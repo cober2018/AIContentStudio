@@ -171,8 +171,11 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
     onError: (e) => setMessage(e instanceof Error ? e.message : "生成失败"),
   });
   const regenerate = useMutation({
-    mutationFn: () => api.post(`/content-jobs/${currentJob!.id}/regenerate`),
-    onSuccess: refresh,
+    mutationFn: () => api.post<{ revision_no: number }>(`/content-jobs/${currentJob!.id}/regenerate`),
+    onSuccess: (d) => {
+      refresh();
+      setMessage(`已生成新版本 r${d.revision_no}（旧版本保留，可用「对比上一版」查看差异）`);
+    },
     onError: (e) => setMessage(e instanceof Error ? e.message : "重新生成失败"),
   });
   const factCheck = useMutation({
