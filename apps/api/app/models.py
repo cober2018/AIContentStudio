@@ -377,6 +377,30 @@ class ContentAsset(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class ExternalContent(Base):
+    """外部 agent（dsh/Antigravity skills）产出内容的入库载体。
+
+    与 ContentAsset（内部生成链路产物，强绑定 draft/topic）分离，
+    只走简化状态机：draft → published / archived。
+    (origin, origin_ref) 唯一，保证同一外部产物重复上报幂等。
+    """
+
+    __tablename__ = "external_content"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(500))
+    body: Mapped[str] = mapped_column(Text)
+    channel: Mapped[str] = mapped_column(String(30))
+    origin: Mapped[str] = mapped_column(String(50), default="dsh")  # dsh / antigravity / manual
+    origin_ref: Mapped[str | None] = mapped_column(String(500))  # 外部唯一引用（run id / url / 文件路径）
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    tags: Mapped[list | None] = mapped_column(JSON)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 class ExportRecord(Base):
     __tablename__ = "export_record"
 
@@ -438,12 +462,18 @@ class ConnectorEndpoint(Base):
     connector_id: Mapped[int] = mapped_column(ForeignKey("connector.id"))
     name: Mapped[str] = mapped_column(String(200))
     path: Mapped[str] = mapped_column(String(500))
+    method: Mapped[str] = mapped_column(String(10), default="GET")  # GET / POST
+    body_template_json: Mapped[dict | None] = mapped_column(JSON)  # POST body，值支持 {today} 占位符
     params_json: Mapped[dict | None] = mapped_column(JSON)  # 查询参数，值支持 {today} 占位符
     title_template: Mapped[str] = mapped_column(String(300))  # Source 标题模板
     as_of_path: Mapped[str | None] = mapped_column(String(200))  # 从响应 JSON 取 as_of 的路径
     trust_level: Mapped[float] = mapped_column(Float, default=0.9)  # 量化平台结构化数据默认高可信
     # JSON → Fact 映射协议：items_path 定位数组，fields 指定字段来源，statement 为模板
     fact_mapping_json: Mapped[dict | None] = mapped_column(JSON)
+    # 分页配置：{type: page, page_param, page_start, max_pages} 或 {type: cursor, cursor_param, cursor_path, max_pages}
+    pagination_json: Mapped[dict | None] = mapped_column(JSON)
+    # 定时拉取间隔（分钟）；null/0 = 不定时，仅手动触发
+    interval_minutes: Mapped[int | None] = mapped_column(Integer)
     last_pull_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_pull_status: Mapped[str | None] = mapped_column(String(20))  # ok / failed
     last_pull_error: Mapped[str | None] = mapped_column(Text)

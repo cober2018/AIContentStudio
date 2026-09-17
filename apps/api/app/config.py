@@ -27,6 +27,15 @@ class Settings(BaseSettings):
     task_queue_enabled: bool = False
     celery_broker_url: str = "redis://localhost:6379/0"
 
+    # 对象存储（S3 兼容，如 MinIO）：默认关闭，导出内容内联返回；开启后导出产物另传存储并返回预签名 URL
+    minio_enabled: bool = False
+    minio_endpoint: str = "localhost:9000"
+    minio_access_key: str = ""
+    minio_secret_key: str = ""
+    minio_bucket: str = "content-studio-assets"
+    minio_secure: bool = False
+    minio_url_expiry_hours: int = 24
+
     upload_max_bytes: int = 20 * 1024 * 1024
 
 

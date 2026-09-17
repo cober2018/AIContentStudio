@@ -13,6 +13,9 @@ dependencies = [
     "pypdf>=4.3",
     "python-multipart>=0.0.9",
     "celery[redis]>=5.4",
+    "minio>=7.2",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
 ]
 
 [dependency-groups]

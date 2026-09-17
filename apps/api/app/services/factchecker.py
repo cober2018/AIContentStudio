@@ -8,6 +8,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import UTC
 
+from .generation.providers import GenerateRequest
+
 RISK_BLOCKER_WORDS = ["保证收益", "稳赚", "必涨", "一定上涨", "包赚", "零风险", "无风险", "稳赚不赔"]
 RISK_WARNING_WORDS = ["大概率", "肯定会", "绝对", "必然"]
 # 标准金融术语中的“无风险”不是收益承诺
@@ -251,10 +253,97 @@ def run_deterministic_check(
 
 
 def run_llm_review(draft_text: str, facts: list[dict], deterministic: FactCheckResult) -> FactCheckResult:
-    """LLM 审查层。mock provider 下无法真正推理，退化为保守规则：
-    确定性结果直接透传，避免伪造审查结论。接真实模型后此函数走 provider。
+    """LLM 审查层（真实 provider）：越界事实/过度推断 + 实体抽取，替代朴素规则。
+
+    mock provider 或调用失败时透传确定性结果，绝不伪造审查结论。
     """
-    return deterministic
+    if not _llm_provider_ready():
+        return deterministic
+
+    facts_brief = "；".join(f"{f.get('id', '')}:{f.get('statement', '')}" for f in facts[:50])
+    prompt = (
+        "你是金融内容事实合规审查员。对照事实清单审查稿件。\n"
+        f"【事实清单】{facts_brief or '（空）'}\n"
+        f"【稿件】\n{draft_text[:4000]}\n\n"
+        "输出 JSON：\n"
+        '{"issues": [{"severity": "warning|blocker", "span": "原文片段", '
+        '"reason": "为何越界或过度推断", "suggestion": "修改建议"}], '
+        '"entities": ["稿件中出现的机构类实体（公司/银行/券商/基金等专有名词，无则空数组）"]}\n'
+        "severity=blocker 仅用于稿件内容与事实清单明显冲突；推测性表述用 warning。"
+    )
+    request = GenerateRequest(
+        purpose="fact_review",
+        channel=None,
+        system_prompt="你是严格的内容事实审查员，只输出 JSON，不输出其他内容。",
+        user_prompt=prompt,
+        schema_hint='{"issues": [], "entities": []}',
+    )
+    try:
+        result = _run_llm_request(request)
+    except Exception:  # noqa: BLE001 审查层任何异常都降级，不阻塞 factcheck 主流程
+        return deterministic
+    if result is None:
+        return deterministic
+
+    merged_issues = list(deterministic.issues)
+    known = _fact_texts(facts)
+    for issue in result.data.get("issues", []) or []:
+        if not isinstance(issue, dict) or not issue.get("reason"):
+            continue
+        merged_issues.append(
+            CheckIssue(
+                severity=issue.get("severity") if issue.get("severity") in {"blocker", "warning"} else "warning",
+                category="llm",
+                span=str(issue.get("span", ""))[:100],
+                reason=f"[LLM 审查] {issue['reason']}",
+                suggestion=issue.get("suggestion"),
+            )
+        )
+    # LLM 实体抽取成功时覆盖朴素规则实体结果
+    llm_entities = result.data.get("entities")
+    if isinstance(llm_entities, list):
+        merged_issues = [i for i in merged_issues if i.category != "entity"]
+        for entity in llm_entities:
+            entity = str(entity).strip()
+            if entity and entity not in known and not entity.startswith(_DEICTIC_PREFIX):
+                merged_issues.append(
+                    CheckIssue(
+                        severity="warning",
+                        category="entity",
+                        span=entity,
+                        reason=f"实体『{entity}』未出现在 FactPack 中，可能为模型引入的新实体（LLM 抽取）",
+                    )
+                )
+
+    blockers = [i for i in merged_issues if i.severity == "blocker"]
+    warnings = [i for i in merged_issues if i.severity == "warning"]
+    return FactCheckResult(
+        result="blocker" if blockers else ("warning" if warnings else "pass"),
+        issues=merged_issues,
+        stats={"blockers": len(blockers), "warnings": len(warnings)},
+    )
+
+
+def _llm_provider_ready() -> bool:
+    from ..config import get_settings
+
+    return get_settings().llm_provider == "openai_compatible"
+
+
+def _run_llm_request(request: GenerateRequest):
+    """LLM 调用统一入口：任何失败都降级返回 None（审查层不阻塞主流程）。"""
+    import asyncio
+    import logging
+
+    from .generation.providers import get_provider
+
+    logger = logging.getLogger(__name__)
+    try:
+        provider = get_provider()
+        return asyncio.run(provider.generate_json(request))
+    except Exception as exc:  # noqa: BLE001 LLM 层失败只降级告警
+        logger.warning("LLM review 调用失败，退回确定性结果: %s", exc)
+        return None
 
 
 def run_fact_check(

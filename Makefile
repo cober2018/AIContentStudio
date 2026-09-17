@@ -1,4 +1,4 @@
-.PHONY: dev dev-web worker stop seed test lint format backup compose-up compose-down
+.PHONY: dev dev-web worker beat stop seed migrate test lint format backup compose-up compose-down
 
 BACKUP_DIR ?= backups
 BACKUP_KEEP ?= 7
@@ -20,6 +20,11 @@ dev-web:
 # 初始化数据库 + 种子数据（管理员、渠道模板、Brand Voice、Prompt 版本）
 seed:
 	cd apps/api && python -m app.seed
+
+# 执行数据库迁移（生产/PostgreSQL 环境建表走这里，替代 create_all）
+migrate:
+	cd apps/api && . .venv/bin/activate 2>/dev/null || true; \
+	python -m alembic upgrade head
 
 test:
 	cd apps/api && python -m pytest tests -q

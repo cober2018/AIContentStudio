@@ -195,3 +195,41 @@ def test_srt_marks_estimated():
 def test_txt_strips_markdown():
     assert "Hook：开场" in export_txt(_Asset())
     assert "#" not in export_txt(_Asset())
+
+
+def test_llm_review_merges_issues_when_provider_ready(monkeypatch):
+    """openai_compatible 可用时：LLM issues/entity 覆盖合并；失败时透传确定性结果。"""
+    from app.services import factchecker as fc
+    from app.services.generation.providers import GenerateResult
+
+    monkeypatch.setattr(fc, "_llm_provider_ready", lambda: True)
+    llm_result = GenerateResult(
+        data={
+            "issues": [{"severity": "warning", "span": "明年翻倍", "reason": "超出事实的预测", "suggestion": "删除"}],
+            "entities": ["某某基金"],
+        },
+        raw_output="",
+        usage={},
+    )
+    monkeypatch.setattr(fc, "_run_llm_request", lambda request: llm_result)
+
+    result = fc.run_fact_check("板块明年翻倍，某某基金重仓。指数上涨1.2%。", FACTS, TOPIC_TEXT, [])
+    categories = {i.category for i in result.issues}
+    assert "llm" in categories
+    assert result.result == "warning"
+    # 朴素规则实体被 LLM 实体替换
+    assert [i.span for i in result.issues if i.category == "entity"] == ["某某基金"]
+
+
+def test_llm_review_falls_back_on_failure(monkeypatch):
+    from app.services import factchecker as fc
+
+    monkeypatch.setattr(fc, "_llm_provider_ready", lambda: True)
+
+    def boom(request):
+        raise RuntimeError("llm down")
+
+    monkeypatch.setattr(fc, "_run_llm_request", boom)
+    result = fc.run_fact_check("指数上涨1.2%。", FACTS, TOPIC_TEXT, [])
+    assert result.result == "pass"  # 透传确定性结果
+    assert not any(i.category == "llm" for i in result.issues)

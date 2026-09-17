@@ -23,3 +23,6 @@ apps/api/evals/reports/
 .idea/
 .vscode/
 .DS_Store
+
+# dsh skill 沙箱草稿输出
+.wewrite-scratch/

@@ -95,9 +95,16 @@ def export_asset(
     db.add(AuditLog(event="asset.exported", actor=user.email, entity_type="content_asset", entity_id=str(asset.id),
                     detail_json={"fmt": payload.fmt}))
     db.commit()
+
+    filename = f"asset-{asset.id}-{asset.channel}-v{asset.fact_pack_version}.{payload.fmt}"
+    # 对象存储启用时产物另传一份并返回预签名 URL；上传失败不阻断导出
+    from ..services import storage_service
+
+    download_url = storage_service.export_to_storage(filename, content)
     return {
         "asset_id": asset.id,
         "fmt": payload.fmt,
-        "filename": f"asset-{asset.id}-{asset.channel}-v{asset.fact_pack_version}.{payload.fmt}",
+        "filename": filename,
         "content": content,
+        "download_url": download_url,
     }

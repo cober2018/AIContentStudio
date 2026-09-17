@@ -44,7 +44,12 @@ def _validate_target(url: str) -> None:
             raise UnsafeUrlError("禁止访问内网/保留地址")
 
 
-def safe_fetch(url: str, headers: dict[str, str] | None = None) -> tuple[bytes, str]:
+def safe_fetch(
+    url: str,
+    headers: dict[str, str] | None = None,
+    method: str = "GET",
+    json_body: dict | None = None,
+) -> tuple[bytes, str]:
     """返回 (响应体, mime_type)。重定向逐跳重新校验目标，防止跳转到内网。"""
 
     settings = get_settings()
@@ -54,7 +59,7 @@ def safe_fetch(url: str, headers: dict[str, str] | None = None) -> tuple[bytes, 
     with httpx.Client(timeout=settings.url_fetch_timeout_seconds, follow_redirects=False) as client:
         while True:
             _validate_target(current_url)
-            resp = client.get(current_url, headers=headers)
+            resp = client.request(method.upper(), current_url, headers=headers, json=json_body)
             if resp.status_code in {301, 302, 303, 307, 308}:
                 redirect_count += 1
                 if redirect_count > MAX_REDIRECTS:

@@ -2,6 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
+import {
+  EditorContent,
+  EditorToolbar,
+  getMarkdown,
+  loadContent,
+  replaceSelection,
+  selectionContext,
+  useMarkdownEditor,
+  type SelectionRange,
+} from "../components/editor";
+import { RevisionDiff } from "../components/RevisionDiff";
 import { Button, EmptyState, Spinner, StatusBadge } from "../components/ui";
 
 interface TopicDetail {
@@ -30,6 +41,11 @@ interface DraftDetail {
   channel: string;
   fact_check: { result: string; stats: { blockers: number; warnings: number }; issues: IssueRow[] } | null;
   structured: Record<string, unknown> | null;
+}
+
+interface JobDetail {
+  id: number;
+  drafts: { id: number; revision_no: number; title: string; status: string }[];
 }
 
 interface IssueRow {
@@ -79,7 +95,8 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [dirty, setDirty] = useState(false);
-  const [selectionInfo, setSelectionInfo] = useState("");
+  const [sel, setSel] = useState<SelectionRange | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
   const [rewriteInstruction, setRewriteInstruction] = useState("");
   const [message, setMessage] = useState("");
 
@@ -101,10 +118,45 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
     enabled: !!currentJob?.latest_draft_id,
   });
   const draft = draftQuery.data;
+  const draftId = draft?.id;
 
+  // 全部 revisions（用于「对比上一版」）
+  const jobQuery = useQuery({
+    queryKey: ["content-job", currentJob?.id],
+    queryFn: () => api.get<JobDetail>(`/content-jobs/${currentJob!.id}`),
+    enabled: !!currentJob,
+  });
+  const prevRevision = useMemo(() => {
+    const drafts = (jobQuery.data?.drafts || []).filter((d) => d.revision_no < (draft?.revision_no ?? 0));
+    return drafts.length > 0 ? drafts[drafts.length - 1] : null;
+  }, [jobQuery.data, draft?.revision_no]);
+
+  const prevDraftQuery = useQuery({
+    queryKey: ["draft", prevRevision?.id],
+    queryFn: () => api.get<DraftDetail>(`/drafts/${prevRevision!.id}`),
+    enabled: showDiff && !!prevRevision,
+  });
+
+  const editor = useMarkdownEditor("", {
+    onChange: (md) => {
+      setBody(md);
+      setDirty(true);
+    },
+    onSelectionChange: setSel,
+  });
+
+  // 切换稿件：重置编辑态
   useEffect(() => {
-    if (draft && !dirty) setBody(draft.body);
-  }, [draft, dirty]);
+    setDirty(false);
+    setSel(null);
+    setShowDiff(false);
+  }, [draftId]);
+  // 未编辑时同步服务端内容到编辑器与字数
+  useEffect(() => {
+    if (!editor || !draft || dirty) return;
+    if (getMarkdown(editor) !== draft.body) loadContent(editor, draft.body);
+    setBody(draft.body);
+  }, [editor, draft, dirty]);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["topic", topicId] });
@@ -149,10 +201,9 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
     mutationFn: (payload: { selected_text: string; instruction: string; context_before: string; context_after: string }) =>
       api.post<{ rewritten_text: string }>(`/drafts/${draft!.id}/rewrite-selection`, payload),
     onSuccess: (result) => {
-      // 用户确认后应用：直接替换选中文本
-      setBody((prev) => prev.replace(rewrite.variables!.selected_text, result.rewritten_text));
-      setDirty(true);
-      setSelectionInfo("");
+      // 按记录的位置精确替换选区；onChange 回调自动更新 body 并置 dirty
+      if (editor && sel) replaceSelection(editor, sel, result.rewritten_text);
+      setSel(null);
       setRewriteInstruction("");
     },
     onError: (e) => setMessage(e instanceof Error ? e.message : "改写失败"),
@@ -243,6 +294,15 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
                 <span>{body.length} 字</span>
                 {dirty && <span className="text-amber-600">未保存</span>}
                 <div className="ml-auto flex gap-2">
+                  {prevRevision && (
+                    <Button
+                      size="sm"
+                      variant={showDiff ? "primary" : "secondary"}
+                      onClick={() => setShowDiff((v) => !v)}
+                    >
+                      {showDiff ? "退出对比" : `对比上一版（r${prevRevision.revision_no}）`}
+                    </Button>
+                  )}
                   <Button size="sm" variant="secondary" onClick={() => regenerate.mutate()} disabled={regenerate.isPending}>
                     重新生成
                   </Button>
@@ -258,45 +318,50 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
                   </Button>
                 </div>
               </div>
-              <textarea
-                className="min-h-0 flex-1 resize-none p-6 font-mono text-sm leading-relaxed focus:outline-none"
-                value={body}
-                onChange={(e) => {
-                  setBody(e.target.value);
-                  setDirty(true);
-                }}
-                onSelect={(e) => {
-                  const el = e.currentTarget;
-                  const selected = el.value.slice(el.selectionStart, el.selectionEnd);
-                  setSelectionInfo(selected);
-                }}
-              />
-              {selectionInfo.length > 4 && (
-                <div className="flex items-center gap-2 border-t border-slate-100 bg-white px-4 py-2">
-                  <span className="max-w-[200px] truncate text-xs text-slate-500">选中：{selectionInfo}</span>
-                  <input
-                    className="flex-1 rounded border border-slate-300 px-2 py-1 text-xs"
-                    placeholder="改写要求，如：更口语化"
-                    value={rewriteInstruction}
-                    onChange={(e) => setRewriteInstruction(e.target.value)}
-                  />
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={!rewriteInstruction || rewrite.isPending}
-                    onClick={() => {
-                      const start = body.indexOf(selectionInfo);
-                      rewrite.mutate({
-                        selected_text: selectionInfo,
-                        instruction: rewriteInstruction,
-                        context_before: body.slice(Math.max(0, start - 100), start),
-                        context_after: body.slice(start + selectionInfo.length, start + selectionInfo.length + 100),
-                      });
-                    }}
-                  >
-                    AI 改写选中
-                  </Button>
-                </div>
+              {showDiff && prevDraftQuery.data ? (
+                <RevisionDiff
+                  oldBody={prevDraftQuery.data.body}
+                  newBody={body}
+                  oldLabel={`r${prevRevision!.revision_no}`}
+                  newLabel={`r${draft.revision_no}（当前）`}
+                />
+              ) : showDiff && prevDraftQuery.isLoading ? (
+                <Spinner label="加载上一版…" />
+              ) : (
+                <>
+                  <EditorToolbar editor={editor!} />
+                  <div className="min-h-0 flex-1 overflow-y-auto">
+                    <div className="mx-auto max-w-3xl px-6 py-4">
+                      <EditorContent editor={editor!} />
+                    </div>
+                  </div>
+                  {sel && sel.text.length > 4 && (
+                    <div className="flex items-center gap-2 border-t border-slate-100 bg-white px-4 py-2">
+                      <span className="max-w-[200px] truncate text-xs text-slate-500">选中：{sel.text}</span>
+                      <input
+                        className="flex-1 rounded border border-slate-300 px-2 py-1 text-xs"
+                        placeholder="改写要求，如：更口语化"
+                        value={rewriteInstruction}
+                        onChange={(e) => setRewriteInstruction(e.target.value)}
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={!rewriteInstruction || rewrite.isPending}
+                        onClick={() => {
+                          if (!editor || !sel) return;
+                          rewrite.mutate({
+                            selected_text: sel.text,
+                            instruction: rewriteInstruction,
+                            ...selectionContext(editor, sel),
+                          });
+                        }}
+                      >
+                        AI 改写选中
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
