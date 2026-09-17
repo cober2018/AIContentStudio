@@ -1,0 +1,37 @@
+[project]
+name = "ai-content-studio-api"
+version = "0.1.0"
+description = "AI Content Studio - 事实驱动内容生产系统 API"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "httpx>=0.27",
+    "pypdf>=4.3",
+    "python-multipart>=0.0.9",
+    "celery[redis]>=5.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+ignore = [
+    "B008", # FastAPI Depends() 在参数默认值中是官方推荐写法
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["RUF012"] # 测试桩类属性无需 ClassVar
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

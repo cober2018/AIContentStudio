@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: studio
+      POSTGRES_PASSWORD: studio
+      POSTGRES_DB: content_studio
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studio -d content_studio"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: studio
+      MINIO_ROOT_PASSWORD: studio-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+  # 创建 bucket：content-studio-assets
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 studio studio-secret; do sleep 2; done;
+      mc mb --ignore-existing local/content-studio-assets;
+      exit 0
+      "
+
+  # Celery worker：消费 default/llm/ingestion/export（TASK_QUEUE_ENABLED=true 时 API 分发到这里）
+  worker:
+    build: ./apps/api
+    command: python -m celery -A app.tasks.celery_app worker -Q default,llm,ingestion,export --loglevel=INFO -c 2
+    environment:
+      DATABASE_URL: postgresql+psycopg://studio:studio@postgres:5432/content_studio
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  pgdata:
+  miniodata:

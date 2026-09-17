@@ -1,0 +1,577 @@
+{
+  "description": "30 Topic Golden 评测集（EPIC-15）。每个场景 = 一组受控事实 + 选题要素 + 渠道配置。mock provider 下跑出的是确定性基线；接真实模型后用同一数据集对比 无来源数字率/Fact 覆盖率/通过率。",
+  "as_of": "2026-09-17",
+  "topics": [
+    {
+      "id": "G001",
+      "category": "市场复盘",
+      "title": "9月17日市场复盘：缩量调整下的结构性行情",
+      "audience": "普通投资者",
+      "goal": "讲清当日市场主线与风险",
+      "angle": "数据说话，不预测涨跌",
+      "core_thesis": "指数缩量调整但结构分化，权重护盘、题材退潮",
+      "cta": "关注每日收盘复盘",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["保证收益", "必涨", "稳赚"],
+      "facts": [
+        { "statement": "沪深300指数收报3905.6点，当日上涨1.2%", "subject": "沪深300", "predicate": "涨跌幅", "value": 1.2, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "两市成交额1.1万亿元，较前一日缩量8%", "subject": "两市", "predicate": "成交额", "value": 1.1, "unit": "万亿", "as_of": "2026-09-17" },
+        { "statement": "北向资金净流出36.5亿元", "subject": "北向资金", "predicate": "净流向", "value": -36.5, "unit": "亿", "as_of": "2026-09-17" }
+      ],
+      "source_text": "2026年9月17日收盘，沪深300指数收报3905.6点，当日上涨1.2%。两市成交额1.1万亿元，较前一日缩量8%。北向资金净流出36.5亿元。"
+    },
+    {
+      "id": "G002",
+      "category": "市场复盘",
+      "title": "创业板领跌：成长风格短期承压",
+      "audience": "普通投资者",
+      "goal": "解释创业板与主板分化原因",
+      "angle": "从成交结构看资金偏好",
+      "core_thesis": "成长板块获利回吐，资金阶段性转向低估值",
+      "cta": "点击关注看每晚复盘",
+      "channels": ["douyin", "wechat"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["必涨", "满仓干"],
+      "facts": [
+        { "statement": "创业板指下跌1.8%，收报2456.3点", "subject": "创业板指", "predicate": "涨跌幅", "value": -1.8, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "上证指数微跌0.3%，收报3210.7点", "subject": "上证指数", "predicate": "涨跌幅", "value": -0.3, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "两市成交额1.1万亿元", "subject": "两市", "predicate": "成交额", "value": 1.1, "unit": "万亿", "as_of": "2026-09-17" },
+        { "statement": "半导体板块主力净流出52亿元", "subject": "半导体", "predicate": "主力净流向", "value": -52, "unit": "亿", "as_of": "2026-09-17" }
+      ],
+      "source_text": "创业板指下跌1.8%，收报2456.3点。上证指数微跌0.3%，收报3210.7点。两市成交额1.1万亿元。半导体板块主力净流出52亿元。"
+    },
+    {
+      "id": "G003",
+      "category": "市场复盘",
+      "title": "三大指数集体收涨，量能是关键变量",
+      "audience": "普通投资者",
+      "goal": "复盘普涨行情的成色",
+      "angle": "量价配合度分析",
+      "core_thesis": "普涨但量能不足，反弹持续性待验证",
+      "cta": "每晚8点直播复盘",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["市场有风险"],
+      "forbidden": ["保证收益"],
+      "facts": [
+        { "statement": "上证指数上涨0.9%，收报3235.4点", "subject": "上证指数", "predicate": "涨跌幅", "value": 0.9, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "深证成指上涨1.4%", "subject": "深证成指", "predicate": "涨跌幅", "value": 1.4, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "创业板指上涨2.1%", "subject": "创业板指", "predicate": "涨跌幅", "value": 2.1, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "两市成交额1.35万亿元，放量12%", "subject": "两市", "predicate": "成交额", "value": 1.35, "unit": "万亿", "as_of": "2026-09-17" }
+      ],
+      "source_text": "上证指数上涨0.9%，收报3235.4点。深证成指上涨1.4%。创业板指上涨2.1%。两市成交额1.35万亿元，放量12%。"
+    },
+    {
+      "id": "G004",
+      "category": "市场复盘",
+      "title": "港股窄幅震荡，南向资金持续流入",
+      "audience": "港股投资者",
+      "goal": "梳理港股当日波动与资金动向",
+      "angle": "南向资金视角",
+      "core_thesis": "指数平淡但南向资金连续净买入，中期资金面偏暖",
+      "cta": "关注获取每日港股数据",
+      "channels": ["xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["稳赚", "必涨"],
+      "facts": [
+        { "statement": "恒生指数收报18245.7点，微涨0.2%", "subject": "恒生指数", "predicate": "涨跌幅", "value": 0.2, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "恒生科技指数下跌0.6%", "subject": "恒生科技", "predicate": "涨跌幅", "value": -0.6, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "南向资金净买入28.4亿港元", "subject": "南向资金", "predicate": "净买入", "value": 28.4, "unit": "亿港元", "as_of": "2026-09-17" }
+      ],
+      "source_text": "恒生指数收报18245.7点，微涨0.2%。恒生科技指数下跌0.6%。南向资金净买入28.4亿港元。"
+    },
+    {
+      "id": "G005",
+      "category": "市场复盘",
+      "title": "美股收盘：科技股拖累纳指跌超1%",
+      "audience": "关注美股的投资者",
+      "goal": "复盘隔夜美股对A股情绪影响",
+      "angle": "隔夜外围与A股联动",
+      "core_thesis": "纳指调整主因科技股财报预期下修",
+      "cta": "早上7点外围行情速览",
+      "channels": ["douyin", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["必涨", "保证收益"],
+      "facts": [
+        { "statement": "纳斯达克指数下跌1.2%，收报17856.3点", "subject": "纳斯达克", "predicate": "涨跌幅", "value": -1.2, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "标普500指数下跌0.7%", "subject": "标普500", "predicate": "涨跌幅", "value": -0.7, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "道琼斯指数持平，收报41230.5点", "subject": "道琼斯", "predicate": "涨跌幅", "value": 0.0, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "纳斯达克指数下跌1.2%，收报17856.3点。标普500指数下跌0.7%。道琼斯指数持平，收报41230.5点。"
+    },
+    {
+      "id": "G006",
+      "category": "市场复盘",
+      "title": "债市走强：10年期国债收益率下行",
+      "audience": "稳健型投资者",
+      "goal": "解释股债跷跷板现象",
+      "angle": "利率与风险偏好",
+      "core_thesis": "避险情绪推动债市走强，收益率曲线牛平",
+      "cta": "关注看每日债市速览",
+      "channels": ["wechat"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["保本", "稳赚"],
+      "facts": [
+        { "statement": "10年期国债收益率下行至1.85%", "subject": "10年期国债", "predicate": "收益率", "value": 1.85, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "30年期国债收益率下行3个bp至2.05%", "subject": "30年期国债", "predicate": "收益率", "value": 2.05, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "银行间质押式回购成交6.8万亿元", "subject": "银行间市场", "predicate": "回购成交", "value": 6.8, "unit": "万亿", "as_of": "2026-09-17" }
+      ],
+      "source_text": "10年期国债收益率下行至1.85%。30年期国债收益率下行3个bp至2.05%。银行间质押式回购成交6.8万亿元。"
+    },
+    {
+      "id": "G007",
+      "category": "市场复盘",
+      "title": "两融余额回升，杠杆资金回流哪些方向",
+      "audience": "活跃交易者",
+      "goal": "追踪杠杆资金流向",
+      "angle": "两融数据结构拆解",
+      "core_thesis": "两融回升但集中度上升，杠杆偏好短周期题材",
+      "cta": "每日两融数据解读",
+      "channels": ["douyin", "xiaohongshu"],
+      "must_include": ["风险提示"],
+      "forbidden": ["加杠杆", "必涨"],
+      "facts": [
+        { "statement": "两市融资融券余额1.86万亿元，环比增加42亿元", "subject": "两融", "predicate": "余额", "value": 1.86, "unit": "万亿", "as_of": "2026-09-17" },
+        { "statement": "融资买入额占A股成交额比例8.6%", "subject": "融资买入", "predicate": "成交占比", "value": 8.6, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "两市融资融券余额1.86万亿元，环比增加42亿元。融资买入额占A股成交额比例8.6%。"
+    },
+    {
+      "id": "G008",
+      "category": "市场复盘",
+      "title": "行业轮动加快：一周主线复盘",
+      "audience": "普通投资者",
+      "goal": "总结一周行业涨跌结构",
+      "angle": "周度行业轮动图谱",
+      "core_thesis": "轮动速度加快，追高胜率下降",
+      "cta": "每周日周度复盘",
+      "channels": ["xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["必涨"],
+      "facts": [
+        { "statement": "本周申万一级行业中通信上涨3.2%居首", "subject": "通信行业", "predicate": "周涨跌幅", "value": 3.2, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "本周煤炭下跌2.4%表现最弱", "subject": "煤炭行业", "predicate": "周涨跌幅", "value": -2.4, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "本周两市日均成交1.2万亿元", "subject": "两市", "predicate": "日均成交", "value": 1.2, "unit": "万亿", "as_of": "2026-09-17" }
+      ],
+      "source_text": "本周申万一级行业中通信上涨3.2%居首。本周煤炭下跌2.4%表现最弱。本周两市日均成交1.2万亿元。"
+    },
+    {
+      "id": "G009",
+      "category": "宏观解读",
+      "title": "8月CPI同比上涨0.6%，物价温和回升",
+      "audience": "普通投资者",
+      "goal": "解读 CPI 对货币政策含义",
+      "angle": "物价-政策传导",
+      "core_thesis": "物价温和回升为宽松留出空间",
+      "cta": "关注每月宏观数据解读",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["放水", "大水漫灌"],
+      "facts": [
+        { "statement": "8月CPI同比上涨0.6%", "subject": "CPI", "predicate": "同比", "value": 0.6, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "8月PPI同比下降1.8%", "subject": "PPI", "predicate": "同比", "value": -1.8, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "8月核心CPI同比上涨0.4%", "subject": "核心CPI", "predicate": "同比", "value": 0.4, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "8月CPI同比上涨0.6%。8月PPI同比下降1.8%。8月核心CPI同比上涨0.4%。"
+    },
+    {
+      "id": "G010",
+      "category": "宏观解读",
+      "title": "社融超预期：8月新增信贷解读",
+      "audience": "普通投资者",
+      "goal": "讲清社融结构的含义",
+      "angle": "总量与结构并重",
+      "core_thesis": "社融回升但结构仍靠票据冲量，实体需求待确认",
+      "cta": "关注宏观数据日历",
+      "channels": ["wechat"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["放水"],
+      "facts": [
+        { "statement": "8月社会融资规模增量3.12万亿元", "subject": "社融", "predicate": "增量", "value": 3.12, "unit": "万亿", "as_of": "2026-09-17" },
+        { "statement": "8月新增人民币贷款1.25万亿元", "subject": "新增贷款", "predicate": "规模", "value": 1.25, "unit": "万亿", "as_of": "2026-09-17" },
+        { "statement": "8月M2同比增长6.3%", "subject": "M2", "predicate": "同比", "value": 6.3, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "8月社会融资规模增量3.12万亿元。8月新增人民币贷款1.25万亿元。8月M2同比增长6.3%。"
+    },
+    {
+      "id": "G011",
+      "category": "宏观解读",
+      "title": "美联储议息前夜：市场定价了什么",
+      "audience": "普通投资者",
+      "goal": "解释利率预期对资产价格影响",
+      "angle": "利率期货隐含预期",
+      "core_thesis": "市场已定价降息，波动风险在预期差",
+      "cta": "关注美联储议息专题",
+      "channels": ["douyin", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["必然", "肯定"],
+      "facts": [
+        { "statement": "利率期货显示9月降息25个bp概率78%", "subject": "利率期货", "predicate": "降息概率", "value": 78, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "美元指数收报100.8点，周跌0.5%", "subject": "美元指数", "predicate": "点位", "value": 100.8, "unit": "点", "as_of": "2026-09-17" },
+        { "statement": "10年期美债收益率3.62%", "subject": "10年期美债", "predicate": "收益率", "value": 3.62, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "利率期货显示9月降息25个bp概率78%。美元指数收报100.8点，周跌0.5%。10年期美债收益率3.62%。"
+    },
+    {
+      "id": "G012",
+      "category": "宏观解读",
+      "title": "出口数据转正：外需修复成色几何",
+      "audience": "关注外贸的投资者",
+      "goal": "解读出口数据与产业链影响",
+      "angle": "分区域拆解",
+      "core_thesis": "出口转正主因低基数与新兴市场需求",
+      "cta": "关注进出口数据解读",
+      "channels": ["xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["稳赚"],
+      "facts": [
+        { "statement": "8月出口同比增长4.7%", "subject": "出口", "predicate": "同比", "value": 4.7, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "8月贸易顺差682亿美元", "subject": "贸易顺差", "predicate": "规模", "value": 682, "unit": "美元", "as_of": "2026-09-17" },
+        { "statement": "对东盟出口同比增长12.1%", "subject": "对东盟出口", "predicate": "同比", "value": 12.1, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "8月出口同比增长4.7%。8月贸易顺差682亿美元。对东盟出口同比增长12.1%。"
+    },
+    {
+      "id": "G013",
+      "category": "宏观解读",
+      "title": "LPR维持不变：房贷成本影响几何",
+      "audience": "有房贷的家庭",
+      "goal": "解释LPR与月供关系",
+      "angle": "居民视角算账",
+      "core_thesis": "LPR按兵不动，存量房贷调整看重定价日",
+      "cta": "关注每月LPR播报",
+      "channels": ["douyin", "xiaohongshu"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["房价必涨"],
+      "facts": [
+        { "statement": "9月1年期LPR报3.0%", "subject": "1年期LPR", "predicate": "报价", "value": 3.0, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "9月5年期以上LPR报3.5%", "subject": "5年期LPR", "predicate": "报价", "value": 3.5, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "100万房贷30年期月供约4490元", "subject": "百万房贷", "predicate": "月供", "value": 4490, "unit": "元", "as_of": "2026-09-17" }
+      ],
+      "source_text": "9月1年期LPR报3.0%。9月5年期以上LPR报3.5%。100万房贷30年期月供约4490元。"
+    },
+    {
+      "id": "G014",
+      "category": "行业观察",
+      "title": "新能源车8月销量：渗透率再创新高",
+      "audience": "关注汽车的投资者",
+      "goal": "解读新能源车销量数据",
+      "angle": "渗透率与价格战",
+      "core_thesis": "渗透率新高但单车利润承压",
+      "cta": "关注每月销量榜解读",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["必涨"],
+      "facts": [
+        { "statement": "8月新能源车零售销量102.7万辆", "subject": "新能源车", "predicate": "零售销量", "value": 102.7, "unit": "万辆", "as_of": "2026-09-17" },
+        { "statement": "8月新能源车渗透率54.3%", "subject": "新能源车", "predicate": "渗透率", "value": 54.3, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "8月汽车行业价格促销幅度平均12%", "subject": "汽车行业", "predicate": "促销幅度", "value": 12, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "8月新能源车零售销量102.7万辆。8月新能源车渗透率54.3%。8月汽车行业价格促销幅度平均12%。"
+    },
+    {
+      "id": "G015",
+      "category": "行业观察",
+      "title": "AI算力投资周期：资本开支数据怎么说",
+      "audience": "科技行业投资者",
+      "goal": "梳理算力产业链景气度",
+      "angle": "资本开支传导链",
+      "core_thesis": "算力资本开支上修，订单向上游光模块集中",
+      "cta": "关注AI产业链周报",
+      "channels": ["douyin", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["翻倍", "必涨"],
+      "facts": [
+        { "statement": "四大云厂商二季度资本开支合计587亿美元", "subject": "云厂商", "predicate": "资本开支", "value": 587, "unit": "美元", "as_of": "2026-09-17" },
+        { "statement": "光模块龙头8月订单同比增长65%", "subject": "光模块龙头", "predicate": "订单同比", "value": 65, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "AI服务器出货量预计全年增长38%", "subject": "AI服务器", "predicate": "出货增速", "value": 38, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "四大云厂商二季度资本开支合计587亿美元。光模块龙头8月订单同比增长65%。AI服务器出货量预计全年增长38%。"
+    },
+    {
+      "id": "G016",
+      "category": "行业观察",
+      "title": "白酒动销调研：中秋旺季成色不足",
+      "audience": "消费行业投资者",
+      "goal": "反馈白酒中秋动销情况",
+      "angle": "渠道调研纪要",
+      "core_thesis": "旺季动销平淡，批价承压，库存去化偏慢",
+      "cta": "关注消费调研系列",
+      "channels": ["xiaohongshu", "wechat"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["必涨"],
+      "facts": [
+        { "statement": "飞天茅台批价降至2250元每瓶", "subject": "飞天茅台", "predicate": "批价", "value": 2250, "unit": "元", "as_of": "2026-09-17" },
+        { "statement": "中秋前白酒动销同比下降8%", "subject": "白酒动销", "predicate": "同比", "value": -8, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "经销商库存平均约2.8个月", "subject": "经销商库存", "predicate": "库存月数", "value": 2.8, "unit": "个月", "as_of": "2026-09-17" }
+      ],
+      "source_text": "飞天茅台批价降至2250元每瓶。中秋前白酒动销同比下降8%。经销商库存平均约2.8个月。"
+    },
+    {
+      "id": "G017",
+      "category": "行业观察",
+      "title": "存储芯片涨价周期开启",
+      "audience": "半导体行业投资者",
+      "goal": "解读存储涨价逻辑",
+      "angle": "供需缺口测算",
+      "core_thesis": "HBM挤占产能，常规存储供需反转",
+      "cta": "关注半导体价格跟踪",
+      "channels": ["douyin", "xiaohongshu"],
+      "must_include": ["风险提示"],
+      "forbidden": ["必涨", "翻倍"],
+      "facts": [
+        { "statement": "DDR5现货价格9月以来上涨18%", "subject": "DDR5", "predicate": "现货涨幅", "value": 18, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "HBM产能占DRAM总产能比例达22%", "subject": "HBM", "predicate": "产能占比", "value": 22, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "存储龙头DRAM业务毛利率回升至38%", "subject": "存储龙头", "predicate": "毛利率", "value": 38, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "DDR5现货价格9月以来上涨18%。HBM产能占DRAM总产能比例达22%。存储龙头DRAM业务毛利率回升至38%。"
+    },
+    {
+      "id": "G018",
+      "category": "行业观察",
+      "title": "创新药出海：License-out 交易创新高",
+      "audience": "医药行业投资者",
+      "goal": "盘点创新药出海交易",
+      "angle": "BD 交易额统计",
+      "core_thesis": "国产创新药国际认可度提升，出海成为主线",
+      "cta": "关注创新药月度盘点",
+      "channels": ["wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["稳赚"],
+      "facts": [
+        { "statement": "年初至今国产创新药License-out交易总金额达412亿美元", "subject": "License-out", "predicate": "交易总额", "value": 412, "unit": "美元", "as_of": "2026-09-17" },
+        { "statement": "9月单月披露BD交易8笔", "subject": "9月BD交易", "predicate": "笔数", "value": 8, "unit": "笔", "as_of": "2026-09-17" },
+        { "statement": "ADC赛道交易占全部BD金额35%", "subject": "ADC赛道", "predicate": "金额占比", "value": 35, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "年初至今国产创新药License-out交易总金额达412亿美元。9月单月披露BD交易8笔。ADC赛道交易占全部BD金额35%。"
+    },
+    {
+      "id": "G019",
+      "category": "行业观察",
+      "title": "猪价筑底：养殖板块的周期位置",
+      "audience": "农业板块投资者",
+      "goal": "判断猪周期位置",
+      "angle": "能繁母猪与猪粮比",
+      "core_thesis": "产能去化缓慢，周期反转仍需时间",
+      "cta": "关注猪周期跟踪",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["必涨", "翻倍"],
+      "facts": [
+        { "statement": "全国生猪出栏均价17.8元每公斤", "subject": "生猪均价", "predicate": "价格", "value": 17.8, "unit": "元", "as_of": "2026-09-17" },
+        { "statement": "能繁母猪存栏3980万头", "subject": "能繁母猪", "predicate": "存栏", "value": 3980, "unit": "万头", "as_of": "2026-09-17" },
+        { "statement": "猪粮比回升至6.2", "subject": "猪粮比", "predicate": "比值", "value": 6.2, "unit": "", "as_of": "2026-09-17" }
+      ],
+      "source_text": "全国生猪出栏均价17.8元每公斤。能繁母猪存栏3980万头。猪粮比回升至6.2。"
+    },
+    {
+      "id": "G020",
+      "category": "行业观察",
+      "title": "光伏产业链价格跟踪：硅料止跌",
+      "audience": "新能源投资者",
+      "goal": "更新光伏产业链价格信号",
+      "angle": "产业链价格传导",
+      "core_thesis": "硅料价格止跌，但组件端仍供过于求",
+      "cta": "每周光伏价格速览",
+      "channels": ["xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["反转", "必涨"],
+      "facts": [
+        { "statement": "多晶硅致密料成交均价4.1万元每吨", "subject": "多晶硅", "predicate": "均价", "value": 4.1, "unit": "万元", "as_of": "2026-09-17" },
+        { "statement": "组件价格0.78元每瓦，周环比持平", "subject": "组件", "predicate": "价格", "value": 0.78, "unit": "元", "as_of": "2026-09-17" },
+        { "statement": "8月国内光伏新增装机21.2GW", "subject": "光伏新增装机", "predicate": "规模", "value": 21.2, "unit": "GW", "as_of": "2026-09-17" }
+      ],
+      "source_text": "多晶硅致密料成交均价4.1万元每吨。组件价格0.78元每瓦，周环比持平。8月国内光伏新增装机21.2GW。"
+    },
+    {
+      "id": "G021",
+      "category": "投教科普",
+      "title": "什么是最大回撤？用真实数据算给你看",
+      "audience": "投资新手",
+      "goal": "教会用户理解最大回撤",
+      "angle": "用一个指数案例算一遍",
+      "core_thesis": "最大回撤衡量最惨时刻的亏损深度，是选基金的重要指标",
+      "cta": "关注投教系列",
+      "channels": ["douyin", "xiaohongshu"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["保本", "稳赚", "无风险"],
+      "facts": [
+        { "statement": "沪深300指数2021年至2024年最大回撤45.6%", "subject": "沪深300", "predicate": "最大回撤", "value": 45.6, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "回撤45.6%后需要上涨83.8%才能回本", "subject": "回本涨幅", "predicate": "所需涨幅", "value": 83.8, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "2024年9月单月沪深300上涨21.2%", "subject": "沪深300", "predicate": "月涨幅", "value": 21.2, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "沪深300指数2021年至2024年最大回撤45.6%。回撤45.6%后需要上涨83.8%才能回本。2024年9月单月沪深300上涨21.2%。"
+    },
+    {
+      "id": "G022",
+      "category": "投教科普",
+      "title": "夏普比率：性价比思维选基金",
+      "audience": "基金投资者",
+      "goal": "教会用户用夏普比率比较基金",
+      "angle": "性价比类比",
+      "core_thesis": "同等收益下波动越小，夏普比率越高，性价比越好",
+      "cta": "关注基金投教专栏",
+      "channels": ["xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["稳赚", "保本"],
+      "facts": [
+        { "statement": "偏股混合型基金指数近10年年化收益7.8%", "subject": "偏股基金指数", "predicate": "年化收益", "value": 7.8, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "偏股混合型基金指数同期年化波动率18.5%", "subject": "偏股基金指数", "predicate": "波动率", "value": 18.5, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "按无风险利率1.5%计算其夏普比率约0.34", "subject": "夏普比率", "predicate": "数值", "value": 0.34, "unit": "", "as_of": "2026-09-17" }
+      ],
+      "source_text": "偏股混合型基金指数近10年年化收益7.8%。偏股混合型基金指数同期年化波动率18.5%。按无风险利率1.5%计算其夏普比率约0.34。"
+    },
+    {
+      "id": "G023",
+      "category": "投教科普",
+      "title": "定投真的万能吗？回测数据说话",
+      "audience": "基金定投人群",
+      "goal": "客观展示定投的适用边界",
+      "angle": "回测对比一次性投入",
+      "core_thesis": "定投胜在纪律与心态，不是收益率必胜法",
+      "cta": "关注定投专题",
+      "channels": ["douyin", "wechat"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["稳赚不赔", "必涨"],
+      "facts": [
+        { "statement": "2015年高点一次性买入沪深300持有至今年化收益2.1%", "subject": "一次性买入", "predicate": "年化收益", "value": 2.1, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "同期按月定投沪深300年化收益3.4%", "subject": "按月定投", "predicate": "年化收益", "value": 3.4, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "定投期间最大亏损幅度比一次性买入低12个百分点", "subject": "定投", "predicate": "回撤优势", "value": 12, "unit": "个百分点", "as_of": "2026-09-17" }
+      ],
+      "source_text": "2015年高点一次性买入沪深300持有至今年化收益2.1%。同期按月定投沪深300年化收益3.4%。定投期间最大亏损幅度比一次性买入低12个百分点。"
+    },
+    {
+      "id": "G024",
+      "category": "投教科普",
+      "title": "看懂基金费率：一年到底被收多少钱",
+      "audience": "基金新手",
+      "goal": "算清基金费率对收益的侵蚀",
+      "angle": "算账视角",
+      "core_thesis": "费率是确定性成本，长期复利下差异巨大",
+      "cta": "关注省钱投教系列",
+      "channels": ["xiaohongshu", "wechat"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["稳赚"],
+      "facts": [
+        { "statement": "主动权益基金平均管理费率1.2%每年", "subject": "主动权益基金", "predicate": "管理费率", "value": 1.2, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "指数基金平均管理费率0.5%每年", "subject": "指数基金", "predicate": "管理费率", "value": 0.5, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "100万元本金按1.2%与0.5%费率30年后差额约62万元", "subject": "费率差额", "predicate": "30年差额", "value": 62, "unit": "万元", "as_of": "2026-09-17" }
+      ],
+      "source_text": "主动权益基金平均管理费率1.2%每年。指数基金平均管理费率0.5%每年。100万元本金按1.2%与0.5%费率30年后差额约62万元。"
+    },
+    {
+      "id": "G025",
+      "category": "基金产品",
+      "title": "红利低波策略：震荡市里的压舱石",
+      "audience": "稳健型投资者",
+      "goal": "介绍红利低波策略特征",
+      "angle": "策略机制拆解",
+      "core_thesis": "高股息+低波动双因子在震荡市回撤更浅",
+      "cta": "关注策略专题",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["稳赚", "保本", "必涨"],
+      "facts": [
+        { "statement": "红利低波指数近5年年化收益6.4%", "subject": "红利低波指数", "predicate": "年化收益", "value": 6.4, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "红利低波指数同期最大回撤18.2%", "subject": "红利低波指数", "predicate": "最大回撤", "value": 18.2, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "该指数当前股息率5.1%", "subject": "红利低波指数", "predicate": "股息率", "value": 5.1, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "红利低波指数近5年年化收益6.4%。红利低波指数同期最大回撤18.2%。该指数当前股息率5.1%。"
+    },
+    {
+      "id": "G026",
+      "category": "基金产品",
+      "title": "QDII额度告急：海外配置还有哪些路",
+      "audience": "有海外配置需求的投资者",
+      "goal": "解释QDII额度约束与替代方案",
+      "angle": "额度数据+替代工具",
+      "core_thesis": "QDII额度紧张导致溢价，需警惕高溢价买入风险",
+      "cta": "关注海外配置专栏",
+      "channels": ["wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["稳赚"],
+      "facts": [
+        { "statement": "全市场QDII额度审批总额度1677.9亿美元", "subject": "QDII额度", "predicate": "总额度", "value": 1677.9, "unit": "美元", "as_of": "2026-09-17" },
+        { "statement": "部分跨境ETF溢价率达8.5%", "subject": "跨境ETF", "predicate": "溢价率", "value": 8.5, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "9月以来3只QDII基金发布溢价风险提示", "subject": "QDII基金", "predicate": "提示次数", "value": 3, "unit": "只", "as_of": "2026-09-17" }
+      ],
+      "source_text": "全市场QDII额度审批总额度1677.9亿美元。部分跨境ETF溢价率达8.5%。9月以来3只QDII基金发布溢价风险提示。"
+    },
+    {
+      "id": "G027",
+      "category": "基金产品",
+      "title": "指增基金超额收益：近一年谁在裸泳",
+      "audience": "指数投资者",
+      "goal": "客观呈现指增超额收益分布",
+      "angle": "超额收益中位数视角",
+      "core_thesis": "指增超额整体收窄，且分化极大，选品难度上升",
+      "cta": "关注指增季度盘点",
+      "channels": ["douyin", "xiaohongshu"],
+      "must_include": ["不构成投资建议"],
+      "forbidden": ["稳赚", "必涨"],
+      "facts": [
+        { "statement": "沪深300指增产品近一年平均超额收益1.8%", "subject": "300指增", "predicate": "平均超额", "value": 1.8, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "近一年仅56%的300指增跑赢基准", "subject": "300指增", "predicate": "跑赢比例", "value": 56, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "中证500指增近一年平均超额收益3.6%", "subject": "500指增", "predicate": "平均超额", "value": 3.6, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "沪深300指增产品近一年平均超额收益1.8%。近一年仅56%的300指增跑赢基准。中证500指增近一年平均超额收益3.6%。"
+    },
+    {
+      "id": "G028",
+      "category": "基金产品",
+      "title": "债基赎回潮会来吗：数据推演",
+      "audience": "债基持有人",
+      "goal": "评估债基赎回压力",
+      "angle": "申赎数据推演",
+      "core_thesis": "短债拥挤度上升，但利率下行环境未逆转",
+      "cta": "关注债市周观察",
+      "channels": ["douyin", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["保本", "稳赚"],
+      "facts": [
+        { "statement": "8月短债基金净申购320亿份", "subject": "短债基金", "predicate": "净申购", "value": 320, "unit": "亿份", "as_of": "2026-09-17" },
+        { "statement": "短债基金平均久期0.9年", "subject": "短债基金", "predicate": "久期", "value": 0.9, "unit": "年", "as_of": "2026-09-17" },
+        { "statement": "9月以来10年期国债收益率下行8个bp", "subject": "10年期国债", "predicate": "收益率变动", "value": 8, "unit": "个点", "as_of": "2026-09-17" }
+      ],
+      "source_text": "8月短债基金净申购320亿份。短债基金平均久期0.9年。9月以来10年期国债收益率下行8个bp。"
+    },
+    {
+      "id": "G029",
+      "category": "热点事件",
+      "title": "重大设备更新政策落地：影响哪些行业",
+      "audience": "普通投资者",
+      "goal": "解读设备更新政策受益链",
+      "angle": "政策文本拆解",
+      "core_thesis": "政策加码设备更新，工业母机与医疗设备弹性大",
+      "cta": "关注政策解读专栏",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["风险提示"],
+      "forbidden": ["必涨", "翻倍"],
+      "facts": [
+        { "statement": "本次设备更新专项再贷款额度2000亿元", "subject": "专项再贷款", "predicate": "额度", "value": 2000, "unit": "亿元", "as_of": "2026-09-17" },
+        { "statement": "工业母机更新需求对应市场规模约1200亿元", "subject": "工业母机", "predicate": "市场规模", "value": 1200, "unit": "亿元", "as_of": "2026-09-17" },
+        { "statement": "医疗设备更新招标9月环比增长45%", "subject": "医疗设备招标", "predicate": "环比", "value": 45, "unit": "%", "as_of": "2026-09-17" }
+      ],
+      "source_text": "本次设备更新专项再贷款额度2000亿元。工业母机更新需求对应市场规模约1200亿元。医疗设备更新招标9月环比增长45%。"
+    },
+    {
+      "id": "G030",
+      "category": "热点事件",
+      "title": "黄金再创新高：现在还能配置吗",
+      "audience": "关注黄金的投资者",
+      "goal": "客观分析黄金上涨驱动与风险",
+      "angle": "驱动因子分解",
+      "core_thesis": "央行购金与降息预期驱动金价，但短期涨幅积累回调压力",
+      "cta": "关注大类资产月报",
+      "channels": ["douyin", "xiaohongshu", "wechat"],
+      "must_include": ["风险提示", "不构成投资建议"],
+      "forbidden": ["必涨", "稳赚"],
+      "facts": [
+        { "statement": "伦敦金现收报2612美元每盎司，年内上涨27%", "subject": "伦敦金", "predicate": "年内涨幅", "value": 27, "unit": "%", "as_of": "2026-09-17" },
+        { "statement": "全球央行连续9个月净购金超50吨", "subject": "全球央行", "predicate": "月均购金", "value": 50, "unit": "吨", "as_of": "2026-09-17" },
+        { "statement": "国内金饰零售价升至1235元每克", "subject": "金饰价格", "predicate": "零售价", "value": 1235, "unit": "元", "as_of": "2026-09-17" }
+      ],
+      "source_text": "伦敦金现收报2612美元每盎司，年内上涨27%。全球央行连续9个月净购金超50吨。国内金饰零售价升至1235元每克。"
+    }
+  ]
+}
