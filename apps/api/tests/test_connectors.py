@@ -63,7 +63,7 @@ def _setup_connector_and_endpoint(client, monkeypatch, api_json=API_JSON, captur
     assert resp.status_code == 201, resp.text
     endpoint_id = resp.json()["id"]
 
-    def fake_fetch(url, headers=None):
+    def fake_fetch(url, headers=None, **kwargs):
         if captured is not None:
             captured["url"] = url
             captured["headers"] = headers or {}
@@ -147,7 +147,7 @@ def test_pull_maps_json_to_facts(client, monkeypatch, seed_admin):
 
 def test_pull_missing_env_key_reports_clearly(client, monkeypatch, seed_admin):
     monkeypatch.delenv("QUANT_API_KEY", raising=False)
-    monkeypatch.setattr(connector_service, "safe_fetch", lambda url, headers=None: (b"{}", "application/json"))
+    monkeypatch.setattr(connector_service, "safe_fetch", lambda url, headers=None, **kw: (b"{}", "application/json"))
     resp = client.post("/api/v1/connectors", json=CONNECTOR_BODY, headers=ADMIN)
     detail = client.get(f"/api/v1/connectors/{resp.json()['id']}", headers=ADMIN).json()
     endpoint_id = detail["endpoints"][0]["id"] if detail["endpoints"] else None
@@ -190,3 +190,111 @@ def test_map_response_missing_statement_template():
         raise AssertionError("应抛 ConnectorError")
     except ConnectorError as exc:
         assert "statement" in str(exc)
+
+
+def _setup_post_pagination_endpoint(client, monkeypatch, pages):
+    """两页数据 + POST + page 分页的 endpoint；safe_fetch 记录每次请求。"""
+    captured = {"calls": []}
+
+    def fake_fetch(url, headers=None, method="GET", json_body=None):
+        captured["calls"].append({"url": url, "method": method, "body": dict(json_body)})
+        rows = pages.get(int(json_body["page"]), [])
+        return json.dumps({"data": {"rows": rows}}, ensure_ascii=False).encode(), "application/json"
+
+    monkeypatch.setenv("QUANT_API_KEY", "test-secret")
+    resp = client.post("/api/v1/connectors", json=CONNECTOR_BODY, headers=ADMIN)
+    connector_id = resp.json()["id"]
+    resp = client.post(
+        f"/api/v1/connectors/{connector_id}/endpoints",
+        json={
+            "name": "分页复盘",
+            "path": "/api/v1/market/daily",
+            "method": "POST",
+            "body_template": {"date": "{today}", "page": 0},
+            "title_template": "{today} 分页拉取",
+            "fact_mapping": {
+                "items_path": "data.rows",
+                "statement": "{index_name} 涨跌 {pct_change}%",
+                "fields": {"value": "{pct_change}", "subject": "{index_name}", "unit": "%"},
+            },
+            "pagination": {"type": "page", "page_param": "page", "page_start": 1, "max_pages": 5},
+        },
+        headers=ADMIN,
+    )
+    assert resp.status_code == 201, resp.text
+    endpoint_id = resp.json()["id"]
+    monkeypatch.setattr(connector_service, "safe_fetch", fake_fetch)
+    return connector_id, endpoint_id, captured
+
+
+def test_pull_post_pagination(client, monkeypatch, seed_admin):
+    pages = {
+        1: [{"index_name": "沪深300", "pct_change": 1.2}],
+        2: [{"index_name": "中证500", "pct_change": -0.8}],
+        3: [],  # 空页停止
+    }
+    _connector_id, endpoint_id, captured = _setup_post_pagination_endpoint(client, monkeypatch, pages)
+
+    resp = client.post(f"/api/v1/endpoints/{endpoint_id}/pull", headers=EDITOR)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["facts"] == 2
+
+    # POST 请求 + 分页参数递增 + {today} 占位符替换
+    methods = [c["method"] for c in captured["calls"]]
+    assert methods == ["POST", "POST", "POST"]
+    bodies = [c["body"] for c in captured["calls"]]
+    assert [b["page"] for b in bodies] == ["1", "2", "3"]
+    assert all(b["date"].startswith("20") for b in bodies)
+
+    source = client.get(f"/api/v1/sources/{resp.json()['source_id']}", headers=EDITOR).json()
+    assert len(source["facts"]) == 2
+
+
+def test_pull_post_requires_body_template(client, seed_admin):
+    resp = client.post("/api/v1/connectors", json=CONNECTOR_BODY, headers=ADMIN)
+    cid = resp.json()["id"]
+    bad = {**ENDPOINT_BODY, "method": "POST"}
+    resp = client.post(f"/api/v1/connectors/{cid}/endpoints", json=bad, headers=ADMIN)
+    assert resp.status_code == 400
+
+
+def test_pull_cursor_pagination(client, monkeypatch, seed_admin):
+    """cursor 分页：从响应 next_cursor 取游标，缺失即停。"""
+    captured = {"calls": []}
+    cursor_state = {"n": 0}
+
+    def fake_fetch(url, headers=None, method="GET", json_body=None):
+        cursor_state["n"] += 1
+        captured["calls"].append(url)
+        if cursor_state["n"] == 1:
+            payload = {"rows": [{"index_name": "上证指数", "pct_change": 0.5}], "next_cursor": "abc123"}
+        else:
+            payload = {"rows": [{"index_name": "深证成指", "pct_change": 0.9}]}
+        return json.dumps(payload, ensure_ascii=False).encode(), "application/json"
+
+    monkeypatch.setenv("QUANT_API_KEY", "test-secret")
+    resp = client.post("/api/v1/connectors", json=CONNECTOR_BODY, headers=ADMIN)
+    cid = resp.json()["id"]
+    resp = client.post(
+        f"/api/v1/connectors/{cid}/endpoints",
+        json={
+            "name": "游标拉取",
+            "path": "/api/v1/market/daily",
+            "title_template": "游标数据",
+            "fact_mapping": {
+                "items_path": "rows",
+                "statement": "{index_name} 涨跌 {pct_change}%",
+                "fields": {"value": "{pct_change}", "unit": "%"},
+            },
+            "pagination": {"type": "cursor", "cursor_param": "cursor", "cursor_path": "next_cursor", "max_pages": 5},
+        },
+        headers=ADMIN,
+    )
+    endpoint_id = resp.json()["id"]
+    monkeypatch.setattr(connector_service, "safe_fetch", fake_fetch)
+
+    resp = client.post(f"/api/v1/endpoints/{endpoint_id}/pull", headers=EDITOR)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["facts"] == 2
+    # 第二次请求带上了第一页返回的游标
+    assert "cursor=abc123" in captured["calls"][1]

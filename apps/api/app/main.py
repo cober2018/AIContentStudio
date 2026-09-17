@@ -12,6 +12,7 @@ from .routers import (
     assets,
     connectors,
     dashboard,
+    external,
     fact_packs,
     facts,
     generate,
@@ -66,6 +67,7 @@ for router in (
     users,
     connectors,
     health,
+    external,
 ):
     app.include_router(router.router)
 

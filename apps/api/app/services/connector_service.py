@@ -160,44 +160,144 @@ def _render_params(params: dict, today: str) -> dict:
     return {k: str(v).replace(PLACEHOLDER_TODAY, today) for k, v in params.items()}
 
 
+def _render_values(data: dict, today: str) -> dict:
+    return {k: str(v).replace(PLACEHOLDER_TODAY, today) if isinstance(v, str) else v for k, v in data.items()}
+
+
+DEFAULT_MAX_PAGES = 20
+
+
+def _fetch_all_pages(endpoint: ConnectorEndpoint, url: str, headers: dict[str, str]) -> tuple[list[dict], str]:
+    """带分页拉取全部条目。返回 (items, 最后一页原始响应文本)。
+
+    page 型：page_param 从 page_start 递增，某页 items_path 为空数组即停；
+    cursor 型：从响应 cursor_path 取游标写入 cursor_param，游标缺失/为空即停。
+    """
+    mapping = endpoint.fact_mapping_json or {}
+    items_path = mapping.get("items_path")
+    pagination = endpoint.pagination_json or {}
+    p_type = pagination.get("type")
+    max_pages = int(pagination.get("max_pages", DEFAULT_MAX_PAGES))
+    method = (endpoint.method or "GET").upper()
+    if method not in {"GET", "POST"}:
+        raise ConnectorError(f"不支持的 method：{endpoint.method}")
+
+    today = datetime.now(UTC).date().isoformat()
+    base_params = _render_params(endpoint.params_json or {}, today)
+    body = _render_values(endpoint.body_template_json or {}, today) if method == "POST" else None
+
+    all_items: list[dict] = []
+    last_raw = "{}"
+    page = int(pagination.get("page_start", 1))
+    cursor: str | None = pagination.get("cursor_start")
+    # POST 的分页参数在 body 里；GET 在 query 里
+    page_target = body if body is not None else None
+
+    def _set_page_param(params: dict, key: str, value: str) -> None:
+        if page_target is not None:
+            page_target[key] = value
+        else:
+            params[key] = value
+
+    for _ in range(max_pages if p_type else 1):
+        params = dict(base_params)
+        if p_type == "page":
+            _set_page_param(params, pagination.get("page_param", "page"), str(page))
+        elif p_type == "cursor" and cursor:
+            _set_page_param(params, pagination.get("cursor_param", "cursor"), cursor)
+
+        page_url = httpx_url_join_urlonly(url, params)
+        content, _ = safe_fetch(page_url, headers, method=method, json_body=body)
+        try:
+            payload = json.loads(content)
+        except json.JSONDecodeError as exc:
+            raise ConnectorError(f"响应不是有效 JSON：{exc}") from exc
+        last_raw = content.decode("utf-8", errors="replace")
+
+        if items_path:
+            items = get_json_path(payload, items_path)
+        elif isinstance(payload, list):
+            items = payload
+        else:
+            items = [payload]
+        if not isinstance(items, list):
+            raise ConnectorError("items_path 指向的不是数组")
+        all_items.extend(items)
+
+        if p_type == "page":
+            page += 1
+            if not items or (pagination.get("stop_path") and not get_json_path(payload, pagination["stop_path"])):
+                break
+            if pagination.get("has_more_path") and not get_json_path(payload, pagination["has_more_path"]):
+                break
+        elif p_type == "cursor":
+            try:
+                cursor = str(get_json_path(payload, pagination.get("cursor_path", "next_cursor")))
+            except ConnectorError:
+                break
+            if not cursor:
+                break
+        else:
+            break
+
+    return all_items, last_raw
+
+
+def httpx_url_join_urlonly(base_url: str, params: dict) -> str:
+    import httpx
+
+    return str(httpx.Request("GET", base_url, params=params).url)
+
+
+
 def pull_endpoint(db: Session, endpoint: ConnectorEndpoint, user: User) -> tuple[SourceDocument, int]:
-    """执行一次拉取：GET 外部 API → 存 SourceDocument → 映射生成候选 Fact。"""
+    """执行一次拉取：请求外部 API（支持 POST/分页）→ 存 SourceDocument → 映射生成候选 Fact。"""
     connector = endpoint.connector
     if not connector.is_active:
         raise ConnectorError("Connector 已停用")
 
     today = datetime.now(UTC).date().isoformat()
-    params = _render_params(endpoint.params_json or {}, today)
-    url = httpx_url_join(connector.base_url, endpoint.path, params)
+    url = connector.base_url.rstrip("/") + "/" + endpoint.path.lstrip("/")
 
     headers = _auth_headers(connector)
-    content, mime = safe_fetch(url, headers)
+    all_items, last_raw = _fetch_all_pages(endpoint, url, headers)
 
-    try:
-        payload = json.loads(content)
-    except json.JSONDecodeError as exc:
-        raise ConnectorError(f"响应不是有效 JSON：{exc}") from exc
+    # as_of 优先从最后一页响应取；分页 items 模式下响应结构被收集，退化为 endpoint 级配置
+    endpoint_as_of = None
+    if endpoint.as_of_path:
+        try:
+            endpoint_as_of = str(get_json_path(json.loads(last_raw), endpoint.as_of_path))
+        except (ConnectorError, json.JSONDecodeError):
+            endpoint_as_of = None
 
-    endpoint_as_of = str(get_json_path(payload, endpoint.as_of_path)) if endpoint.as_of_path else None
     title = endpoint.title_template.replace(PLACEHOLDER_TODAY, today)
+    mapping = endpoint.fact_mapping_json or {}
 
-    candidates = map_response_to_facts(payload, endpoint.fact_mapping_json or {}, endpoint_as_of)
+    candidates = []
+    for item in all_items:
+        candidates.extend(map_response_to_facts({"item": [item]}, {**mapping, "items_path": "item"}, endpoint_as_of))
 
+    mime = "application/json"
     text_lines = [c.statement for c in candidates]
     doc = SourceDocument(
         title=title,
         source_type="connector",
         source_url=url,
         original_uri=f"connector:{connector.id}/endpoint:{endpoint.id}",
-        mime_type=mime or "application/json",
+        mime_type=mime,
         as_of=endpoint_as_of or today,
         trust_level=endpoint.trust_level,
-        sha256=hashlib.sha256(content).hexdigest(),
-        raw_text=json.dumps(payload, ensure_ascii=False, indent=2),
+        sha256=hashlib.sha256(last_raw.encode()).hexdigest(),
+        raw_text=last_raw,
         parse_status=ParseStatus.done.value,
         parsed_json={
             "blocks": [{"type": "line", "text": line, "locator": {"index": i}} for i, line in enumerate(text_lines)],
-            "metadata": {"connector": connector.name, "endpoint": endpoint.name, "item_count": len(candidates)},
+            "metadata": {
+                "connector": connector.name,
+                "endpoint": endpoint.name,
+                "item_count": len(candidates),
+                "pages_items": len(all_items),
+            },
         },
         metadata_json={"connector_id": connector.id, "endpoint_id": endpoint.id, "final_url": url},
     )
@@ -237,9 +337,3 @@ def record_pull_failure(db: Session, endpoint: ConnectorEndpoint, error: str) ->
     endpoint.last_pull_status = "failed"
     endpoint.last_pull_error = error[:500]
     db.commit()
-
-
-def httpx_url_join(base_url: str, path: str, params: dict) -> str:
-    import httpx
-
-    return str(httpx.Request("GET", base_url.rstrip("/") + "/" + path.lstrip("/"), params=params).url)

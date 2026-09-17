@@ -53,7 +53,12 @@ class LLMProvider(Protocol):
 _TRAILING_COMMA = re.compile(r",\s*([}\]])")
 
 
+_THINK_BLOCK = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
 def parse_llm_json(raw: str) -> dict[str, Any]:
+    # 思考模型（MiniMax-M3 / DeepSeek-R1 等）把 reasoning 以 <think> 内联在 content 里
+    raw = _THINK_BLOCK.sub("", raw)
     for attempt_text in (raw, _repair_attempt(raw)):
         candidate = attempt_text.strip()
         if candidate.startswith("```"):

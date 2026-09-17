@@ -60,8 +60,12 @@ curl -X POST http://localhost:8000/api/v1/endpoints/1/pull -H "X-Studio-User: ed
 
 - 监控：`GET /api/v1/health`（深探针：DB/provider/队列），`GET /metrics`（Prometheus 文本格式），
   每个响应带 `x-trace-id` 并输出 JSON 结构化访问日志
+- 多副本指标聚合：Prometheus 按 replica 逐个抓 `/metrics`（service discovery 自动发现实例），
+  指标自带 `instance` label 天然区分副本；**不需要** Pushgateway——它适用于批任务，长驻服务抓取即可
 - 异步队列：`.env` 设 `TASK_QUEUE_ENABLED=true` + Redis（`CELERY_BROKER_URL`），生成走 `llm` 队列、
   Connector 拉取走 `ingestion` 队列；`make worker` 启动 Celery worker（compose 部署含 worker 服务）
+- 数据库迁移：开发环境 `make seed` 幂等建库；生产/PostgreSQL 执行 `make migrate`
+  （`alembic upgrade head`，已在 PG 16 实测），后续 schema 变更用 `alembic revision --autogenerate`
 - 备份恢复：`make backup`（SQLite 开发库，保留 7 份）；生产 PostgreSQL 流程见
   `docs/runbooks/backup-restore.md`
 
@@ -115,7 +119,7 @@ apps/api/scripts/           # evaluate_content.py（Golden 评测 CLI）
 apps/api/evals/             # golden_topics.json（30 Topic）+ reports/
 apps/web/src/pages/         # Dashboard / Sources / Connectors / FactPacks / Topics
 │                           # / Workspace(三栏) / Review / Assets / Templates / Settings
-apps/api/tests/             # 51 个测试：端到端主干 + 关键不变量 + 服务层单测
+apps/api/tests/             # 63 个测试：端到端主干 + 关键不变量 + 服务层单测
 docs/runbooks/              # backup-restore.md
 ```
 
@@ -133,12 +137,12 @@ docs/runbooks/              # backup-restore.md
 | EPIC-07 LLM Provider | ✅ | 协议 + registry + llm_run 记录 + JSON 一次修复 |
 | EPIC-08 多渠道生成 | ✅ | 三渠道独立 job、结构化输出、fact_id 服务端校验、失败不互相回滚 |
 | EPIC-09 Fact Checker | ✅ | 确定性层（数字/日期/风险词/朴素实体）+ LLM 层接口 + approve gate(409) |
-| EPIC-10 编辑器与版本 | ✅ | revision 递增不覆盖；选中文本 AI 改写（不送全文） |
+| EPIC-10 编辑器与版本 | ✅ | TipTap 富文本（Markdown 存储契约不变）；revision 递增不覆盖；选区 AI 改写（按位置替换）；上一版 Diff 视图 |
 | EPIC-11 Review | ✅ | 队列 / 退回 / 批准（blocker=0 + frozen + revision 未变三重校验） |
 | EPIC-12 Asset/Export | ✅ | MD/TXT/JSON(含 provenance)/SRT(标记 estimated) + 分渠道格式限制 |
-| EPIC-13 前端页面 | ✅ | P01-P11 全部页面 + 数据接入页（Markdown 编辑器 + 选中改写） |
+| EPIC-13 前端页面 | ✅ | P01-P11 全部页面 + 数据接入页（TipTap 编辑器 + 工具栏 + Diff） |
 | EPIC-14 原型验收 | ✅ | Mock 全链路（§22 用例含注入口径）已在测试与冒烟中走通 |
-| EPIC-15 测试 | ✅ | 51 个测试；30 Topic Golden 集 + evaluate_content.py 评测 CLI |
+| EPIC-15 测试 | ✅ | 63 个测试；30 Topic Golden 集 + evaluate_content.py 评测 CLI |
 | EPIC-16 安全 | ✅ | SSRF 防护 / 上传双校验 / Prompt 注入包装（source 只作数据） |
 | EPIC-17 运维 | ✅ | Celery 四队列 + worker 容器；/health + /metrics + trace_id 日志；备份 runbook |
 | EPIC-18 Connector | ✅ | generic_rest：API 拉取 + 鉴权（env 引用）+ JSON→Fact 映射 + 前端页 |
@@ -148,19 +152,14 @@ docs/runbooks/              # backup-restore.md
 1. **同步/异步双模式生成**：默认同步（Mock 毫秒级、测试零依赖）；`TASK_QUEUE_ENABLED=true` 时同一 API 分发到
    Celery `llm/ingestion` 队列，前端以 queued 状态轮询，接口契约不变。
 2. **原文存 DB**：V1 长文本存 `source_document.raw_text`；对象存储是文档化升级路径。
-3. **建表用 create_all**：Alembic 迁移在接 PostgreSQL 生产化时补（当前 seed 幂等）。
+3. **建表走 Alembic**：开发环境 seed 幂等可重跑；生产/PostgreSQL 用 `make migrate`（`alembic upgrade head`）建表，已在 PG 16 实测。
 4. **LLM Reviewer mock 下透传确定性结果**：不伪造审查结论；接真实模型后自动启用。
-5. **编辑器为 Markdown 文本区**：满足版本/改写/字数需求；TipTap 富文本为升级项。
+5. **编辑器用 TipTap、存储仍是 Markdown**：`tiptap-markdown` 在边界做双向转换，导出 md/txt/srt 契约不变；选区改写按文档位置替换（不再字符串查找首个匹配）。
 6. **SRT 时间轴为估算**：明确标记 estimated，不假装精确字幕。
 7. **Connector 鉴权凭据只存环境变量名**：DB 记 `api_key_env`，值运行时从进程环境读取，不落库不入日志。
 8. **朴素实体检查**：机构后缀启发式，已剥动词前缀/时间指示词降噪；误报为 warning 不阻塞，NER 是升级项。
 
 ## TODO（按优先级）
 
-1. Alembic 迁移 + PostgreSQL 生产化验证（compose 已含 worker，但 API 容器化部署待接）
-2. 定时拉取 Connector 的调度入口（cron / Celery beat）
-3. LLM Fact Reviewer 接真实模型；实体检查升级为 NER
-4. 对象存储（MinIO/S3）+ signed URL
-5. 多副本部署下的指标聚合（prometheus_client / Pushgateway）
-6. TipTap 富文本编辑器 + Diff 视图
-7. Connector 支持 POST 请求与分页拉取
+1. dsh 沙箱限制：skill 无法写 `~/.wewrite/runs/`，产出暂落 `.wewrite-scratch/`（待沙箱放行或路径迁移）
+2. DeepSeek API key 尚未配置（`~/.dsh/env.local` 留空，MiniMax 已可用）

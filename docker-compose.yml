@@ -5,6 +5,8 @@ services:
       POSTGRES_USER: studio
       POSTGRES_PASSWORD: studio
       POSTGRES_DB: content_studio
+      MINIO_ROOT_USER: studio
+      MINIO_ROOT_PASSWORD: studio-secret
     ports:
       - "5432:5432"
     volumes:
@@ -53,6 +55,16 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
     depends_on:
       - postgres
+      - redis
+
+  # Celery beat：每分钟触发 Connector 定时拉取扫描（endpoint 配 interval_minutes 即生效）
+  beat:
+    build: ./apps/api
+    command: python -m celery -A app.tasks.celery_app beat --loglevel=INFO
+    environment:
+      DATABASE_URL: postgresql+psycopg://studio:studio@postgres:5432/content_studio
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
       - redis
 
 volumes:

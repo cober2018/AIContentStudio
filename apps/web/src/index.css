@@ -7,3 +7,41 @@
     @apply bg-slate-50 text-slate-900 antialiased;
   }
 }
+
+/* TipTap 编辑区：Tailwind preflight 重置了标题/列表样式，这里按公众号排版习惯补回 */
+.ProseMirror {
+  outline: none;
+  min-height: 100%;
+  font-size: 0.875rem;
+  line-height: 1.8;
+}
+.ProseMirror h2 {
+  @apply mt-5 mb-2 text-xl font-semibold;
+}
+.ProseMirror h3 {
+  @apply mt-4 mb-2 text-base font-semibold;
+}
+.ProseMirror p {
+  @apply my-2;
+}
+.ProseMirror ul {
+  @apply my-2 list-disc pl-6;
+}
+.ProseMirror ol {
+  @apply my-2 list-decimal pl-6;
+}
+.ProseMirror blockquote {
+  @apply my-3 border-l-4 border-slate-300 pl-3 text-slate-600;
+}
+.ProseMirror hr {
+  @apply my-4 border-slate-200;
+}
+.ProseMirror code {
+  @apply rounded bg-slate-100 px-1 text-[0.85em];
+}
+.ProseMirror pre {
+  @apply my-3 rounded-md bg-slate-900 p-3 text-slate-100;
+}
+.ProseMirror pre code {
+  @apply bg-transparent p-0 text-inherit;
+}

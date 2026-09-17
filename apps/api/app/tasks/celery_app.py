@@ -20,6 +20,14 @@ celery_app.conf.update(
     task_routes={
         "app.tasks.worker_tasks.run_generation_job": {"queue": "llm"},
         "app.tasks.worker_tasks.pull_connector_endpoint": {"queue": "ingestion"},
+        "app.tasks.worker_tasks.scan_connector_schedules": {"queue": "default"},
+    },
+    # beat 周期触发扫描任务；任务内部按每个 endpoint 的 interval_minutes 决定是否拉取
+    beat_schedule={
+        "scan-connector-schedules": {
+            "task": "app.tasks.worker_tasks.scan_connector_schedules",
+            "schedule": 60.0,
+        },
     },
     task_serializer="json",
     accept_content=["json"],

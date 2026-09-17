@@ -55,6 +55,32 @@ def pull_connector_endpoint(endpoint_id: int, actor_email: str) -> dict:
         return {"endpoint_id": endpoint_id, "status": endpoint.last_pull_status if endpoint else "unknown"}
 
 
+@celery_app.task(name="app.tasks.worker_tasks.scan_connector_schedules")
+def scan_connector_schedules() -> dict:
+    """beat 每分钟触发：找到达到 interval_minutes 间隔的 endpoint，分发给 ingestion 队列。"""
+    from datetime import UTC, datetime
+
+    def _aware(dt: datetime) -> datetime:
+        # SQLite 可能读回 naive datetime，统一按 UTC 处理
+        return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+
+    with SessionLocal() as db:
+        now = datetime.now(UTC)
+        due_ids: list[int] = []
+        for endpoint in db.query(ConnectorEndpoint).all():
+            if not endpoint.interval_minutes or endpoint.interval_minutes <= 0:
+                continue
+            if not endpoint.connector or not endpoint.connector.is_active:
+                continue
+            if endpoint.last_pull_at is None or (
+                now - _aware(endpoint.last_pull_at)
+            ).total_seconds() >= endpoint.interval_minutes * 60:
+                due_ids.append(endpoint.id)
+        for endpoint_id in due_ids:
+            pull_connector_endpoint.delay(endpoint_id, "scheduler")
+        return {"scanned_at": now.isoformat(), "dispatched": due_ids}
+
+
 # ---------- 供 API 路由调用的分发封装（同步/异步双模式） ----------
 
 

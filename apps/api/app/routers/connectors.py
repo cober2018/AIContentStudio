@@ -31,11 +31,15 @@ class ConnectorIn(BaseModel):
 class EndpointIn(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     path: str = Field(min_length=1, max_length=500)
+    method: str = "GET"
+    body_template: dict | None = None
     params: dict[str, str] | None = None
     title_template: str = Field(min_length=1, max_length=300)
     as_of_path: str | None = None
     trust_level: float = 0.9
     fact_mapping: dict
+    pagination: dict | None = None
+    interval_minutes: int | None = Field(default=None, ge=0, le=10080)
 
 
 def _validate_connector(payload: ConnectorIn) -> None:
@@ -71,11 +75,15 @@ def _serialize_endpoint(e: ConnectorEndpoint) -> dict:
         "connector_id": e.connector_id,
         "name": e.name,
         "path": e.path,
+        "method": e.method,
+        "body_template": e.body_template_json or {},
         "params": e.params_json or {},
         "title_template": e.title_template,
         "as_of_path": e.as_of_path,
         "trust_level": e.trust_level,
         "fact_mapping": e.fact_mapping_json or {},
+        "pagination": e.pagination_json or {},
+        "interval_minutes": e.interval_minutes,
         "last_pull_at": e.last_pull_at.isoformat() if e.last_pull_at else None,
         "last_pull_status": e.last_pull_status,
         "last_pull_error": e.last_pull_error,
@@ -161,15 +169,26 @@ def create_endpoint(
         raise HTTPException(404, "Connector 不存在")
     if "statement" not in payload.fact_mapping or "value" not in payload.fact_mapping.get("fields", {}):
         raise HTTPException(400, "fact_mapping 需要包含 statement 模板和 fields.value 字段引用")
+    if payload.method.upper() not in {"GET", "POST"}:
+        raise HTTPException(400, "method 只允许 GET/POST")
+    if payload.method.upper() == "POST" and not payload.body_template:
+        raise HTTPException(400, "POST 请求需要提供 body_template")
+    p_type = (payload.pagination or {}).get("type")
+    if p_type not in {None, "page", "cursor"}:
+        raise HTTPException(400, "pagination.type 只允许 page/cursor")
     endpoint = ConnectorEndpoint(
         connector_id=connector.id,
         name=payload.name,
         path=payload.path,
+        method=payload.method.upper(),
+        body_template_json=payload.body_template,
         params_json=payload.params,
         title_template=payload.title_template,
         as_of_path=payload.as_of_path,
         trust_level=payload.trust_level,
         fact_mapping_json=payload.fact_mapping,
+        pagination_json=payload.pagination,
+        interval_minutes=payload.interval_minutes,
     )
     db.add(endpoint)
     db.commit()
