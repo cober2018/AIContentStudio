@@ -27,3 +27,6 @@ apps/api/evals/reports/
 # dsh skill 沙箱草稿输出
 .wewrite-scratch/
 apps/api/media/
+# 运行时上传的配图素材与前端构建产物，不入库
+apps/api/app/media/
+apps/web/tsconfig.tsbuildinfo
