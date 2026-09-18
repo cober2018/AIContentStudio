@@ -100,8 +100,9 @@ skill 无法写 `~/.wewrite/runs/`，产出暂落仓库根 `.wewrite-scratch/`�
 
 ### 5.3 API 容器化缺口 —— ✅ 已于 2026-09-18 生产部署时补齐
 compose 现在含 postgres / redis / minio / **api** / **web(nginx)** / worker / beat 七个服务，
-`docker compose up -d --build` 即全栈。宿主机端口绑定 127.0.0.1 且避开本机占用：
-PG 15432 / Redis 16379 / MinIO 19000+19001 / API 8000 / Web 8088。
+`docker compose up -d --build` 即全栈。入口服务（api 8000 / web 8088）绑定 0.0.0.0 对局域网开放；
+存储类端口绑定 127.0.0.1 且避开本机占用：PG 15432 / Redis 16379 / MinIO 19000+19001。
+局域网开放 = 任何人可伪造 X-Studio-User 冒充 admin（开发模式无密码鉴权），对外部署需收紧。
 顺带修复：① 迁移链 bug——初始迁移按当前模型 create_all，后续增量迁移建同批表，
 全新库 `alembic upgrade head` 必撞 DuplicateTable（三个增量迁移已加 has_table 守卫，
 新增 tests/test_migrations.py 回归）；② pyproject 显式声明 packages + prompts/*.txt

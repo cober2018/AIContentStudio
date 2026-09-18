@@ -42,8 +42,10 @@ api / web / worker / beat。标准流程：先 `up -d postgres redis minio minio
 宿主机 `DATABASE_URL=postgresql+psycopg://studio:studio@localhost:15432/content_studio make migrate`
 （再跑 `python -m app.seed` 做幂等种子），最后 `up -d --build` 其余服务。
 访问入口：Web `http://localhost:8088`（nginx 托管 + /api 反代），API `http://localhost:8000`。
-宿主机端口均绑定 127.0.0.1 且避开了常用端口（PG 15432 / Redis 16379 / MinIO 19000、19001）；
-容器内 api/worker/beat 通信走 compose 内网，互不依赖宿主机端口。
+入口服务（api 8000 / web 8088）绑定 0.0.0.0 对局域网开放；存储类端口绑定 127.0.0.1
+（PG 15432 / Redis 16379 / MinIO 19000、19001），不对局域网暴露；容器内服务互通走 compose 内网。
+注意：开发模式身份来自可伪造的 `X-Studio-User` header，局域网开放即局域网内任何人可冒充
+admin，正式对外部署须改回 127.0.0.1 并接入真实鉴权。
 
 ### 演示账号（开发模式 Header 身份）
 

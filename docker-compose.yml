@@ -62,8 +62,9 @@ services:
   # API 服务：uvicorn，容器化后替代裸进程（交接文档 §5.3 缺口）
   api:
     build: ./apps/api
+    # 开发环境对局域网开放（0.0.0.0）；对外部署请改回 127.0.0.1 并加访问控制
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8000:8000"
     environment: *studio-env
     depends_on:
       postgres:
@@ -82,8 +83,9 @@ services:
   # Web 前端：nginx 托管构建产物 + /api 同源反代到 api（无 CORS）
   web:
     build: ./apps/web
+    # 开发环境对局域网开放（0.0.0.0）；对外部署请改回 127.0.0.1 并加访问控制
     ports:
-      - "127.0.0.1:8088:80"
+      - "8088:80"
     depends_on:
       api:
         condition: service_healthy
