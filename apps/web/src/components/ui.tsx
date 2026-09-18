@@ -20,7 +20,7 @@ export function Button({
   className?: string;
 }) {
   const variants = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300",
+    primary: "bg-gray-900 text-white hover:bg-black disabled:bg-gray-300",
     secondary: "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 disabled:text-slate-400",
     danger: "bg-rose-600 text-white hover:bg-rose-700",
     ghost: "text-slate-600 hover:bg-slate-100",
@@ -154,12 +154,12 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 }
 
 export const inputClass =
-  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none";
+  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none";
 
 export function Spinner({ label = "加载中…" }: { label?: string }) {
   return (
     <div className="flex items-center justify-center py-16 text-sm text-slate-400">
-      <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-500" />
+      <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-gray-900" />
       {label}
     </div>
   );

@@ -18,7 +18,9 @@ config.set_main_option("sqlalchemy.url", get_settings().database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-if config.config_file_name is not None:
+# 程序内调用（如测试）可置 config.attributes["configure_logger"]=False，
+# 避免 fileConfig 禁用既有 logger、污染应用日志配置
+if config.config_file_name is not None and config.attributes.get("configure_logger", True):
     fileConfig(config.config_file_name)
 
 # add your model's MetaData object here

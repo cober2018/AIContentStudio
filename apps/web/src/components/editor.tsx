@@ -63,7 +63,7 @@ function ToolButton({ label, isActive, onClick }: {
   return (
     <button
       type="button"
-      className={`${TOOL_BUTTON} ${isActive ? "bg-indigo-100 font-medium text-indigo-700" : ""}`}
+      className={`${TOOL_BUTTON} ${isActive ? "bg-gray-200 font-medium text-gray-900" : ""}`}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
     >

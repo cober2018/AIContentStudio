@@ -106,7 +106,7 @@ export default function Review() {
                 key={item.draft_id}
                 onClick={() => setActiveId(item.draft_id)}
                 className={`block w-full border-b border-slate-50 px-5 py-3 text-left hover:bg-slate-50 ${
-                  activeId === item.draft_id ? "bg-indigo-50/60" : ""
+                  activeId === item.draft_id ? "bg-gray-100/60" : ""
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">

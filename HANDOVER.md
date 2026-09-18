@@ -98,9 +98,16 @@ skill 无法写 `~/.wewrite/runs/`，产出暂落仓库根 `.wewrite-scratch/`�
 ### 5.2 DeepSeek API key 未配置
 `~/.dsh/env.local` 中 DeepSeek key 留空；**MiniMax 已可用**（key 在同一文件，600 权限）。
 
-### 5.3 API 容器化缺口
-PG 生产化已实测，但 docker-compose 里 postgres / redis / minio / worker / beat 都有，
-**唯独没有 api 服务本身**——目前 api 只能裸进程跑。补一个 api service 是自然下一步。
+### 5.3 API 容器化缺口 —— ✅ 已于 2026-09-18 生产部署时补齐
+compose 现在含 postgres / redis / minio / **api** / **web(nginx)** / worker / beat 七个服务，
+`docker compose up -d --build` 即全栈。宿主机端口绑定 127.0.0.1 且避开本机占用：
+PG 15432 / Redis 16379 / MinIO 19000+19001 / API 8000 / Web 8088。
+顺带修复：① 迁移链 bug——初始迁移按当前模型 create_all，后续增量迁移建同批表，
+全新库 `alembic upgrade head` 必撞 DuplicateTable（三个增量迁移已加 has_table 守卫，
+新增 tests/test_migrations.py 回归）；② pyproject 显式声明 packages + prompts/*.txt
+package-data（否则镜像里 flat-layout 歧义、prompt 模板丢文件）；③ api 镜像补拷 alembic。
+当前部署配置：LLM_PROVIDER=mock、TASK_QUEUE_ENABLED=true、MINIO_ENABLED=false
+（单机预签名 URL 指向容器内域名，暂关闭，bucket 已建好；接真实 endpoint 后置 true）。
 
 ### 5.4 一个已修但未自测的前端修复（当前未提交改动）
 **背景**：用户报告「重新生成」看起来没变化——后端每次都成功、前端也每次拉到新版本，

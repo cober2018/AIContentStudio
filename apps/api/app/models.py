@@ -377,6 +377,28 @@ class ContentAsset(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class AssetMedia(Base):
+    """资产配图素材：底层统一素材池（本表全量），前端按 asset 归属随文展示。
+
+    kind: cover（封面）/ inline（文章内配图位）；
+    source: generated（占位位，prompt=配图说明，来自 structured_json 的 image_prompts/
+    image_suggestions）/ upload（用户上传的实体图片，落本地 media 目录）。
+    PRD §6.7：V1 素材=说明/Prompt，不依赖具体生图平台。
+    """
+
+    __tablename__ = "asset_media"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    asset_id: Mapped[int] = mapped_column(ForeignKey("content_asset.id"))
+    kind: Mapped[str] = mapped_column(String(10), default="inline")  # cover / inline
+    source: Mapped[str] = mapped_column(String(10), default="generated")  # generated / upload
+    prompt: Mapped[str | None] = mapped_column(Text)  # 配图说明（生图 Prompt / 建议）
+    file_path: Mapped[str | None] = mapped_column(String(300))  # 上传文件相对 media 根的路径
+    mime_type: Mapped[str | None] = mapped_column(String(50))
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ExternalContent(Base):
     """外部 agent（dsh/Antigravity skills）产出内容的入库载体。
 
@@ -492,3 +514,66 @@ class AuditLog(Base):
     entity_id: Mapped[str | None] = mapped_column(String(50))
     detail_json: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SystemSetting(Base):
+    """运行时配置覆盖（前端设置页写入），值优先于环境变量。
+
+    Secret（如 LLM API Key）允许存本表以支持前端配置，但所有 API 读取一律脱敏回显；
+    「恢复默认」删除覆盖行后回落环境变量。生产建议仍走环境变量/secret manager。
+    """
+
+    __tablename__ = "system_settings"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)  # 如 llm
+    value: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    updated_by: Mapped[str | None] = mapped_column(String(255))
+
+
+class Workflow(Base):
+    """工作流画布定义（仿扣子）：节点=已有能力的编排壳，结果沉淀回既有实体。"""
+
+    __tablename__ = "workflow"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str | None] = mapped_column(Text)
+    template_key: Mapped[str | None] = mapped_column(String(50))  # daily_suggest / gen_export / null=自定义
+    definition_json: Mapped[dict] = mapped_column(JSON)  # {nodes:[{id,type,label,params,layout}], edges:[{from,to}]}
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class WorkflowRun(Base):
+    """一次画布执行。status: running / waiting_input / succeeded / failed / canceled。"""
+
+    __tablename__ = "workflow_run"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
+    status: Mapped[str] = mapped_column(String(20), default="running")
+    context_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 节点间数据总线（实体 ID 等）
+    params_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 启动参数（topic_id 等）
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class WorkflowStep(Base):
+    """画布上单个节点的一次执行记录（input=params，output=产物摘要 + 实体 ID）。"""
+
+    __tablename__ = "workflow_step"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("workflow_run.id"))
+    node_id: Mapped[str] = mapped_column(String(50))
+    node_type: Mapped[str] = mapped_column(String(30))
+    label: Mapped[str | None] = mapped_column(String(200))
+    params_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending/running/waiting_input/succeeded/failed/skipped
+    output_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

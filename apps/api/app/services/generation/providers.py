@@ -89,7 +89,8 @@ class MockProvider:
     async def generate_json(self, request: GenerateRequest) -> GenerateResult:
         from . import mock_content
 
-        data = mock_content.build_structured_output(request, inject_unfact=self.settings.mock_inject_unfact_number)
+        inject = bool(effective_llm_config().get("mock_inject_unfact_number", False))
+        data = mock_content.build_structured_output(request, inject_unfact=inject)
         raw = json.dumps(data, ensure_ascii=False, indent=2)
         return GenerateResult(
             data=data,
@@ -150,28 +151,90 @@ class OpenAICompatibleProvider:
 
 # ---------- Registry ----------
 
+# 按解析后的配置档缓存 provider 实例；配置变更时整体失效
 _providers: dict[str, LLMProvider] = {}
 
+# 场景路由键：内容生成 / 选区改写 / 事实校验与审核复核 / 选题发现（基于 FactPack 荐题）
+ROUTE_KEYS = ("generate", "rewrite", "fact_check", "topic_discovery")
 
-def get_provider() -> LLMProvider:
-    settings = get_settings()
-    name = settings.llm_provider
-    if name not in _providers:
+
+def _models_override() -> dict:
+    """system_settings 里 models key 的运行时覆盖（profiles + routes）。"""
+    from ... import runtime_config
+
+    return runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
+
+
+def _profile_config(name: str, profiles: dict) -> dict | None:
+    profile = profiles.get(name)
+    if not isinstance(profile, dict):
+        return None
+    return {
+        "provider": profile.get("provider", "mock"),
+        "base_url": profile.get("base_url", ""),
+        "api_key": profile.get("api_key", ""),
+        "model": profile.get("model", ""),
+        "mock_inject_unfact_number": profile.get("mock_inject_unfact_number", False),
+    }
+
+
+def effective_llm_config(purpose: str | None = None) -> dict:
+    """按场景解析生效 LLM 配置。
+
+    优先级：models.routes[purpose] 指向的启用 profile → 旧 llm 覆盖 → .env 环境变量。
+    purpose=None 时取默认（旧 llm 覆盖 / env），与既有行为兼容。
+    """
+    from ... import runtime_config
+
+    override = runtime_config.get_runtime(runtime_config.KEY_LLM) or {}
+    fallback = {
+        "provider": override.get("provider", get_settings().llm_provider),
+        "base_url": override.get("base_url", get_settings().llm_base_url),
+        "api_key": override.get("api_key", get_settings().llm_api_key),
+        "model": override.get("model", get_settings().llm_model),
+        "mock_inject_unfact_number": override.get(
+            "mock_inject_unfact_number", get_settings().mock_inject_unfact_number
+        ),
+    }
+    if purpose:
+        models = _models_override()
+        route_name = (models.get("routes") or {}).get(purpose)
+        if route_name:
+            raw_profile = (models.get("profiles") or {}).get(route_name) or {}
+            if raw_profile and raw_profile.get("enabled", True):
+                profile = _profile_config(route_name, models.get("profiles") or {})
+                if profile and profile["provider"]:
+                    profile["profile"] = route_name
+                    return profile
+    fallback["profile"] = "default"
+    return fallback
+
+
+def reset_provider_cache() -> None:
+    """配置变更后使已构建的 provider 实例失效（按配置档名缓存）。"""
+    _providers.clear()
+
+
+def get_provider(purpose: str | None = None) -> LLMProvider:
+    config = effective_llm_config(purpose)
+    cache_key = config.get("profile") or "default"
+    if cache_key not in _providers:
+        name = config["provider"]
         if name == "mock":
-            _providers[name] = MockProvider()
+            _providers[cache_key] = MockProvider()
         elif name == "openai_compatible":
-            _providers[name] = OpenAICompatibleProvider(
-                settings.llm_base_url, settings.llm_api_key, settings.llm_model
+            _providers[cache_key] = OpenAICompatibleProvider(
+                config["base_url"], config["api_key"], config["model"]
             )
         else:
             raise LLMError(f"未知 provider: {name}")
-    return _providers[name]
+    return _providers[cache_key]
 
 
-def provider_model_name() -> str:
-    settings = get_settings()
-    if settings.llm_provider == "openai_compatible":
-        return settings.llm_model
+def provider_model_name(purpose: str | None = None) -> str:
+    config = effective_llm_config(purpose)
+    if config["provider"] == "openai_compatible":
+        return config["model"]
     return "mock-structured-v1"
 
 
@@ -186,7 +249,7 @@ def input_hash(request: GenerateRequest) -> str:
 
 def record_run(db, request: GenerateRequest, result: GenerateResult | None, error: str | None = None) -> LLMRun:
     run = LLMRun(
-        provider=get_settings().llm_provider,
+        provider=effective_llm_config()["provider"],
         model=provider_model_name(),
         purpose=request.purpose,
         input_hash=input_hash(request),

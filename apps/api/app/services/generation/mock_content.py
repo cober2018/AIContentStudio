@@ -34,6 +34,9 @@ def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> di
     brand = context.get("brand_voice", {})
     channel = request.channel or "douyin"
 
+    if request.purpose == "suggest_topics":
+        return _build_topic_suggestions(facts, context.get("count", 3))
+
     builders = {
         "douyin": _build_douyin,
         "xiaohongshu": _build_xiaohongshu,
@@ -45,6 +48,35 @@ def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> di
     if inject_unfact and facts:
         _inject_unfact(output, channel)
     return output
+
+
+def _build_topic_suggestions(facts: list[dict[str, Any]], count: int) -> dict[str, Any]:
+    """选题发现 mock：确定性三角度，素材全部来自给定 facts，不引入外部数字。"""
+    count = max(1, min(int(count or 3), 5))
+    angles = [
+        ("风险防守视角", "先把压力讲清楚，再谈机会", "帮助观众识别风险、稳住仓位"),
+        ("结构性机会视角", "聚焦仍强的主线与数据交叉验证", "帮观众抓住结构性方向"),
+        ("数据深读视角", "把看板数字翻译成普通人的决策语言", "让观众看懂数据背后的含义"),
+    ]
+    fact_lines = _fact_lines(facts)
+    suggestions = []
+    for i in range(min(count, len(angles))):
+        label, angle, goal = angles[i]
+        headline = fact_lines[i] if i < len(fact_lines) else (fact_lines[0] if fact_lines else "今日市场数据")
+        suggestions.append(
+            {
+                "title": f"{label}：{headline[:26]}",
+                "audience": "关注A股与宏观的个人投资者",
+                "goal": goal,
+                "angle": angle,
+                "core_thesis": f"基于已确认事实展开：{headline[:40]}",
+                "must_include": [line[:14] for line in fact_lines[:3]],
+                "forbidden": ["保证收益", "一定上涨", "稳赚"],
+                "cta": "关注获取每日量化复盘",
+                "rationale": f"覆盖事实 {min(i + 1, len(fact_lines))} 条中的核心条目，适合{label}叙事。",
+            }
+        )
+    return {"suggestions": suggestions}
 
 
 def _topic_title(topic: dict[str, Any]) -> str:

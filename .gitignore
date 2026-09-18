@@ -26,3 +26,4 @@ apps/api/evals/reports/
 
 # dsh skill 沙箱草稿输出
 .wewrite-scratch/
+apps/api/media/

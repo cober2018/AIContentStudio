@@ -18,6 +18,10 @@ def _run_generation(db: Session, job_id: int) -> None:
     if not job:
         logger.error("生成任务取消：ContentJob %s 不存在", job_id)
         return
+    # worker 进程独立于 FastAPI 生命周期：跑 LLM 前刷新运行时配置覆盖
+    from .. import runtime_config
+
+    runtime_config.load_from_db(db)
     try:
         orchestrator.run_generation_for_job(db, job)
     except orchestrator.GenerationError:

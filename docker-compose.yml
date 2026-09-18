@@ -1,3 +1,17 @@
+# 应用服务公共环境：api / worker / beat 共用（YAML 锚点）
+# LLM 接真实模型：改 LLM_PROVIDER=openai_compatible 并补 LLM_BASE_URL / LLM_API_KEY / LLM_MODEL
+x-studio-env: &studio-env
+  DATABASE_URL: postgresql+psycopg://studio:studio@postgres:5432/content_studio
+  CELERY_BROKER_URL: redis://redis:6379/0
+  # 生产模式：生成/Connector 拉取走 Celery 队列异步执行
+  TASK_QUEUE_ENABLED: "true"
+  LLM_PROVIDER: mock
+  # 生产必须 false（SSRF 防护禁私网）
+  SSRF_ALLOW_PRIVATE: "false"
+  # 导出副本存储：单机部署下预签名 URL 会指向容器内域名，暂关闭（导出内联返回，功能可降级）；
+  # bucket content-studio-assets 已由 minio-init 创建，需要时置 true 并解决外网可达 endpoint
+  MINIO_ENABLED: "false"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -5,10 +19,9 @@ services:
       POSTGRES_USER: studio
       POSTGRES_PASSWORD: studio
       POSTGRES_DB: content_studio
-      MINIO_ROOT_USER: studio
-      MINIO_ROOT_PASSWORD: studio-secret
+    # 宿主机 5432 已被其他项目占用，映射到 15432（host migrate/seed 用 localhost:15432）
     ports:
-      - "5432:5432"
+      - "127.0.0.1:15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -20,17 +33,17 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:16379:6379"
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: studio
       MINIO_ROOT_PASSWORD: studio-secret
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:19000:9000"
+      - "127.0.0.1:19001:9001"
     volumes:
       - miniodata:/data
 
@@ -46,26 +59,56 @@ services:
       exit 0
       "
 
+  # API 服务：uvicorn，容器化后替代裸进程（交接文档 §5.3 缺口）
+  api:
+    build: ./apps/api
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment: *studio-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=3).status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  # Web 前端：nginx 托管构建产物 + /api 同源反代到 api（无 CORS）
+  web:
+    build: ./apps/web
+    ports:
+      - "127.0.0.1:8088:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
   # Celery worker：消费 default/llm/ingestion/export（TASK_QUEUE_ENABLED=true 时 API 分发到这里）
   worker:
     build: ./apps/api
     command: python -m celery -A app.tasks.celery_app worker -Q default,llm,ingestion,export --loglevel=INFO -c 2
-    environment:
-      DATABASE_URL: postgresql+psycopg://studio:studio@postgres:5432/content_studio
-      CELERY_BROKER_URL: redis://redis:6379/0
+    environment: *studio-env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   # Celery beat：每分钟触发 Connector 定时拉取扫描（endpoint 配 interval_minutes 即生效）
   beat:
     build: ./apps/api
     command: python -m celery -A app.tasks.celery_app beat --loglevel=INFO
-    environment:
-      DATABASE_URL: postgresql+psycopg://studio:studio@postgres:5432/content_studio
-      CELERY_BROKER_URL: redis://redis:6379/0
+    environment: *studio-env
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   pgdata:

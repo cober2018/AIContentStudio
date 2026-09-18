@@ -1,5 +1,7 @@
 """External Connector API（EPIC-18）。"""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -33,7 +35,7 @@ class EndpointIn(BaseModel):
     path: str = Field(min_length=1, max_length=500)
     method: str = "GET"
     body_template: dict | None = None
-    params: dict[str, str] | None = None
+    params: dict[str, Any] | None = None  # 值支持 bool/int（local_git）与字符串（query 参数）
     title_template: str = Field(min_length=1, max_length=300)
     as_of_path: str | None = None
     trust_level: float = 0.9
@@ -43,7 +45,11 @@ class EndpointIn(BaseModel):
 
 
 def _validate_connector(payload: ConnectorIn) -> None:
-    if not payload.base_url.startswith(("http://", "https://")):
+    if payload.connector_type == "local_git":
+        # 本地文档数据源：base_url 是仓库目录（绝对路径或 file://）
+        if not payload.base_url.startswith(("file://", "/")):
+            raise HTTPException(400, "local_git 的 base_url 必须是本地目录绝对路径或 file:// 开头")
+    elif not payload.base_url.startswith(("http://", "https://")):
         raise HTTPException(400, "base_url 必须以 http/https 开头")
     if payload.auth_style not in AUTH_STYLES:
         raise HTTPException(400, f"auth_style 只允许 {sorted(AUTH_STYLES)}")
@@ -65,6 +71,10 @@ def _serialize_connector(c: Connector) -> dict:
         "default_headers": c.default_headers_json or {},
         "is_active": c.is_active,
         "endpoint_count": len(c.endpoints) if c.endpoints else 0,
+        "endpoints": [
+            {"id": e.id, "name": e.name, "path": e.path}
+            for e in (c.endpoints or [])
+        ],
         "created_by": c.created_by,
     }
 

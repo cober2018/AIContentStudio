@@ -16,7 +16,9 @@ from ..deps import get_current_user, require_admin
 from ..models import (
     BrandVoiceVersion,
     ChannelTemplateVersion,
+    ContentJob,
     PromptVersion,
+    TopicBrief,
     User,
 )
 from ..services.generation import renderers
@@ -26,6 +28,35 @@ router = APIRouter(prefix="/api/v1/templates", tags=["templates"])
 
 def _checksum(payload: dict) -> str:
     return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+
+
+def _demote_other_published(db, model, scope: dict, keep_id: int) -> int:
+    """发布新版本时自动下线同范围的其他生效版本（同渠道模板/Prompt、同名 Voice）。
+
+    不变量：每个范围内至多一个 published（当前生效）；旧版本降级为 archived，
+    ContentJob / TopicBrief 按 id 引用不受影响。
+    """
+    query = db.query(model).filter(model.status == "published", model.id != keep_id)
+    for field, value in scope.items():
+        query = query.filter(getattr(model, field) == value)
+    return query.update({"status": "archived"}, synchronize_session=False)
+
+
+def normalize_template_publication(db) -> int:
+    """修复历史数据：同渠道存在多个 published 模板时，仅保留最高版本，其余降级 archived。"""
+    from ..models import Channel
+
+    demoted = 0
+    for channel in {c.value for c in Channel}:
+        published = db.scalars(
+            select(ChannelTemplateVersion)
+            .where(ChannelTemplateVersion.channel == channel, ChannelTemplateVersion.status == "published")
+            .order_by(ChannelTemplateVersion.version.desc())
+        ).all()
+        for old in published[1:]:
+            old.status = "archived"
+            demoted += 1
+    return demoted
 
 
 class BrandVoiceIn(BaseModel):
@@ -121,8 +152,26 @@ def set_brand_voice_status(bv_id: int, payload: StatusIn, db: Session = Depends(
             "tone_rules": bv.tone_rules, "preferred_words": bv.preferred_words,
             "forbidden_words": bv.forbidden_words,
         })
+        # 同名 Voice 仅一个生效版本：新发布自动下线旧版本（选题按 id 绑定，不受影响）
+        _demote_other_published(db, BrandVoiceVersion, {"name": bv.name}, keep_id=bv.id)
     db.commit()
     return _bv_serialize(bv)
+
+
+@router.delete("/brand-voices/{bv_id}")
+def delete_brand_voice(bv_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    """删除 Brand Voice 版本。被任何选题引用时禁止（保护历史内容的口径可追溯）。"""
+    bv = db.get(BrandVoiceVersion, bv_id)
+    if not bv:
+        raise HTTPException(404, "Brand Voice 不存在")
+    referenced = db.scalars(
+        select(TopicBrief.id).where(TopicBrief.brand_voice_version_id == bv_id).limit(1)
+    ).first()
+    if referenced:
+        raise HTTPException(409, "该 Brand Voice 已被选题引用，不能删除（可归档）")
+    db.delete(bv)
+    db.commit()
+    return {"deleted": True, "id": bv_id}
 
 
 # ---------- Channel Template ----------
@@ -198,8 +247,26 @@ def set_template_status(ct_id: int, payload: StatusIn, db: Session = Depends(get
     ct.status = payload.status
     if payload.status == "published":
         ct.checksum = _checksum({"structure": ct.structure, "output_schema": ct.output_schema})
+        # 同渠道仅一个生效版本：新发布自动下线旧版本（历史任务按 id 引用，不受影响）
+        _demote_other_published(db, ChannelTemplateVersion, {"channel": ct.channel}, keep_id=ct.id)
     db.commit()
     return _ct_serialize(ct)
+
+
+@router.delete("/channel-templates/{ct_id}")
+def delete_channel_template(ct_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    """删除渠道模板版本。被任何内容任务引用时禁止（任务记录生成时所用模板）。"""
+    ct = db.get(ChannelTemplateVersion, ct_id)
+    if not ct:
+        raise HTTPException(404, "模板不存在")
+    referenced = db.scalars(
+        select(ContentJob.id).where(ContentJob.template_version_id == ct_id).limit(1)
+    ).first()
+    if referenced:
+        raise HTTPException(409, "该模板已被内容任务引用，不能删除")
+    db.delete(ct)
+    db.commit()
+    return {"deleted": True, "id": ct_id}
 
 
 # ---------- Prompt Version ----------
@@ -236,8 +303,22 @@ def set_prompt_status(pv_id: int, payload: StatusIn, db: Session = Depends(get_d
     pv.status = payload.status
     if payload.status == "published":
         pv.checksum = _checksum({"template_text": pv.template_text})
+        _demote_other_published(db, PromptVersion, {"channel": pv.channel}, keep_id=pv.id)
     db.commit()
     return _pv_serialize(pv)
+
+
+@router.delete("/prompts/{pv_id}")
+def delete_prompt(pv_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    """删除 Prompt 版本。已发布版本由 prompts 目录文件同步产生（文件为准），不可删除。"""
+    pv = db.get(PromptVersion, pv_id)
+    if not pv:
+        raise HTTPException(404, "Prompt 不存在")
+    if pv.status == "published":
+        raise HTTPException(409, "已发布 Prompt 由 prompts 目录同步产生（文件为准），不能删除")
+    db.delete(pv)
+    db.commit()
+    return {"deleted": True, "id": pv_id}
 
 
 def sync_prompt_versions_from_files(db: Session) -> int:
@@ -253,15 +334,17 @@ def sync_prompt_versions_from_files(db: Session) -> int:
         if latest and latest.checksum == checksum:
             continue
         max_version = latest.version if latest else 0
-        db.add(
-            PromptVersion(
-                channel=channel,
-                name=f"{channel} 结构化生成 Prompt",
-                version=max_version + 1,
-                template_text=text,
-                status="published",
-                checksum=checksum,
-            )
+        pv = PromptVersion(
+            channel=channel,
+            name=f"{channel} 结构化生成 Prompt",
+            version=max_version + 1,
+            template_text=text,
+            status="published",
+            checksum=checksum,
         )
+        db.add(pv)
+        db.flush()
+        # 文件为准：新版本生效的同时下线该渠道旧的 published 版本
+        _demote_other_published(db, PromptVersion, {"channel": channel}, keep_id=pv.id)
         created += 1
     return created

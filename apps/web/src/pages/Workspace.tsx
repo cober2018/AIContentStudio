@@ -70,7 +70,7 @@ function TopicPicker() {
             <div
               key={t.id}
               onClick={() => navigate(`/workspace/${t.id}`)}
-              className="cursor-pointer rounded-lg border border-slate-200 bg-white p-4 hover:border-indigo-300"
+              className="cursor-pointer rounded-lg border border-slate-200 bg-white p-4 hover:border-gray-400"
             >
               {t.title}
             </div>
@@ -264,7 +264,7 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
                 key={channel}
                 onClick={() => setActiveChannel(channel)}
                 className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm ${
-                  isActive ? "bg-indigo-50 font-medium text-indigo-700" : "text-slate-600 hover:bg-slate-50"
+                  isActive ? "bg-gray-100 font-medium text-gray-900" : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 <span>{CHANNEL_NAMES[channel]}</span>
@@ -418,7 +418,7 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
             ) : (
               citations.map((c, i) => (
                 <div key={i} className="rounded border border-slate-100 p-2 text-xs">
-                  <div className="font-mono text-indigo-600">{c.factIds.join(", ")}</div>
+                  <div className="font-mono text-gray-900">{c.factIds.join(", ")}</div>
                   <div className="mt-0.5 line-clamp-2 text-slate-600">{c.text}</div>
                 </div>
               ))

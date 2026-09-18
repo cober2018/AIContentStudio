@@ -255,6 +255,8 @@ def pull_endpoint(db: Session, endpoint: ConnectorEndpoint, user: User) -> tuple
     connector = endpoint.connector
     if not connector.is_active:
         raise ConnectorError("Connector 已停用")
+    if connector.connector_type == "local_git":
+        return _pull_local_git(db, connector, endpoint, user)
 
     today = datetime.now(UTC).date().isoformat()
     url = connector.base_url.rstrip("/") + "/" + endpoint.path.lstrip("/")
@@ -329,6 +331,105 @@ def pull_endpoint(db: Session, endpoint: ConnectorEndpoint, user: User) -> tuple
                     detail_json={"source_id": doc.id, "facts": len(candidates)}))
     db.commit()
     return doc, len(candidates)
+
+
+def _pull_local_git(db: Session, connector: Connector, endpoint: ConnectorEndpoint, user: User) -> tuple[SourceDocument, int]:
+    """本地开发文档数据源（connector_type=local_git）。
+
+    connector.base_url = 仓库根目录；endpoint.path = 相对 glob（如 docs/**/*.md、CHANGELOG.md）；
+    params: {max_files, max_bytes_per_file, git_log, max_commits}。
+    只读文本（md/txt）与 git log，不执行任何仓库代码；目录必须在 LOCAL_DOCS_ALLOWLIST 前缀内。
+    """
+    import subprocess
+    from pathlib import Path
+
+    from ..config import get_settings
+
+    today = datetime.now(UTC).date().isoformat()
+    allowlist = get_settings().local_docs_allowlist_dirs
+    if not allowlist:
+        raise ConnectorError("未启用本地文档数据源：需设置 LOCAL_DOCS_ALLOWLIST（允许读取的目录前缀）")
+    root = Path(connector.base_url.replace("file://", "")).expanduser().resolve()
+    if not root.is_dir():
+        raise ConnectorError(f"仓库目录不存在: {root}")
+    if not any(str(root).startswith(prefix) for prefix in allowlist):
+        raise ConnectorError(f"目录不在 LOCAL_DOCS_ALLOWLIST 内: {root}")
+
+    params = endpoint.params_json or {}
+    max_files = int(params.get("max_files", 20))
+    max_bytes = int(params.get("max_bytes_per_file", 200_000))
+    pattern = endpoint.path or "*.md"
+    files = sorted(p for p in root.glob(pattern) if p.is_file())[:max_files]
+    if not files:
+        raise ConnectorError(f"未匹配到文档文件: {pattern}（相对 {root.name}）")
+
+    sections: list[str] = []
+    blocks: list[dict] = []
+    for f in files:
+        rel = f.relative_to(root).as_posix()
+        text = f.read_text(encoding="utf-8", errors="replace")[:max_bytes]
+        sections.append(f"## 文件：{rel}\n\n{text}")
+        blocks.append({"type": "doc", "text": text, "locator": {"file": rel}})
+
+    git_log = ""
+    if params.get("git_log"):
+        max_commits = str(params.get("max_commits", 50))
+        try:
+            proc = subprocess.run(
+                ["git", "-C", str(root), "log", f"--max-count={max_commits}", "--no-decorate", "--oneline"],
+                capture_output=True, text=True, timeout=10, check=True,
+            )
+            git_log = proc.stdout
+            sections.append(f"## 近期提交（修复/变更日志）\n\n{git_log}")
+            blocks.append({"type": "git_log", "text": git_log, "locator": {"source": "git log"}})
+        except (subprocess.SubprocessError, OSError):
+            pass  # 非 git 目录 / git 不可用：best-effort 跳过
+
+    as_of = today
+    if git_log:
+        try:
+            proc = subprocess.run(
+                ["git", "-C", str(root), "log", "-1", "--format=%cs"],
+                capture_output=True, text=True, timeout=5, check=True,
+            )
+            as_of = proc.stdout.strip() or today
+        except (subprocess.SubprocessError, OSError):
+            pass
+
+    raw_text = "\n\n".join(sections)
+    doc = SourceDocument(
+        title=endpoint.title_template.replace(PLACEHOLDER_TODAY, today),
+        source_type="local_git",
+        source_url=str(root),
+        original_uri=f"connector:{connector.id}/endpoint:{endpoint.id}",
+        mime_type="text/markdown",
+        as_of=as_of,
+        trust_level=endpoint.trust_level,
+        sha256=hashlib.sha256(raw_text.encode()).hexdigest(),
+        raw_text=raw_text,
+        parse_status=ParseStatus.done.value,
+        parsed_json={
+            "blocks": blocks,
+            "metadata": {
+                "connector": connector.name,
+                "endpoint": endpoint.name,
+                "files": [f.relative_to(root).as_posix() for f in files],
+                "git_log_commits": len(git_log.splitlines()) if git_log else 0,
+            },
+        },
+        metadata_json={"connector_id": connector.id, "endpoint_id": endpoint.id, "root": str(root)},
+    )
+    db.add(doc)
+    db.flush()
+
+    endpoint.last_pull_at = datetime.now(UTC)
+    endpoint.last_pull_status = "ok"
+    endpoint.last_pull_error = None
+    db.add(AuditLog(event="connector.pulled", actor=user.email, entity_type="connector_endpoint",
+                    entity_id=str(endpoint.id),
+                    detail_json={"source_id": doc.id, "files": len(files), "facts": 0}))
+    db.commit()
+    return doc, 0
 
 
 def record_pull_failure(db: Session, endpoint: ConnectorEndpoint, error: str) -> None:

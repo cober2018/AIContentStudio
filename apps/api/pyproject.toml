@@ -24,6 +24,14 @@ dev = [
     "ruff>=0.6",
 ]
 
+# 显式声明：仓库根还有 alembic/（非包），避免 flat-layout 自动发现歧义；
+# prompts/*.txt 是启动同步的数据文件，wheel 必须带上
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["llm/prompts/*.txt"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"

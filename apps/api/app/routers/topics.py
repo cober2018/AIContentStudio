@@ -86,6 +86,25 @@ def _serialize(topic: TopicBrief, with_jobs: bool = False) -> dict:
     return data
 
 
+@router.post("/suggest")
+def suggest_topics(
+    fact_pack_id: int,
+    count: int = 3,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_editor),
+):
+    """AI 选题发现：基于冻结 FactPack 荐题候选（场景路由 topic_discovery），人工采纳后建 Topic。"""
+    from ..services.topic_suggest import suggest_for_pack
+
+    pack = db.get(FactPack, fact_pack_id)
+    if not pack:
+        raise HTTPException(404, "FactPack 不存在")
+    try:
+        return suggest_for_pack(db, pack, count=count)
+    except ValueError as exc:
+        raise HTTPException(409 if "frozen" in str(exc) else 422, str(exc))
+
+
 @router.post("", status_code=201)
 def create_topic(
     payload: TopicCreateIn,

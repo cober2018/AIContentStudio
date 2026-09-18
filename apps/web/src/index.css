@@ -1,10 +1,20 @@
+@font-face {
+  font-family: "Kudryashev Display";
+  src: url("/fonts/kudryashev.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-white text-slate-900 antialiased;
+    /* 全站基础字体：拉丁走 Space Grotesk，中文回退系统字体（不 @apply 自定义类，避免 dev 缓存问题） */
+    font-family: "Space Grotesk", "PingFang SC", "Microsoft YaHei", sans-serif;
   }
 }
 
