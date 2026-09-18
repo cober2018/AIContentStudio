@@ -339,7 +339,7 @@ def _run_llm_request(request: GenerateRequest):
 
     logger = logging.getLogger(__name__)
     try:
-        provider = get_provider()
+        provider = get_provider("fact_check")
         return asyncio.run(provider.generate_json(request))
     except Exception as exc:  # noqa: BLE001 LLM 层失败只降级告警
         logger.warning("LLM review 调用失败，退回确定性结果: %s", exc)

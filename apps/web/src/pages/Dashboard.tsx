@@ -54,7 +54,7 @@ export default function Dashboard() {
         <div className="flex gap-2">
           <Link
             to="/topics"
-            className="rounded-md bg-indigo-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+            className="rounded-md bg-gray-900 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-black"
           >
             新建选题
           </Link>
@@ -78,7 +78,7 @@ export default function Dashboard() {
         <div className="border-b border-slate-100 px-5 py-3 text-sm font-medium">今日工作流</div>
         {data.today_flow.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm text-slate-400">
-            暂无内容任务，先到 <Link to="/sources" className="text-indigo-600">来源库</Link> 导入数据
+            暂无内容任务，先到 <Link to="/sources" className="text-gray-900">来源库</Link> 导入数据
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -94,7 +94,7 @@ export default function Dashboard() {
               {data.today_flow.map((row) => (
                 <tr key={row.job_id} className="border-b border-slate-50 last:border-0">
                   <td className="px-5 py-2.5">
-                    <Link to={`/workspace/${row.topic_id}`} className="text-indigo-600 hover:underline">
+                    <Link to={`/workspace/${row.topic_id}`} className="text-gray-900 hover:underline">
                       {row.topic_title}
                     </Link>
                   </td>
@@ -122,7 +122,7 @@ export default function Dashboard() {
           ) : (
             data.recent_fact_packs.map((p) => (
               <div key={p.id} className="flex items-center justify-between py-1.5 text-sm">
-                <Link to={`/fact-packs/${p.id}`} className="truncate text-slate-700 hover:text-indigo-600">
+                <Link to={`/fact-packs/${p.id}`} className="truncate text-slate-700 hover:text-gray-900">
                   {p.name} v{p.version}
                 </Link>
                 <StatusBadge status={p.status} />

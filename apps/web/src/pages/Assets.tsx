@@ -24,10 +24,93 @@ function copyText(text: string) {
   );
 }
 
+
+interface MediaItem {
+  id: number;
+  kind: string;
+  source: string;
+  prompt: string | null;
+  mime_type: string | null;
+  sort_order: number;
+  url: string;
+}
+
+function MediaPanel({ asset, onClose }: { asset: AssetRow; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [viewing, setViewing] = useState<string | null>(null);
+  const { data: media, isLoading } = useQuery({
+    queryKey: ["asset-media", asset.id],
+    queryFn: () => api.get<MediaItem[]>(`/assets/${asset.id}/media`),
+  });
+  const upload = useMutation({
+    mutationFn: ({ slotId, file }: { slotId: number; file: File }) => {
+      const form = new FormData();
+      form.append("file", file);
+      return api.upload(`/assets/${asset.id}/media/${slotId}/upload`, form);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["asset-media", asset.id] }),
+    onError: (e) => alert(e instanceof Error ? e.message : "上传失败"),
+  });
+
+  return (
+    <Modal title={`配图素材 · ${asset.title.slice(0, 24)}`} onClose={onClose} wide>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <>
+          <p className="mb-3 text-xs leading-relaxed text-slate-400">
+            素材统一存放底层素材池，按文章归属展示。占位图来自生成结果的配图说明
+            （小红书 image_prompts / 公众号配图建议）；点击占位下方的「上传」替换为实体图，
+            历史版本保留。导出 HTML/MD 时图片在公众号编辑器内插入。
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {(media || []).map((m) => (
+              <div key={m.id} className="rounded-lg border border-slate-200 p-2">
+                <button onClick={() => setViewing(m.url)} className="block w-full" title="点击放大">
+                  <img src={m.url} alt={m.prompt || "配图"} className="aspect-square w-full rounded object-cover" loading="lazy" />
+                </button>
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">
+                    {m.kind === "cover" ? "封面" : `配图 ${m.sort_order}`}
+                  </span>
+                  <span className={`rounded px-1.5 py-0.5 text-[11px] ${m.source === "upload" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                    {m.source === "upload" ? "已上传" : "占位"}
+                  </span>
+                </div>
+                {m.prompt && <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-slate-400">{m.prompt}</p>}
+                {m.source !== "upload" && (
+                  <label className="mt-1.5 block cursor-pointer rounded border border-dashed border-slate-300 px-2 py-1 text-center text-[11px] text-slate-500 hover:bg-slate-50">
+                    上传图片
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) upload.mutate({ slotId: m.id, file });
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      {viewing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-8" onClick={() => setViewing(null)}>
+          <img src={viewing} alt="预览" className="max-h-full max-w-full rounded-lg shadow-2xl" />
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 export default function Assets() {
   const queryClient = useQueryClient();
   const [channel, setChannel] = useState("");
   const [preview, setPreview] = useState<{ filename: string; content: string } | null>(null);
+  const [mediaFor, setMediaFor] = useState<AssetRow | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["assets", channel],
@@ -75,6 +158,20 @@ export default function Assets() {
           {data.map((a) => (
             <div key={a.id} className="rounded-lg border border-slate-200 bg-white p-4">
               <div className="flex flex-wrap items-center gap-3">
+                <a
+                  href={`/api/v1/assets/${a.id}/cover.svg`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block h-[72px] w-28 shrink-0 overflow-hidden rounded-md border border-slate-100"
+                  title="查看封面大图"
+                >
+                  <img
+                    src={`/api/v1/assets/${a.id}/cover.svg`}
+                    alt={`${a.channel} 封面`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </a>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate font-medium text-slate-800">{a.title}</span>
@@ -92,6 +189,9 @@ export default function Assets() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => setMediaFor(a)}>
+                    配图
+                  </Button>
                   {a.allowed_formats.map((fmt) => (
                     <Button
                       key={fmt}
@@ -110,6 +210,7 @@ export default function Assets() {
         </div>
       )}
 
+      {mediaFor && <MediaPanel asset={mediaFor} onClose={() => setMediaFor(null)} />}
       {preview && (
         <Modal title={`导出预览：${preview.filename}`} onClose={() => setPreview(null)} wide>
           <div className="mb-3 flex justify-end gap-2">

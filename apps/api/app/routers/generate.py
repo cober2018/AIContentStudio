@@ -267,7 +267,7 @@ async def rewrite_selection(
             f"【可用事实】{allowed}\n"
         ),
     )
-    provider = get_provider()
+    provider = get_provider("rewrite")
     if provider.name == "mock":
         rewritten = f"{payload.selected_text}（{payload.instruction}后）"
         run_result = GenerateResult(data={}, raw_output=rewritten, usage={"mock": True})

@@ -1,14 +1,16 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Assets from "./pages/Assets";
 import Connectors from "./pages/Connectors";
 import Dashboard from "./pages/Dashboard";
+import Landing from "./pages/Landing";
 import FactPacks from "./pages/FactPacks";
 import Review from "./pages/Review";
 import Settings from "./pages/Settings";
 import Sources from "./pages/Sources";
 import Templates from "./pages/Templates";
 import Topics from "./pages/Topics";
+import Workflows from "./pages/Workflows";
 import Workspace from "./pages/Workspace";
 
 const queryClient = new QueryClient({
@@ -16,7 +18,7 @@ const queryClient = new QueryClient({
 });
 
 const NAV = [
-  { to: "/", label: "总览", icon: "◧" },
+  { to: "/dashboard", label: "总览", icon: "◧" },
   { to: "/sources", label: "来源库", icon: "▤" },
   { to: "/connectors", label: "数据接入", icon: "⇄" },
   { to: "/fact-packs", label: "FactPack", icon: "▣" },
@@ -24,6 +26,7 @@ const NAV = [
   { to: "/workspace", label: "内容任务", icon: "✍" },
   { to: "/review", label: "审核中心", icon: "✓" },
   { to: "/assets", label: "内容资产", icon: "◫" },
+  { to: "/workflows", label: "工作流", icon: "◴" },
   { to: "/templates", label: "模板", icon: "⚙" },
   { to: "/settings", label: "设置", icon: "☰" },
 ];
@@ -32,6 +35,24 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <Shell />
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+}
+
+function Shell() {
+  const location = useLocation();
+  const isLanding = location.pathname === "/";
+  if (isLanding) {
+    return (
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
+  return (
         <div className="flex min-h-screen">
           <aside className="flex w-52 shrink-0 flex-col border-r border-slate-200 bg-white">
             <div className="px-5 py-5">
@@ -60,7 +81,7 @@ export default function App() {
           </aside>
           <main className="min-w-0 flex-1">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sources" element={<Sources />} />
               <Route path="/connectors" element={<Connectors />} />
               <Route path="/fact-packs" element={<FactPacks />} />
@@ -70,13 +91,12 @@ export default function App() {
               <Route path="/workspace/:topicId" element={<Workspace />} />
               <Route path="/review" element={<Review />} />
               <Route path="/assets" element={<Assets />} />
+              <Route path="/workflows" element={<Workflows />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
         </div>
-      </BrowserRouter>
-    </QueryClientProvider>
   );
 }

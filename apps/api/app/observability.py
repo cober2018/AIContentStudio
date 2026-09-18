@@ -76,13 +76,13 @@ def check_health(db) -> dict:
         db_ok = False
         error = str(exc)[:200]
     from .config import get_settings
+    from .services.generation.providers import effective_llm_config
 
-    settings = get_settings()
     return {
         "status": "ok" if db_ok else "degraded",
         "db": db_ok,
         "error": error,
-        "provider": settings.llm_provider,
-        "queue_enabled": settings.task_queue_enabled,
+        "provider": effective_llm_config()["provider"],
+        "queue_enabled": get_settings().task_queue_enabled,
         "version": "0.1.0",
     }

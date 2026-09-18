@@ -18,10 +18,12 @@ from .routers import (
     generate,
     health,
     reviews,
+    settings,
     sources,
     templates,
     topics,
     users,
+    workflows,
 )
 from .routers.templates import sync_prompt_versions_from_files
 
@@ -40,6 +42,18 @@ async def lifespan(app: FastAPI):
 
     with SessionLocal() as db:
         sync_prompt_versions_from_files(db)
+        # 修复历史数据：同渠道多个 published 模板只保留最高版本
+        from .routers.templates import normalize_template_publication
+
+        demoted = normalize_template_publication(db)
+        if demoted:
+            import logging
+
+            logging.getLogger(__name__).info("已下线 %d 个同渠道旧生效模板", demoted)
+        # 运行时配置覆盖（前端设置页写入）加载进进程缓存
+        from . import runtime_config
+
+        runtime_config.load_from_db(db)
         db.commit()
     yield
 
@@ -66,6 +80,8 @@ for router in (
     dashboard,
     users,
     connectors,
+    settings,
+    workflows,
     health,
     external,
 ):

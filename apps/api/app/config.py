@@ -38,6 +38,19 @@ class Settings(BaseSettings):
 
     upload_max_bytes: int = 20 * 1024 * 1024
 
+    # local_git Connector 允许读取的本地目录前缀（CSV，如 /Users/me/Project）；空 = 功能关闭。
+    # 开发文档作为数据源（repo docs / CHANGELOG / git log），只读不执行。
+    # 存 str 而非 tuple：pydantic-settings 对复杂类型会先走 JSON 解析，裸路径 CSV 会炸
+    local_docs_allowlist: str = ""
+
+    @property
+    def local_docs_allowlist_dirs(self) -> tuple[str, ...]:
+        import os
+
+        return tuple(
+            os.path.expanduser(p.strip()) for p in (self.local_docs_allowlist or "").split(",") if p.strip()
+        )
+
 
 @lru_cache
 def get_settings() -> Settings:

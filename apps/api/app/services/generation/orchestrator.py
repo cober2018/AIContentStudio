@@ -87,7 +87,7 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
     job.started_at = models.utcnow()
     db.flush()
 
-    provider = get_provider()
+    provider = get_provider("generate")
     try:
         result = _run_provider(provider, request)
         record_run(db, request, result)
@@ -127,7 +127,7 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
     job.finished_at = models.utcnow()
     job.usage_json = result.usage
     job.model_provider = provider.name
-    job.model_name = provider_model_name()
+    job.model_name = provider_model_name("generate")
     db.flush()
     db.refresh(draft)
     return draft
@@ -160,8 +160,8 @@ def create_jobs_for_topic(db: Session, topic: models.TopicBrief, channels: list[
             topic_brief_id=topic.id,
             channel=channel,
             template_version_id=template.id if template else None,
-            model_provider=get_provider().name,
-            model_name=provider_model_name(),
+            model_provider=get_provider("generate").name,
+            model_name=provider_model_name("generate"),
             fact_pack_snapshot={"id": pack.id, "version": pack.version, "checksum": pack.checksum},
             status=JobStatus.queued.value,
         )
