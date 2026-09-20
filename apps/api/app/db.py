@@ -16,6 +16,21 @@ def _engine_kwargs(url: str) -> dict:
 
 
 engine = create_engine(get_settings().database_url, **_engine_kwargs(get_settings().database_url))
+
+if get_settings().database_url.startswith("sqlite"):
+    # 异步队列（Celery 多进程）与 API 并发写 SQLite 的前提：WAL 允许读写并发，
+    # busy_timeout 让写锁等待而非立刻报 database is locked（生产 PostgreSQL 无需此段）
+    from sqlalchemy import event
+
+    @event.listens_for(engine, "connect")
+    def _sqlite_pragma(dbapi_connection, _record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=8000")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.close()
+
+
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 

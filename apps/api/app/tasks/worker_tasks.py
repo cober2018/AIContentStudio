@@ -32,7 +32,12 @@ def _run_generation(db: Session, job_id: int) -> None:
 def _run_pull(db: Session, endpoint_id: int, actor_email: str) -> None:
     endpoint = db.get(ConnectorEndpoint, endpoint_id)
     user = db.query(User).filter(User.email == actor_email).first()
-    if not endpoint or not user:
+    if user is None:
+        # 定时拉取的 actor（"scheduler"）不是真实登录用户：兜底建系统账号，调度链路不该因此断
+        user = User(email=actor_email, name="系统调度", role="editor")
+        db.add(user)
+        db.commit()
+    if not endpoint:
         logger.error("拉取任务取消：endpoint=%s user=%s 缺失", endpoint_id, actor_email)
         return
     try:
