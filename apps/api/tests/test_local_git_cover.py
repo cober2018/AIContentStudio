@@ -101,3 +101,48 @@ def test_asset_cover_svg(client, seed_users, db_session):
     assert resp.text.startswith("<svg")
     assert "9·17复盘" in resp.text
     assert client.get("/api/v1/assets/99999/cover.svg").status_code == 404
+
+def test_pull_dedupe_same_content(client, seed_users, docs_repo):
+    """同一端点内容未变化时二次拉取不新建 Source（来源库不再被刷屏）。"""
+    _, ep = _make_local_git(client, docs_repo)
+    first = client.post(f"/api/v1/endpoints/{ep}/pull", headers=EDITOR)
+    assert first.status_code == 200
+    sid1 = first.json()["source_id"]
+    before = client.get("/api/v1/sources", headers=EDITOR).json()
+    second = client.post(f"/api/v1/endpoints/{ep}/pull", headers=EDITOR)
+    assert second.status_code == 200
+    sid2 = second.json()["source_id"]
+    assert sid2 == sid1  # 返回既有 Source
+    after = client.get("/api/v1/sources", headers=EDITOR).json()
+    assert len(after) == len(before)  # 没有新建
+
+
+def test_patch_endpoint_interval(client, seed_users, docs_repo):
+    _, ep = _make_local_git(client, docs_repo)
+    resp = client.patch(
+        f"/api/v1/endpoints/{ep}", headers=ADMIN,
+        json={
+            "name": "改过名的端点", "path": "**/*.md", "title_template": "t {today}",
+            "trust_level": 0.8,
+            "fact_mapping": {"statement": "x", "fields": {"value": "{v}"}},
+            "interval_minutes": 60,
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["name"] == "改过名的端点"
+    assert body["interval_minutes"] == 60
+    # interval=0 → 仅手动
+    resp = client.patch(
+        f"/api/v1/endpoints/{ep}", headers=ADMIN,
+        json={"name": "手动", "path": "**/*.md", "title_template": "t {today}",
+              "trust_level": 0.8, "fact_mapping": {"statement": "x", "fields": {"value": "{v}"}},
+              "interval_minutes": 0},
+    )
+    assert resp.json()["interval_minutes"] is None
+
+
+def test_patch_endpoint_requires_admin(client, seed_users, docs_repo):
+    _, ep = _make_local_git(client, docs_repo)
+    resp = client.patch(f"/api/v1/endpoints/{ep}", headers=EDITOR, json={"name": "x", "path": "a.md", "title_template": "t", "fact_mapping": {"statement": "x", "fields": {"value": "{v}"}}})
+    assert resp.status_code == 403
