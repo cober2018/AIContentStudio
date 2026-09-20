@@ -74,7 +74,11 @@ const NODE_TYPE_LABEL: Record<string, string> = {
   factpack_freeze: "打包冻结",
   suggest_topics: "AI 荐题",
   adopt_topic: "人工采纳",
+  confirm_facts: "人工确认事实",
   generate: "生成",
+  humanize_polish: "去AI味精炼",
+  content_censor: "合规审查",
+  generate_cover: "AI 封面",
   fact_check: "事实校验",
   approve: "人工批准",
   export: "导出",
@@ -430,6 +434,16 @@ export default function Workflows() {
   useEffect(() => {
     if (workflows && workflows.length && selectedWf === null) setSelectedWf(workflows[0].id);
   }, [workflows, selectedWf]);
+
+  // 切换工作流 / 工作流列表刷新后：自动选中该工作流最近一次运行，打开页面即见画布结果
+  useEffect(() => {
+    if (!wf || !wf.runs.length) {
+      if (runId !== null && !wf) setRunId(null);
+      return;
+    }
+    if (!wf.runs.some((r) => r.id === runId)) setRunId(wf.runs[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wf?.id, wf?.runs[0]?.id]);
 
   return (
     <div className="flex h-screen flex-col">
