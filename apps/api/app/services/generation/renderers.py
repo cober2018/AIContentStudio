@@ -8,9 +8,22 @@ from ...models import Channel
 PROMPT_DIR = Path(__file__).resolve().parents[2] / "llm" / "prompts"
 
 
-def compose_prompt(channel: str, topic_brief_text: str, facts: list[dict], brand_voice_text: str) -> str:
+def compose_prompt(
+    channel: str,
+    topic_brief_text: str,
+    facts: list[dict],
+    brand_voice_text: str,
+    domain_knowledge_block: str = "",
+) -> str:
     template_path = PROMPT_DIR / f"{channel}.txt"
     template = template_path.read_text(encoding="utf-8")
+    # wechat 模板注入 wewrite 风格块（style.yaml 缺失时为空串，模板不破）
+    if "{style_block}" in template:
+        from ..writing_pipeline import style_prompt_block
+
+        template = template.replace("{style_block}", style_prompt_block())
+    # 领域知识块（方法论 + 涉及指标的口径卡）；知识文档缺席时为空串，模板不破
+    template = template.replace("{domain_knowledge_block}", domain_knowledge_block)
     # 模板内含 JSON 示例的花括号，不能用 str.format，只能做占位符替换
     return (
         template.replace("{topic_brief}", topic_brief_text)

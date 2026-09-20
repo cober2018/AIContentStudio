@@ -6,6 +6,7 @@ V1 在请求内同步执行（Mock 毫秒级）；接真实模型时升级为 Ce
 
 import logging
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ... import models
@@ -61,8 +62,21 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
     facts_payload = _pack_facts_payload(db, pack)
     brand_voice = db.get(models.BrandVoiceVersion, topic.brand_voice_version_id) if topic.brand_voice_version_id else None
 
+    # 领域知识块：方法论全文 + 本稿涉及指标的口径卡（知识文档缺席时为空串，prompt 不变）
+    from ..domain_knowledge import generation_block
+
+    source_ids = {f["source_id"] for f in facts_payload if f.get("source_id")}
+    source_raws = [doc.raw_text or "" for doc in db.scalars(
+        select(models.SourceDocument).where(models.SourceDocument.id.in_(source_ids))
+    )] if source_ids else []
+    knowledge_block = generation_block(facts_payload, source_raws)
+
     prompt = renderers.compose_prompt(
-        job.channel, renderers.topic_brief_text(topic), facts_payload, renderers.brand_voice_text(brand_voice)
+        job.channel,
+        renderers.topic_brief_text(topic),
+        facts_payload,
+        renderers.brand_voice_text(brand_voice),
+        domain_knowledge_block=knowledge_block,
     )
     request = GenerateRequest(
         purpose="generate",

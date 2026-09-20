@@ -261,15 +261,20 @@ def run_llm_review(draft_text: str, facts: list[dict], deterministic: FactCheckR
         return deterministic
 
     facts_brief = "；".join(f"{f.get('id', '')}:{f.get('statement', '')}" for f in facts[:50])
+    # 指标误读红线：数字对但方向/口径/确定性写错（如把底部共振低分写成利空）→ warning
+    from .domain_knowledge import reviewer_block
+
+    redline = reviewer_block(facts)
     prompt = (
         "你是金融内容事实合规审查员。对照事实清单审查稿件。\n"
         f"【事实清单】{facts_brief or '（空）'}\n"
-        f"【稿件】\n{draft_text[:4000]}\n\n"
+        + (f"{redline}\n" if redline else "")
+        + f"【稿件】\n{draft_text[:4000]}\n\n"
         "输出 JSON：\n"
         '{"issues": [{"severity": "warning|blocker", "span": "原文片段", '
         '"reason": "为何越界或过度推断", "suggestion": "修改建议"}], '
         '"entities": ["稿件中出现的机构类实体（公司/银行/券商/基金等专有名词，无则空数组）"]}\n'
-        "severity=blocker 仅用于稿件内容与事实清单明显冲突；推测性表述用 warning。"
+        "severity=blocker 仅用于稿件内容与事实清单明显冲突；推测性表述与指标解读红线违规用 warning。"
     )
     request = GenerateRequest(
         purpose="fact_review",
