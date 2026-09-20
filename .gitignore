@@ -30,3 +30,8 @@ apps/api/media/
 # 运行时上传的配图素材与前端构建产物，不入库
 apps/api/app/media/
 apps/web/tsconfig.tsbuildinfo
+apps/api/scripts/startup/runtime.env
+# Celery beat 状态文件与 SQLite WAL 伴随文件、本地日志等运行产物
+apps/api/celerybeat-schedule*
+apps/api/*.db-*
+logs/
