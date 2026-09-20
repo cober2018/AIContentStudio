@@ -177,15 +177,21 @@ def create_endpoint(
     connector = db.get(Connector, connector_id)
     if not connector:
         raise HTTPException(404, "Connector 不存在")
-    if "statement" not in payload.fact_mapping or "value" not in payload.fact_mapping.get("fields", {}):
-        raise HTTPException(400, "fact_mapping 需要包含 statement 模板和 fields.value 字段引用")
+    mapping = payload.fact_mapping or {}
+    is_v1 = "statement" in mapping and "value" in mapping.get("fields", {})
+    is_v2 = bool(mapping.get("stages"))
+    if not is_v1 and not is_v2:
+        raise HTTPException(
+            400,
+            "fact_mapping 需要 v1（statement 模板 + fields.value 字段引用）或 v2（非空 stages 列表）协议之一",
+        )
     if payload.method.upper() not in {"GET", "POST"}:
         raise HTTPException(400, "method 只允许 GET/POST")
     if payload.method.upper() == "POST" and not payload.body_template:
         raise HTTPException(400, "POST 请求需要提供 body_template")
     p_type = (payload.pagination or {}).get("type")
-    if p_type not in {None, "page", "cursor"}:
-        raise HTTPException(400, "pagination.type 只允许 page/cursor")
+    if p_type not in {None, "page", "cursor", "offset"}:
+        raise HTTPException(400, "pagination.type 只允许 page/cursor/offset")
     endpoint = ConnectorEndpoint(
         connector_id=connector.id,
         name=payload.name,
@@ -201,6 +207,32 @@ def create_endpoint(
         interval_minutes=payload.interval_minutes,
     )
     db.add(endpoint)
+    db.commit()
+    return _serialize_endpoint(endpoint)
+
+
+@router.patch("/endpoints/{endpoint_id}")
+def update_endpoint(
+    endpoint_id: int,
+    payload: EndpointIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """编辑端点（补缺口 #13）：可改路径/参数/映射/周期等，interval_minutes=0 表示仅手动拉取。"""
+    endpoint = db.get(ConnectorEndpoint, endpoint_id)
+    if not endpoint:
+        raise HTTPException(404, "端点不存在")
+    endpoint.name = payload.name
+    endpoint.path = payload.path
+    endpoint.method = payload.method
+    endpoint.body_template_json = payload.body_template
+    endpoint.params_json = payload.params
+    endpoint.title_template = payload.title_template
+    endpoint.as_of_path = payload.as_of_path
+    endpoint.trust_level = payload.trust_level
+    endpoint.fact_mapping_json = payload.fact_mapping
+    endpoint.pagination_json = payload.pagination
+    endpoint.interval_minutes = payload.interval_minutes or None
     db.commit()
     return _serialize_endpoint(endpoint)
 
@@ -221,7 +253,7 @@ def pull(endpoint_id: int, db: Session = Depends(get_db), user: User = Depends(r
     if not endpoint:
         raise HTTPException(404, "Endpoint 不存在")
     try:
-        doc, count = connector_service.pull_endpoint(db, endpoint, user)
+        doc, count, created = connector_service.pull_endpoint(db, endpoint, user)
     except ConnectorError as exc:
         connector_service.record_pull_failure(db, endpoint, str(exc))
         raise HTTPException(400, str(exc)) from exc
@@ -232,6 +264,7 @@ def pull(endpoint_id: int, db: Session = Depends(get_db), user: User = Depends(r
         connector_service.record_pull_failure(db, endpoint, str(exc))
         raise HTTPException(502, f"拉取失败：{exc}") from exc
     return {
+        "unchanged": not created,
         "source_id": doc.id,
         "source_title": doc.title,
         "facts": count,
