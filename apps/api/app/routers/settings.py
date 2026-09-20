@@ -64,6 +64,15 @@ class PluginsUpdate(BaseModel):
     mcp: list[dict[str, Any]] = []
 
 
+class ImageGenUpdate(BaseModel):
+    enabled: bool = False
+    provider: Literal["minimax", "gemini", "openai", "doubao", "dashscope", "replicate", "openrouter", "jimeng"] = "minimax"
+    model: str = ""
+    base_url: str = ""
+    api_key: str = ""  # 留空 = 保持已存值
+    size: str = "1344x768"
+
+
 class DshConfigUpdate(BaseModel):
     default_provider: str = "minimax"
     default_model: str = "MiniMax-M3"
@@ -224,6 +233,31 @@ def put_plugins_settings(
     )
     db.commit()
     return build_settings_view()["plugins"]
+
+
+@router.put("/api/v1/settings/image")
+def put_image_settings(
+    payload: ImageGenUpdate,
+    db: Session = Depends(get_db),
+    user=Depends(require_admin),
+):
+    """AI 生图开关：provider 可切（minimax / gemini / openai / ...），保存即同步 wewrite CLI 配置。"""
+    from ..services.system_settings import save_image
+
+    existing = (runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}).get("api_key", "")
+    value = {
+        "enabled": payload.enabled,
+        "provider": payload.provider,
+        "model": payload.model.strip(),
+        "base_url": payload.base_url.strip(),
+        "api_key": payload.api_key or existing,
+        "size": payload.size.strip() or "1344x768",
+    }
+    if payload.enabled and not value["api_key"]:
+        raise HTTPException(422, "启用生图需要 API Key（MiniMax/Gemini 均用各自平台 Key）")
+    save_image(db, value, updated_by=user.email)
+    db.commit()
+    return build_settings_view()["image"]
 
 
 @router.put("/api/v1/settings/dsh")

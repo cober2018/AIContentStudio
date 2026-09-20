@@ -12,7 +12,8 @@ _OVERRIDES: dict[str, dict] = {}
 KEY_LLM = "llm"
 KEY_MODELS = "models"  # {"profiles": {name: {...}}, "routes": {purpose: profile_name}}
 KEY_PLUGINS = "plugins"  # {"skill_dirs": [...], "skills_enabled": [...], "mcp": [{name, url, enabled}]}
-KEY_DSH = "dsh"  # {"default_provider","default_model","fallback_provider","timeout_sec","max_retries","output_dir"}
+KEY_DSH = "dsh"
+KEY_IMAGE = "image"  # {"enabled","provider","model","base_url","api_key","size"}  # {"default_provider","default_model","fallback_provider","timeout_sec","max_retries","output_dir"}
 
 
 def load_from_db(db) -> None:

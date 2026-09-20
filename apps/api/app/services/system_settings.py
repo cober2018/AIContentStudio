@@ -12,6 +12,7 @@ from ..models import SystemSetting
 from .plugin_registry import SKILL_DIRS as DEFAULT_SKILL_DIRS
 from .plugin_registry import dsh_status
 from .plugin_registry import scan_skills as discover_local_skills
+from .writing_pipeline import WEWRITE_HOME
 
 
 def discover_default_skill_dirs() -> tuple:
@@ -56,6 +57,7 @@ def build_settings_view() -> dict:
         "models": models_view(),
         "plugins": plugins_view(),
         "dsh": dsh_view(),
+        "image": image_view(),
         "database": {
             "url": mask_url(settings.database_url),
             "driver": make_url(settings.database_url).drivername,
@@ -138,7 +140,7 @@ def plugins_view() -> dict:
 
     stored = runtime_config.get_runtime(runtime_config.KEY_PLUGINS) or {}
     custom_dirs = [str(d) for d in (stored.get("skill_dirs") or [])]
-    scan_dirs = custom_dirs or list(discover_default_skill_dirs())
+    scan_dirs = list(discover_default_skill_dirs()) + custom_dirs  # 并集：默认目录始终生效
     return {
         "skill_dirs": custom_dirs,
         "skills_enabled": list(stored.get("skills_enabled") or []),
@@ -159,6 +161,57 @@ def save_plugins(db, value: dict, updated_by: str | None) -> None:
     row.updated_by = updated_by
     db.flush()
     runtime_config.set_runtime(runtime_config.KEY_PLUGINS, value)
+
+
+IMAGE_PROVIDERS = ("minimax", "gemini", "openai", "doubao", "dashscope", "replicate", "openrouter", "jimeng")
+
+
+def image_view() -> dict:
+    from .. import runtime_config
+
+    stored = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
+    return {
+        "enabled": bool(stored.get("enabled", False)),
+        "provider": stored.get("provider", "minimax"),
+        "model": stored.get("model", ""),
+        "base_url": stored.get("base_url", ""),
+        "size": stored.get("size", "1344x768"),
+        "api_key": mask_secret(stored.get("api_key")),
+        "providers_available": list(IMAGE_PROVIDERS),
+    }
+
+
+def save_image(db, value: dict, updated_by: str | None) -> None:
+    """保存生图开关并把 provider 同步进 ~/.wewrite/config.yaml（wewrite image-gen CLI 消费）。"""
+    import yaml
+
+    from .. import runtime_config
+
+    row = db.get(SystemSetting, runtime_config.KEY_IMAGE)
+    if row is None:
+        row = SystemSetting(key=runtime_config.KEY_IMAGE)
+        db.add(row)
+    row.value = value
+    row.updated_by = updated_by
+    db.flush()
+    runtime_config.set_runtime(runtime_config.KEY_IMAGE, value)
+
+    cfg_path = WEWRITE_HOME / "config.yaml"
+    try:
+        cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        cfg = {}
+    if value.get("enabled") and value.get("api_key"):
+        entry = {
+            "provider": value["provider"],
+            "api_key": value["api_key"],
+            "model": value.get("model") or None,
+        }
+        if value.get("base_url"):
+            entry["base_url"] = value["base_url"]
+        cfg["image"] = {"providers": [entry]}
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        cfg_path.write_text(yaml.safe_dump(cfg, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
 
 def dsh_view() -> dict:

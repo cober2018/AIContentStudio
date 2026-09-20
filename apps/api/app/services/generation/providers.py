@@ -146,7 +146,8 @@ class OpenAICompatibleProvider:
 
     async def generate_text(self, request: GenerateRequest) -> str:
         body = await self._chat(request)
-        return body["choices"][0]["message"]["content"]
+        # 思考模型（MiniMax-M3 等）会把 <think> 推理内联在正文里，文本场景同样要剥掉
+        return _THINK_BLOCK.sub("", body["choices"][0]["message"]["content"]).strip()
 
 
 # ---------- Registry ----------

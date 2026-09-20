@@ -25,7 +25,7 @@ from ..models import (
 
 logger = logging.getLogger(__name__)
 
-HUMAN_NODE_TYPES = {"adopt_topic", "approve"}
+HUMAN_NODE_TYPES = {"adopt_topic", "approve", "confirm_facts"}
 
 
 def _now():
@@ -49,10 +49,10 @@ def _h_connector_pull(db: Session, run: WorkflowRun, step: WorkflowStep, user) -
     endpoint = db.get(ConnectorEndpoint, step.params_json.get("endpoint_id"))
     if not endpoint:
         raise ValueError("未配置有效的监测端点（endpoint_id）")
-    doc, facts = connector_service.pull_endpoint(db, endpoint, user)
+    doc, _facts, _created = connector_service.pull_endpoint(db, endpoint, user)
     source_ids = list((run.context_json or {}).get("source_ids") or []) + [doc.id]
     _ctx_update(run, source_ids=source_ids)
-    return {"source_id": doc.id, "title": doc.title, "candidate_facts": facts}
+    return {"source_id": doc.id, "title": doc.title, "candidate_facts": _facts, "unchanged": _created}
 
 
 def _h_extract_facts(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
@@ -60,7 +60,7 @@ def _h_extract_facts(db: Session, run: WorkflowRun, step: WorkflowStep, user) ->
     from ..routers.sources import extract_facts
 
     ctx = run.context_json or {}
-    source_ids = ctx.get("source_ids") or []
+    source_ids = step.params_json.get("source_ids") or ctx.get("source_ids") or []
     if not source_ids:
         raise ValueError("上游没有拉取到任何 Source")
     confirmed = 0
@@ -153,6 +153,29 @@ def _h_adopt_topic_complete(db: Session, run: WorkflowRun, step: WorkflowStep, p
     return {"topic_id": created["id"], "title": created["title"]}
 
 
+def _h_confirm_facts_complete(db: Session, run: WorkflowRun, step: WorkflowStep, payload: dict, user) -> dict:
+    """人工确认事实：payload {confirmed_ids, rejected_ids}；缺省全确认上游候选。
+
+    状态落库后把「已确认的事实 id」写回 context（freeze 只认 confirmed）。
+    """
+    from ..models import FactStatus
+
+    ctx = run.context_json or {}
+    candidate_ids = ctx.get("fact_ids") or []
+    confirmed_ids = [int(i) for i in (payload.get("confirmed_ids") or candidate_ids)]
+    rejected_ids = {int(i) for i in (payload.get("rejected_ids") or [])}
+    rows = db.scalars(select(Fact).where(Fact.id.in_(confirmed_ids))).all() if confirmed_ids else []
+    kept = []
+    for f in rows:
+        if f.id in rejected_ids:
+            f.status = FactStatus.rejected.value
+            continue
+        f.status = FactStatus.confirmed.value
+        kept.append(f.id)
+    _ctx_update(run, fact_ids=kept)
+    return {"confirmed": len(kept), "rejected": len(rejected_ids)}
+
+
 def _h_generate(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
     from ..routers.topics import VALID_CHANNELS
     from ..services.generation.orchestrator import create_jobs_for_topic
@@ -168,11 +191,24 @@ def _h_generate(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict
     if not topic:
         raise ValueError(f"Topic {topic_id} 不存在")
 
+    import time as _time
+
     jobs = create_jobs_for_topic(db, topic, [channel])
+    # 异步模式消息先于本事务 commit 到达 worker：必须先落库 job 行再入队，否则 worker 查无此 job
+    db.commit()
     statuses = []
     for job in jobs:
         status = worker_tasks.dispatch_generation(db, job.id)
         statuses.append(status)
+    # 异步（TASK_QUEUE_ENABLED）时 dispatch 返回 queued：轮询到终态为止，画布不区分两种模式
+    deadline = _time.monotonic() + 420
+    while statuses and statuses[-1] == "queued" and _time.monotonic() < deadline:
+        _time.sleep(2)
+        db.expire_all()
+        fresh = db.get(ContentJob, jobs[0].id)
+        if fresh is None:
+            break
+        statuses[-1] = fresh.status
     fresh_job = db.get(ContentJob, jobs[0].id)
     if fresh_job and fresh_job.status != "succeeded":
         # 真实模型偶发解析失败等：把生成失败暴露为节点失败（画布可重试），而不是静默往下走
@@ -185,11 +221,24 @@ def _h_generate(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict
     return {"job_id": jobs[0].id, "status": statuses[0], "draft_id": draft.id if draft else None, "title": draft.title if draft else None}
 
 
+def _latest_draft_id(db: Session, run: WorkflowRun, channel: str) -> int:
+    """该渠道 content_job 的最新 revision draft（人工修稿后 context 里的旧 id 会过期）。"""
+    job_id = (run.context_json.get("jobs") or {}).get(channel, {}).get("job_id")
+    if not job_id:
+        raise ValueError(f"渠道 {channel} 没有生成任务")
+    latest = db.scalars(
+        select(Draft.id).where(Draft.content_job_id == job_id).order_by(Draft.revision_no.desc()).limit(1)
+    ).first()
+    if not latest:
+        raise ValueError(f"渠道 {channel} 没有可用的草稿")
+    return latest
+
+
 def _h_fact_check(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
     from ..routers.generate import run_fact_check as run_fc
 
     channel = step.params_json.get("channel")
-    draft_id = (run.context_json.get("jobs") or {}).get(channel, {}).get("draft_id")
+    draft_id = _latest_draft_id(db, run, channel)
     if not draft_id:
         raise ValueError(f"渠道 {channel} 没有可校验的草稿")
     result = run_fc(draft_id=draft_id, db=db, user=user)
@@ -201,6 +250,94 @@ def _h_fact_check(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> di
     }
 
 
+def _h_humanize_polish(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
+    """去 AI 味二次精炼（humanizer-zh 规则注入 system）：全文改写为新 revision，事实数字不动。"""
+    import asyncio
+
+    from ..routers.generate import DraftUpdateIn, update_draft
+    from ..services.generation.providers import GenerateRequest, get_provider
+    from ..services.writing_pipeline import HUMANIZE_SYSTEM
+
+    channel = step.params_json.get("channel")
+    draft_id = _latest_draft_id(db, run, channel)
+    draft = db.get(Draft, draft_id)
+    provider = get_provider("rewrite")
+    if provider.name == "mock":
+        return {"draft_id": draft_id, "humanized": False, "note": "mock 跳过精炼"}
+    request = GenerateRequest(
+        purpose="humanize",
+        channel=channel,
+        system_prompt=HUMANIZE_SYSTEM,
+        user_prompt=draft.body,
+    )
+    result = asyncio.run(provider.generate_text(request))
+    cleaned = result.strip()
+    if not cleaned or len(cleaned) < len(draft.body) * 0.5:
+        raise ValueError("去 AI 味改写结果异常（过短），保留原稿人工处理")
+    updated = update_draft(
+        draft_id=draft_id, payload=DraftUpdateIn(body=cleaned), db=db, user=user
+    )
+    return {"draft_id": updated["id"], "humanized": True, "revision": updated["revision_no"]}
+
+
+def _h_content_censor(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
+    """合规审查（content-censor）：RED 自动合规改写为新 revision + 补平台免责声明。"""
+    from ..routers.generate import DraftUpdateIn, update_draft
+    from ..services.writing_pipeline import censor_text
+
+    channel = step.params_json.get("channel") or "wechat"
+    platform = {"wechat": "wechat", "xiaohongshu": "xiaohongshu", "douyin": "douyin"}.get(channel, "general")
+    draft_id = _latest_draft_id(db, run, channel)
+    draft = db.get(Draft, draft_id)
+    report = censor_text(draft.body, platform=platform)
+    applied = False
+    if report.get("patched_text"):
+        updated = update_draft(
+            draft_id=draft_id, payload=DraftUpdateIn(body=report["patched_text"]), db=db, user=user
+        )
+        draft_id = updated["id"]
+        applied = True
+    if report["result"] == "blocker":
+        reds = "、".join(i.get("word") or "" for i in report["issues"] if i.get("level") == "RED")
+        raise ValueError(f"合规审查 RED 未清零（{reds}），已自动改写仍命中，需人工处理")
+    return {
+        "draft_id": draft_id,
+        "result": report["result"],
+        "red": sum(1 for i in report["issues"] if i.get("level") == "RED"),
+        "yellow": sum(1 for i in report["issues"] if i.get("level") == "YELLOW"),
+        "applied_rewrite": applied,
+        "disclaimer_appended": report.get("disclaimer_appended", False),
+    }
+
+
+def _h_generate_cover(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
+    """AI 封面（wewrite image-gen，16:9 深色科技风）；失败降级不阻断，发布时回退占位图。"""
+    from .. import runtime_config
+    from ..models import ContentJob
+    from ..services.asset_media import MEDIA_ROOT
+    from ..services.writing_pipeline import generate_cover_image
+
+    image_cfg = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
+    if not image_cfg.get("enabled"):
+        return {"generated": False, "skipped": "AI 生图未启用（设置 → 模型服务 → AI 生图）"}
+    channel = step.params_json.get("channel") or "wechat"
+    job_id = (run.context_json.get("jobs") or {}).get(channel, {}).get("job_id")
+    prompt = step.params_json.get("prompt")
+    if not prompt and job_id:
+        job = db.get(ContentJob, job_id)
+        structured = (db.get(Draft, _latest_draft_id(db, run, channel)) if job else None)
+        data = structured.structured_json if structured else {}
+        prompt = (data.get("image_suggestions") or data.get("image_prompts") or [""])[0]
+    prompt = prompt or "16:9 深色科技风封面：发光数据流、全息数仓架构，无文字"
+    out = MEDIA_ROOT / "working" / f"run{run.id}_{channel}_cover.png"
+    generated = generate_cover_image(prompt, out)
+    covers = {**((run.context_json or {}).get("covers") or {})}
+    if generated:
+        covers[channel] = str(out)
+        _ctx_update(run, covers=covers)
+    return {"generated": generated, "path": str(out) if generated else None, "prompt": prompt[:80]}
+
+
 def _h_approve(db: Session, run: WorkflowRun, step: WorkflowStep, payload: dict, user) -> dict:
     """人工批准：提交审核 + 批准（沿用既有 409 闸门），产出 Asset。"""
     from fastapi import HTTPException
@@ -209,9 +346,7 @@ def _h_approve(db: Session, run: WorkflowRun, step: WorkflowStep, payload: dict,
     from ..routers.reviews import DecisionIn, approve
 
     channel = step.params_json.get("channel")
-    draft_id = (run.context_json.get("jobs") or {}).get(channel, {}).get("draft_id")
-    if not draft_id:
-        raise ValueError(f"渠道 {channel} 没有可批准的草稿")
+    draft_id = _latest_draft_id(db, run, channel)
     submit_for_review(draft_id=draft_id, db=db, user=user)
     try:
         result = approve(draft_id=draft_id, payload=DecisionIn(comment="工作流画布批准"), db=db, user=user)
@@ -262,7 +397,10 @@ def _h_publish_wechat(db: Session, run: WorkflowRun, step: WorkflowStep, user) -
                 AssetMedia.asset_id == asset_id, AssetMedia.kind == "cover", AssetMedia.source == "upload"
             )
         ).first()
-        if uploaded and uploaded.file_path:
+        ctx_cover = ((run.context_json or {}).get("covers") or {}).get("wechat")
+        if ctx_cover and Path(ctx_cover).is_file():
+            cover_path = Path(ctx_cover)
+        elif uploaded and uploaded.file_path:
             from ..services.asset_media import MEDIA_ROOT
 
             cover_path = MEDIA_ROOT / uploaded.file_path
@@ -308,6 +446,9 @@ HANDLERS: dict[str, Callable[..., dict]] = {
     "factpack_freeze": _h_factpack_freeze,
     "suggest_topics": _h_suggest_topics,
     "generate": _h_generate,
+    "humanize_polish": _h_humanize_polish,
+    "content_censor": _h_content_censor,
+    "generate_cover": _h_generate_cover,
     "fact_check": _h_fact_check,
     "export": _h_export,
     "publish_wechat": _h_publish_wechat,
@@ -317,6 +458,7 @@ HANDLERS: dict[str, Callable[..., dict]] = {
 COMPLETE_HANDLERS: dict[str, Callable[..., dict]] = {
     "adopt_topic": _h_adopt_topic_complete,
     "approve": _h_approve,
+    "confirm_facts": _h_confirm_facts_complete,
 }
 
 
@@ -414,7 +556,14 @@ def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, us
         raise ValueError(f"节点 {step.node_type} 不是人工节点")
     step.status = "running"
     db.commit()
-    output = handler(db, run, step, payload or {}, user)
+    try:
+        output = handler(db, run, step, payload or {}, user)
+    except Exception:
+        # 操作被闸门拒绝（如 blocker 未解决）：节点恢复等待态，人工处理后可再次提交
+        db.rollback()
+        step.status = "waiting_input"
+        db.commit()
+        raise
     step.output_json = output
     step.status = "succeeded"
     step.finished_at = _now()

@@ -119,7 +119,10 @@ def test_plugins_skill_dirs_custom(client, seed_users, tmp_path, reset_runtime_p
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert [s["name"] for s in body["skills"]] == ["custom-skill"]  # 自定义目录替代默认
+    names = [s["name"] for s in body["skills"]]
+    # 并集语义：默认目录 + 自定义目录都生效
+    assert "custom-skill" in names
+    assert len(names) > 1  # 默认目录技能仍在
     assert body["skill_dirs"] == [str(tmp_path)]
 
 
