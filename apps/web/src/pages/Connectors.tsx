@@ -12,6 +12,7 @@ interface Endpoint {
   as_of_path: string | null;
   trust_level: number;
   fact_mapping: { items_path?: string; statement: string; fields: Record<string, string>; as_of_field?: string };
+  interval_minutes: number | null;
   last_pull_at: string | null;
   last_pull_status: string | null;
   last_pull_error: string | null;
@@ -168,12 +169,25 @@ function ConnectorCard({ connector }: { connector: Connector }) {
 
   const pull = useMutation({
     mutationFn: (endpointId: number) =>
-      api.post<{ source_id: number; facts: number }>(`/endpoints/${endpointId}/pull`, {}),
+      api.post<{ source_id: number; facts: number; unchanged?: boolean }>(`/endpoints/${endpointId}/pull`, {}),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["connector", connector.id] });
-      setMessage(`拉取成功：${result.facts} 条候选事实已进入来源库（来源 #${result.source_id}），去确认后可入 FactPack`);
+      if (result.unchanged) {
+        setMessage(`内容无变化（来源 #${result.source_id} 保持不变），未新建来源`);
+      } else {
+        setMessage(`拉取成功：${result.facts} 条候选事实已进入来源库（来源 #${result.source_id}），去确认后可入 FactPack`);
+      }
     },
     onError: (e) => setMessage(e instanceof Error ? e.message : "拉取失败"),
+  });
+  const saveInterval = useMutation({
+    mutationFn: ({ endpoint, minutes }: { endpoint: Endpoint; minutes: number }) =>
+      api.patch(`/endpoints/${endpoint.id}`, { ...endpoint, interval_minutes: minutes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["connector", connector.id] });
+      setMessage("拉取周期已更新");
+    },
+    onError: (e) => setMessage(e instanceof Error ? e.message : "保存失败"),
   });
 
   return (
@@ -211,6 +225,20 @@ function ConnectorCard({ connector }: { connector: Connector }) {
                   {!ep.last_pull_status && "尚未拉取"}
                 </div>
               </div>
+              <select
+                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-600"
+                value={ep.interval_minutes ?? 0}
+                onChange={(e) => saveInterval.mutate({ endpoint: ep, minutes: Number(e.target.value) })}
+                title="自动拉取周期；仅手动 = 不自动拉取"
+              >
+                <option value={0}>仅手动</option>
+                <option value={15}>每 15 分钟</option>
+                <option value={30}>每 30 分钟</option>
+                <option value={60}>每 1 小时</option>
+                <option value={180}>每 3 小时</option>
+                <option value={720}>每 12 小时</option>
+                <option value={1440}>每天</option>
+              </select>
               <Button size="sm" onClick={() => pull.mutate(ep.id)} disabled={pull.isPending}>
                 {pull.isPending ? "拉取中…" : "立即拉取"}
               </Button>

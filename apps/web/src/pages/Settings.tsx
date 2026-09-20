@@ -62,6 +62,16 @@ interface DshSnapshot {
   env_keys: Record<string, boolean>;
 }
 
+interface ImageView {
+  enabled: boolean;
+  provider: string;
+  model: string;
+  base_url: string;
+  size: string;
+  api_key: SecretView;
+  providers_available: string[];
+}
+
 interface DshView {
   config: {
     default_provider: string;
@@ -97,6 +107,7 @@ interface SettingsView {
     upload_max_bytes: number;
   };
   dsh: DshView;
+  image: ImageView;
   app: { version: string };
 }
 
@@ -502,8 +513,85 @@ function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: b
         </div>
       </Panel>
 
+      <ImagePanel settings={settings} isAdmin={isAdmin} />
       <DefaultLLMPanel settings={settings} isAdmin={isAdmin} />
     </div>
+  );
+}
+
+function ImagePanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const img = settings.image;
+  const [form, setForm] = useState({
+    enabled: img.enabled,
+    provider: img.provider,
+    model: img.model,
+    base_url: img.base_url,
+    api_key: "",
+    size: img.size,
+  });
+  const [msg, setMsg] = useState("");
+  useEffect(() => setForm({
+    enabled: img.enabled, provider: img.provider, model: img.model,
+    base_url: img.base_url, api_key: "", size: img.size,
+  }), [img]);
+
+  const save = useMutation({
+    mutationFn: () => api.put<ImageView>("/settings/image", form),
+    onSuccess: () => {
+      setMsg(form.enabled ? "已保存并同步 wewrite 生图配置（cover 节点将真实出图）" : "已保存（生图关闭，cover 节点自动跳过）");
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+    },
+    onError: (e) => setMsg(e instanceof Error ? e.message : "保存失败"),
+  });
+
+  return (
+    <Panel title="AI 生图" desc="封面节点用；provider 可随时切换（Gemini 反带接入后在此切换即可），保存即同步 wewrite CLI 配置。">
+      <div className="mb-3 flex items-center gap-2">
+        {img.enabled ? <StatusBadge status="active" /> : <StatusBadge status="draft" />}
+        <span className="text-xs text-slate-400">
+          {img.enabled ? "已启用" : "未启用（cover 节点自动跳过）"} | Key {img.api_key.configured ? img.api_key.masked : "未配置"}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        <Field label="Provider">
+          <select className={inputClass} value={form.provider} disabled={!isAdmin}
+            onChange={(e) => setForm({ ...form, provider: e.target.value })}>
+            {img.providers_available.map((p) => (
+              <option key={p} value={p}>{p}{p === "gemini" ? "（nano-banana 图像原生）" : p === "minimax" ? "（image-01）" : ""}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="模型" hint={form.provider === "minimax" ? "默认 image-01" : form.provider === "gemini" ? "如 gemini-3.1-flash-image-preview" : ""}>
+          <input className={inputClass} value={form.model} disabled={!isAdmin}
+            onChange={(e) => setForm({ ...form, model: e.target.value })} />
+        </Field>
+        {form.provider !== "minimax" && form.provider !== "gemini" && (
+          <Field label="Base URL">
+            <input className={inputClass} value={form.base_url} disabled={!isAdmin}
+              onChange={(e) => setForm({ ...form, base_url: e.target.value })} />
+          </Field>
+        )}
+        <Field label="尺寸" hint="宽x高，封面建议 1344x768（16:9）">
+          <input className={inputClass} value={form.size} disabled={!isAdmin}
+            onChange={(e) => setForm({ ...form, size: e.target.value })} />
+        </Field>
+        <Field label="API Key" hint={img.api_key.configured ? `已配置（${img.api_key.masked}），留空保持不变` : "对应平台的图像 API Key"}>
+          <input className={inputClass} type="password" value={form.api_key} disabled={!isAdmin}
+            placeholder={img.api_key.configured ? "留空保持不变" : "粘贴 Key"}
+            onChange={(e) => setForm({ ...form, api_key: e.target.value })} />
+        </Field>
+        <label className="flex items-end gap-2 pb-1 text-sm text-slate-600">
+          <input type="checkbox" checked={form.enabled} disabled={!isAdmin}
+            onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
+          启用生图
+        </label>
+      </div>
+      {msg && <div className="mt-2 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">{msg}</div>}
+      <Button className="mt-3" disabled={!isAdmin || save.isPending} onClick={() => save.mutate()}>
+        {save.isPending ? "保存中…" : "保存生图配置"}
+      </Button>
+    </Panel>
   );
 }
 
