@@ -84,6 +84,14 @@ curl -X POST http://localhost:8000/api/v1/endpoints/1/pull -H "X-Studio-User: ed
   （`alembic upgrade head`，已在 PG 16 实测），后续 schema 变更用 `alembic revision --autogenerate`
 - 备份恢复：`make backup`（SQLite 开发库，保留 7 份）；生产 PostgreSQL 流程见
   `docs/runbooks/backup-restore.md`
+- **常驻服务（launchd）**：API 与 Celery worker/beat 由 launchd 管理（崩溃自动拉起、开机自启）：
+  `launchctl list | grep aicontent` 查看状态，`launchctl kickstart -k gui/$UID/com.aicontent.api` 重启；
+  日志在 `logs/api.log` / `logs/worker.log`；运行时密钥集中在 `apps/api/scripts/startup/runtime.env`
+  （600 权限、已 gitignore，DreamO token 过期只需改这一个文件后 kickstart worker）
+- **数据保留**：beat 每日 03:30 自动清理——llm_run 超期清空大字段（行保留 30 天）、audit_log /
+  export_record 留 90 天、终态 workflow 运行留 30 天，库体积有界
+- **拉取节奏**：Connector 端点内容指纹去重（无变化不新建 Source）；beat 扫描 300s；端点周期在
+  数据接入页可调（仅手动 ~ 每天）
 
 ### Golden 评测
 
@@ -208,6 +216,27 @@ docs/runbooks/              # backup-restore.md
     「生成 → 出库」（共享一个 Topic，抖音口播/小红书/公众号各自独立一条线：生成→校验→
     人工批准→导出，公众号线再接 wewrite 草稿箱真实发布）。已实测：荐题工作流与三渠道出库
     工作流均以真实 MiniMax 全链跑通，草稿箱 media_id 真实返回。
+15. **DreamO 复盘看板走标准数据服务（Connector 映射 v2）**：量化平台已把复盘中心 4 张看板以
+    「一表一服务」标准透出（`GET /api/v1/data/apis/{service_key}/records`，X-API-Key 鉴权，
+    参数白名单 trade_date/industry_code/idx_type/limit/offset，`*_json` 列需二次解析，
+    限流 60 次/分钟，见 DreamOAgents `docs/api/review-dashboards-data-service-api.md`）。
+    Connector 切换到 `X-API-Key`（`DREAMO_DATA_API_KEY` env，原 bearer JWT 无 dm:apis 权限且
+    8h 过期）；`scripts/seed_dreamo_data_service.py` 幂等维护 4 个端点覆盖 5 张看板
+    （行业复盘与行业生命周期共用同一张 190 列 ADS 宽表，按 API 约定按需取用字段，单端点服务
+    两看板）。映射协议 v2（`stages`）：aggregate/expand(JSON 字符串列二次解析)/join(名单汇总、
+    分布计数)/item + filter/sort_by/limit/derived，配 offset 分页与 `raw_keep_fields` 原始响应
+    瘦身（190 列 × 1031 行/日会打爆 raw_text 与事实库）。每日每端点产出 1-19 条高信号事实
+    （大盘上下文、情绪/风险摘要、生命周期分布、RRG 象限分布、focus 行业清单），Float32 精度
+    噪声在渲染层统一降噪；指纹去重保证非交易日不产生新 Source。
+16. **领域知识层（方法论 + 指标字典注入）**：写稿 Agent 不再裸读量化指标——量化平台官方
+    产出的《方法论》（看盘顺序/跨图剧本/成稿模板/自检清单）与《指标字典》（逐字段口径/
+    阈值/组合用法/误读红线）落 `app/llm/knowledge/`（`scripts/sync_dreamo_knowledge.sh`
+    从 DreamOAgents docs/review/ 同步），`domain_knowledge.py` 按 mtime 缓存加载：
+    生成与荐题 prompt 注入方法论全文 + 按本稿涉及指标裁剪的口径卡（token 来自事实
+    statement/predicate 中文术语 + 来源 raw_text 里的 API 英文字段名，总长封顶防打爆），
+    FactCheck 的 LLM Reviewer 注入误读红线节（数字对但方向/口径/确定性写错 → warning）。
+    知识是解读规则不是事实：不进 FactPack、不参与数字校验；文档缺席时全链路优雅降级为
+    原行为（空串注入，模板不破），落盘即生效零代码改动。
 
 ## TODO（按优先级）
 
