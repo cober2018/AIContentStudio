@@ -7,9 +7,11 @@
 
 import asyncio
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import FactPack, FactPackStatus
+from ..models import FactPack, FactPackStatus, SourceDocument
+from .domain_knowledge import generation_block as _knowledge_block
 from .generation.mock_content import build_structured_output
 from .generation.orchestrator import _pack_facts_payload
 from .generation.providers import (
@@ -43,6 +45,13 @@ def suggest_for_pack(db: Session, pack: FactPack, count: int = 3) -> dict:
     if not facts:
         raise ValueError("FactPack 没有事实，无法荐题")
 
+    # 领域知识块：有方法论时荐题模型才读得懂指标含义（拥挤度/生命周期/底部共振…）
+    source_ids = {f["source_id"] for f in facts if f.get("source_id")}
+    source_raws = [d.raw_text or "" for d in db.scalars(
+        select(SourceDocument).where(SourceDocument.id.in_(source_ids))
+    )] if source_ids else []
+    knowledge = _knowledge_block(facts, source_raws)
+
     request = GenerateRequest(
         purpose="suggest_topics",
         channel=None,
@@ -50,24 +59,34 @@ def suggest_for_pack(db: Session, pack: FactPack, count: int = 3) -> dict:
         user_prompt=(
             f"事实包：{pack.name} v{pack.version}。\n"
             f"请提出 {count} 个选题候选，{_SUGGEST_SCHEMA_HINT}\n"
-            f"【事实（唯一允许的素材）】\n"
+            + (f"{knowledge}\n\n" if knowledge else "")
+            + "【事实（唯一允许的素材）】\n"
             + "\n".join(f"- {f['statement']}（{f.get('as_of') or '日期未知'}）" for f in facts)
         ),
         context={"facts": facts, "count": count},
         schema_hint=_SUGGEST_SCHEMA_HINT,
     )
     provider = get_provider("topic_discovery")
-    try:
-        if provider.name == "mock":
-            data = build_structured_output(request, inject_unfact=False)
-            result = None
-        else:
-            result = asyncio.run(provider.generate_json(request))
-            data = result.data
-        record_run(db, request, result)
-    except (LLMError, Exception) as exc:
-        record_run(db, request, None, error=str(exc))
-        raise ValueError(f"荐题失败：{exc}") from exc
+    data = None
+    last_error: Exception | None = None
+    # 真实模型偶发输出不可解析：调用级重试一次（STU-072 精神：修复一次 + 重试一次，不无限循环）
+    for attempt in range(2 if provider.name != "mock" else 1):
+        try:
+            if provider.name == "mock":
+                data = build_structured_output(request, inject_unfact=False)
+                result = None
+            else:
+                result = asyncio.run(provider.generate_json(request))
+                data = result.data
+            record_run(db, request, result)
+            last_error = None
+            break
+        except (LLMError, Exception) as exc:  # noqa: BLE001
+            last_error = exc
+            record_run(db, request, None, error=str(exc))
+            db.commit()
+    if last_error is not None or data is None:
+        raise ValueError(f"荐题失败：{last_error}")
 
     suggestions = []
     for item in (data.get("suggestions") or [])[:count]:

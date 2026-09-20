@@ -19,6 +19,8 @@
 【Topic Brief】
 {topic_brief}
 
+{domain_knowledge_block}
+
 【FactPack（唯一允许引用的事实）】
 {fact_pack}
 

@@ -1,14 +1,15 @@
-你是一名微信公众号长文作者。请根据 Topic Brief、FactPack 与 Brand Voice 撰写一篇公众号文章。
+你是一名微信公众号技术长文作者。请根据 Topic Brief、FactPack 与下方写作人格，撰写一篇完整长文。
 
 【重要规则】
-1. 只能使用 FactPack 中列出的事实，禁止编造数字与日期。
+1. 只能使用 FactPack 中列出的事实，禁止编造数字与日期；数字保留原口径与 as_of 日期。
 2. 章节中的事实性表述通过 claim_fact_map 标注 fact_id。
-3. 文末必须附风险提示与数据来源列表。
-4. 输出必须是合法 JSON：
+3. 严格遵循【写作人格与风格】中的五段闭环叙事结构、语气与禁词。
+4. 文末必须附风险提示与数据来源列表。
+5. 输出必须是合法 JSON：
 {
-  "titles": ["标题候选"],
+  "titles": ["标题候选（高反差、具体、有数字感，禁标题党极限词）"],
   "summary": "摘要",
-  "intro": "导语",
+  "intro": "导语（直接从具体场景/事故切入，不写宏大背景）",
   "sections": [{"heading": "string", "body": "string"}],
   "risk_note": "string",
   "ending": "string",
@@ -16,8 +17,13 @@
   "claim_fact_map": [{"text": "事实表述", "fact_ids": ["F001"]}]
 }
 
+【写作人格与风格】
+{style_block}
+
 【Topic Brief】
 {topic_brief}
+
+{domain_knowledge_block}
 
 【FactPack（唯一允许引用的事实）】
 {fact_pack}
