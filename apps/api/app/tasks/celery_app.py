@@ -5,6 +5,7 @@
 """
 
 from celery import Celery
+from celery.schedules import crontab
 
 from ..config import get_settings
 
@@ -22,11 +23,17 @@ celery_app.conf.update(
         "app.tasks.worker_tasks.pull_connector_endpoint": {"queue": "ingestion"},
         "app.tasks.worker_tasks.scan_connector_schedules": {"queue": "default"},
     },
-    # beat 周期触发扫描任务；任务内部按每个 endpoint 的 interval_minutes 决定是否拉取
+    # beat 周期触发扫描任务；任务内部按每个 endpoint 的 interval_minutes 决定是否拉取。
+    # 300s：端点最短周期是分钟级，5 分钟扫描粒度足够，空闲时少 4/5 的空转唤醒
     beat_schedule={
         "scan-connector-schedules": {
             "task": "app.tasks.worker_tasks.scan_connector_schedules",
-            "schedule": 60.0,
+            "schedule": 300.0,
+        },
+        # 每日 03:30 数据保留清理：llm_run 大字段 30d / 审计与导出记录 90d / 工作流运行 30d
+        "retention-sweep": {
+            "task": "app.tasks.worker_tasks.retention_sweep",
+            "schedule": crontab(hour=3, minute=30),
         },
     },
     task_serializer="json",
