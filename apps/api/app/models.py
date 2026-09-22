@@ -4,6 +4,7 @@ import enum
 from datetime import UTC, datetime
 
 from sqlalchemy import (
+    CheckConstraint,
     JSON,
     Boolean,
     DateTime,
@@ -59,6 +60,55 @@ class Channel(str, enum.Enum):
     douyin = "douyin"
     xiaohongshu = "xiaohongshu"
     wechat = "wechat"
+    x_thread = "x_thread"
+
+
+class EvidenceKind(str, enum.Enum):
+    fact = "fact"
+    event = "event"
+    third_party_quote = "third_party_quote"
+    author_opinion = "author_opinion"
+    legacy_untyped = "legacy_untyped"
+
+
+class CandidateReadiness(str, enum.Enum):
+    incomplete = "incomplete"
+    ready = "ready"
+    stale = "stale"
+
+
+class DraftMediaRole(str, enum.Enum):
+    cover = "cover"
+    inline = "inline"
+    attachment = "attachment"
+
+
+class DeliveryAction(str, enum.Enum):
+    manual_handoff = "manual_handoff"
+
+
+class DeliveryTargetStatus(str, enum.Enum):
+    approved = "approved"
+    target_authorized = "target_authorized"
+    package_ready = "package_ready"
+    awaiting_manual_receipt = "awaiting_manual_receipt"
+    human_confirmed = "human_confirmed"
+    failed = "failed"
+    reconciliation_needed = "reconciliation_needed"
+    blocked = "blocked"
+    canceled = "canceled"
+
+
+class ReceiptVerification(str, enum.Enum):
+    human_confirmed = "human_confirmed"
+    link_checked = "link_checked"
+    screenshot_checked = "screenshot_checked"
+
+
+class FeedbackKind(str, enum.Enum):
+    performance = "performance"
+    correction = "correction"
+    note = "note"
 
 
 class JobStatus(str, enum.Enum):
@@ -180,13 +230,27 @@ class FactPack(Base):
 
 class FactPackItem(Base):
     __tablename__ = "fact_pack_item"
-    __table_args__ = (UniqueConstraint("fact_pack_id", "fact_id", name="uq_pack_item"),)
+    __table_args__ = (
+        UniqueConstraint("fact_pack_id", "fact_id", name="uq_pack_item"),
+        CheckConstraint(
+            "evidence_kind IN ('fact', 'event', 'third_party_quote', 'author_opinion', 'legacy_untyped')",
+            name="ck_fact_pack_item_evidence_kind",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     fact_pack_id: Mapped[int] = mapped_column(ForeignKey("fact_pack.id"))
-    fact_id: Mapped[int] = mapped_column(ForeignKey("fact.id"))
+    fact_id: Mapped[int | None] = mapped_column(ForeignKey("fact.id"))
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     note: Mapped[str | None] = mapped_column(Text)
+    evidence_kind: Mapped[str] = mapped_column(String(30), default=EvidenceKind.legacy_untyped.value)
+    snapshot_version: Mapped[int | None] = mapped_column(Integer)
+    snapshot_json: Mapped[dict | None] = mapped_column(JSON)
+    snapshot_checksum: Mapped[str | None] = mapped_column(String(64))
+    public_use_allowed: Mapped[bool | None] = mapped_column(Boolean)
+    model_use_allowed: Mapped[bool | None] = mapped_column(Boolean)
+    public_use_revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    public_use_revocation_note: Mapped[str | None] = mapped_column(Text)
 
     fact_pack: Mapped["FactPack"] = relationship(back_populates="items")
     fact: Mapped["Fact"] = relationship()
@@ -270,6 +334,9 @@ class TopicBrief(Base):
 
     fact_pack: Mapped["FactPack"] = relationship()
     content_jobs: Mapped[list["ContentJob"]] = relationship(back_populates="topic_brief")
+    mother_revisions: Mapped[list["MotherRevision"]] = relationship(
+        back_populates="topic_brief", order_by="MotherRevision.revision_no", cascade="all, delete-orphan"
+    )
 
 
 # ---------- Generation ----------
@@ -307,14 +374,68 @@ class Draft(Base):
     body: Mapped[str] = mapped_column(Text)  # 渲染后的 Markdown 正文
     structured_json: Mapped[dict | None] = mapped_column(JSON)  # 模型结构化输出（含 fact_ids）
     fact_check_json: Mapped[dict | None] = mapped_column(JSON)  # 最近一次 FactCheck 结果
+    mother_revision_id: Mapped[int | None] = mapped_column(ForeignKey("mother_revision.id"))
+    evidence_checksum: Mapped[str | None] = mapped_column(String(64))
+    input_hash: Mapped[str | None] = mapped_column(String(64))
+    thread_posts_json: Mapped[list | None] = mapped_column(JSON)
+    candidate_readiness: Mapped[str | None] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(String(20), default=DraftStatus.draft.value)
     created_by_type: Mapped[str] = mapped_column(String(10), default="ai")  # ai/user
     created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     content_job: Mapped["ContentJob"] = relationship(back_populates="drafts")
+    mother_revision: Mapped["MotherRevision | None"] = relationship(back_populates="drafts")
     claims: Mapped[list["DraftClaim"]] = relationship(back_populates="draft", cascade="all, delete-orphan")
     reviews: Mapped[list["Review"]] = relationship(back_populates="draft")
+    media: Mapped[list["DraftMedia"]] = relationship(
+        back_populates="draft", order_by="DraftMedia.sort_order", cascade="all, delete-orphan"
+    )
+
+
+class MotherRevision(Base):
+    __tablename__ = "mother_revision"
+    __table_args__ = (UniqueConstraint("topic_brief_id", "revision_no", name="uq_mother_revision_topic_no"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    topic_brief_id: Mapped[int] = mapped_column(ForeignKey("topic_brief.id"))
+    revision_no: Mapped[int] = mapped_column(Integer, default=1)
+    title: Mapped[str | None] = mapped_column(String(500))
+    body_markdown: Mapped[str] = mapped_column(Text)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("mother_revision.id"))
+    evidence_checksum: Mapped[str | None] = mapped_column(String(64))
+    body_hash: Mapped[str] = mapped_column(String(64))
+    import_metadata_json: Mapped[dict | None] = mapped_column(JSON)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    topic_brief: Mapped["TopicBrief"] = relationship(back_populates="mother_revisions")
+    parent_revision: Mapped["MotherRevision | None"] = relationship(remote_side=[id])
+    drafts: Mapped[list["Draft"]] = relationship(back_populates="mother_revision")
+
+
+class DraftMedia(Base):
+    __tablename__ = "draft_media"
+    __table_args__ = (
+        UniqueConstraint("draft_id", "content_hash", name="uq_draft_media_hash"),
+        CheckConstraint("role IN ('cover', 'inline', 'attachment')", name="ck_draft_media_role"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    draft_id: Mapped[int] = mapped_column(ForeignKey("draft.id"))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    role: Mapped[str] = mapped_column(String(20), default=DraftMediaRole.inline.value)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    file_path: Mapped[str | None] = mapped_column(String(500))
+    mime_type: Mapped[str | None] = mapped_column(String(100))
+    rights_status: Mapped[str | None] = mapped_column(String(30))
+    public_use_allowed: Mapped[bool | None] = mapped_column(Boolean)
+    public_use_revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    public_use_revocation_note: Mapped[str | None] = mapped_column(Text)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    draft: Mapped["Draft"] = relationship(back_populates="media")
 
 
 class DraftClaim(Base):
@@ -344,6 +465,11 @@ class Review(Base):
     reviewer_id: Mapped[int | None] = mapped_column(String(255))
     decision: Mapped[str] = mapped_column(String(30))  # changes_requested/approved
     comment: Mapped[str | None] = mapped_column(Text)
+    candidate_hash: Mapped[str | None] = mapped_column(String(64))
+    candidate_readiness: Mapped[str | None] = mapped_column(String(20))
+    warning_dispositions_json: Mapped[dict | None] = mapped_column(JSON)
+    checked_input_hash: Mapped[str | None] = mapped_column(String(64))
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     draft: Mapped["Draft"] = relationship(back_populates="reviews")
@@ -373,8 +499,81 @@ class ContentAsset(Base):
     reviewer: Mapped[str | None] = mapped_column(String(255))
     approved_revision: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(20), default="approved")
+    approved_candidate_hash: Mapped[str | None] = mapped_column(String(64))
+    candidate_manifest_json: Mapped[dict | None] = mapped_column(JSON)
+    mother_revision_id: Mapped[int | None] = mapped_column(ForeignKey("mother_revision.id"))
     tags: Mapped[list | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class DeliveryTarget(Base):
+    __tablename__ = "delivery_target"
+    __table_args__ = (
+        UniqueConstraint(
+            "content_asset_id", "approved_candidate_hash", "channel", "content_form", "account_ref", "action", "authorization_version",
+            name="uq_delivery_target_authorization",
+        ),
+        CheckConstraint("channel IN ('wechat', 'x_thread')", name="ck_delivery_target_channel"),
+        CheckConstraint("action = 'manual_handoff'", name="ck_delivery_target_action"),
+        CheckConstraint(
+            "status IN ('approved', 'target_authorized', 'package_ready', 'awaiting_manual_receipt', 'human_confirmed', 'failed', 'reconciliation_needed', 'blocked', 'canceled')",
+            name="ck_delivery_target_status",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    content_asset_id: Mapped[int] = mapped_column(ForeignKey("content_asset.id"))
+    channel: Mapped[str] = mapped_column(String(30))
+    content_form: Mapped[str] = mapped_column(String(30))
+    account_ref: Mapped[str] = mapped_column(String(255))
+    action: Mapped[str] = mapped_column(String(30), default=DeliveryAction.manual_handoff.value)
+    authorization_version: Mapped[str] = mapped_column(String(64))
+    approved_candidate_hash: Mapped[str] = mapped_column(String(64))
+    authorized_by: Mapped[str | None] = mapped_column(String(255))
+    authorized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(30), default=DeliveryTargetStatus.target_authorized.value)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    receipts: Mapped[list["DeliveryReceipt"]] = relationship(
+        back_populates="target", order_by="DeliveryReceipt.created_at", cascade="all, delete-orphan"
+    )
+    feedback: Mapped[list["DeliveryFeedback"]] = relationship(
+        back_populates="target", order_by="DeliveryFeedback.created_at", cascade="all, delete-orphan"
+    )
+
+
+class DeliveryReceipt(Base):
+    __tablename__ = "delivery_receipt"
+    __table_args__ = (UniqueConstraint("target_id", "idempotency_key", name="uq_delivery_receipt_idempotency"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    target_id: Mapped[int] = mapped_column(ForeignKey("delivery_target.id"))
+    approved_candidate_hash: Mapped[str] = mapped_column(String(64))
+    action: Mapped[str] = mapped_column(String(30), default=DeliveryAction.manual_handoff.value)
+    idempotency_key: Mapped[str | None] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(30))
+    operator: Mapped[str | None] = mapped_column(String(255))
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    evidence_ref: Mapped[str | None] = mapped_column(String(1000))
+    verification_method: Mapped[str | None] = mapped_column(String(30))
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    target: Mapped["DeliveryTarget"] = relationship(back_populates="receipts")
+
+
+class DeliveryFeedback(Base):
+    __tablename__ = "delivery_feedback"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    target_id: Mapped[int] = mapped_column(ForeignKey("delivery_target.id"))
+    kind: Mapped[str] = mapped_column(String(30), default=FeedbackKind.note.value)
+    body: Mapped[str] = mapped_column(Text)
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    target: Mapped["DeliveryTarget"] = relationship(back_populates="feedback")
 
 
 class AssetMedia(Base):

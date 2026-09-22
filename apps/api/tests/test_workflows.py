@@ -68,7 +68,7 @@ def test_gen_export_branches_run_to_human_gate(client, seed_users, frozen_pack_w
     resp = client.post("/api/v1/workflows", headers=ADMIN, json={"template_key": "gen_export"})
     assert resp.status_code == 201
     wf = resp.json()
-    assert wf["node_count"] == 20  # 3 渠道 × 6 节点（含去AI味/合规审查）+ 封面 + 草稿箱
+    assert wf["node_count"] == 18  # 3 渠道 × 6 节点（含去AI味/合规审查）
 
     run = client.post(
         "/api/v1/workflow-runs",

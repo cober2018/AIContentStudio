@@ -1,12 +1,36 @@
 # AI Content Studio（AI 内容生产中心）
 
-事实驱动的内容生产系统：把结构化数据、研究笔记、文件、URL、人工观点整理成 **FactPack**，面向抖音 / 小红书 / 公众号生成内容，经事实校验与人工审核后导出。
+事实驱动的内容生产系统：把结构化数据、研究笔记、文件、URL、人工观点整理成 **FactPack**，面向抖音 / 小红书 / 公众号生成内容，经事实校验与人工审核后导出；公众号可进一步自动写入官方草稿箱。
 
-需求与任务依据：`03_ai_content_studio_PRD.md`、`04_ai_content_studio_execution_plan.md`。
+需求与任务依据：`03_ai_content_studio_PRD.md`、`04_ai_content_studio_execution_plan.md`；当前边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
+
+### 下一版规划：文章/图文全渠道
+
+最新产品蓝图与本地代码的对齐讨论见 [V1 对齐方案](docs/AI_CONTENT_STUDIO_V1_ALIGNMENT_PLAN.md)，核对依据见 [findings.md](findings.md)。旧三渠道澄清稿仅作历史背景；最新目标是三产品矩阵中的文章/图文内容中心，视频属于 V2。
+
+- 已完成：按确认的 M1 OpenSpec 实现并本地验收了母稿、不可变证据、完整候选审批、公众号/X Thread 人工交付与反馈闭环。
+- 待完成：真实账号的人工发布验收；后续全渠道适配和自动分发必须另开变更，不以本地交付包代替平台发布。
+- 关键决策：复用 FastAPI/React/Celery 和现有事实/审核链；建议首批打通已有文章的公众号 + X 线程成品、人工交付回执及反馈，再补全文章/图文 V1。成品覆盖与自动分发能力分别验收，不以导出冒充已发布。
+- 注意：M1 仅覆盖人工交付；公众号自动进入草稿箱、X API 发布、排期与自动重试均未启用。
+
+本轮新增的 M1 路径不改变运行依赖或启动方式；已归档规范见 `openspec/changes/archive/2026-09-22-add-evidence-bound-article-handoff/`。
+
+### M1 当前落地状态
+
+- 已有文章可导入不可覆盖的 `MotherRevision`，并生成公众号 / X Thread 的本地适配稿；冻结证据以类型化快照而非可变 Fact 作为 M1 依据。
+- 候选批准同时冻结标题、正文、X 帖子顺序、素材顺序、引用、声明和检查结果；素材、证据公开权限撤销会停止未完成的交付目标。
+- 每个账号的人工交付目标独立授权、幂等创建。ZIP 成品包包含正文、HTML 或 Thread JSON、清单和经哈希校验的实际公开素材；回填 `human_confirmed` 只表示人工确认，不表示平台已发布。
+- M1 不调用公众号、X 或对象存储接口；目标授权只允许授权操作人下载包或回填结果。
+- 旧工作流的公众号远端草稿节点默认不生成；只有显式遗留配置才会保留该节点，且 M1 母稿资产仍会被服务端拒绝。
+- 迁移执行：`cd apps/api && .venv/bin/python -m alembic upgrade head`。
+- 本地验收已覆盖公众号实际封面 ZIP、X Thread、重复目标、账号隔离、目标独立失败/成功、旧证据阻断、终态不回退和权限撤销；OpenSpec 已在 ChatGPT 最终复核通过后归档。
+
+### 当前实现链路
 
 ```text
-Source → Fact → FactPack(冻结) → Topic Brief → 三渠道生成
-       → FactCheck → Review → Asset → Export(MD/TXT/JSON/SRT)
+Source → Fact → FactPack(类型化冻结) → Topic Brief → MotherRevision
+       → 公众号 / X Thread Draft + DraftMedia → FactCheck → Review(候选哈希)
+       → Asset → DeliveryTarget(账号授权) → ZIP 成品包 → 人工回填 / 反馈
 ```
 
 核心不变量（"事实不可漂移"主干，全部有测试覆盖）：
@@ -19,6 +43,12 @@ Source → Fact → FactPack(冻结) → Topic Brief → 三渠道生成
 - 已生成内容永远记录生成时的 FactPack 版本与 checksum
 
 ## 快速启动
+
+### Codex with ChatGPT 连接
+
+- 当前工作区已绑定 ChatGPT 项目「AIContentStudio」，使用「仅限项目记忆」。
+- 连接器名称：`Codex with ChatGPT · AIContentStudio`。
+- 更换 ChatGPT 账号后，需要重新授权同名连接器，并重新完成工作区读取验证。
 
 ```bash
 # 后端（默认 SQLite，零外部依赖；Mock provider，无需 API Key）

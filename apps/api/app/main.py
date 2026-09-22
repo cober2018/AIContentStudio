@@ -10,6 +10,7 @@ from .db import init_db
 from .observability import trace_middleware
 from .routers import (
     assets,
+    article_handoff,
     connectors,
     dashboard,
     external,
@@ -76,6 +77,7 @@ for router in (
     generate,
     reviews,
     assets,
+    article_handoff,
     templates,
     dashboard,
     users,

@@ -11,7 +11,7 @@ from ..models import AuditLog, FactPack, FactPackStatus, TopicBrief, User, utcno
 
 router = APIRouter(prefix="/api/v1/topics", tags=["topics"])
 
-VALID_CHANNELS = {"douyin", "xiaohongshu", "wechat"}
+VALID_CHANNELS = {"douyin", "xiaohongshu", "wechat", "x_thread"}
 
 
 class TopicCreateIn(BaseModel):

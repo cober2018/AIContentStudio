@@ -181,14 +181,14 @@ def _md_to_html(md: str) -> str:
     return "\n".join(out)
 
 
-def export_html(asset: ContentAsset) -> str:
-    body = _md_to_html(asset.final_body)
-    title = html.escape(asset.title)
-    date = asset.created_at.strftime("%Y-%m-%d") if asset.created_at else ""
+def render_wechat_html(title_text: str, body_markdown: str, footer_text: str = "") -> str:
+    """Render immutable handoff content without consulting a mutable asset row."""
+    body = _md_to_html(body_markdown)
+    title = html.escape(title_text)
     footer = (
         '<p style="margin-top:28px;padding-top:12px;border-top:1px solid #e5e7eb;'
         'font-size:12px;color:#9ca3af;">本文由 AI Content Studio 生成，经事实校验与人工审核。'
-        f"事实包 v{asset.fact_pack_version}（checksum {asset.fact_pack_checksum or '-'}）· {date}</p>"
+        f"{html.escape(footer_text)}</p>"
     )
     return (
         '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'
@@ -197,9 +197,13 @@ def export_html(asset: ContentAsset) -> str:
         '<article style="max-width:677px;margin:0 auto;padding:24px 16px;'
         'font-family:-apple-system,BlinkMacSystemFont,\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">\n'
         f'<h1 style="font-size:22px;font-weight:700;color:#111827;line-height:1.5;margin:0 0 8px;">{title}</h1>\n'
-        f'<p style="font-size:12px;color:#9ca3af;margin:0 0 20px;">{date}</p>\n'
         f"{body}\n{footer}\n</article>\n</body>\n</html>\n"
     )
+
+
+def export_html(asset: ContentAsset) -> str:
+    footer = f"事实包 v{asset.fact_pack_version}（checksum {asset.fact_pack_checksum or '-'}）"
+    return render_wechat_html(asset.title, asset.final_body, footer)
 
 
 EXPORTERS = {

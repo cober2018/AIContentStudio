@@ -5,6 +5,7 @@ import Connectors from "./pages/Connectors";
 import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
 import FactPacks from "./pages/FactPacks";
+import Handoff from "./pages/Handoff";
 import Review from "./pages/Review";
 import Settings from "./pages/Settings";
 import Sources from "./pages/Sources";
@@ -26,6 +27,7 @@ const NAV = [
   { to: "/workspace", label: "内容任务", icon: "✍" },
   { to: "/review", label: "审核中心", icon: "✓" },
   { to: "/assets", label: "内容资产", icon: "◫" },
+  { to: "/handoff", label: "文章交付", icon: "⇧" },
   { to: "/workflows", label: "工作流", icon: "◴" },
   { to: "/templates", label: "模板", icon: "⚙" },
   { to: "/settings", label: "设置", icon: "☰" },
@@ -91,6 +93,7 @@ function Shell() {
               <Route path="/workspace/:topicId" element={<Workspace />} />
               <Route path="/review" element={<Review />} />
               <Route path="/assets" element={<Assets />} />
+              <Route path="/handoff" element={<Handoff />} />
               <Route path="/workflows" element={<Workflows />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/settings" element={<Settings />} />
