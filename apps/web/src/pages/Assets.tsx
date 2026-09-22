@@ -15,6 +15,9 @@ interface AssetRow {
   created_at: string | null;
   allowed_formats: string[];
   export_count: number;
+  mother_revision_id: number | null;
+  approved_candidate_hash: string | null;
+  candidate_manifest: { media?: unknown[]; citations?: unknown[] } | null;
 }
 
 function copyText(text: string) {
@@ -33,6 +36,77 @@ interface MediaItem {
   mime_type: string | null;
   sort_order: number;
   url: string;
+}
+
+interface DeliveryTarget {
+  id: number;
+  channel: string;
+  content_form: string;
+  account_ref: string;
+  authorization_version: string;
+  status: string;
+  approved_candidate_hash: string;
+  receipts: { id: number; status: string; evidence_ref: string | null; verification_method: string | null }[];
+  feedback: { id: number; kind: string; body: string }[];
+}
+
+function DeliveryPanel({ asset, onClose }: { asset: AssetRow; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [accountRef, setAccountRef] = useState("");
+  const [authorizationVersion, setAuthorizationVersion] = useState("v1");
+  const [receipt, setReceipt] = useState({ status: "human_confirmed", evidence_ref: "", verification_method: "operator", note: "" });
+  const [feedback, setFeedback] = useState("");
+  const { data: targets, isLoading } = useQuery({
+    queryKey: ["delivery-targets", asset.id],
+    queryFn: () => api.get<DeliveryTarget[]>(`/article-handoff/assets/${asset.id}/targets`),
+  });
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["delivery-targets", asset.id] });
+  const create = useMutation({
+    mutationFn: () => api.post<DeliveryTarget>(`/article-handoff/assets/${asset.id}/targets`, {
+      channel: asset.channel,
+      content_form: asset.channel === "wechat" ? "wechat_article" : "x_thread",
+      account_ref: accountRef,
+      authorization_version: authorizationVersion,
+    }),
+    onSuccess: () => { setAccountRef(""); refresh(); },
+    onError: (error) => alert(error instanceof Error ? error.message : "授权失败"),
+  });
+  const packageMutation = useMutation({
+    mutationFn: (target: DeliveryTarget) => api.post<{ manifest: { archive_download_path?: string }; content: { title: string; markdown: string; html?: string; json?: string } }>(`/article-handoff/targets/${target.id}/package`),
+    onSuccess: (result) => { setPackageContent(result); refresh(); },
+    onError: (error) => alert(error instanceof Error ? error.message : "生成成品包失败"),
+  });
+  const [packageContent, setPackageContent] = useState<{ manifest: { archive_download_path?: string }; content: { title: string; markdown: string; html?: string; json?: string } } | null>(null);
+  const receiptMutation = useMutation({
+    mutationFn: (target: DeliveryTarget) => api.post(`/article-handoff/targets/${target.id}/receipt`, receipt),
+    onSuccess: () => { refresh(); setReceipt({ status: "human_confirmed", evidence_ref: "", verification_method: "operator", note: "" }); },
+    onError: (error) => alert(error instanceof Error ? error.message : "回填失败"),
+  });
+  const feedbackMutation = useMutation({
+    mutationFn: (target: DeliveryTarget) => api.post(`/article-handoff/targets/${target.id}/feedback`, { kind: "note", body: feedback }),
+    onSuccess: () => { setFeedback(""); refresh(); },
+    onError: (error) => alert(error instanceof Error ? error.message : "反馈保存失败"),
+  });
+
+  return <Modal title={`人工交付 · ${asset.title.slice(0, 24)}`} onClose={onClose} wide>
+    <p className="mb-4 text-xs leading-relaxed text-slate-500">内容批准与账号授权是两件事。这里仅生成本地成品包；人工回填只记录操作人确认，不会标成平台已发布。</p>
+    <div className="rounded-lg border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2 text-sm"><ChannelBadge channel={asset.channel} /><span>批准哈希 {asset.approved_candidate_hash?.slice(0, 16)}</span><span>素材 {asset.candidate_manifest?.media?.length || 0} 项</span></div>
+      <div className="mt-3 grid gap-3 md:grid-cols-[1fr_160px_auto] md:items-end">
+        <label className="block text-xs font-medium text-slate-500">账号标识<input className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={accountRef} onChange={(event) => setAccountRef(event.target.value)} placeholder="公众号或 X 账号" /></label>
+        <label className="block text-xs font-medium text-slate-500">授权版本<input className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={authorizationVersion} onChange={(event) => setAuthorizationVersion(event.target.value)} /></label>
+        <Button disabled={!accountRef || create.isPending} onClick={() => create.mutate()}>{create.isPending ? "授权中…" : "创建人工目标"}</Button>
+      </div>
+    </div>
+    {isLoading ? <Spinner /> : <div className="mt-4 space-y-3">{(targets || []).map((target) => <div className="rounded-lg border border-slate-200 p-4" key={target.id}>
+      <div className="flex flex-wrap items-center gap-2"><span className="font-medium">{target.account_ref}</span><StatusBadge status={target.status} /><span className="text-xs text-slate-400">{target.content_form} · {target.authorization_version}</span></div>
+      <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" variant="secondary" disabled={packageMutation.isPending} onClick={() => packageMutation.mutate(target)}>生成/查看成品包</Button>{target.status === "awaiting_manual_receipt" && <><select className="rounded border border-slate-300 px-2 text-xs" value={receipt.status} onChange={(event) => setReceipt({ ...receipt, status: event.target.value })}><option value="human_confirmed">人工确认</option><option value="reconciliation_needed">需要核对</option><option value="failed">交付失败</option></select><Button size="sm" disabled={receiptMutation.isPending} onClick={() => receiptMutation.mutate(target)}>回填结果</Button></>}</div>
+      {target.status === "awaiting_manual_receipt" && <div className="mt-2 grid gap-2 md:grid-cols-2"><input className="rounded border border-slate-300 px-2 py-1 text-xs" placeholder="链接或凭证引用（可选）" value={receipt.evidence_ref} onChange={(event) => setReceipt({ ...receipt, evidence_ref: event.target.value })} /><input className="rounded border border-slate-300 px-2 py-1 text-xs" placeholder="核验方式" value={receipt.verification_method} onChange={(event) => setReceipt({ ...receipt, verification_method: event.target.value })} /></div>}
+      {target.receipts.length > 0 && <p className="mt-2 text-xs text-slate-500">最近回填：{target.receipts[0].status}{target.receipts[0].evidence_ref ? ` · ${target.receipts[0].evidence_ref}` : ""}</p>}
+      <div className="mt-3 flex gap-2"><input className="min-w-0 flex-1 rounded border border-slate-300 px-2 py-1 text-xs" placeholder="记录发布后的最小反馈" value={feedback} onChange={(event) => setFeedback(event.target.value)} /><Button size="sm" variant="secondary" disabled={!feedback || feedbackMutation.isPending} onClick={() => feedbackMutation.mutate(target)}>保存反馈</Button></div>
+    </div>)}</div>}
+    {packageContent && <div className="mt-4 rounded-lg border border-slate-200 p-4"><div className="mb-2 flex flex-wrap justify-between gap-2"><span className="text-sm font-medium">本地成品包</span><span className="flex gap-2"><Button size="sm" variant="secondary" onClick={() => copyText(packageContent.content.markdown)}>复制 Markdown</Button>{packageContent.manifest.archive_download_path && <Button size="sm" onClick={() => window.open(packageContent.manifest.archive_download_path, "_blank", "noopener,noreferrer")}>下载 ZIP 成品包</Button>}</span></div><pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-3 text-xs">{packageContent.content.markdown}</pre><details className="mt-2 text-xs text-slate-500"><summary className="cursor-pointer">查看交付清单</summary><pre className="mt-2 overflow-auto rounded bg-slate-50 p-3">{JSON.stringify(packageContent.manifest, null, 2)}</pre></details></div>}
+  </Modal>;
 }
 
 function MediaPanel({ asset, onClose }: { asset: AssetRow; onClose: () => void }) {
@@ -111,6 +185,7 @@ export default function Assets() {
   const [channel, setChannel] = useState("");
   const [preview, setPreview] = useState<{ filename: string; content: string } | null>(null);
   const [mediaFor, setMediaFor] = useState<AssetRow | null>(null);
+  const [deliveryFor, setDeliveryFor] = useState<AssetRow | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["assets", channel],
@@ -137,6 +212,7 @@ export default function Assets() {
             ["douyin", "抖音"],
             ["xiaohongshu", "小红书"],
             ["wechat", "公众号"],
+            ["x_thread", "X Thread"],
           ].map(([key, label]) => (
             <button
               key={key}
@@ -192,6 +268,7 @@ export default function Assets() {
                   <Button size="sm" variant="secondary" onClick={() => setMediaFor(a)}>
                     配图
                   </Button>
+                  {a.mother_revision_id && a.approved_candidate_hash && <Button size="sm" onClick={() => setDeliveryFor(a)}>人工交付</Button>}
                   {a.allowed_formats.map((fmt) => (
                     <Button
                       key={fmt}
@@ -211,6 +288,7 @@ export default function Assets() {
       )}
 
       {mediaFor && <MediaPanel asset={mediaFor} onClose={() => setMediaFor(null)} />}
+      {deliveryFor && <DeliveryPanel asset={deliveryFor} onClose={() => setDeliveryFor(null)} />}
       {preview && (
         <Modal title={`导出预览：${preview.filename}`} onClose={() => setPreview(null)} wide>
           <div className="mb-3 flex justify-end gap-2">

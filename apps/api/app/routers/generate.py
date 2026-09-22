@@ -19,6 +19,7 @@ from ..models import (
     utcnow,
 )
 from ..services import factchecker
+from ..services.candidates import draft_input_hash
 from ..services.generation import orchestrator, renderers
 from ..services.generation.providers import GenerateRequest, GenerateResult, get_provider, record_run
 from ..tasks import worker_tasks
@@ -165,7 +166,13 @@ def update_draft(
         revision_no=max(d.revision_no for d in job.drafts) + 1,
         title=payload.title or draft.title,
         body=payload.body,
-        structured_json=draft.structured_json,
+        structured_json=None,
+        fact_check_json=None,
+        mother_revision_id=draft.mother_revision_id,
+        evidence_checksum=draft.evidence_checksum,
+        input_hash=draft_input_hash(payload.title or draft.title, payload.body, None),
+        thread_posts_json=None,
+        candidate_readiness="stale",
         status=DraftStatus.draft.value,
         created_by_type="user",
         created_by=user.email,
@@ -187,7 +194,8 @@ def run_fact_check(draft_id: int, db: Session = Depends(get_db), user: User = De
     facts_payload = orchestrator._pack_facts_payload(db, topic.fact_pack)
     topic_text = renderers.topic_brief_text(topic)
     source_text = " ".join(
-        f.source_document.raw_text or "" for f in topic.fact_pack.items for f in [f.fact]
+        (item.snapshot_json or {}).get("excerpt") or (item.snapshot_json or {}).get("statement") or ""
+        for item in topic.fact_pack.items
     )
 
     result = factchecker.run_fact_check(
@@ -198,7 +206,9 @@ def run_fact_check(draft_id: int, db: Session = Depends(get_db), user: User = De
         source_text=source_text,
     )
 
-    draft.fact_check_json = result.to_json() | {"checked_at": utcnow().isoformat()}
+    current_input_hash = draft.input_hash or draft_input_hash(draft.title, draft.body, draft.thread_posts_json)
+    draft.input_hash = current_input_hash
+    draft.fact_check_json = result.to_json() | {"checked_at": utcnow().isoformat(), "input_hash": current_input_hash}
     draft.status = (
         DraftStatus.fact_check_failed.value
         if result.result == "blocker"
@@ -249,7 +259,8 @@ async def rewrite_selection(
 
     job = draft.content_job
     topic = job.topic_brief
-    facts_payload = orchestrator._pack_facts_payload(db, topic.fact_pack)
+    provider = get_provider("rewrite")
+    facts_payload = orchestrator._pack_facts_payload(db, topic.fact_pack, require_model_use=provider.name != "mock")
     allowed = "\n".join(f"{f['id']}: {f['statement']}" for f in facts_payload)
 
     request = GenerateRequest(
@@ -267,7 +278,6 @@ async def rewrite_selection(
             f"【可用事实】{allowed}\n"
         ),
     )
-    provider = get_provider("rewrite")
     if provider.name == "mock":
         rewritten = f"{payload.selected_text}（{payload.instruction}后）"
         run_result = GenerateResult(data={}, raw_output=rewritten, usage={"mock": True})

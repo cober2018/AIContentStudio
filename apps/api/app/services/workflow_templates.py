@@ -6,6 +6,7 @@ CHANNEL_META = {
     "douyin": {"label": "抖音口播", "formats": ["txt", "srt"]},
     "xiaohongshu": {"label": "小红书图文", "formats": ["md", "txt"]},
     "wechat": {"label": "公众号文章", "formats": ["md", "html"]},
+    "x_thread": {"label": "X Thread", "formats": ["md", "json"]},
 }
 
 
@@ -36,7 +37,7 @@ def build_daily_suggest(params: dict | None = None) -> dict:
 
 
 def build_gen_export(params: dict | None = None) -> dict:
-    """生成 → 出库：共享一个 Topic，按渠道分叉（生成 → 校验 →【人工批准】→ 导出），公众号线接草稿箱。"""
+    """生成 → 出库：默认只生成本地交付物；遗留远端草稿需显式开启。"""
     p = params or {}
     channels = p.get("channels") or ["douyin", "xiaohongshu", "wechat"]
     nodes: list[dict] = []
@@ -59,9 +60,18 @@ def build_gen_export(params: dict | None = None) -> dict:
             {"from": f"check_{ch}", "to": f"approve_{ch}"},
             {"from": f"approve_{ch}", "to": f"export_{ch}"},
         ]
-        if ch == "wechat" and p.get("publish_wechat", True):
+        if ch == "wechat" and p.get("publish_wechat", False):
             nodes.append(_node("cover_wechat", "generate_cover", "AI 封面 · 公众号", {"channel": "wechat"}, 1380, y))
-            nodes.append(_node("publish_wechat", "publish_wechat", "公众号草稿箱", {"channel": "wechat"}, 1610, y))
+            nodes.append(
+                _node(
+                    "publish_wechat",
+                    "publish_wechat",
+                    "公众号草稿箱（遗留能力，显式启用）",
+                    {"channel": "wechat", "legacy_remote_publish": True},
+                    1610,
+                    y,
+                )
+            )
             edges += [
                 {"from": "approve_wechat", "to": "cover_wechat"},
                 {"from": "cover_wechat", "to": "publish_wechat"},
@@ -84,11 +94,11 @@ TEMPLATES = {
     },
     "gen_export": {
         "name": "生成 → 出库（按渠道分叉）",
-        "description": "共享一个选题，抖音/小红书/公众号各自一条线：生成 → 事实校验 → 人工批准 → 导出；公众号线接草稿箱",
+        "description": "共享一个选题，按渠道生成 → 事实校验 → 人工批准 → 本地导出；遗留公众号草稿能力需显式开启",
         "builder": build_gen_export,
         "params_schema": [
             {"key": "channels", "label": "渠道线", "type": "channels", "default": ["douyin", "xiaohongshu", "wechat"]},
-            {"key": "publish_wechat", "label": "公众号线接草稿箱", "type": "boolean", "default": True},
+            {"key": "publish_wechat", "label": "显式启用遗留公众号草稿能力", "type": "boolean", "default": False},
         ],
     },
 }

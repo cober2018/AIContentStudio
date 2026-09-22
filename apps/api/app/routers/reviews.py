@@ -14,13 +14,16 @@ from ..models import (
     DraftStatus,
     Review,
     User,
+    utcnow,
 )
+from ..services.candidates import build_manifest, candidate_hash
 
 router = APIRouter(prefix="/api/v1/reviews", tags=["reviews"])
 
 
 class DecisionIn(BaseModel):
     comment: str | None = None
+    warning_dispositions: dict[str, str] | None = None
 
 
 def _serialize_queue_item(draft: Draft) -> dict:
@@ -135,9 +138,42 @@ def approve(
     if existing_review and existing_review.revision_no != draft.revision_no:
         raise HTTPException(409, "稿件在审核开启后被修改，需基于最新 revision 重新提交")
 
+    if draft.mother_revision_id:
+        from ..services.candidates import readiness_reasons
+
+        reasons = readiness_reasons(draft)
+        revision = draft.mother_revision
+        if not revision or draft.evidence_checksum != revision.evidence_checksum or pack.checksum != revision.evidence_checksum:
+            reasons.append("evidence_binding_mismatch")
+        invalid_evidence = [
+            item.id
+            for item in pack.items
+            if item.evidence_kind == "legacy_untyped"
+            or not item.snapshot_checksum
+            or item.public_use_allowed is not True
+            or item.public_use_revoked_at
+        ]
+        if invalid_evidence:
+            reasons.append(f"evidence_not_publicly_deliverable:{invalid_evidence}")
+        if fc.get("input_hash") != draft.input_hash:
+            reasons.append("fact_check_not_bound_to_candidate")
+        warnings = (fc.get("stats") or {}).get("warnings", 0)
+        dispositions = (payload.warning_dispositions if payload else None) or {}
+        if warnings and not dispositions:
+            reasons.append("missing_warning_dispositions")
+        if reasons:
+            draft.candidate_readiness = "incomplete"
+            raise HTTPException(409, {"message": "候选内容尚未达到完整批准条件", "reasons": reasons})
+    manifest = build_manifest(draft)
+    approved_candidate_hash = candidate_hash(manifest)
+
     db.add(Review(draft_id=draft.id, revision_no=draft.revision_no, reviewer_id=user.email,
-                  decision="approved", comment=payload.comment if payload else None))
+                  decision="approved", comment=payload.comment if payload else None,
+                  candidate_hash=approved_candidate_hash, candidate_readiness="ready",
+                  warning_dispositions_json=(payload.warning_dispositions if payload else None),
+                  checked_input_hash=draft.input_hash, approved_at=utcnow()))
     draft.status = DraftStatus.approved.value
+    draft.candidate_readiness = "ready"
 
     asset = ContentAsset(
         draft_id=draft.id,
@@ -156,10 +192,13 @@ def approve(
         prompt_version=job.prompt_version,
         reviewer=user.email,
         approved_revision=draft.revision_no,
+        approved_candidate_hash=approved_candidate_hash,
+        candidate_manifest_json=manifest,
+        mother_revision_id=draft.mother_revision_id,
     )
     db.add(asset)
     db.add(AuditLog(event="review.approved", actor=user.email, entity_type="draft", entity_id=str(draft.id),
-                    detail_json={"asset_id": None, "revision": draft.revision_no}))
+                    detail_json={"asset_id": None, "revision": draft.revision_no, "candidate_hash": approved_candidate_hash}))
     db.commit()
     db.refresh(asset)
     return {"draft_id": draft.id, "asset_id": asset.id, "status": draft.status}

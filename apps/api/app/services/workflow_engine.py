@@ -98,7 +98,16 @@ def _h_factpack_freeze(db: Session, run: WorkflowRun, step: WorkflowStep, user) 
     from ..models import FactPackItem
 
     for i, f in enumerate(confirmed):
-        db.add(FactPackItem(fact_pack_id=pack.id, fact_id=f.id, sort_order=i))
+        db.add(
+            FactPackItem(
+                fact_pack_id=pack.id,
+                fact_id=f.id,
+                sort_order=i,
+                evidence_kind="fact",
+                public_use_allowed=False,
+                model_use_allowed=False,
+            )
+        )
     db.flush()
 
     from ..routers.fact_packs import freeze_fact_pack
@@ -372,7 +381,7 @@ def _h_export(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
 
 
 def _h_publish_wechat(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
-    """公众号草稿箱：导出 MD + 封面（上传真图优先，否则占位 PNG）→ wewrite publish。"""
+    """显式遗留能力：导出 MD + 封面 → wewrite publish。"""
     import subprocess
     import tempfile
     from pathlib import Path
@@ -383,12 +392,16 @@ def _h_publish_wechat(db: Session, run: WorkflowRun, step: WorkflowStep, user) -
     from ..services.exports import export_markdown
 
     channel = "wechat"
+    if step.params_json.get("legacy_remote_publish") is not True:
+        raise ValueError("公众号远端草稿节点未显式启用；M1 仅允许人工交付成品包")
     asset_id = (run.context_json.get("assets") or {}).get(channel)
     if not asset_id:
         raise ValueError("公众号线没有已批准的资产")
     from ..models import ContentAsset
 
     asset = db.get(ContentAsset, asset_id)
+    if asset and asset.mother_revision_id:
+        raise ValueError("M1 内容没有自动交付动作，禁止通过旧工作流进入公众号草稿箱")
     with tempfile.TemporaryDirectory() as tmp:
         md_path = Path(tmp) / "article.md"
         md_path.write_text(export_markdown(asset), encoding="utf-8")
@@ -576,6 +589,15 @@ def retry_run(db: Session, run: WorkflowRun, user) -> WorkflowRun:
     """从失败节点重试：失败步骤与下游 pending 重置。"""
     if run.status != "failed":
         raise ValueError("只有失败的运行可以重试")
+    from ..models import ContentAsset
+
+    asset_ids = ((run.context_json or {}).get("assets") or {}).values()
+    if any(
+        asset and asset.mother_revision_id
+        for asset_id in asset_ids
+        for asset in [db.get(ContentAsset, asset_id)]
+    ):
+        raise ValueError("M1 人工交付不允许通过旧工作流重试远端副作用")
     for step in _steps(db, run):
         if step.status == "failed":
             step.status = "pending"

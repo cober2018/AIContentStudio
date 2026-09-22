@@ -64,6 +64,11 @@ const STATUS_STYLES: Record<string, string> = {
   stale: "bg-amber-100 text-amber-700",
   archived: "bg-slate-100 text-slate-400",
   exported: "bg-teal-100 text-teal-700",
+  incomplete: "bg-amber-100 text-amber-700",
+  target_authorized: "bg-sky-100 text-sky-700",
+  awaiting_manual_receipt: "bg-violet-100 text-violet-700",
+  human_confirmed: "bg-emerald-100 text-emerald-700",
+  reconciliation_needed: "bg-amber-100 text-amber-700",
   active: "bg-emerald-100 text-emerald-700",
 };
 
@@ -73,7 +78,7 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 export function ChannelBadge({ channel }: { channel: string }) {
-  const names: Record<string, string> = { douyin: "抖音", xiaohongshu: "小红书", wechat: "公众号" };
+  const names: Record<string, string> = { douyin: "抖音", xiaohongshu: "小红书", wechat: "公众号", x_thread: "X Thread" };
   return (
     <span className="inline-flex rounded border border-slate-200 bg-white px-1.5 py-0.5 text-xs text-slate-600">
       {names[channel] || channel}

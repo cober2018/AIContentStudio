@@ -7,10 +7,9 @@
 
 import asyncio
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import FactPack, FactPackStatus, SourceDocument
+from ..models import FactPack, FactPackStatus
 from .domain_knowledge import generation_block as _knowledge_block
 from .generation.mock_content import build_structured_output
 from .generation.orchestrator import _pack_facts_payload
@@ -41,16 +40,14 @@ def suggest_for_pack(db: Session, pack: FactPack, count: int = 3) -> dict:
     if pack.status != FactPackStatus.frozen.value:
         raise ValueError("FactPack 必须为 frozen 状态才能荐题")
     count = max(1, min(int(count or 3), 5))
-    facts = _pack_facts_payload(db, pack)
+    provider = get_provider("topic_discovery")
+    facts = _pack_facts_payload(db, pack, require_model_use=provider.name != "mock")
     if not facts:
         raise ValueError("FactPack 没有事实，无法荐题")
 
     # 领域知识块：有方法论时荐题模型才读得懂指标含义（拥挤度/生命周期/底部共振…）
-    source_ids = {f["source_id"] for f in facts if f.get("source_id")}
-    source_raws = [d.raw_text or "" for d in db.scalars(
-        select(SourceDocument).where(SourceDocument.id.in_(source_ids))
-    )] if source_ids else []
-    knowledge = _knowledge_block(facts, source_raws)
+    # 领域知识只能由已冻结快照派生，不能把原始来源正文送往外部模型。
+    knowledge = _knowledge_block(facts, [fact.get("statement") or "" for fact in facts])
 
     request = GenerateRequest(
         purpose="suggest_topics",
@@ -66,7 +63,6 @@ def suggest_for_pack(db: Session, pack: FactPack, count: int = 3) -> dict:
         context={"facts": facts, "count": count},
         schema_hint=_SUGGEST_SCHEMA_HINT,
     )
-    provider = get_provider("topic_discovery")
     data = None
     last_error: Exception | None = None
     # 真实模型偶发输出不可解析：调用级重试一次（STU-072 精神：修复一次 + 重试一次，不无限循环）
