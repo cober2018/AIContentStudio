@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { Button, Drawer, EmptyState, ErrorBanner, Field, Spinner, StatusBadge, inputClass } from "../components/ui";
-import type { Definition, Persona, Project, SharedAsset, Unit, WorkflowBinding, WorkflowNode } from "./PersistentProjectPages";
+import type { Definition, Persona, Project, SharedAsset, Unit, WorkflowBinding, WorkflowNode } from "./project/projectTypes";
 
 type Step = { id: number; node_id: string; node_type: string; label: string; status: string; params: Record<string, unknown>; output: Record<string, unknown>; error: string | null; stale_reason: string | null; attempt_no: number };
 type Run = { id: number; status: string; workflow_id: number; workflow_version: number | null; definition_checksum: string | null; identity_snapshot_id: number | null; identity_state: string; definition: Definition; steps: Step[]; error: string | null };
