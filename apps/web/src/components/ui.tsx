@@ -65,6 +65,9 @@ const STATUS_STYLES: Record<string, string> = {
   blocked: "bg-rose-100 text-rose-800 ring-1 ring-rose-200",
   unknown: "bg-violet-100 text-violet-800 ring-1 ring-violet-200",
   ready: "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200",
+  waiting_review: "bg-violet-100 text-violet-800",
+  delivery_ready: "bg-sky-100 text-sky-800",
+  delivered: "bg-emerald-100 text-emerald-800",
   waiting_human: "bg-sky-100 text-sky-800 ring-1 ring-sky-200",
   archived: "bg-slate-100 text-slate-400",
   exported: "bg-teal-100 text-teal-700",
@@ -78,7 +81,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 export function StatusBadge({ status }: { status: string }) {
   const style = STATUS_STYLES[status] || "bg-slate-100 text-slate-600";
-  const labels: Record<string, string> = { blocked: "受阻", stale: "已过期", unknown: "待核对", ready: "就绪", waiting_human: "等待人工", running: "进行中", draft: "草稿", approved: "已批准" };
+  const labels: Record<string, string> = { blocked: "受阻", stale: "已过期", unknown: "待核对", ready: "就绪", waiting_review: "待审核", delivery_ready: "待交付", delivered: "已回填", waiting_human: "等待人工", running: "进行中", draft: "草稿", approved: "已批准" };
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${style}`} title={status}>{labels[status] || status}</span>;
 }
 

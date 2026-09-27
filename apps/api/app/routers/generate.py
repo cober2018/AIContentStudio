@@ -22,6 +22,7 @@ from ..services import factchecker
 from ..services.candidates import draft_input_hash
 from ..services.generation import orchestrator, renderers
 from ..services.generation.providers import GenerateRequest, GenerateResult, get_provider, record_run
+from ..services.project_authorization import authorize_project_draft, authorize_project_job
 from ..tasks import worker_tasks
 
 router = APIRouter(prefix="/api/v1", tags=["generate"])
@@ -170,6 +171,7 @@ def get_content_job(job_id: int, db: Session = Depends(get_db), user: User = Dep
     job = db.get(ContentJob, job_id)
     if not job:
         raise HTTPException(404, "ContentJob 不存在")
+    authorize_project_job(db, job, user)
     return {
         "id": job.id,
         "topic_id": job.topic_brief_id,
@@ -190,6 +192,7 @@ def regenerate(job_id: int, db: Session = Depends(get_db), user: User = Depends(
     job = db.get(ContentJob, job_id)
     if not job:
         raise HTTPException(404, "ContentJob 不存在")
+    authorize_project_job(db, job, user, mutate=True)
     if job.status in {JobStatus.queued.value, JobStatus.running.value}:
         raise HTTPException(409, f"任务正在执行（{job.status}），请稍后刷新查看")
     status = worker_tasks.dispatch_generation(db, job_id)
@@ -205,6 +208,7 @@ def get_draft(draft_id: int, db: Session = Depends(get_db), user: User = Depends
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user)
     return _serialize_draft(draft, with_detail=True)
 
 
@@ -224,6 +228,7 @@ def update_draft(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     if draft.status == DraftStatus.approved.value:
         raise HTTPException(409, "已批准的 Draft 不可编辑")
 
@@ -240,6 +245,7 @@ def run_fact_check(draft_id: int, db: Session = Depends(get_db), user: User = De
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
 
     job = draft.content_job
     topic = job.topic_brief
@@ -312,6 +318,7 @@ async def rewrite_selection(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
 
     job = draft.content_job
     topic = job.topic_brief
@@ -350,6 +357,7 @@ def submit_for_review(draft_id: int, db: Session = Depends(get_db), user: User =
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     if not draft.fact_check_json:
         raise HTTPException(409, "提交审核前必须先通过 FactCheck")
     if draft.fact_check_json.get("result") == "blocker":

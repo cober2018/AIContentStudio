@@ -19,6 +19,7 @@ from .routers import (
     project_evidence,
     project_assets,
     project_read_models,
+    project_review,
     dashboard,
     delivery,
     discoverability,
@@ -114,6 +115,7 @@ for router in (
     project_evidence,
     project_assets,
     project_read_models,
+    project_review,
     health,
     external,
 ):

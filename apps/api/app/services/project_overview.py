@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from ..models import ContentPersona, ContentUnit, IdentitySnapshot, WorkflowRun, WorkflowStep
 from .project_brief import current_brief
 from .project_evidence import current_boundary
+from .project_review_projection import unit_projection
 
 
 def project_overview(db: Session, project_id: int) -> dict:
@@ -13,6 +14,7 @@ def project_overview(db: Session, project_id: int) -> dict:
     boundary = current_boundary(db, project_id)
     units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id).order_by(ContentUnit.id)).all()
     active = [unit for unit in units if unit.status != "archived"]
+    review_units = [unit_projection(db, unit) for unit in active]
     modality_counts = {key: sum(unit.modality == key for unit in active) for key in ("text", "graphic", "video")}
     personas = []
     for persona_id in sorted({unit.persona_id for unit in active}):
@@ -56,4 +58,16 @@ def project_overview(db: Session, project_id: int) -> dict:
         stage, next_action = "review_ready", None
     else:
         stage, next_action = "production", {"code": "production.continue", "label": "继续生产", "href": f"/projects/{project_id}?tab=matrix"}
-    return {"stage": stage, "activeUnitCount": len(active), "archivedUnitCount": len(units) - len(active), "modalityCounts": modality_counts, "personas": personas, "brief": {"ready": brief is not None, "revision": brief.revision_no if brief else None}, "factBoundary": {"ready": boundary is not None, "revision": boundary.revision_no if boundary else None, "factPackId": boundary.fact_pack_id if boundary else None, "factPackVersion": boundary.fact_pack_version if boundary else None, "checksum": boundary.fact_pack_checksum if boundary else None}, "risks": risks, "pendingDecisions": pending, "nextAction": next_action}
+    if stage in {"review_ready", "production"}:
+        decisions = (
+            ("unknown", "delivery.reconcile", "核对交付结果"),
+            ("waiting_review", "content.approve", "审核冻结候选"),
+            ("approved", "delivery.authorize", "授权交付目标"),
+            ("delivery_ready", "delivery.complete", "完成交付并回填"),
+        )
+        for status, code, label in decisions:
+            if any(unit["summary"] == status for unit in review_units):
+                stage = "review_ready"
+                next_action = {"code": code, "label": label, "href": f"/review?project={project_id}"}
+                break
+    return {"stage": stage, "activeUnitCount": len(active), "archivedUnitCount": len(units) - len(active), "modalityCounts": modality_counts, "personas": personas, "brief": {"ready": brief is not None, "revision": brief.revision_no if brief else None}, "factBoundary": {"ready": boundary is not None, "revision": boundary.revision_no if boundary else None, "factPackId": boundary.fact_pack_id if boundary else None, "factPackVersion": boundary.fact_pack_version if boundary else None, "checksum": boundary.fact_pack_checksum if boundary else None}, "risks": risks, "pendingDecisions": pending, "nextAction": next_action, "review": {"units": review_units}}

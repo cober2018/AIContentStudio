@@ -691,8 +691,9 @@ class Review(Base):
     __tablename__ = "review"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int] = mapped_column(ForeignKey("draft.id"))
-    revision_no: Mapped[int] = mapped_column(Integer)  # 打开审核时的 revision，approve 时校验未被编辑
+    draft_id: Mapped[int | None] = mapped_column(ForeignKey("draft.id"))
+    revision_no: Mapped[int | None] = mapped_column(Integer)  # 打开审核时的 revision，approve 时校验未被编辑
+    content_asset_id: Mapped[int | None] = mapped_column(ForeignKey("content_asset.id"), index=True)
     reviewer_id: Mapped[int | None] = mapped_column(String(255))
     decision: Mapped[str] = mapped_column(String(30))  # changes_requested/approved
     comment: Mapped[str | None] = mapped_column(Text)
@@ -711,16 +712,22 @@ class Review(Base):
 
 class ContentAsset(Base):
     __tablename__ = "content_asset"
+    __table_args__ = (UniqueConstraint("project_id", "content_unit_id", "candidate_hash", name="uq_project_candidate_hash"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int] = mapped_column(ForeignKey("draft.id"))
-    topic_brief_id: Mapped[int] = mapped_column(ForeignKey("topic_brief.id"))
+    draft_id: Mapped[int | None] = mapped_column(ForeignKey("draft.id"))
+    topic_brief_id: Mapped[int | None] = mapped_column(ForeignKey("topic_brief.id"))
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id"), index=True)
+    content_unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"), index=True)
+    workflow_run_id: Mapped[int | None] = mapped_column(ForeignKey("workflow_run.id"), index=True)
+    candidate_hash: Mapped[str | None] = mapped_column(String(64), index=True)
     channel: Mapped[str] = mapped_column(String(30))
     title: Mapped[str] = mapped_column(String(500))
     final_body: Mapped[str] = mapped_column(Text)
     structured_json: Mapped[dict | None] = mapped_column(JSON)
-    fact_pack_id: Mapped[int] = mapped_column(Integer)
-    fact_pack_version: Mapped[int] = mapped_column(Integer)
+    fact_pack_id: Mapped[int | None] = mapped_column(Integer)
+    fact_pack_version: Mapped[int | None] = mapped_column(Integer)
     fact_pack_checksum: Mapped[str | None] = mapped_column(String(64))
     brand_voice_version_id: Mapped[int | None] = mapped_column(Integer)
     template_version_id: Mapped[int | None] = mapped_column(Integer)
@@ -728,7 +735,7 @@ class ContentAsset(Base):
     model_name: Mapped[str | None] = mapped_column(String(100))
     prompt_version: Mapped[str | None] = mapped_column(String(30))
     reviewer: Mapped[str | None] = mapped_column(String(255))
-    approved_revision: Mapped[int] = mapped_column(Integer)
+    approved_revision: Mapped[int | None] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String(20), default="approved")
     approved_candidate_hash: Mapped[str | None] = mapped_column(String(64))
     candidate_manifest_json: Mapped[dict | None] = mapped_column(JSON)
@@ -751,7 +758,7 @@ class DeliveryTarget(Base):
     __tablename__ = "delivery_target"
     __table_args__ = (
         UniqueConstraint(
-            "content_asset_id", "approved_candidate_hash", "channel", "content_form", "account_ref", "action", "authorization_version",
+            "content_asset_id", "approved_candidate_hash", "channel", "content_form", "authorization_account_key", "action", "authorization_version",
             name="uq_delivery_target_authorization",
         ),
         CheckConstraint(
@@ -766,9 +773,18 @@ class DeliveryTarget(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     content_asset_id: Mapped[int] = mapped_column(ForeignKey("content_asset.id"))
+    content_account_id: Mapped[int | None] = mapped_column(ForeignKey("content_account.id"), index=True)
     channel: Mapped[str] = mapped_column(String(30))
     content_form: Mapped[str] = mapped_column(String(30))
     account_ref: Mapped[str] = mapped_column(String(255))
+    authorization_account_key: Mapped[str] = mapped_column(
+        String(300),
+        default=lambda context: (
+            f"content-account:{context.get_current_parameters()['content_account_id']}"
+            if context.get_current_parameters().get("content_account_id") is not None
+            else f"legacy-ref:{context.get_current_parameters()['account_ref']}"
+        ),
+    )
     action: Mapped[str] = mapped_column(String(30), default=DeliveryAction.manual_handoff.value)
     authorization_version: Mapped[str] = mapped_column(String(64))
     approved_candidate_hash: Mapped[str] = mapped_column(String(64))

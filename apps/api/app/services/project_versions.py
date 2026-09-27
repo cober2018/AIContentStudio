@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentUnit, CreativeBriefRevision, IdentitySnapshot, MaterialRevision, ProjectFactBoundaryRevision, ProjectMaterialReference, ProjectWorkflowOutput, Workflow, WorkflowRun
+from ..models import ContentAsset, ContentUnit, CreativeBriefRevision, DeliveryTarget, IdentitySnapshot, MaterialRevision, ProjectFactBoundaryRevision, ProjectMaterialReference, ProjectWorkflowOutput, Review, Workflow, WorkflowRun
 
 
 def _item(kind: str, id: int, version=None, status=None, checksum=None, created_at=None, current=False, unit_id=None, source=None) -> dict:
@@ -22,6 +22,12 @@ def project_versions(db: Session, project_id: int) -> dict:
     unit_ids = [unit.id for unit in units]
     runs = db.scalars(select(WorkflowRun).where(WorkflowRun.content_unit_id.in_(unit_ids)).order_by(WorkflowRun.id.desc()).limit(200)).all() if unit_ids else []
     outputs = db.scalars(select(ProjectWorkflowOutput).where(ProjectWorkflowOutput.project_id == project_id).order_by(ProjectWorkflowOutput.id.desc()).limit(200)).all()
+    candidates = db.scalars(select(ContentAsset).where(ContentAsset.project_id == project_id).order_by(ContentAsset.id.desc()).limit(200)).all()
+    candidate_ids = [candidate.id for candidate in candidates]
+    approvals = db.scalars(select(Review).where(Review.content_asset_id.in_(candidate_ids)).order_by(Review.id.desc()).limit(200)).all() if candidate_ids else []
+    delivery_targets = db.scalars(select(DeliveryTarget).where(DeliveryTarget.content_asset_id.in_(candidate_ids)).order_by(DeliveryTarget.id.desc()).limit(200)).all() if candidate_ids else []
+    current_candidate_ids = {candidate.content_unit_id: candidate.id for candidate in reversed(candidates)}
+    candidate_unit_ids = {candidate.id: candidate.content_unit_id for candidate in candidates}
     refs = db.scalars(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id).order_by(ProjectMaterialReference.id.desc()).limit(200)).all()
     workflow_ids = {unit.pinned_workflow_id for unit in units if unit.pinned_workflow_id} | {run.workflow_id for run in runs if run.workflow_id}
     workflows = [db.get(Workflow, workflow_id) for workflow_id in sorted(workflow_ids)]
@@ -59,4 +65,7 @@ def project_versions(db: Session, project_id: int) -> dict:
         "runs": [_item("workflow_run", row.id, row.workflow_version, row.status, row.definition_checksum, row.started_at, False, row.content_unit_id) for row in runs],
         "materials": materials,
         "contentOutputs": [_item(output.output_kind, output.entity_id, None, None, None, output.created_at, True, output.unit_id, "workflow") for output in outputs if output.output_kind in {"draft", "candidate"}],
+        "candidates": [_item("candidate", row.id, (row.candidate_manifest_json or {}).get("schema_version"), row.status, row.candidate_hash, row.created_at, current_candidate_ids.get(row.content_unit_id) == row.id, row.content_unit_id) for row in candidates],
+        "approvals": [_item("content_approval", row.id, None, row.decision, row.candidate_hash, row.created_at, current_candidate_ids.get(candidate_unit_ids.get(row.content_asset_id)) == row.content_asset_id, candidate_unit_ids.get(row.content_asset_id)) for row in approvals],
+        "deliveryTargets": [_item("delivery_target", row.id, row.authorization_version, row.status, row.approved_candidate_hash, row.requested_at, current_candidate_ids.get(candidate_unit_ids.get(row.content_asset_id)) == row.content_asset_id, candidate_unit_ids.get(row.content_asset_id)) for row in delivery_targets],
     }

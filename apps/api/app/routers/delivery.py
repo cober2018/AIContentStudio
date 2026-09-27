@@ -23,6 +23,8 @@ from ..models import (
     utcnow,
 )
 from ..services import delivery as delivery_service
+from ..services.project_authorization import authorize_project_asset, authorize_project_target
+from ..services.project_events import record_project_event
 
 router = APIRouter(prefix="/api/v1", tags=["delivery"])
 
@@ -31,6 +33,7 @@ class GenericTargetIn(BaseModel):
     channel: str
     content_form: str
     account_ref: str = Field(min_length=1, max_length=255)
+    content_account_id: int | None = None
     authorization_version: str = Field(min_length=1, max_length=64)
     action: str = DeliveryAction.copy_package.value
 
@@ -59,6 +62,7 @@ def _target_json(target: DeliveryTarget, with_attempts: bool = True) -> dict:
         "channel": target.channel,
         "content_form": target.content_form,
         "account_ref": target.account_ref,
+        "content_account_id": target.content_account_id,
         "action": target.action,
         "authorization_version": target.authorization_version,
         "status": target.status,
@@ -85,10 +89,11 @@ def _target_json(target: DeliveryTarget, with_attempts: bool = True) -> dict:
     return data
 
 
-def _own_target(db: Session, target_id: int, user: User) -> DeliveryTarget:
+def _own_target(db: Session, target_id: int, user: User, *, mutate: bool = False) -> DeliveryTarget:
     target = db.get(DeliveryTarget, target_id)
     if not target:
         raise HTTPException(404, "交付目标不存在")
+    authorize_project_target(db, target, user, mutate=mutate)
     if target.authorized_by and target.authorized_by != user.email:
         raise HTTPException(403, "该账号交付目标未授权给当前操作人")
     return target
@@ -99,12 +104,16 @@ def create_delivery_target(asset_id: int, payload: GenericTargetIn, db: Session 
     asset = db.get(ContentAsset, asset_id)
     if not asset:
         raise HTTPException(404, "批准资产不存在")
+    authorize_project_asset(db, asset, user, mutate=True)
     target = delivery_service.authorize_target(db, asset, payload, user)
     return _target_json(target)
 
 
 @router.get("/assets/{asset_id}/delivery-targets")
 def list_delivery_targets(asset_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    asset = db.get(ContentAsset, asset_id)
+    if asset is not None:
+        authorize_project_asset(db, asset, user)
     rows = db.scalars(
         select(DeliveryTarget).where(DeliveryTarget.content_asset_id == asset_id, DeliveryTarget.authorized_by == user.email)
         .order_by(DeliveryTarget.id.desc())
@@ -126,22 +135,27 @@ def execute_delivery_target(target_id: int, db: Session = Depends(get_db), user:
 
 @router.get("/delivery-targets/{target_id}/package.zip")
 def download_package(target_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    target = _own_target(db, target_id, user)
+    target = _own_target(db, target_id, user, mutate=True)
     if target.status == DeliveryTargetStatus.blocked.value:
         raise HTTPException(409, "该目标的公开使用权限已撤销，不能再交付")
-    if target.action == DeliveryAction.manual_handoff.value:
+    asset = db.get(ContentAsset, target.content_asset_id)
+    if target.action == DeliveryAction.manual_handoff.value and asset.project_id is None:
         # v1 M1 目标：复用既有成品包路径（兼容 alias 反向：新路径委托旧实现）
         from .article_handoff import download_package_archive
 
         return download_package_archive(target_id, db, user)
     data, filename = delivery_service.package_zip_bytes(db, target)
+    if target.status in {DeliveryTargetStatus.target_authorized.value, DeliveryTargetStatus.package_ready.value}:
+        target.status = DeliveryTargetStatus.awaiting_manual_receipt.value
+        db.commit()
     return Response(content=data, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @router.post("/delivery-targets/{target_id}/package")
 def preview_package(target_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    target = _own_target(db, target_id, user)
-    if target.action == DeliveryAction.manual_handoff.value:
+    target = _own_target(db, target_id, user, mutate=True)
+    asset = db.get(ContentAsset, target.content_asset_id)
+    if target.action == DeliveryAction.manual_handoff.value and asset.project_id is None:
         from .article_handoff import get_package
 
         return get_package(target_id, db, user)
@@ -155,7 +169,12 @@ def preview_package(target_id: int, db: Session = Depends(get_db), user: User = 
 
 @router.post("/delivery-targets/{target_id}/receipt")
 def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    target = _own_target(db, target_id, user)
+    target = _own_target(db, target_id, user, mutate=True)
+    if target.status == DeliveryTargetStatus.reconciliation_needed.value or any(
+        attempt.status == "unknown" and (attempt.response_metadata_json or {}).get("reconciled") is None
+        for attempt in target.attempts
+    ):
+        raise HTTPException(409, "交付结果待核对，必须先完成对账")
     idempotency_key = delivery_service._hash(
         str(target.id), target.approved_candidate_hash, payload.status,
         payload.evidence_ref or "", payload.verification_method or "", payload.note or "",
@@ -167,7 +186,6 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
         return _target_json(target, with_attempts=False)
     if target.status not in {
         DeliveryTargetStatus.awaiting_manual_receipt.value,
-        DeliveryTargetStatus.reconciliation_needed.value,
         DeliveryTargetStatus.failed.value,
     }:
         raise HTTPException(409, "目标尚未生成成品包/未执行交付，或当前状态不可回填")
@@ -191,13 +209,19 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
     db.add(receipt)
     db.add(AuditLog(event="delivery_receipt.recorded", actor=user.email, entity_type="delivery_target",
                     entity_id=str(target.id), detail_json={"status": target.status, "platform_verified": False}))
+    asset = db.get(ContentAsset, target.content_asset_id)
+    if asset.project_id is not None:
+        db.flush()
+        record_project_event(db, project_id=asset.project_id, event_type="delivery.receipt_recorded", actor=user.email,
+                             entity_type="delivery_receipt", entity_id=receipt.id,
+                             payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "target_id": target.id, "status": receipt.status})
     db.commit()
     return _target_json(target, with_attempts=False)
 
 
 @router.post("/delivery-targets/{target_id}/feedback", status_code=201)
 def add_feedback(target_id: int, payload: FeedbackIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    target = _own_target(db, target_id, user)
+    target = _own_target(db, target_id, user, mutate=True)
     row = DeliveryFeedback(target_id=target.id, kind=payload.kind, body=payload.body, observed_at=utcnow(), created_by=user.email)
     db.add(row)
     db.add(AuditLog(event="delivery_feedback.recorded", actor=user.email, entity_type="delivery_target", entity_id=str(target.id)))

@@ -7,6 +7,7 @@ from ..db import get_db
 from ..deps import get_current_user, require_editor_or_reviewer
 from ..models import CheckKind, Draft, User
 from ..services import checks as checks_service
+from ..services.project_authorization import authorize_project_draft
 
 router = APIRouter(prefix="/api/v1/drafts", tags=["checks"])
 
@@ -25,6 +26,7 @@ def list_checks(draft_id: int, db: Session = Depends(get_db), user: User = Depen
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user)
     return [
         {
             "id": row.id,
@@ -45,6 +47,7 @@ def run_check(kind: str, draft_id: int, db: Session = Depends(get_db), user: Use
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     if kind not in _RUNNABLE_KINDS:
         raise HTTPException(422, f"kind 只支持 {sorted(_RUNNABLE_KINDS)}（fact 走 POST /drafts/{draft_id}/fact-check）")
     if kind not in {k.value for k in CheckKind}:

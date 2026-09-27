@@ -9,6 +9,7 @@ const GROUPS: { key: keyof Versions; label: string }[] = [
   { key: "identitySnapshots", label: "身份快照" }, { key: "identityStates", label: "历史未冻结身份" },
   { key: "runs", label: "运行" }, { key: "materials", label: "素材版本" },
   { key: "contentOutputs", label: "内容产物" },
+  { key: "candidates", label: "冻结候选" }, { key: "approvals", label: "内容审批" }, { key: "deliveryTargets", label: "交付授权与结果" },
 ];
 
 export function ProjectVersionsTab({ projectId }: { projectId: number }) {

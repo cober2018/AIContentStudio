@@ -11,6 +11,7 @@ from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import AssetMedia, AuditLog, ContentAsset, DraftStatus, ExportRecord, User
 from ..services import asset_media, exports
+from ..services.project_authorization import authorize_project_asset
 
 router = APIRouter(prefix="/api/v1/assets", tags=["assets"])
 
@@ -61,7 +62,12 @@ def list_assets(
         stmt = stmt.where(ContentAsset.channel == channel)
     if topic_id:
         stmt = stmt.where(ContentAsset.topic_brief_id == topic_id)
-    return [_serialize(db, a) for a in db.scalars(stmt)]
+    from ..models import ContentProject
+
+    visible = stmt.outerjoin(ContentProject, ContentProject.id == ContentAsset.project_id).where(
+        (ContentAsset.project_id.is_(None)) | (ContentProject.owner_user_id == user.id)
+    )
+    return [_serialize(db, a) for a in db.scalars(visible)]
 
 
 @router.get("/{asset_id}")
@@ -69,6 +75,7 @@ def get_asset(asset_id: int, db: Session = Depends(get_db), user: User = Depends
     asset = db.get(ContentAsset, asset_id)
     if not asset:
         raise HTTPException(404, "Asset 不存在")
+    authorize_project_asset(db, asset, user)
     data = _serialize(db, asset)
     data["final_body"] = asset.final_body
     data["structured"] = asset.structured_json
@@ -80,6 +87,8 @@ def asset_cover(asset_id: int, db: Session = Depends(get_db)):
     """动态封面图（SVG，前端 <img> 直接引用故不做 Header 鉴权，内容仅标题/渠道/日期）。"""
     asset = db.get(ContentAsset, asset_id)
     if not asset:
+        raise HTTPException(404, "Asset 不存在")
+    if asset.project_id is not None:
         raise HTTPException(404, "Asset 不存在")
     themes = {
         "douyin": ("#111827", "#22d3ee", "#ec4899", "抖音口播"),
@@ -115,6 +124,7 @@ def list_asset_media(asset_id: int, db: Session = Depends(get_db), user: User = 
     asset = db.get(ContentAsset, asset_id)
     if not asset:
         raise HTTPException(404, "Asset 不存在")
+    authorize_project_asset(db, asset, user)
     return asset_media.list_for(db, asset)
 
 
@@ -134,6 +144,9 @@ def add_media_slot(
     asset = db.get(ContentAsset, asset_id)
     if not asset:
         raise HTTPException(404, "Asset 不存在")
+    authorize_project_asset(db, asset, user, mutate=True)
+    if asset.project_id is not None:
+        raise HTTPException(409, "项目候选不可通过旧素材接口修改")
     if payload.kind not in ("cover", "inline"):
         raise HTTPException(422, "kind 只允许 cover / inline")
     next_order = asset_media.list_for(db, asset)[-1]["sort_order"] + 1 if asset_media.list_for(db, asset) else 1
@@ -156,6 +169,9 @@ async def upload_asset_media(
     media = db.get(AssetMedia, media_id)
     if not asset or not media or media.asset_id != asset_id:
         raise HTTPException(404, "素材位不存在")
+    authorize_project_asset(db, asset, user, mutate=True)
+    if asset.project_id is not None:
+        raise HTTPException(409, "项目候选不可通过旧素材接口修改")
     content = await file.read()
     try:
         asset_media.save_upload(db, asset, media, file.filename or "", content, file.content_type or "")
@@ -174,6 +190,8 @@ def raw_asset_media(asset_id: int, media_id: int, db: Session = Depends(get_db))
     media = db.get(AssetMedia, media_id)
     if not asset or not media or media.asset_id != asset_id:
         raise HTTPException(404, "素材不存在")
+    if asset.project_id is not None:
+        raise HTTPException(404, "素材不存在")
     return asset_media.raw_response(db, asset, media)
 
 
@@ -187,6 +205,12 @@ def delete_asset_media(
     media = db.get(AssetMedia, media_id)
     if not media or media.asset_id != asset_id:
         raise HTTPException(404, "素材不存在")
+    asset = db.get(ContentAsset, asset_id)
+    if asset is None:
+        raise HTTPException(404, "素材不存在")
+    authorize_project_asset(db, asset, user, mutate=True)
+    if asset.project_id is not None:
+        raise HTTPException(409, "项目候选不可通过旧素材接口修改")
     db.delete(media)
     db.commit()
     return {"deleted": True}
@@ -202,6 +226,9 @@ def export_asset(
     asset = db.get(ContentAsset, asset_id)
     if not asset:
         raise HTTPException(404, "Asset 不存在")
+    authorize_project_asset(db, asset, user, mutate=True)
+    if asset.project_id is not None:
+        raise HTTPException(409, "项目候选须通过交付授权生成成品包")
     allowed = exports.CHANNEL_ALLOWED_FORMATS.get(asset.channel, ["md", "txt", "json"])
     if payload.fmt not in allowed:
         raise HTTPException(400, f"渠道 {asset.channel} 不支持 {payload.fmt}，允许：{allowed}")
