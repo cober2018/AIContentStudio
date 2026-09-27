@@ -3,6 +3,8 @@
 > 交接时间：2026-09-17 · 交接基线：main @ c54fd41（+ 1 个未提交修复，见 §5.4）
 > 读者：接手继续开发的 Agent / 工程师。本文档所有事实均已对照仓库实测核验。
 
+> **2026-09-24 增量（V1 PRD 2.0 Content Harness 已实施）：** 本文以下内容描述 M1/三渠道基线，仍有效；在其之上已落地主变更 [`align-v1-prd2-content-harness`](openspec/changes/align-v1-prd2-content-harness/proposal.md)——Channel Registry（14 平台 profile）、Workflow 版本化 + Node Plugin Registry、Material Library、DraftCheckRun、Discoverability、Candidate Manifest v2、Delivery Router（DeliveryAttempt：prepared→远端→结果，unknown 走 reconcile）、Node Rerun/Stale、Review & Publish Center（`/review-publish`）。新增路由：`/api/v1/channels|materials|checks|discoverability|delivery|review-center`。迁移已到 head（`a1harness00001`→`b2material00002`→`c3delivery00003`）。实现偏差逐条记录在该 change 的 `design.md` Deviations 节；真实账号自动发布未验证，平台能力如实标注 unverified。
+
 ---
 
 ## 0. 一分钟摘要

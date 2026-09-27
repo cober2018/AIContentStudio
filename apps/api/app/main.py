@@ -9,15 +9,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db import init_db
 from .observability import trace_middleware
 from .routers import (
-    assets,
     article_handoff,
+    assets,
+    channels,
+    checks,
     connectors,
     dashboard,
+    delivery,
+    discoverability,
     external,
     fact_packs,
     facts,
     generate,
     health,
+    materials,
+    review_center,
     reviews,
     settings,
     sources,
@@ -55,6 +61,14 @@ async def lifespan(app: FastAPI):
         from . import runtime_config
 
         runtime_config.load_from_db(db)
+        # V1 PRD 2.0：媒体 provider（asset_provider 等）注册；不联网、不发布
+        from .services.content_harness.providers import bootstrap_media_providers
+
+        bootstrap_media_providers()
+        # V1 PRD 2.0：基础 discoverability profiles（幂等）
+        from .services import discoverability as disco
+
+        disco.seed_default_profiles(db)
         db.commit()
     yield
 
@@ -75,10 +89,16 @@ for router in (
     fact_packs,
     topics,
     generate,
+    checks,
     reviews,
+    review_center,
     assets,
     article_handoff,
+    delivery,
+    materials,
     templates,
+    channels,
+    discoverability,
     dashboard,
     users,
     connectors,

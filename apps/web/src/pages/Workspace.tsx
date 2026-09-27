@@ -56,7 +56,19 @@ interface IssueRow {
   suggestion: string | null;
 }
 
-const CHANNEL_NAMES: Record<string, string> = { douyin: "抖音", xiaohongshu: "小红书", wechat: "公众号" };
+// 渠道标签来自 Channel Registry（V1 PRD 2.0 §1.2.A：前端不维护渠道集合）
+function useChannelLabels(): Record<string, string> {
+  const { data } = useQuery({
+    queryKey: ["channels"],
+    queryFn: () => api.get<{ channel: string; label: string }[]>("/channels"),
+    staleTime: 5 * 60 * 1000,
+  });
+  return useMemo(() => {
+    const map: Record<string, string> = {};
+    (data || []).forEach((c) => (map[c.channel] = c.label));
+    return map;
+  }, [data]);
+}
 
 function TopicPicker() {
   const navigate = useNavigate();
@@ -92,6 +104,7 @@ export default function Workspace() {
 function WorkspaceInner({ topicId }: { topicId: number }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const channelLabels = useChannelLabels();
   const [activeChannel, setActiveChannel] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [dirty, setDirty] = useState(false);
@@ -267,7 +280,7 @@ function WorkspaceInner({ topicId }: { topicId: number }) {
                   isActive ? "bg-gray-100 font-medium text-gray-900" : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <span>{CHANNEL_NAMES[channel]}</span>
+                <span>{channelLabels[channel] || channel}</span>
                 {job ? <StatusBadge status={job.status} /> : <span className="text-xs text-slate-300">未生成</span>}
               </button>
             );

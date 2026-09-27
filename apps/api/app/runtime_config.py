@@ -14,6 +14,7 @@ KEY_MODELS = "models"  # {"profiles": {name: {...}}, "routes": {purpose: profile
 KEY_PLUGINS = "plugins"  # {"skill_dirs": [...], "skills_enabled": [...], "mcp": [{name, url, enabled}]}
 KEY_DSH = "dsh"
 KEY_IMAGE = "image"  # {"enabled","provider","model","base_url","api_key","size"}  # {"default_provider","default_model","fallback_provider","timeout_sec","max_retries","output_dir"}
+KEY_DELIVERY = "delivery"  # {"allow_unverified_auto_draft": bool}——未真实验收的自动能力默认禁止
 
 
 def load_from_db(db) -> None:

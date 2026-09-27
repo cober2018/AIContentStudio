@@ -1,12 +1,14 @@
 """工作流画布执行引擎：DAG 拓扑推进 + 人工节点挂起续跑。
 
-节点 handler 直接调用既有路由函数/服务（同一套校验、审计、闸门），画布只是编排壳。
+V1 PRD 2.0：节点执行统一经 content_harness registry 解析 plugin（版本钉死），
+本文件不再新增平台 handler；旧 handler 全部薄包装为 builtin.*@1 插件，业务结果不变。
 执行模型：同步推进（TASK_QUEUE_ENABLED 的异步模式留给 V2）；人工节点置
 waiting_input 后返回，前端操作后调 complete 续跑；失败即停、可从失败节点重试。
 """
 
+import hashlib
+import json
 import logging
-from collections.abc import Callable
 from datetime import UTC, datetime
 
 from sqlalchemy import select
@@ -21,15 +23,37 @@ from ..models import (
     Workflow,
     WorkflowRun,
     WorkflowStep,
+    WorkflowStepAttempt,
 )
+from .content_harness.contracts import NodeResult, WorkflowExecutionContext
+from .content_harness.nodes import bootstrap_builtin_nodes, resolve_node_key
 
 logger = logging.getLogger(__name__)
+
+bootstrap_builtin_nodes()
 
 HUMAN_NODE_TYPES = {"adopt_topic", "approve", "confirm_facts"}
 
 
 def _now():
     return datetime.now(UTC)
+
+
+def _channel_of(run: WorkflowRun, step: WorkflowStep) -> str | None:
+    """R2-B1：target 解析——节点参数优先（catalog 实例化烘焙），run 参数兜底（共享 Bundle）。"""
+    return (step.params_json or {}).get("channel") or (run.params_json or {}).get("channel")
+
+
+def _form_of(run: WorkflowRun, step: WorkflowStep) -> str | None:
+    return (step.params_json or {}).get("content_form") or (run.params_json or {}).get("content_form")
+
+
+def canonical_checksum(payload) -> str:
+    return hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()
+
+
+def definition_checksum(definition: dict) -> str:
+    return canonical_checksum(definition)
 
 
 def _ctx_update(run: WorkflowRun, **kv) -> dict:
@@ -186,13 +210,15 @@ def _h_confirm_facts_complete(db: Session, run: WorkflowRun, step: WorkflowStep,
 
 
 def _h_generate(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
-    from ..routers.topics import VALID_CHANNELS
+    from ..services.content_harness import channel_registry
     from ..services.generation.orchestrator import create_jobs_for_topic
     from ..tasks import worker_tasks
 
-    channel = step.params_json.get("channel")
-    if channel not in VALID_CHANNELS:
-        raise ValueError(f"未知渠道: {channel}")
+    channel = _channel_of(run, step)
+    if not channel:
+        raise ValueError("生成节点缺少 channel（节点参数或 run 参数）")
+    content_form = _form_of(run, step)
+    channel_registry.resolve_content_form(db, channel, content_form)  # 未知渠道在这里失败（ChannelRegistryError ⊂ ValueError）
     topic_id = run.params_json.get("topic_id") or run.context_json.get("topic_id")
     if not topic_id:
         raise ValueError("生成需要 topic_id（人工采纳或启动参数）")
@@ -202,7 +228,7 @@ def _h_generate(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict
 
     import time as _time
 
-    jobs = create_jobs_for_topic(db, topic, [channel])
+    jobs = create_jobs_for_topic(db, topic, [{"channel": channel, "content_form": content_form}], workflow_run_id=run.id)
     # 异步模式消息先于本事务 commit 到达 worker：必须先落库 job 行再入队，否则 worker 查无此 job
     db.commit()
     statuses = []
@@ -246,7 +272,7 @@ def _latest_draft_id(db: Session, run: WorkflowRun, channel: str) -> int:
 def _h_fact_check(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
     from ..routers.generate import run_fact_check as run_fc
 
-    channel = step.params_json.get("channel")
+    channel = _channel_of(run, step)
     draft_id = _latest_draft_id(db, run, channel)
     if not draft_id:
         raise ValueError(f"渠道 {channel} 没有可校验的草稿")
@@ -259,6 +285,31 @@ def _h_fact_check(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> di
     }
 
 
+def _h_discoverability_post(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
+    """R3-2：SEO 审查作为 Workflow 独立 Stage（§6.15）。
+
+    profile 声明了 discoverability_profile 才生成 post 报告（状态如实落库，
+    incomplete 不阻断——Candidate 会冻结报告）；未声明的形态节点空转跳过。
+    """
+    from ..services import discoverability as disco
+    from ..services.content_harness.channel_registry import ChannelRegistryError, resolve_content_form
+
+    channel = _channel_of(run, step)
+    draft_id = _latest_draft_id(db, run, channel)
+    if not draft_id:
+        raise ValueError(f"渠道 {channel} 没有可审查的草稿")
+    try:
+        spec = resolve_content_form(db, channel, _form_of(run, step))
+    except ChannelRegistryError as exc:
+        raise ValueError(str(exc)) from exc
+    if not spec.discoverability_profile:
+        return {"ran": False, "reason": f"渠道 {channel} 未声明 discoverability_profile"}
+    draft = db.get(Draft, draft_id)
+    report = disco.run_post_draft(db, draft, user)
+    db.commit()
+    return {"ran": True, "report_id": report.id, "status": report.status, "draft_id": draft_id}
+
+
 def _h_humanize_polish(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
     """去 AI 味二次精炼（humanizer-zh 规则注入 system）：全文改写为新 revision，事实数字不动。"""
     import asyncio
@@ -267,7 +318,7 @@ def _h_humanize_polish(db: Session, run: WorkflowRun, step: WorkflowStep, user) 
     from ..services.generation.providers import GenerateRequest, get_provider
     from ..services.writing_pipeline import HUMANIZE_SYSTEM
 
-    channel = step.params_json.get("channel")
+    channel = _channel_of(run, step)
     draft_id = _latest_draft_id(db, run, channel)
     draft = db.get(Draft, draft_id)
     provider = get_provider("rewrite")
@@ -294,7 +345,7 @@ def _h_content_censor(db: Session, run: WorkflowRun, step: WorkflowStep, user) -
     from ..routers.generate import DraftUpdateIn, update_draft
     from ..services.writing_pipeline import censor_text
 
-    channel = step.params_json.get("channel") or "wechat"
+    channel = _channel_of(run, step) or "wechat"
     platform = {"wechat": "wechat", "xiaohongshu": "xiaohongshu", "douyin": "douyin"}.get(channel, "general")
     draft_id = _latest_draft_id(db, run, channel)
     draft = db.get(Draft, draft_id)
@@ -329,7 +380,7 @@ def _h_generate_cover(db: Session, run: WorkflowRun, step: WorkflowStep, user) -
     image_cfg = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
     if not image_cfg.get("enabled"):
         return {"generated": False, "skipped": "AI 生图未启用（设置 → 模型服务 → AI 生图）"}
-    channel = step.params_json.get("channel") or "wechat"
+    channel = _channel_of(run, step) or "wechat"
     job_id = (run.context_json.get("jobs") or {}).get(channel, {}).get("job_id")
     prompt = step.params_json.get("prompt")
     if not prompt and job_id:
@@ -354,7 +405,7 @@ def _h_approve(db: Session, run: WorkflowRun, step: WorkflowStep, payload: dict,
     from ..routers.generate import submit_for_review
     from ..routers.reviews import DecisionIn, approve
 
-    channel = step.params_json.get("channel")
+    channel = _channel_of(run, step)
     draft_id = _latest_draft_id(db, run, channel)
     submit_for_review(draft_id=draft_id, db=db, user=user)
     try:
@@ -369,7 +420,7 @@ def _h_approve(db: Session, run: WorkflowRun, step: WorkflowStep, payload: dict,
 def _h_export(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
     from ..routers.assets import ExportIn, export_asset
 
-    channel = step.params_json.get("channel")
+    channel = _channel_of(run, step)
     asset_id = (run.context_json.get("assets") or {}).get(channel)
     if not asset_id:
         raise ValueError(f"渠道 {channel} 没有已批准的资产可导出")
@@ -402,6 +453,9 @@ def _h_publish_wechat(db: Session, run: WorkflowRun, step: WorkflowStep, user) -
     asset = db.get(ContentAsset, asset_id)
     if asset and asset.mother_revision_id:
         raise ValueError("M1 内容没有自动交付动作，禁止通过旧工作流进入公众号草稿箱")
+    if asset and (asset.candidate_manifest_json or {}).get("schema_version") == 2:
+        # V1 PRD 2.0（D24/5.8）：schema v2 内容的远端副作用一律走 Delivery Router
+        raise ValueError("schema v2 候选必须经 Delivery Router（DeliveryTarget/Attempt）交付，禁止旧工作流直接发布")
     with tempfile.TemporaryDirectory() as tmp:
         md_path = Path(tmp) / "article.md"
         md_path.write_text(export_markdown(asset), encoding="utf-8")
@@ -453,7 +507,8 @@ def _placeholder_png() -> bytes:
     )
 
 
-HANDLERS: dict[str, Callable[..., dict]] = {
+# 旧 handler 中央表：仅供兼容参考与插件包装，引擎执行路径已改为 registry resolve（D6）
+HANDLERS = {
     "connector_pull": _h_connector_pull,
     "extract_facts": _h_extract_facts,
     "factpack_freeze": _h_factpack_freeze,
@@ -463,12 +518,13 @@ HANDLERS: dict[str, Callable[..., dict]] = {
     "content_censor": _h_content_censor,
     "generate_cover": _h_generate_cover,
     "fact_check": _h_fact_check,
+    "discoverability_post": _h_discoverability_post,
     "export": _h_export,
     "publish_wechat": _h_publish_wechat,
 }
 
 # 人工节点的完成动作（complete 时调用）；其余节点无 complete 语义
-COMPLETE_HANDLERS: dict[str, Callable[..., dict]] = {
+COMPLETE_HANDLERS = {
     "adopt_topic": _h_adopt_topic_complete,
     "approve": _h_approve,
     "confirm_facts": _h_confirm_facts_complete,
@@ -482,8 +538,97 @@ def _steps(db: Session, run: WorkflowRun) -> list[WorkflowStep]:
     return list(db.scalars(select(WorkflowStep).where(WorkflowStep.run_id == run.id).order_by(WorkflowStep.id)))
 
 
+def _resolve_step_plugin(db: Session, run: WorkflowRun, step: WorkflowStep):
+    """D6：节点执行统一走 registry resolve。
+
+    优先用 step 上钉死的 plugin key/version；历史 run 的 step 无记录时按节点定义
+    （schema v2 plugin 字段 / schema v1 type 映射）解析并回写钉死。
+    """
+    from .content_harness import registry as plugin_registry
+    from .content_harness.nodes import TYPE_TO_PLUGIN
+
+    if step.plugin_key:
+        return plugin_registry.resolve("node", step.plugin_key, step.plugin_version)
+    node = next(
+        (
+            n
+            for n in (db.get(Workflow, run.workflow_id).definition_json or {}).get("nodes", [])
+            if n.get("id") == step.node_id
+        ),
+        {},
+    )
+    try:
+        key, version = resolve_node_key(node or {"type": step.node_type})
+    except ValueError:
+        # 节点定义缺失时兜底：直接把 step.node_type 当 plugin key（自定义注册场景）
+        key, version = TYPE_TO_PLUGIN.get(step.node_type, step.node_type), "1"
+    step.plugin_key = key
+    step.plugin_version = version
+    return plugin_registry.resolve("node", key, version)
+
+
+def _execute_node(db: Session, run: WorkflowRun, step: WorkflowStep, user, *, payload: dict | None = None) -> dict:
+    plugin = _resolve_step_plugin(db, run, step)
+    ctx = WorkflowExecutionContext(db=db, run=run, step=step, config=step.params_json or {})
+    if payload is not None:
+        result: NodeResult = plugin.complete(db, ctx, payload, user)
+    else:
+        result = plugin.execute(db, ctx, step.params_json or {}, user)
+    if not step.input_hash:
+        step.input_hash = canonical_checksum(step.params_json or {})
+    step.output_hash = canonical_checksum(result.output or {})
+    return result.output or {}
+
+
+def _fail_step(db: Session, run: WorkflowRun, step: WorkflowStep, exc: Exception) -> WorkflowRun:
+    db.rollback()
+    fresh = db.get(WorkflowStep, step.id)
+    fresh.status = "failed"
+    fresh.error = str(exc)[:500]
+    fresh.finished_at = _now()
+    _record_attempt(db, fresh, "failed", error=str(exc))
+    run.status = "failed"
+    run.error = f"节点「{fresh.label or fresh.node_id}」失败：{str(exc)[:300]}"
+    db.commit()
+    return run
+
+
+def _record_attempt(db: Session, step: WorkflowStep, status: str, *, error: str | None = None) -> int:
+    """R2-H7：节点每次终态执行沉淀一行不可变审计（含 output）。
+
+    WorkflowStep 只保留「当前」输出；rerun 覆盖前旧 output 已在本表——新旧 output 均可审计。
+    """
+    from sqlalchemy import func
+
+    last = db.scalar(
+        select(func.max(WorkflowStepAttempt.attempt_no)).where(WorkflowStepAttempt.step_id == step.id)
+    )
+    attempt_no = (last or 0) + 1
+    if (step.attempt_no or 0) < attempt_no:
+        step.attempt_no = attempt_no
+    db.add(
+        WorkflowStepAttempt(
+            step_id=step.id,
+            run_id=step.run_id,
+            node_id=step.node_id,
+            plugin_key=step.plugin_key,
+            plugin_version=step.plugin_version,
+            attempt_no=attempt_no,
+            status=status,
+            output_json=step.output_json or {},
+            output_hash=step.output_hash,
+            input_hash=step.input_hash,
+            error=error[:2000] if error else None,
+            created_at=_now(),
+        )
+    )
+    return attempt_no
+
+
 def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
     """从当前断点推进：自动节点逐个执行，人工节点挂起，失败即停。"""
+    from .content_harness import registry as plugin_registry
+
     definition = db.get(Workflow, run.workflow_id).definition_json
     deps: dict[str, list[str]] = {}
     for edge in definition.get("edges", []):
@@ -507,7 +652,13 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
             # 无可执行节点且仍有 pending → 挂起在人工节点（status 应已置 waiting_input）
             return run
         step = ready[0]
-        if step.node_type in HUMAN_NODE_TYPES:
+        try:
+            _resolve_step_plugin(db, run, step)
+            descriptor = plugin_registry.descriptor("node", step.plugin_key, step.plugin_version)
+        except Exception as exc:  # noqa: BLE001 未知 plugin：与旧“未知节点类型”一致按节点失败处理
+            return _fail_step(db, run, step, exc)
+        # 人工节点以 plugin descriptor 为准（D6）；v1 type 集合兜底历史定义
+        if descriptor.human_gate or step.node_type in HUMAN_NODE_TYPES:
             step.status = "waiting_input"
             run.status = "waiting_input"
             db.commit()
@@ -517,42 +668,68 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
         run.status = "running"
         db.commit()
         try:
-            handler = HANDLERS.get(step.node_type)
-            if handler is None:
-                raise ValueError(f"未知节点类型: {step.node_type}")
-            output = handler(db, run, step, user)
+            output = _execute_node(db, run, step, user)
             step.output_json = output
             step.status = "succeeded"
             step.finished_at = _now()
+            _record_attempt(db, step, "succeeded")
             db.commit()
-            logger.info("workflow_step_ok run=%s node=%s", run.id, step.node_id)
+            logger.info("workflow_step_ok run=%s node=%s plugin=%s", run.id, step.node_id, step.plugin_key)
         except Exception as exc:  # noqa: BLE001 节点失败即停，可从失败节点重试
-            db.rollback()
-            fresh = db.get(WorkflowStep, step.id)
-            fresh.status = "failed"
-            fresh.error = str(exc)[:500]
-            fresh.finished_at = _now()
-            run.status = "failed"
-            run.error = f"节点「{fresh.label or fresh.node_id}」失败：{str(exc)[:300]}"
-            db.commit()
-            return run
+            return _fail_step(db, run, step, exc)
 
 
-def start_run(db: Session, workflow: Workflow, params: dict | None, user) -> WorkflowRun:
-    run = WorkflowRun(workflow_id=workflow.id, params_json=params or {}, context_json={})
+def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, advance_now: bool = True) -> WorkflowRun:
+    # D17 preflight：技能缺失在启动前暴露，而不是运行中 ImportError
+    from .content_harness.skill_runtime import preflight_workflow
+
+    problems = preflight_workflow(db, workflow.definition_json or {})
+    if problems:
+        raise ValueError("Workflow preflight 失败：" + "；".join(problems))
+
+    p = params or {}
+    topic_id = p.get("topic_id")
+    try:
+        topic_id = int(topic_id) if topic_id is not None else None
+    except (TypeError, ValueError):
+        topic_id = None
+    run = WorkflowRun(
+        workflow_id=workflow.id,
+        params_json=p,
+        context_json={},
+        # D5：启动时冻结 definition 身份与目标上下文
+        topic_id=topic_id,
+        channel=p.get("channel"),
+        content_form=p.get("content_form"),
+        workflow_key=workflow.workflow_key,
+        workflow_version=workflow.version,
+        definition_checksum=workflow.checksum or definition_checksum(workflow.definition_json),
+    )
     db.add(run)
     db.flush()
+    from .content_harness.nodes import node_config_of
+
     for node in workflow.definition_json.get("nodes", []):
+        try:
+            plugin_key, plugin_version = resolve_node_key(node)
+        except ValueError:
+            plugin_key, plugin_version = None, None
         db.add(
             WorkflowStep(
                 run_id=run.id,
                 node_id=node["id"],
-                node_type=node["type"],
+                node_type=node.get("type") or node.get("plugin") or "",
                 label=node.get("label"),
-                params_json=node.get("params", {}),
+                # R4-B1：schema v2 config 为真源（优先），v1 params 兼容合并
+                params_json=node_config_of(node),
+                plugin_key=plugin_key,
+                plugin_version=plugin_version,
             )
         )
     db.commit()
+    if not advance_now:
+        # R2-B1：异步模式下由 worker 任务推进（HTTP 请求不阻塞等待真实模型）
+        return run
     return advance(db, run, user)
 
 
@@ -564,13 +741,13 @@ def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, us
         raise ValueError(f"节点 {node_id} 不存在")
     if run.status != "waiting_input" or step.status != "waiting_input":
         raise ValueError(f"节点当前状态 {step.status} 不可操作（run={run.status}）")
-    handler = COMPLETE_HANDLERS.get(step.node_type)
-    if handler is None:
+    plugin = _resolve_step_plugin(db, run, step)
+    if not hasattr(plugin, "complete"):
         raise ValueError(f"节点 {step.node_type} 不是人工节点")
     step.status = "running"
     db.commit()
     try:
-        output = handler(db, run, step, payload or {}, user)
+        output = _execute_node(db, run, step, user, payload=payload or {})
     except Exception:
         # 操作被闸门拒绝（如 blocker 未解决）：节点恢复等待态，人工处理后可再次提交
         db.rollback()
@@ -580,6 +757,7 @@ def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, us
     step.output_json = output
     step.status = "succeeded"
     step.finished_at = _now()
+    _record_attempt(db, step, "succeeded")
     run.status = "running"
     db.commit()
     return advance(db, run, user)
@@ -602,6 +780,107 @@ def retry_run(db: Session, run: WorkflowRun, user) -> WorkflowRun:
         if step.status == "failed":
             step.status = "pending"
             step.error = None
+    run.status = "running"
+    run.error = None
+    db.commit()
+    return advance(db, run, user)
+
+
+# ---------- Node-level Rerun（D27/Phase 6）----------
+
+
+def _definition_of(db: Session, run: WorkflowRun) -> dict:
+    return (db.get(Workflow, run.workflow_id).definition_json or {})
+
+
+def _downstream(definition: dict, node_id: str) -> list[str]:
+    """BFS 后继（不含自身）。"""
+    adj: dict[str, list[str]] = {}
+    for edge in definition.get("edges", []):
+        adj.setdefault(edge["from"], []).append(edge["to"])
+    seen: list[str] = []
+    queue = list(adj.get(node_id, []))
+    while queue:
+        current = queue.pop(0)
+        if current in seen:
+            continue
+        seen.append(current)
+        queue.extend(adj.get(current, []))
+    return seen
+
+
+def _resolve_or_none(db: Session, run: WorkflowRun, step: WorkflowStep):
+    from .content_harness import registry as plugin_registry
+
+    try:
+        plugin = _resolve_step_plugin(db, run, step)
+        descriptor = plugin_registry.descriptor("node", step.plugin_key, step.plugin_version)
+        return plugin, descriptor
+    except Exception:  # noqa: BLE001
+        return None, None
+
+
+def rerun_node(db: Session, run: WorkflowRun, node_id: str, user) -> WorkflowRun:
+    """Rerun Node：上游不变，当前节点新 attempt；output hash 变化 → downstream 标 stale（不自动重跑）。"""
+
+    step = db.scalars(select(WorkflowStep).where(WorkflowStep.run_id == run.id, WorkflowStep.node_id == node_id)).first()
+    if not step:
+        raise ValueError(f"节点 {node_id} 不存在")
+    if run.status == "canceled":
+        raise ValueError("已取消的运行不可重跑")
+    _plugin_obj, descriptor = _resolve_or_none(db, run, step)
+    if descriptor is None:
+        raise ValueError(f"节点 {node_id} 无法解析 plugin")
+    if descriptor.side_effect:
+        raise ValueError("远端副作用节点禁止泛化重跑；请通过 Delivery reconciliation/retry 契约处理")
+
+    old_output_hash = step.output_hash
+    step.attempt_no = (step.attempt_no or 0) + 1
+    step.status = "running"
+    step.error = None
+    step.stale_reason = None
+    run.status = "running"
+    db.commit()
+    try:
+        output = _execute_node(db, run, step, user)
+    except Exception as exc:  # noqa: BLE001
+        return _fail_step(db, run, step, exc)
+    step.output_json = output
+    step.status = "succeeded"
+    step.finished_at = _now()
+    changed = bool(old_output_hash) and step.output_hash != old_output_hash
+    if changed:
+        from .content_harness.staleness import mark_workflow_downstream_stale
+
+        marked = mark_workflow_downstream_stale(
+            db, run, node_id, f"upstream {node_id} output changed (attempt #{step.attempt_no})"
+        )
+        logger.info("workflow_rerun run=%s node=%s downstream_stale=%s", run.id, node_id, marked)
+    _record_attempt(db, step, "succeeded")
+    db.commit()
+    return run
+
+
+def rerun_from_here(db: Session, run: WorkflowRun, node_id: str, user) -> WorkflowRun:
+    """Rerun From Here：当前+downstream 置 pending 重跑；不回滚历史实体（产生新 Revision）。"""
+    step = db.scalars(select(WorkflowStep).where(WorkflowStep.run_id == run.id, WorkflowStep.node_id == node_id)).first()
+    if not step:
+        raise ValueError(f"节点 {node_id} 不存在")
+    if run.status == "canceled":
+        raise ValueError("已取消的运行不可重跑")
+    definition = _definition_of(db, run)
+    affected = [node_id] + _downstream(definition, node_id)
+    for s in _steps(db, run):
+        if s.node_id not in affected:
+            continue
+        _, descriptor = _resolve_or_none(db, run, s)
+        if descriptor is not None and descriptor.side_effect:
+            raise ValueError(f"下游包含远端副作用节点（{s.node_id}），禁止 rerun-from-here 自动重跑；请走 Delivery 契约")
+    for s in _steps(db, run):
+        if s.node_id in affected:
+            s.status = "pending"
+            s.error = None
+            s.stale_reason = None
     run.status = "running"
     run.error = None
     db.commit()

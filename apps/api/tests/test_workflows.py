@@ -88,7 +88,7 @@ def test_gen_export_branches_run_to_human_gate(client, seed_users, frozen_pack_w
     assert _step(run, "gen_xiaohongshu")["status"] == "pending"
 
 
-def test_full_run_through_all_channels_to_export(client, seed_users, frozen_pack_with_topic):
+def test_full_run_through_all_channels_to_export(client, seed_users, frozen_pack_with_topic, db_session):
     wf = client.post("/api/v1/workflows", headers=ADMIN, json={"template_key": "gen_export"}).json()
     run = client.post(
         "/api/v1/workflow-runs",
@@ -97,6 +97,24 @@ def test_full_run_through_all_channels_to_export(client, seed_users, frozen_pack
     ).json()
     # 依次通过三道人工批准闸
     for gate in ("approve_douyin", "approve_xiaohongshu", "approve_wechat"):
+        if gate == "approve_wechat":
+            # R2-B2：公众号 media_requirements 兜底要求封面——批准闸前补真实素材（挂最新 revision）
+            db_session.expire_all()
+            from sqlalchemy import select
+
+            from app.models import Draft
+
+            job_id = run["context"]["jobs"]["wechat"]["job_id"]
+            latest = db_session.execute(
+                select(Draft.id).where(Draft.content_job_id == job_id).order_by(Draft.revision_no.desc()).limit(1)
+            ).scalar_one()
+            up = client.post(
+                f"/api/v1/drafts/{latest}/materials/upload",
+                files={"file": ("cover.png", b"\x89PNG\r\n\x1a\n" + b"cov" * 8, "image/png")},
+                params={"role": "cover", "rights_status": "cleared", "public_use_allowed": "true"},
+                headers=EDITOR,
+            )
+            assert up.status_code == 201, up.text
         resp = client.post(
             f"/api/v1/workflow-runs/{run['id']}/nodes/{gate}/complete", headers=EDITOR, json={"payload": {}}
         )

@@ -3,6 +3,8 @@
 > 状态：设计稿 V1（待确认后实施）· 2026-09-18
 > 定位：仿扣子（Coze）的 Agent 工作流画布——把 Studio 已有能力点串成**可执行、可视化、结果沉淀回既有实体**的编排层。
 
+> **2026-09-24 实施更新（align-v1-prd2-content-harness）：** 引擎已升级——节点执行统一经 `content_harness` Plugin Registry 版本化解析（旧 handler 薄包装为 `builtin.*@1`，schema v1 `{type}` 与 v2 `{plugin}` 双格式兼容）；`Workflow` 具备 workflow_key/version/status/schema_version/checksum，`WorkflowRun` 启动即冻结 definition 身份；`WorkflowStep` 记录 plugin key/version 与 input/output hash；新增节点级 `rerun` / `rerun-from-here`（远端副作用节点禁止泛化重跑）与 stale 传播；一个 `Platform × ContentForm` 一个 Run；共享 Workflow Bundle（catalog families）可经 `POST /api/v1/workflows {catalog_key}` 实例化。本设计稿其余部分保持历史参考。
+
 ---
 
 ## 0. 设计原则（三条铁律）

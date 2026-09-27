@@ -164,7 +164,36 @@ def approve(
         if reasons:
             draft.candidate_readiness = "incomplete"
             raise HTTPException(409, {"message": "候选内容尚未达到完整批准条件", "reasons": reasons})
-    manifest = build_manifest(draft)
+        manifest = build_manifest(draft)
+        schema_version = 1
+    else:
+        # V1 PRD 2.0（§6.23）：schema v2 路径——Document/真实媒体/checks/render 全覆盖。
+        # 确定性检查（platform/media/rights/domain）在批准时自动补跑（输入绑定、可复算）；
+        # fact check 必须先于批准存在（上方已拦截）。
+        from ..services import checks as checks_service
+        from ..services.candidates import asset_v2_columns, build_manifest_v2, readiness_reasons_v2
+        from ..services.content_harness.domain_rules import rules_for_form
+
+        content_form = getattr(draft, "content_form", None) or job.content_form
+        checks_service.run_rule_set(db, draft, rule_keys=["rule.platform.required_fields"])
+        # R2-B2：media 规则不再以「有素材」为前提——零素材的 image 型/要求封面的形态必须跑出 blocker
+        checks_service.run_rule_set(
+            db, draft, rule_keys=["rule.media.required", "rule.media.public_rights", "rule.media.order"]
+        )
+        domain_keys = rules_for_form(content_form)
+        if domain_keys:
+            checks_service.run_domain_checks(db, draft, content_form=content_form)
+        # 兼容镜像：历史稿只有 fact_check_json 而无 check run 时补一条（不重算）
+        if not any(row.check_kind == "fact" for row in checks_service.current_checks(db, draft)) and draft.fact_check_json:
+            checks_service.run_fact_check(db, draft, result_json=draft.fact_check_json, input_hash=(draft.fact_check_json or {}).get("input_hash"))
+        mandatory = ["fact", "platform"] + (["domain"] if domain_keys else [])
+
+        manifest = build_manifest_v2(db, draft)
+        reasons = readiness_reasons_v2(db, draft, manifest, required=mandatory)
+        if reasons:
+            draft.candidate_readiness = "incomplete"
+            raise HTTPException(409, {"message": "候选内容尚未达到完整批准条件（schema v2）", "reasons": reasons})
+        schema_version = 2
     approved_candidate_hash = candidate_hash(manifest)
 
     db.add(Review(draft_id=draft.id, revision_no=draft.revision_no, reviewer_id=user.email,
@@ -195,10 +224,11 @@ def approve(
         approved_candidate_hash=approved_candidate_hash,
         candidate_manifest_json=manifest,
         mother_revision_id=draft.mother_revision_id,
+        **(asset_v2_columns(manifest) if schema_version == 2 else {}),
     )
     db.add(asset)
     db.add(AuditLog(event="review.approved", actor=user.email, entity_type="draft", entity_id=str(draft.id),
-                    detail_json={"asset_id": None, "revision": draft.revision_no, "candidate_hash": approved_candidate_hash}))
+                    detail_json={"asset_id": None, "revision": draft.revision_no, "candidate_hash": approved_candidate_hash, "manifest_schema": schema_version}))
     db.commit()
     db.refresh(asset)
-    return {"draft_id": draft.id, "asset_id": asset.id, "status": draft.status}
+    return {"draft_id": draft.id, "asset_id": asset.id, "status": draft.status, "manifest_schema": schema_version}

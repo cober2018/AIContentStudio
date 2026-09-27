@@ -6,7 +6,9 @@ import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
 import FactPacks from "./pages/FactPacks";
 import Handoff from "./pages/Handoff";
+import Materials from "./pages/Materials";
 import Review from "./pages/Review";
+import ReviewPublish from "./pages/ReviewPublish";
 import Settings from "./pages/Settings";
 import Sources from "./pages/Sources";
 import Templates from "./pages/Templates";
@@ -36,6 +38,7 @@ const LEGACY_NAV = [
   { to: "/dashboard", label: "旧总览" }, { to: "/sources", label: "来源与证据" },
   { to: "/connectors", label: "数据接入" }, { to: "/fact-packs", label: "FactPack" },
   { to: "/topics", label: "选题中心" }, { to: "/workspace", label: "旧生产页" },
+  { to: "/materials", label: "旧素材库" }, { to: "/review-publish", label: "旧审核与发布" },
   { to: "/legacy/review", label: "旧审核中心" }, { to: "/legacy/assets", label: "旧内容资产" },
   { to: "/handoff", label: "文章交付" }, { to: "/workflows", label: "旧工作流" },
   { to: "/templates", label: "模板与规则" },
@@ -108,6 +111,9 @@ function Shell() {
               <Route path="/topics" element={<Topics />} />
               <Route path="/workspace" element={<Workspace />} />
               <Route path="/workspace/:topicId" element={<Workspace />} />
+              <Route path="/materials" element={<Materials />} />
+              <Route path="/review-publish" element={<ReviewPublish />} />
+              <Route path="/review-publish/:topicId" element={<ReviewPublish />} />
               <Route path="/legacy/review" element={<Review />} />
               <Route path="/legacy/assets" element={<Assets />} />
               <Route path="/handoff" element={<Handoff />} />

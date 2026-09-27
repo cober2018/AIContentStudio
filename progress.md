@@ -1,5 +1,49 @@
 # 当前进度
 
+## 2026-09-27：FE-F2 正式 review 补强（未 apply）
+
+- 已核对旧 Workflow API：除裸 run 详情、attempt、retry、节点重跑和人工完成，运行列表、取消、定义列表/clone/publish 及 raw create-run 也需要纳入同一项目权限边界。
+- 已在 FE-F2 proposal/design/spec/tasks 补入统一授权、角色默认模板服务端可移植性 Gate、视觉顺序与依赖图分离、以及现有测试基础上的定向回归覆盖。
+- 用户明确要求 FE-F2 新增回归测试，因此旧任务中“不新增测试代码”的限制已在该变更任务条款中替换；本轮只订正规范，尚未新增或运行测试、业务代码和迁移。
+- 新版 `openspec validate fe-f2-persistent-production-workflow --strict` 和 `git diff --check` 均通过；未将规范校验误当成功能验收。
+
+## 2026-09-27：FE-F2 V5 规格校准（未 apply）
+
+- 用户确认 FE-F2 须真实持久化“角色 × 内容形态”默认工作流新版本，并供后续 Content Unit 选择；项目覆盖与角色默认保存须分离。
+- 已订正 FE-F2 proposal/design/specs/tasks：六类节点、拖拽排序、可扩展 Data Source Plugin 六类来源及断连不可执行、快照 stale、项目共享素材产物关联。
+- `openspec validate fe-f2-persistent-production-workflow --strict` 与 `git diff --check` 均通过；本轮未运行应用构建，因没有改业务代码。
+- 仅修改规范和记录；没有业务代码、迁移、真实 Connector 或远端动作。校准后的完整提案仍待用户确认后才可 apply。
+
+## 2026-09-27：FE-F0-F1 复核补丁
+
+- 主规格缺口已补：异常项目的总览与内容矩阵显示五种状态说明；生产页原有说明仍保留。
+- 本轮 `npm run build` 成功；浏览器已看到异常项目矩阵和总览的状态说明。正在隔离 FE-F0-F1 暂存范围，历史 API/迁移和 FE-F2 提案不纳入本次提交。
+
+## 2026-09-27：FE-F2 提案（未实施）
+
+- 用户明确工作流调试器须后端持久化并真实执行，不能只做前端 mock。
+- 已核对现有 Workflow/Run/Step/Attempt 与重跑接口；它们仍以 Topic/渠道组织，FE-F0-F1 项目数据仍在浏览器 `localStorage`。
+- 已建立 `fe-f2-persistent-production-workflow` 的 proposal/design/specs/tasks，`openspec validate --strict` 通过；等待用户确认，未运行 apply、未改业务代码或数据库。
+- 建议以新增项目/内容单元持久化和项目级不可变工作流版本复用现有引擎；此处原“首个 Data Source Plugin”表述已被上面的 V5 校准覆盖：契约可扩展，首个可执行适配器才是 Studio Source。
+
+## 2026-09-27：FE-F0-F1
+
+- 已确认当前工作区为 AIContentStudio；North Star V2、V5 原型、前端契约和 HANDOFF 均已核对本切片范围。
+- OpenSpec `implement-fe-f0-f1-product-shell` 的提案、设计、规格和任务齐全，严格校验通过并已实施、归档。
+- 当前工作树已有大量用户改动，本切片只改前端相关文件和本任务文档。
+- 已建立类型化本地模拟项目、内容单元和素材版本数据；含健康、异常两类项目，扩展状态徽标且沿用已有弹窗/抽屉。
+- 已实现九入口主导航、项目列表、七个 URL 标签、内容单元增删改、本地持久化、共享素材抽屉和生产入口；`npm run build` 已通过，Vite 提示现有主包较大。
+- 浏览器实测：项目列表、七标签、内容单元新增/编辑/删除、生产入口、共享素材来源筛选和异常样本的受阻/已过期/待核对区分可见；删除改为站内确认弹窗，验收样本已清理。
+- 最新核验：`apps/web` 的 `npm run build` 成功；`openspec validate implement-fe-f0-f1-product-shell --strict` 和 `git diff --check` 成功。前端无单独 lint/test 脚本，本轮未新增测试代码。
+- 交付边界：项目数据只在浏览器本地演示，未接后端、未增加迁移、未实现 FE-F2 工作流调试器；旧审核/素材页改用 `/legacy/review`、`/legacy/assets` 别名访问。
+- OpenSpec 已归档到 `openspec/changes/archive/2026-09-27-implement-fe-f0-f1-product-shell/`，新增主规格 `openspec/specs/fe-f0-f1-project-experience/spec.md`。
+
+## 2026-09-24：PRD 三渠道补齐提案
+
+- 用户明确 `03_ai_content_studio_PRD.md` 是产品长期目标，并纠正三渠道误读：完整 V1 还包括百家号等 11 个文章/图文/社交平台，另保留抖音脚本。
+- 已核对抖音和小红书具备旧生成/导出入口，但缺 M1 受控成品交付；其余长文/问答/社交平台缺原生适配。已把完整范围补入 PRD §3.1，正在修订 OpenSpec `complete-prd-v1-channel-deliverables`；当前仅规划文档，未改业务代码。
+- OpenSpec 严格校验通过，4/4 产物齐全；`git diff --check` 通过。下一步是用户确认具体提案，然后按 OpenSpec 流程实施与归档。
+
 - 已配置固定域名连接：`kayoyo.top`
 - 已创建连接器：`Codex with ChatGPT · AIContentStudio`
 - 已完成 ChatGPT 授权与安全配对
@@ -46,3 +90,11 @@
 - 已补完陈旧候选拒绝与人工结果未知（`reconciliation_needed`）的独立本地验收；同一未知回填重复提交不会新增第二条回执。
 - ChatGPT 最终代码复核指出旧工作流默认仍生成公众号草稿节点；已将模板默认改为本地导出，并为遗留远端草稿增加显式开关与服务端闸门，M1 母稿仍不可进入该路径。
 - ChatGPT 对上述修复返回 DONE；已完成 `add-evidence-bound-article-handoff` 的 OpenSpec 归档，归档目录为 `openspec/changes/archive/2026-09-22-add-evidence-bound-article-handoff/`。
+# 2026-09-27：连接器故障检查
+
+- C2C 更新检查无新版本；授权白名单已配置。
+- 固定域名配置正常；`C2C_TUNNEL_PROTOCOL=http2` 已在当前环境及 `~/.zprofile` 配置。
+- 用户确认四种独立读取均返回 `internal error`。进一步外部复核发现公开连接返回 530，且该工作区的健康连接数为 0；协议配置正确。
+- 已执行 `c2c restart --tunnel`。复核通过：HTTP/2 正确、健康连接数大于 0、公开 MCP 未授权请求返回预期 401。
+- 待用户在 ChatGPT 中重试 `workspace_info`，确认连接器端到端恢复。
+- 2026-09-27 再次复查：本地诊断无修复项，外部探测仍返回 401，HTTP/2 与健康连接数正常；未重复重启。状态输出含一条 Cloudflare edge 地址警告，但当前传输探测通过。

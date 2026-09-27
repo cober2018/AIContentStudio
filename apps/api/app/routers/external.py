@@ -10,12 +10,20 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import AuditLog, ExternalContent, User
+from ..services.content_harness import channel_registry
 
 router = APIRouter(prefix="/api/v1", tags=["external"])
 
-CHANNELS = {"douyin", "xiaohongshu", "wechat", "other"}
 ORIGINS = {"dsh", "antigravity", "manual"}
 STATUSES = {"draft", "published", "archived"}
+
+
+def _validate_channel(db: Session, channel: str) -> None:
+    """V1 PRD 2.0 §6.29：正式渠道经 ChannelRegistry 校验；other = 无平台外部内容。"""
+    if channel == "other":
+        return
+    if channel not in channel_registry.list_channel_keys(db):
+        raise HTTPException(400, f"未知渠道: {channel}（无平台外部内容请用 channel=other）")
 
 
 class IngestIn(BaseModel):
@@ -54,8 +62,7 @@ def _serialize(c: ExternalContent) -> dict:
 @router.post("/assets/ingest", status_code=201)
 def ingest(payload: IngestIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     """外部产出入库。同 (origin, origin_ref) 重复上报返回已有记录（幂等，200）。"""
-    if payload.channel not in CHANNELS:
-        raise HTTPException(400, f"channel 只允许 {sorted(CHANNELS)}")
+    _validate_channel(db, payload.channel)
     if payload.origin not in ORIGINS:
         raise HTTPException(400, f"origin 只允许 {sorted(ORIGINS)}")
 

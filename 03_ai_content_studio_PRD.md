@@ -5,6 +5,11 @@
 > 核心定位：把“可信事实包 + 内容策略 + 模型生成 + 人工审核 + 多平台输出”变成一条可管理的内容生产流水线。  
 > **明确约束：本产品不得内嵌或依赖 DreamOAgents，也不依赖财经观点雷达。外部数据只能通过导入/API 进入本产品。**
 
+> **2026-09-22 边界澄清：** 本文原有“V1 不直接自动发布平台”的表述，需要结合
+> [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md) 理解：公众号草稿箱投递已纳入当前需求，抖音/小红书等未接入平台仍输出可复制排版内容，任何平台公开发布仍不在本期范围。
+
+> **2026-09-24 状态标注（V1 PRD 2.0 Content Harness）：** 本文的渠道/交付章节为 legacy 基线；当前实施基准是 [`AIContentStudio_V1_PRD_2.0_ContentHarness_2026-09-24.md`](AIContentStudio_V1_PRD_2.0_ContentHarness_2026-09-24.md) 及其代码级 OpenSpec（已实施为 [`openspec/changes/align-v1-prd2-content-harness/`](openspec/changes/align-v1-prd2-content-harness/proposal.md)：Channel Registry 多平台 profile、Candidate Manifest v2、Delivery Router 等）。本文 §15/§16 的 V1 验收与 30 Topic 门槛保持独立有效，未因工程实施自动达标。
+
 ---
 
 # 1. 产品定义
@@ -96,6 +101,20 @@ V1 首选渠道：
 - 微信公众号：长文
 
 V1 不直接自动发布平台，先做到 Generate → Review → Export。
+
+## 3.1 V1 全渠道目标补充（2026-09-24）
+
+上面三项是最初的**首选渠道**，并非最终的 V1 渠道上限。结合原对话「自媒体平台对比总结」及 [`docs/AI_CONTENT_STUDIO_V1_ALIGNMENT_PLAN.md`](docs/AI_CONTENT_STUDIO_V1_ALIGNMENT_PLAN.md) 的渠道清单，文章/图文 V1 还应覆盖以下平台与内容形态；抖音现有口播脚本继续保留，视频成片属于 V2。
+
+| 内容形态 | V1 目标平台 | 成品最低要求 |
+| --- | --- | --- |
+| 长文 | 公众号、头条、百家号、知乎文章、B站专栏/图文、搜狐号、企鹅号、网易号 | 按平台规则改写并排版的正文、来源/声明、实际素材、可预览交付包 |
+| 问答 | 知乎回答 | 围绕具体问题组织答案，独立于知乎文章验收 |
+| 图文 | 小红书 | 有序的实际图片组、正文、标题与标签 |
+| 社交文本 | X、微博 | 单帖/线程等形态分别适配；X 单帖、线程、长帖、Articles 分别验收 |
+| 现有脚本能力 | 抖音 | 口播脚本、分镜、字幕/B-roll 说明；不等同视频成片 |
+
+上述文章/图文/社交文本合计 **11 个平台**；同一平台的不同内容形态分别验收。成品适配、账号分发与真实平台发布应分开记录；没有核验的账号能力不得标为已接入。旧版 §15–16 的三渠道、30 个真实 Topic 是最初验收基线，仍需完成，但不能单独代表这一全渠道目标已完成。更完整的需求编号与实施阶段见 V1 对齐方案。
 
 ---
 

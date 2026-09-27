@@ -78,27 +78,89 @@ def generate_for_topic(
     db: Session = Depends(get_db),
     user: User = Depends(require_editor),
 ):
+    """主生产入口（R2-B1）：每个 target（channel × content_form）启动独立 WorkflowRun。
+
+    - 有 profile 的渠道：解析 default_workflow_key → 共享 Bundle Workflow（不存在则构建并发布）
+      → start_run 冻结定义身份，节点链内完成生成/校验，人工节点由审核中心/画布续跑；
+    - legacy 渠道（无 profile，如 x_thread 兜底）：保持直连生成（M1 兼容路径）。
+    """
+    from ..config import get_settings
+    from ..services import workflow_engine
+    from ..services.content_harness import channel_registry
+    from ..services.workflow_templates import ensure_bundle_workflow
+    from ..tasks import worker_tasks
+
     topic = db.get(TopicBrief, topic_id)
     if not topic:
         raise HTTPException(404, "Topic 不存在")
-    channels = (payload.channels if payload and payload.channels else topic.channels) or []
-    if not channels:
+    # 显式 channels 参数 > targets_json（真源）> channels 兼容列
+    if payload and payload.channels:
+        targets = payload.channels
+    elif topic.targets_json:
+        targets = topic.targets_json
+    else:
+        targets = topic.channels or []
+    if not targets:
         raise HTTPException(400, "Topic 未配置渠道")
 
-    jobs = orchestrator.create_jobs_for_topic(db, topic, channels)
+    async_mode = get_settings().task_queue_enabled
     results = []
-    for job in jobs:
-        status = worker_tasks.dispatch_generation(db, job.id)
-        # 异步模式返回 queued（前端轮询）；同步模式返回最终状态
-        if status == JobStatus.queued.value:
-            results.append({"job_id": job.id, "channel": job.channel, "status": status})
+    for target in targets:
+        t = {"channel": target} if isinstance(target, str) else {"channel": target["channel"], "content_form": target.get("content_form")}
+        try:
+            spec = channel_registry.resolve_content_form(db, t["channel"], t.get("content_form"))
+        except channel_registry.ChannelRegistryError as exc:
+            raise HTTPException(400, str(exc)) from exc
+
+        workflow = ensure_bundle_workflow(db, spec.workflow_key)
+        if workflow is None:
+            # legacy 渠道：直连生成（无 Content Harness Bundle 可用）
+            jobs = orchestrator.create_jobs_for_topic(db, topic, [t])
+            for job in jobs:
+                status = worker_tasks.dispatch_generation(db, job.id)
+                if status == JobStatus.queued.value:
+                    results.append({"job_id": job.id, "channel": job.channel, "status": status, "workflow_run_id": None})
+                    continue
+                latest = latest_draft_id(db, job.id)
+                if status == JobStatus.succeeded.value and latest:
+                    results.append({"job_id": job.id, "channel": job.channel, "status": status, "draft_id": latest, "workflow_run_id": None})
+                else:
+                    # 某渠道失败不影响其他渠道（STU-084）
+                    results.append({"job_id": job.id, "channel": job.channel, "status": status, "error": job.error, "workflow_run_id": None})
             continue
-        latest = latest_draft_id(db, job.id)
-        if status == JobStatus.succeeded.value and latest:
-            results.append({"job_id": job.id, "channel": job.channel, "status": status, "draft_id": latest})
-        else:
-            # 某渠道失败不影响其他渠道（STU-084）
-            results.append({"job_id": job.id, "channel": job.channel, "status": status, "error": job.error})
+
+        run_params = {"topic_id": topic_id, "channel": spec.channel, "content_form": spec.content_form}
+        if async_mode:
+            run = workflow_engine.start_run(db, workflow, run_params, user, advance_now=False)
+            db.commit()
+            worker_tasks.advance_workflow_run.delay(run.id)
+            results.append(
+                {
+                    "job_id": None,
+                    "channel": spec.channel,
+                    "content_form": spec.content_form,
+                    "status": JobStatus.queued.value,
+                    "workflow_run_id": run.id,
+                }
+            )
+            continue
+        try:
+            run = workflow_engine.start_run(db, workflow, run_params, user)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        job_ctx = ((run.context_json or {}).get("jobs") or {}).get(spec.channel) or {}
+        job = db.get(ContentJob, job_ctx["job_id"]) if job_ctx.get("job_id") else None
+        results.append(
+            {
+                "job_id": job.id if job else None,
+                "channel": spec.channel,
+                "content_form": spec.content_form,
+                "status": job.status if job else ("failed" if run.status == "failed" else run.status),
+                "draft_id": job_ctx.get("draft_id"),
+                "error": (job.error if job else None) or (run.error if run.status == "failed" else None),
+                "workflow_run_id": run.id,
+            }
+        )
     db.commit()
     return {"topic_id": topic_id, "jobs": results}
 
@@ -153,31 +215,21 @@ def update_draft(
     db: Session = Depends(get_db),
     user: User = Depends(require_editor_or_reviewer),
 ):
-    """人工保存：revision+1，不覆盖旧版本（STU-100）。"""
+    """人工保存：revision+1，不覆盖旧版本（STU-100）。
+
+    R3-5：统一走 fork_draft_revision——克隆 media use + 重建 document，杜绝新稿引用旧稿素材。
+    """
+    from ..services.draft_fork import fork_draft_revision
+
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
     if draft.status == DraftStatus.approved.value:
         raise HTTPException(409, "已批准的 Draft 不可编辑")
 
-    job = draft.content_job
-    new_draft = Draft(
-        content_job_id=draft.content_job_id,
-        revision_no=max(d.revision_no for d in job.drafts) + 1,
-        title=payload.title or draft.title,
-        body=payload.body,
-        structured_json=None,
-        fact_check_json=None,
-        mother_revision_id=draft.mother_revision_id,
-        evidence_checksum=draft.evidence_checksum,
-        input_hash=draft_input_hash(payload.title or draft.title, payload.body, None),
-        thread_posts_json=None,
-        candidate_readiness="stale",
-        status=DraftStatus.draft.value,
-        created_by_type="user",
-        created_by=user.email,
+    new_draft = fork_draft_revision(
+        db, draft, title=payload.title, body=payload.body, created_by=user.email, reason="manual_edit"
     )
-    db.add(new_draft)
     db.commit()
     db.refresh(new_draft)
     return _serialize_draft(new_draft, with_detail=True)
@@ -216,6 +268,10 @@ def run_fact_check(draft_id: int, db: Session = Depends(get_db), user: User = De
     )
 
     _sync_claims(db, draft, result)
+    # V1 PRD 2.0（D12）：镜像写 DraftCheckRun(check_kind=fact)，新 Review Gate 统一读它
+    from ..services import checks as checks_service
+
+    checks_service.run_fact_check(db, draft, result_json=draft.fact_check_json, input_hash=current_input_hash)
     db.commit()
     return draft.fact_check_json
 

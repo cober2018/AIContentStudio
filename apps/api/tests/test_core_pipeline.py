@@ -232,6 +232,15 @@ def test_full_pipeline_and_immutability(client):
 
     for job in jobs:
         draft_id = job["draft_id"]
+        if job["channel"] == "wechat":
+            # R2-B2：公众号 media_requirements 兜底要求封面（approve 前补真实素材）
+            up = client.post(
+                f"/api/v1/drafts/{draft_id}/materials/upload",
+                files={"file": ("cover.png", b"\x89PNG\r\n\x1a\n" + b"cov" * 8, "image/png")},
+                params={"role": "cover", "rights_status": "cleared", "public_use_allowed": "true"},
+                headers=ADMIN,
+            )
+            assert up.status_code == 201, up.text
         resp = client.post(f"/api/v1/drafts/{draft_id}/fact-check", headers=ADMIN)
         assert resp.status_code == 200, resp.text
         assert resp.json()["result"] != "blocker", resp.json()

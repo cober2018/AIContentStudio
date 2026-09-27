@@ -21,6 +21,11 @@ interface WfRow {
   name: string;
   description: string | null;
   template_key: string | null;
+  workflow_key?: string | null;
+  version?: number;
+  status?: string;
+  schema_version?: number;
+  checksum?: string | null;
   node_count: number;
   runs: { id: number; status: string; error: string; started_at: string | null }[];
 }
@@ -43,12 +48,21 @@ interface StepRow {
   error: string | null;
   layout: { x: number; y: number };
   channel: string | null;
+  plugin_key?: string | null;
+  plugin_version?: string | null;
+  stale_reason?: string | null;
 }
 
 interface RunRow {
   id: number;
   workflow_id: number;
   workflow_name: string;
+  workflow_key?: string | null;
+  workflow_version?: number | null;
+  definition_checksum?: string | null;
+  topic_id?: number | null;
+  channel?: string | null;
+  content_form?: string | null;
   status: string;
   error: string | null;
   params: Record<string, unknown>;
@@ -66,6 +80,7 @@ const STATUS_STYLE: Record<string, { bg: string; border: string; badge: string }
   succeeded: { bg: "#f0fdf4", border: "#22c55e", badge: "完成" },
   failed: { bg: "#fef2f2", border: "#ef4444", badge: "失败" },
   skipped: { bg: "#f8fafc", border: "#e2e8f0", badge: "跳过" },
+  stale: { bg: "#fff7ed", border: "#fb923c", badge: "已过期（需重跑）" },
 };
 
 const NODE_TYPE_LABEL: Record<string, string> = {
@@ -223,15 +238,38 @@ function Inspector({
     onError: (e) => setError(e instanceof Error ? e.message : "操作失败"),
   });
 
+  // D27：节点级重跑（副作用节点由后端拒绝）
+  const rerun = useMutation({
+    mutationFn: (mode: "rerun" | "rerun-from-here") =>
+      api.post<RunRow>(`/workflow-runs/${run.id}/nodes/${step.node_id}/${mode}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wf-run", run.id] });
+      queryClient.invalidateQueries({ queryKey: ["workflows"] });
+    },
+    onError: (e) => setError(e instanceof Error ? e.message : "重跑失败"),
+  });
+  const rerunnable = ["succeeded", "failed", "stale"].includes(step.status) && step.node_type !== "publish_wechat";
+
   return (
     <div className="space-y-3">
       <div>
         <span className="text-sm font-semibold text-slate-800">{step.label}</span>
         <span className="ml-2 text-xs text-slate-400">{NODE_TYPE_LABEL[step.node_type] || step.node_type}</span>
+        {/* V1 PRD 2.0：节点执行经 registry 版本钉死，展示 plugin key@version */}
+        {step.plugin_key && (
+          <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">
+            {step.plugin_key}@{step.plugin_version || "1"}
+          </span>
+        )}
         <div className="mt-1">
           <StatusBadge status={step.status === "waiting_input" ? "changes_requested" : step.status} />
         </div>
       </div>
+      {(run.workflow_key || run.definition_checksum) && (
+        <p className="text-[11px] text-slate-400">
+          Run 冻结：{run.workflow_key || "-"} v{run.workflow_version ?? "-"} · checksum {String(run.definition_checksum || "").slice(0, 12)}
+        </p>
+      )}
 
       <div>
         <h4 className="mb-1 text-xs font-medium text-slate-500">配置</h4>
@@ -265,6 +303,21 @@ function Inspector({
       )}
 
       {step.error && <div className="rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-700">{step.error}</div>}
+      {step.stale_reason && (
+        <div className="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">上游输出已变化：{step.stale_reason}</div>
+      )}
+
+      {/* D27：节点级重跑 / 从此处重跑 */}
+      {rerunnable && (
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" disabled={rerun.isPending} onClick={() => rerun.mutate("rerun")}>
+            ↻ 重跑此节点
+          </Button>
+          <Button size="sm" variant="ghost" disabled={rerun.isPending} onClick={() => rerun.mutate("rerun-from-here")}>
+            ⏭ 从此处重跑下游
+          </Button>
+        </div>
+      )}
 
       {/* 人工采纳 */}
       {step.node_type === "adopt_topic" && step.status === "waiting_input" && (
