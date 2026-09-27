@@ -16,6 +16,7 @@ import Topics from "./pages/Topics";
 import Workflows from "./pages/Workflows";
 import Workspace from "./pages/Workspace";
 import ProductPlaceholder from "./product/ProductPlaceholders";
+import IdentityWorkspace from "./product/IdentityWorkspace";
 import { ProductionShellPage, ProjectPage, ProjectsPage } from "./product/ProjectPages";
 import { PersistentProjectPage, PersistentProjectsPage, PersistentProductionPage } from "./product/PersistentProjectPages";
 
@@ -102,7 +103,7 @@ function Shell() {
               <Route path="/projects/:projectId/units/:unitId/production" element={<ProductionRoute />} />
               <Route path="/production" element={<ProductPlaceholder kind="production" />} />
               <Route path="/review" element={<ProductPlaceholder kind="review" />} />
-              <Route path="/identities" element={<ProductPlaceholder kind="identities" />} />
+              <Route path="/identities" element={<IdentityWorkspace />} />
               <Route path="/assets" element={<ProductPlaceholder kind="assets" />} />
               <Route path="/learning" element={<ProductPlaceholder kind="learning" />} />
               <Route path="/dashboard" element={<Dashboard />} />

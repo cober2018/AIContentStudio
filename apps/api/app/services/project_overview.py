@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentPersona, ContentUnit, WorkflowRun, WorkflowStep
+from ..models import ContentPersona, ContentUnit, IdentitySnapshot, WorkflowRun, WorkflowStep
 from .project_brief import current_brief
 from .project_evidence import current_boundary
 
@@ -22,6 +22,9 @@ def project_overview(db: Session, project_id: int) -> dict:
     pending: list[dict] = []
     latest_runs: list[WorkflowRun] = []
     for unit in active:
+        snapshot = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
+        if snapshot is None or not snapshot.effective_profile_json:
+            risks.append({"code": "identity_unready", "unit_id": unit.id, "reason": "legacy_identity" if snapshot is None else "incomplete_profile"})
         if unit.status in {"blocked", "stale", "unknown", "failed"}:
             risks.append({"code": f"unit_{unit.status}", "unit_id": unit.id})
         if unit.status in {"waiting_human", "waiting_input"}:
@@ -45,7 +48,8 @@ def project_overview(db: Session, project_id: int) -> dict:
     elif not active:
         stage, next_action = "matrix_needed", {"code": "matrix.create_unit", "label": "添加内容单元", "href": f"/projects/{project_id}?tab=matrix"}
     elif risks:
-        stage, next_action = "attention_required", {"code": "production.resolve_risk", "label": "处理生产风险", "href": f"/projects/{project_id}?tab=matrix"}
+        only_identity = all(risk["code"] == "identity_unready" for risk in risks)
+        stage, next_action = "attention_required", {"code": "identity.rebind" if only_identity else "production.resolve_risk", "label": "完善或重绑内容身份" if only_identity else "处理生产风险", "href": f"/projects/{project_id}?tab=matrix"}
     elif pending:
         stage, next_action = "waiting_human", {"code": "production.complete_human", "label": "处理人工节点", "href": f"/projects/{project_id}?tab=matrix"}
     elif all(unit.status in {"ready", "approved"} for unit in active):

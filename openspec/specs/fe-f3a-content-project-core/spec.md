@@ -1,11 +1,11 @@
 # fe-f3a-content-project-core Specification
 
 ## Purpose
-TBD - created by archiving change fe-f3a-content-project-core-completion. Update Purpose after archive.
+Define the persistent ContentProject core contract for append-only Brief and Fact Boundary revisions, project assets and events, aggregated Versions, deterministic Overview readiness, and validated content identity scope.
 ## Requirements
 ### Requirement: Immutable CreativeBrief revisions
 
-The system SHALL persist CreativeBrief as append-only revisions owned by one ContentProject. Each committed revision SHALL include objective, primary audience, core message, angle, required evidence, content constraints, identity scope, modality scope, channel scope, CTA, references, checksum, author and creation time. Saving a Brief SHALL create a new revision; a prior revision MUST NOT be mutated.
+The system SHALL persist CreativeBrief as append-only revisions owned by one ContentProject. Each committed revision SHALL include objective, primary audience, core message, angle, required evidence, content constraints, identity scope, modality scope, channel scope, CTA, references, checksum, author and creation time. Saving a Brief SHALL create a new revision; a prior revision MUST NOT be mutated. New CreativeBrief revisions MAY reference stable Brand/Persona/Account/Series IDs in identity scope. Those typed references SHALL be server-validated against ownership/hierarchy when saved. Historical Brief revisions MUST NOT be rewritten when identity hierarchy changes.
 
 #### Scenario: Save next Brief revision
 - **WHEN** an editor saves a valid Brief with `expected_revision` equal to the current revision
@@ -22,6 +22,10 @@ The system SHALL persist CreativeBrief as append-only revisions owned by one Con
 #### Scenario: Reload Brief
 - **WHEN** the user reloads the project
 - **THEN** the Brief tab shows the latest committed revision and its prior revisions from backend state
+
+#### Scenario: Invalid identity scope
+- **WHEN** a Brief revision references an identity outside the user's hierarchy
+- **THEN** the save is rejected without changing prior Brief revisions
 
 ### Requirement: Project Sources reference existing SourceDocument records
 
@@ -121,21 +125,23 @@ Deleting a FE-F3A ContentProject SHALL archive the project and preserve Brief, S
 
 ### Requirement: Aggregated project Versions view
 
-The system SHALL expose a project Versions read model aggregated from actual versioned resources. It MUST NOT introduce a monolithic ProjectVersion persistence table solely for UI presentation.
-
-The view SHALL aggregate, when present: CreativeBrief revisions, ProjectFactBoundary revisions, active/archived ContentUnits, relevant Workflow versions, WorkflowRuns with frozen checksums, project MaterialRevisions, and workflow-associated Draft/Candidate references.
+The system SHALL expose a project Versions read model aggregated from actual versioned resources. It MUST NOT introduce a monolithic ProjectVersion persistence table solely for UI presentation. The view SHALL aggregate, when present: CreativeBrief revisions, ProjectFactBoundary revisions, active/archived ContentUnits, relevant Workflow versions, WorkflowRuns with frozen checksums, project MaterialRevisions, workflow-associated Draft/Candidate references, and real IdentitySnapshots linked to project ContentUnits/Runs. It MUST NOT create synthetic snapshots for legacy units.
 
 #### Scenario: Historical versions remain visible
 - **WHEN** newer Brief, boundary, Workflow or material versions exist
 - **THEN** older project-relevant versions remain visible and their IDs/checksums are not rewritten
 
-#### Scenario: Missing IdentitySnapshot
-- **WHEN** FE-F3A has no IdentitySnapshot implementation
-- **THEN** Versions does not fabricate one and the UI clearly scopes that item to a later identity phase
+#### Scenario: IdentitySnapshot version item
+- **WHEN** a project unit pins an IdentitySnapshot
+- **THEN** Versions returns the snapshot ID/checksum and unit association as an immutable historical item
+
+#### Scenario: Legacy identity version item
+- **WHEN** a unit has no snapshot
+- **THEN** Versions reports a legacy/unknown identity state without fabricating Brand/Persona/Account/Series revisions
 
 ### Requirement: Derived project Overview
 
-The backend SHALL derive ContentProject overview stage, counts, readiness, risks, pending decisions and next action from persisted state using deterministic rules. The frontend MUST NOT duplicate an independent stage engine.
+The backend SHALL derive ContentProject overview stage, counts, readiness, risks, pending decisions and next action from persisted state using deterministic rules. The frontend MUST NOT duplicate an independent stage engine. Active FE-F3B production units lacking a usable IdentitySnapshot SHALL produce a typed identity-readiness risk; archived legacy units SHALL not block current readiness.
 
 #### Scenario: Missing Brief
 - **WHEN** a project has no CreativeBrief revision
@@ -152,6 +158,14 @@ The backend SHALL derive ContentProject overview stage, counts, readiness, risks
 #### Scenario: Waiting human
 - **WHEN** no higher-priority blocker exists and an active production run is waiting for human input
 - **THEN** overview returns `waiting_human` with a typed pending decision
+
+#### Scenario: Identity not ready
+- **WHEN** an active FE-F3B unit lacks a usable identity snapshot
+- **THEN** Overview includes an `identity_unready` risk and a deterministic next action
+
+#### Scenario: Empty legacy Persona profile
+- **WHEN** a newly bound active unit has a snapshot of a brandless Persona with no authored profile revision
+- **THEN** Overview identifies incomplete identity readiness rather than presenting the empty snapshot as a complete identity
 
 ### Requirement: Project-core authorization and historical safety
 

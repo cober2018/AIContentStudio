@@ -5,7 +5,7 @@ import { ErrorBanner, Spinner } from "../../components/ui";
 import type { Overview } from "./types";
 
 const STAGES: Record<string, string> = { brief_needed: "待完成任务书", evidence_needed: "待建立事实边界", matrix_needed: "待添加内容单元", production: "生产中", attention_required: "需要处理风险", waiting_human: "等待人工", review_ready: "可进入审核" };
-const STATE_NAMES: Record<string, string> = { blocked: "受阻", stale: "已过期", unknown: "待核对", failed: "执行失败", waiting_human: "等待人工" };
+const STATE_NAMES: Record<string, string> = { identity_unready: "身份未就绪，请完善画像或显式重绑", blocked: "受阻", stale: "已过期", unknown: "待核对", failed: "执行失败", waiting_human: "等待人工" };
 function stateLabel(code: string) { const state = Object.keys(STATE_NAMES).find((item) => code.endsWith(item)); return state ? STATE_NAMES[state] : code; }
 
 export function ProjectOverviewTab({ projectId }: { projectId: number }) {

@@ -5,11 +5,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import (
+    AccountWorkflowDefault,
+    ContentAccount,
     ContentPersona,
     ContentProject,
     ContentUnit,
     PersonaWorkflowDefault,
     ProjectWorkflowBinding,
+    ContentSeries,
+    SeriesWorkflowDefault,
     User,
     Workflow,
     WorkflowRun,
@@ -28,6 +32,11 @@ def authorize_project_run(db: Session, run: WorkflowRun, user: User, *, mutate: 
         raise HTTPException(404, "运行不存在")
     if mutate and (owner[1] == "archived" or owner[2] == "archived"):
         raise HTTPException(409, "已归档项目或单元的运行历史只可查看")
+    if mutate:
+        from .content_identity import hierarchy
+
+        unit = db.get(ContentUnit, run.content_unit_id)
+        hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
 
 
 def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> bool:
@@ -49,8 +58,21 @@ def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> b
         .join(PersonaWorkflowDefault, PersonaWorkflowDefault.persona_id == ContentPersona.id)
         .where(PersonaWorkflowDefault.workflow_id == workflow.id)
     ).all())
-    owners = project_owners | run_owners | persona_owners
-    if workflow.scope in {"project", "persona_default"}:
+    account_owners = set(db.scalars(
+        select(ContentPersona.owner_user_id)
+        .join(ContentAccount, ContentAccount.persona_id == ContentPersona.id)
+        .join(AccountWorkflowDefault, AccountWorkflowDefault.account_id == ContentAccount.id)
+        .where(AccountWorkflowDefault.workflow_id == workflow.id)
+    ).all())
+    series_owners = set(db.scalars(
+        select(ContentPersona.owner_user_id)
+        .join(ContentAccount, ContentAccount.persona_id == ContentPersona.id)
+        .join(ContentSeries, ContentSeries.account_id == ContentAccount.id)
+        .join(SeriesWorkflowDefault, SeriesWorkflowDefault.series_id == ContentSeries.id)
+        .where(SeriesWorkflowDefault.workflow_id == workflow.id)
+    ).all())
+    owners = project_owners | run_owners | persona_owners | account_owners | series_owners
+    if workflow.scope in {"project", "persona_default", "account_default", "series_default"}:
         if workflow.owner_user_id is None:
             raise HTTPException(404, "工作流不存在")
         owners.add(workflow.owner_user_id)

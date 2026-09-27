@@ -307,7 +307,7 @@ def test_overview_risk_precedes_waiting_and_archived_units_leave_active_counts(c
     assert client.patch(f"{base}/units/{waiting}", json={"status": "waiting_human"}, headers=headers).status_code == 200
     overview = client.get(f"{base}/overview", headers=headers).json()
     assert overview["stage"] == "attention_required"
-    assert {risk["code"] for risk in overview["risks"]} == {"unit_blocked"}
+    assert {risk["code"] for risk in overview["risks"]} == {"unit_blocked", "identity_unready"}
     assert overview["modalityCounts"] == {"text": 1, "graphic": 1, "video": 0}
     assert overview["personas"] == [{"id": persona, "name": "作者", "unitCount": 2}]
     db_session.get(ContentUnit, blocked).status = "archived"
@@ -316,13 +316,14 @@ def test_overview_risk_precedes_waiting_and_archived_units_leave_active_counts(c
     assert after["activeUnitCount"] == 1
     assert after["archivedUnitCount"] == 1
     assert after["modalityCounts"]["text"] == 0
-    assert after["stage"] == "waiting_human"
+    assert after["stage"] == "attention_required"
+    assert after["nextAction"]["code"] == "identity.rebind"
     assert after["pendingDecisions"][0]["code"] == "unit_waiting_human"
     for status in ("stale", "unknown"):
         assert client.patch(f"{base}/units/{waiting}", json={"status": status}, headers=headers).status_code == 200
         risk_view = client.get(f"{base}/overview", headers=headers).json()
         assert risk_view["stage"] == "attention_required"
-        assert {risk["code"] for risk in risk_view["risks"]} == {f"unit_{status}"}
+        assert {risk["code"] for risk in risk_view["risks"]} == {f"unit_{status}", "identity_unready"}
 
 
 def test_archived_project_keeps_historic_run_readable_and_blocks_legacy_mutation(client):

@@ -21,9 +21,10 @@ export type WorkflowNode = {
   input_mapping?: Record<string, unknown>; output_mapping?: Record<string, unknown>;
   condition?: Record<string, unknown> | string; failure_policy?: string; enabled?: boolean;
 };
-export type WorkflowBinding = { revision: number; workflow_id: number | null; workflow_version: number | null; definition_checksum: string | null; definition: Definition };
-export type Persona = { id: number; name: string };
-export type Unit = { id: number; project_id: number; persona_id: number; modality: Modality; channel_id: string | null; title: string; status: string; pinned_workflow_id: number | null };
+export type WorkflowBinding = { revision: number; workflow_id: number | null; workflow_version: number | null; definition_checksum: string | null; definition: Definition; source?: string };
+export type Persona = { id: number; name: string; brand_id?: number | null; status?: string };
+export type Unit = { id: number; project_id: number; persona_id: number; account_id: number | null; series_id: number | null; identity_snapshot_id: number | null; identity_state: string; modality: Modality; channel_id: string | null; title: string; status: string; pinned_workflow_id: number | null };
+type IdentityChild = { id: number; name: string; status: string; persona_id?: number; account_id?: number };
 export type Project = { id: number; title: string; objective: string; status: string; units: Unit[] };
 
 const TABS = ["overview", "brief", "evidence", "assets", "matrix", "versions", "activity"] as const;
@@ -74,11 +75,16 @@ export function PersistentProjectPage() {
   const [unitTitle, setUnitTitle] = useState("");
   const [personaName, setPersonaName] = useState("");
   const [personaId, setPersonaId] = useState<number | null>(null);
+  const [accountId, setAccountId] = useState<number | null>(null);
+  const [seriesId, setSeriesId] = useState<number | null>(null);
+  const [accounts, setAccounts] = useState<IdentityChild[]>([]);
+  const [series, setSeries] = useState<IdentityChild[]>([]);
   const [modality, setModality] = useState<Modality>("text");
   const [channel, setChannel] = useState("wechat");
   const [projectTitle, setProjectTitle] = useState("");
   const [defaultBinding, setDefaultBinding] = useState<WorkflowBinding | null>(null);
   const [rebindDefault, setRebindDefault] = useState(false);
+  const [rebindIdentity, setRebindIdentity] = useState(false);
   const tab = TABS.includes(searchParams.get("tab") as typeof TABS[number]) ? searchParams.get("tab")! : "overview";
 
   async function reload() {
@@ -90,9 +96,18 @@ export function PersistentProjectPage() {
   }
   useEffect(() => { setLoading(true); reload().catch((err) => setError(message(err))).finally(() => setLoading(false)); }, [projectId]);
   useEffect(() => {
+    if (!personaId) { setDefaultBinding(null); setAccounts([]); return; }
+    api.get<IdentityChild[]>(`/content-personas/${personaId}/accounts`).then(setAccounts).catch((err) => setError(message(err)));
+  }, [personaId]);
+  useEffect(() => {
+    if (!accountId) { setSeries([]); return; }
+    api.get<IdentityChild[]>(`/content-accounts/${accountId}/series`).then(setSeries).catch((err) => setError(message(err)));
+  }, [accountId]);
+  useEffect(() => {
     if (!personaId) { setDefaultBinding(null); return; }
-    api.get<WorkflowBinding>(`/content-personas/${personaId}/default-workflows/${modality}`).then(setDefaultBinding).catch((err) => setError(message(err)));
-  }, [personaId, modality]);
+    const query = `persona_id=${personaId}${accountId ? `&account_id=${accountId}` : ""}${seriesId ? `&series_id=${seriesId}` : ""}&modality=${modality}`;
+    api.get<WorkflowBinding>(`/content-identities/effective-workflow?${query}`).then(setDefaultBinding).catch((err) => setError(message(err)));
+  }, [personaId, accountId, seriesId, modality]);
 
   async function createPersona(event: FormEvent) {
     event.preventDefault();
@@ -102,7 +117,7 @@ export function PersistentProjectPage() {
   async function createUnit(event: FormEvent) {
     event.preventDefault();
     if (!project || !personaId) { setError("先选择一个内容身份。" ); return; }
-    try { await api.post<Unit>(`/content-projects/${project.id}/units`, { title: unitTitle.trim(), persona_id: personaId, modality, channel_id: channel, pinned_workflow_id: defaultBinding?.workflow_id ?? null }); await reload(); setUnitModal(false); setUnitTitle(""); setError(""); }
+    try { await api.post<Unit>(`/content-projects/${project.id}/units`, { title: unitTitle.trim(), persona_id: personaId, account_id: accountId, series_id: seriesId, modality, channel_id: channel }); await reload(); setUnitModal(false); setUnitTitle(""); setError(""); }
     catch (err) { setError(message(err)); }
   }
   async function deleteUnit(unit: Unit) {
@@ -114,7 +129,7 @@ export function PersistentProjectPage() {
     event.preventDefault();
     if (!project || !editingUnit) return;
     try {
-      const saved = await api.patch<Unit>(`/content-projects/${project.id}/units/${editingUnit.id}`, { title: unitTitle.trim(), channel_id: channel, persona_id: personaId, modality, rebind_default: rebindDefault || personaId !== editingUnit.persona_id || modality !== editingUnit.modality });
+      const saved = await api.patch<Unit>(`/content-projects/${project.id}/units/${editingUnit.id}`, { title: unitTitle.trim(), channel_id: channel, persona_id: personaId, account_id: accountId, series_id: seriesId, modality, rebind_identity: rebindIdentity, rebind_default: rebindDefault });
       await reload(); setEditingUnit(null); setError("");
       if (saved.id !== editingUnit.id) window.alert(`已有执行历史：已创建新单元 #${saved.id}，旧单元已归档，原运行历史仍可读取。`);
     }
@@ -132,6 +147,12 @@ export function PersistentProjectPage() {
     catch (err) { setError(message(err)); }
   }
 
+  const identityFields = <>
+    <Field label="内容身份"><select className={inputClass} value={personaId ?? ""} onChange={(event) => { setPersonaId(Number(event.target.value) || null); setAccountId(null); setSeriesId(null); }}><option value="">请选择</option>{personas.filter((item) => item.status !== "archived" || item.id === editingUnit?.persona_id).map((item) => <option key={item.id} value={item.id}>{item.name}{item.status === "archived" ? " · 已归档" : ""}</option>)}</select></Field>
+    <Field label="账号（可选）"><select className={inputClass} value={accountId ?? ""} onChange={(event) => { setAccountId(Number(event.target.value) || null); setSeriesId(null); }}><option value="">不绑定账号</option>{accounts.filter((item) => item.status !== "archived" || item.id === editingUnit?.account_id).map((item) => <option key={item.id} value={item.id}>{item.name}{item.status === "archived" ? " · 已归档" : ""}</option>)}</select></Field>
+    <Field label="栏目（可选）"><select className={inputClass} value={seriesId ?? ""} onChange={(event) => setSeriesId(Number(event.target.value) || null)}><option value="">不绑定栏目</option>{series.filter((item) => item.status !== "archived" || item.id === editingUnit?.series_id).map((item) => <option key={item.id} value={item.id}>{item.name}{item.status === "archived" ? " · 已归档" : ""}</option>)}</select></Field>
+  </>;
+
   if (loading) return <div className="p-9"><Spinner label="读取项目…" /></div>;
   if (!project) return <div className="p-9"><ErrorBanner message={error || "项目不存在或无权访问。"} /></div>;
   return <div className="mx-auto max-w-7xl px-6 py-9">
@@ -143,15 +164,15 @@ export function PersistentProjectPage() {
     {tab === "overview" && <ProjectOverviewTab projectId={project.id} />}
     {tab === "brief" && <ProjectBriefTab projectId={project.id} readOnly={project.status === "archived"} onSaved={() => { reload().catch((err) => setError(message(err))); }} />}
     {tab === "evidence" && <ProjectEvidenceTab projectId={project.id} readOnly={project.status === "archived"} />}
-    {tab === "matrix" && <ProjectMatrixTab project={project} personas={personas} onAddPersona={() => setPersonaModal(true)} onAddUnit={() => { setPersonaId(personas[0]?.id ?? null); setUnitModal(true); }} onEditUnit={(unit) => { setEditingUnit(unit); setUnitTitle(unit.title); setPersonaId(unit.persona_id); setModality(unit.modality); setChannel(unit.channel_id || ""); setRebindDefault(false); }} onDeleteUnit={deleteUnit} />}
+    {tab === "matrix" && <ProjectMatrixTab project={project} personas={personas} onAddPersona={() => setPersonaModal(true)} onAddUnit={() => { setPersonaId(personas[0]?.id ?? null); setAccountId(null); setSeriesId(null); setUnitModal(true); }} onEditUnit={(unit) => { setEditingUnit(unit); setUnitTitle(unit.title); setPersonaId(unit.persona_id); setAccountId(unit.account_id); setSeriesId(unit.series_id); setModality(unit.modality); setChannel(unit.channel_id || ""); setRebindDefault(false); setRebindIdentity(false); }} onDeleteUnit={deleteUnit} />}
     {tab === "assets" && <ProjectAssetsTab projectId={project.id} readOnly={project.status === "archived"} onChanged={() => { reload().catch((err) => setError(message(err))); }} />}
     {tab === "versions" && <ProjectVersionsTab projectId={project.id} />}
     {tab === "activity" && <ProjectActivityTab projectId={project.id} />}
     {assetsOpen && <Modal title={`项目共享素材 · ${assets.length}`} onClose={() => setAssetsOpen(false)} wide><ProjectAssetsTab projectId={project.id} readOnly={project.status === "archived"} onChanged={() => { reload().catch((err) => setError(message(err))); }} /></Modal>}
     {projectModal && <Modal title="编辑项目" onClose={() => setProjectModal(false)}><form onSubmit={editProject} className="space-y-4"><Field label="项目名称"><input required className={inputClass} value={projectTitle} onChange={(event) => setProjectTitle(event.target.value)} /></Field><p className="text-xs text-slate-500">项目目标请在「创作任务书」中保存为新版本。</p><Button type="submit">保存项目</Button></form></Modal>}
-    {editingUnit && <Modal title="编辑内容单元" onClose={() => setEditingUnit(null)}><form onSubmit={editUnit} className="space-y-4"><Field label="内容名称"><input required className={inputClass} value={unitTitle} onChange={(event) => setUnitTitle(event.target.value)} /></Field><Field label="内容身份"><select className={inputClass} value={personaId ?? ""} onChange={(event) => setPersonaId(Number(event.target.value))}>{personas.map((persona) => <option key={persona.id} value={persona.id}>{persona.name}</option>)}</select></Field><Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value as Modality)}>{Object.entries(MODALITY_NAMES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field><Field label="渠道"><input className={inputClass} value={channel} onChange={(event) => setChannel(event.target.value)} /></Field><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={rebindDefault} onChange={(event) => setRebindDefault(event.target.checked)} />重新绑定当前角色默认工作流{defaultBinding?.workflow_id ? `（版本 ${defaultBinding.workflow_version}）` : "（尚无默认版本）"}</label><p className="text-xs text-slate-500">更换身份或形态会绑定对应默认工作流。若已有运行历史，保存将新建单元并归档旧单元；历史仍可查看。</p><Button type="submit">保存单元</Button></form></Modal>}
+    {editingUnit && <Modal title="编辑内容单元" onClose={() => setEditingUnit(null)}><form onSubmit={editUnit} className="space-y-4"><Field label="内容名称"><input required className={inputClass} value={unitTitle} onChange={(event) => setUnitTitle(event.target.value)} /></Field>{identityFields}<Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value as Modality)}>{Object.entries(MODALITY_NAMES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field><Field label="渠道"><input className={inputClass} value={channel} onChange={(event) => setChannel(event.target.value)} /></Field><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={rebindIdentity} onChange={(event) => setRebindIdentity(event.target.checked)} />显式刷新当前身份快照</label><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={rebindDefault} onChange={(event) => setRebindDefault(event.target.checked)} />重新绑定当前有效默认工作流{defaultBinding?.workflow_id ? `（${defaultBinding.source || "身份"} · 版本 ${defaultBinding.workflow_version}）` : "（尚无默认版本）"}</label><p className="text-xs text-slate-500">更换身份、账号或栏目会生成新快照，并重新解析默认工作流。若有执行历史，保存将创建替代单元并归档旧单元。</p><Button type="submit">保存单元</Button></form></Modal>}
     {personaModal && <Modal title="新增内容身份" onClose={() => setPersonaModal(false)}><form onSubmit={createPersona} className="space-y-4"><Field label="身份名称"><input required autoFocus className={inputClass} value={personaName} onChange={(event) => setPersonaName(event.target.value)} /></Field><Button type="submit">保存身份</Button></form></Modal>}
-    {unitModal && <Modal title="新增内容单元" onClose={() => setUnitModal(false)}><form onSubmit={createUnit} className="space-y-4"><Field label="名称"><input required className={inputClass} value={unitTitle} onChange={(event) => setUnitTitle(event.target.value)} /></Field><Field label="内容身份"><select className={inputClass} value={personaId ?? ""} onChange={(event) => setPersonaId(Number(event.target.value))}><option value="">请选择</option>{personas.map((persona) => <option key={persona.id} value={persona.id}>{persona.name}</option>)}</select></Field><Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value as Modality)}>{Object.entries(MODALITY_NAMES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field><Field label="渠道"><input className={inputClass} value={channel} onChange={(event) => setChannel(event.target.value)} /></Field><p className="text-xs text-slate-500">角色 × 内容形态默认流程：{defaultBinding?.workflow_id ? `版本 ${defaultBinding.workflow_version}（将固定到此单元）` : "尚未设置，可进入生产工作台创建项目覆盖"}</p><Button type="submit">保存内容单元</Button></form></Modal>}
+    {unitModal && <Modal title="新增内容单元" onClose={() => setUnitModal(false)}><form onSubmit={createUnit} className="space-y-4"><Field label="名称"><input required className={inputClass} value={unitTitle} onChange={(event) => setUnitTitle(event.target.value)} /></Field>{identityFields}<Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value as Modality)}>{Object.entries(MODALITY_NAMES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field><Field label="渠道"><input className={inputClass} value={channel} onChange={(event) => setChannel(event.target.value)} /></Field><p className="text-xs text-slate-500">当前有效默认：{defaultBinding?.workflow_id ? `${defaultBinding.source || "身份"} · 版本 ${defaultBinding.workflow_version}（创建时固定）` : "尚未设置，可进入生产工作台创建项目覆盖"}</p><Button type="submit">保存内容单元</Button></form></Modal>}
   </div>;
 }
 

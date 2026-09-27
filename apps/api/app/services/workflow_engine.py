@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from ..models import (
     ContentJob,
+    ContentUnit,
     Draft,
     Fact,
     FactPack,
@@ -779,6 +780,16 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
     if problems:
         raise ValueError("Workflow preflight 失败：" + "；".join(problems))
 
+    identity_snapshot_id = None
+    if content_unit_id is not None:
+        from .content_identity import hierarchy
+
+        unit = db.get(ContentUnit, content_unit_id)
+        if unit is None or unit.status == "archived":
+            raise ValueError("已归档或不存在的内容单元不可启动新运行")
+        hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
+        identity_snapshot_id = unit.identity_snapshot_id
+
     p = params or {}
     topic_id = p.get("topic_id")
     try:
@@ -788,6 +799,7 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
     run = WorkflowRun(
         workflow_id=workflow.id,
         content_unit_id=content_unit_id,
+        identity_snapshot_id=identity_snapshot_id,
         params_json=p,
         context_json={},
         # D5：启动时冻结 definition 身份与目标上下文

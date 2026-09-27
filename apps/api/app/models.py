@@ -1048,6 +1048,7 @@ class WorkflowRun(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
     content_unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"), index=True)
     status: Mapped[str] = mapped_column(String(20), default="running")
     context_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 节点间数据总线（实体 ID 等）
     params_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 启动参数（topic_id 等）
@@ -1115,12 +1116,117 @@ class WorkflowStepAttempt(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class ContentBrand(Base):
+    __tablename__ = "content_brand"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentBrandRevision(Base):
+    __tablename__ = "content_brand_revision"
+    __table_args__ = (UniqueConstraint("brand_id", "revision_no", name="uq_content_brand_revision"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    brand_id: Mapped[int] = mapped_column(ForeignKey("content_brand.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    profile_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ContentPersona(Base):
     __tablename__ = "content_persona"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    brand_id: Mapped[int | None] = mapped_column(ForeignKey("content_brand.id"), index=True)
     name: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentPersonaRevision(Base):
+    __tablename__ = "content_persona_revision"
+    __table_args__ = (UniqueConstraint("persona_id", "revision_no", name="uq_content_persona_revision"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    profile_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentAccount(Base):
+    __tablename__ = "content_account"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentAccountRevision(Base):
+    __tablename__ = "content_account_revision"
+    __table_args__ = (UniqueConstraint("account_id", "revision_no", name="uq_content_account_revision"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("content_account.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    profile_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentSeries(Base):
+    __tablename__ = "content_series"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("content_account.id"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentSeriesRevision(Base):
+    __tablename__ = "content_series_revision"
+    __table_args__ = (UniqueConstraint("series_id", "revision_no", name="uq_content_series_revision"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    series_id: Mapped[int] = mapped_column(ForeignKey("content_series.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    profile_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class IdentitySnapshot(Base):
+    __tablename__ = "identity_snapshot"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    brand_id: Mapped[int | None] = mapped_column(ForeignKey("content_brand.id"))
+    brand_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_brand_revision.id"))
+    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    persona_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_persona_revision.id"))
+    account_id: Mapped[int | None] = mapped_column(ForeignKey("content_account.id"))
+    account_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_account_revision.id"))
+    series_id: Mapped[int | None] = mapped_column(ForeignKey("content_series.id"))
+    series_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_series_revision.id"))
+    brand_voice_version_id: Mapped[int | None] = mapped_column(ForeignKey("brand_voice_version.id"))
+    effective_profile_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    field_origins_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -1142,6 +1248,9 @@ class ContentUnit(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
     persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"))
+    account_id: Mapped[int | None] = mapped_column(ForeignKey("content_account.id"), index=True)
+    series_id: Mapped[int | None] = mapped_column(ForeignKey("content_series.id"), index=True)
+    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"), index=True)
     modality: Mapped[str] = mapped_column(String(20))
     channel_id: Mapped[str | None] = mapped_column(String(100))
     title: Mapped[str] = mapped_column(String(300))
@@ -1157,6 +1266,28 @@ class PersonaWorkflowDefault(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"))
+    modality: Mapped[str] = mapped_column(String(20))
+    workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class AccountWorkflowDefault(Base):
+    __tablename__ = "account_workflow_default"
+    __table_args__ = (UniqueConstraint("account_id", "modality", name="uq_account_workflow_default"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("content_account.id"), index=True)
+    modality: Mapped[str] = mapped_column(String(20))
+    workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class SeriesWorkflowDefault(Base):
+    __tablename__ = "series_workflow_default"
+    __table_args__ = (UniqueConstraint("series_id", "modality", name="uq_series_workflow_default"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    series_id: Mapped[int] = mapped_column(ForeignKey("content_series.id"), index=True)
     modality: Mapped[str] = mapped_column(String(20))
     workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
     revision: Mapped[int] = mapped_column(Integer, default=1)
