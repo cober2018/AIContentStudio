@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentUnit, CreativeBriefRevision, MaterialRevision, ProjectFactBoundaryRevision, ProjectMaterialReference, ProjectWorkflowOutput, Workflow, WorkflowRun
+from ..models import ContentUnit, CreativeBriefRevision, IdentitySnapshot, MaterialRevision, ProjectFactBoundaryRevision, ProjectMaterialReference, ProjectWorkflowOutput, Workflow, WorkflowRun
 
 
 def _item(kind: str, id: int, version=None, status=None, checksum=None, created_at=None, current=False, unit_id=None, source=None) -> dict:
@@ -25,6 +25,19 @@ def project_versions(db: Session, project_id: int) -> dict:
     refs = db.scalars(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id).order_by(ProjectMaterialReference.id.desc()).limit(200)).all()
     workflow_ids = {unit.pinned_workflow_id for unit in units if unit.pinned_workflow_id} | {run.workflow_id for run in runs if run.workflow_id}
     workflows = [db.get(Workflow, workflow_id) for workflow_id in sorted(workflow_ids)]
+    snapshot_units: dict[int, set[int]] = {}
+    for unit in units:
+        if unit.identity_snapshot_id is not None:
+            snapshot_units.setdefault(unit.identity_snapshot_id, set()).add(unit.id)
+    for run in runs:
+        if run.identity_snapshot_id is not None and run.content_unit_id is not None:
+            snapshot_units.setdefault(run.identity_snapshot_id, set()).add(run.content_unit_id)
+    identity_snapshots = []
+    for snapshot_id, related_units in sorted(snapshot_units.items()):
+        snapshot = db.get(IdentitySnapshot, snapshot_id)
+        if snapshot:
+            identity_snapshots.extend(_item("identity_snapshot", snapshot.id, None, "frozen", snapshot.checksum, snapshot.created_at, any(unit.identity_snapshot_id == snapshot.id and unit.status != "archived" for unit in units), unit_id) for unit_id in sorted(related_units))
+    identity_states = [_item("identity_state", unit.id, None, "legacy_identity", None, unit.created_at, unit.status != "archived", unit.id) for unit in units if unit.identity_snapshot_id is None]
     materials = []
     for ref in refs:
         revision = db.get(MaterialRevision, ref.material_revision_id)
@@ -40,6 +53,8 @@ def project_versions(db: Session, project_id: int) -> dict:
         "brief": [_item("creative_brief_revision", row.id, row.revision_no, None, row.checksum, row.created_at, index == 0) for index, row in enumerate(brief)],
         "factBoundary": [_item("project_fact_boundary_revision", row.id, row.revision_no, "frozen", row.fact_pack_checksum, row.created_at, index == 0) for index, row in enumerate(boundary)],
         "contentUnits": [_item("content_unit", row.id, None, row.status, None, row.created_at, row.status != "archived") for row in units],
+        "identitySnapshots": identity_snapshots,
+        "identityStates": identity_states,
         "workflows": [_item("workflow", row.id, row.version, row.status, row.checksum, row.created_at, any(unit.pinned_workflow_id == row.id for unit in units)) for row in workflows if row],
         "runs": [_item("workflow_run", row.id, row.workflow_version, row.status, row.definition_checksum, row.started_at, False, row.content_unit_id) for row in runs],
         "materials": materials,

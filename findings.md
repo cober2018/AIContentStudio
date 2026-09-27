@@ -1,5 +1,15 @@
 # 配置记录
 
+## 2026-09-27：FE-F3B 规格审计发现
+
+- FE-F3B 归档 CLI 使用宿主机日期生成 `2026-09-27-fe-f3b-content-identity`，尽管任务环境日期显示 2026-09-28；文档须引用实际目录。归档自动同步四份主规格：三份 MODIFIED、一份 ADDED。FE-F2、FE-F3A、FE-F3B 主规格原有或新生的 `Purpose: TBD` 及 FE-F0/F1 已过时的 mock Purpose 均需改为当前长期契约描述。
+
+- 来源 `fe-f3b-content-identity/` 的新能力规格采用完整主规格格式，不能原样作为 OpenSpec change delta；三份 MODIFIED 规格也只写增量、会在归档时丢失原有场景。已改成 ADDED delta 并补回被修改主要求的完整旧场景。
+- `BrandVoiceVersion` 当前没有 owner_user_id；FE-F3B 只能复用现有全局 published 版本，不能声称“按 owner 验证”却没有所有权字段。历史引用不因未来归档而被重写。
+- 现有 `ContentPersona` 可能无 Brand、无身份修订。迁移不回填；显式新建单位可冻结真实 Persona ID 与空 profile/null revision，并显示身份资料不完整，而不是编造品牌、定位。
+- Unit 变更父级时，省略 Account/Series 不能被解释为悄然清空不兼容子级；需要明确替换/清空，否则 422。归档祖先拒绝新单位、默认工作流和 Run。
+- `test_worker_task_function_executes_locally` 的模块级 `SessionLocal` 依赖默认 SQLite 文件，和测试 fixture 的内存库不同。新工作树默认文件缺表导致基线失败；独立临时文件库初始化后全套 296 通过，未改测试或业务逻辑。
+
 ## 2026-09-27：FE-F3A 规格复核发现
 
 - 用户提供的结构化包与合并 Markdown 内容属于同一 FE-F3A 草案；标准活跃变更采用 `fe-f3a-content-project-core-completion` 作为 change 名，能力名保留 `fe-f3a-content-project-core`。原始资料未删除或覆盖。

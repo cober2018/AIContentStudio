@@ -98,6 +98,8 @@ def _serialize_run(db: Session, run: WorkflowRun) -> dict:
         "workflow_key": run.workflow_key,
         "workflow_version": run.workflow_version,
         "definition_checksum": run.definition_checksum,
+        "identity_snapshot_id": run.identity_snapshot_id,
+        "identity_state": "frozen" if run.identity_snapshot_id else "legacy_identity",
         "topic_id": run.topic_id,
         "channel": run.channel,
         "content_form": run.content_form,

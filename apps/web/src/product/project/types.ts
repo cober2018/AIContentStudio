@@ -30,5 +30,5 @@ export type VersionItem = {
   kind: string; id: string; version: string | number | null; status: string | null;
   checksum: string | null; createdAt: string | null; current: boolean; unitId?: number; source?: string;
 };
-export type Versions = Record<"brief" | "factBoundary" | "contentUnits" | "workflows" | "runs" | "materials" | "contentOutputs", VersionItem[]>;
+export type Versions = Record<"brief" | "factBoundary" | "contentUnits" | "identitySnapshots" | "identityStates" | "workflows" | "runs" | "materials" | "contentOutputs", VersionItem[]>;
 export type Activity = { id: number; event_type: string; entity_type: string | null; entity_id: string | null; actor: string | null; payload: Record<string, unknown>; created_at: string | null };

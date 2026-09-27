@@ -1,5 +1,33 @@
 # 当前进度
 
+## 2026-09-27：FE-F3B 审计与 apply 起点
+
+- 用户明确授权四份 delta 全部同步。`openspec archive fe-f3b-content-identity --yes` 已更新 FE-F0/F1、FE-F2、FE-F3A 主规格并新增 FE-F3B 主规格；工具实际归档目录是 `openspec/changes/archive/2026-09-27-fe-f3b-content-identity/`。四份主规格的 Purpose 已校正；归档后主规格 strict、diff-check 和本地提交待完成。未推送、合并、部署或执行生产迁移。
+- 归档后核验：四份主规格均包含各自 FE-F3B delta，`IdentitySnapshot`、Series > Account > Persona、`identity_unready` 和 Brief identity scope 均可检索；全体 14 份主规格 strict 校验 14 passed / 0 failed，`git diff --check` 通过，受影响主规格无 `Purpose: TBD`。提交前重新完整运行后端 310 passed / 5 既有 warnings、前端构建通过；现有主 JS bundle 1,079.36 kB 提醒未在本切片处理。
+- 2026-09-28 独立复核修补：任何 Unit 身份/形态/工作流重绑均生成新快照；同层级纯身份刷新保留兼容的项目覆盖（含有 Run 后 fork 的新 Unit），旧 Run 仍固定旧快照。长期观点改为保留结构的 JSON 编辑；修订 409 后锁定旧草稿并要求显式加载最新版本；历史 Run 仅以冻结 ID/快照表示历史身份，当前名称明确标注为当前值。FE-F3B 定向回归 14 passed；全量门禁与二次复核待运行。
+- 2026-09-28 修补后门禁：清除本机异常 `NO_PROXY/no_proxy`，用独立临时 SQLite 初始化 worker 数据库后，全量后端 310 passed / 5 既有 warnings；前端 `npm run build`、OpenSpec strict、`git diff --check` 通过。未改环境持久配置、未碰生产库；等待独立二次复核。
+- 2026-09-28 独立二次复核 `REVIEW_PASSED`：五项收尾问题均闭合；复核者另跑 FE-F3B 14 项、FE-F2/F3A 27 项及 TypeScript/diff-check。OpenSpec 11.8 已完成，归档前等待四份 delta spec 同步选择；不将本地回归视为生产验收。
+
+- 用户确认 FE-F3B 整包进入 apply。工作树 `/Users/mshengran/.codex/worktrees/fe-f3b-content-identity/AIContentStudio` 从 FE-F3A 提交 `1fa4520` 建立，分支 `codex/fe-f3b-content-identity`；来源目录仍留在主工作区，未修改。
+- 已将来源 proposal/design/specs/tasks 纳入标准 `openspec/changes/fe-f3b-content-identity/`；新能力规格改为 ADDED delta，三份旧能力规格补全 MODIFIED 原要求，OpenSpec strict 通过。
+- 审计补强：现有 BrandVoiceVersion 是无 owner 字段的全局版本资源；brandless 历史 Persona 不补造 Brand/修订；归档祖先不得参与新生产；重绑父级时不得悄然丢弃不兼容子级；旧裸 Workflow API 仍须保护 Account/Series 默认定义。
+- 基线第一次后端全套 295/296：唯一失败是新工作树默认 worker SQLite 文件缺表，`test_task_queue` 的 Celery task 不使用测试内存库。使用独立临时 SQLite 并初始化后，296 passed、5 warnings；前端 build 通过，现有主包 1,060.65 kB 提醒。未改代码、未触及生产库。
+- 模型已加 Brand/Persona/Account/Series 的稳定实体与修订、IdentitySnapshot、两类新默认绑定，并为 Persona/Unit/Run 添可空引用。定向模型结构测试先按缺表/缺列失败、实现后 2 passed。隔离空库迁移初次因新增外键无名称而失败；显式命名后 `f3a→f3b→f3a→f3b` 通过。带历史样本的迁移回读仍待做。
+- 内容身份服务和新路由已接入：四级层级所有权、Pydantic override 字段校验、追加修订与 409、缺失/显式 null/整体替换解析、全局 published BrandVoice 检查、快照构造与所有者读取。第一批 API 定向测试先 404 后 3 passed；Unit/Run 接线和跨所有者/归档回归仍待完成。
+- 新 Unit 已持久化 IdentitySnapshot，Run 启动时复制精确 snapshot ID，并在归档身份祖先时拒绝新运行，历史 Run 仍可读取。相关测试先因序列化缺字段失败、修正后通过；现有工作仅完成此纵切片，重绑/默认/前端仍待实现。
+- 显式身份重绑已接入 Unit PATCH：无 Run/Snapshot/Output 历史时原地生成新快照；有历史时创建替代 Unit、归档旧 Unit，旧 Run 固定旧快照。父级变化而未显式处理子级时返回 422；定向 FE-F3B/FE-F2 回归 25 passed。层级默认工作流尚未接入，当前重绑仍仅解析角色默认。
+- 账号/栏目默认工作流的 GET/POST、乐观修订冲突、可移植性校验和有效优先级已接入；新 Unit 固定 Series > Account > Persona，旧 Unit 不自动重绑。旧裸 Workflow API 的 owner 检查覆盖账号/栏目 scope；定向 FE-F3B/FE-F2 回归 26 passed。
+- FE-F3A 读模型已接入真实快照条目及 legacy 状态，Overview 对活动单元的缺失/空身份给 `identity_unready`；新 Brief 版本里的结构化身份 ID 会校验 owner 与层级，旧字符串标签保留。定向 FE-F3B/FE-F2 回归 27 passed。
+- `/identities` 已换为后端持久层级工作区：树、四级修订字段、继承/覆盖/清空、历史、账号/栏目、工作流偏好和诚实的内容记忆空态；前端构建通过。项目版本页也显示真实身份快照及 Legacy 条目。浏览器交互与项目/生产上下文仍待验收。
+- 在独立临时 SQLite 上，先由 FE-F3A 原代码建真实旧 schema 并插入 owner/Persona/Project/Unit/Workflow/Run，再由 FE-F3B 执行 upgrade→downgrade→upgrade；旧 Run checksum 原样、Unit/Run 快照仍 NULL、IdentitySnapshot 0 行，`foreign_key_check` 空。迁移有既存 workflow parent FK 的 SQLAlchemy 警告，非失败；未碰项目数据库或生产库。
+- 项目矩阵账号/栏目选择、有效默认预览、显式身份刷新和生产页四级 Context Header/只读快照已接入；最新前端 build 通过，现有主 bundle >500 kB 提醒仍在。浏览器端到端验收尚未做。
+- 全量后端首次 303 passed / 1 failed：旧 FE-F3A Overview 测试假设唯一风险为 `unit_blocked`，与 FE-F3B 新 `identity_unready` 合同冲突。按新合同加入确定性的身份下一步并更新该断言后，全量 304 passed / 5 既有 warnings。该调整仅涉及风险读模型与既有回归预期，不抹掉真实风险。
+- 追加 FE-F3B 定向回归：身份归档后 project-scoped 与 legacy Run rerun、项目覆盖保存均拒绝；发布 BrandVoice 可入快照、草稿版本不可引用；身份新修订不改旧快照，显式重绑生成新 checksum。FE-F3B 定向 9 passed，最新前端改动后 build 通过；后续需重跑全量。
+- 最新本地门禁：后端全量 305 passed / 5 warnings；前端 TypeScript/Vite build 通过（主包 1,078.53 kB 提醒）；OpenSpec strict、`git diff --check`、涉及后端文件 Ruff F 检查通过。独立代码审阅已发起，尚未归档/提交。
+- 补充 Snapshot `readiness`/原因元数据，以及 Unit 创建、原地重绑、替换事件的结构化旧/新 snapshot ID。定向测试最初误把 Activity 分页对象当数组，按既有 `items` 契约修正测试后 9 passed；全量门禁需在审阅修订后再次运行。
+- 扩充 FE-F3B 定向测试至 12 passed：跨层级/跨所有者、归档祖先、唯一键竞态回滚、数组/对象整体替换、BrandVoice 覆盖和账号默认模板可移植性。隔离浏览器与 API 共同验收：四级身份创建/刷新、栏目默认 v1 保存后旧 Unit 未自动改绑、新 Unit 固定 v1、品牌修订 v2 后旧快照仍 v1、无历史原地刷新到新快照、真实 Human Run 固定快照、再刷新创建替代 Unit 并归档旧 Unit。临时库读回旧 Run checksum 不变。
+- 最新完整门禁：后端 308 passed / 5 warnings，前端 build 通过（主包 1,078.53 kB 警告），OpenSpec strict、diff-check、Ruff F 通过。独立审阅结论仍待回，未归档/提交。
+
 ## 2026-09-27：FE-F3A apply 起点
 
 - 用户已明确授权进入 apply；使用标准变更 `fe-f3a-content-project-core-completion`，spec-driven 产物 4/4，任务 2/54 完成。

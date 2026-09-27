@@ -33,6 +33,15 @@
 - 关键设计决策：复用现有 SourceDocument、冻结 FactPack、MaterialRevision 与 FE-F2 Run/Output，不另造平行资源库；项目引用不扩大全局资源权限，项目历史用归档而非物理删除保护，Overview/Versions 是后端派生读模型。新哈希素材上传若数据库回滚，字节候选写入 AuditLog，由已注册的定时 `retention_sweep` 在一日宽限后按批核实引用再清理；同哈希的写入与清理用文件锁协调，未处理候选不因普通审计日志过期而丢失。
 - 依赖与启动：无新增运行依赖。沿用上节 FastAPI/React 启动方式；先在隔离开发库执行 `cd apps/api && .venv/bin/alembic upgrade head`，再启动 API 与前端。生产数据库未执行迁移。
 
+### FE-F3B 内容身份（本地归档）
+
+- PRD/需求背景：按 [`openspec/specs/fe-f3b-content-identity/spec.md`](openspec/specs/fe-f3b-content-identity/spec.md) 把品牌、角色、账号、栏目作为可修订的长期身份，并让新内容单元与运行固定实际身份快照；不自动回填旧运行，也不改变长期 PRD。实施记录归档于 [`openspec/changes/archive/2026-09-27-fe-f3b-content-identity/`](openspec/changes/archive/2026-09-27-fe-f3b-content-identity/)；另三份 FE-F0/F1、FE-F2、FE-F3A 主规格已同步。
+- 目录结构：`apps/api/app/services/content_identity.py` 负责层级、修订和快照；`apps/api/app/routers/content_identities.py` 提供身份 API，`content_projects.py` 承接单元重绑和分层默认工作流；`apps/api/alembic/versions/f3b000000001_content_identity.py` 是增量迁移；`apps/web/src/product/IdentityWorkspace.tsx` 为真实身份工作区，项目与生产页读取冻结身份。
+- 已完成：四级实体/修订、继承与显式清空、发布版 BrandVoice 引用、IdentitySnapshot、Run 精确固定、无历史原地重绑/有历史替换归档、栏目 > 账号 > 角色默认工作流、旧 API 所有权闸门、项目 Versions/Overview/Brief 集成和前端身份入口。隔离 SQLite 的 FE-F3A 历史行已验证升级→回退→再升级，旧 Run 校验和与 NULL 快照保持不变；隔离浏览器已验证四级创建/刷新、项目单元关联和生产 Context Header。独立二次复核通过；后端 310 项测试和前端构建通过。
+- 待完成/TODO：真实外部账号与连接器不在本切片，Content Memory 只如实显示未实现；未推送/合并/部署或运行生产迁移。
+- 关键设计决策：旧 brandless Persona 不伪造品牌或画像，旧 Unit/Run 不伪造快照；身份新修订不回写历史快照；默认工作流新版本不悄然改绑已有单元；项目 Run 的新旧 API 共用权限闸门，归档祖先不参与新生产。
+- 依赖与启动方式：无新增运行依赖。仅对隔离开发库执行 `cd apps/api && .venv/bin/alembic upgrade head`，再按下方 FastAPI/Vite 命令启动；生产数据库迁移须另行决策。
+
 ### 下一版规划：文章/图文全渠道
 
 > **2026-09-24 更新（V1 PRD 2.0 Content Harness 已实施）**：下一段提到的 `complete-prd-v1-channel-deliverables` 已标记 **superseded**，被主变更 [`align-v1-prd2-content-harness`](openspec/changes/align-v1-prd2-content-harness/proposal.md) 吸收并实施。当前代码已落地：Channel Registry（14 平台 profile，新增渠道无需改枚举/迁移）、Workflow 版本化 + Node Plugin Registry、Material Library（素材全局复用/权利链）、DraftCheckRun 统一检查、Discoverability（Pre/Post SEO）、Candidate Manifest schema v2、Delivery Router（copy_package / assisted_draft / auto_draft + DeliveryAttempt：prepared→远端→结果，unknown 不自动重发）、节点级 Rerun/Stale、Review & Publish Center（`/review-publish`）。真实账号自动发布仍未验证，平台能力一律如实标注 unverified；PRD §15–16 与 30 Topic 门槛仍需单独验收。实施与偏差记录见该 change 的 `design.md`。

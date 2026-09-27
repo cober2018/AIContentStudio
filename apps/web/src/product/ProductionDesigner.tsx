@@ -5,7 +5,8 @@ import { Button, Drawer, EmptyState, ErrorBanner, Field, Spinner, StatusBadge, i
 import type { Definition, Persona, Project, SharedAsset, Unit, WorkflowBinding, WorkflowNode } from "./PersistentProjectPages";
 
 type Step = { id: number; node_id: string; node_type: string; label: string; status: string; params: Record<string, unknown>; output: Record<string, unknown>; error: string | null; stale_reason: string | null; attempt_no: number };
-type Run = { id: number; status: string; workflow_id: number; workflow_version: number | null; definition_checksum: string | null; definition: Definition; steps: Step[]; error: string | null };
+type Run = { id: number; status: string; workflow_id: number; workflow_version: number | null; definition_checksum: string | null; identity_snapshot_id: number | null; identity_state: string; definition: Definition; steps: Step[]; error: string | null };
+type IdentitySnapshot = { id: number; brand_id: number | null; persona_id: number; account_id: number | null; series_id: number | null; revision_ids?: Record<string, number | null>; brand_revision_id: number | null; persona_revision_id: number | null; account_revision_id: number | null; series_revision_id: number | null; brand_voice_version_id: number | null; effective_profile: Record<string, unknown>; field_origins: Record<string, string>; checksum: string };
 type Attempt = { attempt_no: number; status: string; input_hash: string | null; output_hash: string | null; output_json: Record<string, unknown>; error: string | null };
 type DataPlugin = { key: string; name: string; category: string; available: boolean; reason: string | null; config_schema: Record<string, unknown> };
 type ExecutionOption = { provider: string; model: string; available: boolean; reason: string | null };
@@ -34,6 +35,10 @@ export function ProductionDesigner({ projectId, unitId }: { projectId: number; u
   const [project, setProject] = useState<Project | null>(null);
   const [unit, setUnit] = useState<Unit | null>(null);
   const [persona, setPersona] = useState<Persona | null>(null);
+  const [brandName, setBrandName] = useState<string | null>(null);
+  const [accountName, setAccountName] = useState<string | null>(null);
+  const [seriesName, setSeriesName] = useState<string | null>(null);
+  const [snapshot, setSnapshot] = useState<IdentitySnapshot | null>(null);
   const [binding, setBinding] = useState<WorkflowBinding | null>(null);
   const [defaultBinding, setDefaultBinding] = useState<WorkflowBinding | null>(null);
   const [definition, setDefinition] = useState<Definition>(EMPTY);
@@ -87,6 +92,24 @@ export function ProductionDesigner({ projectId, unitId }: { projectId: number; u
       if (nextRuns[0]) setRun(await api.get<Run>(`${base}/runs/${nextRuns[0].id}`));
     }).catch((err) => setError(problem(err))).finally(() => setLoading(false));
   }, [projectId, unitId]);
+
+  useEffect(() => {
+    if (!unit) return;
+    const personaBrand = persona?.brand_id;
+    Promise.all([
+      personaBrand ? api.get<{ name: string }>(`/content-brands/${personaBrand}`) : Promise.resolve(null),
+      unit.account_id ? api.get<{ name: string }>(`/content-accounts/${unit.account_id}`) : Promise.resolve(null),
+      unit.series_id ? api.get<{ name: string }>(`/content-series/${unit.series_id}`) : Promise.resolve(null),
+    ]).then(([brand, account, series]) => { setBrandName(brand?.name || null); setAccountName(account?.name || null); setSeriesName(series?.name || null); }).catch((err) => setError(problem(err)));
+  }, [unit?.id, persona?.brand_id]);
+  const displayedSnapshotId = !design && run ? run.identity_snapshot_id : unit?.identity_snapshot_id;
+  useEffect(() => {
+    setSnapshot(null);
+    if (!displayedSnapshotId) return;
+    let active = true;
+    api.get<IdentitySnapshot>(`/identity-snapshots/${displayedSnapshotId}`).then((value) => { if (active) setSnapshot(value); }).catch((err) => { if (active) setError(problem(err)); });
+    return () => { active = false; };
+  }, [displayedSnapshotId]);
 
   useEffect(() => {
     const node = canvasDefinition.nodes.find((item) => item.id === selected);
@@ -189,7 +212,8 @@ export function ProductionDesigner({ projectId, unitId }: { projectId: number; u
   if (!project || !unit) return <div className="p-9"><ErrorBanner message={error || "内容单元不存在或无权访问。"} /></div>;
   return <div className="mx-auto max-w-7xl px-6 py-9">
     <Link to={`/projects/${project.id}?tab=matrix`} className="text-sm text-slate-500">← {project.title} / 内容矩阵</Link>
-    <div className="mt-5 mb-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">{MODALITY_NAMES[unit.modality] || "生产工作台"}</p><h1 className="mt-2 text-3xl font-semibold">{unit.title}</h1><p className="mt-2 text-sm text-slate-500">{persona?.name || `身份 #${unit.persona_id}`} · {unit.channel_id || "未选渠道"} · 固定工作流 #{unit.pinned_workflow_id || "未设置"}</p></div><Button variant="secondary" onClick={() => setAssetsOpen(!assetsOpen)}>项目共享素材 · {assets.length}</Button></div>
+    <div className="mt-5 mb-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">{MODALITY_NAMES[unit.modality] || "生产工作台"}</p><h1 className="mt-2 text-3xl font-semibold">{unit.title}</h1><p className="mt-2 text-sm text-slate-500">当前名称：{brandName || "无品牌"} → {persona?.name || `角色 #${unit.persona_id}`} → {accountName || "无账号"} → {seriesName || "无栏目"} · {unit.channel_id || "未选渠道"}</p>{!design && run && snapshot && <p className="mt-1 text-xs text-slate-600">历史 Run 固定身份 ID：品牌 #{snapshot.brand_id ?? "无"} → 角色 #{snapshot.persona_id} → 账号 #{snapshot.account_id ?? "无"} → 栏目 #{snapshot.series_id ?? "无"}；上方名称是当前名称，不代表运行时名称。</p>}<p className="mt-1 text-xs text-slate-500">{!design && run ? `历史 Run #${run.id}` : "当前单元"}身份：{snapshot ? `快照 #${snapshot.id} · ${snapshot.checksum.slice(0, 12)}` : "Legacy / 未冻结身份"} · 固定工作流 #{!design && run ? run.workflow_id : unit.pinned_workflow_id || "未设置"}</p></div><Button variant="secondary" onClick={() => setAssetsOpen(!assetsOpen)}>项目共享素材 · {assets.length}</Button></div>
+    <details className="mb-5 rounded-xl border border-slate-200 bg-white p-4 text-sm"><summary className="cursor-pointer font-medium">本内容使用的身份快照（只读）</summary>{snapshot ? <div className="mt-3 space-y-2 text-xs text-slate-600"><p>快照 #{snapshot.id} · 校验和 {snapshot.checksum}</p><p>修订：品牌 {snapshot.brand_revision_id ?? "无"} / 角色 {snapshot.persona_revision_id ?? "无"} / 账号 {snapshot.account_revision_id ?? "无"} / 栏目 {snapshot.series_revision_id ?? "无"} · 品牌语气 {snapshot.brand_voice_version_id ?? "无"}</p><pre className="max-h-56 overflow-auto whitespace-pre-wrap bg-slate-50 p-3">{pretty(snapshot.effective_profile)}</pre><p>字段来源：{pretty(snapshot.field_origins)}</p><p>身份当前修订变化不会回写此快照；如需更新，请在项目矩阵显式重绑。</p></div> : <p className="mt-2 text-xs text-amber-700">Legacy / 未冻结身份。不能宣称当前身份曾用于历史运行；如需新生产，请在项目矩阵显式重绑。</p>}</details>
     {unit.status === "archived" && <p className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">此内容单元已归档，仅供查看历史运行、尝试和产物；不能保存或重新执行。</p>}
     {error && <div className="mb-4"><ErrorBanner message={error} /></div>}{notice && <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</p>}
     {assetsOpen && <Drawer title="项目共享素材（仅真实版本）" onClose={() => setAssetsOpen(false)}>{assets.length ? <ul className="space-y-3 text-sm">{assets.map((asset) => <li key={asset.key} className="rounded-lg border border-slate-200 p-3">Revision #{asset.material_revision_id} · {asset.kind || "素材"} · {asset.source_type === "workflow" ? `工作流 Run #${asset.run_id} / ${asset.node_id}` : asset.source_type === "project_upload" ? "项目上传" : "系统素材引用"} · {asset.rights_status || "权利待核对"}</li>)}</ul> : <p className="text-sm text-slate-500">暂无关联素材。</p>}</Drawer>}

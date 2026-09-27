@@ -1,10 +1,11 @@
 # fe-f2-persistent-production-workflow Specification
 
 ## Purpose
-TBD - created by archiving change fe-f2-persistent-production-workflow. Update Purpose after archive.
+Define the persistent project production workflow contract: versioned definitions and defaults, project-scoped runs and authorization, node execution and inspection, data snapshots, output lineage, and immutable identity context pinned to runs.
 ## Requirements
 ### Requirement: Project-scoped persistent workflow
-The system SHALL persist ContentProject and ContentUnit records, associate a Content Unit with a stable Persona/Role identity, modality, and immutable workflow definition revision, and address every production run through its owning project and unit. A unit MAY have multiple historical runs; each run MUST pin the exact definition version and checksum used at creation.
+
+The system SHALL persist ContentProject and ContentUnit records, associate a Content Unit with a stable Persona/Role identity, modality, and immutable workflow definition revision, and address every production run through its owning project and unit. A unit MAY have multiple historical runs; each run MUST pin the exact definition version and checksum used at creation. A new or explicitly rebound unit SHALL pin a server-created IdentitySnapshot; a WorkflowRun started from such a unit SHALL store the exact same snapshot ID. Historical units and runs without a snapshot SHALL remain explicitly legacy/unknown.
 
 #### Scenario: Reload a saved project workflow
 - **WHEN** an editor saves a valid project workflow override and reloads the selected Content Unit
@@ -17,6 +18,10 @@ The system SHALL persist ContentProject and ContentUnit records, associate a Con
 #### Scenario: Reject unrelated run
 - **WHEN** a user requests a run ID through a different project or Content Unit
 - **THEN** the server denies access without returning the run's nodes, inputs, or outputs
+
+#### Scenario: Identity changes after run
+- **WHEN** Brand/Persona/Account/Series receives newer revisions after a Run starts
+- **THEN** the historical Run continues to reference its original IdentitySnapshot and workflow definition
 
 ### Requirement: Uniform project-run authorization across legacy APIs
 Any WorkflowRun bound to a ContentUnit SHALL receive the same persisted Project/Unit ownership and action-specific authorization check whether accessed through a new project-scoped route or any legacy Workflow API. The check MUST happen before a response is serialized or a mutation starts. This includes run detail/list, attempt read, retry, node rerun, rerun-from-here, human completion, and cancel; legacy Workflow definition list/serialization, clone/publish, and raw create-run MUST NOT expose or operate on project-bound definitions outside the same boundary. Legacy Topic-only runs SHALL retain their existing behavior.
@@ -49,9 +54,10 @@ The production workspace SHALL allow an authorized editor to add, edit, disable,
 - **THEN** the changed graph or mapping is shown as unsaved and the server rejects a missing dependency, duplicate node ID, cycle, invalid mapping, unsupported executor, or prohibited side effect before replacing the runnable revision
 
 ### Requirement: Persona × Modality default workflow versions
-The system SHALL persist a minimal content Persona/Role identity and a current default Workflow Template Version for each Persona × Modality binding. An authorized editor SHALL be able to explicitly save a project draft as a new immutable version of that binding, separate from saving a project override, only after a server-side portability check. A later Content Unit SHALL be able to select the current role default. Existing units, project overrides, and runs MUST NOT be silently rebound when a new default version is saved. Authentication roles MUST NOT be treated as content Personas.
 
-The portable role default MAY contain node structure, dependency edges, plugin types, generic configuration, parameter templates, rules, model policy, and authorized reusable connection/profile references. It MUST NOT freeze the current project/unit/run ID, DataSnapshot ID, project AssetRevision/Draft/Candidate ID, attempt ID, or actual node output. A project-bound value MAY be converted into an explicit placeholder/context binding only when the server can prove that conversion safe; otherwise the server MUST reject the role-default save with an actionable reason and leave the project override and current default unchanged.
+The system SHALL persist a content Persona/Role identity and a current default Workflow Template Version for each Persona × Modality binding. An authorized editor SHALL be able to explicitly save a project draft as a new immutable version of that binding, separate from saving a project override, only after a server-side portability check. Existing PersonaWorkflowDefault remains valid. FE-F3B SHALL add Account × Modality and Series × Modality overrides without replacing Persona defaults. Effective selection SHALL prefer Series, then Account, then Persona. Existing units, overrides and runs MUST NOT be silently rebound when any default version advances. Authentication roles MUST NOT be treated as content Personas.
+
+The portable default MAY contain node structure, dependency edges, plugin types, generic configuration, parameter templates, rules, model policy, and authorized reusable connection/profile references. It MUST NOT freeze the current project/unit/run ID, DataSnapshot ID, project AssetRevision/Draft/Candidate ID, attempt ID, or actual node output. A project-bound value MAY be converted into an explicit placeholder/context binding only when the server can prove that conversion safe; otherwise the server MUST reject the default save and leave prior bindings unchanged.
 
 #### Scenario: Save a new role default
 - **WHEN** an authorized editor explicitly chooses “save as new role default” for a Persona and modality with a valid draft and current binding revision
@@ -66,21 +72,30 @@ The portable role default MAY contain node structure, dependency edges, plugin t
 - **THEN** saving a new default returns a conflict without overwriting the newer binding
 
 #### Scenario: Parameterize or reject project-bound values
-- **WHEN** a project workflow draft contains project-specific identifiers or actual attempt output and an editor saves it as a Persona default
+- **WHEN** a project workflow draft contains project-specific identifiers or actual attempt output and an editor saves it as a default
 - **THEN** the server stores only safe placeholders/context bindings for parameterizable fields and rejects any non-portable field without publishing a new default version
 
 #### Scenario: Placeholder resolution boundary
 - **WHEN** a project or unit binding appears in node config, which runtime resolves
 - **THEN** the portability gate MAY parameterize it
 - **WHEN** such a binding appears in input mapping, condition, or another node field not resolved by runtime
-- **THEN** the role-default save is rejected rather than storing an inert placeholder
+- **THEN** the default save is rejected rather than storing an inert placeholder
 
 #### Scenario: Prevent cross-project template leakage
-- **WHEN** a later Content Unit in Project B selects the role default created from Project A
+- **WHEN** a later Content Unit in Project B selects the default created from Project A
 - **THEN** the selected definition contains no Project A run, snapshot, asset revision, draft, candidate, attempt, or actual output reference
 
+#### Scenario: Resolve hierarchy workflow preference
+- **WHEN** a unit is bound to Series and Account
+- **THEN** effective default resolution uses Series then Account then Persona and returns the source scope
+
+#### Scenario: Scoped default portability
+- **WHEN** an editor saves Account or Series default from a project workflow
+- **THEN** the same FE-F2 server portability gate and immutable Workflow version rules apply
+
 ### Requirement: Real node execution and inspection
-The system SHALL execute supported nodes through the backend engine, persist step status, output and attempt history, and show the server result in the selected unit's mini canvas and inspector. It MUST refuse unsupported or side-effectful generic reruns.
+
+The system SHALL execute supported nodes through the backend engine, persist step status, output and attempt history, and show the server result in the selected unit's mini canvas and inspector. It MUST refuse unsupported or side-effectful generic reruns. Identity updates MUST NOT change the identity context of an existing WorkflowRun.
 
 #### Scenario: Run safe node
 - **WHEN** an editor runs a supported non-side-effect node with satisfied prerequisites
@@ -95,6 +110,10 @@ The system SHALL execute supported nodes through the backend engine, persist ste
 #### Scenario: Unsafe rerun
 - **WHEN** an editor requests generic rerun of a delivery or other side-effect node
 - **THEN** execution is rejected without a second external action
+
+#### Scenario: Run inspector
+- **WHEN** a user inspects a historical Run
+- **THEN** the run view uses its frozen IdentitySnapshot or explicit legacy/unknown state, not current hierarchy settings
 
 ### Requirement: Snapshot-backed Data Node
 A Data Node SHALL use a typed, extensible Data Source Plugin registry distinct from Tool nodes. Its descriptor SHALL expose key, name, category, connection mode, search/query/snapshot capabilities, configuration schema, result schema, and server-derived availability/reason. The registry and selector SHALL represent internal data, media data, Notion, Obsidian, API, and SQL/Database without making Studio Source the only possible implementation. A configured executable plugin SHALL persist an immutable bounded snapshot with source/version identity, checksum, lineage, normalized output, and refresh time; downstream nodes SHALL consume its snapshot ID. Changed refresh output MUST mark actual dependent outputs stale; unchanged output MUST NOT stale them. Disconnected or unverified plugins MUST be visibly unavailable and MUST NOT execute successfully.

@@ -1,5 +1,16 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-27：FE-F3B Content Identity apply
+
+目标：在隔离工作树审计并实施 `fe-f3b-content-identity`，交付身份层级、不可变快照、工作流偏好和真实工作区；不做生产迁移、推送或合并。详细步骤见 `docs/superpowers/plans/2026-09-27-fe-f3b-content-identity.md`。
+
+- [x] /// 将来源提案归入标准 OpenSpec，校准四份 delta 规格和历史安全边界
+- [x] /// 核对 296 项后端和前端构建基线，隔离初始化 worker 数据库
+- [x] /// 模型/迁移、版本化身份解析与授权 API
+- [x] /// Unit/Run 快照固定、层级默认工作流与项目读模型
+- [x] /// 身份工作区、矩阵/生产 UI 与隔离浏览器验收
+- [x] /// 全量门禁、独立复核、OpenSpec 归档；不推送/合并/部署
+
 ## 2026-09-27：FE-F3A apply
 
 目标：按已确认的 `fe-f3a-content-project-core-completion` 实现五类项目核心持久化、真实七标签与回归验收；不做生产迁移、推送或合并。详细步骤见 `docs/superpowers/plans/2026-09-27-fe-f3a-project-core.md`。
