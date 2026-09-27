@@ -1,9 +1,15 @@
 """数据保留策略测试：llm_run 大字段瘦身 / 审计与工作流过期删除 / 新数据不动。"""
 
+import threading
 from datetime import UTC, datetime, timedelta
 
 from app.models import AuditLog, LLMRun, WorkflowRun, WorkflowStep
+from app.services import asset_media
+from app.services.material_byte_lock import locked_hash
+from app.services.materials import store_bytes
 from app.services.retention import run_retention
+from app.tasks.celery_app import celery_app
+from app.tasks.worker_tasks import retention_sweep
 
 
 def _old(days):
@@ -41,3 +47,39 @@ def test_retention_audit_and_workflow(db_session):
     assert stats["workflow_runs_deleted"] == 1
     assert db_session.get(WorkflowRun, rid) is None
     assert db_session.get(WorkflowRun, lid) is not None
+
+
+def test_unprocessed_material_byte_candidate_survives_audit_expiry(db_session):
+    candidate = AuditLog(event="material.upload_orphan_candidate", entity_type="material_bytes", entity_id="a" * 50, detail_json={"file_path": "material/aa/" + "a" * 64 + ".png", "content_hash": "a" * 64}, created_at=_old(100))
+    db_session.add(candidate)
+    db_session.commit()
+    run_retention(db_session, {"batch": 0})
+    assert db_session.get(AuditLog, candidate.id) is not None
+
+
+def test_retention_task_is_registered_for_beat():
+    scheduled = celery_app.conf.beat_schedule["retention-sweep"]["task"]
+    assert scheduled == retention_sweep.name
+    assert scheduled in celery_app.tasks
+
+
+def test_material_writer_holds_hash_lock_until_commit(db_session, tmp_path, monkeypatch):
+    monkeypatch.setattr(asset_media, "MEDIA_ROOT", tmp_path)
+    _, content_hash = store_bytes(db_session, b"same material", subdir="material", suffix=".bin")
+    attempted = threading.Event()
+    acquired = threading.Event()
+
+    def cleanup_waiter():
+        attempted.set()
+        with locked_hash(content_hash):
+            acquired.set()
+
+    thread = threading.Thread(target=cleanup_waiter, daemon=True)
+    thread.start()
+    try:
+        assert attempted.wait(1)
+        assert not acquired.wait(0.1)
+    finally:
+        db_session.commit()
+        thread.join(timeout=1)
+    assert acquired.is_set()

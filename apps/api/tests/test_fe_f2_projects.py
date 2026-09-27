@@ -44,7 +44,10 @@ def test_project_and_unit_crud_is_owned_by_creator(client):
     assert client.get("/api/v1/content-projects", headers=bob).json() == []
     assert client.delete(f"/api/v1/content-projects/{project_id}/units/{unit_id}", headers=alice).status_code == 204
     assert client.delete(f"/api/v1/content-projects/{project_id}", headers=alice).status_code == 204
-    assert client.get(f"/api/v1/content-projects/{project_id}", headers=alice).status_code == 404
+    archived = client.get(f"/api/v1/content-projects/{project_id}", headers=alice)
+    assert archived.status_code == 200
+    assert archived.json()["status"] == "archived"
+    assert client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "Again", "persona_id": persona.json()["id"], "modality": "text"}, headers=alice).status_code == 409
 
 
 def test_unit_rejects_foreign_persona_and_unowned_workflow(client):

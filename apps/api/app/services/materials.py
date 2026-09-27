@@ -64,11 +64,15 @@ def validate_upload(content: bytes, declared_mime: str | None) -> str:
     return mime
 
 
-def store_bytes(content: bytes, *, subdir: str, suffix: str) -> tuple[str, str]:
+def store_bytes(db: Session, content: bytes, *, subdir: str, suffix: str) -> tuple[str, str]:
     """content-addressed 存储；返回 (relative_path, content_hash)。"""
     from .asset_media import MEDIA_ROOT
 
     content_hash = hashlib.sha256(content).hexdigest()
+    if subdir == "material":
+        from .material_byte_lock import hold_until_transaction_end
+
+        hold_until_transaction_end(db, content_hash)
     relative = Path(subdir) / content_hash[:2] / f"{content_hash}{suffix}"
     absolute = MEDIA_ROOT / relative
     absolute.parent.mkdir(parents=True, exist_ok=True)
@@ -120,7 +124,7 @@ def create_revision(
     if source_kind not in {k.value for k in MaterialSourceKind}:
         raise HTTPException(422, f"非法素材来源: {source_kind}")
     mime = validate_upload(content, declared_mime) if source_kind != MaterialSourceKind.legacy.value else (declared_mime or FALLBACK_MIME)
-    relative, content_hash = store_bytes(content, subdir="material", suffix=suffix)
+    relative, content_hash = store_bytes(db, content, subdir="material", suffix=suffix)
     latest_no = db.scalar(
         select(MaterialRevision.revision_no)
         .where(MaterialRevision.material_id == material.id)

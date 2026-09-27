@@ -42,6 +42,13 @@ def test_project_shared_asset_links_existing_revision_and_attempt(client, db_ses
     assert assets.json()[0]["material_revision_id"] == revision.id
     assert assets.json()[0]["attempt_id"] == attempt.id
     assert assets.json()[0]["rights_status"] == "review_required"
+    reference = client.post(f"/api/v1/content-projects/{project_id}/materials/references", json={"material_revision_id": revision.id}, headers=alice)
+    assert reference.status_code == 201, reference.text
+    combined = client.get(f"/api/v1/content-projects/{project_id}/shared-assets", headers=alice).json()
+    assert {item["source_type"] for item in combined} == {"workflow", "system_reference"}
+    assert {item["material_revision_id"] for item in combined} == {revision.id}
+    assert len({item["key"] for item in combined}) == 2
+    assert db_session.query(MaterialRevision).count() == 1
     assert client.get(f"/api/v1/content-projects/{project_id}/shared-assets", headers=bob).status_code == 404
 
 

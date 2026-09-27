@@ -13,6 +13,14 @@ from .celery_app import celery_app
 logger = logging.getLogger(__name__)
 
 
+@celery_app.task(name="app.tasks.worker_tasks.retention_sweep")
+def retention_sweep() -> dict:
+    from ..services.retention import run_retention
+
+    with SessionLocal() as db:
+        return run_retention(db)
+
+
 def _run_generation(db: Session, job_id: int) -> None:
     job = db.get(ContentJob, job_id)
     if not job:

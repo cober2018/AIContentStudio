@@ -1201,3 +1201,103 @@ class ProjectWorkflowOutput(Base):
     entity_id: Mapped[int] = mapped_column(Integer)
     provenance_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CreativeBriefRevision(Base):
+    __tablename__ = "creative_brief_revision"
+    __table_args__ = (
+        UniqueConstraint("project_id", "revision_no", name="uq_creative_brief_project_revision"),
+        Index("ix_creative_brief_project_created", "project_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"))
+    revision_no: Mapped[int] = mapped_column(Integer)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("creative_brief_revision.id"))
+    objective: Mapped[str] = mapped_column(Text)
+    primary_audience: Mapped[str | None] = mapped_column(Text)
+    core_message: Mapped[str | None] = mapped_column(Text)
+    angle: Mapped[str | None] = mapped_column(Text)
+    required_evidence_json: Mapped[list] = mapped_column(JSON, default=list)
+    content_constraints_json: Mapped[list] = mapped_column(JSON, default=list)
+    identity_scope_json: Mapped[list] = mapped_column(JSON, default=list)
+    modality_scope_json: Mapped[list] = mapped_column(JSON, default=list)
+    channel_scope_json: Mapped[list] = mapped_column(JSON, default=list)
+    cta: Mapped[str | None] = mapped_column(Text)
+    references_json: Mapped[list] = mapped_column(JSON, default=list)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProjectSourceBinding(Base):
+    __tablename__ = "project_source_binding"
+    __table_args__ = (
+        UniqueConstraint("project_id", "source_document_id", name="uq_project_source"),
+        Index("ix_project_source_project_status", "project_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"))
+    source_document_id: Mapped[int] = mapped_column(ForeignKey("source_document.id"))
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    note: Mapped[str | None] = mapped_column(Text)
+    attached_by: Mapped[str | None] = mapped_column(String(255))
+    attached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    detached_by: Mapped[str | None] = mapped_column(String(255))
+    detached_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ProjectFactBoundaryRevision(Base):
+    __tablename__ = "project_fact_boundary_revision"
+    __table_args__ = (
+        UniqueConstraint("project_id", "revision_no", name="uq_project_fact_boundary_revision"),
+        Index("ix_project_fact_boundary_project_created", "project_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"))
+    revision_no: Mapped[int] = mapped_column(Integer)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("project_fact_boundary_revision.id"))
+    fact_pack_id: Mapped[int] = mapped_column(ForeignKey("fact_pack.id"))
+    fact_pack_version: Mapped[int] = mapped_column(Integer)
+    fact_pack_checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProjectMaterialReference(Base):
+    __tablename__ = "project_material_reference"
+    __table_args__ = (
+        UniqueConstraint("project_id", "material_revision_id", name="uq_project_material_revision"),
+        Index("ix_project_material_project_status", "project_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"))
+    material_revision_id: Mapped[int] = mapped_column(ForeignKey("material_revision.id"))
+    origin: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    note: Mapped[str | None] = mapped_column(Text)
+    attached_by: Mapped[str | None] = mapped_column(String(255))
+    attached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    detached_by: Mapped[str | None] = mapped_column(String(255))
+    detached_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ProjectEvent(Base):
+    __tablename__ = "project_event"
+    __table_args__ = (
+        Index("ix_project_event_project_id_id", "project_id", "id"),
+        Index("ix_project_event_project_created", "project_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"))
+    event_type: Mapped[str] = mapped_column(String(80))
+    entity_type: Mapped[str | None] = mapped_column(String(50))
+    entity_id: Mapped[str | None] = mapped_column(String(80))
+    actor: Mapped[str | None] = mapped_column(String(255))
+    payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

@@ -116,15 +116,16 @@ A Data Node SHALL use a typed, extensible Data Source Plugin registry distinct f
 - **THEN** the new refresh remains auditable without marking dependent successful steps stale
 
 ### Requirement: Project-shared workflow outputs
-The system SHALL persist references to supported workflow-produced Draft, AssetRevision, and Candidate outputs with owning project, unit, run, node, attempt, and applicable source/rights provenance. Generated image, chart, screenshot, and video-clip revisions SHALL appear in the owning project's Shared Assets. It MUST NOT create a synthetic asset or approved Candidate merely because a node reports success.
 
-#### Scenario: Generated media revision
-- **WHEN** a supported node successfully produces an image, chart, screenshot, or video clip
-- **THEN** a versioned asset reference appears in that project's Shared Assets after reload and remains traceable to the producing run and attempt
+The system SHALL persist references to supported workflow-produced Draft, MaterialRevision, and Candidate outputs with owning project, unit, run, node, attempt, and applicable source/rights provenance. Generated image, chart, screenshot, and video-clip revisions SHALL appear in the owning project's Shared Assets. FE-F3A MAY add explicit project MaterialRevision references for project upload/system-library use, but those references SHALL remain a separate persistence source from ProjectWorkflowOutput. The project Shared Assets API SHALL unify both sources at read time and MUST NOT create a synthetic material, duplicate bytes, or infer an asset merely because a node reports success.
 
-#### Scenario: Unsupported generator
-- **WHEN** a node has no verified executable generator
-- **THEN** it is blocked with a reason and no generated asset or Candidate is recorded
+#### Scenario: Workflow material and explicit material coexist
+- **WHEN** a project has both explicit MaterialRevision references and a verified workflow-generated MaterialRevision
+- **THEN** the Shared Assets response includes both with distinct source types and preserves the workflow item's run/node/attempt provenance
+
+#### Scenario: Explicit detach does not erase workflow history
+- **WHEN** an editor detaches an explicit project material reference
+- **THEN** any separate ProjectWorkflowOutput association to the same MaterialRevision remains intact and historical runs are not modified
 
 ### Requirement: Modality production shells
 The frontend SHALL provide distinct text, graphic, and video Production Workspace shells for a selected Content Unit, each with the same project-scoped workflow mini canvas, node inspector, explicit save/run controls, and a compact Project Shared Assets entry.

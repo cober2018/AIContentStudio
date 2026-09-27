@@ -1,8 +1,10 @@
 """Typed Data Source Plugin catalog and read-only snapshot adapter."""
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import DataSnapshot, SourceDocument, WorkflowRun, utcnow
+from ..models import ContentUnit, DataSnapshot, SourceDocument, WorkflowRun, utcnow
+from .project_events import record_project_event
 from .workflow_engine import canonical_checksum
 
 _PLUGINS = [
@@ -64,6 +66,7 @@ def snapshot_source(db: Session, run: WorkflowRun, node_id: str, plugin_key: str
         "truncated": len(text) > 20000,
     }
     checksum = canonical_checksum(normalized)
+    previous = db.scalar(select(DataSnapshot).where(DataSnapshot.unit_id == run.content_unit_id, DataSnapshot.node_id == node_id).order_by(DataSnapshot.id.desc()).limit(1))
     snapshot = DataSnapshot(
         unit_id=run.content_unit_id,
         run_id=run.id,
@@ -78,4 +81,7 @@ def snapshot_source(db: Session, run: WorkflowRun, node_id: str, plugin_key: str
     )
     db.add(snapshot)
     db.flush()
+    unit = db.get(ContentUnit, run.content_unit_id)
+    if unit is not None:
+        record_project_event(db, project_id=unit.project_id, event_type="data.snapshot_changed" if previous and previous.checksum != checksum else "data.snapshot_created", actor=None, entity_type="data_snapshot", entity_id=snapshot.id, payload={"unit_id": unit.id, "run_id": run.id, "node_id": node_id, "old_checksum": previous.checksum if previous else None, "new_checksum": checksum, "changed": bool(previous and previous.checksum != checksum)})
     return {"snapshot_id": snapshot.id, "data_checksum": checksum, "source_version": source.sha256}

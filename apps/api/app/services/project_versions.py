@@ -1,0 +1,47 @@
+"""Bounded project version aggregation; no ProjectVersion persistence table."""
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from ..models import ContentUnit, CreativeBriefRevision, MaterialRevision, ProjectFactBoundaryRevision, ProjectMaterialReference, ProjectWorkflowOutput, Workflow, WorkflowRun
+
+
+def _item(kind: str, id: int, version=None, status=None, checksum=None, created_at=None, current=False, unit_id=None, source=None) -> dict:
+    item = {"kind": kind, "id": str(id), "version": version, "status": status, "checksum": checksum, "createdAt": created_at.isoformat() if created_at else None, "current": current}
+    if unit_id is not None:
+        item["unitId"] = unit_id
+    if source is not None:
+        item["source"] = source
+    return item
+
+
+def project_versions(db: Session, project_id: int) -> dict:
+    brief = db.scalars(select(CreativeBriefRevision).where(CreativeBriefRevision.project_id == project_id).order_by(CreativeBriefRevision.revision_no.desc()).limit(100)).all()
+    boundary = db.scalars(select(ProjectFactBoundaryRevision).where(ProjectFactBoundaryRevision.project_id == project_id).order_by(ProjectFactBoundaryRevision.revision_no.desc()).limit(100)).all()
+    units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id).order_by(ContentUnit.id.desc()).limit(200)).all()
+    unit_ids = [unit.id for unit in units]
+    runs = db.scalars(select(WorkflowRun).where(WorkflowRun.content_unit_id.in_(unit_ids)).order_by(WorkflowRun.id.desc()).limit(200)).all() if unit_ids else []
+    outputs = db.scalars(select(ProjectWorkflowOutput).where(ProjectWorkflowOutput.project_id == project_id).order_by(ProjectWorkflowOutput.id.desc()).limit(200)).all()
+    refs = db.scalars(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id).order_by(ProjectMaterialReference.id.desc()).limit(200)).all()
+    workflow_ids = {unit.pinned_workflow_id for unit in units if unit.pinned_workflow_id} | {run.workflow_id for run in runs if run.workflow_id}
+    workflows = [db.get(Workflow, workflow_id) for workflow_id in sorted(workflow_ids)]
+    materials = []
+    for ref in refs:
+        revision = db.get(MaterialRevision, ref.material_revision_id)
+        if revision:
+            materials.append(_item("material_revision", revision.id, revision.revision_no, ref.status, revision.content_hash, revision.created_at, ref.status == "active", source=ref.origin))
+    for output in outputs:
+        if output.output_kind != "material_revision":
+            continue
+        revision = db.get(MaterialRevision, output.entity_id)
+        if revision:
+            materials.append(_item("material_revision", revision.id, revision.revision_no, revision.status, revision.content_hash, revision.created_at, True, output.unit_id, "workflow"))
+    return {
+        "brief": [_item("creative_brief_revision", row.id, row.revision_no, None, row.checksum, row.created_at, index == 0) for index, row in enumerate(brief)],
+        "factBoundary": [_item("project_fact_boundary_revision", row.id, row.revision_no, "frozen", row.fact_pack_checksum, row.created_at, index == 0) for index, row in enumerate(boundary)],
+        "contentUnits": [_item("content_unit", row.id, None, row.status, None, row.created_at, row.status != "archived") for row in units],
+        "workflows": [_item("workflow", row.id, row.version, row.status, row.checksum, row.created_at, any(unit.pinned_workflow_id == row.id for unit in units)) for row in workflows if row],
+        "runs": [_item("workflow_run", row.id, row.workflow_version, row.status, row.definition_checksum, row.started_at, False, row.content_unit_id) for row in runs],
+        "materials": materials,
+        "contentOutputs": [_item(output.output_kind, output.entity_id, None, None, None, output.created_at, True, output.unit_id, "workflow") for output in outputs if output.output_kind in {"draft", "candidate"}],
+    }
