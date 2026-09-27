@@ -56,6 +56,37 @@ def run_generation_job(job_id: int) -> dict:
         return {"job_id": job_id, "status": job.status if job else "unknown"}
 
 
+def _advance_workflow_run(db: Session, run_id: int) -> str:
+    """R2-B1：异步模式下推进 WorkflowRun（主生产入口经 Content Harness）。"""
+    from ..models import WorkflowRun
+    from ..services import workflow_engine
+
+    run = db.get(WorkflowRun, run_id)
+    if not run:
+        return "unknown"
+    user = db.query(User).filter(User.email == "workflow@studio.local").first()
+    if user is None:
+        user = User(email="workflow@studio.local", name="工作流执行", role="editor")
+        db.add(user)
+        db.commit()
+    from .. import runtime_config
+
+    runtime_config.load_from_db(db)
+    try:
+        run = workflow_engine.advance(db, run, user)
+        return run.status
+    except Exception as exc:
+        logger.exception("workflow run %s 推进异常", run_id)
+        return f"error: {exc}"[:100]
+
+
+@celery_app.task(name="app.tasks.worker_tasks.advance_workflow_run")
+def advance_workflow_run(run_id: int) -> dict:
+    with SessionLocal() as db:
+        status = _advance_workflow_run(db, run_id)
+        return {"run_id": run_id, "status": status}
+
+
 @celery_app.task(name="app.tasks.worker_tasks.pull_connector_endpoint")
 def pull_connector_endpoint(endpoint_id: int, actor_email: str) -> dict:
     with SessionLocal() as db:

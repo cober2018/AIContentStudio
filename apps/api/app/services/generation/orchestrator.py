@@ -6,13 +6,15 @@ V1 在请求内同步执行（Mock 毫秒级）；接真实模型时升级为 Ce
 
 import logging
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ... import models
-from ...models import Channel, Draft, DraftStatus, FactPack, FactPackStatus, JobStatus
+from ...models import Draft, DraftStatus, FactPack, FactPackStatus, JobStatus
 from . import mock_content, renderers
 from .providers import GenerateRequest, get_provider, provider_model_name, record_run
+
+# legacy prompt 渲染路由：x_thread 复用 wechat prompt（V1 PRD 2.0：渠道合法性一律走 ChannelRegistry）
+X_THREAD = "x_thread"
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +99,7 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
     source_raws = [f.get("statement") or "" for f in facts_payload]
     knowledge_block = generation_block(facts_payload, source_raws)
 
-    generation_channel = "wechat" if job.channel == Channel.x_thread.value else job.channel
+    generation_channel = "wechat" if job.channel == X_THREAD else job.channel
     prompt = renderers.compose_prompt(
         generation_channel,
         renderers.topic_brief_text(topic),
@@ -150,7 +152,8 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
     body = _render_job_body(job.channel, result.data)
     title = result.data.get("titles", [result.data.get("title", topic.title)])[0]
     thread_posts = result.data.get("posts") or result.data.get("thread_posts")
-    if job.channel == Channel.x_thread.value and not thread_posts:
+    job_form = job.content_form or ""
+    if (job.channel == X_THREAD or job_form == "thread") and not thread_posts:
         thread_posts = _thread_posts_from_wechat(result.data)
 
     # 重试/重新生成不覆盖旧 Draft：revision_no 递增（PRD 验收 13）
@@ -178,7 +181,7 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
 
 
 def _render_job_body(channel: str, structured: dict) -> str:
-    if channel != Channel.x_thread.value:
+    if channel != X_THREAD:
         return renderers.render_body(channel, structured)
     posts = structured.get("posts") or structured.get("thread_posts") or _thread_posts_from_wechat(structured)
     return "\n\n".join(f"{index}. {post.get('text', post.get('body', ''))}" for index, post in enumerate(posts, 1))
@@ -209,21 +212,43 @@ async def _generate(provider, request: GenerateRequest):
     return await provider.generate_json(request)
 
 
-def create_jobs_for_topic(db: Session, topic: models.TopicBrief, channels: list[str]) -> list[models.ContentJob]:
+def create_jobs_for_topic(
+    db: Session,
+    topic: models.TopicBrief,
+    targets: list[str] | list[dict],
+    *,
+    workflow_run_id: int | None = None,
+) -> list[models.ContentJob]:
+    """每个 target（channel×content_form）一个独立 content_job。
+
+    target 兼容两种入参：纯 channel 字符串（legacy 调用方）或 {channel, content_form}；
+    合法性一律经 ChannelRegistry 校验（D3），不再依赖 models.Channel。
+    """
+    from ..content_harness import channel_registry
+
     pack = topic.fact_pack
     jobs = []
-    for channel in channels:
-        if channel not in {c.value for c in Channel}:
-            raise GenerationError(f"未知渠道: {channel}")
+    for target in targets:
+        if isinstance(target, str):
+            target = {"channel": target}
+        try:
+            spec = channel_registry.resolve_content_form(db, target["channel"], target.get("content_form"))
+        except channel_registry.ChannelRegistryError as exc:
+            raise GenerationError(str(exc)) from exc
+        # template 兜底：优先承载 profile 的行，否则该渠道最高 published 模板
         template = (
             db.query(models.ChannelTemplateVersion)
-            .filter_by(channel=channel, status="published")
+            .filter_by(channel=spec.channel, status="published")
             .order_by(models.ChannelTemplateVersion.version.desc())
             .first()
         )
         job = models.ContentJob(
             topic_brief_id=topic.id,
-            channel=channel,
+            channel=spec.channel,
+            content_form=spec.content_form,
+            artifact_kind=spec.artifact_kind,
+            workflow_run_id=workflow_run_id,
+            channel_profile_version_id=spec.profile_version_id,
             template_version_id=template.id if template else None,
             model_provider=get_provider("generate").name,
             model_name=provider_model_name("generate"),

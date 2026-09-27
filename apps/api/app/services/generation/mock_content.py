@@ -42,7 +42,7 @@ def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> di
         "xiaohongshu": _build_xiaohongshu,
         "wechat": _build_wechat,
     }
-    builder = builders.get(channel, _build_douyin)
+    builder = builders.get(channel, _build_wechat)  # V1 新平台：wechat 结构 fallback（与 built-in fallback writer 对齐）
     output = builder(topic, facts, brand)
 
     if inject_unfact and facts:

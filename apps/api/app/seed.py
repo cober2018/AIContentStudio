@@ -1,4 +1,4 @@
-"""种子数据：管理员、渠道模板、Brand Voice。`make seed` 或 python -m app.seed。"""
+"""种子数据：管理员、渠道模板、Brand Voice、V1 平台 Profiles。`make seed` 或 python -m app.seed。"""
 
 from .db import SessionLocal, init_db
 from .models import BrandVoiceVersion, ChannelTemplateVersion, User
@@ -7,6 +7,94 @@ from .routers.templates import sync_prompt_versions_from_files
 DOUYIN_STRUCTURE = ["Hook 3-8s", "背景", "核心观点 1", "证据", "核心观点 2", "风险/反面信息", "总结", "CTA"]
 XHS_STRUCTURE = ["标题候选", "封面文案", "正文", "小标题", "卡片文案", "图片 Prompt", "Tags"]
 WECHAT_STRUCTURE = ["标题", "摘要", "导语", "主体章节", "风险提示", "结尾", "配图建议", "数据来源列表"]
+
+
+def _form(artifact_kind, family, *, renderer, rules=None, seo=None, publishers=None, media=None, label=None):
+    return {
+        "artifact_kind": artifact_kind,
+        "label": label,
+        "default_workflow_key": family,
+        "renderer_key": renderer,
+        "rule_sets": rules or [],
+        "discoverability_profile": seo,
+        "publisher_candidates": publishers or ["publisher.copy"],
+        "media_requirements": media or {},
+    }
+
+
+def _article(label, family, *, seo=None, media=None, publishers=None):
+    return _form("text", family, renderer="renderer.generic.markdown", seo=seo, media=media, publishers=publishers, label=label)
+
+
+def seed_v1_channel_profiles(db) -> int:
+    """V1 PRD 2.0 的 14 平台 profile seeding（§9/7.1）。幂等：以 (channel, workflow 标记 version) 判重。
+
+    注意：profile 是「配置存在」，不代表该平台 auto publish 已验证（PRD：不得伪装 verified）。
+    """
+    created = 0
+    profiles: list[tuple[str, str, dict]] = [
+        ("wechat", "公众号", {"content_forms": {"article": _article(
+            "文章", "workflow.article.editorial", seo="seo.wechat.article",
+            publishers=["publisher.wechat.wewrite", "publisher.copy"],
+            media={"cover": "required", "inline": "optional"},
+        )}}),
+        ("toutiao", "今日头条", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
+        ("baijia", "百家号", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
+        ("zhihu", "知乎", {"content_forms": {
+            "article": _article("文章", "workflow.article.editorial", seo="seo.default"),
+            "answer": _form("text", "workflow.qa.answer", renderer="renderer.generic.markdown", label="回答"),
+        }}),
+        ("bilibili", "B站专栏", {"content_forms": {"article": _article("专栏", "workflow.article.editorial")}}),
+        ("sohu", "搜狐号", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
+        ("penguin", "企鹅号", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
+        ("netease", "网易号", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
+        ("xiaohongshu", "小红书", {"content_forms": {"image_note": _form(
+            "image", "workflow.image.cards", renderer="renderer.xhs.cards",
+            rules=["rule.media.required", "rule.media.public_rights"],
+            media={"cover": "required", "inline": "required"},
+        )}}),
+        ("x", "X（Twitter）", {"content_forms": {
+            "single": _form("text", "workflow.social.short", renderer="renderer.generic.markdown", label="单推"),
+            "thread": _form("text", "workflow.social.thread", renderer="renderer.x.thread", label="推串"),
+        }}),
+        ("weibo", "微博", {"content_forms": {"single": _form("text", "workflow.social.short", renderer="renderer.generic.markdown", label="帖子")}}),
+        ("xueqiu", "雪球", {"content_forms": {
+            "quant_research": _form("text", "workflow.finance.article", renderer="renderer.generic.markdown",
+                                    rules=["rule.finance.as_of", "rule.finance.no_return_guarantee"], label="量化研究"),
+            "market_recap": _form("text", "workflow.finance.article", renderer="renderer.generic.markdown",
+                                  rules=["rule.finance.as_of", "rule.finance.no_return_guarantee"], label="行情复盘"),
+        }}),
+        ("juejin", "掘金", {"content_forms": {"tech_article": _form(
+            "text", "workflow.tech.article", renderer="renderer.generic.markdown",
+            rules=["rule.tech.code_provenance"],
+        )}}),
+        ("douyin", "抖音口播", {"content_forms": {"spoken_script": _form(
+            "script", "workflow.script.spoken", renderer="renderer.generic.markdown",
+        )}}),
+    ]
+    for channel, name, profile in profiles:
+        exists = (
+            db.query(ChannelTemplateVersion)
+            .filter(ChannelTemplateVersion.channel == channel, ChannelTemplateVersion.profile_json.is_not(None))
+            .first()
+        )
+        if exists:
+            continue
+        db.add(
+            ChannelTemplateVersion(
+                channel=channel,
+                name=f"{name} V1 Profile",
+                version=100,  # profile 行为该渠道最高版本（发布时自动下线同渠道旧 published）
+                structure=[],
+                output_schema={"type": "object", "required": ["claim_fact_map"]},
+                profile_schema_version=1,
+                profile_json=profile,
+                status="published",
+            )
+        )
+        created += 1
+    db.flush()
+    return created
 
 
 def seed() -> None:
@@ -64,8 +152,9 @@ def seed() -> None:
                 )
 
         sync_prompt_versions_from_files(db)
+        seed_v1_channel_profiles(db)
         db.commit()
-    print("Seed 完成：4 个内置用户（admin/editor/reviewer/viewer @studio.local）、3 渠道模板、默认 Brand Voice")
+    print("Seed 完成：4 个内置用户、3 渠道 legacy 模板、默认 Brand Voice、V1 平台 Profiles（14 渠道）")
 
 
 if __name__ == "__main__":

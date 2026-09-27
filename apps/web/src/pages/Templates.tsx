@@ -21,7 +21,18 @@ interface ChannelTemplate {
   version: number;
   structure: string[];
   length_guidance: Record<string, string>;
+  profile_schema_version?: number;
+  profile_json?: Record<string, unknown> | null;
   status: string;
+  checksum?: string | null;
+}
+
+interface ProfileForm {
+  artifact_kind?: string;
+  label?: string;
+  default_workflow_key?: string;
+  renderer_key?: string;
+  rule_sets?: string[];
 }
 
 interface PromptVersion {
@@ -41,6 +52,7 @@ const TABS = [
 
 function TemplatesTab() {
   const queryClient = useQueryClient();
+  const [expandedProfile, setExpandedProfile] = useState<number | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["channel-templates"],
     queryFn: () => api.get<ChannelTemplate[]>("/templates/channel-templates"),
@@ -83,12 +95,38 @@ function TemplatesTab() {
           </div>
           <div className="mt-1 text-xs text-slate-400">
             {t.channel} · v{t.version}
+            {t.profile_json && <span className="ml-1 text-emerald-600">· Profile v{t.profile_schema_version ?? 1}</span>}
           </div>
           <ul className="mt-3 space-y-1 text-xs text-slate-600">
             {t.structure.map((s, i) => (
               <li key={i}>· {s}</li>
             ))}
           </ul>
+          {/* V1 PRD 2.0：Channel Profile（content_forms → workflow/renderer/rules/seo/publishers） */}
+          {t.profile_json && (
+            <div className="mt-3 rounded-md border border-emerald-100 bg-emerald-50/60 p-2">
+              <div className="flex flex-wrap gap-1">
+                {Object.entries((t.profile_json.content_forms || {}) as Record<string, ProfileForm>).map(
+                  ([form, conf]) => (
+                    <span key={form} className="rounded bg-white px-1.5 py-0.5 text-[11px] text-emerald-700">
+                      {conf.label || form} · {conf.artifact_kind || "text"}
+                    </span>
+                  ),
+                )}
+              </div>
+              <button
+                className="mt-1 text-[11px] text-emerald-700 hover:underline"
+                onClick={() => setExpandedProfile(expandedProfile === t.id ? null : t.id)}
+              >
+                {expandedProfile === t.id ? "收起 profile_json" : "查看 profile_json"}
+              </button>
+              {expandedProfile === t.id && (
+                <pre className="mt-1 max-h-48 overflow-y-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-[10px] leading-relaxed text-slate-600">
+                  {JSON.stringify(t.profile_json, null, 1)}
+                </pre>
+              )}
+            </div>
+          )}
           <div className="mt-3 flex gap-2">
             {t.status !== "published" && (
               <Button size="sm" onClick={() => setStatus.mutate({ id: t.id, status: "published" })}>

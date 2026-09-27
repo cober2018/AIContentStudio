@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { Button, ChannelBadge, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
@@ -19,16 +19,30 @@ interface TopicRow {
   audience: string | null;
   core_thesis: string | null;
   channels: string[];
+  targets?: { channel: string; content_form: string | null }[];
   status: string;
   fact_pack: { id: number; name: string; version: number; status: string; fact_count: number };
   content_jobs?: { id: number; channel: string; status: string }[];
 }
 
-const CHANNELS = [
-  ["douyin", "抖音"],
-  ["xiaohongshu", "小红书"],
-  ["wechat", "公众号"],
-] as const;
+// 渠道/内容形态来自 Channel Registry（GET /channels），前端不再维护本地常量
+interface ContentFormInfo {
+  content_form: string;
+  label: string;
+  artifact_kind: string;
+  source: string;
+}
+
+interface ChannelInfo {
+  channel: string;
+  label: string;
+  content_forms: ContentFormInfo[];
+}
+
+interface Target {
+  channel: string;
+  content_form: string | null;
+}
 
 interface Suggestion {
   title: string;
@@ -151,6 +165,10 @@ function CreateTopicModal({
     queryKey: ["brand-voices"],
     queryFn: () => api.get<{ id: number; name: string; version: number; status: string }[]>("/templates/brand-voices"),
   });
+  const { data: channels } = useQuery({
+    queryKey: ["channels"],
+    queryFn: () => api.get<ChannelInfo[]>("/channels"),
+  });
 
   const [form, setForm] = useState({
     title: initial?.title || "",
@@ -163,11 +181,28 @@ function CreateTopicModal({
     cta: initial?.cta || "",
     fact_pack_id: initial?.fact_pack_id || 0,
     brand_voice_version_id: 0,
-    channels: ["douyin"] as string[],
   });
+  const [targets, setTargets] = useState<Target[]>([]);
   const [error, setError] = useState("");
 
+  // 渠道列表到达后默认选中第一个渠道的默认形态（保持原 UX：默认抖音）
+  const defaultTarget = (channels || []).find((c) => c.channel === "douyin") || channels?.[0];
+  useEffect(() => {
+    if (targets.length === 0 && defaultTarget) {
+      setTargets([{ channel: defaultTarget.channel, content_form: defaultTarget.content_forms[0]?.content_form || null }]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channels]);
+
   const selectedPack = (packs || []).find((p) => p.id === form.fact_pack_id);
+
+  const toggleTarget = (channel: string, content_form: string) => {
+    setTargets((prev) => {
+      const exists = prev.some((t) => t.channel === channel && t.content_form === content_form);
+      if (exists) return prev.filter((t) => !(t.channel === channel && t.content_form === content_form));
+      return [...prev, { channel, content_form }];
+    });
+  };
 
   const create = useMutation({
     mutationFn: () =>
@@ -177,6 +212,7 @@ function CreateTopicModal({
         brand_voice_version_id: form.brand_voice_version_id || null,
         must_include: form.must_include.split(/[,，、\s]+/).filter(Boolean),
         forbidden: form.forbidden.split(/[,，、\s]+/).filter(Boolean),
+        targets: targets.map((t) => ({ channel: t.channel, content_form: t.content_form })),
       }),
     onSuccess: (topic) => {
       queryClient.invalidateQueries({ queryKey: ["topics"] });
@@ -252,28 +288,32 @@ function CreateTopicModal({
               ))}
             </select>
           </Field>
-          <Field label="目标渠道 *">
-            <div className="flex gap-2">
-              {CHANNELS.map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() =>
-                    set(
-                      "channels",
-                      form.channels.includes(key)
-                        ? form.channels.filter((c) => c !== key)
-                        : [...form.channels, key],
-                    )
-                  }
-                  className={`rounded-md border px-3 py-1.5 text-sm ${
-                    form.channels.includes(key)
-                      ? "border-gray-900 bg-gray-100 text-gray-900"
-                      : "border-slate-300 bg-white text-slate-600"
-                  }`}
-                >
-                  {label}
-                </button>
+          <Field label="交付目标（渠道 × 内容形态）*">
+            <div className="flex flex-wrap gap-2">
+              {(channels || []).map((c) => (
+                <div key={c.channel} className="flex items-center gap-1">
+                  {c.content_forms.map((f) => {
+                    const selected = targets.some(
+                      (t) => t.channel === c.channel && t.content_form === f.content_form,
+                    );
+                    const chipLabel =
+                      c.content_forms.length > 1 ? `${c.label}·${f.label}` : c.label;
+                    return (
+                      <button
+                        key={f.content_form}
+                        type="button"
+                        onClick={() => toggleTarget(c.channel, f.content_form)}
+                        className={`rounded-md border px-3 py-1.5 text-sm ${
+                          selected
+                            ? "border-gray-900 bg-gray-100 text-gray-900"
+                            : "border-slate-300 bg-white text-slate-600"
+                        }`}
+                      >
+                        {chipLabel}
+                      </button>
+                    );
+                  })}
+                </div>
               ))}
             </div>
           </Field>
@@ -293,7 +333,7 @@ function CreateTopicModal({
           取消
         </Button>
         <Button
-          disabled={!form.title || !form.fact_pack_id || form.channels.length === 0}
+          disabled={!form.title || !form.fact_pack_id || targets.length === 0}
           onClick={() => create.mutate()}
         >
           创建并进入工作台

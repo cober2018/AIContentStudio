@@ -2,11 +2,13 @@
 
 V1 范围：
 - 自动发现本机 Agent skills（~/.agents/skills、~/.zcode/skills 下带 SKILL.md 的目录），
-  读 frontmatter 的 name/description；
+  读 frontmatter 的 name/description，以及 V1 PRD 2.0（D16）扩展元数据
+  version/license/kind/capabilities（缺省 unversioned/unknown/skill/[]）；
 - MCP server 手工登记（name + url + enabled），连通性检测留 V2；
 - dsh（DeepSeek Harness，:3080）状态探测（未带 token ping，401 = 存活且要求鉴权）。
 
 登记用途：工作流节点 / 场景路由引用技能时的可见清单；启用集存 system_settings.plugins。
+不读取 Skill body 当系统指令（D16：只消费 frontmatter 元数据）。
 """
 
 import re
@@ -17,11 +19,13 @@ import httpx
 
 SKILL_DIRS = (Path.home() / ".agents" / "skills", Path.home() / ".zcode" / "skills")
 _FRONTMATTER = re.compile(r"\A---\s*\n(.*?)\n---", re.DOTALL)
-_FIELD = re.compile(r"^(name|description):\s*(.+)$", re.MULTILINE)
+# D16：frontmatter 元数据键；capabilities 为逗号分隔列表
+_FIELD = re.compile(r"^(name|description|version|license|kind|capabilities):\s*(.+)$", re.MULTILINE)
+_DEFAULTS = {"version": "unversioned", "license": "unknown", "kind": "skill"}
 
 
 def scan_skills(dirs: list[Path] | tuple[Path, ...] = SKILL_DIRS) -> list[dict[str, Any]]:
-    """扫描 skill 目录：每个含 SKILL.md 的子目录记为一条（name/description 来自 frontmatter）。"""
+    """扫描 skill 目录：每个含 SKILL.md 的子目录记为一条（元数据来自 frontmatter，缺省见 _DEFAULTS）。"""
     found: dict[str, dict[str, Any]] = {}
     for raw in dirs:
         base = Path(str(raw)).expanduser()
@@ -32,21 +36,35 @@ def scan_skills(dirs: list[Path] | tuple[Path, ...] = SKILL_DIRS) -> list[dict[s
                 text = skill_md.read_text(encoding="utf-8", errors="replace")[:4000]
             except OSError:
                 continue
-            meta = {}
+            meta: dict[str, Any] = {}
             match = _FRONTMATTER.search(text)
             if match:
                 for key, value in _FIELD.findall(match.group(1)):
-                    meta[key] = value.strip().strip('"').strip("'")
+                    value = value.strip().strip('"').strip("'")
+                    if key == "capabilities":
+                        meta[key] = [c.strip() for c in value.split(",") if c.strip()]
+                    else:
+                        meta[key] = value
             name = meta.get("name") or skill_md.parent.name
             entry = {
                 "name": name,
                 "description": (meta.get("description") or "")[:200],
+                # D16 扩展：version/license/kind/capabilities（缺省值保证旧 skill 可登记）
+                "version": meta.get("version") or _DEFAULTS["version"],
+                "license": meta.get("license") or _DEFAULTS["license"],
+                "kind": meta.get("kind") or _DEFAULTS["kind"],
+                "capabilities": meta.get("capabilities") or [],
                 "path": str(skill_md.parent),
                 "source": "local",
             }
             # 同名 skill 以先扫描到的为准（.agents 优先）
             found.setdefault(name, entry)
     return sorted(found.values(), key=lambda x: x["name"])
+
+
+def skill_descriptor(name: str, dirs: list[Path] | tuple[Path, ...] = SKILL_DIRS) -> dict[str, Any] | None:
+    """按 name 取单个 skill 描述符（未安装返回 None）。"""
+    return next((s for s in scan_skills(dirs) if s["name"] == name), None)
 
 
 def dsh_status(base_url: str = "http://localhost:3080") -> dict[str, Any]:

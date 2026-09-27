@@ -43,11 +43,13 @@ def _demote_other_published(db, model, scope: dict, keep_id: int) -> int:
 
 
 def normalize_template_publication(db) -> int:
-    """修复历史数据：同渠道存在多个 published 模板时，仅保留最高版本，其余降级 archived。"""
-    from ..models import Channel
+    """修复历史数据：同渠道存在多个 published 模板时，仅保留最高版本，其余降级 archived。
 
+    渠道范围来自 DB distinct（V1 PRD 2.0 §6.5：不再遍历 models.Channel）。
+    """
     demoted = 0
-    for channel in {c.value for c in Channel}:
+    channels = db.scalars(select(ChannelTemplateVersion.channel).distinct()).all()
+    for channel in channels:
         published = db.scalars(
             select(ChannelTemplateVersion)
             .where(ChannelTemplateVersion.channel == channel, ChannelTemplateVersion.status == "published")
@@ -75,6 +77,35 @@ class TemplateIn(BaseModel):
     length_guidance: dict = Field(default_factory=dict)
     forbidden_patterns: list[str] = Field(default_factory=list)
     output_schema: dict = Field(default_factory=dict)
+    # V1 PRD 2.0：Channel Profile（content_forms → workflow/renderer/rules/seo/publishers）
+    profile_json: dict | None = None
+    profile_schema_version: int = 1
+
+
+def validate_profile_json(profile: dict | None, channel: str) -> None:
+    """profile_json schema 校验（Decision 2）。非法直接 422，防止坏 profile 进入 published。"""
+    from ..services.content_harness.channel_registry import VALID_ARTIFACT_KINDS
+
+    if profile is None:
+        return
+    if not isinstance(profile, dict):
+        raise HTTPException(422, "profile_json 必须是对象")
+    content_forms = profile.get("content_forms")
+    if not isinstance(content_forms, dict) or not content_forms:
+        raise HTTPException(422, "profile_json.content_forms 必须是非空对象")
+    for form_key, conf in content_forms.items():
+        if not isinstance(conf, dict):
+            raise HTTPException(422, f"content_forms.{form_key} 必须是对象")
+        artifact_kind = conf.get("artifact_kind", "text")
+        if artifact_kind not in VALID_ARTIFACT_KINDS:
+            raise HTTPException(422, f"content_forms.{form_key}.artifact_kind 非法: {artifact_kind}")
+        for list_field in ("rule_sets", "publisher_candidates"):
+            if not isinstance(conf.get(list_field) or [], list):
+                raise HTTPException(422, f"content_forms.{form_key}.{list_field} 必须是数组")
+    # 同一 profile 内 content_form 不得重复（JSON 对象键天然唯一，这里防手写大小写/空格变体）
+    keys = [k.strip().lower() for k in content_forms]
+    if len(keys) != len(set(keys)):
+        raise HTTPException(422, f"渠道 {channel} profile 存在重复 content_form")
 
 
 class StatusIn(BaseModel):
@@ -187,6 +218,8 @@ def _ct_serialize(ct: ChannelTemplateVersion) -> dict:
         "length_guidance": ct.length_guidance or {},
         "forbidden_patterns": ct.forbidden_patterns or [],
         "output_schema": ct.output_schema or {},
+        "profile_schema_version": ct.profile_schema_version,
+        "profile_json": ct.profile_json,
         "status": ct.status,
         "checksum": ct.checksum,
     }
@@ -215,11 +248,14 @@ def clone_channel_template(source_id: int, payload: TemplateIn | None = None,
         length_guidance=source.length_guidance or {},
         forbidden_patterns=source.forbidden_patterns or [],
         output_schema=source.output_schema or {},
+        profile_json=source.profile_json,
+        profile_schema_version=source.profile_schema_version,
     )
     max_version = db.scalars(
         select(ChannelTemplateVersion.version).where(ChannelTemplateVersion.channel == data.channel)
         .order_by(ChannelTemplateVersion.version.desc()).limit(1)
     ).first() or 0
+    validate_profile_json(data.profile_json, data.channel)
     ct = ChannelTemplateVersion(
         channel=data.channel,
         name=data.name,
@@ -228,6 +264,8 @@ def clone_channel_template(source_id: int, payload: TemplateIn | None = None,
         length_guidance=data.length_guidance,
         forbidden_patterns=data.forbidden_patterns,
         output_schema=data.output_schema,
+        profile_json=data.profile_json,
+        profile_schema_version=data.profile_schema_version,
         status="draft",
     )
     db.add(ct)
@@ -246,7 +284,14 @@ def set_template_status(ct_id: int, payload: StatusIn, db: Session = Depends(get
         raise HTTPException(409, "已发布版本 immutable，请 clone 新版本")
     ct.status = payload.status
     if payload.status == "published":
-        ct.checksum = _checksum({"structure": ct.structure, "output_schema": ct.output_schema})
+        validate_profile_json(ct.profile_json, ct.channel)
+        # checksum 覆盖 profile（D2）：profile 变化即新 hash
+        ct.checksum = _checksum({
+            "structure": ct.structure,
+            "output_schema": ct.output_schema,
+            "profile_schema_version": ct.profile_schema_version,
+            "profile_json": ct.profile_json,
+        })
         # 同渠道仅一个生效版本：新发布自动下线旧版本（历史任务按 id 引用，不受影响）
         _demote_other_published(db, ChannelTemplateVersion, {"channel": ct.channel}, keep_id=ct.id)
     db.commit()
@@ -322,10 +367,15 @@ def delete_prompt(pv_id: int, db: Session = Depends(get_db), user: User = Depend
 
 
 def sync_prompt_versions_from_files(db: Session) -> int:
-    """启动时将 prompts 目录同步为 draft 版本（文件为准，checksum 判断变更）。"""
+    """启动时将 prompts 目录同步为 draft 版本（文件为准，checksum 判断变更）。
+
+    V1 PRD 2.0 §6.11：遍历目录实际文件而非固定三渠道；外部 Skill 自带 prompt
+    时不强行建 PromptVersion（Workflow/Candidate 记录 Skill version 即可）。
+    """
     created = 0
-    for channel in ("douyin", "xiaohongshu", "wechat"):
-        text = (renderers.PROMPT_DIR / f"{channel}.txt").read_text(encoding="utf-8")
+    for path in sorted(renderers.PROMPT_DIR.glob("*.txt")):
+        channel = path.stem
+        text = path.read_text(encoding="utf-8")
         checksum = _checksum({"template_text": text})
         latest = db.scalars(
             select(PromptVersion).where(PromptVersion.channel == channel)

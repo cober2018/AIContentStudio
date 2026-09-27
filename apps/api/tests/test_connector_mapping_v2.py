@@ -250,7 +250,7 @@ def test_pull_v2_offset_pagination_and_raw_trim(client, monkeypatch, seed_admin)
         ]
     )
     mapping["raw_keep_fields"] = ["trade_date", "emotion_total_score", "emotion_state_label"]
-    cid, endpoint_id = _setup_v2_endpoint(client, monkeypatch, rows, mapping, captured)
+    _cid, endpoint_id = _setup_v2_endpoint(client, monkeypatch, rows, mapping, captured)
 
     resp = client.post(f"/api/v1/endpoints/{endpoint_id}/pull", headers=EDITOR)
     assert resp.status_code == 200, resp.text

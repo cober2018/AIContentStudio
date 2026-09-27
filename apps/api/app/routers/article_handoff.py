@@ -6,8 +6,8 @@
 import hashlib
 import io
 import json
-from pathlib import Path
 import zipfile
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
@@ -30,6 +30,7 @@ from ..models import (
     DraftMedia,
     DraftStatus,
     FactPack,
+    MaterialRevision,
     MotherRevision,
     TopicBrief,
     User,
@@ -308,6 +309,7 @@ async def upload_draft_media(
     db: Session = Depends(get_db),
     user: User = Depends(require_editor),
 ):
+    """M1 素材上传（§2.5 改造）：上传即入库 Material+Revision，DraftMedia 为 use。"""
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
@@ -316,36 +318,47 @@ async def upload_draft_media(
     if role not in {"cover", "inline", "attachment"}:
         raise HTTPException(422, "role 不受支持")
     content = await file.read()
-    if not content:
-        raise HTTPException(422, "素材文件为空")
+    from ..services import materials as materials_service
+
+    mime = materials_service.validate_upload(content, file.content_type)
     content_hash = hashlib.sha256(content).hexdigest()
     existing = db.scalars(
         select(DraftMedia).where(DraftMedia.draft_id == draft.id, DraftMedia.content_hash == content_hash)
     ).first()
     if existing:
         return _media_json(existing)
+    material = materials_service.create_material(
+        db, kind="image", title=file.filename or f"material-{content_hash[:8]}", created_by=user.email
+    )
     suffix = Path(file.filename or "media.bin").suffix.lower()[:10] or ".bin"
-    from ..services.asset_media import MEDIA_ROOT
+    revision = materials_service.create_revision(
+        db, material,
+        content=content, suffix=suffix, declared_mime=mime,
+        rights_status=rights_status, public_use_allowed=public_use_allowed,
+        metadata={"filename": file.filename, "first_draft_id": draft_id},
+        created_by=user.email,
+    )
+    from ..services.document_composition import sync_document
 
-    relative_path = Path("draft") / content_hash[:2] / f"{content_hash}{suffix}"
-    absolute_path = MEDIA_ROOT / relative_path
-    absolute_path.parent.mkdir(parents=True, exist_ok=True)
-    if not absolute_path.exists():
-        absolute_path.write_bytes(content)
     row = DraftMedia(
         draft_id=draft.id,
-        content_hash=content_hash,
+        content_hash=revision.content_hash,
         role=role,
         sort_order=len(draft.media),
-        file_path=str(relative_path),
-        mime_type=file.content_type or "application/octet-stream",
+        # 兼容 M1 raw/package 路径：use 行共享 revision 的 content-addressed 文件
+        file_path=revision.file_path,
+        material_revision_id=revision.id,
+        mime_type=revision.mime_type,
         rights_status=rights_status,
         public_use_allowed=public_use_allowed,
-        metadata_json={"filename": file.filename, "uploaded_by": user.email},
+        metadata_json={"filename": file.filename, "uploaded_by": user.email, "via": "material_library"},
     )
-    draft.candidate_readiness = "stale"
+    draft.media.append(row)
     db.add(row)
-    db.add(AuditLog(event="draft.media_uploaded", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"content_hash": content_hash, "role": role}))
+    db.flush()
+    sync_document(db, draft)
+    draft.candidate_readiness = "stale"
+    db.add(AuditLog(event="draft.media_uploaded", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"content_hash": content_hash, "role": role, "material_revision_id": revision.id}))
     db.commit()
     db.refresh(row)
     return _media_json(row)
@@ -407,12 +420,16 @@ def revoke_draft_media_public_use(
 @router.get("/drafts/{draft_id}/media/{media_id}/raw")
 def get_draft_media_raw(draft_id: int, media_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     row = db.get(DraftMedia, media_id)
-    if not row or row.draft_id != draft_id or not row.file_path:
+    if not row or row.draft_id != draft_id:
         raise HTTPException(404, "素材不存在")
     from ..services.asset_media import MEDIA_ROOT
 
-    path = MEDIA_ROOT / row.file_path
-    if not path.is_file():
+    # use 行无独立字节时回退 MaterialRevision 的 content-addressed 文件
+    path = MEDIA_ROOT / row.file_path if row.file_path else None
+    if (not path or not path.is_file()) and row.material_revision_id:
+        revision = db.get(MaterialRevision, row.material_revision_id)
+        path = MEDIA_ROOT / revision.file_path if revision and revision.file_path else None
+    if not path or not path.is_file():
         raise HTTPException(404, "素材文件不存在")
     return FileResponse(path, media_type=row.mime_type)
 

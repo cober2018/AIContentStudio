@@ -4,12 +4,13 @@ import enum
 from datetime import UTC, datetime
 
 from sqlalchemy import (
-    CheckConstraint,
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -57,6 +58,8 @@ class FactPackStatus(str, enum.Enum):
 
 
 class Channel(str, enum.Enum):
+    """兼容保留：V1 PRD 2.0 起新渠道一律经 ChannelRegistry 注册（profile），禁止在此新增 enum item。"""
+
     douyin = "douyin"
     xiaohongshu = "xiaohongshu"
     wechat = "wechat"
@@ -83,8 +86,76 @@ class DraftMediaRole(str, enum.Enum):
     attachment = "attachment"
 
 
+class ArtifactKind(str, enum.Enum):
+    """V1 内容形态；video/audio 为 V2 预留，暂不实现。"""
+
+    text = "text"
+    image = "image"
+    script = "script"
+
+
+class CheckKind(str, enum.Enum):
+    fact = "fact"
+    platform = "platform"
+    safety = "safety"
+    rights = "rights"
+    seo = "seo"
+    domain = "domain"
+    media = "media"
+
+
+class CheckStatus(str, enum.Enum):
+    pass_ = "pass"
+    warning = "warning"
+    blocker = "blocker"
+    incomplete = "incomplete"
+    stale = "stale"
+
+
 class DeliveryAction(str, enum.Enum):
-    manual_handoff = "manual_handoff"
+    manual_handoff = "manual_handoff"  # legacy alias（M1 人工交付）
+    copy_package = "copy_package"
+    assisted_draft = "assisted_draft"
+    auto_draft = "auto_draft"
+
+
+class MaterialKind(str, enum.Enum):
+    image = "image"
+    chart = "chart"
+    screenshot = "screenshot"
+    video = "video"
+    audio = "audio"
+    brand = "brand"
+    other = "other"
+
+
+class MaterialRevisionStatus(str, enum.Enum):
+    candidate = "candidate"
+    usable = "usable"
+    revoked = "revoked"
+    archived = "archived"
+
+
+class MaterialSourceKind(str, enum.Enum):
+    upload = "upload"
+    web_search = "web_search"
+    ai_generated = "ai_generated"
+    chart = "chart"
+    screenshot = "screenshot"
+    upstream = "upstream"
+    legacy = "legacy"
+
+
+class DiscoverabilityStage(str, enum.Enum):
+    pre = "pre"
+    post = "post"
+
+
+class DiscoverabilityStatus(str, enum.Enum):
+    ready = "ready"
+    incomplete = "incomplete"
+    stale = "stale"
+    failed = "failed"
 
 
 class DeliveryTargetStatus(str, enum.Enum):
@@ -288,6 +359,9 @@ class ChannelTemplateVersion(Base):
     length_guidance: Mapped[dict | None] = mapped_column(JSON)
     forbidden_patterns: Mapped[list | None] = mapped_column(JSON)
     output_schema: Mapped[dict | None] = mapped_column(JSON)
+    # V1 PRD 2.0：本表提升为 Channel Profile Version 载体（content_forms → workflow/renderer/rules/seo/publishers）
+    profile_schema_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    profile_json: Mapped[dict | None] = mapped_column(JSON)
     status: Mapped[str] = mapped_column(String(20), default="draft")
     checksum: Mapped[str | None] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -325,7 +399,11 @@ class TopicBrief(Base):
     brand_voice_version_id: Mapped[int | None] = mapped_column(ForeignKey("brand_voice_version.id"))
     fact_pack_id: Mapped[int] = mapped_column(ForeignKey("fact_pack.id"))
     fact_pack_version: Mapped[int] = mapped_column(Integer)
-    channels: Mapped[list | None] = mapped_column(JSON)
+    channels: Mapped[list | None] = mapped_column(JSON)  # 兼容字段：targets_json 去重后的 channel 列表
+    # V1 PRD 2.0：交付目标真源 [{channel, content_form}]
+    targets_json: Mapped[list | None] = mapped_column(JSON)
+    product_ref: Mapped[str | None] = mapped_column(String(100))
+    business_line: Mapped[str | None] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(String(20), default="active")  # active/archived
     tags: Mapped[list | None] = mapped_column(JSON)
     created_by: Mapped[str | None] = mapped_column(String(255))
@@ -348,6 +426,10 @@ class ContentJob(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     topic_brief_id: Mapped[int] = mapped_column(ForeignKey("topic_brief.id"))
     channel: Mapped[str] = mapped_column(String(30))
+    content_form: Mapped[str | None] = mapped_column(String(50))
+    artifact_kind: Mapped[str | None] = mapped_column(String(20))
+    workflow_run_id: Mapped[int | None] = mapped_column(Integer)
+    channel_profile_version_id: Mapped[int | None] = mapped_column(Integer)
     template_version_id: Mapped[int | None] = mapped_column(ForeignKey("channel_template_version.id"))
     model_provider: Mapped[str | None] = mapped_column(String(50))
     model_name: Mapped[str | None] = mapped_column(String(100))
@@ -379,6 +461,11 @@ class Draft(Base):
     input_hash: Mapped[str | None] = mapped_column(String(64))
     thread_posts_json: Mapped[list | None] = mapped_column(JSON)
     candidate_readiness: Mapped[str | None] = mapped_column(String(20))
+    # V1 PRD 2.0：平台 Artifact 形态与图文 composition（Markdown 仍是文本真源）
+    artifact_kind: Mapped[str] = mapped_column(String(20), default=ArtifactKind.text.value, server_default="text")
+    content_form: Mapped[str | None] = mapped_column(String(50))
+    document_schema_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    document_json: Mapped[dict | None] = mapped_column(JSON)
     status: Mapped[str] = mapped_column(String(20), default=DraftStatus.draft.value)
     created_by_type: Mapped[str] = mapped_column(String(10), default="ai")  # ai/user
     created_by: Mapped[str | None] = mapped_column(String(255))
@@ -391,6 +478,36 @@ class Draft(Base):
     media: Mapped[list["DraftMedia"]] = relationship(
         back_populates="draft", order_by="DraftMedia.sort_order", cascade="all, delete-orphan"
     )
+    check_runs: Mapped[list["DraftCheckRun"]] = relationship(
+        back_populates="draft", order_by="DraftCheckRun.created_at", cascade="all, delete-orphan"
+    )
+
+
+class DraftCheckRun(Base):
+    """通用检查记录（V1 PRD 2.0 D12）：统一 fact/platform/safety/rights/seo/domain/media 检查语义。
+
+    兼容期：`Draft.fact_check_json` 继续写，同时镜像一条 check_kind='fact' 的记录；
+    新 Review Gate 只读本表。incomplete 不等于 pass，input_hash 变化后标 stale。
+    """
+
+    __tablename__ = "draft_check_run"
+    __table_args__ = (
+        Index("ix_draft_check_run_draft_kind_time", "draft_id", "check_kind", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    draft_id: Mapped[int] = mapped_column(ForeignKey("draft.id"))
+    check_kind: Mapped[str] = mapped_column(String(30))
+    profile_key: Mapped[str | None] = mapped_column(String(150))
+    profile_version: Mapped[str | None] = mapped_column(String(50))
+    input_hash: Mapped[str | None] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20))  # pass/warning/blocker/incomplete/stale
+    report_json: Mapped[dict | None] = mapped_column(JSON)
+    provider_key: Mapped[str | None] = mapped_column(String(100))
+    provider_version: Mapped[str | None] = mapped_column(String(50))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    draft: Mapped["Draft"] = relationship(back_populates="check_runs")
 
 
 class MotherRevision(Base):
@@ -433,9 +550,123 @@ class DraftMedia(Base):
     public_use_revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     public_use_revocation_note: Mapped[str | None] = mapped_column(Text)
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
+    # V1 PRD 2.0（D9）：DraftMedia 降为 Use/Placement；旧行 material_revision_id 为空仍可读
+    material_revision_id: Mapped[int | None] = mapped_column(ForeignKey("material_revision.id"))
+    placement_json: Mapped[dict | None] = mapped_column(JSON)
+    alt_text: Mapped[str | None] = mapped_column(Text)
+    caption: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     draft: Mapped["Draft"] = relationship(back_populates="media")
+    material_revision: Mapped["MaterialRevision | None"] = relationship(back_populates="draft_uses")
+
+
+# ---------- Material Library（D9）----------
+
+
+class Material(Base):
+    """全局素材：跨稿件复用的逻辑实体，字节不可变体现在 MaterialRevision。"""
+
+    __tablename__ = "material"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(20), default=MaterialKind.image.value)
+    title: Mapped[str] = mapped_column(String(500))
+    tags_json: Mapped[list | None] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(20), default="active")  # active/archived
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    revisions: Mapped[list["MaterialRevision"]] = relationship(
+        back_populates="material", order_by="MaterialRevision.revision_no", cascade="all, delete-orphan"
+    )
+
+
+class MaterialRevision(Base):
+    """素材版本：content_hash 寻址的字节快照 + 来源/权利元数据。
+
+    被 approved Candidate 引用后不可变（替换=新 Revision）；web_search 来源在
+    public_use_allowed != true 前不满足 Candidate media readiness。
+    """
+
+    __tablename__ = "material_revision"
+    __table_args__ = (
+        UniqueConstraint("material_id", "revision_no", name="uq_material_revision_no"),
+        Index("ix_material_revision_content_hash", "content_hash"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    material_id: Mapped[int] = mapped_column(ForeignKey("material.id"))
+    revision_no: Mapped[int] = mapped_column(Integer, default=1)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("material_revision.id"))
+    status: Mapped[str] = mapped_column(String(20), default=MaterialRevisionStatus.candidate.value)
+    source_kind: Mapped[str] = mapped_column(String(30), default=MaterialSourceKind.upload.value)
+    source_url: Mapped[str | None] = mapped_column(String(1000))
+    source_metadata_json: Mapped[dict | None] = mapped_column(JSON)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    file_path: Mapped[str | None] = mapped_column(String(500))
+    mime_type: Mapped[str | None] = mapped_column(String(100))
+    width: Mapped[int | None] = mapped_column(Integer)
+    height: Mapped[int | None] = mapped_column(Integer)
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    rights_status: Mapped[str | None] = mapped_column(String(30))
+    public_use_allowed: Mapped[bool | None] = mapped_column(Boolean)
+    model_use_allowed: Mapped[bool | None] = mapped_column(Boolean)
+    commercial_use_allowed: Mapped[bool | None] = mapped_column(Boolean)
+    attribution_text: Mapped[str | None] = mapped_column(Text)
+    provider_key: Mapped[str | None] = mapped_column(String(100))
+    provider_version: Mapped[str | None] = mapped_column(String(50))
+    prompt_text: Mapped[str | None] = mapped_column(Text)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    material: Mapped["Material"] = relationship(back_populates="revisions")
+    draft_uses: Mapped[list["DraftMedia"]] = relationship(back_populates="material_revision")
+
+
+# ---------- Discoverability（D14）----------
+
+
+class DiscoverabilityProfileVersion(Base):
+    """SEO Profile 版本：config_json 定义该渠道×形态的 discoverability 检查项。"""
+
+    __tablename__ = "discoverability_profile_version"
+    __table_args__ = (UniqueConstraint("profile_key", "version", name="uq_discoverability_profile_version"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profile_key: Mapped[str] = mapped_column(String(150))
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    channel: Mapped[str] = mapped_column(String(30))
+    content_form: Mapped[str | None] = mapped_column(String(50))
+    config_json: Mapped[dict | None] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    checksum: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class DiscoverabilityReport(Base):
+    """Pre/Post SEO 报告：不自动改稿；apply 建议走 Draft 新 revision。"""
+
+    __tablename__ = "discoverability_report"
+    __table_args__ = (
+        Index("ix_discoverability_report_stage", "stage", "channel", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    topic_id: Mapped[int | None] = mapped_column(Integer)
+    mother_revision_id: Mapped[int | None] = mapped_column(Integer)
+    draft_id: Mapped[int | None] = mapped_column(Integer)
+    stage: Mapped[str] = mapped_column(String(10))  # pre / post
+    channel: Mapped[str] = mapped_column(String(30))
+    content_form: Mapped[str | None] = mapped_column(String(50))
+    profile_version_id: Mapped[int | None] = mapped_column(Integer)
+    input_hash: Mapped[str | None] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20), default=DiscoverabilityStatus.incomplete.value)
+    report_json: Mapped[dict | None] = mapped_column(JSON)
+    model_provider: Mapped[str | None] = mapped_column(String(50))
+    model_name: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class DraftClaim(Base):
@@ -502,19 +733,31 @@ class ContentAsset(Base):
     approved_candidate_hash: Mapped[str | None] = mapped_column(String(64))
     candidate_manifest_json: Mapped[dict | None] = mapped_column(JSON)
     mother_revision_id: Mapped[int | None] = mapped_column(ForeignKey("mother_revision.id"))
+    # V1 PRD 2.0（§6.23）：查询性能列（真源在 candidate_manifest_json）
+    artifact_kind: Mapped[str | None] = mapped_column(String(20))
+    content_form: Mapped[str | None] = mapped_column(String(50))
+    workflow_key: Mapped[str | None] = mapped_column(String(120))
+    workflow_version: Mapped[int | None] = mapped_column(Integer)
     tags: Mapped[list | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class DeliveryTarget(Base):
+    """交付目标（D20/D21）：action 四值；渠道/形态合法性由 ChannelRegistry+PublisherRegistry 服务层验证。
+
+    DB 约束不再锁渠道枚举（新增渠道不得要求改 migration）。
+    """
+
     __tablename__ = "delivery_target"
     __table_args__ = (
         UniqueConstraint(
             "content_asset_id", "approved_candidate_hash", "channel", "content_form", "account_ref", "action", "authorization_version",
             name="uq_delivery_target_authorization",
         ),
-        CheckConstraint("channel IN ('wechat', 'x_thread')", name="ck_delivery_target_channel"),
-        CheckConstraint("action = 'manual_handoff'", name="ck_delivery_target_action"),
+        CheckConstraint(
+            "action IN ('manual_handoff', 'copy_package', 'assisted_draft', 'auto_draft')",
+            name="ck_delivery_target_action",
+        ),
         CheckConstraint(
             "status IN ('approved', 'target_authorized', 'package_ready', 'awaiting_manual_receipt', 'human_confirmed', 'failed', 'reconciliation_needed', 'blocked', 'canceled')",
             name="ck_delivery_target_status",
@@ -532,6 +775,11 @@ class DeliveryTarget(Base):
     authorized_by: Mapped[str | None] = mapped_column(String(255))
     authorized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[str] = mapped_column(String(30), default=DeliveryTargetStatus.target_authorized.value)
+    # V1 PRD 2.0（D22/D23）：执行 publisher 与能力快照
+    publisher_key: Mapped[str | None] = mapped_column(String(150))
+    publisher_version: Mapped[str | None] = mapped_column(String(50))
+    capability_snapshot_json: Mapped[dict | None] = mapped_column(JSON)
+    requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     receipts: Mapped[list["DeliveryReceipt"]] = relationship(
@@ -540,6 +788,36 @@ class DeliveryTarget(Base):
     feedback: Mapped[list["DeliveryFeedback"]] = relationship(
         back_populates="target", order_by="DeliveryFeedback.created_at", cascade="all, delete-orphan"
     )
+    attempts: Mapped[list["DeliveryAttempt"]] = relationship(
+        back_populates="target", order_by="DeliveryAttempt.attempt_no", cascade="all, delete-orphan"
+    )
+
+
+class DeliveryAttempt(Base):
+    """一次远端交付尝试（D22）：prepared 必须先 COMMIT 再调远端；超时=unknown，不自动重发。"""
+
+    __tablename__ = "delivery_attempt"
+    __table_args__ = (
+        UniqueConstraint("target_id", "attempt_no", name="uq_delivery_attempt_no"),
+        UniqueConstraint("idempotency_key", name="uq_delivery_attempt_idempotency"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    target_id: Mapped[int] = mapped_column(ForeignKey("delivery_target.id"))
+    attempt_no: Mapped[int] = mapped_column(Integer, default=1)
+    idempotency_key: Mapped[str] = mapped_column(String(64))
+    publisher_key: Mapped[str | None] = mapped_column(String(150))
+    publisher_version: Mapped[str | None] = mapped_column(String(50))
+    request_hash: Mapped[str | None] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20), default="prepared")  # prepared/running/succeeded/failed/unknown
+    remote_id: Mapped[str | None] = mapped_column(String(200))
+    response_metadata_json: Mapped[dict | None] = mapped_column(JSON)  # 只存安全 metadata（禁止 token/cookie）
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    target: Mapped["DeliveryTarget"] = relationship(back_populates="attempts")
 
 
 class DeliveryReceipt(Base):
@@ -731,14 +1009,25 @@ class SystemSetting(Base):
 
 
 class Workflow(Base):
-    """工作流画布定义（仿扣子）：节点=已有能力的编排壳，结果沉淀回既有实体。"""
+    """工作流画布定义（仿扣子）：节点=已有能力的编排壳，结果沉淀回既有实体。
+
+    V1 PRD 2.0（D4）：本表升级为版本化 Definition——workflow_key+version 唯一，
+    publish 后 immutable（修改须 clone 新版本），历史行回填 schema_version=1。
+    """
 
     __tablename__ = "workflow"
+    __table_args__ = (UniqueConstraint("workflow_key", "version", name="uq_workflow_key_version"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text)
     template_key: Mapped[str | None] = mapped_column(String(50))  # daily_suggest / gen_export / null=自定义
+    workflow_key: Mapped[str | None] = mapped_column(String(120))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("workflow.id"))
+    status: Mapped[str] = mapped_column(String(20), default="draft")  # draft/published/archived
+    schema_version: Mapped[int] = mapped_column(Integer, default=2, server_default="1")  # 历史行=1，新定义=2
+    checksum: Mapped[str | None] = mapped_column(String(64))
     definition_json: Mapped[dict] = mapped_column(JSON)  # {nodes:[{id,type,label,params,layout}], edges:[{from,to}]}
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     created_by: Mapped[str | None] = mapped_column(String(255))
@@ -746,7 +1035,11 @@ class Workflow(Base):
 
 
 class WorkflowRun(Base):
-    """一次画布执行。status: running / waiting_input / succeeded / failed / canceled。"""
+    """一次画布执行。status: running / waiting_input / succeeded / failed / canceled。
+
+    V1 PRD 2.0（D5）：新平台生产按 Platform×ContentForm 一 Run，启动时冻结
+    topic/channel/content_form/workflow_key/workflow_version/definition_checksum。
+    """
 
     __tablename__ = "workflow_run"
 
@@ -755,13 +1048,22 @@ class WorkflowRun(Base):
     status: Mapped[str] = mapped_column(String(20), default="running")
     context_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 节点间数据总线（实体 ID 等）
     params_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 启动参数（topic_id 等）
+    topic_id: Mapped[int | None] = mapped_column(Integer)
+    channel: Mapped[str | None] = mapped_column(String(30))
+    content_form: Mapped[str | None] = mapped_column(String(50))
+    workflow_key: Mapped[str | None] = mapped_column(String(120))
+    workflow_version: Mapped[int | None] = mapped_column(Integer)
+    definition_checksum: Mapped[str | None] = mapped_column(String(64))
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class WorkflowStep(Base):
-    """画布上单个节点的一次执行记录（input=params，output=产物摘要 + 实体 ID）。"""
+    """画布上单个节点的一次执行记录（input=params，output=产物摘要 + 实体 ID）。
+
+    V1 PRD 2.0（D8）：记录 plugin key/version 与 input/output hash，支持 stale 与 rerun 审计。
+    """
 
     __tablename__ = "workflow_step"
 
@@ -771,8 +1073,40 @@ class WorkflowStep(Base):
     node_type: Mapped[str] = mapped_column(String(30))
     label: Mapped[str | None] = mapped_column(String(200))
     params_json: Mapped[dict] = mapped_column(JSON, default=dict)
-    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending/running/waiting_input/succeeded/failed/skipped
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending/running/waiting_input/succeeded/failed/skipped/stale
     output_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    plugin_key: Mapped[str | None] = mapped_column(String(150))
+    plugin_version: Mapped[str | None] = mapped_column(String(50))
+    input_hash: Mapped[str | None] = mapped_column(String(64))
+    output_hash: Mapped[str | None] = mapped_column(String(64))
+    stale_reason: Mapped[str | None] = mapped_column(Text)
+    attempt_no: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class WorkflowStepAttempt(Base):
+    """节点每次执行的不可变审计行（R2-H7：新旧 output 均可审计）。
+
+    WorkflowStep 只保存「当前」输出；rerun 覆盖前，旧 output/hash 已沉淀为本表历史行。
+    """
+
+    __tablename__ = "workflow_step_attempt"
+    __table_args__ = (
+        Index("ix_workflow_step_attempt_step", "step_id", "attempt_no"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    step_id: Mapped[int] = mapped_column(ForeignKey("workflow_step.id"))
+    run_id: Mapped[int] = mapped_column(ForeignKey("workflow_run.id"))
+    node_id: Mapped[str] = mapped_column(String(50))
+    plugin_key: Mapped[str | None] = mapped_column(String(150))
+    plugin_version: Mapped[str | None] = mapped_column(String(50))
+    attempt_no: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    status: Mapped[str] = mapped_column(String(20))  # succeeded/failed
+    output_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    output_hash: Mapped[str | None] = mapped_column(String(64))
+    input_hash: Mapped[str | None] = mapped_column(String(64))
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

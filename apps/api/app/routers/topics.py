@@ -1,4 +1,4 @@
-"""Topic Brief API（STU-060~062）。"""
+"""Topic Brief API（STU-060~062）。V1 PRD 2.0：targets（channel×content_form）为真源，channels 兼容。"""
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -8,10 +8,14 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import AuditLog, FactPack, FactPackStatus, TopicBrief, User, utcnow
+from ..services.content_harness import channel_registry
 
 router = APIRouter(prefix="/api/v1/topics", tags=["topics"])
 
-VALID_CHANNELS = {"douyin", "xiaohongshu", "wechat", "x_thread"}
+
+class TargetIn(BaseModel):
+    channel: str
+    content_form: str | None = None
 
 
 class TopicCreateIn(BaseModel):
@@ -25,7 +29,8 @@ class TopicCreateIn(BaseModel):
     cta: str | None = None
     brand_voice_version_id: int | None = None
     fact_pack_id: int
-    channels: list[str] = Field(min_length=1)
+    channels: list[str] | None = None  # 兼容字段：与 targets 二选一
+    targets: list[TargetIn] | None = None  # V1 PRD 2.0：[{channel, content_form}]
     tags: list[str] = Field(default_factory=list)
 
 
@@ -39,12 +44,14 @@ class TopicUpdateIn(BaseModel):
     forbidden: list[str] | None = None
     cta: str | None = None
     channels: list[str] | None = None
+    targets: list[TargetIn] | None = None
     tags: list[str] | None = None
     status: str | None = None
 
 
 def _serialize(topic: TopicBrief, with_jobs: bool = False) -> dict:
     pack = topic.fact_pack
+    targets = topic.targets_json or [{"channel": c, "content_form": None} for c in (topic.channels or [])]
     data = {
         "id": topic.id,
         "title": topic.title,
@@ -65,6 +72,7 @@ def _serialize(topic: TopicBrief, with_jobs: bool = False) -> dict:
             "fact_count": len(pack.items),
         },
         "channels": topic.channels or [],
+        "targets": targets,
         "status": topic.status,
         "tags": topic.tags or [],
         "created_at": topic.created_at.isoformat() if topic.created_at else None,
@@ -111,9 +119,14 @@ def create_topic(
     db: Session = Depends(get_db),
     user: User = Depends(require_editor),
 ):
-    invalid = set(payload.channels) - VALID_CHANNELS
-    if invalid:
-        raise HTTPException(400, f"未知渠道: {sorted(invalid)}")
+    try:
+        targets = channel_registry.normalize_targets(
+            db,
+            channels=payload.channels,
+            targets=[t.model_dump() for t in payload.targets] if payload.targets else None,
+        )
+    except channel_registry.ChannelRegistryError as exc:
+        raise HTTPException(400, str(exc)) from exc
     pack = db.get(FactPack, payload.fact_pack_id)
     if not pack:
         raise HTTPException(404, "FactPack 不存在")
@@ -132,7 +145,9 @@ def create_topic(
         brand_voice_version_id=payload.brand_voice_version_id,
         fact_pack_id=pack.id,
         fact_pack_version=pack.version,
-        channels=payload.channels,
+        # targets_json 真源；channels 写去重兼容值
+        targets_json=targets,
+        channels=sorted({t["channel"] for t in targets}),
         tags=payload.tags,
         created_by=user.email,
     )
@@ -191,11 +206,18 @@ def update_topic(
         topic.must_include_json = payload.must_include
     if payload.forbidden is not None:
         topic.forbidden_json = payload.forbidden
-    if payload.channels is not None:
-        invalid = set(payload.channels) - VALID_CHANNELS
-        if invalid:
-            raise HTTPException(400, f"未知渠道: {sorted(invalid)}")
-        topic.channels = payload.channels
+    if payload.channels is not None or payload.targets is not None:
+        try:
+            targets = channel_registry.normalize_targets(
+                db,
+                channels=payload.channels,
+                targets=[t.model_dump() for t in payload.targets] if payload.targets else None,
+            )
+        except channel_registry.ChannelRegistryError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        # targets 优先：只传 channels 时保留旧语义（整体替换目标列表）
+        topic.targets_json = targets
+        topic.channels = sorted({t["channel"] for t in targets})
     if payload.tags is not None:
         topic.tags = payload.tags
     topic.updated_at = utcnow()

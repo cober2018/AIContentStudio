@@ -2,9 +2,33 @@
 
 事实驱动的内容生产系统：把结构化数据、研究笔记、文件、URL、人工观点整理成 **FactPack**，面向抖音 / 小红书 / 公众号生成内容，经事实校验与人工审核后导出；公众号可进一步自动写入官方草稿箱。
 
-需求与任务依据：`03_ai_content_studio_PRD.md`、`04_ai_content_studio_execution_plan.md`；当前边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
+长期产品目标以 [`03_ai_content_studio_PRD.md`](03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
+
+### FE-F0-F1 前端产品骨架（2026-09-27）
+
+- 需求背景：以 [`AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md`](AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md)、[`AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md`](AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md) 和 V5 原型为方向，本切片按 [`AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md`](AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md) 建立项目驱动的前端入口；不表示 PRD 全部完成。
+- 目录结构：`apps/web/src/product/` 包含本地模拟项目数据、项目页面、共享素材抽屉和其余工作区的占位页；`apps/web/src/App.tsx` 负责九个一级工作区路由与旧功能入口。
+- 已完成：九个一级入口、项目列表与七标签、内容矩阵增删改、文字/图片/视频单元、共享素材来源筛选、单元生产入口、健康和异常项目样本及受阻/过期/待核对状态区分。旧功能仍可从“现有功能入口”访问。
+- FE-F0-F1 复核补丁：异常项目的总览和内容矩阵现直接说明受阻、已过期、待核对、等待人工、就绪五种状态的含义。
+- 待完成/TODO：FE-F2 再接工作流设计器、真实 API/权限/持久化与内容生产；本切片不包含真实素材上传、发布或后端模型迁移。
+- 关键设计决策：新项目数据只保存在浏览器 `localStorage`，与现有后端业务数据隔离；首次访问加载演示样本，浏览器已有本地数据不会被新样本覆盖。生产页仅提供入口与上下文，不伪装为可用生产流程。
+- 依赖与启动：沿用下方前端启动命令 `cd apps/web && npm install && npm run dev`；静态构建用 `npm run build`。本切片未增加依赖。
+- 规范记录：[`openspec/specs/fe-f0-f1-project-experience/spec.md`](openspec/specs/fe-f0-f1-project-experience/spec.md)；实施归档见 `openspec/changes/archive/2026-09-27-implement-fe-f0-f1-product-shell/`。
+
+### FE-F2 待确认：真实工作流执行与持久化
+
+- 需求背景：用户明确下一步须让生产工作台接后端，保存并真实执行工作流；仅前端模拟不满足目标。
+- 目录结构与设计草案见 [`openspec/changes/fe-f2-persistent-production-workflow/proposal.md`](openspec/changes/fe-f2-persistent-production-workflow/proposal.md) 和同目录 `design.md`、`specs/`、`tasks.md`。
+- 已完成：提案、设计、规格及任务已建立；2026-09-27 按 V5 校准插件架构和角色默认模板，并根据正式 review 补齐旧 API 授权、模板可移植性、顺序/依赖分离及回归测试要求。**业务代码、迁移和真实执行尚未实施**。
+- 待完成/TODO：本轮未 apply；实施时先打通持久化项目/内容单元与现有引擎及所有旧入口的权限闸门，再做项目覆盖、角色 × 内容形态默认模板版本、Data Node、真实执行与三种生产工作台，最后完成定向回归与本地验收。
+- 关键设计决策：复用既有 Workflow/Run/Step/Attempt 与副作用闸门；所有项目绑定运行通过新旧 API 均按同一项目权限校验；角色默认模板保存须通过服务端项目值可移植性 Gate；拖拽只改视觉顺序，依赖和映射须显式编辑；Data Source Plugin 契约覆盖内部数据、媒体数据、Notion、Obsidian、API、SQL/Database，首个可执行适配器只读 Studio Source，未连接者明确不可执行；项目覆盖与显式另存角色默认版本是两个独立持久化动作；现有浏览器演示数据不自动导入后端。
+- 依赖与启动：拟沿用现有 FastAPI/React/SQLAlchemy 与上文启动方式，无已新增运行依赖；生产迁移与部署不在本提案授权内。
 
 ### 下一版规划：文章/图文全渠道
+
+> **2026-09-24 更新（V1 PRD 2.0 Content Harness 已实施）**：下一段提到的 `complete-prd-v1-channel-deliverables` 已标记 **superseded**，被主变更 [`align-v1-prd2-content-harness`](openspec/changes/align-v1-prd2-content-harness/proposal.md) 吸收并实施。当前代码已落地：Channel Registry（14 平台 profile，新增渠道无需改枚举/迁移）、Workflow 版本化 + Node Plugin Registry、Material Library（素材全局复用/权利链）、DraftCheckRun 统一检查、Discoverability（Pre/Post SEO）、Candidate Manifest schema v2、Delivery Router（copy_package / assisted_draft / auto_draft + DeliveryAttempt：prepared→远端→结果，unknown 不自动重发）、节点级 Rerun/Stale、Review & Publish Center（`/review-publish`）。真实账号自动发布仍未验证，平台能力一律如实标注 unverified；PRD §15–16 与 30 Topic 门槛仍需单独验收。实施与偏差记录见该 change 的 `design.md`。
+
+当前待确认的 OpenSpec 是 [`complete-prd-v1-channel-deliverables`](openspec/changes/complete-prd-v1-channel-deliverables/proposal.md)：先建立多平台内容形态规则和交付主链，再分批完成长文、问答、图文、社交文本的 11 平台成品与验收，同时保留抖音脚本。本项尚未实施；PRD §15–16 的原始验收以及 §3.1 的全渠道验收均需单独完成。
 
 最新产品蓝图与本地代码的对齐讨论见 [V1 对齐方案](docs/AI_CONTENT_STUDIO_V1_ALIGNMENT_PLAN.md)，核对依据见 [findings.md](findings.md)。旧三渠道澄清稿仅作历史背景；最新目标是三产品矩阵中的文章/图文内容中心，视频属于 V2。
 
@@ -49,6 +73,8 @@ Source → Fact → FactPack(类型化冻结) → Topic Brief → MotherRevision
 - 当前工作区已绑定 ChatGPT 项目「AIContentStudio」，使用「仅限项目记忆」。
 - 连接器名称：`Codex with ChatGPT · AIContentStudio`。
 - 更换 ChatGPT 账号后，需要重新授权同名连接器，并重新完成工作区读取验证。
+- 2026-09-27 连接故障记录：四项独立读取均返回 `internal error`；重启此工作区的安全连接后，HTTP/2 与健康连接数正常，公开 MCP 未授权探测返回 401。待 ChatGPT 端重试 `workspace_info` 完成端到端确认。
+- 2026-09-27 后续复查：用户再次报告疑似断开，但公开连通性、HTTP/2、健康连接数仍通过，因此未重复重启；ChatGPT 端仍需 `workspace_info` 实测确认。
 
 ```bash
 # 后端（默认 SQLite，零外部依赖；Mock provider，无需 API Key）

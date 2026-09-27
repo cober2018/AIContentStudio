@@ -156,7 +156,7 @@ class OpenAICompatibleProvider:
 _providers: dict[str, LLMProvider] = {}
 
 # 场景路由键：内容生成 / 选区改写 / 事实校验与审核复核 / 选题发现（基于 FactPack 荐题）
-ROUTE_KEYS = ("generate", "rewrite", "fact_check", "topic_discovery")
+ROUTE_KEYS = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation")
 
 
 def _models_override() -> dict:

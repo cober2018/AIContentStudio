@@ -16,6 +16,10 @@ def compose_prompt(
     domain_knowledge_block: str = "",
 ) -> str:
     template_path = PROMPT_DIR / f"{channel}.txt"
+    if not template_path.is_file():
+        # V1 PRD 2.0（7.4 built-in fallback writer）：新平台无专属 prompt 时回退 wechat 模板；
+        # 平台风格由外部 Skill（D17）接管，Candidate 记录 skill version。
+        template_path = PROMPT_DIR / "wechat.txt"
     template = template_path.read_text(encoding="utf-8")
     # wechat 模板注入 wewrite 风格块（style.yaml 缺失时为空串，模板不破）
     if "{style_block}" in template:
@@ -64,8 +68,26 @@ def render_body(channel: str, structured: dict) -> str:
         Channel.douyin.value: _render_douyin,
         Channel.xiaohongshu.value: _render_xiaohongshu,
         Channel.wechat.value: _render_wechat,
-    }[channel]
+    }.get(channel)
+    if renderer is None:
+        # V1 新平台：内置 fallback writer（wechat 结构）→ 通用 markdown 渲染
+        return _render_generic(structured)
     return renderer(structured)
+
+
+def _render_generic(s: dict) -> str:
+    titles = s.get("titles", [])
+    lines = [f"# {titles[0] if titles else s.get('title', '')}", ""]
+    if s.get("summary"):
+        lines += [f"> 摘要：{s['summary']}", ""]
+    for section in s.get("sections", []):
+        lines += [f"## {section.get('heading', '')}", "", section.get("body", ""), ""]
+    if s.get("body"):
+        lines += [s["body"], ""]
+    if s.get("sources"):
+        lines += ["## 数据来源"]
+        lines.extend(f"- {src}" for src in s["sources"])
+    return "\n".join(lines)
 
 
 def _render_douyin(s: dict) -> str:
