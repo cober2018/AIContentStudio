@@ -51,6 +51,15 @@
 - 关键设计决策：复用 ContentAsset、Review、DeliveryTarget/Attempt/Receipt，不新增第二套 Review Center 状态表；只批准精确 Candidate ID/hash，历史候选只读且不能新授权。`unknown` 仅可经对账解除，不能用普通回执或自动重发绕过。项目身份和证据事实不由迁移伪造。
 - 依赖与启动方式：无新增运行依赖；仅在隔离开发库可用 `cd apps/api && .venv/bin/alembic upgrade head` 验证，再按既有 FastAPI/Vite 命令启动。生产迁移须另行授权。
 
+### FE-P1 前端首包性能（仅 OpenSpec 提案，未 apply）
+
+- PRD/需求背景：FE-F4 前端构建实测只有一个 1,095.28 kB JS 文件（gzip 351.06 kB），而当前与旧页面都由 `App.tsx` 静态导入。以 [`openspec/changes/fe-p1-frontend-bundle-performance/proposal.md`](openspec/changes/fe-p1-frontend-bundle-performance/proposal.md) 为提案入口，不改变既有产品业务契约。
+- 目录结构：同目录 `design.md`、`specs/fe-p1-frontend-bundle-performance/spec.md`、`tasks.md` 分别记录加载边界、验收要求和实施清单；计划改动仅限 `apps/web/` 及文档。
+- 已完成：在 FE-F4 `2f3ced2` 上复跑构建并审计路由、项目页、生产设计器、TipTap/XYFlow 依赖；独立规格的 OpenSpec strict 校验已通过，尚未实施或独立复核。
+- 待完成/TODO：等待用户确认后才可 apply；目标为按路由加载、项目列表/详情/生产分离、首包预算和直接访问/导航验收。Tab 深拆、手工 vendor 分包、缓存与分页不在首轮范围；不推送、合并或部署。
+- 关键设计决策：以初始静态依赖闭包的实际字节数为门禁，不以 Vite 警告消失为验收；旧路由和业务行为保持不变，重型编辑器只在进入相应页面时加载。
+- 依赖与启动方式：不新增运行依赖；现阶段仅用 `cd apps/web && npm run build` 复现基线。提案未改变启动方式或生产环境。
+
 ### 下一版规划：文章/图文全渠道
 
 > **2026-09-24 更新（V1 PRD 2.0 Content Harness 已实施）**：下一段提到的 `complete-prd-v1-channel-deliverables` 已标记 **superseded**，被主变更 [`align-v1-prd2-content-harness`](openspec/changes/align-v1-prd2-content-harness/proposal.md) 吸收并实施。当前代码已落地：Channel Registry（14 平台 profile，新增渠道无需改枚举/迁移）、Workflow 版本化 + Node Plugin Registry、Material Library（素材全局复用/权利链）、DraftCheckRun 统一检查、Discoverability（Pre/Post SEO）、Candidate Manifest schema v2、Delivery Router（copy_package / assisted_draft / auto_draft + DeliveryAttempt：prepared→远端→结果，unknown 不自动重发）、节点级 Rerun/Stale、Review & Publish Center（`/review-publish`）。真实账号自动发布仍未验证，平台能力一律如实标注 unverified；PRD §15–16 与 30 Topic 门槛仍需单独验收。实施与偏差记录见该 change 的 `design.md`。
