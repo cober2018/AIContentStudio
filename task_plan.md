@@ -1,5 +1,23 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-P1 主规格同步与归档（已授权）
+
+目标：将五条 ADDED Requirement 归入 canonical `openspec/specs/` 并归档已复核的 FE-P1；不推送、合并或部署。
+
+- [x] /// 核对隔离工作树、4/4 OpenSpec 产物、10/10 任务与主规格未同步状态
+- [x] /// 使用 OpenSpec 归档并同步 FE-P1 主规格，核对五条长期要求
+- [x] /// 归档后运行 strict、前端构建预算与 diff-check，更新 README/progress/findings
+
+## 2026-09-28：FE-P1 apply（已授权）
+
+目标：按已确认 OpenSpec 限定前端加载边界和首包预算；实施计划见 `docs/superpowers/plans/2026-09-28-fe-p1-frontend-bundle-performance.md`。
+
+- [x] /// 复跑 FE-F4 基线与直接访问，确认隔离工作树
+- [x] /// 拆分项目列表、详情、生产与共享类型
+- [x] /// 路由级 lazy、加载/错误恢复，不改原有路径和业务动作
+- [x] /// 生成 manifest，检查 `/projects` 初始 JS 静态闭包与重型依赖
+- [x] /// 构建、预算、OpenSpec、浏览器冒烟、文档回填与独立复核；归档需同步主规格后执行
+
 ## 2026-09-28：FE-P1 前端首包性能规格审计（不 apply）
 
 目标：以 FE-F4 `2f3ced2` 为基线，核实加载依赖并提出独立 OpenSpec；用户确认前不修改前端实现。

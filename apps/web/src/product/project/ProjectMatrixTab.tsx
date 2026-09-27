@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button, EmptyState, StatusBadge } from "../../components/ui";
-import type { Persona, Project, Unit } from "../PersistentProjectPages";
+import type { Persona, Project, Unit } from "./projectTypes";
 
 const MODALITY_NAMES = { text: "文字", graphic: "图文", video: "视频" };
 

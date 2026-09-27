@@ -18,7 +18,7 @@
 ### FE-F2 本地实现与 R1 复核通过：真实工作流执行与持久化
 
 - 需求背景：用户明确下一步须让生产工作台接后端，保存并真实执行工作流；仅前端模拟不满足目标。
-- 目录结构：`apps/api/app/routers/content_projects.py` 提供持久化项目、单元、流程与快照 API；`apps/api/app/services/project_*` 和 `data_source_plugins.py` 承接授权、版本、产物和数据来源；`apps/web/src/product/PersistentProjectPages.tsx`、`ProductionDesigner.tsx` 是真实项目入口。原 `ProjectPages.tsx` 和 `mockProjects.ts` 留在 `/projects/demo` 作本地演示。规格见 [`openspec/changes/archive/2026-09-27-fe-f2-persistent-production-workflow/proposal.md`](openspec/changes/archive/2026-09-27-fe-f2-persistent-production-workflow/proposal.md) 与同目录 design/specs/tasks。
+- 目录结构：`apps/api/app/routers/content_projects.py` 提供持久化项目、单元、流程与快照 API；`apps/api/app/services/project_*` 和 `data_source_plugins.py` 承接授权、版本、产物和数据来源；`apps/web/src/product/PersistentProjectsPage.tsx`、`PersistentProjectPage.tsx`、`PersistentProductionPage.tsx` 与 `ProductionDesigner.tsx` 是真实项目入口。原 `ProjectPages.tsx` 和 `mockProjects.ts` 留在 `/projects/demo` 作本地演示。规格见 [`openspec/changes/archive/2026-09-27-fe-f2-persistent-production-workflow/proposal.md`](openspec/changes/archive/2026-09-27-fe-f2-persistent-production-workflow/proposal.md) 与同目录 design/specs/tasks。
 - 已完成：新增可逆增量迁移；项目/单元/内容身份 CRUD 与旧 Workflow API 的项目归属闸门；项目覆盖和角色默认的独立不可变版本保存；Data Source 六类描述符、只读 Studio Source 快照、变化传播 stale；项目 Run/Attempt 回读及真实素材字节校验后的项目关联。真实项目页、三形态生产区和设计/调试画布已接后端；隔离库浏览器验收了创建、保存、真实执行、刷新回读、双保存、后续单元默认绑定、断连阻断和素材抽屉。Provider/Model 只可绑定后端当前可执行路由，保存、启动与节点重跑均防止配置漂移。R1 收尾修正设计器读取单元固定版本、无执行历史原地编辑/显式重绑、有历史替换归档、模板占位符解析边界、节点 Kind 审计和失败重跑输出隔离。后端全量测试在清除本机异常 `NO_PROXY/no_proxy` 后为 279 passed；前端构建和 OpenSpec strict 通过。
 - 待完成/TODO：未执行生产迁移、发布或真实第三方 Connector 验收。当前可执行 Data Source 仅只读 Studio Source，其余来源明确“未连接”；视频生成器未验证时不展示片段。既有前端主包 >500 kB 是性能债，不阻塞 FE-F2 本地切片，也不代表完整 PRD/V1 已达标。已归档单元的部分设计控件仍可本地进入编辑态，但服务端拒绝保存和重跑；后续可做只读 UX 打磨。
 - 关键设计决策：复用既有 Workflow/Run/Step/Attempt 与副作用闸门；所有项目绑定运行通过新旧 API 均按同一项目权限校验；角色默认模板保存须通过服务端项目值可移植性 Gate；拖拽只改视觉顺序，依赖和映射须显式编辑；运行模式显示 Run 冻结的历史定义，设计模式编辑当前项目草稿；Data Source Plugin 契约覆盖内部数据、媒体数据、Notion、Obsidian、API、SQL/Database，首个可执行适配器只读 Studio Source，未连接者明确不可执行；项目覆盖与显式另存角色默认版本是两个独立持久化动作；现有浏览器演示数据不自动导入后端。
@@ -51,14 +51,14 @@
 - 关键设计决策：复用 ContentAsset、Review、DeliveryTarget/Attempt/Receipt，不新增第二套 Review Center 状态表；只批准精确 Candidate ID/hash，历史候选只读且不能新授权。`unknown` 仅可经对账解除，不能用普通回执或自动重发绕过。项目身份和证据事实不由迁移伪造。
 - 依赖与启动方式：无新增运行依赖；仅在隔离开发库可用 `cd apps/api && .venv/bin/alembic upgrade head` 验证，再按既有 FastAPI/Vite 命令启动。生产迁移须另行授权。
 
-### FE-P1 前端首包性能（仅 OpenSpec 提案，未 apply）
+### FE-P1 前端首包性能（本地实现并归档）
 
-- PRD/需求背景：FE-F4 前端构建实测只有一个 1,095.28 kB JS 文件（gzip 351.06 kB），而当前与旧页面都由 `App.tsx` 静态导入。以 [`openspec/changes/fe-p1-frontend-bundle-performance/proposal.md`](openspec/changes/fe-p1-frontend-bundle-performance/proposal.md) 为提案入口，不改变既有产品业务契约。
-- 目录结构：同目录 `design.md`、`specs/fe-p1-frontend-bundle-performance/spec.md`、`tasks.md` 分别记录加载边界、验收要求和实施清单；计划改动仅限 `apps/web/` 及文档。
-- 已完成：在 FE-F4 `2f3ced2` 上复跑构建并审计路由、项目页、生产设计器、TipTap/XYFlow 依赖；独立规格的 OpenSpec strict 校验已通过，尚未实施或独立复核。
-- 待完成/TODO：等待用户确认后才可 apply；目标为按路由加载、项目列表/详情/生产分离、首包预算和直接访问/导航验收。Tab 深拆、手工 vendor 分包、缓存与分页不在首轮范围；不推送、合并或部署。
-- 关键设计决策：以初始静态依赖闭包的实际字节数为门禁，不以 Vite 警告消失为验收；旧路由和业务行为保持不变，重型编辑器只在进入相应页面时加载。
-- 依赖与启动方式：不新增运行依赖；现阶段仅用 `cd apps/web && npm run build` 复现基线。提案未改变启动方式或生产环境。
+- PRD/需求背景：FE-F4 基线只有一个 1,095.28 kB JS 文件（gzip 351.06 kB），旧页面与项目生产模块均被入口静态加载。本变更只调整前端加载边界，不改变产品、API 或持久化契约；长期规范见 [`openspec/specs/fe-p1-frontend-bundle-performance/spec.md`](openspec/specs/fe-p1-frontend-bundle-performance/spec.md)，实施记录见 [`openspec/changes/archive/2026-09-27-fe-p1-frontend-bundle-performance/`](openspec/changes/archive/2026-09-27-fe-p1-frontend-bundle-performance/)。
+- 目录结构：`apps/web/src/App.tsx` 管理路由级 lazy、加载与失败恢复；`apps/web/src/product/Persistent{Projects,Project,Production}Page.tsx` 分别承载真实项目列表、详情、生产入口；`apps/web/src/product/project/projectTypes.ts` 保存仅类型依赖；`apps/web/vite.config.ts` 输出重型模块归属，`apps/web/scripts/check-bundle.mjs` 读取构建 manifest 并检查首包预算。变更的 design/spec/tasks 在上述 OpenSpec 目录。
+- 已完成：按路由拆包并保留现有 URL、导航、数字项目与演示回退；`npm run build` 已输出 manifest 且预算检查通过。`/projects` 入口加静态闭包共 214.45 kB 原始 JS、69.98 kB gzip，较 FE-F4 基线原始 JS 减少 80.4%；全站生成 JS 共 1,138.41 kB，不能当作首包。隔离浏览器已核验直接访问、路由切换、加载提示、chunk 失败后的导航恢复；临时后端已核验项目→内容单元→保存覆盖→真实 Run→刷新回读。
+- 待完成/TODO：Tab 深拆、手工 vendor 分包、缓存与分页未纳入首轮；尚未在真实网络环境测量用户体感时延，也未推送、合并或部署。
+- 关键设计决策：预算依据 Vite manifest 的入口与 `/projects` 静态依赖闭包，阈值为原始 JS 低于 500,000 字节；gzip 与全站 JS 单独报告。TipTap/XYFlow 所在旧页面、项目详情与生产页不进入 `/projects` 初始图；Vite 警告消失本身不算验收。
+- 依赖与启动方式：无新增运行依赖。`cd apps/web && npm run build` 同时执行 TypeScript、Vite manifest 构建和预算门禁；也可对已有构建运行 `npm run check:bundle`。本地开发仍用 `npm run dev` 与原有 API 代理。
 
 ### 下一版规划：文章/图文全渠道
 

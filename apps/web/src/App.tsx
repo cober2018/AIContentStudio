@@ -1,25 +1,31 @@
+import { Component, lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import Assets from "./pages/Assets";
-import Connectors from "./pages/Connectors";
-import Dashboard from "./pages/Dashboard";
-import Landing from "./pages/Landing";
-import FactPacks from "./pages/FactPacks";
-import Handoff from "./pages/Handoff";
-import Materials from "./pages/Materials";
-import Review from "./pages/Review";
-import ReviewPublish from "./pages/ReviewPublish";
-import Settings from "./pages/Settings";
-import Sources from "./pages/Sources";
-import Templates from "./pages/Templates";
-import Topics from "./pages/Topics";
-import Workflows from "./pages/Workflows";
-import Workspace from "./pages/Workspace";
-import ProductPlaceholder from "./product/ProductPlaceholders";
-import IdentityWorkspace from "./product/IdentityWorkspace";
-import ProjectReviewCenter from "./product/ProjectReviewCenter";
-import { ProductionShellPage, ProjectPage, ProjectsPage } from "./product/ProjectPages";
-import { PersistentProjectPage, PersistentProjectsPage, PersistentProductionPage } from "./product/PersistentProjectPages";
+
+const Assets = lazy(() => import("./pages/Assets"));
+const Connectors = lazy(() => import("./pages/Connectors"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Landing = lazy(() => import("./pages/Landing"));
+const FactPacks = lazy(() => import("./pages/FactPacks"));
+const Handoff = lazy(() => import("./pages/Handoff"));
+const Materials = lazy(() => import("./pages/Materials"));
+const Review = lazy(() => import("./pages/Review"));
+const ReviewPublish = lazy(() => import("./pages/ReviewPublish"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Sources = lazy(() => import("./pages/Sources"));
+const Templates = lazy(() => import("./pages/Templates"));
+const Topics = lazy(() => import("./pages/Topics"));
+const Workflows = lazy(() => import("./pages/Workflows"));
+const Workspace = lazy(() => import("./pages/Workspace"));
+const ProductPlaceholder = lazy(() => import("./product/ProductPlaceholders"));
+const IdentityWorkspace = lazy(() => import("./product/IdentityWorkspace"));
+const ProjectReviewCenter = lazy(() => import("./product/ProjectReviewCenter"));
+const ProjectsPage = lazy(() => import("./product/ProjectPages").then((module) => ({ default: module.ProjectsPage })));
+const ProjectPage = lazy(() => import("./product/ProjectPages").then((module) => ({ default: module.ProjectPage })));
+const ProductionShellPage = lazy(() => import("./product/ProjectPages").then((module) => ({ default: module.ProductionShellPage })));
+const PersistentProjectsPage = lazy(() => import("./product/PersistentProjectsPage").then((module) => ({ default: module.PersistentProjectsPage })));
+const PersistentProjectPage = lazy(() => import("./product/PersistentProjectPage").then((module) => ({ default: module.PersistentProjectPage })));
+const PersistentProductionPage = lazy(() => import("./product/PersistentProductionPage").then((module) => ({ default: module.PersistentProductionPage })));
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -47,6 +53,23 @@ const LEGACY_NAV = [
   { to: "/templates", label: "模板与规则" },
 ];
 
+function RouteLoading() {
+  return <div className="p-9 text-sm text-slate-600" role="status" aria-live="polite">正在加载页面…</div>;
+}
+
+class RouteFailureBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() { return { failed: true }; }
+
+  render() {
+    if (this.state.failed) {
+      return <div className="p-9" role="alert"><p className="text-sm text-rose-700">页面加载失败，请检查连接后重试。</p><button className="mt-3 rounded-lg border border-slate-300 px-4 py-2 text-sm" onClick={() => window.location.reload()}>重新加载</button></div>;
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -62,10 +85,14 @@ function Shell() {
   const isLanding = location.pathname === "/";
   if (isLanding) {
     return (
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <RouteFailureBoundary key={location.pathname}>
+        <Suspense fallback={<RouteLoading />}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </RouteFailureBoundary>
     );
   }
   return (
@@ -95,7 +122,9 @@ function Shell() {
             <div className="hidden border-t border-slate-700/70 px-5 py-4 text-[11px] text-slate-400 md:block">FE-F3A · 项目核心由后端保存</div>
           </aside>
           <main className="min-w-0 flex-1" id="main-content">
-            <Routes>
+            <RouteFailureBoundary key={location.pathname}>
+              <Suspense fallback={<RouteLoading />}>
+                <Routes>
               <Route path="/home" element={<ProductPlaceholder kind="home" />} />
               <Route path="/opportunities" element={<ProductPlaceholder kind="opportunities" />} />
               <Route path="/projects" element={<PersistentProjectsPage />} />
@@ -125,7 +154,9 @@ function Shell() {
               <Route path="/templates" element={<Templates />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
-            </Routes>
+                </Routes>
+              </Suspense>
+            </RouteFailureBoundary>
           </main>
         </div>
   );

@@ -2,9 +2,15 @@
 
 ## 2026-09-28：FE-P1 前端加载边界审计
 
+- 归档 CLI 使用宿主机日期 `2026-09-27` 命名，尽管当前任务日期是 2026-09-28；FE-P1 实际归档目录须以命令回执为准。五条 ADDED Requirement 已同步到新的主规格，无旧要求被替换；自动生成的 Purpose TBD 已修成正式描述。
+
 - FE-F4 `2f3ced2` 的实际 Vite 产物只有一个 1,095.28 kB JS 文件，不能把“分成多个文件”或消除 500 kB 警告等同于首屏收益；预算应关注入口与默认路由的静态依赖闭包，并验证重型依赖不在其中。
 - `App.tsx` 静态导入当前与旧页面；`Workspace` 静态引用 TipTap 编辑器，`Workflows` 静态引用 XYFlow。`PersistentProjectPages.tsx` 静态引用 `ProductionDesigner`、七个 Tab；因此仅将整个项目模块变为 lazy，不能隔离 `/projects` 与生产设计器。
 - `vite.config.ts` 尚无分包配置，web package 只有 dev/build/preview，CI 当前只运行 build。首次切片优先路由级 lazy 与项目/生产边界；Tab 深拆、manualChunks、缓存策略和分页须以构建/运行数据再决定，不作为本次承诺。
+- FE-P1 apply 的最新实测静态闭包为 214.45 kB raw / 69.98 kB gzip；旧 1,095.28 kB 单文件降幅 80.4%，但全站产物仍为 1,138.41 kB raw / 375.65 kB gzip。不能据此宣称所有页面更快或总 JS 更小；性能收益是按需加载边界，不是内容减少。Workspace 自身仍有 442.36 kB JS，Workflows 197.52 kB JS，仅在相应路由加载。Rollup module 归属表证实 TipTap 在 Workspace chunk、XYFlow 在 Workflows chunk，不依赖 chunk 名称猜测。
+- Vite preview 不代理 `/api`，会显示 404，不能用 preview 的数字项目页证明真实操作。隔离 Vite dev + 临时 API 验证了真实项目、身份、内容单元、生产页保存项目覆盖 v1、Run succeeded 和刷新回读，随后清理唯一临时数据库；这仍不是生产环境时延或部署验收。
+- Route error boundary 在加载失败时保留侧栏并支持重载；导航到另一条路由会重置错误。模拟慢网与 chunk 阻断的浏览器验收已观察到两种状态，未新增自动化测试框架。
+- 独立复核指出以 `location.key` 重置错误边界会在同一路径 query 参数变化时重挂载页面，导致未保存 UI 状态丢失；根因是 React key 随每次 history entry 变化。已改用 `location.pathname`，仅实际路径变化才重置错误；需保留 query-only 导航的状态回归检查。
 
 ## 2026-09-28：FE-F4 apply 起点
 

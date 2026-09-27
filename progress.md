@@ -1,5 +1,20 @@
 # 当前进度
 
+## 2026-09-28：FE-P1 主规格同步与归档
+
+- 用户明确选择将五条 FE-P1 长期要求全部同步到主规格并归档。`openspec archive fe-p1-frontend-bundle-performance --yes` 报告 10/10 任务完成、5 added / 0 modified / 0 removed；新增 `openspec/specs/fe-p1-frontend-bundle-performance/spec.md`，归档到工具实际生成的 `openspec/changes/archive/2026-09-27-fe-p1-frontend-bundle-performance/`。已将自动生成的 Purpose TBD 改为正式契约描述。归档后全部 16 份主规格 strict 为 16 passed / 0 failed；前端 TypeScript/Vite 构建及预算通过（`/projects` 初始 JS 214.45 kB raw / 69.98 kB gzip），`git diff --check` 通过。没有提交、推送、合并或部署。
+
+## 2026-09-28：FE-P1 apply
+
+- 用户明确输入 `/opsx:apply`；在已有隔离工作树 `codex/fe-p1-frontend-bundle-performance`（起点 `6d1ecbb`）实施，不改本地 `main`。OpenSpec `spec-driven` 4/4 产物完整、10 项任务待做；详细步骤见 `docs/superpowers/plans/2026-09-28-fe-p1-frontend-bundle-performance.md`。本轮不推送、合并、部署或执行生产操作。
+- Task 1.1 基线复跑：TypeScript/Vite build 通过，单 JS 1,095.28 kB（gzip 351.06 kB），CSS 48.52 kB；隔离 preview 对 `/`、`/projects`、演示/数字项目、生产、review、identity 与两条重型旧路由均返回 SPA HTML 200。该 HTTP 检查只证明直接链接服务回退，不等于页面交互已验收。端口 15176 已关闭。
+- Task 1.2–1.4：真实项目列表、详情、生产 wrapper 与共享类型已拆成独立模块；`App.tsx` 现以 `React.lazy` 加载页面，并在保留 sidebar 的 route 区域显示状态/可重载错误。`npx tsc -b` 通过，静态导入检查显示项目列表不再连到七标签或生产设计器、详情不再连到生产设计器；浏览器交互见下方 Task 3.2。
+- Task 2.1–2.3：正常 `npm run build` 生成 manifest 并执行预算脚本；按入口加 `/projects` 静态导入闭包去重后为 214.45 kB raw / 69.98 kB gzip（4 个 chunk），比 FE-F4 1,095.28 kB raw 基线低 80.4%；全站生成 JS 1,138.41 kB raw / 375.65 kB gzip，独立报告而非首包门禁。详情与生产 chunk 均不在项目列表静态闭包；构建时还从 Rollup module ID 生成重型模块归属表，明确 TipTap 只在 Workspace chunk、XYFlow 只在 Workflows chunk，预算脚本会拒绝它们进入 `/projects` 静态闭包。未设置 `manualChunks`。最新 `npm run build`（TypeScript + Vite + 预算）通过。
+- Task 3.2：生产 preview 直接进入 `/`、`/projects`、数字详情/生产、`/review`、`/identities`、`/workspace`、`/workflows` 和非数字演示路径，页面模块均可加载；preview 无 API 代理，故数字项目真实内容仅在随后隔离 API 联调验收。慢网条件下可见有可访问状态的“正在加载页面…”且导航壳层保留；拦截 Workflows chunk 后出现错误说明/重载按钮，转回项目列表恢复。隔离临时 SQLite + 127.0.0.1:18083/15177 下创建项目 #1、身份 #1、文字单元 #1，进入生产保存 System 常量节点项目覆盖 v1、启动 Run #1 succeeded；刷新仍可见固定工作流 #1、Run #1 和冻结定义 checksum。验收服务已停止，仅含测试数据的临时 SQLite 已删除，未操作正式数据库。
+- 首轮独立代码复核发现 `location.key` 会因 query-only 导航变化而重挂载整个页面；已改为按 `pathname` 重置错误边界，避免项目标签或 Review 筛选切换丢失本地状态。复核还指出仅排除路由 chunk 不足以证明重型依赖缺席；现已增加 Rollup module 归属门禁，构建证实 TipTap/XYFlow 分别位于 Workspace/Workflows。README 已更新；复核后的浏览器检查和最终记录仍待完成，不提前归档。
+- 修正后已重新通过 `npm run build`（含 TypeScript/Vite/预算）、`openspec validate fe-p1-frontend-bundle-performance --strict` 和 `git diff --check`。生产 preview 再次验证演示项目同路径 `?tab=matrix` 标签切换；拦截 Workflows chunk 后错误说明/重载按钮可见，点击侧栏项目路由恢复。preview 无 API 代理时列表显示 `Not Found`，真实 API 联调结果以上述独立临时库为准。第二次独立只读复核正在进行。
+- 第二次独立针对性复核已给出 `APPROVE`，没有新的高/中风险发现；复核者只读核对模块拆分、pathname 边界、重型依赖模块归属和现有构建产物，构建与浏览器复测由本轮直接执行。OpenSpec 10/10 任务均完成；后续同步与归档结果见本文件顶部。
+
 ## 2026-09-28：FE-P1 前端首包性能规格审计
 
 - 用户授权审计 FE-F4 分支并提出 FE-P1 OpenSpec，未授权 apply。已在干净的 FE-F4 `2f3ced2` 上创建 `codex/fe-p1-frontend-bundle-performance` 与标准变更目录。
