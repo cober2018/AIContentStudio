@@ -1,5 +1,28 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-27：FE-F2-R1 收尾补丁（待外部复核）
+
+目标：按已核对的 review 缺口，恢复固定版本所见即所执行、矩阵安全 CRUD、可解析模板占位符与真实 Attempt 审计；不扩大到新插件或生产迁移。
+
+- [x] /// 确认仅项目覆盖、无 Run/快照/产物的单元可原地修改；补 FE-F2 OpenSpec 场景
+- [x] /// 先写固定版本、矩阵生命周期与模板 Gate 的定向回归，观察旧行为失败
+- [x] /// 加 effective-workflow、原地修改/历史替换/归档和显式重绑，前端加载固定版本
+- [x] /// 收紧占位符到 config，持久化节点 Kind，清理失败重跑的当前输出
+- [x] /// 全量后端测试、前端构建、OpenSpec strict 与 diff 检查
+- [x] /// 外部 R1 小补丁复核通过；完成 OpenSpec 6.3，归档后仅提交 FE-F2 分支，不推送或合并
+
+## 2026-09-27：FE-F2 apply（codex 分支）
+
+目标：按已确认的 `fe-f2-persistent-production-workflow` 实施真实持久化、权限、版本、Data Node、项目产物和生产工作台；不触碰生产迁移或发布。实施细目见 `docs/superpowers/plans/2026-09-27-fe-f2-persistent-production-workflow.md`。
+
+- [x] /// 从当前干净 main 建立 `codex/fe-f2-persistent-production-workflow` 分支，核对 OpenSpec 0/21 与基线测试
+- [x] /// 持久化项目/单元/角色/默认绑定及迁移，补定向回归测试（OpenSpec 1.1）
+- [x] /// 统一项目权限覆盖新旧 Workflow API
+- [x] /// 工作流校验、项目覆盖与角色默认版本双保存
+- [x] /// Data Source Plugin、快照、stale 与项目产物
+- [x] /// 三形态生产工作台与设计/调试器
+- [ ] /// 完整回归、本地验收、文档及归档
+
 ## 2026-09-27：FE-F2 正式 review 的实施前边界（仅规范）
 
 目标：封闭旧 Workflow API 旁路、角色默认模板的项目值泄漏与拖拽误改依赖，并把回归测试列为 FE-F2 实施任务；本轮不 apply。

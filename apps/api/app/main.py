@@ -14,6 +14,7 @@ from .routers import (
     channels,
     checks,
     connectors,
+    content_projects,
     dashboard,
     delivery,
     discoverability,
@@ -104,6 +105,7 @@ for router in (
     connectors,
     settings,
     workflows,
+    content_projects,
     health,
     external,
 ):

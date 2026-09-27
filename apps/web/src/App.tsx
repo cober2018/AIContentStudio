@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import Assets from "./pages/Assets";
 import Connectors from "./pages/Connectors";
 import Dashboard from "./pages/Dashboard";
@@ -17,6 +17,7 @@ import Workflows from "./pages/Workflows";
 import Workspace from "./pages/Workspace";
 import ProductPlaceholder from "./product/ProductPlaceholders";
 import { ProductionShellPage, ProjectPage, ProjectsPage } from "./product/ProjectPages";
+import { PersistentProjectPage, PersistentProjectsPage, PersistentProductionPage } from "./product/PersistentProjectPages";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -89,15 +90,16 @@ function Shell() {
                 <div className="mt-3 space-y-0.5">{LEGACY_NAV.map((item) => <Link key={item.to} to={item.to} className="block rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-[#252936] hover:text-white">{item.label}</Link>)}</div>
               </details>
             </nav>
-            <div className="hidden border-t border-slate-700/70 px-5 py-4 text-[11px] text-slate-400 md:block">FE-F0-F1 · 本地演示数据</div>
+            <div className="hidden border-t border-slate-700/70 px-5 py-4 text-[11px] text-slate-400 md:block">FE-F2 · 项目数据由后端保存</div>
           </aside>
           <main className="min-w-0 flex-1" id="main-content">
             <Routes>
               <Route path="/home" element={<ProductPlaceholder kind="home" />} />
               <Route path="/opportunities" element={<ProductPlaceholder kind="opportunities" />} />
-              <Route path="/projects" element={<ProjectsPage />} />
-              <Route path="/projects/:projectId" element={<ProjectPage />} />
-              <Route path="/projects/:projectId/units/:unitId/production" element={<ProductionShellPage />} />
+              <Route path="/projects" element={<PersistentProjectsPage />} />
+              <Route path="/projects/demo" element={<ProjectsPage />} />
+              <Route path="/projects/:projectId" element={<ProjectRoute />} />
+              <Route path="/projects/:projectId/units/:unitId/production" element={<ProductionRoute />} />
               <Route path="/production" element={<ProductPlaceholder kind="production" />} />
               <Route path="/review" element={<ProductPlaceholder kind="review" />} />
               <Route path="/identities" element={<ProductPlaceholder kind="identities" />} />
@@ -125,4 +127,14 @@ function Shell() {
           </main>
         </div>
   );
+}
+
+function ProjectRoute() {
+  const { projectId } = useParams();
+  return projectId && /^\d+$/.test(projectId) ? <PersistentProjectPage /> : <ProjectPage />;
+}
+
+function ProductionRoute() {
+  const { projectId } = useParams();
+  return projectId && /^\d+$/.test(projectId) ? <PersistentProductionPage /> : <ProductionShellPage />;
 }

@@ -44,6 +44,12 @@ When a supported node creates a draft, image, chart, screenshot, or video clip, 
 
 The ContentProject list and seven tabs keep their URLs and become API-backed. Browser demo fixtures remain an explicit demo path; the application must not silently import or overwrite local records. The three modality shells share the run/inspector services but keep different editing surfaces. The canvas is *the selected unit's run*, not a global Workflow page. Project Shared Assets stays in a drawer. Normal UI uses product terms; plugin/provider internals remain in advanced inspection.
 
+### FE-F2-R1: pinned view and safe matrix lifecycle
+
+The selected unit's Design Mode reads an effective-workflow endpoint backed by `ContentUnit.pinned_workflow_id`; it never substitutes the newest Persona default. The current Persona default is consulted only for creation, explicit rebind, and default-save revision checks. Because runtime resolves project/unit placeholders only inside `node.config`, the role-default portability gate parameterizes those bindings only there and rejects them in mappings or conditions.
+
+A saved project override by itself is not execution history. Identity, modality, or workflow may change in place until the unit has a Run, DataSnapshot, or generated output; switching selection detaches any incompatible override binding. Once that history exists, such a change creates a new unit and archives the original; title and channel remain editable without rewriting historical identity. Deletion physically removes a history-free unit (including its binding), but archives a historical unit. Archived units and their runs stay readable through their original IDs and may not be executed or mutated through project-scoped or legacy run routes.
+
 ## Risks / Trade-offs
 
 - [Existing workflow handlers expect Topic context] → Adapt only existing compatible executors to Content Unit context; reject unsupported steps before run rather than claiming universal execution.

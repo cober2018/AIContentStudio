@@ -1,5 +1,32 @@
 # 配置记录
 
+## 2026-09-27：FE-F2-R1 最终复核边界
+
+- 用户提供的外部复核只覆盖 R1 五项补丁，结论为 `REVIEW_PASSED`，允许归档及本地提交；连接器未保存 pytest/build 原始 execution artifact。本轮须直接复跑门禁，不把复核文字当作命令执行证据。
+- 归档同步会把 FE-F0-F1 的内容矩阵修订写入主规格，并建立 FE-F2 主规格；不使用 `--skip-specs`。归档与本地 commit 不等于 push、merge、部署或生产数据迁移。
+
+## 2026-09-27：FE-F2-R1 复核发现与决策
+
+- `pinned_workflow_id` 决定 Run 的实际版本；设计器以前在无项目覆盖时读最新角色默认，形成所见与执行版本错位。新增按单元固定版本读取，不自动改绑旧单元。
+- 单独存在 `ProjectWorkflowBinding` 不构成不可改写的执行历史；Run、DataSnapshot、ProjectWorkflowOutput 才构成。历史身份变化通过新单元与旧单元归档保留，而不是篡改旧行；归档历史可读、项目及旧裸 Run 入口都禁止再执行。
+- `resolve_placeholders()` 只应用于节点 config；角色默认模板中其余字段的项目/单元绑定必须拒绝，不能存一个运行时不解析的占位符。
+- 失败重跑开始前必须持久化清空 current output/hash；旧成功结果由不可变 Attempt 保留。六类节点的 `kind` 优先写入 Step.node_type。
+
+## 2026-09-27：FE-F2 apply 起点
+
+- 工作流定义缺少持久 owner/scope 时，旧绑定切走会让历史定义失去归属；本轮迁移补可空 `Workflow.owner_user_id/scope`，仅新项目/角色默认版本使用，旧 Topic 定义保持兼容。
+- 现有引擎将完整节点输出哈希用于 stale；DataSnapshot 每次刷新都会生成新 ID，即使内容不变。Data Node 的 stale 判断现改按 `data_checksum`，仍保留每次快照和 Attempt 审计。
+- 现有素材版本实体是 `MaterialRevision`，而非名为 `AssetRevision` 的表；项目共享素材需要对这个真实版本做引用，不能凭节点返回路径或成功状态伪造素材。
+- FE-F2 隔离验收中的 `/outputs` 404 来自无 reload 的旧 API 进程；新进程中同一路由 200，之前保存的 Run 可读回。Provider/Model 当前由全局模型路由选择，节点配置不可独立切换，因此设计器只暴露当前真实组合，并在保存/启动时拒绝不匹配值，避免“可选但被执行器忽略”。
+- `ProjectWorkflowOutput` 对媒体版本原仅检查数据库路径/哈希字段，文件丢失仍可进入素材池；现增加字节存在与哈希匹配检查。图文/视频壳层对未生成素材和片段保持空状态。
+- 全量测试默认继承本机异常 `NO_PROXY/no_proxy` 时，旧 DSH 探测链路的 12 项在 httpx URL 解析处失败（非法端口 `:1`）；仅对测试命令移除这两个环境变量后 274 项全过，未改 DSH 代码或全局环境。前端主包约 1.04 MB 是既有性能债。
+- 最终 UI 复核发现“另存为角色默认”原与未保存状态绑定，导致先保存项目覆盖后无法再显式另存；现只在定义为空或请求忙时禁用，已保存项目版本也能另存，两个保存出口继续互不改绑。
+- 历史 Run 画布原误用当前项目覆盖定义：项目 v2 出现新节点而 Run #1 的 checksum/step 仍属 v1。现运行模式读取 `run.definition`，设计模式读取当前项目草稿；隔离库浏览器在同一页面切换两模式已分别显示旧/新节点。
+
+- 本轮开始时 `main@c044085` 已干净；用户同意在当前目录创建 `codex/fe-f2-persistent-production-workflow` 分支，因此不使用缺少旧本地改动的独立 worktree。
+- Alembic 当前唯一 head 为 `d4audit00004`；FE-F2 迁移应从该版本增量接续，验证只用隔离本地测试库。
+- 现有 `User.role` 是鉴权角色，不能代替内容 Persona；需要单独持久化内容身份归属。项目权限不能仅依赖请求中的 project_id。
+
 ## 2026-09-27：FE-F2 正式 review 的代码核对
 
 - `apps/api/app/routers/workflows.py` 的旧 run detail、complete、retry、rerun、rerun-from-here、attempts 与 cancel 仍按裸 `run_id` 读取；`list_runs` 列出运行记录，`list_workflows` 的序列化还嵌入最近运行。只保护新 project-scoped URL 会留下读写旁路。

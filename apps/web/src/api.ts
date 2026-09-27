@@ -33,6 +33,7 @@ async function request<T>(method: string, path: string, body?: unknown, isForm =
     const detail = await resp.json().catch(() => ({}));
     throw new ApiError(resp.status, detail.detail ? String(detail.detail) : `HTTP ${resp.status}`);
   }
+  if (resp.status === 204) return undefined as T;
   return resp.json() as Promise<T>;
 }
 

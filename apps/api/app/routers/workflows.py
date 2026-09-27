@@ -9,6 +9,7 @@ from ..db import get_db
 from ..deps import get_current_user, require_admin, require_editor, require_editor_or_reviewer
 from ..models import User, Workflow, WorkflowRun, WorkflowStep, utcnow
 from ..services import workflow_engine
+from ..services.project_authorization import authorize_project_run, authorize_project_workflow
 from ..services.workflow_templates import TEMPLATES, build_definition
 
 router = APIRouter(prefix="/api/v1", tags=["workflows"])
@@ -192,6 +193,8 @@ def clone_workflow(workflow_id: int, db: Session = Depends(get_db), user: User =
     source = db.get(Workflow, workflow_id)
     if not source:
         raise HTTPException(404, "工作流不存在")
+    if authorize_project_workflow(db, source, user):
+        raise HTTPException(409, "项目或角色默认工作流须在所属工作区另存版本")
     if not source.workflow_key:
         raise HTTPException(409, "legacy 无 key 工作流不能 clone（从模板/catalog 重新创建）")
     max_version = db.scalars(
@@ -221,6 +224,8 @@ def publish_workflow(workflow_id: int, db: Session = Depends(get_db), user: User
     workflow = db.get(Workflow, workflow_id)
     if not workflow:
         raise HTTPException(404, "工作流不存在")
+    if authorize_project_workflow(db, workflow, user):
+        raise HTTPException(409, "项目或角色默认工作流须在所属工作区发布")
     if workflow.status == "published":
         raise HTTPException(409, "已发布版本 immutable，请 clone 新版本")
     if workflow.status == "archived":
@@ -234,7 +239,14 @@ def publish_workflow(workflow_id: int, db: Session = Depends(get_db), user: User
 @router.get("/workflows")
 def list_workflows(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     workflows = db.scalars(select(Workflow).order_by(Workflow.id.desc())).all()
-    return [_serialize_workflow(w, db) for w in workflows]
+    visible = []
+    for workflow in workflows:
+        try:
+            authorize_project_workflow(db, workflow, user)
+        except HTTPException:
+            continue
+        visible.append(_serialize_workflow(workflow, db))
+    return visible
 
 
 @router.post("/workflow-runs", status_code=201)
@@ -242,6 +254,8 @@ def create_run(payload: RunCreateIn, db: Session = Depends(get_db), user: User =
     workflow = db.get(Workflow, payload.workflow_id)
     if not workflow or not workflow.enabled:
         raise HTTPException(404, "工作流不存在或已停用")
+    if authorize_project_workflow(db, workflow, user):
+        raise HTTPException(409, "项目工作流须通过所属内容单元启动")
     try:
         run = workflow_engine.start_run(db, workflow, payload.params, user)
     except ValueError as exc:
@@ -254,6 +268,7 @@ def get_run(run_id: int, db: Session = Depends(get_db), user: User = Depends(get
     run = db.get(WorkflowRun, run_id)
     if not run:
         raise HTTPException(404, "运行不存在")
+    authorize_project_run(db, run, user)
     return _serialize_run(db, run)
 
 
@@ -269,6 +284,7 @@ def complete_node(
     run = db.get(WorkflowRun, run_id)
     if not run:
         raise HTTPException(404, "运行不存在")
+    authorize_project_run(db, run, user, mutate=True)
     try:
         run = workflow_engine.complete_node(db, run, node_id, payload.payload, user)
     except ValueError as exc:
@@ -281,6 +297,7 @@ def retry_run(run_id: int, db: Session = Depends(get_db), user: User = Depends(r
     run = db.get(WorkflowRun, run_id)
     if not run:
         raise HTTPException(404, "运行不存在")
+    authorize_project_run(db, run, user, mutate=True)
     try:
         run = workflow_engine.retry_run(db, run, user)
     except ValueError as exc:
@@ -294,6 +311,7 @@ def rerun_node(run_id: int, node_id: str, db: Session = Depends(get_db), user: U
     run = db.get(WorkflowRun, run_id)
     if not run:
         raise HTTPException(404, "运行不存在")
+    authorize_project_run(db, run, user, mutate=True)
     try:
         run = workflow_engine.rerun_node(db, run, node_id, user)
     except ValueError as exc:
@@ -307,6 +325,7 @@ def rerun_from_here(run_id: int, node_id: str, db: Session = Depends(get_db), us
     run = db.get(WorkflowRun, run_id)
     if not run:
         raise HTTPException(404, "运行不存在")
+    authorize_project_run(db, run, user, mutate=True)
     try:
         run = workflow_engine.rerun_from_here(db, run, node_id, user)
     except ValueError as exc:
@@ -318,6 +337,11 @@ def rerun_from_here(run_id: int, node_id: str, db: Session = Depends(get_db), us
 def list_node_attempts(run_id: int, node_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """R2-H7：节点执行 attempt 审计历史（新旧 output 均可查，rerun 不抹历史）。"""
     from ..models import WorkflowStep, WorkflowStepAttempt
+
+    run = db.get(WorkflowRun, run_id)
+    if not run:
+        raise HTTPException(404, "运行不存在")
+    authorize_project_run(db, run, user)
 
     step = db.scalars(
         select(WorkflowStep).where(WorkflowStep.run_id == run_id, WorkflowStep.node_id == node_id)
@@ -362,6 +386,7 @@ def list_runs(
     if content_form:
         stmt = stmt.where(WorkflowRun.content_form == content_form)
     runs = db.scalars(stmt).all()
+    runs = [run for run in runs if _may_read_run(db, run, user)]
     return [
         {
             "id": r.id,
@@ -383,9 +408,20 @@ def list_runs(
 @router.post("/workflow-runs/{run_id}/cancel")
 def cancel_run(run_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     run = db.get(WorkflowRun, run_id)
-    if not run or run.status not in {"running", "waiting_input"}:
+    if not run:
+        raise HTTPException(404, "运行不存在")
+    authorize_project_run(db, run, user, mutate=True)
+    if run.status not in {"running", "waiting_input"}:
         raise HTTPException(409, "仅运行中/等待人工的运行可取消")
     run.status = "canceled"
     run.finished_at = utcnow()
     db.commit()
     return _serialize_run(db, run)
+
+
+def _may_read_run(db: Session, run: WorkflowRun, user: User) -> bool:
+    try:
+        authorize_project_run(db, run, user)
+    except HTTPException:
+        return False
+    return True

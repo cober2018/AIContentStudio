@@ -1,5 +1,34 @@
 # 当前进度
 
+## 2026-09-27：FE-F2-R1 复核通过，归档与本地提交
+
+- 外部复核已明确给出 `REVIEW_PASSED`，范围仅限 R1 五项收尾问题，不把结论外推为完整 PRD/V1 或生产验收。
+- 已勾选 OpenSpec 6.3；按用户授权归档 `fe-f2-persistent-production-workflow` 并提交当前 `codex/fe-f2-persistent-production-workflow` 分支。最终命令输出及 commit hash 以本轮实际执行结果为准；不推送、不合并、不部署、不运行生产迁移。
+- 归档命令完成：`openspec/changes/archive/2026-09-27-fe-f2-persistent-production-workflow/`；主规格更新 `fe-f0-f1-project-experience` 一项、新建 `fe-f2-persistent-production-workflow` 八项。归档后重新验证：后端全量 279 passed、前端 build 通过、12 份主规格 strict 校验通过、`git diff --check` 通过。归档工具给 FE-F0-F1 主规格增加的末尾空行已修正；待暂存快照核对及本地提交。
+
+## 2026-09-27：FE-F2-R1 review 收尾
+
+- 用户确认：仅保存项目覆盖但尚无 Run、快照、产物的单元，身份/形态/工作流可原地修改；一旦有执行历史，替换为新单元并归档旧单元。
+- 已补 OpenSpec 场景并落地：unit-scoped effective-workflow 保持 Designer 与 pinned version 一致；矩阵恢复身份/形态/工作流重绑编辑，历史单元归档且可回读；模板可移植性仅在运行时解析的 config 中参数化；Step 保存 Kind；失败 rerun 不携带旧输出。
+- 定向测试先红后绿；全量后端 279 passed，前端 `npm run build` 通过。首次全量出现 1 个新增测试夹具不符合模板 config allow-list，修正夹具后复测通过。OpenSpec strict 与 `git diff --check` 通过；主 JS 包体积警告仍在。归档、提交、推送和生产迁移均未执行，等待 R1 小补丁外部复核。
+
+## 2026-09-27：FE-F2 apply
+
+- 当前分支 `codex/fe-f2-persistent-production-workflow` 从干净的 `main@c044085` 创建；先前脏工作树已由其他提交收敛，本轮不搬运旧改动。
+- OpenSpec `fe-f2-persistent-production-workflow` 是 spec-driven，0/21 任务完成；已建立实施计划，先处理持久化与旧 API 权限。
+- 基线：`test_workflows.py` 10 passed，前端 `npm run build` 通过（主包体积警告）；Alembic head 为 `d4audit00004`。没有执行生产迁移或发布。
+- OpenSpec 1.1：新增项目/单元/内容 Persona、两类工作流绑定、DataSnapshot、项目产物关联与可空 `WorkflowRun.content_unit_id`；定向模型测试先红后绿。隔离临时 SQLite 上从旧版本升级到 `e5fef2000001`、回退到 `d4audit00004`、再升级均成功。未修改已有正式数据库。
+- OpenSpec 1.2/1.3：项目、角色、单元 CRUD 与创建者隔离已接 API；旧 Workflow 的 run/attempt/重跑/人工完成/取消/列表和 definition 列表、clone/publish/raw create-run 均接统一项目权限。项目工作流版本增加持久 owner/scope，阻断绑定变更后的遗留旁路。`test_fe_f2_projects.py` 与 `test_workflows.py` 共 14 passed；隔离 SQLite 全量迁移至新 head 成功。下一步补工作流校验和双保存。
+- OpenSpec 2.2：项目覆盖另存生成不可变 Workflow 新版本，绑定修订号比较并在失配时返回 409；旧 Run 保留版本/checksum。角色默认另存入口已有初版，但可移植性 allow-list 仍须收严，2.3/2.4 暂不勾选。
+- OpenSpec 3.1–3.3：Data Source 六类描述符及断连状态已接服务端；Studio Source 只读快照限制 20k 字、保留 source/version/lineage/checksum。项目 Run 经原引擎记录 Attempt；相同快照不使下游 stale，变化只标记依赖后代；断连插件在启动前被拒绝。快照可按所属单元读取。当前项目/工作流/Data 定向回归与旧工作流回归共 21 passed。
+- OpenSpec 2.1/2.3–2.5、4.1：六类节点校验、条件/失败策略及映射参与真实执行；角色默认对同项目/单元 ID 使用上下文占位，对数据 source_ref 用运行参数占位，其他绑定值拒绝。已有 Draft、批准 Candidate 和真实 MaterialRevision 才能被关联项目。定向测试包含生成图实际字节落 MaterialRevision→共享池、历史 checksum、旧 API 旁路和副作用重跑。
+- 前端当前接入真实项目 CRUD、角色默认版本选择、单条画布、Inspector、双保存和实际 Run；Mock 单独保留在 `/projects/demo`。隔离 SQLite `e5fef2000001` + 本地 18080/15173 联动浏览器实测：创建项目/身份/单元 → 保存 System 工作流 → Run succeeded/Attempt 输出 → 刷新后仍可读取。没有触碰原 8000 端口上的进程或已有数据库。
+- 2026-09-27 续作：隔离 API 旧进程导致 `/outputs` 404，重启后为 200；文字/图文/视频三形态工作台均在浏览器读到持久单元。AI Provider/Model 只允许绑定后端当前执行路由，保存和启动均验证，不暴露密钥；UI 已选中 mock/mocked model 并显示在 Inspector。素材关联增加真实文件与哈希复核，缺失字节不入池。定向后端 30 passed、前端构建通过（包体积警告仍在）。
+- FE-F2 最终本地验收：角色默认 v1 另存后，后续单元固定新版本，原单元仍固定项目覆盖；带 snapshot_id 的默认模板保存 422 且绑定不变；Notion 断连启动 409，隔离库对应 Run/Snapshot 均为 0；非所有者走遗留裸 run API 为 404。浏览器验证文字/图文/视频壳层及项目共享素材抽屉。后端 274 passed（需清除本机异常 NO_PROXY/no_proxy）、前端 build 通过、OpenSpec strict 与 diff-check 通过；待规格同步/归档。
+- 最终双保存按钮复核：已保存项目覆盖且页面无未保存修改时，“另存为角色默认”现在仍可点击；服务端可移植性 Gate 继续决定能否成功，项目绑定不会被此操作改写。待最新前端构建复核。
+- 隔离库保存项目 v2 后发现 Run #1 的冻结定义与当前草稿不同；已修正画布为运行模式显示 Run #1 原节点/成功状态，设计模式显示项目 v2 新节点且不混用旧状态。最新前端 build 通过。
+- 全量后端测试 253 passed / 12 failed；12 项均是旧 DSH 代理端口 `:1` 导致的 `httpx.InvalidURL`，与本轮定向链路一致未扩大。前端 `npm run build` 和 OpenSpec strict 通过，主 JS bundle >500 kB 警告仍在。FE-F2 尚有专属三形态界面、Provider/Model/Tool 选择语义及最终本地验收，不可归档。
+
 ## 2026-09-27：FE-F2 正式 review 补强（未 apply）
 
 - 已核对旧 Workflow API：除裸 run 详情、attempt、retry、节点重跑和人工完成，运行列表、取消、定义列表/clone/publish 及 raw create-run 也需要纳入同一项目权限边界。
