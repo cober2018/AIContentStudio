@@ -1,5 +1,16 @@
 # 配置记录
 
+## 2026-09-28：FE-F4 规格审计发现
+
+- 后续主工作区本地 `main` 已快进至 FE-F3B `55eba02`；直接核实了四份 canonical 主规格、`ContentAccount`、`IdentitySnapshot`、身份 API 和 Alembic head `f3b000000001`。这解决了本地 apply 基线缺失；连接器端到端回读仍未单独验证。
+- 初审时主工作区基线 `1fa4520` 与 FE-F3B 已归档提交 `55eba02` 分离；FE-F4 因而先在后者的隔离工作树做规格审计。该本地基线差异已由后续 `main` 快进解决。
+- 来源包四份 `MODIFIED Requirements` 只有新增句子，没有主规格要求原文及既有场景。OpenSpec 归档会用 delta 替换同名 Requirement，必须把原约束和场景补全后才可标记 `SPEC_READY`。
+- OpenSpec 的 delta JSON 读取只把同名 Requirement 的首段作为 `requirement.text`；把新增规范写成第二段虽然 strict 可通过，但合并后可能不成为规范正文。九个 MODIFIED 要求已将新增句子并入首段，并用 `openspec change show --json --deltas-only` 验证解析结果。
+- 当前 `ContentAsset` 的 `draft_id`、`topic_brief_id`、`fact_pack_id/version`、`approved_revision` 非空，状态默认 `approved`；`Review.draft_id/revision_no` 非空。项目 Candidate 允许先冻结后批准，且 FE-F2 Unit 输出不保证有 TopicBrief/Draft；FE-F4 必须明确项目候选的真实来源与哪些旧必填列需变可空，禁止造假旧 Topic/Draft ID。
+- `ContentAccount` 当前只有 Persona、名称和状态，没有渠道或平台凭据字段。新 DeliveryTarget 可以引用稳定账号 ID，但不能据此声称平台能力/渠道已验证；需界定显式账号映射与能力检查，保留 `account_ref` 历史快照。
+- 独立规格审阅指出旧 `article_handoff` 手工包强依赖 Draft/v1 媒体字段；非 Draft 的 v3 Candidate 若沿用此路径会在交付时失败。已规定 v3 schema-aware 本地成品包适配器和真实字节/权利校验，v1 builder 仅处理真实 v1 资产。
+- 现有 DeliveryTarget 唯一约束仅按 `account_ref`，两个不同 ContentAccount 若引用同一字符串会冲突。FE-F4 规格改为新增不可变 `authorization_account_key`：项目稳定 Account ID / 旧目标原 account_ref，替换唯一约束并统一幂等查询；不伪造旧行 ContentAccount 关联。
+
 ## 2026-09-27：FE-F3B 规格审计发现
 
 - FE-F3B 归档 CLI 使用宿主机日期生成 `2026-09-27-fe-f3b-content-identity`，尽管任务环境日期显示 2026-09-28；文档须引用实际目录。归档自动同步四份主规格：三份 MODIFIED、一份 ADDED。FE-F2、FE-F3A、FE-F3B 主规格原有或新生的 `Purpose: TBD` 及 FE-F0/F1 已过时的 mock Purpose 均需改为当前长期契约描述。

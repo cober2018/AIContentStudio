@@ -1,5 +1,16 @@
 # 当前进度
 
+## 2026-09-28：FE-F4 规格审计
+
+- 后续本地主工作区 `main` 已从 `c044085` 快进到 FE-F3B `55eba02`。已核实 FE-F3B 四份主规格、`ContentAccount`/`IdentitySnapshot`、身份路由和迁移 head；隔离 SQLite 基线后端 310 passed、前端 build、14 份主规格 strict 均通过。连接器自身回读未验证；FE-F4 尚未 apply。
+- 初审时主工作区 `/Users/mshengran/Project/AIContentStudio` 为 `1fa4520`，仅有用户提供的未跟踪 FE-F4/FE-F3B 来源包；当时看不到 FE-F3B 代码。因而复用隔离工作树并从 FE-F3B `55eba02` 建 `codex/fe-f4-project-review-distribution`；后续本地 `main` 已同步，见上条。
+- 来源目录无 README，9 个文件与 zip 清单一致。初审发现四份 MODIFIED delta 只有新增句子，直接归档将覆盖原主规格场景；现有 ContentAsset/Review 的 Topic/Draft 必填列也需要在 FE-F4 设计中明示兼容迁移。准备归位与校准；来源包保持原样。
+- 标准 `openspec/changes/fe-f4-project-review-distribution/` 已建立；五份 delta 均归位。四份 MODIFIED 已从 canonical specs 复制完整同名 Requirement 与所有旧场景，再加入 FE-F4 合同；逐条场景比对无丢失。新能力规格补齐权限、v3、候选冻结/批准/授权、Unknown、投影、前端和项目历史场景。设计/任务明确迁移可空列、候选哈希、受支持来源适配、账号能力验证和 raw-ID 保护。当前 OpenSpec strict 与 `git diff --check` 通过；独立只读规格复核进行中。
+- 进一步检查 OpenSpec 解析 JSON 发现第二段规范文字不进入 `requirement.text`；九个 MODIFIED 要求的新增句子已并回首段，CLI JSON 回读确认。保留的旧场景未改写；本轮仍只修改规格与记录。
+- 独立审阅第一轮指出 v3 非 Draft 人工成品包不可直接走 v1 `article_handoff`，以及两个同 `account_ref` 的 ContentAccount 会被旧唯一约束合并。已补 v3 manifest-based 本地包路径、不可用形态阻断、稳定授权账号键/迁移/幂等任务与场景；OpenSpec strict、diff-check 再次通过，等待针对性复核。
+- 独立针对性复核 `PASS`：上述两处高风险规格缺口均闭合，没有新的 critical/high/medium/low 问题。仅为规格复核，不是实现或 apply 授权；当时 FE-F3B 主工作区可见性门槛尚未满足。
+- 本轮规格门禁：`openspec validate fe-f4-project-review-distribution --strict` 通过，`git diff --check` 通过，`git diff --exit-code -- apps/api apps/web` 无业务代码变更。标准变更位于 FE-F3B `55eba02` 基线的隔离工作树；本地主工作区 `main` 现已具有 FE-F3B canonical spec、IdentitySnapshot 和 ContentAccount。状态为 `SPEC_READY / APPLY_AWAITING_EXPLICIT_APPROVAL`；连接器回读未独立验证。本轮仅准备在 FE-F4 分支本地提交规格，不推送、合并 FE-F4、部署或执行迁移。
+
 ## 2026-09-27：FE-F3B 审计与 apply 起点
 
 - 用户明确授权四份 delta 全部同步。`openspec archive fe-f3b-content-identity --yes` 已更新 FE-F0/F1、FE-F2、FE-F3A 主规格并新增 FE-F3B 主规格；工具实际归档目录是 `openspec/changes/archive/2026-09-27-fe-f3b-content-identity/`。四份主规格的 Purpose 已校正；归档后主规格 strict、diff-check 和本地提交待完成。未推送、合并、部署或执行生产迁移。

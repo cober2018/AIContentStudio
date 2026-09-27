@@ -1,5 +1,15 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F4 Project-first Review & Distribution 规格审计（不 apply）
+
+目标：以本地 FE-F3B 提交 `55eba02` 为基线，审计用户提供的 FE-F4 包，将校准后的提案放入标准 OpenSpec；主工作区本地 `main` 后续已快进到该提交，但 FE-F4 仍需单独确认才能 apply、推送、合并或部署。
+
+- [x] /// 核对主工作区与 FE-F3B 隔离工作树、canonical specs、模型和迁移前置
+- [x] /// 审计来源 proposal/design/specs/tasks 对现有 Candidate/Review/Delivery 结构与权限的适配
+- [x] /// 创建标准 `openspec/changes/fe-f4-project-review-distribution/` 并补全五份 delta 的归档安全边界
+- [x] /// OpenSpec strict、`git diff --check`、文档与独立规格复核；保持业务代码未改动
+- [x] /// 复核主工作区 FE-F3B 主规格、身份实现、迁移 head 与隔离库测试/前端构建基线
+
 ## 2026-09-27：FE-F3B Content Identity apply
 
 目标：在隔离工作树审计并实施 `fe-f3b-content-identity`，交付身份层级、不可变快照、工作流偏好和真实工作区；不做生产迁移、推送或合并。详细步骤见 `docs/superpowers/plans/2026-09-27-fe-f3b-content-identity.md`。
