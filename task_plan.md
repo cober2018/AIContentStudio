@@ -1,5 +1,14 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-P1 前端首包性能规格审计（不 apply）
+
+目标：以 FE-F4 `2f3ced2` 为基线，核实加载依赖并提出独立 OpenSpec；用户确认前不修改前端实现。
+
+- [x] /// 核对 FE-F4 工作树、入口路由、项目/生产模块和真实构建产物
+- [x] /// 写出 FE-P1 proposal、design、spec 与 tasks，限定首轮范围
+- [x] /// 运行 OpenSpec strict、差异检查，记录基线和待确认边界
+- [ ] /// 等待用户明确确认；本轮不 apply、不归档、不推送
+
 ## 2026-09-28：FE-F4 apply（已授权）
 
 目标：按 `openspec/changes/fe-f4-project-review-distribution/` 实施项目优先审核与分发，保持旧 Topic 链兼容；详细步骤见 `docs/superpowers/plans/2026-09-28-fe-f4-project-review-distribution.md`。

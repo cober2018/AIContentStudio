@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-28：FE-P1 前端加载边界审计
+
+- FE-F4 `2f3ced2` 的实际 Vite 产物只有一个 1,095.28 kB JS 文件，不能把“分成多个文件”或消除 500 kB 警告等同于首屏收益；预算应关注入口与默认路由的静态依赖闭包，并验证重型依赖不在其中。
+- `App.tsx` 静态导入当前与旧页面；`Workspace` 静态引用 TipTap 编辑器，`Workflows` 静态引用 XYFlow。`PersistentProjectPages.tsx` 静态引用 `ProductionDesigner`、七个 Tab；因此仅将整个项目模块变为 lazy，不能隔离 `/projects` 与生产设计器。
+- `vite.config.ts` 尚无分包配置，web package 只有 dev/build/preview，CI 当前只运行 build。首次切片优先路由级 lazy 与项目/生产边界；Tab 深拆、manualChunks、缓存策略和分页须以构建/运行数据再决定，不作为本次承诺。
+
 ## 2026-09-28：FE-F4 apply 起点
 
 - FE-F4 归档器采用宿主机日期 `2026-09-27` 生成目录，虽然当前任务日期显示 2026-09-28；README 必须引用实际路径。归档命令成功同步四份旧能力规格并新增 FE-F4 主规格（11 added / 9 modified），且自动生成的 FE-F4 Purpose 为 `TBD`，已修成正式说明。

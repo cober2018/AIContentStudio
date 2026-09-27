@@ -1,5 +1,12 @@
 # 当前进度
 
+## 2026-09-28：FE-P1 前端首包性能规格审计
+
+- 用户授权审计 FE-F4 分支并提出 FE-P1 OpenSpec，未授权 apply。已在干净的 FE-F4 `2f3ced2` 上创建 `codex/fe-p1-frontend-bundle-performance` 与标准变更目录。
+- 重新运行 `npm run build`：JS 单文件 1,095.28 kB（gzip 351.06 kB），CSS 48.52 kB；`App.tsx` 静态加载全部现有/旧页面，`PersistentProjectPages.tsx` 同时承载列表、详情、生产并静态加载 `ProductionDesigner` 和七标签。当前 web 包无独立测试脚本；规格和门禁待完成。
+- FE-P1 proposal、design、新能力 delta spec、tasks 已按 OpenSpec `spec-driven` 顺序写入；范围为路由/项目生产边界、初始 JS 预算、可恢复加载与路由冒烟；不含业务代码或后端变更。规格验证与独立复核待执行。
+- `openspec validate fe-p1-frontend-bundle-performance --strict` 通过；OpenSpec 状态 4/4 artifacts complete，JSON 回读确认 5 条 ADDED 要求与对应场景均被解析。`git diff --check` 通过；仅提案、README、任务/进度/发现文件发生变化。独立复核未执行，不将 strict 校验称为正式 review；等待用户确认后才进入 apply。
+
 ## 2026-09-28：FE-F4 apply 启动
 
 - 用户明确选择五份 delta 全部同步主规格。归档前比对四份 MODIFIED 的 9 条要求、28 个旧场景标题全部保留；`openspec archive fe-f4-project-review-distribution --yes` 报告新增 11 条、修改 9 条、删除 0 条，归档实际路径是 `openspec/changes/archive/2026-09-27-fe-f4-project-review-distribution/`（工具使用宿主机日期）。新增主规格的机械 Purpose 已改成正式产品契约说明。归档后五份主规格保留 delta 与旧契约，全体 15 份主规格 strict 校验 15 passed / 0 failed，`git diff --check` 通过；本地提交待执行。
