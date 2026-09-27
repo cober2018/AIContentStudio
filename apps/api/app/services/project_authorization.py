@@ -20,14 +20,14 @@ def authorize_project_run(db: Session, run: WorkflowRun, user: User, *, mutate: 
     if run.content_unit_id is None:
         return
     owner = db.execute(
-        select(ContentProject.owner_user_id, ContentUnit.status)
+        select(ContentProject.owner_user_id, ContentUnit.status, ContentProject.status)
         .join(ContentUnit, ContentUnit.project_id == ContentProject.id)
         .where(ContentUnit.id == run.content_unit_id)
     ).first()
     if owner is None or owner[0] != user.id:
         raise HTTPException(404, "运行不存在")
-    if mutate and owner[1] == "archived":
-        raise HTTPException(409, "已归档单元的运行历史只可查看")
+    if mutate and (owner[1] == "archived" or owner[2] == "archived"):
+        raise HTTPException(409, "已归档项目或单元的运行历史只可查看")
 
 
 def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> bool:

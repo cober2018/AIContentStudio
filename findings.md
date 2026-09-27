@@ -1,5 +1,24 @@
 # 配置记录
 
+## 2026-09-27：FE-F3A 规格复核发现
+
+- 用户提供的结构化包与合并 Markdown 内容属于同一 FE-F3A 草案；标准活跃变更采用 `fe-f3a-content-project-core-completion` 作为 change 名，能力名保留 `fe-f3a-content-project-core`。原始资料未删除或覆盖。
+- FE-F2 基线 `734990c` 的 `ContentProject` 已有 `status` 和所有者；`DELETE /content-projects/{id}` 在无单元时物理删除。一旦 FE-F3A 为项目写入 append-only `ProjectEvent` 和 Brief 等子记录，原行为会丢失历史或触发 FK 错误。因此提案明确改为归档项目、历史可读、项目级写操作（含 legacy run）拒绝。
+- `SourceDocument`、`FactPack`、`MaterialRevision` 没有项目所有权；项目绑定只能在现有全局资源权限内引用，不应把项目拥有者视为全局资源拥有者。Source/Material 引用表的唯一键要求 detach 后 reattach 复用原记录。
+- `materials_service.create_revision` 在数据库提交前写入内容哈希字节；项目上传的数据库原子性不能自动涵盖文件系统。规范须要求失败后清理或跟踪未引用字节，不可误删已共享哈希对象。
+- 修订表 `(project_id, revision_no)` 唯一约束能阻止重复版本，但并发抢写若不捕获完整性错误会 500；规范要求回滚并返回 409，且事件同一数据库事务提交。
+- 这轮只复核/校准 OpenSpec，不声称 FE-F3A 功能已实现；源包中要求定向回归测试为未来 apply 范围，本轮没有生成测试代码。
+
+## 2026-09-27：FE-F3A apply 核对
+
+- 五表在隔离库可逆迁移；带 FE-F2 项目、单元、Run 和 checksum 的 e5→f3a→e5→f3a 均能回读历史。生产迁移未执行。
+- Browser 端使用独立 SQLite 验证七标签刷新、Brief 两版、Source 绑定、事实边界 Clone 后返回并冻结、素材上传和版本/活动聚合；项目上传与系统引用同一 revision 仍由唯一项目引用幂等处理，不复制字节。工作流关联可另列为独立来源。
+- 现有素材存储为哈希寻址。项目上传事务失败时回滚 Material/Revision/Reference 与事件；不删除可能被其他资源共享的同哈希文件。新哈希失败写 `material.upload_orphan_candidate` AuditLog（相对路径/哈希/项目，`entity_id` 只存 50 字符前缀以兼容 PostgreSQL）。已有 `run_retention` 现消费该候选：一日宽限、每批上限、路径验证、查询已提交的 MaterialRevision/DraftMedia/AssetMedia 引用，仅删无引用字节；未处理候选不受普通 90 天 AuditLog 过期清理影响。若数据库不可写导致记录也失败，则写错误日志，不掩盖原上传失败。保留流程按现有维护入口执行，不在请求或 API 启动时自动扫盘。
+- 清理计划原来指向未注册的 `retention_sweep`，已补对应 Celery task。仅做“检查引用后 unlink”仍会与复用同哈希文件的未提交写入竞态；现在写入方持有按哈希前缀划分的跨进程文件锁直至提交/回滚，清理方在引用核查和 unlink 期间持同一把锁。清理每个候选立即提交，避免持数据库写锁再等待下一把文件锁。
+- 普通 Project/Unit PATCH 若允许直接设置 archived，会绕过专用归档事件及单元历史语义；已改为拒绝，要求走专用归档/删除入口。
+- 非阻塞债务：前端主包约 1,058 kB，仍有 >500 kB 构建提醒；旧全局 FactPack 页面关于冻结条件的提示与当前类型化观点条目规则不完全一致，未在本切片重做该页面。
+- 独立审阅还验证了三个领域缺口：归档项目的项目页面创建 Source 会先在全局 Source 库写成功、随后关联失败；旧项目 PATCH 可绕过 Brief 修订改目标；显式素材未向共享读模型传来源字段。现分别通过归档只读/创建前状态检查、目标 PATCH 拒绝、MaterialRevision provenance 回传收口。Evidence 补独立冻结条目区，Brief 历史可展开全部字段。
+
 ## 2026-09-27：FE-F2-R1 最终复核边界
 
 - 用户提供的外部复核只覆盖 R1 五项补丁，结论为 `REVIEW_PASSED`，允许归档及本地提交；连接器未保存 pytest/build 原始 execution artifact。本轮须直接复跑门禁，不把复核文字当作命令执行证据。

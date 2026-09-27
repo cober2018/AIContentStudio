@@ -6,7 +6,39 @@ import json
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import EvidenceKind, Fact, FactPackItem, FactStatus
+from ..models import EvidenceKind, Fact, FactPack, FactPackItem, FactPackStatus, FactStatus, utcnow
+
+
+def clone_pack(db: Session, pack: FactPack, *, actor: str) -> FactPack:
+    max_version = db.scalars(select(FactPack.version).where(FactPack.name == pack.name).order_by(FactPack.version.desc()).limit(1)).first() or pack.version
+    clone = FactPack(name=pack.name, description=pack.description, version=max_version + 1, parent_id=pack.id, created_by=actor)
+    db.add(clone)
+    db.flush()
+    for item in pack.items:
+        db.add(FactPackItem(fact_pack_id=clone.id, fact_id=item.fact_id, note=item.note, sort_order=item.sort_order, evidence_kind=item.evidence_kind, snapshot_json=dict(item.snapshot_json or {}), public_use_allowed=item.public_use_allowed, model_use_allowed=item.model_use_allowed))
+    db.flush()
+    return clone
+
+
+def freeze_pack(pack: FactPack) -> None:
+    if pack.status != FactPackStatus.draft.value:
+        raise ValueError(f"FactPack 已 {pack.status}，不能再次冻结")
+    if not pack.items:
+        raise ValueError("FactPack 至少需要 1 个 Fact")
+    facts = [item.fact for item in pack.items if item.fact is not None]
+    conflicted = [fact.id for fact in facts if fact.status == FactStatus.conflict.value]
+    if conflicted:
+        raise ValueError(f"存在未解决冲突: {conflicted}")
+    not_confirmed = [fact.id for fact in facts if fact.status != FactStatus.confirmed.value]
+    if not_confirmed:
+        raise ValueError(f"存在非 confirmed 事实: {not_confirmed}")
+    for item in pack.items:
+        item.snapshot_json = evidence_snapshot(item)
+        item.snapshot_checksum = snapshot_checksum(item.snapshot_json)
+        item.snapshot_version = 1
+    pack.checksum = pack_snapshot_checksum(pack.items)
+    pack.status = FactPackStatus.frozen.value
+    pack.frozen_at = utcnow()
 
 
 def conflict_key(fact: Fact) -> tuple:

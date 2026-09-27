@@ -1,5 +1,43 @@
 # 当前进度
 
+## 2026-09-27：FE-F3A apply 起点
+
+- 用户已明确授权进入 apply；使用标准变更 `fe-f3a-content-project-core-completion`，spec-driven 产物 4/4，任务 2/54 完成。
+- 当前分支 `codex/fe-f3a-project-core-completion` 基于 FE-F2 `734990c`，存在上一轮尚未提交的规格/README/记录改动和用户原始 FE-F3A 包；这些均保留，不新建丢失规格的工作树。
+- 实施顺序记录于 `docs/superpowers/plans/2026-09-27-fe-f3a-project-core.md`。尚未运行生产迁移，也不推送/合并。
+- 1.1/1.2：五个模型和增量迁移文件已加入；FE-F3A 表结构测试先因缺表失败，新增模型后单测通过。下一步在隔离库验证迁移 up/down/up，并实施事件/归档语义。
+- 1.3 部分：隔离临时 SQLite 已完成 `e5fef2000001 → f3a000000001 → e5fef2000001 → f3a000000001`；仓库初始迁移会按当前模型预建新表，因此 FE-F3A 迁移使用既有的表/索引存在性防御。尚未在该迁移链路里插入并回读 FE-F2 历史行。
+- 2.x 部分：项目创建/编辑/归档、单元创建/编辑/替换/删除、项目工作流保存、项目来源角色默认保存、快照与关联产物写入 ProjectEvent；当前事件/项目及 FE-F2 Data/Output 定向测试 11 passed。项目归档后新旧 Run 修改权限加了保护，后续仍需更完整回归。`project_events.py` 的稳定常量与 2.5 全路径验证尚未完成。
+- 3.1/3.2：Brief 已有当前/历史/详情/追加版本 API；保存按 expected_revision 对比，唯一键并发冲突回滚为 409，事件同事务写入。先验证无路由 404，再实现后定向 4 passed；前端尚未接入，完整字段校验和并发双会话验证待做。
+- 4.1/4.2/4.4：项目 Source 引用可附加、幂等重复、解除并重新激活，旧全局 Source 保持可读；Fact Boundary 可读取当前/历史并只绑定有 checksum 的冻结 FactPack，revision 冲突返回 409。相关测试先 404 失败后定向 6 passed。项目级 Clone/Freeze-and-bind、全局 FactPack 服务共用规则、前端 Evidence 仍待实现。
+- 4.3/4.5：全局与项目级 FactPack Clone/Freeze 现复用 `factpack_service`，项目级 freeze-and-bind 要求当前边界的直接草稿子版本，冻结、审计和边界修订同一数据库事务。克隆→冻结→新边界→旧历史可读的定向测试先失败后通过；FE-F3A+FE-F2 项目定向 13 passed。前端 Evidence 仍未接入。
+- 后续实现已接入 Brief、Evidence、Assets、Overview、Versions、Activity 后端与项目七标签前端；此前后端全套 289 passed、前端 build 通过，最终门禁待重跑。新归档项目回归证明历史 Run 可读、旧裸 Run mutation 与项目 mutation 均拒绝。
+- 收尾修正：项目 PATCH 不允许绕过专用归档接口直接设置 archived；生产工作台共享素材按项目上传/系统引用/工作流产物区分，图文与视频“已生成”列表只显示工作流产物。
+- 定向补测通过：项目 PATCH 直接归档返回 422；注入上传事务内事件失败时 Material、MaterialRevision、项目引用均回滚，预先存在的同哈希共享字节保持不删。FE-F3A 定向测试 12 passed；此前全套 290 passed，最终变更后需再跑。
+- Evidence 返回项目页后可从 FactPack 列表恢复当前边界的最新草稿，避免“编辑后无法冻结并绑定”；Matrix 已提取为独立 Tab 组件并隐藏已归档项目的矩阵写入按钮。前端构建再次通过（主 bundle 1,057.94 kB，原有体积提醒）。
+- 隔离迁移库带真实 FE-F2 ContentProject、ContentUnit、WorkflowRun(checksum) 完成 e5→f3a→e5→f3a；三条历史行与 checksum 回读一致。未触及生产库。
+- 隔离浏览器验收：创建项目、Brief v1/v2、文本 Source 创建并关联、冻结 FactPack 绑定、项目边界 Clone→跳转编辑→返回恢复草稿→冻结并绑定、PNG 项目上传、同版本再次引用幂等、Overview/Versions/Activity 真读模型、七标签逐一刷新均成功。验收使用独立临时 SQLite 与 127.0.0.1:18081/15174。
+- 归档状态的普通 PATCH 旁路已同步堵住：Project 必须走 DELETE→archive，ContentUnit 必须走已有删除/归档语义；避免写成通用 updated 事件或绕过历史保护。
+- 新定向用例先发现 Overview 把 `waiting_human` 单元误归为普通生产；已补待人工聚合，并区分最新 Run 的 stale/failed/waiting_input 节点状态。Brief 同内容显式保存会形成新修订、checksum 相同。FE-F3A 定向现为 13 passed。
+- Overview 前端将风险/人工状态代码翻成用户可读中文，并显示待处理项对应单元；不在 React 重算阶段。
+- 新增跨所有项目核心读模型的归档/跨所有者回归：归档后 Brief、Boundary、Assets、Versions、Activity、Overview 可读，Source 解绑不改已冻结边界；另一用户均 404，归档项目的新写入均 409。FE-F3A 定向现为 14 passed。
+- 当前最终本地门禁：后端全套 293 passed / 5 warnings；前端 `npm run build`（含 TypeScript）通过，主 JS 1,058.31 kB 非阻塞提醒；OpenSpec strict、`git diff --check`、本次后端文件 Ruff F 检查通过。独立代码复核已发起，OpenSpec 归档与提交保持等待。
+- 定向回归进一步验证 Clone 后编辑草稿再冻结会产生不同 checksum 且旧 FactPack item 数不变；重复 Source/Material 关联不重复写项目事件。新增断言后 FE-F3A 定向 14 passed；全套门禁仍需最终复跑。
+- 在 FE-F2 素材真实字节/Attempt 回归上增加 FE-F3A 并集断言：同一 MaterialRevision 同时由 workflow 与 system_reference 合法展示，两个稳定 key，数据库仍只有一条 Revision；定向测试通过。
+- 独立审阅首次结论为不准归档/提交，指出 5 个重要缺口。已逐项修：新哈希上传失败单独记录可核对的 `material.upload_orphan_candidate` AuditLog，不删除共享字节；归档 Evidence 隐藏创建/绑定并在全局 Source 创建前再次核对项目状态；项目 PATCH 不能修改 objective；显式素材回传 MaterialRevision 来源信息；Evidence 增加当前冻结 FactPack 条目区，Brief 历史可展开全文。定向单测与前端 build 已针对相关修改通过，最终全套和复审待跑。
+- 隔离浏览器归档后复验：Evidence 的 Source 创建/解绑和边界绑定控件均不出现，事实条目和边界历史仍可读；Brief/Assets/Matrix 的项目级写入控件不出现。
+- 二次复审又发现 orphan candidate 的 `AuditLog.entity_id` 超过 PostgreSQL 的 50 字符限制、且未被清理消费。现只在该列存 50 字符哈希前缀，完整哈希留在 detail；既有 `run_retention` 以一日宽限、每批上限处理候选，先检验路径与已提交 MaterialRevision/DraftMedia/AssetMedia 引用，再删除无引用字节或保留共享字节。未处理候选不受普通 90 天 AuditLog 清理影响。新增新文件删除/共享文件保留/过期候选保留测试均通过，复审待重跑。
+- 最新本地门禁：后端全套 294 passed / 5 warnings，前端 TypeScript/Vite build 通过（主包 1,060.65 kB 非阻塞提醒），OpenSpec strict、`git diff --check`、涉及后端文件 Ruff F 检查通过。独立审阅正在复核最后两个上传清理边界，9.6 尚未完成。
+- 第三轮审阅指出清理任务未注册、同哈希上传与清理可能竞态。已注册现有 beat 配置的 `retention_sweep`；MaterialRevision 写入持有哈希分片文件锁到外层事务结束，保留流程在引用检查与 unlink 期间持同锁，并逐候选提交。新增任务注册与跨线程锁释放回归；清除本机异常 `NO_PROXY/no_proxy` 后后端全套 296 passed / 5 warnings，前端 build、OpenSpec strict、diff-check、Ruff F 通过。最终独立复核进行中，仍未归档/提交。
+- 独立复核最终 PASS、无剩余 blocker；9.6 已勾选。用户确认同步主规格后，OpenSpec 已归档至 `openspec/changes/archive/2026-09-27-fe-f3a-content-project-core-completion/`，同步两项旧能力规格并新增 FE-F3A 主规格（9 added / 3 modified）；三份主规格 strict 均通过。待核对暂存快照并提交本地分支；不推送、合并或部署。
+
+## 2026-09-27：FE-F3A 规格复核与归位（仅文档）
+
+- 以 `734990c` 为基线创建 `codex/fe-f3a-project-core-completion`，把用户提供的结构化 FE-F3A proposal/design/tasks/三份 spec 归入 `openspec/changes/fe-f3a-content-project-core-completion/`。原始目录、ZIP 与合并文档保持原状，便于追溯。
+- 对照 FE-F2 实际项目、单元、Source、FactPack、MaterialRevision 和迁移头复核；旧 Source/FactPack/Material 为全局资源，项目引用不等于获得资源所有权。现有项目 DELETE 可物理删除无单元项目，与新增 append-only 活动/子表冲突，已在规范中改为归档语义。
+- 已补强事件同库事务、Brief/Fact Boundary 并发冲突转 409、Source/Material 唯一绑定重新激活、素材字节写入后的失败清理边界。业务代码和数据库未改动；`openspec validate fe-f3a-content-project-core-completion --strict` 通过，纳入新增规格文件后的 `git diff --check` 通过。
+- `tasks.md` 仅将分支/规格门禁 0.1–0.2 标记完成；所有实施任务仍待明确 apply 授权，不因 4/4 规格产物齐全而视为功能已完成。
+
 ## 2026-09-27：FE-F2-R1 复核通过，归档与本地提交
 
 - 外部复核已明确给出 `REVIEW_PASSED`，范围仅限 R1 五项收尾问题，不把结论外推为完整 PRD/V1 或生产验收。

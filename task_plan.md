@@ -1,5 +1,25 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-27：FE-F3A apply
+
+目标：按已确认的 `fe-f3a-content-project-core-completion` 实现五类项目核心持久化、真实七标签与回归验收；不做生产迁移、推送或合并。详细步骤见 `docs/superpowers/plans/2026-09-27-fe-f3a-project-core.md`。
+
+- [x] /// 五表迁移、模型、ProjectEvent 和项目归档权限边界
+- [x] /// Brief、Source/Fact Boundary、共享素材和 Versions/Overview API
+- [x] /// 七标签前端接真实 API，保留 FE-F2 Matrix/Production
+- [x] /// 隔离库迁移、后端/前端回归、OpenSpec strict 与文档同步（296 后端测试通过）
+- [x] /// 外部复核通过并归档；仅提交本地 FE-F3A 分支，不推送/合并/部署
+
+## 2026-09-27：FE-F3A 规格复核与标准目录归位（不 apply）
+
+目标：核对用户提供的 FE-F3A 包与 FE-F2 基线，纳入标准 OpenSpec 变更目录，修补实施前必须明确的边界；不修改业务代码、运行迁移或发布。
+
+- [x] /// 核对 FE-F3A 来源包、FE-F2 基线、现有项目/Source/FactPack/Material 实体及路由
+- [x] /// 从 `734990c` 创建 `codex/fe-f3a-project-core-completion`，将结构化提案归位到标准 `openspec/changes/`，保留原始包
+- [x] /// 修补项目删除历史安全、事件事务、并发修订、重新绑定与素材字节回滚边界
+- [x] /// 运行 OpenSpec strict 与 diff 检查，核对本轮仅文档变更，更新 README/progress/findings
+- [x] 用户已确认进入 `/opsx:apply`；本轮按已校准规格实施
+
 ## 2026-09-27：FE-F2-R1 收尾补丁（待外部复核）
 
 目标：按已核对的 review 缺口，恢复固定版本所见即所执行、矩阵安全 CRUD、可解析模板占位符与真实 Attempt 审计；不扩大到新插件或生产迁移。

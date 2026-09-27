@@ -11,11 +11,16 @@ The frontend SHALL offer nine primary workspaces with navigable routes and loadi
 - **THEN** nine primary workspaces are visible and each link resolves to a page or scoped placeholder
 
 ### Requirement: Project workspace
-The frontend SHALL present ContentProject as the business root and provide overview, brief, evidence, assets, matrix, versions, and activity tabs with URL-addressable tab state.
 
-#### Scenario: Open a project tab
-- **WHEN** the user opens a project and selects any of the seven tabs
-- **THEN** the selected panel appears and its URL can be opened directly
+The frontend SHALL present ContentProject as the business root and provide overview, brief, evidence, assets, matrix, versions, and activity tabs with URL-addressable tab state. For persisted projects, all seven tabs SHALL load real backend state; Brief, Evidence, Versions, and Activity MUST NOT remain persistent placeholder panels.
+
+#### Scenario: Open a persisted project tab
+- **WHEN** the user opens any of the seven tabs for a backend-persisted ContentProject
+- **THEN** the tab loads the corresponding real project data or a truthful empty state from the backend and can be opened directly by URL
+
+#### Scenario: Reload project tab
+- **WHEN** the user reloads a project URL on Brief, Evidence, Assets, Matrix, Versions or Activity
+- **THEN** saved project state remains visible without depending on browser-only fixture data
 
 ### Requirement: Content matrix editing
 The frontend SHALL let the user add, edit, and delete Content Units through the backend project API. A Content Unit MUST show stable content Persona/Role identity, modality, channel, pinned workflow reference, and status. On creation, the user SHALL be able to select the current Persona × Modality default Workflow Template Version or an explicit project override. Browser-only FE-F0-F1 fixture data MUST remain clearly separate from real persisted projects and MUST NOT be imported without an explicit action.
@@ -47,11 +52,12 @@ The frontend SHALL let the user add, edit, and delete Content Units through the 
 - **THEN** that version is offered for selection and the saved unit pins the selected version without changing existing units
 
 ### Requirement: Project assets
-The frontend SHALL expose Project Shared Assets through a modal or drawer and include uploaded, system-referenced, and workflow-generated mock revisions.
 
-#### Scenario: Open shared assets
-- **WHEN** the user selects the shared-assets entry from a project or production page
-- **THEN** a dismissible asset browser opens without permanently occupying the production canvas
+The frontend SHALL expose Project Shared Assets through a modal or drawer instead of permanently occupying the Production canvas. For persisted projects, the same project asset pool SHALL include explicit project uploads, system MaterialRevision references, and verified workflow-generated material revisions with source/provenance/rights distinctions.
+
+#### Scenario: Open unified shared assets
+- **WHEN** the user opens Project Shared Assets from a persisted project or Production Workspace
+- **THEN** one dismissible asset browser shows project-upload, system-reference and workflow-generated items from backend state without duplicating the underlying material bytes
 
 ### Requirement: Production entry and status semantics
 The frontend SHALL navigate from a selected Content Unit to a project-scoped Production Workspace shell. Blocked, stale, unknown, ready, and waiting_human MUST have distinct labels and visual treatments.

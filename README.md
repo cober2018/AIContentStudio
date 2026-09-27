@@ -24,6 +24,15 @@
 - 关键设计决策：复用既有 Workflow/Run/Step/Attempt 与副作用闸门；所有项目绑定运行通过新旧 API 均按同一项目权限校验；角色默认模板保存须通过服务端项目值可移植性 Gate；拖拽只改视觉顺序，依赖和映射须显式编辑；运行模式显示 Run 冻结的历史定义，设计模式编辑当前项目草稿；Data Source Plugin 契约覆盖内部数据、媒体数据、Notion、Obsidian、API、SQL/Database，首个可执行适配器只读 Studio Source，未连接者明确不可执行；项目覆盖与显式另存角色默认版本是两个独立持久化动作；现有浏览器演示数据不自动导入后端。
 - 依赖与启动：沿用现有 FastAPI/React/SQLAlchemy，无新增运行依赖。先在隔离开发库执行 `cd apps/api && .venv/bin/python -m alembic upgrade head`，再按下方命令启动；若本机 8000 端口已占用，可用 `AI_STUDIO_API_TARGET=http://127.0.0.1:<端口> npm run dev` 指向另一个本地 API。没有执行生产迁移或部署。
 
+### FE-F3A 项目核心完成（本地归档）
+
+- 需求背景：FE-F2 已使项目与生产工作台持久化，但 Brief、Evidence、Versions、Activity 仍是占位；FE-F3A 提案完成七标签的真实项目核心，不改变长期 PRD 和 FE-F2 工作流历史。
+- 目录结构：已归档变更在 [`openspec/changes/archive/2026-09-27-fe-f3a-content-project-core-completion/`](openspec/changes/archive/2026-09-27-fe-f3a-content-project-core-completion/)；主规格在 [`openspec/specs/fe-f3a-content-project-core/spec.md`](openspec/specs/fe-f3a-content-project-core/spec.md)。`apps/api/app/routers/project_{evidence,assets,read_models}.py` 与 `apps/api/app/services/project_{brief,evidence,assets,events,versions,overview}.py` 提供后端核心，`apps/web/src/product/project/` 按标签拆分真实项目界面。用户原始包、ZIP 与合并稿保持原状。
+- 已完成：五表增量迁移、项目事件与归档、追加式 Brief、Source 引用、冻结 Fact Boundary、显式 MaterialRevision 引用与工作流素材并集、Overview/Versions/Activity 派生读模型及七标签前端。隔离 SQLite 中已验证带 FE-F2 Run 历史的升级→回退→再升级；隔离浏览器完成项目、Brief 两版、Source、边界克隆/冻结、素材与七标签刷新。当前后端全套 296 passed、前端 build、OpenSpec strict 与 diff 检查通过。
+- 待完成/TODO：FE-F3B Identity、FE-F4 Review、FE-F5 Opportunity/Learning、真实外部连接器及生产部署不在本切片范围；本次未推送、合并或执行生产迁移。
+- 关键设计决策：复用现有 SourceDocument、冻结 FactPack、MaterialRevision 与 FE-F2 Run/Output，不另造平行资源库；项目引用不扩大全局资源权限，项目历史用归档而非物理删除保护，Overview/Versions 是后端派生读模型。新哈希素材上传若数据库回滚，字节候选写入 AuditLog，由已注册的定时 `retention_sweep` 在一日宽限后按批核实引用再清理；同哈希的写入与清理用文件锁协调，未处理候选不因普通审计日志过期而丢失。
+- 依赖与启动：无新增运行依赖。沿用上节 FastAPI/React 启动方式；先在隔离开发库执行 `cd apps/api && .venv/bin/alembic upgrade head`，再启动 API 与前端。生产数据库未执行迁移。
+
 ### 下一版规划：文章/图文全渠道
 
 > **2026-09-24 更新（V1 PRD 2.0 Content Harness 已实施）**：下一段提到的 `complete-prd-v1-channel-deliverables` 已标记 **superseded**，被主变更 [`align-v1-prd2-content-harness`](openspec/changes/align-v1-prd2-content-harness/proposal.md) 吸收并实施。当前代码已落地：Channel Registry（14 平台 profile，新增渠道无需改枚举/迁移）、Workflow 版本化 + Node Plugin Registry、Material Library（素材全局复用/权利链）、DraftCheckRun 统一检查、Discoverability（Pre/Post SEO）、Candidate Manifest schema v2、Delivery Router（copy_package / assisted_draft / auto_draft + DeliveryAttempt：prepared→远端→结果，unknown 不自动重发）、节点级 Rerun/Stale、Review & Publish Center（`/review-publish`）。真实账号自动发布仍未验证，平台能力一律如实标注 unverified；PRD §15–16 与 30 Topic 门槛仍需单独验收。实施与偏差记录见该 change 的 `design.md`。

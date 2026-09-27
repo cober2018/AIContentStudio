@@ -10,6 +10,7 @@ from ..models import (
     ContentAsset, ContentJob, ContentProject, ContentUnit, Draft, MaterialRevision,
     ProjectWorkflowOutput, WorkflowRun, WorkflowStep, utcnow,
 )
+from .project_events import record_project_event
 
 OUTPUTS = {
     "builtin.generate": ("draft_id", "draft", Draft),
@@ -73,4 +74,7 @@ def associate_step_output(db: Session, run: WorkflowRun, step: WorkflowStep, att
         created_at=utcnow(),
     )
     db.add(output)
+    db.flush()
+    event_type = "asset.workflow_generated" if kind == "material_revision" else "draft.generated" if kind == "draft" else "candidate.associated"
+    record_project_event(db, project_id=project.id, event_type=event_type, actor=None, entity_type=kind, entity_id=entity_id, payload={"unit_id": unit.id, "run_id": run.id, "node_id": step.node_id, "attempt_id": attempt_id, "project_output_id": output.id})
     return output

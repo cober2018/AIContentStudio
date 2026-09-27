@@ -90,7 +90,7 @@ function Shell() {
                 <div className="mt-3 space-y-0.5">{LEGACY_NAV.map((item) => <Link key={item.to} to={item.to} className="block rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-[#252936] hover:text-white">{item.label}</Link>)}</div>
               </details>
             </nav>
-            <div className="hidden border-t border-slate-700/70 px-5 py-4 text-[11px] text-slate-400 md:block">FE-F2 · 项目数据由后端保存</div>
+            <div className="hidden border-t border-slate-700/70 px-5 py-4 text-[11px] text-slate-400 md:block">FE-F3A · 项目核心由后端保存</div>
           </aside>
           <main className="min-w-0 flex-1" id="main-content">
             <Routes>

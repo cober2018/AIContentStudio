@@ -295,27 +295,11 @@ def freeze_fact_pack(pack_id: int, db: Session = Depends(get_db), user: User = D
     if pack.status == FactPackStatus.archived.value:
         raise HTTPException(409, "FactPack 已归档，请 Clone")
 
-    # 事务内校验（STU-042）：冲突优先于状态提示，便于定位根因
-    if not pack.items:
-        raise HTTPException(400, "FactPack 至少需要 1 个 Fact")
-    facts = [item.fact for item in pack.items if item.fact is not None]
-    conflicted = [f.id for f in facts if f.status == FactStatus.conflict.value]
-    if conflicted:
-        raise HTTPException(400, f"存在未解决冲突: {conflicted}")
-    not_confirmed = [f.id for f in facts if f.status != FactStatus.confirmed.value]
-    if not_confirmed:
-        raise HTTPException(400, f"存在非 confirmed 事实: {not_confirmed}")
-
-    pack.status = FactPackStatus.frozen.value
-    pack.frozen_at = utcnow()
-    for item in pack.items:
-        try:
-            item.snapshot_json = factpack_service.evidence_snapshot(item)
-        except ValueError as exc:
-            raise HTTPException(422, f"证据项 {item.id}: {exc}") from exc
-        item.snapshot_checksum = factpack_service.snapshot_checksum(item.snapshot_json)
-        item.snapshot_version = 1
-    pack.checksum = factpack_service.pack_snapshot_checksum(pack.items)
+    try:
+        factpack_service.freeze_pack(pack)
+    except ValueError as exc:
+        status_code = 400 if "至少需要" in str(exc) or "冲突" in str(exc) or "非 confirmed" in str(exc) else 422
+        raise HTTPException(status_code, str(exc)) from exc
     db.add(AuditLog(event="fact_pack.frozen", actor=user.email, entity_type="fact_pack", entity_id=str(pack.id),
                     detail_json={"version": pack.version, "checksum": pack.checksum}))
     db.commit()
@@ -328,32 +312,7 @@ def clone_fact_pack(pack_id: int, db: Session = Depends(get_db), user: User = De
     if not pack:
         raise HTTPException(404, "FactPack 不存在")
 
-    max_version = (
-        db.scalars(
-            select(FactPack.version).where(FactPack.name == pack.name).order_by(FactPack.version.desc()).limit(1)
-        ).first()
-        or pack.version
-    )
-    clone = FactPack(
-        name=pack.name,
-        description=pack.description,
-        version=max_version + 1,
-        parent_id=pack.id,
-        created_by=user.email,
-    )
-    db.add(clone)
-    db.flush()
-    for item in pack.items:
-        db.add(FactPackItem(
-            fact_pack_id=clone.id,
-            fact_id=item.fact_id,
-            note=item.note,
-            sort_order=item.sort_order,
-            evidence_kind=item.evidence_kind,
-            snapshot_json=dict(item.snapshot_json or {}),
-            public_use_allowed=item.public_use_allowed,
-            model_use_allowed=item.model_use_allowed,
-        ))
+    clone = factpack_service.clone_pack(db, pack, actor=user.email)
     db.add(AuditLog(event="fact_pack.cloned", actor=user.email, entity_type="fact_pack", entity_id=str(clone.id),
                     detail_json={"parent_id": pack.id, "parent_version": pack.version}))
     db.commit()
