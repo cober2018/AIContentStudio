@@ -5,7 +5,7 @@ Define the persistent project production workflow contract: versioned definition
 ## Requirements
 ### Requirement: Project-scoped persistent workflow
 
-The system SHALL persist ContentProject and ContentUnit records, associate a Content Unit with a stable Persona/Role identity, modality, and immutable workflow definition revision, and address every production run through its owning project and unit. A unit MAY have multiple historical runs; each run MUST pin the exact definition version and checksum used at creation. A new or explicitly rebound unit SHALL pin a server-created IdentitySnapshot; a WorkflowRun started from such a unit SHALL store the exact same snapshot ID. Historical units and runs without a snapshot SHALL remain explicitly legacy/unknown.
+The system SHALL persist ContentProject and ContentUnit records, associate a Content Unit with a stable Persona/Role identity, modality, and immutable workflow definition revision, and address every production run through its owning project and unit. A unit MAY have multiple historical runs; each run MUST pin the exact definition version and checksum used at creation. A new or explicitly rebound unit SHALL pin a server-created IdentitySnapshot; a WorkflowRun started from such a unit SHALL store the exact same snapshot ID. Historical units and runs without a snapshot SHALL remain explicitly legacy/unknown. A Project Candidate manifest SHALL preserve the exact WorkflowRun ID, version, and definition checksum that produced the reviewed content; later workflow changes MUST NOT rewrite it.
 
 #### Scenario: Reload a saved project workflow
 - **WHEN** an editor saves a valid project workflow override and reloads the selected Content Unit
@@ -22,6 +22,10 @@ The system SHALL persist ContentProject and ContentUnit records, associate a Con
 #### Scenario: Identity changes after run
 - **WHEN** Brand/Persona/Account/Series receives newer revisions after a Run starts
 - **THEN** the historical Run continues to reference its original IdentitySnapshot and workflow definition
+
+#### Scenario: Candidate pins producing run
+- **WHEN** a candidate is frozen from a unit's persisted workflow output
+- **THEN** its manifest records the producing run's exact workflow identity and checksum, which remain unchanged after a new workflow version is saved
 
 ### Requirement: Uniform project-run authorization across legacy APIs
 Any WorkflowRun bound to a ContentUnit SHALL receive the same persisted Project/Unit ownership and action-specific authorization check whether accessed through a new project-scoped route or any legacy Workflow API. The check MUST happen before a response is serialized or a mutation starts. This includes run detail/list, attempt read, retry, node rerun, rerun-from-here, human completion, and cancel; legacy Workflow definition list/serialization, clone/publish, and raw create-run MUST NOT expose or operate on project-bound definitions outside the same boundary. Legacy Topic-only runs SHALL retain their existing behavior.
@@ -136,7 +140,7 @@ A Data Node SHALL use a typed, extensible Data Source Plugin registry distinct f
 
 ### Requirement: Project-shared workflow outputs
 
-The system SHALL persist references to supported workflow-produced Draft, MaterialRevision, and Candidate outputs with owning project, unit, run, node, attempt, and applicable source/rights provenance. Generated image, chart, screenshot, and video-clip revisions SHALL appear in the owning project's Shared Assets. FE-F3A MAY add explicit project MaterialRevision references for project upload/system-library use, but those references SHALL remain a separate persistence source from ProjectWorkflowOutput. The project Shared Assets API SHALL unify both sources at read time and MUST NOT create a synthetic material, duplicate bytes, or infer an asset merely because a node reports success.
+The system SHALL persist references to supported workflow-produced Draft, MaterialRevision, and Candidate outputs with owning project, unit, run, node, attempt, and applicable source/rights provenance. Generated image, chart, screenshot, and video-clip revisions SHALL appear in the owning project's Shared Assets. FE-F3A MAY add explicit project MaterialRevision references for project upload/system-library use, but those references SHALL remain a separate persistence source from ProjectWorkflowOutput. The project Shared Assets API SHALL unify both sources at read time and MUST NOT create a synthetic material, duplicate bytes, or infer an asset merely because a node reports success. Freezing a Project Candidate SHALL verify that every referenced Draft, Candidate, and workflow output belongs to the requested ContentUnit through persisted output/run lineage. A raw output ID alone MUST NOT establish ownership.
 
 #### Scenario: Workflow material and explicit material coexist
 - **WHEN** a project has both explicit MaterialRevision references and a verified workflow-generated MaterialRevision
@@ -145,6 +149,10 @@ The system SHALL persist references to supported workflow-produced Draft, Materi
 #### Scenario: Explicit detach does not erase workflow history
 - **WHEN** an editor detaches an explicit project material reference
 - **THEN** any separate ProjectWorkflowOutput association to the same MaterialRevision remains intact and historical runs are not modified
+
+#### Scenario: Reject unrelated output at freeze
+- **WHEN** a candidate-freeze request references a Draft or workflow output from another ContentUnit
+- **THEN** the server rejects the request without creating a Candidate or disclosing the foreign output
 
 ### Requirement: Modality production shells
 The frontend SHALL provide distinct text, graphic, and video Production Workspace shells for a selected Content Unit, each with the same project-scoped workflow mini canvas, node inspector, explicit save/run controls, and a compact Project Shared Assets entry.

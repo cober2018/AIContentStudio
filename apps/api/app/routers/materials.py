@@ -26,6 +26,7 @@ from ..models import (
 from ..services import document_composition
 from ..services import materials as materials_service
 from ..services.content_harness.providers import CapabilityUnavailable
+from ..services.project_authorization import authorize_project_draft
 
 router = APIRouter(prefix="/api/v1", tags=["materials"])
 
@@ -258,6 +259,12 @@ def generate_material(
 ):
     """AI 生图 → MaterialRevision（source=ai_generated, prompt 留痕）。"""
 
+    draft = db.get(Draft, payload.draft_id) if payload.draft_id else None
+    if payload.draft_id and draft is None:
+        raise HTTPException(404, "Draft 不存在")
+    if draft is not None:
+        authorize_project_draft(db, draft, user, mutate=True)
+
     from .. import runtime_config
     from ..services.asset_media import MEDIA_ROOT
     from ..services.content_harness.providers import bootstrap_media_providers, resolve_asset_provider
@@ -289,11 +296,9 @@ def generate_material(
     db.add(AuditLog(event="material.generated", actor=user.email, entity_type="material", entity_id=str(material.id), detail_json={"provider": provider.key}))
     db.commit()
     result = _material_json(material, with_revisions=True)
-    if payload.draft_id:
-        draft = db.get(Draft, payload.draft_id)
-        if draft:
-            use = materials_service.attach_to_draft(db, draft, revision, role=payload.role if payload.role in ROLES else "inline")
-            db.add(AuditLog(event="material.attached", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"draft_media_id": use.id}))
+    if draft is not None:
+        use = materials_service.attach_to_draft(db, draft, revision, role=payload.role if payload.role in ROLES else "inline")
+        db.add(AuditLog(event="material.attached", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"draft_media_id": use.id}))
     db.commit()
     return result
 
@@ -306,6 +311,7 @@ def list_draft_materials(draft_id: int, db: Session = Depends(get_db), user: Use
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user)
     return [_media_json(m) for m in draft.media]
 
 
@@ -320,6 +326,7 @@ def attach_material(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     if payload.role not in ROLES:
         raise HTTPException(422, "role 不受支持")
     revision = db.get(MaterialRevision, payload.material_revision_id)
@@ -354,6 +361,7 @@ async def upload_draft_material(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     if role not in ROLES:
         raise HTTPException(422, "role 不受支持")
     content = await file.read()
@@ -384,6 +392,7 @@ def patch_draft_material(
     user: User = Depends(require_editor),
 ):
     draft, row = _own_media(db, draft_id, media_id)
+    authorize_project_draft(db, draft, user, mutate=True)
     if draft.status == DraftStatus.approved.value:
         raise HTTPException(409, "已批准稿件的素材不可修改")
     if payload.role is not None:
@@ -407,6 +416,7 @@ def patch_draft_material(
 @router.delete("/drafts/{draft_id}/materials/{media_id}")
 def delete_draft_material(draft_id: int, media_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     draft, row = _own_media(db, draft_id, media_id)
+    authorize_project_draft(db, draft, user, mutate=True)
     referenced_v1 = db.scalars(
         select(ContentAsset).where(ContentAsset.draft_id == draft.id, ContentAsset.approved_candidate_hash.is_not(None))
     ).first()
@@ -428,6 +438,7 @@ def get_document(draft_id: int, db: Session = Depends(get_db), user: User = Depe
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user)
     return {
         "draft_id": draft.id,
         "document_schema_version": draft.document_schema_version,
@@ -440,6 +451,7 @@ def set_document(draft_id: int, payload: DocumentIn, db: Session = Depends(get_d
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     try:
         document = document_composition.set_document(db, draft, {"blocks": payload.blocks})
     except (TypeError, ValueError) as exc:
@@ -453,6 +465,7 @@ def rebuild_document(draft_id: int, db: Session = Depends(get_db), user: User = 
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     document_composition.sync_document(db, draft)
     db.commit()
     return {"draft_id": draft.id, "document": draft.document_json}

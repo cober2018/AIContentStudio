@@ -1,5 +1,13 @@
 # 配置记录
 
+## 2026-09-28：FE-F4 apply 起点
+
+- FE-F4 归档器采用宿主机日期 `2026-09-27` 生成目录，虽然当前任务日期显示 2026-09-28；README 必须引用实际路径。归档命令成功同步四份旧能力规格并新增 FE-F4 主规格（11 added / 9 modified），且自动生成的 FE-F4 Purpose 为 `TBD`，已修成正式说明。
+- 独立复核把此前“项目 Draft 来源裸接口可能泄漏”的风险证实为实际旁路：`article_handoff` 的原始媒体可被其他用户读取/修改。当前已经使用 Project Run 所有权助手覆盖稿件、任务、素材、检查、文档与 Discoverability 入口；跨项目裸 ID 定向回归通过。Unknown 的普通回执与对账是两条不同路径，前者现在不能解除后者；项目历史 Candidate 也不能新建交付目标。
+- FE-F4 旧裸 ID 审计发现，项目 Candidate 的大多数 Asset/Target 别名已共用所有者检查，但两个旧授权入口先返回资产状态再鉴权，可形成状态探测；现已把鉴权前置。通用 Draft/ContentJob 裸接口仍是 FE-F2 既有来源表面，需与 FE-F4 Candidate 边界分开评估，不把项目 Candidate 保密性等同于其来源 Draft 已完全隔离。
+- 当前 `ProjectWorkflowOutput` 自动关联的可发布内容形态主要是 `draft`；纯媒体 `material_revision` 不构成完整可发布 Candidate。FE-F4 冻结适配器须基于持久化 Run/Output/Draft 链验证，不能把素材生成成功视为内容成品。
+- FE-F3B `ContentAccount` 不包含已验证渠道、凭据或远端发布能力。自动交付必须依赖真实验证映射；没有映射时只允许明确标注能力未验证的人工包/复制交付，并拒绝远端自动动作。
+
 ## 2026-09-28：FE-F4 规格审计发现
 
 - 后续主工作区本地 `main` 已快进至 FE-F3B `55eba02`；直接核实了四份 canonical 主规格、`ContentAccount`、`IdentitySnapshot`、身份 API 和 Alembic head `f3b000000001`。这解决了本地 apply 基线缺失；连接器端到端回读仍未单独验证。

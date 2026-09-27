@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..models import (
     AccountWorkflowDefault,
+    ContentAsset,
     ContentAccount,
     ContentPersona,
     ContentProject,
@@ -13,11 +14,35 @@ from ..models import (
     PersonaWorkflowDefault,
     ProjectWorkflowBinding,
     ContentSeries,
+    DeliveryTarget,
+    ContentJob,
+    Draft,
     SeriesWorkflowDefault,
     User,
     Workflow,
     WorkflowRun,
 )
+
+
+def authorize_project_asset(db: Session, asset: ContentAsset, user: User, *, mutate: bool = False) -> None:
+    if asset.project_id is None:
+        return
+    owner = db.execute(
+        select(ContentProject.owner_user_id, ContentProject.status, ContentUnit.status)
+        .join(ContentUnit, ContentUnit.project_id == ContentProject.id)
+        .where(ContentProject.id == asset.project_id, ContentUnit.id == asset.content_unit_id)
+    ).first()
+    if owner is None or owner[0] != user.id:
+        raise HTTPException(404, "候选内容不存在")
+    if mutate and (owner[1] == "archived" or owner[2] == "archived"):
+        raise HTTPException(409, "已归档项目或单元只可查看历史")
+
+
+def authorize_project_target(db: Session, target: DeliveryTarget, user: User, *, mutate: bool = False) -> None:
+    asset = db.get(ContentAsset, target.content_asset_id)
+    if asset is None:
+        raise HTTPException(404, "交付目标不存在")
+    authorize_project_asset(db, asset, user, mutate=mutate)
 
 
 def authorize_project_run(db: Session, run: WorkflowRun, user: User, *, mutate: bool = False) -> None:
@@ -37,6 +62,19 @@ def authorize_project_run(db: Session, run: WorkflowRun, user: User, *, mutate: 
 
         unit = db.get(ContentUnit, run.content_unit_id)
         hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
+
+
+def authorize_project_job(db: Session, job: ContentJob, user: User, *, mutate: bool = False) -> None:
+    if job.workflow_run_id is None:
+        return
+    run = db.get(WorkflowRun, job.workflow_run_id)
+    if run is None:
+        raise HTTPException(404, "内容任务不存在")
+    authorize_project_run(db, run, user, mutate=mutate)
+
+
+def authorize_project_draft(db: Session, draft: Draft, user: User, *, mutate: bool = False) -> None:
+    authorize_project_job(db, draft.content_job, user, mutate=mutate)
 
 
 def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> bool:

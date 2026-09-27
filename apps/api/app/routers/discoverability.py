@@ -8,6 +8,7 @@ from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import DiscoverabilityReport, Draft, TopicBrief, User
 from ..services import discoverability as disco
+from ..services.project_authorization import authorize_project_draft
 
 router = APIRouter(prefix="/api/v1", tags=["discoverability"])
 
@@ -40,6 +41,7 @@ def run_post(draft_id: int, db: Session = Depends(get_db), user: User = Depends(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     try:
         row = disco.run_post_draft(db, draft, user)
     except Exception as exc:
@@ -50,6 +52,10 @@ def run_post(draft_id: int, db: Session = Depends(get_db), user: User = Depends(
 
 @router.get("/drafts/{draft_id}/discoverability")
 def list_draft_reports(draft_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    draft = db.get(Draft, draft_id)
+    if not draft:
+        raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user)
     return [disco.serialize(r) for r in disco.reports_for(db, draft_id=draft_id)]
 
 
@@ -59,6 +65,7 @@ def apply_suggestion(draft_id: int, report_id: int, payload: ApplyIn, db: Sessio
     report = db.get(DiscoverabilityReport, report_id)
     if not draft or not report or report.draft_id not in {None, draft_id}:
         raise HTTPException(404, "Draft 或报告不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     try:
         result = disco.apply_suggestion(db, draft, report, payload.model_dump(), user)
     except ValueError as exc:

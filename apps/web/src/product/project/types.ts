@@ -14,6 +14,7 @@ export type Overview = {
   risks: { code: string; unit_id?: number; run_id?: number }[];
   pendingDecisions: { code: string; unit_id?: number; run_id?: number }[];
   nextAction: { code: string; label: string; href: string } | null;
+  review: { units: { unit_id: number; title: string; summary: string; current_candidate: { id: number } | null }[] };
 };
 
 export type SharedAsset = {
@@ -30,5 +31,5 @@ export type VersionItem = {
   kind: string; id: string; version: string | number | null; status: string | null;
   checksum: string | null; createdAt: string | null; current: boolean; unitId?: number; source?: string;
 };
-export type Versions = Record<"brief" | "factBoundary" | "contentUnits" | "identitySnapshots" | "identityStates" | "workflows" | "runs" | "materials" | "contentOutputs", VersionItem[]>;
+export type Versions = Record<"brief" | "factBoundary" | "contentUnits" | "identitySnapshots" | "identityStates" | "workflows" | "runs" | "materials" | "contentOutputs" | "candidates" | "approvals" | "deliveryTargets", VersionItem[]>;
 export type Activity = { id: number; event_type: string; entity_type: string | null; entity_id: string | null; actor: string | null; payload: Record<string, unknown>; created_at: string | null };

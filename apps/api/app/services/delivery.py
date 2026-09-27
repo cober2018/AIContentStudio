@@ -17,13 +17,16 @@ from sqlalchemy.orm import Session
 
 from ..models import (
     AuditLog,
+    ContentAccount,
     ContentAsset,
+    ContentUnit,
     DeliveryAction,
     DeliveryAttempt,
     DeliveryTarget,
     DeliveryTargetStatus,
     DraftMedia,
     MaterialRevision,
+    Review,
     utcnow,
 )
 from .content_harness.channel_registry import resolve_content_form
@@ -53,8 +56,41 @@ def resolve_publisher(channel: str, content_form: str, action: str):
 
 def authorize_target(db: Session, asset: ContentAsset, payload, user) -> DeliveryTarget:
     """通用交付目标授权：channel/form/action 经 Registry 验证（D21），幂等。"""
+    if asset.project_id is not None:
+        from .project_authorization import authorize_project_asset
+
+        authorize_project_asset(db, asset, user, mutate=True)
     if asset.status not in {"approved", "exported"} or not asset.approved_candidate_hash:
         raise HTTPException(409, "只有已批准内容才能创建交付目标")
+    content_account_id = getattr(payload, "content_account_id", None)
+    if asset.project_id is not None:
+        from .candidates import candidate_hash
+        if candidate_hash(asset.candidate_manifest_json or {}) != asset.candidate_hash or asset.candidate_hash != asset.approved_candidate_hash:
+            raise HTTPException(409, "项目候选哈希与已批准内容不一致")
+        approved = db.scalar(select(Review.id).where(
+            Review.content_asset_id == asset.id,
+            Review.decision == "approved",
+            Review.candidate_hash == asset.candidate_hash,
+        ).order_by(Review.id.desc()).limit(1))
+        if approved is None:
+            raise HTTPException(409, "项目候选尚未经过独立内容审批")
+        current_candidate_id = db.scalar(select(ContentAsset.id).where(
+            ContentAsset.content_unit_id == asset.content_unit_id,
+        ).order_by(ContentAsset.id.desc()).limit(1))
+        if current_candidate_id != asset.id:
+            raise HTTPException(409, "历史候选只可查看，不能新增交付授权")
+        unit = db.get(ContentUnit, asset.content_unit_id)
+        if unit is None or (unit.channel_id and unit.channel_id != payload.channel):
+            raise HTTPException(409, "目标渠道与内容单元不一致")
+        if content_account_id is not None:
+            account = db.get(ContentAccount, content_account_id)
+            if account is None or account.status != "active" or account.persona_id != unit.persona_id or (unit.account_id is not None and unit.account_id != account.id):
+                raise HTTPException(404, "内容账号不存在")
+        if payload.action in {DeliveryAction.auto_draft.value, DeliveryAction.assisted_draft.value}:
+            raise HTTPException(422, "capability_unavailable: 内容账号尚无已验证的渠道/远端发布映射")
+    elif content_account_id is not None:
+        raise HTTPException(422, "旧候选不能推断新的内容账号归属")
+    account_key = f"content-account:{content_account_id}" if content_account_id is not None else f"legacy-ref:{payload.account_ref}"
     try:
         spec = resolve_content_form(db, payload.channel, payload.content_form)
     except ValueError as exc:
@@ -85,18 +121,22 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
             DeliveryTarget.approved_candidate_hash == asset.approved_candidate_hash,
             DeliveryTarget.channel == payload.channel,
             DeliveryTarget.content_form == payload.content_form,
-            DeliveryTarget.account_ref == payload.account_ref,
+            DeliveryTarget.authorization_account_key == account_key,
             DeliveryTarget.action == payload.action,
             DeliveryTarget.authorization_version == payload.authorization_version,
         )
     ).first()
     if existing:
+        if existing.account_ref != payload.account_ref:
+            raise HTTPException(409, "账号引用已变化，请使用新的显式授权版本")
         return existing
     target = DeliveryTarget(
         content_asset_id=asset.id,
+        content_account_id=content_account_id,
         channel=payload.channel,
         content_form=payload.content_form,
         account_ref=payload.account_ref,
+        authorization_account_key=account_key,
         action=payload.action,
         authorization_version=payload.authorization_version,
         approved_candidate_hash=asset.approved_candidate_hash,
@@ -113,13 +153,30 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
                     detail_json={"asset_id": asset.id, "action": payload.action, "publisher": publisher_key,
                                  "capability": capability, "remote_call": payload.action == DeliveryAction.auto_draft.value}))
     try:
+        db.flush()
+        if asset.project_id is not None:
+            from .project_events import record_project_event
+
+            record_project_event(db, project_id=asset.project_id, event_type="delivery.authorized", actor=user.email,
+                                 entity_type="delivery_target", entity_id=target.id,
+                                 payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "candidate_hash": asset.candidate_hash, "action": target.action})
         db.commit()
     except Exception:  # noqa: BLE001 并发幂等
         db.rollback()
         concurrent = db.scalars(
-            select(DeliveryTarget).where(DeliveryTarget.id == target.id)
+            select(DeliveryTarget).where(
+                DeliveryTarget.content_asset_id == asset.id,
+                DeliveryTarget.approved_candidate_hash == asset.approved_candidate_hash,
+                DeliveryTarget.channel == payload.channel,
+                DeliveryTarget.content_form == payload.content_form,
+                DeliveryTarget.authorization_account_key == account_key,
+                DeliveryTarget.action == payload.action,
+                DeliveryTarget.authorization_version == payload.authorization_version,
+            )
         ).first()
         if concurrent:
+            if concurrent.account_ref != payload.account_ref:
+                raise HTTPException(409, "账号引用已变化，请使用新的显式授权版本")
             return concurrent
         raise HTTPException(409, "交付目标创建冲突，请刷新后重试") from None
     db.refresh(target)
@@ -146,6 +203,12 @@ def validate_live_candidate_payload(db: Session, asset: ContentAsset) -> dict:
     from .candidates import candidate_hash
 
     manifest = asset.candidate_manifest_json or {}
+    if asset.project_id is not None:
+        from .project_review import live_evidence_reasons
+
+        evidence_reasons = live_evidence_reasons(db, asset.project_id, manifest)
+        if evidence_reasons:
+            raise HTTPException(409, {"code": "evidence_unready", "reasons": evidence_reasons})
     if candidate_hash(manifest) != asset.approved_candidate_hash:
         raise HTTPException(409, "候选清单与批准哈希不一致（candidate integrity failed），拒绝远端交付")
     render = manifest.get("render") or {}
@@ -200,6 +263,9 @@ def execute_attempt(db: Session, target_id: int, user) -> dict:
     target = db.get(DeliveryTarget, target_id)
     if not target:
         raise HTTPException(404, "交付目标不存在")
+    from .project_authorization import authorize_project_target
+
+    authorize_project_target(db, target, user, mutate=True)
     if target.authorized_by and target.authorized_by != user.email:
         raise HTTPException(403, "该账号交付目标未授权给当前操作人")
     if target.status == DeliveryTargetStatus.blocked.value:
@@ -234,6 +300,11 @@ def execute_attempt(db: Session, target_id: int, user) -> dict:
         attempt.error = f"publisher 未注册: {exc}"[:500]
         attempt.finished_at = utcnow()
         target.status = DeliveryTargetStatus.failed.value
+        if asset.project_id is not None:
+            from .project_events import record_project_event
+
+            record_project_event(db, project_id=asset.project_id, event_type="delivery.failed", actor=user.email,
+                                 entity_type="delivery_attempt", entity_id=attempt.id, payload={"target_id": target.id})
         db.commit()
         raise HTTPException(422, f"publisher 未注册: {target.publisher_key}") from exc
 
@@ -260,6 +331,13 @@ def execute_attempt(db: Session, target_id: int, user) -> dict:
         target.status = DeliveryTargetStatus.failed.value
     db.add(AuditLog(event="delivery_attempt.finished", actor=user.email, entity_type="delivery_attempt",
                     entity_id=str(attempt.id), detail_json={"status": attempt.status, "remote_id": attempt.remote_id, "publisher": target.publisher_key}))
+    if asset.project_id is not None:
+        from .project_events import record_project_event
+
+        event_type = {"succeeded": "delivery.succeeded", "unknown": "delivery.unknown", "failed": "delivery.failed"}[attempt.status]
+        record_project_event(db, project_id=asset.project_id, event_type=event_type, actor=user.email,
+                             entity_type="delivery_attempt", entity_id=attempt.id,
+                             payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "target_id": target.id, "attempt_status": attempt.status})
     db.commit()
     return {
         "attempt_id": attempt.id, "attempt_no": attempt.attempt_no, "status": attempt.status,
@@ -272,6 +350,11 @@ def reconcile_attempt(db: Session, target_id: int, payload, user) -> dict:
     target = db.get(DeliveryTarget, target_id)
     if not target:
         raise HTTPException(404, "交付目标不存在")
+    from .project_authorization import authorize_project_target
+
+    authorize_project_target(db, target, user, mutate=True)
+    if target.authorized_by and target.authorized_by != user.email:
+        raise HTTPException(403, "该账号交付目标未授权给当前操作人")
     if target.status != DeliveryTargetStatus.reconciliation_needed.value:
         raise HTTPException(409, "只有 reconciliation_needed 的目标需要对账")
     last = db.scalars(
@@ -290,6 +373,12 @@ def reconcile_attempt(db: Session, target_id: int, payload, user) -> dict:
         raise HTTPException(422, "resolution 只允许 delivered / not_delivered")
     db.add(AuditLog(event="delivery_target.reconciled", actor=user.email, entity_type="delivery_target",
                     entity_id=str(target.id), detail_json={"resolution": resolution, "note": payload.note}))
+    asset = db.get(ContentAsset, target.content_asset_id)
+    if asset.project_id is not None:
+        from .project_events import record_project_event
+
+        record_project_event(db, project_id=asset.project_id, event_type="delivery.reconciled", actor=user.email,
+                             entity_type="delivery_target", entity_id=target.id, payload={"resolution": resolution, "unit_id": asset.content_unit_id})
     db.commit()
     return {"target_id": target.id, "status": target.status}
 
@@ -349,6 +438,10 @@ def _live_media_rights(db: Session, media: dict) -> bool | None:
 def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
     asset = _asset_of(db, target)
     manifest = asset.candidate_manifest_json or {}
+    if asset.project_id is not None:
+        if manifest.get("schema_version") != 3:
+            raise HTTPException(409, "项目候选缺少 v3 冻结清单")
+        validate_live_candidate_payload(db, asset)
     render = (manifest.get("render") or {}).get("payload") or {}
     title = manifest.get("content", {}).get("title") or asset.title
     content: dict = {"markdown": render.get("markdown") or manifest.get("content", {}).get("body_markdown") or asset.final_body, "title": title}
@@ -362,7 +455,7 @@ def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
             raise HTTPException(409, f"候选清单包含未获公开权限的素材: {media.get('draft_media_id')}")
         # 实时权利复核：批准快照之后撤权（revision/status 或 use 行 revoked）必须阻止
         live = _live_media_rights(db, media)
-        if live is False:
+        if live is False or (asset.project_id is not None and live is not True):
             raise HTTPException(409, f"素材公开使用权限已撤销: {media.get('material_revision_id') or media.get('draft_media_id')}")
         media_entries.append({
             "draft_media_id": media.get("draft_media_id"),
@@ -375,7 +468,7 @@ def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
             "caption": media.get("caption"),
         })
     package_manifest = {
-        "schema_version": 2,
+        "schema_version": 3 if asset.project_id is not None else 2,
         "target_id": target.id,
         "asset_id": asset.id,
         "channel": target.channel,
@@ -390,6 +483,12 @@ def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
         "declarations": manifest.get("declarations", []),
         "remote_call": False,
     }
+    if asset.project_id is not None:
+        package_manifest["candidate"] = {"id": asset.id, "hash": asset.candidate_hash}
+        package_manifest["project"] = manifest["project"]
+        package_manifest["identity"] = manifest["identity"]
+        package_manifest["evidence"] = manifest["evidence"]
+        package_manifest["production"] = manifest["production"]
     return {"manifest": package_manifest, "content": content}
 
 
@@ -418,7 +517,8 @@ def package_zip_bytes(db: Session, target: DeliveryTarget) -> tuple[bytes, str]:
             if hashlib.sha256(data).hexdigest() != media.get("hash"):
                 raise HTTPException(409, "批准素材文件校验失败，不能导出成品包")
             suffix = _media_suffix(db, media)
-            archive.writestr(f"media/{(media.get('sort_order') or 0):02d}-{media.get('draft_media_id')}{suffix}", data)
+            media_id = media.get("draft_media_id") or media.get("material_revision_id")
+            archive.writestr(f"media/{(media.get('sort_order') or 0):02d}-{media_id}{suffix}", data)
     filename = f"delivery-target-{target.id}.zip"
     return buffer.getvalue(), filename
 

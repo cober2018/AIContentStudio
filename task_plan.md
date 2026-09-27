@@ -1,5 +1,17 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F4 apply（已授权）
+
+目标：按 `openspec/changes/fe-f4-project-review-distribution/` 实施项目优先审核与分发，保持旧 Topic 链兼容；详细步骤见 `docs/superpowers/plans/2026-09-28-fe-f4-project-review-distribution.md`。
+
+- [x] /// 确认 FE-F3B 本地 `main` 基线、OpenSpec 57 项任务（3 项已完成）和隔离分支 `codex/fe-f4-project-review-distribution`
+- [x] /// 模型与可逆迁移：ContentAsset / Review / DeliveryTarget
+- [x] /// Candidate v3 冻结、精确审批与不可变血缘
+- [x] /// 交付授权、v3 人工包、legacy raw-ID 权限、unknown 对账
+- [x] /// 项目 Review 投影、Overview/Versions/Activity 与 `/review` 前端
+- [x] /// 回归、隔离迁移、浏览器验收、独立复核与五份主规格同步归档
+- [x] /// 归档后五份主规格及全部主规格严格校验、差异检查；准备本地提交，不推送/合并/部署
+
 ## 2026-09-28：FE-F4 Project-first Review & Distribution 规格审计（不 apply）
 
 目标：以本地 FE-F3B 提交 `55eba02` 为基线，审计用户提供的 FE-F4 包，将校准后的提案放入标准 OpenSpec；主工作区本地 `main` 后续已快进到该提交，但 FE-F4 仍需单独确认才能 apply、推送、合并或部署。

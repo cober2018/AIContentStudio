@@ -14,6 +14,7 @@ from ..models import (
     DraftStatus,
     Review,
     User,
+    WorkflowRun,
     utcnow,
 )
 from ..services.candidates import build_manifest, candidate_hash
@@ -52,6 +53,12 @@ def _get_latest_draft_for_job(db: Session, job_id: int) -> Draft | None:
     ).first()
 
 
+def _project_bound(db: Session, draft: Draft) -> bool:
+    run_id = draft.content_job.workflow_run_id
+    run = db.get(WorkflowRun, run_id) if run_id else None
+    return run is not None and run.content_unit_id is not None
+
+
 @router.get("/queue")
 def review_queue(
     db: Session = Depends(get_db),
@@ -62,7 +69,7 @@ def review_queue(
         .where(Draft.status.in_([DraftStatus.ready_for_review.value, DraftStatus.changes_requested.value]))
         .order_by(Draft.created_at.desc())
     )
-    return [_serialize_queue_item(d) for d in drafts]
+    return [_serialize_queue_item(d) for d in drafts if not _project_bound(db, d)]
 
 
 @router.get("/history")
@@ -75,7 +82,7 @@ def review_history(
         .where(Draft.status.in_([DraftStatus.approved.value, DraftStatus.exported.value]))
         .order_by(Draft.created_at.desc())
     )
-    return [_serialize_queue_item(d) for d in drafts]
+    return [_serialize_queue_item(d) for d in drafts if not _project_bound(db, d)]
 
 
 @router.post("/drafts/{draft_id}/request-changes")
@@ -88,6 +95,8 @@ def request_changes(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    if _project_bound(db, draft):
+        raise HTTPException(409, "项目稿件必须通过项目候选审核")
     if draft.status not in {DraftStatus.ready_for_review.value, DraftStatus.changes_requested.value}:
         raise HTTPException(409, f"当前状态 {draft.status} 不可退回")
 
@@ -111,6 +120,8 @@ def approve(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    if _project_bound(db, draft):
+        raise HTTPException(409, "项目稿件必须通过项目候选审核")
     if draft.status not in {DraftStatus.ready_for_review.value, DraftStatus.changes_requested.value}:
         raise HTTPException(409, f"当前状态 {draft.status} 不可批准")
 

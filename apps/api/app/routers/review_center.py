@@ -96,7 +96,11 @@ def topic_review_center(topic_id: int, db: Session = Depends(get_db), user: User
         raise HTTPException(404, "Topic 不存在")
     pack = topic.fact_pack
     targets_spec = topic.targets_json or [{"channel": c, "content_form": None} for c in (topic.channels or [])]
-    jobs = db.scalars(select(ContentJob).where(ContentJob.topic_brief_id == topic.id)).all()
+    jobs = []
+    for job in db.scalars(select(ContentJob).where(ContentJob.topic_brief_id == topic.id)):
+        run = db.get(WorkflowRun, job.workflow_run_id) if job.workflow_run_id else None
+        if run is None or run.content_unit_id is None:
+            jobs.append(job)
 
     targets_out = []
     for spec in targets_spec:

@@ -1,5 +1,22 @@
 # 当前进度
 
+## 2026-09-28：FE-F4 apply 启动
+
+- 用户明确选择五份 delta 全部同步主规格。归档前比对四份 MODIFIED 的 9 条要求、28 个旧场景标题全部保留；`openspec archive fe-f4-project-review-distribution --yes` 报告新增 11 条、修改 9 条、删除 0 条，归档实际路径是 `openspec/changes/archive/2026-09-27-fe-f4-project-review-distribution/`（工具使用宿主机日期）。新增主规格的机械 Purpose 已改成正式产品契约说明。归档后五份主规格保留 delta 与旧契约，全体 15 份主规格 strict 校验 15 passed / 0 failed，`git diff --check` 通过；本地提交待执行。
+- 归档后重新隔离运行后端全量 318 passed / 6 warnings，前端构建通过（主包 1,095.28 kB 警告）。此前 FE-F4 定向 8 passed、Ruff F 通过；`openspec status` 四类产物均 done，tasks 57/57 勾选。未推送、合并、部署或运行生产迁移。
+- 独立复核最终一项（历史 Candidate 裸审批）已确认关闭，无剩余高风险问题。FE-F4 OpenSpec 任务现全勾选；非 Draft v3 包回归实际检查 PNG 字节和正确素材文件名，定向 8 passed。OpenSpec strict、`git diff --check`、本次后端 Ruff F 通过；最终后端全套正在复跑。五份 delta 同步主规格的归档选项已向用户确认，回复前不归档。
+- 二次独立复核仅剩历史 Candidate 仍可从裸审批 API 再次批准或退改；现已按当前 Candidate ID 在服务端同时封住 approve/request-changes，并增加历史候选负例。定向 FE-F4 8 passed；复核最后一项正在回读。前端 build 和上一轮后端全量均通过，最终全量需在最后改动后复跑。
+- 独立代码复核首次指出四项阻断：旧项目 Draft 素材裸 ID、Unknown 普通回执绕过对账、历史 Candidate 新增授权、批准后前端详情不刷新。现分别补上共享 Project Run 所有者闸门（覆盖旧 Draft/Job/素材/检查/文档/Discoverability）、Unknown 回执拒绝并要求对账、当前 Candidate 判定、审批后重取详情。定向 FE-F4 7 passed；第二轮独立复核进行中。修后全量后端 317 passed / 6 warnings，前端 build 通过；新增更细断言后定向 7 passed。归档/提交仍未执行。
+- 最终门禁首轮复跑：隔离 SQLite 全量后端 317 passed / 6 warnings；前端 TypeScript/Vite build 通过（1,095.18 kB 主包警告）；FE-F4 OpenSpec strict 与 `git diff --check` 通过。旧 article-handoff 与通用 DeliveryTarget 授权入口已调整为先核验项目所有者再返回状态，避免跨项目状态探测。独立代码复核已发起；尚未归档/提交。
+- FE-F4 浏览器门禁补齐：隔离验收库（与用户当前服务分离）依次验证 Blocked 无 Draft 输出时 Freeze 禁用、Unknown 展示人工对账且无重发按钮、更新 Candidate 后旧 Unknown 不覆盖当前 Stale、Stale 当前候选 Approve/Authorize 禁用、历史 Candidate 仅显示只读提示。首次鼠标 click 自动化未切换 tab，改用真实键盘 Enter 后交付 tab 控件与状态均在可访问树中核验；此非产品逻辑错误。临时浏览器页与 18082/15175 服务已关闭。验收库内造数仅用于 UI 状态，不当成真实 Freeze→Approve→Delivery 业务验收；真实链路由后端集成测试覆盖。
+- FE-F4 第五批：独立临时 SQLite 上后端全量 317 passed / 6 warnings；另一独立临时库 Alembic 从空库升到 `f4a000000001`、退回 FE-F3B、再升 FE-F4 均通过。隔离 127.0.0.1:18082/15175 浏览器验证 `/review` 可显示真实项目/单元受阻状态；在隔离验收库注入待核对目标后，页面可见 `unknown` 与“先对账、不可自动重发”说明。交付标签点击的 UI 自动化未产生状态变化，浏览器交互门禁尚不算通过；不会把截图/页面加载误报为完整交互验收。OpenSpec strict、diff-check 通过；任务 4.4、5.4、8–9 仍待收口。
+- FE-F4 第四批：`/review` 从 placeholder 改为真实项目审核页，分项目/单元、状态筛选、候选预览/变更/检查/交付四栏，区分 Freeze、审批、授权、ZIP、人工作业回填与 unknown 对账；历史 Candidate 的交付操作隐藏，自动草稿因无已验证账号映射不开放。项目 Overview/Versions 接入相同审核投影，旧 `/review-publish` 未改。前端 TypeScript/Vite build 通过（bundle 1,095.18 kB，原有体积警告）。服务端额外封闭已批准候选的退改状态歧义，ZIP 下载本身推进待人工回填，并按实时 FactPack item 权利检查交付（避免 ORM 关系缓存掩盖撤权）；FE-F4/F3A/delivery 定向 28 passed。浏览器验收与最终全量门禁未完成。
+- FE-F4 第三批：Project Review Center 新增项目/单元/候选只读投影及 Candidate diff；状态只按当前 Candidate/Target 计算，旧 Candidate 的 unknown 不污染新候选，当前目标的 unresolved unknown 优先。旧 article-handoff 的 project-bound alias 已做所有者检查并拒绝混用 v1 包路径；旧 Topic Review read model 排除 project-bound run。冻结来源不能悄悄替换成同 Job 的较新 Draft；并发同 Project/Unit/hash 冻结有数据库唯一键与冲突回读。交付授权、结果、对账、回执开始与项目事件同事务记录。FE-F4 + delivery + review + v2 candidate 定向 21 passed。全量测试首次因本机 `NO_PROXY/no_proxy` 配置出现 13 个无关失败；去掉二者后为 316 passed / 1 个既有 worker 默认 SQLite 未初始化失败；已建立独立临时测试库供最终复跑，不改生产或主工作区。
+- FE-F4 第二批：Draft-backed WorkflowOutput 可冻结 v3 Candidate，Freeze/Content Approval/退改分离；项目账号授权沿稳定 ContentAccount 键幂等。旧裸 `/assets` 的项目候选读取按所有者隔离，项目候选不能经旧素材增删/导出接口修改；匿名封面/媒体直链对项目候选关闭。项目 manual_handoff 已改走 v3 manifest 成品包（真实媒体字节与实时权限校验），随后可人工回填 Receipt；旧 v1 手工交付路径保持。定向 FE-F4 + delivery + v2 candidate 测试 17 passed。项目 Review Center 投影、前端、其他 raw-ID/alias 审计及全量门禁仍待完成。
+- 持久化 1.1–1.4 完成：稳定 `authorization_account_key` 取代仅 `account_ref` 的唯一约束；同引用不同 ContentAccount 可分别授权、同账号幂等，引用改变须新授权版本。用旧 FE-F3B checkout 构造真实旧结构并插入 Asset/Review/Target/Attempt/Receipt，隔离库升级→回退→再升级后 5 类旧行及历史 account_ref 均保持，未伪造项目或账号链接。新建库往返亦通过。相关定向测试 10 passed。
+- 首批模型与迁移：ContentAsset 新增 Project/Unit/IdentitySnapshot/Run 与独立 `candidate_hash` 字段；Review 可绑定 Candidate 且项目原生行可无旧 Draft；DeliveryTarget 增加 ContentAccount 和稳定授权账号键。隔离 SQLite 新建库往返通过；旧 delivery/review 与新 schema 定向测试 10 passed。此时稳定账号幂等及旧行往返尚待补齐，已由上一条闭合。
+- 用户明确授权 FE-F4 apply；在隔离分支 `codex/fe-f4-project-review-distribution` 执行，不改本地 `main`。OpenSpec `spec-driven` 起点为 57 项、已完成 3 项基线任务；计划见 `docs/superpowers/plans/2026-09-28-fe-f4-project-review-distribution.md`。启动时业务代码、迁移和验收均未完成；本轮不推送/合并/部署/运行生产迁移。
+
 ## 2026-09-28：FE-F4 规格审计
 
 - 后续本地主工作区 `main` 已从 `c044085` 快进到 FE-F3B `55eba02`。已核实 FE-F3B 四份主规格、`ContentAccount`/`IdentitySnapshot`、身份路由和迁移 head；隔离 SQLite 基线后端 310 passed、前端 build、14 份主规格 strict 均通过。连接器自身回读未验证；FE-F4 尚未 apply。

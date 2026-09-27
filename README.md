@@ -42,14 +42,14 @@
 - 关键设计决策：旧 brandless Persona 不伪造品牌或画像，旧 Unit/Run 不伪造快照；身份新修订不回写历史快照；默认工作流新版本不悄然改绑已有单元；项目 Run 的新旧 API 共用权限闸门，归档祖先不参与新生产。
 - 依赖与启动方式：无新增运行依赖。仅对隔离开发库执行 `cd apps/api && .venv/bin/alembic upgrade head`，再按下方 FastAPI/Vite 命令启动；生产数据库迁移须另行决策。
 
-### FE-F4 项目优先审核与分发（规格就绪，未 apply）
+### FE-F4 项目优先审核与分发（本地实现并归档）
 
-- PRD/需求背景：[`openspec/changes/fe-f4-project-review-distribution/`](openspec/changes/fe-f4-project-review-distribution/) 定义 ContentProject → ContentUnit → Freeze Candidate → Content Approval → Delivery Authorization → Delivery；Review Center 是现有业务事实的投影，不新建平行审核状态表。
-- 目录结构：本轮仅新增标准 OpenSpec proposal、design、tasks 和五份 delta spec；来源包仍保留在主工作区的 `openspec/fe-f4-project-review-distribution/`。业务代码和迁移尚未更改。
-- 已完成：以 FE-F3B 本地提交 `55eba02` 为规格基线，校准 v3 Candidate 血缘、冻结/批准/授权分离、旧裸 ID 权限、ContentAccount 能力边界和四份修改规格的原有场景保留；v3 人工包与同 `account_ref` 不同账号的授权唯一性已明确。OpenSpec strict 与独立规格复核通过。
-- 待完成/TODO：主工作区本地 `main` 已快进至 FE-F3B `55eba02`，且主规格、身份模型与迁移 head 已核实；连接器端到端回读尚未单独验证。FE-F4 仍须用户明确确认后才可 apply；当前不推送、合并 FE-F4、部署或运行生产迁移。
-- 关键设计决策：复用 ContentAsset、Review、DeliveryTarget/Attempt/Receipt；不伪造旧 Topic/Draft/身份引用，`unknown` 必须人工对账、绝不自动重发。无真实渲染/血缘的输出阻断 Candidate freeze。
-- 依赖与启动方式：规格阶段不增加运行依赖或启动步骤；后续实现需从 FE-F3B Alembic head `f3b000000001` 做可逆迁移，仅在隔离开发库验收。
+- PRD/需求背景：[`openspec/specs/fe-f4-project-review-distribution/spec.md`](openspec/specs/fe-f4-project-review-distribution/spec.md) 定义 ContentProject → ContentUnit → Freeze Candidate → Content Approval → Delivery Authorization → Delivery；Review Center 是现有业务事实的投影，不新建平行审核状态表。
+- 目录结构：实施记录归档于 [`openspec/changes/archive/2026-09-27-fe-f4-project-review-distribution/`](openspec/changes/archive/2026-09-27-fe-f4-project-review-distribution/)；另四份 FE-F0/F1、FE-F2、FE-F3A、FE-F3B 主规格已同步。`apps/api/app/services/project_review*.py`、`apps/api/app/routers/project_review.py` 承接 Candidate 与投影，`apps/api/app/services/delivery.py` 承接授权和本地成品包，`apps/web/src/product/ProjectReviewCenter.tsx` 是真实 `/review`；增量迁移是 `apps/api/alembic/versions/f4a000000001_project_review_distribution.py`。原始来源包不改动。
+- 已完成：项目级 Draft 工作流输出可冻结 v3 Candidate，内容审批与交付授权独立；项目/单元/身份/事实边界/运行/检查/渲染/素材血缘进入冻结清单。`/review` 按项目展示当前候选、历史、检查、交付与对账，旧 `/review-publish` 保留。项目人工包和复制包经 v3 清单校验后包含真实媒体字节；旧裸 Candidate/Target 与项目稿件素材入口按项目所有者校验。隔离库升级→回退→升级、后端全量 318 项与前端构建已通过；独立代码复核已关闭发现的问题。五份规格已同步并归档。
+- 待完成/TODO：五份主规格同步及全体 15 份主规格 strict 校验已完成；本地提交待执行，尚未推送、合并、部署或运行生产迁移。自动发布仍缺已验证账号/渠道映射；非 Draft 工作流输出缺可发布渲染适配器，冻结时明确阻断。前端主包超过 500 kB 仍为性能债，不能当作完整 PRD/V1 验收。
+- 关键设计决策：复用 ContentAsset、Review、DeliveryTarget/Attempt/Receipt，不新增第二套 Review Center 状态表；只批准精确 Candidate ID/hash，历史候选只读且不能新授权。`unknown` 仅可经对账解除，不能用普通回执或自动重发绕过。项目身份和证据事实不由迁移伪造。
+- 依赖与启动方式：无新增运行依赖；仅在隔离开发库可用 `cd apps/api && .venv/bin/alembic upgrade head` 验证，再按既有 FastAPI/Vite 命令启动。生产迁移须另行授权。
 
 ### 下一版规划：文章/图文全渠道
 

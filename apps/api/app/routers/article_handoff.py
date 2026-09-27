@@ -37,6 +37,7 @@ from ..models import (
     utcnow,
 )
 from ..services import exports
+from ..services.project_authorization import authorize_project_asset, authorize_project_draft, authorize_project_target
 
 router = APIRouter(prefix="/api/v1/article-handoff", tags=["article-handoff"])
 
@@ -116,6 +117,13 @@ def _target_json(target: DeliveryTarget) -> dict:
 def _require_target_operator(target: DeliveryTarget, user: User) -> None:
     if target.authorized_by and target.authorized_by != user.email:
         raise HTTPException(403, "该账号交付目标未授权给当前操作人")
+
+
+def _legacy_target(db: Session, target: DeliveryTarget, user: User, *, mutate: bool = False) -> None:
+    authorize_project_target(db, target, user, mutate=mutate)
+    asset = db.get(ContentAsset, target.content_asset_id)
+    if asset.project_id is not None:
+        raise HTTPException(409, "项目交付目标须使用项目交付接口")
 
 
 def _mother_json(row: MotherRevision) -> dict:
@@ -296,6 +304,7 @@ def list_draft_media(draft_id: int, db: Session = Depends(get_db), user: User = 
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user)
     return [_media_json(row) for row in draft.media]
 
 
@@ -313,6 +322,7 @@ async def upload_draft_media(
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     if draft.status == DraftStatus.approved.value:
         raise HTTPException(409, "已批准稿件的素材不可修改")
     if role not in {"cover", "inline", "attachment"}:
@@ -369,6 +379,7 @@ def reorder_draft_media(draft_id: int, payload: DraftMediaOrderIn, db: Session =
     draft = db.get(Draft, draft_id)
     if not draft:
         raise HTTPException(404, "Draft 不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     if draft.status == DraftStatus.approved.value:
         raise HTTPException(409, "已批准稿件的素材不可修改")
     rows = {row.id: row for row in draft.media}
@@ -407,6 +418,7 @@ def revoke_draft_media_public_use(
     row = db.get(DraftMedia, media_id)
     if not row or row.draft_id != draft_id:
         raise HTTPException(404, "素材不存在")
+    authorize_project_draft(db, row.draft, user, mutate=True)
     if not row.public_use_revoked_at:
         row.public_use_revoked_at = utcnow()
         row.public_use_revocation_note = payload.note
@@ -422,6 +434,7 @@ def get_draft_media_raw(draft_id: int, media_id: int, db: Session = Depends(get_
     row = db.get(DraftMedia, media_id)
     if not row or row.draft_id != draft_id:
         raise HTTPException(404, "素材不存在")
+    authorize_project_draft(db, row.draft, user)
     from ..services.asset_media import MEDIA_ROOT
 
     # use 行无独立字节时回退 MaterialRevision 的 content-addressed 文件
@@ -440,6 +453,7 @@ def delete_draft_media(draft_id: int, media_id: int, db: Session = Depends(get_d
     row = db.get(DraftMedia, media_id)
     if not draft or not row or row.draft_id != draft_id:
         raise HTTPException(404, "素材不存在")
+    authorize_project_draft(db, draft, user, mutate=True)
     referenced = db.scalars(
         select(ContentAsset).where(ContentAsset.draft_id == draft.id, ContentAsset.approved_candidate_hash.is_not(None))
     ).first()
@@ -460,8 +474,13 @@ def create_target(
     user: User = Depends(require_editor),
 ):
     asset = db.get(ContentAsset, asset_id)
-    if not asset or asset.status not in {"approved", DraftStatus.exported.value}:
+    if not asset:
+        raise HTTPException(404, "批准资产不存在")
+    authorize_project_asset(db, asset, user, mutate=True)
+    if asset.status not in {"approved", DraftStatus.exported.value}:
         raise HTTPException(409, "只有已批准内容才能创建人工交付目标")
+    if asset.project_id is not None:
+        raise HTTPException(409, "项目候选须使用项目交付授权")
     if payload.channel not in {"wechat", "x_thread"}:
         raise HTTPException(400, "M1 只支持公众号和 X Thread")
     if asset.channel != payload.channel:
@@ -521,6 +540,9 @@ def list_targets_for_asset(asset_id: int, db: Session = Depends(get_db), user: U
     asset = db.get(ContentAsset, asset_id)
     if not asset:
         raise HTTPException(404, "批准资产不存在")
+    authorize_project_asset(db, asset, user)
+    if asset.project_id is not None:
+        raise HTTPException(409, "项目交付目标须使用项目交付接口")
     rows = db.scalars(select(DeliveryTarget).where(
         DeliveryTarget.content_asset_id == asset_id,
         DeliveryTarget.authorized_by == user.email,
@@ -533,6 +555,7 @@ def get_package(target_id: int, db: Session = Depends(get_db), user: User = Depe
     target = db.get(DeliveryTarget, target_id)
     if not target:
         raise HTTPException(404, "交付目标不存在")
+    _legacy_target(db, target, user, mutate=True)
     _require_target_operator(target, user)
     if target.status == DeliveryTargetStatus.blocked.value:
         raise HTTPException(409, "该目标的公开使用权限已撤销，不能再交付")
@@ -666,6 +689,7 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
     target = db.get(DeliveryTarget, target_id)
     if not target:
         raise HTTPException(404, "交付目标不存在")
+    _legacy_target(db, target, user, mutate=True)
     _require_target_operator(target, user)
     idempotency_key = _hash(
         str(target.id), target.approved_candidate_hash, payload.status,
@@ -711,6 +735,8 @@ def add_feedback(target_id: int, payload: FeedbackIn, db: Session = Depends(get_
     target = db.get(DeliveryTarget, target_id)
     if not target:
         raise HTTPException(404, "交付目标不存在")
+    _legacy_target(db, target, user, mutate=True)
+    _require_target_operator(target, user)
     row = DeliveryFeedback(target_id=target.id, kind=payload.kind, body=payload.body, observed_at=utcnow(), created_by=user.email)
     db.add(row)
     db.add(AuditLog(event="delivery_feedback.recorded", actor=user.email, entity_type="delivery_target", entity_id=str(target.id)))
