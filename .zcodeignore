@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+apps/web/dist/
+
+# Local data
+*.sqlite3
+*.db
+data/
+.env
+backups/
+evals/reports/
+apps/api/evals/reports/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# dsh skill 沙箱草稿输出
+.wewrite-scratch/
+apps/api/media/
+# 运行时上传的配图素材与前端构建产物，不入库
+apps/api/app/media/
+apps/web/tsconfig.tsbuildinfo
+apps/api/scripts/startup/runtime.env
+# Celery beat 状态文件与 SQLite WAL 伴随文件、本地日志等运行产物
+apps/api/celerybeat-schedule*
+apps/api/*.db-*
+logs/
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+bower_components/
+jspm_packages/
+site-packages/
+venv/
+coverage/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+cdk.out/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）
