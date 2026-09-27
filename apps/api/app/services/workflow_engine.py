@@ -395,7 +395,19 @@ def _h_generate_cover(db: Session, run: WorkflowRun, step: WorkflowStep, user) -
     if generated:
         covers[channel] = str(out)
         _ctx_update(run, covers=covers)
-    return {"generated": generated, "path": str(out) if generated else None, "prompt": prompt[:80]}
+    result = {"generated": generated, "path": str(out) if generated else None, "prompt": prompt[:80]}
+    if generated and run.content_unit_id is not None and out.is_file():
+        from ..services import materials as materials_service
+
+        material = materials_service.create_material(db, kind="image", title=f"工作流封面 · {channel}", created_by=user.email)
+        revision = materials_service.create_revision(
+            db, material,
+            content=out.read_bytes(), suffix=".png", declared_mime="image/png",
+            source_kind="ai_generated", rights_status="review_required", public_use_allowed=False,
+            model_use_allowed=False, prompt_text=prompt, created_by=user.email,
+        )
+        result["material_revision_id"] = revision.id
+    return result
 
 
 def _h_approve(db: Session, run: WorkflowRun, step: WorkflowStep, payload: dict, user) -> dict:
@@ -567,22 +579,74 @@ def _resolve_step_plugin(db: Session, run: WorkflowRun, step: WorkflowStep):
     return plugin_registry.resolve("node", key, version)
 
 
+def _node_config(db: Session, run: WorkflowRun, node_id: str) -> dict:
+    return next((item for item in (db.get(Workflow, run.workflow_id).definition_json or {}).get("nodes", []) if item.get("id") == node_id), {})
+
+
+def _prepare_step_params(db: Session, run: WorkflowRun, step: WorkflowStep) -> None:
+    definition = (db.get(Workflow, run.workflow_id).definition_json or {})
+    node = next((item for item in definition.get("nodes", []) if item.get("id") == step.node_id), {})
+    if run.content_unit_id is not None:
+        from ..models import ContentUnit
+        from .project_workflows import resolve_placeholders
+
+        unit = db.get(ContentUnit, run.content_unit_id)
+        if unit is None:
+            raise ValueError("项目内容单元不存在")
+        resolved_config = resolve_placeholders(node.get("config") or {}, project_id=unit.project_id, unit_id=unit.id, run_params=run.params_json or {})
+        step.params_json = {**(step.params_json or {}), **resolved_config}
+    mapping = node.get("input_mapping") or {}
+    if mapping:
+        upstream = {row.node_id: row for row in _steps(db, run)}
+        inputs = {}
+        for name, ref in mapping.items():
+            if isinstance(ref, dict) and "node_id" in ref:
+                source = upstream.get(ref["node_id"])
+                if source is None or source.status != "succeeded" or ref.get("output") not in (source.output_json or {}):
+                    raise ValueError(f"输入映射 {name} 的上游输出不可用")
+                inputs[name] = source.output_json[ref["output"]]
+            else:
+                inputs[name] = ref
+        step.params_json = {**(step.params_json or {}), "inputs": inputs}
+
+
 def _execute_node(db: Session, run: WorkflowRun, step: WorkflowStep, user, *, payload: dict | None = None) -> dict:
+    _prepare_step_params(db, run, step)
+    node = _node_config(db, run, step.node_id)
+    if run.content_unit_id is not None:
+        from .project_workflows import validate_ai_executor_selection
+
+        validate_ai_executor_selection(node)
     plugin = _resolve_step_plugin(db, run, step)
     ctx = WorkflowExecutionContext(db=db, run=run, step=step, config=step.params_json or {})
     if payload is not None:
         result: NodeResult = plugin.complete(db, ctx, payload, user)
     else:
         result = plugin.execute(db, ctx, step.params_json or {}, user)
-    if not step.input_hash:
-        step.input_hash = canonical_checksum(step.params_json or {})
-    step.output_hash = canonical_checksum(result.output or {})
-    return result.output or {}
+    output = dict(result.output or {})
+    for alias, source_key in (node.get("output_mapping") or {}).items():
+        if source_key not in output:
+            raise ValueError(f"输出映射 {alias} 引用了不存在的结果字段 {source_key}")
+        output[alias] = output[source_key]
+    step.input_hash = canonical_checksum(step.params_json or {})
+    step.output_hash = canonical_checksum(output)
+    return output
 
 
-def _fail_step(db: Session, run: WorkflowRun, step: WorkflowStep, exc: Exception) -> WorkflowRun:
+def _fail_step(db: Session, run: WorkflowRun, step: WorkflowStep, exc: Exception, user=None) -> WorkflowRun:
     db.rollback()
     fresh = db.get(WorkflowStep, step.id)
+    node = _node_config(db, run, fresh.node_id)
+    policy = node.get("failure_policy", "stop") if run.content_unit_id is not None else "stop"
+    if policy in {"skip", "wait_human"}:
+        fresh.status = "skipped" if policy == "skip" else "waiting_input"
+        fresh.error = str(exc)[:500]
+        fresh.finished_at = _now()
+        _record_attempt(db, fresh, "failed", error=str(exc))
+        run.status = "running" if policy == "skip" else "waiting_input"
+        run.error = f"节点「{fresh.label or fresh.node_id}」等待处理：{str(exc)[:300]}" if policy == "wait_human" else None
+        db.commit()
+        return advance(db, run, user) if policy == "skip" else run
     fresh.status = "failed"
     fresh.error = str(exc)[:500]
     fresh.finished_at = _now()
@@ -606,8 +670,7 @@ def _record_attempt(db: Session, step: WorkflowStep, status: str, *, error: str 
     attempt_no = (last or 0) + 1
     if (step.attempt_no or 0) < attempt_no:
         step.attempt_no = attempt_no
-    db.add(
-        WorkflowStepAttempt(
+    attempt = WorkflowStepAttempt(
             step_id=step.id,
             run_id=step.run_id,
             node_id=step.node_id,
@@ -621,8 +684,9 @@ def _record_attempt(db: Session, step: WorkflowStep, status: str, *, error: str 
             error=error[:2000] if error else None,
             created_at=_now(),
         )
-    )
-    return attempt_no
+    db.add(attempt)
+    db.flush()
+    return attempt.id
 
 
 def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
@@ -643,6 +707,13 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
                 run.finished_at = _now()
                 db.commit()
             return run
+        skipped = [s for s in pending if any(steps[dep].status == "skipped" for dep in deps.get(s.node_id, []) if dep in steps)]
+        if skipped:
+            for step in skipped:
+                step.status = "skipped"
+                step.stale_reason = "上游节点已跳过"
+            db.commit()
+            continue
         ready = [
             s
             for s in pending
@@ -652,11 +723,29 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
             # 无可执行节点且仍有 pending → 挂起在人工节点（status 应已置 waiting_input）
             return run
         step = ready[0]
+        if run.content_unit_id is not None:
+            node = _node_config(db, run, step.node_id)
+            if node.get("enabled") is False:
+                step.status = "skipped"
+                step.stale_reason = "节点已停用"
+                db.commit()
+                continue
+            condition = node.get("condition") or {}
+            if condition:
+                try:
+                    _prepare_step_params(db, run, step)
+                    if (step.params_json or {}).get("inputs", {}).get(condition["input"]) != condition["equals"]:
+                        step.status = "skipped"
+                        step.stale_reason = "执行条件未满足"
+                        db.commit()
+                        continue
+                except Exception as exc:
+                    return _fail_step(db, run, step, exc, user)
         try:
             _resolve_step_plugin(db, run, step)
             descriptor = plugin_registry.descriptor("node", step.plugin_key, step.plugin_version)
         except Exception as exc:  # noqa: BLE001 未知 plugin：与旧“未知节点类型”一致按节点失败处理
-            return _fail_step(db, run, step, exc)
+            return _fail_step(db, run, step, exc, user)
         # 人工节点以 plugin descriptor 为准（D6）；v1 type 集合兜底历史定义
         if descriptor.human_gate or step.node_type in HUMAN_NODE_TYPES:
             step.status = "waiting_input"
@@ -672,14 +761,17 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
             step.output_json = output
             step.status = "succeeded"
             step.finished_at = _now()
-            _record_attempt(db, step, "succeeded")
+            attempt_id = _record_attempt(db, step, "succeeded")
+            from .project_outputs import associate_step_output
+
+            associate_step_output(db, run, step, attempt_id)
             db.commit()
             logger.info("workflow_step_ok run=%s node=%s plugin=%s", run.id, step.node_id, step.plugin_key)
         except Exception as exc:  # noqa: BLE001 节点失败即停，可从失败节点重试
-            return _fail_step(db, run, step, exc)
+            return _fail_step(db, run, step, exc, user)
 
 
-def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, advance_now: bool = True) -> WorkflowRun:
+def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, advance_now: bool = True, content_unit_id: int | None = None) -> WorkflowRun:
     # D17 preflight：技能缺失在启动前暴露，而不是运行中 ImportError
     from .content_harness.skill_runtime import preflight_workflow
 
@@ -695,6 +787,7 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
         topic_id = None
     run = WorkflowRun(
         workflow_id=workflow.id,
+        content_unit_id=content_unit_id,
         params_json=p,
         context_json={},
         # D5：启动时冻结 definition 身份与目标上下文
@@ -718,7 +811,7 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
             WorkflowStep(
                 run_id=run.id,
                 node_id=node["id"],
-                node_type=node.get("type") or node.get("plugin") or "",
+                node_type=node.get("kind") or node.get("type") or node.get("plugin") or "",
                 label=node.get("label"),
                 # R4-B1：schema v2 config 为真源（优先），v1 params 兼容合并
                 params_json=node_config_of(node),
@@ -741,6 +834,17 @@ def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, us
         raise ValueError(f"节点 {node_id} 不存在")
     if run.status != "waiting_input" or step.status != "waiting_input":
         raise ValueError(f"节点当前状态 {step.status} 不可操作（run={run.status}）")
+    node = _node_config(db, run, node_id)
+    if run.content_unit_id is not None and node.get("failure_policy") == "wait_human" and step.error:
+        action = (payload or {}).get("action")
+        if action not in {"retry", "skip"}:
+            raise ValueError("失败节点需要人工选择 retry 或 skip")
+        step.status = "pending" if action == "retry" else "skipped"
+        step.error = None
+        run.status = "running"
+        run.error = None
+        db.commit()
+        return advance(db, run, user)
     plugin = _resolve_step_plugin(db, run, step)
     if not hasattr(plugin, "complete"):
         raise ValueError(f"节点 {step.node_type} 不是人工节点")
@@ -757,7 +861,10 @@ def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, us
     step.output_json = output
     step.status = "succeeded"
     step.finished_at = _now()
-    _record_attempt(db, step, "succeeded")
+    attempt_id = _record_attempt(db, step, "succeeded")
+    from .project_outputs import associate_step_output
+
+    associate_step_output(db, run, step, attempt_id)
     run.status = "running"
     db.commit()
     return advance(db, run, user)
@@ -780,6 +887,8 @@ def retry_run(db: Session, run: WorkflowRun, user) -> WorkflowRun:
         if step.status == "failed":
             step.status = "pending"
             step.error = None
+            step.output_json = {}
+            step.output_hash = None
     run.status = "running"
     run.error = None
     db.commit()
@@ -828,27 +937,42 @@ def rerun_node(db: Session, run: WorkflowRun, node_id: str, user) -> WorkflowRun
         raise ValueError(f"节点 {node_id} 不存在")
     if run.status == "canceled":
         raise ValueError("已取消的运行不可重跑")
+    if run.content_unit_id is not None:
+        node = _node_config(db, run, node_id)
+        if node.get("enabled") is False:
+            raise ValueError("已停用的节点不可单独运行")
+        dependency_ids = [edge["from"] for edge in _definition_of(db, run).get("edges", []) if edge["to"] == node_id]
+        statuses = {item.node_id: item.status for item in _steps(db, run)}
+        if any(statuses.get(dep) != "succeeded" for dep in dependency_ids):
+            raise ValueError("上游节点尚未成功，不能单独运行")
     _plugin_obj, descriptor = _resolve_or_none(db, run, step)
     if descriptor is None:
         raise ValueError(f"节点 {node_id} 无法解析 plugin")
     if descriptor.side_effect:
         raise ValueError("远端副作用节点禁止泛化重跑；请通过 Delivery reconciliation/retry 契约处理")
+    if descriptor.human_gate:
+        raise ValueError("人工节点须通过完成人工步骤操作")
 
     old_output_hash = step.output_hash
+    old_data_checksum = (step.output_json or {}).get("data_checksum")
     step.attempt_no = (step.attempt_no or 0) + 1
     step.status = "running"
     step.error = None
     step.stale_reason = None
+    step.output_json = {}
+    step.output_hash = None
     run.status = "running"
     db.commit()
     try:
         output = _execute_node(db, run, step, user)
     except Exception as exc:  # noqa: BLE001
-        return _fail_step(db, run, step, exc)
+        return _fail_step(db, run, step, exc, user)
     step.output_json = output
     step.status = "succeeded"
     step.finished_at = _now()
-    changed = bool(old_output_hash) and step.output_hash != old_output_hash
+    new_data_checksum = output.get("data_checksum")
+    changed = (old_data_checksum != new_data_checksum) if old_data_checksum is not None and new_data_checksum is not None else bool(old_output_hash) and step.output_hash != old_output_hash
+    marked = 0
     if changed:
         from .content_harness.staleness import mark_workflow_downstream_stale
 
@@ -856,7 +980,15 @@ def rerun_node(db: Session, run: WorkflowRun, node_id: str, user) -> WorkflowRun
             db, run, node_id, f"upstream {node_id} output changed (attempt #{step.attempt_no})"
         )
         logger.info("workflow_rerun run=%s node=%s downstream_stale=%s", run.id, node_id, marked)
-    _record_attempt(db, step, "succeeded")
+    attempt_id = _record_attempt(db, step, "succeeded")
+    from .project_outputs import associate_step_output
+
+    associate_step_output(db, run, step, attempt_id)
+    if run.content_unit_id is not None:
+        statuses = {item.status for item in _steps(db, run)}
+        run.status = "stale" if marked else "succeeded" if statuses == {"succeeded"} else "waiting_input" if "waiting_input" in statuses else "running"
+        if run.status == "succeeded":
+            run.finished_at = _now()
     db.commit()
     return run
 
@@ -881,6 +1013,8 @@ def rerun_from_here(db: Session, run: WorkflowRun, node_id: str, user) -> Workfl
             s.status = "pending"
             s.error = None
             s.stale_reason = None
+            s.output_json = {}
+            s.output_hash = None
     run.status = "running"
     run.error = None
     db.commit()

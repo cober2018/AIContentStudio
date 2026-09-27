@@ -1031,6 +1031,8 @@ class Workflow(Base):
     definition_json: Mapped[dict] = mapped_column(JSON)  # {nodes:[{id,type,label,params,layout}], edges:[{from,to}]}
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     created_by: Mapped[str | None] = mapped_column(String(255))
+    owner_user_id: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True)
+    scope: Mapped[str | None] = mapped_column(String(30))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -1045,6 +1047,7 @@ class WorkflowRun(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
+    content_unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"), index=True)
     status: Mapped[str] = mapped_column(String(20), default="running")
     context_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 节点间数据总线（实体 ID 等）
     params_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 启动参数（topic_id 等）
@@ -1109,4 +1112,92 @@ class WorkflowStepAttempt(Base):
     output_hash: Mapped[str | None] = mapped_column(String(64))
     input_hash: Mapped[str | None] = mapped_column(String(64))
     error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentPersona(Base):
+    __tablename__ = "content_persona"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentProject(Base):
+    __tablename__ = "content_project"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    title: Mapped[str] = mapped_column(String(300))
+    objective: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(30), default="draft")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ContentUnit(Base):
+    __tablename__ = "content_unit"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
+    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"))
+    modality: Mapped[str] = mapped_column(String(20))
+    channel_id: Mapped[str | None] = mapped_column(String(100))
+    title: Mapped[str] = mapped_column(String(300))
+    status: Mapped[str] = mapped_column(String(30), default="draft")
+    pinned_workflow_id: Mapped[int | None] = mapped_column(ForeignKey("workflow.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class PersonaWorkflowDefault(Base):
+    __tablename__ = "persona_workflow_default"
+    __table_args__ = (UniqueConstraint("persona_id", "modality", name="uq_persona_workflow_default"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"))
+    modality: Mapped[str] = mapped_column(String(20))
+    workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class ProjectWorkflowBinding(Base):
+    __tablename__ = "project_workflow_binding"
+    __table_args__ = (UniqueConstraint("unit_id", name="uq_project_workflow_binding_unit"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"))
+    workflow_id: Mapped[int] = mapped_column(ForeignKey("workflow.id"))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class DataSnapshot(Base):
+    __tablename__ = "data_snapshot"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    run_id: Mapped[int | None] = mapped_column(ForeignKey("workflow_run.id"))
+    node_id: Mapped[str] = mapped_column(String(50))
+    plugin_key: Mapped[str] = mapped_column(String(150))
+    source_ref: Mapped[str] = mapped_column(String(255))
+    source_version: Mapped[str | None] = mapped_column(String(100))
+    checksum: Mapped[str] = mapped_column(String(64))
+    normalized_output: Mapped[dict] = mapped_column(JSON, default=dict)
+    lineage_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProjectWorkflowOutput(Base):
+    __tablename__ = "project_workflow_output"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
+    unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"))
+    run_id: Mapped[int] = mapped_column(ForeignKey("workflow_run.id"))
+    node_id: Mapped[str] = mapped_column(String(50))
+    attempt_id: Mapped[int | None] = mapped_column(ForeignKey("workflow_step_attempt.id"))
+    output_kind: Mapped[str] = mapped_column(String(30))
+    entity_id: Mapped[int] = mapped_column(Integer)
+    provenance_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

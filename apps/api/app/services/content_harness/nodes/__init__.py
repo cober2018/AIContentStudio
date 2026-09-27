@@ -101,6 +101,33 @@ class SkillNodePlugin:
         return NodeResult(output={"skill": name, "result": result.output or {}})
 
 
+class SystemConstantNodePlugin:
+    """Persist a configured, local value as an ordinary workflow attempt."""
+
+    key = "system.constant"
+    version = "1"
+    human_gate = False
+    side_effect = False
+
+    def execute(self, db, ctx: WorkflowExecutionContext, config: dict, user) -> NodeResult:
+        value = config.get("value")
+        if not isinstance(value, dict):
+            raise ValueError("system.constant 需要对象形式的 value")
+        return NodeResult(output=value)
+
+
+class DataSourceNodePlugin:
+    key = "data.source"
+    version = "1"
+    human_gate = False
+    side_effect = False
+
+    def execute(self, db, ctx: WorkflowExecutionContext, config: dict, user) -> NodeResult:
+        from ...data_source_plugins import snapshot_source
+
+        return NodeResult(output=snapshot_source(db, ctx.run, ctx.step.node_id, config.get("data_source_plugin_key", ""), str(config.get("source_ref", ""))))
+
+
 def _plugin(key: str, handler: str, label: str, *, complete: str | None = None, side_effect: bool = False):
     attrs = {"key": key, "handler_name": handler, "label": label, "side_effect": side_effect}
     if complete:
@@ -131,7 +158,7 @@ _BUILTIN_SPECS: list[tuple[str, str, str, str | None, bool]] = [
 ]
 
 # 直接注册的非 handler 插件（R2-H5：node.skill 可执行节点）
-_DIRECT_PLUGINS = [SkillNodePlugin]
+_DIRECT_PLUGINS = [SkillNodePlugin, SystemConstantNodePlugin, DataSourceNodePlugin]
 
 _bootstrapped = False
 
@@ -156,7 +183,7 @@ def bootstrap_builtin_nodes() -> None:
         )
     for plugin_cls in _DIRECT_PLUGINS:
         if plugin_cls.key not in {d.key for d in registry.list("node")}:
-            registry.register("node", plugin_cls.key, plugin_cls.version, plugin_cls(), label="Skill 执行")
+            registry.register("node", plugin_cls.key, plugin_cls.version, plugin_cls(), label=plugin_cls.key)
     _bootstrapped = True
 
 

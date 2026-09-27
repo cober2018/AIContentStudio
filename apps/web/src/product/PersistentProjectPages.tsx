@@ -1,0 +1,151 @@
+import { FormEvent, useEffect, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { api, ApiError } from "../api";
+import { Button, EmptyState, ErrorBanner, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
+import { ProductionDesigner } from "./ProductionDesigner";
+
+export type Modality = "text" | "graphic" | "video";
+export type Definition = { nodes: WorkflowNode[]; edges: { from: string; to: string }[]; visual_order: string[] };
+export type WorkflowNode = {
+  id: string; kind: "Data" | "AI" | "Tool" | "Rule" | "Human" | "System";
+  plugin: string; plugin_version?: string; label?: string; config: Record<string, unknown>;
+  input_mapping?: Record<string, unknown>; output_mapping?: Record<string, unknown>;
+  condition?: Record<string, unknown> | string; failure_policy?: string; enabled?: boolean;
+};
+export type WorkflowBinding = { revision: number; workflow_id: number | null; workflow_version: number | null; definition_checksum: string | null; definition: Definition };
+export type Persona = { id: number; name: string };
+export type Unit = { id: number; project_id: number; persona_id: number; modality: Modality; channel_id: string | null; title: string; status: string; pinned_workflow_id: number | null };
+export type Project = { id: number; title: string; objective: string; status: string; units: Unit[] };
+export type SharedAsset = { id: number; material_revision_id: number; kind: string | null; mime_type: string | null; rights_status: string | null; public_use_allowed: boolean | null; unit_id: number; run_id: number; node_id: string; attempt_id: number | null };
+
+const TABS = ["overview", "brief", "evidence", "assets", "matrix", "versions", "activity"] as const;
+const TAB_NAMES = ["总览", "创作任务书", "来源与证据", "项目素材", "内容矩阵", "版本", "活动"];
+const MODALITY_NAMES: Record<Modality, string> = { text: "文字", graphic: "图文", video: "视频" };
+
+function message(error: unknown) { return error instanceof ApiError ? error.message : "连接后端失败，请检查 API 服务。"; }
+
+export function PersistentProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [title, setTitle] = useState("");
+  const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => { api.get<Project[]>("/content-projects").then(setProjects).catch((err) => setError(message(err))).finally(() => setLoading(false)); }, []);
+
+  async function create(event: FormEvent) {
+    event.preventDefault();
+    try {
+      const project = await api.post<Project>("/content-projects", { title: title.trim(), objective: "" });
+      navigate(`/projects/${project.id}`);
+    } catch (err) { setError(message(err)); }
+  }
+
+  return <div className="mx-auto max-w-7xl px-6 py-9">
+    <div className="mb-7 flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">Content Projects</p><h1 className="mt-2 text-3xl font-semibold">内容项目</h1><p className="mt-2 text-sm text-slate-500">真实项目保存在后端；演示样本与真实数据分离。</p></div><div className="flex gap-2"><Link className="rounded-lg border border-slate-300 px-4 py-2 text-sm" to="/projects/demo">查看本地演示</Link><Button onClick={() => setCreating(true)}>新建项目</Button></div></div>
+    {error && <ErrorBanner message={error} />}
+    {loading ? <Spinner label="读取后端项目…" /> : projects.length === 0 ? <EmptyState title="还没有真实项目" hint="创建项目后可以添加角色、内容单元与持久化工作流。" action={<Button onClick={() => setCreating(true)}>新建项目</Button>} /> : <div className="grid gap-4 lg:grid-cols-2">{projects.map((project) => <Link key={project.id} to={`/projects/${project.id}`} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-indigo-300"><div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{project.title}</h2><StatusBadge status={project.status} /></div><p className="mt-3 text-sm text-slate-600">{project.objective || "待填写项目目标"}</p><p className="mt-4 text-xs text-slate-500">{project.units.length} 个内容单元 · 后端持久化</p></Link>)}</div>}
+    {creating && <Modal title="新建内容项目" onClose={() => setCreating(false)}><form onSubmit={create} className="space-y-4"><Field label="项目名称"><input autoFocus required className={inputClass} value={title} onChange={(event) => setTitle(event.target.value)} /></Field><div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setCreating(false)}>取消</Button><Button type="submit">创建</Button></div></form></Modal>}
+  </div>;
+}
+
+export function PersistentProjectPage() {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [project, setProject] = useState<Project | null>(null);
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [assets, setAssets] = useState<SharedAsset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [unitModal, setUnitModal] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+  const [projectModal, setProjectModal] = useState(false);
+  const [personaModal, setPersonaModal] = useState(false);
+  const [assetsOpen, setAssetsOpen] = useState(false);
+  const [unitTitle, setUnitTitle] = useState("");
+  const [personaName, setPersonaName] = useState("");
+  const [personaId, setPersonaId] = useState<number | null>(null);
+  const [modality, setModality] = useState<Modality>("text");
+  const [channel, setChannel] = useState("wechat");
+  const [projectTitle, setProjectTitle] = useState("");
+  const [projectObjective, setProjectObjective] = useState("");
+  const [defaultBinding, setDefaultBinding] = useState<WorkflowBinding | null>(null);
+  const [rebindDefault, setRebindDefault] = useState(false);
+  const tab = TABS.includes(searchParams.get("tab") as typeof TABS[number]) ? searchParams.get("tab")! : "overview";
+
+  async function reload() {
+    if (!projectId) return;
+    const [nextProject, nextPersonas, nextAssets] = await Promise.all([
+      api.get<Project>(`/content-projects/${projectId}`), api.get<Persona[]>("/content-personas"), api.get<SharedAsset[]>(`/content-projects/${projectId}/shared-assets`),
+    ]);
+    setProject(nextProject); setPersonas(nextPersonas); setAssets(nextAssets);
+  }
+  useEffect(() => { setLoading(true); reload().catch((err) => setError(message(err))).finally(() => setLoading(false)); }, [projectId]);
+  useEffect(() => {
+    if (!personaId) { setDefaultBinding(null); return; }
+    api.get<WorkflowBinding>(`/content-personas/${personaId}/default-workflows/${modality}`).then(setDefaultBinding).catch((err) => setError(message(err)));
+  }, [personaId, modality]);
+
+  async function createPersona(event: FormEvent) {
+    event.preventDefault();
+    try { const created = await api.post<Persona>("/content-personas", { name: personaName.trim() }); setPersonas([...personas, created]); setPersonaId(created.id); setPersonaModal(false); setPersonaName(""); }
+    catch (err) { setError(message(err)); }
+  }
+  async function createUnit(event: FormEvent) {
+    event.preventDefault();
+    if (!project || !personaId) { setError("先选择一个内容身份。" ); return; }
+    try { await api.post<Unit>(`/content-projects/${project.id}/units`, { title: unitTitle.trim(), persona_id: personaId, modality, channel_id: channel, pinned_workflow_id: defaultBinding?.workflow_id ?? null }); await reload(); setUnitModal(false); setUnitTitle(""); setError(""); }
+    catch (err) { setError(message(err)); }
+  }
+  async function deleteUnit(unit: Unit) {
+    if (!project || !window.confirm(`移除「${unit.title}」？若已有运行历史，将归档并保留历史记录。`)) return;
+    try { await api.del<void>(`/content-projects/${project.id}/units/${unit.id}`); await reload(); }
+    catch (err) { setError(message(err)); }
+  }
+  async function editUnit(event: FormEvent) {
+    event.preventDefault();
+    if (!project || !editingUnit) return;
+    try {
+      const saved = await api.patch<Unit>(`/content-projects/${project.id}/units/${editingUnit.id}`, { title: unitTitle.trim(), channel_id: channel, persona_id: personaId, modality, rebind_default: rebindDefault || personaId !== editingUnit.persona_id || modality !== editingUnit.modality });
+      await reload(); setEditingUnit(null); setError("");
+      if (saved.id !== editingUnit.id) window.alert(`已有执行历史：已创建新单元 #${saved.id}，旧单元已归档，原运行历史仍可读取。`);
+    }
+    catch (err) { setError(message(err)); }
+  }
+  async function editProject(event: FormEvent) {
+    event.preventDefault();
+    if (!project) return;
+    try { await api.patch<Project>(`/content-projects/${project.id}`, { title: projectTitle.trim(), objective: projectObjective }); await reload(); setProjectModal(false); setError(""); }
+    catch (err) { setError(message(err)); }
+  }
+  async function deleteProject() {
+    if (!project || !window.confirm(`删除项目「${project.title}」？项目内仍有内容单元时，后端会拒绝删除。`)) return;
+    try { await api.del<void>(`/content-projects/${project.id}`); navigate("/projects"); }
+    catch (err) { setError(message(err)); }
+  }
+
+  if (loading) return <div className="p-9"><Spinner label="读取项目…" /></div>;
+  if (!project) return <div className="p-9"><ErrorBanner message={error || "项目不存在或无权访问。"} /></div>;
+  return <div className="mx-auto max-w-7xl px-6 py-9">
+    <Link to="/projects" className="text-sm text-slate-500">← 内容项目</Link>
+    <div className="mt-4 mb-6 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">Content Project</p><h1 className="mt-2 text-3xl font-semibold">{project.title}</h1><p className="mt-2 text-sm text-slate-500">{project.objective || "项目目标待填写"}</p></div><div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => { setProjectTitle(project.title); setProjectObjective(project.objective); setProjectModal(true); }}>编辑项目</Button><Button variant="secondary" onClick={() => setAssetsOpen(true)}>项目共享素材 · {assets.length}</Button><Button variant="danger" onClick={deleteProject}>删除项目</Button></div></div>
+    {error && <div className="mb-4"><ErrorBanner message={error} /></div>}
+    <div role="tablist" aria-label="项目工作区" className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">{TABS.map((item, index) => <button key={item} role="tab" aria-selected={tab === item} onClick={() => setSearchParams({ tab: item })} className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm ${tab === item ? "border-indigo-600 font-semibold text-indigo-700" : "border-transparent text-slate-500"}`}>{TAB_NAMES[index]}</button>)}</div>
+    {tab === "overview" && <section className="rounded-xl border border-slate-200 bg-white p-6"><h2 className="font-semibold">项目概况</h2><p className="mt-3 text-sm text-slate-600">{project.units.length} 个内容单元 · {personas.length} 个可用身份 · {assets.length} 个已关联素材版本</p><p className="mt-3 text-xs text-slate-500">项目、单元与工作流由后端保存；任务书与证据区域尚未接入项目级持久化。</p></section>}
+    {tab === "matrix" && <section className="rounded-xl border border-slate-200 bg-white p-5"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">内容矩阵</h2><div className="flex gap-2"><Button variant="secondary" onClick={() => setPersonaModal(true)}>新增身份</Button><Button onClick={() => { setPersonaId(personas[0]?.id ?? null); setUnitModal(true); }}>新增内容单元</Button></div></div>{project.units.some((unit) => unit.status !== "archived") ? <div className="space-y-3">{project.units.filter((unit) => unit.status !== "archived").map((unit) => <article key={unit.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-4"><div><div className="flex gap-2"><h3 className="font-semibold">{unit.title}</h3><StatusBadge status={unit.status} /></div><p className="mt-1 text-xs text-slate-500">{personas.find((persona) => persona.id === unit.persona_id)?.name || `身份 #${unit.persona_id}`} · {MODALITY_NAMES[unit.modality]} · {unit.channel_id || "未选择渠道"}</p><p className="mt-1 text-xs text-slate-500">固定工作流版本：{unit.pinned_workflow_id ? `#${unit.pinned_workflow_id}` : "未设置"}</p></div><div className="flex gap-2"><Link to={`/projects/${project.id}/units/${unit.id}/production`} className="rounded-md bg-indigo-600 px-3 py-2 text-xs text-white">进入生产</Link><Button size="sm" variant="secondary" onClick={() => { setEditingUnit(unit); setUnitTitle(unit.title); setPersonaId(unit.persona_id); setModality(unit.modality); setChannel(unit.channel_id || ""); setRebindDefault(false); }}>编辑</Button><Button size="sm" variant="danger" onClick={() => deleteUnit(unit)}>删除</Button></div></article>)}</div> : <EmptyState title="还没有内容单元" hint="先创建身份，再添加文字、图文或视频单元。" />}{project.units.some((unit) => unit.status === "archived") && <details className="mt-5 border-t pt-4"><summary className="cursor-pointer text-sm text-slate-600">已归档单元（{project.units.filter((unit) => unit.status === "archived").length}）</summary><div className="mt-3 space-y-2">{project.units.filter((unit) => unit.status === "archived").map((unit) => <div key={unit.id} className="flex items-center justify-between rounded-lg bg-slate-50 p-3 text-sm"><span>{unit.title} · #{unit.id} · {MODALITY_NAMES[unit.modality]}</span><Link className="text-indigo-600" to={`/projects/${project.id}/units/${unit.id}/production`}>查看历史</Link></div>)}</div></details>}</section>}
+    {tab === "assets" && <section className="rounded-xl border border-slate-200 bg-white p-6"><h2 className="font-semibold">项目素材</h2><p className="mt-2 text-sm text-slate-500">{assets.length} 个已由真实工作流关联的素材版本。</p><Button className="mt-4" onClick={() => setAssetsOpen(true)}>查看素材</Button></section>}
+    {!(["overview", "matrix", "assets"] as string[]).includes(tab) && <EmptyState title={`${TAB_NAMES[TABS.indexOf(tab as typeof TABS[number])]}尚未接入持久化`} hint="当前 FE-F2 首先落地项目、工作流与数据快照；此处不展示本地模拟成功结果。" />}
+    {assetsOpen && <Modal title={`项目共享素材 · ${assets.length}`} onClose={() => setAssetsOpen(false)}><div className="max-h-[65vh] space-y-3 overflow-y-auto">{assets.length ? assets.map((asset) => <div key={asset.id} className="rounded-lg border p-3 text-sm"><p className="font-medium">{asset.kind || "素材"} · Revision #{asset.material_revision_id}</p><p className="mt-1 text-xs text-slate-500">Run #{asset.run_id} · 节点 {asset.node_id} · Attempt #{asset.attempt_id || "?"}</p><p className="mt-1 text-xs text-slate-500">权利状态：{asset.rights_status || "待核对"} · {asset.public_use_allowed ? "允许公开使用" : "未获公开使用许可"}</p></div>) : <EmptyState title="暂无真实素材版本" />}</div></Modal>}
+    {projectModal && <Modal title="编辑项目" onClose={() => setProjectModal(false)}><form onSubmit={editProject} className="space-y-4"><Field label="项目名称"><input required className={inputClass} value={projectTitle} onChange={(event) => setProjectTitle(event.target.value)} /></Field><Field label="项目目标"><textarea className={inputClass} rows={4} value={projectObjective} onChange={(event) => setProjectObjective(event.target.value)} /></Field><Button type="submit">保存项目</Button></form></Modal>}
+    {editingUnit && <Modal title="编辑内容单元" onClose={() => setEditingUnit(null)}><form onSubmit={editUnit} className="space-y-4"><Field label="内容名称"><input required className={inputClass} value={unitTitle} onChange={(event) => setUnitTitle(event.target.value)} /></Field><Field label="内容身份"><select className={inputClass} value={personaId ?? ""} onChange={(event) => setPersonaId(Number(event.target.value))}>{personas.map((persona) => <option key={persona.id} value={persona.id}>{persona.name}</option>)}</select></Field><Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value as Modality)}>{Object.entries(MODALITY_NAMES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field><Field label="渠道"><input className={inputClass} value={channel} onChange={(event) => setChannel(event.target.value)} /></Field><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={rebindDefault} onChange={(event) => setRebindDefault(event.target.checked)} />重新绑定当前角色默认工作流{defaultBinding?.workflow_id ? `（版本 ${defaultBinding.workflow_version}）` : "（尚无默认版本）"}</label><p className="text-xs text-slate-500">更换身份或形态会绑定对应默认工作流。若已有运行历史，保存将新建单元并归档旧单元；历史仍可查看。</p><Button type="submit">保存单元</Button></form></Modal>}
+    {personaModal && <Modal title="新增内容身份" onClose={() => setPersonaModal(false)}><form onSubmit={createPersona} className="space-y-4"><Field label="身份名称"><input required autoFocus className={inputClass} value={personaName} onChange={(event) => setPersonaName(event.target.value)} /></Field><Button type="submit">保存身份</Button></form></Modal>}
+    {unitModal && <Modal title="新增内容单元" onClose={() => setUnitModal(false)}><form onSubmit={createUnit} className="space-y-4"><Field label="名称"><input required className={inputClass} value={unitTitle} onChange={(event) => setUnitTitle(event.target.value)} /></Field><Field label="内容身份"><select className={inputClass} value={personaId ?? ""} onChange={(event) => setPersonaId(Number(event.target.value))}><option value="">请选择</option>{personas.map((persona) => <option key={persona.id} value={persona.id}>{persona.name}</option>)}</select></Field><Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value as Modality)}>{Object.entries(MODALITY_NAMES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field><Field label="渠道"><input className={inputClass} value={channel} onChange={(event) => setChannel(event.target.value)} /></Field><p className="text-xs text-slate-500">角色 × 内容形态默认流程：{defaultBinding?.workflow_id ? `版本 ${defaultBinding.workflow_version}（将固定到此单元）` : "尚未设置，可进入生产工作台创建项目覆盖"}</p><Button type="submit">保存内容单元</Button></form></Modal>}
+  </div>;
+}
+
+export function PersistentProductionPage() {
+  const { projectId, unitId } = useParams();
+  if (!projectId || !unitId) return <ErrorBanner message="缺少项目或内容单元。" />;
+  return <ProductionDesigner projectId={Number(projectId)} unitId={Number(unitId)} />;
+}

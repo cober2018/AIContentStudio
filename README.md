@@ -10,19 +10,19 @@
 - 目录结构：`apps/web/src/product/` 包含本地模拟项目数据、项目页面、共享素材抽屉和其余工作区的占位页；`apps/web/src/App.tsx` 负责九个一级工作区路由与旧功能入口。
 - 已完成：九个一级入口、项目列表与七标签、内容矩阵增删改、文字/图片/视频单元、共享素材来源筛选、单元生产入口、健康和异常项目样本及受阻/过期/待核对状态区分。旧功能仍可从“现有功能入口”访问。
 - FE-F0-F1 复核补丁：异常项目的总览和内容矩阵现直接说明受阻、已过期、待核对、等待人工、就绪五种状态的含义。
-- 待完成/TODO：FE-F2 再接工作流设计器、真实 API/权限/持久化与内容生产；本切片不包含真实素材上传、发布或后端模型迁移。
+- 待完成/TODO：本切片原定的工作流设计器与真实 API/权限/持久化已由下方 FE-F2 承接；FE-F0-F1 自身不包含真实素材上传、发布或后端模型迁移。
 - 关键设计决策：新项目数据只保存在浏览器 `localStorage`，与现有后端业务数据隔离；首次访问加载演示样本，浏览器已有本地数据不会被新样本覆盖。生产页仅提供入口与上下文，不伪装为可用生产流程。
 - 依赖与启动：沿用下方前端启动命令 `cd apps/web && npm install && npm run dev`；静态构建用 `npm run build`。本切片未增加依赖。
 - 规范记录：[`openspec/specs/fe-f0-f1-project-experience/spec.md`](openspec/specs/fe-f0-f1-project-experience/spec.md)；实施归档见 `openspec/changes/archive/2026-09-27-implement-fe-f0-f1-product-shell/`。
 
-### FE-F2 待确认：真实工作流执行与持久化
+### FE-F2 本地实现与 R1 复核通过：真实工作流执行与持久化
 
 - 需求背景：用户明确下一步须让生产工作台接后端，保存并真实执行工作流；仅前端模拟不满足目标。
-- 目录结构与设计草案见 [`openspec/changes/fe-f2-persistent-production-workflow/proposal.md`](openspec/changes/fe-f2-persistent-production-workflow/proposal.md) 和同目录 `design.md`、`specs/`、`tasks.md`。
-- 已完成：提案、设计、规格及任务已建立；2026-09-27 按 V5 校准插件架构和角色默认模板，并根据正式 review 补齐旧 API 授权、模板可移植性、顺序/依赖分离及回归测试要求。**业务代码、迁移和真实执行尚未实施**。
-- 待完成/TODO：本轮未 apply；实施时先打通持久化项目/内容单元与现有引擎及所有旧入口的权限闸门，再做项目覆盖、角色 × 内容形态默认模板版本、Data Node、真实执行与三种生产工作台，最后完成定向回归与本地验收。
-- 关键设计决策：复用既有 Workflow/Run/Step/Attempt 与副作用闸门；所有项目绑定运行通过新旧 API 均按同一项目权限校验；角色默认模板保存须通过服务端项目值可移植性 Gate；拖拽只改视觉顺序，依赖和映射须显式编辑；Data Source Plugin 契约覆盖内部数据、媒体数据、Notion、Obsidian、API、SQL/Database，首个可执行适配器只读 Studio Source，未连接者明确不可执行；项目覆盖与显式另存角色默认版本是两个独立持久化动作；现有浏览器演示数据不自动导入后端。
-- 依赖与启动：拟沿用现有 FastAPI/React/SQLAlchemy 与上文启动方式，无已新增运行依赖；生产迁移与部署不在本提案授权内。
+- 目录结构：`apps/api/app/routers/content_projects.py` 提供持久化项目、单元、流程与快照 API；`apps/api/app/services/project_*` 和 `data_source_plugins.py` 承接授权、版本、产物和数据来源；`apps/web/src/product/PersistentProjectPages.tsx`、`ProductionDesigner.tsx` 是真实项目入口。原 `ProjectPages.tsx` 和 `mockProjects.ts` 留在 `/projects/demo` 作本地演示。规格见 [`openspec/changes/archive/2026-09-27-fe-f2-persistent-production-workflow/proposal.md`](openspec/changes/archive/2026-09-27-fe-f2-persistent-production-workflow/proposal.md) 与同目录 design/specs/tasks。
+- 已完成：新增可逆增量迁移；项目/单元/内容身份 CRUD 与旧 Workflow API 的项目归属闸门；项目覆盖和角色默认的独立不可变版本保存；Data Source 六类描述符、只读 Studio Source 快照、变化传播 stale；项目 Run/Attempt 回读及真实素材字节校验后的项目关联。真实项目页、三形态生产区和设计/调试画布已接后端；隔离库浏览器验收了创建、保存、真实执行、刷新回读、双保存、后续单元默认绑定、断连阻断和素材抽屉。Provider/Model 只可绑定后端当前可执行路由，保存、启动与节点重跑均防止配置漂移。R1 收尾修正设计器读取单元固定版本、无执行历史原地编辑/显式重绑、有历史替换归档、模板占位符解析边界、节点 Kind 审计和失败重跑输出隔离。后端全量测试在清除本机异常 `NO_PROXY/no_proxy` 后为 279 passed；前端构建和 OpenSpec strict 通过。
+- 待完成/TODO：未执行生产迁移、发布或真实第三方 Connector 验收。当前可执行 Data Source 仅只读 Studio Source，其余来源明确“未连接”；视频生成器未验证时不展示片段。既有前端主包 >500 kB 是性能债，不阻塞 FE-F2 本地切片，也不代表完整 PRD/V1 已达标。已归档单元的部分设计控件仍可本地进入编辑态，但服务端拒绝保存和重跑；后续可做只读 UX 打磨。
+- 关键设计决策：复用既有 Workflow/Run/Step/Attempt 与副作用闸门；所有项目绑定运行通过新旧 API 均按同一项目权限校验；角色默认模板保存须通过服务端项目值可移植性 Gate；拖拽只改视觉顺序，依赖和映射须显式编辑；运行模式显示 Run 冻结的历史定义，设计模式编辑当前项目草稿；Data Source Plugin 契约覆盖内部数据、媒体数据、Notion、Obsidian、API、SQL/Database，首个可执行适配器只读 Studio Source，未连接者明确不可执行；项目覆盖与显式另存角色默认版本是两个独立持久化动作；现有浏览器演示数据不自动导入后端。
+- 依赖与启动：沿用现有 FastAPI/React/SQLAlchemy，无新增运行依赖。先在隔离开发库执行 `cd apps/api && .venv/bin/python -m alembic upgrade head`，再按下方命令启动；若本机 8000 端口已占用，可用 `AI_STUDIO_API_TARGET=http://127.0.0.1:<端口> npm run dev` 指向另一个本地 API。没有执行生产迁移或部署。
 
 ### 下一版规划：文章/图文全渠道
 

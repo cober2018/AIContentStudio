@@ -1,11 +1,18 @@
-## ADDED Requirements
+# fe-f2-persistent-production-workflow Specification
 
+## Purpose
+TBD - created by archiving change fe-f2-persistent-production-workflow. Update Purpose after archive.
+## Requirements
 ### Requirement: Project-scoped persistent workflow
 The system SHALL persist ContentProject and ContentUnit records, associate a Content Unit with a stable Persona/Role identity, modality, and immutable workflow definition revision, and address every production run through its owning project and unit. A unit MAY have multiple historical runs; each run MUST pin the exact definition version and checksum used at creation.
 
 #### Scenario: Reload a saved project workflow
 - **WHEN** an editor saves a valid project workflow override and reloads the selected Content Unit
 - **THEN** the same saved revision and ordered nodes are returned from the backend, and prior revisions remain available to existing runs
+
+#### Scenario: Designer shows the pinned workflow
+- **WHEN** a Persona default advances from v1 to v2 after a Content Unit pinned v1, without a project override
+- **THEN** the unit's effective-workflow read and Design Mode still return v1, and a new Run executes v1 until an explicit rebind
 
 #### Scenario: Reject unrelated run
 - **WHEN** a user requests a run ID through a different project or Content Unit
@@ -62,6 +69,12 @@ The portable role default MAY contain node structure, dependency edges, plugin t
 - **WHEN** a project workflow draft contains project-specific identifiers or actual attempt output and an editor saves it as a Persona default
 - **THEN** the server stores only safe placeholders/context bindings for parameterizable fields and rejects any non-portable field without publishing a new default version
 
+#### Scenario: Placeholder resolution boundary
+- **WHEN** a project or unit binding appears in node config, which runtime resolves
+- **THEN** the portability gate MAY parameterize it
+- **WHEN** such a binding appears in input mapping, condition, or another node field not resolved by runtime
+- **THEN** the role-default save is rejected rather than storing an inert placeholder
+
 #### Scenario: Prevent cross-project template leakage
 - **WHEN** a later Content Unit in Project B selects the role default created from Project A
 - **THEN** the selected definition contains no Project A run, snapshot, asset revision, draft, candidate, attempt, or actual output reference
@@ -72,6 +85,12 @@ The system SHALL execute supported nodes through the backend engine, persist ste
 #### Scenario: Run safe node
 - **WHEN** an editor runs a supported non-side-effect node with satisfied prerequisites
 - **THEN** a backend attempt is recorded and the canvas displays the persisted result after reload
+
+#### Scenario: Node kind and failed rerun output
+- **WHEN** a six-kind node is persisted as a step
+- **THEN** its node_type records the actual kind
+- **WHEN** a formerly successful node fails on rerun
+- **THEN** the failed attempt has no prior successful output, while the old successful attempt remains readable
 
 #### Scenario: Unsafe rerun
 - **WHEN** an editor requests generic rerun of a delivery or other side-effect node
