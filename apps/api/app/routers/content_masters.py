@@ -21,6 +21,7 @@ router = APIRouter(prefix="/api/v1", tags=["content-masters"])
 
 class MasterRevisionIn(BaseModel):
     expected_revision: int = Field(default=0, ge=0)
+    expected_context_hash: str | None = Field(default=None, pattern="^[0-9a-f]{64}$")
     idempotency_key: str = Field(min_length=1, max_length=150)
     modality: str | None = None
     payload_schema: str | None = None

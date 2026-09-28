@@ -1,27 +1,48 @@
 """One ownership boundary for project-bound runs and definitions."""
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from ..models import (
     AccountWorkflowDefault,
-    ContentAsset,
     ContentAccount,
+    ContentAsset,
+    ContentJob,
     ContentPersona,
     ContentProject,
+    ContentSeries,
     ContentUnit,
+    DeliveryTarget,
+    Draft,
     PersonaWorkflowDefault,
     ProjectWorkflowBinding,
-    ContentSeries,
-    DeliveryTarget,
-    ContentJob,
-    Draft,
     SeriesWorkflowDefault,
     User,
     Workflow,
     WorkflowRun,
 )
+
+
+def lock_project_context(db: Session, project_id: int, user: User) -> ContentProject:
+    project = db.get(ContentProject, project_id)
+    if project is None or project.owner_user_id != user.id:
+        raise HTTPException(404, "项目不存在")
+    # A no-op UPDATE serializes context writers on both PostgreSQL and SQLite.
+    try:
+        with db.no_autoflush:
+            db.execute(update(ContentProject).where(ContentProject.id == project_id).values(updated_at=ContentProject.updated_at).execution_options(synchronize_session=False))
+            db.refresh(project)
+    except OperationalError as exc:
+        db.rollback()
+        sqlstate = getattr(exc.orig, "sqlstate", None) or getattr(exc.orig, "pgcode", None)
+        if "locked" in str(exc.orig).lower() or sqlstate in {"40001", "40P01", "55P03"}:
+            raise HTTPException(409, {"code": "project_context_busy", "message": "项目上下文正在更新，请刷新后重试"}) from exc
+        raise
+    if project.owner_user_id != user.id:
+        raise HTTPException(404, "项目不存在")
+    return project
 
 
 def authorize_project_asset(db: Session, asset: ContentAsset, user: User, *, mutate: bool = False) -> None:

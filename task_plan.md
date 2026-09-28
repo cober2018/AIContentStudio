@@ -1,5 +1,13 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F6A 后端不可变量（main，继续apply）
+
+- [x] /// 回归先行：跨Unit项目生成素材、未知渠道/形态与原子保存边界；修复后复跑。
+- [ ] /// 封严Master上下文事务锁、完整live evidence/rights检查及Draft seed血缘。
+- [ ] /// 完成Modality Adapter，再实现纯manifest v4 builder和无Draft的Freeze→Approval→local package。
+- [ ] /// 后端链路通过后再做Review/Versions/Overview；前端暂不改。
+- 仅主工作区main；不push/deploy/生产迁移，不同步canonical或归档未完成change。
+
 ## 2026-09-28：FE-F6A 阶段代码整合到main（用户已授权）
 
 - [x] /// 核对两工作区共同基线661e30a与重叠审计文档，保留原始包

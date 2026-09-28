@@ -1,5 +1,13 @@
 # 配置记录
 
+## 2026-09-28 FE-F6A 后端复核
+
+- ProjectWorkflowOutput是项目共享素材的血缘，Master引用不可额外限定当前unit_id；仍需验证成功Attempt、生成插件及内容哈希，防裸ID绕过。
+- Channel Registry已有resolve_content_form，应复用其真实注册能力；不能把unknown组合默认为可执行，也不能以单Agent替代事务一致性。
+- 锁不能只放在Master端：复用mutable_project入口使Brief/Boundary/Unit写入共享同一Project行锁，项目归档也参与。no-op UPDATE不改updated_at；提交刷新context仍是必要的防御。SQLite真实双连接已测，不能据此宣称PostgreSQL实库竞态验收。
+- 检查input hash必须包含整个边界包的live权限/快照状态，而非仅Master显式引用的item；素材状态应包含父Material归档和实际字节结果。否则撤权和文件替换后旧pass仍会被错误认作current。
+- 新增可选context期望时，不携带此期望的旧请求必须保留原fingerprint算法，避免破坏已成功请求的幂等重放。
+
 ## 2026-09-28 FE-F6A 本地main阶段整合授权
 
 - 用户明确要求将当前阶段代码合入本地main，并因当前仅一个开发Agent，后续直接在main实施；此授权覆盖必要的本地提交与整合，不包含push/deploy/生产迁移。

@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-28：FE-F6A 后端不可变量继续实施
+
+- 基线main eb1156c，已完成44/214。按用户复核的后端顺序推进，先不改前端；当前读取确认跨Unit生成素材被错误限制，Channel/content_form尚未校验，CAS尚缺共享锁。
+- 使用OpenSpec apply、receiving-code-review、writing-plans/executing-plans、TDD及verification-before-completion；图MCP未提供，回退限定文件读取。门禁结果待本轮实际执行。
+- 本轮先RED再GREEN封严：共享项目事务锁覆盖Master和Project/Unit/Brief/Boundary写入；提交前刷新上下文，expected_context_hash冲突409；旧fingerprint继续可重放。SQLite双连接测试验证同键一版本/一事件、不同键同head一成功一409，锁竞争及提交时Unit/Brief/Boundary漂移均回滚。
+- ProjectWorkflowOutput按project而非消费unit校验，核验成功历史Attempt、插件/Run/checksum及实际字节；外项目、裸全局ID、失败Attempt和被替换字节均拒绝。Evidence检查覆盖整个边界（含未显式引用项）；rights检查回读hash/public/status/父素材归档；live变化使旧检查stale。Candidate-only历史纳入Archive保护。
+- 定向58项（新增31项），任务仅勾选已闭合8项，当前52/214；完整Adapter、Draft映射/警告、v4 builder/Freeze/Approval/package仍未完成，不能宣称里程碑已通过。没有前端改动或canonical归档。
+- 最终实跑：迁移后的新临时SQLite，全量605 passed/6既有警告（22.44秒，含58项Master回归）；触及文件Ruff通过；仓库根目录OpenSpec all strict24/24、git diff --check通过。前端未改，本轮未复跑build/budget，不用上轮build冒充本轮结果；PostgreSQL实库并发及完整v4端到端仍未验收。仅本地main阶段提交，不push/deploy/生产迁移。
+
 ## 2026-09-28：FE-F6A 阶段代码本地main整合（已完成，F6A仍在开发）
 
 - 用户授权当前阶段代码整合到main，后续直接在主工作区main开发。仍按已确认OpenSpec实施，不另开隔离开发分支；发布、生产写入、canonical同步归档不随此授权自动开放。
