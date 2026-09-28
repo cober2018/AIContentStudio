@@ -1,5 +1,21 @@
 # 当前进度
 
+## 2026-09-28：FE-F5A Home + Opportunity 标准包审计（SPEC_READY，未 apply）
+
+- 用户提供并解压标准包于 `/Users/mshengran/Project/AIContentStudio/openspec/fe-f5a-home-opportunity/`；原始目录保留不改。
+- 已确认本地隔离工作树基线为 `85b8c08`，FE-P1 canonical spec 与归档变更存在；connector 仍需外部刷新确认，未把本地证据冒充 connector 已同步。
+- 已将 F5A 新规格及 FE-F0/F1、FE-F3A、FE-F3B、FE-F4 四份 delta 归位到 `openspec/changes/fe-f5a-home-opportunity/`。
+- 审计并修正一个语义差异：转换只允许用户明确选择的 SourceDocument signal 建立普通 ProjectSourceBinding，但绝不自动创建、冻结或绑定 Fact Boundary；自动分析能力不可用时不得伪造 Assessment。
+- `openspec validate fe-f5a-home-opportunity --strict` 通过；`git diff --check` 通过。未修改业务代码、未执行迁移、未 apply、未推送/合并/部署。
+- 下一步前置：connector 真实可读 FE-F4/FE-P1 最终基线后，才可执行 `/opsx:apply fe-f5a-home-opportunity`。
+
+## 2026-09-28：FE-F5A Home + Opportunity 规格提案
+
+- FE-P1 已在本地提交为 `85b8c08`，随后创建分支 `codex/fe-f5a-home-opportunity` 作为下一阶段规格基线；未推送、合并或部署。
+- 已审计现状：`/home`、`/opportunities` 仍由 `ProductPlaceholder` 提供；项目 Overview 已能派生 Brief/Evidence/Identity/blocked/stale/review/delivery 风险；SourceDocument、DataSnapshot、ProjectEvent、Review、DeliveryTarget 均可复用。当前没有 ContentOpportunity、HomeTask 或调度实体。
+- 已创建 `openspec/changes/fe-f5a-home-opportunity/`，包含 proposal、design、三份 delta spec 和 tasks。F5A 明确分为 Opportunity（三类持久对象、评估版本、显式转项目）与 Home（现有事实 Projection），不自动绑定 Evidence、不创建 Topic、不自动更新 Identity、不引入新闻抓取系统。
+- OpenSpec strict 校验和归档前复核待完成；F5A 业务代码 apply 必须先确认 connector 能读到 FE-P1 `85b8c08` 和 canonical spec。
+
 ## 2026-09-28：FE-P1 主规格同步与归档
 
 - 用户明确选择将五条 FE-P1 长期要求全部同步到主规格并归档。`openspec archive fe-p1-frontend-bundle-performance --yes` 报告 10/10 任务完成、5 added / 0 modified / 0 removed；新增 `openspec/specs/fe-p1-frontend-bundle-performance/spec.md`，归档到工具实际生成的 `openspec/changes/archive/2026-09-27-fe-p1-frontend-bundle-performance/`。已将自动生成的 Purpose TBD 改为正式契约描述。归档后全部 16 份主规格 strict 为 16 passed / 0 failed；前端 TypeScript/Vite 构建及预算通过（`/projects` 初始 JS 214.45 kB raw / 69.98 kB gzip），`git diff --check` 通过。没有提交、推送、合并或部署。

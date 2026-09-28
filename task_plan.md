@@ -1,5 +1,15 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F5A Home + Opportunity 规格审计与归位（SPEC_READY）
+
+目标：在 FE-P1 `85b8c08` 基线上，为内容生命周期补上 Opportunity 决策层和 Home 聚合工作台；本轮仅完成 OpenSpec 规格，不 apply 业务代码。
+
+- [x] /// 核对 FE-P1 本地 commit、主规格、现有 Home/Opportunity placeholder、Project Overview/Review/Delivery 事实来源
+- [x] /// 创建 `fe-f5a-home-opportunity` proposal/design/specs/tasks，写明 Opportunity 与 Topic、Home 与第二状态机的边界
+- [x] /// OpenSpec strict 校验、diff 检查、记录 connector 基线前置
+- [x] /// 审计用户解压标准包，补齐四份 FE-F0/F1、F3A、F3B、F4 delta，并统一 Source binding / Fact Boundary 语义
+- [ ] /// 等待 connector 可读 FE-F4/FE-P1 最终基线后执行 `/opsx:apply`
+
 ## 2026-09-28：FE-P1 主规格同步与归档（已授权）
 
 目标：将五条 ADDED Requirement 归入 canonical `openspec/specs/` 并归档已复核的 FE-P1；不推送、合并或部署。

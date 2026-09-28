@@ -60,6 +60,15 @@
 - 关键设计决策：预算依据 Vite manifest 的入口与 `/projects` 静态依赖闭包，阈值为原始 JS 低于 500,000 字节；gzip 与全站 JS 单独报告。TipTap/XYFlow 所在旧页面、项目详情与生产页不进入 `/projects` 初始图；Vite 警告消失本身不算验收。
 - 依赖与启动方式：无新增运行依赖。`cd apps/web && npm run build` 同时执行 TypeScript、Vite manifest 构建和预算门禁；也可对已有构建运行 `npm run check:bundle`。本地开发仍用 `npm run dev` 与原有 API 代理。
 
+### FE-F5A Home + Opportunity（SPEC_READY，未 apply）
+
+- 需求背景：FE-F0/F1 至 FE-F4 已覆盖项目、身份、生产、审核和交付，但 `/home` 与 `/opportunities` 仍是占位页，系统缺少“为什么现在做这条内容”的决策层。F5A 规格入口为 [`openspec/changes/fe-f5a-home-opportunity/proposal.md`](openspec/changes/fe-f5a-home-opportunity/proposal.md)，实施计划见 [`docs/superpowers/plans/2026-09-28-fe-f5a-home-opportunity.md`](docs/superpowers/plans/2026-09-28-fe-f5a-home-opportunity.md)。
+- 目录结构：`content-opportunities` 定义 Opportunity、Signal、Assessment 与显式转项目；`content-home-workspace` 定义 Home Projection；FE-F3A delta 补充 Opportunity 建议值进入项目核心时的 suggested/approved 边界。
+- 已完成：已审计用户提供的标准包 [`openspec/fe-f5a-home-opportunity/`](openspec/fe-f5a-home-opportunity/)，并归位到 [`openspec/changes/fe-f5a-home-opportunity/`](openspec/changes/fe-f5a-home-opportunity/)。包含 F5A 新规格及 FE-F0/F1、FE-F3A、FE-F3B、FE-F4 四份 delta；严格校验与 `git diff --check` 已通过。业务代码、迁移、外部 Connector 和生产数据库均未改动。
+- 待完成/TODO：apply 前仍需 connector 真实读到 FE-F4/FE-P1 最终基线；本地工作树已确认 FE-P1 commit `85b8c08`、canonical FE-P1 spec 和归档变更存在。F5A apply 后需隔离迁移、后端/前端门禁和浏览器验收，再归档。
+- 关键设计决策：Opportunity 解释 why-now，TopicBrief 继续负责生产输入；Signal 只引用 SourceDocument/DataSnapshot/DeliveryFeedback；Assessment append-only 且 `unknown` 不降级为 `none`；转换只绑定用户明确选择的 SourceDocument，不自动创建/冻结 Fact Boundary；Home 只聚合真实 Opportunity、Project Overview、ProjectEvent、Review、Delivery 和 identity readiness；没有排期实体时不伪造“近期计划”。
+- 依赖与启动方式：沿用 FastAPI/SQLAlchemy/Alembic/React，无新增运行依赖；本轮未执行 apply，不运行迁移、不推送、不合并、不部署。
+
 ### 下一版规划：文章/图文全渠道
 
 > **2026-09-24 更新（V1 PRD 2.0 Content Harness 已实施）**：下一段提到的 `complete-prd-v1-channel-deliverables` 已标记 **superseded**，被主变更 [`align-v1-prd2-content-harness`](openspec/changes/align-v1-prd2-content-harness/proposal.md) 吸收并实施。当前代码已落地：Channel Registry（14 平台 profile，新增渠道无需改枚举/迁移）、Workflow 版本化 + Node Plugin Registry、Material Library（素材全局复用/权利链）、DraftCheckRun 统一检查、Discoverability（Pre/Post SEO）、Candidate Manifest schema v2、Delivery Router（copy_package / assisted_draft / auto_draft + DeliveryAttempt：prepared→远端→结果，unknown 不自动重发）、节点级 Rerun/Stale、Review & Publish Center（`/review-publish`）。真实账号自动发布仍未验证，平台能力一律如实标注 unverified；PRD §15–16 与 30 Topic 门槛仍需单独验收。实施与偏差记录见该 change 的 `design.md`。

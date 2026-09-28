@@ -1,5 +1,21 @@
 # 配置记录
 
+## 2026-09-28：FE-F5A Home + Opportunity 规格审计补充
+
+- 源包包含 `proposal.md`、`design.md`、`tasks.md`、F5A 新规格，以及 FE-F0/F1、FE-F3A、FE-F3B、FE-F4 四份 delta；已放入标准 `openspec/changes/fe-f5a-home-opportunity/`。
+- 不能直接用四份 delta 覆盖 canonical specs：它们是 MODIFIED 片段。归档时必须与现有完整主规格合并，否则会丢失既有项目、身份和审核契约。
+- 源包的转换语义已采用：Opportunity → Project 可绑定用户明确选择的 SourceDocument；但不创建 FactPack、不冻结/绑定 Fact Boundary、不创建 IdentitySnapshot；新项目仍由 Overview 派生为 evidence-needed。
+- Signal 只保存受控引用与版本/checksum/注释，不复制 SourceDocument、DataSnapshot 或 DeliveryFeedback 真源；权限在创建和转换时重新校验。
+- Home 只做 Projection；没有排期实体时 `upcoming=[]`、`schedule=false`，不能从时间戳推导发布日期。
+- 规格门禁：strict validation PASS；diff-check PASS。connector 基线在本地无法独立证明已从旧 main 刷新，故 apply 仍受外部 workspace reconciliation 前置约束。
+
+## 2026-09-28：FE-F5A 规格审计
+
+- `/home` 与 `/opportunities` 当前只是占位页；`project_overview()` 已经是可复用的确定性项目状态来源，Review/Delivery/Identity readiness 也已有项目投影，适合由 Home 聚合而不是再造状态表。
+- F5A 的稳定边界是 `ContentOpportunity`（为什么现在做）、`ContentOpportunitySignal`（依据快照）和 `ContentOpportunityAssessment`（可追溯评估版本）。TopicBrief 仍是生产输入，不应接管 Opportunity。
+- Opportunity 转 Project 必须显式、幂等、可回溯；建议值只能进入可编辑 Brief 草稿；只有用户明确选择的 SourceDocument signal 才能创建普通 ProjectSourceBinding，仍不能自动创建 Fact Boundary、IdentitySnapshot、Candidate 或 DeliveryTarget。
+- 当前没有排期实体，因此 Home 的“近期计划”不能由更新时间伪装；规格将其收敛为近期项目活动/更新项目，等调度契约另开变更。
+
 ## 2026-09-28：FE-P1 前端加载边界审计
 
 - 归档 CLI 使用宿主机日期 `2026-09-27` 命名，尽管当前任务日期是 2026-09-28；FE-P1 实际归档目录须以命令回执为准。五条 ADDED Requirement 已同步到新的主规格，无旧要求被替换；自动生成的 Purpose TBD 已修成正式描述。
