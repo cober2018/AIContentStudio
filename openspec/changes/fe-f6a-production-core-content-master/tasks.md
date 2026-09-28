@@ -42,12 +42,12 @@
 
 ## 4. Modality adapter registry
 
-- [ ] 4.1 Add `ProductionModalityAdapter` registry separate from Workflow Plugin and Channel registries.
-- [ ] 4.2 Add text adapter for `text.master.v1`.
-- [ ] 4.3 Add graphic adapter for `graphic.master.v1` stable envelope.
-- [ ] 4.4 Add video adapter for `video.master.v1` stable envelope.
-- [ ] 4.5 Expose adapter descriptor/readiness/unavailable reason.
-- [ ] 4.6 Empty/structural Graphic/Video Masters may save but cannot freeze Candidate without real render.
+- [x] 4.1 Add `ProductionModalityAdapter` registry separate from Workflow Plugin and Channel registries.
+- [x] 4.2 Add text adapter for `text.master.v1`.
+- [x] 4.3 Add graphic adapter for `graphic.master.v1` stable envelope.
+- [x] 4.4 Add video adapter for `video.master.v1` stable envelope.
+- [x] 4.5 Expose adapter descriptor/readiness/unavailable reason.
+- [x] 4.6 Empty/structural Graphic/Video Masters may save but cannot freeze Candidate without real render.
 - [x] 4.7 No adapter fabricates generated image/video/media.
 
 ## 5. Master asset refs
@@ -74,7 +74,7 @@
 - [x] 7.2 Add common master_schema check.
 - [x] 7.3 Add evidence check.
 - [x] 7.4 Add rights check.
-- [ ] 7.5 Add render-readiness check through modality adapter.
+- [x] 7.5 Add render-readiness check through modality adapter.
 - [ ] 7.6 Preserve warning/blocker/incomplete/stale semantics.
 - [x] 7.7 Add list/current-check read API.
 - [x] 7.8 Do not silently treat missing/incomplete check as pass.
@@ -82,13 +82,13 @@
 ## 8. Draft workflow compatibility seed
 
 - [x] 8.1 Add `master-revisions/from-output`.
-- [ ] 8.2 Accept only verified same-unit current Draft ProjectWorkflowOutput initially.
-- [ ] 8.3 Preserve Draft ID/revision/input hash and WorkflowRun/node/attempt/output provenance.
-- [ ] 8.4 Convert Draft document/markdown/structured content into text.master.v1.
-- [ ] 8.5 Map only provable MaterialRevision refs into MasterAssetRef.
-- [ ] 8.6 Map only provable FactPackItem refs into MasterEvidenceRef.
-- [ ] 8.7 Unmappable legacy claims/media become explicit warning/incomplete state rather than invented lineage.
-- [ ] 8.8 Foreign/stale Draft output is rejected.
+- [x] 8.2 Accept only verified same-unit current Draft ProjectWorkflowOutput initially.
+- [x] 8.3 Preserve Draft ID/revision/input hash and WorkflowRun/node/attempt/output provenance.
+- [x] 8.4 Convert Draft document/markdown/structured content into text.master.v1.
+- [x] 8.5 Map only provable MaterialRevision refs into MasterAssetRef.
+- [x] 8.6 Map only provable FactPackItem refs into MasterEvidenceRef.
+- [x] 8.7 Unmappable legacy claims/media become explicit warning/incomplete state rather than invented lineage.
+- [x] 8.8 Foreign/stale Draft output is rejected.
 
 ## 9. ProjectWorkflowOutput extension
 
@@ -99,42 +99,42 @@
 
 ## 10. Candidate manifest v4
 
-- [ ] 10.1 Add canonical manifest-v4 builder from exact ContentMasterRevision.
-- [ ] 10.2 Freeze Project/Unit/modality/channel/content-form.
-- [ ] 10.3 Freeze exact IdentitySnapshot ID/checksum.
-- [ ] 10.4 Freeze exact Brief revision ID/checksum.
-- [ ] 10.5 Freeze exact Fact Boundary/FactPack ID/version/checksum.
-- [ ] 10.6 Freeze Master ID/revision/payload schema/payload hash/context hash/parent.
-- [ ] 10.7 Freeze full bounded modality content snapshot required for audit/package.
-- [ ] 10.8 Freeze exact asset refs/hash/rights snapshot/order/placement.
-- [ ] 10.9 Freeze exact evidence refs/snapshot checksum/locator.
-- [ ] 10.10 Freeze current Master checks/input hashes/results.
-- [ ] 10.11 Freeze modality render snapshot.
-- [ ] 10.12 Freeze origin WorkflowRun/output/node/attempt/edit provenance.
-- [ ] 10.13 Include citations/declarations where payload supports them.
-- [ ] 10.14 Candidate hash covers every frozen v4 section.
-- [ ] 10.15 Canonical hash is deterministic across key ordering.
+- [x] 10.1 Add canonical manifest-v4 builder from exact ContentMasterRevision.
+- [x] 10.2 Freeze Project/Unit/modality/channel/content-form.
+- [x] 10.3 Freeze exact IdentitySnapshot ID/checksum.
+- [x] 10.4 Freeze exact Brief revision ID/checksum.
+- [x] 10.5 Freeze exact Fact Boundary/FactPack ID/version/checksum.
+- [x] 10.6 Freeze Master ID/revision/payload schema/payload hash/context hash/parent.
+- [x] 10.7 Freeze full bounded modality content snapshot required for audit/package.
+- [x] 10.8 Freeze exact asset refs/hash/rights snapshot/order/placement.
+- [x] 10.9 Freeze exact evidence refs/snapshot checksum/locator.
+- [x] 10.10 Freeze current Master checks/input hashes/results.
+- [x] 10.11 Freeze modality render snapshot.
+- [x] 10.12 Freeze origin WorkflowRun/output/node/attempt/edit provenance.
+- [x] 10.13 Include citations/declarations where payload supports them.
+- [x] 10.14 Candidate hash covers every frozen v4 section.
+- [x] 10.15 Canonical hash is deterministic across key ordering.
 
 ## 11. Dual-path Candidate freeze
 
 - [x] 11.1 Evolve Freeze input to require exactly one of legacy project_output_id or content_master_revision_id.
 - [x] 11.2 Preserve existing v3 Draft freeze behavior.
-- [ ] 11.3 Add expected_payload_hash gate for v4.
-- [ ] 11.4 Require v4 source is current/latest Master for the unit.
-- [ ] 11.5 Reject stale Identity/Brief/Evidence/channel context.
-- [ ] 11.6 Require all mandatory Master checks current.
-- [ ] 11.7 Require live asset/evidence rights.
-- [ ] 11.8 Require real modality render snapshot.
+- [x] 11.3 Add expected_payload_hash gate for v4.
+- [x] 11.4 Require v4 source is current/latest Master for the unit.
+- [x] 11.5 Reject stale Identity/Brief/Evidence/channel context.
+- [x] 11.6 Require all mandatory Master checks current.
+- [x] 11.7 Require live asset/evidence rights.
+- [x] 11.8 Require real modality render snapshot.
 - [ ] 11.9 Repeated identical v4 freeze returns existing Candidate/event exactly once.
 - [ ] 11.10 Changed Master revision produces new Candidate and preserves old one.
 
 ## 12. ContentAsset compatibility
 
-- [ ] 12.1 Populate content_master_revision_id for v4 only.
-- [ ] 12.2 Keep draft_id/topic_brief_id/mother_revision_id null for non-Draft v4.
-- [ ] 12.3 Do not fabricate legacy links.
-- [ ] 12.4 Text v4 may populate final_body compatibility projection; Graphic/Video need not.
-- [ ] 12.5 ArtifactKind.video persists/serializes safely.
+- [x] 12.1 Populate content_master_revision_id for v4 only.
+- [x] 12.2 Keep draft_id/topic_brief_id/mother_revision_id null for non-Draft v4.
+- [x] 12.3 Do not fabricate legacy links.
+- [x] 12.4 Text v4 may populate final_body compatibility projection; Graphic/Video need not.
+- [x] 12.5 ArtifactKind.video persists/serializes safely.
 - [ ] 12.6 Existing asset serializers and authorization accept null Draft text lineage for v4.
 
 ## 13. Approval and live invalidation

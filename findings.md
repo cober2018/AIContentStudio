@@ -1,5 +1,14 @@
 # 配置记录
 
+## 2026-09-28 FE-F6A Adapter边界
+
+- descriptor/validator只是结构草稿；Graphic/Video现固定final_render_required，未验证具体Master输入。人工render确认须是显式API输入，由服务端绑定actor及exact输入hash，不信任edit_summary冒充确认。
+- render_input_hash必须排除最终render引用，覆盖payload/context及非render素材/证据；全canvas都要有exact输出。ChannelRegistry未注册组合不能因素材存在而被推断支持。
+- 初始确认只实现manual，不冒充verified renderer；媒体存在不是确认。API追加保存时服务端绑定actor及输出hash，旧Master不变；改payload/context/非render素材/evidence refs会使旧确认失效。实际MIME、字节和实时权利变化使检查stale。
+- Draft引用不能只检查Fact ID：source job必须有与当前Boundary一致的FactPack ID/version/checksum，且条目唯一/typed；DraftMedia必须有精确hash、字节、项目可见性与使用权限。无法证明的引用保留unmapped并阻止检查pass，幂等重试回放已有冻结Master。
+- manifest-v4取快照与纯builder分开；identity冻结真实snapshot/checksum而非readiness。提交冻结候选前再次刷新版本/context/检查及live gates，并对manifest hash复核。复核发现旧证据checksum变化后重新检查会错误pass，已补exact MasterEvidenceRef与当前边界item匹配回归。
+- 现有Approval仍Draft-only、copy package仍仅project schema v3，不能把v4 Freeze通过等同完整闭环；下一阶段必须独立schema dispatch，禁止v4回退。
+
 ## 2026-09-28 FE-F6A 后端复核
 
 - ProjectWorkflowOutput是项目共享素材的血缘，Master引用不可额外限定当前unit_id；仍需验证成功Attempt、生成插件及内容哈希，防裸ID绕过。

@@ -512,7 +512,7 @@ def test_draft_seed_requires_current_successful_attempt(client, draft_env, statu
     workflow = Workflow(name="Seed", workflow_key="seed", version=1, definition_json={}, checksum="w" * 64)
     db.add(workflow)
     db.flush()
-    run = WorkflowRun(workflow_id=workflow.id, content_unit_id=unit, identity_snapshot_id=db.get(ContentUnit, unit).identity_snapshot_id, status="succeeded")
+    run = WorkflowRun(workflow_id=workflow.id, workflow_version=workflow.version, definition_checksum=workflow.checksum, content_unit_id=unit, identity_snapshot_id=db.get(ContentUnit, unit).identity_snapshot_id, status="succeeded")
     db.add(run)
     db.flush()
     draft.content_job.workflow_run_id = run.id

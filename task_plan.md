@@ -1,5 +1,14 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F6A Adapter → seed → v4后端（main）
+
+- [x] /// Adapter定向测试先RED：精确render输入、显式人工attestation、多canvas覆盖、字节/MIME/权利和Registry不匹配。
+- [x] /// production_modalities收口validate/preview/render/package/availability；content_masters接只读readiness、检查与追加式确认，保留v3行为。
+- [x] /// DraftMedia/claim映射和显式unmapped检查；独立manifest builder/hash回归，并验证工作流seed完整快照。
+- [x] /// builder验收后接v4 Freeze：expected_payload_hash、latest/current checks/live rights、提交前复核回滚。
+- [ ] /// 接schema-dispatched Approval/local package、完整无Draft端到端及并发冻结回归；前端仍不动。
+- OpenSpec已核92/214；不把Freeze通过写成Approval/Package闭环，不同步canonical或归档。
+
 ## 2026-09-28：FE-F6A 后端不可变量（main，继续apply）
 
 - [x] /// 回归先行：跨Unit项目生成素材、未知渠道/形态与原子保存边界；修复后复跑。

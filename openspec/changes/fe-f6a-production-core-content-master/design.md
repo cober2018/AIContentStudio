@@ -301,6 +301,8 @@ No adapter may fabricate generated media.
 
 Real media bytes alone do not prove a render of this Master. A `render_input_hash` covers payload/context/non-render asset/evidence inputs, excluding the final render reference to avoid a hash cycle. Bind exact project-visible final revisions through verified renderer provenance or an explicit editor-confirmed manual-render attestation stored on the new Master, labeling the two origins distinctly. Verify bytes/hash, MIME/kind and live rights. Multi-canvas content requires all declared outputs, not silently one image. Changed input invalidates the binding. Unsupported channel/form/modality combinations stay unavailable; F6A adds no channel format or publisher by inference.
 
+Initial API: read `GET master-revisions/{id}/readiness` for the input hash, adapter availability and current checks. An explicit new save accepts `render_attestation` containing exactly `confirmed: true` and `render_input_hash`. The server records origin, authenticated actor and exact output revision/hash bindings; client-supplied attestation inside `edit_summary` is rejected. `render_asset_ref` is one declaration or a list for multiple canvases, each referring to a `render_output` Master asset reference. This initial path is labeled `manual`, never a verified renderer. Text renders deterministically from markdown; document-only render remains unavailable until an actual renderer exists.
+
 ## 9. Workflow output → Master seed
 
 Add explicit compatibility action:
@@ -320,6 +322,8 @@ Server converts current Draft into `text.master.v1`, preserving:
 Unmappable claims/media are surfaced as warnings/incomplete, not silently invented.
 
 Verify Draft/Run/Step/Attempt consistently and reject stale/failed/replaced attempts even when old ProjectWorkflowOutput remains. Freeze exact Draft content/hash at seed time; later Draft edits do not mutate Master. Source identity matches the pinned unit snapshot. Current Brief/Boundary used for Master are separate new context, not relabeled historical run provenance. Client origin IDs cannot fabricate association.
+
+Seed replays return the already frozen revision for the identical action. Evidence mapping requires the source job's frozen FactPack ID/version/checksum to match the current boundary and each claim's Fact ID to resolve uniquely to a typed snapshot item. Missing proof remains unmapped. Unmapped media/claims result in incomplete rights/evidence checks, so incomplete migration cannot silently become Candidate-ready.
 
 Graphic/video workflow assets can be attached to a manually/adapter-created Master, but F6A does not pretend a single image/video clip is automatically a complete professional Master.
 

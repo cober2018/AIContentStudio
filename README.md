@@ -129,7 +129,10 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 依赖与启动：复用现有 FastAPI/SQLAlchemy/Alembic/React；后端测试使用迁移后的隔离SQLite，禁止把临时库迁移命令用于开发或生产数据库。
 - 当前阶段门禁：574后端测试（含27项F6A回归）、SQLite空库迁移往返、前端build/FE-P1预算、strict24/24、Ruff/diff通过；这不是整体F6A完成或浏览器/生产验收。真实业务链仍按上方TODO继续实施。
 - 开发方式：用户明确授权当前阶段提交合入本地main，后续唯一开发Agent直接在`/Users/mshengran/Project/AIContentStudio`的main实施；继续保留OpenSpec确认/回归/阶段提交，不因单Agent而跳过质量门禁。禁止自动push/deploy/生产迁移。
-- 后端继续实施：共享Project事务锁、Master提交前上下文复核和可选`expected_context_hash`、真实Channel/content_form校验已补齐；生成素材按Project共享且验证成功Attempt/字节，Evidence与rights检查使用live状态，Candidate-only单元删除改为归档。当前52/214；605后端测试（含58项Master回归）、strict24/24、Ruff/diff通过，前端未改未复跑；完整Adapter、seed映射和v4审批/成品包仍待完成。PostgreSQL实库并发未验收。
+- 后端继续实施：共享Project事务锁、Master提交前上下文复核和可选`expected_context_hash`、真实Channel/content_form校验已补齐；生成素材按Project共享且验证成功Attempt/字节，Evidence与rights检查使用live状态，Candidate-only单元删除改为归档。
+- 当前已核92/214：三种Modality Adapter支持validate/preview/render/package projection/availability；`GET master-revisions/{id}/readiness`提供精确render输入hash，显式追加保存确认manual render（不是自动生成/verified renderer）。Draft精确素材/证据映射和unmapped incomplete已接入；`services/candidates_v4.py`把快照加载与纯builder分开，v4 Freeze使用真实Identity/Brief/Boundary/检查/render/provenance，带expected_payload_hash和提交前复核。手工Text及显式确认的Graphic/Video均可冻结，重复调用不新增事件。
+- 下一步/TODO：v4 Approval与copy/manual package的schema dispatch、并发冻结完整验收、Review/Versions/Overview、Production Workspace与浏览器验收；没有Draft/Topic/Mother的Text已走到Candidate，但尚未走通审批/本地包。前端本阶段未改未复跑；PostgreSQL实库未验收，不把SQLite测试当生产证明。
+- 本阶段实跑：668后端测试通过（含121项F6A Master/Adapter/seed/manifest/Freeze回归，6既有警告），strict24/24、触及文件Ruff和diff-check通过；原始规格包、canonical和前端未改。仍是阶段交付，不是F6A完成或独立审核通过。
 
 ### 下一版规划：文章/图文全渠道
 

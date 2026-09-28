@@ -1,5 +1,18 @@
 # 当前进度
 
+## 2026-09-28：FE-F6A Adapter及v4后端继续实施
+
+- 已核main4b5c7c9，52/214；继续已批准fe-f6a-production-core-content-master（spec-driven）。用户要求保持Adapter→Draft映射→纯builder→Freeze/Approval/package顺序，前端不启动。
+- 使用using-superpowers、OpenSpec apply、receiving-code-review、writing-plans/executing-plans、TDD、verification-before-completion。图MCP仍未提供，限定相关文件回退读取；原始规格包、canonical和生产库不动。
+- 已完成Adapter三形态契约与readiness：人工render需明确追加保存确认，由服务端绑定actor/精确input hash/output；全canvas覆盖，字节/MIME/实时权利、非render资产与证据输入变化均回归。Channel Registry只接受真实注册的video能力，不增加或推断新渠道。
+- Draft seed校验冻结Workflow version/checksum与最新成功Attempt；真实document/markdown/structured与内容hash冻结，精确素材/证据映射，source pack无法证明或素材不可见时明确unmapped并使检查incomplete。相同seed动作重试回放已冻结内容，不读取后来变化的Draft替代它。
+- 已独立实现candidates_v4：load frozen inputs与纯build_manifest_v4分离，实际Identity/Brief/Boundary/FactPack checksum、Master哈希、refs/checks/render、workflow/edit provenance及citations/declarations均冻结；JSON深拷贝和key-order/hash覆盖回归通过。
+- v4 Freeze已替换临时骨架：强制expected_payload_hash；latest/current context/current checks/live refs/真实render闸门；提交前刷新复核hash，漂移时Candidate/Event一起回滚。手工Text无Draft/Topic/Mother/Run可冻结；Graphic/Video只有明确manual确认可冻结。重复调用一Candidate/一事件，跨owner/归档拒绝。
+- 本轮任务实核92/214；Approval仍Draft-only、copy package仍schema-v3入口，下一轮必须独立v3/v4 dispatch。完整无Draft的Approval→local package里程碑尚未通过；不勾选并发冻结/审批/交付或前端任务。
+- 阶段复核使用requesting-code-review检查清单，但当前没有subagent工具，实际是单Agent逐项代码/门禁复核，不标为独立APPROVE。复核新增exact evidence checksum更换后重跑不得pass的回归；Ruff和OpenSpec all strict24/24、diff-check已实际通过。
+- 最终全量实跑668 passed/6既有警告（26.25秒，包含展示标题入hash后的最终代码），新增63项（Adapter28、seed7、manifest16、Freeze12），连同58项旧Master回归共121项。使用新迁移临时SQLite，不涉及开发/生产库；strict24/24、Ruff和diff-check均通过。前端未改未复跑，不引用旧build作为本轮验收。
+- 实际skills：using-superpowers、openspec-apply-change、receiving-code-review、writing-plans、executing-plans、test-driven-development、systematic-debugging、requesting-code-review（单Agent回退）、verification-before-completion。仅本地main阶段提交，不push/deploy/生产迁移/canonical同步/归档。
+
 ## 2026-09-28：FE-F6A 后端不可变量继续实施
 
 - 基线main eb1156c，已完成44/214。按用户复核的后端顺序推进，先不改前端；当前读取确认跨Unit生成素材被错误限制，Channel/content_form尚未校验，CAS尚缺共享锁。
