@@ -27,6 +27,291 @@ def _master_unit(client):
     return project, unit, f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", headers
 
 
+@pytest.mark.parametrize("channel,content_form", [(None, "article"), ("unknown-channel", None), ("wechat", "unknown-form")])
+def test_master_save_rejects_unregistered_channel_form(client, db_session, channel, content_form):
+    from app.models import ContentUnit
+
+    _, unit, path, headers = _master_unit(client)
+    db_session.get(ContentUnit, unit).channel_id = channel
+    db_session.commit()
+    response = client.post(path, json={"idempotency_key": "registry", "payload": {"markdown": "内容"}, "content_form": content_form}, headers=headers)
+    assert response.status_code == 422, response.text
+    assert client.get(path, headers=headers).json()["items"] == []
+
+
+def test_master_save_resolves_registered_default_form(client, db_session):
+    from app.models import ContentUnit
+
+    _, unit, path, headers = _master_unit(client)
+    db_session.get(ContentUnit, unit).channel_id = "wechat"
+    db_session.commit()
+    response = client.post(path, json={"idempotency_key": "default-form", "payload": {"markdown": "内容"}}, headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()["content_form"] == "article"
+
+
+def test_master_save_rejects_expected_context_mismatch_atomically(client):
+    _, _, path, headers = _master_unit(client)
+    response = client.post(path, json={"idempotency_key": "old-context", "expected_context_hash": "0" * 64, "payload": {"markdown": "内容"}}, headers=headers)
+    assert response.status_code == 409, response.text
+    assert response.json()["detail"]["code"] == "master_context_conflict"
+    assert client.get(path, headers=headers).json()["items"] == []
+
+
+@pytest.mark.parametrize("field,value", [("channel_id", "wechat"), ("modality", "video"), ("status", "archived"), ("project_id", "other")])
+def test_master_commit_revalidates_unit_context_and_rolls_back_refs_events(client, db_session, field, value):
+    from sqlalchemy import event
+
+    from app.models import ContentUnit, ProjectEvent
+
+    _, unit, path, headers = _master_unit(client)
+    if field == "project_id":
+        value = client.post("/api/v1/content-projects", json={"title": "其他项目"}, headers=headers).json()["id"]
+    injected = False
+
+    def update_during_flush(session, flush_context, instances):
+        nonlocal injected
+        if not injected and any(isinstance(row, ContentMasterRevision) for row in session.new):
+            injected = True
+            setattr(session.get(ContentUnit, unit), field, value)
+
+    event.listen(db_session, "before_flush", update_during_flush)
+    try:
+        response = client.post(path, json={"idempotency_key": "commit-drift", "payload": {"markdown": "内容"}}, headers=headers)
+    finally:
+        event.remove(db_session, "before_flush", update_during_flush)
+    assert response.status_code == 409, response.text
+    assert client.get(path, headers=headers).json()["items"] == []
+    assert db_session.query(ProjectEvent).filter_by(event_type="content_master.saved").count() == 0
+
+
+@pytest.mark.parametrize("head", ["brief", "boundary"])
+def test_master_commit_revalidates_upstream_heads(client, db_session, head):
+    from sqlalchemy import event
+
+    from app.models import CreativeBriefRevision, FactPack, ProjectEvent, ProjectFactBoundaryRevision
+
+    project, _, path, headers = _master_unit(client)
+    pack = FactPack(name="边界", version=1, status="frozen", checksum="p" * 64)
+    db_session.add(pack)
+    db_session.commit()
+    pack_id = pack.id
+    injected = False
+
+    def append_head(session, flush_context, instances):
+        nonlocal injected
+        if not injected and any(isinstance(row, ContentMasterRevision) for row in session.new):
+            injected = True
+            if head == "brief":
+                session.add(CreativeBriefRevision(project_id=project, revision_no=1, objective="新目标", checksum="b" * 64))
+            else:
+                session.add(ProjectFactBoundaryRevision(project_id=project, revision_no=1, fact_pack_id=pack_id, fact_pack_version=1, fact_pack_checksum="p" * 64))
+
+    event.listen(db_session, "before_flush", append_head)
+    try:
+        response = client.post(path, json={"idempotency_key": "context-head", "payload": {"markdown": "内容"}}, headers=headers)
+    finally:
+        event.remove(db_session, "before_flush", append_head)
+    assert response.status_code == 409, response.text
+    assert client.get(path, headers=headers).json()["items"] == []
+    assert db_session.query(ProjectEvent).filter_by(event_type="content_master.saved").count() == 0
+
+
+def test_master_save_rolls_back_when_context_writer_holds_lock(client, db_session, tmp_path):
+    import sqlite3
+
+    from fastapi import HTTPException
+    from sqlalchemy.orm import Session
+
+    from app.models import ContentProject, User
+    from app.services.content_masters import save_revision
+
+    project, unit, _, headers = _master_unit(client)
+    db_session.commit()
+    database = tmp_path / "race.db"
+    raw = db_session.get_bind().raw_connection()
+    with sqlite3.connect(database) as destination:
+        raw.driver_connection.backup(destination)
+    raw.close()
+    engine = create_engine(f"sqlite:///{database}", connect_args={"timeout": 0})
+    try:
+        with Session(engine) as writer, Session(engine) as saver:
+            writer.execute(text("UPDATE content_project SET status = status WHERE id = :id"), {"id": project})
+            user = saver.query(User).filter_by(email=headers["X-Studio-User"]).one()
+            with pytest.raises(HTTPException) as error:
+                save_revision(saver, project_id=project, unit_id=unit, user=user, payload={"idempotency_key": "race", "payload": {"markdown": "内容"}})
+            assert error.value.status_code == 409
+            writer.rollback()
+            assert saver.scalar(text("SELECT count(*) FROM content_master_revision")) == 0
+            assert saver.get(ContentProject, project).status != "archived"
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("same_key", [False, True])
+def test_concurrent_master_saves_have_one_head_and_one_event(client, db_session, tmp_path, same_key):
+    import sqlite3
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    from fastapi import HTTPException
+    from sqlalchemy.orm import Session
+
+    from app.models import User
+    from app.services.content_masters import save_revision
+
+    project, unit, _, headers = _master_unit(client)
+    db_session.commit()
+    database = tmp_path / "concurrent.db"
+    raw = db_session.get_bind().raw_connection()
+    with sqlite3.connect(database) as destination:
+        raw.driver_connection.backup(destination)
+    raw.close()
+    engine = create_engine(f"sqlite:///{database}", connect_args={"timeout": 5})
+    barrier = Barrier(2)
+
+    def save(number):
+        with Session(engine) as session:
+            user = session.query(User).filter_by(email=headers["X-Studio-User"]).one()
+            barrier.wait(timeout=5)
+            try:
+                result = save_revision(session, project_id=project, unit_id=unit, user=user, payload={"idempotency_key": "same" if same_key else str(number), "expected_revision": 0, "payload": {"markdown": "内容"}})
+                return 200, result["id"]
+            except HTTPException as exc:
+                session.rollback()
+                return exc.status_code, None
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(save, [1, 2]))
+        assert sorted(status for status, _ in results) == ([200, 200] if same_key else [200, 409])
+        if same_key:
+            assert results[0][1] == results[1][1]
+        with Session(engine) as session:
+            assert session.scalar(text("SELECT count(*) FROM content_master_revision")) == 1
+            assert session.scalar(text("SELECT count(*) FROM project_event WHERE event_type = 'content_master.saved'")) == 1
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("state", ["ready", "not_public", "revoked", "archived", "corrupt_bytes"])
+def test_master_rights_check_uses_live_revision_and_exact_bytes(client, db_session, tmp_path, state):
+    import hashlib
+
+    from app.models import Material, MaterialRevision, ProjectMaterialReference
+
+    project, _, path, headers = _master_unit(client)
+    data = b"real immutable material"
+    file = tmp_path / "asset.png"
+    file.write_bytes(data)
+    material = Material(title="素材", status="active")
+    db_session.add(material)
+    db_session.flush()
+    revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(data).hexdigest(), file_path=str(file), mime_type="image/png", public_use_allowed=True, rights_status="cleared", status="active")
+    db_session.add(revision)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active"))
+    db_session.commit()
+    saved = client.post(path, json={"idempotency_key": "rights", "payload": {"markdown": "内容"}, "asset_refs": [{"material_revision_id": revision.id, "content_hash": revision.content_hash}]}, headers=headers).json()
+    first = client.post(f"{path}/{saved['id']}/checks", headers=headers).json()["items"]
+    assert next(row for row in first if row["check_kind"] == "rights")["status"] == "pass"
+    if state == "not_public":
+        revision.public_use_allowed = False
+    elif state == "revoked":
+        revision.status = "revoked"
+    elif state == "archived":
+        material.status = "archived"
+    elif state == "corrupt_bytes":
+        file.write_bytes(b"replaced bytes")
+    db_session.commit()
+    current = client.get(f"{path}/{saved['id']}/checks/current", headers=headers).json()["items"]
+    assert next(row for row in current if row["check_kind"] == "rights")["status"] == ("pass" if state == "ready" else "stale")
+    checked = client.post(f"{path}/{saved['id']}/checks", headers=headers).json()["items"]
+    assert next(row for row in checked if row["check_kind"] == "rights")["status"] == ("pass" if state == "ready" else "blocker")
+
+
+@pytest.mark.parametrize("state", ["ready", "revoked", "missing_checksum", "legacy_untyped", "empty"])
+def test_master_evidence_check_covers_entire_boundary_not_only_explicit_refs(client, db_session, state):
+    from app.models import FactPack, FactPackItem, utcnow
+
+    project, _, path, headers = _master_unit(client)
+    pack = FactPack(name="边界", version=1, status="frozen", checksum="p" * 64)
+    db_session.add(pack)
+    db_session.flush()
+    item = FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion", snapshot_checksum="s" * 64, snapshot_json={"statement": "观点"}, public_use_allowed=True)
+    if state != "empty":
+        db_session.add(item)
+    db_session.commit()
+    bound = client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={"fact_pack_id": pack.id, "expected_revision": 0}, headers=headers)
+    assert bound.status_code == 201, bound.text
+    saved = client.post(path, json={"idempotency_key": "boundary", "payload": {"markdown": "内容"}}, headers=headers).json()
+    first = client.post(f"{path}/{saved['id']}/checks", headers=headers).json()["items"]
+    assert next(row for row in first if row["check_kind"] == "evidence")["status"] == ("incomplete" if state == "empty" else "pass")
+    if state == "revoked":
+        item.public_use_revoked_at = utcnow()
+    elif state == "missing_checksum":
+        item.snapshot_checksum = None
+    elif state == "legacy_untyped":
+        item.evidence_kind = "legacy_untyped"
+    db_session.commit()
+    current = client.get(f"{path}/{saved['id']}/checks/current", headers=headers).json()["items"]
+    if state not in {"ready", "empty"}:
+        assert next(row for row in current if row["check_kind"] == "evidence")["status"] == "stale"
+    checked = client.post(f"{path}/{saved['id']}/checks", headers=headers).json()["items"]
+    expected = "pass" if state == "ready" else "incomplete" if state == "empty" else "blocker"
+    assert next(row for row in checked if row["check_kind"] == "evidence")["status"] == expected
+
+
+@pytest.mark.parametrize("source", ["same_project", "foreign_project", "forged_attempt", "corrupt_bytes", "raw_global"])
+def test_master_shared_generated_asset_is_project_scoped(client, db_session, tmp_path, source):
+    import hashlib
+
+    from app.models import (
+        ContentUnit,
+        Material,
+        MaterialRevision,
+        ProjectWorkflowOutput,
+        Workflow,
+        WorkflowRun,
+        WorkflowStep,
+        WorkflowStepAttempt,
+    )
+
+    project, unit, path, headers = _master_unit(client)
+    current = db_session.get(ContentUnit, unit)
+    producer_project = project
+    if source == "foreign_project":
+        producer_project = client.post("/api/v1/content-projects", json={"title": "其他项目"}, headers=headers).json()["id"]
+    producer = client.post(f"/api/v1/content-projects/{producer_project}/units", json={"title": "产图单元", "persona_id": current.persona_id, "modality": "text"}, headers=headers).json()["id"]
+    material = Material(title="生成图", kind="image")
+    workflow = Workflow(name="产图", workflow_key="f6a-media", version=1, definition_json={}, checksum="w" * 64)
+    db_session.add_all([material, workflow])
+    db_session.flush()
+    data_bytes = b"\x89PNG\r\n\x1a\nactual generated bytes"
+    file = tmp_path / "generated.png"
+    file.write_bytes(data_bytes)
+    revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(data_bytes).hexdigest(), file_path=str(file), mime_type="image/png", public_use_allowed=True, status="active")
+    run = WorkflowRun(workflow_id=workflow.id, content_unit_id=producer, status="succeeded", definition_checksum=workflow.checksum)
+    db_session.add_all([revision, run])
+    db_session.flush()
+    data = {"material_revision_id": revision.id, "generated": True}
+    step = WorkflowStep(run_id=run.id, node_id="image", node_type="Tool", plugin_key="builtin.generate_cover", status="succeeded", attempt_no=1, output_json=data, output_hash="o" * 64)
+    db_session.add(step)
+    db_session.flush()
+    attempt = WorkflowStepAttempt(step_id=step.id, run_id=run.id, node_id=step.node_id, attempt_no=1, status="failed" if source == "forged_attempt" else "succeeded", output_json=data, output_hash=step.output_hash)
+    db_session.add(attempt)
+    db_session.flush()
+    if source != "raw_global":
+        db_session.add(ProjectWorkflowOutput(project_id=producer_project, unit_id=producer, run_id=run.id, node_id=step.node_id, attempt_id=attempt.id, output_kind="material_revision", entity_id=revision.id, provenance_json={"plugin_key": step.plugin_key, "workflow_id": workflow.id, "definition_checksum": workflow.checksum, "content_hash": revision.content_hash}))
+    db_session.commit()
+    if source == "corrupt_bytes":
+        file.write_bytes(b"replaced bytes")
+    response = client.post(path, json={"idempotency_key": "shared", "payload": {"markdown": "跨单元素材"}, "asset_refs": [{"material_revision_id": revision.id, "content_hash": revision.content_hash, "role": "inline"}]}, headers=headers)
+    assert response.status_code == (200 if source == "same_project" else 422), response.text
+    if source == "same_project":
+        assert response.json()["assets"][0]["material_revision_id"] == revision.id
+
+
 @pytest.mark.parametrize("history_table", ["content_master_revision", "content_master_asset_ref", "content_master_evidence_ref", "content_master_check_run"])
 def test_downgrade_refuses_master_history_before_any_ddl(history_table):
     spec = importlib.util.spec_from_file_location("f6a_migration", Path(__file__).parents[1] / "alembic/versions/f6a000000001_production_content_master.py")
@@ -72,6 +357,22 @@ def test_archived_unit_cannot_append_check_history(client, db_session):
     assert client.get(f"{path}/{saved['id']}/checks", headers=headers).json()["items"] == []
 
 
+def test_candidate_only_unit_is_archived_not_deleted(client, db_session):
+    from app.models import ContentAsset, ContentUnit
+
+    project, unit, _, headers = _master_unit(client)
+    candidate = ContentAsset(project_id=project, content_unit_id=unit, channel="wechat", title="历史候选", final_body="正文", status="frozen", candidate_hash="c" * 64)
+    db_session.add(candidate)
+    db_session.commit()
+    response = client.delete(f"/api/v1/content-projects/{project}/units/{unit}", headers=headers)
+    assert response.status_code == 204, response.text
+    db_session.expire_all()
+    historical = db_session.get(ContentUnit, unit)
+    assert historical is not None
+    assert historical.status == "archived"
+    assert db_session.get(ContentAsset, candidate.id).content_unit_id == unit
+
+
 @pytest.mark.parametrize("field,value", [("payload_schema", "video.master.v1"), ("source_kind", "workflow_seed")])
 def test_manual_save_rejects_forged_schema_or_provenance(client, field, value):
     _, _, path, headers = _master_unit(client)
@@ -92,6 +393,20 @@ def test_idempotent_replay_survives_upstream_context_drift(client, db_session):
     assert response.status_code == 200, response.text
     assert response.json()["id"] == saved["id"]
     assert "stale_channel" in response.json()["readiness"]["reasons"]
+
+
+def test_earlier_master_fingerprint_remains_replayable(client, db_session):
+    from app.services.content_masters import _hash
+
+    _, _, path, headers = _master_unit(client)
+    body = {"idempotency_key": "old-fingerprint", "payload": {"markdown": "内容"}}
+    saved = client.post(path, json=body, headers=headers).json()
+    row = db_session.get(ContentMasterRevision, saved["id"])
+    row.request_fingerprint = _hash({"modality": "text", "schema": "text.master.v1", "payload": body["payload"], "content_form": None, "parent_revision_id": None, "expected_revision": 0, "edit_summary": {}, "refs": {"assets": [], "evidence": []}, "source_kind": "user_edit", "origin_project_output_id": None, "origin_workflow_run_id": None})
+    db_session.commit()
+    replay = client.post(path, json=body, headers=headers)
+    assert replay.status_code == 200, replay.text
+    assert replay.json()["id"] == saved["id"]
 
 
 def test_empty_text_can_draft_but_is_not_render_ready(client):

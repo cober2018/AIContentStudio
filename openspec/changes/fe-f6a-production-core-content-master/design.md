@@ -98,6 +98,7 @@ Recommended API:
 
 Input:
 - `expected_revision`
+- `expected_context_hash optional`: compare the editor's context expectation on a new save; identical authorized replay remains tied to the original request intent.
 - `idempotency_key`
 - `payload_schema`
 - `payload`
@@ -119,6 +120,8 @@ Stale expected_revision or DB race returns 409 with no partial refs/checks/event
 Repeated same idempotency key returns the existing revision.
 
 This applies only after authorization and when the canonical request fingerprint is identical; replay lookup precedes stale expected_revision rejection. Same key with different payload/refs/context intent returns 409. Fingerprint includes source/action, requested context expectations, normalized payload, ordered asset/evidence refs and edit provenance. Revision-head CAS/locking, same-unit parent, refs and ProjectEvent commit atomically; unique constraints alone are not expected_revision enforcement.
+
+Master saves and upstream Project/Unit/Brief/Fact Boundary mutations share a project-row transaction lock. Before committing a new Master, the server refreshes Unit and relevant context heads and rejects changed modality, archived state or context hash with rollback. PostgreSQL and SQLite both use a no-op Project UPDATE to hold the write/row lock without altering the Project timestamp; SQLite writer contention returns 409. Real PostgreSQL race acceptance remains a separate gate.
 
 ## 3. Master context never silently advances
 

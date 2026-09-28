@@ -23,12 +23,12 @@
 
 - [x] 2.1 Add project/unit authorization helpers for Master reads/writes using existing ContentProject boundaries.
 - [x] 2.2 Implement list/current/detail read APIs.
-- [ ] 2.3 Implement explicit append-only save with expected_revision + idempotency key.
+- [x] 2.3 Implement explicit append-only save with expected_revision + idempotency key.
 - [x] 2.4 Server-resolve current IdentitySnapshot, latest Brief and current Fact Boundary; never trust client-supplied foreign context IDs.
 - [x] 2.5 Allow incomplete drafting context but project typed readiness blockers.
 - [x] 2.6 Enforce parent revision same unit and payload modality matches ContentUnit.
-- [ ] 2.7 Validate channel/content-form through Channel Registry when present.
-- [ ] 2.8 Concurrent unique race returns 409 with no partial refs/check rows/events.
+- [x] 2.7 Validate channel/content-form through Channel Registry when present.
+- [x] 2.8 Concurrent unique race returns 409 with no partial refs/check rows/events.
 - [x] 2.9 Archived Project/Unit remains historical read-only.
 
 ## 3. Context hash and staleness
@@ -53,8 +53,8 @@
 ## 5. Master asset refs
 
 - [x] 5.1 Validate MaterialRevision exists and exact content hash.
-- [ ] 5.2 Require revision already visible to Project through ProjectMaterialReference or verified ProjectWorkflowOutput.
-- [ ] 5.3 Reject foreign/raw material IDs without disclosure.
+- [x] 5.2 Require revision already visible to Project through ProjectMaterialReference or verified ProjectWorkflowOutput.
+- [x] 5.3 Reject foreign/raw material IDs without disclosure.
 - [x] 5.4 Persist immutable role/slot/order/placement and rights snapshot.
 - [x] 5.5 Do not copy bytes.
 - [ ] 5.6 Candidate/live gates recheck current revision status/public-use rights instead of trusting only the saved snapshot.
@@ -72,8 +72,8 @@
 
 - [ ] 7.1 Implement Master check runner/service with canonical input hash.
 - [x] 7.2 Add common master_schema check.
-- [ ] 7.3 Add evidence check.
-- [ ] 7.4 Add rights check.
+- [x] 7.3 Add evidence check.
+- [x] 7.4 Add rights check.
 - [ ] 7.5 Add render-readiness check through modality adapter.
 - [ ] 7.6 Preserve warning/blocker/incomplete/stale semantics.
 - [x] 7.7 Add list/current-check read API.
@@ -212,7 +212,7 @@
 - [ ] 19.6 exact Brief/Boundary pin
 - [ ] 19.7 incomplete context allowed but not freeze-ready
 - [ ] 19.8 context stale after upstream changes
-- [ ] 19.9 project-visible asset requirement
+- [x] 19.9 project-visible asset requirement
 - [ ] 19.10 no asset byte copy
 - [ ] 19.11 exact boundary evidence requirement
 - [ ] 19.12 check input hash / no carry-forward

@@ -10,6 +10,7 @@ from ..db import get_db
 from ..deps import get_current_user, require_editor, require_editor_or_reviewer
 from ..models import (
     AccountWorkflowDefault,
+    ContentAsset,
     ContentMasterRevision,
     ContentPersona,
     ContentProject,
@@ -116,7 +117,9 @@ def owned_project(db: Session, project_id: int, user: User) -> ContentProject:
 
 
 def mutable_project(db: Session, project_id: int, user: User) -> ContentProject:
-    project = owned_project(db, project_id, user)
+    from ..services.project_authorization import lock_project_context
+
+    project = lock_project_context(db, project_id, user)
     if project.status == "archived":
         raise HTTPException(409, "已归档项目仅可查看历史")
     return project
@@ -247,7 +250,9 @@ def patch_project(payload: ProjectPatch, project_id: int, db: Session = Depends(
 
 @router.delete("/content-projects/{project_id}", status_code=204)
 def delete_project(project_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    project = owned_project(db, project_id, user)
+    from ..services.project_authorization import lock_project_context
+
+    project = lock_project_context(db, project_id, user)
     if project.status == "archived":
         return
     project.status = "archived"
@@ -473,6 +478,7 @@ def _has_execution_history(db: Session, unit_id: int) -> bool:
         (DataSnapshot, DataSnapshot.unit_id),
         (ProjectWorkflowOutput, ProjectWorkflowOutput.unit_id),
         (ContentMasterRevision, ContentMasterRevision.content_unit_id),
+        (ContentAsset, ContentAsset.content_unit_id),
     ))
 
 
