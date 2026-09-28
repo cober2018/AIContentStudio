@@ -1528,3 +1528,177 @@ class ProjectEvent(Base):
     payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
     schema_version: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PublishedContentRecord(Base):
+    __tablename__ = "published_content_record"
+    __table_args__ = (
+        UniqueConstraint('delivery_receipt_id', name='uq_published_receipt'),
+        UniqueConstraint('owner_user_id', 'channel', 'external_key', name='uq_published_external'),
+        CheckConstraint("origin IN ('studio','external_import')", name='ck_published_origin'),
+        CheckConstraint("status IN ('active','archived')", name='ck_published_status'),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), index=True)
+    origin: Mapped[str] = mapped_column(String(30))
+    external_key: Mapped[str | None] = mapped_column(String(300))
+    content_asset_id: Mapped[int | None] = mapped_column(ForeignKey('content_asset.id'))
+    delivery_target_id: Mapped[int | None] = mapped_column(ForeignKey('delivery_target.id'))
+    delivery_receipt_id: Mapped[int | None] = mapped_column(ForeignKey('delivery_receipt.id'))
+    content_account_id: Mapped[int | None] = mapped_column(ForeignKey('content_account.id'))
+    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey('identity_snapshot.id'))
+    channel: Mapped[str] = mapped_column(String(30), index=True)
+    content_form: Mapped[str | None] = mapped_column(String(50))
+    account_ref_snapshot: Mapped[str | None] = mapped_column(String(255))
+    title: Mapped[str | None] = mapped_column(String(500))
+    canonical_url: Mapped[str | None] = mapped_column(String(2000))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    content_hash: Mapped[str | None] = mapped_column(String(64))
+    content_snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    coverage_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(String(20), default='active')
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PerformanceObservation(Base):
+    __tablename__ = "performance_observation"
+    __table_args__ = (
+        UniqueConstraint('supersedes_id', name='uq_observation_correction_tip'),
+        CheckConstraint("observation_kind IN ('metric','feedback','editorial','correction')", name='ck_observation_kind'),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    published_content_id: Mapped[int] = mapped_column(ForeignKey('published_content_record.id'), index=True)
+    observation_kind: Mapped[str] = mapped_column(String(30))
+    metric_namespace: Mapped[str | None] = mapped_column(String(100))
+    metric_key: Mapped[str | None] = mapped_column(String(100))
+    numeric_value: Mapped[float | None] = mapped_column(Float)
+    text_value: Mapped[str | None] = mapped_column(Text)
+    unit: Mapped[str | None] = mapped_column(String(50))
+    period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    source_type: Mapped[str] = mapped_column(String(30), default='manual')
+    source_ref: Mapped[str | None] = mapped_column(String(300))
+    source_checksum: Mapped[str | None] = mapped_column(String(64))
+    confidence: Mapped[float | None] = mapped_column(Float)
+    payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    supersedes_id: Mapped[int | None] = mapped_column(ForeignKey('performance_observation.id'))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentInsight(Base):
+    __tablename__ = "content_insight"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), index=True)
+    insight_type: Mapped[str] = mapped_column(String(30), default='general')
+    statement: Mapped[str] = mapped_column(Text)
+    scope_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    cohort_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    coverage_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    supporting_refs_json: Mapped[list] = mapped_column(JSON, default=list)
+    contradicting_refs_json: Mapped[list] = mapped_column(JSON, default=list)
+    limitations_json: Mapped[list] = mapped_column(JSON, default=list)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    analysis_source: Mapped[str] = mapped_column(String(30), default='manual')
+    provider_key: Mapped[str | None] = mapped_column(String(150))
+    provider_version: Mapped[str | None] = mapped_column(String(50))
+    checksum: Mapped[str] = mapped_column(String(64))
+    supersedes_id: Mapped[int | None] = mapped_column(ForeignKey('content_insight.id'))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class LearningCandidate(Base):
+    __tablename__ = "learning_candidate"
+    __table_args__ = (
+        CheckConstraint("status IN ('collecting','ready_for_review','accepted','rejected','archived')", name='ck_learning_candidate_status'),
+        CheckConstraint("category IN ('identity','audience','channel','format','topic','workflow')", name='ck_learning_candidate_category'),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), index=True)
+    category: Mapped[str] = mapped_column(String(30))
+    title: Mapped[str] = mapped_column(String(500))
+    proposition: Mapped[str] = mapped_column(Text)
+    rationale: Mapped[str] = mapped_column(Text, default='')
+    scope_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(30), default='collecting', index=True)
+    revision_no: Mapped[int] = mapped_column(Integer, default=1)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    validation_method: Mapped[str | None] = mapped_column(String(30))
+    validation_summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_from_insight_id: Mapped[int | None] = mapped_column(ForeignKey('content_insight.id'))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_by: Mapped[str | None] = mapped_column(String(255))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class LearningCandidateEvidence(Base):
+    __tablename__ = "learning_candidate_evidence"
+    __table_args__ = (
+        UniqueConstraint('learning_candidate_id', 'evidence_type', 'entity_id', 'role', name='uq_learning_evidence'),
+        CheckConstraint("role IN ('support','contradict','context')", name='ck_learning_evidence_role'),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    learning_candidate_id: Mapped[int] = mapped_column(ForeignKey('learning_candidate.id'), index=True)
+    evidence_type: Mapped[str] = mapped_column(String(40))
+    entity_id: Mapped[int] = mapped_column(Integer)
+    role: Mapped[str] = mapped_column(String(20))
+    snapshot_checksum: Mapped[str | None] = mapped_column(String(64))
+    snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    note: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentMemoryEntry(Base):
+    __tablename__ = "content_memory_entry"
+    __table_args__ = (
+        UniqueConstraint('source_learning_candidate_id', name='uq_memory_promoted_candidate'),
+        UniqueConstraint('owner_user_id','promotion_idempotency_key', name='uq_memory_promotion_key'),
+        CheckConstraint("scope_type IN ('owner','brand','persona','account','series')", name='ck_memory_scope'),
+        CheckConstraint("status IN ('active','archived')", name='ck_memory_status'),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), index=True)
+    scope_type: Mapped[str] = mapped_column(String(30))
+    brand_id: Mapped[int | None] = mapped_column(ForeignKey('content_brand.id'))
+    persona_id: Mapped[int | None] = mapped_column(ForeignKey('content_persona.id'))
+    account_id: Mapped[int | None] = mapped_column(ForeignKey('content_account.id'))
+    series_id: Mapped[int | None] = mapped_column(ForeignKey('content_series.id'))
+    memory_type: Mapped[str] = mapped_column(String(40))
+    status: Mapped[str] = mapped_column(String(20), default='active')
+    source_learning_candidate_id: Mapped[int] = mapped_column(ForeignKey('learning_candidate.id'))
+    promotion_idempotency_key: Mapped[str] = mapped_column(String(100))
+    promotion_checksum: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentMemoryRevision(Base):
+    __tablename__ = "content_memory_revision"
+    __table_args__ = (
+        UniqueConstraint('memory_entry_id','revision_no',name='uq_memory_revision'),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    memory_entry_id: Mapped[int] = mapped_column(ForeignKey('content_memory_entry.id'), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey('content_memory_revision.id'))
+    statement: Mapped[str] = mapped_column(Text)
+    applicability_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    limitations_json: Mapped[list] = mapped_column(JSON, default=list)
+    source_learning_candidate_id: Mapped[int] = mapped_column(ForeignKey('learning_candidate.id'))
+    evidence_snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

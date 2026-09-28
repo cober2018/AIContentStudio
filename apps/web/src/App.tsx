@@ -19,6 +19,7 @@ const Workflows = lazy(() => import("./pages/Workflows"));
 const Workspace = lazy(() => import("./pages/Workspace"));
 const ProductPlaceholder = lazy(() => import("./product/ProductPlaceholders"));
 const IdentityWorkspace = lazy(() => import("./product/IdentityWorkspace"));
+const LearningWorkspace = lazy(() => import("./product/LearningWorkspace"));
 const ProjectReviewCenter = lazy(() => import("./product/ProjectReviewCenter"));
 const HomePage = lazy(() => import("./product/HomePage"));
 const ProjectOriginLink = lazy(() => import("./product/HomePage").then((module) => ({ default: module.ProjectOriginLink })));
@@ -140,7 +141,7 @@ function Shell() {
               <Route path="/review" element={<ProjectReviewCenter />} />
               <Route path="/identities" element={<IdentityWorkspace />} />
               <Route path="/assets" element={<ProductPlaceholder kind="assets" />} />
-              <Route path="/learning" element={<ProductPlaceholder kind="learning" />} />
+              <Route path="/learning" element={<LearningWorkspace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sources" element={<Sources />} />
               <Route path="/connectors" element={<Connectors />} />

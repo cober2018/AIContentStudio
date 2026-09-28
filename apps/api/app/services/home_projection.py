@@ -9,6 +9,7 @@ from ..models import (
     ContentOpportunity,
     ContentOpportunityAssessmentRevision,
     ContentProject,
+    LearningCandidate,
     OpportunityProjectConversion,
     ProjectEvent,
     User,
@@ -24,6 +25,7 @@ DECISION_ORDER = {
     "approval": 4,
     "authorization": 5,
     "identity_unready": 6,
+    "learning_validation": 7,
 }
 PRIORITY_ORDER = {"high": 0, "normal": 1, "low": 2}
 SENSITIVITY_ORDER = {"high": 0, "medium": 1, "low": 2, "timeless": 3}
@@ -180,7 +182,33 @@ def home_projection(db: Session, user: User, limit: int = 20) -> dict:
                     }
                 )
             decisions.extend(compose_decisions(project.id, overview))
-    decisions.sort(key=lambda item: (DECISION_ORDER[item["code"]], item["project_id"], item["unit_id"] or 0))
+    candidates = db.scalars(
+        select(LearningCandidate)
+        .where(LearningCandidate.owner_user_id == user.id, LearningCandidate.status == "ready_for_review")
+        .order_by(LearningCandidate.created_at, LearningCandidate.id)
+        .limit(100)
+    ).all()
+    decisions.extend(
+        {
+            "code": "learning_validation",
+            "project_id": None,
+            "unit_id": None,
+            "run_id": None,
+            "entity_id": candidate.id,
+            "learning_candidate_id": candidate.id,
+            "label": f"验证学习候选：{candidate.title}",
+            "href": f"/learning?tab=candidates&candidate={candidate.id}",
+        }
+        for candidate in candidates
+    )
+    decisions.sort(
+        key=lambda item: (
+            DECISION_ORDER[item["code"]],
+            item["project_id"] or 0,
+            item["unit_id"] or 0,
+            item.get("entity_id", 0),
+        )
+    )
     activity = db.scalars(
         select(ProjectEvent)
         .join(ContentProject, ContentProject.id == ProjectEvent.project_id)

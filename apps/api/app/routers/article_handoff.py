@@ -7,11 +7,12 @@ import hashlib
 import io
 import json
 import zipfile
+from datetime import UTC
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -36,7 +37,7 @@ from ..models import (
     User,
     utcnow,
 )
-from ..services import exports
+from ..services import exports, published_history
 from ..services.project_authorization import authorize_project_asset, authorize_project_draft, authorize_project_target
 
 router = APIRouter(prefix="/api/v1/article-handoff", tags=["article-handoff"])
@@ -66,6 +67,17 @@ class ReceiptIn(BaseModel):
     evidence_ref: str | None = None
     verification_method: str | None = None
     note: str | None = None
+    published_at: AwareDatetime | None = None
+    publication_time_evidence: str | None = None
+
+    @model_validator(mode="after")
+    def validate_publication_time(self):
+        if self.published_at is not None or self.publication_time_evidence is not None:
+            if (self.status != "human_confirmed" or self.published_at is None
+                    or not self.publication_time_evidence or not self.publication_time_evidence.strip()):
+                raise ValueError("实际发布时间须由人工确认并提供非空依据")
+            self.published_at = self.published_at.astimezone(UTC)
+        return self
 
 
 class FeedbackIn(BaseModel):
@@ -691,15 +703,30 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
         raise HTTPException(404, "交付目标不存在")
     _legacy_target(db, target, user, mutate=True)
     _require_target_operator(target, user)
-    idempotency_key = _hash(
+    key_parts = [
         str(target.id), target.approved_candidate_hash, payload.status,
         payload.evidence_ref or "", payload.verification_method or "", payload.note or "",
-    )
+    ]
+    # Preserve old receipt keys so retries can repair missing history.
+    if payload.published_at is not None:
+        key_parts.extend([payload.published_at.isoformat(), payload.publication_time_evidence])
+    idempotency_key = _hash(*key_parts)
     existing = db.scalars(select(DeliveryReceipt).where(
         DeliveryReceipt.target_id == target.id,
         DeliveryReceipt.idempotency_key == idempotency_key,
     ).order_by(DeliveryReceipt.id.desc())).first()
     if existing:
+        try:
+            db.flush()
+            published_history.sync_receipt(db, user, existing, published_at=payload.published_at,
+                                           publication_time_evidence=payload.publication_time_evidence)
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(409, "回执或发布历史保存冲突，请重试")
+        except Exception:
+            db.rollback()
+            raise
         return _target_json(target)
     if target.status not in {DeliveryTargetStatus.awaiting_manual_receipt.value, DeliveryTargetStatus.reconciliation_needed.value, DeliveryTargetStatus.failed.value}:
         raise HTTPException(409, "目标尚未生成成品包，或当前状态不可回填")
@@ -723,10 +750,22 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
     db.add(receipt)
     db.add(AuditLog(event="delivery_receipt.recorded", actor=user.email, entity_type="delivery_target", entity_id=str(target.id), detail_json={"status": target.status, "platform_verified": False}))
     try:
+        db.flush()
+        published_history.sync_receipt(db, user, receipt, published_at=payload.published_at,
+                                       publication_time_evidence=payload.publication_time_evidence)
         db.commit()
     except IntegrityError:
         db.rollback()
-        return _target_json(db.get(DeliveryTarget, target.id))
+        existing = db.scalar(select(DeliveryReceipt).where(
+            DeliveryReceipt.target_id == target_id,
+            DeliveryReceipt.idempotency_key == idempotency_key,
+        ))
+        if existing is None:
+            raise HTTPException(409, "回执或发布历史保存冲突，请重试")
+        return add_receipt(target_id, payload, db, user)
+    except Exception:
+        db.rollback()
+        raise
     return _target_json(target)
 
 

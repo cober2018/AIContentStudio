@@ -8,7 +8,7 @@ const manifest = JSON.parse(readFileSync(join(dist, ".vite/manifest.json"), "utf
 const heavyByChunk = JSON.parse(readFileSync(join(dist, "heavy-dependencies.json"), "utf8"));
 const entryKey = "index.html";
 const projectKey = "src/product/PersistentProjectsPage.tsx";
-const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityPages.tsx"];
+const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityPages.tsx", "src/product/LearningWorkspace.tsx"];
 const excludedRoutes = [
   "src/product/PersistentProjectPage.tsx",
   "src/product/PersistentProductionPage.tsx",
