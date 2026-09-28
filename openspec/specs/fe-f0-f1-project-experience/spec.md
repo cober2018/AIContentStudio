@@ -28,6 +28,12 @@ The frontend SHALL offer nine primary workspaces with navigable routes and loadi
 - **WHEN** the user opens `/opportunities`
 - **THEN** persisted Opportunity state loads without browser fixture substitution
 
+`/learning` SHALL be a real persistent workspace rather than a placeholder and SHALL preserve FE-P1 lazy route boundaries.
+
+#### Scenario: Open Learning
+- **WHEN** the user opens `/learning`
+- **THEN** Historical Recovery, Long-term Analysis, Learning Candidates and Content Memory views load from backend state without browser fixture substitution
+
 ### Requirement: Project workspace
 
 The frontend SHALL present ContentProject as the business root and provide overview, brief, evidence, assets, matrix, versions, and activity tabs with URL-addressable tab state. For persisted projects, all seven tabs SHALL load real backend state; Brief, Evidence, Versions, and Activity MUST NOT remain persistent placeholder panels.
