@@ -18,6 +18,16 @@ The frontend SHALL offer nine primary workspaces with navigable routes and loadi
 - **WHEN** the user opens `/review`
 - **THEN** the workspace loads authorized ContentProjects and ContentUnits from backend state, not browser fixtures or a placeholder
 
+`/home` and `/opportunities` SHALL be real persistent workspaces. Opportunity detail SHALL be addressable at `/opportunities/:id`.
+
+#### Scenario: Open Home
+- **WHEN** the user opens `/home`
+- **THEN** backend Opportunity/Project/decision projections load with truthful loading/error/empty states
+
+#### Scenario: Open Opportunities
+- **WHEN** the user opens `/opportunities`
+- **THEN** persisted Opportunity state loads without browser fixture substitution
+
 ### Requirement: Project workspace
 
 The frontend SHALL present ContentProject as the business root and provide overview, brief, evidence, assets, matrix, versions, and activity tabs with URL-addressable tab state. For persisted projects, all seven tabs SHALL load real backend state; Brief, Evidence, Versions, and Activity MUST NOT remain persistent placeholder panels.
@@ -29,6 +39,12 @@ The frontend SHALL present ContentProject as the business root and provide overv
 #### Scenario: Reload project tab
 - **WHEN** the user reloads a project URL on Brief, Evidence, Assets, Matrix, Versions or Activity
 - **THEN** saved project state remains visible without depending on browser-only fixture data
+
+A ContentProject SHALL expose origin Opportunity provenance when created by conversion. Existing Projects without Opportunity origin SHALL remain valid.
+
+#### Scenario: Converted project
+- **WHEN** a converted Project is opened
+- **THEN** Project can navigate back to its origin Opportunity without copying Opportunity state into Project
 
 ### Requirement: Content matrix editing
 The frontend SHALL let the user add, edit, and delete Content Units through the backend project API. A Content Unit MUST show stable content Persona/Role identity, optional Account/Series, modality, channel, pinned workflow reference, IdentitySnapshot state, and status. On creation, the user SHALL be able to select the effective Persona/Account/Series × Modality default Workflow Template Version or an explicit project override. Browser-only FE-F0-F1 fixture data MUST remain clearly separate from real persisted projects and MUST NOT be imported without an explicit action.

@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-28：FE-F5A 六份主规格同步与归档
+
+- 用户已明确授权同步全部六份 canonical specs 并归档；当前 main `682df71`，4/4 产物与17/17任务完成。
+- 本轮仅处理规格与收尾文档，核对旧契约保留后本地提交，不推送、部署、生产迁移或实施 FE-F5B。
+- `openspec archive fe-f5a-home-opportunity --yes` 已同步全部六份主规格，报告 +11 / ~10 / -0 / rename 0，归档目录为 `openspec/changes/archive/2026-09-28-fe-f5a-home-opportunity/`，17/17任务完整。工具提示建议拆分超过10条delta，属于已完成切片的非阻塞建议。
+- 已逐块验证21个delta与canonical一致、四份旧主规格全部37个旧要求及场景正文保留；新增两份 Purpose 已补正式说明。首次 strict 19/19 通过，diff-check发现工具生成的四处EOF空行，已修正，最终校验待复跑。
+- 修正后的最终门禁：`openspec validate --all --strict` 19 passed / 0 failed（18份主规格及1个既有active change），`git diff --check` PASS。本次仅规格和文档变化，不重复执行已在main验证的346项业务测试与前端构建；待提交本地main，未推送、部署或运行生产迁移。
+- 本轮实际 skills：using-superpowers、openspec-archive-change、writing-plans、verification-before-completion。归档 skill 用于完整性和同步检查，按明确授权使用 OpenSpec CLI 同步并归档；未新增业务或测试代码。
+
 ## 2026-09-28：FE-F5A 本地 main 整合
 
 - 用户授权合入本地 main；已核对主工作区 main 与隔离分支共同基线 `2f52053`，主工作区无已跟踪改动，原始规格包保留。
