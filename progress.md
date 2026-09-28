@@ -1,5 +1,42 @@
 # 当前进度
 
+## 2026-09-28：FE-F5C 本地main整合启动（授权）
+
+- 用户明确授权“融入main分支”；本轮仅本地提交/合入，归档与主规格同步仍待单独授权，不push/deploy/生产迁移。
+- main及实现分支同在49d6c4b；四份根文档、标准change与计划逐项比较完全一致，主工作区没有业务代码差异。使用限定路径stash保留重叠资料后快进，不恢复旧记录覆盖新状态。
+- 合入前后门禁使用新临时库/tmp/aicontent-f5c-main-integration-GvoX7B/studio.db，真实开发/生产库不变。工作树保留供F5C规格归档使用。
+- 本轮实际skills：using-superpowers、writing-plans、finishing-a-development-branch、verification-before-completion。
+
+## 2026-09-28：FE-F5C apply 验收通过（隔离分支，未提交）
+
+- 标准change：openspec/changes/fe-f5c-system-assets-knowledge-settings/，95/95完成；五份delta保留旧要求/场景，源包/ZIP未动，canonical尚未同步归档。
+- 基线49d6c4b；业务代码仅在codex/fe-f5c-system-assets-knowledge-settings隔离工作树。main本轮只有标准规格与计划/记录变更，未合入业务实现。
+- 已落地KnowledgeCollection/Item、f5c000000001、SQL有界Library/授权Usage、安全Settings投影、Assets五标签、Settings六分区、精确项目引用与显式Frozen FactPack边界；无新运行依赖或第二套Asset/Registry。
+- 最终实跑：547后端测试通过（24.04秒、6既有警告）；TypeScript/Vite build与bundle门禁通过。Assets257.70kB、Settings229.76kB initial，无TipTap/XYFlow；projects224.68kB raw/72.86kB gzip。OpenSpec all strict22/22、定向Ruff（含models/main/既有引用接口）与diff-check通过。
+- TDD首轮Library26 RED→33 GREEN；Settings最终53、Library+F3A最终51测试。临时SQLite迁移up/down/up、约束/并发单赢家及PG DDL编译通过；未实测PostgreSQL数据库并发。
+- 独立完整SPEC/plan、Assets与Settings SPEC/QUALITY均APPROVE。闭合危险legacy库存admin权限、URL查询允许列表及地址重新输入、成员snapshot revision绑定、所选精确素材撤销回读/确认重置、Source sha256及后端撤销引用闸门。
+- 隔离浏览器：集合CRUD/解除重启用/完整重排/刷新持久化；另一操作更新→旧UI409→显式刷新保留新备注；archive13只读。Source/固定素材版本项目引用、冻结包明确边界、真实PNG字节按需预览通过；撤销后固定原ID且权利/确认/引用禁用。
+- 六设置分区和断连Plugin理由、只读Channel、Rule/Template区分、开发Header说明回读；viewer模型工具禁用、legacy入口拒绝。仅临时库用户样本，无真实配置/密钥保存、外网模型/Connector/发布调用或CLI配置写入。
+- 临时库/tmp/aicontent-f5c-browser-mYr3Ek/studio.db；验收后停止自建API18106/Vite15186。测试PNG仅存隔离工作树忽略media；原开发/生产数据库不变。
+- 实际skills：using-superpowers、openspec-propose/apply-change、writing-plans、executing-plans、using-git-worktrees、dispatching-parallel-agents、test-driven-development、receiving/requesting-code-review、systematic-debugging、verification-before-completion。用于先规范、隔离、失败证据与独立复核，不扩展发布权限。
+- 待单独决定：canonical同步归档、本地commit/main整合。当前无commit/archive/merge/push/deploy/生产迁移；本地验收不是生产准入。
+
+## 2026-09-28：FE-F5C 审计与隔离开发启动
+
+- 实施首轮门禁：539后端测试通过（24.01秒、6既有警告），build/bundle通过，Assets255.74kB、Settings229.76kB initial，projects224.68kB raw/72.86kB gzip；strict22/22、定向Ruff/diff通过。旧F5B测试改为验证自身迁移版本，避免把旧切片写死成永远最新head。
+- Settings独立SPEC通过；QUALITY发现少见URL凭据参数遗漏，已用version/api-version允许列表关闭，定向53测试通过，待独立复核。危险legacy库存新增服务端admin读取和前端入口闸门。
+- Assets独立SPEC通过；QUALITY发现成员快照和父revision独立刷新、所选素材撤销回读两项竞态及Source sha256字段不齐，正在定点补齐。浏览器已实际完成集合创建/条目保存/解除与重启用、Source及精确素材项目引用、显式Frozen FactPack边界；六设置分区已回读。
+
+- 用户明确授权完整规格review、标准归位及开发，另明确授权定向回归测试；无推送、部署或生产迁移权限。
+- 真实main49d6c4b包含F5B归档与两份canonical；code migration head f5b000000001。复用干净工作树 `/Users/mshengran/.codex/worktrees/fe-f3b-content-identity/AIContentStudio`，新分支 codex/fe-f5c-system-assets-knowledge-settings 从main开始。
+- 标准change已生成：五份delta，两份新增转换为ADDED格式、三份MODIFIED按完整canonical块保留旧要求/场景。补使用情况所有权、集合revision/归档竞态/排序、SQL有界筛选、false/NULL/撤销权利、安全Settings allowlist与角色能力、Assets/Settings首包门禁。源包及ZIP未更改。
+- 首轮change strict及diff-check通过；独立Settings契约复核进行中，尚未修改业务代码。
+- 隔离基线已实际完成：SQLite迁移到f5b000000001，pytest457 passed/6既有警告（19.12秒），前端build/bundle通过，/projects215.21kB raw/70.15kB gzip。标准全量strict22/22通过。
+- Using change: fe-f5c-system-assets-knowledge-settings；OpenSpec apply为ready、93项任务。完整源包与五份规格已审查，校准不改变产品范围。按用户审查后开发授权进入apply；Assets后端与前端采用不重叠写集，Settings独立复核继续收严真实API边界。
+- 独立完整SPEC/plan复核PASS：原始包要求保留，三份MODIFIED旧块完整，五份规格和实施计划一致。独立Settings反馈经代码核实补入11.7/11.8，当前95任务；冷启动Rule、版本动作、完整模型快照与显式文件/网络副作用已锁定。
+- 前端两路由lazy与named budget检查先加失败断言：旧manifest实际失败“SystemAssetsKnowledgePage不是lazy route”；随后实现ProductSettingsPage安全六分区和显式按需配置工具。Library后端/Collection、Settings投影和Assets前端分不重叠写集实施，主控负责集成与验收。
+- skills：using-superpowers、openspec-propose、openspec-apply-change、writing-plans、executing-plans、using-git-worktrees、dispatching-parallel-agents、test-driven-development、verification-before-completion、requesting-code-review；并行子任务仅限不重叠写集。
+
 ## 2026-09-28：FE-F5B 同步归档（通过）
 
 - 当前真实基线 main `6452ad2` 已含功能提交 `9e0ce04`；tracked/staged/unstaged 干净，用户原始包/ZIP继续保留并排除提交。

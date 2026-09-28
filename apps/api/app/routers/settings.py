@@ -1,6 +1,6 @@
 """系统配置管理（前端设置页 API，EPIC-13 扩展）。
 
-- GET    /api/v1/settings          生效配置总览（Secret 一律脱敏；登录即可看）
+- GET    /api/v1/settings          完整运行环境总览（admin；含本地 inventory）
 - PUT    /api/v1/settings/llm      写入默认 LLM 覆盖（admin；优先于 .env）
 - DELETE /api/v1/settings/llm      清除默认覆盖，回落环境变量（admin）
 - POST   /api/v1/settings/llm/test 连通性验证（admin）
@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from .. import runtime_config
 from ..db import get_db
-from ..deps import get_current_user, require_admin
+from ..deps import require_admin
 from ..services.generation.providers import (
     ROUTE_KEYS,
     GenerateRequest,
@@ -85,7 +85,7 @@ class DshConfigUpdate(BaseModel):
 
 
 @router.get("/api/v1/settings")
-def get_settings_view(user=Depends(get_current_user)):
+def get_settings_view(user=Depends(require_admin)):
     return build_settings_view()
 
 

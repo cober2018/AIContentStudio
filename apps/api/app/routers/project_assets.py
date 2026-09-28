@@ -34,6 +34,8 @@ def attach_material_reference(payload: MaterialReferenceIn, project_id: int, db:
     revision = db.get(MaterialRevision, payload.material_revision_id)
     if revision is None or revision.material is None or revision.material.status != "active":
         raise HTTPException(404, "素材版本不存在")
+    if revision.status in {"revoked", "archived"}:
+        raise HTTPException(409, "素材版本已撤销或归档，不能新增或重新激活引用")
     row = db.scalar(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.material_revision_id == revision.id))
     if row is not None and row.status == "active":
         return reference_json(db, row)

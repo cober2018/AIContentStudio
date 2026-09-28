@@ -1,5 +1,22 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F5C 本地main整合（用户已授权）
+
+- [ ] /// 对比分支与main的重叠文档/标准规格，限定路径可恢复保存，不碰原始包
+- [ ] /// 分支复跑547测试、build/bundle、strict/Ruff/diff，仅提交本次白名单文件
+- [ ] /// 快进本地main，合入后复跑门禁并提交整合记录
+- 仅本地commit/main；不canonical同步归档、不push/deploy/生产迁移。保留工作树供后续归档。
+
+## 2026-09-28：FE-F5C 审计归位与 apply（已授权定向回归）
+
+- [x] /// 核对 main49d6c4b/F5B canonical、迁移head，复用空闲工作树隔离F5C
+- [x] /// 完整审查源包，标准change保留既有MODIFIED块并补权限/并发/权利/性能边界
+- [x] /// 独立SPEC复核、strict/diff-check，记录隔离门禁基线后进入apply
+- [x] /// Collection持久化/API、SQL有界Library/usage、Project引用复用
+- [x] /// 安全Settings投影与两工作区真实前端、lazy预算
+- [x] /// 定向/全量回归、迁移往返、独立SPEC/QUALITY与隔离浏览器验收
+- 本轮不commit/main合入/canonical归档/push/deploy/生产迁移；实施在 codex/fe-f5c-system-assets-knowledge-settings。
+
 ## 2026-09-28：FE-F5B 六份主规格同步与归档（已授权）
 
 - [x] /// 核对 main 6452ad2、4/4 产物、94/94 任务及六份 delta，保留原始包

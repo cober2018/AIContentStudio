@@ -1,5 +1,26 @@
 # 配置记录
 
+## 2026-09-28 FE-F5C 本地整合核对
+
+- main49d6c4b与F5C分支共同基线一致；重叠的README/progress/findings/task_plan、标准规格和实施计划内容完全一致，无main独有段落需要合并。
+- 只保存和提交本轮白名单，原始包/ZIP不进入提交；本地main整合不包含canonical同步归档或生产操作。
+
+## 2026-09-28 FE-F5C 最终复核闭环
+
+- 系统资源仍system_shared；Usage的私有Project/Opportunity计数、标题与链接必须授权过滤，unsupported不能补零。
+- Collection成员写入绑定所读snapshot revision，不能用新版父token提交旧成员值；409显式刷新，归档保留历史而禁写。
+- MaterialRevision固定ID但授权需精确回读，变化清确认；后端引用拒绝revoked/archived而保留历史。Source真实校验和是sha256。
+- 安全Settings读不运行外网/目录诊断；旧危险库存admin显式打开。Provider URL只允许受限version/api-version查询，隐藏地址必须重新输入，不能保存掩码/空地址。
+- 最终547测试、build/bundle、strict22/22及独立SPEC/QUALITY通过；PG DDL不等于实库并发，真实Connector/租户隔离/生产准入不在本切片范围。
+
+## 2026-09-28：FE-F5C SPEC审计
+
+- 源包两份新增为主规格格式，三个MODIFIED为片段；标准归位必须保留完整既有块，避免归档时丢掉F2快照stale或F3A素材/证据历史场景。
+- system_shared资源可读不代表Project/Opportunity使用情况可读；usage数量和链接均按所有权过滤，不能泄露外人存在计数。
+- Collection只组织Source/FactPack，created_by不是owner；归档/排序/重激活加expected_revision与条件写闸门，引用不复制、不授予Fact Boundary。
+- Source权利不由trust推断；MaterialRevision与FactPackItem区分false/NULL/撤销，冻结不等于允许公开。列表用SQL有界轻量列，不先读全库再截断。
+- Settings必须以safe allowlist投影，保留既有真实角色和mutation边界，不能直接透传SystemSetting/connector配置/带密钥URL/本地路径。
+
 ## 2026-09-28：FE-F5B 归档契约
 
 - 两份新增与四份更新 delta 都是长期契约，必须全部同步 canonical，不能只移动 change。
