@@ -1,5 +1,15 @@
 # 当前进度
 
+## 2026-09-28：FE-F5C 五份主规格同步归档（通过）
+
+- 基线main ac6d4dc含7956273功能提交；已跟踪文件干净，原始包/ZIP继续保留且排除提交。
+- 已核对OpenSpec产物4/4 done、任务95/95；用户授权全部五份主规格同步、归档和本地提交。
+- 仅文档收尾，不复跑与本轮改动无关的业务测试，不push/deploy/生产迁移；547测试/build为上轮实际证据，本轮重新运行规格保留检查、strict和diff-check。
+- 本轮实际skills：using-superpowers、writing-plans、openspec-archive-change、verification-before-completion。
+- OpenSpec CLI已同步五份主规格：新增system-assets-knowledge、product-settings（20项要求），更新FE-F0/F1、FE-F2、FE-F3A（4项要求），删除0项。归档路径 `openspec/changes/archive/2026-09-28-fe-f5c-system-assets-knowledge-settings/`，active change已不存在。
+- 逐块核对24项delta要求与canonical完全一致；ac6d4dc中的22项既有要求和92个既有场景保留，未修改要求逐字保留。两个新增Purpose已补正式说明，修正归档工具生成的三个EOF空行。
+- 归档后全量OpenSpec strict实际23 passed/0 failed、git diff --check通过；仅五份主规格、归档移动和四份记录进入本地提交。业务代码、原始包/ZIP、开发/生产数据库不变，没有push/deploy/生产迁移。
+
 ## 2026-09-28：FE-F5C 本地main整合（通过）
 
 - 用户明确授权“融入main分支”；本轮仅本地提交/合入，归档与主规格同步仍待单独授权，不push/deploy/生产迁移。

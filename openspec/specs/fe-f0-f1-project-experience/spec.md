@@ -34,6 +34,16 @@ The frontend SHALL offer nine primary workspaces with navigable routes and loadi
 - **WHEN** the user opens `/learning`
 - **THEN** Historical Recovery, Long-term Analysis, Learning Candidates and Content Memory views load from backend state without browser fixture substitution
 
+`/assets` SHALL be a real persistent System Assets & Knowledge workspace rather than a placeholder. `/settings` SHALL remain a primary workspace and SHALL expose the product-oriented Settings sections while preserving existing configuration behavior.
+
+#### Scenario: Open Assets
+- **WHEN** the user opens `/assets`
+- **THEN** backend system-library data loads with truthful loading/error/empty states
+
+#### Scenario: Open Settings
+- **WHEN** the user opens `/settings`
+- **THEN** Models, Data Sources, Channels, Rules, Team and Advanced sections load from real backend state
+
 ### Requirement: Project workspace
 
 The frontend SHALL present ContentProject as the business root and provide overview, brief, evidence, assets, matrix, versions, and activity tabs with URL-addressable tab state. For persisted projects, all seven tabs SHALL load real backend state; Brief, Evidence, Versions, and Activity MUST NOT remain persistent placeholder panels.

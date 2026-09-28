@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-28 FE-F5C 归档边界
+
+- 两份新增与三份更新delta均为长期契约；须全部同步canonical再归档，不能仅移动change。
+- 旧主规格以ac6d4dc为比较基线；新增/修改块逐项与归档delta对比，未修改旧块逐字保留，不以原始包覆盖canonical。
+- 复用OpenSpec CLI同步归档，业务代码、数据库和原始包不变。
+- 结果：20项新增、4项更新、0项删除；24项delta逐块匹配，22项旧要求/92旧场景保留。新增Purpose与三处EOF空行已规范化，归档后全量strict23/23和diff-check通过。
+
 ## 2026-09-28 FE-F5C 本地整合核对
 
 - main49d6c4b与F5C分支共同基线一致；重叠的README/progress/findings/task_plan、标准规格和实施计划内容完全一致，无main独有段落需要合并。
