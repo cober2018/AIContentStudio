@@ -3,7 +3,10 @@
 ## 2026-09-28：FE-F5A 本地 main 整合
 
 - 用户授权合入本地 main；已核对主工作区 main 与隔离分支共同基线 `2f52053`，主工作区无已跟踪改动，原始规格包保留。
-- 正在复跑提交前门禁；随后仅提交本任务文件并快进 main。六份 delta 同步与归档仍待确认，不推送、部署或运行生产迁移。
+- 功能提交 `3012fe5`（30 个本任务文件）已从 `codex/fe-f5a-home-opportunity` 快进合入主工作区 main；未将用户原始规格包加入提交。
+- 提交前及合入 main 后均实际复跑：346 后端测试通过（6 条既有警告）、前端 TypeScript/Vite build/bundle gate 通过、OpenSpec all strict 18/18 通过、diff-check 通过。测试只使用已迁移的隔离临时库。
+- 六份 delta 同步与归档仍待确认；未推送、部署或运行生产迁移，保留隔离工作树用于后续收尾。
+- 本轮实际 skills：using-superpowers、writing-plans、finishing-a-development-branch、verification-before-completion；没有新增业务实现或测试代码。
 
 ## 2026-09-28：FE-F5A apply（IMPLEMENTED / REVIEW_PASSED，待归档确认）
 
@@ -18,7 +21,7 @@
 - 后端独立复核 APPROVE；前端两项阻断（Brief 身份对象损坏、HTTP LAN UUID 缺失）已关闭，前端最终 APPROVE。身份 Brand-only 转换后只改目标的 Brief v1→v2 实际浏览器保存/刷新验证通过，身份对象不变。UUID native/fallback 与稳定重试 key 已定向验证，未实际部署 LAN。
 - Home 全部自有活动项目按 100 个批量扫描决策，近期卡片独立限额20；不读取历史候选/回执全文，实时证据/媒体权利门禁复用并回归。近期活动是真实 ProjectEvent。
 - OpenSpec 17/17 apply 任务完成。四份 MODIFIED delta 已补成保留既有要求/场景的完整块，修正 Unknown 标题匹配，避免将来归档覆盖旧契约；canonical specs 尚未同步。归档同步问题已发给用户，等待确认。
-- 未归档、未提交业务改动、未推送/合并/部署/生产迁移。临时验收服务已停止，临时数据库保留在隔离路径以便追溯。
+- apply 收尾时未归档、未提交业务改动、未推送/合并/部署/生产迁移；随后本地 main 整合结果见顶部记录。临时验收服务已停止，临时数据库保留在隔离路径以便追溯。
 - 本轮实际 skills：using-superpowers、openspec-apply-change、writing-plans、executing-plans、subagent-driven-development、test-driven-development、systematic-debugging、requesting-code-review、receiving-code-review、verification-before-completion；openspec-archive-change 完成同步评估并要求暂停等待用户确认，未执行归档。
 
 ## 2026-09-28：FE-F5A-SPEC-R1（规格修订完成，未 apply）
