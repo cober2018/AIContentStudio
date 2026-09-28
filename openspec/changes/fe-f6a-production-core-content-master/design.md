@@ -446,6 +446,8 @@ Approval for v4:
 - rechecks live evidence/material revocation;
 - rejects unsupported current rights state.
 
+Freeze, Approval, new Delivery Authorization and local Package SHALL share a v4 live validator rather than duplicate gates. Dispatch uses the persisted schema, not Draft presence. New approval/authorization require the current Candidate and context-current latest Master. Existing authorized local packages preserve their exact historical Candidate/Target binding without requiring the latest Master or retargeting it; they still validate frozen provenance, required checks against that frozen context, live rights, byte hashes and render binding. V4 validation failure never enters a legacy package branch.
+
 A later Master revision creates a new Candidate; an old approved Candidate stays historical.
 
 ## 16. v4 Review preview and diff

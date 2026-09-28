@@ -145,35 +145,9 @@ def freeze_candidate(db: Session, project_id: int, unit_id: int, project_output_
 
 
 def _master_freeze_manifest(db: Session, master: ContentMasterRevision, user: User) -> dict:
-    from .candidates_v4 import build_manifest_v4, load_manifest_v4_inputs
-    from .content_masters import _evidence_check, _hash, _rights_check, _serialize, current_checks
-    from .production_modalities import adapter_for
+    from .production_validation import validate_live_v4_master
 
-    unit = db.get(ContentUnit, master.content_unit_id)
-    if unit is None or unit.modality != master.modality:
-        raise _blocked("stale_master", "内容单元形态已变化")
-    latest = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == master.content_unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
-    if latest is None or latest.id != master.id:
-        raise _blocked("stale_master", "只有当前Master版本可以冻结候选")
-    projection = _serialize(db, master)
-    if projection["readiness"]["state"] != "current":
-        raise _blocked("stale_master", *projection["readiness"]["reasons"])
-    if _hash(master.payload_json) != master.payload_hash:
-        raise _blocked("master_payload_changed", "Master内容哈希不一致")
-    check_projection = current_checks(db, master.project_id, master.content_unit_id, master.id, user)
-    blocked = [row["check_kind"] for row in check_projection if not row["is_current"] or row["status"] != "pass"]
-    if blocked:
-        raise _blocked("checks_unready", *blocked)
-    for status, report in (_rights_check(db, projection), _evidence_check(db, master)):
-        if status != "pass":
-            raise _blocked("readiness_blocked", *report["reasons"])
-    available = adapter_for(master.modality).freeze_availability(db, master)
-    if not available["available"]:
-        raise _blocked("readiness_blocked", *available["reasons"])
-    try:
-        return build_manifest_v4(load_manifest_v4_inputs(db, master))
-    except (TypeError, ValueError) as exc:
-        raise _blocked("manifest_unready", str(exc)) from exc
+    return validate_live_v4_master(db, master)
 
 
 def freeze_master_candidate(db: Session, project_id: int, unit_id: int, master_revision_id: int, user: User, *, expected_payload_hash: str | None = None) -> ContentAsset:
@@ -224,6 +198,34 @@ def freeze_master_candidate(db: Session, project_id: int, unit_id: int, master_r
     return asset
 
 
+def _validate_v3_approval(db: Session, asset: ContentAsset) -> None:
+    draft = db.get(Draft, asset.draft_id) if asset.draft_id else None
+    if draft is None:
+        raise _blocked("unsupported_source", "非稿件候选缺少受支持的审批适配器")
+    latest = db.scalar(select(Draft.revision_no).where(Draft.content_job_id == draft.content_job_id).order_by(Draft.revision_no.desc()).limit(1))
+    if latest != draft.revision_no:
+        raise _blocked("stale_candidate", "已有更新稿件修订")
+    boundary = current_boundary(db, asset.project_id)
+    if boundary is None or boundary.id != (asset.candidate_manifest_json or {}).get("evidence", {}).get("boundary_id"):
+        raise _blocked("stale_evidence", "项目事实边界已变化")
+    reasons = live_evidence_reasons(db, asset.project_id, asset.candidate_manifest_json or {})
+    reasons.extend(readiness_reasons_v2(db, draft, asset.candidate_manifest_json or {}))
+    if reasons:
+        raise _blocked("readiness_blocked", *reasons)
+
+
+def _validate_approval(db: Session, asset: ContentAsset) -> None:
+    from .production_validation import validate_live_v4_candidate
+
+    schema = (asset.candidate_manifest_json or {}).get("schema_version")
+    if schema == 4 or asset.content_master_revision_id is not None:
+        validate_live_v4_candidate(db, asset)
+    elif schema == 3:
+        _validate_v3_approval(db, asset)
+    else:
+        raise _blocked("candidate_schema", "不支持的项目候选清单版本")
+
+
 def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: int, expected_hash: str, decision: str, comment: str | None, user: User) -> ContentAsset:
     _mutable_unit(db, project_id, unit_id, user)
     asset = _candidate(db, project_id, unit_id, candidate_id, user, mutate=True)
@@ -236,29 +238,15 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
     if expected_hash != asset.candidate_hash or candidate_hash(asset.candidate_manifest_json or {}) != asset.candidate_hash:
         raise _blocked("candidate_mismatch", "冻结候选哈希不一致")
     if decision == "approved":
+        _validate_approval(db, asset)
         if asset.status == "approved" and asset.approved_candidate_hash == asset.candidate_hash:
             return asset
-        draft = db.get(Draft, asset.draft_id) if asset.draft_id else None
-        if draft is None:
-            raise _blocked("unsupported_source", "非稿件候选缺少受支持的审批适配器")
-        latest = db.scalar(select(Draft.revision_no).where(Draft.content_job_id == draft.content_job_id).order_by(Draft.revision_no.desc()).limit(1))
-        if latest != draft.revision_no:
-            raise _blocked("stale_candidate", "已有更新稿件修订")
-        boundary = current_boundary(db, project_id)
-        if boundary is None or boundary.id != (asset.candidate_manifest_json or {}).get("evidence", {}).get("boundary_id"):
-            raise _blocked("stale_evidence", "项目事实边界已变化")
-        evidence_reasons = live_evidence_reasons(db, project_id, asset.candidate_manifest_json or {})
-        if evidence_reasons:
-            raise _blocked("readiness_blocked", *evidence_reasons)
-        reasons = readiness_reasons_v2(db, draft, asset.candidate_manifest_json or {})
-        if reasons:
-            raise _blocked("readiness_blocked", *reasons)
     elif decision != "changes_requested":
         raise HTTPException(422, "不支持的内容审核决定")
     elif asset.status == "approved":
         raise _blocked("approved_candidate", "已批准候选保持历史不变；修改内容须产生新候选")
     review = Review(
-        content_asset_id=asset.id, draft_id=asset.draft_id, revision_no=(asset.candidate_manifest_json or {}).get("revision_no"),
+        content_asset_id=asset.id, draft_id=asset.draft_id, revision_no=(asset.candidate_manifest_json or {}).get("content_master", {}).get("revision_no") if (asset.candidate_manifest_json or {}).get("schema_version") == 4 else (asset.candidate_manifest_json or {}).get("revision_no"),
         reviewer_id=user.email, decision=decision, comment=comment, candidate_hash=asset.candidate_hash,
         approved_at=utcnow() if decision == "approved" else None,
     )
@@ -270,6 +258,17 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
         asset.reviewer = user.email
     db.flush()
     record_project_event(db, project_id=project_id, event_type="content.approved" if decision == "approved" else "content.changes_requested", actor=user.email, entity_type="review", entity_id=review.id, payload={"unit_id": unit_id, "candidate_id": asset.id, "candidate_hash": asset.candidate_hash})
+    if decision == "approved" and (asset.candidate_manifest_json or {}).get("schema_version") == 4:
+        db.flush()
+        db.expire_all()
+        try:
+            _mutable_unit(db, project_id, unit_id, user)
+            _validate_approval(db, asset)
+            if asset.candidate_hash != expected_hash:
+                raise _blocked("candidate_mismatch", "审批提交前候选发生变化")
+        except HTTPException:
+            db.rollback()
+            raise
     db.commit()
     db.refresh(asset)
     return asset

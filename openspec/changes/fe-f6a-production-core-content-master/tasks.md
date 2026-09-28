@@ -135,17 +135,17 @@
 - [x] 12.3 Do not fabricate legacy links.
 - [x] 12.4 Text v4 may populate final_body compatibility projection; Graphic/Video need not.
 - [x] 12.5 ArtifactKind.video persists/serializes safely.
-- [ ] 12.6 Existing asset serializers and authorization accept null Draft text lineage for v4.
+- [x] 12.6 Existing asset serializers and authorization accept null Draft text lineage for v4.
 
 ## 13. Approval and live invalidation
 
-- [ ] 13.1 Existing Candidate approval endpoint accepts valid current v4.
-- [ ] 13.2 Approval binds exact Candidate hash, never Master row.
-- [ ] 13.3 Recheck Master/Candidate integrity.
-- [ ] 13.4 Recheck live evidence revocation.
-- [ ] 13.5 Recheck live MaterialRevision rights/revocation.
-- [ ] 13.6 Changes request preserves frozen Candidate and Master history.
-- [ ] 13.7 Old approved Candidate stays historical after new Master/Candidate.
+- [x] 13.1 Existing Candidate approval endpoint accepts valid current v4.
+- [x] 13.2 Approval binds exact Candidate hash, never Master row.
+- [x] 13.3 Recheck Master/Candidate integrity.
+- [x] 13.4 Recheck live evidence revocation.
+- [x] 13.5 Recheck live MaterialRevision rights/revocation.
+- [x] 13.6 Changes request preserves frozen Candidate and Master history.
+- [x] 13.7 Old approved Candidate stays historical after new Master/Candidate.
 
 ## 14. Review and diff v4
 
@@ -160,14 +160,14 @@
 
 ## 15. V4 local packaging
 
-- [ ] 15.1 Extend copy_package/manual_handoff to manifest v4.
-- [ ] 15.2 Text package emits master content projection and exact media.
-- [ ] 15.3 Graphic package emits exact final rendered image bytes + manifest.
-- [ ] 15.4 Video package emits exact final rendered video bytes + manifest and declared companion assets.
-- [ ] 15.5 Verify file hash and current public-use rights at package time.
-- [ ] 15.6 V4 unsupported render/package fails closed.
-- [ ] 15.7 Never fall back from v4 to v3/v1 package code.
-- [ ] 15.8 No new remote publisher action added.
+- [x] 15.1 Extend copy_package/manual_handoff to manifest v4.
+- [x] 15.2 Text package emits master content projection and exact media.
+- [x] 15.3 Graphic package emits exact final rendered image bytes + manifest.
+- [x] 15.4 Video package emits exact final rendered video bytes + manifest and declared companion assets.
+- [x] 15.5 Verify file hash and current public-use rights at package time.
+- [x] 15.6 V4 unsupported render/package fails closed.
+- [x] 15.7 Never fall back from v4 to v3/v1 package code.
+- [x] 15.8 No new remote publisher action added.
 
 ## 16. Project Versions / Overview
 
@@ -220,18 +220,18 @@
 - [ ] 19.14 graphic/video no fake render
 - [ ] 19.15 Draft→Text Master lineage
 - [ ] 19.16 foreign/stale Draft output denial
-- [ ] 19.17 v4 ContentAsset no fake Draft/MotherRevision
+- [x] 19.17 v4 ContentAsset no fake Draft/MotherRevision
 - [x] 19.18 ArtifactKind.video
 - [ ] 19.19 manifest v4 hash determinism
 - [ ] 19.20 v4 freeze idempotency
 - [ ] 19.21 stale Master freeze denial
-- [ ] 19.22 rights revocation freeze/approval/package denial
+- [x] 19.22 rights revocation freeze/approval/package denial
 - [ ] 19.23 v3 freeze regression
 - [ ] 19.24 v1/v2/v3 read compatibility
 - [ ] 19.25 modality-aware Review diff
-- [ ] 19.26 v4 text package
-- [ ] 19.27 v4 graphic/video render package
-- [ ] 19.28 unsupported package closed
+- [x] 19.26 v4 text package
+- [x] 19.27 v4 graphic/video render package
+- [x] 19.28 unsupported package closed
 - [ ] 19.29 Versions Master aggregation
 - [ ] 19.30 Overview stale/readiness
 - [ ] 19.31 archive safety
@@ -275,7 +275,7 @@
 - [ ] 22.4 Include Master/Candidate-only unit history; pinned identity and explicit Fork + Archive, no latest hierarchy repinning.
 - [ ] 22.5 Bind verified/manual render to exact inputs with typed MIME/hash/rights and full multi-canvas coverage; unsupported registry combinations unavailable.
 - [ ] 22.6 Latest immutable checks/warning dispositions; reject stale/failed/replaced Draft-output attempts with truthful provenance.
-- [ ] 22.7 Shared authorization/schema dispatch for legacy APIs; current Master gate at new approval/authorization; unverified v4 publisher denied.
+- [x] 22.7 Shared authorization/schema dispatch for legacy APIs; current Master gate at new approval/authorization; unverified v4 publisher denied.
 - [ ] 22.8 Payload bounds/embedded reference validation, pagination and safe projections; no arbitrary file paths/URLs.
 - [ ] 22.9 Downgrade preflight rejects incompatible history without deletion/fake-body backfill; validate real PG storage constraints.
 - [ ] 22.10 After test-code authorization, add regressions for 22.3–22.9 including commit races, render attestation, Master-only delete, latest blocker and legacy denial.

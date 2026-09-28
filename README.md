@@ -122,17 +122,16 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 ### FE-F6A Production Core（阶段代码已合入本地main，继续开发中）
 
 - 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的内容主版本和上下文血缘；本轮不替换旧引擎、不新增远程发布能力。
-- 目录结构：`apps/api/app/models.py` 增加 Master 与不可变素材/证据/检查引用；`apps/api/app/services/content_masters.py` 和 `production_modalities.py` 承接项目边界、CAS/幂等保存、上下文哈希和三种形态的最小 payload；`apps/api/app/routers/content_masters.py` 提供项目单元级读写；迁移为 `apps/api/alembic/versions/f6a000000001_production_content_master.py`。
-- 已完成的基础：四表与`ContentAsset` Master关联、video枚举；授权的有界列表/当前/详情读取；追加保存、请求幂等重试、父版本检查及上下文冻结/不完整和stale投影。检查追加历史、最新结果和stale投影已回归；Draft seed验证当前成功Step/Attempt并记录血缘。回退发现Master/不兼容Candidate历史时，在任何DDL之前拒绝；本轮27项定向回归通过。
-- 待完成/TODO：共享事务锁与上下文冲突、完整素材/嵌入引用校验、完整权利/渲染检查与人工render绑定、Candidate v4完整冻结/审批/本地包、Review/Versions/Overview、Production Workspace及浏览器验收。已有v4入口不是可交付完成状态；PostgreSQL实库未验收。阶段功能提交`7c2be75`已本地快进合入main；未同步canonical、未归档、未push/deploy/生产迁移。
+- 目录结构：`apps/api/app/models.py` 保留 Master 与不可变引用；`services/content_masters.py` 承接CAS/幂等保存及上下文，`production_modalities.py` 提供三形态Adapter，`candidates_v4.py` 提供纯冻结builder，`production_validation.py` 共享live gate，`production_packages.py` 构建v4本地包。项目单元API在`routers/content_masters.py`及`project_review.py`；迁移为`alembic/versions/f6a000000001_production_content_master.py`。
+- 已完成的基础：四表、video枚举、有界读取、追加保存/请求幂等、父版本与上下文冻结/stale；共享Project锁、提交前上下文复核、项目级跨Unit素材可见性、成功Attempt及生成字节校验、完整边界live evidence/rights、Draft精确引用映射/unmapped、三形态真实render约束和v4纯builder/Freeze。回退发现不兼容历史时在任何DDL前拒绝。
+- 待完成/TODO：完整并发冻结验收、Review v4 preview/diff、Versions/Overview、Production Workspace及浏览器验收；PostgreSQL实库和生产环境未验收。当前仅后端阶段闭环完成，不等同整体F6A交付；canonical未同步、change未归档、未push/deploy/生产迁移。
 - 关键设计决策：Master 与 Workflow 保存分离；历史上下文不自动跟随最新身份/Brief/事实边界；素材只按项目可见的 `MaterialRevision` 引用、不复制字节；Graphic/Video 没有真实渲染时不伪造成功。
 - 依赖与启动：复用现有 FastAPI/SQLAlchemy/Alembic/React；后端测试使用迁移后的隔离SQLite，禁止把临时库迁移命令用于开发或生产数据库。
-- 当前阶段门禁：574后端测试（含27项F6A回归）、SQLite空库迁移往返、前端build/FE-P1预算、strict24/24、Ruff/diff通过；这不是整体F6A完成或浏览器/生产验收。真实业务链仍按上方TODO继续实施。
 - 开发方式：用户明确授权当前阶段提交合入本地main，后续唯一开发Agent直接在`/Users/mshengran/Project/AIContentStudio`的main实施；继续保留OpenSpec确认/回归/阶段提交，不因单Agent而跳过质量门禁。禁止自动push/deploy/生产迁移。
 - 后端继续实施：共享Project事务锁、Master提交前上下文复核和可选`expected_context_hash`、真实Channel/content_form校验已补齐；生成素材按Project共享且验证成功Attempt/字节，Evidence与rights检查使用live状态，Candidate-only单元删除改为归档。
-- 当前已核92/214：三种Modality Adapter支持validate/preview/render/package projection/availability；`GET master-revisions/{id}/readiness`提供精确render输入hash，显式追加保存确认manual render（不是自动生成/verified renderer）。Draft精确素材/证据映射和unmapped incomplete已接入；`services/candidates_v4.py`把快照加载与纯builder分开，v4 Freeze使用真实Identity/Brief/Boundary/检查/render/provenance，带expected_payload_hash和提交前复核。手工Text及显式确认的Graphic/Video均可冻结，重复调用不新增事件。
-- 下一步/TODO：v4 Approval与copy/manual package的schema dispatch、并发冻结完整验收、Review/Versions/Overview、Production Workspace与浏览器验收；没有Draft/Topic/Mother的Text已走到Candidate，但尚未走通审批/本地包。前端本阶段未改未复跑；PostgreSQL实库未验收，不把SQLite测试当生产证明。
-- 本阶段实跑：668后端测试通过（含121项F6A Master/Adapter/seed/manifest/Freeze回归，6既有警告），strict24/24、触及文件Ruff和diff-check通过；原始规格包、canonical和前端未改。仍是阶段交付，不是F6A完成或独立审核通过。
+- 当前已核114/214：手工Text（无Draft/Topic/Mother/Run）→ checks → Candidate v4 → exact-hash Review → DeliveryTarget → ZIP已打通。共用live validator验证准确Master/冻结上下文、refs/checks/render与实时权利；审批/授权提交前再次复核并原子回滚。Graphic/Video仅导出已明确manual确认的真实字节，不新增编辑器或远端Publisher。
+- 历史契约：新审批/授权必须是当前Master/当前context/当前Candidate；已有授权继续交付原冻结历史内容，但撤权、字节改变、检查失败、hash篡改仍阻断。schema dispatch保留v3路径，v4失败禁止回退；重新检查不重写Candidate。
+- 本阶段实跑：712后端测试通过（165项F6A回归，6既有警告），包含44项新增v4闭环及12项既有Freeze回归；strict24/24、Ruff及diff-check通过，完整记录见`progress.md`。前端本阶段未改未复跑，不把旧build或SQLite结果当生产验收；单Agent复核不冒充独立审核。
 
 ### 下一版规划：文章/图文全渠道
 
