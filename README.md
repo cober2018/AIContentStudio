@@ -70,14 +70,14 @@
 - 关键设计决策：推荐始终是 suggested；转换只创建普通 Brief v1 与用户明确选择的 Source bindings，不创建 Topic / FactPack / Fact Boundary / IdentitySnapshot / Candidate / DeliveryTarget。Assessment 与 Conversion 保留历史；Home 不建立第二套状态表，近期活动不冒充排期。
 - 依赖与启动方式：无新增运行依赖。隔离库先 `DATABASE_URL=sqlite:////tmp/<isolated>/studio.db python -m alembic upgrade head`，API 使用 uvicorn，Vite 通过 `AI_STUDIO_API_TARGET` 指向该 API；前端 `npm run build` 同时检查三个入口预算。全量 pytest 需指向已迁移隔离 DATABASE_URL，worker SessionLocal 不使用 TestClient 的内存依赖替换。本轮未运行生产迁移。
 
-### FE-F6A Production Core / ContentMaster / Candidate v4（规格审计记录；当前已授权隔离apply）
+### FE-F6A Production Core / ContentMaster / Candidate v4（历史规格审计记录）
 
-- PRD/需求背景：建立文字/图像/视频共用的不可变生产版本核心，不实现F6B/C/D专业编辑器；标准change在 `openspec/changes/fe-f6a-production-core-content-master/`，计划在 `docs/superpowers/plans/2026-09-28-fe-f6a-production-core-content-master.md`。
+- PRD/需求背景：建立文字/图像/视频共用的不可变生产版本核心，不实现F6B/C/D专业编辑器；标准change已归档至 `openspec/changes/archive/2026-09-29-fe-f6a-production-core-content-master/`，计划在 `docs/superpowers/plans/2026-09-28-fe-f6a-production-core-content-master.md`。
 - 目录结构：proposal/design/tasks及五份delta；新增production-content-master，完整更新FE-F2、FE-F3A、FE-F3B、FE-F4要求块。原始目录和ZIP不覆盖、不移动。
 - 已完成：本地post-F5C基线main661e30a及code head f5c000000001核对，原稿审计与标准归位；补并发/幂等、固定身份、Master-only历史、render输入绑定、旧API/schema边界及安全回退。独立完整SPEC/plan复核APPROVE，strict24/24、diff-check及旧契约保留检查通过。
-- 后续状态：用户已授权apply/定向回归，并提供post-F5C连接器实际读取证据；当前实现进度见下方“隔离开发中”。此段保留规格审计记录，不代表当前仍未apply。
+- 后续状态：用户已授权apply/定向回归，并提供post-F5C连接器实际读取证据；实施与规格归档均已完成，最终状态见下方F6A小节。此段仅保留历史规格审计记录。
 - 关键设计决策：Master保存与Workflow保存分离；v4不伪造Draft；真实媒体存在不代表它渲染当前Master；身份层级变化不自动替换单元固定快照。
-- 依赖与启动方式：复用现有技术栈，无新依赖；规格校验 `openspec validate --all --strict`，状态 `openspec status --change fe-f6a-production-core-content-master`；实施与回归仅用隔离工作树和临时数据库，不发布。
+- 依赖与启动方式：复用现有技术栈，无新依赖；归档后的规格校验为 `openspec validate --all --strict`；历史实施与回归使用隔离环境，后续按用户授权在本地main完成，不发布。
 
 ### FE-F5C System Assets + Knowledge + Settings（已合入本地main，五份主规格已同步归档）
 
@@ -119,14 +119,15 @@ SourceDocument / DataSnapshot / Feedback / Manual reference
 Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 ```
 
-### FE-F6A Production Core（本地实施验收完成，待授权规格归档）
+### FE-F6A Production Core（本地验收完成，五份主规格同步并归档）
 
 - 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的主版本和上下文血缘；不替换旧引擎，不新增远程发布能力。
 - 目录结构：后端 `services/content_masters.py`、`production_modalities.py`、`candidates_v4.py`、`production_validation.py`、`production_packages.py` 承接保存、适配、冻结、live gate 与本地包；既有 Review/Outputs/Overview/Versions 接入 Master。前端 `ProductionWorkspace` 拆分 Header/Canvas/Inspector/AssetDrawer/MasterPanel 和三个 lazy StudioShell；迁移为 `f6a000000001`。
 - 已完成：214/214。手工 Text（无 Draft/Topic/Mother/Run）→ checks → Candidate v4 → exact-hash Approval → Delivery Authorization → ZIP；Graphic/Video 经真实文件及精确输入的人工 render attestation 走同一闭环。上下文/CAS/幂等、live rights/evidence/checks、跨 Unit 项目素材、输出血缘、三形态 Review、Master Versions/Overview、历史只读和 Workflow debugger 均已验收。
 - 验收：后端 753 passed（206 项 F6A，6 项既有 warnings）；TypeScript/Vite、FE-P1、strict24/24、Ruff/diff 通过。隔离 SQLite 与真实 PostgreSQL16 up/down/up 通过；浏览器 20.1–20.14 和三项独立 review 全部通过。/projects 224.68 kB raw / 72.86 gzip，Production 254.44 / 82.27；无 TipTap/XYFlow 首包泄漏。完整证据与边界见 [FE_F6A_FINAL_ACCEPTANCE.md](docs/FE_F6A_FINAL_ACCEPTANCE.md)。
 - 关键设计决策：Workflow/Master dirty 与保存独立；冻结历史不自动跟随身份/Brief/Boundary；新审批/授权要求 current Master，已有授权只交付原冻结历史且仍受撤权/字节/检查 gate；v4 失败不回退。图文、视频不计算假文本相似度；最小壳不冒充专业编辑器。
-- 待完成/TODO：规格仍是 active change，五份 delta 的 canonical 同步/归档按 21.9 等待单独授权；本轮未 push、deploy、生产迁移。F6B 及以后不执行，须先有具体方案并确认。原始包和 canonical 均未覆盖。
+- 规格收尾：2026-09-29获单独授权后，新增 [Production Core主规格](openspec/specs/production-content-master/spec.md)，更新FE-F2/F3A/F3B/F4四份主规格；实施记录归档至 [F6A归档](openspec/changes/archive/2026-09-29-fe-f6a-production-core-content-master/proposal.md)。29个delta要求块准确同步，40条旧要求/149个旧场景保留，原始包及9份归档文件未改。
+- 待完成/TODO：F6A已完成规格生命周期收尾；F6B及以后不执行，须先有具体方案并确认。仅本地提交，未push/deploy/生产迁移；不把本地验收当作生产就绪。
 - 依赖与启动：复用现有 FastAPI/SQLAlchemy/Alembic/React，无新增运行依赖；启动沿用下方命令。迁移与验收只在新临时数据库执行，禁止用于未授权开发/生产库。AI Workflow 浏览器验收使用显式 mock provider，不代表真实外部服务验收。
 - 开发方式：按用户授权直接在本地 main 实施和提交；不因单 Agent 跳过规格、回归与独立只读评审。
 

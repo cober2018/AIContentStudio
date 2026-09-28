@@ -1,5 +1,15 @@
 # 当前进度
 
+## 2026-09-29：FE-F6A 五份主规格已同步并归档
+
+- 用户已明确授权五份canonical同步、F6A归档、strict/diff-check及本地main提交；不改业务代码，不启动F6B。
+- 实核main d060428、工作区干净、4/4产物和214/214任务；仅新增production-content-master，并更新F2/F3A/F3B/F4，不覆盖原始包或其他canonical。
+- 本轮使用using-superpowers、OpenSpec archive、writing-plans/executing-plans及verification-before-completion；计划按根task_plan维护，不新增无关方案或测试。
+- 已完成：production-content-master新增19要求，F2/F3A/F3B/F4准确更新10要求块；四份主规格的40旧要求/149旧场景完整保留，未修改的要求块逐块一致。新Purpose已正式化，无TBD机械占位。
+- 标准归档：openspec/changes/archive/2026-09-29-fe-f6a-production-core-content-master/；9文件（含.openspec.yaml）SHA256与归档前相同，原始包9文件也相同；active中不再有F6A。CLI UTC目录名09-28已仅校正为本地Asia/Taipei日期09-29。
+- 实际归档后全量OpenSpec strict24/24通过、git diff --check通过，apps业务代码差异为空。CLI有“超过10个delta建议拆分”的非阻塞提示，不改变已验收范围。
+- 仅规格/文档本地main提交，最终hash以git log -1为准；本轮不重跑后端/浏览器，也不将昨日753测试当新运行结果。F6A状态ARCHIVED；不push/deploy/生产迁移、不启动F6B。
+
 ### FE-F6A 最终验收完成（214/214，仅本地main收尾）
 
 - 用户本轮明确限定：只完成F6A收尾；F6B及以后禁止启动，必须先出具体方案再确认。canonical同步/归档仍按21.9另待授权；不push/deploy/生产迁移。

@@ -1,6 +1,6 @@
 # FE-F6A Production Core Specification and Implementation Plan
 
-> **For agentic workers:** Apply and local main integration were authorized. After stage integration, continue in /Users/mshengran/Project/AIContentStudio on main as the user requested. Do not archive, push, deploy or run production migrations.
+> **For agentic workers:** Apply and local main integration were authorized. The user separately authorized all five canonical-spec updates and F6A archive on 2026-09-29. Remain on local main; do not push, deploy, run production migrations or start F6B+.
 
 **Goal:** Introduce an immutable production core and Candidate v4 without replacing legacy workflow/review engines or implementing full modality editors.
 
@@ -19,7 +19,7 @@
 
 ## Apply scope
 
-Source: openspec/fe-f6a-production-core-content-master/ and original ZIP, both untouched. Initial business/test implementation used codex/fe-f6a-production-core-content-master; the user subsequently authorized integrating the stage into main and continuing directly there. No push, deployment or production migration. Canonical specs remain unchanged until eventual authorized archive. Integration does not mark incomplete implementation as accepted.
+Source: openspec/fe-f6a-production-core-content-master/ and original ZIP, both untouched. Initial business/test implementation used codex/fe-f6a-production-core-content-master; the user subsequently authorized integrating the stage into main and continuing directly there. No push, deployment or production migration. Implementation acceptance completed at main@d060428; five canonical specs were synchronized under separate archive authorization on 2026-09-29. Archived artifacts reside at openspec/changes/archive/2026-09-29-fe-f6a-production-core-content-master/.
 
 ## Implementation sequence
 
@@ -75,11 +75,11 @@ Files: targeted existing test infrastructure only after user authorization; stan
 - [x] /// Targeted race/idempotency/history/render/legacy authorization regressions, then full suite.
 - [x] /// Isolated browser history/409/seed/check/freeze/review/local package acceptance.
 - [x] /// Independent backend/frontend/spec review and fresh strict/build/bundle/Ruff/diff gates.
-- [x] /// Record 214/214 acceptance and prepare the authorized local-main commit; canonical sync/archive still require separate authorization.
+- [x] /// Record 214/214 acceptance and the authorized local-main implementation commit d060428; canonical sync/archive subsequently authorized and completed separately on 2026-09-29.
 
 ## Gate commands
 
-- Specification: openspec status --change fe-f6a-production-core-content-master --json; openspec validate --all --strict; git diff --check.
+- Specification after archive: openspec validate --all --strict; git diff --check. Historical tasks/artifacts remain at openspec/changes/archive/2026-09-29-fe-f6a-production-core-content-master/.
 - Code head only: from apps/api, .venv/bin/python -m alembic heads (no upgrade).
 - Future code gates: isolated DATABASE_URL pytest; apps/web npm run build; targeted Ruff. Never substitute prior F5C outcomes for fresh F6A evidence.
 

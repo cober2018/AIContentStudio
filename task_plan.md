@@ -1,5 +1,12 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：FE-F6A 五份主规格同步与归档（用户已授权）
+
+- [x] /// 核对 main d060428、tree clean、4/4 artifacts、214/214 tasks；保存五份delta、四份旧主规格和原始包校验基线。
+- [x] /// 同步新增 production-content-master 及 FE-F2/F3A/F3B/F4 四份更新，归档标准change；旧要求/场景完整保留，补正式Purpose。
+- [x] /// 核对归档与五份canonical，更新README/验收/进度/发现，全量strict24/24和diff-check通过，准备已授权白名单本地提交。
+- 本轮只改规格和文档，不改业务代码，不push/deploy/生产迁移，不启动F6B或后续方案。
+
 ## 2026-09-28：FE-F6A FINAL-CLOSE（完成214/214，仅本地main收尾）
 
 - [x] /// 核对114/214与既有165项回归，补后端剩余输出支持、检查/权限、冻结并发/历史及迁移SQLite往返和PostgreSQL约束；不扩能力。
