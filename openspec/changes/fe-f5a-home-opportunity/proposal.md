@@ -21,7 +21,10 @@ The system can now carry content from evidence through project, identity, produc
 
 ### Modified Capabilities
 
+- `fe-f0-f1-project-experience`: make Home and Opportunity real persistent workspaces.
 - `fe-f3a-content-project-core`: Define opportunity conversion as an explicit project-creation entry point with suggested values that remain drafts until the existing project brief/evidence flows approve them.
+- `fe-f3b-content-identity`: allow validated identity recommendations without mutating identity or creating snapshots.
+- `fe-f4-project-review-distribution`: allow Home to consume review/delivery pending-decision projections without creating a parallel state machine.
 
 ## Impact
 
