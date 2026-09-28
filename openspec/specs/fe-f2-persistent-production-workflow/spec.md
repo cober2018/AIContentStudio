@@ -138,6 +138,16 @@ A Data Node SHALL use a typed, extensible Data Source Plugin registry distinct f
 - **WHEN** a Data Node refresh produces the same normalized output checksum
 - **THEN** the new refresh remains auditable without marking dependent successful steps stale
 
+The typed Data Source Plugin registry SHALL remain authoritative for Data Node availability/capabilities. Product Settings MAY expose and manage related connector configuration, but MUST NOT create a second plugin registry or mark an unavailable plugin executable without verified runtime support.
+
+#### Scenario: Settings shows disconnected plugin
+- **WHEN** a registered Data Source Plugin is unavailable
+- **THEN** Settings shows the same unavailable reason that prevents Data Node execution
+
+#### Scenario: Connector configuration does not imply plugin executor
+- **WHEN** a generic Connector is configured
+- **THEN** Data Source Plugin execution eligibility changes only through its explicit verified runtime contract
+
 ### Requirement: Project-shared workflow outputs
 
 The system SHALL persist references to supported workflow-produced Draft, MaterialRevision, and Candidate outputs with owning project, unit, run, node, attempt, and applicable source/rights provenance. Generated image, chart, screenshot, and video-clip revisions SHALL appear in the owning project's Shared Assets. FE-F3A MAY add explicit project MaterialRevision references for project upload/system-library use, but those references SHALL remain a separate persistence source from ProjectWorkflowOutput. The project Shared Assets API SHALL unify both sources at read time and MUST NOT create a synthetic material, duplicate bytes, or infer an asset merely because a node reports success. Freezing a Project Candidate SHALL verify that every referenced Draft, Candidate, and workflow output belongs to the requested ContentUnit through persisted output/run lineage. A raw output ID alone MUST NOT establish ownership.

@@ -85,6 +85,12 @@ Opportunity conversion MUST NOT create or bind Fact Boundary implicitly.
 - **WHEN** a converted Project has attached Sources
 - **THEN** Fact Boundary stays absent until explicit freeze/bind
 
+A FactPack surfaced through System Assets & Knowledge SHALL still require the normal explicit frozen/checksum-valid Fact Boundary bind. KnowledgeCollection membership MUST NOT satisfy or bypass this gate.
+
+#### Scenario: Collection contains frozen FactPack
+- **WHEN** a KnowledgeCollection includes a frozen FactPack
+- **THEN** the Project has no Fact Boundary until an authorized user explicitly binds that FactPack
+
 ### Requirement: Unified Project Shared Assets by reference
 
 Project Shared Assets SHALL combine explicit project references to existing MaterialRevision rows with FE-F2 verified workflow-produced MaterialRevision associations. The system MUST NOT duplicate underlying material bytes merely to add an item to a project.
@@ -108,6 +114,16 @@ Project Shared Assets SHALL combine explicit project references to existing Mate
 #### Scenario: Upload transaction fails
 - **WHEN** creating the project material reference or event fails after byte storage
 - **THEN** the API does not report success or leave a committed MaterialRevision without its project reference; newly unreferenced bytes are cleaned up or tracked for bounded cleanup without deleting shared content
+
+System Library MaterialRevision and SourceDocument resources SHALL enter a Project through existing reference bindings. System Assets & Knowledge does not replace the project Shared Assets pool or duplicate underlying resource bytes/text.
+
+#### Scenario: Add system Material to Project
+- **WHEN** the user selects a MaterialRevision from `/assets`
+- **THEN** ProjectMaterialReference is created and the same MaterialRevision remains the underlying resource
+
+#### Scenario: Add system Source to Project
+- **WHEN** the user selects a SourceDocument from `/assets`
+- **THEN** ProjectSourceBinding is created and the existing Source remains the underlying truth
 
 ### Requirement: Append-only project activity
 

@@ -70,14 +70,14 @@
 - 关键设计决策：推荐始终是 suggested；转换只创建普通 Brief v1 与用户明确选择的 Source bindings，不创建 Topic / FactPack / Fact Boundary / IdentitySnapshot / Candidate / DeliveryTarget。Assessment 与 Conversion 保留历史；Home 不建立第二套状态表，近期活动不冒充排期。
 - 依赖与启动方式：无新增运行依赖。隔离库先 `DATABASE_URL=sqlite:////tmp/<isolated>/studio.db python -m alembic upgrade head`，API 使用 uvicorn，Vite 通过 `AI_STUDIO_API_TARGET` 指向该 API；前端 `npm run build` 同时检查三个入口预算。全量 pytest 需指向已迁移隔离 DATABASE_URL，worker SessionLocal 不使用 TestClient 的内存依赖替换。本轮未运行生产迁移。
 
-### FE-F5C System Assets + Knowledge + Settings（已合入本地main，待主规格同步归档）
+### FE-F5C System Assets + Knowledge + Settings（已合入本地main，五份主规格已同步归档）
 
-- PRD/需求背景：统一系统素材/知识展示和设置产品入口，不新增平行Asset或Registry真源；标准规格在 `openspec/changes/fe-f5c-system-assets-knowledge-settings/`。
+- PRD/需求背景：统一系统素材/知识展示和设置产品入口，不新增平行Asset或Registry真源；长期规范在 `openspec/specs/system-assets-knowledge/spec.md` 与 `openspec/specs/product-settings/spec.md`，并同步FE-F0/F1、FE-F2、FE-F3A三份主规格。实施记录归档于 `openspec/changes/archive/2026-09-28-fe-f5c-system-assets-knowledge-settings/`。
 - 目录结构：services/system_library、library_usage、knowledge_collections、product_settings，KnowledgeCollection两表及f5c000000001迁移；前端product/SystemAssetsKnowledgePage五标签、ProductSettingsPage六分区，保留legacy入口。
 - 已完成：标准规格95/95、引用式集合与项目精确资源复用、有界授权使用情况、安全设置投影及lazy工作区；547后端测试、构建/预算、strict22/22、独立SPEC/QUALITY、SQLite迁移往返与隔离浏览器验收通过。projects224.68kB raw/72.86kB gzip；Assets257.70kB、Settings229.76kB initial均无重型画布/编辑器。
-- 待完成/TODO：功能提交 `7956273` 已快进合入本地main，合入后547测试、build/bundle、strict22/22、Ruff/diff门禁通过；五份canonical同步及change归档等待单独授权。原始包/ZIP保留，实现工作树保留供收尾；真实PostgreSQL并发、第三方Connector和生产准入未验收。
+- 待完成/TODO：功能提交 `7956273` 已快进合入本地main，合入后547测试、build/bundle、strict22/22、Ruff/diff门禁通过；五份canonical同步及change归档已完成，归档后全量strict23/23、规格保留核对和diff-check通过。原始包/ZIP保持不变；真实PostgreSQL并发、第三方Connector和生产准入未验收。
 - 关键设计决策：库资源system_shared但使用情况遵循Project/Opportunity授权；Collection引用不成为Fact Boundary；Settings安全投影不新增Registry，断连不假成功。
-- 依赖与启动方式：复用FastAPI/React与现有隔离API/Vite流程；迁移仅临时数据库。无push/deploy/生产迁移，canonical归档另待授权。
+- 依赖与启动方式：复用FastAPI/React与现有隔离API/Vite流程；业务验收迁移仅临时数据库，本轮归档不运行迁移。无push/deploy/生产迁移。
 
 ```text
 系统资源 → 有界Library → 明确的项目引用 / Frozen FactPack事实边界
