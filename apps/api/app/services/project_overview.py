@@ -5,7 +5,8 @@ from collections.abc import Iterable
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentPersona, ContentUnit, IdentitySnapshot, WorkflowRun, WorkflowStep
+from ..models import ContentMasterRevision, ContentPersona, ContentUnit, IdentitySnapshot, WorkflowRun, WorkflowStep
+from .content_masters import master_risks
 from .project_brief import current_brief
 from .project_evidence import current_boundary
 from .project_projection_context import ProjectProjectionContext
@@ -37,6 +38,9 @@ def project_overview(db: Session, project_id: int, *, context: ProjectProjection
     pending: list[dict] = []
     latest_runs: list[WorkflowRun] = []
     for unit in active:
+        master = context.masters.get(unit.id) if context is not None else db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        if master:
+            risks.extend(master_risks(db, master))
         snapshot = context.snapshots.get(unit.identity_snapshot_id) if context is not None else db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
         if snapshot is None or not snapshot.effective_profile_json:
             risks.append({"code": "identity_unready", "unit_id": unit.id, "reason": "legacy_identity" if snapshot is None else "incomplete_profile"})
@@ -83,4 +87,9 @@ def project_overview(db: Session, project_id: int, *, context: ProjectProjection
                 stage = "review_ready"
                 next_action = {"code": code, "label": label, "href": f"/review?project={project_id}"}
                 break
+    master_risk = next((risk for risk in risks if risk["code"].startswith("master_")), None)
+    if master_risk and stage == "attention_required":
+        next_action = {"code": "production.resolve_risk", "label": "处理内容Master风险", "href": f"/projects/{project_id}/units/{master_risk['unit_id']}/production"}
+    if any(unit["summary"] == "unknown" for unit in review_units):
+        stage, next_action = "review_ready", {"code": "delivery.reconcile", "label": "核对交付结果", "href": f"/review?project={project_id}"}
     return {"stage": stage, "activeUnitCount": len(active), "archivedUnitCount": len(units) - len(active), "modalityCounts": modality_counts, "personas": personas, "brief": {"ready": brief is not None, "revision": brief.revision_no if brief else None}, "factBoundary": {"ready": boundary is not None, "revision": boundary.revision_no if boundary else None, "factPackId": boundary.fact_pack_id if boundary else None, "factPackVersion": boundary.fact_pack_version if boundary else None, "checksum": boundary.fact_pack_checksum if boundary else None}, "risks": risks, "pendingDecisions": pending, "nextAction": next_action, "review": {"units": review_units}}

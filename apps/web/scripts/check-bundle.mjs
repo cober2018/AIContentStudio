@@ -8,7 +8,7 @@ const manifest = JSON.parse(readFileSync(join(dist, ".vite/manifest.json"), "utf
 const heavyByChunk = JSON.parse(readFileSync(join(dist, "heavy-dependencies.json"), "utf8"));
 const entryKey = "index.html";
 const projectKey = "src/product/PersistentProjectsPage.tsx";
-const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityPages.tsx", "src/product/LearningWorkspace.tsx", "src/product/SystemAssetsKnowledgePage.tsx", "src/product/ProductSettingsPage.tsx"];
+const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityPages.tsx", "src/product/LearningWorkspace.tsx", "src/product/SystemAssetsKnowledgePage.tsx", "src/product/ProductSettingsPage.tsx", "src/product/PersistentProductionPage.tsx"];
 const excludedRoutes = [
   "src/product/PersistentProjectPage.tsx",
   "src/product/PersistentProductionPage.tsx",
@@ -61,7 +61,8 @@ try {
       if (heavyByChunk[file]?.length) throw new Error(`Heavy dependency in ${route}: ${file}`);
     }
     if (sizes(closure).raw >= limit) throw new Error(`Route initial JS exceeds budget: ${route}`);
-    console.log(`${route}: lazy route, no TipTap/XYFlow, ${(sizes(closure).raw / 1000).toFixed(2)} kB initial JS`);
+    const routeSize = sizes(closure);
+    console.log(`${route}: lazy route, no TipTap/XYFlow, ${(routeSize.raw / 1000).toFixed(2)} kB initial JS / ${(routeSize.gzip / 1000).toFixed(2)} kB gzip`);
   }
   for (const route of excludedRoutes) {
     if (initial.has(required(route).file)) throw new Error(`Unrelated route is in /projects initial graph: ${route}`);

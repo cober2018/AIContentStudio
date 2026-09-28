@@ -16,8 +16,8 @@ from app.models import (
 HEADERS = {"X-Studio-User": "adapter@studio.local"}
 
 
-def _unit(client, db, modality):
-    channel = "wechat" if modality == "text" else f"fixture_{modality}"
+def _unit(client, db, modality, *, suffix=""):
+    channel = "wechat" if modality == "text" else f"fixture_{modality}{suffix}"
     form = "article" if modality == "text" else "final"
     if modality != "text":
         db.add(ChannelTemplateVersion(channel=channel, version=1, name="明确配置的测试渠道", status="published", profile_json={"content_forms": {form: {"artifact_kind": "image" if modality == "graphic" else "video"}}}))
@@ -28,7 +28,7 @@ def _unit(client, db, modality):
     assert response.status_code == 201, response.text
     unit = response.json()["id"]
     client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={"objective": "明确目标", "expected_revision": 0}, headers=HEADERS)
-    pack = FactPack(name="冻结边界", version=1, status="frozen", checksum="p" * 64)
+    pack = FactPack(name=f"冻结边界{suffix}", version=1, status="frozen", checksum="p" * 64)
     db.add(pack)
     db.flush()
     db.add(FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion", snapshot_json={"statement": "观点"}, snapshot_checksum="s" * 64, public_use_allowed=True))

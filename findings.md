@@ -1,5 +1,22 @@
 # 配置记录
 
+## 2026-09-28 FE-F6A 最终收尾边界
+
+- 本轮用户明确禁止F6B及以后实施，未来切片必须先有具体方案；这里只关闭F6A的214项，不主动开始下一份proposal。
+- final backend753通过（206项F6A）；SQLite/真实PG往返与两会话撤权约束通过，不能把本地验证叫生产验收。
+- 三独立评审最终APPROVE；归档UI遗漏已用真实浏览器先复现后修复，统一project或unit readOnly，不仅依赖后端拒绝。
+- 最终浏览器完整闭环13 gates且无pageerror，包含v3/Draft/debugger；AI provider明确mock、manual render明确人工确认，未启用真实Connector/Publisher。
+- canonical/原始包保持不变，标准change任务21.9禁止未经单独授权同步/归档；本轮达到ARCHIVE_READY，本地main提交后停止。
+
+## 2026-09-28 FE-F6A FINAL-CLOSE
+
+- 独立后端复核指出Project事务锁不能覆盖system-shared撤权；gate现在以确定顺序锁Material/Revision及FactPack/Item，真实PostgreSQL第二会话撤权被锁阻断。SQLite green不能替代该证据。
+- 嵌入素材/证据必须属于明确ref集合，基础设施路径不可进入payload；标题与ref字段受真实PG列bounds约束。审批warning按准确check-id/input-hash明确处置，不改写warning为pass。
+- 显式content_form编辑应校验用户读到的旧form live context，再冻结新form context；不能拿新form hash拒绝正常编辑，也不能省掉Brief/Boundary漂移CAS。
+- Preview先按schema分派，旧v3 graphic/video仍是冻结正文，不得套用v4 canvases/shots导致历史消失。当前检查不对stale Master执行；已授权历史包按冻结输入取最新检查，同输入新blocker仍拒绝，不同上下文stale检查不能污染历史。
+- project_outputs目前按既有plugin白名单识别Draft/Material/Candidate，没有content_master_revision分支；新支持必须验证成功Attempt/冻结输出及同Unit/Run实际来源，不能因为任意节点报告ID就关联。
+- 已批准设计约束三种最小开发壳而非专业编辑器；保留现有Workflow保存/Run/debugger，Master独立请求/dirty/CAS冲突状态。最终任务勾选须有具体测试或浏览器证据，不按剩余数量机械勾满。
+
 ## 2026-09-28 FE-F6A v4 live gate
 
 - 共享校验不能简单重建manifest再比整个hash：项目展示名称可能变化，重新检查产生新ID；冻结Candidate和原审批hash不能被回写。需分别检验冻结Master/context/refs/render、冻结Check行与最新可用结果，维持不可变Candidate。

@@ -2,6 +2,7 @@
 
 from difflib import SequenceMatcher
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -60,13 +61,24 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
             latest = context.draft_revisions.get(draft.content_job_id) if context is not None else db.scalar(select(Draft.revision_no).where(Draft.content_job_id == draft.content_job_id).order_by(Draft.revision_no.desc()).limit(1))
             stale_revision = latest != draft.revision_no
     dimension("candidate", "stale" if stale_revision else ("ready" if current else "blocked"), ["newer_draft_revision"] if stale_revision else ([] if current else ["freeze_required"]))
+    v4_error = None
+    if current and (current.candidate_manifest_json or {}).get("schema_version") == 4:
+        from .production_validation import validate_live_v4_candidate
+
+        try:
+            validate_live_v4_candidate(db, current)
+        except HTTPException as exc:
+            v4_error = exc.detail if isinstance(exc.detail, dict) else {"code": "readiness_blocked", "reasons": [str(exc.detail)]}
+            stale_revision = v4_error["code"] in {"stale_master", "historical_candidate"}
+            dimension("candidate", "stale" if stale_revision else "blocked", v4_error.get("reasons", []))
+            dimension("checks", "stale" if stale_revision else "blocked", [v4_error["code"], *v4_error.get("reasons", [])])
     approved = bool(current and current.status in {"approved", "exported"} and current.candidate_hash == current.approved_candidate_hash and any(row.decision == "approved" and row.candidate_hash == current.candidate_hash for row in reviews))
     dimension("approval", "approved" if approved else "waiting_review" if current else "blocked", [] if approved or current else ["candidate_missing"])
     dimension("delivery", "ready" if targets else "blocked", [] if targets else ["authorization_missing"])
     unknown = any(target.status == "reconciliation_needed" or any(attempt.status == "unknown" and (attempt.response_metadata_json or {}).get("reconciled") is None for attempt in attempts(target)) for target in targets)
     if unknown:
         summary = "unknown"
-    elif any(target.status == "blocked" for target in targets) or media_reasons or (evidence_reasons and not evidence_stale) or (not checksum_ok and current is not None):
+    elif any(target.status == "blocked" for target in targets) or media_reasons or (evidence_reasons and not evidence_stale) or (not checksum_ok and current is not None) or (v4_error and not stale_revision):
         summary = "blocked"
     elif evidence_stale or stale_revision or (run and run.status == "stale" and current is None):
         summary = "stale"
@@ -105,10 +117,35 @@ def project_projection(db: Session, project: ContentProject) -> dict:
 def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict:
     prior = previous.candidate_manifest_json or {} if previous else {}
     latest = current.candidate_manifest_json or {}
-    sections = ("content", "media", "evidence", "identity", "production", "checks", "render", "channel")
+    sections = ("content", "content_master", "brief", "assets", "evidence_refs", "media", "evidence", "identity", "production", "checks", "render", "channel", "content_form", "citations", "declarations")
     changed = {name: {"changed": prior.get(name) != latest.get(name)} for name in sections}
-    before = str((prior.get("content") or {}).get("body_markdown") or "")[:2000]
-    after = str((latest.get("content") or {}).get("body_markdown") or "")[:2000]
+    modality = (latest.get("project") or {}).get("modality", "text")
+    if modality != "text":
+        return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id, "modality": modality, "changed_sections": changed, "text": None}
+    before = str((prior.get("content") or {}).get("markdown" if prior.get("schema_version") == 4 else "body_markdown") or "")[:2000]
+    after = str((latest.get("content") or {}).get("markdown" if latest.get("schema_version") == 4 else "body_markdown") or "")[:2000]
     return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id,
             "changed_sections": changed, "text": {"before_chars": len(before), "after_chars": len(after),
                                                  "similarity": round(SequenceMatcher(None, before, after).ratio(), 4)}}
+
+
+def candidate_preview(asset: ContentAsset) -> dict:
+    """Preview the frozen snapshot, never the mutable current Master payload."""
+    manifest = asset.candidate_manifest_json or {}
+    content = manifest.get("content") or {}
+    modality = (manifest.get("project") or {}).get("modality", "text")
+    preview = {"modality": modality, "title": asset.title, "render": manifest.get("render") or {}}
+    if manifest.get("schema_version") != 4:
+        markdown = str(content.get("body_markdown") or "")
+        return {**preview, "modality": "text", "source_modality": modality, "markdown": markdown[:20_000], "truncated": len(markdown) > 20_000}
+    if modality == "text":
+        markdown = str(content.get("markdown" if manifest.get("schema_version") == 4 else "body_markdown") or "")
+        preview.update({"markdown": markdown[:20_000], "truncated": len(markdown) > 20_000, "document_present": isinstance(content.get("document"), dict)})
+    elif modality == "graphic":
+        canvases = content.get("canvases") or []
+        preview.update({"canvas_count": len(canvases), "canvases": [{"id": row.get("id"), "order": row.get("order"), "width": row.get("width"), "height": row.get("height")} for row in canvases[:50]]})
+    elif modality == "video":
+        shots = content.get("shots") or []
+        script = content.get("script") or ""
+        preview.update({"shot_count": len(shots), "script": script[:20_000] if isinstance(script, str) else {"structured": True}, "shots": [{"id": row.get("id"), "order": row.get("order"), "duration": row.get("duration")} for row in shots[:50]], "timeline_present": bool(content.get("timeline"))})
+    return preview

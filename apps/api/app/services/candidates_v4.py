@@ -61,7 +61,10 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
     input_hash = check_input_hash(db, master, require_current=require_current)
     checks = []
     for kind in adapter.required_check_kinds:
-        check = db.scalar(select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == master.id, ContentMasterCheckRun.check_kind == kind).order_by(ContentMasterCheckRun.id.desc()).limit(1))
+        query = select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == master.id, ContentMasterCheckRun.check_kind == kind)
+        if not require_current:
+            query = query.where(ContentMasterCheckRun.input_hash == input_hash)
+        check = db.scalar(query.order_by(ContentMasterCheckRun.id.desc()).limit(1))
         if check is None or check.input_hash != input_hash or check.profile_key != adapter.payload_schema or check.profile_version != adapter.version:
             raise ValueError(f"missing or stale Master check: {kind}")
         checks.append({"id": check.id, "kind": kind, "profile_key": check.profile_key, "profile_version": check.profile_version, "input_hash": check.input_hash, "status": check.status, "report": check.report_json})

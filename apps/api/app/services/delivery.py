@@ -63,7 +63,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
 
         owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
         db.refresh(asset)
-        validate_live_v4_candidate(db, asset, require_approved=True)
+        validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
         if payload.action not in {DeliveryAction.copy_package.value, DeliveryAction.manual_handoff.value}:
             raise HTTPException(422, "capability_unavailable: v4当前仅支持本地成品包/人工交付")
         if payload.content_form != asset.content_form:
@@ -176,7 +176,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
             db.flush()
             db.expire_all()
             owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
-            validate_live_v4_candidate(db, asset, require_approved=True)
+            validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
             if target.approved_candidate_hash != asset.candidate_hash:
                 raise HTTPException(409, "授权提交前候选发生变化")
         db.commit()

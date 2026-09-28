@@ -16,7 +16,7 @@ from .production_validation import validate_live_v4_candidate
 
 
 def build_v4_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -> dict:
-    manifest = validate_live_v4_candidate(db, asset, require_current=False, require_approved=True)
+    manifest = validate_live_v4_candidate(db, asset, require_current=False, require_approved=True, lock_live=True)
     if target.action not in {"copy_package", "manual_handoff"} or target.channel != manifest["channel"] or target.content_form != manifest["content_form"] or target.approved_candidate_hash != asset.candidate_hash:
         raise HTTPException(409, "v4交付授权与准确候选/渠道/形态不一致")
     master = db.get(ContentMasterRevision, asset.content_master_revision_id)

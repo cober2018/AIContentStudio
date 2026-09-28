@@ -1,5 +1,15 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F6A FINAL-CLOSE（完成214/214，仅本地main收尾）
+
+- [x] /// 核对114/214与既有165项回归，补后端剩余输出支持、检查/权限、冻结并发/历史及迁移SQLite往返和PostgreSQL约束；不扩能力。
+- [x] /// 按v3/v4分派Review Preview/Changes/Checks；三形态结构化diff，只有text可有相似度；Versions/Overview加入真实Master，Unknown优先。
+- [x] /// 拆ProductionWorkspace/ContextHeader/MiniCanvas/Inspector/AssetDrawer/MasterPanel及三最小壳；Workflow与Master的dirty/save独立。
+- [x] /// 新临时DB浏览器覆盖三形态save/reload/409/stale/seed/check/freeze/review/approval/package及v3/debugger回归；不使用生产数据。
+- [x] /// 全量backend、TypeScript/Vite、route预算、strict、Ruff、diff及迁移fresh gates，独立SPEC/backend/frontend-review-package评审；验收后勾任务并准备白名单本地提交。
+- 验收映射见 docs/FE_F6A_FINAL_ACCEPTANCE.md：753 passed / 206项F6A；三形态与历史浏览器完整通过；三独立评审APPROVE。
+- F6B不启动，原始包/canonical不覆盖，不push/deploy/生产迁移；归档和canonical同步另待授权。
+
 ## 2026-09-28：FE-F6A v4审批→本地成品包（main）
 
 - [x] /// 先写无Draft Text的端到端和撤权/篡改/新Master负向回归，确认既有Draft-only/schema-v3阻断。

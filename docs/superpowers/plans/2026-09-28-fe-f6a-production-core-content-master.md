@@ -30,52 +30,52 @@ Files: apps/api/app/models.py; new incremental migration under apps/api/alembic/
 - [x] /// Verify fresh connector/local baseline and existing worktree availability after approval.
 - [x] /// Isolated full-suite/build/bundle baseline before code changes.
 - [x] /// Four Master tables, FK/history constraints and nullable ContentAsset link/body; no backfill.
-- [ ] /// SQLite up/down/up and PostgreSQL-compatible constraints; incompatible downgrade fails before destructive DDL. SQLite history refusal is tested; actual PostgreSQL validation remains outstanding.
+- [x] /// SQLite up/down/up and PostgreSQL-compatible constraints; incompatible downgrade fails before destructive DDL. SQLite and actual isolated PostgreSQL16 roundtrips and history refusal passed.
 
 ### 2. Master/context/ref services
 
 Files: proposed apps/api/app/services/content_masters.py, production_modalities.py, content_master_checks.py; apps/api/app/routers/content_masters.py; apps/api/app/main.py.
 
-- [ ] /// Authorized append-only save, fingerprint idempotency, CAS/head/parent/context transaction gate. Replay and parent tests pass; shared archive/context locking remains outstanding.
+- [x] /// Authorized append-only save, fingerprint idempotency, CAS/head/parent/context transaction gate. Replay, parent, shared archive/context locking and commit revalidation passed.
 - [x] /// Frozen unit identity plus Brief/Boundary context and derived stale/readiness, no latest repinning.
-- [ ] /// Exact project-visible MaterialRevision/FactPackItem refs, payload bounds and typed locators. Bounds/schema are tested; embedded refs and generated-asset lineage remain outstanding.
-- [ ] /// Immutable current input-bound checks, latest-result authority and warning disposition. Append-only/latest/stale tests pass; full rights, renderer and warning-disposition gates remain outstanding.
-- [ ] /// Three bounded payload adapters, render-input binding and truthful manual-render attestation.
+- [x] /// Exact project-visible MaterialRevision/FactPackItem refs, payload bounds and typed locators. Bounds/schema, embedded refs and generated-asset lineage all passed.
+- [x] /// Immutable current input-bound checks, latest-result authority and warning disposition. Append-only/latest/stale, live rights, renderer and exact latest-warning disposition gates passed.
+- [x] /// Three bounded payload adapters, render-input binding and truthful manual-render attestation.
 
 ### 3. Existing unit/workflow history
 
 Files: apps/api/app/routers/content_projects.py; apps/api/app/services/project_outputs.py.
 
-- [ ] /// Count Master-only history for Fork + Archive and delete safety.
-- [ ] /// Seed from current verified Draft/Run/Step/Attempt; retain exact old execution provenance.
-- [ ] /// Optional future Master output association only with persisted verified lineage.
+- [x] /// Count Master-only history for Fork + Archive and delete safety.
+- [x] /// Seed from current verified Draft/Run/Step/Attempt; retain exact old execution provenance.
+- [x] /// Optional future Master output association only with persisted verified lineage.
 
 ### 4. Candidate v4/review/local package
 
 Files: apps/api/app/services/project_review.py, project_review_projection.py, candidates.py, delivery.py; apps/api/app/routers/project_review.py, assets.py; related legacy export services discovered narrowly during apply.
 
-- [ ] /// Exactly one source and current Master validation; dual v3/v4 schema dispatch/hash/idempotency.
-- [ ] /// Exact-hash review approval/new authorization with live rights and immutable history.
-- [ ] /// Audit every relevant raw legacy read/mutation/export for common ownership/archive gates.
-- [ ] /// Real modality preview/diff and local packages; no v4 fallback or unverified remote capability.
+- [x] /// Exactly one source and current Master validation; dual v3/v4 schema dispatch/hash/idempotency.
+- [x] /// Exact-hash review approval/new authorization with live rights and immutable history.
+- [x] /// Audit every relevant raw legacy read/mutation/export for common ownership/archive gates.
+- [x] /// Real modality preview/diff and local packages; no v4 fallback or unverified remote capability.
 
 ### 5. Project/read models and UI
 
 Files: apps/api/app/services/project_versions.py, project_overview.py; apps/web/src/product/ProductionDesigner.tsx, PersistentProductionPage.tsx, ProjectReviewCenter.tsx; new narrowly scoped production components; apps/web/scripts/check-bundle.mjs.
 
-- [ ] /// Include exact Master history and derived readiness without duplicate status storage.
-- [ ] /// Common shell split while preserving actual debugger and archive readonly semantics.
-- [ ] /// Separate workflow/content dirty/save state, minimal modality payload editing only.
-- [ ] /// Lazy production boundary and no TipTap/XYFlow leakage to existing entry budgets.
+- [x] /// Include exact Master history and derived readiness without duplicate status storage.
+- [x] /// Common shell split while preserving actual debugger and archive readonly semantics.
+- [x] /// Separate workflow/content dirty/save state, minimal modality payload editing only.
+- [x] /// Lazy production boundary and no TipTap/XYFlow leakage to existing entry budgets.
 
 ### 6. Acceptance and handoff
 
 Files: targeted existing test infrastructure only after user authorization; standard change tasks.md and root progress/findings/README.
 
-- [ ] /// Targeted race/idempotency/history/render/legacy authorization regressions, then full suite.
-- [ ] /// Isolated browser history/409/seed/check/freeze/review/local package acceptance.
-- [ ] /// Independent backend/frontend/spec review and fresh strict/build/bundle/Ruff/diff gates.
-- [ ] /// Report implementation outcome; archive/canonical sync/local merge need separate authorization.
+- [x] /// Targeted race/idempotency/history/render/legacy authorization regressions, then full suite.
+- [x] /// Isolated browser history/409/seed/check/freeze/review/local package acceptance.
+- [x] /// Independent backend/frontend/spec review and fresh strict/build/bundle/Ruff/diff gates.
+- [x] /// Record 214/214 acceptance and prepare the authorized local-main commit; canonical sync/archive still require separate authorization.
 
 ## Gate commands
 
@@ -88,3 +88,7 @@ Files: targeted existing test infrastructure only after user authorization; stan
 Unit-pinned context → Master revision + exact refs → input-bound checks + verified/attested render → Freeze v4 → Content Approval → Delivery Authorization → local package.
 
 Workflow save → Workflow definition/run; Content save → Master revision. Neither action implicitly changes the other.
+
+## Final evidence and next-slice boundary
+
+753 backend tests passed, including 206 F6A cases and two actual PostgreSQL acceptance tests. Browser 20.1–20.14 passed with archived-readonly regression; all three independent reviews APPROVE. See docs/FE_F6A_FINAL_ACCEPTANCE.md for full evidence. The user limited this close to F6A; do not begin F6B or later without a concrete proposal and new confirmation.

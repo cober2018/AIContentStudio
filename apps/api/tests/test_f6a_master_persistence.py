@@ -19,12 +19,51 @@ from app.models import (
 )
 
 
+@pytest.mark.parametrize("content", [
+    {"title": "t" * 501, "markdown": "正文"},
+    {"document": {"blocks": [{"material_revision_id": 999}]}},
+    {"markdown": "正文", "render_asset_ref": {"material_revision_id": 999}},
+    {"structured": {"file_path": "/private/raw-byte-location"}},
+])
+def test_payload_storage_and_embedded_reference_bounds(client, content):
+    _, _, path, headers = _master_unit(client)
+    response = client.post(path, json={"idempotency_key": "embedded-invalid", "payload": content}, headers=headers)
+    assert response.status_code == 422, response.text
+    assert client.get(path, headers=headers).json()["items"] == []
+
+
+@pytest.mark.parametrize("ref", [{"role": "r" * 41}, {"slot_key": "s" * 101}, {"sort_order": -1}, {"sort_order": True}, {"placement": {"file_path": "/private/path"}}])
+def test_ref_fields_fail_with_typed_422_not_database_errors(client, ref):
+    _, _, path, headers = _master_unit(client)
+    response = client.post(path, json={"idempotency_key": "refs-invalid", "payload": {"markdown": "正文"}, "asset_refs": [{"material_revision_id": 1, "content_hash": "a" * 64, **ref}]}, headers=headers)
+    assert response.status_code == 422, response.text
+    assert client.get(path, headers=headers).json()["items"] == []
+
+
 def _master_unit(client):
     headers = {"X-Studio-User": "f6a-safety@studio.local"}
     persona = client.post("/api/v1/content-personas", json={"name": "安全作者"}, headers=headers).json()["id"]
     project = client.post("/api/v1/content-projects", json={"title": "安全项目"}, headers=headers).json()["id"]
     unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "正文", "persona_id": persona, "modality": "text"}, headers=headers).json()["id"]
     return project, unit, f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", headers
+
+
+def test_explicit_form_change_validates_old_live_context_without_false_conflict(client, db_session):
+    from app.models import ChannelTemplateVersion, ContentUnit
+
+    project, unit, path, headers = _master_unit(client)
+    db_session.add(ChannelTemplateVersion(channel="form-change", version=1, name="两种形态", status="published", profile_json={"content_forms": {"single": {"artifact_kind": "text"}, "thread": {"artifact_kind": "text"}}}))
+    db_session.get(ContentUnit, unit).channel_id = "form-change"
+    db_session.commit()
+    first = client.post(path, json={"idempotency_key": "single", "content_form": "single", "payload": {"markdown": "正文"}}, headers=headers).json()
+    body = {"expected_revision": 1, "expected_context_hash": first["context_hash"], "idempotency_key": "thread", "content_form": "thread", "payload": first["payload"]}
+    response = client.post(path, json=body, headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()["content_form"] == "thread"
+    client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={"expected_revision": 0, "objective": "并发上下文变化"}, headers=headers)
+    second = response.json()
+    response = client.post(path, json={**body, "expected_revision": 2, "expected_context_hash": second["context_hash"], "idempotency_key": "back", "content_form": "single"}, headers=headers)
+    assert response.status_code == 409
 
 
 @pytest.mark.parametrize("channel,content_form", [(None, "article"), ("unknown-channel", None), ("wechat", "unknown-form")])

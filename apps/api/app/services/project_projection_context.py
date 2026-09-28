@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, aliased, joinedload, load_only
 
 from ..models import (
     ContentAsset,
+    ContentMasterRevision,
     ContentPersona,
     ContentUnit,
     CreativeBriefRevision,
@@ -94,6 +95,7 @@ class ProjectProjectionContext:
         self.personas = {}
         self.snapshots = {}
         self.runs = {}
+        self.masters = {}
         self.step_statuses = defaultdict(set)
         self.candidates = {}
         self.targets = {}
@@ -117,6 +119,8 @@ class ProjectProjectionContext:
         if not active:
             return
         unit_ids = [unit.id for unit in active]
+        latest_masters = select(func.max(ContentMasterRevision.id)).where(ContentMasterRevision.content_unit_id.in_(unit_ids)).group_by(ContentMasterRevision.content_unit_id)
+        self.masters = {row.content_unit_id: row for row in db.scalars(select(ContentMasterRevision).where(ContentMasterRevision.id.in_(latest_masters))).all()}
         persona_ids = {unit.persona_id for unit in active}
         self.personas = self._rows(db, ContentPersona, persona_ids)
         self.snapshots = self._rows(db, IdentitySnapshot, {unit.identity_snapshot_id for unit in active})

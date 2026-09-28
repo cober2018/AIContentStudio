@@ -287,6 +287,23 @@ def test_latest_failed_check_cannot_use_old_frozen_pass(client, db_session, tmp_
     assert db_session.query(DeliveryAttempt).count() == 0
 
 
+def test_stale_context_checks_cannot_poison_already_authorized_history(client, db_session, tmp_path):
+    path, base, master, candidate, _ = _candidate(client, db_session, tmp_path)
+    assert _approve(client, base, candidate).status_code == 200
+    target = _authorize(client, base).json()
+    project = path.split("/")[4]
+    client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={"expected_revision": 1, "objective": "新上下文"}, headers=HEADERS)
+    response = client.post(f"{path}/{master['id']}/checks", headers=HEADERS)
+    assert response.status_code == 409
+    old = db_session.query(ContentMasterCheckRun).filter_by(master_revision_id=master["id"], check_kind="rights").one()
+    db_session.add(ContentMasterCheckRun(master_revision_id=master["id"], check_kind=old.check_kind, profile_key=old.profile_key, profile_version=old.profile_version, input_hash="a" * 64, status="stale", report_json={"reasons": ["different context"]}))
+    db_session.commit()
+    assert client.get(f"/api/v1/delivery-targets/{target['id']}/package.zip", headers=HEADERS).status_code == 200
+    db_session.add(ContentMasterCheckRun(master_revision_id=master["id"], check_kind=old.check_kind, profile_key=old.profile_key, profile_version=old.profile_version, input_hash=old.input_hash, status="blocker", report_json={"reasons": ["same input, actual new blocker"]}))
+    db_session.commit()
+    assert client.get(f"/api/v1/delivery-targets/{target['id']}/package.zip", headers=HEADERS).status_code == 409
+
+
 def test_raw_asset_authorization_cannot_bypass_owner_or_current_master(client, db_session, tmp_path):
     path, base, _, candidate, _ = _candidate(client, db_session, tmp_path)
     assert _approve(client, base, candidate).status_code == 200

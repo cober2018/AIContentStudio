@@ -34,7 +34,14 @@ from ..models import (
 )
 from .content_harness.channel_registry import ChannelRegistryError, resolve_content_form
 from .materials import read_bytes_checked
-from .production_modalities import adapter_for, descriptor, render_input_hash, validate_json_bounds, validate_payload
+from .production_modalities import (
+    adapter_for,
+    descriptor,
+    render_input_hash,
+    validate_json_bounds,
+    validate_master_references,
+    validate_payload,
+)
 from .project_brief import current_brief
 from .project_events import record_project_event
 from .project_evidence import current_boundary
@@ -127,7 +134,7 @@ def get_readiness(db: Session, project_id: int, unit_id: int, master_id: int, us
     latest = db.scalar(select(ContentMasterRevision.id).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     project = db.get(ContentProject, project_id)
     unit = db.get(ContentUnit, unit_id)
-    return {"master_revision_id": row.id, "payload_schema": adapter.payload_schema, "adapter_version": adapter.version, "render_input_hash": render_input_hash(db, row), "preview": adapter.build_preview(row), "render": adapter.build_render_snapshot(db, row), "adapter_availability": available, "context": projection["readiness"], "checks": checks, "candidate_freeze_available": project.status != "archived" and unit.status != "archived" and latest == row.id and projection["readiness"]["state"] == "current" and available["available"] and all(check["status"] == "pass" and check["is_current"] for check in checks)}
+    return {"master_revision_id": row.id, "payload_schema": adapter.payload_schema, "adapter_version": adapter.version, "render_input_hash": render_input_hash(db, row), "preview": adapter.build_preview(row), "render": adapter.build_render_snapshot(db, row), "adapter_availability": available, "context": projection["readiness"], "checks": checks, "candidate_freeze_available": project.status != "archived" and unit.status != "archived" and latest == row.id and projection["readiness"]["state"] == "current" and available["available"] and all(check["status"] in {"pass", "warning"} and check["is_current"] for check in checks)}
 
 
 def frozen_context(db: Session, row: ContentMasterRevision) -> dict:
@@ -213,16 +220,42 @@ def _rights_check(db: Session, inputs: dict) -> tuple[str, dict]:
 def current_checks(db: Session, project_id: int, unit_id: int, master_id: int, user: User) -> list[dict]:
     get_revision(db, project_id, unit_id, master_id, user)
     row = db.get(ContentMasterRevision, master_id)
+    return projected_checks(db, row)
+
+
+def projected_checks(db: Session, row: ContentMasterRevision) -> list[dict]:
+    """Internal read projection; callers authorize the enclosing project/unit."""
     input_hash = check_input_hash(db, row)
     adapter = adapter_for(row.modality)
     latest = {}
     for kind in adapter.required_check_kinds:
-        latest[kind] = db.scalar(select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == master_id, ContentMasterCheckRun.check_kind == kind).order_by(ContentMasterCheckRun.id.desc()).limit(1))
+        latest[kind] = db.scalar(select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == row.id, ContentMasterCheckRun.check_kind == kind).order_by(ContentMasterCheckRun.id.desc()).limit(1))
     result = []
     for kind, check in latest.items():
         is_current = check is not None and check.input_hash == input_hash and check.profile_key == adapter.payload_schema and check.profile_version == adapter.version
         result.append({"id": check.id if check else None, "check_kind": kind, "input_hash": check.input_hash if check else None, "is_current": is_current, "stored_status": check.status if check else None, "status": check.status if is_current else "stale" if check else "incomplete", "report": check.report_json if check else {"reason": "check_missing"}})
     return result
+
+
+def master_risks(db: Session, row: ContentMasterRevision) -> list[dict]:
+    projection = _serialize(db, row)
+    checks = projected_checks(db, row)
+    adapter = adapter_for(row.modality)
+    risks = []
+    context = projection["readiness"]
+    if context["state"] != "current":
+        risks.append({"code": "master_stale" if context["state"] == "stale" else "master_incomplete", "reasons": context["reasons"]})
+    if any(item["status"] == "blocker" for item in checks):
+        risks.append({"code": "master_check_blocked", "reasons": [item["check_kind"] for item in checks if item["status"] == "blocker"]})
+    elif any(item["status"] not in {"pass", "warning"} for item in checks):
+        risks.append({"code": "master_incomplete", "reasons": [f"{item['check_kind']}:{item['status']}" for item in checks if item["status"] not in {"pass", "warning"}]})
+    render = adapter.build_render_snapshot(db, row)
+    if render["status"] != "ready":
+        risks.append({"code": "master_render_unready", "reasons": render["reasons"]})
+    availability = adapter.freeze_availability(db, row)
+    if not availability["available"] and render["status"] == "ready":
+        risks.append({"code": "master_incomplete", "reasons": availability["reasons"]})
+    return [{**risk, "master_revision_id": row.id, "unit_id": row.content_unit_id} for risk in risks]
 
 
 def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user: User) -> list[dict]:
@@ -231,6 +264,8 @@ def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user:
     if row is None or row.project_id != project_id or row.content_unit_id != unit.id:
         raise HTTPException(404, "Master版本不存在")
     inputs = _serialize(db, row)
+    if inputs["readiness"]["state"] == "stale":
+        raise HTTPException(409, {"code": "stale_master", "reasons": inputs["readiness"]["reasons"]})
     input_hash = check_input_hash(db, row)
     adapter = adapter_for(row.modality)
     payload_errors = validate_payload(row.modality, row.payload_json)
@@ -298,6 +333,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     desc = descriptor(modality)
     errors = validate_payload(modality, payload["payload"])
     errors.extend(validate_json_bounds(payload))
+    errors.extend(validate_master_references(payload["payload"], payload.get("asset_refs", []), payload.get("evidence_refs", [])))
     if errors:
         raise HTTPException(422, {"code": "invalid_master_payload", "reasons": errors})
     refs_fingerprint = {"assets": payload.get("asset_refs", []), "evidence": payload.get("evidence_refs", [])}
@@ -329,10 +365,11 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     elif content_form is not None:
         raise HTTPException(422, {"code": "channel_required_for_content_form"})
     context = _context(db, project, unit, content_form=content_form)
-    if payload.get("expected_context_hash") is not None and payload["expected_context_hash"] != _hash(context):
+    latest = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+    expected_context = _context(db, project, unit, content_form=latest.content_form) if latest else context
+    if payload.get("expected_context_hash") is not None and payload["expected_context_hash"] != _hash(expected_context):
         db.rollback()
         raise HTTPException(409, {"code": "master_context_conflict"})
-    latest = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     head = latest.revision_no if latest else 0
     expected = payload.get("expected_revision", 0)
     if expected != head:

@@ -1,13 +1,13 @@
 """Project-first Candidate and Review APIs."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user, require_editor, require_editor_or_reviewer
-from ..models import ContentAsset, ContentProject, User
+from ..models import ContentAsset, ContentProject, MaterialRevision, User
 from ..services import delivery as delivery_service
 from ..services import project_review as review_service
 from ..services import project_review_projection as projection
@@ -53,6 +53,29 @@ def review_candidate_diff(project_id: int, unit_id: int, candidate_id: int, db: 
     return projection.candidate_diff(previous, current)
 
 
+@router.get("/review-center/projects/{project_id}/units/{unit_id}/candidates/{candidate_id}/renders/{revision_id}")
+def review_candidate_render(project_id: int, unit_id: int, candidate_id: int, revision_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services.candidates import candidate_hash
+    from ..services.materials import read_bytes_checked, sniff_mime
+
+    asset = review_service._candidate(db, project_id, unit_id, candidate_id, user, mutate=False)
+    manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") != 4:
+        raise HTTPException(404, "此候选没有Master渲染")
+    output = next((row for row in (manifest.get("render") or {}).get("outputs", []) if row.get("material_revision_id") == revision_id), None)
+    if output is None:
+        raise HTTPException(404, "候选未引用此渲染版本")
+    if candidate_hash(manifest) != asset.candidate_hash:
+        raise HTTPException(409, "候选完整性检查失败")
+    revision = db.get(MaterialRevision, revision_id)
+    if revision is None or revision.content_hash != output.get("content_hash") or revision.mime_type != output.get("mime_type"):
+        raise HTTPException(409, "冻结渲染版本不一致")
+    content = read_bytes_checked(db, revision, require_public=True)
+    if revision.mime_type not in {"image/png", "image/jpeg", "image/webp", "image/gif", "video/mp4"} or sniff_mime(content, None) != revision.mime_type:
+        raise HTTPException(409, "渲染媒体类型未验证")
+    return Response(content, media_type=revision.mime_type, headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+
+
 class FreezeIn(BaseModel):
     project_output_id: int | None = None
     content_master_revision_id: int | None = None
@@ -62,6 +85,7 @@ class FreezeIn(BaseModel):
 class CandidateDecisionIn(BaseModel):
     candidate_hash: str = Field(min_length=64, max_length=64)
     comment: str | None = None
+    warning_dispositions: dict[str, str] | None = None
 
 
 def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> dict:
@@ -77,6 +101,7 @@ def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> d
     }
     if include_manifest:
         data["manifest"] = asset.candidate_manifest_json
+        data["preview"] = projection.candidate_preview(asset)
     return data
 
 
@@ -106,7 +131,7 @@ def get_candidate(project_id: int, unit_id: int, candidate_id: int, db: Session 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/candidates/{candidate_id}/approve")
 def approve(project_id: int, unit_id: int, candidate_id: int, payload: CandidateDecisionIn, db: Session = Depends(get_db), user: User = Depends(require_editor_or_reviewer)):
-    return _candidate_json(review_service.decide_candidate(db, project_id, unit_id, candidate_id, payload.candidate_hash, "approved", payload.comment, user), include_manifest=True)
+    return _candidate_json(review_service.decide_candidate(db, project_id, unit_id, candidate_id, payload.candidate_hash, "approved", payload.comment, user, warning_dispositions=payload.warning_dispositions), include_manifest=True)
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/candidates/{candidate_id}/request-changes")

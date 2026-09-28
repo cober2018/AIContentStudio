@@ -1,0 +1,14 @@
+import { Button, EmptyState, StatusBadge, inputClass } from "../components/ui";
+import { KINDS } from "./useProductionWorkflow";
+import type { WorkflowNode } from "./project/projectTypes";
+import type { useProductionWorkflow } from "./useProductionWorkflow";
+export function WorkflowMiniCanvas({ workflow }: { workflow: ReturnType<typeof useProductionWorkflow> }) {
+  const { readOnly, design: workflowDesign, selected, setSelected, run, dragging, setDragging, newKind, setNewKind, canvasDefinition, addNode, moveNode, moveBy } = workflow;
+  const design = workflowDesign && !readOnly;
+  if (!workflow.project || !workflow.unit) return null;
+  return <><section className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">单条流程小画布</h2><span className="text-xs text-slate-500">{!design && run ? `历史 Run #${run.id} · ${run.definition_checksum?.slice(0, 12) || "未知定义"}` : "项目工作流草稿"} · 顺序与依赖独立 · {canvasDefinition.nodes.length} 节点</span></div>
+      {design && <div className="mb-4 flex flex-wrap gap-2"><select aria-label="新增节点类型" className={inputClass} value={newKind} onChange={(event) => setNewKind(event.target.value as WorkflowNode["kind"])}>{KINDS.map((kind) => <option key={kind}>{kind}</option>)}</select><Button onClick={addNode}>新增节点</Button></div>}
+      {canvasDefinition.visual_order.length ? <div className="space-y-3">{canvasDefinition.visual_order.map((id, index) => { const node = canvasDefinition.nodes.find((item) => item.id === id); if (!node) return null; const step = !design ? run?.steps.find((item) => item.node_id === id) : null; return <article key={id} draggable={design} onDragStart={() => setDragging(id)} onDragOver={(event) => { if (design) event.preventDefault(); }} onDrop={() => { if (dragging) moveNode(dragging, id); setDragging(null); }} className={`rounded-xl border p-4 ${selected === id ? "border-indigo-400 bg-indigo-50" : "border-slate-200"}`}><div className="flex flex-wrap items-center justify-between gap-3"><button className="text-left" onClick={() => setSelected(id)}><span className="text-xs text-slate-500">{index + 1} · {node.kind}</span><p className="font-medium">{node.label || id}</p><p className="text-xs text-slate-500">{node.plugin}</p></button><div className="flex items-center gap-2">{step ? <StatusBadge status={step.status} /> : <span className="text-xs text-slate-400">未运行</span>}{design && <><button title="上移" aria-label={`${id} 上移`} onClick={() => moveBy(id, -1)} className="px-2 text-sm">↑</button><button title="下移" aria-label={`${id} 下移`} onClick={() => moveBy(id, 1)} className="px-2 text-sm">↓</button></>}</div></div></article>; })}</div> : <EmptyState title="还没有流程节点" hint="进入设计模式，添加 Data、AI、Tool、Rule、Human 或 System 节点。" />}
+      <p className="mt-4 text-xs text-slate-500">依赖边：{canvasDefinition.edges.map((edge) => `${edge.from} → ${edge.to}`).join("；") || "无"}。拖拽只调整视觉顺序，不修改依赖。</p>
+    </section></>;
+}

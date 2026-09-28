@@ -1,5 +1,31 @@
 # 当前进度
 
+### FE-F6A 最终验收完成（214/214，仅本地main收尾）
+
+- 用户本轮明确限定：只完成F6A收尾；F6B及以后禁止启动，必须先出具体方案再确认。canonical同步/归档仍按21.9另待授权；不push/deploy/生产迁移。
+- 最终新临时SQLite全量实际输出753 passed / 6既有warnings / 32.06s，包含206项F6A；实际PG约束和撤权行锁2项执行通过，未skip。相关Ruff通过；SQLite及真实隔离PostgreSQL16 fresh head→f5c→head往返通过。
+- 最终TypeScript/Vite及FE-P1通过：projects224.68kB raw/72.86gzip，Production254.44/82.27；既有Assets/Settings/Learning预算保持，轻路由无TipTap/XYFlow。最终OpenSpec全量strict24/24与diff检查通过。
+- 完整浏览器20.1–20.14实跑通过：三形态保存/刷新、409保留编辑、Brief stale、checks/真实render/v4 freeze、Preview/Changes/Checks、Approval/授权/下载ZIP、真实Draft seed、旧v3、节点rerun/from-here/Human和dirty隔离；额外归档只读回归先RED后GREEN。
+- 最终浏览器证据：/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6a-browser-evidence-KFiSr7/report.json；13 gates、consoleErrors=[]。AI provider显式mock，执行/Attempt是实际持久化；媒体是真实编码文件与明确manual attestation，不冒充真实AI/自动renderer/远端发布。
+- 三项只读独立review均最终APPROVE：SPEC（旧MODIFIED要求/场景保留）、backend（live locks/embedded refs/bounds/latest warning）、frontend-review-package（form CAS/v3正文/stale历史/归档控件）。所有发现已修正并回归，主Agent独自写代码。
+- 任务逐项验收映射、当前目录结构和长期不变量记录在docs/FE_F6A_FINAL_ACCEPTANCE.md；原始包和canonical未改。本轮只提交F6A白名单，最终hash以git log -1为准，规格状态ARCHIVE_READY；不得把本地验收说成生产验收。
+
+### FE-F6A FINAL-CLOSE 实施增量（main@703d6c5）
+
+- 完整后端初轮实跑745 passed/6既有警告（含实际PG测试），独立前端发现3项并先复现5失败后修复：合法form变更保留上游CAS、旧v3各modality正文schema分派、stale检查禁止执行且历史包按准确冻结input选latest。三形态真实浏览器save/reload/409/stale/check/freeze/Review/Approval/ZIP已通过；真实Draft seed/legacy v3/debugger正在补齐。最终全量仍待修复后重跑。
+- 最新前端TypeScript/Vite与扩展Production预算检查通过：projects224.68kB/72.86gzip，Production254.46kB/82.28gzip；三最小壳独立lazy且无TipTap/XYFlow。归档单元/项目的Workflow设计、保存、执行也禁用，Master独立只读。
+- 新增 verified Master Workflow Output、两会话 Freeze 幂等/历史保留、Review 三形态冻结预览与结构化 diff、Master Versions/Overview风险（Unknown优先）。相关定向37项及输出9项通过。
+- 隔离本地 PostgreSQL16容器 `aicontent-f6a-postgres-acceptance`（127.0.0.1:15462/f6a_acceptance）实际 Alembic up/down/up 通过；真实唯一/FK/非破坏downgrade和两会话撤权行锁2项通过。不是生产数据库。
+- 独立SPEC review APPROVE。独立后端首轮发现撤权窗口/嵌入引用/标题存储bounds/warning处置四项：已添加行锁、精确引用与路径校验、500字符标题上限、准确check-id+input-hash的审批warning处置。针对warning+原v4交付45项通过，Master/adapter/seed102项通过；还需独立复核。
+- ProductionDesigner已拆分为controller + Workspace/Header/Canvas/Inspector/AssetDrawer/MasterPanel及三lazy最小壳；Review冻结渲染经项目权限/权利/字节校验后预览。TypeScript/Vite和既有route预算初跑通过；最终全量/浏览器/独立frontend仍未完成。
+- 当前不勾214/214、不归档/同步、不push/deploy/生产迁移。临时PG仍运行供最终门禁；完成后仅停止本任务容器。
+
+## 2026-09-28：FE-F6A FINAL-CLOSE
+
+- 实核本地main703d6c5、tree clean，OpenSpec114/214；用户授权完成剩余100项并实际浏览器/独立评审验收。不进入F6B，不push/deploy/生产迁移，归档仍须另行授权。
+- Skills：using-superpowers、OpenSpec apply、receiving-code-review、writing-plans/executing-plans、TDD、verification-before-completion；复用已批准设计，无新proposal或专业编辑器。新增独立评审工具现可用，仅用于只读评审，主Agent仍独自实施代码；graph MCP未提供，限定相关文件回退读取。
+- 先完成project_outputs、Freeze历史/竞态、检查和迁移残余；再Review/Versions/Overview，然后Production最小壳和隔离浏览器。新门禁未执行前不引用上轮712通过作为本轮结果。
+
 ## 2026-09-28：FE-F6A v4 Approval/Authorization/Package窄闭环
 
 - 基线main6ebc9e5、92/214，跟踪文件干净。按用户授权继续已有change，前端不动；采用OpenSpec apply、评审反馈、writing-plans/executing-plans、TDD和verification-before-completion。

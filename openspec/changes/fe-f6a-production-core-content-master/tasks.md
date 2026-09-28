@@ -1,3 +1,5 @@
+<!-- Final acceptance: docs/FE_F6A_FINAL_ACCEPTANCE.md. All 214 implementation tasks verified. User authorized continuing directly on local main; no additional merge, push, deploy or production migration. Task 21.9 is a satisfied guardrail: canonical sync/archive remain unexecuted pending separate authorization. F6B+ not started. -->
+
 ## 0. Prerequisite reconciliation and baseline
 
 - [x] 0.1 Verify FE-F5C is archived and `system-assets-knowledge` + `product-settings` are canonical.
@@ -5,7 +7,7 @@
 - [x] 0.3 Create dedicated `codex/fe-f6a-production-core-content-master` from the reconciled baseline.
 - [x] 0.4 Preserve all user-provided untracked source/spec packages unchanged and exclude them from commits.
 - [x] 0.5 Record backend full-suite baseline, frontend build/bundle budgets, OpenSpec all-strict, Ruff and diff-check.
-- [ ] 0.6 No push, merge, deploy, production migration or remote publisher changes.
+- [x] 0.6 No push, merge, deploy, production migration or remote publisher changes.
 
 ## 1. Additive production-core persistence
 
@@ -17,7 +19,7 @@
 - [x] 1.6 Make ContentAsset.final_body nullable only if actual current schema requires it for non-text v4; preserve v1-v3 behavior.
 - [x] 1.7 Add ArtifactKind.video without changing historical artifact_kind values.
 - [x] 1.8 Create additive reversible migration after actual post-F5C head; no Draft/MotherRevision/Candidate backfill.
-- [ ] 1.9 Validate isolated SQLite upgrade/rollback/upgrade and PostgreSQL-compatible DDL/constraints.
+- [x] 1.9 Validate isolated SQLite upgrade/rollback/upgrade and PostgreSQL-compatible DDL/constraints.
 
 ## 2. Master revision service and authorization
 
@@ -57,25 +59,25 @@
 - [x] 5.3 Reject foreign/raw material IDs without disclosure.
 - [x] 5.4 Persist immutable role/slot/order/placement and rights snapshot.
 - [x] 5.5 Do not copy bytes.
-- [ ] 5.6 Candidate/live gates recheck current revision status/public-use rights instead of trusting only the saved snapshot.
+- [x] 5.6 Candidate/live gates recheck current revision status/public-use rights instead of trusting only the saved snapshot.
 
 ## 6. Master evidence refs
 
 - [x] 6.1 Require current Master Fact Boundary before accepting evidence refs.
 - [x] 6.2 Validate FactPackItem belongs to exact boundary FactPack.
-- [ ] 6.3 Require frozen item snapshot checksum and supported evidence kind for Candidate-readiness path.
+- [x] 6.3 Require frozen item snapshot checksum and supported evidence kind for Candidate-readiness path.
 - [x] 6.4 Persist immutable role/locator/order/checksum.
 - [x] 6.5 Evidence refs never mutate FactPack or Fact Boundary.
-- [ ] 6.6 Live revocation later blocks freeze/approval/package without rewriting history.
+- [x] 6.6 Live revocation later blocks freeze/approval/package without rewriting history.
 
 ## 7. Master checks
 
-- [ ] 7.1 Implement Master check runner/service with canonical input hash.
+- [x] 7.1 Implement Master check runner/service with canonical input hash.
 - [x] 7.2 Add common master_schema check.
 - [x] 7.3 Add evidence check.
 - [x] 7.4 Add rights check.
 - [x] 7.5 Add render-readiness check through modality adapter.
-- [ ] 7.6 Preserve warning/blocker/incomplete/stale semantics.
+- [x] 7.6 Preserve warning/blocker/incomplete/stale semantics.
 - [x] 7.7 Add list/current-check read API.
 - [x] 7.8 Do not silently treat missing/incomplete check as pass.
 
@@ -92,10 +94,10 @@
 
 ## 9. ProjectWorkflowOutput extension
 
-- [ ] 9.1 Add output kind serialization/support for `content_master_revision`.
-- [ ] 9.2 Associate it only when an actual future node emits a persisted same-unit Master ID.
-- [ ] 9.3 Do not change existing Draft/Material/Candidate output semantics.
-- [ ] 9.4 Raw Master ID from unrelated unit/run is rejected.
+- [x] 9.1 Add output kind serialization/support for `content_master_revision`.
+- [x] 9.2 Associate it only when an actual future node emits a persisted same-unit Master ID.
+- [x] 9.3 Do not change existing Draft/Material/Candidate output semantics.
+- [x] 9.4 Raw Master ID from unrelated unit/run is rejected.
 
 ## 10. Candidate manifest v4
 
@@ -125,8 +127,8 @@
 - [x] 11.6 Require all mandatory Master checks current.
 - [x] 11.7 Require live asset/evidence rights.
 - [x] 11.8 Require real modality render snapshot.
-- [ ] 11.9 Repeated identical v4 freeze returns existing Candidate/event exactly once.
-- [ ] 11.10 Changed Master revision produces new Candidate and preserves old one.
+- [x] 11.9 Repeated identical v4 freeze returns existing Candidate/event exactly once.
+- [x] 11.10 Changed Master revision produces new Candidate and preserves old one.
 
 ## 12. ContentAsset compatibility
 
@@ -150,13 +152,13 @@
 ## 14. Review and diff v4
 
 - [x] 14.1 Candidate serialization exposes master_revision_id/schema version.
-- [ ] 14.2 Text preview renders bounded markdown/document summary.
-- [ ] 14.3 Graphic preview exposes canvas summary + exact render asset.
-- [ ] 14.4 Video preview exposes script/shot/timeline summary + exact render asset.
-- [ ] 14.5 Diff compares payload/context/assets/evidence/identity/workflow/check/render.
-- [ ] 14.6 Text similarity only for text.
-- [ ] 14.7 Graphic/Video do not emit fake text similarity.
-- [ ] 14.8 v1/v2/v3 Review remains readable.
+- [x] 14.2 Text preview renders bounded markdown/document summary.
+- [x] 14.3 Graphic preview exposes canvas summary + exact render asset.
+- [x] 14.4 Video preview exposes script/shot/timeline summary + exact render asset.
+- [x] 14.5 Diff compares payload/context/assets/evidence/identity/workflow/check/render.
+- [x] 14.6 Text similarity only for text.
+- [x] 14.7 Graphic/Video do not emit fake text similarity.
+- [x] 14.8 v1/v2/v3 Review remains readable.
 
 ## 15. V4 local packaging
 
@@ -171,112 +173,112 @@
 
 ## 16. Project Versions / Overview
 
-- [ ] 16.1 Add ContentMasterRevision to Versions aggregation.
-- [ ] 16.2 Include exact payload/context hashes and Identity/Brief/Boundary/Run refs.
-- [ ] 16.3 Do not synthesize Master rows for legacy units.
-- [ ] 16.4 Overview exposes Master incomplete/stale/check-blocked/render-unready risks.
-- [ ] 16.5 Existing review/delivery Unknown precedence remains higher where applicable.
-- [ ] 16.6 Next-action links back to the correct Production unit.
+- [x] 16.1 Add ContentMasterRevision to Versions aggregation.
+- [x] 16.2 Include exact payload/context hashes and Identity/Brief/Boundary/Run refs.
+- [x] 16.3 Do not synthesize Master rows for legacy units.
+- [x] 16.4 Overview exposes Master incomplete/stale/check-blocked/render-unready risks.
+- [x] 16.5 Existing review/delivery Unknown precedence remains higher where applicable.
+- [x] 16.6 Next-action links back to the correct Production unit.
 
 ## 17. Production Workspace component split
 
-- [ ] 17.1 Extract ProductionWorkspace orchestration from monolithic ProductionDesigner.
-- [ ] 17.2 Extract ProductionContextHeader.
-- [ ] 17.3 Extract WorkflowMiniCanvas.
-- [ ] 17.4 Extract NodeInspector.
-- [ ] 17.5 Extract ProductionAssetDrawer.
-- [ ] 17.6 Add ContentMasterPanel for current revision/readiness/history/save/check controls.
-- [ ] 17.7 Add ModalityWorkspace adapter boundary.
-- [ ] 17.8 Add TextStudioShell minimal Master summary/development editor.
-- [ ] 17.9 Add GraphicStudioShell minimal Master summary/development editor.
-- [ ] 17.10 Add VideoStudioShell minimal Master summary/development editor.
-- [ ] 17.11 Workflow design save and Master content save remain separate dirty states/actions.
-- [ ] 17.12 Preserve existing run/debug/history/human-node behavior.
+- [x] 17.1 Extract ProductionWorkspace orchestration from monolithic ProductionDesigner.
+- [x] 17.2 Extract ProductionContextHeader.
+- [x] 17.3 Extract WorkflowMiniCanvas.
+- [x] 17.4 Extract NodeInspector.
+- [x] 17.5 Extract ProductionAssetDrawer.
+- [x] 17.6 Add ContentMasterPanel for current revision/readiness/history/save/check controls.
+- [x] 17.7 Add ModalityWorkspace adapter boundary.
+- [x] 17.8 Add TextStudioShell minimal Master summary/development editor.
+- [x] 17.9 Add GraphicStudioShell minimal Master summary/development editor.
+- [x] 17.10 Add VideoStudioShell minimal Master summary/development editor.
+- [x] 17.11 Workflow design save and Master content save remain separate dirty states/actions.
+- [x] 17.12 Preserve existing run/debug/history/human-node behavior.
 
 ## 18. FE-P1 performance
 
-- [ ] 18.1 Production route stays lazy from App shell.
-- [ ] 18.2 Do not import legacy Workspace TipTap into common Production core.
-- [ ] 18.3 Do not import global XYFlow Workflows page.
-- [ ] 18.4 Modality-specific future heavy editors use lazy boundaries where practical.
-- [ ] 18.5 Existing `/projects`, `/assets`, `/settings`, `/learning` budgets remain green.
-- [ ] 18.6 Record Production initial chunk baseline after refactor.
+- [x] 18.1 Production route stays lazy from App shell.
+- [x] 18.2 Do not import legacy Workspace TipTap into common Production core.
+- [x] 18.3 Do not import global XYFlow Workflows page.
+- [x] 18.4 Modality-specific future heavy editors use lazy boundaries where practical.
+- [x] 18.5 Existing `/projects`, `/assets`, `/settings`, `/learning` budgets remain green.
+- [x] 18.6 Record Production initial chunk baseline after refactor.
 
 ## 19. Targeted regression tests
 
-- [ ] 19.1 Master authorization / cross-owner denial
+- [x] 19.1 Master authorization / cross-owner denial
 - [x] 19.2 append-only expected_revision conflict
 - [x] 19.3 idempotent save
-- [ ] 19.4 parent same-unit constraint
-- [ ] 19.5 exact IdentitySnapshot pin
-- [ ] 19.6 exact Brief/Boundary pin
-- [ ] 19.7 incomplete context allowed but not freeze-ready
-- [ ] 19.8 context stale after upstream changes
+- [x] 19.4 parent same-unit constraint
+- [x] 19.5 exact IdentitySnapshot pin
+- [x] 19.6 exact Brief/Boundary pin
+- [x] 19.7 incomplete context allowed but not freeze-ready
+- [x] 19.8 context stale after upstream changes
 - [x] 19.9 project-visible asset requirement
-- [ ] 19.10 no asset byte copy
-- [ ] 19.11 exact boundary evidence requirement
-- [ ] 19.12 check input hash / no carry-forward
-- [ ] 19.13 modality payload validation
-- [ ] 19.14 graphic/video no fake render
-- [ ] 19.15 Draft→Text Master lineage
-- [ ] 19.16 foreign/stale Draft output denial
+- [x] 19.10 no asset byte copy
+- [x] 19.11 exact boundary evidence requirement
+- [x] 19.12 check input hash / no carry-forward
+- [x] 19.13 modality payload validation
+- [x] 19.14 graphic/video no fake render
+- [x] 19.15 Draft→Text Master lineage
+- [x] 19.16 foreign/stale Draft output denial
 - [x] 19.17 v4 ContentAsset no fake Draft/MotherRevision
 - [x] 19.18 ArtifactKind.video
-- [ ] 19.19 manifest v4 hash determinism
-- [ ] 19.20 v4 freeze idempotency
-- [ ] 19.21 stale Master freeze denial
+- [x] 19.19 manifest v4 hash determinism
+- [x] 19.20 v4 freeze idempotency
+- [x] 19.21 stale Master freeze denial
 - [x] 19.22 rights revocation freeze/approval/package denial
-- [ ] 19.23 v3 freeze regression
-- [ ] 19.24 v1/v2/v3 read compatibility
-- [ ] 19.25 modality-aware Review diff
+- [x] 19.23 v3 freeze regression
+- [x] 19.24 v1/v2/v3 read compatibility
+- [x] 19.25 modality-aware Review diff
 - [x] 19.26 v4 text package
 - [x] 19.27 v4 graphic/video render package
 - [x] 19.28 unsupported package closed
-- [ ] 19.29 Versions Master aggregation
-- [ ] 19.30 Overview stale/readiness
-- [ ] 19.31 archive safety
-- [ ] 19.32 F2/F3A/F3B/F4/F5 regressions green
+- [x] 19.29 Versions Master aggregation
+- [x] 19.30 Overview stale/readiness
+- [x] 19.31 archive safety
+- [x] 19.32 F2/F3A/F3B/F4/F5 regressions green
 
 ## 20. Local/browser acceptance
 
-- [ ] 20.1 Create/save Text Master and reload.
-- [ ] 20.2 Create/save Graphic shell Master and reload.
-- [ ] 20.3 Create/save Video shell Master and reload.
-- [ ] 20.4 Demonstrate stale save 409/reload preservation.
-- [ ] 20.5 Advance Brief/Fact Boundary or identity and see old Master stale.
-- [ ] 20.6 Seed Text Master from a real Draft ProjectWorkflowOutput.
-- [ ] 20.7 Run Master checks.
-- [ ] 20.8 Freeze v4 Text Candidate.
-- [ ] 20.9 Freeze Graphic/Video only after binding real final render MaterialRevision.
-- [ ] 20.10 Review Preview/Changes/Checks for v4.
-- [ ] 20.11 Approve and build local package.
-- [ ] 20.12 Open historical v3 Candidate unchanged.
-- [ ] 20.13 Workflow debugger run/rerun/human completion still works.
-- [ ] 20.14 Production component split has no navigation/state regression.
+- [x] 20.1 Create/save Text Master and reload.
+- [x] 20.2 Create/save Graphic shell Master and reload.
+- [x] 20.3 Create/save Video shell Master and reload.
+- [x] 20.4 Demonstrate stale save 409/reload preservation.
+- [x] 20.5 Advance Brief/Fact Boundary or identity and see old Master stale.
+- [x] 20.6 Seed Text Master from a real Draft ProjectWorkflowOutput.
+- [x] 20.7 Run Master checks.
+- [x] 20.8 Freeze v4 Text Candidate.
+- [x] 20.9 Freeze Graphic/Video only after binding real final render MaterialRevision.
+- [x] 20.10 Review Preview/Changes/Checks for v4.
+- [x] 20.11 Approve and build local package.
+- [x] 20.12 Open historical v3 Candidate unchanged.
+- [x] 20.13 Workflow debugger run/rerun/human completion still works.
+- [x] 20.14 Production component split has no navigation/state regression.
 
 ## 21. Final gates and handoff
 
-- [ ] 21.1 Run full backend suite and all targeted F6A tests.
-- [ ] 21.2 Run frontend TypeScript/Vite build and FE-P1 bundle checks.
-- [ ] 21.3 Run all canonical/active OpenSpec strict validation.
-- [ ] 21.4 Run relevant Ruff and git diff --check.
-- [ ] 21.5 Run isolated browser acceptance on a migrated temporary DB.
-- [ ] 21.6 Independent SPEC review.
-- [ ] 21.7 Independent backend/production-core code review.
-- [ ] 21.8 Independent frontend/Review/package review.
-- [ ] 21.9 Do not archive or sync canonical specs until explicit authorization.
-- [ ] 21.10 Do not push, merge, deploy or run production migration.
+- [x] 21.1 Run full backend suite and all targeted F6A tests.
+- [x] 21.2 Run frontend TypeScript/Vite build and FE-P1 bundle checks.
+- [x] 21.3 Run all canonical/active OpenSpec strict validation.
+- [x] 21.4 Run relevant Ruff and git diff --check.
+- [x] 21.5 Run isolated browser acceptance on a migrated temporary DB.
+- [x] 21.6 Independent SPEC review.
+- [x] 21.7 Independent backend/production-core code review.
+- [x] 21.8 Independent frontend/Review/package review.
+- [x] 21.9 Do not archive or sync canonical specs until explicit authorization.
+- [x] 21.10 Do not push, merge, deploy or run production migration.
 
 ## 22. Audited implementation boundaries
 
 - [x] 22.1 Confirm calibrated proposal/apply and targeted test authorization; record real connector freshness and f5c000000001 code head before implementation.
-- [ ] 22.2 Prove full post-F5C MODIFIED requirement/scenario retention before archive.
-- [ ] 22.3 Authorized identical idempotency replay before expected_revision, changed fingerprint conflict and atomic head/context CAS/locking.
-- [ ] 22.4 Include Master/Candidate-only unit history; pinned identity and explicit Fork + Archive, no latest hierarchy repinning.
-- [ ] 22.5 Bind verified/manual render to exact inputs with typed MIME/hash/rights and full multi-canvas coverage; unsupported registry combinations unavailable.
-- [ ] 22.6 Latest immutable checks/warning dispositions; reject stale/failed/replaced Draft-output attempts with truthful provenance.
+- [x] 22.2 Prove full post-F5C MODIFIED requirement/scenario retention before archive.
+- [x] 22.3 Authorized identical idempotency replay before expected_revision, changed fingerprint conflict and atomic head/context CAS/locking.
+- [x] 22.4 Include Master/Candidate-only unit history; pinned identity and explicit Fork + Archive, no latest hierarchy repinning.
+- [x] 22.5 Bind verified/manual render to exact inputs with typed MIME/hash/rights and full multi-canvas coverage; unsupported registry combinations unavailable.
+- [x] 22.6 Latest immutable checks/warning dispositions; reject stale/failed/replaced Draft-output attempts with truthful provenance.
 - [x] 22.7 Shared authorization/schema dispatch for legacy APIs; current Master gate at new approval/authorization; unverified v4 publisher denied.
-- [ ] 22.8 Payload bounds/embedded reference validation, pagination and safe projections; no arbitrary file paths/URLs.
-- [ ] 22.9 Downgrade preflight rejects incompatible history without deletion/fake-body backfill; validate real PG storage constraints.
-- [ ] 22.10 After test-code authorization, add regressions for 22.3–22.9 including commit races, render attestation, Master-only delete, latest blocker and legacy denial.
-- [ ] 22.11 Verify ready manually authored Master freezes without Draft/Run; retain strict actual lineage checks for v3 and workflow-backed v4.
+- [x] 22.8 Payload bounds/embedded reference validation, pagination and safe projections; no arbitrary file paths/URLs.
+- [x] 22.9 Downgrade preflight rejects incompatible history without deletion/fake-body backfill; validate real PG storage constraints.
+- [x] 22.10 After test-code authorization, add regressions for 22.3–22.9 including commit races, render attestation, Master-only delete, latest blocker and legacy denial.
+- [x] 22.11 Verify ready manually authored Master freezes without Draft/Run; retain strict actual lineage checks for v3 and workflow-backed v4.

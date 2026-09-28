@@ -114,3 +114,56 @@ def test_changed_evidence_snapshot_cannot_be_cleared_by_rerunning_checks(client,
     checks = client.post(f"{path}/{master['id']}/checks", headers=HEADERS).json()["items"]
     assert next(check for check in checks if check["check_kind"] == "evidence")["status"] == "blocker"
     assert _freeze(client, path, master).status_code == 409
+
+
+def test_new_master_freeze_preserves_prior_candidate(client, db_session):
+    from copy import deepcopy
+
+    path, first = _ready(client, db_session)
+    frozen = _freeze(client, path, first).json()
+    snapshot = deepcopy(frozen["manifest"])
+    second = client.post(path, json={"idempotency_key": "new-master", "expected_revision": 1, "payload": {"markdown": "下一版"}}, headers=HEADERS).json()
+    client.post(f"{path}/{second['id']}/checks", headers=HEADERS)
+    next_candidate = _freeze(client, path, second).json()
+    assert next_candidate["id"] != frozen["id"]
+    assert db_session.get(ContentAsset, frozen["id"]).candidate_manifest_json == snapshot
+    assert db_session.get(ContentAsset, frozen["id"]).candidate_hash == frozen["candidate_hash"]
+    assert _freeze(client, path, first).status_code == 409
+
+
+def test_two_sessions_freeze_identical_master_once(client, db_session, tmp_path):
+    import sqlite3
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    from sqlalchemy import create_engine, text
+    from sqlalchemy.orm import Session
+
+    from app.models import User
+    from app.services.project_review import freeze_master_candidate
+
+    path, master = _ready(client, db_session)
+    db_session.commit()
+    database = tmp_path / "freeze-race.db"
+    raw = db_session.get_bind().raw_connection()
+    with sqlite3.connect(database) as destination:
+        raw.driver_connection.backup(destination)
+    raw.close()
+    engine = create_engine(f"sqlite:///{database}", connect_args={"timeout": 5})
+    barrier = Barrier(2)
+
+    def freeze(_):
+        with Session(engine) as session:
+            user = session.query(User).filter_by(email=HEADERS["X-Studio-User"]).one()
+            barrier.wait(timeout=5)
+            return freeze_master_candidate(session, int(path.split('/')[4]), int(path.split('/')[6]), master['id'], user, expected_payload_hash=master['payload_hash']).id
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            ids = list(pool.map(freeze, [1, 2]))
+        assert ids[0] == ids[1]
+        with Session(engine) as session:
+            assert session.scalar(text("SELECT count(*) FROM content_asset")) == 1
+            assert session.scalar(text("SELECT count(*) FROM project_event WHERE event_type = 'candidate.frozen'")) == 1
+    finally:
+        engine.dispose()
