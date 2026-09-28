@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-28：FE-F5B 同步归档（通过）
+
+- 当前真实基线 main `6452ad2` 已含功能提交 `9e0ce04`；tracked/staged/unstaged 干净，用户原始包/ZIP继续保留并排除提交。
+- 归档前四项产物均 done，任务94/94；用户已授权全部六份主规格同步、归档和本地提交，不推送、部署或运行生产迁移。
+- 本轮只修改规格和文档；457后端测试及前端build为上轮实际门禁，本轮重跑归档后的全量 strict、规格保留检查和 diff-check。
+- 实际skills：using-superpowers、openspec-archive-change、writing-plans、verification-before-completion。
+- OpenSpec内置archive实际同步六份：新增19项要求、更新4项、删除0项；归档路径 `openspec/changes/archive/2026-09-28-fe-f5b-performance-learning-memory/`。逐块比较全部delta与canonical一致，未修改的既有requirement逐字保留；Identity旧占位场景仅明确为pre-F5历史行为。
+- 两份新增Purpose已补正式领域描述，修正归档工具生成的四份EOF空行；归档后全量strict实际21 passed/0 failed，git diff --check通过。仅规格及四份任务文档进入本地提交，原始包/ZIP继续未跟踪，不重跑业务测试，不推送、部署或生产迁移。
+
 ## 2026-09-28：FE-F5B 本地main整合（通过）
 
 - 功能提交 `9e0ce04b8d076935e9b8182ce8154eb6e235e31d`，36份白名单文件；本地main从dd71a14快进到该提交，无业务冲突。

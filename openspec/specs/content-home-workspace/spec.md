@@ -2,7 +2,6 @@
 
 ## Purpose
 Define the daily Home workspace as an owner-scoped read projection of authoritative opportunities, project progress, review and delivery decisions, identity readiness, and project activity. Preserve unknown/error semantics and route loading boundaries without creating duplicate task state or inventing publication schedules.
-
 ## Requirements
 ### Requirement: Home is a projection of authoritative business state
 
@@ -35,6 +34,12 @@ Home SHALL derive “待我处理” from existing typed facts including waiting
 #### Scenario: Decision precedence and deduplication
 - **WHEN** the same entity yields multiple pending facts, including an unresolved unknown delivery result
 - **THEN** Home orders unknown first and shows at most one card per stable code and entity reference without hiding distinct issues
+
+Home MAY additionally surface LearningCandidate validation when a candidate is `ready_for_review`. Learning remains the authoritative source and Home MUST NOT create a duplicate learning task/state. Operational production/review risks retain higher precedence than learning validation.
+
+#### Scenario: Learning validation pending
+- **WHEN** an owned LearningCandidate is ready_for_review
+- **THEN** Home shows a pending decision linking to `/learning` without changing candidate status
 
 ### Requirement: Active project and opportunity summaries
 
