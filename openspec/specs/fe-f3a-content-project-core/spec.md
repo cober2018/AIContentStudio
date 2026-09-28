@@ -187,6 +187,16 @@ The system SHALL expose a project Versions read model aggregated from actual ver
 - **WHEN** a project has a frozen Candidate, its approval, and a DeliveryTarget with attempts or receipts
 - **THEN** Versions returns their real IDs, hashes, status, and unit association without synthesizing a ProjectVersion row
 
+Project Versions SHALL include real ContentMasterRevision rows with unit/modality, revision number, payload/context hashes, exact Identity/Brief/Fact Boundary refs, origin WorkflowRun/output provenance and creation actor/time. It MUST NOT synthesize Masters for legacy Draft-only history.
+
+#### Scenario: Master version history
+- **WHEN** a ContentUnit has multiple ContentMaster revisions
+- **THEN** Versions returns each immutable revision and its exact context/provenance
+
+#### Scenario: Legacy Draft-only unit
+- **WHEN** historical production predates ContentMasterRevision
+- **THEN** Versions keeps existing Draft/Candidate history without fabricating Master rows
+
 ### Requirement: Derived project Overview
 
 The backend SHALL derive ContentProject overview stage, counts, readiness, risks, pending decisions and next action from persisted state using deterministic rules. The frontend MUST NOT duplicate an independent stage engine. Active FE-F3B production units lacking a usable IdentitySnapshot SHALL produce a typed identity-readiness risk; archived legacy units SHALL not block current readiness. Overview SHALL derive pending Content Approval, Delivery Authorization, and reconciliation decisions from project candidate/review/delivery facts. Unresolved unknown delivery MUST NOT be flattened into ready, approved, or delivered.
@@ -218,6 +228,16 @@ The backend SHALL derive ContentProject overview stage, counts, readiness, risks
 #### Scenario: Pending reconciliation
 - **WHEN** an active project Candidate has a DeliveryAttempt with unresolved unknown outcome
 - **THEN** Overview exposes a typed reconciliation decision ahead of generic ready or approved next actions
+
+Project Overview SHALL derive production attention from the current ContentMaster revision when present, including incomplete_context, stale identity/brief/evidence/channel, blocked Master checks and render-unready state. These remain projections, not a mutable duplicate status table.
+
+#### Scenario: Master context stale
+- **WHEN** the current Master references an older Brief or Fact Boundary
+- **THEN** Overview exposes a typed production-stale risk and next action back to Production
+
+#### Scenario: Draft-only compatibility
+- **WHEN** a unit has no ContentMaster revision
+- **THEN** existing FE-F2/F3A/F4 readiness behavior remains valid until the unit adopts the new production core
 
 ### Requirement: Project-core authorization and historical safety
 
