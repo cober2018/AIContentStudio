@@ -14,6 +14,7 @@ interface SecretView {
 interface LLMView {
   provider: string;
   base_url: string;
+  base_url_redacted?: boolean;
   model: string;
   api_key: SecretView;
   mock_inject_unfact_number: boolean;
@@ -23,6 +24,7 @@ interface LLMView {
 interface ModelProfileView {
   provider: string;
   base_url: string;
+  base_url_redacted?: boolean;
   model: string;
   api_key: SecretView;
   enabled: boolean;
@@ -67,6 +69,7 @@ interface ImageView {
   provider: string;
   model: string;
   base_url: string;
+  base_url_redacted?: boolean;
   size: string;
   api_key: SecretView;
   providers_available: string[];
@@ -251,6 +254,7 @@ interface ProfileDraft {
   api_key: string;
   enabled: boolean;
   isNew?: boolean;
+  base_url_redacted?: boolean;
 }
 
 function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: boolean }) {
@@ -268,6 +272,7 @@ function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: b
         name,
         provider: p.provider,
         base_url: p.base_url,
+        base_url_redacted: p.base_url_redacted,
         model: p.model,
         api_key: "",
         enabled: p.enabled,
@@ -300,7 +305,9 @@ function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: b
 
   const save = useMutation({
     mutationFn: () =>
-      api.put<ModelsView>("/settings/models", {
+      {
+      if (profiles.some((profile) => profile.base_url_redacted && !profile.base_url.trim())) throw new Error("部分地址含敏感信息，已隐藏。请逐项编辑并明确重新输入地址后再保存完整配置，避免覆盖已有地址。");
+      return api.put<ModelsView>("/settings/models", {
         profiles: profiles.map((p) => ({
           name: p.name,
           provider: p.provider,
@@ -310,7 +317,8 @@ function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: b
           enabled: p.enabled,
         })),
         routes,
-      }),
+      });
+      },
     onSuccess: () => {
       setEditingName(null);
       setError("");
@@ -321,6 +329,10 @@ function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: b
   });
 
   function testProfile(p: ProfileDraft) {
+    if (p.base_url_redacted && !p.base_url.trim()) {
+      setError("敏感地址已隐藏，请明确重新输入地址后再测试。");
+      return;
+    }
     api
       .post<TestResult>("/settings/llm/test", {
         provider: p.provider,
@@ -366,6 +378,7 @@ function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: b
         desc="可同时登记多个模型（DeepSeek / MiniMax / OpenAI / 任意兼容网关）；API Key 只回显掩码。"
       >
         {!isAdmin && <p className="mb-2 text-xs text-slate-400">需要 admin 角色才能修改。</p>}
+        {profiles.some((profile) => profile.base_url_redacted && !profile.base_url.trim()) && <p role="alert" className="mb-3 text-sm text-amber-800">部分连接地址含凭据，已隐藏。保存完整配置前须明确重新输入所有受影响的地址，不会用空值覆盖旧配置。</p>}
         <div className="space-y-3">
           {profiles.map((p, idx) => {
             const stored = models.profiles[p.name];
@@ -434,7 +447,7 @@ function ModelsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: b
                         </select>
                       </Field>
                     </div>
-                    {p.provider === "openai_compatible" && (
+                    {(p.provider === "openai_compatible" || p.base_url_redacted) && (
                       <div className="grid grid-cols-2 gap-2.5">
                         <Field label="Base URL">
                           <input
@@ -537,7 +550,10 @@ function ImagePanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: bo
   }), [img]);
 
   const save = useMutation({
-    mutationFn: () => api.put<ImageView>("/settings/image", form),
+    mutationFn: () => {
+      if (img.base_url_redacted && !form.base_url.trim()) throw new Error("敏感地址已隐藏，请明确重新输入地址后再保存；旧配置未更改。");
+      return api.put<ImageView>("/settings/image", form);
+    },
     onSuccess: () => {
       setMsg(form.enabled ? "已保存并同步 wewrite 生图配置（cover 节点将真实出图）" : "已保存（生图关闭，cover 节点自动跳过）");
       queryClient.invalidateQueries({ queryKey: ["settings"] });
@@ -566,7 +582,7 @@ function ImagePanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: bo
           <input className={inputClass} value={form.model} disabled={!isAdmin}
             onChange={(e) => setForm({ ...form, model: e.target.value })} />
         </Field>
-        {form.provider !== "minimax" && form.provider !== "gemini" && (
+        {((form.provider !== "minimax" && form.provider !== "gemini") || img.base_url_redacted) && (
           <Field label="Base URL">
             <input className={inputClass} value={form.base_url} disabled={!isAdmin}
               onChange={(e) => setForm({ ...form, base_url: e.target.value })} />
@@ -588,6 +604,7 @@ function ImagePanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: bo
         </label>
       </div>
       {msg && <div className="mt-2 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">{msg}</div>}
+      {img.base_url_redacted && !form.base_url.trim() && <p role="alert" className="mt-2 text-sm text-amber-800">地址含敏感信息，已隐藏；明确重新输入地址后才能保存。</p>}
       <Button className="mt-3" disabled={!isAdmin || save.isPending} onClick={() => save.mutate()}>
         {save.isPending ? "保存中…" : "保存生图配置"}
       </Button>
@@ -625,7 +642,10 @@ function DefaultLLMPanel({ settings, isAdmin }: { settings: SettingsView; isAdmi
   }
 
   const save = useMutation({
-    mutationFn: () => api.put<LLMView>("/settings/llm", form),
+    mutationFn: () => {
+      if (llm.base_url_redacted && !form.base_url.trim()) throw new Error("敏感地址已隐藏，请明确重新输入地址后再保存；旧配置未更改。");
+      return api.put<LLMView>("/settings/llm", form);
+    },
     onSuccess: () => {
       setEditing(false);
       queryClient.invalidateQueries({ queryKey: ["settings"] });
@@ -646,12 +666,15 @@ function DefaultLLMPanel({ settings, isAdmin }: { settings: SettingsView; isAdmi
 
   const test = useMutation({
     mutationFn: () =>
-      api.post<TestResult>("/settings/llm/test", {
+      {
+      if (llm.base_url_redacted && (!editing || !form.base_url.trim())) throw new Error("敏感地址已隐藏，请进入编辑并明确重新输入地址后再测试。");
+      return api.post<TestResult>("/settings/llm/test", {
         provider: form.provider,
         base_url: form.base_url,
         model: form.model,
         api_key: editing && form.api_key ? form.api_key : undefined,
-      }),
+      });
+      },
     onSuccess: (d) => setTestResult(d),
     onError: (e) => setTestResult({ ok: false, provider: form.provider, error: e instanceof Error ? e.message : "测试失败" }),
   });
@@ -664,6 +687,7 @@ function DefaultLLMPanel({ settings, isAdmin }: { settings: SettingsView; isAdmi
         </span>
         <SourceBadge overridden={llm.overridden} />
       </div>
+      {llm.base_url_redacted && <p role="alert" className="mb-3 text-sm text-amber-800">连接地址含敏感信息，已隐藏；保存或测试前须明确重新输入。</p>}
       <div className="divide-y divide-slate-100">
         <Row label="Provider">{llm.provider}</Row>
         <Row label="模型">{llm.provider === "mock" ? "mock-structured-v1（确定性输出）" : llm.model || "未配置"}</Row>
@@ -702,7 +726,7 @@ function DefaultLLMPanel({ settings, isAdmin }: { settings: SettingsView; isAdmi
                 <option value="openai_compatible">openai_compatible</option>
               </select>
             </Field>
-            {form.provider === "openai_compatible" && (
+            {(form.provider === "openai_compatible" || llm.base_url_redacted) && (
               <>
                 <Field label="模型名">
                   <input className={inputClass} value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value.trim() })} />

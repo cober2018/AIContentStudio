@@ -70,6 +70,22 @@
 - 关键设计决策：推荐始终是 suggested；转换只创建普通 Brief v1 与用户明确选择的 Source bindings，不创建 Topic / FactPack / Fact Boundary / IdentitySnapshot / Candidate / DeliveryTarget。Assessment 与 Conversion 保留历史；Home 不建立第二套状态表，近期活动不冒充排期。
 - 依赖与启动方式：无新增运行依赖。隔离库先 `DATABASE_URL=sqlite:////tmp/<isolated>/studio.db python -m alembic upgrade head`，API 使用 uvicorn，Vite 通过 `AI_STUDIO_API_TARGET` 指向该 API；前端 `npm run build` 同时检查三个入口预算。全量 pytest 需指向已迁移隔离 DATABASE_URL，worker SessionLocal 不使用 TestClient 的内存依赖替换。本轮未运行生产迁移。
 
+### FE-F5C System Assets + Knowledge + Settings（隔离实现验收通过，未合入main）
+
+- PRD/需求背景：统一系统素材/知识展示和设置产品入口，不新增平行Asset或Registry真源；标准规格在 `openspec/changes/fe-f5c-system-assets-knowledge-settings/`。
+- 目录结构：隔离分支新增services/system_library、library_usage、knowledge_collections、product_settings，KnowledgeCollection两表及f5c000000001迁移；前端product/SystemAssetsKnowledgePage五标签、ProductSettingsPage六分区，保留legacy入口。
+- 已完成：标准规格95/95、引用式集合与项目精确资源复用、有界授权使用情况、安全设置投影及lazy工作区；547后端测试、构建/预算、strict22/22、独立SPEC/QUALITY、SQLite迁移往返与隔离浏览器验收通过。projects224.68kB raw/72.86kB gzip；Assets257.70kB、Settings229.76kB initial均无重型画布/编辑器。
+- 待完成/TODO：业务实现位于codex/fe-f5c-system-assets-knowledge-settings，尚未commit/main整合/canonical同步归档；等待单独授权。真实PostgreSQL并发、第三方Connector和生产准入未验收。
+- 关键设计决策：库资源system_shared但使用情况遵循Project/Opportunity授权；Collection引用不成为Fact Boundary；Settings安全投影不新增Registry，断连不假成功。
+- 依赖与启动方式：复用FastAPI/React与现有隔离API/Vite流程；迁移仅临时数据库。无push/deploy/生产迁移，canonical归档另待授权。
+
+```text
+系统资源 → 有界Library → 明确的项目引用 / Frozen FactPack事实边界
+集合成员快照修订 → CAS写入 → 409时显式刷新；归档只读
+固定MaterialRevision ID → 精确权限回读 → 撤销后禁止新增引用
+Registry / 安全配置 → 六设置分区；危险旧库存仅admin显式进入
+```
+
 ### FE-F5B Performance + Learning + Memory（已合入本地main，六份主规格已同步归档）
 
 - PRD/需求背景：把已发布/外部历史内容的表现，经可追溯观察、Insight、学习候选和明确验证闭环到内容记忆；高表现不代表自动修改身份或策略。变更已归档至 `openspec/changes/archive/2026-09-28-fe-f5b-performance-learning-memory/`；新增主规格为 `openspec/specs/content-performance-history/` 和 `openspec/specs/content-learning-memory/`，同时更新产品入口、身份、审核交付与Home四份主规格。步骤见 `docs/superpowers/plans/2026-09-28-fe-f5b-performance-learning-memory.md`。

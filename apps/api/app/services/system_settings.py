@@ -4,6 +4,9 @@
 所有 Secret 字段一律脱敏回显，任何接口都不返回明文密钥。
 """
 
+import re
+from urllib.parse import parse_qsl, unquote, urlsplit
+
 from sqlalchemy.engine import make_url
 
 from .. import runtime_config
@@ -35,14 +38,41 @@ def mask_url(url: str) -> str:
         return "••••"
 
 
+def display_provider_url(value: str | None) -> tuple[str, bool]:
+    """Keep editable clean URLs intact; omit unsafe ones rather than invent a mask URL."""
+    if not value:
+        return "", False
+    if not isinstance(value, str) or any(ord(c) <= 32 for c in value) or "\\" in value:
+        return "", True
+    credential_name = r"api[_-]?key|access[_-]?key|token|secret|password|passwd|pwd|credential|authorization|auth|bearer|signature|sig"
+    try:
+        parsed = urlsplit(value)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username is not None or parsed.password is not None or parsed.fragment:
+            return "", True
+        if parsed.port == 0:
+            return "", True
+        decoded_path = unquote(parsed.path)
+        if re.search(rf"(?:^|[/;])(?:{credential_name})(?:[/;=]|$)|(?:^|/)sk-[^/]+", decoded_path, re.IGNORECASE):
+            return "", True
+        # Unknown query names are not evidence of safety, even without a secret keyword.
+        for name, query_value in parse_qsl(parsed.query.replace(";", "&"), keep_blank_values=True, strict_parsing=True):
+            if name.lower() not in {"version", "api-version"} or not re.fullmatch(r"[vV]?[0-9][a-zA-Z0-9._-]{0,63}", query_value):
+                return "", True
+        return value, False
+    except ValueError:
+        return "", True
+
+
 def llm_view() -> dict:
     from ..services.generation.providers import effective_llm_config
 
     config = effective_llm_config()
     override = runtime_config.get_runtime(runtime_config.KEY_LLM) or {}
+    base_url, redacted = display_provider_url(config["base_url"])
     return {
         "provider": config["provider"],
-        "base_url": config["base_url"],
+        "base_url": base_url,
+        "base_url_redacted": redacted,
         "model": config["model"],
         "api_key": mask_secret(config["api_key"]),
         "mock_inject_unfact_number": bool(config.get("mock_inject_unfact_number", False)),
@@ -108,9 +138,11 @@ def models_view() -> dict:
     models = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
     profiles_out = {}
     for name, p in (models.get("profiles") or {}).items():
+        base_url, redacted = display_provider_url(p.get("base_url", ""))
         profiles_out[name] = {
             "provider": p.get("provider", "mock"),
-            "base_url": p.get("base_url", ""),
+            "base_url": base_url,
+            "base_url_redacted": redacted,
             "model": p.get("model", ""),
             "api_key": mask_secret(p.get("api_key")),
             "enabled": bool(p.get("enabled", True)),
@@ -170,11 +202,13 @@ def image_view() -> dict:
     from .. import runtime_config
 
     stored = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
+    base_url, redacted = display_provider_url(stored.get("base_url", ""))
     return {
         "enabled": bool(stored.get("enabled", False)),
         "provider": stored.get("provider", "minimax"),
         "model": stored.get("model", ""),
-        "base_url": stored.get("base_url", ""),
+        "base_url": base_url,
+        "base_url_redacted": redacted,
         "size": stored.get("size", "1344x768"),
         "api_key": mask_secret(stored.get("api_key")),
         "providers_available": list(IMAGE_PROVIDERS),

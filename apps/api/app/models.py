@@ -223,6 +223,51 @@ class User(Base):
 # ---------- Source ----------
 
 
+class KnowledgeCollection(Base):
+    __tablename__ = "knowledge_collection"
+    __table_args__ = (
+        CheckConstraint("status IN ('active','archived')", name="ck_knowledge_collection_status"),
+        CheckConstraint("revision > 0", name="ck_knowledge_collection_revision"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class KnowledgeCollectionItem(Base):
+    __tablename__ = "knowledge_collection_item"
+    __table_args__ = (
+        CheckConstraint(
+            "(item_type = 'source_document' AND source_document_id IS NOT NULL AND fact_pack_id IS NULL) OR "
+            "(item_type = 'fact_pack' AND fact_pack_id IS NOT NULL AND source_document_id IS NULL)",
+            name="ck_knowledge_item_resource",
+        ),
+        CheckConstraint("status IN ('active','detached')", name="ck_knowledge_item_status"),
+        CheckConstraint("sort_order >= 0", name="ck_knowledge_item_sort_order"),
+        UniqueConstraint("collection_id", "source_document_id", name="uq_knowledge_item_source"),
+        UniqueConstraint("collection_id", "fact_pack_id", name="uq_knowledge_item_pack"),
+        Index("ix_knowledge_item_collection_status_order", "collection_id", "status", "sort_order", "id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    collection_id: Mapped[int] = mapped_column(ForeignKey("knowledge_collection.id"))
+    item_type: Mapped[str] = mapped_column(String(30))
+    source_document_id: Mapped[int | None] = mapped_column(ForeignKey("source_document.id"))
+    fact_pack_id: Mapped[int | None] = mapped_column(ForeignKey("fact_pack.id"))
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    note: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    added_by: Mapped[str | None] = mapped_column(String(255))
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    detached_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class SourceDocument(Base):
     __tablename__ = "source_document"
 

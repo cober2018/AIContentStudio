@@ -1,5 +1,6 @@
 import { Component, lazy, Suspense, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { api, currentUser } from "./api";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 
 const Assets = lazy(() => import("./pages/Assets"));
@@ -20,6 +21,8 @@ const Workspace = lazy(() => import("./pages/Workspace"));
 const ProductPlaceholder = lazy(() => import("./product/ProductPlaceholders"));
 const IdentityWorkspace = lazy(() => import("./product/IdentityWorkspace"));
 const LearningWorkspace = lazy(() => import("./product/LearningWorkspace"));
+const SystemAssetsKnowledgePage = lazy(() => import("./product/SystemAssetsKnowledgePage"));
+const ProductSettingsPage = lazy(() => import("./product/ProductSettingsPage"));
 const ProjectReviewCenter = lazy(() => import("./product/ProjectReviewCenter"));
 const HomePage = lazy(() => import("./product/HomePage"));
 const ProjectOriginLink = lazy(() => import("./product/HomePage").then((module) => ({ default: module.ProjectOriginLink })));
@@ -140,7 +143,7 @@ function Shell() {
               <Route path="/production" element={<ProductPlaceholder kind="production" />} />
               <Route path="/review" element={<ProjectReviewCenter />} />
               <Route path="/identities" element={<IdentityWorkspace />} />
-              <Route path="/assets" element={<ProductPlaceholder kind="assets" />} />
+              <Route path="/assets" element={<SystemAssetsKnowledgePage />} />
               <Route path="/learning" element={<LearningWorkspace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sources" element={<Sources />} />
@@ -158,7 +161,8 @@ function Shell() {
               <Route path="/handoff" element={<Handoff />} />
               <Route path="/workflows" element={<Workflows />} />
               <Route path="/templates" element={<Templates />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings" element={<ProductSettingsPage />} />
+              <Route path="/legacy/settings" element={<AdminSettingsRoute />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
                 </Routes>
               </Suspense>
@@ -171,6 +175,13 @@ function Shell() {
 function ProjectRoute() {
   const { projectId } = useParams();
   return projectId && /^\d+$/.test(projectId) ? <><ProjectOriginLink projectId={Number(projectId)} /><PersistentProjectPage /></> : <ProjectPage />;
+}
+
+function AdminSettingsRoute() {
+  const user = useQuery({ queryKey: ["settings-admin", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  if (user.isPending) return <RouteLoading />;
+  if (user.error || user.data?.role !== "admin") return <div className="p-9" role="alert">本机运行配置仅限管理员访问。<Link to="/settings" className="ml-2 text-indigo-700 underline">返回安全产品设置</Link></div>;
+  return <Settings />;
 }
 
 function ProductionRoute() {
