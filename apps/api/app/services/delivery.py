@@ -56,6 +56,18 @@ def resolve_publisher(channel: str, content_form: str, action: str):
 
 def authorize_target(db: Session, asset: ContentAsset, payload, user) -> DeliveryTarget:
     """通用交付目标授权：channel/form/action 经 Registry 验证（D21），幂等。"""
+    is_master = asset.content_master_revision_id is not None or (asset.candidate_manifest_json or {}).get("schema_version") == 4
+    if is_master:
+        from .content_masters import owned_unit
+        from .production_validation import validate_live_v4_candidate
+
+        owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
+        db.refresh(asset)
+        validate_live_v4_candidate(db, asset, require_approved=True)
+        if payload.action not in {DeliveryAction.copy_package.value, DeliveryAction.manual_handoff.value}:
+            raise HTTPException(422, "capability_unavailable: v4当前仅支持本地成品包/人工交付")
+        if payload.content_form != asset.content_form:
+            raise HTTPException(409, "目标内容形态必须与冻结候选一致")
     if asset.project_id is not None:
         from .project_authorization import authorize_project_asset
 
@@ -160,7 +172,17 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
             record_project_event(db, project_id=asset.project_id, event_type="delivery.authorized", actor=user.email,
                                  entity_type="delivery_target", entity_id=target.id,
                                  payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "candidate_hash": asset.candidate_hash, "action": target.action})
+        if is_master:
+            db.flush()
+            db.expire_all()
+            owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
+            validate_live_v4_candidate(db, asset, require_approved=True)
+            if target.approved_candidate_hash != asset.candidate_hash:
+                raise HTTPException(409, "授权提交前候选发生变化")
         db.commit()
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception:  # noqa: BLE001 并发幂等
         db.rollback()
         concurrent = db.scalars(
@@ -203,6 +225,8 @@ def validate_live_candidate_payload(db: Session, asset: ContentAsset) -> dict:
     from .candidates import candidate_hash
 
     manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 4 or asset.content_master_revision_id is not None:
+        raise HTTPException(422, "capability_unavailable: v4尚无已验证Publisher适配器，请使用本地成品包")
     if asset.project_id is not None:
         from .project_review import live_evidence_reasons
 
@@ -438,6 +462,10 @@ def _live_media_rights(db: Session, media: dict) -> bool | None:
 def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
     asset = _asset_of(db, target)
     manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 4 or asset.content_master_revision_id is not None:
+        from .production_packages import build_v4_package
+
+        return build_v4_package(db, target, asset)
     if asset.project_id is not None:
         if manifest.get("schema_version") != 3:
             raise HTTPException(409, "项目候选缺少 v3 冻结清单")
@@ -496,6 +524,10 @@ def package_zip_bytes(db: Session, target: DeliveryTarget) -> tuple[bytes, str]:
     """v2 通用成品包（保留 media order/placement 与交付说明）。v1 目标由 article_handoff 兼容路径处理。"""
     package = build_copy_package(db, target)
     manifest, content = package["manifest"], package["content"]
+    if manifest["schema_version"] == 4:
+        from .production_packages import v4_zip_bytes
+
+        return v4_zip_bytes(db, target, package)
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))

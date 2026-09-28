@@ -1,5 +1,13 @@
 # 配置记录
 
+## 2026-09-28 FE-F6A v4 live gate
+
+- 共享校验不能简单重建manifest再比整个hash：项目展示名称可能变化，重新检查产生新ID；冻结Candidate和原审批hash不能被回写。需分别检验冻结Master/context/refs/render、冻结Check行与最新可用结果，维持不可变Candidate。
+- 新Approval/Authorization要求最新Master/当前context和Candidate；已授权历史本地包按design第26段保留冻结target语义，只检查冻结来源和live rights/checks，不改绑最新Master。historical与current校验要显式区分。
+- frozen_context必须从Master固定的Identity/Brief/Boundary重建并验证context_hash；历史包的check_input_hash使用这些固定引用，而不是项目最新heads。最新必需检查仍需pass，冻结check行/report也要匹配；重新检查不回写Candidate。
+- 按schema分派同时以content_master_revision_id防降级：即使攻击性测试同时重算Candidate/批准hash，把v4改成v3仍不能穿过旧适配器。Publisher入口明确拒绝v4，失败不产生Attempt。
+- 审批/授权flush后刷新并复核，注入提交前撤权时Review/Target/Event原子回滚；包从冻结content/render/精确素材输出，不读legacy final_body。单Agent检查清单复核，不标记独立review通过。
+
 ## 2026-09-28 FE-F6A Adapter边界
 
 - descriptor/validator只是结构草稿；Graphic/Video现固定final_render_required，未验证具体Master输入。人工render确认须是显式API输入，由服务端绑定actor及exact输入hash，不信任edit_summary冒充确认。

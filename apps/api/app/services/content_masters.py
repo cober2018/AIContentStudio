@@ -15,6 +15,7 @@ from ..models import (
     ContentMasterRevision,
     ContentProject,
     ContentUnit,
+    CreativeBriefRevision,
     Draft,
     EvidenceKind,
     FactPack,
@@ -129,7 +130,20 @@ def get_readiness(db: Session, project_id: int, unit_id: int, master_id: int, us
     return {"master_revision_id": row.id, "payload_schema": adapter.payload_schema, "adapter_version": adapter.version, "render_input_hash": render_input_hash(db, row), "preview": adapter.build_preview(row), "render": adapter.build_render_snapshot(db, row), "adapter_availability": available, "context": projection["readiness"], "checks": checks, "candidate_freeze_available": project.status != "archived" and unit.status != "archived" and latest == row.id and projection["readiness"]["state"] == "current" and available["available"] and all(check["status"] == "pass" and check["is_current"] for check in checks)}
 
 
-def check_input_hash(db: Session, row: ContentMasterRevision) -> str:
+def frozen_context(db: Session, row: ContentMasterRevision) -> dict:
+    identity = db.get(IdentitySnapshot, row.identity_snapshot_id) if row.identity_snapshot_id else None
+    brief = db.get(CreativeBriefRevision, row.creative_brief_revision_id) if row.creative_brief_revision_id else None
+    boundary = db.get(ProjectFactBoundaryRevision, row.fact_boundary_revision_id) if row.fact_boundary_revision_id else None
+    return {
+        "identity": {"id": identity.id, "checksum": identity.checksum} if identity else None,
+        "brief": {"id": brief.id, "checksum": brief.checksum} if brief else None,
+        "boundary": {"id": boundary.id, "fact_pack_id": boundary.fact_pack_id, "checksum": boundary.fact_pack_checksum} if boundary else None,
+        "channel_id": row.channel_id,
+        "content_form": row.content_form,
+    }
+
+
+def check_input_hash(db: Session, row: ContentMasterRevision, *, require_current: bool = True) -> str:
     inputs = _serialize(db, row)
     assets = []
     for ref in inputs["assets"]:
@@ -142,7 +156,8 @@ def check_input_hash(db: Session, row: ContentMasterRevision) -> str:
     project = db.get(ContentProject, row.project_id)
     unit = db.get(ContentUnit, row.content_unit_id)
     adapter = adapter_for(row.modality)
-    return _hash({"payload_hash": row.payload_hash, "context_hash": row.context_hash, "current_context": _context(db, project, unit, content_form=row.content_form), "assets": assets, "evidence": evidence, "boundary_live": _boundary_live_state(db, row), "render": adapter.build_render_snapshot(db, row), "profile_key": adapter.payload_schema, "profile_version": adapter.version})
+    context = _context(db, project, unit, content_form=row.content_form) if require_current else frozen_context(db, row)
+    return _hash({"payload_hash": row.payload_hash, "context_hash": row.context_hash, "current_context": context, "assets": assets, "evidence": evidence, "boundary_live": _boundary_live_state(db, row), "render": adapter.build_render_snapshot(db, row), "profile_key": adapter.payload_schema, "profile_version": adapter.version})
 
 
 def _material_live_state(db: Session, material: MaterialRevision) -> dict:

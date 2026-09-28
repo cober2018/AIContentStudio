@@ -45,7 +45,7 @@ def build_manifest_v4(inputs: dict) -> dict:
     return json.loads(json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False))
 
 
-def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision) -> dict:
+def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, require_current: bool = True) -> dict:
     project = db.get(ContentProject, master.project_id)
     unit = db.get(ContentUnit, master.content_unit_id)
     identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
@@ -58,7 +58,7 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision) -> dict:
         raise ValueError("inconsistent frozen Master context")
     adapter = adapter_for(master.modality)
     projection = _serialize(db, master)
-    input_hash = check_input_hash(db, master)
+    input_hash = check_input_hash(db, master, require_current=require_current)
     checks = []
     for kind in adapter.required_check_kinds:
         check = db.scalar(select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == master.id, ContentMasterCheckRun.check_kind == kind).order_by(ContentMasterCheckRun.id.desc()).limit(1))

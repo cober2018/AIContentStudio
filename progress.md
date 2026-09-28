@@ -1,5 +1,16 @@
 # 当前进度
 
+## 2026-09-28：FE-F6A v4 Approval/Authorization/Package窄闭环
+
+- 基线main6ebc9e5、92/214，跟踪文件干净。按用户授权继续已有change，前端不动；采用OpenSpec apply、评审反馈、writing-plans/executing-plans、TDD和verification-before-completion。
+- 实际确认审批draft=None阻断、项目package只接受schema3；抽共享v4 live validator，明确新审批/授权要求current Master，已有授权历史package不retarget，但持续检验冻结来源/check/render/rights。图MCP未提供，仅限定相关文件回退读取；未用无关记忆结果作为项目证据。
+- TDD先复现12失败/4通过，再统一接Freeze/Approval/Authorization/Package：schema分派有Master-FK防降级；准确Candidate/Master/context/provenance与冻结check行和最新pass均验证。审批和授权在flush后刷新复核，提交前撤权时Review/Target/Event回滚。
+- 无Draft/Topic/Mother/Run的Text完整走通checks→freeze v4→approve→copy/manual authorize→ZIP，检查manifest、content.md、精确媒体和guide；Master、Candidate/hash不变，Review/Target绑定准确hash，不创建DeliveryAttempt。已有Media Adapter仅输出明确manual确认的精确render，不新增能力。
+- 新增44项闭环回归通过，含rights/evidence/bytes/tamper三阶段拦截、重算hash后的Master/identity/render/check/schema伪造、最新failed检查、raw asset授权旁路、提交前回滚、幂等、退改、新Master/Brief后旧target冻结历史、重跑checks不改Candidate及两种media输出；既有Freeze回归也在最终全量覆盖。
+- 按requesting-code-review检查清单做单Agent复核，当前无subagent工具，不标独立APPROVE。最终实跑712 passed/6既有警告（29.22秒，165项F6A回归），新临时SQLite迁移到f6a000000001；strict24/24、触及文件Ruff、diff-check全部通过。前端未改未复跑，开发/生产库未动，不引用旧build作为本轮验收。
+- OpenSpec仅新增22项已验收勾选，当前114/214。PRODUCTION CORE BACKEND MILESTONE（无Draft的Text→local ZIP）通过；并发冻结完整验收、Review v4 preview/diff、Versions/Overview、Production Workspace及浏览器验收仍未完成。原始包/canonical未动，change不归档；仅本地main阶段提交，不push/deploy/生产迁移。
+- 实际skills：using-superpowers、openspec-apply-change、receiving-code-review、writing-plans、executing-plans、test-driven-development、systematic-debugging、requesting-code-review（单Agent回退）、verification-before-completion。
+
 ## 2026-09-28：FE-F6A Adapter及v4后端继续实施
 
 - 已核main4b5c7c9，52/214；继续已批准fe-f6a-production-core-content-master（spec-driven）。用户要求保持Adapter→Draft映射→纯builder→Freeze/Approval/package顺序，前端不启动。

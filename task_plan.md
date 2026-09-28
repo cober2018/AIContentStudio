@@ -1,5 +1,15 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F6A v4审批→本地成品包（main）
+
+- [x] /// 先写无Draft Text的端到端和撤权/篡改/新Master负向回归，确认既有Draft-only/schema-v3阻断。
+- [x] /// 抽services/production_validation.py共享Master/Candidate live validator；Freeze、审批、新授权共用，已有授权包只校验冻结来源和live gates，不悄然换成最新Master。
+- [x] /// project_review.py按schema分派审批，delivery.py按schema分派包；包内使用冻结内容与精确引用，v4失败禁止回退。
+- [x] /// 用隔离SQLite复跑全量/定向、strict/Ruff/diff，核对ZIP字节/哈希/Review/Target和历史不变；更新README/进度，按本轮白名单本地提交。
+- 禁止前端修改、push、deploy、生产迁移、canonical同步或归档。
+- 已验证流程：手工Text Master（无Draft/Topic/Mother/Run）→ 当前检查 → v4 Candidate → exact-hash Review → DeliveryTarget → 本地ZIP；新Master/Brief阻断新增审批/授权，已有授权继续使用冻结历史内容且须通过live gates。
+- 阶段门禁712 passed/6既有警告、strict24/24、Ruff/diff通过，任务114/214；下一段继续Review v4/Versions/Overview，尚不代表前端或完整F6A验收。
+
 ## 2026-09-28：FE-F6A Adapter → seed → v4后端（main）
 
 - [x] /// Adapter定向测试先RED：精确render输入、显式人工attestation、多canvas覆盖、字节/MIME/权利和Registry不匹配。
