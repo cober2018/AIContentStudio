@@ -1,42 +1,55 @@
 """Deterministic project overview derived from persisted state."""
 
+from collections.abc import Iterable
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import ContentPersona, ContentUnit, IdentitySnapshot, WorkflowRun, WorkflowStep
 from .project_brief import current_brief
 from .project_evidence import current_boundary
+from .project_projection_context import ProjectProjectionContext
 from .project_review_projection import unit_projection
 
 
-def project_overview(db: Session, project_id: int) -> dict:
-    brief = current_brief(db, project_id)
-    boundary = current_boundary(db, project_id)
-    units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id).order_by(ContentUnit.id)).all()
+def project_overviews(db: Session, project_ids: Iterable[int], *, summary_only: bool = False) -> dict[int, dict]:
+    """Read authorized IDs; Home can pass batches of 100 with summary_only=True.
+
+    Summary mode omits candidate history and attempt/receipt payloads, preserving
+    current-candidate decisions and unresolved unknown delivery semantics.
+    """
+    context = ProjectProjectionContext(db, project_ids, summary_only=summary_only)
+    return {project_id: project_overview(db, project_id, context=context) for project_id in context.project_ids}
+
+
+def project_overview(db: Session, project_id: int, *, context: ProjectProjectionContext | None = None) -> dict:
+    brief = context.briefs.get(project_id) if context is not None else current_brief(db, project_id)
+    boundary = context.boundaries.get(project_id) if context is not None else current_boundary(db, project_id)
+    units = context.units.get(project_id, []) if context is not None else db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id).order_by(ContentUnit.id)).all()
     active = [unit for unit in units if unit.status != "archived"]
-    review_units = [unit_projection(db, unit) for unit in active]
+    review_units = [unit_projection(db, unit, context=context) for unit in active]
     modality_counts = {key: sum(unit.modality == key for unit in active) for key in ("text", "graphic", "video")}
     personas = []
     for persona_id in sorted({unit.persona_id for unit in active}):
-        persona = db.get(ContentPersona, persona_id)
+        persona = context.personas.get(persona_id) if context is not None else db.get(ContentPersona, persona_id)
         personas.append({"id": persona_id, "name": persona.name if persona else None, "unitCount": sum(unit.persona_id == persona_id for unit in active)})
     risks: list[dict] = []
     pending: list[dict] = []
     latest_runs: list[WorkflowRun] = []
     for unit in active:
-        snapshot = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
+        snapshot = context.snapshots.get(unit.identity_snapshot_id) if context is not None else db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
         if snapshot is None or not snapshot.effective_profile_json:
             risks.append({"code": "identity_unready", "unit_id": unit.id, "reason": "legacy_identity" if snapshot is None else "incomplete_profile"})
         if unit.status in {"blocked", "stale", "unknown", "failed"}:
             risks.append({"code": f"unit_{unit.status}", "unit_id": unit.id})
         if unit.status in {"waiting_human", "waiting_input"}:
             pending.append({"code": "unit_waiting_human", "unit_id": unit.id})
-        run = db.scalar(select(WorkflowRun).where(WorkflowRun.content_unit_id == unit.id).order_by(WorkflowRun.id.desc()).limit(1))
+        run = context.runs.get(unit.id) if context is not None else db.scalar(select(WorkflowRun).where(WorkflowRun.content_unit_id == unit.id).order_by(WorkflowRun.id.desc()).limit(1))
         if run:
             latest_runs.append(run)
             if run.status in {"blocked", "stale", "unknown", "failed"}:
                 risks.append({"code": f"run_{run.status}", "unit_id": unit.id, "run_id": run.id})
-            step_statuses = set(db.scalars(select(WorkflowStep.status).where(WorkflowStep.run_id == run.id, WorkflowStep.status.in_(["stale", "failed", "waiting_input"]))).all())
+            step_statuses = context.step_statuses.get(run.id, set()) if context is not None else set(db.scalars(select(WorkflowStep.status).where(WorkflowStep.run_id == run.id, WorkflowStep.status.in_(["stale", "failed", "waiting_input"]))).all())
             for status in sorted(step_statuses & {"stale", "failed"}):
                 risks.append({"code": f"step_{status}", "unit_id": unit.id, "run_id": run.id})
             if "waiting_input" in step_statuses:

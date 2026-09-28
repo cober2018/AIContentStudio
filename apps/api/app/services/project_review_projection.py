@@ -8,18 +8,27 @@ from sqlalchemy.orm import Session
 from ..models import ContentAsset, ContentProject, ContentUnit, DeliveryTarget, Draft, Review, WorkflowRun
 from .candidates import candidate_hash
 from .project_evidence import current_boundary
+from .project_projection_context import ProjectProjectionContext
 
 
 def candidate_rows(db: Session, unit_id: int) -> list[ContentAsset]:
     return db.scalars(select(ContentAsset).where(ContentAsset.content_unit_id == unit_id).order_by(ContentAsset.id.desc())).all()
 
 
-def unit_projection(db: Session, unit: ContentUnit) -> dict:
-    candidates = candidate_rows(db, unit.id)
+def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectionContext | None = None) -> dict:
+    candidates = context.candidates.get(unit.id, []) if context is not None else candidate_rows(db, unit.id)
     current = candidates[0] if candidates else None
-    targets = db.scalars(select(DeliveryTarget).where(DeliveryTarget.content_asset_id == current.id).order_by(DeliveryTarget.id.desc())).all() if current else []
-    reviews = db.scalars(select(Review).where(Review.content_asset_id == current.id).order_by(Review.id.desc())).all() if current else []
-    run = db.scalar(select(WorkflowRun).where(WorkflowRun.content_unit_id == unit.id).order_by(WorkflowRun.id.desc()).limit(1))
+    targets = (context.targets.get(current.id, []) if context is not None else db.scalars(select(DeliveryTarget).where(DeliveryTarget.content_asset_id == current.id).order_by(DeliveryTarget.id.desc())).all()) if current else []
+    reviews = (context.reviews.get(current.id, []) if context is not None else db.scalars(select(Review).where(Review.content_asset_id == current.id).order_by(Review.id.desc())).all()) if current else []
+    run = context.runs.get(unit.id) if context is not None else db.scalar(select(WorkflowRun).where(WorkflowRun.content_unit_id == unit.id).order_by(WorkflowRun.id.desc()).limit(1))
+
+    def attempts(target):
+        return context.attempts.get(target.id, []) if context is not None else target.attempts
+
+    def receipts(target):
+        return context.receipts.get(target.id, []) if context is not None else target.receipts
+
+    live_db = context.live_reads(unit.project_id) if context is not None else db
     dimensions: dict[str, dict] = {}
 
     def dimension(name: str, status: str, reasons: list[str] | None = None) -> None:
@@ -27,34 +36,34 @@ def unit_projection(db: Session, unit: ContentUnit) -> dict:
 
     dimension("content", "ready" if current else "blocked", [] if current else ["candidate_missing"])
     dimension("identity", "ready" if unit.identity_snapshot_id else "blocked", [] if unit.identity_snapshot_id else ["identity_unready"])
-    boundary = current_boundary(db, unit.project_id)
+    boundary = context.boundaries.get(unit.project_id) if context is not None else current_boundary(db, unit.project_id)
     evidence = (current.candidate_manifest_json or {}).get("evidence", {}) if current else {}
     evidence_stale = bool(current and evidence.get("boundary_id") and boundary and evidence["boundary_id"] != boundary.id)
     from .project_review import live_evidence_reasons
 
-    evidence_reasons = live_evidence_reasons(db, unit.project_id, current.candidate_manifest_json or {}) if current else ([] if boundary else ["evidence_unready"])
+    evidence_reasons = live_evidence_reasons(live_db, unit.project_id, current.candidate_manifest_json or {}) if current else ([] if boundary else ["evidence_unready"])
     dimension("evidence", "stale" if evidence_stale else ("blocked" if evidence_reasons else "ready"), evidence_reasons)
     media_reasons: list[str] = []
     if current:
         from .delivery import _live_media_rights
 
         for media in (current.candidate_manifest_json or {}).get("media", []):
-            if _live_media_rights(db, media) is not True:
+            if _live_media_rights(live_db, media) is not True:
                 media_reasons.append(f"media_rights_unready:{media.get('material_revision_id') or media.get('draft_media_id')}")
     dimension("media", "blocked" if media_reasons else "ready", media_reasons)
     checksum_ok = bool(current and current.candidate_hash and candidate_hash(current.candidate_manifest_json or {}) == current.candidate_hash)
     dimension("checks", "ready" if checksum_ok else "blocked", [] if checksum_ok else ["candidate_integrity_unready"])
     stale_revision = False
     if current and current.draft_id:
-        draft = db.get(Draft, current.draft_id)
+        draft = context.drafts.get(current.draft_id) if context is not None else db.get(Draft, current.draft_id)
         if draft:
-            latest = db.scalar(select(Draft.revision_no).where(Draft.content_job_id == draft.content_job_id).order_by(Draft.revision_no.desc()).limit(1))
+            latest = context.draft_revisions.get(draft.content_job_id) if context is not None else db.scalar(select(Draft.revision_no).where(Draft.content_job_id == draft.content_job_id).order_by(Draft.revision_no.desc()).limit(1))
             stale_revision = latest != draft.revision_no
     dimension("candidate", "stale" if stale_revision else ("ready" if current else "blocked"), ["newer_draft_revision"] if stale_revision else ([] if current else ["freeze_required"]))
     approved = bool(current and current.status in {"approved", "exported"} and current.candidate_hash == current.approved_candidate_hash and any(row.decision == "approved" and row.candidate_hash == current.candidate_hash for row in reviews))
     dimension("approval", "approved" if approved else "waiting_review" if current else "blocked", [] if approved or current else ["candidate_missing"])
     dimension("delivery", "ready" if targets else "blocked", [] if targets else ["authorization_missing"])
-    unknown = any(target.status == "reconciliation_needed" or any(attempt.status == "unknown" and (attempt.response_metadata_json or {}).get("reconciled") is None for attempt in target.attempts) for target in targets)
+    unknown = any(target.status == "reconciliation_needed" or any(attempt.status == "unknown" and (attempt.response_metadata_json or {}).get("reconciled") is None for attempt in attempts(target)) for target in targets)
     if unknown:
         summary = "unknown"
     elif any(target.status == "blocked" for target in targets) or media_reasons or (evidence_reasons and not evidence_stale) or (not checksum_ok and current is not None):
@@ -83,8 +92,8 @@ def unit_projection(db: Session, unit: ContentUnit) -> dict:
         "reviews": [{"id": row.id, "decision": row.decision, "candidate_hash": row.candidate_hash, "comment": row.comment} for row in reviews],
         "targets": [{"id": target.id, "status": target.status, "action": target.action, "account_ref": target.account_ref,
                      "content_account_id": target.content_account_id,
-                     "attempts": [{"id": attempt.id, "status": attempt.status, "remote_id": attempt.remote_id, "error": attempt.error} for attempt in target.attempts],
-                     "receipts": [{"id": receipt.id, "status": receipt.status, "evidence_ref": receipt.evidence_ref, "note": receipt.note} for receipt in target.receipts]} for target in targets],
+                     "attempts": [] if context is not None and context.summary_only else [{"id": attempt.id, "status": attempt.status, "remote_id": attempt.remote_id, "error": attempt.error} for attempt in attempts(target)],
+                     "receipts": [{"id": receipt.id, "status": receipt.status, "evidence_ref": receipt.evidence_ref, "note": receipt.note} for receipt in receipts(target)]} for target in targets],
     }
 
 
