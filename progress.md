@@ -1,10 +1,12 @@
 # 当前进度
 
-## 2026-09-28：FE-F6A 阶段代码本地main整合（已授权，执行中）
+## 2026-09-28：FE-F6A 阶段代码本地main整合（已完成，F6A仍在开发）
 
 - 用户授权当前阶段代码整合到main，后续直接在主工作区main开发。仍按已确认OpenSpec实施，不另开隔离开发分支；发布、生产写入、canonical同步归档不随此授权自动开放。
 - 当前基线main661e30a，F6A44/214；本次不是完成F6A，只整合已实现/已回归的阶段代码及标准change、计划和文档。
 - 本轮使用using-superpowers、finishing-a-development-branch（阶段整合）、writing-plans（维护计划）、verification-before-completion。
+- 分支阶段提交`7c2be75`已白名单提交并快进合入main，合入前后均574 passed/6既有警告；main全量22.73秒，前端build/FE-P1预算通过（projects224.68kB raw/72.86kB gzip），strict24/24、Ruff/diff-check通过。主规格未同步，active change仍44/214。
+- main原有重叠文档/标准change可恢复备份保留于stash `cbee2d1e66dfdd083814e1acdf5fce22a690782d`；核对后无main独有内容遗漏，不把旧stash重新覆盖新进度。原始包/ZIP仍未跟踪且未改动。保留原隔离分支作为阶段快照，后续实际开发路径为主工作区main。
 
 ## 2026-09-28：FE-F6A apply（隔离工作树，进行中）
 
