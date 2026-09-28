@@ -1,5 +1,43 @@
 # 当前进度
 
+## 2026-09-28：FE-F6A 阶段代码本地main整合（已授权，执行中）
+
+- 用户授权当前阶段代码整合到main，后续直接在主工作区main开发。仍按已确认OpenSpec实施，不另开隔离开发分支；发布、生产写入、canonical同步归档不随此授权自动开放。
+- 当前基线main661e30a，F6A44/214；本次不是完成F6A，只整合已实现/已回归的阶段代码及标准change、计划和文档。
+- 本轮使用using-superpowers、finishing-a-development-branch（阶段整合）、writing-plans（维护计划）、verification-before-completion。
+
+## 2026-09-28：FE-F6A apply（隔离工作树，进行中）
+
+- 用户提供ChatGPT连接器实际读取证据：AIContentStudio main@661e30a、两份FE-F5C主规格和f5c000000001迁移均成功；业务代码前硬门槛解除。该证据来自用户转述的连接器读取，不冒充本地工具直连。
+- 复用干净的托管工作树，从main@661e30a新建codex/fe-f6a-production-core-content-master；校准后的标准change及本轮计划/记录机械复制到隔离工作树，原始规格包和main未跟踪资料未改动。
+- 本轮进入持久化/服务实施。禁止push、merge、deploy、生产迁移；canonical同步与归档另待授权。
+- 隔离工作树复跑：临时SQLite迁移到f5c000000001，547后端测试通过、6既有警告；首次因本机继承的畸形NO_PROXY导致12项环境错误，限定NO_PROXY后全绿。前端TypeScript/Vite/FE-P1预算通过（/projects 224.68 kB raw、72.86 kB gzip）；OpenSpec all strict 24/24、diff-check通过。Ruff基线在既有content_projects.py和project_review.py有两处import排序告警，非F6A引入，后续只对改动文件门禁并整理触及的import。
+- 本轮重新核对任务和实际代码，撤销未验收的过早勾选：当前44/214。已实现持久化基础、有界详情读取、请求幂等重试、父版本检查、不完整/stale投影、检查追加历史/最新结果/输入时效、Draft当前成功Attempt血缘验证；不把唯一约束等同完整事务锁，也不把v4入口等同完整候选链路。
+- TDD：先复现回退删除历史、归档写检查、假schema/假来源、上下文漂移重试、空文稿/结构深度、缺失详情/父版本、冻结输入500、检查缓存旧pass及失效Attempt seed，再按失败证据修复。当前定向27 passed（2既有依赖警告）。此前40项/12项记录不作为当前完成证明。
+- 尚未完成：共享事务锁/上下文CAS、完整嵌入引用和生成素材血缘、权利与renderer/attestation、完整v4冻结/审批/交付、读模型、前端与浏览器验收；PostgreSQL实库未验收。canonical、main及原始包未改动。
+- 本轮实际skills：using-superpowers、openspec-apply-change、executing-plans、writing-plans（校正计划/记录）、test-driven-development、verification-before-completion。
+- 本轮新鲜门禁：临时SQLite upgrade→downgrade f5c000000001→upgrade成功；全量574 passed/6既有警告（21.22秒），包含27项F6A定向测试。前端TypeScript/Vite/build与FE-P1预算通过，/projects 224.68kB raw/72.86kB gzip；OpenSpec all strict24/24、触及文件Ruff、diff-check通过。前端本轮无功能改动，该build不代表F6A前端验收。
+
+## 2026-09-28：FE-F6A apply 前置核验（授权，等待连接器证据）
+
+- 用户明确授权进入apply；上一回合启动后被中断，未执行代码命令。本回合重新核对本地main `661e30a`、F5C archived、两份canonical与只读Alembic code head `f5c000000001`，OpenSpec 4/4产物齐备、214项实施任务未开始。
+- F6A规格把ChatGPT连接器实际读取post-F5C main/主规格/迁移列为业务代码前硬门槛；本地git/bridge状态不能替代该证据。当前工具未提供合规的连接器端workspace_info调用，已请求用户在现有ChatGPT对话中实际读取并反馈。未创建工作树或修改业务代码。
+- 在隔离临时SQLite `/tmp/aicontent-f6a-baseline-zkSC1c/studio.db` 上启动本地基线回归；不会运行生产迁移。OpenSpec all strict24/24和diff-check已通过，后端/前端结果待回收。
+- 基线结果已回收：隔离SQLite迁移到f5c000000001；后端547 passed、6既有警告（22.23秒）；TypeScript/Vite/build与FE-P1 bundle预算通过，/projects 224.68kB raw/72.86kB gzip，Assets257.70kB、Settings229.76kB initial；strict24/24和diff-check通过。
+- C2C本地status仅表明桥接进程在运行，近期bridge日志不包含post-F5C的ChatGPT侧workspace_info读取证据。当前缺少合规的ChatGPT端读取结果，因此按F6A硬前置停在业务代码前；无测试代码/业务代码、无工作树切换。
+- 本轮实际skills：using-superpowers、openspec-apply-change、executing-plans、using-git-worktrees、test-driven-development、verification-before-completion；codex-with-chatgpt已检查但当前未通过其页面发送消息。
+
+## 2026-09-28：FE-F6A 规格审计与归位（SPEC REVIEW通过，未apply）
+
+- 用户确认本轮仅审计、调整和标准归位；apply仍需用户确认，不由代理自行授权。
+- main实际为661e30a，FE-F5C五份canonical及归档已可在本地读取。外部ChatGPT connector是否已看到新提交尚未证实，不以本地读取冒充connector验证。
+- 本轮skills：using-superpowers、writing-plans、openspec-propose、verification-before-completion。代码图MCP工具未提供，代码发现仅在相关服务范围内回退搜索。
+- 标准change已生成：完整读取原稿proposal/design/tasks/五规格，四份MODIFIED保留canonical全文块。补Master-only历史、pinned身份而非latest、原子幂等/CAS、render输入hash及显式手工确认、最新检查权威、失败旧output拒绝、legacy schema/权限、v4远端能力和回退预检边界；业务代码及canonical未修改。
+- 首轮全量strict实际24 passed/0 failed、diff-check通过；4/4产物done代表规格齐备，不代表业务实现完成。独立整包/计划审计进行中。
+- 独立整包/计划复核发现旧F4冻结要求仍无条件强制Draft/Run，已拆为v3/工作流v4血缘校验与手工v4 Master所有权/上下文/引用/渲染闸门，并增加无Run手工Master可冻结场景；待复核确认。当前214项实施任务，未apply。
+- 独立最终完整SPEC/plan复核APPROVE：上述冲突闭合，无剩余实质矛盾；批准仅规格/计划，不代表apply授权或connector验证。最终实跑全量strict24/24、diff-check及保留核验通过：23原要求标题/203原任务完整保留，10完整canonical块/33旧场景保留（4处兼容文字校准）。
+- 标准proposal/design/tasks/五规格4/4产物齐备，214项实施任务0完成；原始目录与ZIP保留，canonical/业务/测试代码未改。文档未提交，未迁移/push/deploy/归档；等待用户apply及定向测试代码确认和真实connector基线证据。
+
 ## 2026-09-28：FE-F5C 五份主规格同步归档（通过）
 
 - 基线main ac6d4dc含7956273功能提交；已跟踪文件干净，原始包/ZIP继续保留且排除提交。

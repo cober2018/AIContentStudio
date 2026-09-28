@@ -9,17 +9,36 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user, require_editor, require_editor_or_reviewer
 from ..models import (
-    AccountWorkflowDefault, ContentPersona, ContentProject, ContentUnit, CreativeBriefRevision, DataSnapshot, PersonaWorkflowDefault, SeriesWorkflowDefault,
-    ProjectWorkflowBinding, ProjectWorkflowOutput, User, Workflow, WorkflowRun,
+    AccountWorkflowDefault,
+    ContentMasterRevision,
+    ContentPersona,
+    ContentProject,
+    ContentUnit,
+    CreativeBriefRevision,
+    DataSnapshot,
+    PersonaWorkflowDefault,
+    ProjectWorkflowBinding,
+    ProjectWorkflowOutput,
+    SeriesWorkflowDefault,
+    User,
+    Workflow,
+    WorkflowRun,
 )
-from ..services.project_authorization import authorize_project_run, authorize_project_workflow
-from ..services.project_events import record_project_event
-from ..services.project_brief import checksum_brief, current_brief, serialize_brief
+from ..services import content_identity, workflow_engine
+from ..services.data_source_plugins import assert_executable
+from ..services.data_source_plugins import descriptors as data_source_descriptors
 from ..services.project_assets import shared_assets
-from ..services.project_workflows import execution_options, new_workflow_version, resolve_placeholders, validate_definition, validate_portable, validate_reusable_profiles
-from ..services import workflow_engine
-from ..services import content_identity
-from ..services.data_source_plugins import assert_executable, descriptors as data_source_descriptors
+from ..services.project_authorization import authorize_project_run, authorize_project_workflow
+from ..services.project_brief import checksum_brief, current_brief, serialize_brief
+from ..services.project_events import record_project_event
+from ..services.project_workflows import (
+    execution_options,
+    new_workflow_version,
+    resolve_placeholders,
+    validate_definition,
+    validate_portable,
+    validate_reusable_profiles,
+)
 from .workflows import NodeCompleteIn, _serialize_run, list_node_attempts
 
 router = APIRouter(prefix="/api/v1", tags=["content-projects"])
@@ -453,6 +472,7 @@ def _has_execution_history(db: Session, unit_id: int) -> bool:
         (WorkflowRun, WorkflowRun.content_unit_id),
         (DataSnapshot, DataSnapshot.unit_id),
         (ProjectWorkflowOutput, ProjectWorkflowOutput.unit_id),
+        (ContentMasterRevision, ContentMasterRevision.content_unit_id),
     ))
 
 

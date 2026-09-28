@@ -87,11 +87,12 @@ class DraftMediaRole(str, enum.Enum):
 
 
 class ArtifactKind(str, enum.Enum):
-    """V1 内容形态；video/audio 为 V2 预留，暂不实现。"""
+    """持久化内容产物形态；未实现的形态仍由服务层能力闸门控制。"""
 
     text = "text"
     image = "image"
     script = "script"
+    video = "video"
 
 
 class CheckKind(str, enum.Enum):
@@ -769,7 +770,7 @@ class ContentAsset(Base):
     candidate_hash: Mapped[str | None] = mapped_column(String(64), index=True)
     channel: Mapped[str] = mapped_column(String(30))
     title: Mapped[str] = mapped_column(String(500))
-    final_body: Mapped[str] = mapped_column(Text)
+    final_body: Mapped[str | None] = mapped_column(Text)
     structured_json: Mapped[dict | None] = mapped_column(JSON)
     fact_pack_id: Mapped[int | None] = mapped_column(Integer)
     fact_pack_version: Mapped[int | None] = mapped_column(Integer)
@@ -791,6 +792,89 @@ class ContentAsset(Base):
     workflow_key: Mapped[str | None] = mapped_column(String(120))
     workflow_version: Mapped[int | None] = mapped_column(Integer)
     tags: Mapped[list | None] = mapped_column(JSON)
+    content_master_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentMasterRevision(Base):
+    """Immutable, unit-scoped production content revision."""
+
+    __tablename__ = "content_master_revision"
+    __table_args__ = (
+        UniqueConstraint("content_unit_id", "revision_no", name="uq_master_unit_revision"),
+        UniqueConstraint("content_unit_id", "idempotency_key", name="uq_master_unit_idempotency"),
+        Index("ix_master_project_unit_created", "project_id", "content_unit_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
+    content_unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_master_revision.id"))
+    modality: Mapped[str] = mapped_column(String(20))
+    channel_id: Mapped[str | None] = mapped_column(String(100))
+    content_form: Mapped[str | None] = mapped_column(String(100))
+    payload_schema: Mapped[str] = mapped_column(String(100))
+    payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    payload_hash: Mapped[str] = mapped_column(String(64), index=True)
+    context_hash: Mapped[str] = mapped_column(String(64), index=True)
+    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"))
+    creative_brief_revision_id: Mapped[int | None] = mapped_column(ForeignKey("creative_brief_revision.id"))
+    fact_boundary_revision_id: Mapped[int | None] = mapped_column(ForeignKey("project_fact_boundary_revision.id"))
+    origin_workflow_run_id: Mapped[int | None] = mapped_column(ForeignKey("workflow_run.id"))
+    origin_project_output_id: Mapped[int | None] = mapped_column(ForeignKey("project_workflow_output.id"))
+    source_kind: Mapped[str] = mapped_column(String(30))
+    edit_summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    idempotency_key: Mapped[str] = mapped_column(String(150))
+    request_fingerprint: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentMasterAssetRef(Base):
+    __tablename__ = "content_master_asset_ref"
+    __table_args__ = (Index("ix_master_asset_ref_master_order", "master_revision_id", "sort_order"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    master_revision_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    material_revision_id: Mapped[int] = mapped_column(ForeignKey("material_revision.id"))
+    role: Mapped[str] = mapped_column(String(40))
+    slot_key: Mapped[str | None] = mapped_column(String(100))
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    placement_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    rights_snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    content_hash_snapshot: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentMasterEvidenceRef(Base):
+    __tablename__ = "content_master_evidence_ref"
+    __table_args__ = (Index("ix_master_evidence_ref_master_order", "master_revision_id", "sort_order"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    master_revision_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    fact_pack_item_id: Mapped[int] = mapped_column(ForeignKey("fact_pack_item.id"))
+    role: Mapped[str] = mapped_column(String(40))
+    content_locator_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    snapshot_checksum: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ContentMasterCheckRun(Base):
+    __tablename__ = "content_master_check_run"
+    __table_args__ = (Index("ix_master_check_master_kind_created", "master_revision_id", "check_kind", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    master_revision_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    check_kind: Mapped[str] = mapped_column(String(40))
+    profile_key: Mapped[str | None] = mapped_column(String(100))
+    profile_version: Mapped[str | None] = mapped_column(String(50))
+    input_hash: Mapped[str] = mapped_column(String(64), index=True)
+    status: Mapped[str] = mapped_column(String(20))
+    report_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    provider_key: Mapped[str | None] = mapped_column(String(100))
+    provider_version: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

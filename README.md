@@ -70,6 +70,15 @@
 - 关键设计决策：推荐始终是 suggested；转换只创建普通 Brief v1 与用户明确选择的 Source bindings，不创建 Topic / FactPack / Fact Boundary / IdentitySnapshot / Candidate / DeliveryTarget。Assessment 与 Conversion 保留历史；Home 不建立第二套状态表，近期活动不冒充排期。
 - 依赖与启动方式：无新增运行依赖。隔离库先 `DATABASE_URL=sqlite:////tmp/<isolated>/studio.db python -m alembic upgrade head`，API 使用 uvicorn，Vite 通过 `AI_STUDIO_API_TARGET` 指向该 API；前端 `npm run build` 同时检查三个入口预算。全量 pytest 需指向已迁移隔离 DATABASE_URL，worker SessionLocal 不使用 TestClient 的内存依赖替换。本轮未运行生产迁移。
 
+### FE-F6A Production Core / ContentMaster / Candidate v4（规格审计记录；当前已授权隔离apply）
+
+- PRD/需求背景：建立文字/图像/视频共用的不可变生产版本核心，不实现F6B/C/D专业编辑器；标准change在 `openspec/changes/fe-f6a-production-core-content-master/`，计划在 `docs/superpowers/plans/2026-09-28-fe-f6a-production-core-content-master.md`。
+- 目录结构：proposal/design/tasks及五份delta；新增production-content-master，完整更新FE-F2、FE-F3A、FE-F3B、FE-F4要求块。原始目录和ZIP不覆盖、不移动。
+- 已完成：本地post-F5C基线main661e30a及code head f5c000000001核对，原稿审计与标准归位；补并发/幂等、固定身份、Master-only历史、render输入绑定、旧API/schema边界及安全回退。独立完整SPEC/plan复核APPROVE，strict24/24、diff-check及旧契约保留检查通过。
+- 后续状态：用户已授权apply/定向回归，并提供post-F5C连接器实际读取证据；当前实现进度见下方“隔离开发中”。此段保留规格审计记录，不代表当前仍未apply。
+- 关键设计决策：Master保存与Workflow保存分离；v4不伪造Draft；真实媒体存在不代表它渲染当前Master；身份层级变化不自动替换单元固定快照。
+- 依赖与启动方式：复用现有技术栈，无新依赖；规格校验 `openspec validate --all --strict`，状态 `openspec status --change fe-f6a-production-core-content-master`；实施与回归仅用隔离工作树和临时数据库，不发布。
+
 ### FE-F5C System Assets + Knowledge + Settings（已合入本地main，五份主规格已同步归档）
 
 - PRD/需求背景：统一系统素材/知识展示和设置产品入口，不新增平行Asset或Registry真源；长期规范在 `openspec/specs/system-assets-knowledge/spec.md` 与 `openspec/specs/product-settings/spec.md`，并同步FE-F0/F1、FE-F2、FE-F3A三份主规格。实施记录归档于 `openspec/changes/archive/2026-09-28-fe-f5c-system-assets-knowledge-settings/`。
@@ -109,6 +118,17 @@ SourceDocument / DataSnapshot / Feedback / Manual reference
   → 明确建立 Fact Boundary → 既有 Identity / Production / Review / Delivery
 Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 ```
+
+### FE-F6A Production Core（阶段实现；已授权整合main并直接继续开发）
+
+- 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的内容主版本和上下文血缘；本轮不替换旧引擎、不新增远程发布能力。
+- 目录结构：`apps/api/app/models.py` 增加 Master 与不可变素材/证据/检查引用；`apps/api/app/services/content_masters.py` 和 `production_modalities.py` 承接项目边界、CAS/幂等保存、上下文哈希和三种形态的最小 payload；`apps/api/app/routers/content_masters.py` 提供项目单元级读写；迁移为 `apps/api/alembic/versions/f6a000000001_production_content_master.py`。
+- 已完成的基础：四表与`ContentAsset` Master关联、video枚举；授权的有界列表/当前/详情读取；追加保存、请求幂等重试、父版本检查及上下文冻结/不完整和stale投影。检查追加历史、最新结果和stale投影已回归；Draft seed验证当前成功Step/Attempt并记录血缘。回退发现Master/不兼容Candidate历史时，在任何DDL之前拒绝；本轮27项定向回归通过。
+- 待完成/TODO：共享事务锁与上下文冲突、完整素材/嵌入引用校验、完整权利/渲染检查与人工render绑定、Candidate v4完整冻结/审批/本地包、Review/Versions/Overview、Production Workspace及浏览器验收。已有v4入口不是可交付完成状态；PostgreSQL实库未验收。未同步canonical、未归档、未合入main、未push/deploy/生产迁移。
+- 关键设计决策：Master 与 Workflow 保存分离；历史上下文不自动跟随最新身份/Brief/事实边界；素材只按项目可见的 `MaterialRevision` 引用、不复制字节；Graphic/Video 没有真实渲染时不伪造成功。
+- 依赖与启动：复用现有 FastAPI/SQLAlchemy/Alembic/React；后端测试使用迁移后的隔离SQLite，禁止把临时库迁移命令用于开发或生产数据库。
+- 当前阶段门禁：574后端测试（含27项F6A回归）、SQLite空库迁移往返、前端build/FE-P1预算、strict24/24、Ruff/diff通过；这不是整体F6A完成或浏览器/生产验收。真实业务链仍按上方TODO继续实施。
+- 开发方式：用户明确授权当前阶段提交合入本地main，后续唯一开发Agent直接在`/Users/mshengran/Project/AIContentStudio`的main实施；继续保留OpenSpec确认/回归/阶段提交，不因单Agent而跳过质量门禁。禁止自动push/deploy/生产迁移。
 
 ### 下一版规划：文章/图文全渠道
 

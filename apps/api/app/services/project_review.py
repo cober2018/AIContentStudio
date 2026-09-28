@@ -6,8 +6,19 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..models import (
-    ContentAsset, ContentUnit, Draft, FactPack, FactPackItem, IdentitySnapshot, ProjectWorkflowOutput,
-    Review, User, WorkflowRun, utcnow,
+    ContentAsset,
+    ContentMasterCheckRun,
+    ContentMasterRevision,
+    ContentUnit,
+    Draft,
+    FactPack,
+    FactPackItem,
+    IdentitySnapshot,
+    ProjectWorkflowOutput,
+    Review,
+    User,
+    WorkflowRun,
+    utcnow,
 )
 from .candidates import asset_v2_columns, build_manifest_v2, candidate_hash, readiness_reasons_v2
 from .project_authorization import authorize_project_asset
@@ -129,6 +140,76 @@ def freeze_candidate(db: Session, project_id: int, unit_id: int, project_output_
             return concurrent
         raise _blocked("freeze_conflict", "候选冻结并发冲突，请刷新后重试") from None
     record_project_event(db, project_id=project_id, event_type="candidate.frozen", actor=user.email, entity_type="content_asset", entity_id=asset.id, payload={"unit_id": unit_id, "candidate_hash": frozen_hash})
+    db.commit()
+    db.refresh(asset)
+    return asset
+
+
+def freeze_master_candidate(db: Session, project_id: int, unit_id: int, master_revision_id: int, user: User) -> ContentAsset:
+    """Freeze a current Master as v4 without fabricating legacy Draft lineage."""
+    unit = _mutable_unit(db, project_id, unit_id, user)
+    master = db.get(ContentMasterRevision, master_revision_id)
+    if master is None or master.project_id != project_id or master.content_unit_id != unit_id:
+        raise HTTPException(404, "Master版本不存在")
+    latest = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+    if latest is None or latest.id != master.id:
+        raise _blocked("stale_master", "只有当前Master版本可以冻结候选")
+    from .content_masters import _serialize, current_checks
+    from .production_modalities import descriptor, validate_payload
+
+    projection = _serialize(db, master)
+    if projection["readiness"]["state"] != "current":
+        raise _blocked("stale_master", *projection["readiness"]["reasons"])
+    if master.identity_snapshot_id is None or master.fact_boundary_revision_id is None:
+        raise _blocked("readiness_blocked", "identity_unready" if master.identity_snapshot_id is None else "evidence_unready")
+    check_projection = current_checks(db, project_id, unit_id, master.id, user)
+    latest_checks = {row["check_kind"]: db.get(ContentMasterCheckRun, row["id"]) for row in check_projection if row["id"] is not None}
+    required = descriptor(master.modality).required_checks
+    missing = [kind for kind in required if kind not in latest_checks]
+    blocked = [row["check_kind"] for row in check_projection if not row["is_current"] or row["status"] != "pass"]
+    if missing or blocked:
+        raise _blocked("checks_unready", *(missing or blocked))
+    payload_errors = validate_payload(master.modality, master.payload_json, for_freeze=True)
+    if payload_errors:
+        raise _blocked("readiness_blocked", *payload_errors)
+    manifest = {
+        "schema_version": 4,
+        "project": {"id": project_id, "unit_id": unit_id, "modality": master.modality, "channel": unit.channel_id},
+        "identity": projection["readiness"],
+        "identity_snapshot": {"id": master.identity_snapshot_id},
+        "brief": {"id": master.creative_brief_revision_id},
+        "evidence": {"boundary_revision_id": master.fact_boundary_revision_id},
+        "master": {"id": master.id, "revision_no": master.revision_no, "schema": master.payload_schema, "payload_hash": master.payload_hash, "context_hash": master.context_hash, "parent_id": master.parent_revision_id},
+        "content": master.payload_json,
+        "assets": projection["assets"], "evidence_refs": projection["evidence"],
+        "checks": [{"kind": kind, "id": latest_checks[kind].id, "input_hash": latest_checks[kind].input_hash, "status": latest_checks[kind].status} for kind in required],
+        "render": {"status": "verified" if master.modality == "text" else "unavailable"},
+        "production": {"source_kind": master.source_kind, "origin_workflow_run_id": master.origin_workflow_run_id, "origin_project_output_id": master.origin_project_output_id},
+    }
+    frozen_hash = candidate_hash(manifest)
+    existing = db.scalar(select(ContentAsset).where(ContentAsset.project_id == project_id, ContentAsset.content_unit_id == unit_id, ContentAsset.candidate_hash == frozen_hash).limit(1))
+    if existing:
+        return existing
+    payload = master.payload_json or {}
+    title = payload.get("title") or unit.title
+    body = payload.get("markdown") or payload.get("document") if master.modality == "text" else None
+    asset = ContentAsset(
+        project_id=project_id, content_unit_id=unit_id, identity_snapshot_id=master.identity_snapshot_id,
+        channel=unit.channel_id or "unassigned", title=title, final_body=body, structured_json=payload,
+        status="frozen", candidate_hash=frozen_hash, approved_candidate_hash=None, candidate_manifest_json=manifest,
+        content_master_revision_id=master.id, artifact_kind="text" if master.modality == "text" else "image" if master.modality == "graphic" else "video",
+        content_form=master.content_form,
+    )
+    db.add(asset)
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        concurrent = db.scalar(select(ContentAsset).where(ContentAsset.project_id == project_id, ContentAsset.content_unit_id == unit_id, ContentAsset.candidate_hash == frozen_hash).limit(1))
+        if concurrent:
+            return concurrent
+        raise _blocked("freeze_conflict", "候选冻结并发冲突，请刷新后重试") from None
+    record_project_event(db, project_id=project_id, event_type="candidate.frozen", actor=user.email, entity_type="content_asset", entity_id=asset.id, payload={"unit_id": unit_id, "candidate_hash": frozen_hash, "schema_version": 4, "master_revision_id": master.id})
     db.commit()
     db.refresh(asset)
     return asset

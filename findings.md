@@ -1,5 +1,32 @@
 # 配置记录
 
+## 2026-09-28 FE-F6A 本地main阶段整合授权
+
+- 用户明确要求将当前阶段代码合入本地main，并因当前仅一个开发Agent，后续直接在main实施；此授权覆盖必要的本地提交与整合，不包含push/deploy/生产迁移。
+- main与隔离分支共同基线661e30a；main重叠审计文档、标准change和计划已逐项核对，无main独有业务改动。限定路径可恢复备份后整合，原始规格目录/ZIP保持未跟踪。
+- 当前F6A仅44/214；分支整合技能在本轮只用于阶段代码整合，不执行完成声明、归档或工作树/分支删除。
+
+## 2026-09-28 FE-F6A 基础实现复核与安全收紧
+
+- 早期任务勾选与实现不一致，已撤销完整CAS/适配器/生成素材权限/完整检查/候选v4等过早完成标记；完整change仍为214项，不修改产品范围。
+- downgrade必须在任何DDL前检查四类Master历史与NULL-body/Master-linked Candidate；不通过删除历史或伪造正文强行回退。四类历史和两类不兼容Candidate拒绝测试通过。
+- request fingerprint应记录用户请求意图而非重试时的新上下文；否则响应丢失后Brief/渠道变化会把相同请求误判为新请求。相同请求重放保留原版本，读取投影如实显示stale。
+- 检查每次显式执行追加新记录；当前投影按各kind最新记录、live输入和profile版本判定，旧pass不遮蔽新blocker。未连接renderer/缺内容不能显示render pass。
+- Seed必须验证Unit/Run/Step/最新Attempt、成功状态/输出一致性与精确Draft修订；失败/过期/替换Attempt不能沿用旧历史成功。不能证明的素材/claims保持unmapped记录而不自动成为引用。
+- code graph MCP未提供，代码发现仅在相关Master、Project、Review服务和既有测试范围回退搜索。
+
+## 2026-09-28 FE-F6A 规格审计
+
+- F6A原稿的四份MODIFIED规格为片段；标准归位必须基于post-F5C canonical完整要求块合并，不能日后归档丢掉F2/F3A/F3B/F4旧契约。
+- 规格审计和业务apply授权分离；本轮不实施，外部connector可见性仍需独立证据。
+- 真实本地基线661e30a，Alembic只读heads返回f5c000000001；未执行upgrade或连接生产库。
+- 代码证据：ContentAsset.final_body目前NOT NULL，ArtifactKind无video；project_review.freeze仅Draft/v3，decide_candidate拒绝无Draft来源，delivery.build_copy_package只接project-v3。因此v4需从serializer→approval→authorization→package明确schema dispatch，不能只改Freeze。
+- content_projects._has_execution_history只查Run/Snapshot/WorkflowOutput，手工Master无Run会落入物理删除/原地重绑；须把Master/Candidate历史纳入原闸门。
+- IdentitySnapshot由显式create_snapshot固定，旧Unit不会随Persona新修订更换snapshot；原稿“层级更新自动stale”的场景已校准为层级drift提示与实际unit-pinned context stale分离。
+- 原子save需规范key请求fingerprint、lost-response重试顺序和head CAS；render需input hash绑定/显式manual attestation，非“有MP4即可”；check新blocker不能被旧pass覆盖；Draft seed需检查attempt当前性。
+- 保留核验实际通过：23个原稿要求标题、203条原任务保留；10个完整MODIFIED canonical块及33旧场景保留，四处旧schema/source文字仅为v4兼容明确调整。canonical及业务代码无改动。
+- 独立复核指出冻结总契约仍强制Draft/Run，已仅对实际workflow来源要求该血缘，手工Master无Run按Master自身上下文/引用/检查/渲染校验；专门验收场景和任务22.11已补齐，当前214项实施任务。
+
 ## 2026-09-28 FE-F5C 归档边界
 
 - 两份新增与三份更新delta均为长期契约；须全部同步canonical再归档，不能仅移动change。
@@ -316,3 +343,8 @@
 - 对 AIContentStudio 定向执行 `c2c restart --tunnel` 后，工作区 cloudflared 使用 HTTP/2，HA 连接数大于 0，公开未授权 MCP 请求返回 401；这确认传输链路现已恢复。
 - ChatGPT 连接器的端到端调用尚未由当前会话复验；需要在 ChatGPT 中重试 `workspace_info`。未重建或重新授权连接器。
 - 2026-09-27 后续复查：bridge、MCP、OAuth、named tunnel 均为 green；公开 MCP 返回 401、对应 cloudflared 使用 HTTP/2 且 HA 连接数大于 0。状态详情出现“no free edge addresses”警告，但不足以推翻当前健康探测，故未重启。ChatGPT 端如仍失败，需按具体工具错误继续定位。
+# FE-F6A apply 基线补充（2026-09-28）
+
+- 用户提供的ChatGPT连接器读取结果确认main@661e30a、FE-F5C两份canonical和f5c000000001迁移；本地隔离分支以相同commit为基线。
+- 547测试在限定NO_PROXY后通过；未限定时12项设置相关测试因环境变量端口格式无效失败，不属于业务回归。
+- Ruff基线有既存import排序告警：content_projects.py和project_review.py；不应把它们错误归因于F6A。
