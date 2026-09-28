@@ -1,5 +1,30 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F5B 本地main整合（已授权）
+
+- [x] /// 核对dd71a14共同基线，保留主工作区原始包、规划和审计文档
+- [ ] /// 分支复跑门禁，仅提交FE-F5B实现、规格及本任务文档
+- [ ] /// 可恢复保存main的重叠审计改动，快进本地main，核对保留结果
+- [ ] /// 合入后复跑全量后端、前端build/bundle、strict和diff-check，记录提交
+- 本次仅本地整合；不同步canonical、不归档、不push/deploy/生产迁移，保留工作树供后续归档。
+
+## 2026-09-28：FE-F5B apply（已授权，隔离实施）
+
+- [x] /// 复用空闲工作树，从main `dd71a14`创建`codex/fe-f5b-performance-learning-memory`，转入校准规格与计划
+- [x] /// 基线门禁与七资源/可逆迁移
+- [x] /// Receipt/外部历史、观察粒度、Coverage/Analysis真实服务
+- [x] /// Insight、候选验证冻结、Memory晋升及版本闸门
+- [x] /// 四标签Learning、Identity Memory、Home和lazy预算
+- [x] /// 全量回归、隔离浏览器、独立规格/代码复核；归档/提交另待授权
+
+## 2026-09-28：FE-F5B 规格审计与标准归位
+
+- [x] /// 核对 main `dd71a14`、F5A canonical/archive 与 Alembic code head `f5a000000001`
+- [x] /// 审计用户原始包与当前 Receipt/Feedback/Identity/Home，校准发布时间、指标粒度、证据冻结、Memory旁路和并发边界
+- [x] /// 六份 delta 归位，四份 MODIFIED 保留现有完整块；新规格改为 ADDED delta 格式
+- [x] /// 独立复核、全量 strict / diff-check / 源包保留核对
+- [x] /// 用户已确认校准proposal并授权测试；隔离分支apply与验收完成，尚未合入main，完整记录见隔离工作树progress.md
+
 ## 2026-09-28：FE-F5A 六份主规格同步与归档（已授权）
 
 - [x] /// 核对 main `682df71`、4/4 产物、17/17 任务和六份 delta

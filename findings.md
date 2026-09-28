@@ -1,5 +1,38 @@
 # 配置记录
 
+## 2026-09-28：FE-F5B 本地main整合边界
+
+- main和实现分支同在dd71a14，主工作区仅四份本任务文档及标准change/计划重叠，用户原始包与ZIP是无关未跟踪资料。
+- 已将主工作区独有SPEC审计/发现/计划段落补入实现分支；重叠工作区改动以限定路径stash可恢复备份，不删除原始资料，不使用reset/强制切换。
+- 用户本次只授权代码并入本地main，隐含必要本地commit，不授权主规格同步/归档、推送、部署或生产数据库写入。
+
+## 2026-09-28：FE-F5B apply边界
+
+- 四份MODIFIED delta已逐块对照canonical：Product shell保留九工作区及F3B/F4/F5A入口；Memory旧占位场景明确限于pre-F5；项目事件原有事务约束保留；Home原有七级优先级及稳定去重保留。尚未同步canonical，避免未授权归档。
+- 恢复声明幂等凭据存入PublishedContentRecord永久provenance，不依赖90天AuditLog留存；观察新增用owner+active条件写锁，归档竞态拒绝。generic context识别的scalar/list引用严格正整数校验，坏输入422而不是500。
+- 服务端冻结promotable_claim和Memory写闸门共用推导；旧可信accepted读时派生且标记derived，不改变原checksum。声明、范围、局限不得借任意accepted候选扩张；不同声明需匹配的新accepted候选。
+
+- 发布回收是同一事务：项目事件未注册会使Receipt/History全部回滚，不能只用legacy无Project夹具替代项目链路验收。已增加project-bound重复回收仅一条事件回归。
+- 恢复幂等不是绕过当前约束的通行证：返回历史前仍核对unknown、冻结哈希及Receipt有效性。计算上限代表结果未知，不代表指标不存在。
+- 晋升表单只能使用服务端冻结可提升声明；前后端字段契约必须一起验证，否则服务端限制正确也可能使浏览器无法提交。
+
+- 持久化采用七个独立业务资源，共用现有用户、身份、Receipt、Candidate及AuditLog，不新增第二套Home/Delivery状态。
+- 现有隔离工作树已包含可复用node_modules；Python运行使用主工作区虚拟环境，但代码和测试从隔离cwd导入。只使用临时数据库，避免访问正式开发/生产数据库。
+- SQLite读取DateTime会省略时区，指标窗口口径比较必须统一UTC；旧Receipt delivered_at代表人工回填发生时间，默认保留published_at未知。
+- 不可证明Candidate哈希的legacy Receipt不能伪造Studio血缘，应跳过历史回收并在同步结果显式报告；已证明但不一致的哈希拒绝写入。
+- 指标超过安全分析界限时不能截断再称最新值，当前返回computed=false和明确缩小范围说明；正常分析的指标Coverage与cutoff/metric/key/unit/有效观察保持一致。
+- 当前Memory需防止仅检查accepted状态就支持任意改写；冻结命题、适用范围和限制必须与实际新记忆匹配，锁顺序也需跨promotion/revision一致。独立SPEC复核正在关闭这些缺口。
+
+## 2026-09-28：FE-F5B SPEC review发现
+
+- 标准源包两份新增规格使用主规格格式，四份MODIFIED均为替换片段；已按OpenSpec delta格式归位并保留完整旧块，Identity旧占位场景标为pre-F5历史行为。
+- `routers/delivery.py:add_receipt`和`routers/article_handoff.py:add_receipt`都将`delivered_at`写为回填时`utcnow()`；不能视为真实历史发布日期。保留确认真源，仅显式已核实时间进入published_at，否则未知。
+- `services/delivery.py:reconcile_attempt`只改Target/Attempt并记录AuditLog/ProjectEvent，不创建Receipt；不能凭human_confirmed Target合成已发布历史或悄改对账语义。
+- 同名metric也可能有不同unit/window或重复累计读数；补snapshot/interval粒度、effective correction、cutoff和不可直接求和规则。
+- 原包直接POST Memory及revision缺验证门槛，accepted证据未冻结、晋升幂等未说明数据库约束；补服务端共用gate、冻结验证快照、candidate/revision冲突409和promotion唯一来源。
+- 图谱MCP工具未提供，本轮仅按已知路径定向读取相关模型、Receipt入口、Identity/Home集成，不全仓代码扫描。
+- 独立复核补充：不生成receipt是正确边界，但需可执行的人工恢复入口。已定义confirm-reconciled独立发布确认，原Receipt API状态闸门与reconciliation语义保持不变；需要人工确认真实发布，而非草稿创建。
+
 ## 2026-09-28：FE-F5A 主规格同步归档检查
 
 - 六份同步结果：新增 Opportunity 7 条、Home 4 条要求；更新 FE-F0/F1 2 条、FE-F3A 4 条、FE-F3B 2 条、FE-F4 2 条。全部21个 delta requirement blocks 与归档逐块一致，四份既有主规格37个旧 requirement blocks（含场景正文）全部保留。

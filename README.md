@@ -70,6 +70,22 @@
 - 关键设计决策：推荐始终是 suggested；转换只创建普通 Brief v1 与用户明确选择的 Source bindings，不创建 Topic / FactPack / Fact Boundary / IdentitySnapshot / Candidate / DeliveryTarget。Assessment 与 Conversion 保留历史；Home 不建立第二套状态表，近期活动不冒充排期。
 - 依赖与启动方式：无新增运行依赖。隔离库先 `DATABASE_URL=sqlite:////tmp/<isolated>/studio.db python -m alembic upgrade head`，API 使用 uvicorn，Vite 通过 `AI_STUDIO_API_TARGET` 指向该 API；前端 `npm run build` 同时检查三个入口预算。全量 pytest 需指向已迁移隔离 DATABASE_URL，worker SessionLocal 不使用 TestClient 的内存依赖替换。本轮未运行生产迁移。
 
+### FE-F5B Performance + Learning + Memory（本地实现验收通过，待主规格同步归档）
+
+- PRD/需求背景：把已发布/外部历史内容的表现，经可追溯观察、Insight、学习候选和明确验证闭环到内容记忆；高表现不代表自动修改身份或策略。标准变更为 `openspec/changes/fe-f5b-performance-learning-memory/`，步骤见 `docs/superpowers/plans/2026-09-28-fe-f5b-performance-learning-memory.md`。
+- 目录结构：七个资源沿用 `apps/api/app/models.py`，迁移 `f5b000000001`；历史与学习分为 `routers/{performance_history,learning}.py` 和 `services/{published_history,content_learning}.py`，前端独立 `product/LearningWorkspace.tsx` 与 Home/Identity 投影衔接。
+- 已完成：七资源持久化、Receipt兼容回收、外部历史导入、同口径分析、Insight、候选验证、显式Memory晋升/版本、四标签Learning和Home/Identity投影。457后端测试、前端build/bundle、独立规格及质量复核、隔离浏览器闭环通过；完整证据见 `progress.md`。
+- 待完成/TODO：本次已获授权进行本地main整合及必要提交；六份delta主规格同步与归档另待确认。PostgreSQL真实并发、真实指标Connector/模型分析器、生产迁移及部署未验收，不用本地测试代替生产准入。
+- 关键设计决策：仅明确人工确认且血缘可核实的 Receipt 进入 Studio 历史；回执提交时间不是发布时间。外部导入有独立来源；指标按 namespace/key/unit/window/mode 保留口径，最新累计快照不相加；Memory 不等于 Identity，不自动改 Workflow/渠道策略。
+- 依赖与启动方式：无新增运行依赖；隔离库执行 Alembic，API/Vite 使用上述启动方式。全量 pytest 指向已迁移隔离 DATABASE_URL；不得运行生产迁移、push、merge 或 deploy。
+
+```text
+Confirmed Receipt / External Import → PublishedContentRecord
+  → PerformanceObservation → ContentInsight → LearningCandidate
+  → 明确验证并冻结声明、范围及限制 → 显式Promote → ContentMemoryRevision
+Home ← ready_for_review；Identity Memory ← 同一ContentMemory投影（不改身份修订）
+```
+
 ```text
 SourceDocument / DataSnapshot / Feedback / Manual reference
   → Opportunity → AssessmentRevision → 用户确认转换

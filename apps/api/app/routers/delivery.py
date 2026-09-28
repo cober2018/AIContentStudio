@@ -3,10 +3,13 @@
 旧 `/article-handoff/...` 路径保留为兼容 alias（M1 manual_handoff 语义不变）。
 """
 
+from datetime import UTC
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field, model_validator
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -23,6 +26,7 @@ from ..models import (
     utcnow,
 )
 from ..services import delivery as delivery_service
+from ..services import published_history
 from ..services.project_authorization import authorize_project_asset, authorize_project_target
 from ..services.project_events import record_project_event
 
@@ -43,6 +47,17 @@ class ReceiptIn(BaseModel):
     evidence_ref: str | None = None
     verification_method: str | None = None
     note: str | None = None
+    published_at: AwareDatetime | None = None
+    publication_time_evidence: str | None = None
+
+    @model_validator(mode="after")
+    def validate_publication_time(self):
+        if self.published_at is not None or self.publication_time_evidence is not None:
+            if (self.status != "human_confirmed" or self.published_at is None
+                    or not self.publication_time_evidence or not self.publication_time_evidence.strip()):
+                raise ValueError("实际发布时间须由人工确认并提供非空依据")
+            self.published_at = self.published_at.astimezone(UTC)
+        return self
 
 
 class FeedbackIn(BaseModel):
@@ -175,14 +190,29 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
         for attempt in target.attempts
     ):
         raise HTTPException(409, "交付结果待核对，必须先完成对账")
-    idempotency_key = delivery_service._hash(
+    key_parts = [
         str(target.id), target.approved_candidate_hash, payload.status,
         payload.evidence_ref or "", payload.verification_method or "", payload.note or "",
-    )
+    ]
+    # Preserve old receipt keys so retries can repair missing history.
+    if payload.published_at is not None:
+        key_parts.extend([payload.published_at.isoformat(), payload.publication_time_evidence])
+    idempotency_key = delivery_service._hash(*key_parts)
     existing = db.scalars(
         select(DeliveryReceipt).where(DeliveryReceipt.target_id == target.id, DeliveryReceipt.idempotency_key == idempotency_key)
     ).first()
     if existing:
+        try:
+            db.flush()
+            published_history.sync_receipt(db, user, existing, published_at=payload.published_at,
+                                           publication_time_evidence=payload.publication_time_evidence)
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(409, "回执或发布历史保存冲突，请重试")
+        except Exception:
+            db.rollback()
+            raise
         return _target_json(target, with_attempts=False)
     if target.status not in {
         DeliveryTargetStatus.awaiting_manual_receipt.value,
@@ -210,12 +240,21 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
     db.add(AuditLog(event="delivery_receipt.recorded", actor=user.email, entity_type="delivery_target",
                     entity_id=str(target.id), detail_json={"status": target.status, "platform_verified": False}))
     asset = db.get(ContentAsset, target.content_asset_id)
-    if asset.project_id is not None:
+    try:
         db.flush()
-        record_project_event(db, project_id=asset.project_id, event_type="delivery.receipt_recorded", actor=user.email,
-                             entity_type="delivery_receipt", entity_id=receipt.id,
-                             payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "target_id": target.id, "status": receipt.status})
-    db.commit()
+        published_history.sync_receipt(db, user, receipt, published_at=payload.published_at,
+                                       publication_time_evidence=payload.publication_time_evidence)
+        if asset.project_id is not None:
+            record_project_event(db, project_id=asset.project_id, event_type="delivery.receipt_recorded", actor=user.email,
+                                 entity_type="delivery_receipt", entity_id=receipt.id,
+                                 payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "target_id": target.id, "status": receipt.status})
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "回执或发布历史保存冲突，请重试")
+    except Exception:
+        db.rollback()
+        raise
     return _target_json(target, with_attempts=False)
 
 

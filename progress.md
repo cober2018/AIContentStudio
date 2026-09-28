@@ -1,5 +1,54 @@
 # 当前进度
 
+## 2026-09-28：FE-F5B 本地main整合（执行中）
+
+- 提交前本轮实际复跑：后端457 passed/6既有警告；前端build/bundle通过，/projects 215.21 kB/70.15 kB gzip，Learning252.12 kB；OpenSpec strict20/20及diff-check通过。标准包两边仅tasks完成状态不同，实施计划仅授权checkbox不同，其他规格内容一致。
+
+- 用户已明确选择先将代码融入main，按分支收尾技能执行本地commit→快进→合入后门禁；不获取/推送远端、不部署或生产迁移。
+- 主工作区四份重叠文档属于本任务审计与执行回链；独有SPEC审计段已保留到实施分支。用户原始包/ZIP继续排除，仅限定本任务路径备份与提交。
+- 本轮skills：using-superpowers、writing-plans、executing-plans、finishing-a-development-branch、verification-before-completion。用户已选择本地合入，无需重复询问四种选项；工作树供未归档变更继续使用，不清理。
+
+## 2026-09-28：FE-F5B apply启动
+
+- 验收后已关闭本轮临时Chrome页并停止自建API18105/Vite15185；未停止用户原有服务。隔离数据库保留用于追溯，未删除数据。OpenSpec apply实际返回all_done、94/94，最终diff-check通过。
+
+- 文档和94/94任务更新后的最终规格门禁：OpenSpec全量strict20 passed/0 failed，git diff --check通过。主工作区仅补执行回链，业务实现依旧在隔离分支。
+
+- FINAL IMPLEMENTATION/REVIEW PASS：OpenSpec实施94/94。实际最终全量457 passed、6条既有警告；前端TypeScript/Vite及bundle通过，/projects 215.21 kB raw /70.15 kB gzip，Learning 252.12 kB initial，无重型编辑器。相关15份Python文件Ruff通过，最终文档后的strict/diff-check另复跑。
+- 独立SPEC复审：历史/持久化/Receipt通过（63定向测试）、Learning通过；独立QUALITY复审后端与前端均APPROVE。质量反馈实际修复：AuditLog清理后恢复幂等仍受永久历史provenance保护；归档与观察写入用owner/active条件锁；异常嵌套引用在ORM前422；旧accepted只读派生可信可提升声明，不修改历史checksum/revision。
+- 浏览器隔离验收完成：外部历史#1无发布时间/身份时诚实显示未知；Studio回收#2→80阅读观察#2→Insight#2→候选#2支持证据→人工accepted→角色#1记忆#1修订1。刷新身份Memory可见来源候选及single_sample/仅限隔离单样本限制；身份仍v1。DB实际readback：2条历史、1条Receipt、1条Memory/Revision、1条PersonaRevision、1条publication事件。Home已验证ready候选待办与accepted后消失。
+- 本地Studio候选/目标为明确test_fixture，仅检验本地事务、浏览器和血缘，不代表真实平台发布。临时SQLite已验证升级/回退/升级、PostgreSQL方言DDL与驱动冲突注入；未实测PostgreSQL服务并发、生产迁移或真实Connector。
+- 本轮实际skills：using-superpowers、openspec-apply-change、writing-plans、executing-plans、using-git-worktrees、subagent-driven-development、dispatching-parallel-agents、test-driven-development、systematic-debugging、receiving-code-review、requesting-code-review、verification-before-completion。Skill要求推动了隔离、失败优先回归、先SPEC后QUALITY复核；归档技能未执行。
+- 代码尚未暂存/提交/合并/推送/部署；六份主规格同步和archive按已确认任务边界等待单独授权。用户原始规格包与主工作区无关文件保持不变。
+
+- 最新实际门禁：437后端测试通过（6条既有警告）；前端build及bundle gate通过，/projects 215.21 kB raw /70.15 kB gzip，Learning 252.12 kB initial JS，无TipTap/XYFlow。后续契约补丁完成后仍需最终复跑。
+- 浏览器项目回收发现未注册delivery.publication_confirmed事件，先补失败回归再注册事件；历史17项回归通过，浏览器现已真实保存Studio历史#2，发布时间未知仍未补成回填时间。
+- 第二轮历史复核补幂等重试前当前状态/候选哈希/Receipt检查；超出分析上限coverage必须unknown而非missing，已补断言。学习验证已浏览器保存accepted，但可提升声明投影尚需后端/前端对齐后才能完成晋升。
+
+- 用户确认校准规格及定向回归测试，使用change `fe-f5b-performance-learning-memory`，spec-driven，94项待实施。
+- 复用已清洁且无需继续F5A开发的现有工作树，分支`codex/fe-f5b-performance-learning-memory`从main `dd71a14`开始；原始包与主工作区规格审计改动保留。
+- 本轮不push/merge/deploy/生产迁移；主规格同步、归档和提交继续按tasks等待收尾授权。计划中的执行步骤采用`///`；先验证持久化测试失败，再实现。
+- 基线实际复跑346后端测试及前端build/bundle通过。七资源模型与迁移先写失败测试，再实现通过；隔离临时SQLite升级→回退f5a→升级成功，当前head f5b000000001。
+- 历史导入、快照最新值、同窗口修正与Home学习待办首批4项回归通过；时间窗口经UTC标准化比较，避免SQLite丢失时区后误拒绝修正。发布确认只回收有人工Receipt且可核实候选血缘的内容，回执提交时间不冒充发布时间。
+- Skill驱动的并行实施按文件范围分离：Learning后端、Learning前端、Receipt兼容钩子；主流程维护历史/分析/Home/迁移与文档。仍在实现，不提前标记完整验收。
+- 注册Learning正式路由后四个F5B测试文件71项通过；首轮全量实际424 passed，6条既有警告。此为中间结果，后续review修补后再复跑。
+- 历史SPEC首轮7项边界修补：所有入库/查询时间统一UTC；数值修正不可变文字；大于10000观察明确不可计算不返回过期值；metric/key/unit/cutoff覆盖按实际选中观察计；日期缺失按同范围计；flush冲突整批回滚重试；恢复确认复用已有Receipt。补充granularity/cutoff及同目标反馈血缘，当前14项历史回归通过。
+- 迁移历史回退再升级保留既有User记录且不自动创建发布历史；七资源DDL可按PostgreSQL方言编译，未实测PostgreSQL服务。Receipt worker完成新旧钩子与43项回归；全部原有路由测试亦通过。
+- 前端SPEC通过，发现冻结证据数读取层级错误，正在补；浏览器完成外部历史导入、刷新、追加150浏览快照、保存人工Insight和创建候选，完整验证/晋升/身份投影待收尾。
+- Learning SPEC发现任意记忆新主张借用旧候选、锁顺序和嵌套Insight覆盖3项，已交由原owned worker按TDD修补。不要将中间绿灯视作最终验收。
+
+## 2026-09-28：FE-F5B 规格审计与归位（SPEC_REVIEW_PASSED / 待确认apply）
+
+- 当前真实基线 main `dd71a14`，F5A 归档与两份canonical存在；Alembic代码head为`f5a000000001`，未核对或迁移任何生产数据库。
+- 标准提案位于 `openspec/changes/fe-f5b-performance-learning-memory/`，原始 `openspec/fe-f5b-performance-learning-memory/` 与ZIP不改。
+- 已补四份MODIFIED完整旧契约、新规格ADDED格式；修正Receipt确认时间与实际发布时间区别、receipt-less reconciliation不合成发布、指标测量粒度和修正链、候选验证冻结、Memory所有写入口及并发/幂等闸门。
+- 单项strict PASS，4/4 artifacts done仅代表规格完整，不代表实现完成。全量门禁与独立规格复核待完成；实施计划在`docs/superpowers/plans/2026-09-28-fe-f5b-performance-learning-memory.md`。
+- 按项目OpenSpec规则，在这份校准proposal获得明确确认前暂停apply；未创建业务实现、测试代码、迁移或提交，不push/merge/deploy。计划中的定向测试仍待apply授权。
+- 独立规格复核首轮指出receipt-less reconciliation缺恢复入口；当前代码对账后目标human_confirmed，而两个Receipt API均拒绝此状态。已在spec/design/tasks/plan补显式confirm-reconciled人工确认动作及原子/幂等/权限/无远端副作用边界，等待针对性复核。
+- 针对性复核最终APPROVE，该恢复入口问题已关闭，首轮其余边界无新增发现。校准后`openspec validate --all --strict`20/20 PASS，diff-check PASS；源包10/10文件未变，四份MODIFIED完整旧块保留（旧Memory占位明确为历史场景）。94项实施任务未执行，主规格未同步、未归档、未提交，业务代码未改。
+- requesting-code-review安排独立只读复核，receiving-code-review核对代码证据并修正一项规格缺口；reviewer已关闭。下一步仅等待用户确认这份校准proposal及其定向回归范围后apply。
+- 本轮实际skills：using-superpowers、openspec-explore、openspec-propose、writing-plans、requesting-code-review、verification-before-completion。explore用于只读审计，propose用于规格归位；writing-plans安排独立复核；不将严格校验等同于业务验收。
+
 ## 2026-09-28：FE-F5A 六份主规格同步与归档
 
 - 用户已明确授权同步全部六份 canonical specs 并归档；当前 main `682df71`，4/4 产物与17/17任务完成。
