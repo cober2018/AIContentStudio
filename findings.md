@@ -1,5 +1,14 @@
 # 配置记录
 
+## 2026-09-28：FE-F5A-SPEC-R1 review 处理
+
+- Review 指出的状态旁路确实存在：原规格允许普通 PATCH 直接写 `converted/archived`；现已限定为转换事务/归档路径专属状态，并拒绝非法回退。
+- Assessment 原规格没有写明 `expected_revision`、409 和数据库竞争处理；现已补成 append-only 并发契约，要求失败不留下部分 revision/audit。
+- Opportunity 预 Project 阶段不能使用 ProjectEvent；现采用已有 `AuditLog` 记录 Opportunity 生命周期，ProjectEvent 只从成功 conversion 开始，不新增 OpportunityEvent 表。
+- 已删除单一 Opportunity `source_type` 作为真源，来源由 Signal 类型派生；转换只允许明确选择的 SourceDocument 进入普通 ProjectSourceBinding。
+- Home 已固化 Today 排序、待决策优先级和稳定实体去重；核心投影失败不得伪装为空，需返回错误或 `incomplete=true` + `section_errors`。
+- tasks 已改为要求 F5A 定向自动化回归，包括权限、状态旁路、并发、转换原子性/幂等/回滚、Fact Boundary 禁止、Home 优先级/去重和性能预算。
+
 ## 2026-09-28：FE-F5A Home + Opportunity 规格审计补充
 
 - 源包包含 `proposal.md`、`design.md`、`tasks.md`、F5A 新规格，以及 FE-F0/F1、FE-F3A、FE-F3B、FE-F4 四份 delta；已放入标准 `openspec/changes/fe-f5a-home-opportunity/`。

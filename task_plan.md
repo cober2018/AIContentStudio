@@ -1,5 +1,13 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F5A-SPEC-R1 review 修订（SPEC_R1_READY）
+
+- [x] /// 核对 review 反馈与当前 OpenSpec、AuditLog/ProjectEvent 模型和既有 Home/Review 投影
+- [x] /// 补状态生命周期闸门、Assessment 并发、来源真源、Home 排序/失败语义和四个 Modified Capabilities
+- [x] /// 将定向自动化回归要求写入 tasks，保留不新增独立测试框架的边界
+- [x] /// 运行全量 OpenSpec strict 与 `git diff --check`
+- [ ] /// 等待 SPEC_R1 确认后执行 `/opsx:apply`，不提前改业务代码
+
 ## 2026-09-28：FE-F5A Home + Opportunity 规格审计与归位（SPEC_READY）
 
 目标：在 FE-P1 `85b8c08` 基线上，为内容生命周期补上 Opportunity 决策层和 Home 聚合工作台；本轮仅完成 OpenSpec 规格，不 apply 业务代码。

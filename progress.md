@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-28：FE-F5A-SPEC-R1（规格修订完成，未 apply）
+
+- 已核对 review 指出的 6 项阻塞与 2 项补充项，确认均适用于当前 OpenSpec。
+- 已补充 Opportunity `converted/archived` 状态闸门、合法 triage/reopen、Assessment `expected_revision`/409/race/无部分提交、AuditLog 与 ProjectEvent 分工、Signal 派生来源类型、Home 排序/决策优先级/去重，以及核心投影失败的 `incomplete/section_errors` 语义。
+- 已将 proposal 的 Modified Capabilities 补齐 FE-F0/F1、FE-F3A、FE-F3B、FE-F4；tasks 改为要求定向自动化回归。
+- `openspec validate --all --strict`：18/18 通过；`git diff --check`：通过。
+- 仍未执行业务代码 apply、数据库迁移、推送、部署或生产写入；状态为 `SPEC_R1_READY`，等待独立确认后再授权 apply。
+
 ## 2026-09-28：FE-F5A Home + Opportunity 标准包审计（SPEC_READY，未 apply）
 
 - 用户提供并解压标准包于 `/Users/mshengran/Project/AIContentStudio/openspec/fe-f5a-home-opportunity/`；原始目录保留不改。

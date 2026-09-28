@@ -2,15 +2,23 @@
 
 ### Requirement: Owner-scoped opportunity lifecycle
 
-The system SHALL persist `ContentOpportunity` records owned by one user with title, summary, source type, priority, lifecycle status, created time, and updated time. Supported statuses SHALL be `new`, `watching`, `qualified`, `dismissed`, `converted`, and `archived`. Reads and mutations MUST enforce the same owner boundary as ContentProject.
+The system SHALL persist `ContentOpportunity` records owned by one user with title, summary, priority, lifecycle status, created time, and updated time. Supported statuses SHALL be `new`, `watching`, `qualified`, `dismissed`, `converted`, and `archived`. Source categories SHALL be derived from attached `ContentOpportunitySignal.signal_type` values, not a single Opportunity source type. Reads and mutations MUST enforce the same owner boundary as ContentProject. Ordinary PATCH may change triage status only among `new`, `watching`, `qualified`, and `dismissed`; it MUST NOT set `converted` or `archived`. `converted` SHALL be set only by a committed `convert-to-project` transaction, and `archived` only by the archive action. Converted and archived Opportunities SHALL reject triage edits and status rollback.
 
 #### Scenario: Create an opportunity
 - **WHEN** an editor submits a valid title and summary
-- **THEN** the system creates an owner-scoped opportunity in `new` status and records one creation event
+- **THEN** the system creates an owner-scoped opportunity in `new` status and records the lifecycle mutation in the existing AuditLog
 
 #### Scenario: Triage an opportunity
 - **WHEN** the owner changes priority or status to `watching`, `qualified`, or `dismissed`
-- **THEN** the system persists the new lifecycle state, records the actor and revision event, and does not create a project automatically
+- **THEN** the system persists the new lifecycle state, records the actor and transition in AuditLog, and does not create a project automatically
+
+#### Scenario: Reopen dismissed opportunity
+- **WHEN** the owner explicitly changes a `dismissed` Opportunity back to `watching` or `qualified` through ordinary triage PATCH
+- **THEN** the transition is audited and no Project is created
+
+#### Scenario: Reject status bypass and rollback
+- **WHEN** ordinary PATCH requests `converted` or `archived`, or attempts to change a converted/archived Opportunity back to a triage state
+- **THEN** the server rejects the request without changing status or creating an OpportunityProjectConversion
 
 #### Scenario: Cross-owner access
 - **WHEN** another user requests, edits, or archives the opportunity
@@ -26,7 +34,7 @@ The system SHALL append `ContentOpportunitySignal` records to an opportunity. Ea
 
 #### Scenario: Add a manual signal
 - **WHEN** an owner records a manual observation without an external source ID
-- **THEN** the system stores it with `source_type=manual` and makes the missing external lineage explicit
+- **THEN** the system stores it with `signal_type=manual` and makes the missing external lineage explicit
 
 #### Scenario: Source changes later
 - **WHEN** the referenced source receives a newer version or is archived
@@ -34,15 +42,19 @@ The system SHALL append `ContentOpportunitySignal` records to an opportunity. Ea
 
 ### Requirement: Append-only opportunity assessments
 
-The system SHALL store opportunity analysis as append-only `ContentOpportunityAssessment` revisions. An assessment SHALL support why-now, relevance, audience fit, suggested identity scope, suggested modalities, suggested channels, evidence references, similar-history references, risks, confidence, author, and creation time. Revisions MUST be owner-scoped and MUST distinguish suggestions from approved project facts.
+The system SHALL store opportunity analysis as append-only `ContentOpportunityAssessmentRevision` rows. An assessment SHALL support why-now, relevance, audience fit, suggested identity scope, suggested modalities, suggested channels, evidence references, similar-history references, risks, confidence, author, and creation time. Revisions MUST be owner-scoped and MUST distinguish suggestions from approved project facts. Saving SHALL require `expected_revision` and a unique `(opportunity_id, revision_no)` constraint; stale saves and database uniqueness races MUST return 409 with no partial revision. Assessment revisions are assessment history; they do not require a separate OpportunityEvent table.
 
 #### Scenario: Save an assessment revision
-- **WHEN** an owner saves an assessment for opportunity revision N
+- **WHEN** an owner saves an assessment with `expected_revision=N` matching the current assessment revision
 - **THEN** the system creates revision N+1, preserves revision N, and records the assessment checksum and author
+
+#### Scenario: Stale or concurrent assessment save
+- **WHEN** another save advances the assessment before or during a save using the previous `expected_revision`
+- **THEN** the stale save returns 409 and commits no partial assessment revision or audit record
 
 #### Scenario: Reject an invalid identity suggestion
 - **WHEN** an assessment references an identity outside the owner's hierarchy
-- **THEN** the save is rejected and no new assessment revision or event is committed
+- **THEN** the save is rejected and no new assessment revision or audit record is committed
 
 #### Scenario: Read assessment history
 - **WHEN** an owner opens an opportunity
@@ -67,6 +79,16 @@ The system SHALL allow an owner to explicitly convert only a `qualified` opportu
 #### Scenario: Conversion does not freeze evidence
 - **WHEN** conversion includes selected source signals
 - **THEN** the new project may show them in its ordinary Source list, but the user must use the existing Evidence/Fact Boundary flow before any fact becomes project evidence
+
+### Requirement: Opportunity lifecycle audit uses existing records
+
+The system SHALL record Opportunity creation, triage, archive, and conversion lifecycle mutations in the existing AuditLog in the same transaction as the state change. It MUST NOT add a parallel ContentOpportunityEvent table. A successful conversion SHALL also create `ProjectEvent(project.created_from_opportunity)` in the same transaction; ProjectEvent MUST NOT be used for pre-project Opportunity history.
+
+#### Scenario: Audit conversion atomically
+- **WHEN** conversion commits successfully
+- **THEN** the AuditLog transition and new ProjectEvent both reference the committed Opportunity and Project
+- **WHEN** conversion rolls back
+- **THEN** neither the lifecycle audit record nor ProjectEvent claims success
 
 ### Requirement: Optional Opportunity Analysis
 

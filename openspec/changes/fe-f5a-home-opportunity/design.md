@@ -17,14 +17,14 @@ F5A must add that decision layer without turning `ContentOpportunity` into a sec
 **Non-Goals:**
 
 - No automatic news/search ingestion, new external connector, or scraping system.
-- No automatic ContentProject creation, Fact Boundary mutation, Source binding, Candidate approval, Delivery authorization, or Identity update.
+- No automatic ContentProject creation, Fact Boundary mutation, unselected Source binding, Candidate approval, Delivery authorization, or Identity update. Explicitly selected SourceDocument signals may become ordinary ProjectSourceBinding rows during conversion.
 - No Topic replacement or deletion of the existing Topic/Brief flow.
 - No `HomeTask`, dashboard status, schedule, performance-learning, asset-library, or settings domain in F5A.
 - No production migration, external publishing, or production database write.
 
 ## Decisions
 
-1. **Use three persisted opportunity records.** `ContentOpportunity` owns lifecycle and triage identity; `ContentOpportunitySignal` records immutable source observations; `ContentOpportunityAssessment` is append-only and versioned. A JSON payload is appropriate for evolving signal/assessment detail, but stable ownership, lifecycle, revision, source reference, checksum, and timestamps remain columns.
+1. **Use four persisted opportunity records.** `ContentOpportunity` owns lifecycle and triage identity; `ContentOpportunitySignal` records immutable source observations; `ContentOpportunityAssessmentRevision` is append-only and versioned; `OpportunityProjectConversion` is the idempotent origin relation. A JSON payload is appropriate for evolving signal/assessment detail, but stable ownership, lifecycle, revision, source reference, checksum, and timestamps remain columns. Source categories are derived from signal types rather than a second single source field.
 
 2. **Keep opportunity separate from TopicBrief.** An opportunity explains why-now and fit. Conversion may later create a project brief, while TopicBrief remains a compatible production input for legacy flows. No opportunity endpoint creates or mutates Topic rows.
 
@@ -40,6 +40,10 @@ F5A must add that decision layer without turning `ContentOpportunity` into a sec
 
 8. **Keep automated analysis optional.** A replaceable `opportunity_analysis` capability may produce a validated assessment, but an unavailable capability returns an explicit unavailable result and never creates fake analysis. Manual assessment is the primary path.
 
+9. **Use existing audit boundaries.** Opportunity lifecycle mutations are written to `AuditLog`; assessment rows are their own immutable history; only post-conversion project activity is written to `ProjectEvent`. F5A does not add `ContentOpportunityEvent`.
+
+10. **Make Home failure semantics explicit.** Core projection failures are request/section errors with `incomplete` metadata; only optional capability failures may be partial. Missing core data is never rendered as an empty successful section.
+
 ## Risks / Trade-offs
 
 - **[Assessment JSON evolves quickly]** → Keep lifecycle, revision, checksum, ownership, and source lineage normalized; version the assessment schema and preserve old JSON.
@@ -50,7 +54,7 @@ F5A must add that decision layer without turning `ContentOpportunity` into a sec
 
 ## Migration Plan
 
-Additive migration creates the four opportunity tables and indexes; existing rows are not backfilled or reclassified. Rollback is a code/schema rollback in an isolated development database before any production migration is considered. Apply must first verify the workspace can read FE-P1 commit `85b8c08` and the canonical FE-P1 spec.
+Additive migration creates the four opportunity tables and indexes; existing rows are not backfilled or reclassified. Lifecycle constraints and conversion uniqueness are enforced at both service and database boundaries. Rollback is a code/schema rollback in an isolated development database before any production migration is considered. Apply must first verify the workspace can read FE-P1 commit `85b8c08` and the canonical FE-P1 spec.
 
 ## Open Questions
 
