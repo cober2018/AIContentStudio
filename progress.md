@@ -1,6 +1,11 @@
 # 当前进度
 
-## 2026-09-28：FE-F5B 本地main整合（执行中）
+## 2026-09-28：FE-F5B 本地main整合（通过）
+
+- 功能提交 `9e0ce04b8d076935e9b8182ce8154eb6e235e31d`，36份白名单文件；本地main从dd71a14快进到该提交，无业务冲突。
+- 合入后从主工作区实际复跑：后端457 passed/6既有警告（17.64秒）；前端TypeScript/Vite/bundle PASS，/projects215.21 kB raw、70.15 kB gzip，Learning252.12 kB；OpenSpec strict20 passed/0 failed，工作区与提交diff-check PASS。测试使用隔离数据库 `/tmp/aicontent-f5b-regression-A7jHoA/migration.db`，没有改动开发或生产数据库。
+- main原重叠审计资料限定路径保存于stash `756ed20db1f8dc29a5ad43e370b5f48b5c46bf50`（fe-f5b-main-pre-integration-owned-docs），其中独有SPEC审计段已整合到当前文档；标准规格除任务完成状态外一致，计划仅授权checkbox更新。备份仍保留，不重复apply旧状态造成文档/任务倒退。
+- 用户原始包/ZIP仍原样未跟踪，没有进入36份提交；canonical `openspec/specs/` 与dd71a14完全一致，FE-F5B change仍active，未执行archive。保留实现工作树供后续规格收尾，无push/merge远端/deploy/生产迁移；只完成用户授权的本地main合入。
 
 - 提交前本轮实际复跑：后端457 passed/6既有警告；前端build/bundle通过，/projects 215.21 kB/70.15 kB gzip，Learning252.12 kB；OpenSpec strict20/20及diff-check通过。标准包两边仅tasks完成状态不同，实施计划仅授权checkbox不同，其他规格内容一致。
 
