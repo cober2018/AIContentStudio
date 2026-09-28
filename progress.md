@@ -1,11 +1,14 @@
 # 当前进度
 
-## 2026-09-28：FE-F5C 本地main整合启动（授权）
+## 2026-09-28：FE-F5C 本地main整合（通过）
 
 - 用户明确授权“融入main分支”；本轮仅本地提交/合入，归档与主规格同步仍待单独授权，不push/deploy/生产迁移。
 - main及实现分支同在49d6c4b；四份根文档、标准change与计划逐项比较完全一致，主工作区没有业务代码差异。使用限定路径stash保留重叠资料后快进，不恢复旧记录覆盖新状态。
 - 合入前后门禁使用新临时库/tmp/aicontent-f5c-main-integration-GvoX7B/studio.db，真实开发/生产库不变。工作树保留供F5C规格归档使用。
 - 本轮实际skills：using-superpowers、writing-plans、finishing-a-development-branch、verification-before-completion。
+- 功能提交 `79562731f4157bce74d7dab4c39a59f0c1f4a7e7`，36份白名单文件；本地main从49d6c4b快进合入，无冲突。原始包和ZIP仍未跟踪且未进入提交，canonical规格未修改，F5C change仍active。
+- 合入前实跑547 passed（22.34秒）；合入main后复跑547 passed（20.96秒），均6既有警告。主工作区TypeScript/Vite build、bundle预算、OpenSpec all strict22/22、定向Ruff与diff-check全部通过；projects224.68kB raw/72.86kB gzip，Assets257.70kB、Settings229.76kB initial。
+- main重叠资料已限定路径可恢复保存于stash `fcbbd3ed9db0c4db2f287a96e2cf17108c142e45`（fe-f5c-main-pre-integration-owned-docs）；内容已随功能提交合入，不重复apply旧文档覆盖当前进度。实现工作树和分支保留供后续主规格同步与归档，未push/deploy/生产迁移。
 
 ## 2026-09-28：FE-F5C apply 验收通过（隔离分支，未提交）
 

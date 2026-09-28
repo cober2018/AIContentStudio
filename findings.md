@@ -4,6 +4,7 @@
 
 - main49d6c4b与F5C分支共同基线一致；重叠的README/progress/findings/task_plan、标准规格和实施计划内容完全一致，无main独有段落需要合并。
 - 只保存和提交本轮白名单，原始包/ZIP不进入提交；本地main整合不包含canonical同步归档或生产操作。
+- 已快进49d6c4b→7956273；合入前后547测试、build/bundle、strict22/22、Ruff/diff均通过。可恢复stash fcbbd3e保留，原始包/ZIP未纳入提交；待独立授权同步五份canonical及归档。
 
 ## 2026-09-28 FE-F5C 最终复核闭环
 
