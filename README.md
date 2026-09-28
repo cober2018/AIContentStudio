@@ -119,12 +119,12 @@ SourceDocument / DataSnapshot / Feedback / Manual reference
 Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 ```
 
-### FE-F6A Production Core（阶段实现；已授权整合main并直接继续开发）
+### FE-F6A Production Core（阶段代码已合入本地main，继续开发中）
 
 - 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的内容主版本和上下文血缘；本轮不替换旧引擎、不新增远程发布能力。
 - 目录结构：`apps/api/app/models.py` 增加 Master 与不可变素材/证据/检查引用；`apps/api/app/services/content_masters.py` 和 `production_modalities.py` 承接项目边界、CAS/幂等保存、上下文哈希和三种形态的最小 payload；`apps/api/app/routers/content_masters.py` 提供项目单元级读写；迁移为 `apps/api/alembic/versions/f6a000000001_production_content_master.py`。
 - 已完成的基础：四表与`ContentAsset` Master关联、video枚举；授权的有界列表/当前/详情读取；追加保存、请求幂等重试、父版本检查及上下文冻结/不完整和stale投影。检查追加历史、最新结果和stale投影已回归；Draft seed验证当前成功Step/Attempt并记录血缘。回退发现Master/不兼容Candidate历史时，在任何DDL之前拒绝；本轮27项定向回归通过。
-- 待完成/TODO：共享事务锁与上下文冲突、完整素材/嵌入引用校验、完整权利/渲染检查与人工render绑定、Candidate v4完整冻结/审批/本地包、Review/Versions/Overview、Production Workspace及浏览器验收。已有v4入口不是可交付完成状态；PostgreSQL实库未验收。未同步canonical、未归档、未合入main、未push/deploy/生产迁移。
+- 待完成/TODO：共享事务锁与上下文冲突、完整素材/嵌入引用校验、完整权利/渲染检查与人工render绑定、Candidate v4完整冻结/审批/本地包、Review/Versions/Overview、Production Workspace及浏览器验收。已有v4入口不是可交付完成状态；PostgreSQL实库未验收。阶段功能提交`7c2be75`已本地快进合入main；未同步canonical、未归档、未push/deploy/生产迁移。
 - 关键设计决策：Master 与 Workflow 保存分离；历史上下文不自动跟随最新身份/Brief/事实边界；素材只按项目可见的 `MaterialRevision` 引用、不复制字节；Graphic/Video 没有真实渲染时不伪造成功。
 - 依赖与启动：复用现有 FastAPI/SQLAlchemy/Alembic/React；后端测试使用迁移后的隔离SQLite，禁止把临时库迁移命令用于开发或生产数据库。
 - 当前阶段门禁：574后端测试（含27项F6A回归）、SQLite空库迁移往返、前端build/FE-P1预算、strict24/24、Ruff/diff通过；这不是整体F6A完成或浏览器/生产验收。真实业务链仍按上方TODO继续实施。
