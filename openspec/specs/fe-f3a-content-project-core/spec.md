@@ -27,6 +27,12 @@ The system SHALL persist CreativeBrief as append-only revisions owned by one Con
 - **WHEN** a Brief revision references an identity outside the user's hierarchy
 - **THEN** the save is rejected without changing prior Brief revisions
 
+Opportunity conversion MAY create CreativeBrief revision 1 from the selected Assessment and explicit user overrides. When created, it SHALL become a normal immutable Brief revision.
+
+#### Scenario: Prefilled Brief
+- **WHEN** conversion creates Brief v1
+- **THEN** recommendations are copied as editable project inputs and later Opportunity changes do not rewrite the Brief
+
 ### Requirement: Project Sources reference existing SourceDocument records
 
 A ContentProject SHALL organize Sources through project bindings to existing SourceDocument rows. Attaching or detaching a Source MUST NOT copy, rewrite, archive, or delete the SourceDocument.
@@ -47,6 +53,12 @@ A ContentProject SHALL organize Sources through project bindings to existing Sou
 - **WHEN** an editor attaches a previously detached Source already bound to the project
 - **THEN** the existing unique binding becomes active again; repeated active attach is idempotent and does not emit a duplicate event
 
+Conversion MAY attach selected SourceDocument signals through normal ProjectSourceBinding, and the binding SHALL preserve the existing source reference semantics.
+
+#### Scenario: Attach Opportunity source
+- **WHEN** a selected signal references SourceDocument
+- **THEN** Project gets a Source binding and no raw source body is copied
+
 ### Requirement: Immutable project Fact Boundary revisions
 
 A ContentProject SHALL represent its factual boundary through immutable ProjectFactBoundaryRevision rows that reference existing frozen FactPack versions. Creating a project boundary revision MUST NOT duplicate FactPack items. Only frozen FactPacks with a checksum MAY become a project boundary.
@@ -66,6 +78,12 @@ A ContentProject SHALL represent its factual boundary through immutable ProjectF
 #### Scenario: Concurrent boundary advancement
 - **WHEN** two editors advance the same boundary revision concurrently
 - **THEN** at most one new revision and event commit; the other request returns 409 and leaves the current boundary unchanged
+
+Opportunity conversion MUST NOT create or bind Fact Boundary implicitly.
+
+#### Scenario: Sources but no boundary
+- **WHEN** a converted Project has attached Sources
+- **THEN** Fact Boundary stays absent until explicit freeze/bind
 
 ### Requirement: Unified Project Shared Assets by reference
 
@@ -114,6 +132,12 @@ The system SHALL maintain an append-only product event stream per ContentProject
 #### Scenario: Review and delivery events
 - **WHEN** a candidate is frozen, approved, authorized, or reconciled through a project-scoped action
 - **THEN** Activity records the corresponding stable event and entity reference exactly once with the committed local change
+
+Conversion SHALL record `project.created_from_opportunity` with Opportunity and Assessment revision references.
+
+#### Scenario: Record origin event
+- **WHEN** a conversion transaction commits
+- **THEN** the project event is committed with the project, Brief, and selected source bindings, and a failed transaction records no event
 
 ### Requirement: Historical project deletion safety
 

@@ -23,6 +23,12 @@ The system SHALL persist Brand → Persona → Account → Series as explicit st
 - **WHEN** another revision has already committed
 - **THEN** a stale save returns 409 and does not partially update current identity state
 
+Opportunity Assessment MAY recommend valid stable identity hierarchy entities, but recommendation SHALL NOT mutate identity revisions or create IdentitySnapshot.
+
+#### Scenario: Recommended Persona/Account/Series
+- **WHEN** an Assessment saves identity recommendations
+- **THEN** hierarchy ownership is validated and identity remains unchanged
+
 ### Requirement: Deterministic identity inheritance
 
 The system SHALL resolve identity fields in Brand → Persona → Account → Series order. Missing fields SHALL inherit, explicit values SHALL override, explicit null SHALL clear, and array/object fields SHALL replace instead of implicit deep merge.
@@ -166,6 +172,12 @@ FE-F3B SHALL NOT automatically convert performance observations into identity or
 #### Scenario: Memory tab before F5
 - **WHEN** the user opens Content Memory in FE-F3B
 - **THEN** the UI may show truthful linked historical content and explicitly marks automated learning/strategy promotion as not yet implemented
+
+Opportunity relevance/recommendation SHALL NOT be treated as verified learning or written automatically into Content Memory.
+
+#### Scenario: Later performance
+- **WHEN** converted content later performs well
+- **THEN** F5A makes no automatic Identity/Memory mutation; later LearningCandidate flow owns that decision
 
 ### Requirement: Production identity context
 

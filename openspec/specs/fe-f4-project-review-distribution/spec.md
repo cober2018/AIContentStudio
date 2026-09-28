@@ -2,7 +2,6 @@
 
 ## Purpose
 Define the durable project-first review and distribution contract: immutable Candidate freeze, separate content approval and delivery authorization, verified local packages, ownership checks, reconciliation, and derived project review status. Legacy Topic review and delivery remain compatible.
-
 ## Requirements
 ### Requirement: Project-first Review Center
 The Review Center SHALL group authorized ContentProjects and ContentUnits and derive state from persisted production, Candidate, Review, DeliveryTarget, DeliveryAttempt, and Receipt facts rather than a second review state table. Legacy Topic-first `/review-publish` SHALL remain available without substituting its queue for project review.
@@ -14,6 +13,12 @@ The Review Center SHALL group authorized ContentProjects and ContentUnits and de
 #### Scenario: Legacy review remains separate
 - **WHEN** the user opens `/review-publish`
 - **THEN** existing Topic-based review remains readable and project candidates are not leaked through that legacy queue
+
+FE-F4 pending-decision summaries MAY be consumed by Home as a read projection. Home MUST NOT create a duplicate review/approval/delivery task state.
+
+#### Scenario: Approval pending on Home
+- **WHEN** FE-F4 projects a Content Approval decision
+- **THEN** Home may deep-link to it while FE-F4 remains the review-state source
 
 ### Requirement: One project authorization boundary
 Every project-bound Candidate, Review decision, DeliveryTarget, Attempt, Receipt, package, and reconciliation SHALL enforce owning Project/Unit authorization before serialization or mutation, including legacy raw-ID routes. Archived projects/units SHALL retain authorized historical reads but refuse new freeze, approval, authorization, delivery, or retry actions.
@@ -111,6 +116,12 @@ Unknown remote results SHALL require reconciliation and SHALL NOT be automatical
 #### Scenario: Reconcile without duplicate side effect
 - **WHEN** an operator records a delivered or not-delivered reconciliation for an unknown attempt
 - **THEN** the attempt/target history records that outcome without making a second remote call during reconciliation
+
+Home SHALL preserve FE-F4 Unknown/reconciliation semantics.
+
+#### Scenario: Unknown on Home
+- **WHEN** delivery result is unknown
+- **THEN** Home shows reconciliation required and no automatic delivery retry action
 
 ### Requirement: Derived review status
 Blocked, stale, waiting_review, ready, approved, delivery_ready, unknown, and delivered SHALL be deterministic projections, not another mutable state source. Projection SHALL be scoped to the selected/current Candidate and its targets; older Candidates remain historical. For that scope, unresolved unknown SHALL outrank blockers/revocations, stale, waiting_review, approved, delivery_ready, and delivered. The same underlying facts SHALL drive project Review and Overview.
