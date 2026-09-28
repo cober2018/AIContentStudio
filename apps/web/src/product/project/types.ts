@@ -30,6 +30,8 @@ export type SharedAsset = {
 export type VersionItem = {
   kind: string; id: string; version: string | number | null; status: string | null;
   checksum: string | null; createdAt: string | null; current: boolean; unitId?: number; source?: string;
+  payloadHash?: string; contextHash?: string; payloadSchema?: string; identitySnapshotId?: number | null;
+  briefRevisionId?: number | null; boundaryRevisionId?: number | null; workflowRunId?: number | null; projectOutputId?: number | null;
 };
-export type Versions = Record<"brief" | "factBoundary" | "contentUnits" | "identitySnapshots" | "identityStates" | "workflows" | "runs" | "materials" | "contentOutputs" | "candidates" | "approvals" | "deliveryTargets", VersionItem[]>;
+export type Versions = Record<"brief" | "factBoundary" | "contentUnits" | "contentMasters" | "identitySnapshots" | "identityStates" | "workflows" | "runs" | "materials" | "contentOutputs" | "candidates" | "approvals" | "deliveryTargets", VersionItem[]>;
 export type Activity = { id: number; event_type: string; entity_type: string | null; entity_id: string | null; actor: string | null; payload: Record<string, unknown>; created_at: string | null };

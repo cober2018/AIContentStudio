@@ -6,7 +6,8 @@ import type { Overview } from "./types";
 
 const STAGES: Record<string, string> = { brief_needed: "待完成任务书", evidence_needed: "待建立事实边界", matrix_needed: "待添加内容单元", production: "生产中", attention_required: "需要处理风险", waiting_human: "等待人工", review_ready: "可进入审核" };
 const STATE_NAMES: Record<string, string> = { identity_unready: "身份未就绪，请完善画像或显式重绑", blocked: "受阻", stale: "已过期", unknown: "待核对", failed: "执行失败", waiting_human: "等待人工", waiting_review: "待审核", ready: "就绪", approved: "已批准", delivery_ready: "待交付", delivered: "已回填" };
-function stateLabel(code: string) { const state = STATE_NAMES[code] ? code : Object.keys(STATE_NAMES).find((item) => code.endsWith(item)); return state ? STATE_NAMES[state] : code; }
+const MASTER_STATES: Record<string, string> = { master_incomplete: "Master 内容/上下文/检查未完成", master_stale: "Master 上下文已过期", master_check_blocked: "Master 检查受阻", master_render_unready: "Master 尚无验证后的最终渲染" };
+function stateLabel(code: string) { if (MASTER_STATES[code]) return MASTER_STATES[code]; const state = STATE_NAMES[code] ? code : Object.keys(STATE_NAMES).find((item) => code.endsWith(item)); return state ? STATE_NAMES[state] : code; }
 
 export function ProjectOverviewTab({ projectId }: { projectId: number }) {
   const [data, setData] = useState<Overview | null>(null);

@@ -18,6 +18,7 @@ EVENT_TYPES = frozenset({
     "delivery.reconciled", "delivery.receipt_recorded", "delivery.publication_confirmed",
     "project.created_from_opportunity",
     "content_master.saved",
+    "content_master.generated",
 })
 
 

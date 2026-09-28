@@ -119,19 +119,16 @@ SourceDocument / DataSnapshot / Feedback / Manual reference
 Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 ```
 
-### FE-F6A Production Core（阶段代码已合入本地main，继续开发中）
+### FE-F6A Production Core（本地实施验收完成，待授权规格归档）
 
-- 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的内容主版本和上下文血缘；本轮不替换旧引擎、不新增远程发布能力。
-- 目录结构：`apps/api/app/models.py` 保留 Master 与不可变引用；`services/content_masters.py` 承接CAS/幂等保存及上下文，`production_modalities.py` 提供三形态Adapter，`candidates_v4.py` 提供纯冻结builder，`production_validation.py` 共享live gate，`production_packages.py` 构建v4本地包。项目单元API在`routers/content_masters.py`及`project_review.py`；迁移为`alembic/versions/f6a000000001_production_content_master.py`。
-- 已完成的基础：四表、video枚举、有界读取、追加保存/请求幂等、父版本与上下文冻结/stale；共享Project锁、提交前上下文复核、项目级跨Unit素材可见性、成功Attempt及生成字节校验、完整边界live evidence/rights、Draft精确引用映射/unmapped、三形态真实render约束和v4纯builder/Freeze。回退发现不兼容历史时在任何DDL前拒绝。
-- 待完成/TODO：完整并发冻结验收、Review v4 preview/diff、Versions/Overview、Production Workspace及浏览器验收；PostgreSQL实库和生产环境未验收。当前仅后端阶段闭环完成，不等同整体F6A交付；canonical未同步、change未归档、未push/deploy/生产迁移。
-- 关键设计决策：Master 与 Workflow 保存分离；历史上下文不自动跟随最新身份/Brief/事实边界；素材只按项目可见的 `MaterialRevision` 引用、不复制字节；Graphic/Video 没有真实渲染时不伪造成功。
-- 依赖与启动：复用现有 FastAPI/SQLAlchemy/Alembic/React；后端测试使用迁移后的隔离SQLite，禁止把临时库迁移命令用于开发或生产数据库。
-- 开发方式：用户明确授权当前阶段提交合入本地main，后续唯一开发Agent直接在`/Users/mshengran/Project/AIContentStudio`的main实施；继续保留OpenSpec确认/回归/阶段提交，不因单Agent而跳过质量门禁。禁止自动push/deploy/生产迁移。
-- 后端继续实施：共享Project事务锁、Master提交前上下文复核和可选`expected_context_hash`、真实Channel/content_form校验已补齐；生成素材按Project共享且验证成功Attempt/字节，Evidence与rights检查使用live状态，Candidate-only单元删除改为归档。
-- 当前已核114/214：手工Text（无Draft/Topic/Mother/Run）→ checks → Candidate v4 → exact-hash Review → DeliveryTarget → ZIP已打通。共用live validator验证准确Master/冻结上下文、refs/checks/render与实时权利；审批/授权提交前再次复核并原子回滚。Graphic/Video仅导出已明确manual确认的真实字节，不新增编辑器或远端Publisher。
-- 历史契约：新审批/授权必须是当前Master/当前context/当前Candidate；已有授权继续交付原冻结历史内容，但撤权、字节改变、检查失败、hash篡改仍阻断。schema dispatch保留v3路径，v4失败禁止回退；重新检查不重写Candidate。
-- 本阶段实跑：712后端测试通过（165项F6A回归，6既有警告），包含44项新增v4闭环及12项既有Freeze回归；strict24/24、Ruff及diff-check通过，完整记录见`progress.md`。前端本阶段未改未复跑，不把旧build或SQLite结果当生产验收；单Agent复核不冒充独立审核。
+- 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的主版本和上下文血缘；不替换旧引擎，不新增远程发布能力。
+- 目录结构：后端 `services/content_masters.py`、`production_modalities.py`、`candidates_v4.py`、`production_validation.py`、`production_packages.py` 承接保存、适配、冻结、live gate 与本地包；既有 Review/Outputs/Overview/Versions 接入 Master。前端 `ProductionWorkspace` 拆分 Header/Canvas/Inspector/AssetDrawer/MasterPanel 和三个 lazy StudioShell；迁移为 `f6a000000001`。
+- 已完成：214/214。手工 Text（无 Draft/Topic/Mother/Run）→ checks → Candidate v4 → exact-hash Approval → Delivery Authorization → ZIP；Graphic/Video 经真实文件及精确输入的人工 render attestation 走同一闭环。上下文/CAS/幂等、live rights/evidence/checks、跨 Unit 项目素材、输出血缘、三形态 Review、Master Versions/Overview、历史只读和 Workflow debugger 均已验收。
+- 验收：后端 753 passed（206 项 F6A，6 项既有 warnings）；TypeScript/Vite、FE-P1、strict24/24、Ruff/diff 通过。隔离 SQLite 与真实 PostgreSQL16 up/down/up 通过；浏览器 20.1–20.14 和三项独立 review 全部通过。/projects 224.68 kB raw / 72.86 gzip，Production 254.44 / 82.27；无 TipTap/XYFlow 首包泄漏。完整证据与边界见 [FE_F6A_FINAL_ACCEPTANCE.md](docs/FE_F6A_FINAL_ACCEPTANCE.md)。
+- 关键设计决策：Workflow/Master dirty 与保存独立；冻结历史不自动跟随身份/Brief/Boundary；新审批/授权要求 current Master，已有授权只交付原冻结历史且仍受撤权/字节/检查 gate；v4 失败不回退。图文、视频不计算假文本相似度；最小壳不冒充专业编辑器。
+- 待完成/TODO：规格仍是 active change，五份 delta 的 canonical 同步/归档按 21.9 等待单独授权；本轮未 push、deploy、生产迁移。F6B 及以后不执行，须先有具体方案并确认。原始包和 canonical 均未覆盖。
+- 依赖与启动：复用现有 FastAPI/SQLAlchemy/Alembic/React，无新增运行依赖；启动沿用下方命令。迁移与验收只在新临时数据库执行，禁止用于未授权开发/生产库。AI Workflow 浏览器验收使用显式 mock provider，不代表真实外部服务验收。
+- 开发方式：按用户授权直接在本地 main 实施和提交；不因单 Agent 跳过规格、回归与独立只读评审。
 
 ### 下一版规划：文章/图文全渠道
 

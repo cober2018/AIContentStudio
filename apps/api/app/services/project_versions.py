@@ -3,7 +3,21 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentAsset, ContentUnit, CreativeBriefRevision, DeliveryTarget, IdentitySnapshot, MaterialRevision, ProjectFactBoundaryRevision, ProjectMaterialReference, ProjectWorkflowOutput, Review, Workflow, WorkflowRun
+from ..models import (
+    ContentAsset,
+    ContentMasterRevision,
+    ContentUnit,
+    CreativeBriefRevision,
+    DeliveryTarget,
+    IdentitySnapshot,
+    MaterialRevision,
+    ProjectFactBoundaryRevision,
+    ProjectMaterialReference,
+    ProjectWorkflowOutput,
+    Review,
+    Workflow,
+    WorkflowRun,
+)
 
 
 def _item(kind: str, id: int, version=None, status=None, checksum=None, created_at=None, current=False, unit_id=None, source=None) -> dict:
@@ -22,6 +36,8 @@ def project_versions(db: Session, project_id: int) -> dict:
     unit_ids = [unit.id for unit in units]
     runs = db.scalars(select(WorkflowRun).where(WorkflowRun.content_unit_id.in_(unit_ids)).order_by(WorkflowRun.id.desc()).limit(200)).all() if unit_ids else []
     outputs = db.scalars(select(ProjectWorkflowOutput).where(ProjectWorkflowOutput.project_id == project_id).order_by(ProjectWorkflowOutput.id.desc()).limit(200)).all()
+    masters = db.scalars(select(ContentMasterRevision).where(ContentMasterRevision.project_id == project_id).order_by(ContentMasterRevision.id.desc()).limit(200)).all()
+    current_master_ids = {row.content_unit_id: row.id for row in reversed(masters)}
     candidates = db.scalars(select(ContentAsset).where(ContentAsset.project_id == project_id).order_by(ContentAsset.id.desc()).limit(200)).all()
     candidate_ids = [candidate.id for candidate in candidates]
     approvals = db.scalars(select(Review).where(Review.content_asset_id.in_(candidate_ids)).order_by(Review.id.desc()).limit(200)).all() if candidate_ids else []
@@ -59,12 +75,13 @@ def project_versions(db: Session, project_id: int) -> dict:
         "brief": [_item("creative_brief_revision", row.id, row.revision_no, None, row.checksum, row.created_at, index == 0) for index, row in enumerate(brief)],
         "factBoundary": [_item("project_fact_boundary_revision", row.id, row.revision_no, "frozen", row.fact_pack_checksum, row.created_at, index == 0) for index, row in enumerate(boundary)],
         "contentUnits": [_item("content_unit", row.id, None, row.status, None, row.created_at, row.status != "archived") for row in units],
+        "contentMasters": [{**_item("content_master_revision", row.id, row.revision_no, "immutable", row.payload_hash, row.created_at, current_master_ids.get(row.content_unit_id) == row.id, row.content_unit_id, row.source_kind), "payloadSchema": row.payload_schema, "payloadHash": row.payload_hash, "contextHash": row.context_hash, "identitySnapshotId": row.identity_snapshot_id, "briefRevisionId": row.creative_brief_revision_id, "boundaryRevisionId": row.fact_boundary_revision_id, "workflowRunId": row.origin_workflow_run_id, "projectOutputId": row.origin_project_output_id, "parentRevisionId": row.parent_revision_id} for row in masters],
         "identitySnapshots": identity_snapshots,
         "identityStates": identity_states,
         "workflows": [_item("workflow", row.id, row.version, row.status, row.checksum, row.created_at, any(unit.pinned_workflow_id == row.id for unit in units)) for row in workflows if row],
         "runs": [_item("workflow_run", row.id, row.workflow_version, row.status, row.definition_checksum, row.started_at, False, row.content_unit_id) for row in runs],
         "materials": materials,
-        "contentOutputs": [_item(output.output_kind, output.entity_id, None, None, None, output.created_at, True, output.unit_id, "workflow") for output in outputs if output.output_kind in {"draft", "candidate"}],
+        "contentOutputs": [_item(output.output_kind, output.entity_id, None, None, None, output.created_at, True, output.unit_id, "workflow") for output in outputs if output.output_kind in {"draft", "candidate", "content_master_revision"}],
         "candidates": [_item("candidate", row.id, (row.candidate_manifest_json or {}).get("schema_version"), row.status, row.candidate_hash, row.created_at, current_candidate_ids.get(row.content_unit_id) == row.id, row.content_unit_id) for row in candidates],
         "approvals": [_item("content_approval", row.id, None, row.decision, row.candidate_hash, row.created_at, current_candidate_ids.get(candidate_unit_ids.get(row.content_asset_id)) == row.content_asset_id, candidate_unit_ids.get(row.content_asset_id)) for row in approvals],
         "deliveryTargets": [_item("delivery_target", row.id, row.authorization_version, row.status, row.approved_candidate_hash, row.requested_at, current_candidate_ids.get(candidate_unit_ids.get(row.content_asset_id)) == row.content_asset_id, candidate_unit_ids.get(row.content_asset_id)) for row in delivery_targets],

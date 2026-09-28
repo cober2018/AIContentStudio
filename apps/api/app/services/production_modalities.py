@@ -245,6 +245,10 @@ def validate_payload(modality: str, payload: dict, *, for_freeze: bool = False) 
             errors.append("render_asset_ref_invalid")
     if payload.get("title") is not None and not isinstance(payload["title"], str):
         errors.append("title_must_be_string")
+    elif isinstance(payload.get("title"), str) and len(payload["title"]) > 500:
+        errors.append("title_too_long")
+    if modality == "text" and declaration is not None:
+        errors.append("text_render_asset_unsupported")
     if for_freeze and modality == "text" and not (payload.get("document") or (payload.get("markdown") or "").strip()):
         errors.append("text_content_missing")
     if for_freeze and modality == "text" and payload.get("document") and not (payload.get("markdown") or "").strip():
@@ -267,9 +271,39 @@ def validate_json_bounds(value: object) -> list[str]:
         if isinstance(item, (list, dict)):
             if len(item) > 1000:
                 return ["payload_collection_too_large"]
+            if isinstance(item, dict) and any(key in {"file_path", "local_path", "storage_path", "absolute_path", "render_url", "storage_url"} for key in item):
+                return ["infrastructure_location_forbidden"]
             stack.extend((child, depth + 1) for child in (item.values() if isinstance(item, dict) else item))
     try:
         canonical = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
     except (TypeError, ValueError):
         return ["payload_invalid_json"]
     return ["payload_too_large"] if len(canonical) > 2_000_000 else []
+
+
+def validate_master_references(payload: dict, assets: list[dict], evidence: list[dict]) -> list[str]:
+    asset_ids = {row.get("material_revision_id") for row in assets if type(row.get("material_revision_id")) is int}
+    evidence_ids = {row.get("fact_pack_item_id") for row in evidence if type(row.get("fact_pack_item_id")) is int}
+    for rows, id_key, hash_key in ((assets, "material_revision_id", "content_hash"), (evidence, "fact_pack_item_id", "snapshot_checksum")):
+        for row in rows:
+            if type(row.get(id_key)) is not int or row[id_key] <= 0 or not isinstance(row.get(hash_key), str) or not 1 <= len(row[hash_key]) <= 64:
+                return ["invalid_exact_reference"]
+            if not isinstance(row.get("role", "other"), str) or not 1 <= len(row.get("role", "other")) <= 40:
+                return ["invalid_reference_role"]
+            if row.get("slot_key") is not None and (not isinstance(row["slot_key"], str) or len(row["slot_key"]) > 100):
+                return ["invalid_reference_slot"]
+            if type(row.get("sort_order", 0)) is not int or not 0 <= row.get("sort_order", 0) <= 2147483647:
+                return ["invalid_reference_order"]
+            if not isinstance(row.get("placement", {}), dict) or not isinstance(row.get("locator", {}), dict):
+                return ["invalid_reference_location"]
+    stack = [payload]
+    while stack:
+        value = stack.pop()
+        if isinstance(value, dict):
+            for key, ids in (("material_revision_id", asset_ids), ("fact_pack_item_id", evidence_ids)):
+                if key in value and (type(value[key]) is not int or value[key] not in ids):
+                    return ["undeclared_embedded_reference"]
+            stack.extend(value.values())
+        elif isinstance(value, list):
+            stack.extend(value)
+    return []

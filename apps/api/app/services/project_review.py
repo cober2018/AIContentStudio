@@ -147,7 +147,7 @@ def freeze_candidate(db: Session, project_id: int, unit_id: int, project_output_
 def _master_freeze_manifest(db: Session, master: ContentMasterRevision, user: User) -> dict:
     from .production_validation import validate_live_v4_master
 
-    return validate_live_v4_master(db, master)
+    return validate_live_v4_master(db, master, lock_live=True)
 
 
 def freeze_master_candidate(db: Session, project_id: int, unit_id: int, master_revision_id: int, user: User, *, expected_payload_hash: str | None = None) -> ContentAsset:
@@ -214,19 +214,20 @@ def _validate_v3_approval(db: Session, asset: ContentAsset) -> None:
         raise _blocked("readiness_blocked", *reasons)
 
 
-def _validate_approval(db: Session, asset: ContentAsset) -> None:
-    from .production_validation import validate_live_v4_candidate
+def _validate_approval(db: Session, asset: ContentAsset, warning_dispositions: dict | None = None) -> None:
+    from .production_validation import validate_live_v4_candidate, validate_warning_dispositions
 
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
     if schema == 4 or asset.content_master_revision_id is not None:
-        validate_live_v4_candidate(db, asset)
+        manifest = validate_live_v4_candidate(db, asset, lock_live=True)
+        validate_warning_dispositions(manifest, warning_dispositions)
     elif schema == 3:
         _validate_v3_approval(db, asset)
     else:
         raise _blocked("candidate_schema", "不支持的项目候选清单版本")
 
 
-def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: int, expected_hash: str, decision: str, comment: str | None, user: User) -> ContentAsset:
+def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: int, expected_hash: str, decision: str, comment: str | None, user: User, warning_dispositions: dict | None = None) -> ContentAsset:
     _mutable_unit(db, project_id, unit_id, user)
     asset = _candidate(db, project_id, unit_id, candidate_id, user, mutate=True)
     current_candidate_id = db.scalar(select(ContentAsset.id).where(
@@ -238,7 +239,7 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
     if expected_hash != asset.candidate_hash or candidate_hash(asset.candidate_manifest_json or {}) != asset.candidate_hash:
         raise _blocked("candidate_mismatch", "冻结候选哈希不一致")
     if decision == "approved":
-        _validate_approval(db, asset)
+        _validate_approval(db, asset, warning_dispositions)
         if asset.status == "approved" and asset.approved_candidate_hash == asset.candidate_hash:
             return asset
     elif decision != "changes_requested":
@@ -249,6 +250,7 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
         content_asset_id=asset.id, draft_id=asset.draft_id, revision_no=(asset.candidate_manifest_json or {}).get("content_master", {}).get("revision_no") if (asset.candidate_manifest_json or {}).get("schema_version") == 4 else (asset.candidate_manifest_json or {}).get("revision_no"),
         reviewer_id=user.email, decision=decision, comment=comment, candidate_hash=asset.candidate_hash,
         approved_at=utcnow() if decision == "approved" else None,
+        warning_dispositions_json=warning_dispositions,
     )
     db.add(review)
     if decision == "approved":
@@ -263,7 +265,7 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
         db.expire_all()
         try:
             _mutable_unit(db, project_id, unit_id, user)
-            _validate_approval(db, asset)
+            _validate_approval(db, asset, warning_dispositions)
             if asset.candidate_hash != expected_hash:
                 raise _blocked("candidate_mismatch", "审批提交前候选发生变化")
         except HTTPException:
