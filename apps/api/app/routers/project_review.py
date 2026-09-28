@@ -1,6 +1,6 @@
 """Project-first Candidate and Review APIs."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user, require_editor, require_editor_or_reviewer
 from ..models import ContentAsset, ContentProject, User
+from ..services import delivery as delivery_service
 from ..services import project_review as review_service
 from ..services import project_review_projection as projection
-from ..services import delivery as delivery_service
 from ..services.project_authorization import authorize_project_asset
 from .content_projects import owned_project, owned_unit
 from .delivery import GenericTargetIn, _target_json
@@ -54,7 +54,8 @@ def review_candidate_diff(project_id: int, unit_id: int, candidate_id: int, db: 
 
 
 class FreezeIn(BaseModel):
-    project_output_id: int
+    project_output_id: int | None = None
+    content_master_revision_id: int | None = None
 
 
 class CandidateDecisionIn(BaseModel):
@@ -68,6 +69,8 @@ def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> d
         "identity_snapshot_id": asset.identity_snapshot_id, "workflow_run_id": asset.workflow_run_id,
         "draft_id": asset.draft_id, "title": asset.title, "channel": asset.channel,
         "content_form": asset.content_form, "status": asset.status,
+        "artifact_kind": asset.artifact_kind, "content_master_revision_id": asset.content_master_revision_id,
+        "manifest_schema_version": (asset.candidate_manifest_json or {}).get("schema_version"),
         "candidate_hash": asset.candidate_hash, "approved_candidate_hash": asset.approved_candidate_hash,
         "created_at": asset.created_at.isoformat() if asset.created_at else None,
     }
@@ -78,7 +81,10 @@ def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> d
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/candidates/freeze", status_code=201)
 def freeze(project_id: int, unit_id: int, payload: FreezeIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    return _candidate_json(review_service.freeze_candidate(db, project_id, unit_id, payload.project_output_id, user), include_manifest=True)
+    if (payload.project_output_id is None) == (payload.content_master_revision_id is None):
+        raise HTTPException(422, "必须且只能选择Draft输出或Content Master作为候选来源")
+    candidate = review_service.freeze_candidate(db, project_id, unit_id, payload.project_output_id, user) if payload.project_output_id is not None else review_service.freeze_master_candidate(db, project_id, unit_id, payload.content_master_revision_id, user)
+    return _candidate_json(candidate, include_manifest=True)
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}/candidates")
