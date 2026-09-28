@@ -52,7 +52,7 @@ FORM_LABELS: dict[str, str] = {
     "tech_article": "技术文章",
 }
 
-VALID_ARTIFACT_KINDS = {ArtifactKind.text.value, ArtifactKind.image.value, ArtifactKind.script.value}
+VALID_ARTIFACT_KINDS = {ArtifactKind.text.value, ArtifactKind.image.value, ArtifactKind.script.value, ArtifactKind.video.value}
 
 
 class ChannelRegistryError(ValueError):

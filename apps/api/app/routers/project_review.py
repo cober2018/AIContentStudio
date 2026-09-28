@@ -56,6 +56,7 @@ def review_candidate_diff(project_id: int, unit_id: int, candidate_id: int, db: 
 class FreezeIn(BaseModel):
     project_output_id: int | None = None
     content_master_revision_id: int | None = None
+    expected_payload_hash: str | None = Field(default=None, pattern="^[0-9a-f]{64}$")
 
 
 class CandidateDecisionIn(BaseModel):
@@ -83,7 +84,9 @@ def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> d
 def freeze(project_id: int, unit_id: int, payload: FreezeIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     if (payload.project_output_id is None) == (payload.content_master_revision_id is None):
         raise HTTPException(422, "必须且只能选择Draft输出或Content Master作为候选来源")
-    candidate = review_service.freeze_candidate(db, project_id, unit_id, payload.project_output_id, user) if payload.project_output_id is not None else review_service.freeze_master_candidate(db, project_id, unit_id, payload.content_master_revision_id, user)
+    if payload.content_master_revision_id is not None and payload.expected_payload_hash is None:
+        raise HTTPException(422, "Master冻结必须提交expected_payload_hash")
+    candidate = review_service.freeze_candidate(db, project_id, unit_id, payload.project_output_id, user) if payload.project_output_id is not None else review_service.freeze_master_candidate(db, project_id, unit_id, payload.content_master_revision_id, user, expected_payload_hash=payload.expected_payload_hash)
     return _candidate_json(candidate, include_manifest=True)
 
 

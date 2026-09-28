@@ -9,6 +9,7 @@ from ..deps import get_current_user, require_editor
 from ..models import User
 from ..services.content_masters import (
     current_checks,
+    get_readiness,
     get_revision,
     list_checks,
     list_revisions,
@@ -32,6 +33,7 @@ class MasterRevisionIn(BaseModel):
     edit_summary: dict = Field(default_factory=dict)
     asset_refs: list[dict] = Field(default_factory=list, max_length=250)
     evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
+    render_attestation: dict | None = None
 
 
 class MasterSeedIn(BaseModel):
@@ -64,6 +66,11 @@ def create_master_revision(project_id: int, unit_id: int, body: MasterRevisionIn
 @router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/checks")
 def get_master_checks(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return {"items": list_checks(db, project_id, unit_id, master_id, user)}
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/readiness")
+def get_master_readiness(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return get_readiness(db, project_id, unit_id, master_id, user)
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/checks", dependencies=[Depends(require_editor)])
