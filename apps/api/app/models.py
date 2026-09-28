@@ -1258,6 +1258,86 @@ class ContentProject(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class ContentOpportunity(Base):
+    __tablename__ = "content_opportunity"
+    __table_args__ = (
+        CheckConstraint("status IN ('new','watching','qualified','dismissed','converted','archived')", name="ck_content_opportunity_status"),
+        CheckConstraint("priority IN ('low','normal','high')", name="ck_content_opportunity_priority"),
+        Index("ix_content_opportunity_owner_status_priority", "owner_user_id", "status", "priority", "updated_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    title: Mapped[str] = mapped_column(String(300))
+    summary: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="new")
+    priority: Mapped[str] = mapped_column(String(20), default="normal")
+    relevant_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ContentOpportunitySignal(Base):
+    __tablename__ = "content_opportunity_signal"
+    __table_args__ = (
+        UniqueConstraint("opportunity_id", "signal_type", "source_entity_id", name="uq_opportunity_signal_resource"),
+        Index("ix_opportunity_signal_type_status", "opportunity_id", "signal_type", "status"),
+        CheckConstraint("status IN ('active','detached')", name="ck_opportunity_signal_status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    opportunity_id: Mapped[int] = mapped_column(ForeignKey("content_opportunity.id"), index=True)
+    signal_type: Mapped[str] = mapped_column(String(30))
+    source_entity_id: Mapped[int | None] = mapped_column(Integer)
+    external_ref: Mapped[str | None] = mapped_column(String(1000))
+    label: Mapped[str] = mapped_column(String(300))
+    annotation_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    source_checksum: Mapped[str | None] = mapped_column(String(64))
+    source_version: Mapped[str | None] = mapped_column(String(100))
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    attached_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    detached_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ContentOpportunityAssessmentRevision(Base):
+    __tablename__ = "content_opportunity_assessment_revision"
+    __table_args__ = (UniqueConstraint("opportunity_id", "revision_no", name="uq_opportunity_assessment_revision"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    opportunity_id: Mapped[int] = mapped_column(ForeignKey("content_opportunity.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_opportunity_assessment_revision.id"))
+    assessment_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    checksum: Mapped[str] = mapped_column(String(64))
+    analysis_source: Mapped[str] = mapped_column(String(30), default="manual")
+    analysis_provider_key: Mapped[str | None] = mapped_column(String(100))
+    analysis_provider_version: Mapped[str | None] = mapped_column(String(100))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class OpportunityProjectConversion(Base):
+    __tablename__ = "opportunity_project_conversion"
+    __table_args__ = (
+        UniqueConstraint("opportunity_id", name="uq_opportunity_conversion_opportunity"),
+        UniqueConstraint("project_id", name="uq_opportunity_conversion_project"),
+        UniqueConstraint("idempotency_key", name="uq_opportunity_conversion_key"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    opportunity_id: Mapped[int] = mapped_column(ForeignKey("content_opportunity.id"), index=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
+    assessment_revision_id: Mapped[int] = mapped_column(ForeignKey("content_opportunity_assessment_revision.id"))
+    idempotency_key: Mapped[str] = mapped_column(String(100))
+    conversion_snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ContentUnit(Base):
     __tablename__ = "content_unit"
 

@@ -1,5 +1,21 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-28：FE-F5A 本地 main 整合（已授权）
+
+- [x] /// 核对 main 与隔离分支同源，保留主工作区未跟踪的原始规格包
+- [ ] /// 重新执行后端、前端、OpenSpec 和差异门禁，仅提交 FE-F5A 文件
+- [ ] /// 快进合入本地 main，在合并结果上复跑门禁并记录提交
+- [ ] /// 六份 delta 同步与归档另待确认；不 push、deploy 或生产迁移
+
+## 2026-09-28：FE-F5A apply（实施/复核通过，待同步归档确认）
+
+- [x] /// 核实 main `2f52053` 含 FE-F4/FE-P1，隔离分支 `codex/fe-f5a-home-opportunity`
+- [x] /// 四资源持久化、状态闸门、评估版本、信号权限、原子显式转换
+- [x] /// Home / Opportunity 真实页面及 lazy 预算，项目来源回链
+- [x] /// 临时库 upgrade → downgrade → upgrade，真实浏览器机会 → 评估 → 项目 → 刷新
+- [x] /// 关闭独立复核问题，完成全项目待决策批量投影，再跑最终门禁
+- [ ] /// 完成规格同步归档（待确认）；本地 main 整合已单独授权，不 push、deploy 或生产迁移
+
 ## 2026-09-28：FE-F5A-SPEC-R1 review 修订（SPEC_R1_READY）
 
 - [x] /// 核对 review 反馈与当前 OpenSpec、AuditLog/ProjectEvent 模型和既有 Home/Review 投影

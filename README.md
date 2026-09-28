@@ -60,14 +60,23 @@
 - 关键设计决策：预算依据 Vite manifest 的入口与 `/projects` 静态依赖闭包，阈值为原始 JS 低于 500,000 字节；gzip 与全站 JS 单独报告。TipTap/XYFlow 所在旧页面、项目详情与生产页不进入 `/projects` 初始图；Vite 警告消失本身不算验收。
 - 依赖与启动方式：无新增运行依赖。`cd apps/web && npm run build` 同时执行 TypeScript、Vite manifest 构建和预算门禁；也可对已有构建运行 `npm run check:bundle`。本地开发仍用 `npm run dev` 与原有 API 代理。
 
-### FE-F5A Home + Opportunity（SPEC_READY，未 apply）
+### FE-F5A Home + Opportunity（本地实施 / REVIEW_PASSED，待同步归档确认）
 
-- 需求背景：FE-F0/F1 至 FE-F4 已覆盖项目、身份、生产、审核和交付，但 `/home` 与 `/opportunities` 仍是占位页，系统缺少“为什么现在做这条内容”的决策层。F5A 规格入口为 [`openspec/changes/fe-f5a-home-opportunity/proposal.md`](openspec/changes/fe-f5a-home-opportunity/proposal.md)，实施计划见 [`docs/superpowers/plans/2026-09-28-fe-f5a-home-opportunity.md`](docs/superpowers/plans/2026-09-28-fe-f5a-home-opportunity.md)。
-- 目录结构：`content-opportunities` 定义 Opportunity、Signal、Assessment 与显式转项目；`content-home-workspace` 定义 Home Projection；FE-F3A delta 补充 Opportunity 建议值进入项目核心时的 suggested/approved 边界。
-- 已完成：已审计用户提供的标准包 [`openspec/fe-f5a-home-opportunity/`](openspec/fe-f5a-home-opportunity/)，并归位到 [`openspec/changes/fe-f5a-home-opportunity/`](openspec/changes/fe-f5a-home-opportunity/)。包含 F5A 新规格及 FE-F0/F1、FE-F3A、FE-F3B、FE-F4 四份 delta；已完成 FE-F5A-SPEC-R1 修订：状态旁路、Assessment 并发、AuditLog 真源、Home 排序/优先级/失败语义、目标能力清单和定向回归测试要求均已写入；全量严格校验与 `git diff --check` 已通过。业务代码、迁移、外部 Connector 和生产数据库均未改动。
-- 待完成/TODO：apply 前仍需 connector 真实读到 FE-F4/FE-P1 最终基线；本地工作树已确认 FE-P1 commit `85b8c08`、canonical FE-P1 spec 和归档变更存在。F5A apply 后需隔离迁移、后端/前端门禁和浏览器验收，再归档。
-- 关键设计决策：Opportunity 解释 why-now，TopicBrief 继续负责生产输入；Signal 只引用 SourceDocument/DataSnapshot/DeliveryFeedback；Assessment append-only 且 `unknown` 不降级为 `none`；转换只绑定用户明确选择的 SourceDocument，不自动创建/冻结 Fact Boundary；Home 只聚合真实 Opportunity、Project Overview、ProjectEvent、Review、Delivery 和 identity readiness；没有排期实体时不伪造“近期计划”。
-- 依赖与启动方式：沿用 FastAPI/SQLAlchemy/Alembic/React，无新增运行依赖；本轮未执行 apply，不运行迁移、不推送、不合并、不部署。
+- PRD/需求背景：补全生产前的“为什么现在做”决策层和日常工作台。Opportunity 不是 Topic；Home 是现有业务事实的 Projection。规格入口为 [FE-F5A proposal](openspec/changes/fe-f5a-home-opportunity/proposal.md)，完整步骤见 [实施计划](docs/superpowers/plans/2026-09-28-fe-f5a-home-opportunity.md)。
+- 目录结构：`apps/api/app/routers/{opportunities,home}.py`、`services/{opportunities,home_projection,project_projection_context}.py`；四资源复用既有 models，增量迁移 `f5a000000001`；`apps/web/src/product/{OpportunityPages,HomePage}.tsx` 是独立 lazy 工作区，ProjectBriefTab 保留层级身份引用。
+- 已完成：持久化 CRUD/triage/archive、引用式信号、append-only Assessment、版本冲突与 AuditLog、qualified 显式原子转换、项目来源回链；Home 全部自有项目批量扫描待决策、真实 ProjectEvent 活动与 identity readiness，不被最近20张卡片限制。信号解除引用不删除历史；unknown 不自动重发，分析不可用不会伪造结果。
+- 验收：隔离 SQLite upgrade→downgrade→upgrade、346 后端测试、前端 TypeScript/Vite/build budget、OpenSpec all strict 18 项、定向 Ruff 和 diff-check 全部通过；真实浏览器创建机会→信号→评估→转换→刷新，以及带身份对象 Brief v1→v2 编辑/刷新通过。前后端独立复核 APPROVE。`/projects` 初始 JS 215.09 kB raw / 70.12 kB gzip，Home 231.11 kB、Opportunity 247.32 kB raw，均不含 TipTap/XYFlow。
+- 待完成/TODO：OpenSpec 17/17 apply 任务完成，全部六份 delta 同步和归档等待用户确认；业务改动仅在 `codex/fe-f5a-home-opportunity` 隔离工作树，尚未本地提交、合入 main、推送或部署。PostgreSQL 并发和真实 LAN 部署未实测，真实 Connector、排期、自动分析、F5B/F5C 不在范围内。
+- 关键设计决策：推荐始终是 suggested；转换只创建普通 Brief v1 与用户明确选择的 Source bindings，不创建 Topic / FactPack / Fact Boundary / IdentitySnapshot / Candidate / DeliveryTarget。Assessment 与 Conversion 保留历史；Home 不建立第二套状态表，近期活动不冒充排期。
+- 依赖与启动方式：无新增运行依赖。隔离库先 `DATABASE_URL=sqlite:////tmp/<isolated>/studio.db python -m alembic upgrade head`，API 使用 uvicorn，Vite 通过 `AI_STUDIO_API_TARGET` 指向该 API；前端 `npm run build` 同时检查三个入口预算。全量 pytest 需指向已迁移隔离 DATABASE_URL，worker SessionLocal 不使用 TestClient 的内存依赖替换。本轮未运行生产迁移。
+
+```text
+SourceDocument / DataSnapshot / Feedback / Manual reference
+  → Opportunity → AssessmentRevision → 用户确认转换
+  → ContentProject + Brief v1 + 选中 Source bindings + Origin Event
+  → 明确建立 Fact Boundary → 既有 Identity / Production / Review / Delivery
+Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
+```
 
 ### 下一版规划：文章/图文全渠道
 

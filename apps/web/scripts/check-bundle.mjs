@@ -8,6 +8,7 @@ const manifest = JSON.parse(readFileSync(join(dist, ".vite/manifest.json"), "utf
 const heavyByChunk = JSON.parse(readFileSync(join(dist, "heavy-dependencies.json"), "utf8"));
 const entryKey = "index.html";
 const projectKey = "src/product/PersistentProjectsPage.tsx";
+const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityPages.tsx"];
 const excludedRoutes = [
   "src/product/PersistentProjectPage.tsx",
   "src/product/PersistentProductionPage.tsx",
@@ -52,6 +53,16 @@ try {
     throw new Error("The /projects route is not a dynamic import from the entry manifest");
   }
   const initial = staticClosure([entryKey, projectKey]);
+  for (const route of lightweightRoutes) {
+    if (!entry.dynamicImports?.includes(route)) throw new Error(`Route is not lazy-loaded: ${route}`);
+    if (initial.has(required(route).file)) throw new Error(`Route is in /projects initial graph: ${route}`);
+    const closure = staticClosure([entryKey, route]);
+    for (const file of closure) {
+      if (heavyByChunk[file]?.length) throw new Error(`Heavy dependency in ${route}: ${file}`);
+    }
+    if (sizes(closure).raw >= limit) throw new Error(`Route initial JS exceeds budget: ${route}`);
+    console.log(`${route}: lazy route, no TipTap/XYFlow, ${(sizes(closure).raw / 1000).toFixed(2)} kB initial JS`);
+  }
   for (const route of excludedRoutes) {
     if (initial.has(required(route).file)) throw new Error(`Unrelated route is in /projects initial graph: ${route}`);
   }

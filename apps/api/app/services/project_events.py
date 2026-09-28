@@ -16,6 +16,7 @@ EVENT_TYPES = frozenset({
     "candidate.frozen", "content.approved", "content.changes_requested",
     "delivery.authorized", "delivery.succeeded", "delivery.failed", "delivery.unknown",
     "delivery.reconciled", "delivery.receipt_recorded",
+    "project.created_from_opportunity",
 })
 
 

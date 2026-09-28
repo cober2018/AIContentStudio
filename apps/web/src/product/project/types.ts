@@ -1,7 +1,7 @@
 export type Brief = {
   id: number; revision_no: number; checksum: string; objective: string;
   primary_audience: string | null; core_message: string | null; angle: string | null;
-  required_evidence: string[]; content_constraints: string[]; identity_scope: number[];
+  required_evidence: string[]; content_constraints: string[]; identity_scope: (number | Record<string, number | null>)[];
   modality_scope: string[]; channel_scope: string[]; cta: string | null;
   references: { kind: string; id: number }[]; created_at: string | null;
 };

@@ -1,5 +1,26 @@
 # 当前进度
 
+## 2026-09-28：FE-F5A 本地 main 整合
+
+- 用户授权合入本地 main；已核对主工作区 main 与隔离分支共同基线 `2f52053`，主工作区无已跟踪改动，原始规格包保留。
+- 正在复跑提交前门禁；随后仅提交本任务文件并快进 main。六份 delta 同步与归档仍待确认，不推送、部署或运行生产迁移。
+
+## 2026-09-28：FE-F5A apply（IMPLEMENTED / REVIEW_PASSED，待归档确认）
+
+- 基线：main `2f52053`；业务改动仅在隔离工作树、`codex/fe-f5a-home-opportunity`。
+- 已实现 Opportunity、Signal、AssessmentRevision、Conversion，复用 AuditLog 和 ProjectEvent；转换不创建 Topic / FactPack / Fact Boundary / IdentitySnapshot。
+- 首轮回归暴露并修正失败锁事务残留、Brief scope 类型检查、首页机会先截断后排序；独立复核补齐旧项目 unknown 不可遗漏与真实近期活动。
+- 临时库 `/tmp/aicontent-f5a-yDS9qM/migration.db` 升级→回退→升级通过，head `f5a000000001`。初始迁移使用当前 metadata，新增迁移沿用既有幂等建表策略。
+- 当前全量后端 331 passed（指定上述已迁移临时库，避免既有 worker 测试访问空默认数据库）；OpenSpec strict 18 passed，diff-check 通过。最终批量投影改动后须重跑，不将当前结果当作最终门禁。
+- 浏览器实际完成新建机会、人工信号、评估 v1、qualified 转项目及刷新；项目 Brief v1、来源机会回链存在，Overview 为 evidence_needed。
+- 最终门禁：346 后端测试 passed（含 15 F5A 领域测试和 13 批量投影测试）；前端 TypeScript/Vite build/bundle gate PASS；OpenSpec all strict 18 passed；Ruff 定向检查及 diff-check PASS。既有 6 条弃用/SQLAlchemy 警告未扩展修复。SQLite 独立 Session 并发回归通过，未进行 PostgreSQL 实测。
+- `/projects` 首包 215.09 kB raw / 70.12 kB gzip，Home 231.11 kB、Opportunity 247.32 kB raw；三个入口均不包含 TipTap/XYFlow。
+- 后端独立复核 APPROVE；前端两项阻断（Brief 身份对象损坏、HTTP LAN UUID 缺失）已关闭，前端最终 APPROVE。身份 Brand-only 转换后只改目标的 Brief v1→v2 实际浏览器保存/刷新验证通过，身份对象不变。UUID native/fallback 与稳定重试 key 已定向验证，未实际部署 LAN。
+- Home 全部自有活动项目按 100 个批量扫描决策，近期卡片独立限额20；不读取历史候选/回执全文，实时证据/媒体权利门禁复用并回归。近期活动是真实 ProjectEvent。
+- OpenSpec 17/17 apply 任务完成。四份 MODIFIED delta 已补成保留既有要求/场景的完整块，修正 Unknown 标题匹配，避免将来归档覆盖旧契约；canonical specs 尚未同步。归档同步问题已发给用户，等待确认。
+- 未归档、未提交业务改动、未推送/合并/部署/生产迁移。临时验收服务已停止，临时数据库保留在隔离路径以便追溯。
+- 本轮实际 skills：using-superpowers、openspec-apply-change、writing-plans、executing-plans、subagent-driven-development、test-driven-development、systematic-debugging、requesting-code-review、receiving-code-review、verification-before-completion；openspec-archive-change 完成同步评估并要求暂停等待用户确认，未执行归档。
+
 ## 2026-09-28：FE-F5A-SPEC-R1（规格修订完成，未 apply）
 
 - 已核对 review 指出的 6 项阻塞与 2 项补充项，确认均适用于当前 OpenSpec。

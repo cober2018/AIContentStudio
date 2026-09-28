@@ -1,5 +1,22 @@
 # 配置记录
 
+## 2026-09-28：FE-F5A 本地 main 整合边界
+
+- main 与 FE-F5A 分支共同基线为 `2f52053`，无需冲突合并或获取远端提交；主工作区未跟踪内容为用户原始规格包，不加入本次提交。
+- 本次授权仅覆盖本地 main 整合；六份 delta 同步与归档保留待确认，不删除仍需用于归档的隔离工作树。
+
+## 2026-09-28：FE-F5A apply 验收发现
+
+- 独立复核后的最终修正：Brief identity_scope 不能用数字 ID join/map(Number) 读写层级对象；改为 JSON 保留 ID/层级对象，同时转换去除 null 键，兼容既有 Brand-only Brief 校验。浏览器和 API 回归通过。
+- 普通 HTTP LAN 上不能假设 crypto.randomUUID 存在；使用功能探测和 getRandomValues v4 回退，幂等 key 按用户/机会/评估版本保存在 sessionStorage。实际 LAN 部署不在本次验收范围。
+- 四份 MODIFIED delta 原本是片段，且 FE-F4 的 Unknown 标题与主规格不一致；已补为保留原契约与场景的完整 requirement blocks，尚未执行主规格同步或归档。
+
+- SQLite 与 PostgreSQL 的评估/转换竞争共用机会行写锁，失败路径必须显式 rollback；否则复用 Session 时失败锁的 updated_at 可被后续 commit 写入。回归已验证。
+- Opportunity 转换 scope 必须使用 typed schema，不能依赖现有 Brief 的任意数组；非法形态与字典元素返回 422，而不是 500 或生成项目。
+- Home 必须先按 priority / sensitivity / expiry / recency / id 排序再 LIMIT；待决策扫描与近期项目卡片的 LIMIT 分离，避免老项目 unknown 被隐去。
+- Home 回包不含 review 完整历史；近期活动来自 ProjectEvent，不以项目 updated_at 伪装排期。
+- 全量 pytest 需使用隔离且已迁移 DATABASE_URL，worker.apply 使用独立 SessionLocal，不受 TestClient 内存 session override 影响；默认空数据库失败不能误判成 F5A 业务回归。
+
 ## 2026-09-28：FE-F5A-SPEC-R1 review 处理
 
 - Review 指出的状态旁路确实存在：原规格允许普通 PATCH 直接写 `converted/archived`；现已限定为转换事务/归档路径专属状态，并拒绝非法回退。

@@ -20,6 +20,10 @@ const Workspace = lazy(() => import("./pages/Workspace"));
 const ProductPlaceholder = lazy(() => import("./product/ProductPlaceholders"));
 const IdentityWorkspace = lazy(() => import("./product/IdentityWorkspace"));
 const ProjectReviewCenter = lazy(() => import("./product/ProjectReviewCenter"));
+const HomePage = lazy(() => import("./product/HomePage"));
+const ProjectOriginLink = lazy(() => import("./product/HomePage").then((module) => ({ default: module.ProjectOriginLink })));
+const OpportunitiesPage = lazy(() => import("./product/OpportunityPages").then((module) => ({ default: module.OpportunitiesPage })));
+const OpportunityDetailPage = lazy(() => import("./product/OpportunityPages").then((module) => ({ default: module.OpportunityDetailPage })));
 const ProjectsPage = lazy(() => import("./product/ProjectPages").then((module) => ({ default: module.ProjectsPage })));
 const ProjectPage = lazy(() => import("./product/ProjectPages").then((module) => ({ default: module.ProjectPage })));
 const ProductionShellPage = lazy(() => import("./product/ProjectPages").then((module) => ({ default: module.ProductionShellPage })));
@@ -125,8 +129,9 @@ function Shell() {
             <RouteFailureBoundary key={location.pathname}>
               <Suspense fallback={<RouteLoading />}>
                 <Routes>
-              <Route path="/home" element={<ProductPlaceholder kind="home" />} />
-              <Route path="/opportunities" element={<ProductPlaceholder kind="opportunities" />} />
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/opportunities" element={<OpportunitiesPage />} />
+              <Route path="/opportunities/:id" element={<OpportunityDetailPage />} />
               <Route path="/projects" element={<PersistentProjectsPage />} />
               <Route path="/projects/demo" element={<ProjectsPage />} />
               <Route path="/projects/:projectId" element={<ProjectRoute />} />
@@ -164,7 +169,7 @@ function Shell() {
 
 function ProjectRoute() {
   const { projectId } = useParams();
-  return projectId && /^\d+$/.test(projectId) ? <PersistentProjectPage /> : <ProjectPage />;
+  return projectId && /^\d+$/.test(projectId) ? <><ProjectOriginLink projectId={Number(projectId)} /><PersistentProjectPage /></> : <ProjectPage />;
 }
 
 function ProductionRoute() {
