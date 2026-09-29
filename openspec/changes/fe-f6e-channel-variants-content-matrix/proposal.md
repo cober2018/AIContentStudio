@@ -9,7 +9,7 @@ North Star requires channel adaptation between a reusable ContentMaster and Cand
 - Add a versioned Channel Adapter capability contract with truthful unavailable state. Deterministic adaptation and model suggestions require explicit review/save, never implicit Master mutation.
 - Allow newly created channel-neutral Units/Masters while preserving existing channel-bound Unit/Master and Candidate v4 behavior.
 - Add Candidate manifest v5 sourced from one current, ready ChannelVariant; extend Review, Approval, authorization and local packaging through schema dispatch without v3/v4 fallback.
-- Provide controlled registered-form packages for WeChat article, X thread, Xiaohongshu image_note and Douyin spoken_script. A script or estimated SRT is not a finished video; prompts are not Xiaohongshu image bytes.
+- Provide controlled registered-form packages for WeChat article, `x/thread`, Xiaohongshu image_note and Douyin spoken_script. The legacy `x_thread/thread` fallback retains existing v3/v4 behavior but is not an exact published-profile v5 target. Registered `x/single` remains unavailable until a matching adapter is implemented and verified. A script or estimated SRT is not a finished video; prompts are not Xiaohongshu image bytes.
 - Preserve the active `complete-prd-v1-channel-deliverables` scenarios and PRD acceptance traceability; do not archive or mark that change superseded in FE-F6E without separate authorization.
 
 ## Capabilities

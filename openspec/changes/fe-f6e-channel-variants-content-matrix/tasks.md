@@ -27,7 +27,7 @@
 - [ ] 2.4 Expose configured/executable/verified capability state without treating mere plugin presence as execution proof.
 - [ ] 2.5 Reject unsupported channel/form or unavailable model/render capability with typed no-write results.
 - [ ] 2.6 Keep Channel Registry/Profile as existing truth; do not create a duplicate mutable settings registry.
-- [ ] 2.7 Regress X single unavailability until an exact form is registered.
+- [ ] 2.7 Regress the existing published `x/thread` target, legacy `x_thread/thread` fallback exclusion from v5, and registered-but-adapter-unavailable `x/single`; do not confuse registration with executable adaptation.
 
 ## 3. Project-scoped Variant service and exact refs
 
@@ -45,7 +45,7 @@
 
 ## 4. Adaptation and neutral source path
 
-- [ ] 4.1 Allow explicit channel-neutral Unit creation while retaining existing channel-bound Unit behavior.
+- [ ] 4.1 Verify existing explicit channel-neutral Unit creation and enable source-only neutral Master behavior without changing channel-bound Unit history.
 - [ ] 4.2 Save neutral Master with null channel/form as source-only; direct v4 freeze must remain unavailable.
 - [ ] 4.3 Keep existing channel-bound Master/v4 paths and hashes unchanged, including optional explicit adaptation from a bound Master.
 - [ ] 4.4 Implement deterministic concrete adaptation preview through registered rules/code.
@@ -67,7 +67,7 @@
 ## 6. Controlled registered-form adapters
 
 - [ ] 6.1 Implement WeChat article adaptation against the exact published registered form/profile.
-- [ ] 6.2 Implement X thread adaptation; leave X single unavailable until registered.
+- [ ] 6.2 Implement adaptation for the published `x/thread` profile; leave already-registered `x/single` unavailable until its adapter is implemented and verified, and keep legacy `x_thread/thread` history unchanged.
 - [ ] 6.3 Require Xiaohongshu image_note ordered actual image revisions, bytes/hash and public-use rights; reject prompt-only readiness.
 - [ ] 6.4 Produce Douyin spoken_script with script/scenes/B-roll/voice text and no false final-video claim.
 - [ ] 6.5 Generate SRT only as explicitly estimated timing absent real timed media.
@@ -98,7 +98,7 @@
 
 - [ ] 9.1 Add v5 Preview/Changes/Checks from frozen adapted content without Publisher-side rewriting.
 - [ ] 9.2 Bind Content Approval to exact v5 Candidate ID/hash and recheck live rights/evidence/integrity.
-- [ ] 9.3 Require current Variant/profile and verified account/channel/form/action capability for new Delivery Authorization.
+- [ ] 9.3 Dispatch new Delivery Authorization by Candidate schema: v5 must match its frozen Variant target channel/form/profile rather than the source Unit channel, preserve pinned identity/account authorization, label local packages manual, and require exact account/channel/form/action verification for remote effects; do not infer a binding from free-form account profile text. V3/v4 retain their Unit-channel rule.
 - [ ] 9.4 Make v5 local package use frozen approved content and byte-verified final media, with no Draft/v4 fallback.
 - [ ] 9.5 Preserve existing authorized history, DeliveryAttempt/Receipt semantics and unknown reconciliation priority.
 - [ ] 9.6 Include Variant revisions/provenance in Project Versions and derive Overview without a second status table.
