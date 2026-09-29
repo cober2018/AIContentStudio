@@ -155,7 +155,11 @@ try {
   await page.getByRole("link", { name: `审阅 Candidate #${frozen.id}` }).click();
   await page.getByRole("heading", { name: `Candidate #${frozen.id}` }).waitFor();
   await page.waitForFunction(() => document.querySelector('video[aria-label="冻结视频渲染"]')?.readyState >= 1);
-  report.gates.push("Review plays frozen exact MP4");
+  const frozenStructure = page.getByLabel("冻结 Video v2 结构");
+  const frozenText = await frozenStructure.textContent();
+  for (const value of ["这是可追溯的作者口播。", "字幕来自人工录入", "重点观点", '"timeline"', '"voice"', '"cover"']) assert(frozenText.includes(value), `Frozen Review omitted ${value}`);
+  assert(await page.getByText(/镜头 .* · 时间线 有/).count(), "Current v2 timeline must not be labeled missing");
+  report.gates.push("Review plays frozen exact MP4 and shows frozen script/timeline/voice/subtitles/overlays/cover");
   await page.getByRole("tab", { name: "变更", exact: true }).click();
   await page.getByText("图文/视频按结构化区段比较，不计算文本相似度。", { exact: true }).waitFor();
   await page.getByRole("tab", { name: "交付", exact: true }).click();
@@ -184,6 +188,15 @@ try {
   assert(packagedVoice?.name.endsWith(".wav"), "Recorded voice must keep a WAV package filename");
   assert.equal(createHash("sha256").update(execFileSync("unzip", ["-p", zip, packagedVoice.name])).digest("hex"), audioRevision.content_hash);
   report.gates.push("Approval, local-only authorization and ZIP with byte-exact MP4/WAV; no remote publication");
+  const currentMaster = (await api(masterPath)).items[0];
+  const editedPayload = structuredClone(currentMaster.payload);
+  editedPayload.title = "冻结后改动的当前 Master";
+  delete editedPayload.render_asset_ref;
+  await api(masterPath, { idempotency_key: `post-freeze-${suffix}`, expected_revision: currentMaster.revision_no, payload_schema: "video.master.v2", payload: editedPayload, asset_refs: currentMaster.assets.filter((item) => item.role !== "render_output").map(({ material_revision_id, content_hash, role, slot_key, sort_order, placement }) => ({ material_revision_id, content_hash, role, slot_key, sort_order, placement })) });
+  await page.reload();
+  await page.getByRole("heading", { name: `Candidate #${frozen.id}` }).waitFor();
+  assert.equal(await frozenStructure.textContent(), frozenText, "Historical Candidate Review must remain frozen after Master advances");
+  report.gates.push("Historical frozen Video v2 Review remains unchanged after a new Master revision");
   const legacyUnit = await api(`${pbase}/units`, { title: "Legacy Video fork", persona_id: persona.id, modality: "video", channel_id: template.channel });
   const legacyPath = `${pbase}/units/${legacyUnit.id}/master-revisions`;
   const legacy = await api(legacyPath, { idempotency_key: `legacy-${suffix}`, payload_schema: "video.master.v1", payload: { title: "旧视频", script: "原有口播", shots: [{ id: "shot-legacy", order: 0, label: "旧镜头" }] } });

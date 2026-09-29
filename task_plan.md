@@ -1,5 +1,14 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6D 独立复核修复与 F6E 当前性规格补丁
+
+目标：只关闭复核 D1–D3 和 E1；F6D 8.4 与 F6E business apply 仍需外部定向复核。
+
+- [x] /// 对照当前 main、F6D/F6E active OpenSpec 与实现，复现预览漏显、跨轨道媒体槽位重复和非法枚举类型。
+- [x] /// 在既有 F6D 测试/隔离浏览器脚本中增加回归，再最小修正前端冻结预览和 Video 文档服务；保持 v1/Graphic/Text 原路径。
+- [x] /// 在 F6E design/tasks/主 delta/Review/Project delta 规定 v5 按稳定 Variant 系列判断当前性，并增加跨系列/跨 schema 场景；不写 F6E 业务代码。
+- [x] /// 跑定向与全量门禁，更新 README/progress/findings 和验收记录，只提交本轮文件到本地 main；保留独立 re-review 门槛。
+
 ## 2026-09-29：F7 既有字段的秘密脱敏契约审计
 
 - [x] /// 读取 F7 标准 proposal/design/tasks/主 delta 与现有 MaterialRevision、ConnectorEndpoint、Delivery 代码，核实可能保存 raw prompt、签名 URL、异常文字的字段。

@@ -1,5 +1,11 @@
 # FE-F6D Video Production Studio — isolated acceptance
 
+## 2026-09-29 independent-review targeted rerun
+
+- After independent review identified D1–D3, scoped repairs were verified on local `main` without new tables or migrations. Video document test: 71 passed; full backend: 1026 passed, 2 skipped, 5 existing warnings. TypeScript/Vite, FE-P1 bundle, OpenSpec strict 30/30 and scoped Ruff passed.
+- A new isolated fixture `/tmp/aicontent-f6d-acceptance.A6dQ2B/studio.db` with sibling media root was migrated to the existing `f6a000000001` head. The browser ran against only ports 18262/15662 and produced `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6d-browser-evidence-4XIweO/report.json`: 12 gates passed, no page errors. It now asserts frozen Video v2 script, timeline, voice, subtitles, overlays and cover, then creates a newer current Master and proves the historical Candidate preview remains byte-for-byte unchanged. API and Vite test processes were stopped; temporary evidence retained.
+- Targeted negative API regressions assert duplicate cross-track media role/slot and array/object/bool/null enum values return 422 without Master or ProjectEvent writes. The prior v1/Text/Graphic path is unchanged. F6D 8.4 still needs independent targeted re-review; this local rerun is not its approval.
+
 Date: 2026-09-29. Scope: local F6D change on `main`, before independent implementation review or archive.
 
 ## Isolation and provenance

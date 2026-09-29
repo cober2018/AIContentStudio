@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-29 F6D 独立复核缺口与 F6E 多系列当前性
+
+- D1 属消费契约错位：后端 frozen Video v2 已有 `script_blocks/timeline/voice/subtitles/overlays/music/cover`，Review UI 仍按 v1 `script/timeline_present` 渲染。前端按 v2 字段存在性分派、只读冻结结构，隔离浏览器实测历史 Candidate 在当前 Master 升版后保持原样。
+- D2 源于每条轨道只校验自身 item ID，而 `timeline_media.slot_key=item.id`；两个轨道同名媒体 item 可共享 role/slot。保存前从 canonical 文档导出 expected refs 并校验全局 `(role, slot_key)` 唯一，负向 API 422/无 Master 或 ProjectEvent，正向同一素材在不同 slot 可复用。
+- D3 四处枚举 membership 对数组/对象可抛 TypeError；统一先检查字符串类型，16 组非法类型 API 均返回 422，无部分写入。未扩大权利或 Provider 范围。
+- E1 不能复用旧 Unit 最大 Candidate ID：同一 Master 先冻结公众号、X thread、X single 后，旧闸门会错误拒绝先冻结的两条。规格现要求 v5 每个稳定 Variant 系列独立当前性、同系列替代；源 Master/context/profile/rights/check 真漂移仍 fail closed，v3/v4 的原路径不放宽。此为需求修订，不是 v5 实施或独立 SPEC 通过。
+
 ## 2026-09-29 F7 既有持久字段脱敏缺口
 
 - 现有 `MaterialRevision` 明确包含 `prompt_text`、`source_url`、`source_metadata_json`、`metadata_json`，`ConnectorEndpoint` 包含 `last_pull_error`；现有自动交付 `execute_attempt()` 还允许旧 `allow_unverified_auto_draft` 在未验证时执行。F7 已要求关掉后者，但外部素材/Connector 对前五个字段的写入仍需安全投影约束，不能只依赖 Settings 页脱敏。

@@ -34,6 +34,57 @@ def _document() -> dict:
     }
 
 
+@pytest.mark.parametrize("field", ["framing", "transition", "track_kind", "voice_mode"])
+@pytest.mark.parametrize("invalid", [[], {}, True, None])
+def test_video_v2_invalid_enum_types_are_domain_errors(field, invalid, client, db_session):
+    from app.models import ContentMasterRevision, ProjectEvent
+    from app.services.video_documents import VideoDocumentError
+
+    document = _document()
+    if field == "track_kind":
+        document["timeline"]["tracks"][0]["kind"] = invalid
+    elif field == "voice_mode":
+        document["voice"]["mode"] = invalid
+    else:
+        document["shots"][0][field] = invalid
+    with pytest.raises(VideoDocumentError):
+        _canonical(document)
+    headers = {"X-Studio-User": "video-enum@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "枚举验证"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "枚举验证"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "视频", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    before_events = db_session.query(ProjectEvent).filter_by(project_id=project).count()
+    response = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", json={"idempotency_key": f"invalid-{field}", "payload_schema": "video.master.v2", "payload": document}, headers=headers)
+    assert response.status_code == 422, response.text
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 0
+    assert db_session.query(ProjectEvent).filter_by(project_id=project).count() == before_events
+
+
+def test_video_v2_rejects_cross_track_duplicate_media_slot_atomically(client, db_session):
+    from app.models import ContentMasterRevision, ProjectEvent
+    from app.services.video_documents import VideoDocumentError, validate_references
+
+    document = _document()
+    document["timeline"]["tracks"][0]["items"][0]["material_revision_id"] = 17
+    document["timeline"]["tracks"].append({"id": "second", "order": 1, "kind": "video", "items": [{"id": "item-1", "order": 0, "material_revision_id": 17, "start_ms": 0, "end_ms": 4_000}]})
+    refs = [{"material_revision_id": 17, "content_hash": "a" * 64, "role": "timeline_media", "slot_key": "item-1", "sort_order": order, "placement": {"track_id": track, "item_id": "item-1", "start_ms": 0, "end_ms": 4_000}} for order, track in enumerate(("visual", "second"))]
+    with pytest.raises(VideoDocumentError, match="video_asset_slot_duplicate"):
+        validate_references(document, refs, [])
+    headers = {"X-Studio-User": "video-slots@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "槽位验证"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "槽位验证"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "视频", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    before_events = db_session.query(ProjectEvent).filter_by(project_id=project).count()
+    response = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", json={"idempotency_key": "duplicate-slot", "payload_schema": "video.master.v2", "payload": document, "asset_refs": refs}, headers=headers)
+    assert response.status_code == 422, response.text
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 0
+    assert db_session.query(ProjectEvent).filter_by(project_id=project).count() == before_events
+    document["timeline"]["tracks"][1]["items"][0]["id"] = "item-2"
+    refs[1]["slot_key"] = "item-2"
+    refs[1]["placement"]["item_id"] = "item-2"
+    validate_references(document, refs, [])
+
+
 def test_video_v2_accepts_exact_project_recorded_wav(client, db_session, tmp_path, monkeypatch):
     from app.models import ProjectMaterialReference
     from app.services import asset_media

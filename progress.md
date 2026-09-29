@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：F6D D1–D3 修复与 F6E E1 规格校准
+
+- 外部独立复核基线 `main@364a49a` 给出 F6D 三项实施问题与 F6E 一项需求缺口；本地逐段核对后，仅修 Video v2 冻结 Review 结构展示、跨轨道 `(role, slot_key)` 唯一性与非法枚举类型的 422 领域错误。既有 v1/Text/Graphic 分支未改；没有新增表或迁移。
+- 定向 Video 文档测试 71 passed；全后端 1026 passed / 2 skipped / 5 warnings。前端 TypeScript/Vite 与 FE-P1 bundle gate 通过；OpenSpec all-strict 30/30、scoped Ruff 通过。隔离 SQLite `/tmp/aicontent-f6d-acceptance.A6dQ2B/studio.db` 与同父媒体目录、独立 API/Vite 端口完成 12 项浏览器闭环，报告 `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6d-browser-evidence-4XIweO/report.json`，页面错误 0；测试服务已停止。浏览器新增验证冻结脚本/时间线/配音/字幕/叠字/封面，以及当前 Master 升版后旧 Candidate 结构不变。
+- F6E 只补标准 active change：v5 以 `(unit_id, variant_key)` 系列判定 Candidate 当前性与幂等范围；三系列任意审批顺序、同系列替代、Master 真漂移及 v3/v4 共存均列为场景/任务。F6E 未做业务 apply，0.1/0.2、F6D 8.4 仍须修复后的独立定向复核；不推送/部署/生产迁移/主规格同步/归档。
+
 ## 2026-09-29：F7 既有字段脱敏规格补强（未 apply）
 
 - 在 `main@f706e86` 复核 F7 设计与当前模型：`MaterialRevision.prompt_text/source_url/source_metadata_json/metadata_json` 和 `ConnectorEndpoint.last_pull_error` 都是真实持久字段，原 F7 广义脱敏要求未逐字段阻止 raw prompt、签名 URL 与异常文本落库。标准 F7 design、能力主 delta、tasks 3.8/5.10 现补安全投影及成功/失败两条负向校验；原始总包和业务代码未动，F7 仍 0/105。
