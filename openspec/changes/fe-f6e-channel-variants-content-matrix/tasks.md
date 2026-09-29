@@ -33,7 +33,7 @@
 ## 3. Project-scoped Variant service and exact refs
 
 - [x] 3.1 Add authorized list/current/detail/history APIs; raw-ID reads must use the same Project/Unit boundary.
-- [ ] 3.2 Add non-durable adapt-preview against exact current source Master and target profile.
+- [x] 3.2 Add non-durable adapt-preview against exact current source Master and target profile.
 - [ ] 3.3 Add append-only save with variant_key/head CAS, `(unit_id, variant_key, idempotency_key)` series-scoped idempotency and atomic event/ref writes.
 - [x] 3.4 Reject a variant_key changing its channel/form or pointing to another Unit's Master.
 - [x] 3.5 Freeze exact source Master ID/payload/context and pinned IdentitySnapshot; preserve original source channel/form.

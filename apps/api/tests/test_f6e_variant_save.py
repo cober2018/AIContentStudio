@@ -218,3 +218,24 @@ def test_malformed_variant_evidence_ref_returns_domain_error_without_write(clien
     }, headers=headers)
     assert response.status_code == 422, response.text
     assert client.get(path, headers=headers).json()["items"] == []
+
+
+def test_adapt_preview_uses_exact_current_master_profile_and_does_not_write(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants/adapt-preview"
+    body = {
+        "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+        "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "single",
+    }
+    preview = client.post(path, json=body, headers=headers)
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["payload_schema"] == "x.single.v1"
+    assert preview.json()["payload"]["text"] == "有来源的原文"
+    assert preview.json()["source_master_revision_id"] == master["id"]
+    assert preview.json()["profile_template_version_id"] is not None
+    assert client.get(f"/api/v1/content-projects/{project}/units/{unit}/channel-variants", headers=headers).json()["items"] == []
+    assert client.post(path, json={**body, "expected_source_payload_hash": "f" * 64}, headers=headers).status_code == 409
+    unavailable = client.post(path, json={**body, "channel_id": "xiaohongshu", "content_form": "image_note"}, headers=headers)
+    assert unavailable.status_code == 422
+    assert unavailable.json()["detail"]["code"] == "variant_adapter_unavailable"
+    assert client.post(path, json=body, headers={"X-Studio-User": "foreign-preview@studio.local"}).status_code == 404

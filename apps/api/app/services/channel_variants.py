@@ -168,6 +168,42 @@ def _validate_evidence_refs(db: Session, master: ContentMasterRevision, refs: li
     return items
 
 
+def adapt_preview(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
+    _, unit = owned_unit(db, project_id, unit_id, user)
+    master = db.get(ContentMasterRevision, payload["source_master_revision_id"])
+    if master is None or master.project_id != project_id or master.content_unit_id != unit_id:
+        raise HTTPException(404, "源 Master 不存在")
+    if _current_source_id(db, unit_id) != master.id or master.payload_hash != _hash(master.payload_json):
+        raise HTTPException(409, {"code": "variant_source_not_current"})
+    if master.payload_hash != payload["expected_source_payload_hash"] or master.context_hash != payload["expected_source_context_hash"]:
+        raise HTTPException(409, {"code": "variant_source_conflict"})
+    if unit.identity_snapshot_id != master.identity_snapshot_id:
+        raise HTTPException(409, {"code": "variant_identity_conflict"})
+    from .content_masters import get_revision as get_master_revision
+
+    source_projection = get_master_revision(db, project_id, unit_id, master.id, user)
+    if source_projection["readiness"]["state"] == "stale":
+        raise HTTPException(409, {"code": "variant_source_context_stale"})
+    if source_projection["assets"] or source_projection["evidence"]:
+        raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
+    try:
+        adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
+    except AdapterUnavailable as exc:
+        raise HTTPException(422, {"code": "variant_adapter_unavailable", "reason": str(exc)}) from exc
+    try:
+        adapted = adapter.adapt(master.payload_json, asset_refs=[], evidence_refs=[])
+    except AdapterUnavailable as exc:
+        raise HTTPException(422, {"code": "variant_adaptation_unavailable", "reason": str(exc)}) from exc
+    return {
+        "source_master_revision_id": master.id, "source_payload_hash": master.payload_hash, "source_context_hash": master.context_hash,
+        "channel_id": payload["channel_id"], "content_form": payload["content_form"], "artifact_kind": capability["artifact_kind"],
+        "payload_schema": capability["payload_schema"], "payload": adapted, "payload_hash": _hash(adapted),
+        "profile_template_version_id": capability["profile_version_id"], "profile_hash": capability["profile_hash"],
+        "adapter_key": capability["adapter_key"], "adapter_version": capability["adapter_version"],
+        "verified_remote": False,
+    }
+
+
 def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
     key = payload["variant_key"]

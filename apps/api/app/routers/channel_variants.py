@@ -31,6 +31,23 @@ class VariantRevisionIn(BaseModel):
     llm_provenance: dict | None = None
 
 
+class VariantAdaptPreviewIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_master_revision_id: int = Field(ge=1)
+    expected_source_payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    expected_source_context_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    channel_id: str = Field(min_length=1, max_length=100)
+    content_form: str = Field(min_length=1, max_length=100)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/channel-variants/adapt-preview", dependencies=[Depends(require_editor)])
+def preview_channel_adaptation(project_id: int, unit_id: int, body: VariantAdaptPreviewIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services.channel_variants import adapt_preview
+
+    return adapt_preview(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
+
+
 @router.post("/content-projects/{project_id}/units/{unit_id}/channel-variants", status_code=201, dependencies=[Depends(require_editor)])
 def create_channel_variant(project_id: int, unit_id: int, body: VariantRevisionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
