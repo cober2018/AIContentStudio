@@ -3,6 +3,8 @@
 ### Requirement: Production identity cannot use development headers
 Production mode SHALL reject `X-Studio-User`, default-user, mock and auto-create-user authentication. It SHALL validate a configured signed identity and map it to an existing active Studio User; authorization SHALL use that User's durable role rather than an untrusted role claim. Development/test Header mode MAY remain available only outside production.
 
+The mapping from a configured issuer's stable subject to an existing User MUST be explicitly reviewed and fail closed for unknown or ambiguous subjects. A token email or role claim alone MUST NOT silently bind an account. If the approved mapping requires new durable persistence beyond the current User table, F8 SHALL pause for a separately reviewed specification/migration decision rather than assuming email-only equivalence.
+
 #### Scenario: Spoofed header in production
 - **WHEN** a request supplies `X-Studio-User: admin@studio.local` without a valid configured production identity
 - **THEN** the protected API denies the request without returning private data or creating a User
@@ -10,6 +12,10 @@ Production mode SHALL reject `X-Studio-User`, default-user, mock and auto-create
 #### Scenario: Unknown or inactive subject
 - **WHEN** a token is otherwise valid but its mapped User is missing or inactive
 - **THEN** the request is denied without auto-provisioning or promoting a token role claim
+
+#### Scenario: Verified token has an unbound subject
+- **WHEN** a correctly signed token presents an email matching a Studio User but its issuer/subject has no approved unambiguous binding
+- **THEN** production authentication denies the request instead of inferring the User from that email
 
 ### Requirement: Production startup fails closed on unsafe configuration
 Production startup SHALL validate auth, required secrets, schema-head compatibility and required runtime configuration before accepting traffic. It MUST NOT silently create tables, migrate/downgrade a database or mutate approved templates/settings as part of service boot. Development/test bootstrap MAY retain explicit local behavior.
@@ -105,9 +111,15 @@ The project SHALL maintain versioned Identity Golden and Content Golden fixtures
 ### Requirement: Full integration acceptance crosses ChannelVariant
 An isolated integration acceptance SHALL exercise Opportunity → Project → Identity → CreativeBrief/Fact Boundary → Matrix → Text/Graphic/Video Masters → ChannelVariant → Candidate → Content Approval → Delivery Authorization → local or verified delivery → Receipt → Performance/Learning. Each transition's ownership, exact revision/checksum, rights and runtime provenance SHALL be queryable. A local package or attempt status MUST NOT stand in for a published receipt.
 
+The local branch MAY complete at authorized package/handoff; it SHALL enter PublishedContentRecord and subsequent Performance/Learning only after real publication is separately attested by a qualifying `human_confirmed` DeliveryReceipt with `delivered_at`, exact Candidate/Target/hash and owner validation. An unresolved Unknown, package-ready target or ZIP download MUST NOT be counted as published or as downstream learning acceptance.
+
 #### Scenario: Complete local chain
 - **WHEN** all three modality Masters and a channel Variant are produced in an isolated environment
-- **THEN** the approved Candidate and local DeliveryTarget retain exact frozen lineage through the downstream feedback/Learning path without claiming remote publication
+- **THEN** the approved Candidate and local DeliveryTarget retain exact frozen lineage through handoff; without a separate qualifying human-confirmed publication Receipt, the published-history and learning branch remains not exercised
+
+#### Scenario: Real publication confirmed after manual handoff
+- **WHEN** an owner separately confirms actual publication with a qualifying `human_confirmed` Receipt, `delivered_at` and matching frozen Candidate/Target/hash
+- **THEN** PublishedContentRecord and subsequent Performance/Learning may be exercised with that exact provenance rather than a fabricated publication time or remote success
 
 #### Scenario: Unknown delivery
 - **WHEN** a remote attempt is unknown or failed

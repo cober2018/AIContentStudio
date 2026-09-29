@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F8 生产身份与发布历史验收契约预审（仅规格）
+
+- [x] /// 对照 F8 active OpenSpec、现有 User/auth 模型与 F5B PublishedContentRecord 真源，核实生产身份映射和本地交付到学习链路的实际前提。
+- [x] /// 仅在 F8 design/tasks/主 delta 写明身份映射前置决策及本地包不得自动生成已发布历史；不选未授权的持久对象，不改业务代码。
+- [x] /// 同步 README/progress/findings，运行 OpenSpec all-strict 与 diff-check，提交本地规格检查点；F6D/F6E 门槛保持原状。
+
 ## 2026-09-29：F7 搜索来源地址安全契约预校准（仅规格）
 
 - [x] /// 对照 F7 design/tasks/Capability delta 与 `MaterialRevision.source_url`/`create_revision()`，确认“记录来源 URL”和“禁止签名抓取 URL”之间的实施歧义。

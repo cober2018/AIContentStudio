@@ -178,8 +178,9 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 ### FE-F8 Production Readiness + Operations（仅标准 OpenSpec 草案，未 apply）
 
 - PRD/需求背景：North Star 的完整产品链路还需生产安全认证、可替换字节存储、真实运行健康状态、恢复演练及 Golden/全链路验收；F8 是部署前的工程收口，不增加 Organization/Invite/Tenant/SSO 产品管理。
-- 目录结构：[`openspec/changes/fe-f8-production-readiness-operations/`](openspec/changes/fe-f8-production-readiness-operations/proposal.md) 含 proposal/design、99 项任务、新 Production Readiness 规格与 Product Settings delta；未来实施以现有 `apps/api/app/deps.py`、`main.py`、`observability.py`、`routers/health.py`、`services/materials.py` 与 worker、Settings 为基线。用户原始包不改。
+- 目录结构：[`openspec/changes/fe-f8-production-readiness-operations/`](openspec/changes/fe-f8-production-readiness-operations/proposal.md) 含 proposal/design、100 项任务（增加身份映射前置审定）、新 Production Readiness 规格与 Product Settings delta；未来实施以现有 `apps/api/app/deps.py`、`main.py`、`observability.py`、`routers/health.py`、`services/materials.py` 与 worker、Settings 为基线。用户原始包不改。
 - 已完成：规格校准了原十条目标，补生产 Header/default-user 拒绝、启动只读预检、健康状态真实 HTTP 失败、metrics 有界标签、全媒体读写者存储切换、存量明文 Secret 处理和实际平台验证边界；仅规格，未修改生产代码或数据库。
+- 规格预审补丁：现有 User 只有 email/role/status，没有外部 issuer/subject 绑定；F8 明确生产身份不能仅凭 token email/role 猜测映射，须在实施前审定稳定 subject→现有 User 的安全绑定，若需新持久结构先修订规格。完整链路验收也明确：本地 ZIP/人工交付不能直接制造 PublishedContentRecord 或 Learning；须另有符合 F5B 的 `human_confirmed` Receipt 与 `delivered_at`。本批未实施 F8、未改变现有开发认证。
 - 待完成/TODO：F6C 独立复核已完成；F6D/F6E/F7 的实施和验收，以及 F8 独立 SPEC review/apply 确认均未完成；生产身份签发方、Secret Provider、对象存储和真实账号未配置或验证，不能称生产就绪。
 - 关键设计决策：复用现有 User/Role、MaterialRevision、Run/Attempt/Review/Receipt 真源；生产禁用开发 Header 与自动建号，不在应用启动时迁移；存储切换前验完整引用字节并保留可恢复回退；Golden 质量与真实发布按证据分别验收。
 - 依赖与启动：规格预计不新增长期业务表；实际生产启动/迁移/部署须有独立授权和运行手册。本轮不 push/deploy/运行生产迁移或同步 canonical/归档。

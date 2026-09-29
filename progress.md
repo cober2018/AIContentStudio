@@ -1,5 +1,12 @@
 # 当前进度
 
+## 2026-09-29：F8 生产身份与本地发布链路规格预审
+
+- 当前基线 `main@5350396`，tracked tree clean，原始总包未跟踪且不修改；F6D 8.4 与 F6E SPEC 独立复核尚无返回。只读对照 `deps.py`、`User`、F5B `sync_receipt()` 和 F8 active OpenSpec 后发现两个未来实施风险：`User` 没有 issuer/subject 映射，且 F8 任务 9.7 易把本地 ZIP 后直接进入已发布历史/学习误解为可验收。
+- F8 design/tasks/主 delta 现要求先审定稳定 issuer/subject→现有 User 绑定；若需新持久 schema，须单独修规格而非擅自建表。手工本地包仅完成交付准备，PublishedContentRecord/Performance/Learning 必须另有真实 `human_confirmed` Receipt、`delivered_at` 与精确 Candidate/Target/hash；否则标记下游未验，不伪造发布。
+- 本轮仅规格与项目文档，未改业务代码、迁移、凭据或远端状态；F8 尚未 apply。F6D/F6E 门槛不变，不推送/部署/生产迁移/主规格同步/归档。
+- OpenSpec all-strict 30/30 PASS；`git diff --check` PASS；F8 任务因增加身份映射前置审定从 99 项变为 100 项、0 项完成。原有 Requirement/Scenario 标题保留，只新增两条验收场景。
+
 ## 2026-09-29：F7 搜索素材来源地址规格预校准
 
 - 在等待 F6D 8.4 与 F6E SPEC 独立定向复核期间，只读审计发现 F7 task 4.5 的“保存来源 URL”可能与既有签名 URL 禁存契约产生歧义；当前 `materials.create_revision()` 的 `source_url` 是原样传入持久层的字段。现仅修 F7 design/tasks/Capability delta：公开稳定引用地址须正向校验，临时签名抓取/预览地址不得落库或回显；无法证明安全时保留来源标识和单向哈希。没有修改业务代码、迁移或 F6E 门槛。

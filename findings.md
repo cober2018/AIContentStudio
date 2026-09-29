@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F8 身份映射与发布学习链路
+
+- `deps.get_current_user()` 目前由 `X-Studio-User`/默认 email 查询且可能自动建 User；`User` 仅有唯一 email、role、is_active，没有 `issuer/sub` 字段。F8 生产 token 校验若仅按 email 映射，即使签名有效也缺少明确稳定主体绑定。规格现将映射方案列为实施前审定项；如果必须新增持久结构，属于原计划未定义的 schema 变化，须停下修订 OpenSpec/迁移方案。
+- F5B `published_history.sync_receipt()` 仅对 `human_confirmed` 且有 `delivered_at` 的 Receipt 建 Studio PublishedContentRecord，并核 Candidate/Target/hash 与 unresolved Unknown。F8 9.4 本地包与 9.7 发布/学习并非自动相邻步骤：没有真实人工确认时，全链路只能证明到 handoff，不能把 ZIP、授权或 attempt 冒充已发布/学习成功。已在 F8 spec/design/tasks 增加正反场景。
+
 ## 2026-09-29 F7 source_url 双用途歧义
 
 - F7 tasks 4.5 原写“Persist source URL/ref/license/provenance”，但 design/spec 同时禁止签名或凭据化抓取地址进入既有 `MaterialRevision.source_url`。`materials.create_revision()` 当前仅透传 `source_url`，因此不修规格容易让实施者把 provider fetch URL 当公开来源引用持久化。
