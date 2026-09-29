@@ -45,6 +45,8 @@ Date: 2026-09-29. Scope: local F6D change on `main`, before independent implemen
 
 ## Honest limits
 
+- F6D task 4.5 is a **handoff record only**. The active F7 `capability-integrations-delivery` spec and tasks 5.1–5.11, 6.1–6.7 and the safe-results requirement carry real Video/TTS/ASR execution, accepted exact bytes/license/provenance/rights, and response/error secret redaction. That handoff is complete; these F7 tasks remain unimplemented and must not be counted as verified F6D capabilities. F6D task 8.4 still awaits an independent implementation verdict.
+
 - Real external Video/TTS/ASR execution, accepted bytes/license/provenance/rights, response redaction and verified publication are F7, not demonstrated here.
 - The initial browser run used ID3 MP3; the later WAV rerun above closes the recorded-audio limitation. External TTS/ASR remains unverified.
 - The previous independent F6D SPEC review is on record, but no independent implementation verdict has been obtained this turn: the dedicated ChatGPT browser-control tool required by the existing review skill is unavailable. Local review and passing tests must not be labeled independent approval.

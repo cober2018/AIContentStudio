@@ -49,7 +49,7 @@
 - [x] 4.2 Reject unverified provider-shaped requests with typed unavailable and zero MaterialRevision/Master writes.
 - [x] 4.3 Ensure local UI never describes preview, manual render attestation or disconnected Provider as verified output.
 - [x] 4.4 Preserve F6A manual input-bound attestation and reject forged renderer origin/version/verification fields.
-- [ ] 4.5 Carry real Provider execution, accepted-result bytes/license/provenance/rights and response secret-redaction requirements into F7; do not implement or mark them complete in F6D.
+- [x] 4.5 Carry real Provider execution, accepted-result bytes/license/provenance/rights and response secret-redaction requirements into F7; do not implement or mark them complete in F6D.
 - [x] 4.6 Require one exact final video output whose attested input hash covers payload/context/source refs/profile.
 - [x] 4.7 Reject stale, wrong-kind, missing-byte or mismatched-hash final video before Candidate freeze.
 

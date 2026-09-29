@@ -5,12 +5,12 @@ North Star requires channel adaptation between a reusable ContentMaster and Cand
 ## What Changes
 
 - Add bounded, read-only Identity × Modality × Channel matrix suggestions; creating a Unit remains an explicit authorized action. Matrix selection never creates an FE-F4 DeliveryTarget before Candidate Approval.
-- Add append-only `ChannelVariantRevision` with exact source Master, IdentitySnapshot, profile/adapter, context and request provenance; persist exact variant asset/evidence refs and append-only checks.
-- Add a versioned Channel Adapter capability contract with truthful unavailable state. Deterministic adaptation and model suggestions require explicit review/save, never implicit Master mutation.
+- Add append-only `ChannelVariantRevision` with a versioned canonical `payload_schema`/`payload_json`/`payload_hash`, exact source Master, IdentitySnapshot, profile/adapter, context and request provenance; persist exact variant asset/evidence refs and append-only checks.
+- Add a versioned Channel Adapter capability contract with an explicit source Master schema × target form compatibility matrix and truthful unavailable state. Deterministic adaptation and model suggestions require explicit review/save, never implicit Master mutation; model provenance reuses verified `LLMRun`.
 - Allow newly created channel-neutral Units/Masters while preserving existing channel-bound Unit/Master and Candidate v4 behavior.
 - Add Candidate manifest v5 sourced from one current, ready ChannelVariant; extend Review, Approval, authorization and local packaging through schema dispatch without v3/v4 fallback.
 - Provide controlled registered-form packages for WeChat article, `x/thread`, `x/single`, Xiaohongshu image_note and Douyin spoken_script. Both X forms already have published profiles and require matching F6E adapters before they become executable; mere registration does not confer readiness. The legacy `x_thread/thread` fallback retains existing v3/v4 behavior but is not an exact published-profile v5 target. A script or estimated SRT is not a finished video; prompts are not Xiaohongshu image bytes.
-- Preserve the active `complete-prd-v1-channel-deliverables` scenarios and PRD acceptance traceability; do not archive or mark that change superseded in FE-F6E without separate authorization.
+- Preserve the seven scenarios and PRD acceptance traceability from `complete-prd-v1-channel-deliverables` as a **superseded but preserved acceptance source**. Its existing `superseded_by: align-v1-prd2-content-harness` metadata remains unchanged; FE-F6E does not reactivate or silently close it.
 
 ## Capabilities
 

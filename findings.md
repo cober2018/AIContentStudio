@@ -1,5 +1,18 @@
 # 配置记录
 
+## 2026-09-29 F6D 4.5 与 F7 真实能力边界
+
+- F6D 设计第 5 项及 Video Studio/Review delta 已把真实 Video/TTS/ASR 输出、接受字节/许可/血缘/权利和响应脱敏列为 F7 义务；F7 标准 change 的真实能力规格、5.1–5.11、6.1–6.7 与安全结果要求可逐项承接。
+- 因此 F6D 4.5 是已完成的规格移交，不是 F6D 中实现 Provider，也不是 F7 测试通过。F6D 8.4 独立实施复核仍是当前实质门禁；不能以本地全绿或移交勾选代替该外部结论。
+
+## 2026-09-29 F6E 独立 SPEC 反馈核验
+
+- 旧 `complete-prd-v1-channel-deliverables/.openspec.yaml` 已有 `superseded_by: align-v1-prd2-content-harness`；`openspec list` 仍按未勾任务显示 in-progress，这不是重新激活的依据。七个 Scenario 标题和 PRD §15/§16 验收义务保留，标准 F6E 不再称其 active。
+- 真实 Registry 种子对首批五形态给出 `wechat/article=text`、`x/thread=text`、`x/single=text`、`xiaohongshu/image_note=image`、`douyin/spoken_script=script`。旧 fallback 的 Xiaohongshu 为 text，但不应覆盖 exact published profile；旧 `x_thread` 不成为 v5 目标。F6E 现把 v2 Master→form 与 artifact_kind 匹配写成实施闸门，v1 须显式 fork。
+- `ContentAsset` 现有 Draft/Topic/Master 可空 source FK，Delivery 仍用 `content_master_revision_id is not None` 作为部分 v4 判断，项目授权还按 Unit 渠道校验；v5 若同时写 Master FK 会被误分派。修订要求 v5 仅 Variant FK，缓存 channel/form/artifact_kind 与冻结目标一致，Review/Approval/Delivery/Package 先按 manifest schema 分派。
+- 现有 `LLMRun` 记录 provider/model/prompt/purpose/input hash、parsed output、raw output/error；后两者可能含敏感内容。F6E 必须验证成功运行与 exact 输入/接受输出 hash，只把安全投影写入 Variant/v5，而不是新增 receipt 表或复制原始输出。
+- 当前修订只动标准 F6E OpenSpec 与项目记录；F6D 4.5 是 F7 Provider/rights/redaction 移交，8.4 独立实施复核仍未通过。F7 真 Provider 不反向阻塞 F6E，但 F6D 独立复核仍阻塞 F6E business apply。
+
 ## 2026-09-29 F6D WAV 拒绝根因
 
 - 证据：同一有效 RIFF/WAVE 字节 `sniff_mime(bytes, "audio/wav")` 返回 `audio/wav`，`sniff_mime(bytes, None)` 返回 octet-stream；`content_masters.save_revision()` 因 `video_asset_bytes_or_mime_invalid` 返回 422。不是权限、项目可见性或文件哈希的问题。

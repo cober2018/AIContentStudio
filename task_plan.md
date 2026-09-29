@@ -1,8 +1,23 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6D→F7 Provider 移交核销与 F6E 规格检查点
+
+- [x] /// 在当前 main 核对 F6D 4.5 文字、F7 标准规格/任务与真实 Provider 未实现边界，确认“移交已写入”不等于“F7 已实现”。
+- [x] /// 仅将 F6D 4.5 作为文档移交勾选；更新验收记录、README 和进度/发现，保留 8.4 独立复核未完成。
+- [x] /// 对 F6E 五项修订与 F6D 移交跑 OpenSpec all-strict、diff-check、文件范围审计，并仅将本轮范围文件本地提交；F6E business apply 仍须 F6D 8.4 与 F6E re-review。
+
+## 2026-09-29：F6E 独立 SPEC 复核修订（仅规格）
+
+目标：针对独立复核提出的五个需求缺口修正标准 active change，保留原有场景；F6D 独立实施复核通过前不执行 F6E 业务 apply。
+
+- [x] /// 核对旧 V1 change 元数据、现有 Registry 五种 published form、ContentAsset source 指针及 LLMRun 真实字段。
+- [x] /// 在 proposal/design/tasks/相关 delta 定义 superseded 验收来源、版本化 canonical Variant payload、首批 Master→form 矩阵、v5 source-pointer/投影列及 LLMRun 安全血缘。
+- [x] /// 同步 README/progress/findings；运行 OpenSpec all-strict 30/30、旧场景保留审计与 git diff --check；不改业务代码/迁移。
+- [ ] /// 获取修订后独立 SPEC re-review；F6D 8.4 独立实施复核通过前不进入 F6E business apply。
+
 ## 2026-09-29：F6D WAV 精确音频闭环
 
-目标：让有效 RIFF/WAVE 录音在 Video v2 的保存与本地包中保持准确的 MIME、字节/哈希和文件名，不放宽素材权利或通用未知格式闸门。当前按 F6D active OpenSpec apply；仍不勾 4.5/8.4，不启动 F6E 业务 apply。
+目标：让有效 RIFF/WAVE 录音在 Video v2 的保存与本地包中保持准确的 MIME、字节/哈希和文件名，不放宽素材权利或通用未知格式闸门。该批按 F6D active OpenSpec apply；当时 4.5/8.4 尚未勾选，后续 4.5 已按 F7 移交证据单独核销，8.4 仍待独立复核；不启动 F6E 业务 apply。
 
 - [x] /// RED：在 `apps/api/tests/test_material_library.py` 添加真实 RIFF/WAVE 与 WEBP/未知 RIFF MIME 回归；在 `apps/api/tests/test_f6d_video_documents.py` 添加临时字节的 Video v2 录音精确引用保存回归。确认当前失败原因是无声明的字节嗅探返回 octet-stream。
 - [x] /// GREEN：仅在 `apps/api/app/services/materials.py` 的既有嗅探器识别 RIFF/WAVE，并保持 WEBP/未知 RIFF 不误判；复跑定向测试。必要时在 `apps/api/app/services/production_packages.py` 对 WAV 同步使用 `.wav` 扩展名。

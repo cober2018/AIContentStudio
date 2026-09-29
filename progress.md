@@ -1,5 +1,16 @@
 # 当前进度
 
+## 2026-09-29：F6D→F7 移交义务核销
+
+- 本地 `main@d85dc08` 核实 F6D 4.5 只要求把真实 Provider 执行、接受结果字节/许可/血缘/权利与响应脱敏写入 F7；F7 标准 spec 及未勾任务 5.1–5.11、6.1–6.7 均明确承接。仅将 F6D 4.5 的“移交完成”勾选，F7 Provider 本身仍为未实施/未验证。
+- F6D 从 77/79 变为 78/79；8.4 独立 SPEC/后端/前端/Review/包/浏览器实施复核仍无结论，不称 F6D 最终通过。F6E 标准规格待独立 re-review，business apply 不启动。本批无业务代码、迁移或外部发布动作。
+
+## 2026-09-29：F6E 五项独立 SPEC 反馈修订（未 apply）
+
+- 基线 `main@d85dc08`；仅标准 F6E proposal/design/tasks、三份相关 delta、README 与计划/进度/发现记录更改。原始总包、业务代码与迁移未动；不推送/部署/运行生产迁移。
+- 旧 V1 change 的 superseded 元数据核实；保留七个历史 Scenario 与 PRD §15/§16 义务。补 `payload_schema` 与五种有界 canonical schema、首批 v2 Master/Registry artifact_kind 矩阵、v5 唯一 Variant source pointer/投影列、`LLMRun` exact-input/accepted-output 安全血缘。F6E 任务由 96 增至 98，0 项实施完成。
+- 六份 delta 原有 Scenario 标题全部保留；单 change strict PASS、全库 OpenSpec strict 30/30 PASS。独立 SPEC re-review 待取得；F6D 8.4 独立实施复核也待取得，F6E business apply 仍被门禁阻断。
+
 ## 2026-09-29：F6D 录音 WAV 闭环补强
 
 - 真实 RIFF/WAVE 录音可上传但无法保存到 Video v2 Master：上传读客户端 `audio/wav`，后续无声明嗅探返回 octet-stream。两项定向测试先 RED；在共享嗅探器识别 RIFF/WAVE 且不误判 WEBP/未知 RIFF 后 GREEN。v4 package 的 WAV `.wav` 成员集成测试先 RED 后 GREEN。
