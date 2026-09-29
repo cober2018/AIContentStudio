@@ -32,6 +32,15 @@ def test_video_v2_document_canonical_order_and_stable_ids():
     assert _canonical(payload)["timeline"]["tracks"][0]["items"][0]["shot_id"] == "shot-1"
 
 
+def test_empty_video_draft_is_valid_but_not_a_final_render():
+    payload = _document()
+    payload["script"]["blocks"] = []
+    payload["shots"] = []
+    payload["timeline"] = {"duration_ms": 0, "tracks": []}
+    payload["subtitles"]["cues"] = []
+    assert _canonical(payload) == payload
+
+
 @pytest.mark.parametrize("mutation", [
     lambda doc: doc["shots"][0].update({"extra": "unsupported"}),
     lambda doc: doc["shots"].append({**doc["shots"][0], "order": 1}),
@@ -63,3 +72,87 @@ def test_exact_video_profile_applies_only_declared_bounded_rules():
     form.source = "legacy_default"
     form.video_requirements = {}
     assert profile_reasons(form, _canonical(_document())) == ["video_profile_unavailable"]
+
+
+def test_video_media_reuse_has_distinct_exact_shot_slots():
+    from app.services.video_documents import validate_references
+
+    payload = _document()
+    first = payload["shots"][0]
+    first["source_material_revision_id"] = 17
+    payload["shots"].append({**first, "id": "shot-2", "order": 1})
+    refs = [
+        {"material_revision_id": 17, "content_hash": "a" * 64, "role": "shot_source", "slot_key": "shot-1", "sort_order": 0, "placement": {"shot_id": "shot-1"}},
+        {"material_revision_id": 17, "content_hash": "a" * 64, "role": "shot_source", "slot_key": "shot-2", "sort_order": 1, "placement": {"shot_id": "shot-2"}},
+    ]
+    validate_references(payload, refs, [])
+    with pytest.raises(ValueError):
+        validate_references(payload, refs[:1], [])
+    with pytest.raises(ValueError):
+        validate_references(payload, [refs[0], {**refs[1], "slot_key": "shot-1"}], [])
+    with pytest.raises(ValueError):
+        validate_references(payload, [refs[0], {**refs[1], "placement": {"shot_id": "shot-1"}}], [])
+
+
+def test_video_media_roles_include_timeline_voice_music_cover_and_one_render():
+    from app.services.video_documents import validate_references
+
+    payload = _document()
+    payload["timeline"]["tracks"][0]["items"][0]["material_revision_id"] = 22
+    payload["voice"] = {"mode": "recorded", "material_revision_id": 18}
+    payload["music"] = {"material_revision_id": 19}
+    payload["cover"] = {"material_revision_id": 20}
+    payload["render_asset_ref"] = {"material_revision_id": 21}
+    placements = [
+        (22, "timeline_media", "item-1", {"track_id": "visual", "item_id": "item-1", "start_ms": 0, "end_ms": 4_000}),
+        (18, "voice_audio", "voice", {"voice": "main"}),
+        (19, "music_audio", "music", {"music": "main"}),
+        (20, "cover_image", "cover", {"cover": "main"}),
+        (21, "render_output", "final", {"render": "final"}),
+    ]
+    refs = [
+        {"material_revision_id": revision_id, "content_hash": "a" * 64, "role": role, "slot_key": slot, "sort_order": index, "placement": placement}
+        for index, (revision_id, role, slot, placement) in enumerate(placements)
+    ]
+    validate_references(payload, refs, [])
+    with pytest.raises(ValueError):
+        validate_references(payload, refs + [refs[-1]], [])
+    with pytest.raises(ValueError):
+        validate_references(payload, [*refs[:-1], {**refs[-1], "role": "timeline_media"}], [])
+
+
+def test_video_v2_master_save_round_trips_canonical_document(client):
+    headers = {"X-Studio-User": "video-v2-contract@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "视频创作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "视频项目"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "短片", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    document = _document()
+    response = client.post(path, json={"idempotency_key": "v2-first", "payload_schema": "video.master.v2", "payload": document}, headers=headers)
+    assert response.status_code == 200, response.text
+    saved = response.json()
+    assert saved["payload_schema"] == "video.master.v2"
+    assert saved["payload"] == document
+    assert client.get(f"{path}/{saved['id']}", headers=headers).json()["payload"] == document
+
+
+def test_video_v2_readiness_uses_exact_published_profile(client, db_session):
+    from app.models import ChannelTemplateVersion
+
+    headers = {"X-Studio-User": "video-profile-check@studio.local"}
+    db_session.add(ChannelTemplateVersion(
+        channel="short_video_fixture", version=1, name="短视频", status="published",
+        profile_json={"content_forms": {"short": {"artifact_kind": "video", "video_requirements": {"max_shots": 1}}}},
+    ))
+    db_session.commit()
+    persona = client.post("/api/v1/content-personas", json={"name": "视频作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "视频规则", "channels": ["short_video_fixture"]}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "短片", "persona_id": persona, "modality": "video", "channel_id": "short_video_fixture"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    document = _document()
+    document["shots"].append({**document["shots"][0], "id": "shot-2", "order": 1})
+    saved = client.post(path, json={"idempotency_key": "two-shots", "payload_schema": "video.master.v2", "payload": document, "content_form": "short"}, headers=headers)
+    assert saved.status_code == 200, saved.text
+    readiness = client.get(f"{path}/{saved.json()['id']}/readiness", headers=headers)
+    assert readiness.status_code == 200, readiness.text
+    assert "video_shot_count_above_profile_maximum" in readiness.json()["adapter_availability"]["reasons"]
