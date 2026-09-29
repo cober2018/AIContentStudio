@@ -157,6 +157,11 @@ def canonical_payload(raw: object) -> dict:
                 normalized["volume"] = volume
             items.append(normalized)
         tracks.append({"id": track["id"], "order": track["order"], "kind": track["kind"], "items": items})
+    if any(shot["duration_ms"] > duration for shot in shots):
+        _fail("video_shot_timeline_duration_invalid")
+    shot_durations = {shot["id"]: shot["duration_ms"] for shot in shots}
+    if any(item["end_ms"] - item["start_ms"] > shot_durations[item["shot_id"]] for track in tracks for item in track["items"] if "shot_id" in item):
+        _fail("video_shot_timeline_duration_invalid")
     result["timeline"] = {"duration_ms": duration, "tracks": tracks}
 
     voice = _object(payload.get("voice"), {"mode", "material_revision_id"}, "video_voice_invalid")

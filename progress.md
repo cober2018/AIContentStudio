@@ -2,6 +2,7 @@
 
 ## 2026-09-29：FE-F6D apply（进行中）
 
+- Video v2 时间线补足跨字段时长约束：镜头时长不得超过文档 duration，引用该镜头的 timeline item 不能比镜头更长；start/end/trim 的既有界限保留。两个不一致场景先见 RED，修复后 Video/F6A/F6C 定向 `80 passed`，全量后端 `978 passed / 2 skipped / 5 warnings`，相关 Ruff、OpenSpec strict 30/30 与 diff-check PASS。OpenSpec 3.1 据此完成，当前 20/79；语音/字幕关联和本地预览仍未勾选。
 - 冻结 Video v2 Candidate 的 Review 读增加跨字段校验：canonical v2 文档、Master payload hash、完整 exact refs、唯一 `render_output` 与 MP4/hash/rights 快照、published profile 的冻结输入哈希、人工 attestation 输出和签认人须一致。10 个篡改变体先见 RED，修复后 11 个冻结读用例 PASS；没有改 v1/Text/Graphic 分派。全量后端从正确 `apps/api` 工作目录新跑 `976 passed / 2 skipped / 5 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。任务仍 19/79：5.10 的 package 与真实候选闭环尚未验收，不提前勾选。
 - 曾从仓库根目录误跑全量测试，出现 4 个运行环境失败：3 个 Alembic 相对路径找不到配置，1 个 worker 连接到错误的相对路径数据库；在 `apps/api` 工作目录重跑全绿。该误跑不是业务回归，也不修改测试或迁移来掩盖。
 

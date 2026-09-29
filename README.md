@@ -148,8 +148,8 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 
 - PRD/需求背景：North Star 要求 Video 从 F6A 的 `video.master.v1` JSON 壳升级为可追溯的脚本、镜头、时间线、字幕、配音与最终视频生产体验；F6C 独立复核和 F6D 规格审阅已通过，F6D 正按标准 change 实施。
 - 目录结构：`openspec/changes/fe-f6d-video-production-studio/` 已有 proposal、design、tasks 和 Video Studio、Production Core、Review、FE-P1 四份 delta；用户总包源文件保持原样。
-- 已完成：标准 OpenSpec 与独立 SPEC review；Video v2 canonical 文档、published exact profile、六种精确媒体位置、显式 v2 保存/回读和保存时项目可见性/字节/权利校验。冻结 Candidate 的 Review 读现校验 canonical 内容、唯一 MP4 输出、精确 ref、profile 输入哈希及人工 attestation 一致性；暂不代表完整 Candidate/包闭环。规格检查点 `a74a7d5` 已本地提交，当前实施 19/79，零新表/迁移。
-- 待完成/TODO：显式 v1→v2 fork、派生子修订、专业 check freshness、真实 Candidate→Review→本地包及 Video Studio 前端仍未完成，不具备生产闭环。正确 `apps/api` 工作目录最新全量后端 976 passed/2 skipped、相关 Ruff、OpenSpec strict 30/30 与 diff-check 通过；前端本批未改也未重测。主规格同步/归档仍须单独授权。
+- 已完成：标准 OpenSpec 与独立 SPEC review；Video v2 canonical 文档、镜头/时间线时长一致性、published exact profile、六种精确媒体位置、显式 v2 保存/回读和保存时项目可见性/字节/权利校验。冻结 Candidate 的 Review 读现校验 canonical 内容、唯一 MP4 输出、精确 ref、profile 输入哈希及人工 attestation 一致性；暂不代表完整 Candidate/包闭环。规格检查点 `a74a7d5` 已本地提交，当前实施 20/79，零新表/迁移。
+- 待完成/TODO：显式 v1→v2 fork、派生子修订、专业 check freshness、真实 Candidate→Review→本地包及 Video Studio 前端仍未完成，不具备生产闭环。正确 `apps/api` 工作目录最新全量后端 978 passed/2 skipped、相关 Ruff、OpenSpec strict 30/30 与 diff-check 通过；前端本批未改也未重测。主规格同步/归档仍须单独授权。
 - 关键设计决策：`video.master.v2` 是唯一可编辑真源；派生剪辑只有在存在明确编辑或确定性本地变换产生的有效 v2 内容时才生成追加式子修订，不能只记转换意图或把未验证 Provider 当成功。现有 MaterialRevision/ContentMasterRevision/Candidate v4 继续是真源。未验证 Video/TTS/ASR 不制造成功或公开使用权，真实 Provider 接收归 F7。
 - 本批目录：`apps/api/app/services/video_documents.py` 保存 Video v2 canonical 文档与精确 profile 规则，`content_harness/channel_registry.py` 提供 published `video_requirements` 投影；`production_modalities.py` 与 `project_review_projection.py` 承接冻结输入哈希和 Review 完整性闸门；`apps/api/tests/test_f6d_video_documents.py` 验证边界。没有新增表或依赖。
 - 依赖与启动：沿用本 README 现有 API/Vite 启动方式，目标零新表/零迁移；若实施证明需新持久化结构，应先暂停修订规格，不直接建表。不 push/deploy/运行生产迁移。

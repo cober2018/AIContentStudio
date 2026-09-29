@@ -116,6 +116,17 @@ def test_video_v2_invalid_structure_fails_closed(mutation):
         _canonical(payload)
 
 
+@pytest.mark.parametrize("mutation", [
+    lambda doc: doc["shots"][0].update({"duration_ms": 5_000}),
+    lambda doc: doc["shots"][0].update({"duration_ms": 2_000}),
+])
+def test_video_v2_rejects_shot_and_timeline_duration_inconsistency(mutation):
+    payload = _document()
+    mutation(payload)
+    with pytest.raises(ValueError, match="video_shot_timeline_duration_invalid"):
+        _canonical(payload)
+
+
 def test_exact_video_profile_applies_only_declared_bounded_rules():
     from app.services.content_harness.channel_registry import ContentFormSpec
     from app.services.video_documents import profile_reasons

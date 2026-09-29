@@ -19,6 +19,7 @@ Apply the reviewed `fe-f6d-video-production-studio` change to the local `main` c
 - [ ] /// Add Video v2 adapter, save/read dispatch and explicit Video v1→v2 preview/commit; keep ordinary cross-schema save forbidden.
 - [ ] /// Add exact source/render refs, input-bound manual attestation and server-only derived child provenance; verify no fake Provider writes.
 - [x] /// Red: add frozen Video v2 Candidate integrity cases for canonical content, exact sole MP4 output/declaration/ref and manual input-hash binding; Green: extend Review frozen verifier without changing v1/Text/Graphic paths; rerun targeted and full backend gates. Package/browser acceptance remains a separate pending gate.
+- [x] /// Red: prove shot duration can exceed timeline and a shot-linked item can exceed its shot; Green: reject both in canonical Video v2 parsing while retaining empty draft and existing shot reuse; rerun Video/F6A/F6C focused regressions.
 - [ ] /// Add Video checks/freshness, frozen Candidate integrity, Review diff/preview and byte-exact local package; regress Video v1/Text/Graphic.
 - [ ] /// Build typed Video-only Studio after backend closure, keep common Production/Text/Graphic bundles isolated.
 - [ ] /// Run isolated browser Video flow, full backend/frontend/FE-P1/OpenSpec/lint/diff gates and independent reviews; close only proven tasks and commit locally.

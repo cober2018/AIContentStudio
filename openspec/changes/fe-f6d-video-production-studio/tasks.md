@@ -33,7 +33,7 @@
 
 ## 3. Bounded timeline and derived lineage
 
-- [ ] 3.1 Validate shot/timeline duration consistency and start/end/trim bounds.
+- [x] 3.1 Validate shot/timeline duration consistency and start/end/trim bounds.
 - [ ] 3.2 Validate voice/audio track placement and subtitle cue ordering/non-overlap.
 - [ ] 3.3 Validate overlay placement/text and cover exact image kind.
 - [ ] 3.4 Build deterministic local preview projection without claiming final-render verification.
