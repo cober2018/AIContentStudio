@@ -88,7 +88,12 @@ class TextChannelAdapter:
         from .text_documents import TextDocumentError
         from .text_documents import canonical_payload as canonical_text_payload
 
-        if asset_refs or evidence_refs:
+        cover_only = (self.contract.payload_schema == "wechat.article.v1" and len(asset_refs) == 1
+                      and isinstance(asset_refs[0], dict)
+                      and all(asset_refs[0].get(key) == value for key, value in {
+                          "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
+                      }.items()))
+        if evidence_refs or asset_refs and not cover_only:
             raise AdapterUnavailable("source_refs_require_explicit_mapping")
         if not isinstance(source_payload, dict) or not isinstance(source_payload.get("document"), dict):
             raise AdapterUnavailable("invalid_source_document")
