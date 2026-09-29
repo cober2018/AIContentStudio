@@ -56,8 +56,21 @@ def resolve_publisher(channel: str, content_form: str, action: str):
 
 def authorize_target(db: Session, asset: ContentAsset, payload, user) -> DeliveryTarget:
     """通用交付目标授权：channel/form/action 经 Registry 验证（D21），幂等。"""
-    is_master = asset.content_master_revision_id is not None or (asset.candidate_manifest_json or {}).get("schema_version") == 4
-    if is_master:
+    schema = (asset.candidate_manifest_json or {}).get("schema_version")
+    is_variant = schema == 5
+    is_master = not is_variant and (asset.content_master_revision_id is not None or schema == 4)
+    if is_variant:
+        from .content_masters import owned_unit
+        from .production_validation import validate_live_v5_candidate
+
+        owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
+        db.refresh(asset)
+        validate_live_v5_candidate(db, asset, require_approved=True, lock_live=True)
+        if payload.action not in {DeliveryAction.copy_package.value, DeliveryAction.manual_handoff.value}:
+            raise HTTPException(422, "capability_unavailable: v5远端账号/渠道/形态/动作尚未验证")
+        if payload.channel != asset.channel or payload.content_form != asset.content_form:
+            raise HTTPException(409, "目标渠道与形态必须与冻结Variant一致")
+    elif is_master:
         from .content_masters import owned_unit
         from .production_validation import validate_live_v4_candidate
 
@@ -86,14 +99,17 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
         ).order_by(Review.id.desc()).limit(1))
         if approved is None:
             raise HTTPException(409, "项目候选尚未经过独立内容审批")
-        current_candidate_id = db.scalar(select(ContentAsset.id).where(
-            ContentAsset.content_unit_id == asset.content_unit_id,
-        ).order_by(ContentAsset.id.desc()).limit(1))
-        if current_candidate_id != asset.id:
-            raise HTTPException(409, "历史候选只可查看，不能新增交付授权")
+        if not is_variant:
+            current_candidate_id = db.scalar(select(ContentAsset.id).where(
+                ContentAsset.content_unit_id == asset.content_unit_id,
+            ).order_by(ContentAsset.id.desc()).limit(1))
+            if current_candidate_id != asset.id:
+                raise HTTPException(409, "历史候选只可查看，不能新增交付授权")
         unit = db.get(ContentUnit, asset.content_unit_id)
-        if unit is None or (unit.channel_id and unit.channel_id != payload.channel):
+        if unit is None or (not is_variant and unit.channel_id and unit.channel_id != payload.channel):
             raise HTTPException(409, "目标渠道与内容单元不一致")
+        if is_variant and unit.account_id is not None and content_account_id != unit.account_id:
+            raise HTTPException(409, "渠道候选不得绕过内容单元固定账号")
         if content_account_id is not None:
             account = db.get(ContentAccount, content_account_id)
             if account is None or account.status != "active" or account.persona_id != unit.persona_id or (unit.account_id is not None and unit.account_id != account.id):
@@ -123,6 +139,8 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
         capability = cap_dict
     else:
         capability = {"publisher_key": publisher_key, "action": payload.action, "available": True, "verified": False, "legacy": True}
+    if is_variant:
+        capability = {**capability, "manual": True, "remote_verified": False}
     # 渠道一致性：v1 资产仍要求与批准渠道一致；v2 同样
     if asset.channel != payload.channel:
         raise HTTPException(409, "目标渠道必须与批准资产渠道一致")
@@ -172,11 +190,14 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
             record_project_event(db, project_id=asset.project_id, event_type="delivery.authorized", actor=user.email,
                                  entity_type="delivery_target", entity_id=target.id,
                                  payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "candidate_hash": asset.candidate_hash, "action": target.action})
-        if is_master:
+        if is_master or is_variant:
             db.flush()
             db.expire_all()
             owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
-            validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
+            if is_variant:
+                validate_live_v5_candidate(db, asset, require_approved=True, lock_live=True)
+            else:
+                validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
             if target.approved_candidate_hash != asset.candidate_hash:
                 raise HTTPException(409, "授权提交前候选发生变化")
         db.commit()
@@ -225,6 +246,8 @@ def validate_live_candidate_payload(db: Session, asset: ContentAsset) -> dict:
     from .candidates import candidate_hash
 
     manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 5:
+        raise HTTPException(422, "capability_unavailable: v5尚无已验证的远端账号/渠道/形态/动作发布能力")
     if manifest.get("schema_version") == 4 or asset.content_master_revision_id is not None:
         raise HTTPException(422, "capability_unavailable: v4尚无已验证Publisher适配器，请使用本地成品包")
     if asset.project_id is not None:
@@ -462,6 +485,10 @@ def _live_media_rights(db: Session, media: dict) -> bool | None:
 def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
     asset = _asset_of(db, target)
     manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 5:
+        from .production_packages import build_v5_package
+
+        return build_v5_package(db, target, asset)
     if manifest.get("schema_version") == 4 or asset.content_master_revision_id is not None:
         from .production_packages import build_v4_package
 
@@ -524,6 +551,10 @@ def package_zip_bytes(db: Session, target: DeliveryTarget) -> tuple[bytes, str]:
     """v2 通用成品包（保留 media order/placement 与交付说明）。v1 目标由 article_handoff 兼容路径处理。"""
     package = build_copy_package(db, target)
     manifest, content = package["manifest"], package["content"]
+    if manifest["schema_version"] == 5:
+        from .production_packages import v5_zip_bytes
+
+        return v5_zip_bytes(db, target, package)
     if manifest["schema_version"] == 4:
         from .production_packages import v4_zip_bytes
 

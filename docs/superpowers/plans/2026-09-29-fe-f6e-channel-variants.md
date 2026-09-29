@@ -37,6 +37,13 @@
 - [ ] /// 实现 Review/Approval/本地包分派；远端能力未验证必须 fail closed。
 - [ ] /// 跑无 Draft 的 Master→Variant→v5→Approval→ZIP 集成回归。
 
+**v5 审批与系列当前性子步骤（2026-09-30）**
+
+- [x] /// 在 `apps/api/tests/test_f6e_freeze_v5.py` 使用已冻结的 X single/thread 写 RED：反序审批均可通过；同系列新版本及五旧 FK/清单污染不能审批。
+- [x] /// 在 `apps/api/app/services/production_validation.py` 共用服务端 v5 live gate；检查唯一 Variant FK、同系列最新 Candidate、源 Master/上下文/rights/refs/checks/render 与冻结内容，不用 Unit 最大 ID。
+- [x] /// 在 `apps/api/app/services/project_review.py` 按 `schema_version` 分派，v5 审批及 commit 前重验；v3/v4 路径保持原语义；Review revision 使用 Variant revision_no。
+- [x] /// 定向 GREEN、全后端及规格/静态门禁后核销确证任务；Authorization 与本地包后端已接通，跨形态与浏览器验收尚未完成。
+
 **实时 loader / Freeze 子步骤**
 
 - [x] /// 在 `apps/api/tests/test_f6e_freeze_v5.py` 写项目级 RED：完整来源/Variant checks 后 POST Freeze v5；检查 manifest、唯一 Variant FK、两个系列独立冻结、重复请求幂等及历史/撤权拒绝。跨项目/并发竞态及全部污染字段仍待补测。

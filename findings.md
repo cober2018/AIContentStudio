@@ -1,10 +1,16 @@
 # 配置记录
 
+## 2026-09-30 F6E v5 审批与历史包
+
+- 旧 Unit-wide `latest ContentAsset.id` 判定会把同一 Master 的 X single 和 thread 互相误判为历史候选；v5 必须以 `(content_unit_id, variant_key)` 查本系列 Candidate head，v3/v4 原行为不动。
+- v5 历史已授权包不能调用“当前 Variant”校验，否则新修订会错误废止已有本地授权；历史包须核 frozen Variant→Master→Profile/Identity/Brief/Boundary/refs/checks 血缘，并重新核实时素材字节和公开权利。历史可读不代表历史候选可新建授权。
+- `channel_variant_revision_id` 为 v5 唯一 Candidate 来源 FK；五个旧来源/Workflow 字段任一非空，即使已批准和已有授权，授权与包仍拒绝，不能退回 v4/v3。公众号精确封面字节已进入本地 ZIP，撤权后取包被拦截；远端动作仍属于 F7 未验证能力。
+
 ## 2026-09-30 F6E v5 实时冻结
 
 - 旧 Freeze API 仅允许 Draft 或 Master，RED 回归得到 422；新增 Variant 显式分派后，只有服务端读取的当前且 `ready` 的 Variant 能成为 v5 来源。v5 的来源 Master 渠道/形态与目标渠道/形态必须分开冻结，不能用 Unit 的源渠道冒充目标。
 - Candidate v5 `content_master_revision_id` 与 `workflow_run_id` 均不写；来源 Master/Workflow 仅在 manifest 中追溯。只读预览先按 schema 识别 v5，再拒绝五个旧来源/工作流字段污染及目标投影列不符。
-- 现有 Variant `ready` 检查已覆盖部分实时素材/证据/渲染；冻结前与提交前双次重算可捕获一般漂移，但尚未完成数据库层全面锁及审批/授权/包各自的 v5 live validator。不得把冻结成功等同已获审批或可交付。
+- 现有 Variant `ready` 检查已覆盖部分实时素材/证据/渲染；冻结前与提交前双次重算可捕获一般漂移。审批/授权/包的 v5 live validator 已在后续切片接入，但冻结全面并发锁与跨形态验收仍未完成；不得把冻结成功等同已获审批或可交付。
 
 ## 2026-09-30 F6E v5 清单边界
 

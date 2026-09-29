@@ -1,5 +1,12 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F6E v5 系列当前性、内容审批与本地包
+
+- [x] /// 对照 F6E 8.7–9.2/9.8，先写真实 API RED：同一 Master 的 X 推串/单条候选反序审批、同系列新版阻断旧候选、污染的五个旧 FK 和篡改清单 fail closed，审批不改 Variant/Master。
+- [x] /// 在现有服务抽取 schema-first v5 live validator：核对唯一 Variant source、系列 head、manifest/列一致、当前来源/检查/权利/证据/渲染；v3/v4 继续原校验。
+- [x] /// 让 Approval 使用系列级当前性及提交前复核，Review 固定 v5 revision，不增加新表或批准时重写稿件。
+- [x] /// 运行定向/全量后端、OpenSpec strict、Ruff/diff；据实更新任务、README/progress/findings 并仅本地 main 提交。交付授权/本地包在后端已接通，跨形态与浏览器验收仍待完成。
+
 ## 2026-09-30：F6E Variant → v5 Candidate 实时冻结
 
 - [x] /// 对照 F6E 8.1–8.9 与现有 v4 路由，写真实项目 API 回归：同一来源多系列独立冻结、重复请求同一 Candidate、撤权/历史 Variant 无写入、五个旧来源指针为空。跨项目、并发竞态及五字段逐一污染仍属后续 8.x/11.x。

@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-30：F6E v5 审批、交付授权与本地包
+
+- `schema_version=5` 在旧 Draft/Master 启发式之前分派；Approval 和新 Delivery Authorization 只接受本系列当前 Variant/Candidate，分别绑定准确 Candidate ID/hash、Review、目标 channel/form 与项目身份。不同 X 系列先冻结后反序审批/授权通过；同系列推进阻断旧 Candidate 的新审批/授权。
+- 既有本地授权包从冻结 v5 manifest 渲染，实际媒体从准确 MaterialRevision 重新校验字节/hash/公开使用权；已有授权在新 Variant 出现后仍可读取历史包，但素材撤权或五个旧来源/Workflow 指针污染会 fail closed。v5 远端动作仍拒绝，不新增 DeliveryAttempt；未声称 F7 Provider 已验证。
+- 定向 v5 API 回归 21 passed；最终全后端 1138 passed / 2 skipped / 7 warnings，OpenSpec strict 30/30、相关 Ruff、`git diff --check` PASS。F6E 已核销 8.7、9.2、9.4，当前 36/100；Review 差异/检查投影、三形态交付验收、前端及最终门禁仍未完成。
+
 ## 2026-09-30：F6E Variant 实时冻结入口
 
 - 在现有项目 Freeze API 加入第三种明确来源 `channel_variant_revision_id`；服务端装载当前 Variant、精确来源 Master、Identity/Brief/Fact Boundary、发布 Profile/Adapter、refs、最新 checks 与确定性 render，并构建 v5 manifest。Candidate 仅填 Variant 来源 FK，五个旧 Draft/Master/Workflow 指针为空；提交前再次计算 live 快照，重复同一清单返回原 Candidate。

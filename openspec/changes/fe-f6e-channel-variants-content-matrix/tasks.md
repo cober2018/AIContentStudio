@@ -92,16 +92,16 @@
 - [x] 8.4 Freeze ordered final refs, rights snapshots, evidence locators, latest checks, render, citations/declarations.
 - [x] 8.5 Regress canonical hash determinism and tamper detection.
 - [ ] 8.6 Add v5 Freeze CAS/idempotency/currentness/live rights/evidence/bytes/render gates.
-- [ ] 8.7 Populate Candidate variant FK only for v5; require `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` and `workflow_run_id` all null. Derive source Master and workflow provenance through Variant plus frozen manifest; never use v5 `workflow_run_id` for dispatch/currentness. Assert channel/form/artifact_kind projection columns match frozen target/profile. Keep v3/v4 source dispatch, workflow projections and history unchanged.
+- [x] 8.7 Populate Candidate variant FK only for v5; require `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` and `workflow_run_id` all null. Derive source Master and workflow provenance through Variant plus frozen manifest; never use v5 `workflow_run_id` for dispatch/currentness. Assert channel/form/artifact_kind projection columns match frozen target/profile. Keep v3/v4 source dispatch, workflow projections and history unchanged.
 - [ ] 8.8 Prove an invalid v5 freeze never falls back to v4/v3 or creates Approval/DeliveryTarget.
 - [ ] 8.9 Scope v5 Candidate freeze/currentness to `(unit_id, variant_key)` and exact current Variant revision; same-series new revision/Candidate supersedes only that series, never other series merely by larger Candidate ID. Preserve v3/v4 currentness and their coexistence with v5.
 
 ## 9. Review Approval Delivery and Project read models
 
 - [ ] 9.1 Dispatch by `schema_version` before legacy source-pointer heuristics; add v5 Preview/Changes/Checks from frozen adapted content and reject mismatched Candidate projection columns without Publisher-side rewriting.
-- [ ] 9.2 Bind Content Approval to exact v5 Candidate ID/hash and recheck live rights/evidence/integrity.
+- [x] 9.2 Bind Content Approval to exact v5 Candidate ID/hash and recheck live rights/evidence/integrity.
 - [ ] 9.3 Dispatch new Delivery Authorization by Candidate schema: v5 must match its frozen Variant target channel/form/profile rather than the source Unit channel, preserve pinned identity/account authorization, label local packages manual, and require exact account/channel/form/action verification for remote effects; do not infer a binding from free-form account profile text. V3/v4 retain their Unit-channel rule.
-- [ ] 9.4 Make v5 local package use frozen approved content and byte-verified final media, with no Draft/v4 fallback.
+- [x] 9.4 Make v5 local package use frozen approved content and byte-verified final media, with no Draft/v4 fallback.
 - [ ] 9.5 Preserve existing authorized history, DeliveryAttempt/Receipt semantics and unknown reconciliation priority.
 - [ ] 9.6 Include Variant revisions/provenance in Project Versions and derive Overview without a second status table.
 - [ ] 9.7 Regress foreign/archived project raw-ID reads and mutations across Variant, Candidate and package APIs.
