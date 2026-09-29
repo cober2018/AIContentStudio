@@ -5,6 +5,7 @@
 - [ ] 0.4 Record production-readiness gaps without inventing tenant/org/SSO features.
 - [ ] 0.5 Record full backend/frontend/OpenSpec baseline.
 - [ ] 0.6 Audit existing `deps.py` default Header user, `main.lifespan()` bootstrap writes, `/api/v1/health` degraded-200/raw error, raw-path metric labels and all direct `MEDIA_ROOT` readers/writers before implementation.
+- [ ] 0.7 Resolve and review the configured issuer's stable subject → existing active User mapping before production-auth implementation; current User has only email and cannot trust an arbitrary token email/role claim. If safe binding needs new durable schema, stop for explicit OpenSpec revision rather than adding it silently.
 
 ## 1. Production authentication
 - [ ] 1.1 Make development-header auth explicitly development/test only.
@@ -100,7 +101,7 @@
 - [ ] 9.4 Exercise Approval/Authorization/local delivery.
 - [ ] 9.5 Exercise configured verified remote Publisher only with explicit authorization.
 - [ ] 9.6 Read back or human-verify remote result.
-- [ ] 9.7 Materialize Receipt/PublishedContentRecord/Performance/LearningCandidate.
+- [ ] 9.7 Materialize PublishedContentRecord/Performance/LearningCandidate only after an actual publication has a qualifying `human_confirmed` DeliveryReceipt with `delivered_at` and exact Candidate/Target/hash; an authorized local package or ZIP download alone stops before this branch. Record absent publication evidence as not exercised, not success.
 - [ ] 9.8 Confirm Unknown/failed delivery never becomes published.
 - [ ] 9.9 Confirm complete lineage queryability.
 - [ ] 9.10 Produce verified/unverified capability matrix.

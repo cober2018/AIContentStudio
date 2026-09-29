@@ -14,6 +14,8 @@ F8 follows F7 acceptance and closes production operations, not missing product f
 
 Production mode requires an approved signed-token identity adapter with issuer/audience/key/JWKS validation, bounded key refresh and mapping to an existing active User row. Studio role comes from that row, not a token role claim or request header; unknown subjects are denied, not auto-created. Development/test mode may retain the existing Header/default-user behavior. Production startup rejects Header mode, missing auth configuration and a test/mock auth fallback before routes are served. Alternative—placing a reverse proxy in front while continuing to trust `X-Studio-User`—leaves a spoofable bypass inside the API.
 
+Before implementation, resolve and review how a verified issuer plus immutable subject maps to an existing User. Current `User` stores email/role/status but no external issuer/subject binding; an arbitrary or unverified email claim is not a durable identity mapping. A production adapter MUST NOT infer ownership from token email or role alone. If a safe mapping needs an additional persistent binding, stop for an explicit OpenSpec/schema decision instead of silently adding a business object or weakening the mapping to email-only.
+
 ### 2. Startup validates; an operator migrates
 
 In production, `lifespan` must not call schema-creating `init_db()` or mutable bootstrap that silently changes approved configuration. Require an explicit migration-head check and documented operator action, with read-only startup validation and safe failure. Dev/test can retain current bootstrap. Alternative—auto-upgrade on service start—can race replicas and make rollback ambiguous.
@@ -42,6 +44,8 @@ Back up PostgreSQL and referenced media together; restore into an isolated envir
 
 Versioned Identity Golden fixtures cover Brand/Persona voice, boundaries, differentiation and frozen snapshot continuity. Content Golden fixtures cover facts, Brief, three modalities and channel adaptation. Deterministic checks run automatically; generative quality evidence records provider/model/version, input/output hashes and human reviewer when needed. Full integration exercises Opportunity→Project→Identity→Brief/Fact Boundary→Matrix→all three Masters→Variant→Candidate→Approval→Authorization→local/verified Delivery→Receipt→Performance→Learning; each step's exact lineage is queryable. Real Platform acceptance is scoped to available, separately authorized account/action/form combinations; absent credentials are reported `unverified`, not simulated.
 
+The local-package branch may stop at authorized handoff. It reaches PublishedContentRecord/Performance/Learning only after a real publication is separately confirmed by a qualifying `human_confirmed` DeliveryReceipt with `delivered_at` and exact Candidate/Target ownership/hash; `package_ready`, a ZIP download or an unresolved Unknown is insufficient. If no actual publication is attested, record the upstream local chain as passed and the downstream publication/learning branch as not exercised, not fabricated success.
+
 ## Risks / Trade-offs
 
 - Production startup behavior becomes stricter → fail early with a safe configuration checklist, preserve dev/test mode, and test negative auth/startup paths.
@@ -58,6 +62,7 @@ No new durable business object is planned. Implementation first runs dev/test ba
 ## Open Questions
 
 - Which identity issuer and secret provider are approved for an actual deployment? The secure adapter contract can be implemented locally, but no production activation is claimed until configured and verified.
+- How will that issuer's stable subject be bound to a pre-existing active Studio User? The current User table has no issuer/subject binding. Choose and review a secure mapping before production-auth implementation; if it requires new persistence, revise the OpenSpec before any migration or apply.
 - Which external accounts are available for Real Platform acceptance? Unavailable combinations remain `unverified` in the final capability matrix.
 
 ## Source-package preservation audit
