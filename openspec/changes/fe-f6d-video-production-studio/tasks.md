@@ -17,7 +17,7 @@
 - [x] 1.7 Reject unknown fields, non-finite values, excessive counts/durations and infrastructure paths before persistence.
 - [x] 1.8 Add `video.master.v2` schema dispatch without changing Video v1 or Text/Graphic adapter behavior.
 - [ ] 1.9 Make new professional Video drafts use v2; no frontend editor schema becomes a backend contract.
-- [ ] 1.10 Extend published exact `ContentFormSpec.video_requirements` with bounded typed keys; missing rules impose no constraint, invalid/unknown or legacy/wildcard rules cannot PASS.
+- [x] 1.10 Extend published exact `ContentFormSpec.video_requirements` with bounded typed keys; missing rules impose no constraint, invalid/unknown or legacy/wildcard rules cannot PASS.
 
 ## 2. Exact media refs and v1 upgrade
 

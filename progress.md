@@ -2,6 +2,8 @@
 
 ## 2026-09-29：FE-F6D SPEC review 修订
 
+- 第四批将 published exact Video profile version/rules 加入 `video.master.v2` render-input hash，并让 Video v2 readiness 实际调用 fail-closed `profile_reasons`；发布新 profile 后旧 render hash 改变。测试先见同 hash 的 RED，修复后 Video/F6A 定向 41 passed、相关 Ruff PASS；1.10 完成，当前 19/79。Video 专业 check input hash/currentness 仍属 5.x 未完成。
+- 最新全量后端 `965 passed / 2 skipped / 5 warnings`，未将它当作 F6D 最终验收；本批没有前端改动。
 - 第三批接入 Video v2 素材保存闸门：按 shot/timeline/voice/music/cover/render 角色核对 `MaterialRevision` 类型、项目显式引用、live public-use、真实字节哈希与 MIME；错误全部在 Master/refs 写入前返回。隔离 API 验证同一图片 revision 在两个镜头保存成不同 slot，wrong kind/hash、项目解除引用、字节篡改和撤权全部阻断，历史仅 1 个 Master/2 条 ref。定向 12 passed，相关 Ruff PASS；2.2–2.4 完成，当前 18/79。检查运行、render/审批/包仍未验收。
 - 本批完整后端回归 `964 passed / 2 skipped / 5 warnings`，OpenSpec strict 30/30 PASS。Ruff 首次仅指出新增测试函数内 import 样式，已定向修正；最终需复跑相关 Ruff 和 diff-check。本轮未改前端，不将旧构建计为 F6D 前端验收。
 - 第二批将 Video v2 canonical payload/ref 校验接入真实 `save_revision()` 与 schema-dispatched Video v2 adapter；显式 v2 API 保存/回读、exact profile readiness、同一素材不同镜头 slot、时间线/语音/音乐/封面/最终输出位置及空草稿 0ms 的定向验证 11 passed，相关 Ruff PASS。旧无 schema Video 路径仍默认 v1，避免悄然改写历史；专业前端日后需显式发送 v2 envelope。当前 15/79，仍缺素材项目可见性/类型/字节/权利、profile freshness、render、checks、Candidate/Review/包和前端。
