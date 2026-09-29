@@ -150,7 +150,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 目录结构：`openspec/changes/fe-f6d-video-production-studio/` 已有 proposal、design、tasks 和 Video Studio、Production Core、Review、FE-P1 四份 delta；用户总包源文件保持原样。
 - 已完成：从用户源包校准为 73 项可跟踪任务与可验证 Scenario；新增 v1 显式 fork、精确媒体位置、输入绑定 render、Provider 断连无写入和 F7 真实结果/脱敏移交边界。OpenSpec 全库 strict 27/27 通过。未改 F6D 业务代码。
 - 待完成/TODO：独立规格审阅、F6C 74/74 与本地 main 基线复核、用户按项目规则单独确认 apply；Video v2 后端/前端、浏览器和完整门禁均未启动。
-- 关键设计决策：`video.master.v2` 是唯一可编辑真源；派生剪辑生成追加式子修订；现有 MaterialRevision/ContentMasterRevision/Candidate v4 继续是真源。未验证 Video/TTS/ASR 不制造成功或公开使用权，真实 Provider 接收归 F7。
+- 关键设计决策：`video.master.v2` 是唯一可编辑真源；派生剪辑只有在存在明确编辑或确定性本地变换产生的有效 v2 内容时才生成追加式子修订，不能只记转换意图或把未验证 Provider 当成功。现有 MaterialRevision/ContentMasterRevision/Candidate v4 继续是真源。未验证 Video/TTS/ASR 不制造成功或公开使用权，真实 Provider 接收归 F7。
 - 依赖与启动：沿用本 README 现有 API/Vite 启动方式，目标零新表/零迁移；若实施证明需新持久化结构，应先暂停修订规格，不直接建表。不 push/deploy/运行生产迁移。
 
 ### FE-F6C Graphic Production Studio（实施中，73/74；待独立复核）
