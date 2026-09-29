@@ -426,7 +426,33 @@ def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
                       "is_current": is_current, "stored_status": latest.status if latest else None,
                       "status": latest.status if is_current else "stale" if latest else "incomplete",
                       "report": {"reasons": drift_reasons} if drift_reasons else latest.report_json if latest else {"reason": "check_missing"}})
-    return {"items": items, "ready": not drift_reasons and all(item["status"] == "pass" for item in items), "drift_reasons": drift_reasons}
+    source_gate = _source_gate(db, row)
+    return {"items": items, "source_gate": source_gate,
+            "ready": not drift_reasons and source_gate["status"] == "pass" and all(item["status"] == "pass" for item in items),
+            "drift_reasons": drift_reasons}
+
+
+def _source_gate(db: Session, row: ChannelVariantRevision) -> dict:
+    from .content_masters import _serialize as serialize_master
+    from .content_masters import projected_checks
+
+    master = db.get(ContentMasterRevision, row.source_master_revision_id)
+    if (master is None or master.project_id != row.project_id or master.content_unit_id != row.content_unit_id
+            or _current_source_id(db, row.content_unit_id) != row.source_master_revision_id
+            or master.payload_hash != row.source_master_payload_hash or master.context_hash != row.source_master_context_hash):
+        return {"status": "stale", "reasons": ["source_master_not_current"], "checks": []}
+    readiness = serialize_master(db, master)["readiness"]
+    if readiness["state"] != "current":
+        return {"status": "stale" if readiness["state"] == "stale" else "incomplete",
+                "reasons": readiness["reasons"], "checks": []}
+    checks = projected_checks(db, master)
+    # A source-only Master has no target profile; the Variant owns target-specific checks.
+    target_only = {"text_platform", "text_discoverability", "graphic_platform", "video_platform"} if not master.channel_id else set()
+    required = [check for check in checks if check["check_kind"] not in target_only]
+    unready = [check for check in required if not check["is_current"] or check["status"] not in {"pass", "warning"}]
+    return {"status": "blocker" if any(check["status"] == "blocker" for check in unready) else "incomplete" if unready else "pass",
+            "reasons": [f"{check['check_kind']}:{check['status']}" for check in unready],
+            "checks": [{"check_kind": check["check_kind"], "status": check["status"], "is_current": check["is_current"]} for check in required]}
 
 
 def _profile_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) -> tuple[str, dict]:
@@ -499,6 +525,21 @@ def _render_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) 
     return "pass", {"reasons": [], "coverage": {"exact_render_attestation": "verified"}}
 
 
+def _package_check(db: Session, row: ChannelVariantRevision, assets: list[dict], evidence: list[dict], results: dict) -> tuple[str, dict]:
+    unready = [kind for kind, (status, _) in results.items() if status != "pass"]
+    if unready:
+        return "incomplete", {"reasons": [f"prerequisite_unready:{kind}" for kind in unready], "coverage": "projection_only",
+                              "local_zip": "not_generated", "remote_effect": "unverified"}
+    master = db.get(ContentMasterRevision, row.source_master_revision_id)
+    try:
+        adapter, _ = executable_adapter_for(db, master.payload_schema, row.channel_id, row.content_form)
+        projection = adapter.package_projection(row.payload_json, asset_refs=assets, evidence_refs=evidence)
+    except (AdapterUnavailable, VariantDocumentError) as exc:
+        return "blocker", {"reasons": [str(exc)], "coverage": "projection_only", "local_zip": "not_generated", "remote_effect": "unverified"}
+    return "pass", {"reasons": [], "coverage": "projection_only", "projection_hash": _hash(projection),
+                    "local_zip": "not_generated", "remote_effect": "unverified"}
+
+
 def get_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: int, user: User) -> dict:
     owned_unit(db, project_id, unit_id, user)
     row = db.get(ChannelVariantRevision, variant_id)
@@ -529,6 +570,7 @@ def run_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: i
     results["variant_rights"] = _rights_check(db, row, assets)
     if row.payload_schema == "xiaohongshu.image_note.v1":
         results["variant_render"] = _render_check(db, row, assets)
+    results["variant_package"] = _package_check(db, row, assets, evidence, results)
     adapter_hash = _hash({"key": row.adapter_key, "version": row.adapter_version})
     for kind, (status, report) in results.items():
         db.add(ChannelVariantCheckRun(
