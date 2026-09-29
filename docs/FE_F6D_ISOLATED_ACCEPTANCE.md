@@ -1,0 +1,37 @@
+# FE-F6D Video Production Studio — isolated acceptance
+
+Date: 2026-09-29. Scope: local F6D change on `main`, before independent implementation review or archive.
+
+## Isolation and provenance
+
+- Dedicated temporary SQLite database: `/tmp/aicontent-f6d-acceptance.vwFhgL/studio.db`; Alembic upgraded only this fixture to `f6a000000001`.
+- Dedicated API `127.0.0.1:18262` and Vite `127.0.0.1:15662`; existing user API, production database and remote publishers were not touched. Media storage is **not isolated**: the current backend writes content-addressed test uploads under `apps/api/app/media/material/`. Existing same-hash files are not overwritten; generated files were left in place because another local database may reference them.
+- Browser script: `apps/web/scripts/fe-f6d-browser-acceptance.mjs`; it checks the exact isolated URLs, a `/tmp/aicontent-f6d-acceptance.*` database and `F6D_ISOLATED_ACCEPTANCE=yes` before any fixture write.
+- Latest successful browser evidence: `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6d-browser-evidence-swdwF7/report.json` (local, temporary). Failed intermediate runs are not counted as acceptance.
+
+## Browser gates observed
+
+1. Video v2 typed script, shot, timeline, recorded MP3, subtitle and overlay saved atomically with exact `shot_source`, `timeline_media`, `voice_audio` MaterialRevision refs; page reload preserved the document.
+2. Concurrent stale save returned HTTP 409 and the losing tab kept its unsaved title.
+3. Bound MP4 was fetched with authorization, MIME/byte limit and SHA-256 checked before local playback. This alone did not create input-bound render proof; changing the Master input removed the old render binding and disabled freeze.
+4. Rebinding the exact MP4, saving and explicitly confirming current input produced a new immutable revision. Master checks then enabled Candidate v4 freeze.
+5. Review played the frozen MP4. Warning dispositions were entered explicitly before Content Approval, followed by manual local-package authorization and ZIP download.
+6. Every MP4 ZIP member, including repeated placement members and final render, matched the exact MaterialRevision SHA-256. Manifest declared schema 4 and `remote_call=false`.
+7. Historical Video v1 remained read-only. Preview showed non-inferable fields; explicit confirmation created a v2 child preserving old script and shot ID, while the v1 payload hash stayed unchanged. New v2 revision diff and a concrete aspect-ratio `derived_video` child were visible in history.
+8. Public-use revocation of the exact MP4 blocked a previously approved package download. Archiving the isolated project kept history readable but disabled Master save and checks.
+9. Video-generation, TTS and ASR remained marked unverified/unexecutable; there was no remote publication or synthetic provider success. Browser page errors: none.
+
+## Fresh local gates
+
+- Backend: `1006 passed, 2 skipped, 5 warnings` from `apps/api/.venv/bin/pytest -q` in `apps/api`.
+- Targeted Video/Graphic/Text/F6A/Review regression: `229 passed, 1 warning`.
+- Frontend: TypeScript/Vite build PASS; Video model 9/9; FE-P1 route/import graph PASS. `/projects` 224.75 kB raw / 72.89 kB gzip; common Production 276.96 kB raw / 88.24 kB gzip. TipTap remains Text-only lazy.
+- OpenSpec: `openspec validate --all --strict` 30/30 PASS.
+- Ruff: scoped changed backend files PASS. `git diff --check` PASS.
+
+## Honest limits
+
+- Real external Video/TTS/ASR execution, accepted bytes/license/provenance/rights, response redaction and verified publication are F7, not demonstrated here.
+- `audio/wav` uploaded but was rejected by the Video v2 save byte/MIME gate because the current unlabelled sniffer does not recognize WAV. The passing fixture used ID3 MP3. No backend gate was loosened for the browser run.
+- The previous independent F6D SPEC review is on record, but no independent implementation verdict has been obtained this turn: the dedicated ChatGPT browser-control tool required by the existing review skill is unavailable. Local review and passing tests must not be labeled independent approval.
+- Source package/ZIP files under `openspec/` remain untouched and untracked. Canonical spec sync, archive, push, deployment and production migration have not occurred.

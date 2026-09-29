@@ -616,6 +616,11 @@ def test_video_v2_render_input_hash_changes_with_published_profile(client, db_se
     db_session.commit()
     second = client.get(f"{path}/{saved.json()['id']}/readiness", headers=headers).json()["render_input_hash"]
     assert second != first
+    changed = deepcopy(_document())
+    changed["subtitles"]["cues"][0]["text"] = "新版字幕"
+    next_master = client.post(path, json={"idempotency_key": "profile-payload", "expected_revision": 1, "payload_schema": "video.master.v2", "payload": changed, "content_form": "short"}, headers=headers)
+    assert next_master.status_code == 200, next_master.text
+    assert client.get(f"{path}/{next_master.json()['id']}/readiness", headers=headers).json()["render_input_hash"] != second
 
 
 def test_video_v2_source_and_context_revision_invalidate_checks_and_render_inputs(client, db_session, tmp_path):
@@ -754,10 +759,11 @@ def test_video_v2_source_media_reuse_requires_live_kind_bytes_rights_and_project
     assert db_session.query(ContentMasterAssetRef).count() == 2
 
 
-def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_draft(client, db_session, tmp_path):
+def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_draft(client, db_session, tmp_path, monkeypatch):
     from app.models import (
         ChannelTemplateVersion,
         ContentAsset,
+        ContentMasterRevision,
         DeliveryAttempt,
         FactPack,
         FactPackItem,
@@ -815,13 +821,26 @@ def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_
     ]
     path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
     body = {"payload_schema": "video.master.v2", "payload": document, "asset_refs": refs, "content_form": "final"}
+    wrong_document = deepcopy(document)
+    wrong_document["render_asset_ref"] = {"material_revision_id": source_revision.id}
+    wrong_refs = [refs[0], {**refs[1], "material_revision_id": source_revision.id, "content_hash": source_revision.content_hash}]
+    assert client.post(path, json={**body, "idempotency_key": "wrong-final", "payload": wrong_document, "asset_refs": wrong_refs}, headers=headers).status_code == 422
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 0
     draft = client.post(path, json={**body, "idempotency_key": "draft"}, headers=headers)
     assert draft.status_code == 200, draft.text
     readiness = client.get(f"{path}/{draft.json()['id']}/readiness", headers=headers).json()
     assert readiness["render"]["status"] == "incomplete"
+    forged = client.post(path, json={**body, "idempotency_key": "forged-renderer", "expected_revision": 1, "render_attestation": {"confirmed": True, "render_input_hash": readiness["render_input_hash"], "origin": "verified", "renderer_version": "external"}}, headers=headers)
+    assert forged.status_code == 422
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 1
     confirmed = client.post(path, json={**body, "idempotency_key": "attested", "expected_revision": 1, "render_attestation": {"confirmed": True, "render_input_hash": readiness["render_input_hash"]}}, headers=headers)
     assert confirmed.status_code == 200, confirmed.text
     master = confirmed.json()
+    changed_document = deepcopy(document)
+    changed_document["subtitles"]["cues"][0]["text"] = "已修改的字幕"
+    stale_render = client.post(path, json={**body, "idempotency_key": "stale-render", "expected_revision": 2, "payload": changed_document, "render_attestation": {"confirmed": True, "render_input_hash": readiness["render_input_hash"]}}, headers=headers)
+    assert stale_render.status_code == 422
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 2
     checked = client.post(f"{path}/{master['id']}/checks", headers=headers)
     assert checked.status_code == 200, checked.text
     checks = {row["check_kind"]: row for row in checked.json()["items"]}
@@ -829,6 +848,17 @@ def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_
     assert checks["video_identity"]["status"] == "warning"
     freeze_url = path.replace("master-revisions", "candidates/freeze")
     freeze_body = {"content_master_revision_id": master["id"], "expected_payload_hash": master["payload_hash"]}
+    material.kind = "image"
+    db_session.commit()
+    assert client.post(freeze_url, json=freeze_body, headers=headers).status_code == 409
+    material.kind = "video"
+    db_session.commit()
+    file.unlink()
+    assert client.post(freeze_url, json=freeze_body, headers=headers).status_code == 409
+    file.write_bytes(video_bytes)
+    file.write_bytes(b"not the approved video")
+    assert client.post(freeze_url, json=freeze_body, headers=headers).status_code == 409
+    file.write_bytes(video_bytes)
     revision.public_use_allowed = False
     db_session.commit()
     assert client.post(freeze_url, json=freeze_body, headers=headers).status_code == 409
@@ -857,12 +887,17 @@ def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_
     db_session.commit()
     target = client.post(f"{base}/delivery-authorizations", json=authorization, headers=headers)
     assert target.status_code == 201, target.text
-    package = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+    with monkeypatch.context() as package_clock:
+        package_clock.setattr(zipfile.time, "localtime", lambda _: (2020, 1, 2, 3, 4, 6, 3, 2, -1))
+        package = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
     assert package.status_code == 200, package.text
-    repeated_package = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+    with monkeypatch.context() as package_clock:
+        package_clock.setattr(zipfile.time, "localtime", lambda _: (2022, 5, 6, 7, 8, 10, 4, 126, -1))
+        repeated_package = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
     assert repeated_package.status_code == 200
     assert repeated_package.content == package.content
     with zipfile.ZipFile(io.BytesIO(package.content)) as archive:
+        assert all(entry.date_time == (1980, 1, 1, 0, 0, 0) for entry in archive.infolist())
         included = json.loads(archive.read("manifest.json"))
         assert included["schema_version"] == 4
         assert included["candidate"]["hash"] == candidate["candidate_hash"]

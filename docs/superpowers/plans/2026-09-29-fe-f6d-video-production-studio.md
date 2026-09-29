@@ -13,6 +13,11 @@ Apply the reviewed `fe-f6d-video-production-studio` change to the local `main` c
 
 ## Steps
 
+- [x] /// Isolated browser gate for Video v2 save/reload, v1 explicit fork, stable diff, 409 state retention, archived read-only and exact MP4/check/Candidate/Review/local package. Evidence: `docs/FE_F6D_ISOLATED_ACCEPTANCE.md`; 6.9–6.11 and 7.6–7.9 checked.
+- [x] /// Video media/preview slice: exact scoped asset picker, input-bound MP4 selection, bounded authenticated byte/hash preview, honest local-structure preview and disconnected Video/TTS/ASR state. Model 8/8 and frontend build/budget PASS; browser acceptance remains separate.
+- [x] /// Model-first timeline/audio/subtitle slice: RED for bounded tracks/items and media placement order, cue overlap, SRT import and render invalidation; typed controls and frontend build/budget PASS. Full backend rerun remains a final gate.
+- [x] /// Video shot-source frontend slice: test exact project media selection, rights/kind/hash rejection and reference reordering; add duration/framing/transition/script-binding controls. Model 4/4 and frontend build/budget PASS.
+- [x] /// Video frontend slice: RED model tests for canonical v2 draft, stable script/shot IDs, reorder and final-render invalidation; implement the pure Video model and Video-only lazy editor with explicit Master save. Model 3/3, TypeScript/Vite/bundle PASS; full backend gate running separately.
 - [x] /// Commit the reviewed F6D spec/plan checkpoint locally, preserving user source packages (`a74a7d5`).
 - [x] /// Record current migration head, F6C regression baseline and Video v1 compatibility; mark F6D 0.x only from evidence.
 - [ ] /// Build canonical `video.master.v2` document/ref validation and exact published `video_requirements`; run focused contract checks.
@@ -31,8 +36,10 @@ Apply the reviewed `fe-f6d-video-production-studio` change to the local `main` c
 - [x] /// F6D 5.5: RED frozen Video v2 preview/diff with two independently valid Candidate v4 manifests, GREEN exact structured Review projection and Video document diff reuse; no whole-video similarity. Existing frozen tamper rejection and legacy reads retained; Video/Graphic/Review targeted 68 passed.
 - [x] /// F6D 5.6–5.10 backend closure: isolated pinned Identity, Brief, frozen Fact Boundary, published exact profile and byte-verified MP4; draft→manual attested Master→checks→Candidate v4→Review→Approval with warning dispositions→Delivery Authorization→deterministic ZIP. Revocation, byte tamper, candidate tamper and new-Master-old-authorization fail closed; no Draft/remote call. Full backend 1004 passed/2 skipped, legacy/multimodal targeted 255 passed, strict 30/30, related Ruff and diff-check PASS.
 - [x] /// F6D 3.5–3.9 trusted derived operations: RED missing endpoint and label-only faux regeneration, GREEN dedicated endpoint for concrete user-edited v2 result, source ID/hash/context/current head CAS, server-only derived_video provenance and request-bound idempotency. Shot regeneration requires a new exact project-visible source revision; Provider request is typed 503 with zero Master/media write. Full backend 1005 passed/2 skipped, strict 30/30, related Ruff/diff PASS.
-- [ ] /// Build typed Video-only Studio after backend closure, keep common Production/Text/Graphic bundles isolated.
-- [ ] /// Run isolated browser Video flow, full backend/frontend/FE-P1/OpenSpec/lint/diff gates and independent reviews; close only proven tasks and commit locally.
+- [x] /// F6D 4.1/4.2 scoped provider honesty: RED missing project-owned Video-generation/TTS/ASR GET/POST; GREEN configured/executable/verified all false, typed unavailable, no MaterialRevision/Master/reference writes, foreign project access 404. Existing Project Assets router only exposes safe unavailable hooks; F7 alone owns real provider acceptance. Targeted Video/Graphic capability tests 2 passed.
+- [x] /// F6D 4.4/4.6/4.7 final-render integrity: exercise forged renderer metadata, wrong-kind render, missing bytes, changed byte hash and live rights at save/freeze; preserve F6A manual input binding to payload/context/source/profile. Reproduce v4 ZIP timestamp nondeterminism with two forced years (RED), write fixed ZIP member metadata (GREEN), verify approved media/content hashes unchanged. Full backend gate running.
+- [x] /// Build typed Video-only Studio after backend closure, keep common Production/Text/Graphic bundles isolated; browser and FE-P1 graph gate passed.
+- [ ] /// Isolated browser and full local gates passed; independent implementation review is unavailable in this session and remains open. Preserve 4.5 as F7-only scope, then complete reviewed F6D handoff without claiming remote publication.
 
 ## Verification rule
 

@@ -1,6 +1,25 @@
 # 配置记录
 
+## 2026-09-29 F6D 隔离浏览器验收
+
+- 使用独立临时 SQLite、独立 API/前端端口及浏览器脚本，真实保存 Video v2 脚本、镜头、时间线、MP3 配音、字幕、叠字与同一 MP4 的不同精确位置。读取后的三条素材引用分别为 `shot_source`、`timeline_media`、`voice_audio`；修改输入立即清除旧 `render_output`，重新绑定后还须单独输入哈希确认。
+- 双窗口旧版本保存返回 409 且保留本地输入；旧 Video v1 预览明确暴露不可推断的画幅/时长/时间线，人工确认后追加 v2，旧 Master hash 和脚本/镜头 ID 不变。显式画幅转换产生 `derived_video` 子修订，浏览器可读稳定版本差异，归档后保存/检查禁用。
+- 已冻结 Candidate v4 在 Review 播放真实 MP4；warning 经明确说明后才能审批，交付只授权人工本地包。ZIP 内同一 revision 因不同用途存在多个 MP4 条目，逐条字节 SHA-256 均匹配；公开使用权撤销后再次下载被服务端阻断，无远端发布。Video/TTS/ASR 仍显示未验证/不可执行。
+- WAV 上传可持久化为 `audio/wav`，但 Video v2 保存的字节复核无法无声明识别其魔数，因此被 `video_asset_bytes_or_mime_invalid` 正确拒绝。验收改用含 ID3 魔数的 MP3；这不是无凭据 TTS，也未放宽后端类型闸门。此限制应在真实音频接入阶段单独处理。
+- 专用 ChatGPT 复核浏览器控制工具在本会话不可用，`codex-with-chatgpt` skill 明确不允许通用电脑操作替代。因此当前仅有既往独立 SPEC 审阅，F6D 实施的独立复核不能虚报为通过。
+- 隔离验收只隔离 SQLite 与端口，`MaterialRevision` 上传仍写到应用共用的内容寻址 `apps/api/app/media/material/`。现有 `store_bytes` 对相同 hash 不覆盖；未删测试文件，以免误删其他本地数据库可能引用的字节。后续验收应将媒体根目录也隔离，不能把本轮称作完整文件系统隔离。
+
 ## 2026-09-29 F6D 专业检查边界
+
+- Video v2 前端原来仍由 raw JSON textarea 驱动，并默认以 v1 schema 保存；这会让已实现的后端 v2 契约无法被普通用户可靠使用。现改为 typed Video draft 与 Video-only lazy shell，旧 v1 留在显式升级边界。编辑脚本或镜头会撤销旧 `render_asset_ref`/`render_output`，不能沿用过期成片。当前 shell 只实现脚本/镜头基础操作，不能把结构预览或未验证 Provider 称为成片；完整 Video Studio 仍在做。
+- 镜头重排若只改变 payload 的 `order` 而不重排 `shot_source` 引用，后端 exact-ref 校验会拒绝保存；镜头删除也不能留下旧 `sort_order`。模型回归先发现该问题，再统一按镜头顺序重建素材引用。
+- Video v2 的结构化时间线既允许空 audio/music 轨道供编辑，也禁止无精确音频版本的已放置片段。前端模型统一由 payload 构建 `shot_source → timeline_media → voice/music/cover` canonical 引用顺序，trim/volume 进入 placement；字幕 SRT 仅作为有界本地导入，不赋予 ASR provenance，也不自动保存 Master。
+- 最终视频的“可播放”与“已证实属于当前 Master”是两层事实。Video UI 现在只在主动预览时读取项目可见 MP4、校验 SHA-256 并播放字节；绑定和播放不生成 attestation，必须再经当前 render-input hash 的显式人工确认及服务端闸门。
+- 旧 Video v1 未核画幅/时长/时间线，升级预览返回 `payload:null` 和可证字段，因此不能像 Text/Graphic 那样直接拿 preview payload 提交。Video UI 用单独的升级草稿并锁定旧脚本和镜头身份，要求用户显式确认占位值和全部 warning；服务端仍验证完整 canonical v2、CAS 与旧数据保留。尚待隔离浏览器验证该 UI，不把接口连线等同验收。
+
+- 真实重复下载测试发现 v4 ZIP 即使 approved Candidate/媒体完全相同，`zipfile.writestr` 默认当前时间也会让归档头变化。根因在 ZIP 条目元数据而非内容哈希；现为 v4 包固定 ZIP 时间和权限，跨两个模拟年份构建字节相同，MP4 与清单仍按 frozen hash 校验。legacy ZIP 未在本切片改变；其确定性若属长期契约应另行审计。
+
+- F6D 的 Video/TTS/ASR 是项目级能力状态而不是“插件存在即能用”：当前无经项目验证的 Provider，故 configured/executable/verified 均 false；生成、语音合成和识别请求均 fail closed 且无素材/Master/引用写入。真实 Provider 接收与许可证据继续留给 F7，不能用 generic Material 适配器冒充。
 
 - 派生操作不能把“已请求转换”写成成功血缘。F6D 专用路径现要求具体 canonical Video v2 用户编辑结果；长转短/画幅转换分别验证实际 duration/ratio，镜头再生成的手工路径必须绑定新 exact MaterialRevision。`derived_video` 来源与完整来源哈希/context/结果哈希只由服务端写入；无可信 Provider 时返回 typed unavailable，不产生 Master、素材或成功回执。显式本地 deterministic transform 尚未实现，因此同样不可用，不冒充成功。
 

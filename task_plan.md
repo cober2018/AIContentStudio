@@ -2,6 +2,15 @@
 
 ## 2026-09-29：North Star 完整剩余开发（目标进行中）
 
+- [x] /// F6D 6.9/6.10/6.11：隔离浏览器验证 Video v1 显式预览/追加修订、稳定 ID diff、历史/归档只读，以及 409 后保留本地草稿；后端 CAS/警告仍是最终闸门。
+- [x] /// F6D 7.1–7.11：后端 Video/旧版本回归与隔离浏览器闭环已证实精确媒体、成片失效、检查、Candidate/Review/审批/本地 ZIP、撤权阻断和未验证 Provider；前端路由预算通过。F7 真正 Provider 接收不计入 F6D。
+- [ ] /// F6D 8.x：保留独立实施复核待办；补最终门禁/验收记录，范围提交本地 main，不推送/部署/运行生产迁移或提前归档。
+- [x] /// F6D 4.3/6.6–6.8：全角色项目精确素材 picker、MP4 字节/hash 限额预览、诚实能力状态与手工输入绑定确认 UI；模型 8/8、TypeScript/Vite/FE-P1 PASS。完整浏览器验收仍在 7.x，累计 56/79。
+- [x] /// F6D 6.4/6.5：纯模型 RED→GREEN 界定 track/item 时间边界、精确 media refs、字幕 cue 重叠/SRT 导入及旧 render 失效；类型化时间线、配音/音乐/封面、字幕与叠层控件已接通。模型 7/7、TypeScript/Vite/FE-P1 PASS；累计 52/79。
+- [x] /// F6D 6.3：为镜头 source 精确引用先加 RED 顺序测试，再实现项目共享素材选择、rights/kind/hash gate、景别/转场/用途/脚本关联；镜头重排与删除同步重排 refs。模型 4/4、TypeScript/Vite/FE-P1 PASS；累计 50/79。
+- [x] /// F6D 6.1/6.2/6.12：先为 Video v2 typed draft、稳定脚本/镜头 ID、重排与变更后成片失效写模型 RED 测试，再实现纯模型并接入 Video-only lazy Studio；旧 v1 只读待显式升级。模型 3/3，TypeScript/Vite/FE-P1 PASS；累计 49/79。
+- [x] /// F6D 4.1/4.2：project-scoped Video/TTS/ASR capability 先 RED（端点 404），后在既有 Project Assets 路由实现 configured/executable/verified 均 false 的真实状态；三种 Provider 形态请求 typed unavailable 且不回显输入 secret，MaterialRevision/Master/项目引用均不增加，跨项目不可读。Video/Graphic 能力定向 2 passed；全量门禁待本批复跑。
+- [x] /// F6D 4.4/4.6/4.7：在真实 Video v2 本地包链路加伪造 renderer origin/version、错误类型、缺字节和字节篡改的成片负向验证；payload/context/source/profile 变更分别改变当前输入 hash，旧成片不得误冻结。跨时钟重复打包暴露 ZIP 条目时间戳导致字节不确定，复现 RED 后固定 v4 ZIP 元数据，定向两例 GREEN；全后端门禁进行中。
 - [x] /// F6D 5.3：精确 source ref 替换、Brief context 修订分别改变新 Master render-input hash；旧检查随 Brief 变化 stale，素材撤权使 rights stale/冻结不可用，历史 Master hash 不变。定向回归通过；全量门禁与交付文档在本批收尾复跑。
 - [x] /// F6D 5.4：stable-ID Video diff 与 Project 路由先 RED 后 GREEN；脚本/镜头/轨道/片段/字幕/叠层及媒体/上下文差异均按 v2 schema 分派，Video/Graphic/Text 定向 83 passed；Candidate Review 冻结差异仍在 5.5。
 - [x] /// F6D 5.5：两份自洽冻结 Video v2 Candidate 的 Review preview/diff 先 RED 后 GREEN，准确显示脚本/镜头/时间线/字幕/叠层/成片与稳定 ID 改动，无整片文本相似度；Video/Graphic/既有 Review 68 passed。完整后端/规格门禁待本批复跑。

@@ -17,6 +17,7 @@ const excludedRoutes = [
 ];
 const textStudioKey = "src/product/TextStudioShell.tsx";
 const graphicModelKey = "src/product/GraphicStudioModel.ts";
+const videoModelKey = "src/product/VideoStudioModel.ts";
 const siblingStudioKeys = ["src/product/GraphicStudioShell.tsx", "src/product/VideoStudioShell.tsx"];
 const limit = 500_000;
 const baseline = 1_095_280;
@@ -81,18 +82,23 @@ try {
   }
   const production = required("src/product/PersistentProductionPage.tsx");
   const graphicModelFile = required(graphicModelKey).file;
+  const videoModelFile = required(videoModelKey).file;
   const commonProduction = staticClosure([entryKey, "src/product/PersistentProductionPage.tsx"]);
   if (commonProduction.has(graphicModelFile)) throw new Error("Graphic editor model leaked into common Production static graph");
+  if (commonProduction.has(videoModelFile)) throw new Error("Video editor model leaked into common Production static graph");
   if (!production.dynamicImports?.includes(graphicModelKey)) throw new Error("Graphic editor model is not lazy-loaded from Production");
+  if (!production.dynamicImports?.includes(videoModelKey)) throw new Error("Video editor model is not lazy-loaded from Production");
   if (!production.dynamicImports?.includes(textStudioKey)) throw new Error("Text Studio is not a Production dynamic import");
   const textClosure = staticClosure([entryKey, textStudioKey]);
   if (![...textClosure].some((file) => heavyByChunk[file]?.includes("TipTap"))) throw new Error("Text Studio TipTap module mapping missing");
   if (textClosure.has(graphicModelFile)) throw new Error("Graphic editor model leaked into Text Studio static graph");
+  if (textClosure.has(videoModelFile)) throw new Error("Video editor model leaked into Text Studio static graph");
   for (const sibling of siblingStudioKeys) {
     if (!production.dynamicImports?.includes(sibling)) throw new Error(`Studio shell is not dynamic: ${sibling}`);
     const closure = staticClosure([entryKey, sibling]);
     if ([...closure].some((file) => heavyByChunk[file]?.includes("TipTap"))) throw new Error(`TipTap leaked into ${sibling}`);
     if (sibling !== "src/product/GraphicStudioShell.tsx" && closure.has(graphicModelFile)) throw new Error(`Graphic editor model leaked into ${sibling}`);
+    if (sibling !== "src/product/VideoStudioShell.tsx" && closure.has(videoModelFile)) throw new Error(`Video editor model leaked into ${sibling}`);
   }
   console.log(`Text Studio: lazy TipTap closure ${(sizes(textClosure).raw / 1000).toFixed(2)} kB raw / ${(sizes(textClosure).gzip / 1000).toFixed(2)} kB gzip; Graphic/Video exclude TipTap`);
   for (const file of initial) {

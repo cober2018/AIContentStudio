@@ -2,6 +2,24 @@
 
 ## 2026-09-29：FE-F6D apply（进行中）
 
+- Video v2 隔离浏览器验收已在独立临时 SQLite/API/Vite 上通过：类型化脚本/镜头/时间线/配音/字幕/叠字及 exact refs 保存/刷新；双窗口 409 保留本地改动；真实 MP4 字节/hash 预览与输入绑定证明分离；输入改变令旧成片失效。随后 checks→Candidate v4→Review 播放→warning 处置审批→人工授权→本地 ZIP，ZIP 内各 MP4 条目逐条 SHA-256 与 MaterialRevision 一致。旧 v1 显式升级、稳定差异、派生子修订历史、撤权阻断包及归档只读也经浏览器验证，页面未出现运行时错误。验收报告位于 `docs/FE_F6D_ISOLATED_ACCEPTANCE.md`，原始本地证据目录在其中。任务现 76/79；4.5 为 F7 真实 Provider 后续义务，8.4 独立实施复核尚未完成，不称最终通过。
+- 新跑全后端 `1006 passed / 2 skipped / 5 warnings`，Video/Graphic/Text/F6A/Review 定向 `229 passed / 1 warning`；前端 TypeScript/Vite 与 FE-P1 PASS，Video 模型 9/9；`/projects` 初始 JS 224.75 kB raw/72.89 kB gzip，通用 Production 276.96 kB raw/88.24 kB gzip，Text TipTap 仍只在 Text 懒加载闭包；OpenSpec strict 30/30，相关 Ruff 和 diff-check PASS。F6D 实施独立复核因专用浏览器入口缺失而未能执行，绝不以本地自审冒充。
+- 验收数据库/端口独立，但应用媒体根目录仍是共享的内容寻址本地目录；上传不会覆盖相同 hash 文件，本轮不删除可能被其他本地数据库引用的测试字节。报告已明确此限制。
+
+- 6.9 前端接口已接线但尚未勾选：v1 preview 不伪造 ready v2，编辑器中的画幅/时长为待人工确认的填写起点，旧脚本与镜头 ID/顺序锁定，首个升级修订不带旧 render；服务端 CAS/警告一致性仍为最终闸门。v2 版本差异按稳定 ID 展示脚本/镜头/轨道/片段/字幕/叠字及素材/渲染/上下文，未计算伪视频文本相似度。模型 9/9、TypeScript/Vite/FE-P1 PASS；浏览器升级/冲突/归档验收前维持 56/79。
+
+- 4.3/6.6–6.8：Video 工作台显示项目共享 image/video/audio 精确 Revision、MIME、来源、公开权与 hash；最终成片仅从可见/允许公开的 MP4 中绑定，模型不伪造 attestation。真实 MP4 预览需主动读取、限制大小并校验字节 SHA-256；结构预览明确非成片。Video/TTS/ASR 项目能力状态由后端读出，未验证时明示不可执行。绑定成片后先显式保存，再由现有输入哈希确认按钮追加修订。模型 8/8、TypeScript/Vite/FE-P1 PASS；累计 56/79。浏览器完整绑定/确认仍待 7.x 验收，不能称本次已实际浏览器跑通。
+
+- 6.4/6.5 Video 类型化时间线与媒体面板：轨道/片段增删、start/end/trim/volume 边界反馈，Video 镜头片段与 audio/music 精确 Revision placement；整片 recorded/TTS 已导入音频、音乐、封面 exact refs；字幕 cue 编辑及有界 SRT 本地导入、叠字坐标/时间。所有编辑只改本地 draft 并令旧 render 失效，不声称已合成/ASR/TTS 成功。模型 7/7、TypeScript/Vite/FE-P1 PASS，/projects 224.75 kB raw、通用 Production 272.26 kB；累计 52/79。最终成片绑定、Video v1 UI 升级、隔离浏览器及 F7 Provider 仍待办。
+
+- 6.3 镜头编辑：项目共享素材可按 exact Revision 选择 image/video，展示来源、权利与 hash；模型绑定 `shot_source` 的 placement/slot/sort_order，并在镜头重排/删除时同步重排，非法 kind/权利拒绝。镜头时长、用途、景别、转场、脚本关联可编辑。4/4 模型测试及 TypeScript/Vite/FE-P1 通过；本次后端全量 1006 passed/2 skipped/5 warnings。累计 50/79；其他媒体位置的 picker 仍未实现，6.6 未勾。
+
+- 6.1/6.2/6.12 Video 前端首批：普通用户不再直接编辑 Master JSON；Video v2 typed draft 与 script/shot 稳定 ID 操作由纯模型维护，本地 dirty 与显式保存走 `video.master.v2`，旧 v1 只读。模型先 RED（模块缺失），后 3/3 GREEN；TypeScript/Vite 与 FE-P1 bundle gate 通过，Video 模型/壳仅在 Video lazy closure，通用 Production/Text/Graphic 静态闭包无泄漏。累计 49/79。镜头素材、时间线/音轨/字幕/叠层、v1 升级 UI、最终成片选择及完整浏览器验收仍未完成；全后端复测进行中。
+
+- 4.4/4.6/4.7 成片闸门定向复核：伪造 renderer origin/version 422、wrong-kind 成片保存 422；已确认 Master 的最终视频在 freeze 前若 kind 变更、字节丢失、哈希不匹配或权利撤销均 409。payload/source/context/profile 变化产生不同当前 render-input hash，手工 attestation 仍是 manual。跨不同时钟重新构建 v4 ZIP 曾因 `writestr` 当前时间导致字节变化，固定条目时间和权限后定向两例 PASS；累计 46/79。全后端与后续浏览器仍待复核。
+
+- 4.1/4.2 Video/TTS/ASR 能力边界：项目级 GET 返回 configured/executable/verified 各为 false、`project_provider_not_verified`，跨项目 404；三种 POST 均 typed unavailable、不回显输入 secret，也不新增 MaterialRevision、ContentMasterRevision 或项目素材引用。Video/Graphic 能力定向 2 passed；累计 43/79。真实 Provider 接收/许可/血缘和响应脱敏仍归 F7，不将静态不可用接口算作真实 Connector。
+
 - 3.5–3.9 派生子修订闭合：新增专用 Video v2 `/derive`，仅显式 user_edit 的具体结果可追加；长转短真实缩短 duration，画幅转换真实改变 ratio，镜头再生成的手工路径必须指向经项目可见性/字节/类型/权利验证的新素材，不能用标签变化冒充。source ID/hash/context/current head 与 request-hash 幂等检查通过，普通 save 伪造 `source_kind`/`edit_summary.derived_video` 被拒；未验证 Provider 返回 503，Master 与 MaterialRevision 不增。全量后端新跑 1005 passed/2 skipped/5 warnings，OpenSpec strict 30/30、相关 Ruff 与 diff-check PASS；最后补充的无媒体写入断言另定向 1 passed。累计 41/79，前端本批未改。
 
 - 5.6–5.10 后端闭环及旧链路回归通过：独立 Video v2 项目夹具将手工 Master→输入绑定 MP4→专业检查→Candidate v4→Review→带 warning 处置的审批→交付授权→确定性 ZIP 完整跑通，PNG/MP4 与批准 revision 字节一致，重复下载字节一致，无 Draft/Topic/Mother、远程调用或 DeliveryAttempt。freeze/approve/authorize/package 的 live rights 撤销、文件字节篡改、候选 manifest 篡改和新 Master 后旧授权均拒绝。Video/Graphic/Text/历史 Review 与交付定向 255 passed；新跑全后端 1004 passed/2 skipped/5 warnings，OpenSpec strict 30/30、相关 Ruff、diff-check PASS。累计 36/79；Provider、派生操作、前端与浏览器尚未完成，前端本批未重测。
