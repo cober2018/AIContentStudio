@@ -396,7 +396,13 @@ class VideoMasterV2Adapter(VideoMasterAdapter):
             document = canonical_payload(master.payload_json)
         except VideoDocumentError as exc:
             return {**super().build_preview(master), "status": "invalid", "reasons": [str(exc)]}
-        return {**super().build_preview(master), "shot_count": len(document["shots"]), "duration_ms": document["timeline"]["duration_ms"]}
+        return {
+            **super().build_preview(master), "kind": "local_assembly_preview", "final_render_verified": False,
+            "shot_count": len(document["shots"]), "duration_ms": document["timeline"]["duration_ms"],
+            "script_blocks": document["script"]["blocks"], "shots": document["shots"], "timeline": document["timeline"],
+            "voice": document["voice"], "subtitles": document["subtitles"], "overlays": document["overlays"],
+            "music": document["music"], "cover": document["cover"],
+        }
 
     def build_render_snapshot(self, db: Session, master: ContentMasterRevision) -> dict:
         render = super().build_render_snapshot(db, master)

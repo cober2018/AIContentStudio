@@ -36,7 +36,7 @@
 - [x] 3.1 Validate shot/timeline duration consistency and start/end/trim bounds.
 - [ ] 3.2 Validate voice/audio track placement and subtitle cue ordering/non-overlap.
 - [x] 3.3 Validate overlay placement/text and cover exact image kind.
-- [ ] 3.4 Build deterministic local preview projection without claiming final-render verification.
+- [x] 3.4 Build deterministic local preview projection without claiming final-render verification.
 - [ ] 3.5 Implement explicit long-to-short child revision from exact source Master and concrete validated v2 result, not intent alone.
 - [ ] 3.6 Implement explicit aspect-ratio child revision from exact source Master and concrete validated v2 result, not intent alone.
 - [ ] 3.7 Implement shot-regeneration child boundary; unavailable Provider returns no child/media or success receipt.

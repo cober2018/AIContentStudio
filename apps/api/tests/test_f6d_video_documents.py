@@ -226,6 +226,26 @@ def test_video_v2_master_save_round_trips_canonical_document(client):
     assert client.get(f"{path}/{saved['id']}", headers=headers).json()["payload"] == document
 
 
+def test_video_v2_preview_projects_exact_saved_structure_without_render_claim(client):
+    headers = {"X-Studio-User": "video-preview@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "预览作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "预览项目"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "视频单元", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    document = _document()
+    document["overlays"] = [{"id": "overlay-1", "order": 0, "text": "重点", "start_ms": 0, "end_ms": 1_000, "x": 0.25, "y": 0.75}]
+    saved = client.post(path, json={"idempotency_key": "preview-one", "payload_schema": "video.master.v2", "payload": document}, headers=headers)
+    assert saved.status_code == 200, saved.text
+    preview = client.get(f"{path}/{saved.json()['id']}/readiness", headers=headers).json()["preview"]
+    assert preview["kind"] == "local_assembly_preview"
+    assert preview["script_blocks"] == document["script"]["blocks"]
+    assert preview["shots"] == document["shots"]
+    assert preview["timeline"] == document["timeline"]
+    assert preview["subtitles"] == document["subtitles"]
+    assert preview["overlays"] == document["overlays"]
+    assert preview["final_render_verified"] is False
+
+
 def test_video_v2_readiness_uses_exact_published_profile(client, db_session):
     from app.models import ChannelTemplateVersion
 
