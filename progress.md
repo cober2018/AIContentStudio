@@ -1,5 +1,9 @@
 # 当前进度
 
+## 2026-09-29：F6E Variant 检查漂移读取
+
+- 本批新增定向回归并修复：同系列 Variant 推进、源 Master 更新、Profile 退役、FactPackItem 公开使用撤销后，旧检查不再显示 current pass；读取历史不改写 CheckRun，漂移后 POST checks 拒绝。Graphic/Video live 素材与 render 校验复用原项目级保存验证。定向相关 28 passed；全后端 `1084 passed / 2 skipped / 7 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。完整检查种类、Candidate v5 尚未完成，F6E 仍 27/100。
+
 ## 2026-09-29：F6E 规格门槛解除
 
 - Variant 检查首批接入 project-scoped GET/POST：schema/content CheckRun 追加式保存，输入 hash 绑定 canonical payload/context 与冻结 refs/profile/adapter/rules；历史输入改变会显示 stale，后续同输入 blocker 覆盖旧 pass。其他 required checks 继续明确 incomplete，因此 schema pass 绝不等于 Candidate-ready。权限、篡改及优先级定向 3 passed；全后端 `1082 passed / 2 skipped / 7 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。任务 7.1/7.4 核销，F6E 进度 27/100；完整检查与 v5 仍待实施。

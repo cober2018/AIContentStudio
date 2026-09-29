@@ -102,12 +102,15 @@ def test_variant_series_have_independent_heads_and_cannot_retarget(client, db_se
     }
     single = client.post(path, json={**common, "variant_key": "single-primary", "idempotency_key": "single-1"}, headers=headers)
     assert single.status_code == 201, single.text
+    first_checks_path = f"{path}/{single.json()['id']}/checks"
+    assert client.post(first_checks_path, headers=headers).json()["items"][0]["status"] == "pass"
     thread = client.post(path, json={**common, "variant_key": "thread-primary", "content_form": "thread", "payload": {"posts": [{"id": "p1", "order": 0, "text": "推文"}]}, "idempotency_key": "thread-1"}, headers=headers)
     assert thread.status_code == 201, thread.text
     second = client.post(path, json={**common, "variant_key": "single-primary", "expected_revision": 1, "payload": {"text": "单条修订"}, "idempotency_key": "single-2"}, headers=headers)
     assert second.status_code == 201, second.text
     assert second.json()["parent_revision_id"] == single.json()["id"]
     assert second.json()["revision_no"] == 2
+    assert client.get(first_checks_path, headers=headers).json()["items"][0]["status"] == "stale"
     current_single = client.get(f"{path}/current", params={"variant_key": "single-primary"}, headers=headers).json()
     current_thread = client.get(f"{path}/current", params={"variant_key": "thread-primary"}, headers=headers).json()
     assert current_single["id"] == second.json()["id"]
@@ -165,6 +168,16 @@ def test_text_variant_citation_binds_exact_frozen_boundary_and_rolls_back_invali
     assert accepted.json()["evidence"][0]["fact_pack_item_id"] == item.id
     assert accepted.json()["evidence"][0]["locator"] == evidence["content_locator_json"]
     assert client.post(path, json=body, headers=headers).json()["id"] == accepted.json()["id"]
+    checks_path = f"{path}/{accepted.json()['id']}/checks"
+    assert client.post(checks_path, headers=headers).json()["items"][0]["status"] == "pass"
+    item.public_use_allowed = False
+    db_session.commit()
+    revoked_checks = client.get(checks_path, headers=headers)
+    assert revoked_checks.status_code == 200, revoked_checks.text
+    assert revoked_checks.json()["items"][0]["status"] == "stale"
+    assert "evidence_changed" in revoked_checks.json()["drift_reasons"]
+    item.public_use_allowed = True
+    db_session.commit()
     oversized_role = client.post(path, json={**body, "variant_key": "x-single-bad-role", "idempotency_key": "cited-bad-role", "evidence_refs": [{**evidence, "role": "r" * 41}]}, headers=headers)
     assert oversized_role.status_code == 422, oversized_role.text
 
@@ -271,6 +284,47 @@ def test_variant_schema_check_is_append_only_bound_to_payload_and_does_not_imply
     assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 1
     assert client.get(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
     assert client.post(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
+
+
+def test_variant_checks_become_stale_when_source_master_advances(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(path, json={
+        "variant_key": "source-drift", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "source-drift-1", "payload": {"text": "有来源的原文"},
+    }, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checks_path = f"{path}/{saved.json()['id']}/checks"
+    assert client.post(checks_path, headers=headers).json()["items"][0]["status"] == "pass"
+    newer = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", json={
+        "idempotency_key": "new-source", "expected_revision": 1, "payload_schema": "text.master.v2", "payload": master["payload"],
+    }, headers=headers)
+    assert newer.status_code == 200, newer.text
+    projected = client.get(checks_path, headers=headers)
+    assert projected.status_code == 200, projected.text
+    assert projected.json()["items"][0]["status"] == "stale"
+    assert projected.json()["ready"] is False
+
+
+def test_variant_checks_become_stale_when_exact_profile_is_demoted(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(path, json={
+        "variant_key": "profile-drift", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "profile-drift-1", "payload": {"text": "有来源的原文"},
+    }, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checks_path = f"{path}/{saved.json()['id']}/checks"
+    assert client.post(checks_path, headers=headers).json()["items"][0]["status"] == "pass"
+    profile = db_session.get(ChannelTemplateVersion, saved.json()["profile_template_version_id"])
+    profile.status = "archived"
+    db_session.commit()
+    projected = client.get(checks_path, headers=headers)
+    assert projected.status_code == 200, projected.text
+    assert projected.json()["items"][0]["status"] == "stale"
+    assert projected.json()["ready"] is False
 
 
 def test_variant_later_corrupt_payload_check_blocks_earlier_pass(client, db_session):

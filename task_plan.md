@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6E Variant 历史检查的实时漂移投影
+
+- [x] /// 对照已批准的 F6E 任务 3.10/7.5 与现有项目级检查读取，先补失败回归：同系列新版本、源 Master 更新、Profile 退役和 Evidence 撤权不得沿用旧 pass。
+- [x] /// 最小化复用现有 Master、Profile、FactPack 和 Material 验证，只在读取时投影 stale，不改写历史 CheckRun；漂移后拒绝重新执行旧检查。
+- [x] /// 跑全量后端、Ruff、OpenSpec strict、diff-check，更新进度/发现/README；此批只是 3.10/7.5 的一部分，暂不勾任务。
+
 ## 2026-09-29：F6E 独立规格复核通过，进入 backend-first apply
 
 - [x] /// 核对 `main@6f5e022`、F6D 79/79、F6E 六份 delta 与独立复核结论，核销 F6E 0.2；不将外部记录的门禁数字冒充本地重跑。

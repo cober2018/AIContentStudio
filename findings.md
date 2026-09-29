@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F6E Variant live drift
+
+- 冻结输入 hash 单独比较只能发现 Variant 行自身变动；同系列新版本、源 Master 新 head、Profile 退役、Evidence 撤权后，旧 schema pass 仍可能显示 current。本轮改为读取时核对真实 head、Master 上下文、当前 published Profile/Adapter/rules、精确证据和 Graphic/Video 素材/渲染；旧 CheckRun 不修改，只投影 `stale` 和具体原因。
+- 这只是历史检查的保守失效边界，不代表 `variant_evidence`、`variant_rights`、`variant_profile`、`variant_render` 检查已可执行，更不代表 Candidate v5 可冻结；这些未实现项仍为 incomplete。
+
 ## 2026-09-29 F6E 首个 Variant 写入边界
 
 - Variant schema/content 检查必须只说明这一类检查的结果，不能用“结构通过”推断 Profile、权利、证据或渲染已验证。检查投影对每个 required kind 取最新记录；同输入的晚到 blocker 高于旧 pass，输入漂移时旧 pass 变 stale。其余闸门未实施前整体 `ready=false`。
