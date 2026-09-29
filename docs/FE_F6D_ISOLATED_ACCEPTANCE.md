@@ -29,6 +29,13 @@ Date: 2026-09-29. Scope: local F6D change on `main`, before independent implemen
 - OpenSpec: `openspec validate --all --strict` 30/30 PASS.
 - Ruff: scoped changed backend files PASS. `git diff --check` PASS.
 
+## 2026-09-29 media-isolated rerun
+
+- Fresh final fixture database: `/tmp/aicontent-f6d-acceptance.kubyUY/studio.db`; API media root: `/tmp/aicontent-f6d-acceptance.kubyUY/media`. The first rerun (`7qLIAl`) exposed a browser assertion using a file_path absent from the public API; after switching the assertion to content hash, the final browser run used a new empty fixture to rule out reuse of prior same-hash bytes. Only these temporary databases received Alembic upgrades; no production migration.
+- `AI_STUDIO_MEDIA_ROOT` is an explicit absolute-path override. The browser script now requires the media root to be the `media` sibling of its guarded fixture database, then verifies uploaded MP4 and MP3 bytes under that root against each exact MaterialRevision hash. The previous shared-media run above remains historical evidence, not the isolation claim for this rerun.
+- Latest successful report: `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6d-browser-evidence-hDIR9b/report.json`. All 11 browser gates passed from a fresh empty media root; no page errors. API and Vite test processes were stopped; temporary fixture and evidence files were retained for inspection.
+- Focused backend regression: 55 passed; full backend: 1007 passed, 2 skipped, 5 warnings. TypeScript/Vite and FE-P1 bundle check passed; OpenSpec strict 30/30 passed.
+
 ## Honest limits
 
 - Real external Video/TTS/ASR execution, accepted bytes/license/provenance/rights, response redaction and verified publication are F7, not demonstrated here.

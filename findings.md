@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-29 F6D 素材隔离根因与修复
+
+- 根因是 `asset_media.MEDIA_ROOT` 写死为仓库路径，临时 `DATABASE_URL` 不会隔离内容寻址的文件字节；此前共享目录中的同 hash 文件不能安全清理，历史验收记录保留而不改写。
+- 新的 `AI_STUDIO_MEDIA_ROOT` 只在显式绝对路径设置时覆盖默认值；新隔离 API 以临时 DB 的兄弟目录 `media` 启动。浏览器 fixture 先校验该环境变量，再实际回读临时目录中的 hash-addressed MP4/MP3 并核对 SHA-256；API 未使用相同根目录时验收会失败。
+- 临时 Playwright 运行依赖未写入 package/lock 文件，而是复用本机已有缓存；本次不新增正式依赖。主规格同步/归档、推送/部署/生产迁移和 F6E 业务代码均未执行；F6D 独立实施复核仍待外部结论。
+
 ## 2026-09-29 F7 原包任务保留核对
 
 - F7 源包 96 条任务与标准 `fe-f7-capability-integrations-delivery` 的 105 条任务以完整 checkbox 行逐字比较：源包没有任何缺失项，标准版新增九项。新增项覆盖 registration/runtime 精确可用性、typed Connector 映射限制、搜索接受后的项目引用、Provider 响应/错误脱敏与假成功拒绝、旧 auto-draft 绕过、执行时重新验证、WeWrite 结果脱敏和只读 Settings 不探测。此核对只覆盖任务文本，不替代独立规格审阅、代码执行或真实 Provider/Publisher 验证。

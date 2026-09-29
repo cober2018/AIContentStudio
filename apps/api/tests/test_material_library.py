@@ -5,6 +5,9 @@ approved 引用不可变（替换=新 Revision）；历史 DraftMedia 可读。
 """
 
 import hashlib
+import os
+import subprocess
+import sys
 
 import pytest
 
@@ -14,6 +17,16 @@ from app.services import materials as materials_service
 EDITOR = {"X-Studio-User": "editor@studio.local"}
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"rest-of-png-bytes" * 8
+
+
+def test_media_root_can_be_isolated_for_acceptance(tmp_path):
+    isolated = tmp_path / "media"
+    output = subprocess.check_output(
+        [sys.executable, "-c", "from app.services.asset_media import MEDIA_ROOT; print(MEDIA_ROOT)"],
+        env={**os.environ, "AI_STUDIO_MEDIA_ROOT": str(isolated)},
+        text=True,
+    ).strip()
+    assert output == str(isolated)
 
 
 def _upload(client, *, title="测试图", public=False, role="inline"):

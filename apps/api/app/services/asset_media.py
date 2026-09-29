@@ -7,6 +7,7 @@
 """
 
 import html
+import os
 from pathlib import Path
 
 from fastapi import Response
@@ -15,7 +16,10 @@ from sqlalchemy.orm import Session
 
 from ..models import AssetMedia, ContentAsset
 
-MEDIA_ROOT = Path(__file__).resolve().parents[1] / "media"
+_configured_media_root = os.environ.get("AI_STUDIO_MEDIA_ROOT")
+if _configured_media_root and not Path(_configured_media_root).is_absolute():
+    raise ValueError("AI_STUDIO_MEDIA_ROOT must be an absolute path")
+MEDIA_ROOT = Path(_configured_media_root).resolve() if _configured_media_root else Path(__file__).resolve().parents[1] / "media"
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 ALLOWED_MIME = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 MAX_INLINE_SLOTS = 9

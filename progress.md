@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：F6D 验收素材隔离修补
+
+- 查明既有隔离浏览器验收只有临时 SQLite/端口，素材仍落仓库共享 `apps/api/app/media/material/`。先写针对媒体根目录 override 的失败测试，再使 `asset_media.MEDIA_ROOT` 支持绝对路径 `AI_STUDIO_MEDIA_ROOT`；浏览器脚本强制媒体与临时数据库同父目录，并按 MaterialRevision hash 实际核查 MP4/MP3 字节。
+- 最终另建全新空数据库 `/tmp/aicontent-f6d-acceptance.kubyUY/studio.db` 并升级至 head，素材根目录同父级；API/Vite 用独立 18262/15662 端口启动，浏览器 11 项闭环 PASS、页面错误 0，报告见 `docs/FE_F6D_ISOLATED_ACCEPTANCE.md`。测试进程已停止；临时文件保留供核查，旧共享素材未清理。
+- 新跑全后端 1007 passed/2 skipped/5 warnings，定向 55 passed，前端 TypeScript/Vite/FE-P1 PASS，全库 OpenSpec strict 30/30 PASS。F6D 仍 77/79：4.5 真实 Provider 属 F7，8.4 独立实施复核未获；不能据自身测试宣布 F6D 全面关单或启动 F6E 业务 apply。
+
 ## 2026-09-29：规格保留审计（中断后继续）
 
 - 当前 `main` tracked 改动仅为 F6E 标准规格及 README/task_plan/progress/findings；用户原始包仍未跟踪、未改，F6D 77/79、F6E 0/96、F7 0/105。
