@@ -281,6 +281,54 @@ def _validate_video_assets(db: Session, project_id: int, master: ContentMasterRe
     return materials
 
 
+def _validate_wechat_assets(db: Session, project_id: int, refs: list[dict]) -> list[MaterialRevision]:
+    from .content_masters import _verified_generated_asset
+
+    if not refs:
+        return []
+    if len(refs) != 1 or any(ref.get(key) != value for key, value in {
+        "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
+    }.items() for ref in refs):
+        raise HTTPException(422, {"code": "variant_cover_mapping_invalid"})
+    ref = refs[0]
+    material = db.get(MaterialRevision, ref.get("material_revision_id"))
+    if material is None:
+        raise HTTPException(422, {"code": "variant_cover_unready"})
+    visible = db.scalar(select(ProjectMaterialReference.id).where(
+        ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.material_revision_id == material.id,
+        ProjectMaterialReference.status == "active",
+    ))
+    generated = db.scalars(select(ProjectWorkflowOutput).where(
+        ProjectWorkflowOutput.project_id == project_id, ProjectWorkflowOutput.output_kind == "material_revision",
+        ProjectWorkflowOutput.entity_id == material.id,
+    )).all() if visible is None else []
+    if ((visible is None and not any(_verified_generated_asset(db, output, material) for output in generated))
+            or material.content_hash != ref.get("content_hash_snapshot") or material.material.kind != "image"
+            or material.material.status != "active" or material.status in {"revoked", "archived"}
+            or material.public_use_allowed is not True):
+        raise HTTPException(422, {"code": "variant_cover_unready"})
+    try:
+        content = read_bytes_checked(db, material, require_public=True)
+    except (HTTPException, OSError) as exc:
+        raise HTTPException(422, {"code": "variant_cover_bytes_unverified"}) from exc
+    if not material.mime_type or not material.mime_type.startswith("image/") or sniff_mime(content, None) != material.mime_type:
+        raise HTTPException(422, {"code": "variant_cover_mime_invalid"})
+    return [material]
+
+
+def _text_source_cover_refs(db: Session, master: ContentMasterRevision) -> list[dict]:
+    refs = db.scalars(select(ContentMasterAssetRef).where(
+        ContentMasterAssetRef.master_revision_id == master.id,
+    ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id)).all()
+    if not refs:
+        return []
+    if len(refs) != 1 or refs[0].role != "cover" or refs[0].slot_key != "cover" or refs[0].sort_order != 0 or refs[0].placement_json != {"usage": "cover"}:
+        raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
+    ref = refs[0]
+    return [{"material_revision_id": ref.material_revision_id, "content_hash_snapshot": ref.content_hash_snapshot,
+             "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"}}]
+
+
 def _check_inputs(db: Session, row: ChannelVariantRevision) -> tuple[str, list[dict], list[dict]]:
     assets = db.scalars(select(ChannelVariantAssetRef).where(ChannelVariantAssetRef.variant_revision_id == row.id).order_by(ChannelVariantAssetRef.sort_order, ChannelVariantAssetRef.id)).all()
     evidence = db.scalars(select(ChannelVariantEvidenceRef).where(ChannelVariantEvidenceRef.variant_revision_id == row.id).order_by(ChannelVariantEvidenceRef.sort_order, ChannelVariantEvidenceRef.id)).all()
@@ -323,6 +371,8 @@ def _drift_reasons(db: Session, row: ChannelVariantRevision) -> list[str]:
             _validate_graphic_assets(db, row.project_id, master, asset_refs)
         elif master.payload_schema == "video.master.v2":
             _validate_video_assets(db, row.project_id, master, asset_refs)
+        elif row.payload_schema == "wechat.article.v1":
+            _validate_wechat_assets(db, row.project_id, asset_refs)
         elif asset_refs:
             reasons.append("asset_mapping_unavailable")
     except HTTPException:
@@ -431,6 +481,8 @@ def _rights_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) 
             _validate_graphic_assets(db, row.project_id, master, assets)
         elif row.payload_schema == "douyin.spoken_script.v1":
             _validate_video_assets(db, row.project_id, master, assets)
+        elif row.payload_schema == "wechat.article.v1":
+            _validate_wechat_assets(db, row.project_id, assets)
         elif assets:
             return "blocker", {"reasons": ["asset_mapping_unavailable"]}
     except HTTPException as exc:
@@ -503,17 +555,20 @@ def adapt_preview(db: Session, *, project_id: int, unit_id: int, user: User, pay
     source_projection = get_master_revision(db, project_id, unit_id, master.id, user)
     if source_projection["readiness"]["state"] == "stale":
         raise HTTPException(409, {"code": "variant_source_context_stale"})
-    if source_projection["evidence"] or (source_projection["assets"] and master.payload_schema not in {"graphic.master.v2", "video.master.v2"}):
+    source_cover = _text_source_cover_refs(db, master) if master.payload_schema == "text.master.v2" and payload["channel_id"] == "wechat" and payload["content_form"] == "article" else []
+    if source_projection["evidence"] or (source_projection["assets"] and master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and not source_cover):
         raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
     try:
         adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
     except AdapterUnavailable as exc:
         raise HTTPException(422, {"code": "variant_adapter_unavailable", "reason": str(exc)}) from exc
-    asset_refs = _graphic_source_refs(db, master) if master.payload_schema == "graphic.master.v2" else _video_source_refs(db, master) if master.payload_schema == "video.master.v2" else []
+    asset_refs = _graphic_source_refs(db, master) if master.payload_schema == "graphic.master.v2" else _video_source_refs(db, master) if master.payload_schema == "video.master.v2" else source_cover
     if master.payload_schema == "graphic.master.v2":
         _validate_graphic_assets(db, project_id, master, asset_refs)
     elif master.payload_schema == "video.master.v2":
         _validate_video_assets(db, project_id, master, asset_refs)
+    elif capability["payload_schema"] == "wechat.article.v1":
+        _validate_wechat_assets(db, project_id, asset_refs)
     try:
         adapted = adapter.adapt(master.payload_json, asset_refs=asset_refs, evidence_refs=[])
     except AdapterUnavailable as exc:
@@ -558,10 +613,13 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     source_projection = get_master_revision(db, project_id, unit_id, master.id, user)
     if source_projection["readiness"]["state"] == "stale":
         raise HTTPException(409, {"code": "variant_source_context_stale"})
-    if (master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and db.scalar(select(ContentMasterAssetRef.id).where(ContentMasterAssetRef.master_revision_id == master.id).limit(1)) is not None) or db.scalar(select(ContentMasterEvidenceRef.id).where(ContentMasterEvidenceRef.master_revision_id == master.id).limit(1)) is not None:
+    source_cover = _text_source_cover_refs(db, master) if master.payload_schema == "text.master.v2" and payload["channel_id"] == "wechat" and payload["content_form"] == "article" else []
+    if (master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and db.scalar(select(ContentMasterAssetRef.id).where(ContentMasterAssetRef.master_revision_id == master.id).limit(1)) is not None and not source_cover) or db.scalar(select(ContentMasterEvidenceRef.id).where(ContentMasterEvidenceRef.master_revision_id == master.id).limit(1)) is not None:
         raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
     evidence_refs = payload.get("evidence_refs", [])
     asset_refs = payload.get("asset_refs", [])
+    if source_cover and asset_refs != source_cover:
+        raise HTTPException(422, {"code": "source_cover_mapping_mismatch"})
     try:
         adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
     except AdapterUnavailable as exc:
@@ -577,10 +635,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         canonical = canonical_payload(capability["payload_schema"], payload["payload"], asset_refs=asset_refs, evidence_refs=evidence_refs)
     except VariantDocumentError as exc:
         raise HTTPException(422, {"code": "variant_payload_invalid", "reason": str(exc)}) from exc
-    materials = _validate_graphic_assets(db, project_id, master, asset_refs) if master.payload_schema == "graphic.master.v2" else _validate_video_assets(db, project_id, master, asset_refs) if master.payload_schema == "video.master.v2" else []
+    materials = _validate_graphic_assets(db, project_id, master, asset_refs) if master.payload_schema == "graphic.master.v2" else _validate_video_assets(db, project_id, master, asset_refs) if master.payload_schema == "video.master.v2" else _validate_wechat_assets(db, project_id, asset_refs) if capability["payload_schema"] == "wechat.article.v1" else []
     if master.payload_schema == "graphic.master.v2" and [card["image_ref_key"] for card in canonical["cards"]] != [ref["slot_key"] for ref in sorted(asset_refs, key=lambda item: item["sort_order"])]:
         raise HTTPException(422, {"code": "variant_asset_order_mismatch"})
-    if master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and asset_refs:
+    if master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and capability["payload_schema"] != "wechat.article.v1" and asset_refs:
         raise HTTPException(422, {"code": "variant_asset_mapping_unavailable"})
     _validate_evidence_refs(db, master, evidence_refs)
     if expected_adapted is not None and canonical != expected_adapted:
@@ -650,6 +708,8 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
                 _validate_graphic_assets(db, project_id, master, asset_refs)
             elif master.payload_schema == "video.master.v2":
                 _validate_video_assets(db, project_id, master, asset_refs)
+            elif row.payload_schema == "wechat.article.v1":
+                _validate_wechat_assets(db, project_id, asset_refs)
         except HTTPException:
             db.rollback()
             raise HTTPException(409, {"code": "variant_refs_changed"}) from None

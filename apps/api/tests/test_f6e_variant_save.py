@@ -1,5 +1,6 @@
 """First F6E append-only Text Variant save keeps exact source/profile and per-series CAS."""
 
+import hashlib
 from types import SimpleNamespace
 
 from sqlalchemy import select
@@ -10,7 +11,10 @@ from app.models import (
     ChannelVariantRevision,
     FactPack,
     FactPackItem,
+    Material,
+    MaterialRevision,
     ProjectEvent,
+    ProjectMaterialReference,
 )
 from app.seed import seed_v1_channel_profiles
 from app.services.channel_variants import _variant_context
@@ -328,6 +332,100 @@ def test_wechat_article_missing_required_cover_blocks_profile_check(client, db_s
     assert profile["status"] == "blocker"
     assert "cover_required" in profile["report"]["reasons"]
     assert checks.json()["ready"] is False
+
+
+def test_wechat_article_cover_is_exact_project_visible_media_and_revocation_blocks_save(client, db_session, tmp_path):
+    project, unit, master, headers = _source(client, db_session)
+    content = b"\x89PNG\r\n\x1a\nwechat cover bytes"
+    file = tmp_path / "wechat-cover.png"
+    file.write_bytes(content)
+    material = Material(title="公众号封面", kind="image", status="active")
+    db_session.add(material)
+    db_session.flush()
+    revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(content).hexdigest(), file_path=str(file),
+                                mime_type="image/png", status="active", public_use_allowed=True, rights_status="cleared")
+    db_session.add(revision)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active"))
+    db_session.commit()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    cover = {"material_revision_id": revision.id, "content_hash_snapshot": revision.content_hash,
+             "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"}}
+    body = {
+        "variant_key": "wechat-with-cover", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "wechat", "content_form": "article", "idempotency_key": "wechat-cover-1",
+        "source_kind": "deterministic_adapt",
+        "payload": {"title": "原稿", "blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "有来源的原文"}]},
+        "asset_refs": [cover],
+    }
+    invalid = client.post(path, json={**body, "idempotency_key": "wrong-cover", "asset_refs": [{**cover, "content_hash_snapshot": "f" * 64}]}, headers=headers)
+    assert invalid.status_code == 422, invalid.text
+    assert client.get(path, headers=headers).json()["items"] == []
+    saved = client.post(path, json=body, headers=headers)
+    assert saved.status_code == 201, saved.text
+    assert saved.json()["assets"][0]["material_revision_id"] == revision.id
+    checks = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checks.status_code == 200, checks.text
+    statuses = {item["check_kind"]: item["status"] for item in checks.json()["items"]}
+    assert statuses["variant_profile"] == "pass"
+    assert statuses["variant_evidence"] == "pass"
+    assert statuses["variant_rights"] == "pass"
+    assert statuses["variant_package"] == "incomplete"
+    project_ref = db_session.scalar(select(ProjectMaterialReference).where(
+        ProjectMaterialReference.project_id == project, ProjectMaterialReference.material_revision_id == revision.id,
+    ))
+    project_ref.status = "detached"
+    db_session.commit()
+    unshared = client.post(path, json={**body, "variant_key": "wechat-unshared", "idempotency_key": "wechat-unshared-1"}, headers=headers)
+    assert unshared.status_code == 422, unshared.text
+    project_ref.status = "active"
+    db_session.commit()
+    revision.public_use_allowed = False
+    db_session.commit()
+    assert "assets_or_render_changed" in client.get(f"{path}/{saved.json()['id']}/checks", headers=headers).json()["drift_reasons"]
+    denied = client.post(path, json={**body, "variant_key": "wechat-revoked", "idempotency_key": "wechat-revoked-1"}, headers=headers)
+    assert denied.status_code == 422, denied.text
+
+
+def test_wechat_preview_inherits_exact_source_master_cover_without_copying_bytes(client, db_session, tmp_path):
+    project, unit, master, headers = _source(client, db_session)
+    content = b"\x89PNG\r\n\x1a\nsource cover bytes"
+    file = tmp_path / "source-cover.png"
+    file.write_bytes(content)
+    material = Material(title="源稿封面", kind="image", status="active")
+    db_session.add(material)
+    db_session.flush()
+    revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(content).hexdigest(), file_path=str(file),
+                                mime_type="image/png", status="active", public_use_allowed=True, rights_status="cleared")
+    db_session.add(revision)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active"))
+    db_session.commit()
+    master_path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    newer = client.post(master_path, json={
+        "idempotency_key": "master-with-cover", "expected_revision": 1, "payload_schema": "text.master.v2", "payload": master["payload"],
+        "asset_refs": [{"material_revision_id": revision.id, "content_hash": revision.content_hash, "role": "cover",
+                        "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"}}],
+    }, headers=headers)
+    assert newer.status_code == 200, newer.text
+    source = newer.json()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    intent = {"source_master_revision_id": source["id"], "expected_source_payload_hash": source["payload_hash"],
+              "expected_source_context_hash": source["context_hash"], "channel_id": "wechat", "content_form": "article"}
+    preview = client.post(f"{path}/adapt-preview", json=intent, headers=headers)
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["asset_refs"] == [{"material_revision_id": revision.id, "content_hash_snapshot": revision.content_hash,
+                                              "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"}}]
+    dropped = client.post(path, json={**intent, "variant_key": "inherited-cover", "expected_revision": 0,
+                                       "idempotency_key": "drop-cover", "source_kind": "deterministic_adapt",
+                                       "payload": preview.json()["payload"], "asset_refs": []}, headers=headers)
+    assert dropped.status_code == 422, dropped.text
+    saved = client.post(path, json={**intent, "variant_key": "inherited-cover", "expected_revision": 0,
+                                     "idempotency_key": "inherited-cover-1", "source_kind": "deterministic_adapt",
+                                     "payload": preview.json()["payload"], "asset_refs": preview.json()["asset_refs"]}, headers=headers)
+    assert saved.status_code == 201, saved.text
+    assert saved.json()["assets"][0]["material_revision_id"] == revision.id
 
 
 def test_unmapped_manual_text_claim_is_not_evidence_verified(client, db_session):

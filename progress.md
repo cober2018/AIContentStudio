@@ -1,5 +1,9 @@
 # 当前进度
 
+## 2026-09-30：F6E 公众号封面适配
+
+- WeChat article Variant 现可引用一个项目可见的 exact cover MaterialRevision（含实时 bytes/hash/MIME/public-use），并可从已有 Text Master 继承同形封面；不匹配、撤权、取消项目引用或静默丢弃均 fail closed。适配输出与素材 sidecar 分离，历史 Master/Variant 不重写。相关定向 37 passed；全后端 `1090 passed / 2 skipped / 7 warnings`，Ruff、OpenSpec strict 30/30、diff-check PASS。F6E 6.1 核销，进度 29/100；受控公众号适配不等于本地包或远端草稿箱可用。
+
 ## 2026-09-30：F6E 分项 Profile/Evidence/Rights 检查
 
 - 项目级 Variant POST checks 现在追加 schema、精确 Profile/rule、Evidence 和 live Rights 四类结果；小红书另追加实际 render attestation/素材结果。公众号缺必需封面为 blocker，未知 RuleSet 或未经语义核实的新增 claim/citation 为 incomplete；远端能力不冒充 verified。新增 `variant_package` 必需项暂不执行，整体仍非 Candidate-ready。定向 31 passed；全后端 `1088 passed / 2 skipped / 7 warnings`，Ruff、OpenSpec strict 30/30、diff-check PASS。F6E 7.2 核销，进度 28/100；7.3/7.5 尚未完整完成。

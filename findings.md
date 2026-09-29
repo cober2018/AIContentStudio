@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-30 F6E 公众号封面引用
+
+- 已发布 WeChat article Profile 要求封面；此前 Text Variant 无法携带任何素材，因此正文适配即使成功也永远过不了 Profile 闸门。现只开放一个有界 `cover` sidecar，锚定项目可见的精确 MaterialRevision、内容哈希、文件字节/MIME 与实时公开权利；其它 Text/X 素材仍 fail closed。
+- Text Master 已有同形封面时，预览显式继承这一个 exact ref，保存不可静默丢弃；新封面可从项目共享素材池显式选取。不复制图片字节，也不把本地包或远端发布冒充已完成。正文里复杂 inline media、证据继承、封面替换与 v5 package 仍是后续任务。
+
 ## 2026-09-30 F6E Profile 与安全检查覆盖边界
 
 - 精确发布 Profile 可以确定目标形态和必要封面/内图；X 单条的纯文字无需媒体，小红书图文的首张真实卡片可满足封面，公众号文章在当前 Text Variant 不支持封面引用时必须明确 `cover_required`，不可因正文结构合法就可冻结。

@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F6E 公众号封面精确引用
+
+- [x] /// 先写失败回归：公众号 Text Variant 绑定项目共享图片的 exact MaterialRevision/hash/字节/公开权利后，Profile 不再因缺封面阻断；伪造 hash、撤权或无项目可见性零写入。
+- [x] /// 仅在 `wechat.article.v1` 开放受限 `cover` ref，复用现有 ProjectMaterialReference/WorkflowOutput 与 live bytes 验证；保存和检查共享同一校验，提交前重验，Text Master 无素材路径不改。
+- [x] /// 回归、全套门禁、文档与本地提交；不提前核销全部 inherited refs/包/审批任务。
+
 ## 2026-09-29：F6E Variant Profile/Evidence/Rights 检查
 
 - [x] /// 对照 F6E 7.2–7.5 和 Registry published Profile，先写检查 RED：X 简单正文的精确 Profile/无素材权限通过；公众号缺必需封面保持 blocker；撤权证据/图片不能保持 pass。

@@ -67,7 +67,7 @@
 
 ## 6. Controlled registered-form adapters
 
-- [ ] 6.1 Implement WeChat article adaptation against the exact published registered form/profile.
+- [x] 6.1 Implement WeChat article adaptation against the exact published registered form/profile.
 - [ ] 6.2 Implement and separately verify controlled adaptation and local package projections for both published `x/thread` and `x/single` forms; keep each unavailable until its own adapter passes, and keep legacy `x_thread/thread` v3/v4 behavior unchanged.
 - [x] 6.3 Require Xiaohongshu image_note ordered actual image revisions, bytes/hash and public-use rights; reject prompt-only readiness.
 - [x] 6.4 Produce Douyin spoken_script with script/scenes/B-roll/voice text and no false final-video claim.
