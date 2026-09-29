@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F7 source_url 双用途歧义
+
+- F7 tasks 4.5 原写“Persist source URL/ref/license/provenance”，但 design/spec 同时禁止签名或凭据化抓取地址进入既有 `MaterialRevision.source_url`。`materials.create_revision()` 当前仅透传 `source_url`，因此不修规格容易让实施者把 provider fetch URL 当公开来源引用持久化。
+- F7 active spec 现区分 stable public citation URL 与 temporary fetch/preview URL：前者经正向安全验证后可保存；后者不得存储或回显。仅有歧义地址时以有界来源 ID 和单向哈希替代，不伪装成公开引用。实施时还须验证成功与失败路径的 MaterialRevision/审计/事件/API 脱敏；本次没有验证真实 Provider。
+
 ## 2026-09-29 F6D 独立复核缺口与 F6E 多系列当前性
 
 - D1 属消费契约错位：后端 frozen Video v2 已有 `script_blocks/timeline/voice/subtitles/overlays/music/cover`，Review UI 仍按 v1 `script/timeline_present` 渲染。前端按 v2 字段存在性分派、只读冻结结构，隔离浏览器实测历史 Candidate 在当前 Master 升版后保持原样。

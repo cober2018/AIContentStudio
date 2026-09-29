@@ -170,6 +170,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - PRD/需求背景：North Star 要求 Model/Tool/Data/Search/Image/Video/TTS/ASR/Renderer/Publisher 成为可替换且可验证的真实能力；注册或配置存在不等于可执行，更不等于特定账号的远端动作已验证。
 - 目录结构：[`openspec/changes/fe-f7-capability-integrations-delivery/`](openspec/changes/fe-f7-capability-integrations-delivery/proposal.md) 含 proposal、design、105 项任务，以及新增 Capability 规格和 FE-F2/System Assets/Settings/FE-F4 四份 delta；用户总包源稿保持原样。未来实施复用 `apps/api/app/services/content_harness/registry.py`、`data_source_plugins.py`、`connector_service.py`、`materials.py` 与 `delivery.py`，不重造其真源。
 - 已完成：审计原 F7 十条要求及当前 registry/Connector/Material/Delivery/Settings 路径，补 exact-scoped verification、Provider 响应/错误/审计脱敏、媒体字节和许可验证、项目精确引用、未验证 legacy auto-draft 不得绕过远端闸门；进一步把现有 MaterialRevision 的 prompt/URL/metadata 与 ConnectorEndpoint 失败原因纳入安全投影契约，避免原始请求、签名链接或异常文本借既有字段泄漏。只完成规格归位，未改业务代码或迁移。
+- 规格预校准：F7 任务中“保存来源 URL”现明确仅允许经过正向验证的稳定公开引用地址；签名、带凭据或过期抓取/预览地址不能落入 `MaterialRevision.source_url`、元数据、审计或 API。无法证明引用地址安全时保留有界来源标识与单向哈希。此项只更新 active OpenSpec，不宣称 F7 实施或独立 SPEC review 已通过。
 - 待完成/TODO：F6C 已完成；F6D/F6E 实施验收后，再对 F7 做独立 SPEC review 与 apply 确认；实际 Provider 适配、隔离迁移、浏览器与真实账号验收均未开始，缺凭据则保持 unverified。
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
 - 依赖与启动：沿用当前 API/Vite 启动方式。规格预计仅为 CapabilityRegistration/CapabilityVerification 加可逆迁移，实际实现前复核当前 migration head；不 push/deploy/运行生产迁移，不同步 canonical 或归档。

@@ -1,5 +1,10 @@
 # 当前进度
 
+## 2026-09-29：F7 搜索素材来源地址规格预校准
+
+- 在等待 F6D 8.4 与 F6E SPEC 独立定向复核期间，只读审计发现 F7 task 4.5 的“保存来源 URL”可能与既有签名 URL 禁存契约产生歧义；当前 `materials.create_revision()` 的 `source_url` 是原样传入持久层的字段。现仅修 F7 design/tasks/Capability delta：公开稳定引用地址须正向校验，临时签名抓取/预览地址不得落库或回显；无法证明安全时保留来源标识和单向哈希。没有修改业务代码、迁移或 F6E 门槛。
+- OpenSpec all-strict 30/30、`git diff --check` 通过；F7 仍未 apply，F6D 78/79、F6E 2/100。F7 后续仍需独立 SPEC review、真实凭据/账号授权与实际平台 read-back 才能宣称外部能力 verified。
+
 ## 2026-09-29：F6D D1–D3 修复与 F6E E1 规格校准
 
 - 外部独立复核基线 `main@364a49a` 给出 F6D 三项实施问题与 F6E 一项需求缺口；本地逐段核对后，仅修 Video v2 冻结 Review 结构展示、跨轨道 `(role, slot_key)` 唯一性与非法枚举类型的 422 领域错误。既有 v1/Text/Graphic 分支未改；没有新增表或迁移。

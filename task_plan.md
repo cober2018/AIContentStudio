@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F7 搜索来源地址安全契约预校准（仅规格）
+
+- [x] /// 对照 F7 design/tasks/Capability delta 与 `MaterialRevision.source_url`/`create_revision()`，确认“记录来源 URL”和“禁止签名抓取 URL”之间的实施歧义。
+- [x] /// 只在 F7 active OpenSpec 区分可公开稳定引用地址与临时获取地址，明确后者不得进素材/审计/响应；同步 README/progress/findings。
+- [x] /// 运行 OpenSpec all-strict、diff-check 与保留性检查，只提交本轮规格文档到本地 main；不实施 F7 业务代码。
+
 ## 2026-09-29：F6D 独立复核修复与 F6E 当前性规格补丁
 
 目标：只关闭复核 D1–D3 和 E1；F6D 8.4 与 F6E business apply 仍需外部定向复核。

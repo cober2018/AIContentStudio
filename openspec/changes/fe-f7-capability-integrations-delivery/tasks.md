@@ -49,7 +49,7 @@
 - [ ] 4.2 Return bounded candidate metadata only.
 - [ ] 4.3 Add explicit import/save action.
 - [ ] 4.4 Download/verify bytes/MIME/hash.
-- [ ] 4.5 Persist source URL/ref/license/provenance.
+- [ ] 4.5 Persist only a positively validated stable public citation URL in `MaterialRevision.source_url`, or a bounded source identifier plus one-way URL/input hash when the URL is ambiguous; never persist a signed/credential-bearing/expiring fetch or preview URL in material metadata, audit, events or API results. Preserve license/provenance without raw provider payloads.
 - [ ] 4.6 Require rights fields before public-use readiness.
 - [ ] 4.7 Add project attachment flow.
 - [ ] 4.8 Add unavailable/provider failure tests.
