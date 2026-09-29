@@ -42,6 +42,12 @@ def _text(value: object, maximum: int, code: str) -> str:
     return value
 
 
+def _enum(value: object, allowed: set[str], code: str) -> str:
+    if not isinstance(value, str) or value not in allowed:
+        _fail(code)
+    return value
+
+
 def _ordered(value: object, *, maximum: int, code: str) -> list[dict]:
     if not isinstance(value, list) or len(value) > maximum:
         _fail(code)
@@ -113,13 +119,9 @@ def canonical_payload(raw: object) -> dict:
         if "source_material_revision_id" in shot:
             normalized["source_material_revision_id"] = _revision_id(shot["source_material_revision_id"], "video_source_revision_invalid")
         if "framing" in shot:
-            if shot["framing"] not in {"wide", "medium", "close", "custom"}:
-                _fail("video_framing_invalid")
-            normalized["framing"] = shot["framing"]
+            normalized["framing"] = _enum(shot["framing"], {"wide", "medium", "close", "custom"}, "video_framing_invalid")
         if "transition" in shot:
-            if shot["transition"] not in {"cut", "fade", "dissolve"}:
-                _fail("video_transition_invalid")
-            normalized["transition"] = shot["transition"]
+            normalized["transition"] = _enum(shot["transition"], {"cut", "fade", "dissolve"}, "video_transition_invalid")
         shots.append(normalized)
     result["shots"] = shots
     shot_ids = {shot["id"] for shot in shots}
@@ -131,8 +133,7 @@ def canonical_payload(raw: object) -> dict:
     tracks = []
     for raw_track in _ordered(timeline.get("tracks"), maximum=16, code="video_tracks_invalid"):
         track = _object(raw_track, {"id", "order", "kind", "items"}, "video_track_invalid")
-        if track.get("kind") not in {"video", "audio", "subtitle", "overlay", "music"}:
-            _fail("video_track_kind_invalid")
+        _enum(track.get("kind"), {"video", "audio", "subtitle", "overlay", "music"}, "video_track_kind_invalid")
         items = []
         for raw_item in _ordered(track.get("items"), maximum=300, code="video_timeline_items_invalid"):
             item = _object(raw_item, {"id", "order", "shot_id", "material_revision_id", "start_ms", "end_ms", "trim_start_ms", "trim_end_ms", "volume"}, "video_timeline_item_invalid")
@@ -167,8 +168,7 @@ def canonical_payload(raw: object) -> dict:
     result["timeline"] = {"duration_ms": duration, "tracks": tracks}
 
     voice = _object(payload.get("voice"), {"mode", "material_revision_id"}, "video_voice_invalid")
-    if voice.get("mode") not in {"none", "recorded", "tts"}:
-        _fail("video_voice_invalid")
+    _enum(voice.get("mode"), {"none", "recorded", "tts"}, "video_voice_invalid")
     if (voice["mode"] == "none") == ("material_revision_id" in voice):
         _fail("video_voice_revision_invalid")
     result["voice"] = {"mode": voice["mode"]}
@@ -309,9 +309,13 @@ def _expected_media(document: dict) -> list[dict]:
 
 def validate_references(payload: object, asset_refs: object, evidence_refs: object) -> None:
     document = canonical_payload(payload)
-    if not isinstance(asset_refs, list) or not isinstance(evidence_refs, list) or len(asset_refs) != len(_expected_media(document)):
+    expected_media = _expected_media(document)
+    slots = [(ref["role"], ref["slot_key"]) for ref in expected_media]
+    if len(slots) != len(set(slots)):
+        _fail("video_asset_slot_duplicate")
+    if not isinstance(asset_refs, list) or not isinstance(evidence_refs, list) or len(asset_refs) != len(expected_media):
         _fail("video_reference_count_mismatch")
-    for actual, expected in zip(asset_refs, _expected_media(document), strict=True):
+    for actual, expected in zip(asset_refs, expected_media, strict=True):
         if not isinstance(actual, dict) or set(actual) - {*expected, "content_hash"}:
             _fail("video_asset_placement_mismatch")
         if any(actual.get(key) != value for key, value in expected.items()):

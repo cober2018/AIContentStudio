@@ -34,7 +34,7 @@
 
 - [ ] 3.1 Add authorized list/current/detail/history APIs; raw-ID reads must use the same Project/Unit boundary.
 - [ ] 3.2 Add non-durable adapt-preview against exact current source Master and target profile.
-- [ ] 3.3 Add append-only save with variant_key/head CAS, unit-scoped idempotency and atomic event/ref writes.
+- [ ] 3.3 Add append-only save with variant_key/head CAS, `(unit_id, variant_key, idempotency_key)` series-scoped idempotency and atomic event/ref writes.
 - [ ] 3.4 Reject a variant_key changing its channel/form or pointing to another Unit's Master.
 - [ ] 3.5 Freeze exact source Master ID/payload/context and pinned IdentitySnapshot; preserve original source channel/form.
 - [ ] 3.6 Freeze exact published target profile, adapter and rule version/config hashes.
@@ -94,6 +94,7 @@
 - [ ] 8.6 Add v5 Freeze CAS/idempotency/currentness/live rights/evidence/bytes/render gates.
 - [ ] 8.7 Populate Candidate variant FK only for v5, leave legacy Draft/Topic/Master Candidate source FKs null, and derive source Master through Variant plus manifest; assert channel/form/artifact_kind projection columns match frozen target/profile. Keep v3/v4 source dispatch and history unchanged.
 - [ ] 8.8 Prove an invalid v5 freeze never falls back to v4/v3 or creates Approval/DeliveryTarget.
+- [ ] 8.9 Scope v5 Candidate freeze/currentness to `(unit_id, variant_key)` and exact current Variant revision; same-series new revision/Candidate supersedes only that series, never other series merely by larger Candidate ID. Preserve v3/v4 currentness and their coexistence with v5.
 
 ## 9. Review Approval Delivery and Project read models
 
@@ -104,6 +105,7 @@
 - [ ] 9.5 Preserve existing authorized history, DeliveryAttempt/Receipt semantics and unknown reconciliation priority.
 - [ ] 9.6 Include Variant revisions/provenance in Project Versions and derive Overview without a second status table.
 - [ ] 9.7 Regress foreign/archived project raw-ID reads and mutations across Variant, Candidate and package APIs.
+- [ ] 9.8 Approve and authorize pre-frozen WeChat/X-thread/X-single v5 Candidates in arbitrary order; advancing only one series blocks its old Candidate but not other current series, while source Master/context/profile/rights/check drift still blocks affected series. Regress unchanged v3/v4 approval, authorization and existing target access alongside v5.
 
 ## 10. Frontend and route isolation
 

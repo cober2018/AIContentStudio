@@ -96,6 +96,20 @@ Candidate manifest v5 SHALL canonically freeze one current ChannelVariantRevisio
 ### Requirement: V5 Review and delivery use the exact approved result
 Review, Content Approval, Delivery Authorization and local package SHALL dispatch v5 separately from v3/v4, bind the immutable Candidate ID/hash and recheck applicable live safety gates. New v5 authorization SHALL match the frozen Variant target channel/form/profile, not the source Unit's channel; pinned IdentitySnapshot and any Unit-bound account MUST remain authorized. Free-form account profile data MUST NOT be treated as verified channel ownership: local packaging is labeled manual, and remote effects require exact account/channel/form/action verification. V3/v4 retain their Unit-channel rule. Publisher MUST NOT rewrite approved payload/media. Existing authorized history remains frozen, and unknown remote outcomes SHALL require reconciliation rather than automatic resend.
 
+V5 Candidate currentness SHALL be determined within its stable `(unit_id, variant_key)` series and exact current Variant revision. A later Variant revision or Candidate in the same series supersedes its predecessor; a greater Candidate ID in another series or in v3/v4 MUST NOT by itself stale this v5 Candidate. Source Master/context, target profile/adapter, live rights/evidence and required checks remain independently enforced and may stale multiple series. V3/v4 retain their existing currentness, approval and authorization semantics when coexisting with v5; schema dispatch MUST precede any Unit-wide latest-Candidate heuristic.
+
+#### Scenario: Approve three already-frozen channel series in arbitrary order
+- **WHEN** one source Master has current WeChat article, X thread and X single v5 Candidates frozen before any approval
+- **THEN** each may be approved and authorized in any order against its own series head, provided its other live gates remain current
+
+#### Scenario: Advance only one channel series
+- **WHEN** X thread receives a newer Variant revision and Candidate while WeChat article and X single remain unchanged
+- **THEN** old X thread is stale for new approval/authorization, but the other current series are not blocked merely by the larger Candidate ID
+
+#### Scenario: Source Master advances or legacy Candidate coexists
+- **WHEN** source Master/context drift affects v5 series, or a v3/v4 Candidate coexists with them
+- **THEN** affected v5 series fail their source-currentness gate while historical Candidates remain readable, and v3/v4 approval, authorization and target access retain their prior rules
+
 #### Scenario: Local package after approval
 - **WHEN** a current v5 Candidate is separately approved and authorized for a local action
 - **THEN** its package contains only frozen approved content and byte/hash-verified media without a remote call
