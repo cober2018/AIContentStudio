@@ -82,6 +82,20 @@ def test_image_note_preview_and_save_freeze_exact_rendered_image(client, db_sess
     assert saved.status_code == 201, saved.text
     assert saved.json()["assets"][0]["material_revision_id"] == image.id
     assert saved.json()["assets"][0]["content_hash"] == image.content_hash
+    checks = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checks.status_code == 200, checks.text
+    by_kind = {item["check_kind"]: item for item in checks.json()["items"]}
+    assert by_kind["variant_rights"]["status"] == "pass"
+    assert by_kind["variant_profile"]["status"] == "pass"
+    assert by_kind["variant_render"]["status"] == "pass"
+    assert by_kind["variant_package"]["status"] == "incomplete"
+    assert checks.json()["ready"] is False
+    image.public_use_allowed = False
+    db_session.commit()
+    drifted = client.get(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert drifted.status_code == 200, drifted.text
+    assert "assets_or_render_changed" in drifted.json()["drift_reasons"]
+    assert next(item for item in drifted.json()["items"] if item["check_kind"] == "variant_rights")["status"] == "stale"
 
 
 def test_image_note_preview_rejects_prompt_only_and_revoked_image(client, db_session, tmp_path):
