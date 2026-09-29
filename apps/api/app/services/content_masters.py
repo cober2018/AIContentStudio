@@ -535,6 +535,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     asset_inputs = payload.get("asset_refs", [])
     embedded = payload["payload"]["document"]["blocks"] if payload_schema == "text.master.v2" else []
     graphic_embedded = {(canvas["id"], layer["id"]): layer["type"] for canvas in payload["payload"]["canvases"] for layer in canvas["layers"] if layer["type"] in {"image", "chart"}} if payload_schema == "graphic.master.v2" else {}
+    video_track_kinds = {track["id"]: track["kind"] for track in payload["payload"]["timeline"]["tracks"]} if payload_schema == "video.master.v2" else {}
     for item in asset_inputs:
         material = db.get(MaterialRevision, item.get("material_revision_id"))
         if material is None or material.content_hash != item.get("content_hash"):
@@ -553,6 +554,25 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             content = read_bytes_checked(db, material, require_public=True)
             if not material.mime_type or not material.mime_type.startswith("image/") or sniff_mime(content, None) != material.mime_type:
                 raise HTTPException(422, {"code": "graphic_asset_bytes_or_mime_invalid"})
+        if payload_schema == "video.master.v2":
+            role = item["role"]
+            if role == "timeline_media":
+                track_kind = video_track_kinds[item["placement"]["track_id"]]
+                allowed_kinds = {"image", "video"} if track_kind == "video" else {"audio"} if track_kind in {"audio", "music"} else set()
+            else:
+                allowed_kinds = {
+                    "shot_source": {"image", "video"}, "voice_audio": {"audio"}, "music_audio": {"audio"},
+                    "cover_image": {"image"}, "render_output": {"video"},
+                }[role]
+            if material.material.kind not in allowed_kinds or material.material.status != "active" or material.status in {"revoked", "archived"} or material.public_use_allowed is not True:
+                raise HTTPException(422, {"code": "video_asset_kind_or_rights_invalid"})
+            try:
+                content = read_bytes_checked(db, material, require_public=True)
+            except (HTTPException, OSError) as exc:
+                raise HTTPException(422, {"code": "video_asset_bytes_unverified"}) from exc
+            expected_prefix = "image/" if material.material.kind == "image" else "audio/" if material.material.kind == "audio" else "video/"
+            if not material.mime_type or not material.mime_type.startswith(expected_prefix) or (role == "render_output" and material.mime_type != "video/mp4") or sniff_mime(content, None) != material.mime_type:
+                raise HTTPException(422, {"code": "video_asset_bytes_or_mime_invalid"})
     for item in payload.get("evidence_refs", []):
         evidence = db.get(FactPackItem, item.get("fact_pack_item_id"))
         if boundary is None or evidence is None or evidence.fact_pack_id != boundary.fact_pack_id or not evidence.snapshot_checksum or evidence.snapshot_checksum != item.get("snapshot_checksum") or evidence.fact_pack.status != "frozen" or evidence.evidence_kind == "legacy_untyped":

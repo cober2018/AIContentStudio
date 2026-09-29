@@ -22,9 +22,9 @@
 ## 2. Exact media refs and v1 upgrade
 
 - [x] 2.1 Map every source visual/audio/music/cover/final-render use to an exact role and placement ref.
-- [ ] 2.2 Validate project visibility, media kind, byte existence/hash and live public-use rights at save.
-- [ ] 2.3 Allow repeated MaterialRevision use in distinct placements without copying bytes or collapsing refs.
-- [ ] 2.4 Reject foreign, wrong-kind, revoked, hash-mismatched or missing media atomically.
+- [x] 2.2 Validate project visibility, media kind, byte existence/hash and live public-use rights at save.
+- [x] 2.3 Allow repeated MaterialRevision use in distinct placements without copying bytes or collapsing refs.
+- [x] 2.4 Reject foreign, wrong-kind, revoked, hash-mismatched or missing media atomically.
 - [ ] 2.5 Implement v1→v2 upgrade preview that identifies provable fields and conversion warnings.
 - [ ] 2.6 Implement explicit append-only v1→v2 fork with expected payload/context/head CAS and idempotency.
 - [ ] 2.7 Keep generic save cross-schema protection and old v1/Candidate hashes unchanged.

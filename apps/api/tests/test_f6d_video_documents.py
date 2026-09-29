@@ -1,5 +1,6 @@
 """Video v2 document and exact-profile contract regressions."""
 
+import hashlib
 import importlib
 import importlib.util
 
@@ -156,3 +157,63 @@ def test_video_v2_readiness_uses_exact_published_profile(client, db_session):
     readiness = client.get(f"{path}/{saved.json()['id']}/readiness", headers=headers)
     assert readiness.status_code == 200, readiness.text
     assert "video_shot_count_above_profile_maximum" in readiness.json()["adapter_availability"]["reasons"]
+
+
+def test_video_v2_source_media_reuse_requires_live_kind_bytes_rights_and_project_reference(client, db_session, tmp_path):
+    from app.models import (
+        ContentMasterAssetRef,
+        ContentMasterRevision,
+        Material,
+        MaterialRevision,
+        ProjectMaterialReference,
+    )
+
+    headers = {"X-Studio-User": "video-media@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "媒体作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "媒体项目"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "双镜头", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    content = b"\x89PNG\r\n\x1a\nvideo source still"
+    file = tmp_path / "still.png"
+    file.write_bytes(content)
+    material = Material(title="源画面", kind="audio", status="active")
+    db_session.add(material)
+    db_session.flush()
+    revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(content).hexdigest(), file_path=str(file), mime_type="image/png", status="candidate", public_use_allowed=True, rights_status="cleared")
+    db_session.add(revision)
+    db_session.flush()
+    project_ref = ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active")
+    db_session.add(project_ref)
+    db_session.commit()
+    payload = _document()
+    payload["shots"][0]["source_material_revision_id"] = revision.id
+    payload["shots"].append({**payload["shots"][0], "id": "shot-2", "order": 1})
+    refs = [
+        {"material_revision_id": revision.id, "content_hash": revision.content_hash, "role": "shot_source", "slot_key": shot_id, "sort_order": index, "placement": {"shot_id": shot_id}}
+        for index, shot_id in enumerate(("shot-1", "shot-2"))
+    ]
+    wrong_kind = client.post(path, json={"idempotency_key": "wrong-kind", "payload_schema": "video.master.v2", "payload": payload, "asset_refs": refs}, headers=headers)
+    assert wrong_kind.status_code == 422, wrong_kind.text
+    material.kind = "image"
+    db_session.commit()
+    wrong_hash = client.post(path, json={"idempotency_key": "wrong-hash", "payload_schema": "video.master.v2", "payload": payload, "asset_refs": [{**refs[0], "content_hash": "f" * 64}, refs[1]]}, headers=headers)
+    assert wrong_hash.status_code == 422, wrong_hash.text
+    accepted = client.post(path, json={"idempotency_key": "two-placements", "payload_schema": "video.master.v2", "payload": payload, "asset_refs": refs}, headers=headers)
+    assert accepted.status_code == 200, accepted.text
+    assert [item["slot_key"] for item in accepted.json()["assets"]] == ["shot-1", "shot-2"]
+    project_ref.status = "detached"
+    db_session.commit()
+    foreign = client.post(path, json={"idempotency_key": "not-visible", "expected_revision": 1, "payload_schema": "video.master.v2", "payload": payload, "asset_refs": refs}, headers=headers)
+    assert foreign.status_code == 422, foreign.text
+    project_ref.status = "active"
+    db_session.commit()
+    file.write_bytes(b"corrupted bytes")
+    bad_bytes = client.post(path, json={"idempotency_key": "bad-bytes", "expected_revision": 1, "payload_schema": "video.master.v2", "payload": payload, "asset_refs": refs}, headers=headers)
+    assert bad_bytes.status_code == 422, bad_bytes.text
+    file.write_bytes(content)
+    revision.public_use_allowed = False
+    db_session.commit()
+    revoked = client.post(path, json={"idempotency_key": "revoked", "expected_revision": 1, "payload_schema": "video.master.v2", "payload": payload, "asset_refs": refs}, headers=headers)
+    assert revoked.status_code == 422, revoked.text
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 1
+    assert db_session.query(ContentMasterAssetRef).count() == 2
