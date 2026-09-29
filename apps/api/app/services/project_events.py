@@ -19,6 +19,7 @@ EVENT_TYPES = frozenset({
     "project.created_from_opportunity",
     "content_master.saved",
     "content_master.generated",
+    "channel_variant.saved",
 })
 
 

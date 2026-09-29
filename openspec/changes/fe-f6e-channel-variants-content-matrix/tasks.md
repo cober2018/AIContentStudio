@@ -9,7 +9,7 @@
 ## 1. Additive persistence and migration
 
 - [x] 1.1 Add append-only ChannelVariantRevision model with exact project/unit/source Master/Identity/profile/adapter, versioned `payload_schema`, canonical `payload_json`/`payload_hash`, context hash, source_kind and edit-summary provenance fields.
-- [ ] 1.2 Add stable variant_key and per-series revision, parent, expected-head, idempotency key and request fingerprint constraints.
+- [x] 1.2 Add stable variant_key and per-series revision, parent, expected-head, idempotency key and request fingerprint constraints.
 - [x] 1.3 Add exact ChannelVariantAssetRef role/order/placement/hash/rights snapshot model.
 - [x] 1.4 Add exact ChannelVariantEvidenceRef FactPackItem/checksum/locator model.
 - [x] 1.5 Add append-only ChannelVariantCheckRun model with input/profile/adapter/rule hash.
@@ -35,8 +35,8 @@
 - [x] 3.1 Add authorized list/current/detail/history APIs; raw-ID reads must use the same Project/Unit boundary.
 - [ ] 3.2 Add non-durable adapt-preview against exact current source Master and target profile.
 - [ ] 3.3 Add append-only save with variant_key/head CAS, `(unit_id, variant_key, idempotency_key)` series-scoped idempotency and atomic event/ref writes.
-- [ ] 3.4 Reject a variant_key changing its channel/form or pointing to another Unit's Master.
-- [ ] 3.5 Freeze exact source Master ID/payload/context and pinned IdentitySnapshot; preserve original source channel/form.
+- [x] 3.4 Reject a variant_key changing its channel/form or pointing to another Unit's Master.
+- [x] 3.5 Freeze exact source Master ID/payload/context and pinned IdentitySnapshot; preserve original source channel/form.
 - [ ] 3.6 Freeze exact published target profile, adapter and rule version/config hashes.
 - [ ] 3.7 Persist inherited and edited final MaterialRevision refs with distinct placements and no byte copy.
 - [ ] 3.8 Persist eligible FactPackItem/checksum/locator refs without expanding the frozen Fact Boundary.
