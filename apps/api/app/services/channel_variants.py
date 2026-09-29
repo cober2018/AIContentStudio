@@ -17,6 +17,7 @@ from ..models import (
     ContentMasterAssetRef,
     ContentMasterEvidenceRef,
     ContentMasterRevision,
+    ContentUnit,
     FactPack,
     FactPackItem,
     IdentitySnapshot,
@@ -294,8 +295,71 @@ def _check_inputs(db: Session, row: ChannelVariantRevision) -> tuple[str, list[d
                   "evidence": evidence_refs}), asset_refs, evidence_refs
 
 
+def _drift_reasons(db: Session, row: ChannelVariantRevision) -> list[str]:
+    from .content_masters import _serialize as serialize_master
+
+    reasons: list[str] = []
+    current_variant_id = db.scalar(select(ChannelVariantRevision.id).where(
+        ChannelVariantRevision.content_unit_id == row.content_unit_id,
+        ChannelVariantRevision.variant_key == row.variant_key,
+    ).order_by(ChannelVariantRevision.revision_no.desc()).limit(1))
+    if current_variant_id != row.id:
+        reasons.append("variant_revision_not_current")
+    master = db.get(ContentMasterRevision, row.source_master_revision_id)
+    if (master is None or master.project_id != row.project_id or master.content_unit_id != row.content_unit_id
+            or _current_source_id(db, row.content_unit_id) != row.source_master_revision_id):
+        return ["source_master_not_current"]
+    if (master.payload_hash != row.source_master_payload_hash or master.payload_hash != _hash(master.payload_json)
+            or master.context_hash != row.source_master_context_hash
+            or serialize_master(db, master)["readiness"]["state"] == "stale"):
+        reasons.append("source_master_changed")
+    _, asset_refs, evidence_refs = _check_inputs(db, row)
+    try:
+        _validate_evidence_refs(db, master, evidence_refs)
+    except HTTPException:
+        reasons.append("evidence_changed")
+    try:
+        if master.payload_schema == "graphic.master.v2":
+            _validate_graphic_assets(db, row.project_id, master, asset_refs)
+        elif master.payload_schema == "video.master.v2":
+            _validate_video_assets(db, row.project_id, master, asset_refs)
+        elif asset_refs:
+            reasons.append("asset_mapping_unavailable")
+    except HTTPException:
+        reasons.append("assets_or_render_changed")
+    unit = db.get(ContentUnit, row.content_unit_id)
+    identity = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit and unit.identity_snapshot_id else None
+    if unit is None or unit.identity_snapshot_id != row.identity_snapshot_id:
+        reasons.append("identity_changed")
+    try:
+        capability = capability_for(db, master.payload_schema, row.channel_id, row.content_form)
+    except AdapterUnavailable:
+        capability = {"executable": False}
+    if not capability.get("executable"):
+        reasons.append("profile_or_adapter_unavailable")
+    else:
+        profile = db.get(ChannelTemplateVersion, capability["profile_version_id"])
+        form_profile = (profile.profile_json or {}).get("content_forms", {}).get(row.content_form, {}) if profile else {}
+        rule_hash = _hash(form_profile.get("rule_sets") or [])
+        if (row.profile_template_version_id != capability["profile_version_id"]
+                or row.profile_version != str(capability["profile_version"])
+                or row.profile_hash != capability["profile_hash"]
+                or row.adapter_key != capability["adapter_key"]
+                or row.adapter_version != capability["adapter_version"]
+                or row.artifact_kind != capability["artifact_kind"]
+                or row.payload_schema != capability["payload_schema"]
+                or row.rule_hash != rule_hash):
+            reasons.append("profile_or_adapter_changed")
+        elif _hash(_variant_context(master, unit.identity_snapshot_id if unit else None,
+                                    identity.checksum if identity else None, row.channel_id, row.content_form,
+                                    capability, rule_hash)) != row.context_hash:
+            reasons.append("variant_context_changed")
+    return reasons
+
+
 def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
     input_hash, _, _ = _check_inputs(db, row)
+    drift_reasons = _drift_reasons(db, row)
     required = ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
     if row.payload_schema == "xiaohongshu.image_note.v1":
         required = (*required, "variant_render")
@@ -305,13 +369,13 @@ def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
         latest = db.scalar(select(ChannelVariantCheckRun).where(
             ChannelVariantCheckRun.variant_revision_id == row.id, ChannelVariantCheckRun.check_kind == kind,
         ).order_by(ChannelVariantCheckRun.id.desc()).limit(1))
-        is_current = bool(latest and latest.input_hash == input_hash and latest.profile_hash == row.profile_hash
+        is_current = bool(not drift_reasons and latest and latest.input_hash == input_hash and latest.profile_hash == row.profile_hash
                           and latest.adapter_hash == adapter_hash and latest.rule_hash == row.rule_hash)
         items.append({"id": latest.id if latest else None, "check_kind": kind, "input_hash": latest.input_hash if latest else None,
                       "is_current": is_current, "stored_status": latest.status if latest else None,
                       "status": latest.status if is_current else "stale" if latest else "incomplete",
-                      "report": latest.report_json if latest else {"reason": "check_missing"}})
-    return {"items": items, "ready": all(item["status"] == "pass" for item in items)}
+                      "report": {"reasons": drift_reasons} if drift_reasons else latest.report_json if latest else {"reason": "check_missing"}})
+    return {"items": items, "ready": not drift_reasons and all(item["status"] == "pass" for item in items), "drift_reasons": drift_reasons}
 
 
 def get_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: int, user: User) -> dict:
@@ -330,7 +394,7 @@ def run_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: i
     current = db.scalar(select(ChannelVariantRevision.id).where(
         ChannelVariantRevision.content_unit_id == unit_id, ChannelVariantRevision.variant_key == row.variant_key,
     ).order_by(ChannelVariantRevision.revision_no.desc()).limit(1))
-    if current != row.id or _current_source_id(db, unit_id) != row.source_master_revision_id:
+    if current != row.id or _drift_reasons(db, row):
         raise HTTPException(409, {"code": "variant_not_current"})
     input_hash, assets, evidence = _check_inputs(db, row)
     try:
