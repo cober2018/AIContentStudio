@@ -194,9 +194,69 @@ class GraphicImageNoteAdapter:
         return self.render(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
 
 
+class VideoSpokenScriptAdapter:
+    """Project script and voice copy without a finished-video claim."""
+
+    contract = FIRST_BATCH[("douyin", "spoken_script")]
+
+    def capabilities(self) -> dict:
+        return {"deterministic_subset": True, "model_assisted": False, "remote_verified": False}
+
+    def canonicalize(self, payload: object, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        from .channel_variant_documents import canonical_payload
+
+        return canonical_payload(self.contract.payload_schema, payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+
+    def validate(self, payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> None:
+        self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+
+    def adapt(self, source_payload: dict, *, asset_refs: list[dict], evidence_refs: list[dict]) -> dict:
+        from .channel_variant_documents import VariantDocumentError
+        from .video_documents import VideoDocumentError
+        from .video_documents import canonical_payload as canonical_video_payload
+
+        if asset_refs or evidence_refs:
+            raise AdapterUnavailable("source_refs_require_explicit_mapping")
+        try:
+            source = canonical_video_payload(source_payload)
+        except VideoDocumentError as exc:
+            raise AdapterUnavailable("invalid_video_source") from exc
+        if source["voice"]["mode"] != "none" or source["subtitles"]["cues"] or source["overlays"] or source["music"] or source["cover"] or source.get("render_asset_ref"):
+            raise AdapterUnavailable("video_media_or_timing_requires_explicit_mapping")
+        blocks = {block["id"]: block["text"] for block in source["script"]["blocks"]}
+        if not source["shots"] or any("script_block_id" not in shot or not blocks[shot["script_block_id"]].strip() for shot in source["shots"]):
+            raise AdapterUnavailable("script_scene_mapping_incomplete")
+        if {shot["script_block_id"] for shot in source["shots"]} != set(blocks):
+            raise AdapterUnavailable("script_block_coverage_incomplete")
+        scenes = [
+            {"id": shot["id"], "order": index, "script": blocks[shot["script_block_id"]],
+             "voice_text": blocks[shot["script_block_id"]], "b_roll_ref_keys": []}
+            for index, shot in enumerate(source["shots"])
+        ]
+        try:
+            return self.canonicalize({"scenes": scenes})
+        except VariantDocumentError as exc:
+            raise AdapterUnavailable("adapted_payload_invalid") from exc
+
+    def preview(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        return {"schema": self.contract.payload_schema, "payload": self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)}
+
+    def render(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        item = self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+        return {"artifact_kind": "script", "scenes": item["scenes"], "estimated_srt": item.get("estimated_srt"), "finished_video": False}
+
+    def required_checks(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> tuple[str, ...]:
+        self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+        return ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
+
+    def package_projection(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        return self.render(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+
+
 for _text_target in (("wechat", "article"), ("x", "thread"), ("x", "single")):
     _EXECUTABLE_ADAPTERS[_text_target] = TextChannelAdapter(*_text_target)
 _EXECUTABLE_ADAPTERS[("xiaohongshu", "image_note")] = GraphicImageNoteAdapter()
+_EXECUTABLE_ADAPTERS[("douyin", "spoken_script")] = VideoSpokenScriptAdapter()
 
 
 def capability_for(db: Session, source_schema: str, channel: str, content_form: str) -> dict:
