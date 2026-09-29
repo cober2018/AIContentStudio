@@ -23,7 +23,7 @@ Existing `video.master.v1` and historical Candidates SHALL remain readable and h
 - **THEN** the server returns a conflict and leaves history unchanged
 
 ### Requirement: Every media use is an exact project-visible revision
-Every source visual, audio, music, cover and final render use SHALL bind an exact project-visible MaterialRevision, content hash, role and placement. Repeated use of one revision MUST preserve distinct placements. The system MUST validate media kind, live bytes/hash, rights and revocation at each applicable save and downstream gate; it MUST NOT copy source bytes into a parallel Video resource.
+Every source visual, audio, music, cover and final render use SHALL bind an exact project-visible MaterialRevision, content hash, role, slot key, canonical sort order and placement. Allowed roles are `shot_source`, `timeline_media`, `voice_audio`, `music_audio`, `cover_image` and `render_output`; slots SHALL use the stable declaration ID, except the sole final output uses `final`. Repeated use of one revision MUST preserve distinct placements. Duplicate role/slot, missing or orphan declarations and multiple final outputs MUST fail atomically. Role/slot/order/placement and revision hash SHALL bind to the Master; source refs participate in render-input hashing, while the final output is excluded from that input hash to avoid a cycle and is separately attested and frozen. The system MUST validate media kind, live bytes/hash, rights and revocation at each applicable save and downstream gate; it MUST NOT copy source bytes into a parallel Video resource.
 
 #### Scenario: Reuse source media in two shots
 - **WHEN** the same eligible MaterialRevision appears in two different shot placements
@@ -56,7 +56,7 @@ Selected recorded/TTS voice refs, subtitle text and cues, overlay text and cover
 - **THEN** the old Candidate continues to show its frozen cues and a new Master/check/render/Candidate path is required for the change
 
 ### Requirement: Derived Video operations create traceable child revisions
-Long-to-short, aspect-ratio conversion and shot-regeneration SHALL produce explicit append-only child Masters bound to exact source revision/hash/context and transformation intent, with optimistic concurrency and idempotency. A derived child MUST contain a concrete validated v2 payload supplied by an explicit user edit or a deterministic local transformation; intent alone MUST NOT be persisted as a successful derivation. If the requested result requires an unverified Provider, the operation MUST return typed unavailable without creating a child Master or media. They MUST NOT silently mutate the source revision or accept a stale head.
+Long-to-short, aspect-ratio conversion and shot-regeneration SHALL produce explicit append-only child Masters bound to exact source revision/hash/context and transformation intent, with optimistic concurrency and idempotency. Only a dedicated server operation may persist `source_kind=derived_video` and server-generated `edit_summary_json.derived_video` containing source ID/hash/context, operation kind, bounded parameters and result hash; ordinary save MUST reject client-forged derivation provenance. A derived child MUST contain a concrete validated v2 payload supplied by an explicit user edit or a deterministic local transformation; intent alone MUST NOT be persisted as a successful derivation. If the requested result requires an unverified Provider, the operation MUST return typed unavailable without creating a child Master or media. They MUST NOT silently mutate the source revision or accept a stale head.
 
 #### Scenario: Derive a short version
 - **WHEN** the user explicitly accepts a long-to-short transformation against a current source Master
@@ -89,7 +89,7 @@ Candidate-ready Video SHALL have one exact final video MaterialRevision with liv
 - **THEN** the server rejects that provenance and creates no new Master or Candidate
 
 ### Requirement: Video checks and differences are modality-aware
-Video v2 SHALL run schema-dispatched structure, timeline, identity and exact published video-profile checks through ContentMasterCheckRun. Missing semantic capability SHALL be reported as unavailable/partial, not PASS. Master and Review diffs SHALL compare stable script/shot/timeline/voice/subtitle/overlay/render identities without fabricated whole-video text similarity.
+Video v2 SHALL run schema-dispatched structure, timeline, identity and exact published video-profile checks through ContentMasterCheckRun. The exact published channel + content-form profile MAY specify bounded `video_requirements`: positive `max_duration_ms` and `max_shots`, bounded reduced positive integer `[width,height]` `allowed_aspect_ratios` pairs, and boolean `subtitle_required`/`cover_required`. Missing keys impose no invented rule; unknown/malformed keys or absent exact published profile are unavailable/invalid, never PASS. Profile version/rules participate in check and render-input freshness. Missing semantic capability SHALL be reported as unavailable/partial, not PASS. Master and Review diffs SHALL compare stable script/shot/timeline/voice/subtitle/overlay/render identities without fabricated whole-video text similarity.
 
 #### Scenario: Change one shot and one cue
 - **WHEN** a newer v2 revision changes a shot duration and a subtitle cue

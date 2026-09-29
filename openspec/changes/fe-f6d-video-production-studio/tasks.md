@@ -17,6 +17,7 @@
 - [ ] 1.7 Reject unknown fields, non-finite values, excessive counts/durations and infrastructure paths before persistence.
 - [ ] 1.8 Add `video.master.v2` schema dispatch without changing Video v1 or Text/Graphic adapter behavior.
 - [ ] 1.9 Make new professional Video drafts use v2; no frontend editor schema becomes a backend contract.
+- [ ] 1.10 Extend published exact `ContentFormSpec.video_requirements` with bounded typed keys; missing rules impose no constraint, invalid/unknown or legacy/wildcard rules cannot PASS.
 
 ## 2. Exact media refs and v1 upgrade
 
@@ -27,6 +28,8 @@
 - [ ] 2.5 Implement v1→v2 upgrade preview that identifies provable fields and conversion warnings.
 - [ ] 2.6 Implement explicit append-only v1→v2 fork with expected payload/context/head CAS and idempotency.
 - [ ] 2.7 Keep generic save cross-schema protection and old v1/Candidate hashes unchanged.
+- [ ] 2.8 Validate canonical role/slot/order/placement mapping for every declared use, including repeated revisions, missing/orphan refs and the sole render output.
+- [ ] 2.9 Permit only the verified `video.master.v1`→`video.master.v2` upgrade pair via preview/commit; ordinary save and other schema crossings remain forbidden.
 
 ## 3. Bounded timeline and derived lineage
 
@@ -38,6 +41,7 @@
 - [ ] 3.6 Implement explicit aspect-ratio child revision from exact source Master and concrete validated v2 result, not intent alone.
 - [ ] 3.7 Implement shot-regeneration child boundary; unavailable Provider returns no child/media or success receipt.
 - [ ] 3.8 Enforce source hash/context, expected head and idempotency for all derived operations.
+- [ ] 3.9 Create `derived_video` source kind and provenance only in the dedicated server operation; reject forged client source/edit-summary and idempotency fingerprint mismatch.
 
 ## 4. Provider and render honesty
 
@@ -60,6 +64,7 @@
 - [ ] 5.7 Build deterministic local package with approved MP4 bytes/hash, manifest and declared companions.
 - [ ] 5.8 Prove v2 package failure never falls back to Draft/v1 or performs remote publishing.
 - [ ] 5.9 Preserve v1/video and Text/Graphic Candidate/Review/package behavior.
+- [ ] 5.10 Extend frozen Candidate integrity dispatch to canonical Video v2 content, one exact video render-output ref/declaration/hash/MIME and ready input-bound render before Review/package.
 
 ## 6. Professional Video Studio
 
@@ -88,6 +93,7 @@
 - [ ] 7.8 In isolated browser, bind exact final MP4, run checks, freeze Candidate, Review, approve and download byte-matched local package.
 - [ ] 7.9 In isolated browser, verify rights revocation, stale render, disconnected Provider and no remote publication.
 - [ ] 7.10 Measure Video/common Production initial JS and enforce FE-P1/Tiptap/Graphic isolation gates.
+- [ ] 7.11 Regress malformed/unpublished Video profile, duplicate/missing media slots, forged derivation, forbidden upgrade pair and tampered frozen Video v2 render/content; prove no legacy fallback.
 
 ## 8. Final gates and handoff
 
