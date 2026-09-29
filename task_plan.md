@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6E 前置门槛核销（不进入 business apply）
+
+- [x] /// 对照 F6C 74/74 独立复核记录和 F6D 79/79 独立复核结论，核实 F6E 0.1 的前置条件。
+- [x] /// 只勾 F6E 0.1，更新 README/progress/findings；保留 F6E 0.2 独立 SPEC re-review 门槛和全部业务任务未执行。
+- [x] /// 运行 OpenSpec strict、diff-check 并范围提交本地 main；不触碰用户源包、业务代码、迁移或外部发布。
+
 ## 2026-09-29：F6D 独立复核收口与 F6E v5 来源字段窄修（仅规格）
 
 - [x] /// 核对外部复核结论与当前 ContentAsset/Master 字段、F6D/F6E 标准 change，明确 v5 的来源 FK 和工作流血缘。

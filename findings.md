@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F6E 前置门槛与独立规格复核分离
+
+- F6C `tasks.md` 74 项全勾，`progress.md` 记录后端、SPEC、前端独立复核 APPROVE；F6D `tasks.md` 79 项全勾，外部独立实施复核 APPROVE。F6E 0.1 可以作为历史依赖确认完成。
+- F6E 0.2 是不同门槛：当前 source-pointer 修订尚未收到独立 SPEC PASS。不能用 F6C/F6D 的审批替代 F6E 规格审批，也不能因为 0.1 完成就启动 v5 迁移/业务代码。
+
 ## 2026-09-29 F6D 独立结论与 F6E v5 source-pointer
 
 - 独立复核 `main@a51efe0` 明确 F6D 实施 `APPROVE`；复核方看了 D1–D3 实现、回归代码和浏览器证据，但未重跑报告中的 1026 项后端测试或 12 个浏览器 gate。8.4 可据复核结论关闭，F7 Provider/真实远端发布不因此变成已验证。

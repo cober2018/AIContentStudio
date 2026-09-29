@@ -1,5 +1,10 @@
 # 当前进度
 
+## 2026-09-29：F6E 0.1 前置门槛核销
+
+- 当前 `main@c1ee957`，F6C 标准任务 74/74 且独立复核记录为 APPROVE；F6D 标准任务 79/79，独立实施复核于 `main@a51efe0` APPROVE。F6D 4.5 是 F7 Provider/许可/脱敏移交，不要求 F7 真能力在 F6E 前完成。故只核销 F6E 0.1，进度 3/100；0.2 独立 SPEC re-review 仍未获得，业务 apply、迁移、主规格同步和归档均未启动。
+- 本轮 OpenSpec `validate --all --strict` 30/30 PASS、`git diff --check` PASS；只变更标准任务与 README/计划/发现/进度，不计为新的后端或浏览器回归。
+
 ## 2026-09-29：F6D 独立实施复核通过；F6E v5 来源字段窄修
 
 - 外部独立复核在 `main@a51efe0` 对 F6D D1–D3 给出 `APPROVE`，确认 Review 冻结 Video v2 展示、跨轨道重复媒体槽位、非法枚举值 422 与现有回归闭合；仅据此将 8.4 标记完成，F6D 79/79。复核方审查了实现/测试/验收记录，但未重跑原始命令；F7 真实 Provider 仍未实现。F6D 主规格同步与归档仍未执行。
