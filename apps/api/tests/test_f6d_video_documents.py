@@ -159,6 +159,25 @@ def test_video_v2_readiness_uses_exact_published_profile(client, db_session):
     assert "video_shot_count_above_profile_maximum" in readiness.json()["adapter_availability"]["reasons"]
 
 
+def test_video_v2_render_input_hash_changes_with_published_profile(client, db_session):
+    from app.models import ChannelTemplateVersion
+
+    headers = {"X-Studio-User": "video-profile-hash@studio.local"}
+    db_session.add(ChannelTemplateVersion(channel="video_hash_fixture", version=1, name="规则一版", status="published", profile_json={"content_forms": {"short": {"artifact_kind": "video", "video_requirements": {"max_shots": 2}}}}))
+    db_session.commit()
+    persona = client.post("/api/v1/content-personas", json={"name": "视频规则作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "规则哈希", "channels": ["video_hash_fixture"]}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "短片", "persona_id": persona, "modality": "video", "channel_id": "video_hash_fixture"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    saved = client.post(path, json={"idempotency_key": "profile-one", "payload_schema": "video.master.v2", "payload": _document(), "content_form": "short"}, headers=headers)
+    assert saved.status_code == 200, saved.text
+    first = client.get(f"{path}/{saved.json()['id']}/readiness", headers=headers).json()["render_input_hash"]
+    db_session.add(ChannelTemplateVersion(channel="video_hash_fixture", version=2, name="规则二版", status="published", profile_json={"content_forms": {"short": {"artifact_kind": "video", "video_requirements": {"max_shots": 3}}}}))
+    db_session.commit()
+    second = client.get(f"{path}/{saved.json()['id']}/readiness", headers=headers).json()["render_input_hash"]
+    assert second != first
+
+
 def test_video_v2_source_media_reuse_requires_live_kind_bytes_rights_and_project_reference(client, db_session, tmp_path):
     from app.models import (
         ContentMasterAssetRef,

@@ -77,8 +77,15 @@ def render_input_hash(db: Session, master: ContentMasterRevision) -> str:
     payload = {key: value for key, value in master.payload_json.items() if key != "render_asset_ref"}
     assets = db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id, ContentMasterAssetRef.role != "render_output").order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id)).all()
     evidence = db.scalars(select(ContentMasterEvidenceRef).where(ContentMasterEvidenceRef.master_revision_id == master.id).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id)).all()
+    video_profile = None
+    if master.payload_schema == "video.master.v2" and master.channel_id and master.content_form:
+        try:
+            form = resolve_content_form(db, master.channel_id, master.content_form)
+            video_profile = {"source": form.source, "version_id": form.profile_version_id, "artifact_kind": form.artifact_kind, "video_requirements": form.video_requirements, "media_requirements": form.media_requirements}
+        except ChannelRegistryError:
+            video_profile = {"unavailable": True}
     # Final outputs and revision IDs are excluded to avoid a render-hash cycle.
-    return _canonical_hash({"project_id": master.project_id, "unit_id": master.content_unit_id, "schema": master.payload_schema, "context_hash": master.context_hash, "payload": payload, "assets": [{"material_revision_id": item.material_revision_id, "content_hash": item.content_hash_snapshot, "role": item.role, "slot_key": item.slot_key, "sort_order": item.sort_order, "placement": item.placement_json, "rights": item.rights_snapshot_json} for item in assets], "evidence": [{"fact_pack_item_id": item.fact_pack_item_id, "checksum": item.snapshot_checksum, "role": item.role, "sort_order": item.sort_order, "locator": item.content_locator_json} for item in evidence]})
+    return _canonical_hash({"project_id": master.project_id, "unit_id": master.content_unit_id, "schema": master.payload_schema, "context_hash": master.context_hash, "payload": payload, "assets": [{"material_revision_id": item.material_revision_id, "content_hash": item.content_hash_snapshot, "role": item.role, "slot_key": item.slot_key, "sort_order": item.sort_order, "placement": item.placement_json, "rights": item.rights_snapshot_json} for item in assets], "evidence": [{"fact_pack_item_id": item.fact_pack_item_id, "checksum": item.snapshot_checksum, "role": item.role, "sort_order": item.sort_order, "locator": item.content_locator_json} for item in evidence], **({"video_profile": video_profile} if master.payload_schema == "video.master.v2" else {})})
 
 
 class ProductionModalityAdapter:
