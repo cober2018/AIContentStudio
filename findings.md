@@ -1,5 +1,28 @@
 # 配置记录
 
+## 2026-09-29 North Star 总包校准 / F6C 规格发现
+
+- F6C 自动渲染能力未经过项目级验证，先前能力投影仅覆盖搜索/生图/变体。现在自动渲染也显式返回 `configured/executable/verified=false`；客户端试图把保存声明冒充 `verified_renderer` 会得到类型化 422 且无新 Master。人工声明继续由服务端记录 `origin=manual`。这只关闭未验证来源的旁路，不等于已接入真实 Renderer。
+- 第二个 Graphic v2 Candidate 历史回归发现 Review 检查摘要只读取旧 `check_kind`，而 v4 冻结清单使用 `kind`，导致 UI 丢失检查名称。已兼容读取两种冻结格式；旧 Candidate 继续展示首版文字与检查输入哈希，新 Candidate 展示新正文及独立检查，结构化差异不制造文本相似度。
+- 隔离浏览器发现两项只靠单元 happy path 不会显露的问题：真实上传的 `MaterialRevision.status` 是 `candidate`，旧 Graphic v2 图层保存误要求不存在的 `active`；修复后仍拒绝 revoked/archived 和未授权字节。第二项是同一 revision 既为 `graphic_layer` 又为 `render_output` 时，v4 ZIP 循环按 revision ID 多次写同名 `render-2.png`；修复为先写冻结 media，再按 adapter 给定的画布顺序单独写每个 render，并用失败回归锁住文件名唯一性、顺序和哈希。
+- 隔离浏览器已证实 Brief/Boundary 新增后旧 Master 显式 stale，接纳上下文才可保存；文字层的 Unicode 选区绑定 exact FactPackItem 会使旧 render 引用失效，需重新绑定并显式人工确认输入哈希。检查中的 fact/identity 是 `warning`（模型使用受限、身份语义不可用），审批须逐条写处置；`awaiting_manual_receipt` 不是已发布。验收图片为真实上传字节及人工渲染声明，不证明图层预览与最终图片视觉同一，也不证明自动 Renderer 可执行。
+- 浏览器额外核实了归档只读与 CAS：有 Master/Candidate 的隔离 Unit 经 API 移除变为 archived，Graphic 标题、加画布、保存、检查、冻结、渲染确认全部禁用；另一个单元让页面保留本地修改后通过 API 写入下一版，旧页面保存显示 409，服务端历史只有初版和外部并发版。本地编辑没有被静默覆盖或伪装成已保存。
+- 本机环境的 `NO_PROXY/no_proxy` 含不合法端口片段，导致无关设置测试在 httpx URL 解析时出现 12 个失败；不改业务代码，使用 `env -u NO_PROXY -u no_proxy` 重跑同一全后端后 951 passed/2 skipped/5 warnings。F6C 定向加 F6A v4 包回归为 83 passed，前端模型 20/20，TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff 与 diff-check 通过。
+- Graphic 每画布最终图与嵌入图片是不同角色：本地图层/内容变更立即移除旧 render_output，显式绑定则只创建 canonical 顺序的精确声明/引用，不制造 attestation。用户需先保存，再对服务端返回的当前 render-input hash 确认；浏览器未完成该两步闭环，不能提前算通过。阶段画布上的前 12 个可见媒体层现在经 Header 鉴权取字节，并比对 MaterialRevision SHA256 后才用 blob 预览；仍不可被当作最终渲染。
+- Graphic 文字证据与 Text 同样只从当前 Project Fact Boundary 的 FactPackItem 列表选，选区从浏览器 UTF-16 转 Unicode code-point locator。纯模型将 claim 与 EvidenceRef 同步增删；过期边界/撤权证据不允许在 UI 绑定，服务端保存时仍原子校验。真实浏览器的选择/保存/回读尚未通过，不提前勾最终验收。
+- 新 Graphic UI 只读取 `GET /channels/{channel}` 返回的 published exact image form；`graphic_requirements.presets` 通过用户确认才改变当前画布尺寸，未配置/旧 text-classified form 保持不可直接冻结。几何、裁剪、样式与锁定操作先在本地模型按服务端相同范围阻断；服务端保存仍是最终真源。
+- Graphic 编辑若只更新画布而保留旧 `render_asset_ref`/`render_output`，虽然服务端输入哈希会阻断假 attestation，UI 草稿仍会展示误导性“旧最终图”。现在所有内容变更从本地 draft 移除旧最终输出；同文本 no-op 保留现有 claim/evidence。画布复制保留 exact MaterialRevision 但新建 placement、清空需要人工重新确认的 claim；项目素材列表仅为选择体验，服务端继续在保存/冻结/包阶段检查 live rights。
+- 旧 `/materials/generate` 会在通用生成路径直接给 `public_use_allowed=true`，并不能证明 F6C 的项目级 provider、版权/商用许可或结果核验。F6C 新 Project Graphic 能力边界因此 fail-closed 暴露 unavailable；真实 provider 接收/授权仍待 F7 验证，不将“接口可调用”包装成“生图可用”。新 Graphic UI 原先只提交未指定 schema 的 JSON，因此默认落历史 v1；现在显式提交 v2 typed draft，旧 v1 需单独升级。
+- Graphic v2 不应继续走 Text Master diff：原路由会返回 `unsupported_text_master_schema`。已按目标 Master schema 分派到只读 Graphic 差异，历史 v1 可以有界比较；稳定 layer ID 跨画布移动需要去重成单个 move，不能呈现为误导性的 remove+add。Review v2 从冻结 manifest 显示文字、卡片、exact render/checks；篡改的 manifest/hash 不可继续展示。真实两画布本地包已核实字节/顺序及撤权后 fail-closed；这只证明本地交付，不证明外部平台发布。
+- F6C 专业检查发现旧格式 FactPackItem.snapshot_json 可能是列表，直接按字典读取会 500；现在这种条目显式降低 semantic coverage，不能假称完整事实审查。Graphic 的文字层身份语义即使由 provider 验证，也不覆盖视觉身份，状态仍是 warning。已发布 exact image form 的版本/hash 应影响 platform check freshness，但未声明的尺寸/张数/封面规则不得臆造。
+- F6C 第一批实现发现：若全局将 `default_payload_schema("graphic")` 改成 v2，既有省略 schema 的 F6A 调用会被意外重解释。已将契约明确为“新 Graphic Studio 显式发送 v2；legacy 无 schema 仍是 v1”。变体引用只要求同文档无环，不与展示顺序绑定；否则用户重排画布会无故失败。两项均用失败→通过测试固定。
+- F6C render 复核发现：F6A 只按 canvas ID 集合验证覆盖，不按顺序或 render_output ref 的 slot/placement 验证。v2 adapter 已额外对 canonical 顺序、slot、placement、sort_order 做 fail-closed；v1 路径未改。全量测试的首次 12 个 `httpx.InvalidURL` 是继承的代理环境变量所致，去掉 `NO_PROXY/no_proxy` 后同一全量套件 935 passed/2 skipped。
+
+- 总包旧基线 `main@ca52aa5`/F6B 131/162 已过时；当前本地 `main@670dd49`/F6B 162/162，源包与 ZIP 保留未跟踪。后续规划任务数必须按当前代码重新校准，不能照旧勾选。
+- F6A 的 `MediaMasterAdapter` 已支持按 canvas ID 的 render-output 覆盖和手工输入哈希证明，但只比较 ID 集合，不保证 Canonical 画布顺序；F6C 必须冻结明确顺序并验证包字节排列。当前 Graphic 仍是 JSON 壳且默认 `graphic.master.v1`，普通保存禁止 v1→v2；需要独立升级路径。
+- 现有 `ContentMasterAssetRef` 可用 `slot_key`/placement 表示同一 MaterialRevision 的不同 layer，目标零新表可行。`MaterialRevision` 已有 provider/version/prompt/source/rights 字段，但旧通用生图 API 的 provider 成功不可自动证明公开/商用权利；F6C 的 project-scoped hook 不能沿用假授权。
+- Channel Registry 的历史小红书 `image_note` artifact_kind 为 `text`；F6C 不将其隐式改成 `image`。真正图文渠道适配留 F6E，F6C 用已发布的 exact image-classified profile 做直接 Graphic 闭环。
+
 ## 2026-09-29 FE-F6B FINAL-CLOSE 审计起点
 
 - 23.9 收尾只纳入标准 active change、F6B 源码/回归与本次记录；用户原始规格包/ZIP 不进提交，canonical specs 不更新，active change 暂不归档。Backend 本轮新跑 913 passed/2 skipped/5 warnings；前端修复后构建/预算复跑；最终归档是下一授权边界。

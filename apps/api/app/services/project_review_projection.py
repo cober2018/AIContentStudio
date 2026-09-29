@@ -116,16 +116,21 @@ def project_projection(db: Session, project: ContentProject) -> dict:
 
 
 def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict:
-    _verify_frozen_text_v2(current)
+    _verify_frozen_production(current)
     if previous is not None:
-        _verify_frozen_text_v2(previous)
+        _verify_frozen_production(previous)
     prior = previous.candidate_manifest_json or {} if previous else {}
     latest = current.candidate_manifest_json or {}
     sections = ("content", "content_master", "brief", "assets", "evidence_refs", "media", "evidence", "identity", "production", "checks", "render", "channel", "content_form", "citations", "declarations")
     changed = {name: {"changed": prior.get(name) != latest.get(name)} for name in sections}
     modality = (latest.get("project") or {}).get("modality", "text")
     if modality != "text":
-        return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id, "modality": modality, "changed_sections": changed, "text": None}
+        structured = None
+        if modality == "graphic" and previous and (prior.get("content_master") or {}).get("payload_schema") == "graphic.master.v2" and (latest.get("content_master") or {}).get("payload_schema") == "graphic.master.v2":
+            from .graphic_master_diff import diff_graphic_documents
+
+            structured = diff_graphic_documents(prior.get("content") or {}, latest.get("content") or {})
+        return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id, "modality": modality, "changed_sections": changed, "structured": structured, "text": None}
     structured = None
     if previous and prior.get("schema_version") == 4 and latest.get("schema_version") == 4 and (prior.get("content_master") or {}).get("payload_schema") == "text.master.v2" and (latest.get("content_master") or {}).get("payload_schema") == "text.master.v2":
         before_list = ((prior.get("content") or {}).get("document") or {}).get("blocks", [])
@@ -155,19 +160,33 @@ def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict
                                                  "similarity": round(SequenceMatcher(None, before, after).ratio(), 4)}}
 
 
-def _verify_frozen_text_v2(asset: ContentAsset) -> None:
+def _verify_frozen_production(asset: ContentAsset) -> None:
     manifest = asset.candidate_manifest_json or {}
-    if manifest.get("schema_version") != 4 or (manifest.get("content_master") or {}).get("payload_schema") != "text.master.v2":
+    schema = (manifest.get("content_master") or {}).get("payload_schema")
+    if manifest.get("schema_version") != 4 or schema not in {"text.master.v2", "graphic.master.v2"}:
         return
     render = manifest.get("render") or {}
-    body = render.get("body_markdown")
-    if candidate_hash(manifest) != asset.candidate_hash or not isinstance(body, str) or render.get("content_hash") != hashlib.sha256(body.encode()).hexdigest() or render.get("status") != "ready":
+    if candidate_hash(manifest) != asset.candidate_hash or render.get("status") != "ready":
         raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
+    if schema == "text.master.v2":
+        body = render.get("body_markdown")
+        if not isinstance(body, str) or render.get("content_hash") != hashlib.sha256(body.encode()).hexdigest():
+            raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
+    else:
+        from .graphic_documents import GraphicDocumentError, canonical_payload
+
+        try:
+            document = canonical_payload(manifest.get("content") or {})
+        except GraphicDocumentError as exc:
+            raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"}) from exc
+        outputs = render.get("outputs")
+        if not isinstance(outputs, list) or [item.get("canvas_id") for item in outputs if isinstance(item, dict)] != [canvas["id"] for canvas in document["canvases"]] or len(outputs) != len(document["canvases"]):
+            raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
 
 
 def candidate_preview(asset: ContentAsset) -> dict:
     """Preview the frozen snapshot, never the mutable current Master payload."""
-    _verify_frozen_text_v2(asset)
+    _verify_frozen_production(asset)
     manifest = asset.candidate_manifest_json or {}
     content = manifest.get("content") or {}
     modality = (manifest.get("project") or {}).get("modality", "text")
@@ -180,7 +199,14 @@ def candidate_preview(asset: ContentAsset) -> dict:
         preview.update({"markdown": markdown[:20_000], "truncated": len(markdown) > 20_000, "document_present": isinstance(content.get("document"), dict)})
     elif modality == "graphic":
         canvases = content.get("canvases") or []
-        preview.update({"canvas_count": len(canvases), "canvases": [{"id": row.get("id"), "order": row.get("order"), "width": row.get("width"), "height": row.get("height")} for row in canvases[:50]]})
+        if (manifest.get("content_master") or {}).get("payload_schema") == "graphic.master.v2":
+            from .graphic_documents import canonical_payload
+
+            canvases = canonical_payload(content)["canvases"]
+            outputs = {(item.get("canvas_id")): item for item in (manifest.get("render") or {}).get("outputs", [])}
+            preview.update({"canvas_count": len(canvases), "canvases": [{"id": row["id"], "order": row["order"], "width": row["width"], "height": row["height"], "role": row.get("role"), "text": "\n".join("".join(run["text"] for run in layer["runs"]) for layer in row["layers"] if layer["type"] == "text" and layer["visible"])[:4000], "layers": [{"id": layer["id"], "order": layer["order"], "type": layer["type"], "visible": layer["visible"], "material_revision_id": layer.get("material_revision_id")} for layer in row["layers"][:100]], "render_output": outputs.get(row["id"])} for row in canvases[:50]], "checks": [{"check_kind": item.get("kind") or item.get("check_kind"), "status": item.get("status"), "input_hash": item.get("input_hash")} for item in (manifest.get("checks") or [])[:50]]})
+        else:
+            preview.update({"canvas_count": len(canvases), "canvases": [{"id": row.get("id"), "order": row.get("order"), "width": row.get("width"), "height": row.get("height")} for row in canvases[:50]]})
     elif modality == "video":
         shots = content.get("shots") or []
         script = content.get("script") or ""

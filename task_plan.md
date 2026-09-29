@@ -1,5 +1,17 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：North Star 完整剩余开发（目标进行中）
+
+- [x] /// 读取一次性开发目标与总包；对照真实仓库，确认 F6B 已从总包旧基线 131/162 推进为本地 `main@670dd49` 的 162/162。
+- [x] /// 按 `openspec-propose` 将 F6C 图文工作台源包校准为标准 active change，补齐 Scenario、显式 v1 升级、冻结画布顺序、现有渠道分类与能力可用性边界。
+- [x] /// 跑 F6C 标准 change 和全部 OpenSpec strict；建立独立实施计划。
+- [ ] /// 按 `openspec-apply-change` 从 F6C 0.1 起完成真实基线、后端/前端/浏览器/门禁，逐项更新任务、进度和发现。
+- [ ] /// F6C 通过后依次机械校准并实施 F6D、F6E、F7、F8，最后按 North Star 全链路证明；每个模块不以局部测试代替完整验收。
+
+当前 F6C 为 71/77：Graphic v2 两画布已在隔离 SQLite/浏览器完成保存、证据绑定、人工渲染确认、检查、Candidate v4、Review、Approval、授权与本地 ZIP；真实包内双图顺序/哈希一致，未声称发布或已验证自动渲染器。归档只读、并发旧页面保存 409 已另用隔离单元核实。ZIP 同名渲染、上传素材状态及 Review 冻结检查名称的缺陷均已用 RED→GREEN 回归修复；新旧 Candidate 历史的冻结正文、检查与结构化差异已核实。自动 Renderer 能力现明确不可用，伪造 Renderer 来源的保存被类型化 422 阻断且不产生新 Master。最新全后端 951 passed / 2 skipped（排除本机异常 `NO_PROXY/no_proxy`），前端模型 20/20、TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff、diff-check PASS。剩余 6 项为真实 Provider 接收/权利血缘 4 项、独立复核及本地提交；不把未验证能力写成完成。
+
+边界：源总包目录/ZIP 保持原样；F6B 主规格同步/归档、后续各 change 的 canonical/归档仍须另行授权；不 push、deploy 或运行生产迁移。用户已要求以后续方案连续开发，不再把 F6C 之后缩减为仅规划。
+
 ## 2026-09-29：FE-F6B FINAL-CLOSE（131/162 起点）
 
 - [x] /// 复核 active OpenSpec 31 项与当前本地 main；只复用临时 SQLite 和现有 fixture/API 建验收数据，不接触生产。

@@ -42,18 +42,19 @@ def v4_zip_bytes(db: Session, target: DeliveryTarget, package: dict) -> tuple[by
             if file["name"] != "content.md" or file["content"] != manifest["render"].get("body_markdown"):
                 raise HTTPException(409, "渲染投影与冻结内容不一致")
             archive.writestr(file["name"], file["content"])
-        outputs = {item["material_revision_id"]: item for item in package["projection"]["material_outputs"]}
+        frozen_media_bytes: dict[int, bytes] = {}
         for media in manifest["media"]:
             revision = db.get(MaterialRevision, media["material_revision_id"])
             data = read_bytes_checked(db, revision, require_public=True)
             if hashlib.sha256(data).hexdigest() != media["content_hash"]:
                 raise HTTPException(409, "冻结媒体字节校验失败")
             archive.writestr(media["name"], data)
-            output = outputs.get(revision.id)
-            if output is not None:
-                if output["content_hash"] != media["content_hash"]:
-                    raise HTTPException(409, "最终渲染与冻结媒体不一致")
-                archive.writestr(output["name"], data)
+            frozen_media_bytes[revision.id] = data
+        for output in package["projection"]["material_outputs"]:
+            data = frozen_media_bytes.get(output["material_revision_id"])
+            if data is None or hashlib.sha256(data).hexdigest() != output["content_hash"]:
+                raise HTTPException(409, "最终渲染与冻结媒体不一致")
+            archive.writestr(output["name"], data)
         archive.writestr("publish-guide.md", f"# 交付说明\n\n- 渠道：{target.channel} / {target.content_form}\n- 账号：{target.account_ref}\n- 候选哈希：{target.approved_candidate_hash}\n- 动作：{target.action}\n\n按 manifest.media 中的 role、sort_order 和 placement 使用精确媒体版本；人工发布后回填回执。本包没有调用远端发布。\n")
     # Recheck live DB state before returning bytes; frozen content is never retargeted.
     db.expire_all()
