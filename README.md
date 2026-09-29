@@ -149,7 +149,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - PRD/需求背景：North Star 要求 Video 从 F6A 的 `video.master.v1` JSON 壳升级为可追溯的脚本、镜头、时间线、字幕、配音与最终视频生产体验；F6C 已完成独立复核，F6D 草案仍须先经过自身规格审阅。
 - 目录结构：`openspec/changes/fe-f6d-video-production-studio/` 已有 proposal、design、tasks 和 Video Studio、Production Core、Review、FE-P1 四份 delta；用户总包源文件保持原样。
 - 已完成：从用户源包校准为标准 OpenSpec；F6C 74/74 和本地 `main@34ef5af` 已核实。独立 F6D SPEC review 提出五项缺口，已补 exact published Video profile、六种精确媒体 ref 位置、受信派生血缘、仅 v1→v2 显式升级、Video v2 frozen Candidate integrity。规格检查点 `a74a7d5` 已提交；基线 head `f6a000000001`、定向回归 95 passed、前端/FE-P1 和 strict 30/30 通过；现 5/79，仅完成 apply 前置，未改 F6D 业务代码。
-- 待完成/TODO：独立修订复核已通过，backend-first apply 已启动，当前 15/79；Video v2 文档、精确 ref 与显式 schema API 保存/回读已接通，但素材 live rights、profile freshness、render/checks、Review/包及前端仍未完成，不具备生产闭环。本批全后端 963 passed/2 skipped、定向 11 passed；相关 Ruff 通过，最终门禁仍须重跑。主规格同步/归档仍须单独授权。
+- 待完成/TODO：独立修订复核已通过，backend-first apply 已启动，当前 18/79；Video v2 文档、精确 ref 与显式 schema API 保存/回读、素材保存时 live rights/字节闸门已接通，但 profile freshness、render/checks、Review/包及前端仍未完成，不具备生产闭环。本批全后端 964 passed/2 skipped、定向 12 passed；OpenSpec strict 30/30，通过后仍须最终验收。主规格同步/归档仍须单独授权。
 - 关键设计决策：`video.master.v2` 是唯一可编辑真源；派生剪辑只有在存在明确编辑或确定性本地变换产生的有效 v2 内容时才生成追加式子修订，不能只记转换意图或把未验证 Provider 当成功。现有 MaterialRevision/ContentMasterRevision/Candidate v4 继续是真源。未验证 Video/TTS/ASR 不制造成功或公开使用权，真实 Provider 接收归 F7。
 - 本批目录：`apps/api/app/services/video_documents.py` 保存 Video v2 canonical 文档与精确 profile 规则，`content_harness/channel_registry.py` 只增加 published `video_requirements` 投影；`apps/api/tests/test_f6d_video_documents.py` 与既有渠道注册测试验证边界。没有新增表或依赖。
 - 依赖与启动：沿用本 README 现有 API/Vite 启动方式，目标零新表/零迁移；若实施证明需新持久化结构，应先暂停修订规格，不直接建表。不 push/deploy/运行生产迁移。
