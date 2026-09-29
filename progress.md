@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：FE-F7 标准 OpenSpec 校准（仅规格）
+
+- 真实本地 `main@775294c` 的 F6B 已是 162/162；F6C 仍 73/74（独立复核未得最终 verdict），F6D/F6E 仅标准规格草案，均未 apply。用户提供的旧 F6B 131/162 是总包规划时的历史基线，不再重复实施。
+- F7 用户源包 96 项任务和十条要求已读取。标准 active change `fe-f7-capability-integrations-delivery` 现有 proposal/design、新能力及 FE-F2/System Assets/Settings/FE-F4 四份 delta、105 项未勾选任务；增加精确 Provider 响应/错误/审计脱敏、Project 素材精确引用、无字节/许可不入库、legacy 未验证自动草稿开关不得绕过远端验证。只做规格，不改业务代码/迁移；F7 apply 仍取决于 F6E 验收及项目规则要求的确认。
+- 源稿十条长期要求逐项映射到标准 11 条新能力要求及四份既有能力 delta；OpenSpec strict 29/29 PASS、change 4/4 artifacts ready、tracked diff-check PASS。F7 仍是待独立 review 的 SPEC DRAFT，不提前宣称 apply 或任何真实平台已验证。
+
 ## 2026-09-29：North Star 剩余开发总目标 / FE-F6C 规格校准
 
 - ChatGPT 原会话对同轮 F6C 独立复核仍显示错误；本地 doctor/tunnel 可用不能证明 ChatGPT 已完成独立读取，F6C 7.10 仍未勾。并行完成 F6E 标准 OpenSpec 草案：新 ChannelVariant 能力与五份既有能力 delta、96 项任务。当前代码确认 Unit/Master channel 字段可空，但 v4 仍是渠道绑定路径；新规格明确 neutral Master 仅作 Variant source，Matrix 不在 Approval 前创建 DeliveryTarget。active V1 交付七场景已映射到 F6E/F7 保留义务；全库 OpenSpec strict 28/28、diff-check PASS。未改 F6E 业务代码/迁移，未将草案视为 apply 授权，独立 SPEC review 仍待完成。

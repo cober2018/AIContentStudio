@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-29 FE-F7 规格校准发现
+
+- 用户 F7 源稿十条新增要求未包含 WHEN/THEN 场景，直接放进标准 OpenSpec 会缺可验收契约；标准版新增场景并保留原意，四份受影响 canonical 能力仅写 ADDED delta，不覆盖旧块。
+- 现有 `content_harness.registry` 按 kind/key/version 精确解析，但 `data_source_plugins` 只允许 Studio Source，`ConnectorEndpoint` 已另有真实拉取/Fact 路径。F7 必须显式映射一个 typed plugin/endpoint，不能靠 generic Connector 配置使 Notion/API/SQL 自动可执行。映射计划先放在已规划 CapabilityRegistration 安全字段；若真实实施需要第三个长期业务对象，按总目标停下来重订规格。
+- `DeliveryTarget`/`DeliveryAttempt` 已保留批准哈希与 unknown 对账，但旧 `allow_unverified_auto_draft` 可放行 `WechatWewritePublisher.verified()==False` 的执行；这和“未验证远端动作不可执行”冲突。标准 F7 将关闭新远端效果的绕过并明确为兼容性行为变更，历史记录仍可读，本地包不受影响。
+- `WechatWewritePublisher` 的失败结果可能把 subprocess 尾部输出写入 error；仅 Settings 脱敏不足以保护执行路径。F7 的注册/验证、API、Material、AuditLog、ProjectEvent、Attempt/Receipt 都要安全白名单；嵌套 secret、带凭据 URL、签名 URL 和本地路径需负向验证。Provider 成功但无真实字节/明确许可也不能入 MaterialRevision 或产生 Master/Render 血缘。
+
 ## 2026-09-29 North Star 总包校准 / F6C 规格发现
 
 - F6E 源包的新增规格没有 WHEN/THEN 场景，不能直接通过 OpenSpec strict；现已补可验收场景和五份主能力 delta。现有 `ContentUnit.channel_id`、`ContentMasterRevision.channel_id/content_form` 可空，但 `content_masters.save_revision()` 将 Master 绑定到 Unit 渠道，v4 仍按旧候选路径；必须把无渠道 Master 设为显式 source-only，而非偷改 v4。源包“选择 target”不得提前建 FE-F4 DeliveryTarget，因它需要 exact approved Candidate。active V1 change 的七场景已做保留映射，未声称已通过。
