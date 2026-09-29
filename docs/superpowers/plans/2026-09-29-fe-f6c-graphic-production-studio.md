@@ -70,7 +70,7 @@
 
 **Files:** `openspec/changes/fe-f6c-graphic-production-studio/tasks.md`, `progress.md`, `findings.md`, `README.md`.
 
-- [ ] /// On isolated data, prove multi-canvas save/reload, exact image/chart refs, text/evidence changes, stale render, wrong-order/rights failures and explicit v1 upgrade.
+- [x] /// On isolated data, prove multi-canvas save/reload, exact image/chart refs, text/evidence changes, stale render, wrong-order/rights failures and explicit v1 upgrade.
 - [x] /// In a real browser, pass Graphic v2 → checks → exact per-canvas render → Candidate v4 → Review → Approval → local ordered image package; inspect packaged hashes/bytes.
-- [ ] /// Re-run full backend, TypeScript/Vite/bundle, OpenSpec all-strict, relevant Ruff, diff-check and independent spec/backend/frontend review; mark only evidenced tasks.
+- [x] /// Re-run full backend, TypeScript/Vite/bundle, OpenSpec all-strict, relevant Ruff, diff-check and independent spec/backend/frontend review; mark only evidenced tasks.
 - [x] /// Record limitations and local implementation commit. Do not push/deploy/run production migrations or canonical-sync/archive without separate authorization. Continue master roadmap to F6D only after F6C implementation gates pass.

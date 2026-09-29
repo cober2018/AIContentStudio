@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：FE-F6C 独立复核与最终门禁
+
+- AIContentStudio 的公网连接短暂返回 521，按工作区范围重建后公网 `/mcp` 回到预期的未授权 401，HTTP/2 且 HA 连接数为 2；同一 ChatGPT 项目中的新审阅对话实际读取 `main@2891bac` 当前文件，SPEC 与 frontend 均 APPROVE，后端沿用前轮 APPROVE（期间无后端业务代码变动）。原 C2C task `c2c_bc87` iteration 2 返回 `STATE: DONE`。F6C 7.10 已据此勾选，现为 74/74。
+- 本轮新跑后端全套 `951 passed, 2 skipped, 5 warnings`（清除本机无效 `NO_PROXY/no_proxy`）；前端 TypeScript/Vite 与 FE-P1 bundle gate PASS，Production initial JS 273.35 kB；OpenSpec 全库 strict 30/30；F6C 两次范围提交涉及的 Python 文件 Ruff PASS。额外尝试的全库 Ruff 有 23 个既有问题，未做无关格式化，也不将其写成 PASS。浏览器闭环和旧版本回归由此前隔离验收记录支持，本轮未重复浏览器执行。
+- F7 的真实 Provider 接收、许可/血缘、Project 关联和响应脱敏仍未实施；F6C 的通过不等于 F7 可用。F6C canonical 同步/归档需另行授权；未 push、deploy 或执行生产 migration。
+
 ## 2026-09-29：FE-F8 标准 OpenSpec 校准（仅规格）
 
 - 真实起点为本地 `main@361265d`，仅用户原始包/ZIP 未跟踪；上一目标轮 F7 标准规格已提交，F6C 仍 73/74 且独立复核未签发最终通过。F8 原始包有 91 项、十条新增要求，无可验收 Scenario。

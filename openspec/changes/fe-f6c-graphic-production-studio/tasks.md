@@ -92,6 +92,6 @@
 - [x] 7.7 Verify v1/legacy Graphic and Text/Video regressions.
 - [x] 7.8 Verify Graphic lazy dependency isolation and all FE-P1 route budgets.
 - [x] 7.9 Run full backend, frontend build, OpenSpec all-strict, relevant Ruff and diff-check.
-- [ ] 7.10 Complete isolated browser acceptance and independent spec/backend/frontend reviews.
+- [x] 7.10 Complete isolated browser acceptance and independent spec/backend/frontend reviews.
 - [x] 7.11 Record exact limitations, changed files, gates and local implementation commit.
 - [x] 7.12 Keep canonical sync/archive pending separate authorization.

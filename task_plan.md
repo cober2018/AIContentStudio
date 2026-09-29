@@ -9,14 +9,15 @@
 - [x] /// 对照真实 `main`、F6C/F6D/F6E 已有标准 change 和 F7 用户原包，确认当前不重复实施 F6B，也不越过 F6C 独立复核门槛。
 - [x] /// 以 `openspec-propose` 将 F7 源稿归位为标准 proposal/design、五份 delta 与任务，补齐场景、精确验证、Project 素材引用和全链路 Provider 脱敏。
 - [x] /// 验证 F7 源稿十条长期要求逐项保留、全库 strict 和 diff-check；业务代码/迁移未触及，规格检查点已本地提交 `361265d`。
-- [ ] /// F6C 独立复核恢复后关闭 7.10；F6D/F6E/F7 业务 apply 须依前序验收和本项目 OpenSpec 确认边界继续推进。
+- [x] /// 恢复 F6C 独立复核并关闭 7.10。
+- [ ] /// F6D/F6E/F7 依次完成各自规格复核、前序验收和实施门禁；不得因 F6C 通过就将后续能力视为已实现。
 - [x] /// 读取一次性开发目标与总包；对照真实仓库，确认 F6B 已从总包旧基线 131/162 推进为本地 `main@670dd49` 的 162/162。
 - [x] /// 按 `openspec-propose` 将 F6C 图文工作台源包校准为标准 active change，补齐 Scenario、显式 v1 升级、冻结画布顺序、现有渠道分类与能力可用性边界。
 - [x] /// 跑 F6C 标准 change 和全部 OpenSpec strict；建立独立实施计划。
-- [ ] /// 按 `openspec-apply-change` 从 F6C 0.1 起完成真实基线、后端/前端/浏览器/门禁，逐项更新任务、进度和发现。
+- [x] /// 按 `openspec-apply-change` 从 F6C 0.1 起完成真实基线、后端/前端/浏览器/门禁，逐项更新任务、进度和发现。
 - [ ] /// F6C 通过后依次机械校准并实施 F6D、F6E、F7、F8，最后按 North Star 全链路证明；每个模块不以局部测试代替完整验收。
 
-当前 F6C 经总计划机械校准为 73/74：Graphic v2 两画布已在隔离 SQLite/浏览器完成保存、证据绑定、人工渲染确认、检查、Candidate v4、Review、Approval、授权与本地 ZIP；真实包内双图顺序/哈希一致。归档只读、并发保存 409 与新旧 Candidate 冻结历史已核实；自动 Renderer 伪造来源被 422 阻断。原 F6C 5.4–5.7 的真实 Provider 接收/许可/项目关联/血缘验证与 F7 4.3–4.8、5.3–5.9 对应，现从 F6C 实施任务移交 F7，不能把阶段 fail-closed 误写成真实 Provider 已实现。最新全后端 951 passed / 2 skipped（排除本机异常 `NO_PROXY/no_proxy`），前端模型 20/20、TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff、diff-check PASS。范围内代码已本地提交 `d0f0051`；F6C 剩独立复核并待规格校准最终门禁。
+当前 F6C 为 74/74：隔离 SQLite/浏览器闭环和独立 SPEC/后端/前端复核均有记录；ChatGPT 在公网连接恢复后实际读取 `main@2891bac`，定向复核给出 SPEC/前端 APPROVE，后端前轮 APPROVE 因未改业务代码继续有效。最终新跑全后端 951 passed / 2 skipped、TypeScript/Vite/FE-P1、OpenSpec strict 30/30、F6C 相关 Ruff PASS。真实 Provider 接收/许可/项目关联/响应脱敏仍属 F7 未实施义务；F6C 仅证明未验证能力 fail-closed。主规格同步/归档未获单独授权，不 push/deploy/生产迁移。全量 Ruff 另外发现 23 个既有、非 F6C 范围问题，不能误记为全库 Ruff PASS。
 
 独立复核第一轮后定向修复：/// F7 Provider 执行/结果响应脱敏与负向测试写入后续标准化义务；/// GraphicStudioModel 改为仅 Graphic 运行时动态载入，并由 bundle gate 验证通用 Production/Text/Video 静态闭包；/// 画布选中态加 aria-pressed。前端 build/FE-P1 与模型 20/20 已复跑 PASS；等待第二轮独立复核，不提前勾 7.10。
 

@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-29 F6C 最终独立复核
+
+- 原 ChatGPT 对话和同项目新对话最初都在 `workspace_info` 报内部错误；本地 doctor 当时一度显示正常，但公网实际返回 HTTP 521，Cloudflare 连接日志有 TLS EOF。只重建 AIContentStudio 工作区连接后，公网 `/mcp` 返回预期 401、HTTP/2 HA=2，ChatGPT 才实际读取到 `main@2891bac`。因此本地 doctor/401 仍不能单独代替 ChatGPT 侧读取证据。
+- 独立定向复核确认三项已修：F7 active spec/task 明确 Provider 响应/错误/血缘与嵌套 secret 的脱敏和负向测试；`GraphicStudioModel` 仅 Graphic 条件动态加载，bundle gate 检查通用 Production/Text/Video 静态闭包；画布和图层按钮暴露 `aria-pressed`。SPEC 与 frontend 均 APPROVE；后端前轮 APPROVE 且本轮未改后端业务代码。真实 F7 Provider 能力仍是后续工作。
+- 最终门禁补充发现：F6C 范围内 Python 文件 Ruff PASS，但全库 Ruff 有 23 个既有问题，主要是非 F6C 文件的导入排序。保持范围边界，不因本阶段收尾批量改写无关代码。
+
 ## 2026-09-29 FE-F8 规格校准发现
 
 - F8 源稿十条 Requirement 没有 WHEN/THEN，原任务 91 项；标准化需补实际验收场景与现状门禁，不等于已经达到 production readiness。现有 `deps.py` 信任可伪造的 `X-Studio-User`，缺省本地身份并自动创建 User；生产模式必须彻底拒绝这条路径，而不是仅在代理层隐藏 Header。
