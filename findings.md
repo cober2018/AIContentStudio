@@ -2,8 +2,9 @@
 
 ## 2026-09-29 F6E 首个 Variant 写入边界
 
+- Text Variant 新增的 citation 只能绑定当前 source Master 所冻结项目 Fact Boundary 内的 exact FactPackItem/checksum，且该 item 仍须可公开使用、未撤权；正文 range 与 EvidenceRef locator 由 canonical payload 同步校验。提交前撤权会回滚 Variant、引用和 ProjectEvent。畸形 ref 在数据库查询前转成 422，不让任意 JSON 引发 500。
 - 公众号文章、X 推串及单条仅实现无素材/证据引用的简单 Text v2 确定性子集；复杂结构、citation、exact refs 不能被静默丢弃，当前服务对其 fail closed。注册的 published Profile 不等于 Graphic/Video Adapter 已可执行。
-- Variant 写入按项目/Unit 授权、精确 Master/Identity/Profile、稳定系列 CAS、幂等键与不可改目标验证；Profile 在事务提交前改变时回滚 Variant 和 ProjectEvent。当前仍需处理真实 refs 原子持久化、live rights/evidence、AI receipt、检查与 v5 Candidate，不能把已保存 Variant 等同可冻结/发布。
+- Variant 写入按项目/Unit 授权、精确 Master/Identity/Profile、稳定系列 CAS、幂等键与不可改目标验证；Profile 在事务提交前改变时回滚 Variant 和 ProjectEvent。当前仍需处理素材 refs、来源 Master 已有 refs 的显式映射、完整 live rights/evidence、AI receipt、检查与 v5 Candidate，不能把已保存 Variant 等同可冻结/发布。
 
 ## 2026-09-29 F6E 独立规格结论
 

@@ -2,6 +2,8 @@
 
 ## 2026-09-29：F6E 规格门槛解除
 
+- 本批继续完成 Text Variant 新增 citation 的 exact Fact Boundary 引用保存：服务端校验 canonical range/locator、FactPackItem checksum、frozen pack、public-use 与撤权状态；提交前变更则连 Variant/引用/Event 一起回滚，畸形 ref 与超长 role 返回 422。来源 Master 自带 refs、素材 refs、Graphic/Video 仍 fail closed，F6E 仍为 19/100，不提前勾 2.8/3.3。
+- 最终代码在 `apps/api` 正确目录重跑全后端 `1065 passed / 2 skipped / 7 warnings`，定向 Variant 文档/保存 `20 passed`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。曾从仓库根目录错误启动全套，导致依赖相对 `alembic.ini` 与 worker DB 的 6 项环境失败；改用后端目录后全部通过，非业务实现故障。
 - 首批计划内加法持久化已落地：四个 Variant 表、`ContentAsset.channel_variant_revision_id`，迁移 `f6e000000001` 接 `f6a000000001`。已定义 versioned Adapter 协议、五种受控 source/form/artifact_kind 矩阵和 published Profile 精确解析；五种 canonical payload 的纯校验与哈希已具备。公众号文章、X 推串与单条的简单无引用 Text v2 子集现在有确定性 Adapter；小红书/抖音 Adapter 仍不可执行。项目级 Variant list/current/detail/history 与首个无引用 Text Variant 追加式保存已接入：系列 CAS/幂等/改换目标拒绝、精确 source Master/Identity/Profile 冻结、跨项目拒绝及 Profile 变更时连事件一起回滚有定向回归。F6E 当前 19/100；1.7 删除/约束闭环、2.8 实际素材/证据绑定、3.3 完整 refs 原子保存仍待实现，不把它们提前勾选。
 - RED→GREEN 定向回归覆盖 Text 适配、Variant 写入及 Profile 变更回滚；隔离 SQLite 升→降→升通过，存在 v5 manifest 且 Variant FK 缺失时拒绝降级。临时 PostgreSQL 16 容器中整链升至 F6E、降至 F6A、再升至 F6E 均通过；写入 v5 manifest 后降级按预期拒绝，读回仍为 `f6e000000001` 且历史/表保留。临时容器已停止并自动删除，未接触生产 DB。
 - 本批无引用 Text Variant 写入后新跑全后端 `1062 passed / 2 skipped / 7 warnings`；相关 Ruff PASS、OpenSpec strict 30/30 PASS、`git diff --check` PASS。Graphic/Video 适配、exact refs/checks、Candidate v5、Matrix 与浏览器验收均未完成；本批结果不代表 F6E 最终通过。

@@ -4,6 +4,7 @@
 
 - [x] /// 核对 `main@6f5e022`、F6D 79/79、F6E 六份 delta 与独立复核结论，核销 F6E 0.2；不将外部记录的门禁数字冒充本地重跑。
 - [x] /// 先做 append-only Variant 四表及 Candidate v5 nullable FK；以 RED→GREEN 回归验证系列唯一性、精确 FK、SQLite up/down/up 与历史降级拒绝。
+- [x] /// 建立 Text 三目标保守确定性适配、Variant 系列 CAS 写入和新增 citation 的精确证据引用；全套回归在后端目录运行，未完成的素材/来源引用仍拒绝写入。
 - [ ] /// 实现 exact Registry/profile 的 canonical adapters，再接项目级 Variant CAS/refs/checks 和 Candidate v5；任何额外持久对象或安全边界削弱先停下修规格。
 - [ ] /// 完成 Review/Approval/本地包、Matrix、前端与隔离浏览器验收；保留 v3/v4 和未知发布状态，不声称 F7 远端能力已验证。
 - [ ] /// 最终门禁和独立复核后仅本地范围提交；主规格同步/归档、push、deploy、生产迁移另行授权。
