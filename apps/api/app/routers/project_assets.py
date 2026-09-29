@@ -29,6 +29,7 @@ class MaterialReferenceIn(BaseModel):
 
 
 _UNVERIFIED_GRAPHIC_CAPABILITY = {"configured": False, "executable": False, "verified": False, "reason": "project_provider_not_verified"}
+_UNVERIFIED_VIDEO_CAPABILITY = {"configured": False, "executable": False, "verified": False, "reason": "project_provider_not_verified"}
 
 
 @router.get("/{project_id}/graphic-capabilities")
@@ -43,6 +44,21 @@ def graphic_capabilities(project_id: int, db: Session = Depends(get_db), user: U
 def unavailable_graphic_provider(project_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     mutable_project(db, project_id, user)
     # The generic Material provider can write bytes, but has no project-scoped verification or license proof.
+    raise HTTPException(422, {"code": "capability_unavailable", "reason": "project_provider_not_verified"})
+
+
+@router.get("/{project_id}/video-capabilities")
+def video_capabilities(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    owned_project(db, project_id, user)
+    return {key: _UNVERIFIED_VIDEO_CAPABILITY.copy() for key in ("video_generation", "tts", "asr")}
+
+
+@router.post("/{project_id}/video-generation")
+@router.post("/{project_id}/video-tts")
+@router.post("/{project_id}/video-asr")
+def unavailable_video_provider(project_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    mutable_project(db, project_id, user)
+    # Provider execution and accepted media rights require F7 verification.
     raise HTTPException(422, {"code": "capability_unavailable", "reason": "project_provider_not_verified"})
 
 
