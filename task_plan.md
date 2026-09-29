@@ -10,6 +10,8 @@
 - [x] /// 以 `openspec-propose` 将 F7 源稿归位为标准 proposal/design、五份 delta 与任务，补齐场景、精确验证、Project 素材引用和全链路 Provider 脱敏。
 - [x] /// 验证 F7 源稿十条长期要求逐项保留、全库 strict 和 diff-check；业务代码/迁移未触及，规格检查点已本地提交 `361265d`。
 - [x] /// 恢复 F6C 独立复核并关闭 7.10。
+- [x] /// 对 F6D 标准 change 做独立 SPEC review；将 Video Profile、精确媒体 slot、受信派生、显式升级和 frozen integrity 五项缺口回写 proposal/design/delta/tasks。
+- [x] /// 复跑 F6D 全库 strict、保留审计与 diff-check，交独立规格复核；通过后再按 backend-first 实施 Video v2。
 - [ ] /// F6D/F6E/F7 依次完成各自规格复核、前序验收和实施门禁；不得因 F6C 通过就将后续能力视为已实现。
 - [x] /// 读取一次性开发目标与总包；对照真实仓库，确认 F6B 已从总包旧基线 131/162 推进为本地 `main@670dd49` 的 162/162。
 - [x] /// 按 `openspec-propose` 将 F6C 图文工作台源包校准为标准 active change，补齐 Scenario、显式 v1 升级、冻结画布顺序、现有渠道分类与能力可用性边界。
@@ -18,6 +20,8 @@
 - [ ] /// F6C 通过后依次机械校准并实施 F6D、F6E、F7、F8，最后按 North Star 全链路证明；每个模块不以局部测试代替完整验收。
 
 当前 F6C 为 74/74：隔离 SQLite/浏览器闭环和独立 SPEC/后端/前端复核均有记录；ChatGPT 在公网连接恢复后实际读取 `main@2891bac`，定向复核给出 SPEC/前端 APPROVE，后端前轮 APPROVE 因未改业务代码继续有效。最终新跑全后端 951 passed / 2 skipped、TypeScript/Vite/FE-P1、OpenSpec strict 30/30、F6C 相关 Ruff PASS。真实 Provider 接收/许可/项目关联/响应脱敏仍属 F7 未实施义务；F6C 仅证明未验证能力 fail-closed。主规格同步/归档未获单独授权，不 push/deploy/生产迁移。全量 Ruff 另外发现 23 个既有、非 F6C 范围问题，不能误记为全库 Ruff PASS。
+
+F6D 独立规格审阅已读到 `main@34ef5af` 和现有后端，判定五项实施前边界缺失。修订后 ChatGPT 再次读当前 diff，返回 SPEC APPROVE / DONE；全库 strict 30/30、diff-check 通过。已有总目标授权覆盖 F6D apply；仍须按后端优先、各项门禁执行，迁移及后续阶段尚未启动。
 
 独立复核第一轮后定向修复：/// F7 Provider 执行/结果响应脱敏与负向测试写入后续标准化义务；/// GraphicStudioModel 改为仅 Graphic 运行时动态载入，并由 bundle gate 验证通用 Production/Text/Video 静态闭包；/// 画布选中态加 aria-pressed。前端 build/FE-P1 与模型 20/20 已复跑 PASS；等待第二轮独立复核，不提前勾 7.10。
 

@@ -1,5 +1,10 @@
 # 当前进度
 
+## 2026-09-29：FE-F6D SPEC review 修订
+
+- F6C 已在本地 `main@34ef5af` 以 74/74 收尾；F6D 仍是 active change、无业务代码或 migration。ChatGPT 独立读取后提出五项必须先修的规格缺口：Video published profile、精确媒体 ref slot、受信派生 provenance、Video 显式升级 pair、Candidate 冻结完整性。当前已回写 design、tasks 与 Video/Production Core/Review delta，任务从 73 增为 79，尚未勾选。
+- 本轮明确现有 `render_input_hash` 排除 `render_output` 防循环，源素材位置进入输入哈希，最终输出另行 attestation 与冻结核验。单 change strict、全库 strict 30/30 与 diff-check 已通过；ChatGPT C2C `c2c_4a78` iteration 1 实际读取修订 diff 后给出 SPEC APPROVE / DONE。F6D 可按后端优先进入 apply；未推送、部署、生产迁移、canonical sync/归档。
+
 ## 2026-09-29：FE-F6C 独立复核与最终门禁
 
 - AIContentStudio 的公网连接短暂返回 521，按工作区范围重建后公网 `/mcp` 回到预期的未授权 401，HTTP/2 且 HA 连接数为 2；同一 ChatGPT 项目中的新审阅对话实际读取 `main@2891bac` 当前文件，SPEC 与 frontend 均 APPROVE，后端沿用前轮 APPROVE（期间无后端业务代码变动）。原 C2C task `c2c_bc87` iteration 2 返回 `STATE: DONE`。F6C 7.10 已据此勾选，现为 74/74。

@@ -148,8 +148,8 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 
 - PRD/需求背景：North Star 要求 Video 从 F6A 的 `video.master.v1` JSON 壳升级为可追溯的脚本、镜头、时间线、字幕、配音与最终视频生产体验；F6C 已完成独立复核，F6D 草案仍须先经过自身规格审阅。
 - 目录结构：`openspec/changes/fe-f6d-video-production-studio/` 已有 proposal、design、tasks 和 Video Studio、Production Core、Review、FE-P1 四份 delta；用户总包源文件保持原样。
-- 已完成：从用户源包校准为 73 项可跟踪任务与可验证 Scenario；新增 v1 显式 fork、精确媒体位置、输入绑定 render、Provider 断连无写入和 F7 真实结果/脱敏移交边界。OpenSpec 全库 strict 27/27 通过。未改 F6D 业务代码。
-- 待完成/TODO：F6C 74/74 已核实；F6D 独立规格审阅、最新本地 main 基线复核及项目规则下的 apply 门槛仍需处理；Video v2 后端/前端、浏览器和完整门禁均未启动。
+- 已完成：从用户源包校准为标准 OpenSpec；F6C 74/74 和本地 `main@34ef5af` 已核实。独立 F6D SPEC review 提出五项缺口，已补 exact published Video profile、六种精确媒体 ref 位置、受信派生血缘、仅 v1→v2 显式升级、Video v2 frozen Candidate integrity，现 79 项未开始任务。全库 strict 30/30 与 diff-check 通过；未改 F6D 业务代码。
+- 待完成/TODO：独立修订复核已通过，按已有总目标授权进入 backend-first apply；Video v2 后端/前端、浏览器和完整门禁均未启动。主规格同步/归档仍须单独授权。
 - 关键设计决策：`video.master.v2` 是唯一可编辑真源；派生剪辑只有在存在明确编辑或确定性本地变换产生的有效 v2 内容时才生成追加式子修订，不能只记转换意图或把未验证 Provider 当成功。现有 MaterialRevision/ContentMasterRevision/Candidate v4 继续是真源。未验证 Video/TTS/ASR 不制造成功或公开使用权，真实 Provider 接收归 F7。
 - 依赖与启动：沿用本 README 现有 API/Vite 启动方式，目标零新表/零迁移；若实施证明需新持久化结构，应先暂停修订规格，不直接建表。不 push/deploy/运行生产迁移。
 

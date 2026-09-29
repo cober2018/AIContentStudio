@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-29 F6D 规格复核发现
+
+- 当前 Channel Registry 只有 `media_requirements`/`graphic_requirements`，没有 exact published Video 规则载体；Video v2 检查必须新增可选、有界 `video_requirements`，缺字段不凭空限制，畸形/未知规则不可 PASS。
+- `ContentMasterAssetRef` 已有 role/slot_key/sort_order/placement_json，F6D 原草案未定义一处视频素材多次使用和最终输出的映射。标准规格现固定六种角色及稳定 slot，源引用进入 render-input hash；最终 render_output 因哈希循环单独验证。
+- 当前 save_revision 仅支持 Text/Graphic 的 verified upgrade pair，并只信任 user_edit/explicit_upgrade/workflow_seed；Video 派生不能让客户端直接伪造 source_kind/edit_summary。Review 的 frozen v4 校验目前仅覆盖 Text/Graphic v2，必须扩到 Video v2 才能防篡改与 legacy fallback。
+
 ## 2026-09-29 F6C 最终独立复核
 
 - 原 ChatGPT 对话和同项目新对话最初都在 `workspace_info` 报内部错误；本地 doctor 当时一度显示正常，但公网实际返回 HTTP 521，Cloudflare 连接日志有 TLS EOF。只重建 AIContentStudio 工作区连接后，公网 `/mcp` 返回预期 401、HTTP/2 HA=2，ChatGPT 才实际读取到 `main@2891bac`。因此本地 doctor/401 仍不能单独代替 ChatGPT 侧读取证据。
