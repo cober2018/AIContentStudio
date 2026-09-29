@@ -13,7 +13,7 @@ from app.services.channel_adapters import AdapterUnavailable, capability_for
         ("text.master.v2", "wechat", "article", "text", True),
         ("text.master.v2", "x", "thread", "text", True),
         ("text.master.v2", "x", "single", "text", True),
-        ("graphic.master.v2", "xiaohongshu", "image_note", "image", False),
+        ("graphic.master.v2", "xiaohongshu", "image_note", "image", True),
         ("video.master.v2", "douyin", "spoken_script", "script", False),
     ],
 )

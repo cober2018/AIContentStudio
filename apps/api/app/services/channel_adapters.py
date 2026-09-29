@@ -33,19 +33,19 @@ class ChannelAdapter(Protocol):
 
     def capabilities(self) -> dict: ...
 
-    def canonicalize(self, payload: object) -> dict: ...
+    def canonicalize(self, payload: object, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict: ...
 
     def validate(self, payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> None: ...
 
     def adapt(self, source_payload: dict, *, asset_refs: list[dict], evidence_refs: list[dict]) -> dict: ...
 
-    def preview(self, payload: dict) -> dict: ...
+    def preview(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict: ...
 
-    def render(self, payload: dict) -> dict: ...
+    def render(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict: ...
 
-    def required_checks(self, payload: dict) -> tuple[str, ...]: ...
+    def required_checks(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> tuple[str, ...]: ...
 
-    def package_projection(self, payload: dict) -> dict: ...
+    def package_projection(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict: ...
 
 
 FIRST_BATCH: dict[tuple[str, str], AdapterContract] = {
@@ -73,10 +73,10 @@ class TextChannelAdapter:
     def capabilities(self) -> dict:
         return {"deterministic_subset": True, "model_assisted": False, "remote_verified": False}
 
-    def canonicalize(self, payload: object) -> dict:
+    def canonicalize(self, payload: object, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
         from .channel_variant_documents import canonical_payload
 
-        return canonical_payload(self.contract.payload_schema, payload)
+        return canonical_payload(self.contract.payload_schema, payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
 
     def validate(self, payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> None:
         from .channel_variant_documents import canonical_payload
@@ -115,11 +115,11 @@ class TextChannelAdapter:
         except VariantDocumentError as exc:
             raise AdapterUnavailable("adapted_payload_invalid") from exc
 
-    def preview(self, payload: dict) -> dict:
-        return {"schema": self.contract.payload_schema, "payload": self.canonicalize(payload)}
+    def preview(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        return {"schema": self.contract.payload_schema, "payload": self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)}
 
-    def render(self, payload: dict) -> dict:
-        item = self.canonicalize(payload)
+    def render(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        item = self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
         if "blocks" in item:
             text = item["title"] + "\n\n" + "\n\n".join(block["text"] for block in item["blocks"])
         elif "posts" in item:
@@ -128,16 +128,75 @@ class TextChannelAdapter:
             text = item["text"]
         return {"artifact_kind": "text", "text": text}
 
-    def required_checks(self, payload: dict) -> tuple[str, ...]:
-        self.canonicalize(payload)
+    def required_checks(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> tuple[str, ...]:
+        self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
         return ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
 
-    def package_projection(self, payload: dict) -> dict:
-        return self.render(payload)
+    def package_projection(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        return self.render(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+
+
+class GraphicImageNoteAdapter:
+    """Map verified per-canvas final render refs to ordered image cards."""
+
+    contract = FIRST_BATCH[("xiaohongshu", "image_note")]
+
+    def capabilities(self) -> dict:
+        return {"deterministic_subset": True, "model_assisted": False, "remote_verified": False}
+
+    def canonicalize(self, payload: object, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        from .channel_variant_documents import canonical_payload
+
+        return canonical_payload(self.contract.payload_schema, payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+
+    def validate(self, payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> None:
+        self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+
+    def adapt(self, source_payload: dict, *, asset_refs: list[dict], evidence_refs: list[dict]) -> dict:
+        from .channel_variant_documents import VariantDocumentError
+        from .graphic_documents import GraphicDocumentError
+        from .graphic_documents import canonical_payload as canonical_graphic_payload
+
+        if evidence_refs:
+            raise AdapterUnavailable("source_evidence_requires_explicit_mapping")
+        try:
+            source = canonical_graphic_payload(source_payload)
+        except GraphicDocumentError as exc:
+            raise AdapterUnavailable("invalid_graphic_source") from exc
+        title = source["title"].strip()
+        canvases = source["canvases"]
+        if not title:
+            raise AdapterUnavailable("image_note_title_required")
+        refs = {item.get("slot_key"): item for item in asset_refs if isinstance(item, dict)}
+        if len(refs) != len(canvases) or set(refs) != {canvas["id"] for canvas in canvases}:
+            raise AdapterUnavailable("render_canvas_coverage_missing")
+        cards = []
+        for index, canvas in enumerate(canvases):
+            caption = "\n".join(run["text"] for layer in canvas["layers"] if layer["type"] == "text" for run in layer["runs"])
+            cards.append({"id": canvas["id"], "order": index, "image_ref_key": canvas["id"], "caption": caption})
+        try:
+            return self.canonicalize({"title": title, "cards": cards}, asset_refs=asset_refs)
+        except VariantDocumentError as exc:
+            raise AdapterUnavailable("adapted_payload_invalid") from exc
+
+    def preview(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        return {"schema": self.contract.payload_schema, "payload": self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)}
+
+    def render(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        item = self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+        return {"artifact_kind": "image", "cards": item["cards"], "title": item["title"]}
+
+    def required_checks(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> tuple[str, ...]:
+        self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+        return ("variant_schema", "variant_evidence", "variant_rights", "variant_profile", "variant_render")
+
+    def package_projection(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
+        return self.render(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
 
 
 for _text_target in (("wechat", "article"), ("x", "thread"), ("x", "single")):
     _EXECUTABLE_ADAPTERS[_text_target] = TextChannelAdapter(*_text_target)
+_EXECUTABLE_ADAPTERS[("xiaohongshu", "image_note")] = GraphicImageNoteAdapter()
 
 
 def capability_for(db: Session, source_schema: str, channel: str, content_form: str) -> dict:
