@@ -2,6 +2,7 @@
 
 ## 2026-09-29 North Star 总包校准 / F6C 规格发现
 
+- F6D 源包原第 4 组同时要求 F6D“接受 Provider 输出为 MaterialRevision”和 F7“真实 Provider 验证”，与 F6C 已纠正的阶段边界相同。标准 F6D 草案仅定义 Video/TTS/ASR 的能力状态和未验证请求无写入；真实输出的字节/许可/血缘/响应脱敏由 F7 承接，F6D 不假造 Provider 产物。原始用户包保持不变。
 - 独立 F6C 复核发现：F7 原包 1.4 只约束持久化不存 secret，9.6 只约束 Settings 脱敏，均未明确约束 Provider 执行/结果/错误/血缘响应。F6C 设计与 delta 已留下 F7 标准化必须新增的规范及负向测试，不修改用户原包。另发现通用 ContentMasterPanel 静态导入 GraphicStudioModel，虽然 Graphic Shell lazy，但模型仍进通用 Production；已改为 Graphic 条件动态导入并在 bundle gate 验证静态闭包隔离。画布按钮此前只靠颜色显示选中，现加 aria-pressed。
 - 总目标与 F6C active change 审计发现一处阶段归属冲突：F6C proposal/design 明确真实 Provider 验证归 F7，F7 源包 4.3–4.8、5.3–5.9 已包含外部素材下载/字节/许可/MaterialRevision/显式接收，但 F6C tasks 5.4–5.7 和一条 Scenario 仍要求当期“实际接受 Provider 结果”。已机械校准 F6C 为只验断连 fail-closed 与项目已有精确素材，移交真实结果接受到 F7；F7 标准归位时还须补精确 Project 关联及返回脱敏的显式任务/场景，防止原要求丢失。未验证能力继续不可执行，未放宽权限。
 - F6C 自动渲染能力未经过项目级验证，先前能力投影仅覆盖搜索/生图/变体。现在自动渲染也显式返回 `configured/executable/verified=false`；客户端试图把保存声明冒充 `verified_renderer` 会得到类型化 422 且无新 Master。人工声明继续由服务端记录 `origin=manual`。这只关闭未验证来源的旁路，不等于已接入真实 Renderer。

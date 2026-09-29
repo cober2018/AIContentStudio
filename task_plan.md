@@ -14,6 +14,8 @@
 
 第二轮复核因 ChatGPT 连接器连续 internal error 而 NOT_VERIFIED；工作区隧道重建遇 Cloudflare API EOF，虽本地诊断恢复在线，ChatGPT 仍未能读取当前文件。保持 7.10 未完成；先提交已验证的规格/前端修补检查点，恢复真实独立读取后再复核并决定是否进入 F6D。
 
+/// F6D 仅做标准 OpenSpec propose：从源包生成 Video v2 proposal/design/四份 delta/73 项 tasks，补 Scenario 与 Provider 真伪/渲染血缘边界；全库 strict 27/27。F6C 独立复核和本轮用户规则要求的明确 apply 确认之前，不运行 F6D 业务代码。
+
 边界：源总包目录/ZIP 保持原样；F6B 主规格同步/归档、后续各 change 的 canonical/归档仍须另行授权；不 push、deploy 或运行生产迁移。用户已要求以后续方案连续开发，不再把 F6C 之后缩减为仅规划。
 
 ## 2026-09-29：FE-F6B FINAL-CLOSE（131/162 起点）
