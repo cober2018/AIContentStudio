@@ -32,6 +32,7 @@ _SIGNATURES: list[tuple[bytes, str]] = [
     (b"GIF87a", "image/gif"),
     (b"GIF89a", "image/gif"),
     (b"RIFF", "image/webp"),  # WEBP：RIFF....WEBP
+    (b"RIFF", "audio/wav"),
     (b"%PDF", "application/pdf"),
     (b"ID3", "audio/mpeg"),
     (b"\x00\x00\x00", "video/mp4"),  # ftyp box 前缀
@@ -44,6 +45,8 @@ def sniff_mime(content: bytes, declared: str | None) -> str:
     for magic, mime in _SIGNATURES:
         if content.startswith(magic):
             if mime == "image/webp" and content[8:12] != b"WEBP":
+                continue
+            if mime == "audio/wav" and content[8:12] != b"WAVE":
                 continue
             if mime == "video/mp4" and content[4:8] != b"ftyp":
                 continue

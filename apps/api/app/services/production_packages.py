@@ -35,7 +35,7 @@ def build_v4_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -
         data = read_bytes_checked(db, revision, require_public=True)
         if hashlib.sha256(data).hexdigest() != ref["content_hash"]:
             raise HTTPException(409, "冻结媒体字节哈希不一致")
-        suffix = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif", "video/mp4": ".mp4", "audio/mpeg": ".mp3", "application/pdf": ".pdf"}.get(revision.mime_type, ".bin")
+        suffix = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif", "video/mp4": ".mp4", "audio/mpeg": ".mp3", "audio/wav": ".wav", "application/pdf": ".pdf"}.get(revision.mime_type, ".bin")
         media.append({**deepcopy(ref), "name": f"media/{len(media):02d}-{revision.id}{suffix}"})
     package_manifest = {**deepcopy(manifest), "target_id": target.id, "asset_id": asset.id, "candidate": {"id": asset.id, "hash": asset.candidate_hash}, "approved_candidate_hash": target.approved_candidate_hash, "account_ref": target.account_ref, "action": target.action, "authorization_version": target.authorization_version, "media": media, "remote_call": False}
     return {"manifest": package_manifest, "content": {"title": manifest["content"].get("title"), "markdown": manifest["render"].get("body_markdown")}, "projection": projection}

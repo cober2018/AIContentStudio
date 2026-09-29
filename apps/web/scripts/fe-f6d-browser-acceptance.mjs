@@ -67,10 +67,11 @@ try {
   assertIsolatedMaterial(revision);
   await api(`${pbase}/materials/references`, { material_revision_id: revision.id });
   report.ids.materialRevision = revision.id;
-  const audioFile = join(artifacts, "voice.mp3");
-  execFileSync("/opt/homebrew/bin/ffmpeg", ["-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=16000", "-t", "1", "-c:a", "libmp3lame", "-id3v2_version", "3", "-metadata", "title=isolated-voice", audioFile]);
-  assert.equal(readFileSync(audioFile).subarray(0, 3).toString(), "ID3");
-  const audioForm = new FormData(); audioForm.append("file", new Blob([readFileSync(audioFile)], { type: "audio/mpeg" }), "voice.mp3");
+  const audioFile = join(artifacts, "voice.wav");
+  execFileSync("/opt/homebrew/bin/ffmpeg", ["-loglevel", "error", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=16000", "-t", "1", "-c:a", "pcm_s16le", audioFile]);
+  assert.equal(readFileSync(audioFile).subarray(0, 4).toString(), "RIFF");
+  assert.equal(readFileSync(audioFile).subarray(8, 12).toString(), "WAVE");
+  const audioForm = new FormData(); audioForm.append("file", new Blob([readFileSync(audioFile)], { type: "audio/wav" }), "voice.wav");
   const uploadedAudio = await fetch(`${apiUrl}/materials/upload?kind=audio&public_use_allowed=true&rights_status=cleared`, { method: "POST", headers: { "X-Studio-User": "admin@studio.local" }, body: audioForm });
   assert(uploadedAudio.ok, `audio upload: ${uploadedAudio.status} ${await uploadedAudio.text()}`);
   const audioMaterials = await api("/materials?kind=audio");
@@ -179,7 +180,10 @@ try {
   const packagedManifest = JSON.parse(execFileSync("unzip", ["-p", zip, "manifest.json"], { encoding: "utf8" }));
   assert.equal(packagedManifest.schema_version, 4);
   assert.equal(packagedManifest.remote_call, false);
-  report.gates.push("Approval, local-only authorization and ZIP with byte-exact MP4; no remote publication");
+  const packagedVoice = packagedManifest.media.find((item) => item.material_revision_id === audioRevision.id);
+  assert(packagedVoice?.name.endsWith(".wav"), "Recorded voice must keep a WAV package filename");
+  assert.equal(createHash("sha256").update(execFileSync("unzip", ["-p", zip, packagedVoice.name])).digest("hex"), audioRevision.content_hash);
+  report.gates.push("Approval, local-only authorization and ZIP with byte-exact MP4/WAV; no remote publication");
   const legacyUnit = await api(`${pbase}/units`, { title: "Legacy Video fork", persona_id: persona.id, modality: "video", channel_id: template.channel });
   const legacyPath = `${pbase}/units/${legacyUnit.id}/master-revisions`;
   const legacy = await api(legacyPath, { idempotency_key: `legacy-${suffix}`, payload_schema: "video.master.v1", payload: { title: "旧视频", script: "原有口播", shots: [{ id: "shot-legacy", order: 0, label: "旧镜头" }] } });

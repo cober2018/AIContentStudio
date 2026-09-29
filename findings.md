@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-29 F6D WAV 拒绝根因
+
+- 证据：同一有效 RIFF/WAVE 字节 `sniff_mime(bytes, "audio/wav")` 返回 `audio/wav`，`sniff_mime(bytes, None)` 返回 octet-stream；`content_masters.save_revision()` 因 `video_asset_bytes_or_mime_invalid` 返回 422。不是权限、项目可见性或文件哈希的问题。
+- 修补在原有素材嗅探层识别精确 `RIFF....WAVE`；`RIFF....WEBP` 继续是 image/webp，其他 RIFF 仍 octet-stream。Video 保存、既有 live rights/byte gates 不降级。v4 ZIP 增加 `audio/wav`→`.wav`，包内字节逐 hash 验证。
+- F6D 录音 WAV 已有隔离浏览器和后端端到端证据，但不能替代任务 8.4 的独立实施复核，也不能把 F7 真实 TTS/ASR/Video Provider 标为 verified。协作桥状态 green 不等于 ChatGPT 已调用连接器审阅。
+
 ## 2026-09-29 F6D 素材隔离根因与修复
 
 - 根因是 `asset_media.MEDIA_ROOT` 写死为仓库路径，临时 `DATABASE_URL` 不会隔离内容寻址的文件字节；此前共享目录中的同 hash 文件不能安全清理，历史验收记录保留而不改写。

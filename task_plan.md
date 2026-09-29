@@ -1,5 +1,14 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6D WAV 精确音频闭环
+
+目标：让有效 RIFF/WAVE 录音在 Video v2 的保存与本地包中保持准确的 MIME、字节/哈希和文件名，不放宽素材权利或通用未知格式闸门。当前按 F6D active OpenSpec apply；仍不勾 4.5/8.4，不启动 F6E 业务 apply。
+
+- [x] /// RED：在 `apps/api/tests/test_material_library.py` 添加真实 RIFF/WAVE 与 WEBP/未知 RIFF MIME 回归；在 `apps/api/tests/test_f6d_video_documents.py` 添加临时字节的 Video v2 录音精确引用保存回归。确认当前失败原因是无声明的字节嗅探返回 octet-stream。
+- [x] /// GREEN：仅在 `apps/api/app/services/materials.py` 的既有嗅探器识别 RIFF/WAVE，并保持 WEBP/未知 RIFF 不误判；复跑定向测试。必要时在 `apps/api/app/services/production_packages.py` 对 WAV 同步使用 `.wav` 扩展名。
+- [x] /// 隔离验收：将 `apps/web/scripts/fe-f6d-browser-acceptance.mjs` 的音频 fixture 改为真实 WAV，在全新临时 DB/素材目录走 Video v2→Candidate→Review→ZIP 并核对音频成员字节；复跑全后端、前端构建/预算、OpenSpec strict、Ruff、diff-check。
+- [x] /// 更新 `README.md`、`progress.md`、`findings.md`、F6D 验收记录，只提交本项范围的本地 main 文件；独立实施复核仍需外部证据。
+
 ## 2026-09-29：中断后规格检查点收口
 
 - [x] /// F6D 验收隔离修补：先用定向测试复现素材根目录未隔离，再为 API 验收进程配置临时素材目录并在浏览器脚本中强制校验 DB/素材同一临时父目录。

@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：F6D 录音 WAV 闭环补强
+
+- 真实 RIFF/WAVE 录音可上传但无法保存到 Video v2 Master：上传读客户端 `audio/wav`，后续无声明嗅探返回 octet-stream。两项定向测试先 RED；在共享嗅探器识别 RIFF/WAVE 且不误判 WEBP/未知 RIFF 后 GREEN。v4 package 的 WAV `.wav` 成员集成测试先 RED 后 GREEN。
+- 全新临时数据库 `/tmp/aicontent-f6d-acceptance.jx9blb/studio.db` 与兄弟 media 目录跑完整 Video 浏览器闭环 11 项通过、页面错误 0，包含 WAV exact ref→Candidate v4→Review/Approval→本地 ZIP 字节/hash；无外部 Provider/Publisher 调用。
+- 新跑全后端 1009 passed/2 skipped/5 warnings，前端构建和 FE-P1、全库 OpenSpec strict 30/30、范围内 Ruff、JS 语法和 diff-check 均通过。连接健康检查成功，但专用 ChatGPT 内置浏览器工具当前缺席，独立实施 review 仍未完成；F6D 保持 77/79，F6E 未 apply。
+
 ## 2026-09-29：F6D 验收素材隔离修补
 
 - 查明既有隔离浏览器验收只有临时 SQLite/端口，素材仍落仓库共享 `apps/api/app/media/material/`。先写针对媒体根目录 override 的失败测试，再使 `asset_media.MEDIA_ROOT` 支持绝对路径 `AI_STUDIO_MEDIA_ROOT`；浏览器脚本强制媒体与临时数据库同父目录，并按 MaterialRevision hash 实际核查 MP4/MP3 字节。

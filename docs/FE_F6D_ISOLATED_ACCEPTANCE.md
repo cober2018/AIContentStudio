@@ -36,9 +36,16 @@ Date: 2026-09-29. Scope: local F6D change on `main`, before independent implemen
 - Latest successful report: `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6d-browser-evidence-hDIR9b/report.json`. All 11 browser gates passed from a fresh empty media root; no page errors. API and Vite test processes were stopped; temporary fixture and evidence files were retained for inspection.
 - Focused backend regression: 55 passed; full backend: 1007 passed, 2 skipped, 5 warnings. TypeScript/Vite and FE-P1 bundle check passed; OpenSpec strict 30/30 passed.
 
+## 2026-09-29 WAV audio regression rerun
+
+- Root cause: upload trusted the declared `audio/wav`, while Video v2 save re-sniffed bytes with no declared type and returned `application/octet-stream` for RIFF/WAVE. The shared sniffer now distinguishes RIFF/WAVE from RIFF/WEBP and unknown RIFF; Video v2 retains its exact byte/hash, project-reference, kind and live-rights gates. The v4 local package names an approved WAV companion `.wav` rather than `.bin`.
+- A fresh isolated database `/tmp/aicontent-f6d-acceptance.jx9blb/studio.db` and sibling media directory were used, not the earlier fixture. Browser evidence: `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6d-browser-evidence-4RGKn5/report.json`; all 11 gates passed, including recorded WAV → exact Master ref → Candidate v4 → Review/Approval → byte-matched WAV/MP4 local ZIP. Page errors: none. API/Vite test processes were stopped; temporary evidence retained.
+- Test-first proof: RIFF/WAVE sniff and Video v2 save both failed before the fix; package integration lacked the `.wav` member before the package mapping fix. Targeted tests then passed. No new table or migration, remote Provider call, publisher call or production write.
+- Fresh final gates: backend 1009 passed / 2 skipped / 5 existing warnings; TypeScript/Vite and FE-P1 budget PASS; OpenSpec strict 30/30; scoped Ruff, JS syntax and `git diff --check` PASS.
+
 ## Honest limits
 
 - Real external Video/TTS/ASR execution, accepted bytes/license/provenance/rights, response redaction and verified publication are F7, not demonstrated here.
-- `audio/wav` uploaded but was rejected by the Video v2 save byte/MIME gate because the current unlabelled sniffer does not recognize WAV. The passing fixture used ID3 MP3. No backend gate was loosened for the browser run.
+- The initial browser run used ID3 MP3; the later WAV rerun above closes the recorded-audio limitation. External TTS/ASR remains unverified.
 - The previous independent F6D SPEC review is on record, but no independent implementation verdict has been obtained this turn: the dedicated ChatGPT browser-control tool required by the existing review skill is unavailable. Local review and passing tests must not be labeled independent approval.
 - Source package/ZIP files under `openspec/` remain untouched and untracked. Canonical spec sync, archive, push, deployment and production migration have not occurred.
