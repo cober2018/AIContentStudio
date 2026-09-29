@@ -1,5 +1,9 @@
 # 配置记录
 
+## 2026-09-29 F6D 专业检查边界
+
+- Video v2 结构/时间线 CheckRun 原先完全缺失；现采用既有 Master append-only 检查记录。有效文档可做确定性结构与时间线验证，空草稿保持 incomplete。身份检查不能从文字推断画面或音频的品牌一致性：即使文字语义提供方返回 verified，整体仍是 warning；身份快照无有效 profile 时为 incomplete。渠道规则仅按 exact published video profile 执行，profile 变更使旧结果 stale；source/context freshness 仍需单独验收。
+
 ## 2026-09-29 F6D 旧视频显式升级边界
 
 - v1 只核镜头稳定 ID，不核画幅、时长、时间线或实际媒体位置。因此 preview 不自动生成 v2 payload；只返回已存脚本/镜头列表顺序和警告。专用提交必须显式供给完整 v2、精确 refs、确认当前警告；首个 child 保留脚本文本和镜头 ID/顺序，旧 render 不继承，内容调整须后续新修订。CAS/idempotency 的 request-hash 不在 edit_summary 重复持久化整份 v2 文档。

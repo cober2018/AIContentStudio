@@ -362,6 +362,7 @@ class VideoMasterAdapter(MediaMasterAdapter):
 
 class VideoMasterV2Adapter(VideoMasterAdapter):
     version = "2"
+    required_check_kinds = (*ProductionModalityAdapter.required_check_kinds, "video_structure", "video_timeline", "video_identity", "video_platform")
 
     @property
     def payload_schema(self) -> str:

@@ -175,6 +175,35 @@ def check_requirements(db: Session, row: ContentMasterRevision, *, require_curre
     """Resolve each required check against its own pinned inputs; v1 keeps its original hash."""
     adapter = adapter_for(row.modality, row.payload_schema)
     base_hash = check_input_hash(db, row, require_current=require_current)
+    if row.payload_schema == "video.master.v2":
+        if frozen_checks is not None:
+            frozen = {item.get("kind"): (item.get("report") or {}).get("requirement") for item in frozen_checks if isinstance(item, dict)}
+            if len(frozen) != len(frozen_checks) or set(frozen) != set(adapter.required_check_kinds):
+                raise ValueError("invalid frozen Video check requirement set")
+        else:
+            frozen = None
+        result = {}
+        for kind in adapter.required_check_kinds:
+            if frozen is not None:
+                metadata = frozen[kind]
+                if not isinstance(metadata, dict) or metadata.get("kind") != kind:
+                    raise ValueError(f"missing frozen Video check requirement: {kind}")
+            else:
+                metadata = {"kind": kind, "schema": adapter.payload_schema, "adapter_version": adapter.version, "implementation": "1"}
+                if kind == "video_platform":
+                    try:
+                        form = resolve_content_form(db, row.channel_id, row.content_form)
+                        template = db.get(ChannelTemplateVersion, form.profile_version_id) if form.profile_version_id else None
+                        metadata["profile"] = {"id": template.id if template else None, "version": template.version if template else None, "checksum": (template.checksum or _hash(template.profile_json or {})) if template else None, "form_hash": _hash(form.to_dict()), "source": form.source, "artifact_kind": form.artifact_kind}
+                    except (ChannelRegistryError, TypeError, ValueError):
+                        metadata["profile"] = {"unavailable": True, "channel": row.channel_id, "content_form": row.content_form}
+                elif kind == "video_identity":
+                    from .generation.providers import effective_llm_config
+
+                    config = effective_llm_config("identity_review")
+                    metadata["semantic"] = {"profile": config.get("profile"), "provider": config["provider"], "model": config["model"], "configured": bool(config["provider"] == "openai_compatible" and config["model"] and config["api_key"] and config["base_url"])}
+            result[kind] = {"kind": kind, "profile_key": adapter.payload_schema, "profile_version": adapter.version, "input_hash": _hash({"base": base_hash, "requirement": metadata}), "profile": metadata.get("profile"), "metadata": metadata}
+        return result
     if row.payload_schema == "graphic.master.v2":
         if frozen_checks is not None:
             frozen = {item.get("kind"): (item.get("report") or {}).get("requirement") for item in frozen_checks if isinstance(item, dict)}
@@ -369,12 +398,16 @@ def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user:
         from .graphic_master_checks import run_graphic_checks
 
         results.update(run_graphic_checks(db, row, inputs, requirements))
+    elif row.payload_schema == "video.master.v2":
+        from .video_master_checks import run_video_checks
+
+        results.update(run_video_checks(db, row, inputs, requirements))
     rows = []
     for kind, requirement in requirements.items():
         status, report = results.get(kind, ("incomplete", {"reasons": ["check_handler_unavailable"]}))
         if inputs["readiness"]["state"] == "stale":
             status, report = "stale", {"reasons": inputs["readiness"]["reasons"]}
-        if row.payload_schema in {"text.master.v2", "graphic.master.v2"}:
+        if row.payload_schema in {"text.master.v2", "graphic.master.v2", "video.master.v2"}:
             report = {**report, "requirement": requirement["metadata"]}
         semantic = requirement.get("metadata", {}).get("semantic", {}) if (report.get("coverage") or {}).get("semantic") in {"verified", "partial"} else {}
         check = ContentMasterCheckRun(master_revision_id=row.id, check_kind=kind, profile_key=requirement["profile_key"], profile_version=requirement["profile_version"], input_hash=requirement["input_hash"], status=status, report_json=report, provider_key=str(semantic.get("provider") or "")[:100] or None, provider_version=str(semantic.get("model") or "")[:100] or None, created_at=utcnow())
