@@ -2,6 +2,7 @@
 
 ## 2026-09-29 F6E 首个 Variant 写入边界
 
+- Video v2 的 `shot_source` 可作为口播脚本 B-roll 的可证明来源：Variant 必须显式保存 shot→MaterialRevision/hash/位置，实时校验项目可见、素材字节和公开权利，并在提交前重复检查。估算 SRT 仅取镜头计划时长，标 `estimated=true`；真实字幕 cue、音轨、最终成片在当前受控适配中不静默丢弃，而是 typed no-write。
 - 抖音 `spoken_script` 的目标 `artifact_kind=script`。Video v2 只有 shot 与 script block 能无损对应、且不含未映射媒体/定时字幕时才可确定性预览/保存；没有视频成片或真实时码就不产生 `estimated_srt`。B-roll/音轨/字幕来源未来必须按 exact ref/时间映射，不可静默丢弃或冒充发布成片。
 - 小红书图文不能由 canvas prompt 推断已产图：F6C Graphic Master 的 `render_input_hash` attestation、逐画布输出与当前素材字节/哈希/权利同时成立，才能预览/保存 `image_note`。Variant 卡片 `image_ref_key` 和冻结 `ChannelVariantAssetRef.sort_order` 必须同序；显式重排两者合法，只改一边拒绝。提交前撤权会回滚 Variant、Refs、Event。
 - 预览与保存是两个动作：`adapt-preview` 只对当前精确 Master 和 published Profile 生成 canonical Text 建议，不创建 Variant、ProjectEvent 或 DeliveryTarget；不支持的目标和来源 refs 明确不可执行。远端 Publisher 仍为后续 F7 范围。

@@ -222,6 +222,64 @@ def _validate_graphic_assets(db: Session, project_id: int, master: ContentMaster
     return materials
 
 
+def _video_source_refs(db: Session, master: ContentMasterRevision) -> list[dict]:
+    from .video_documents import canonical_payload as canonical_video_payload
+
+    source = canonical_video_payload(master.payload_json)
+    stored = db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id)).all()
+    if any(ref.role != "shot_source" for ref in stored):
+        raise HTTPException(422, {"code": "video_source_media_requires_explicit_mapping"})
+    by_shot = {ref.slot_key: ref for ref in stored}
+    shots = [shot for shot in source["shots"] if "source_material_revision_id" in shot]
+    if len(by_shot) != len(stored) or set(by_shot) != {shot["id"] for shot in shots}:
+        raise HTTPException(422, {"code": "video_source_b_roll_mismatch"})
+    result = []
+    for index, shot in enumerate(shots):
+        ref = by_shot[shot["id"]]
+        if ref.material_revision_id != shot["source_material_revision_id"] or ref.placement_json != {"shot_id": shot["id"]}:
+            raise HTTPException(422, {"code": "video_source_b_roll_mismatch"})
+        result.append({"material_revision_id": ref.material_revision_id, "content_hash_snapshot": ref.content_hash_snapshot,
+                       "role": "b_roll", "slot_key": shot["id"], "sort_order": index, "placement": {"shot_id": shot["id"]}})
+    return result
+
+
+def _validate_video_assets(db: Session, project_id: int, master: ContentMasterRevision, refs: list[dict]) -> list[MaterialRevision]:
+    from .content_masters import _verified_generated_asset
+
+    expected = _video_source_refs(db, master)
+    if len(refs) != len(expected) or not all(isinstance(ref, dict) for ref in refs):
+        raise HTTPException(422, {"code": "variant_b_roll_set_mismatch"})
+    materials = []
+    for actual, source in zip(refs, expected, strict=True):
+        if any(actual.get(key) != source[key] for key in source):
+            raise HTTPException(422, {"code": "variant_b_roll_binding_mismatch"})
+        material = db.get(MaterialRevision, source["material_revision_id"])
+        if material is None:
+            raise HTTPException(422, {"code": "variant_b_roll_unready"})
+        visible = db.scalar(select(ProjectMaterialReference.id).where(
+            ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.material_revision_id == material.id,
+            ProjectMaterialReference.status == "active",
+        ))
+        generated = db.scalars(select(ProjectWorkflowOutput).where(
+            ProjectWorkflowOutput.project_id == project_id, ProjectWorkflowOutput.output_kind == "material_revision",
+            ProjectWorkflowOutput.entity_id == material.id,
+        )).all() if visible is None else []
+        if ((visible is None and not any(_verified_generated_asset(db, output, material) for output in generated))
+                or material.content_hash != source["content_hash_snapshot"] or material.material.kind not in {"image", "video"}
+                or material.material.status != "active" or material.status in {"revoked", "archived"}
+                or material.public_use_allowed is not True):
+            raise HTTPException(422, {"code": "variant_b_roll_unready"})
+        try:
+            content = read_bytes_checked(db, material, require_public=True)
+        except (HTTPException, OSError) as exc:
+            raise HTTPException(422, {"code": "variant_b_roll_bytes_unverified"}) from exc
+        expected_prefix = "image/" if material.material.kind == "image" else "video/"
+        if not material.mime_type or not material.mime_type.startswith(expected_prefix) or sniff_mime(content, None) != material.mime_type:
+            raise HTTPException(422, {"code": "variant_b_roll_mime_invalid"})
+        materials.append(material)
+    return materials
+
+
 def adapt_preview(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
     _, unit = owned_unit(db, project_id, unit_id, user)
     master = db.get(ContentMasterRevision, payload["source_master_revision_id"])
@@ -238,15 +296,17 @@ def adapt_preview(db: Session, *, project_id: int, unit_id: int, user: User, pay
     source_projection = get_master_revision(db, project_id, unit_id, master.id, user)
     if source_projection["readiness"]["state"] == "stale":
         raise HTTPException(409, {"code": "variant_source_context_stale"})
-    if source_projection["evidence"] or (source_projection["assets"] and master.payload_schema != "graphic.master.v2"):
+    if source_projection["evidence"] or (source_projection["assets"] and master.payload_schema not in {"graphic.master.v2", "video.master.v2"}):
         raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
     try:
         adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
     except AdapterUnavailable as exc:
         raise HTTPException(422, {"code": "variant_adapter_unavailable", "reason": str(exc)}) from exc
-    asset_refs = _graphic_source_refs(db, master) if master.payload_schema == "graphic.master.v2" else []
-    if asset_refs:
+    asset_refs = _graphic_source_refs(db, master) if master.payload_schema == "graphic.master.v2" else _video_source_refs(db, master) if master.payload_schema == "video.master.v2" else []
+    if master.payload_schema == "graphic.master.v2":
         _validate_graphic_assets(db, project_id, master, asset_refs)
+    elif master.payload_schema == "video.master.v2":
+        _validate_video_assets(db, project_id, master, asset_refs)
     try:
         adapted = adapter.adapt(master.payload_json, asset_refs=asset_refs, evidence_refs=[])
     except AdapterUnavailable as exc:
@@ -291,7 +351,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     source_projection = get_master_revision(db, project_id, unit_id, master.id, user)
     if source_projection["readiness"]["state"] == "stale":
         raise HTTPException(409, {"code": "variant_source_context_stale"})
-    if (master.payload_schema != "graphic.master.v2" and db.scalar(select(ContentMasterAssetRef.id).where(ContentMasterAssetRef.master_revision_id == master.id).limit(1)) is not None) or db.scalar(select(ContentMasterEvidenceRef.id).where(ContentMasterEvidenceRef.master_revision_id == master.id).limit(1)) is not None:
+    if (master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and db.scalar(select(ContentMasterAssetRef.id).where(ContentMasterAssetRef.master_revision_id == master.id).limit(1)) is not None) or db.scalar(select(ContentMasterEvidenceRef.id).where(ContentMasterEvidenceRef.master_revision_id == master.id).limit(1)) is not None:
         raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
     evidence_refs = payload.get("evidence_refs", [])
     asset_refs = payload.get("asset_refs", [])
@@ -310,10 +370,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         canonical = canonical_payload(capability["payload_schema"], payload["payload"], asset_refs=asset_refs, evidence_refs=evidence_refs)
     except VariantDocumentError as exc:
         raise HTTPException(422, {"code": "variant_payload_invalid", "reason": str(exc)}) from exc
-    materials = _validate_graphic_assets(db, project_id, master, asset_refs) if master.payload_schema == "graphic.master.v2" else []
+    materials = _validate_graphic_assets(db, project_id, master, asset_refs) if master.payload_schema == "graphic.master.v2" else _validate_video_assets(db, project_id, master, asset_refs) if master.payload_schema == "video.master.v2" else []
     if master.payload_schema == "graphic.master.v2" and [card["image_ref_key"] for card in canonical["cards"]] != [ref["slot_key"] for ref in sorted(asset_refs, key=lambda item: item["sort_order"])]:
         raise HTTPException(422, {"code": "variant_asset_order_mismatch"})
-    if master.payload_schema != "graphic.master.v2" and asset_refs:
+    if master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and asset_refs:
         raise HTTPException(422, {"code": "variant_asset_mapping_unavailable"})
     _validate_evidence_refs(db, master, evidence_refs)
     if expected_adapted is not None and canonical != expected_adapted:
@@ -349,7 +409,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         db.flush()
         for ref, material in zip(asset_refs, materials, strict=True):
             db.add(ChannelVariantAssetRef(
-                variant_revision_id=row.id, material_revision_id=material.id, role="card_image", slot_key=ref["slot_key"],
+                variant_revision_id=row.id, material_revision_id=material.id, role=ref["role"], slot_key=ref["slot_key"],
                 sort_order=ref["sort_order"], placement_json=ref["placement"],
                 rights_snapshot_json={"rights_status": material.rights_status, "public_use_allowed": material.public_use_allowed,
                                       "model_use_allowed": material.model_use_allowed, "commercial_use_allowed": material.commercial_use_allowed},
@@ -379,8 +439,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         current_master = get_master_revision(db, project_id, unit_id, master.id, user)
         try:
             _validate_evidence_refs(db, master, evidence_refs)
-            if asset_refs:
+            if master.payload_schema == "graphic.master.v2":
                 _validate_graphic_assets(db, project_id, master, asset_refs)
+            elif master.payload_schema == "video.master.v2":
+                _validate_video_assets(db, project_id, master, asset_refs)
         except HTTPException:
             db.rollback()
             raise HTTPException(409, {"code": "variant_refs_changed"}) from None

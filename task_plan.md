@@ -8,6 +8,9 @@
 - [x] /// 增加 non-durable adapt-preview，只对精确当前 Master 和 published Profile 给出受控 Text 建议，确认无 Variant/Event 写入。
 - [x] /// 将 Graphic v2 已验证的逐画布最终 render 映射为小红书有序图文卡片和精确 MaterialRevision；缺 render、撤权、字节或顺序不符时 fail closed。
 - [x] /// 为 Video v2→抖音口播脚本开放无媒体/无定时内容的确定性子集；未映射 B-roll、配音、字幕及叠字一律拒绝，绝不声称已生成视频。
+- [x] /// 先写 Video v2 shot_source→spoken_script B-roll 精确引用的失败回归，覆盖预览/保存、撤权、缺字节与无部分写入。
+- [x] /// 仅映射可证明的 shot_source 素材；服务端验证项目可见、媒体类型、hash/字节/公开权利，并在事务提交前复核。其他音轨、定时字幕和成片仍拒绝；根据镜头计划时长生成标明 estimated 的字幕。
+- [x] /// 复跑定向及全后端、Ruff、OpenSpec strict、diff-check；更新 README/progress/findings，核销真实完成的 OpenSpec 任务并本地提交。
 - [ ] /// 实现 exact Registry/profile 的 canonical adapters，再接项目级 Variant CAS/refs/checks 和 Candidate v5；任何额外持久对象或安全边界削弱先停下修规格。
 - [ ] /// 完成 Review/Approval/本地包、Matrix、前端与隔离浏览器验收；保留 v3/v4 和未知发布状态，不声称 F7 远端能力已验证。
 - [ ] /// 最终门禁和独立复核后仅本地范围提交；主规格同步/归档、push、deploy、生产迁移另行授权。
