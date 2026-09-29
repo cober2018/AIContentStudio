@@ -1,6 +1,9 @@
 # 当前进度
 
-## 2026-09-29：FE-F6D SPEC review 修订
+## 2026-09-29：FE-F6D apply（进行中）
+
+- 冻结 Video v2 Candidate 的 Review 读增加跨字段校验：canonical v2 文档、Master payload hash、完整 exact refs、唯一 `render_output` 与 MP4/hash/rights 快照、published profile 的冻结输入哈希、人工 attestation 输出和签认人须一致。10 个篡改变体先见 RED，修复后 11 个冻结读用例 PASS；没有改 v1/Text/Graphic 分派。全量后端从正确 `apps/api` 工作目录新跑 `976 passed / 2 skipped / 5 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。任务仍 19/79：5.10 的 package 与真实候选闭环尚未验收，不提前勾选。
+- 曾从仓库根目录误跑全量测试，出现 4 个运行环境失败：3 个 Alembic 相对路径找不到配置，1 个 worker 连接到错误的相对路径数据库；在 `apps/api` 工作目录重跑全绿。该误跑不是业务回归，也不修改测试或迁移来掩盖。
 
 - 第四批将 published exact Video profile version/rules 加入 `video.master.v2` render-input hash，并让 Video v2 readiness 实际调用 fail-closed `profile_reasons`；发布新 profile 后旧 render hash 改变。测试先见同 hash 的 RED，修复后 Video/F6A 定向 41 passed、相关 Ruff PASS；1.10 完成，当前 19/79。Video 专业 check input hash/currentness 仍属 5.x 未完成。
 - 最新全量后端 `965 passed / 2 skipped / 5 warnings`，未将它当作 F6D 最终验收；本批没有前端改动。

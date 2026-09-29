@@ -73,19 +73,35 @@ def _canonical_hash(value: object) -> str:
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
 
 
+def _video_profile_snapshot(db: Session, master: ContentMasterRevision) -> dict:
+    try:
+        form = resolve_content_form(db, master.channel_id, master.content_form)
+        return {"source": form.source, "version_id": form.profile_version_id, "artifact_kind": form.artifact_kind, "video_requirements": form.video_requirements, "media_requirements": form.media_requirements}
+    except ChannelRegistryError:
+        return {"unavailable": True}
+
+
 def render_input_hash(db: Session, master: ContentMasterRevision) -> str:
     payload = {key: value for key, value in master.payload_json.items() if key != "render_asset_ref"}
     assets = db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id, ContentMasterAssetRef.role != "render_output").order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id)).all()
     evidence = db.scalars(select(ContentMasterEvidenceRef).where(ContentMasterEvidenceRef.master_revision_id == master.id).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id)).all()
-    video_profile = None
-    if master.payload_schema == "video.master.v2" and master.channel_id and master.content_form:
-        try:
-            form = resolve_content_form(db, master.channel_id, master.content_form)
-            video_profile = {"source": form.source, "version_id": form.profile_version_id, "artifact_kind": form.artifact_kind, "video_requirements": form.video_requirements, "media_requirements": form.media_requirements}
-        except ChannelRegistryError:
-            video_profile = {"unavailable": True}
+    video_profile = _video_profile_snapshot(db, master) if master.payload_schema == "video.master.v2" and master.channel_id and master.content_form else None
     # Final outputs and revision IDs are excluded to avoid a render-hash cycle.
     return _canonical_hash({"project_id": master.project_id, "unit_id": master.content_unit_id, "schema": master.payload_schema, "context_hash": master.context_hash, "payload": payload, "assets": [{"material_revision_id": item.material_revision_id, "content_hash": item.content_hash_snapshot, "role": item.role, "slot_key": item.slot_key, "sort_order": item.sort_order, "placement": item.placement_json, "rights": item.rights_snapshot_json} for item in assets], "evidence": [{"fact_pack_item_id": item.fact_pack_item_id, "checksum": item.snapshot_checksum, "role": item.role, "sort_order": item.sort_order, "locator": item.content_locator_json} for item in evidence], **({"video_profile": video_profile} if master.payload_schema == "video.master.v2" else {})})
+
+
+def frozen_video_render_input_hash(manifest: dict) -> str:
+    project = manifest["project"]
+    master = manifest["content_master"]
+    content = manifest["content"]
+    render = manifest["render"]
+    return _canonical_hash({
+        "project_id": project["id"], "unit_id": project["unit_id"], "schema": master["payload_schema"], "context_hash": master["context_hash"],
+        "payload": {key: value for key, value in content.items() if key != "render_asset_ref"},
+        "assets": [{"material_revision_id": ref["material_revision_id"], "content_hash": ref["content_hash"], "role": ref["role"], "slot_key": ref["slot_key"], "sort_order": ref["sort_order"], "placement": ref["placement"], "rights": ref["rights_snapshot"]} for ref in manifest["assets"] if ref["role"] != "render_output"],
+        "evidence": [{"fact_pack_item_id": ref["fact_pack_item_id"], "checksum": ref["snapshot_checksum"], "role": ref["role"], "sort_order": ref["sort_order"], "locator": ref["locator"]} for ref in manifest["evidence_refs"]],
+        "video_profile": render["video_profile"],
+    })
 
 
 class ProductionModalityAdapter:
@@ -381,6 +397,12 @@ class VideoMasterV2Adapter(VideoMasterAdapter):
         except VideoDocumentError as exc:
             return {**super().build_preview(master), "status": "invalid", "reasons": [str(exc)]}
         return {**super().build_preview(master), "shot_count": len(document["shots"]), "duration_ms": document["timeline"]["duration_ms"]}
+
+    def build_render_snapshot(self, db: Session, master: ContentMasterRevision) -> dict:
+        render = super().build_render_snapshot(db, master)
+        if render["status"] == "ready":
+            render["video_profile"] = _video_profile_snapshot(db, master)
+        return render
 
 
 ADAPTERS = {(adapter.modality, adapter.payload_schema): adapter for adapter in (TextMasterAdapter(), TextMasterV2Adapter(), GraphicMasterAdapter(), GraphicMasterV2Adapter(), VideoMasterAdapter(), VideoMasterV2Adapter())}

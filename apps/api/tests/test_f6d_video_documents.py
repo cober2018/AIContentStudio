@@ -3,8 +3,11 @@
 import hashlib
 import importlib
 import importlib.util
+import json
+from copy import deepcopy
 
 import pytest
+from fastapi import HTTPException
 
 
 def _canonical(payload: dict) -> dict:
@@ -25,6 +28,64 @@ def _document() -> dict:
         "music": {},
         "cover": {},
     }
+
+
+def _frozen_video_candidate():
+    from app.models import ContentAsset
+    from app.services.candidates import candidate_hash
+
+    document = _document()
+    document["render_asset_ref"] = {"material_revision_id": 42}
+    video_hash = "a" * 64
+    profile = {"source": "profile", "version_id": 7, "artifact_kind": "video", "video_requirements": {}, "media_requirements": {}}
+    asset = {"id": 9, "material_revision_id": 42, "content_hash": video_hash, "role": "render_output", "slot_key": "final", "sort_order": 0, "placement": {"render": "final"}, "rights_snapshot": {}}
+    input_snapshot = {
+        "project_id": 1, "unit_id": 2, "schema": "video.master.v2", "context_hash": "b" * 64,
+        "payload": {key: value for key, value in document.items() if key != "render_asset_ref"},
+        "assets": [], "evidence": [], "video_profile": profile,
+    }
+    input_hash = hashlib.sha256(json.dumps(input_snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    output = {"material_revision_id": 42, "content_hash": video_hash, "mime_type": "video/mp4", "canvas_id": None, "rights_snapshot": {}}
+    manifest = {
+        "schema_version": 4, "project": {"id": 1, "unit_id": 2, "modality": "video"},
+        "content_master": {"payload_schema": "video.master.v2", "payload_hash": hashlib.sha256(json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest(), "context_hash": "b" * 64},
+        "content": document, "assets": [asset], "evidence_refs": [],
+        "render": {"status": "ready", "origin": "manual", "attested_by": "editor@studio.local", "render_input_hash": input_hash, "video_profile": profile, "outputs": [output]},
+        "production": {"edit_summary": {"render_attestation": {"origin": "manual", "confirmed": True, "render_input_hash": input_hash, "attested_by": "editor@studio.local", "outputs": [{"material_revision_id": 42, "content_hash": video_hash, "canvas_id": None}]}}},
+    }
+    return ContentAsset(title="Video", channel="video", candidate_manifest_json=manifest, candidate_hash=candidate_hash(manifest))
+
+
+def test_frozen_video_v2_accepts_canonical_exact_manual_render():
+    from app.services.project_review_projection import candidate_preview
+
+    preview = candidate_preview(_frozen_video_candidate())
+    assert preview["render"]["outputs"][0]["material_revision_id"] == 42
+
+
+@pytest.mark.parametrize("change", [
+    lambda manifest: manifest["assets"].clear(),
+    lambda manifest: manifest["assets"].append(deepcopy(manifest["assets"][0])),
+    lambda manifest: manifest["assets"][0].update({"slot_key": "other"}),
+    lambda manifest: manifest["assets"][0].update({"content_hash": "f" * 64}),
+    lambda manifest: manifest["render"]["outputs"][0].update({"mime_type": "image/png"}),
+    lambda manifest: manifest["render"].update({"attested_by": "other@studio.local"}),
+    lambda manifest: manifest["content"].update({"unknown": True}),
+    lambda manifest: manifest["content_master"].update({"payload_hash": "f" * 64}),
+    lambda manifest: manifest["render"].update({"render_input_hash": "f" * 64}),
+    lambda manifest: manifest["production"]["edit_summary"]["render_attestation"].update({"outputs": []}),
+])
+def test_frozen_video_v2_rejects_cross_field_tampering_even_with_rehashed_candidate(change):
+    from app.services.candidates import candidate_hash
+    from app.services.project_review_projection import candidate_preview
+
+    asset = _frozen_video_candidate()
+    change(asset.candidate_manifest_json)
+    asset.candidate_hash = candidate_hash(asset.candidate_manifest_json)
+    with pytest.raises(HTTPException) as exc:
+        candidate_preview(asset)
+    assert exc.value.status_code == 409
+    assert exc.value.detail["code"] == "frozen_candidate_integrity_failed"
 
 
 def test_video_v2_document_canonical_order_and_stable_ids():

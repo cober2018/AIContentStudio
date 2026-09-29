@@ -18,6 +18,7 @@ Apply the reviewed `fe-f6d-video-production-studio` change to the local `main` c
 - [ ] /// Build canonical `video.master.v2` document/ref validation and exact published `video_requirements`; run focused contract checks.
 - [ ] /// Add Video v2 adapter, save/read dispatch and explicit Video v1→v2 preview/commit; keep ordinary cross-schema save forbidden.
 - [ ] /// Add exact source/render refs, input-bound manual attestation and server-only derived child provenance; verify no fake Provider writes.
+- [x] /// Red: add frozen Video v2 Candidate integrity cases for canonical content, exact sole MP4 output/declaration/ref and manual input-hash binding; Green: extend Review frozen verifier without changing v1/Text/Graphic paths; rerun targeted and full backend gates. Package/browser acceptance remains a separate pending gate.
 - [ ] /// Add Video checks/freshness, frozen Candidate integrity, Review diff/preview and byte-exact local package; regress Video v1/Text/Graphic.
 - [ ] /// Build typed Video-only Studio after backend closure, keep common Production/Text/Graphic bundles isolated.
 - [ ] /// Run isolated browser Video flow, full backend/frontend/FE-P1/OpenSpec/lint/diff gates and independent reviews; close only proven tasks and commit locally.

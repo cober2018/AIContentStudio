@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F6D 冻结 Candidate 读边界
+
+- 原 `_verify_frozen_production()` 仅覆盖 Text/Graphic v2，Video v2 即使缺失最终成片 ref、输出 MIME 错误或人工 attestation 不一致，Review 仍可显示。现加入 Video v2 的冻结自洽校验，并冻结 published profile 供纯函数重算 render-input hash；输出仍只标记 `origin=manual`。Package、live rights 与浏览器端到端仍需后续单独验收，不能据此宣称 F6D 完成。
+- 全量后端测试必须从 `apps/api` 运行：Alembic 配置和默认开发库路径相对当前工作目录。从仓库根运行产生 4 个环境性失败，正确目录实测 `976 passed / 2 skipped`。不得把根目录的失败归因于 Video 代码，也不能把正确目录的通过冒充浏览器/外部能力验证。
+
 ## 2026-09-29 F6D 规格复核发现
 
 - 当前 Channel Registry 只有 `media_requirements`/`graphic_requirements`，没有 exact published Video 规则载体；Video v2 检查必须新增可选、有界 `video_requirements`，缺字段不凭空限制，畸形/未知规则不可 PASS。

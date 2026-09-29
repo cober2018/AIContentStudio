@@ -2,6 +2,7 @@
 
 ## 2026-09-29：North Star 完整剩余开发（目标进行中）
 
+- [x] /// F6D 冻结 Video v2 候选增加独立读时一致性校验：规范化文档、Master payload hash、精确成片 ref/MP4、已冻结 profile 与 render-input hash、人工 attestation；先 RED 后 GREEN，后端全量与 strict 门禁通过。Review 的冻结读已保护，Package/浏览器全链路仍待后续任务验证。
 - [x] /// 从 `main@361265d` 与 F8 用户源包出发，审计 auth/startup/health/metrics/media/worker 当前实现，区分已有功能与生产缺口。
 - [x] /// 以 `openspec-propose` 归位 F8 proposal/design、新 Production Readiness 规格和 Settings delta；为原十条要求补可验收场景及当前代码边界。
 - [x] /// 审核 F8 原 91 项任务保留与八项现状安全门禁，运行全库 OpenSpec strict 30/30 和 diff-check；仅规格检查点准备本地提交。
