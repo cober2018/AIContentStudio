@@ -4,7 +4,14 @@ from types import SimpleNamespace
 
 from sqlalchemy import select
 
-from app.models import ChannelTemplateVersion, ChannelVariantRevision, FactPack, FactPackItem, ProjectEvent
+from app.models import (
+    ChannelTemplateVersion,
+    ChannelVariantCheckRun,
+    ChannelVariantRevision,
+    FactPack,
+    FactPackItem,
+    ProjectEvent,
+)
 from app.seed import seed_v1_channel_profiles
 from app.services.channel_variants import _variant_context
 
@@ -239,3 +246,82 @@ def test_adapt_preview_uses_exact_current_master_profile_and_does_not_write(clie
     assert unavailable.status_code == 422
     assert unavailable.json()["detail"]["code"] == "variant_adapter_unavailable"
     assert client.post(path, json=body, headers={"X-Studio-User": "foreign-preview@studio.local"}).status_code == 404
+
+
+def test_variant_schema_check_is_append_only_bound_to_payload_and_does_not_imply_ready(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    variant = client.post(path, json={
+        "variant_key": "single-checks", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "single-checks-1", "payload": {"text": "有来源的原文"},
+    }, headers=headers)
+    assert variant.status_code == 201, variant.text
+    checks_path = f"{path}/{variant.json()['id']}/checks"
+    before = client.get(checks_path, headers=headers)
+    assert before.status_code == 200, before.text
+    assert {item["check_kind"]: item["status"] for item in before.json()["items"]}["variant_schema"] == "incomplete"
+    assert before.json()["ready"] is False
+    first = client.post(checks_path, headers=headers)
+    assert first.status_code == 200, first.text
+    schema = next(item for item in first.json()["items"] if item["check_kind"] == "variant_schema")
+    assert schema["status"] == "pass"
+    assert schema["is_current"] is True
+    assert first.json()["ready"] is False
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 1
+    assert client.get(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
+    assert client.post(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
+
+
+def test_variant_later_corrupt_payload_check_blocks_earlier_pass(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    variant = client.post(path, json={
+        "variant_key": "single-checks", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "single-checks-1", "payload": {"text": "有来源的原文"},
+    }, headers=headers).json()
+    checks_path = f"{path}/{variant['id']}/checks"
+    first = client.post(checks_path, headers=headers).json()
+    old = next(item for item in first["items"] if item["check_kind"] == "variant_schema")
+    row = db_session.get(ChannelVariantRevision, variant["id"])
+    row.payload_json = {"text": "被篡改"}
+    db_session.commit()
+    stale = client.get(checks_path, headers=headers).json()
+    stale_schema = next(item for item in stale["items"] if item["check_kind"] == "variant_schema")
+    assert stale_schema["status"] == "stale"
+    assert stale["ready"] is False
+    second = client.post(checks_path, headers=headers)
+    assert second.status_code == 200, second.text
+    latest = next(item for item in second.json()["items"] if item["check_kind"] == "variant_schema")
+    assert latest["status"] == "blocker"
+    assert latest["input_hash"] != old["input_hash"]
+    assert latest["id"] != old["id"]
+    assert second.json()["ready"] is False
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 2
+
+
+def test_later_variant_check_blocker_for_same_input_outranks_old_pass(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    variant = client.post(path, json={
+        "variant_key": "single-checks", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "single-checks-1", "payload": {"text": "有来源的原文"},
+    }, headers=headers).json()
+    checks_path = f"{path}/{variant['id']}/checks"
+    first = client.post(checks_path, headers=headers).json()
+    old = next(item for item in first["items"] if item["check_kind"] == "variant_schema")
+    stored = db_session.get(ChannelVariantCheckRun, old["id"])
+    db_session.add(ChannelVariantCheckRun(
+        variant_revision_id=variant["id"], check_kind="variant_schema", input_hash=stored.input_hash,
+        profile_hash=stored.profile_hash, adapter_hash=stored.adapter_hash, rule_hash=stored.rule_hash,
+        status="blocker", report_json={"reasons": ["later_blocker"]},
+    ))
+    db_session.commit()
+    current = client.get(checks_path, headers=headers).json()
+    latest = next(item for item in current["items"] if item["check_kind"] == "variant_schema")
+    assert latest["status"] == "blocker"
+    assert latest["report"]["reasons"] == ["later_blocker"]
+    assert latest["id"] != old["id"]
+    assert current["ready"] is False

@@ -11,6 +11,9 @@
 - [x] /// 先写 Video v2 shot_source→spoken_script B-roll 精确引用的失败回归，覆盖预览/保存、撤权、缺字节与无部分写入。
 - [x] /// 仅映射可证明的 shot_source 素材；服务端验证项目可见、媒体类型、hash/字节/公开权利，并在事务提交前复核。其他音轨、定时字幕和成片仍拒绝；根据镜头计划时长生成标明 estimated 的字幕。
 - [x] /// 复跑定向及全后端、Ruff、OpenSpec strict、diff-check；更新 README/progress/findings，核销真实完成的 OpenSpec 任务并本地提交。
+- [x] /// 先写 Variant schema/content CheckRun 的失败回归：项目权限、append-only、精确 payload/context/ref 输入哈希和最新 blocker 覆盖旧 pass。
+- [x] /// 复用既有 CheckRun 表添加项目级运行/投影 API；未实现的 profile/rights/evidence/render 检查继续显式 incomplete，禁止借 schema pass 冒充可冻结。
+- [x] /// 完成定向/全量门禁和本地提交，之后继续补完整 Variant live gate 与 Candidate v5。
 - [ ] /// 实现 exact Registry/profile 的 canonical adapters，再接项目级 Variant CAS/refs/checks 和 Candidate v5；任何额外持久对象或安全边界削弱先停下修规格。
 - [ ] /// 完成 Review/Approval/本地包、Matrix、前端与隔离浏览器验收；保留 v3/v4 和未知发布状态，不声称 F7 远端能力已验证。
 - [ ] /// 最终门禁和独立复核后仅本地范围提交；主规格同步/归档、push、deploy、生产迁移另行授权。

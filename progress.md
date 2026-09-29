@@ -2,6 +2,7 @@
 
 ## 2026-09-29：F6E 规格门槛解除
 
+- Variant 检查首批接入 project-scoped GET/POST：schema/content CheckRun 追加式保存，输入 hash 绑定 canonical payload/context 与冻结 refs/profile/adapter/rules；历史输入改变会显示 stale，后续同输入 blocker 覆盖旧 pass。其他 required checks 继续明确 incomplete，因此 schema pass 绝不等于 Candidate-ready。权限、篡改及优先级定向 3 passed；全后端 `1082 passed / 2 skipped / 7 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。任务 7.1/7.4 核销，F6E 进度 27/100；完整检查与 v5 仍待实施。
 - Video v2→抖音 `spoken_script` 现将来源 `shot_source` 逐镜头映射成精确 `b_roll` MaterialRevision 引用，校验项目可见、图片/视频种类、实时公开权利、真实字节/hash/MIME、顺序和放置；提交前撤权则连 Variant/refs/Event 回滚。镜头计划时长只生成明确 `estimated=true` 的 SRT，不冒充真实字幕时码/成片；来源音轨、真实定时字幕、叠字等尚不能无损映射时拒绝。定向 23 passed；全后端 `1079 passed / 2 skipped / 7 warnings`，Ruff、OpenSpec strict 30/30、diff-check PASS。F6E 任务 6.4/6.5 核销，进度 25/100；v5/本地包/浏览器及最终门禁仍未完成。
 - 抖音 `spoken_script` 增加 Video v2 无媒体/无真实定时内容的确定性预览与保存子集：稳定 shot/script block 映射，输出 `artifact_kind=script`、不含成片声称；定时字幕等无法证明的来源内容 fail closed，未映射 B-roll 明确拒绝。B-roll exact refs、完整 6.4/6.5、Candidate v5/本地包未完成，F6E 勾选仍 23/100。定向适配测试 12 passed；全后端重跑 `1075 passed / 2 skipped / 7 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。
 - Graphic v2→小红书 `image_note` 受控适配已接入：仅从 F6C 已验证的逐画布最终 render 映射真实图片；项目显式引用或已证明的工作流生成素材、实时 public-use、文件字节/hash/MIME 与卡片/引用顺序均由服务端校验。未渲染、撤权、错误 hash/order 无业务写入，保存中撤权原子回滚。F6E 任务 2.3/3.6/6.3 核销，进度 23/100。全后端重跑 `1072 passed / 2 skipped / 7 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。视频 Adapter、完整检查、Candidate v5/Review/包仍未实施。
