@@ -1,5 +1,6 @@
 """Read-only project review projection over existing persisted facts."""
 
+import hashlib
 from difflib import SequenceMatcher
 
 from fastapi import HTTPException
@@ -115,6 +116,9 @@ def project_projection(db: Session, project: ContentProject) -> dict:
 
 
 def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict:
+    _verify_frozen_text_v2(current)
+    if previous is not None:
+        _verify_frozen_text_v2(previous)
     prior = previous.candidate_manifest_json or {} if previous else {}
     latest = current.candidate_manifest_json or {}
     sections = ("content", "content_master", "brief", "assets", "evidence_refs", "media", "evidence", "identity", "production", "checks", "render", "channel", "content_form", "citations", "declarations")
@@ -122,15 +126,48 @@ def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict
     modality = (latest.get("project") or {}).get("modality", "text")
     if modality != "text":
         return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id, "modality": modality, "changed_sections": changed, "text": None}
-    before = str((prior.get("content") or {}).get("markdown" if prior.get("schema_version") == 4 else "body_markdown") or "")[:2000]
-    after = str((latest.get("content") or {}).get("markdown" if latest.get("schema_version") == 4 else "body_markdown") or "")[:2000]
+    structured = None
+    if previous and prior.get("schema_version") == 4 and latest.get("schema_version") == 4 and (prior.get("content_master") or {}).get("payload_schema") == "text.master.v2" and (latest.get("content_master") or {}).get("payload_schema") == "text.master.v2":
+        before_list = ((prior.get("content") or {}).get("document") or {}).get("blocks", [])
+        after_list = ((latest.get("content") or {}).get("document") or {}).get("blocks", [])
+        before_blocks = {item.get("id"): item for item in before_list}
+        after_blocks = {item.get("id"): item for item in after_list}
+        before_order, after_order = list(before_blocks), list(after_blocks)
+        structured = []
+        for block_id in before_order:
+            if block_id not in after_blocks:
+                structured.append({"kind": "remove", "block_id": block_id})
+        for block_id in after_order:
+            if block_id not in before_blocks:
+                structured.append({"kind": "add", "block_id": block_id})
+            else:
+                changes = []
+                if before_order.index(block_id) != after_order.index(block_id):
+                    changes.append("move")
+                if before_blocks[block_id] != after_blocks[block_id]:
+                    changes.append("modify")
+                if changes:
+                    structured.append({"kind": changes[-1], "changes": changes, "block_id": block_id})
+    before = str(((prior.get("render") or {}).get("body_markdown") if prior.get("schema_version") == 4 else (prior.get("content") or {}).get("body_markdown")) or "")[:2000]
+    after = str(((latest.get("render") or {}).get("body_markdown") if latest.get("schema_version") == 4 else (latest.get("content") or {}).get("body_markdown")) or "")[:2000]
     return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id,
-            "changed_sections": changed, "text": {"before_chars": len(before), "after_chars": len(after),
+            "changed_sections": changed, "structured": structured, "text": {"before_chars": len(before), "after_chars": len(after),
                                                  "similarity": round(SequenceMatcher(None, before, after).ratio(), 4)}}
+
+
+def _verify_frozen_text_v2(asset: ContentAsset) -> None:
+    manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") != 4 or (manifest.get("content_master") or {}).get("payload_schema") != "text.master.v2":
+        return
+    render = manifest.get("render") or {}
+    body = render.get("body_markdown")
+    if candidate_hash(manifest) != asset.candidate_hash or not isinstance(body, str) or render.get("content_hash") != hashlib.sha256(body.encode()).hexdigest() or render.get("status") != "ready":
+        raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
 
 
 def candidate_preview(asset: ContentAsset) -> dict:
     """Preview the frozen snapshot, never the mutable current Master payload."""
+    _verify_frozen_text_v2(asset)
     manifest = asset.candidate_manifest_json or {}
     content = manifest.get("content") or {}
     modality = (manifest.get("project") or {}).get("modality", "text")
@@ -139,7 +176,7 @@ def candidate_preview(asset: ContentAsset) -> dict:
         markdown = str(content.get("body_markdown") or "")
         return {**preview, "modality": "text", "source_modality": modality, "markdown": markdown[:20_000], "truncated": len(markdown) > 20_000}
     if modality == "text":
-        markdown = str(content.get("markdown" if manifest.get("schema_version") == 4 else "body_markdown") or "")
+        markdown = str((manifest.get("render") or {}).get("body_markdown") if manifest.get("schema_version") == 4 else content.get("body_markdown") or "")
         preview.update({"markdown": markdown[:20_000], "truncated": len(markdown) > 20_000, "document_present": isinstance(content.get("document"), dict)})
     elif modality == "graphic":
         canvases = content.get("canvases") or []

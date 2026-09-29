@@ -1,5 +1,79 @@
 # 配置记录
 
+## 2026-09-29 FE-F6B FINAL-CLOSE 审计起点
+
+- 23.9 收尾只纳入标准 active change、F6B 源码/回归与本次记录；用户原始规格包/ZIP 不进提交，canonical specs 不更新，active change 暂不归档。Backend 本轮新跑 913 passed/2 skipped/5 warnings；前端修复后构建/预算复跑；最终归档是下一授权边界。
+- 修复后的独立前端复核 APPROVE；SPEC/backend 的先前 APPROVE 保持有效。三类独立审查完成，剩本地提交与最终记录，不能把暂存或 active change 误称为已归档。
+- 独立 SPEC 与后端复核均 APPROVE。前端复核发现格式控件未暴露按选择变化的活动态；原 `role=toolbar` 又隐含未实现的方向键导航。最小修复为 `role=group` + 原生 Tab 顺序，四个格式操作增加 `aria-pressed` 与视觉活动态，并监听编辑事务更新；浏览器已验证选择→加粗状态 0→1、Tab 前进，最终前端复核仍待返回。
+- 最终浏览器已补齐：Text v2 的图文/图表 exact refs、同 FactPackItem 多处 citation、解除引用、AI 本地接受、显式升级、真实 Draft seed、结构化 diff、百家号 Candidate→Approval→本地 ZIP。微信 article `cover` 缺失仍保持 blocker，不以 inline 资源绕过。ZIP 下载事件在浏览器自动化中超时，但同一隔离后端 GET 包字节已逐项核验，并不表示发布成功。
+- 工作流草稿和 Text Master 同时编辑时分别显示各自 dirty；将有 Run 历史的测试 Unit 归档后重新打开，所有保存/运行/编辑控件禁用，历史 Run 仍可见。新建 Graphic/Video Unit 的 F6A JSON 壳可正常加载且没有专业 Text 编辑器。隔离 CDP 故意阻断 TextStudioShell 动态模块，错误边界给出重载入口；解除后点击重载恢复，常规标签页无 console error，故障模拟标签页预期有 import error。
+- 全量后端 913 passed/2 skipped、F6A/F6B 三形态定向 130 passed、前端模型 9/9、TypeScript/Vite、FE-P1、OpenSpec strict 25/25、相关 Python Ruff、diff-check 均通过；全仓 Ruff 的 23 个问题位于本次未改文件，不写成全仓质量通过。`apps/api/alembic` 无改动。当前独立 SPEC/backend/frontend 审阅尚待结果，不可用主 Agent 自审替代。
+- 微信文章 Registry 要求 `cover` 角色；Text Studio 当前“插入图片”产生 `inline` 角色，专业平台检查正确报 `missing_required_media:cover`，不可为验收绕过。Candidate→ZIP 浏览器闭环使用 Registry 中无封面必需项的百家号 article；不修改渠道规则或虚构封面。隔离浏览器操作时有外部输入混入测试目标的人工账号引用，已在可变审批说明中清除误入文本，但授权目标快照的 `account_ref` 带额外非测试字句；只影响临时 SQLite 测试夹具，不可作为精确账号映射的验收证据。
+- 隔离真实浏览器与同一临时 SQLite 上，v2 Master 的结构化 document、图片/图表引用、Unicode 列表 citation 与 `ContentMasterEvidenceRef` 一次保存一致；同一个 FactPackItem 可在段落和列表分别使用而不合并 locator。解除引用/移除图表只影响新 Master 修订，系统库底层资源保留。上述结果已用 project-scoped Master detail API 逐字段回读，不仅凭页面成功提示。
+- OpenSpec 剩余 31 项分布为跨层 5.6/6.1/6.3、旧版与跨模态 21.x、浏览器 22.x、最终门禁 23.x；本轮先沿现有 F6A 验收夹具补真实数据，再按可观察行为逐条确认，不把 API 单元测试冒充浏览器接受。
+- 当前代码图 MCP 工具未暴露；相关代码发现仅用定向 `rg` 与明确路径读取。评审工具若不可用，将保留未完成状态而不写“独立 APPROVE”。
+
+## 2026-09-29 FE-F6B 前端阶段性发现
+
+- 隔离浏览器发现 TipTap 初始化/可编辑状态同步会发出与当前 runs 等价的 update，导致 Master 保存后仍假标 dirty 并禁用检查/AI；现在先规范化比较 runs，等价更新不触发 `onChange`。刷新后可见“内容已同步”，AI 和检查恢复可用。
+- 双窗口并发测试确认旧 revision 保存返回 409 且不覆盖新版本；旧版 UI 原显示 `409 · [object Object]`，现改为明确提示版本/上下文变化，保留本地编辑供人工核对。独立第二窗口刷新后浏览器 console 无错误。
+- 隔离夹具中项目无共享素材或冻结 Fact Boundary，且 WeChat profile 要求封面；不能把“Master 检查已运行”冒充 Candidate-ready，更不能以此勾选精确素材/证据/Review/package 的浏览器验收。
+- 新 Studio Document 不可从旧 `markdown` JSON 状态隐式推断；当前 v1 Master 只能只读，必须显式 upgrade。新的 Text 保存请求已明确带 `text.master.v2`，不会修改 Graphic/Video 的 F6A 保存路径。
+- Vite 在 Text-only TipTap 动态块引用共用 typed model 后，将 Production 动态入口映射为 `_PersistentProductionPage-*.js`；路由仍是真正 lazy，静态闭包无 TipTap/XYFlow。旧预算脚本只匹配源码 key 导致误报，现按唯一动态入口别名解析后继续执行原预算和重依赖门禁。
+- 浏览器选择范围使用 UTF-16，服务端 citation locator 使用 Unicode code point；本地模型必须明确转换并在文本变化时重定位唯一匹配或使引用失效。图片/图表和证据引用须与区块/citation 同步更新，最终权限/权利仍以服务端为准。
+
+## 2026-09-29 FE-F6B Backend Milestone B 审计边界
+
+- 旧实现曾允许客户端通过普通 `edit_summary.ai_provenance` 写入伪造的“已验证”血缘；保存端必须拒绝该保留字段，只从成功且精确匹配的 LLMRun 生成 compact provenance。相同 run ID 不得在链内重复；`issued`/`subsequently_modified` 不等于明确 Accept。
+- Review 原来直接展示 v2 `manifest.render.body_markdown`，即使数据库内冻结清单被改写；现在先验证 Candidate canonical hash、render 内容哈希与 ready 状态，失败保持 409，不回退到 Draft/当前 Master。
+- 改写引用之前的文字会改变后续引文位置。引用与编辑区域重叠时，建议响应明确列出失效 citation 并返回删除该 locator 的本地 evidence refs；完全位于之后且文本未变时精确平移 citation 与 evidence start/end。不能把旧 EvidenceRef 自动绑定到改写后的新 claim。FactPackItem 的正文来自冻结 `snapshot_json`，不存在 `statement` ORM 属性；只有 live `model_use_allowed=true` 的条目可进入建议上下文。
+- 每次 Master 追加版本都会产生新的 asset/evidence ref 数据库行 ID；diff 比较这些 ID 会错误报告内容变更。结构化 diff 排除存储行 ID，保留 exact revision/checksum/locator/排序/权利语义。
+- v2→v2 Candidate 可展示 stable-ID 结构化变更；v1→v2 只给有界渲染文本比较，不把旧版缺失的结构块伪装为“新增”。本地 ZIP 已直接打开验证冻结 `content.md`，不止校验 package preview JSON。
+
+## 2026-09-29 FE-F6B 检查层与历史包边界
+
+- v1/Graphic/Video 保留原全局检查输入哈希；`text.master.v2` 使用按 check_kind 的冻结 requirement 元数据与哈希。精确 SEO profile 的后来变更只过期可发现性检查，不让结构等无关检查一并过期。
+- v4 当前 Freeze/Approval/新授权重算当前要求；已授权历史包从冻结 manifest 的 check/report 取原要求集，同时重新校验 live rights、完整性、同输入最新结果。冻结集必须含 v2 所有必需检查，新增默认 profile 不倒灌历史。
+- Fact 的确定性审查可用公开证据；只要 FactPack 中存在不可供模型使用或已撤销条目，就不把可能引用它们的正文送给语义 provider。禁用、mock、失败、截断和不合法模型输出均显式标 coverage，不能升级成 `pass`。
+- Identity 检查读取 Master 固定的 IdentitySnapshot，不跟随后续 Persona 新修订；可机器执行的显式禁用词独立检查，其他语义约束在模型不可用时保持 warning，不修改身份。
+- 渠道检查使用精确 Channel Registry 内容形态和规则描述；未支持的规则返回 incomplete。可发现性只用同时匹配 channel+content_form 的 published profile；旧通配 resolver 未改。旧 SEO profile 的 description/pre/post 字段当前 Text Master 无真源可执行，明确 partial warning 交由审批逐条处置，不制造假完整，也不让默认历史 profile 永久阻断 v2 Freeze。
+
+## 2026-09-29 FE-F6B 转换/升级/seed 批次
+
+- 升级和新 Draft seed 只调用 text_documents.convert_legacy_text；canonical 文档/hash、exact refs 相同，入口血缘仅放 edit_summary。旧 Markdown/body 保持权威，只有文字逐段精确相同的 composition 才能用来安排已声明媒体，比较不得 strip 缩进。
+- 不实现第二套旧编辑器 parser；支持有限可证明的 Markdown 语法，其余保留有界字面文本并返回 warning。Setext、plus-list、嵌套/转义链接、复杂强调、实体/硬换行/容器布局等不能无警告改文。规则核对参考 [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/)，并以定向回归锁定本切片的保守转换行为，不声称全量 CommonMark parser。
+- 重叠选文也算多处匹配；第二个匹配即停止并标记 unmapped，不把 Python 非重叠 finditer 当唯一性证明。Unicode U+2028/U+2029 不当成换行替换。只有 unique claim text + 已证明 FactPackItem/checksum 才转换为 citation/locator。
+- 旧素材同 exact revision/hash 可合并一份声明，重复 placement/role 有显式归一警告；冲突 hash 拒绝。多个 media block 仍引用原 revision，不复制资源或字节。
+- latest v1 不等于非 stale v1。上游 Brief/Identity/Boundary 已变动时首次 upgrade commit 必须拒绝，不能用刚读的 current context hash 把旧内容洗成 current；preview 可读历史，已提交 replay 优先返回既有结果。
+- Generic save 的跨 schema gate 保留，reserved upgrade provenance 不能由客户端伪造；trusted upgrade 走同一 save transaction，不另造持久化模型。新 Draft seed 保留全部冻结定义/最新成功 Attempt/最新 Draft/身份及渠道验证；历史 v1 seed 的重放及 Candidate v4 冻结继续兼容。
+- 有界JSON还不足以防整数解析异常：4301位列表序号在Python int转换时会报错。只转换ASCII 1–9位列表标记，其余保留字面并warning；不调整解释器安全限制。真实升级预览与纯转换回归均通过。
+- 下一阶段从任务9/10开始：精确 published channel+content_form discoverability，schema/profile/provider/live model-use currentness 和真实专业 checks；A/B 未绿前不做 TipTap 前端。现有专业 handler 不可用仍 honest incomplete。
+
+## 2026-09-29 FE-F6B apply 授权
+
+- 用户明确授权标准校准包 apply；真实 HEAD ca52aa5，单 Agent 主写、main 直接开发仍为执行方式。
+- 未提交的上轮审计文档和标准包是本任务输入，不视作可删除的 dirty tree。原始八文件/ZIP、canonical 与 migration 保持不改。
+- 当前 JSON 模型可承接计划，若新增持久化结构必要必须停止修订；本轮不借 apply 自动获得 push/生产/归档授权。
+- 本批确认旧调用不都带Markdown：F6A存在只发旧document的合法保存请求，必须保留v1/renderer-incomplete，不能根据“含document”就重解释成v2。无显式schema时只有Studio schema文档进入v2；新Studio会明确发v2。
+- Ref校验须独立拒绝bool/float整数替身；不能只用Python字典相等。一个FactPackItem多次引用仍各存独立locator row。
+- Markdown citation标记必须转义成字面量，避免与随后括号正文组成链接；实体字符、强调边界空白、inline-code换行和padding均可能让渲染正文与真源不一致。
+- 同素材ID重复使用可去重字节，但必须逐block检查image/chart类别；不能让最后一个block覆盖前面的冲突。
+- 现有RBAC取持久化User.role，不读取X-Studio-Role。测试必须设置真实数据库角色，不能把不存在的Header当权限契约。
+- 阶段安全出口：v2四类专业检查尚未实现时显式incomplete，AI回执尚未验证时拒绝保存；不是虚构成功，也不是完整F6B验收。
+- CommonMark强调符号在中文标点/不同marked runs邻接时不能可靠表达格式；投影仅在这些边界用固定服务端strong/em inline tags，所有用户文本继续转义。不增加HTML导出产物或raw-HTML输入，不用加空格改变正文。
+
+## 2026-09-29 FE-F6B 初始审计证据
+
+- 真实基线 main@ca52aa5；新增 text-production-studio 尚无 canonical 是预期，不是基线缺失。其余 Production Core/F4/FE-P1 canonical 已读。
+- 现有 Master payload/edit_summary、asset placement、evidence locator、check report、LLMRun parsed_output 均有 JSON 容器，支持目标零新表/零迁移；不是已实现 v2。
+- adapter 当前只按 modality；Review v4 Text 当前读取 content.markdown；包使用 frozen render 并验证匹配，需 schema-aware 调度，不能默默改 v1。
+- 原稿 MODIFIED 三份仅新场景，缺少旧场景；标准包需保留旧要求场景。v1/Draft 的 markdown 是旧真源，转换优先级不得用过期 document 覆盖正文。
+- 引用范围尚缺 Unicode 单位、列表项定位、同一 FactPackItem 多次引用、编辑后的引用失效处理；LLMRun 没有 owner FK，必须以服务端 JSON provenance 与 Project 授权验证，不可信任模型返回的 owner 信息。
+- codebase-memory graph 工具本轮不可用，使用限定相关目录的 rg/定点源码读取，没有全仓扫描。
+- 最终 SPEC_READY：三位只读 reviewer 均 APPROVE；校准采用签发时服务端应用补丁、保存时比较 after/final hash 或连续链的更短方案。不存整份 before，也不声称证明浏览器 Accept 点击；retention 清理后未提交 receipt 不可验证，已提交紧凑 receipt 冻结在 edit_summary。
+- 现有 warning disposition 在 project_review.py Approval，不在 Freeze；discoverability.py legacy resolver 允许空 channel/form fallback，v2 必须另行 exact matching；candidates_v4.py 当前只取顶层/structured citations，v2 必须从 document.citations 映射。三个实际边界都已补设计/任务/规格。
+- 保留审计：Production Core 修改4块/保留9旧场景，F4 1/3，FE-P1 2/4；三份完整 canonical 仍35要求/86场景且逐文件不变；源包八文件逐文件不变。strict25/25与新旧文档 diff-check 通过，实施0/162。
+
 ## 2026-09-29 FE-F6A 归档授权与边界
 
 - 用户确认授权覆盖五份主规格同步、archive、strict/diff及本地main commit；原21.9等待授权条件已满足。

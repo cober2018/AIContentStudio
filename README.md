@@ -119,6 +119,31 @@ SourceDocument / DataSnapshot / Feedback / Manual reference
 Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 ```
 
+### FE-F6B Text Production Studio（实现与本地验收完成 162/162，规格仍 active）
+
+- 需求背景：基于已归档 F6A 的 Production Core，将文字最小 JSON 壳升级为专业结构化编辑；`text.master.v2` 的 Studio Document 是唯一可编辑真源，Markdown 只由服务端确定性生成。
+- 目录结构：标准提案见 [F6B proposal](openspec/changes/fe-f6b-text-production-studio/proposal.md)，设计与实施计划在同目录；新增 Text spec，附 Production Core / Review / FE-P1 三份 delta。审计记录见 [F6B review](openspec/changes/fe-f6b-text-production-studio/review.md)。用户原始包及 ZIP 保留。
+- 已完成：规格审计与归位、fresh 基线；新增 `services/text_documents.py` 实现十类 blocks、marks、Unicode/list/citation 定位、精确 refs 和确定性 Markdown；v2 append-only save / 读回 / 幂等 / context-CAS 接通，持久化 schema 分派覆盖 readiness/checks/Candidate/package，v1/Graphic/Video 兼容回归通过。普通保存拒绝 schema 跨越；新 Studio Document 默认 v2，旧 Markdown/文档调用保持 v1。
+- 本批已完成：唯一 legacy Text converter 供升级和 Draft seed 共用；显式升级预览/提交保留旧 v1，验证最新非 stale 父版本与 payload/context CAS，并先幂等回放；新 seed 输出 v2，保留原 Run/Step/Attempt 血缘、exact refs 与未映射警告。矛盾的旧 document 不覆盖 Markdown，不能证明等价的语法保留字面内容并告警。
+- Backend Milestone A：共用检查要求解析按 v2 精确 schema、adapter、renderer、实现、profile 与模型使用权限计算每类输入哈希；v1 继续沿用原检查语义。结构、事实、固定身份、精确渠道以及条件性可发现性检查已落 `ContentMasterCheckRun`；模型未配置或禁用证据时不假称语义通过，空白身份也不假称已验证，默认老 SEO profile 未覆盖字段显示 partial warning 并留给审批人工处置。新增 profile 只使对应检查过期，历史授权包仍按冻结要求校验，同输入的新 blocker 会阻断。本批最终后端 892 passed / 2 skipped，strict 与 Ruff 通过。
+- Backend Milestone B：项目内五种文字 AI 建议只返回服务端验证过的 patch 和 LLMRun receipt，不写 Master；显式保存验证连续 hash 血缘，拒绝客户端伪造。结构化版本 diff、v2 精确引文/证据冻结、不可变 Review 预览与无 Draft 的本地 ZIP 闭环已通过后端回归；冻结正文篡改会拒绝展示，被改写的引文会明确失效，未受影响的引文及证据 locator 会重定位。全量后端 913 passed / 2 skipped，OpenSpec strict 25/25、Ruff、diff-check 均通过。
+- Frontend milestone：Text-only lazy TipTap、结构化 blocks/marks、精确素材/证据引用、AI 建议本地接受、固定身份与检查面板、v1 升级及 revision diff 已接入；15–20 共 38 项完成。隔离浏览器已核 v2 保存回读、AI receipt 修订、双窗口 409、历史只读及缺上下文时不可冻结。最新前端构建、FE-P1 与全后端 913 passed / 2 skipped 通过，具体包体和验收范围见 `progress.md`。
+- 最终浏览器与回归：隔离项目已完成真实素材和冻结 FactPack 精确引用、边界漂移、五种 AI 建议、显式 v1 升级、验证过的 Draft seed、结构化差异，以及百家号 article Text v2 → Candidate v4 → Review/Approval → 本地 ZIP；ZIP 正文与素材哈希和冻结清单一致。微信 article 缺精确 `cover` 角色时仍被 Registry 正确阻断，不用 inline 图片冒充封面。legacy `/workspace`、Graphic/Video 最小壳与归档只读、动态模块失败后重试恢复均已验收；F6A/F6B 三形态定向回归 130 passed。完整证据和包体数据见 `progress.md`。
+- 待完成/TODO：实现任务 162/162、独立 SPEC/后端/前端复核均通过，格式按钮无障碍缺口已在浏览器核验。最终新跑全后端 913 passed / 2 skipped、构建/FE-P1、OpenSpec strict 25/25、相关 Ruff 与 diff-check；零新 migration。本地 main 提交后仍须另行授权 canonical 同步/归档；不推送、部署或运行生产迁移，不启动 F6C/F6D。
+- 关键设计决策：显式 v1→v2 upgrade；Workflow 与 Master 保存独立；AI 仅建议→预览→明确接受到本地→明确保存，服务端验证 output match，不冒充点击或全篇 AI 作者证明；warnings 在 Approval 处置而非 Freeze 前。目标零新表/零迁移，若实际需要持久化扩展必须停止修订。
+- 依赖与启动：继续复用现有 Master/refs/checks/LLMRun 和已有 TipTap；无新增依赖、表或 migration，现有服务启动方式不变。测试使用独立临时 SQLite；阶段门禁和未完成边界见 `progress.md`，不把基础测试当作完整 F6B/browser 验收。
+
+```text
+持久化 payload_schema
+├─ text.master.v1 → 既有 Markdown / legacy 流程不变
+│                   → 显式升级预览 + 当前父版本/CAS/幂等 → v2 新 revision（不改历史）
+├─ verified Draft WorkflowOutput → 同一 converter + exact refs / warnings → v2 seed
+└─ text.master.v2 → Studio Document + exact refs → append-only Master
+                  → 确定性 Markdown / schema-aware projection
+                  → 专业 checks + 每类 currentness（Backend A 已通过）
+                  → warning 可冻结、审批须按检查 ID/输入哈希处置
+```
+
 ### FE-F6A Production Core（本地验收完成，五份主规格同步并归档）
 
 - 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的主版本和上下文血缘；不替换旧引擎，不新增远程发布能力。

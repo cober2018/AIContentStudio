@@ -1,5 +1,92 @@
 # 当前进度
 
+## 2026-09-29：FE-F6B FINAL-CLOSE（进行中）
+
+- 最终本地交付记录（162/162）：本次纳入提交的后端文件为 `apps/api/app/routers/content_masters.py`，`apps/api/app/services/{candidates_v4,content_masters,production_modalities,production_packages,production_validation,project_review_projection,text_documents,text_master_ai,text_master_checks,text_master_diff}.py`，`apps/api/app/services/generation/{mock_content,providers}.py`，以及 `apps/api/tests/test_f6a_{draft_mapping,modality_adapters}.py`、`apps/api/tests/test_f6b_{backend_milestone_b,master_checks,master_v2,text_documents}.py`；前端为 `apps/web/scripts/check-bundle.mjs`、`apps/web/src/components/ui.tsx`、`apps/web/src/product/{ContentMasterPanel,ModalityWorkspace,TextStudioModel,TextStudioShell,TextTiptapAdapter}.tsx/.ts` 和 `apps/web/tests/text-*.test.mjs`；另含标准 active OpenSpec change 与根目录 README/task_plan/progress/findings。用户原始规格包目录和 ZIP 保持未跟踪，canonical specs 与 migration 无改动。
+- 最终门禁：隔离后端全量 `913 passed / 2 skipped / 5 warnings`（此次新跑）；F6A/F6B 三形态定向 `130 passed`；前端模型 9/9；TypeScript/Vite build PASS；FE-P1 PASS（`/projects` 224.75 kB raw / 72.91 kB gzip，common Production 269.38/86.71，Text lazy closure 596.13/186.92；Graphic/Video 不含 TipTap）；OpenSpec strict 25/25；本次相关 Ruff PASS；`git diff --check` PASS。独立 SPEC/backend/frontend-review-package 均 APPROVE，格式按钮无障碍复核完成。
+- 已知限制：真实语义 Provider 未联机验证，不能把 unavailable/partial 写成语义 PASS；2 项 PostgreSQL opt-in 测试未跑（本阶段零迁移）；浏览器验收基于临时 `/tmp` SQLite，保留的是 `progress.md` 的可界定记录；下载事件未返回，但同库 GET ZIP 字节已核对。公众号文章仍因缺 exact cover 被 Registry 阻断，不将 inline 图片冒充封面。全仓 Ruff 另有 23 个既存非本次文件问题。只做本地 main 提交，不 push/deploy/生产迁移；canonical sync/archive 须另行授权。
+- 独立复核最终结果：SPEC APPROVE（23.6）、后端 APPROVE（23.7）、前端/无障碍/性能 APPROVE（23.8）。前端复核在格式按钮修复后只读复查了 `TextStudioShell` 和 `Button` 的状态同步、语义与键盘路径，未重审后端；累计 161/162，仅剩 23.9 最终交付记录与本地提交。
+- 独立只读复核：SPEC/保留性 APPROVE、backend/Text schema/check/AI provenance APPROVE；前端复核曾指出格式按钮缺少活动态/`aria-pressed`，且错误声明 `toolbar` 键盘语义。已改为普通有标签按钮组，按 TipTap transaction 同步加粗/斜体/代码/链接的视觉与无障碍状态。隔离浏览器验证选中文字后加粗 `aria-pressed` 从 0→1、Tab 到斜体按钮，再恢复；TypeScript/Vite 与 FE-P1 通过（`/projects` 224.75/72.91 kB、Production 269.38/86.71、Text lazy 596.13/186.92）。前端独立复核仍待再次确认；当前 160/162。
+- 隔离验收证据：只在临时 SQLite `/tmp/aicontent-f6b-accept-9rZCbY/studio.db` 与本地 API/Vite 运行。Project #1、Text Unit #1/#2/#4、已归档 Text Unit #3、Graphic Unit #5、Video Unit #6；真实 MaterialRevision 图片 #2/图表 #1、FactPack #1/#2。浏览器 #1 v2 修订保存/精确图表和图片引用/段落与 emoji 列表双重 citation/解绑，边界换至 FactPack #2 后旧 Master 明确 stale 并禁止继续绑定；#2 v2 Candidate #1 → Review → Approval → copy_package Target #1 → 本地 ZIP，ZIP 的 `content.md` 与 manifest frozen render 哈希一致，图片字节与 MaterialRevision #2 哈希一致；未宣称远端发布。#3 真实 Draft seed 保留 Run/Attempt 血缘、归档后所有编辑/运行禁用；#4 v1→v2 fork 保留旧版。结构化 diff 实际出现 add/remove/move/modify 及 refs、AI provenance/context 变化。Workflow 草稿和 Master 本地编辑分别显示独立 dirty。Graphic/Video 页面仍是 F6A 最小壳。
+- `22.13` 专项：legacy `/workspace/1` Markdown 保存、选区改写、Draft fact-check/文档合成通过；生产/Review 直接 URL 与刷新可恢复；隔离浏览器仅阻断 TextStudioShell 动态模块时出现可重试错误页，解除阻断点击“重新加载”后同页恢复。正常验收标签页 console errors 为 0；故障模拟标签页有预期的动态 import error，不冒充空控制台。
+- 定向 F6A/F6B 历史、三形态渲染/冻结/Review/package 共 `130 passed`（2 warnings）；全量后端 `913 passed / 2 skipped / 6 warnings`；前端模型 9/9，TypeScript/Vite/FE-P1 PASS，OpenSpec strict `25/25`，本次相关 Python Ruff PASS，`git diff --check` PASS。零新增 migration。全仓 Ruff 尚有 23 个非本次变更文件的既存问题，因此只声明 relevant Ruff 通过。浏览器验收 22.1–22.13 全部有记录，当前任务 158/162；独立 SPEC/backend/frontend 复核与最终本地提交仍未完成。项目当前账号引用测试夹具曾混入非测试文本，仅临时库，不能作为精确账号映射证据。
+- 本批继续完成 legacy `/workspace` Markdown/Draft 保存、selection rewrite、fact-check；真实 Run/Output → Draft seed v2，过期 Output 正确 409、最新成功 Output 可 seed 且显示血缘/未映射警告；v1→v2 显式预览与 fork 不改旧版；AI 五动作 Reject/本地 Accept/显式保存、stale patch 拒绝、固定身份只读均在隔离浏览器验证。Project Fact Boundary 更新到新 FactPack 后，旧 Master 显示 stale_evidence/stale_context 且禁止绑定新证据。结构化差异实际显示 add/remove/move/modify 与素材/证据/引用/AI 血缘/上下文变化。当前 146/162，剩 16 项。
+- 新鲜门禁：全量后端 `913 passed / 2 skipped / 6 warnings`；前端 TypeScript/Vite 与 FE-P1 预算 PASS（`/projects` 224.72 kB raw / 72.86 kB gzip，Production 269.34/86.66，Text Studio lazy closure 595.68/186.72，Graphic/Video 不静态含 TipTap）；前端模型 9/9；OpenSpec strict 25/25；`git diff --check` PASS；F6B 涉及 Python 文件定向 Ruff PASS。全仓 Ruff 发现 23 个非本次变更文件的既存问题，不冒称全仓 PASS。migration 目录无改动。
+- 浏览器 22.1/22.2/22.4/22.11 已实测：新 Text v2 区块/顺序保存回读；图片、图表精确引用及移除；stale/current/coverage；百家号 article（无封面必需项）手工 Master #11 → checks → Candidate v4 #1 → Review 预览/变更/冻结检查 → 两条 warning 人工处置 → Approval → copy_package 授权 → 本地 ZIP。浏览器下载事件未返回，但页面确认已生成，使用同一隔离后端的 GET package.zip 取回并检查 4 文件，`content.md` 与图片 SHA256 分别等于 manifest render hash 和 MaterialRevision hash。页面没有将本地包误标为已发布。累计 138/162；22.3 等剩余项不提前勾选。
+- 跨层三项 5.6/6.1/6.3 已以隔离浏览器 + API 回读 + 定向测试闭合，累计 134/162。Text Studio 从 stale Master 显式接纳 Brief/Boundary 后保存 v5；图片/图表插入后保存 v6；段落 citation + exact EvidenceRef 保存 v7；带 emoji 的列表中重复引用同一 FactPackItem 保存 v8；解除列表引用并移除图表保存 v9。v8 API 回读两条 citation/locator、两条 exact MaterialRevision 和对应 EvidenceRef；v9 回读仅剩图片与段落引用，原系统素材/FactPack 未删除。AI edit provenance 此前已通过浏览器保存回读及后端 receipt/hash-chain 回归；本次定向后端 146 passed、前端模型 7 passed。此处仅关闭跨层任务，不把局部通过写成完整 22.x 浏览器验收。
+- 当前 OpenSpec apply 状态经命令重读：`spec-driven`，131/162，剩 31 项；本地 `main@ca52aa5` 和已有未提交 F6B 改动保留。本轮只做隔离夹具、跨层验收、legacy/三形态回归及最终门禁，未确认的任务不预勾。
+- 目标门禁为 Text Master v2 的 exact asset/evidence、AI/upgrade/seed/diff、Candidate→Review→Approval→ZIP，以及 legacy、Graphic/Video、性能与迁移零变更。最终验收记录待实际运行后补充。
+
+## 2026-09-29：FE-F6B Professional Text Studio 前端（15–20 完成；131/162）
+
+- 从已核后端 A/B PASS、93/162 继续；本批完成 15–20 共 38 项，累计 131/162。5.6/6.1/6.3 尚待真实 refs/seed 原子性证明；21–23 尚待完整回归/浏览器/最终门禁；未归档。
+- 已建立 Text v2 typed draft / Studio Document ↔ TipTap 临时格式适配；旧 v1 只读，普通保存仍禁止隐式升级。Graphic/Video 继续使用 F6A 原 JSON 壳，Workflow 保存状态独立。
+- Text 块编辑支持稳定 ID、区块顺序、基础格式；不支持的 TipTap 结构显式阻止保存。项目共享图片/图表与 FactPack 证据从真实 API 读取，本地按精确 revision/checksum 同步更新 document+refs；失效 citation 显式提示，保存后端仍复核。
+- 定向 Node 模型/适配器回归 9/9；最新 TypeScript/Vite 与 FE-P1 门禁通过。`/projects` 首包 224.72 kB raw / 72.86 kB gzip，common Production 269.34 / 86.66，Text Studio lazy closure 595.68 / 186.72；Graphic/Video 静态闭包不含 TipTap。`/assets`、`/settings`、`/learning` 预算通过；打包清单动态别名有唯一入口检查。
+- 完成 AI 五操作建议/本地 Accept/Reject、固定身份只读、覆盖诚实的专业检查、显式 v1 升级、结构化版本 diff、Draft seed 血缘展示。隔离 SQLite 浏览器已实测项目/身份/文字单元创建，v2 区块保存/回读，AI 改写建议→本地接受→显式修订保存与回读 AI 血缘，修订 diff、专业检查、双窗口 409、历史只读与刷新持久化。发现并修复编辑器初始化导致的假 dirty；409 保留本地编辑并给出明确重载提示。素材/证据、全形态与 Candidate/Review/package 浏览器闭环尚未验收，22.x 不提前勾。
+- 本批全量后端实跑 913 passed / 2 skipped / 6 warnings；OpenSpec strict 25/25 与 diff-check 均通过。无 migration、无 commit/push/deploy/生产迁移/canonical sync/archive；F6C/F6D 未启动。
+
+## 2026-09-29：FE-F6B Backend Milestone B（93/162，阶段完成）
+
+- 基线 `main@ca52aa5`，在既有未提交 F6B 工作区继续；只执行任务 11–14，不动前端、DB migration、F6C/F6D，也未 commit/push/deploy 或同步归档主规格。
+- AI suggestion 五种操作经项目/单元、当前 v2 Master 与 context 校验，仅返回服务端验证/内存应用的 patch；模型输出不能指定越界目标或自报可信 provenance。LLMRun 保存实际 provider/model、受限输出及服务端 receipt；引用证据只取允许模型使用的精确快照。改写覆盖引用时在建议响应中列出失效 citation 并移除对应本地 evidence ref；改写前方正文时对未受影响的后续 citation 与 evidence locator 做确定性重定位。建议本身不改 Master。
+- 保存时拒绝客户端自造 `ai_provenance`，核验 receipt 所属人/项目/单元/父 Master、payload/context/input/selection/patch、状态与连续 document hash；重复、失败、外来、清除或断链收据不可信。只有提交文档确与最终输出相同才标 `verified_output_match`，后续手改标 `subsequently_modified`，不冒充浏览器点击证明。
+- Structured Master diff 忽略每次追加版本产生的引用行 ID，仅比较真实素材/证据语义；v1→v2 历史 diff 只读。Candidate v4 冻结 document citations 与 EvidenceRef locator/checksum；Review 对 v2 冻结清单/hash/render 做完整性校验，v1↔v2 不伪造结构化差异。本地 ZIP 的 `content.md` 与冻结 render 字节一致，单条 AI→保存→检查→冻结→审批→授权→ZIP 无 Draft 闭环已通过。
+- OpenSpec 11–14 共 27 项逐项复核后完成；累计 93/162，剩 69 项。定向回归 `21 passed`；全量后端 `913 passed / 2 skipped / 6 warnings`（37.79s）；OpenSpec strict `25/25`、Ruff、`git diff --check` PASS。前端未改，未执行本阶段前端 build/browser 验收，不把旧结果冒充当前门禁。
+
+## 2026-09-29：FE-F6B Backend Milestone A（66/162，阶段完成）
+
+- 从已核 51/162 继续，仅处理任务 9/10；现有 main 的 F6B 未提交改动保留。不启动 AI/前端/迁移/发布。
+- 已加入 v2 每类检查 requirement/hash 解析，并连接执行、当前投影、Candidate v4 与历史包；v1 仍使用原哈希。结构/事实/身份/渠道/精确 published discoverability 处理器均已落库，仅 `ContentMasterCheckRun`；未配置/失败/禁用或截断的语义覆盖显式标记，不能假称全量通过。
+- 新增 13 项定向回归：精确 profile、per-kind stale、模型使用撤权、无假语义验证、空白身份不可假称全量核验、v2 Freeze/人工 Approval、历史包新 profile 不追溯、同输入新 blocker、未知规则/SEO、Fact locator、固定 IdentitySnapshot、provider 失败/截断/无效响应、无 DraftClaim/Report 副作用。F6A/F6B 相关先前 113 项通过；旧测试所要求“v2 warning 不可冻结”与批准契约冲突，已改为“可冻结但 Approval 必须准确处置”。
+- 首次全量无代理环境未配置，12 项旧 Settings/Plugin 网络状态测试因本机无效代理端口 `:1` 失败；使用本项目已记录的 `NO_PROXY='*' no_proxy='*'` 后最终全量 892 passed / 2 skipped / 6 warnings（34.47s）。最后一次实跑覆盖空白身份边界与全部代码改动，后续仅改动任务/README/进度文本。
+- OpenSpec 任务9.1–9.6、10.1–10.9均已完成，累计66/162，剩96。Backend A=PASS；B（AI/receipt/diff/v2 Review/package）及 F6B 前端仍未开始。本批不改 migration、不 push/deploy/生产迁移、不归档未完成 change。Ruff/OpenSpec/diff 的最终状态见本节后续门禁记录。
+- 最终轻门禁：OpenSpec strict 25/25 PASS；本批触及 Python 文件 Ruff PASS；`git diff --check` PASS。前端未改、未将旧 build 结果冒充本批验收。没有可用的只读 code-review 子 Agent 授权（用户指定单 Agent 负责本项目），本批做了主 Agent 逐文件自审，不标记独立复核。
+
+## 2026-09-29：FE-F6B 后端第二批（51/162，转换/升级/seed）
+
+- 用户确认39/162基线，要求后端优先：ONE converter → 显式升级 → Draft seed → 专业 checks → AI/receipt/diff/v4；只在A/B门禁通过后做前端。直接本地main@ca52aa5，前批未提交改动完整保留。
+- 使用 using-superpowers、openspec-apply-change、writing-plans/executing-plans、TDD、systematic-debugging、requesting/receiving-code-review、verification-before-completion；仅主Agent写代码，两个独立Agent只读检查。图谱工具不可用，限定相关文件读取。
+- 完成任务7.1–7.6、8.1–8.6共12项，累计51/162，剩111。convert_legacy_text是升级与seed唯一转换核心；逐入口真实API验证同canonical payload/document hash/locator，旧document与正文矛盾不覆盖正文。
+- GET text-v2-upgrade-preview不落库，POST text-v2-upgrade追加子版本；expected revision/payload/context+latest v1+非stale+ownership/archive+原save原子边界均保留。source/request provenance仅可信服务创建；committed retry先回放，后续Brief变动或源码变化不触发重复转换；不同intent复用key409。
+- 新from-output创建v2，冻结definition/identity/channel/Run/Step/最新成功Attempt/最新Draft门禁未削弱。媒体只用项目已授权精确revision/hash；证据只有已证明pack/item/checksum和唯一选文才生成citation，无法定位保留warning/unmapped/incomplete。新seed不能跨过当前v1的explicit upgrade gate。
+- 历史v1保存/读取/已有seed幂等回放/Candidate v4冻结保持原样，旧Master/Draft未回填。历史v1 fixture明确构建原契约，而不是把专业v2检查伪装成pass。
+- TDD先RED：10个converter缺失、7个upgrade API/来源边界、v2seed映射/一致性，及复核发现的复杂强调、code-span空白、stale-parent、重叠选文、Unicode分隔符、缩进等价、Setext/plus-list、嵌套link label均先复现再修正。无法可靠转换的有界语法保留字面内容+显式警告，不声称完整Markdown parser。
+- 最终实际门禁：135项converter/upgrade/seed定向PASS；全后端879 passed/2个未配置PG的opt-in测试skip/6既有warnings（41.69s）；相关Ruff PASS；OpenSpec全量strict25/25 PASS；tracked及三份新增代码/测试whitespace检查无错误。初轮854/中间875是修正前结果，不作最终验收。
+- SPEC/task只读复核APPROVE（Confucius，仅7/8共12任务）；backend终轮APPROVE（Euler，独立实跑135定向）；所有复核发现已复现并修正，包括末轮4301位数字列表标记的受控处理。两份review均只覆盖converter/upgrade/seed，不冒充整套F6B独立验收。未记录全量测试stdout到connector索引，可见证据为当前实际终端输出及本记录。
+- Backend Milestone A = PARTIAL：upgrade+Draft seed通过，专业checks未做；Backend Milestone B = NOT_STARTED。不存在本批已知未处理阻挡转换/升级/seed的问题；任务9/10的profile/currentness/semantic/model-use仍待实施，专业handlers继续incomplete。
+- 本批六个代码/测试文件：apps/api/app/services/text_documents.py、services/content_masters.py、routers/content_masters.py、tests/test_f6b_text_documents.py、tests/test_f6b_master_v2.py、tests/test_f6a_draft_mapping.py；同步根README/task_plan/progress/findings和标准tasks。此前F6B adapter/Candidate/package schema分派改动保留，未修改用户原始包/ZIP或canonical。
+- 前端本批未修改/未重新build，不将旧build/budget冒充本阶段验收。零新表/零migration/零依赖；未commit/push/deploy/生产迁移/canonical sync/archive，仍main@ca52aa5+未提交F6B改动；F6C/F6D未启动。
+
+## 2026-09-29：FE-F6B 第一批（39/162，后端基础）
+
+- 用户明确“进入 F6B apply”；标准 change fe-f6b-text-production-studio（spec-driven，0/162）进入实施，不再重复询问已确认的产品范围。
+- 实核本地 main@ca52aa5；tracked 改动仅上轮审计 README/task_plan/progress/findings，标准包及用户源包/ZIP 未跟踪。全部保留，业务代码初始无差异。
+- 使用 Superpowers / OpenSpec Apply / writing-plans / executing-plans / TDD / verification-before-completion；主 Agent 在 main 实施，独立 Agent 只读评审。图谱工具不可用，沿用定点代码读取。
+- 先补后端契约，再接前端；0新表/0迁移约束仍在。禁止 push/deploy/生产 migration/canonical sync/archive/F6C/F6D。
+- Fresh 基线：初始化独立临时测试库后 backend751 passed/2个未配置PostgreSQL测试skip/6既有warnings；初次纯内存库的Celery独立session无表已用正确测试环境复跑，不改业务。TypeScript/Vite/FE-P1 PASS，projects224.68/72.86kB，Production254.44/82.27；strict25/25、相关Ruff/diff PASS。
+- TDD第一段：新增44个纯文档契约先全部因service缺失失败，实现text_documents后44通过；覆盖十类blocks、mark/canonical/hash、UTF-8/codepoint/list/citation、单真源、精确ref对应、safe renderer/media mapping。尚未接Master API/checks，不能据此宣称v2闭环。
+- 当前已完成39/162：0、1、2、3、4全部，5.1–5.5、6.2/6.4–6.6。已接真实v2保存/读回/append-only/CAS/幂等，旧Markdown及旧文档请求保持v1；所有持久化读取/验证/投影按精确schema分派。
+- 素材验证project-visible/hash/type，图片与图表插入/移除不复制或删除资源；未使用的声明明确报告。Citation与EvidenceRef逐use对应codepoint/list-item/text hash/FactPack snapshot，范围仍在但选中文本改变必须拒绝；Boundary改变阻断继续使用旧ref，历史不改。
+- 新增84项定向测试通过，包含真实API持久化、同item多citation、emoji/list、权限/归档、旧版本兼容、冲突无部分Master/ref/event、renderer/ZIP media路径和撤权。旧两项adapter测试显式指定v1，继续验证旧契约，而不是对新默认v2套用v1的固定检查集。
+- 只读复核发现并先RED后修复：实体转义、强调首尾空白、inline-code换行/纯空白、严格locator整数、citation与括号误拼链接、同revision image/chart冲突；不忽略这些冻结正文细节。
+- 专业text checks目前只有schema注册，未实现handler明确incomplete，假AI receipt拒绝。显式upgrade、Draft seed v2、专业checks/profile freshness、AI/receipt、diff、Review v2、前端与浏览器仍未实现；不把adapter/package projection测试冒充Candidate→Approval→ZIP闭环。
+- 本批前端无改动；本轮开头fresh build/budget通过只是基线，不是新Text Studio验收。未新建表/migration、未push/deploy/生产迁移/canonical sync/archive；HEAD尚未产生F6B提交，仍ca52aa5。
+- 最终本批fresh门禁：全后端835 passed /2个未配置PostgreSQL测试skip /6既有warnings（42.32s）；84项F6B定向（1.75s）；相关Ruff PASS；OpenSpec all strict25/25 PASS；tracked diff与本批新增代码/文档whitespace PASS。不是F6B最终验收，23.x仍未勾选。
+- 本批后端只读复核APPROVE（Euler）；仅限schema/document/render/save/ref基础，不代表完整F6B。三份MODIFIED delta的16个旧Scenario本轮逐块保留审计PASS；canonical/models/migration差异为空。
+- 阶段勾选审计（Confucius）：已读范围未发现过勾，schema/document/renderer/save/refs与测试对应；未独立读取门禁stdout或核对真实并行竞争，不冒充完整F6B独立验收。实际CAS/幂等/上下文漂移回归通过，全阶段仍39/162。
+
+## 2026-09-29：FE-F6B SPEC_READY（等待单独 apply 授权）
+
+- 实核 main@ca52aa5；原始包和 ZIP 为用户未跟踪文件，tracked clean；F6A 已 canonical + archive。
+- 完整读取原稿 162 项实施任务和四份 delta；仅审计/校准/标准目录归位，apply 未授权。
+- 三份 MODIFIED 缺少原条款旧场景，归位时必须补齐；不能以 strict 语法通过替代保留审计。
+- 标准包已归位 openspec/changes/fe-f6b-text-production-studio；原始八文件与源读取基线逐文件一致，三份 canonical 未改。162 项实施任务全部未勾选。
+- 校准完成：七个 MODIFIED 块保留十六旧场景；Markdown 权威转换/显式 schema upgrade；Unicode/list-item/selected-text hash/编辑失效；AI output-match 紧凑回执与 retention；warning 只在 Approval 处置；exact discoverability、nested citations→manifest、冻结媒体路径、Text/legacy 各自 lazy。
+- 三独立只读复核最终全部 APPROVE：SPEC/plan、backend、frontend/Review/package。只批准规格，不是 apply 授权或实现验收。
+- 本轮实跑全量 strict25/25、旧条款保留审计、tracked diff-check及新增九文件 whitespace check 均 PASS，apps 差异为空。未运行后端测试/前端构建/浏览器，不借用 F6A 结果宣称 F6B 验收。
+- 使用 using-superpowers、openspec-explore、writing-plans、requesting-code-review、receiving-code-review、verification-before-completion；更新根 README/计划/进度/发现和包内 review.md。没有 commit/push/deploy/migration/canonical sync/archive，HEAD 仍 ca52aa5。
+
 ## 2026-09-29：FE-F6A 五份主规格已同步并归档
 
 - 用户已明确授权五份canonical同步、F6A归档、strict/diff-check及本地main提交；不改业务代码，不启动F6B。

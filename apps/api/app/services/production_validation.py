@@ -39,7 +39,7 @@ def lock_live_resources(db: Session, master: ContentMasterRevision) -> None:
         db.scalars(query.with_for_update().execution_options(populate_existing=True)).all()
 
 
-def validate_live_v4_master(db: Session, master: ContentMasterRevision, *, require_current: bool = True, lock_live: bool = False) -> dict:
+def validate_live_v4_master(db: Session, master: ContentMasterRevision, *, require_current: bool = True, lock_live: bool = False, frozen_checks: list[dict] | None = None) -> dict:
     if lock_live:
         lock_live_resources(db, master)
     unit = db.get(ContentUnit, master.content_unit_id)
@@ -55,14 +55,14 @@ def validate_live_v4_master(db: Session, master: ContentMasterRevision, *, requi
     for status, report in (_rights_check(db, projection), _evidence_check(db, master)):
         if status != "pass":
             raise _blocked("readiness_blocked", *report["reasons"])
-    adapter = adapter_for(master.modality)
+    adapter = adapter_for(master.modality, master.payload_schema)
     if master.payload_schema != adapter.payload_schema:
         raise _blocked("master_schema", "Master适配器契约不一致")
     availability = adapter.freeze_availability(db, master)
     if not availability["available"]:
         raise _blocked("readiness_blocked", *availability["reasons"])
     try:
-        manifest = build_manifest_v4(load_manifest_v4_inputs(db, master, require_current=require_current))
+        manifest = build_manifest_v4(load_manifest_v4_inputs(db, master, require_current=require_current, frozen_checks=frozen_checks))
     except (TypeError, ValueError) as exc:
         raise _blocked("manifest_unready", str(exc)) from exc
     if any(check["status"] not in {"pass", "warning"} for check in manifest["checks"]):
@@ -91,7 +91,7 @@ def validate_live_v4_candidate(db: Session, asset: ContentAsset, *, require_curr
     master = db.get(ContentMasterRevision, asset.content_master_revision_id) if asset.content_master_revision_id else None
     if master is None or master.project_id != asset.project_id or master.content_unit_id != asset.content_unit_id:
         raise _blocked("master_mismatch", "候选未绑定所属项目的准确Master")
-    current = validate_live_v4_master(db, master, require_current=require_current, lock_live=lock_live)
+    current = validate_live_v4_master(db, master, require_current=require_current, lock_live=lock_live, frozen_checks=manifest.get("checks") if not require_current else None)
     # Display titles and newer checks may change; frozen business provenance may not.
     for key in current:
         if key not in {"project", "checks"} and manifest.get(key) != current[key]:

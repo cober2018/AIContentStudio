@@ -199,7 +199,8 @@ def effective_llm_config(purpose: str | None = None) -> dict:
     }
     if purpose:
         models = _models_override()
-        route_name = (models.get("routes") or {}).get(purpose)
+        routes = models.get("routes") or {}
+        route_name = (routes.get(purpose) or routes.get("rewrite")) if purpose == "text_master_edit" else routes.get(purpose)
         if route_name:
             raw_profile = (models.get("profiles") or {}).get(route_name) or {}
             if raw_profile and raw_profile.get("enabled", True):
@@ -248,10 +249,12 @@ def input_hash(request: GenerateRequest) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-def record_run(db, request: GenerateRequest, result: GenerateResult | None, error: str | None = None) -> LLMRun:
+def record_run(db, request: GenerateRequest, result: GenerateResult | None, error: str | None = None, *, provider_name: str | None = None, model_name: str | None = None, prompt_version: str | None = None) -> LLMRun:
+    config = effective_llm_config(request.purpose)
     run = LLMRun(
-        provider=effective_llm_config()["provider"],
-        model=provider_model_name(),
+        provider=provider_name or config["provider"],
+        model=model_name or provider_model_name(request.purpose),
+        prompt_version=prompt_version,
         purpose=request.purpose,
         input_hash=input_hash(request),
         raw_output=result.raw_output if result else None,

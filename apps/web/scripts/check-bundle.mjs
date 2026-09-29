@@ -15,11 +15,22 @@ const excludedRoutes = [
   "src/pages/Workspace.tsx",
   "src/pages/Workflows.tsx",
 ];
+const textStudioKey = "src/product/TextStudioShell.tsx";
+const siblingStudioKeys = ["src/product/GraphicStudioShell.tsx", "src/product/VideoStudioShell.tsx"];
 const limit = 500_000;
 const baseline = 1_095_280;
 
+function resolveKey(key) {
+  if (manifest[key]) return key;
+  if (key === "src/product/PersistentProductionPage.tsx") {
+    const aliases = Object.entries(manifest).filter(([, record]) => record.isDynamicEntry && record.name === "PersistentProductionPage");
+    if (aliases.length === 1) return aliases[0][0];
+  }
+  throw new Error(`Missing JS manifest mapping: ${key}`);
+}
+
 function required(key) {
-  const record = manifest[key];
+  const record = manifest[resolveKey(key)];
   if (!record?.file?.endsWith(".js")) throw new Error(`Missing JS manifest mapping: ${key}`);
   return record;
 }
@@ -54,7 +65,7 @@ try {
   }
   const initial = staticClosure([entryKey, projectKey]);
   for (const route of lightweightRoutes) {
-    if (!entry.dynamicImports?.includes(route)) throw new Error(`Route is not lazy-loaded: ${route}`);
+    if (!entry.dynamicImports?.includes(resolveKey(route))) throw new Error(`Route is not lazy-loaded: ${route}`);
     if (initial.has(required(route).file)) throw new Error(`Route is in /projects initial graph: ${route}`);
     const closure = staticClosure([entryKey, route]);
     for (const file of closure) {
@@ -67,6 +78,16 @@ try {
   for (const route of excludedRoutes) {
     if (initial.has(required(route).file)) throw new Error(`Unrelated route is in /projects initial graph: ${route}`);
   }
+  const production = required("src/product/PersistentProductionPage.tsx");
+  if (!production.dynamicImports?.includes(textStudioKey)) throw new Error("Text Studio is not a Production dynamic import");
+  const textClosure = staticClosure([entryKey, textStudioKey]);
+  if (![...textClosure].some((file) => heavyByChunk[file]?.includes("TipTap"))) throw new Error("Text Studio TipTap module mapping missing");
+  for (const sibling of siblingStudioKeys) {
+    if (!production.dynamicImports?.includes(sibling)) throw new Error(`Studio shell is not dynamic: ${sibling}`);
+    const closure = staticClosure([entryKey, sibling]);
+    if ([...closure].some((file) => heavyByChunk[file]?.includes("TipTap"))) throw new Error(`TipTap leaked into ${sibling}`);
+  }
+  console.log(`Text Studio: lazy TipTap closure ${(sizes(textClosure).raw / 1000).toFixed(2)} kB raw / ${(sizes(textClosure).gzip / 1000).toFixed(2)} kB gzip; Graphic/Video exclude TipTap`);
   for (const file of initial) {
     if (heavyByChunk[file]?.length) throw new Error(`Heavy dependency in /projects initial graph: ${file} (${heavyByChunk[file].join(", ")})`);
   }

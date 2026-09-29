@@ -1,5 +1,74 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：FE-F6B FINAL-CLOSE（131/162 起点）
+
+- [x] /// 复核 active OpenSpec 31 项与当前本地 main；只复用临时 SQLite 和现有 fixture/API 建验收数据，不接触生产。
+- [x] /// 用真实 Text Studio 页面核对 v2 payload、图片/图表精确引用、FactPack 引文绑定/解绑与边界漂移、AI 五操作、升级、Draft seed、diff、Review/Approval/ZIP；完成一项才勾一项。
+- [x] /// 跑 legacy `/workspace`、历史 v1、Graphic/Video、F2–F6A 定向及浏览器回归；发现缺口只做范围内最小修复。
+- [x] /// 跑全后端、前端构建与路由包预算、OpenSpec strict、Ruff、diff-check，核实零新 migration；留可复查的隔离验收记录。
+- [x] /// 按可用评审能力复核 SPEC、后端、前端与性能，更新 README/progress/findings 和真实任务数；无独立 reviewer 不虚报 APPROVE。
+- [x] /// 记录最终文件/门禁/限制并在本地 main 提交 F6B；原始规格包和 ZIP 保持未跟踪，主规格同步/归档另行授权。
+
+本轮不扩产品能力，不新建迁移，不推送/部署/运行生产迁移，不启动 F6C/F6D。主规格同步/归档仍需单独授权；F6B 代码留在本地 main 未提交工作区。
+
+## 2026-09-29：FE-F6B Professional Text Studio Frontend（本轮继续）
+
+- [x] /// 复核后端 v2 接口与前端 F6A 边界，先把 Text 的 typed document/ref/edit state 接入 ContentMasterPanel；Graphic/Video 保持原路径。
+- [x] /// 先写纯模型/适配器定向回归，再实现 Text-only lazy TipTap、稳定 block ID 与显式本地 dirty/save；不持久化 ProseMirror JSON。
+- [x] /// 接项目素材、精确证据引用、AI 建议与 provenance、只读身份/检查、历史升级/diff，逐项用真实 API 契约验证。
+- [x] /// 测量 Production/Text 路由包边界，运行 TypeScript/Vite、FE-P1、后端定向/全量及 strict/diff 门禁；只对真实完成项勾 OpenSpec。
+- [x] /// 更新 README/progress/findings，报告实际任务数与前端 PASS/PARTIAL；15–20 完成前不开始最终浏览器验收。
+
+本轮前端 15–20 已完成，累计 131/162；22 浏览器验收已开始但未完成，5.6/6.1/6.3 与 21–23 保持未勾。下一批先建有权利的共享素材和冻结 Fact Boundary 隔离夹具，再完成精确引用与完整浏览器/跨模态回归。
+
+本批不新增 migration，不 commit/push/deploy，不同步 canonical/归档，不启动 F6C/F6D；Workflow 与 Text 保存状态必须独立。
+
+## 2026-09-29：FE-F6B Backend Milestone B（任务 11–14，本批继续）
+
+- [x] /// 先读取并锁定 AI suggestion、receipt/provenance、structured diff、Review/package 的现有实现边界，记录本批 RED 测试入口。
+- [x] /// 复核上一批过早勾选的 11–14，先以伪造血缘、冻结预览完整性和 ZIP 字节回归暴露缺口，再逐项恢复完成标记。
+- [x] /// 先写定向回归：项目/单元权限、当前 v2 基础、选择范围与 patch 有界性、suggestion 不写 Master。
+- [x] /// 实现 `text_master_ai`：五种操作、服务端 patch 校验、模型使用上下文、服务端 LLMRun receipt；不接受模型自报 provenance。
+- [x] /// 先写定向回归：receipt 精确绑定、连续 hash chain、伪造/失败/外来/断链/后续修改与无 AI 内容。
+- [x] /// 接入 v2 保存的 receipt 验证与 compact edit provenance；保持 append-only、CAS、旧 v1/v2/v3/v4 兼容。
+- [x] /// 先写定向回归：v2 stable-ID add/remove/move/modify、refs/provenance/context 分组与只读权限。
+- [x] /// 实现 bounded `text_master_diff` 与 project-scoped diff route；不新增 diff 表。
+- [x] /// 先写 v2 Candidate/Review/package 端到端回归，再修复 deterministic frozen render、exact citations、schema dispatch 与本地包闭环。
+- [x] /// 运行 Backend Milestone B 定向/全量后端、strict、Ruff、diff-check；不启动前端、migration、commit、push、deploy、canonical sync 或 archive。
+
+
+## 2026-09-29：FE-F6B Backend Milestone A（任务 9–10，本批继续）
+
+- [x] /// 为 v2 建立按检查种类解析的要求、精确 profile 与输入哈希；保留 v1 历史语义。
+- [x] /// 将执行、当前投影、Candidate v4、历史包及 warning 处置统一到要求解析；先写定向回归并验证失败。
+- [x] /// 实现结构、事实、身份、渠道与条件性可发现性检查，诚实报告不可用/截断/模型使用权限。
+- [x] /// 跑定向及全量后端、OpenSpec strict、Ruff、diff-check；逐项更新 9/10 任务和进度。
+- 本批只做后端 Milestone A；不启动 AI、前端、migration、F6C/F6D，不推送/部署/运行生产迁移。
+
+## 2026-09-29：FE-F6B apply（用户明确授权，本地 main）
+
+- [x] /// 本批先在text_documents统一纯转换，测试Markdown权威、稳定hash、未知结构显式warning与exact refs；两个入口不得另起parser。
+- [x] /// 独立upgrade preview/commit验证最新v1父版本、payload/context CAS及先幂等回放；generic跨schema保护不放宽。
+- [x] /// Draft seed复用同转换器，仅替换内容转换，保留Run/Workflow/Step/Attempt/最新Draft与媒体证据证明；测试两入口一致。
+- [ ] /// 依次关闭专业checks（A）与AI/receipt/diff/Candidate/Review/package（B）；A/B未绿不动前端。
+- [x] /// 阶段全量后端/定向/strict/Ruff/diff及只读复核，记录实际任务与未闭合项；零迁移、不推送部署。
+
+- [x] /// 核对已审标准包/main@ca52aa5/现有文档改动，运行 fresh backend/build/budget/strict/Ruff/diff 基线；保留源包及 ZIP。
+- [x] /// 先 RED 后实现有界 Studio Document、Unicode/list/citation 精确定位、确定性 renderer/hash 和 schema-aware adapter；保留 v1/Graphic/Video。
+- [ ] /// 接入 append-only v2 save、显式 upgrade、Draft seed、schema/profile checks、AI suggestion/receipt、structured diff 和冻结 Review/package；零新表/迁移。
+- [ ] /// 接 Text-only lazy TipTap editor、素材/证据/AI/check/history UX，保持 Workflow/Master dirty/save 独立。
+- [ ] /// 完整回归、性能、浏览器及独立只读评审后记录实际完成项；canonical 同步/归档另待授权，不启动 F6C/F6D。
+- 仅主 Agent 写代码；沿用用户要求直接 main，不创建隔离分支。规格内定向测试已明确要求并随 apply 授权，不生成无关示例或测试。
+- 已接 generic v2 save/refs、共用 converter、显式 upgrade 和 Draft v2 seed，任务51/162；checks/AI/diff/Review 与前端仍未完成，后端 A/B 门禁不能提前算通过。
+
+## 2026-09-29：FE-F6B SPEC REVIEW（仅规格，apply 未授权）
+
+- [x] /// 核对 main@ca52aa5、F6A canonical/archive 与原始包；完整读取 proposal/design/tasks/四份 delta 和现有三份主规格。
+- [x] /// 对照实际 Master/LLMRun/编辑器/Review/package/预算，校准引用定位、转换、AI 血缘与检查 currentness；原始包不改。
+- [x] /// 将校准包归位 openspec/changes/fe-f6b-text-production-studio，审计三份 MODIFIED 的旧要求/场景保留。
+- [x] /// 独立只读 SPEC/后端契约/前端与包复核，运行 strict/保留审计/diff-check，更新 README/进度/发现后等待单独 apply 授权。
+- 禁止业务代码、测试代码、migration、canonical 同步、归档、commit、push、deploy；162 项实施任务保持未执行。
+
 ## 2026-09-29：FE-F6A 五份主规格同步与归档（用户已授权）
 
 - [x] /// 核对 main d060428、tree clean、4/4 artifacts、214/214 tasks；保存五份delta、四份旧主规格和原始包校验基线。

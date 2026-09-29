@@ -10,6 +10,7 @@ export function Button({
   disabled,
   type = "button",
   className = "",
+  ariaPressed,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -18,6 +19,7 @@ export function Button({
   disabled?: boolean;
   type?: "button" | "submit";
   className?: string;
+  ariaPressed?: boolean;
 }) {
   const variants = {
     primary: "bg-gray-900 text-white hover:bg-black disabled:bg-gray-300",
@@ -31,6 +33,7 @@ export function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
+      aria-pressed={ariaPressed}
       className={`rounded-md font-medium transition-colors disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
