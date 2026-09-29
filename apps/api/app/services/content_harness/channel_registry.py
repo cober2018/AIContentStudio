@@ -73,6 +73,7 @@ class ContentFormSpec:
     discoverability_profile: str | None = None
     publisher_candidates: list[str] = field(default_factory=list)
     media_requirements: dict = field(default_factory=dict)
+    graphic_requirements: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -88,6 +89,7 @@ class ContentFormSpec:
             "discoverability_profile": self.discoverability_profile,
             "publisher_candidates": self.publisher_candidates,
             "media_requirements": self.media_requirements,
+            "graphic_requirements": self.graphic_requirements,
         }
 
 
@@ -134,6 +136,7 @@ def _form_from_profile(channel: str, form_key: str, conf: dict, template: Channe
         discoverability_profile=conf.get("discoverability_profile"),
         publisher_candidates=list(conf.get("publisher_candidates") or []),
         media_requirements=dict(conf.get("media_requirements") or {}),
+        graphic_requirements=conf.get("graphic_requirements") if conf.get("graphic_requirements") is not None else {},
     )
 
 

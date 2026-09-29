@@ -275,6 +275,61 @@ class GraphicMasterAdapter(MediaMasterAdapter):
     mime_prefix = "image/"
 
 
+class GraphicMasterV2Adapter(GraphicMasterAdapter):
+    version = "2"
+    required_check_kinds = (*ProductionModalityAdapter.required_check_kinds, "graphic_structure", "graphic_fact", "graphic_identity", "graphic_platform")
+
+    @property
+    def payload_schema(self) -> str:
+        return "graphic.master.v2"
+
+    def validate_payload(self, payload: dict) -> list[str]:
+        from .graphic_documents import GraphicDocumentError, canonical_payload
+
+        try:
+            canonical_payload(payload)
+        except GraphicDocumentError as exc:
+            return [str(exc)]
+        return []
+
+    def freeze_availability(self, db: Session, master: ContentMasterRevision) -> dict:
+        from .graphic_master_checks import profile_reasons
+
+        availability = super().freeze_availability(db, master)
+        reasons = list(availability["reasons"])
+        if master.channel_id and master.content_form and not self.validate_payload(master.payload_json):
+            try:
+                form = resolve_content_form(db, master.channel_id, master.content_form)
+                reasons.extend(profile_reasons(form, master.payload_json))
+            except ChannelRegistryError:
+                reasons.append("graphic_profile_unavailable")
+        return {**availability, "available": not reasons, "reasons": list(dict.fromkeys(reasons))}
+
+    def build_preview(self, master: ContentMasterRevision) -> dict:
+        from .graphic_documents import GraphicDocumentError, canonical_payload
+
+        try:
+            document = canonical_payload(master.payload_json)
+        except GraphicDocumentError as exc:
+            return {**super().build_preview(master), "status": "invalid", "reasons": [str(exc)]}
+        return {**super().build_preview(master), "canvas_count": len(document["canvases"]), "canvases": [{"id": canvas["id"], "order": canvas["order"], "width": canvas["width"], "height": canvas["height"], "layer_count": len(canvas["layers"])} for canvas in document["canvases"]]}
+
+    def build_render_snapshot(self, db: Session, master: ContentMasterRevision) -> dict:
+        render = super().build_render_snapshot(db, master)
+        if render["status"] != "ready":
+            return render
+        canvas_ids = [canvas["id"] for canvas in master.payload_json["canvases"]]
+        if [output["canvas_id"] for output in render["outputs"]] != canvas_ids:
+            return {"status": "incomplete", "reasons": ["render_canvas_order_mismatch"]}
+        refs = {ref.material_revision_id: ref for ref in db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id, ContentMasterAssetRef.role == "render_output")).all()}
+        for index, output in enumerate(render["outputs"]):
+            ref = refs[output["material_revision_id"]]
+            canvas_id = canvas_ids[index]
+            if ref.slot_key != canvas_id or ref.sort_order != index or ref.placement_json != {"canvas_id": canvas_id}:
+                return {"status": "incomplete", "reasons": ["render_canvas_binding_mismatch"]}
+        return render
+
+
 class VideoMasterAdapter(MediaMasterAdapter):
     modality = "video"
     allowed_artifact_kinds = ("video",)
@@ -282,7 +337,7 @@ class VideoMasterAdapter(MediaMasterAdapter):
     mime_prefix = "video/"
 
 
-ADAPTERS = {(adapter.modality, adapter.payload_schema): adapter for adapter in (TextMasterAdapter(), TextMasterV2Adapter(), GraphicMasterAdapter(), VideoMasterAdapter())}
+ADAPTERS = {(adapter.modality, adapter.payload_schema): adapter for adapter in (TextMasterAdapter(), TextMasterV2Adapter(), GraphicMasterAdapter(), GraphicMasterV2Adapter(), VideoMasterAdapter())}
 
 
 def default_payload_schema(modality: str) -> str:

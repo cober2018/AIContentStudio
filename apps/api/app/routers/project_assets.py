@@ -12,12 +12,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import require_editor
+from ..deps import get_current_user, require_editor
 from ..models import AuditLog, MaterialRevision, ProjectMaterialReference, User, utcnow
 from ..services import materials as materials_service
 from ..services.project_assets import reference_json
 from ..services.project_events import record_project_event
-from .content_projects import mutable_project
+from .content_projects import mutable_project, owned_project
 
 router = APIRouter(prefix="/api/v1/content-projects", tags=["content-project-assets"])
 logger = logging.getLogger(__name__)
@@ -26,6 +26,24 @@ logger = logging.getLogger(__name__)
 class MaterialReferenceIn(BaseModel):
     material_revision_id: int
     note: str | None = None
+
+
+_UNVERIFIED_GRAPHIC_CAPABILITY = {"configured": False, "executable": False, "verified": False, "reason": "project_provider_not_verified"}
+
+
+@router.get("/{project_id}/graphic-capabilities")
+def graphic_capabilities(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    owned_project(db, project_id, user)
+    return {key: _UNVERIFIED_GRAPHIC_CAPABILITY.copy() for key in ("material_search", "image_generation", "image_variation", "graphic_renderer")}
+
+
+@router.post("/{project_id}/graphic-material-search")
+@router.post("/{project_id}/graphic-image-generation")
+@router.post("/{project_id}/graphic-image-variation")
+def unavailable_graphic_provider(project_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    mutable_project(db, project_id, user)
+    # The generic Material provider can write bytes, but has no project-scoped verification or license proof.
+    raise HTTPException(422, {"code": "capability_unavailable", "reason": "project_provider_not_verified"})
 
 
 @router.post("/{project_id}/materials/references", status_code=201)
