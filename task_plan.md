@@ -2,9 +2,13 @@
 
 ## 2026-09-29：North Star 完整剩余开发（目标进行中）
 
+- [x] /// 从 `main@361265d` 与 F8 用户源包出发，审计 auth/startup/health/metrics/media/worker 当前实现，区分已有功能与生产缺口。
+- [x] /// 以 `openspec-propose` 归位 F8 proposal/design、新 Production Readiness 规格和 Settings delta；为原十条要求补可验收场景及当前代码边界。
+- [x] /// 审核 F8 原 91 项任务保留与八项现状安全门禁，运行全库 OpenSpec strict 30/30 和 diff-check；仅规格检查点准备本地提交。
+- [ ] /// F8 业务 apply 须在 F6C 独立复核及 F6D/F6E/F7 前序验收与项目规则确认之后；不得把规格存在当成生产就绪。
 - [x] /// 对照真实 `main`、F6C/F6D/F6E 已有标准 change 和 F7 用户原包，确认当前不重复实施 F6B，也不越过 F6C 独立复核门槛。
 - [x] /// 以 `openspec-propose` 将 F7 源稿归位为标准 proposal/design、五份 delta 与任务，补齐场景、精确验证、Project 素材引用和全链路 Provider 脱敏。
-- [x] /// 验证 F7 源稿十条长期要求逐项保留、全库 strict 和 diff-check；业务代码/迁移未触及，准备本地规格检查点。
+- [x] /// 验证 F7 源稿十条长期要求逐项保留、全库 strict 和 diff-check；业务代码/迁移未触及，规格检查点已本地提交 `361265d`。
 - [ ] /// F6C 独立复核恢复后关闭 7.10；F6D/F6E/F7 业务 apply 须依前序验收和本项目 OpenSpec 确认边界继续推进。
 - [x] /// 读取一次性开发目标与总包；对照真实仓库，确认 F6B 已从总包旧基线 131/162 推进为本地 `main@670dd49` 的 162/162。
 - [x] /// 按 `openspec-propose` 将 F6C 图文工作台源包校准为标准 active change，补齐 Scenario、显式 v1 升级、冻结画布顺序、现有渠道分类与能力可用性边界。

@@ -1,5 +1,13 @@
 # 配置记录
 
+## 2026-09-29 FE-F8 规格校准发现
+
+- F8 源稿十条 Requirement 没有 WHEN/THEN，原任务 91 项；标准化需补实际验收场景与现状门禁，不等于已经达到 production readiness。现有 `deps.py` 信任可伪造的 `X-Studio-User`，缺省本地身份并自动创建 User；生产模式必须彻底拒绝这条路径，而不是仅在代理层隐藏 Header。
+- `main.lifespan()` 当前会 `init_db()`、同步 Prompt/模板、加载覆盖配置、seed profiles；这些开发便利不应在生产服务启动时静默建表/改配置。F8 标准方案要求生产只读预检和显式迁移/变更流程。
+- `/api/v1/health` 已存在，`check_health()` 的 DB 异常字符串可进入响应且降级仍由路由返回默认 200；`/metrics` 直接以原始 request path 作为 label，会暴露动态 ID 并扩大时序数。应原位改为可区分 liveness/readiness、安全 reason code、真实非成功状态及有界路由标签，不再造一个冲突的第二健康真源。
+- MaterialRevision 是现有素材业务真源且会校验 hash，但 `MaterialRevision.file_path`、DraftMedia、项目/工作流/Review/Delivery/retention 多处直连 `MEDIA_ROOT`。已有 MinIO 服务主要用于导出，不意味着全部不可变媒体具备可替换存储。F8 存储切换必须先清点所有读写者、完成引用字节复制校验与可恢复回退；不能只改一个 `read_bytes_checked()`。
+- `SystemSetting` 可能持久化明文 Secret；Settings 脱敏不等于静态存储与日志安全。生产启用前必须清点、明确迁移或禁用，并避免把值打印到审计报告。
+
 ## 2026-09-29 FE-F7 规格校准发现
 
 - 用户 F7 源稿十条新增要求未包含 WHEN/THEN 场景，直接放进标准 OpenSpec 会缺可验收契约；标准版新增场景并保留原意，四份受影响 canonical 能力仅写 ADDED delta，不覆盖旧块。

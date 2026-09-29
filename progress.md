@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：FE-F8 标准 OpenSpec 校准（仅规格）
+
+- 真实起点为本地 `main@361265d`，仅用户原始包/ZIP 未跟踪；上一目标轮 F7 标准规格已提交，F6C 仍 73/74 且独立复核未签发最终通过。F8 原始包有 91 项、十条新增要求，无可验收 Scenario。
+- 本轮审计现有 `deps.get_current_user()` 的 Header/default-user/自动建号、`main.lifespan()` 的 `init_db()` 与模板/设置 bootstrap、`health.check_health()` 的原始错误/HTTP200降级、raw-path metrics、`MaterialRevision.file_path` 与多处直接 `MEDIA_ROOT` 读取，及 Celery/MinIO 当前仅部分覆盖；原始 F8 不能直接把这些现状标成生产可用。
+- 标准 change `fe-f8-production-readiness-operations` 已写 proposal/design、新 Production Readiness 能力规格与 Product Settings delta，原 91 项任务保留并补八项现状安全门禁，现为 99 项未开始；原十条 Requirement 均有标准场景。全库 OpenSpec strict 30/30 PASS、change artifacts 4/4、tracked diff-check PASS。仅做规格，不变更认证、媒体存储、数据库、业务代码或生产环境；独立 SPEC review、F7 前置门禁及用户规则的 apply 确认仍未完成。
+
 ## 2026-09-29：FE-F7 标准 OpenSpec 校准（仅规格）
 
 - 真实本地 `main@775294c` 的 F6B 已是 162/162；F6C 仍 73/74（独立复核未得最终 verdict），F6D/F6E 仅标准规格草案，均未 apply。用户提供的旧 F6B 131/162 是总包规划时的历史基线，不再重复实施。
