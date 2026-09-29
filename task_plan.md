@@ -7,6 +7,7 @@
 - [x] /// 建立 Text 三目标保守确定性适配、Variant 系列 CAS 写入和新增 citation 的精确证据引用；全套回归在后端目录运行，未完成的素材/来源引用仍拒绝写入。
 - [x] /// 增加 non-durable adapt-preview，只对精确当前 Master 和 published Profile 给出受控 Text 建议，确认无 Variant/Event 写入。
 - [x] /// 将 Graphic v2 已验证的逐画布最终 render 映射为小红书有序图文卡片和精确 MaterialRevision；缺 render、撤权、字节或顺序不符时 fail closed。
+- [x] /// 为 Video v2→抖音口播脚本开放无媒体/无定时内容的确定性子集；未映射 B-roll、配音、字幕及叠字一律拒绝，绝不声称已生成视频。
 - [ ] /// 实现 exact Registry/profile 的 canonical adapters，再接项目级 Variant CAS/refs/checks 和 Candidate v5；任何额外持久对象或安全边界削弱先停下修规格。
 - [ ] /// 完成 Review/Approval/本地包、Matrix、前端与隔离浏览器验收；保留 v3/v4 和未知发布状态，不声称 F7 远端能力已验证。
 - [ ] /// 最终门禁和独立复核后仅本地范围提交；主规格同步/归档、push、deploy、生产迁移另行授权。

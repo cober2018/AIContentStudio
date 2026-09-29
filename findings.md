@@ -2,6 +2,7 @@
 
 ## 2026-09-29 F6E 首个 Variant 写入边界
 
+- 抖音 `spoken_script` 的目标 `artifact_kind=script`。Video v2 只有 shot 与 script block 能无损对应、且不含未映射媒体/定时字幕时才可确定性预览/保存；没有视频成片或真实时码就不产生 `estimated_srt`。B-roll/音轨/字幕来源未来必须按 exact ref/时间映射，不可静默丢弃或冒充发布成片。
 - 小红书图文不能由 canvas prompt 推断已产图：F6C Graphic Master 的 `render_input_hash` attestation、逐画布输出与当前素材字节/哈希/权利同时成立，才能预览/保存 `image_note`。Variant 卡片 `image_ref_key` 和冻结 `ChannelVariantAssetRef.sort_order` 必须同序；显式重排两者合法，只改一边拒绝。提交前撤权会回滚 Variant、Refs、Event。
 - 预览与保存是两个动作：`adapt-preview` 只对当前精确 Master 和 published Profile 生成 canonical Text 建议，不创建 Variant、ProjectEvent 或 DeliveryTarget；不支持的目标和来源 refs 明确不可执行。远端 Publisher 仍为后续 F7 范围。
 - Text Variant 新增的 citation 只能绑定当前 source Master 所冻结项目 Fact Boundary 内的 exact FactPackItem/checksum，且该 item 仍须可公开使用、未撤权；正文 range 与 EvidenceRef locator 由 canonical payload 同步校验。提交前撤权会回滚 Variant、引用和 ProjectEvent。畸形 ref 在数据库查询前转成 422，不让任意 JSON 引发 500。
@@ -10,7 +11,7 @@
 
 ## 2026-09-29 F6E 独立规格结论
 
-- `x/thread` 与 `x/single` 的 published Profile 都存在，但注册配置本身不证明 Adapter 已实现；现仅公众号文章、X 推串和单条的无引用 Text v2 子集可执行，Graphic/Video 仍不可执行，所有目标均未验证远端能力；旧 `x_thread/thread` 不在 v5 矩阵内。
+- `x/thread` 与 `x/single` 的 published Profile 都存在，但注册配置本身不证明 Adapter 已实现；现公众号文章、X 推串和单条的无引用 Text v2 子集、小红书已验证 render 图文以及抖音无媒体口播脚本子集可执行，其余来源内容仍需显式映射。所有目标均未验证远端能力；旧 `x_thread/thread` 不在 v5 矩阵内。
 - 五种 Variant canonical payload 在服务端限制字段、稳定 ID/顺序与长度；引用了图片槽位或 citation 却缺少对应精确素材 hash / FactPackItem checksum+locator 时拒绝。纯校验通过不代表当前项目素材可见、live rights 或真实字节已核验；这些还要在项目级保存与冻结闸门完成。
 - Variant 只读 API 必须先核项目 owner 和 Unit 归属，再查行；只判断 `variant_id` 存在会造成跨项目历史泄漏。当前 list/current/detail 均复用 `owned_unit()`，detail 再确认行的 project/unit，foreign raw-ID 回归为 404。
 - 当前 Registry 的 published Profile 真源是 `ChannelTemplateVersion`，所以 Variant 除 channel/form/hash 外还须精确保存 `profile_template_version_id` 外键；只存字符串版本会丢掉不可变配置来源。此字段已加入计划内 Variant 表。
