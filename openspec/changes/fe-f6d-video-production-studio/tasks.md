@@ -55,8 +55,8 @@
 
 ## 5. Video checks, diff, Review and package
 
-- [ ] 5.1 Add append-only Video v2 structure and timeline checks in ContentMasterCheckRun.
-- [ ] 5.2 Add coverage-honest Video identity and exact published video-profile checks; missing semantic provider is not PASS.
+- [x] 5.1 Add append-only Video v2 structure and timeline checks in ContentMasterCheckRun.
+- [x] 5.2 Add coverage-honest Video identity and exact published video-profile checks; missing semantic provider is not PASS.
 - [ ] 5.3 Make profile/source/context changes invalidate current check and render-input hashes.
 - [ ] 5.4 Add stable-ID Master diff for script, shots, timeline, voice, cues, overlays, media and context.
 - [ ] 5.5 Project Review reads Video v2 from frozen Candidate v4 manifest and never invents whole-video text similarity.

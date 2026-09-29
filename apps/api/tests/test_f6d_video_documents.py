@@ -5,6 +5,7 @@ import importlib
 import importlib.util
 import json
 from copy import deepcopy
+from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
@@ -229,6 +230,68 @@ def test_empty_video_draft_is_valid_but_not_a_final_render():
     assert _canonical(payload) == payload
 
 
+@pytest.mark.parametrize("empty,expected", [(False, "pass"), (True, "incomplete")])
+def test_video_v2_structure_and_timeline_checks_use_append_only_master_runs(client, db_session, empty, expected):
+    from app.models import ContentMasterCheckRun
+
+    headers = {"X-Studio-User": f"video-checks-{empty}@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "视频检查作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "视频检查"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "短片", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    document = _document()
+    if empty:
+        document["script"]["blocks"] = []
+        document["shots"] = []
+        document["timeline"] = {"duration_ms": 0, "tracks": []}
+        document["subtitles"]["cues"] = []
+    saved = client.post(path, json={"idempotency_key": f"check-{empty}", "payload_schema": "video.master.v2", "payload": document}, headers=headers)
+    assert saved.status_code == 200, saved.text
+    master_id = saved.json()["id"]
+    run = client.post(f"{path}/{master_id}/checks", headers=headers)
+    assert run.status_code == 200, run.text
+    checks = {item["check_kind"]: item for item in run.json()["items"]}
+    assert checks["video_structure"]["status"] == expected
+    assert checks["video_timeline"]["status"] == expected
+    assert checks["video_structure"]["report"]["coverage"]["deterministic"] == "complete"
+    assert checks["video_timeline"]["report"]["coverage"]["deterministic"] == "complete"
+    assert checks["video_identity"]["status"] != "pass"
+    assert checks["video_identity"]["report"]["reasons"] == ["identity_profile_invalid"]
+    assert checks["video_identity"]["report"]["coverage"]["semantic"] == "unavailable"
+    assert checks["video_platform"]["status"] != "pass"
+    current = {item["check_kind"]: item for item in client.get(f"{path}/{master_id}/checks/current", headers=headers).json()["items"]}
+    assert current["video_structure"]["is_current"] is True
+    assert current["video_timeline"]["is_current"] is True
+    assert db_session.query(ContentMasterCheckRun).filter_by(master_revision_id=master_id).count() == len(checks)
+
+
+def test_video_identity_explicit_phrase_blocks_but_visual_and_audio_remain_unverified(monkeypatch):
+    checks = importlib.import_module("app.services.video_master_checks")
+    monkeypatch.setattr(checks, "_semantic_review", lambda *args, **kwargs: ([], {"semantic": "verified"}))
+    snapshot = SimpleNamespace(id=7, checksum="i" * 64, effective_profile_json={"expression_style": {"forbidden_phrases": ["开场"]}})
+    db = SimpleNamespace(get=lambda model, key: snapshot)
+    master = SimpleNamespace(identity_snapshot_id=7)
+    status, report = checks._identity(db, master, _canonical(_document()), {"metadata": {"semantic": {"configured": True}}})
+    assert status == "blocker"
+    assert report["issues"][0]["reason"] == "explicit_identity_forbidden_phrase"
+    assert report["coverage"]["semantic"] == "verified"
+    assert report["coverage"]["visual_semantics"] == "unavailable"
+    assert report["coverage"]["audio_semantics"] == "unavailable"
+
+
+def test_video_identity_verified_text_is_only_warning_when_media_unverified(monkeypatch):
+    checks = importlib.import_module("app.services.video_master_checks")
+    monkeypatch.setattr(checks, "_semantic_review", lambda *args, **kwargs: ([], {"semantic": "verified"}))
+    snapshot = SimpleNamespace(id=7, checksum="i" * 64, effective_profile_json={"expression_style": {"forbidden_phrases": []}})
+    db = SimpleNamespace(get=lambda model, key: snapshot)
+    master = SimpleNamespace(identity_snapshot_id=7)
+    status, report = checks._identity(db, master, _canonical(_document()), {"metadata": {"semantic": {"configured": True}}})
+    assert status == "warning"
+    assert report["coverage"]["semantic"] == "verified"
+    assert report["coverage"]["visual_semantics"] == "unavailable"
+    assert report["coverage"]["audio_semantics"] == "unavailable"
+
+
 @pytest.mark.parametrize("mutation", [
     lambda doc: doc["shots"][0].update({"extra": "unsupported"}),
     lambda doc: doc["shots"].append({**doc["shots"][0], "order": 1}),
@@ -418,6 +481,19 @@ def test_video_v2_readiness_uses_exact_published_profile(client, db_session):
     readiness = client.get(f"{path}/{saved.json()['id']}/readiness", headers=headers)
     assert readiness.status_code == 200, readiness.text
     assert "video_shot_count_above_profile_maximum" in readiness.json()["adapter_availability"]["reasons"]
+    checked = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checked.status_code == 200, checked.text
+    platform = next(item for item in checked.json()["items"] if item["check_kind"] == "video_platform")
+    assert platform["status"] == "blocker"
+    assert "video_shot_count_above_profile_maximum" in platform["report"]["reasons"]
+    db_session.add(ChannelTemplateVersion(
+        channel="short_video_fixture", version=2, name="短视频新版", status="published",
+        profile_json={"content_forms": {"short": {"artifact_kind": "video", "video_requirements": {"max_shots": 2}}}},
+    ))
+    db_session.commit()
+    current = {item["check_kind"]: item for item in client.get(f"{path}/{saved.json()['id']}/checks/current", headers=headers).json()["items"]}
+    assert current["video_platform"]["is_current"] is False
+    assert current["video_platform"]["status"] == "stale"
 
 
 def test_video_v2_render_input_hash_changes_with_published_profile(client, db_session):
