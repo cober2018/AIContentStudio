@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-30 F6E v5 实时冻结
+
+- 旧 Freeze API 仅允许 Draft 或 Master，RED 回归得到 422；新增 Variant 显式分派后，只有服务端读取的当前且 `ready` 的 Variant 能成为 v5 来源。v5 的来源 Master 渠道/形态与目标渠道/形态必须分开冻结，不能用 Unit 的源渠道冒充目标。
+- Candidate v5 `content_master_revision_id` 与 `workflow_run_id` 均不写；来源 Master/Workflow 仅在 manifest 中追溯。只读预览先按 schema 识别 v5，再拒绝五个旧来源/工作流字段污染及目标投影列不符。
+- 现有 Variant `ready` 检查已覆盖部分实时素材/证据/渲染；冻结前与提交前双次重算可捕获一般漂移，但尚未完成数据库层全面锁及审批/授权/包各自的 v5 live validator。不得把冻结成功等同已获审批或可交付。
+
 ## 2026-09-30 F6E v5 清单边界
 
 - v4 manifest builder 依赖源 Master 的 channel/form，不能直接服务 channel-neutral v5；v5 改为 `source_master` 与 `target` 分离，目标 Profile/Adapter/Rule 不覆盖源渠道血缘。

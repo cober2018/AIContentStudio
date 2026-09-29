@@ -1,5 +1,12 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F6E Variant → v5 Candidate 实时冻结
+
+- [x] /// 对照 F6E 8.1–8.9 与现有 v4 路由，写真实项目 API 回归：同一来源多系列独立冻结、重复请求同一 Candidate、撤权/历史 Variant 无写入、五个旧来源指针为空。跨项目、并发竞态及五字段逐一污染仍属后续 8.x/11.x。
+- [x] /// 从已授权当前 Variant 装载真实 Project/Unit/Identity/Brief/Fact Boundary、Master/Workflow、Profile/Adapter、refs/check/render 快照，并调用纯 `build_manifest_v5()`；只用服务端对象，不信任客户端清单。
+- [x] /// 在现有 Freeze API 增加显式 Variant 分派和 expected hash；提交前重验 live gates，Candidate 仅填 Variant source FK，保持 v3/v4 路径原样。
+- [x] /// 运行定向/全量回归、OpenSpec strict、Ruff/diff，按实际完成勾任务并同步 README/progress/findings；仅提交本地 main，不推送/部署/归档。
+
 ## 2026-09-30：F6E Candidate v5 冻结清单
 
 - [x] /// 对照 v5 OpenSpec、v4 清单与当前 Variant 字段，先写纯 builder 的失败回归：完整血缘、哈希确定性、输入不别名、缺失字段/伪造 LLM 原始输出拒绝。

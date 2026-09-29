@@ -4,8 +4,25 @@ import hashlib
 import json
 import re
 
-from .channel_adapters import FIRST_BATCH
+from sqlalchemy.orm import Session
+
+from ..models import (
+    ChannelVariantCheckRun,
+    ChannelVariantRevision,
+    ContentMasterRevision,
+    ContentProject,
+    ContentUnit,
+    CreativeBriefRevision,
+    FactPack,
+    IdentitySnapshot,
+    ProjectFactBoundaryRevision,
+    ProjectWorkflowOutput,
+    WorkflowRun,
+    WorkflowStepAttempt,
+)
+from .channel_adapters import FIRST_BATCH, executable_adapter_for
 from .channel_variant_documents import VariantDocumentError, canonical_payload
+from .channel_variants import _check_inputs, projected_variant_checks
 from .production_modalities import validate_json_bounds
 
 SECTIONS = ("project", "identity", "brief", "evidence", "source_master", "variant", "target", "content",
@@ -70,6 +87,9 @@ def build_manifest_v5(inputs: dict) -> dict:
         raise ValueError("variant source, target or adapter mismatch")
     if source["id"] != variant["source_master_revision_id"] or identity["id"] != variant["identity_snapshot_id"]:
         raise ValueError("variant source or identity mismatch")
+    if (source.get("channel") != variant.get("source_channel")
+            or source.get("content_form") != variant.get("source_content_form")):
+        raise ValueError("variant source channel or form mismatch")
     for section in ("assets", "evidence_refs", "checks", "citations", "declarations"):
         if not isinstance(inputs[section], list):
             raise TypeError(f"invalid manifest section: {section}")
@@ -120,3 +140,82 @@ def build_manifest_v5(inputs: dict) -> dict:
     if errors:
         raise ValueError(f"invalid v5 manifest bounds: {errors}")
     return json.loads(json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False))
+
+
+def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
+    """Resolve one current Variant into exact, live and frozen candidate inputs."""
+    project = db.get(ContentProject, row.project_id)
+    unit = db.get(ContentUnit, row.content_unit_id)
+    master = db.get(ContentMasterRevision, row.source_master_revision_id)
+    identity = db.get(IdentitySnapshot, row.identity_snapshot_id) if row.identity_snapshot_id else None
+    if not all((project, unit, master, identity)) or unit.project_id != project.id or project.owner_user_id != identity.owner_user_id:
+        raise ValueError("variant project, source or identity unavailable")
+    if (master.project_id != project.id or master.content_unit_id != unit.id or master.identity_snapshot_id != identity.id
+            or unit.identity_snapshot_id != identity.id or master.payload_hash != row.source_master_payload_hash
+            or master.context_hash != row.source_master_context_hash or master.channel_id != row.source_channel_id
+            or master.content_form != row.source_content_form):
+        raise ValueError("variant source provenance mismatch")
+    brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id) if master.creative_brief_revision_id else None
+    boundary = db.get(ProjectFactBoundaryRevision, master.fact_boundary_revision_id) if master.fact_boundary_revision_id else None
+    pack = db.get(FactPack, boundary.fact_pack_id) if boundary else None
+    if (not all((brief, boundary, pack)) or brief.project_id != project.id or boundary.project_id != project.id
+            or pack.status != "frozen" or pack.version != boundary.fact_pack_version or pack.checksum != boundary.fact_pack_checksum):
+        raise ValueError("variant brief or fact boundary mismatch")
+    readiness = projected_variant_checks(db, row)
+    if not readiness["ready"]:
+        raise ValueError(f"variant not ready: {readiness['drift_reasons'] or readiness['source_gate']['reasons']}")
+    input_hash, assets, evidence_refs = _check_inputs(db, row)
+    checks = []
+    for item in readiness["items"]:
+        check = db.get(ChannelVariantCheckRun, item["id"])
+        if check is None or check.input_hash != input_hash or not item["is_current"]:
+            raise ValueError("variant check changed")
+        checks.append({"id": check.id, "kind": check.check_kind, "input_hash": check.input_hash,
+                       "status": check.status, "profile_hash": check.profile_hash, "adapter_hash": check.adapter_hash,
+                       "rule_hash": check.rule_hash, "report": check.report_json})
+    adapter, capability = executable_adapter_for(db, master.payload_schema, row.channel_id, row.content_form)
+    if (capability["profile_version_id"] != row.profile_template_version_id or capability["profile_hash"] != row.profile_hash
+            or capability["artifact_kind"] != row.artifact_kind):
+        raise ValueError("variant target profile changed")
+    workflow = output = None
+    if master.origin_workflow_run_id is not None or master.origin_project_output_id is not None:
+        run = db.get(WorkflowRun, master.origin_workflow_run_id) if master.origin_workflow_run_id else None
+        project_output = db.get(ProjectWorkflowOutput, master.origin_project_output_id) if master.origin_project_output_id else None
+        attempt = db.get(WorkflowStepAttempt, project_output.attempt_id) if project_output and project_output.attempt_id else None
+        if (not run or not project_output or not attempt or not run.definition_checksum or run.workflow_version is None
+                or run.content_unit_id != unit.id or run.identity_snapshot_id != identity.id
+                or project_output.project_id != project.id or project_output.unit_id != unit.id or project_output.run_id != run.id
+                or attempt.run_id != run.id or attempt.node_id != project_output.node_id or attempt.status != "succeeded" or not attempt.output_hash):
+            raise ValueError("unverified source Master workflow provenance")
+        workflow = {"run_id": run.id, "workflow_id": run.workflow_id, "version": run.workflow_version, "definition_checksum": run.definition_checksum}
+        output = {"id": project_output.id, "kind": project_output.output_kind, "entity_id": project_output.entity_id,
+                  "node_id": project_output.node_id, "attempt_id": attempt.id, "attempt_no": attempt.attempt_no,
+                  "input_hash": attempt.input_hash, "output_hash": attempt.output_hash}
+    return {
+        "project": {"id": project.id, "title": project.title, "unit_id": unit.id, "unit_title": unit.title, "modality": master.modality},
+        "identity": {"id": identity.id, "checksum": identity.checksum, "effective_profile": identity.effective_profile_json,
+                     "field_origins": identity.field_origins_json},
+        "brief": {"id": brief.id, "revision_no": brief.revision_no, "checksum": brief.checksum,
+                  "snapshot": {"objective": brief.objective, "primary_audience": brief.primary_audience,
+                               "core_message": brief.core_message, "angle": brief.angle, "constraints": brief.content_constraints_json}},
+        "evidence": {"boundary_id": boundary.id, "revision_no": boundary.revision_no,
+                     "fact_pack": {"id": pack.id, "version": pack.version, "checksum": pack.checksum}},
+        "source_master": {"id": master.id, "revision_no": master.revision_no, "modality": master.modality,
+                          "payload_schema": master.payload_schema, "payload_hash": master.payload_hash,
+                          "context_hash": master.context_hash, "channel": master.channel_id,
+                          "content_form": master.content_form},
+        "variant": {"id": row.id, "variant_key": row.variant_key, "revision_no": row.revision_no,
+                    "source_master_revision_id": master.id, "identity_snapshot_id": identity.id,
+                    "payload_schema": row.payload_schema, "payload_hash": row.payload_hash,
+                    "context_hash": row.context_hash, "source_kind": row.source_kind,
+                    "source_channel": row.source_channel_id, "source_content_form": row.source_content_form},
+        "target": {"channel": row.channel_id, "content_form": row.content_form, "artifact_kind": row.artifact_kind,
+                   "profile": {"id": row.profile_template_version_id, "key": row.profile_key,
+                               "version": row.profile_version, "hash": row.profile_hash, "artifact_kind": row.artifact_kind},
+                   "adapter": {"key": row.adapter_key, "version": row.adapter_version}, "rule_hash": row.rule_hash},
+        "content": row.payload_json, "assets": assets, "evidence_refs": evidence_refs, "checks": checks,
+        "render": adapter.package_projection(row.payload_json, asset_refs=assets, evidence_refs=evidence_refs),
+        "production": {"workflow": workflow, "output": output, "edit_summary": row.edit_summary_json,
+                       "created_by": row.created_by, "llm_provenance": row.llm_provenance_json},
+        "citations": row.payload_json["citations"], "declarations": row.payload_json["declarations"],
+    }

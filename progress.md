@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-30：F6E Variant 实时冻结入口
+
+- 在现有项目 Freeze API 加入第三种明确来源 `channel_variant_revision_id`；服务端装载当前 Variant、精确来源 Master、Identity/Brief/Fact Boundary、发布 Profile/Adapter、refs、最新 checks 与确定性 render，并构建 v5 manifest。Candidate 仅填 Variant 来源 FK，五个旧 Draft/Master/Workflow 指针为空；提交前再次计算 live 快照，重复同一清单返回原 Candidate。
+- RED 为旧接口拒绝 Variant；GREEN 定向 5 passed，另与纯 manifest builder 共 30 passed；最终全后端重跑 1122 passed / 2 skipped / 7 warnings，相关 Ruff PASS、OpenSpec strict 30/30、diff-check PASS。未就绪/旧系列版本、Evidence 撤权、错误来源组合无新 Candidate；两个 Variant 系列可分别冻结。F6E 8.1/8.2/8.4/8.5 核销，进度 33/100。
+- F6E Review/Approval/Authorization/Package 还未接 v5；完整并发锁、所有来源污染字段的全路径 fail-closed、跨项目及真实本地包回归仍未完成。不可将此里程碑称为 F6E 完成或可交付。
+
 ## 2026-09-30：F6E Candidate v5 manifest 基础
 
 - 新增纯 `build_manifest_v5()`：校验 Project/Unit/Identity、Brief/FactPack、精确源 Master、Variant、已发布目标与 Adapter 兼容矩阵；冻结 canonical payload、精确 refs、各类当前检查、render 与仅安全字段的 LLMRun 投影。定向 RED（模块缺失）后 GREEN 27 passed，覆盖哈希确定性、快照不别名、15 个冻结区段篡改敏感性、来源/目标不一致和原始模型输出拒绝。全后端 1117 passed / 2 skipped / 7 warnings，OpenSpec strict 30/30，相关 Ruff 与 diff-check PASS。数据库快照 loader、实时 Freeze、Review/Package 仍未接入；F6E 8.x 暂不勾为完成，进度保持 29/100。

@@ -37,6 +37,12 @@
 - [ ] /// 实现 Review/Approval/本地包分派；远端能力未验证必须 fail closed。
 - [ ] /// 跑无 Draft 的 Master→Variant→v5→Approval→ZIP 集成回归。
 
+**实时 loader / Freeze 子步骤**
+
+- [x] /// 在 `apps/api/tests/test_f6e_freeze_v5.py` 写项目级 RED：完整来源/Variant checks 后 POST Freeze v5；检查 manifest、唯一 Variant FK、两个系列独立冻结、重复请求幂等及历史/撤权拒绝。跨项目/并发竞态及全部污染字段仍待补测。
+- [x] /// 在 `apps/api/app/services/candidates_v5.py` 补服务端 snapshot loader（授权/当前性/实时检查由调用者证明），在 `apps/api/app/services/project_review.py` 加 v5 Freeze，并在现有 `apps/api/app/routers/project_review.py` 明确三选一 source dispatch。
+- [x] /// 定向 GREEN 后跑完整门禁；Review/Approval/Delivery 另行实现，不用 Freeze 通过冒充 v5 全闭环。
+
 **本轮 v5 manifest builder 子步骤（先于 Freeze）**
 
 - [x] /// 在 `apps/api/tests/test_f6e_candidate_manifest_v5.py` 写完整上下文与安全模型血缘的纯函数 RED；执行 `.venv/bin/pytest -q tests/test_f6e_candidate_manifest_v5.py`，确认因 builder 缺失而失败。

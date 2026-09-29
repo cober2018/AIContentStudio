@@ -79,6 +79,7 @@ def review_candidate_render(project_id: int, unit_id: int, candidate_id: int, re
 class FreezeIn(BaseModel):
     project_output_id: int | None = None
     content_master_revision_id: int | None = None
+    channel_variant_revision_id: int | None = None
     expected_payload_hash: str | None = Field(default=None, pattern="^[0-9a-f]{64}$")
 
 
@@ -95,6 +96,7 @@ def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> d
         "draft_id": asset.draft_id, "title": asset.title, "channel": asset.channel,
         "content_form": asset.content_form, "status": asset.status,
         "artifact_kind": asset.artifact_kind, "content_master_revision_id": asset.content_master_revision_id,
+        "channel_variant_revision_id": asset.channel_variant_revision_id,
         "manifest_schema_version": (asset.candidate_manifest_json or {}).get("schema_version"),
         "candidate_hash": asset.candidate_hash, "approved_candidate_hash": asset.approved_candidate_hash,
         "created_at": asset.created_at.isoformat() if asset.created_at else None,
@@ -107,11 +109,17 @@ def _candidate_json(asset: ContentAsset, *, include_manifest: bool = False) -> d
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/candidates/freeze", status_code=201)
 def freeze(project_id: int, unit_id: int, payload: FreezeIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    if (payload.project_output_id is None) == (payload.content_master_revision_id is None):
-        raise HTTPException(422, "必须且只能选择Draft输出或Content Master作为候选来源")
-    if payload.content_master_revision_id is not None and payload.expected_payload_hash is None:
-        raise HTTPException(422, "Master冻结必须提交expected_payload_hash")
-    candidate = review_service.freeze_candidate(db, project_id, unit_id, payload.project_output_id, user) if payload.project_output_id is not None else review_service.freeze_master_candidate(db, project_id, unit_id, payload.content_master_revision_id, user, expected_payload_hash=payload.expected_payload_hash)
+    sources = (payload.project_output_id, payload.content_master_revision_id, payload.channel_variant_revision_id)
+    if sum(source is not None for source in sources) != 1:
+        raise HTTPException(422, "必须且只能选择Draft输出、Content Master或ChannelVariant作为候选来源")
+    if (payload.content_master_revision_id is not None or payload.channel_variant_revision_id is not None) and payload.expected_payload_hash is None:
+        raise HTTPException(422, "Master或Variant冻结必须提交expected_payload_hash")
+    if payload.project_output_id is not None:
+        candidate = review_service.freeze_candidate(db, project_id, unit_id, payload.project_output_id, user)
+    elif payload.content_master_revision_id is not None:
+        candidate = review_service.freeze_master_candidate(db, project_id, unit_id, payload.content_master_revision_id, user, expected_payload_hash=payload.expected_payload_hash)
+    else:
+        candidate = review_service.freeze_variant_candidate(db, project_id, unit_id, payload.channel_variant_revision_id, user, expected_payload_hash=payload.expected_payload_hash)
     return _candidate_json(candidate, include_manifest=True)
 
 
