@@ -1,13 +1,23 @@
 """F6E script adaptation must not claim a finished video or silently discard media."""
 
-import pytest
+import hashlib
 
-from app.models import ChannelTemplateVersion
+import pytest
+from sqlalchemy import select
+
+from app.models import (
+    ChannelTemplateVersion,
+    ChannelVariantRevision,
+    Material,
+    MaterialRevision,
+    ProjectEvent,
+    ProjectMaterialReference,
+)
 from app.seed import seed_v1_channel_profiles
 from app.services.channel_adapters import AdapterUnavailable, VideoSpokenScriptAdapter
 
 
-def _source(client, db_session, *, timed_cues=False):
+def _source(client, db_session, *, timed_cues=False, b_roll_file=None):
     seed_v1_channel_profiles(db_session)
     db_session.add(ChannelTemplateVersion(
         channel="video_f6e_source", version=1, name="Video source", status="published",
@@ -31,9 +41,27 @@ def _source(client, db_session, *, timed_cues=False):
     }
     if timed_cues:
         document["subtitles"]["cues"] = [{"id": "cue-1", "order": 0, "text": "开场白", "start_ms": 0, "end_ms": 2000}]
+    refs = []
+    if b_roll_file is not None:
+        content = b"\x89PNG\r\n\x1a\nreal b-roll image bytes"
+        b_roll_file.write_bytes(content)
+        material = Material(title="镜头素材", kind="image", status="active")
+        db_session.add(material)
+        db_session.flush()
+        revision = MaterialRevision(
+            material_id=material.id, content_hash=hashlib.sha256(content).hexdigest(), file_path=str(b_roll_file),
+            mime_type="image/png", status="active", public_use_allowed=True, rights_status="cleared",
+        )
+        db_session.add(revision)
+        db_session.flush()
+        db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active"))
+        db_session.commit()
+        document["shots"][0]["source_material_revision_id"] = revision.id
+        refs.append({"material_revision_id": revision.id, "content_hash": revision.content_hash, "role": "shot_source",
+                     "slot_key": "shot-1", "sort_order": 0, "placement": {"shot_id": "shot-1"}})
     saved = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", json={
         "idempotency_key": "video-script-source", "payload_schema": "video.master.v2", "payload": document,
-        "content_form": "short",
+        "content_form": "short", "asset_refs": refs,
     }, headers=headers)
     assert saved.status_code == 200, saved.text
     return project, unit, saved.json(), headers
@@ -49,7 +77,7 @@ def test_script_only_preview_and_save_do_not_claim_finished_video(client, db_ses
     assert preview.json()["artifact_kind"] == "script"
     assert preview.json()["verified_remote"] is False
     assert preview.json()["payload"]["scenes"] == [{"id": "shot-1", "order": 0, "script": "开场白", "voice_text": "开场白", "b_roll_ref_keys": []}]
-    assert "estimated_srt" not in preview.json()["payload"]
+    assert preview.json()["payload"]["estimated_srt"] == {"estimated": True, "text": "1\n00:00:00,000 --> 00:00:04,000\n开场白"}
     saved = client.post(path, json={**intent, "variant_key": "douyin-main", "expected_revision": 0,
         "idempotency_key": "script-1", "source_kind": "deterministic_adapt", "payload": preview.json()["payload"]}, headers=headers)
     assert saved.status_code == 201, saved.text
@@ -73,3 +101,78 @@ def test_script_adapter_rejects_unmapped_b_roll_instead_of_dropping_it():
     adapter = VideoSpokenScriptAdapter()
     with pytest.raises(AdapterUnavailable, match="source_refs_require_explicit_mapping"):
         adapter.adapt({}, asset_refs=[{"slot_key": "shot-1"}], evidence_refs=[])
+
+
+def test_exact_b_roll_preview_and_save(client, db_session, tmp_path):
+    project, unit, master, headers = _source(client, db_session, b_roll_file=tmp_path / "b-roll.png")
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    intent = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "douyin", "content_form": "spoken_script"}
+    preview = client.post(f"{path}/adapt-preview", json=intent, headers=headers)
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["payload"]["scenes"][0]["b_roll_ref_keys"] == ["shot-1"]
+    assert preview.json()["asset_refs"][0]["role"] == "b_roll"
+    assert preview.json()["asset_refs"][0]["material_revision_id"] == master["assets"][0]["material_revision_id"]
+    saved = client.post(path, json={**intent, "variant_key": "douyin-b-roll", "expected_revision": 0,
+        "idempotency_key": "script-b-roll", "source_kind": "deterministic_adapt", "payload": preview.json()["payload"],
+        "asset_refs": preview.json()["asset_refs"]}, headers=headers)
+    assert saved.status_code == 201, saved.text
+    assert saved.json()["assets"][0]["content_hash"] == master["assets"][0]["content_hash"]
+    assert saved.json()["artifact_kind"] == "script"
+
+
+def test_b_roll_revocation_blocks_adaptation_without_writes(client, db_session, tmp_path):
+    project, unit, master, headers = _source(client, db_session, b_roll_file=tmp_path / "b-roll.png")
+    db_session.get(MaterialRevision, master["assets"][0]["material_revision_id"]).public_use_allowed = False
+    db_session.commit()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    preview = client.post(f"{path}/adapt-preview", json={
+        "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+        "expected_source_context_hash": master["context_hash"], "channel_id": "douyin", "content_form": "spoken_script",
+    }, headers=headers)
+    assert preview.status_code == 422, preview.text
+    assert preview.json()["detail"]["code"] == "variant_b_roll_unready"
+    assert client.get(path, headers=headers).json()["items"] == []
+
+
+def test_b_roll_missing_bytes_or_tampered_binding_rejects_without_variant(client, db_session, tmp_path):
+    file = tmp_path / "b-roll.png"
+    project, unit, master, headers = _source(client, db_session, b_roll_file=file)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    intent = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "douyin", "content_form": "spoken_script"}
+    preview = client.post(f"{path}/adapt-preview", json=intent, headers=headers).json()
+    body = {**intent, "variant_key": "douyin-main", "expected_revision": 0, "idempotency_key": "tampered-b-roll",
+            "payload": preview["payload"], "asset_refs": [{**preview["asset_refs"][0], "content_hash_snapshot": "f" * 64}]}
+    tampered = client.post(path, json=body, headers=headers)
+    assert tampered.status_code == 422, tampered.text
+    assert tampered.json()["detail"]["code"] == "variant_b_roll_binding_mismatch"
+    file.write_bytes(b"corrupted image bytes")
+    missing = client.post(f"{path}/adapt-preview", json=intent, headers=headers)
+    assert missing.status_code == 422, missing.text
+    assert missing.json()["detail"]["code"] == "variant_b_roll_bytes_unverified"
+    assert client.get(path, headers=headers).json()["items"] == []
+
+
+def test_b_roll_rights_change_during_save_rolls_back_variant_and_event(client, db_session, tmp_path, monkeypatch):
+    from app.services import channel_variants as service
+
+    project, unit, master, headers = _source(client, db_session, b_roll_file=tmp_path / "b-roll.png")
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    intent = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "douyin", "content_form": "spoken_script"}
+    preview = client.post(f"{path}/adapt-preview", json=intent, headers=headers).json()
+    original = service.record_project_event
+
+    def revoke_on_event(db, **kwargs):
+        result = original(db, **kwargs)
+        db.get(MaterialRevision, master["assets"][0]["material_revision_id"]).public_use_allowed = False
+        db.flush()
+        return result
+
+    monkeypatch.setattr(service, "record_project_event", revoke_on_event)
+    response = client.post(path, json={**intent, "variant_key": "douyin-main", "expected_revision": 0,
+        "idempotency_key": "race-revoke", "payload": preview["payload"], "asset_refs": preview["asset_refs"]}, headers=headers)
+    assert response.status_code == 409, response.text
+    assert db_session.scalars(select(ChannelVariantRevision)).all() == []
+    assert db_session.scalars(select(ProjectEvent).where(ProjectEvent.event_type == "channel_variant.saved")).all() == []

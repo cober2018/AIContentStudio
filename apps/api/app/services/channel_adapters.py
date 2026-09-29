@@ -215,7 +215,9 @@ class VideoSpokenScriptAdapter:
         from .video_documents import VideoDocumentError
         from .video_documents import canonical_payload as canonical_video_payload
 
-        if asset_refs or evidence_refs:
+        if evidence_refs:
+            raise AdapterUnavailable("source_evidence_requires_explicit_mapping")
+        if any(ref.get("role") != "b_roll" for ref in asset_refs):
             raise AdapterUnavailable("source_refs_require_explicit_mapping")
         try:
             source = canonical_video_payload(source_payload)
@@ -228,15 +230,33 @@ class VideoSpokenScriptAdapter:
             raise AdapterUnavailable("script_scene_mapping_incomplete")
         if {shot["script_block_id"] for shot in source["shots"]} != set(blocks):
             raise AdapterUnavailable("script_block_coverage_incomplete")
+        refs_by_shot = {ref["slot_key"]: ref for ref in asset_refs}
+        if len(refs_by_shot) != len(asset_refs) or set(refs_by_shot) - {shot["id"] for shot in source["shots"]}:
+            raise AdapterUnavailable("b_roll_shot_mapping_invalid")
+        if {shot["id"] for shot in source["shots"] if "source_material_revision_id" in shot} != set(refs_by_shot):
+            raise AdapterUnavailable("b_roll_shot_mapping_incomplete")
         scenes = [
             {"id": shot["id"], "order": index, "script": blocks[shot["script_block_id"]],
-             "voice_text": blocks[shot["script_block_id"]], "b_roll_ref_keys": []}
+             "voice_text": blocks[shot["script_block_id"]], "b_roll_ref_keys": [shot["id"]] if shot["id"] in refs_by_shot else []}
             for index, shot in enumerate(source["shots"])
         ]
+        elapsed_ms = 0
+        estimated_cues = []
+        for index, shot in enumerate(source["shots"], start=1):
+            start_ms = elapsed_ms
+            elapsed_ms += shot["duration_ms"]
+            estimated_cues.append(f"{index}\n{self._srt_time(start_ms)} --> {self._srt_time(elapsed_ms)}\n{blocks[shot['script_block_id']]}")
         try:
-            return self.canonicalize({"scenes": scenes})
+            return self.canonicalize({"scenes": scenes, "estimated_srt": {"estimated": True, "text": "\n\n".join(estimated_cues)}}, asset_refs=asset_refs)
         except VariantDocumentError as exc:
             raise AdapterUnavailable("adapted_payload_invalid") from exc
+
+    @staticmethod
+    def _srt_time(milliseconds: int) -> str:
+        hours, remainder = divmod(milliseconds, 3_600_000)
+        minutes, remainder = divmod(remainder, 60_000)
+        seconds, millis = divmod(remainder, 1_000)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
 
     def preview(self, payload: dict, *, asset_refs: list[dict] | None = None, evidence_refs: list[dict] | None = None) -> dict:
         return {"schema": self.contract.payload_schema, "payload": self.canonicalize(payload, asset_refs=asset_refs, evidence_refs=evidence_refs)}
