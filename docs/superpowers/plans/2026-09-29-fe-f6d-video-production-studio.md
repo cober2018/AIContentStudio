@@ -13,8 +13,8 @@ Apply the reviewed `fe-f6d-video-production-studio` change to the local `main` c
 
 ## Steps
 
-- [ ] /// Commit the reviewed F6D spec/plan checkpoint locally, preserving user source packages.
-- [ ] /// Record current migration head, F6C regression baseline and Video v1 compatibility; mark F6D 0.x only from evidence.
+- [x] /// Commit the reviewed F6D spec/plan checkpoint locally, preserving user source packages (`a74a7d5`).
+- [x] /// Record current migration head, F6C regression baseline and Video v1 compatibility; mark F6D 0.x only from evidence.
 - [ ] /// Build canonical `video.master.v2` document/ref validation and exact published `video_requirements`; run focused contract checks.
 - [ ] /// Add Video v2 adapter, save/read dispatch and explicit Video v1→v2 preview/commit; keep ordinary cross-schema save forbidden.
 - [ ] /// Add exact source/render refs, input-bound manual attestation and server-only derived child provenance; verify no fake Provider writes.

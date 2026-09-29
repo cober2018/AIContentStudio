@@ -1,18 +1,18 @@
 ## 0. Baseline and apply boundary
 
-- [ ] 0.1 Verify F6C 74/74, independent review approval and a clean tracked local-main baseline before F6D business-code apply.
-- [ ] 0.2 Review all four F6D delta specs against current canonical requirements and obtain explicit apply confirmation under the project OpenSpec rule.
-- [ ] 0.3 Record current API migration head, backend/frontend tests, FE-P1 bundle sizes, OpenSpec strict and Git status.
-- [ ] 0.4 Confirm existing revision/ref/check tables can persist v2 without a new migration; stop and amend the specification if they cannot.
-- [ ] 0.5 Keep F6E/F7 implementation, remote publication, push, deployment, production migration and canonical archive outside this change.
+- [x] 0.1 Verify F6C 74/74, independent review approval and a clean tracked local-main baseline before F6D business-code apply.
+- [x] 0.2 Review all four F6D delta specs against current canonical requirements and obtain explicit apply confirmation under the project OpenSpec rule.
+- [x] 0.3 Record current API migration head, backend/frontend tests, FE-P1 bundle sizes, OpenSpec strict and Git status.
+- [x] 0.4 Confirm existing revision/ref/check tables can persist v2 without a new migration; stop and amend the specification if they cannot.
+- [x] 0.5 Keep F6E/F7 implementation, remote publication, push, deployment, production migration and canonical archive outside this change.
 
 ## 1. Canonical video.master.v2 document and adapter
 
-- [ ] 1.1 Define stable script-block IDs and bounded text/content structure.
+- [x] 1.1 Define stable script-block IDs and bounded text/content structure.
 - [ ] 1.2 Define stable shot IDs, contiguous order, duration, source placements and bounded framing/transition tokens.
-- [ ] 1.3 Define stable timeline track/item IDs, allowed track kinds, start/end/trim/volume bounds and canonical order.
+- [x] 1.3 Define stable timeline track/item IDs, allowed track kinds, start/end/trim/volume bounds and canonical order.
 - [ ] 1.4 Define voice mode and exact audio reference semantics.
-- [ ] 1.5 Define subtitle cue IDs/text/start/end, ordering and overlap rules.
+- [x] 1.5 Define subtitle cue IDs/text/start/end, ordering and overlap rules.
 - [ ] 1.6 Define overlay IDs/text/placement and exact music/cover declarations.
 - [ ] 1.7 Reject unknown fields, non-finite values, excessive counts/durations and infrastructure paths before persistence.
 - [ ] 1.8 Add `video.master.v2` schema dispatch without changing Video v1 or Text/Graphic adapter behavior.

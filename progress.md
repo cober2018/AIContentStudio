@@ -2,6 +2,9 @@
 
 ## 2026-09-29：FE-F6D SPEC review 修订
 
+- F6D apply 第一批：新增 canonical `video.master.v2` 文档验证（脚本块、镜头、时间线轨/项、语音/字幕/叠层、封面与最终视频声明）及 `ContentFormSpec.video_requirements` 投影/纯规则检查。针对新文档和渠道投影先观察 RED（缺模块/字段），实现后 7 passed，相关 Ruff PASS；1.1、1.3、1.5 已完成，当前 8/79。1.10 仍待规则接入实际 Video check/可用性，不能只因纯函数通过就勾选。尚未接入 Master save/refs/adapter，不能称 Video v2 可执行。零 migration。
+- 本批全量后端实跑 `958 passed / 2 skipped / 5 warnings`，前端 TypeScript/Vite/FE-P1 基线 PASS，OpenSpec strict 30/30、diff-check PASS。注意这些门禁尚不构成 F6D 端到端验收。
+- 规格检查点已本地提交 `a74a7d5`；只提交标准规格与计划/进度文档，用户原始包仍未跟踪。F6D apply 基线：Alembic head `f6a000000001`，F6A/F6C 定向回归 95 passed / 1 warning，前端 TypeScript/Vite/FE-P1 PASS，Production 初始 JS 273.35 kB，Video 不含 TipTap，OpenSpec strict 30/30，tracked tree 在规格提交后 clean。现有 MasterRevision/AssetRef/EvidenceRef/CheckRun 足以承接目标 v2（若实现反证须暂停）；0.1–0.5 已据证勾选，5/79。无业务代码或迁移。
 - F6C 已在本地 `main@34ef5af` 以 74/74 收尾；F6D 仍是 active change、无业务代码或 migration。ChatGPT 独立读取后提出五项必须先修的规格缺口：Video published profile、精确媒体 ref slot、受信派生 provenance、Video 显式升级 pair、Candidate 冻结完整性。当前已回写 design、tasks 与 Video/Production Core/Review delta，任务从 73 增为 79，尚未勾选。
 - 本轮明确现有 `render_input_hash` 排除 `render_output` 防循环，源素材位置进入输入哈希，最终输出另行 attestation 与冻结核验。单 change strict、全库 strict 30/30 与 diff-check 已通过；ChatGPT C2C `c2c_4a78` iteration 1 实际读取修订 diff 后给出 SPEC APPROVE / DONE。F6D 可按后端优先进入 apply；未推送、部署、生产迁移、canonical sync/归档。
 
