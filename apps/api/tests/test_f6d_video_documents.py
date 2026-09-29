@@ -127,6 +127,23 @@ def test_video_v2_rejects_shot_and_timeline_duration_inconsistency(mutation):
         _canonical(payload)
 
 
+@pytest.mark.parametrize("overlay", [
+    {"id": "overlay-1", "order": 0, "text": "字幕条", "start_ms": 0, "end_ms": 1_000, "x": 0.5},
+    {"id": "overlay-1", "order": 0, "text": "", "start_ms": 0, "end_ms": 1_000, "x": 0.5, "y": 0.5},
+])
+def test_video_v2_overlay_requires_exact_position_and_visible_text(overlay):
+    payload = _document()
+    payload["overlays"] = [overlay]
+    with pytest.raises(ValueError, match="video_overlay_(position|text)_invalid"):
+        _canonical(payload)
+
+
+def test_video_v2_overlay_keeps_explicit_bounded_position():
+    payload = _document()
+    payload["overlays"] = [{"id": "overlay-1", "order": 0, "text": "重点", "start_ms": 0, "end_ms": 1_000, "x": 0.25, "y": 0.75}]
+    assert _canonical(payload)["overlays"] == payload["overlays"]
+
+
 def test_exact_video_profile_applies_only_declared_bounded_rules():
     from app.services.content_harness.channel_registry import ContentFormSpec
     from app.services.video_documents import profile_reasons

@@ -189,7 +189,12 @@ def canonical_payload(raw: object) -> dict:
     for raw_overlay in _ordered(payload.get("overlays"), maximum=300, code="video_overlays_invalid"):
         overlay = _object(raw_overlay, {"id", "order", "text", "start_ms", "end_ms", "x", "y"}, "video_overlay_invalid")
         _time_bounds(overlay, duration, "video_overlay_time_invalid")
-        normalized = {"id": overlay["id"], "order": overlay["order"], "text": _text(overlay.get("text"), 1000, "video_overlay_text_invalid"), "start_ms": overlay["start_ms"], "end_ms": overlay["end_ms"]}
+        text = _text(overlay.get("text"), 1000, "video_overlay_text_invalid")
+        if not text.strip():
+            _fail("video_overlay_text_invalid")
+        if "x" not in overlay or "y" not in overlay:
+            _fail("video_overlay_position_invalid")
+        normalized = {"id": overlay["id"], "order": overlay["order"], "text": text, "start_ms": overlay["start_ms"], "end_ms": overlay["end_ms"]}
         for coordinate in ("x", "y"):
             if coordinate in overlay:
                 value = overlay[coordinate]
