@@ -14,6 +14,8 @@ New professional Video content SHALL use canonical `video.master.v2` with stable
 ### Requirement: Historical Video requires an explicit v2 fork
 Existing `video.master.v1` and historical Candidates SHALL remain readable and hash-stable. Professional editing from a current v1 Master MUST use a dedicated preview and append-only v2 fork with source payload/context CAS, idempotency and conversion warnings; generic save MUST NOT change schema.
 
+Because v1 did not validate aspect ratio, timeline timing or media placement, preview MUST NOT synthesize a ready v2 document. The first v2 child MUST use a complete user-submitted canonical payload and exact refs with explicit warning acknowledgment, preserve stored script text and shot IDs/order, and omit inherited final-render declaration/attestation. Later content edits require a separate revision.
+
 #### Scenario: Fork legacy Video safely
 - **WHEN** a current v1 Master is previewed and explicitly upgraded with matching expected hashes
 - **THEN** a v2 child is appended, the v1 Master and its Candidates remain unchanged, and unprovable fields are warned or rejected rather than fabricated

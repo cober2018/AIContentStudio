@@ -215,6 +215,29 @@ def canonical_payload(raw: object) -> dict:
     return result
 
 
+def legacy_upgrade_preview(payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> dict:
+    warnings = ["aspect_ratio_requires_explicit_input", "timeline_requires_explicit_input", "shot_durations_require_explicit_input"]
+    title = payload.get("title")
+    script = payload.get("script")
+    if not isinstance(title, str) or len(title) > 500:
+        warnings.append("legacy_title_requires_review")
+        title = None
+    if not isinstance(script, str):
+        warnings.append("legacy_script_requires_review")
+        script = None
+    if any(set(shot) - {"id", "order"} for shot in payload.get("shots", [])) or set(payload) - {"title", "script", "shots"}:
+        warnings.append("legacy_fields_require_review")
+    if asset_refs or evidence_refs:
+        warnings.append("legacy_refs_require_explicit_mapping")
+    if payload.get("render_asset_ref") or any(ref.get("role") == "render_output" for ref in asset_refs):
+        warnings.append("legacy_render_requires_new_attestation")
+    return {
+        "payload": None,
+        "source_fields": {"title": title, "script": script, "shots": [{"id": shot["id"], "order": index} for index, shot in enumerate(payload.get("shots", []))]},
+        "warnings": warnings,
+    }
+
+
 def profile_reasons(form: ContentFormSpec, document: dict) -> list[str]:
     if form.source != "profile" or form.artifact_kind != "video" or form.profile_version_id is None:
         return ["video_profile_unavailable"]

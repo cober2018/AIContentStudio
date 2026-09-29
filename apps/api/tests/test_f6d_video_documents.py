@@ -30,6 +30,132 @@ def _document() -> dict:
     }
 
 
+def _legacy_video_master(client):
+    headers = {"X-Studio-User": "video-upgrade@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "视频升级作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "旧视频升级"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "旧镜头", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    legacy = {"title": "旧稿", "script": "原有口播", "shots": [{"id": "shot-1", "order": 0, "label": "旧镜头"}]}
+    response = client.post(path, json={"idempotency_key": "legacy-video", "payload_schema": "video.master.v1", "payload": legacy}, headers=headers)
+    assert response.status_code == 200, response.text
+    return path, headers, response.json()
+
+
+def test_video_v1_upgrade_preview_reports_only_stored_facts_and_missing_v2_fields(client):
+    path, headers, source = _legacy_video_master(client)
+    preview_response = client.get(f"{path}/{source['id']}/video-v2-upgrade-preview", headers=headers)
+    assert preview_response.status_code == 200, preview_response.text
+    preview = preview_response.json()
+    assert preview["source_payload_hash"] == source["payload_hash"]
+    assert preview["source_fields"]["script"] == "原有口播"
+    assert preview["source_fields"]["shots"] == [{"id": "shot-1", "order": 0}]
+    assert "aspect_ratio_requires_explicit_input" in preview["warnings"]
+    assert "timeline_requires_explicit_input" in preview["warnings"]
+    assert preview["payload"] is None
+
+
+def test_video_v1_upgrade_requires_acknowledged_complete_document_and_preserves_history(client, db_session):
+    from app.models import ContentMasterRevision
+
+    path, headers, source = _legacy_video_master(client)
+    preview = client.get(f"{path}/{source['id']}/video-v2-upgrade-preview", headers=headers).json()
+    document = _document()
+    document["script"]["blocks"][0]["text"] = "原有口播"
+    body = {
+        "expected_revision": 1, "expected_payload_hash": source["payload_hash"],
+        "expected_context_hash": preview["current_context_hash"], "idempotency_key": "explicit-video-upgrade",
+        "payload": document, "asset_refs": [], "evidence_refs": [],
+        "acknowledged_warnings": preview["warnings"],
+    }
+    url = f"{path}/{source['id']}/video-v2-upgrade"
+    direct = client.post(path, json={"idempotency_key": "implicit-video-upgrade", "expected_revision": 1, "payload_schema": "video.master.v2", "payload": document}, headers=headers)
+    assert direct.status_code == 409
+    unacknowledged = client.post(url, json={**body, "acknowledged_warnings": []}, headers=headers)
+    assert unacknowledged.status_code == 422
+    incomplete = client.post(url, json={**body, "payload": {"shots": []}}, headers=headers)
+    assert incomplete.status_code == 422
+    accepted = client.post(url, json=body, headers=headers)
+    assert accepted.status_code == 200, accepted.text
+    child = accepted.json()
+    assert child["payload_schema"] == "video.master.v2"
+    assert child["source_kind"] == "explicit_upgrade"
+    assert child["parent_revision_id"] == source["id"]
+    assert child["payload"] == document
+    assert child["edit_summary"]["conversion_warnings"] == preview["warnings"]
+    assert len(child["edit_summary"]["upgrade_request"]["request_hash"]) == 64
+    assert "payload" not in child["edit_summary"]["upgrade_request"]
+    assert client.post(url, json=body, headers=headers).json()["id"] == child["id"]
+    assert client.get(f"{path}/{source['id']}", headers=headers).json()["payload_hash"] == source["payload_hash"]
+    reverse = client.post(path, json={"idempotency_key": "reverse-video-schema", "expected_revision": 2, "payload_schema": "video.master.v1", "payload": source["payload"]}, headers=headers)
+    assert reverse.status_code == 409
+    assert reverse.json()["detail"]["code"] == "explicit_master_upgrade_required"
+    wrong_source = client.post(f"{path}/{child['id']}/video-v2-upgrade", json={**body, "expected_revision": 2, "idempotency_key": "wrong-source"}, headers=headers)
+    assert wrong_source.status_code == 409
+    assert wrong_source.json()["detail"]["code"] == "video_v1_upgrade_source_required"
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=source["content_unit_id"]).count() == 2
+
+
+@pytest.mark.parametrize("change,expected_code", [
+    ("source_hash", "master_upgrade_source_conflict"),
+    ("context_hash", "master_upgrade_source_conflict"),
+    ("script", "legacy_script_changed_during_upgrade"),
+    ("shot", "legacy_shots_changed_during_upgrade"),
+    ("render", "video_upgrade_render_requires_new_attestation"),
+])
+def test_video_v1_upgrade_rejects_stale_or_unsafe_child_without_history(client, db_session, change, expected_code):
+    from app.models import ContentMasterRevision
+
+    path, headers, source = _legacy_video_master(client)
+    preview = client.get(f"{path}/{source['id']}/video-v2-upgrade-preview", headers=headers).json()
+    document = _document()
+    document["script"]["blocks"][0]["text"] = "原有口播"
+    body = {
+        "expected_revision": 1, "expected_payload_hash": source["payload_hash"],
+        "expected_context_hash": preview["current_context_hash"], "idempotency_key": f"unsafe-{change}",
+        "payload": document, "asset_refs": [], "evidence_refs": [], "acknowledged_warnings": preview["warnings"],
+    }
+    if change == "source_hash":
+        body["expected_payload_hash"] = "0" * 64
+    elif change == "context_hash":
+        body["expected_context_hash"] = "0" * 64
+    elif change == "script":
+        document["script"]["blocks"][0]["text"] = "改写旧稿"
+    elif change == "shot":
+        document["shots"][0]["id"] = "other-shot"
+        document["timeline"]["tracks"][0]["items"][0]["shot_id"] = "other-shot"
+    else:
+        document["render_asset_ref"] = {"material_revision_id": 42}
+    response = client.post(f"{path}/{source['id']}/video-v2-upgrade", json=body, headers=headers)
+    assert response.status_code in {409, 422}, response.text
+    assert response.json()["detail"]["code"] == expected_code
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=source["content_unit_id"]).count() == 1
+
+
+def test_video_v1_upgrade_rejects_stale_head_and_idempotency_reuse(client, db_session):
+    from app.models import ContentMasterRevision
+
+    path, headers, source = _legacy_video_master(client)
+    preview = client.get(f"{path}/{source['id']}/video-v2-upgrade-preview", headers=headers).json()
+    document = _document()
+    document["script"]["blocks"][0]["text"] = "原有口播"
+    intent = {
+        "expected_revision": 1, "expected_payload_hash": source["payload_hash"],
+        "expected_context_hash": preview["current_context_hash"], "idempotency_key": "upgrade-retry",
+        "payload": document, "asset_refs": [], "evidence_refs": [], "acknowledged_warnings": preview["warnings"],
+    }
+    url = f"{path}/{source['id']}/video-v2-upgrade"
+    accepted = client.post(url, json=intent, headers=headers)
+    assert accepted.status_code == 200, accepted.text
+    changed = client.post(url, json={**intent, "expected_revision": 2}, headers=headers)
+    assert changed.status_code == 409
+    assert changed.json()["detail"]["code"] == "master_upgrade_idempotency_conflict"
+    stale = client.post(url, json={**intent, "idempotency_key": "late-upgrade"}, headers=headers)
+    assert stale.status_code == 409
+    assert stale.json()["detail"]["code"] == "master_upgrade_source_conflict"
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=source["content_unit_id"]).count() == 2
+
+
 def _frozen_video_candidate():
     from app.models import ContentAsset
     from app.services.candidates import candidate_hash
