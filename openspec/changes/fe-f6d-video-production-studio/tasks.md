@@ -34,9 +34,9 @@
 - [ ] 3.2 Validate voice/audio track placement and subtitle cue ordering/non-overlap.
 - [ ] 3.3 Validate overlay placement/text and cover exact image kind.
 - [ ] 3.4 Build deterministic local preview projection without claiming final-render verification.
-- [ ] 3.5 Implement explicit long-to-short child revision from exact source Master.
-- [ ] 3.6 Implement explicit aspect-ratio child revision from exact source Master.
-- [ ] 3.7 Implement shot-regeneration child boundary without an implicit Provider success path.
+- [ ] 3.5 Implement explicit long-to-short child revision from exact source Master and concrete validated v2 result, not intent alone.
+- [ ] 3.6 Implement explicit aspect-ratio child revision from exact source Master and concrete validated v2 result, not intent alone.
+- [ ] 3.7 Implement shot-regeneration child boundary; unavailable Provider returns no child/media or success receipt.
 - [ ] 3.8 Enforce source hash/context, expected head and idempotency for all derived operations.
 
 ## 4. Provider and render honesty
@@ -79,7 +79,7 @@
 ## 7. Regression and isolated acceptance
 
 - [ ] 7.1 Regress v2 canonical IDs/hash, invalid document and atomic exact-ref failures.
-- [ ] 7.2 Regress v1 explicit fork, stale context/head conflicts and idempotent derived revisions.
+- [ ] 7.2 Regress v1 explicit fork, stale context/head conflicts, idempotent concrete derived revisions and unavailable Provider no-write.
 - [ ] 7.3 Regress unverified Provider no-write, forged renderer and stale/wrong-kind final media.
 - [ ] 7.4 Regress Video check freshness, frozen Candidate/Review diff and byte-exact local package.
 - [ ] 7.5 Regress Text v2, Graphic v2, Video v1 and historical Candidate reads without backfill.

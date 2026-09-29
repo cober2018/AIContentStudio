@@ -56,7 +56,7 @@ Selected recorded/TTS voice refs, subtitle text and cues, overlay text and cover
 - **THEN** the old Candidate continues to show its frozen cues and a new Master/check/render/Candidate path is required for the change
 
 ### Requirement: Derived Video operations create traceable child revisions
-Long-to-short, aspect-ratio conversion and shot-regeneration SHALL produce explicit append-only child Masters bound to exact source revision/hash/context and transformation intent, with optimistic concurrency and idempotency. They MUST NOT silently mutate the source revision or accept a stale head.
+Long-to-short, aspect-ratio conversion and shot-regeneration SHALL produce explicit append-only child Masters bound to exact source revision/hash/context and transformation intent, with optimistic concurrency and idempotency. A derived child MUST contain a concrete validated v2 payload supplied by an explicit user edit or a deterministic local transformation; intent alone MUST NOT be persisted as a successful derivation. If the requested result requires an unverified Provider, the operation MUST return typed unavailable without creating a child Master or media. They MUST NOT silently mutate the source revision or accept a stale head.
 
 #### Scenario: Derive a short version
 - **WHEN** the user explicitly accepts a long-to-short transformation against a current source Master
@@ -65,6 +65,10 @@ Long-to-short, aspect-ratio conversion and shot-regeneration SHALL produce expli
 #### Scenario: Stale derivation
 - **WHEN** source payload/context or current head differs from the expected values
 - **THEN** derivation returns conflict and creates no child revision
+
+#### Scenario: Unavailable generated transformation
+- **WHEN** a requested shot-regeneration or conversion needs a Provider that is not verified and no concrete user-edited or deterministic local v2 result exists
+- **THEN** the operation reports unavailable and creates no child Master, generated media or successful transformation receipt
 
 ### Requirement: Unverified Video providers are unavailable
 Video generation, TTS and ASR hooks SHALL expose truthful configured/executable/verified state. F6D MUST reject unverified provider-shaped calls without creating media, rights, transcripts or Master revisions. F7 owns real execution and accepted-result MaterialRevision bytes/hash/license/provenance plus provider execution/result/error secret redaction and negative tests.
