@@ -86,11 +86,11 @@
 
 ## 8. Candidate manifest v5
 
-- [ ] 8.1 Implement pure canonical v5 manifest builder from one exact current Variant and source Master.
-- [ ] 8.2 Freeze Project/Unit/Identity, source Master ID/hash/context and source channel/form provenance.
+- [x] 8.1 Implement pure canonical v5 manifest builder from one exact current Variant and source Master.
+- [x] 8.2 Freeze Project/Unit/Identity, source Master ID/hash/context and source channel/form provenance.
 - [ ] 8.3 Freeze Variant ID/key/revision/`payload_schema`/canonical payload hash/context, target profile/adapter/rules and safe verified `LLMRun` provenance.
-- [ ] 8.4 Freeze ordered final refs, rights snapshots, evidence locators, latest checks, render, citations/declarations.
-- [ ] 8.5 Regress canonical hash determinism and tamper detection.
+- [x] 8.4 Freeze ordered final refs, rights snapshots, evidence locators, latest checks, render, citations/declarations.
+- [x] 8.5 Regress canonical hash determinism and tamper detection.
 - [ ] 8.6 Add v5 Freeze CAS/idempotency/currentness/live rights/evidence/bytes/render gates.
 - [ ] 8.7 Populate Candidate variant FK only for v5; require `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` and `workflow_run_id` all null. Derive source Master and workflow provenance through Variant plus frozen manifest; never use v5 `workflow_run_id` for dispatch/currentness. Assert channel/form/artifact_kind projection columns match frozen target/profile. Keep v3/v4 source dispatch, workflow projections and history unchanged.
 - [ ] 8.8 Prove an invalid v5 freeze never falls back to v4/v3 or creates Approval/DeliveryTarget.

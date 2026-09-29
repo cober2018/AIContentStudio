@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..models import (
+    ChannelVariantRevision,
     ContentAsset,
     ContentMasterRevision,
     ContentUnit,
@@ -193,6 +194,66 @@ def freeze_master_candidate(db: Session, project_id: int, unit_id: int, master_r
     except HTTPException:
         db.rollback()
         raise
+    db.commit()
+    db.refresh(asset)
+    return asset
+
+
+def freeze_variant_candidate(db: Session, project_id: int, unit_id: int, variant_revision_id: int, user: User, *, expected_payload_hash: str | None = None) -> ContentAsset:
+    """Freeze one ready Variant series without turning its Master into the Candidate source."""
+    from .candidates_v5 import build_manifest_v5, load_manifest_v5_inputs
+
+    unit = _mutable_unit(db, project_id, unit_id, user)
+    variant = db.get(ChannelVariantRevision, variant_revision_id)
+    if variant is None or variant.project_id != project_id or variant.content_unit_id != unit_id:
+        raise HTTPException(404, "ChannelVariant版本不存在")
+    if expected_payload_hash != variant.payload_hash:
+        raise _blocked("variant_payload_conflict", "渠道版本已变化，请刷新后重试")
+    try:
+        manifest = build_manifest_v5(load_manifest_v5_inputs(db, variant))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise _blocked("variant_freeze_unready", str(exc)) from exc
+    frozen_hash = candidate_hash(manifest)
+    existing = db.scalar(select(ContentAsset).where(ContentAsset.project_id == project_id, ContentAsset.content_unit_id == unit_id, ContentAsset.candidate_hash == frozen_hash).limit(1))
+    if existing:
+        return existing
+    render = manifest["render"]
+    content = manifest["content"]
+    title = content.get("title") or unit.title
+    body = render.get("body_markdown") if isinstance(render, dict) else None
+    asset = ContentAsset(
+        project_id=project_id, content_unit_id=unit_id, identity_snapshot_id=variant.identity_snapshot_id,
+        channel_variant_revision_id=variant.id, channel=variant.channel_id, content_form=variant.content_form,
+        artifact_kind=variant.artifact_kind, title=title, final_body=body, structured_json=content,
+        status="frozen", candidate_hash=frozen_hash, approved_candidate_hash=None, candidate_manifest_json=manifest,
+        fact_pack_id=manifest["evidence"]["fact_pack"]["id"],
+        fact_pack_version=manifest["evidence"]["fact_pack"]["version"],
+        fact_pack_checksum=manifest["evidence"]["fact_pack"]["checksum"],
+    )
+    db.add(asset)
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        concurrent = db.scalar(select(ContentAsset).where(ContentAsset.project_id == project_id, ContentAsset.content_unit_id == unit_id, ContentAsset.candidate_hash == frozen_hash).limit(1))
+        if concurrent is not None:
+            return concurrent
+        raise _blocked("freeze_conflict", "候选冻结并发冲突，请刷新后重试") from None
+    record_project_event(db, project_id=project_id, event_type="candidate.frozen", actor=user.email,
+                         entity_type="content_asset", entity_id=asset.id,
+                         payload={"unit_id": unit_id, "candidate_hash": frozen_hash, "schema_version": 5,
+                                  "variant_revision_id": variant.id, "variant_key": variant.variant_key})
+    db.flush()
+    db.expire_all()
+    try:
+        _mutable_unit(db, project_id, unit_id, user)
+        if variant.payload_hash != expected_payload_hash or candidate_hash(build_manifest_v5(load_manifest_v5_inputs(db, variant))) != frozen_hash:
+            raise _blocked("freeze_context_conflict", "冻结输入在提交前已变化")
+    except (HTTPException, KeyError, TypeError, ValueError) as exc:
+        db.rollback()
+        if isinstance(exc, HTTPException):
+            raise
+        raise _blocked("freeze_context_conflict", str(exc)) from exc
     db.commit()
     db.refresh(asset)
     return asset

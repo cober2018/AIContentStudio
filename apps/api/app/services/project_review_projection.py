@@ -224,6 +224,20 @@ def candidate_preview(asset: ContentAsset) -> dict:
     """Preview the frozen snapshot, never the mutable current Master payload."""
     _verify_frozen_production(asset)
     manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 5:
+        legacy_fields = (asset.draft_id, asset.topic_brief_id, asset.mother_revision_id,
+                         asset.content_master_revision_id, asset.workflow_run_id)
+        if (candidate_hash(manifest) != asset.candidate_hash or asset.channel_variant_revision_id != (manifest.get("variant") or {}).get("id")
+                or any(value is not None for value in legacy_fields)):
+            raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
+        target = manifest.get("target") or {}
+        render = manifest.get("render") or {}
+        if (asset.channel != target.get("channel") or asset.content_form != target.get("content_form")
+                or asset.artifact_kind != target.get("artifact_kind")):
+            raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
+        return {"modality": (manifest.get("project") or {}).get("modality"), "title": asset.title,
+                "target": {"channel": asset.channel, "content_form": asset.content_form, "artifact_kind": asset.artifact_kind},
+                "render": render, "content": manifest.get("content")}
     content = manifest.get("content") or {}
     modality = (manifest.get("project") or {}).get("modality", "text")
     preview = {"modality": modality, "title": asset.title, "render": manifest.get("render") or {}}
