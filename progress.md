@@ -1,5 +1,18 @@
 # 当前进度
 
+## 2026-09-29：规格保留审计（中断后继续）
+
+- 当前 `main` tracked 改动仅为 F6E 标准规格及 README/task_plan/progress/findings；用户原始包仍未跟踪、未改，F6D 77/79、F6E 0/96、F7 0/105。
+- F7 原始 96 条 checkbox 与标准 105 条逐行对照：`comm -23` 没有缺失行，标准版仅新增 9 条执行可用性、项目素材/权利、Provider 结果脱敏、Publisher 再验证等安全门禁。这证明任务文本保留，不是 F7 业务能力已经落地。
+- F6E 原包的 X 单推适配已补回标准长期规格/任务，适配器就绪前继续显示 unavailable；F6D 未获实施独立复核，不启动 F6E 业务 apply。
+- 本批最终全库 OpenSpec strict 30/30、`git diff --check` 均通过；仅规格/记录文件待本地提交，没有运行本批业务测试或迁移，不能将上轮 F6D 测试结果当本批重测。
+
+## 2026-09-29：F6E 原包范围保留修正（未 apply）
+
+- 对照用户总包的 F6E 原始 102 项计划与当前标准 96 项 change，确认原任务 6.2 要求已注册的 X 推串和单推均纳入适配。当前 `seed_v1_channel_profiles()` 已发布 `x/thread`、`x/single`，上轮标准规格只明确实现推串，等于把单推无授权延期；现修正为 F6E 必须分别实现/测试两种适配及本地包，适配器完成前维持 unavailable，旧 `x_thread` v3/v4 行为不变。
+- Variant 修订的 source_kind/edit summary 血缘、显式 regenerate 不自动写入、X 单推浏览器闭环和 archive-readiness 交接也已补进任务/规格。尚未修改业务代码或 migration；F6D 仍待独立实施复核。
+- 原包 0–11 组与标准 0–11 组已逐组映射（适配/方法、冻结字段和门禁可合并任务，不可合并掉能力）；全库 OpenSpec strict 30/30、`git diff --check` PASS。没有把 96 个标准 checkbox 冒充原包 102 项的逐条完成证据。
+
 ## 2026-09-29：F6E 规格校准（未 apply）
 
 - 当前本地 `main@d3c37ec`，F6D 为 77/79：真实 Video/TTS/ASR Provider 接收仍属 F7，F6D 实施独立复核仍待取得；F6E 业务代码未启动。

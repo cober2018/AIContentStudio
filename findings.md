@@ -1,8 +1,19 @@
 # 配置记录
 
+## 2026-09-29 F7 原包任务保留核对
+
+- F7 源包 96 条任务与标准 `fe-f7-capability-integrations-delivery` 的 105 条任务以完整 checkbox 行逐字比较：源包没有任何缺失项，标准版新增九项。新增项覆盖 registration/runtime 精确可用性、typed Connector 映射限制、搜索接受后的项目引用、Provider 响应/错误脱敏与假成功拒绝、旧 auto-draft 绕过、执行时重新验证、WeWrite 结果脱敏和只读 Settings 不探测。此核对只覆盖任务文本，不替代独立规格审阅、代码执行或真实 Provider/Publisher 验证。
+
+## 2026-09-29 F6E 原包保留审计
+
+- 原始总包 `modules/03-fe-f6e-channel-variants-content-matrix/tasks.md` 的 6.2 是“X thread/single adapter where registered”。实际 seed 同时发布 `x/thread` 与 `x/single`，因此上轮标准 change 把 single 留待不确定未来适配器是错误收窄；F6E 实施/浏览器验收必须包括两种独立 X 形态。注册时不冒充可执行，完成的受控本地包也不冒充远端 Publisher verified。
+- 原包 ChannelVariantRevision 推荐包含 `source_kind` 与 `edit_summary_json`；标准版先前仅泛称 request provenance，现具体补入设计、模型任务和长期契约。原包的 `regenerate` 是显式新预览/建议，不是隐式持久化；项目级 UI 任务已补明确边界。
+- 原始任务总数 102、标准任务总数 96 的差额主要来自把 adapter 方法、候选清单字段与最终门禁合并成更可验收的工作项；任务数不同不等于范围可缩。后续实施仍须逐项映射原包要求，不能只凭标准任务计数宣称 North Star 完成。
+- 原包分组与标准分组逐项复核：0→0、1→1、2→2、3→3、4→3/4、5→5、6→2/6、7→7、8→8、9→9、10→10、11→11。明确发现并补回的遗漏是 6.2 的 `x/single`、Variant 的 `source_kind/edit_summary`、UI 显式 regenerate 和归档就绪交接；其余原包分组在标准 change 中有对应任务与长期 Scenario。此映射仅证明规格保留，不证明任何业务代码已完成。
+
 ## 2026-09-29 F6E 规格与真实 Registry/授权差异
 
-- `seed_v1_channel_profiles()` 已发布 `x/thread` 和 `x/single`；`x_thread/thread` 仅在 Channel Registry 的 legacy fallback 中存在，未携带 published profile。因此 F6E 原稿的“`x_thread/thread` 作为 exact published v5 目标”和“X single 尚未注册”均不符合当前代码。标准 F6E 规格现固定 `x/thread` 首批目标、旧 `x_thread` 的 v3/v4 兼容行为不变、`x/single` 因缺匹配适配器而 unavailable；注册不等于可执行。
+- `seed_v1_channel_profiles()` 已发布 `x/thread` 和 `x/single`；`x_thread/thread` 仅在 Channel Registry 的 legacy fallback 中存在，未携带 published profile。因此 F6E 原稿的“`x_thread/thread` 作为 exact published v5 目标”和“X single 尚未注册”均不符合当前代码。标准 F6E 应实现 `x/thread` 与 `x/single` 两种受控适配，旧 `x_thread` 的 v3/v4 兼容行为不变；在各自适配器完成前注册不等于可执行。
 - 当前 `delivery.authorize_target()` 对项目候选检查 `unit.channel_id == payload.channel`。F6E 允许由 channel-bound Master 派生其他渠道 Variant，故 v5 必须按冻结 Variant 目标渠道/形态授权；v3/v4 原规则不变。`ContentAccountRevision.profile_json` 没有类型化渠道绑定，不能从自由文本推断平台所有权；本地包只表示人工交付，远端效果须 F7 精确账号/渠道/形态/动作验证。身份与 Unit 固定账号不可绕过。
 - `ContentUnit.channel_id` 已可空、Master 保存也接受 null channel/form；F6E 的新增工作是明确 source-only neutral Master 与 v4 冻结阻断及 v5 适配链，不能把已有 nullable 字段或 Unit 创建误报为新实现。上述修正未触及业务代码或迁移，F6D 仍待实施独立复核。
 

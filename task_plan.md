@@ -1,10 +1,26 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：中断后规格检查点收口
+
+- [x] /// 重新读取一次性目标，核对当前 main/dirty scope 与 F6D/F6E/F7 active tasks，保留用户原始包不动。
+- [x] /// 对照 F7 原包任务与标准 change：原任务行全部逐字保留，新增九条安全/执行门禁；不把此审计当 F7 实施。
+- [x] /// F6E 规格修订完成后复跑全库 OpenSpec strict 30/30、diff-check，核对暂存范围并提交本地文档检查点。
+- [ ] /// F6D 独立实施复核仍待外部入口/用户结论；其未过前不进入 F6E 业务 apply。
+
+## 2026-09-29：F6E 原包范围保留复核
+
+- [x] /// 复查用户一次性总目标、原始 F6E 102 项计划与当前标准 96 项 change，核对已经发布的 X 内容形态。
+- [x] /// 将原包明确要求的 `x/single` 受控适配、单独验收与 source_kind/edit summary 血缘补回标准 F6E 规格；适配器完成前仍 fail closed，旧 `x_thread` 不变。
+- [x] /// 复核其余原包要求映射、全库 strict 30/30 和 diff-check，并记录本轮纯规格检查点。
+- [ ] /// F6D 独立实施复核通过后再做 F6E 独立 SPEC review 与业务 apply；不把本轮规格校准当成功能完成。
+
+本轮仍不修改 F6E 业务代码、迁移或用户原始包，不推送、部署、归档或同步主规格。
+
 ## 2026-09-29：F6D 收尾门槛与 F6E 规格基线复核
 
 - [x] /// 核对本地 main、F6D 实际任务数、F7 已承接的真实 Provider 义务；F6D 独立实施复核仍未获得，不虚报完成。
 - [x] /// 对照现有 Channel Registry、账号/Unit/Master、交付授权代码审计 F6E 六份 delta；只修正规格，不改业务代码。
-- [x] /// 明确 `x/thread` 已发布、`x/single` 已注册但无初始适配器、`x_thread/thread` 仅旧版 fallback 且 v3/v4 行为不变，以及 v5 跨渠道授权须按 Variant 目标分派。
+- [x] /// 明确 `x/thread` 与 `x/single` 已发布但适配器未实现、`x_thread/thread` 仅旧版 fallback 且 v3/v4 行为不变，以及 v5 跨渠道授权须按 Variant 目标分派。
 - [ ] /// 获得 F6D 实施独立复核并处理结论；之后完成 F6E 独立 SPEC review，再进入 F6E 业务 apply。
 - [ ] /// F6E 实施/验收后依序推进 F7、F8 与全链路；缺真实凭据时仅能标记未验证。
 
