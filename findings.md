@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-29 F6E 规格与真实 Registry/授权差异
+
+- `seed_v1_channel_profiles()` 已发布 `x/thread` 和 `x/single`；`x_thread/thread` 仅在 Channel Registry 的 legacy fallback 中存在，未携带 published profile。因此 F6E 原稿的“`x_thread/thread` 作为 exact published v5 目标”和“X single 尚未注册”均不符合当前代码。标准 F6E 规格现固定 `x/thread` 首批目标、旧 `x_thread` 的 v3/v4 兼容行为不变、`x/single` 因缺匹配适配器而 unavailable；注册不等于可执行。
+- 当前 `delivery.authorize_target()` 对项目候选检查 `unit.channel_id == payload.channel`。F6E 允许由 channel-bound Master 派生其他渠道 Variant，故 v5 必须按冻结 Variant 目标渠道/形态授权；v3/v4 原规则不变。`ContentAccountRevision.profile_json` 没有类型化渠道绑定，不能从自由文本推断平台所有权；本地包只表示人工交付，远端效果须 F7 精确账号/渠道/形态/动作验证。身份与 Unit 固定账号不可绕过。
+- `ContentUnit.channel_id` 已可空、Master 保存也接受 null channel/form；F6E 的新增工作是明确 source-only neutral Master 与 v4 冻结阻断及 v5 适配链，不能把已有 nullable 字段或 Unit 创建误报为新实现。上述修正未触及业务代码或迁移，F6D 仍待实施独立复核。
+
 ## 2026-09-29 F6D 隔离浏览器验收
 
 - 使用独立临时 SQLite、独立 API/前端端口及浏览器脚本，真实保存 Video v2 脚本、镜头、时间线、MP3 配音、字幕、叠字与同一 MP4 的不同精确位置。读取后的三条素材引用分别为 `shot_source`、`timeline_media`、`voice_audio`；修改输入立即清除旧 `render_output`，重新绑定后还须单独输入哈希确认。

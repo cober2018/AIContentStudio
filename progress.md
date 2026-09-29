@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：F6E 规格校准（未 apply）
+
+- 当前本地 `main@d3c37ec`，F6D 为 77/79：真实 Video/TTS/ASR Provider 接收仍属 F7，F6D 实施独立复核仍待取得；F6E 业务代码未启动。
+- 审计 F6E 标准包与实际 Registry/Unit/Master/Delivery 后，只修正 proposal/design/tasks、ChannelVariant 主 delta 和 FE-F4 delta：v5 首个 X 推串目标为已发布 `x/thread`；旧 `x_thread/thread` 无发布版 profile，保留 v3/v4 行为但不得冒充 v5；已注册的 `x/single` 是适配器未实现/未验证，而非“未注册”。v5 跨渠道授权按冻结 Variant 目标渠道/形态分派，保留 Unit/身份/账号约束；远端效果需要 F7 精确验证，手工本地包不得冒充远端能力。
+- OpenSpec 全库 strict 30/30 PASS；后续仍需独立 F6D 实施复核、F6E SPEC review 与前置门禁，不能据此认定 F6D/F6E 功能完成。不 push/deploy/生产迁移、不同步主规格或归档。
+
 ## 2026-09-29：FE-F6D apply（进行中）
 
 - Video v2 隔离浏览器验收已在独立临时 SQLite/API/Vite 上通过：类型化脚本/镜头/时间线/配音/字幕/叠字及 exact refs 保存/刷新；双窗口 409 保留本地改动；真实 MP4 字节/hash 预览与输入绑定证明分离；输入改变令旧成片失效。随后 checks→Candidate v4→Review 播放→warning 处置审批→人工授权→本地 ZIP，ZIP 内各 MP4 条目逐条 SHA-256 与 MaterialRevision 一致。旧 v1 显式升级、稳定差异、派生子修订历史、撤权阻断包及归档只读也经浏览器验证，页面未出现运行时错误。验收报告位于 `docs/FE_F6D_ISOLATED_ACCEPTANCE.md`，原始本地证据目录在其中。任务现 77/79；本地范围提交 `ca16b39`，4.5 为 F7 真实 Provider 后续义务，8.4 独立实施复核尚未完成，不称最终通过。

@@ -1,5 +1,15 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6D 收尾门槛与 F6E 规格基线复核
+
+- [x] /// 核对本地 main、F6D 实际任务数、F7 已承接的真实 Provider 义务；F6D 独立实施复核仍未获得，不虚报完成。
+- [x] /// 对照现有 Channel Registry、账号/Unit/Master、交付授权代码审计 F6E 六份 delta；只修正规格，不改业务代码。
+- [x] /// 明确 `x/thread` 已发布、`x/single` 已注册但无初始适配器、`x_thread/thread` 仅旧版 fallback 且 v3/v4 行为不变，以及 v5 跨渠道授权须按 Variant 目标分派。
+- [ ] /// 获得 F6D 实施独立复核并处理结论；之后完成 F6E 独立 SPEC review，再进入 F6E 业务 apply。
+- [ ] /// F6E 实施/验收后依序推进 F7、F8 与全链路；缺真实凭据时仅能标记未验证。
+
+本批只做 F6E 标准规格校准及 strict/diff 门禁；F6D 保持 77/79，不勾 F7 真正 Provider 任务，也不提前实施 F6E。原始包、主规格、业务代码、生产环境均不动。
+
 ## 2026-09-29：North Star 完整剩余开发（目标进行中）
 
 - [x] /// F6D 6.9/6.10/6.11：隔离浏览器验证 Video v1 显式预览/追加修订、稳定 ID diff、历史/归档只读，以及 409 后保留本地草稿；后端 CAS/警告仍是最终闸门。

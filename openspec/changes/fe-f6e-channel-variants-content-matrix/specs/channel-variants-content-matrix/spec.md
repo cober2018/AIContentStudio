@@ -86,7 +86,7 @@ Candidate manifest v5 SHALL canonically freeze one current ChannelVariantRevisio
 - **THEN** freeze fails without a package-ready Candidate or fabricated media
 
 ### Requirement: V5 Review and delivery use the exact approved result
-Review, Content Approval, Delivery Authorization and local package SHALL dispatch v5 separately from v3/v4, bind the immutable Candidate ID/hash and recheck applicable live safety gates. Publisher MUST NOT rewrite approved payload/media. Existing authorized history remains frozen, and unknown remote outcomes SHALL require reconciliation rather than automatic resend.
+Review, Content Approval, Delivery Authorization and local package SHALL dispatch v5 separately from v3/v4, bind the immutable Candidate ID/hash and recheck applicable live safety gates. New v5 authorization SHALL match the frozen Variant target channel/form/profile, not the source Unit's channel; pinned IdentitySnapshot and any Unit-bound account MUST remain authorized. Free-form account profile data MUST NOT be treated as verified channel ownership: local packaging is labeled manual, and remote effects require exact account/channel/form/action verification. V3/v4 retain their Unit-channel rule. Publisher MUST NOT rewrite approved payload/media. Existing authorized history remains frozen, and unknown remote outcomes SHALL require reconciliation rather than automatic resend.
 
 #### Scenario: Local package after approval
 - **WHEN** a current v5 Candidate is separately approved and authorized for a local action
@@ -96,8 +96,16 @@ Review, Content Approval, Delivery Authorization and local package SHALL dispatc
 - **WHEN** frozen render shape or referenced bytes cannot be verified
 - **THEN** packaging fails closed without v4/v3 fallback or a false receipt
 
+#### Scenario: Cross-channel Variant authorization
+- **WHEN** a channel-bound source Master has a v5 Variant for a different registered target channel
+- **THEN** authorization checks the approved Variant target and pinned account/identity compatibility, without rewriting the source Unit channel or admitting an unrelated target account
+
 ### Requirement: Registered controlled channel deliverables are truthful
-Initial adapters SHALL operate only on exact registered forms. WeChat article and X thread SHALL be formatted before approval; X single SHALL be unavailable until registered. Xiaohongshu image_note SHALL include ordered real image bytes; Douyin spoken_script SHALL include script/scenes/B-roll/voice text and label SRT as estimated when no real timed media exists. Neither script nor prompt-only output SHALL be described as a finished video or complete image note.
+Initial adapters SHALL operate only on exact published forms with matching executable adapters. WeChat article and `x/thread` SHALL be formatted before approval. The `x_thread/thread` legacy fallback SHALL retain its existing v3/v4 behavior but SHALL NOT serve as a v5 target without its own published profile. Already-registered `x/single` SHALL remain unavailable until a matching adapter is implemented and verified. Xiaohongshu image_note SHALL include ordered real image bytes; Douyin spoken_script SHALL include script/scenes/B-roll/voice text and label SRT as estimated when no real timed media exists. Neither script nor prompt-only output SHALL be described as a finished video or complete image note.
+
+#### Scenario: Registered form without an adapter
+- **WHEN** an editor selects the published `x/single` form before a matching adapter is executable
+- **THEN** adaptation reports unavailable without creating a Variant or implying that the legacy `x_thread` fallback provides that adapter
 
 #### Scenario: Douyin script package
 - **WHEN** an approved spoken_script Candidate is packaged without produced video/audio timing
