@@ -4,6 +4,7 @@
 
 - `x/thread` 与 `x/single` 的 published Profile 都存在，但注册配置并不证明 Adapter 已实现；当前五种受控 form 的 capability 显式返回 `configured=true, executable=false, verified=false`，旧 `x_thread/thread` 不在 v5 矩阵内。
 - 五种 Variant canonical payload 在服务端限制字段、稳定 ID/顺序与长度；引用了图片槽位或 citation 却缺少对应精确素材 hash / FactPackItem checksum+locator 时拒绝。纯校验通过不代表当前项目素材可见、live rights 或真实字节已核验；这些还要在项目级保存与冻结闸门完成。
+- Variant 只读 API 必须先核项目 owner 和 Unit 归属，再查行；只判断 `variant_id` 存在会造成跨项目历史泄漏。当前 list/current/detail 均复用 `owned_unit()`，detail 再确认行的 project/unit，foreign raw-ID 回归为 404。
 - 当前 Registry 的 published Profile 真源是 `ChannelTemplateVersion`，所以 Variant 除 channel/form/hash 外还须精确保存 `profile_template_version_id` 外键；只存字符串版本会丢掉不可变配置来源。此字段已加入计划内 Variant 表。
 - 降级安全不能只看 Variant FK：历史 v5 Candidate 的链接若被置空，也必须拒绝删表。SQLite 与临时 PostgreSQL 均证实 manifest `schema_version=5` 可阻断降级，并保持版本/表/历史不变。
 - 外部复核确认 v5 `channel_variant_revision_id` 是唯一 Candidate 来源 FK；`draft_id`、`topic_brief_id`、`mother_revision_id`、`content_master_revision_id`、`workflow_run_id` 均须为空。工作流血缘只能经 Variant→精确 source Master→冻结 manifest 追溯。

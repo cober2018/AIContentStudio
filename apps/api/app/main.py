@@ -11,6 +11,7 @@ from .observability import trace_middleware
 from .routers import (
     article_handoff,
     assets,
+    channel_variants,
     channels,
     checks,
     connectors,
@@ -111,6 +112,7 @@ for router in (
     materials,
     templates,
     channels,
+    channel_variants,
     discoverability,
     dashboard,
     users,
