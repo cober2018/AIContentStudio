@@ -92,7 +92,7 @@
 - [ ] 8.4 Freeze ordered final refs, rights snapshots, evidence locators, latest checks, render, citations/declarations.
 - [ ] 8.5 Regress canonical hash determinism and tamper detection.
 - [ ] 8.6 Add v5 Freeze CAS/idempotency/currentness/live rights/evidence/bytes/render gates.
-- [ ] 8.7 Populate Candidate variant FK only for v5, leave legacy Draft/Topic/Master Candidate source FKs null, and derive source Master through Variant plus manifest; assert channel/form/artifact_kind projection columns match frozen target/profile. Keep v3/v4 source dispatch and history unchanged.
+- [ ] 8.7 Populate Candidate variant FK only for v5; require `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` and `workflow_run_id` all null. Derive source Master and workflow provenance through Variant plus frozen manifest; never use v5 `workflow_run_id` for dispatch/currentness. Assert channel/form/artifact_kind projection columns match frozen target/profile. Keep v3/v4 source dispatch, workflow projections and history unchanged.
 - [ ] 8.8 Prove an invalid v5 freeze never falls back to v4/v3 or creates Approval/DeliveryTarget.
 - [ ] 8.9 Scope v5 Candidate freeze/currentness to `(unit_id, variant_key)` and exact current Variant revision; same-series new revision/Candidate supersedes only that series, never other series merely by larger Candidate ID. Preserve v3/v4 currentness and their coexistence with v5.
 
@@ -132,4 +132,4 @@
 - [ ] 11.11 Obtain independent SPEC, backend/security, frontend/Review/package review; resolve findings without weakening gates.
 - [ ] 11.12 Update README, task_plan/progress/findings and acceptance record with exact outcomes/limitations and archive-readiness status; commit owned files locally only.
 - [ ] 11.13 Keep F6E canonical sync/archive, push, deploy and production migration pending separate authorization.
-- [ ] 11.14 Regress first-batch compatibility matrix, v1 explicit-fork requirement, canonical payload determinism, v5 sole source pointer/projection consistency and forged/foreign/failed `LLMRun` rejection before calling F6E complete.
+- [ ] 11.14 Regress first-batch compatibility matrix, v1 explicit-fork requirement, canonical payload determinism, v5 sole source pointer/projection consistency and forged/foreign/failed `LLMRun` rejection before calling F6E complete. Tamper each v5 legacy source FK (`draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id`) and `workflow_run_id` separately; Review, Approval, Authorization and Package must fail closed, with no v3/v4 fallback.

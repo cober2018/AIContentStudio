@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-29 F6D 独立结论与 F6E v5 source-pointer
+
+- 独立复核 `main@a51efe0` 明确 F6D 实施 `APPROVE`；复核方看了 D1–D3 实现、回归代码和浏览器证据，但未重跑报告中的 1026 项后端测试或 12 个浏览器 gate。8.4 可据复核结论关闭，F7 Provider/真实远端发布不因此变成已验证。
+- 当前 `ContentAsset` 实有 `draft_id`、`topic_brief_id`、`mother_revision_id`、`content_master_revision_id` 和 `workflow_run_id`；之前 F6E 只列了其中三列为空，与“Variant 是唯一来源 FK”矛盾。`ContentMasterRevision.origin_workflow_run_id` 已能承载准确工作流来源，因此 v5 选择五列全部为空，工作流血缘随精确 source Master 与冻结 manifest 保存。v3/v4 的 Candidate workflow 投影不变。
+- F6E design、主 delta、FE-F4 delta 与任务 8.7/11.14 已列明污染字段逐项拒绝及 Review/Approval/Authorization/Package fail closed。此为规格修订，不表示 v5 代码或独立 SPEC re-review 已通过。
+
 ## 2026-09-29 F8 身份映射与发布学习链路
 
 - `deps.get_current_user()` 目前由 `X-Studio-User`/默认 email 查询且可能自动建 User；`User` 仅有唯一 email、role、is_active，没有 `issuer/sub` 字段。F8 生产 token 校验若仅按 email 映射，即使签名有效也缺少明确稳定主体绑定。规格现将映射方案列为实施前审定项；如果必须新增持久结构，属于原计划未定义的 schema 变化，须停下修订 OpenSpec/迁移方案。

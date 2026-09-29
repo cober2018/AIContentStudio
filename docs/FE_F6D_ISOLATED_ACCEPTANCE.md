@@ -4,9 +4,9 @@
 
 - After independent review identified D1–D3, scoped repairs were verified on local `main` without new tables or migrations. Video document test: 71 passed; full backend: 1026 passed, 2 skipped, 5 existing warnings. TypeScript/Vite, FE-P1 bundle, OpenSpec strict 30/30 and scoped Ruff passed.
 - A new isolated fixture `/tmp/aicontent-f6d-acceptance.A6dQ2B/studio.db` with sibling media root was migrated to the existing `f6a000000001` head. The browser ran against only ports 18262/15662 and produced `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f6d-browser-evidence-4XIweO/report.json`: 12 gates passed, no page errors. It now asserts frozen Video v2 script, timeline, voice, subtitles, overlays and cover, then creates a newer current Master and proves the historical Candidate preview remains byte-for-byte unchanged. API and Vite test processes were stopped; temporary evidence retained.
-- Targeted negative API regressions assert duplicate cross-track media role/slot and array/object/bool/null enum values return 422 without Master or ProjectEvent writes. The prior v1/Text/Graphic path is unchanged. F6D 8.4 still needs independent targeted re-review; this local rerun is not its approval.
+- Targeted negative API regressions assert duplicate cross-track media role/slot and array/object/bool/null enum values return 422 without Master or ProjectEvent writes. The prior v1/Text/Graphic path is unchanged. The later independent review at `main@a51efe0` approved D1–D3 and F6D implementation; that review inspected code, regression tests and browser evidence but did not rerun the raw test commands.
 
-Date: 2026-09-29. Scope: local F6D change on `main`, before independent implementation review or archive.
+Date: 2026-09-29. Scope: local F6D change on `main`; independent implementation review approved, canonical sync/archive not executed.
 
 ## Isolation and provenance
 
@@ -51,9 +51,9 @@ Date: 2026-09-29. Scope: local F6D change on `main`, before independent implemen
 
 ## Honest limits
 
-- F6D task 4.5 is a **handoff record only**. The active F7 `capability-integrations-delivery` spec and tasks 5.1–5.11, 6.1–6.7 and the safe-results requirement carry real Video/TTS/ASR execution, accepted exact bytes/license/provenance/rights, and response/error secret redaction. That handoff is complete; these F7 tasks remain unimplemented and must not be counted as verified F6D capabilities. F6D task 8.4 still awaits an independent implementation verdict.
+- F6D task 4.5 is a **handoff record only**. The active F7 `capability-integrations-delivery` spec and tasks 5.1–5.11, 6.1–6.7 and the safe-results requirement carry real Video/TTS/ASR execution, accepted exact bytes/license/provenance/rights, and response/error secret redaction. That handoff is complete; these F7 tasks remain unimplemented and must not be counted as verified F6D capabilities. F6D task 8.4 was closed using the independent `APPROVE` verdict at `main@a51efe0`.
 
 - Real external Video/TTS/ASR execution, accepted bytes/license/provenance/rights, response redaction and verified publication are F7, not demonstrated here.
 - The initial browser run used ID3 MP3; the later WAV rerun above closes the recorded-audio limitation. External TTS/ASR remains unverified.
-- The previous independent F6D SPEC review is on record, but no independent implementation verdict has been obtained this turn: the dedicated ChatGPT browser-control tool required by the existing review skill is unavailable. Local review and passing tests must not be labeled independent approval.
+- Independent F6D SPEC review and the later implementation `APPROVE` verdict are on record. The independent reviewer did not rerun the reported commands; the raw execution output was not retained by the connector. This is not a claim of a new test run in this documentation-only closeout.
 - Source package/ZIP files under `openspec/` remain untouched and untracked. Canonical spec sync, archive, push, deployment and production migration have not occurred.

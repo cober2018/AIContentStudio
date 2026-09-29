@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：F6D 独立实施复核通过；F6E v5 来源字段窄修
+
+- 外部独立复核在 `main@a51efe0` 对 F6D D1–D3 给出 `APPROVE`，确认 Review 冻结 Video v2 展示、跨轨道重复媒体槽位、非法枚举值 422 与现有回归闭合；仅据此将 8.4 标记完成，F6D 79/79。复核方审查了实现/测试/验收记录，但未重跑原始命令；F7 真实 Provider 仍未实现。F6D 主规格同步与归档仍未执行。
+- F6E 独立 SPEC 复核只余 v5 Candidate 来源指针字段缺口；标准 active change 现明确四个 legacy source FK 和 `workflow_run_id` 均为空，工作流血缘仅通过 Variant→source Master→frozen manifest。污染字段须在 Review/Approval/Authorization/Package 按 schema 拒绝；未写 F6E 业务代码/迁移，仍待窄范围独立 SPEC re-review 才可 apply。
+- 本轮文档门禁：OpenSpec `validate --all --strict` 30/30 PASS；两份改动 delta 的 Requirement/Scenario 标题保留审计无差异；`git diff --check` PASS。未将此前后端/浏览器记录冒充本轮重跑。
+
 ## 2026-09-29：F8 生产身份与本地发布链路规格预审
 
 - 当前基线 `main@5350396`，tracked tree clean，原始总包未跟踪且不修改；F6D 8.4 与 F6E SPEC 独立复核尚无返回。只读对照 `deps.py`、`User`、F5B `sync_receipt()` 和 F8 active OpenSpec 后发现两个未来实施风险：`User` 没有 issuer/subject 映射，且 F8 任务 9.7 易把本地 ZIP 后直接进入已发布历史/学习误解为可验收。

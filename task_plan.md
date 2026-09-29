@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6D 独立复核收口与 F6E v5 来源字段窄修（仅规格）
+
+- [x] /// 核对外部复核结论与当前 ContentAsset/Master 字段、F6D/F6E 标准 change，明确 v5 的来源 FK 和工作流血缘。
+- [x] /// 据独立 APPROVE 关闭 F6D 8.4，并在 F6E design/tasks/相关 delta 中写死四个 legacy source FK 及 workflow_run_id 的 v5 规则；不改业务代码/迁移。
+- [x] /// 同步 README/progress/findings/验收记录，运行 OpenSpec all-strict、保留性核对和 diff-check，按范围本地提交；F6E business apply 等窄范围独立 SPEC re-review。
+
 ## 2026-09-29：F8 生产身份与发布历史验收契约预审（仅规格）
 
 - [x] /// 对照 F8 active OpenSpec、现有 User/auth 模型与 F5B PublishedContentRecord 真源，核实生产身份映射和本地交付到学习链路的实际前提。

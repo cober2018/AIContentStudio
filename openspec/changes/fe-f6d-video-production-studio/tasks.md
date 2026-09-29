@@ -100,6 +100,6 @@
 - [x] 8.1 Run full backend suite and targeted Video/legacy regressions; record actual pass/skip/warning counts.
 - [x] 8.2 Run TypeScript/Vite, frontend model checks and FE-P1 bundle/import-graph gate.
 - [x] 8.3 Run `openspec validate --all --strict`, relevant lint and `git diff --check`.
-- [ ] 8.4 Independently review SPEC preservation, backend/rights/render and frontend/Review/package/browser evidence.
+- [x] 8.4 Independently review SPEC preservation, backend/rights/render and frontend/Review/package/browser evidence.
 - [x] 8.5 Update README, progress/findings and acceptance report with exact limitations and verification provenance.
 - [x] 8.6 Commit only owned F6D files locally; preserve user source packages and do not push, deploy, run production migration or canonical-sync/archive without separate authorization.
