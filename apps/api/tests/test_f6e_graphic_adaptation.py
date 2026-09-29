@@ -88,7 +88,7 @@ def test_image_note_preview_and_save_freeze_exact_rendered_image(client, db_sess
     assert by_kind["variant_rights"]["status"] == "pass"
     assert by_kind["variant_profile"]["status"] == "pass"
     assert by_kind["variant_render"]["status"] == "pass"
-    assert by_kind["variant_package"]["status"] == "incomplete"
+    assert by_kind["variant_package"]["status"] == "pass"
     assert checks.json()["ready"] is False
     image.public_use_allowed = False
     db_session.commit()

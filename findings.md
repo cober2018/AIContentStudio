@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-30 F6E Variant 来源与成品投影
+
+- 原 `ready` 只聚合 Variant 自身检查；来源 Master 即使 Brief/Boundary 不全或自身检查缺席，也没有独立门槛。现在以项目级授权后对精确 Master 的只读投影核对，避免把 Variant 局部 pass 当成内容可冻结。
+- Adapter `package_projection` 当前是确定性结构/文本投影，不是 ZIP 字节包。新增检查只存安全的 projection hash 和 coverage；Profile/Evidence/Rights/Render 任一未就绪时，package 只能 incomplete。真实本地包和远端副作用需后续明确分开验收。
+
 ## 2026-09-30 F6E 公众号封面引用
 
 - 已发布 WeChat article Profile 要求封面；此前 Text Variant 无法携带任何素材，因此正文适配即使成功也永远过不了 Profile 闸门。现只开放一个有界 `cover` sidecar，锚定项目可见的精确 MaterialRevision、内容哈希、文件字节/MIME 与实时公开权利；其它 Text/X 素材仍 fail closed。

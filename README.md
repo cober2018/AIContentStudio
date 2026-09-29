@@ -4,6 +4,15 @@
 
 长期产品目标以 [`03_ai_content_studio_PRD.md`](03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
 
+### FE-F6E 渠道变体检查（进行中）
+
+- 需求背景：一个已保存的渠道变体只有在来源 Master 当前、必要检查有效，且目标形态/素材/证据检查通过时，才可能进入后续 Candidate v5 冻结。
+- 目录结构：`apps/api/app/services/channel_variants.py` 负责项目授权后的 Variant 历史、只读来源门槛和追加式检查；`channel_adapters.py` 负责五种受控形态的确定性成品投影；规格位于 `openspec/changes/fe-f6e-channel-variants-content-matrix/`。
+- 已完成：来源 Master 的上下文与检查状态进入 Variant `ready` 投影；`variant_package` 只验证受控 Adapter 的确定性成品投影，并记录投影哈希，不生成 ZIP、不声称远端发布。
+- 待完成/TODO：完整 byte-exact 本地包、Candidate v5、审核交付、Matrix 和前端验收仍在 F6E 后续任务；F7 远端 Provider 不在本阶段。
+- 关键设计决策：channel-neutral Master 的目标平台检查由 Variant 承担，不以 v4 直接冻结资格替代来源门槛；检查结果追加保存，读取时仍进行实时来源与权限漂移判断。
+- 依赖与启动：沿用现有 FastAPI/SQLAlchemy 环境；在 `apps/api` 运行 `.venv/bin/pytest -q tests/test_f6e_variant_save.py tests/test_f6e_graphic_adaptation.py` 进行定向回归。本切片不增加依赖或迁移。
+
 ### FE-F0-F1 前端产品骨架（2026-09-27）
 
 - 需求背景：以 [`AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md`](AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md)、[`AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md`](AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md) 和 V5 原型为方向，本切片按 [`AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md`](AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md) 建立项目驱动的前端入口；不表示 PRD 全部完成。

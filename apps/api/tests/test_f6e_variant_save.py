@@ -289,12 +289,12 @@ def test_variant_schema_check_is_append_only_bound_to_payload_and_does_not_imply
     assert schema["status"] == "pass"
     assert schema["is_current"] is True
     assert first.json()["ready"] is False
-    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 4
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 5
     assert client.get(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
     assert client.post(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
 
 
-def test_x_single_variant_checks_record_exact_profile_evidence_and_rights_without_package_claim(client, db_session):
+def test_x_single_variant_checks_record_projection_without_claiming_zip_or_source_readiness(client, db_session):
     project, unit, master, headers = _source(client, db_session)
     path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
     saved = client.post(path, json={
@@ -311,9 +311,14 @@ def test_x_single_variant_checks_record_exact_profile_evidence_and_rights_withou
         "variant_schema": "pass", "variant_profile": "pass", "variant_evidence": "pass", "variant_rights": "pass",
     }
     assert by_kind["variant_profile"]["report"]["coverage"]["remote_publisher"] == "unverified"
-    assert by_kind["variant_package"]["status"] == "incomplete"
+    assert by_kind["variant_package"]["status"] == "pass"
+    assert by_kind["variant_package"]["report"]["coverage"] == "projection_only"
+    assert by_kind["variant_package"]["report"]["local_zip"] == "not_generated"
+    assert by_kind["variant_package"]["report"]["remote_effect"] == "unverified"
+    assert checks.json()["source_gate"]["status"] == "incomplete"
+    assert "evidence_missing" in checks.json()["source_gate"]["reasons"]
     assert checks.json()["ready"] is False
-    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 4
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 5
 
 
 def test_wechat_article_missing_required_cover_blocks_profile_check(client, db_session):
@@ -331,6 +336,9 @@ def test_wechat_article_missing_required_cover_blocks_profile_check(client, db_s
     profile = next(item for item in checks.json()["items"] if item["check_kind"] == "variant_profile")
     assert profile["status"] == "blocker"
     assert "cover_required" in profile["report"]["reasons"]
+    package = next(item for item in checks.json()["items"] if item["check_kind"] == "variant_package")
+    assert package["status"] == "incomplete"
+    assert "prerequisite_unready:variant_profile" in package["report"]["reasons"]
     assert checks.json()["ready"] is False
 
 
@@ -371,7 +379,7 @@ def test_wechat_article_cover_is_exact_project_visible_media_and_revocation_bloc
     assert statuses["variant_profile"] == "pass"
     assert statuses["variant_evidence"] == "pass"
     assert statuses["variant_rights"] == "pass"
-    assert statuses["variant_package"] == "incomplete"
+    assert statuses["variant_package"] == "pass"
     project_ref = db_session.scalar(select(ProjectMaterialReference).where(
         ProjectMaterialReference.project_id == project, ProjectMaterialReference.material_revision_id == revision.id,
     ))
@@ -535,7 +543,7 @@ def test_variant_later_corrupt_payload_check_blocks_earlier_pass(client, db_sess
     assert latest["input_hash"] != old["input_hash"]
     assert latest["id"] != old["id"]
     assert second.json()["ready"] is False
-    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 8
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 10
 
 
 def test_later_variant_check_blocker_for_same_input_outranks_old_pass(client, db_session):

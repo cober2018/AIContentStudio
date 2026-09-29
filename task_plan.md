@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F6E Variant 来源与成品投影闸门
+
+- [x] /// 先以失败回归锁定：已有 Variant check pass 不代表来源 Master 的 Brief/Boundary/Identity 和其 checks 已 current；Adapter 仅可验证确定性的本地包投影，不得声称 ZIP 或远端效果已生成。
+- [x] /// 增加只读 source gate（复用 Master 现有 check/readiness）、追加式 variant_package projection check；只有二者及其它 required checks 均通过时 `ready=true`，不要求 channel-neutral Master 获得 v4 直接 Freeze 资格。
+- [x] /// 定向/全量测试与 strict/Ruff/diff 后，按真实范围核销 F6E 检查任务；同步 README/progress/findings 并只在本地 main 提交。
+
 ## 2026-09-30：F6E 公众号封面精确引用
 
 - [x] /// 先写失败回归：公众号 Text Variant 绑定项目共享图片的 exact MaterialRevision/hash/字节/公开权利后，Profile 不再因缺封面阻断；伪造 hash、撤权或无项目可见性零写入。

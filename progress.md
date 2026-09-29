@@ -1,5 +1,9 @@
 # 当前进度
 
+## 2026-09-30：F6E Variant 来源与本地包投影门槛
+
+- Variant checks 增加只读 `source_gate`：要求精确当前 Master、当前 Brief/Identity/Fact Boundary 上下文与适用的 Master 检查；channel-neutral source 不要求其不存在的目标平台检查。`variant_package` 追加保存确定性 Adapter projection hash，并明确 `projection_only`、`local_zip=not_generated`、`remote_effect=unverified`。其它检查通过但来源上下文不全时 `ready` 仍为 false。定向 RED 后 GREEN：26 passed；全后端 1090 passed / 2 skipped / 7 warnings，OpenSpec strict 30/30，相关 Ruff 与 diff-check PASS。F6E 进度保持 29/100；7.3/7.5 与 Candidate v5 仍未整体完成。
+
 ## 2026-09-30：F6E 公众号封面适配
 
 - WeChat article Variant 现可引用一个项目可见的 exact cover MaterialRevision（含实时 bytes/hash/MIME/public-use），并可从已有 Text Master 继承同形封面；不匹配、撤权、取消项目引用或静默丢弃均 fail closed。适配输出与素材 sidecar 分离，历史 Master/Variant 不重写。相关定向 37 passed；全后端 `1090 passed / 2 skipped / 7 warnings`，Ruff、OpenSpec strict 30/30、diff-check PASS。F6E 6.1 核销，进度 29/100；受控公众号适配不等于本地包或远端草稿箱可用。
