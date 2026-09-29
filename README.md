@@ -144,6 +144,15 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
                   → warning 可冻结、审批须按检查 ID/输入哈希处置
 ```
 
+### FE-F6D Video Production Studio（仅标准 OpenSpec 草案，未 apply）
+
+- PRD/需求背景：North Star 要求 Video 从 F6A 的 `video.master.v1` JSON 壳升级为可追溯的脚本、镜头、时间线、字幕、配音与最终视频生产体验；F6C 仍需独立复核通过，不能把当前草案当实施许可。
+- 目录结构：`openspec/changes/fe-f6d-video-production-studio/` 已有 proposal、design、tasks 和 Video Studio、Production Core、Review、FE-P1 四份 delta；用户总包源文件保持原样。
+- 已完成：从用户源包校准为 73 项可跟踪任务与可验证 Scenario；新增 v1 显式 fork、精确媒体位置、输入绑定 render、Provider 断连无写入和 F7 真实结果/脱敏移交边界。OpenSpec 全库 strict 27/27 通过。未改 F6D 业务代码。
+- 待完成/TODO：独立规格审阅、F6C 74/74 与本地 main 基线复核、用户按项目规则单独确认 apply；Video v2 后端/前端、浏览器和完整门禁均未启动。
+- 关键设计决策：`video.master.v2` 是唯一可编辑真源；派生剪辑生成追加式子修订；现有 MaterialRevision/ContentMasterRevision/Candidate v4 继续是真源。未验证 Video/TTS/ASR 不制造成功或公开使用权，真实 Provider 接收归 F7。
+- 依赖与启动：沿用本 README 现有 API/Vite 启动方式，目标零新表/零迁移；若实施证明需新持久化结构，应先暂停修订规格，不直接建表。不 push/deploy/运行生产迁移。
+
 ### FE-F6C Graphic Production Studio（实施中，73/74；待独立复核）
 
 - PRD/需求背景：North Star 的图文生产不是图片附件；F6A 仅有 `graphic.master.v1` JSON 壳。标准提案在 [`openspec/changes/fe-f6c-graphic-production-studio/proposal.md`](openspec/changes/fe-f6c-graphic-production-studio/proposal.md)，完整实施计划在 [`docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md`](docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md)。用户原始总包保持原样。
