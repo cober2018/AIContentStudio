@@ -1,5 +1,12 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6E 前置基线与旧 V1 验收审计
+
+- [x] /// 复核当前 main、既有 Unit/Master/Candidate/Review/Delivery/Registry 代码与 Alembic head；记录仍未落地的 Variant/v5 边界。
+- [x] /// 并行运行当前后端全套和前端 build/FE-P1，记录真实测试与路由预算；仅作为 F6E apply 前基线，不算 F6E 功能验收。
+- [x] /// 对 superseded V1 七个 Scenario、PRD §15 15 条与 §16 30 Topic/指标/发布门槛逐项映射到现有真源和 F6E/F7/F8 后续验收，不将文档映射算完成。
+- [x] /// 证据足够后只勾 F6E 0.3/0.4，更新 README/progress/findings，复跑 strict/diff 并本地提交检查点；保留 F6D 8.4 与 F6E re-review 门禁。
+
 ## 2026-09-29：F6D→F7 Provider 移交核销与 F6E 规格检查点
 
 - [x] /// 在当前 main 核对 F6D 4.5 文字、F7 标准规格/任务与真实 Provider 未实现边界，确认“移交已写入”不等于“F7 已实现”。

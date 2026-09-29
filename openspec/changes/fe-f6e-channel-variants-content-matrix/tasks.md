@@ -2,8 +2,8 @@
 
 - [ ] 0.1 Confirm F6C and F6D final gates and independent reviews before any F6E business-code apply; F6D 4.5 is a documented F7 Provider/rights/redaction handoff, not a demand to implement F7 real Providers before F6E.
 - [ ] 0.2 Review the six F6E delta specs against current canonical requirements and obtain explicit apply confirmation under the project OpenSpec rule.
-- [ ] 0.3 Re-read the current Unit/Master/Candidate/Review/Delivery/Registry code and record actual Alembic head, tests, bundle budgets and Git status.
-- [ ] 0.4 Audit all seven preserved scenarios from the already-superseded `complete-prd-v1-channel-deliverables` and PRD §15/§16 acceptance boundaries; do not reactivate the old change or claim its obligations complete.
+- [x] 0.3 Re-read the current Unit/Master/Candidate/Review/Delivery/Registry code and record actual Alembic head, tests, bundle budgets and Git status.
+- [x] 0.4 Audit all seven preserved scenarios from the already-superseded `complete-prd-v1-channel-deliverables` and PRD §15/§16 acceptance boundaries; do not reactivate the old change or claim its obligations complete.
 - [ ] 0.5 Stop and revise the specification if implementation requires destructive migration, an unplanned durable business object or weaker safety gates; do not backfill historical variants.
 
 ## 1. Additive persistence and migration

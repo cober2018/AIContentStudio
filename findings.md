@@ -1,5 +1,43 @@
 # 配置记录
 
+## 2026-09-29 F6E apply 前基线与旧 V1 验收保留审计
+
+- 当前基线 `main@c295174`；tracked tree 在本次审计前 clean，仅用户原始规格包仍未跟踪。Alembic `heads` 为 `f6a000000001`。`ContentUnit.channel_id`、`ContentMasterRevision.channel_id/content_form` 可空；`ContentAsset` 有 Draft/Topic/Master source FK、channel/content_form/artifact_kind 查询列，但没有 Variant FK 或 ChannelVariant 模型。`delivery.authorize_target()` 仍会用 Master FK 判定 v4 并按 Unit 渠道限制项目目标；`project_review.decide_candidate()` 当前只分派 v3/v4。因此 F6E 的 v5 source-pointer/schema-first 校验是必要新增，不是现有功能。
+- 当前代码基线新跑：从 `apps/api` 执行 pytest，1009 passed / 2 skipped / 5 warnings；`apps/web` 的 TypeScript/Vite/FE-P1 构建通过，`/projects` 224.75 kB raw / 72.89 kB gzip，通用 Production 276.96 kB raw / 88.24 kB gzip。此为 F6E 实施前对照，不证明任何 Variant/v5 功能。
+- `complete-prd-v1-channel-deliverables` 的 `.openspec.yaml` 已标记 `superseded_by: align-v1-prd2-content-harness`。下表只审计其七个 Scenario 的保留落点，不重新激活旧 change，也不把映射写成通过验收：
+
+| 原 Scenario | 保留落点 | 尚需的真实证据 |
+| --- | --- | --- |
+| 旧稿缺少新审批证据 | F6E `Legacy histories` / F4 Candidate 审批边界 | 历史 Douyin/XHS 草稿回读且显示未就绪 |
+| 下载已批准脚本 | F6E controlled `douyin/spoken_script`、v5 Review/Package | 批准 hash 一致的脚本/分镜/B-roll/引文/estimated SRT 本地包；不标已发布 |
+| 图片缺失 | F6E canonical `image_note`、素材检查 | 只有 Prompt、无合格图片字节时冻结/交付阻断 |
+| 图片顺序或字节变化 | F6E ordered refs、v5 frozen manifest/Package | 改顺序或改实际字节后旧包拒绝、须新 Variant/Candidate/Approval |
+| 账号独立交付 | F6E v5 DeliveryTarget；F7 远端 Publisher | 两账号授权/包/尝试/回填相互隔离，一方失败不污染另一方 |
+| 权限撤销 | F6E live rights/evidence gates | 已批准历史可读，未完成目标的下载/交付被阻断 |
+| 本变更完成后查看 V1 状态 | F6E 11.8 与 PRD 总验收 | 仅报告已验本地路径，15 条与 30 Topic 不自动通过 |
+
+PRD §15 的 15 条仍是独立验收单元。下面是证据入口，不是完成判定：
+
+| §15 | 所需证据入口 / 后续责任 |
+| --- | --- |
+| 1 | 文本、URL、PDF/TXT/CSV 至少三类真实导入；以 SourceDocument 与导入 API 的实际样本证明 |
+| 2 | SourceDocument 抽取候选 Facts；检查来源及候选血缘 |
+| 3 | Fact 人工确认、拒绝、编辑三动作；核实际状态与审计 |
+| 4 | FactPack 冻结并产生不可变版本；核版本与 checksum |
+| 5 | 真实 Topic 绑定 frozen FactPack；不能以 Project Fact Boundary 自动代替旧 Topic 路径 |
+| 6 | 同一真实 Topic 的抖音/XHS/公众号三渠道生成；F6E 三种 Variant 本地路径不能单独证明旧 Topic 条件 |
+| 7 | 生成产物记录模型/Prompt/模板版本；检查 LLMRun、Workflow/产物冻结血缘 |
+| 8 | 事实性句子能映射 Fact；检查 DraftClaim 或 Master/Variant EvidenceRef 的精确定位 |
+| 9 | Fact Checker 阻止无来源数字；须用含无来源数字的负向样本证明阻断 |
+| 10 | Reviewer 能退回及批准；核两种独立内容决定与历史 |
+| 11 | 批准内容进入 ContentAsset；核 Candidate hash 与资产读回 |
+| 12 | Markdown/TXT/JSON/SRT 对应格式真实导出；逐格式检查包内容，不以 ZIP 存在代替 |
+| 13 | 生成失败可重试且不覆盖旧 Draft；核 Attempt/Draft 版本 |
+| 14 | FactPack 历史升版不改旧稿证据；核旧 Candidate/引用 checksum |
+| 15 | 外部系统不能直连产品数据库；由 F8 生产网络/认证/部署验收证明，非本地 API 测试可替代 |
+
+PRD §16 的发布门槛另需 **30 个真实 Topic（抖音/XHS/公众号各 10）**，并对无来源数字率、Fact 覆盖率、人工事实错误率、格式通过率、Reviewer 返工率及同 FactPack 三渠道一致性逐一统计；还需 Blocker 事实错误不可自动通过、FactPack 版本不可变、Draft 历史不丢、全流程审计可追溯及部署/恢复/备份文档。当前本地 fixture、F6E 未来的四渠道包、F5B Performance 数据和 F8 规格都不能充作这组真实发布验收。
+
 ## 2026-09-29 F6D 4.5 与 F7 真实能力边界
 
 - F6D 设计第 5 项及 Video Studio/Review delta 已把真实 Video/TTS/ASR 输出、接受字节/许可/血缘/权利和响应脱敏列为 F7 义务；F7 标准 change 的真实能力规格、5.1–5.11、6.1–6.7 与安全结果要求可逐项承接。

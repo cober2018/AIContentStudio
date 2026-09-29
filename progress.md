@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-29：F6E 0.3/0.4 前置审计完成（仅规格与证据）
+
+- 基线 `main@c295174`、Alembic head `f6a000000001`；复读 Unit/Master/Candidate/Review/Delivery/Registry 后确认当前无 ChannelVariant/v5 模型或业务分派。审计前 tracked tree clean；用户原始规格包仍为未跟踪且未改。
+- 新跑后端全套 `1009 passed / 2 skipped / 5 warnings`；前端 TypeScript/Vite/FE-P1 PASS，`/projects` 初始 JS 224.75 kB raw / 72.89 kB gzip，通用 Production 276.96 kB raw / 88.24 kB gzip。这是 F6E apply 前基线，不是 Variant/v5 验收。
+- `findings.md` 已逐项映射 superseded 旧 V1 的七个 Scenario、PRD §15 的 15 条和 §16 的 30 个真实 Topic/六项指标/发布门槛；未重新激活旧 change，也未把文档映射视为验收通过。F6E 仅勾 0.3/0.4，11.8 保持待真实验收。
+- F6D 8.4 独立实施复核与 F6E 修订后独立 SPEC re-review 仍缺；不进入 F6E business apply，不改业务代码/迁移，不推送、部署、同步主规格或归档。
+- 本批 `openspec validate --all --strict` 30/30 PASS、`git diff --check` PASS；`openspec list` 显示 F6E 2/98、F6D 78/79。CLI 将 superseded 旧 V1 列为 in-progress 只是按未勾任务计算，不改变其 `.openspec.yaml` 的 superseded 事实。
+
 ## 2026-09-29：F6D→F7 移交义务核销
 
 - 本地 `main@d85dc08` 核实 F6D 4.5 只要求把真实 Provider 执行、接受结果字节/许可/血缘/权利与响应脱敏写入 F7；F7 标准 spec 及未勾任务 5.1–5.11、6.1–6.7 均明确承接。仅将 F6D 4.5 的“移交完成”勾选，F7 Provider 本身仍为未实施/未验证。
