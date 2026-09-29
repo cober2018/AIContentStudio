@@ -78,7 +78,7 @@
 ## 7. Variant checks and render readiness
 
 - [x] 7.1 Add append-only schema/content check bound to exact Variant payload/context.
-- [ ] 7.2 Add exact channel/profile/rule check and preserve provider-coverage honesty.
+- [x] 7.2 Add exact channel/profile/rule check and preserve provider-coverage honesty.
 - [ ] 7.3 Add final refs/evidence/rights and package/render readiness checks.
 - [x] 7.4 Derive latest applicable check per kind; later blocker for the same input must outrank old pass.
 - [ ] 7.5 Make source/profile/adapter/rule/ref drift stale relevant checks and render binding.

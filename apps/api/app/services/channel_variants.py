@@ -363,6 +363,7 @@ def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
     required = ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
     if row.payload_schema == "xiaohongshu.image_note.v1":
         required = (*required, "variant_render")
+    required = (*required, "variant_package")
     adapter_hash = _hash({"key": row.adapter_key, "version": row.adapter_version})
     items = []
     for kind in required:
@@ -376,6 +377,74 @@ def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
                       "status": latest.status if is_current else "stale" if latest else "incomplete",
                       "report": {"reasons": drift_reasons} if drift_reasons else latest.report_json if latest else {"reason": "check_missing"}})
     return {"items": items, "ready": not drift_reasons and all(item["status"] == "pass" for item in items), "drift_reasons": drift_reasons}
+
+
+def _profile_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) -> tuple[str, dict]:
+    profile = db.get(ChannelTemplateVersion, row.profile_template_version_id)
+    form = (profile.profile_json or {}).get("content_forms", {}).get(row.content_form) if profile else None
+    if profile is None or profile.status != "published" or not isinstance(form, dict):
+        return "blocker", {"reasons": ["published_profile_missing"]}
+    reasons = []
+    media = form.get("media_requirements") or {}
+    if not isinstance(media, dict):
+        return "incomplete", {"reasons": ["media_policy_unavailable"], "coverage": {"profile": "verified", "media": "unknown", "rules": "unknown", "remote_publisher": "unverified"}}
+    if media.get("cover") == "required" and not (
+        any(ref["role"] == "cover" for ref in assets)
+        or row.payload_schema == "xiaohongshu.image_note.v1" and any(ref["role"] == "card_image" for ref in assets)
+    ):
+        reasons.append("cover_required")
+    if media.get("inline") == "required" and not assets:
+        reasons.append("inline_media_required")
+    rules = form.get("rule_sets") or []
+    unsupported_rules = not isinstance(rules, list) or any(
+        not isinstance(rule, str) or rule not in {"rule.media.required", "rule.media.public_rights"} for rule in rules
+    )
+    return ("blocker" if reasons else "incomplete" if unsupported_rules else "pass", {
+        "reasons": reasons or (["rule_executor_unavailable"] if unsupported_rules else []),
+        "coverage": {"profile": "verified", "media": "deterministic", "rules": "unknown" if unsupported_rules else "deterministic", "remote_publisher": "unverified"},
+    })
+
+
+def _evidence_check(db: Session, row: ChannelVariantRevision, assets: list[dict], evidence: list[dict]) -> tuple[str, dict]:
+    master = db.get(ContentMasterRevision, row.source_master_revision_id)
+    try:
+        _validate_evidence_refs(db, master, evidence)
+    except HTTPException as exc:
+        return "blocker", {"reasons": [exc.detail.get("code", "evidence_invalid") if isinstance(exc.detail, dict) else "evidence_invalid"]}
+    if not evidence:
+        try:
+            adapter, _ = executable_adapter_for(db, master.payload_schema, row.channel_id, row.content_form)
+            source_projection = adapter.adapt(master.payload_json, asset_refs=assets, evidence_refs=[])
+        except AdapterUnavailable:
+            source_projection = None
+        if source_projection != row.payload_json:
+            return "incomplete", {"reasons": ["semantic_delta_requires_review"], "coverage": {"exact_refs": "none", "semantic_claims": "unknown"}}
+    else:
+        return "incomplete", {"reasons": ["citation_semantics_unverified"], "coverage": {"exact_refs": "verified", "semantic_claims": "unknown", "ref_count": len(evidence)}}
+    return "pass", {"reasons": [], "coverage": {"exact_refs": "not_applicable", "semantic_claims": "source_equivalent", "ref_count": 0}}
+
+
+def _rights_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) -> tuple[str, dict]:
+    master = db.get(ContentMasterRevision, row.source_master_revision_id)
+    try:
+        if row.payload_schema == "xiaohongshu.image_note.v1":
+            _validate_graphic_assets(db, row.project_id, master, assets)
+        elif row.payload_schema == "douyin.spoken_script.v1":
+            _validate_video_assets(db, row.project_id, master, assets)
+        elif assets:
+            return "blocker", {"reasons": ["asset_mapping_unavailable"]}
+    except HTTPException as exc:
+        return "blocker", {"reasons": [exc.detail.get("code", "rights_unready") if isinstance(exc.detail, dict) else "rights_unready"]}
+    return "pass", {"reasons": [], "coverage": {"exact_media_bytes_and_public_use": "verified" if assets else "not_applicable", "ref_count": len(assets)}}
+
+
+def _render_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) -> tuple[str, dict]:
+    master = db.get(ContentMasterRevision, row.source_master_revision_id)
+    try:
+        _validate_graphic_assets(db, row.project_id, master, assets)
+    except HTTPException as exc:
+        return "blocker", {"reasons": [exc.detail.get("code", "render_unready") if isinstance(exc.detail, dict) else "render_unready"]}
+    return "pass", {"reasons": [], "coverage": {"exact_render_attestation": "verified"}}
 
 
 def get_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: int, user: User) -> dict:
@@ -402,11 +471,18 @@ def run_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: i
         reasons = [] if canonical == row.payload_json and _hash(canonical) == row.payload_hash else ["payload_hash_or_canonical_mismatch"]
     except VariantDocumentError as exc:
         reasons = [str(exc)]
-    db.add(ChannelVariantCheckRun(
-        variant_revision_id=row.id, check_kind="variant_schema", input_hash=input_hash, profile_hash=row.profile_hash,
-        adapter_hash=_hash({"key": row.adapter_key, "version": row.adapter_version}), rule_hash=row.rule_hash,
-        status="blocker" if reasons else "pass", report_json={"reasons": reasons}, created_at=utcnow(),
-    ))
+    results = {"variant_schema": ("blocker" if reasons else "pass", {"reasons": reasons})}
+    results["variant_profile"] = _profile_check(db, row, assets)
+    results["variant_evidence"] = _evidence_check(db, row, assets, evidence)
+    results["variant_rights"] = _rights_check(db, row, assets)
+    if row.payload_schema == "xiaohongshu.image_note.v1":
+        results["variant_render"] = _render_check(db, row, assets)
+    adapter_hash = _hash({"key": row.adapter_key, "version": row.adapter_version})
+    for kind, (status, report) in results.items():
+        db.add(ChannelVariantCheckRun(
+            variant_revision_id=row.id, check_kind=kind, input_hash=input_hash, profile_hash=row.profile_hash,
+            adapter_hash=adapter_hash, rule_hash=row.rule_hash, status=status, report_json=report, created_at=utcnow(),
+        ))
     db.commit()
     return projected_variant_checks(db, row)
 

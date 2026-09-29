@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-30 F6E Profile 与安全检查覆盖边界
+
+- 精确发布 Profile 可以确定目标形态和必要封面/内图；X 单条的纯文字无需媒体，小红书图文的首张真实卡片可满足封面，公众号文章在当前 Text Variant 不支持封面引用时必须明确 `cover_required`，不可因正文结构合法就可冻结。
+- `variant_profile` 只把已知的素材规则当作可执行的确定性配置；未知或畸形 RuleSet 返回 incomplete，远端 Publisher 始终显示 unverified。`variant_rights` 复用项目可见、live public-use、字节/hash/MIME 检查；零媒体显示 not_applicable，不伪称实际验证了媒体。
+- `variant_evidence` 对精确引用做 scope/checksum/撤权核对，但引用与文字的语义支持关系没有被确定性算法证明时保持 incomplete；手工改写若偏离可证明的来源适配且无引用，也保持 incomplete。简单来源等价改写可通过结构覆盖，但不冒充模型语义审查。
+- 现阶段没有完整 byte-exact 本地包检查，因此 `variant_package` 明确保持 incomplete；即使其它已实现检查通过，Variant 整体 `ready=false`。Candidate v5 和最终交付仍待实施。
+
 ## 2026-09-29 F6E Variant live drift
 
 - 冻结输入 hash 单独比较只能发现 Variant 行自身变动；同系列新版本、源 Master 新 head、Profile 退役、Evidence 撤权后，旧 schema pass 仍可能显示 current。本轮改为读取时核对真实 head、Master 上下文、当前 published Profile/Adapter/rules、精确证据和 Graphic/Video 素材/渲染；旧 CheckRun 不修改，只投影 `stale` 和具体原因。

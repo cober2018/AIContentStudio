@@ -169,7 +169,11 @@ def test_text_variant_citation_binds_exact_frozen_boundary_and_rolls_back_invali
     assert accepted.json()["evidence"][0]["locator"] == evidence["content_locator_json"]
     assert client.post(path, json=body, headers=headers).json()["id"] == accepted.json()["id"]
     checks_path = f"{path}/{accepted.json()['id']}/checks"
-    assert client.post(checks_path, headers=headers).json()["items"][0]["status"] == "pass"
+    checked = client.post(checks_path, headers=headers).json()
+    assert checked["items"][0]["status"] == "pass"
+    citation_check = next(entry for entry in checked["items"] if entry["check_kind"] == "variant_evidence")
+    assert citation_check["status"] == "incomplete"
+    assert "citation_semantics_unverified" in citation_check["report"]["reasons"]
     item.public_use_allowed = False
     db_session.commit()
     revoked_checks = client.get(checks_path, headers=headers)
@@ -281,9 +285,90 @@ def test_variant_schema_check_is_append_only_bound_to_payload_and_does_not_imply
     assert schema["status"] == "pass"
     assert schema["is_current"] is True
     assert first.json()["ready"] is False
-    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 1
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 4
     assert client.get(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
     assert client.post(checks_path, headers={"X-Studio-User": "foreign-check@studio.local"}).status_code == 404
+
+
+def test_x_single_variant_checks_record_exact_profile_evidence_and_rights_without_package_claim(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(path, json={
+        "variant_key": "x-check-coverage", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "x-check-coverage-1",
+        "source_kind": "deterministic_adapt", "payload": {"text": "有来源的原文"},
+    }, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checks = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checks.status_code == 200, checks.text
+    by_kind = {item["check_kind"]: item for item in checks.json()["items"]}
+    assert {kind: by_kind[kind]["status"] for kind in ("variant_schema", "variant_profile", "variant_evidence", "variant_rights")} == {
+        "variant_schema": "pass", "variant_profile": "pass", "variant_evidence": "pass", "variant_rights": "pass",
+    }
+    assert by_kind["variant_profile"]["report"]["coverage"]["remote_publisher"] == "unverified"
+    assert by_kind["variant_package"]["status"] == "incomplete"
+    assert checks.json()["ready"] is False
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 4
+
+
+def test_wechat_article_missing_required_cover_blocks_profile_check(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(path, json={
+        "variant_key": "wechat-no-cover", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "wechat", "content_form": "article", "idempotency_key": "wechat-no-cover-1",
+        "payload": {"title": "原稿", "blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "有来源的原文"}]},
+    }, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checks = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checks.status_code == 200, checks.text
+    profile = next(item for item in checks.json()["items"] if item["check_kind"] == "variant_profile")
+    assert profile["status"] == "blocker"
+    assert "cover_required" in profile["report"]["reasons"]
+    assert checks.json()["ready"] is False
+
+
+def test_unmapped_manual_text_claim_is_not_evidence_verified(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(path, json={
+        "variant_key": "new-claim", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "new-claim-1",
+        "payload": {"text": "有来源的原文，而且新事实也成立"},
+    }, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checks = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checks.status_code == 200, checks.text
+    evidence = next(item for item in checks.json()["items"] if item["check_kind"] == "variant_evidence")
+    assert evidence["status"] == "incomplete"
+    assert "semantic_delta_requires_review" in evidence["report"]["reasons"]
+    assert checks.json()["ready"] is False
+
+
+def test_unexecutable_published_profile_rule_is_incomplete_not_a_server_error(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    profile = db_session.scalar(select(ChannelTemplateVersion).where(ChannelTemplateVersion.channel == "x"))
+    edited = dict(profile.profile_json)
+    forms = dict(edited["content_forms"])
+    forms["single"] = {**forms["single"], "rule_sets": [{"unknown": "rule"}]}
+    edited["content_forms"] = forms
+    profile.profile_json = edited
+    db_session.commit()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(path, json={
+        "variant_key": "unknown-rule", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "unknown-rule-1", "payload": {"text": "有来源的原文"},
+    }, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checks = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checks.status_code == 200, checks.text
+    profile_check = next(item for item in checks.json()["items"] if item["check_kind"] == "variant_profile")
+    assert profile_check["status"] == "incomplete"
+    assert profile_check["report"]["coverage"]["rules"] == "unknown"
 
 
 def test_variant_checks_become_stale_when_source_master_advances(client, db_session):
@@ -352,7 +437,7 @@ def test_variant_later_corrupt_payload_check_blocks_earlier_pass(client, db_sess
     assert latest["input_hash"] != old["input_hash"]
     assert latest["id"] != old["id"]
     assert second.json()["ready"] is False
-    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 2
+    assert len(db_session.scalars(select(ChannelVariantCheckRun)).all()) == 8
 
 
 def test_later_variant_check_blocker_for_same_input_outranks_old_pass(client, db_session):

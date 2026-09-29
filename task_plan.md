@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6E Variant Profile/Evidence/Rights 检查
+
+- [x] /// 对照 F6E 7.2–7.5 和 Registry published Profile，先写检查 RED：X 简单正文的精确 Profile/无素材权限通过；公众号缺必需封面保持 blocker；撤权证据/图片不能保持 pass。
+- [x] /// 在既有 ChannelVariantCheckRun 实现 profile、evidence、rights 的追加式结果与诚实 coverage；不把来源 Master 的语义审查或远端能力冒充已执行。
+- [x] /// 运行定向及全量回归、Ruff、OpenSpec strict、diff-check，按实际完成范围勾任务并更新 README/progress/findings，只提交本地 main。
+
 ## 2026-09-29：F6E Variant 历史检查的实时漂移投影
 
 - [x] /// 对照已批准的 F6E 任务 3.10/7.5 与现有项目级检查读取，先补失败回归：同系列新版本、源 Master 更新、Profile 退役和 Evidence 撤权不得沿用旧 pass。
