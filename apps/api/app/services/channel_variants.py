@@ -1,17 +1,34 @@
-"""Project-owned immutable ChannelVariant history reads."""
+"""Project-owned immutable ChannelVariant history and bounded writes."""
+
+import hashlib
+import json
 
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..models import (
+    ChannelTemplateVersion,
     ChannelVariantAssetRef,
     ChannelVariantCheckRun,
     ChannelVariantEvidenceRef,
     ChannelVariantRevision,
+    ContentMasterAssetRef,
+    ContentMasterEvidenceRef,
+    ContentMasterRevision,
+    IdentitySnapshot,
     User,
+    utcnow,
 )
+from .channel_adapters import AdapterUnavailable, capability_for, executable_adapter_for
+from .channel_variant_documents import VariantDocumentError, canonical_payload
 from .content_masters import owned_unit
+from .project_events import record_project_event
+
+
+def _hash(value: object) -> str:
+    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
 
 
 def _serialize(db: Session, row: ChannelVariantRevision) -> dict:
@@ -103,4 +120,135 @@ def get_revision(db: Session, project_id: int, unit_id: int, variant_id: int, us
     row = db.get(ChannelVariantRevision, variant_id)
     if row is None or row.project_id != project_id or row.content_unit_id != unit_id:
         raise HTTPException(404, "ChannelVariant版本不存在")
+    return _serialize(db, row)
+
+
+def _current_source_id(db: Session, unit_id: int) -> int | None:
+    return db.scalar(
+        select(ContentMasterRevision.id)
+        .where(ContentMasterRevision.content_unit_id == unit_id)
+        .order_by(ContentMasterRevision.revision_no.desc())
+        .limit(1)
+    )
+
+
+def _variant_context(master: ContentMasterRevision, unit_identity_id: int | None, identity_checksum: str | None, channel_id: str, content_form: str, capability: dict, rule_hash: str) -> dict:
+    return {
+        "source_master_revision_id": master.id,
+        "source_payload_hash": master.payload_hash,
+        "source_context_hash": master.context_hash,
+        "identity_snapshot_id": unit_identity_id,
+        "identity_checksum": identity_checksum,
+        "target": {"channel": channel_id, "content_form": content_form, "artifact_kind": capability["artifact_kind"]},
+        "profile_version_id": capability["profile_version_id"],
+        "profile_version": capability["profile_version"],
+        "profile_hash": capability["profile_hash"],
+        "adapter_key": capability["adapter_key"],
+        "adapter_version": capability["adapter_version"],
+        "rule_hash": rule_hash,
+    }
+
+
+def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
+    project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
+    key = payload["variant_key"]
+    idempotency_key = payload["idempotency_key"]
+    fingerprint = _hash(payload)
+    existing = db.scalar(select(ChannelVariantRevision).where(
+        ChannelVariantRevision.content_unit_id == unit_id,
+        ChannelVariantRevision.variant_key == key,
+        ChannelVariantRevision.idempotency_key == idempotency_key,
+    ))
+    if existing is not None:
+        if existing.request_fingerprint != fingerprint:
+            raise HTTPException(409, {"code": "variant_idempotency_conflict"})
+        return _serialize(db, existing)
+    if payload.get("asset_refs") or payload.get("evidence_refs") or payload.get("llm_provenance"):
+        raise HTTPException(422, {"code": "variant_refs_or_ai_not_yet_supported"})
+    master = db.get(ContentMasterRevision, payload["source_master_revision_id"])
+    if master is None or master.project_id != project_id or master.content_unit_id != unit_id:
+        raise HTTPException(404, "源 Master 不存在")
+    if _current_source_id(db, unit_id) != master.id or master.payload_hash != _hash(master.payload_json):
+        raise HTTPException(409, {"code": "variant_source_not_current"})
+    if master.payload_hash != payload["expected_source_payload_hash"] or master.context_hash != payload["expected_source_context_hash"]:
+        raise HTTPException(409, {"code": "variant_source_conflict"})
+    if unit.identity_snapshot_id != master.identity_snapshot_id:
+        raise HTTPException(409, {"code": "variant_identity_conflict"})
+    from .content_masters import get_revision as get_master_revision
+
+    source_projection = get_master_revision(db, project_id, unit_id, master.id, user)
+    if source_projection["readiness"]["state"] == "stale":
+        raise HTTPException(409, {"code": "variant_source_context_stale"})
+    if db.scalar(select(ContentMasterAssetRef.id).where(ContentMasterAssetRef.master_revision_id == master.id).limit(1)) is not None or db.scalar(select(ContentMasterEvidenceRef.id).where(ContentMasterEvidenceRef.master_revision_id == master.id).limit(1)) is not None:
+        raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
+    try:
+        adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
+    except AdapterUnavailable as exc:
+        raise HTTPException(422, {"code": "variant_adapter_unavailable", "reason": str(exc)}) from exc
+    if payload.get("source_kind", "manual_edit") == "deterministic_adapt":
+        try:
+            expected_adapted = adapter.adapt(master.payload_json, asset_refs=[], evidence_refs=[])
+        except AdapterUnavailable as exc:
+            raise HTTPException(422, {"code": "variant_adaptation_unavailable", "reason": str(exc)}) from exc
+    else:
+        expected_adapted = None
+    try:
+        canonical = canonical_payload(capability["payload_schema"], payload["payload"])
+    except VariantDocumentError as exc:
+        raise HTTPException(422, {"code": "variant_payload_invalid", "reason": str(exc)}) from exc
+    if expected_adapted is not None and canonical != expected_adapted:
+        raise HTTPException(422, {"code": "variant_adapted_output_mismatch"})
+    head = db.scalar(select(ChannelVariantRevision).where(
+        ChannelVariantRevision.content_unit_id == unit_id,
+        ChannelVariantRevision.variant_key == key,
+    ).order_by(ChannelVariantRevision.revision_no.desc()).limit(1))
+    if (head.revision_no if head else 0) != payload["expected_revision"]:
+        raise HTTPException(409, {"code": "variant_revision_conflict"})
+    if head is not None and (head.channel_id != payload["channel_id"] or head.content_form != payload["content_form"]):
+        raise HTTPException(409, {"code": "variant_series_target_conflict"})
+    profile = db.get(ChannelTemplateVersion, capability["profile_version_id"])
+    form_profile = (profile.profile_json or {}).get("content_forms", {}).get(payload["content_form"], {})
+    rule_hash = _hash(form_profile.get("rule_sets") or [])
+    identity = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
+    context = _variant_context(master, unit.identity_snapshot_id, identity.checksum if identity else None, payload["channel_id"], payload["content_form"], capability, rule_hash)
+    row = ChannelVariantRevision(
+        project_id=project.id, content_unit_id=unit_id, variant_key=key, revision_no=payload["expected_revision"] + 1,
+        parent_revision_id=head.id if head else None, source_master_revision_id=master.id,
+        source_master_payload_hash=master.payload_hash, source_master_context_hash=master.context_hash,
+        source_channel_id=master.channel_id, source_content_form=master.content_form,
+        identity_snapshot_id=unit.identity_snapshot_id, channel_id=payload["channel_id"], content_form=payload["content_form"],
+        artifact_kind=capability["artifact_kind"], profile_template_version_id=profile.id,
+        profile_key=f"{payload['channel_id']}/{payload['content_form']}", profile_version=str(profile.version), profile_hash=capability["profile_hash"],
+        adapter_key=capability["adapter_key"], adapter_version=capability["adapter_version"], rule_hash=rule_hash,
+        payload_schema=capability["payload_schema"], payload_json=canonical, payload_hash=_hash(canonical), context_hash=_hash(context),
+        source_kind=payload.get("source_kind", "manual_edit"), edit_summary_json=payload.get("edit_summary", {}),
+        idempotency_key=idempotency_key, request_fingerprint=fingerprint, created_by=user.email, created_at=utcnow(),
+    )
+    db.add(row)
+    try:
+        db.flush()
+        record_project_event(db, project_id=project_id, event_type="channel_variant.saved", actor=user.email, entity_type="channel_variant_revision", entity_id=row.id, payload={"unit_id": unit_id, "variant_key": key, "revision_no": row.revision_no})
+        db.flush()
+        db.expire_all()
+        project, unit = owned_unit(db, project_id, unit_id, user)
+        master = db.get(ContentMasterRevision, row.source_master_revision_id)
+        identity = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
+        try:
+            latest_capability = capability_for(db, master.payload_schema, row.channel_id, row.content_form)
+        except AdapterUnavailable as exc:
+            db.rollback()
+            raise HTTPException(409, {"code": "variant_profile_changed"}) from exc
+        if not latest_capability.get("executable"):
+            db.rollback()
+            raise HTTPException(409, {"code": "variant_profile_changed"})
+        latest_context = _variant_context(master, unit.identity_snapshot_id, identity.checksum if identity else None, row.channel_id, row.content_form, latest_capability, rule_hash)
+        current_master = get_master_revision(db, project_id, unit_id, master.id, user)
+        if project.status == "archived" or unit.status == "archived" or unit.identity_snapshot_id != master.identity_snapshot_id or current_master["readiness"]["state"] == "stale" or _current_source_id(db, unit_id) != master.id or master.payload_hash != _hash(master.payload_json) or _hash(latest_context) != row.context_hash:
+            db.rollback()
+            raise HTTPException(409, {"code": "variant_context_conflict"})
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, {"code": "variant_concurrent_conflict"}) from exc
+    db.refresh(row)
     return _serialize(db, row)

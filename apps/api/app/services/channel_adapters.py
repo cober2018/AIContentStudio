@@ -37,7 +37,7 @@ class ChannelAdapter(Protocol):
 
     def validate(self, payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> None: ...
 
-    def adapt(self, source_payload: dict) -> dict: ...
+    def adapt(self, source_payload: dict, *, asset_refs: list[dict], evidence_refs: list[dict]) -> dict: ...
 
     def preview(self, payload: dict) -> dict: ...
 
@@ -59,6 +59,85 @@ FIRST_BATCH: dict[tuple[str, str], AdapterContract] = {
 
 # Registration means the executable implementation passed its own acceptance gates.
 _EXECUTABLE_ADAPTERS: dict[tuple[str, str], ChannelAdapter] = {}
+
+
+class TextChannelAdapter:
+    """Conservative deterministic subset; unsupported structure requires explicit editing."""
+
+    def __init__(self, channel: str, content_form: str):
+        contract = FIRST_BATCH.get((channel, content_form))
+        if contract is None or "text.master.v2" not in contract.accepted_master_schemas:
+            raise AdapterUnavailable("unsupported_text_target")
+        self.contract = contract
+
+    def capabilities(self) -> dict:
+        return {"deterministic_subset": True, "model_assisted": False, "remote_verified": False}
+
+    def canonicalize(self, payload: object) -> dict:
+        from .channel_variant_documents import canonical_payload
+
+        return canonical_payload(self.contract.payload_schema, payload)
+
+    def validate(self, payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> None:
+        from .channel_variant_documents import canonical_payload
+
+        canonical_payload(self.contract.payload_schema, payload, asset_refs=asset_refs, evidence_refs=evidence_refs)
+
+    def adapt(self, source_payload: dict, *, asset_refs: list[dict], evidence_refs: list[dict]) -> dict:
+        from .channel_variant_documents import VariantDocumentError, canonical_payload
+        from .text_documents import TextDocumentError
+        from .text_documents import canonical_payload as canonical_text_payload
+
+        if asset_refs or evidence_refs:
+            raise AdapterUnavailable("source_refs_require_explicit_mapping")
+        if not isinstance(source_payload, dict) or not isinstance(source_payload.get("document"), dict):
+            raise AdapterUnavailable("invalid_source_document")
+        if source_payload["document"].get("citations"):
+            raise AdapterUnavailable("source_citations_require_explicit_mapping")
+        try:
+            source = canonical_text_payload(source_payload)
+        except TextDocumentError as exc:
+            raise AdapterUnavailable("invalid_source_document") from exc
+        blocks = source["document"]["blocks"]
+        if not blocks or any(block["type"] != "paragraph" or any(run["marks"] for run in block["content"]) for block in blocks):
+            raise AdapterUnavailable("source_structure_requires_explicit_mapping")
+        text_blocks = [{"id": block["id"], "order": index, "text": "".join(run["text"] for run in block["content"])} for index, block in enumerate(blocks)]
+        if self.contract.payload_schema == "wechat.article.v1":
+            proposal = {"title": source["title"], "blocks": [{**block, "kind": "paragraph"} for block in text_blocks]}
+        elif self.contract.payload_schema == "x.thread.v1":
+            proposal = {"posts": text_blocks}
+        else:
+            if len(text_blocks) != 1:
+                raise AdapterUnavailable("single_post_requires_one_block")
+            proposal = {"text": text_blocks[0]["text"]}
+        try:
+            return canonical_payload(self.contract.payload_schema, proposal)
+        except VariantDocumentError as exc:
+            raise AdapterUnavailable("adapted_payload_invalid") from exc
+
+    def preview(self, payload: dict) -> dict:
+        return {"schema": self.contract.payload_schema, "payload": self.canonicalize(payload)}
+
+    def render(self, payload: dict) -> dict:
+        item = self.canonicalize(payload)
+        if "blocks" in item:
+            text = item["title"] + "\n\n" + "\n\n".join(block["text"] for block in item["blocks"])
+        elif "posts" in item:
+            text = "\n\n".join(post["text"] for post in item["posts"])
+        else:
+            text = item["text"]
+        return {"artifact_kind": "text", "text": text}
+
+    def required_checks(self, payload: dict) -> tuple[str, ...]:
+        self.canonicalize(payload)
+        return ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
+
+    def package_projection(self, payload: dict) -> dict:
+        return self.render(payload)
+
+
+for _text_target in (("wechat", "article"), ("x", "thread"), ("x", "single")):
+    _EXECUTABLE_ADAPTERS[_text_target] = TextChannelAdapter(*_text_target)
 
 
 def capability_for(db: Session, source_schema: str, channel: str, content_form: str) -> dict:
@@ -114,3 +193,10 @@ def capability_for(db: Session, source_schema: str, channel: str, content_form: 
         "adapter_version": contract.version,
         "payload_schema": contract.payload_schema,
     }
+
+
+def executable_adapter_for(db: Session, source_schema: str, channel: str, content_form: str) -> tuple[ChannelAdapter, dict]:
+    capability = capability_for(db, source_schema, channel, content_form)
+    if not capability["executable"]:
+        raise AdapterUnavailable(capability["reason"] or "adapter_unavailable")
+    return _EXECUTABLE_ADAPTERS[(channel, content_form)], capability

@@ -1,8 +1,13 @@
 # 配置记录
 
+## 2026-09-29 F6E 首个 Variant 写入边界
+
+- 公众号文章、X 推串及单条仅实现无素材/证据引用的简单 Text v2 确定性子集；复杂结构、citation、exact refs 不能被静默丢弃，当前服务对其 fail closed。注册的 published Profile 不等于 Graphic/Video Adapter 已可执行。
+- Variant 写入按项目/Unit 授权、精确 Master/Identity/Profile、稳定系列 CAS、幂等键与不可改目标验证；Profile 在事务提交前改变时回滚 Variant 和 ProjectEvent。当前仍需处理真实 refs 原子持久化、live rights/evidence、AI receipt、检查与 v5 Candidate，不能把已保存 Variant 等同可冻结/发布。
+
 ## 2026-09-29 F6E 独立规格结论
 
-- `x/thread` 与 `x/single` 的 published Profile 都存在，但注册配置并不证明 Adapter 已实现；当前五种受控 form 的 capability 显式返回 `configured=true, executable=false, verified=false`，旧 `x_thread/thread` 不在 v5 矩阵内。
+- `x/thread` 与 `x/single` 的 published Profile 都存在，但注册配置本身不证明 Adapter 已实现；现仅公众号文章、X 推串和单条的无引用 Text v2 子集可执行，Graphic/Video 仍不可执行，所有目标均未验证远端能力；旧 `x_thread/thread` 不在 v5 矩阵内。
 - 五种 Variant canonical payload 在服务端限制字段、稳定 ID/顺序与长度；引用了图片槽位或 citation 却缺少对应精确素材 hash / FactPackItem checksum+locator 时拒绝。纯校验通过不代表当前项目素材可见、live rights 或真实字节已核验；这些还要在项目级保存与冻结闸门完成。
 - Variant 只读 API 必须先核项目 owner 和 Unit 归属，再查行；只判断 `variant_id` 存在会造成跨项目历史泄漏。当前 list/current/detail 均复用 `owned_unit()`，detail 再确认行的 project/unit，foreign raw-ID 回归为 404。
 - 当前 Registry 的 published Profile 真源是 `ChannelTemplateVersion`，所以 Variant 除 channel/form/hash 外还须精确保存 `profile_template_version_id` 外键；只存字符串版本会丢掉不可变配置来源。此字段已加入计划内 Variant 表。

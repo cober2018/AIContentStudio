@@ -8,16 +8,16 @@ from app.services.channel_adapters import AdapterUnavailable, capability_for
 
 
 @pytest.mark.parametrize(
-    ("schema", "channel", "form", "artifact_kind"),
+    ("schema", "channel", "form", "artifact_kind", "executable"),
     [
-        ("text.master.v2", "wechat", "article", "text"),
-        ("text.master.v2", "x", "thread", "text"),
-        ("text.master.v2", "x", "single", "text"),
-        ("graphic.master.v2", "xiaohongshu", "image_note", "image"),
-        ("video.master.v2", "douyin", "spoken_script", "script"),
+        ("text.master.v2", "wechat", "article", "text", True),
+        ("text.master.v2", "x", "thread", "text", True),
+        ("text.master.v2", "x", "single", "text", True),
+        ("graphic.master.v2", "xiaohongshu", "image_note", "image", False),
+        ("video.master.v2", "douyin", "spoken_script", "script", False),
     ],
 )
-def test_first_batch_requires_exact_published_profile_and_is_not_executable_yet(db_session, schema, channel, form, artifact_kind):
+def test_first_batch_requires_exact_published_profile_and_only_implemented_adapter_executes(db_session, schema, channel, form, artifact_kind, executable):
     seed_v1_channel_profiles(db_session)
     db_session.commit()
     result = capability_for(db_session, schema, channel, form)
@@ -25,9 +25,9 @@ def test_first_batch_requires_exact_published_profile_and_is_not_executable_yet(
     assert result["profile_version_id"] is not None
     assert result["artifact_kind"] == artifact_kind
     assert result["configured"] is True
-    assert result["executable"] is False
+    assert result["executable"] is executable
     assert result["verified"] is False
-    assert result["reason"] == "adapter_not_implemented"
+    assert result["reason"] == (None if executable else "adapter_not_implemented")
 
 
 @pytest.mark.parametrize(
