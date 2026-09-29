@@ -2,20 +2,29 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 assert.equal(process.env.F6D_ISOLATED_ACCEPTANCE, "yes", "Run only with a dedicated temporary database");
 assert.equal(process.env.F6D_BROWSER_URL, "http://127.0.0.1:15662");
 assert.equal(process.env.F6D_BROWSER_API, "http://127.0.0.1:18262/api/v1");
 assert.match(process.env.F6D_ACCEPTANCE_DB || "", /^sqlite:\/\/\/\/tmp\/aicontent-f6d-acceptance\.[^/]+\/studio\.db$/);
 const require = createRequire(import.meta.url);
+const isolatedDbPath = process.env.F6D_ACCEPTANCE_DB.slice("sqlite:///".length);
+const isolatedMediaRoot = resolve(join(dirname(isolatedDbPath), "media"));
+assert.equal(resolve(process.env.AI_STUDIO_MEDIA_ROOT || "."), isolatedMediaRoot, "API media must use the same temporary acceptance directory");
 const { chromium } = require("playwright");
 const ui = process.env.F6D_BROWSER_URL;
 const apiUrl = process.env.F6D_BROWSER_API;
 const artifacts = mkdtempSync(join(tmpdir(), "aicontent-f6d-browser-evidence-"));
 const report = { artifacts, gates: [], ids: {}, pageErrors: [] };
+function assertIsolatedMaterial(revision) {
+  const directory = join(isolatedMediaRoot, "material", revision.content_hash.slice(0, 2));
+  const matches = readdirSync(directory).filter((name) => name.startsWith(`${revision.content_hash}.`));
+  assert.equal(matches.length, 1, "Uploaded bytes must exist in the isolated material directory");
+  assert.equal(createHash("sha256").update(readFileSync(join(directory, matches[0]))).digest("hex"), revision.content_hash);
+}
 async function api(path, data, method = data === undefined ? "GET" : "POST") {
   const response = await fetch(`${apiUrl}${path}`, { method, headers: { "X-Studio-User": "admin@studio.local", ...(data === undefined ? {} : { "Content-Type": "application/json" }) }, body: data === undefined ? undefined : JSON.stringify(data) });
   const body = await response.text();
@@ -55,6 +64,7 @@ try {
   const materials = await api("/materials?kind=video");
   const material = await api(`/materials/${materials[0].id}`);
   const revision = material.revisions[0];
+  assertIsolatedMaterial(revision);
   await api(`${pbase}/materials/references`, { material_revision_id: revision.id });
   report.ids.materialRevision = revision.id;
   const audioFile = join(artifacts, "voice.mp3");
@@ -66,6 +76,7 @@ try {
   const audioMaterials = await api("/materials?kind=audio");
   const audioMaterial = await api(`/materials/${audioMaterials[0].id}`);
   const audioRevision = audioMaterial.revisions[0];
+  assertIsolatedMaterial(audioRevision);
   await api(`${pbase}/materials/references`, { material_revision_id: audioRevision.id });
   report.ids.audioRevision = audioRevision.id;
   const route = `${ui}/projects/${project.id}/units/${unit.id}/production`;
