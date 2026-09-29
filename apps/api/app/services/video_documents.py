@@ -144,6 +144,8 @@ def canonical_payload(raw: object) -> dict:
                     _fail("video_timeline_shot_invalid")
             if "material_revision_id" in item:
                 normalized["material_revision_id"] = _revision_id(item["material_revision_id"], "video_timeline_media_invalid")
+            elif track["kind"] in {"audio", "music"}:
+                _fail("video_audio_placement_unbound")
             if "trim_start_ms" in item or "trim_end_ms" in item:
                 trim_start = _int(item.get("trim_start_ms", 0), 0, _MAX_DURATION_MS, "video_trim_invalid")
                 trim_end = _int(item.get("trim_end_ms"), 1, _MAX_DURATION_MS, "video_trim_invalid")

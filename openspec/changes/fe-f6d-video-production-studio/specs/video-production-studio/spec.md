@@ -36,6 +36,8 @@ Every source visual, audio, music, cover and final render use SHALL bind an exac
 ### Requirement: Video timeline is bounded content assembly
 The Studio SHALL support ordered shots, bounded duration/start/end/trim, source framing, voice/audio, subtitle cue editing/import, overlays, music and exact cover selection without an unrestricted NLE/effects graph. Imported cues MUST pass the same bounded timing/text validation before an explicit Master save. A local preview MUST NOT be described as a verified final render.
 
+Recorded/TTS voice and music declarations identify exact whole-composition audio sources; they do not imply a verified Provider execution. Each placed `audio` or `music` timeline item MUST declare an exact source MaterialRevision, and its timing/trim/volume MUST pass the same bounded validation before save. Subtitle cues MUST remain in canonical order without overlap. An empty audio/music track is a valid editable draft; an unbound placed item is not.
+
 #### Scenario: Invalid timing
 - **WHEN** a shot, track item or subtitle cue exceeds the document duration or violates its ordering/bounds
 - **THEN** the server rejects the revision with a field-level reason and no partial media reference writes
