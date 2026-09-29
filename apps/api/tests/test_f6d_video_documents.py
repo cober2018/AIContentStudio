@@ -127,6 +127,32 @@ def test_video_v2_rejects_shot_and_timeline_duration_inconsistency(mutation):
         _canonical(payload)
 
 
+@pytest.mark.parametrize("kind", ["audio", "music"])
+def test_video_v2_rejects_unbound_placed_audio(kind):
+    payload = _document()
+    payload["timeline"]["tracks"].append({
+        "id": "sound", "order": 1, "kind": kind,
+        "items": [{"id": "sound-1", "order": 0, "start_ms": 0, "end_ms": 2_000}],
+    })
+    with pytest.raises(ValueError, match="video_audio_placement_unbound"):
+        _canonical(payload)
+
+
+def test_video_v2_allows_empty_audio_track_and_whole_composition_voice_music():
+    payload = _document()
+    payload["timeline"]["tracks"].append({"id": "sound", "order": 1, "kind": "audio", "items": []})
+    payload["voice"] = {"mode": "recorded", "material_revision_id": 18}
+    payload["music"] = {"material_revision_id": 19}
+    assert _canonical(payload) == payload
+
+
+def test_video_v2_rejects_overlapping_subtitle_cues():
+    payload = _document()
+    payload["subtitles"]["cues"].append({"id": "cue-2", "order": 1, "text": "重叠", "start_ms": 1_000, "end_ms": 3_000})
+    with pytest.raises(ValueError, match="video_cue_overlap"):
+        _canonical(payload)
+
+
 @pytest.mark.parametrize("overlay", [
     {"id": "overlay-1", "order": 0, "text": "字幕条", "start_ms": 0, "end_ms": 1_000, "x": 0.5},
     {"id": "overlay-1", "order": 0, "text": "", "start_ms": 0, "end_ms": 1_000, "x": 0.5, "y": 0.5},

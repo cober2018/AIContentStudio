@@ -1,5 +1,9 @@
 # 配置记录
 
+## 2026-09-29 F6D 音轨素材位置
+
+- Video v2 原先允许 audio/music 时间线片段不声明 MaterialRevision，因而没有对应精确素材 ref 仍能保存。标准 change 现明确：空音轨合法，但已放置的音频片段必须指向精确素材；全片 voice/music 声明仍按原契约作为独立 source，不冒称 TTS/ASR 执行。字幕 cue 的顺序和不重叠既有服务端校验，补定向回归。后端全量 986 passed/2 skipped、strict 30/30、相关 Ruff/diff PASS；没有实际浏览器或成片验证。
+
 ## 2026-09-29 F6D 冻结 Candidate 读边界
 
 - 原 `_verify_frozen_production()` 仅覆盖 Text/Graphic v2，Video v2 即使缺失最终成片 ref、输出 MIME 错误或人工 attestation 不一致，Review 仍可显示。现加入 Video v2 的冻结自洽校验，并冻结 published profile 供纯函数重算 render-input hash；输出仍只标记 `origin=manual`。Package、live rights 与浏览器端到端仍需后续单独验收，不能据此宣称 F6D 完成。

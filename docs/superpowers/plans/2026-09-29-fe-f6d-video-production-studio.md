@@ -22,6 +22,7 @@ Apply the reviewed `fe-f6d-video-production-studio` change to the local `main` c
 - [x] /// Red: prove shot duration can exceed timeline and a shot-linked item can exceed its shot; Green: reject both in canonical Video v2 parsing while retaining empty draft and existing shot reuse; rerun Video/F6A/F6C focused regressions.
 - [x] /// Red: prove an overlay without both coordinates or with blank text can persist; Green: require explicit bounded x/y and visible text, retaining save-time exact image-kind/bytes/rights validation for cover assets.
 - [x] /// Red: prove Video v2 readiness omits its script/shot/timeline preview; Green: return only canonical known structure with an explicit local-assembly label and false final-render verification claim.
+- [x] /// Red: prove a placed audio/music timeline item without exact MaterialRevision persists; Green: reject it while preserving empty tracks, whole-composition voice/music declarations and bounded non-overlapping subtitle cues. Focused 34 passed, full backend 986 passed/2 skipped, strict 30/30, Ruff/diff PASS.
 - [ ] /// Add Video checks/freshness, frozen Candidate integrity, Review diff/preview and byte-exact local package; regress Video v1/Text/Graphic.
 - [ ] /// Build typed Video-only Studio after backend closure, keep common Production/Text/Graphic bundles isolated.
 - [ ] /// Run isolated browser Video flow, full backend/frontend/FE-P1/OpenSpec/lint/diff gates and independent reviews; close only proven tasks and commit locally.
