@@ -5,9 +5,11 @@ approved 引用不可变（替换=新 Revision）；历史 DraftMedia 可读。
 """
 
 import hashlib
+import io
 import os
 import subprocess
 import sys
+import wave
 
 import pytest
 
@@ -17,6 +19,20 @@ from app.services import materials as materials_service
 EDITOR = {"X-Studio-User": "editor@studio.local"}
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"rest-of-png-bytes" * 8
+
+
+def test_riff_wave_is_identified_without_client_mime_and_other_riff_is_not():
+    from app.services.materials import sniff_mime
+
+    output = io.BytesIO()
+    with wave.open(output, "wb") as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(16000)
+        audio.writeframes(b"\x00\x00" * 160)
+    assert sniff_mime(output.getvalue(), None) == "audio/wav"
+    assert sniff_mime(b"RIFF\x00\x00\x00\x00WEBPVP8 ", None) == "image/webp"
+    assert sniff_mime(b"RIFF\x00\x00\x00\x00FAKE", None) == "application/octet-stream"
 
 
 def test_media_root_can_be_isolated_for_acceptance(tmp_path):

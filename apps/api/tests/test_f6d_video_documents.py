@@ -5,6 +5,7 @@ import importlib
 import importlib.util
 import io
 import json
+import wave
 import zipfile
 from copy import deepcopy
 from types import SimpleNamespace
@@ -31,6 +32,43 @@ def _document() -> dict:
         "music": {},
         "cover": {},
     }
+
+
+def test_video_v2_accepts_exact_project_recorded_wav(client, db_session, tmp_path, monkeypatch):
+    from app.models import ProjectMaterialReference
+    from app.services import asset_media
+
+    monkeypatch.setattr(asset_media, "MEDIA_ROOT", tmp_path / "media")
+    output = io.BytesIO()
+    with wave.open(output, "wb") as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(16000)
+        audio.writeframes(b"\x00\x00" * 160)
+    headers = {"X-Studio-User": "video-wav@studio.local"}
+    upload = client.post(
+        "/api/v1/materials/upload?kind=audio&public_use_allowed=true&rights_status=cleared",
+        files={"file": ("voice.wav", output.getvalue(), "audio/wav")},
+        headers=headers,
+    )
+    assert upload.status_code == 201, upload.text
+    revision = upload.json()["revisions"][0]
+    assert revision["mime_type"] == "audio/wav"
+    persona = client.post("/api/v1/content-personas", json={"name": "录音作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "录音项目"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "视频", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision["id"], origin="system_library", status="active"))
+    db_session.commit()
+    document = _document()
+    document["voice"] = {"mode": "recorded", "material_revision_id": revision["id"]}
+    refs = [{"material_revision_id": revision["id"], "content_hash": revision["content_hash"], "role": "voice_audio", "slot_key": "voice", "sort_order": 0, "placement": {"voice": "main"}}]
+    response = client.post(
+        f"/api/v1/content-projects/{project}/units/{unit}/master-revisions",
+        json={"idempotency_key": "recorded-wav", "payload_schema": "video.master.v2", "payload": document, "asset_refs": refs},
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["assets"][0]["content_hash"] == revision["content_hash"]
 
 
 def test_video_v2_structured_diff_uses_stable_ids_without_whole_video_similarity():
@@ -810,20 +848,38 @@ def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_
     db_session.add(source_revision)
     db_session.flush()
     db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=source_revision.id, origin="system_library", status="active"))
+    voice_output = io.BytesIO()
+    with wave.open(voice_output, "wb") as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(16000)
+        audio.writeframes(b"\x00\x00" * 160)
+    voice_bytes = voice_output.getvalue()
+    voice_file = tmp_path / "voice.wav"
+    voice_file.write_bytes(voice_bytes)
+    voice_material = Material(title="录音素材", kind="audio", status="active")
+    db_session.add(voice_material)
+    db_session.flush()
+    voice_revision = MaterialRevision(material_id=voice_material.id, content_hash=hashlib.sha256(voice_bytes).hexdigest(), file_path=str(voice_file), mime_type="audio/wav", status="active", public_use_allowed=True, rights_status="cleared")
+    db_session.add(voice_revision)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=voice_revision.id, origin="system_library", status="active"))
     db_session.commit()
 
     document = _document()
     document["shots"][0]["source_material_revision_id"] = source_revision.id
+    document["voice"] = {"mode": "recorded", "material_revision_id": voice_revision.id}
     document["render_asset_ref"] = {"material_revision_id": revision.id}
     refs = [
         {"material_revision_id": source_revision.id, "content_hash": source_revision.content_hash, "role": "shot_source", "slot_key": "shot-1", "sort_order": 0, "placement": {"shot_id": "shot-1"}},
-        {"material_revision_id": revision.id, "content_hash": revision.content_hash, "role": "render_output", "slot_key": "final", "sort_order": 1, "placement": {"render": "final"}},
+        {"material_revision_id": voice_revision.id, "content_hash": voice_revision.content_hash, "role": "voice_audio", "slot_key": "voice", "sort_order": 1, "placement": {"voice": "main"}},
+        {"material_revision_id": revision.id, "content_hash": revision.content_hash, "role": "render_output", "slot_key": "final", "sort_order": 2, "placement": {"render": "final"}},
     ]
     path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
     body = {"payload_schema": "video.master.v2", "payload": document, "asset_refs": refs, "content_form": "final"}
     wrong_document = deepcopy(document)
     wrong_document["render_asset_ref"] = {"material_revision_id": source_revision.id}
-    wrong_refs = [refs[0], {**refs[1], "material_revision_id": source_revision.id, "content_hash": source_revision.content_hash}]
+    wrong_refs = [refs[0], refs[1], {**refs[2], "material_revision_id": source_revision.id, "content_hash": source_revision.content_hash}]
     assert client.post(path, json={**body, "idempotency_key": "wrong-final", "payload": wrong_document, "asset_refs": wrong_refs}, headers=headers).status_code == 422
     assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 0
     draft = client.post(path, json={**body, "idempotency_key": "draft"}, headers=headers)
@@ -903,7 +959,8 @@ def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_
         assert included["candidate"]["hash"] == candidate["candidate_hash"]
         assert archive.read("render-1.mp4") == video_bytes
         assert archive.read(f"media/00-{source_revision.id}.png") == source_bytes
-        assert archive.read(f"media/01-{revision.id}.mp4") == video_bytes
+        assert archive.read(f"media/01-{voice_revision.id}.wav") == voice_bytes
+        assert archive.read(f"media/02-{revision.id}.mp4") == video_bytes
         assert "content.md" not in archive.namelist()
         assert included["remote_call"] is False
     asset = db_session.get(ContentAsset, candidate["id"])
