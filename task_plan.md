@@ -5,6 +5,7 @@
 - [x] /// F6D 冻结 Video v2 候选增加独立读时一致性校验：规范化文档、Master payload hash、精确成片 ref/MP4、已冻结 profile 与 render-input hash、人工 attestation；先 RED 后 GREEN，后端全量与 strict 门禁通过。Review 的冻结读已保护，Package/浏览器全链路仍待后续任务验证。
 - [x] /// F6D 3.1：服务端拒绝镜头时长超过时间线，或绑定镜头的片段时长超过镜头；先观察两条 RED，再确认定向回归通过，保留空草稿合法性。
 - [x] /// F6D 3.3：叠层文字必须非空，x/y 必须同时存在并在 0–1 内；封面继续由 Master 保存时的 image/字节/权利闸门约束。负向先 RED，正向与三形态相关定向回归通过。
+- [x] /// F6D 3.4：从已保存 canonical Video v2 文档确定性投影脚本、镜头、时间线、语音、字幕、叠层、音乐、封面；明确 `local_assembly_preview` 和未验证成片，不把结构预览当视频渲染。
 - [x] /// 从 `main@361265d` 与 F8 用户源包出发，审计 auth/startup/health/metrics/media/worker 当前实现，区分已有功能与生产缺口。
 - [x] /// 以 `openspec-propose` 归位 F8 proposal/design、新 Production Readiness 规格和 Settings delta；为原十条要求补可验收场景及当前代码边界。
 - [x] /// 审核 F8 原 91 项任务保留与八项现状安全门禁，运行全库 OpenSpec strict 30/30 和 diff-check；仅规格检查点准备本地提交。

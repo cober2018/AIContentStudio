@@ -21,6 +21,7 @@ Apply the reviewed `fe-f6d-video-production-studio` change to the local `main` c
 - [x] /// Red: add frozen Video v2 Candidate integrity cases for canonical content, exact sole MP4 output/declaration/ref and manual input-hash binding; Green: extend Review frozen verifier without changing v1/Text/Graphic paths; rerun targeted and full backend gates. Package/browser acceptance remains a separate pending gate.
 - [x] /// Red: prove shot duration can exceed timeline and a shot-linked item can exceed its shot; Green: reject both in canonical Video v2 parsing while retaining empty draft and existing shot reuse; rerun Video/F6A/F6C focused regressions.
 - [x] /// Red: prove an overlay without both coordinates or with blank text can persist; Green: require explicit bounded x/y and visible text, retaining save-time exact image-kind/bytes/rights validation for cover assets.
+- [x] /// Red: prove Video v2 readiness omits its script/shot/timeline preview; Green: return only canonical known structure with an explicit local-assembly label and false final-render verification claim.
 - [ ] /// Add Video checks/freshness, frozen Candidate integrity, Review diff/preview and byte-exact local package; regress Video v1/Text/Graphic.
 - [ ] /// Build typed Video-only Studio after backend closure, keep common Production/Text/Graphic bundles isolated.
 - [ ] /// Run isolated browser Video flow, full backend/frontend/FE-P1/OpenSpec/lint/diff gates and independent reviews; close only proven tasks and commit locally.
