@@ -75,15 +75,15 @@ Graphic v2 SHALL use append-only input-bound structure, text/fact/identity, exac
 - **THEN** the diff names both changes by stable IDs and Review presents the frozen rendered content and current check status
 
 ### Requirement: Graphic provider hooks cannot fake capability or rights
-Search/generation/variation controls SHALL report configured/executable/verified availability truthfully. A selected or generated image SHALL become a MaterialRevision with exact bytes, source/provider/version/prompt and rights provenance and an explicit project reference before a canvas can use it. Provider success alone MUST NOT grant public or commercial use.
+Search/generation/variation/renderer controls SHALL report configured/executable/verified availability truthfully. Without a verified project-scoped provider capability, they MUST fail closed and MUST NOT create a fake MaterialRevision, grant public/commercial rights or claim renderer provenance. Graphic canvas use of an existing uploaded/library MaterialRevision still requires an explicit project-visible reference and live byte/hash/rights validation. F7 owns verified external result acceptance, provenance/license materialization and project attachment. F7 provider execution/result responses, errors and provenance metadata MUST NOT expose keys, tokens, cookies, credential-bearing URLs, raw provider configuration or secret headers, and F7 MUST verify this with negative tests. The F6C disconnected state is not a claim that those F7 capabilities exist.
 
 #### Scenario: Disconnected provider
 - **WHEN** no executable provider is configured
 - **THEN** the Studio/API reports unavailable and creates no fake MaterialRevision or generated image
 
-#### Scenario: Accepted provider result
-- **WHEN** a configured provider returns real bytes and a user accepts them
-- **THEN** a versioned MaterialRevision with provenance is created and rights remain subject to explicit live validation
+#### Scenario: Provider-shaped request without verification
+- **WHEN** a client invokes project-scoped search, generation or variation while no corresponding provider is verified
+- **THEN** the request is rejected as unavailable and no new MaterialRevision, project reference or rights grant is created
 
 ### Requirement: Graphic Studio is a professional but bounded editor
 The Graphic-only frontend SHALL support canvas create/duplicate/delete/reorder, stage zoom/selection, text/image/chart/shape layers, bounded geometry, layer order/visibility/lock, exact project asset selection, history/diff/check/readiness and explicit Master save. Workflow dirty/save SHALL remain independent. Historical/archived content SHALL be read-only.

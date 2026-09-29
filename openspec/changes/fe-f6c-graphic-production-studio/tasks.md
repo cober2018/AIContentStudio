@@ -62,10 +62,7 @@
 - [x] 5.1 Expose project-scoped Material search capability state and request boundary.
 - [x] 5.2 Expose project-scoped image generation/variation capability state and request boundary.
 - [x] 5.3 Return typed unavailable when no configured/executable provider exists; create no fake output.
-- [ ] 5.4 Materialize an actually accepted provider result as MaterialRevision before canvas use.
-- [ ] 5.5 Preserve source/provider/version/prompt/hash/license metadata and do not auto-grant public/commercial rights.
-- [ ] 5.6 Bind accepted revision to the Project explicitly and mask provider secrets in responses.
-- [ ] 5.7 Verify unavailable/mock/provider provenance and live-rights negative paths.
+- [x] 5.4 Audit provider-shaped requests as unavailable/no-write in F6C; transfer accepted-result materialization, metadata/license, Project attachment and provenance/live-rights tests to F7 tasks 4.3–4.8 and 5.3–5.9. Require an additional F7 provider-response redaction task and negative tests per design decision 6; F7 source tasks 1.4/9.6 alone are insufficient. Do not claim any transferred capability implemented here.
 - [x] 5.8 Leave real-provider verification and remote publishing to F7.
 
 ## 6. Professional Graphic Studio frontend
