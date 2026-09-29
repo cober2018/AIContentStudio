@@ -146,10 +146,10 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 
 ### FE-F6D Video Production Studio（仅标准 OpenSpec 草案，未 apply）
 
-- PRD/需求背景：North Star 要求 Video 从 F6A 的 `video.master.v1` JSON 壳升级为可追溯的脚本、镜头、时间线、字幕、配音与最终视频生产体验；F6C 仍需独立复核通过，不能把当前草案当实施许可。
+- PRD/需求背景：North Star 要求 Video 从 F6A 的 `video.master.v1` JSON 壳升级为可追溯的脚本、镜头、时间线、字幕、配音与最终视频生产体验；F6C 已完成独立复核，F6D 草案仍须先经过自身规格审阅。
 - 目录结构：`openspec/changes/fe-f6d-video-production-studio/` 已有 proposal、design、tasks 和 Video Studio、Production Core、Review、FE-P1 四份 delta；用户总包源文件保持原样。
 - 已完成：从用户源包校准为 73 项可跟踪任务与可验证 Scenario；新增 v1 显式 fork、精确媒体位置、输入绑定 render、Provider 断连无写入和 F7 真实结果/脱敏移交边界。OpenSpec 全库 strict 27/27 通过。未改 F6D 业务代码。
-- 待完成/TODO：独立规格审阅、F6C 74/74 与本地 main 基线复核、用户按项目规则单独确认 apply；Video v2 后端/前端、浏览器和完整门禁均未启动。
+- 待完成/TODO：F6C 74/74 已核实；F6D 独立规格审阅、最新本地 main 基线复核及项目规则下的 apply 门槛仍需处理；Video v2 后端/前端、浏览器和完整门禁均未启动。
 - 关键设计决策：`video.master.v2` 是唯一可编辑真源；派生剪辑只有在存在明确编辑或确定性本地变换产生的有效 v2 内容时才生成追加式子修订，不能只记转换意图或把未验证 Provider 当成功。现有 MaterialRevision/ContentMasterRevision/Candidate v4 继续是真源。未验证 Video/TTS/ASR 不制造成功或公开使用权，真实 Provider 接收归 F7。
 - 依赖与启动：沿用本 README 现有 API/Vite 启动方式，目标零新表/零迁移；若实施证明需新持久化结构，应先暂停修订规格，不直接建表。不 push/deploy/运行生产迁移。
 
@@ -158,7 +158,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - PRD/需求背景：North Star 要求在可复用 ContentMaster 与审批候选之间形成真正的渠道适配层；当前无持久 ChannelVariant，Project Matrix 只能直接管理 ContentUnit。F6E 仅先把用户总包方案归位，实施须等 F6D 门禁和项目规则下的单独确认。
 - 目录结构：`openspec/changes/fe-f6e-channel-variants-content-matrix/` 包含 proposal、design、tasks、新 ChannelVariant 规格及 Matrix、Production Core、Project 读模型、Review、FE-P1 五份 delta；用户原总包不改。
 - 已完成：规格界定非写入 Matrix 建议、追加式 Variant/精确引用/检查、Candidate v5、Review/Approval/本地包分派与旧 v3/v4 保留；原 V1 交付变更的七个场景已做规格映射，不等于功能验收或自动归档。OpenSpec 全库 strict 28/28 通过；尚无 F6E 业务代码或迁移。
-- 待完成/TODO：F6C/F6D 先完成独立复核与实施验收；F6E 自身独立 SPEC review、明确 apply 确认、真实迁移/服务/UI/浏览器和全量门禁均未完成。
+- 待完成/TODO：F6C 已完成，F6D 仍须独立复核与实施验收；F6E 自身独立 SPEC review、apply 确认、真实迁移/服务/UI/浏览器和全量门禁均未完成。
 - 关键设计决策：无渠道 Master 是显式 source-only 路径；Matrix 选择不会在 Candidate Approval 前创建 DeliveryTarget；渠道适配在 Candidate v5 冻结前完成，Publisher 不改已批准内容，未知交付仍须对账。
 - 依赖与启动：沿用当前 FastAPI、React、Alembic；F6E 预计新增 Variant 表和 nullable Candidate 链接，但仅在 F6D 完成后按实际迁移 head 审核。无 push/deploy/生产 migration/canonical 同步或归档授权。
 
@@ -167,7 +167,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - PRD/需求背景：North Star 要求 Model/Tool/Data/Search/Image/Video/TTS/ASR/Renderer/Publisher 成为可替换且可验证的真实能力；注册或配置存在不等于可执行，更不等于特定账号的远端动作已验证。
 - 目录结构：[`openspec/changes/fe-f7-capability-integrations-delivery/`](openspec/changes/fe-f7-capability-integrations-delivery/proposal.md) 含 proposal、design、105 项任务，以及新增 Capability 规格和 FE-F2/System Assets/Settings/FE-F4 四份 delta；用户总包源稿保持原样。未来实施复用 `apps/api/app/services/content_harness/registry.py`、`data_source_plugins.py`、`connector_service.py`、`materials.py` 与 `delivery.py`，不重造其真源。
 - 已完成：审计原 F7 十条要求及当前 registry/Connector/Material/Delivery/Settings 路径，补 exact-scoped verification、Provider 响应/错误/审计脱敏、媒体字节和许可验证、项目精确引用、未验证 legacy auto-draft 不得绕过远端闸门；只完成规格归位，未改业务代码或迁移。
-- 待完成/TODO：先完成 F6C 独立复核、F6D/F6E 实施验收，再对 F7 做独立 SPEC review 与明确 apply 确认；实际 Provider 适配、隔离迁移、浏览器与真实账号验收均未开始，缺凭据则保持 unverified。
+- 待完成/TODO：F6C 已完成；F6D/F6E 实施验收后，再对 F7 做独立 SPEC review 与 apply 确认；实际 Provider 适配、隔离迁移、浏览器与真实账号验收均未开始，缺凭据则保持 unverified。
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
 - 依赖与启动：沿用当前 API/Vite 启动方式。规格预计仅为 CapabilityRegistration/CapabilityVerification 加可逆迁移，实际实现前复核当前 migration head；不 push/deploy/运行生产迁移，不同步 canonical 或归档。
 
@@ -176,16 +176,16 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - PRD/需求背景：North Star 的完整产品链路还需生产安全认证、可替换字节存储、真实运行健康状态、恢复演练及 Golden/全链路验收；F8 是部署前的工程收口，不增加 Organization/Invite/Tenant/SSO 产品管理。
 - 目录结构：[`openspec/changes/fe-f8-production-readiness-operations/`](openspec/changes/fe-f8-production-readiness-operations/proposal.md) 含 proposal/design、99 项任务、新 Production Readiness 规格与 Product Settings delta；未来实施以现有 `apps/api/app/deps.py`、`main.py`、`observability.py`、`routers/health.py`、`services/materials.py` 与 worker、Settings 为基线。用户原始包不改。
 - 已完成：规格校准了原十条目标，补生产 Header/default-user 拒绝、启动只读预检、健康状态真实 HTTP 失败、metrics 有界标签、全媒体读写者存储切换、存量明文 Secret 处理和实际平台验证边界；仅规格，未修改生产代码或数据库。
-- 待完成/TODO：F6C 独立复核、F6D/F6E/F7 的实施和验收，以及 F8 独立 SPEC review/明确 apply 确认均未完成；生产身份签发方、Secret Provider、对象存储和真实账号未配置或验证，不能称生产就绪。
+- 待完成/TODO：F6C 独立复核已完成；F6D/F6E/F7 的实施和验收，以及 F8 独立 SPEC review/apply 确认均未完成；生产身份签发方、Secret Provider、对象存储和真实账号未配置或验证，不能称生产就绪。
 - 关键设计决策：复用现有 User/Role、MaterialRevision、Run/Attempt/Review/Receipt 真源；生产禁用开发 Header 与自动建号，不在应用启动时迁移；存储切换前验完整引用字节并保留可恢复回退；Golden 质量与真实发布按证据分别验收。
 - 依赖与启动：规格预计不新增长期业务表；实际生产启动/迁移/部署须有独立授权和运行手册。本轮不 push/deploy/运行生产迁移或同步 canonical/归档。
 
-### FE-F6C Graphic Production Studio（实施中，73/74；待独立复核）
+### FE-F6C Graphic Production Studio（本地实施 74/74；待主规格同步与归档授权）
 
 - PRD/需求背景：North Star 的图文生产不是图片附件；F6A 仅有 `graphic.master.v1` JSON 壳。标准提案在 [`openspec/changes/fe-f6c-graphic-production-studio/proposal.md`](openspec/changes/fe-f6c-graphic-production-studio/proposal.md)，完整实施计划在 [`docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md`](docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md)。用户原始总包保持原样。
-- 目录结构：标准 change 包含 proposal/design/tasks、Graphic 新规格以及 Production Core、Review、前端性能三份 delta；预计后端 Graphic document/check/diff 服务和 Graphic-only lazy Studio 组件均以现有 Master/Ref/Check/Candidate 数据链为基础。
+- 目录结构：标准 change 包含 proposal/design/tasks、Graphic 新规格以及 Production Core、Review、前端性能三份 delta；后端 `apps/api/app/services/graphic_documents.py`、`graphic_master_checks.py`、`graphic_master_diff.py` 复用现有 Master/Ref/Check/Candidate 链，前端 `apps/web/src/product/GraphicStudioModel.ts` 与 `GraphicStudioShell.tsx` 按 Graphic 路径加载，`apps/web/scripts/check-bundle.mjs` 核查静态依赖边界。
 - 已完成：按 `main@670dd49` 校准 F6C 的 77 项可验证任务和 Scenario。`graphic.master.v2` canonical 文档/adapter、精确图层素材与证据 locator、按画布顺序的真实手工 render、v1→v2 显式 fork 均已实现；旧无 schema Graphic 保留 v1。exact image profile 规则和四类专业检查已接入；语义/视觉不足仅 warning。Graphic-only UI 已有画布增删复制重排、可缩放/选择的阶段预览、图层几何/样式/裁剪/形状/锁定、exact 共享素材插入/替换、文字证据绑定、每画布最终图片绑定、published Profile preset、显式保存与历史升级/差异。前 12 个可见媒体层经鉴权和 SHA256 校验才预览。隔离 SQLite 与真实浏览器已完成两画布保存/刷新、Brief/事实边界变化使旧 Master stale、精确证据绑定、手工渲染确认、八项检查、Candidate v4、冻结双图预览、警告处置、审批与本地包授权；ZIP 双图顺序/哈希与冻结清单一致，未回填发布。归档单元的 Graphic 输入/保存/检查/冻结均只读；第二单元的并发写入后，旧页面保存显示 409 且本地编辑未冒充落库。重复素材兼任图层/最终渲染时的 ZIP 重名已按失败回归修复；新旧 Candidate 回读与结构化差异保留各自冻结文字和检查哈希，Review 检查名称不再丢失。全后端在排除本机无效 `NO_PROXY/no_proxy` 后为 951 passed/2 skipped；相关定向 97 passed，前端模型 20/20、TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff 与 diff-check PASS。
-- 待完成/TODO：F6C 独立复核第一轮后端通过，规格与前端三处定向问题已修；第二轮因 ChatGPT 连接器内部错误无法读取当前工作区，尚未给出复核结论，任务保持 73/74。原 F6C 5.4–5.7 的真实 Provider 接收/许可/血缘要求已与总路线校准并明确移交 F7 的素材搜索与图像 Provider 任务，未宣称已实现；F7 标准归位时须增加执行/结果响应脱敏与负向测试，不能只靠 Settings 脱敏。F6C 只验收未验证能力 fail-closed。已在本地 `main@d0f0051` 提交阶段代码，规格/前端复核补丁仍在工作树。项目能力接口及 Graphic 工作台现明确显示自动渲染不可执行，客户端伪造 Renderer 来源返回类型化 422 且不产生 Master；人工图片确认不代表已验证自动渲染器或视觉语义检查。不能把当前阶段通过等同整个 North Star 完成。主规格同步/归档另需授权，不 push/deploy/生产迁移。
+- 待完成/TODO：独立复核已在 ChatGPT 实际读取 `main@2891bac` 后给出 SPEC 与前端 APPROVE；后端前轮 APPROVE 继续有效（未改后端业务代码），任务 74/74。本轮全后端新跑 951 passed/2 skipped，前端构建/FE-P1、OpenSpec strict 30/30、F6C 相关 Ruff 通过；额外全库 Ruff 有 23 个既有问题，不属于本切片完成声明。原 F6C 真实 Provider 接收/许可/血缘要求明确移交 F7，执行/结果响应脱敏及负向测试已进入 F7 active 规格但业务能力尚未实现。项目接口和 Graphic 工作台仍诚实显示未验证自动渲染不可执行；人工图片确认不代表已验证 Renderer 或视觉语义。不能把 F6C 通过等同整个 North Star 完成。主规格同步/归档另需授权，不 push/deploy/生产迁移。
 - 关键设计决策：旧 Graphic v1 显式 Fork；画布顺序与输出一一对应；未验证 Renderer/Search/Image 不冒充可用；GraphicStudioModel 仅在 Graphic 工作区动态加载，通用 Production/Text/Video 静态闭包由构建门禁隔离；小红书旧 `image_note` 当前是 text-classified，F6C 不暗中改类，跨渠道适配由 F6E 承接。
 - 依赖与启动：沿用现有 FastAPI/React、MaterialRevision 与生产工作台；目标零新表/零迁移。使用本 README 既有 API/Vite 启动方式，先在隔离数据库做验收。
 
