@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Project Candidate v5 is Variant-backed and schema-dispatched
-Freeze SHALL accept one current, project-owned, ready ChannelVariantRevision as a distinct v5 source, canonically bind its exact Master/Identity/profile/adapter, versioned canonical Variant payload/hash, refs/checks/render and set the Candidate's Variant link as its only source pointer. V5 `draft_id`, `topic_brief_id` and `content_master_revision_id` SHALL be null; the source Master is reached through the Variant and frozen manifest. The Candidate's `channel`, `content_form` and `artifact_kind` projections SHALL match the Variant's frozen target and exact published profile. V3 Draft and v4 Master source paths SHALL remain unchanged. V5 failure MUST NOT fall back to an older source schema.
+Freeze SHALL accept one current, project-owned, ready ChannelVariantRevision as a distinct v5 source, canonically bind its exact Master/Identity/profile/adapter, versioned canonical Variant payload/hash, refs/checks/render and set the Candidate's Variant link as its only source FK. V5 `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` and `workflow_run_id` SHALL be null; the source Master and exact workflow provenance are reached through the Variant and frozen manifest, never through a second Candidate FK. The Candidate's `channel`, `content_form` and `artifact_kind` projections SHALL match the Variant's frozen target and exact published profile. V3 Draft and v4 Master source paths and workflow projections SHALL remain unchanged. V5 failure MUST NOT fall back to an older source schema.
 
 #### Scenario: Freeze Variant
 - **WHEN** a current Variant passes CAS, context, check, rights, evidence and render gates
@@ -12,8 +12,8 @@ Freeze SHALL accept one current, project-owned, ready ChannelVariantRevision as 
 - **THEN** authorization denies the request before private payload or media is returned
 
 #### Scenario: V5 carries a conflicting Master pointer or target projection
-- **WHEN** a v5 Candidate carries a Draft/Master source FK or a cached channel/form/artifact_kind inconsistent with its frozen Variant/profile
-- **THEN** schema-dispatched readers and gates reject it before any Review content, authorization or package is returned
+- **WHEN** a v5 Candidate carries a non-null `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` or `workflow_run_id`, or a cached channel/form/artifact_kind inconsistent with its frozen Variant/profile
+- **THEN** schema-dispatched Review, Approval, Authorization and Package gates reject it without legacy fallback or content/package disclosure
 
 ### Requirement: V5 approval authorization and package preserve frozen adaptation
 Review Preview/Changes/Checks SHALL dispatch on manifest `schema_version` before any Draft/Master source-pointer heuristic and read the frozen v5 Variant's canonical payload and final channel content. Approval SHALL bind exact Candidate ID/hash; new Delivery Authorization SHALL validate the current Variant, the account's active ownership through the pinned identity, any Unit-bound account constraint, and the target channel/form/action. A local `copy_package` or `manual_handoff` MAY be authorized as an explicitly manual action without inferring verified remote capability from free-form account profile data; any remote effect SHALL additionally require verified exact account/channel/form/action capability. For v5, the authorized channel/form SHALL equal the frozen Variant target rather than the source Unit's channel. V3/v4 retain their existing Unit-channel rule. Local package SHALL use approved frozen bytes/content, current live rights and no Draft/v4 fallback; Publisher MUST NOT rewrite approved content. Existing unknown/reconciliation and historical authorization semantics SHALL remain.

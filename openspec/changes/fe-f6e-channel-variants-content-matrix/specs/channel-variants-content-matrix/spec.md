@@ -79,7 +79,7 @@ Currentness SHALL compare the exact source Master/head/context, target profile/c
 - **THEN** currentness reports stale profile/check inputs while old approved Candidate hashes remain unchanged
 
 ### Requirement: Candidate v5 freezes post-adaptation content
-Candidate manifest v5 SHALL canonically freeze one current ChannelVariantRevision with its `payload_schema` and canonical payload hash, its exact source Master, Project/Unit/Identity, target channel/form/profile, adapter/model provenance, final refs/rights, checks, render, citations and declarations. The Candidate's Variant FK SHALL be its only source pointer; Draft/Topic/Master Candidate source FKs SHALL be null. Its cached channel/content_form/artifact_kind SHALL match the frozen Variant target and exact published profile. Freeze MUST enforce ownership, currentness, CAS/idempotency, live rights/evidence/bytes and render availability. V5 failure MUST NOT fall back to v4/v3 or allow Publisher formatting after Approval.
+Candidate manifest v5 SHALL canonically freeze one current ChannelVariantRevision with its `payload_schema` and canonical payload hash, its exact source Master and workflow provenance, Project/Unit/Identity, target channel/form/profile, adapter/model provenance, final refs/rights, checks, render, citations and declarations. The Candidate's Variant FK SHALL be its only source FK; `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` and `workflow_run_id` SHALL all be null. Workflow provenance comes from the Variant's exact source Master and frozen manifest, not a v5 Candidate run FK. Its cached channel/content_form/artifact_kind SHALL match the frozen Variant target and exact published profile. Freeze MUST enforce ownership, currentness, CAS/idempotency, live rights/evidence/bytes and render availability. V5 failure MUST NOT fall back to v4/v3 or allow Publisher formatting after Approval.
 
 #### Scenario: Freeze a ready variant
 - **WHEN** a current Variant passes exact checks/render/rights gates
@@ -90,7 +90,7 @@ Candidate manifest v5 SHALL canonically freeze one current ChannelVariantRevisio
 - **THEN** freeze fails without a package-ready Candidate or fabricated media
 
 #### Scenario: Conflicting Candidate source or target projection
-- **WHEN** a v5 Candidate has a legacy Draft/Master source pointer or its channel/form/artifact_kind differs from the frozen target/profile
+- **WHEN** any one of a v5 Candidate's `draft_id`, `topic_brief_id`, `mother_revision_id`, `content_master_revision_id` or `workflow_run_id` is non-null, or its channel/form/artifact_kind differs from the frozen target/profile
 - **THEN** Review, Approval, Authorization and Package reject it by schema-aware integrity validation rather than treating it as v3/v4
 
 ### Requirement: V5 Review and delivery use the exact approved result
