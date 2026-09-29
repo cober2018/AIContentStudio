@@ -171,6 +171,15 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
 - 依赖与启动：沿用当前 API/Vite 启动方式。规格预计仅为 CapabilityRegistration/CapabilityVerification 加可逆迁移，实际实现前复核当前 migration head；不 push/deploy/运行生产迁移，不同步 canonical 或归档。
 
+### FE-F8 Production Readiness + Operations（仅标准 OpenSpec 草案，未 apply）
+
+- PRD/需求背景：North Star 的完整产品链路还需生产安全认证、可替换字节存储、真实运行健康状态、恢复演练及 Golden/全链路验收；F8 是部署前的工程收口，不增加 Organization/Invite/Tenant/SSO 产品管理。
+- 目录结构：[`openspec/changes/fe-f8-production-readiness-operations/`](openspec/changes/fe-f8-production-readiness-operations/proposal.md) 含 proposal/design、99 项任务、新 Production Readiness 规格与 Product Settings delta；未来实施以现有 `apps/api/app/deps.py`、`main.py`、`observability.py`、`routers/health.py`、`services/materials.py` 与 worker、Settings 为基线。用户原始包不改。
+- 已完成：规格校准了原十条目标，补生产 Header/default-user 拒绝、启动只读预检、健康状态真实 HTTP 失败、metrics 有界标签、全媒体读写者存储切换、存量明文 Secret 处理和实际平台验证边界；仅规格，未修改生产代码或数据库。
+- 待完成/TODO：F6C 独立复核、F6D/F6E/F7 的实施和验收，以及 F8 独立 SPEC review/明确 apply 确认均未完成；生产身份签发方、Secret Provider、对象存储和真实账号未配置或验证，不能称生产就绪。
+- 关键设计决策：复用现有 User/Role、MaterialRevision、Run/Attempt/Review/Receipt 真源；生产禁用开发 Header 与自动建号，不在应用启动时迁移；存储切换前验完整引用字节并保留可恢复回退；Golden 质量与真实发布按证据分别验收。
+- 依赖与启动：规格预计不新增长期业务表；实际生产启动/迁移/部署须有独立授权和运行手册。本轮不 push/deploy/运行生产迁移或同步 canonical/归档。
+
 ### FE-F6C Graphic Production Studio（实施中，73/74；待独立复核）
 
 - PRD/需求背景：North Star 的图文生产不是图片附件；F6A 仅有 `graphic.master.v1` JSON 壳。标准提案在 [`openspec/changes/fe-f6c-graphic-production-studio/proposal.md`](openspec/changes/fe-f6c-graphic-production-studio/proposal.md)，完整实施计划在 [`docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md`](docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md)。用户原始总包保持原样。
