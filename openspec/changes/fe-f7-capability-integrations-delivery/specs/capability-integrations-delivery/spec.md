@@ -55,6 +55,16 @@ A generic Connector or ConnectorEndpoint SHALL become a Data Source executor onl
 ### Requirement: Search output is not a usable asset
 Search providers SHALL return bounded candidate metadata only. Explicit import MUST validate source, downloaded bytes, hash, MIME and rights/license before creating an immutable MaterialRevision or attaching it to a Project.
 
+The source's stable public citation URL and the provider's temporary fetch/preview URL are distinct. Only a positively validated credential-free public citation URL MAY be stored in `MaterialRevision.source_url`; when its safety is ambiguous, store a bounded source identifier and one-way URL/input hash instead. A signed, tokenized or expiring fetch/preview URL MUST NOT enter MaterialRevision metadata, AuditLog, ProjectEvent or API projections.
+
+#### Scenario: Public citation and signed media fetch are distinct
+- **WHEN** one accepted search result has a safe stable public citation URL and a signed temporary URL used to fetch its bytes
+- **THEN** the exact accepted MaterialRevision may retain the validated citation and safe source identifier, while the temporary URL appears in no stored or returned metadata
+
+#### Scenario: No provably safe citation URL
+- **WHEN** a provider supplies only an ambiguous or expiring URL with valid licensed bytes
+- **THEN** acceptance may retain a bounded source identifier and one-way URL/input hash but MUST NOT persist that raw URL or present it as a public citation
+
 #### Scenario: Preview URL selected without rights
 - **WHEN** a user selects a search preview whose license or public-use status is unknown
 - **THEN** it remains a candidate and cannot be used as a public-ready Master/Variant asset
