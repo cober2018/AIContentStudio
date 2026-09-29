@@ -8,7 +8,11 @@
 - [ ] /// 按 `openspec-apply-change` 从 F6C 0.1 起完成真实基线、后端/前端/浏览器/门禁，逐项更新任务、进度和发现。
 - [ ] /// F6C 通过后依次机械校准并实施 F6D、F6E、F7、F8，最后按 North Star 全链路证明；每个模块不以局部测试代替完整验收。
 
-当前 F6C 为 72/77：Graphic v2 两画布已在隔离 SQLite/浏览器完成保存、证据绑定、人工渲染确认、检查、Candidate v4、Review、Approval、授权与本地 ZIP；真实包内双图顺序/哈希一致，未声称发布或已验证自动渲染器。归档只读、并发旧页面保存 409 已另用隔离单元核实。ZIP 同名渲染、上传素材状态及 Review 冻结检查名称的缺陷均已用 RED→GREEN 回归修复；新旧 Candidate 历史的冻结正文、检查与结构化差异已核实。自动 Renderer 能力现明确不可用，伪造 Renderer 来源的保存被类型化 422 阻断且不产生新 Master。最新全后端 951 passed / 2 skipped（排除本机异常 `NO_PROXY/no_proxy`），前端模型 20/20、TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff、diff-check PASS。范围内实现已本地提交 `d0f0051`；剩余 5 项为真实 Provider 接收/权利血缘 4 项和独立复核，不把未验证能力写成完成。
+当前 F6C 经总计划机械校准为 73/74：Graphic v2 两画布已在隔离 SQLite/浏览器完成保存、证据绑定、人工渲染确认、检查、Candidate v4、Review、Approval、授权与本地 ZIP；真实包内双图顺序/哈希一致。归档只读、并发保存 409 与新旧 Candidate 冻结历史已核实；自动 Renderer 伪造来源被 422 阻断。原 F6C 5.4–5.7 的真实 Provider 接收/许可/项目关联/血缘验证与 F7 4.3–4.8、5.3–5.9 对应，现从 F6C 实施任务移交 F7，不能把阶段 fail-closed 误写成真实 Provider 已实现。最新全后端 951 passed / 2 skipped（排除本机异常 `NO_PROXY/no_proxy`），前端模型 20/20、TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff、diff-check PASS。范围内代码已本地提交 `d0f0051`；F6C 剩独立复核并待规格校准最终门禁。
+
+独立复核第一轮后定向修复：/// F7 Provider 执行/结果响应脱敏与负向测试写入后续标准化义务；/// GraphicStudioModel 改为仅 Graphic 运行时动态载入，并由 bundle gate 验证通用 Production/Text/Video 静态闭包；/// 画布选中态加 aria-pressed。前端 build/FE-P1 与模型 20/20 已复跑 PASS；等待第二轮独立复核，不提前勾 7.10。
+
+第二轮复核因 ChatGPT 连接器连续 internal error 而 NOT_VERIFIED；工作区隧道重建遇 Cloudflare API EOF，虽本地诊断恢复在线，ChatGPT 仍未能读取当前文件。保持 7.10 未完成；先提交已验证的规格/前端修补检查点，恢复真实独立读取后再复核并决定是否进入 F6D。
 
 边界：源总包目录/ZIP 保持原样；F6B 主规格同步/归档、后续各 change 的 canonical/归档仍须另行授权；不 push、deploy 或运行生产迁移。用户已要求以后续方案连续开发，不再把 F6C 之后缩减为仅规划。
 

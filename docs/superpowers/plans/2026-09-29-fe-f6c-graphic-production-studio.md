@@ -32,12 +32,12 @@
 
 **Files:** Modify `apps/api/app/services/production_modalities.py`, `apps/api/app/services/content_masters.py`, `apps/api/app/services/project_review_projection.py`, `apps/api/app/services/production_packages.py`; create focused `graphic_master_checks.py` and `graphic_master_diff.py` if the existing services would otherwise grow unrelated branches. Reuse `apps/api/app/routers/materials.py` and project asset services only through scoped endpoints.
 
-- [ ] /// Resolve exact image-classified Channel Profile; reject legacy text-classified forms for direct Graphic freeze and offer dimension/card rules without silently changing payload.
-- [ ] /// Require one input-bound real render MaterialRevision per canvas in canonical order; retain truthful manual attestation and require actual capability verification for renderer-origin claims.
-- [ ] /// Make Graphic v2 structure/text-fact/identity/platform checks append-only, input/profile aware and coverage-honest; no fake semantic PASS.
-- [ ] /// Add structured Graphic diff and frozen Review preview; preserve Candidate v4/Approval/Authorization/local package hashes and ordered image bytes.
-- [ ] /// Expose project-scoped search/generation/variation availability; accept only real materialized outputs with source/provider/license/rights provenance, never auto-grant rights or fake unavailable results.
-- [ ] /// Run targeted backend regressions and full suite before frontend work; block on changed v1/Text/Video behavior.
+- [x] /// Resolve exact image-classified Channel Profile; reject legacy text-classified forms for direct Graphic freeze and offer dimension/card rules without silently changing payload.
+- [x] /// Require one input-bound real render MaterialRevision per canvas in canonical order; retain truthful manual attestation and reject unverified renderer-origin claims.
+- [x] /// Make Graphic v2 structure/text-fact/identity/platform checks append-only, input/profile aware and coverage-honest; no fake semantic PASS.
+- [x] /// Add structured Graphic diff and frozen Review preview; preserve Candidate v4/Approval/Authorization/local package hashes and ordered image bytes.
+- [x] /// Expose project-scoped search/generation/variation/renderer availability and fail closed without a verified capability. Transfer accepted external-result materialization, license/provenance/project attachment and execution/result-response secret redaction with negative tests to F7 without claiming it done in F6C.
+- [x] /// Run targeted backend regressions and full suite before frontend work; block on changed v1/Text/Video behavior.
 
 ### Current checkpoint: exact Graphic profile and check gate
 
@@ -73,4 +73,4 @@
 - [ ] /// On isolated data, prove multi-canvas save/reload, exact image/chart refs, text/evidence changes, stale render, wrong-order/rights failures and explicit v1 upgrade.
 - [x] /// In a real browser, pass Graphic v2 → checks → exact per-canvas render → Candidate v4 → Review → Approval → local ordered image package; inspect packaged hashes/bytes.
 - [ ] /// Re-run full backend, TypeScript/Vite/bundle, OpenSpec all-strict, relevant Ruff, diff-check and independent spec/backend/frontend review; mark only evidenced tasks.
-- [ ] /// Record limitations and local implementation commit. Do not push/deploy/run production migrations or canonical-sync/archive without separate authorization. Continue master roadmap to F6D only after F6C implementation gates pass.
+- [x] /// Record limitations and local implementation commit. Do not push/deploy/run production migrations or canonical-sync/archive without separate authorization. Continue master roadmap to F6D only after F6C implementation gates pass.

@@ -2,6 +2,8 @@
 
 ## 2026-09-29 North Star 总包校准 / F6C 规格发现
 
+- 独立 F6C 复核发现：F7 原包 1.4 只约束持久化不存 secret，9.6 只约束 Settings 脱敏，均未明确约束 Provider 执行/结果/错误/血缘响应。F6C 设计与 delta 已留下 F7 标准化必须新增的规范及负向测试，不修改用户原包。另发现通用 ContentMasterPanel 静态导入 GraphicStudioModel，虽然 Graphic Shell lazy，但模型仍进通用 Production；已改为 Graphic 条件动态导入并在 bundle gate 验证静态闭包隔离。画布按钮此前只靠颜色显示选中，现加 aria-pressed。
+- 总目标与 F6C active change 审计发现一处阶段归属冲突：F6C proposal/design 明确真实 Provider 验证归 F7，F7 源包 4.3–4.8、5.3–5.9 已包含外部素材下载/字节/许可/MaterialRevision/显式接收，但 F6C tasks 5.4–5.7 和一条 Scenario 仍要求当期“实际接受 Provider 结果”。已机械校准 F6C 为只验断连 fail-closed 与项目已有精确素材，移交真实结果接受到 F7；F7 标准归位时还须补精确 Project 关联及返回脱敏的显式任务/场景，防止原要求丢失。未验证能力继续不可执行，未放宽权限。
 - F6C 自动渲染能力未经过项目级验证，先前能力投影仅覆盖搜索/生图/变体。现在自动渲染也显式返回 `configured/executable/verified=false`；客户端试图把保存声明冒充 `verified_renderer` 会得到类型化 422 且无新 Master。人工声明继续由服务端记录 `origin=manual`。这只关闭未验证来源的旁路，不等于已接入真实 Renderer。
 - 第二个 Graphic v2 Candidate 历史回归发现 Review 检查摘要只读取旧 `check_kind`，而 v4 冻结清单使用 `kind`，导致 UI 丢失检查名称。已兼容读取两种冻结格式；旧 Candidate 继续展示首版文字与检查输入哈希，新 Candidate 展示新正文及独立检查，结构化差异不制造文本相似度。
 - 隔离浏览器发现两项只靠单元 happy path 不会显露的问题：真实上传的 `MaterialRevision.status` 是 `candidate`，旧 Graphic v2 图层保存误要求不存在的 `active`；修复后仍拒绝 revoked/archived 和未授权字节。第二项是同一 revision 既为 `graphic_layer` 又为 `render_output` 时，v4 ZIP 循环按 revision ID 多次写同名 `render-2.png`；修复为先写冻结 media，再按 adapter 给定的画布顺序单独写每个 render，并用失败回归锁住文件名唯一性、顺序和哈希。

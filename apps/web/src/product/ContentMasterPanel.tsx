@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { Button, ErrorBanner, Field, Spinner, StatusBadge, inputClass } from "../components/ui";
 import { ModalityWorkspace } from "./ModalityWorkspace";
-import { createGraphicDraft, graphicDraftFromMaster, type GraphicDraft } from "./GraphicStudioModel";
+import type { GraphicDraft } from "./GraphicStudioModel";
 import { createTextDraft, draftFromMaster, type TextDraft } from "./TextStudioModel";
 import type { Unit } from "./project/projectTypes";
 import type { UnitOutput } from "./useProductionWorkflow";
@@ -34,7 +34,7 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
   const [checkHistory, setCheckHistory] = useState<CheckHistory[]>([]);
   const [payload, setPayload] = useState(pretty(initial(unit.modality)));
   const [textDraft, setTextDraft] = useState<TextDraft | null>(() => unit.modality === "text" ? createTextDraft() : null);
-  const [graphicDraft, setGraphicDraft] = useState<GraphicDraft | null>(() => unit.modality === "graphic" ? createGraphicDraft() : null);
+  const [graphicDraft, setGraphicDraft] = useState<GraphicDraft | null>(null);
   const [textEpoch, setTextEpoch] = useState(0);
   const [editorIssue, setEditorIssue] = useState("");
   const [assets, setAssets] = useState("[]");
@@ -75,7 +75,13 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
     setSelected(master); setReadiness(null); setCheckHistory([]); setDirty(false); setAcceptContext(false);
     setUpgradePreview(null); setRevisionDiff(null); setGraphicDiff(null); setCompareToId("");
     setTextDraft(unit.modality !== "text" ? null : !master ? createTextDraft() : master.payload_schema === "text.master.v2" ? draftFromMaster(master) : null);
-    setGraphicDraft(unit.modality !== "graphic" ? null : !master ? createGraphicDraft() : master.payload_schema === "graphic.master.v2" ? graphicDraftFromMaster(master) : null);
+    if (unit.modality === "graphic") {
+      setGraphicDraft(null);
+      const { createGraphicDraft, graphicDraftFromMaster } = await import("./GraphicStudioModel");
+      setGraphicDraft(!master ? createGraphicDraft() : master.payload_schema === "graphic.master.v2" ? graphicDraftFromMaster(master) : null);
+    } else {
+      setGraphicDraft(null);
+    }
     setTextEpoch((value) => value + 1); setEditorIssue("");
     setPayload(pretty(master?.payload || initial(unit.modality)));
     setAssets(pretty((master?.assets || []).map((row) => ({ material_revision_id: row.material_revision_id, content_hash: row.content_hash, role: row.role, slot_key: row.slot_key, sort_order: row.sort_order, placement: row.placement }))));

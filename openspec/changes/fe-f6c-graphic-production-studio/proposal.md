@@ -9,6 +9,7 @@ F6A makes Graphic a first-class Content Master, but the current Graphic page is 
 - Bind embedded image/chart layers and every final canvas render to project-visible exact MaterialRevision refs; retain F6A input-bound manual attestation until a renderer is independently verified.
 - Add schema-aware Graphic structure, text/identity and exact channel-profile checks, structured revision/Review diff, ordered local package and an honest unavailable state for unconfigured search/generation/renderer providers.
 - Preserve ContentMasterRevision/AssetRef/EvidenceRef/CheckRun/Candidate v4 and target zero new tables or migrations. No remote publishing or full design-tool/NLE runtime is introduced.
+- Keep real provider-result acceptance in F7. F6C exposes unavailable project-scoped hooks until a provider is independently verified; it does not claim to materialize provider output or infer its license.
 
 ## Capabilities
 
