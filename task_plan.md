@@ -1,5 +1,13 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6E 独立规格复核通过，进入 backend-first apply
+
+- [x] /// 核对 `main@6f5e022`、F6D 79/79、F6E 六份 delta 与独立复核结论，核销 F6E 0.2；不将外部记录的门禁数字冒充本地重跑。
+- [x] /// 先做 append-only Variant 四表及 Candidate v5 nullable FK；以 RED→GREEN 回归验证系列唯一性、精确 FK、SQLite up/down/up 与历史降级拒绝。
+- [ ] /// 实现 exact Registry/profile 的 canonical adapters，再接项目级 Variant CAS/refs/checks 和 Candidate v5；任何额外持久对象或安全边界削弱先停下修规格。
+- [ ] /// 完成 Review/Approval/本地包、Matrix、前端与隔离浏览器验收；保留 v3/v4 和未知发布状态，不声称 F7 远端能力已验证。
+- [ ] /// 最终门禁和独立复核后仅本地范围提交；主规格同步/归档、push、deploy、生产迁移另行授权。
+
 ## 2026-09-29：F6E 前置门槛核销（不进入 business apply）
 
 - [x] /// 对照 F6C 74/74 独立复核记录和 F6D 79/79 独立复核结论，核实 F6E 0.1 的前置条件。

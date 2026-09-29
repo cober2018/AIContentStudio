@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-29：F6E 规格门槛解除
+
+- 首批计划内加法持久化已落地：四个 Variant 表、`ContentAsset.channel_variant_revision_id`，迁移 `f6e000000001` 接 `f6a000000001`。已定义 versioned Adapter 协议、五种受控 source/form/artifact_kind 矩阵和 published Profile 精确解析；五种 canonical payload 的纯校验与哈希已具备，适配实现仍未注册，能力状态明确不可执行。F6E 当前 15/100；1.2 的 expected-head/CAS、1.7 的删除/约束闭环、2.8 的实际素材/证据绑定集成仍待服务实现，不把它们提前勾选。
+- RED→GREEN 定向回归 5 passed；隔离 SQLite 升→降→升通过，存在 v5 manifest 且 Variant FK 缺失时拒绝降级。临时 PostgreSQL 16 容器中整链升至 F6E、降至 F6A、再升至 F6E 均通过；写入 v5 manifest 后降级按预期拒绝，读回仍为 `f6e000000001` 且历史/表保留。临时容器已停止并自动删除，未接触生产 DB。
+- 本轮 F6E 持久化与纯 Adapter 契约加入后，全后端重跑 `1052 passed / 2 skipped / 7 warnings`；相关 Ruff PASS、OpenSpec strict 30/30 PASS、`git diff --check` PASS。警告来自既有 Starlette/SQLite 反射/Workflow 路径，不把它们报成无警告。
+- 独立定向复核在 `main@6f5e022` 给出 `F6E_SPEC: APPROVE`、无规格 blocker；F6D 79/79。已据此核销 F6E task 0.2，进入既定 backend-first apply。
+- 复核方读取当前规格/代码契约，但未重跑所述 strict 30/30 或 diff-check；本轮实施门禁须重新运行并单独记录。
+- 当前 Alembic head 经本地命令确认为 `f6a000000001`；F6E 业务代码/迁移尚未写入，用户原始 OpenSpec 包保持未跟踪原样。
+
 ## 2026-09-29：F6E 0.1 前置门槛核销
 
 - 当前 `main@c1ee957`，F6C 标准任务 74/74 且独立复核记录为 APPROVE；F6D 标准任务 79/79，独立实施复核于 `main@a51efe0` APPROVE。F6D 4.5 是 F7 Provider/许可/脱敏移交，不要求 F7 真能力在 F6E 前完成。故只核销 F6E 0.1，进度 3/100；0.2 独立 SPEC re-review 仍未获得，业务 apply、迁移、主规格同步和归档均未启动。

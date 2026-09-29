@@ -1,5 +1,15 @@
 # 配置记录
 
+## 2026-09-29 F6E 独立规格结论
+
+- `x/thread` 与 `x/single` 的 published Profile 都存在，但注册配置并不证明 Adapter 已实现；当前五种受控 form 的 capability 显式返回 `configured=true, executable=false, verified=false`，旧 `x_thread/thread` 不在 v5 矩阵内。
+- 五种 Variant canonical payload 在服务端限制字段、稳定 ID/顺序与长度；引用了图片槽位或 citation 却缺少对应精确素材 hash / FactPackItem checksum+locator 时拒绝。纯校验通过不代表当前项目素材可见、live rights 或真实字节已核验；这些还要在项目级保存与冻结闸门完成。
+- 当前 Registry 的 published Profile 真源是 `ChannelTemplateVersion`，所以 Variant 除 channel/form/hash 外还须精确保存 `profile_template_version_id` 外键；只存字符串版本会丢掉不可变配置来源。此字段已加入计划内 Variant 表。
+- 降级安全不能只看 Variant FK：历史 v5 Candidate 的链接若被置空，也必须拒绝删表。SQLite 与临时 PostgreSQL 均证实 manifest `schema_version=5` 可阻断降级，并保持版本/表/历史不变。
+- 外部复核确认 v5 `channel_variant_revision_id` 是唯一 Candidate 来源 FK；`draft_id`、`topic_brief_id`、`mother_revision_id`、`content_master_revision_id`、`workflow_run_id` 均须为空。工作流血缘只能经 Variant→精确 source Master→冻结 manifest 追溯。
+- `(unit_id, variant_key)` 是 v5 当前性的系列边界，不以 Unit 下最大 Candidate ID 替代；v3/v4 的分派与当前性保持原语义。
+- F6E 可开始计划内四表、一列的加法迁移；若出现破坏性迁移、额外持久业务对象或安全闸门放宽，先停下修订规格。
+
 ## 2026-09-29 F6E 前置门槛与独立规格复核分离
 
 - F6C `tasks.md` 74 项全勾，`progress.md` 记录后端、SPEC、前端独立复核 APPROVE；F6D `tasks.md` 79 项全勾，外部独立实施复核 APPROVE。F6E 0.1 可以作为历史依赖确认完成。

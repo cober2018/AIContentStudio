@@ -1,33 +1,33 @@
 ## 0. Baseline and authorization
 
 - [x] 0.1 Confirm F6C and F6D final gates and independent reviews before any F6E business-code apply; F6D 4.5 is a documented F7 Provider/rights/redaction handoff, not a demand to implement F7 real Providers before F6E.
-- [ ] 0.2 Review the six F6E delta specs against current canonical requirements and obtain explicit apply confirmation under the project OpenSpec rule.
+- [x] 0.2 Review the six F6E delta specs against current canonical requirements and obtain explicit apply confirmation under the project OpenSpec rule.
 - [x] 0.3 Re-read the current Unit/Master/Candidate/Review/Delivery/Registry code and record actual Alembic head, tests, bundle budgets and Git status.
 - [x] 0.4 Audit all seven preserved scenarios from the already-superseded `complete-prd-v1-channel-deliverables` and PRD §15/§16 acceptance boundaries; do not reactivate the old change or claim its obligations complete.
 - [ ] 0.5 Stop and revise the specification if implementation requires destructive migration, an unplanned durable business object or weaker safety gates; do not backfill historical variants.
 
 ## 1. Additive persistence and migration
 
-- [ ] 1.1 Add append-only ChannelVariantRevision model with exact project/unit/source Master/Identity/profile/adapter, versioned `payload_schema`, canonical `payload_json`/`payload_hash`, context hash, source_kind and edit-summary provenance fields.
+- [x] 1.1 Add append-only ChannelVariantRevision model with exact project/unit/source Master/Identity/profile/adapter, versioned `payload_schema`, canonical `payload_json`/`payload_hash`, context hash, source_kind and edit-summary provenance fields.
 - [ ] 1.2 Add stable variant_key and per-series revision, parent, expected-head, idempotency key and request fingerprint constraints.
-- [ ] 1.3 Add exact ChannelVariantAssetRef role/order/placement/hash/rights snapshot model.
-- [ ] 1.4 Add exact ChannelVariantEvidenceRef FactPackItem/checksum/locator model.
-- [ ] 1.5 Add append-only ChannelVariantCheckRun model with input/profile/adapter/rule hash.
-- [ ] 1.6 Add nullable `ContentAsset.channel_variant_revision_id` for v5 only.
+- [x] 1.3 Add exact ChannelVariantAssetRef role/order/placement/hash/rights snapshot model.
+- [x] 1.4 Add exact ChannelVariantEvidenceRef FactPackItem/checksum/locator model.
+- [x] 1.5 Add append-only ChannelVariantCheckRun model with input/profile/adapter/rule hash.
+- [x] 1.6 Add nullable `ContentAsset.channel_variant_revision_id` for v5 only.
 - [ ] 1.7 Add FK, unique, index and bounded field constraints with atomic relationship deletion policy.
-- [ ] 1.8 Add migration after the verified current head without rewriting v3/v4 rows.
-- [ ] 1.9 Make isolated downgrade refuse v5-linked history before destructive DDL; prove compatible up/down/up on SQLite.
-- [ ] 1.10 Validate PostgreSQL-compatible migration/constraint behavior on an isolated database.
+- [x] 1.8 Add migration after the verified current head without rewriting v3/v4 rows.
+- [x] 1.9 Make isolated downgrade refuse v5-linked history before destructive DDL; prove compatible up/down/up on SQLite.
+- [x] 1.10 Validate PostgreSQL-compatible migration/constraint behavior on an isolated database.
 
 ## 2. Channel Adapter and Registry boundary
 
-- [ ] 2.1 Define versioned ChannelAdapter protocol with declared accepted Master schemas and exact target artifact_kind plus capabilities, canonicalize/validate, adapt, preview, render, required_checks and package_projection.
-- [ ] 2.2 Resolve only exact registered channel/content_form and published profile version/config hash.
+- [x] 2.1 Define versioned ChannelAdapter protocol with declared accepted Master schemas and exact target artifact_kind plus capabilities, canonicalize/validate, adapt, preview, render, required_checks and package_projection.
+- [x] 2.2 Resolve only exact registered channel/content_form and published profile version/config hash.
 - [ ] 2.3 Persist adapter key/version and relevant rule/config hashes in variant provenance.
 - [ ] 2.4 Expose configured/executable/verified capability state without treating mere plugin presence as execution proof.
 - [ ] 2.5 Reject unsupported channel/form or unavailable model/render capability with typed no-write results.
 - [ ] 2.6 Keep Channel Registry/Profile as existing truth; do not create a duplicate mutable settings registry.
-- [ ] 2.7 Regress existing published `x/thread` and `x/single` profiles, each form's unavailable state before its F6E adapter is implemented, and legacy `x_thread/thread` fallback exclusion from v5; do not confuse registration with executable adaptation.
+- [x] 2.7 Regress existing published `x/thread` and `x/single` profiles, each form's unavailable state before its F6E adapter is implemented, and legacy `x_thread/thread` fallback exclusion from v5; do not confuse registration with executable adaptation.
 - [ ] 2.8 Define and enforce bounded canonical payload schemas for `wechat.article.v1`, `x.thread.v1`, `x.single.v1`, `xiaohongshu.image_note.v1` and `douyin.spoken_script.v1`; hash only server-canonicalized payload, and reject missing exact image/evidence refs.
 
 ## 3. Project-scoped Variant service and exact refs

@@ -793,6 +793,7 @@ class ContentAsset(Base):
     workflow_version: Mapped[int | None] = mapped_column(Integer)
     tags: Mapped[list | None] = mapped_column(JSON)
     content_master_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    channel_variant_revision_id: Mapped[int | None] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -875,6 +876,96 @@ class ContentMasterCheckRun(Base):
     report_json: Mapped[dict] = mapped_column(JSON, default=dict)
     provider_key: Mapped[str | None] = mapped_column(String(100))
     provider_version: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ChannelVariantRevision(Base):
+    __tablename__ = "channel_variant_revision"
+    __table_args__ = (
+        UniqueConstraint("content_unit_id", "variant_key", "revision_no", name="uq_variant_series_revision"),
+        UniqueConstraint("content_unit_id", "variant_key", "idempotency_key", name="uq_variant_series_idempotency"),
+        CheckConstraint("revision_no > 0", name="ck_variant_revision_positive"),
+        Index("ix_variant_project_unit_target", "project_id", "content_unit_id", "channel_id", "content_form"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
+    content_unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    variant_key: Mapped[str] = mapped_column(String(120))
+    revision_no: Mapped[int] = mapped_column(Integer)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("channel_variant_revision.id"))
+    source_master_revision_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    source_master_payload_hash: Mapped[str] = mapped_column(String(64))
+    source_master_context_hash: Mapped[str] = mapped_column(String(64))
+    source_channel_id: Mapped[str | None] = mapped_column(String(100))
+    source_content_form: Mapped[str | None] = mapped_column(String(100))
+    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"))
+    channel_id: Mapped[str] = mapped_column(String(100))
+    content_form: Mapped[str] = mapped_column(String(100))
+    artifact_kind: Mapped[str] = mapped_column(String(20))
+    profile_template_version_id: Mapped[int] = mapped_column(ForeignKey("channel_template_version.id"))
+    profile_key: Mapped[str] = mapped_column(String(150))
+    profile_version: Mapped[str] = mapped_column(String(50))
+    profile_hash: Mapped[str] = mapped_column(String(64))
+    adapter_key: Mapped[str] = mapped_column(String(150))
+    adapter_version: Mapped[str] = mapped_column(String(50))
+    rule_hash: Mapped[str] = mapped_column(String(64))
+    payload_schema: Mapped[str] = mapped_column(String(100))
+    payload_json: Mapped[dict] = mapped_column(JSON)
+    payload_hash: Mapped[str] = mapped_column(String(64), index=True)
+    context_hash: Mapped[str] = mapped_column(String(64), index=True)
+    source_kind: Mapped[str] = mapped_column(String(40))
+    edit_summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    llm_provenance_json: Mapped[dict | None] = mapped_column(JSON)
+    idempotency_key: Mapped[str] = mapped_column(String(150))
+    request_fingerprint: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ChannelVariantAssetRef(Base):
+    __tablename__ = "channel_variant_asset_ref"
+    __table_args__ = (Index("ix_variant_asset_ref_order", "variant_revision_id", "sort_order"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
+    material_revision_id: Mapped[int] = mapped_column(ForeignKey("material_revision.id"))
+    role: Mapped[str] = mapped_column(String(40))
+    slot_key: Mapped[str | None] = mapped_column(String(100))
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    placement_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    rights_snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    content_hash_snapshot: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ChannelVariantEvidenceRef(Base):
+    __tablename__ = "channel_variant_evidence_ref"
+    __table_args__ = (Index("ix_variant_evidence_ref_order", "variant_revision_id", "sort_order"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
+    fact_pack_item_id: Mapped[int] = mapped_column(ForeignKey("fact_pack_item.id"))
+    role: Mapped[str] = mapped_column(String(40))
+    content_locator_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    snapshot_checksum: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ChannelVariantCheckRun(Base):
+    __tablename__ = "channel_variant_check_run"
+    __table_args__ = (Index("ix_variant_check_kind_created", "variant_revision_id", "check_kind", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
+    check_kind: Mapped[str] = mapped_column(String(40))
+    input_hash: Mapped[str] = mapped_column(String(64), index=True)
+    profile_hash: Mapped[str] = mapped_column(String(64))
+    adapter_hash: Mapped[str] = mapped_column(String(64))
+    rule_hash: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20))
+    report_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
