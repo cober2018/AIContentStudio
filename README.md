@@ -8,9 +8,9 @@
 
 - 需求背景：一个已保存的渠道变体只有在来源 Master 当前、必要检查有效，且目标形态/素材/证据检查通过时，才可能进入后续 Candidate v5 冻结。
 - 目录结构：`apps/api/app/services/channel_variants.py` 负责项目授权后的 Variant 历史、只读来源门槛和追加式检查；`channel_adapters.py` 负责五种受控形态的确定性成品投影；规格位于 `openspec/changes/fe-f6e-channel-variants-content-matrix/`。
-- 已完成：来源 Master 的上下文与检查状态进入 Variant `ready` 投影；`variant_package` 只验证受控 Adapter 的确定性成品投影，并记录投影哈希，不生成 ZIP、不声称远端发布。
-- 待完成/TODO：完整 byte-exact 本地包、Candidate v5、审核交付、Matrix 和前端验收仍在 F6E 后续任务；F7 远端 Provider 不在本阶段。
-- 关键设计决策：channel-neutral Master 的目标平台检查由 Variant 承担，不以 v4 直接冻结资格替代来源门槛；检查结果追加保存，读取时仍进行实时来源与权限漂移判断。
+- 已完成：来源 Master 的上下文与检查状态进入 Variant `ready` 投影；`variant_package` 只验证受控 Adapter 的确定性成品投影，并记录投影哈希，不生成 ZIP、不声称远端发布。独立 v5 manifest builder 现能校验并冻结精确 Variant/来源/目标/检查/引用快照，拒绝缺失血缘和不安全模型原始输出。
+- 待完成/TODO：v5 构建器尚未接数据库实时 loader/Freeze API；完整 byte-exact 本地包、Candidate v5 审核交付、Matrix 和前端验收仍在 F6E 后续任务；F7 远端 Provider 不在本阶段。
+- 关键设计决策：channel-neutral Master 的目标平台检查由 Variant 承担，不以 v4 直接冻结资格替代来源门槛；检查结果追加保存，读取时仍进行实时来源与权限漂移判断。v5 清单只接受服务端提供的有界 canonical 快照，绝不沿用 Draft/Master 作为 Candidate 来源指针。
 - 依赖与启动：沿用现有 FastAPI/SQLAlchemy 环境；在 `apps/api` 运行 `.venv/bin/pytest -q tests/test_f6e_variant_save.py tests/test_f6e_graphic_adaptation.py` 进行定向回归。本切片不增加依赖或迁移。
 
 ### FE-F0-F1 前端产品骨架（2026-09-27）

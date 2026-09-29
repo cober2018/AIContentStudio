@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F6E Candidate v5 冻结清单
+
+- [x] /// 对照 v5 OpenSpec、v4 清单与当前 Variant 字段，先写纯 builder 的失败回归：完整血缘、哈希确定性、输入不别名、缺失字段/伪造 LLM 原始输出拒绝。
+- [x] /// 在独立 `candidates_v5.py` 实现有界、不可变的 canonical manifest builder；不接 Candidate 写入、不复用 v4 Draft/Master 来源指针。
+- [x] /// 定向及全量门禁，按覆盖范围勾 OpenSpec 8.x；同步 README/progress/findings 后仅本地 `main` 提交（8.x 尚需 DB loader/Freeze，故不提前核销）。
+
 ## 2026-09-30：F6E Variant 来源与成品投影闸门
 
 - [x] /// 先以失败回归锁定：已有 Variant check pass 不代表来源 Master 的 Brief/Boundary/Identity 和其 checks 已 current；Adapter 仅可验证确定性的本地包投影，不得声称 ZIP 或远端效果已生成。

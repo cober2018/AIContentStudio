@@ -1,5 +1,9 @@
 # 当前进度
 
+## 2026-09-30：F6E Candidate v5 manifest 基础
+
+- 新增纯 `build_manifest_v5()`：校验 Project/Unit/Identity、Brief/FactPack、精确源 Master、Variant、已发布目标与 Adapter 兼容矩阵；冻结 canonical payload、精确 refs、各类当前检查、render 与仅安全字段的 LLMRun 投影。定向 RED（模块缺失）后 GREEN 27 passed，覆盖哈希确定性、快照不别名、15 个冻结区段篡改敏感性、来源/目标不一致和原始模型输出拒绝。全后端 1117 passed / 2 skipped / 7 warnings，OpenSpec strict 30/30，相关 Ruff 与 diff-check PASS。数据库快照 loader、实时 Freeze、Review/Package 仍未接入；F6E 8.x 暂不勾为完成，进度保持 29/100。
+
 ## 2026-09-30：F6E Variant 来源与本地包投影门槛
 
 - Variant checks 增加只读 `source_gate`：要求精确当前 Master、当前 Brief/Identity/Fact Boundary 上下文与适用的 Master 检查；channel-neutral source 不要求其不存在的目标平台检查。`variant_package` 追加保存确定性 Adapter projection hash，并明确 `projection_only`、`local_zip=not_generated`、`remote_effect=unverified`。其它检查通过但来源上下文不全时 `ready` 仍为 false。定向 RED 后 GREEN：26 passed；全后端 1090 passed / 2 skipped / 7 warnings，OpenSpec strict 30/30，相关 Ruff 与 diff-check PASS。F6E 进度保持 29/100；7.3/7.5 与 Candidate v5 仍未整体完成。

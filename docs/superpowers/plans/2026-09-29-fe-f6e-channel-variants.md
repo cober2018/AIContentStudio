@@ -37,6 +37,12 @@
 - [ ] /// 实现 Review/Approval/本地包分派；远端能力未验证必须 fail closed。
 - [ ] /// 跑无 Draft 的 Master→Variant→v5→Approval→ZIP 集成回归。
 
+**本轮 v5 manifest builder 子步骤（先于 Freeze）**
+
+- [x] /// 在 `apps/api/tests/test_f6e_candidate_manifest_v5.py` 写完整上下文与安全模型血缘的纯函数 RED；执行 `.venv/bin/pytest -q tests/test_f6e_candidate_manifest_v5.py`，确认因 builder 缺失而失败。
+- [x] /// 新建 `apps/api/app/services/candidates_v5.py`，只做有界 canonical manifest 的严格校验与 JSON 深拷贝；其输入必须由后续授权/实时 gate 提供，不用客户端自报即可冻结。
+- [x] /// 同一测试 GREEN，随后全后端、OpenSpec all-strict、Ruff 和 diff-check；不把纯 builder 误称为 Candidate v5 已可冻结。
+
 ### Task 4: Matrix、前端与最终门禁
 
 **Files:** 现有 Project Matrix/Production/Review 前端、FE-P1 检查脚本及隔离浏览器验收。

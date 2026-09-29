@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-30 F6E v5 清单边界
+
+- v4 manifest builder 依赖源 Master 的 channel/form，不能直接服务 channel-neutral v5；v5 改为 `source_master` 与 `target` 分离，目标 Profile/Adapter/Rule 不覆盖源渠道血缘。
+- `ContentAsset.channel_variant_revision_id` 已存在，但仅有 FK 不构成 v5 冻结闭环。先完成纯、确定性、拒绝 raw LLM 输出的清单契约，再由后续服务加载真实 DB 当前状态并写 Candidate；不能以纯 builder 的通过声称 Freeze 已可用。
+
 ## 2026-09-30 F6E Variant 来源与成品投影
 
 - 原 `ready` 只聚合 Variant 自身检查；来源 Master 即使 Brief/Boundary 不全或自身检查缺席，也没有独立门槛。现在以项目级授权后对精确 Master 的只读投影核对，避免把 Variant 局部 pass 当成内容可冻结。
