@@ -158,7 +158,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 
 - PRD/需求背景：North Star 要求在可复用 ContentMaster 与审批候选之间形成真正的渠道适配层；当前无持久 ChannelVariant，Project Matrix 只能直接管理 ContentUnit。F6E 仅先把用户总包方案归位，实施须等 F6D 门禁和项目规则下的单独确认。
 - 目录结构：`openspec/changes/fe-f6e-channel-variants-content-matrix/` 包含 proposal、design、tasks、新 ChannelVariant 规格及 Matrix、Production Core、Project 读模型、Review、FE-P1 五份 delta；用户原总包不改。
-- 已完成：规格界定非写入 Matrix 建议、追加式 Variant/精确引用/检查、Candidate v5、Review/Approval/本地包分派与旧 v3/v4 保留；原 V1 交付变更的七个场景已做规格映射，不等于功能验收或自动归档。2026-09-29 基线复核修正了 X 渠道和 v5 授权边界：首批发布版目标为 `x/thread`，旧 `x_thread/thread` 保持 v3/v4 行为但不作为 v5 目标，已注册 `x/single` 在无匹配适配器时不可执行；v5 跨渠道授权比较冻结 Variant 目标而非来源 Unit 渠道，仍保留身份/账号约束。OpenSpec 全库 strict 30/30 通过；尚无 F6E 业务代码或迁移。
+- 已完成：规格界定非写入 Matrix 建议、追加式 Variant/精确引用/检查、Candidate v5、Review/Approval/本地包分派与旧 v3/v4 保留；原 V1 交付变更的七个场景已做规格映射，不等于功能验收或自动归档。2026-09-29 基线复核确认 `x/thread` 与 `x/single` 均已有发布版 profile，F6E 须分别实现受控适配并验收；适配器通过前仍不可用。旧 `x_thread/thread` 保持 v3/v4 行为但不作为 v5 目标。v5 跨渠道授权比较冻结 Variant 目标而非来源 Unit 渠道，仍保留身份/账号约束。OpenSpec 全库 strict 门禁按当前 change 复跑；尚无 F6E 业务代码或迁移。
 - 待完成/TODO：F6C 已完成，F6D 仍须独立复核与实施验收；F6E 自身独立 SPEC review、apply 确认、真实迁移/服务/UI/浏览器和全量门禁均未完成。
 - 关键设计决策：无渠道 Master 是显式 source-only 路径；Matrix 选择不会在 Candidate Approval 前创建 DeliveryTarget；渠道适配在 Candidate v5 冻结前完成，Publisher 不改已批准内容，未知交付仍须对账。ContentAccount 自由格式 profile 不证明目标平台所有权；本地包只是人工交付，远端动作须后续 F7 精确验证。
 - 依赖与启动：沿用当前 FastAPI、React、Alembic；F6E 预计新增 Variant 表和 nullable Candidate 链接，但仅在 F6D 完成后按实际迁移 head 审核。无 push/deploy/生产 migration/canonical 同步或归档授权。

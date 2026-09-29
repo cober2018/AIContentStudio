@@ -12,7 +12,7 @@ The system SHALL suggest a bounded Identity × Modality × Channel selection usi
 - **THEN** only those selections pass through existing authorized Unit APIs, with normal execution-history fork/archive semantics
 
 ### Requirement: ChannelVariantRevision is append-only and project-scoped
-Each variant series SHALL have one stable Unit × channel × content_form × variant_key identity. Revisions SHALL be append-only, CAS/idempotent and bound to one exact project-owned source ContentMasterRevision, pinned IdentitySnapshot, source payload/context hashes and target Registry/profile/adapter versions. A key MUST NOT silently change its channel or content form; old rows MUST remain readable.
+Each variant series SHALL have one stable Unit × channel × content_form × variant_key identity. Revisions SHALL be append-only, CAS/idempotent and bound to one exact project-owned source ContentMasterRevision, pinned IdentitySnapshot, source payload/context hashes, source_kind/edit summary and target Registry/profile/adapter versions. A key MUST NOT silently change its channel or content form; old rows MUST remain readable.
 
 #### Scenario: Save after preview
 - **WHEN** an authorized editor saves a validated adaptation against the current expected series head and source Master
@@ -101,11 +101,15 @@ Review, Content Approval, Delivery Authorization and local package SHALL dispatc
 - **THEN** authorization checks the approved Variant target and pinned account/identity compatibility, without rewriting the source Unit channel or admitting an unrelated target account
 
 ### Requirement: Registered controlled channel deliverables are truthful
-Initial adapters SHALL operate only on exact published forms with matching executable adapters. WeChat article and `x/thread` SHALL be formatted before approval. The `x_thread/thread` legacy fallback SHALL retain its existing v3/v4 behavior but SHALL NOT serve as a v5 target without its own published profile. Already-registered `x/single` SHALL remain unavailable until a matching adapter is implemented and verified. Xiaohongshu image_note SHALL include ordered real image bytes; Douyin spoken_script SHALL include script/scenes/B-roll/voice text and label SRT as estimated when no real timed media exists. Neither script nor prompt-only output SHALL be described as a finished video or complete image note.
+Initial F6E adapters SHALL operate on exact published `wechat/article`, `x/thread`, `x/single`, `xiaohongshu/image_note` and `douyin/spoken_script` forms. Each form SHALL remain unavailable until its matching adapter is executable and independently checked; registration alone is insufficient. WeChat article, X thread and X single SHALL be formatted before approval. The `x_thread/thread` legacy fallback SHALL retain its existing v3/v4 behavior but SHALL NOT serve as a v5 target without its own published profile. Xiaohongshu image_note SHALL include ordered real image bytes; Douyin spoken_script SHALL include script/scenes/B-roll/voice text and label SRT as estimated when no real timed media exists. Neither script nor prompt-only output SHALL be described as a finished video or complete image note.
 
 #### Scenario: Registered form without an adapter
 - **WHEN** an editor selects the published `x/single` form before a matching adapter is executable
 - **THEN** adaptation reports unavailable without creating a Variant or implying that the legacy `x_thread` fallback provides that adapter
+
+#### Scenario: X single adapter becomes executable
+- **WHEN** the registered `x/single` adapter passes its own validation and produces a concrete single-post Variant
+- **THEN** the editor can explicitly save, check, freeze, approve and locally package that exact single-post content without using the thread adapter or changing historical `x_thread` behavior
 
 #### Scenario: Douyin script package
 - **WHEN** an approved spoken_script Candidate is packaged without produced video/audio timing

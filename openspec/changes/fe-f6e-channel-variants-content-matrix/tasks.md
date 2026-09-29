@@ -8,7 +8,7 @@
 
 ## 1. Additive persistence and migration
 
-- [ ] 1.1 Add append-only ChannelVariantRevision model with exact project/unit/source Master/Identity/profile/adapter/payload/context fields.
+- [ ] 1.1 Add append-only ChannelVariantRevision model with exact project/unit/source Master/Identity/profile/adapter/payload/context, source_kind and edit-summary provenance fields.
 - [ ] 1.2 Add stable variant_key and per-series revision, parent, expected-head, idempotency key and request fingerprint constraints.
 - [ ] 1.3 Add exact ChannelVariantAssetRef role/order/placement/hash/rights snapshot model.
 - [ ] 1.4 Add exact ChannelVariantEvidenceRef FactPackItem/checksum/locator model.
@@ -27,7 +27,7 @@
 - [ ] 2.4 Expose configured/executable/verified capability state without treating mere plugin presence as execution proof.
 - [ ] 2.5 Reject unsupported channel/form or unavailable model/render capability with typed no-write results.
 - [ ] 2.6 Keep Channel Registry/Profile as existing truth; do not create a duplicate mutable settings registry.
-- [ ] 2.7 Regress the existing published `x/thread` target, legacy `x_thread/thread` fallback exclusion from v5, and registered-but-adapter-unavailable `x/single`; do not confuse registration with executable adaptation.
+- [ ] 2.7 Regress existing published `x/thread` and `x/single` profiles, each form's unavailable state before its F6E adapter is implemented, and legacy `x_thread/thread` fallback exclusion from v5; do not confuse registration with executable adaptation.
 
 ## 3. Project-scoped Variant service and exact refs
 
@@ -67,7 +67,7 @@
 ## 6. Controlled registered-form adapters
 
 - [ ] 6.1 Implement WeChat article adaptation against the exact published registered form/profile.
-- [ ] 6.2 Implement adaptation for the published `x/thread` profile; leave already-registered `x/single` unavailable until its adapter is implemented and verified, and keep legacy `x_thread/thread` history unchanged.
+- [ ] 6.2 Implement and separately verify controlled adaptation and local package projections for both published `x/thread` and `x/single` forms; keep each unavailable until its own adapter passes, and keep legacy `x_thread/thread` v3/v4 behavior unchanged.
 - [ ] 6.3 Require Xiaohongshu image_note ordered actual image revisions, bytes/hash and public-use rights; reject prompt-only readiness.
 - [ ] 6.4 Produce Douyin spoken_script with script/scenes/B-roll/voice text and no false final-video claim.
 - [ ] 6.5 Generate SRT only as explicitly estimated timing absent real timed media.
@@ -109,7 +109,7 @@
 - [ ] 10.1 Add bounded Matrix suggestion UI and explicit selected-only confirmation.
 - [ ] 10.2 Add Production Channel Variants panel with target/profile/adapter capability state.
 - [ ] 10.3 Show per-Variant current/stale/check/render/ref provenance and history/diff.
-- [ ] 10.4 Add adapt preview, explicit accept/save and 409 conflict handling without modifying Master editor state.
+- [ ] 10.4 Add adapt preview, explicit regenerate/retry, accept/save and 409 conflict handling without modifying Master editor state; retry never writes a Variant implicitly.
 - [ ] 10.5 Add v5 Review preview/changes/checks, separate approval/authorization and truthful local-package status.
 - [ ] 10.6 Preserve Text/Graphic/Video editing and Workflow dirty/save independence.
 - [ ] 10.7 Keep Matrix/Variant modules lazy and enforce `/projects` and unrelated route initial-JS/import-graph budgets.
@@ -119,7 +119,7 @@
 - [ ] 11.1 Regress neutral and bound Master paths, v3/v4 Candidate history and no invented Variant backfill.
 - [ ] 11.2 Regress exact refs/evidence, profile/source/adapter stale, concurrent save and hash-tampered v5 gates.
 - [ ] 11.3 Browser: confirm selected Matrix Units and prove suggestion-only state makes no writes.
-- [ ] 11.4 Browser: one Text Master to multiple channel Variants, current checks and v5 Candidate/Approval/local package.
+- [ ] 11.4 Browser: one Text Master to WeChat article, X thread and X single Variants, separately checking each registered adapter, current checks and v5 Candidate/Approval/local package.
 - [ ] 11.5 Browser: Graphic Master to ordered-byte Xiaohongshu image_note and prompt-only blocked state.
 - [ ] 11.6 Browser: Video/script to Douyin controlled script-only package with estimated SRT and no publication claim.
 - [ ] 11.7 Browser: profile/source drift, archived read-only, rights revocation and unknown/reconciliation safety.
@@ -127,5 +127,5 @@
 - [ ] 11.9 Run full backend, frontend TypeScript/Vite, FE-P1 budgets, OpenSpec all-strict, relevant lint and diff-check.
 - [ ] 11.10 Verify isolated SQLite/PostgreSQL migration and non-destructive downgrade preflight.
 - [ ] 11.11 Obtain independent SPEC, backend/security, frontend/Review/package review; resolve findings without weakening gates.
-- [ ] 11.12 Update README, task_plan/progress/findings and acceptance record with exact outcomes/limitations; commit owned files locally only.
+- [ ] 11.12 Update README, task_plan/progress/findings and acceptance record with exact outcomes/limitations and archive-readiness status; commit owned files locally only.
 - [ ] 11.13 Keep F6E canonical sync/archive, push, deploy and production migration pending separate authorization.
