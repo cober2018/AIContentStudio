@@ -40,7 +40,7 @@
 - [ ] 3.5 Persist DataSnapshot/SourceDocument/Fact provenance.
 - [ ] 3.6 Bound pagination/timeouts/body sizes.
 - [ ] 3.7 Treat external payload as untrusted data.
-- [ ] 3.8 Add failure/retry/audit behavior.
+- [ ] 3.8 Add failure/retry/audit behavior; `ConnectorEndpoint.last_pull_error` and all returned diagnostics must use bounded safe reason codes, never raw exception or response text.
 - [ ] 3.9 Do not mark unrelated plugin keys connected.
 - [ ] 3.10 Add connector integration tests.
 
@@ -65,7 +65,7 @@
 - [ ] 5.7 Add async/timeout/failure/unknown provider-result handling.
 - [ ] 5.8 Add mock + at least one configured real adapter path where repository settings support it.
 - [ ] 5.9 Do not mark adapter verified without real test.
-- [ ] 5.10 Redact nested provider request/response/errors across API, Material metadata, AuditLog, ProjectEvent and settings projections; add negative secret-leakage checks.
+- [ ] 5.10 Redact nested provider request/response/errors across API, Material metadata, AuditLog, ProjectEvent and settings projections; specifically prevent raw prompts/requests, signed URLs and secret fragments in existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error`; add successful-result and error-path negative secret-leakage checks.
 - [ ] 5.11 Reject success-without-bytes, unsupported MIME, missing/ambiguous license and wrong render-input hash without creating MaterialRevision or Master provenance.
 
 ## 6. TTS/ASR
