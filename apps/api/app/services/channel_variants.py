@@ -17,7 +17,10 @@ from ..models import (
     ContentMasterAssetRef,
     ContentMasterEvidenceRef,
     ContentMasterRevision,
+    FactPack,
+    FactPackItem,
     IdentitySnapshot,
+    ProjectFactBoundaryRevision,
     User,
     utcnow,
 )
@@ -149,6 +152,22 @@ def _variant_context(master: ContentMasterRevision, unit_identity_id: int | None
     }
 
 
+def _validate_evidence_refs(db: Session, master: ContentMasterRevision, refs: list[dict]) -> list[FactPackItem]:
+    if not refs:
+        return []
+    boundary = db.get(ProjectFactBoundaryRevision, master.fact_boundary_revision_id) if master.fact_boundary_revision_id else None
+    pack = db.get(FactPack, boundary.fact_pack_id) if boundary else None
+    if pack is None or pack.status != "frozen" or pack.version != boundary.fact_pack_version or pack.checksum != boundary.fact_pack_checksum:
+        raise HTTPException(422, {"code": "variant_evidence_boundary_unready"})
+    items = []
+    for ref in refs:
+        item = db.get(FactPackItem, ref.get("fact_pack_item_id"))
+        if item is None or item.fact_pack_id != pack.id or item.snapshot_checksum != ref.get("snapshot_checksum") or item.evidence_kind == "legacy_untyped" or item.public_use_allowed is not True or item.public_use_revoked_at is not None:
+            raise HTTPException(422, {"code": "variant_evidence_ref_invalid"})
+        items.append(item)
+    return items
+
+
 def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
     key = payload["variant_key"]
@@ -163,7 +182,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         if existing.request_fingerprint != fingerprint:
             raise HTTPException(409, {"code": "variant_idempotency_conflict"})
         return _serialize(db, existing)
-    if payload.get("asset_refs") or payload.get("evidence_refs") or payload.get("llm_provenance"):
+    if payload.get("asset_refs") or payload.get("llm_provenance"):
         raise HTTPException(422, {"code": "variant_refs_or_ai_not_yet_supported"})
     master = db.get(ContentMasterRevision, payload["source_master_revision_id"])
     if master is None or master.project_id != project_id or master.content_unit_id != unit_id:
@@ -181,6 +200,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         raise HTTPException(409, {"code": "variant_source_context_stale"})
     if db.scalar(select(ContentMasterAssetRef.id).where(ContentMasterAssetRef.master_revision_id == master.id).limit(1)) is not None or db.scalar(select(ContentMasterEvidenceRef.id).where(ContentMasterEvidenceRef.master_revision_id == master.id).limit(1)) is not None:
         raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
+    evidence_refs = payload.get("evidence_refs", [])
     try:
         adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
     except AdapterUnavailable as exc:
@@ -193,9 +213,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     else:
         expected_adapted = None
     try:
-        canonical = canonical_payload(capability["payload_schema"], payload["payload"])
+        canonical = canonical_payload(capability["payload_schema"], payload["payload"], evidence_refs=evidence_refs)
     except VariantDocumentError as exc:
         raise HTTPException(422, {"code": "variant_payload_invalid", "reason": str(exc)}) from exc
+    _validate_evidence_refs(db, master, evidence_refs)
     if expected_adapted is not None and canonical != expected_adapted:
         raise HTTPException(422, {"code": "variant_adapted_output_mismatch"})
     head = db.scalar(select(ChannelVariantRevision).where(
@@ -227,6 +248,12 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     db.add(row)
     try:
         db.flush()
+        for ref in evidence_refs:
+            db.add(ChannelVariantEvidenceRef(
+                variant_revision_id=row.id, fact_pack_item_id=ref["fact_pack_item_id"], role=ref.get("role", "claim"),
+                content_locator_json=ref["content_locator_json"], sort_order=ref.get("sort_order", 0),
+                snapshot_checksum=ref["snapshot_checksum"], created_at=utcnow(),
+            ))
         record_project_event(db, project_id=project_id, event_type="channel_variant.saved", actor=user.email, entity_type="channel_variant_revision", entity_id=row.id, payload={"unit_id": unit_id, "variant_key": key, "revision_no": row.revision_no})
         db.flush()
         db.expire_all()
@@ -243,6 +270,11 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             raise HTTPException(409, {"code": "variant_profile_changed"})
         latest_context = _variant_context(master, unit.identity_snapshot_id, identity.checksum if identity else None, row.channel_id, row.content_form, latest_capability, rule_hash)
         current_master = get_master_revision(db, project_id, unit_id, master.id, user)
+        try:
+            _validate_evidence_refs(db, master, evidence_refs)
+        except HTTPException:
+            db.rollback()
+            raise HTTPException(409, {"code": "variant_evidence_changed"}) from None
         if project.status == "archived" or unit.status == "archived" or unit.identity_snapshot_id != master.identity_snapshot_id or current_master["readiness"]["state"] == "stale" or _current_source_id(db, unit_id) != master.id or master.payload_hash != _hash(master.payload_json) or _hash(latest_context) != row.context_hash:
             db.rollback()
             raise HTTPException(409, {"code": "variant_context_conflict"})

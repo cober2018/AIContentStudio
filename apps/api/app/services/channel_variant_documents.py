@@ -85,13 +85,16 @@ def _citations(raw: object, evidence_refs: object, locations: dict[str, str]) ->
         _fail("citations_invalid")
     available = set()
     for ref in evidence_refs:
-        if not isinstance(ref, dict):
-            _fail("evidence_refs_invalid")
+        ref = _object(ref, {"fact_pack_item_id", "snapshot_checksum", "role", "sort_order", "content_locator_json"})
         fact_id, checksum = ref.get("fact_pack_item_id"), ref.get("snapshot_checksum")
         locator = ref.get("content_locator_json")
         if type(fact_id) is not int or fact_id <= 0 or not isinstance(checksum, str) or _HASH.fullmatch(checksum) is None or not isinstance(locator, dict) or set(locator) != {"location_id", "start", "end"}:
             _fail("evidence_refs_invalid")
-        if not isinstance(locator["location_id"], str) or type(locator["start"]) is not int or type(locator["end"]) is not int:
+        role = ref.get("role", "claim")
+        order = ref.get("sort_order", 0)
+        if not isinstance(role, str) or not role or len(role) > 40 or _ID.fullmatch(role) is None or type(order) is not int or not 0 <= order < 250:
+            _fail("evidence_refs_invalid")
+        if not isinstance(locator["location_id"], str) or _ID.fullmatch(locator["location_id"]) is None or type(locator["start"]) is not int or type(locator["end"]) is not int:
             _fail("evidence_refs_invalid")
         available.add((fact_id, checksum, json.dumps(locator, sort_keys=True, separators=(",", ":"))))
     result = []

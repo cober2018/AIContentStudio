@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from sqlalchemy import select
 
-from app.models import ChannelTemplateVersion, ChannelVariantRevision, ProjectEvent
+from app.models import ChannelTemplateVersion, ChannelVariantRevision, FactPack, FactPackItem, ProjectEvent
 from app.seed import seed_v1_channel_profiles
 from app.services.channel_variants import _variant_context
 
@@ -121,4 +121,100 @@ def test_unsupported_source_target_has_typed_no_write_result(client, db_session)
     }, headers=headers)
     assert response.status_code == 422
     assert response.json()["detail"]["code"] == "variant_adapter_unavailable"
+    assert client.get(path, headers=headers).json()["items"] == []
+
+
+def test_text_variant_citation_binds_exact_frozen_boundary_and_rolls_back_invalid_ref(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    pack = FactPack(name="可核对事实", version=1, status="frozen", checksum="p" * 64)
+    db_session.add(pack)
+    db_session.flush()
+    item = FactPackItem(fact_pack_id=pack.id, evidence_kind="fact", snapshot_json={"statement": "有来源"}, snapshot_checksum="a" * 64, public_use_allowed=True)
+    db_session.add(item)
+    db_session.commit()
+    boundary = client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={"fact_pack_id": pack.id, "expected_revision": 0}, headers=headers)
+    assert boundary.status_code == 201, boundary.text
+    source_path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    second_source = client.post(source_path, json={
+        "idempotency_key": "source-with-boundary", "expected_revision": 1, "payload_schema": "text.master.v2",
+        "payload": master["payload"],
+    }, headers=headers)
+    assert second_source.status_code == 200, second_source.text
+    source = second_source.json()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    evidence = {"fact_pack_item_id": item.id, "snapshot_checksum": item.snapshot_checksum, "role": "claim", "content_locator_json": {"location_id": "single", "start": 0, "end": 2}, "sort_order": 0}
+    body = {
+        "variant_key": "x-single-cited", "expected_revision": 0, "source_master_revision_id": source["id"],
+        "expected_source_payload_hash": source["payload_hash"], "expected_source_context_hash": source["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "cited-1",
+        "payload": {"text": "有来源的原文", "citations": [{"id": "c1", "location_id": "single", "fact_pack_item_id": item.id, "snapshot_checksum": item.snapshot_checksum, "locator": {"start": 0, "end": 2}}]},
+        "evidence_refs": [evidence],
+    }
+    invalid = client.post(path, json={**body, "idempotency_key": "cited-bad", "evidence_refs": [{**evidence, "snapshot_checksum": "x" * 64}]}, headers=headers)
+    assert invalid.status_code == 422, invalid.text
+    assert client.get(path, headers=headers).json()["items"] == []
+    accepted = client.post(path, json=body, headers=headers)
+    assert accepted.status_code == 201, accepted.text
+    assert accepted.json()["evidence"][0]["fact_pack_item_id"] == item.id
+    assert accepted.json()["evidence"][0]["locator"] == evidence["content_locator_json"]
+    assert client.post(path, json=body, headers=headers).json()["id"] == accepted.json()["id"]
+    oversized_role = client.post(path, json={**body, "variant_key": "x-single-bad-role", "idempotency_key": "cited-bad-role", "evidence_refs": [{**evidence, "role": "r" * 41}]}, headers=headers)
+    assert oversized_role.status_code == 422, oversized_role.text
+
+
+def test_text_variant_citation_revoked_before_commit_rolls_back_variant_and_event(client, db_session, monkeypatch):
+    from app.services import channel_variants as service
+
+    project, unit, master, headers = _source(client, db_session)
+    pack = FactPack(name="待撤权事实", version=1, status="frozen", checksum="b" * 64)
+    db_session.add(pack)
+    db_session.flush()
+    item = FactPackItem(fact_pack_id=pack.id, evidence_kind="fact", snapshot_json={"statement": "有来源"}, snapshot_checksum="a" * 64, public_use_allowed=True)
+    db_session.add(item)
+    db_session.commit()
+    assert client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={"fact_pack_id": pack.id, "expected_revision": 0}, headers=headers).status_code == 201
+    source = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", json={
+        "idempotency_key": "source-boundary-race", "expected_revision": 1, "payload_schema": "text.master.v2", "payload": master["payload"],
+    }, headers=headers).json()
+    original_record = service.record_project_event
+
+    def revoke_on_event(db, **kwargs):
+        result = original_record(db, **kwargs)
+        db.get(FactPackItem, item.id).public_use_allowed = False
+        db.flush()
+        return result
+
+    monkeypatch.setattr(service, "record_project_event", revoke_on_event)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    response = client.post(path, json={
+        "variant_key": "x-single-race", "expected_revision": 0, "source_master_revision_id": source["id"],
+        "expected_source_payload_hash": source["payload_hash"], "expected_source_context_hash": source["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "cited-race",
+        "payload": {"text": "有来源的原文", "citations": [{"id": "c1", "location_id": "single", "fact_pack_item_id": item.id, "snapshot_checksum": item.snapshot_checksum, "locator": {"start": 0, "end": 2}}]},
+        "evidence_refs": [{"fact_pack_item_id": item.id, "snapshot_checksum": item.snapshot_checksum, "role": "claim", "content_locator_json": {"location_id": "single", "start": 0, "end": 2}}],
+    }, headers=headers)
+    assert response.status_code == 409, response.text
+    assert db_session.scalars(select(ChannelVariantRevision)).all() == []
+    assert db_session.scalars(select(ProjectEvent).where(ProjectEvent.event_type == "channel_variant.saved")).all() == []
+    db_session.expire(item)
+    assert item.public_use_allowed is True
+
+
+def test_malformed_variant_evidence_ref_returns_domain_error_without_write(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    pack = FactPack(name="畸形引用测试", version=1, status="frozen", checksum="b" * 64)
+    db_session.add(pack)
+    db_session.commit()
+    assert client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={"fact_pack_id": pack.id, "expected_revision": 0}, headers=headers).status_code == 201
+    source = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", json={
+        "idempotency_key": "malformed-ref-source", "expected_revision": 1, "payload_schema": "text.master.v2", "payload": master["payload"],
+    }, headers=headers).json()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    response = client.post(path, json={
+        "variant_key": "bad-citation", "expected_revision": 0, "source_master_revision_id": source["id"],
+        "expected_source_payload_hash": source["payload_hash"], "expected_source_context_hash": source["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "bad-citation",
+        "payload": {"text": "文字"}, "evidence_refs": [{"fact_pack_item_id": [], "snapshot_checksum": "a" * 64, "content_locator_json": {"location_id": "single", "start": 0, "end": 1}}],
+    }, headers=headers)
+    assert response.status_code == 422, response.text
     assert client.get(path, headers=headers).json()["items"] == []
