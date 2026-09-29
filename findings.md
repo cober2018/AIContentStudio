@@ -2,6 +2,7 @@
 
 ## 2026-09-29 North Star 总包校准 / F6C 规格发现
 
+- F6E 源包的新增规格没有 WHEN/THEN 场景，不能直接通过 OpenSpec strict；现已补可验收场景和五份主能力 delta。现有 `ContentUnit.channel_id`、`ContentMasterRevision.channel_id/content_form` 可空，但 `content_masters.save_revision()` 将 Master 绑定到 Unit 渠道，v4 仍按旧候选路径；必须把无渠道 Master 设为显式 source-only，而非偷改 v4。源包“选择 target”不得提前建 FE-F4 DeliveryTarget，因它需要 exact approved Candidate。active V1 change 的七场景已做保留映射，未声称已通过。
 - F6D 衍生操作原草案只要求来源和转换意图，可能被实现为无实际内容变化却记录“转换成功”；现已要求具体、有效的 v2 结果，未验证 Provider 时无写入。F6C 独立复核仍受 ChatGPT 模型加载错误影响，本地连接器可读不能代替 ChatGPT 实际独立读取。
 - F6D 源包原第 4 组同时要求 F6D“接受 Provider 输出为 MaterialRevision”和 F7“真实 Provider 验证”，与 F6C 已纠正的阶段边界相同。标准 F6D 草案仅定义 Video/TTS/ASR 的能力状态和未验证请求无写入；真实输出的字节/许可/血缘/响应脱敏由 F7 承接，F6D 不假造 Provider 产物。原始用户包保持不变。
 - 独立 F6C 复核发现：F7 原包 1.4 只约束持久化不存 secret，9.6 只约束 Settings 脱敏，均未明确约束 Provider 执行/结果/错误/血缘响应。F6C 设计与 delta 已留下 F7 标准化必须新增的规范及负向测试，不修改用户原包。另发现通用 ContentMasterPanel 静态导入 GraphicStudioModel，虽然 Graphic Shell lazy，但模型仍进通用 Production；已改为 Graphic 条件动态导入并在 bundle gate 验证静态闭包隔离。画布按钮此前只靠颜色显示选中，现加 aria-pressed。

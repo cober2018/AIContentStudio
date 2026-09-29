@@ -2,6 +2,7 @@
 
 ## 2026-09-29：North Star 剩余开发总目标 / FE-F6C 规格校准
 
+- ChatGPT 原会话对同轮 F6C 独立复核仍显示错误；本地 doctor/tunnel 可用不能证明 ChatGPT 已完成独立读取，F6C 7.10 仍未勾。并行完成 F6E 标准 OpenSpec 草案：新 ChannelVariant 能力与五份既有能力 delta、96 项任务。当前代码确认 Unit/Master channel 字段可空，但 v4 仍是渠道绑定路径；新规格明确 neutral Master 仅作 Variant source，Matrix 不在 Approval 前创建 DeliveryTarget。active V1 交付七场景已映射到 F6E/F7 保留义务；全库 OpenSpec strict 28/28、diff-check PASS。未改 F6E 业务代码/迁移，未将草案视为 apply 授权，独立 SPEC review 仍待完成。
 - 本轮连接器本地 `workspace_info` 可读 `main@9089c8b`，但 ChatGPT 页面显示“无法加载 ChatGPT 模型”，同轮复核消息未能发送；已清理未发送草稿，F6C 7.10 继续未勾。F6D 只补规格：衍生 Video 子修订必须有明确编辑或确定性本地变换所得的具体有效 v2 内容；未验证 Provider 需要参与时 typed unavailable、无子修订/媒体/成功回执。未进入业务 apply。
 - F6C 补丁已在本地 main 作为检查点 `35df0a7` 提交；仅用户原始 OpenSpec 包/ZIP 仍未跟踪，未纳入提交。F6C 73/74，独立复核仍因连接器实际读取失败待验。本轮另将 F6D 源包机械归位为标准 active OpenSpec 草案：proposal/design、新 Video Studio 规格及 Production Core/Review/FE-P1 三份 delta、73 项未开始任务；补全可验证 Scenario、明确 F6C 完成前不得 apply、真实 Provider/输出接收和执行响应脱敏归 F7、零新表目标。F6D 未改业务代码/迁移；OpenSpec 全库 strict 27/27 PASS。F6D 仍需独立规格 review 与用户明确 apply 确认。
 - 独立复核第一轮：后端 APPROVE，SPEC/前端要求三处定向修复。F7 来源包原任务未显式覆盖 Provider 执行/结果响应脱敏；F6C 设计和主 delta 已写入 F7 标准化时必须新增的响应/错误/血缘脱敏要求与负向测试，未改用户源包，也未宣称 F7 已完成。GraphicStudioModel 从通用 Production 静态导入改为仅 Graphic 时动态载入，bundle gate 现直接断言其不在通用 Production/Text/Video 静态闭包；旧产物运行新 gate 如预期失败，修正后 TypeScript/Vite/FE-P1 PASS，Production 初始 JS 从 285.80 降至 273.34 kB。画布选择按钮已暴露 aria-pressed。前端模型 20/20 PASS。F6C 仍 73/74，待再次独立复核；后端本轮未改，951 passed 是前次代码门禁，不冒充重跑。
