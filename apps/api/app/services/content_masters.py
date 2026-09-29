@@ -454,7 +454,7 @@ def _verified_generated_asset(db: Session, output: ProjectWorkflowOutput, materi
     )
 
 
-def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, workflow_seed: bool = False, upgrade_source: ContentMasterRevision | None = None) -> dict:
+def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, workflow_seed: bool = False, upgrade_source: ContentMasterRevision | None = None, derived_source: ContentMasterRevision | None = None) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
     modality = payload.get("modality") or unit.modality
     if modality != unit.modality:
@@ -496,11 +496,13 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         except VideoDocumentError as exc:
             raise HTTPException(422, {"code": "invalid_master_document", "reason": str(exc)}) from exc
     refs_fingerprint = {"assets": payload.get("asset_refs", []), "evidence": payload.get("evidence_refs", [])}
-    trusted_kind = "explicit_upgrade" if upgrade_source is not None else "workflow_seed" if workflow_seed else "user_edit"
+    trusted_kind = "derived_video" if derived_source is not None else "explicit_upgrade" if upgrade_source is not None else "workflow_seed" if workflow_seed else "user_edit"
     if payload.get("source_kind", "user_edit") != trusted_kind:
         raise HTTPException(422, "来源血缘必须通过对应的已验证服务创建")
     if upgrade_source is None and {"upgrade_source", "upgrade_request"} & set(payload.get("edit_summary", {})):
         raise HTTPException(422, {"code": "unverified_upgrade_provenance"})
+    if derived_source is None and "derived_video" in payload.get("edit_summary", {}):
+        raise HTTPException(422, {"code": "unverified_derived_video_provenance"})
     if "render_attestation" in payload.get("edit_summary", {}):
         raise HTTPException(422, "渲染确认必须使用显式render_attestation输入")
     if "ai_provenance" in payload.get("edit_summary", {}):
@@ -532,6 +534,8 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     upgrade_pair = (upgrade_source.payload_schema, payload_schema) if upgrade_source is not None else None
     if upgrade_source is not None and (latest is None or latest.id != upgrade_source.id or latest.content_unit_id != unit_id or upgrade_pair not in {("text.master.v1", "text.master.v2"), ("graphic.master.v1", "graphic.master.v2"), ("video.master.v1", "video.master.v2")} or latest.payload_hash != payload.get("edit_summary", {}).get("upgrade_source", {}).get("payload_hash") or _hash(latest.payload_json) != latest.payload_hash):
         raise HTTPException(409, {"code": "master_upgrade_source_conflict"})
+    if derived_source is not None and (latest is None or latest.id != derived_source.id or latest.content_unit_id != unit_id or latest.payload_schema != "video.master.v2" or payload_schema != "video.master.v2" or latest.payload_hash != payload.get("edit_summary", {}).get("derived_video", {}).get("source_payload_hash") or latest.context_hash != payload.get("edit_summary", {}).get("derived_video", {}).get("source_context_hash") or _hash(latest.payload_json) != latest.payload_hash):
+        raise HTTPException(409, {"code": "video_derivation_source_conflict"})
     if latest and latest.payload_schema != payload_schema and upgrade_source is None:
         raise HTTPException(409, {"code": "explicit_master_upgrade_required"})
     expected_context = _context(db, project, unit, content_form=latest.content_form) if latest else context

@@ -3,7 +3,9 @@
 import hashlib
 import importlib
 import importlib.util
+import io
 import json
+import zipfile
 from copy import deepcopy
 from types import SimpleNamespace
 
@@ -29,6 +31,72 @@ def _document() -> dict:
         "music": {},
         "cover": {},
     }
+
+
+def test_video_v2_structured_diff_uses_stable_ids_without_whole_video_similarity():
+    diff = importlib.import_module("app.services.video_master_diff").diff_video_documents
+    before = _document()
+    before["script"]["blocks"].append({"id": "closing", "order": 1, "text": "结尾"})
+    after = deepcopy(before)
+    after["script"]["blocks"] = [{"id": "closing", "order": 0, "text": "结尾"}, {"id": "opening", "order": 1, "text": "新开场"}]
+    after["shots"][0]["duration_ms"] = 3_000
+    after["shots"].append({"id": "shot-2", "order": 1, "label": "补充镜头", "duration_ms": 1_000})
+    after["timeline"]["tracks"][0]["items"][0]["end_ms"] = 3_000
+    after["subtitles"]["cues"][0]["text"] = "新字幕"
+    after["overlays"] = [{"id": "overlay-1", "order": 0, "text": "标注", "start_ms": 0, "end_ms": 1_000, "x": 0.2, "y": 0.3}]
+    after["voice"] = {"mode": "recorded", "material_revision_id": 7}
+    result = diff(before, after)
+    assert {item["id"]: item for item in result["script"]}["opening"]["changes"] == ["move", "text"]
+    assert "duration_ms" in {item["id"]: item for item in result["shots"]}["shot-1"]["changes"]
+    assert {item["id"]: item for item in result["shots"]}["shot-2"]["kind"] == "add"
+    assert {item["id"]: item for item in result["subtitles"]}["cue-1"]["changes"] == ["text"]
+    assert {item["id"]: item for item in result["overlays"]}["overlay-1"]["kind"] == "add"
+    assert result["voice"]["changed"] is True
+    assert result["timeline_items"][0]["changes"] == ["end_ms"]
+    assert "similarity" not in str(result)
+
+
+def test_video_v2_structured_diff_reports_track_and_item_move_remove():
+    diff = importlib.import_module("app.services.video_master_diff").diff_video_documents
+    before = _document()
+    before["overlays"] = [{"id": "old-caption", "order": 0, "text": "旧叠层", "start_ms": 0, "end_ms": 1_000, "x": 0.2, "y": 0.3}]
+    before["timeline"]["tracks"][0]["items"].append({"id": "item-2", "order": 1, "shot_id": "shot-1", "start_ms": 2_000, "end_ms": 4_000})
+    before["timeline"]["tracks"][0]["items"][0]["end_ms"] = 2_000
+    after = deepcopy(before)
+    after["overlays"] = []
+    after["timeline"]["tracks"][0]["items"] = [
+        {**after["timeline"]["tracks"][0]["items"][1], "order": 0},
+        {**after["timeline"]["tracks"][0]["items"][0], "order": 1},
+    ]
+    after["timeline"]["tracks"].append({"id": "subtitle-track", "order": 1, "kind": "subtitle", "items": []})
+    result = diff(before, after)
+    assert {item["id"]: item for item in result["timeline_items"]}["item-1"]["kind"] == "move"
+    assert {item["id"]: item for item in result["timeline_tracks"]}["subtitle-track"]["kind"] == "add"
+    assert {item["id"]: item for item in result["overlays"]}["old-caption"]["kind"] == "remove"
+
+
+def test_video_v2_master_diff_rejects_tampered_historical_payload(client, db_session):
+    from app.models import ContentMasterRevision
+
+    headers = {"X-Studio-User": "video-diff-integrity@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "剪辑作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "差异完整性"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "短片", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    first = client.post(path, json={"idempotency_key": "diff-first", "payload_schema": "video.master.v2", "payload": _document()}, headers=headers)
+    assert first.status_code == 200, first.text
+    changed = _document()
+    changed["script"]["blocks"][0]["text"] = "改过的口播"
+    second = client.post(path, json={"idempotency_key": "diff-second", "expected_revision": 1, "payload_schema": "video.master.v2", "payload": changed}, headers=headers)
+    assert second.status_code == 200, second.text
+    row = db_session.get(ContentMasterRevision, second.json()["id"])
+    tampered = deepcopy(row.payload_json)
+    tampered["script"]["blocks"][0]["text"] = "被篡改的口播"
+    row.payload_json = tampered
+    db_session.commit()
+    response = client.get(f"{path}/{row.id}/diff", params={"compare_to_id": first.json()["id"]}, headers=headers)
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "video_master_not_comparable"
 
 
 def _legacy_video_master(client):
@@ -188,6 +256,41 @@ def test_frozen_video_v2_accepts_canonical_exact_manual_render():
 
     preview = candidate_preview(_frozen_video_candidate())
     assert preview["render"]["outputs"][0]["material_revision_id"] == 42
+
+
+def test_frozen_video_v2_review_preview_and_diff_use_exact_structured_content():
+    from app.services.candidates import candidate_hash
+    from app.services.production_modalities import _canonical_hash, frozen_video_render_input_hash
+    from app.services.project_review_projection import candidate_diff, candidate_preview
+
+    previous = _frozen_video_candidate()
+    previous.id = 1
+    current = _frozen_video_candidate()
+    current.id = 2
+    manifest = current.candidate_manifest_json
+    manifest["content"]["script"]["blocks"][0]["text"] = "新版口播"
+    manifest["content"]["shots"][0]["duration_ms"] = 3_000
+    manifest["content"]["timeline"]["tracks"][0]["items"][0]["end_ms"] = 3_000
+    manifest["content"]["subtitles"]["cues"][0]["text"] = "新版字幕"
+    manifest["content"]["overlays"] = [{"id": "label-1", "order": 0, "text": "新标注", "start_ms": 0, "end_ms": 1_000, "x": 0.2, "y": 0.3}]
+    manifest["content_master"]["payload_hash"] = _canonical_hash(manifest["content"])
+    input_hash = frozen_video_render_input_hash(manifest)
+    manifest["render"]["render_input_hash"] = input_hash
+    manifest["production"]["edit_summary"]["render_attestation"]["render_input_hash"] = input_hash
+    current.candidate_hash = candidate_hash(manifest)
+
+    preview = candidate_preview(current)
+    assert preview["script_blocks"][0]["text"] == "新版口播"
+    assert preview["shots"][0]["duration_ms"] == 3_000
+    assert preview["timeline"]["tracks"][0]["items"][0]["end_ms"] == 3_000
+    assert preview["subtitles"]["cues"][0]["text"] == "新版字幕"
+    assert preview["overlays"][0]["text"] == "新标注"
+    assert preview["render"]["outputs"][0]["material_revision_id"] == 42
+    diff = candidate_diff(previous, current)
+    assert diff["text"] is None
+    assert {item["id"]: item for item in diff["structured"]["shots"]}["shot-1"]["changes"] == ["duration_ms"]
+    assert {item["id"]: item for item in diff["structured"]["subtitles"]}["cue-1"]["changes"] == ["text"]
+    assert diff["changed_sections"]["content"]["changed"] is True
 
 
 @pytest.mark.parametrize("change", [
@@ -515,6 +618,82 @@ def test_video_v2_render_input_hash_changes_with_published_profile(client, db_se
     assert second != first
 
 
+def test_video_v2_source_and_context_revision_invalidate_checks_and_render_inputs(client, db_session, tmp_path):
+    from test_f6a_modality_adapters import HEADERS, _unit
+
+    from app.models import Material, MaterialRevision, ProjectMaterialReference
+
+    project, path = _unit(client, db_session, "video", suffix="_freshness")
+    sources = []
+    for index in (1, 2):
+        content = b"\x89PNG\r\n\x1a\n" + f"exact source {index}".encode()
+        file = tmp_path / f"source-{index}.png"
+        file.write_bytes(content)
+        material = Material(title=f"画面 {index}", kind="image", status="active")
+        db_session.add(material)
+        db_session.flush()
+        revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(content).hexdigest(), file_path=str(file), mime_type="image/png", status="active", public_use_allowed=True, rights_status="cleared")
+        db_session.add(revision)
+        db_session.flush()
+        db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active"))
+        sources.append(revision)
+    db_session.commit()
+
+    def document_and_refs(source):
+        document = _document()
+        document["shots"][0]["source_material_revision_id"] = source.id
+        refs = [{"material_revision_id": source.id, "content_hash": source.content_hash, "role": "shot_source", "slot_key": "shot-1", "sort_order": 0, "placement": {"shot_id": "shot-1"}}]
+        return document, refs
+
+    document, refs = document_and_refs(sources[0])
+    first = client.post(path, json={"idempotency_key": "source-a", "payload_schema": "video.master.v2", "payload": document, "asset_refs": refs, "content_form": "final"}, headers=HEADERS)
+    assert first.status_code == 200, first.text
+    first_id = first.json()["id"]
+    assert client.post(f"{path}/{first_id}/checks", headers=HEADERS).status_code == 200
+    first_hash = client.get(f"{path}/{first_id}/readiness", headers=HEADERS).json()["render_input_hash"]
+    assert all(item["is_current"] for item in client.get(f"{path}/{first_id}/checks/current", headers=HEADERS).json()["items"])
+
+    document, refs = document_and_refs(sources[1])
+    second = client.post(path, json={"idempotency_key": "source-b", "expected_revision": 1, "payload_schema": "video.master.v2", "payload": document, "asset_refs": refs, "content_form": "final"}, headers=HEADERS)
+    assert second.status_code == 200, second.text
+    assert second.json()["parent_revision_id"] == first_id
+    assert second.json()["context_hash"] == first.json()["context_hash"]
+    second_id = second.json()["id"]
+    second_hash = client.get(f"{path}/{second_id}/readiness", headers=HEADERS).json()["render_input_hash"]
+    assert second_hash != first_hash
+    source_diff = client.get(f"{path}/{second_id}/diff", params={"compare_to_id": first_id}, headers=HEADERS)
+    assert source_diff.status_code == 200, source_diff.text
+    assert source_diff.json()["assets"]["changed"] is True
+    assert source_diff.json()["context"]["changed"] is False
+    assert "source_material_revision_id" in source_diff.json()["shots"][0]["changes"]
+    assert "similarity" not in str(source_diff.json())
+    assert client.post(f"{path}/{second_id}/checks", headers=HEADERS).status_code == 200
+
+    brief = client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={"expected_revision": 1, "objective": "新制作方向"}, headers=HEADERS)
+    assert brief.status_code == 201, brief.text
+    stale = client.get(f"{path}/{second_id}/checks/current", headers=HEADERS).json()["items"]
+    assert all(item["status"] == "stale" for item in stale)
+    assert client.get(f"{path}/{second_id}/readiness", headers=HEADERS).json()["render_input_hash"] == second_hash
+
+    third = client.post(path, json={"idempotency_key": "source-b-new-context", "expected_revision": 2, "payload_schema": "video.master.v2", "payload": document, "asset_refs": refs, "content_form": "final"}, headers=HEADERS)
+    assert third.status_code == 200, third.text
+    assert third.json()["context_hash"] != second.json()["context_hash"]
+    assert client.get(f"{path}/{third.json()['id']}/readiness", headers=HEADERS).json()["render_input_hash"] != second_hash
+    context_diff = client.get(f"{path}/{third.json()['id']}/diff", params={"compare_to_id": second_id}, headers=HEADERS)
+    assert context_diff.status_code == 200, context_diff.text
+    assert context_diff.json()["context"]["changed"] is True
+    assert context_diff.json()["assets"]["changed"] is False
+    foreign = client.get(f"{path}/{third.json()['id']}/diff", params={"compare_to_id": second_id}, headers={"X-Studio-User": "other-video-diff@studio.local"})
+    assert foreign.status_code == 404
+    assert client.post(f"{path}/{third.json()['id']}/checks", headers=HEADERS).status_code == 200
+    sources[1].public_use_allowed = False
+    db_session.commit()
+    after_revocation = {item["check_kind"]: item for item in client.get(f"{path}/{third.json()['id']}/checks/current", headers=HEADERS).json()["items"]}
+    assert after_revocation["rights"]["status"] == "stale"
+    assert client.get(f"{path}/{third.json()['id']}/readiness", headers=HEADERS).json()["candidate_freeze_available"] is False
+    assert client.get(f"{path}/{first_id}", headers=HEADERS).json()["payload_hash"] == first.json()["payload_hash"]
+
+
 def test_video_v2_source_media_reuse_requires_live_kind_bytes_rights_and_project_reference(client, db_session, tmp_path):
     from app.models import (
         ContentMasterAssetRef,
@@ -573,3 +752,221 @@ def test_video_v2_source_media_reuse_requires_live_kind_bytes_rights_and_project
     assert revoked.status_code == 422, revoked.text
     assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 1
     assert db_session.query(ContentMasterAssetRef).count() == 2
+
+
+def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_draft(client, db_session, tmp_path):
+    from app.models import (
+        ChannelTemplateVersion,
+        ContentAsset,
+        DeliveryAttempt,
+        FactPack,
+        FactPackItem,
+        Material,
+        MaterialRevision,
+        ProjectMaterialReference,
+    )
+
+    headers = {"X-Studio-User": "video-v2-package@studio.local"}
+    channel = "video_v2_package_fixture"
+    db_session.add(ChannelTemplateVersion(channel=channel, version=1, name="视频成品", status="published", profile_json={"content_forms": {"final": {"artifact_kind": "video", "video_requirements": {"max_shots": 2}}}}))
+    db_session.commit()
+    persona = client.post("/api/v1/content-personas", json={"name": "成片作者"}, headers=headers).json()["id"]
+    persona_revision = client.post(f"/api/v1/content-personas/{persona}/revisions", json={"expected_revision": 0, "profile": {"expression_style": {"forbidden_phrases": []}}}, headers=headers)
+    assert persona_revision.status_code == 201, persona_revision.text
+    project = client.post("/api/v1/content-projects", json={"title": "成片项目"}, headers=headers).json()["id"]
+    unit_response = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "短片", "persona_id": persona, "modality": "video", "channel_id": channel}, headers=headers)
+    assert unit_response.status_code == 201, unit_response.text
+    unit = unit_response.json()["id"]
+    assert client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={"expected_revision": 0, "objective": "发布短片"}, headers=headers).status_code == 201
+    pack = FactPack(name="短片事实", version=1, status="frozen", checksum="p" * 64)
+    db_session.add(pack)
+    db_session.flush()
+    db_session.add(FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion", snapshot_json={"statement": "自述观点"}, snapshot_checksum="s" * 64, public_use_allowed=True))
+    db_session.commit()
+    assert client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={"fact_pack_id": pack.id, "expected_revision": 0}, headers=headers).status_code == 201
+    video_bytes = b"\x00\x00\x00\x18ftypmp42exact Video v2 package bytes"
+    file = tmp_path / "final.mp4"
+    file.write_bytes(video_bytes)
+    material = Material(title="确认成片", kind="video", status="active")
+    db_session.add(material)
+    db_session.flush()
+    revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(video_bytes).hexdigest(), file_path=str(file), mime_type="video/mp4", status="active", public_use_allowed=True, rights_status="cleared")
+    db_session.add(revision)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active"))
+    source_bytes = b"\x89PNG\r\n\x1a\nexact source frame"
+    source_file = tmp_path / "shot.png"
+    source_file.write_bytes(source_bytes)
+    source_material = Material(title="镜头素材", kind="image", status="active")
+    db_session.add(source_material)
+    db_session.flush()
+    source_revision = MaterialRevision(material_id=source_material.id, content_hash=hashlib.sha256(source_bytes).hexdigest(), file_path=str(source_file), mime_type="image/png", status="active", public_use_allowed=True, rights_status="cleared")
+    db_session.add(source_revision)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=source_revision.id, origin="system_library", status="active"))
+    db_session.commit()
+
+    document = _document()
+    document["shots"][0]["source_material_revision_id"] = source_revision.id
+    document["render_asset_ref"] = {"material_revision_id": revision.id}
+    refs = [
+        {"material_revision_id": source_revision.id, "content_hash": source_revision.content_hash, "role": "shot_source", "slot_key": "shot-1", "sort_order": 0, "placement": {"shot_id": "shot-1"}},
+        {"material_revision_id": revision.id, "content_hash": revision.content_hash, "role": "render_output", "slot_key": "final", "sort_order": 1, "placement": {"render": "final"}},
+    ]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    body = {"payload_schema": "video.master.v2", "payload": document, "asset_refs": refs, "content_form": "final"}
+    draft = client.post(path, json={**body, "idempotency_key": "draft"}, headers=headers)
+    assert draft.status_code == 200, draft.text
+    readiness = client.get(f"{path}/{draft.json()['id']}/readiness", headers=headers).json()
+    assert readiness["render"]["status"] == "incomplete"
+    confirmed = client.post(path, json={**body, "idempotency_key": "attested", "expected_revision": 1, "render_attestation": {"confirmed": True, "render_input_hash": readiness["render_input_hash"]}}, headers=headers)
+    assert confirmed.status_code == 200, confirmed.text
+    master = confirmed.json()
+    checked = client.post(f"{path}/{master['id']}/checks", headers=headers)
+    assert checked.status_code == 200, checked.text
+    checks = {row["check_kind"]: row for row in checked.json()["items"]}
+    assert checks["video_structure"]["status"] == checks["video_timeline"]["status"] == checks["video_platform"]["status"] == "pass"
+    assert checks["video_identity"]["status"] == "warning"
+    freeze_url = path.replace("master-revisions", "candidates/freeze")
+    freeze_body = {"content_master_revision_id": master["id"], "expected_payload_hash": master["payload_hash"]}
+    revision.public_use_allowed = False
+    db_session.commit()
+    assert client.post(freeze_url, json=freeze_body, headers=headers).status_code == 409
+    revision.public_use_allowed = True
+    db_session.commit()
+    frozen = client.post(freeze_url, json=freeze_body, headers=headers)
+    assert frozen.status_code == 201, frozen.text
+    candidate = frozen.json()
+    assert candidate["manifest"]["schema_version"] == 4
+    assert candidate["preview"]["shots"][0]["duration_ms"] == 4_000
+    assert candidate["preview"]["render"]["outputs"][0]["content_hash"] == revision.content_hash
+    base = f"{path.replace('master-revisions', 'candidates')}/{candidate['id']}"
+    dispositions = {f"{row['id']}:{row['input_hash']}": "已人工审查画面和音频语义" for row in candidate["manifest"]["checks"] if row["status"] == "warning"}
+    revision.public_use_allowed = False
+    db_session.commit()
+    assert client.post(f"{base}/approve", json={"candidate_hash": candidate["candidate_hash"], "warning_dispositions": dispositions}, headers=headers).status_code == 409
+    revision.public_use_allowed = True
+    db_session.commit()
+    approved = client.post(f"{base}/approve", json={"candidate_hash": candidate["candidate_hash"], "warning_dispositions": dispositions}, headers=headers)
+    assert approved.status_code == 200, approved.text
+    authorization = {"channel": channel, "content_form": "final", "account_ref": "manual", "authorization_version": "v1", "action": "copy_package"}
+    revision.public_use_allowed = False
+    db_session.commit()
+    assert client.post(f"{base}/delivery-authorizations", json=authorization, headers=headers).status_code == 409
+    revision.public_use_allowed = True
+    db_session.commit()
+    target = client.post(f"{base}/delivery-authorizations", json=authorization, headers=headers)
+    assert target.status_code == 201, target.text
+    package = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+    assert package.status_code == 200, package.text
+    repeated_package = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+    assert repeated_package.status_code == 200
+    assert repeated_package.content == package.content
+    with zipfile.ZipFile(io.BytesIO(package.content)) as archive:
+        included = json.loads(archive.read("manifest.json"))
+        assert included["schema_version"] == 4
+        assert included["candidate"]["hash"] == candidate["candidate_hash"]
+        assert archive.read("render-1.mp4") == video_bytes
+        assert archive.read(f"media/00-{source_revision.id}.png") == source_bytes
+        assert archive.read(f"media/01-{revision.id}.mp4") == video_bytes
+        assert "content.md" not in archive.namelist()
+        assert included["remote_call"] is False
+    asset = db_session.get(ContentAsset, candidate["id"])
+    assert asset.draft_id is None and asset.topic_brief_id is None and asset.mother_revision_id is None
+    revision.public_use_allowed = False
+    db_session.commit()
+    assert client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers).status_code == 409
+    revision.public_use_allowed = True
+    db_session.commit()
+    file.write_bytes(b"not the approved video")
+    assert client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers).status_code == 409
+    file.write_bytes(video_bytes)
+    newer = client.post(path, json={"idempotency_key": "newer-cut", "expected_revision": 2, "payload_schema": "video.master.v2", "payload": _document(), "content_form": "final"}, headers=headers)
+    assert newer.status_code == 200, newer.text
+    assert client.post(f"{base}/delivery-authorizations", json={**authorization, "authorization_version": "v2"}, headers=headers).status_code == 409
+    tampered = deepcopy(asset.candidate_manifest_json)
+    tampered["content"]["script"]["blocks"][0]["text"] = "未经批准的内容"
+    asset.candidate_manifest_json = tampered
+    db_session.commit()
+    assert client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers).status_code == 409
+    assert db_session.query(DeliveryAttempt).count() == 0
+
+
+def test_video_v2_derived_operations_require_concrete_results_and_server_provenance(client, db_session, tmp_path):
+    from app.models import ContentMasterRevision, Material, MaterialRevision, ProjectMaterialReference
+
+    headers = {"X-Studio-User": "video-derive@studio.local"}
+    persona = client.post("/api/v1/content-personas", json={"name": "派生作者"}, headers=headers).json()["id"]
+    project = client.post("/api/v1/content-projects", json={"title": "派生视频"}, headers=headers).json()["id"]
+    unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "视频", "persona_id": persona, "modality": "video"}, headers=headers).json()["id"]
+    path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    source_response = client.post(path, json={"idempotency_key": "source", "payload_schema": "video.master.v2", "payload": _document()}, headers=headers)
+    assert source_response.status_code == 200, source_response.text
+    source = source_response.json()
+    short = _document()
+    short["shots"][0]["duration_ms"] = 2_000
+    short["timeline"]["duration_ms"] = 2_000
+    short["timeline"]["tracks"][0]["items"][0]["end_ms"] = 2_000
+    short["subtitles"]["cues"][0]["end_ms"] = 1_000
+    request = {
+        "idempotency_key": "short-cut", "expected_revision": 1,
+        "expected_payload_hash": source["payload_hash"], "expected_context_hash": source["context_hash"],
+        "operation": "long_to_short", "parameters": {"target_duration_ms": 2_000},
+        "result_origin": "user_edit", "result_payload": short,
+    }
+    derive = f"{path}/{source['id']}/derive"
+    assert client.post(derive, json={**request, "idempotency_key": "intent-only", "result_payload": None}, headers=headers).status_code == 422
+    assert client.post(derive, json={**request, "idempotency_key": "not-short", "parameters": {"target_duration_ms": 4_000}}, headers=headers).status_code == 422
+    first = client.post(derive, json=request, headers=headers)
+    assert first.status_code == 200, first.text
+    child = first.json()
+    assert child["source_kind"] == "derived_video"
+    assert child["parent_revision_id"] == source["id"]
+    assert child["edit_summary"]["derived_video"]["source_payload_hash"] == source["payload_hash"]
+    assert child["edit_summary"]["derived_video"]["result_payload_hash"] == child["payload_hash"]
+    assert client.post(derive, json=request, headers=headers).json()["id"] == child["id"]
+    assert client.post(derive, json={**request, "parameters": {"target_duration_ms": 1_000}}, headers=headers).status_code == 409
+    assert client.post(path, json={"idempotency_key": "forged-kind", "expected_revision": 2, "payload_schema": "video.master.v2", "payload": short, "source_kind": "derived_video"}, headers=headers).status_code == 422
+    assert client.post(path, json={"idempotency_key": "forged-summary", "expected_revision": 2, "payload_schema": "video.master.v2", "payload": short, "edit_summary": {"derived_video": {"source_master_id": source["id"]}}}, headers=headers).status_code == 422
+
+    wide = deepcopy(short)
+    wide["aspect_ratio"] = [16, 9]
+    wide_request = {**request, "idempotency_key": "wide", "expected_revision": 2, "expected_payload_hash": child["payload_hash"], "expected_context_hash": child["context_hash"], "operation": "aspect_ratio", "parameters": {"target_aspect_ratio": [16, 9]}, "result_payload": wide}
+    wide_response = client.post(f"{path}/{child['id']}/derive", json=wide_request, headers=headers)
+    assert wide_response.status_code == 200, wide_response.text
+    wide_child = wide_response.json()
+    label_only = deepcopy(wide)
+    label_only["shots"][0]["label"] = "只改标签"
+    rejected_request = {**request, "idempotency_key": "not-regenerated", "expected_revision": 3, "expected_payload_hash": wide_child["payload_hash"], "expected_context_hash": wide_child["context_hash"], "operation": "shot_regeneration", "parameters": {"shot_id": "shot-1"}, "result_payload": label_only}
+    assert client.post(f"{path}/{wide_child['id']}/derive", json=rejected_request, headers=headers).status_code == 422
+    image_bytes = b"\x89PNG\r\n\x1a\nmanual replacement frame"
+    image_file = tmp_path / "replacement.png"
+    image_file.write_bytes(image_bytes)
+    material = Material(title="手工替换镜头", kind="image", status="active")
+    db_session.add(material)
+    db_session.flush()
+    replacement = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(image_bytes).hexdigest(), file_path=str(image_file), mime_type="image/png", status="active", public_use_allowed=True, rights_status="cleared")
+    db_session.add(replacement)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=replacement.id, origin="system_library", status="active"))
+    db_session.commit()
+    shot = deepcopy(wide)
+    shot["shots"][0]["source_material_revision_id"] = replacement.id
+    shot_request = {**request, "idempotency_key": "shot", "expected_revision": 3, "expected_payload_hash": wide_child["payload_hash"], "expected_context_hash": wide_child["context_hash"], "operation": "shot_regeneration", "parameters": {"shot_id": "shot-1"}, "result_payload": shot}
+    shot_request["asset_refs"] = [{"material_revision_id": replacement.id, "content_hash": replacement.content_hash, "role": "shot_source", "slot_key": "shot-1", "sort_order": 0, "placement": {"shot_id": "shot-1"}}]
+    shot_response = client.post(f"{path}/{wide_child['id']}/derive", json=shot_request, headers=headers)
+    assert shot_response.status_code == 200, shot_response.text
+    assert shot_response.json()["edit_summary"]["derived_video"]["operation"] == "shot_regeneration"
+
+    bad = {**shot_request, "idempotency_key": "no-result", "expected_revision": 4, "result_payload": shot}
+    assert client.post(f"{path}/{wide_child['id']}/derive", json=bad, headers=headers).status_code == 409
+    provider_request = {**shot_request, "idempotency_key": "provider", "expected_revision": 4, "expected_payload_hash": shot_response.json()["payload_hash"], "result_origin": "provider", "result_payload": None}
+    assert client.post(f"{path}/{shot_response.json()['id']}/derive", json=provider_request, headers=headers).status_code == 503
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 4
+    assert db_session.query(MaterialRevision).count() == 1
+    brief = client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={"expected_revision": 0, "objective": "新目标"}, headers=headers)
+    assert brief.status_code == 201, brief.text
+    stale_context = {**shot_request, "idempotency_key": "stale-context", "expected_revision": 4, "expected_payload_hash": shot_response.json()["payload_hash"], "result_origin": "provider", "result_payload": None}
+    assert client.post(f"{path}/{shot_response.json()['id']}/derive", json=stale_context, headers=headers).status_code == 409
+    assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 4
+    assert client.get(f"{path}/{source['id']}", headers=headers).json()["payload_hash"] == source["payload_hash"]

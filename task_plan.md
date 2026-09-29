@@ -2,6 +2,11 @@
 
 ## 2026-09-29：North Star 完整剩余开发（目标进行中）
 
+- [x] /// F6D 5.3：精确 source ref 替换、Brief context 修订分别改变新 Master render-input hash；旧检查随 Brief 变化 stale，素材撤权使 rights stale/冻结不可用，历史 Master hash 不变。定向回归通过；全量门禁与交付文档在本批收尾复跑。
+- [x] /// F6D 5.4：stable-ID Video diff 与 Project 路由先 RED 后 GREEN；脚本/镜头/轨道/片段/字幕/叠层及媒体/上下文差异均按 v2 schema 分派，Video/Graphic/Text 定向 83 passed；Candidate Review 冻结差异仍在 5.5。
+- [x] /// F6D 5.5：两份自洽冻结 Video v2 Candidate 的 Review preview/diff 先 RED 后 GREEN，准确显示脚本/镜头/时间线/字幕/叠层/成片与稳定 ID 改动，无整片文本相似度；Video/Graphic/既有 Review 68 passed。完整后端/规格门禁待本批复跑。
+- [x] /// F6D 后端闭环：隔离 fixture 真实保存 Video v2、手工输入绑定 MP4、检查、冻结 v4、Review、带 warning 处置的审批、授权与 byte-exact ZIP；撤权/篡改/新 Master 后旧授权拒绝，无 Draft 回退或远程调用。全后端 1004 passed/2 skipped，跨形态定向 255 passed；5.6–5.10 已据证完成，累计 36/79。
+- [x] /// F6D 3.5–3.9：派生 API 先见 404 RED，再验证“只改镜头标签”也曾错误通过，现要求精确新素材；long-to-short/aspect-ratio/shot-regeneration 均仅以具体 v2 结果创建追加子修订。来源 ID/hash/context/head 与 request 指纹、server-only derived_video 血缘已验证，Provider 503 无 Master/素材写入；全后端 1005 passed/2 skipped、strict 30/30、相关 Ruff/diff PASS。累计 41/79。
 - [x] /// F6D 5.1/5.2：对有效/空 Video v2 先测结构/时间线缺口 RED，再接入 append-only CheckRun；补精确 published profile 与身份覆盖状态，未验证画面/音频不报 PASS。定向 46 passed、全后端 998 passed/2 skipped、strict 30/30、Ruff/diff PASS。5.3 的完整 source/context freshness 尚待验收。
 - [x] /// F6D 2.5/2.6/2.9：旧 Video 仅保留可证脚本与镜头 ID/顺序；预览不伪造画幅/时间线；专用 API 要求完整 v2 文档、警告确认和精确 refs，追加式 CAS/幂等且不继承旧 render。定向升级 8 passed，另有候选历史哈希与浏览器验收留在 2.7/7.x。
 - [x] /// F6D 3.2：明确音轨片段必须有精确素材版本；未绑定 audio/music 两例先 RED，修复后定向 34 passed、全后端 986 passed/2 skipped、strict 30/30、相关 Ruff 和 diff-check PASS。空音轨、全片语音/音乐、字幕重叠回归通过。

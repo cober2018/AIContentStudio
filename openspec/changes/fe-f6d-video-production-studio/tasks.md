@@ -37,11 +37,11 @@
 - [x] 3.2 Validate voice/audio track placement and subtitle cue ordering/non-overlap.
 - [x] 3.3 Validate overlay placement/text and cover exact image kind.
 - [x] 3.4 Build deterministic local preview projection without claiming final-render verification.
-- [ ] 3.5 Implement explicit long-to-short child revision from exact source Master and concrete validated v2 result, not intent alone.
-- [ ] 3.6 Implement explicit aspect-ratio child revision from exact source Master and concrete validated v2 result, not intent alone.
-- [ ] 3.7 Implement shot-regeneration child boundary; unavailable Provider returns no child/media or success receipt.
-- [ ] 3.8 Enforce source hash/context, expected head and idempotency for all derived operations.
-- [ ] 3.9 Create `derived_video` source kind and provenance only in the dedicated server operation; reject forged client source/edit-summary and idempotency fingerprint mismatch.
+- [x] 3.5 Implement explicit long-to-short child revision from exact source Master and concrete validated v2 result, not intent alone.
+- [x] 3.6 Implement explicit aspect-ratio child revision from exact source Master and concrete validated v2 result, not intent alone.
+- [x] 3.7 Implement shot-regeneration child boundary; unavailable Provider returns no child/media or success receipt.
+- [x] 3.8 Enforce source hash/context, expected head and idempotency for all derived operations.
+- [x] 3.9 Create `derived_video` source kind and provenance only in the dedicated server operation; reject forged client source/edit-summary and idempotency fingerprint mismatch.
 
 ## 4. Provider and render honesty
 
@@ -57,14 +57,14 @@
 
 - [x] 5.1 Add append-only Video v2 structure and timeline checks in ContentMasterCheckRun.
 - [x] 5.2 Add coverage-honest Video identity and exact published video-profile checks; missing semantic provider is not PASS.
-- [ ] 5.3 Make profile/source/context changes invalidate current check and render-input hashes.
-- [ ] 5.4 Add stable-ID Master diff for script, shots, timeline, voice, cues, overlays, media and context.
-- [ ] 5.5 Project Review reads Video v2 from frozen Candidate v4 manifest and never invents whole-video text similarity.
-- [ ] 5.6 Preserve exact Candidate integrity/current Master/live-rights gates across freeze, approval and authorization.
-- [ ] 5.7 Build deterministic local package with approved MP4 bytes/hash, manifest and declared companions.
-- [ ] 5.8 Prove v2 package failure never falls back to Draft/v1 or performs remote publishing.
-- [ ] 5.9 Preserve v1/video and Text/Graphic Candidate/Review/package behavior.
-- [ ] 5.10 Extend frozen Candidate integrity dispatch to canonical Video v2 content, one exact video render-output ref/declaration/hash/MIME and ready input-bound render before Review/package.
+- [x] 5.3 Make profile/source/context changes invalidate current check and render-input hashes.
+- [x] 5.4 Add stable-ID Master diff for script, shots, timeline, voice, cues, overlays, media and context.
+- [x] 5.5 Project Review reads Video v2 from frozen Candidate v4 manifest and never invents whole-video text similarity.
+- [x] 5.6 Preserve exact Candidate integrity/current Master/live-rights gates across freeze, approval and authorization.
+- [x] 5.7 Build deterministic local package with approved MP4 bytes/hash, manifest and declared companions.
+- [x] 5.8 Prove v2 package failure never falls back to Draft/v1 or performs remote publishing.
+- [x] 5.9 Preserve v1/video and Text/Graphic Candidate/Review/package behavior.
+- [x] 5.10 Extend frozen Candidate integrity dispatch to canonical Video v2 content, one exact video render-output ref/declaration/hash/MIME and ready input-bound render before Review/package.
 
 ## 6. Professional Video Studio
 

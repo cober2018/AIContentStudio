@@ -2,6 +2,16 @@
 
 ## 2026-09-29：FE-F6D apply（进行中）
 
+- 3.5–3.9 派生子修订闭合：新增专用 Video v2 `/derive`，仅显式 user_edit 的具体结果可追加；长转短真实缩短 duration，画幅转换真实改变 ratio，镜头再生成的手工路径必须指向经项目可见性/字节/类型/权利验证的新素材，不能用标签变化冒充。source ID/hash/context/current head 与 request-hash 幂等检查通过，普通 save 伪造 `source_kind`/`edit_summary.derived_video` 被拒；未验证 Provider 返回 503，Master 与 MaterialRevision 不增。全量后端新跑 1005 passed/2 skipped/5 warnings，OpenSpec strict 30/30、相关 Ruff 与 diff-check PASS；最后补充的无媒体写入断言另定向 1 passed。累计 41/79，前端本批未改。
+
+- 5.6–5.10 后端闭环及旧链路回归通过：独立 Video v2 项目夹具将手工 Master→输入绑定 MP4→专业检查→Candidate v4→Review→带 warning 处置的审批→交付授权→确定性 ZIP 完整跑通，PNG/MP4 与批准 revision 字节一致，重复下载字节一致，无 Draft/Topic/Mother、远程调用或 DeliveryAttempt。freeze/approve/authorize/package 的 live rights 撤销、文件字节篡改、候选 manifest 篡改和新 Master 后旧授权均拒绝。Video/Graphic/Text/历史 Review 与交付定向 255 passed；新跑全后端 1004 passed/2 skipped/5 warnings，OpenSpec strict 30/30、相关 Ruff、diff-check PASS。累计 36/79；Provider、派生操作、前端与浏览器尚未完成，前端本批未重测。
+
+- 5.5 冻结 Review 读取闭合：Video v2 Candidate v4 的 preview 使用 manifest 中的 canonical 脚本、镜头、时间线、语音、字幕、叠层、封面及成片；前后两份有效冻结候选的结构差异使用稳定 ID，`text` 保持 null，不伪造整片相似度。RED→GREEN，Video/Graphic/历史 Review 定向 68 passed；累计 31/79。真实 freeze/approval/package 与浏览器闭环仍未验收，本批最终全量门禁待复跑。
+
+- 5.4 Video v2 Master 差异已补：稳定 ID 对比脚本块、镜头、时间线轨道/片段、字幕 cue、叠层，另列语音、音乐、封面、render、精确素材/证据和 context；不计算整片文字相似度。Project-scoped `/master-revisions/{id}/diff` 仅在目标为 Video v2 时分派，源版本必须同为 v2，旧 Text/Graphic/Video v1 行为不变。纯函数和 API 先见 RED 后 GREEN，Video/Graphic/Text 定向 83 passed；累计 30/79。Candidate Review 冻结差异与包仍待后续，当前全量门禁待复跑。
+
+- 5.3 新鲜度回归：同 context 替换 exact source ref 使新 Master render-input hash 改变；同 source 更新 CreativeBrief 使旧 CheckRun stale，随后新 Master 的输入 hash 改变，旧 Master 冻结 hash 保持不变。live source 公开权撤销后 rights CheckRun stale 且 freeze 不可用。现有 Production Core 已满足定向回归，无需改服务。Video v2 定向测试新增 1 项，累计 29/79；本批全量门禁待最终复跑。
+
 - Video v2 专业检查批次：有效/空 Master 的 structure/timeline RED→GREEN；身份由 pinned IdentitySnapshot、显式禁语与可用时的语义复核组成，画面/音频语义始终标记不可用，不把模型缺席写成 PASS。渠道检查精确读取已发布 video profile，profile 升版后旧 CheckRun 投影 stale；所有结果复用 append-only ContentMasterCheckRun。定向 46 passed，全后端 998 passed/2 skipped/5 warnings，OpenSpec strict 30/30、相关 Ruff 与 diff-check PASS。5.1/5.2 完成，累计 28/79；5.3 仍须覆盖 source/context freshness。前端本批未改，未将旧 build 当作本批验收。
 
 - Video v1→v2 升级路径已补：preview 只投影已存脚本及稳定镜头 ID/列表顺序，明确画幅、时间线和镜头时长需用户补齐；commit 必须提交完整 canonical v2 文档、精确引用与当前警告确认，保留旧脚本/镜头、禁止继承成片，通过 source payload/context/head CAS 与 request-hash 幂等生成追加式 child。两条缺端点的 RED 分别验证，升级定向 8 passed；最后反向 schema 断言加入后全量后端重新运行 994 passed/2 skipped/5 warnings，OpenSpec strict 30/30、相关 Ruff、diff-check PASS。2.5/2.6/2.9 完成，当前 26/79；2.7 的旧 Candidate hash 回归、Video 前端和浏览器验收仍待证明。

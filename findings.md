@@ -2,7 +2,14 @@
 
 ## 2026-09-29 F6D 专业检查边界
 
-- Video v2 结构/时间线 CheckRun 原先完全缺失；现采用既有 Master append-only 检查记录。有效文档可做确定性结构与时间线验证，空草稿保持 incomplete。身份检查不能从文字推断画面或音频的品牌一致性：即使文字语义提供方返回 verified，整体仍是 warning；身份快照无有效 profile 时为 incomplete。渠道规则仅按 exact published video profile 执行，profile 变更使旧结果 stale；source/context freshness 仍需单独验收。
+- 派生操作不能把“已请求转换”写成成功血缘。F6D 专用路径现要求具体 canonical Video v2 用户编辑结果；长转短/画幅转换分别验证实际 duration/ratio，镜头再生成的手工路径必须绑定新 exact MaterialRevision。`derived_video` 来源与完整来源哈希/context/结果哈希只由服务端写入；无可信 Provider 时返回 typed unavailable，不产生 Master、素材或成功回执。显式本地 deterministic transform 尚未实现，因此同样不可用，不冒充成功。
+
+- F6D 5.6–5.10 的无 Draft Video v2 后端闭环已从真实 Project/Unit/Identity/Brief/Boundary 与精确 PNG+MP4 字节运行，不只是假 manifest：撤权在 freeze/approve/authorize/package 各层被拒绝，MP4 字节损坏、候选 manifest 篡改和新 Master 后旧候选再授权也被拒绝；同一 package 两次构建字节一致，未创建 DeliveryAttempt。此结论仅限本地成品包，不代表远程发布或浏览器 Video Studio 验收。
+
+- 原通用 Master diff 路由把 Video v2 误送到 Text diff，返回 `unsupported_text_master_schema`；专用 v2 分派现在按脚本/镜头/时间线等稳定 ID 比较，素材、渲染与上下文单独列示。Video v1 仍按旧行为保持不可跨 schema 暗中对比；Candidate Review 的冻结差异另在 5.5 验证。
+- Review 的 Video v2 预览原先把结构化脚本压成 `{"structured": true}`，镜头也读取了不存在的 `duration` 字段，冻结 Candidate 的结构信息无法评审。现从已验证 manifest 的 canonical v2 内容直接投影全部关键结构，前后 Candidate 差异复用稳定 ID 比较；旧 Video v1 分支仍保持原样。
+- Video v2 结构/时间线 CheckRun 原先完全缺失；现采用既有 Master append-only 检查记录。有效文档可做确定性结构与时间线验证，空草稿保持 incomplete。身份检查不能从文字推断画面或音频的品牌一致性：即使文字语义提供方返回 verified，整体仍是 warning；身份快照无有效 profile 时为 incomplete。渠道规则仅按 exact published video profile 执行，profile 变更使旧结果 stale。
+- 5.3 已用隔离 API 证实：新 source ref 与新 Brief 分别进入新 Master 的 render-input hash；旧检查随 Brief head 变化 stale；source 撤权令 rights stale/冻结不可用。历史 Master 输入 hash 不随上游修改而回写，这正是 immutable 血缘要求；“失效”通过 currentness/live gate 实现，不篡改历史 hash。
 
 ## 2026-09-29 F6D 旧视频显式升级边界
 

@@ -25,6 +25,8 @@ from ..services.content_masters import (
 from ..services.graphic_master_diff import structured_graphic_diff
 from ..services.text_master_ai import suggest_text_edit
 from ..services.text_master_diff import structured_diff
+from ..services.video_derivations import derive_video_master
+from ..services.video_master_diff import structured_video_diff
 
 router = APIRouter(prefix="/api/v1", tags=["content-masters"])
 
@@ -65,6 +67,17 @@ class VideoUpgradeIn(MasterUpgradeIn):
     asset_refs: list[dict] = Field(default_factory=list, max_length=250)
     evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
     acknowledged_warnings: list[str] = Field(max_length=20)
+
+
+class VideoDerivationIn(MasterUpgradeIn):
+    model_config = ConfigDict(extra="forbid")
+
+    operation: str = Field(pattern="^(long_to_short|aspect_ratio|shot_regeneration)$")
+    parameters: dict = Field(default_factory=dict)
+    result_origin: str = Field(pattern="^(user_edit|deterministic_local|provider)$")
+    result_payload: dict | None = None
+    asset_refs: list[dict] = Field(default_factory=list, max_length=250)
+    evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
 
 
 class TextSuggestionIn(BaseModel):
@@ -121,6 +134,11 @@ def commit_video_upgrade(project_id: int, unit_id: int, master_id: int, body: Vi
     return upgrade_video_master(db, project_id=project_id, unit_id=unit_id, master_id=master_id, user=user, payload=body.model_dump())
 
 
+@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/derive", dependencies=[Depends(require_editor)])
+def commit_video_derivation(project_id: int, unit_id: int, master_id: int, body: VideoDerivationIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return derive_video_master(db, project_id=project_id, unit_id=unit_id, master_id=master_id, user=user, request=body.model_dump())
+
+
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions", dependencies=[Depends(require_editor)])
 def create_master_revision(project_id: int, unit_id: int, body: MasterRevisionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
@@ -141,6 +159,8 @@ def diff_master_revision(project_id: int, unit_id: int, master_id: int, compare_
     target = db.get(ContentMasterRevision, master_id)
     if target is not None and target.payload_schema.startswith("graphic.master."):
         return structured_graphic_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
+    if target is not None and target.payload_schema == "video.master.v2":
+        return structured_video_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
     return structured_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
 
 
