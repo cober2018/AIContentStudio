@@ -2,6 +2,8 @@
 
 ## 2026-09-29：FE-F6D SPEC review 修订
 
+- 第二批将 Video v2 canonical payload/ref 校验接入真实 `save_revision()` 与 schema-dispatched Video v2 adapter；显式 v2 API 保存/回读、exact profile readiness、同一素材不同镜头 slot、时间线/语音/音乐/封面/最终输出位置及空草稿 0ms 的定向验证 11 passed，相关 Ruff PASS。旧无 schema Video 路径仍默认 v1，避免悄然改写历史；专业前端日后需显式发送 v2 envelope。当前 15/79，仍缺素材项目可见性/类型/字节/权利、profile freshness、render、checks、Candidate/Review/包和前端。
+- 本批新跑全量后端 `963 passed / 2 skipped / 5 warnings`；非最终 F6D 验收。前端本批没有业务代码改动，沿用此前 fresh build 基线，不把它冒充 Video Studio 验收。
 - F6D apply 第一批：新增 canonical `video.master.v2` 文档验证（脚本块、镜头、时间线轨/项、语音/字幕/叠层、封面与最终视频声明）及 `ContentFormSpec.video_requirements` 投影/纯规则检查。针对新文档和渠道投影先观察 RED（缺模块/字段），实现后 7 passed，相关 Ruff PASS；1.1、1.3、1.5 已完成，当前 8/79。1.10 仍待规则接入实际 Video check/可用性，不能只因纯函数通过就勾选。尚未接入 Master save/refs/adapter，不能称 Video v2 可执行。零 migration。
 - 本批全量后端实跑 `958 passed / 2 skipped / 5 warnings`，前端 TypeScript/Vite/FE-P1 基线 PASS，OpenSpec strict 30/30、diff-check PASS。注意这些门禁尚不构成 F6D 端到端验收。
 - 规格检查点已本地提交 `a74a7d5`；只提交标准规格与计划/进度文档，用户原始包仍未跟踪。F6D apply 基线：Alembic head `f6a000000001`，F6A/F6C 定向回归 95 passed / 1 warning，前端 TypeScript/Vite/FE-P1 PASS，Production 初始 JS 273.35 kB，Video 不含 TipTap，OpenSpec strict 30/30，tracked tree 在规格提交后 clean。现有 MasterRevision/AssetRef/EvidenceRef/CheckRun 足以承接目标 v2（若实现反证须暂停）；0.1–0.5 已据证勾选，5/79。无业务代码或迁移。

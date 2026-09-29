@@ -454,6 +454,14 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             validate_references(payload["payload"], payload.get("asset_refs", []), payload.get("evidence_refs", []))
         except GraphicDocumentError as exc:
             raise HTTPException(422, {"code": "invalid_master_document", "reason": str(exc)}) from exc
+    elif payload_schema == "video.master.v2":
+        from .video_documents import VideoDocumentError, canonical_payload, validate_references
+
+        try:
+            payload = {**payload, "payload": canonical_payload(payload["payload"])}
+            validate_references(payload["payload"], payload.get("asset_refs", []), payload.get("evidence_refs", []))
+        except VideoDocumentError as exc:
+            raise HTTPException(422, {"code": "invalid_master_document", "reason": str(exc)}) from exc
     refs_fingerprint = {"assets": payload.get("asset_refs", []), "evidence": payload.get("evidence_refs", [])}
     trusted_kind = "explicit_upgrade" if upgrade_source is not None else "workflow_seed" if workflow_seed else "user_edit"
     if payload.get("source_kind", "user_edit") != trusted_kind:

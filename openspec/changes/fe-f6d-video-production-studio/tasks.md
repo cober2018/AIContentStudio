@@ -9,26 +9,26 @@
 ## 1. Canonical video.master.v2 document and adapter
 
 - [x] 1.1 Define stable script-block IDs and bounded text/content structure.
-- [ ] 1.2 Define stable shot IDs, contiguous order, duration, source placements and bounded framing/transition tokens.
+- [x] 1.2 Define stable shot IDs, contiguous order, duration, source placements and bounded framing/transition tokens.
 - [x] 1.3 Define stable timeline track/item IDs, allowed track kinds, start/end/trim/volume bounds and canonical order.
-- [ ] 1.4 Define voice mode and exact audio reference semantics.
+- [x] 1.4 Define voice mode and exact audio reference semantics.
 - [x] 1.5 Define subtitle cue IDs/text/start/end, ordering and overlap rules.
-- [ ] 1.6 Define overlay IDs/text/placement and exact music/cover declarations.
-- [ ] 1.7 Reject unknown fields, non-finite values, excessive counts/durations and infrastructure paths before persistence.
-- [ ] 1.8 Add `video.master.v2` schema dispatch without changing Video v1 or Text/Graphic adapter behavior.
+- [x] 1.6 Define overlay IDs/text/placement and exact music/cover declarations.
+- [x] 1.7 Reject unknown fields, non-finite values, excessive counts/durations and infrastructure paths before persistence.
+- [x] 1.8 Add `video.master.v2` schema dispatch without changing Video v1 or Text/Graphic adapter behavior.
 - [ ] 1.9 Make new professional Video drafts use v2; no frontend editor schema becomes a backend contract.
 - [ ] 1.10 Extend published exact `ContentFormSpec.video_requirements` with bounded typed keys; missing rules impose no constraint, invalid/unknown or legacy/wildcard rules cannot PASS.
 
 ## 2. Exact media refs and v1 upgrade
 
-- [ ] 2.1 Map every source visual/audio/music/cover/final-render use to an exact role and placement ref.
+- [x] 2.1 Map every source visual/audio/music/cover/final-render use to an exact role and placement ref.
 - [ ] 2.2 Validate project visibility, media kind, byte existence/hash and live public-use rights at save.
 - [ ] 2.3 Allow repeated MaterialRevision use in distinct placements without copying bytes or collapsing refs.
 - [ ] 2.4 Reject foreign, wrong-kind, revoked, hash-mismatched or missing media atomically.
 - [ ] 2.5 Implement v1→v2 upgrade preview that identifies provable fields and conversion warnings.
 - [ ] 2.6 Implement explicit append-only v1→v2 fork with expected payload/context/head CAS and idempotency.
 - [ ] 2.7 Keep generic save cross-schema protection and old v1/Candidate hashes unchanged.
-- [ ] 2.8 Validate canonical role/slot/order/placement mapping for every declared use, including repeated revisions, missing/orphan refs and the sole render output.
+- [x] 2.8 Validate canonical role/slot/order/placement mapping for every declared use, including repeated revisions, missing/orphan refs and the sole render output.
 - [ ] 2.9 Permit only the verified `video.master.v1`→`video.master.v2` upgrade pair via preview/commit; ordinary save and other schema crossings remain forbidden.
 
 ## 3. Bounded timeline and derived lineage

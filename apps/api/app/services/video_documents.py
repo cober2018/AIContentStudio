@@ -125,7 +125,9 @@ def canonical_payload(raw: object) -> dict:
     shot_ids = {shot["id"] for shot in shots}
 
     timeline = _object(payload.get("timeline"), {"duration_ms", "tracks"}, "video_timeline_invalid")
-    duration = _int(timeline.get("duration_ms"), 1, _MAX_DURATION_MS, "video_timeline_duration_invalid")
+    duration = _int(timeline.get("duration_ms"), 0, _MAX_DURATION_MS, "video_timeline_duration_invalid")
+    if duration == 0 and shots:
+        _fail("video_timeline_duration_invalid")
     tracks = []
     for raw_track in _ordered(timeline.get("tracks"), maximum=16, code="video_tracks_invalid"):
         track = _object(raw_track, {"id", "order", "kind", "items"}, "video_track_invalid")
@@ -243,3 +245,42 @@ def profile_reasons(form: ContentFormSpec, document: dict) -> list[str]:
     if media_rules.get("inline") == "required" and not any("source_material_revision_id" in shot for shot in document["shots"]):
         reasons.append("video_inline_media_required")
     return reasons
+
+
+def _expected_media(document: dict) -> list[dict]:
+    expected: list[dict] = []
+
+    def add(role: str, slot: str, revision_id: int, placement: dict) -> None:
+        expected.append({"material_revision_id": revision_id, "role": role, "slot_key": slot, "sort_order": len(expected), "placement": placement})
+
+    for shot in document["shots"]:
+        if "source_material_revision_id" in shot:
+            add("shot_source", shot["id"], shot["source_material_revision_id"], {"shot_id": shot["id"]})
+    for track in document["timeline"]["tracks"]:
+        for item in track["items"]:
+            if "material_revision_id" in item:
+                placement = {"track_id": track["id"], "item_id": item["id"], "start_ms": item["start_ms"], "end_ms": item["end_ms"]}
+                for key in ("trim_start_ms", "trim_end_ms", "volume"):
+                    if key in item:
+                        placement[key] = item[key]
+                add("timeline_media", item["id"], item["material_revision_id"], placement)
+    for field, role in (("voice", "voice_audio"), ("music", "music_audio"), ("cover", "cover_image")):
+        if "material_revision_id" in document[field]:
+            add(role, field, document[field]["material_revision_id"], {field: "main"})
+    if "render_asset_ref" in document:
+        add("render_output", "final", document["render_asset_ref"]["material_revision_id"], {"render": "final"})
+    return expected
+
+
+def validate_references(payload: object, asset_refs: object, evidence_refs: object) -> None:
+    document = canonical_payload(payload)
+    if not isinstance(asset_refs, list) or not isinstance(evidence_refs, list) or len(asset_refs) != len(_expected_media(document)):
+        _fail("video_reference_count_mismatch")
+    for actual, expected in zip(asset_refs, _expected_media(document), strict=True):
+        if not isinstance(actual, dict) or set(actual) - {*expected, "content_hash"}:
+            _fail("video_asset_placement_mismatch")
+        if any(actual.get(key) != value for key, value in expected.items()):
+            _fail("video_asset_placement_mismatch")
+        content_hash = actual.get("content_hash")
+        if not isinstance(content_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", content_hash):
+            _fail("video_asset_hash_invalid")

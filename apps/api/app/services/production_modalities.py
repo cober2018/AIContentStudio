@@ -337,7 +337,46 @@ class VideoMasterAdapter(MediaMasterAdapter):
     mime_prefix = "video/"
 
 
-ADAPTERS = {(adapter.modality, adapter.payload_schema): adapter for adapter in (TextMasterAdapter(), TextMasterV2Adapter(), GraphicMasterAdapter(), GraphicMasterV2Adapter(), VideoMasterAdapter())}
+class VideoMasterV2Adapter(VideoMasterAdapter):
+    version = "2"
+
+    @property
+    def payload_schema(self) -> str:
+        return "video.master.v2"
+
+    def validate_payload(self, payload: dict) -> list[str]:
+        from .video_documents import VideoDocumentError, canonical_payload
+
+        try:
+            canonical_payload(payload)
+        except VideoDocumentError as exc:
+            return [str(exc)]
+        return []
+
+    def freeze_availability(self, db: Session, master: ContentMasterRevision) -> dict:
+        from .video_documents import profile_reasons
+
+        availability = super().freeze_availability(db, master)
+        reasons = list(availability["reasons"])
+        if master.channel_id and master.content_form and not self.validate_payload(master.payload_json):
+            try:
+                form = resolve_content_form(db, master.channel_id, master.content_form)
+                reasons.extend(profile_reasons(form, master.payload_json))
+            except ChannelRegistryError:
+                reasons.append("video_profile_unavailable")
+        return {**availability, "available": not reasons, "reasons": list(dict.fromkeys(reasons))}
+
+    def build_preview(self, master: ContentMasterRevision) -> dict:
+        from .video_documents import VideoDocumentError, canonical_payload
+
+        try:
+            document = canonical_payload(master.payload_json)
+        except VideoDocumentError as exc:
+            return {**super().build_preview(master), "status": "invalid", "reasons": [str(exc)]}
+        return {**super().build_preview(master), "shot_count": len(document["shots"]), "duration_ms": document["timeline"]["duration_ms"]}
+
+
+ADAPTERS = {(adapter.modality, adapter.payload_schema): adapter for adapter in (TextMasterAdapter(), TextMasterV2Adapter(), GraphicMasterAdapter(), GraphicMasterV2Adapter(), VideoMasterAdapter(), VideoMasterV2Adapter())}
 
 
 def default_payload_schema(modality: str) -> str:
