@@ -72,7 +72,7 @@ def test_registered_adapter_has_complete_contract(modality):
 
     factory = getattr(production_modalities, "adapter_for", None)
     assert callable(factory), "adapter registry missing"
-    adapter = factory(modality)
+    adapter = factory(modality, f"{modality}.master.v1")
     for name in ("validate_payload", "build_preview", "build_render_snapshot", "build_package_projection", "freeze_availability"):
         assert callable(getattr(adapter, name, None)), name
     assert set(adapter.required_check_kinds) == {"master_schema", "evidence", "rights", "render"}
@@ -207,7 +207,7 @@ def test_check_profile_tracks_actual_adapter_version(client, db_session, monkeyp
     _, path = _unit(client, db_session, "text")
     saved = client.post(path, json={"idempotency_key": "version", "payload": {"markdown": "内容"}}, headers=HEADERS).json()
     client.post(f"{path}/{saved['id']}/checks", headers=HEADERS)
-    monkeypatch.setattr(adapter_for("text"), "version", "2")
+    monkeypatch.setattr(adapter_for("text", "text.master.v1"), "version", "2")
     checks = client.get(f"{path}/{saved['id']}/checks/current", headers=HEADERS).json()["items"]
     assert all(check["status"] == "stale" for check in checks)
     client.post(f"{path}/{saved['id']}/checks", headers=HEADERS)

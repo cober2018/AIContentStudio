@@ -19,7 +19,7 @@ from ..models import (
     WorkflowStepAttempt,
 )
 from .content_harness.channel_registry import resolve_content_form
-from .content_masters import _serialize, check_input_hash
+from .content_masters import _serialize, check_requirements
 from .production_modalities import adapter_for, validate_json_bounds
 
 SECTIONS = ("artifact_kind", "channel", "content_form", "project", "identity", "brief", "evidence", "content_master", "content", "assets", "evidence_refs", "checks", "render", "production", "citations", "declarations")
@@ -45,7 +45,7 @@ def build_manifest_v4(inputs: dict) -> dict:
     return json.loads(json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False))
 
 
-def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, require_current: bool = True) -> dict:
+def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, require_current: bool = True, frozen_checks: list[dict] | None = None) -> dict:
     project = db.get(ContentProject, master.project_id)
     unit = db.get(ContentUnit, master.content_unit_id)
     identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
@@ -56,16 +56,16 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
         raise ValueError("incomplete frozen Master context")
     if unit.project_id != project.id or identity.owner_user_id != project.owner_user_id or brief.project_id != project.id or boundary.project_id != project.id or pack.checksum != boundary.fact_pack_checksum or pack.version != boundary.fact_pack_version:
         raise ValueError("inconsistent frozen Master context")
-    adapter = adapter_for(master.modality)
+    adapter = adapter_for(master.modality, master.payload_schema)
     projection = _serialize(db, master)
-    input_hash = check_input_hash(db, master, require_current=require_current)
+    requirements = check_requirements(db, master, require_current=require_current, frozen_checks=frozen_checks if not require_current else None)
     checks = []
-    for kind in adapter.required_check_kinds:
+    for kind, requirement in requirements.items():
         query = select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == master.id, ContentMasterCheckRun.check_kind == kind)
         if not require_current:
-            query = query.where(ContentMasterCheckRun.input_hash == input_hash)
+            query = query.where(ContentMasterCheckRun.input_hash == requirement["input_hash"])
         check = db.scalar(query.order_by(ContentMasterCheckRun.id.desc()).limit(1))
-        if check is None or check.input_hash != input_hash or check.profile_key != adapter.payload_schema or check.profile_version != adapter.version:
+        if check is None or check.input_hash != requirement["input_hash"] or check.profile_key != requirement["profile_key"] or check.profile_version != requirement["profile_version"]:
             raise ValueError(f"missing or stale Master check: {kind}")
         checks.append({"id": check.id, "kind": kind, "profile_key": check.profile_key, "profile_version": check.profile_version, "input_hash": check.input_hash, "status": check.status, "report": check.report_json})
     workflow, output_snapshot = None, None
@@ -79,6 +79,7 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
         output_snapshot = {"id": output.id, "kind": output.output_kind, "entity_id": output.entity_id, "node_id": output.node_id, "attempt_id": attempt.id, "attempt_no": attempt.attempt_no, "input_hash": attempt.input_hash, "output_hash": attempt.output_hash}
     payload = master.payload_json
     structured = payload.get("structured") or {}
+    exact_citations = (payload.get("document") or {}).get("citations", []) if master.payload_schema == "text.master.v2" else None
     return {
         "artifact_kind": resolve_content_form(db, master.channel_id, master.content_form).artifact_kind,
         "channel": master.channel_id, "content_form": master.content_form,
@@ -90,6 +91,6 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
         "content": payload, "assets": projection["assets"], "evidence_refs": projection["evidence"], "checks": checks,
         "render": adapter.build_render_snapshot(db, master),
         "production": {"source_kind": master.source_kind, "workflow": workflow, "output": output_snapshot, "edit_summary": master.edit_summary_json, "created_by": master.created_by},
-        "citations": payload.get("citations", structured.get("citations", structured.get("claim_fact_map", []))) or [],
+        "citations": exact_citations if exact_citations is not None else (payload.get("citations", structured.get("citations", structured.get("claim_fact_map", []))) or []),
         "declarations": payload.get("declarations", structured.get("declarations", [])) or [],
     }

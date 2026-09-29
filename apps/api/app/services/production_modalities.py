@@ -142,6 +142,70 @@ class TextMasterAdapter(ProductionModalityAdapter):
         return {"text_files": [{"name": "content.md", "content": render["body_markdown"]}], "material_outputs": []}
 
 
+class TextMasterV2Adapter(TextMasterAdapter):
+    version = "2"
+    required_check_kinds = (*ProductionModalityAdapter.required_check_kinds, "text_structure", "text_fact", "text_identity", "text_platform")
+
+    @property
+    def payload_schema(self) -> str:
+        return "text.master.v2"
+
+    def validate_payload(self, payload: dict) -> list[str]:
+        from .text_documents import TextDocumentError, canonical_payload
+
+        try:
+            canonical_payload(payload)
+        except TextDocumentError as exc:
+            return [str(exc)]
+        return []
+
+    def build_preview(self, master: ContentMasterRevision) -> dict:
+        from .text_documents import TextDocumentError, canonical_payload, plain_text
+
+        try:
+            document = canonical_payload(master.payload_json)["document"]
+            text = plain_text(document)
+        except TextDocumentError as exc:
+            return {**ProductionModalityAdapter.build_preview(self, master), "status": "invalid", "reasons": [str(exc)]}
+        return {**ProductionModalityAdapter.build_preview(self, master), "plain_text": text[:20_000], "truncated": len(text) > 20_000, "block_count": len(document["blocks"]), "citation_count": len(document["citations"])}
+
+    def build_render_snapshot(self, db: Session, master: ContentMasterRevision) -> dict:
+        from .text_documents import TextDocumentError, canonical_payload, plain_text, render_markdown
+
+        try:
+            document = canonical_payload(master.payload_json)["document"]
+            if not plain_text(document).strip():
+                return {"status": "incomplete", "reasons": ["text_content_missing"]}
+            refs = db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id)).all()
+            paths = {}
+            used = {}
+            for block in document["blocks"]:
+                if block["type"] not in {"image", "chart"}:
+                    continue
+                revision_id = block["material_revision_id"]
+                if revision_id in used and used[revision_id] != block["type"]:
+                    raise TextDocumentError("text_asset_use_kind_conflict")
+                used[revision_id] = block["type"]
+            for index, ref in enumerate(refs):
+                if ref.material_revision_id not in used:
+                    continue
+                revision = db.get(MaterialRevision, ref.material_revision_id)
+                expected_kind = "chart" if used[ref.material_revision_id] == "chart" else "image"
+                if revision is None or revision.material.kind != expected_kind or revision.content_hash != ref.content_hash_snapshot or ref.material_revision_id in paths:
+                    raise TextDocumentError("text_asset_kind_hash_or_declaration_invalid")
+                data = read_bytes_checked(db, revision, require_public=True)
+                suffix = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif"}.get(revision.mime_type)
+                if suffix is None or sniff_mime(data, None) != revision.mime_type:
+                    raise TextDocumentError("text_asset_render_unavailable")
+                paths[revision.id] = f"media/{index:02d}-{revision.id}{suffix}"
+            markdown = render_markdown(document, media_paths=paths)
+        except (TextDocumentError, HTTPException, OSError) as exc:
+            reason = str(exc) if isinstance(exc, TextDocumentError) else "text_asset_bytes_or_rights_unavailable"
+            return {"status": "incomplete", "reasons": [reason]}
+        unused = sorted({ref.material_revision_id for ref in refs} - set(used))
+        return {"status": "ready", "origin": "deterministic", "renderer_key": "text.studio.document.v1", "renderer_version": self.version, "render_input_hash": render_input_hash(db, master), "content_hash": hashlib.sha256(markdown.encode()).hexdigest(), "body_markdown": markdown, "unused_asset_ids": unused, "warnings": ["declared_asset_unused"] if unused else [], "reasons": []}
+
+
 class MediaMasterAdapter(ProductionModalityAdapter):
     material_kind: str
     mime_prefix: str
@@ -218,13 +282,26 @@ class VideoMasterAdapter(MediaMasterAdapter):
     mime_prefix = "video/"
 
 
-ADAPTERS = {adapter.modality: adapter for adapter in (TextMasterAdapter(), GraphicMasterAdapter(), VideoMasterAdapter())}
+ADAPTERS = {(adapter.modality, adapter.payload_schema): adapter for adapter in (TextMasterAdapter(), TextMasterV2Adapter(), GraphicMasterAdapter(), VideoMasterAdapter())}
 
 
-def adapter_for(modality: str) -> ProductionModalityAdapter:
-    if modality not in ADAPTERS:
+def default_payload_schema(modality: str) -> str:
+    if modality not in DESCRIPTORS:
         raise HTTPException(422, {"code": "unsupported_modality"})
-    return ADAPTERS[modality]
+    return "text.master.v2" if modality == "text" else DESCRIPTORS[modality].payload_schema
+
+
+def supported_payload_schemas(modality: str) -> tuple[str, ...]:
+    default_payload_schema(modality)
+    return tuple(schema for kind, schema in ADAPTERS if kind == modality)
+
+
+def adapter_for(modality: str, payload_schema: str | None = None) -> ProductionModalityAdapter:
+    schema = payload_schema or default_payload_schema(modality)
+    adapter = ADAPTERS.get((modality, schema))
+    if adapter is None:
+        raise HTTPException(422, {"code": "unsupported_payload_schema", "modality": modality, "payload_schema": schema})
+    return adapter
 
 
 def descriptor(modality: str) -> ModalityDescriptor:

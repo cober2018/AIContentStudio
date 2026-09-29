@@ -20,7 +20,7 @@ def build_v4_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -
     if target.action not in {"copy_package", "manual_handoff"} or target.channel != manifest["channel"] or target.content_form != manifest["content_form"] or target.approved_candidate_hash != asset.candidate_hash:
         raise HTTPException(409, "v4交付授权与准确候选/渠道/形态不一致")
     master = db.get(ContentMasterRevision, asset.content_master_revision_id)
-    projection = adapter_for(master.modality).build_package_projection(db, master)
+    projection = adapter_for(master.modality, master.payload_schema).build_package_projection(db, master)
     media = []
     for ref in manifest["assets"]:
         revision = db.get(MaterialRevision, ref["material_revision_id"])

@@ -29,6 +29,8 @@ def _injected_statement(facts: list[dict[str, Any]]) -> str:
 
 def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> dict[str, Any]:
     context = request.context or {}
+    if request.purpose == "text_master_edit":
+        return _build_text_master_edit(context)
     topic = context.get("topic", {})
     facts: list[dict[str, Any]] = context.get("facts", [])
     brand = context.get("brand_voice", {})
@@ -48,6 +50,24 @@ def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> di
     if inject_unfact and facts:
         _inject_unfact(output, channel)
     return output
+
+
+def _build_text_master_edit(context: dict[str, Any]) -> dict[str, Any]:
+    """Return a deterministic provider candidate; the service still validates/applies it."""
+    operation = context.get("operation")
+    selection = context.get("selection") or {}
+    selected = str(context.get("selected_text") or "")
+    if operation == "restructure":
+        return {"patch": {"kind": "replace_blocks", "from_block_id": selection.get("from_block_id"), "to_block_id": selection.get("to_block_id"), "blocks": context.get("selected_blocks") or []}}
+    if operation == "shorten":
+        replacement = selected[: max(1, len(selected) // 2)]
+    elif operation == "expand":
+        replacement = f"{selected}。补充说明：这部分内容需要结合上下文理解。"
+    elif operation == "tone":
+        replacement = f"换个角度看，{selected}"
+    else:
+        replacement = f"{selected}（改写建议）"
+    return {"patch": {"kind": "replace_text", "block_id": selection.get("block_id"), "list_item_id": selection.get("list_item_id"), "start": selection.get("start"), "end": selection.get("end"), "replacement": [{"text": replacement, "marks": []}]}}
 
 
 def _build_topic_suggestions(facts: list[dict[str, Any]], count: int) -> dict[str, Any]:

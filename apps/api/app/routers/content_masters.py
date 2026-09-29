@@ -13,9 +13,13 @@ from ..services.content_masters import (
     get_revision,
     list_checks,
     list_revisions,
+    preview_text_upgrade,
     run_checks,
     save_revision,
+    upgrade_text_master,
 )
+from ..services.text_master_ai import suggest_text_edit
+from ..services.text_master_diff import structured_diff
 
 router = APIRouter(prefix="/api/v1", tags=["content-masters"])
 
@@ -42,6 +46,21 @@ class MasterSeedIn(BaseModel):
     project_output_id: int
 
 
+class MasterUpgradeIn(BaseModel):
+    expected_revision: int = Field(ge=1)
+    expected_payload_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    expected_context_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    idempotency_key: str = Field(min_length=1, max_length=150)
+
+
+class TextSuggestionIn(BaseModel):
+    base_payload_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    working_document: dict
+    operation: str = Field(pattern="^(rewrite|expand|shorten|tone|restructure)$")
+    selection: dict
+    instruction: str = Field(default="", max_length=2000)
+
+
 @router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions")
 def get_master_revisions(project_id: int, unit_id: int, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return {"items": list_revisions(db, project_id, unit_id, user, limit=limit, offset=offset), "limit": limit, "offset": offset}
@@ -58,14 +77,34 @@ def get_master_revision(project_id: int, unit_id: int, master_id: int, db: Sessi
     return get_revision(db, project_id, unit_id, master_id, user)
 
 
+@router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/text-v2-upgrade-preview")
+def get_text_upgrade_preview(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return preview_text_upgrade(db, project_id, unit_id, master_id, user)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/text-v2-upgrade", dependencies=[Depends(require_editor)])
+def commit_text_upgrade(project_id: int, unit_id: int, master_id: int, body: MasterUpgradeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return upgrade_text_master(db, project_id=project_id, unit_id=unit_id, master_id=master_id, user=user, payload=body.model_dump())
+
+
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions", dependencies=[Depends(require_editor)])
 def create_master_revision(project_id: int, unit_id: int, body: MasterRevisionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
 
 
+@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/text-suggestions", dependencies=[Depends(require_editor)])
+async def text_suggestion(project_id: int, unit_id: int, master_id: int, body: TextSuggestionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return await suggest_text_edit(db, project_id=project_id, unit_id=unit_id, master_id=master_id, user=user, payload=body.model_dump())
+
+
 @router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/checks")
 def get_master_checks(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return {"items": list_checks(db, project_id, unit_id, master_id, user)}
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/diff")
+def diff_master_revision(project_id: int, unit_id: int, master_id: int, compare_to_id: int = Query(..., ge=1), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return structured_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/readiness")

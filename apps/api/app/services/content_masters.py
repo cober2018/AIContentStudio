@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..models import (
+    ChannelTemplateVersion,
     ContentMasterAssetRef,
     ContentMasterCheckRun,
     ContentMasterEvidenceRef,
@@ -16,6 +17,7 @@ from ..models import (
     ContentProject,
     ContentUnit,
     CreativeBriefRevision,
+    DiscoverabilityProfileVersion,
     Draft,
     EvidenceKind,
     FactPack,
@@ -36,11 +38,10 @@ from .content_harness.channel_registry import ChannelRegistryError, resolve_cont
 from .materials import read_bytes_checked
 from .production_modalities import (
     adapter_for,
-    descriptor,
+    default_payload_schema,
     render_input_hash,
     validate_json_bounds,
     validate_master_references,
-    validate_payload,
 )
 from .project_brief import current_brief
 from .project_events import record_project_event
@@ -128,7 +129,7 @@ def get_revision(db: Session, project_id: int, unit_id: int, master_id: int, use
 def get_readiness(db: Session, project_id: int, unit_id: int, master_id: int, user: User) -> dict:
     projection = get_revision(db, project_id, unit_id, master_id, user)
     row = db.get(ContentMasterRevision, master_id)
-    adapter = adapter_for(row.modality)
+    adapter = adapter_for(row.modality, row.payload_schema)
     checks = current_checks(db, project_id, unit_id, master_id, user)
     available = adapter.freeze_availability(db, row)
     latest = db.scalar(select(ContentMasterRevision.id).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
@@ -162,9 +163,60 @@ def check_input_hash(db: Session, row: ContentMasterRevision, *, require_current
         evidence.append({"ref": ref, "live": {"checksum": item.snapshot_checksum, "public_use_allowed": item.public_use_allowed, "revoked": item.public_use_revoked_at is not None, "kind": item.evidence_kind} if item else None})
     project = db.get(ContentProject, row.project_id)
     unit = db.get(ContentUnit, row.content_unit_id)
-    adapter = adapter_for(row.modality)
+    adapter = adapter_for(row.modality, row.payload_schema)
     context = _context(db, project, unit, content_form=row.content_form) if require_current else frozen_context(db, row)
     return _hash({"payload_hash": row.payload_hash, "context_hash": row.context_hash, "current_context": context, "assets": assets, "evidence": evidence, "boundary_live": _boundary_live_state(db, row), "render": adapter.build_render_snapshot(db, row), "profile_key": adapter.payload_schema, "profile_version": adapter.version})
+
+
+TEXT_CHECK_VERSIONS = {kind: "1" for kind in ("master_schema", "evidence", "rights", "render", "text_structure", "text_fact", "text_identity", "text_platform", "text_discoverability")}
+
+
+def check_requirements(db: Session, row: ContentMasterRevision, *, require_current: bool = True, frozen_checks: list[dict] | None = None) -> dict[str, dict]:
+    """Resolve each required check against its own pinned inputs; v1 keeps its original hash."""
+    adapter = adapter_for(row.modality, row.payload_schema)
+    base_hash = check_input_hash(db, row, require_current=require_current)
+    if row.payload_schema != "text.master.v2":
+        return {kind: {"kind": kind, "profile_key": adapter.payload_schema, "profile_version": adapter.version, "input_hash": base_hash, "profile": None} for kind in adapter.required_check_kinds}
+    profile = None
+    if frozen_checks is None:
+        if row.channel_id and row.content_form:
+            profile = db.scalar(select(DiscoverabilityProfileVersion).where(DiscoverabilityProfileVersion.channel == row.channel_id, DiscoverabilityProfileVersion.content_form == row.content_form, DiscoverabilityProfileVersion.status == "published").order_by(DiscoverabilityProfileVersion.version.desc(), DiscoverabilityProfileVersion.id.desc()).limit(1))
+        kinds = (*adapter.required_check_kinds, *(("text_discoverability",) if profile else ()))
+        frozen = {}
+    else:
+        frozen = {item.get("kind"): (item.get("report") or {}).get("requirement") for item in frozen_checks if isinstance(item, dict)}
+        kinds = tuple(frozen)
+        required = set(adapter.required_check_kinds)
+        if len(kinds) != len(frozen_checks) or not required.issubset(kinds) or set(kinds) - required - {"text_discoverability"}:
+            raise ValueError("invalid frozen Text check requirement set")
+    result = {}
+    for kind in kinds:
+        if frozen_checks is not None:
+            metadata = frozen.get(kind)
+            if not isinstance(metadata, dict) or metadata.get("kind") != kind:
+                raise ValueError(f"missing frozen check requirement: {kind}")
+        else:
+            metadata = {"kind": kind, "schema": adapter.payload_schema, "adapter_version": adapter.version, "implementation": TEXT_CHECK_VERSIONS[kind], "renderer": {"key": "text.studio.document.v1", "version": adapter.version}}
+            if kind == "text_discoverability":
+                metadata["profile"] = {"id": profile.id, "key": profile.profile_key, "version": profile.version, "checksum": profile.checksum or _hash(profile.config_json or {}), "checksum_origin": "stored" if profile.checksum else "computed", "config_hash": _hash(profile.config_json or {})}
+            elif kind == "text_platform":
+                try:
+                    form = resolve_content_form(db, row.channel_id, row.content_form)
+                    template = db.get(ChannelTemplateVersion, form.profile_version_id) if form.profile_version_id else None
+                    metadata["profile"] = {"id": template.id if template else None, "version": template.version if template else None, "checksum": (template.checksum or _hash(template.profile_json or {})) if template else None, "checksum_origin": "stored" if template and template.checksum else "computed" if template else "legacy_default", "form": form.to_dict()}
+                except (ChannelRegistryError, TypeError, ValueError):
+                    metadata["profile"] = {"unavailable": True, "channel": row.channel_id, "content_form": row.content_form}
+            elif kind in {"text_fact", "text_identity"}:
+                from .generation.providers import effective_llm_config
+
+                config = effective_llm_config("fact_review" if kind == "text_fact" else "identity_review")
+                metadata["semantic"] = {"profile": config.get("profile"), "provider": config["provider"], "model": config["model"], "configured": bool(config["provider"] == "openai_compatible" and config["model"] and config["api_key"] and config["base_url"])}
+                if kind == "text_fact":
+                    boundary = db.get(ProjectFactBoundaryRevision, row.fact_boundary_revision_id) if row.fact_boundary_revision_id else None
+                    items = db.scalars(select(FactPackItem).where(FactPackItem.fact_pack_id == boundary.fact_pack_id).order_by(FactPackItem.id)).all() if boundary else []
+                    metadata["model_use"] = [{"id": item.id, "checksum": item.snapshot_checksum, "allowed": item.model_use_allowed, "revoked": item.public_use_revoked_at is not None} for item in items]
+        result[kind] = {"kind": kind, "profile_key": adapter.payload_schema, "profile_version": adapter.version, "input_hash": _hash({"base": base_hash, "requirement": metadata}), "profile": metadata.get("profile"), "profile_config": profile.config_json if kind == "text_discoverability" and profile is not None and frozen_checks is None else None, "metadata": metadata}
+    return result
 
 
 def _material_live_state(db: Session, material: MaterialRevision) -> dict:
@@ -225,14 +277,14 @@ def current_checks(db: Session, project_id: int, unit_id: int, master_id: int, u
 
 def projected_checks(db: Session, row: ContentMasterRevision) -> list[dict]:
     """Internal read projection; callers authorize the enclosing project/unit."""
-    input_hash = check_input_hash(db, row)
-    adapter = adapter_for(row.modality)
+    requirements = check_requirements(db, row)
     latest = {}
-    for kind in adapter.required_check_kinds:
+    for kind in requirements:
         latest[kind] = db.scalar(select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == row.id, ContentMasterCheckRun.check_kind == kind).order_by(ContentMasterCheckRun.id.desc()).limit(1))
     result = []
     for kind, check in latest.items():
-        is_current = check is not None and check.input_hash == input_hash and check.profile_key == adapter.payload_schema and check.profile_version == adapter.version
+        requirement = requirements[kind]
+        is_current = check is not None and check.input_hash == requirement["input_hash"] and check.profile_key == requirement["profile_key"] and check.profile_version == requirement["profile_version"]
         result.append({"id": check.id if check else None, "check_kind": kind, "input_hash": check.input_hash if check else None, "is_current": is_current, "stored_status": check.status if check else None, "status": check.status if is_current else "stale" if check else "incomplete", "report": check.report_json if check else {"reason": "check_missing"}})
     return result
 
@@ -240,7 +292,7 @@ def projected_checks(db: Session, row: ContentMasterRevision) -> list[dict]:
 def master_risks(db: Session, row: ContentMasterRevision) -> list[dict]:
     projection = _serialize(db, row)
     checks = projected_checks(db, row)
-    adapter = adapter_for(row.modality)
+    adapter = adapter_for(row.modality, row.payload_schema)
     risks = []
     context = projection["readiness"]
     if context["state"] != "current":
@@ -266,22 +318,29 @@ def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user:
     inputs = _serialize(db, row)
     if inputs["readiness"]["state"] == "stale":
         raise HTTPException(409, {"code": "stale_master", "reasons": inputs["readiness"]["reasons"]})
-    input_hash = check_input_hash(db, row)
-    adapter = adapter_for(row.modality)
-    payload_errors = validate_payload(row.modality, row.payload_json)
-    render = adapter_for(row.modality).build_render_snapshot(db, row)
+    requirements = check_requirements(db, row)
+    adapter = adapter_for(row.modality, row.payload_schema)
+    payload_errors = adapter.validate_payload(row.payload_json)
+    render = adapter_for(row.modality, row.payload_schema).build_render_snapshot(db, row)
     results = {
         "master_schema": ("blocker" if payload_errors else "pass", {"reasons": payload_errors}),
         "evidence": _evidence_check(db, row),
         "rights": _rights_check(db, inputs),
         "render": ("pass" if render["status"] == "ready" else "incomplete", render),
     }
+    if row.payload_schema == "text.master.v2":
+        from .text_master_checks import run_text_checks
+
+        results.update(run_text_checks(db, row, inputs, requirements))
     rows = []
-    for kind in adapter.required_check_kinds:
-        status, report = results[kind]
+    for kind, requirement in requirements.items():
+        status, report = results.get(kind, ("incomplete", {"reasons": ["check_handler_unavailable"]}))
         if inputs["readiness"]["state"] == "stale":
             status, report = "stale", {"reasons": inputs["readiness"]["reasons"]}
-        check = ContentMasterCheckRun(master_revision_id=row.id, check_kind=kind, profile_key=adapter.payload_schema, profile_version=adapter.version, input_hash=input_hash, status=status, report_json=report, created_at=utcnow())
+        if row.payload_schema == "text.master.v2":
+            report = {**report, "requirement": requirement["metadata"]}
+        semantic = requirement.get("metadata", {}).get("semantic", {}) if (report.get("coverage") or {}).get("semantic") in {"verified", "partial"} else {}
+        check = ContentMasterCheckRun(master_revision_id=row.id, check_kind=kind, profile_key=requirement["profile_key"], profile_version=requirement["profile_version"], input_hash=requirement["input_hash"], status=status, report_json=report, provider_key=str(semantic.get("provider") or "")[:100] or None, provider_version=str(semantic.get("model") or "")[:100] or None, created_at=utcnow())
         db.add(check)
         rows.append(check)
     db.commit()
@@ -325,25 +384,43 @@ def _verified_generated_asset(db: Session, output: ProjectWorkflowOutput, materi
     )
 
 
-def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, workflow_seed: bool = False) -> dict:
+def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, workflow_seed: bool = False, upgrade_source: ContentMasterRevision | None = None) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
     modality = payload.get("modality") or unit.modality
     if modality != unit.modality:
         raise HTTPException(422, "Master形态必须与内容单元一致")
-    desc = descriptor(modality)
-    errors = validate_payload(modality, payload["payload"])
+    payload_schema = payload.get("payload_schema")
+    if not payload_schema:
+        document = payload["payload"].get("document")
+        studio_document = isinstance(document, dict) and document.get("schema") == "studio.text.document.v1"
+        legacy_text = modality == "text" and (workflow_seed or "markdown" in payload["payload"] or not studio_document)
+        payload_schema = "text.master.v1" if legacy_text else default_payload_schema(modality)
+    adapter = adapter_for(modality, payload_schema)
+    errors = adapter.validate_payload(payload["payload"])
     errors.extend(validate_json_bounds(payload))
     errors.extend(validate_master_references(payload["payload"], payload.get("asset_refs", []), payload.get("evidence_refs", [])))
     if errors:
         raise HTTPException(422, {"code": "invalid_master_payload", "reasons": errors})
+    if payload_schema == "text.master.v2":
+        from .text_documents import TextDocumentError, canonical_payload, validate_references
+
+        try:
+            payload = {**payload, "payload": canonical_payload(payload["payload"])}
+            validate_references(payload["payload"], payload.get("asset_refs", []), payload.get("evidence_refs", []))
+        except TextDocumentError as exc:
+            raise HTTPException(422, {"code": "invalid_master_document", "reason": str(exc)}) from exc
     refs_fingerprint = {"assets": payload.get("asset_refs", []), "evidence": payload.get("evidence_refs", [])}
-    payload_schema = payload.get("payload_schema") or desc.payload_schema
-    if payload_schema != desc.payload_schema:
-        raise HTTPException(422, "Master schema必须匹配当前形态支持的版本")
-    if payload.get("source_kind", "user_edit") != ("workflow_seed" if workflow_seed else "user_edit"):
+    trusted_kind = "explicit_upgrade" if upgrade_source is not None else "workflow_seed" if workflow_seed else "user_edit"
+    if payload.get("source_kind", "user_edit") != trusted_kind:
         raise HTTPException(422, "来源血缘必须通过对应的已验证服务创建")
+    if upgrade_source is None and {"upgrade_source", "upgrade_request"} & set(payload.get("edit_summary", {})):
+        raise HTTPException(422, {"code": "unverified_upgrade_provenance"})
     if "render_attestation" in payload.get("edit_summary", {}):
         raise HTTPException(422, "渲染确认必须使用显式render_attestation输入")
+    if "ai_provenance" in payload.get("edit_summary", {}):
+        raise HTTPException(422, {"code": "unverified_ai_provenance"})
+    if "ai_edits" in payload.get("edit_summary", {}) and (payload_schema != "text.master.v2" or not payload["edit_summary"]["ai_edits"]):
+        raise HTTPException(422, {"code": "invalid_ai_edit_history"})
     request_intent = {"modality": modality, "schema": payload_schema, "payload": payload["payload"], "content_form": payload.get("content_form"), "parent_revision_id": payload.get("parent_revision_id"), "expected_revision": payload.get("expected_revision", 0), "edit_summary": payload.get("edit_summary", {}), "refs": refs_fingerprint, "source_kind": payload.get("source_kind", "user_edit"), "origin_project_output_id": payload.get("origin_project_output_id"), "origin_workflow_run_id": payload.get("origin_workflow_run_id")}
     if payload.get("expected_context_hash") is not None:
         request_intent["expected_context_hash"] = payload["expected_context_hash"]
@@ -366,6 +443,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         raise HTTPException(422, {"code": "channel_required_for_content_form"})
     context = _context(db, project, unit, content_form=content_form)
     latest = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+    if upgrade_source is not None and (latest is None or latest.id != upgrade_source.id or latest.content_unit_id != unit_id or latest.payload_schema != "text.master.v1" or payload_schema != "text.master.v2" or latest.payload_hash != payload.get("edit_summary", {}).get("upgrade_source", {}).get("payload_hash") or _hash(latest.payload_json) != latest.payload_hash):
+        raise HTTPException(409, {"code": "master_upgrade_source_conflict"})
+    if latest and latest.payload_schema != payload_schema and upgrade_source is None:
+        raise HTTPException(409, {"code": "explicit_master_upgrade_required"})
     expected_context = _context(db, project, unit, content_form=latest.content_form) if latest else context
     if payload.get("expected_context_hash") is not None and payload["expected_context_hash"] != _hash(expected_context):
         db.rollback()
@@ -374,6 +455,21 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     expected = payload.get("expected_revision", 0)
     if expected != head:
         raise HTTPException(409, {"code": "master_revision_conflict", "expected_revision": expected, "current_revision": head})
+    if payload_schema == "text.master.v2" and payload.get("edit_summary", {}).get("ai_edits"):
+        from .text_master_ai import verify_ai_edits
+
+        payload["edit_summary"] = {
+            **payload.get("edit_summary", {}),
+            "ai_provenance": verify_ai_edits(
+                db,
+                project_id=project_id,
+                unit_id=unit_id,
+                actor=user.email,
+                base=latest,
+                document=payload["payload"]["document"],
+                ai_edits=payload["edit_summary"]["ai_edits"],
+            ),
+        }
     parent_id = payload.get("parent_revision_id") or (latest.id if latest else None)
     if parent_id is not None:
         parent = db.get(ContentMasterRevision, parent_id)
@@ -383,10 +479,13 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             raise HTTPException(409, "父Master不是当前版本，请刷新后重试")
     boundary = db.get(ProjectFactBoundaryRevision, context["boundary"]["id"]) if context["boundary"] else None
     asset_inputs = payload.get("asset_refs", [])
+    embedded = payload["payload"]["document"]["blocks"] if payload_schema == "text.master.v2" else []
     for item in asset_inputs:
         material = db.get(MaterialRevision, item.get("material_revision_id"))
         if material is None or material.content_hash != item.get("content_hash"):
             raise HTTPException(422, "素材版本不存在或内容哈希不匹配")
+        if any(block["type"] in {"image", "chart"} and block["material_revision_id"] == material.id and block["type"] != material.material.kind for block in embedded):
+            raise HTTPException(422, {"code": "text_asset_kind_mismatch"})
         visible = db.scalar(select(ProjectMaterialReference.id).where(ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.material_revision_id == material.id, ProjectMaterialReference.status == "active"))
         generated = db.scalars(select(ProjectWorkflowOutput).where(ProjectWorkflowOutput.project_id == project_id, ProjectWorkflowOutput.output_kind == "material_revision", ProjectWorkflowOutput.entity_id == material.id)).all()
         if visible is None and not any(_verified_generated_asset(db, output, material) for output in generated):
@@ -432,7 +531,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             refs = {item.material_revision_id: item.content_hash_snapshot for item in db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == row.id, ContentMasterAssetRef.role == "render_output")).all()}
             outputs = [{"material_revision_id": item.get("material_revision_id"), "content_hash": refs.get(item.get("material_revision_id")), "canvas_id": item.get("canvas_id")} for item in declarations if isinstance(item, dict)]
             row.edit_summary_json = {**row.edit_summary_json, "render_attestation": {"origin": "manual", "confirmed": True, "render_input_hash": attestation["render_input_hash"], "attested_by": user.email, "outputs": outputs}}
-            rendered = adapter_for(modality).build_render_snapshot(db, row)
+            rendered = adapter_for(modality, row.payload_schema).build_render_snapshot(db, row)
             if rendered["status"] != "ready":
                 db.rollback()
                 raise HTTPException(422, {"code": "invalid_render_attestation", "reasons": rendered["reasons"]})
@@ -444,7 +543,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         if project.owner_user_id != user.id or project.status == "archived" or unit.project_id != project_id or unit.status == "archived" or unit.modality != modality or _hash(_context(db, project, unit, content_form=content_form)) != row.context_hash:
             db.rollback()
             raise HTTPException(409, {"code": "master_context_conflict"})
-        if attestation is not None and adapter_for(modality).build_render_snapshot(db, row)["status"] != "ready":
+        if attestation is not None and adapter_for(modality, row.payload_schema).build_render_snapshot(db, row)["status"] != "ready":
             db.rollback()
             raise HTTPException(409, {"code": "render_inputs_changed"})
         db.commit()
@@ -453,6 +552,49 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         raise HTTPException(409, "Master版本并发冲突，请刷新后重试") from exc
     db.refresh(row)
     return _serialize(db, row)
+
+
+def preview_text_upgrade(db: Session, project_id: int, unit_id: int, master_id: int, user: User) -> dict:
+    from .text_documents import TextDocumentError, convert_legacy_text
+
+    project, unit = owned_unit(db, project_id, unit_id, user)
+    row = db.get(ContentMasterRevision, master_id)
+    if row is None or row.content_unit_id != unit_id or row.project_id != project_id:
+        raise HTTPException(404, "Master版本不存在")
+    if row.modality != "text" or row.payload_schema != "text.master.v1":
+        raise HTTPException(409, {"code": "text_v1_upgrade_source_required"})
+    if row.payload_hash != _hash(row.payload_json):
+        raise HTTPException(409, {"code": "master_upgrade_source_integrity"})
+    saved = _serialize(db, row)
+    assets = [{key: ref[key] for key in ("material_revision_id", "content_hash", "role", "slot_key", "sort_order", "placement")} for ref in saved["assets"]]
+    evidence = [{key: ref[key] for key in ("fact_pack_item_id", "snapshot_checksum", "role", "locator", "sort_order")} for ref in saved["evidence"]]
+    try:
+        converted = convert_legacy_text(row.payload_json, asset_refs=assets, evidence_refs=evidence)
+    except TextDocumentError as exc:
+        raise HTTPException(422, {"code": "legacy_text_conversion_failed", "reason": str(exc)}) from exc
+    return {**converted, "source_master_id": row.id, "source_revision_no": row.revision_no, "source_payload_hash": row.payload_hash, "source_schema": row.payload_schema, "current_context_hash": _hash(_context(db, project, unit, content_form=row.content_form))}
+
+
+def upgrade_text_master(db: Session, *, project_id: int, unit_id: int, master_id: int, user: User, payload: dict) -> dict:
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    intent = {"source_master_id": master_id, "actor": user.email, **payload}
+    existing = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id, ContentMasterRevision.idempotency_key == payload["idempotency_key"]))
+    if existing:
+        if existing.source_kind != "explicit_upgrade" or existing.edit_summary_json.get("upgrade_request") != intent:
+            raise HTTPException(409, {"code": "master_upgrade_idempotency_conflict"})
+        return _serialize(db, existing)
+    preview = preview_text_upgrade(db, project_id, unit_id, master_id, user)
+    if preview["source_payload_hash"] != payload["expected_payload_hash"] or preview["current_context_hash"] != payload["expected_context_hash"]:
+        raise HTTPException(409, {"code": "master_upgrade_source_conflict"})
+    source = db.get(ContentMasterRevision, master_id)
+    if _serialize(db, source)["readiness"]["state"] == "stale":
+        raise HTTPException(409, {"code": "stale_upgrade_source"})
+    return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, upgrade_source=source, payload={
+        "expected_revision": payload["expected_revision"], "expected_context_hash": payload["expected_context_hash"],
+        "idempotency_key": payload["idempotency_key"], "parent_revision_id": source.id, "content_form": source.content_form,
+        "payload_schema": "text.master.v2", "payload": preview["payload"], "asset_refs": preview["asset_refs"], "evidence_refs": preview["evidence_refs"], "source_kind": "explicit_upgrade",
+        "edit_summary": {"upgrade_request": intent, "upgrade_source": {"master_id": source.id, "revision_no": source.revision_no, "payload_schema": source.payload_schema, "payload_hash": source.payload_hash}, "conversion_warnings": preview["warnings"], "document_hash": preview["document_hash"]},
+    })
 
 
 def _draft_references(db: Session, draft: Draft, project_id: int) -> tuple[list, list, list, list]:
@@ -528,10 +670,17 @@ def seed_from_output(db: Session, *, project_id: int, unit_id: int, user: User, 
         raise HTTPException(409, "工作流稿件渠道与当前单元不一致")
     assets, evidence, unmapped_media, unmapped_claims = _draft_references(db, draft, project_id)
     content = {"title": draft.title, "markdown": draft.body, "structured": draft.structured_json, "document": draft.document_json, "thread_posts": draft.thread_posts_json}
+    from .text_documents import TextDocumentError, convert_legacy_text
+
+    try:
+        converted = convert_legacy_text(content, asset_refs=assets, evidence_refs=evidence)
+    except TextDocumentError as exc:
+        raise HTTPException(422, {"code": "legacy_text_conversion_failed", "reason": str(exc)}) from exc
+    unmapped_claims += [warning for warning in converted["warnings"] if warning["code"] == "unmapped_evidence_locator"]
     return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, workflow_seed=True, payload={
         "expected_revision": expected_revision, "idempotency_key": idempotency_key, "modality": unit.modality,
-        "payload": content, "asset_refs": assets, "evidence_refs": evidence,
+        "payload_schema": "text.master.v2", "payload": converted["payload"], "asset_refs": converted["asset_refs"], "evidence_refs": converted["evidence_refs"],
         "source_kind": "workflow_seed", "origin_workflow_run_id": run.id, "origin_project_output_id": output.id,
         "content_form": draft.content_job.content_form if unit.channel_id else None,
-        "edit_summary": {"workflow_source": {"draft_id": draft.id, "draft_revision_no": draft.revision_no, "draft_input_hash": draft.input_hash, "draft_content_hash": _hash(content), "workflow_id": workflow.id, "workflow_version": run.workflow_version, "run_id": run.id, "definition_checksum": run.definition_checksum, "node_id": step.node_id, "attempt_id": attempt.id, "attempt_input_hash": attempt.input_hash, "attempt_output_hash": attempt.output_hash}, "unmapped_media_ids": unmapped_media, "unmapped_claims": unmapped_claims},
+        "edit_summary": {"workflow_source": {"draft_id": draft.id, "draft_revision_no": draft.revision_no, "draft_input_hash": draft.input_hash, "draft_content_hash": _hash(content), "workflow_id": workflow.id, "workflow_version": run.workflow_version, "run_id": run.id, "definition_checksum": run.definition_checksum, "node_id": step.node_id, "attempt_id": attempt.id, "attempt_input_hash": attempt.input_hash, "attempt_output_hash": attempt.output_hash}, "unmapped_media_ids": unmapped_media, "unmapped_claims": unmapped_claims, "conversion_warnings": converted["warnings"], "source_schema": "legacy.draft", "document_hash": converted["document_hash"]},
     })
