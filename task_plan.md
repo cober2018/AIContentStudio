@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F6E 六份 delta 本地保留性复核
+
+- [x] /// 对照 F6E 六份 delta、FE-F4 canonical 授权契约与当前设计，寻找与人工本地包/远端能力边界相冲突的措辞。
+- [x] /// 只修 FE-F4 delta 的 v5 授权语义，明确本地人工动作与远端效果的不同能力闸门；同步 findings/progress/README。
+- [x] /// 复跑 OpenSpec strict 和 diff-check，检查任务门禁不被提前勾选，仅将规格检查点提交本地 main。
+
 ## 2026-09-29：F6E 前置基线与旧 V1 验收审计
 
 - [x] /// 复核当前 main、既有 Unit/Master/Candidate/Review/Delivery/Registry 代码与 Alembic head；记录仍未落地的 Variant/v5 边界。

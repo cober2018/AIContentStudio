@@ -1,5 +1,10 @@
 # 当前进度
 
+## 2026-09-29：F6E 授权 delta 一处语义收紧（未 apply）
+
+- 本地对照 F6E 六份 delta 与 FE-F4 canonical 后，修正 FE-F4 delta 中笼统的账号/渠道/形态/动作能力闸门：手工 `copy_package`/`manual_handoff` 可在账号活动、身份归属、单元绑定及冻结目标校验后明确作为人工动作；远端效果必须额外具备精确验证，不能从自由格式账号 profile 推断。F6E 任务仍 2/98，F6D 仍 78/79；独立复核未获得，不进入业务 apply。
+- 本批只改规格与跟踪文档；OpenSpec all-strict 30/30、`git diff --check` PASS。原始用户包、业务代码和迁移未改；不推送、部署、同步主规格或归档。
+
 ## 2026-09-29：F6E 0.3/0.4 前置审计完成（仅规格与证据）
 
 - 基线 `main@c295174`、Alembic head `f6a000000001`；复读 Unit/Master/Candidate/Review/Delivery/Registry 后确认当前无 ChannelVariant/v5 模型或业务分派。审计前 tracked tree clean；用户原始规格包仍为未跟踪且未改。

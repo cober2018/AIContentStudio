@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F6E 六份 delta 本地保留性复核
+
+- FE-F4 canonical 的 Delivery Authorization 将 ContentAccount 的活动状态/身份归属与平台能力区分：账号名称和自由格式 profile 不能充作已验证的远端能力；缺验证时自动动作 unavailable。F6E 主规格/design 同样允许明确标记的手工本地包，并要求远端动作精确验证。
+- F6E 的 FE-F4 delta 原句“new Delivery Authorization SHALL validate current Variant and account/channel/form/action capability”未区分本地/远端，实施时可能错误地用未来 F7 远端验证阻断 `copy_package`/`manual_handoff`。现只将该句细化为：本地仍验证冻结目标与账号活动/归属/单元绑定并标为人工；远端效果额外要求精确的账号 × 渠道 × 形态 × 动作验证。该本地审计不等于独立 SPEC re-review，也不满足 F6E 0.2。
+
 ## 2026-09-29 F6E apply 前基线与旧 V1 验收保留审计
 
 - 当前基线 `main@c295174`；tracked tree 在本次审计前 clean，仅用户原始规格包仍未跟踪。Alembic `heads` 为 `f6a000000001`。`ContentUnit.channel_id`、`ContentMasterRevision.channel_id/content_form` 可空；`ContentAsset` 有 Draft/Topic/Master source FK、channel/content_form/artifact_kind 查询列，但没有 Variant FK 或 ChannelVariant 模型。`delivery.authorize_target()` 仍会用 Master FK 判定 v4 并按 Unit 渠道限制项目目标；`project_review.decide_candidate()` 当前只分派 v3/v4。因此 F6E 的 v5 source-pointer/schema-first 校验是必要新增，不是现有功能。
