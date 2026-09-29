@@ -25,11 +25,11 @@
 - [x] 2.2 Validate project visibility, media kind, byte existence/hash and live public-use rights at save.
 - [x] 2.3 Allow repeated MaterialRevision use in distinct placements without copying bytes or collapsing refs.
 - [x] 2.4 Reject foreign, wrong-kind, revoked, hash-mismatched or missing media atomically.
-- [ ] 2.5 Implement v1→v2 upgrade preview that identifies provable fields and conversion warnings.
-- [ ] 2.6 Implement explicit append-only v1→v2 fork with expected payload/context/head CAS and idempotency.
+- [x] 2.5 Implement v1→v2 upgrade preview that identifies provable fields and conversion warnings.
+- [x] 2.6 Implement explicit append-only v1→v2 fork with expected payload/context/head CAS and idempotency.
 - [ ] 2.7 Keep generic save cross-schema protection and old v1/Candidate hashes unchanged.
 - [x] 2.8 Validate canonical role/slot/order/placement mapping for every declared use, including repeated revisions, missing/orphan refs and the sole render output.
-- [ ] 2.9 Permit only the verified `video.master.v1`→`video.master.v2` upgrade pair via preview/commit; ordinary save and other schema crossings remain forbidden.
+- [x] 2.9 Permit only the verified `video.master.v1`→`video.master.v2` upgrade pair via preview/commit; ordinary save and other schema crossings remain forbidden.
 
 ## 3. Bounded timeline and derived lineage
 

@@ -2,6 +2,7 @@
 
 ## 2026-09-29：FE-F6D apply（进行中）
 
+- Video v1→v2 升级路径已补：preview 只投影已存脚本及稳定镜头 ID/列表顺序，明确画幅、时间线和镜头时长需用户补齐；commit 必须提交完整 canonical v2 文档、精确引用与当前警告确认，保留旧脚本/镜头、禁止继承成片，通过 source payload/context/head CAS 与 request-hash 幂等生成追加式 child。两条缺端点的 RED 分别验证，升级定向 8 passed；最后反向 schema 断言加入后全量后端重新运行 994 passed/2 skipped/5 warnings，OpenSpec strict 30/30、相关 Ruff、diff-check PASS。2.5/2.6/2.9 完成，当前 26/79；2.7 的旧 Candidate hash 回归、Video 前端和浏览器验收仍待证明。
 - Video v2 时间线中已放置的 audio/music item 现必须有精确 MaterialRevision；空轨仍可编辑，全片 voice/music 声明不强迫伪造轨内位置。两条漏绑用例先 RED（此前错误保存），修复后 Video 定向 34 passed；字幕重叠与空轨/全片音源回归通过。正确 apps/api 工作目录全后端 986 passed / 2 skipped / 5 warnings，OpenSpec strict 30/30、相关 Ruff 和 diff-check PASS；3.2 完成，当前 23/79。无前端更改，不把本批计作视频浏览器或最终成片验收。
 - Video v2 readiness 现返回从 canonical Master 文档确定性生成的脚本/镜头/时间线/语音/字幕/叠层/音乐/封面投影，类型明确为 `local_assembly_preview`、`final_render_verified=false`。测试先见缺失 `kind` 的 RED，修复后 Video/F6A/F6C 定向 `84 passed`、全量后端 `982 passed / 2 skipped / 5 warnings`、相关 Ruff、OpenSpec strict 30/30 与 diff-check PASS；3.4 完成，当前 22/79。它不是已生成/已验证 MP4，也未证明 Video Studio 浏览器预览。
 - Video v2 叠层的有效正文与 x/y 成对显式位置现在在 canonical save 前校验；之前缺坐标或空文字会保存，两个场景先见 RED、修复后含正向用例的 Video/F6A/F6C 定向 `83 passed`，全量后端 `981 passed / 2 skipped / 5 warnings`，相关 Ruff PASS。封面精确 image 类型/真实字节/公开权限继续由已有 Master 保存闸门保障。3.3 已勾，当前 21/79；未把 UI 预览、成片或 Provider 能力视为已完成。

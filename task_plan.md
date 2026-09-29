@@ -2,6 +2,7 @@
 
 ## 2026-09-29：North Star 完整剩余开发（目标进行中）
 
+- [x] /// F6D 2.5/2.6/2.9：旧 Video 仅保留可证脚本与镜头 ID/顺序；预览不伪造画幅/时间线；专用 API 要求完整 v2 文档、警告确认和精确 refs，追加式 CAS/幂等且不继承旧 render。定向升级 8 passed，另有候选历史哈希与浏览器验收留在 2.7/7.x。
 - [x] /// F6D 3.2：明确音轨片段必须有精确素材版本；未绑定 audio/music 两例先 RED，修复后定向 34 passed、全后端 986 passed/2 skipped、strict 30/30、相关 Ruff 和 diff-check PASS。空音轨、全片语音/音乐、字幕重叠回归通过。
 - [x] /// F6D 冻结 Video v2 候选增加独立读时一致性校验：规范化文档、Master payload hash、精确成片 ref/MP4、已冻结 profile 与 render-input hash、人工 attestation；先 RED 后 GREEN，后端全量与 strict 门禁通过。Review 的冻结读已保护，Package/浏览器全链路仍待后续任务验证。
 - [x] /// F6D 3.1：服务端拒绝镜头时长超过时间线，或绑定镜头的片段时长超过镜头；先观察两条 RED，再确认定向回归通过，保留空草稿合法性。

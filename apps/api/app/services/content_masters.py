@@ -497,7 +497,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     context = _context(db, project, unit, content_form=content_form)
     latest = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     upgrade_pair = (upgrade_source.payload_schema, payload_schema) if upgrade_source is not None else None
-    if upgrade_source is not None and (latest is None or latest.id != upgrade_source.id or latest.content_unit_id != unit_id or upgrade_pair not in {("text.master.v1", "text.master.v2"), ("graphic.master.v1", "graphic.master.v2")} or latest.payload_hash != payload.get("edit_summary", {}).get("upgrade_source", {}).get("payload_hash") or _hash(latest.payload_json) != latest.payload_hash):
+    if upgrade_source is not None and (latest is None or latest.id != upgrade_source.id or latest.content_unit_id != unit_id or upgrade_pair not in {("text.master.v1", "text.master.v2"), ("graphic.master.v1", "graphic.master.v2"), ("video.master.v1", "video.master.v2")} or latest.payload_hash != payload.get("edit_summary", {}).get("upgrade_source", {}).get("payload_hash") or _hash(latest.payload_json) != latest.payload_hash):
         raise HTTPException(409, {"code": "master_upgrade_source_conflict"})
     if latest and latest.payload_schema != payload_schema and upgrade_source is None:
         raise HTTPException(409, {"code": "explicit_master_upgrade_required"})
@@ -723,6 +723,67 @@ def upgrade_graphic_master(db: Session, *, project_id: int, unit_id: int, master
         "idempotency_key": payload["idempotency_key"], "parent_revision_id": source.id, "content_form": source.content_form,
         "payload_schema": "graphic.master.v2", "payload": preview["payload"], "asset_refs": preview["asset_refs"], "evidence_refs": preview["evidence_refs"], "source_kind": "explicit_upgrade",
         "edit_summary": {"upgrade_request": intent, "upgrade_source": {"master_id": source.id, "revision_no": source.revision_no, "payload_schema": source.payload_schema, "payload_hash": source.payload_hash}, "conversion_warnings": preview["warnings"], "document_hash": preview["document_hash"]},
+    })
+
+
+def preview_video_upgrade(db: Session, project_id: int, unit_id: int, master_id: int, user: User) -> dict:
+    from .video_documents import legacy_upgrade_preview
+
+    project, unit = owned_unit(db, project_id, unit_id, user)
+    row = db.get(ContentMasterRevision, master_id)
+    if row is None or row.content_unit_id != unit_id or row.project_id != project_id:
+        raise HTTPException(404, "Master版本不存在")
+    if row.modality != "video" or row.payload_schema != "video.master.v1":
+        raise HTTPException(409, {"code": "video_v1_upgrade_source_required"})
+    if row.payload_hash != _hash(row.payload_json):
+        raise HTTPException(409, {"code": "master_upgrade_source_integrity"})
+    saved = _serialize(db, row)
+    return {
+        **legacy_upgrade_preview(row.payload_json, saved["assets"], saved["evidence"]),
+        "source_master_id": row.id, "source_revision_no": row.revision_no,
+        "source_payload_hash": row.payload_hash, "source_schema": row.payload_schema,
+        "current_context_hash": _hash(_context(db, project, unit, content_form=row.content_form)),
+    }
+
+
+def upgrade_video_master(db: Session, *, project_id: int, unit_id: int, master_id: int, user: User, payload: dict) -> dict:
+    from .video_documents import VideoDocumentError, canonical_payload
+
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    intent = {"source_master_id": master_id, "actor": user.email, "request_hash": _hash(payload)}
+    existing = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id, ContentMasterRevision.idempotency_key == payload["idempotency_key"]))
+    if existing:
+        if existing.source_kind != "explicit_upgrade" or existing.edit_summary_json.get("upgrade_request") != intent:
+            raise HTTPException(409, {"code": "master_upgrade_idempotency_conflict"})
+        return _serialize(db, existing)
+    preview = preview_video_upgrade(db, project_id, unit_id, master_id, user)
+    if preview["source_payload_hash"] != payload["expected_payload_hash"] or preview["current_context_hash"] != payload["expected_context_hash"]:
+        raise HTTPException(409, {"code": "master_upgrade_source_conflict"})
+    if payload["acknowledged_warnings"] != preview["warnings"]:
+        raise HTTPException(422, {"code": "video_upgrade_warnings_not_acknowledged", "warnings": preview["warnings"]})
+    try:
+        document = canonical_payload(payload["payload"])
+    except VideoDocumentError as exc:
+        raise HTTPException(422, {"code": "invalid_master_document", "reason": str(exc)}) from exc
+    source_fields = preview["source_fields"]
+    if source_fields["script"] is not None and "".join(block["text"] for block in document["script"]["blocks"]) != source_fields["script"]:
+        raise HTTPException(409, {"code": "legacy_script_changed_during_upgrade"})
+    if [{"id": shot["id"], "order": shot["order"]} for shot in document["shots"]] != source_fields["shots"]:
+        raise HTTPException(409, {"code": "legacy_shots_changed_during_upgrade"})
+    if "render_asset_ref" in document or any(ref.get("role") == "render_output" for ref in payload["asset_refs"]):
+        raise HTTPException(422, {"code": "video_upgrade_render_requires_new_attestation"})
+    source = db.get(ContentMasterRevision, master_id)
+    if _serialize(db, source)["readiness"]["state"] == "stale":
+        raise HTTPException(409, {"code": "stale_upgrade_source"})
+    return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, upgrade_source=source, payload={
+        "expected_revision": payload["expected_revision"], "expected_context_hash": payload["expected_context_hash"],
+        "idempotency_key": payload["idempotency_key"], "parent_revision_id": source.id, "content_form": source.content_form,
+        "payload_schema": "video.master.v2", "payload": document, "asset_refs": payload["asset_refs"], "evidence_refs": payload["evidence_refs"],
+        "source_kind": "explicit_upgrade", "edit_summary": {
+            "upgrade_request": intent,
+            "upgrade_source": {"master_id": source.id, "revision_no": source.revision_no, "payload_schema": source.payload_schema, "payload_hash": source.payload_hash},
+            "conversion_warnings": preview["warnings"],
+        },
     })
 
 

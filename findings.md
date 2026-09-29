@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F6D 旧视频显式升级边界
+
+- v1 只核镜头稳定 ID，不核画幅、时长、时间线或实际媒体位置。因此 preview 不自动生成 v2 payload；只返回已存脚本/镜头列表顺序和警告。专用提交必须显式供给完整 v2、精确 refs、确认当前警告；首个 child 保留脚本文本和镜头 ID/顺序，旧 render 不继承，内容调整须后续新修订。CAS/idempotency 的 request-hash 不在 edit_summary 重复持久化整份 v2 文档。
+- 本轮证据覆盖旧 Master hash 不变、普通跨 schema save 拒绝、反向 schema/错误升级源拒绝、冲突与重试无额外修订。旧 Candidate hash 未单独建回归，2.7 暂不勾；独立浏览器升级路径亦未验收。最后反向 schema 断言加入后 API 全量重新运行 994 passed/2 skipped/5 warnings。
+
 ## 2026-09-29 F6D 音轨素材位置
 
 - Video v2 原先允许 audio/music 时间线片段不声明 MaterialRevision，因而没有对应精确素材 ref 仍能保存。标准 change 现明确：空音轨合法，但已放置的音频片段必须指向精确素材；全片 voice/music 声明仍按原契约作为独立 source，不冒称 TTS/ASR 执行。字幕 cue 的顺序和不重叠既有服务端校验，补定向回归。后端全量 986 passed/2 skipped、strict 30/30、相关 Ruff/diff PASS；没有实际浏览器或成片验证。

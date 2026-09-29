@@ -1,7 +1,7 @@
 """Project-scoped Content Master revision API."""
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -15,10 +15,12 @@ from ..services.content_masters import (
     list_revisions,
     preview_graphic_upgrade,
     preview_text_upgrade,
+    preview_video_upgrade,
     run_checks,
     save_revision,
     upgrade_graphic_master,
     upgrade_text_master,
+    upgrade_video_master,
 )
 from ..services.graphic_master_diff import structured_graphic_diff
 from ..services.text_master_ai import suggest_text_edit
@@ -54,6 +56,15 @@ class MasterUpgradeIn(BaseModel):
     expected_payload_hash: str = Field(pattern="^[0-9a-f]{64}$")
     expected_context_hash: str = Field(pattern="^[0-9a-f]{64}$")
     idempotency_key: str = Field(min_length=1, max_length=150)
+
+
+class VideoUpgradeIn(MasterUpgradeIn):
+    model_config = ConfigDict(extra="forbid")
+
+    payload: dict
+    asset_refs: list[dict] = Field(default_factory=list, max_length=250)
+    evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
+    acknowledged_warnings: list[str] = Field(max_length=20)
 
 
 class TextSuggestionIn(BaseModel):
@@ -98,6 +109,16 @@ def get_graphic_upgrade_preview(project_id: int, unit_id: int, master_id: int, d
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/graphic-v2-upgrade", dependencies=[Depends(require_editor)])
 def commit_graphic_upgrade(project_id: int, unit_id: int, master_id: int, body: MasterUpgradeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return upgrade_graphic_master(db, project_id=project_id, unit_id=unit_id, master_id=master_id, user=user, payload=body.model_dump())
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/video-v2-upgrade-preview")
+def get_video_upgrade_preview(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return preview_video_upgrade(db, project_id, unit_id, master_id, user)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/video-v2-upgrade", dependencies=[Depends(require_editor)])
+def commit_video_upgrade(project_id: int, unit_id: int, master_id: int, body: VideoUpgradeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return upgrade_video_master(db, project_id=project_id, unit_id=unit_id, master_id=master_id, user=user, payload=body.model_dump())
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions", dependencies=[Depends(require_editor)])
