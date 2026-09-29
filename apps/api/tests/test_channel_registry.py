@@ -108,6 +108,20 @@ def test_legacy_channels_still_valid_with_default_forms(client, seed_users):
     assert kinds["wechat"] == "text"
 
 
+def test_exact_video_profile_projects_video_requirements(db_session):
+    from app.services.content_harness.channel_registry import resolve_content_form
+
+    rules = {"max_duration_ms": 90_000, "allowed_aspect_ratios": [[9, 16]], "subtitle_required": True}
+    db_session.add(ChannelTemplateVersion(
+        channel="video_profile_fixture", version=1, name="Video Profile", status="published",
+        profile_json={"content_forms": {"short": {"artifact_kind": "video", "video_requirements": rules}}},
+    ))
+    db_session.commit()
+    form = resolve_content_form(db_session, "video_profile_fixture", "short")
+    assert form.video_requirements == rules
+    assert form.to_dict()["video_requirements"] == rules
+
+
 def test_unknown_channel_rejected_on_topic(client, seed_users, frozen_pack):
     """未注册渠道建 Topic 被拒（400），且不进入 channels。"""
     resp = client.post(
