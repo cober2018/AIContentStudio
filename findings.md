@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-29 F7 既有持久字段脱敏缺口
+
+- 现有 `MaterialRevision` 明确包含 `prompt_text`、`source_url`、`source_metadata_json`、`metadata_json`，`ConnectorEndpoint` 包含 `last_pull_error`；现有自动交付 `execute_attempt()` 还允许旧 `allow_unverified_auto_draft` 在未验证时执行。F7 已要求关掉后者，但外部素材/Connector 对前五个字段的写入仍需安全投影约束，不能只依赖 Settings 页脱敏。
+- 修订后的 F7 要求使用安全来源标识、请求/输入哈希和有界错误码；不把原始 prompt、签名媒体链接、请求头、远端响应或异常字串写进既有字段。成功接受媒体与失败 Connector 拉取都要做嵌套 secret 负向校验。该修订不建新表、不替代 F7 真实 Provider/Publisher 验证，也不跨过 F6D/F6E 门禁。
+
 ## 2026-09-29 F6E 六份 delta 本地保留性复核
 
 - FE-F4 canonical 的 Delivery Authorization 将 ContentAccount 的活动状态/身份归属与平台能力区分：账号名称和自由格式 profile 不能充作已验证的远端能力；缺验证时自动动作 unavailable。F6E 主规格/design 同样允许明确标记的手工本地包，并要求远端动作精确验证。

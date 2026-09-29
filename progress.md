@@ -1,5 +1,11 @@
 # 当前进度
 
+## 2026-09-29：F7 既有字段脱敏规格补强（未 apply）
+
+- 在 `main@f706e86` 复核 F7 设计与当前模型：`MaterialRevision.prompt_text/source_url/source_metadata_json/metadata_json` 和 `ConnectorEndpoint.last_pull_error` 都是真实持久字段，原 F7 广义脱敏要求未逐字段阻止 raw prompt、签名 URL 与异常文本落库。标准 F7 design、能力主 delta、tasks 3.8/5.10 现补安全投影及成功/失败两条负向校验；原始总包和业务代码未动，F7 仍 0/105。
+- F6D 独立实施复核和 F6E 修订版独立 SPEC re-review 仍是业务推进门禁；本次 F7 规格预审不等于它们通过，也不开始 F7 apply。
+- OpenSpec all-strict 30/30 PASS、`git diff --check` PASS；当前任务数仍 F6D 78/79、F6E 2/98、F7 0/105。仅提交本地规格检查点，不推送/部署/同步主规格/归档。
+
 ## 2026-09-29：F6E 授权 delta 一处语义收紧（未 apply）
 
 - 本地对照 F6E 六份 delta 与 FE-F4 canonical 后，修正 FE-F4 delta 中笼统的账号/渠道/形态/动作能力闸门：手工 `copy_package`/`manual_handoff` 可在账号活动、身份归属、单元绑定及冻结目标校验后明确作为人工动作；远端效果必须额外具备精确验证，不能从自由格式账号 profile 推断。F6E 任务仍 2/98，F6D 仍 78/79；独立复核未获得，不进入业务 apply。

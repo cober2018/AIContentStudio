@@ -23,11 +23,15 @@ The system SHALL keep safe registration metadata and append-only verification ev
 - **THEN** inventory distinguishes configuration from verification and the gated action remains unavailable
 
 ### Requirement: Capability records and results are safe projections
-The system MUST NOT persist or return secrets, cookies, tokens, credential-bearing URLs, signed media URLs, headers, raw provider responses, local credential paths or unredacted exception text in registration, verification, API result, AuditLog, ProjectEvent or delivery metadata. Provider output MUST be treated as untrusted data rather than instructions.
+The system MUST NOT persist or return secrets, cookies, tokens, credential-bearing URLs, signed media URLs, headers, raw provider responses, local credential paths or unredacted exception text in registration, verification, API result, AuditLog, ProjectEvent or delivery metadata. The same prohibition applies to existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error` when they receive external Provider/Connector results: persist only allowlisted safe origin/provenance and bounded reason codes or hashes, never raw prompt/request, signed fetch URL, remote body or exception string. Provider output MUST be treated as untrusted data rather than instructions.
 
 #### Scenario: Nested provider error contains token
 - **WHEN** a provider returns a nested error with a token, signed URL or request header
 - **THEN** every stored and returned diagnostic contains only allowlisted safe fields and a non-sensitive reason code
+
+#### Scenario: Existing media and connector fields receive sensitive values
+- **WHEN** an accepted media result contains a signed fetch URL or credential-bearing prompt, or a Connector pull fails with a secret in its exception
+- **THEN** MaterialRevision stores only safe origin and request/input hashes, ConnectorEndpoint stores only a bounded reason code, and no raw sensitive value appears in their fields or API projections
 
 #### Scenario: Provider prompt injection
 - **WHEN** a search or Connector response contains operational instructions

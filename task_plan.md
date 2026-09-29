@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-29：F7 既有字段的秘密脱敏契约审计
+
+- [x] /// 读取 F7 标准 proposal/design/tasks/主 delta 与现有 MaterialRevision、ConnectorEndpoint、Delivery 代码，核实可能保存 raw prompt、签名 URL、异常文字的字段。
+- [x] /// 只将这些既有字段的安全投影/禁止写入原值约束补入 F7 design/spec/tasks 与 README/progress/findings，不新增表或提前实施 F7。
+- [x] /// 复跑 OpenSpec strict、diff-check，核 F6D/F6E 门禁未变；仅提交本地规格检查点。
+
 ## 2026-09-29：F6E 六份 delta 本地保留性复核
 
 - [x] /// 对照 F6E 六份 delta、FE-F4 canonical 授权契约与当前设计，寻找与人工本地包/远端能力边界相冲突的措辞。
