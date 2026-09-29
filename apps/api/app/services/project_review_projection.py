@@ -163,7 +163,7 @@ def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict
 def _verify_frozen_production(asset: ContentAsset) -> None:
     manifest = asset.candidate_manifest_json or {}
     schema = (manifest.get("content_master") or {}).get("payload_schema")
-    if manifest.get("schema_version") != 4 or schema not in {"text.master.v2", "graphic.master.v2"}:
+    if manifest.get("schema_version") != 4 or schema not in {"text.master.v2", "graphic.master.v2", "video.master.v2"}:
         return
     render = manifest.get("render") or {}
     if candidate_hash(manifest) != asset.candidate_hash or render.get("status") != "ready":
@@ -172,7 +172,7 @@ def _verify_frozen_production(asset: ContentAsset) -> None:
         body = render.get("body_markdown")
         if not isinstance(body, str) or render.get("content_hash") != hashlib.sha256(body.encode()).hexdigest():
             raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
-    else:
+    elif schema == "graphic.master.v2":
         from .graphic_documents import GraphicDocumentError, canonical_payload
 
         try:
@@ -182,6 +182,38 @@ def _verify_frozen_production(asset: ContentAsset) -> None:
         outputs = render.get("outputs")
         if not isinstance(outputs, list) or [item.get("canvas_id") for item in outputs if isinstance(item, dict)] != [canvas["id"] for canvas in document["canvases"]] or len(outputs) != len(document["canvases"]):
             raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"})
+    else:
+        from .production_modalities import _canonical_hash, frozen_video_render_input_hash
+        from .video_documents import VideoDocumentError, canonical_payload, validate_references
+
+        try:
+            content = manifest["content"]
+            if canonical_payload(content) != content or _canonical_hash(content) != manifest["content_master"]["payload_hash"]:
+                raise ValueError("frozen_video_payload_mismatch")
+            assets = manifest["assets"]
+            validate_references(content, [
+                {key: ref[key] for key in ("material_revision_id", "content_hash", "role", "slot_key", "sort_order", "placement")}
+                for ref in assets
+            ], manifest["evidence_refs"])
+            output_refs = [ref for ref in assets if ref["role"] == "render_output"]
+            outputs = render["outputs"]
+            if len(output_refs) != 1 or not isinstance(outputs, list) or len(outputs) != 1:
+                raise ValueError("frozen_video_render_count_invalid")
+            ref, output = output_refs[0], outputs[0]
+            if not isinstance(output, dict) or output.get("material_revision_id") != ref["material_revision_id"] or output.get("content_hash") != ref["content_hash"] or output.get("mime_type") != "video/mp4" or output.get("rights_snapshot") != ref["rights_snapshot"] or output.get("canvas_id") is not None:
+                raise ValueError("frozen_video_render_binding_invalid")
+            profile = render["video_profile"]
+            if not isinstance(profile, dict) or profile.get("source") != "profile" or type(profile.get("version_id")) is not int or profile.get("artifact_kind") != "video":
+                raise ValueError("frozen_video_profile_invalid")
+            input_hash = frozen_video_render_input_hash(manifest)
+            attestation = manifest["production"]["edit_summary"]["render_attestation"]
+            if not isinstance(attestation, dict) or attestation.get("origin") != "manual" or attestation.get("confirmed") is not True or not attestation.get("attested_by"):
+                raise ValueError("frozen_video_render_attestation_invalid")
+            expected_output = {"material_revision_id": ref["material_revision_id"], "content_hash": ref["content_hash"], "canvas_id": None}
+            if render.get("origin") != "manual" or render.get("attested_by") != attestation["attested_by"] or render.get("render_input_hash") != input_hash or attestation.get("render_input_hash") != input_hash or attestation.get("outputs") != [expected_output]:
+                raise ValueError("frozen_video_render_attestation_invalid")
+        except (KeyError, TypeError, ValueError, VideoDocumentError) as exc:
+            raise HTTPException(409, {"code": "frozen_candidate_integrity_failed"}) from exc
 
 
 def candidate_preview(asset: ContentAsset) -> dict:
