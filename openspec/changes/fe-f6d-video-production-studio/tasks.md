@@ -102,4 +102,4 @@
 - [x] 8.3 Run `openspec validate --all --strict`, relevant lint and `git diff --check`.
 - [ ] 8.4 Independently review SPEC preservation, backend/rights/render and frontend/Review/package/browser evidence.
 - [x] 8.5 Update README, progress/findings and acceptance report with exact limitations and verification provenance.
-- [ ] 8.6 Commit only owned F6D files locally; preserve user source packages and do not push, deploy, run production migration or canonical-sync/archive without separate authorization.
+- [x] 8.6 Commit only owned F6D files locally; preserve user source packages and do not push, deploy, run production migration or canonical-sync/archive without separate authorization.

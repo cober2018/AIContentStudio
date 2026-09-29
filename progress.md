@@ -2,7 +2,7 @@
 
 ## 2026-09-29：FE-F6D apply（进行中）
 
-- Video v2 隔离浏览器验收已在独立临时 SQLite/API/Vite 上通过：类型化脚本/镜头/时间线/配音/字幕/叠字及 exact refs 保存/刷新；双窗口 409 保留本地改动；真实 MP4 字节/hash 预览与输入绑定证明分离；输入改变令旧成片失效。随后 checks→Candidate v4→Review 播放→warning 处置审批→人工授权→本地 ZIP，ZIP 内各 MP4 条目逐条 SHA-256 与 MaterialRevision 一致。旧 v1 显式升级、稳定差异、派生子修订历史、撤权阻断包及归档只读也经浏览器验证，页面未出现运行时错误。验收报告位于 `docs/FE_F6D_ISOLATED_ACCEPTANCE.md`，原始本地证据目录在其中。任务现 76/79；4.5 为 F7 真实 Provider 后续义务，8.4 独立实施复核尚未完成，不称最终通过。
+- Video v2 隔离浏览器验收已在独立临时 SQLite/API/Vite 上通过：类型化脚本/镜头/时间线/配音/字幕/叠字及 exact refs 保存/刷新；双窗口 409 保留本地改动；真实 MP4 字节/hash 预览与输入绑定证明分离；输入改变令旧成片失效。随后 checks→Candidate v4→Review 播放→warning 处置审批→人工授权→本地 ZIP，ZIP 内各 MP4 条目逐条 SHA-256 与 MaterialRevision 一致。旧 v1 显式升级、稳定差异、派生子修订历史、撤权阻断包及归档只读也经浏览器验证，页面未出现运行时错误。验收报告位于 `docs/FE_F6D_ISOLATED_ACCEPTANCE.md`，原始本地证据目录在其中。任务现 77/79；本地范围提交 `ca16b39`，4.5 为 F7 真实 Provider 后续义务，8.4 独立实施复核尚未完成，不称最终通过。
 - 新跑全后端 `1006 passed / 2 skipped / 5 warnings`，Video/Graphic/Text/F6A/Review 定向 `229 passed / 1 warning`；前端 TypeScript/Vite 与 FE-P1 PASS，Video 模型 9/9；`/projects` 初始 JS 224.75 kB raw/72.89 kB gzip，通用 Production 276.96 kB raw/88.24 kB gzip，Text TipTap 仍只在 Text 懒加载闭包；OpenSpec strict 30/30，相关 Ruff 和 diff-check PASS。F6D 实施独立复核因专用浏览器入口缺失而未能执行，绝不以本地自审冒充。
 - 验收数据库/端口独立，但应用媒体根目录仍是共享的内容寻址本地目录；上传不会覆盖相同 hash 文件，本轮不删除可能被其他本地数据库引用的测试字节。报告已明确此限制。
 
