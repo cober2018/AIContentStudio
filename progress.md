@@ -2,6 +2,7 @@
 
 ## 2026-09-29：F6E 规格门槛解除
 
+- Graphic v2→小红书 `image_note` 受控适配已接入：仅从 F6C 已验证的逐画布最终 render 映射真实图片；项目显式引用或已证明的工作流生成素材、实时 public-use、文件字节/hash/MIME 与卡片/引用顺序均由服务端校验。未渲染、撤权、错误 hash/order 无业务写入，保存中撤权原子回滚。F6E 任务 2.3/3.6/6.3 核销，进度 23/100。全后端重跑 `1072 passed / 2 skipped / 7 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。视频 Adapter、完整检查、Candidate v5/Review/包仍未实施。
 - 新增非持久化 Text Variant adapt-preview：要求当前精确 Master ID/payload/context、固定 Identity 和 exact published target Profile，无法映射的来源 refs 或不支持形态返回 typed no-write；返回 canonical 提议及 Profile/Adapter 血缘，不写 Variant/Event、不声称远端已验证。定向 API 回归验证预览、过期 hash、不可用目标和跨项目访问。最终代码全后端 `1066 passed / 2 skipped / 7 warnings`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。F6E 进度 20/100；只读 Matrix 和 Graphic/Video 适配仍待完成。
 - 本批继续完成 Text Variant 新增 citation 的 exact Fact Boundary 引用保存：服务端校验 canonical range/locator、FactPackItem checksum、frozen pack、public-use 与撤权状态；提交前变更则连 Variant/引用/Event 一起回滚，畸形 ref 与超长 role 返回 422。来源 Master 自带 refs、素材 refs、Graphic/Video 仍 fail closed；此项自身不核销 2.8/3.3。
 - 最终代码在 `apps/api` 正确目录重跑全后端 `1065 passed / 2 skipped / 7 warnings`，定向 Variant 文档/保存 `20 passed`，相关 Ruff、OpenSpec strict 30/30、diff-check PASS。曾从仓库根目录错误启动全套，导致依赖相对 `alembic.ini` 与 worker DB 的 6 项环境失败；改用后端目录后全部通过，非业务实现故障。

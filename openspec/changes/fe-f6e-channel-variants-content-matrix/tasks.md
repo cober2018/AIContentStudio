@@ -23,7 +23,7 @@
 
 - [x] 2.1 Define versioned ChannelAdapter protocol with declared accepted Master schemas and exact target artifact_kind plus capabilities, canonicalize/validate, adapt, preview, render, required_checks and package_projection.
 - [x] 2.2 Resolve only exact registered channel/content_form and published profile version/config hash.
-- [ ] 2.3 Persist adapter key/version and relevant rule/config hashes in variant provenance.
+- [x] 2.3 Persist adapter key/version and relevant rule/config hashes in variant provenance.
 - [ ] 2.4 Expose configured/executable/verified capability state without treating mere plugin presence as execution proof.
 - [ ] 2.5 Reject unsupported channel/form or unavailable model/render capability with typed no-write results.
 - [ ] 2.6 Keep Channel Registry/Profile as existing truth; do not create a duplicate mutable settings registry.
@@ -37,7 +37,7 @@
 - [ ] 3.3 Add append-only save with variant_key/head CAS, `(unit_id, variant_key, idempotency_key)` series-scoped idempotency and atomic event/ref writes.
 - [x] 3.4 Reject a variant_key changing its channel/form or pointing to another Unit's Master.
 - [x] 3.5 Freeze exact source Master ID/payload/context and pinned IdentitySnapshot; preserve original source channel/form.
-- [ ] 3.6 Freeze exact published target profile, adapter and rule version/config hashes.
+- [x] 3.6 Freeze exact published target profile, adapter and rule version/config hashes.
 - [ ] 3.7 Persist inherited and edited final MaterialRevision refs with distinct placements and no byte copy.
 - [ ] 3.8 Persist eligible FactPackItem/checksum/locator refs without expanding the frozen Fact Boundary.
 - [ ] 3.9 Validate Project visibility, media kind, live bytes/hash/rights and evidence scope before commit.
@@ -69,7 +69,7 @@
 
 - [ ] 6.1 Implement WeChat article adaptation against the exact published registered form/profile.
 - [ ] 6.2 Implement and separately verify controlled adaptation and local package projections for both published `x/thread` and `x/single` forms; keep each unavailable until its own adapter passes, and keep legacy `x_thread/thread` v3/v4 behavior unchanged.
-- [ ] 6.3 Require Xiaohongshu image_note ordered actual image revisions, bytes/hash and public-use rights; reject prompt-only readiness.
+- [x] 6.3 Require Xiaohongshu image_note ordered actual image revisions, bytes/hash and public-use rights; reject prompt-only readiness.
 - [ ] 6.4 Produce Douyin spoken_script with script/scenes/B-roll/voice text and no false final-video claim.
 - [ ] 6.5 Generate SRT only as explicitly estimated timing absent real timed media.
 - [ ] 6.6 Build byte-exact local package projections for each supported form with citations/declarations and no remote call.

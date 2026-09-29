@@ -2,6 +2,7 @@
 
 ## 2026-09-29 F6E 首个 Variant 写入边界
 
+- 小红书图文不能由 canvas prompt 推断已产图：F6C Graphic Master 的 `render_input_hash` attestation、逐画布输出与当前素材字节/哈希/权利同时成立，才能预览/保存 `image_note`。Variant 卡片 `image_ref_key` 和冻结 `ChannelVariantAssetRef.sort_order` 必须同序；显式重排两者合法，只改一边拒绝。提交前撤权会回滚 Variant、Refs、Event。
 - 预览与保存是两个动作：`adapt-preview` 只对当前精确 Master 和 published Profile 生成 canonical Text 建议，不创建 Variant、ProjectEvent 或 DeliveryTarget；不支持的目标和来源 refs 明确不可执行。远端 Publisher 仍为后续 F7 范围。
 - Text Variant 新增的 citation 只能绑定当前 source Master 所冻结项目 Fact Boundary 内的 exact FactPackItem/checksum，且该 item 仍须可公开使用、未撤权；正文 range 与 EvidenceRef locator 由 canonical payload 同步校验。提交前撤权会回滚 Variant、引用和 ProjectEvent。畸形 ref 在数据库查询前转成 422，不让任意 JSON 引发 500。
 - 公众号文章、X 推串及单条仅实现无素材/证据引用的简单 Text v2 确定性子集；复杂结构、citation、exact refs 不能被静默丢弃，当前服务对其 fail closed。注册的 published Profile 不等于 Graphic/Video Adapter 已可执行。
