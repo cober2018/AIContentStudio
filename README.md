@@ -144,12 +144,12 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
                   → warning 可冻结、审批须按检查 ID/输入哈希处置
 ```
 
-### FE-F6C Graphic Production Studio（实施中，71/77）
+### FE-F6C Graphic Production Studio（实施中，72/77）
 
 - PRD/需求背景：North Star 的图文生产不是图片附件；F6A 仅有 `graphic.master.v1` JSON 壳。标准提案在 [`openspec/changes/fe-f6c-graphic-production-studio/proposal.md`](openspec/changes/fe-f6c-graphic-production-studio/proposal.md)，完整实施计划在 [`docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md`](docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md)。用户原始总包保持原样。
 - 目录结构：标准 change 包含 proposal/design/tasks、Graphic 新规格以及 Production Core、Review、前端性能三份 delta；预计后端 Graphic document/check/diff 服务和 Graphic-only lazy Studio 组件均以现有 Master/Ref/Check/Candidate 数据链为基础。
 - 已完成：按 `main@670dd49` 校准 F6C 的 77 项可验证任务和 Scenario。`graphic.master.v2` canonical 文档/adapter、精确图层素材与证据 locator、按画布顺序的真实手工 render、v1→v2 显式 fork 均已实现；旧无 schema Graphic 保留 v1。exact image profile 规则和四类专业检查已接入；语义/视觉不足仅 warning。Graphic-only UI 已有画布增删复制重排、可缩放/选择的阶段预览、图层几何/样式/裁剪/形状/锁定、exact 共享素材插入/替换、文字证据绑定、每画布最终图片绑定、published Profile preset、显式保存与历史升级/差异。前 12 个可见媒体层经鉴权和 SHA256 校验才预览。隔离 SQLite 与真实浏览器已完成两画布保存/刷新、Brief/事实边界变化使旧 Master stale、精确证据绑定、手工渲染确认、八项检查、Candidate v4、冻结双图预览、警告处置、审批与本地包授权；ZIP 双图顺序/哈希与冻结清单一致，未回填发布。归档单元的 Graphic 输入/保存/检查/冻结均只读；第二单元的并发写入后，旧页面保存显示 409 且本地编辑未冒充落库。重复素材兼任图层/最终渲染时的 ZIP 重名已按失败回归修复；新旧 Candidate 回读与结构化差异保留各自冻结文字和检查哈希，Review 检查名称不再丢失。全后端在排除本机无效 `NO_PROXY/no_proxy` 后为 951 passed/2 skipped；相关定向 97 passed，前端模型 20/20、TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff 与 diff-check PASS。
-- 待完成/TODO：真实 provider 结果的许可验证/接收仍缺已验证能力；独立复核和本地提交仍未完成。项目能力接口及 Graphic 工作台现明确显示自动渲染不可执行，客户端伪造 Renderer 来源返回类型化 422 且不产生 Master；人工图片确认不代表已验证自动渲染器或视觉语义检查。不能把当前局部规格通过等同整个 North Star 完成。主规格同步/归档另需授权，不 push/deploy/生产迁移。
+- 待完成/TODO：真实 provider 结果的许可验证/接收仍缺已验证能力；独立复核仍未完成。已在本地 `main@d0f0051` 提交 F6C 72 项范围内的代码与 active 规格，不代表最终完成。项目能力接口及 Graphic 工作台现明确显示自动渲染不可执行，客户端伪造 Renderer 来源返回类型化 422 且不产生 Master；人工图片确认不代表已验证自动渲染器或视觉语义检查。不能把当前局部规格通过等同整个 North Star 完成。主规格同步/归档另需授权，不 push/deploy/生产迁移。
 - 关键设计决策：旧 Graphic v1 显式 Fork；画布顺序与输出一一对应；未验证 Renderer/Search/Image 不冒充可用；小红书旧 `image_note` 当前是 text-classified，F6C 不暗中改类，跨渠道适配由 F6E 承接。
 - 依赖与启动：沿用现有 FastAPI/React、MaterialRevision 与生产工作台；目标零新表/零迁移。使用本 README 既有 API/Vite 启动方式，先在隔离数据库做验收。
 
