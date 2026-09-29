@@ -280,6 +280,73 @@ def _validate_video_assets(db: Session, project_id: int, master: ContentMasterRe
     return materials
 
 
+def _check_inputs(db: Session, row: ChannelVariantRevision) -> tuple[str, list[dict], list[dict]]:
+    assets = db.scalars(select(ChannelVariantAssetRef).where(ChannelVariantAssetRef.variant_revision_id == row.id).order_by(ChannelVariantAssetRef.sort_order, ChannelVariantAssetRef.id)).all()
+    evidence = db.scalars(select(ChannelVariantEvidenceRef).where(ChannelVariantEvidenceRef.variant_revision_id == row.id).order_by(ChannelVariantEvidenceRef.sort_order, ChannelVariantEvidenceRef.id)).all()
+    asset_refs = [{"material_revision_id": item.material_revision_id, "content_hash_snapshot": item.content_hash_snapshot,
+                   "role": item.role, "slot_key": item.slot_key, "sort_order": item.sort_order, "placement": item.placement_json,
+                   "rights_snapshot": item.rights_snapshot_json} for item in assets]
+    evidence_refs = [{"fact_pack_item_id": item.fact_pack_item_id, "snapshot_checksum": item.snapshot_checksum,
+                      "role": item.role, "sort_order": item.sort_order, "content_locator_json": item.content_locator_json} for item in evidence]
+    return _hash({"variant_id": row.id, "payload": row.payload_json, "payload_hash": row.payload_hash,
+                  "context_hash": row.context_hash, "profile_hash": row.profile_hash, "adapter_key": row.adapter_key,
+                  "adapter_version": row.adapter_version, "rule_hash": row.rule_hash, "assets": asset_refs,
+                  "evidence": evidence_refs}), asset_refs, evidence_refs
+
+
+def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
+    input_hash, _, _ = _check_inputs(db, row)
+    required = ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
+    if row.payload_schema == "xiaohongshu.image_note.v1":
+        required = (*required, "variant_render")
+    adapter_hash = _hash({"key": row.adapter_key, "version": row.adapter_version})
+    items = []
+    for kind in required:
+        latest = db.scalar(select(ChannelVariantCheckRun).where(
+            ChannelVariantCheckRun.variant_revision_id == row.id, ChannelVariantCheckRun.check_kind == kind,
+        ).order_by(ChannelVariantCheckRun.id.desc()).limit(1))
+        is_current = bool(latest and latest.input_hash == input_hash and latest.profile_hash == row.profile_hash
+                          and latest.adapter_hash == adapter_hash and latest.rule_hash == row.rule_hash)
+        items.append({"id": latest.id if latest else None, "check_kind": kind, "input_hash": latest.input_hash if latest else None,
+                      "is_current": is_current, "stored_status": latest.status if latest else None,
+                      "status": latest.status if is_current else "stale" if latest else "incomplete",
+                      "report": latest.report_json if latest else {"reason": "check_missing"}})
+    return {"items": items, "ready": all(item["status"] == "pass" for item in items)}
+
+
+def get_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: int, user: User) -> dict:
+    owned_unit(db, project_id, unit_id, user)
+    row = db.get(ChannelVariantRevision, variant_id)
+    if row is None or row.project_id != project_id or row.content_unit_id != unit_id:
+        raise HTTPException(404, "ChannelVariant版本不存在")
+    return projected_variant_checks(db, row)
+
+
+def run_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: int, user: User) -> dict:
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    row = db.get(ChannelVariantRevision, variant_id)
+    if row is None or row.project_id != project_id or row.content_unit_id != unit_id:
+        raise HTTPException(404, "ChannelVariant版本不存在")
+    current = db.scalar(select(ChannelVariantRevision.id).where(
+        ChannelVariantRevision.content_unit_id == unit_id, ChannelVariantRevision.variant_key == row.variant_key,
+    ).order_by(ChannelVariantRevision.revision_no.desc()).limit(1))
+    if current != row.id or _current_source_id(db, unit_id) != row.source_master_revision_id:
+        raise HTTPException(409, {"code": "variant_not_current"})
+    input_hash, assets, evidence = _check_inputs(db, row)
+    try:
+        canonical = canonical_payload(row.payload_schema, row.payload_json, asset_refs=assets, evidence_refs=evidence)
+        reasons = [] if canonical == row.payload_json and _hash(canonical) == row.payload_hash else ["payload_hash_or_canonical_mismatch"]
+    except VariantDocumentError as exc:
+        reasons = [str(exc)]
+    db.add(ChannelVariantCheckRun(
+        variant_revision_id=row.id, check_kind="variant_schema", input_hash=input_hash, profile_hash=row.profile_hash,
+        adapter_hash=_hash({"key": row.adapter_key, "version": row.adapter_version}), rule_hash=row.rule_hash,
+        status="blocker" if reasons else "pass", report_json={"reasons": reasons}, created_at=utcnow(),
+    ))
+    db.commit()
+    return projected_variant_checks(db, row)
+
+
 def adapt_preview(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
     _, unit = owned_unit(db, project_id, unit_id, user)
     master = db.get(ContentMasterRevision, payload["source_master_revision_id"])

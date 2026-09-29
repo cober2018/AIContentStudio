@@ -7,7 +7,14 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import User
-from ..services.channel_variants import current_revision, get_revision, list_revisions, save_revision
+from ..services.channel_variants import (
+    current_revision,
+    get_revision,
+    get_variant_checks,
+    list_revisions,
+    run_variant_checks,
+    save_revision,
+)
 
 router = APIRouter(prefix="/api/v1", tags=["channel-variants"])
 
@@ -66,3 +73,13 @@ def get_current_channel_variant(project_id: int, unit_id: int, variant_key: str 
 @router.get("/content-projects/{project_id}/units/{unit_id}/channel-variants/{variant_id}")
 def get_channel_variant(project_id: int, unit_id: int, variant_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return get_revision(db, project_id, unit_id, variant_id, user)
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/channel-variants/{variant_id}/checks")
+def get_channel_variant_checks(project_id: int, unit_id: int, variant_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return get_variant_checks(db, project_id, unit_id, variant_id, user)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/channel-variants/{variant_id}/checks", dependencies=[Depends(require_editor)])
+def run_channel_variant_checks(project_id: int, unit_id: int, variant_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return run_variant_checks(db, project_id, unit_id, variant_id, user)
