@@ -130,6 +130,10 @@ def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict
             from .graphic_master_diff import diff_graphic_documents
 
             structured = diff_graphic_documents(prior.get("content") or {}, latest.get("content") or {})
+        elif modality == "video" and previous and (prior.get("content_master") or {}).get("payload_schema") == "video.master.v2" and (latest.get("content_master") or {}).get("payload_schema") == "video.master.v2":
+            from .video_master_diff import diff_video_documents
+
+            structured = diff_video_documents(prior["content"], latest["content"])
         return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id, "modality": modality, "changed_sections": changed, "structured": structured, "text": None}
     structured = None
     if previous and prior.get("schema_version") == 4 and latest.get("schema_version") == 4 and (prior.get("content_master") or {}).get("payload_schema") == "text.master.v2" and (latest.get("content_master") or {}).get("payload_schema") == "text.master.v2":
@@ -240,7 +244,13 @@ def candidate_preview(asset: ContentAsset) -> dict:
         else:
             preview.update({"canvas_count": len(canvases), "canvases": [{"id": row.get("id"), "order": row.get("order"), "width": row.get("width"), "height": row.get("height")} for row in canvases[:50]]})
     elif modality == "video":
-        shots = content.get("shots") or []
-        script = content.get("script") or ""
-        preview.update({"shot_count": len(shots), "script": script[:20_000] if isinstance(script, str) else {"structured": True}, "shots": [{"id": row.get("id"), "order": row.get("order"), "duration": row.get("duration")} for row in shots[:50]], "timeline_present": bool(content.get("timeline"))})
+        if (manifest.get("content_master") or {}).get("payload_schema") == "video.master.v2":
+            from .video_documents import canonical_payload
+
+            document = canonical_payload(content)
+            preview.update({"shot_count": len(document["shots"]), "script_blocks": document["script"]["blocks"], "shots": document["shots"], "timeline": document["timeline"], "voice": document["voice"], "subtitles": document["subtitles"], "overlays": document["overlays"], "music": document["music"], "cover": document["cover"], "checks": [{"check_kind": item.get("kind") or item.get("check_kind"), "status": item.get("status"), "input_hash": item.get("input_hash")} for item in (manifest.get("checks") or [])[:50]]})
+        else:
+            shots = content.get("shots") or []
+            script = content.get("script") or ""
+            preview.update({"shot_count": len(shots), "script": script[:20_000] if isinstance(script, str) else {"structured": True}, "shots": [{"id": row.get("id"), "order": row.get("order"), "duration": row.get("duration")} for row in shots[:50]], "timeline_present": bool(content.get("timeline"))})
     return preview
