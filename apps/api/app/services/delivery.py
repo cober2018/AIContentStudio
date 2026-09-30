@@ -100,9 +100,9 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
         if approved is None:
             raise HTTPException(409, "项目候选尚未经过独立内容审批")
         if not is_variant:
-            current_candidate_id = db.scalar(select(ContentAsset.id).where(
-                ContentAsset.content_unit_id == asset.content_unit_id,
-            ).order_by(ContentAsset.id.desc()).limit(1))
+            from .production_validation import latest_legacy_candidate_id
+
+            current_candidate_id = latest_legacy_candidate_id(db, asset.content_unit_id)
             if current_candidate_id != asset.id:
                 raise HTTPException(409, "历史候选只可查看，不能新增交付授权")
         unit = db.get(ContentUnit, asset.content_unit_id)

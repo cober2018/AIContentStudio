@@ -284,7 +284,8 @@ def _validate_approval(db: Session, asset: ContentAsset, warning_dispositions: d
 
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
     if schema == 5:
-        validate_live_v5_candidate(db, asset, lock_live=True)
+        manifest = validate_live_v5_candidate(db, asset, lock_live=True)
+        validate_warning_dispositions(manifest, warning_dispositions)
     elif schema == 4 or asset.content_master_revision_id is not None:
         manifest = validate_live_v4_candidate(db, asset, lock_live=True)
         validate_warning_dispositions(manifest, warning_dispositions)
@@ -303,10 +304,9 @@ def decide_candidate(db: Session, project_id: int, unit_id: int, candidate_id: i
 
         validate_live_v5_candidate(db, asset, lock_live=True)
     else:
-        current_candidate_id = db.scalar(select(ContentAsset.id).where(
-            ContentAsset.project_id == project_id,
-            ContentAsset.content_unit_id == unit_id,
-        ).order_by(ContentAsset.id.desc()).limit(1))
+        from .production_validation import latest_legacy_candidate_id
+
+        current_candidate_id = latest_legacy_candidate_id(db, unit_id)
         if current_candidate_id != asset.id:
             raise _blocked("historical_candidate", "历史候选只可查看，不能重新审批或退改")
     if expected_hash != asset.candidate_hash or candidate_hash(asset.candidate_manifest_json or {}) != asset.candidate_hash:

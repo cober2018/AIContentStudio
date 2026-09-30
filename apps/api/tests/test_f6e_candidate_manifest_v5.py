@@ -21,7 +21,8 @@ def _inputs():
         "brief": {"id": 44, "revision_no": 1, "checksum": "b" * 64},
         "evidence": {"boundary_id": 55, "revision_no": 1, "fact_pack": {"id": 66, "version": 2, "checksum": "c" * 64}},
         "source_master": {"id": 77, "revision_no": 3, "modality": "text", "payload_schema": "text.master.v2",
-                          "payload_hash": "d" * 64, "context_hash": "e" * 64, "channel": None, "content_form": None},
+                          "payload_hash": "d" * 64, "context_hash": "e" * 64, "channel": None, "content_form": None,
+                          "warning_checks": []},
         "variant": {"id": 88, "variant_key": "x.single.primary", "revision_no": 2, "source_master_revision_id": 77,
                     "identity_snapshot_id": 33, "payload_schema": "x.single.v1",
                     "payload_hash": payload_hash("x.single.v1", content), "context_hash": "f" * 64,
@@ -41,6 +42,73 @@ def _inputs():
                        "llm_provenance": None},
         "citations": [], "declarations": [],
     }
+
+
+def _frozen_review_asset_for_form(form: str):
+    from app.models import ContentAsset
+    from app.services.candidates_v5 import build_manifest_v5
+    from app.services.channel_adapters import GraphicImageNoteAdapter, VideoSpokenScriptAdapter
+
+    inputs = _inputs()
+    if form == "image_note":
+        adapter = GraphicImageNoteAdapter()
+        source_schema, modality, channel, artifact = "graphic.master.v2", "graphic", "xiaohongshu", "image"
+        inputs["assets"] = [{"material_revision_id": 101, "content_hash_snapshot": "4" * 64, "role": "image_card",
+                             "slot_key": "cover", "sort_order": 0, "placement": {"card_id": "cover"},
+                             "rights_snapshot": {"public_use_allowed": True}}]
+        raw = {"title": "图文", "cards": [{"id": "cover", "order": 0, "image_ref_key": "cover", "caption": "真实图片"}]}
+        inputs["checks"].append({**inputs["checks"][0], "id": 6, "kind": "variant_render"})
+    else:
+        adapter = VideoSpokenScriptAdapter()
+        source_schema, modality, channel, artifact = "video.master.v2", "video", "douyin", "script"
+        raw = {"scenes": [{"id": "shot-1", "order": 0, "script": "开场", "voice_text": "开场", "b_roll_ref_keys": []}],
+               "estimated_srt": {"estimated": True, "text": "1\n00:00:00,000 --> 00:00:04,000\n开场"}}
+    contract = adapter.contract
+    inputs["project"]["modality"] = modality
+    inputs["source_master"].update(modality=modality, payload_schema=source_schema)
+    inputs["variant"]["payload_schema"] = contract.payload_schema
+    inputs["target"].update(channel=channel, content_form=form, artifact_kind=artifact,
+                            profile={**inputs["target"]["profile"], "key": contract.key, "artifact_kind": artifact},
+                            adapter={"key": contract.key, "version": contract.version})
+    inputs["content"] = adapter.canonicalize(raw, asset_refs=inputs["assets"])
+    inputs["variant"]["payload_hash"] = payload_hash(contract.payload_schema, inputs["content"], asset_refs=inputs["assets"])
+    inputs["citations"] = inputs["content"]["citations"]
+    inputs["declarations"] = inputs["content"]["declarations"]
+    inputs["render"] = adapter.render(inputs["content"], asset_refs=inputs["assets"])
+    adapter_hash = hashlib.sha256(json.dumps(inputs["target"]["adapter"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    render_hash = hashlib.sha256(json.dumps(inputs["render"], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    for check in inputs["checks"]:
+        check["adapter_hash"] = adapter_hash
+        if check["kind"] == "variant_package":
+            check["report"]["projection_hash"] = render_hash
+    manifest = build_manifest_v5(inputs)
+    asset = ContentAsset(id=202, project_id=11, content_unit_id=22, identity_snapshot_id=33,
+                         channel_variant_revision_id=88, title="冻结渠道成品", channel=channel,
+                         content_form=form, artifact_kind=artifact, candidate_manifest_json=manifest,
+                         candidate_hash=candidate_hash(manifest))
+    return asset
+
+
+@pytest.mark.parametrize("form", ["image_note", "spoken_script"])
+def test_v5_review_preview_uses_frozen_shape_without_claiming_image_prompt_or_finished_video(form):
+    from app.services.project_review_projection import candidate_diff, candidate_preview
+
+    asset = _frozen_review_asset_for_form(form)
+    preview = candidate_preview(asset)
+    diff = candidate_diff(None, asset)
+    assert preview["target"]["content_form"] == form
+    assert preview["checks"] == asset.candidate_manifest_json["checks"]
+    assert diff["text"] is None
+    if form == "image_note":
+        assert preview["canvas_count"] == 1
+        assert preview["cards"][0]["image_ref_key"] == "cover"
+        assert diff["structured"] == [{"id": "cover", "changes": ["add"]}]
+    else:
+        assert preview["shot_count"] == 1
+        assert preview["shots"][0]["script"] == "开场"
+        assert preview["estimated_srt"]["estimated"] is True
+        assert preview["finished_video"] is False
+        assert diff["structured"] == [{"id": "shot-1", "changes": ["add"]}]
 
 
 def test_v5_manifest_freezes_exact_variant_target_source_and_checks():

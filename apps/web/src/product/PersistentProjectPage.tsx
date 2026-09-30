@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
@@ -8,10 +8,12 @@ import { ProjectEvidenceTab } from "./project/ProjectEvidenceTab";
 import { ProjectAssetsTab } from "./project/ProjectAssetsTab";
 import { ProjectVersionsTab } from "./project/ProjectVersionsTab";
 import { ProjectActivityTab } from "./project/ProjectActivityTab";
-import { ProjectMatrixTab } from "./project/ProjectMatrixTab";
 import type { Modality, Persona, Project, SharedAsset, Unit, WorkflowBinding } from "./project/projectTypes";
 
+const ProjectMatrixTab = lazy(() => import("./project/ProjectMatrixTab").then((module) => ({ default: module.ProjectMatrixTab })));
+
 type IdentityChild = { id: number; name: string; status: string; persona_id?: number; account_id?: number };
+type MatrixSuggestion = { personaId: number; accountId: number | null; seriesId: number | null; modality: Modality; channel: string; contentForm: string };
 
 const TABS = ["overview", "brief", "evidence", "assets", "matrix", "versions", "activity"] as const;
 const TAB_NAMES = ["总览", "创作任务书", "来源与证据", "项目素材", "内容矩阵", "版本", "活动"];
@@ -81,6 +83,22 @@ export function PersistentProjectPage() {
     try { await api.post<Unit>(`/content-projects/${project.id}/units`, { title: unitTitle.trim(), persona_id: personaId, account_id: accountId, series_id: seriesId, modality, channel_id: channel }); await reload(); setUnitModal(false); setUnitTitle(""); setError(""); }
     catch (err) { setError(message(err)); }
   }
+  async function confirmMatrixSuggestions(rows: MatrixSuggestion[]) {
+    if (!project || project.status === "archived") throw new Error("项目已归档，不能创建内容单元。");
+    let created = 0;
+    try {
+      for (const row of rows) {
+        await api.post<Unit>(`/content-projects/${project.id}/units`, {
+          title: `${MODALITY_NAMES[row.modality]} · ${row.channel}/${row.contentForm}`,
+          persona_id: row.personaId, account_id: row.accountId, series_id: row.seriesId,
+          modality: row.modality, channel_id: row.channel,
+        });
+        created += 1;
+      }
+    } catch (cause) {
+      throw new Error(`已创建 ${created}/${rows.length} 个所选单元；其余未创建。${message(cause)}`);
+    } finally { await reload(); }
+  }
   async function deleteUnit(unit: Unit) {
     if (!project || !window.confirm(`移除「${unit.title}」？若已有运行历史，将归档并保留历史记录。`)) return;
     try { await api.del<void>(`/content-projects/${project.id}/units/${unit.id}`); await reload(); }
@@ -125,7 +143,7 @@ export function PersistentProjectPage() {
     {tab === "overview" && <ProjectOverviewTab projectId={project.id} />}
     {tab === "brief" && <ProjectBriefTab projectId={project.id} readOnly={project.status === "archived"} onSaved={() => { reload().catch((err) => setError(message(err))); }} />}
     {tab === "evidence" && <ProjectEvidenceTab projectId={project.id} readOnly={project.status === "archived"} />}
-    {tab === "matrix" && <ProjectMatrixTab project={project} personas={personas} onAddPersona={() => setPersonaModal(true)} onAddUnit={() => { setPersonaId(personas[0]?.id ?? null); setAccountId(null); setSeriesId(null); setUnitModal(true); }} onEditUnit={(unit) => { setEditingUnit(unit); setUnitTitle(unit.title); setPersonaId(unit.persona_id); setAccountId(unit.account_id); setSeriesId(unit.series_id); setModality(unit.modality); setChannel(unit.channel_id || ""); setRebindDefault(false); setRebindIdentity(false); }} onDeleteUnit={deleteUnit} />}
+    {tab === "matrix" && <Suspense fallback={<Spinner label="加载内容矩阵…" />}><ProjectMatrixTab project={project} personas={personas} onAddPersona={() => setPersonaModal(true)} onAddUnit={() => { setPersonaId(personas[0]?.id ?? null); setAccountId(null); setSeriesId(null); setUnitModal(true); }} onEditUnit={(unit) => { setEditingUnit(unit); setUnitTitle(unit.title); setPersonaId(unit.persona_id); setAccountId(unit.account_id); setSeriesId(unit.series_id); setModality(unit.modality); setChannel(unit.channel_id || ""); setRebindDefault(false); setRebindIdentity(false); }} onDeleteUnit={deleteUnit} onConfirmSuggestions={confirmMatrixSuggestions} /></Suspense>}
     {tab === "assets" && <ProjectAssetsTab projectId={project.id} readOnly={project.status === "archived"} onChanged={() => { reload().catch((err) => setError(message(err))); }} />}
     {tab === "versions" && <ProjectVersionsTab projectId={project.id} />}
     {tab === "activity" && <ProjectActivityTab projectId={project.id} />}

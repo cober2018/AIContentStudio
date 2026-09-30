@@ -28,10 +28,24 @@ from ..models import (
 from .candidates import candidate_hash
 from .candidates_v4 import build_manifest_v4, load_manifest_v4_inputs
 from .candidates_v5 import build_manifest_v5, load_manifest_v5_inputs
-from .channel_variants import _check_inputs, _validate_graphic_assets, _validate_video_assets, _validate_wechat_assets
+from .channel_variants import (
+    _check_inputs,
+    _validate_graphic_assets,
+    _validate_video_assets,
+    _validate_wechat_assets,
+    source_check_exclusions,
+)
 from .content_masters import _evidence_check, _hash, _rights_check, _serialize, frozen_context
 from .materials import read_bytes_checked
 from .production_modalities import adapter_for
+
+
+def latest_legacy_candidate_id(db: Session, unit_id: int) -> int | None:
+    # V5 has its own channel series and must not supersede the legacy Unit series.
+    return db.scalar(select(ContentAsset.id).where(
+        ContentAsset.content_unit_id == unit_id,
+        ContentAsset.channel_variant_revision_id.is_(None),
+    ).order_by(ContentAsset.id.desc()).limit(1))
 
 
 def _blocked(code: str, *reasons: str) -> HTTPException:
@@ -83,6 +97,7 @@ def validate_live_v4_master(db: Session, master: ContentMasterRevision, *, requi
 
 def validate_warning_dispositions(manifest: dict, dispositions: dict | None) -> None:
     warnings = [row for row in manifest.get("checks", []) if row["status"] == "warning"]
+    warnings.extend(row for row in manifest.get("source_master", {}).get("warning_checks", []) if row["status"] == "warning")
     required = {f"{row['id']}:{row['input_hash']}" for row in warnings}
     supplied = dispositions or {}
     if set(supplied) != required or any(not isinstance(reason, str) or not reason.strip() or len(reason) > 1000 for reason in supplied.values()):
@@ -129,7 +144,7 @@ def validate_live_v4_candidate(db: Session, asset: ContentAsset, *, require_curr
         if check != stored or any(check.get(key) != latest_checks[kind][key] for key in ("input_hash", "profile_key", "profile_version", "status")) or (check["status"] == "warning" and check != latest_checks[kind]):
             raise _blocked("checks_unready", "冻结检查已失效或被修改")
     if require_current:
-        latest = db.scalar(select(ContentAsset.id).where(ContentAsset.content_unit_id == asset.content_unit_id).order_by(ContentAsset.id.desc()).limit(1))
+        latest = latest_legacy_candidate_id(db, asset.content_unit_id)
         if latest != asset.id:
             raise _blocked("historical_candidate", "历史候选不能新增审批或授权")
     if require_approved:
@@ -176,6 +191,21 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
             or master.channel_id != source.get("channel") or master.content_form != source.get("content_form")
             or master.identity_snapshot_id != manifest["identity"]["id"]):
         raise _blocked("candidate_provenance", "历史候选来源Master血缘不一致")
+    from .content_masters import projected_checks
+
+    exclusions = source_check_exclusions(master, variant.payload_schema)
+    live_checks = [check for check in projected_checks(db, master) if check["check_kind"] not in exclusions]
+    frozen_warning_keys = {(check["id"], check["kind"], check["input_hash"])
+                           for check in source.get("warning_checks", [])}
+    live_warning_keys = {(check["id"], check["check_kind"], check["input_hash"])
+                         for check in live_checks if check["status"] == "warning"}
+    for check in source.get("warning_checks", []):
+        stored = db.get(ContentMasterCheckRun, check["id"])
+        if (stored is None or stored.master_revision_id != master.id
+                or check != {"id": stored.id, "kind": stored.check_kind,
+                             "profile_key": stored.profile_key, "profile_version": stored.profile_version,
+                             "input_hash": stored.input_hash, "status": stored.status, "report": stored.report_json}):
+            raise _blocked("checks_unready", "历史来源Master warning血缘不一致")
     if any(getattr(variant, column) != frozen_variant[key] for column, key in (
         ("variant_key", "variant_key"), ("revision_no", "revision_no"),
         ("source_master_revision_id", "source_master_revision_id"), ("identity_snapshot_id", "identity_snapshot_id"),
@@ -236,6 +266,12 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
         item = db.get(FactPackItem, ref["fact_pack_item_id"])
         if item is None or item.fact_pack_id != pack.id or item.snapshot_checksum != ref["snapshot_checksum"]:
             raise _blocked("evidence_unready", "历史精确证据引用不一致")
+    if any(check["status"] not in {"pass", "warning"} for check in live_checks):
+        raise _blocked("checks_unready", "来源Master最新检查已阻断或失效")
+    if "warning_checks" in source and frozen_warning_keys != live_warning_keys:
+        raise _blocked("checks_unready", "来源Master warning 已变化，须重新审批")
+    if "warning_checks" not in source and live_warning_keys:
+        raise _blocked("warning_dispositions_required", "旧v5候选缺少来源Master warning快照")
     production = manifest["production"]
     if (production["edit_summary"] != variant.edit_summary_json or production["created_by"] != variant.created_by
             or production.get("llm_provenance") != variant.llm_provenance_json):
@@ -284,7 +320,11 @@ def validate_live_v5_candidate(db: Session, asset: ContentAsset, *, require_curr
         current = manifest
     for section in ("identity", "brief", "evidence", "source_master", "variant", "target", "content",
                     "assets", "evidence_refs", "render", "production", "citations", "declarations"):
-        if manifest[section] != current[section]:
+        frozen_section = manifest[section]
+        current_section = current[section]
+        if section == "source_master" and "warning_checks" not in frozen_section and current_section.get("warning_checks") == []:
+            current_section = {key: value for key, value in current_section.items() if key != "warning_checks"}
+        if frozen_section != current_section:
             raise _blocked("candidate_provenance", f"v5冻结来源或内容已变化: {section}")
     if any(manifest["project"].get(key) != current["project"][key] for key in ("id", "unit_id", "modality")):
         raise _blocked("candidate_provenance", "v5冻结项目或形态不一致")
@@ -314,4 +354,5 @@ def validate_live_v5_candidate(db: Session, asset: ContentAsset, *, require_curr
                            .order_by(Review.id.desc()).limit(1))
         if asset.status not in {"approved", "exported"} or asset.approved_candidate_hash != asset.candidate_hash or review is None:
             raise _blocked("candidate_unapproved", "缺少绑定准确v5候选的内容审批")
+        validate_warning_dispositions(manifest, review.warning_dispositions_json)
     return manifest

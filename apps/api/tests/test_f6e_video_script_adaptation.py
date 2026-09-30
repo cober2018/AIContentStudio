@@ -1,6 +1,9 @@
 """F6E script adaptation must not claim a finished video or silently discard media."""
 
 import hashlib
+import io
+import json
+import zipfile
 
 import pytest
 from sqlalchemy import select
@@ -8,6 +11,8 @@ from sqlalchemy import select
 from app.models import (
     ChannelTemplateVersion,
     ChannelVariantRevision,
+    FactPack,
+    FactPackItem,
     Material,
     MaterialRevision,
     ProjectEvent,
@@ -17,7 +22,7 @@ from app.seed import seed_v1_channel_profiles
 from app.services.channel_adapters import AdapterUnavailable, VideoSpokenScriptAdapter
 
 
-def _source(client, db_session, *, timed_cues=False, b_roll_file=None):
+def _source(client, db_session, *, timed_cues=False, b_roll_file=None, ready=False):
     seed_v1_channel_profiles(db_session)
     db_session.add(ChannelTemplateVersion(
         channel="video_f6e_source", version=1, name="Video source", status="published",
@@ -26,10 +31,31 @@ def _source(client, db_session, *, timed_cues=False, b_roll_file=None):
     db_session.commit()
     headers = {"X-Studio-User": "video-f6e@studio.local"}
     persona = client.post("/api/v1/content-personas", json={"name": "口播作者"}, headers=headers).json()["id"]
+    if ready:
+        persona_revision = client.post(f"/api/v1/content-personas/{persona}/revisions", json={
+            "expected_revision": 0, "profile": {"expression_style": {"forbidden_phrases": []}},
+        }, headers=headers)
+        assert persona_revision.status_code == 201, persona_revision.text
     project = client.post("/api/v1/content-projects", json={"title": "口播项目"}, headers=headers).json()["id"]
     unit = client.post(f"/api/v1/content-projects/{project}/units", json={
-        "title": "口播脚本", "persona_id": persona, "modality": "video", "channel_id": "video_f6e_source",
+        "title": "口播脚本", "persona_id": persona, "modality": "video", "channel_id": None if ready else "video_f6e_source",
     }, headers=headers).json()["id"]
+    if ready:
+        brief = client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={
+            "objective": "准确表达口播观点", "expected_revision": 0,
+        }, headers=headers)
+        assert brief.status_code == 201, brief.text
+        pack = FactPack(name="口播事实边界", version=1, status="frozen", checksum="c" * 64)
+        db_session.add(pack)
+        db_session.flush()
+        db_session.add(FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion",
+                                    snapshot_json={"statement": "开场白"}, snapshot_checksum="d" * 64,
+                                    public_use_allowed=True, model_use_allowed=True))
+        db_session.commit()
+        boundary = client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={
+            "fact_pack_id": pack.id, "expected_revision": 0,
+        }, headers=headers)
+        assert boundary.status_code == 201, boundary.text
     document = {
         "title": "短片", "aspect_ratio": [9, 16],
         "script": {"blocks": [{"id": "opening", "order": 0, "text": "开场白"}]},
@@ -61,10 +87,74 @@ def _source(client, db_session, *, timed_cues=False, b_roll_file=None):
                      "slot_key": "shot-1", "sort_order": 0, "placement": {"shot_id": "shot-1"}})
     saved = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", json={
         "idempotency_key": "video-script-source", "payload_schema": "video.master.v2", "payload": document,
-        "content_form": "short", "asset_refs": refs,
+        **({} if ready else {"content_form": "short"}), "asset_refs": refs,
     }, headers=headers)
     assert saved.status_code == 200, saved.text
+    if ready:
+        checks = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions/{saved.json()['id']}/checks", headers=headers)
+        assert checks.status_code == 200, checks.text
     return project, unit, saved.json(), headers
+
+
+@pytest.mark.parametrize("with_b_roll", [False, True])
+def test_spoken_script_v5_approval_and_manual_package_remain_script_only(client, db_session, tmp_path, with_b_roll):
+    b_roll_file = tmp_path / "b-roll.png" if with_b_roll else None
+    project, unit, master, headers = _source(client, db_session, b_roll_file=b_roll_file, ready=True)
+    direct_video = client.post(f"/api/v1/content-projects/{project}/units/{unit}/candidates/freeze", json={
+        "content_master_revision_id": master["id"], "expected_payload_hash": master["payload_hash"],
+    }, headers=headers)
+    assert direct_video.status_code == 409, direct_video.text
+    variants = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    intent = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "douyin", "content_form": "spoken_script"}
+    preview = client.post(f"{variants}/adapt-preview", json=intent, headers=headers)
+    assert preview.status_code == 200, preview.text
+    declaration = {"id": "timing-note", "kind": "timing", "text": "字幕时间为估算"}
+    saved = client.post(variants, json={**intent, "variant_key": "spoken-script.complete", "expected_revision": 0,
+        "idempotency_key": "spoken-script.complete", "source_kind": "manual_edit",
+        "payload": {**preview.json()["payload"], "declarations": [declaration]},
+        "asset_refs": preview.json()["asset_refs"]}, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checked = client.post(f"{variants}/{saved.json()['id']}/checks", headers=headers)
+    assert checked.status_code == 200 and checked.json()["ready"] is True, checked.json()["source_gate"]
+    candidates = f"/api/v1/content-projects/{project}/units/{unit}/candidates"
+    frozen = client.post(f"{candidates}/freeze", json={"channel_variant_revision_id": saved.json()["id"],
+        "expected_payload_hash": saved.json()["payload_hash"]}, headers=headers)
+    assert frozen.status_code == 201, frozen.text
+    candidate = frozen.json()
+    assert candidate["manifest"]["target"]["artifact_kind"] == "script"
+    assert candidate["manifest"]["render"].get("finished_video") is False
+    approved = client.post(f"{candidates}/{candidate['id']}/approve", json={
+        "candidate_hash": candidate["candidate_hash"],
+        "warning_dispositions": {
+            f"{row['id']}:{row['input_hash']}": "编辑已核对该提示"
+            for row in candidate["manifest"]["source_master"].get("warning_checks", [])
+        }}, headers=headers)
+    assert approved.status_code == 200, approved.text
+    target = client.post(f"{candidates}/{candidate['id']}/delivery-authorizations", json={
+        "channel": "douyin", "content_form": "spoken_script", "account_ref": "manual-douyin",
+        "authorization_version": "v1", "action": "copy_package"}, headers=headers)
+    assert target.status_code == 201, target.text
+    downloaded = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+    assert downloaded.status_code == 200, downloaded.text
+    with zipfile.ZipFile(io.BytesIO(downloaded.content)) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        assert manifest["schema_version"] == 5 and manifest["remote_call"] is False
+        assert manifest["render"]["finished_video"] is False
+        assert manifest["declarations"] == [declaration]
+        assert archive.read("content.md").decode() == "开场白"
+        assert "estimated.srt" in archive.namelist()
+        assert "开场白" in archive.read("estimated.srt").decode()
+        assert not any(name.endswith(".mp4") for name in archive.namelist())
+        if with_b_roll:
+            media = manifest["media"]
+            assert len(media) == 1 and media[0]["role"] == "b_roll"
+            assert archive.read(media[0]["name"]) == b_roll_file.read_bytes()
+    if with_b_roll:
+        db_session.get(MaterialRevision, master["assets"][0]["material_revision_id"]).public_use_allowed = False
+        db_session.commit()
+        denied = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+        assert denied.status_code == 422 and denied.json()["detail"]["code"] == "variant_b_roll_unready"
 
 
 def test_script_only_preview_and_save_do_not_claim_finished_video(client, db_session):

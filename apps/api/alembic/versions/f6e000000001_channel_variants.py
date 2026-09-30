@@ -28,21 +28,21 @@ def upgrade() -> None:
         op.create_table(
             "channel_variant_revision",
             sa.Column("id", sa.Integer(), primary_key=True),
-            sa.Column("project_id", sa.Integer(), sa.ForeignKey("content_project.id"), nullable=False),
-            sa.Column("content_unit_id", sa.Integer(), sa.ForeignKey("content_unit.id"), nullable=False),
+            sa.Column("project_id", sa.Integer(), sa.ForeignKey("content_project.id", ondelete="RESTRICT"), nullable=False),
+            sa.Column("content_unit_id", sa.Integer(), sa.ForeignKey("content_unit.id", ondelete="RESTRICT"), nullable=False),
             sa.Column("variant_key", sa.String(120), nullable=False),
             sa.Column("revision_no", sa.Integer(), nullable=False),
-            sa.Column("parent_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id")),
-            sa.Column("source_master_revision_id", sa.Integer(), sa.ForeignKey("content_master_revision.id"), nullable=False),
+            sa.Column("parent_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id", ondelete="RESTRICT")),
+            sa.Column("source_master_revision_id", sa.Integer(), sa.ForeignKey("content_master_revision.id", ondelete="RESTRICT"), nullable=False),
             sa.Column("source_master_payload_hash", sa.String(64), nullable=False),
             sa.Column("source_master_context_hash", sa.String(64), nullable=False),
             sa.Column("source_channel_id", sa.String(100)),
             sa.Column("source_content_form", sa.String(100)),
-            sa.Column("identity_snapshot_id", sa.Integer(), sa.ForeignKey("identity_snapshot.id")),
+            sa.Column("identity_snapshot_id", sa.Integer(), sa.ForeignKey("identity_snapshot.id", ondelete="RESTRICT")),
             sa.Column("channel_id", sa.String(100), nullable=False),
             sa.Column("content_form", sa.String(100), nullable=False),
             sa.Column("artifact_kind", sa.String(20), nullable=False),
-            sa.Column("profile_template_version_id", sa.Integer(), sa.ForeignKey("channel_template_version.id"), nullable=False),
+            sa.Column("profile_template_version_id", sa.Integer(), sa.ForeignKey("channel_template_version.id", ondelete="RESTRICT"), nullable=False),
             sa.Column("profile_key", sa.String(150), nullable=False),
             sa.Column("profile_version", sa.String(50), nullable=False),
             sa.Column("profile_hash", sa.String(64), nullable=False),
@@ -63,13 +63,17 @@ def upgrade() -> None:
             sa.UniqueConstraint("content_unit_id", "variant_key", "revision_no", name="uq_variant_series_revision"),
             sa.UniqueConstraint("content_unit_id", "variant_key", "idempotency_key", name="uq_variant_series_idempotency"),
             sa.CheckConstraint("revision_no > 0", name="ck_variant_revision_positive"),
+            sa.CheckConstraint("length(variant_key) BETWEEN 1 AND 120", name="ck_variant_key_length"),
+            sa.CheckConstraint("artifact_kind IN ('text', 'image', 'script')", name="ck_variant_artifact_kind"),
+            sa.CheckConstraint("source_kind IN ('manual_edit', 'deterministic_adapt', 'model_assisted')", name="ck_variant_source_kind"),
+            sa.CheckConstraint("length(payload_hash) = 64 AND length(context_hash) = 64", name="ck_variant_hash_lengths"),
         )
     if "channel_variant_asset_ref" not in _tables():
         op.create_table(
             "channel_variant_asset_ref",
             sa.Column("id", sa.Integer(), primary_key=True),
-            sa.Column("variant_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id"), nullable=False),
-            sa.Column("material_revision_id", sa.Integer(), sa.ForeignKey("material_revision.id"), nullable=False),
+            sa.Column("variant_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), nullable=False),
+            sa.Column("material_revision_id", sa.Integer(), sa.ForeignKey("material_revision.id", ondelete="RESTRICT"), nullable=False),
             sa.Column("role", sa.String(40), nullable=False),
             sa.Column("slot_key", sa.String(100)),
             sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"),
@@ -77,24 +81,26 @@ def upgrade() -> None:
             sa.Column("rights_snapshot_json", sa.JSON(), nullable=False),
             sa.Column("content_hash_snapshot", sa.String(64), nullable=False),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+            sa.CheckConstraint("sort_order >= 0", name="ck_variant_asset_order_nonnegative"),
         )
     if "channel_variant_evidence_ref" not in _tables():
         op.create_table(
             "channel_variant_evidence_ref",
             sa.Column("id", sa.Integer(), primary_key=True),
-            sa.Column("variant_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id"), nullable=False),
-            sa.Column("fact_pack_item_id", sa.Integer(), sa.ForeignKey("fact_pack_item.id"), nullable=False),
+            sa.Column("variant_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), nullable=False),
+            sa.Column("fact_pack_item_id", sa.Integer(), sa.ForeignKey("fact_pack_item.id", ondelete="RESTRICT"), nullable=False),
             sa.Column("role", sa.String(40), nullable=False),
             sa.Column("content_locator_json", sa.JSON(), nullable=False),
             sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"),
             sa.Column("snapshot_checksum", sa.String(64), nullable=False),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+            sa.CheckConstraint("sort_order >= 0", name="ck_variant_evidence_order_nonnegative"),
         )
     if "channel_variant_check_run" not in _tables():
         op.create_table(
             "channel_variant_check_run",
             sa.Column("id", sa.Integer(), primary_key=True),
-            sa.Column("variant_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id"), nullable=False),
+            sa.Column("variant_revision_id", sa.Integer(), sa.ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), nullable=False),
             sa.Column("check_kind", sa.String(40), nullable=False),
             sa.Column("input_hash", sa.String(64), nullable=False),
             sa.Column("profile_hash", sa.String(64), nullable=False),
@@ -109,7 +115,7 @@ def upgrade() -> None:
         column = sa.Column(
             "channel_variant_revision_id",
             sa.Integer(),
-            sa.ForeignKey("channel_variant_revision.id", name="fk_content_asset_variant_revision_id"),
+            sa.ForeignKey("channel_variant_revision.id", name="fk_content_asset_variant_revision_id", ondelete="RESTRICT"),
         )
         if op.get_bind().dialect.name == "sqlite":
             with op.batch_alter_table("content_asset") as batch:

@@ -793,7 +793,7 @@ class ContentAsset(Base):
     workflow_version: Mapped[int | None] = mapped_column(Integer)
     tags: Mapped[list | None] = mapped_column(JSON)
     content_master_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
-    channel_variant_revision_id: Mapped[int | None] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
+    channel_variant_revision_id: Mapped[int | None] = mapped_column(ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -885,25 +885,29 @@ class ChannelVariantRevision(Base):
         UniqueConstraint("content_unit_id", "variant_key", "revision_no", name="uq_variant_series_revision"),
         UniqueConstraint("content_unit_id", "variant_key", "idempotency_key", name="uq_variant_series_idempotency"),
         CheckConstraint("revision_no > 0", name="ck_variant_revision_positive"),
+        CheckConstraint("length(variant_key) BETWEEN 1 AND 120", name="ck_variant_key_length"),
+        CheckConstraint("artifact_kind IN ('text', 'image', 'script')", name="ck_variant_artifact_kind"),
+        CheckConstraint("source_kind IN ('manual_edit', 'deterministic_adapt', 'model_assisted')", name="ck_variant_source_kind"),
+        CheckConstraint("length(payload_hash) = 64 AND length(context_hash) = 64", name="ck_variant_hash_lengths"),
         Index("ix_variant_project_unit_target", "project_id", "content_unit_id", "channel_id", "content_form"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
-    content_unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id", ondelete="RESTRICT"), index=True)
+    content_unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id", ondelete="RESTRICT"), index=True)
     variant_key: Mapped[str] = mapped_column(String(120))
     revision_no: Mapped[int] = mapped_column(Integer)
-    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("channel_variant_revision.id"))
-    source_master_revision_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"))
+    source_master_revision_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id", ondelete="RESTRICT"), index=True)
     source_master_payload_hash: Mapped[str] = mapped_column(String(64))
     source_master_context_hash: Mapped[str] = mapped_column(String(64))
     source_channel_id: Mapped[str | None] = mapped_column(String(100))
     source_content_form: Mapped[str | None] = mapped_column(String(100))
-    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"))
+    identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id", ondelete="RESTRICT"))
     channel_id: Mapped[str] = mapped_column(String(100))
     content_form: Mapped[str] = mapped_column(String(100))
     artifact_kind: Mapped[str] = mapped_column(String(20))
-    profile_template_version_id: Mapped[int] = mapped_column(ForeignKey("channel_template_version.id"))
+    profile_template_version_id: Mapped[int] = mapped_column(ForeignKey("channel_template_version.id", ondelete="RESTRICT"))
     profile_key: Mapped[str] = mapped_column(String(150))
     profile_version: Mapped[str] = mapped_column(String(50))
     profile_hash: Mapped[str] = mapped_column(String(64))
@@ -925,11 +929,12 @@ class ChannelVariantRevision(Base):
 
 class ChannelVariantAssetRef(Base):
     __tablename__ = "channel_variant_asset_ref"
-    __table_args__ = (Index("ix_variant_asset_ref_order", "variant_revision_id", "sort_order"),)
+    __table_args__ = (Index("ix_variant_asset_ref_order", "variant_revision_id", "sort_order"),
+                      CheckConstraint("sort_order >= 0", name="ck_variant_asset_order_nonnegative"))
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
-    material_revision_id: Mapped[int] = mapped_column(ForeignKey("material_revision.id"))
+    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), index=True)
+    material_revision_id: Mapped[int] = mapped_column(ForeignKey("material_revision.id", ondelete="RESTRICT"))
     role: Mapped[str] = mapped_column(String(40))
     slot_key: Mapped[str | None] = mapped_column(String(100))
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
@@ -941,11 +946,12 @@ class ChannelVariantAssetRef(Base):
 
 class ChannelVariantEvidenceRef(Base):
     __tablename__ = "channel_variant_evidence_ref"
-    __table_args__ = (Index("ix_variant_evidence_ref_order", "variant_revision_id", "sort_order"),)
+    __table_args__ = (Index("ix_variant_evidence_ref_order", "variant_revision_id", "sort_order"),
+                      CheckConstraint("sort_order >= 0", name="ck_variant_evidence_order_nonnegative"))
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
-    fact_pack_item_id: Mapped[int] = mapped_column(ForeignKey("fact_pack_item.id"))
+    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), index=True)
+    fact_pack_item_id: Mapped[int] = mapped_column(ForeignKey("fact_pack_item.id", ondelete="RESTRICT"))
     role: Mapped[str] = mapped_column(String(40))
     content_locator_json: Mapped[dict] = mapped_column(JSON, default=dict)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
@@ -958,7 +964,7 @@ class ChannelVariantCheckRun(Base):
     __table_args__ = (Index("ix_variant_check_kind_created", "variant_revision_id", "check_kind", "created_at"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id"), index=True)
+    variant_revision_id: Mapped[int] = mapped_column(ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), index=True)
     check_kind: Mapped[str] = mapped_column(String(40))
     input_hash: Mapped[str] = mapped_column(String(64), index=True)
     profile_hash: Mapped[str] = mapped_column(String(64))

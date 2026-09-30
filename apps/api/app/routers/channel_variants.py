@@ -12,8 +12,10 @@ from ..services.channel_variants import (
     get_revision,
     get_variant_checks,
     list_revisions,
+    revision_diff,
     run_variant_checks,
     save_revision,
+    variant_capabilities,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["channel-variants"])
@@ -31,7 +33,7 @@ class VariantRevisionIn(BaseModel):
     content_form: str = Field(min_length=1, max_length=100)
     idempotency_key: str = Field(min_length=1, max_length=150)
     payload: dict
-    source_kind: str = Field(default="manual_edit", pattern="^(manual_edit|deterministic_adapt)$")
+    source_kind: str = Field(default="manual_edit", pattern="^(manual_edit|deterministic_adapt|model_assisted)$")
     edit_summary: dict = Field(default_factory=dict)
     asset_refs: list[dict] = Field(default_factory=list, max_length=250)
     evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
@@ -55,6 +57,13 @@ def preview_channel_adaptation(project_id: int, unit_id: int, body: VariantAdapt
     return adapt_preview(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
 
 
+@router.post("/content-projects/{project_id}/units/{unit_id}/channel-variants/model-suggestions", dependencies=[Depends(require_editor)])
+async def suggest_channel_adaptation(project_id: int, unit_id: int, body: VariantAdaptPreviewIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services.channel_variants import suggest_adaptation
+
+    return await suggest_adaptation(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
+
+
 @router.post("/content-projects/{project_id}/units/{unit_id}/channel-variants", status_code=201, dependencies=[Depends(require_editor)])
 def create_channel_variant(project_id: int, unit_id: int, body: VariantRevisionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
@@ -70,9 +79,19 @@ def get_current_channel_variant(project_id: int, unit_id: int, variant_key: str 
     return current_revision(db, project_id, unit_id, variant_key, user)
 
 
+@router.get("/content-projects/{project_id}/units/{unit_id}/channel-variants/capabilities")
+def get_channel_variant_capabilities(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return variant_capabilities(db, project_id, unit_id, user)
+
+
 @router.get("/content-projects/{project_id}/units/{unit_id}/channel-variants/{variant_id}")
 def get_channel_variant(project_id: int, unit_id: int, variant_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return get_revision(db, project_id, unit_id, variant_id, user)
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/channel-variants/{variant_id}/diff")
+def get_channel_variant_diff(project_id: int, unit_id: int, variant_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return revision_diff(db, project_id, unit_id, variant_id, user)
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}/channel-variants/{variant_id}/checks")
