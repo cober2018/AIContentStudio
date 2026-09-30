@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 已配置图片 Adapter
+
+- [x] /// 校准 5.8 的单次 HTTPS/base64/config fingerprint；复用 KEY_IMAGE 和 stage/accept，无新对象/迁移，不发送真实凭据请求；独立计划复核通过。
+- [x] /// RED→GREEN：原生图片 adapter、safe endpoint/response cap/timeout/rotation、真实 PNG 入 preview/明确接受；legacy generate 与 Settings 不写 WeWrite 全局配置，其他 Provider 不 fallback。28 新回归，DNS→TCP pin；压缩响应失败回归后拒绝读取，独立复核缺口关闭。
+- [x] /// 集中定向52/全量1435 +2 skipped、构建预算、strict30/30/Ruff/diff、独立窄复核通过；配置与 Mock transport 不作为真实厂商验证，10.3 保留待办，F7 92/105。
+
 ## 2026-09-30：F7 人工对账闭环
 
 - [x] /// 补严既有 8.8：exact latest attempt、非空安全证据、原子人类回执与幂等；不将草稿箱对账当已发布，不新增表。

@@ -1,5 +1,12 @@
 # 当前进度
 
+## 2026-09-30：F7 原生已配置图片接入
+
+- F7 92/105；关闭 5.8 的真实可配置 adapter 实现路径，不勾真实厂商验收 10.3，F8 未 apply。KEY_IMAGE 明确 openai/model/size/HTTPS /v1/key，无默认/回退/来源图编辑。实际 UI 沿用 ProviderMediaPanel，未新增浏览器验收或声称前端闭环变化。
+- 单次 n=1、零 retry/redirect/env proxy；DNS 验证后 TCP pin public IP，TLS 保留原 host。25 秒 HTTP/总读取期限，8MiB JSON/5MiB PNG，现有 Pillow/stage/人工接受继续严验；config/credential/code combined fingerprint 使轮换失效，无独立 key hash/raw metadata。原生 Settings 不写 WeWrite 全局配置，GET/save 无厂商调用。
+- 28 新测试含真实 PNG stage→accept/数据库、超时未知/零重试、坏配置/内网/超限、rotation和生成中配置漂移、原生选择无fallback。压缩风险由失败回归复现，identity请求+读取前拒压缩修复，独立窄复核 APPROVE。
+- 最新52定向、全后端1435 passed /2 skipped /8 existing warnings（85.22s）；TypeScript/Vite/FE-P1 PASS，projects224.84/72.94kB、commonProduction280.20/89.13kB；strict30/30、Ruff/diff PASS。无表/迁移/新依赖/真实凭据调用、push/deploy/生产迁移/canonical sync/archive。报告 docs/FE_F7_NATIVE_IMAGE_ACCEPTANCE.md，HTTPCore内部hook升级需复验。
+
 ## 2026-09-30：F7 人工对账与回执
 
 - 本批关闭 8.8 实施链路，F7 91/105；F8 尚未 apply。真实账号/Provider 验收 10.3/10.5/10.6 仍待办，不以 fixture 代替外部确认。

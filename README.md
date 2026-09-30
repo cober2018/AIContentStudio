@@ -6,6 +6,8 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
+- 已配置图片原生路径（F7 92/105）：管理员现有 AI 生图设置明确选择 OpenAI 与支持的 exact model/size/HTTPS `/v1`/key；现有素材生成按钮进入私有 PNG 预览，人工权利确认后才写精确版本，不改 Master。实现位于 `services/openai_image_provider.py`，复用 Registry、stage/accept 与现有 UI；无新依赖/表/迁移，原生设置不写 WeWrite 全局配置。单次调用、无重试/回退、public-IP pin、响应/时间上限和轮换失效；全后端1435/2 skipped、52定向、构建预算/strict/Ruff/diff与窄复核通过。报告 [原生图片接入验收](docs/FE_F7_NATIVE_IMAGE_ACCEPTANCE.md) 含配置/复跑命令；真实付费厂商与账号验收仍TODO，未做新版浏览器验收，不把 Mock transport 称外部verified。
+
 - 人工对账闭环：Unknown 保留原 Attempt，核验说明只提交/保存 SHA-256 摘要；最新 Attempt 校验、目标锁、重复决策幂等，确认已交付原子新增精确人工 Receipt，不自动写已发布历史/verified 或重发。错误输入固定安全原因，不回显秘密；源码独立窄复核与五项 UI fixture browser gate 通过，非真实账号验收。接口沿用 `delivery.py`，UI 在 ProjectReviewCenter，复跑 `F7_ISOLATED_ACCEPTANCE=yes NODE_PATH=<Playwright依赖目录> node apps/web/scripts/fe-f7-reconciliation-ui-acceptance.mjs`（需隔离 Vite 15671）。本批无新增依赖/表/迁移；当前 F7 91/105，全后端1407/2 skipped、定向109、构建预算/strict/Ruff/diff通过；阶段外部验收继续待办。
 
 - 媒体 Renderer 范围闭环：管理员明确核对真实 stage 后记录 renderer/schema/channel/form/MIME 的 24h 验证；editor 可走独立输出入口，每次调用与接受重验 current Master/runtime/Profile/rights/expiry/revocation。撤销留史，不改素材/Master；per-stage lock 与 registration DB lock 关闭 cache/DB 反向等待和撤销提交窗口。库存保持 not_probed，只展示记录和请求权限。实际 Graphic 13 browser gate、1400 全后端/2 skipped、106 定向、预算/strict/窄复核通过；F7 90/105，真实 Video Renderer 和外部 Provider/Publisher 不冒充完成。接口、目录和复跑见 [`docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md`](docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md)。

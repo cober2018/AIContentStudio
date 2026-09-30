@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-30 F7 图片 Adapter 基线
+
+- KEY_IMAGE 已有 provider/model/base_url/api_key/size，现有 typed WeWrite 因内部 retry/global config 不能证明单次精确调用。本批用明确 openai 配置接原生 Images JSON 请求，不猜默认模型、不启用其他平台。
+- API 按官方 Images contract 的单次 n=1/base64 output 实现；许可仍由操作者显式核对。无凭据/无授权时不做真实网络或付费验收；保留所有后续真实验证任务。
+- 单纯 DNS 预检不足以阻止重解析漂移：本批 TCP backend 固定已验证 public IP，TLS 仍使用原 host；HTTPX/HTTPCore 私有连接 hook 的升级兼容需重验。流式 iter_bytes 在压缩解码后才检查上限，独立复核指出同一风险；失败回归后要求 identity 并先拒绝压缩响应，不放宽容量。
+
 ## 2026-09-30 F7 对账缺口
 
 - 当前 reconcile 的 docstring 承诺回填 receipt，但 delivered 分支只改 target/attempt，没有创建 DeliveryReceipt；原始 note 直接进入 attempt metadata 和 AuditLog，且空说明也可确认。

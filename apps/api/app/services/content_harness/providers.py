@@ -126,6 +126,10 @@ def resolve_material_search() -> MaterialSearchProvider:
 def bootstrap_media_providers() -> None:
     from ..local_graphic_renderer import LocalGraphicRenderer
     from ..material_search import WikimediaSearchProvider
+    from ..openai_image_provider import OpenAIImageProvider
+
+    if OpenAIImageProvider.key not in {d.key for d in registry.list("image_provider")}:
+        registry.register("image_provider", OpenAIImageProvider.key, "1", OpenAIImageProvider(), label="Configured OpenAI image preview (explicit acceptance required)")
 
     if LocalGraphicRenderer.key not in {d.key for d in registry.list("renderer")}:
         registry.register("renderer", LocalGraphicRenderer.key, "1", LocalGraphicRenderer(), label="Local Graphic Chromium renderer (explicit runtime required)")
