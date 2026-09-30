@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { api } from "../api";
 import { Button, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
 import ProviderMediaPanel from "../product/ProviderMediaPanel";
+import ProviderSearchPanel from "../product/ProviderSearchPanel";
 
 // 素材库（V1 PRD 2.0 / material-library-v1）：
 // Material = 全局逻辑素材；MaterialRevision = 不可变字节版本；稿件通过 DraftMedia(use) 引用。
@@ -228,24 +229,9 @@ function GenerateModal({ onClose }: { onClose: () => void }) {
 }
 
 function SearchModal({ onClose }: { onClose: () => void }) {
-  const [query, setQuery] = useState("");
-  const [error, setError] = useState("");
-  const search = useMutation({
-    mutationFn: () => api.post<unknown[]>("/materials/search", { query }),
-    onError: (e) => setError(e instanceof Error ? e.message : "搜索失败"),
-  });
   return (
     <Modal title="素材搜索" onClose={onClose}>
-      <div className="flex items-end gap-2">
-        <Field label="关键词">
-          <input className={inputClass} value={query} onChange={(e) => setQuery(e.target.value)} />
-        </Field>
-        <Button className="mb-0.5" disabled={!query || search.isPending} onClick={() => search.mutate()}>搜索</Button>
-      </div>
-      {error && <div className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700">{error}</div>}
-      <div className="mt-4 flex justify-end">
-        <Button variant="secondary" onClick={onClose}>关闭</Button>
-      </div>
+      <ProviderSearchPanel />
     </Modal>
   );
 }

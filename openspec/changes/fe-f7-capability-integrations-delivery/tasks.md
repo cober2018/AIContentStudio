@@ -45,14 +45,14 @@
 - [x] 3.10 Add connector integration tests.
 
 ## 4. Material search provider
-- [ ] 4.1 Define search provider protocol/capability.
-- [ ] 4.2 Return bounded candidate metadata only.
-- [ ] 4.3 Add explicit import/save action.
-- [ ] 4.4 Download/verify bytes/MIME/hash.
-- [ ] 4.5 Persist only a positively validated stable public citation URL in `MaterialRevision.source_url`, or a bounded source identifier plus one-way URL/input hash when the URL is ambiguous; never persist a signed/credential-bearing/expiring fetch or preview URL in material metadata, audit, events or API results. Preserve license/provenance without raw provider payloads.
-- [ ] 4.6 Require rights fields before public-use readiness.
-- [ ] 4.7 Add project attachment flow.
-- [ ] 4.8 Add unavailable/provider failure tests.
+- [x] 4.1 Define search provider protocol/capability.
+- [x] 4.2 Return bounded candidate metadata only.
+- [x] 4.3 Add explicit import/save action.
+- [x] 4.4 Download/verify bytes/MIME/hash.
+- [x] 4.5 Persist only a positively validated stable public citation URL in `MaterialRevision.source_url`, or a bounded source identifier plus one-way URL/input hash when the URL is ambiguous; never persist a signed/credential-bearing/expiring fetch or preview URL in material metadata, audit, events or API results. Preserve license/provenance without raw provider payloads.
+- [x] 4.6 Require rights fields before public-use readiness.
+- [x] 4.7 Add project attachment flow.
+- [x] 4.8 Add unavailable/provider failure tests.
 - [ ] 4.9 Prove search preview is non-public-ready, accepted result bytes/license/rights are exact, and Project attachment uses a revision reference visible across Units.
 
 ## 5. Image/video providers

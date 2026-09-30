@@ -78,6 +78,11 @@ class MaterialSearchProvider(Protocol):
     def search(self, query: str, limit: int = 10) -> MaterialSearchResult: ...
 
 
+class SearchProvider(MaterialSearchProvider, Protocol):
+    def runtime_fingerprint(self) -> str | None: ...
+    def fetch(self, candidate: dict) -> MediaOutput: ...
+
+
 class CapabilityUnavailable(LookupError):
     """要求的 capability 没有已配置 provider（上层映射 422 capability_unavailable）。"""
 
@@ -98,6 +103,10 @@ def resolve_material_search() -> MaterialSearchProvider:
 
 
 def bootstrap_media_providers() -> None:
+    from ..material_search import WikimediaSearchProvider
+
+    if WikimediaSearchProvider.key not in {d.key for d in registry.list("search_provider")}:
+        registry.register("search_provider", WikimediaSearchProvider.key, "1", WikimediaSearchProvider(), label="Wikimedia Commons public search (rights acceptance required)")
     if "asset_provider.wewrite_image" not in {d.key for d in registry.list("asset_provider")}:
         registry.register(
             "asset_provider", "asset_provider.wewrite_image", "1", WewriteImageProvider(), label="wewrite AI 生图"

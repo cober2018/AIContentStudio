@@ -57,6 +57,33 @@ class ProviderAcceptIn(BaseModel):
     attribution_text: str | None = Field(default=None, max_length=1000)
 
 
+class ProviderSearchIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provider_key: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,150}$")
+    provider_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,50}$")
+    query: str = Field(min_length=1, max_length=300)
+    limit: int = Field(default=10, ge=1, le=10)
+
+
+class SearchStageIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    project_id: int | None = Field(default=None, ge=1)
+
+
+@router.post("/provider-search")
+def search_provider_media(payload: ProviderSearchIn, user: User = Depends(require_editor)):
+    from ..services import material_search
+
+    return material_search.search(user, key=payload.provider_key, version=payload.provider_version, query=payload.query, limit=payload.limit)
+
+
+@router.post("/provider-search/{candidate_id}/stage")
+def stage_search_media(candidate_id: str, payload: SearchStageIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import material_search
+
+    return material_search.stage(db, user, candidate_id, payload.project_id)
+
+
 @router.post("/provider-media/stage")
 def stage_provider_media(payload: ProviderStageIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     from ..services import provider_media
@@ -102,7 +129,7 @@ class RevocationIn(BaseModel):
 
 class SearchIn(BaseModel):
     query: str = Field(min_length=1, max_length=300)
-    limit: int = 10
+    limit: int = Field(default=10, ge=1, le=10)
 
 
 class GenerateIn(BaseModel):
@@ -294,7 +321,9 @@ def search_materials(payload: SearchIn, db: Session = Depends(get_db), user: Use
         provider = resolve_material_search()
     except CapabilityUnavailable as exc:
         raise HTTPException(422, f"capability_unavailable: {exc}") from exc
-    return provider.search(payload.query, limit=payload.limit).items
+    from ..services import material_search
+
+    return material_search.search(user, key=provider.key, version=provider.version, query=payload.query, limit=payload.limit)["items"]
 
 
 @router.post("/materials/generate")
