@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-30：F7 受控读取安全与能力矩阵
+
+- F7 94/105，仅新增关闭10.4诚实缺失状态和10.10能力矩阵；外部接受、WeWrite账号绑定/不可改稿实现、阶段终验仍不完整，F8尚未apply。
+- Commons与typed Connector读取前拒非identity压缩；Connector复制并强制identity请求头、共享跨redirect/body总deadline和remaining I/O timeout，空响应/下一跳也检查。旧safe_fetch不改，无新表/迁移/依赖，原生图片路由不改。
+- 11新失败回归复现后修复；84定向PASS，最新全后端1446 passed /2 skipped /8既有warnings（85.77s）。TypeScript/Vite/FE-P1、strict30/30、范围Ruff/diffPASS。独立计划与实现/记录窄复核APPROVE（reviewer只读，未重跑命令）。未改前端，不声称新浏览器验收。
+- docs/FE_F7_CAPABILITY_MATRIX.md逐项区分真实加载实现、配置/fixture证据与外部未验证。descriptor-only读取不探测；当前video/TTS/ASR生产bootstrap无实现，公众号CLI无精确账号/不可改稿运行证明。新只读Commons搜索仍因UnsafeUrlError拒绝，未绕过防护或假标verified。
+- 默认本地content_studio.db只读抽查head=d4audit00004且无两张capability表；并非effective运行/生产DATABASE_URL核验，未改该库。隔离迁移PASS不能作为该库已升级证据。
+- flow：显式typed读取 → identity/来源验证 → 共享deadline/受控字节 → 映射/来源 → 后续明确接受；失败不生成成功snapshot/media。无push/deploy/生产迁移/canonical sync/archive。后续需明确账号绑定的公众号上传替代方案与真实账号动作授权，不借该矩阵关F7/F8。
+
 ## 2026-09-30：F7 原生已配置图片接入
 
 - F7 92/105；关闭 5.8 的真实可配置 adapter 实现路径，不勾真实厂商验收 10.3，F8 未 apply。KEY_IMAGE 明确 openai/model/size/HTTPS /v1/key，无默认/回退/来源图编辑。实际 UI 沿用 ProviderMediaPanel，未新增浏览器验收或声称前端闭环变化。

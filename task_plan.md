@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 外部读取边界与能力清单
+
+- [x] /// 在既有 F7 3.6/4.4/10.4/10.10 范围校准压缩拒绝和 Connector 总读取期限；不改 legacy safe_fetch，不扩账号或供应商范围。计划/SPEC窄复核通过。
+- [x] /// RED→GREEN：Commons/typed Connector identity negotiation、压缩读取前拒绝、慢流 deadline、正常响应与现有权利/配置回归；修复仅两个现有函数。11新增，84定向通过，包含空响应和redirect时限。
+- [x] /// 集中门禁、只读窄复核、记录 capability matrix 与缺失凭据/Publisher真实阻塞；全后端1446/2 skipped、build/FE-P1/strict30/Ruff/diff通过，窄复核APPROVE；F7 94/105，不借本地包/fixture宣称 F7或F8完成。
+
 ## 2026-09-30：F7 已配置图片 Adapter
 
 - [x] /// 校准 5.8 的单次 HTTPS/base64/config fingerprint；复用 KEY_IMAGE 和 stage/accept，无新对象/迁移，不发送真实凭据请求；独立计划复核通过。

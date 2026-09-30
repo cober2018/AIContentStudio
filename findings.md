@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-30 F7 外部读取审计
+
+- 原生图片压缩回归引出同类检查：Commons/typed Connector 都在 iter_bytes 自动解压后计数；Commons只请求identity但未拒不遵从的压缩响应，Connector连identity协商也没有。Connector逐块timeout不等于有界总读取期限。
+- 本轮按既有3.6/4.4边界只修两个受控函数，不改旧safe_fetch。真实 WeWrite执行仍因全局账号/转换器无安全证明而 unavailable；不能用 version label/operator hash绕过或让本地包替代远端草稿验收。
+
 ## 2026-09-30 F7 图片 Adapter 基线
 
 - KEY_IMAGE 已有 provider/model/base_url/api_key/size，现有 typed WeWrite 因内部 retry/global config 不能证明单次精确调用。本批用明确 openai 配置接原生 Images JSON 请求，不猜默认模型、不启用其他平台。

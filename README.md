@@ -6,6 +6,8 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
+- 受控读取与能力矩阵（F7 94/105）：现有typed Connector和Commons在读取前拒压缩；Connector总deadline跨redirect/body/空响应，不改legacy direct safe_fetch。11新回归、84定向、1446全后端/2 skipped、构建预算/strict/Ruff/diff及窄复核通过；无新依赖/迁移，复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_capability_persistence.py tests/test_f7_material_search.py tests/test_f7_openai_image_provider.py`。结构、真实实现/fixture/外部未验证、默认旧库抽查与长期TODO见 [能力矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)。WeWrite真实账号绑定和不可改稿上传仍缺失，Video/TTS/ASR真实实现/平台验收不能由协议替代；F8未apply。默认旧库未迁移，不误称运行/生产已升级。
+
 - 已配置图片原生路径（F7 92/105）：管理员现有 AI 生图设置明确选择 OpenAI 与支持的 exact model/size/HTTPS `/v1`/key；现有素材生成按钮进入私有 PNG 预览，人工权利确认后才写精确版本，不改 Master。实现位于 `services/openai_image_provider.py`，复用 Registry、stage/accept 与现有 UI；无新依赖/表/迁移，原生设置不写 WeWrite 全局配置。单次调用、无重试/回退、public-IP pin、响应/时间上限和轮换失效；全后端1435/2 skipped、52定向、构建预算/strict/Ruff/diff与窄复核通过。报告 [原生图片接入验收](docs/FE_F7_NATIVE_IMAGE_ACCEPTANCE.md) 含配置/复跑命令；真实付费厂商与账号验收仍TODO，未做新版浏览器验收，不把 Mock transport 称外部verified。
 
 - 人工对账闭环：Unknown 保留原 Attempt，核验说明只提交/保存 SHA-256 摘要；最新 Attempt 校验、目标锁、重复决策幂等，确认已交付原子新增精确人工 Receipt，不自动写已发布历史/verified 或重发。错误输入固定安全原因，不回显秘密；源码独立窄复核与五项 UI fixture browser gate 通过，非真实账号验收。接口沿用 `delivery.py`，UI 在 ProjectReviewCenter，复跑 `F7_ISOLATED_ACCEPTANCE=yes NODE_PATH=<Playwright依赖目录> node apps/web/scripts/fe-f7-reconciliation-ui-acceptance.mjs`（需隔离 Vite 15671）。本批无新增依赖/表/迁移；当前 F7 91/105，全后端1407/2 skipped、定向109、构建预算/strict/Ruff/diff通过；阶段外部验收继续待办。

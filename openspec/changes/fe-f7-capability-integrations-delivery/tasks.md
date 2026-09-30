@@ -115,12 +115,12 @@
 - [x] 10.1 Run Connector integration against configured isolated endpoint.
 - [ ] 10.2 Run material search/import with real bytes if configured.
 - [ ] 10.3 Run image/video/TTS/ASR real adapter tests only where credentials are provided.
-- [ ] 10.4 Keep missing credentials explicitly unverified, not failed-complete.
+- [x] 10.4 Keep missing credentials explicitly unverified, not failed-complete.
 - [ ] 10.5 Run real Publisher verification only with explicit account/side-effect authorization.
 - [ ] 10.6 Verify read-back/human evidence before `verified`.
 - [ ] 10.7 Full backend/frontend/migration/OpenSpec/Ruff/diff gates.
 - [ ] 10.8 Browser Settings/Production/Delivery acceptance.
 - [ ] 10.9 Independent security/provider/delivery reviews.
-- [ ] 10.10 Record capability matrix with verified/unverified reasons.
+- [x] 10.10 Record capability matrix with verified/unverified reasons.
 - [ ] 10.11 Record local implementation commit and ARCHIVE_READY.
 - [ ] 10.12 Do not canonical-sync/archive without explicit authorization.
