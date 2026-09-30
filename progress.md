@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-30：F7 共享消费与配置指引批
+
+- F7 86/105，本批仅核销 4.9 / 9.7。搜索预览不可发布；人工核对来源许可、署名与权利后只保存一个 MaterialRevision / ProjectMaterialReference，Text 配图和 Video timeline 引用同一精确版本，生产页刷新回读。撤销公开使用权后两者 rights check 为 blocker、freeze unavailable，历史 Master 不改写；不禁止合法的未就绪私有编辑。
+- Settings 模型分区新增独立 lazy ProviderGuidancePanel，五类指引只读取安全 descriptor / registration，不读秘密配置或调用 runtime fingerprint / Provider / 网络 / 子进程。已加载、已有配置记录均明确 unchecked / not verified；没有实现显示 unavailable，不新增假 Save。无新表或 migration。
+- 本批实际全后端 1322 passed / 2 skipped / 8 既有 warnings（52.62s）；搜索/指引/Renderer 定向 48 passed。TypeScript/Vite/FE-P1 通过：/projects 224.84/72.94 kB、/assets 258.81/82.80、/settings 230.46/75.17、common Production 280.03/89.09；指引 chunk 1.24/0.91。OpenSpec strict 30/30、范围 Ruff / diff-check 通过。
+- 隔离真实浏览器七个 gate、零 page error；证据 `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f7-search-browser-RHML5J`，SQLite/media `/tmp/aicontent-f7-media.rfpQTj/`。使用搜索/PNG fixture，不是 Wikimedia 真实外部验证；也未执行自动 Video 成片渲染。首次扩展脚本只因 Master 文案重复而 strict locator 失败，改为精确标题定位后整链重跑通过。
+- 独立窄复核 APPROVE：只批准本批指引与跨 Unit 精确复用 / 权利冻结边界，不代表 F7 整体验收。自动媒体 Renderer、真实外部 Provider、账号绑定 Publisher 和最终门禁仍未完成，F8 未 apply；不 push/deploy/生产迁移/canonical sync/archive。
+
 ## 2026-09-30：F7 受控公共搜索批
 
 - F7 75/105，新增核销 4.1–4.8；4.9 的跨 Unit 实际消费和阶段真实集成仍待完成，F8 未启动。全量实际运行 1270 passed / 2 skipped / 8 warnings（51.82s）；搜索/媒体/能力定向 64 passed。

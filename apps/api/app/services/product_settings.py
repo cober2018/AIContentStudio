@@ -250,8 +250,10 @@ def product_view(db: Session, user: User) -> dict:
 
 def capability_inventory(db: Session, user: User) -> dict:
     from . import renderer_capabilities
+    from .content_harness import providers
 
     renderer_capabilities.bootstrap()
+    providers.bootstrap_media_providers()
     bootstrap_publishers()
     rows = db.scalars(select(CapabilityRegistration).order_by(CapabilityRegistration.id.desc()).limit(100)).all()
     registrations = {(row.kind, row.key, row.version): row for row in rows}
@@ -293,5 +295,34 @@ def capability_inventory(db: Session, user: User) -> dict:
                                                      "expires_at": event.expires_at.isoformat() if event.expires_at else None}})
     from .capability_integrations import publisher_runtime_fingerprint
 
-    return {"descriptors": descriptors, "publishers": publishers, "renderers": renderer_capabilities.inventory(db), "can_verify": user.role == "admin",
+    return {"descriptors": descriptors, "publishers": publishers, "renderers": renderer_capabilities.inventory(db),
+            "provider_guidance": provider_guidance(registrations), "can_verify": user.role == "admin",
             "publisher_verification_available": publisher_runtime_fingerprint("publisher.wechat.wewrite", "1") is not None}
+
+
+def provider_guidance(registrations: dict) -> list[dict]:
+    from .content_harness import providers
+
+    instructions = (
+        ("search_provider", "公共素材搜索", "公共 Commons 无需账号密钥；需实际网络与来源校验，接受前核对许可和完整署名。"),
+        ("image_provider", "图片生成", "沿用管理员模型与图片配置工具；现有 WeWrite CLI 不满足单次调用及安全配置契约，保存 CLI 配置不等于 typed Provider 可用。"),
+        ("video_provider", "视频生成", "需要已加载的精确 video_provider key/version 与受控单次真实调用；当前没有独立持久配置 API，不提供保存按钮。"),
+        ("tts_provider", "语音合成", "需要已加载的精确 tts_provider key/version、已配置且可核验的 runtime；接受前核对音频许可和使用权。"),
+        ("asr_provider", "字幕转录", "需要已加载的精确 asr_provider key/version；在 Video Studio 对已保存、允许模型使用的精确音视频版本明确请求。"),
+    )
+    result = []
+    for kind, label, setup in instructions:
+        adapters = []
+        for descriptor in providers.registry.list(kind)[:100]:
+            key, version = _ref(descriptor.key), _ref(descriptor.version)
+            if key is None or version is None:
+                continue
+            registration = registrations.get((kind, key, version))
+            adapters.append({"key": key, "version": version,
+                "saved_configuration": bool(registration and registration.status == "configured"),
+                "configuration_status": "unchecked", "verified": False,
+                "execution_status": "requires_explicit_runtime_check"})
+        result.append({"kind": kind, "label": label, "setup": setup, "adapters": adapters,
+            "execution_status": "requires_explicit_runtime_check" if adapters else "unavailable",
+            "reason": "runtime_not_inspected" if adapters else "implementation_missing"})
+    return result

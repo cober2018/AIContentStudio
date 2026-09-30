@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-30 F7 共享消费与配置指引
+
+- 公共权利撤销阻断 checks / Candidate freeze，不意味着一律禁止私有草稿编辑；原先测试假设撤权后任意 Master save 都应 422 不符合既有契约，已改验真实 rights blocker / readiness 与历史不变，没有放宽业务闸门。
+- 共享搜索素材按项目可见性复用同一 revision：Text inline 与 Video timeline 有不同 placement，但底层素材字节和项目引用不复制。此证据是保存 / 回读 / 撤权，不是自动视频成片。
+- Provider 的 descriptor 已加载与 registration 已配置都不能证明实时执行可用。只读指引不调用 runtime fingerprint；safe key/version 过滤、最多每类 100 项、无实现 unavailable。具体请求仍由现有服务执行准确 runtime / 权利 gate。
+- 浏览器 Master 摘要和 AI base 提示都含 Master ID；泛文本正则会匹配两处。验收脚本改为摘要标题前缀，素材标题包含隔离项目 ID，允许无清库重跑；这是测试定位修正而非产品行为改变。
+
 ## 2026-09-30 F7 Renderer 验证边界
 
 - Renderer exact scope 复用两张既有 Capability 表，仅增量拓宽验证 scope CHECK；不创建新的渲染业务表。注册指纹是实际加载的实现，事件指纹另绑定具体渠道/Profile，避免第二渠道验证覆盖第一渠道。

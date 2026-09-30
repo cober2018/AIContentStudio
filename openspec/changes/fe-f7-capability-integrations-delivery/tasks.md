@@ -53,7 +53,7 @@
 - [x] 4.6 Require rights fields before public-use readiness.
 - [x] 4.7 Add project attachment flow.
 - [x] 4.8 Add unavailable/provider failure tests.
-- [ ] 4.9 Prove search preview is non-public-ready, accepted result bytes/license/rights are exact, and Project attachment uses a revision reference visible across Units.
+- [x] 4.9 Prove search preview is non-public-ready, accepted result bytes/license/rights are exact, and Project attachment uses a revision reference visible across Units.
 
 ## 5. Image/video providers
 - [x] 5.1 Define image generation/variation protocol.
@@ -108,7 +108,7 @@
 - [x] 9.4 Add explicit probe/verify actions.
 - [x] 9.5 Read-only inventory triggers no network calls.
 - [x] 9.6 Preserve role-based editability and secret masking.
-- [ ] 9.7 Add provider configuration guidance/status without fake Save actions.
+- [x] 9.7 Add provider configuration guidance/status without fake Save actions.
 - [x] 9.8 Prove read-only inventory performs no provider/Connector probe and viewer cannot invoke verification.
 
 ## 10. Real integration acceptance/final gates

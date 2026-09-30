@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 共享消费与配置指引批
+
+- [x] /// 依现有 F7 4.9/9.7，验收搜索 preview→accept→项目精确引用→两 Unit 独立保存/生产页回读及撤权；不重复入库，不以 fixture 宣称真实外部能力已验证。没有自动 Video render，不能将回读算成成片验证。
+- [x] /// 测试先行添加只读 Provider 指引：仅加载 descriptor 和安全 registration 标识，不调用 runtime fingerprint、秘密配置、网络、子进程或 Provider；缺实现保持 unavailable，配置记录不等于有效验证。
+- [x] /// Settings 模型分区 lazy 接只读配置指引，缺 durable 配置 API 不放假 Save；48 定向、1322 全后端、前端/预算、7 浏览器 gate 与独立窄复核通过，记录本地提交。真实媒体 Renderer 和 F8 保持原范围未核销。
+
 ## 2026-09-30：Renderer 持久验证批
 
 - [x] /// 校准已批准 F7 Renderer 精确 scope、确定性/人工性质与真实 Text probe；规格定向复核 APPROVE 后进入代码，不新增业务表或自动 verified。
