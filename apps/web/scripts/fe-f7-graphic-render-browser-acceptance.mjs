@@ -12,7 +12,7 @@ const { chromium } = createRequire(import.meta.url)("playwright");
 const ui = process.env.F7_BROWSER_URL;
 const headers = { "X-Studio-User": "admin@studio.local" };
 const artifacts = mkdtempSync(join(tmpdir(), "aicontent-f7-graphic-browser-"));
-const report = { artifacts, evidence: "actual explicitly configured local Chromium renderer; manual acceptance, no external Provider or capability verification", gates: [], pageErrors: [] };
+const report = { artifacts, evidence: "actual explicitly configured local Chromium renderer; explicit local renderer scope verification, separate manual media acceptance/attestation; no external Provider/account verification", gates: [], pageErrors: [] };
 const browser = await chromium.launch({ headless: true, channel: "chrome", chromiumSandbox: true });
 const page = await browser.newPage();
 page.on("pageerror", error => report.pageErrors.push(error.message));
@@ -45,6 +45,10 @@ try {
   await probe.click();
   const preview = panel.getByRole("region", { name: "渲染预览与接受", exact: true });
   await preview.getByAltText("未入库的渲染预览").waitFor({ timeout: 30000 });
+  page.once("dialog", dialog => dialog.accept());
+  await panel.getByRole("button", { name: "核对当前预览并验证此精确渲染范围（24 小时）", exact: true }).click();
+  await panel.getByText("已记录此精确范围的验证", { exact: false }).waitFor();
+  report.gates.push("explicit real-stage scope verification does not rerender or create Material/Master");
   assert.equal((await api(path)).items.length, 1);
   assert.equal((await api(`/content-projects/${project.id}/shared-assets`)).length, 0);
   report.gates.push("actual selected-canvas PNG preview writes neither Master nor library material");
@@ -130,12 +134,26 @@ try {
   try {
     await page.reload();
     await panel.getByText("仅管理员可探测", { exact: false }).waitFor();
-    assert(await probe.isDisabled());
+    assert(await panel.getByRole("button", { name: "按已记录范围请求渲染（服务端复核）", exact: true }).isDisabled());
     assert.equal((await api(path)).items.length, 3);
     report.gates.push("same owner viewer may read saved history but cannot request rendering");
   } finally {
     execFileSync('sqlite3', [dbPath, "UPDATE user SET role='admin' WHERE email='admin@studio.local';"]);
   }
+  execFileSync('sqlite3', [dbPath, "UPDATE user SET role='editor' WHERE email='admin@studio.local';"]);
+  try {
+    await page.reload();
+    await panel.getByRole("button", { name: "按已记录范围请求渲染（服务端复核）", exact: true }).click();
+    await panel.getByAltText("未入库的渲染预览").waitFor({ timeout: 30000 });
+    assert.equal((await api(path)).items.length, 3);
+    report.gates.push("owner editor requests actual verified-scope PNG through non-admin execution endpoint");
+  } finally {
+    execFileSync('sqlite3', [dbPath, "UPDATE user SET role='admin' WHERE email='admin@studio.local';"]);
+  }
+  await page.reload();
+  await panel.getByRole("button", { name: "撤销此渲染范围验证", exact: true }).click();
+  await panel.getByText("已撤销此范围", { exact: false }).waitFor();
+  report.gates.push("explicit revoke appends scope history without modifying saved render or Master");
   assert.deepEqual(report.pageErrors, []);
 } catch (error) {
   await page.screenshot({ path: join(artifacts, "failure.png"), fullPage: true });

@@ -6,20 +6,36 @@ import io
 import marshal
 import re
 import types
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException
 from PIL import Image
-from sqlalchemy import select
+from sqlalchemy import select, update
 
-from ..models import ContentMasterAssetRef, ContentMasterRevision, MaterialRevision
-from . import asset_media, content_masters, materials, provider_calls, provider_media, renderer_capabilities
+from ..models import (
+    AuditLog,
+    CapabilityRegistration,
+    CapabilityVerification,
+    ContentMasterAssetRef,
+    ContentMasterRevision,
+    MaterialRevision,
+)
+from . import (
+    asset_media,
+    capability_integrations,
+    content_masters,
+    materials,
+    provider_calls,
+    provider_media,
+    renderer_capabilities,
+)
 from .content_harness import channel_registry, providers
 from .production_modalities import render_input_hash
 
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
 
 
-def preview_inventory(user):
+def preview_inventory(user, db=None):
     from .local_graphic_renderer import LocalGraphicRenderer
 
     items = []
@@ -27,12 +43,38 @@ def preview_inventory(user):
         renderer = providers.registry.resolve("renderer", descriptor.key, descriptor.version)
         if not isinstance(renderer, LocalGraphicRenderer):
             continue
+        recorded = []
+        registration = db.scalar(select(CapabilityRegistration).where(CapabilityRegistration.kind == "renderer",
+            CapabilityRegistration.key == renderer.key, CapabilityRegistration.version == renderer.version)) if db is not None else None
+        events = db.scalars(select(CapabilityVerification).where(CapabilityVerification.registration_id == registration.id,
+            CapabilityVerification.scope_kind == "renderer_output").order_by(CapabilityVerification.id.desc()).limit(100)).all() if registration else []
+        seen = set()
+        for event in events:
+            try:
+                scope = capability_integrations._scope("renderer_output", event.scope_json)
+            except ValueError:
+                continue
+            token = tuple(scope.items())
+            if token in seen:
+                continue
+            seen.add(token)
+            if (scope["renderer_key"] != renderer.key or scope["renderer_version"] != renderer.version
+                    or scope["payload_schema"] != renderer.schema or scope["modality"] != renderer.modality
+                    or scope["output_mime"] not in renderer.output_mimes
+                    or (scope["channel"], scope["content_form"]) not in renderer.supported_forms):
+                continue
+            expiry = event.expires_at.replace(tzinfo=UTC) if event.expires_at and event.expires_at.tzinfo is None else event.expires_at
+            recorded.append({"verification_id": event.id, "scope": scope, "result": event.result,
+                "expires_at": expiry.isoformat() if expiry else None,
+                "requestable": registration.status == "configured" and event.result == "verified" and expiry is not None and expiry > datetime.now(UTC)})
         items.append({"renderer_key": renderer.key, "renderer_version": renderer.version,
             "modality": renderer.modality, "payload_schema": renderer.schema,
             "output_mimes": list(renderer.output_mimes),
             "supported_forms": [{"channel": channel, "content_form": form} for channel, form in renderer.supported_forms],
             "configuration_status": "not_probed", "verified": False, "executable": False,
-            "can_probe": user.role == "admin", "reason": "admin_preview_requires_explicit_runtime"})
+            "can_probe": user.role == "admin", "recorded_scopes": recorded,
+            "can_request_execution": user.role in {"admin", "editor"} and any(row["requestable"] for row in recorded),
+            "reason": "admin_preview_requires_explicit_runtime"})
     return items
 
 
@@ -75,7 +117,7 @@ def resolve_renderer(key, version):
 
 
 def _current(db, user, origin):
-    if user.role != "admin":
+    if user.role != "admin" and not (user.role == "editor" and origin.get("execution_mode") == "verified"):
         raise HTTPException(403, "media_renderer_admin_probe_required")
     project, unit = content_masters.owned_unit(db, origin["project_id"], origin["unit_id"], user, mutate=True)
     master = db.get(ContentMasterRevision, origin["master_id"])
@@ -106,6 +148,8 @@ def _current(db, user, origin):
     input_hash = render_input_hash(db, master)
     if origin.get("render_input_hash") not in {None, input_hash}:
         raise HTTPException(409, "media_renderer_input_changed")
+    if origin.get("execution_mode") == "verified":
+        _require_verified(db, master, origin["renderer_key"], origin["renderer_version"], origin["output_mime"])
     return master, profile_hash, input_hash
 
 
@@ -128,10 +172,13 @@ def revalidate_preview(db, user, preview, decision=None):
                     raise HTTPException(422, "media_renderer_source_license_required")
 
 
-def stage_render(db, user, project_id, unit_id, master_id, request):
+def stage_render(db, user, project_id, unit_id, master_id, request, *, verified_execution=False):
     origin = {"project_id": project_id, "unit_id": unit_id, "master_id": master_id,
         "payload_hash": request["expected_payload_hash"], "context_hash": request["expected_context_hash"],
         "canvas_id": request["canvas_id"]}
+    if verified_execution:
+        origin.update({"execution_mode": "verified", "renderer_key": request["renderer_key"],
+            "renderer_version": request["renderer_version"], "output_mime": request["output_mime"]})
     try:
         master, profile_hash, input_hash = _current(db, user, origin)
         renderer, fingerprint = resolve_renderer(request["renderer_key"], request["renderer_version"])
@@ -171,6 +218,8 @@ def stage_render(db, user, project_id, unit_id, master_id, request):
             raise HTTPException(422, "media_renderer_output_binding_invalid")
         if output.mime_type not in renderer.output_mimes:
             raise HTTPException(422, "media_renderer_output_mime_invalid")
+        if verified_execution and output.mime_type != request["output_mime"]:
+            raise HTTPException(422, "media_renderer_output_mime_invalid")
         provider_media._decode(output.content, output.mime_type)
         if master.modality == "graphic":
             canvas = next(item for item in master.payload_json["canvases"] if item["id"] == request["canvas_id"])
@@ -180,6 +229,7 @@ def stage_render(db, user, project_id, unit_id, master_id, request):
         _current(db, user, origin)
         if resolve_renderer(renderer.key, renderer.version)[1] != fingerprint:
             raise HTTPException(409, "media_renderer_runtime_changed")
+        db.rollback()
         result = provider_media.stage_output(user, kind="renderer", key=renderer.key, version=renderer.version,
             runtime_hash=fingerprint, input_hash=input_hash, output=providers.MediaOutput("succeeded", output.content, output.mime_type),
             project_id=project_id, sources=tuple((item["revision_id"], item["content_hash"]) for item in sources), renderer_origin=origin)
@@ -187,3 +237,112 @@ def stage_render(db, user, project_id, unit_id, master_id, request):
     finally:
         # Probing retains no DB locks while a user is considering a preview.
         db.rollback()
+
+
+def scope_fingerprint(db, renderer, scope):
+    try:
+        actual, fingerprint = resolve_renderer(scope["renderer_key"], scope["renderer_version"])
+        if (actual is not renderer or scope["modality"] != renderer.modality or scope["payload_schema"] != renderer.schema
+                or scope["output_mime"] not in renderer.output_mimes
+                or (scope["channel"], scope["content_form"]) not in renderer.supported_forms):
+            return None
+        profile = channel_registry.resolve_content_form(db, scope["channel"], scope["content_form"]).to_dict()
+        return content_masters._hash({"implementation": fingerprint, "scope": scope, "profile": profile})
+    except (HTTPException, channel_registry.ChannelRegistryError):
+        return None
+
+
+def _scope(renderer, master, mime):
+    return capability_integrations._scope("renderer_output", {"renderer_key": renderer.key,
+        "renderer_version": renderer.version, "modality": master.modality, "payload_schema": master.payload_schema,
+        "channel": master.channel_id, "content_form": master.content_form, "output_mime": mime})
+
+
+def _lock_registration(db, registration):
+    db.execute(update(CapabilityRegistration).where(CapabilityRegistration.id == registration.id)
+        .values(status=CapabilityRegistration.status).execution_options(synchronize_session=False))
+    db.refresh(registration)
+
+
+def _require_verified(db, master, key, version, mime):
+    renderer, _ = resolve_renderer(key, version)
+    scope = _scope(renderer, master, mime)
+    registration = db.scalar(select(CapabilityRegistration).where(CapabilityRegistration.kind == "renderer",
+        CapabilityRegistration.key == key, CapabilityRegistration.version == version))
+    if registration is not None:
+        _lock_registration(db, registration)
+    fingerprint = scope_fingerprint(db, renderer, scope)
+    if (registration is None or fingerprint is None or not capability_integrations.is_verified_for_scope(
+            db, registration, scope, fingerprint, providers.registry)):
+        raise HTTPException(409, "media_renderer_scope_unverified")
+
+
+def _stage_identity(preview):
+    return content_masters._hash({"actor": preview.actor_id, "kind": preview.provider_kind,
+        "key": preview.provider_key, "version": preview.provider_version, "runtime": preview.runtime_hash,
+        "input": preview.input_hash, "hash": preview.content_hash, "actual": hashlib.sha256(preview.content).hexdigest(),
+        "mime": preview.mime_type, "sources": preview.sources, "origin": preview.renderer_origin})
+
+
+def verify_stage(db, user, request):
+    if user.role != "admin":
+        raise HTTPException(403, "media_renderer_admin_probe_required")
+    if not request["confirmed"]:
+        raise HTTPException(422, "media_renderer_readback_required")
+    with provider_media._lock:
+        preview = provider_media._get(request["stage_id"], user)
+    with preview.operation_lock:
+        with provider_media._lock:
+            if provider_media._get(request["stage_id"], user) is not preview:
+                raise HTTPException(409, "provider_preview_changed")
+            identity = _stage_identity(preview)
+        if (preview.provider_kind != "renderer" or not preview.renderer_origin
+                or preview.input_hash != request["expected_input_hash"]
+                or preview.content_hash != request["expected_output_hash"]
+                or hashlib.sha256(preview.content).hexdigest() != preview.content_hash):
+            raise HTTPException(409, "media_renderer_readback_mismatch")
+        master, _, _ = _current(db, user, preview.renderer_origin)
+        revalidate_preview(db, user, preview)
+        provider_media._decode(preview.content, preview.mime_type)
+        renderer, fingerprint = resolve_renderer(preview.provider_key, preview.provider_version)
+        scope = _scope(renderer, master, preview.mime_type)
+        scoped = scope_fingerprint(db, renderer, scope)
+        if scoped is None:
+            raise HTTPException(409, "media_renderer_scope_unavailable")
+        registration = db.scalar(select(CapabilityRegistration).where(CapabilityRegistration.kind == "renderer",
+            CapabilityRegistration.key == renderer.key, CapabilityRegistration.version == renderer.version))
+        if registration is None:
+            registration = CapabilityRegistration(kind="renderer", key=renderer.key, version=renderer.version,
+                status="configured", config_fingerprint=fingerprint, created_by=user.email)
+            db.add(registration)
+            db.flush()
+        else:
+            _lock_registration(db, registration)
+            registration.config_fingerprint, registration.status = fingerprint, "configured"
+        evidence = {"kind": "render_readback", "input_hash": preview.input_hash, "output_hash": preview.content_hash}
+        evidence["reference_hash"] = content_masters._hash(evidence)
+        event = capability_integrations.append_verification(db, registration, scope_kind="renderer_output", scope=scope,
+            result="verified", actor=user.email, evidence=evidence, config_fingerprint=scoped,
+            expires_at=datetime.now(UTC) + timedelta(hours=24))
+        revalidate_preview(db, user, preview)
+        with provider_media._lock:
+            if provider_media._get(request["stage_id"], user) is not preview or _stage_identity(preview) != identity:
+                raise HTTPException(409, "provider_preview_changed")
+            db.add(AuditLog(event="renderer.verification_recorded", actor=user.email, entity_type="capability_verification",
+                entity_id=str(event.id), detail_json={"registration_id": registration.id, "scope": scope, "result": "verified"}))
+            db.commit()
+        return {"registration_id": registration.id, "verification_id": event.id, "scope": scope, "result": "verified"}
+
+
+def revoke(db, user, verification_id):
+    event = db.get(CapabilityVerification, verification_id)
+    if event is None or event.scope_kind != "renderer_output":
+        raise HTTPException(404, "renderer_verification_unavailable")
+    registration = db.get(CapabilityRegistration, event.registration_id)
+    _lock_registration(db, registration)
+    revoked = capability_integrations.append_verification(db, registration, scope_kind="renderer_output", scope=event.scope_json,
+        result="revoked", actor=user.email, evidence={"kind": "revocation"}, config_fingerprint=event.config_fingerprint)
+    db.add(AuditLog(event="renderer.verification_recorded", actor=user.email, entity_type="capability_verification",
+        entity_id=str(revoked.id), detail_json={"registration_id": registration.id, "scope": event.scope_json, "result": "revoked"}))
+    db.commit()
+    return {"registration_id": registration.id, "verification_id": revoked.id, "result": "revoked", "scope": event.scope_json}

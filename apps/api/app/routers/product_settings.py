@@ -57,6 +57,28 @@ def capabilities(db: Session = Depends(get_db), user: User = Depends(get_current
     return product_settings.capability_inventory(db, user)
 
 
+class MediaRendererVerificationIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    stage_id: str = Field(pattern=r"^[a-f0-9]{32}$")
+    confirmed: bool
+    expected_input_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    expected_output_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+@router.post("/media-renderer-verifications", status_code=201)
+def verify_media_renderer(payload: MediaRendererVerificationIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services.media_renderers import verify_stage
+
+    return verify_stage(db, user, payload.model_dump())
+
+
+@router.post("/media-renderer-verifications/{verification_id}/revoke", status_code=201)
+def revoke_media_renderer(verification_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services.media_renderers import revoke
+
+    return revoke(db, user, verification_id)
+
+
 @router.post("/publisher-verifications", status_code=201)
 def verify_publisher(payload: PublisherVerificationIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
     content_identity.owned_entity(db, user, "account", payload.content_account_id, mutable=True)

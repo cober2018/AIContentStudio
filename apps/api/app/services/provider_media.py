@@ -12,7 +12,7 @@ import threading
 import time
 import uuid
 import wave
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -53,6 +53,7 @@ class Preview:
     acceptance_hash: str | None = None
     search_origin: dict | None = None
     renderer_origin: dict | None = None
+    operation_lock: threading.RLock = field(default_factory=threading.RLock, repr=False, compare=False)
 
 
 def _hash(value: object) -> str:
@@ -224,6 +225,10 @@ def preview_bytes(stage_id: str, user: User) -> tuple[bytes, str]:
 def accept(db: Session, user: User, stage_id: str, decision: dict) -> dict:
     with _lock:
         preview = _get(stage_id, user)
+    with preview.operation_lock:
+        with _lock:
+            if _get(stage_id, user) is not preview:
+                raise HTTPException(409, "provider_preview_changed")
         decision_hash = _hash(decision)
         if not decision.get("confirmed"):
             raise HTTPException(422, "provider_acceptance_required")
@@ -283,7 +288,10 @@ def accept(db: Session, user: User, stage_id: str, decision: dict) -> dict:
                             entity_id=str(revision.id), detail_json=safe))
             if preview.renderer_origin:
                 revalidate_preview(db, user, preview, decision)
-            db.commit()
+            with _lock:
+                if _get(stage_id, user) is not preview or hashlib.sha256(preview.content).hexdigest() != preview.content_hash:
+                    raise HTTPException(409, "provider_preview_changed")
+                db.commit()
         except Exception:
             db.rollback()
             raise

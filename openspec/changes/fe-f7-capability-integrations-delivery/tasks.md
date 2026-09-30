@@ -66,7 +66,7 @@
 - [ ] 5.8 Add mock + at least one configured real adapter path where repository settings support it.
 - [x] 5.9 Do not mark adapter verified without real test.
 - [x] 5.10 Redact nested provider request/response/errors across API, Material metadata, AuditLog, ProjectEvent and settings projections; specifically prevent raw prompts/requests, signed URLs and secret fragments in existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error`; add successful-result and error-path negative secret-leakage checks.
-- [ ] 5.11 Reject success-without-bytes, unsupported MIME, missing/ambiguous license and wrong render-input hash without creating MaterialRevision or Master provenance.
+- [x] 5.11 Reject success-without-bytes, unsupported MIME, missing/ambiguous license and wrong render-input hash without creating MaterialRevision or Master provenance.
 
 ## 6. TTS/ASR
 - [x] 6.1 Define TTS provider protocol.
@@ -82,9 +82,9 @@
 - [x] 7.2 Declare supported modality/schema/form/MIME.
 - [x] 7.3 Record deterministic/verified/manual property.
 - [x] 7.4 Persist renderer verification scope.
-- [ ] 7.5 Save media renderer output as MaterialRevision.
-- [ ] 7.6 Bind exact render-input hash.
-- [ ] 7.7 Add stale/version change tests.
+- [x] 7.5 Save media renderer output as MaterialRevision.
+- [x] 7.6 Bind exact render-input hash.
+- [x] 7.7 Add stale/version change tests.
 
 ## 8. Publisher capability
 - [x] 8.1 Persist exact account/channel/form/action/version verification.

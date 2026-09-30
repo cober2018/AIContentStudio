@@ -113,6 +113,18 @@ def preview_media_render(project_id: int, unit_id: int, master_id: int, payload:
     return stage_render(db, user, project_id, unit_id, master_id, payload.model_dump())
 
 
+class MediaRenderOutputIn(MediaRenderPreviewIn):
+    output_mime: str = Field(pattern=r"^(image/(png|jpeg|webp)|video/mp4)$")
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/media-render-outputs")
+def execute_media_render(project_id: int, unit_id: int, master_id: int, payload: MediaRenderOutputIn,
+                         db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services.media_renderers import stage_render
+
+    return stage_render(db, user, project_id, unit_id, master_id, payload.model_dump(), verified_execution=True)
+
+
 @router.get("/asr-provider-options")
 def asr_provider_options(user: User = Depends(get_current_user)):
     from ..services.content_harness import providers

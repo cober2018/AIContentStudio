@@ -40,6 +40,14 @@ Renderer verification SHALL use the existing registration and append-only verifi
 - **WHEN** the actual loaded renderer/adapter callable changes, or referenced evidence or material is revoked before the probe transaction completes
 - **THEN** previous capability evidence cannot authorize the changed implementation and the affected probe records no successful verification
 
+#### Scenario: Real media stage scope is explicitly verified
+- **WHEN** an administrator confirms the exact input/output hashes of their unexpired real-render stage with current source/context/live rights/runtime/profile
+- **THEN** the service appends exact media renderer scope evidence without invoking another render or writing Material/Master; actor mismatch, stale source or tampered bytes creates no successful verification
+
+#### Scenario: Editor executes a verified media renderer
+- **WHEN** an authorized editor explicitly requests the exact schema/channel/form/output MIME backed by a current media renderer scope
+- **THEN** execution and explicit output acceptance both recheck version/runtime/profile/expiry/revocation and current source gates; an unavailable scope fails without administrator-preview fallback or automatic retry
+
 ### Requirement: Capability records and results are safe projections
 The system MUST NOT persist or return secrets, cookies, tokens, credential-bearing URLs, signed media URLs, headers, raw provider responses, local credential paths or unredacted exception text in registration, verification, API result, AuditLog, ProjectEvent or delivery metadata. The same prohibition applies to existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error` when they receive external Provider/Connector results: persist only allowlisted safe origin/provenance and bounded reason codes or hashes, never raw prompt/request, signed fetch URL, remote body or exception string. Provider output MUST be treated as untrusted data rather than instructions.
 

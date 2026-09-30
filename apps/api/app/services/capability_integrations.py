@@ -9,6 +9,7 @@ import re
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlsplit
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -215,16 +216,26 @@ def is_verified_for_scope(
         return False
     if scope_kind == "renderer_output" and (
         wanted_scope["renderer_key"] != registration.key or wanted_scope["renderer_version"] != registration.version
-        or getattr(implementation, "mode", None) != "deterministic"
-        or not callable(getattr(implementation, "supports_scope", None)) or not implementation.supports_scope(wanted_scope)
     ):
         return False
     if scope_kind == "renderer_output":
-        from .renderer_capabilities import implementation_fingerprint, runtime_fingerprint
+        from .renderer_capabilities import ProductionRenderer, implementation_fingerprint, runtime_fingerprint
 
-        if (registration.config_fingerprint != implementation_fingerprint(implementation)
-                or actual_config_fingerprint != runtime_fingerprint(db, implementation, wanted_scope)):
-            return False
+        if isinstance(implementation, ProductionRenderer):
+            if (implementation.mode != "deterministic" or not implementation.supports_scope(wanted_scope)
+                    or registration.config_fingerprint != implementation_fingerprint(implementation)
+                    or actual_config_fingerprint != runtime_fingerprint(db, implementation, wanted_scope)):
+                return False
+        else:
+            from .media_renderers import resolve_renderer, scope_fingerprint
+
+            try:
+                media, fingerprint = resolve_renderer(registration.key, registration.version)
+            except HTTPException:
+                return False
+            if (media is not implementation or registration.config_fingerprint != fingerprint
+                    or actual_config_fingerprint != scope_fingerprint(db, media, wanted_scope)):
+                return False
     events = db.scalars(select(CapabilityVerification).where(
         CapabilityVerification.registration_id == registration.id,
         CapabilityVerification.scope_kind == scope_kind,

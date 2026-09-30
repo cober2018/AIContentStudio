@@ -11,6 +11,7 @@ export interface Preview {
   provider_key: string;
   provider_version: string;
   expires_in_seconds: number;
+  input_hash?: string;
 }
 export interface Accepted { material_id: number; material_revision_id: number; content_hash: string }
 const reasons: Record<string, string> = {
