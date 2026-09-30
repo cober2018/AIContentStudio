@@ -29,8 +29,9 @@ from ..services import document_composition
 from ..services import materials as materials_service
 from ..services.content_harness.providers import CapabilityUnavailable
 from ..services.project_authorization import authorize_project_draft
+from . import CapabilityInputRoute
 
-router = APIRouter(prefix="/api/v1", tags=["materials"])
+router = APIRouter(prefix="/api/v1", tags=["materials"], route_class=CapabilityInputRoute)
 
 ROLES = {"cover", "inline", "attachment"}
 

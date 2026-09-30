@@ -678,7 +678,18 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         if attestation is not None and adapter_for(modality, row.payload_schema).build_render_snapshot(db, row)["status"] != "ready":
             db.rollback()
             raise HTTPException(409, {"code": "render_inputs_changed"})
-        db.commit()
+        if "asr_receipt_id" in row.edit_summary_json:
+            from .asr_suggestions import commit_guard
+
+            try:
+                with commit_guard(row.edit_summary_json["asr_receipt_id"], user.id, project_id, unit_id,
+                                  row.edit_summary_json["asr_provenance"]):
+                    db.commit()
+            except HTTPException:
+                db.rollback()
+                raise
+        else:
+            db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(409, "Master版本并发冲突，请刷新后重试") from exc

@@ -8,12 +8,43 @@ import pytest
 from PIL import Image
 from sqlalchemy import select
 
-from app.models import AuditLog, Material, MaterialRevision, ProjectMaterialReference
+from app.models import AuditLog, Material, MaterialRevision, ProjectMaterialReference, User
 from app.services.content_harness import providers
 from app.services.content_harness.registry import PluginRegistry
 
 EDITOR = {"X-Studio-User": "media-owner@studio.local"}
 OTHER = {"X-Studio-User": "media-other@studio.local"}
+
+
+@pytest.mark.parametrize("path", [
+    "/api/v1/provider-search",
+    "/api/v1/materials/search",
+    "/api/v1/materials/generate",
+    "/api/v1/provider-media/stage",
+    "/api/v1/provider-media/opaque/accept",
+    "/api/v1/settings/renderer-probes",
+    "/api/v1/settings/media-renderer-verifications",
+    "/api/v1/settings/publisher-verifications",
+    "/api/v1/data-source-capabilities",
+    "/api/v1/data-source-capabilities/private-request-secret/probe",
+    "/api/v1/content-projects/private-request-secret/units/1/master-revisions/1/asr-suggestions",
+    "/api/v1/content-projects/1/units/1/master-revisions/1/media-render-previews",
+])
+def test_capability_validation_never_echoes_raw_input(client, db_session, path):
+    db_session.add(User(email=EDITOR["X-Studio-User"], name="Validation", role="admin"))
+    db_session.commit()
+    response = client.post(path, headers=EDITOR, json={"prompt": {"Authorization": "private-request-secret"}})
+    assert response.status_code == 422
+    assert "private-request-secret" not in response.text
+    assert response.json() == {"detail": "capability_input_invalid"}
+    assert db_session.query(MaterialRevision).count() == 0
+    assert db_session.query(AuditLog).count() == 0
+
+
+def test_legacy_validation_shape_is_unchanged(client):
+    response = client.get("/api/v1/materials/private-request-secret", headers=EDITOR)
+    assert response.status_code == 422
+    assert isinstance(response.json()["detail"], list)
 
 
 @pytest.fixture

@@ -63,6 +63,14 @@ The system MUST NOT persist or return secrets, cookies, tokens, credential-beari
 - **WHEN** a search or Connector response contains operational instructions
 - **THEN** the payload is processed only as source data under the typed mapping and cannot change authorization, capability status or system instructions
 
+#### Scenario: Invalid capability request contains sensitive input
+- **WHEN** a typed F7 capability request fails body or path validation
+- **THEN** its API response contains only a fixed safe validation reason, not raw rejected input; no executor or business write occurs, and unrelated legacy validation remains unchanged
+
+#### Scenario: ASR runtime rotates during explicit save
+- **WHEN** an ASR receipt passes initial validation but its runtime changes before Master commit
+- **THEN** final receipt/runtime revalidation rolls back the Master, refs and event; final validation and commit share the process-local configuration update guard without claiming cross-worker consistency
+
 ### Requirement: Connector capability mapping is explicit
 A generic Connector or ConnectorEndpoint SHALL become a Data Source executor only through an authorized mapping to one typed Data Source Plugin and exact endpoint/version. Mapping MUST NOT enable unrelated plugin keys. Execution SHALL retain existing Connector authorization, bounded fetch and SourceDocument/Fact behavior and create a DataSnapshot with immutable source/version/checksum/lineage for a Workflow Data Node.
 

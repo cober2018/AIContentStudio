@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-30 F7 输入与ASR提交安全复核
+
+- FastAPI默认422含原始input；Provider服务脱敏不能覆盖请求尚未进入服务的错误。仅F7 typed入口及实际搜索/生图包装入口捕获RequestValidationError并返回固定安全原因，普通素材CRUD/F6校验不变；不全局改错误handler。
+- ASR初检后至Master提交存在runtime轮换窗口。最终guard在既有DB锁后取得进程配置锁及ASR cache锁，重验receipt/expiry/runtime并持至实际commit，失败整笔回滚。不能重跑旧base currentness：flush子revision后旧base已经合法不再current。
+- 两个复核问题已闭合，独立窄review APPROVE；fixture ASR和线程测试不代表真实Provider、PostgreSQL业务并发或跨worker配置一致。10.9/真实账号/F8门槛不关闭。
+
 ## 2026-09-30 F7 PostgreSQL与网络验收
 
 - 旧PostgreSQL证据只到f7a，不能拿来覆盖后来f7b renderer scope widening。本轮真实PG16.15证明最新往返与保留验证拒降级，旧行字段及约束/FK/索引实际回读一致；没有证明PG业务并发或多worker配置一致。

@@ -16,8 +16,9 @@ from ..services import connector_service, data_source_plugins
 from ..services.capability_integrations import append_verification, endpoint_config_fingerprint
 from ..services.connector_service import ConnectorError
 from ..services.url_fetch import UnsafeUrlError
+from . import CapabilityInputRoute
 
-router = APIRouter(prefix="/api/v1", tags=["connectors"])
+router = APIRouter(prefix="/api/v1", tags=["connectors"], route_class=CapabilityInputRoute)
 
 AUTH_STYLES = {"bearer", "header", "none"}
 

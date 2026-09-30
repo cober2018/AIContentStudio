@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-30：F7 输入脱敏与ASR提交窗口收口
+
+- 基线main@54978d5，按既有F7安全契约完成两项修复，无新增依赖/表/迁移或供应商。F7仍95/105，10.9整阶段安全/provider/delivery review保持未完成。
+- 定向初跑11失败/1兼容通过；独立复核发现生产包装入口遗漏，再复现2失败后补齐；最终61 passed。ASR提交前轮换409，Master/refs/events不增加；实际db.commit期间配置更新线程等待；普通素材CRUD validation形态保持。
+- 新TS/Vite/FE-P1 PASS：/projects224.84/72.94 kB raw/gzip，common Production280.20/89.13，Text606.95/189.34；strict30/30、改动范围Ruff PASS。无前端代码更改/浏览器重跑，不用历史浏览器证据替代本批。
+- 独立只读窄复核APPROVE，仅覆盖两项修复、未代跑测试。全后端首轮1483/2 skipped/8既有warnings（85.99s）发生在最后包装入口修正前，不充作最终结果；最终代码全套实际1485 passed/2 skipped/8既有warnings（88.45s）。
+- 使用using-superpowers、openspec-apply-change、writing-plans、executing-plans、receiving/requesting-code-review、systematic-debugging、test-driven-development及verification-before-completion。无push/deploy/生产迁移/canonical sync/archive，F8未apply。
+
 ## 2026-09-30：F7 最新PostgreSQL迁移实际验证
 
 - 基线main@c828672，独立PostgreSQL16.15临时容器/库实际upgrade head至f7b000000001；空能力表head→f6e→head、旧publisher evidence字段保留、f7a保留史拒降级、f7b renderer史拒降级四项实际通过。最终columns/checks/indexes/FKs和原head一致，非DDL编译替代。
