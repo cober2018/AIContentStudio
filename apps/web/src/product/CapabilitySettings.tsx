@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import type { RendererCapability } from "./RendererVerificationPanel";
 
 type DataCapability = { id: number; key: string; version: string; source_ref: string; configured: boolean; executable: boolean; verified: boolean; last_verification: { result: string; verified_at: string; expires_at: string | null } | null };
 type PublisherScope = { channel: string; content_form: string; action: string; content_account_id: number; account_ref: string; publisher_key: string; publisher_version: string };
 type Publisher = { scope: PublisherScope; configured: boolean; executable: boolean; verified: boolean; reason: string | null; last_verification: { result: string; verified_at: string; expires_at: string | null } };
-type Inventory = { publishers: Publisher[]; can_verify: boolean; publisher_verification_available: boolean };
+type Inventory = { publishers: Publisher[]; renderers: RendererCapability[]; can_verify: boolean; publisher_verification_available: boolean };
 type Endpoint = { id: number; connector_name: string; name: string; method: string };
 type Account = { id: number; name: string };
 
@@ -56,6 +57,9 @@ export default function CapabilitySettings({ mode }: { mode: "data_sources" | "c
       </form>}
     </>}
     {mode === "channels" && <>
+      <h4 className="font-medium">渲染能力（只读清单）</h4>
+      <p className="text-xs text-slate-600">管理员在文字生产工作台对已保存 Master 显式验证。图片/视频人工成片不等于自动 Renderer 已验证。</p>
+      {inventory.data?.renderers.map((item) => <article key={`${item.renderer_key}:${item.renderer_version}:${JSON.stringify(item.scope || {})}`} className="rounded-lg border bg-white p-3 text-sm"><p>{item.renderer_key} / {item.renderer_version} · {item.payload_schema}</p><p>{item.mode === "manual" ? "人工成片；自动渲染不可用" : item.verified ? "精确范围已验证" : "精确范围尚未验证 / 已失效"}</p><p className="text-xs text-slate-500">{item.scope ? `${item.scope.channel} / ${item.scope.content_form} → ${item.scope.output_mime}` : item.output_mimes.join(" / ")}{item.last_verification ? ` · ${item.last_verification.result} · ${item.last_verification.expires_at || "已撤销"}` : " · 无验证记录"}</p></article>)}
       {inventory.data && !inventory.data.publisher_verification_available && <p className="text-sm text-amber-800">当前 WeWrite 尚不能证明实际执行账号与批准正文保持一致，远端交付未开放。请使用审核后的人工成品包。</p>}
       {inventory.data?.publishers.length === 0 && <p className="text-sm text-slate-500">当前身份尚无账号发布验证。人工成品包仍按候选审批与素材权利提供。</p>}
       {inventory.data?.publishers.map((item) => <article key={JSON.stringify(item.scope)} className="space-y-2 rounded-lg border bg-white p-3"><p className="font-medium">{item.scope.account_ref} · 公众号文章 → 草稿箱</p><p className="text-sm">{item.verified ? "账号范围已验证" : "当前范围未验证 / 已失效"}</p><p className="text-xs text-slate-500">最近结果：{item.last_verification.result} · 有效期：{item.last_verification.expires_at ?? "已撤销"}</p>{inventory.data.can_verify && <Button size="sm" variant="danger" disabled={busy || !item.verified} onClick={() => { if (window.confirm("撤销该账号的草稿箱执行验证？")) action.mutate({ path: "/settings/publisher-verifications", body: { ...item.scope, result: "revoked", reference_hash: "0".repeat(64), confirm_readback: true }, message: "验证已撤销；历史记录仍可查看。" }); }}>撤销验证</Button>}</article>)}

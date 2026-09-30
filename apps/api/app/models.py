@@ -1258,7 +1258,7 @@ class CapabilityVerification(Base):
     __table_args__ = (
         Index("ix_capability_verification_registration_scope_id", "registration_id", "scope_kind", "id"),
         CheckConstraint("result IN ('verified', 'failed', 'revoked')", name="ck_capability_verification_result"),
-        CheckConstraint("scope_kind IN ('publisher_action', 'data_source_endpoint')", name="ck_capability_verification_scope_kind"),
+        CheckConstraint("scope_kind IN ('publisher_action', 'data_source_endpoint', 'renderer_output')", name="ck_capability_verification_scope_kind"),
         CheckConstraint("length(config_fingerprint) = 64", name="ck_capability_verification_fingerprint"),
     )
 
