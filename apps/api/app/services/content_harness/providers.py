@@ -124,7 +124,11 @@ def resolve_material_search() -> MaterialSearchProvider:
 
 
 def bootstrap_media_providers() -> None:
+    from ..local_graphic_renderer import LocalGraphicRenderer
     from ..material_search import WikimediaSearchProvider
+
+    if LocalGraphicRenderer.key not in {d.key for d in registry.list("renderer")}:
+        registry.register("renderer", LocalGraphicRenderer.key, "1", LocalGraphicRenderer(), label="Local Graphic Chromium renderer (explicit runtime required)")
 
     if WikimediaSearchProvider.key not in {d.key for d in registry.list("search_provider")}:
         registry.register("search_provider", WikimediaSearchProvider.key, "1", WikimediaSearchProvider(), label="Wikimedia Commons public search (rights acceptance required)")

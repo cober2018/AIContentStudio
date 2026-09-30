@@ -6,6 +6,8 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
+- 本地图文 Renderer 实现：新增 `graphic.chromium@1`，显式配置 Node/Playwright/Chromium/字体后可按当前 Graphic v2 画布生成真实 PNG，管理员 preview→权利接受→精确素材→显式人工 final binding 已做 API 回归；不默认使用 Codex 私有 runtime，不自动 verified/attest，不修改旧 Text/Video 路径。当前单字体仅 normal/400，缺字或样式拒绝而非替换。目录、配置/启动和限制见 [`docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md`](docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md)。产品 UI/精确媒体 scope verification/真实 Video 等仍 TODO，F7 仍 86/105。
+
 - 需求背景：让数据源、模型/素材能力与远端 Publisher 只有在精确版本、配置、账号及动作范围真实验证后才可执行；本地包不冒充远端发布。
 - 目录结构：标准变更在 `openspec/changes/fe-f7-capability-integrations-delivery/`；统一 Registry 为 `apps/api/app/services/content_harness/registry.py`，安全验证模型/服务在 `apps/api/app/models.py`、`apps/api/app/services/capability_integrations.py`，加法迁移为 `apps/api/alembic/versions/f7a000000001_capability_verification.py`。
 - 已完成：十类新 Registry kind 保持旧版本解析；CapabilityRegistration/CapabilityVerification 分表和留史拒降级；内部 Publisher 范围/指纹/撤销判定；Connector 失败与 WeWrite 子进程错误安全原因码。受控 API Data Source 已通过注册 ID/版本映射到精确 Endpoint，管理员可配置并做真实 GET 探测，验证后可手工拉取或由 Data Node 执行；只读清单不触发网络。该路径逐块限制响应体至 1 MB、每页 500 条且最多 20 页，单次请求至多 10 秒；旧 Connector 路径保持原样。快照只含映射后的 Fact 字段，数值变化即使陈述不变也会产生新快照并使下游 stale；配置或凭据版本变化、空结果/失败探测或后续拉取失败都会使旧验证不可执行，成功重探测或显式新 profile 版本才可恢复。
