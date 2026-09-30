@@ -192,10 +192,9 @@ def stage(db: Session, user: User, request: dict) -> dict:
         project = lock_project_context(db, project_id, user)
         if project.status == "archived":
             raise HTTPException(409, "project_archived")
-        db.rollback()
     kind, key, version = request["provider_kind"], request["provider_key"], request["provider_version"]
     provider, runtime_hash = _provider(kind, key, version)
-    refs, source_bytes = _sources(db, request.get("source_revision_ids", []))
+    refs, source_bytes = _sources(db, request.get("source_revision_ids", []), lock=True)
     with _lock:
         _prune()
         if len(_cache) >= 64 or sum(preview.actor_id == user.id for preview in _cache.values()) >= 8:
@@ -208,6 +207,9 @@ def stage(db: Session, user: User, request: dict) -> dict:
         raise HTTPException(409, "provider_outcome_unknown") from None
     except Exception:  # noqa: BLE001 Provider diagnostics can contain credentials.
         raise HTTPException(502, "provider_execution_failed") from None
+    finally:
+        # Dispatch needs live authorization; cache publication must not hold DB locks.
+        db.rollback()
     if not isinstance(output, providers.MediaOutput) or output.status != "succeeded":
         if getattr(output, "status", None) == "unavailable":
             raise HTTPException(422, "capability_unavailable")

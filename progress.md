@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-30：F7 Provider 调用前权利保护
+
+- 对现有10.9范围展开只读复核，发现generic stage提前释放project锁、无source锁；两失败回归（含真实SQLite双连接撤权先赢）复现旧代码发送来源字节和新增preview。仅修既有stage事务，source/parent排序锁持至受控dispatch/result，finally释放DB后再缓存，不新增Provider/表/迁移。
+- 125定向PASS；无显式Graphic环境第一次全套1432/18 skipped后，补明确Node/Chrome/Playwright/font重跑1448 passed/2 skipped/8既有warnings（86.84s）。新TS/Vite/FE-P1、strict30/30、范围Ruff/diff PASS；没有重跑浏览器，不把上轮52项冒充本批。
+- F7仍95/105；整阶段安全/provider/delivery review尚未终验，10.7/10.9/ARCHIVE_READY及F8前置保持打开。公众号替代方案仍需用户选择，真实凭据/账号动作仍需单独授权。
+- 整阶段独立审查仍在进行，未收到结论，不将其记为APPROVE。本批使用using-superpowers、openspec-apply-change、writing-plans、executing-plans、systematic-debugging、test-driven-development、requesting-code-review、verification-before-completion；只读review与主Agent源码修复分工，不授权其他Agent编辑业务代码。
+
+
 ## 2026-09-30：F7 隔离浏览器整批再验收
 
 - 本地main@b940547上不改业务代码，七脚本52 gate、零page error；关闭既有10.8的本地UI验收，F7 95/105，阶段终验/真实供应商和公众号上传仍未完成，F8未apply。

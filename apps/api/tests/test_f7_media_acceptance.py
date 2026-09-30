@@ -350,6 +350,101 @@ def test_source_revoked_after_preview_blocks_accept(client, db_session, media_pr
     assert len(db_session.scalars(select(MaterialRevision)).all()) == 1
 
 
+def test_generation_keeps_source_authorization_transaction_through_dispatch(client, db_session, media_provider, monkeypatch):
+    from app.services import provider_calls, provider_media
+
+    first = stage(client).json()
+    accepted = client.post(f"/api/v1/provider-media/{first['stage_id']}/accept", headers=EDITOR, json=decision()).json()
+    project = client.post("/api/v1/content-projects", headers=EDITOR, json={"title": "Dispatch authorization"}).json()
+    observed = []
+    original_sources, original_call = provider_media._sources, provider_calls.call
+
+    def sources(*args, **kwargs):
+        observed.append(kwargs.get("lock", False))
+        return original_sources(*args, **kwargs)
+
+    def dispatch(*args, **kwargs):
+        assert observed == [True]
+        assert db_session.in_transaction()
+        return original_call(*args, **kwargs)
+
+    monkeypatch.setattr(provider_media, "_sources", sources)
+    monkeypatch.setattr(provider_calls, "call", dispatch)
+    response = stage(client, project_id=project["id"], source_revision_ids=[accepted["material_revision_id"]])
+    assert response.status_code == 200, response.text
+    assert len(db_session.scalars(select(MaterialRevision)).all()) == 1
+
+
+def test_revocation_winning_generation_dispatch_lock_sends_no_source_bytes(media_provider, tmp_path, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    from fastapi import HTTPException
+    from sqlalchemy import create_engine, event, update
+    from sqlalchemy.orm import Session
+
+    from app.db import Base
+    from app.models import User
+    from app.services import materials, provider_media
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'dispatch.db'}", connect_args={"check_same_thread": False, "timeout": 3})
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        user = User(email=EDITOR["X-Studio-User"], name="media owner", role="editor")
+        db.add(user)
+        material = materials.create_material(db, kind="image", title="source", created_by=user.email)
+        source = materials.create_revision(db, material, content=media_provider.content, suffix=".png", declared_mime="image/png", model_use_allowed=True)
+        db.commit()
+        actor_id, source_id = user.id, source.id
+    writer_locked, release_writer, boundary_attempted = threading.Event(), threading.Event(), threading.Event()
+    dispatched = []
+    original_generate = media_provider.generate
+
+    def generate(request):
+        dispatched.append(request["source_bytes"])
+        boundary_attempted.set()
+        return original_generate(request)
+
+    monkeypatch.setattr(media_provider, "generate", generate)
+
+    @event.listens_for(engine, "before_cursor_execute")
+    def observe_lock(_connection, _cursor, statement, _parameters, _context, _executemany):
+        if "SET status=material_revision.status" in statement:
+            boundary_attempted.set()
+
+    def revoke():
+        with Session(engine) as db:
+            db.execute(update(MaterialRevision).where(MaterialRevision.id == source_id).values(model_use_allowed=False))
+            writer_locked.set()
+            assert release_writer.wait(3)
+            db.commit()
+
+    def generate_preview():
+        with Session(engine) as db:
+            try:
+                return provider_media.stage(db, db.get(User, actor_id), {"provider_kind": "image_provider", "provider_key": "image.fixture",
+                    "provider_version": "1", "prompt": "derived", "source_revision_ids": [source_id]})
+            except HTTPException as error:
+                return error.status_code
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            writer = executor.submit(revoke)
+            assert writer_locked.wait(3)
+            generating = executor.submit(generate_preview)
+            assert boundary_attempted.wait(3)
+            release_writer.set()
+            writer.result(timeout=3)
+            assert generating.result(timeout=3) == 409
+        assert dispatched == []
+        assert provider_media._cache == {}
+        with Session(engine) as db:
+            assert len(db.scalars(select(MaterialRevision)).all()) == 1
+    finally:
+        release_writer.set()
+        engine.dispose()
+
+
 def test_expired_preview_requires_explicit_new_generation(client, db_session, media_provider, monkeypatch):
     from app.services import provider_media
 

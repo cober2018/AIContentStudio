@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 阶段安全与交付复核
+
+- [x] /// 依据既有10.9启动只读阶段复核；主Agent核实调用前撤权漏洞，独立复核仍未完成，不把浏览器subset或测试总数替代安全审查；公众号方案待明确选择。
+- [x] /// 主Agent复核调用前source撤权窗口，两个RED→GREEN含实际SQLite双连接；只修现有stage事务及既有spec说明，不开始F8、不新增Publisher对象或真实账号动作。
+- [x] /// 记录SQLite source竞态覆盖和PG/project-archive未覆盖；125定向/1448全后端（2 skipped）、新build/FE-P1/strict30/30/Ruff/diff通过。保留10.9和F7/F8终验，独立复核未完成不假标APPROVE。
+
 ## 2026-09-30：F7 隔离浏览器再验收
 
 - [x] /// 按既有F7任务10.8，在新临时SQLite/media运行已批准的Settings/Search/Media/Graphic/ASR/Delivery脚本；七脚本52 gate/零page error，不触碰默认旧库，不调用真实模型/账号。

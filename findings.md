@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-30 F7 调用前撤权窗口
+
+- 后置accept重验不能阻止已经发生的Provider传输。generic stage与已有ASR不同：提前rollback project且_sources不加锁；双连接失败回归证明撤权事务持锁期间旧代码仍发送原字节并缓存成功preview。
+- 最小修复复用现有排序Revision/Material和project锁，持到受控dispatch/result，finally rollback后再stage cache。只证明SQLite撤权先赢则零调用；未声称PG并发/独立project archive竞态。超时unknown不等于取消已发送外部调用，capacity仍保留至terminal。
+- 全量测试缺四项显式Graphic环境会跳16项；补配置实际重跑1448/2 skipped，不能把1432/18 skipped当真实渲染通过。
+
+
 ## 2026-09-30 F7 浏览器环境再核对
 
 - 空库访问admin邮箱会自动创建editor；无已发布exact渠道Profile时应保持不可执行。验收前显式准备临时管理员/Profile，而非移除权限/形态校验；本轮首次失败留证后重跑通过。

@@ -1,5 +1,17 @@
 # FE-F7 Batch B — shared media acceptance slice
 
+## 2026-09-30 dispatch-time source authorization correction
+
+Baseline `main@4072c65`, F7 95/105. A review of current `provider_media.stage()` found project authorization released before dispatch and source rights read without write locks. Acceptance checks were correct but could not prevent already-revoked source bytes being sent to a Provider. This is a correction within the existing approved media rights contract, not a new provider or durable object.
+
+Two new tests failed against the old implementation, then passed with the minimal existing-function fix. One observes a live locked source transaction at controlled dispatch. The other uses two actual SQLite connections: a source model-use revocation holds the write lock first; old code dispatched cached bytes and created a preview, corrected code waits for revocation commit and returns 409 with zero Provider calls, zero cache and no derived revision. This is real SQLite source-revocation ordering coverage, not PostgreSQL concurrency or project-archive race coverage.
+
+`stage()` now retains the existing optional project lock, uses the existing sorted source/parent locks, and rolls back the read-only authorization transaction in the call's `finally` block before publishing a cache stage. Existing acceptance still rechecks live sources separately. Failed/unknown Provider outcomes remain safely mapped; a timed-out live call retains its worker slot, is not retried, and is not claimed to be cancelled.
+
+Actual batch results: **125 targeted passed**, first unconfigured full suite **1432 passed /18 skipped**, then full suite with explicit local Node/Chrome/Playwright/font **1448 passed /2 skipped /8 existing warnings, 86.84s**. TypeScript/Vite/FE-P1, OpenSpec strict30/30, scoped Ruff and diff-check PASS. `/projects` initial JS224.84/72.94 kB raw/gzip; common Production280.20/89.13 kB. The 16 real Graphic runtime tests were rerun, not counted as accepted skips. No new browser run: previous52-gate evidence remains dated and separate.
+
+Full F7 security/provider/delivery review is still in progress and task10.9 remains open. The source-dispatch fix does not resolve absent real suppliers, WeWrite account binding/immutable upload, real account evidence or F8 prerequisites. No push, deployment, production migration, canonical sync, archive or paid/account action.
+
 ## Scope and limitations
 
 Local main based on `1687963`; F7 **67/105**, still implementing. This slice implements typed Image/Video/TTS/ASR interfaces and shared media staging/explicit acceptance, not real-provider readiness or complete ASR/render/search delivery. No additional table or migration. No push/deploy/production migration/canonical archive/remote generation or publishing.

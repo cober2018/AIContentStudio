@@ -8,6 +8,8 @@
 
 当前本地任务95/105。七个既有脚本在新隔离库重跑52项浏览器检查，零页面错误：实际Text/Chromium图文渲染及五形态Candidate v5→审批→本地ZIP，与图片/搜索/ASR fixture和对账UI fixture分别记录于[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、账号绑定公众号上传、F7最终门禁与F8仍待完成；没有真实远端发布。脚本环境需临时管理员与已发布exact Profile，不改真实用户/旧库。
 
+- 最新调用前权利修复：`provider_media.stage`持有project/source/parent权限锁至受控Provider调用结束，finally释放DB后再缓存；SQLite撤权先赢时零供应商调用。两个失败回归后修复，125定向/1448全后端（2 skipped）、构建预算/strict/Ruff/diff通过；不借本批关闭整阶段review或真实外部验收。复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py`；完整环境和限制见[共享媒体记录](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。没有新增依赖/迁移/业务对象或本批浏览器结果。
+
 - 受控读取与能力矩阵（F7 94/105）：现有typed Connector和Commons在读取前拒压缩；Connector总deadline跨redirect/body/空响应，不改legacy direct safe_fetch。11新回归、84定向、1446全后端/2 skipped、构建预算/strict/Ruff/diff及窄复核通过；无新依赖/迁移，复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_capability_persistence.py tests/test_f7_material_search.py tests/test_f7_openai_image_provider.py`。结构、真实实现/fixture/外部未验证、默认旧库抽查与长期TODO见 [能力矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)。WeWrite真实账号绑定和不可改稿上传仍缺失，Video/TTS/ASR真实实现/平台验收不能由协议替代；F8未apply。默认旧库未迁移，不误称运行/生产已升级。
 
 - 已配置图片原生路径（F7 92/105）：管理员现有 AI 生图设置明确选择 OpenAI 与支持的 exact model/size/HTTPS `/v1`/key；现有素材生成按钮进入私有 PNG 预览，人工权利确认后才写精确版本，不改 Master。实现位于 `services/openai_image_provider.py`，复用 Registry、stage/accept 与现有 UI；无新依赖/表/迁移，原生设置不写 WeWrite 全局配置。单次调用、无重试/回退、public-IP pin、响应/时间上限和轮换失效；全后端1435/2 skipped、52定向、构建预算/strict/Ruff/diff与窄复核通过。报告 [原生图片接入验收](docs/FE_F7_NATIVE_IMAGE_ACCEPTANCE.md) 含配置/复跑命令；真实付费厂商与账号验收仍TODO，未做新版浏览器验收，不把 Mock transport 称外部verified。
