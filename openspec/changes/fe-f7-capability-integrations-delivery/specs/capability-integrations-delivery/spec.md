@@ -129,6 +129,10 @@ Image, video, TTS and renderer providers SHALL return bounded untrusted results.
 - **WHEN** the unique referenced source files exceed the bounded 30 MB input budget or escape the media storage root
 - **THEN** the probe rejects them before reading their bytes or calling the renderer; repeated layers share one verified source byte set
 
+#### Scenario: Explicit local Graphic rendering runtime
+- **WHEN** an administrator probes an installed local Graphic renderer with explicitly configured browser, execution dependencies and font bytes
+- **THEN** it renders only the selected canonical canvas and verified inline source bytes with network access blocked, fingerprints its actual execution inputs, and returns a real PNG; absent configuration, unsupported font coverage or unsupported document semantics fail rather than silently substituting a font, placeholder or external resource
+
 #### Scenario: Accepted cross-unit media
 - **WHEN** an authorized Project user accepts generated media and attaches its exact revision to the Project
 - **THEN** another Unit in that Project can select the shared revision subject to current rights without claiming the generating Unit owns it exclusively

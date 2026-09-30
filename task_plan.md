@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 真实本地图文渲染实现
+
+- [x] /// 明确配置 Node / Playwright / Chromium / 单一字体，运行身份绑定脚本、依赖、浏览器和字体字节；缺配置不可执行，不依赖 Codex 私有默认路径。
+- [x] /// RED→GREEN：真实 PNG 像素、裁剪/形状/文字、重复输入确定性、缺素材/字体覆盖/非法文档拒绝、配置漂移；固定 DOM/CSP/route/proxy/DNS/sandbox 防御，不冒充 OS 无网络验收。仅接现有 admin preview，不自动写 Master/attestation/verified。
+- [x] /// 独立复核与集中门禁：73 定向、1371 全后端、构建/预算/strict/Ruff/Node syntax/diff PASS；API 证明显式人工最终绑定，产品 UI 与普通用户 verified 执行保持待办，不勾完整 7.5–7.7。记录真实本地运行与窄复核 APPROVE。
+
 ## 2026-09-30：F7 媒体 Renderer 输出接受边界
 
 - [x] /// 依 F7 7.5–7.7：定义已加载 exact renderer 的有界 MediaRenderOutput 协议与当前 Master/hash/context/canvas 请求；只复用既有 15 分钟 actor preview 与 MaterialRevision，不建表。未安装 renderer 仍 unavailable，不做假渲染。

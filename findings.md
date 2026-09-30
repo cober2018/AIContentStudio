@@ -881,6 +881,14 @@ PRD §16 的发布门槛另需 **30 个真实 Topic（抖音/XHS/公众号各 10
 - Provider source 接受必须在项目锁之后，对 source Revision 和父 Material 按排序锁定并 populate_existing/refresh 后验证权限和字节，直至 commit。双 SQLite 连接实测进行中的撤权提交后接受 409，零派生素材；缓存锁不替代数据库权利锁。
 - 未做真实外部图像/视频/TTS/ASR 验证，fixture 与已接受素材的人工许可不代表 Provider verified。F7 继续实施，F8 尚未开始。
 
+# 2026-09-30 F7 实际 Graphic renderer
+
+- 现有 Graphic Studio 画布明确是阶段预览，不精确模拟 crop；真实输出必须从 canonical payload + exact bytes 渲染，不能截图带选择框的编辑器当成成片。
+- Playwright 默认关闭 Chromium sandbox，必须显式 `chromiumSandbox: true`；不以 no-sandbox 作为缺配置的降级。浏览器路由/CSP/proxy/DNS 防御不等于 OS 网络隔离验收。
+- 注入字体不消除缺字/合成 bold/italic；本批单字体拒绝缺字、非400/italic及混合对齐，后续需真实字体映射与中文验收，不能冒充全排版支持。
+- Chrome app 外层 executable 不是完整执行身份；实际 bundle/framework/resource 字节、Playwright 代码和字体一起纳入指纹。确定性限定实际配置，不承诺跨 OS 一致。
+- CSS 半透明 sRGB 合成会将两个通道各舍入至128；像素断言需允许127–128，而不是错误要求两通道相加严格255。输出依然明确为红蓝混合且无隐藏绿层。
+
 # 2026-09-30 F7 ASR 复核关闭
 
 - 保存 Master 的旧素材 ref 不证明今天仍在当前项目可见；建议与保存均需 active ProjectMaterialReference，或可证实的跨 Unit Workflow 生成血缘，并匹配精确保存哈希。

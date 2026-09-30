@@ -1,5 +1,12 @@
 # 当前进度
 
+## 2026-09-30：F7 真实本地图文 Renderer
+
+- F7 保持 86/105，F8 未 apply；真实 `graphic.chromium@1` 在显式配置环境中将当前 Graphic v2 selected canvas 渲染成 PNG。没有修改真实服务配置，没有默认 Codex runtime 路径。现有管理员 preview→接受真实 MaterialRevision/项目引用→用户显式 manual render binding→新 Master 已做 API 端到端回归；不伪造自动 verified/attestation。
+- 17 个新测试实跑通过：矩形/椭圆/线条/旋转/层序/alpha/隐藏层、exact bytes crop、文本安全与实际像素、两独立 browser 输出一致、缺字/缺变体/混合对齐/坏 CSS/缺素材拒绝、字体字节漂移。当前单字体仅 normal/400；全字体、中文、多样式与产品 UI 验收仍未完成。
+- 窄 SPEC/plan 与 implementation 独立只读复核 APPROVE；新增六个像素/对齐测试不改实现。最终集中定向 73 passed / 1 既有 warning（30.38s）；全后端 1371 passed / 2 skipped / 8 既有 warnings（88.79s）。TypeScript/Vite/FE-P1 PASS，/projects 224.84/72.94 kB；OpenSpec strict 30/30、范围 Ruff、Node syntax、diff-check PASS。不把先前1365或67当追加测试后的最终数。
+- 证据与配置/目录/边界：`docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md`。UI、媒体 scope verification、真实 Video Renderer、F7 其他真实 Provider/Publisher 验收继续；无新表/migration、无远端发布、push/deploy/生产迁移/canonical sync/archive。
+
 ## 2026-09-30：F7 媒体 Renderer 接受基础契约
 
 - F7 保持 86/105：本批完成 7.5–7.7 的基础输出/接受服务，但没有真实已安装媒体 Renderer、一般编辑者 verified execution、UI/final binding，不提前关闭整项；F8 未 apply。显式 admin-only preview/probe 复用 existing actor 15 分钟 stage→raw→accept；普通 Provider stage 不接受 renderer kind，未验证实现不能绕过一般执行闸门。
