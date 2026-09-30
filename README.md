@@ -6,6 +6,8 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
+当前本地任务95/105。七个既有脚本在新隔离库重跑52项浏览器检查，零页面错误：实际Text/Chromium图文渲染及五形态Candidate v5→审批→本地ZIP，与图片/搜索/ASR fixture和对账UI fixture分别记录于[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、账号绑定公众号上传、F7最终门禁与F8仍待完成；没有真实远端发布。脚本环境需临时管理员与已发布exact Profile，不改真实用户/旧库。
+
 - 受控读取与能力矩阵（F7 94/105）：现有typed Connector和Commons在读取前拒压缩；Connector总deadline跨redirect/body/空响应，不改legacy direct safe_fetch。11新回归、84定向、1446全后端/2 skipped、构建预算/strict/Ruff/diff及窄复核通过；无新依赖/迁移，复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_capability_persistence.py tests/test_f7_material_search.py tests/test_f7_openai_image_provider.py`。结构、真实实现/fixture/外部未验证、默认旧库抽查与长期TODO见 [能力矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)。WeWrite真实账号绑定和不可改稿上传仍缺失，Video/TTS/ASR真实实现/平台验收不能由协议替代；F8未apply。默认旧库未迁移，不误称运行/生产已升级。
 
 - 已配置图片原生路径（F7 92/105）：管理员现有 AI 生图设置明确选择 OpenAI 与支持的 exact model/size/HTTPS `/v1`/key；现有素材生成按钮进入私有 PNG 预览，人工权利确认后才写精确版本，不改 Master。实现位于 `services/openai_image_provider.py`，复用 Registry、stage/accept 与现有 UI；无新依赖/表/迁移，原生设置不写 WeWrite 全局配置。单次调用、无重试/回退、public-IP pin、响应/时间上限和轮换失效；全后端1435/2 skipped、52定向、构建预算/strict/Ruff/diff与窄复核通过。报告 [原生图片接入验收](docs/FE_F7_NATIVE_IMAGE_ACCEPTANCE.md) 含配置/复跑命令；真实付费厂商与账号验收仍TODO，未做新版浏览器验收，不把 Mock transport 称外部verified。
@@ -27,7 +29,7 @@
 - Renderer 批已完成：`renderer_capabilities.py` 复用实际 Text v1/v2 adapter，管理员在生产页明确渲染验证，Settings 投影安全范围；注册实现与事件 scope/Profile 指纹分离，绑定实际 callable。新增 `f7b000000001_renderer_scope.py` 仅拓宽既有验证 CHECK，保留旧行/索引/FK，留存 Renderer 证据时拒降级。Graphic/Video 仍标人工成片，不伪装自动可执行。验收见 `docs/FE_F7_RENDERER_ACCEPTANCE.md`。
 - 共享消费 / 配置指引已完成：Text 配图与 Video timeline 引用同一个搜索接受的精确 MaterialRevision，撤权阻断两者 checks / freeze；Settings 模型分区独立 lazy ProviderGuidancePanel 只读显示五类协议与配置指引，已加载不等于可执行 / verified，不提供假 Save。验收见 `docs/FE_F7_SHARED_MEDIA_GUIDANCE_ACCEPTANCE.md`。
 - 媒体 Renderer 基础契约：`media_renderers.py` 提供管理员明确 media-render-previews，绑定 current Master/hash/context/Profile/canvas 和 exact installed renderer；接受复用原 stage/raw/accept，真实解码字节只写 upstream MaterialRevision/项目引用。来源权限/CC BY、读取前30MB、安全路径、重复层去重及提交前撤权有回归；不生成 Master/自动 attestation，也未装入假的 renderer。见 `docs/FE_F7_MEDIA_RENDER_BOUNDARY_ACCEPTANCE.md`。
-- 待完成/TODO：F7 当前 90/105，真实单次生成/TTS/外部 ASR、真实 Video Renderer、账号绑定且无改写的 Publisher 和阶段最终门禁仍待完成。最新后端 1400 passed / 2 skipped，13 browser gate、106 定向、预算/strict/范围 Ruff/diff/窄复核通过。SQLite 实际迁移/往返与本批两连接撤销验收通过，PostgreSQL 仅 DDL 编译；本批无新迁移。真实 Commons 请求被本机网络安全校验阻断，未标为 verified；WeWrite typed runtime 仍 unavailable，F8 尚未 apply。隔离 fixture 不代表外部能力已验证。
+- 待完成/TODO：F7 当前95/105，真实厂商图片验收/视频生成/TTS/外部ASR、真实Video Renderer、账号绑定且无改写的Publisher和阶段最终门禁仍待完成。上一轮全后端1446 passed /2 skipped、构建预算/strict/范围Ruff/diff通过；本轮仅重跑52项浏览器门槛及文档校验，不重新宣称全套后端结果。SQLite历史往返和撤销回归、PG DDL证据保持原范围；本轮只做新隔离SQLite升级，不做生产迁移。真实Commons请求被URL安全校验阻断，未标verified；WeWrite typed runtime仍unavailable，F8尚未apply。
 - 关键设计决策：只存安全身份与证据摘要，不存 secret、原始响应或签名 URL；验证事件追加，配置变化/撤销让旧验证失效。F6E canonical/归档尚待单独授权。
 - 依赖与启动方式：沿用 `apps/api` 既有 Python 环境、FastAPI 和 Alembic；测试在 `apps/api` 运行 `.venv/bin/python -m pytest tests/test_f7_capability_persistence.py tests/test_migrations.py -q`。只在隔离库执行迁移；不推送、部署或执行生产迁移。
 
