@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -60,7 +61,8 @@ class WechatWewritePublisher:
         with tempfile.TemporaryDirectory() as tmp:
             md_path = Path(tmp) / "article.md"
             md_path.write_text(markdown, encoding="utf-8")
-            cover_path = Path(tmp) / "cover.png"
+            cover_suffix = ".jpg" if manifest.get("_cover_mime") == "image/jpeg" else ".png"
+            cover_path = Path(tmp) / f"cover{cover_suffix}"
             cover_path.write_bytes(cover_bytes)
             cmd = [
                 "wewrite", "publish", str(md_path),
@@ -70,10 +72,12 @@ class WechatWewritePublisher:
                 proc = subprocess.run(cmd, capture_output=True, text=True, timeout=WEWRITE_TIMEOUT_SEC, check=False)
             except subprocess.TimeoutExpired:
                 return PublisherResult(status="unknown", error=f"wewrite 超时（{WEWRITE_TIMEOUT_SEC}s），远端结果未确认")
-            output = (proc.stdout or "") + (proc.stderr or "")
-            if proc.returncode != 0 or "Draft created" not in output:
-                return PublisherResult(status="failed", error=f"wewrite 发布失败：{output[-300:]}")
-        media_id = output.split("Draft created! media_id:")[-1].strip().splitlines()[0]
+            if proc.returncode != 0:
+                return PublisherResult(status="failed", error="publisher_execution_failed")
+            match = re.search(r"Draft created! media_id: ([A-Za-z0-9_-]{1,128})(?:\s|$)", proc.stdout or "")
+            if match is None:
+                return PublisherResult(status="unknown", error="publisher_result_unconfirmed")
+        media_id = match.group(1)
         return PublisherResult(
             status="succeeded", remote_id=media_id,
             metadata={"channel": "wechat", "verified": self.verified(), "draft_box": True},

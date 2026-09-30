@@ -125,7 +125,7 @@ class DataSourceNodePlugin:
     def execute(self, db, ctx: WorkflowExecutionContext, config: dict, user) -> NodeResult:
         from ...data_source_plugins import snapshot_source
 
-        return NodeResult(output=snapshot_source(db, ctx.run, ctx.step.node_id, config.get("data_source_plugin_key", ""), str(config.get("source_ref", ""))))
+        return NodeResult(output=snapshot_source(db, ctx.run, ctx.step.node_id, config.get("data_source_plugin_key", ""), str(config.get("source_ref", "")), user))
 
 
 def _plugin(key: str, handler: str, label: str, *, complete: str | None = None, side_effect: bool = False):

@@ -5,6 +5,7 @@ import { api, currentUser, setCurrentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
 
 const RuntimeSettings = lazy(() => import("../pages/Settings"));
+const CapabilitySettings = lazy(() => import("./CapabilitySettings"));
 type Editability = "editable" | "read_only" | "unavailable";
 type Section = { key: string; label: string; editability: Editability; reason?: string | null; data?: unknown };
 type Inventory = { sections: Section[] };
@@ -43,6 +44,7 @@ function SectionActions({ section }: { section: Section }) {
     {section.key === "models" && <div className="space-y-2"><p className="text-sm text-slate-600">模型配置沿用现有持久化与完整 Profiles / 路由保存契约。密钥留空表示保留，显示掩码不会被重新提交。连接测试会发起真实网络请求；图片配置保存可能写入本机 CLI 配置，必须由你明确操作。</p><Button disabled={!editable} onClick={() => setShowRuntime(!showRuntime)}>{showRuntime ? "收起配置工具" : "打开模型与图片配置工具"}</Button></div>}
     {section.key === "data_sources" && <div className="space-y-2"><p className="text-sm text-slate-600">Generic Connector 配置不代表 Data Source Plugin 已可执行。此清单读取不会自动拉取或测试连接；数据拉取是独立的有副作用动作。</p>{["admin", "editor"].includes(me.data?.role ?? "") && <Link className="text-sm text-indigo-700 underline" to="/connectors">{editable ? "管理 Generic Connectors / 显式拉取" : "打开已有 Connectors（配置只读，可显式拉取）"}</Link>}</div>}
     {section.key === "channels" && <p className="text-sm text-slate-600">渠道注册信息为只读真源。配置了 workflow / publisher 引用不代表已经验证可执行或可发布，不提供虚假的保存按钮。</p>}
+    {(section.key === "channels" || section.key === "data_sources") && <Suspense fallback={<Spinner label="加载能力验证…" />}><CapabilitySettings mode={section.key} /></Suspense>}
     {section.key === "rules" && <div className="space-y-2"><p className="text-sm text-slate-600">确定性 Rule、Prompt、Channel Template 与 Discoverability Profile 分开列出。版本操作以每项实际支持的 actions 和状态为准。</p>{editable && <Link className="text-sm text-indigo-700 underline" to="/templates">打开现有版本化模板工具</Link>}</div>}
     {section.key === "advanced" && <div className="space-y-2"><p className="text-sm text-amber-800">高级工具包含本机路径、技能、MCP、dsh 与基础设施配置。不会在读取此清单时扫描目录、写文件或探测外部服务。</p><Button disabled={!editable} onClick={() => setShowRuntime(!showRuntime)}>{showRuntime ? "收起高级工具" : "明确打开本机运行配置工具"}</Button></div>}
     {showRuntime && editable && <section className="rounded-xl border border-amber-200 bg-white"><p className="p-4 text-sm text-amber-800">下面是原有管理员配置工具；其保存、连接测试和本机写入操作均需单独确认操作。</p><Suspense fallback={<Spinner label="按需加载原有配置工具…" />}><RuntimeSettings /></Suspense></section>}

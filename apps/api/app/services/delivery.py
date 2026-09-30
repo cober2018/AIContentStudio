@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import re
 import zipfile
 
 from fastapi import HTTPException
@@ -29,15 +30,36 @@ from ..models import (
     Review,
     utcnow,
 )
+from .capability_integrations import publisher_target_verified
 from .content_harness.channel_registry import resolve_content_form
+from .content_harness.contracts import PublisherResult
 from .content_harness.publishers import bootstrap_publishers
 from .content_harness.registry import registry
 
 ACTIONS = {a.value for a in DeliveryAction}
+_SAFE_REMOTE_ID = re.compile(r"[A-Za-z0-9_-]{1,128}\Z")
+_SAFE_REASON = re.compile(r"[a-z][a-z0-9_]{0,79}\Z")
 
 
 def _hash(*parts: str) -> str:
     return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
+
+
+def safe_publisher_result(result: PublisherResult) -> PublisherResult:
+    status = result.status if result.status in {"succeeded", "failed", "unknown"} else "unknown"
+    remote_id = result.remote_id if isinstance(result.remote_id, str) and _SAFE_REMOTE_ID.fullmatch(result.remote_id) else None
+    if result.remote_id is not None and remote_id is None:
+        status = "unknown"
+    raw_metadata = result.metadata if isinstance(result.metadata, dict) else {}
+    metadata = {}
+    if raw_metadata.get("channel") in {"wechat", "x", "xiaohongshu", "douyin"}:
+        metadata["channel"] = raw_metadata["channel"]
+    if type(raw_metadata.get("draft_box")) is bool:
+        metadata["draft_box"] = raw_metadata["draft_box"]
+    reason = result.error if isinstance(result.error, str) and _SAFE_REASON.fullmatch(result.error) else None
+    if status != "succeeded" and reason is None:
+        reason = "publisher_result_unconfirmed" if status == "unknown" else "publisher_execution_failed"
+    return PublisherResult(status=status, remote_id=remote_id, metadata=metadata, error=reason)
 
 
 def resolve_publisher(channel: str, content_form: str, action: str):
@@ -54,6 +76,39 @@ def resolve_publisher(channel: str, content_form: str, action: str):
     raise HTTPException(422, f"action {action} 尚无 publisher 实现")
 
 
+def project_v5_wewrite_payload(manifest: dict) -> dict:
+    """Project the exact approved article into the legacy CLI input without rewriting it."""
+    target = manifest.get("target") or {}
+    if (manifest.get("schema_version") != 5 or target.get("channel") != "wechat"
+            or target.get("content_form") != "article" or target.get("artifact_kind") != "text"):
+        raise HTTPException(422, "capability_unavailable: 仅支持v5公众号图文")
+    title = (manifest.get("content") or {}).get("title")
+    body = (manifest.get("render") or {}).get("text")
+    assets = manifest.get("assets") or []
+    covers = [ref for ref in assets if ref.get("role") == "cover"]
+    if (not isinstance(title, str) or not title.strip() or len(title) > 64
+            or not isinstance(body, str) or not body.strip() or len(covers) != 1
+            or not isinstance(covers[0].get("material_revision_id"), int)):
+        raise HTTPException(409, "v5公众号候选缺少可发布的冻结标题、正文或唯一封面")
+    return {**manifest, "render": {**manifest["render"], "payload": {
+        "title": title, "digest": title, "markdown": body,
+    }}}
+
+
+def _v5_cover_bytes(db: Session, manifest: dict) -> bytes:
+    from .materials import read_bytes_checked, sniff_mime
+
+    cover = next(ref for ref in manifest["assets"] if ref["role"] == "cover")
+    revision = db.get(MaterialRevision, cover["material_revision_id"])
+    if revision is None or revision.mime_type not in {"image/png", "image/jpeg"}:
+        raise HTTPException(422, "capability_unavailable: 公众号封面需为PNG或JPEG")
+    data = read_bytes_checked(db, revision, require_public=True)
+    if (hashlib.sha256(data).hexdigest() != cover["content_hash_snapshot"]
+            or sniff_mime(data, None) != revision.mime_type):
+        raise HTTPException(409, "v5封面与冻结哈希不一致")
+    return data
+
+
 def authorize_target(db: Session, asset: ContentAsset, payload, user) -> DeliveryTarget:
     """通用交付目标授权：channel/form/action 经 Registry 验证（D21），幂等。"""
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
@@ -66,7 +121,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
         owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
         db.refresh(asset)
         validate_live_v5_candidate(db, asset, require_approved=True, lock_live=True)
-        if payload.action not in {DeliveryAction.copy_package.value, DeliveryAction.manual_handoff.value}:
+        if payload.action not in {DeliveryAction.copy_package.value, DeliveryAction.manual_handoff.value, DeliveryAction.auto_draft.value}:
             raise HTTPException(422, "capability_unavailable: v5远端账号/渠道/形态/动作尚未验证")
         if payload.channel != asset.channel or payload.content_form != asset.content_form:
             raise HTTPException(409, "目标渠道与形态必须与冻结Variant一致")
@@ -114,7 +169,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
             account = db.get(ContentAccount, content_account_id)
             if account is None or account.status != "active" or account.persona_id != unit.persona_id or (unit.account_id is not None and unit.account_id != account.id):
                 raise HTTPException(404, "内容账号不存在")
-        if payload.action in {DeliveryAction.auto_draft.value, DeliveryAction.assisted_draft.value}:
+        if payload.action in {DeliveryAction.auto_draft.value, DeliveryAction.assisted_draft.value} and not is_variant:
             raise HTTPException(422, "capability_unavailable: 内容账号尚无已验证的渠道/远端发布映射")
     elif content_account_id is not None:
         raise HTTPException(422, "旧候选不能推断新的内容账号归属")
@@ -139,7 +194,17 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
         capability = cap_dict
     else:
         capability = {"publisher_key": publisher_key, "action": payload.action, "available": True, "verified": False, "legacy": True}
-    if is_variant:
+    if is_variant and payload.action == DeliveryAction.auto_draft.value:
+        projected = project_v5_wewrite_payload(asset.candidate_manifest_json or {})
+        _v5_cover_bytes(db, projected)
+        scope_target = DeliveryTarget(content_account_id=content_account_id, channel=payload.channel,
+                                      content_form=payload.content_form, action=payload.action,
+                                      account_ref=payload.account_ref, publisher_key=publisher_key,
+                                      publisher_version=publisher_version)
+        if not publisher_target_verified(db, scope_target, registry):
+            raise HTTPException(422, "publisher_unverified: 当前账号、渠道、形态、动作或配置尚无有效验证")
+        capability = {**capability, "verified": True, "remote_verified": True}
+    elif is_variant:
         capability = {**capability, "manual": True, "remote_verified": False}
     # 渠道一致性：v1 资产仍要求与批准渠道一致；v2 同样
     if asset.channel != payload.channel:
@@ -247,7 +312,9 @@ def validate_live_candidate_payload(db: Session, asset: ContentAsset) -> dict:
 
     manifest = asset.candidate_manifest_json or {}
     if manifest.get("schema_version") == 5:
-        raise HTTPException(422, "capability_unavailable: v5尚无已验证的远端账号/渠道/形态/动作发布能力")
+        from .production_validation import validate_live_v5_candidate
+
+        return validate_live_v5_candidate(db, asset, require_approved=True, lock_live=True)
     if manifest.get("schema_version") == 4 or asset.content_master_revision_id is not None:
         raise HTTPException(422, "capability_unavailable: v4尚无已验证Publisher适配器，请使用本地成品包")
     if asset.project_id is not None:
@@ -289,7 +356,11 @@ def prepare_attempt(db: Session, target: DeliveryTarget, manifest: dict) -> Deli
         if last.status in {"prepared", "running", "succeeded"} or (last.status == "unknown" and not reconciled_not_delivered):
             raise HTTPException(409, f"已有 {last.status} 状态的尝试（#{last.attempt_no}），不可重复发起；unknown 请走 reconcile")
     attempt_no = (last.attempt_no + 1) if last else 1
-    request_hash = _hash(json.dumps((manifest.get("render") or {}).get("payload") or {}, ensure_ascii=False, sort_keys=True, default=str))
+    request_input = (manifest.get("render") or {}).get("payload") or {}
+    if manifest.get("schema_version") == 5:
+        request_input = {"payload": request_input, "cover_hash": next(
+            ref["content_hash_snapshot"] for ref in manifest["assets"] if ref["role"] == "cover")}
+    request_hash = _hash(json.dumps(request_input, ensure_ascii=False, sort_keys=True, default=str))
     attempt = DeliveryAttempt(
         target_id=target.id,
         attempt_no=attempt_no,
@@ -319,21 +390,18 @@ def execute_attempt(db: Session, target_id: int, user) -> dict:
         raise HTTPException(409, "该目标的公开使用权限已撤销，不能再交付")
     if target.action == DeliveryAction.manual_handoff.value:
         raise HTTPException(409, "manual_handoff 目标走成品包 + 人工回填，不能 execute")
-    # R2-M10：unverified publisher 的自动执行默认禁止（未真实验收的自动能力不可执行）。
-    # 显式放行：system_settings delivery.allow_unverified_auto_draft=true
-    snapshot = target.capability_snapshot_json or {}
-    if target.action == DeliveryAction.auto_draft.value and snapshot.get("verified") is False:
-        from .. import runtime_config
-
-        delivery_cfg = runtime_config.get_runtime(runtime_config.KEY_DELIVERY) or {}
-        if delivery_cfg.get("allow_unverified_auto_draft") is not True:
-            raise HTTPException(
-                409,
-                "publisher unverified：未真实验收的自动能力默认禁止执行（完成后可在设置 → 交付开启 allow_unverified_auto_draft 显式放行）",
-            )
+    if target.action == DeliveryAction.auto_draft.value and not publisher_target_verified(db, target, registry):
+        raise HTTPException(409, "publisher_unverified：当前账号、渠道、形态、动作或配置尚无有效验证")
     # R3-3：统一实时校验在 prepare（落 attempt）之前——校验失败不产生 attempt
     asset = _asset_of(db, target)
     manifest = validate_live_candidate_payload(db, asset)
+    if manifest.get("schema_version") == 5:
+        if target.action != DeliveryAction.auto_draft.value or target.publisher_key != "publisher.wechat.wewrite":
+            raise HTTPException(422, "capability_unavailable: v5远端动作尚未验证")
+        manifest = project_v5_wewrite_payload(manifest)
+        cover_bytes = _v5_cover_bytes(db, manifest)
+    else:
+        cover_bytes = None
 
     attempt = prepare_attempt(db, target, manifest)
     # D22：prepared 先落库（commit 由 SessionLocal 事务语义保证——路由层在调用远端前 commit）
@@ -359,8 +427,15 @@ def execute_attempt(db: Session, target_id: int, user) -> dict:
     db.commit()
 
     if target.publisher_key == "publisher.wechat.wewrite":
-        manifest = {**manifest, "_cover_bytes": _cover_bytes(db, asset, manifest)}
-    result = publisher.deliver(manifest, target, attempt)
+        manifest = {**manifest, "_cover_bytes": cover_bytes if cover_bytes is not None else _cover_bytes(db, asset, manifest)}
+        if cover_bytes is not None:
+            from .materials import sniff_mime
+
+            manifest["_cover_mime"] = sniff_mime(cover_bytes, None)
+    try:
+        result = safe_publisher_result(publisher.deliver(manifest, target, attempt))
+    except Exception:  # noqa: BLE001 外部效果可能已发生；不得重试，也不得持久化可能含密钥的异常原文。
+        result = PublisherResult(status="unknown", error="publisher_result_unconfirmed")
 
     attempt.finished_at = utcnow()
     attempt.response_metadata_json = result.metadata or {}

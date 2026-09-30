@@ -1,5 +1,18 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 两批实施，随后 F8
+
+- [x] /// 核实本地 main、F6E 100/100、F7/F8 标准规格、Alembic head 与后端/前端基线；修正 F7 Endpoint fingerprint 和 v5 WeWrite 输入边界，strict 与 diff-check 通过。
+- [x] /// 接续第一批：以失败回归锁定 typed Data Source 的逐块响应体上限、分页与总量边界；仅在 F7 受控调用生效，旧 Connector 路径保持兼容。
+- [x] /// 审查并实现 v5 已批准公众号文章到 WeWrite 只读确定性投影；先证明无 Draft fallback、精确封面与无重写，缺字段须在创建远端 Attempt 前阻断。
+- [x] /// 集中补足 Capability 表约束、SQLite/PostgreSQL 迁移与授权/审计回归，更新 OpenSpec 勾选、README、progress、findings 后跑整批门禁。
+- [x] /// 将数据 profile 配置/探测、账号验证/撤销接入 Settings 六分区；Data Node 用真实 profile 选择器固定版本，完成构建与隔离浏览器验收。
+- [x] /// 第一批：两张能力表、版本/范围验证、Registry/Connector 映射、未验证远端动作 fail-closed 与安全日志；集中做回归和迁移门禁。独立复核四项修复通过；真实 WeWrite 不满足账号绑定/无改写契约，8.3/8.5 保持待办，人工包不受影响。
+- [ ] /// 第二批：受控搜索/生成/TTS/ASR/渲染、精确素材与项目引用、Settings、发布验证、浏览器与最终门禁。
+- [ ] /// F7 验收后复核并实施 F8，完成全产品隔离闭环和生产准入审计；无单独授权不做真实远端副作用、push、deploy、生产迁移或规格归档。
+
+详细步骤：`docs/superpowers/plans/2026-09-30-fe-f7-capability-integrations-delivery.md`。
+
 ## 2026-09-30：F6E 集中验收批
 
 - [x] /// 从当前 `main` 保留既有 F6E 工作区，重新跑全量后端门禁；不把上一轮失联的测试会话当作通过证据。

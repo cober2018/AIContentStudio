@@ -146,10 +146,65 @@ def test_copy_package_zip_hash_and_media_consistency(env):
 
 
 def _allow_unverified_auto_draft(monkeypatch):
-    """R2-M10：unverified 自动执行默认禁止——测试里显式打开开关。"""
+    """仅让旧交付流程测试越过新 F7 验证闸门；真实放行另测。"""
+    from app.services import delivery
+
+    monkeypatch.setattr(delivery, "publisher_target_verified", lambda *args: True)
+
+
+def test_legacy_unverified_flag_cannot_start_remote_attempt(env, monkeypatch):
+    db, asset = env
+    client = _client(db)
     from app import runtime_config
 
     monkeypatch.setattr(runtime_config, "get_runtime", lambda key: {"allow_unverified_auto_draft": True})
+    _inject_cover(db, asset)
+    target = client.post(
+        f"/api/v1/assets/{asset.id}/delivery-targets",
+        json={"channel": "wechat", "content_form": "article", "account_ref": "wx-acct", "authorization_version": "v1", "action": "auto_draft"},
+        headers=EDITOR,
+    )
+    assert target.status_code == 201
+    result = client.post(f"/api/v1/delivery-targets/{target.json()['id']}/execute", headers=EDITOR)
+    assert result.status_code == 409
+    assert "publisher_unverified" in result.text
+    detail = client.get(f"/api/v1/delivery-targets/{target.json()['id']}", headers=EDITOR).json()
+    assert detail["attempts"] == []
+
+
+def test_wewrite_subprocess_error_does_not_return_secret(monkeypatch):
+    from types import SimpleNamespace
+
+    from app.services.content_harness.publishers.wechat_wewrite import WechatWewritePublisher
+
+    secret = "token-super-private-123"
+
+    def fail_run(*args, **kwargs):
+        return SimpleNamespace(returncode=1, stdout="", stderr=f"Authorization: Bearer {secret}")
+
+    from app.services.content_harness.publishers import wechat_wewrite
+
+    monkeypatch.setattr(wechat_wewrite.subprocess, "run", fail_run)
+    result = WechatWewritePublisher().deliver({
+        "render": {"payload": {"title": "Approved", "markdown": "# Approved"}}, "_cover_bytes": b"cover",
+    }, None, None)
+    assert result.status == "failed"
+    assert result.error == "publisher_execution_failed"
+    assert secret not in repr(result)
+
+
+def test_publisher_result_projection_rejects_nested_secret_and_unsafe_remote_id():
+    from app.services.content_harness.contracts import PublisherResult
+    from app.services.delivery import safe_publisher_result
+
+    result = safe_publisher_result(PublisherResult(
+        status="succeeded", remote_id="wx123\nAuthorization: Bearer secret",
+        metadata={"channel": "wechat", "nested": {"token": "secret"}, "verified": True},
+    ))
+    assert result.status == "unknown"
+    assert result.remote_id is None
+    assert result.metadata == {"channel": "wechat"}
+    assert "secret" not in repr(result)
 
 
 def _inject_cover(db, asset):

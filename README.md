@@ -4,16 +4,26 @@
 
 长期产品目标以 [`03_ai_content_studio_PRD.md`](03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
 
-### FE-F6E 渠道变体检查（进行中）
+### FE-F7 能力集成与交付（本地实施中）
 
-本地前端现已接入 Matrix 限量只读建议/所选 Unit 确认、Production 独立 lazy Variant 面板，以及按冻结目标和渠道系列工作的 v5 Review。Variant 可预览、显式保存、回看版本/差异、运行检查并冻结；预览与重试不写业务对象。图文卡片的准确图片和口播脚本的估算 SRT 在 Review 有区分展示，交付仍只允许人工本地包。前端构建和首包预算已通过；跨形态隔离浏览器与最终门禁尚未完成。
+- 需求背景：让数据源、模型/素材能力与远端 Publisher 只有在精确版本、配置、账号及动作范围真实验证后才可执行；本地包不冒充远端发布。
+- 目录结构：标准变更在 `openspec/changes/fe-f7-capability-integrations-delivery/`；统一 Registry 为 `apps/api/app/services/content_harness/registry.py`，安全验证模型/服务在 `apps/api/app/models.py`、`apps/api/app/services/capability_integrations.py`，加法迁移为 `apps/api/alembic/versions/f7a000000001_capability_verification.py`。
+- 已完成：十类新 Registry kind 保持旧版本解析；CapabilityRegistration/CapabilityVerification 分表和留史拒降级；内部 Publisher 范围/指纹/撤销判定；Connector 失败与 WeWrite 子进程错误安全原因码。受控 API Data Source 已通过注册 ID/版本映射到精确 Endpoint，管理员可配置并做真实 GET 探测，验证后可手工拉取或由 Data Node 执行；只读清单不触发网络。该路径逐块限制响应体至 1 MB、每页 500 条且最多 20 页，单次请求至多 10 秒；旧 Connector 路径保持原样。快照只含映射后的 Fact 字段，数值变化即使陈述不变也会产生新快照并使下游 stale；配置或凭据版本变化、空结果/失败探测或后续拉取失败都会使旧验证不可执行，成功重探测或显式新 profile 版本才可恢复。
+- 第一批接入：Settings 既有数据源/渠道分区新增 lazy 能力面板；可保存 API profile、显式探测，并在 Data Node 选择固定版本执行。只读库存不读秘密配置、不发网络；失败追加准确 scope 验证失效，普通旧 pull 成功不恢复验证。v5 公众号已具备冻结正文/标题与真实 PNG/JPEG 封面的确定性投影，但现有 WeWrite 会改稿且不能证明实际账号绑定，因此新远端交付仍未开放，Settings 明示 unavailable、API 人工确认也不能放行。真实公共 GET 已生成 Source/Fact/DataSnapshot；没有真实远端发布。
+- 待完成/TODO：账号绑定且无改写的 Publisher adapter、其他 Provider 真实结果接受、受控搜索/生成/TTS/ASR/渲染及整阶段最终门禁；F7 当前 56/105。修正后最新全量后端 1230 passed / 2 skipped，前端/首包预算与四项隔离浏览器、SQLite/PostgreSQL 迁移往返、OpenSpec strict 30/30、diff-check 通过。历史 SystemConstant 的 Ruff TRY004 未改，其他范围通过。独立定向复核 APPROVE，仅批准安全收口，不代表真实 Publisher 可用。当前任何外部能力都不能因新增表或 Mock 测试标记为已验证；F8 尚未 apply。
+- 关键设计决策：只存安全身份与证据摘要，不存 secret、原始响应或签名 URL；验证事件追加，配置变化/撤销让旧验证失效。F6E canonical/归档尚待单独授权。
+- 依赖与启动方式：沿用 `apps/api` 既有 Python 环境、FastAPI 和 Alembic；测试在 `apps/api` 运行 `.venv/bin/python -m pytest tests/test_f7_capability_persistence.py tests/test_migrations.py -q`。只在隔离库执行迁移；不推送、部署或执行生产迁移。
 
-本地后端现已走通 Graphic v2→小红书真实图片包、Video v2→抖音脚本/估算 SRT 包，以及带精确 FactPackItem 引用的 Text v2→公众号文章/X Thread/X Single 人工包；图片/B-roll 均按精确素材字节入包且撤权后禁止再取。抖音脚本不要求已有成片，但直接 Video v4 冻结仍要求真实最终渲染。同系列 Variant 保存与 v5 Freeze 的双连接并发防重、跨项目 raw-ID 和归档只读边界已有后端回归；五形态本地包已保留准确媒体、引用和非空披露声明。v5 审批要求精确来源 warning 的人工处置，历史包下载会重验后续来源检查；同一候选的不同账号授权与 unknown 对账状态互不覆盖。全形态浏览器验收仍待完成。未启用远端发布。
+### FE-F6E 渠道变体检查（本地实施验收完成；规格归档待授权）
+
+本地前端已接入 Matrix 限量只读建议/所选 Unit 确认、Production 独立 lazy Variant 面板，以及按冻结目标和渠道系列工作的 v5 Review。Variant 可预览、显式保存、回看版本/差异、运行检查并冻结；预览与重试不写业务对象。图文卡片的准确图片和口播脚本的估算 SRT 在 Review 有区分展示，交付仍只允许人工本地包。前端构建、首包预算、跨形态隔离浏览器与最终门禁已通过；不代表真实平台发布。
+
+本地后端已走通 Graphic v2→小红书真实图片包、Video v2→抖音脚本/估算 SRT 包，以及带精确 FactPackItem 引用的 Text v2→公众号文章/X Thread/X Single 人工包；图片/B-roll 均按精确素材字节入包且撤权后禁止再取。抖音脚本不要求已有成片，但直接 Video v4 冻结仍要求真实最终渲染。同系列 Variant 保存与 v5 Freeze 的双连接并发防重、跨项目 raw-ID 和归档只读边界已有后端回归；五形态本地包已保留准确媒体、引用和非空披露声明。v5 审批要求精确来源 warning 的人工处置，历史包下载会重验后续来源检查；同一候选的不同账号授权与 unknown 对账状态互不覆盖。全形态隔离浏览器已验收。未启用远端发布。
 
 - 需求背景：一个已保存的渠道变体只有在来源 Master 当前、必要检查有效，且目标形态/素材/证据检查通过时，才可能进入后续 Candidate v5 冻结。
 - 目录结构：`apps/api/app/services/channel_variants.py` 负责项目授权后的 Variant 历史、只读来源门槛和追加式检查；`channel_adapters.py` 负责五种受控形态的确定性成品投影；`candidates_v5.py` 装载并构建 v5 清单，`project_review.py` 提供冻结；规格位于 `openspec/changes/fe-f6e-channel-variants-content-matrix/`。
 - 已完成：来源 Master 的上下文与检查状态进入 Variant `ready` 投影；`variant_package` 验证受控 Adapter 的确定性成品投影并记录哈希。v5 manifest builder 已接服务端 DB 快照和项目级 Freeze；仅当前且已通过检查的 Variant 可冻结，重复请求幂等，旧 Draft/Master/Workflow 来源列保持空。v5 内容审批按 Variant 系列判定当前性；交付授权仅允许本地包/人工交接，ZIP 从冻结 v5 内容和实时验证的精确素材字节生成，不回退旧 schema。已有授权可读取历史包，但仍须通过实时公开权利与来源完整性验证。Review 后端现从冻结 v5 内容投影文字/图片卡片/脚本、检查与同系列差异，媒体预览读取精确版本并实时验证公开权利及字节；Project Versions/Overview 保留同 Unit 多渠道系列及未知交付优先级。Matrix 新增限量、授权、无写入的建议 API，确认仍须走现有 Unit API。Variant 历史可按同系列稳定 ID 比较改动；模型建议的真实 `LLMRun` 经显式保存和冻结二次校验，只冻结安全摘要。Text v2 原稿的未改动段落引用可按精确 FactPackItem/checksum/range 映射至公众号文章和 X；引用被静默丢弃或位置变动时拒绝确定性继承。
-- 待完成/TODO：其余跨形态/历史安全回归、Matrix 真实成本/价值估计、v5 Matrix/Production/Review 隔离浏览器验收及最终独立复核仍在 F6E 后续任务；F7 远端 Provider 不在本阶段。Matrix 历史表现当前只展示同渠道同形态且实际存在的指标覆盖，不生成跨平台评分；无指标与无历史分别标为 missing/unknown。模型辅助适配已接现有 Provider/LLMRun：建议只读，显式接受保存时核对当前来源/Profile/Adapter、操作者及 canonical 输出哈希；无可用或合格 Provider 时返回不可用，不伪称适配成功。
+- 待完成/TODO：F6E canonical 主规格同步/归档待单独授权；Matrix 真实成本/价值估计及远端 Provider 属后续范围，不以未知估值冒充排序。Matrix 历史表现只展示同渠道同形态且实际存在的指标覆盖，不生成跨平台评分；无指标与无历史分别标为 missing/unknown。模型辅助适配已接现有 Provider/LLMRun：建议只读，显式接受保存时核对当前来源/Profile/Adapter、操作者及 canonical 输出哈希；无可用或合格 Provider 时返回不可用，不伪称适配成功。
 - 关键设计决策：channel-neutral Master 的目标平台检查由 Variant 承担，不以 v4 直接冻结资格替代来源门槛；检查结果追加保存，读取时仍进行实时来源与权限漂移判断。v5 清单只接受服务端提供的有界 canonical 快照，绝不沿用 Draft/Master 作为 Candidate 来源指针。
 - 依赖与启动：沿用现有 FastAPI/SQLAlchemy 环境；在 `apps/api` 运行 `PYTHONPATH=. .venv/bin/pytest -q tests/test_f6e_freeze_v5.py tests/test_f6e_candidate_manifest_v5.py` 进行定向回归。本切片不增加依赖或迁移；Matrix 服务位于 `apps/api/app/services/project_matrix.py`、路由位于 `apps/api/app/routers/project_read_models.py`。
 
@@ -180,15 +190,15 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 关键设计决策：无渠道 Master 是显式 source-only 路径；Matrix 选择不会在 Candidate Approval 前创建 DeliveryTarget；渠道适配在 Candidate v5 冻结前完成，Publisher 不改已批准内容，未知交付仍须对账。ContentAccount 自由格式 profile 不证明目标平台所有权；本地包仍须校验账号活动/归属/单元绑定和冻结目标，但只能标为人工交付，远端动作须后续 F7 精确验证。
 - 依赖与启动：沿用当前 FastAPI、React、Alembic；F6E 加法迁移 `f6e000000001` 已在代码中，未执行生产迁移。无 push/deploy/canonical 同步或归档授权。
 
-### FE-F7 Capability Integrations + Delivery（仅标准 OpenSpec 草案，未 apply）
+### FE-F7 Capability Integrations + Delivery（标准 OpenSpec 已进入本地 apply）
 
 - PRD/需求背景：North Star 要求 Model/Tool/Data/Search/Image/Video/TTS/ASR/Renderer/Publisher 成为可替换且可验证的真实能力；注册或配置存在不等于可执行，更不等于特定账号的远端动作已验证。
-- 目录结构：[`openspec/changes/fe-f7-capability-integrations-delivery/`](openspec/changes/fe-f7-capability-integrations-delivery/proposal.md) 含 proposal、design、105 项任务，以及新增 Capability 规格和 FE-F2/System Assets/Settings/FE-F4 四份 delta；用户总包源稿保持原样。未来实施复用 `apps/api/app/services/content_harness/registry.py`、`data_source_plugins.py`、`connector_service.py`、`materials.py` 与 `delivery.py`，不重造其真源。
-- 已完成：审计原 F7 十条要求及当前 registry/Connector/Material/Delivery/Settings 路径，补 exact-scoped verification、Provider 响应/错误/审计脱敏、媒体字节和许可验证、项目精确引用、未验证 legacy auto-draft 不得绕过远端闸门；进一步把现有 MaterialRevision 的 prompt/URL/metadata 与 ConnectorEndpoint 失败原因纳入安全投影契约，避免原始请求、签名链接或异常文本借既有字段泄漏。只完成规格归位，未改业务代码或迁移。
-- 规格预校准：F7 任务中“保存来源 URL”现明确仅允许经过正向验证的稳定公开引用地址；签名、带凭据或过期抓取/预览地址不能落入 `MaterialRevision.source_url`、元数据、审计或 API。无法证明引用地址安全时保留有界来源标识与单向哈希。此项只更新 active OpenSpec，不宣称 F7 实施或独立 SPEC review 已通过。
-- 待完成/TODO：F6C 已完成；F6D/F6E 实施验收后，再对 F7 做独立 SPEC review 与 apply 确认；实际 Provider 适配、隔离迁移、浏览器与真实账号验收均未开始，缺凭据则保持 unverified。
+- 目录结构：[`openspec/changes/fe-f7-capability-integrations-delivery/`](openspec/changes/fe-f7-capability-integrations-delivery/proposal.md) 含 proposal、design、105 项任务，以及新增 Capability 规格和 FE-F2/System Assets/Settings/FE-F4 四份 delta；用户总包源稿保持原样。实施复用 `apps/api/app/services/content_harness/registry.py`、`data_source_plugins.py`、`connector_service.py`、`materials.py` 与 `delivery.py`，不重造其真源。
+- 已完成：规格审计、十类 Registry 扩展、两张能力/验证表及加法迁移、内部精确 Publisher 验证判定、旧自动草稿执行旁路关闭、Connector/WeWrite/PublisherResult 错误与结果安全投影；本地全量后端 1207 passed、OpenSpec strict 30/30，均只是 F7 第一批阶段门禁，不是 F7 终验。
+- 规格预校准：“保存来源 URL”仅允许经过正向验证的稳定公开引用地址；签名、带凭据或过期抓取/预览地址不能落入 `MaterialRevision.source_url`、元数据、审计或 API。无法证明安全时保留有界来源标识与单向哈希。这仍是尚待实现的 Provider 接受契约。
+- 待完成/TODO：F6D/F6E 已完成本地实施验收；F7 正在按两大批 apply。Provider 适配、完整隔离浏览器与真实账号验证仍未完成，缺凭据则保持 unverified。
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
-- 依赖与启动：沿用当前 API/Vite 启动方式。规格预计仅为 CapabilityRegistration/CapabilityVerification 加可逆迁移，实际实现前复核当前 migration head；不 push/deploy/运行生产迁移，不同步 canonical 或归档。
+- 依赖与启动：沿用当前 API/Vite 启动方式。F7 加法迁移 `f7a000000001` 已在代码中并经隔离 SQLite 测试，未执行生产迁移；不 push/deploy，不同步 canonical 或归档。
 
 ### FE-F8 Production Readiness + Operations（仅标准 OpenSpec 草案，未 apply）
 

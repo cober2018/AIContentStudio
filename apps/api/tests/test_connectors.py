@@ -145,6 +145,23 @@ def test_pull_maps_json_to_facts(client, monkeypatch, seed_admin):
     assert refreshed["endpoints"][0]["last_pull_status"] == "ok"
 
 
+def test_pull_failure_does_not_expose_remote_secret_in_api_or_endpoint(client, monkeypatch, seed_admin):
+    connector_id, endpoint_id = _setup_connector_and_endpoint(client, monkeypatch)
+    secret = "token-super-private-123"
+
+    def fail_fetch(*args, **kwargs):
+        raise ConnectorError(f"remote body Authorization: Bearer {secret}")
+
+    monkeypatch.setattr(connector_service, "safe_fetch", fail_fetch)
+    response = client.post(f"/api/v1/endpoints/{endpoint_id}/pull", headers=EDITOR)
+    assert response.status_code == 400
+    detail = client.get(f"/api/v1/connectors/{connector_id}", headers=ADMIN)
+    assert detail.status_code == 200
+    assert detail.json()["endpoints"][0]["last_pull_error"] == "connector_pull_failed"
+    assert secret not in response.text
+    assert secret not in detail.text
+
+
 def test_pull_missing_env_key_reports_clearly(client, monkeypatch, seed_admin):
     monkeypatch.delenv("QUANT_API_KEY", raising=False)
     monkeypatch.setattr(connector_service, "safe_fetch", lambda url, headers=None, **kw: (b"{}", "application/json"))
@@ -157,7 +174,7 @@ def test_pull_missing_env_key_reports_clearly(client, monkeypatch, seed_admin):
         endpoint_id = r.json()["id"]
     resp = client.post(f"/api/v1/endpoints/{endpoint_id}/pull", headers=EDITOR)
     assert resp.status_code == 400
-    assert "QUANT_API_KEY" in resp.json()["detail"]
+    assert resp.json()["detail"] == "connector_credential_missing"
 
 
 def test_pull_bad_mapping_path(client, monkeypatch, seed_admin):
@@ -168,7 +185,7 @@ def test_pull_bad_mapping_path(client, monkeypatch, seed_admin):
 
     resp = client.post(f"/api/v1/endpoints/{endpoint_id}/pull", headers=EDITOR)
     assert resp.status_code == 400
-    assert "不存在" in resp.json()["detail"]
+    assert resp.json()["detail"] == "connector_mapping_invalid"
     # 失败留痕
     refreshed = client.get(f"/api/v1/connectors/{listing[0]['id']}", headers=ADMIN).json()
     assert refreshed["endpoints"][0]["last_pull_status"] == "failed"

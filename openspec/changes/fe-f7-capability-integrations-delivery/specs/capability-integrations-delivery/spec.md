@@ -40,6 +40,13 @@ The system MUST NOT persist or return secrets, cookies, tokens, credential-beari
 ### Requirement: Connector capability mapping is explicit
 A generic Connector or ConnectorEndpoint SHALL become a Data Source executor only through an authorized mapping to one typed Data Source Plugin and exact endpoint/version. Mapping MUST NOT enable unrelated plugin keys. Execution SHALL retain existing Connector authorization, bounded fetch and SourceDocument/Fact behavior and create a DataSnapshot with immutable source/version/checksum/lineage for a Workflow Data Node.
 
+For the existing mutable ConnectorEndpoint, exact endpoint/version means endpoint ID plus the effective configuration and credential-version fingerprint. A changed endpoint configuration or credential version MUST invalidate verification before execution; absent verifiable credential-version identity MUST NOT be treated as a verified mapping. No secret value is stored or exposed as the fingerprint.
+
+The registration SHALL explicitly store its typed `data_source_plugin_key` and `endpoint_id` while its own key names a selectable connection profile. A Data Node SHALL select the exact registration ID and version through `source_ref`; deriving a plugin mapping from key prefixes or treating the endpoint ID alone as a source reference is forbidden. Multiple endpoint profiles MAY use the same typed plugin without becoming interchangeable.
+
+The first generic REST `api` executor SHALL accept HTTPS GET endpoints only. Existing POST Connector pulls remain legacy-compatible but SHALL NOT be promoted to a typed read-only Data Source capability without a separate read-only contract. A probe SHALL perform an actual bounded mapped readback and append a scoped verification only when at least one mapped Fact exists; a failed or empty readback SHALL invalidate the prior scope verification.
+After a verified manual pull or Data Node pull fails, the mapped capability SHALL remain unavailable until a new successful administrator probe; a stale prior verification alone SHALL NOT re-enable execution.
+
 #### Scenario: Generic Connector configured
 - **WHEN** an API Connector exists with no typed Data Source mapping
 - **THEN** `api`, `notion`, `sql` and other disconnected plugin keys remain unavailable
@@ -47,6 +54,10 @@ A generic Connector or ConnectorEndpoint SHALL become a Data Source executor onl
 #### Scenario: Mapped node refresh
 - **WHEN** an authorized mapped Data Node refreshes and normalized output changes
 - **THEN** a new snapshot records exact ConnectorEndpoint/source identity and existing dependent outputs become stale
+
+#### Scenario: POST endpoint is not a read-only Data Source
+- **WHEN** an administrator tries to register a generic POST endpoint as the first typed `api` Data Source
+- **THEN** registration is unavailable and no verification is created
 
 #### Scenario: Failed pull
 - **WHEN** a mapped endpoint times out, exceeds limits or fails authorization
@@ -109,9 +120,15 @@ Remote Publisher verification MUST bind platform/channel, stable account identit
 ### Requirement: Publisher consumes approved immutable content
 Every remote Publisher action SHALL require exact approved Candidate hash and Delivery Authorization, validate live account/capability/rights, and receive only the frozen approved content/package. The Publisher MUST NOT rewrite, truncate, adapt, generate media or silently switch providers after approval. Local copy/manual package remains a distinct non-remote path when packageable.
 
+The existing WeWrite publisher's legacy render input MUST NOT be applied directly to a v5 manifest. A v5 WeChat article requires a deterministic pre-attempt projection from its frozen approved title/body/digest/cover bytes into the publisher input; missing or incompatible frozen content MUST fail before a remote attempt, without v3/v4 fallback or post-approval rewriting.
+
 #### Scenario: Publisher wants shorter title
 - **WHEN** frozen approved content exceeds a remote platform limit
 - **THEN** delivery fails with an actionable validation reason and no modified remote payload is sent
+
+#### Scenario: V5 article presented to legacy WeWrite input
+- **WHEN** a verified WeChat account authorizes an approved v5 article for auto-draft
+- **THEN** the publisher receives only a validated deterministic projection of the frozen article and exact cover bytes, or no attempt is prepared if that projection cannot be formed
 
 #### Scenario: Unverified remote fallback
 - **WHEN** remote capability is unavailable but a local package is valid

@@ -1,5 +1,43 @@
 # 当前进度
 
+## 2026-09-30：独立复核后的安全收口（覆盖前一版验收状态）
+
+- 独立只读 re-review APPROVE：原四项安全 blocker 已关闭，仅批准此次安全收口，不代表真实 Publisher 实现完成。最新 strict 30/30、diff-check 与除历史 SystemConstant TRY004 外的范围 Ruff PASS。隔离 Uvicorn/Vite 及 PostgreSQL 容器均已停止，媒体/SQLite/browser 证据保留；本地 main 第一批提交，不推送/部署/生产迁移/归档。
+- 修复后最新全量后端真实运行 1230 passed / 2 skipped / 8 warnings（64.48s），包含追加失效、legacy pull 不能恢复、跨源/降级拒绝、真实 CLI runtime unavailable 和 fake runtime 下通用 v5 字节/unknown 闸门。
+- 独立复核揭示四项阻断，已接续修复：typed fetch 跨源/降级在发送第二次请求前拒绝；所有映射 Endpoint 失败追加 scope failedVerification，旧 legacy 成功拉取不恢复验证；现安装 WeWrite 的全局账号配置和会删改正文/追加声明的 converter 无法满足批准载荷契约，runtime 保持 unavailable，管理员确认也无法绕过，API 409 且不写 Verification/Attempt。
+- F7 已调整为 56/105，49 项待完成；8.3/8.5 重新打开，纯 v5 投影与假 runtime 回归不能当真实 Publisher 可用。人工本地包继续可用。新的独立定向复核进行中，暂无本地提交。
+- 修复后定向后端 92 passed；TypeScript/Vite/FE-P1 新跑 PASS，CapabilitySettings lazy 6.07 / 2.95 kB，/projects 224.75 / 72.89，Settings 230.12 / 75.06。
+- 最新隔离浏览器四项 PASS、零 page error，证据 `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f7-browser-evidence-hyydf2`。本轮真实公共 GET/Source/Fact/DataSnapshot 成立；Publisher 场景改为 UI 不提供核验按钮、API 即使给人工确认也 409、刷新仍不可用，没有远端发布。此前 synthetic 核验可保存的浏览器报告已被此轮更严格门槛取代。
+
+## 2026-09-30：F7 第一批产品接入与门禁
+
+- F7 58/105（47 项待完成）；本批核销迁移往返、失败安全审计、Settings 库存/范围/权限/显式探测以及真实数据源浏览器读取。Publisher reconciliation、真实账号验收和 Provider 第二批仍保持待办，不提前勾选。
+- 最新全量后端实际运行：1228 passed / 2 skipped / 8 warnings（67.01s）；前端 TypeScript/Vite 与 FE-P1 通过，/projects 224.75 kB raw / 72.90 kB gzip，Settings 230.12 / 75.07，通用 Production 279.10 / 88.85。CapabilitySettings 独立 lazy chunk 5.86 / 2.83，无新增依赖。
+- SQLite 全量回归包括 F7 up/down/up 与留史拒降级。独立 PostgreSQL 16 容器真实 upgrade→downgrade f6e→upgrade 通过，回读 f7a000000001 和 13 个约束；未触碰生产数据库。
+- 隔离浏览器四个 gate PASS，零 page error：Settings 配置精确 API profile、真实 httpbin HTTPS GET 映射 Source/Fact、刷新验证状态；Production 保存并执行固定版本 Data Node 生成 DataSnapshot；账号人工证据记录/刷新/撤销；Viewer 权限隔离。证据目录 `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f7-browser-evidence-9cYvcr`。账号证据是 synthetic isolated fixture，没有任何远端发布调用，不能算真实账号验收。
+- v5 公众号冻结内容确定性投影、PNG/JPEG 精确封面字节、执行前实时验证/撤销、unknown 不重复、副作用前零 Attempt 拒绝均有回归。数据源失败追加安全审计，只保存固定 reason_code；重探测恢复及新版本固定引用保持原语义。
+- OpenSpec strict 30/30 与 diff-check 已通过；范围 Ruff 除既有 SystemConstant 节点 TRY004 外通过，忽略该既有规则复跑通过，不为消除历史告警改无关代码。独立只读复核进行中；F7 Provider 第二批和 F8 尚未实施，未推送/部署/生产迁移/规格归档。
+
+## 2026-09-30：F7 开始第一大批
+
+- 本轮 Data Source 有界抓取定向 RED→GREEN：原 `safe_fetch` 先完整读入再检查超限，新增仅 F7 使用的流式抓取在越过 1 MB 时立即停读，并把 10 秒/请求、500 条/页、20 页/10,000 条总量和已有配置体限额接入受控路径。旧 Connector 拉取保持兼容。Connector/Data Node/F7 定向 32 passed；F7 3.6 已核销，当前 36/105，整批全量门禁仍待跑。
+- 本轮接续本地 `main` 上尚未提交的 F7 代码；OpenSpec 35/105。先补 typed Data Source 严格资源上限，再完成 Publisher v5 冻结投影与 Capability 迁移/审计门禁；两批节奏和不推送/部署/生产迁移/归档边界不变。
+- 接续 F7 Data Source 映射：同一 typed plugin 可有多个 profile；Data Node `source_ref=capability:<registration_id>@<version>` 固定精确映射。新增的 `data_source_plugin_key` 与 Endpoint FK 仍在原定 Registration 表中，未加第三表。验证前手工拉取/Run 均阻断；经独立测试注入的有效验证后，真实 Connector 拉取生成 SourceDocument/Fact 与 DataSnapshot 精确血缘；同输入不使子节点 stale，映射值变化使子节点 stale，Endpoint 修改阻断后续执行。测试只模拟验证事件，未声称真实外部端点已验收。
+- F7 受控 Data Source 分页 `max_pages≤20`、`page_size≤500`，配置片段≤16 KiB；快照只保存映射 Fact，不将未映射原始响应复制进 DataSnapshot。手工 capability pull 与 Data Node 共用同一版本/配置/凭据/范围/加载执行器闸门，外部错误仅返回安全码。定向 21 passed，首次接入前全量 `1216 passed / 2 skipped / 8 warnings`；手工拉取入口后全量需重新验证。
+- 管理员配置/探测 API 已落地：初版 generic REST Data Source 只接受 HTTPS GET；真正执行受控拉取且来源有映射 Fact 才追加验证。重复相同有效响应可重探测；空结果或外部失败追加 failed 并撤销此前的可执行性。Viewer 可只读查看安全库存，但不能配置/探测；该库存不发网络请求。定向 F7/FE-F2 数据测试 19 passed；新增 API 后全量仍需重跑，不能将 test double 当真实外部验收。
+- 新增 API 后全后端新跑 `1218 passed / 2 skipped / 8 warnings`，OpenSpec 全量 strict 30/30、范围 Ruff 与 `git diff --check` PASS；之后补了失败手工拉取立即阻断后续执行、需管理员重新探测恢复的回归，目前该增量只完成定向测试，最终全量仍需再次重跑。F7 当前 35/105；这一批还未收尾或提交。
+- 进一步补齐 profile version 2 的显式再注册/再探测，不让旧 Data Node 静默跟随配置编辑；F7 数据源专用去重改用映射 Fact 的 statement/value/unit/as-of 等字段，旧直接 Connector 拉取语义保持不变。即使陈述不变而数值改变，也会产生新 Source/快照并使下游 stale；DataSnapshot 有界投影值与精确 source hash，未映射字段不进入节点输出。Connector/Data Node/F7 定向 30 passed，改动后的全量还需重跑。
+- 本轮收尾重跑全后端 `1218 passed / 2 skipped / 8 warnings`，OpenSpec strict 30/30、范围 Ruff、diff-check PASS。F7 仍 35/105、第一大批仍在实施；这些回归使用隔离测试替身，不等于真实外部端点、账号或 Publisher 验收。无提交、推送、部署、生产迁移或归档。
+- 本轮最新全量后端在 `apps/api` 实跑 `1207 passed / 2 skipped / 8 warnings`；F7 当前 23/105。范围 Ruff、OpenSpec all-strict 30/30、`git diff --check` PASS；前端未修改，沿用本轮开始时已通过的基线构建，不冒充 F7 最终验收。首次全量发现两条本地文档 allowlist 提示用例，已改为固定安全配置名并重跑全量通过。
+- 已关闭旧 `allow_unverified_auto_draft` 的执行旁路：新远端 Attempt 在写入前核当前账号、渠道/形态/动作、Publisher key/version、有效配置/凭据版本指纹、已加载实现和验证时效；旧旗标设 true 仍 409 且零 Attempt。现有历史仍可读；真正远端验证/账号验收尚未执行。PublisherResult 仅保留允许字段与有界远端 ID/原因码，插件抛错按 unknown，避免秘密泄漏或误重试。Delivery/legacy 流程定向 36 passed。
+- 本轮新增 F7 两表 ORM 与 `f7a000000001` 加法迁移：Registration 唯一 kind/key/version，Verification 独立历史，保留验证记录时拒绝降级；隔离 SQLite 迁移 up/down/up 与留史拒降级测试通过。只有模型/内部服务，没有对外验证 API，绝不把存在行当成已验证。
+- Registry 新增十类 North Star 能力，仍按 kind/key/version 精确解析；旧 Workflow Registry 回归通过。内部 scoped publisher 检查已覆盖账号、形态、动作、配置指纹、已加载实现、追加撤销；尚未接到交付执行路径，不宣称 Publisher 可用。
+- Connector 拉取失败的 API/Endpoint 不再回显远端异常原文，改为有界原因码；WeWrite 子进程 stderr 不再进入 PublisherResult，成功回执仅接受有界 ID，无法确认则 unknown。定向 Connector+Registry 31 passed、F7 model/migration 6 passed、Delivery 8 passed；第一批仍在实施，未跑改动后的全量门禁。
+- 本地 `main@be4f0a9`；F6E 100/100，F7 0/105，F8 0/100；Alembic head `f6e000000001`。F6E canonical/归档未获单独授权，保持 active。
+- F7 全部规格已审，补齐 Endpoint 无 revision 时的有效配置/凭据版本指纹与 v5 WeWrite 冻结投影边界；F7 strict、`git diff --check` PASS。
+- 基线在 `apps/api` 正确目录新跑 `1188 passed, 2 skipped, 7 warnings`；前端 build/FE-P1、全规格 strict 30/30 PASS。错误工作目录造成的测试失败已用正确运行方式排除，未视作代码回归。
+- 第一大批计划已记录；业务代码尚未实施，任何真实外部 Provider/账号效果仍未验证。
+
 ## 2026-09-30：F6E 本地最终门禁与独立复核
 
 - 后端全量新跑 `1188 passed / 2 skipped / 7 warnings`；前端 TypeScript/Vite 与 FE-P1 PASS，`/projects` 224.75 kB raw / 72.89 kB gzip，Channel Variants lazy closure 234.19 kB raw / 76.03 kB gzip；OpenSpec strict 30/30、范围内 Ruff、`git diff --check` PASS。

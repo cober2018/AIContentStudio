@@ -53,7 +53,7 @@ def test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite(fresh_sqlite_ur
 
     cfg = Config("alembic.ini")
     cfg.attributes["configure_logger"] = False
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["f6e000000001"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["f7a000000001"]
     command.upgrade(cfg, "head")
     engine = create_engine(fresh_sqlite_url)
     try:
@@ -109,3 +109,44 @@ def test_f6e_downgrade_refuses_v5_candidate_even_if_variant_fk_is_missing(fresh_
             assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "f6e000000001"
     finally:
         engine.dispose()
+
+
+def test_f7_capability_schema_up_down_up_and_retained_evidence_guard(fresh_sqlite_url):
+    from alembic.config import Config
+
+    from alembic import command
+
+    cfg = Config("alembic.ini")
+    cfg.attributes["configure_logger"] = False
+    command.upgrade(cfg, "head")
+    engine = create_engine(fresh_sqlite_url)
+    try:
+        inspector = inspect(engine)
+        assert inspector.has_table("capability_registration")
+        assert inspector.has_table("capability_verification")
+        assert {"ck_capability_registration_identity_nonempty", "ck_capability_registration_status",
+                "ck_capability_registration_data_mapping"}.issubset(
+                    {row["name"] for row in inspector.get_check_constraints("capability_registration")})
+        assert {"ck_capability_verification_scope_kind", "ck_capability_verification_result"}.issubset(
+            {row["name"] for row in inspector.get_check_constraints("capability_verification")})
+        assert "ix_capability_verification_registration_scope_id" in {
+            row["name"] for row in inspector.get_indexes("capability_verification")}
+    finally:
+        engine.dispose()
+    command.downgrade(cfg, "f6e000000001")
+    command.upgrade(cfg, "head")
+    engine = create_engine(fresh_sqlite_url)
+    try:
+        with engine.begin() as connection:
+            connection.execute(text(
+                "INSERT INTO capability_registration (kind, key, version, status, config_fingerprint, created_at) "
+                "VALUES ('publisher', 'wewrite', '1', 'configured', :fingerprint, CURRENT_TIMESTAMP)"
+            ), {"fingerprint": "a" * 64})
+            connection.execute(text(
+                "INSERT INTO capability_verification (registration_id, config_fingerprint, scope_kind, scope_json, result, verified_at, evidence_json) "
+                "VALUES (1, :fingerprint, 'publisher_action', '{}', 'verified', CURRENT_TIMESTAMP, '{}')"
+            ), {"fingerprint": "a" * 64})
+    finally:
+        engine.dispose()
+    with pytest.raises(RuntimeError, match="retained CapabilityVerification history"):
+        command.downgrade(cfg, "f6e000000001")

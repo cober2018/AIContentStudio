@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from ..models import AuditLog, Connector, ConnectorEndpoint, Fact, ParseStatus, SourceDocument, User
 from .fact_extractor import CandidateFact
-from .url_fetch import safe_fetch
+from .url_fetch import bounded_safe_fetch, safe_fetch
 
 PLACEHOLDER_TODAY = "{today}"
 
@@ -369,7 +369,7 @@ def _render_values(data: dict, today: str) -> dict:
 DEFAULT_MAX_PAGES = 20
 
 
-def _fetch_all_pages(endpoint: ConnectorEndpoint, url: str, headers: dict[str, str]) -> tuple[list[dict], str]:
+def _fetch_all_pages(endpoint: ConnectorEndpoint, url: str, headers: dict[str, str], *, bounded: bool = False) -> tuple[list[dict], str]:
     """带分页拉取全部条目。返回 (items, 最后一个有数据页的原始响应文本)。
 
     page 型：page_param 从 page_start 递增，某页 items_path 为空数组即停；
@@ -415,7 +415,8 @@ def _fetch_all_pages(endpoint: ConnectorEndpoint, url: str, headers: dict[str, s
             _set_page_param(params, pagination.get("offset_param", "offset"), str(offset))
 
         page_url = httpx_url_join_urlonly(url, params)
-        content, _ = safe_fetch(page_url, headers, method=method, json_body=body)
+        fetch = bounded_safe_fetch if bounded else safe_fetch
+        content, _ = fetch(page_url, headers, method=method, json_body=body)
         try:
             payload = json.loads(content)
         except json.JSONDecodeError as exc:
@@ -429,6 +430,8 @@ def _fetch_all_pages(endpoint: ConnectorEndpoint, url: str, headers: dict[str, s
             items = [payload]
         if not isinstance(items, list):
             raise ConnectorError("items_path 指向的不是数组")
+        if bounded and (len(items) > min(page_size, 500) or len(all_items) + len(items) > 10_000):
+            raise ConnectorError("connector_response_item_limit")
         all_items.extend(items)
         if items:
             # 空页不覆盖 last_raw，保证 as_of_path 从最后一个有数据的响应解析
@@ -464,7 +467,9 @@ def httpx_url_join_urlonly(base_url: str, params: dict) -> str:
 
 
 
-def pull_endpoint(db: Session, endpoint: ConnectorEndpoint, user: User) -> tuple[SourceDocument, int, bool]:
+def pull_endpoint(
+    db: Session, endpoint: ConnectorEndpoint, user: User, *, dedup_mode: str = "statements", bounded: bool = False,
+) -> tuple[SourceDocument, int, bool]:
     """执行一次拉取：请求外部 API（支持 POST/分页）→ 存 SourceDocument → 映射生成候选 Fact。"""
     connector = endpoint.connector
     if not connector.is_active:
@@ -476,7 +481,7 @@ def pull_endpoint(db: Session, endpoint: ConnectorEndpoint, user: User) -> tuple
     url = connector.base_url.rstrip("/") + "/" + endpoint.path.lstrip("/")
 
     headers = _auth_headers(connector)
-    all_items, last_raw = _fetch_all_pages(endpoint, url, headers)
+    all_items, last_raw = _fetch_all_pages(endpoint, url, headers, bounded=bounded)
 
     # as_of 优先从最后一页响应取；分页 items 模式下响应结构被收集，退化为 endpoint 级配置
     endpoint_as_of = None
@@ -514,9 +519,14 @@ def pull_endpoint(db: Session, endpoint: ConnectorEndpoint, user: User) -> tuple
         select(SourceDocument.sha256).where(SourceDocument.id == prev).limit(1)
     ).first() if prev else None
     # 指纹用候选事实集合（statement 排序哈希）：响应内嵌时间戳会导致整包 sha 每次不同
-    new_sha = hashlib.sha256(
-        json.dumps(sorted(c.statement for c in candidates), ensure_ascii=False).encode()
-    ).hexdigest()
+    if dedup_mode == "mapped_facts":
+        projected = [{"statement": c.statement, "fact_type": c.fact_type, "subject": c.subject,
+                      "predicate": c.predicate, "value": c.value, "unit": c.unit, "as_of": c.as_of}
+                     for c in candidates]
+        dedup_input = sorted(projected, key=lambda item: json.dumps(item, ensure_ascii=False, sort_keys=True, default=str))
+    else:
+        dedup_input = sorted(c.statement for c in candidates)
+    new_sha = hashlib.sha256(json.dumps(dedup_input, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest()
     endpoint.last_pull_at = datetime.now(UTC)
     if prev and prev_sha == new_sha:
         endpoint.last_pull_status = "ok"
@@ -692,9 +702,37 @@ def _pull_local_git(db: Session, connector: Connector, endpoint: ConnectorEndpoi
     return doc, 0, True
 
 
-def record_pull_failure(db: Session, endpoint: ConnectorEndpoint, error: str) -> None:
-    """拉取失败也要留痕在 endpoint 上，前端能看到最近一次错误。"""
+def safe_pull_failure_code(error: Exception | str) -> str:
+    message = str(error)
+    if "LOCAL_DOCS_ALLOWLIST" in message:
+        return "LOCAL_DOCS_ALLOWLIST_rejected"
+    if message.startswith("环境变量 ") and "未设置" in message:
+        return "connector_credential_missing"
+    if "不存在" in message or "缺失" in message:
+        return "connector_mapping_invalid"
+    return "connector_pull_failed"
+
+
+def record_pull_failure(db: Session, endpoint: ConnectorEndpoint, error: Exception | str, *, actor: str | None = None) -> None:
+    """保留失败状态；远端错误文本可能带凭据，绝不持久化。"""
     endpoint.last_pull_at = datetime.now(UTC)
     endpoint.last_pull_status = "failed"
-    endpoint.last_pull_error = error[:500]
+    endpoint.last_pull_error = safe_pull_failure_code(error)
+    from ..models import CapabilityRegistration
+    from .capability_integrations import append_verification
+
+    # Mutable legacy pull status cannot restore a failed typed verification.
+    registrations = db.scalars(select(CapabilityRegistration).where(
+        CapabilityRegistration.kind == "data_connector", CapabilityRegistration.endpoint_id == endpoint.id,
+    )).all()
+    for registration in registrations:
+        append_verification(db, registration, scope_kind="data_source_endpoint", scope={
+            "plugin_key": registration.data_source_plugin_key, "registration_key": registration.key,
+            "registration_version": registration.version, "endpoint_id": endpoint.id,
+        }, result="failed", actor=actor or "system",
+            evidence={"kind": "probe_failure", "reason_code": endpoint.last_pull_error})
+    if actor is not None:
+        db.add(AuditLog(event="connector.pull_failed", actor=actor,
+                        entity_type="connector_endpoint", entity_id=str(endpoint.id),
+                        detail_json={"reason_code": endpoint.last_pull_error}))
     db.commit()

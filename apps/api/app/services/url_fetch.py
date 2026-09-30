@@ -70,3 +70,43 @@ def safe_fetch(
             if len(resp.content) > settings.url_fetch_max_bytes:
                 raise UnsafeUrlError(f"响应超过大小限制 {settings.url_fetch_max_bytes} 字节")
             return resp.content, resp.headers.get("content-type", "text/html").split(";")[0].strip()
+
+
+def bounded_safe_fetch(
+    url: str,
+    headers: dict[str, str] | None = None,
+    method: str = "GET",
+    json_body: dict | None = None,
+    *,
+    max_bytes: int = 1_000_000,
+) -> tuple[bytes, str]:
+    """F7 external capability fetch with an in-flight body limit and per-hop URL validation."""
+    settings = get_settings()
+    limit = min(max_bytes, settings.url_fetch_max_bytes, 1_000_000)
+    if limit < 1:
+        raise UnsafeUrlError("响应大小限制无效")
+    current_url = url
+    redirect_count = 0
+    with httpx.Client(timeout=min(settings.url_fetch_timeout_seconds, 10), follow_redirects=False) as client:
+        while True:
+            _validate_target(current_url)
+            with client.stream(method.upper(), current_url, headers=headers, json=json_body) as resp:
+                if resp.status_code in {301, 302, 303, 307, 308}:
+                    redirect_count += 1
+                    if redirect_count > MAX_REDIRECTS:
+                        raise UnsafeUrlError("重定向次数超限")
+                    redirected = httpx.URL(current_url).join(resp.headers["location"])
+                    original = httpx.URL(url)
+                    if (redirected.scheme, redirected.host, redirected.port) != (original.scheme, original.host, original.port):
+                        raise UnsafeUrlError("重定向目标不属于已验证来源")
+                    current_url = str(redirected)
+                    continue
+                resp.raise_for_status()
+                chunks: list[bytes] = []
+                total = 0
+                for chunk in resp.iter_bytes():
+                    total += len(chunk)
+                    if total > limit:
+                        raise UnsafeUrlError(f"响应超过大小限制 {limit} 字节")
+                    chunks.append(chunk)
+                return b"".join(chunks), resp.headers.get("content-type", "text/html").split(";")[0].strip()

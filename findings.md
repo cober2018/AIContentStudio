@@ -1,5 +1,37 @@
 # 配置记录
 
+## 2026-09-30 F7 独立复核修正
+
+- `bounded_safe_fetch` 原跨源跳转会保留认证 headers；F7 现仅接受同 scheme/host/port 的跳转，在第二请求前拒绝跨源与 HTTPS 降级。旧 fetch 未改，typed 路径不回退。
+- `last_pull_status` 是可覆盖字段，不能承担长期验证撤销。失败现在对所有 mapped profile 追加准确 failedVerification，旧 pull 成功也不会恢复，需要新管理员 probe。
+- 已安装 WeWrite 的 converter 会删除正文首级标题、规范化中英文空格并追加非批准声明；账号实际来自 CLI 全局配置，版本标签/路径哈希不证明账号绑定。因此 runtime 返回 unavailable，不读取/泄漏全局凭据，不让任何真实新远端 effect 到达 CLI。后续应实现可证明账号绑定与批准成品原样上传的 adapter，不能仅修投影后宣称可发布。
+
+## 2026-09-30 F7 第一批验收边界
+
+- 第二批已确认的旧路径缺口：`/materials/generate` 从布尔生成结果直接创建 public-ready 素材、保存 raw prompt 并可能自动挂 Draft。F7 必须把新生成改成有界 staged output→明确接受/权利→精确字节版本，不把该旧路径或 provider 注册当作已验证能力；当前尚未修这部分，不能声称 F7 完成。
+- Settings 数据源接口曾 select 整个 ConnectorEndpoint，会读取 secret-bearing 配置列；已有 SQL 负向回归揭示后改为只选择 id/name/method/connector_name。UI 只给 GET 接口注册 profile，不将 generic Connector 等同已验证 Plugin。
+- 账号人工核验只记录本机算出的证据摘要，服务端核操作者拥有的 ContentAccount、精确动作和真实 runtime 指纹；最大 24 小时有效。隔离假证据只证明流程，真实平台验证必须另有授权和实际回看。
+- v5 WeChat 无独立 digest 字段，确定性使用冻结 title；封面仅接受 live rights/hash 与真实 sniff 一致的 PNG/JPEG，Publisher 不重写正文、不生成素材、不回退旧 Draft。
+- 最新 PostgreSQL 16 真实迁移往返与 SQLite 回归通过；保留 Verification 历史时拒绝降级。生产库未改。
+- Ruff 的 SystemConstant TRY004 位于未改动历史行；本批不为消除它改节点异常契约。其余范围通过，保留这条已知门禁差异，不将带告警运行伪报成无条件全绿。
+
+## 2026-09-30 F7 实施前事实
+
+- 原 `safe_fetch` 是先完整读取 `resp.content` 再检查大小；F7 增加独立流式抓取，在超限块处立即停读。受控端点路径限定 1 MB 解码响应体、10 秒/请求、500 条/页和 20 页/10,000 条总量；旧 Connector 抓取行为不变。定向回归证明实际不消耗超限后的后续块。
+- 单凭 `CapabilityRegistration.endpoint_id` 无法区分同为 `api` 的两个来源，也无法给 Data Node 固定具体版本。F7 在同一 registration 表内增加显式 `data_source_plugin_key`，`source_ref` 采用 `capability:<registration_id>@<version>`，没有额外数据表。
+- 旧 Connector 分页配置可超出默认 20 页，因此 F7 能力指纹只接受 1–20 页、每页 1–500 条的有界端点；原有旧 Connector 路径保持不变。外部 SourceDocument 仍为原始来源记录，但 DataSnapshot 只投影映射后的 Fact 文本，未映射远端字段不应进入工作流快照。
+- 仅有 generic REST POST 配置无法证明它对远端没有副作用，因此 F7 首批 typed `api` 能力限定 HTTPS GET；POST 保留旧 Connector 功能，但不能通过 F7 只读数据源探测。重复读到相同 Source 时 Connector 返回新 Fact 数为零，探测必须回查已持久的映射 Fact，不能误把无变化认作失败；真正空结果必须写 failed verification，覆盖旧的 verified 状态。
+- 已验证的 capability 手工拉取失败不能只留下 Endpoint 的 `last_pull_error`，否则旧验证仍会显示 executable。当前执行闸门额外检查最近拉取失败并阻断，只有管理员成功重探测才能恢复；API 和库存仅返回固定安全码/状态，不回显第三方异常文本。
+- 原 Connector 去重只哈希候选 Fact 的陈述；若陈述模板不含数值，数值变化会被当成“无变化”，数据节点也无法正确 stale。F7 受控路径独立采用完整映射 Fact 字段哈希、在快照投影有界 Fact 值与 source hash；旧直接拉取维持原逻辑。配置变更后的新 profile 版本须显式注册/重探测，旧 pinned source_ref 不自动转向。
+- 旧 `allow_unverified_auto_draft` 只曾绕过 unverified 检查；现在执行入口不再读取它。历史目标可读，但无 ContentAccount 稳定账号或无真实范围验证的新远端调用被拒。内部验证服务仅为真实结果的安全存储/判定，不会自动创建验证记录。
+- PublisherResult 是不可信插件结果：即便 Publisher CLI 自身已脱敏，DeliveryAttempt 仍需再次过滤 metadata/error/remote_id；非零退出是失败，CLI 报成功却无可信 ID 或运行中异常按 unknown 对账。
+- F7 两张表的 `scope_json`/`evidence_json` 安全依赖服务层 allowlist；publisher_action 与 data_source_endpoint 的精确范围验证已接执行入口，但公开验证管理 API、其他 Provider 范围与真实外部 readback 尚未完成，不能把模拟回归称为 F7 安全闭环。
+- WeWrite CLI 失败时原来直接拼接 stderr（可含 token）；现在仅返回 `publisher_execution_failed`。CLI 零退出但缺可靠 media ID 时按 unknown，而非可重发失败。
+- `ConnectorEndpoint` 没有版本字段；能力验证须用 endpoint ID 加服务端计算的有效配置/凭据版本指纹，缺少可核验凭据版本时保持 unverified，不能编造 Endpoint revision。
+- 当前 WeWrite Publisher 只接 legacy render payload；v5 公众号文章必须先从冻结且批准的 manifest 作确定性 title/body/digest/cover 投影，不能直接将 v5 JSON 或旧稿回退给 Publisher。
+- 旧 `allow_unverified_auto_draft` 执行旁路已关闭；`last_pull_error` 与 PublisherResult/subprocess 错误改为安全原因码和白名单字段。真正远端账号与 Provider readback 仍待独立验收。
+- F8 production auth 的外部 issuer/subject 与现有 User 映射尚无实证；进入 F8 前必须明确身份与存储/密钥边界，不能以本地 Header auth 冒充生产准入。
+
 ## 2026-09-30 F6E 最终复核决策
 
 - v5 按 `(unit_id, variant_key)` 判当前，旧 v3/v4 按不含 v5 的 Unit legacy 系列判当前；否则冻结任一 v5 会意外阻断旧 v4 的新审批/授权。Project Versions 和 Review UI 必须与服务端采用同一系列边界。

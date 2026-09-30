@@ -7,6 +7,7 @@ export type Run = { id: number; status: string; workflow_id: number; workflow_ve
 export type IdentitySnapshot = { id: number; brand_id: number | null; persona_id: number; account_id: number | null; series_id: number | null; revision_ids?: Record<string, number | null>; brand_revision_id: number | null; persona_revision_id: number | null; account_revision_id: number | null; series_revision_id: number | null; brand_voice_version_id: number | null; effective_profile: Record<string, unknown>; field_origins: Record<string, string>; checksum: string };
 export type Attempt = { attempt_no: number; status: string; input_hash: string | null; output_hash: string | null; output_json: Record<string, unknown>; error: string | null };
 export type DataPlugin = { key: string; name: string; category: string; available: boolean; reason: string | null; config_schema: Record<string, unknown> };
+export type DataCapability = { id: number; key: string; version: string; plugin_key: string; source_ref: string; executable: boolean; verified: boolean };
 export type ExecutionOption = { provider: string; model: string; available: boolean; reason: string | null };
 export type UnitOutput = { id: number; output_kind: "draft" | "candidate" | "material_revision" | "content_master_revision"; entity_id: number; run_id: number; node_id: string; attempt_id: number | null; provenance: Record<string, unknown> };
 
@@ -47,6 +48,7 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
   const [run, setRun] = useState<Run | null>(null);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [plugins, setPlugins] = useState<DataPlugin[]>([]);
+  const [dataCapabilities, setDataCapabilities] = useState<DataCapability[]>([]);
   const [executionOptions, setExecutionOptions] = useState<Record<string, ExecutionOption>>({});
   const [assets, setAssets] = useState<SharedAsset[]>([]);
   const [outputs, setOutputs] = useState<UnitOutput[]>([]);
@@ -66,7 +68,12 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
   const canvasDefinition = !design && run ? run.definition : definition;
   const selectedNode = useMemo(() => canvasDefinition.nodes.find((node) => node.id === selected) || null, [canvasDefinition, selected]);
   const selectedStep = !design ? run?.steps.find((step) => step.node_id === selected) || null : null;
-  const sourcePlugin = plugins.find((item) => item.key === selectedNode?.config.data_source_plugin_key);
+  const sourceCapability = dataCapabilities.find((item) => item.source_ref === selectedNode?.config.source_ref
+    && item.plugin_key === selectedNode?.config.data_source_plugin_key);
+  const pluginDescriptor = plugins.find((item) => item.key === selectedNode?.config.data_source_plugin_key);
+  const sourcePlugin = pluginDescriptor && sourceCapability ? { ...pluginDescriptor,
+    available: sourceCapability.executable, reason: sourceCapability.executable ? null : "所选连接版本未验证或已失效",
+  } : pluginDescriptor;
   const executor = selectedNode?.kind === "AI" ? executionOptions[selectedNode.plugin] : null;
   const readOnly = project?.status === "archived" || unit?.status === "archived";
 
@@ -83,11 +90,13 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       api.get<{ id: number; status: string }[]>(`${base}/runs`),
       api.get<SharedAsset[]>(`/content-projects/${projectId}/shared-assets`),
       api.get<UnitOutput[]>(`${base}/outputs`),
-    ]).then(async ([nextProject, nextUnit, personas, nextBinding, nextEffective, nextPlugins, nextExecutors, nextRuns, nextAssets, nextOutputs]) => {
+      api.get<DataCapability[]>("/data-source-capabilities"),
+    ]).then(async ([nextProject, nextUnit, personas, nextBinding, nextEffective, nextPlugins, nextExecutors, nextRuns, nextAssets, nextOutputs, nextCapabilities]) => {
       const nextDefault = await api.get<WorkflowBinding>(`/content-personas/${nextUnit.persona_id}/default-workflows/${nextUnit.modality}`);
       setProject(nextProject); setUnit(nextUnit); setPersona(personas.find((item) => item.id === nextUnit.persona_id) || null);
       setBinding(nextBinding); setDefaultBinding(nextDefault); setDefinition(structuredClone(nextEffective.workflow_id ? nextEffective.definition : EMPTY));
       setPlugins(nextPlugins); setExecutionOptions(nextExecutors.ai); setRuns(nextRuns); setAssets(nextAssets); setOutputs(nextOutputs);
+      setDataCapabilities(nextCapabilities);
       if (nextRuns[0]) setRun(await api.get<Run>(`${base}/runs/${nextRuns[0].id}`));
     }).catch((err) => setError(problem(err))).finally(() => setLoading(false));
   }, [projectId, unitId]);
@@ -207,5 +216,5 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
     catch (err) { setError(problem(err)); } finally { setBusy(false); }
   }
 
-  return { readOnly, base, project, unit, persona, brandName, accountName, seriesName, snapshot, binding, defaultBinding, definition, dirty, design, setDesign, selected, setSelected, runs, run, setRun, attempts, plugins, executionOptions, assets, outputs, assetsOpen, setAssetsOpen, loading, busy, error, setError, notice, configText, setConfigText, inputText, setInputText, outputText, setOutputText, conditionText, setConditionText, depsText, setDepsText, dragging, setDragging, newKind, setNewKind, runSourceRef, setRunSourceRef, canvasDefinition, selectedNode, selectedStep, sourcePlugin, executor, change, editNode, addNode, removeNode, moveNode, moveBy, applyInspector, saveOverride, saveDefault, startRun, runAction };
+  return { readOnly, base, project, unit, persona, brandName, accountName, seriesName, snapshot, binding, defaultBinding, definition, dirty, design, setDesign, selected, setSelected, runs, run, setRun, attempts, plugins, dataCapabilities, executionOptions, assets, outputs, assetsOpen, setAssetsOpen, loading, busy, error, setError, notice, configText, setConfigText, inputText, setInputText, outputText, setOutputText, conditionText, setConditionText, depsText, setDepsText, dragging, setDragging, newKind, setNewKind, runSourceRef, setRunSourceRef, canvasDefinition, selectedNode, selectedStep, sourcePlugin, sourceCapability, executor, change, editNode, addNode, removeNode, moveNode, moveBy, applyInspector, saveOverride, saveDefault, startRun, runAction };
 }

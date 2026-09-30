@@ -10,18 +10,24 @@ from .. import runtime_config
 from ..config import get_settings
 from ..models import (
     BrandVoiceVersion,
+    CapabilityRegistration,
+    CapabilityVerification,
     ChannelTemplateVersion,
     Connector,
     ConnectorEndpoint,
+    ContentAccount,
     ContentJob,
+    ContentPersona,
+    DeliveryTarget,
     DiscoverabilityProfileVersion,
     PromptVersion,
     TopicBrief,
     User,
 )
-from . import data_source_plugins, system_settings
+from . import capability_integrations, data_source_plugins, system_settings
 from .content_harness import channel_registry, rules
-from .content_harness.registry import registry
+from .content_harness.publishers import bootstrap_publishers
+from .content_harness.registry import RegistryKinds, registry
 from .generation.providers import effective_llm_config
 
 LABELS = {
@@ -127,6 +133,12 @@ def data_sources_section(db: Session, user: User, limit=50, offset=0) -> dict:
     } for row in rows]
     return _section("data_sources", {
         "plugins": plugins, "connectors": connectors,
+        "endpoint_options": [{"id": endpoint.id, "connector_name": _text(endpoint.connector_name), "name": _text(endpoint.name),
+                              "method": endpoint.method if endpoint.method in {"GET", "POST"} else "unknown"}
+                             for endpoint in db.execute(select(ConnectorEndpoint.id, ConnectorEndpoint.name,
+                                                               ConnectorEndpoint.method, Connector.name.label("connector_name")).join(
+                                 Connector, ConnectorEndpoint.connector_id == Connector.id,
+                             ).where(Connector.is_active.is_(True)).order_by(ConnectorEndpoint.id).limit(200))],
         "total": db.scalar(select(func.count()).select_from(Connector)), "limit": limit, "offset": offset,
         "can_configure": user.role == "admin", "can_pull": user.role in {"admin", "editor"},
     }, "editable" if user.role == "admin" else "read_only")
@@ -234,3 +246,49 @@ def product_view(db: Session, user: User) -> dict:
         models_section(user), data_sources_section(db, user), channels_section(db, user),
         rules_section(db, user), team_section(db, user), advanced_section(user),
     ]}
+
+
+def capability_inventory(db: Session, user: User) -> dict:
+    bootstrap_publishers()
+    rows = db.scalars(select(CapabilityRegistration).order_by(CapabilityRegistration.id.desc()).limit(100)).all()
+    registrations = {(row.kind, row.key, row.version): row for row in rows}
+    descriptors = []
+    for kind in RegistryKinds:
+        for descriptor in registry.list(kind):
+            registration = registrations.get((kind, descriptor.key, descriptor.version))
+            descriptors.append({"kind": kind, "key": _ref(descriptor.key), "version": _ref(descriptor.version),
+                                "discovered": True, "configured": bool(registration and registration.status == "configured"),
+                                "verified": False, "executable": False,
+                                "reason": "scope_verification_required" if kind in {"publisher", "data_connector"} else "configuration_required"})
+    owned_accounts = set(db.scalars(select(ContentAccount.id).join(
+        ContentPersona, ContentAccount.persona_id == ContentPersona.id,
+    ).where(ContentPersona.owner_user_id == user.id)).all())
+    publisher_rows = [row for row in rows if row.kind == "publisher"]
+    publishers = []
+    for registration in publisher_rows:
+        events = db.scalars(select(CapabilityVerification).where(
+            CapabilityVerification.registration_id == registration.id,
+            CapabilityVerification.scope_kind == "publisher_action",
+        ).order_by(CapabilityVerification.id.desc()).limit(200)).all()
+        seen = set()
+        for event in events:
+            try:
+                scope = capability_integrations._scope("publisher_action", event.scope_json)
+            except ValueError:
+                continue
+            token = tuple(scope.items())
+            if scope["content_account_id"] not in owned_accounts or token in seen:
+                continue
+            seen.add(token)
+            target = DeliveryTarget(**scope)
+            verified = capability_integrations.publisher_target_verified(db, target, registry)
+            publishers.append({"registration_id": registration.id, "scope": scope,
+                               "configured": registration.status == "configured", "verified": verified,
+                               "executable": verified, "reason": None if verified else "publisher_scope_unverified",
+                               "last_verification": {"id": event.id, "result": event.result,
+                                                     "verified_at": event.verified_at.isoformat(),
+                                                     "expires_at": event.expires_at.isoformat() if event.expires_at else None}})
+    from .capability_integrations import publisher_runtime_fingerprint
+
+    return {"descriptors": descriptors, "publishers": publishers, "can_verify": user.role == "admin",
+            "publisher_verification_available": publisher_runtime_fingerprint("publisher.wechat.wewrite", "1") is not None}

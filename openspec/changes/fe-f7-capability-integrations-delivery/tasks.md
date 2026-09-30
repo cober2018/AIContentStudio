@@ -1,48 +1,48 @@
 ## 0. Baseline and registry audit
-- [ ] 0.1 Start after F6E implementation gates pass.
-- [ ] 0.2 Inventory current PluginRegistry, Connector, Settings, provider and Publisher code.
-- [ ] 0.3 Map current keys to North Star capability kinds without breaking existing resolvers.
-- [ ] 0.4 Record backend/frontend/OpenSpec/migration baseline.
-- [ ] 0.5 No provider capability is promoted from assumption.
+- [x] 0.1 Start after F6E implementation gates pass.
+- [x] 0.2 Inventory current PluginRegistry, Connector, Settings, provider and Publisher code.
+- [x] 0.3 Map current keys to North Star capability kinds without breaking existing resolvers.
+- [x] 0.4 Record backend/frontend/OpenSpec/migration baseline.
+- [x] 0.5 No provider capability is promoted from assumption.
 
 ## 1. Durable capability persistence
-- [ ] 1.1 Add CapabilityRegistration model.
-- [ ] 1.2 Add CapabilityVerification model.
-- [ ] 1.3 Add kind/status/scope/index constraints.
-- [ ] 1.4 Exclude secret/token/cookie/raw path fields by schema.
-- [ ] 1.5 Add config fingerprint/version identity.
-- [ ] 1.6 Add additive migration.
-- [ ] 1.7 Add downgrade preflight for retained verification history.
-- [ ] 1.8 Validate SQLite/PostgreSQL paths.
-- [ ] 1.9 Add authorization/audit tests.
-- [ ] 1.10 Prove runtime availability rechecks exact registration version/config fingerprint, verification scope/expiry and loaded implementation; never infer executable from a DB row.
-- [ ] 1.11 Keep the explicit Data Source Plugin → ConnectorEndpoint mapping inside planned registration/config fields; stop for spec revision if another durable business object is truly required.
+- [x] 1.1 Add CapabilityRegistration model.
+- [x] 1.2 Add CapabilityVerification model.
+- [x] 1.3 Add kind/status/scope/index constraints.
+- [x] 1.4 Exclude secret/token/cookie/raw path fields by schema.
+- [x] 1.5 Add config fingerprint/version identity.
+- [x] 1.6 Add additive migration.
+- [x] 1.7 Add downgrade preflight for retained verification history.
+- [x] 1.8 Validate SQLite/PostgreSQL paths.
+- [x] 1.9 Add authorization/audit tests.
+- [x] 1.10 Prove runtime availability rechecks exact registration version/config fingerprint, verification scope/expiry and loaded implementation; never infer executable from a DB row.
+- [x] 1.11 Keep the explicit Data Source Plugin → ConnectorEndpoint mapping inside planned registration/config fields; stop for spec revision if another durable business object is truly required.
 
 ## 2. Registry expansion
-- [ ] 2.1 Add model_provider kind.
-- [ ] 2.2 Add tool_provider kind.
-- [ ] 2.3 Add data_connector kind.
-- [ ] 2.4 Add search_provider kind.
-- [ ] 2.5 Add image_provider kind.
-- [ ] 2.6 Add video_provider kind.
-- [ ] 2.7 Add tts_provider kind.
-- [ ] 2.8 Add asr_provider kind.
-- [ ] 2.9 Add channel_adapter/browser_automation kinds.
-- [ ] 2.10 Preserve existing node/rule/renderer/publisher/skill compatibility.
-- [ ] 2.11 Exact version resolution only.
-- [ ] 2.12 Add descriptor/inventory tests.
+- [x] 2.1 Add model_provider kind.
+- [x] 2.2 Add tool_provider kind.
+- [x] 2.3 Add data_connector kind.
+- [x] 2.4 Add search_provider kind.
+- [x] 2.5 Add image_provider kind.
+- [x] 2.6 Add video_provider kind.
+- [x] 2.7 Add tts_provider kind.
+- [x] 2.8 Add asr_provider kind.
+- [x] 2.9 Add channel_adapter/browser_automation kinds.
+- [x] 2.10 Preserve existing node/rule/renderer/publisher/skill compatibility.
+- [x] 2.11 Exact version resolution only.
+- [x] 2.12 Add descriptor/inventory tests.
 
 ## 3. Connector→Data Source execution
-- [ ] 3.1 Add explicit typed mapping model/config from Data Source capability to ConnectorEndpoint.
-- [ ] 3.2 Preserve Connector env-secret references.
-- [ ] 3.3 Add manual pull through capability.
-- [ ] 3.4 Add Workflow Data Node execution through capability.
-- [ ] 3.5 Persist DataSnapshot/SourceDocument/Fact provenance.
-- [ ] 3.6 Bound pagination/timeouts/body sizes.
-- [ ] 3.7 Treat external payload as untrusted data.
-- [ ] 3.8 Add failure/retry/audit behavior; `ConnectorEndpoint.last_pull_error` and all returned diagnostics must use bounded safe reason codes, never raw exception or response text.
-- [ ] 3.9 Do not mark unrelated plugin keys connected.
-- [ ] 3.10 Add connector integration tests.
+- [x] 3.1 Add explicit typed `data_source_plugin_key` and endpoint mapping on CapabilityRegistration; Data Node source_ref pins registration ID/version. Use endpoint ID plus effective configuration/credential-version fingerprint instead of inventing an Endpoint revision; unverifiable credential version remains unverified.
+- [x] 3.2 Preserve Connector env-secret references.
+- [x] 3.3 Add manual pull through capability.
+- [x] 3.4 Add Workflow Data Node execution through capability.
+- [x] 3.5 Persist DataSnapshot/SourceDocument/Fact provenance.
+- [x] 3.6 Bound pagination/timeouts/body sizes.
+- [x] 3.7 Treat external payload as untrusted data.
+- [x] 3.8 Add failure/retry/audit behavior; `ConnectorEndpoint.last_pull_error` and all returned diagnostics must use bounded safe reason codes, never raw exception or response text.
+- [x] 3.9 Do not mark unrelated plugin keys connected.
+- [x] 3.10 Add connector integration tests.
 
 ## 4. Material search provider
 - [ ] 4.1 Define search provider protocol/capability.
@@ -87,32 +87,32 @@
 - [ ] 7.7 Add stale/version change tests.
 
 ## 8. Publisher capability
-- [ ] 8.1 Persist exact account/channel/form/action/version verification.
-- [ ] 8.2 Keep copy_package as safe local capability where packageable.
+- [x] 8.1 Persist exact account/channel/form/action/version verification.
+- [x] 8.2 Keep copy_package as safe local capability where packageable.
 - [ ] 8.3 Preserve existing WeChat WeWrite behavior and verify only real supported scopes.
-- [ ] 8.4 Automatic actions require verified capability + account authorization.
-- [ ] 8.5 Publisher receives immutable approved package only.
-- [ ] 8.6 No publisher content rewrite/truncation/asset generation.
-- [ ] 8.7 Unknown outcome remains Unknown.
+- [x] 8.4 Automatic actions require verified capability + account authorization.
+- [ ] 8.5 Publisher receives immutable approved package only; v5 WeChat article reaches legacy WeWrite input solely through validated deterministic frozen title/body/digest/cover projection before attempt preparation, with no v3/v4 fallback.
+- [x] 8.6 No publisher content rewrite/truncation/asset generation.
+- [x] 8.7 Unknown outcome remains Unknown.
 - [ ] 8.8 Add reconciliation/read-back/human verification flow.
-- [ ] 8.9 Douyin/Xiaohongshu remote actions remain unavailable unless real adapter verified.
-- [ ] 8.10 Add idempotency/duplicate-side-effect tests.
-- [ ] 8.11 Remove the legacy `allow_unverified_auto_draft` execution bypass for new remote effects; preserve old targets/attempts as readable history and report the behavior change.
-- [ ] 8.12 Recheck verification at execution after target creation, including account/form/action/version/fingerprint/expiry; revoked scope creates no new remote attempt.
-- [ ] 8.13 Ensure WeWrite subprocess output and all PublisherResult fields are allowlisted/redacted before persistence or API return; add nested secret/error negative checks.
+- [x] 8.9 Douyin/Xiaohongshu remote actions remain unavailable unless real adapter verified.
+- [x] 8.10 Add idempotency/duplicate-side-effect tests.
+- [x] 8.11 Remove the legacy `allow_unverified_auto_draft` execution bypass for new remote effects; preserve old targets/attempts as readable history and report the behavior change.
+- [x] 8.12 Recheck verification at execution after target creation, including account/form/action/version/fingerprint/expiry; revoked scope creates no new remote attempt.
+- [x] 8.13 Ensure WeWrite subprocess output and all PublisherResult fields are allowlisted/redacted before persistence or API return; add nested secret/error negative checks.
 
 ## 9. Settings and capability UI
-- [ ] 9.1 Add capability inventory section/projection.
-- [ ] 9.2 Distinguish configured/executable/verified/unavailable.
-- [ ] 9.3 Show last verification/scope safe metadata.
-- [ ] 9.4 Add explicit probe/verify actions.
-- [ ] 9.5 Read-only inventory triggers no network calls.
-- [ ] 9.6 Preserve role-based editability and secret masking.
+- [x] 9.1 Add capability inventory section/projection.
+- [x] 9.2 Distinguish configured/executable/verified/unavailable.
+- [x] 9.3 Show last verification/scope safe metadata.
+- [x] 9.4 Add explicit probe/verify actions.
+- [x] 9.5 Read-only inventory triggers no network calls.
+- [x] 9.6 Preserve role-based editability and secret masking.
 - [ ] 9.7 Add provider configuration guidance/status without fake Save actions.
-- [ ] 9.8 Prove read-only inventory performs no provider/Connector probe and viewer cannot invoke verification.
+- [x] 9.8 Prove read-only inventory performs no provider/Connector probe and viewer cannot invoke verification.
 
 ## 10. Real integration acceptance/final gates
-- [ ] 10.1 Run Connector integration against configured isolated endpoint.
+- [x] 10.1 Run Connector integration against configured isolated endpoint.
 - [ ] 10.2 Run material search/import with real bytes if configured.
 - [ ] 10.3 Run image/video/TTS/ASR real adapter tests only where credentials are provided.
 - [ ] 10.4 Keep missing credentials explicitly unverified, not failed-complete.

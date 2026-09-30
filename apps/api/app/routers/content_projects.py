@@ -737,7 +737,7 @@ def start_project_run(payload: ProjectRunIn, project_id: int, unit_id: int, db: 
             except ValueError as exc:
                 raise HTTPException(409, str(exc)) from exc
             try:
-                assert_executable(db, config.get("data_source_plugin_key", ""), str(config.get("source_ref", "")))
+                assert_executable(db, config.get("data_source_plugin_key", ""), str(config.get("source_ref", "")), user=user, unit_id=unit.id)
             except ValueError as exc:
                 raise HTTPException(409, str(exc)) from exc
     try:

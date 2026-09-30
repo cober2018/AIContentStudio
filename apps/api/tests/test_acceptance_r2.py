@@ -656,11 +656,10 @@ def _wechat_asset_with_cover(db) -> tuple:
 
 
 def _authorize_auto_draft(db, asset, monkeypatch):
-    from app import runtime_config
     from app.models import User
     from app.services import delivery as delivery_service
 
-    monkeypatch.setattr(runtime_config, "get_runtime", lambda key: {"allow_unverified_auto_draft": True})
+    monkeypatch.setattr(delivery_service, "publisher_target_verified", lambda *args: True)
     user = db.query(User).filter_by(email="editor@studio.local").first()
 
     class _Payload:
