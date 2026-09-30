@@ -6,6 +6,7 @@ import time
 from urllib.parse import urlparse
 
 import httpx
+from httpcore._backends.sync import SyncBackend
 
 from ..config import get_settings
 
@@ -14,6 +15,38 @@ MAX_REDIRECTS = 3
 
 class UnsafeUrlError(ValueError):
     pass
+
+
+class _PinnedBackend(SyncBackend):
+    def __init__(self, host: str, port: int, address: str):
+        self.host, self.port, self.address = host, port, address
+
+    def connect_tcp(self, host, port, timeout=None, local_address=None, socket_options=None):
+        if (host, port) != (self.host, self.port):
+            raise OSError("fetch_target_mismatch")
+        # Only TCP is rewritten; TLS certificate/SNI and HTTP Host retain the URL hostname.
+        return super().connect_tcp(self.address, port, timeout=timeout,
+                                   local_address=local_address, socket_options=socket_options)
+
+
+def pinned_transport(url: str) -> httpx.HTTPTransport:
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+            raise UnsafeUrlError("仅允许无凭据 HTTPS 来源")
+        port = parsed.port or 443
+        addresses = socket.getaddrinfo(parsed.hostname, port, type=socket.SOCK_STREAM)
+        if not addresses or any(
+            not ipaddress.ip_address(info[4][0]).is_global
+            or ipaddress.ip_address(info[4][0]).is_multicast
+            for info in addresses
+        ):
+            raise UnsafeUrlError("禁止访问内网/保留地址")
+    except (OSError, ValueError) as exc:
+        raise UnsafeUrlError("来源网络地址不可用") from exc
+    transport = httpx.HTTPTransport(retries=0, trust_env=False)
+    transport._pool._network_backend = _PinnedBackend(parsed.hostname, port, addresses[0][4][0])
+    return transport
 
 
 def _validate_target(url: str) -> None:
@@ -92,9 +125,9 @@ def bounded_safe_fetch(
     deadline = time.monotonic() + timeout
     request_headers = {key: value for key, value in (headers or {}).items() if key.lower() != "accept-encoding"}
     request_headers["Accept-Encoding"] = "identity"
-    with httpx.Client(timeout=timeout, follow_redirects=False) as client:
-        while True:
-            _validate_target(current_url)
+    while True:
+        with httpx.Client(timeout=timeout, follow_redirects=False, trust_env=False,
+                          transport=pinned_transport(current_url)) as client:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise UnsafeUrlError("响应超过总读取时限")

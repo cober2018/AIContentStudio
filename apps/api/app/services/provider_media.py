@@ -20,6 +20,7 @@ from PIL import Image
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from .. import runtime_config
 from ..models import AuditLog, Material, MaterialRevision, ProjectMaterialReference, User
 from . import materials, provider_calls
 from .content_harness import providers
@@ -290,10 +291,13 @@ def accept(db: Session, user: User, stage_id: str, decision: dict) -> dict:
                             entity_id=str(revision.id), detail_json=safe))
             if preview.renderer_origin:
                 revalidate_preview(db, user, preview, decision)
-            with _lock:
-                if _get(stage_id, user) is not preview or hashlib.sha256(preview.content).hexdigest() != preview.content_hash:
-                    raise HTTPException(409, "provider_preview_changed")
-                db.commit()
+            with runtime_config.configuration_guard():
+                if _provider(preview.provider_kind, preview.provider_key, preview.provider_version)[1] != preview.runtime_hash:
+                    raise HTTPException(409, "provider_runtime_changed")
+                with _lock:
+                    if _get(stage_id, user) is not preview or hashlib.sha256(preview.content).hexdigest() != preview.content_hash:
+                        raise HTTPException(409, "provider_preview_changed")
+                    db.commit()
         except Exception:
             db.rollback()
             raise

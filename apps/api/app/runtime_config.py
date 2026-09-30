@@ -5,8 +5,9 @@ LLM 任务前刷新。读取热路径（get_provider 等）只查缓存，不碰
 """
 
 import threading
+from contextlib import contextmanager
 
-_LOCK = threading.Lock()
+_LOCK = threading.RLock()
 _OVERRIDES: dict[str, dict] = {}
 
 KEY_LLM = "llm"
@@ -15,6 +16,13 @@ KEY_PLUGINS = "plugins"  # {"skill_dirs": [...], "skills_enabled": [...], "mcp":
 KEY_DSH = "dsh"
 KEY_IMAGE = "image"  # {"enabled","provider","model","base_url","api_key","size"}  # {"default_provider","default_model","fallback_provider","timeout_sec","max_retries","output_dir"}
 KEY_DELIVERY = "delivery"  # 历史配置保留读取；allow_unverified_auto_draft 不再授权远端效果
+
+
+@contextmanager
+def configuration_guard():
+    """Serialize process-cache changes with runtime revalidation and durable acceptance."""
+    with _LOCK:
+        yield
 
 
 def load_from_db(db) -> None:

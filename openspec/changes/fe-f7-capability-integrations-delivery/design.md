@@ -6,6 +6,8 @@ Current WeWrite reports `verified() == False`. Legacy `delivery.allow_unverified
 
 ## Goals / Non-Goals
 
+Safety review closure: the historical `publish_wechat` workflow node remains readable but rejects every new execution, regardless of legacy flags or Candidate schema. It must not invoke CLI, export temporary content, generate covers or expose CLI output; new remote effects require the Delivery Router. Typed Connector and Commons fetches pin each hop's TCP transport to a freshly validated globally routable address, preserve original TLS hostname verification, disable proxy environment/retries and reject mixed private/public DNS answers. Legacy `safe_fetch` remains unchanged. Media acceptance rechecks exact runtime immediately before commit under the same process-local configuration guard used by cache updates; this is not a cross-worker/database configuration consistency guarantee, which remains a production-readiness obligation.
+
 **Goals:** exact versioned resolution; safe durable verification; explicitly mapped Connector execution; bounded, accepted provider bytes with live rights; truthful inventory; scoped remote delivery with immutable approved payload and unknown reconciliation.
 
 **Non-Goals:** a second Workflow Engine, generic Asset truth, provider-written Master/Variant, publisher-time adaptation, credential storage in verification rows, invented remote platform support, production deployment, or claiming untested accounts verified.

@@ -445,60 +445,8 @@ def _h_export(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
 
 
 def _h_publish_wechat(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict:
-    """显式遗留能力：导出 MD + 封面 → wewrite publish。"""
-    import subprocess
-    import tempfile
-    from pathlib import Path
-
-    from sqlalchemy import select as sa_select
-
-    from ..models import AssetMedia
-    from ..services.exports import export_markdown
-
-    channel = "wechat"
-    if step.params_json.get("legacy_remote_publish") is not True:
-        raise ValueError("公众号远端草稿节点未显式启用；M1 仅允许人工交付成品包")
-    asset_id = (run.context_json.get("assets") or {}).get(channel)
-    if not asset_id:
-        raise ValueError("公众号线没有已批准的资产")
-    from ..models import ContentAsset
-
-    asset = db.get(ContentAsset, asset_id)
-    if asset and asset.mother_revision_id:
-        raise ValueError("M1 内容没有自动交付动作，禁止通过旧工作流进入公众号草稿箱")
-    if asset and (asset.candidate_manifest_json or {}).get("schema_version") == 2:
-        # V1 PRD 2.0（D24/5.8）：schema v2 内容的远端副作用一律走 Delivery Router
-        raise ValueError("schema v2 候选必须经 Delivery Router（DeliveryTarget/Attempt）交付，禁止旧工作流直接发布")
-    with tempfile.TemporaryDirectory() as tmp:
-        md_path = Path(tmp) / "article.md"
-        md_path.write_text(export_markdown(asset), encoding="utf-8")
-        uploaded = db.scalars(
-            sa_select(AssetMedia).where(
-                AssetMedia.asset_id == asset_id, AssetMedia.kind == "cover", AssetMedia.source == "upload"
-            )
-        ).first()
-        ctx_cover = ((run.context_json or {}).get("covers") or {}).get("wechat")
-        if ctx_cover and Path(ctx_cover).is_file():
-            cover_path = Path(ctx_cover)
-        elif uploaded and uploaded.file_path:
-            from ..services.asset_media import MEDIA_ROOT
-
-            cover_path = MEDIA_ROOT / uploaded.file_path
-        else:
-            cover_path = Path(tmp) / "cover.png"
-            cover_path.write_bytes(_placeholder_png())
-        title = asset.title[:60]
-        digest = (asset.title[:54]) or title
-        cmd = [
-            "wewrite", "publish", str(md_path),
-            "--cover", str(cover_path), "--title", title, "--digest", digest,
-        ]
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=180, check=False)
-        output = (proc.stdout or "") + (proc.stderr or "")
-        if proc.returncode != 0 or "Draft created" not in output:
-            raise ValueError(f"wewrite 发布失败：{output[-300:]}")
-    media_id = output.split("Draft created! media_id:")[-1].strip().splitlines()[0]
-    return {"asset_id": asset_id, "draft_media_id": media_id}
+    # Retain the historical node key, not its unscoped remote execution path.
+    raise ValueError("旧工作流禁止直接发布；请经 Delivery Router 完成精确账号验证和交付授权")
 
 
 def _placeholder_png() -> bytes:

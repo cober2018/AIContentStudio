@@ -426,9 +426,20 @@ def test_candidate_mismatch_blocks_execute(env):
     assert "不一致" in r.json()["detail"]
 
 
-def test_v2_content_blocked_from_legacy_workflow_publish(env):
+@pytest.mark.parametrize("schema", [1, 2, 3, 4, 5])
+@pytest.mark.parametrize("legacy_flag", [True, False])
+def test_v2_content_blocked_from_legacy_workflow_publish(env, monkeypatch, schema, legacy_flag):
     """schema v2 候选禁止经旧 workflow_engine 直接发布（D24/5.8）。"""
     db, asset = env
+    import subprocess
+    import tempfile
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("legacy publish reached export/CLI/placeholder path")
+
+    monkeypatch.setattr(subprocess, "run", forbidden)
+    monkeypatch.setattr(tempfile, "TemporaryDirectory", forbidden)
+    asset.candidate_manifest_json = {"schema_version": schema}
     from app.models import Workflow
     from app.services import workflow_engine
 
@@ -450,6 +461,7 @@ def test_v2_content_blocked_from_legacy_workflow_publish(env):
     step = WorkflowStep(run_id=run.id, node_id="p", node_type="publish_wechat", label="p", params_json={"channel": "wechat", "legacy_remote_publish": True}, plugin_key="builtin.publish_wechat", plugin_version="1")
     db.add(step)
     db.commit()
+    step.params_json = {"legacy_remote_publish": legacy_flag}
     import pytest as _pytest
 
     handler = workflow_engine._h_publish_wechat

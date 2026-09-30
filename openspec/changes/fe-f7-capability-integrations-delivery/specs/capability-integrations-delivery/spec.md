@@ -93,6 +93,10 @@ After a verified manual pull or Data Node pull fails, the mapped capability SHAL
 - **WHEN** a typed Connector or Commons response uses non-identity compression, or a typed Connector exceeds its cumulative read deadline
 - **THEN** the bounded reader refuses compressed content before iteration or aborts the overrun, with no successful snapshot/media; typed requests force identity negotiation and old direct Connector reads retain their legacy boundary
 
+#### Scenario: DNS changes after validation
+- **WHEN** a typed Connector or Commons request resolves a safe public address and DNS subsequently changes
+- **THEN** TCP uses the validated address, TLS/Host retain the original hostname, and each redirect has a separately validated pinned connection with no environment proxy or retry; empty or mixed forbidden DNS answers fail closed regardless of the legacy private-address opt-in
+
 ### Requirement: Search output is not a usable asset
 Search providers SHALL return bounded candidate metadata only. Explicit import MUST validate source, downloaded bytes, hash, MIME and rights/license before creating an immutable MaterialRevision or attaching it to a Project.
 
@@ -118,6 +122,10 @@ The source's stable public citation URL and the provider's temporary fetch/previ
 Image, video, TTS and renderer providers SHALL return bounded untrusted results. Only explicitly accepted, byte-verified output with exact provider/version, input/request hash, MIME, license and rights status SHALL become MaterialRevision. A Master or Variant SHALL change only through its own explicit revision save. No provider success flag, remote URL or preview alone SHALL count as generated media.
 
 Source model-use authorization and optional Project active/ownership authorization SHALL be serialized through controlled Provider dispatch/result, not merely checked after sending source bytes. Source and parent Material locks SHALL use deterministic ordering; database authorization locks SHALL be released before publishing a temporary cache stage. Explicit acceptance retains its separate live rights checks.
+
+#### Scenario: Runtime changes while accepting preview
+- **WHEN** the provider configuration changes after acceptance starts but before commit
+- **THEN** final runtime revalidation rejects the changed preview and rolls back derived rows; process-cache configuration updates and final revalidation/commit share one guard, acquired after database authorization locks. This does not claim cross-worker configuration consistency.
 
 #### Scenario: Source revoked before controlled dispatch
 - **WHEN** a source revocation wins the authorization lock before a derived media request dispatches
@@ -185,6 +193,12 @@ Remote Publisher verification MUST bind platform/channel, stable account identit
 Every remote Publisher action SHALL require exact approved Candidate hash and Delivery Authorization, validate live account/capability/rights, and receive only the frozen approved content/package. The Publisher MUST NOT rewrite, truncate, adapt, generate media or silently switch providers after approval. Local copy/manual package remains a distinct non-remote path when packageable.
 
 The existing WeWrite publisher's legacy render input MUST NOT be applied directly to a v5 manifest. A v5 WeChat article requires a deterministic pre-attempt projection from its frozen approved title/body/digest/cover bytes into the publisher input; missing or incompatible frozen content MUST fail before a remote attempt, without v3/v4 fallback or post-approval rewriting.
+
+The historical workflow `publish_wechat` node MUST reject new execution for every schema and legacy flag without invoking a publisher, producing placeholder media, truncating content or returning subprocess output. Historical records remain readable; new remote execution is only through the authorized Delivery Router.
+
+#### Scenario: Legacy workflow opt-in cannot bypass authorization
+- **WHEN** an old workflow enables `legacy_remote_publish` for any Candidate schema
+- **THEN** execution fails with a fixed safe Delivery Router reason before any external call or temporary export
 
 #### Scenario: Publisher wants shorter title
 - **WHEN** frozen approved content exceeds a remote platform limit

@@ -236,7 +236,7 @@ def test_public_fetch_rejects_bad_redirect_and_streamed_body_bounds(monkeypatch,
         return httpx.Response(status, headers=headers, content=content)
 
     original = httpx.Client
-    monkeypatch.setattr(material_search, "_validate_target", lambda url: None)
+    monkeypatch.setattr(material_search, "pinned_transport", lambda url: None)
     monkeypatch.setattr(httpx, "Client", lambda **kwargs: original(timeout=10, follow_redirects=False, transport=httpx.MockTransport(respond)))
     with pytest.raises(ValueError):
         material_search.commons_fetch("https://upload.wikimedia.org/wikipedia/commons/a/test.png", 100)
@@ -259,7 +259,7 @@ def test_commons_refuses_compression_before_body_read(monkeypatch, encoding):
         return real_client(transport=httpx.MockTransport(
             lambda request: httpx.Response(200, stream=Body(), headers={"content-encoding": encoding})), **kwargs)
     monkeypatch.setattr(material_search.httpx, "Client", fixture_client)
-    monkeypatch.setattr(material_search, "_validate_target", lambda url: None)
+    monkeypatch.setattr(material_search, "pinned_transport", lambda url: None)
     with pytest.raises(ValueError, match="compression"):
         material_search.commons_fetch("https://upload.wikimedia.org/wikipedia/commons/a/test.png", 100)
     assert not read
