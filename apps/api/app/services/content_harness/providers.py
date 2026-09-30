@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
@@ -21,13 +22,50 @@ class AssetProvider(Protocol):
     def generate(self, prompt: str, out_path: Path) -> bool: ...
 
 
+@dataclass(frozen=True, slots=True)
+class MediaOutput:
+    status: str
+    content: bytes = b""
+    mime_type: str | None = None
+    metadata: dict = field(default_factory=dict)
+
+
+class ImageProvider(Protocol):
+    key: str
+    version: str
+    def runtime_fingerprint(self) -> str | None: ...
+    def generate(self, request: dict) -> MediaOutput: ...
+
+
+class VideoProvider(ImageProvider, Protocol):
+    pass
+
+
+class TTSProvider(ImageProvider, Protocol):
+    pass
+
+
+class ASRProvider(Protocol):
+    key: str
+    version: str
+    def runtime_fingerprint(self) -> str | None: ...
+    def transcribe(self, request: dict) -> dict: ...
+
+
 class WewriteImageProvider:
     """wewrite image-gen 薄包装：生图未启用/失败返回 False，由调用方降级。"""
 
     key = "asset_provider.wewrite_image"
     version = "1"
 
-    def generate(self, prompt: str, out_path: Path) -> bool:
+    def runtime_fingerprint(self) -> str | None:
+        # Installed CLI retries uncertain calls and reads mutable global config.
+        # A launcher hash cannot attest the actual model, endpoint or credentials.
+        return None
+
+    def generate(self, prompt: str | dict, out_path: Path | None = None) -> bool | MediaOutput:
+        if isinstance(prompt, dict):
+            return MediaOutput("unavailable")
         from ...services.writing_pipeline import generate_cover_image
 
         return generate_cover_image(prompt, out_path)
@@ -64,4 +102,6 @@ def bootstrap_media_providers() -> None:
         registry.register(
             "asset_provider", "asset_provider.wewrite_image", "1", WewriteImageProvider(), label="wewrite AI 生图"
         )
+    if "asset_provider.wewrite_image" not in {d.key for d in registry.list("image_provider")}:
+        registry.register("image_provider", "asset_provider.wewrite_image", "1", WewriteImageProvider(), label="WeWrite image preview (acceptance required)")
     # material_search 不注册内置实现：能力显式不可用

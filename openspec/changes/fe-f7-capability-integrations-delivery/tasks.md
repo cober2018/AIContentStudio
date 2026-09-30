@@ -56,22 +56,22 @@
 - [ ] 4.9 Prove search preview is non-public-ready, accepted result bytes/license/rights are exact, and Project attachment uses a revision reference visible across Units.
 
 ## 5. Image/video providers
-- [ ] 5.1 Define image generation/variation protocol.
-- [ ] 5.2 Define video generation protocol.
-- [ ] 5.3 Persist accepted output as MaterialRevision.
-- [ ] 5.4 Persist provider/version/prompt/input refs/hash metadata.
-- [ ] 5.5 Respect model/public/commercial rights.
-- [ ] 5.6 Require explicit accept before Master use.
+- [x] 5.1 Define image generation/variation protocol.
+- [x] 5.2 Define video generation protocol.
+- [x] 5.3 Persist accepted output as MaterialRevision.
+- [x] 5.4 Persist provider/version/prompt/input refs/hash metadata.
+- [x] 5.5 Respect model/public/commercial rights.
+- [x] 5.6 Require explicit accept before Master use.
 - [ ] 5.7 Add async/timeout/failure/unknown provider-result handling.
 - [ ] 5.8 Add mock + at least one configured real adapter path where repository settings support it.
-- [ ] 5.9 Do not mark adapter verified without real test.
-- [ ] 5.10 Redact nested provider request/response/errors across API, Material metadata, AuditLog, ProjectEvent and settings projections; specifically prevent raw prompts/requests, signed URLs and secret fragments in existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error`; add successful-result and error-path negative secret-leakage checks.
+- [x] 5.9 Do not mark adapter verified without real test.
+- [x] 5.10 Redact nested provider request/response/errors across API, Material metadata, AuditLog, ProjectEvent and settings projections; specifically prevent raw prompts/requests, signed URLs and secret fragments in existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error`; add successful-result and error-path negative secret-leakage checks.
 - [ ] 5.11 Reject success-without-bytes, unsupported MIME, missing/ambiguous license and wrong render-input hash without creating MaterialRevision or Master provenance.
 
 ## 6. TTS/ASR
-- [ ] 6.1 Define TTS provider protocol.
-- [ ] 6.2 Store TTS audio as exact MaterialRevision.
-- [ ] 6.3 Define ASR provider protocol.
+- [x] 6.1 Define TTS provider protocol.
+- [x] 6.2 Store TTS audio as exact MaterialRevision.
+- [x] 6.3 Define ASR provider protocol.
 - [ ] 6.4 Return bounded transcript/cues.
 - [ ] 6.5 Explicit accept/save required to change Video Master.
 - [ ] 6.6 Record provider/runtime/source hashes.

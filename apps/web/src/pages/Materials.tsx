@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { api } from "../api";
 import { Button, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
+import ProviderMediaPanel from "../product/ProviderMediaPanel";
 
 // 素材库（V1 PRD 2.0 / material-library-v1）：
 // Material = 全局逻辑素材；MaterialRevision = 不可变字节版本；稿件通过 DraftMedia(use) 引用。
@@ -219,35 +220,9 @@ function DetailModal({ material, onClose }: { material: MaterialRow; onClose: ()
 }
 
 function GenerateModal({ onClose }: { onClose: () => void }) {
-  const queryClient = useQueryClient();
-  const [prompt, setPrompt] = useState("");
-  const [title, setTitle] = useState("");
-  const [error, setError] = useState("");
-  const generate = useMutation({
-    mutationFn: () => api.post<MaterialRow>("/materials/generate", { prompt, title: title || undefined }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["materials"] });
-      onClose();
-    },
-    onError: (e) => setError(e instanceof Error ? e.message : "生图失败"),
-  });
   return (
     <Modal title="AI 生成素材" onClose={onClose}>
-      <div className="space-y-3">
-        <Field label="Prompt *">
-          <textarea className={`${inputClass} h-20`} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="16:9 深色科技风封面：…" />
-        </Field>
-        <Field label="标题（可选）">
-          <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} />
-        </Field>
-        {error && <div className="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>}
-      </div>
-      <div className="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" onClick={onClose}>取消</Button>
-        <Button disabled={!prompt || generate.isPending} onClick={() => generate.mutate()}>
-          {generate.isPending ? "生成中…" : "生成"}
-        </Button>
-      </div>
+      <ProviderMediaPanel />
     </Modal>
   );
 }

@@ -2,6 +2,9 @@
 
 ## 2026-09-30：F7 两批实施，随后 F8
 
+- [ ] /// 第二批接续：先实现共享 ProviderOutput/ASROutput 协议与有界临时预览；精确 actor/runtime/input/bytes 绑定，重启/过期需重新预览，不建第三张持久表。
+- [x] /// 将旧 generate 自动写素材改成 stage→明确权利/许可确认→atomic MaterialRevision + 可选精确项目引用；无字节、错 MIME、过期、外部身份、runtime 漂移或输入撤权不写业务对象。新 Assets 与旧入口共享接受面板；20 项定向回归及隔离浏览器四项通过。真实 WeWrite CLI 因内部重试/配置不可证明而 unavailable，不计真实 Provider 实现完成。
+- [ ] /// 复用共享接受边界接图像/视频/TTS/ASR Provider；真实 WeWrite 生图仅在明确配置时可请求，不以 mock 代替外部验证。按批末集中跑 API/权利/秘密泄漏与全量门禁，再接 Assets/Production UX。
 - [x] /// 核实本地 main、F6E 100/100、F7/F8 标准规格、Alembic head 与后端/前端基线；修正 F7 Endpoint fingerprint 和 v5 WeWrite 输入边界，strict 与 diff-check 通过。
 - [x] /// 接续第一批：以失败回归锁定 typed Data Source 的逐块响应体上限、分页与总量边界；仅在 F7 受控调用生效，旧 Connector 路径保持兼容。
 - [x] /// 审查并实现 v5 已批准公众号文章到 WeWrite 只读确定性投影；先证明无 Draft fallback、精确封面与无重写，缺字段须在创建远端 Attempt 前阻断。

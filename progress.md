@@ -1,5 +1,15 @@
 # 当前进度
 
+## 2026-09-30：F7 第二批 Provider 显式接受（进行中）
+
+- F7 67/105：核销图像/视频/TTS/ASR 协议、精确素材接受、三类人工权利与安全 hash 血缘；ASR 有界转录、真实单次 Provider、搜索/渲染/Publisher、阶段最终验收仍未完成，F8 未启动。
+- 新增共享 stage→preview→accept：actor 隔离、15 分钟有界内存预览（重启失效）、PNG/JPEG/WebP/Pillow 解码、WAV 帧验证、MP4 全解码与限时；接受才写 MaterialRevision/可选 ProjectMaterialReference。来源 Revision/Material 在事务内按固定次序锁定且刷新权利；不新增表/迁移。
+- 新 Assets lazy 面板与旧 Materials 生图入口共用显式接受，许可 hash、CC BY 署名、public/model/commercial 权利均人工确认；默认全否。不会写 Master，不做耐久自动保存，不标记 Provider verified。
+- 独立复核第一轮四项：CLI 指纹不等于实际配置、内部不确定调用重试、视频探测不等于解码、来源撤权并发。已关闭新 CLI 请求路径（runtime unavailable）、加入全解码和 source 事务锁；20 项定向回归通过，含真实双连接 SQLite 撤权和真实小 MP4。独立二次复核 APPROVE，仅批准本批安全/接受边界，不代表真实 Provider/F7 完成。
+- 修正后最新全量 1250 passed / 2 skipped / 8 warnings（51.10s）；中途 1246 是旧结果。TypeScript/Vite/FE-P1 通过：/projects 224.80/72.92 kB、/assets 258.37/82.70、ProviderMediaPanel 独立 lazy 4.77/2.65。OpenSpec strict 30/30、范围 Ruff/diff 通过。
+- 修正后重启隔离 API、fresh SQLite，再跑浏览器四项、零 page error：预览零素材、显式接受精确 hash/权利、刷新持久化而预览不复活、旧入口同面板；最新证据 `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f7-media-browser-kl1CJE`。这是隔离生成 PNG fixture，不是外部生图验证。SQLite/media `/tmp/aicontent-f7-media.UL5AFR/`，没有外部生成/发布。
+
+
 ## 2026-09-30：独立复核后的安全收口（覆盖前一版验收状态）
 
 - 独立只读 re-review APPROVE：原四项安全 blocker 已关闭，仅批准此次安全收口，不代表真实 Publisher 实现完成。最新 strict 30/30、diff-check 与除历史 SystemConstant TRY004 外的范围 Ruff PASS。隔离 Uvicorn/Vite 及 PostgreSQL 容器均已停止，媒体/SQLite/browser 证据保留；本地 main 第一批提交，不推送/部署/生产迁移/归档。

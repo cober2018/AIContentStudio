@@ -844,3 +844,10 @@ PRD §16 的发布门槛另需 **30 个真实 Topic（抖音/XHS/公众号各 10
 - v5 Freeze 对同一精确 Variant 的双连接并发请求只返回同一 Candidate ID，且只留一条 `candidate.frozen` 事件；数据库唯一约束与项目写锁形成最后防线，无需新增并行 Candidate 状态。
 - v5 raw-ID 边界已从 Variant 一直验到包：归档项目保留历史读取，但涉及新写入或下载后推进 DeliveryTarget 状态的包入口必须拒绝；外部用户对这三层 ID 均不可探测。
 - Variant 保存使用同一个数据库事务落 Revision、EvidenceRef/AssetRef 与 ProjectEvent；提交前 Evidence 撤权回归现明确断言三类写入都回滚，不留下孤立引用或事件。
+# 2026-09-30 F7 Provider 接受边界
+
+- 预览只保存有界 actor-scoped 字节缓存，确认许可/权利后才原子写既有素材版本和精确项目引用；不新增 ProviderOutput 表。服务重启/跨 worker 的预览失效须在 F8 明确处理，不能冒充持久化。
+- 已安装 WeWrite image-gen 会对 Timeout/ConnectionError 做内部重试；其 launcher 与手工 credential-version 不是实际模型/配置/凭据身份。因此新 typed runtime 明确 unavailable，保留旧 helper 历史边界；下一步需要真实配置绑定且单次请求的 adapter，不能靠管理员确认启用旧 CLI。
+- ffprobe stream width/height 不能证明 MP4 可解码。新生成视频需在体积/像素/时间上限内完整 ffmpeg -xerror 解码；真实坏包拒绝，真实小 MP4 通过，不持久化 stderr。
+- Provider source 接受必须在项目锁之后，对 source Revision 和父 Material 按排序锁定并 populate_existing/refresh 后验证权限和字节，直至 commit。双 SQLite 连接实测进行中的撤权提交后接受 409，零派生素材；缓存锁不替代数据库权利锁。
+- 未做真实外部图像/视频/TTS/ASR 验证，fixture 与已接受素材的人工许可不代表 Provider verified。F7 继续实施，F8 尚未开始。

@@ -5,8 +5,10 @@
 - 旧 DraftMedia（无 material_revision_id）保持可读。
 """
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -31,6 +33,50 @@ from ..services.project_authorization import authorize_project_draft
 router = APIRouter(prefix="/api/v1", tags=["materials"])
 
 ROLES = {"cover", "inline", "attachment"}
+
+
+class ProviderStageIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provider_kind: Literal["image_provider", "video_provider", "tts_provider"]
+    provider_key: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,150}$")
+    provider_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,50}$")
+    prompt: str = Field(min_length=1, max_length=2000)
+    project_id: int | None = Field(default=None, ge=1)
+    source_revision_ids: list[int] = Field(default_factory=list, max_length=4)
+
+
+class ProviderAcceptIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    confirmed: bool
+    title: str = Field(min_length=1, max_length=200)
+    license_code: Literal["CC0", "CC-BY-4.0", "provider_terms", "owned"]
+    license_evidence_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    public_use_allowed: bool
+    model_use_allowed: bool
+    commercial_use_allowed: bool
+    attribution_text: str | None = Field(default=None, max_length=1000)
+
+
+@router.post("/provider-media/stage")
+def stage_provider_media(payload: ProviderStageIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import provider_media
+
+    return provider_media.stage(db, user, payload.model_dump())
+
+
+@router.get("/provider-media/{stage_id}/raw")
+def preview_provider_media(stage_id: str, user: User = Depends(get_current_user)):
+    from ..services import provider_media
+
+    content, mime = provider_media.preview_bytes(stage_id, user)
+    return Response(content=content, media_type=mime, headers={"Cache-Control": "private, no-store"})
+
+
+@router.post("/provider-media/{stage_id}/accept", status_code=201)
+def accept_provider_media(stage_id: str, payload: ProviderAcceptIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import provider_media
+
+    return provider_media.accept(db, user, stage_id, payload.model_dump())
 
 
 class MaterialAttachIn(BaseModel):
@@ -251,13 +297,13 @@ def search_materials(payload: SearchIn, db: Session = Depends(get_db), user: Use
     return provider.search(payload.query, limit=payload.limit).items
 
 
-@router.post("/materials/generate", status_code=201)
+@router.post("/materials/generate")
 def generate_material(
     payload: GenerateIn,
     db: Session = Depends(get_db),
     user: User = Depends(require_editor),
 ):
-    """AI 生图 → MaterialRevision（source=ai_generated, prompt 留痕）。"""
+    """Generation now returns a private preview; acceptance is a separate action."""
 
     draft = db.get(Draft, payload.draft_id) if payload.draft_id else None
     if payload.draft_id and draft is None:
@@ -266,7 +312,6 @@ def generate_material(
         authorize_project_draft(db, draft, user, mutate=True)
 
     from .. import runtime_config
-    from ..services.asset_media import MEDIA_ROOT
     from ..services.content_harness.providers import bootstrap_media_providers, resolve_asset_provider
 
     bootstrap_media_providers()
@@ -278,29 +323,11 @@ def generate_material(
     except CapabilityUnavailable as exc:
         raise HTTPException(422, f"capability_unavailable: {exc}") from exc
 
-    out = MEDIA_ROOT / "working" / f"material_gen_{utcnow().timestamp():.0f}.png"
-    generated = provider.generate(payload.prompt, out)
-    if not generated or not out.is_file():
-        raise HTTPException(502, "生图失败（provider 返回未生成）")
-    content = out.read_bytes()
-    material = materials_service.create_material(
-        db, kind="image", title=payload.title or f"AI 生成 · {payload.prompt[:40]}", created_by=user.email
-    )
-    revision = materials_service.create_revision(
-        db, material,
-        content=content, suffix=".png", declared_mime="image/png",
-        source_kind="ai_generated", public_use_allowed=True, model_use_allowed=True,
-        provider_key=provider.key, provider_version=provider.version, prompt_text=payload.prompt,
-        created_by=user.email,
-    )
-    db.add(AuditLog(event="material.generated", actor=user.email, entity_type="material", entity_id=str(material.id), detail_json={"provider": provider.key}))
-    db.commit()
-    result = _material_json(material, with_revisions=True)
-    if draft is not None:
-        use = materials_service.attach_to_draft(db, draft, revision, role=payload.role if payload.role in ROLES else "inline")
-        db.add(AuditLog(event="material.attached", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"draft_media_id": use.id}))
-    db.commit()
-    return result
+    from ..services import provider_media
+
+    return provider_media.stage(db, user, {"provider_kind": "image_provider", "provider_key": provider.key,
+                                          "provider_version": provider.version, "prompt": payload.prompt,
+                                          "project_id": None, "source_revision_ids": []})
 
 
 # ---------- Draft × Material（Use/Placement）----------
