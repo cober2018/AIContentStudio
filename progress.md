@@ -1,5 +1,12 @@
 # 当前进度
 
+## 2026-09-30：F7 最新PostgreSQL迁移实际验证
+
+- 基线main@c828672，独立PostgreSQL16.15临时容器/库实际upgrade head至f7b000000001；空能力表head→f6e→head、旧publisher evidence字段保留、f7a保留史拒降级、f7b renderer史拒降级四项实际通过。最终columns/checks/indexes/FKs和原head一致，非DDL编译替代。
+- Commons实际搜索仍被非公网DNS198.18.0.41正确拒绝，未HTTP发送/下载/导入；不放宽SSRF/代理。10.2保持未完成，不把安全拒绝当素材集成成功。
+- 临时容器已停止并自动移除，仅回收本轮test DB；gate脚本保留/tmp/aics-f7-readiness-Etf53d，证据见docs/FE_F7_MIGRATION_REVALIDATION.md。F7仍95/105，10.7/10.9及外部/Publisher待办；F8不apply。未改业务代码/迁移/供应商策略/默认库，未push/deploy/archive。
+- 新SQLite既有迁移回归7 passed/5既有warnings（1.24s）、strict30/30和diff通过；首次错写不存在的renderer测试文件未执行，校准路径后才记录成功。无全后端/构建/浏览器重跑声明；只读记录窄复核APPROVE，不是F7整阶段终验。
+
 ## 2026-09-30：F7 三项安全缺口整批修复（窄复核通过）
 
 - 基线main@dfeb66f，旧workflow publish无条件安全拒绝；保留历史key/读取但不再导出文件、截稿、补占位图或调用CLI。typed Connector/Commons每跳transport锁定public IP，原host TLS验证/Host保留，禁止代理/重试/混合私网/组播答案，legacy safe_fetch不改。

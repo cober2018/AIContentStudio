@@ -6,6 +6,8 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
+最新迁移实测：独立PostgreSQL16.15实际验证到f7b000000001，四项往返/旧验证保留/两类历史拒降级通过，不使用旧f7a结果代替新迁移。临时容器已回收；真实Commons搜索被当前DNS非公网198.18.0.41拒绝，尚无下载/导入成功。详细证据与未覆盖范围见[最新迁移与公共来源验收](docs/FE_F7_MIGRATION_REVALIDATION.md)。没有新代码/依赖/迁移，启动方式不变，F7仍95/105、F8未apply。
+
 当前本地任务95/105：三项安全缺口整批修复并通过独立窄复核；旧workflow新发布一律要求Delivery Router、typed读取逐跳绑定验证IP/TLS原host、媒体accept最终runtime复检与当前进程配置串行。新增实际门禁150定向/1470全后端（2 skipped）、build/FE-P1、strict30/30通过，范围Ruff保留已存在workflow告警例外，详见[本批验收](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。无新依赖/业务表/迁移，原启动方式不变。七脚本52项本地浏览器历史证据未在本批重跑；实际渲染/本地ZIP与fixture区分见[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、账号绑定公众号上传、整阶段终验和F8仍待完成，不能把窄复核当F7通过。
 
 - 最新调用前权利修复：`provider_media.stage`持有project/source/parent权限锁至受控Provider调用结束，finally释放DB后再缓存；SQLite撤权先赢时零供应商调用。两个失败回归后修复，125定向/1448全后端（2 skipped）、构建预算/strict/Ruff/diff通过；不借本批关闭整阶段review或真实外部验收。复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py`；完整环境和限制见[共享媒体记录](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。没有新增依赖/迁移/业务对象或本批浏览器结果。

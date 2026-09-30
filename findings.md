@@ -1,5 +1,10 @@
 # 配置记录
 
+## 2026-09-30 F7 PostgreSQL与网络验收
+
+- 旧PostgreSQL证据只到f7a，不能拿来覆盖后来f7b renderer scope widening。本轮真实PG16.15证明最新往返与保留验证拒降级，旧行字段及约束/FK/索引实际回读一致；没有证明PG业务并发或多worker配置一致。
+- 当前Commons DNS为198.18.0.41，属于非公网答案；这是实际外部验收前置问题，不能在测试内mock public-IP或打开ssrf_allow_private后声称真实外部通过。
+
 ## 2026-09-30 F7 三项安全修复
 
 - 留着legacy_remote_publish真分支仍可旁路审核；最短安全路径是保留旧node key/历史但新执行一律要求Delivery Router，不用无作用的verified标签包装旧CLI。
