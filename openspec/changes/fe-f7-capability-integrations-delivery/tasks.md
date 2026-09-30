@@ -94,7 +94,7 @@
 - [ ] 8.5 Publisher receives immutable approved package only; v5 WeChat article reaches legacy WeWrite input solely through validated deterministic frozen title/body/digest/cover projection before attempt preparation, with no v3/v4 fallback.
 - [x] 8.6 No publisher content rewrite/truncation/asset generation.
 - [x] 8.7 Unknown outcome remains Unknown.
-- [ ] 8.8 Add reconciliation/read-back/human verification flow.
+- [x] 8.8 Add reconciliation/read-back/human verification flow. Existing scoped human verification plus locked, evidence-hashed, exact-attempt reconciliation/receipt and explicit UI confirmation implemented; synthetic acceptance is not real-account verification (10.5/10.6 remain pending).
 - [x] 8.9 Douyin/Xiaohongshu remote actions remain unavailable unless real adapter verified.
 - [x] 8.10 Add idempotency/duplicate-side-effect tests.
 - [x] 8.11 Remove the legacy `allow_unverified_auto_draft` execution bypass for new remote effects; preserve old targets/attempts as readable history and report the behavior change.

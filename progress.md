@@ -1,5 +1,15 @@
 # 当前进度
 
+## 2026-09-30：F7 人工对账与回执
+
+- 本批关闭 8.8 实施链路，F7 91/105；F8 尚未 apply。真实账号/Provider 验收 10.3/10.5/10.6 仍待办，不以 fixture 代替外部确认。
+- 补上 delivered 缺失的精确 DeliveryReceipt；target 写锁、expected latest Attempt、同证据/决策幂等与冲突拒绝。Unknown Attempt 原状态保留，not_delivered 不自动重发，所有再次执行仍走现有 Publisher gate。
+- 新客户端只提交本地 SHA-256 证据摘要；兼容非空 legacy note 但仅保存摘要，拒绝空证据和不安全 reference。独立复核发现 422 回显秘密，两个失败回归复现后以 reconcile-only APIRoute 固定安全原因修复；无全局处理器/新表/迁移。
+- 实际最终全后端 1407 passed / 2 skipped / 8 existing warnings（98.47s）；定向 109 passed（3.67s）；TypeScript/Vite + FE-P1 PASS：projects224.84/72.94kB，common Production280.20/89.13kB，Text606.95/189.34kB，review chunk21.47/8.13kB。strict30/30、范围 Ruff、Node syntax、diff-check PASS。
+- `fe-f7-reconciliation-ui-acceptance.mjs` 实际 Chrome 五项 fixture-transport gate：空证据禁用、取消零写、确认精确 Attempt/仅hash、无 execute、零 page errors。与真实后端定向测试分开报告，未执行真实账号 readback，未做 PostgreSQL 对账并发测试。Vite 隔离服务已停止。
+- flow：Unknown Attempt → 人工平台核验 → 本地 hash/显式确认 → target lock/exact latest → atomic human Receipt 或 not_delivered → 后续明确执行；没有自动 verified/PublishedContentRecord。
+- 无 push/deploy/生产迁移/canonical sync/archive；源码独立复核已关闭秘密回显问题，整批 reconciliation 实现窄复核 APPROVE（只读，没有由 reviewer 重跑命令）；支持关闭 8.8，不代表完整 F7。
+
 ## 2026-09-30：F7 媒体 Renderer 精确验证/执行
 
 - F7 90/105：本批核销 5.11 和 7.5–7.7，依据通用接受/校验协议、实际 Graphic Chromium renderer 与既有真实解码 MP4 contract fixture，不宣称已安装真实 Video renderer。F8 未 apply；真实生成/外部 ASR/TTS/Publisher、账号验证/阶段终验继续。

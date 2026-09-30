@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 人工对账闭环
+
+- [x] /// 补严既有 8.8：exact latest attempt、非空安全证据、原子人类回执与幂等；不将草稿箱对账当已发布，不新增表。
+- [x] /// 失败回归后实现 target 锁与 evidence hash 投影；Project Review 明确确认并只提交本地证据摘要，保留 legacy note 输入兼容。
+- [x] /// 集中跑交付/安全定向109、全后端1407/2 skipped、前端构建预算、strict30/30/Ruff/diff；五项 UI fixture gate 与独立整批窄复核 APPROVE。记录实际覆盖，不冒充真实远端验证或阶段终验。
+
 ## 2026-09-30：F7 媒体 Renderer 精确范围执行
 
 - [x] /// 复用两个既有 capability 表和已真实渲染的 actor stage：明确确认 input/output hash 才追加媒体 scope 验证；当前来源/字节/rights/runtime/Profile 事务内重验，不再调用 Renderer，不写 Master/素材。per-stage operation lock 保护 accept/verify，全局 cache 锁不等待 DB；提交边界重验身份/TTL/冻结字节。registration 写锁串行化 revoke/accept commit。

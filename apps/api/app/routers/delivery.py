@@ -5,9 +5,11 @@
 
 from datetime import UTC
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response
-from pydantic import AwareDatetime, BaseModel, Field, model_validator
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse, Response
+from fastapi.routing import APIRoute
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -30,7 +32,24 @@ from ..services import published_history
 from ..services.project_authorization import authorize_project_asset, authorize_project_target
 from ..services.project_events import record_project_event
 
-router = APIRouter(prefix="/api/v1", tags=["delivery"])
+
+class ReconciliationRoute(APIRoute):
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+
+        async def safe_handler(request: Request):
+            try:
+                return await handler(request)
+            except RequestValidationError:
+                # Default validation echoes request values that may contain secrets.
+                if self.path.endswith("/reconcile"):
+                    return JSONResponse(status_code=422, content={"detail": "reconciliation_input_invalid"})
+                raise
+
+        return safe_handler
+
+
+router = APIRouter(prefix="/api/v1", tags=["delivery"], route_class=ReconciliationRoute)
 
 
 class GenericTargetIn(BaseModel):
@@ -66,8 +85,17 @@ class FeedbackIn(BaseModel):
 
 
 class ReconcileIn(BaseModel):
-    resolution: str  # delivered / not_delivered
-    note: str | None = None
+    model_config = ConfigDict(extra="forbid")
+    resolution: str = Field(pattern="^(delivered|not_delivered)$")
+    note: str | None = Field(default=None, max_length=2000)
+    evidence_ref: str | None = Field(default=None, pattern="^sha256:[0-9a-f]{64}$")
+    expected_attempt_id: int | None = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def require_evidence(self):
+        if self.evidence_ref is None and not (self.note or "").strip():
+            raise ValueError("对账须提供非空核验说明或证据摘要")
+        return self
 
 
 def _target_json(target: DeliveryTarget, with_attempts: bool = True) -> dict:

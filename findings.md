@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-30 F7 对账缺口
+
+- 当前 reconcile 的 docstring 承诺回填 receipt，但 delivered 分支只改 target/attempt，没有创建 DeliveryReceipt；原始 note 直接进入 attempt metadata 和 AuditLog，且空说明也可确认。
+- 本批复用既有对象，新增有界证据 hash/expected attempt 契约；真实 Publisher 凭据选择不阻断该已批准闭环。草稿已交付不等于公开发布，不自动创建 PublishedContentRecord。
+- 独立窄复核发现 FastAPI 默认校验响应回显 input。unsafe URL/超长 note 失败回归复现后，以 delivery APIRoute 仅对 reconcile 返回固定原因关闭，不改变其他路由/global handler。源码窄复核 APPROVE，命令结果由本 Agent 回收。
+- UI 验收使用 fixture transport，五项 browser gate 仅证明本地摘要、取消/确认、准确 Attempt 和零 execute 请求；后端 109 定向回归单独证明事务/权限/回执，不能冒充真实平台 readback。跨进程 PostgreSQL 对账并发未跑。
+
 ## 2026-09-30 F7 媒体 Renderer 验证与锁序
 
 - Text renderer verification 不能直接套在媒体上，也不能移除 manual renderer 保护。通用 predicate 按 ProductionRenderer/Text 和 typed media executor 分流，媒体校验真实 callable/runtime/schema/forms/MIME/Profile；只有明确真实 stage readback 才记录媒体范围。

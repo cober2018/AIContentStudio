@@ -47,7 +47,7 @@ def test_project_bound_raw_delivery_ids_do_not_disclose_to_other_owner(client, d
 
     assert client.get(f"/api/v1/delivery-targets/{target.id}", headers=bob).status_code == 404
     assert client.post(f"/api/v1/delivery-targets/{target.id}/execute", headers=bob).status_code == 404
-    assert client.post(f"/api/v1/delivery-targets/{target.id}/reconcile", json={"resolution": "delivered"}, headers=bob).status_code == 404
+    assert client.post(f"/api/v1/delivery-targets/{target.id}/reconcile", json={"resolution": "delivered", "note": "platform checked"}, headers=bob).status_code == 404
     assert client.post(f"/api/v1/delivery-targets/{target.id}/receipt", json={"status": "human_confirmed"}, headers=bob).status_code == 404
     assert client.get(f"/api/v1/delivery-targets/{target.id}/package.zip", headers=bob).status_code == 404
     assert client.get(f"/api/v1/assets/{asset.id}/delivery-targets", headers=bob).status_code == 404
@@ -69,7 +69,7 @@ def test_project_bound_raw_delivery_ids_do_not_disclose_to_other_owner(client, d
     db_session.commit()
     assert client.post(f"/api/v1/delivery-targets/{target.id}/receipt", json={"status": "human_confirmed"}, headers=alice).status_code == 409
     assert client.get(f"/api/v1/delivery-targets/{target.id}", headers=alice).json()["status"] == "reconciliation_needed"
-    reconciled = client.post(f"/api/v1/delivery-targets/{target.id}/reconcile", json={"resolution": "delivered"}, headers=alice)
+    reconciled = client.post(f"/api/v1/delivery-targets/{target.id}/reconcile", json={"resolution": "delivered", "note": "platform checked"}, headers=alice)
     assert reconciled.status_code == 200
     assert db_session.query(DeliveryAttempt).filter_by(target_id=target.id).one().response_metadata_json["reconciled"] == "delivered"
 
