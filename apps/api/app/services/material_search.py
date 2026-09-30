@@ -66,6 +66,8 @@ def commons_fetch(url: str, max_bytes: int) -> tuple[bytes, str]:
                         current = str(redirected)
                         continue
                     response.raise_for_status()
+                    if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
+                        raise ValueError("search response compression forbidden")
                     if int(response.headers.get("content-length", "0")) > limit:
                         raise ValueError("search response too large")
                     chunks, total = [], 0

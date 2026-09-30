@@ -430,6 +430,69 @@ def test_f7_bounded_fetch_stops_reading_oversize_stream(monkeypatch):
     assert yielded == [b"1234", b"56"]
 
 
+@pytest.mark.parametrize("encoding", ["gzip", "br", "deflate", "identity, gzip"])
+def test_f7_bounded_fetch_refuses_compression_before_read(monkeypatch, encoding):
+    read = []
+    class Body(httpx.SyncByteStream):
+        def __iter__(self):
+            read.append(True)
+            yield b"private-compressed-body"
+    real_client = httpx.Client
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(
+        lambda request: httpx.Response(200, stream=Body(), headers={"content-encoding": encoding})), **kwargs))
+    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    with pytest.raises(url_fetch.UnsafeUrlError, match="压缩"):
+        url_fetch.bounded_safe_fetch("https://example.org/data")
+    assert not read
+
+
+def test_f7_bounded_fetch_forces_identity_without_changing_caller_headers(monkeypatch):
+    original = {"aCcEpT-EnCoDiNg": "gzip", "Authorization": "Bearer isolated-secret"}
+    def respond(request):
+        assert request.headers["accept-encoding"] == "identity"
+        assert request.headers["authorization"] == original["Authorization"]
+        return httpx.Response(200, content=b"ok")
+    real_client = httpx.Client
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(respond), **kwargs))
+    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    assert url_fetch.bounded_safe_fetch("https://example.org/data", headers=original)[0] == b"ok"
+    assert original["aCcEpT-EnCoDiNg"] == "gzip"
+
+
+def test_f7_bounded_fetch_has_total_read_deadline(monkeypatch):
+    ticks, read = [0], []
+    class Body(httpx.SyncByteStream):
+        def __iter__(self):
+            for index in range(100):
+                ticks[0] += 6
+                read.append(index)
+                yield b"x"
+    real_client = httpx.Client
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(
+        lambda request: httpx.Response(200, stream=Body())), **kwargs))
+    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch, "time", type("Clock", (), {"monotonic": staticmethod(lambda: ticks[0])}), raising=False)
+    with pytest.raises(url_fetch.UnsafeUrlError, match="时限"):
+        url_fetch.bounded_safe_fetch("https://example.org/data")
+    assert read == [0, 1]
+
+
+@pytest.mark.parametrize("status", [200, 302])
+def test_f7_deadline_rejects_empty_body_or_next_redirect(monkeypatch, status):
+    ticks, calls = [0], []
+    def respond(request):
+        calls.append(True)
+        ticks[0] += 11
+        return httpx.Response(status, content=b"", headers={"location": "https://example.org/next"})
+    real_client = httpx.Client
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(respond), **kwargs))
+    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch, "time", type("Clock", (), {"monotonic": staticmethod(lambda: ticks[0])}), raising=False)
+    with pytest.raises(url_fetch.UnsafeUrlError, match="时限"):
+        url_fetch.bounded_safe_fetch("https://example.org/data")
+    assert calls == [True]
+
+
 @pytest.mark.parametrize("destination", ["https://other.example/data", "http://example.org/data"])
 def test_f7_bounded_fetch_rejects_cross_origin_or_downgrade_before_sending_headers(monkeypatch, destination):
     seen = []

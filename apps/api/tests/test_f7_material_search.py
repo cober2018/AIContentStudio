@@ -243,6 +243,28 @@ def test_public_fetch_rejects_bad_redirect_and_streamed_body_bounds(monkeypatch,
     assert len(calls) == 1
 
 
+@pytest.mark.parametrize("encoding", ["gzip", "br", "deflate"])
+def test_commons_refuses_compression_before_body_read(monkeypatch, encoding):
+    import httpx
+
+    from app.services import material_search
+    read = []
+    class Body(httpx.SyncByteStream):
+        def __iter__(self):
+            read.append(True)
+            yield b"private-compressed-body"
+    real_client = httpx.Client
+    def fixture_client(**kwargs):
+        kwargs.pop("transport", None)
+        return real_client(transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, stream=Body(), headers={"content-encoding": encoding})), **kwargs)
+    monkeypatch.setattr(material_search.httpx, "Client", fixture_client)
+    monkeypatch.setattr(material_search, "_validate_target", lambda url: None)
+    with pytest.raises(ValueError, match="compression"):
+        material_search.commons_fetch("https://upload.wikimedia.org/wikipedia/commons/a/test.png", 100)
+    assert not read
+
+
 def test_provider_error_and_metadata_fail_closed_without_leaking_private_data(client, search_provider, monkeypatch):
     def fail(*args, **kwargs):
         raise RuntimeError("Authorization: private-api-key")

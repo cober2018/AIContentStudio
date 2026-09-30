@@ -89,6 +89,10 @@ After a verified manual pull or Data Node pull fails, the mapped capability SHAL
 - **WHEN** a mapped endpoint times out, exceeds limits or fails authorization
 - **THEN** no successful snapshot or new Fact Boundary is fabricated
 
+#### Scenario: Compressed or indefinitely trickling external response
+- **WHEN** a typed Connector or Commons response uses non-identity compression, or a typed Connector exceeds its cumulative read deadline
+- **THEN** the bounded reader refuses compressed content before iteration or aborts the overrun, with no successful snapshot/media; typed requests force identity negotiation and old direct Connector reads retain their legacy boundary
+
 ### Requirement: Search output is not a usable asset
 Search providers SHALL return bounded candidate metadata only. Explicit import MUST validate source, downloaded bytes, hash, MIME and rights/license before creating an immutable MaterialRevision or attaching it to a Project.
 

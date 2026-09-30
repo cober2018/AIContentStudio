@@ -2,6 +2,7 @@
 
 import ipaddress
 import socket
+import time
 from urllib.parse import urlparse
 
 import httpx
@@ -87,10 +88,19 @@ def bounded_safe_fetch(
         raise UnsafeUrlError("响应大小限制无效")
     current_url = url
     redirect_count = 0
-    with httpx.Client(timeout=min(settings.url_fetch_timeout_seconds, 10), follow_redirects=False) as client:
+    timeout = min(settings.url_fetch_timeout_seconds, 10)
+    deadline = time.monotonic() + timeout
+    request_headers = {key: value for key, value in (headers or {}).items() if key.lower() != "accept-encoding"}
+    request_headers["Accept-Encoding"] = "identity"
+    with httpx.Client(timeout=timeout, follow_redirects=False) as client:
         while True:
             _validate_target(current_url)
-            with client.stream(method.upper(), current_url, headers=headers, json=json_body) as resp:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise UnsafeUrlError("响应超过总读取时限")
+            with client.stream(method.upper(), current_url, headers=request_headers, json=json_body, timeout=remaining) as resp:
+                if time.monotonic() >= deadline:
+                    raise UnsafeUrlError("响应超过总读取时限")
                 if resp.status_code in {301, 302, 303, 307, 308}:
                     redirect_count += 1
                     if redirect_count > MAX_REDIRECTS:
@@ -102,11 +112,17 @@ def bounded_safe_fetch(
                     current_url = str(redirected)
                     continue
                 resp.raise_for_status()
+                if resp.headers.get("content-encoding", "identity").strip().lower() != "identity":
+                    raise UnsafeUrlError("不允许压缩响应")
                 chunks: list[bytes] = []
                 total = 0
                 for chunk in resp.iter_bytes():
+                    if time.monotonic() >= deadline:
+                        raise UnsafeUrlError("响应超过总读取时限")
                     total += len(chunk)
                     if total > limit:
                         raise UnsafeUrlError(f"响应超过大小限制 {limit} 字节")
                     chunks.append(chunk)
+                if time.monotonic() >= deadline:
+                    raise UnsafeUrlError("响应超过总读取时限")
                 return b"".join(chunks), resp.headers.get("content-type", "text/html").split(";")[0].strip()
