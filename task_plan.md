@@ -1,5 +1,12 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：Renderer 持久验证批
+
+- [x] /// 校准已批准 F7 Renderer 精确 scope、确定性/人工性质与真实 Text probe；规格定向复核 APPROVE 后进入代码，不新增业务表或自动 verified。
+- [x] /// 测试先行：增量 scope constraint、旧证据保留/拒降级、exact loaded renderer/runtime/scope、只读清单无探测、viewer/异项目/旧 Master 拒绝。独立复核三项缺口已用失败回归复现并闭合。
+- [x] /// 实现既有 Production Text/Manual Renderer descriptor 与管理员明确 Text probe；记录实际 input/output hash，不改 Master/Candidate，不把人工媒体当自动 renderer。Text-only lazy 入口、Settings 只读清单和六浏览器 gate 已通过。
+- [x] /// 集中定向 55、全后端 1318/2 skipped、隔离 SQLite/DDL、前端构建/预算、strict 30/30、Ruff/diff 与独立窄复核通过；同步 README/progress/findings，提交本地 main。实际媒体 renderer 输出接受/成片绑定继续后续实施，不能冒充本批完成。
+
 ## 2026-09-30：F7 两批实施，随后 F8
 
 - [x] /// ASR 批：先写失败回归，验证精确 Project-visible 音频/视频字节与 model-use 权利、真实时长、actor/base/runtime/context 有界 receipt，建议不得写 Master；只通过显式 save 验证并记录安全血缘。

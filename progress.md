@@ -969,6 +969,15 @@
 - 已补完陈旧候选拒绝与人工结果未知（`reconciliation_needed`）的独立本地验收；同一未知回填重复提交不会新增第二条回执。
 - ChatGPT 最终代码复核指出旧工作流默认仍生成公众号草稿节点；已将模板默认改为本地导出，并为遗留远端草稿增加显式开关与服务端闸门，M1 母稿仍不可进入该路径。
 - ChatGPT 对上述修复返回 DONE；已完成 `add-evidence-bound-article-handoff` 的 OpenSpec 归档，归档目录为 `openspec/changes/archive/2026-09-22-add-evidence-bound-article-handoff/`。
+# 2026-09-30 F7 Renderer 持久验证批
+
+- F7 80/105 → 84/105，仅关闭 7.1–7.4；媒体自动 Renderer 输出保存/精确绑定、实际 Provider/Publisher/F8 仍待完成。
+- Text v1/v2 真实确定性 probe、精确 scope 验证/过期/撤销/加载实现漂移、只读库存及 lazy 生产入口已实现；不写 Master/Candidate，不将人工 Graphic/Video 成片标 verified automatic。
+- 当前定向 55 passed；全量 1318 passed / 2 skipped / 8 existing warnings，52.35s。TS/Vite/FE-P1 PASS，common Production 280.03 kB raw / 89.09 kB gzip；Text-only 验证 chunk 2.59/1.58 kB。
+- 六个隔离浏览器 gate、0 page error，实测 v1/v2、刷新、撤销、历史只读及人工媒体清单；没有调用外部 Provider。首次因隔离 admin 邮箱默认 editor 无按钮，补测试库 admin 角色后重新整套通过，不改真实用户角色。
+- 规格定向复核 APPROVE；独立实施复核三项问题均已用 RED/GREEN 回归闭合并复核 APPROVE。最终含 UI/迁移/权利回归及浏览器报告的窄复核 APPROVE，仅限本批，不代表整个 F7。
+- f7b000000001 已在全新隔离 SQLite 实际 upgrade，往返/留史/索引/FK 回归通过；PostgreSQL 仅 DDL 编译。未 push/deploy/生产迁移/canonical sync/archive。
+
 # 2026-09-30 F7 ASR 本地批验收
 
 - F7 从 75/105 到 80/105，关闭 5.7 和 6.4–6.7；真实 adapter/Renderer/Publisher/F8 未因此完成。

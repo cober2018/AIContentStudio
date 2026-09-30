@@ -78,10 +78,10 @@
 - [x] 6.7 Add rights/failure/provenance tests.
 
 ## 7. Renderer capability
-- [ ] 7.1 Register renderer capability descriptors.
-- [ ] 7.2 Declare supported modality/schema/form/MIME.
-- [ ] 7.3 Record deterministic/verified/manual property.
-- [ ] 7.4 Persist renderer verification scope.
+- [x] 7.1 Register renderer capability descriptors.
+- [x] 7.2 Declare supported modality/schema/form/MIME.
+- [x] 7.3 Record deterministic/verified/manual property.
+- [x] 7.4 Persist renderer verification scope.
 - [ ] 7.5 Save media renderer output as MaterialRevision.
 - [ ] 7.6 Bind exact render-input hash.
 - [ ] 7.7 Add stale/version change tests.

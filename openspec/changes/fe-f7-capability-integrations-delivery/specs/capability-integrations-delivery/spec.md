@@ -22,6 +22,24 @@ The system SHALL keep safe registration metadata and append-only verification ev
 - **WHEN** a plugin is installed or enabled but has no valid verification for the requested scope
 - **THEN** inventory distinguishes configuration from verification and the gated action remains unavailable
 
+Renderer verification SHALL use the existing registration and append-only verification records with exact renderer key/version, modality, payload schema, channel, content form and output MIME. Loaded implementation support and effective runtime fingerprint MUST match; manual Graphic/Video attestation MUST NOT be represented as verified automatic rendering. Explicit administrator verification of a deterministic Text renderer SHALL render an owned current saved Master with current context and exact live refs/rights, record only server-derived render input/output evidence hashes, and leave Master/Candidate unchanged. Read-only inventory SHALL NOT render or probe.
+
+#### Scenario: Renderer scope changes
+- **WHEN** the renderer implementation, runtime fingerprint, schema, channel, form or output MIME differs from recorded verification
+- **THEN** the previous evidence remains readable but cannot verify the new render action
+
+#### Scenario: Manual final media is not an automatic renderer
+- **WHEN** an operator confirms an uploaded Graphic or Video final asset
+- **THEN** its manual attestation remains valid under existing content gates but cannot authorize or verify an automatic renderer
+
+#### Scenario: Renderer verification scopes coexist
+- **WHEN** the same loaded renderer version is verified for two different supported channel/form scopes
+- **THEN** both unchanged scopes remain independently verified until their own expiry, revocation or implementation/profile drift
+
+#### Scenario: Renderer execution or evidence changes
+- **WHEN** the actual loaded renderer/adapter callable changes, or referenced evidence or material is revoked before the probe transaction completes
+- **THEN** previous capability evidence cannot authorize the changed implementation and the affected probe records no successful verification
+
 ### Requirement: Capability records and results are safe projections
 The system MUST NOT persist or return secrets, cookies, tokens, credential-bearing URLs, signed media URLs, headers, raw provider responses, local credential paths or unredacted exception text in registration, verification, API result, AuditLog, ProjectEvent or delivery metadata. The same prohibition applies to existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error` when they receive external Provider/Connector results: persist only allowlisted safe origin/provenance and bounded reason codes or hashes, never raw prompt/request, signed fetch URL, remote body or exception string. Provider output MUST be treated as untrusted data rather than instructions.
 

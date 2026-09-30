@@ -22,7 +22,8 @@ _PUBLISHER_SCOPE = frozenset({
     "publisher_key", "publisher_version",
 })
 _DATA_SOURCE_SCOPE = frozenset({"plugin_key", "registration_key", "registration_version", "endpoint_id"})
-_EVIDENCE_KEYS = frozenset({"kind", "reference_hash", "reason_code"})
+_RENDERER_SCOPE = frozenset({"renderer_key", "renderer_version", "modality", "payload_schema", "channel", "content_form", "output_mime"})
+_EVIDENCE_KEYS = frozenset({"kind", "reference_hash", "reason_code", "input_hash", "output_hash"})
 _SENSITIVE_KEY = re.compile(r"(?:secret|token|password|authorization|cookie|signature|api[_-]?key)", re.IGNORECASE)
 
 
@@ -93,16 +94,18 @@ def endpoint_config_fingerprint(endpoint: ConnectorEndpoint) -> str | None:
 
 
 def _scope(scope_kind: str, scope: dict) -> dict:
-    expected = {"publisher_action": _PUBLISHER_SCOPE, "data_source_endpoint": _DATA_SOURCE_SCOPE}.get(scope_kind)
+    expected = {"publisher_action": _PUBLISHER_SCOPE, "data_source_endpoint": _DATA_SOURCE_SCOPE,
+                "renderer_output": _RENDERER_SCOPE}.get(scope_kind)
     if not isinstance(scope, dict) or expected is None or set(scope) != expected:
         raise ValueError("capability_scope_invalid")
-    int_key = "content_account_id" if scope_kind == "publisher_action" else "endpoint_id"
-    if type(scope[int_key]) is not int or scope[int_key] < 1:
+    int_key = {"publisher_action": "content_account_id", "data_source_endpoint": "endpoint_id"}.get(scope_kind)
+    if int_key is not None and (type(scope[int_key]) is not int or scope[int_key] < 1):
         raise ValueError("capability_scope_invalid")
     for key, value in scope.items():
         if key == int_key:
             continue
-        if not isinstance(value, str) or not _SAFE_ID.fullmatch(value):
+        valid = isinstance(value, str) and (value in {"text/markdown", "image/png", "image/jpeg", "image/webp", "video/mp4"} if key == "output_mime" else _SAFE_ID.fullmatch(value))
+        if not valid:
             raise ValueError("capability_scope_invalid")
     return {key: scope[key] for key in sorted(scope)}
 
@@ -114,11 +117,15 @@ def _evidence(result: str, evidence: dict) -> dict:
         raise ValueError("capability_evidence_invalid")
     kind = evidence.get("kind")
     if result == "verified":
-        if kind not in {"human_readback", "platform_readback"} or not _HEX64.fullmatch(str(evidence.get("reference_hash", ""))):
+        if kind not in {"human_readback", "platform_readback", "render_readback"} or not _HEX64.fullmatch(str(evidence.get("reference_hash", ""))):
             raise ValueError("capability_evidence_invalid")
     elif kind not in {"revocation", "probe_failure"}:
         raise ValueError("capability_evidence_invalid")
     if "reason_code" in evidence and not _SAFE_ID.fullmatch(str(evidence["reason_code"])):
+        raise ValueError("capability_evidence_invalid")
+    if any(not _HEX64.fullmatch(str(evidence[key])) for key in ("input_hash", "output_hash") if key in evidence):
+        raise ValueError("capability_evidence_invalid")
+    if kind == "render_readback" and not {"input_hash", "output_hash"}.issubset(evidence):
         raise ValueError("capability_evidence_invalid")
     return {key: evidence[key] for key in sorted(evidence)}
 
@@ -133,6 +140,7 @@ def append_verification(
     actor: str,
     evidence: dict,
     expires_at: datetime | None = None,
+    config_fingerprint: str | None = None,
 ) -> CapabilityVerification:
     safe_scope = _scope(scope_kind, scope)
     safe_evidence = _evidence(result, evidence)
@@ -145,8 +153,14 @@ def append_verification(
                   and safe_scope["registration_version"] == registration.version
                   and safe_scope["plugin_key"] == registration.data_source_plugin_key
                   and safe_scope["endpoint_id"] == registration.endpoint_id)
-    if not (publisher_match or data_match):
+    renderer_match = (scope_kind == "renderer_output" and registration.kind == "renderer"
+                      and safe_scope["renderer_key"] == registration.key and safe_scope["renderer_version"] == registration.version)
+    if not (publisher_match or data_match or renderer_match):
         raise ValueError("capability_scope_registration_mismatch")
+    if config_fingerprint is not None and (not renderer_match or not _HEX64.fullmatch(config_fingerprint)):
+        raise ValueError("capability_registration_invalid")
+    if result == "verified" and (renderer_match != (safe_evidence.get("kind") == "render_readback")):
+        raise ValueError("capability_evidence_invalid")
     if not actor or len(actor) > 255:
         raise ValueError("capability_actor_invalid")
     now = datetime.now(UTC)
@@ -155,7 +169,7 @@ def append_verification(
         raise ValueError("capability_expiry_invalid")
     row = CapabilityVerification(
         registration_id=registration.id,
-        config_fingerprint=registration.config_fingerprint,
+        config_fingerprint=config_fingerprint or registration.config_fingerprint,
         scope_kind=scope_kind,
         scope_json=safe_scope,
         result=result,
@@ -180,14 +194,14 @@ def is_verified_for_scope(
 ) -> bool:
     if registration.id is None or registration.status != "configured":
         return False
-    if registration.config_fingerprint != actual_config_fingerprint or not _HEX64.fullmatch(actual_config_fingerprint):
+    if not _HEX64.fullmatch(actual_config_fingerprint) or (registration.kind != "renderer" and registration.config_fingerprint != actual_config_fingerprint):
         return False
-    scope_kind = "publisher_action" if registration.kind == "publisher" else "data_source_endpoint" if registration.kind == "data_connector" else None
+    scope_kind = {"publisher": "publisher_action", "data_connector": "data_source_endpoint", "renderer": "renderer_output"}.get(registration.kind)
     if scope_kind is None:
         return False
     try:
         wanted_scope = _scope(scope_kind, scope)
-        loaded_registry.resolve(registration.kind, registration.key, registration.version)
+        implementation = loaded_registry.resolve(registration.kind, registration.key, registration.version)
     except (ValueError, RegistryError):
         return False
     if scope_kind == "publisher_action" and (wanted_scope["publisher_key"] != registration.key or wanted_scope["publisher_version"] != registration.version):
@@ -199,6 +213,18 @@ def is_verified_for_scope(
         or wanted_scope["endpoint_id"] != registration.endpoint_id
     ):
         return False
+    if scope_kind == "renderer_output" and (
+        wanted_scope["renderer_key"] != registration.key or wanted_scope["renderer_version"] != registration.version
+        or getattr(implementation, "mode", None) != "deterministic"
+        or not callable(getattr(implementation, "supports_scope", None)) or not implementation.supports_scope(wanted_scope)
+    ):
+        return False
+    if scope_kind == "renderer_output":
+        from .renderer_capabilities import implementation_fingerprint, runtime_fingerprint
+
+        if (registration.config_fingerprint != implementation_fingerprint(implementation)
+                or actual_config_fingerprint != runtime_fingerprint(db, implementation, wanted_scope)):
+            return False
     events = db.scalars(select(CapabilityVerification).where(
         CapabilityVerification.registration_id == registration.id,
         CapabilityVerification.scope_kind == scope_kind,

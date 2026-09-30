@@ -249,6 +249,9 @@ def product_view(db: Session, user: User) -> dict:
 
 
 def capability_inventory(db: Session, user: User) -> dict:
+    from . import renderer_capabilities
+
+    renderer_capabilities.bootstrap()
     bootstrap_publishers()
     rows = db.scalars(select(CapabilityRegistration).order_by(CapabilityRegistration.id.desc()).limit(100)).all()
     registrations = {(row.kind, row.key, row.version): row for row in rows}
@@ -290,5 +293,5 @@ def capability_inventory(db: Session, user: User) -> dict:
                                                      "expires_at": event.expires_at.isoformat() if event.expires_at else None}})
     from .capability_integrations import publisher_runtime_fingerprint
 
-    return {"descriptors": descriptors, "publishers": publishers, "can_verify": user.role == "admin",
+    return {"descriptors": descriptors, "publishers": publishers, "renderers": renderer_capabilities.inventory(db), "can_verify": user.role == "admin",
             "publisher_verification_available": publisher_runtime_fingerprint("publisher.wechat.wewrite", "1") is not None}

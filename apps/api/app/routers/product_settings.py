@@ -33,6 +33,25 @@ class PublisherVerificationIn(BaseModel):
     validity_hours: int = Field(default=24, ge=1, le=24)
 
 
+class RendererProbeIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    project_id: int = Field(ge=1)
+    unit_id: int = Field(ge=1)
+    master_id: int = Field(ge=1)
+    renderer_key: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,150}$")
+    renderer_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,50}$")
+    expected_payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    expected_context_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    result: Literal["verified", "revoked"] = "verified"
+
+
+@router.post("/renderer-probes", status_code=201)
+def renderer_probe(payload: RendererProbeIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services import renderer_capabilities
+
+    return renderer_capabilities.probe(db, user, payload.model_dump())
+
+
 @router.get("/capabilities")
 def capabilities(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return product_settings.capability_inventory(db, user)

@@ -1,5 +1,13 @@
 # 配置记录
 
+## 2026-09-30 F7 Renderer 验证边界
+
+- Renderer exact scope 复用两张既有 Capability 表，仅增量拓宽验证 scope CHECK；不创建新的渲染业务表。注册指纹是实际加载的实现，事件指纹另绑定具体渠道/Profile，避免第二渠道验证覆盖第一渠道。
+- Python marshal 默认引用跟踪会受字符串驻留影响，导致没有代码变化却失效；实际诊断显示 ProductionRenderer.__init__ 的 v3/v4 序列化哈希在 bootstrap 后改变，而 v2 保持稳定。加载代码指纹使用 v2，并另绑定实际 adapter/renderer callable/default/closure，不以磁盘文件代替正在执行的实现。
+- 独立复核发现不同 scope 互相覆盖、实例 callable 旁路、证据撤权窗口；对应回归先失败后通过。来源 Material/Revision、FactPack/items 锁到验证提交，实际渲染后再刷新/检查。受控同事务撤权负例不是实际 PostgreSQL 双连接并发证明。
+- Text v1/v2 实际本地确定性 Markdown render probe 已验证；Graphic/Video descriptor 明确 manual，未提供自动 Renderer。读取清单不会渲染、读字节、网络或启动子进程，能力 verified 不等于当前稿已审批。
+- f7b000000001 的隔离 SQLite 往返、旧行/索引/FK 保留和有 Renderer 证据拒降级已通过；PostgreSQL 只编译了 DDL，本批没有实际 PostgreSQL 迁移/并发运行，不能复用先前 f7a 的结果冒充。
+
 ## 2026-09-30 F7 搜索接受边界
 
 - 公共 MediaWiki imageinfo 的 Artist 是 HTML 元数据，只转换为文本，不渲染 HTML。CC BY 超长署名不能截断后接受，现跳过整条候选，保留完整署名义务。
