@@ -6,7 +6,7 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
-当前本地任务91/105：阶段安全复核纠正了先前95/105的四项过勾，旧workflow发布旁路及改稿/raw CLI诊断仍需关闭，typed读取DNS连接绑定、accept提交前runtime复检也待修。dispatch撤权修复获独立认可，但F7整体PARTIAL/BLOCK。七脚本52项本地浏览器历史证据仍有效，不代表这些新安全缺口已解决；实际渲染/本地ZIP与fixture区分见[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、公众号上传、阶段终验和F8仍待完成。
+当前本地任务95/105：三项安全缺口整批修复并通过独立窄复核；旧workflow新发布一律要求Delivery Router、typed读取逐跳绑定验证IP/TLS原host、媒体accept最终runtime复检与当前进程配置串行。新增实际门禁150定向/1470全后端（2 skipped）、build/FE-P1、strict30/30通过，范围Ruff保留已存在workflow告警例外，详见[本批验收](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。无新依赖/业务表/迁移，原启动方式不变。七脚本52项本地浏览器历史证据未在本批重跑；实际渲染/本地ZIP与fixture区分见[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、账号绑定公众号上传、整阶段终验和F8仍待完成，不能把窄复核当F7通过。
 
 - 最新调用前权利修复：`provider_media.stage`持有project/source/parent权限锁至受控Provider调用结束，finally释放DB后再缓存；SQLite撤权先赢时零供应商调用。两个失败回归后修复，125定向/1448全后端（2 skipped）、构建预算/strict/Ruff/diff通过；不借本批关闭整阶段review或真实外部验收。复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py`；完整环境和限制见[共享媒体记录](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。没有新增依赖/迁移/业务对象或本批浏览器结果。
 

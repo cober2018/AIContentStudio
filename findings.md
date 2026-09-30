@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-30 F7 三项安全修复
+
+- 留着legacy_remote_publish真分支仍可旁路审核；最短安全路径是保留旧node key/历史但新执行一律要求Delivery Router，不用无作用的verified标签包装旧CLI。
+- DNS预检与transport实际DNS是两次独立解析；用现有HTTPCore backend方式仅替换TCP地址，TLS原hostname不改。is_global并不排除组播，因此额外拒绝is_multicast；旧SSRF开发豁免不能进入新typed路径。两跳实际HTTPX/HTTPCore受控stream验证各自IP/TLS/Host/连接关闭及环境代理不生效，没有真实公网请求。
+- 接受时初检fingerprint不足，必须最后重验并串行配置缓存直到commit；不能持runtime锁等待前置DB锁。已有set/clear/load/clear_all共享RLock，测试覆盖真正接受db.commit期间另一线程更新被阻止；仅保证本进程，生产多worker配置一致性仍待F8。
+- workflow_engine基线已有BLE001广义捕获告警，本批不顺手重构执行器；范围lint例外与基线回读证据明确记录，不能称全仓Ruff零问题。
+
 ## 2026-09-30 F7 调用前撤权窗口
 
 - 后续独立review对dispatch fix认可但整体PARTIAL/BLOCK；三个仍在源码中的问题：workflow_engine旧节点legacy_remote_publish真则schema v1直调wewrite，缺Target/Attempt/scoped gate且改稿/raw CLI错误；Connector/Commons校验后默认transport重新DNS解析；generic accept初检runtime后commit前无复检。重新打开8.4/8.6/8.11/8.13，下一批按失败回归修复，不用绿色总数替代安全正确性。

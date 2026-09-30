@@ -24,7 +24,7 @@ from . import provider_media
 from .content_harness import providers
 from .content_harness.contracts import MaterialSearchResult
 from .project_authorization import lock_project_context
-from .url_fetch import _validate_target
+from .url_fetch import pinned_transport
 
 _lock = threading.RLock()
 _cache: dict[str, Candidate] = {}
@@ -51,33 +51,35 @@ def commons_fetch(url: str, max_bytes: int) -> tuple[bytes, str]:
     deadline = time.monotonic() + 15
     token = _fetching.set(True)
     try:
-        with httpx.Client(timeout=10, follow_redirects=False, trust_env=False, transport=httpx.HTTPTransport(retries=0)) as client:
-            current = url
-            for _ in range(4):
-                _validate_target(current)
-                with client.stream("GET", current, headers={"User-Agent": "AIContentStudio/0.1 (explicit user media search)", "Accept-Encoding": "identity"}) as response:
-                    if response.status_code in {301, 302, 303, 307, 308}:
-                        redirected = httpx.URL(current).join(response.headers["location"])
-                        original = httpx.URL(url)
-                        if (redirected.scheme, redirected.host, redirected.port) != (original.scheme, original.host, original.port):
-                            raise ValueError("search redirect forbidden")
-                        if redirected.username or redirected.password or (redirected.host == "upload.wikimedia.org" and redirected.query):
-                            raise ValueError("search redirect forbidden")
-                        current = str(redirected)
-                        continue
-                    response.raise_for_status()
-                    if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
-                        raise ValueError("search response compression forbidden")
-                    if int(response.headers.get("content-length", "0")) > limit:
-                        raise ValueError("search response too large")
-                    chunks, total = [], 0
-                    for chunk in response.iter_bytes():
-                        total += len(chunk)
-                        if total > limit or time.monotonic() > deadline:
-                            raise ValueError("search fetch bound exceeded")
-                        chunks.append(chunk)
-                    return b"".join(chunks), response.headers.get("content-type", "").split(";")[0].strip()
-            raise ValueError("search redirects exceeded")
+        current = url
+        for _ in range(4):
+            with (
+                httpx.Client(timeout=10, follow_redirects=False, trust_env=False,
+                             transport=pinned_transport(current)) as client,
+                client.stream("GET", current, headers={"User-Agent": "AIContentStudio/0.1 (explicit user media search)", "Accept-Encoding": "identity"}) as response,
+            ):
+                if response.status_code in {301, 302, 303, 307, 308}:
+                    redirected = httpx.URL(current).join(response.headers["location"])
+                    original = httpx.URL(url)
+                    if (redirected.scheme, redirected.host, redirected.port) != (original.scheme, original.host, original.port):
+                        raise ValueError("search redirect forbidden")
+                    if redirected.username or redirected.password or (redirected.host == "upload.wikimedia.org" and redirected.query):
+                        raise ValueError("search redirect forbidden")
+                    current = str(redirected)
+                    continue
+                response.raise_for_status()
+                if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
+                    raise ValueError("search response compression forbidden")
+                if int(response.headers.get("content-length", "0")) > limit:
+                    raise ValueError("search response too large")
+                chunks, total = [], 0
+                for chunk in response.iter_bytes():
+                    total += len(chunk)
+                    if total > limit or time.monotonic() > deadline:
+                        raise ValueError("search fetch bound exceeded")
+                    chunks.append(chunk)
+                return b"".join(chunks), response.headers.get("content-type", "").split(";")[0].strip()
+        raise ValueError("search redirects exceeded")
     finally:
         _fetching.reset(token)
 

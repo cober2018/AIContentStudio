@@ -1,5 +1,12 @@
 # 当前进度
 
+## 2026-09-30：F7 三项安全缺口整批修复（窄复核通过）
+
+- 基线main@dfeb66f，旧workflow publish无条件安全拒绝；保留历史key/读取但不再导出文件、截稿、补占位图或调用CLI。typed Connector/Commons每跳transport锁定public IP，原host TLS验证/Host保留，禁止代理/重试/混合私网/组播答案，legacy safe_fetch不改。
+- accept提交边界新增同进程配置RLock：DB锁在先，guard内重新fingerprint→cache身份/TTL→commit；写入期间runtime变化409并回滚，配置更新线程不能穿过实际db.commit。明确不是跨worker/PG配置全局一致证明。
+- 原始15检查14 RED/1原先通过→15 GREEN；扩展定向150 passed。显式Graphic运行环境全后端1470 passed/2 skipped/8既有warnings（89.46s），新build/FE-P1与strict30/30通过。独立窄复核APPROVE、无新增blocker；8.4/8.6/8.11/8.13关闭，真实进度95/105。范围Ruff保留workflow_engine已有BLE001（基线同样失败），仅检查该文件时排除此旧告警及关联unused-noqa；本批其他文件未豁免。10.9阶段review与真实集成仍不勾选。
+- 无新浏览器/迁移/供应商请求/账号动作；无push/deploy/canonical同步/归档，F8未开始。
+
 ## 2026-09-30：F7 Provider 调用前权利保护
 
 - 后续独立审查返回PARTIAL/BLOCK：本次dispatch修复无新阻断，但核实旧workflow远端旁路（含截稿/占位图/raw CLI错误）、typed读取DNS重解析连接窗口、普通媒体接受提交前runtime重验缺失。主Agent回读当前源码确认上述路径仍在；重新打开8.4/8.6/8.11/8.13，真实任务计数91/105，不保留错误的95/105已完成声明。下一批先关闭这些安全缺口，10.9仍打开。

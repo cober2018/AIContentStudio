@@ -132,6 +132,89 @@ def test_incomplete_rights_decision_writes_no_material(client, db_session, media
     assert db_session.scalars(select(Material)).all() == []
 
 
+def test_runtime_rotation_during_accept_rolls_back_all_rows(client, db_session, media_provider, monkeypatch):
+    from app.services import materials
+
+    receipt = stage(client).json()
+    create = materials.create_revision
+
+    def rotate(*args, **kwargs):
+        revision = create(*args, **kwargs)
+        media_provider.fingerprint = "c" * 64
+        return revision
+
+    monkeypatch.setattr(materials, "create_revision", rotate)
+    response = client.post(f"/api/v1/provider-media/{receipt['stage_id']}/accept", headers=EDITOR, json=decision())
+    assert response.status_code == 409, response.text
+    assert response.json()["detail"] == "provider_runtime_changed"
+    assert not db_session.scalars(select(Material)).all()
+    assert not db_session.scalars(select(MaterialRevision)).all()
+    assert not db_session.scalars(select(AuditLog).where(AuditLog.event == "provider.media_accepted")).all()
+
+
+def test_accept_holds_runtime_configuration_until_actual_db_commit(client, db_session, media_provider, monkeypatch):
+    import threading
+
+    from app import runtime_config
+
+    key = "f7-test-accept-guard"
+    runtime_config.set_runtime(key, {"fingerprint": "a" * 64})
+    monkeypatch.setattr(media_provider, "runtime_fingerprint",
+                        lambda: runtime_config.get_runtime(key)["fingerprint"])
+    started, done = threading.Event(), threading.Event()
+    def rotate():
+        started.set()
+        runtime_config.set_runtime(key, {"fingerprint": "b" * 64})
+        done.set()
+    worker = threading.Thread(target=rotate)
+    commit = db_session.commit
+    def observed_commit():
+        worker.start()
+        assert started.wait(2)
+        assert not done.wait(0.05), "configuration changed before durable acceptance committed"
+        assert runtime_config.get_runtime(key)["fingerprint"] == "a" * 64
+        commit()
+    try:
+        receipt = stage(client).json()
+        monkeypatch.setattr(db_session, "commit", observed_commit)
+        response = client.post(f"/api/v1/provider-media/{receipt['stage_id']}/accept", headers=EDITOR, json=decision())
+        assert response.status_code == 201, response.text
+        worker.join(2)
+        assert done.is_set()
+        revision = db_session.get(MaterialRevision, response.json()["material_revision_id"])
+        assert revision.source_metadata_json["runtime_hash"] == "a" * 64
+    finally:
+        worker.join(2) if worker.ident else None
+        runtime_config.clear_runtime(key)
+
+
+def test_runtime_guard_serializes_config_rotation_through_commit(monkeypatch):
+    import threading
+
+    from app import runtime_config
+
+    started, done = threading.Event(), threading.Event()
+    def rotate():
+        started.set()
+        runtime_config.set_runtime("f7-test-guard", {"revision": 2})
+        done.set()
+
+    runtime_config.set_runtime("f7-test-guard", {"revision": 1})
+    worker = threading.Thread(target=rotate)
+    try:
+        with runtime_config.configuration_guard():
+            worker.start()
+            assert started.wait(2)
+            assert not done.wait(0.05)
+            assert runtime_config.get_runtime("f7-test-guard") == {"revision": 1}
+        worker.join(2)
+        assert done.is_set()
+        assert runtime_config.get_runtime("f7-test-guard") == {"revision": 2}
+    finally:
+        worker.join(2) if worker.ident else None
+        runtime_config.clear_runtime("f7-test-guard")
+
+
 @pytest.mark.parametrize("content,mime", [(b"", "image/png"), (b"not-media", "image/png"), (b"\x89PNG\r\n\x1a\ninvalid", "image/png")])
 def test_provider_success_without_valid_decoded_bytes_creates_no_receipt(client, db_session, media_provider, content, mime):
     media_provider.content, media_provider.mime = content, mime

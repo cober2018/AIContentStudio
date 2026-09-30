@@ -1,5 +1,13 @@
 # FE-F7 Batch B — shared media acceptance slice
 
+## 2026-09-30 three safety findings closure — narrow review APPROVE
+
+Baseline `main@dfeb66f`. The historical workflow publish key is retained but every new execution fails before any file export/CLI/placeholder/title truncation. Typed Connector/Commons use fresh per-hop pinned TCP transports, original TLS hostname/Host, no proxy environment/retry and globally routable non-multicast DNS answers; legacy safe_fetch is unchanged. Ordinary media acceptance now rechecks runtime under the shared process-cache configuration guard through durable commit, after DB locks. This is not a cross-worker/PG consistency guarantee.
+
+Initial targeted probes:14 failed/1 already passed; corrected:15 passed; expanded five-file targeted suite:**150 passed**. Full backend with explicit Graphic runtime:**1470 passed/2 skipped/8 existing warnings,89.46s**. New frontend TypeScript/Vite/FE-P1 and OpenSpec strict30/30 pass. `/projects`224.84/72.94 kB raw/gzip, common Production280.20/89.13 kB. Scoped Ruff passes with the pre-existing workflow_engine BLE001 and resulting unused-noqa excluded only for that file; baseline Ruff independently reproduces that old failure. No fresh browser run/migration/live vendor/account call.
+
+Independent implementation re-review APPROVE, no new blocker within this slice. Tasks8.4/8.6/8.11/8.13 closed: progress95/105. Reviewer inspected current implementation/contracts, not independently rerun test stdout. Full F7 review/real integration/F8 prerequisites stay open; real account-bound publisher work8.3/8.5 and exact external verification remain pending.
+
 ## 2026-09-30 dispatch-time source authorization correction
 
 Baseline `main@4072c65`, F7 95/105. A review of current `provider_media.stage()` found project authorization released before dispatch and source rights read without write locks. Acceptance checks were correct but could not prevent already-revoked source bytes being sent to a Provider. This is a correction within the existing approved media rights contract, not a new provider or durable object.

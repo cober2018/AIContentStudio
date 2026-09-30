@@ -1,12 +1,18 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 三项安全缺口整批修复
+
+- [x] /// 先补既有F7规格边界与失败回归：14 RED/1原先通过→15 GREEN；两跳真实HTTPX/HTTPCore受控连接验证IP/TLS/Host/禁代理，实际db.commit并发配置串行。
+- [x] /// 实现现有安全契约，不加供应商/业务表/迁移；历史读取和legacy safe_fetch保留，配置锁仅保障当前进程。
+- [x] /// 150定向/1470全后端（2 skipped）、build/FE-P1/strict30/30/diff通过；范围Ruff记录已有workflow告警例外。独立窄复核APPROVE，关闭四项至95/105，10.9/F7终验及F8仍待办。
+
 ## 2026-09-30：F7 阶段安全与交付复核
 
 - [x] /// 依据既有10.9启动只读阶段复核；主Agent核实调用前撤权漏洞，独立复核仍未完成，不把浏览器subset或测试总数替代安全审查；公众号方案待明确选择。
 - [x] /// 主Agent复核调用前source撤权窗口，两个RED→GREEN含实际SQLite双连接；只修现有stage事务及既有spec说明，不开始F8、不新增Publisher对象或真实账号动作。
 - [x] /// 记录SQLite source竞态覆盖和PG/project-archive未覆盖；125定向/1448全后端（2 skipped）、新build/FE-P1/strict30/30/Ruff/diff通过。独立review PARTIAL/BLOCK，dispatch无阻断但3新缺口，8.4/8.6/8.11/8.13重新打开至91/105；保留10.9和F7/F8终验。
 
-- [ ] /// 下一批：关闭旧workflow发布旁路；绑定typed Connector/Commons验证IP连接；普通媒体accept提交前runtime复检与配置串行化。先失败回归，保持legacy历史读取，不新增供应商/远端授权。
+- [x] /// 三项安全缺口已在上方整批修复并独立复核，不新增供应商/远端授权；真实Publisher方案仍待用户选择。
 
 ## 2026-09-30：F7 隔离浏览器再验收
 

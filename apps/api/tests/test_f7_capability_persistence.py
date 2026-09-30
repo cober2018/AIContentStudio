@@ -411,6 +411,91 @@ def test_f7_post_endpoint_cannot_be_registered_as_read_only_data_capability(clie
     assert response.status_code == 409
 
 
+@pytest.mark.parametrize("address", ["93.184.216.34", "2606:4700:4700::1111"])
+def test_f7_pinned_transport_uses_checked_ip_without_hostname_resolution(monkeypatch, address):
+    import socket
+
+    from httpcore._backends.sync import SyncBackend
+
+    resolutions, connections = [], []
+    def resolve(host, port, **kwargs):
+        resolutions.append((host, port))
+        return [(socket.AF_INET6 if ":" in address else socket.AF_INET, socket.SOCK_STREAM, 6, "", (address, port))]
+    def connect(self, host, port, **kwargs):
+        connections.append((host, port))
+        return object()
+    monkeypatch.setattr(socket, "getaddrinfo", resolve)
+    monkeypatch.setattr(SyncBackend, "connect_tcp", connect)
+    with url_fetch.pinned_transport("https://example.org/data") as transport:
+        backend = transport._pool._network_backend
+        backend.connect_tcp("example.org", 443)
+        assert resolutions == [("example.org", 443)]
+        assert connections == [(address, 443)]
+        with pytest.raises(OSError):
+            backend.connect_tcp("127.0.0.1", 443)
+
+
+@pytest.mark.parametrize("invalid", ["127.0.0.1", "10.0.0.1", "169.254.169.254", "224.0.0.1", "ff02::1", "::1"])
+def test_f7_pinned_transport_rejects_mixed_dns_even_with_legacy_private_opt_in(monkeypatch, invalid):
+    import socket
+    monkeypatch.setattr(url_fetch, "get_settings", lambda: type("Settings", (), {"ssrf_allow_private": True})())
+    monkeypatch.setattr(socket, "getaddrinfo", lambda *args, **kwargs: [
+        (socket.AF_INET, socket.SOCK_STREAM, 6, "", (ip, 443)) for ip in ["93.184.216.34", invalid]])
+    with pytest.raises(url_fetch.UnsafeUrlError):
+        url_fetch.pinned_transport("https://example.org/data")
+
+
+@pytest.mark.parametrize("commons", [False, True])
+def test_f7_fetch_redirect_pins_each_tcp_hop_and_preserves_tls_host(monkeypatch, commons):
+    import socket
+
+    from httpcore._backends.sync import SyncBackend
+
+    from app.services import material_search
+
+    host = "upload.wikimedia.org" if commons else "example.org"
+    dns, tcp, tls, requests, closed = [], [], [], [], []
+    def resolve(name, port, **kwargs):
+        dns.append(name)
+        assert name == host
+        address = "93.184.216.34" if len(dns) == 1 else "1.1.1.1"
+        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", (address, port))]
+    class Stream:
+        def __init__(self, redirect):
+            self.body = (b"HTTP/1.1 302 Found\r\nLocation: /next\r\nContent-Length: 0\r\n\r\n" if redirect
+                         else b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok")
+        def read(self, max_bytes, timeout=None):
+            body, self.body = self.body, b""
+            return body
+        def write(self, data, timeout=None):
+            requests.append(data)
+        def start_tls(self, ssl_context, server_hostname=None, timeout=None):
+            assert ssl_context.check_hostname
+            tls.append(server_hostname)
+            return self
+        def get_extra_info(self, info):
+            return None
+        def close(self):
+            closed.append(True)
+    def connect(self, name, port, **kwargs):
+        tcp.append((name, port))
+        return Stream(len(tcp) == 1)
+    monkeypatch.setattr(socket, "getaddrinfo", resolve)
+    monkeypatch.setattr(SyncBackend, "connect_tcp", connect)
+    monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:8888")
+    fetch = material_search.commons_fetch if commons else url_fetch.bounded_safe_fetch
+    if commons:
+        result = fetch(f"https://{host}/image.png", 100)
+    else:
+        result = fetch(f"https://{host}/data", max_bytes=100)
+    assert result[0] == b"ok"
+    assert dns == [host, host]
+    assert tcp == [("93.184.216.34", 443), ("1.1.1.1", 443)]
+    assert tls == [host, host]
+    assert sum(b"Host: " + host.encode() in request for request in requests) == 2
+    assert len(closed) >= 2
+
+
 def test_f7_bounded_fetch_stops_reading_oversize_stream(monkeypatch):
     yielded = []
 
@@ -422,8 +507,8 @@ def test_f7_bounded_fetch_stops_reading_oversize_stream(monkeypatch):
 
     transport = httpx.MockTransport(lambda request: httpx.Response(200, stream=Chunks()))
     real_client = httpx.Client
-    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=transport, **kwargs))
-    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(**(kwargs | {"transport": transport})))
+    monkeypatch.setattr(url_fetch, "pinned_transport", lambda url: None)
 
     with pytest.raises(url_fetch.UnsafeUrlError, match="响应超过大小限制"):
         url_fetch.bounded_safe_fetch("https://example.org/data", max_bytes=5)
@@ -438,9 +523,9 @@ def test_f7_bounded_fetch_refuses_compression_before_read(monkeypatch, encoding)
             read.append(True)
             yield b"private-compressed-body"
     real_client = httpx.Client
-    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(
-        lambda request: httpx.Response(200, stream=Body(), headers={"content-encoding": encoding})), **kwargs))
-    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(**(kwargs | {"transport": httpx.MockTransport(
+        lambda request: httpx.Response(200, stream=Body(), headers={"content-encoding": encoding}))})))
+    monkeypatch.setattr(url_fetch, "pinned_transport", lambda url: None)
     with pytest.raises(url_fetch.UnsafeUrlError, match="压缩"):
         url_fetch.bounded_safe_fetch("https://example.org/data")
     assert not read
@@ -453,8 +538,8 @@ def test_f7_bounded_fetch_forces_identity_without_changing_caller_headers(monkey
         assert request.headers["authorization"] == original["Authorization"]
         return httpx.Response(200, content=b"ok")
     real_client = httpx.Client
-    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(respond), **kwargs))
-    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(**(kwargs | {"transport": httpx.MockTransport(respond)})))
+    monkeypatch.setattr(url_fetch, "pinned_transport", lambda url: None)
     assert url_fetch.bounded_safe_fetch("https://example.org/data", headers=original)[0] == b"ok"
     assert original["aCcEpT-EnCoDiNg"] == "gzip"
 
@@ -468,9 +553,9 @@ def test_f7_bounded_fetch_has_total_read_deadline(monkeypatch):
                 read.append(index)
                 yield b"x"
     real_client = httpx.Client
-    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(
-        lambda request: httpx.Response(200, stream=Body())), **kwargs))
-    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(**(kwargs | {"transport": httpx.MockTransport(
+        lambda request: httpx.Response(200, stream=Body()))})))
+    monkeypatch.setattr(url_fetch, "pinned_transport", lambda url: None)
     monkeypatch.setattr(url_fetch, "time", type("Clock", (), {"monotonic": staticmethod(lambda: ticks[0])}), raising=False)
     with pytest.raises(url_fetch.UnsafeUrlError, match="时限"):
         url_fetch.bounded_safe_fetch("https://example.org/data")
@@ -485,8 +570,8 @@ def test_f7_deadline_rejects_empty_body_or_next_redirect(monkeypatch, status):
         ticks[0] += 11
         return httpx.Response(status, content=b"", headers={"location": "https://example.org/next"})
     real_client = httpx.Client
-    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(respond), **kwargs))
-    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(**(kwargs | {"transport": httpx.MockTransport(respond)})))
+    monkeypatch.setattr(url_fetch, "pinned_transport", lambda url: None)
     monkeypatch.setattr(url_fetch, "time", type("Clock", (), {"monotonic": staticmethod(lambda: ticks[0])}), raising=False)
     with pytest.raises(url_fetch.UnsafeUrlError, match="时限"):
         url_fetch.bounded_safe_fetch("https://example.org/data")
@@ -500,8 +585,8 @@ def test_f7_bounded_fetch_rejects_cross_origin_or_downgrade_before_sending_heade
         seen.append(str(request.url))
         return httpx.Response(302, headers={"location": destination})
     real_client = httpx.Client
-    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs))
-    monkeypatch.setattr(url_fetch, "_validate_target", lambda url: None)
+    monkeypatch.setattr(url_fetch.httpx, "Client", lambda **kwargs: real_client(**(kwargs | {"transport": httpx.MockTransport(handler)})))
+    monkeypatch.setattr(url_fetch, "pinned_transport", lambda url: None)
     with pytest.raises(url_fetch.UnsafeUrlError, match="重定向目标"):
         url_fetch.bounded_safe_fetch("https://example.org/data", headers={"Authorization": "Bearer isolated-secret"})
     assert seen == ["https://example.org/data"]
