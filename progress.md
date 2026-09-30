@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-30：F7 受控公共搜索批
+
+- F7 75/105，新增核销 4.1–4.8；4.9 的跨 Unit 实际消费和阶段真实集成仍待完成，F8 未启动。全量实际运行 1270 passed / 2 skipped / 8 warnings（51.82s）；搜索/媒体/能力定向 64 passed。
+- Wikimedia adapter 限制元数据 1 MB、媒体 5 MB、最多 10 候选、固定来源/同源 HTTPS；下载校验来源 SHA1，接受校验 decoded bytes/SHA256。短期候选只返回安全许可摘要；明确下载再 preview，人工接受后才入库和可选项目引用。不建表/迁移，不改 Master。
+- 畸形 URL、异常 MIME/SHA1 在缓存前拒绝；未知许可不可导入。独立复核发现 CC BY 超长署名截断，已以失败回归锁定并改为跳过候选；窄复核 APPROVE，仅限本批，不代表真实 Wikimedia/F7 完成。
+- 前端/FE-P1 通过：/projects 224.84/72.95 kB、/assets 258.81/82.81；搜索面板独立 lazy 2.75/1.79。strict 30/30、范围 Ruff/diff 通过。搜索四项浏览器 gate、原生成四项回归均通过，零 page error；select 标签补显式 aria-label 后重新验收通过。
+- 搜索证据 `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f7-search-browser-pwjgVU`；生成证据 `/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aicontent-f7-media-browser-nqhsBn`；隔离 SQLite/media `/tmp/aicontent-f7-media.MPIOsP/`。均为 fixture，不是外部搜索/生成验证。
+- 真实 Commons 请求被本机 DNS/内网地址安全校验拒绝，未关闭 SSRF 防护、不标记 verified。无 push/deploy/生产迁移/canonical sync/archive。
+
 ## 2026-09-30：F7 第二批 Provider 显式接受（进行中）
 
 - F7 67/105：核销图像/视频/TTS/ASR 协议、精确素材接受、三类人工权利与安全 hash 血缘；ASR 有界转录、真实单次 Provider、搜索/渲染/Publisher、阶段最终验收仍未完成，F8 未启动。

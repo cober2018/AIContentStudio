@@ -51,6 +51,7 @@ class Preview:
     expires: float
     accepted: dict | None = None
     acceptance_hash: str | None = None
+    search_origin: dict | None = None
 
 
 def _hash(value: object) -> str:
@@ -154,6 +155,28 @@ def _get(stage_id: str, user: User) -> Preview:
     return preview
 
 
+def stage_output(user: User, *, kind: str, key: str, version: str, runtime_hash: str, input_hash: str,
+                 output: providers.MediaOutput, project_id: int | None, sources=(), search_origin: dict | None = None) -> dict:
+    media_kind, mime = _decode(output.content, output.mime_type)
+    expected_kind = {"image_provider": "image", "search_provider": "image", "video_provider": "video", "tts_provider": "audio"}[kind]
+    if media_kind != expected_kind:
+        raise HTTPException(422, "provider_output_kind_mismatch")
+    content_hash = hashlib.sha256(output.content).hexdigest()
+    preview = Preview(user.id, kind, key, version, runtime_hash, input_hash,
+                      output.content, mime, media_kind, content_hash, project_id, sources, time.monotonic() + _TTL,
+                      search_origin=search_origin)
+    with _lock:
+        _prune()
+        if (len(_cache) >= 64 or sum(item.actor_id == user.id for item in _cache.values()) >= 8
+                or sum(len(item.content) for item in _cache.values()) + len(preview.content) > _MAX_CACHE_BYTES):
+            raise HTTPException(429, "provider_preview_capacity")
+        stage_id = uuid.uuid4().hex
+        _cache[stage_id] = preview
+    return {"stage_id": stage_id, "content_hash": content_hash, "mime_type": mime, "kind": media_kind,
+            "provider_key": key, "provider_version": version, "input_hash": preview.input_hash,
+            "public_ready": False, "verified": False, "expires_in_seconds": _TTL}
+
+
 def stage(db: Session, user: User, request: dict) -> dict:
     project_id = request.get("project_id")
     if project_id is not None:
@@ -178,23 +201,8 @@ def stage(db: Session, user: User, request: dict) -> dict:
         if getattr(output, "status", None) == "unavailable":
             raise HTTPException(422, "capability_unavailable")
         raise HTTPException(409, "provider_outcome_unknown" if getattr(output, "status", None) == "unknown" else "provider_execution_failed")
-    media_kind, mime = _decode(output.content, output.mime_type)
-    expected_kind = {"image_provider": "image", "video_provider": "video", "tts_provider": "audio"}[kind]
-    if media_kind != expected_kind:
-        raise HTTPException(422, "provider_output_kind_mismatch")
-    content_hash = hashlib.sha256(output.content).hexdigest()
-    preview = Preview(user.id, kind, key, version, runtime_hash, _hash({**request, "sources": refs}),
-                      output.content, mime, media_kind, content_hash, project_id, refs, time.monotonic() + _TTL)
-    with _lock:
-        _prune()
-        if (len(_cache) >= 64 or sum(item.actor_id == user.id for item in _cache.values()) >= 8
-                or sum(len(item.content) for item in _cache.values()) + len(preview.content) > _MAX_CACHE_BYTES):
-            raise HTTPException(429, "provider_preview_capacity")
-        stage_id = uuid.uuid4().hex
-        _cache[stage_id] = preview
-    return {"stage_id": stage_id, "content_hash": content_hash, "mime_type": mime, "kind": media_kind,
-            "provider_key": key, "provider_version": version, "input_hash": preview.input_hash,
-            "public_ready": False, "verified": False, "expires_in_seconds": _TTL}
+    return stage_output(user, kind=kind, key=key, version=version, runtime_hash=runtime_hash,
+                        input_hash=_hash({**request, "sources": refs}), output=output, project_id=project_id, sources=refs)
 
 
 def preview_bytes(stage_id: str, user: User) -> tuple[bytes, str]:
@@ -211,6 +219,9 @@ def accept(db: Session, user: User, stage_id: str, decision: dict) -> dict:
             raise HTTPException(422, "provider_acceptance_required")
         if decision.get("license_code") == "CC-BY-4.0" and not (decision.get("attribution_text") or "").strip():
             raise HTTPException(422, "provider_attribution_required")
+        if preview.search_origin and any(decision.get(field) != preview.search_origin[field] for field in
+                                         ("license_code", "license_evidence_hash", "attribution_text")):
+            raise HTTPException(422, "search_license_decision_mismatch")
         if preview.accepted is not None:
             if preview.acceptance_hash != decision_hash:
                 raise HTTPException(409, "provider_acceptance_conflict")
@@ -230,11 +241,14 @@ def accept(db: Session, user: User, stage_id: str, decision: dict) -> dict:
         safe = {"provider_kind": preview.provider_kind, "runtime_hash": preview.runtime_hash,
                 "input_hash": preview.input_hash, "source_refs": [{"revision_id": rid, "content_hash": digest} for rid, digest in preview.sources],
                 "license_code": decision["license_code"], "license_evidence_hash": decision["license_evidence_hash"]}
+        if preview.search_origin:
+            safe.update({field: preview.search_origin[field] for field in ("source_id", "fetch_url_hash")})
         suffix = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "audio/wav": ".wav", "video/mp4": ".mp4"}[preview.mime_type]
         try:
             material = materials.create_material(db, kind=preview.kind, title=decision["title"], created_by=user.email)
             revision = materials.create_revision(db, material, content=preview.content, suffix=suffix,
-                                                 declared_mime=preview.mime_type, source_kind="ai_generated", source_metadata=safe,
+                                                 declared_mime=preview.mime_type, source_kind="web_search" if preview.search_origin else "ai_generated", source_metadata=safe,
+                                                 source_url=preview.search_origin.get("source_url") if preview.search_origin else None,
                                                  provider_key=preview.provider_key, provider_version=preview.provider_version,
                                                  public_use_allowed=decision["public_use_allowed"], model_use_allowed=decision["model_use_allowed"],
                                                  commercial_use_allowed=decision["commercial_use_allowed"], created_by=user.email)

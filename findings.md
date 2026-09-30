@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-30 F7 搜索接受边界
+
+- 公共 MediaWiki imageinfo 的 Artist 是 HTML 元数据，只转换为文本，不渲染 HTML。CC BY 超长署名不能截断后接受，现跳过整条候选，保留完整署名义务。
+- 搜索结果只缓存 opaque actor candidate；抓取定位 URL 留在有界临时缓存，不进入 API/审计/素材元数据。公开 citation 只接受无凭据、query/fragment 的 Commons File 页面；格式异常返回空 citation。
+- 默认公共 adapter 已加载但没有真实网络验证；本机 DNS 触发 UnsafeUrlError，不能通过关闭 SSRF 来伪造验收。隔离浏览器与真实外部验证分开记录，4.9/10.2 不核销。
+
 ## 2026-09-30 F7 独立复核修正
 
 - `bounded_safe_fetch` 原跨源跳转会保留认证 headers；F7 现仅接受同 scheme/host/port 的跳转，在第二请求前拒绝跨源与 HTTPS 降级。旧 fetch 未改，typed 路径不回退。

@@ -2,6 +2,10 @@
 
 ## 2026-09-30：F7 两批实施，随后 F8
 
+- [x] /// 接续搜索整批：限定公共 Wikimedia 搜索 adapter 与 exact key/version，服务端只缓存短期抓取定位符，API 只返回有界安全候选/许可摘要；旧搜索入口不直传原始 Provider metadata。
+- [x] /// 显式选择候选才下载有界真实字节并进入既有 stage/accept，固定来源域名/同源跳转、许可/署名核对、配置漂移、过期/跨身份和项目归档均 fail-closed；不建新表/迁移。
+- [x] /// Assets 与旧素材搜索共用 lazy 搜索/接受面板，集中验收搜索→预览→许可确认→精确版本/项目引用，真实公共读取与 fixture 清楚区分；全量 1270 passed/2 skipped，8 个浏览器 gate、预算/strict/独立复核通过。本批本地提交，真实外部验证和跨 Unit 实际消费仍待办。
+
 - [ ] /// 第二批接续：先实现共享 ProviderOutput/ASROutput 协议与有界临时预览；精确 actor/runtime/input/bytes 绑定，重启/过期需重新预览，不建第三张持久表。
 - [x] /// 将旧 generate 自动写素材改成 stage→明确权利/许可确认→atomic MaterialRevision + 可选精确项目引用；无字节、错 MIME、过期、外部身份、runtime 漂移或输入撤权不写业务对象。新 Assets 与旧入口共享接受面板；20 项定向回归及隔离浏览器四项通过。真实 WeWrite CLI 因内部重试/配置不可证明而 unavailable，不计真实 Provider 实现完成。
 - [ ] /// 复用共享接受边界接图像/视频/TTS/ASR Provider；真实 WeWrite 生图仅在明确配置时可请求，不以 mock 代替外部验证。按批末集中跑 API/权利/秘密泄漏与全量门禁，再接 Assets/Production UX。

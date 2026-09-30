@@ -13,6 +13,7 @@ from PIL import Image
 from app import runtime_config
 from app.main import app  # noqa: F401 Uvicorn loads this module's app export.
 from app.services.content_harness import providers
+from app.services.content_harness.contracts import MaterialSearchResult
 
 output = io.BytesIO()
 Image.new("RGB", (32, 32), "blue").save(output, format="PNG")
@@ -27,6 +28,23 @@ class FixtureProvider:
 
     def generate(self, request):
         return providers.MediaOutput("succeeded", output.getvalue(), "image/png", {"token": "fixture-secret"})
+
+
+class SearchFixture:
+    key = "search.wikimedia.commons"
+    version = "1"
+
+    def runtime_fingerprint(self):
+        return "b" * 64
+
+    def search(self, query, limit=10):
+        return MaterialSearchResult(self.key, [{"source_id": "commons.fixture", "title": "F7 搜索候选",
+            "license_code": "CC-BY-4.0", "attribution_text": "Fixture Author",
+            "source_url": "https://commons.wikimedia.org/wiki/File:Fixture.png",
+            "fetch_url": "https://upload.wikimedia.org/fixture.png", "mime_type": "image/png"}])
+
+    def fetch(self, candidate):
+        return providers.MediaOutput("succeeded", output.getvalue(), "image/png")
 
 
 original_config = runtime_config.get_runtime
@@ -44,6 +62,8 @@ original_bootstrap = providers.bootstrap_media_providers
 def isolated_bootstrap():
     if not providers.registry.list("image_provider"):
         providers.registry.register("image_provider", FixtureProvider.key, "1", FixtureProvider())
+    if not providers.registry.list("search_provider"):
+        providers.registry.register("search_provider", SearchFixture.key, "1", SearchFixture())
     original_bootstrap()
 
 
