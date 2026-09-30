@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-30：F7 剩余门槛复查
+
+- 当前main@c216e41，tracked tree无改动后开始本轮只读核对；105项中95完成/10未完成，F8 0.1前置不变。上一轮确实提交两项修复，属于进展，不累计为no-progress。
+- 真实descriptor bootstrap确认video/TTS/ASR无生产实现；public Commons实际请求仍因DNS198.18.0.41而UnsafeUrlError，未下载或导入。未访问secret、付费请求、真实账号动作，也未新增官方API方案或修改业务代码。
+- 独立只读阶段评估PARTIAL：本轮已读安全/provider/delivery实现无新增确定blocker，未穷尽调用方/UI或PG业务并发/多worker；不能关闭10.9。8.3/8.5实现不满足与10.2/10.3已有实现但外部未验证明确区分，真实Video/TTS/ASR适配器并未安装，不能只称缺凭据。真实环境、方案选择和授权门槛需要用户输入，不自动前进F8。
+- 本轮仅文档记录，实际OpenSpec strict30/30、git diff --check PASS。未重跑全后端/frontend/browser，上一轮1485 passed是前轮代码门禁，不称本轮新结果；不推送/部署/生产迁移/归档。
+- 本轮使用using-superpowers、openspec-apply-change、writing-plans、executing-plans、requesting-code-review及verification-before-completion；维护计划/进度/发现，不创建worktree或安排并行代码写入。
+
 ## 2026-09-30：F7 输入脱敏与ASR提交窗口收口
 
 - 基线main@54978d5，按既有F7安全契约完成两项修复，无新增依赖/表/迁移或供应商。F7仍95/105，10.9整阶段安全/provider/delivery review保持未完成。

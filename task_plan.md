@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 剩余启动门槛复核
+
+- [x] /// 以main@c216e41核对10项未完成任务和F8前置，独立只读阶段评估PARTIAL；已读路径无新增确定blocker，未穷尽全调用方/UI或PG并发，不关闭10.9。
+- [x] /// 实际Commons读取仍因非公网DNS拒绝，安装descriptor确认video/TTS/ASR为空；不访问secret内容、不发付费请求/真实账号动作，不新增未批准Publisher方案。
+- [x] /// 按实现未满足/外部未验证/待方案授权交接，更新progress/findings/README；strict30/30与diff通过，本地记录，不缩减F7/F8目标。
+
 ## 2026-09-30：F7 已实施链路安全复核
 
 - [x] /// 以main@54978d5为准，主Agent与既有只读reviewer找到两项现有契约缺口：validation回显与ASR提交runtime窗口；未重做已关闭三项，也未调用真实Provider。

@@ -1,5 +1,13 @@
 # 配置记录
 
+## 2026-09-30 F7 剩余门槛复查（main@c216e41）
+
+- 当前真实bootstrap仅载入Commons搜索、OpenAI/旧WeWrite image、Graphic Chromium renderer与copy/旧WeWrite publisher；video_provider/tts_provider/asr_provider三类列表为空。只读取descriptor，不读取凭据、不触发runtime fingerprint或供应商探测。
+- 新一次实际Commons读取在pinned_transport前置安全校验处报UnsafeUrlError；DNS仍198.18.0.41，无下载/导入/verification。不能改代理/私网豁免以伪造通过。
+- F7 8.3/8.5仍要求真实账号绑定且不改批准内容的Publisher实现。官方API替代是待用户选择的实施方案，自动goal续跑不是选择确认；远端验证/上传授权及各媒体真实Provider选择/凭据也尚未取得。
+- F8任务0.1仍明文要求F7 implementation gates，不能把10.7本地绿色、10.9窄review、明确unavailable代替完整前置。当前F7仍95/105，F8未apply。
+- 本轮独立阶段评估PARTIAL：所读安全/dispatch/accept/network/renderer/Delivery/reconcile/inventory路径无新增确定blocker；未穷尽所有调用方/UI/PG并发/多worker，不关闭10.9。下一行动需方案决定或实际环境/授权改变，不能反复跑已通过的同一测试冒充进展。
+
 ## 2026-09-30 F7 输入与ASR提交安全复核
 
 - FastAPI默认422含原始input；Provider服务脱敏不能覆盖请求尚未进入服务的错误。仅F7 typed入口及实际搜索/生图包装入口捕获RequestValidationError并返回固定安全原因，普通素材CRUD/F6校验不变；不全局改错误handler。
