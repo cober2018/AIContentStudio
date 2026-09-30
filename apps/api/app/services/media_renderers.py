@@ -19,6 +19,23 @@ from .production_modalities import render_input_hash
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
 
 
+def preview_inventory(user):
+    from .local_graphic_renderer import LocalGraphicRenderer
+
+    items = []
+    for descriptor in providers.registry.list("renderer"):
+        renderer = providers.registry.resolve("renderer", descriptor.key, descriptor.version)
+        if not isinstance(renderer, LocalGraphicRenderer):
+            continue
+        items.append({"renderer_key": renderer.key, "renderer_version": renderer.version,
+            "modality": renderer.modality, "payload_schema": renderer.schema,
+            "output_mimes": list(renderer.output_mimes),
+            "supported_forms": [{"channel": channel, "content_form": form} for channel, form in renderer.supported_forms],
+            "configuration_status": "not_probed", "verified": False, "executable": False,
+            "can_probe": user.role == "admin", "reason": "admin_preview_requires_explicit_runtime"})
+    return items
+
+
 def _source_budget(db, master):
     ids = db.scalars(select(ContentMasterAssetRef.material_revision_id).where(
         ContentMasterAssetRef.master_revision_id == master.id, ContentMasterAssetRef.role != "render_output")).all()

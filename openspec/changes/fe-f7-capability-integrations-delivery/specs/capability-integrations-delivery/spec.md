@@ -133,6 +133,10 @@ Image, video, TTS and renderer providers SHALL return bounded untrusted results.
 - **WHEN** an administrator probes an installed local Graphic renderer with explicitly configured browser, execution dependencies and font bytes
 - **THEN** it renders only the selected canonical canvas and verified inline source bytes with network access blocked, fingerprints its actual execution inputs, and returns a real PNG; absent configuration, unsupported font coverage or unsupported document semantics fail rather than silently substituting a font, placeholder or external resource
 
+#### Scenario: Graphic Studio explicitly accepts and binds a render
+- **WHEN** an administrator renders a current saved Graphic canvas and explicitly accepts its bytes and rights in Production
+- **THEN** accepting saves only the library revision and Project reference, a separate explicit action binds the exact server-visible accepted revision to local canvas state, and only explicit Master save creates a new immutable revision; dirty, historical, archived or unauthorized state cannot execute the preview/accept/bind controls, and no action silently verifies a capability
+
 #### Scenario: Accepted cross-unit media
 - **WHEN** an authorized Project user accepts generated media and attaches its exact revision to the Project
 - **THEN** another Unit in that Project can select the shared revision subject to current rights without claiming the generating Unit owns it exclusively

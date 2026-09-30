@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 Graphic Studio 渲染产品入口
+
+- [x] /// Settings 提供安全 media preview descriptor，不调用 runtime/env/files/probe；失败 API 测试后实现，三项 API 回归通过。
+- [x] /// Graphic-only lazy 面板绑定 saved Master/canvas，dirty/history/archive 禁止操作；复用接受面板，分别显式接受素材、引用最终图、保存 Master，不改 Workflow/自动验证。归档和 canvas/actor 切换 guards 经静态复核，本批没有单列浏览器验收。
+- [x] /// 真实 Chromium 隔离浏览器 RED→GREEN：十个 browser gate、全后端 1374/2 skipped、构建/预算/strict/Ruff/diff 与窄独立复核通过，记录后本地提交。不推送/归档/生产迁移。
+
 ## 2026-09-30：F7 真实本地图文渲染实现
 
 - [x] /// 明确配置 Node / Playwright / Chromium / 单一字体，运行身份绑定脚本、依赖、浏览器和字体字节；缺配置不可执行，不依赖 Codex 私有默认路径。

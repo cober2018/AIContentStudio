@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-30：F7 Graphic Studio 渲染产品入口
+
+- 接通 Graphic-only lazy 渲染面板：已保存 Master/所选画布 → 实际 PNG 预览 → 明确许可接受 → fresh Shared Assets 精确 revision/hash/公开权利 → 本地绑定 → 独立 Master save → 人工输入哈希确认。工作流保存不受影响，不自动 verified/attest/publish。F7 保持 86/105，F8 未 apply。
+- 库存新字段只读已加载实现及支持范围，不触发 runtime/env/files/probe。管理员可明确尝试，不表示配置可用；viewer 不可执行。两项库存失败回归后实现，三项定向 API 测试通过。ProviderMediaPanel 默认生图/搜索行为保留，Renderer 按 MIME 显示真实 PNG。
+- 真实 Chrome 隔离浏览器十项通过、零 page error：预览零写入、接受后 GET 失败保留 accepted 且只重读、不重复接受、精确引用、本地 dirty/独立保存、manual confirmation/刷新、历史只读、途中修改丢弃迟到结果、同 owner viewer 禁用。本批未单列归档/途中 actor 或 canvas 切换浏览器，不把静态 guards 宣称完整动态验收。
+- 最终显式 Renderer 环境全后端 1374 passed / 2 skipped / 8 既有 warnings（102.66s）；首次无环境运行 1358/18 skipped 不是最终真实 Renderer 门禁。TypeScript/Vite/FE-P1 PASS，/projects 224.84/72.95 kB，common Production 280.20/89.13 kB；GraphicRenderPanel 独立 chunk 3.43/2.15 kB。strict 30/30、范围 Ruff、diff-check PASS，窄独立 implementation 只读复核 APPROVE。
+- 证据：docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md。无新表/迁移；仅隔离库/媒体目录和显式命令环境，未改真实服务配置。普通用户 media scope verification、真实 Video Renderer/其他 Provider/Publisher 与 F7 最终验收继续待办；无 push/deploy/生产迁移/canonical sync/archive。
+
 ## 2026-09-30：F7 真实本地图文 Renderer
 
 - F7 保持 86/105，F8 未 apply；真实 `graphic.chromium@1` 在显式配置环境中将当前 Graphic v2 selected canvas 渲染成 PNG。没有修改真实服务配置，没有默认 Codex runtime 路径。现有管理员 preview→接受真实 MaterialRevision/项目引用→用户显式 manual render binding→新 Master 已做 API 端到端回归；不伪造自动 verified/attestation。

@@ -1,5 +1,12 @@
 # 配置记录
 
+## 2026-09-30 F7 Graphic 渲染 UI 边界
+
+- 能力库存必须把 loaded descriptor、可尝试 admin preview、configured/verified/executable 分开；GET 不读取 runtime。异步库存返回前按钮禁用是正确行为，浏览器验收应等待条件，而非看见按钮即断言 enabled。
+- 接受成功与项目 read model 刷新是两笔不同结果：先保留 accepted，GET 失败不能重复 POST accept；fresh exact revision/hash/live public rights 可见后才提供本地绑定。
+- 渲染请求代次与 unavailable/current actor 校验丢弃迟到结果；dirty 修改不清除正文。Master/canvas/project/unit/actor key 隔离状态。实际 browser 覆盖途中 dirty，actor/canvas 切换本批仅静态复核。
+- Brief/事实边界缺失时现有 manual confirmation 不可用；补齐隔离上下文后才能验收，不放宽业务门槛。本批完成真实 PNG 产品入口，不声称 Candidate/远端发布或媒体 capability verified。
+
 ## 2026-09-30 F7 媒体 Renderer 基础边界
 
 - 同一个 renderer descriptor 不能无条件用于任何 form：explicit supported_forms 与 schema/MIME/runtime/code 共同绑定，scope 不符拒绝调用。未验证路径仅管理员明确探测，不是普通执行旁路；不自动保存 CapabilityVerification。
