@@ -2,10 +2,12 @@
 
 ## 2026-09-30：F7 Provider 调用前权利保护
 
+- 后续独立审查返回PARTIAL/BLOCK：本次dispatch修复无新阻断，但核实旧workflow远端旁路（含截稿/占位图/raw CLI错误）、typed读取DNS重解析连接窗口、普通媒体接受提交前runtime重验缺失。主Agent回读当前源码确认上述路径仍在；重新打开8.4/8.6/8.11/8.13，真实任务计数91/105，不保留错误的95/105已完成声明。下一批先关闭这些安全缺口，10.9仍打开。
+
 - 对现有10.9范围展开只读复核，发现generic stage提前释放project锁、无source锁；两失败回归（含真实SQLite双连接撤权先赢）复现旧代码发送来源字节和新增preview。仅修既有stage事务，source/parent排序锁持至受控dispatch/result，finally释放DB后再缓存，不新增Provider/表/迁移。
 - 125定向PASS；无显式Graphic环境第一次全套1432/18 skipped后，补明确Node/Chrome/Playwright/font重跑1448 passed/2 skipped/8既有warnings（86.84s）。新TS/Vite/FE-P1、strict30/30、范围Ruff/diff PASS；没有重跑浏览器，不把上轮52项冒充本批。
 - F7仍95/105；整阶段安全/provider/delivery review尚未终验，10.7/10.9/ARCHIVE_READY及F8前置保持打开。公众号替代方案仍需用户选择，真实凭据/账号动作仍需单独授权。
-- 整阶段独立审查仍在进行，未收到结论，不将其记为APPROVE。本批使用using-superpowers、openspec-apply-change、writing-plans、executing-plans、systematic-debugging、test-driven-development、requesting-code-review、verification-before-completion；只读review与主Agent源码修复分工，不授权其他Agent编辑业务代码。
+- 独立审查实际为PARTIAL/BLOCK，不记为整体APPROVE；dispatch fix可认可，未穷尽所有调用方/UI/迁移和真实外部/PG并发。reviewer仅做无真实网络/DB/文件写入的注入诊断，未重跑pytest/browser。使用using-superpowers、openspec-apply-change、writing-plans、executing-plans、systematic-debugging、test-driven-development、requesting-code-review、verification-before-completion。
 
 
 ## 2026-09-30：F7 隔离浏览器整批再验收

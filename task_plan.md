@@ -4,7 +4,9 @@
 
 - [x] /// 依据既有10.9启动只读阶段复核；主Agent核实调用前撤权漏洞，独立复核仍未完成，不把浏览器subset或测试总数替代安全审查；公众号方案待明确选择。
 - [x] /// 主Agent复核调用前source撤权窗口，两个RED→GREEN含实际SQLite双连接；只修现有stage事务及既有spec说明，不开始F8、不新增Publisher对象或真实账号动作。
-- [x] /// 记录SQLite source竞态覆盖和PG/project-archive未覆盖；125定向/1448全后端（2 skipped）、新build/FE-P1/strict30/30/Ruff/diff通过。保留10.9和F7/F8终验，独立复核未完成不假标APPROVE。
+- [x] /// 记录SQLite source竞态覆盖和PG/project-archive未覆盖；125定向/1448全后端（2 skipped）、新build/FE-P1/strict30/30/Ruff/diff通过。独立review PARTIAL/BLOCK，dispatch无阻断但3新缺口，8.4/8.6/8.11/8.13重新打开至91/105；保留10.9和F7/F8终验。
+
+- [ ] /// 下一批：关闭旧workflow发布旁路；绑定typed Connector/Commons验证IP连接；普通媒体accept提交前runtime复检与配置串行化。先失败回归，保持legacy历史读取，不新增供应商/远端授权。
 
 ## 2026-09-30：F7 隔离浏览器再验收
 

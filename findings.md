@@ -2,6 +2,8 @@
 
 ## 2026-09-30 F7 调用前撤权窗口
 
+- 后续独立review对dispatch fix认可但整体PARTIAL/BLOCK；三个仍在源码中的问题：workflow_engine旧节点legacy_remote_publish真则schema v1直调wewrite，缺Target/Attempt/scoped gate且改稿/raw CLI错误；Connector/Commons校验后默认transport重新DNS解析；generic accept初检runtime后commit前无复检。重新打开8.4/8.6/8.11/8.13，下一批按失败回归修复，不用绿色总数替代安全正确性。
+
 - 后置accept重验不能阻止已经发生的Provider传输。generic stage与已有ASR不同：提前rollback project且_sources不加锁；双连接失败回归证明撤权事务持锁期间旧代码仍发送原字节并缓存成功preview。
 - 最小修复复用现有排序Revision/Material和project锁，持到受控dispatch/result，finally rollback后再stage cache。只证明SQLite撤权先赢则零调用；未声称PG并发/独立project archive竞态。超时unknown不等于取消已发送外部调用，capacity仍保留至terminal。
 - 全量测试缺四项显式Graphic环境会跳16项；补配置实际重跑1448/2 skipped，不能把1432/18 skipped当真实渲染通过。
