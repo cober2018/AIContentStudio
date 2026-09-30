@@ -348,7 +348,11 @@ def generate_material(
     if not image_cfg.get("enabled"):
         raise HTTPException(422, "capability_unavailable: AI 生图未启用（设置 → 模型服务 → AI 生图）")
     try:
-        provider = resolve_asset_provider()
+        if image_cfg.get("provider") == "openai":
+            from ..services.content_harness.providers import registry
+            provider = registry.resolve("image_provider", "image.openai", "1")
+        else:
+            provider = resolve_asset_provider()
     except CapabilityUnavailable as exc:
         raise HTTPException(422, f"capability_unavailable: {exc}") from exc
 

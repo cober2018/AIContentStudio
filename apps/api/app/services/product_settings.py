@@ -306,7 +306,7 @@ def provider_guidance(registrations: dict) -> list[dict]:
 
     instructions = (
         ("search_provider", "公共素材搜索", "公共 Commons 无需账号密钥；需实际网络与来源校验，接受前核对许可和完整署名。"),
-        ("image_provider", "图片生成", "沿用管理员模型与图片配置工具；现有 WeWrite CLI 不满足单次调用及安全配置契约，保存 CLI 配置不等于 typed Provider 可用。"),
+        ("image_provider", "图片生成", "管理员在现有 AI 生图配置明确选择 OpenAI、模型、尺寸、HTTPS /v1 地址与密钥后，可明确请求单次 PNG 预览；支持 GPT Image 1/1-mini/1.5 与 DALL-E 2/3 的受控尺寸，不支持来源图编辑。保存配置不会调用服务或标记 verified；其他 WeWrite CLI 配置不等于 typed Provider 可用。"),
         ("video_provider", "视频生成", "需要已加载的精确 video_provider key/version 与受控单次真实调用；当前没有独立持久配置 API，不提供保存按钮。"),
         ("tts_provider", "语音合成", "需要已加载的精确 tts_provider key/version、已配置且可核验的 runtime；接受前核对音频许可和使用权。"),
         ("asr_provider", "字幕转录", "需要已加载的精确 asr_provider key/version；在 Video Studio 对已保存、允许模型使用的精确音视频版本明确请求。"),

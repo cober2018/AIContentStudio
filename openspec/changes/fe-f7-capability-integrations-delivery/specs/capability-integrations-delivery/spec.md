@@ -113,6 +113,10 @@ The source's stable public citation URL and the provider's temporary fetch/previ
 ### Requirement: Generated media and renderer output require exact acceptance
 Image, video, TTS and renderer providers SHALL return bounded untrusted results. Only explicitly accepted, byte-verified output with exact provider/version, input/request hash, MIME, license and rights status SHALL become MaterialRevision. A Master or Variant SHALL change only through its own explicit revision save. No provider success flag, remote URL or preview alone SHALL count as generated media.
 
+#### Scenario: Explicitly configured one-shot image adapter
+- **WHEN** an authorized user explicitly requests generation with the existing openai image settings and exact loaded adapter
+- **THEN** one bounded HTTPS request uses the exact configured model/size, with no redirect/retry/fallback; only one base64 PNG can enter preview, source-image edits and unsafe/unsupported configuration fail before a call, config/credential drift invalidates acceptance, and neither settings save nor preview creates verification or durable media
+
 #### Scenario: Provider reports success without bytes
 - **WHEN** a provider returns a success status but media cannot be fetched, decoded, hashed or licensed
 - **THEN** no MaterialRevision, project attachment, Master update or render attestation is created

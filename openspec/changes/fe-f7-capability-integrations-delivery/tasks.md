@@ -63,7 +63,7 @@
 - [x] 5.5 Respect model/public/commercial rights.
 - [x] 5.6 Require explicit accept before Master use.
 - [x] 5.7 Add async/timeout/failure/unknown provider-result handling.
-- [ ] 5.8 Add mock + at least one configured real adapter path where repository settings support it.
+- [x] 5.8 Add mock + at least one configured real adapter path where repository settings support it.
 - [x] 5.9 Do not mark adapter verified without real test.
 - [x] 5.10 Redact nested provider request/response/errors across API, Material metadata, AuditLog, ProjectEvent and settings projections; specifically prevent raw prompts/requests, signed URLs and secret fragments in existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error`; add successful-result and error-path negative secret-leakage checks.
 - [x] 5.11 Reject success-without-bytes, unsupported MIME, missing/ambiguous license and wrong render-input hash without creating MaterialRevision or Master provenance.

@@ -230,6 +230,10 @@ def save_image(db, value: dict, updated_by: str | None) -> None:
     db.flush()
     runtime_config.set_runtime(runtime_config.KEY_IMAGE, value)
 
+    # Native requests freeze KEY_IMAGE directly, not mutable CLI configuration.
+    if value.get("provider") == "openai":
+        return
+
     cfg_path = WEWRITE_HOME / "config.yaml"
     try:
         cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
