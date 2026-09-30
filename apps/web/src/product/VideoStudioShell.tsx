@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { api, currentUser } from "../api";
 import { Button, Field, inputClass } from "../components/ui";
 import { addOverlay, addScriptBlock, addShot, addSubtitleCue, addTrack, addTimelineItem, bindFinalRender, bindShotSource, importSubtitleSrt, removeOverlay, removeShot, removeSubtitleCue, removeTimelineItem, removeTrack, reorderShots, setCover, setMusic, setVoice, updateAspectRatio, updateOverlay, updateScriptBlock, updateShot, updateSubtitleCue, updateTimelineDuration, updateTimelineItem, updateVideoTitle, type VideoDraft, type VideoTimelineItem, type VideoTrack } from "./VideoStudioModel";
@@ -6,9 +6,10 @@ import { addOverlay, addScriptBlock, addShot, addSubtitleCue, addTrack, addTimel
 type ProjectAsset = { key: string; material_id: number; material_revision_id: number; content_hash: string; kind: string; mime_type: string | null; title: string | null; rights_status: string | null; public_use_allowed: boolean; source_type: string; provenance?: { source_kind?: string | null; provider_key?: string | null } };
 type Capability = { configured: boolean; executable: boolean; verified: boolean; reason: string };
 type VideoCapabilities = { video_generation: Capability; tts: Capability; asr: Capability };
-export type VideoStudioProps = { projectId: number; draft: VideoDraft | null; legacyPayload?: Record<string, unknown>; upgradeMode?: boolean; onChange: (draft: VideoDraft) => void; readOnly: boolean };
+const AsrSuggestionPanel = lazy(() => import("./AsrSuggestionPanel"));
+export type VideoStudioProps = { projectId: number; unitId?: number; masterId?: number | null; masterHash?: string | null; savedSourceIds?: number[]; dirty?: boolean; draft: VideoDraft | null; legacyPayload?: Record<string, unknown>; upgradeMode?: boolean; onChange: (draft: VideoDraft) => void; readOnly: boolean };
 
-export default function VideoStudioShell({ projectId, draft, legacyPayload, upgradeMode = false, onChange, readOnly }: VideoStudioProps) {
+export default function VideoStudioShell({ projectId, unitId, masterId = null, masterHash = null, savedSourceIds = [], dirty = false, draft, legacyPayload, upgradeMode = false, onChange, readOnly }: VideoStudioProps) {
   const [issue, setIssue] = useState("");
   const [newTrackKind, setNewTrackKind] = useState<VideoTrack["kind"]>("video");
   const [voiceMode, setVoiceMode] = useState<"recorded" | "tts">("recorded");
@@ -67,6 +68,7 @@ export default function VideoStudioShell({ projectId, draft, legacyPayload, upgr
       <Field label="整片音乐"><select aria-label="整片音乐" className={inputClass} value={draft.payload.music.material_revision_id || ""} disabled={readOnly || !!assetIssue} onChange={(event) => edit(() => setMusic(draft, assets.find((item) => item.material_revision_id === Number(event.target.value)) || null))}><option value="">无</option>{assets.filter((item) => item.kind === "audio" && item.public_use_allowed).map((item) => <option key={item.key} value={item.material_revision_id}>{item.title || "未命名音频"} #{item.material_revision_id}</option>)}</select></Field>
       <Field label="封面图片"><select aria-label="封面图片" className={inputClass} value={draft.payload.cover.material_revision_id || ""} disabled={readOnly || !!assetIssue} onChange={(event) => edit(() => setCover(draft, assets.find((item) => item.material_revision_id === Number(event.target.value)) || null))}><option value="">无</option>{assets.filter((item) => item.kind === "image" && item.public_use_allowed).map((item) => <option key={item.key} value={item.material_revision_id}>{item.title || "未命名图片"} #{item.material_revision_id}</option>)}</select></Field>
     </div></section>
+    {unitId && !upgradeMode && <Suspense fallback={<p className="text-xs">读取 ASR 面板…</p>}><AsrSuggestionPanel projectId={projectId} unitId={unitId} masterId={masterId} masterHash={masterHash} savedSourceIds={savedSourceIds} draft={draft} readOnly={readOnly} dirty={dirty} onChange={onChange} /></Suspense>}
     <SubtitleEditor draft={draft} readOnly={readOnly} edit={edit} />
     <OverlayEditor draft={draft} readOnly={readOnly} edit={edit} />
     <section className="rounded-xl border border-amber-200 bg-amber-50 p-4"><h3 className="font-semibold">最终 MP4 与能力状态</h3><p className="mt-1 text-xs">脚本/时间线是本地结构声明，绝不是已渲染视频。最终成片必须从项目可见的真实 MP4 Revision 选择，保存 Master 后再按当前输入哈希明确确认。</p>

@@ -857,3 +857,11 @@ PRD §16 的发布门槛另需 **30 个真实 Topic（抖音/XHS/公众号各 10
 - ffprobe stream width/height 不能证明 MP4 可解码。新生成视频需在体积/像素/时间上限内完整 ffmpeg -xerror 解码；真实坏包拒绝，真实小 MP4 通过，不持久化 stderr。
 - Provider source 接受必须在项目锁之后，对 source Revision 和父 Material 按排序锁定并 populate_existing/refresh 后验证权限和字节，直至 commit。双 SQLite 连接实测进行中的撤权提交后接受 409，零派生素材；缓存锁不替代数据库权利锁。
 - 未做真实外部图像/视频/TTS/ASR 验证，fixture 与已接受素材的人工许可不代表 Provider verified。F7 继续实施，F8 尚未开始。
+
+# 2026-09-30 F7 ASR 复核关闭
+
+- 保存 Master 的旧素材 ref 不证明今天仍在当前项目可见；建议与保存均需 active ProjectMaterialReference，或可证实的跨 Unit Workflow 生成血缘，并匹配精确保存哈希。
+- 在调用前 rollback 会释放授权锁，允许来源先撤权后仍发送缓存字节；ASR 现在持有 project/source 锁至受控 dispatch/result。接受时再检查不能替代调用前检查。
+- Provider 抛出的 HTTPException 仍是外部不可信数据；独立内部容量异常才能保留固定 429，Provider 任意诊断统一安全 502。RED/GREEN 测试与窄复核闭合。
+- 两个 worker 与响应 deadline 仅限制资源/等待，不保证取消已发出的外部请求；timeout unknown 保留 slot 至终止，不自动重试。ASR receipt 为 actor-scoped 临时缓存，不新增数据真源。
+- ASR 浏览器 fixture 用实际 WAV，不是真实 Provider 验证。F7 80/105，F8 未 apply。

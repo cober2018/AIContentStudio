@@ -21,7 +21,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from ..models import AuditLog, Material, MaterialRevision, ProjectMaterialReference, User
-from . import materials
+from . import materials, provider_calls
 from .content_harness import providers
 from .project_authorization import lock_project_context
 from .project_events import record_project_event
@@ -192,7 +192,9 @@ def stage(db: Session, user: User, request: dict) -> dict:
         if len(_cache) >= 64 or sum(preview.actor_id == user.id for preview in _cache.values()) >= 8:
             raise HTTPException(429, "provider_preview_capacity")
     try:
-        output = provider.generate({**request, "source_bytes": source_bytes})
+        output = provider_calls.call(provider.generate, {**request, "source_bytes": source_bytes, "timeout_seconds": 30})
+    except provider_calls.ProviderCapacityError:
+        raise HTTPException(429, "provider_execution_capacity") from None
     except TimeoutError:
         raise HTTPException(409, "provider_outcome_unknown") from None
     except Exception:  # noqa: BLE001 Provider diagnostics can contain credentials.

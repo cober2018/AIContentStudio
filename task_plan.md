@@ -2,6 +2,10 @@
 
 ## 2026-09-30：F7 两批实施，随后 F8
 
+- [x] /// ASR 批：先写失败回归，验证精确 Project-visible 音频/视频字节与 model-use 权利、真实时长、actor/base/runtime/context 有界 receipt，建议不得写 Master；只通过显式 save 验证并记录安全血缘。
+- [x] /// Video Studio 接 ASR 预览/拒绝/明确接受，本地字幕编辑和 Master save 分离，接受使成片绑定失效；模型未配置仍显示不可用，旧三形态路径保持兼容。
+- [x] /// 集中跑来源撤权、坏 cues、过期/伪造 receipt、旧 Master/跨项目回归及浏览器门禁；调用事务边界回归通过，ASR 双连接竞态未单独重跑，不冒充并发终验。全套 1291 passed/2 skipped、四浏览器 gate、build/预算/strict/Ruff/diff 与独立窄复核通过，已更新 README/progress/findings，不以 fixture 冒充真实 Provider。
+
 - [x] /// 接续搜索整批：限定公共 Wikimedia 搜索 adapter 与 exact key/version，服务端只缓存短期抓取定位符，API 只返回有界安全候选/许可摘要；旧搜索入口不直传原始 Provider metadata。
 - [x] /// 显式选择候选才下载有界真实字节并进入既有 stage/accept，固定来源域名/同源跳转、许可/署名核对、配置漂移、过期/跨身份和项目归档均 fail-closed；不建新表/迁移。
 - [x] /// Assets 与旧素材搜索共用 lazy 搜索/接受面板，集中验收搜索→预览→许可确认→精确版本/项目引用，真实公共读取与 fixture 清楚区分；全量 1270 passed/2 skipped，8 个浏览器 gate、预算/strict/独立复核通过。本批本地提交，真实外部验证和跨 Unit 实际消费仍待办。

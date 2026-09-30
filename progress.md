@@ -969,6 +969,14 @@
 - 已补完陈旧候选拒绝与人工结果未知（`reconciliation_needed`）的独立本地验收；同一未知回填重复提交不会新增第二条回执。
 - ChatGPT 最终代码复核指出旧工作流默认仍生成公众号草稿节点；已将模板默认改为本地导出，并为遗留远端草稿增加显式开关与服务端闸门，M1 母稿仍不可进入该路径。
 - ChatGPT 对上述修复返回 DONE；已完成 `add-evidence-bound-article-handoff` 的 OpenSpec 归档，归档目录为 `openspec/changes/archive/2026-09-22-add-evidence-bound-article-handoff/`。
+# 2026-09-30 F7 ASR 本地批验收
+
+- F7 从 75/105 到 80/105，关闭 5.7 和 6.4–6.7；真实 adapter/Renderer/Publisher/F8 未因此完成。
+- ASR 建议与本地 Accept、显式 Master Save 分离；来源锁与项目可见性封住调用前撤权/历史引用旁路，Provider HTTPException 统一脱敏。
+- 定向 ASR/素材 41 passed；最终全套 1291 passed / 2 skipped / 8 existing warnings（52.28s）。TypeScript/Vite/FE-P1、OpenSpec strict 30/30、范围 Ruff/diff PASS。
+- 隔离真实 WAV + fixture 四浏览器 gate、0 page error；Independent narrow closure APPROVE。证据及限制见 `docs/FE_F7_ASR_ACCEPTANCE.md`。不宣称真实外部 ASR verified。
+- 无新 migration/table，无 push/deploy/生产迁移/canonical sync/archive；原始 OpenSpec 包保持原样。
+
 # 2026-09-27：连接器故障检查
 
 - C2C 更新检查无新版本；授权白名单已配置。

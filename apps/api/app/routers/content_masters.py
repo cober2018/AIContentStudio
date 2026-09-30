@@ -88,6 +88,28 @@ class TextSuggestionIn(BaseModel):
     instruction: str = Field(default="", max_length=2000)
 
 
+class ASRSuggestionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provider_key: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,150}$")
+    provider_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,50}$")
+    source_revision_id: int = Field(ge=1)
+    base_payload_hash: str = Field(pattern="^[0-9a-f]{64}$")
+
+
+@router.get("/asr-provider-options")
+def asr_provider_options(user: User = Depends(get_current_user)):
+    from ..services.content_harness import providers
+
+    return [{"key": row.key, "version": row.version, "verified": False} for row in providers.registry.list("asr_provider")]
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/asr-suggestions")
+def suggest_asr(project_id: int, unit_id: int, master_id: int, payload: ASRSuggestionIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services.asr_suggestions import suggest
+
+    return suggest(db, project_id, unit_id, master_id, user, payload.model_dump())
+
+
 @router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions")
 def get_master_revisions(project_id: int, unit_id: int, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return {"items": list_revisions(db, project_id, unit_id, user, limit=limit, offset=offset), "limit": limit, "offset": offset}

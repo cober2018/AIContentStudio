@@ -12,7 +12,7 @@ export type VideoPayload = {
 };
 export type VideoAssetRef = { material_revision_id: number; content_hash: string; role: string; slot_key?: string; sort_order?: number; placement?: Record<string, unknown> };
 export type VideoEvidenceRef = { fact_pack_item_id: number; snapshot_checksum: string; role?: string; sort_order?: number; locator: Record<string, unknown> };
-export type VideoDraft = { payloadSchema: "video.master.v2"; payload: VideoPayload; assetRefs: VideoAssetRef[]; evidenceRefs: VideoEvidenceRef[] };
+export type VideoDraft = { payloadSchema: "video.master.v2"; payload: VideoPayload; assetRefs: VideoAssetRef[]; evidenceRefs: VideoEvidenceRef[]; asrReceiptId?: string };
 export type ExactVideoAsset = { material_revision_id: number; content_hash: string; kind: string; public_use_allowed: boolean };
 
 const MAX_DURATION = 8 * 60 * 60 * 1000;
@@ -50,6 +50,16 @@ function duration(shots: VideoShot[], current: number): number {
 
 export function createVideoDraft(): VideoDraft {
   return { payloadSchema: "video.master.v2", payload: { title: "", aspect_ratio: [9, 16], script: { blocks: [] }, shots: [], timeline: { duration_ms: 0, tracks: [] }, voice: { mode: "none" }, subtitles: { cues: [] }, overlays: [], music: {}, cover: {} }, assetRefs: [], evidenceRefs: [] };
+}
+
+export function acceptAsrCues(draft: VideoDraft, receiptId: string, cues: VideoCue[]): VideoDraft {
+  if (!/^[0-9a-f]{32}$/.test(receiptId) || cues.length < 1 || cues.length > 1000) throw new Error("ASR receipt/cues invalid");
+  let end = 0;
+  for (const [order, cue] of cues.entries()) {
+    if (cue.order !== order || !Number.isInteger(cue.start_ms) || !Number.isInteger(cue.end_ms) || cue.start_ms < end || cue.end_ms <= cue.start_ms || cue.end_ms > draft.payload.timeline.duration_ms || !cue.text.trim() || cue.text.length > 500) throw new Error("ASR cues do not fit current timeline");
+    end = cue.end_ms;
+  }
+  return { ...changed(draft, { ...draft.payload, subtitles: { cues: structuredClone(cues) } }), asrReceiptId: receiptId };
 }
 
 export function videoUpgradeDraftFromPreview(fields: { title: string | null; script: string | null; shots: { id: string; order: number }[] }): VideoDraft {

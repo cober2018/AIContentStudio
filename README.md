@@ -199,6 +199,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 已完成：规格审计、十类 Registry 扩展、两张能力/验证表及加法迁移、内部精确 Publisher 验证判定、旧自动草稿执行旁路关闭、Connector/WeWrite/PublisherResult 错误与结果安全投影；本地全量后端 1207 passed、OpenSpec strict 30/30，均只是 F7 第一批阶段门禁，不是 F7 终验。
 - 规格预校准：“保存来源 URL”仅允许经过正向验证的稳定公开引用地址；签名、带凭据或过期抓取/预览地址不能落入 `MaterialRevision.source_url`、元数据、审计或 API。无法证明安全时保留有界来源标识与单向哈希。这仍是尚待实现的 Provider 接受契约。
 - 待完成/TODO：F6D/F6E 已完成本地实施验收；F7 正在按两大批 apply。Provider 适配、完整隔离浏览器与真实账号验证仍未完成，缺凭据则保持 unverified。
+- 本地 ASR 批：Video-only lazy 面板已接上有界转录建议、拒绝/本地接受/显式 Master 保存和安全血缘；最多十分钟来源、15 分钟 actor receipt，重新核对当前项目可见性、精确哈希和 model-use 权利。单次 Provider 调用最多两个未结束任务、30 秒响应期限，超时保持 unknown、不重试、占用槽位直至任务终止；不声称能取消远端任务。全后端 1291 passed / 2 skipped，隔离浏览器四 gate 与独立窄复核通过，详见 [`docs/FE_F7_ASR_ACCEPTANCE.md`](docs/FE_F7_ASR_ACCEPTANCE.md)。F7 80/105；真实 ASR adapter/凭据尚未验证，无新表或迁移。
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
 - 依赖与启动：沿用当前 API/Vite 启动方式。F7 加法迁移 `f7a000000001` 已在代码中并经隔离 SQLite 测试，未执行生产迁移；不 push/deploy，不同步 canonical 或归档。
 
