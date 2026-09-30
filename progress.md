@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-30：F7 媒体 Renderer 精确验证/执行
+
+- F7 90/105：本批核销 5.11 和 7.5–7.7，依据通用接受/校验协议、实际 Graphic Chromium renderer 与既有真实解码 MP4 contract fixture，不宣称已安装真实 Video renderer。F8 未 apply；真实生成/外部 ASR/TTS/Publisher、账号验证/阶段终验继续。
+- 管理员明确确认 actor-owned 未过期真实 stage 的 input/output hash，重验 Master/context/Profile/runtime/rights/bytes 后追加既有 renderer_output verification，24h 有效；不重新渲染、不写素材/Master。普通 editor 通过独立 media-render-outputs 请求，执行前/返回后/接受/commit 均重验精确 scope；mode 由服务端冻结，客户端不能伪造或回退 admin probe。撤销追加历史且不依赖仍存在的 preview。
+- 接受/验证改为 per-stage operation lock，全局缓存锁不等待 DB；render 释放 DB 后才创建 stage。registration 写锁使 revoke 与接受提交串行。真实 SQLite 文件库两连接证明撤销先提交→接受 409、零新素材、旧 verified 行保留；补强后的 owned_unit 等待点与缓存可获取检查已由最新 106 定向测试覆盖。未进行真实 PostgreSQL 双连接验收。
+- Graphic UI 新增明确验证/撤销与 editor 执行入口；库存只读最新 recorded scope/expiry，not_probed、verified/executable=false 不推测 runtime。实际 Chrome 13 gate、零 page error：验证不重渲染/写素材，editor 真 PNG 请求，撤销不改已有 Master，以及既有预览/接受/独立保存/历史/viewer/迟到结果保护。证据报告 YfL1fs，不使用旧 no-capability-verification 口径。
+- 全后端显式真实 runtime 1400 passed / 2 skipped / 8 既有 warnings（94.32s）；随后只补强测试等待点，最新定向 106 passed（5.76s）。本批新增 22 verification/lock 回归及 4 inventory 回归；TypeScript/Vite/预算 PASS，/projects 224.84/72.95kB，common Production 280.20/89.13，GraphicRenderPanel 独立 lazy 5.04/2.77。strict 30/30、范围 Ruff/Node syntax/diff PASS；独立 plan/implementation/增量复核 APPROVE。
+- 证据/启动/接口见 docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md。无新表/迁移，无真实外部账号副作用、push/deploy/生产迁移/canonical sync/archive。
+
 ## 2026-09-30：F7 Graphic Studio 渲染产品入口
 
 - 接通 Graphic-only lazy 渲染面板：已保存 Master/所选画布 → 实际 PNG 预览 → 明确许可接受 → fresh Shared Assets 精确 revision/hash/公开权利 → 本地绑定 → 独立 Master save → 人工输入哈希确认。工作流保存不受影响，不自动 verified/attest/publish。F7 保持 86/105，F8 未 apply。

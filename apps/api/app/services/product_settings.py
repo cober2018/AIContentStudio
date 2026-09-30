@@ -296,7 +296,7 @@ def capability_inventory(db: Session, user: User) -> dict:
     from .capability_integrations import publisher_runtime_fingerprint
 
     return {"descriptors": descriptors, "publishers": publishers, "renderers": renderer_capabilities.inventory(db),
-            "media_renderer_previews": media_renderers.preview_inventory(user),
+            "media_renderer_previews": media_renderers.preview_inventory(user, db),
             "provider_guidance": provider_guidance(registrations), "can_verify": user.role == "admin",
             "publisher_verification_available": publisher_runtime_fingerprint("publisher.wechat.wewrite", "1") is not None}
 

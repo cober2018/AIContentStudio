@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-30 F7 媒体 Renderer 验证与锁序
+
+- Text renderer verification 不能直接套在媒体上，也不能移除 manual renderer 保护。通用 predicate 按 ProductionRenderer/Text 和 typed media executor 分流，媒体校验真实 callable/runtime/schema/forms/MIME/Profile；只有明确真实 stage readback 才记录媒体范围。
+- 全局缓存锁包住接受 DB 操作会与 render→stage_output 的 DB→cache 顺序相反。现已使用 per-stage operation lock，DB 前退出 global cache，render rollback 后 staging，提交边界短暂锁 cache 检查同一 actor/TTL/字节；registration DB 写锁隔离 revoke/accept。新两连接 SQLite 回归在 owned_unit 边界同步，避免仅在 accept 前发信号的弱并发证据。
+- 只读库存不能计算 browser/font/runtime fingerprint，否则 GET 会读环境或磁盘。recorded verification/expiry 只赋予有权限者请求资格，不宣称实时 executable；每次执行和接受仍在服务端实际检查。撤销保留历史、不等于删除已接受素材，也不修改 Master。
+
 ## 2026-09-30 F7 Graphic 渲染 UI 边界
 
 - 能力库存必须把 loaded descriptor、可尝试 admin preview、configured/verified/executable 分开；GET 不读取 runtime。异步库存返回前按钮禁用是正确行为，浏览器验收应等待条件，而非看见按钮即断言 enabled。

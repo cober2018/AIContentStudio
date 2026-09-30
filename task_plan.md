@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 媒体 Renderer 精确范围执行
+
+- [x] /// 复用两个既有 capability 表和已真实渲染的 actor stage：明确确认 input/output hash 才追加媒体 scope 验证；当前来源/字节/rights/runtime/Profile 事务内重验，不再调用 Renderer，不写 Master/素材。per-stage operation lock 保护 accept/verify，全局 cache 锁不等待 DB；提交边界重验身份/TTL/冻结字节。registration 写锁串行化 revoke/accept commit。
+- [x] /// 普通 editor 执行另走 verified media output 入口，起始/返回/接受/commit 均检验 exact registration/runtime/schema/channel/form/MIME/expiry。26 新回归、106 定向、实际 SQLite 两连接撤销→接受与缓存锁边界通过；PG 并发未跑。
+- [x] /// Graphic UI 显式验证与按已记录范围请求分离；安全库存不检查 runtime/文件，仅记录可请求且服务端执行时重验。13 真实 browser gate、全量 1400/2 skipped、构建/预算/strict/Ruff/窄复核通过后本地提交。F7 90/105，Video 实际 renderer/其他外部能力仍待办，无发布/迁移/归档。
+
 ## 2026-09-30：F7 Graphic Studio 渲染产品入口
 
 - [x] /// Settings 提供安全 media preview descriptor，不调用 runtime/env/files/probe；失败 API 测试后实现，三项 API 回归通过。
