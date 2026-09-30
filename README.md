@@ -6,6 +6,8 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
+剩余门槛复查（main@c216e41）：真实bootstrap的Video/TTS/ASR实现列表为空；Commons新请求仍被非公网DNS拒绝。公众号账号绑定且不改稿的新实现方案尚待选择，真实账号/付费Provider动作未授权。F7仍95/105，F8前置不变；仅记录证据，不新增依赖/迁移或修改启动方式。
+
 最新安全收口：F7 typed入口及实际素材搜索/生图包装入口的非法输入只返回固定安全422，普通CRUD不改；ASR显式保存最终receipt/runtime与commit共用进程配置guard，漂移回滚Master/refs/event。61定向、最终全后端1485 passed/2 skipped与独立两项窄复核通过，构建/FE-P1/strict30/30/范围Ruff通过；无新依赖/业务表/迁移，启动不变。复跑：`cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py tests/test_f7_asr_suggestions.py`。F7仍95/105，真实Provider/账号、阶段终验和F8未完成，不以本地测试代替外部验收。
 
 最新迁移实测：独立PostgreSQL16.15实际验证到f7b000000001，四项往返/旧验证保留/两类历史拒降级通过，不使用旧f7a结果代替新迁移。临时容器已回收；真实Commons搜索被当前DNS非公网198.18.0.41拒绝，尚无下载/导入成功。详细证据与未覆盖范围见[最新迁移与公共来源验收](docs/FE_F7_MIGRATION_REVALIDATION.md)。没有新代码/依赖/迁移，启动方式不变，F7仍95/105、F8未apply。
