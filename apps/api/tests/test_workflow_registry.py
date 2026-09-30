@@ -10,7 +10,7 @@ from app.models import User, Workflow, WorkflowRun
 from app.services.content_harness import registry as plugin_registry
 from app.services.content_harness.contracts import NodeResult
 from app.services.content_harness.nodes import TYPE_TO_PLUGIN, resolve_node_key
-from app.services.content_harness.registry import RegistryError
+from app.services.content_harness.registry import PluginRegistry, RegistryError
 from app.services.workflow_engine import _steps, definition_checksum, start_run
 
 ADMIN = {"X-Studio-User": "admin@studio.local"}
@@ -45,6 +45,23 @@ def test_registry_duplicate_registration_raises():
 def test_registry_unknown_plugin_raises():
     with pytest.raises(RegistryError):
         plugin_registry.resolve("node", "builtin.not_exists", "1")
+
+
+@pytest.mark.parametrize("kind", (
+    "model_provider", "tool_provider", "data_connector", "search_provider",
+    "image_provider", "video_provider", "tts_provider", "asr_provider",
+    "channel_adapter", "browser_automation",
+))
+def test_f7_capability_kinds_keep_exact_version_resolution(kind):
+    registry = PluginRegistry()
+    provider = object()
+    registry.register(kind, "sample", "2", provider)
+    assert registry.resolve(kind, "sample", "2") is provider
+    assert registry.descriptor(kind, "sample", "2").kind == kind
+    with pytest.raises(RegistryError):
+        registry.resolve(kind, "sample", "1")
+    with pytest.raises(RegistryError):
+        registry.register(kind, "sample", "2", object())
 
 
 def test_builtin_plugins_registered_with_versions():

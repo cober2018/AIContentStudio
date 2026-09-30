@@ -1,14 +1,82 @@
-"""Read-only safe Settings projections; mutation gates stay in existing routers."""
+"""Safe Settings inventory and explicit scoped operator verification."""
 
-from fastapi import APIRouter, Depends, Query
+from datetime import UTC, datetime, timedelta
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import get_current_user
-from ..models import User
-from ..services import product_settings
+from ..deps import get_current_user, require_admin
+from ..models import AuditLog, CapabilityRegistration, User
+from ..services import capability_integrations, content_identity, product_settings
+from ..services.content_harness.publishers import bootstrap_publishers
+from ..services.content_harness.registry import registry
 
 router = APIRouter(prefix="/api/v1/settings", tags=["product-settings"])
+
+
+class PublisherVerificationIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    channel: Literal["wechat"]
+    content_form: Literal["article"]
+    action: Literal["auto_draft"]
+    content_account_id: int = Field(ge=1)
+    account_ref: str = Field(pattern=r"^[A-Za-z0-9_.:@-]{1,150}$")
+    publisher_key: Literal["publisher.wechat.wewrite"]
+    publisher_version: Literal["1"]
+    result: Literal["verified", "revoked"]
+    reference_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    confirm_readback: bool = False
+    validity_hours: int = Field(default=24, ge=1, le=24)
+
+
+@router.get("/capabilities")
+def capabilities(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return product_settings.capability_inventory(db, user)
+
+
+@router.post("/publisher-verifications", status_code=201)
+def verify_publisher(payload: PublisherVerificationIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    content_identity.owned_entity(db, user, "account", payload.content_account_id, mutable=True)
+    if not payload.confirm_readback:
+        raise HTTPException(422, "publisher_readback_confirmation_required")
+    bootstrap_publishers()
+    registry.resolve("publisher", payload.publisher_key, payload.publisher_version)
+    scope = {key: getattr(payload, key) for key in (
+        "channel", "content_form", "action", "content_account_id", "account_ref", "publisher_key", "publisher_version",
+    )}
+    registration = db.scalar(select(CapabilityRegistration).where(
+        CapabilityRegistration.kind == "publisher", CapabilityRegistration.key == payload.publisher_key,
+        CapabilityRegistration.version == payload.publisher_version,
+    ))
+    fingerprint = capability_integrations.publisher_runtime_fingerprint(payload.publisher_key, payload.publisher_version)
+    if payload.result == "verified":
+        if fingerprint is None:
+            raise HTTPException(409, "publisher_runtime_unavailable")
+        if registration is None:
+            registration = CapabilityRegistration(kind="publisher", key=payload.publisher_key,
+                                                   version=payload.publisher_version, status="configured",
+                                                   config_fingerprint=fingerprint, created_by=user.email)
+            db.add(registration)
+            db.flush()
+        else:
+            registration.config_fingerprint = fingerprint
+            registration.status = "configured"
+    elif registration is None:
+        raise HTTPException(404, "publisher_verification_not_found")
+    evidence = {"kind": "human_readback", "reference_hash": payload.reference_hash} if payload.result == "verified" else {"kind": "revocation"}
+    event = capability_integrations.append_verification(db, registration, scope_kind="publisher_action", scope=scope,
+                                                        result=payload.result, actor=user.email, evidence=evidence,
+                                                        expires_at=datetime.now(UTC) + timedelta(hours=payload.validity_hours) if payload.result == "verified" else None)
+    db.add(AuditLog(event="publisher.verification_recorded", actor=user.email,
+                    entity_type="capability_verification", entity_id=str(event.id),
+                    detail_json={"registration_id": registration.id, "scope": scope, "result": payload.result}))
+    db.commit()
+    return {"verification_id": event.id, "registration_id": registration.id, "result": event.result,
+            "scope": scope, "expires_at": event.expires_at.isoformat() if event.expires_at else None}
 
 
 @router.get("/product")

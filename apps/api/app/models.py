@@ -1223,6 +1223,57 @@ class ConnectorEndpoint(Base):
     connector: Mapped["Connector"] = relationship(back_populates="endpoints")
 
 
+class CapabilityRegistration(Base):
+    __tablename__ = "capability_registration"
+    __table_args__ = (
+        UniqueConstraint("kind", "key", "version", name="uq_capability_registration_identity"),
+        CheckConstraint("kind IN ('node','rule','renderer','publisher','asset_provider','material_search','skill_runtime',"
+                        "'model_provider','tool_provider','data_connector','search_provider','image_provider',"
+                        "'video_provider','tts_provider','asr_provider','channel_adapter','browser_automation')",
+                        name="ck_capability_registration_kind"),
+        CheckConstraint("length(kind) > 0 AND length(key) > 0 AND length(version) > 0", name="ck_capability_registration_identity_nonempty"),
+        CheckConstraint("status IN ('configured', 'disabled')", name="ck_capability_registration_status"),
+        CheckConstraint("length(config_fingerprint) = 64", name="ck_capability_registration_fingerprint"),
+        CheckConstraint(
+            "(kind = 'data_connector' AND data_source_plugin_key IS NOT NULL AND endpoint_id IS NOT NULL) "
+            "OR (kind != 'data_connector' AND data_source_plugin_key IS NULL AND endpoint_id IS NULL)",
+            name="ck_capability_registration_data_mapping",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str] = mapped_column(String(50), nullable=False)
+    key: Mapped[str] = mapped_column(String(150), nullable=False)
+    version: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="configured")
+    config_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    data_source_plugin_key: Mapped[str | None] = mapped_column(String(100))
+    endpoint_id: Mapped[int | None] = mapped_column(ForeignKey("connector_endpoint.id", ondelete="RESTRICT"))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class CapabilityVerification(Base):
+    __tablename__ = "capability_verification"
+    __table_args__ = (
+        Index("ix_capability_verification_registration_scope_id", "registration_id", "scope_kind", "id"),
+        CheckConstraint("result IN ('verified', 'failed', 'revoked')", name="ck_capability_verification_result"),
+        CheckConstraint("scope_kind IN ('publisher_action', 'data_source_endpoint')", name="ck_capability_verification_scope_kind"),
+        CheckConstraint("length(config_fingerprint) = 64", name="ck_capability_verification_fingerprint"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    registration_id: Mapped[int] = mapped_column(ForeignKey("capability_registration.id", ondelete="RESTRICT"), nullable=False, index=True)
+    config_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    scope_kind: Mapped[str] = mapped_column(String(50), nullable=False)
+    scope_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+    result: Mapped[str] = mapped_column(String(20), nullable=False)
+    verified_by: Mapped[str | None] = mapped_column(String(255))
+    verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+
 class AuditLog(Base):
     __tablename__ = "audit_log"
 

@@ -15,6 +15,16 @@ RegistryKinds = (
     "asset_provider",
     "material_search",
     "skill_runtime",
+    "model_provider",
+    "tool_provider",
+    "data_connector",
+    "search_provider",
+    "image_provider",
+    "video_provider",
+    "tts_provider",
+    "asr_provider",
+    "channel_adapter",
+    "browser_automation",
 )
 
 

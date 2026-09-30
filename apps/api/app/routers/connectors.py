@@ -1,16 +1,19 @@
 """External Connector API（EPIC-18）。"""
 
+import re
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user, require_admin, require_editor
-from ..models import Connector, ConnectorEndpoint, User
-from ..services import connector_service
+from ..models import AuditLog, CapabilityRegistration, CapabilityVerification, Connector, ConnectorEndpoint, Fact, User
+from ..services import connector_service, data_source_plugins
+from ..services.capability_integrations import append_verification, endpoint_config_fingerprint
 from ..services.connector_service import ConnectorError
 from ..services.url_fetch import UnsafeUrlError
 
@@ -42,6 +45,13 @@ class EndpointIn(BaseModel):
     fact_mapping: dict
     pagination: dict | None = None
     interval_minutes: int | None = Field(default=None, ge=0, le=10080)
+
+
+class DataSourceCapabilityIn(BaseModel):
+    key: str = Field(min_length=1, max_length=150)
+    version: str = Field(min_length=1, max_length=50)
+    plugin_key: str
+    endpoint_id: int = Field(ge=1)
 
 
 def _validate_connector(payload: ConnectorIn) -> None:
@@ -255,14 +265,14 @@ def pull(endpoint_id: int, db: Session = Depends(get_db), user: User = Depends(r
     try:
         doc, count, created = connector_service.pull_endpoint(db, endpoint, user)
     except ConnectorError as exc:
-        connector_service.record_pull_failure(db, endpoint, str(exc))
-        raise HTTPException(400, str(exc)) from exc
+        connector_service.record_pull_failure(db, endpoint, str(exc), actor=user.email)
+        raise HTTPException(400, connector_service.safe_pull_failure_code(exc)) from exc
     except UnsafeUrlError as exc:
-        connector_service.record_pull_failure(db, endpoint, f"SSRF 拦截：{exc}")
-        raise HTTPException(400, f"目标被安全策略拒绝：{exc}") from exc
+        connector_service.record_pull_failure(db, endpoint, str(exc), actor=user.email)
+        raise HTTPException(400, "目标被安全策略拒绝") from exc
     except Exception as exc:
-        connector_service.record_pull_failure(db, endpoint, str(exc))
-        raise HTTPException(502, f"拉取失败：{exc}") from exc
+        connector_service.record_pull_failure(db, endpoint, str(exc), actor=user.email)
+        raise HTTPException(502, "连接器拉取失败") from exc
     return {
         "unchanged": not created,
         "source_id": doc.id,
@@ -270,3 +280,156 @@ def pull(endpoint_id: int, db: Session = Depends(get_db), user: User = Depends(r
         "facts": count,
         "endpoint": _serialize_endpoint(endpoint),
     }
+
+
+@router.post("/data-source-capabilities/{registration_id}/pull")
+def pull_verified_data_capability(
+    registration_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_editor),
+):
+    registration = db.get(CapabilityRegistration, registration_id)
+    if registration is None or registration.kind != "data_connector":
+        raise HTTPException(404, "Data Source capability 不存在")
+    try:
+        endpoint = data_source_plugins.verified_data_endpoint(db, registration, "api")
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(409, "data_source_capability_unavailable") from exc
+    try:
+        source, facts, created = connector_service.pull_endpoint(db, endpoint, user, dedup_mode="mapped_facts", bounded=True)
+    except Exception as exc:  # noqa: BLE001 第三方响应/异常不可信，只回显固定错误码。
+        connector_service.record_pull_failure(db, endpoint, exc, actor=user.email)
+        raise HTTPException(502, "connector_pull_failed") from None
+    db.expire_all()
+    try:
+        data_source_plugins.verified_data_endpoint(db, registration, "api")
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(409, "data_source_capability_changed") from exc
+    return {"source_id": source.id, "facts": facts, "unchanged": not created,
+            "registration_id": registration.id, "registration_version": registration.version}
+
+
+@router.post("/data-source-capabilities", status_code=201)
+def create_data_source_capability(
+    payload: DataSourceCapabilityIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    if (payload.plugin_key != "api" or not re.fullmatch(r"[1-9][0-9]{0,49}", payload.version)
+            or not re.fullmatch(r"[A-Za-z0-9_.-]+", payload.key)):
+        raise HTTPException(422, "data_source_capability_unsupported")
+    endpoint = db.get(ConnectorEndpoint, payload.endpoint_id)
+    fingerprint = endpoint_config_fingerprint(endpoint) if endpoint else None
+    if fingerprint is None:
+        raise HTTPException(409, "data_source_endpoint_unavailable")
+    existing = db.scalar(select(CapabilityRegistration).where(
+        CapabilityRegistration.kind == "data_connector", CapabilityRegistration.key == payload.key,
+        CapabilityRegistration.version == payload.version,
+    ))
+    if existing is not None:
+        raise HTTPException(409, "data_source_capability_exists")
+    registration = CapabilityRegistration(
+        kind="data_connector", key=payload.key, version=payload.version, status="configured",
+        config_fingerprint=fingerprint, data_source_plugin_key=payload.plugin_key,
+        endpoint_id=endpoint.id, created_by=user.email,
+    )
+    db.add(registration)
+    try:
+        db.flush()
+        db.add(AuditLog(event="data_source_capability.configured", actor=user.email,
+                        entity_type="capability_registration", entity_id=str(registration.id),
+                        detail_json={"key": registration.key, "version": registration.version,
+                                     "endpoint_id": endpoint.id}))
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "data_source_capability_exists") from exc
+    return {"id": registration.id, "key": registration.key, "version": registration.version,
+            "plugin_key": registration.data_source_plugin_key, "endpoint_id": endpoint.id, "verified": False}
+
+
+@router.get("/data-source-capabilities")
+def list_data_source_capabilities(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    registrations = db.scalars(select(CapabilityRegistration).where(
+        CapabilityRegistration.kind == "data_connector",
+    ).order_by(CapabilityRegistration.id.desc()).limit(100)).all()
+    result = []
+    for registration in registrations:
+        executable = False
+        try:
+            data_source_plugins.verified_data_endpoint(db, registration, registration.data_source_plugin_key or "")
+            executable = True
+        except (ValueError, TypeError):
+            pass
+        last = db.scalar(select(CapabilityVerification).where(
+            CapabilityVerification.registration_id == registration.id,
+            CapabilityVerification.scope_kind == "data_source_endpoint",
+        ).order_by(CapabilityVerification.id.desc()).limit(1))
+        result.append({
+            "id": registration.id, "key": registration.key, "version": registration.version,
+            "plugin_key": registration.data_source_plugin_key,
+            "endpoint_id": registration.endpoint_id,
+            "source_ref": f"capability:{registration.id}@{registration.version}",
+            "configured": registration.status == "configured",
+            "executable": executable, "verified": executable,
+            "last_verification": {"result": last.result, "verified_at": last.verified_at.isoformat(),
+                                  "expires_at": last.expires_at.isoformat() if last.expires_at else None} if last else None,
+        })
+    return result
+
+
+@router.post("/data-source-capabilities/{registration_id}/probe")
+def probe_data_source_capability(
+    registration_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    registration = db.get(CapabilityRegistration, registration_id)
+    if registration is None or registration.kind != "data_connector":
+        raise HTTPException(404, "Data Source capability 不存在")
+    try:
+        endpoint = data_source_plugins.configured_data_endpoint(db, registration, "api")
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(409, "data_source_capability_unavailable") from exc
+    try:
+        source, _facts, _created = connector_service.pull_endpoint(db, endpoint, user, dedup_mode="mapped_facts", bounded=True)
+    except Exception as exc:  # noqa: BLE001 不回传远端异常原文。
+        connector_service.record_pull_failure(db, endpoint, exc, actor=user.email)
+        append_verification(db, registration, scope_kind="data_source_endpoint", scope={
+            "plugin_key": "api", "registration_key": registration.key,
+            "registration_version": registration.version, "endpoint_id": endpoint.id,
+        }, result="failed", actor=user.email,
+            evidence={"kind": "probe_failure", "reason_code": "connector_pull_failed"})
+        db.add(AuditLog(event="data_source_capability.probed", actor=user.email,
+                        entity_type="capability_registration", entity_id=str(registration.id),
+                        detail_json={"result": "failed", "reason_code": "connector_pull_failed"}))
+        db.commit()
+        raise HTTPException(502, "connector_pull_failed") from None
+    db.expire_all()
+    try:
+        data_source_plugins.configured_data_endpoint(db, registration, "api")
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(409, "data_source_capability_changed") from exc
+    mapped_facts = db.scalar(select(func.count(Fact.id)).where(Fact.source_document_id == source.id)) or 0
+    if mapped_facts < 1 or not source.sha256 or not re.fullmatch(r"[0-9a-f]{64}", source.sha256):
+        append_verification(db, registration, scope_kind="data_source_endpoint", scope={
+            "plugin_key": "api", "registration_key": registration.key,
+            "registration_version": registration.version, "endpoint_id": endpoint.id,
+        }, result="failed", actor=user.email,
+            evidence={"kind": "probe_failure", "reason_code": "no_mapped_facts"})
+        db.add(AuditLog(event="data_source_capability.probed", actor=user.email,
+                        entity_type="capability_registration", entity_id=str(registration.id),
+                        detail_json={"result": "failed", "reason_code": "no_mapped_facts"}))
+        db.commit()
+        raise HTTPException(422, "data_source_probe_no_mapped_facts")
+    verification = append_verification(db, registration, scope_kind="data_source_endpoint", scope={
+        "plugin_key": "api", "registration_key": registration.key,
+        "registration_version": registration.version, "endpoint_id": endpoint.id,
+    }, result="verified", actor=user.email,
+        evidence={"kind": "platform_readback", "reference_hash": source.sha256})
+    db.add(AuditLog(event="data_source_capability.probed", actor=user.email,
+                    entity_type="capability_registration", entity_id=str(registration.id),
+                    detail_json={"result": "verified", "verification_id": verification.id}))
+    db.commit()
+    return {"verified": True, "registration_id": registration.id,
+            "verification_id": verification.id, "source_id": source.id, "facts": mapped_facts}

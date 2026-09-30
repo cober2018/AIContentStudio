@@ -13,6 +13,8 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from app.models import (
+    CapabilityRegistration,
+    ContentAccount,
     ContentAsset,
     ContentMasterCheckRun,
     ContentProject,
@@ -33,6 +35,9 @@ from app.models import (
     utcnow,
 )
 from app.seed import seed_v1_channel_profiles
+from app.services import capability_integrations
+from app.services.content_harness.contracts import PublisherResult
+from app.services.content_harness.publishers.wechat_wewrite import WechatWewritePublisher
 
 HEADERS = {"X-Studio-User": "v5-freeze@studio.local"}
 
@@ -1018,6 +1023,108 @@ def test_v5_wechat_package_uses_exact_cover_and_blocks_revoked_rights(client, db
     denied = client.get(package_path, headers=HEADERS)
     assert denied.status_code in (403, 409, 422), denied.text
     assert client.get(render_path, headers=HEADERS).status_code in (403, 409)
+
+
+@pytest.mark.parametrize("cover_mime,signature", [("image/png", b"\x89PNG\r\n\x1a\n"), ("image/jpeg", b"\xff\xd8\xff")])
+def test_f7_v5_wechat_verified_projection_precedes_attempt_and_uses_frozen_bytes(
+    client, db_session, tmp_path, monkeypatch, cover_mime, signature,
+):
+    project, unit, master = _ready_source(client, db_session)
+    persona_id = db_session.get(ContentUnit, unit).persona_id
+    account = ContentAccount(persona_id=persona_id, name="公众号账号", status="active")
+    db_session.add(account)
+    cover_bytes = signature + b"verified cover bytes"
+    cover_path = tmp_path / "approved-cover.png"
+    cover_path.write_bytes(cover_bytes)
+    material = Material(title="封面", kind="image", status="active")
+    db_session.add(material)
+    db_session.flush()
+    revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(cover_bytes).hexdigest(),
+                                file_path=str(cover_path), mime_type=cover_mime, status="active",
+                                public_use_allowed=True, rights_status="cleared")
+    db_session.add(revision)
+    db_session.flush()
+    db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id,
+                                            origin="system_library", status="active"))
+    db_session.commit()
+    variants = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(variants, json={
+        "variant_key": "wechat.article.primary", "expected_revision": 0,
+        "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+        "expected_source_context_hash": master["context_hash"], "channel_id": "wechat", "content_form": "article",
+        "idempotency_key": "wechat.article.primary", "source_kind": "deterministic_adapt",
+        "payload": {"title": "有来源的观点", "blocks": [{"id": "b1", "order": 0, "kind": "paragraph", "text": "这是观点"}]},
+        "asset_refs": [{"material_revision_id": revision.id, "content_hash_snapshot": revision.content_hash,
+                        "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"}}],
+    }, headers=HEADERS)
+    assert saved.status_code == 201, saved.text
+    assert client.post(f"{variants}/{saved.json()['id']}/checks", headers=HEADERS).json()["ready"] is True
+    candidates = f"/api/v1/content-projects/{project}/units/{unit}/candidates"
+    frozen = client.post(f"{candidates}/freeze", json={"channel_variant_revision_id": saved.json()["id"],
+                                                    "expected_payload_hash": saved.json()["payload_hash"]}, headers=HEADERS)
+    assert frozen.status_code == 201, frozen.text
+    candidate = frozen.json()
+    assert client.post(f"{candidates}/{candidate['id']}/approve", json=_approval_payload(candidate), headers=HEADERS).status_code == 200
+    auth_url = f"{candidates}/{candidate['id']}/delivery-authorizations"
+    auth_body = {"channel": "wechat", "content_form": "article", "content_account_id": account.id,
+                 "account_ref": "verified-wechat", "authorization_version": "v1", "action": "auto_draft"}
+    denied = client.post(auth_url, json=auth_body, headers=HEADERS)
+    assert denied.status_code in (409, 422), denied.text
+    assert db_session.scalars(select(DeliveryAttempt)).all() == []
+    monkeypatch.setenv("WEWRITE_CREDENTIAL_VERSION", "credential-v1")
+    monkeypatch.setenv("WEWRITE_BINARY_VERSION", "binary-v1")
+    fingerprint = hashlib.sha256(json.dumps({
+        "publisher_key": "publisher.wechat.wewrite", "publisher_version": "1",
+        "credential_version": "credential-v1", "binary_version": "binary-v1",
+        "executable": "/verified/wewrite",
+    }, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    monkeypatch.setattr(capability_integrations, "publisher_runtime_fingerprint", lambda *args: fingerprint)
+    registration = CapabilityRegistration(kind="publisher", key="publisher.wechat.wewrite", version="1",
+                                          status="configured", config_fingerprint=fingerprint)
+    db_session.add(registration)
+    db_session.flush()
+    scope = {"channel": "wechat", "content_form": "article", "action": "auto_draft",
+             "content_account_id": account.id, "account_ref": "verified-wechat",
+             "publisher_key": "publisher.wechat.wewrite", "publisher_version": "1"}
+    capability_integrations.append_verification(db_session, registration, scope_kind="publisher_action", scope=scope,
+                                                 result="verified", actor=HEADERS["X-Studio-User"],
+                                                 evidence={"kind": "human_readback", "reference_hash": "a" * 64})
+    db_session.commit()
+    authorized = client.post(auth_url, json=auth_body, headers=HEADERS)
+    assert authorized.status_code == 201, authorized.text
+    capability_integrations.append_verification(db_session, registration, scope_kind="publisher_action", scope=scope,
+                                                 result="revoked", actor=HEADERS["X-Studio-User"],
+                                                 evidence={"kind": "revocation"})
+    db_session.commit()
+    revoked_execute = client.post(f"/api/v1/delivery-targets/{authorized.json()['id']}/execute", headers=HEADERS)
+    assert revoked_execute.status_code == 409, revoked_execute.text
+    assert db_session.scalars(select(DeliveryAttempt)).all() == []
+    capability_integrations.append_verification(db_session, registration, scope_kind="publisher_action", scope=scope,
+                                                 result="verified", actor=HEADERS["X-Studio-User"],
+                                                 evidence={"kind": "human_readback", "reference_hash": "b" * 64})
+    db_session.commit()
+    seen = []
+
+    def fake_deliver(_publisher, manifest, _target, _attempt):
+        seen.append(manifest)
+        return PublisherResult(status="unknown", error="publisher_result_unconfirmed")
+
+    monkeypatch.setattr(WechatWewritePublisher, "deliver", fake_deliver)
+    executed = client.post(f"/api/v1/delivery-targets/{authorized.json()['id']}/execute", headers=HEADERS)
+    assert executed.status_code == 200, executed.text
+    assert executed.json()["status"] == "unknown"
+    assert len(seen) == 1
+    assert seen[0]["render"]["payload"] == {
+        "title": "有来源的观点", "digest": "有来源的观点", "markdown": candidate["manifest"]["render"]["text"]}
+    assert seen[0]["_cover_bytes"] == cover_bytes
+    replay = client.post(f"/api/v1/delivery-targets/{authorized.json()['id']}/execute", headers=HEADERS)
+    assert replay.status_code == 409, replay.text
+    assert len(seen) == 1
+    attempt = db_session.scalars(select(DeliveryAttempt)).all()[0]
+    request_input = {"payload": seen[0]["render"]["payload"], "cover_hash": revision.content_hash}
+    expected_request_hash = hashlib.sha256(("\x1f".join((json.dumps(request_input, ensure_ascii=False,
+                                                                          sort_keys=True, default=str),))).encode()).hexdigest()
+    assert attempt.request_hash == expected_request_hash
 
 
 @pytest.mark.parametrize("legacy_field", [
