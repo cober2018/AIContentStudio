@@ -21,3 +21,11 @@ Publisher SHALL consume the exact approved v3/v4/v5 schema-dispatched package an
 #### Scenario: Timeout followed by another available Publisher
 - **WHEN** an attempt is unknown and another Publisher is registered
 - **THEN** no automatic switch or second remote effect occurs before explicit reconciliation
+
+#### Scenario: Explicit human reconciliation evidence
+- **WHEN** an authorized operator reconciles an unknown attempt using a bounded evidence hash or nonempty legacy note
+- **THEN** the server locks the target, verifies the expected latest attempt when supplied, stores only an evidence hash, preserves the unknown attempt status and atomically records the decision; delivered creates one exact human receipt, while not-delivered permits only a later explicit execution subject to current capability gates
+
+#### Scenario: Conflicting or stale reconciliation
+- **WHEN** a repeated decision changes the resolution/evidence or references another latest attempt
+- **THEN** it fails without writes; an identical retry returns the existing decision without another receipt, remote call, verification or published-history record

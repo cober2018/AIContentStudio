@@ -6,6 +6,8 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
+- 人工对账闭环：Unknown 保留原 Attempt，核验说明只提交/保存 SHA-256 摘要；最新 Attempt 校验、目标锁、重复决策幂等，确认已交付原子新增精确人工 Receipt，不自动写已发布历史/verified 或重发。错误输入固定安全原因，不回显秘密；源码独立窄复核与五项 UI fixture browser gate 通过，非真实账号验收。接口沿用 `delivery.py`，UI 在 ProjectReviewCenter，复跑 `F7_ISOLATED_ACCEPTANCE=yes NODE_PATH=<Playwright依赖目录> node apps/web/scripts/fe-f7-reconciliation-ui-acceptance.mjs`（需隔离 Vite 15671）。本批无新增依赖/表/迁移；当前 F7 91/105，全后端1407/2 skipped、定向109、构建预算/strict/Ruff/diff通过；阶段外部验收继续待办。
+
 - 媒体 Renderer 范围闭环：管理员明确核对真实 stage 后记录 renderer/schema/channel/form/MIME 的 24h 验证；editor 可走独立输出入口，每次调用与接受重验 current Master/runtime/Profile/rights/expiry/revocation。撤销留史，不改素材/Master；per-stage lock 与 registration DB lock 关闭 cache/DB 反向等待和撤销提交窗口。库存保持 not_probed，只展示记录和请求权限。实际 Graphic 13 browser gate、1400 全后端/2 skipped、106 定向、预算/strict/窄复核通过；F7 90/105，真实 Video Renderer 和外部 Provider/Publisher 不冒充完成。接口、目录和复跑见 [`docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md`](docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md)。
 
 - Graphic Studio 前批 UI 已接通：安全只读库存、实际 PNG 预览、明确权利接受、精确项目素材重读、本地 final binding、单独 Master save / 人工确认；接受后读失败不重复接受，dirty/历史/viewer 禁止渲染，迟到结果丢弃。前批十项 Chrome gate、全后端 1374/2 skipped，当前范围验证/editor 执行已由上方新批扩展。历史验收见 [`docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md`](docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md)。

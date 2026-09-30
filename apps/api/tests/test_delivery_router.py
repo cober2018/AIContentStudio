@@ -20,6 +20,91 @@ EDITOR = {"X-Studio-User": "editor@studio.local"}
 PNG = b"\x89PNG\r\n\x1a\n" + b"cover" * 8
 
 
+def _unknown_target(env):
+    from app.models import DeliveryAttempt, DeliveryTarget
+
+    db, asset = env
+    target = DeliveryTarget(content_asset_id=asset.id, channel="wechat", content_form="article",
+        account_ref="acct-1", authorization_version="v1", action="auto_draft",
+        authorized_by="editor@studio.local", approved_candidate_hash=asset.approved_candidate_hash,
+        status="reconciliation_needed")
+    db.add(target)
+    db.flush()
+    attempt = DeliveryAttempt(target_id=target.id, attempt_no=1, idempotency_key="d" * 64,
+                              status="unknown", response_metadata_json={"draft_box": True})
+    db.add(attempt)
+    db.commit()
+    return db, target, attempt
+
+
+def test_reconcile_delivered_creates_exact_receipt_idempotently_without_publication(env):
+    from sqlalchemy import select
+
+    from app.models import AuditLog, DeliveryReceipt, PublishedContentRecord
+
+    db, target, attempt = _unknown_target(env)
+    client = _client(db)
+    body = {"resolution": "delivered", "expected_attempt_id": attempt.id, "evidence_ref": "sha256:" + "e" * 64}
+    endpoint = f"/api/v1/delivery-targets/{target.id}/reconcile"
+    for _ in range(2):
+        response = client.post(endpoint, json=body, headers=EDITOR)
+        assert response.status_code == 200, response.json()
+    receipts = db.scalars(select(DeliveryReceipt).where(DeliveryReceipt.target_id == target.id)).all()
+    assert len(receipts) == 1
+    assert receipts[0].approved_candidate_hash == target.approved_candidate_hash
+    assert receipts[0].verification_method == "human_reconciliation"
+    assert receipts[0].evidence_ref == body["evidence_ref"]
+    assert attempt.status == "unknown"
+    assert not db.scalars(select(PublishedContentRecord)).all()
+    assert len(db.scalars(select(AuditLog).where(AuditLog.event == "delivery_target.reconciled")).all()) == 1
+
+
+@pytest.mark.parametrize("body,status", [
+    ({"resolution": "delivered"}, 422),
+    ({"resolution": "not_delivered", "note": "   "}, 422),
+    ({"resolution": "delivered", "evidence_ref": "https://host/?token=SECRET"}, 422),
+    ({"resolution": "delivered", "note": "checked", "expected_attempt_id": 9999}, 409),
+])
+def test_reconcile_rejects_missing_unsafe_or_stale_evidence_without_writes(env, body, status):
+    from sqlalchemy import select
+
+    from app.models import DeliveryReceipt
+
+    db, target, attempt = _unknown_target(env)
+    response = _client(db).post(f"/api/v1/delivery-targets/{target.id}/reconcile", json=body, headers=EDITOR)
+    assert response.status_code == status, response.json()
+    assert "SECRET" not in response.text
+    assert target.status == "reconciliation_needed"
+    assert "reconciled" not in attempt.response_metadata_json
+    assert not db.scalars(select(DeliveryReceipt)).all()
+
+
+def test_reconcile_oversized_note_failure_does_not_echo_secret(env):
+    _, target, _ = _unknown_target(env)
+    response = _client(env[0]).post(f"/api/v1/delivery-targets/{target.id}/reconcile",
+        json={"resolution": "delivered", "note": "PRIVATE_SECRET" * 200}, headers=EDITOR)
+    assert response.status_code == 422
+    assert "PRIVATE_SECRET" not in response.text
+
+
+def test_reconcile_hashes_legacy_note_and_rejects_conflicting_retry(env):
+    from sqlalchemy import select
+
+    from app.models import AuditLog
+
+    db, target, attempt = _unknown_target(env)
+    client = _client(db)
+    endpoint = f"/api/v1/delivery-targets/{target.id}/reconcile"
+    body = {"resolution": "not_delivered", "note": "verified token=PRIVATE_SECRET no draft"}
+    assert client.post(endpoint, json=body, headers=EDITOR).status_code == 200
+    assert client.post(endpoint, json=body, headers=EDITOR).status_code == 200
+    assert target.status == "target_authorized"
+    assert "PRIVATE_SECRET" not in str(attempt.response_metadata_json)
+    audit = db.scalar(select(AuditLog).where(AuditLog.event == "delivery_target.reconciled"))
+    assert "PRIVATE_SECRET" not in str(audit.detail_json)
+    assert client.post(endpoint, json={**body, "resolution": "delivered"}, headers=EDITOR).status_code == 409
+
+
 def _client(db):
     from fastapi.testclient import TestClient
 

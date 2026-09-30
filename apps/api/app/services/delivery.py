@@ -13,7 +13,7 @@ import re
 import zipfile
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from ..models import (
@@ -23,6 +23,7 @@ from ..models import (
     ContentUnit,
     DeliveryAction,
     DeliveryAttempt,
+    DeliveryReceipt,
     DeliveryTarget,
     DeliveryTargetStatus,
     DraftMedia,
@@ -477,24 +478,49 @@ def reconcile_attempt(db: Session, target_id: int, payload, user) -> dict:
     authorize_project_target(db, target, user, mutate=True)
     if target.authorized_by and target.authorized_by != user.email:
         raise HTTPException(403, "该账号交付目标未授权给当前操作人")
-    if target.status != DeliveryTargetStatus.reconciliation_needed.value:
-        raise HTTPException(409, "只有 reconciliation_needed 的目标需要对账")
+    # Serialize the decision with other reconciliations before reading the attempt head.
+    db.execute(update(DeliveryTarget).where(DeliveryTarget.id == target.id)
+               .values(status=DeliveryTarget.status).execution_options(synchronize_session=False))
+    db.refresh(target)
+    authorize_project_target(db, target, user, mutate=True)
     last = db.scalars(
         select(DeliveryAttempt).where(DeliveryAttempt.target_id == target.id).order_by(DeliveryAttempt.attempt_no.desc()).limit(1)
     ).first()
     resolution = payload.resolution
+    evidence_ref = getattr(payload, "evidence_ref", None)
+    if evidence_ref is None:
+        note = (payload.note or "").strip()
+        if not note or len(note) > 2000:
+            raise HTTPException(422, "reconciliation_evidence_required")
+        evidence_ref = "sha256:" + hashlib.sha256(note.encode("utf-8")).hexdigest()
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", evidence_ref) or resolution not in {"delivered", "not_delivered"}:
+        raise HTTPException(422, "reconciliation_evidence_invalid")
+    expected = getattr(payload, "expected_attempt_id", None)
+    if expected is not None and (last is None or last.id != expected):
+        raise HTTPException(409, "reconciliation_attempt_changed")
+    if target.action == DeliveryAction.auto_draft.value and (last is None or last.status != "unknown"):
+        raise HTTPException(409, "reconciliation_unknown_attempt_required")
+    decision_key = _hash(str(target.id), target.approved_candidate_hash, str(last.id if last else 0), resolution, evidence_ref)
+    previous = db.scalar(select(AuditLog).where(AuditLog.event == "delivery_target.reconciled",
+        AuditLog.entity_type == "delivery_target", AuditLog.entity_id == str(target.id)).order_by(AuditLog.id.desc()).limit(1))
+    if previous and (previous.detail_json or {}).get("decision_key") == decision_key:
+        return {"target_id": target.id, "status": target.status}
+    if (last and (last.response_metadata_json or {}).get("reconciled") is not None
+            or target.status != DeliveryTargetStatus.reconciliation_needed.value):
+        raise HTTPException(409, "reconciliation_decision_conflict")
     if resolution == "delivered":
         target.status = DeliveryTargetStatus.human_confirmed.value
-        if last:
-            last.response_metadata_json = {**(last.response_metadata_json or {}), "reconciled": "delivered", "note": payload.note}
+        db.add(DeliveryReceipt(target_id=target.id, approved_candidate_hash=target.approved_candidate_hash,
+            action=target.action, idempotency_key=decision_key, status="human_confirmed", operator=user.email,
+            delivered_at=utcnow(), evidence_ref=evidence_ref, verification_method="human_reconciliation"))
     elif resolution == "not_delivered":
         target.status = DeliveryTargetStatus.target_authorized.value
-        if last:
-            last.response_metadata_json = {**(last.response_metadata_json or {}), "reconciled": "not_delivered", "note": payload.note}
-    else:
-        raise HTTPException(422, "resolution 只允许 delivered / not_delivered")
+    if last:
+        last.response_metadata_json = {**(last.response_metadata_json or {}), "reconciled": resolution,
+                                       "evidence_ref": evidence_ref, "decision_key": decision_key}
     db.add(AuditLog(event="delivery_target.reconciled", actor=user.email, entity_type="delivery_target",
-                    entity_id=str(target.id), detail_json={"resolution": resolution, "note": payload.note}))
+                    entity_id=str(target.id), detail_json={"resolution": resolution, "evidence_ref": evidence_ref,
+                        "decision_key": decision_key, "attempt_id": last.id if last else None, "platform_verified": False}))
     asset = db.get(ContentAsset, target.content_asset_id)
     if asset.project_id is not None:
         from .project_events import record_project_event
