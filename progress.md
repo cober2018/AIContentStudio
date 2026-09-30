@@ -1,5 +1,13 @@
 # 当前进度
 
+## 2026-09-30：F7 媒体 Renderer 接受基础契约
+
+- F7 保持 86/105：本批完成 7.5–7.7 的基础输出/接受服务，但没有真实已安装媒体 Renderer、一般编辑者 verified execution、UI/final binding，不提前关闭整项；F8 未 apply。显式 admin-only preview/probe 复用 existing actor 15 分钟 stage→raw→accept；普通 Provider stage 不接受 renderer kind，未验证实现不能绕过一般执行闸门。
+- MediaRenderOutput 绑定 server input hash 与 Graphic canvas / Video 单成片；loaded key/version/schema/forms/MIME、实际 callable/runtime/Profile 全进指纹。source-only payload 与唯一 source byte set 有界传入，一次调用，unknown 不自动重试。Graph PNG 必须匹配真实 canvas 尺寸；MP4 经真实 ffprobe/ffmpeg 解码，但本批未证明与 Video 时间线/成片规格一致，不产生自动 attestation。
+- 初次接受和提交前重验当前 Master/context/profile/runtime 与 live sources。输出只写 MaterialRevision/source_kind=upstream 和 project reference，不改 Master。来源模型/商业权限不能升级，CC BY 许可/完整署名不能丢；来源安全根目录与唯一 bytes 总量 30MB 在读取前检查。同素材重复图层传一份 bytes，input hash 仍冻结全部 placement。
+- 本批 32 新测试、77 定向实际通过；最后全后端 1354 passed / 2 skipped / 8 既有 warnings（53.83s），旧中途 1350/1353 不作为最终结果。TypeScript/Vite/FE-P1、strict 30/30、范围 Ruff/diff 通过，未修改前端，不复用旧浏览器报告冒充新验收。独立 foundation 只读复核 APPROVE；真实双连接并发、自动 Video/Graphic 最终成片、真实外部 Provider 均未验收。
+- 无新表/迁移、无外部请求/发布、无 push/deploy/生产迁移/canonical sync/archive。证据与运行命令见 docs/FE_F7_MEDIA_RENDER_BOUNDARY_ACCEPTANCE.md。
+
 ## 2026-09-30：F7 共享消费与配置指引批
 
 - F7 86/105，本批仅核销 4.9 / 9.7。搜索预览不可发布；人工核对来源许可、署名与权利后只保存一个 MaterialRevision / ProjectMaterialReference，Text 配图和 Video timeline 引用同一精确版本，生产页刷新回读。撤销公开使用权后两者 rights check 为 blocker、freeze unavailable，历史 Master 不改写；不禁止合法的未就绪私有编辑。

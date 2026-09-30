@@ -104,7 +104,7 @@ def runtime_fingerprint(db, renderer, scope):
     return content_masters._hash({"implementation": implementation, "scope": scope, "profile": profile})
 
 
-def _live_refs(db, project_id, master):
+def _live_refs(db, project_id, master, *, exclude_outputs=False):
     boundary = db.get(ProjectFactBoundaryRevision, master.fact_boundary_revision_id) if master.fact_boundary_revision_id else None
     if boundary:
         db.execute(update(FactPack).where(FactPack.id == boundary.fact_pack_id).values(status=FactPack.status).execution_options(synchronize_session=False))
@@ -113,6 +113,8 @@ def _live_refs(db, project_id, master):
             db.execute(update(FactPackItem).where(FactPackItem.id == item_id).values(public_use_allowed=FactPackItem.public_use_allowed).execution_options(synchronize_session=False))
         db.scalars(select(FactPackItem).where(FactPackItem.fact_pack_id == boundary.fact_pack_id).execution_options(populate_existing=True)).all()
     assets = content_masters._serialize(db, master)["assets"]
+    if exclude_outputs:
+        assets = [ref for ref in assets if ref["role"] != "render_output"]
     for source_id in sorted({ref["material_revision_id"] for ref in assets}):
         db.execute(update(MaterialRevision).where(MaterialRevision.id == source_id).values(status=MaterialRevision.status).execution_options(synchronize_session=False))
     material_ids = db.scalars(select(MaterialRevision.material_id).where(MaterialRevision.id.in_([ref["material_revision_id"] for ref in assets]))).all()

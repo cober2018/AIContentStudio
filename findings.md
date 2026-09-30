@@ -1,5 +1,13 @@
 # 配置记录
 
+## 2026-09-30 F7 媒体 Renderer 基础边界
+
+- 同一个 renderer descriptor 不能无条件用于任何 form：explicit supported_forms 与 schema/MIME/runtime/code 共同绑定，scope 不符拒绝调用。未验证路径仅管理员明确探测，不是普通执行旁路；不自动保存 CapabilityVerification。
+- 测试最初用 BytesIO 闭包导致无法 marshal 的 runtime identity，应拒绝；改测试 fixture 为实例真实 byte 字段而非放宽校验。hash provenance 不接受任意 provider metadata。
+- Renderer output 是 upstream 变换产物，不自动称 ai_generated。显式输出许可不能将来源 CC BY 改成 owned/CC0，也不能丢全署名或升级 model/commercial 权利。提交前再验来源，受控同事务撤权回归不等于真实双连接证明。
+- 预算须在 live rights 内部读字节前检查，而非拿到 bytes 后再加总；safe resolved media path / stat 在前，总量 30MB。重复图层复用同 revision 时只传一份 source bytes，完整 placement 保留在 render_input_hash 中。
+- 当前只证明 typed renderer 输出与 accepted library provenance，不证明真实 Video 时间线合成或 Graphic 专业视觉成片；final bind/attestation、真实 installed adapter 和 UI 仍需继续，不能核销 F7 整个媒体渲染。
+
 ## 2026-09-30 F7 共享消费与配置指引
 
 - 公共权利撤销阻断 checks / Candidate freeze，不意味着一律禁止私有草稿编辑；原先测试假设撤权后任意 Master save 都应 422 不符合既有契约，已改验真实 rights blocker / readiness 与历史不变，没有放宽业务闸门。

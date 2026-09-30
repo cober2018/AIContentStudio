@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 媒体 Renderer 输出接受边界
+
+- [x] /// 依 F7 7.5–7.7：定义已加载 exact renderer 的有界 MediaRenderOutput 协议与当前 Master/hash/context/canvas 请求；只复用既有 15 分钟 actor preview 与 MaterialRevision，不建表。未安装 renderer 仍 unavailable，不做假渲染。
+- [x] /// API RED→GREEN：来源/新版本/上下文/实现漂移、错 input hash/画布/MIME/尺寸、秘密元数据、foreign/viewer、公开权利撤销、模型/商业权限升级、CC BY、超限与去重。归档仍走已有 owned_unit mutate 拒绝，本批未单列归档/真实双连接竞态测试。仅调用一次，接受前后重验来源；不改 Master 或自动 attestation。
+- [x] /// admin-only media-render-previews 复用 provider-media raw/accept。32 新回归、77 定向、全后端 1354/2 skipped、构建/预算/strict/Ruff/diff 通过，独立 foundation 复核 APPROVE。记录基础契约而非媒体 Renderer 完成；真实实现与 UI/成片绑定继续，7.5–7.7 不提前全勾。
+
 ## 2026-09-30：F7 共享消费与配置指引批
 
 - [x] /// 依现有 F7 4.9/9.7，验收搜索 preview→accept→项目精确引用→两 Unit 独立保存/生产页回读及撤权；不重复入库，不以 fixture 宣称真实外部能力已验证。没有自动 Video render，不能将回读算成成片验证。
