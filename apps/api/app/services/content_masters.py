@@ -507,6 +507,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         raise HTTPException(422, "渲染确认必须使用显式render_attestation输入")
     if "ai_provenance" in payload.get("edit_summary", {}):
         raise HTTPException(422, {"code": "unverified_ai_provenance"})
+    if "asr_provenance" in payload.get("edit_summary", {}):
+        raise HTTPException(422, {"code": "unverified_asr_provenance"})
+    if "asr_receipt_id" in payload.get("edit_summary", {}) and payload_schema != "video.master.v2":
+        raise HTTPException(422, {"code": "asr_video_v2_required"})
     if "ai_edits" in payload.get("edit_summary", {}) and (payload_schema != "text.master.v2" or not payload["edit_summary"]["ai_edits"]):
         raise HTTPException(422, {"code": "invalid_ai_edit_history"})
     request_intent = {"modality": modality, "schema": payload_schema, "payload": payload["payload"], "content_form": payload.get("content_form"), "parent_revision_id": payload.get("parent_revision_id"), "expected_revision": payload.get("expected_revision", 0), "edit_summary": payload.get("edit_summary", {}), "refs": refs_fingerprint, "source_kind": payload.get("source_kind", "user_edit"), "origin_project_output_id": payload.get("origin_project_output_id"), "origin_workflow_run_id": payload.get("origin_workflow_run_id")}
@@ -546,6 +550,11 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     expected = payload.get("expected_revision", 0)
     if expected != head:
         raise HTTPException(409, {"code": "master_revision_conflict", "expected_revision": expected, "current_revision": head})
+    if "asr_receipt_id" in payload.get("edit_summary", {}):
+        from .asr_suggestions import verify_for_save
+
+        payload["edit_summary"] = {**payload["edit_summary"], "asr_provenance": verify_for_save(
+            db, project_id, unit_id, user, latest, payload["payload"], payload["edit_summary"]["asr_receipt_id"])}
     if payload_schema == "text.master.v2" and payload.get("edit_summary", {}).get("ai_edits"):
         from .text_master_ai import verify_ai_edits
 

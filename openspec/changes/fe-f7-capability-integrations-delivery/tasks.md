@@ -62,7 +62,7 @@
 - [x] 5.4 Persist provider/version/prompt/input refs/hash metadata.
 - [x] 5.5 Respect model/public/commercial rights.
 - [x] 5.6 Require explicit accept before Master use.
-- [ ] 5.7 Add async/timeout/failure/unknown provider-result handling.
+- [x] 5.7 Add async/timeout/failure/unknown provider-result handling.
 - [ ] 5.8 Add mock + at least one configured real adapter path where repository settings support it.
 - [x] 5.9 Do not mark adapter verified without real test.
 - [x] 5.10 Redact nested provider request/response/errors across API, Material metadata, AuditLog, ProjectEvent and settings projections; specifically prevent raw prompts/requests, signed URLs and secret fragments in existing `MaterialRevision.prompt_text`, `source_url`, `source_metadata_json`, `metadata_json` and `ConnectorEndpoint.last_pull_error`; add successful-result and error-path negative secret-leakage checks.
@@ -72,10 +72,10 @@
 - [x] 6.1 Define TTS provider protocol.
 - [x] 6.2 Store TTS audio as exact MaterialRevision.
 - [x] 6.3 Define ASR provider protocol.
-- [ ] 6.4 Return bounded transcript/cues.
-- [ ] 6.5 Explicit accept/save required to change Video Master.
-- [ ] 6.6 Record provider/runtime/source hashes.
-- [ ] 6.7 Add rights/failure/provenance tests.
+- [x] 6.4 Return bounded transcript/cues.
+- [x] 6.5 Explicit accept/save required to change Video Master.
+- [x] 6.6 Record provider/runtime/source hashes.
+- [x] 6.7 Add rights/failure/provenance tests.
 
 ## 7. Renderer capability
 - [ ] 7.1 Register renderer capability descriptors.

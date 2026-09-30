@@ -64,6 +64,32 @@ def decision(**extra):
             "model_use_allowed": True, "commercial_use_allowed": False, **extra}
 
 
+def test_provider_wall_clock_timeout_does_not_retry_or_stage(client, db_session, media_provider, monkeypatch):
+    import importlib.util
+    import threading
+
+    assert importlib.util.find_spec("app.services.provider_calls"), "bounded provider call is missing"
+    from app.services import provider_calls
+
+    release = threading.Event()
+    calls = []
+
+    def slow(request):
+        calls.append(True)
+        release.wait(5)
+        return providers.MediaOutput("succeeded", media_provider.content, "image/png")
+
+    monkeypatch.setattr(provider_calls, "TIMEOUT_SECONDS", 0.01)
+    monkeypatch.setattr(media_provider, "generate", slow)
+    try:
+        result = stage(client)
+        assert result.status_code == 409 and result.json()["detail"] == "provider_outcome_unknown"
+        assert len(calls) == 1
+        assert db_session.scalars(select(Material)).all() == []
+    finally:
+        release.set()
+
+
 def test_preview_accept_is_explicit_atomic_and_exact_project_reference(client, db_session, media_provider):
     project = client.post("/api/v1/content-projects", headers=EDITOR, json={"title": "素材项目"}).json()
     response = stage(client, project_id=project["id"])

@@ -47,6 +47,19 @@ class SearchFixture:
         return providers.MediaOutput("succeeded", output.getvalue(), "image/png")
 
 
+class AsrFixture:
+    key = "asr.fixture"
+    version = "1"
+
+    def runtime_fingerprint(self):
+        return "c" * 64
+
+    def transcribe(self, request):
+        assert request["source_bytes"].startswith(b"RIFF")
+        return {"status": "succeeded", "transcript": "隔离转录字幕", "cues": [
+            {"text": "隔离转录字幕", "start_ms": 0, "end_ms": 2000}], "metadata": {"token": "fixture-secret"}}
+
+
 original_config = runtime_config.get_runtime
 
 
@@ -64,6 +77,8 @@ def isolated_bootstrap():
         providers.registry.register("image_provider", FixtureProvider.key, "1", FixtureProvider())
     if not providers.registry.list("search_provider"):
         providers.registry.register("search_provider", SearchFixture.key, "1", SearchFixture())
+    if not providers.registry.list("asr_provider"):
+        providers.registry.register("asr_provider", AsrFixture.key, "1", AsrFixture())
     original_bootstrap()
 
 
