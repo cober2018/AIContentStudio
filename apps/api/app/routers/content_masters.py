@@ -27,8 +27,9 @@ from ..services.text_master_ai import suggest_text_edit
 from ..services.text_master_diff import structured_diff
 from ..services.video_derivations import derive_video_master
 from ..services.video_master_diff import structured_video_diff
+from . import CapabilityInputRoute
 
-router = APIRouter(prefix="/api/v1", tags=["content-masters"])
+router = APIRouter(prefix="/api/v1", tags=["content-masters"], route_class=CapabilityInputRoute)
 
 
 class MasterRevisionIn(BaseModel):

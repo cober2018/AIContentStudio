@@ -10,6 +10,7 @@ import threading
 import time
 import uuid
 import wave
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,12 +18,30 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .. import runtime_config
 from ..models import ContentMasterRevision, MaterialRevision, ProjectMaterialReference, ProjectWorkflowOutput, User
 from . import content_masters, provider_calls, provider_media
 
 _lock = threading.RLock()
 _cache = {}
 _TTL = 900
+
+
+@contextmanager
+def commit_guard(receipt_id, user_id, project_id, unit_id, provenance):
+    # Rechecking the old base's currentness after child flush would reject every valid save.
+    with runtime_config.configuration_guard(), _lock:
+        _prune()
+        receipt = _cache.get(receipt_id)
+        if receipt is None or (receipt.actor_id, receipt.project_id, receipt.unit_id) != (user_id, project_id, unit_id):
+            raise HTTPException(422, "asr_receipt_unavailable_or_expired")
+        if (receipt.master_id != provenance["base_master_id"]
+                or receipt.input_hash != provenance["input_hash"]
+                or provider_media._hash(receipt.output) != provenance["output_hash"]):
+            raise HTTPException(409, "asr_receipt_changed")
+        if provider_media._provider("asr_provider", receipt.provider_key, receipt.provider_version)[1] != receipt.runtime_hash:
+            raise HTTPException(409, "asr_runtime_changed")
+        yield
 
 
 @dataclass(frozen=True)

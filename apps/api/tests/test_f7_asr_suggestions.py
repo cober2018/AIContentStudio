@@ -2,13 +2,20 @@
 
 import io
 import json
+import threading
 import wave
 from copy import deepcopy
 
 import pytest
 from sqlalchemy import select
 
-from app.models import ContentMasterRevision, MaterialRevision, ProjectMaterialReference
+from app.models import (
+    ContentMasterAssetRef,
+    ContentMasterRevision,
+    MaterialRevision,
+    ProjectEvent,
+    ProjectMaterialReference,
+)
 from app.services.content_harness import providers
 from app.services.content_harness.registry import PluginRegistry
 
@@ -230,3 +237,57 @@ def test_provider_http_exception_is_redacted(client, db_session, asr_setup, monk
     assert result.json()["detail"] == "asr_execution_failed"
     assert "synthetic-secret" not in result.text
     assert db_session.query(ContentMasterRevision).count() == 1
+
+
+def test_asr_runtime_rotation_at_commit_rolls_back_master(client, db_session, asr_setup, monkeypatch):
+    from app.services import content_masters
+
+    result = suggest(client, asr_setup).json()
+    original = content_masters.record_project_event
+    events = db_session.query(ProjectEvent).count()
+    refs = db_session.query(ContentMasterAssetRef).count()
+
+    def rotate_after_writes(*args, **kwargs):
+        original(*args, **kwargs)
+        asr_setup["provider"].fingerprint = "b" * 64
+
+    monkeypatch.setattr(content_masters, "record_project_event", rotate_after_writes)
+    response = save(client, asr_setup, result)
+    assert response.status_code == 409, response.text
+    assert response.json()["detail"] == "asr_runtime_changed"
+    assert db_session.query(ContentMasterRevision).count() == 1
+    assert db_session.query(ContentMasterAssetRef).count() == refs
+    assert db_session.query(ProjectEvent).count() == events
+
+
+def test_asr_configuration_update_waits_for_actual_commit(client, db_session, asr_setup, monkeypatch):
+    from app import runtime_config
+
+    result = suggest(client, asr_setup).json()
+    started, finished = threading.Event(), threading.Event()
+    original = db_session.commit
+    workers = []
+
+    def rotate():
+        started.set()
+        runtime_config.set_runtime("asr-commit-test", {"version": "rotated"})
+        finished.set()
+
+    def commit():
+        worker = threading.Thread(target=rotate)
+        workers.append(worker)
+        worker.start()
+        assert started.wait(1)
+        assert not finished.wait(0.05)
+        return original()
+
+    monkeypatch.setattr(db_session, "commit", commit)
+    try:
+        response = save(client, asr_setup, result)
+        assert response.status_code == 200, response.text
+        assert finished.wait(1)
+        assert db_session.query(ContentMasterRevision).count() == 2
+    finally:
+        for worker in workers:
+            worker.join(timeout=1)
+        runtime_config.clear_runtime("asr-commit-test")

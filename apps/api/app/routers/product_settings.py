@@ -14,8 +14,9 @@ from ..models import AuditLog, CapabilityRegistration, User
 from ..services import capability_integrations, content_identity, product_settings
 from ..services.content_harness.publishers import bootstrap_publishers
 from ..services.content_harness.registry import registry
+from . import CapabilityInputRoute
 
-router = APIRouter(prefix="/api/v1/settings", tags=["product-settings"])
+router = APIRouter(prefix="/api/v1/settings", tags=["product-settings"], route_class=CapabilityInputRoute)
 
 
 class PublisherVerificationIn(BaseModel):
