@@ -117,6 +117,12 @@ The source's stable public citation URL and the provider's temporary fetch/previ
 ### Requirement: Generated media and renderer output require exact acceptance
 Image, video, TTS and renderer providers SHALL return bounded untrusted results. Only explicitly accepted, byte-verified output with exact provider/version, input/request hash, MIME, license and rights status SHALL become MaterialRevision. A Master or Variant SHALL change only through its own explicit revision save. No provider success flag, remote URL or preview alone SHALL count as generated media.
 
+Source model-use authorization and optional Project active/ownership authorization SHALL be serialized through controlled Provider dispatch/result, not merely checked after sending source bytes. Source and parent Material locks SHALL use deterministic ordering; database authorization locks SHALL be released before publishing a temporary cache stage. Explicit acceptance retains its separate live rights checks.
+
+#### Scenario: Source revoked before controlled dispatch
+- **WHEN** a source revocation wins the authorization lock before a derived media request dispatches
+- **THEN** no source bytes are sent to the Provider and no preview or derived revision is created; acceptance-time rejection alone is insufficient
+
 #### Scenario: Explicitly configured one-shot image adapter
 - **WHEN** an authorized user explicitly requests generation with the existing openai image settings and exact loaded adapter
 - **THEN** one bounded HTTPS request uses the exact configured model/size, with no redirect/retry/fallback; only one base64 PNG can enter preview, source-image edits and unsafe/unsupported configuration fail before a call, config/credential drift invalidates acceptance, and neither settings save nor preview creates verification or durable media
