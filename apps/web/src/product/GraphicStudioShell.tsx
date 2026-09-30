@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { api, currentUser } from "../api";
-import { Button, Field, inputClass } from "../components/ui";
+import { Button, Field, Spinner, inputClass } from "../components/ui";
+import type { GraphicRenderSource } from "./GraphicRenderPanel";
 import { addCanvas, appendTextLayer, bindFinalRender, bindGraphicClaim, duplicateCanvas, insertMediaLayer, insertShapeLayer, removeCanvas, removeLayer, reorderCanvases, reorderLayers, replaceMediaLayer, setLayerFlags, unbindGraphicClaim, updateCanvas, updateGraphicTitle, updateLayerGeometry, updateMediaPlacement, updateTextLayer, updateTextStyle, type GraphicCanvas, type GraphicDraft } from "./GraphicStudioModel";
 
 type ProjectAsset = { key: string; material_id: number; material_revision_id: number; content_hash: string; kind: string; title: string | null; rights_status: string | null; public_use_allowed: boolean; commercial_use_allowed: boolean | null; source_type: string; provenance?: { provider_key?: string | null; provider_version?: string | null; source_kind?: string | null } };
@@ -11,7 +12,8 @@ type ChannelForm = { content_form: string; artifact_kind: string; source: string
 type ChannelDetail = { channel: string; content_forms: ChannelForm[] };
 type Boundary = { id: number; fact_pack_id: number; fact_pack_version: number; fact_pack_checksum: string };
 type EvidenceItem = { item_id: number; snapshot_checksum: string; statement: string | null; public_use_allowed: boolean; public_use_revoked_at: string | null };
-export type GraphicStudioProps = { projectId: number; channelId?: string | null; contentForm?: string | null; boundaryRevisionId?: number | null; draft: GraphicDraft | null; legacyPayload?: Record<string, unknown>; onChange: (draft: GraphicDraft) => void; readOnly: boolean };
+export type GraphicStudioProps = { projectId: number; unitId: number; renderSource: GraphicRenderSource | null; renderUnavailable: boolean; channelId?: string | null; contentForm?: string | null; boundaryRevisionId?: number | null; draft: GraphicDraft | null; legacyPayload?: Record<string, unknown>; onChange: (draft: GraphicDraft) => void; readOnly: boolean };
+const GraphicRenderPanel = lazy(() => import("./GraphicRenderPanel"));
 
 function ProjectMediaPreview({ asset, fit }: { asset: ProjectAsset | undefined; fit: "cover" | "contain" | "fill" }) {
   const [url, setUrl] = useState("");
@@ -40,7 +42,7 @@ function ProjectMediaPreview({ asset, fit }: { asset: ProjectAsset | undefined; 
   return <img src={url} alt={`项目素材版本 ${asset.material_revision_id}`} className="h-full w-full" style={{ objectFit: fit }} />;
 }
 
-export default function GraphicStudioShell({ projectId, channelId, contentForm, boundaryRevisionId, draft, legacyPayload, onChange, readOnly }: GraphicStudioProps) {
+export default function GraphicStudioShell({ projectId, unitId, renderSource, renderUnavailable, channelId, contentForm, boundaryRevisionId, draft, legacyPayload, onChange, readOnly }: GraphicStudioProps) {
   const [selectedId, setSelectedId] = useState("");
   const [selectedLayerId, setSelectedLayerId] = useState("");
   const [zoom, setZoom] = useState(100);
@@ -53,6 +55,7 @@ export default function GraphicStudioShell({ projectId, channelId, contentForm, 
   const [profile, setProfile] = useState<ChannelForm | null>(null);
   const [profileIssue, setProfileIssue] = useState("");
   const [assetIssue, setAssetIssue] = useState("");
+  const [assetRefresh, setAssetRefresh] = useState(0);
   useEffect(() => {
     let active = true;
     Promise.all([api.get<ProjectAsset[]>(`/content-projects/${projectId}/shared-assets`), api.get<Capabilities>(`/content-projects/${projectId}/graphic-capabilities`), api.get<Boundary | null>(`/content-projects/${projectId}/fact-boundary`)]).then(async ([items, states, nextBoundary]) => {
@@ -60,7 +63,7 @@ export default function GraphicStudioShell({ projectId, channelId, contentForm, 
       if (active) { setAssets(items); setCapabilities(states); setBoundary(nextBoundary); setEvidence(nextEvidence?.items || []); setAssetIssue(""); }
     }).catch(() => { if (active) setAssetIssue("项目素材、事实边界或能力状态读取失败；无法选择新素材/证据。"); });
     return () => { active = false; };
-  }, [projectId]);
+  }, [projectId, assetRefresh]);
   useEffect(() => {
     let active = true;
     if (!channelId) { setProfile(null); setProfileIssue("尚未选择渠道；Graphic Candidate 暂不可冻结。"); return () => { active = false; }; }
@@ -80,6 +83,11 @@ export default function GraphicStudioShell({ projectId, channelId, contentForm, 
   const changeCanvas = (next: GraphicCanvas) => onChange(updateCanvas(draft, next));
   const editNumber = (field: "width" | "height", value: number) => { if (Number.isFinite(value) && value >= 1 && value <= 8192) changeCanvas({ ...canvas, [field]: value }); };
   return <div className="space-y-4" aria-label="Graphic Studio">
+    {renderSource && <Suspense fallback={<Spinner label="加载画布渲染…" />}><GraphicRenderPanel
+      key={`${projectId}:${unitId}:${renderSource.id}:${canvas.id}:${currentUser()}`}
+      projectId={projectId} unitId={unitId} source={renderSource} canvasId={canvas.id}
+      channelId={channelId} contentForm={contentForm} unavailable={renderUnavailable || readOnly || !!assetIssue}
+      onAssets={() => setAssetRefresh(value => value + 1)} onBind={asset => change(() => bindFinalRender(draft, canvas.id, asset))} /></Suspense>}
     <Field label="图文标题"><input className={inputClass} value={draft.payload.title} disabled={readOnly} maxLength={500} onChange={(event) => onChange(updateGraphicTitle(draft, event.target.value))} /></Field>
     <div className="rounded-xl border border-slate-200 p-3 text-sm"><h3 className="font-medium">目标渠道 Profile</h3><p>{channelId || "未选择渠道"} / {profile?.content_form || contentForm || "默认形态"} · {profile?.source || "未解析"} · #{profile?.profile_version_id ?? "无版本"}</p>{profileIssue && <p role="status" className="text-amber-800">{profileIssue}</p>}{!profileIssue && profile && <><p className="text-xs text-slate-500">画布数：{profile.graphic_requirements.min_canvases ?? "未限制"}–{profile.graphic_requirements.max_canvases ?? "未限制"}；封面：{profile.graphic_requirements.cover_required ? "首张必须标记封面" : "未要求"}；允许尺寸：{profile.graphic_requirements.allowed_dimensions?.map((pair) => pair.join("×")).join("、") || "未限制"}。</p><div className="mt-2 flex flex-wrap gap-2">{(profile.graphic_requirements.presets || []).map((preset) => <Button key={preset.key} size="sm" variant="secondary" disabled={readOnly} onClick={() => { if (window.confirm(`将当前画布尺寸改为 ${preset.width}×${preset.height}？该操作不会自动保存。`)) change(() => updateCanvas(draft, { ...canvas, width: preset.width, height: preset.height })); }}>{preset.label} · {preset.width}×{preset.height}</Button>)}</div></>}</div>
     <div className="rounded-xl border border-slate-200 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-medium">画布 · {draft.payload.canvases.length}/24</h3><Button variant="secondary" disabled={readOnly || draft.payload.canvases.length >= 24} onClick={() => { const next = addCanvas(draft); onChange(next); setSelectedId(next.payload.canvases[next.payload.canvases.length - 1].id); }}>新增画布</Button></div>

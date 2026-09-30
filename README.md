@@ -6,7 +6,9 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
-- 本地图文 Renderer 实现：新增 `graphic.chromium@1`，显式配置 Node/Playwright/Chromium/字体后可按当前 Graphic v2 画布生成真实 PNG，管理员 preview→权利接受→精确素材→显式人工 final binding 已做 API 回归；不默认使用 Codex 私有 runtime，不自动 verified/attest，不修改旧 Text/Video 路径。当前单字体仅 normal/400，缺字或样式拒绝而非替换。目录、配置/启动和限制见 [`docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md`](docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md)。产品 UI/精确媒体 scope verification/真实 Video 等仍 TODO，F7 仍 86/105。
+- Graphic Studio 渲染 UI 已接通：安全只读库存、已保存画布的实际 PNG 预览、明确权利接受、精确项目素材重读、本地 final binding、单独 Master save / 人工确认；接受后读失败不重复接受，dirty/历史/viewer 禁止渲染，迟到结果丢弃。十项真实 Chrome 浏览器 gate、全后端 1374/2 skipped、构建/预算/strict/窄复核通过。UI 只支持显式配置的管理员预览，不替代 media scope verification，F7 保持 86/105。目录、启动和边界见 [`docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md`](docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md)。
+
+- 本地图文 Renderer 实现：新增 `graphic.chromium@1`，显式配置 Node/Playwright/Chromium/字体后可按当前 Graphic v2 画布生成真实 PNG，管理员 preview→权利接受→精确素材→显式人工 final binding 已做 API 与上述 UI 回归；不默认使用 Codex 私有 runtime，不自动 verified/attest，不修改旧 Text/Video 路径。当前单字体仅 normal/400，缺字或样式拒绝而非替换。目录、配置/启动和限制见 [`docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md`](docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md)。精确媒体 scope verification/真实 Video 等仍 TODO，F7 仍 86/105。
 
 - 需求背景：让数据源、模型/素材能力与远端 Publisher 只有在精确版本、配置、账号及动作范围真实验证后才可执行；本地包不冒充远端发布。
 - 目录结构：标准变更在 `openspec/changes/fe-f7-capability-integrations-delivery/`；统一 Registry 为 `apps/api/app/services/content_harness/registry.py`，安全验证模型/服务在 `apps/api/app/models.py`、`apps/api/app/services/capability_integrations.py`，加法迁移为 `apps/api/alembic/versions/f7a000000001_capability_verification.py`。
@@ -17,7 +19,7 @@
 - Renderer 批已完成：`renderer_capabilities.py` 复用实际 Text v1/v2 adapter，管理员在生产页明确渲染验证，Settings 投影安全范围；注册实现与事件 scope/Profile 指纹分离，绑定实际 callable。新增 `f7b000000001_renderer_scope.py` 仅拓宽既有验证 CHECK，保留旧行/索引/FK，留存 Renderer 证据时拒降级。Graphic/Video 仍标人工成片，不伪装自动可执行。验收见 `docs/FE_F7_RENDERER_ACCEPTANCE.md`。
 - 共享消费 / 配置指引已完成：Text 配图与 Video timeline 引用同一个搜索接受的精确 MaterialRevision，撤权阻断两者 checks / freeze；Settings 模型分区独立 lazy ProviderGuidancePanel 只读显示五类协议与配置指引，已加载不等于可执行 / verified，不提供假 Save。验收见 `docs/FE_F7_SHARED_MEDIA_GUIDANCE_ACCEPTANCE.md`。
 - 媒体 Renderer 基础契约：`media_renderers.py` 提供管理员明确 media-render-previews，绑定 current Master/hash/context/Profile/canvas 和 exact installed renderer；接受复用原 stage/raw/accept，真实解码字节只写 upstream MaterialRevision/项目引用。来源权限/CC BY、读取前30MB、安全路径、重复层去重及提交前撤权有回归；不生成 Master/自动 attestation，也未装入假的 renderer。见 `docs/FE_F7_MEDIA_RENDER_BOUNDARY_ACCEPTANCE.md`。
-- 待完成/TODO：F7 当前 86/105，真实单次生成/TTS/外部 ASR、自动媒体 Renderer 的真实实现/UI/final binding、账号绑定且无改写的 Publisher 和阶段最终门禁仍待完成。最新本批后端 1354 passed / 2 skipped、32 新回归/77 定向、前端/预算、strict 30/30、范围 Ruff/diff 通过；独立 foundation 复核 APPROVE。本批不改前端，没有新的浏览器验收声明。Renderer 前批 SQLite 实际迁移/往返通过，PostgreSQL 仅 DDL 编译；本批无新迁移。真实 Commons 请求被本机网络安全校验阻断，未标为 verified；WeWrite typed runtime 仍 unavailable，F8 尚未 apply。隔离 fixture 不代表外部能力已验证。
+- 待完成/TODO：F7 当前 86/105，真实单次生成/TTS/外部 ASR、媒体 Renderer 普通用户精确 scope verification、真实 Video Renderer、账号绑定且无改写的 Publisher 和阶段最终门禁仍待完成。Graphic 管理员实际渲染 UI/final binding 已由上述本批验收，最新后端 1374 passed / 2 skipped，十项 browser gate、前端/预算、strict 30/30、范围 Ruff/diff 与窄复核通过。Renderer 前批 SQLite 实际迁移/往返通过，PostgreSQL 仅 DDL 编译；本批无新迁移。真实 Commons 请求被本机网络安全校验阻断，未标为 verified；WeWrite typed runtime 仍 unavailable，F8 尚未 apply。隔离 fixture 不代表外部能力已验证。
 - 关键设计决策：只存安全身份与证据摘要，不存 secret、原始响应或签名 URL；验证事件追加，配置变化/撤销让旧验证失效。F6E canonical/归档尚待单独授权。
 - 依赖与启动方式：沿用 `apps/api` 既有 Python 环境、FastAPI 和 Alembic；测试在 `apps/api` 运行 `.venv/bin/python -m pytest tests/test_f7_capability_persistence.py tests/test_migrations.py -q`。只在隔离库执行迁移；不推送、部署或执行生产迁移。
 
