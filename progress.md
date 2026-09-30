@@ -1,5 +1,14 @@
 # 当前进度
 
+## 2026-09-30：F7 隔离浏览器整批再验收
+
+- 本地main@b940547上不改业务代码，七脚本52 gate、零page error；关闭既有10.8的本地UI验收，F7 95/105，阶段终验/真实供应商和公众号上传仍未完成，F8未apply。
+- 实际Text v1/v2、Chromium Graphic、五形态v5审批/授权/ZIP通过；素材生成/搜索/ASR明确Provider fixture，对账五项明确UI route fixture。typed Connector/operator UI沿用既有Batch A证据，本轮未重跑外网读。
+- 首次Graphic无admin按钮且无published exact image Profile，诊断为新临时库准备缺失；仅该库补测试管理员和Profile后13项整套PASS，不改产品授权或可用性。两个隔离库upgrade head=f7b000000001；不冒充本轮up/down/up或PG验证。
+- 记录docs/FE_F7_BROWSER_REVALIDATION.md；不重标上一轮1446/build为本轮门禁，不用本地ZIP替代远端发布。全阶段10.7/10.9/ARCHIVE_READY和F8前置保留。
+- 本轮最终OpenSpec strict30/30、git diff --check PASS；六份成功report实际回读47gate，加真实执行console对账5gate=52。只读窄复核APPROVE，认可10.8本地UI口径（未重跑命令，也未独立验证无report的对账执行）；四个本轮服务已停止，临时库/报告保留。本轮使用using-superpowers、openspec-apply-change、writing-plans、executing-plans、systematic-debugging、requesting-code-review、verification-before-completion。
+
+
 ## 2026-09-30：F7 受控读取安全与能力矩阵
 
 - F7 94/105，仅新增关闭10.4诚实缺失状态和10.10能力矩阵；外部接受、WeWrite账号绑定/不可改稿实现、阶段终验仍不完整，F8尚未apply。

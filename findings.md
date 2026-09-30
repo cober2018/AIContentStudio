@@ -1,5 +1,11 @@
 # 配置记录
 
+## 2026-09-30 F7 浏览器环境再核对
+
+- 空库访问admin邮箱会自动创建editor；无已发布exact渠道Profile时应保持不可执行。验收前显式准备临时管理员/Profile，而非移除权限/形态校验；本轮首次失败留证后重跑通过。
+- 52项浏览器gate不是52次真实集成：Actual Chromium/Text/本地ZIP、Provider fixture、对账UI route fixture必须分开。真实Commons/供应商/公众号账号证据仍缺失，本地UI通过只关闭10.8，不跨过F7最终门槛或启动F8。
+
+
 ## 2026-09-30 F7 外部读取审计
 
 - 原生图片压缩回归引出同类检查：Commons/typed Connector 都在 iter_bytes 自动解压后计数；Commons只请求identity但未拒不遵从的压缩响应，Connector连identity协商也没有。Connector逐块timeout不等于有界总读取期限。

@@ -1,5 +1,11 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F7 隔离浏览器再验收
+
+- [x] /// 按既有F7任务10.8，在新临时SQLite/media运行已批准的Settings/Search/Media/Graphic/ASR/Delivery脚本；七脚本52 gate/零page error，不触碰默认旧库，不调用真实模型/账号。
+- [x] /// 分别报告actual Chromium、Provider fixture和UI route fixture，保留首次Graphic环境缺失失败/未覆盖范围；仅临时库补admin/Profile后整套通过，无真实账号证据不关闭10.5/10.6或F8前置。
+- [x] /// 回收报告、停本轮四个隔离服务；strict30/30、diff和记录窄复核APPROVE。F7 95/105，剩余Publisher方式待确认；不改业务实现或归档。
+
 ## 2026-09-30：F7 外部读取边界与能力清单
 
 - [x] /// 在既有 F7 3.6/4.4/10.4/10.10 范围校准压缩拒绝和 Connector 总读取期限；不改 legacy safe_fetch，不扩账号或供应商范围。计划/SPEC窄复核通过。

@@ -119,7 +119,7 @@
 - [ ] 10.5 Run real Publisher verification only with explicit account/side-effect authorization.
 - [ ] 10.6 Verify read-back/human evidence before `verified`.
 - [ ] 10.7 Full backend/frontend/migration/OpenSpec/Ruff/diff gates.
-- [ ] 10.8 Browser Settings/Production/Delivery acceptance.
+- [x] 10.8 Browser Settings/Production/Delivery acceptance. Existing local UI flows revalidated in 52 gates; actual Text/Graphic rendering and five-form v5 local ZIP are distinguished from image/search/ASR Provider fixtures and reconciliation UI transport fixture in docs/FE_F7_BROWSER_REVALIDATION.md. Real supplier/account acceptance remains pending under 10.2/10.3/10.5/10.6; this does not close final F7 gates.
 - [ ] 10.9 Independent security/provider/delivery reviews.
 - [x] 10.10 Record capability matrix with verified/unverified reasons.
 - [ ] 10.11 Record local implementation commit and ARCHIVE_READY.
