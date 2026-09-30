@@ -30,6 +30,27 @@ class MediaOutput:
     metadata: dict = field(default_factory=dict)
 
 
+@dataclass(frozen=True, slots=True)
+class MediaRenderOutput:
+    status: str
+    content: bytes = b""
+    mime_type: str | None = None
+    render_input_hash: str | None = None
+    canvas_id: str | None = None
+    metadata: dict = field(default_factory=dict)
+
+
+class MediaRenderer(Protocol):
+    key: str
+    version: str
+    modality: str
+    schema: str
+    output_mimes: tuple[str, ...]
+    supported_forms: tuple[tuple[str, str], ...]
+    def runtime_fingerprint(self) -> str | None: ...
+    def render_master(self, request: dict) -> MediaRenderOutput: ...
+
+
 class ImageProvider(Protocol):
     key: str
     version: str

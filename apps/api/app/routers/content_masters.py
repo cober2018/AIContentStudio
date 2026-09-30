@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import get_current_user, require_editor
+from ..deps import get_current_user, require_admin, require_editor
 from ..models import ContentMasterRevision, User
 from ..services.content_masters import (
     current_checks,
@@ -94,6 +94,23 @@ class ASRSuggestionIn(BaseModel):
     provider_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,50}$")
     source_revision_id: int = Field(ge=1)
     base_payload_hash: str = Field(pattern="^[0-9a-f]{64}$")
+
+
+class MediaRenderPreviewIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    renderer_key: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,150}$")
+    renderer_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,50}$")
+    expected_payload_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    expected_context_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    canvas_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,99}$")
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/media-render-previews")
+def preview_media_render(project_id: int, unit_id: int, master_id: int, payload: MediaRenderPreviewIn,
+                         db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services.media_renderers import stage_render
+
+    return stage_render(db, user, project_id, unit_id, master_id, payload.model_dump())
 
 
 @router.get("/asr-provider-options")

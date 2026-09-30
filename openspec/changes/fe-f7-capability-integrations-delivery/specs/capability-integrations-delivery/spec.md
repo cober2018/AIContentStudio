@@ -113,6 +113,22 @@ Image, video, TTS and renderer providers SHALL return bounded untrusted results.
 - **WHEN** the Master payload/context/asset-set hash differs from the renderer's recorded input hash
 - **THEN** the result cannot attest the current Master or make its Candidate freeze-ready
 
+#### Scenario: Staged renderer result becomes stale
+- **WHEN** the source Master head/context, selected canvas, profile or exact loaded renderer runtime changes before explicit acceptance
+- **THEN** acceptance fails without writing a MaterialRevision or project reference; safe historical preview metadata does not authorize a new Master or render attestation
+
+#### Scenario: Renderer result is explicitly accepted
+- **WHEN** one installed exact media renderer returns decodable bytes for the server-derived input hash and selected canvas and the user explicitly confirms license/rights
+- **THEN** only the exact library revision and project reference are saved with safe input/runtime/base provenance; Master save and final render binding remain separate explicit operations
+
+#### Scenario: Derived renderer output cannot escalate source rights
+- **WHEN** a renderer consumes a source lacking model/commercial-use rights or requiring CC BY attribution
+- **THEN** the explicit output decision cannot grant unsupported rights or remove the source license/complete attribution; acceptance rechecks the live restrictions before commit
+
+#### Scenario: Renderer source budget is exceeded
+- **WHEN** the unique referenced source files exceed the bounded 30 MB input budget or escape the media storage root
+- **THEN** the probe rejects them before reading their bytes or calling the renderer; repeated layers share one verified source byte set
+
 #### Scenario: Accepted cross-unit media
 - **WHEN** an authorized Project user accepts generated media and attaches its exact revision to the Project
 - **THEN** another Unit in that Project can select the shared revision subject to current rights without claiming the generating Unit owns it exclusively
