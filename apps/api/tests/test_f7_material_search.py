@@ -89,6 +89,55 @@ def test_search_preview_import_accept_keeps_exact_rights_and_project_ref(client,
     assert "private-fetch-secret" not in stored and "provider-private-token" not in stored
 
 
+def test_accepted_search_revision_is_shared_by_text_and_video_units_with_live_rights(client, db_session, search_provider):
+    project = client.post("/api/v1/content-projects", headers=OWNER, json={"title": "跨形态共享"}).json()["id"]
+    candidate = search(client).json()["items"][0]
+    assert candidate["public_ready"] is False
+    staged = client.post(f"/api/v1/provider-search/{candidate['candidate_id']}/stage", headers=OWNER, json={"project_id": project}).json()
+    assert db_session.query(MaterialRevision).count() == 0
+    accepted = client.post(f"/api/v1/provider-media/{staged['stage_id']}/accept", headers=OWNER, json={
+        "confirmed": True, "title": "共享原图", "license_code": candidate["license_code"], "license_evidence_hash": candidate["license_evidence_hash"],
+        "attribution_text": candidate["attribution_text"], "public_use_allowed": True, "model_use_allowed": False, "commercial_use_allowed": False})
+    assert accepted.status_code == 201, accepted.text
+    source = db_session.get(MaterialRevision, accepted.json()["material_revision_id"])
+    persona = client.post("/api/v1/content-personas", headers=OWNER, json={"name": "共享素材作者"}).json()["id"]
+    saved = []
+    for modality in ("text", "video"):
+        unit = client.post(f"/api/v1/content-projects/{project}/units", headers=OWNER, json={"title": modality,
+            "modality": modality, "persona_id": persona}).json()["id"]
+        if modality == "text":
+            payload = {"document": {"schema": "studio.text.document.v1", "blocks": [
+                {"id": "body", "type": "paragraph", "content": [{"text": "跨形态同一精确版本", "marks": []}]},
+                {"id": "shared", "type": "image", "material_revision_id": source.id}], "citations": []}}
+            ref = {"role": "inline"}
+        else:
+            payload = {"aspect_ratio": [9, 16], "script": {"blocks": []}, "shots": [],
+                "timeline": {"duration_ms": 4000, "tracks": [{"id": "visual", "order": 0, "kind": "video",
+                    "items": [{"id": "shared", "order": 0, "start_ms": 0, "end_ms": 4000, "material_revision_id": source.id}]}]},
+                "voice": {"mode": "none"}, "subtitles": {"cues": []}, "overlays": [], "music": {}, "cover": {}}
+            ref = {"role": "timeline_media", "slot_key": "shared", "sort_order": 0, "placement": {"track_id": "visual", "item_id": "shared", "start_ms": 0, "end_ms": 4000}}
+        path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+        response = client.post(path, headers=OWNER, json={"payload_schema": f"{modality}.master.v2", "payload": payload,
+            "idempotency_key": f"shared-{modality}", "asset_refs": [{"material_revision_id": source.id, "content_hash": source.content_hash, **ref}]})
+        assert response.status_code == 200, response.text
+        master = response.json()
+        assert master["assets"][0]["material_revision_id"] == source.id
+        saved.append((path, master))
+    assert db_session.query(MaterialRevision).count() == 1
+    assert db_session.query(ProjectMaterialReference).count() == 1
+    assert source.content_hash == hashlib.sha256(search_provider.content).hexdigest()
+    source.public_use_allowed = False
+    db_session.commit()
+    for path, master in saved:
+        response = client.post(f"{path}/{master['id']}/checks", headers=OWNER)
+        assert response.status_code == 200, response.text
+        rights = next(row for row in response.json()["items"] if row["check_kind"] == "rights")
+        assert rights["status"] == "blocker"
+        readiness = client.get(f"{path}/{master['id']}/readiness", headers=OWNER).json()
+        assert readiness["candidate_freeze_available"] is False
+        assert len(client.get(path, headers=OWNER).json()["items"]) == 1
+
+
 @pytest.mark.parametrize("field,value", [("license_code", "CC0"), ("license_evidence_hash", "0" * 64), ("attribution_text", "another author")])
 def test_search_accept_cannot_replace_observed_license_or_attribution(client, db_session, search_provider, field, value):
     result = search(client).json()["items"][0]
