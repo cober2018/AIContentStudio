@@ -90,16 +90,16 @@
 - [x] 8.1 Persist exact account/channel/form/action/version verification.
 - [x] 8.2 Keep copy_package as safe local capability where packageable.
 - [ ] 8.3 Preserve existing WeChat WeWrite behavior and verify only real supported scopes.
-- [x] 8.4 Automatic actions require verified capability + account authorization.
+- [ ] 8.4 Automatic actions require verified capability + account authorization. Reopened by independent review: legacy workflow publish still bypasses DeliveryTarget/scoped verification.
 - [ ] 8.5 Publisher receives immutable approved package only; v5 WeChat article reaches legacy WeWrite input solely through validated deterministic frozen title/body/digest/cover projection before attempt preparation, with no v3/v4 fallback.
-- [x] 8.6 No publisher content rewrite/truncation/asset generation.
+- [ ] 8.6 No publisher content rewrite/truncation/asset generation. Reopened: legacy workflow still truncates title and synthesizes fallback cover before direct CLI publish.
 - [x] 8.7 Unknown outcome remains Unknown.
 - [x] 8.8 Add reconciliation/read-back/human verification flow. Existing scoped human verification plus locked, evidence-hashed, exact-attempt reconciliation/receipt and explicit UI confirmation implemented; synthetic acceptance is not real-account verification (10.5/10.6 remain pending).
 - [x] 8.9 Douyin/Xiaohongshu remote actions remain unavailable unless real adapter verified.
 - [x] 8.10 Add idempotency/duplicate-side-effect tests.
-- [x] 8.11 Remove the legacy `allow_unverified_auto_draft` execution bypass for new remote effects; preserve old targets/attempts as readable history and report the behavior change.
+- [ ] 8.11 Remove the legacy `allow_unverified_auto_draft` execution bypass for new remote effects; preserve old targets/attempts as readable history and report the behavior change. Target route flag closed, but review found another direct workflow `legacy_remote_publish` bypass; all new remote entry points must fail closed.
 - [x] 8.12 Recheck verification at execution after target creation, including account/form/action/version/fingerprint/expiry; revoked scope creates no new remote attempt.
-- [x] 8.13 Ensure WeWrite subprocess output and all PublisherResult fields are allowlisted/redacted before persistence or API return; add nested secret/error negative checks.
+- [ ] 8.13 Ensure WeWrite subprocess output and all PublisherResult fields are allowlisted/redacted before persistence or API return; add nested secret/error negative checks. Reopened: legacy workflow concatenates raw subprocess diagnostics into ValueError.
 
 ## 9. Settings and capability UI
 - [x] 9.1 Add capability inventory section/projection.

@@ -6,7 +6,7 @@
 
 ### FE-F7 能力集成与交付（本地实施中）
 
-当前本地任务95/105。七个既有脚本在新隔离库重跑52项浏览器检查，零页面错误：实际Text/Chromium图文渲染及五形态Candidate v5→审批→本地ZIP，与图片/搜索/ASR fixture和对账UI fixture分别记录于[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、账号绑定公众号上传、F7最终门禁与F8仍待完成；没有真实远端发布。脚本环境需临时管理员与已发布exact Profile，不改真实用户/旧库。
+当前本地任务91/105：阶段安全复核纠正了先前95/105的四项过勾，旧workflow发布旁路及改稿/raw CLI诊断仍需关闭，typed读取DNS连接绑定、accept提交前runtime复检也待修。dispatch撤权修复获独立认可，但F7整体PARTIAL/BLOCK。七脚本52项本地浏览器历史证据仍有效，不代表这些新安全缺口已解决；实际渲染/本地ZIP与fixture区分见[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、公众号上传、阶段终验和F8仍待完成。
 
 - 最新调用前权利修复：`provider_media.stage`持有project/source/parent权限锁至受控Provider调用结束，finally释放DB后再缓存；SQLite撤权先赢时零供应商调用。两个失败回归后修复，125定向/1448全后端（2 skipped）、构建预算/strict/Ruff/diff通过；不借本批关闭整阶段review或真实外部验收。复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py`；完整环境和限制见[共享媒体记录](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。没有新增依赖/迁移/业务对象或本批浏览器结果。
 
@@ -31,7 +31,7 @@
 - Renderer 批已完成：`renderer_capabilities.py` 复用实际 Text v1/v2 adapter，管理员在生产页明确渲染验证，Settings 投影安全范围；注册实现与事件 scope/Profile 指纹分离，绑定实际 callable。新增 `f7b000000001_renderer_scope.py` 仅拓宽既有验证 CHECK，保留旧行/索引/FK，留存 Renderer 证据时拒降级。Graphic/Video 仍标人工成片，不伪装自动可执行。验收见 `docs/FE_F7_RENDERER_ACCEPTANCE.md`。
 - 共享消费 / 配置指引已完成：Text 配图与 Video timeline 引用同一个搜索接受的精确 MaterialRevision，撤权阻断两者 checks / freeze；Settings 模型分区独立 lazy ProviderGuidancePanel 只读显示五类协议与配置指引，已加载不等于可执行 / verified，不提供假 Save。验收见 `docs/FE_F7_SHARED_MEDIA_GUIDANCE_ACCEPTANCE.md`。
 - 媒体 Renderer 基础契约：`media_renderers.py` 提供管理员明确 media-render-previews，绑定 current Master/hash/context/Profile/canvas 和 exact installed renderer；接受复用原 stage/raw/accept，真实解码字节只写 upstream MaterialRevision/项目引用。来源权限/CC BY、读取前30MB、安全路径、重复层去重及提交前撤权有回归；不生成 Master/自动 attestation，也未装入假的 renderer。见 `docs/FE_F7_MEDIA_RENDER_BOUNDARY_ACCEPTANCE.md`。
-- 待完成/TODO：F7 当前95/105，真实厂商图片验收/视频生成/TTS/外部ASR、真实Video Renderer、账号绑定且无改写的Publisher和阶段最终门禁仍待完成。上一轮全后端1446 passed /2 skipped、构建预算/strict/范围Ruff/diff通过；本轮仅重跑52项浏览器门槛及文档校验，不重新宣称全套后端结果。SQLite历史往返和撤销回归、PG DDL证据保持原范围；本轮只做新隔离SQLite升级，不做生产迁移。真实Commons请求被URL安全校验阻断，未标verified；WeWrite typed runtime仍unavailable，F8尚未apply。
+- 待完成/TODO：F7 当前91/105；先修本轮审查发现的legacy远端旁路、DNS绑定与accept runtime竞态，再做真实供应商/账号验证、阶段终验。最新1448 passed/2 skipped、125定向、构建/预算/strict/范围Ruff/diff通过，但不作为安全缺口已解决证明；PostgreSQL真实并发未因此验收。真实Commons请求被URL安全校验阻断，未标verified；新Delivery WeWrite runtime仍unavailable，但旧workflow旁路尚未关闭；F8未apply。
 - 关键设计决策：只存安全身份与证据摘要，不存 secret、原始响应或签名 URL；验证事件追加，配置变化/撤销让旧验证失效。F6E canonical/归档尚待单独授权。
 - 依赖与启动方式：沿用 `apps/api` 既有 Python 环境、FastAPI 和 Alembic；测试在 `apps/api` 运行 `.venv/bin/python -m pytest tests/test_f7_capability_persistence.py tests/test_migrations.py -q`。只在隔离库执行迁移；不推送、部署或执行生产迁移。
 
