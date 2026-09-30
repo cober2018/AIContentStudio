@@ -3,10 +3,11 @@
 from collections import defaultdict
 from collections.abc import Iterable
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, aliased, joinedload, load_only
 
 from ..models import (
+    ChannelVariantRevision,
     ContentAsset,
     ContentMasterRevision,
     ContentPersona,
@@ -98,6 +99,7 @@ class ProjectProjectionContext:
         self.masters = {}
         self.step_statuses = defaultdict(set)
         self.candidates = {}
+        self.variant_keys = {}
         self.targets = {}
         self.reviews = {}
         self.attempts = {}
@@ -145,14 +147,40 @@ class ProjectProjectionContext:
             latest_candidate = select(func.max(candidate.id)).where(
                 candidate.content_unit_id == ContentAsset.content_unit_id
             ).correlate(ContentAsset).scalar_subquery()
-            candidate_query = candidate_query.where(ContentAsset.id == latest_candidate).options(load_only(
+            latest_legacy = select(func.max(candidate.id)).where(
+                candidate.content_unit_id == ContentAsset.content_unit_id,
+                candidate.channel_variant_revision_id.is_(None),
+            ).correlate(ContentAsset).scalar_subquery()
+            series_heads = (select(func.max(ContentAsset.id)).join(
+                ChannelVariantRevision, ContentAsset.channel_variant_revision_id == ChannelVariantRevision.id,
+            ).where(ContentAsset.content_unit_id.in_(unit_ids)).group_by(
+                ContentAsset.content_unit_id, ChannelVariantRevision.variant_key,
+            ))
+            candidate_query = candidate_query.where(or_(ContentAsset.id == latest_candidate, ContentAsset.id == latest_legacy, ContentAsset.id.in_(series_heads))).options(load_only(
                 ContentAsset.id, ContentAsset.content_unit_id, ContentAsset.draft_id,
+                ContentAsset.channel_variant_revision_id,
+                ContentAsset.channel, ContentAsset.content_form,
                 ContentAsset.candidate_manifest_json, ContentAsset.candidate_hash,
                 ContentAsset.approved_candidate_hash, ContentAsset.status, ContentAsset.title,
             ))
         candidates = db.scalars(candidate_query.order_by(ContentAsset.id.desc())).all()
         self.candidates = _group(candidates, "content_unit_id")
-        current = [rows[0] for rows in self.candidates.values()]
+        variant_ids = {row.channel_variant_revision_id for row in candidates if row.channel_variant_revision_id is not None}
+        variant_keys = dict(db.execute(select(ChannelVariantRevision.id, ChannelVariantRevision.variant_key).where(
+            ChannelVariantRevision.id.in_(variant_ids),
+        )).all()) if variant_ids else {}
+        self.variant_keys = {row.id: variant_keys[row.channel_variant_revision_id] for row in candidates
+                             if row.channel_variant_revision_id in variant_keys}
+        current = []
+        for rows in self.candidates.values():
+            seen = set()
+            legacy_head_id = next((item.id for item in rows if item.channel_variant_revision_id is None), None)
+            for row in rows:
+                key = self.variant_keys.get(row.id)
+                if row is rows[0] or key is not None and key not in seen or row.id == legacy_head_id:
+                    current.append(row)
+                if key is not None:
+                    seen.add(key)
         if not current:
             return
         candidate_ids = [row.id for row in current]

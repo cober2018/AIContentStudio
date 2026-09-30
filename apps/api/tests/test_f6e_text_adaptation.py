@@ -1,5 +1,7 @@
 """Deterministic Text v2 adaptation is lossless for its supported subset."""
 
+import hashlib
+
 import pytest
 
 from app.services.channel_adapters import AdapterUnavailable, TextChannelAdapter
@@ -41,10 +43,27 @@ def test_simple_text_source_adapts_to_canonical_target(channel, form, expected_s
 def test_adaptation_rejects_unmapped_citations_or_assets_and_overlong_single():
     adapter = TextChannelAdapter("x", "single")
     source = _text_payload("原文")
-    source["document"]["citations"] = [{"id": "c1", "block_id": "b0", "start": 0, "end": 2, "fact_pack_item_id": 1, "selected_text_hash": "a" * 64}]
+    source["document"]["citations"] = [{"id": "c1", "block_id": "b0", "start": 0, "end": 2, "fact_pack_item_id": 1, "selected_text_hash": hashlib.sha256("原文".encode()).hexdigest()}]
     with pytest.raises(AdapterUnavailable, match="source_citations_require_explicit_mapping"):
         adapter.adapt(source, asset_refs=[], evidence_refs=[])
     with pytest.raises(AdapterUnavailable, match="source_refs_require_explicit_mapping"):
         adapter.adapt(_text_payload("原文"), asset_refs=[{"material_revision_id": 1}], evidence_refs=[])
     with pytest.raises(AdapterUnavailable, match="adapted_payload_invalid"):
         adapter.adapt(_text_payload("很" * 281), asset_refs=[], evidence_refs=[])
+
+
+@pytest.mark.parametrize(("channel", "form", "location"),
+                         [("wechat", "article", "b0"), ("x", "thread", "b0"), ("x", "single", "single")])
+def test_exact_source_citation_survives_deterministic_adaptation(channel, form, location):
+    adapter = TextChannelAdapter(channel, form)
+    source = _text_payload("有来源的原文")
+    source["document"]["citations"] = [{"id": "c1", "block_id": "b0", "start": 0, "end": 3,
+        "fact_pack_item_id": 7, "selected_text_hash": hashlib.sha256("有来源".encode()).hexdigest()}]
+    ref = {"fact_pack_item_id": 7, "snapshot_checksum": "a" * 64, "role": "claim", "sort_order": 0,
+           "content_locator_json": {"location_id": location, "start": 0, "end": 3}}
+    result = adapter.adapt(source, asset_refs=[], evidence_refs=[ref])
+    assert result["citations"] == [{"id": "c1", "location_id": location, "fact_pack_item_id": 7,
+                                    "snapshot_checksum": "a" * 64, "locator": {"start": 0, "end": 3}}]
+    assert adapter.canonicalize(result, evidence_refs=[ref]) == result
+    with pytest.raises(AdapterUnavailable, match="source_citations_require_explicit_mapping"):
+        adapter.adapt(source, asset_refs=[], evidence_refs=[{**ref, "content_locator_json": {"location_id": location, "start": 1, "end": 3}}])

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..deps import get_current_user
 from ..models import ProjectEvent, User
+from ..services.project_matrix import matrix_suggestions
 from ..services.project_overview import project_overview
 from ..services.project_versions import project_versions
 from .content_projects import owned_project
@@ -24,6 +25,12 @@ def get_project_overview(project_id: int, db: Session = Depends(get_db), user: U
 def get_project_versions(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     owned_project(db, project_id, user)
     return project_versions(db, project_id)
+
+
+@router.get("/{project_id}/matrix/suggestions")
+def get_matrix_suggestions(project_id: int, limit: int = Query(default=20, ge=1, le=50), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    owned_project(db, project_id, user)
+    return matrix_suggestions(db, project_id, user, limit=limit)
 
 
 @router.get("/{project_id}/activity")

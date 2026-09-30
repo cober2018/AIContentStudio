@@ -1,5 +1,79 @@
 # 当前进度
 
+## 2026-09-30：F6E 本地最终门禁与独立复核
+
+- 后端全量新跑 `1188 passed / 2 skipped / 7 warnings`；前端 TypeScript/Vite 与 FE-P1 PASS，`/projects` 224.75 kB raw / 72.89 kB gzip，Channel Variants lazy closure 234.19 kB raw / 76.03 kB gzip；OpenSpec strict 30/30、范围内 Ruff、`git diff --check` PASS。
+- 隔离 SQLite 与临时 PostgreSQL 16 均实跑 Alembic up/down/up；PostgreSQL 容器仅绑定本机临时端口，验证后已停止，生产库未触及。
+- 隔离浏览器最终报告见 `docs/FE_F6E_ISOLATED_ACCEPTANCE.md`：五形态 v5 审批/本地包、候选请求和授权后刷新竞态、Text/Graphic/Video/Workflow 草稿隔离、unknown 对账与双账号分离、来源漂移/撤权/归档通过，0 page error。
+- 独立 SPEC、backend/security、frontend/Review/package 定向复核均 APPROVE。复核指出的模型使用权绕过、旧 v4 与 v5 当前性冲突、多渠道概览误报、前端迟到响应/未保存工作流风险，均已修复并有定向回归或浏览器证据。
+- F6E 只完成本地实施与验收；canonical 主规格同步/归档、push、deploy、生产迁移仍待单独授权。旧 V1 PRD §15/§16 不因本地包通过而视为全量验收。
+
+## 2026-09-30：F6E Matrix / Variant / v5 Review 前端接入（未完成最终验收）
+
+- OpenSpec 进度 83/100。新增项目 Matrix 限量只读建议与勾选确认，确认只调用既有 Unit API；若批量创建中途失败，界面报告已创建数量并重读项目，不创建 DeliveryTarget。
+- Production 新增独立 lazy Channel Variants 面板：读取当前 Master 与精确 Profile/Adapter 能力，五种形态支持确定性预览、显式保存、历史/差异、实时检查与 v5 Freeze。预览/重试不写 Variant；Master 与 Workflow 草稿保持独立。Review 改为按 v5 Variant 系列判断当前 Candidate，显示冻结图文卡片/脚本/SRT 与结构差异，授权使用冻结目标 channel/form，并读取准确 Candidate 的交付目标。
+- F6E 加法迁移和 ORM 补齐有界字段 CHECK、引用 RESTRICT、非负顺序约束；现有项目/Unit 删除是归档或已有历史保护。定向 Variant/Candidate 110 passed，F6E SQLite 迁移 2 passed，能力 API 定向 1 passed；前端 TypeScript/Vite/FE-P1 PASS，`/projects` 首包 224.75 kB raw / 72.89 kB gzip，Channel Variants lazy closure 232.62 kB raw / 75.47 kB gzip。上述为分段证据，不冒充完整最终门禁。
+- 未完成：跨系列/历史安全组合回归、Text/Graphic/Video 浏览器闭环、PostgreSQL 迁移复核、全量后端与独立复核。本轮尚未提交；无 push/deploy/生产迁移/canonical 同步或归档。
+
+## 2026-09-30：F6E 精确引用与提交边界复核
+
+- WeChat 显式/继承封面、Graphic 最终画布图片、Video B-roll 仅保存准确 MaterialRevision/哈希/位置引用，不复制字节；Text 原文 Citation 保留 FactPackItem/checksum/locator。提交前验证项目可见性、素材种类、实时字节/哈希/公开权利与冻结 Fact Boundary；撤权或错位时 Variant/ref/event 同事务回滚。既有定向正负回归覆盖以上路径，F6E 3.7–3.9 核销，当前 74/100。复杂改写的引用语义仍按 incomplete/不可用处理，不扩大当前首批适配能力。
+
+## 2026-09-30：F6E 不可用能力无业务写入
+
+- 不兼容渠道/形态、无真实 Graphic render 的适配预览，以及断连模型的建议入口都有类型化不可用返回；新增断连模型回归证明可记录失败 LLMRun 审计，但不会生成 ChannelVariant。F6E 2.5 核销，当前 71/100。模型真实 Provider 验证仍属于 F7，不把 mock 或建议结果视为可执行远端能力。
+
+## 2026-09-30：F6E 漂移、事实与交付授权边界审计
+
+- 旧 Variant 的来源 Master/head/context、Profile/Adapter/Rule、检查及精确素材/证据漂移继续以只读 `stale` 投影，不改历史行；正文新增无法证明的事实保持 `incomplete`，不能冻结 v5。交付授权先按 v5 schema 及冻结目标渠道/形态校验，内容账号必须属于固定 Persona/Unit；本地目标明确 `manual`，远端动作因尚无 F7 的精确账号/渠道/形态/动作验证一律拒绝，不因自由格式账号备注放行。v3/v4 旧路径未放宽。F6E 3.10、4.7、9.3 核销，当前 70/100；跨 schema/漂移组合验收仍留在 9.8。
+
+## 2026-09-30：F6E 三渠道系列与旧 v4 同单元共存
+
+- 同一 Text Master 的公众号文章、X Thread、X Single 先全部冻结，再反序审批/授权及下载；只推进 X Single 系列后，旧 Single 不能新增授权，但另两系列仍能新增授权，旧已授权 Single 包仍可回读。旧 v4 Candidate 与 v5 在同 Unit 共存时，v4 历史授权包仍可读取，新 v4 授权继续按原 Unit 当前性拒绝。F6E 8.9 核销，当前 67/100；9.8 的跨 schema/漂移全组合仍待集中验收。
+
+## 2026-09-30：F6E 既有契约的保留性核对
+
+- 复核五种 versioned canonical payload 的确定性哈希、未知字段/重复 ID/顺序/精确图片与证据引用拒绝测试；Variant 仍只读取既有 Channel Registry/Published Profile，不增加同义 Settings 注册表。多账号 unknown 对账与既有 DeliveryAttempt/Receipt 回归保持通过，已授权历史包的来源/素材实时安全闸门保持有效。对应 F6E 2.6、2.8、9.5 核销，当前 66/100；不将此视为 F6E 第一批完成。
+
+## 2026-09-30：F6E 五形态本地包与多账号状态
+
+- 在既有公众号文章、X Thread、X Single、小红书图文、抖音口播脚本的真实 ZIP 回归上补齐非空声明：Text 的准确 Citation/Evidence locator、小红书真实图片和抖音 B-roll/SRT 都进入冻结清单与人工包，`remote_call=false`，撤权后不能继续下载。两条 `ContentAccount` 对同一 v5 Candidate 使用相同别名也生成独立授权；一条变成 `reconciliation_needed/unknown` 时，另一条保持可取本地包，Overview 优先显示对账。F6E 6.6、6.7 核销，当前 63/100。定向回归通过；完整门禁待后端第一批结束集中执行。
+
+## 2026-09-30：F6E 历史包实时检查和声明回归
+
+- 已授权 v5 历史包现在重验来源 Master 的最新适用检查：后来追加 blocker/失效或 warning 集合变化时拒绝下载，不能沿用旧人工处置。目标形态专属检查仍由 Variant 负责；Graphic/Video 素材实时撤权继续优先返回精确素材错误。新增 Text 带准确 citation/FactPackItem 的非空披露声明闭环：Variant 检查、v5 冻结、审批、授权和 ZIP 清单均通过，声明不伪装成新事实或改变原文。无效 v5 Freeze 回归同时确认不会写 Review/DeliveryTarget，也不回退旧 schema。F6E 8.8 核销，当前 61/100。
+- 新增断言后的定向回归通过；此前同批全后端 `1178 passed / 2 skipped / 7 warnings`。由于随后只增加了无效 Freeze 的负向断言，完整最终门禁仍留到后端第一批结束集中重跑。本地代码未提交，未推送/部署/生产迁移。
+
+## 2026-09-30：F6E v5 warning 审批安全闭环
+
+- Candidate v5 冻结来源 Master 当前 warning 的精确 check ID、input hash、Profile 和报告；审批必须逐条给出与冻结检查匹配的处置理由，既有授权包回读也复核处置和历史检查。缺失、伪造或事后移除理由均 409；历史无 warning 的旧 v5 清单保持可读。未放宽实时素材、证据和检查门槛。
+- Text、Graphic、Video v5 正向回归均按精确 warning 处置；新增负向/包回读回归。定向 `86 passed`，全后端 `1177 passed / 2 skipped / 7 warnings`，OpenSpec strict `30/30`、范围 Ruff 与 `git diff --check` PASS。F6E 7.6 核销，当前 60/100；后端第一批仍未完成，未提交。
+
+## 2026-09-30：F6E 图文与脚本 v5 后端闭环（第一批仍在进行）
+
+- Variant、Candidate、Delivery package 的跨项目 raw-ID 访问与归档只读边界已做同一端到端负向回归：外部身份一律 404；项目归档后历史 Variant/Candidate 可读，但 Freeze、Checks、Approval、新 Authorization 和包下载一律 409。F6E 9.7 核销。本轮还确认 Variant 保存的系列 CAS/幂等与引用/事件同事务：提交前撤销 Evidence 的负向回归明确断言 Revision、EvidenceRef 和 Event 全部回滚，3.3 核销；合计 59/100。新增后全后端 `1176 passed / 2 skipped / 7 warnings`，OpenSpec all-strict `30/30`、相关 Ruff、diff-check PASS；第一批仍未完成。
+- 真实文件 SQLite 双连接并发回归已补齐：同系列不同幂等键仅一条 revision/event、另一方 409；相同幂等键两方读回同一胜出版本。保存前项目写锁会串行化 head 读取，先前将测试屏障设在 head 查询处是错误测试设计，未据此改动服务端。v5 同一精确 Variant 并发 Freeze 也只产生一条 Candidate/Event，两请求读回同一 Candidate；Variant 保存定向 `31 passed`，v5 Freeze 文件 `39 passed`。结合已有 stale Profile/source、幂等回放、异项目 raw-ID、Freeze live rights/evidence/bytes/render 负向回归，F6E 3.11、8.6 核销至 57/100。新增两个并发用例后的全后端 `1175 passed / 2 skipped / 7 warnings`；F6E change strict、相关 Ruff、diff-check PASS。第一批仍未完成，未提交、未推送或部署。
+- 小红书 `image_note` 从真实 Graphic v2 最终渲染，经 Variant 检查、Candidate v5 冻结、审批、人工本地 ZIP 走通；ZIP 内图片与精确 MaterialRevision 字节相同，撤销公开权利后旧授权包拒绝回读。
+- 抖音 `spoken_script` 从 Video v2 脚本走通相同闭环。发现来源门槛错误要求先有最终成片，现只对准确 `video.master.v2 → douyin.spoken_script.v1` 排除来源 Master 的成片 render 检查；其它来源检查保留，直接 v4 视频冻结仍因无成片被拒绝。脚本包标记 `finished_video=false`，附估算 SRT；有 B-roll 时按精确素材字节入包，撤权后拒绝取包。没有远端发布或伪造视频。
+- 三个 Text 目标又新增精确引用本地包闭环：Text v2 原稿 Citation→公众号文章、X Thread、X Single 的 Variant/checks/v5/审批/ZIP，清单保持 FactPackItem/checksum/locator；公众号带真实封面字节。声明非空的可审批场景未验收，6.6 不提前勾选。
+- 定向 Graphic/Video/v5/F6D 回归 122 passed；新增 Text 引用 E2E 和 Profile 规则变更后的全后端 1172 passed / 2 skipped / 7 warnings。Matrix 的 reason/cost/value/confidence/unknown 均有无写入投影；来源/Profile/规则/素材 render 漂移可使历史检查 stale。F6E 5.4/7.3/7.5 核销至 55/100；OpenSpec strict 30/30、范围 Ruff 和 diff-check PASS。双连接并发、声明安全、本地包权限和其它后端安全回归仍待完成，不能称第一批已交付。
+
+## 2026-09-30：F6E 后端第一批继续（未交付）
+
+- Text v2 原稿现可将未改动段落的 Citation/FactPackItem 精确映射到公众号文章、X Thread、X Single；预览返回目标 Evidence refs，保存要求逐一继承，不能静默删引用或移动定位。`variant_evidence` 只在确定性输出与原文相同且引用完全一致时记 source-equivalent/pass；编辑后语义未知仍 incomplete。模型建议对带引用来源显式返回不可用，防止 Provider 改写后误保留旧引用。三目标 API 回归涵盖绑定、阻断删引用、编辑后未知及撤权漂移；最终全后端 1165 passed / 2 skipped / 7 warnings，OpenSpec strict 30/30、范围 Ruff 和 diff-check PASS。该改动只关闭保守 Text 子集，不提前核销涵盖所有形态/编辑情况的 3.8。
+- Variant 写入遇数据库唯一键冲突后现在回读同 `(unit, variant_key, idempotency_key)` 胜出行：请求指纹相同则返回既有版本，不同仍 409；其它并发冲突保持 409。真实双连接并发回归仍未完成，3.3/3.11 暂不核销。
+- 本轮补项目已选身份的 Matrix 建议过滤；模型辅助适配调用现有 Provider 产生只读建议和 `LLMRun`，显式保存才生成 Variant。保存核对同操作者/项目/Unit、精确 Master/Profile/Adapter 与 canonical 输出；失败、伪造、异项目、超大 Provider 输出不进入可信 Variant，过大原文也不写入 LLMRun。v5 Freeze 再核运行状态，只冻结安全摘要；归档单元拒绝适配预览/建议。新增同系列稳定 ID/内容/引用/Profile 差异 API。
+- 模型建议、归档、差异及 v5 正/负向定向测试通过；F6E 文件集合先前 127 passed，后来新增冻结/差异回归定向通过。新增冻结校验和差异 API 后全后端 1159 passed / 2 skipped / 7 warnings。OpenSpec all-strict 30/30、范围 Ruff 与 diff-check PASS。任务再核销 4.5、4.6、4.8、6.2、8.3，当前 52/100；后端第一批未完成、不提交。
+- 本地 `main` 的 F6E apply 持续中；Review API 现支持 v5 冻结文字/图片卡片/脚本与检查投影、同系列稳定 ID 差异和精确 MaterialRevision 预览。无关引用 404、撤权阻断，旧 v4 路径保留。
+- Project Versions 新增 ChannelVariant 血缘并按 `(unit_id, variant_key)` 判断多系列当前性；Overview 同时投影其他系列的待对账 unknown 与来源漂移。Matrix GET 限量且不写库，按 Brief 身份/形态/渠道范围、Registry 当前能力和已有 Unit 筛选；Performance 未比较时明确 unknown。
+- 本轮一次完整后端 `1148 passed / 2 skipped / 7 warnings`，OpenSpec all-strict 30/30、diff-check PASS；后续增加 Matrix 历史覆盖与 channel-neutral 源链路测试，仅定向通过，整批最终门禁仍须重跑。OpenSpec 本轮核销 2.4、4.1–4.4、5.1–5.3、5.5、5.7、9.6，总进度 47/100；9.1 因前端 Review 未闭合保持未勾。
+- 剩余后端还有模型辅助适配、精确 LLMRun 接受哈希、继承引用/并发、Matrix 历史覆盖/估值和跨形态安全回归；前端/浏览器、F7/F8 均未开始。本条不等于第一批交付，不提交、不推送/部署/生产迁移/归档。
+
+## 2026-09-30：F6E 执行节奏调整
+
+- 用户要求停止逐小项交付，剩余 F6E 按“后端完整闭环”和“前端加最终验收”两批连续完成。OpenSpec 100 条仍是逐项验收依据，不删减范围；批内可连续实现与验证，批末集中汇报和本地提交。
+- 打断时 `main` 的已提交基线为 `28cc0bd`、F6E 36/100；当前 v5 Review 后端有未提交改动（冻结预览、同系列 Diff 和定向回归），保留并纳入第一批，不冒充整批已通过。既有四份未跟踪原始规格包保持原样。
+
 ## 2026-09-30：F6E v5 审批、交付授权与本地包
 
 - `schema_version=5` 在旧 Draft/Master 启发式之前分派；Approval 和新 Delivery Authorization 只接受本系列当前 Variant/Candidate，分别绑定准确 Candidate ID/hash、Review、目标 channel/form 与项目身份。不同 X 系列先冻结后反序审批/授权通过；同系列推进阻断旧 Candidate 的新审批/授权。

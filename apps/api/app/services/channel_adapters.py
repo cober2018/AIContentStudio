@@ -93,12 +93,10 @@ class TextChannelAdapter:
                       and all(asset_refs[0].get(key) == value for key, value in {
                           "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
                       }.items()))
-        if evidence_refs or asset_refs and not cover_only:
+        if asset_refs and not cover_only:
             raise AdapterUnavailable("source_refs_require_explicit_mapping")
         if not isinstance(source_payload, dict) or not isinstance(source_payload.get("document"), dict):
             raise AdapterUnavailable("invalid_source_document")
-        if source_payload["document"].get("citations"):
-            raise AdapterUnavailable("source_citations_require_explicit_mapping")
         try:
             source = canonical_text_payload(source_payload)
         except TextDocumentError as exc:
@@ -115,8 +113,25 @@ class TextChannelAdapter:
             if len(text_blocks) != 1:
                 raise AdapterUnavailable("single_post_requires_one_block")
             proposal = {"text": text_blocks[0]["text"]}
+        citations = source["document"]["citations"]
+        if len(evidence_refs) != len(citations):
+            raise AdapterUnavailable("source_citations_require_explicit_mapping")
+        mapped = []
+        for citation, ref in zip(citations, evidence_refs, strict=True):
+            source_locator = ref.get("content_locator_json") if isinstance(ref, dict) else None
+            location_id = "single" if self.contract.payload_schema == "x.single.v1" else citation["block_id"]
+            expected_locator = {"location_id": location_id, "start": citation["start"], "end": citation["end"]}
+            if (citation.get("list_item_id") is not None or not isinstance(ref, dict)
+                    or ref.get("fact_pack_item_id") != citation["fact_pack_item_id"]
+                    or source_locator != expected_locator):
+                raise AdapterUnavailable("source_citations_require_explicit_mapping")
+            mapped.append({"id": citation["id"], "location_id": location_id,
+                           "fact_pack_item_id": citation["fact_pack_item_id"],
+                           "snapshot_checksum": ref["snapshot_checksum"],
+                           "locator": {"start": citation["start"], "end": citation["end"]}})
+        proposal["citations"] = mapped
         try:
-            return canonical_payload(self.contract.payload_schema, proposal)
+            return canonical_payload(self.contract.payload_schema, proposal, asset_refs=asset_refs, evidence_refs=evidence_refs)
         except VariantDocumentError as exc:
             raise AdapterUnavailable("adapted_payload_invalid") from exc
 

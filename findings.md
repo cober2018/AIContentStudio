@@ -1,5 +1,58 @@
 # 配置记录
 
+## 2026-09-30 F6E 最终复核决策
+
+- v5 按 `(unit_id, variant_key)` 判当前，旧 v3/v4 按不含 v5 的 Unit legacy 系列判当前；否则冻结任一 v5 会意外阻断旧 v4 的新审批/授权。Project Versions 和 Review UI 必须与服务端采用同一系列边界。
+- Review Overview 不可仅取最后冻结渠道的审批/授权作为整个 Unit 的结论。多系列投影逐一展示审批/目标，任一系列待审核时整体保持 `waiting_review`；`unknown` 对账仍优先。
+- 模型辅助适配会接触完整冻结 FactPack，上游 `model_use_allowed=false` 即使没有显式 citation，也必须在 Provider 调用之前阻断。安全摘要/LLMRun 本身不能代替输入权利检查。
+- 候选初次读取与授权后刷新是两条独立异步路径；两者在每个 awaited 响应后均需核当前选中项。隔离浏览器以迟到响应注入证明不会覆盖新选择。
+
+## 2026-09-30 F6E 前端与数据库边界
+
+- `ContentUnit` 没有持久 `content_form` 字段；Matrix 的 form 是非持久规划建议，确认仅创建现有 Unit。相同渠道的多个 form 可在该 Unit 下继续建立不同 `ChannelVariant` 系列，不能把 Unit title 当 durable form 真源。
+- 旧 Review UI 以 Unit 最新 Candidate 和 Unit.channel_id 授权；v5 的当前性与渠道目标必须分别取 `variantSeries` 与冻结 manifest.target，否则 X Single 会误伤 X Thread/公众号，channel-neutral Unit 会无法授权。交付目标列表也必须按所选 Candidate 读取，不能复用 Unit 最新候选的 targets。
+- Variant/Matrix 已拆成 lazy chunk；构建脚本现在验证 import graph，Channel Variants 不引入 TipTap/XYFlow。数据库对 Variant 历史采用 RESTRICT/no cascade，项目归档与 Unit 执行历史保护保留历史关系；已在隔离 SQLite 迁移测试核对约束，PostgreSQL 仍待独立验证。
+
+## 2026-09-30 F6E 历史包与声明边界
+
+- 历史 v5 Candidate 的冻结 warning 快照只证明当时有人处置，不证明同一 Master 后来追加的检查仍安全。包回读现在核最新适用来源检查及 warning 集合；`text_platform` 等 channel-neutral 目标检查、抖音脚本不需要的最终视频 render 检查仍按 Variant 来源门槛排除，避免误拦正常历史包。
+- 受控 Variant 的披露声明是独立元数据。若正文及 exact citation/evidence refs 与来源投影逐一相同，新增声明不应使事实覆盖从 `source_equivalent` 降为 `unknown`；当前只对这种可证明的等价子集通过，不放宽改写正文后的语义检查。
+- 五形态本地包都从冻结清单输出，不调用远端 Publisher；对同一个 Candidate，`ContentAccount` 是稳定账号身份，`account_ref` 只是快照别名。两个账号共享别名时仍须各自授权、各自保留状态；一个 unknown 不得让另一个已授权本地包失效，但项目 Overview 必须继续提示对账。
+
+## 2026-09-30 F6E v5 来源 warning 的处置门槛
+
+- v5 Variant 可在来源 Master 存在 current warning 时就绪，但原 v5 Candidate 未冻结这些提示；审批与包回读因此会丢失人工确认义务。现在 Candidate 清单冻结来源 Master 最新适用 warning，审批要求 check ID/input hash 对应的非空理由，已批准历史取包重验 Review 中的处置；缺失或篡改 fail closed。只有无 warning 的旧 v5 清单允许缺少新字段。
+
+## 2026-09-30 F6E 脚本交付与视频成片的来源门槛
+
+- `video.master.v2` 的 `render` 检查要求真实成片，适合直接冻结 Video v4；但 `douyin.spoken_script.v1` 的受控目标是脚本和估算 SRT。原 `_source_gate` 将前者硬性套在后者上，使脚本 v5 永远无法 ready。仅对这一准确来源/目标组合豁免成片检查，其余来源上下文、结构、时间线、身份、事实、素材权利与 Variant 自身检查不变。
+- 两种 v5 形态已实测本地包：Graphic→小红书的真实图片、Video→抖音的脚本/SRT/B-roll。抖音 ZIP 不含未生产的 MP4；直接 Video v4 冻结仍拒绝无成片源。B-roll 撤权后取包返回 `variant_b_roll_unready`，未修改已批准历史。
+- 三个 Text 目标已新增真实 API 集成回归：带原稿 Citation 的 Text v2→公众号/X Thread/X Single 都能冻结准确 FactPackItem、checksum、位置并生成本地包；公众号同时带真实封面字节。按当前 `_evidence_check` 的精确来源投影比较逻辑，新增手工声明会使证据覆盖变为 `incomplete`；这条声明场景尚未实测闭环，6.6 继续待办，不将空声明清单冒充完整能力。
+- 同一已发布 Profile 的 RuleSet 原地变化会改变目标能力快照；回读必须把旧 Variant 检查标为 stale，而不是沿用此前 pass。新增定向测试已确认 `profile_or_adapter_changed` 且所有检查 stale；测试来源未建 Brief/Fact Boundary，因此原 `source_gate` 先前并不 ready，本例只验证规则漂移，不声称可冻结。
+
+## 2026-09-30 F6E Text 引用的保守继承
+
+- 之前 Text Adapter 遇任何原稿 Citation 都拒绝，虽有 FactPackItem 也不能进入 Variant。现在仅支持无格式的段落且文字不变：服务端比对原 Master 的 citation ID、block/range、selected-text hash 与 ContentMasterEvidenceRef，映射成目标 location/range。X Single 的 location 固定为 `single`，公众号/X Thread 保持原 block ID。
+- 目标 Variant 不能漏掉原稿 citation；检查只把完全同源的确定性投影判为 `source_equivalent`。手工或模型改写后的证据语义仍未知；模型建议带引用来源暂不可用，不把可能移动的引用当已验证。事实撤权继续令旧检查 stale。
+- 并发同幂等键请求可能两者先读到不存在，再由数据库唯一键选出赢家；失败方不能一律报泛化冲突，应回读胜出行并比较请求指纹。此路径已加恢复逻辑，仍需双连接事务回归证明实际数据库行为。
+
+## 2026-09-30 F6E 模型建议与来源权限
+
+- Variant 的模型辅助入口复用现有 `LLMRun`，但建议并非 Variant 写入。输入锚定当前 Master 和已发布目标 Profile/Adapter；Provider 输出先在服务端 canonicalize，过大输出不进入运行记录，失败运行不能成为可信血缘。
+- 显式保存只接受服务端签出的同项目/单元/操作者 `LLMRun`，核对输入、输出和当前目标能力；Variant/v5 仅保存安全摘要，不复制 raw output、错误或 Secret。改写产生的新事实若没有可证明的精确证据，现有 evidence check 保持 incomplete，不能冻结 Candidate。
+- 归档单元先前还能拿到适配预览；现在预览和模型建议都拒绝，历史 Variant 仍可只读。Matrix 在无 Brief 身份范围时优先当前项目已选身份，不把其他作者扩成建议。
+- Variant 直接保存时的安全摘要并不足以保证 v5 冻结时仍可信；现在候选输入装载会回查 `LLMRun` 的成功状态、原始服务端 receipt 与当前 Variant 绑定，运行变为 failed 后不能再冻结。Variant 版本差异使用同一系列上一修订及稳定块 ID，区分移动和改文；不拿不同渠道版本作前版。
+
+## 2026-09-30 F6E 多渠道读模型与只读 Matrix
+
+- 旧 Versions/Overview 把同 Unit 最大 Candidate ID 当唯一当前结果，导致其他渠道系列被误标过期，甚至漏掉待对账 unknown。v5 必须用 `(unit_id, variant_key)` 系列投影，未知回执继续高于内容建议。
+- 旧 Review 媒体预览仅认 v4 render outputs，v5 封面虽能进入 ZIP 却无法查看；v5 预览应从冻结 manifest 的 exact asset ref 找版本，实时校验撤权、hash、MIME，不按任意 revision ID 取文件。
+- Matrix 仅取同渠道同形态 PublishedContentRecord 与实际 PerformanceObservation 的指标 namespace/key 覆盖，`known/missing/unknown` 分开；不聚合跨平台分数，不用缺失数据补零。成本/价值模型仍不存在，`estimatedCost/estimatedValue/confidence=unknown` 尚未满足完整估计要求，不能伪造排序。
+
+## 2026-09-30 F6E 批量交付决策
+
+- 100 个条目是 OpenSpec 验收粒度，不应等同 100 个实施批次。剩余工作改为后端闭环、前端与终验两批；原规格、失败关闭边界和测试覆盖不因此缩小。未提交的 v5 Review 实现纳入第一批，集中验证后再提交。
+
 ## 2026-09-30 F6E v5 审批与历史包
 
 - 旧 Unit-wide `latest ContentAsset.id` 判定会把同一 Master 的 X single 和 thread 互相误判为历史候选；v5 必须以 `(content_unit_id, variant_key)` 查本系列 Candidate head，v3/v4 原行为不动。
@@ -752,3 +805,10 @@ PRD §16 的发布门槛另需 **30 个真实 Topic（抖音/XHS/公众号各 10
 - 用户提供的ChatGPT连接器读取结果确认main@661e30a、FE-F5C两份canonical和f5c000000001迁移；本地隔离分支以相同commit为基线。
 - 547测试在限定NO_PROXY后通过；未限定时12项设置相关测试因环境变量端口格式无效失败，不属于业务回归。
 - Ruff基线有既存import排序告警：content_projects.py和project_review.py；不应把它们错误归因于F6A。
+# 2026-09-30 F6E 同系列并发保存
+
+- `owned_unit(..., mutate=True)` 通过 `lock_project_context` 在读 Variant head 前锁项目行；SQLite 实文件的两个独立连接会在这里串行。把同步屏障设在 head 查询处会制造测试超时，不代表业务死锁。
+- 同时进入保存入口的回归证明：不同幂等键为一成功一 409；相同幂等键返回同一 revision；两种情况都只有一条 `channel_variant.saved` 事件。`ProjectEvent.entity_id` 是字符串，比较时须与 Revision ID 的字符串形式一致。
+- v5 Freeze 对同一精确 Variant 的双连接并发请求只返回同一 Candidate ID，且只留一条 `candidate.frozen` 事件；数据库唯一约束与项目写锁形成最后防线，无需新增并行 Candidate 状态。
+- v5 raw-ID 边界已从 Variant 一直验到包：归档项目保留历史读取，但涉及新写入或下载后推进 DeliveryTarget 状态的包入口必须拒绝；外部用户对这三层 ID 均不可探测。
+- Variant 保存使用同一个数据库事务落 Revision、EvidenceRef/AssetRef 与 ProjectEvent；提交前 Evidence 撤权回归现明确断言三类写入都回滚，不留下孤立引用或事件。

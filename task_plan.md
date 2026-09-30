@@ -1,5 +1,55 @@
 # Codex with ChatGPT 连接配置计划
 
+## 2026-09-30：F6E 集中验收批
+
+- [x] /// 从当前 `main` 保留既有 F6E 工作区，重新跑全量后端门禁；不把上一轮失联的测试会话当作通过证据。
+- [x] /// 核对 9.8、11.1/11.2/11.14 的现有回归与缺口，缺口以失败测试先行补齐，再统一核销已证明的任务。
+- [x] /// 在独立 SQLite/媒体目录启动 API 与前端，先做 Matrix 只读建议和选择性确认，再做 Text 三目标、Graphic、Video 的浏览器闭环；发现缺陷时先复现后修复。
+- [x] /// 隔离迁移/性能/规格/差异门禁与文档记录集中执行；未获授权不做 F6E canonical 同步、归档、推送、部署或生产迁移。
+
+## 2026-09-30：F6E 剩余工作改为两批交付
+
+- [x] /// 本轮先将 Matrix 限量建议接到现有项目页；仅明确勾选并确认的建议才调用既有 Unit 创建 API，错误不吞没，项目归档只读。
+- [x] /// 随后将 Variant 历史/适配预览/保存/检查接入 Production 独立面板，并按当前 source/profile/adapter 显示不可用或 stale，不改变 Master 与 Workflow 编辑状态。
+- [ ] /// 最后接 v5 Review 多系列选择及授权目标校验，完成浏览器与性能门禁；本地提交按两大批收口，不推送/部署/生产迁移。（Review UI 已接，浏览器验收待完成。）
+- [x] /// F6E 7.6：复现 Variant 当前 warning 已 ready、v5 Freeze 却拒绝；对照 v4 warning disposition，要求 v5 冻结保留精确 warning、审批必须按 check ID/input hash 提交理由、授权与包读取重验处置；实时素材/证据安全门槛不得降级。
+- [ ] /// 第一批：连续完成剩余后端契约。包含 Variant refs/CAS/漂移与检查、Matrix 只读建议、Candidate v5 完整性、Review/Versions/Overview、五形态本地成品包及新旧安全回归；在批末集中核对 OpenSpec 任务、跑后端/迁移/规格门禁并提交本地 `main`。
+- [x] /// 用真实文件 SQLite、两条独立连接同时进入同一 Variant 系列保存入口；验证不同幂等键一成功一 409、相同幂等键只回读胜者，且仅一条 revision/event。项目写锁先于 head 查询，故不在 head 处设置屏障；精确引用原子性另由现有引用回归验证。
+- [x] /// 并发回归未揭示需修复的 SQLite 锁异常；服务端写入路径与 PostgreSQL 唯一键冲突恢复保持不变。
+- [x] /// 同一精确 v5 Variant 以双连接并发 Freeze：两请求回读同一 Candidate，且仅一条冻结事件；对照已有 currentness/live rights/evidence/bytes/render 回归核销 8.6。
+- [x] /// 跨项目与归档安全回归：外部身份 raw-ID 不可读 Variant/Candidate/Package；项目归档后可读历史但不可 Freeze、重跑检查、审批、授权或取包。
+- [x] /// 当前切片：先以真实 API 回归构造已有 Brief/Fact Boundary/Identity 与 Graphic v2 最终渲染，验证 Xiaohongshu Variant→checks→v5 Freeze→Approval→local ZIP 的精确素材和无远端副作用；失败则仅修其阻断点，随后补撤权负例。
+- [x] /// 接续用已有 Video v2 脚本/镜头创建完整来源上下文，验证 Douyin spoken_script 的当前检查、v5 Freeze→Approval→local ZIP 与 estimated SRT；不引入 F7 Provider 或伪造最终视频。
+- [x] /// Text v2 原稿携带准确 FactPackItem 引用时，分别验证公众号文章、X Thread、X Single 的确定性 Variant→检查→v5→审批→本地包；ZIP 清单保留准确引用 locator，公众号仍带真实封面。
+- [x] /// Text v2 原稿引用的精确继承：只在段落原文、FactPackItem/checksum、引用位置和 Master 证据 ref 可逐一证明时转换；删引用/改位置拒绝，撤权后的 Variant 检查失效。
+- [x] /// v5 已授权历史包再核来源 Master 最新适用检查；新 blocker 或 warning 集合变化时拒绝下载，保留目标形态专属检查豁免和实时撤权错误语义。
+- [x] /// Text 原文/引用未变时，新增有界披露声明只改变声明字段；定向验证审批、清单与人工本地包均保留声明和准确引用。
+- [x] /// 非法 v5 Freeze 的缺哈希、错哈希、双来源或异项目输入不回退 v4/v3，且不产生 Review/DeliveryTarget。
+- [x] /// 五种受控形态分别验收人工本地包、精确媒体/引用和非空披露；同一候选的两个账号各有授权，单账号 unknown 不覆盖另一账号，Overview 仍优先提示对账。
+- [x] /// 保留性审计：五种 canonical schema/哈希/refs 的测试与唯一 Registry 真源、既有授权历史/对账语义均有证据，核销对应 F6E 任务；未覆盖边界继续保留待办。
+- [x] /// 同一源稿的公众号、X Thread、X Single 先全部冻结再反序审批/授权；单系列推进不伤其他系列，旧 v4 与 v5 同 Unit 时历史包可读而新 v4 授权保持旧闸门。
+- [x] /// 审计 3.10/4.7/9.3：来源/能力/引用漂移只读投影，未证实新事实保持 incomplete，v5 本地授权核准确目标与账号；远端动作待 F7 验证而拒绝。
+- [x] /// 不兼容来源/目标、缺真实 render 和断连模型均返回类型化不可用；模型失败不产生 Variant。
+- [x] /// 对照已有 WeChat/Graphic/Video 精确 MaterialRevision、Text FactPackItem 引用和提交前撤权回滚回归，核销 F6E 3.7–3.9；复杂改写仍保持不可证实。
+- [ ] /// 第二批：连续完成 Matrix/Production/Review 前端、路由性能、五形态隔离浏览器闭环、旧七场景、全套门禁与独立复核；批末集中更新验收记录并提交本地 `main`。
+- [ ] /// 100 个 OpenSpec 条目保留作验收清单，不再按单条任务暂停、重复走完整流程或单独汇报。只有破坏性迁移、规格外持久对象、安全边界削弱或真实外部授权缺口才暂停并提出一个明确问题；不推送/部署/生产迁移，F7/F8 仍按顺序推进。
+
+## 2026-09-30：F6E 后端第一批持续实施
+
+- [x] /// v5 Review 只读投影按冻结 manifest 展示文字、图文卡片、脚本、检查及同系列差异；旧 v3/v4 保留。
+- [x] /// Review 媒体端点按冻结 v5 MaterialRevision 引用读取真实字节，校验 live rights/hash/MIME；撤权与无关 revision fail closed。
+- [x] /// Versions/Overview 保留同 Unit 多渠道系列与未知交付优先级，来源漂移投影为 stale，不创建状态表。
+- [x] /// Matrix 只读 API 按 Brief/身份/Registry/现有 Unit/已转换 Opportunity 生成有界建议，未知表现与估值不伪造。
+- [x] /// 模型辅助适配复用现有 Provider/LLMRun：当前 Master 的确定性适配作为有界输入；服务端验证并记录 canonical 建议，显式保存时核对 exact actor/source/Profile/Adapter/input/output；失败或过大输出不生成可信 Variant。归档预览/建议拒绝。
+- [x] /// v5 冻结从真实 `LLMRun` 再验成功状态和安全摘要，单系列 Variant 版本差异输出稳定 ID 的 add/remove/move/modify 与 Profile/Adapter/refs 区段；公众号/X 双形态已有受控本地包路径。
+- [ ] /// 第一批剩余：双连接保存并发、Matrix 估值诚实投影、Text 引用/声明成品包、全形态权限及历史回归与集中验收。
+
+## 2026-09-30：F6E v5 Review 冻结展示
+
+- [x] /// 对照 F6E 9.1 和当前 Review API，写失败回归：v5 文字预览显示冻结正文与检查；Graphic/Video 分别显示真实卡片/场景，不能冒充文本相似度；同 Unit 不同系列不互相作为 diff 前版。
+- [x] /// 只在 v5 schema 分支读取冻结 canonical payload/render/checks，按 `(unit_id, variant_key)` 选择上一 Candidate；旧 v3/v4 分支不变，污染来源与投影列 fail closed。
+- [ ] /// 定向及全后端、OpenSpec strict、Ruff/diff；同步 README/progress/findings、OpenSpec tasks 并本地提交，不推送/部署/归档。
+
 ## 2026-09-30：F6E v5 系列当前性、内容审批与本地包
 
 - [x] /// 对照 F6E 8.7–9.2/9.8，先写真实 API RED：同一 Master 的 X 推串/单条候选反序审批、同系列新版阻断旧候选、污染的五个旧 FK 和篡改清单 fail closed，审批不改 Variant/Master。

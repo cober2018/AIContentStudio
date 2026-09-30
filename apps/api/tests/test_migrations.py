@@ -66,6 +66,12 @@ def test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite(fresh_sqlite_ur
         ):
             assert inspector.has_table(table)
         assert "channel_variant_revision_id" in {column["name"] for column in inspector.get_columns("content_asset")}
+        assert {"ck_variant_key_length", "ck_variant_artifact_kind", "ck_variant_source_kind", "ck_variant_hash_lengths"}.issubset(
+            {row["name"] for row in inspector.get_check_constraints("channel_variant_revision")}
+        )
+        assert {"ck_variant_asset_order_nonnegative"}.issubset({row["name"] for row in inspector.get_check_constraints("channel_variant_asset_ref")})
+        assert {"ck_variant_evidence_order_nonnegative"}.issubset({row["name"] for row in inspector.get_check_constraints("channel_variant_evidence_ref")})
+        assert all(row.get("options", {}).get("ondelete") == "RESTRICT" for row in inspector.get_foreign_keys("channel_variant_revision"))
     finally:
         engine.dispose()
     command.downgrade(cfg, "f6a000000001")

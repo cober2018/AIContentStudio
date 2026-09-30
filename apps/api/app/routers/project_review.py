@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user, require_editor, require_editor_or_reviewer
-from ..models import ContentAsset, ContentProject, MaterialRevision, User
+from ..models import ChannelVariantRevision, ContentAsset, ContentProject, MaterialRevision, User
 from ..services import delivery as delivery_service
 from ..services import project_review as review_service
 from ..services import project_review_projection as projection
@@ -49,7 +49,16 @@ def review_candidate(project_id: int, unit_id: int, candidate_id: int, db: Sessi
 @router.get("/review-center/projects/{project_id}/units/{unit_id}/candidates/{candidate_id}/diff")
 def review_candidate_diff(project_id: int, unit_id: int, candidate_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     current = review_service._candidate(db, project_id, unit_id, candidate_id, user, mutate=False)
-    previous = db.scalar(select(ContentAsset).where(ContentAsset.content_unit_id == unit_id, ContentAsset.id < candidate_id).order_by(ContentAsset.id.desc()).limit(1))
+    manifest = current.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 5:
+        projection.candidate_preview(current)
+        previous = db.scalar(select(ContentAsset).join(
+            ChannelVariantRevision, ContentAsset.channel_variant_revision_id == ChannelVariantRevision.id,
+        ).where(ContentAsset.content_unit_id == unit_id, ContentAsset.id < candidate_id,
+                ChannelVariantRevision.variant_key == manifest["variant"]["variant_key"])
+            .order_by(ContentAsset.id.desc()).limit(1))
+    else:
+        previous = db.scalar(select(ContentAsset).where(ContentAsset.content_unit_id == unit_id, ContentAsset.id < candidate_id).order_by(ContentAsset.id.desc()).limit(1))
     return projection.candidate_diff(previous, current)
 
 
@@ -60,6 +69,20 @@ def review_candidate_render(project_id: int, unit_id: int, candidate_id: int, re
 
     asset = review_service._candidate(db, project_id, unit_id, candidate_id, user, mutate=False)
     manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 5:
+        manifest = projection._verify_frozen_variant(asset)
+        ref = next((item for item in manifest["assets"] if item["material_revision_id"] == revision_id), None)
+        if ref is None:
+            raise HTTPException(404, "候选未引用此素材版本")
+        revision = db.get(MaterialRevision, revision_id)
+        if (revision is None or revision.content_hash != ref["content_hash_snapshot"]
+                or revision.material is None or revision.material.status != "active"
+                or revision.status in {"revoked", "archived"}):
+            raise HTTPException(409, "冻结素材版本不可用")
+        content = read_bytes_checked(db, revision, require_public=True)
+        if revision.mime_type not in {"image/png", "image/jpeg", "image/webp", "image/gif", "video/mp4"} or sniff_mime(content, None) != revision.mime_type:
+            raise HTTPException(409, "冻结素材媒体类型未验证")
+        return Response(content, media_type=revision.mime_type, headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
     if manifest.get("schema_version") != 4:
         raise HTTPException(404, "此候选没有Master渲染")
     output = next((row for row in (manifest.get("render") or {}).get("outputs", []) if row.get("material_revision_id") == revision_id), None)

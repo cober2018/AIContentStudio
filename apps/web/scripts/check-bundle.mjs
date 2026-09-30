@@ -16,6 +16,8 @@ const excludedRoutes = [
   "src/pages/Workflows.tsx",
 ];
 const textStudioKey = "src/product/TextStudioShell.tsx";
+const matrixKey = "src/product/project/ProjectMatrixTab.tsx";
+const variantKey = "src/product/ChannelVariantsPanel.tsx";
 const graphicModelKey = "src/product/GraphicStudioModel.ts";
 const videoModelKey = "src/product/VideoStudioModel.ts";
 const siblingStudioKeys = ["src/product/GraphicStudioShell.tsx", "src/product/VideoStudioShell.tsx"];
@@ -81,6 +83,18 @@ try {
     if (initial.has(required(route).file)) throw new Error(`Unrelated route is in /projects initial graph: ${route}`);
   }
   const production = required("src/product/PersistentProductionPage.tsx");
+  const projectDetail = required("src/product/PersistentProjectPage.tsx");
+  if (!projectDetail.dynamicImports?.includes(matrixKey)) throw new Error("Project Matrix is not lazy-loaded from project detail");
+  if (!production.dynamicImports?.includes(variantKey)) throw new Error("Channel Variants panel is not lazy-loaded from Production");
+  const variantClosure = staticClosure([entryKey, variantKey]);
+  if (initial.has(required(matrixKey).file) || initial.has(required(variantKey).file)
+      || staticClosure([entryKey, "src/product/PersistentProductionPage.tsx"]).has(required(variantKey).file)) {
+    throw new Error("Matrix/Variant leaked into an unrelated initial graph");
+  }
+  for (const file of variantClosure) {
+    if (heavyByChunk[file]?.length) throw new Error(`Heavy dependency in Channel Variants: ${file}`);
+  }
+  if (sizes(variantClosure).raw >= limit) throw new Error("Channel Variants initial JS exceeds route budget");
   const graphicModelFile = required(graphicModelKey).file;
   const videoModelFile = required(videoModelKey).file;
   const commonProduction = staticClosure([entryKey, "src/product/PersistentProductionPage.tsx"]);
@@ -101,6 +115,7 @@ try {
     if (sibling !== "src/product/VideoStudioShell.tsx" && closure.has(videoModelFile)) throw new Error(`Video editor model leaked into ${sibling}`);
   }
   console.log(`Text Studio: lazy TipTap closure ${(sizes(textClosure).raw / 1000).toFixed(2)} kB raw / ${(sizes(textClosure).gzip / 1000).toFixed(2)} kB gzip; Graphic/Video exclude TipTap`);
+  console.log(`Channel Variants: lazy closure ${(sizes(variantClosure).raw / 1000).toFixed(2)} kB raw / ${(sizes(variantClosure).gzip / 1000).toFixed(2)} kB gzip; no TipTap/XYFlow`);
   for (const file of initial) {
     if (heavyByChunk[file]?.length) throw new Error(`Heavy dependency in /projects initial graph: ${file} (${heavyByChunk[file].join(", ")})`);
   }

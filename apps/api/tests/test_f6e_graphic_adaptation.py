@@ -2,12 +2,17 @@
 
 import copy
 import hashlib
+import io
+import json
+import zipfile
 
 from sqlalchemy import select
 
 from app.models import (
     ChannelTemplateVersion,
     ChannelVariantRevision,
+    FactPack,
+    FactPackItem,
     Material,
     MaterialRevision,
     ProjectEvent,
@@ -16,7 +21,7 @@ from app.models import (
 from app.seed import seed_v1_channel_profiles
 
 
-def _source(client, db_session, tmp_path, *, attest=True):
+def _source(client, db_session, tmp_path, *, attest=True, ready=False):
     seed_v1_channel_profiles(db_session)
     db_session.add(ChannelTemplateVersion(
         channel="graphic_f6e_source", version=1, name="Graphic source", status="published",
@@ -27,8 +32,24 @@ def _source(client, db_session, tmp_path, *, attest=True):
     persona = client.post("/api/v1/content-personas", json={"name": "设计师"}, headers=headers).json()["id"]
     project = client.post("/api/v1/content-projects", json={"title": "图文渠道项目"}, headers=headers).json()["id"]
     unit = client.post(f"/api/v1/content-projects/{project}/units", json={
-        "title": "一张封面", "persona_id": persona, "modality": "graphic", "channel_id": "graphic_f6e_source",
+        "title": "一张封面", "persona_id": persona, "modality": "graphic", "channel_id": None if ready else "graphic_f6e_source",
     }, headers=headers).json()["id"]
+    if ready:
+        brief = client.post(f"/api/v1/content-projects/{project}/brief/revisions", json={
+            "objective": "准确表达图文观点", "expected_revision": 0,
+        }, headers=headers)
+        assert brief.status_code == 201, brief.text
+        pack = FactPack(name="图文事实边界", version=1, status="frozen", checksum="c" * 64)
+        db_session.add(pack)
+        db_session.flush()
+        db_session.add(FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion",
+                                    snapshot_json={"statement": "视觉观点"}, snapshot_checksum="d" * 64,
+                                    public_use_allowed=True, model_use_allowed=True))
+        db_session.commit()
+        boundary = client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={
+            "fact_pack_id": pack.id, "expected_revision": 0,
+        }, headers=headers)
+        assert boundary.status_code == 201, boundary.text
     content = b"\x89PNG\r\n\x1a\nreal rendered image bytes"
     file = tmp_path / "final.png"
     file.write_bytes(content)
@@ -61,7 +82,59 @@ def _source(client, db_session, tmp_path, *, attest=True):
         "asset_refs": [asset_ref], "render_attestation": {"confirmed": True, "render_input_hash": readiness.json()["render_input_hash"]},
     }, headers=headers)
     assert saved.status_code == 200, saved.text
+    if ready:
+        checks = client.post(f"{master_path}/{saved.json()['id']}/checks", headers=headers)
+        assert checks.status_code == 200, checks.text
     return project, unit, saved.json(), revision, headers
+
+
+def test_image_note_v5_freeze_approval_and_manual_package_use_exact_render_bytes(client, db_session, tmp_path):
+    project, unit, master, image, headers = _source(client, db_session, tmp_path, ready=True)
+    variants = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    intent = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "xiaohongshu", "content_form": "image_note"}
+    preview = client.post(f"{variants}/adapt-preview", json=intent, headers=headers)
+    assert preview.status_code == 200, preview.text
+    declaration = {"id": "rights-note", "kind": "rights", "text": "图片来源已核对"}
+    saved = client.post(variants, json={**intent, "variant_key": "image-note.complete", "expected_revision": 0,
+        "idempotency_key": "image-note.complete", "source_kind": "manual_edit",
+        "payload": {**preview.json()["payload"], "declarations": [declaration]},
+        "asset_refs": preview.json()["asset_refs"]}, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checked = client.post(f"{variants}/{saved.json()['id']}/checks", headers=headers)
+    assert checked.status_code == 200 and checked.json()["ready"] is True, checked.text
+    candidates = f"/api/v1/content-projects/{project}/units/{unit}/candidates"
+    frozen = client.post(f"{candidates}/freeze", json={"channel_variant_revision_id": saved.json()["id"],
+        "expected_payload_hash": saved.json()["payload_hash"]}, headers=headers)
+    assert frozen.status_code == 201, frozen.text
+    candidate = frozen.json()
+    assert candidate["manifest"]["target"]["artifact_kind"] == "image"
+    approved = client.post(f"{candidates}/{candidate['id']}/approve", json={
+        "candidate_hash": candidate["candidate_hash"],
+        "warning_dispositions": {
+            f"{row['id']}:{row['input_hash']}": "编辑已核对该提示"
+            for row in candidate["manifest"]["source_master"].get("warning_checks", [])
+        }}, headers=headers)
+    assert approved.status_code == 200, approved.text
+    target = client.post(f"{candidates}/{candidate['id']}/delivery-authorizations", json={
+        "channel": "xiaohongshu", "content_form": "image_note", "account_ref": "manual-xiaohongshu",
+        "authorization_version": "v1", "action": "copy_package"}, headers=headers)
+    assert target.status_code == 201, target.text
+    downloaded = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+    assert downloaded.status_code == 200, downloaded.text
+    with zipfile.ZipFile(io.BytesIO(downloaded.content)) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        assert manifest["schema_version"] == 5 and manifest["remote_call"] is False
+        assert manifest["target"]["content_form"] == "image_note"
+        assert manifest["declarations"] == [declaration]
+        media = manifest["media"]
+        assert len(media) == 1 and media[0]["material_revision_id"] == image.id
+        assert archive.read(media[0]["name"]) == (tmp_path / "final.png").read_bytes()
+        assert "cards.json" in archive.namelist()
+    image.public_use_allowed = False
+    db_session.commit()
+    blocked = client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers)
+    assert blocked.status_code in {403, 409, 422}, blocked.text
 
 
 def test_image_note_preview_and_save_freeze_exact_rendered_image(client, db_session, tmp_path):

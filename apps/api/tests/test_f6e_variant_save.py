@@ -1,32 +1,108 @@
 """First F6E append-only Text Variant save keeps exact source/profile and per-series CAS."""
 
 import hashlib
+import sqlite3
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
-from sqlalchemy import select
+import pytest
+from fastapi import HTTPException
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 from app.models import (
     ChannelTemplateVersion,
     ChannelVariantCheckRun,
+    ChannelVariantEvidenceRef,
     ChannelVariantRevision,
+    ContentUnit,
     FactPack,
     FactPackItem,
+    LLMRun,
     Material,
     MaterialRevision,
     ProjectEvent,
     ProjectMaterialReference,
+    User,
 )
 from app.seed import seed_v1_channel_profiles
 from app.services.channel_variants import _variant_context
+from app.services.generation.providers import GenerateResult
 
 
-def _source(client, db_session):
+@pytest.mark.parametrize("same_idempotency_key", [False, True])
+def test_simultaneous_variant_saves_have_one_series_winner(client, db_session, tmp_path, same_idempotency_key):
+    from app.services.channel_variants import save_revision
+
+    project, unit, master, headers = _source(client, db_session)
+    user_id = db_session.scalar(select(User.id).where(User.email == headers["X-Studio-User"]))
+    db_session.commit()
+    db_file = tmp_path / "variant-race.db"
+    with sqlite3.connect(db_file) as target:
+        db_session.connection().connection.driver_connection.backup(target)
+        target.execute("PRAGMA journal_mode=WAL")
+    db_session.rollback()
+    engine = create_engine(f"sqlite:///{db_file}", connect_args={"check_same_thread": False, "timeout": 5})
+    factory = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+    start = threading.Barrier(2, timeout=5)
+
+    common = {"variant_key": "x.single.race", "expected_revision": 0,
+              "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "single",
+              "source_kind": "manual_edit", "edit_summary": {}, "asset_refs": [], "evidence_refs": [],
+              "llm_provenance": None, "payload": {"text": "有来源的原文"}}
+
+    def save(key):
+        with factory() as session:
+            try:
+                user = session.get(User, user_id)
+                start.wait()
+                result = save_revision(session, project_id=project, unit_id=unit,
+                                       user=user, payload={**common, "idempotency_key": key})
+                return ("saved", result["id"])
+            except HTTPException as exc:
+                return (exc.status_code, exc.detail)
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes = [future.result(timeout=12) for future in
+                        (pool.submit(save, "race-a"), pool.submit(save, "race-a" if same_idempotency_key else "race-b"))]
+        if same_idempotency_key:
+            assert outcomes[0][0] == outcomes[1][0] == "saved" and outcomes[0][1] == outcomes[1][1], outcomes
+        else:
+            assert sorted((outcome[0] for outcome in outcomes), key=str) == [409, "saved"], outcomes
+        with factory() as session:
+            rows = session.scalars(select(ChannelVariantRevision).where(
+                ChannelVariantRevision.content_unit_id == unit,
+                ChannelVariantRevision.variant_key == "x.single.race")).all()
+            assert len(rows) == 1 and rows[0].revision_no == 1
+            events = session.scalars(select(ProjectEvent).where(
+                ProjectEvent.project_id == project, ProjectEvent.event_type == "channel_variant.saved")).all()
+            assert len(events) == 1 and events[0].entity_id == str(rows[0].id)
+    finally:
+        engine.dispose()
+
+
+def _source(client, db_session, *, restricted_fact=False):
     seed_v1_channel_profiles(db_session)
     db_session.commit()
     headers = {"X-Studio-User": "variant-save@studio.local"}
     persona = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=headers).json()["id"]
     project = client.post("/api/v1/content-projects", json={"title": "渠道适配"}, headers=headers).json()["id"]
     unit = client.post(f"/api/v1/content-projects/{project}/units", json={"title": "源稿", "persona_id": persona, "modality": "text", "channel_id": "wechat"}, headers=headers).json()["id"]
+    if restricted_fact:
+        pack = FactPack(name="禁止模型使用的事实", version=1, status="frozen", checksum="c" * 64)
+        db_session.add(pack)
+        db_session.flush()
+        db_session.add(FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion",
+                                    snapshot_json={"statement": "有来源的原文"}, snapshot_checksum="d" * 64,
+                                    public_use_allowed=True, model_use_allowed=False))
+        db_session.commit()
+        boundary = client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={
+            "fact_pack_id": pack.id, "expected_revision": 0,
+        }, headers=headers)
+        assert boundary.status_code == 201, boundary.text
     source_payload = {"title": "原稿", "document": {"schema": "studio.text.document.v1", "blocks": [{"id": "b1", "type": "paragraph", "content": [{"text": "有来源的原文", "marks": []}]}], "citations": []}}
     path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
     response = client.post(path, json={"idempotency_key": "source-master", "payload_schema": "text.master.v2", "content_form": "article", "payload": source_payload}, headers=headers)
@@ -34,9 +110,188 @@ def _source(client, db_session):
     return project, unit, response.json(), headers
 
 
+def test_model_adaptation_never_sends_uncited_restricted_fact_to_provider(client, db_session, monkeypatch):
+    from app.services import channel_variants as service
+
+    project, unit, master, headers = _source(client, db_session, restricted_fact=True)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    called = []
+
+    class Provider:
+        async def generate_json(self, request):
+            called.append(request)
+            raise AssertionError("restricted fact reached provider")
+
+    monkeypatch.setattr(service, "get_provider", lambda purpose: Provider())
+    response = client.post(f"{path}/model-suggestions", json={
+        "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+        "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "single",
+    }, headers=headers)
+    assert response.status_code == 422, response.text
+    assert response.json()["detail"]["code"] == "variant_model_use_unavailable"
+    assert not called
+    assert not db_session.scalars(select(LLMRun)).all()
+    assert not db_session.scalars(select(ChannelVariantRevision)).all()
+
+
+def test_model_adaptation_is_suggestion_then_explicit_verified_save(client, db_session, monkeypatch):
+    from app.services import channel_variants as service
+
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    class Provider:
+        name = "test-provider"
+        model = "test-model"
+
+        async def generate_json(self, request):
+            return GenerateResult(data={"payload": {"text": "有来源的原文"}}, raw_output='{"payload":{"text":"有来源的原文"}}', usage={})
+
+    monkeypatch.setattr(service, "get_provider", lambda purpose: Provider())
+    source = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "single"}
+    suggestion = client.post(f"{path}/model-suggestions", json=source, headers=headers)
+    assert suggestion.status_code == 200, suggestion.text
+    assert suggestion.json()["payload"] == {"text": "有来源的原文", "citations": [], "declarations": []}
+    assert not db_session.scalars(select(ChannelVariantRevision)).all()
+    run = db_session.get(LLMRun, suggestion.json()["llm_run_id"])
+    assert run.status == "succeeded" and run.purpose == "channel_variant_adapt"
+    body = {**source, "variant_key": "x.single.ai", "expected_revision": 0,
+            "idempotency_key": "ai-saved", "source_kind": "model_assisted",
+            "payload": suggestion.json()["payload"], "llm_provenance": {"llm_run_id": run.id}}
+    saved = client.post(path, json=body, headers=headers)
+    assert saved.status_code == 201, saved.text
+    assert saved.json()["llm_provenance"]["llm_run_id"] == run.id
+    assert "raw_output" not in saved.json()["llm_provenance"]
+    assert client.get(f"{path}/{saved.json()['id']}", headers=headers).json()["llm_provenance"] == saved.json()["llm_provenance"]
+
+
+def test_model_adaptation_rejects_forged_failed_foreign_or_changed_receipts(client, db_session, monkeypatch):
+    from app.services import channel_variants as service
+
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    class Provider:
+        name = "test-provider"
+        model = "test-model"
+
+        async def generate_json(self, request):
+            return GenerateResult(data={"payload": {"text": "有来源的原文"}}, raw_output="{}", usage={})
+
+    monkeypatch.setattr(service, "get_provider", lambda purpose: Provider())
+    source = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+              "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "single"}
+    suggested = client.post(f"{path}/model-suggestions", json=source, headers=headers)
+    assert suggested.status_code == 200, suggested.text
+    run = db_session.get(LLMRun, suggested.json()["llm_run_id"])
+    body = {**source, "variant_key": "x.single.ai", "expected_revision": 0,
+            "idempotency_key": "ai-bad", "source_kind": "model_assisted",
+            "payload": suggested.json()["payload"], "llm_provenance": {"llm_run_id": run.id}}
+    for change in ({"llm_provenance": {"llm_run_id": 999999}},
+                   {"payload": {"text": "未经确认的改写"}},
+                   {"llm_provenance": {"llm_run_id": run.id, "raw_output": "secret"}}):
+        response = client.post(path, json={**body, **change}, headers=headers)
+        assert response.status_code == 422, response.text
+    run.status = "failed"
+    db_session.commit()
+    assert client.post(path, json=body, headers=headers).status_code == 422
+    run.status = "succeeded"
+    receipt = run.parsed_output_json["provenance"]
+    run.parsed_output_json = {**run.parsed_output_json, "provenance": {**receipt, "project_id": project + 1}}
+    db_session.commit()
+    assert client.post(path, json=body, headers=headers).status_code == 422
+    assert not db_session.scalars(select(ChannelVariantRevision)).all()
+
+
+def test_unavailable_model_returns_typed_no_variant_write(client, db_session, monkeypatch):
+    from app.services import channel_variants as service
+
+    project, unit, master, headers = _source(client, db_session)
+    def unavailable(_purpose):
+        raise RuntimeError("model disconnected")
+
+    monkeypatch.setattr(service, "get_provider", unavailable)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    response = client.post(f"{path}/model-suggestions", json={
+        "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+        "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "single"},
+        headers=headers)
+    assert response.status_code == 503 and response.json()["detail"]["code"] == "variant_model_unavailable", response.text
+    assert not db_session.scalars(select(ChannelVariantRevision)).all()
+
+
+def test_archived_unit_cannot_adapt_or_request_model_suggestion(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    row = db_session.get(ContentUnit, unit)
+    row.status = "archived"
+    db_session.commit()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    body = {"source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+            "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "single"}
+    assert client.post(f"{path}/adapt-preview", json=body, headers=headers).status_code == 409
+    assert client.post(f"{path}/model-suggestions", json=body, headers=headers).status_code == 409
+    assert not db_session.scalars(select(ChannelVariantRevision)).all()
+
+
+def test_model_suggestion_does_not_persist_oversized_provider_output(client, db_session, monkeypatch):
+    from app.services import channel_variants as service
+
+    project, unit, master, headers = _source(client, db_session)
+    class Provider:
+        name = "test-provider"
+
+        async def generate_json(self, request):
+            return GenerateResult(data={"payload": {"text": "原文"}}, raw_output="s" * 256_001, usage={})
+
+    monkeypatch.setattr(service, "get_provider", lambda purpose: Provider())
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants/model-suggestions"
+    response = client.post(path, json={"source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"],
+        "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single"}, headers=headers)
+    assert response.status_code == 422, response.text
+    run = db_session.scalar(select(LLMRun).where(LLMRun.purpose == "channel_variant_adapt"))
+    assert run.status == "failed" and run.raw_output is None and run.parsed_output_json is None
+
+
+def test_variant_revision_diff_uses_same_series_stable_ids_and_refs(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    base = {"variant_key": "x.thread.diff", "expected_revision": 0,
+            "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+            "expected_source_context_hash": master["context_hash"], "channel_id": "x", "content_form": "thread"}
+    first = client.post(path, json={**base, "idempotency_key": "diff-1", "payload": {"posts": [
+        {"id": "p1", "order": 0, "text": "第一段"}, {"id": "p2", "order": 1, "text": "第二段"},
+        {"id": "p4", "order": 2, "text": "第四段"}]}}, headers=headers)
+    assert first.status_code == 201, first.text
+    second = client.post(path, json={**base, "expected_revision": 1, "idempotency_key": "diff-2",
+        "payload": {"posts": [{"id": "p2", "order": 0, "text": "第二段已改"},
+                              {"id": "p1", "order": 1, "text": "第一段"},
+                              {"id": "p3", "order": 2, "text": "第三段"}]}}, headers=headers)
+    assert second.status_code == 201, second.text
+    diff = client.get(f"{path}/{second.json()['id']}/diff", headers=headers)
+    assert diff.status_code == 200, diff.text
+    assert diff.json()["from_revision_id"] == first.json()["id"]
+    assert diff.json()["structured"] == [
+        {"id": "p4", "changes": ["remove"]},
+        {"id": "p2", "changes": ["move", "modify"]},
+        {"id": "p1", "changes": ["move"]},
+        {"id": "p3", "changes": ["add"]},
+    ]
+    assert diff.json()["changed_sections"]["content"]["changed"] is True
+    assert diff.json()["changed_sections"]["profile"]["changed"] is False
+    assert client.get(f"{path}/{second.json()['id']}/diff", headers={"X-Studio-User": "foreign@studio.local"}).status_code == 404
+
+
 def test_text_variant_save_is_append_only_idempotent_and_series_scoped(client, db_session):
     project, unit, master, headers = _source(client, db_session)
     path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    capabilities = client.get(f"{path}/capabilities", headers=headers)
+    assert capabilities.status_code == 200, capabilities.text
+    assert capabilities.json()["source_master_revision_id"] == master["id"]
+    assert {(item["channel"], item["content_form"]) for item in capabilities.json()["items"]} == {
+        ("wechat", "article"), ("x", "thread"), ("x", "single"),
+    }
+    assert client.get(f"{path}/capabilities", headers={"X-Studio-User": "foreign@studio.local"}).status_code == 404
     body = {
         "variant_key": "x.single.primary", "expected_revision": 0, "source_master_revision_id": master["id"],
         "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
@@ -91,6 +346,7 @@ def test_profile_demoted_before_variant_commit_rolls_back_row_and_event(client, 
     }, headers=headers)
     assert response.status_code == 409, response.text
     assert db_session.scalars(select(ChannelVariantRevision)).all() == []
+    assert db_session.scalars(select(ChannelVariantEvidenceRef)).all() == []
     assert db_session.scalars(select(ProjectEvent).where(ProjectEvent.event_type == "channel_variant.saved")).all() == []
     db_session.expire(profile)
     assert profile.status == "published"
@@ -188,6 +444,71 @@ def test_text_variant_citation_binds_exact_frozen_boundary_and_rolls_back_invali
     db_session.commit()
     oversized_role = client.post(path, json={**body, "variant_key": "x-single-bad-role", "idempotency_key": "cited-bad-role", "evidence_refs": [{**evidence, "role": "r" * 41}]}, headers=headers)
     assert oversized_role.status_code == 422, oversized_role.text
+
+
+@pytest.mark.parametrize(("channel", "form", "location"),
+                         [("wechat", "article", "b1"), ("x", "thread", "b1"), ("x", "single", "single")])
+def test_text_source_citation_is_inherited_without_silent_drop(client, db_session, channel, form, location):
+    project, unit, master, headers = _source(client, db_session)
+    pack = FactPack(name="原稿引用", version=1, status="frozen", checksum="p" * 64)
+    db_session.add(pack)
+    db_session.flush()
+    item = FactPackItem(fact_pack_id=pack.id, evidence_kind="fact", snapshot_json={"statement": "有来源"},
+                        snapshot_checksum="a" * 64, public_use_allowed=True)
+    db_session.add(item)
+    db_session.commit()
+    assert client.post(f"/api/v1/content-projects/{project}/fact-boundary", json={"fact_pack_id": pack.id, "expected_revision": 0}, headers=headers).status_code == 201
+    citation = {"id": "c1", "block_id": "b1", "start": 0, "end": 3,
+                "fact_pack_item_id": item.id, "selected_text_hash": hashlib.sha256("有来源".encode()).hexdigest()}
+    source_payload = {**master["payload"], "document": {**master["payload"]["document"], "citations": [citation]}}
+    locator = {"citation_id": "c1", "block_id": "b1", "start": 0, "end": 3,
+               "selected_text_hash": citation["selected_text_hash"]}
+    source_path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    source_response = client.post(source_path, json={"idempotency_key": "cited-source", "expected_revision": 1,
+        "payload_schema": "text.master.v2", "payload": source_payload,
+        "evidence_refs": [{"fact_pack_item_id": item.id, "snapshot_checksum": item.snapshot_checksum,
+                           "locator": locator}]}, headers=headers)
+    assert source_response.status_code == 200, source_response.text
+    source = source_response.json()
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    request = {"source_master_revision_id": source["id"], "expected_source_payload_hash": source["payload_hash"],
+               "expected_source_context_hash": source["context_hash"], "channel_id": channel, "content_form": form}
+    preview = client.post(f"{path}/adapt-preview", json=request, headers=headers)
+    assert preview.status_code == 200, preview.text
+    expected = preview.json()["evidence_refs"]
+    assert expected == [{"fact_pack_item_id": item.id, "snapshot_checksum": item.snapshot_checksum,
+                         "role": "claim", "sort_order": 0,
+                         "content_locator_json": {"location_id": location, "start": 0, "end": 3}}]
+    body = {**request, "variant_key": f"{channel}.{form}.cited", "expected_revision": 0,
+            "idempotency_key": "cited-variant", "source_kind": "deterministic_adapt",
+            "payload": preview.json()["payload"], "evidence_refs": expected}
+    dropped = client.post(path, json={**body, "idempotency_key": "drop-citation", "evidence_refs": []}, headers=headers)
+    assert dropped.status_code == 422, dropped.text
+    assert dropped.json()["detail"]["code"] == "source_citations_require_exact_mapping"
+    saved = client.post(path, json=body, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checked = client.post(f"{path}/{saved.json()['id']}/checks", headers=headers)
+    assert checked.status_code == 200, checked.text
+    evidence_check = next(entry for entry in checked.json()["items"] if entry["check_kind"] == "variant_evidence")
+    assert evidence_check["status"] == "pass"
+    assert evidence_check["report"]["coverage"]["semantic_claims"] == "source_equivalent"
+    changed = preview.json()["payload"].copy()
+    if form == "single":
+        changed["text"] += "，新增未经核实的主张"
+    else:
+        field = "blocks" if form == "article" else "posts"
+        changed[field] = [{**changed[field][0], "text": changed[field][0]["text"] + "，新增未经核实的主张"}]
+    edited = client.post(path, json={**body, "variant_key": f"{channel}.{form}.edited", "idempotency_key": "cited-edit",
+        "source_kind": "manual_edit", "payload": changed}, headers=headers)
+    assert edited.status_code == 201, edited.text
+    edited_checks = client.post(f"{path}/{edited.json()['id']}/checks", headers=headers)
+    assert edited_checks.status_code == 200, edited_checks.text
+    edited_evidence = next(entry for entry in edited_checks.json()["items"] if entry["check_kind"] == "variant_evidence")
+    assert edited_evidence["status"] == "incomplete"
+    assert "citation_semantics_unverified" in edited_evidence["report"]["reasons"]
+    item.public_use_allowed = False
+    db_session.commit()
+    assert client.get(f"{path}/{saved.json()['id']}/checks", headers=headers).json()["items"][0]["status"] == "stale"
 
 
 def test_text_variant_citation_revoked_before_commit_rolls_back_variant_and_event(client, db_session, monkeypatch):
@@ -516,6 +837,29 @@ def test_variant_checks_become_stale_when_exact_profile_is_demoted(client, db_se
     assert projected.status_code == 200, projected.text
     assert projected.json()["items"][0]["status"] == "stale"
     assert projected.json()["ready"] is False
+
+
+def test_variant_checks_become_stale_when_exact_profile_rules_change(client, db_session):
+    project, unit, master, headers = _source(client, db_session)
+    path = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    saved = client.post(path, json={
+        "variant_key": "rule-drift", "expected_revision": 0, "source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "x", "content_form": "single", "idempotency_key": "rule-drift-1", "payload": {"text": "有来源的原文"},
+    }, headers=headers)
+    assert saved.status_code == 201, saved.text
+    checks_path = f"{path}/{saved.json()['id']}/checks"
+    first = client.post(checks_path, headers=headers)
+    assert first.status_code == 200 and all(item["status"] == "pass" for item in first.json()["items"]), first.text
+    profile = db_session.get(ChannelTemplateVersion, saved.json()["profile_template_version_id"])
+    forms = profile.profile_json["content_forms"].copy()
+    forms["single"] = {**forms["single"], "rule_sets": ["rule.media.required"]}
+    profile.profile_json = {**profile.profile_json, "content_forms": forms}
+    db_session.commit()
+    drifted = client.get(checks_path, headers=headers)
+    assert drifted.status_code == 200 and drifted.json()["ready"] is False, drifted.text
+    assert "profile_or_adapter_changed" in drifted.json()["drift_reasons"]
+    assert all(item["status"] == "stale" for item in drifted.json()["items"])
 
 
 def test_variant_later_corrupt_payload_check_blocks_earlier_pass(client, db_session):

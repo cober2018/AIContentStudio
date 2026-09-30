@@ -6,12 +6,16 @@
 
 ### FE-F6E 渠道变体检查（进行中）
 
+本地前端现已接入 Matrix 限量只读建议/所选 Unit 确认、Production 独立 lazy Variant 面板，以及按冻结目标和渠道系列工作的 v5 Review。Variant 可预览、显式保存、回看版本/差异、运行检查并冻结；预览与重试不写业务对象。图文卡片的准确图片和口播脚本的估算 SRT 在 Review 有区分展示，交付仍只允许人工本地包。前端构建和首包预算已通过；跨形态隔离浏览器与最终门禁尚未完成。
+
+本地后端现已走通 Graphic v2→小红书真实图片包、Video v2→抖音脚本/估算 SRT 包，以及带精确 FactPackItem 引用的 Text v2→公众号文章/X Thread/X Single 人工包；图片/B-roll 均按精确素材字节入包且撤权后禁止再取。抖音脚本不要求已有成片，但直接 Video v4 冻结仍要求真实最终渲染。同系列 Variant 保存与 v5 Freeze 的双连接并发防重、跨项目 raw-ID 和归档只读边界已有后端回归；五形态本地包已保留准确媒体、引用和非空披露声明。v5 审批要求精确来源 warning 的人工处置，历史包下载会重验后续来源检查；同一候选的不同账号授权与 unknown 对账状态互不覆盖。全形态浏览器验收仍待完成。未启用远端发布。
+
 - 需求背景：一个已保存的渠道变体只有在来源 Master 当前、必要检查有效，且目标形态/素材/证据检查通过时，才可能进入后续 Candidate v5 冻结。
 - 目录结构：`apps/api/app/services/channel_variants.py` 负责项目授权后的 Variant 历史、只读来源门槛和追加式检查；`channel_adapters.py` 负责五种受控形态的确定性成品投影；`candidates_v5.py` 装载并构建 v5 清单，`project_review.py` 提供冻结；规格位于 `openspec/changes/fe-f6e-channel-variants-content-matrix/`。
-- 已完成：来源 Master 的上下文与检查状态进入 Variant `ready` 投影；`variant_package` 验证受控 Adapter 的确定性成品投影并记录哈希。v5 manifest builder 已接服务端 DB 快照和项目级 Freeze；仅当前且已通过检查的 Variant 可冻结，重复请求幂等，旧 Draft/Master/Workflow 来源列保持空。v5 内容审批按 Variant 系列判定当前性；交付授权仅允许本地包/人工交接，ZIP 从冻结 v5 内容和实时验证的精确素材字节生成，不回退旧 schema。已有授权可读取历史包，但仍须通过实时公开权利与来源完整性验证。
-- 待完成/TODO：冻结全面并发锁、跨形态与历史/安全回归、v5 Review 预览/差异/检查、Matrix 和前端/浏览器验收仍在 F6E 后续任务；F7 远端 Provider 不在本阶段。
+- 已完成：来源 Master 的上下文与检查状态进入 Variant `ready` 投影；`variant_package` 验证受控 Adapter 的确定性成品投影并记录哈希。v5 manifest builder 已接服务端 DB 快照和项目级 Freeze；仅当前且已通过检查的 Variant 可冻结，重复请求幂等，旧 Draft/Master/Workflow 来源列保持空。v5 内容审批按 Variant 系列判定当前性；交付授权仅允许本地包/人工交接，ZIP 从冻结 v5 内容和实时验证的精确素材字节生成，不回退旧 schema。已有授权可读取历史包，但仍须通过实时公开权利与来源完整性验证。Review 后端现从冻结 v5 内容投影文字/图片卡片/脚本、检查与同系列差异，媒体预览读取精确版本并实时验证公开权利及字节；Project Versions/Overview 保留同 Unit 多渠道系列及未知交付优先级。Matrix 新增限量、授权、无写入的建议 API，确认仍须走现有 Unit API。Variant 历史可按同系列稳定 ID 比较改动；模型建议的真实 `LLMRun` 经显式保存和冻结二次校验，只冻结安全摘要。Text v2 原稿的未改动段落引用可按精确 FactPackItem/checksum/range 映射至公众号文章和 X；引用被静默丢弃或位置变动时拒绝确定性继承。
+- 待完成/TODO：其余跨形态/历史安全回归、Matrix 真实成本/价值估计、v5 Matrix/Production/Review 隔离浏览器验收及最终独立复核仍在 F6E 后续任务；F7 远端 Provider 不在本阶段。Matrix 历史表现当前只展示同渠道同形态且实际存在的指标覆盖，不生成跨平台评分；无指标与无历史分别标为 missing/unknown。模型辅助适配已接现有 Provider/LLMRun：建议只读，显式接受保存时核对当前来源/Profile/Adapter、操作者及 canonical 输出哈希；无可用或合格 Provider 时返回不可用，不伪称适配成功。
 - 关键设计决策：channel-neutral Master 的目标平台检查由 Variant 承担，不以 v4 直接冻结资格替代来源门槛；检查结果追加保存，读取时仍进行实时来源与权限漂移判断。v5 清单只接受服务端提供的有界 canonical 快照，绝不沿用 Draft/Master 作为 Candidate 来源指针。
-- 依赖与启动：沿用现有 FastAPI/SQLAlchemy 环境；在 `apps/api` 运行 `PYTHONPATH=. .venv/bin/pytest -q tests/test_f6e_freeze_v5.py tests/test_f6e_candidate_manifest_v5.py` 进行定向回归。本切片不增加依赖或迁移。
+- 依赖与启动：沿用现有 FastAPI/SQLAlchemy 环境；在 `apps/api` 运行 `PYTHONPATH=. .venv/bin/pytest -q tests/test_f6e_freeze_v5.py tests/test_f6e_candidate_manifest_v5.py` 进行定向回归。本切片不增加依赖或迁移；Matrix 服务位于 `apps/api/app/services/project_matrix.py`、路由位于 `apps/api/app/routers/project_read_models.py`。
 
 ### FE-F0-F1 前端产品骨架（2026-09-27）
 
@@ -164,15 +168,15 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 本批目录：`apps/api/app/services/video_documents.py` 保存 Video v2 canonical 文档与精确 profile 规则，`content_harness/channel_registry.py` 提供 published `video_requirements` 投影；`video_derivations.py` 实现专用派生 API 的服务端血缘/来源闸门，`video_master_checks.py` 复用既有 Master CheckRun，`video_master_diff.py` 提供 v2 稳定 ID 差异，`production_modalities.py` 与 `project_review_projection.py` 承接冻结输入哈希和 Review 完整性闸门；`apps/api/app/routers/project_assets.py` 暴露不可用的项目级 Video/TTS/ASR 能力，`apps/api/tests/test_f6d_video_{documents,capabilities}.py` 验证边界。`apps/web/src/product/VideoStudioModel.ts` 和 `VideoStudioShell.tsx` 承接 Video-only 类型化草稿，`apps/web/scripts/check-bundle.mjs` 验证按需加载。没有新增表或依赖。
 - 依赖与启动：沿用本 README 现有 API/Vite 启动方式，目标零新表/零迁移；隔离验收 API 须同时指定临时 `DATABASE_URL` 和绝对路径 `AI_STUDIO_MEDIA_ROOT`（与临时数据库同一父目录下的 `media`），浏览器脚本校验二者并核对实际字节。若实施证明需新持久化结构，应先暂停修订规格，不直接建表。不 push/deploy/运行生产迁移。
 
-### FE-F6E Channel Variants + Content Matrix（独立规格复核通过，backend-first apply 进行中）
+### FE-F6E Channel Variants + Content Matrix（本地实现与隔离验收完成，待主规格同步/归档授权）
 
 - PRD/需求背景：North Star 要求在可复用 ContentMaster 与审批候选之间形成真正的渠道适配层；原先缺少持久 ChannelVariant，Project Matrix 只能直接管理 ContentUnit。F6D 门禁与 F6E 独立规格复核已通过，F6E 正按标准 change 做 backend-first 实施。
 - 目录结构：`openspec/changes/fe-f6e-channel-variants-content-matrix/` 包含 proposal、design、tasks、新 ChannelVariant 规格及 Matrix、Production Core、Project 读模型、Review、FE-P1 五份 delta；`apps/api/app/models.py` 与 `apps/api/alembic/versions/f6e000000001_channel_variants.py` 承接四表及 Candidate 链接，`apps/api/app/services/channel_adapters.py` 和 `channel_variant_documents.py` 承接 Profile 能力边界与五种 canonical payload，`apps/api/app/services/channel_variants.py` 与 `apps/api/app/routers/channel_variants.py` 承接项目级历史读取、非持久化适配预览、Variant 写入和检查。用户原总包不改。
 - 已完成：规格界定非写入 Matrix 建议、追加式 Variant/精确引用/检查、Candidate v5、Review/Approval/本地包分派与旧 v3/v4 保留；已标记 superseded 的 V1 交付变更只作为七个历史场景和 PRD §15/§16 的保留验收来源，不重新激活、不冒充已验收。2026-09-29 独立 SPEC 反馈后补定五个边界：版本化 canonical Variant payload、首批 v2 Master→form/`artifact_kind` 兼容矩阵、v5 唯一 Variant source pointer 与缓存投影列校验、复用成功 `LLMRun` 的安全血缘，以及 superseded 状态。旧 `x_thread/thread` 保持 v3/v4 行为但不作为 v5 目标。v5 跨渠道授权比较冻结 Variant 目标而非来源 Unit 渠道，仍保留身份/账号约束。已完成 F6E 0.3/0.4 基线与旧 V1 验收义务映射（见 `findings.md`），未将其视为功能验收。首批计划内加法模型和迁移已落地，含四个 Variant 表、Candidate nullable 链接及精确 published Profile 版本 FK；SQLite/临时 PostgreSQL 迁移门禁已通过。公众号文章、X 推串与单条已有保守的 Text v2 确定性适配器；公众号文章可显式选择或继承项目可见的精确封面引用，X 仍限无素材子集；小红书图文仅对 F6C 已验证真实最终 render 开放；项目级 Variant 历史、适配预览、追加式保存及精确 Fact Boundary citation 已接通。
 - 第二轮 SPEC 反馈补充：v5 Candidate 当前性按稳定 `(unit_id, variant_key)` 系列判断，不由整个 Unit 最大 Candidate ID 决定；三渠道预先冻结后可任意顺序审批/授权，同系列新版本仅替代本系列，真实 Master/context/profile/rights/check 漂移仍阻断，v3/v4 保持原闸门。已写入 design/tasks 与三份相关 delta，独立 SPEC re-review 已通过。
 - 第三轮 SPEC 窄修：v5 `ContentAsset` 仅 `channel_variant_revision_id` 为来源 FK；既有 `draft_id`、`topic_brief_id`、`mother_revision_id`、`content_master_revision_id`、`workflow_run_id` 均须为空。工作流血缘从 Variant→精确 source Master→冻结 manifest 读取，不用 Candidate 运行 FK 参与分派/当前性；Review/Approval/Authorization/Package 遇污染字段须拒绝。独立 SPEC re-review 于 `main@6f5e022` 给出 APPROVE。
-- Variant 检查进度：项目级 `/channel-variants/{id}/checks` 可追加结构、精确 Profile/rule、证据引用、实时素材权利结果；小红书另有真实 render 检查。同系列新版本、源 Master、Profile/Adapter/rule、精确证据或 Graphic/Video 素材/render 漂移时，历史结果只读投影为 stale。公众号缺必需封面阻断，未知规则/未证实语义保持 incomplete，远端能力仍未验证；完整 byte-exact 本地包检查尚未接入，`variant_package` 始终 incomplete，因此整体不宣称可冻结。
-- 待完成/TODO：F6C 74/74、F6D 79/79 及独立复核已核对，F6E 0.1/0.2 前置与独立规格任务完成；小红书 Graphic v2 图文适配已要求逐画布真实 render/素材精确版本/公开权利。抖音 Video v2→口播脚本现支持 `shot_source` B-roll 精确素材映射和标明估算的 SRT，仍不是成片；无法证明的音轨/真实字幕/叠字不转换。来源证据、完整 Variant 检查、v5、UI、浏览器和最终门禁仍待完成。三个 Text Adapter 只处理无引用的可完整保留子集；复杂源稿会明确拒绝，不应在 UI 上显示为完整适配成功。不得将本地人工包当作真实远端发布。
+- 验收结果：项目级 Variant 检查、五种受控形态的 byte-exact 本地包、v5 多系列审批/授权、v3/v4 独立当前性及 Project Overview/Versions 已落地。隔离浏览器通过 Matrix 选择、Text 三形态、Graphic 真渲染、Video 脚本、审批/授权/ZIP、未知对账、素材撤权、归档只读及异步候选切换竞态；详见 [`docs/FE_F6E_ISOLATED_ACCEPTANCE.md`](docs/FE_F6E_ISOLATED_ACCEPTANCE.md)。全量后端、TypeScript/Vite、FE-P1、OpenSpec strict、Ruff、SQLite/PostgreSQL 隔离迁移及三方独立复核均通过；本地包不等于平台发布。
+- 待完成/TODO：F6E 的 canonical 主规格同步与归档须单独授权；真实账号/Provider/远端发布留 F7，生产身份与部署留 F8。旧 V1 七场景及 PRD §15/§16 的真实 Topic/全渠道门槛未因此自动完成。无 push/deploy/生产迁移。
 - 关键设计决策：无渠道 Master 是显式 source-only 路径；Matrix 选择不会在 Candidate Approval 前创建 DeliveryTarget；渠道适配在 Candidate v5 冻结前完成，Publisher 不改已批准内容，未知交付仍须对账。ContentAccount 自由格式 profile 不证明目标平台所有权；本地包仍须校验账号活动/归属/单元绑定和冻结目标，但只能标为人工交付，远端动作须后续 F7 精确验证。
 - 依赖与启动：沿用当前 FastAPI、React、Alembic；F6E 加法迁移 `f6e000000001` 已在代码中，未执行生产迁移。无 push/deploy/canonical 同步或归档授权。
 

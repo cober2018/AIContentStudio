@@ -28,6 +28,12 @@
 - [ ] /// 先写 series CAS、幂等、foreign raw-ID、rights/evidence 失败测试，再实现项目级 Variant revision 与 exact refs/checks。
 - [ ] /// 运行后端相关回归并核对没有新增持久业务对象。
 
+**同系列真实并发子步骤（2026-09-30）**
+
+- [ ] /// 用文件 SQLite 和两条独立 Session 同步到同一个旧 series head，先写 RED：竞争后恰好一版持久化，失败方 409，未留下孤立 ref/Event；同幂等键胜者回读不重写。
+- [ ] /// 读锁错误与唯一键冲突的来源及事务状态，只在 Variant save 边界归一化真实并发冲突；其它数据库错误不吞掉。
+- [ ] /// 定向 GREEN、F6E 相关回归、OpenSpec strict、Ruff、diff-check；根据证据勾任务并更新 README/progress/findings。
+
 ### Task 3: Candidate v5 与审核交付
 
 **Files:** 现有 Candidate、Review、Approval、Delivery、Package 服务与测试。
@@ -63,4 +69,15 @@
 - [ ] /// 先写非持久建议与受控选择的服务测试，再实现 Matrix API。
 - [ ] /// 按需加载 Variant 编辑/差异/状态/交付 UI，不污染通用首包。
 - [ ] /// 跑旧七场景对应回归、隔离浏览器、全后端、前端、性能、strict、Ruff、diff-check 和迁移门禁。
+
+**v5 Review 冻结展示子步骤（2026-09-30）**
+
+- [ ] /// 在 `apps/api/tests/test_f6e_freeze_v5.py` 写项目级 RED：v5 各受控形态的冻结 Preview/Checks 与同系列 Diff；跨系列 Candidate 不充当前版，五个旧来源字段污染时拒绝 Review。
+- [ ] /// 在 `apps/api/app/services/project_review_projection.py` 增加 schema-first v5 Preview/Diff 只读投影，并在 `apps/api/app/routers/project_review.py` 限定 v5 Diff 选择同 Unit 同 variant_key 的前一 Candidate；不改 v3/v4。
+- [ ] /// 回归、strict、Ruff、diff-check 后只核销已证实的任务；文档与本地提交记录未完成的前端 Review UI、Versions/Overview 与跨形态验收。
 - [ ] /// 记录独立复核；只在实际完成后勾 OpenSpec 任务并本地提交，不推送/部署/归档。
+# F6E v5 warning 处置闭环（2026-09-30）
+
+/// 在既有 v5 API fixture 将一条当前检查置为 warning：Variant readiness 仍为 ready，当前 Freeze 拒绝，锁定 RED。
+/// v5 清单仅允许 pass/warning，保留精确 check ID/input hash；审批调用现有 `validate_warning_dispositions`，授权和包的 approved gate 复验已保存的理由。
+/// 回归拒绝缺失/伪造处置、被删除的历史处置；保留 live rights/evidence/bytes 检查，定向及全后端门禁通过后才核销 7.6。

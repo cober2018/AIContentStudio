@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..models import (
     ChannelVariantCheckRun,
     ChannelVariantRevision,
+    ContentMasterCheckRun,
     ContentMasterRevision,
     ContentProject,
     ContentUnit,
@@ -22,7 +23,7 @@ from ..models import (
 )
 from .channel_adapters import FIRST_BATCH, executable_adapter_for
 from .channel_variant_documents import VariantDocumentError, canonical_payload
-from .channel_variants import _check_inputs, projected_variant_checks
+from .channel_variants import _check_inputs, projected_variant_checks, validate_stored_model_provenance
 from .production_modalities import validate_json_bounds
 
 SECTIONS = ("project", "identity", "brief", "evidence", "source_master", "variant", "target", "content",
@@ -60,6 +61,12 @@ def build_manifest_v5(inputs: dict) -> dict:
     evidence = _object(inputs["evidence"], "evidence", ("boundary_id", "revision_no", "fact_pack"))
     pack = _object(evidence["fact_pack"], "fact_pack", ("id", "version", "checksum"))
     source = _object(inputs["source_master"], "source_master", ("id", "revision_no", "modality", "payload_schema", "payload_hash", "context_hash"))
+    warnings = source.get("warning_checks", [])
+    if (not isinstance(warnings, list) or len({check.get("kind") for check in warnings if isinstance(check, dict)}) != len(warnings)
+            or any(not isinstance(check, dict) or not _id(check.get("id")) or not _hex(check.get("input_hash"))
+                   or check.get("status") != "warning" or not isinstance(check.get("report"), dict)
+                   for check in warnings)):
+        raise ValueError("invalid source Master warning provenance")
     variant = _object(inputs["variant"], "variant", ("id", "variant_key", "revision_no", "source_master_revision_id",
                                                        "identity_snapshot_id", "payload_schema", "payload_hash", "context_hash", "source_kind"))
     target = _object(inputs["target"], "target", ("channel", "content_form", "artifact_kind", "profile", "adapter", "rule_hash"))
@@ -155,6 +162,7 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
             or master.context_hash != row.source_master_context_hash or master.channel_id != row.source_channel_id
             or master.content_form != row.source_content_form):
         raise ValueError("variant source provenance mismatch")
+    validate_stored_model_provenance(db, row, master)
     brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id) if master.creative_brief_revision_id else None
     boundary = db.get(ProjectFactBoundaryRevision, master.fact_boundary_revision_id) if master.fact_boundary_revision_id else None
     pack = db.get(FactPack, boundary.fact_pack_id) if boundary else None
@@ -191,6 +199,19 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
         output = {"id": project_output.id, "kind": project_output.output_kind, "entity_id": project_output.entity_id,
                   "node_id": project_output.node_id, "attempt_id": attempt.id, "attempt_no": attempt.attempt_no,
                   "input_hash": attempt.input_hash, "output_hash": attempt.output_hash}
+    from .content_masters import projected_checks
+
+    warning_checks = []
+    for check in projected_checks(db, master):
+        if check["status"] != "warning" or not check["is_current"]:
+            continue
+        stored = db.get(ContentMasterCheckRun, check["id"])
+        if stored is None or stored.master_revision_id != master.id:
+            raise ValueError("source Master warning changed")
+        warning_checks.append({"id": stored.id, "kind": stored.check_kind,
+                               "profile_key": stored.profile_key, "profile_version": stored.profile_version,
+                               "input_hash": stored.input_hash, "status": stored.status, "report": stored.report_json})
+    warning_checks.sort(key=lambda check: check["kind"])
     return {
         "project": {"id": project.id, "title": project.title, "unit_id": unit.id, "unit_title": unit.title, "modality": master.modality},
         "identity": {"id": identity.id, "checksum": identity.checksum, "effective_profile": identity.effective_profile_json,
@@ -203,7 +224,7 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
         "source_master": {"id": master.id, "revision_no": master.revision_no, "modality": master.modality,
                           "payload_schema": master.payload_schema, "payload_hash": master.payload_hash,
                           "context_hash": master.context_hash, "channel": master.channel_id,
-                          "content_form": master.content_form},
+                          "content_form": master.content_form, "warning_checks": warning_checks},
         "variant": {"id": row.id, "variant_key": row.variant_key, "revision_no": row.revision_no,
                     "source_master_revision_id": master.id, "identity_snapshot_id": identity.id,
                     "payload_schema": row.payload_schema, "payload_hash": row.payload_hash,

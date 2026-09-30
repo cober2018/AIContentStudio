@@ -38,6 +38,12 @@ def project_overview(db: Session, project_id: int, *, context: ProjectProjection
     pending: list[dict] = []
     latest_runs: list[WorkflowRun] = []
     for unit in active:
+        review_unit = next((row for row in review_units if row["unit_id"] == unit.id), None)
+        if review_unit:
+            for series in review_unit.get("variantSeries", []):
+                if series["status"] in {"stale", "blocked"}:
+                    risks.append({"code": f"variant_{series['status']}", "unit_id": unit.id,
+                                  "variant_key": series["variantKey"], "candidate_id": series["candidateId"]})
         master = context.masters.get(unit.id) if context is not None else db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
         if master:
             risks.extend(master_risks(db, master))
