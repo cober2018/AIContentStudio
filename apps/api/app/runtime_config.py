@@ -4,8 +4,10 @@
 LLM 任务前刷新。读取热路径（get_provider 等）只查缓存，不碰 DB。
 """
 
+import re
 import threading
 from contextlib import contextmanager
+from urllib.parse import parse_qsl, urlsplit
 
 _LOCK = threading.RLock()
 _OVERRIDES: dict[str, dict] = {}
@@ -30,10 +32,55 @@ def load_from_db(db) -> None:
     from .models import SystemSetting
 
     rows = db.query(SystemSetting).all()
+    validate_production_secret_policy(rows)
     with _LOCK:
         _OVERRIDES.clear()
         for row in rows:
             _OVERRIDES[row.key] = dict(row.value or {})
+
+
+_SECRET_FIELDS = {"apikey", "accesskey", "secretkey", "secret", "clientsecret", "appsecret", "password", "passwd", "token", "accesstoken", "refreshtoken", "authorization", "cookie", "signature"}
+
+
+def contains_plaintext_secret(value, *, depth: int = 0) -> bool:
+    """Inspect stored configuration without returning any value or user-defined key."""
+    if depth > 20:
+        return True
+    if isinstance(value, dict):
+        for name, item in value.items():
+            normalized = re.sub(r"[^a-z]", "", str(name).lower())
+            if normalized in _SECRET_FIELDS and item:
+                return True
+            if contains_plaintext_secret(item, depth=depth + 1):
+                return True
+    elif isinstance(value, list):
+        return any(contains_plaintext_secret(item, depth=depth + 1) for item in value)
+    elif isinstance(value, str) and "://" in value:
+        try:
+            url = urlsplit(value)
+            if url.username is not None or url.password is not None:
+                return True
+            if any(re.sub(r"[^a-z]", "", name.lower()) in _SECRET_FIELDS for name, _ in parse_qsl(url.query)):
+                return True
+        except ValueError:
+            return True
+    return False
+
+
+def validate_production_secret_policy(rows) -> None:
+    from .config import get_settings
+
+    if get_settings().app_env == "production" and any(contains_plaintext_secret(row.value) for row in rows):
+        raise RuntimeError("production_plaintext_secret_override")
+
+
+def validate_persisted_configuration(value) -> None:
+    from fastapi import HTTPException
+
+    from .config import get_settings
+
+    if get_settings().app_env == "production" and contains_plaintext_secret(value):
+        raise HTTPException(422, "production_secret_reference_required")
 
 
 def set_runtime(key: str, value: dict) -> None:

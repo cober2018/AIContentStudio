@@ -13,12 +13,12 @@ import time
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from .. import runtime_config
 from ..db import get_db
-from ..deps import require_admin
+from ..deps import get_current_user, require_admin
 from ..services.generation.providers import (
     ROUTE_KEYS,
     GenerateRequest,
@@ -58,10 +58,67 @@ class ModelsUpdate(BaseModel):
     routes: dict[str, str] = {}
 
 
+class CapabilityConfigurationUpdate(BaseModel):
+    model_config = {"extra": "forbid"}
+    expected_revision: int = Field(strict=True, ge=0)
+    configuration: dict[str, Any]
+
+
+class CapabilityPlanIn(BaseModel):
+    model_config = {"extra": "forbid"}
+    capability: str = Field(max_length=30)
+    selected_profile: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,100}$")
+    parameters: dict[str, int] = {}
+    explicit_plugin: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_.-]{1,100}$")
+    explicit_profile: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_.-]{1,100}$")
+
+
+@router.get("/api/v1/settings/model-capabilities")
+def get_model_capabilities(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services import model_capability_routing
+
+    return model_capability_routing.configuration_view(db)
+
+
+@router.put("/api/v1/settings/model-capabilities")
+def put_model_capabilities(payload: CapabilityConfigurationUpdate, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import model_capability_routing
+
+    return model_capability_routing.save_configuration(db, payload.configuration, expected_revision=payload.expected_revision, actor=user.email)
+
+
+@router.post("/api/v1/settings/model-capabilities/plan")
+def preview_model_capability_plan(payload: CapabilityPlanIn, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services import model_capability_routing
+
+    return model_capability_routing.plan(db, **payload.model_dump())
+
+
 class PluginsUpdate(BaseModel):
     skill_dirs: list[str] = []
     skills_enabled: list[str] = []
     mcp: list[dict[str, Any]] = []
+
+
+@router.get("/api/v1/settings/model-registration")
+def get_model_registration(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services.model_registration import configuration_view
+
+    return configuration_view(db)
+
+
+@router.put("/api/v1/settings/model-registration")
+def put_model_registration(payload: CapabilityConfigurationUpdate, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services.model_registration import save_configuration
+
+    return save_configuration(db, {**payload.configuration, "expected_revision": payload.expected_revision}, actor=user.email)
+
+
+@router.post("/api/v1/settings/model-registration/providers/{provider_id}/models")
+def discover_provider_models(provider_id: str, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services.model_registration import discover
+
+    return discover(db, provider_id)
 
 
 class ImageGenUpdate(BaseModel):
@@ -95,12 +152,15 @@ def put_llm_settings(
     db: Session = Depends(get_db),
     user=Depends(require_admin),
 ):
+    current = effective_llm_config()
+    if current.get("registered_provider") and not payload.api_key:
+        raise HTTPException(422, "registered_credential_requires_registration_editor")
     # 覆盖存完整快照：未填的 api_key 沿用当前生效值，避免已配置密钥被意外清空
     merged = {
         "provider": payload.provider,
         "base_url": payload.base_url.strip(),
         "model": payload.model.strip(),
-        "api_key": payload.api_key or effective_llm_config()["api_key"],
+        "api_key": payload.api_key or current["api_key"],
         "mock_inject_unfact_number": payload.mock_inject_unfact_number,
     }
     if payload.provider == "openai_compatible":
@@ -137,11 +197,14 @@ def test_llm_settings(
         "model": (body.get("model") or "").strip() or effective["model"],
         "api_key": body.get("api_key") or effective["api_key"],
     }
+    registered = effective.get("registered_provider") if not body.get("api_key") else None
+    if registered and config["base_url"].rstrip("/") != registered["base_url"]:
+        raise HTTPException(422, "registered_credential_endpoint_mismatch")
     started = time.monotonic()
     if provider_name == "mock":
         return {"ok": True, "provider": "mock", "latency_ms": 0, "reply": "mock provider 恒可用"}
     try:
-        provider = OpenAICompatibleProvider(config["base_url"], config["api_key"], config["model"])
+        provider = OpenAICompatibleProvider(config["base_url"], config["api_key"], config["model"], registered_provider=registered)
         request = GenerateRequest(
             purpose="settings_test",
             channel=None,
@@ -149,12 +212,12 @@ def test_llm_settings(
             user_prompt="ping",
         )
         reply = asyncio.run(provider.generate_text(request))
-    except Exception as exc:  # noqa: BLE001 测试端点把任何失败转成结构化结果
+    except Exception:  # noqa: BLE001 测试端点把任何失败转成结构化结果
         return {
             "ok": False,
             "provider": provider_name,
             "latency_ms": int((time.monotonic() - started) * 1000),
-            "error": str(exc)[:300],
+            "error": "provider_connection_test_failed",
         }
     return {
         "ok": True,

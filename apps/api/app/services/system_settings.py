@@ -119,6 +119,7 @@ def save_llm_override(db, value: dict, updated_by: str | None) -> None:
     """写入覆盖行 + 刷新进程缓存 + 失效 provider 缓存。"""
     from ..services.generation.providers import reset_provider_cache
 
+    runtime_config.validate_persisted_configuration(value)
     row = db.get(SystemSetting, runtime_config.KEY_LLM)
     if row is None:
         row = SystemSetting(key=runtime_config.KEY_LLM)
@@ -138,13 +139,14 @@ def models_view() -> dict:
     models = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
     profiles_out = {}
     for name, p in (models.get("profiles") or {}).items():
-        base_url, redacted = display_provider_url(p.get("base_url", ""))
+        supplier = (models.get("providers") or {}).get(p.get("provider_id"), {})
+        base_url, redacted = display_provider_url(supplier.get("base_url", p.get("base_url", "")))
         profiles_out[name] = {
             "provider": p.get("provider", "mock"),
             "base_url": base_url,
             "base_url_redacted": redacted,
             "model": p.get("model", ""),
-            "api_key": mask_secret(p.get("api_key")),
+            "api_key": mask_secret(supplier.get("api_key", p.get("api_key"))),
             "enabled": bool(p.get("enabled", True)),
         }
     routes = {k: (models.get("routes") or {}).get(k, "") for k in ROUTE_KEYS}
@@ -153,16 +155,39 @@ def models_view() -> dict:
 
 def save_models(db, value: dict, updated_by: str | None) -> None:
     """写入 models 覆盖（profiles + routes）并失效 provider 缓存。"""
+    from fastapi import HTTPException
+    from sqlalchemy import func, select, update
+    from sqlalchemy.exc import IntegrityError
+
     from .. import runtime_config
     from ..services.generation.providers import reset_provider_cache
 
-    row = db.get(SystemSetting, runtime_config.KEY_MODELS)
+    runtime_config.validate_persisted_configuration(value)
+    row = db.scalar(select(SystemSetting).where(SystemSetting.key == runtime_config.KEY_MODELS)
+                    .with_for_update().execution_options(populate_existing=True))
+    if row is not None and (row.value or {}).get("schema_version", 1) >= 2:
+        # The old whole-document editor must not erase capability bindings or CAS heads.
+        raise HTTPException(409, "capability_configuration_requires_versioned_editor")
+    observed_revision = (row.value or {}).get("revision", 0) if row is not None else 0
+    value = {**value, "schema_version": 1, "revision": observed_revision + 1}
     if row is None:
-        row = SystemSetting(key=runtime_config.KEY_MODELS)
-        db.add(row)
-    row.value = value
-    row.updated_by = updated_by
-    db.flush()
+        db.add(SystemSetting(key=runtime_config.KEY_MODELS, value=value, updated_by=updated_by))
+        try:
+            db.flush()
+        except IntegrityError as exc:
+            db.rollback()
+            raise HTTPException(409, "capability_configuration_requires_versioned_editor") from exc
+    else:
+        # SQLite ignores FOR UPDATE, so the write itself must reject a racing upgrade.
+        changed = db.execute(update(SystemSetting).where(
+            SystemSetting.key == runtime_config.KEY_MODELS,
+            func.coalesce(SystemSetting.value["schema_version"].as_integer(), 1) < 2,
+            func.coalesce(SystemSetting.value["revision"].as_integer(), 0) == observed_revision,
+        ).values(value=value, updated_by=updated_by).execution_options(synchronize_session=False))
+        if changed.rowcount != 1:
+            db.rollback()
+            raise HTTPException(409, "capability_configuration_requires_versioned_editor")
+        db.expire(row)
     runtime_config.set_runtime(runtime_config.KEY_MODELS, value)
     reset_provider_cache()
 
@@ -185,6 +210,7 @@ def plugins_view() -> dict:
 def save_plugins(db, value: dict, updated_by: str | None) -> None:
     from .. import runtime_config
 
+    runtime_config.validate_persisted_configuration(value)
     row = db.get(SystemSetting, runtime_config.KEY_PLUGINS)
     if row is None:
         row = SystemSetting(key=runtime_config.KEY_PLUGINS)
@@ -221,6 +247,7 @@ def save_image(db, value: dict, updated_by: str | None) -> None:
 
     from .. import runtime_config
 
+    runtime_config.validate_persisted_configuration(value)
     row = db.get(SystemSetting, runtime_config.KEY_IMAGE)
     if row is None:
         row = SystemSetting(key=runtime_config.KEY_IMAGE)
@@ -263,6 +290,7 @@ def dsh_view() -> dict:
 def save_dsh(db, value: dict, updated_by: str | None) -> None:
     from .. import runtime_config
 
+    runtime_config.validate_persisted_configuration(value)
     row = db.get(SystemSetting, runtime_config.KEY_DSH)
     if row is None:
         row = SystemSetting(key=runtime_config.KEY_DSH)

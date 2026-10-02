@@ -8,6 +8,8 @@ import hashlib
 import json
 import logging
 import re
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -38,6 +40,7 @@ class GenerateResult:
     data: dict[str, Any]
     raw_output: str
     usage: dict[str, Any]
+    route_provenance: dict[str, Any] | None = None
 
 
 class LLMProvider(Protocol):
@@ -108,12 +111,14 @@ class MockProvider:
 class OpenAICompatibleProvider:
     name = "openai_compatible"
 
-    def __init__(self, base_url: str, api_key: str, model: str) -> None:
+    def __init__(self, base_url: str, api_key: str, model: str, *, registered_provider: dict | None = None, route_provenance: dict | None = None) -> None:
         if not (base_url and api_key and model):
             raise LLMError("openai_compatible provider 需要 LLM_BASE_URL / LLM_API_KEY / LLM_MODEL")
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model = model
+        self.registered_provider = registered_provider
+        self.route_provenance = route_provenance
 
     async def _chat(self, request: GenerateRequest) -> dict[str, Any]:
         payload = {
@@ -126,6 +131,15 @@ class OpenAICompatibleProvider:
         }
         if request.schema_hint:
             payload["response_format"] = {"type": "json_object"}
+        if self.registered_provider is not None:
+            import asyncio
+
+            from ..model_registration import provider_request
+
+            try:
+                return await asyncio.to_thread(provider_request, self.registered_provider, "/chat/completions", payload=payload, timeout=120)
+            except Exception as exc:
+                raise LLMError("registered_provider_request_failed") from exc
         async with httpx.AsyncClient(timeout=120) as client:
             resp = await client.post(
                 f"{self.base_url}/chat/completions",
@@ -142,6 +156,7 @@ class OpenAICompatibleProvider:
             data=parse_llm_json(raw),
             raw_output=raw,
             usage=body.get("usage", {}),
+            route_provenance=self.route_provenance,
         )
 
     async def generate_text(self, request: GenerateRequest) -> str:
@@ -154,6 +169,16 @@ class OpenAICompatibleProvider:
 
 # 按解析后的配置档缓存 provider 实例；配置变更时整体失效
 _providers: dict[str, LLMProvider] = {}
+_explicit_profile = ContextVar("studio_model_profile", default=None)
+
+
+@contextmanager
+def model_selection(profile):
+    token = _explicit_profile.set(profile)
+    try:
+        yield
+    finally:
+        _explicit_profile.reset(token)
 
 # 场景路由键：内容生成 / 选区改写 / 事实校验与审核复核 / 选题发现（基于 FactPack 荐题）
 ROUTE_KEYS = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation")
@@ -164,6 +189,10 @@ def _models_override() -> dict:
     from ... import runtime_config
 
     return runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
+
+
+def selected_model_profile() -> str | None:
+    return _explicit_profile.get()
 
 
 def _profile_config(name: str, profiles: dict) -> dict | None:
@@ -179,7 +208,7 @@ def _profile_config(name: str, profiles: dict) -> dict | None:
     }
 
 
-def effective_llm_config(purpose: str | None = None) -> dict:
+def effective_llm_config(purpose: str | None = None, *, profile: str | None = None) -> dict:
     """按场景解析生效 LLM 配置。
 
     优先级：models.routes[purpose] 指向的启用 profile → 旧 llm 覆盖 → .env 环境变量。
@@ -197,13 +226,31 @@ def effective_llm_config(purpose: str | None = None) -> dict:
             "mock_inject_unfact_number", get_settings().mock_inject_unfact_number
         ),
     }
-    if purpose:
-        models = _models_override()
+    models = _models_override()
+    explicit = profile or _explicit_profile.get()
+    if purpose or models.get("default_profile") or explicit:
         routes = models.get("routes") or {}
-        route_name = (routes.get(purpose) or routes.get("rewrite")) if purpose == "text_master_edit" else routes.get(purpose)
+        route_name = explicit or ((routes.get(purpose) or routes.get("rewrite")) if purpose == "text_master_edit" else routes.get(purpose)) or models.get("default_profile")
         if route_name:
             raw_profile = (models.get("profiles") or {}).get(route_name) or {}
+            if raw_profile.get("enabled", True) and "declared_capabilities" in raw_profile and "chat" not in raw_profile["declared_capabilities"]:
+                raise LLMError("chat_capability_unavailable")
+            if raw_profile and not raw_profile.get("provider_id") and "provider" not in raw_profile:
+                raise LLMError("model_selection_unavailable")
+            registered = raw_profile.get("provider_id")
+            if registered:
+                provider = models.get("providers", {}).get(registered)
+                if (not raw_profile.get("enabled", True) or "chat" not in raw_profile.get("declared_capabilities", ["chat"])
+                        or not provider or not provider.get("enabled") or not provider.get("api_key")):
+                    raise LLMError("registered_model_unavailable")
+                return {"provider": "openai_compatible", "base_url": provider["base_url"], "api_key": provider["api_key"],
+                        "model": raw_profile["model"], "profile": route_name, "configuration_revision": models.get("revision", 0),
+                        "registered_provider": dict(provider)}
+            if (explicit or models.get("default_profile")) and (not raw_profile or not raw_profile.get("enabled", True)):
+                raise LLMError("model_selection_unavailable")
             if raw_profile and raw_profile.get("enabled", True):
+                if "declared_capabilities" in raw_profile and "chat" not in raw_profile["declared_capabilities"]:
+                    raise LLMError("chat_capability_unavailable")
                 profile = _profile_config(route_name, models.get("profiles") or {})
                 if profile and profile["provider"]:
                     profile["profile"] = route_name
@@ -226,7 +273,8 @@ def get_provider(purpose: str | None = None) -> LLMProvider:
             _providers[cache_key] = MockProvider()
         elif name == "openai_compatible":
             _providers[cache_key] = OpenAICompatibleProvider(
-                config["base_url"], config["api_key"], config["model"]
+                config["base_url"], config["api_key"], config["model"], registered_provider=config.get("registered_provider"),
+                route_provenance={"profile": config["profile"], "configuration_revision": config["configuration_revision"], "model": config["model"], "provider": config["provider"]} if config.get("registered_provider") else None,
             )
         else:
             raise LLMError(f"未知 provider: {name}")
@@ -250,16 +298,20 @@ def input_hash(request: GenerateRequest) -> str:
 
 
 def record_run(db, request: GenerateRequest, result: GenerateResult | None, error: str | None = None, *, provider_name: str | None = None, model_name: str | None = None, prompt_version: str | None = None) -> LLMRun:
-    config = effective_llm_config(request.purpose)
+    usage = dict(result.usage or {}) if result else None
+    actual_route = getattr(result, "route_provenance", None) if result else None
+    config = actual_route or effective_llm_config(request.purpose)
+    if actual_route:
+        usage["model_route"] = dict(actual_route)
     run = LLMRun(
-        provider=provider_name or config["provider"],
-        model=model_name or provider_model_name(request.purpose),
+        provider=provider_name or (actual_route or {}).get("provider") or config["provider"],
+        model=model_name or config.get("model") or "mock-structured-v1",
         prompt_version=prompt_version,
         purpose=request.purpose,
         input_hash=input_hash(request),
         raw_output=result.raw_output if result else None,
         parsed_output_json=result.data if result else None,
-        usage_json=result.usage if result else None,
+        usage_json=usage,
         status="succeeded" if result else "failed",
         error=error,
     )
