@@ -14,6 +14,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.models import (
     CapabilityRegistration,
+    ChannelVariantRevision,
     ContentAccount,
     ContentAsset,
     ContentMasterCheckRun,
@@ -49,7 +50,7 @@ def _approval_payload(candidate):
                                      for row in warnings}}
 
 
-def _ready_source(client, db, *, neutral=False, cited=False):
+def _ready_source(client, db, *, neutral=False, cited=False, fact_pack_name="真实事实边界"):
     seed_v1_channel_profiles(db)
     db.commit()
     persona = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=HEADERS).json()["id"]
@@ -63,7 +64,7 @@ def _ready_source(client, db, *, neutral=False, cited=False):
         "objective": "准确表达观点", "expected_revision": 0,
     }, headers=HEADERS)
     assert brief.status_code == 201, brief.text
-    pack = FactPack(name="真实事实边界", version=1, status="frozen", checksum="c" * 64)
+    pack = FactPack(name=fact_pack_name, version=1, status="frozen", checksum="c" * 64)
     db.add(pack)
     db.flush()
     item = FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion",
@@ -994,6 +995,13 @@ def test_v5_wechat_package_uses_exact_cover_and_blocks_revoked_rights(client, db
                                                    "expected_payload_hash": saved.json()["payload_hash"]}, headers=HEADERS)
     assert frozen.status_code == 201, frozen.text
     candidate = frozen.json()
+    official = candidate["manifest"]["official_render"]
+    assert official["schema"] == "wechat.official.article.v1"
+    assert official["html_template"] == '<p data-block-id="b1">这是观点</p>'
+    assert official["asset_slots"][0]["material_revision_id"] == revision.id
+    from app.services.project_review_projection import candidate_preview
+
+    assert candidate_preview(db_session.get(ContentAsset, candidate["id"]))["official_render"] == official
     approved = client.post(f"{candidates}/{candidate['id']}/approve",
                            json=_approval_payload(candidate), headers=HEADERS)
     assert approved.status_code == 200, approved.text
@@ -1023,6 +1031,101 @@ def test_v5_wechat_package_uses_exact_cover_and_blocks_revoked_rights(client, db
     denied = client.get(package_path, headers=HEADERS)
     assert denied.status_code in (403, 409, 422), denied.text
     assert client.get(render_path, headers=HEADERS).status_code in (403, 409)
+
+
+def test_official_inline_source_to_frozen_review_and_exact_local_package(client, db_session, tmp_path):
+    from PIL import Image
+
+    project, unit, master = _ready_source(client, db_session, neutral=True)
+    revisions, exact_bytes = [], []
+    for index, color in enumerate(("blue", "red")):
+        image = tmp_path / f"official-{index}.png"
+        Image.new("RGB", (16, 16), color).save(image)
+        content = image.read_bytes()
+        material = Material(title=f"图片{index}", kind="image", status="active")
+        db_session.add(material)
+        db_session.flush()
+        revision = MaterialRevision(material_id=material.id, content_hash=hashlib.sha256(content).hexdigest(),
+                                    file_path=str(image), mime_type="image/png", status="active", public_use_allowed=True,
+                                    model_use_allowed=True, rights_status="cleared", metadata_json={"filename": image.name})
+        db_session.add(revision)
+        db_session.flush()
+        db_session.add(ProjectMaterialReference(project_id=project, material_revision_id=revision.id, origin="system_library", status="active"))
+        revisions.append(revision)
+        exact_bytes.append(content)
+    db_session.commit()
+    master_path = f"/api/v1/content-projects/{project}/units/{unit}/master-revisions"
+    payload = {**master["payload"], "document": {**master["payload"]["document"], "blocks": [
+        *master["payload"]["document"]["blocks"], {"id": "img1", "type": "image", "material_revision_id": revisions[1].id, "caption": "", "alt_text": "精确配图"}]}}
+    source = client.post(master_path, json={"expected_revision": 1, "parent_revision_id": master["id"],
+        "idempotency_key": "official-inline-source", "payload_schema": "text.master.v2", "payload": payload,
+        "asset_refs": [{"material_revision_id": ref.id, "content_hash": ref.content_hash, "role": "cover" if index == 0 else "inline",
+                        "slot_key": "cover" if index == 0 else "img1", "sort_order": index,
+                        "placement": {"usage": "cover"} if index == 0 else {"block_id": "img1"}}
+                       for index, ref in enumerate(revisions)]}, headers=HEADERS)
+    assert source.status_code == 200, source.text
+    master = source.json()
+    assert client.post(f"{master_path}/{master['id']}/checks", headers=HEADERS).status_code == 200
+    variants = f"/api/v1/content-projects/{project}/units/{unit}/channel-variants"
+    preview = client.post(f"{variants}/adapt-preview", json={"source_master_revision_id": master["id"],
+        "expected_source_payload_hash": master["payload_hash"], "expected_source_context_hash": master["context_hash"],
+        "channel_id": "wechat", "content_form": "article"}, headers=HEADERS)
+    assert preview.status_code == 200, preview.text
+    proposed = preview.json()
+    assert proposed["payload"]["blocks"][1]["image_ref_key"] == "img1"
+    save_input = {"variant_key": "wechat.article.primary", "expected_revision": 0,
+        "source_master_revision_id": master["id"], "expected_source_payload_hash": master["payload_hash"],
+        "expected_source_context_hash": master["context_hash"], "channel_id": "wechat", "content_form": "article",
+        "idempotency_key": "official-inline-variant", "source_kind": "deterministic_adapt",
+        "payload": proposed["payload"], "asset_refs": proposed["asset_refs"], "evidence_refs": proposed["evidence_refs"]}
+    before_events = len(db_session.scalars(select(ProjectEvent).where(ProjectEvent.project_id == project)).all())
+    for field, value in (("slot_key", "wrong-slot"), ("content_hash_snapshot", "0" * 64),
+                         ("placement", {"usage": "inline", "block_id": "other"}), ("sort_order", 7)):
+        invalid = json.loads(json.dumps(save_input))
+        invalid["asset_refs"][1][field] = value
+        denied = client.post(variants, json=invalid, headers=HEADERS)
+        assert denied.status_code == 422, denied.text
+        assert not db_session.scalars(select(ChannelVariantRevision).where(ChannelVariantRevision.project_id == project)).all()
+        assert len(db_session.scalars(select(ProjectEvent).where(ProjectEvent.project_id == project)).all()) == before_events
+    revisions[1].public_use_allowed = False
+    db_session.commit()
+    denied = client.post(variants, json=save_input, headers=HEADERS)
+    assert denied.status_code in (409, 422), denied.text
+    assert not db_session.scalars(select(ChannelVariantRevision).where(ChannelVariantRevision.project_id == project)).all()
+    assert len(db_session.scalars(select(ProjectEvent).where(ProjectEvent.project_id == project)).all()) == before_events
+    revisions[1].public_use_allowed = True
+    db_session.commit()
+    saved = client.post(variants, json=save_input, headers=HEADERS)
+    assert saved.status_code == 201, saved.text
+    checks = client.post(f"{variants}/{saved.json()['id']}/checks", headers=HEADERS)
+    assert checks.status_code == 200 and checks.json()["ready"] is True, checks.text
+    candidates = f"/api/v1/content-projects/{project}/units/{unit}/candidates"
+    frozen = client.post(f"{candidates}/freeze", json={"channel_variant_revision_id": saved.json()["id"],
+        "expected_payload_hash": saved.json()["payload_hash"]}, headers=HEADERS)
+    assert frozen.status_code == 201, frozen.text
+    candidate = frozen.json()
+    official = candidate["manifest"]["official_render"]
+    assert official["status"] == "local_ready" and official["asset_slots"][1]["block_id"] == "img1"
+    assert 'src="aics-resource:img1"' in official["html_template"]
+    review_path = f"/api/v1/review-center/projects/{project}/units/{unit}/candidates/{candidate['id']}/renders/{revisions[1].id}"
+    assert client.get(review_path, headers=HEADERS).content == exact_bytes[1]
+    approved = client.post(f"{candidates}/{candidate['id']}/approve", json=_approval_payload(candidate), headers=HEADERS)
+    assert approved.status_code == 200, approved.text
+    authorized = client.post(f"{candidates}/{candidate['id']}/delivery-authorizations", json={"channel": "wechat", "content_form": "article",
+        "account_ref": "manual-wechat", "authorization_version": "v1", "action": "copy_package"}, headers=HEADERS)
+    assert authorized.status_code == 201, authorized.text
+    package_path = f"/api/v1/delivery-targets/{authorized.json()['id']}/package.zip"
+    package = client.get(package_path, headers=HEADERS)
+    assert package.status_code == 200, package.text
+    with zipfile.ZipFile(io.BytesIO(package.content)) as archive:
+        frozen_manifest = json.loads(archive.read("manifest.json"))
+        assert frozen_manifest["official_render"] == official
+        media = [archive.read(name) for name in archive.namelist() if name.endswith(".png")]
+        assert all(content in media for content in exact_bytes)
+    revisions[1].public_use_allowed = False
+    db_session.commit()
+    assert client.get(package_path, headers=HEADERS).status_code in (403, 409, 422)
+    assert client.get(review_path, headers=HEADERS).status_code in (403, 409)
 
 
 @pytest.mark.parametrize("cover_mime,signature", [("image/png", b"\x89PNG\r\n\x1a\n"), ("image/jpeg", b"\xff\xd8\xff")])

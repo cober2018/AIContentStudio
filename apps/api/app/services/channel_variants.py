@@ -30,7 +30,7 @@ from ..models import (
     utcnow,
 )
 from .channel_adapters import FIRST_BATCH, AdapterUnavailable, capability_for, executable_adapter_for
-from .channel_variant_documents import VariantDocumentError, canonical_payload
+from .channel_variant_documents import VariantDocumentError, canonical_payload, validate_wechat_inline_refs
 from .content_masters import owned_unit
 from .generation.providers import GenerateRequest, get_provider, record_run
 from .materials import read_bytes_checked, sniff_mime
@@ -370,39 +370,49 @@ def _validate_video_assets(db: Session, project_id: int, master: ContentMasterRe
     return materials
 
 
-def _validate_wechat_assets(db: Session, project_id: int, refs: list[dict]) -> list[MaterialRevision]:
+def _validate_wechat_assets(db: Session, project_id: int, refs: list[dict], payload: dict | None = None) -> list[MaterialRevision]:
     from .content_masters import _verified_generated_asset
 
     if not refs:
         return []
-    if len(refs) != 1 or any(ref.get(key) != value for key, value in {
-        "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
+    if any(ref.get("role") == "inline_image" for ref in refs):
+        if payload is None:
+            raise HTTPException(422, {"code": "variant_inline_mapping_invalid"})
+        try:
+            validate_wechat_inline_refs(payload.get("blocks", []), refs)
+        except VariantDocumentError as exc:
+            raise HTTPException(422, {"code": "variant_inline_mapping_invalid"}) from exc
+    elif len(refs) != 1 or any(ref.get(key) != value for key, value in {
+            "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
     }.items() for ref in refs):
         raise HTTPException(422, {"code": "variant_cover_mapping_invalid"})
-    ref = refs[0]
-    material = db.get(MaterialRevision, ref.get("material_revision_id"))
-    if material is None:
-        raise HTTPException(422, {"code": "variant_cover_unready"})
-    visible = db.scalar(select(ProjectMaterialReference.id).where(
-        ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.material_revision_id == material.id,
-        ProjectMaterialReference.status == "active",
-    ))
-    generated = db.scalars(select(ProjectWorkflowOutput).where(
-        ProjectWorkflowOutput.project_id == project_id, ProjectWorkflowOutput.output_kind == "material_revision",
-        ProjectWorkflowOutput.entity_id == material.id,
-    )).all() if visible is None else []
-    if ((visible is None and not any(_verified_generated_asset(db, output, material) for output in generated))
-            or material.content_hash != ref.get("content_hash_snapshot") or material.material.kind != "image"
-            or material.material.status != "active" or material.status in {"revoked", "archived"}
-            or material.public_use_allowed is not True):
-        raise HTTPException(422, {"code": "variant_cover_unready"})
-    try:
-        content = read_bytes_checked(db, material, require_public=True)
-    except (HTTPException, OSError) as exc:
-        raise HTTPException(422, {"code": "variant_cover_bytes_unverified"}) from exc
-    if not material.mime_type or not material.mime_type.startswith("image/") or sniff_mime(content, None) != material.mime_type:
-        raise HTTPException(422, {"code": "variant_cover_mime_invalid"})
-    return [material]
+    materials = []
+    for ref in refs:
+        label = "cover" if ref.get("role") == "cover" else "inline"
+        material = db.get(MaterialRevision, ref.get("material_revision_id"))
+        if material is None:
+            raise HTTPException(422, {"code": f"variant_{label}_unready"})
+        visible = db.scalar(select(ProjectMaterialReference.id).where(
+            ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.material_revision_id == material.id,
+            ProjectMaterialReference.status == "active",
+        ))
+        generated = db.scalars(select(ProjectWorkflowOutput).where(
+            ProjectWorkflowOutput.project_id == project_id, ProjectWorkflowOutput.output_kind == "material_revision",
+            ProjectWorkflowOutput.entity_id == material.id,
+        )).all() if visible is None else []
+        if ((visible is None and not any(_verified_generated_asset(db, output, material) for output in generated))
+                or material.content_hash != ref.get("content_hash_snapshot") or material.material.kind != "image"
+                or material.material.status != "active" or material.status in {"revoked", "archived"}
+                or material.public_use_allowed is not True):
+            raise HTTPException(422, {"code": f"variant_{label}_unready"})
+        try:
+            content = read_bytes_checked(db, material, require_public=True)
+        except (HTTPException, OSError) as exc:
+            raise HTTPException(422, {"code": f"variant_{label}_bytes_unverified"}) from exc
+        if not material.mime_type or not material.mime_type.startswith("image/") or sniff_mime(content, None) != material.mime_type:
+            raise HTTPException(422, {"code": f"variant_{label}_mime_invalid"})
+        materials.append(material)
+    return materials
 
 
 def _text_source_cover_refs(db: Session, master: ContentMasterRevision) -> list[dict]:
@@ -411,11 +421,25 @@ def _text_source_cover_refs(db: Session, master: ContentMasterRevision) -> list[
     ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id)).all()
     if not refs:
         return []
-    if len(refs) != 1 or refs[0].role != "cover" or refs[0].slot_key != "cover" or refs[0].sort_order != 0 or refs[0].placement_json != {"usage": "cover"}:
+    covers = [ref for ref in refs if ref.role == "cover"]
+    if len(covers) > 1 or any(ref.slot_key != "cover" or ref.sort_order != 0 or ref.placement_json != {"usage": "cover"} for ref in covers):
         raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
-    ref = refs[0]
-    return [{"material_revision_id": ref.material_revision_id, "content_hash_snapshot": ref.content_hash_snapshot,
-             "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"}}]
+    result = [{"material_revision_id": ref.material_revision_id, "content_hash_snapshot": ref.content_hash_snapshot,
+               "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"}} for ref in covers]
+    used = {ref.material_revision_id for ref in covers}
+    for block in master.payload_json["document"]["blocks"]:
+        if block["type"] != "image":
+            continue
+        ref = next((ref for ref in refs if ref.material_revision_id == block["material_revision_id"]), None)
+        if ref is None or block["id"] == "cover":
+            raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
+        used.add(ref.material_revision_id)
+        result.append({"material_revision_id": ref.material_revision_id, "content_hash_snapshot": ref.content_hash_snapshot,
+                       "role": "inline_image", "slot_key": block["id"], "sort_order": len(result),
+                       "placement": {"usage": "inline", "block_id": block["id"]}})
+    if any(ref.material_revision_id not in used for ref in refs):
+        raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
+    return result
 
 
 def _check_inputs(db: Session, row: ChannelVariantRevision) -> tuple[str, list[dict], list[dict]]:
@@ -461,7 +485,7 @@ def _drift_reasons(db: Session, row: ChannelVariantRevision) -> list[str]:
         elif master.payload_schema == "video.master.v2":
             _validate_video_assets(db, row.project_id, master, asset_refs)
         elif row.payload_schema == "wechat.article.v1":
-            _validate_wechat_assets(db, row.project_id, asset_refs)
+            _validate_wechat_assets(db, row.project_id, asset_refs, row.payload_json)
         elif asset_refs:
             reasons.append("asset_mapping_unavailable")
     except HTTPException:
@@ -620,7 +644,7 @@ def _rights_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) 
         elif row.payload_schema == "douyin.spoken_script.v1":
             _validate_video_assets(db, row.project_id, master, assets)
         elif row.payload_schema == "wechat.article.v1":
-            _validate_wechat_assets(db, row.project_id, assets)
+            _validate_wechat_assets(db, row.project_id, assets, row.payload_json)
         elif assets:
             return "blocker", {"reasons": ["asset_mapping_unavailable"]}
     except HTTPException as exc:
@@ -726,7 +750,9 @@ def adapt_preview(db: Session, *, project_id: int, unit_id: int, user: User, pay
     elif master.payload_schema == "video.master.v2":
         _validate_video_assets(db, project_id, master, asset_refs)
     elif capability["payload_schema"] == "wechat.article.v1":
-        _validate_wechat_assets(db, project_id, asset_refs)
+        _validate_wechat_assets(db, project_id, asset_refs, {"blocks": [
+            {"id": block["id"], "kind": "image", "image_ref_key": block["id"]}
+            for block in master.payload_json["document"]["blocks"] if block["type"] == "image"]})
     try:
         adapted = adapter.adapt(master.payload_json, asset_refs=asset_refs, evidence_refs=evidence_refs)
     except AdapterUnavailable as exc:
@@ -902,7 +928,14 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     evidence_refs = payload.get("evidence_refs", [])
     asset_refs = payload.get("asset_refs", [])
     if source_cover and asset_refs != source_cover:
-        raise HTTPException(422, {"code": "source_cover_mapping_mismatch"})
+        added_cover = (not any(ref["role"] == "cover" for ref in source_cover)
+                       and len(asset_refs) == len(source_cover) + 1 and isinstance(asset_refs[0], dict)
+                       and all(asset_refs[0].get(key) == value for key, value in {
+                           "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
+                       }.items())
+                       and asset_refs[1:] == [{**ref, "sort_order": ref["sort_order"] + 1} for ref in source_cover])
+        if not added_cover:
+            raise HTTPException(422, {"code": "source_cover_mapping_mismatch"})
     try:
         adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
     except AdapterUnavailable as exc:
@@ -926,7 +959,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
                              master=master, capability=capability, channel_id=payload["channel_id"],
                              content_form=payload["content_form"], canonical=canonical,
                              supplied=payload.get("llm_provenance")) if payload.get("llm_provenance") is not None else None)
-    materials = _validate_graphic_assets(db, project_id, master, asset_refs) if master.payload_schema == "graphic.master.v2" else _validate_video_assets(db, project_id, master, asset_refs) if master.payload_schema == "video.master.v2" else _validate_wechat_assets(db, project_id, asset_refs) if capability["payload_schema"] == "wechat.article.v1" else []
+    materials = _validate_graphic_assets(db, project_id, master, asset_refs) if master.payload_schema == "graphic.master.v2" else _validate_video_assets(db, project_id, master, asset_refs) if master.payload_schema == "video.master.v2" else _validate_wechat_assets(db, project_id, asset_refs, canonical) if capability["payload_schema"] == "wechat.article.v1" else []
     if master.payload_schema == "graphic.master.v2" and [card["image_ref_key"] for card in canonical["cards"]] != [ref["slot_key"] for ref in sorted(asset_refs, key=lambda item: item["sort_order"])]:
         raise HTTPException(422, {"code": "variant_asset_order_mismatch"})
     if master.payload_schema not in {"graphic.master.v2", "video.master.v2"} and capability["payload_schema"] != "wechat.article.v1" and asset_refs:
@@ -1001,7 +1034,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             elif master.payload_schema == "video.master.v2":
                 _validate_video_assets(db, project_id, master, asset_refs)
             elif row.payload_schema == "wechat.article.v1":
-                _validate_wechat_assets(db, project_id, asset_refs)
+                _validate_wechat_assets(db, project_id, asset_refs, row.payload_json)
         except HTTPException:
             db.rollback()
             raise HTTPException(409, {"code": "variant_refs_changed"}) from None

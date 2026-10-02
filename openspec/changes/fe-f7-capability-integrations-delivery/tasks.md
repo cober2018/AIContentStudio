@@ -89,9 +89,9 @@
 ## 8. Publisher capability
 - [x] 8.1 Persist exact account/channel/form/action/version verification.
 - [x] 8.2 Keep copy_package as safe local capability where packageable.
-- [ ] 8.3 Preserve existing WeChat WeWrite behavior and verify only real supported scopes.
+- [ ] 8.3 Preserve historical WeWrite reads and its fail-closed remote runtime; implement the approved account-bound publisher.wechat.official@1 supplement and verify only exact real supported account/form/action scopes. Do not inherit WeWrite verification.
 - [x] 8.4 Automatic actions require verified capability + account authorization. Legacy workflow publish now rejects every new execution before file/CLI work; scoped Delivery gates remain authoritative. Narrow independent safety review APPROVE; real-account validation remains10.5/10.6.
-- [ ] 8.5 Publisher receives immutable approved package only; v5 WeChat article reaches legacy WeWrite input solely through validated deterministic frozen title/body/digest/cover projection before attempt preparation, with no v3/v4 fallback.
+- [x] 8.5 Publisher receives immutable approved package only; new official WeChat execution requires the supplement's deterministic official HTML/asset-slot render frozen before Candidate approval, with no post-approval Markdown conversion, enrichment or v3/v4 fallback. Old candidates remain readable/local-packageable but cannot gain a remote render implicitly. 2026-10-02 task-level independent review PASS plus fresh129 targeted/1660 backend proves the implementation boundary; actual short-draft Attempt6 consumes frozen render/resources. This does not close8.3/10.5/10.6/general-contract verification or original-filename parity.
 - [x] 8.6 No publisher content rewrite/truncation/asset generation. Removed legacy direct execution/truncation/placeholder path; schema1–5 and both opt-in flags reject without export/CLI. Account-bound immutable publisher implementation remains8.3/8.5.
 - [x] 8.7 Unknown outcome remains Unknown.
 - [x] 8.8 Add reconciliation/read-back/human verification flow. Existing scoped human verification plus locked, evidence-hashed, exact-attempt reconciliation/receipt and explicit UI confirmation implemented; synthetic acceptance is not real-account verification (10.5/10.6 remain pending).

@@ -138,6 +138,28 @@ def _declarations(raw: object) -> list[dict]:
     return result
 
 
+def validate_wechat_inline_refs(blocks: list[dict], refs: list[dict]) -> None:
+    images = [block for block in blocks if block.get("kind") == "image"]
+    inline = [ref for ref in refs if ref.get("role") == "inline_image"]
+    if not images and not inline:
+        return
+    keys = [block["image_ref_key"] for block in images]
+    if len(set(keys)) != len(keys) or len(inline) != len(images):
+        _fail("inline_mapping_invalid")
+    covers = [ref for ref in refs if ref.get("role") == "cover"]
+    if len(covers) > 1 or len(refs) != len(covers) + len(inline):
+        _fail("inline_mapping_invalid")
+    if any(any(ref.get(key) != value for key, value in {
+        "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
+    }.items()) for ref in covers):
+        _fail("inline_mapping_invalid")
+    for order, block in enumerate(images, len(covers)):
+        ref = next((item for item in inline if item.get("slot_key") == block["image_ref_key"]), None)
+        if (ref is None or block["image_ref_key"] == "cover" or type(ref.get("sort_order")) is not int
+                or ref["sort_order"] != order or ref.get("placement") != {"usage": "inline", "block_id": block["id"]}):
+            _fail("inline_mapping_invalid")
+
+
 def canonical_payload(schema: str, value: object, *, asset_refs: object = None, evidence_refs: object = None) -> dict:
     asset_keys = _asset_keys([] if asset_refs is None else asset_refs)
     evidence = [] if evidence_refs is None else evidence_refs
@@ -147,12 +169,23 @@ def canonical_payload(schema: str, value: object, *, asset_refs: object = None, 
         item = _object(value, {"title", "blocks"} | common)
         blocks = []
         for raw in _ordered(item.get("blocks"), 200):
+            if raw.get("kind") == "image":
+                raw = _object(raw, {"id", "order", "kind", "image_ref_key", "text", "alt_text"})
+                key = _id(raw.get("image_ref_key"))
+                if key not in asset_keys:
+                    _fail("asset_ref_missing")
+                block = {"id": raw["id"], "order": raw["order"], "kind": "image", "image_ref_key": key,
+                         "text": _text(raw.get("text", ""), 2000), "alt_text": _text(raw.get("alt_text", ""), 2000)}
+                locations[block["id"]] = block["text"]
+                blocks.append(block)
+                continue
             raw = _object(raw, {"id", "order", "kind", "text"})
-            if raw.get("kind") not in {"heading", "paragraph", "quote", "list"}:
+            if not isinstance(raw.get("kind"), str) or raw["kind"] not in {"heading", "paragraph", "quote", "list"}:
                 _fail("block_kind_invalid")
             block = {"id": raw["id"], "order": raw["order"], "kind": raw["kind"], "text": _text(raw.get("text"), 10000, required=True)}
             locations[block["id"]] = block["text"]
             blocks.append(block)
+        validate_wechat_inline_refs(blocks, [] if asset_refs is None else asset_refs)
         result = {"title": _text(item.get("title"), 200, required=True), "blocks": blocks}
     elif schema == "x.thread.v1":
         item = _object(value, {"posts"} | common)

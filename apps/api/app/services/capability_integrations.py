@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from ..models import CapabilityRegistration, CapabilityVerification, ConnectorEndpoint, ContentAccount, DeliveryTarget
@@ -158,8 +158,35 @@ def append_verification(
                       and safe_scope["renderer_key"] == registration.key and safe_scope["renderer_version"] == registration.version)
     if not (publisher_match or data_match or renderer_match):
         raise ValueError("capability_scope_registration_mismatch")
+    official_match = publisher_match and registration.key == "publisher.wechat.official" and registration.version == "1"
     if config_fingerprint is not None and (not renderer_match or not _HEX64.fullmatch(config_fingerprint)):
         raise ValueError("capability_registration_invalid")
+    if official_match:
+        from . import wechat_official
+
+        # Serialize official verification changes with each bounded dispatch decision.
+        db.execute(update(CapabilityRegistration).where(CapabilityRegistration.id == registration.id)
+                   .values(status=CapabilityRegistration.status).execution_options(synchronize_session=False))
+        db.refresh(registration)
+
+        if result == "verified" and registration.config_fingerprint != wechat_official.implementation_fingerprint():
+            raise ValueError("capability_registration_invalid")
+        if result == "verified" and not wechat_official.remote_contract_ready():
+            raise ValueError("official_contract_unresolved")
+        if result == "verified":
+            account_fingerprint = wechat_official.scope_fingerprint(db, safe_scope)
+            if account_fingerprint is None:
+                raise ValueError("capability_scope_registration_mismatch")
+        else:
+            account = db.get(ContentAccount, safe_scope["content_account_id"], populate_existing=True)
+            if account is None or account.platform_channel != "wechat" or account.platform_account_id != safe_scope["account_ref"]:
+                raise ValueError("capability_scope_registration_mismatch")
+            prior = db.scalars(select(CapabilityVerification).where(CapabilityVerification.registration_id == registration.id,
+                              CapabilityVerification.scope_kind == scope_kind).order_by(CapabilityVerification.id.desc())).all()
+            latest = next((event for event in prior if event.scope_json == safe_scope), None)
+            account_fingerprint = latest.config_fingerprint if latest else registration.config_fingerprint
+    else:
+        account_fingerprint = None
     if result == "verified" and (renderer_match != (safe_evidence.get("kind") == "render_readback")):
         raise ValueError("capability_evidence_invalid")
     if not actor or len(actor) > 255:
@@ -170,7 +197,7 @@ def append_verification(
         raise ValueError("capability_expiry_invalid")
     row = CapabilityVerification(
         registration_id=registration.id,
-        config_fingerprint=config_fingerprint or registration.config_fingerprint,
+        config_fingerprint=account_fingerprint or config_fingerprint or registration.config_fingerprint,
         scope_kind=scope_kind,
         scope_json=safe_scope,
         result=result,
@@ -195,7 +222,8 @@ def is_verified_for_scope(
 ) -> bool:
     if registration.id is None or registration.status != "configured":
         return False
-    if not _HEX64.fullmatch(actual_config_fingerprint) or (registration.kind != "renderer" and registration.config_fingerprint != actual_config_fingerprint):
+    official_match = registration.kind == "publisher" and registration.key == "publisher.wechat.official" and registration.version == "1"
+    if not _HEX64.fullmatch(actual_config_fingerprint) or (registration.kind != "renderer" and not official_match and registration.config_fingerprint != actual_config_fingerprint):
         return False
     scope_kind = {"publisher": "publisher_action", "data_connector": "data_source_endpoint", "renderer": "renderer_output"}.get(registration.kind)
     if scope_kind is None:
@@ -207,6 +235,14 @@ def is_verified_for_scope(
         return False
     if scope_kind == "publisher_action" and (wanted_scope["publisher_key"] != registration.key or wanted_scope["publisher_version"] != registration.version):
         return False
+    if official_match:
+        from . import wechat_official
+
+        if (not isinstance(implementation, wechat_official.OfficialWechatPublisher)
+                or not wechat_official.remote_contract_ready()
+                or registration.config_fingerprint != wechat_official.implementation_fingerprint()
+                or actual_config_fingerprint != wechat_official.scope_fingerprint(db, wanted_scope)):
+            return False
     if scope_kind == "data_source_endpoint" and (
         wanted_scope["registration_key"] != registration.key
         or wanted_scope["registration_version"] != registration.version
@@ -262,15 +298,13 @@ def publisher_runtime_fingerprint(key: str, version: str) -> str | None:
 
 
 def publisher_target_verified(db: Session, target: DeliveryTarget, loaded_registry: PluginRegistry) -> bool:
-    if target.action != "auto_draft" or target.publisher_key != "publisher.wechat.wewrite":
+    official = target.publisher_key == "publisher.wechat.official" and target.publisher_version == "1"
+    if target.action != "auto_draft" or target.publisher_key != "publisher.wechat.wewrite" and not official:
         return False
     if target.content_account_id is None or not target.account_ref:
         return False
     account = db.get(ContentAccount, target.content_account_id)
     if account is None or account.status != "active":
-        return False
-    fingerprint = publisher_runtime_fingerprint(target.publisher_key, target.publisher_version)
-    if fingerprint is None:
         return False
     registration = db.scalar(select(CapabilityRegistration).where(
         CapabilityRegistration.kind == "publisher",
@@ -288,4 +322,14 @@ def publisher_target_verified(db: Session, target: DeliveryTarget, loaded_regist
         "publisher_key": target.publisher_key,
         "publisher_version": target.publisher_version,
     }
+    if official:
+        from . import wechat_official
+
+        if not wechat_official.remote_contract_ready():
+            return False
+        fingerprint = wechat_official.scope_fingerprint(db, scope)
+    else:
+        fingerprint = publisher_runtime_fingerprint(target.publisher_key, target.publisher_version)
+    if fingerprint is None:
+        return False
     return is_verified_for_scope(db, registration, scope, fingerprint, loaded_registry)

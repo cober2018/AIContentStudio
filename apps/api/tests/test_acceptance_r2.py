@@ -695,12 +695,17 @@ def test_auto_draft_rejects_tampered_media_bytes(seeded, monkeypatch):
 
     monkeypatch.setattr(ww.subprocess, "run", _must_not_run)
 
-    with pytest.raises(HTTPException) as exc:
-        delivery_service.execute_attempt(seeded, target.id, user)
-    assert exc.value.status_code == 409
-    assert "字节与批准哈希不一致" in str(exc.value.detail)
-    assert seeded.query(DeliveryAttempt).filter_by(target_id=target.id).count() == 0
-    path.write_bytes(original)  # 还原，避免污染共享 MEDIA_ROOT
+    try:
+        with pytest.raises(HTTPException) as exc:
+            delivery_service.execute_attempt(seeded, target.id, user)
+        assert exc.value.status_code == 409
+        assert any(reason in str(exc.value.detail) for reason in (
+            "字节与批准哈希不一致", "素材字节校验失败（content hash 不一致）",
+        ))
+        assert seeded.query(DeliveryAttempt).filter_by(target_id=target.id).count() == 0
+    finally:
+        # Assertion failure must not leave shared content-addressed fixtures corrupted.
+        path.write_bytes(original)
 
 
 def test_auto_draft_rejects_revoked_media_rights(seeded, monkeypatch):

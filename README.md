@@ -1,5 +1,7 @@
 # AI Content Studio（AI 内容生产中心）
 
+2026-10-02 公众号补充收尾：用户接受指定账号草稿/media_id+后台确认，额外成功回读为豁免不是已执行。原文件名已冻结于official render v2并逐步核对、原样上传，缺失/不安全名称拒绝；历史候选不回填。完整工作区后端1660/28 skipped，公众号-only拟提交快照1624/28 skipped、PG迁移22项、Web/FE-P1、41隔离UI、范围Ruff/diff及独立复核通过。仅同步account-bound-wechat-draft-publisher主规格并归档本补充，不将未提交MiniMax/F8混入；不再外发、推送、部署或生产迁移。一般runtime未解除安全门槛，其他F7/F8 TODO仍保留。目录增加四个wechat_official服务、AccountPublisherPanel/OfficialArticlePreview、f7c账号字段迁移；启动/依赖不变，正式f7c升级仍需独立目标授权。详见[公众号收尾证据](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
+
 事实驱动的内容生产系统：把结构化数据、研究笔记、文件、URL、人工观点整理成 **FactPack**，面向抖音 / 小红书 / 公众号生成内容，经事实校验与人工审核后导出；公众号可进一步自动写入官方草稿箱。
 
 长期产品目标以 [`03_ai_content_studio_PRD.md`](03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。

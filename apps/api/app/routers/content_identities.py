@@ -1,16 +1,25 @@
 """Persistent Brand/Persona/Account/Series identity APIs."""
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import get_current_user, require_editor
-from ..models import BrandVoiceVersion, ContentAccount, ContentBrand, ContentPersona, ContentSeries, IdentitySnapshot, User
+from ..deps import get_current_user, require_admin, require_editor
+from ..models import (
+    BrandVoiceVersion,
+    ContentAccount,
+    ContentBrand,
+    ContentPersona,
+    ContentSeries,
+    IdentitySnapshot,
+    User,
+)
 from ..services import content_identity as identity
+from . import CapabilityInputRoute
 
-router = APIRouter(prefix="/api/v1", tags=["content-identities"])
+router = APIRouter(prefix="/api/v1", tags=["content-identities"], route_class=CapabilityInputRoute)
 
 
 class NameIn(BaseModel):
@@ -22,6 +31,19 @@ class RevisionIn(BaseModel):
     profile: identity.IdentityProfile
 
 
+class PlatformBindingIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    platform_channel: str = Field(pattern=r"^wechat$")
+    platform_account_id: str = Field(pattern=r"^wx[0-9a-f]{16}$")
+
+
+class PublisherConnectionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    expected_revision: int = Field(ge=0)
+    enabled: bool
+    credential_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,64}$")
+
+
 def _entity_json(db: Session, kind: str, row) -> dict:
     current = identity.current_revision(db, kind, row.id)
     data = {"id": row.id, "name": row.name, "status": row.status, "current_revision": current.revision_no if current else 0}
@@ -29,6 +51,9 @@ def _entity_json(db: Session, kind: str, row) -> dict:
         data["owner_user_id"] = row.owner_user_id
     else:
         data[{"persona": "brand_id", "account": "persona_id", "series": "account_id"}[kind]] = getattr(row, {"persona": "brand_id", "account": "persona_id", "series": "account_id"}[kind])
+    if kind == "account":
+        data.update(platform_channel=row.platform_channel, platform_account_id=row.platform_account_id,
+                    platform_binding_state="bound_unverified" if row.platform_account_id else "unbound")
     return data
 
 
@@ -148,6 +173,30 @@ def get_account(account_id: int, db: Session = Depends(get_db), user: User = Dep
 @router.patch("/content-accounts/{account_id}")
 def rename_account(payload: NameIn, account_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     return _rename(db, user, "account", account_id, payload.name)
+
+
+@router.put("/content-accounts/{account_id}/platform-binding")
+def bind_account(account_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    try:
+        binding = PlatformBindingIn.model_validate(payload)
+    except ValidationError:
+        raise HTTPException(422, "platform_binding_invalid") from None
+    row = identity.bind_platform_account(db, user, account_id, channel=binding.platform_channel, platform_account_id=binding.platform_account_id)
+    return _entity_json(db, "account", row)
+
+
+@router.get("/content-accounts/{account_id}/publisher-connection")
+def get_publisher_connection(account_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return identity.publisher_connection(db, user, account_id)
+
+
+@router.put("/content-accounts/{account_id}/publisher-connection")
+def save_publisher_connection(account_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    try:
+        config = PublisherConnectionIn.model_validate(payload)
+    except ValidationError:
+        raise HTTPException(422, "publisher_connection_invalid") from None
+    return identity.save_publisher_connection(db, user, account_id, **config.model_dump())
 
 
 @router.delete("/content-accounts/{account_id}", status_code=204)

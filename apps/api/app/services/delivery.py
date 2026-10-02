@@ -110,7 +110,7 @@ def _v5_cover_bytes(db: Session, manifest: dict) -> bytes:
     return data
 
 
-def authorize_target(db: Session, asset: ContentAsset, payload, user) -> DeliveryTarget:
+def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_draft_request=None) -> DeliveryTarget:
     """通用交付目标授权：channel/form/action 经 Registry 验证（D21），幂等。"""
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
     is_variant = schema == 5
@@ -182,6 +182,22 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
     if payload.action not in ACTIONS:
         raise HTTPException(422, f"action 只允许 {sorted(ACTIONS)}")
     publisher, publisher_key, publisher_version = resolve_publisher(spec.channel, spec.content_form, payload.action)
+    official = (is_variant and payload.action == DeliveryAction.auto_draft.value
+                and payload.channel == "wechat" and content_account_id is not None
+                and db.get(ContentAccount, content_account_id).platform_channel == "wechat")
+    if official:
+        from . import wechat_official
+        from .wechat_official_delivery import validate_target
+
+        publisher_key, publisher_version = wechat_official.KEY, wechat_official.VERSION
+        publisher = registry.resolve("publisher", publisher_key, publisher_version)
+        scope_target = DeliveryTarget(content_asset_id=asset.id, content_account_id=content_account_id,
+            channel=payload.channel, content_form=payload.content_form, action=payload.action,
+            account_ref=payload.account_ref, publisher_key=publisher_key, publisher_version=publisher_version,
+            approved_candidate_hash=asset.approved_candidate_hash, authorized_by=user.email)
+        validate_target(db, scope_target, user, _short_draft_request=_short_draft_request)
+    elif _short_draft_request is not None:
+        raise HTTPException(422, "official_experiment_scope_invalid")
     capability = None
     if publisher is not None:
         capability = publisher.capability(spec.channel, spec.content_form, payload.account_ref)
@@ -190,12 +206,18 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
             "available": capability.available, "reason": capability.reason,
             "verified": bool(getattr(publisher, "verified", lambda: True)()),
         }
-        if capability.available is False:
+        if capability.available is False and not official:
             raise HTTPException(422, f"capability_unavailable: {capability.reason}")
         capability = cap_dict
     else:
         capability = {"publisher_key": publisher_key, "action": payload.action, "available": True, "verified": False, "legacy": True}
-    if is_variant and payload.action == DeliveryAction.auto_draft.value:
+    if official:
+        capability = {"publisher_key": publisher_key, "action": payload.action,
+                      "available": True, "verified": _short_draft_request is None,
+                      "remote_verified": _short_draft_request is None}
+        if _short_draft_request is not None:
+            capability.update(available=False, reason="bounded_experiment_only")
+    elif is_variant and payload.action == DeliveryAction.auto_draft.value:
         projected = project_v5_wewrite_payload(asset.candidate_manifest_json or {})
         _v5_cover_bytes(db, projected)
         scope_target = DeliveryTarget(content_account_id=content_account_id, channel=payload.channel,
@@ -266,12 +288,15 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
                 validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
             if target.approved_candidate_hash != asset.candidate_hash:
                 raise HTTPException(409, "授权提交前候选发生变化")
-        db.commit()
+        if _short_draft_request is None:
+            db.commit()
     except HTTPException:
         db.rollback()
         raise
     except Exception:  # noqa: BLE001 并发幂等
         db.rollback()
+        if _short_draft_request is not None:
+            raise HTTPException(409, "official_experiment_prepare_conflict") from None
         concurrent = db.scalars(
             select(DeliveryTarget).where(
                 DeliveryTarget.content_asset_id == asset.id,
@@ -382,6 +407,10 @@ def execute_attempt(db: Session, target_id: int, user) -> dict:
     target = db.get(DeliveryTarget, target_id)
     if not target:
         raise HTTPException(404, "交付目标不存在")
+    if target.publisher_key == "publisher.wechat.official":
+        from .wechat_official_delivery import execute
+
+        return execute(db, target_id, user)
     from .project_authorization import authorize_project_target
 
     authorize_project_target(db, target, user, mutate=True)
@@ -498,6 +527,15 @@ def reconcile_attempt(db: Session, target_id: int, payload, user) -> dict:
     expected = getattr(payload, "expected_attempt_id", None)
     if expected is not None and (last is None or last.id != expected):
         raise HTTPException(409, "reconciliation_attempt_changed")
+    if (target.publisher_key == "publisher.wechat.official" and last is not None
+            and last.status in {"prepared", "running"}):
+        if expected != last.id:
+            raise HTTPException(409, "reconciliation_attempt_required")
+        # Only an explicit evidenced decision invalidates an interrupted worker's private claim.
+        last.response_metadata_json = {**(last.response_metadata_json or {}),
+            "claim_hash": _hash("manual-interruption", str(last.id), evidence_ref), "interrupted": True}
+        last.status = "unknown"
+        target.status = DeliveryTargetStatus.reconciliation_needed.value
     if target.action == DeliveryAction.auto_draft.value and (last is None or last.status != "unknown"):
         raise HTTPException(409, "reconciliation_unknown_attempt_required")
     decision_key = _hash(str(target.id), target.approved_candidate_hash, str(last.id if last else 0), resolution, evidence_ref)

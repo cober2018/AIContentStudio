@@ -24,7 +24,9 @@ function contentRows(variant: { payload_schema: string; payload: Record<string, 
   const payload = variant.payload;
   if (variant.payload_schema === "x.single.v1") return [{ id: "single", text: String(payload.text || "") }];
   const key = variant.payload_schema === "wechat.article.v1" ? "blocks" : variant.payload_schema === "x.thread.v1" ? "posts" : variant.payload_schema === "xiaohongshu.image_note.v1" ? "cards" : "scenes";
-  return ((payload[key] as Ref[] | undefined) || []).map((row) => ({ id: String(row.id), text: String(row.text || row.caption || row.script || "") }));
+  return ((payload[key] as Ref[] | undefined) || []).map((row) => ({ id: String(row.id), text: row.kind === "image"
+    ? `正文图片 · Block ${String(row.id)} · Slot ${String(row.image_ref_key)} · 图注：${String(row.text || "未指定")} · Alt：${String(row.alt_text || "未指定")}`
+    : String(row.text || row.caption || row.script || "") }));
 }
 
 export default function ChannelVariantsPanel({ projectId, unit, readOnly, workflowDirty }: { projectId: number; unit: Unit; readOnly: boolean; workflowDirty: boolean }) {
@@ -89,7 +91,7 @@ export default function ChannelVariantsPanel({ projectId, unit, readOnly, workfl
     await run(async () => {
       const cover = sharedAssets.find((asset) => String(asset.material_revision_id) === coverId);
       const assetRefs = target.channel === "wechat" && target.form === "article" && !preview.asset_refs.some((row) => row.role === "cover") && cover
-        ? [...preview.asset_refs, { material_revision_id: cover.material_revision_id, content_hash_snapshot: cover.content_hash, role: "cover", slot_key: "cover", sort_order: 0, placement: { usage: "cover" } }]
+        ? [{ material_revision_id: cover.material_revision_id, content_hash_snapshot: cover.content_hash, role: "cover", slot_key: "cover", sort_order: 0, placement: { usage: "cover" } }, ...preview.asset_refs.map((ref, index) => ({ ...ref, sort_order: index + 1 }))]
         : preview.asset_refs;
       const saved = await api.post<Variant>(`${base}/channel-variants`, {
         variant_key: keyOf(target), expected_revision: current?.revision_no || 0,

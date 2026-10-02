@@ -286,10 +286,11 @@ def capability_inventory(db: Session, user: User) -> dict:
                 continue
             seen.add(token)
             target = DeliveryTarget(**scope)
-            verified = capability_integrations.publisher_target_verified(db, target, registry)
+            official = scope["publisher_key"] == "publisher.wechat.official" and scope["publisher_version"] == "1"
+            verified = False if official else capability_integrations.publisher_target_verified(db, target, registry)
             publishers.append({"registration_id": registration.id, "scope": scope,
                                "configured": registration.status == "configured", "verified": verified,
-                               "executable": verified, "reason": None if verified else "publisher_scope_unverified",
+                               "executable": verified, "reason": None if verified else "official_contract_unresolved" if official else "publisher_scope_unverified",
                                "last_verification": {"id": event.id, "result": event.result,
                                                      "verified_at": event.verified_at.isoformat(),
                                                      "expires_at": event.expires_at.isoformat() if event.expires_at else None}})

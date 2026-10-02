@@ -9,6 +9,45 @@ import pytest
 from sqlalchemy import create_engine, inspect, text
 
 
+def test_account_platform_migration_preserves_legacy_and_refuses_bound_downgrade(tmp_path):
+    import importlib.util
+    from pathlib import Path
+
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+
+    path = Path("alembic/versions/f7c000000001_account_platform_identity.py")
+    assert path.exists(), "additive account platform migration required"
+    spec = importlib.util.spec_from_file_location("account_platform", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    engine = create_engine(f"sqlite:///{tmp_path / 'account-platform.db'}")
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("CREATE TABLE content_persona (id INTEGER PRIMARY KEY)"))
+            conn.execute(text("CREATE TABLE content_account (id INTEGER PRIMARY KEY, persona_id INTEGER NOT NULL REFERENCES content_persona(id), name VARCHAR(200) NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'active')"))
+            conn.execute(text("CREATE INDEX ix_content_account_persona_id ON content_account (persona_id)"))
+            conn.execute(text("INSERT INTO content_persona VALUES (1)"))
+            conn.execute(text("INSERT INTO content_account VALUES (1,1,'legacy','active')"))
+            module.op = Operations(MigrationContext.configure(conn))
+            original_indexes = inspect(conn).get_indexes("content_account")
+            original_fks = inspect(conn).get_foreign_keys("content_account")
+            module.upgrade()
+            module.upgrade()
+            assert conn.execute(text("SELECT platform_channel,platform_account_id FROM content_account")).one() == (None, None)
+            module.downgrade()
+            assert conn.execute(text("SELECT * FROM content_account")).one() == (1, 1, "legacy", "active")
+            module.upgrade()
+            assert inspect(conn).get_indexes("content_account") == original_indexes
+            assert inspect(conn).get_foreign_keys("content_account") == original_fks
+            conn.execute(text("UPDATE content_account SET platform_channel='wechat',platform_account_id='wx0123456789abcdef',status='archived' WHERE id=1"))
+            with pytest.raises(RuntimeError, match="retained platform identity"):
+                module.downgrade()
+            assert conn.execute(text("SELECT platform_account_id FROM content_account")).scalar_one() == "wx0123456789abcdef"
+    finally:
+        engine.dispose()
+
+
 @pytest.fixture
 def fresh_sqlite_url(tmp_path, monkeypatch):
     url = f"sqlite:///{tmp_path}/migrate.db"
@@ -53,7 +92,7 @@ def test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite(fresh_sqlite_ur
 
     cfg = Config("alembic.ini")
     cfg.attributes["configure_logger"] = False
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["f7b000000001"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["f7c000000001"]
     command.upgrade(cfg, "head")
     engine = create_engine(fresh_sqlite_url)
     try:
