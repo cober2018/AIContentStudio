@@ -20,6 +20,7 @@ from ..models import (
     AuditLog,
     ContentAsset,
     DeliveryAction,
+    DeliveryAttempt,
     DeliveryFeedback,
     DeliveryReceipt,
     DeliveryTarget,
@@ -42,7 +43,7 @@ class ReconciliationRoute(APIRoute):
                 return await handler(request)
             except RequestValidationError:
                 # Default validation echoes request values that may contain secrets.
-                if self.path.endswith("/reconcile"):
+                if self.path.endswith(("/reconcile", "/official-readback")):
                     return JSONResponse(status_code=422, content={"detail": "reconciliation_input_invalid"})
                 raise
 
@@ -59,6 +60,11 @@ class GenericTargetIn(BaseModel):
     content_account_id: int | None = None
     authorization_version: str = Field(min_length=1, max_length=64)
     action: str = DeliveryAction.copy_package.value
+
+
+class OfficialReadbackIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_attempt_id: int = Field(gt=0)
 
 
 class ReceiptIn(BaseModel):
@@ -139,6 +145,20 @@ def _own_target(db: Session, target_id: int, user: User, *, mutate: bool = False
     authorize_project_target(db, target, user, mutate=mutate)
     if target.authorized_by and target.authorized_by != user.email:
         raise HTTPException(403, "该账号交付目标未授权给当前操作人")
+    if mutate and target.publisher_key == "publisher.wechat.official" and target.publisher_version == "1":
+        from sqlalchemy import update
+
+        from ..services.project_authorization import lock_project_context
+
+        asset = db.get(ContentAsset, target.content_asset_id)
+        if asset.project_id is not None:
+            lock_project_context(db, asset.project_id, user)
+        db.execute(update(DeliveryTarget).where(DeliveryTarget.id == target.id).values(status=DeliveryTarget.status)
+                   .execution_options(synchronize_session=False))
+        db.refresh(target)
+        authorize_project_target(db, target, user, mutate=True)
+        if target.authorized_by and target.authorized_by != user.email:
+            raise HTTPException(403, "该账号交付目标未授权给当前操作人")
     return target
 
 
@@ -174,6 +194,14 @@ def execute_delivery_target(target_id: int, db: Session = Depends(get_db), user:
     """远端副作用唯一入口：prepared→COMMIT→publisher→result；unknown 不自动重发。"""
     result = delivery_service.execute_attempt(db, target_id, user)
     return result
+
+
+@router.post("/delivery-targets/{target_id}/official-readback")
+def readback_official_target(target_id: int, payload: OfficialReadbackIn,
+                            db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services.wechat_official_delivery import readback
+
+    return readback(db, target_id, payload.expected_attempt_id, user)
 
 
 @router.get("/delivery-targets/{target_id}/package.zip")
@@ -213,6 +241,10 @@ def preview_package(target_id: int, db: Session = Depends(get_db), user: User = 
 @router.post("/delivery-targets/{target_id}/receipt")
 def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     target = _own_target(db, target_id, user, mutate=True)
+    if (target.publisher_key == "publisher.wechat.official" and target.publisher_version == "1"
+            and target.action == "auto_draft" and db.scalar(select(DeliveryAttempt.id).where(
+                DeliveryAttempt.target_id == target.id, DeliveryAttempt.status.in_(["prepared", "running"])).limit(1))):
+        raise HTTPException(409, "official_reconciliation_required")
     if target.status == DeliveryTargetStatus.reconciliation_needed.value or any(
         attempt.status == "unknown" and (attempt.response_metadata_json or {}).get("reconciled") is None
         for attempt in target.attempts

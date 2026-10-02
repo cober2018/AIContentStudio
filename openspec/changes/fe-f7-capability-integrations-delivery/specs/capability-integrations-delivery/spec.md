@@ -200,7 +200,7 @@ Remote Publisher verification MUST bind platform/channel, stable account identit
 ### Requirement: Publisher consumes approved immutable content
 Every remote Publisher action SHALL require exact approved Candidate hash and Delivery Authorization, validate live account/capability/rights, and receive only the frozen approved content/package. The Publisher MUST NOT rewrite, truncate, adapt, generate media or silently switch providers after approval. Local copy/manual package remains a distinct non-remote path when packageable.
 
-The existing WeWrite publisher's legacy render input MUST NOT be applied directly to a v5 manifest. A v5 WeChat article requires a deterministic pre-attempt projection from its frozen approved title/body/digest/cover bytes into the publisher input; missing or incompatible frozen content MUST fail before a remote attempt, without v3/v4 fallback or post-approval rewriting.
+The existing WeWrite publisher's legacy render input MUST NOT be applied directly to a v5 manifest and its new remote execution SHALL remain unavailable. The approved account-bound official Publisher SHALL consume deterministic official HTML and exact asset slots frozen before Candidate approval. Missing or incompatible frozen content MUST fail before a remote attempt, without v3/v4 fallback, post-approval render enrichment or rewriting. Historical candidates and local packages SHALL remain readable under existing rules.
 
 The historical workflow `publish_wechat` node MUST reject new execution for every schema and legacy flag without invoking a publisher, producing placeholder media, truncating content or returning subprocess output. Historical records remain readable; new remote execution is only through the authorized Delivery Router.
 
@@ -212,9 +212,9 @@ The historical workflow `publish_wechat` node MUST reject new execution for ever
 - **WHEN** frozen approved content exceeds a remote platform limit
 - **THEN** delivery fails with an actionable validation reason and no modified remote payload is sent
 
-#### Scenario: V5 article presented to legacy WeWrite input
-- **WHEN** a verified WeChat account authorizes an approved v5 article for auto-draft
-- **THEN** the publisher receives only a validated deterministic projection of the frozen article and exact cover bytes, or no attempt is prepared if that projection cannot be formed
+#### Scenario: V5 article presented to official Publisher
+- **WHEN** an exact verified WeChat account authorizes an approved v5 article for official auto-draft
+- **THEN** the publisher receives only its approved frozen official render and exact resource slots, or no attempt is prepared when that render is absent; legacy WeWrite input and verification cannot substitute
 
 #### Scenario: Unverified remote fallback
 - **WHEN** remote capability is unavailable but a local package is valid

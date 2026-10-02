@@ -1,3 +1,13 @@
+# 2026-10-02：公众号补充终验、范围提交与归档
+
+用户已接受2.8，成功草稿回读被明确豁免，未写成执行PASS。原文件名补丁已按用户选择实施：renderer2 freezes metadata filename/MIME，发送逐步live比对，缺失/unsafe及历史无冻结name拒绝新远端效果；旧候选不改。
+
+新鲜最终工作区1660 passed/28 skipped/8 warnings；公众号-only拟提交快照1624 passed/28 skipped/8 warnings。两个范围PG/migration22项和Web/FE-P1分别通过；41隔离UI gates、范围Ruff/diff、独立安全/交付/filename/scope复核通过。仅补充22/22，单canonical同步/归档获准；F7/F8、runtime unverified与历史Unknown继续保留，不新发草稿、不推送/部署/生产迁移。
+
+/// 原scope漏delivery.prepared依赖已在私有索引修正并重新全量通过；shared models/delivery/capability/product_settings/test_migrations按hunk拆分，排除MiniMax/F8，仅公众号内容本地提交。
+
+已同步唯一新增主规格并归档到`2026-10-02-add-account-bound-wechat-draft-publisher`，归档后全部strict33/33通过。隔离PG容器/匿名卷已清理，15391无监听；私人验收文件保留。该提交不包含其他未完成F7/F8切片。
+
 # 当前进度
 
 ## 2026-09-30：F7 剩余门槛复查

@@ -17,10 +17,12 @@ _BOOTSTRAPPED = False
 
 
 def bootstrap_publishers() -> None:
+    from ...wechat_official import OfficialWechatPublisher
+
     global _BOOTSTRAPPED
     if _BOOTSTRAPPED:
         return
-    for plugin in (CopyPackagePublisher(), WechatWewritePublisher()):
+    for plugin in (CopyPackagePublisher(), WechatWewritePublisher(), OfficialWechatPublisher()):
         if plugin.key not in {d.key for d in registry.list("publisher")}:
             registry.register(
                 "publisher", plugin.key, plugin.version, plugin,

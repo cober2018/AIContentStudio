@@ -53,7 +53,7 @@ def _hex(value: object) -> bool:
 
 def build_manifest_v5(inputs: dict) -> dict:
     """Freeze explicit, already-authorized snapshots; live DB gates belong to the caller."""
-    if not isinstance(inputs, dict) or set(inputs) != set(SECTIONS):
+    if not isinstance(inputs, dict) or set(inputs) - {"official_render"} != set(SECTIONS):
         raise ValueError("incomplete v5 manifest sections")
     project = _object(inputs["project"], "project", ("id", "unit_id", "modality"))
     identity = _object(inputs["identity"], "identity", ("id", "checksum"))
@@ -143,6 +143,13 @@ def build_manifest_v5(inputs: dict) -> dict:
                                 or not _hex(receipt.get("input_hash"))):
         raise ValueError("invalid or unsafe llm provenance")
     manifest = {"schema_version": 5, **{section: inputs[section] for section in SECTIONS}}
+    if "official_render" in inputs:
+        from .wechat_official_render import validate_article_render
+
+        if variant["payload_schema"] != "wechat.article.v1":
+            raise ValueError("official_render_target_mismatch")
+        validate_article_render(inputs["official_render"], canonical, assets, evidence_refs)
+        manifest["official_render"] = inputs["official_render"]
     errors = validate_json_bounds(manifest)
     if errors:
         raise ValueError(f"invalid v5 manifest bounds: {errors}")
@@ -212,7 +219,7 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
                                "profile_key": stored.profile_key, "profile_version": stored.profile_version,
                                "input_hash": stored.input_hash, "status": stored.status, "report": stored.report_json})
     warning_checks.sort(key=lambda check: check["kind"])
-    return {
+    inputs = {
         "project": {"id": project.id, "title": project.title, "unit_id": unit.id, "unit_title": unit.title, "modality": master.modality},
         "identity": {"id": identity.id, "checksum": identity.checksum, "effective_profile": identity.effective_profile_json,
                      "field_origins": identity.field_origins_json},
@@ -240,3 +247,8 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
                        "created_by": row.created_by, "llm_provenance": row.llm_provenance_json},
         "citations": row.payload_json["citations"], "declarations": row.payload_json["declarations"],
     }
+    if row.payload_schema == "wechat.article.v1":
+        from .wechat_official_render import build_material_article_render
+
+        inputs["official_render"] = build_material_article_render(db, row.payload_json, assets, evidence_refs)
+    return inputs

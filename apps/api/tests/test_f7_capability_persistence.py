@@ -16,12 +16,196 @@ from app.models import (
     ConnectorEndpoint,
     ContentAccount,
     ContentPersona,
+    DeliveryTarget,
     SourceDocument,
     User,
 )
 from app.services import capability_integrations, connector_service, delivery, url_fetch
 from app.services.capability_integrations import append_verification, is_verified_for_scope
 from app.services.content_harness.registry import PluginRegistry
+
+
+def _official_accounts(db, monkeypatch):
+    from app.models import SystemSetting
+
+    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "isolated-runtime-identity-key" * 2)
+
+    user = User(email="official-owner@studio.local", name="Owner", role="admin")
+    db.add(user)
+    db.flush()
+    persona = ContentPersona(owner_user_id=user.id, name="作者")
+    db.add(persona)
+    db.flush()
+    accounts = []
+    for suffix in ("a", "b"):
+        account = ContentAccount(persona_id=persona.id, name=suffix, platform_channel="wechat", platform_account_id="wx" + suffix * 16)
+        db.add(account)
+        db.flush()
+        ref = f"AICS_WECHAT_ACCOUNT_{account.id}_APPSECRET"
+        db.add(SystemSetting(key=f"wechat.official.account.{account.id}", value={
+            "revision": 1, "enabled": True, "credential_ref": ref,
+            "credential_version": "v1", "platform_account_id": account.platform_account_id,
+        }))
+        monkeypatch.setenv(ref, suffix * 32)
+        monkeypatch.setenv(ref + "_VERSION", "v1")
+        accounts.append(account)
+    db.commit()
+    return user, accounts
+
+
+def _official_scope(account):
+    return {"channel": "wechat", "content_form": "article", "action": "auto_draft",
+            "content_account_id": account.id, "account_ref": account.platform_account_id,
+            "publisher_key": "publisher.wechat.official", "publisher_version": "1"}
+
+
+def test_official_runtime_and_token_cache_are_exact_account_isolated(db_session, monkeypatch):
+    from app.services import wechat_official
+
+    _, (a, b) = _official_accounts(db_session, monkeypatch)
+    first = wechat_official.resolve_runtime(db_session, a.id)
+    second = wechat_official.resolve_runtime(db_session, b.id)
+    assert first.fingerprint != second.fingerprint
+    assert first.secret not in repr(first)
+    cache = wechat_official.TokenCache()
+    cache.put(first, "token-account-a", expires_in=7200)
+    cache.put(second, "token-account-b", expires_in=7200)
+    assert cache.get(first) == "token-account-a"
+    assert cache.get(second) == "token-account-b"
+    monkeypatch.setenv(f"AICS_WECHAT_ACCOUNT_{a.id}_APPSECRET", "rotated" * 5)
+    rotated = wechat_official.resolve_runtime(db_session, a.id)
+    assert rotated.fingerprint != first.fingerprint
+    assert cache.get(rotated) is None
+    assert wechat_official.resolve_runtime(db_session, b.id).fingerprint == second.fingerprint
+    assert cache.get(second) == "token-account-b"
+    cache.revoke(second)
+    assert cache.get(second) is None
+    cache.put(first, "expiry", expires_in=60)
+    assert cache.get(first, now=10**15) is None
+    monkeypatch.delenv(f"AICS_WECHAT_ACCOUNT_{a.id}_APPSECRET")
+    with pytest.raises(HTTPException, match="official_credentials_unavailable"):
+        wechat_official.resolve_runtime(db_session, a.id)
+
+
+def test_official_verification_uses_server_account_hash_not_client_or_registration_hash(db_session, monkeypatch):
+    from app.services import wechat_official
+
+    user, (a, b) = _official_accounts(db_session, monkeypatch)
+    implementation = wechat_official.OfficialWechatPublisher()
+    registration = CapabilityRegistration(kind="publisher", key=implementation.key, version="1", status="configured",
+                                          config_fingerprint=wechat_official.implementation_fingerprint())
+    db_session.add(registration)
+    db_session.flush()
+    scope = _official_scope(a)
+    with pytest.raises(ValueError, match="official_contract_unresolved"):
+        append_verification(db_session, registration, scope_kind="publisher_action", scope=scope,
+                            result="verified", actor=user.email, evidence={"kind": "human_readback", "reference_hash": "c" * 64})
+    assert db_session.scalars(select(CapabilityVerification)).all() == []
+    monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: True)
+    with pytest.raises(ValueError, match="capability_registration_invalid"):
+        append_verification(db_session, registration, scope_kind="publisher_action", scope=scope,
+                            result="verified", actor=user.email, evidence={"kind": "human_readback", "reference_hash": "c" * 64},
+                            config_fingerprint="f" * 64)
+    events = []
+    for account in (a, b):
+        event = append_verification(db_session, registration, scope_kind="publisher_action", scope=_official_scope(account),
+                                    result="verified", actor=user.email, evidence={"kind": "human_readback", "reference_hash": "c" * 64})
+        assert event.config_fingerprint == wechat_official.scope_fingerprint(db_session, _official_scope(account))
+        assert event.config_fingerprint != registration.config_fingerprint
+        events.append(event)
+    db_session.commit()
+    loaded = PluginRegistry()
+    loaded.register("publisher", implementation.key, "1", implementation)
+    for account, event in zip((a, b), events):
+        assert is_verified_for_scope(db_session, registration, _official_scope(account), event.config_fingerprint, loaded)
+        assert capability_integrations.publisher_target_verified(db_session, DeliveryTarget(**_official_scope(account)), loaded)
+    from datetime import UTC, datetime, timedelta
+
+    assert not is_verified_for_scope(db_session, registration, scope, events[0].config_fingerprint, loaded,
+                                    now=datetime.now(UTC) + timedelta(days=2))
+    monkeypatch.setenv(f"AICS_WECHAT_ACCOUNT_{a.id}_APPSECRET", "new-secret" * 4)
+    assert not is_verified_for_scope(db_session, registration, scope, events[0].config_fingerprint, loaded)
+    assert is_verified_for_scope(db_session, registration, _official_scope(b), events[1].config_fingerprint, loaded)
+    assert not is_verified_for_scope(db_session, registration, {**_official_scope(b), "account_ref": a.platform_account_id}, events[1].config_fingerprint, loaded)
+    append_verification(db_session, registration, scope_kind="publisher_action", scope=_official_scope(b),
+                        result="revoked", actor=user.email, evidence={"kind": "revocation"})
+    db_session.commit()
+    assert not is_verified_for_scope(db_session, registration, _official_scope(b), events[1].config_fingerprint, loaded)
+
+
+def test_official_verification_api_blocks_unresolved_contract_and_can_revoke_without_secret(client, db_session, monkeypatch):
+    from app.services import wechat_official
+
+    user, (a, _) = _official_accounts(db_session, monkeypatch)
+    payload = {**_official_scope(a), "result": "verified", "reference_hash": "c" * 64, "confirm_readback": True}
+    response = client.post("/api/v1/settings/publisher-verifications", json=payload, headers={"X-Studio-User": user.email})
+    assert response.status_code == 409
+    assert response.json()["detail"] == "official_contract_unresolved"
+    monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: True)
+    response = client.post("/api/v1/settings/publisher-verifications", json=payload, headers={"X-Studio-User": user.email})
+    assert response.status_code == 201, response.text
+    registration = db_session.get(CapabilityRegistration, response.json()["registration_id"])
+    assert registration.config_fingerprint == wechat_official.implementation_fingerprint()
+    monkeypatch.delenv(f"AICS_WECHAT_ACCOUNT_{a.id}_APPSECRET")
+    response = client.post("/api/v1/settings/publisher-verifications", json={**payload, "result": "revoked"}, headers={"X-Studio-User": user.email})
+    assert response.status_code == 201, response.text
+    assert db_session.get(CapabilityVerification, response.json()["verification_id"]).result == "revoked"
+
+
+def test_official_inventory_never_resolves_credentials(client, db_session, monkeypatch):
+    from app.services import wechat_official
+
+    user, (a, _) = _official_accounts(db_session, monkeypatch)
+    registration = CapabilityRegistration(kind="publisher", key="publisher.wechat.official", version="1", status="configured",
+                                          config_fingerprint=wechat_official.implementation_fingerprint())
+    db_session.add(registration)
+    db_session.flush()
+    monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: True)
+    append_verification(db_session, registration, scope_kind="publisher_action", scope=_official_scope(a), result="verified",
+                        actor=user.email, evidence={"kind": "human_readback", "reference_hash": "c" * 64})
+    db_session.commit()
+    monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: False)
+    monkeypatch.setattr(wechat_official, "resolve_runtime", lambda *args: pytest.fail("inventory read secret"))
+    response = client.get("/api/v1/settings/capabilities", headers={"X-Studio-User": user.email})
+    assert response.status_code == 200, response.text
+    publisher = next(row for row in response.json()["publishers"] if row["scope"]["publisher_key"] == "publisher.wechat.official")
+    assert publisher["verified"] is False and publisher["executable"] is False
+    assert publisher["reason"] == "official_contract_unresolved"
+
+
+def test_official_fingerprint_survives_module_reload_but_requires_explicit_identity_key(db_session, monkeypatch):
+    import importlib.util
+    import sys
+
+    from app.services import wechat_official
+
+    _, (a, _) = _official_accounts(db_session, monkeypatch)
+    fingerprint = wechat_official.resolve_runtime(db_session, a.id).fingerprint
+    # A fresh module models another worker without invalidating the shared Registry's class.
+    name = "app.services._wechat_identity_reload_fixture"
+    spec = importlib.util.spec_from_file_location(name, wechat_official.__file__)
+    reloaded = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, name, reloaded)
+    spec.loader.exec_module(reloaded)
+    assert reloaded.resolve_runtime(db_session, a.id).fingerprint == fingerprint
+    monkeypatch.delenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY")
+    with pytest.raises(HTTPException, match="official_identity_key_unavailable"):
+        wechat_official.resolve_runtime(db_session, a.id)
+
+
+def test_official_revoke_wrong_account_ref_is_safe_conflict(client, db_session, monkeypatch):
+    from app.services import wechat_official
+
+    user, (a, b) = _official_accounts(db_session, monkeypatch)
+    registration = CapabilityRegistration(kind="publisher", key="publisher.wechat.official", version="1", status="configured",
+                                          config_fingerprint=wechat_official.implementation_fingerprint())
+    db_session.add(registration)
+    db_session.commit()
+    payload = {**_official_scope(a), "account_ref": b.platform_account_id, "result": "revoked", "reference_hash": "c" * 64, "confirm_readback": True}
+    response = client.post("/api/v1/settings/publisher-verifications", json=payload, headers={"X-Studio-User": user.email})
+    assert response.status_code == 409
+    assert response.json()["detail"] == "official_account_scope_mismatch"
+    assert db_session.scalars(select(CapabilityVerification)).all() == []
 
 
 def test_f7_v5_wewrite_projection_uses_only_frozen_article_and_cover():

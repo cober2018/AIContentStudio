@@ -9,8 +9,8 @@ from typing import Any
 
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from ..models import (
@@ -24,6 +24,7 @@ from ..models import (
     ContentSeries,
     ContentSeriesRevision,
     IdentitySnapshot,
+    SystemSetting,
     User,
 )
 
@@ -116,6 +117,101 @@ def owned_entity(db: Session, user: User, kind: str, entity_id: int, *, mutable:
 def current_revision(db: Session, kind: str, entity_id: int):
     _, revision_model, foreign_key = REVISION_MODELS[kind]
     return db.scalar(select(revision_model).where(getattr(revision_model, foreign_key) == entity_id).order_by(revision_model.revision_no.desc()).limit(1))
+
+
+def _lock_account(db: Session, user: User, account_id: int) -> ContentAccount:
+    row = owned_entity(db, user, "account", account_id, mutable=True)
+    selected = hierarchy(db, user, persona_id=row.persona_id, account_id=row.id, mutable=True)
+    try:
+        # Serialize with normal archive UPDATEs, including ancestors, before re-reading authority.
+        with db.no_autoflush:
+            for model, entity in ((ContentBrand, selected.brand), (ContentPersona, selected.persona), (ContentAccount, row)):
+                if entity is not None:
+                    db.execute(update(model).where(model.id == entity.id).values(status=model.status).execution_options(synchronize_session=False))
+                    db.refresh(entity)
+        hierarchy(db, user, persona_id=row.persona_id, account_id=row.id, mutable=True)
+    except OperationalError:
+        db.rollback()
+        raise HTTPException(409, "platform_binding_busy") from None
+    except HTTPException:
+        db.rollback()
+        raise
+    return row
+
+
+def bind_platform_account(db: Session, user: User, account_id: int, *, channel: str, platform_account_id: str) -> ContentAccount:
+    if user.role != "admin":
+        raise HTTPException(403, "platform_binding_admin_required")
+    row = _lock_account(db, user, account_id)
+    try:
+        if row.platform_channel is not None or row.platform_account_id is not None:
+            if (row.platform_channel, row.platform_account_id) != (channel, platform_account_id):
+                raise HTTPException(409, "platform_identity_immutable")
+        else:
+            row.platform_channel = channel
+            row.platform_account_id = platform_account_id
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "platform_identity_conflict") from None
+    except OperationalError:
+        db.rollback()
+        raise HTTPException(409, "platform_binding_busy") from None
+    except HTTPException:
+        db.rollback()
+        raise
+    db.refresh(row)
+    return row
+
+
+def publisher_connection(db: Session, user: User, account_id: int) -> dict:
+    account = owned_entity(db, user, "account", account_id)
+    ancestry = hierarchy(db, user, persona_id=account.persona_id, account_id=account.id)
+    setting = db.get(SystemSetting, f"wechat.official.account.{account_id}", populate_existing=True)
+    config = setting.value if setting else {}
+    return {
+        "content_account_id": account.id,
+        "publisher_key": "publisher.wechat.official", "publisher_version": "1",
+        "platform_account_id": account.platform_account_id,
+        "revision": config.get("revision", 0), "enabled": config.get("enabled", False),
+        "credential_ref": f"AICS_WECHAT_ACCOUNT_{account.id}_APPSECRET",
+        "credential_version": config.get("credential_version"),
+        "configured": bool(setting), "verified": False, "executable": False,
+        "read_only": user.role != "admin" or any(row.status != "active" for _, row in ancestry.members()),
+        "unavailable_reason": "official_contract_unresolved",
+    }
+
+
+def save_publisher_connection(db: Session, user: User, account_id: int, *, expected_revision: int, enabled: bool, credential_version: str) -> dict:
+    if user.role != "admin":
+        raise HTTPException(403, "platform_binding_admin_required")
+    account = _lock_account(db, user, account_id)
+    try:
+        if account.platform_channel != "wechat" or account.platform_account_id is None:
+            raise HTTPException(409, "platform_binding_required")
+        key = f"wechat.official.account.{account.id}"
+        setting = db.get(SystemSetting, key, populate_existing=True)
+        revision = setting.value.get("revision", 0) if setting else 0
+        if revision != expected_revision:
+            raise HTTPException(409, "publisher_connection_conflict")
+        if setting is None:
+            setting = SystemSetting(key=key)
+            db.add(setting)
+        setting.value = {
+            "revision": revision + 1, "enabled": enabled,
+            "credential_ref": f"AICS_WECHAT_ACCOUNT_{account.id}_APPSECRET",
+            "credential_version": credential_version,
+            "platform_account_id": account.platform_account_id,
+        }
+        setting.updated_by = user.email
+        db.commit()
+    except (IntegrityError, OperationalError):
+        db.rollback()
+        raise HTTPException(409, "publisher_connection_conflict") from None
+    except HTTPException:
+        db.rollback()
+        raise
+    return publisher_connection(db, user, account_id)
 
 
 def revisions(db: Session, kind: str, entity_id: int) -> list:

@@ -1458,11 +1458,17 @@ class ContentPersonaRevision(Base):
 
 class ContentAccount(Base):
     __tablename__ = "content_account"
+    __table_args__ = (
+        CheckConstraint("(platform_channel IS NULL AND platform_account_id IS NULL) OR (platform_channel IS NOT NULL AND platform_account_id IS NOT NULL)", name="ck_content_account_platform_pair"),
+        UniqueConstraint("platform_channel", "platform_account_id", name="uq_content_account_platform_identity"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"), index=True)
     name: Mapped[str] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    platform_channel: Mapped[str | None] = mapped_column(String(50))
+    platform_account_id: Mapped[str | None] = mapped_column(String(128))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

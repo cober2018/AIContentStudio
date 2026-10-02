@@ -362,6 +362,8 @@ def candidate_preview(asset: ContentAsset) -> dict:
         preview = {"modality": manifest["project"]["modality"], "title": asset.title,
                 "target": {"channel": asset.channel, "content_form": asset.content_form, "artifact_kind": asset.artifact_kind},
                 "render": render, "content": manifest["content"], "checks": manifest["checks"]}
+        if "official_render" in manifest:
+            preview["official_render"] = manifest["official_render"]
         if target["artifact_kind"] == "text":
             body = render["text"]
             preview.update({"markdown": body[:20_000], "truncated": len(body) > 20_000})

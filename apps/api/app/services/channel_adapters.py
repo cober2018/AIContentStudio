@@ -93,7 +93,8 @@ class TextChannelAdapter:
                       and all(asset_refs[0].get(key) == value for key, value in {
                           "role": "cover", "slot_key": "cover", "sort_order": 0, "placement": {"usage": "cover"},
                       }.items()))
-        if asset_refs and not cover_only:
+        official_article = self.contract.payload_schema == "wechat.article.v1"
+        if asset_refs and not cover_only and not official_article:
             raise AdapterUnavailable("source_refs_require_explicit_mapping")
         if not isinstance(source_payload, dict) or not isinstance(source_payload.get("document"), dict):
             raise AdapterUnavailable("invalid_source_document")
@@ -102,11 +103,23 @@ class TextChannelAdapter:
         except TextDocumentError as exc:
             raise AdapterUnavailable("invalid_source_document") from exc
         blocks = source["document"]["blocks"]
-        if not blocks or any(block["type"] != "paragraph" or any(run["marks"] for run in block["content"]) for block in blocks):
+        if not blocks or any((block["type"] != "paragraph" and not (official_article and block["type"] == "image"))
+                             or block["type"] == "paragraph" and any(run["marks"] for run in block["content"]) for block in blocks):
             raise AdapterUnavailable("source_structure_requires_explicit_mapping")
-        text_blocks = [{"id": block["id"], "order": index, "text": "".join(run["text"] for run in block["content"])} for index, block in enumerate(blocks)]
+        text_blocks = []
+        for index, block in enumerate(blocks):
+            if block["type"] == "image":
+                ref = next((ref for ref in asset_refs if ref.get("role") == "inline_image" and ref.get("slot_key") == block["id"]), None)
+                if ref is None or ref.get("material_revision_id") != block["material_revision_id"]:
+                    raise AdapterUnavailable("source_refs_require_explicit_mapping")
+                text_blocks.append({"id": block["id"], "order": index, "kind": "image", "image_ref_key": block["id"],
+                                    "text": block.get("caption", ""), "alt_text": block.get("alt_text", "")})
+            else:
+                text_blocks.append({"id": block["id"], "order": index, "text": "".join(run["text"] for run in block["content"])})
         if self.contract.payload_schema == "wechat.article.v1":
-            proposal = {"title": source["title"], "blocks": [{**block, "kind": "paragraph"} for block in text_blocks]}
+            if asset_refs and not cover_only and not any(block["type"] == "image" for block in blocks):
+                raise AdapterUnavailable("source_refs_require_explicit_mapping")
+            proposal = {"title": source["title"], "blocks": [{"kind": "paragraph", **block} for block in text_blocks]}
         elif self.contract.payload_schema == "x.thread.v1":
             proposal = {"posts": text_blocks}
         else:

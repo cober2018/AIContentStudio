@@ -26,7 +26,7 @@ class PublisherVerificationIn(BaseModel):
     action: Literal["auto_draft"]
     content_account_id: int = Field(ge=1)
     account_ref: str = Field(pattern=r"^[A-Za-z0-9_.:@-]{1,150}$")
-    publisher_key: Literal["publisher.wechat.wewrite"]
+    publisher_key: Literal["publisher.wechat.wewrite", "publisher.wechat.official"]
     publisher_version: Literal["1"]
     result: Literal["verified", "revoked"]
     reference_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -82,7 +82,7 @@ def revoke_media_renderer(verification_id: int, db: Session = Depends(get_db), u
 
 @router.post("/publisher-verifications", status_code=201)
 def verify_publisher(payload: PublisherVerificationIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    content_identity.owned_entity(db, user, "account", payload.content_account_id, mutable=True)
+    account = content_identity.owned_entity(db, user, "account", payload.content_account_id, mutable=True)
     if not payload.confirm_readback:
         raise HTTPException(422, "publisher_readback_confirmation_required")
     bootstrap_publishers()
@@ -94,25 +94,41 @@ def verify_publisher(payload: PublisherVerificationIn, db: Session = Depends(get
         CapabilityRegistration.kind == "publisher", CapabilityRegistration.key == payload.publisher_key,
         CapabilityRegistration.version == payload.publisher_version,
     ))
-    fingerprint = capability_integrations.publisher_runtime_fingerprint(payload.publisher_key, payload.publisher_version)
+    official = payload.publisher_key == "publisher.wechat.official"
+    if official:
+        from ..services import wechat_official
+
+        if account.platform_channel != "wechat" or account.platform_account_id != payload.account_ref:
+            raise HTTPException(409, "official_account_scope_mismatch")
+        if payload.result == "verified" and not wechat_official.remote_contract_ready():
+            raise HTTPException(409, "official_contract_unresolved")
+        fingerprint = wechat_official.scope_fingerprint(db, scope) if payload.result == "verified" else None
+        registration_fingerprint = wechat_official.implementation_fingerprint()
+    else:
+        fingerprint = capability_integrations.publisher_runtime_fingerprint(payload.publisher_key, payload.publisher_version)
+        registration_fingerprint = fingerprint
     if payload.result == "verified":
         if fingerprint is None:
             raise HTTPException(409, "publisher_runtime_unavailable")
         if registration is None:
             registration = CapabilityRegistration(kind="publisher", key=payload.publisher_key,
                                                    version=payload.publisher_version, status="configured",
-                                                   config_fingerprint=fingerprint, created_by=user.email)
+                                                   config_fingerprint=registration_fingerprint, created_by=user.email)
             db.add(registration)
             db.flush()
         else:
-            registration.config_fingerprint = fingerprint
+            registration.config_fingerprint = registration_fingerprint
             registration.status = "configured"
     elif registration is None:
         raise HTTPException(404, "publisher_verification_not_found")
     evidence = {"kind": "human_readback", "reference_hash": payload.reference_hash} if payload.result == "verified" else {"kind": "revocation"}
-    event = capability_integrations.append_verification(db, registration, scope_kind="publisher_action", scope=scope,
-                                                        result=payload.result, actor=user.email, evidence=evidence,
-                                                        expires_at=datetime.now(UTC) + timedelta(hours=payload.validity_hours) if payload.result == "verified" else None)
+    try:
+        event = capability_integrations.append_verification(db, registration, scope_kind="publisher_action", scope=scope,
+                                                            result=payload.result, actor=user.email, evidence=evidence,
+                                                            expires_at=datetime.now(UTC) + timedelta(hours=payload.validity_hours) if payload.result == "verified" else None)
+    except ValueError:
+        db.rollback()
+        raise HTTPException(409, "publisher_verification_conflict") from None
     db.add(AuditLog(event="publisher.verification_recorded", actor=user.email,
                     entity_type="capability_verification", entity_id=str(event.id),
                     detail_json={"registration_id": registration.id, "scope": scope, "result": payload.result}))

@@ -14,7 +14,7 @@ EVENT_TYPES = frozenset({
     "asset.attached", "asset.detached", "asset.workflow_generated",
     "draft.generated", "candidate.associated",
     "candidate.frozen", "content.approved", "content.changes_requested",
-    "delivery.authorized", "delivery.succeeded", "delivery.failed", "delivery.unknown",
+    "delivery.authorized", "delivery.prepared", "delivery.succeeded", "delivery.failed", "delivery.unknown",
     "delivery.reconciled", "delivery.receipt_recorded", "delivery.publication_confirmed",
     "project.created_from_opportunity",
     "content_master.saved",

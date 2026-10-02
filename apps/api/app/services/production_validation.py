@@ -249,7 +249,7 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
     elif master.payload_schema == "video.master.v2":
         _validate_video_assets(db, variant.project_id, master, assets)
     elif variant.payload_schema == "wechat.article.v1":
-        _validate_wechat_assets(db, variant.project_id, assets)
+        _validate_wechat_assets(db, variant.project_id, assets, variant.payload_json)
     elif assets:
         raise _blocked("candidate_provenance", "历史文本渠道不支持未验证素材")
     for ref in assets:

@@ -1,8 +1,312 @@
 """FE-F3B identity hierarchy, revision, snapshot and production contracts."""
 
+import pytest
 from sqlalchemy import inspect
 
 from app.models import BrandVoiceVersion, ContentUnit, IdentitySnapshot
+
+
+@pytest.mark.parametrize("archived_kind", ["brand", "persona", "account"])
+def test_publisher_connection_readonly_includes_full_ancestry(client, db_session, archived_kind):
+    from app.models import ContentBrand, ContentPersona
+
+    headers, persona_id, account_id = _publisher_account(client, db_session)
+    persona = db_session.get(ContentPersona, persona_id)
+    brand = ContentBrand(owner_user_id=persona.owner_user_id, name="品牌")
+    db_session.add(brand)
+    db_session.flush()
+    persona.brand_id = brand.id
+    db_session.commit()
+    path = f"/api/v1/content-accounts/{account_id}/publisher-connection"
+    assert client.get(path, headers=headers).json().get("read_only") is False
+    entity_id = {"brand": brand.id, "persona": persona_id, "account": account_id}[archived_kind]
+    root = {"brand": "content-brands", "persona": "content-personas", "account": "content-accounts"}[archived_kind]
+    assert client.delete(f"/api/v1/{root}/{entity_id}", headers=headers).status_code == 204
+    assert client.get(path, headers=headers).json()["read_only"] is True
+    assert client.put(path, headers=headers, json={"expected_revision": 0, "enabled": True, "credential_version": "v1"}).status_code == 409
+
+
+def _publisher_account(client, db_session, email="publisher@studio.local"):
+    from app.models import User
+
+    headers = {"X-Studio-User": email}
+    persona = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=headers).json()
+    user = db_session.query(User).filter_by(email=email).one()
+    user.role = "admin"
+    db_session.commit()
+    account = client.post(f"/api/v1/content-personas/{persona['id']}/accounts", json={"name": "公众号"}, headers=headers).json()
+    return headers, persona["id"], account["id"]
+
+
+def test_official_account_binding_is_owned_idempotent_and_not_verification(client, db_session):
+    headers, persona_id, account_id = _publisher_account(client, db_session)
+    path = f"/api/v1/content-accounts/{account_id}/platform-binding"
+    payload = {"platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}
+    first = client.put(path, json=payload, headers=headers)
+    assert first.status_code == 200, first.text
+    assert first.json()["platform_account_id"] == payload["platform_account_id"]
+    assert first.json()["persona_id"] == persona_id
+    assert first.json()["platform_binding_state"] == "bound_unverified"
+    assert client.put(path, json=payload, headers=headers).json() == first.json()
+    assert client.get(f"/api/v1/content-personas/{persona_id}/accounts", headers=headers).json()[0]["platform_binding_state"] == "bound_unverified"
+    assert client.put(path, json={**payload, "platform_account_id": "wx1123456789abcdef"}, headers=headers).status_code == 409
+    assert client.get(f"/api/v1/content-accounts/{account_id}", headers=headers).json()["platform_account_id"] == payload["platform_account_id"]
+
+
+def test_real_account_exclusivity_survives_archive_and_cross_owner(client, db_session):
+    first_headers, _, first_id = _publisher_account(client, db_session)
+    other_headers, _, other_id = _publisher_account(client, db_session, "other@studio.local")
+    payload = {"platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}
+    assert client.put(f"/api/v1/content-accounts/{first_id}/platform-binding", json=payload, headers=first_headers).status_code == 200
+    conflict = client.put(f"/api/v1/content-accounts/{other_id}/platform-binding", json=payload, headers=other_headers)
+    assert conflict.status_code == 409 and conflict.json()["detail"] == "platform_identity_conflict"
+    assert client.delete(f"/api/v1/content-accounts/{first_id}", headers=first_headers).status_code == 204
+    assert client.put(f"/api/v1/content-accounts/{other_id}/platform-binding", json=payload, headers=other_headers).status_code == 409
+    assert client.get(f"/api/v1/content-accounts/{other_id}", headers=other_headers).json()["platform_account_id"] is None
+    assert client.put(f"/api/v1/content-accounts/{first_id}/platform-binding", json=payload, headers=other_headers).status_code == 404
+
+
+def test_binding_rejects_editor_viewer_archived_parent_and_sensitive_input(client, db_session):
+    from app.models import User
+
+    headers, persona_id, account_id = _publisher_account(client, db_session)
+    user = db_session.query(User).filter_by(email=headers["X-Studio-User"]).one()
+    path = f"/api/v1/content-accounts/{account_id}/platform-binding"
+    payload = {"platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}
+    for role in ("editor", "viewer"):
+        user.role = role
+        db_session.commit()
+        assert client.put(path, json=payload, headers=headers).status_code == 403
+    user.role = "admin"
+    db_session.commit()
+    for bad in ({**payload, "secret": "do-not-echo-secret"}, {**payload, "platform_account_id": "do-not-echo-secret"}, {**payload, "platform_channel": "x"}):
+        response = client.put(path, json=bad, headers=headers)
+        assert response.status_code == 422
+        assert "do-not-echo-secret" not in response.text
+    assert client.delete(f"/api/v1/content-personas/{persona_id}", headers=headers).status_code == 204
+    assert client.put(path, json=payload, headers=headers).status_code == 409
+
+
+def test_platform_binding_database_constraints_and_two_accounts(db_session):
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    from app.models import ContentAccount, ContentPersona, User
+
+    user = User(email="constraints@studio.local", name="owner", role="admin")
+    db_session.add(user)
+    db_session.flush()
+    persona = ContentPersona(owner_user_id=user.id, name="作者")
+    db_session.add(persona)
+    db_session.commit()
+    for fields in ({"platform_channel": "wechat"}, {"platform_account_id": "wx0123456789abcdef"}):
+        row = ContentAccount(persona_id=persona.id, name="invalid")
+        for key, value in fields.items():
+            setattr(row, key, value)
+        db_session.add(row)
+        with pytest.raises(IntegrityError):
+            db_session.commit()
+        db_session.rollback()
+    for appid in ("wx0123456789abcdef", "wx1123456789abcdef"):
+        row = ContentAccount(persona_id=persona.id, name="independent")
+        row.platform_channel = "wechat"
+        row.platform_account_id = appid
+        db_session.add(row)
+    db_session.commit()
+    duplicate = ContentAccount(persona_id=persona.id, name="duplicate")
+    duplicate.platform_channel = "wechat"
+    duplicate.platform_account_id = "wx0123456789abcdef"
+    db_session.add(duplicate)
+    with pytest.raises(IntegrityError):
+        db_session.commit()
+    db_session.rollback()
+    assert db_session.query(ContentAccount).count() == 2
+
+
+def test_platform_binding_malformed_json_never_echoes_credentials(client, db_session):
+    headers, _, account_id = _publisher_account(client, db_session)
+    path = f"/api/v1/content-accounts/{account_id}/platform-binding"
+    for raw in ('["sensitive-secret"]', '"sensitive-secret"', '{"secret":"sensitive-secret"'):
+        response = client.put(path, content=raw, headers={**headers, "Content-Type": "application/json"})
+        assert response.status_code == 422
+        assert "sensitive-secret" not in response.text
+
+
+def test_account_connection_is_safe_cas_and_account_isolated(client, db_session, monkeypatch):
+    from app.models import SystemSetting
+
+    headers, persona_id, first_id = _publisher_account(client, db_session)
+    second_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "第二账号"}, headers=headers).json()["id"]
+    for account_id, appid in ((first_id, "wx0123456789abcdef"), (second_id, "wx1123456789abcdef")):
+        assert client.put(f"/api/v1/content-accounts/{account_id}/platform-binding", json={"platform_channel": "wechat", "platform_account_id": appid}, headers=headers).status_code == 200
+    body = {"expected_revision": 0, "enabled": True, "credential_version": "credential-v1"}
+    path = f"/api/v1/content-accounts/{first_id}/publisher-connection"
+    first = client.put(path, json=body, headers=headers)
+    assert first.status_code == 200, first.text
+    assert first.json()["revision"] == 1
+    assert first.json()["credential_ref"] == f"AICS_WECHAT_ACCOUNT_{first_id}_APPSECRET"
+    assert first.json()["verified"] is False and first.json()["executable"] is False
+    assert first.json()["unavailable_reason"] == "official_contract_unresolved"
+    monkeypatch.setenv(first.json()["credential_ref"], "private-account-secret")
+    assert "private-account-secret" not in client.get(path, headers=headers).text
+    assert client.put(path, json=body, headers=headers).status_code == 409
+    assert client.put(f"/api/v1/content-accounts/{second_id}/publisher-connection", json=body, headers=headers).status_code == 200
+    second_before = client.get(f"/api/v1/content-accounts/{second_id}/publisher-connection", headers=headers).json()
+    rotated = client.put(path, json={**body, "expected_revision": 1, "credential_version": "credential-v2"}, headers=headers)
+    assert rotated.status_code == 200 and rotated.json()["revision"] == 2
+    assert client.get(f"/api/v1/content-accounts/{second_id}/publisher-connection", headers=headers).json() == second_before
+    assert all("private-account-secret" not in str(row.value) for row in db_session.query(SystemSetting).all())
+
+
+def test_connection_rejects_unbound_foreign_viewer_and_secret_input(client, db_session):
+    from app.models import User
+
+    headers, _, account_id = _publisher_account(client, db_session)
+    foreign, _, _ = _publisher_account(client, db_session, "foreign-publisher@studio.local")
+    path = f"/api/v1/content-accounts/{account_id}/publisher-connection"
+    payload = {"expected_revision": 0, "enabled": True, "credential_version": "v1"}
+    assert client.put(path, json=payload, headers=headers).status_code == 409
+    assert client.put(path, json=payload, headers=foreign).status_code == 404
+    assert client.get(path, headers=foreign).status_code == 404
+    user = db_session.query(User).filter_by(email=headers["X-Studio-User"]).one()
+    user.role = "viewer"
+    db_session.commit()
+    assert client.get(path, headers=headers).status_code == 200
+    assert client.put(path, json=payload, headers=headers).status_code == 403
+    user.role = "admin"
+    db_session.commit()
+    for bad in ({**payload, "secret": "private-key"}, {**payload, "credential_ref": "OTHER_ACCOUNT_SECRET"}, {**payload, "credential_version": "private-key?token=private-key"}):
+        response = client.put(path, json=bad, headers=headers)
+        assert response.status_code == 422 and "private-key" not in response.text
+
+
+def _concurrent_platform_binding(url):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    from fastapi import HTTPException
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    from app.models import ContentAccount, ContentPersona, User
+    from app.services.content_identity import bind_platform_account
+
+    engine = create_engine(url)
+    with Session(engine) as db:
+        user = User(email="race@studio.local", name="race", role="admin")
+        db.add(user)
+        db.flush()
+        personas = [ContentPersona(owner_user_id=user.id, name=f"Persona {i}") for i in range(2)]
+        db.add_all(personas)
+        db.flush()
+        accounts = [ContentAccount(persona_id=persona.id, name="独立账号") for persona in personas]
+        db.add_all(accounts)
+        db.commit()
+        user_id = user.id
+        ids = [account.id for account in accounts]
+    barrier = Barrier(2)
+
+    def bind(account_id):
+        with Session(engine) as db:
+            user = db.get(User, user_id)
+            barrier.wait(timeout=10)
+            try:
+                bind_platform_account(db, user, account_id, channel="wechat", platform_account_id="wx0123456789abcdef")
+                return 200
+            except HTTPException as exc:
+                return exc.status_code
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes = list(pool.map(bind, ids))
+        assert sorted(outcomes) == [200, 409]
+        with Session(engine) as db:
+            rows = db.query(ContentAccount).filter(ContentAccount.platform_account_id.is_not(None)).all()
+            assert len(rows) == 1
+            assert rows[0].platform_account_id == "wx0123456789abcdef"
+    finally:
+        engine.dispose()
+
+
+def test_platform_binding_actual_sqlite_dual_connection(tmp_path):
+    from sqlalchemy import create_engine
+
+    from app.db import Base
+
+    url = f"sqlite:///{tmp_path / 'binding-race.db'}"
+    engine = create_engine(url)
+    Base.metadata.create_all(engine)
+    engine.dispose()
+    _concurrent_platform_binding(url)
+
+
+def test_platform_binding_isolated_postgresql_migration_and_race():
+    import importlib.util
+    import os
+    import uuid
+    from pathlib import Path
+
+    import pytest
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    from sqlalchemy import create_engine, inspect, text
+    from sqlalchemy.engine import make_url
+
+    from app.db import Base
+
+    value = os.getenv("AICS_ACCOUNT_TEST_DATABASE_URL")
+    if not value:
+        pytest.skip("opt-in isolated PostgreSQL gate")
+    parsed = make_url(value)
+    assert parsed.host == "127.0.0.1" and parsed.port == 15439 and parsed.database == "aics_account_test"
+    schema = "account_gate_" + uuid.uuid4().hex
+    admin_engine = create_engine(value)
+    with admin_engine.begin() as conn:
+        conn.execute(text(f"CREATE SCHEMA {schema}"))
+    url = parsed.set(query={**parsed.query, "options": f"-csearch_path={schema}"}).render_as_string(hide_password=False)
+    engine = create_engine(url)
+    try:
+        Base.metadata.create_all(engine)
+        from sqlalchemy.orm import Session
+
+        from app.models import ContentAccount, ContentPersona, User
+
+        with Session(engine) as db:
+            user = User(email="legacy@studio.local", name="legacy", role="admin")
+            db.add(user)
+            db.flush()
+            persona = ContentPersona(owner_user_id=user.id, name="历史角色")
+            db.add(persona)
+            db.flush()
+            legacy = ContentAccount(persona_id=persona.id, name="历史未绑定账号")
+            db.add(legacy)
+            db.commit()
+            legacy_id = legacy.id
+        spec = importlib.util.spec_from_file_location("account_pg_migration", Path("alembic/versions/f7c000000001_account_platform_identity.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with engine.begin() as conn:
+            module.op = Operations(MigrationContext.configure(conn))
+            indexes = inspect(conn).get_indexes("content_account")
+            foreign_keys = inspect(conn).get_foreign_keys("content_account")
+            module.downgrade()
+            module.upgrade()
+            module.downgrade()
+            module.upgrade()
+            assert inspect(conn).get_indexes("content_account") == indexes
+            assert inspect(conn).get_foreign_keys("content_account") == foreign_keys
+            assert conn.execute(text("SELECT name, platform_channel, platform_account_id FROM content_account WHERE id=:id"), {"id": legacy_id}).one() == ("历史未绑定账号", None, None)
+        _concurrent_platform_binding(url)
+        with engine.begin() as conn:
+            module.op = Operations(MigrationContext.configure(conn))
+            with pytest.raises(RuntimeError, match="retained platform identity"):
+                module.downgrade()
+            assert conn.execute(text("SELECT COUNT(*) FROM content_account WHERE platform_account_id IS NOT NULL")).scalar_one() == 1
+    finally:
+        engine.dispose()
+        with admin_engine.begin() as conn:
+            conn.execute(text(f"DROP SCHEMA {schema} CASCADE"))
+        admin_engine.dispose()
 
 
 def test_identity_tables_exist_without_backfilling_legacy_rows(db_session):

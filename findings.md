@@ -1,3 +1,13 @@
+# 2026-10-02：公众号收尾审计结论
+
+初始全量10失败并非10个业务问题：素材hash保护仍409，旧提示断言失败跳过fixture恢复，连带污染9项；现有测试接受两种同义明确hash错误并finally恢复。4处PG断言仍期待自动read，按已确认的成功创建不强制回读契约修正；Unknown显式readback继续不create。
+
+独立复核指出原文件名没有透传，用户明确要求先补实现。MaterialRevision.metadata_json.filename是真实上传名称来源，title/hash路径不是；新render2冻结filename/MIME/hash并在每步live核对，不safe或缺失不可用。无新表/migration，不改旧manifest，不再外发。静态复核APPROVE；工作区1660、公众号快照1624及两轮PG22真实通过。首次快照漏prepared事件导致41失败，补依赖后全量green，避免混入MiniMax/F8来掩盖依赖。
+
+仅新增account-bound-wechat-draft-publisher canonical，不能把豁免写为完整回读成功/一般verified，更不能关闭整体F7/F8。最终提交需保持其他worktree改动和旧source包不变。
+
+归档后主规格/活动变更strict33/33，补充22/22；清理独立测试PG容器/卷不涉及产品数据。后续F8仍按原计划执行，不能由公众号收尾替代F8身份、secret、恢复和全链路验收。
+
 # 配置记录
 
 ## 2026-09-30 F7 剩余门槛复查（main@c216e41）

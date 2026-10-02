@@ -98,6 +98,10 @@ def sync_receipt(
     if receipt.status != "human_confirmed" or receipt.delivered_at is None:
         return None
     target = owned_target(db, user, receipt.target_id)
+    # Confirming official draft delivery is not attesting public publication.
+    if (target.publisher_key == "publisher.wechat.official" and target.publisher_version == "1"
+            and target.action == "auto_draft"):
+        return None
     if any(a.status == "unknown" and not (a.response_metadata_json or {}).get("reconciled") for a in target.attempts):
         return None
     asset = db.get(ContentAsset, target.content_asset_id)
