@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -7,6 +8,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="", env_file=".env", extra="ignore")
 
     database_url: str = "sqlite:///./content_studio.db"
+
+    app_env: Literal["development", "test", "production"] = "development"
 
     llm_provider: str = "mock"  # mock | openai_compatible
     llm_base_url: str = ""

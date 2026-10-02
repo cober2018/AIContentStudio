@@ -1,12 +1,14 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, currentUser, setCurrentUser } from "../api";
-import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
 
 const RuntimeSettings = lazy(() => import("../pages/Settings"));
 const CapabilitySettings = lazy(() => import("./CapabilitySettings"));
 const ProviderGuidancePanel = lazy(() => import("./ProviderGuidancePanel"));
+const ModelRoutingSettings = lazy(() => import("./ModelRoutingSettings"));
+const ModelRegistrationSettings = lazy(() => import("./ModelRegistrationSettings"));
 type Editability = "editable" | "read_only" | "unavailable";
 type Section = { key: string; label: string; editability: Editability; reason?: string | null; data?: unknown };
 type Inventory = { sections: Section[] };
@@ -16,6 +18,49 @@ const sections = [
   ["models", "模型与 AI"], ["data_sources", "数据源"], ["channels", "渠道"],
   ["rules", "规则与模板"], ["team", "团队与权限"], ["advanced", "高级运行环境"],
 ] as const;
+
+const modelViews = [
+  { key: "providers", label: "厂商与模型", hint: "连接服务，登记可用模型", icon: "01" },
+  { key: "routes", label: "用途路由", hint: "为各个功能选择模型", icon: "02" },
+  { key: "capabilities", label: "生成能力与插件", hint: "配置媒体能力与回退", icon: "03" },
+] as const;
+type ModelView = typeof modelViews[number]["key"];
+
+function ModelSettingsWorkspace({ editable, onDirtyChange }: { editable: boolean; onDirtyChange: (dirty: boolean) => void }) {
+  const [view, setView] = useState<ModelView>("providers");
+  const [capabilitiesOpened, setCapabilitiesOpened] = useState(false);
+  const [registrationDirty, setRegistrationDirty] = useState(false);
+  const [capabilityDirty, setCapabilityDirty] = useState(false);
+  const [showGuidance, setShowGuidance] = useState(false);
+  useEffect(() => { onDirtyChange(registrationDirty || capabilityDirty); }, [registrationDirty, capabilityDirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
+  return <div className="grid min-w-0 gap-6 lg:grid-cols-[11rem_minmax(0,1fr)]">
+    <nav aria-label="模型配置分区" className="flex gap-1 overflow-x-auto rounded-lg bg-slate-50 p-1.5 lg:sticky lg:top-6 lg:block lg:self-start">
+      {modelViews.map(item => <button key={item.key} type="button" aria-current={view === item.key ? "page" : undefined}
+        className={`flex shrink-0 items-start gap-2.5 rounded-md px-3 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-700 lg:w-full ${view === item.key ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:bg-white/70 hover:text-slate-800"}`}
+        onClick={() => { setView(item.key); if (item.key === "capabilities") setCapabilitiesOpened(true); }}>
+        <span className="mt-0.5 text-[10px] font-semibold tabular-nums text-slate-400">{item.icon}</span>
+        <span className="text-sm font-medium">{item.label}<span className="mt-1 hidden text-[11px] font-normal leading-relaxed text-slate-500 lg:block">{item.hint}</span></span>
+      </button>)}
+    </nav>
+    <div className="min-w-0">
+      <div hidden={view === "capabilities"}>
+        <Suspense fallback={<Spinner label="读取厂商与模型…" />}><ModelRegistrationSettings view={view === "routes" ? "routes" : "providers"} editable={editable} onDirtyChange={setRegistrationDirty} /></Suspense>
+      </div>
+      {capabilitiesOpened && <div hidden={view !== "capabilities"} className="space-y-5">
+        <Suspense fallback={<Spinner label="读取生成能力…" />}><ModelRoutingSettings editable={editable} onDirtyChange={setCapabilityDirty} /></Suspense>
+        <details className="rounded-lg border border-slate-200 bg-slate-50/60" onToggle={event => setShowGuidance(event.currentTarget.open)}>
+          <summary className="cursor-pointer px-4 py-3 text-sm text-slate-600 focus-visible:outline focus-visible:outline-2">技术说明与旧版兼容工具</summary>
+          {showGuidance && <div className="space-y-4 border-t border-slate-200 p-4">
+            <Suspense fallback={<Spinner label="读取协议说明…" />}><ProviderGuidancePanel /></Suspense>
+            <p className="text-xs leading-relaxed text-slate-500">旧版保留图片、技能和运行环境配置；新版模型配置使用此页的版本化保存。</p>
+            <Link className="inline-flex text-sm font-medium text-slate-700 underline underline-offset-4" to="/legacy/settings" target="_blank" rel="noopener noreferrer">打开原管理员配置工具 ↗</Link>
+          </div>}
+        </details>
+      </div>}
+    </div>
+  </div>;
+}
 
 function Metadata({ value }: { value: unknown }) {
   if (value === null || value === undefined) return <span className="text-slate-400">未知 / 未提供</span>;
@@ -36,17 +81,16 @@ function TeamIdentity() {
   }}><p className="text-sm text-amber-900">当前是开发 Header 身份，可在本机切换；这不是生产登录、组织成员管理或 SSO。请勿据此对外部署。</p><Field label="开发身份邮箱"><input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} /></Field><Button type="submit" variant="secondary">切换本机开发身份</Button></form>;
 }
 
-function SectionActions({ section }: { section: Section }) {
+function SectionActions({ section, onModelDirtyChange }: { section: Section; onModelDirtyChange: (dirty: boolean) => void }) {
   const [showRuntime, setShowRuntime] = useState(false);
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
   const editable = section.editability === "editable";
+  if (section.key === "models") return <ModelSettingsWorkspace editable={editable} onDirtyChange={onModelDirtyChange} />;
   if (section.key === "team") return <TeamIdentity />;
   return <div className="space-y-4">
-    {section.key === "models" && <div className="space-y-2"><p className="text-sm text-slate-600">模型配置沿用现有持久化与完整 Profiles / 路由保存契约。密钥留空表示保留，显示掩码不会被重新提交。连接测试会发起真实网络请求；图片配置保存可能写入本机 CLI 配置，必须由你明确操作。</p><Button disabled={!editable} onClick={() => setShowRuntime(!showRuntime)}>{showRuntime ? "收起配置工具" : "打开模型与图片配置工具"}</Button></div>}
     {section.key === "data_sources" && <div className="space-y-2"><p className="text-sm text-slate-600">Generic Connector 配置不代表 Data Source Plugin 已可执行。此清单读取不会自动拉取或测试连接；数据拉取是独立的有副作用动作。</p>{["admin", "editor"].includes(me.data?.role ?? "") && <Link className="text-sm text-indigo-700 underline" to="/connectors">{editable ? "管理 Generic Connectors / 显式拉取" : "打开已有 Connectors（配置只读，可显式拉取）"}</Link>}</div>}
     {section.key === "channels" && <p className="text-sm text-slate-600">渠道注册信息为只读真源。配置了 workflow / publisher 引用不代表已经验证可执行或可发布，不提供虚假的保存按钮。</p>}
     {(section.key === "channels" || section.key === "data_sources") && <Suspense fallback={<Spinner label="加载能力验证…" />}><CapabilitySettings mode={section.key} /></Suspense>}
-    {section.key === "models" && <Suspense fallback={<Spinner label="加载 Provider 指引…" />}><ProviderGuidancePanel /></Suspense>}
     {section.key === "rules" && <div className="space-y-2"><p className="text-sm text-slate-600">确定性 Rule、Prompt、Channel Template 与 Discoverability Profile 分开列出。版本操作以每项实际支持的 actions 和状态为准。</p>{editable && <Link className="text-sm text-indigo-700 underline" to="/templates">打开现有版本化模板工具</Link>}</div>}
     {section.key === "advanced" && <div className="space-y-2"><p className="text-sm text-amber-800">高级工具包含本机路径、技能、MCP、dsh 与基础设施配置。不会在读取此清单时扫描目录、写文件或探测外部服务。</p><Button disabled={!editable} onClick={() => setShowRuntime(!showRuntime)}>{showRuntime ? "收起高级工具" : "明确打开本机运行配置工具"}</Button></div>}
     {showRuntime && editable && <section className="rounded-xl border border-amber-200 bg-white"><p className="p-4 text-sm text-amber-800">下面是原有管理员配置工具；其保存、连接测试和本机写入操作均需单独确认操作。</p><Suspense fallback={<Spinner label="按需加载原有配置工具…" />}><RuntimeSettings /></Suspense></section>}
@@ -64,8 +108,72 @@ function pageInfo(section: Section): PageInfo | undefined {
 }
 
 export default function ProductSettingsPage() {
+  const navigate = useNavigate();
   const [active, setActive] = useState<string>("models");
   const [offset, setOffset] = useState(0);
+  const [modelDirty, setModelDirty] = useState(false);
+  const [leaveAction, setLeaveAction] = useState<(() => void) | null>(null);
+  const leaveDialog = useRef<HTMLDivElement>(null);
+  const allowHistoryExit = useRef(false);
+  const allowDocumentExit = useRef(false);
+  useEffect(() => {
+    if (!leaveAction) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    leaveDialog.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    return () => { if (previousFocus?.isConnected) previousFocus.focus(); };
+  }, [leaveAction]);
+  useEffect(() => {
+    if (!modelDirty) return;
+    let retainedState = window.history.state;
+    let retainedUrl = window.location.href;
+    let restoringHistory = false;
+    let restoredLeaveAction: (() => void) | null = null;
+    const warn = (event: BeforeUnloadEvent) => { if (!allowDocumentExit.current) { event.preventDefault(); event.returnValue = ""; } };
+    const warnHistory = (event: PopStateEvent) => {
+      // BrowserRouter 的同文档后退不可取消，先恢复原位置，再让用户明确决定是否离开。
+      if (restoringHistory) {
+        event.stopImmediatePropagation();
+        if (typeof retainedState?.idx === "number" && typeof event.state?.idx === "number" && retainedState.idx !== event.state.idx) {
+          window.history.go(retainedState.idx - event.state.idx); return;
+        }
+        restoringHistory = false;
+        if (restoredLeaveAction) setLeaveAction(() => restoredLeaveAction);
+        return;
+      }
+      if (allowHistoryExit.current) { allowHistoryExit.current = false; return; }
+      const retained = new URL(retainedUrl);
+      if (window.location.pathname === retained.pathname && window.location.search === retained.search) {
+        retainedState = window.history.state; retainedUrl = window.location.href; return;
+      }
+      event.stopImmediatePropagation();
+      const destination = window.location.pathname + window.location.search + window.location.hash;
+      const oldIndex = retainedState?.idx;
+      const nextIndex = event.state?.idx;
+      if (typeof oldIndex === "number" && typeof nextIndex === "number" && oldIndex !== nextIndex) {
+        restoredLeaveAction = () => { allowHistoryExit.current = true; window.history.go(nextIndex - oldIndex); };
+        restoringHistory = true; window.history.go(oldIndex - nextIndex);
+      } else {
+        window.history.pushState(retainedState, "", retainedUrl);
+        setLeaveAction(() => () => navigate(destination));
+      }
+    };
+    const warnNavigation = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (!link || (link.target && link.target !== "_self") || link.hasAttribute("download")) return;
+      const destination = new URL(link.href, window.location.href);
+      if (destination.pathname === window.location.pathname && destination.search === window.location.search) return;
+      event.preventDefault(); event.stopPropagation();
+      setLeaveAction(() => () => {
+        if (destination.origin === window.location.origin) navigate(destination.pathname + destination.search + destination.hash);
+        else { allowDocumentExit.current = true; window.location.assign(destination.href); }
+      });
+    };
+    window.addEventListener("beforeunload", warn);
+    window.addEventListener("popstate", warnHistory, true);
+    document.addEventListener("click", warnNavigation, true);
+    return () => { window.removeEventListener("beforeunload", warn); window.removeEventListener("popstate", warnHistory, true); document.removeEventListener("click", warnNavigation, true); };
+  }, [modelDirty, navigate]);
   const query = useQuery({ queryKey: ["product-settings", currentUser()], queryFn: () => api.get<Inventory>("/settings/product"), retry: false });
   const paginated = active === "rules" || active === "data_sources";
   const path = active === "rules" ? "rules" : "data-sources";
@@ -76,10 +184,18 @@ export default function ProductSettingsPage() {
   const error = paginated ? page.error : query.error;
   const refresh = () => paginated ? page.refetch() : query.refetch();
   return <div className="space-y-6 p-6 lg:p-9"><header><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">System configuration</p><h1 className="mt-2 text-2xl font-bold">设置</h1><p className="mt-2 text-sm text-slate-600">统一产品入口，读取既有 Registry 与安全配置投影；不建立第二套配置真源。</p></header>
-    <nav className="flex flex-wrap gap-2" aria-label="设置分区">{sections.map(([key, label]) => <Button key={key} variant={active === key ? "primary" : "secondary"} onClick={() => { setActive(key); setOffset(0); }}>{label}</Button>)}</nav>
+    <nav className="flex flex-wrap gap-2" aria-label="设置分区">{sections.map(([key, label]) => <Button key={key} variant={active === key ? "primary" : "secondary"} onClick={() => { if (key === active) return; const leave = () => { setActive(key); setOffset(0); }; if (active === "models" && modelDirty) setLeaveAction(() => leave); else leave(); }}>{label}</Button>)}</nav>
     {pending && <Spinner label="读取安全产品设置…" />}
     {error && <div className="space-y-3" role="alert"><ErrorBanner message={error instanceof Error ? error.message : "设置读取失败"} /><Button onClick={() => void refresh()}>重试</Button></div>}
     {!pending && !error && !selected && <ErrorBanner message="后端尚未返回这个分区，不能确认其能力。" />}
-    {selected && <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{selected.label}</h2><span className="rounded-full bg-slate-100 px-3 py-1 text-xs">{labels[selected.editability] ?? "能力未核对"}</span></div>{selected.reason && <p className="text-sm text-amber-800">{selected.reason}</p>}<Metadata value={selected.data} />{paging && <div className="flex items-center gap-3"><span className="text-xs text-slate-500">共 {paging.total} 条，当前起点 {paging.offset}</span><Button variant="secondary" disabled={paging.offset === 0} onClick={() => setOffset(Math.max(0, paging.offset - paging.limit))}>上一页</Button><Button variant="secondary" disabled={paging.offset + paging.limit >= paging.total} onClick={() => setOffset(paging.offset + paging.limit)}>下一页</Button></div>}<SectionActions key={`${currentUser()}:${selected.key}`} section={selected} /><Button variant="secondary" onClick={() => void refresh()}>刷新真实配置</Button></section>}
+    {selected && <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{selected.label}</h2><span className="rounded-full bg-slate-100 px-3 py-1 text-xs">{labels[selected.editability] ?? "能力未核对"}</span></div>{selected.reason && <p className="text-sm text-amber-800">{selected.reason}</p>}{selected.key !== "models" && <Metadata value={selected.data} />}{paging && <div className="flex items-center gap-3"><span className="text-xs text-slate-500">共 {paging.total} 条，当前起点 {paging.offset}</span><Button variant="secondary" disabled={paging.offset === 0} onClick={() => setOffset(Math.max(0, paging.offset - paging.limit))}>上一页</Button><Button variant="secondary" disabled={paging.offset + paging.limit >= paging.total} onClick={() => setOffset(paging.offset + paging.limit)}>下一页</Button></div>}<SectionActions key={`${currentUser()}:${selected.key}`} section={selected} onModelDirtyChange={setModelDirty} />{selected.key !== "models" && <Button variant="secondary" onClick={() => void refresh()}>刷新真实配置</Button>}</section>}
+    {leaveAction && <div ref={leaveDialog} role="dialog" aria-modal="true" aria-label="未保存的模型编辑" onKeyDown={event => {
+      if (event.key === "Escape") { event.preventDefault(); setLeaveAction(null); }
+      if (event.key !== "Tab") return;
+      const buttons = leaveDialog.current?.querySelectorAll<HTMLButtonElement>("button");
+      if (!buttons?.length) return;
+      if (event.shiftKey && document.activeElement === buttons[0]) { event.preventDefault(); buttons[buttons.length - 1].focus(); }
+      else if (!event.shiftKey && document.activeElement === buttons[buttons.length - 1]) { event.preventDefault(); buttons[0].focus(); }
+    }}><Modal title="保留未保存的编辑？" onClose={() => setLeaveAction(null)}><p className="text-sm leading-6 text-slate-600">厂商、用途路由或能力配置有未保存的编辑。离开会丢弃这些本地草稿，已保存的配置不受影响。</p><div className="mt-5 flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={() => setLeaveAction(null)}>继续编辑</Button><Button variant="danger" onClick={() => { const leave = leaveAction; setLeaveAction(null); leave(); }}>丢弃并离开</Button></div></Modal></div>}
   </div>;
 }

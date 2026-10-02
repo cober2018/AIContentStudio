@@ -1,5 +1,7 @@
 # AI Content Studio（AI 内容生产中心）
 
+2026-10-03 模型设置与配置基础：模型与 AI 按厂商与模型、用途路由、生成能力与插件三视图组织，保留独立草稿/CAS/权限和懒加载；模型登记与能力路由复用 SystemSetting，不增加第二套配置真源。必要前后端依赖随本版提交；其他 F7 持久任务/消费者与 F8 改动不混入。目录增加模型登记/能力/固定 CLI 服务及模型设置组件，无新增依赖，本次无迁移，启动沿用下文。已完成快照构建与相关回归；真实 CPA/MiniMax 验收仍逐能力记录，不把配置或聊天成功当媒体生成成功，不推送/部署。证据与 TODO 见 [F7 模型验收](docs/FE_F7_MODEL_VALIDATION.md)。
+
 2026-10-02 公众号补充收尾：用户接受指定账号草稿/media_id+后台确认，额外成功回读为豁免不是已执行。原文件名已冻结于official render v2并逐步核对、原样上传，缺失/不安全名称拒绝；历史候选不回填。完整工作区后端1660/28 skipped，公众号-only拟提交快照1624/28 skipped、PG迁移22项、Web/FE-P1、41隔离UI、范围Ruff/diff及独立复核通过。仅同步account-bound-wechat-draft-publisher主规格并归档本补充，不将未提交MiniMax/F8混入；不再外发、推送、部署或生产迁移。一般runtime未解除安全门槛，其他F7/F8 TODO仍保留。目录增加四个wechat_official服务、AccountPublisherPanel/OfficialArticlePreview、f7c账号字段迁移；启动/依赖不变，正式f7c升级仍需独立目标授权。详见[公众号收尾证据](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
 
 事实驱动的内容生产系统：把结构化数据、研究笔记、文件、URL、人工观点整理成 **FactPack**，面向抖音 / 小红书 / 公众号生成内容，经事实校验与人工审核后导出；公众号可进一步自动写入官方草稿箱。

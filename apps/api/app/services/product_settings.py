@@ -28,7 +28,7 @@ from . import capability_integrations, data_source_plugins, system_settings
 from .content_harness import channel_registry, rules
 from .content_harness.publishers import bootstrap_publishers
 from .content_harness.registry import RegistryKinds, registry
-from .generation.providers import effective_llm_config
+from .generation.providers import LLMError, effective_llm_config
 
 LABELS = {
     "models": "模型与 AI", "data_sources": "数据源", "channels": "渠道",
@@ -89,7 +89,14 @@ def _section(key: str, data: dict, editability="read_only", reason=None) -> dict
 
 
 def models_section(user: User) -> dict:
-    llm = _profile(effective_llm_config())
+    try:
+        llm = _profile(effective_llm_config())
+    except LLMError:
+        models = system_settings.models_view()
+        model_config = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
+        default_name = model_config.get("default_profile")
+        llm = _profile((models.get("profiles") or {}).get(default_name) or {})
+        llm.update({"available": False, "reason": "默认模型不可用，请修复模型登记或选择其他默认模型"})
     llm["overridden"] = bool(runtime_config.get_runtime(runtime_config.KEY_LLM))
     models = system_settings.models_view()
     profiles = {
