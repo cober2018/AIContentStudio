@@ -1,4 +1,14 @@
-# 2026-10-04：F8 独立复核修正（当前状态）
+# 2026-10-04：F8 本地main提交完成（当前状态）
+
+- 用户授权的本机F8功能已提交到当前main：`ade4ce04870b854d262cdbc55250233cb293f54e`。无需分支合并：获准代码直接提交在main；没有push/deploy/正式迁移或新增外部调用。
+- 10.11完成，本机82/82；原清单82/100，18条生产身份/Secret Provider/MinIO/新增远端验收义务保留未勾选。ROADMAP_IMPLEMENTED_LOCAL=true，仅指SQLite+local media+loopback批准范围；ROADMAP_IMPLEMENTED_PRODUCTION=false，不宣称完整生产路线已实现。
+- 功能提交使用获准片段的私有索引，实际提交树已经过1660 passed/28 skipped/8 warnings、Web/FE-P1、Ruff/strict34/diff及Hubble限定边界APPROVE；身份/schema/MinIO工作文件没有覆盖，原始资料包没有纳入。
+- 规格仍active，canonical sync/archive未获准、不执行。提交后的文档收尾只补状态与提交证据，不改业务代码，不重复供应商/公众号发送或测试。
+- 本轮实际技能：using-superpowers、finishing-a-development-branch、writing-plans、executing-plans、verification-before-completion、requesting/receiving-code-review；限定复核使用dispatching-parallel-agents指引。
+
+以下为提交前的修正与验收历史，等待提交/81计数不再是当前状态。
+
+# 2026-10-04：F8 独立复核修正（提交前历史）
 
 - Hubble（`01a102bc-9cc8-7772-a0d5-c82539c6b04c`）最终提交边界复审APPROVE：3.3与18延期/81完成/82本机计数一致；排除路径、引用、f7d、production拒绝、无密钥/原始包边界均认可。只批准本地main提交，不代替外部或生产验收。
 - 提交边界review唯一blocker为task3.3把排除的MinIO类记已交付，核对源码/私有索引属实。已将其恢复未勾选并按用户确定的本机profile列为未来对象存储要求；当前81/82本机、81/100原清单、18延期，下方17/83为历史。代码没改，不通过混入未验收实现凑计数。

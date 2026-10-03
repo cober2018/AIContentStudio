@@ -1,4 +1,10 @@
-# 2026-10-04：独立复核后的实际缺口
+# 2026-10-04：本地main提交边界结论
+
+- 获准本机功能提交为`ade4ce04870b854d262cdbc55250233cb293f54e`，已经位于main。分支本来为main，不能额外执行不必要merge或pull；提交不等于推送/部署。
+- 完成的是82项本机要求，原100项中的18项未来义务仍保留未验证；canonical sync/archive也不在本轮授权内。
+- 全量验证必须针对实际提交投影：排除JWT validator后health不能仍无条件import它；正式草案则完整保留。未批准文件继续显示dirty是有意保存，不应reset、清理或误报工作区clean。
+
+# 2026-10-04：独立复核后的实际缺口（提交前历史）
 
 - 提交边界审查抓到任务计数不一致：MinIO 3.3不在获准本机提交树，却仍记完成。按已有local-only部署选择恢复为延期/未交付；本机分母82、原义务延期18，提交前81完成。不能同时排除代码又声称其交付。
 - 提交隔离必须同时检查import：从config排除JWT validator而check_health还无条件import它，会导致本机health ImportError。拟提交片段已只import get_settings，并明确拒绝未交付production readiness；最终拟提交树1660/28 skipped通过，code head仍f7d，正式工作区draft保持原样。没有新增持久测试或表。

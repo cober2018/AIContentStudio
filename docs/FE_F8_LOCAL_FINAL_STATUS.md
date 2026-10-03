@@ -12,7 +12,7 @@ SQLite + 当前本地素材库 + loopback-only API/Web 访问
 
 这不是PostgreSQL、MinIO、多主机、JWT生产身份或远程发布验收。已确认的本机profile不含生产身份/Secret Provider/新增远端发布或生产对象存储；原100项中的18项（0.7、1.1–1.10、2.4–2.6、3.3、9.5–9.7）保留延期/未验证。本机分母为82。提交边界复核发现此前将未交付MinIO 3.3误计完成，已纠正，原83分母不是当前计数。
 
-## 本机结果（实施验收通过，等待获准提交与规格生命周期收尾）
+## 本机结果（实施验收与本地main提交完成，规格生命周期待授权）
 
 | 层级 | 结果 | 证据 |
 |---|---|---|
@@ -44,14 +44,24 @@ SQLite + 当前本地素材库 + loopback-only API/Web 访问
 
 ## 状态解释
 
-当前为 **FE-F8 本机实施验收通过，等待本地提交/主规格同步/归档授权**，还不能宣称规格生命周期已关单或完整生产就绪。身份/远端部署范围仍未批准；正式库仍使用批准f7d，未启用身份draft。
+当前为 **FE-F8 本机实施验收与本地main提交完成，主规格同步/归档待单独授权**，还不能宣称规格生命周期已关单或完整生产就绪。身份/远端部署范围仍未批准；正式库仍使用批准f7d，未启用身份draft。
 
-当前本机任务 **81/82**，只剩 **10.11 本地最终提交及ROADMAP记录**；主规格同步和归档也须单独获准。原清单 **81/100**，另外18条为延期而非本机代码blocker。未执行commit/push/deploy/canonical sync/archive/正式迁移；未来提交不得混入未批准身份/schema/MinIO draft或原始资料包。
+当前本机任务 **82/82**，10.11已由获准本地提交及本节ROADMAP记录完成；主规格同步和归档须单独获准。原清单 **82/100**，另外18条为延期而非本机代码blocker。未执行push/deploy/canonical sync/archive/正式迁移；未批准身份/schema/MinIO draft和原始资料包不在功能提交中，继续保留工作区。
+
+```text
+IMPLEMENTATION_COMMIT = ade4ce04870b854d262cdbc55250233cb293f54e
+BRANCH = main (local)
+ROADMAP_IMPLEMENTED_LOCAL = true
+ROADMAP_IMPLEMENTED_PRODUCTION = false
+SPEC_LIFECYCLE = active; canonical sync/archive not authorized
+```
+
+`ROADMAP_IMPLEMENTED_LOCAL`仅指本轮确认的SQLite、本地素材库和loopback范围，不表示原100项生产/远端路线全部实现。本轮功能提交没有新增迁移或永久测试。
 
 ## 2026-10-04 获准本地提交的独立快照
 
 用户随后明确授权本地提交并融入main，但没有授权主规格同步/归档。私有索引对应无Git注册快照 `/private/tmp/aics-f8-main-commit.kQBOP1/snapshot/`：排除deps/main/models/f8a/test migration head以及混合文件中的JWT/生产身份/MinIO片段。main本来已为目标分支，不需要切分支或pull。
 
-拟提交版本完整后端 **1660 passed / 28 skipped / 8 warnings，85.99秒**；Web/FE-P1、Ruff、OpenSpec strict34/34及暂存diff通过。Projects224.89/72.97kB、Settings238.88/78.06kB；source code head保持f7d。临时probe证实不存在JWT config属性、production auth/ready=false；不会因为排除draft而虚报生产就绪。首轮投影的3个health导入失败已明确修正后重跑，不计入PASS。提交凭据marker扫描0。
+实际功能提交版本完整后端 **1660 passed / 28 skipped / 8 warnings，85.99秒**；Web/FE-P1、Ruff、OpenSpec strict34/34及暂存diff通过。Projects224.89/72.97kB、Settings238.88/78.06kB；source code head保持f7d。临时probe证实不存在JWT config属性、production auth/ready=false；不会因为排除draft而虚报生产就绪。首轮投影的3个health导入失败已明确修正后重跑，不计入PASS。提交凭据marker扫描0。
 
-身份草案仍完整保留工作区，生产启动与未来媒体MinIO实现不是该提交能力。没有新增外部调用、依赖、表或永久测试；本地提交hash在执行后记录。
+身份草案仍完整保留工作区，生产启动与未来媒体MinIO实现不是该提交能力。Hubble限定提交边界复审APPROVE，MinIO 3.3计数已纠正。功能commit为上述`ade4ce0`；随后的文档提交仅记录最终计数和状态，不改变已验证代码。没有新增外部调用、依赖、表或永久测试。

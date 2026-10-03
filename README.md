@@ -1,6 +1,6 @@
 # AI Content Studio（AI 内容生产中心）
 
-2026-10-04 本地main提交已获准，拟提交本机树1660 passed/28 skipped、Web/FE-P1、Ruff/strict34/diff通过。当前81/82本机，只剩提交记录；原81/100、18项未来义务未验证。限定复核发现排除的MinIO 3.3被误记完成，已恢复延期：未批准身份/MinIO草案与原始包不纳入，不凑100/100。没有push/deploy/正式迁移，主规格同步/归档尚未获准。下方82/83、17项是提交边界校准前历史，不是当前计数。
+2026-10-04 F8 获准本机实现已提交到本地main：`ade4ce04870b854d262cdbc55250233cb293f54e`。本机82/82完成，原清单82/100，18项生产/远端义务延期且未验证。实际提交快照后端1660 passed/28 skipped、Web/FE-P1、Ruff/strict34/diff与限定提交边界复核通过；未批准身份/MinIO草案及原始包完整保留在工作区、不在提交内。未push/deploy/正式迁移，主规格同步/归档尚未获准。目录、依赖与启动方式不因本次提交改变；见[本机验收及提交记录](docs/FE_F8_LOCAL_FINAL_STATUS.md)。下方等待提交、82/83和17项为历史，不是当前状态。
 
 2026-10-04 F8 本机实施验收通过，等待本地提交及主规格同步/归档授权。正式基准为个人本机 SQLite、本地素材库、仅 loopback 访问；本机 `82/83`，原清单 `82/100`，只剩本地最终提交/ROADMAP记录。17项生产身份/Secret Provider/新增真实远端发布义务已确认延期，保留未勾选/未验证。此前总体复核及最终定向复审闭合四项恢复/安全blocker，安全与架构均APPROVE；正确apps/api cwd全量1660 passed/28 skipped/8 warnings、186定向、Web/预算、strict34/34、Ruff/diff通过。三形态/五渠道本地闭环、20个新浏览器gate、恢复重新导出和确定性Golden证据保留，真实模型质量未验收。CLI内部HTTP/供应商后台grant不由本机helper证明。未commit/push/deploy/正式迁移/主规格同步归档；未批准身份draft不得混入提交。目录增加恢复脚本和Golden夹具，依赖与启动方式不变。见[本机验收](docs/FE_F8_LOCAL_FINAL_STATUS.md)、[出站审计](docs/FE_F8_EXTERNAL_CAPABILITY_SECURITY_AUDIT.md)、[本机闭环](docs/FE_F8_LOCAL_FULL_CHAIN_ACCEPTANCE.md)、[恢复验收](docs/FE_F8_RECOVERY_ACCEPTANCE.md)与[Golden夹具](apps/api/evals/goldens/README.md)；下方旧计数为历史。
 

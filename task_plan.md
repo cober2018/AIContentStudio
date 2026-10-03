@@ -8,9 +8,9 @@
 
 - [x] 固定拟提交范围；混合config/product-settings/storage/observability/Web team仅纳入本机片段，不改正式工作文件的草案。
 - [x] 拟提交快照完整后端、Web/FE-P1、Ruff/OpenSpec/diff及限定提交边界复核；全量1660/28 skipped、build/预算及静态门禁通过，Hubble限定复审APPROVE，3.3状态校准完成。
-- [ ] 本地main提交并记录hash/ROADMAP本机状态；保留18延期与active change，不执行主规格同步/归档。
+- [x] 本地main功能提交`ade4ce04870b854d262cdbc55250233cb293f54e`，ROADMAP_IMPLEMENTED_LOCAL=true（仅已确认本机范围）；本机82/82，18延期与active change保留，不执行主规格同步/归档。
 
-提交边界复核纠正：3.3声称MinIO已交付与实际拟提交树不符，已重开并按既定local-only profile列入未来范围。当前81/82本机、81/100原清单、18延期；下方17/83历史计数由此替代。不补做或混入未来MinIO实现。
+提交边界复核纠正：3.3声称MinIO已交付与实际提交树不符，已重开并按既定local-only profile列入未来范围。当前82/82本机、82/100原清单、18延期；下方等待提交、17/83历史计数由此替代。不补做或混入未来MinIO实现。
 
 ## 当前补验批次（上轮 PASS 纠正）
 
