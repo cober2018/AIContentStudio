@@ -92,7 +92,7 @@ def test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite(fresh_sqlite_ur
 
     cfg = Config("alembic.ini")
     cfg.attributes["configure_logger"] = False
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["f7c000000001"]
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["f7d000000001"]
     command.upgrade(cfg, "head")
     engine = create_engine(fresh_sqlite_url)
     try:

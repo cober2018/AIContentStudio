@@ -101,13 +101,6 @@ def test_f7_exact_mapped_api_data_node_pulls_then_invalidates_on_endpoint_edit(c
     )
     db_session.add(endpoint)
     db_session.flush()
-    fingerprint = endpoint_config_fingerprint(endpoint)
-    registration = CapabilityRegistration(
-        kind="data_connector", key="profile.daily", version="1", status="configured",
-        config_fingerprint=fingerprint, data_source_plugin_key="api", endpoint_id=endpoint.id,
-    )
-    db_session.add(registration)
-    db_session.commit()
     calls = []
     payload = {"value": 1}
 
@@ -116,8 +109,16 @@ def test_f7_exact_mapped_api_data_node_pulls_then_invalidates_on_endpoint_edit(c
         return json.dumps({"rows": [{"name": "evidence", "value": payload["value"],
                                      "unmapped_secret": "private-response-data"}]}).encode(), "application/json"
 
+    # Verification must identify the executor that will actually perform the pull.
     monkeypatch.setattr(connector_service, "bounded_safe_fetch", fake_fetch, raising=False)
     monkeypatch.setattr(connector_service, "safe_fetch", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("legacy fetch used")))
+    fingerprint = endpoint_config_fingerprint(endpoint)
+    registration = CapabilityRegistration(
+        kind="data_connector", key="profile.daily", version="1", status="configured",
+        config_fingerprint=fingerprint, data_source_plugin_key="api", endpoint_id=endpoint.id,
+    )
+    db_session.add(registration)
+    db_session.commit()
     source_ref = f"capability:{registration.id}@1"
     definition = {"nodes": [
         {"id": "data", "kind": "Data", "plugin": "data.source", "config": {

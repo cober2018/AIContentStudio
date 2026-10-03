@@ -415,6 +415,37 @@ def test_f7_verification_rejects_secret_bearing_scope_or_evidence(db_session):
         }, result="verified", actor="admin@studio.local", evidence={"kind": "human_readback", "raw_output": "secret"})
 
 
+@pytest.mark.parametrize("function_name", ["_fetch_all_pages", "map_response_to_facts", "bounded_safe_fetch"])
+def test_f7_endpoint_verification_rejects_loaded_executor_change(db_session, monkeypatch, function_name):
+    from app.services import data_source_plugins
+
+    connector = Connector(name="API", base_url="https://example.org", auth_style="none")
+    db_session.add(connector)
+    db_session.flush()
+    endpoint = ConnectorEndpoint(connector_id=connector.id, name="daily", path="/daily", title_template="daily")
+    db_session.add(endpoint)
+    db_session.flush()
+    fingerprint = capability_integrations.endpoint_config_fingerprint(endpoint)
+    registration = CapabilityRegistration(kind="data_connector", key="profile.code-drift", version="1",
+        status="configured", config_fingerprint=fingerprint, data_source_plugin_key="api", endpoint_id=endpoint.id)
+    db_session.add(registration)
+    db_session.flush()
+    scope = {"plugin_key": "api", "registration_key": registration.key,
+             "registration_version": registration.version, "endpoint_id": endpoint.id}
+    append_verification(db_session, registration, scope_kind="data_source_endpoint", scope=scope,
+                        result="verified", actor="admin@studio.local",
+                        evidence={"kind": "platform_readback", "reference_hash": "d" * 64})
+    db_session.commit()
+    assert data_source_plugins.verified_data_endpoint(db_session, registration, "api") == endpoint
+    original = getattr(connector_service, function_name)
+    monkeypatch.setattr(connector_service, function_name, lambda *args, **kwargs: None)
+    assert capability_integrations.endpoint_config_fingerprint(endpoint) != fingerprint
+    with pytest.raises(ValueError, match="配置或凭据版本已变化"):
+        data_source_plugins.verified_data_endpoint(db_session, registration, "api")
+    monkeypatch.setattr(connector_service, function_name, original)
+    assert capability_integrations.endpoint_config_fingerprint(endpoint) == fingerprint
+
+
 def test_f7_endpoint_identity_needs_credential_version_and_tracks_config_edit(db_session, monkeypatch):
     connector = Connector(
         name="API", base_url="https://example.org", auth_style="bearer", api_key_env="F7_TEST_API_KEY",
@@ -504,6 +535,19 @@ def test_f7_admin_configures_and_probes_read_only_data_capability(client, db_ses
     db_session.commit()
     path = "/api/v1/data-source-capabilities"
     config = {"key": "profile.daily", "version": "1", "plugin_key": "api", "endpoint_id": endpoint.id}
+    calls = []
+    payload = {"rows": [{"name": "rate", "value": 4}]}
+    fetch_failure = False
+
+    def fake_fetch(url, *args, **kwargs):
+        if fetch_failure:
+            raise RuntimeError("secret-example-provider-response")
+        calls.append(url)
+        return json.dumps(payload).encode(), "application/json"
+
+    # The configured profile must bind the same test executor that its probe will run.
+    monkeypatch.setattr(connector_service, "bounded_safe_fetch", fake_fetch, raising=False)
+    monkeypatch.setattr(connector_service, "safe_fetch", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("legacy fetch used")))
     assert client.post(path, json=config, headers=viewer).status_code == 403
     created = client.post(path, json=config, headers=admin)
     assert created.status_code == 201, created.text
@@ -519,15 +563,6 @@ def test_f7_admin_configures_and_probes_read_only_data_capability(client, db_ses
     probe_path = f"{path}/{capability_id}/probe"
     assert client.post(pull_path, headers=admin).status_code == 409
     assert client.post(probe_path, headers=viewer).status_code == 403
-    calls = []
-    payload = {"rows": [{"name": "rate", "value": 4}]}
-
-    def fake_fetch(url, *args, **kwargs):
-        calls.append(url)
-        return json.dumps(payload).encode(), "application/json"
-
-    monkeypatch.setattr(connector_service, "bounded_safe_fetch", fake_fetch, raising=False)
-    monkeypatch.setattr(connector_service, "safe_fetch", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("legacy fetch used")))
     probe = client.post(probe_path, headers=admin)
     assert probe.status_code == 200, probe.text
     assert probe.json()["verified"] is True
@@ -537,20 +572,19 @@ def test_f7_admin_configures_and_probes_read_only_data_capability(client, db_ses
     pulled = client.post(pull_path, headers=admin)
     assert pulled.status_code == 200, pulled.text
     assert client.post(probe_path, headers=admin).status_code == 200
-    def failing_fetch(url, *args, **kwargs):
-        raise RuntimeError("secret-example-provider-response")
-
-    monkeypatch.setattr(connector_service, "bounded_safe_fetch", failing_fetch)
+    fetch_failure = True
     failed = client.post(pull_path, headers=admin)
     assert failed.status_code == 502
     assert "secret-example-provider-response" not in failed.text
     assert db_session.get(ConnectorEndpoint, endpoint.id).last_pull_error == "connector_pull_failed"
+    fetch_failure = False
     monkeypatch.setattr(connector_service, "safe_fetch", fake_fetch)
     assert client.post(f"/api/v1/endpoints/{endpoint.id}/pull", headers=admin).status_code == 200
     assert client.get(inventory_path, headers=viewer).json()[0]["executable"] is False
     assert client.post(pull_path, headers=admin).status_code == 409
+    fetch_failure = True
     assert client.post(probe_path, headers=admin).status_code == 502
-    monkeypatch.setattr(connector_service, "bounded_safe_fetch", fake_fetch)
+    fetch_failure = False
     assert client.post(probe_path, headers=admin).status_code == 200
     payload["rows"] = []
     assert client.post(probe_path, headers=admin).status_code == 422

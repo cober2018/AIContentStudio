@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from ..models import CreativeBriefRevision
 
-
 BRIEF_FIELDS = (
     "objective", "primary_audience", "core_message", "angle", "required_evidence",
     "content_constraints", "identity_scope", "modality_scope", "channel_scope", "cta", "references",

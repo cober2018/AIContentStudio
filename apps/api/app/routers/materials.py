@@ -8,7 +8,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -56,6 +56,77 @@ class ProviderAcceptIn(BaseModel):
     model_use_allowed: bool
     commercial_use_allowed: bool
     attribution_text: str | None = Field(default=None, max_length=1000)
+
+
+class GenerationTaskIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    idempotency_key: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,100}$")
+    capability: Literal["image_generation", "video_generation", "tts"]
+    selected_profile: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,100}$")
+    explicit_plugin: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_.-]{1,100}$")
+    prompt: str = Field(min_length=1, max_length=2000)
+    project_id: int | None = Field(default=None, ge=1)
+    source_revision_ids: list[int] = Field(default_factory=list, max_length=4)
+    parameters: dict[Literal["items", "pixels", "seconds", "tokens", "timeout_seconds"], StrictInt] = Field(default_factory=dict, max_length=5)
+
+
+class GenerationRevisionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_revision: int = Field(strict=True, ge=1)
+
+
+class GenerationAcceptIn(ProviderAcceptIn):
+    expected_revision: int = Field(strict=True, ge=1)
+
+
+@router.get("/generation-tasks")
+def list_generation_tasks(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import generation_tasks
+
+    return generation_tasks.list_tasks(db, user)
+
+
+@router.post("/generation-tasks", status_code=201)
+def prepare_generation_task(payload: GenerationTaskIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import generation_tasks
+
+    return generation_tasks.prepare(db, user, payload.model_dump())
+
+
+@router.get("/generation-tasks/{task_id}")
+def read_generation_task(task_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import generation_tasks
+
+    return generation_tasks.read(db, user, task_id)
+
+
+@router.post("/generation-tasks/{task_id}/execute")
+def execute_generation_task(task_id: str, payload: GenerationRevisionIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import generation_tasks
+
+    return generation_tasks.execute(db, user, task_id, payload.expected_revision)
+
+
+@router.post("/generation-tasks/{task_id}/recover")
+def recover_generation_task(task_id: str, payload: GenerationRevisionIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import generation_tasks
+
+    return generation_tasks.recover(db, user, task_id, payload.expected_revision)
+
+
+@router.get("/generation-tasks/{task_id}/raw")
+def preview_generation_task(task_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import generation_tasks
+
+    content, mime = generation_tasks.raw(db, user, task_id)
+    return Response(content=content, media_type=mime, headers={"Cache-Control": "private, no-store"})
+
+
+@router.post("/generation-tasks/{task_id}/accept", status_code=201)
+def accept_generation_task(task_id: str, payload: GenerationAcceptIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import generation_tasks
+
+    return generation_tasks.accept(db, user, task_id, payload.expected_revision, payload.model_dump(exclude={"expected_revision"}))
 
 
 class ProviderSearchIn(BaseModel):

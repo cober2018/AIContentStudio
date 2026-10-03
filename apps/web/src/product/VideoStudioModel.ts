@@ -13,7 +13,7 @@ export type VideoPayload = {
 export type VideoAssetRef = { material_revision_id: number; content_hash: string; role: string; slot_key?: string; sort_order?: number; placement?: Record<string, unknown> };
 export type VideoEvidenceRef = { fact_pack_item_id: number; snapshot_checksum: string; role?: string; sort_order?: number; locator: Record<string, unknown> };
 export type VideoDraft = { payloadSchema: "video.master.v2"; payload: VideoPayload; assetRefs: VideoAssetRef[]; evidenceRefs: VideoEvidenceRef[]; asrReceiptId?: string };
-export type ExactVideoAsset = { material_revision_id: number; content_hash: string; kind: string; public_use_allowed: boolean };
+export type ExactVideoAsset = { material_revision_id: number; content_hash: string; kind: string; public_use_allowed: boolean; model_use_allowed: boolean };
 
 const MAX_DURATION = 8 * 60 * 60 * 1000;
 function reordered<T extends { order: number }>(rows: T[]): T[] { return rows.map((row, order) => ({ ...row, order })); }
@@ -150,7 +150,7 @@ export function removeShot(draft: VideoDraft, id: string): VideoDraft {
 export function bindShotSource(draft: VideoDraft, id: string, asset: ExactVideoAsset | null): VideoDraft {
   const old = draft.payload.shots.find((shot) => shot.id === id);
   if (!old) throw new Error("Shot not found");
-  if (asset && !asset.public_use_allowed) throw new Error("Asset rights do not allow public use");
+  if (asset && !asset.model_use_allowed && !asset.public_use_allowed) throw new Error("Asset rights allow neither model nor public use");
   if (asset && !["image", "video"].includes(asset.kind)) throw new Error("Shot source kind must be image or video");
   if (asset && (!Number.isInteger(asset.material_revision_id) || asset.material_revision_id < 1 || !/^[0-9a-f]{64}$/.test(asset.content_hash))) throw new Error("Exact asset revision/hash invalid");
   const current = draft.assetRefs.find((ref) => ref.role === "shot_source" && ref.slot_key === id);
@@ -205,7 +205,7 @@ export function addTimelineItem(draft: VideoDraft, trackId: string, input: { sta
     if (!input.asset) throw new Error("Audio track requires exact asset");
   }
   if (input.asset) {
-    if (!input.asset.public_use_allowed) throw new Error("Asset rights do not allow public use");
+    if (!input.asset.model_use_allowed && !input.asset.public_use_allowed) throw new Error("Asset rights allow neither model nor public use");
     const kinds = track.kind === "video" ? ["image", "video"] : track.kind === "audio" || track.kind === "music" ? ["audio"] : [];
     if (!kinds.includes(input.asset.kind)) throw new Error("Timeline media kind invalid");
     if (!Number.isInteger(input.asset.material_revision_id) || input.asset.material_revision_id < 1 || !/^[0-9a-f]{64}$/.test(input.asset.content_hash)) throw new Error("Exact timeline media revision/hash invalid");
@@ -246,9 +246,10 @@ export function removeTimelineItem(draft: VideoDraft, trackId: string, itemId: s
   return changed(draft, payload, orderedAssetRefs(payload, draft.assetRefs));
 }
 
-function validateMedia(asset: ExactVideoAsset | null, kind: string, label: string): void {
+function validateMedia(asset: ExactVideoAsset | null, kind: string, label: string, requirePublic = false): void {
   if (!asset) return;
-  if (!asset.public_use_allowed) throw new Error(`${label} rights do not allow public use`);
+  if (!asset.model_use_allowed && !asset.public_use_allowed) throw new Error(`${label} rights allow neither model nor public use`);
+  if (requirePublic && !asset.public_use_allowed) throw new Error(`${label} rights do not allow public use`);
   if (asset.kind !== kind) throw new Error(`${label} kind must be ${kind}`);
   if (!Number.isInteger(asset.material_revision_id) || asset.material_revision_id < 1 || !/^[0-9a-f]{64}$/.test(asset.content_hash)) throw new Error(`${label} exact revision/hash invalid`);
 }
@@ -280,7 +281,7 @@ export function setCover(draft: VideoDraft, asset: ExactVideoAsset | null): Vide
 }
 
 export function bindFinalRender(draft: VideoDraft, asset: ExactVideoAsset | null): VideoDraft {
-  validateMedia(asset, "video", "Final render");
+  validateMedia(asset, "video", "Final render", true);
   const old = draft.assetRefs.find((ref) => ref.role === "render_output");
   if (draft.payload.render_asset_ref?.material_revision_id === asset?.material_revision_id && (!asset || old?.content_hash === asset.content_hash)) return draft;
   const payload = { ...draft.payload };

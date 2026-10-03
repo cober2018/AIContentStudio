@@ -97,7 +97,7 @@ def credential_environment(account_id, version, credentials):
                 os.environ[key] = value
 
 
-def run_acceptance(db, *, candidate_id, candidate_hash, account_id, actor, expires_at, execute=False):
+def run_acceptance(db, *, candidate_id, candidate_hash, account_id, actor, expires_at, execute=False, mode="short"):
     from fastapi import HTTPException
     from sqlalchemy import select
 
@@ -105,13 +105,13 @@ def run_acceptance(db, *, candidate_id, candidate_hash, account_id, actor, expir
     from app.routers.delivery import GenericTargetIn
     from app.services import wechat_official, wechat_official_delivery
     from app.services.content_harness.publishers import bootstrap_publishers
-    from app.services.wechat_official_render import validate_short_draft_render_bound
+    from app.services.wechat_official_render import validate_html_draft_render_bound, validate_short_draft_render_bound
 
     now = int(time.time())
     if (type(candidate_id) is not int or candidate_id < 1 or type(account_id) is not int or account_id < 1
             or not isinstance(candidate_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", candidate_hash)
             or not isinstance(actor, str) or not 1 <= len(actor) <= 255 or any(ord(c) < 32 for c in actor)
-            or type(expires_at) is not int or not now < expires_at <= now + 900 or type(execute) is not bool):
+            or type(expires_at) is not int or not now < expires_at <= now + 900 or type(execute) is not bool or mode not in {"short", "html"}):
         raise AcceptanceRefused("acceptance_scope_invalid")
     try:
         asset = db.get(ContentAsset, candidate_id)
@@ -132,19 +132,21 @@ def run_acceptance(db, *, candidate_id, candidate_hash, account_id, actor, expir
         if not isinstance(version, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", version):
             raise AcceptanceRefused("acceptance_connection_invalid")
         payload = GenericTargetIn(channel="wechat", content_form="article", action="auto_draft",
-            content_account_id=account_id, account_ref=credentials.appid, authorization_version="short-draft.v1")
+            content_account_id=account_id, account_ref=credentials.appid, authorization_version=f"{mode}-draft.v1")
         authority = {"account_id": account_id, "appid": credentials.appid, "candidate_id": candidate_id,
                      "candidate_hash": candidate_hash, "actor": actor, "expires_at": expires_at}
+        if mode == "html":
+            authority["mode"] = mode
         with credential_environment(account_id, version, credentials):
             bootstrap_publishers()
             transient = DeliveryTarget(content_asset_id=candidate_id, channel="wechat", content_form="article",
                 action="auto_draft", content_account_id=account_id, account_ref=credentials.appid,
                 approved_candidate_hash=candidate_hash, authorized_by=actor,
-                publisher_key=wechat_official.KEY, publisher_version="1", authorization_version="short-draft.v1")
+                publisher_key=wechat_official.KEY, publisher_version="1", authorization_version=f"{mode}-draft.v1")
             manifest, runtime = wechat_official_delivery.validate_target(db, transient, user,
                                                                         _short_draft_request=authority)
-            bound = validate_short_draft_render_bound(manifest["official_render"])
-            summary = {"schema": "wechat.short-draft.acceptance.v1", "candidate_id": candidate_id,
+            bound = (validate_html_draft_render_bound if mode == "html" else validate_short_draft_render_bound)(manifest["official_render"])
+            summary = {"schema": f"wechat.{mode}-draft.acceptance.v1", "candidate_id": candidate_id,
                 "candidate_hash": candidate_hash, "account_id": account_id,
                 "account_identity_hash": hashlib.sha256(credentials.appid.encode()).hexdigest(),
                 "runtime_fingerprint": runtime.fingerprint, "render_hash": manifest["official_render"]["render_hash"],
@@ -163,7 +165,7 @@ def run_acceptance(db, *, candidate_id, candidate_hash, account_id, actor, expir
                 completed = metadata.get("completed_steps", [])
                 summary.update(status=result["status"], target_status=result["target_status"],
                     dispatched=True if completed else None,
-                    completed_steps=[step for step in completed if step in {"token", "asset_0", "create", "read"}],
+                    completed_steps=[step for step in completed if step in {"token", "create", "read"} or re.fullmatch(r"asset_[0-9]{1,2}", step)],
                     remote_id_hash=hashlib.sha256(attempt.remote_id.encode()).hexdigest() if attempt.remote_id else None,
                     readback_hash=metadata.get("readback_hash"))
             except Exception:  # noqa: BLE001 - committed preparation or effects cannot be called a refusal.
@@ -192,6 +194,7 @@ def parse_arguments(argv=None):
     parser.add_argument("--actor", required=True)
     parser.add_argument("--expires-at", required=True, type=int)
     parser.add_argument("--execute", action="store_true", help="Explicit one-shot external draft effect; never public publish")
+    parser.add_argument("--mode", choices=("short", "html"), default="short")
     return parser.parse_args(argv)
 
 
@@ -215,7 +218,7 @@ def main(argv=None):
                     raise AcceptanceRefused("acceptance_database_invalid")
             with Session(engine, expire_on_commit=False) as db:
                 result = run_acceptance(db, **{key: getattr(arguments, key) for key in
-                    ("candidate_id", "candidate_hash", "account_id", "actor", "expires_at", "execute")})
+                    ("candidate_id", "candidate_hash", "account_id", "actor", "expires_at", "execute", "mode")})
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] in {"preflight_only", "succeeded"} else 2
         finally:

@@ -1,6 +1,7 @@
 """Allowlisted product inventory; never execute providers or inspect local files."""
 
 import re
+from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
 from sqlalchemy import func, literal, select, union_all
@@ -294,7 +295,19 @@ def capability_inventory(db: Session, user: User) -> dict:
             seen.add(token)
             target = DeliveryTarget(**scope)
             official = scope["publisher_key"] == "publisher.wechat.official" and scope["publisher_version"] == "1"
-            verified = False if official else capability_integrations.publisher_target_verified(db, target, registry)
+            if official:
+                expiry = event.expires_at
+                if expiry is not None and expiry.tzinfo is None:
+                    expiry = expiry.replace(tzinfo=UTC)
+                verified = (
+                    registration.status == "configured"
+                    and event.result == "verified"
+                    and expiry is not None
+                    and datetime.now(UTC) < expiry
+                    and event.evidence_json.get("reason_code") == "account_bound_draft_confirmed"
+                )
+            else:
+                verified = capability_integrations.publisher_target_verified(db, target, registry)
             publishers.append({"registration_id": registration.id, "scope": scope,
                                "configured": registration.status == "configured", "verified": verified,
                                "executable": verified, "reason": None if verified else "official_contract_unresolved" if official else "publisher_scope_unverified",

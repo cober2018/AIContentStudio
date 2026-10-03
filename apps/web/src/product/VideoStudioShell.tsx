@@ -3,7 +3,7 @@ import { api, currentUser } from "../api";
 import { Button, Field, inputClass } from "../components/ui";
 import { addOverlay, addScriptBlock, addShot, addSubtitleCue, addTrack, addTimelineItem, bindFinalRender, bindShotSource, importSubtitleSrt, removeOverlay, removeShot, removeSubtitleCue, removeTimelineItem, removeTrack, reorderShots, setCover, setMusic, setVoice, updateAspectRatio, updateOverlay, updateScriptBlock, updateShot, updateSubtitleCue, updateTimelineDuration, updateTimelineItem, updateVideoTitle, type VideoDraft, type VideoTimelineItem, type VideoTrack } from "./VideoStudioModel";
 
-type ProjectAsset = { key: string; material_id: number; material_revision_id: number; content_hash: string; kind: string; mime_type: string | null; title: string | null; rights_status: string | null; public_use_allowed: boolean; source_type: string; provenance?: { source_kind?: string | null; provider_key?: string | null } };
+type ProjectAsset = { key: string; material_id: number; material_revision_id: number; content_hash: string; kind: string; mime_type: string | null; title: string | null; rights_status: string | null; public_use_allowed: boolean; model_use_allowed: boolean; source_type: string; provenance?: { source_kind?: string | null; provider_key?: string | null } };
 type Capability = { configured: boolean; executable: boolean; verified: boolean; reason: string };
 type VideoCapabilities = { video_generation: Capability; tts: Capability; asr: Capability };
 const AsrSuggestionPanel = lazy(() => import("./AsrSuggestionPanel"));
@@ -119,7 +119,7 @@ function TimelineTrackEditor({ draft, track, assets, readOnly, edit }: { draft: 
   const [shotId, setShotId] = useState("");
   const [assetId, setAssetId] = useState("");
   const allowedKinds = track.kind === "video" ? ["image", "video"] : track.kind === "audio" || track.kind === "music" ? ["audio"] : [];
-  const options = assets.filter((asset) => allowedKinds.includes(asset.kind) && asset.public_use_allowed);
+  const options = assets.filter((asset) => allowedKinds.includes(asset.kind) && (asset.model_use_allowed || asset.public_use_allowed));
   return <div className="rounded-lg border border-slate-200 p-3"><div className="flex items-center justify-between"><strong className="text-sm">{track.kind} 轨 · {track.order + 1}</strong><Button variant="secondary" size="sm" disabled={readOnly} onClick={() => edit(() => removeTrack(draft, track.id))}>删除轨道</Button></div>
     <div className="mt-2 space-y-2">{track.items.map((item) => <TimelineItemEditor key={item.id} draft={draft} track={track} item={item} readOnly={readOnly} edit={edit} />)}</div>
     <div className="mt-3 flex flex-wrap items-end gap-2"><Field label="新片段开始 ms"><input aria-label={`${track.id} 新片段开始`} className={inputClass} type="number" min="0" value={start} disabled={readOnly} onChange={(event) => setStart(Number(event.target.value))} /></Field><Field label="结束 ms"><input aria-label={`${track.id} 新片段结束`} className={inputClass} type="number" min="1" value={end} disabled={readOnly} onChange={(event) => setEnd(Number(event.target.value))} /></Field>

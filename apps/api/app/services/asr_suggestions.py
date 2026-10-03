@@ -152,6 +152,7 @@ def _visible_source(db, project_id, base, source_id):
 
 
 def suggest(db: Session, project_id: int, unit_id: int, master_id: int, user: User, request: dict) -> dict:
+    started = time.monotonic()
     base = _base(db, project_id, unit_id, master_id, user)
     if request["base_payload_hash"] != base.payload_hash:
         raise HTTPException(409, "asr_master_changed")
@@ -160,25 +161,43 @@ def suggest(db: Session, project_id: int, unit_id: int, master_id: int, user: Us
     refs, contents = provider_media._sources(db, [source_id], (source,), lock=True)
     revision = db.get(MaterialRevision, source_id)
     source_mime = revision.mime_type
-    duration = min(_duration(contents[0], source_mime), base.payload_json["timeline"]["duration_ms"])
+    provider, runtime = provider_media._provider("asr_provider", request["provider_key"], request["provider_version"])
+    from .local_mlx_asr_provider import TIMEOUT_SECONDS, LocalASRUnavailable, LocalMLXASRProvider
+
+    local = type(provider) is LocalMLXASRProvider
+    # Local probing/decoding must stay inside the same offline process boundary.
+    duration = min(600_000 if local else _duration(contents[0], source_mime), base.payload_json["timeline"]["duration_ms"])
     if duration <= 0:
         raise HTTPException(422, "asr_timeline_duration_required")
-    provider, runtime = provider_media._provider("asr_provider", request["provider_key"], request["provider_version"])
-    input_hash = provider_media._hash({"master_id": base.id, "payload_hash": base.payload_hash, "context_hash": base.context_hash,
-        "source": refs[0], "runtime_hash": runtime, "duration_ms": duration})
-    fields = (user.id, project_id, unit_id, base.id, base.payload_hash, base.context_hash, request["provider_key"], request["provider_version"], runtime, refs[0], input_hash)
+    timeout = TIMEOUT_SECONDS - (time.monotonic() - started) if local else 30
+    if timeout <= 2:
+        raise HTTPException(409, "asr_outcome_unknown")
     with _lock:
         _capacity(user)
     # Keep project/source authorization serialized through dispatch, not just save.
     try:
-        raw = provider_calls.call(provider.transcribe, {"source_bytes": contents[0], "source_hash": refs[0][1], "mime_type": source_mime,
-            "max_duration_ms": duration, "timeout_seconds": 30})
+        provider_request = {"source_bytes": contents[0], "source_hash": refs[0][1], "mime_type": source_mime,
+                            "max_duration_ms": duration, "timeout_seconds": timeout}
+        raw = (provider_calls.call(provider.transcribe, provider_request, timeout_seconds=timeout) if local
+               else provider_calls.call(provider.transcribe, provider_request))
     except provider_calls.ProviderCapacityError:
         raise HTTPException(429, "provider_execution_capacity") from None
     except TimeoutError:
         raise HTTPException(409, "asr_outcome_unknown") from None
+    except LocalASRUnavailable:
+        raise HTTPException(422, "local_asr_unavailable") from None
     except Exception:  # noqa: BLE001 External diagnostics can include secrets.
         raise HTTPException(502, "asr_execution_failed") from None
+    if local and provider.runtime_fingerprint() != runtime:
+        raise HTTPException(409, "asr_runtime_changed")
+    if local:
+        source_duration = raw.get("source_duration_ms") if isinstance(raw, dict) else None
+        if type(source_duration) is not int or not 0 < source_duration <= 600_000:
+            raise HTTPException(422, "asr_source_duration_invalid")
+        duration = min(duration, source_duration)
+    input_hash = provider_media._hash({"master_id": base.id, "payload_hash": base.payload_hash, "context_hash": base.context_hash,
+        "source": refs[0], "runtime_hash": runtime, "duration_ms": duration})
+    fields = (user.id, project_id, unit_id, base.id, base.payload_hash, base.context_hash, request["provider_key"], request["provider_version"], runtime, refs[0], input_hash)
     output = _output(raw, duration)
     receipt_id = uuid.uuid4().hex
     receipt = Receipt(*fields, output=output, expires=time.monotonic() + _TTL)

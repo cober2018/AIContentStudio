@@ -1,7 +1,7 @@
 """Validation and immutable versions for project production workflows."""
 
-from copy import deepcopy
 import re
+from copy import deepcopy
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -9,13 +9,13 @@ from sqlalchemy.orm import Session
 from ..models import DiscoverabilityProfileVersion, Workflow
 from .content_harness.registry import RegistryError, registry
 from .data_source_plugins import descriptors as data_source_descriptors
-from .workflow_engine import definition_checksum
+from .workflow_engine import _validate_generation_output_mapping, definition_checksum
 
 NODE_KINDS = {"Data", "AI", "Tool", "Rule", "Human", "System"}
 FAILURE_POLICIES = {"stop", "skip", "wait_human"}
 KIND_PLUGINS = {
     "Data": {"data.source"},
-    "AI": {"builtin.generate", "builtin.humanize", "builtin.generate_cover", "node.skill"},
+    "AI": {"builtin.generate", "builtin.humanize", "builtin.generate_cover", "node.skill", "media.generate"},
     "Tool": {"builtin.connector_pull", "builtin.extract_facts", "builtin.factpack_freeze", "builtin.topic_suggest", "builtin.export"},
     "Rule": {"builtin.fact_check", "builtin.content_censor", "builtin.discoverability_post"},
     "Human": {"builtin.adopt_topic", "builtin.confirm_facts", "builtin.approve"},
@@ -33,16 +33,17 @@ BOUND_KEYS = {
 }
 PORTABLE_CONFIG_KEYS = {
     "project_id", "content_unit_id", "unit_id", "data_source_plugin_key", "provider", "model",
-    "model_policy", "tool_key", "rule_key", "skill", "skill_version", "prompt_template",
+    "model_policy", "model_profile_id", "tool_key", "rule_key", "skill", "skill_version", "prompt_template",
     "query_template", "profile_key", "channel", "content_form", "temperature", "max_tokens",
     "timeout_sec", "auto_confirm", "name", "source_ref",
+    "capability", "selected_profile", "explicit_plugin", "prompt", "parameters", "source_revision_ids",
 }
-BOUND_LITERAL = re.compile(r"\b(?:project_id|content_unit_id|unit_id|run_id|snapshot_id|asset_revision_id|draft_id|candidate_id|attempt_id)\s*[:=]\s*\d+\b", re.I)
+BOUND_LITERAL = re.compile(r"\b(?:project_id|content_unit_id|unit_id|run_id|snapshot_id|asset_revision_id|draft_id|candidate_id|attempt_id)\s*[:=]\s*\d+\b", re.IGNORECASE)
 
 
 def _validate_mapping(mapping: object, ids: set[str], name: str) -> None:
     if not isinstance(mapping, dict):
-        raise ValueError(f"{name} 必须是对象")
+        raise ValueError(f"{name} 必须是对象")  # noqa: TRY004 - API 将配置错误统一映射为 422。
     for key, ref in mapping.items():
         if not isinstance(key, str) or not key:
             raise ValueError(f"{name} 的字段名无效")
@@ -55,15 +56,26 @@ def _validate_mapping(mapping: object, ids: set[str], name: str) -> None:
 
 def execution_options() -> dict:
     from .. import runtime_config
-    from .generation.providers import effective_llm_config, provider_model_name
+    from .generation.providers import LLMError, effective_llm_config, provider_model_name
 
     ai = {}
     for plugin, purpose in (("builtin.generate", "generate"), ("builtin.humanize", "rewrite")):
-        config = effective_llm_config(purpose)
-        provider = config.get("provider") or ""
-        model = provider_model_name(purpose)
-        available = provider == "mock" or (provider == "openai_compatible" and bool(config.get("base_url") and config.get("api_key") and config.get("model")))
-        ai[plugin] = {"provider": provider, "model": model, "available": available, "reason": "模拟模型，仅供开发验收" if provider == "mock" else None if available else "当前模型路由未配置完整"}
+        try:
+            config = effective_llm_config(purpose)
+            provider = config.get("provider") or ""
+            model = provider_model_name(purpose)
+            available = provider == "mock" or (provider == "openai_compatible" and bool(config.get("base_url") and config.get("api_key") and config.get("model")))
+            ai[plugin] = {"provider": provider, "model": model, "available": available, "reason": "模拟模型，仅供开发验收" if provider == "mock" else None if available else "当前模型路由未配置完整"}
+        except LLMError:
+            ai[plugin] = {"provider": "", "model": "", "available": False, "reason": "默认模型不可用，请选择已登记模型或修复配置"}
+        choices = []
+        for profile_id in (runtime_config.get_runtime("models") or {}).get("profiles", {}):
+            try:
+                actual = effective_llm_config(purpose, profile=profile_id)
+                choices.append({"profile_id": profile_id, "provider": actual["provider"], "model": actual["model"], "available": True})
+            except LLMError:
+                continue
+        ai[plugin]["profiles"] = choices
     image = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
     enabled = bool(image.get("enabled") and image.get("provider") and image.get("model"))
     ai["builtin.generate_cover"] = {"provider": image.get("provider") or "", "model": image.get("model") or "", "available": enabled, "reason": None if enabled else "AI 生图未配置或未启用"}
@@ -73,21 +85,29 @@ def execution_options() -> dict:
 
 def validate_ai_executor_selection(node: dict) -> None:
     config = node.get("config") or {}
-    if node.get("kind") != "AI" or not ("provider" in config or "model" in config):
+    if node.get("kind") != "AI" or not ("provider" in config or "model" in config or "model_profile_id" in config):
         return
     selected = execution_options()["ai"][node["plugin"]]
-    if not selected["available"] or config.get("provider") != selected["provider"] or config.get("model") != selected["model"]:
+    if config.get("model_profile_id"):
+        selected = next((p for p in selected.get("profiles", []) if p["profile_id"] == config["model_profile_id"]), None)
+        if selected is None:
+            raise ValueError("所选模型配置不可执行")
+    if not selected["available"]:
+        raise ValueError(f"节点 {node['id']} 的 Provider/Model 与当前可执行路由不一致")
+    if config.get("provider") and config["provider"] != selected["provider"]:
+        raise ValueError(f"节点 {node['id']} 的 Provider/Model 与当前可执行路由不一致")
+    if config.get("model") and config["model"] != selected["model"]:
         raise ValueError(f"节点 {node['id']} 的 Provider/Model 与当前可执行路由不一致")
 
 
 def validate_definition(definition: dict) -> dict:
     if not isinstance(definition, dict):
-        raise ValueError("工作流定义必须是对象")
+        raise ValueError("工作流定义必须是对象")  # noqa: TRY004 - API 将配置错误统一映射为 422。
     nodes = definition.get("nodes")
     edges = definition.get("edges")
     order = definition.get("visual_order")
     if not isinstance(nodes, list) or not isinstance(edges, list) or not isinstance(order, list):
-        raise ValueError("节点、边和视觉顺序必须是列表")
+        raise ValueError("节点、边和视觉顺序必须是列表")  # noqa: TRY004 - API 将配置错误统一映射为 422。
     ids = [node.get("id") for node in nodes if isinstance(node, dict)]
     if len(ids) != len(nodes) or any(not isinstance(node_id, str) or not node_id for node_id in ids) or len(set(ids)) != len(ids):
         raise ValueError("节点 ID 缺失或重复")
@@ -99,22 +119,29 @@ def validate_definition(definition: dict) -> dict:
             raise ValueError(f"节点 {node['id']} 类型无效")
         plugin = node.get("plugin")
         if not isinstance(plugin, str):
-            raise ValueError(f"节点 {node['id']} 未选择执行插件")
+            raise ValueError(f"节点 {node['id']} 未选择执行插件")  # noqa: TRY004 - API 将配置错误统一映射为 422。
         if plugin not in KIND_PLUGINS[node["kind"]]:
             raise ValueError(f"节点 {node['id']} 的执行插件与类型不匹配")
         try:
             descriptor = registry.descriptor("node", plugin, str(node.get("plugin_version") or "1"))
         except RegistryError as exc:
             raise ValueError(f"节点 {node['id']} 执行插件不可用：{exc}") from exc
-        if descriptor.side_effect:
+        if descriptor.side_effect and plugin != "media.generate":
             raise ValueError(f"节点 {node['id']} 包含禁止泛化执行的远端副作用")
         if node.get("kind") == "Human" and not descriptor.human_gate:
             raise ValueError(f"节点 {node['id']} 不是人工执行插件")
         if node.get("kind") != "Human" and descriptor.human_gate:
             raise ValueError(f"节点 {node['id']} 的执行插件属于人工节点")
         if not isinstance(node.get("config", {}), dict):
-            raise ValueError(f"节点 {node['id']} 配置无效")
+            raise ValueError(f"节点 {node['id']} 配置无效")  # noqa: TRY004 - API 将配置错误统一映射为 422。
         config = node.get("config") or {}
+        if plugin == "media.generate":
+            from .generation_tasks import workflow_request
+
+            mapped = node.get("input_mapping") or {}
+            workflow_request({**config, "inputs": {key: "mapped" if key == "prompt" else [] for key in mapped}})
+            if node.get("failure_policy", "stop") != "stop":
+                raise ValueError("持久生成节点不允许跳过或泛化重试失败")
         validate_ai_executor_selection(node)
         if node["kind"] == "Data":
             keys = {item["key"] for item in data_source_descriptors()}
@@ -131,6 +158,7 @@ def validate_definition(definition: dict) -> dict:
         output_mapping = node.get("output_mapping", {})
         if not isinstance(output_mapping, dict) or any(not isinstance(key, str) or not key or not isinstance(value, str) or not value for key, value in output_mapping.items()):
             raise ValueError(f"节点 {node['id']} 输出映射无效")
+        _validate_generation_output_mapping(node)
     adjacency = {node_id: [] for node_id in ids}
     for edge in edges:
         if not isinstance(edge, dict) or edge.get("from") not in id_set or edge.get("to") not in id_set:
@@ -166,6 +194,8 @@ def validate_portable(definition: dict, *, source_project_id: int | None, source
         if set(node) - PORTABLE_NODE_KEYS:
             raise ValueError(f"节点 {node['id']} 包含不可移植字段")
         config = node.get("config") or {}
+        if node.get("plugin") == "media.generate" and config.get("source_revision_ids"):
+            raise ValueError("默认模板不能固定项目素材版本；请使用输入映射")
         if set(config) - PORTABLE_CONFIG_KEYS:
             raise ValueError(f"节点 {node['id']} 配置包含不可移植字段")
         if node["kind"] == "Data" and "source_ref" in config:
@@ -182,6 +212,17 @@ def validate_portable(definition: dict, *, source_project_id: int | None, source
                     continue
                 if resolve_at_runtime and key in {"content_unit_id", "unit_id"} and source_unit_id is not None and child == source_unit_id:
                     result[key] = {"$context": "unit.id"}
+                    continue
+                if resolve_at_runtime and key == "model_profile_id":
+                    from .generation.providers import LLMError, effective_llm_config
+
+                    if not isinstance(child, str) or not child:
+                        raise ValueError("角色默认模板引用了无效模型配置")
+                    try:
+                        effective_llm_config(profile=child)
+                    except LLMError as exc:
+                        raise ValueError("角色默认模板引用了不可用模型配置") from exc
+                    result[key] = child
                     continue
                 if key in BOUND_KEYS or key.endswith("_id") and key != "node_id":
                     raise ValueError(f"角色默认模板包含项目绑定值：{key}")

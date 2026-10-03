@@ -129,8 +129,18 @@ def execute_media_render(project_id: int, unit_id: int, master_id: int, payload:
 @router.get("/asr-provider-options")
 def asr_provider_options(user: User = Depends(get_current_user)):
     from ..services.content_harness import providers
+    from ..services.local_mlx_asr_provider import LocalMLXASRProvider
 
-    return [{"key": row.key, "version": row.version, "verified": False} for row in providers.registry.list("asr_provider")]
+    options = []
+    for row in providers.registry.list("asr_provider"):
+        provider = providers.registry.resolve("asr_provider", row.key, row.version)
+        if type(provider) is LocalMLXASRProvider:
+            options.append(provider.option())
+        else:
+            options.append({"key": row.key, "version": row.version, "verified": False, "available": True,
+                            "execution_mode": "cloud", "reason": "runtime_checked_on_request",
+                            "label": "MiniMax 云端转录" if row.key == "minimax.cli" else row.label or row.key})
+    return options
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/asr-suggestions")

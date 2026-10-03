@@ -3,6 +3,8 @@
 import hashlib
 import io
 import json
+import sys
+import types
 
 import pytest
 from PIL import Image
@@ -15,6 +17,19 @@ from app.services.content_harness.registry import PluginRegistry
 
 OWNER = {"X-Studio-User": "search-owner@studio.local"}
 OTHER = {"X-Studio-User": "search-other@studio.local"}
+
+
+def test_commons_runtime_fingerprint_survives_incidental_string_interning():
+    from app.services.material_search import WikimediaSearchProvider
+
+    provider = WikimediaSearchProvider()
+    original = provider.search.__func__
+    value = b"aics-commons-fingerprint-intern-regression-20261001".decode()
+    code = original.__code__.replace(co_consts=original.__code__.co_consts + (value,))
+    provider.search = types.MethodType(types.FunctionType(code, original.__globals__), provider)
+    before = provider.runtime_fingerprint()
+    sys.intern(value)
+    assert provider.runtime_fingerprint() == before
 
 
 @pytest.fixture

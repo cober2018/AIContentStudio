@@ -112,7 +112,7 @@ class SystemConstantNodePlugin:
     def execute(self, db, ctx: WorkflowExecutionContext, config: dict, user) -> NodeResult:
         value = config.get("value")
         if not isinstance(value, dict):
-            raise ValueError("system.constant 需要对象形式的 value")
+            raise ValueError("system.constant 需要对象形式的 value")  # noqa: TRY004 - 保留既有节点配置失败契约。
         return NodeResult(output=value)
 
 
@@ -126,6 +126,23 @@ class DataSourceNodePlugin:
         from ...data_source_plugins import snapshot_source
 
         return NodeResult(output=snapshot_source(db, ctx.run, ctx.step.node_id, config.get("data_source_plugin_key", ""), str(config.get("source_ref", "")), user))
+
+
+class MediaGenerationNodePlugin:
+    key = "media.generate"
+    version = "1"
+    human_gate = False
+    side_effect = True
+
+    def execute(self, db, ctx: WorkflowExecutionContext, config: dict, user) -> NodeResult:
+        from ...generation_tasks import workflow_execute
+
+        return NodeResult(output=workflow_execute(db, ctx.run, ctx.step, config, user))
+
+    def complete(self, db, ctx: WorkflowExecutionContext, payload: dict, user) -> NodeResult:
+        from ...generation_tasks import workflow_complete
+
+        return NodeResult(output=workflow_complete(db, ctx.run, ctx.step, payload, user))
 
 
 def _plugin(key: str, handler: str, label: str, *, complete: str | None = None, side_effect: bool = False):
@@ -158,7 +175,7 @@ _BUILTIN_SPECS: list[tuple[str, str, str, str | None, bool]] = [
 ]
 
 # 直接注册的非 handler 插件（R2-H5：node.skill 可执行节点）
-_DIRECT_PLUGINS = [SkillNodePlugin, SystemConstantNodePlugin, DataSourceNodePlugin]
+_DIRECT_PLUGINS = [SkillNodePlugin, SystemConstantNodePlugin, DataSourceNodePlugin, MediaGenerationNodePlugin]
 
 _bootstrapped = False
 
@@ -183,7 +200,8 @@ def bootstrap_builtin_nodes() -> None:
         )
     for plugin_cls in _DIRECT_PLUGINS:
         if plugin_cls.key not in {d.key for d in registry.list("node")}:
-            registry.register("node", plugin_cls.key, plugin_cls.version, plugin_cls(), label=plugin_cls.key)
+            registry.register("node", plugin_cls.key, plugin_cls.version, plugin_cls(), label=plugin_cls.key,
+                side_effect=getattr(plugin_cls, "side_effect", False))
     _bootstrapped = True
 
 

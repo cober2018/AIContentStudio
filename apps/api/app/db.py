@@ -45,4 +45,7 @@ def get_db():
 def init_db() -> None:
     from . import models  # noqa: F401  确保模型注册后再建表
 
-    Base.metadata.create_all(engine)
+    # Durable generation schema requires an explicit operator migration even
+    # in a local development process that otherwise creates legacy tables.
+    Base.metadata.create_all(engine, tables=[table for table in Base.metadata.sorted_tables
+        if table.name != "provider_generation_task"])

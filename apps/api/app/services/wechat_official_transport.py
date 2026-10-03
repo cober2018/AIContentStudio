@@ -216,7 +216,7 @@ class OfficialTransport:
 
     def _enabled(self):
         if self._experiment:
-            if not wechat_official.check_short_draft_authority(self._authority, self._scope):
+            if not wechat_official.check_draft_authority(self._authority, self._scope):
                 raise OfficialTransportError("official_experiment_scope_invalid")
         else:
             _enabled()
@@ -382,10 +382,11 @@ class OfficialTransport:
         self._check_token(token)
         article = _article(article)
         if self._experiment:
-            from .wechat_official_render import validate_short_draft_body
+            from .wechat_official_render import validate_html_draft_body, validate_short_draft_body
 
             try:
-                validate_short_draft_body(article["content"])
+                validator = validate_html_draft_body if self._authority["schema"] == "wechat.html-draft.authority.v1" else validate_short_draft_body
+                validator(article["content"])
             except ValueError:
                 raise OfficialTransportError("official_experiment_body_limit") from None
             if self._create_claimed:

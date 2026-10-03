@@ -8,7 +8,16 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user, require_editor
-from ..models import AuditLog, FactPack, FactPackStatus, ProjectFactBoundaryRevision, ProjectSourceBinding, SourceDocument, User, utcnow
+from ..models import (
+    AuditLog,
+    FactPack,
+    FactPackStatus,
+    ProjectFactBoundaryRevision,
+    ProjectSourceBinding,
+    SourceDocument,
+    User,
+    utcnow,
+)
 from ..services import factpack_service
 from ..services.project_events import record_project_event
 from ..services.project_evidence import boundary_json, current_boundary, source_binding_json

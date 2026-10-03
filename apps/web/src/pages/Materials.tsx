@@ -67,8 +67,9 @@ function UploadModal({ onClose }: { onClose: () => void }) {
     mutationFn: () => {
       const body = new FormData();
       body.append("file", fileRef.current?.files?.[0] as File);
-      Object.entries(form).forEach(([k, v]) => body.append(k, String(v)));
-      return api.upload<MaterialRow>("/materials/upload", body);
+      // The existing upload API reads metadata from query parameters, not multipart fields.
+      const parameters = new URLSearchParams(Object.entries(form).map(([key, value]) => [key, String(value)]));
+      return api.upload<MaterialRow>(`/materials/upload?${parameters}`, body);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["materials"] });
@@ -80,7 +81,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="上传素材" onClose={onClose}>
       <div className="space-y-3">
-        <Field label="文件 *（PNG/JPEG/GIF/WebP/PDF/MP4/MP3，≤30MB）">
+        <Field label="文件 *（PNG/JPEG/GIF/WebP/PDF/MP4/MP3/WAV，≤30MB）">
           <input ref={fileRef} type="file" className={inputClass} />
         </Field>
         <div className="grid grid-cols-2 gap-3">

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./content_studio.db"
 
     app_env: Literal["development", "test", "production"] = "development"
+    material_storage_backend: str = "local"
 
     llm_provider: str = "mock"  # mock | openai_compatible
     llm_base_url: str = ""
@@ -40,6 +41,11 @@ class Settings(BaseSettings):
     minio_url_expiry_hours: int = 24
 
     upload_max_bytes: int = 20 * 1024 * 1024
+
+    aics_enable_local_mlx_asr: bool = False
+    aics_mlx_asr_python: str = ""
+    aics_mlx_asr_worker: str = ""
+    aics_mlx_asr_model_dir: str = ""
 
     # local_git Connector 允许读取的本地目录前缀（CSV，如 /Users/me/Project）；空 = 功能关闭。
     # 开发文档作为数据源（repo docs / CHANGELOG / git log），只读不执行。

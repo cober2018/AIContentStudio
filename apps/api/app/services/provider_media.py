@@ -123,7 +123,7 @@ def _decode(content: bytes, declared: str | None) -> tuple[str, str]:
         if mime == "audio/wav":
             with wave.open(io.BytesIO(content)) as audio:
                 expected = audio.getnframes() * audio.getnchannels() * audio.getsampwidth()
-                if expected > _MAX_BYTES or audio.getframerate() < 1 or len(audio.readframes(audio.getnframes())) != expected:
+                if expected < 1 or expected > _MAX_BYTES or audio.getframerate() < 1 or len(audio.readframes(audio.getnframes())) != expected:
                     raise ValueError("audio invalid")
             return "audio", mime
         if mime == "video/mp4":
@@ -188,6 +188,9 @@ def stage_output(user: User, *, kind: str, key: str, version: str, runtime_hash:
 
 
 def stage(db: Session, user: User, request: dict) -> dict:
+    if request.get("provider_key") == "minimax.cli":
+        # The newly introduced CLI may not bypass durable claims via legacy staging.
+        raise HTTPException(422, "generation_task_required")
     project_id = request.get("project_id")
     if project_id is not None:
         project = lock_project_context(db, project_id, user)
@@ -225,7 +228,7 @@ def preview_bytes(stage_id: str, user: User) -> tuple[bytes, str]:
         return preview.content, preview.mime_type
 
 
-def accept(db: Session, user: User, stage_id: str, decision: dict) -> dict:
+def accept(db: Session, user: User, stage_id: str, decision: dict, *, commit: bool = True) -> dict:
     with _lock:
         preview = _get(stage_id, user)
     with preview.operation_lock:
@@ -297,10 +300,17 @@ def accept(db: Session, user: User, stage_id: str, decision: dict) -> dict:
                 with _lock:
                     if _get(stage_id, user) is not preview or hashlib.sha256(preview.content).hexdigest() != preview.content_hash:
                         raise HTTPException(409, "provider_preview_changed")
-                    db.commit()
+                    if commit:
+                        db.commit()
+                    else:
+                        db.flush()
         except Exception:
             db.rollback()
             raise
-        preview.accepted = {"material_id": material.id, "material_revision_id": revision.id, "content_hash": revision.content_hash}
+        saved = {"material_id": material.id, "material_revision_id": revision.id, "content_hash": revision.content_hash}
+        if not commit:
+            # Outer durable task transaction owns both the revision and linkage.
+            return saved
+        preview.accepted = saved
         preview.acceptance_hash = decision_hash
         return preview.accepted
