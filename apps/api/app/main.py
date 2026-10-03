@@ -6,7 +6,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .db import init_db
+from .config import get_settings, validate_production_settings
+from .db import SessionLocal, init_db, schema_head_matches
 from .observability import trace_middleware
 from .routers import (
     article_handoff,
@@ -58,15 +59,19 @@ logging.basicConfig(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
-    from .db import SessionLocal
-
+    settings = get_settings()
+    validate_production_settings(settings)
+    if settings.app_env != "production":
+        init_db()
     with SessionLocal() as db:
-        sync_prompt_versions_from_files(db)
+        if settings.app_env == "production" and not schema_head_matches(db, settings.required_schema_head):
+            raise RuntimeError("production_schema_head_mismatch")
+        if settings.app_env != "production":
+            sync_prompt_versions_from_files(db)
         # 修复历史数据：同渠道多个 published 模板只保留最高版本
         from .routers.templates import normalize_template_publication
 
-        demoted = normalize_template_publication(db)
+        demoted = normalize_template_publication(db) if settings.app_env != "production" else 0
         if demoted:
             import logging
 
@@ -82,8 +87,9 @@ async def lifespan(app: FastAPI):
         # V1 PRD 2.0：基础 discoverability profiles（幂等）
         from .services import discoverability as disco
 
-        disco.seed_default_profiles(db)
-        db.commit()
+        if settings.app_env != "production":
+            disco.seed_default_profiles(db)
+            db.commit()
     yield
 
 

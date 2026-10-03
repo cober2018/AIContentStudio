@@ -7,6 +7,7 @@ changes where bytes live; production mode must choose one provider explicitly.
 from __future__ import annotations
 
 import hashlib
+import io
 import os
 import re
 import tempfile
@@ -174,12 +175,96 @@ class LocalMaterialStorage:
         return True
 
 
+class MinioMaterialStorage:
+    name = "minio"
+
+    def __init__(self):
+        from minio import Minio
+        from urllib3 import PoolManager, Timeout
+
+        settings = get_settings()
+        self.bucket = settings.minio_bucket
+        self.client = Minio(
+            settings.minio_endpoint,
+            access_key=settings.minio_access_key,
+            secret_key=settings.minio_secret_key,
+            secure=settings.minio_secure,
+            http_client=PoolManager(timeout=Timeout(connect=2, read=5), retries=False),
+        )
+
+    def put(self, key: str, content: bytes) -> None:
+        key = _safe_key(key)
+        if len(content) > MAX_BYTES:
+            raise ValueError("storage_object_too_large")
+        digest = _content_hash(content)
+        if key.startswith("material/"):
+            _validate_material_key(key, digest)
+        elif (key.startswith("legacy/") and not re.fullmatch(r"legacy/" + digest + r"\.[A-Za-z0-9]+", key)) or (key.startswith("generation/") and (
+            not re.fullmatch(r"generation/[0-9a-f]{32}/[0-9a-f]{64}\.bin", key)
+            or Path(key).stem != digest
+        )):
+            raise ValueError("storage_key_invalid")
+        if self.exists(key):
+            if self.read(key) != content:
+                raise ValueError("storage_object_conflict")
+            return
+        self.client.put_object(self.bucket, key, io.BytesIO(content), len(content))
+
+    def read(self, key: str) -> bytes:
+        key = _safe_key(key)
+        response = self.client.get_object(self.bucket, key)
+        try:
+            content = response.read(MAX_BYTES + 1)
+        finally:
+            response.close()
+            response.release_conn()
+        if len(content) > MAX_BYTES:
+            raise ValueError("storage_object_too_large")
+        return content
+
+    def exists(self, key: str) -> bool:
+        from minio.error import S3Error
+
+        try:
+            self.client.stat_object(self.bucket, _safe_key(key))
+            return True
+        except S3Error as exc:
+            if exc.code in {"NoSuchKey", "NoSuchObject", "NoSuchBucket"}:
+                return False
+            raise
+
+    def size(self, key: str) -> int:
+        try:
+            return self.client.stat_object(self.bucket, _safe_key(key)).size
+        except Exception as exc:
+            from minio.error import S3Error
+
+            if isinstance(exc, S3Error) and exc.code in {"NoSuchKey", "NoSuchObject", "NoSuchBucket"}:
+                raise FileNotFoundError("storage_object_missing") from None
+            raise
+
+    def probe(self) -> bool:
+        return self.client.bucket_exists(self.bucket)
+
+    def delete_if_unreferenced(self, key: str, *, expected_hash: str) -> bool:
+        if not key.startswith("material/") or Path(key).stem != expected_hash:
+            raise ValueError("material_storage_key_invalid")
+        if not self.exists(key):
+            return False
+        if _content_hash(self.read(key)) != expected_hash:
+            raise ValueError("storage_object_hash_mismatch")
+        self.client.remove_object(self.bucket, _safe_key(key))
+        return True
+
+
 def provider() -> MaterialStorage:
     from .asset_media import MEDIA_ROOT
 
     settings = get_settings()
     if settings.material_storage_backend == "local":
         return LocalMaterialStorage(MEDIA_ROOT, legacy_absolute_reads=settings.app_env in {"development", "test"})
+    if settings.material_storage_backend == "minio":
+        return MinioMaterialStorage()
     raise ValueError("storage_backend_invalid")
 
 

@@ -121,7 +121,11 @@ function SectionActions({ section, onModelDirtyChange }: { section: Section; onM
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
   const editable = section.editability === "editable";
   if (section.key === "models") return <ModelSettingsWorkspace editable={editable} onDirtyChange={onModelDirtyChange} />;
-  if (section.key === "team") return <TeamIdentity />;
+  if (section.key === "team") {
+    const data = section.data && typeof section.data === "object" ? section.data as Record<string, unknown> : {};
+    const production = data.auth_mode === "production/jwt_hs256";
+    return production ? <p className="text-sm text-emerald-800">生产身份由已验证的 issuer + subject 映射到现有用户；本页面不提供 Header 身份切换或组织/SSO 管理。</p> : <TeamIdentity />;
+  }
   return <div className="space-y-4">
     {section.key === "data_sources" && <div className="space-y-2"><p className="text-sm text-slate-600">Generic Connector 配置不代表 Data Source Plugin 已可执行。此清单读取不会自动拉取或测试连接；数据拉取是独立的有副作用动作。</p>{["admin", "editor"].includes(me.data?.role ?? "") && <Link className="text-sm text-indigo-700 underline" to="/connectors">{editable ? "管理 Generic Connectors / 显式拉取" : "打开已有 Connectors（配置只读，可显式拉取）"}</Link>}</div>}
     {section.key === "channels" && <p className="text-sm text-slate-600">渠道注册信息为只读真源。配置了 workflow / publisher 引用不代表已经验证可执行或可发布，不提供虚假的保存按钮。</p>}

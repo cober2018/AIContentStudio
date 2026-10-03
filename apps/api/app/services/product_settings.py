@@ -224,11 +224,14 @@ def _user(user) -> dict:
 
 
 def team_section(db: Session, user: User) -> dict:
+    settings = get_settings()
+    production = settings.app_env == "production"
     rows = db.execute(select(User.id, User.email, User.name, User.role, User.is_active).order_by(User.id))
     return _section("team", {
         "current_user": _user(user), "users": [_user(row) for row in rows],
-        "auth_mode": "development/header",
-        "limitations": ["X-Studio-User identity is spoofable development authentication", "No production organizations, invitations, SSO or role management"],
+        "auth_mode": "production/jwt_hs256" if production else "development/header",
+        "limitations": (["Identity is mapped from verified issuer + subject; role comes from existing User", "No production organizations, invitations, SSO or role management"]
+                        if production else ["X-Studio-User identity is spoofable development authentication", "No production organizations, invitations, SSO or role management"]),
     })
 
 

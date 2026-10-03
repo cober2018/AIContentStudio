@@ -9,7 +9,13 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./content_studio.db"
 
+    # development_header keeps the local V1 workflow; production requires a
+    # verified signed token and an operator-provided schema head.
     app_env: Literal["development", "test", "production"] = "development"
+    auth_mode: str = "development_header"
+    auth_issuer: str = ""
+    auth_audience: str = ""
+    auth_hmac_secret: str = ""
     required_schema_head: str = ""
     material_storage_backend: str = "local"
 
@@ -67,3 +73,23 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def validate_production_settings(settings: Settings | None = None) -> None:
+    settings = settings or get_settings()
+    if settings.app_env != "production":
+        if settings.app_env not in {"development", "test"}:
+            raise RuntimeError("environment_invalid")
+        return
+    required = {
+        "auth_mode": settings.auth_mode == "jwt_hs256",
+        "auth_issuer": bool(settings.auth_issuer and "\n" not in settings.auth_issuer),
+        "auth_audience": bool(settings.auth_audience and "\n" not in settings.auth_audience),
+        "auth_hmac_secret": len(settings.auth_hmac_secret) >= 32,
+        "required_schema_head": bool(settings.required_schema_head),
+        "storage_backend": settings.material_storage_backend == "minio" and settings.minio_enabled,
+        "storage_endpoint": bool(settings.minio_endpoint and "\n" not in settings.minio_endpoint),
+        "storage_credentials": bool(settings.minio_access_key and settings.minio_secret_key and settings.minio_bucket),
+    }
+    if not all(required.values()):
+        raise RuntimeError("production_configuration_invalid")
