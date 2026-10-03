@@ -1,5 +1,7 @@
 # AI Content Studio（AI 内容生产中心）
 
+2026-10-03 F7已按当前批准范围收口：主任务110/110（Commons为用户暂缓行政关闭，不是实测PASS），模型路由23/23；F7实施已本地main提交`3f28a51`。主F7与模型路由均已归档，八份delta完整同步七份canonical，原有54条要求/146个场景精确保留，strict34/34及diff通过。F7-only后端1660 passed/28 skipped、Web/FE-P1/state和Ruff通过；无push/deploy/正式迁移或新增微信/供应商调用。F8及原始资料仍保留工作区、不在本次提交。目录、依赖与启动方式沿用既有配置，后续Commons/F8需另定范围；见[F7归档](openspec/changes/archive/2026-10-03-fe-f7-capability-integrations-delivery/README.md)。以下旧计数与active状态为历史。
+
 2026-10-03 F7本地生命周期收尾：仅F7的81文件拟提交快照经后端1660 passed/28 skipped、Web/FE-P1/state、full app Ruff、strict34/34与diff验证通过，Projects224.89/72.97kB。共享文件按片段排除F8认证/MinIO/f8a，F8工作区完整保留。Commons按用户决定暂缓/未实测，不标真实PASS；公众号沿用已确认的当前草稿与精确系统记录，模型路由23/23。当前108/110，接下来只做本地提交和七份主规格同步归档，无push/deploy/正式迁移或新增外部调用。目录增加已实现的本地生成任务/ASR服务，依赖与启动命令不变；见[最终门禁](docs/FE_F7_FINAL_LOCAL_GATES.md)。下方计数与未提交描述为历史快照。
 
 2026-10-03 公众号精确范围验收完成：原短稿/黄色封面经AIContentStudio Candidate7→审批→Target7/Attempt7一次上传/draft/add成功，用户确认最新草稿后真实Receipt1/CapabilityVerification1原子持久化于私有验收库，重复回填幂等；不同账号/形态/动作/版本/运行身份均不能复用。补齐历史Attempt指纹校验，120定向/1660全量、Ruff/strict34/diff和限定复核通过。F7现107/110，剩Commons用户暂缓、本地提交、主规格同步归档；模型路由23/23。无公开发布/回读/重发或正式库改变，F8、依赖和启动方式不变，未提交推送归档。见[本轮真实证据](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；下方105/110为历史。
