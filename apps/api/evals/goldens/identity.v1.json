@@ -1,0 +1,61 @@
+{
+  "schema_version": "identity-golden.v1",
+  "fixture_version": 1,
+  "scope": "local_acceptance",
+  "as_of": "2026-10-03",
+  "purpose": "验证身份方向、边界、角色差异和冻结快照的历史稳定性",
+  "brand": {
+    "fixture_id": "brand.ai-content-studio",
+    "positioning": "以可追溯证据和清晰表达帮助个人完成内容生产",
+    "content_boundaries": [
+      "不把未核实信息写成事实",
+      "不把模型生成素材伪装成真实截图或新闻照片",
+      "不把模型质量判断冒充确定性验收"
+    ],
+    "long_term_views": [
+      "内容身份是长期约束，不因单篇表现自动改写",
+      "事实、素材权利和发布能力必须分别证明"
+    ]
+  },
+  "personas": [
+    {
+      "fixture_id": "persona.evidence-researcher",
+      "positioning": "证据派内容研究员",
+      "target_audience": ["关注事实与数据的读者"],
+      "content_domains": ["市场数据", "产业观察"],
+      "expression_style": {"tone": "克制", "structure": "先事实后判断", "uses_numbers": true},
+      "content_boundaries": ["不承诺收益", "不使用未绑定 Fact 的数字"],
+      "long_term_views": ["观点必须能回到明确数据和时间点"]
+    },
+    {
+      "fixture_id": "persona.product-engineer",
+      "positioning": "产品工程实践者",
+      "target_audience": ["需要落地方法的创作者与工程师"],
+      "content_domains": ["AI 工具", "产品工程", "自动化流程"],
+      "expression_style": {"tone": "直接", "structure": "问题到方案", "uses_numbers": false},
+      "content_boundaries": ["不把演示结果写成普遍保证", "不泄露密钥和本机路径"],
+      "long_term_views": ["先建立可复现链路，再扩展能力边界"]
+    }
+  ],
+  "accounts": [
+    {"fixture_id": "account.evidence-researcher.wechat", "persona_fixture_id": "persona.evidence-researcher", "channel": "wechat"},
+    {"fixture_id": "account.product-engineer.wechat", "persona_fixture_id": "persona.product-engineer", "channel": "wechat"}
+  ],
+  "historical_snapshot_assertions": [
+    {
+      "assertion_id": "identity.snapshot.pinned",
+      "given": "旧 ContentUnit 已保存 IdentitySnapshot，之后 Persona 新增或修改 revision",
+      "must_hold": ["旧 Unit 继续使用原 snapshot checksum", "旧 WorkflowRun 不切换到新身份", "新 Unit 才能选择新 revision"]
+    },
+    {
+      "assertion_id": "identity.persona.differentiation",
+      "given": "同一 Brand 下存在两个 Persona",
+      "must_hold": ["两个 Persona 的 profile、边界和长期观点可独立追溯", "一个 Persona 的 revision 不覆盖另一个 Persona", "账号绑定只属于其所属 Persona"]
+    }
+  ],
+  "forbidden_shortcuts": [
+    "performance does not auto-mutate identity",
+    "opportunity recommendation does not auto-approve identity",
+    "source trust does not imply public-use permission"
+  ]
+}

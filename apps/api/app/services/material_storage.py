@@ -181,3 +181,18 @@ def provider() -> MaterialStorage:
     if settings.material_storage_backend == "local":
         return LocalMaterialStorage(MEDIA_ROOT, legacy_absolute_reads=settings.app_env in {"development", "test"})
     raise ValueError("storage_backend_invalid")
+
+
+def read_legacy_bytes(key: str, *, expected_hash: str | None = None) -> bytes:
+    """Historical DB paths use the selected store, never a second local fallback."""
+    try:
+        content = provider().read(key)
+    except (OSError, ValueError):
+        raise
+    except Exception:  # noqa: BLE001 External stores must not leak credential-bearing diagnostics.
+        raise ValueError("storage_unavailable") from None
+    key_hash = Path(key).stem if key.startswith("legacy/") else None
+    digest = expected_hash or key_hash
+    if digest and _content_hash(content) != digest:
+        raise ValueError("storage_object_hash_mismatch")
+    return content

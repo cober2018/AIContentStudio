@@ -81,6 +81,41 @@ function TeamIdentity() {
   }}><p className="text-sm text-amber-900">当前是开发 Header 身份，可在本机切换；这不是生产登录、组织成员管理或 SSO。请勿据此对外部署。</p><Field label="开发身份邮箱"><input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} /></Field><Button type="submit" variant="secondary">切换本机开发身份</Button></form>;
 }
 
+const runtimeChecks = [
+  ["db", "数据库"], ["schema", "迁移版本"], ["auth", "身份配置"],
+  ["storage", "素材存储"], ["queue", "任务队列"], ["worker", "执行进程"], ["secrets", "密钥策略"],
+] as const;
+type RuntimeCheck = typeof runtimeChecks[number][0];
+type RuntimeStatus = { ready: boolean; checks: Record<RuntimeCheck, boolean> };
+
+function OperationalStatus() {
+  const query = useQuery<RuntimeStatus>({
+    queryKey: ["runtime-readiness", currentUser()], enabled: false, retry: false,
+    refetchOnWindowFocus: false, refetchOnReconnect: false,
+    queryFn: async ({ signal }) => {
+      const response = await fetch("/api/v1/health/ready", { signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]), cache: "no-store" });
+      if (![200, 503].includes(response.status)) throw new Error("暂时无法读取运行状态，请稍后重试。");
+      const result: unknown = await response.json();
+      if (!result || typeof result !== "object") throw new Error("运行状态响应不完整，请稍后重试。");
+      const data = result as Record<string, unknown>;
+      if (typeof data.ready !== "boolean" || (response.status === 200) !== data.ready
+        || runtimeChecks.some(([key]) => typeof data[key] !== "boolean")
+        || (data.ready && runtimeChecks.some(([key]) => data[key] !== true))) {
+        throw new Error("运行状态响应不完整，请稍后重试。");
+      }
+      return { ready: data.ready, checks: Object.fromEntries(runtimeChecks.map(([key]) => [key, data[key]])) as Record<RuntimeCheck, boolean> };
+    },
+  });
+  return <section aria-label="运行状态" className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-sm font-semibold text-slate-900">运行状态</h2><Button variant="secondary" disabled={query.isFetching} onClick={() => void query.refetch()}>{query.isFetching ? "检查中…" : "查询运行状态"}</Button></div>
+    <p className="text-xs leading-relaxed text-slate-500">仅在点击时检查基础设施；不调用模型、不发送内容，也不改变配置。队列关闭时，队列与执行进程检查不阻断本机同步运行。</p>
+    {query.isFetching ? <Spinner label="检查必要运行条件…" /> : query.isError ? <p role="alert" className="text-sm text-amber-800">暂时无法读取运行状态；这不代表检查通过。</p> : query.data ? <div aria-live="polite" className="space-y-3">
+      <p className={`text-sm font-medium ${query.data.ready ? "text-emerald-800" : "text-amber-800"}`}>{query.data.ready ? "基础运行条件已就绪（不代表外部能力已验收）" : "基础运行条件未就绪"}</p>
+      <dl className="grid gap-2 sm:grid-cols-2">{runtimeChecks.map(([key, label]) => <div key={key} className="flex justify-between gap-3 text-sm"><dt className="text-slate-600">{label}</dt><dd className={query.data!.checks[key] ? "text-emerald-700" : "text-amber-800"}>{query.data!.checks[key] ? "满足当前运行要求" : "未通过"}</dd></div>)}</dl>
+    </div> : <p className="text-sm text-slate-500">尚未检查。配置存在不代表服务可用。</p>}
+  </section>;
+}
+
 function SectionActions({ section, onModelDirtyChange }: { section: Section; onModelDirtyChange: (dirty: boolean) => void }) {
   const [showRuntime, setShowRuntime] = useState(false);
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
@@ -92,7 +127,7 @@ function SectionActions({ section, onModelDirtyChange }: { section: Section; onM
     {section.key === "channels" && <p className="text-sm text-slate-600">渠道注册信息为只读真源。配置了 workflow / publisher 引用不代表已经验证可执行或可发布，不提供虚假的保存按钮。</p>}
     {(section.key === "channels" || section.key === "data_sources") && <Suspense fallback={<Spinner label="加载能力验证…" />}><CapabilitySettings mode={section.key} /></Suspense>}
     {section.key === "rules" && <div className="space-y-2"><p className="text-sm text-slate-600">确定性 Rule、Prompt、Channel Template 与 Discoverability Profile 分开列出。版本操作以每项实际支持的 actions 和状态为准。</p>{editable && <Link className="text-sm text-indigo-700 underline" to="/templates">打开现有版本化模板工具</Link>}</div>}
-    {section.key === "advanced" && <div className="space-y-2"><p className="text-sm text-amber-800">高级工具包含本机路径、技能、MCP、dsh 与基础设施配置。不会在读取此清单时扫描目录、写文件或探测外部服务。</p><Button disabled={!editable} onClick={() => setShowRuntime(!showRuntime)}>{showRuntime ? "收起高级工具" : "明确打开本机运行配置工具"}</Button></div>}
+    {section.key === "advanced" && <div className="space-y-2"><p className="text-sm text-amber-800">高级工具包含本机路径、技能、MCP、dsh 与基础设施配置。不会在读取此清单时扫描目录、写文件或探测外部服务。</p>{editable && <OperationalStatus />}<Button disabled={!editable} onClick={() => setShowRuntime(!showRuntime)}>{showRuntime ? "收起高级工具" : "明确打开本机运行配置工具"}</Button></div>}
     {showRuntime && editable && <section className="rounded-xl border border-amber-200 bg-white"><p className="p-4 text-sm text-amber-800">下面是原有管理员配置工具；其保存、连接测试和本机写入操作均需单独确认操作。</p><Suspense fallback={<Spinner label="按需加载原有配置工具…" />}><RuntimeSettings /></Suspense></section>}
   </div>;
 }

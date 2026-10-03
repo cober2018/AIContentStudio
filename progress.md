@@ -1,3 +1,64 @@
+# 2026-10-04：F8 独立复核修正（当前状态）
+
+- Hubble（`01a102bc-9cc8-7772-a0d5-c82539c6b04c`）最终提交边界复审APPROVE：3.3与18延期/81完成/82本机计数一致；排除路径、引用、f7d、production拒绝、无密钥/原始包边界均认可。只批准本地main提交，不代替外部或生产验收。
+- 提交边界review唯一blocker为task3.3把排除的MinIO类记已交付，核对源码/私有索引属实。已将其恢复未勾选并按用户确定的本机profile列为未来对象存储要求；当前81/82本机、81/100原清单、18延期，下方17/83为历史。代码没改，不通过混入未验收实现凑计数。
+- 获准本机提交快照已验证：`/private/tmp/aics-f8-main-commit.kQBOP1/snapshot/`，排除deps/main/models/f8a/test head变化，config/Settings/storage按本机片段分离，production readiness不依赖JWT draft且返回auth=false。真实提交前全量1660 passed/28 skipped/8 warnings（85.99秒、exit0），Web/FE-P1 PASS（Projects224.89/72.97kB，Settings238.88/78.06kB），Ruff/strict34/diff PASS；拟提交新增行凭据marker扫描0。
+- 快照首轮3个health ImportError是本机投影遗漏移除draft validator导入，明确不计PASS；已经将依赖分离并用全量及stdin probe验证批准head仍f7d、无JWT配置、production不ready。正式工作文件的draft未被改写。限定提交边界复核进行中，不以整个dirty树先前绿代替拟提交树。
+- 用户新授权本地提交并融入main；未授权主规格同步/归档或push/deploy/正式迁移。当前本来就在main，将用私有索引精确排除身份/schema及未验收部署代码，验证拟提交快照后提交，工作文件草案保持原样。
+- 最终本机验收收口到 82/83，原清单 82/100。6.1–6.3、10.8、10.9、10.12 已依据源码/探针/回归和独立批准关闭；只剩 10.11 的本地最终提交与 ROADMAP 记录，等待单独授权。17 条生产身份/schema、Secret Provider、新真实远端发布义务仍延期/未验证，不能说完整生产就绪或100/100。
+- 2026-10-04 最终独立结论：Harvey（`01a10298-737c-7562-a81d-23f5d3320ed2`）安全/运维 APPROVE；Copernicus（`01a10298-73e9-7c02-a966-bdf2794c0a9f`）10.9 架构 APPROVE。这是此前总体复核发现的四项 blocker 的定向闭环，不冒称本次重新全审或亲跑全部测试；审查能力边界、CLI内部HTTP和供应商grant限制保留。
+- 正确 `apps/api` cwd 最终全量重跑完成：1660 passed / 28 skipped / 8 warnings，84.32 秒，exit 0。186 既有定向、Web TypeScript/Vite/FE-P1、full app/recovery scripts Ruff、strict34/34和diff均通过。根cwd的32路径失败仍作为失败记录，不计PASS；未修改测试绕过。
+- 当前 main@a59d5de 加未提交F8，未 push/deploy/正式迁移/主规格同步归档。未批准身份/schema draft及原始包完整保留；后续提交须按范围排除。
+
+以下为本轮修复过程记录，等待/76计数已由上述最终结果替代。
+
+- 架构 reviewer 实际返回两项恢复 blocker：源 SQLite URI 未编码可打开错库；同 storage key 第二条 expected hash 被忽略。临时 RED 均复现，现已 Path.as_uri 只读连接、逐条 ref/hash 校验后复制去重。GREEN 验证 #? 特殊名内容正确、冲突 hash 返回 2/ready=false、相同 hash 两引用验证两条仅复制一份、无截断路径源库。等待定向复审，不提前勾 10.9。
+- 安全 reviewer 实际返回两个本机 blocker：HTTP idle timeout 不能拦截慢头、HTTPX INFO 泄漏查询 URL。真实 loopback RED 在 0.25 秒预算下耗时 1.278 秒且合成 token 进日志；新共用 network stream 将绝对 deadline 传入 TCP/TLS/read/每次 socket send，DNS/redirect 使用相同剩余预算。HTTPX/HTTPcore 日志按 ContextVar scope 抑制，scope 后正常日志仍可用。
+- GREEN 实际 loopback 慢响应头 0.251 秒、慢响应体 0.252 秒中止；合成 query token 零日志且普通 control 日志恢复。没有远端、付费或微信请求，无新永久测试/正式配置修改。既有定向回归/最终复审进行中。
+- 最后刷新 Web TypeScript/Vite/FE-P1 已 PASS：Projects 224.89/72.98 kB、Settings 239.16/78.19 kB、common Production 284.42/90.48 kB；Graphic/Video 不含 TipTap。新补丁只涉及后端/恢复脚本，不改 UI。
+- 本机仍 76/83；原 17 条生产/远端义务明确延期，未 commit/push/deploy/canonical archive/production migration。
+- 恢复修正后真实隔离 f7d 源重演：`/private/tmp/aics-f8-final-recovery.JdpsNl/`，source/restored integrity ok、批准 head 正确、八业务表 counts 匹配、两素材引用验两条仅复制一对象，失败 0。新增 stream 首轮兼容失败为无 socket 内存 NetworkStream，按其接口有限 write 后 186 定向全部 PASS，未改测试夹具。
+- 最后一次全量误从仓库根目录执行，32 项失败均为相对 Alembic/script 路径缺失（1628 passed/28 skipped），不是门禁通过；现在从规定 `apps/api` cwd、相同私有 worker 库重跑，不改源码绕过失败。真实 TCP/TLS/read/send 临时探针四项通过，过期连接零发送。
+
+# 2026-10-03：F8 Batch M
+
+- 用户确认原清单中的生产身份/schema（11 项）、生产 Secret Provider 切换（3 项）、新增远端真实发布/下游（3 项）为本轮延期；17 项原义务保留未勾选。本机范围目前 76/83，原清单仍 76/100；出站安全 3 项、整体独立复核及本地提交/生命周期 4 项未关闭。
+- 修正统一 10 秒损害既有聊天/生图的做法：集中按能力策略，聊天 120 秒、生图 25 秒、Commons 15 秒、微信 step 25 秒；严格 JSON、流式字节上限、DNS bounded/pin 和逐跳凭据策略保持。HTTP optional exact-host CSV 在 DNS/凭据发送前拦截非法目标；CLI 内部网络不冒充受该白名单控制。
+- MiniMax 子进程只继承基础环境变量，不继承其他服务 secret；dsh 状态只读取响应头。所有新验证使用本机注入/临时进程，不调用供应商、不改正式库/配置/密钥、不新增永久测试。
+- 新鲜门禁：186 既有定向 PASS；全量 1660 passed / 28 skipped / 8 warnings（84.92s）。最终 socket-family lint 修正另跑生图 28 PASS＋全 app/scripts Ruff PASS。OpenSpec strict 34/34、diff-check PASS；Web build 最后刷新进行中。
+- 安全与架构 reviewer 首次因模型容量未能运行，已按同模型重试，不记为 APPROVE。独立结论返回前不关 6.1–6.3 或 10.8/10.9；未 commit/push/deploy/canonical archive/production migration。
+- 实际技能：using-superpowers、openspec-apply-change、writing/executing-plans、systematic-debugging、test-driven-development（仅临时诊断）、verification-before-completion、requesting/receiving-code-review。
+
+下方为历史批次记录；10 秒生成上限已经由 Batch M 校正，不是当前策略。
+
+# 2026-10-03：F8 新鲜闭环、恢复、Golden 与安全补验
+
+- 本轮纠正先前将夹具定义/分组回归/历史浏览器当成正式 PASS 的表述；10.6 曾重开至75/100，现在以新鲜 build、13产品+7状态浏览器及legacy复验关闭，恢复76/100。整体F8、安全/架构总终审均未完成，剩24条仍真实开放。
+- 同一 Opportunity4→幂等 Project4→Text6/Graphic7/Video8→五 v5 Candidate→Approval/Authorization→本地 ZIP 通过；档案目录见完整闭环文档。当前 Video 是脚本/estimated SRT，不冒充成片；Unknown不重发、撤权/归档/stale及dirty独立均实际浏览器覆盖，无page error。
+- 历史初始迁移引用当前 Base.metadata，导致新建f7d夹具也可能带入draft列。已仅在私有夹具还原批准的旧 User 表，并验证 ORM read/insert/refresh、API startup、browser及恢复重导出；未改正式库、未执行f8a。测试迁移夹具依然验证head，不等于正式迁移。
+- 在线备份与复制media同时恢复启动后，五ZIP的全部解压entry byte与原包一致；唯一引用字节对象1/复制1/失败0。integrity失败由exit0修为2，所有source备份/检查只读；WAL文件大小不同不是损坏。
+- Identity/Content v1实际读取hash并执行：两Persona/Brand边界、旧Unit9/Run1固定snapshot9、新snapshot12、G001/G003/G006/G009的13个confirmed Fact/Brief/citation/checksum、无依据数字blocker/409、三Master必需状态；真实ffmpeg4秒H.264经Video Master19→Candidate15→Approval/Target13→逐字节ZIP。语义审核仍unavailable/warning；真实模型质量not_exercised。
+- 安全复核发现并最小修正：worker/Source传输异常固定分类；旧audit字段和类型重投影；未知HTTP method合并OTHER；legacy Settings无dsh自动HTTP探测；legacy fetch流式限时限大小/DNS pin/逐跳私网校验，header/body/query跨域不转发，返回原域也按当前hop判定。所有修补临时RED/GREEN，无新增永久测试或依赖。
+- 新鲜后端多次1660 passed/28 skipped/8既有warnings，最后每跳redirect补丁后最终回归仍在跑；Web/FE-P1通过（Projects224.89/72.98kB，Settings239.16/78.19kB），strict34/34、full app+rehearsal Ruff与diff通过。81定向既有回归通过。
+- 只使用隔离SQLite/local-media/TestClient/loopback，不调用供应商或微信、不改正式库/配置，不提交/推送/部署/主规格归档。实际使用using-superpowers、OpenSpec Apply、writing/executing-plans、systematic-debugging、test-driven-development（仅临时诊断）、receiving/requesting-code-review、verification-before-completion。
+
+下方为此前批次历史记录，以本段和最新验收文档为准。
+
+# 2026-10-03：F8 本地正式验收基准确认与 Batch A 修正
+
+- 用户确认本轮 F8 正式验收以“SQLite + 本地素材库 + 仅本机/loopback 访问”为准；PostgreSQL、MinIO、多主机部署保留为未来 profile，不阻塞本轮闭环验收。未因此批准 F8 的 JWT/用户身份字段迁移或生产开关。
+- 修正就绪检查：选定本地素材根目录在非生产模式也必须真实可访问；缺失目录返回 `storage_unavailable`、不创建目录、不切换 provider。Worker probe 现在接受真实 `{"ok":"pong"}`，并以独立有界线程阻止 Kombu 发布重试拖住 readiness。默认技能目录补入当前本机 `~/.codex/skills`，修复环境中 25 项 F7 公众号/插件回归的导入与发现问题。
+- 新鲜全量后端：`PYTHONPATH=. APP_ENV=test LLM_PROVIDER=mock DATABASE_URL=sqlite:////private/tmp/aics-f7-close-Ro2XB0/worker-test.sqlite .venv/bin/python -m pytest -q --tb=short` → `1660 passed, 28 skipped, 8 warnings`。前一次直接 `.venv/bin/pytest` 的 23 个 `scripts` 导入失败由测试路径错误造成，未修改业务绕过。
+- 新鲜超时探针与限定 Ruff 通过；正式 Web build/strict/diff 需在最后一次 UI/spec 修正后重跑。当前 F8 任务计数仍不提前扩大，保留身份、恢复、Golden、全链路和最终独立复核未完成状态。
+- 本机恢复演练：当前 SQLite 在线 `.backup` → 私有临时恢复副本，`integrity_check=ok`、备份/恢复大小一致；恢复副本目标升级到批准的 `f7d000000001` 后 head 与完整性仍正确。6 个本地 MaterialRevision 引用字节重算均匹配。未执行未批准的 `f8a000000001` 身份迁移。
+- 只读盘点当前 SQLite 的 6 条 `SystemSetting`：3 条含 secret-bearing 字段、3 条安全；未输出值，未删除/迁移个人配置。外部 secret remediation 仍保持待授权。
+
+# 2026-10-03：F8 从 post-F7 基线继续
+
+- 实际基线 main@a59d5de，F7 实施/主规格归档均可见；实际 F8 为18/100，已有 dirty 实现与旧身份/schema 草案完整保留，不能当作已验收。目标仍是完成原 F8 及产品闭环/设计保真验收。
+- 部署验收范围（当前 SQLite/本地素材库与 PostgreSQL/MinIO）已向用户提出一个关键问题；尚无回复。先推进不依赖该选择的健康、安全、历史保留与隔离恢复准备，不修改正式库/密钥/媒体根，不执行迁移、供应商/微信调用或推送部署。
+- 当前变更 `fe-f8-production-readiness-operations`；计划批次与 /// 步骤已写入 task_plan.md。已完整读取两份 delta、proposal/design/tasks，OpenSpec CLI 可用；代码图工具当前未提供，使用限定文件文本定位，不全库扫描。
+
 # 2026-10-03：F7 本地提交与canonical归档
 
 - 用户明确继续剩余三项，授权本地提交、主规格同步与归档；Commons按既有决定保持暂缓而非真实验收PASS。基线main@8c0e3b8、107/110，模型路由23/23，F8混合dirty改动保留。
@@ -253,6 +314,22 @@
 - 新进程对临时数据库和结果文件完成存在性、权限和 SHA256 一致性回读；由于本轮临时 receipt key 只存在于首次命令进程、没有持久保存，无法完成同 key 的跨进程 HMAC receipt 验签。没有为补验签再次调用供应商，不把本轮结果记为正式可信素材或重启恢复验收。
 - 旧图片 Unknown 与旧语音任务不变；没有重试、恢复、接受素材、视频/ASR调用、公众号请求、提交或推送。F7 其他未完成项仍保持原状态。
 
+# 2026-10-02：F8 第一批启动——生产等价素材生命周期
+
+- 用户确认开发环境也必须沿用正式环境的素材生命周期。本批按 F8 已批准的 `StorageProvider` 契约推进，不把临时 MiniMax 验收目录当作产品默认存储。
+- 实施顺序固定为：统一 MaterialRevision 字节访问 → 开发/生产存储配置隔离 → 生成任务人工接受后晋级正式 `MaterialRevision` → 项目引用 `ProjectMaterialReference` → Candidate/Review/Delivery 继续按 hash 复核。
+- 当前代码已有 `material_storage.py`、`generation_tasks.accept()` 和 `provider_media.accept()` 的局部基础；但 Delivery、legacy DraftMedia、workflow 输出和 retention 仍有直接 `MEDIA_ROOT` 调用，F8 storage tasks 尚未关闭。
+- 本批不运行正式数据库迁移、不修改生产配置、不删除旧文件、不把未确认生成结果直接写入正式素材库。
+
+## F8 第一批当前结果
+
+- 已完成统一 `StorageProvider` contract：local provider 现在支持安全的 immutable put/read/exists/size/delete-if-unreferenced；生成 namespace 继续私有，Material namespace 按内容 hash 原子写入。
+- `delivery.py` 的正式 MaterialRevision 封面/媒体、`article_handoff.py` 的 MaterialRevision 回读、旧 package 的 revision fallback、`media_renderers.py` 的输入预算现在优先走 provider；DraftMedia 没有 revision 的历史路径仍保留明确本地兼容桥。
+- 渲染输入先通过 provider `size()` 做 30MiB 预算，再读取并校验 hash，避免为预算检查提前读取超大对象。
+- 已补 fail-closed：绑定 `MaterialRevision` 的读取失败不再回退旧本地路径；项目上传的存在性/孤儿记录也通过 provider 判断。管理员可通过 `/api/v1/materials/storage-diagnostics` 查看不含路径/密钥的缺失、哈希损坏、存储异常和孤儿候选统计。
+- 运维门禁同步收口：新增显式 `/api/v1/health/ready`，保留 `/api/v1/health` 兼容别名；`/health/live` 只报告进程存活；生产 `/metrics` 需要管理员身份，开发环境保持现有本地访问兼容。
+- 定向门禁：存储/交付/渲染/观测范围 `128 passed, 1 warning`；范围 Ruff、`git diff --check`、OpenSpec strict `33/33` 通过。
+- F8 tasks 已关闭 3.1–3.7（不含 3.8–3.10）、4.9、5.1–5.5。3.8–3.10、4.1–4.8、5.6–5.9 及后续认证/密钥/恢复/Golden/全链路仍未完成；当前完成 `18/100`，F8 不宣称完成。
 
 # 当前进度
 
@@ -594,6 +671,14 @@
 - 使用获准Clash UI订阅→重新激活，显示“订阅已激活”；生成clash-verge.yaml实际含三个域名，全局enable_dns_settings=false。未改DNS服务器/代理节点/凭据/生成文件，不重启整个VPN。
 - fresh系统DNS：Commons API103.102.166.224、media103.102.166.240及公网IPv6，固定地址连接/原host证书TLSv1.3均通过，HTTP/账号请求0。网络前置恢复不等于10.2真实素材bytes导入，F7仍97/105、F8未apply；微信Unknown不动、不重发、不公开发布。
 - 本轮无业务代码/测试/迁移/commit/push/deploy/生产操作/canonical archive。实际skills：using-superpowers、systematic-debugging、writing-plans、executing-plans、verification-before-completion；仅外部已授权订阅配置与项目过程记录。
+
+## 2026-10-01：F8 前置只读准备完成，业务仍未 apply
+
+- 前一轮真实Commons API/DNS提供新的阻断证据；新增域名授权未收到，本轮不改VPN、不重试微信unknown。重新核对当前main@da73bbb、OpenSpec F7 97/105、补充17/20、F8 0/100。
+- 完读F8 proposal/design/tasks和两份delta，核对当前deps/User/config/main/health/observability/storage及已知素材/Delivery入口。图谱工具未提供，仅对已知代码入口和MEDIA_ROOT字符串使用fallback；未全repo扫描、不读持久secret值。
+- 新隔离诊断明确证明健康故障返回200/degraded并暴露合成异常标记、动态路径进入metric label。未启动lifespan，实际数据库文件未创建，0外部请求/0业务写入；临时目录已回收。源代码另证明Header默认admin/自动建号、无issuer/subject绑定、无条件startup写库、MinIO只有exports而非全媒体存储。
+- 将证据和未决issuer/subject设计写入findings；未勾F8任务/修改规格/业务/迁移/测试。F7前置保持，未声称完整inventory或F8完成；真实发布→Learning需人工发布证据，用户“不公开发布”的边界不变。
+- 仅文档更新，OpenSpec --all --strict31/31及git diff --check实跑通过；不重跑或冒用既有后端/build结果。无commit/push/deploy/生产迁移/canonical sync/archive。实际skills：using-superpowers、openspec-explore、writing-plans、verification-before-completion。
 
 ## 2026-10-01：F7 真实素材验收遇到独立网络前置
 
@@ -2083,3 +2168,115 @@ ASR续批新鲜验证收尾：定向54 passed /1 warning；全后端1661 passed 
 
 - 用户再次明确授权后，使用新私有产品Candidate/Target/Attempt和原批准HTML、八图JPEG、首图封面、同一真实公众号账号执行一次。token + 9次素材上传 + 1次 `draft/add` 完成；微信返回有效media_id，Attempt=`succeeded`、Target=`awaiting_manual_receipt`、remote_id已落库。发送前核对冻结标题、摘要、图槽及正文仅URL替换后的还原一致性，文件名原样传递。
 - 旧失败库SHA256保持 `f86167b30e57e98fc4a5bc2477594444154387148a3a9908a9ed88b79d58b077`，原Unknown/claim未被重试或改写。未公开发布或进行成功草稿回读；未创建一般CapabilityVerification/Receipt。本轮关闭F7 11.5，主变更103/110；F7其他未完成项仍保留。详情见 `docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md`。
+
+# 2026-10-02：F8 生产 schema readiness 单头兼容检查
+
+- 生产启动和readiness现在共用只读 `schema_head_matches()`：Alembic代码、数据库版本表、显式 `required_schema_head` 必须各只有相同一个head；多头、空头、缺表和陈旧配置返回安全失败，不自动迁移。F8 5.3已关闭，当前16/100；身份映射、真实存储拓扑和完整F8验收仍未关闭。
+- 隔离SQLite现行/陈旧/多头/空头探针通过；既有健康测试3 passed/1 warning，OpenSpec strict33/33、范围Ruff和 `git diff --check` 通过。OpenSpec工具附带PostHog遥测DNS错误但退出码0，不能将遥测错误冒充规格失败。
+- 同批只读复核关闭F8 4.1（请求ID、响应头及结构化日志已有现行测试）和5.6（可选LLM能力只读投影，不探测供应商、不影响核心ready）。F8当前18/100；worker/MinIO真实拓扑及代际传播仍待证据。另发现当前持久生成服务只接受local StorageProvider，在生产强制MinIO配置下会拒绝生成，列入F8存储兼容下一批，不能宣称3.9或端到端生产可用。
+# 2026-10-02：F7 两项范围决定
+
+- 用户确认 `grok-4.7` 是此前通过第三方 CPA 网关接入的 Grok，不是 Groq Cloud；Gemini 也走同一类自定义兼容接口。Google/xAI 官方专用适配器退出当前模型路由范围，不视为已实现或已验证。
+- 公众号成功草稿回读退出验收条件；精确 Attempt 的有效 `media_id` 与同账号后台人工确认已覆盖有界创建验收。F7 10.6 按修订口径关闭，8.3/10.5 一般 Publisher 验证仍开放；没有新回读、CapabilityVerification、草稿或公开发布。
+- 已修订 active proposal/design/spec/tasks 和 README/验收矩阵；通用 CPA 聊天路径有既有代码，但未因品牌名称推断媒体能力，MiniMax/Unknown 不重发不变。OpenSpec strict 33/33 与 `git diff --check` 通过（首次 OpenSpec telemetry flush 因网络失败报非验证错误，退出码仍为0）；没有后端/前端业务改动，所以没有把历史 build/test 当本轮重跑。
+- 新任务口径：主 F7 104/110，模型路由 14/23（专用 Google/xAI 两项移出而非算 PASS），公众号补充已归档 22/22；合计 140/155，15 项待完成。一般 Publisher 8.3/10.5 与 CPA/MiniMax 实际能力仍未验证。
+# 2026-10-02：模型路由九项首批——合同/矩阵对账
+
+- 本批最终门禁：从正确 `apps/api` 工作目录跑后端全量 `1660 passed / 28 skipped / 8 warnings`；API/路由定向 `83 passed / 1 warning`；TypeScript/Vite 与 FE-P1 bundle PASS（`/projects` 224.89 kB raw / 72.98 kB gzip）；模型路由状态脚本 PASS；OpenSpec strict `33/33`、范围 Ruff 与 `git diff --check` PASS。第一次从仓库根运行全量出现 33 个相对路径/模块导入失败，已在正确工作目录重新执行并通过，不是产品缺陷。
+- ASR 收窄修正后的定向 `105 passed / 1 warning`、完整后端再次 `1660 passed / 28 skipped / 8 warnings`；OpenSpec strict `33/33` 与范围 Ruff/diff 复跑通过。前端构建在路由历史 UI 改动后通过；其后仅更新文档，没有再改前端代码。
+- 持久任务只读视图增加已冻结 route_reason；素材面板的准备态与历史态明确标识“所选模型自身/显式模型/显式插件/已授权自动插件路由”，不靠品牌推断也不改执行计划。2.6 跨 Workflow/ASR/浏览器完整验收仍开放。
+- 同批修正同步 MiniMax image/TTS 的不确定结果：CLI 非零退出或结果文件缺失/空白/超限时保留 `unknown` 和 durable claim，不再错误记为可重试的普通失败。无文件写入的三个离线分支探针通过；仍需全量与独立安全复核，2.5/2.7/3.2/3.4 未勾。
+- MiniMax ASR 的 CLI 非零退出改为 `asr_outcome_unknown`。尝试将通用 provider 异常也改为 Unknown 时，现有安全回归要求 HTTP 502 脱敏失败（105项中1项不符）；已撤回该越界改动，保留旧通用契约并在 findings 中登记待规格修订。ASR 收据仍非持久 claim，不关闭 3.4。
+- 本机无付费请求地核对 `mmx 1.0.27` 固定 image/video task/TTS/ASR CLI 帮助；路由与 F7 持久化既有测试 83 passed / 1 warning。此前真实 image/TTS 仅达到隔离 `result_ready`，本轮未再次调用供应商。
+- 更新 Provider 契约、F7 能力矩阵、根 README 和 change README，纠正“官方 Google/xAI 仍是当前门槛”以及“MiniMax TTS 无真实结果”的过时描述；CPA 聊天 `/models` 401、视频/ASR/许可/浏览器不冒充完成。
+- 修正 task 2.5 遗留的“native and local CLI”措辞，防止把已退出范围的 Google/xAI 官方适配器重新当作必做；以已验证逐操作合同和固定 MiniMax CLI 为准，未验证 CPA 媒体保持不可用。
+- `add-model-capability-routing` 2.10 完整文档/前置对账关闭，当前 15/23，仍 8 项。F7 一般账号范围与 F8 生产身份/存储门槛继续独立；无外部调用、Unknown 重发、迁移、推送、归档。
+# 2026-10-03：公众号草稿成功后的系统能力记录（规格阶段）
+
+- 已完成限定审计：现有 `DeliveryAttempt.remote_id` 能证明一次 `draft/add` 成功，但人工确认后未晋级到 `CapabilityVerification`。
+- 已完成 OpenSpec 草案：复用既有能力验证表，精确绑定账号、`wechat/article/auto_draft`、publisher 版本和运行时指纹；不新增表、不要求 `draft/get`、不代表公开发布。
+- 已进入 apply：通用 Delivery Receipt 与兼容 Article Handoff 收据都接入原子幂等晋级；Settings 能力库存可显示精确账号/文章/auto_draft 范围。
+- 定向回归 165 passed、Ruff PASS；未新增测试代码、表或 migration，未重新调用公众号。change 已归档至 `openspec/changes/archive/2026-10-03-record-wechat-capability-verification/`；本轮未同步 canonical 主规格、未提交。
+# 2026-10-03：F8 Batch B 可观测性收口
+
+- 在用户确认的正式范围（SQLite＋本地素材库＋仅本机/loopback 访问）内，完成 4.2–4.8：请求 trace 通过安全 JSON context 传到 queued generation/workflow；项目事件保留 trace 与已有 actor/project/entity/lineage；worker generation/workflow/connector 记录固定错误分类、状态和耗时。
+- 新增 admin-only `GET /api/v1/ops/audit`，只返回事件元数据与安全 telemetry，不返回原始审计详情、正文、provider error 或密钥。
+- 验证：observability + task queue `7 passed`；目标文件 Ruff PASS；临时隔离 SQLite smoke probe 验证响应 `x-trace-id` 与落库 ProjectEvent trace 一致。
+- 未新增 migration、未启用 F8 auth/schema 草案、未访问外部发布/供应商、未 push/deploy。
+- 当前 F8 active change 实际计数：`41/100`，剩余 `59`；身份/生产认证、黄金样例、完整全链路、最终独立复核与本地收尾仍未完成。
+# 2026-10-03：F8 Batch C 前置恢复收口
+
+- 新增 `apps/api/scripts/rehearse_sqlite_recovery.py`，以只读源库在线备份到新隔离目标；本次输出 `source_integrity=ok`、`restored_integrity=ok`、大小一致。
+- 当前本地 storage diagnostics：6 条 MaterialRevision、`issue_count=0`、`orphan_candidate_count=0`、`truncated=false`；已引用字节 hash 仍为 `matched=6, missing=0, mismatch=0`。
+- 新增 `docs/FE_F8_RECOVERY_ACCEPTANCE.md`，明确本机恢复通过、未执行 f8a 身份迁移，不把未来 PG/MinIO 或生产恢复冒称已验收。
+- downgrade preflight 因保留 generation task 与平台身份绑定而 fail closed；能力禁用/回退步骤已写入 runbook，不通过删除历史制造回滚成功。
+## F8 Batch D：Identity / Content Golden 基线（2026-10-03）
+
+- 按正式范围补齐版本化 Golden 夹具：`apps/api/evals/goldens/manifest.v1.json`、`identity.v1.json`、`content.v1.json`；复用既有 `apps/api/evals/golden_topics.json`，不复制事实、不新增业务表、不新增测试代码。
+- Identity 覆盖 Brand/Persona 差异、边界、长期观点与历史 IdentitySnapshot 固定；Content 覆盖 Text/Graphic/Video、Brief/Fact 保真和五个首批 ChannelVariant 适配矩阵。
+- 真实模型质量评审没有被伪造为通过：manifest 明确记录本机只运行 mock 确定性管线，真实 provider/model/reviewer 字段作为启用真实模型时的必填 provenance。
+- 新鲜本机评测：30 topics、64 jobs、`generation_success_rate=1.0`、`unfact_number_rate=0.0`、`avg_fact_coverage=1.0`、`blocked_rate=0.0`；报告：[eval-20261003-115920.md](apps/api/evals/reports/eval-20261003-115920.md)。
+- OpenSpec 进度：`50 / 100`；剩余 `50`，当前未触及 F8 未获批准的认证/多租户/生产部署/真实远端发布范围。
+
+## F8 Batch E：本机素材存储收口（2026-10-03）
+
+- 完成 selected StorageProvider 的本机消费者审计：MaterialRevision、DraftMedia 兼容桥、AssetMedia、Workflow/Project output、Review/Delivery package 和 retention 的字节入口均有统一 provider 或明确兼容边界。
+- 新增 `rehearse_storage_cutover.py`，对当前 SQLite 所引用的本地字节做隔离复制与双端 hash 验证；实际结果 5/5、0 failure、ready for operator cutover；不切换正式根目录。
+- 现有 storage/material/media/ASR/renderer 回归作为集成证据，未新增永久测试代码；审计记录见 [FE_F8_STORAGE_CUTOVER_AUDIT.md](docs/FE_F8_STORAGE_CUTOVER_AUDIT.md)。
+- OpenSpec 进度：`55 / 100`；剩余 `45`。认证、多租户、真实远端发布、生产部署仍不属于本机正式验收。
+
+## F8 Batch F：配置库存与健康失败路径（2026-10-03）
+
+- 本地 SQLite SystemSetting 只读盘点：6 行，其中 3 行含 secret-bearing 字段；没有打印值、删除行或替换个人凭据。生产 remediation 规则见 [FE_F8_SECRET_INVENTORY.md](docs/FE_F8_SECRET_INVENTORY.md)。
+- 数据库不可用临时探针返回 `503/degraded` 语义对应的 `ready=false + database_unavailable`，生产缺配置启动校验返回固定 `production_configuration_invalid`；原始异常不出现在响应。
+- 证据见 [FE_F8_HEALTH_FAILURE_ACCEPTANCE.md](docs/FE_F8_HEALTH_FAILURE_ACCEPTANCE.md)。
+- OpenSpec 进度：`57 / 100`；剩余 `43`。
+
+## F8 Batch G：本机产品闭环（2026-10-03）
+
+- 在隔离 SQLite + mock provider 下跑通 Opportunity→Project→IdentitySnapshot/Brief/Boundary→Text/Graphic/Video Master→ChannelVariant→Candidate→Approval/Authorization→local package 的既有服务链路。
+- 证据：项目/身份/Variant 50 passed + Master/Candidate/Delivery 182 passed + Graphic/Video 79 passed；远端 Publisher、公开发布及 PublishedContentRecord/Learning 分支没有被模拟为成功。
+- 记录见 [FE_F8_LOCAL_FULL_CHAIN_ACCEPTANCE.md](docs/FE_F8_LOCAL_FULL_CHAIN_ACCEPTANCE.md)。
+- OpenSpec 进度：`61 / 100`；剩余 `39`。
+
+## F8 Batch H：失败发布与能力矩阵（2026-10-03）
+
+- 既有 Delivery/PublishedHistory 回归确认 Unknown、超时、失败、未验证 Publisher 不会变成已发布，也不触发自动重试；本机 local package 不进入 Performance/Learning 下游。
+- 现有 project read model、冻结 manifest、DeliveryTarget/Receipt、ProjectEvent 和 bounded audit projection 可按 exact lineage 查询；新增能力矩阵区分 implemented、configured、locally verified、remote not exercised。
+- 记录见 [FE_F8_LOCAL_CAPABILITY_MATRIX.md](docs/FE_F8_LOCAL_CAPABILITY_MATRIX.md)。
+- OpenSpec 进度：`64 / 100`；剩余 `36`。
+
+## F8 Batch I：运行手册与未来部署模板（2026-10-03）
+
+- 补齐未来部署 profile 的配置模板、API/Web/Worker 启动顺序、迁移/备份/素材切换/密钥处理和 reverse-proxy/TLS/auth 预期。
+- 所有模板仅含 placeholder；本机 SQLite profile 不切换、不运行生产迁移、不启用 JWT/MinIO。
+- 记录见 [production-readiness.md](docs/runbooks/production-readiness.md) 和 [production.env.example](docs/runbooks/production.env.example)。
+- OpenSpec 进度：`68 / 100`；剩余 `32`。
+
+## F8 Batch J：本机正式验收收口（2026-10-03）
+
+- 用户确认正式验收 profile：`SQLite + 当前本地素材库 + loopback-only`。PostgreSQL/MinIO、多主机、生产身份和远程发布不作为本轮本机 PASS 条件。
+- 外部能力安全审计完成：6.4–6.8 依据现有 DeliveryTarget/CapabilityVerification、Unknown/幂等、只读库存、AuditLog/ProjectEvent 和既有安全回归关闭；6.1–6.3 继续开放，明确留给未来统一 outbound policy、host allowlist 和 secret-provider/权限 profile。证据见 `docs/FE_F8_EXTERNAL_CAPABILITY_SECURITY_AUDIT.md`。
+- 安全定向回归：`257 passed / 1 warning`。全后端先因临时 SQLite 父目录/隔离库未初始化出现环境性失败，未改代码；在隔离库初始化当前 head 后重跑为 `1660 passed / 28 skipped / 8 warnings`。
+- 前端 `npm run build` 与 FE-P1 bundle gate PASS：`/projects 224.89/72.97 kB` raw/gzip，Production 284.42/90.47 kB，Text Studio 保持 lazy TipTap；OpenSpec strict `34/34`、本轮 `app + scripts` Ruff PASS、`git diff --check` PASS。
+- 新增 `docs/FE_F8_LOCAL_FINAL_STATUS.md`，把 implemented / configured / locally verified / real-platform-unverified 分开。当前 F8 tasks **76/100**；本机闭环可正式验收，未批准生产与真实远端项不伪装完成。
+## F8 Batch K：模型出站请求边界（2026-10-03）
+
+- OpenAI-compatible 注册模型与旧环境配置共用 `model_registration.provider_request()`；移除旧的独立 `AsyncClient(timeout=120)` 路径。
+- 当前统一边界：请求体最多 1 MB、响应体最多 2 MB、总请求预算最多 10 秒、禁止环境代理、沿用已验证目标的 DNS/TCP 固定与禁止跟随重定向；超大请求在目标解析前返回固定 `provider_request_limit`。
+- 临时探针确认请求体超限直接拒绝、响应体超限固定失败且 120 秒输入被压到 10 秒；模型/设置/产品设置定向回归 `71 passed / 1 warning`，正确隔离库全量 `1660 passed / 28 skipped / 8 warnings`，Ruff、OpenSpec strict `34/34`、`git diff --check` 通过。
+- 这只收紧模型调用路径；URL Import、Connector、媒体能力的全路径 host/credential policy 仍未形成 6.1–6.3 的完整证据，独立安全/架构复核、真实远端发布、提交/归档继续保持开放。
+## F8 Batch K 复核补丁：模型出站边界（2026-10-03）
+
+- 独立安全复核发现两个旁路：目标解析耗尽 deadline 后的 0.1 秒 fallback，以及供应商合法 JSON 缺少 `choices/message/content` 时的 Python 结构异常。
+- 已分别修为固定 `provider_timeout` 和 `provider_response_invalid`；新的 deadline/响应分类临时探针通过。
+- 最终验证：模型/设置/产品设置定向回归 `71 passed / 1 warning`；全量后端 `1660 passed / 28 skipped / 8 warnings`；Ruff、OpenSpec strict `34/34`、临时 pycache 编译检查、`git diff --check` 均通过。
+- F8 仍为 `76/100`。6.1–6.3 的全路径 outbound policy、生产身份/secret、远端发布/学习、独立总审、提交和归档仍未关闭。
+## 2026-10-03 F8 Batch L：本机出站边界补强
+
+- 按用户确认的正式基准继续：SQLite＋本地素材库＋loopback-only；生产认证、Secret Provider、真实远端发布不纳入本轮验收。
+- URL Import / Connector 共用请求体 1MB、响应体 5MB、总时限 10 秒上限；JSON 在 DNS/连接前序列化并限长，禁止无界 `json=` 请求体。
+- Commons 搜索/素材拉取与 OpenAI 图片 provider 复用 10 秒出站时限；dsh 状态探测仅允许 loopback、禁代理、禁重定向。
+- 临时边界探针通过：`url_request_bound`、`dsh_target_bound`、`timeout_bound`。
+- 定向回归：`tests/test_connectors.py`、`test_f7_material_search.py`、`test_f7_openai_image_provider.py`、`test_product_settings.py`、`test_f7_capability_persistence.py` 全部通过；Ruff 与 `git diff --check` 通过。
+- 仍未把 6.1–6.3 标记完成，等待安全复核并继续盘点 WeChat/Minimax/其他出站路径；F8 当前仍 76/100。

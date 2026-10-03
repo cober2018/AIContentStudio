@@ -24,7 +24,7 @@ from . import provider_media
 from .content_harness import providers
 from .content_harness.contracts import MaterialSearchResult
 from .project_authorization import lock_project_context
-from .url_fetch import pinned_transport
+from .url_fetch import OUTBOUND_HTTP_POLICIES, outbound_scope, pinned_transport
 
 _lock = threading.RLock()
 _cache: dict[str, Candidate] = {}
@@ -47,17 +47,30 @@ def commons_fetch(url: str, max_bytes: int) -> tuple[bytes, str]:
             or (parsed.hostname == "upload.wikimedia.org" and parsed.query)
             or (parsed.hostname == "commons.wikimedia.org" and parsed.path != "/w/api.php")):
         raise ValueError("search fetch source forbidden")
-    limit = min(max_bytes, 5_000_000)
-    deadline = time.monotonic() + 15
+    limits = OUTBOUND_HTTP_POLICIES["commons"]
+    limit = min(max_bytes, limits.response_bytes)
+    if limit < 1:
+        raise ValueError("search fetch bound invalid")
+    deadline = time.monotonic() + limits.timeout_seconds
     token = _fetching.set(True)
     try:
         current = url
         for _ in range(4):
+            with outbound_scope(deadline):
+                transport = pinned_transport(current)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                if transport is not None:
+                    transport.close()
+                raise ValueError("search fetch bound exceeded")
             with (
-                httpx.Client(timeout=10, follow_redirects=False, trust_env=False,
-                             transport=pinned_transport(current)) as client,
+                outbound_scope(deadline),
+                httpx.Client(timeout=min(10, remaining), follow_redirects=False, trust_env=False,
+                             transport=transport) as client,
                 client.stream("GET", current, headers={"User-Agent": "AIContentStudio/0.1 (explicit user media search)", "Accept-Encoding": "identity"}) as response,
             ):
+                if time.monotonic() >= deadline:
+                    raise ValueError("search fetch bound exceeded")
                 if response.status_code in {301, 302, 303, 307, 308}:
                     redirected = httpx.URL(current).join(response.headers["location"])
                     original = httpx.URL(url)
@@ -78,6 +91,8 @@ def commons_fetch(url: str, max_bytes: int) -> tuple[bytes, str]:
                     if total > limit or time.monotonic() > deadline:
                         raise ValueError("search fetch bound exceeded")
                     chunks.append(chunk)
+                if time.monotonic() >= deadline:
+                    raise ValueError("search fetch bound exceeded")
                 return b"".join(chunks), response.headers.get("content-type", "").split(";")[0].strip()
         raise ValueError("search redirects exceeded")
     finally:

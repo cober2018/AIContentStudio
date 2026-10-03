@@ -11,7 +11,7 @@ from datetime import UTC
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
 from pydantic import AwareDatetime, BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -447,16 +447,23 @@ def get_draft_media_raw(draft_id: int, media_id: int, db: Session = Depends(get_
     if not row or row.draft_id != draft_id:
         raise HTTPException(404, "素材不存在")
     authorize_project_draft(db, row.draft, user)
-    from ..services.asset_media import MEDIA_ROOT
+    if row.material_revision_id:
+        from ..services.materials import read_bytes_checked
 
-    # use 行无独立字节时回退 MaterialRevision 的 content-addressed 文件
-    path = MEDIA_ROOT / row.file_path if row.file_path else None
-    if (not path or not path.is_file()) and row.material_revision_id:
         revision = db.get(MaterialRevision, row.material_revision_id)
-        path = MEDIA_ROOT / revision.file_path if revision and revision.file_path else None
-    if not path or not path.is_file():
+        if not revision:
+            raise HTTPException(409, "素材版本不存在")
+        return Response(content=read_bytes_checked(db, revision), media_type=row.mime_type)
+
+    from ..services.material_storage import read_legacy_bytes
+
+    if not row.file_path:
         raise HTTPException(404, "素材文件不存在")
-    return FileResponse(path, media_type=row.mime_type)
+    try:
+        content = read_legacy_bytes(row.file_path, expected_hash=row.content_hash)
+    except (OSError, ValueError):
+        raise HTTPException(409, "素材文件缺失或校验失败") from None
+    return Response(content=content, media_type=row.mime_type)
 
 
 @router.delete("/drafts/{draft_id}/media/{media_id}")
@@ -677,13 +684,29 @@ def download_package_archive(target_id: int, db: Session = Depends(get_db), user
         if content.get("json"):
             archive.writestr("thread.json", content["json"])
         archive.writestr("README.txt", "本包仅限已授权账号人工发布；完成后回到系统回填结果。")
-        from ..services.asset_media import MEDIA_ROOT
         for media in manifest["media"]:
             row = db.get(DraftMedia, media["id"])
-            path = MEDIA_ROOT / (row.file_path or "") if row else None
-            if not row or not path or not path.is_file():
+            if not row:
                 raise HTTPException(409, "批准素材文件已缺失，不能导出成品包")
-            content_bytes = path.read_bytes()
+            content_bytes = None
+            if row.material_revision_id:
+                from ..services.materials import read_bytes_checked
+
+                revision = db.get(MaterialRevision, row.material_revision_id)
+                if revision:
+                    try:
+                        content_bytes = read_bytes_checked(db, revision)
+                    except HTTPException:
+                        content_bytes = None
+            if content_bytes is None and not row.material_revision_id and row.file_path:
+                from ..services.material_storage import read_legacy_bytes
+
+                try:
+                    content_bytes = read_legacy_bytes(row.file_path, expected_hash=media["hash"])
+                except (OSError, ValueError):
+                    content_bytes = None
+            if content_bytes is None:
+                raise HTTPException(409, "批准素材文件已缺失，不能导出成品包")
             if hashlib.sha256(content_bytes).hexdigest() != media["hash"]:
                 raise HTTPException(409, "批准素材文件校验失败，不能导出成品包")
             suffix = Path(row.file_path).suffix or ".bin"

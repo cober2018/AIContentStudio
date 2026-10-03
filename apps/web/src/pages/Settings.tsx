@@ -53,7 +53,7 @@ interface PluginsView {
   skills: SkillInfo[];
   skills_enabled: string[];
   mcp: McpEntry[];
-  dsh: { url: string; reachable: boolean; status_code: number | null };
+  dsh: { url: string; reachable: boolean; status_code: number | null; status?: "not_probed" };
 }
 
 interface DshSnapshot {
@@ -827,7 +827,7 @@ function PluginsPanel({ settings, isAdmin }: { settings: SettingsView; isAdmin: 
         <div className="mb-3 flex items-center justify-between">
           <Dot
             ok={plugins.dsh.reachable}
-            label={`dsh :3080 ${plugins.dsh.reachable ? `在线（HTTP ${plugins.dsh.status_code}，token 鉴权）` : "未启动"}`}
+            label={`dsh :3080 ${plugins.dsh.status === "not_probed" ? "尚未探测（读取配置不检测连接）" : plugins.dsh.reachable ? `在线（HTTP ${plugins.dsh.status_code}，token 鉴权）` : "未启动"}`}
           />
           <span className="font-mono text-[11px] text-slate-400">{dsh.snapshot.settings_path}</span>
         </div>

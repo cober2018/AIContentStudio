@@ -16,24 +16,34 @@ from httpcore._backends.sync import SyncBackend
 
 from app import runtime_config
 from app.services.content_harness.providers import MediaOutput
+from app.services.url_fetch import (
+    OUTBOUND_HTTP_POLICIES,
+    enforce_outbound_host,
+    outbound_scope,
+    resolve_addresses,
+)
+from app.services.url_fetch import (
+    _PinnedBackend as PinnedHttpBackend,
+)
 
 _IDENTITY_KEY = secrets.token_bytes(32)
-MAX_RESPONSE_BYTES = 8 * 1024 * 1024
+MAX_RESPONSE_BYTES = OUTBOUND_HTTP_POLICIES["image"].response_bytes
+REQUEST_TIMEOUT_SECONDS = OUTBOUND_HTTP_POLICIES["image"].timeout_seconds
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 _MODELS = {"gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5"}
 
 
 class _PinnedBackend(SyncBackend):
-    def __init__(self, host, address):
+    def __init__(self, host, address, deadline=None):
         self.host, self.address = host, address
+        self.deadline = deadline
 
     def connect_tcp(self, host, port, timeout=None, local_address=None, socket_options=None):
         if host != self.host or port != 443:
             raise OSError("provider_target_mismatch")
         # TCP uses the checked address; httpcore still negotiates TLS for the original host.
-        return super().connect_tcp(
-            self.address, port, timeout=timeout, local_address=local_address, socket_options=socket_options
-        )
+        return PinnedHttpBackend(self.host, port, self.address, self.deadline).connect_tcp(
+            host, port, timeout=timeout, local_address=local_address, socket_options=socket_options)
 
 
 def _config():
@@ -58,6 +68,7 @@ def _config():
     if size not in sizes:
         return None
     try:
+        enforce_outbound_host(config["base_url"])
         url = urlsplit(config["base_url"])
         if (
             url.scheme != "https"
@@ -106,10 +117,17 @@ class OpenAIImageProvider:
             or len(prompt) > (1000 if config["model"] == "dall-e-2" else 2000)
         ):
             return MediaOutput("unavailable")
+        started = time.monotonic()
+        deadline = started + REQUEST_TIMEOUT_SECONDS
         try:
             host = urlsplit(config["base_url"]).hostname
-            addresses = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
-            if not addresses or any(not ipaddress.ip_address(item[4][0]).is_global for item in addresses):
+            with outbound_scope(deadline):
+                addresses = resolve_addresses(host, 443)
+            if not addresses or any(
+                item[0] not in {socket.AF_INET, socket.AF_INET6}
+                or not ipaddress.ip_address(item[4][0]).is_global
+                for item in addresses
+            ):
                 return MediaOutput("unavailable")
         except (OSError, ValueError):
             return MediaOutput("unavailable")
@@ -117,17 +135,23 @@ class OpenAIImageProvider:
         payload["output_format" if config["model"] in _MODELS else "response_format"] = (
             "png" if config["model"] in _MODELS else "b64_json"
         )
-        started = time.monotonic()
+        request_body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        if len(request_body) > OUTBOUND_HTTP_POLICIES["image"].request_bytes:
+            return MediaOutput("unavailable")
         try:
+            remaining = REQUEST_TIMEOUT_SECONDS - (time.monotonic() - started)
+            if remaining <= 0:
+                return MediaOutput("unavailable")
             transport = httpx.HTTPTransport(retries=0, trust_env=False)
-            transport._pool._network_backend = _PinnedBackend(host, addresses[0][4][0])
+            transport._pool._network_backend = _PinnedBackend(host, addresses[0][4][0], deadline)
             with (
-                httpx.Client(timeout=25, follow_redirects=False, trust_env=False, transport=transport) as client,
+                outbound_scope(deadline),
+                httpx.Client(timeout=remaining, follow_redirects=False, trust_env=False, transport=transport) as client,
                 client.stream(
                     "POST",
                     config["base_url"].rstrip("/") + "/images/generations",
-                    headers={"Authorization": "Bearer " + config["api_key"], "Accept-Encoding": "identity"},
-                    json=payload,
+                    headers={"Authorization": "Bearer " + config["api_key"], "Accept-Encoding": "identity", "Content-Type": "application/json"},
+                    content=request_body,
                 ) as response,
             ):
                 if response.status_code != 200:
@@ -141,10 +165,12 @@ class OpenAIImageProvider:
                 chunks, length = [], 0
                 for chunk in response.iter_bytes():
                     length += len(chunk)
-                    if length > MAX_RESPONSE_BYTES or time.monotonic() - started > 25:
+                    if length > MAX_RESPONSE_BYTES or time.monotonic() - started >= REQUEST_TIMEOUT_SECONDS:
                         return MediaOutput("unknown")
                     chunks.append(chunk)
                 body = json.loads(b"".join(chunks))
+                if time.monotonic() - started >= REQUEST_TIMEOUT_SECONDS:
+                    return MediaOutput("unknown")
             data = body.get("data") if isinstance(body, dict) else None
             if (
                 not isinstance(data, list)

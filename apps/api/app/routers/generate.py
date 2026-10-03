@@ -133,6 +133,9 @@ def generate_for_topic(
         run_params = {"topic_id": topic_id, "channel": spec.channel, "content_form": spec.content_form}
         if async_mode:
             run = workflow_engine.start_run(db, workflow, run_params, user, advance_now=False)
+            from ..observability import persisted_telemetry
+
+            run.context_json = persisted_telemetry(run.context_json)
             db.commit()
             worker_tasks.advance_workflow_run.delay(run.id)
             results.append(

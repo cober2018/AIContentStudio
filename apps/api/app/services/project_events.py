@@ -35,13 +35,19 @@ def record_project_event(
 ) -> ProjectEvent:
     if event_type not in EVENT_TYPES:
         raise ValueError(f"未注册的项目事件类型：{event_type}")
+    from ..observability import current_correlation
+
+    event_payload = dict(payload or {})
+    telemetry = current_correlation()
+    if telemetry:
+        event_payload.setdefault("_telemetry", telemetry)
     event = ProjectEvent(
         project_id=project_id,
         event_type=event_type,
         actor=actor,
         entity_type=entity_type,
         entity_id=str(entity_id) if entity_id is not None else None,
-        payload_json=payload or {},
+        payload_json=event_payload,
         schema_version=1,
     )
     db.add(event)

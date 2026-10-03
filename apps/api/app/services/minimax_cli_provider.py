@@ -33,10 +33,11 @@ from pathlib import Path
 import httpx
 
 from .content_harness.providers import MediaOutput
+from .url_fetch import OUTBOUND_HTTP_POLICIES
 
 CLI_VERSION = "1"
 CLI_KEY = "minimax.cli"
-_MAX_OUTPUT = 30 * 1024 * 1024
+_MAX_OUTPUT = OUTBOUND_HTTP_POLICIES["minimax_download"].response_bytes
 _MAX_STDOUT = 512 * 1024
 _MAX_PROMPT = 10_000
 
@@ -81,7 +82,7 @@ def _job_id(value) -> str | None:
 
 
 def _download_video_bytes(url: str, deadline: float) -> bytes:
-    from .url_fetch import pinned_transport
+    from .url_fetch import outbound_scope, pinned_transport
 
     original = httpx.URL(url)
     if (original.scheme != "https" or not original.host or original.port not in {None, 443}
@@ -91,12 +92,14 @@ def _download_video_bytes(url: str, deadline: float) -> bytes:
     try:
         current = original
         for _ in range(4):
-            transport = pinned_transport(str(current))
+            with outbound_scope(deadline):
+                transport = pinned_transport(str(current))
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 transport.close()
                 raise ValueError("generation_download_unavailable")
             with (
+                outbound_scope(deadline),
                 httpx.Client(transport=transport, trust_env=False, follow_redirects=False,
                              timeout=remaining) as client,
                 client.stream("GET", current, headers={"Accept-Encoding": "identity"}) as response,
@@ -178,6 +181,10 @@ def _run_bounded(executable: str | None, args: list[str], *, timeout: float,
     try:
         process = subprocess.Popen(
             [executable, *args],
+            # The fixed CLI authenticates from its own file; it must not inherit
+            # unrelated CPA/WeChat/receipt secrets or credential overrides.
+            env={key: value for key, value in os.environ.items()
+                 if key in {"PATH", "HOME", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR", "SSL_CERT_FILE", "SSL_CERT_DIR"}},
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             start_new_session=True,

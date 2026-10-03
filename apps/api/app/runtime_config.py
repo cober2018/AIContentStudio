@@ -42,14 +42,20 @@ def load_from_db(db) -> None:
 _SECRET_FIELDS = {"apikey", "accesskey", "secretkey", "secret", "clientsecret", "appsecret", "password", "passwd", "token", "accesstoken", "refreshtoken", "authorization", "cookie", "signature"}
 
 
+def _secret_field(name: str) -> bool:
+    normalized = re.sub(r"[^a-z]", "", name.lower())
+    return (normalized in _SECRET_FIELDS
+            or normalized.endswith(("apikey", "password", "secret", "token", "authorization", "cookie", "signature"))
+            or normalized in {"sig", "xamzcredential", "xgoogcredential", "ossaccesskeyid", "keypairid"})
+
+
 def contains_plaintext_secret(value, *, depth: int = 0) -> bool:
     """Inspect stored configuration without returning any value or user-defined key."""
     if depth > 20:
         return True
     if isinstance(value, dict):
         for name, item in value.items():
-            normalized = re.sub(r"[^a-z]", "", str(name).lower())
-            if normalized in _SECRET_FIELDS and item:
+            if _secret_field(str(name)) and item:
                 return True
             if contains_plaintext_secret(item, depth=depth + 1):
                 return True
@@ -60,7 +66,7 @@ def contains_plaintext_secret(value, *, depth: int = 0) -> bool:
             url = urlsplit(value)
             if url.username is not None or url.password is not None:
                 return True
-            if any(re.sub(r"[^a-z]", "", name.lower()) in _SECRET_FIELDS for name, _ in parse_qsl(url.query)):
+            if any(_secret_field(name) for name, _ in parse_qsl(url.query, keep_blank_values=True)):
                 return True
         except ValueError:
             return True

@@ -18,12 +18,13 @@ from threading import BoundedSemaphore
 from urllib.parse import urlencode
 
 from . import wechat_official
+from .url_fetch import OUTBOUND_HTTP_POLICIES, enforce_outbound_host
 
 HOST = "api.weixin.qq.com"
-MAX_RESPONSE_BYTES = 1_048_576
+MAX_RESPONSE_BYTES = OUTBOUND_HTTP_POLICIES["wechat"].response_bytes
 MAX_JSON_REQUEST_BYTES = 1_048_576
 MAX_HEADER_BYTES = 65_536
-STEP_TIMEOUT = 25
+STEP_TIMEOUT = OUTBOUND_HTTP_POLICIES["wechat"].timeout_seconds
 _DNS_POOL = ThreadPoolExecutor(max_workers=2, thread_name_prefix="official-dns")
 _DNS_SLOTS = BoundedSemaphore(2)
 _TOKEN = re.compile(r"[A-Za-z0-9_.-]{1,2048}")
@@ -79,6 +80,7 @@ def _remaining(deadline: float) -> float:
 
 
 def _address(deadline: float):
+    enforce_outbound_host("https://" + HOST)
     if not _DNS_SLOTS.acquire(blocking=False):
         raise OSError("official_dns_capacity")
     try:
@@ -230,7 +232,8 @@ class OfficialTransport:
         self._enabled()
         if operation != "token":
             self._check_token(token)
-        if operation not in _PATHS or (body is not None and not isinstance(body, bytes)) or len(body or b"") > 11 * 1024 * 1024:
+        if (operation not in _PATHS or (body is not None and not isinstance(body, bytes))
+                or len(body or b"") > OUTBOUND_HTTP_POLICIES["wechat"].request_bytes):
             raise OfficialTransportError("official_request_invalid")
         query = dict(query or {})
         if operation != "token":

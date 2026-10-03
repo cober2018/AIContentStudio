@@ -238,11 +238,12 @@ def advanced_section(user: User) -> dict:
     settings = get_settings()
     return _section("advanced", {
         "legacy_href": "/legacy/settings", "status": "not_probed",
+        "environment": settings.app_env if settings.app_env in {"development", "test", "production"} else "unknown",
         "can_manage": True, "runtime_editability": "read_only",
         "management_actions": ["manage_plugins", "manage_dsh"],
         "database": {"status": "not_probed"},
         "queue": {"enabled": bool(settings.task_queue_enabled), "status": "not_probed"},
-        "storage": {"enabled": bool(settings.minio_enabled), "secure": bool(settings.minio_secure), "status": "not_probed"},
+        "storage": {"backend": settings.material_storage_backend if settings.material_storage_backend in {"local", "minio"} else "unknown", "enabled": settings.material_storage_backend == "local" or bool(settings.minio_enabled), "secure": bool(settings.minio_secure), "status": "not_probed"},
         "security": {"ssrf_allow_private": bool(settings.ssrf_allow_private), "upload_limit_configured": settings.upload_max_bytes > 0},
         "plugins": {"configured": bool(runtime_config.get_runtime(runtime_config.KEY_PLUGINS)), "status": "not_inspected"},
         "dsh": {"configured": bool(runtime_config.get_runtime(runtime_config.KEY_DSH)), "status": "not_inspected"},

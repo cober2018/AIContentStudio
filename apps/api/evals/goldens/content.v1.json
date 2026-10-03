@@ -1,0 +1,46 @@
+{
+  "schema_version": "content-golden.v1",
+  "fixture_version": 1,
+  "scope": "local_acceptance",
+  "as_of": "2026-10-03",
+  "source_fixture": "../golden_topics.json",
+  "source_cases": ["G001", "G003", "G006", "G009"],
+  "brief_assertions": {
+    "must_preserve": ["title intent", "core thesis", "audience", "required disclaimer", "fact as_of"],
+    "must_not_invent": ["numeric claim without Fact reference", "guaranteed return", "publication status", "asset rights"],
+    "coverage": "every accepted numeric claim maps to an exact frozen FactPackItem or remains incomplete"
+  },
+  "modalities": [
+    {
+      "fixture_id": "master.text.v2",
+      "payload_schema": "text.master.v2",
+      "direction": "facts and brief become structured document blocks with exact citations",
+      "required_state": ["identity_snapshot", "creative_brief", "fact_boundary", "master_checks", "deterministic_render"]
+    },
+    {
+      "fixture_id": "master.graphic.v2",
+      "payload_schema": "graphic.master.v2",
+      "direction": "brief and claims become ordered canvases; each final canvas is an exact MaterialRevision",
+      "required_state": ["identity_snapshot", "creative_brief", "fact_boundary", "canvas_asset_refs", "verified_render_attestation"]
+    },
+    {
+      "fixture_id": "master.video.v2",
+      "payload_schema": "video.master.v2",
+      "direction": "brief becomes script blocks and shots; timing, voice, subtitle and render claims stay explicit",
+      "required_state": ["identity_snapshot", "creative_brief", "fact_boundary", "shot_asset_refs", "verified_render_attestation"]
+    }
+  ],
+  "channel_adaptation": [
+    {"source_schema": "text.master.v2", "channel": "wechat", "content_form": "article", "variant_schema": "wechat.article.v1", "artifact_kind": "text"},
+    {"source_schema": "text.master.v2", "channel": "x", "content_form": "thread", "variant_schema": "x.thread.v1", "artifact_kind": "text"},
+    {"source_schema": "text.master.v2", "channel": "x", "content_form": "single", "variant_schema": "x.single.v1", "artifact_kind": "text"},
+    {"source_schema": "graphic.master.v2", "channel": "xiaohongshu", "content_form": "image_note", "variant_schema": "xiaohongshu.image_note.v1", "artifact_kind": "image"},
+    {"source_schema": "video.master.v2", "channel": "douyin", "content_form": "spoken_script", "variant_schema": "douyin.spoken_script.v1", "artifact_kind": "script"}
+  ],
+  "negative_assertions": [
+    "v1 Master is not implicitly upgraded",
+    "unsupported modality/form is unavailable and creates no Variant",
+    "revoked MaterialRevision or FactPack evidence blocks freeze/package",
+    "a Variant never turns into a published record without a qualifying human_confirmed receipt"
+  ]
+}

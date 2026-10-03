@@ -1,5 +1,9 @@
 # AI Content Studio（AI 内容生产中心）
 
+2026-10-04 本地main提交已获准，拟提交本机树1660 passed/28 skipped、Web/FE-P1、Ruff/strict34/diff通过。当前81/82本机，只剩提交记录；原81/100、18项未来义务未验证。限定复核发现排除的MinIO 3.3被误记完成，已恢复延期：未批准身份/MinIO草案与原始包不纳入，不凑100/100。没有push/deploy/正式迁移，主规格同步/归档尚未获准。下方82/83、17项是提交边界校准前历史，不是当前计数。
+
+2026-10-04 F8 本机实施验收通过，等待本地提交及主规格同步/归档授权。正式基准为个人本机 SQLite、本地素材库、仅 loopback 访问；本机 `82/83`，原清单 `82/100`，只剩本地最终提交/ROADMAP记录。17项生产身份/Secret Provider/新增真实远端发布义务已确认延期，保留未勾选/未验证。此前总体复核及最终定向复审闭合四项恢复/安全blocker，安全与架构均APPROVE；正确apps/api cwd全量1660 passed/28 skipped/8 warnings、186定向、Web/预算、strict34/34、Ruff/diff通过。三形态/五渠道本地闭环、20个新浏览器gate、恢复重新导出和确定性Golden证据保留，真实模型质量未验收。CLI内部HTTP/供应商后台grant不由本机helper证明。未commit/push/deploy/正式迁移/主规格同步归档；未批准身份draft不得混入提交。目录增加恢复脚本和Golden夹具，依赖与启动方式不变。见[本机验收](docs/FE_F8_LOCAL_FINAL_STATUS.md)、[出站审计](docs/FE_F8_EXTERNAL_CAPABILITY_SECURITY_AUDIT.md)、[本机闭环](docs/FE_F8_LOCAL_FULL_CHAIN_ACCEPTANCE.md)、[恢复验收](docs/FE_F8_RECOVERY_ACCEPTANCE.md)与[Golden夹具](apps/api/evals/goldens/README.md)；下方旧计数为历史。
+
 2026-10-03 F7已按当前批准范围收口：主任务110/110（Commons为用户暂缓行政关闭，不是实测PASS），模型路由23/23；F7实施已本地main提交`3f28a51`。主F7与模型路由均已归档，八份delta完整同步七份canonical，原有54条要求/146个场景精确保留，strict34/34及diff通过。F7-only后端1660 passed/28 skipped、Web/FE-P1/state和Ruff通过；无push/deploy/正式迁移或新增微信/供应商调用。F8及原始资料仍保留工作区、不在本次提交。目录、依赖与启动方式沿用既有配置，后续Commons/F8需另定范围；见[F7归档](openspec/changes/archive/2026-10-03-fe-f7-capability-integrations-delivery/README.md)。以下旧计数与active状态为历史。
 
 2026-10-03 F7本地生命周期收尾：仅F7的81文件拟提交快照经后端1660 passed/28 skipped、Web/FE-P1/state、full app Ruff、strict34/34与diff验证通过，Projects224.89/72.97kB。共享文件按片段排除F8认证/MinIO/f8a，F8工作区完整保留。Commons按用户决定暂缓/未实测，不标真实PASS；公众号沿用已确认的当前草稿与精确系统记录，模型路由23/23。当前108/110，接下来只做本地提交和七份主规格同步归档，无push/deploy/正式迁移或新增外部调用。目录增加已实现的本地生成任务/ASR服务，依赖与启动命令不变；见[最终门禁](docs/FE_F7_FINAL_LOCAL_GATES.md)。下方计数与未提交描述为历史快照。
@@ -50,7 +54,7 @@ MiniMax ASR 的 CLI 非零退出现保持 Unknown，不将该错误当作安全�
 
 2026-10-02 F7 范围校准：成功公众号草稿以有效 `media_id` 落库和同账号后台人工确认验收，不强制成功后 `draft/get`；Unknown 对账和一般 Publisher `verified` 仍分开。Gemini/`grok-4.7` 均经第三方 CPA 网关，模型路由复用可配置 OpenAI-compatible 接口，不再要求 Google/xAI 官方专用适配器；生图/视频/语音能力须逐操作证明，否则走已配置插件或显示不可用。沿用现有目录、依赖与启动方式；模型真实合同、MiniMax 原任务可靠性和 F7 一般账号验收仍待完成。详见 [F7 任务](openspec/changes/fe-f7-capability-integrations-delivery/tasks.md) 与 [模型路由](openspec/changes/add-model-capability-routing/README.md)。本次不发草稿、不运行生成、不改正式数据库或默认配置。
 
-
+2026-10-02 F8 schema readiness：生产启动与 `/api/v1/health/ready` 现在共用只读 Alembic 检查，要求代码、数据库与显式配置各只有同一个 head；多头、缺失或陈旧版本返回安全失败，不自动迁移。沿用现有 `apps/api/app/db.py`、`main.py`、`observability.py`；目录、依赖与启动命令不变。F8 身份绑定、真实存储连通及完整验收仍待后续任务，详见 [F8 OpenSpec](openspec/changes/fe-f8-production-readiness-operations/tasks.md)。
 
 2026-10-02 指定原HTML长文已通过AIContentStudio公众号适配器进入同一真实公众号草稿箱：新私有产品链 Candidate v5 → Approval → Target/Attempt 上传封面和八张正文图并调用一次 `draft/add`，有效 `media_id` 已落库，原正文在替换上传图URL后可精确还原，九个素材上传保留原文件名。旧失败Unknown库不变；未公开发布或回读；本次指定草稿验收通过，但一般Publisher验证及F7全阶段仍未完成。代码目录、依赖、启动方式未变；证据见 [F7公众号草稿验收](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
 
@@ -146,7 +150,7 @@ MiniMax 输出限制最新修复（2026-10-01）：先前 capture_output 并非�
 
 最新状态纠正（2026-10-01，以此为准）：下述 F8 身份列/迁移/HS256 仍为未接受草案，未取得规定的独立 schema 确认，不激活或升级本地生产库；F7 前置仍未关闭，F8 不计完成。MiniMax 本机 `mmx 1.0.27` 帮助已核对，但现有适配草案尚缺完整 dispatch、输出流硬上限、ASR cue 转换、视频任务恢复和认证版本绑定，不能称完整 executable/verified；默认媒体优先级仍待用户选择。最新后端复跑 1661 passed / 28 skipped / 8 warnings，不等于产品闭环验收。未提交、推送、部署、生产迁移或消耗生成额度；依赖及启动方式未增加。
 
-
+F8 生产身份第一批（2026-10-01）：已加入现有 User 的 `identity_issuer + identity_subject` 稳定映射和 `f8a000000001` 加法迁移；production 模式使用配置化 HS256 JWT，拒绝 Header/default-user/auto-create，角色只取数据库。production lifespan 不自动建表或写入 seed，需显式 auth/schema-head 配置；health/readiness 使用安全 reason code 和非成功状态，metrics 使用 route template。当前仅本地实现，未配置真实 issuer、未部署、未运行生产迁移。
 
 CPA 厂商/模型登记方案（2026-10-01）：[add-provider-model-registration](openspec/changes/add-provider-model-registration/README.md) 已进入 apply。登记页、CAS 持久化、模型手动补录/发现、Gemini 默认及功能/工作流选择已实现；复用 SystemSetting/CAS，不新增表/迁移/依赖。CPA 已保存为本地登记配置，但 `/models` 实际返回 401，因此不能称为已验证可执行；未发起付费生成请求。工作流异步模型选择与执行 provenance 正在收口，原有显式路由保留。
 
@@ -450,12 +454,13 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
 - 依赖与启动：沿用当前 API/Vite 启动方式。F7 加法迁移 `f7a000000001` 已在代码中并经隔离 SQLite 测试，未执行生产迁移；不 push/deploy，不同步 canonical 或归档。
 
+### FE-F8 Production Readiness + Operations（本地 apply 中）
 
 - PRD/需求背景：North Star 的完整产品链路还需生产安全认证、可替换字节存储、真实运行健康状态、恢复演练及 Golden/全链路验收；F8 是部署前的工程收口，不增加 Organization/Invite/Tenant/SSO 产品管理。
 - 目录结构：[`openspec/changes/fe-f8-production-readiness-operations/`](openspec/changes/fe-f8-production-readiness-operations/proposal.md) 含 proposal/design、100 项任务（增加身份映射前置审定）、新 Production Readiness 规格与 Product Settings delta；未来实施以现有 `apps/api/app/deps.py`、`main.py`、`observability.py`、`routers/health.py`、`services/materials.py` 与 worker、Settings 为基线。用户原始包不改。
 - 已完成：规格校准了原十条目标，补生产 Header/default-user 拒绝、启动只读预检、健康状态真实 HTTP 失败、metrics 有界标签、全媒体读写者存储切换、存量明文 Secret 处理和实际平台验证边界；当前已在本地 main 实施存储第一批，未运行生产迁移或切生产配置。
 - 规格预审补丁：现有 User 只有 email/role/status，没有外部 issuer/subject 绑定；F8 明确生产身份不能仅凭 token email/role 猜测映射，须在实施前审定稳定 subject→现有 User 的安全绑定，若需新持久结构先修订规格。完整链路验收也明确：本地 ZIP/人工交付不能直接制造 PublishedContentRecord 或 Learning；须另有符合 F5B 的 `human_confirmed` Receipt 与 `delivered_at`。本批未实施 F8、未改变现有开发认证。
-- 待完成/TODO：F8 当前为 18/100；生产身份、Secret Provider、MinIO 真实连接/切换、全量 legacy 字节路径、恢复/Golden/全链路门禁与真实账号验证仍未完成，不能称生产就绪。
+- 待完成/TODO：F8 当前为 76/100，仍进行中。本机产品/恢复/浏览器/Golden 确定性契约已实测；统一 outbound/host/最小权限安全仍须完成，总体独立复核和最终提交未完成。生产身份/Secret Provider 草案未批准，远端公开发布/下游 Learning 未执行，不能靠本地 ZIP 或 loopback 限制代替。
 - 关键设计决策：复用现有 User/Role、MaterialRevision、Run/Attempt/Review/Receipt 真源；生产禁用开发 Header 与自动建号，不在应用启动时迁移；存储切换前验完整引用字节并保留可恢复回退；Golden 质量与真实发布按证据分别验收。
 - 依赖与启动：规格预计不新增长期业务表；实际生产启动/迁移/部署须有独立授权和运行手册。本轮不 push/deploy/运行生产迁移或同步 canonical/归档。
 

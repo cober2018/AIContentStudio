@@ -5,11 +5,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="", env_file=".env", extra="ignore", hide_input_in_errors=True)
 
     database_url: str = "sqlite:///./content_studio.db"
 
     app_env: Literal["development", "test", "production"] = "development"
+    required_schema_head: str = ""
     material_storage_backend: str = "local"
 
     llm_provider: str = "mock"  # mock | openai_compatible
@@ -22,6 +23,8 @@ class Settings(BaseSettings):
 
     url_fetch_timeout_seconds: int = 10
     url_fetch_max_bytes: int = 5 * 1024 * 1024
+    # Exact hostnames/IPs only; empty keeps each capability's existing target policy.
+    outbound_allowed_hosts: str = ""
     # 仅限本机开发：代理 fake-ip 模式（如 Clash）下所有域名解析到 198.18.0.0/15，
     # 连接实际由代理转发；此时按解析 IP 判内网会误杀全部外网请求。生产必须保持 false。
     ssrf_allow_private: bool = False

@@ -115,12 +115,12 @@ async def upload_project_material(project_id: int, file: UploadFile, kind: str =
     mime = materials_service.validate_upload(content, file.content_type)
     extension = (file.filename or "").rsplit(".", 1)[-1].lower()
     suffix = f".{extension}" if re.fullmatch(r"[a-z0-9]{1,5}", extension) else ".bin"
-    from ..services import asset_media
-
     content_hash = hashlib.sha256(content).hexdigest()
     relative_path = Path("material") / content_hash[:2] / f"{content_hash}{suffix}"
-    stored_path = asset_media.MEDIA_ROOT / relative_path
-    existed_before = stored_path.exists()
+    from ..services.material_storage import provider
+
+    storage = provider()
+    existed_before = storage.exists(str(relative_path))
     try:
         material = materials_service.create_material(db, kind=kind, title=title or file.filename or "项目素材", created_by=user.email)
         revision = materials_service.create_revision(db, material, content=content, suffix=suffix, declared_mime=mime, source_kind="upload", created_by=user.email)
@@ -132,7 +132,7 @@ async def upload_project_material(project_id: int, file: UploadFile, kind: str =
         db.commit()
     except Exception:
         db.rollback()
-        if not existed_before and stored_path.is_file():
+        if not existed_before and storage.exists(str(relative_path)):
             try:
                 db.add(AuditLog(event="material.upload_orphan_candidate", actor=user.email, entity_type="material_bytes", entity_id=content_hash[:50], detail_json={"project_id": project_id, "file_path": str(relative_path), "content_hash": content_hash, "cleanup_rule": "check_committed_revision_references_after_grace_period"}))
                 db.commit()
