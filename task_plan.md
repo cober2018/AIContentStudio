@@ -9,9 +9,9 @@
 /// 确认Git/归档授权与Commons暂缓 → 独立只读核对混合改动边界并固定F7提交范围 → 在私有临时checkout验证只含F7的提交树 → 本地提交实现 → 要求级同步全部F7相关delta并做preservation audit → 归档主F7/模型路由 → strict/diff与本地归档提交；不推送、部署或提交F8。
 
 - [x] 固定F7范围，保留F8/无关改动；Commons范围延期记录，不冒充真实PASS。独立边界/保留性复核完成，81文件私有投影排除F8认证/MinIO/schema迁移，仅保留F7本地字节依赖。
-- [ ] 验证并本地提交F7实现，记录确切commit。
-- [ ] 同步五份主F7、模型路由及公众号系统记录长期契约；完整保留既有要求/场景。
-- [ ] 归档已完成F7/模型路由，更新README/进度并完成最终strict/diff和本地提交。
+- [x] 验证并本地提交F7实现，记录确切commit：3f28a51d0145c49ae558766aeebbdbed68a8fcc1。81文件私有索引已提交，实际索引清空，F8/原始包与混合历史资料仍保留。
+- [x] 同步五份主F7、模型路由及公众号系统记录长期契约；八份delta合并七份canonical，原有54条要求/146个场景精确保留，范围前言保留，Purpose正式化。
+- [x] 归档已完成F7/模型路由，更新README/进度并完成最终strict/diff和本地归档提交；不推送，F8保留。归档日期2026-10-03；实际最终hash由Git提交后交付。
 
 本轮技能：using-superpowers、writing-plans、executing-plans、openspec-archive-change、finishing-a-development-branch、verification-before-completion；执行范围已由用户明确选择为本地main收尾，跳过新分支/推送选择。
 

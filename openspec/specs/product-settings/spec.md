@@ -188,3 +188,50 @@ The local navigation and configuration forms SHALL remain usable on desktop and 
 #### Scenario: Initial Settings load
 - **WHEN** the user loads the initial model view
 - **THEN** it does not eagerly mount Provider guidance or the full legacy Settings workspace and unrelated workspace budget checks remain passing
+
+### Requirement: Capability inventory separates configuration from verification
+Product Settings SHALL project existing typed Plugin, Connector, Channel and model truth with bounded CapabilityRegistration/Verification safe metadata. It SHALL distinguish discovered, configured, executable, verified and unavailable for exact kind/key/version/scope and explain missing or invalid verification. A read MUST NOT probe networks or imply an editable action without durable mutation support and caller permission.
+
+#### Scenario: Configured but unverified Publisher
+- **WHEN** a Publisher implementation and account configuration exist without valid scoped real-account verification
+- **THEN** Settings displays the safe configuration and an unavailable remote action reason, not a verified badge
+
+#### Scenario: Verification expired or config changed
+- **WHEN** stored evidence expires or its config fingerprint differs from the active runtime
+- **THEN** Settings shows the scope as no longer verified without deleting the historical evidence
+
+### Requirement: Explicit capability actions retain role and redaction gates
+Capability probe and verification actions SHALL be separately labeled, authorized and audited; remote side-effect verification SHALL require explicit account/action confirmation. Safe API projections MUST exclude nested provider secrets and credential-bearing errors as well as existing Settings secret fields.
+
+#### Scenario: Viewer clicks verify
+- **WHEN** a viewer invokes a capability verification action
+- **THEN** authorization rejects it without a provider call or verification record
+
+#### Scenario: Provider returns sensitive diagnostic
+- **WHEN** a probe error contains a signed URL or token in a nested response
+- **THEN** the Settings response and persisted audit expose only an allowlisted reason code
+
+### Requirement: Settings configures model capabilities plugins and routing
+Models & AI SHALL expose manual capability declarations, per-capability protocol/model/connection bindings, plugin executor/model bindings, ordered defaults, automatic fallback authorization and per-request limits. Declared, configured, executable and verified states SHALL remain distinct with safe unavailable reasons.
+
+#### Scenario: Configure plugin fallback
+- **WHEN** an admin configures a chat model and a separate image plugin default
+- **THEN** the persisted settings show both identities and a no-network plan preview explains image routing through that plugin
+
+### Requirement: Routing edits preserve existing authorization and safe configuration
+All capability/plugin/route/limit mutations SHALL remain admin-only, preserve unrelated loaded profiles/routes, use expected revisions, retain blank secrets without resubmitting masks, and expose only safe allowlisted metadata. Inventory and plan preview MUST NOT install plugins, probe suppliers or generate media.
+
+#### Scenario: Viewer opens capability settings
+- **WHEN** a viewer inspects model capabilities
+- **THEN** safe metadata is shown without plaintext credentials or mutation rights and no supplier request occurs
+
+### Requirement: Settings distinguishes local CLI readiness from verification
+When a local MiniMax CLI provider is installed and registered, Settings SHALL show its fixed capability families and separately report loaded, executable and verified state. Reading Settings or building a plan MUST NOT read the CLI credential file or invoke a paid generation request.
+
+#### Scenario: Local MiniMax CLI is installed
+- **WHEN** an administrator opens model capability settings
+- **THEN** the UI can show the bounded MiniMax CLI adapter and its supported operation families, while account, quota and real-output verification remain explicitly separate
+
+#### Scenario: Read settings after enabling image capability
+- **WHEN** an admin reads the saved capability configuration
+- **THEN** no image is generated and declared support does not become verified automatically

@@ -128,8 +128,8 @@
 - [x] 10.8 Browser Settings/Production/Delivery acceptance. Existing local UI flows revalidated in 52 gates; actual Text/Graphic rendering and five-form v5 local ZIP are distinguished from image/search/ASR Provider fixtures and reconciliation UI transport fixture in docs/FE_F7_BROWSER_REVALIDATION.md. Real supplier/account acceptance remains pending under 10.2/10.3/10.5; this does not close final F7 gates.
 - [x] 10.9 Independent security/provider/delivery reviews. Whole-stage Scope B APPROVE; Scope A review found Connector code identity and Commons fingerprint instability, both reproduced RED and fixed, then independently re-reviewed APPROVE. Composite local review only; real platform evidence remains 10.2/10.3/10.5, full gates10.7 and commit/archive remain separate.
 - [x] 10.10 Record capability matrix with verified/unverified reasons.
-- [ ] 10.11 Record local implementation commit and ARCHIVE_READY.
-- [ ] 10.12 Do not canonical-sync/archive without explicit authorization.
+- [x] 10.11 Record local implementation commit and ARCHIVE_READY. F7-only implementation is committed on local main as 3f28a51d0145c49ae558766aeebbdbed68a8fcc1; independent shared-file boundary review and fresh 1660/28-skipped backend, Web/FE-P1/state, Ruff/strict/diff gates passed. F8 working changes are not included. Commons remains user-deferred, not real PASS.
+- [x] 10.12 Record explicit authorization before canonical synchronization/archive. The user's 2026-10-03 continuation authorizes the remaining F7 lifecycle closure: synchronize every F7/model-routing/confirmed-draft delta, preserve all existing requirements/scenarios, and archive locally only. No push, deployment, formal migration, new external request or F8 implementation is authorized by this task.
 ## 11. Approved original-HTML product draft closure
 
 - [x] 11.1 Validate bounded original HTML against canonical visible blocks and exact image slots; preserve inline styling without unsafe active content.

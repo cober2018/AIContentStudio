@@ -4,6 +4,9 @@
 - 先审核F7/F8归属与共享文件片段，验证可独立提交的F7树；不使用git add -A，不推送/部署，不执行正式迁移或新增供应商/微信调用。
 - 独立复核确认八份ADDED delta对应七个canonical目标，原有54条要求/146个场景必须原样保留。81文件F7-only投影已建立；共享config/models/router/storage按片段拆分，迁移测试只在投影中对齐已存在f7d head，工作区F8版本不覆盖。Commons10.2按用户暂缓决定行政关闭，非真实PASS；当前108/110，提交和归档尚未完成。
 - F7-only快照实际门禁：1660 passed/28 skipped/8既有warnings87.75秒，Web TypeScript/Vite/FE-P1/state PASS，Projects224.89/72.97 kB，full app Ruff/strict34/diff PASS；共享八文件提交边界独立APPROVE。首轮旧worker依赖空默认库失败，初始化明确私有worker库后四项定向及最终全量通过，无源码或正式库改动。此前真实浏览器/PG证据保留，本轮不冒称重跑。
+- F7实施已本地main提交3f28a51d0145c49ae558766aeebbdbed68a8fcc1；只含核准F7片段，实际索引为空，F8/未跟踪原始包未改。10.11实施提交及10.12明确归档授权已记录，清单110/110（10.2为用户暂缓行政关闭，非实测PASS）；正在同步七份canonical并归档两change。
+- canonical及归档现已完成：主F7→`2026-10-03-fe-f7-capability-integrations-delivery`，模型路由→`2026-10-03-add-model-capability-routing`；已归档公众号系统记录四条要求亦进入主规格。八份ADDED delta合并七目标，54旧要求/146旧场景及全部新增块精确保留；model-routing范围前言保留，Purpose TBD清理。strict34/34、diff及保留审计PASS，后续只提交本地规格生命周期，不包含F8或推送。
+- 最终归档限定独立APPROVE：七canonical95要求/261场景及旧契约完整、两change归档/清单110与23完整、local-ASR不变；29文件归档索引只含文档/规格/移动，未包含apps/F8。拟提交树strict34/34与diff通过；本轮技能及实际命令边界见task_plan和最终门禁文档。
 
 # 2026-10-03：当前版本公众号单次草稿验证
 

@@ -1,20 +1,22 @@
 # Model capability routing
 
-2026-10-03 当前23/23、ARCHIVE_READY：最后2.1/2.5/2.6/2.7/2.9已全部收尾。真实CPA聊天/MiniMax图像、TTS、ASR及本机MLX证据与私有Workflow/浏览器夹具分开；未证明的许可保持false，CPA媒体不可推定执行，真实MiniMax视频/H3为用户排除。五处已有契约缺口修复后全量1660 passed/28 skipped/8 warnings101.93秒、177定向、Web/FE-P1/state、九文件Ruff、strict34/34与diff通过；独立Provider安全APPROVE和消费者复审APPROVE。没有新增表/迁移/依赖/永久测试、付费调用、微信请求、正式库写入或默认变更；main工作区未提交，未推送。剩余生命周期TODO为另行授权的canonical同步与归档，本change完成不代表整个F7/F8已关闭。详见[最终门禁](../../../docs/FE_F7_FINAL_LOCAL_GATES.md)，下方计数与未接入描述均为历史。
+2026-10-03 生命周期已完成：23/23，实施随F7-only本地main提交3f28a51；两份delta已同步canonical，本change已归档。Commons为用户暂缓/未实测，MiniMax视频/H3排除，未验证CPA媒体和公开权利不提升。当前依赖与本地启动方式不变，无push/deploy/正式库或供应商操作；长期契约见[主规格](../../../specs/model-capability-routing/spec.md)，实际F7-only门禁见[证据](../../../../docs/FE_F7_FINAL_LOCAL_GATES.md)。以下旧计数、未提交和未归档描述为历史阶段。
+
+2026-10-03 当前23/23、ARCHIVE_READY：最后2.1/2.5/2.6/2.7/2.9已全部收尾。真实CPA聊天/MiniMax图像、TTS、ASR及本机MLX证据与私有Workflow/浏览器夹具分开；未证明的许可保持false，CPA媒体不可推定执行，真实MiniMax视频/H3为用户排除。五处已有契约缺口修复后全量1660 passed/28 skipped/8 warnings101.93秒、177定向、Web/FE-P1/state、九文件Ruff、strict34/34与diff通过；独立Provider安全APPROVE和消费者复审APPROVE。没有新增表/迁移/依赖/永久测试、付费调用、微信请求、正式库写入或默认变更；main工作区未提交，未推送。剩余生命周期TODO为另行授权的canonical同步与归档，本change完成不代表整个F7/F8已关闭。详见[最终门禁](../../../../docs/FE_F7_FINAL_LOCAL_GATES.md)，下方计数与未接入描述均为历史。
 
 2026-10-03 当前18/23：2.8已完成。隔离页面两条生成/预览/接受链路、Unknown不重发、unsupported零task、Settings限额保存及旧prepared发送前409通过；最小中文提示/原task只读回读修复经独立源码复核APPROVE、Web/bundle/state和144定向回归通过。fixture不冒充供应商真实产物或许可，正式库/配置未改、外部0调用；剩2.1/2.5/2.6/2.7/2.9。未提交、推送或归档，下方17/23为先前可靠性记录。
 
 2026-10-03 3.2/3.4已收口：17/23，剩2.1/2.5/2.6/2.7/2.8/2.9。最终后端1660 passed/28 skipped、Web/FE-P1/state、strict34/34、Ruff/diff通过，独立源码复核APPROVE仅适用于可靠性机制。初验38场景及修复后33组证据分开记录；真实MiniMax视频/H3仍为排除，不是PASS。不归档整个change、不提交推送，下一整项验收现有产品路由与页面链路。
 
-2026-10-03 最新：正式TTS已经通过任务→人工接受→MaterialRevision6→Project引用→Unit3 Master9/v3及浏览器回读；未授予公开/商业许可。可靠性初验38场景后，按实际review最小修复原key派生、terminal job/file一致性和known-job unavailable→Unknown，另33组正负向验证通过。claim commit为授权线性化点，接受/复用仍实时检查来源；只改两service及原规格约束，无新依赖/migration/真实供应商调用或正式库写入。整体F7其余复合验收仍待完成。目录和启动方式保持；下方旧15/23和未正式接受为此前快照。详见 [可靠性门禁](../../../docs/FE_F7_FINAL_LOCAL_GATES.md)。
+2026-10-03 最新：正式TTS已经通过任务→人工接受→MaterialRevision6→Project引用→Unit3 Master9/v3及浏览器回读；未授予公开/商业许可。可靠性初验38场景后，按实际review最小修复原key派生、terminal job/file一致性和known-job unavailable→Unknown，另33组正负向验证通过。claim commit为授权线性化点，接受/复用仍实时检查来源；只改两service及原规格约束，无新依赖/migration/真实供应商调用或正式库写入。整体F7其余复合验收仍待完成。目录和启动方式保持；下方旧15/23和未正式接受为此前快照。详见 [可靠性门禁](../../../../docs/FE_F7_FINAL_LOCAL_GATES.md)。
 
-2026-10-03 当前本地接入已完成：用户明确授权后，备份/演练并准确升级现有个人本地库到f7d、加载稳定私有receipt key、补launchd的Homebrew PATH、启用image/TTS/ASR受限绑定；无F8，CPA默认/文本routes/密钥保留。页面准备TTS插件路由但未执行新生成；已验证WAV通过真实素材上传→项目引用→Master2显式保存/刷新/服务重启回读，来源仍upload、public=false/rights=unknown。修正上传metadata query合同和NodeInspector imports开发模式TDZ，不复制跨库Task/ASR回执。118项现有回归、Web/FE-P1、strict33/33、diff及限定只读复核通过，新增付费调用0。任务仍15/23；新正式任务execute/preview/accept及Production ASR仍TODO，不归档/提交/推送。详见[模型验收](../../../docs/FE_F7_MODEL_VALIDATION.md)，下方旧缺schema/key描述仅保留历史。
+2026-10-03 当前本地接入已完成：用户明确授权后，备份/演练并准确升级现有个人本地库到f7d、加载稳定私有receipt key、补launchd的Homebrew PATH、启用image/TTS/ASR受限绑定；无F8，CPA默认/文本routes/密钥保留。页面准备TTS插件路由但未执行新生成；已验证WAV通过真实素材上传→项目引用→Master2显式保存/刷新/服务重启回读，来源仍upload、public=false/rights=unknown。修正上传metadata query合同和NodeInspector imports开发模式TDZ，不复制跨库Task/ASR回执。118项现有回归、Web/FE-P1、strict33/33、diff及限定只读复核通过，新增付费调用0。任务仍15/23；新正式任务execute/preview/accept及Production ASR仍TODO，不归档/提交/推送。详见[模型验收](../../../../docs/FE_F7_MODEL_VALIDATION.md)，下方旧缺schema/key描述仅保留历史。
 
-2026-10-03 最新语音证据：用户批准的三次MiniMax操作全部真实成功，TTS 3.413秒、WAV和测试MP4音轨转写均准确匹配原句；TTS经隔离持久任务API且新进程签名/凭据epoch/字节验签通过。ASR走既有固定adapter，不冒称Production入口/素材接受完成。正式schema/binding/签名配置仍TODO；未改业务源码/依赖/正式配置，现有54项回归、strict33/33及diff-check通过。任务保持15/23，不以单操作PASS勾完复合项；记录见 [模型验收](../../../docs/FE_F7_MODEL_VALIDATION.md)。
+2026-10-03 最新语音证据：用户批准的三次MiniMax操作全部真实成功，TTS 3.413秒、WAV和测试MP4音轨转写均准确匹配原句；TTS经隔离持久任务API且新进程签名/凭据epoch/字节验签通过。ASR走既有固定adapter，不冒称Production入口/素材接受完成。正式schema/binding/签名配置仍TODO；未改业务源码/依赖/正式配置，现有54项回归、strict33/33及diff-check通过。任务保持15/23，不以单操作PASS勾完复合项；记录见 [模型验收](../../../../docs/FE_F7_MODEL_VALIDATION.md)。
 
 2026-10-03 最新范围：按用户明确决定，当前 MiniMax 视频生成/H3下载退出本轮验收，停止请求与查询，不是PASS，不再阻断F7；下方DNS/H3均为历史证据。保留generic视频协议和旧记录，不删除adapter或改已保存配置。MiniMax后续只聚焦TTS、ASR、已有视频音轨→ASR；真实样本/次数/时长确认后执行，未发起新调用。目录、依赖和启动方式不变，语音真实闭环/素材接受等TODO仍保留。
 
-2026-10-03 最新实测：必要配置/界面依赖已本地提交 main@8c0e3b8；CPA 三模型聊天均实际返回正常，模型发现200且含三个精确ID，七用途解析与Gemini JSON消费者调用通过。配置revision3/默认/路由未改。原H3只读查询仍远端succeeded，但OSS域名被VPN解析198.18.4.255，产品0字节、未接受/重发。下方401与未提交为历史步骤；本次只关闭CPA合同部分，复合任务仍15/23。无新依赖/迁移、推送/部署、新媒体生成或规格归档；证据见 [F7模型验收](../../../docs/FE_F7_MODEL_VALIDATION.md)。
+2026-10-03 最新实测：必要配置/界面依赖已本地提交 main@8c0e3b8；CPA 三模型聊天均实际返回正常，模型发现200且含三个精确ID，七用途解析与Gemini JSON消费者调用通过。配置revision3/默认/路由未改。原H3只读查询仍远端succeeded，但OSS域名被VPN解析198.18.4.255，产品0字节、未接受/重发。下方401与未提交为历史步骤；本次只关闭CPA合同部分，复合任务仍15/23。无新依赖/迁移、推送/部署、新媒体生成或规格归档；证据见 [F7模型验收](../../../../docs/FE_F7_MODEL_VALIDATION.md)。
 
 2026-10-02 真实 H3 探针：本机 MiniMax CLI 单次 5 秒任务 `448101822222777` 远端 `succeeded`，证明账号可提交/完成 H3；产品安全下载因当前 VPN 将成品 CDN 解析成 `198.18.4.255` 而拒绝，MP4 字节/正式素材/权利未验收。CPA 三模型在本地已登记且 Gemini 为默认，但 `/models` 当前仍鉴权失败；不调用 Gemini/Grok 代替视频。现有目录、依赖、启动方式不变，任务仍 15/23，后续只恢复原任务，不重发。
 
@@ -28,7 +30,7 @@ task 2.5 的遗留“native”范围字样已与当前 CPA 决策对齐：只对
 
 MiniMax ASR 的 CLI 非零退出保守返回 Unknown；通用 provider 异常仍保留现有 502 脱敏契约，不能把它说成已统一防重复。其建议收据非 durable task，后续安全/并发验收仍开放。
 
-九项剩余任务按已批准范围继续处理。本机 `mmx 1.0.27` 的 image/video task/TTS/ASR 帮助与当前固定参数一致；现有路由及 F7 持久化回归 83 项通过。这些是本地操作合同和回归，不是 CPA 的真实聊天 ID/媒体协议、MiniMax 视频原任务、许可或浏览器验收。第三方 CPA 此前 `/models` 返回 401，仍只作为登记/聊天兼容配置，不因 Gemini/Grok 名字赋予媒体能力；Google/xAI 官方直连不是当前要求。已同步 [适配契约](../../../docs/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md) 与 [F7 能力矩阵](../../../docs/FE_F7_CAPABILITY_MATRIX.md) 的当前状态；F7 一般账号范围和 F8 生产身份/存储门槛均未因此解除。本批未调用收费供应商、不重发 Unknown、未改默认配置、未推送/部署或执行正式迁移。
+九项剩余任务按已批准范围继续处理。本机 `mmx 1.0.27` 的 image/video task/TTS/ASR 帮助与当前固定参数一致；现有路由及 F7 持久化回归 83 项通过。这些是本地操作合同和回归，不是 CPA 的真实聊天 ID/媒体协议、MiniMax 视频原任务、许可或浏览器验收。第三方 CPA 此前 `/models` 返回 401，仍只作为登记/聊天兼容配置，不因 Gemini/Grok 名字赋予媒体能力；Google/xAI 官方直连不是当前要求。已同步 [适配契约](../../../../docs/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md) 与 [F7 能力矩阵](../../../../docs/FE_F7_CAPABILITY_MATRIX.md) 的当前状态；F7 一般账号范围和 F8 生产身份/存储门槛均未因此解除。本批未调用收费供应商、不重发 Unknown、未改默认配置、未推送/部署或执行正式迁移。
 
 ## 2026-10-02 CPA 范围校准
 
