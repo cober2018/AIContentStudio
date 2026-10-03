@@ -68,7 +68,8 @@ export function OfficialArticlePreview({ render, path }: { render: OfficialArtic
   }, [key]);
   const current = loaded?.key === key ? loaded : null;
   // Frozen HTML is data, not an application surface: deny scripts, remote bytes and top-level navigation.
-  const source = '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'none\'; style-src \'none\'; img-src data:; connect-src \'none\'; frame-src \'none\'; form-action \'none\'; base-uri \'none\'"></head><body>' + (current?.html ?? render.html_template) + '</body></html>';
+  const styles = render.renderer_version === "3" ? "'unsafe-inline'" : "'none'";
+  const source = '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'none\'; style-src ' + styles + '; img-src data:; connect-src \'none\'; frame-src \'none\'; form-action \'none\'; base-uri \'none\'"></head><body>' + (current?.html ?? render.html_template) + '</body></html>';
   return <section aria-label="冻结公众号适配表示" className="space-y-3 rounded-lg border border-indigo-200 p-4">
     <h5 className="font-semibold">公众号审批时冻结的 HTML</h5>
     <p className="text-sm">{render.title} · 作者：{render.author || "未指定"} · 摘要：{render.digest || "未指定"}</p>

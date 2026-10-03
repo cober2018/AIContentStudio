@@ -1,5 +1,7 @@
 ## ADDED Requirements
 
+Current acceptance scope, explicitly revised by the user on 2026-10-03: MiniMax video generation and original H3 download are excluded for the current account/package, not verified and not a F7 acceptance blocker. No further MiniMax video submission/query or replacement-provider generation is authorized by this scope. Preserve existing generic video contracts, immutable history and offline safety regression. In-scope MiniMax validation focuses on TTS, ASR and validated extraction of an existing video's audio for ASR; it does not imply video generation or visual understanding. This scope record does not mutate saved configuration, remove generic adapters or infer a vendor-wide lack of video capability.
+
 ### Requirement: Model capability declarations are explicit and truthful
 The system SHALL support admin-edited chat, image_generation, video_generation, tts and asr declarations independently of adapter support, connection configuration and real verification. Understanding media MUST NOT imply generation.
 
@@ -111,6 +113,22 @@ The system SHALL commit an atomic send claim before calling the provider, persis
 - **WHEN** a foreign caller, changed credential epoch or stale worker attempts recovery
 - **THEN** the operation fails closed without exposing private results, changing the frozen plan or creating another job
 
+#### Scenario: Rotating the active receipt key preserves historical credential identity
+- **WHEN** MiniMax credentials are unchanged and the active receipt key rotates while the task's original key remains configured
+- **THEN** recovery and acceptance derive the credential epoch with the task's original key ID, verify the original receipt and do not mistake key rotation for credential change; removing that original key or changing real credentials still blocks
+
+#### Scenario: Terminal output belongs to a foreign job or file
+- **WHEN** recovery of a known job returns successful bytes or a confirmed terminal status with missing or different required original job/file identity
+- **THEN** the task rejects the output without accepting bytes, replacing the original job/file or signing a successful result; running and uncertain outputs also reject any explicitly returned foreign identity
+
+#### Scenario: Revocation and a send claim race
+- **WHEN** a source revocation races the transaction that validates rights and commits a send claim
+- **THEN** a revocation committed first prevents the claim; an already committed claim retains its one frozen dispatch authorization without holding database locks during network IO, while later acceptance and reuse fail live-rights validation
+
+#### Scenario: A known job query adapter becomes unavailable
+- **WHEN** querying an already known provider job returns an unavailable adapter result without confirmed remote failure
+- **THEN** the task remains unknown with its original job rather than becoming failed or permitting a replacement submission
+
 #### Scenario: Persistent trust key unavailable
 - **WHEN** a task receipt cannot be verified with its explicitly configured stable key after restart
 - **THEN** execution and acceptance block without replanning or resubmitting the original job; safe historical state remains readable
@@ -130,9 +148,21 @@ Validated results SHALL persist in private controlled storage with exact MIME/by
 - **WHEN** a source is revoked or result bytes change after generation
 - **THEN** acceptance blocks and writes neither a MaterialRevision nor a project reference
 
+#### Scenario: Empty audio is not a generated result
+- **WHEN** a provider returns a structurally readable WAV with zero audio frames
+- **THEN** decoding rejects it before result storage or acceptance, retains the original send claim and does not resubmit
+
+#### Scenario: MiniMax ASR credentials change before suggestion save
+- **WHEN** the CLI credential epoch changes or cannot be proven after an ASR proposal was created
+- **THEN** its execution fingerprint no longer validates, and explicit Master save rejects the old proposal rather than recording trusted provenance; static Settings inventory still reads no credential file
+
 #### Scenario: Refresh or archive is not submission authority
 - **WHEN** a user refreshes task details or opens an archived project
 - **THEN** reads do not submit generation, and the archived project cannot submit, mutate recovery or accept new results
+
+#### Scenario: Switching previews invalidates previous acceptance consent
+- **WHEN** a user opens a different task and its raw-result read fails or a previous read returns late
+- **THEN** previous media, confirmation and rights choices cannot authorize acceptance of the new task; only the latest matching task/result preview can be accepted
 
 ### Requirement: Workflow generation preserves immutable pre-send and terminal history
 Explicit new media.generate nodes SHALL append a real immutable started Attempt before submitting their durable generation task, then wait on that original task without generic rerun/retry or executing dependent nodes. Resume SHALL use server-derived run/step/Attempt/task association and owner/archive checks. Media acceptance SHALL remain a separate explicit operation; only accepted exact MaterialRevision results SHALL complete the node and enter ProjectWorkflowOutput. Terminal history SHALL be appended, never overwrite started or legacy Attempts. Legacy nodes SHALL remain unchanged.
@@ -144,6 +174,14 @@ Explicit new media.generate nodes SHALL append a real immutable started Attempt 
 #### Scenario: Explicit acceptance resumes the workflow
 - **WHEN** the original task is explicitly accepted and the user resumes the waiting node
 - **THEN** a terminal Attempt and exact project output are appended once without resubmission or mutation of the started Attempt
+
+#### Scenario: Accepted media keeps configured output mappings
+- **WHEN** a media node maps an accepted MaterialRevision field to a downstream alias
+- **THEN** the pending phase defers that unavailable field and the accepted terminal output includes the mapping before downstream execution, without another provider submission; invalid mappings still fail closed
+
+#### Scenario: Output aliases cannot overwrite generation identity or state
+- **WHEN** a media node maps a different field into a reserved generation output name such as generation_state, generation_task_id or material_revision_id
+- **THEN** definition validation and execution/resume reject the mapping before a provider call or recovery, preserving server-derived task identity, accepted state, exact asset identity and terminal history; same-field identity mappings remain compatible
 
 #### Scenario: Archive or foreign ownership blocks task mutation
 - **WHEN** a task bound to an archived or foreign ContentUnit is executed, recovered or accepted

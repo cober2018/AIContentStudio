@@ -37,7 +37,7 @@ from ..models import (
     User,
     utcnow,
 )
-from ..services import exports, published_history
+from ..services import capability_integrations, exports, published_history
 from ..services.project_authorization import authorize_project_asset, authorize_project_draft, authorize_project_target
 
 router = APIRouter(prefix="/api/v1/article-handoff", tags=["article-handoff"])
@@ -703,6 +703,10 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
         raise HTTPException(404, "交付目标不存在")
     _legacy_target(db, target, user, mutate=True)
     _require_target_operator(target, user)
+    if (target.publisher_key == "publisher.wechat.official" and target.publisher_version == "1"
+            and target.action == "auto_draft"
+            and (payload.published_at is not None or payload.publication_time_evidence is not None)):
+        raise HTTPException(422, "official_draft_receipt_cannot_claim_publication")
     key_parts = [
         str(target.id), target.approved_candidate_hash, payload.status,
         payload.evidence_ref or "", payload.verification_method or "", payload.note or "",
@@ -753,7 +757,11 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
         db.flush()
         published_history.sync_receipt(db, user, receipt, published_at=payload.published_at,
                                        publication_time_evidence=payload.publication_time_evidence)
+        capability_integrations.promote_confirmed_official_draft(db, target, receipt, user.email)
         db.commit()
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(409, str(exc)) from exc
     except IntegrityError:
         db.rollback()
         existing = db.scalar(select(DeliveryReceipt).where(

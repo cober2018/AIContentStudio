@@ -6,6 +6,8 @@
 
 ## Goals / Non-Goals
 
+**Current account acceptance scope (2026-10-03):** 用户明确排除 MiniMax 视频生成及 H3 原 job 下载验收，停止其请求/查询/重试，不作为本轮 F7 blocker，也不记为 verified。用户所述套餐限制视为账号范围决策，不能推断所有 MiniMax API/模型均无视频能力。保留原任务与协议/Unknown 安全历史，不新增默认或静默 fallback。MiniMax 后续验收为文字转语音、语音转文字、已有视频→已验证音轨→ASR；最后一项只转写声音，不生成视频或理解画面。新真实调用须先明确输入、次数和时长上限；配置/密钥和 generic video 运行机制不因本记录而被修改。
+
 **Goals:** 任意模型可配置并手动声明能力；受支持协议能真实执行；模型与生成插件统一路由；Settings配置完整、执行选择可解释、费用与Unknown受控。
 
 **Non-Goals:** 自动下载执行任意插件、默认相信模型自报能力、接通所有世界供应商、免凭据真实调用、跨品牌伪兼容、生成新闻证据、发布后改稿、生产部署、多租户改造、自动重发微信。
@@ -66,6 +68,10 @@ ASR本地适配使用明确的 `asr-1.0`、`response-format=srt`、`timestamp-le
 
 本地输入闭合实施：复用Video Studio既有精确MaterialRevision及live model-use/hash证明；MiniMax适配器可在受控临时目录把经真实解码验证的MP4首音轨提取为16kHz/mono PCM WAV，再以实际WAV帧数验证请求限额和500秒上限。固定ffmpeg参数、file-only协议、单线程、30MiB输出界限和剩余deadline；不得裁剪超限来源、估计字幕时间或回写新的素材版本。缺音轨/工具/非法时长/超限时发送前拒绝，原MP4来源hash继续进入既有ASR receipt，成功仍只产生显式接受/Save Master所需建议，不自动改Master。真实转录/账号验证仍另行验收。
 
+ASR执行指纹同时固定CLI runtime和受控credential epoch；缺失连续性证明时不可执行，原建议接受/提交前通过既有runtime复核拒绝凭据漂移。该读取只在明确ASR操作发生，静态ModelAdapter库存不读凭据。共享音频解码要求实际帧数大于零，不能将只有WAV头的文件作为成功结果。
+
+media.generate 的输出别名不能覆盖服务端派生的 generation_task_id、generation_started_attempt_id、generation_state、reason、generated、material_revision_id、content_hash 或 media_kind；只有映射到自身的同字段保持兼容。定义保存、执行和 resume 共享校验，必须在任何供应商调用/恢复前拒绝冲突，避免 accepted 被别名替换后继续等待或精确素材血缘被覆盖。
+
 新MP4输入路径先以真实字节MIME校验容器，再固定file-only ffprobe/视频帧解码/音轨提取；不复用旧MP4预校验的无界capture_output。媒体诊断stdout+stderr合计4096字节，所有命令与最终CLI共用同一remaining deadline及超时进程组回收。模型绑定投影保留已加载的合法runtime hash，但CLI缺认证连续性证明时reason为credential_continuity_unverified、executable/verified为false；共享resolver不得把这个理由抹成“未加载”或显示可执行。
 
 本地个人生产环境可使用已安装的 `mmx` CLI，但它必须作为版本化、受控的 Registry Provider 接入，而不是允许配置任意命令或脚本。适配器只调用固定的 `mmx` 子命令，使用参数数组、非交互模式、输出/超时/文件大小边界。经用户明确授权后，适配器可以只读官方固定路径的 MiniMax CLI 认证配置，用于固定调用与检测认证上下文变化；读取必须限于受控本地进程和已知配置结构，不接受用户任意路径或任意字段透传。
@@ -88,7 +94,7 @@ CLI Provider 只允许本地 `mmx` 可执行文件，禁止用户输入的可执
 
 first-send检查冻结configuration revision；恢复/接受不因无关配置的全局revision变化失效，而验证原provider/model/protocol及认证、实际runtime。收到原claim返回的job/结果先存证，来源撤权/项目归档/配置变动只阻塞后续使用，不丢弃已知job。CAS须同时匹配所读revision、state与lease token，不能仅使用客户端提供的未来revision。
 
-跨重启信任与此前process-local规划签名分开：持久任务保存task_receipt_key_id及服务端HMAC receipt，绑定任务ID、owner、request_hash、原plan/runtime/credential_epoch。密钥来自显式受控本地secret配置，启动不得自动创建/轮换；只保存key ID与签名，不保存密钥。缺少稳定key时新持久任务在发送前blocked；重启只验原receipt，不重新规划已发送任务，缺key/验签失败仅允许安全状态读取、禁止恢复/接受。轮换保留只验旧key，撤销旧key则历史仍可读但不得执行。原process-local计划仍按既有规则仅用于发送前规划，不能替代持久receipt。
+跨重启信任与此前process-local规划签名分开：持久任务保存task_receipt_key_id及服务端HMAC receipt，绑定任务ID、owner、request_hash、原plan/runtime/credential_epoch。密钥来自显式受控本地secret配置，启动不得自动创建/轮换；只保存key ID与签名，不保存密钥。缺少稳定key时新持久任务在发送前blocked；重启只验原receipt，不重新规划已发送任务，缺key/验签失败仅允许安全状态读取、禁止恢复/接受。轮换保留只验旧key，撤销旧key则历史仍可读但不得执行。MiniMax历史credential epoch也必须用任务原receipt_key_id派生，不能因活动key轮换而误报凭据变更；新任务用当前活动key，实际API/OAuth变化仍阻塞原任务。原process-local计划仍按既有规则仅用于发送前规划，不能替代持久receipt。
 
 credential_epoch由现有连接配置服务在受控认证更新时生成并随SystemSetting CAS持久化。对于CLI，本次授权的受控认证读取可以补足这一证明：适配器通过当前 OS 用户的官方固定配置路径解析已知认证字段，并以 `O_NOFOLLOW` 文件描述符读取后，在进程内组成规范投影，再用现有受控 receipt key 计算不可逆 HMAC；任何原始凭据都不得离开进程内存。该指纹必须纳入runtime/receipt且每次查询/接受复核。若配置无法安全读取、字段不完整、receipt key不可用或指纹变化，明确返回credential_continuity_unverified，保留原job与本地只读结果、不查询、不重发、不接受；支持这一blocked状态，不伪称MiniMax自动恢复已经成立。后续若改用官方安全身份接口，仍需锁定官方契约并保持相同的无密钥落库边界。
 
@@ -96,9 +102,9 @@ credential_epoch由现有连接配置服务在受控认证更新时生成并随S
 
 DB约束：owner+idempotency_key唯一；同key不同request_hash返回409；状态枚举/正revision/合法大小、可空关联FK及owner/project/state索引。request_hash包括输入、来源、模型/插件/runtime、参数、授权限额与任务作用域；重启不得修改原plan。配置凭据轮换用受控epoch显式标记；CLI只允许读取官方固定配置路径的已知认证字段并生成不可逆HMAC指纹，无法证明同一认证上下文则恢复阻塞，不猜账号。这里只保证单任务数量/大小/时长授权，不实现累计计费账本。
 
-状态为 prepared → submitting → running → result_ready → accepted；failed/cancelled为确认终态，unknown为不确定态。发送前事务创建prepared并原子claim为submitting，事务提交后才调用供应商，绝不跨网络持有数据库锁。并发只能一个claim发送；进程在submitting退出后视为unknown，不能凭lease到期再次提交。仅确知从未进入发送claim的prepared可继续首次提交。已知job立即持久化再返回running；发送成功但job保存失败也是unknown，不重发。用户明确取消/远端查询确认失败才记录相应终态，杀本地进程不等于远端取消。
+状态为 prepared → submitting → running → result_ready → accepted；failed/cancelled为确认终态，unknown为不确定态。发送前事务创建prepared并原子claim为submitting，事务提交后才调用供应商，绝不跨网络持有数据库锁。claim commit是dispatch授权线性化点：来源撤权先提交则不允许取得claim；claim先提交则允许该已冻结授权发送一次，撤权不追撤此claim，但阻止之后的新claim以及结果接受/复用。并发只能一个claim发送；进程在submitting退出后视为unknown，不能凭lease到期再次提交。仅确知从未进入发送claim的prepared可继续首次提交。已知job立即持久化再返回running；发送成功但job保存失败也是unknown，不重发。用户明确取消/远端查询确认失败才记录相应终态，杀本地进程不等于远端取消；已知job查询返回adapter unavailable不证明远端失败，必须保留unknown及原job，不授权重发。
 
-恢复只读取原provider/protocol/model/job：MiniMax CLI H3查询显式原model，V1 file与V2 URL严格分派；无job的unknown要求人工对账，不自动新建或跨供应商fallback。查询有deadline、间隔、次数和并发上限；所有lease更新用CAS/claim token，旧worker晚返回不得覆盖新revision。任务/job不属于当前actor或项目、认证epoch变化、协议不支持或job过期均安全阻塞；不以过期证明未生成。
+恢复只读取原provider/protocol/model/job：MiniMax CLI H3查询显式原model，V1 file与V2 URL严格分派；无job的unknown要求人工对账，不自动新建或跨供应商fallback。查询有deadline、间隔、次数和并发上限；所有lease更新用CAS/claim token，旧worker晚返回不得覆盖新revision。任务/job不属于当前actor或项目、认证epoch变化、协议不支持或job过期均安全阻塞；不以过期证明未生成。所有输出均核对返回的job/file类型及既有身份，不能只在running分支检查；已知job的成功或确认终态必须回传同一job，成功字节还必须匹配已知file。缺失/foreign身份不得入result_ready、签成功结果或判定确认终态。
 
 结果下载复用现有transport/MIME/decode/hash/大小/rights校验，临时私有文件校验后原子转受控storage并记录result_ready；崩溃孤儿文件可安全回收，丢失/篡改文件不得呈现有效预览或重新生成。重启按任务读取验证结果，不依赖旧Preview token；URL只是瞬时下载入口，不是资产。网络来源和下载redirect仍受原SSRF/TLS门禁。
 
@@ -122,6 +128,7 @@ DB约束：owner+idempotency_key唯一；同key不同request_hash返回409；状
 - pending/running/unknown生成任务使生成节点明确等待，不执行下游、泛化rerun或创建替代任务；显式恢复只查询原job。无job的unknown保留人工对账，不通过新Attempt换幂等键重发。
 - 原任务result_ready且精确字节校验通过后才收口节点执行结果；媒体接受保持独立人工确认，只有真实MaterialRevision才能进入共享素材/后续引用。不能把task ID、URL或供应商已受理当MaterialRevision。
 - 前端须展示等待原因、task/Attempt血缘、只查原任务操作和独立接受；Workflow dirty/save仍独立。所有关联由服务端真实上下文派生，不允许独立素材API由客户端任意指定Attempt ID。
+- 切换任务立即撤销旧预览/确认/权利选择；异步回读只接受最新请求且task/result ID/hash相符。恢复接受后复用既有output_mapping，接受前才缺失的素材字段延后映射，未知字段仍拒绝；不重发生成。
 - 必须复核现有Attempt读取/最新成功选择、Run等待/恢复、通用rerun、ProjectWorkflowOutput和归档权限；并发执行/恢复不得重复发送、覆盖started历史或生成两个终态产物。仍只使用现有Workflow和单一ProviderGenerationTask，不增加业务表或第二套引擎。
 
 实现使用新`media.generate@1` AI节点，旧cover不静默改写。节点配置选capability、selected_profile、可选explicit_plugin、prompt、parameters与精确source_revision_ids；只将本节点受控生成副作用列入Project定义白名单，Publisher禁令不变。该节点禁止通用rerun/retry/skip；等待状态通过既有complete入口的refresh/recover/submit_prepared操作续进原任务，客户端不得选择task/Attempt替代。result_ready显示生成完成、等待独立人工接受；accepted后追加带exact MaterialRevision的终态并进入项目Workflow输出，未接受时不执行需素材的下游。
@@ -144,10 +151,14 @@ CLI 库存与路由预览仅运行静态配置/能力判断，不启动可能自
 
 ## Migration Plan
 
+The approved local activation acceptance reuses already generated bytes through the existing upload API, without fabricating a formal ProviderGenerationTask receipt. Upload metadata (kind, title, source and explicit rights choices) MUST use the existing API query contract; multipart carries the file only. Unverified rights remain unknown, and a local import MUST NOT be presented as a new provider execution or public/commercial permission.
+
+2026-10-03用户进一步明确授权当前本机正式使用库的MiniMax接入：先在线私有备份、在副本演练已批准迁移链并核对旧数据，再显式升级到准确f7d000000001，不运行f8a或自动upgrade head。稳定receipt key通过固定本地受控启动配置加载，不入Git/数据库/日志。只配置已验证image/TTS/ASR及有界插件策略，不改CPA默认/文本routes、不启用video。复用既有字节必须通过正式素材导入/引用流程并真实标记来源；不得跨库伪造原Task/actor/provenance或为补证据重复付费生成。下方“不生产迁移”描述保留此前阶段边界，本条是当前精确本地目标授权，不是远程生产部署授权。
+
 不修改canonical或归档，不生产迁移。先验证旧settings读取和文本purpose路由，新增schema显式保存与回滚兼容；然后接resolver/官方adapters/UI。持久任务修订确认后先开发一个加法迁移并在隔离库SQLite往返/原生PostgreSQL约束验证，不启动时自动迁移用户本地生产库。大批次执行：任务模型/原job恢复/结果校验，然后消费者/UI/接受/整体验收；真实供应商验收仅精确已配置且单独授权额度，缺凭据未验证。F7现97/105和F8原门槛保持，不自动放行。
 
 ## Open Questions
 
 - 自动fallback已获用户原则确认；真实测试的供应商额度/可用API模型与凭据仍在实施配置时确认，不阻塞本地开发。
 - 当前只定义每次执行限额；累计额度如有需求需单独设计事务预留。
-- Commons暂缓对F7归档范围的处理需另行明确，不能把deferred当PASS。
+- Commons按2026-10-03用户授权的生命周期收尾决定继续暂缓，并行政关闭F7该验收项；保持unverified/未实测，不计为真实PASS，日后恢复实测需另行授权。

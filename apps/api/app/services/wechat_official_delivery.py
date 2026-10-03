@@ -31,6 +31,7 @@ from .wechat_official_render import (
     match_readback,
     prepare_article,
     validate_article_render,
+    validate_html_draft_render_bound,
     validate_short_draft_render_bound,
 )
 
@@ -61,7 +62,8 @@ def _experiment_scope(target, attempt_id, runtime):
 
 def _validate_experiment_request(authority, target, runtime, user):
     fields = {"account_id", "appid", "candidate_id", "candidate_hash", "actor", "expires_at"}
-    if (not isinstance(authority, dict) or set(authority) != fields or target.id is not None
+    if (not isinstance(authority, dict) or set(authority) not in (fields, fields | {"mode"}) or target.id is not None
+            or authority.get("mode", "short") not in {"short", "html"}
             or user.role != "admin" or authority["actor"] != user.email
             or type(authority["account_id"]) is not int or type(authority["candidate_id"]) is not int
             or authority["account_id"] != runtime.account_id or authority["appid"] != runtime.appid
@@ -106,7 +108,7 @@ def validate_target(db, target, user, *, _short_draft_request=None):
     if not isinstance(manifest.get("official_render"), dict):
         raise HTTPException(409, "official_render_required")
     render = manifest["official_render"]
-    if render.get("renderer_version") != "2" or render.get("status") != "local_ready":
+    if render.get("renderer_version") not in {"2", "3"} or render.get("status") != "local_ready":
         raise HTTPException(409, "official_asset_filename_required")
     from .wechat_official_render import upload_asset_metadata
 
@@ -122,7 +124,10 @@ def validate_target(db, target, user, *, _short_draft_request=None):
         raise HTTPException(409, "official_render_unavailable")
     runtime = wechat_official.resolve_runtime(db, account.id)
     snapshot = target.capability_snapshot_json or {}
-    experimental = _short_draft_request is not None or "short_draft_authority" in snapshot
+    proofs = [snapshot[key] for key in ("short_draft_authority", "html_draft_authority") if key in snapshot]
+    if len(proofs) > 1:
+        raise HTTPException(403, "official_experiment_scope_invalid")
+    experimental = _short_draft_request is not None or bool(proofs)
     if experimental:
         actor = db.get(User, user.id, populate_existing=True)
         if actor is None or actor.is_active is not True or actor.role != "admin":
@@ -145,11 +150,14 @@ def validate_target(db, target, user, *, _short_draft_request=None):
         else:
             attempt = db.scalar(select(DeliveryAttempt).where(DeliveryAttempt.target_id == target.id)
                                 .order_by(DeliveryAttempt.attempt_no.desc()).limit(1))
-            if (attempt is None or not wechat_official.check_short_draft_authority(
-                    snapshot["short_draft_authority"], _experiment_scope(target, attempt.id, runtime))):
+            if (attempt is None or not wechat_official.check_draft_authority(
+                    proofs[0], _experiment_scope(target, attempt.id, runtime))):
                 raise HTTPException(403, "official_experiment_scope_invalid")
         try:
-            validate_short_draft_render_bound(manifest["official_render"])
+            mode = _short_draft_request.get("mode", "short") if _short_draft_request is not None else (
+                "html" if proofs[0]["schema"] == "wechat.html-draft.authority.v1" else "short")
+            validator = validate_html_draft_render_bound if mode == "html" else validate_short_draft_render_bound
+            validator(manifest["official_render"])
         except ValueError:
             raise HTTPException(422, "official_experiment_body_limit") from None
     elif not wechat_official.remote_contract_ready() or not publisher_target_verified(db, target, registry):
@@ -180,9 +188,11 @@ def prepare_short_draft_experiment(db, asset, payload, user, *, authority):
             status="prepared", started_at=utcnow(), response_metadata_json=metadata)
         db.add(attempt)
         db.flush()
-        proof = wechat_official.sign_short_draft_authority(_experiment_scope(target, attempt.id, runtime),
+        html_mode = authority.get("mode", "short") == "html"
+        signer = wechat_official.sign_html_draft_authority if html_mode else wechat_official.sign_short_draft_authority
+        proof = signer(_experiment_scope(target, attempt.id, runtime),
                                                           expires_at=authority["expires_at"])
-        target.capability_snapshot_json = {**target.capability_snapshot_json, "short_draft_authority": proof}
+        target.capability_snapshot_json = {**target.capability_snapshot_json, "html_draft_authority" if html_mode else "short_draft_authority": proof}
         db.flush()
         validate_target(db, target, user)
         _event(db, target, attempt, "delivery.prepared")
@@ -207,7 +217,7 @@ def prepare(db, target_id, user):
             raise HTTPException(409, "official_execution_claimed")
         last = db.scalar(select(DeliveryAttempt).where(DeliveryAttempt.target_id == target_id)
                          .order_by(DeliveryAttempt.attempt_no.desc()).limit(1))
-        if "short_draft_authority" in (target.capability_snapshot_json or {}):
+        if any(key in (target.capability_snapshot_json or {}) for key in ("short_draft_authority", "html_draft_authority")):
             raise HTTPException(409, "official_execution_claimed")
         if last is not None and not (last.status == "unknown"
                                     and (last.response_metadata_json or {}).get("reconciled") == "not_delivered"):
@@ -316,7 +326,7 @@ def execute_prepared(db, target_id, attempt_id, claim, user):
     # Persist the worker start under the target lock before any second worker can reuse the claim.
     _attempt.response_metadata_json = {**_metadata, "execution_started": True}
     db.commit()
-    proof = (target.capability_snapshot_json or {}).get("short_draft_authority")
+    proof = (target.capability_snapshot_json or {}).get("html_draft_authority") or (target.capability_snapshot_json or {}).get("short_draft_authority")
     client = (wechat_official_transport.OfficialTransport(experiment_authority=proof,
               experiment_scope=_experiment_scope(target, attempt_id, runtime)) if proof is not None
               else wechat_official_transport.OfficialTransport())
@@ -379,7 +389,7 @@ def readback(db, target_id, expected_attempt_id, user):
         if isinstance(exc, HTTPException):
             raise
         raise HTTPException(409, "official_readback_busy") from None
-    proof = (target.capability_snapshot_json or {}).get("short_draft_authority")
+    proof = (target.capability_snapshot_json or {}).get("html_draft_authority") or (target.capability_snapshot_json or {}).get("short_draft_authority")
     client = (wechat_official_transport.OfficialTransport(experiment_authority=proof,
               experiment_scope=_experiment_scope(target, attempt_id, runtime)) if proof is not None
               else wechat_official_transport.OfficialTransport())

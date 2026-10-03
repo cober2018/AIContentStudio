@@ -4,16 +4,28 @@ from __future__ import annotations
 
 import hashlib
 import json
+import marshal
 import os
 import re
+import sys
+import types
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from ..models import CapabilityRegistration, CapabilityVerification, ConnectorEndpoint, ContentAccount, DeliveryTarget
+from ..models import (
+    CapabilityRegistration,
+    CapabilityVerification,
+    ConnectorEndpoint,
+    ContentAccount,
+    DeliveryAttempt,
+    DeliveryReceipt,
+    DeliveryTarget,
+)
 from .content_harness.registry import PluginRegistry, RegistryError
 
 _HEX64 = re.compile(r"[0-9a-f]{64}\Z")
@@ -26,6 +38,18 @@ _DATA_SOURCE_SCOPE = frozenset({"plugin_key", "registration_key", "registration_
 _RENDERER_SCOPE = frozenset({"renderer_key", "renderer_version", "modality", "payload_schema", "channel", "content_form", "output_mime"})
 _EVIDENCE_KEYS = frozenset({"kind", "reference_hash", "reason_code", "input_hash", "output_hash"})
 _SENSITIVE_KEY = re.compile(r"(?:secret|token|password|authorization|cookie|signature|api[_-]?key)", re.IGNORECASE)
+_BOUNDED_WECHAT_DRAFT_REASON = "account_bound_draft_confirmed"
+
+
+def is_bounded_official_draft_scope(scope: dict) -> bool:
+    return (
+        isinstance(scope, dict)
+        and scope.get("publisher_key") == "publisher.wechat.official"
+        and scope.get("publisher_version") == "1"
+        and scope.get("channel") == "wechat"
+        and scope.get("content_form") == "article"
+        and scope.get("action") == "auto_draft"
+    )
 
 
 def _contains_sensitive_key(value: object) -> bool:
@@ -73,6 +97,7 @@ def endpoint_config_fingerprint(endpoint: ConnectorEndpoint) -> str | None:
     if any(len(json.dumps(part, ensure_ascii=False, default=str).encode()) > 16_384 for part in config_parts):
         return None
     identity = {
+        "executor": data_connector_implementation_fingerprint(),
         "connector_id": connector.id,
         "endpoint_id": endpoint.id,
         "base_url": connector.base_url,
@@ -92,6 +117,23 @@ def endpoint_config_fingerprint(endpoint: ConnectorEndpoint) -> str | None:
         "trust_level": endpoint.trust_level,
     }
     return hashlib.sha256(json.dumps(identity, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
+
+
+def data_connector_implementation_fingerprint() -> str:
+    from . import connector_service, url_fetch
+
+    parts = [str(sys.version_info[:3]).encode()]
+    for module in (connector_service, url_fetch):
+        # Source bytes bind policy constants; loaded callables also detect in-process replacement.
+        parts.extend((module.__name__.encode(), Path(module.__file__).read_bytes()))
+        for name, value in sorted(vars(module).items()):
+            if isinstance(value, types.FunctionType) and (value.__module__ == module.__name__ or name == "bounded_safe_fetch"):
+                parts.extend((name.encode(), marshal.dumps(value.__code__, 2)))
+            elif isinstance(value, type) and value.__module__ == module.__name__:
+                for method_name, method in sorted(vars(value).items()):
+                    if isinstance(method, types.FunctionType):
+                        parts.extend((method_name.encode(), marshal.dumps(method.__code__, 2)))
+    return hashlib.sha256(b"".join(parts)).hexdigest()
 
 
 def _scope(scope_kind: str, scope: dict) -> dict:
@@ -142,6 +184,7 @@ def append_verification(
     evidence: dict,
     expires_at: datetime | None = None,
     config_fingerprint: str | None = None,
+    allow_bounded_official_draft: bool = False,
 ) -> CapabilityVerification:
     safe_scope = _scope(scope_kind, scope)
     safe_evidence = _evidence(result, evidence)
@@ -171,7 +214,12 @@ def append_verification(
 
         if result == "verified" and registration.config_fingerprint != wechat_official.implementation_fingerprint():
             raise ValueError("capability_registration_invalid")
-        if result == "verified" and not wechat_official.remote_contract_ready():
+        bounded_experiment = (
+            allow_bounded_official_draft
+            and is_bounded_official_draft_scope(safe_scope)
+            and safe_evidence.get("reason_code") == _BOUNDED_WECHAT_DRAFT_REASON
+        )
+        if result == "verified" and not wechat_official.remote_contract_ready() and not bounded_experiment:
             raise ValueError("official_contract_unresolved")
         if result == "verified":
             account_fingerprint = wechat_official.scope_fingerprint(db, safe_scope)
@@ -235,13 +283,22 @@ def is_verified_for_scope(
         return False
     if scope_kind == "publisher_action" and (wanted_scope["publisher_key"] != registration.key or wanted_scope["publisher_version"] != registration.version):
         return False
+    latest = None
     if official_match:
         from . import wechat_official
 
         if (not isinstance(implementation, wechat_official.OfficialWechatPublisher)
-                or not wechat_official.remote_contract_ready()
                 or registration.config_fingerprint != wechat_official.implementation_fingerprint()
                 or actual_config_fingerprint != wechat_official.scope_fingerprint(db, wanted_scope)):
+            return False
+        events = db.scalars(select(CapabilityVerification).where(
+            CapabilityVerification.registration_id == registration.id,
+            CapabilityVerification.scope_kind == scope_kind,
+        ).order_by(CapabilityVerification.id.desc())).all()
+        latest = next((event for event in events if event.scope_json == wanted_scope), None)
+        if not wechat_official.remote_contract_ready() and not (
+            latest is not None and latest.evidence_json.get("reason_code") == _BOUNDED_WECHAT_DRAFT_REASON
+        ):
             return False
     if scope_kind == "data_source_endpoint" and (
         wanted_scope["registration_key"] != registration.key
@@ -272,11 +329,12 @@ def is_verified_for_scope(
             if (media is not implementation or registration.config_fingerprint != fingerprint
                     or actual_config_fingerprint != scope_fingerprint(db, media, wanted_scope)):
                 return False
-    events = db.scalars(select(CapabilityVerification).where(
-        CapabilityVerification.registration_id == registration.id,
-        CapabilityVerification.scope_kind == scope_kind,
-    ).order_by(CapabilityVerification.id.desc())).all()
-    latest = next((event for event in events if event.scope_json == wanted_scope), None)
+    if latest is None:
+        events = db.scalars(select(CapabilityVerification).where(
+            CapabilityVerification.registration_id == registration.id,
+            CapabilityVerification.scope_kind == scope_kind,
+        ).order_by(CapabilityVerification.id.desc())).all()
+        latest = next((event for event in events if event.scope_json == wanted_scope), None)
     if latest is None or latest.result != "verified" or latest.config_fingerprint != actual_config_fingerprint:
         return False
     at = now or datetime.now(UTC)
@@ -325,11 +383,100 @@ def publisher_target_verified(db: Session, target: DeliveryTarget, loaded_regist
     if official:
         from . import wechat_official
 
-        if not wechat_official.remote_contract_ready():
-            return False
         fingerprint = wechat_official.scope_fingerprint(db, scope)
     else:
         fingerprint = publisher_runtime_fingerprint(target.publisher_key, target.publisher_version)
     if fingerprint is None:
         return False
     return is_verified_for_scope(db, registration, scope, fingerprint, loaded_registry)
+
+
+def promote_confirmed_official_draft(
+    db: Session,
+    target: DeliveryTarget,
+    receipt: DeliveryReceipt,
+    actor: str,
+) -> CapabilityVerification | None:
+    """Promote one confirmed official draft into the exact capability ledger."""
+    if not (
+        receipt.status == "human_confirmed"
+        and target.publisher_key == "publisher.wechat.official"
+        and target.publisher_version == "1"
+        and target.action == "auto_draft"
+    ):
+        return None
+    if target.channel != "wechat" or target.content_form != "article" or target.content_account_id is None:
+        raise ValueError("official_draft_capability_scope_invalid")
+    attempt = db.scalars(
+        select(DeliveryAttempt)
+        .where(DeliveryAttempt.target_id == target.id, DeliveryAttempt.status == "succeeded")
+        .order_by(DeliveryAttempt.id.desc())
+    ).first()
+    if attempt is None or not isinstance(attempt.remote_id, str) or not attempt.remote_id.strip():
+        raise ValueError("official_draft_capability_requires_media_id")
+    if attempt.publisher_key not in {None, target.publisher_key} or attempt.publisher_version not in {None, target.publisher_version}:
+        raise ValueError("official_draft_capability_publisher_mismatch")
+    account = db.get(ContentAccount, target.content_account_id, populate_existing=True)
+    if account is None or account.status != "active" or account.platform_channel != "wechat" or account.platform_account_id != target.account_ref:
+        raise ValueError("official_draft_capability_account_mismatch")
+    scope = {
+        "channel": target.channel,
+        "content_form": target.content_form,
+        "action": target.action,
+        "content_account_id": account.id,
+        "account_ref": target.account_ref,
+        "publisher_key": target.publisher_key,
+        "publisher_version": target.publisher_version,
+    }
+    registration = db.scalar(select(CapabilityRegistration).where(
+        CapabilityRegistration.kind == "publisher",
+        CapabilityRegistration.key == target.publisher_key,
+        CapabilityRegistration.version == target.publisher_version,
+    ))
+    if registration is None or registration.status != "configured" or registration.endpoint_id is not None:
+        raise ValueError("official_draft_capability_registration_unavailable")
+    from . import wechat_official
+
+    runtime_fingerprint = wechat_official.scope_fingerprint(db, scope)
+    metadata = attempt.response_metadata_json
+    if (runtime_fingerprint is None or registration.config_fingerprint != wechat_official.implementation_fingerprint()
+            or not isinstance(metadata, dict) or metadata.get("runtime_fingerprint") != runtime_fingerprint):
+        raise ValueError("official_draft_capability_runtime_changed")
+    remote_hash = hashlib.sha256(attempt.remote_id.encode("utf-8")).hexdigest()
+    input_hash = attempt.request_hash if _HEX64.fullmatch(attempt.request_hash or "") else None
+    reference_hash = hashlib.sha256(json.dumps({
+        "target_id": target.id,
+        "attempt_id": attempt.id,
+        "receipt_id": receipt.id,
+        "candidate_hash": target.approved_candidate_hash,
+        "remote_id_hash": remote_hash,
+    }, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    events = db.scalars(select(CapabilityVerification).where(
+        CapabilityVerification.registration_id == registration.id,
+        CapabilityVerification.scope_kind == "publisher_action",
+    ).order_by(CapabilityVerification.id.desc())).all()
+    existing = next((event for event in events
+                     if event.scope_json == _scope("publisher_action", scope)
+                     and event.result == "verified"
+                     and event.config_fingerprint == runtime_fingerprint
+                     and (event.evidence_json or {}).get("reference_hash") == reference_hash), None)
+    if existing is not None:
+        return existing
+    evidence = {
+        "kind": "human_readback",
+        "reason_code": _BOUNDED_WECHAT_DRAFT_REASON,
+        "reference_hash": reference_hash,
+        "output_hash": remote_hash,
+    }
+    if input_hash is not None:
+        evidence["input_hash"] = input_hash
+    return append_verification(
+        db,
+        registration,
+        scope_kind="publisher_action",
+        scope=scope,
+        result="verified",
+        actor=actor,
+        evidence=evidence,
+        allow_bounded_official_draft=True,
+    )

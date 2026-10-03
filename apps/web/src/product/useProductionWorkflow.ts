@@ -8,7 +8,7 @@ export type IdentitySnapshot = { id: number; brand_id: number | null; persona_id
 export type Attempt = { attempt_no: number; status: string; input_hash: string | null; output_hash: string | null; output_json: Record<string, unknown>; error: string | null };
 export type DataPlugin = { key: string; name: string; category: string; available: boolean; reason: string | null; config_schema: Record<string, unknown> };
 export type DataCapability = { id: number; key: string; version: string; plugin_key: string; source_ref: string; executable: boolean; verified: boolean };
-export type ExecutionOption = { provider: string; model: string; available: boolean; reason: string | null };
+export type ExecutionOption = { provider: string; model: string; available: boolean; reason: string | null; profiles?: { profile_id: string; provider: string; model: string; available: boolean }[] };
 export type UnitOutput = { id: number; output_kind: "draft" | "candidate" | "material_revision" | "content_master_revision"; entity_id: number; run_id: number; node_id: string; attempt_id: number | null; provenance: Record<string, unknown> };
 
 export const KINDS: WorkflowNode["kind"][] = ["Data", "AI", "Tool", "Rule", "Human", "System"];
@@ -17,7 +17,7 @@ const DEFAULT_PLUGINS: Record<WorkflowNode["kind"], string> = {
 };
 export const PLUGIN_CHOICES: Record<WorkflowNode["kind"], string[]> = {
   Data: ["data.source"],
-  AI: ["builtin.generate", "builtin.humanize", "builtin.generate_cover", "node.skill"],
+  AI: ["builtin.generate", "builtin.humanize", "builtin.generate_cover", "media.generate", "node.skill"],
   Tool: ["builtin.connector_pull", "builtin.extract_facts", "builtin.factpack_freeze", "builtin.topic_suggest", "builtin.export"],
   Rule: ["builtin.fact_check", "builtin.content_censor", "builtin.discoverability_post"],
   Human: ["builtin.approve", "builtin.confirm_facts", "builtin.adopt_topic"],

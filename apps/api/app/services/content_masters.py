@@ -610,10 +610,15 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
                     "shot_source": {"image", "video"}, "voice_audio": {"audio"}, "music_audio": {"audio"},
                     "cover_image": {"image"}, "render_output": {"video"},
                 }[role]
-            if material.material.kind not in allowed_kinds or material.material.status != "active" or material.status in {"revoked", "archived"} or material.public_use_allowed is not True:
+            # Local production/ASR may use a model-authorized source that is not
+            # cleared for publication; candidate/render gates still require public rights.
+            if (material.material.kind not in allowed_kinds or material.material.status != "active"
+                    or material.status in {"revoked", "archived"}
+                    or (material.model_use_allowed is not True and material.public_use_allowed is not True)
+                    or (role == "render_output" and material.public_use_allowed is not True)):
                 raise HTTPException(422, {"code": "video_asset_kind_or_rights_invalid"})
             try:
-                content = read_bytes_checked(db, material, require_public=True)
+                content = read_bytes_checked(db, material, require_public=role == "render_output")
             except (HTTPException, OSError) as exc:
                 raise HTTPException(422, {"code": "video_asset_bytes_unverified"}) from exc
             expected_prefix = "image/" if material.material.kind == "image" else "audio/" if material.material.kind == "audio" else "video/"

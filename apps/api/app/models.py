@@ -1967,6 +1967,58 @@ class ContentMemoryEntry(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class ProviderGenerationTask(Base):
+    __tablename__ = "provider_generation_task"
+    __table_args__ = (
+        UniqueConstraint("owner_user_id", "idempotency_key", name="uq_generation_owner_key"),
+        CheckConstraint("state IN ('prepared','submitting','running','unknown','result_ready','accepted','failed','cancelled')", name="ck_generation_state"),
+        CheckConstraint("revision > 0", name="ck_generation_revision"),
+        CheckConstraint("query_count >= 0 AND query_count <= 120", name="ck_generation_queries"),
+        CheckConstraint("result_size IS NULL OR (result_size > 0 AND result_size <= 31457280)", name="ck_generation_size"),
+        CheckConstraint("state != 'accepted' OR accepted_material_revision_id IS NOT NULL", name="ck_generation_accepted_ref"),
+        Index("ix_generation_owner_state", "owner_user_id", "state"),
+        Index("ix_generation_project_state", "project_id", "state"),
+    )
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id"))
+    workflow_step_attempt_id: Mapped[int | None] = mapped_column(ForeignKey("workflow_step_attempt.id"))
+    idempotency_key: Mapped[str] = mapped_column(String(100))
+    request_hash: Mapped[str] = mapped_column(String(64))
+    state: Mapped[str] = mapped_column(String(20), default="prepared")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    query_count: Mapped[int] = mapped_column(Integer, default=0)
+    request_json: Mapped[dict] = mapped_column(JSON)
+    plan_json: Mapped[dict] = mapped_column(JSON)
+    plan_hash: Mapped[str] = mapped_column(String(64))
+    provider_kind: Mapped[str] = mapped_column(String(30))
+    provider_key: Mapped[str] = mapped_column(String(150))
+    provider_version: Mapped[str] = mapped_column(String(50))
+    model_id: Mapped[str] = mapped_column(String(100))
+    protocol_version: Mapped[str] = mapped_column(String(50))
+    runtime_hash: Mapped[str] = mapped_column(String(64))
+    credential_epoch: Mapped[str] = mapped_column(String(64))
+    input_hash: Mapped[str] = mapped_column(String(64))
+    source_refs_json: Mapped[list] = mapped_column(JSON, default=list)
+    receipt_key_id: Mapped[str] = mapped_column(String(100))
+    receipt_signature: Mapped[str] = mapped_column(String(64))
+    provider_job_id: Mapped[str | None] = mapped_column(String(200))
+    provider_file_id: Mapped[str | None] = mapped_column(String(200))
+    result_storage_key: Mapped[str | None] = mapped_column(String(300))
+    result_mime: Mapped[str | None] = mapped_column(String(100))
+    result_hash: Mapped[str | None] = mapped_column(String(64))
+    result_size: Mapped[int | None] = mapped_column(Integer)
+    result_signature: Mapped[str | None] = mapped_column(String(64))
+    accepted_material_revision_id: Mapped[int | None] = mapped_column(ForeignKey("material_revision.id"))
+    acceptance_hash: Mapped[str | None] = mapped_column(String(64))
+    lease_token: Mapped[str | None] = mapped_column(String(32))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reason_code: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ContentMemoryRevision(Base):
     __tablename__ = "content_memory_revision"
     __table_args__ = (

@@ -1,5 +1,71 @@
 # F7 官方公众号有界短稿验收
 
+## 2026-10-03 当前版本单次草稿与系统验证完成
+
+用户明确授权后，通过AIContentStudio当前产品服务完成一次新草稿，不调用独立WeWrite脚本、不公开发布、不要求`draft/get`。私有验收库：`/private/tmp/aics-wechat-current-LXseEZ/acceptance.sqlite`（目录0700、数据库0600）；不是向正式本地库复制旧成功记录。
+
+| 对象 | 本轮实际证据 |
+|---|---|
+| 内容 | 「响应兼容测试，请勿发布」；原正文118B、原黄色封面19723B，封面hash保持原值 |
+| 产品链路 | Project2/Unit7 → Master8 → Variant8 → Candidate7冻结并审批 → Target7/Attempt7 |
+| Candidate hash | `6a5300d07f332ad1f92e7349e291b989a52af1229d4ff8b7ef89a906115e52db` |
+| 真实执行 | 2026-10-03 16:42（Asia/Taipei）；`token → asset_0 → create`，一次draft/add，Attempt succeeded |
+| 微信回执 | 非空media_id已保存在Attempt；安全投影SHA256为`b94208156f367f2cd18ae42d910d246b227053dffabbcd231e1e970bbbb159f7`，不回显原值 |
+| 当前指纹 | registration匹配当前实现、Attempt的runtime匹配精确账号/config/当前实现 |
+| 历史与单次保护 | 原六个Attempt完整不变，旧Unknown不重发；execute-once.claim保留，不能重复执行 |
+| 人工确认 | 用户回答“已经看到，确认通过”；现有receipt API返回200，Target7为human_confirmed，Receipt1/CapabilityVerification1持久化 |
+| 精确验证 | publisher.wechat.official@1/account1/wechat/article/auto_draft；当前指纹匹配，24小时有效期至2026-10-04 16:46（Asia/Taipei），不扩大一般长文合同 |
+| 系统幂等/隔离 | 新进程重复同回执200，只有一份Receipt/Verification；账号/形态/渠道/动作/版本/运行身份变化六项均不可复用 |
+| 未发生 | 公开发布、draft/get、PublishedContentRecord、正式库变更、commit/push/canonical-sync/archive |
+
+本次修复只增加成功Attempt与当前runtime一致性校验。修复前无网络内存探针RED证明旧Attempt可被错误晋级；修复后旧/缺失/外来/非法metadata均409且零Receipt/Verification，当前匹配及重复幂等通过。上述合成内存证据不冒充真实人工核验。
+
+新鲜门禁：120项既有定向回归、全量1660 passed/28 skipped/8既有warnings（103.23秒）、范围Ruff、OpenSpec strict34/34、diff-check通过。限定源码/执行计划独立复核APPROVE；复核不冒称重跑全量或真实账号。没有前端改动，不重复声称本轮重新构建前端/native PostgreSQL。真实人工确认后的系统记录只在私有验收库落地，没有搬入正式库，记录/复验时网络明确禁止。诊断脚本首次在API已经200提交后漏传registry参数，随后以正确参数重新回读和幂等回填通过；不是远端失败，也没有第二次发送。8.3/10.5按上述精确有界范围关闭，F7现107/110；剩Commons暂缓、提交、规格同步归档，不宣称整体F7已归档。
+
+## 2026-10-03 当前版本验证预检（不外发）
+
+本轮核对的是F7 8.3/10.5，不重开已经通过的草稿创建验收，也不恢复成功后的`draft/get`要求。
+
+| 核对对象 | 新鲜本地结果 | 不可推定的结论 |
+|---|---|---|
+| 原短稿库Attempt6及原HTML库Attempt1 | 均为succeeded、非空remote_id、原账号仍与已批准配置一致 | 不是本轮再次请求微信或新建草稿 |
+| 原两库系统收据/能力记录 | DeliveryReceipt与CapabilityVerification均为0；正式库也没有公众号Attempt/Verification | 不能把私有验收库记录直接搬入正式库或伪造已落库 |
+| 当前官方实现与历史记录 | 当前implementation为`4cb2b0ae694003e215feb43081ac4bea7d681bed4fac572ab584965f56c76668`；两个历史registration和Attempt runtime均不匹配当前实现 | 旧成功不因此变失败；也不证明当前实现已验证 |
+| 现有收据API | 从原短稿库只读备份到内存，实际POST receipt返回409 `official_draft_capability_runtime_changed`；Receipt/Verification仍0 | 不能替换旧指纹、续签旧一次授权或把回归夹具当真实验证 |
+
+预检只在受控进程解析已批准账号和原私有identity key，未回显密钥；原数据库只读打开，API写入只发生在内存副本且因409回滚。外部socket连接被拒绝，没有微信、CPA或MiniMax请求，没有正式配置/库变更。使用显式诊断证据摘要，不把它当新增人工平台核验。既有交付/能力/ASR三文件回归`119 passed / 1 existing warning`（17.41秒）。未重跑全量、浏览器、前端或PG。
+
+8.3/10.5仍未完成。若以当前实现完成精确账号/文章/auto_draft系统验证，须先获得一次新的明确草稿授权，再通过产品链成功创建并记录同账号人工确认；之前的单次外发授权已消费，不自动重发。公开发布、其他账号/形态、一般长文合同及旧Unknown处理不因此放开。
+
+## 2026-10-03 成功草稿后的系统能力记录已接入
+
+- AIContentStudio 现在在通用 Delivery Receipt 的 `human_confirmed` 事务中，自动把同一 `ContentAccount`、`wechat/article/auto_draft`、`publisher.wechat.official@1` 的成功草稿晋级为现有 `CapabilityVerification`。
+- 晋级前必须存在同一 Target 的 `succeeded` Attempt 和非空 `remote_id`（微信 `media_id`），并校验当前账号状态、账号引用、registration与当前官方实现/运行指纹。缺失、Unknown、reconciliation、失败或当前registration/账号不匹配会拒绝。当前晋级函数尚未显式比较成功Attempt保存的`runtime_fingerprint`与当前值，不能宣称这项历史Attempt漂移校验已经实现；8.3收口前仍须补齐，不以重标registration绕过。
+- 记录仅表示“该精确账号的公众号文章草稿创建能力已验证”，不表示公开发布，不创建 `PublishedContentRecord`，不要求或假称执行 `draft/get`。证据只保存安全哈希/固定原因码，不保存原始 `media_id`、凭据、响应正文或HTML。
+- 同一回执重复提交保持幂等；Settings 能力库存按精确账号/文章/`auto_draft` 范围展示验证状态。实现本轮未重新发送公众号草稿，未公开发布、未推送或运行生产迁移。
+- 本轮复用现有交付/能力回归：`165 passed`，Ruff 通过；未新增测试代码、表或 migration。F7 的真实远端验收状态仍以已有草稿证据和其余未完成任务为准。
+
+## 2026-10-02 成功草稿回读验收条件正式取消
+
+用户再次明确：AIContentStudio 公众号草稿创建以微信返回并在精确 Attempt 落库的有效 `media_id`，加同账号后台人工确认为验收终点；不要求再调用 `draft/get`。本次已授权短稿和原 HTML 长文的创建成功证据分别保留，不补写未执行的回读结果。`draft/get` 在产品和 WeWrite 中仍是存在的可选读取能力，取消的是成功草稿的验收门槛，不是声称接口不存在。旧 Unknown 仍只能精确对账、不得自动重发；这项决定不生成 CapabilityVerification、发布 Receipt 或一般账号的 `verified` 范围。F7 10.6 按此口径关闭，8.3/10.5 仍需单独验证一般 Publisher 范围。
+
+## 2026-10-02 指定原HTML经AIContentStudio草稿箱发送成功（最新）
+
+- 用户重新授权后，建立新的私有产品记录 `/private/tmp/aics-wechat-product-html-Lfo7fC`。同一原稿和八张已批准JPEG副本、首图封面、同一真实公众号账号；经ContentMaster → ChannelVariant → Candidate v5 → Approval → DeliveryTarget/Attempt。账号身份哈希 `8628e0ad80045e412f3a56b9b765f959e75b1591d946b3faeacba48a747bea5d`，Candidate hash `3bd3d4ef3d889dbac3c033fd3ab043b0aff3e7782a9d4352a1fb32f30379bfd9`。
+- 实际AIContentStudio官方适配器完成token、封面上传、八张正文图上传、一次 `draft/add`；上传共9次，`create_calls=1`。发送前适配器核对冻结标题、摘要、原HTML正文（仅替换已上传图URL）及9个精确槽位；`original_html_restored_exactly=true`。传输证据中9个文件名均保留原JPEG文件名。
+- 微信返回草稿 `media_id=TrHZ7fvz9Q_Wyx8cuHKbyZ8tP7K5nwgxb9myo-rPF75KsjE6jZjYzX6HTLlgGqJ_`。新库只读复核：Attempt1=`succeeded`、`remote_id`等于该ID、Target1=`awaiting_manual_receipt`，Candidate冻结/审批哈希一致。`result.json`和`wire-evidence.json`保存私有证据；旧Unknown库SHA256仍为 `f86167b30e57e98fc4a5bc2477594444154387148a3a9908a9ed88b79d58b077`。
+- 本轮没有草稿回读或后台视觉核对；按用户已经确认的验收口径，以有效 `media_id` 落库作为草稿创建成功证据。没有调用公开发布、自动重试旧Unknown、生成Receipt/PublishedContentRecord或CapabilityVerification。一般Publisher合同和整个F7仍按各自未完成任务推进。
+
+## 2026-10-02 原HTML产品链路修正及首次长文执行（历史失败记录）
+
+- 用户确认沿用原HTML、八图JPEG副本、首图封面、同一真实账号草稿箱一次。此次不是独立WeWrite替代：实际经产品API完成新Master → canonical Variant → checks → v5 Candidate → Approval → DeliveryTarget/Attempt。
+- 新renderer v3审批前冻结原HTML/样式/digest及原文件名/MIME/精确revision/hash。原正文47577B、8图、216styles；仅替换src后还原验证正文完全一致。安全HTML拒绝活动内容/外部CSS资源/伪占位符；前端v3在opaque sandbox显示内联样式，仍禁止脚本、外部资源/表单/导航。历史v1/v2样例及短稿授权不变。
+- 私有证据目录 `/private/tmp/aics-wechat-product-html-agJdFD`（700），DB/身份key及结果文件600。原稿引用走真实FactPack API freeze但只表示用户原稿引述；不创建confirmed Fact，不把模型不可用或未独立核验事实冒充pass。三个Master warnings有明确限定为格式/上传实验的审批说明，未创建CapabilityVerification。
+- 一次执行Candidate1 / Account1 / Target1 / Attempt1：token及封面asset_0成功，asset_1响应契约拒绝，status=unknown，target=reconciliation_needed；draft/add调用0，remote_id=null。`result.json`、`wire-evidence.json`与DB保留；执行claim不删除，旧实验库/Unknown不改，不公开发表、不回读、不重试。
+- 对照已成功WeWrite的uploaded-preview，八个URL均为mmbiz.qpic.cn并携带from=appmsg；原URL白名单实测八个全拒绝。已只增加固定参数兼容，八个真实历史URL离线全部通过，foreign hosts/credential/未知query继续拒绝。没有保留此次拒绝响应原文，故不把历史URL误称为本次响应原文；当前阻断诊断范围如实保留。已询问修正后新单次发送授权。
+- 新鲜门禁：定向256 passed；full1660 passed/28 skipped/8 warnings（最后URL小修后重跑定向256）；TypeScript/Vite及FE-P1 PASS、projects224.89kB/72.97gzip；OpenSpec strict33/33、范围Ruff/diff PASS。unsafe CSS/src两处独立复核最终APPROVE；URL兼容/预览CSP独立窄复核APPROVE（7接受/26拒绝URL，CSP静态检查，无浏览器运行冒称）。
+- 没有新增repo测试文件、migration、正式配置/数据库修改、commit/push/deploy，不归档整个F7。以下旧结论保留为历史，不代表当前外发已经成功。
+
 ## 2026-10-02 用户确认本次实验结束
 
 - 用户明确：成功草稿不要求额外回读，到此结束。产品 Candidate6 / Account1 / Target6 / Attempt6 已完成 token、封面上传、draft/add，保存有效 media_id，状态 succeeded，用户后台已确认；本次草稿创建验收 PASS。

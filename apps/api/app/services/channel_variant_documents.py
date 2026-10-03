@@ -166,7 +166,7 @@ def canonical_payload(schema: str, value: object, *, asset_refs: object = None, 
     common = {"citations", "declarations"}
     locations: dict[str, str] = {}
     if schema == "wechat.article.v1":
-        item = _object(value, {"title", "blocks"} | common)
+        item = _object(value, {"title", "blocks", "html_template", "digest", "author"} | common)
         blocks = []
         for raw in _ordered(item.get("blocks"), 200):
             if raw.get("kind") == "image":
@@ -187,6 +187,18 @@ def canonical_payload(schema: str, value: object, *, asset_refs: object = None, 
             blocks.append(block)
         validate_wechat_inline_refs(blocks, [] if asset_refs is None else asset_refs)
         result = {"title": _text(item.get("title"), 200, required=True), "blocks": blocks}
+        if "html_template" in item:
+            from .wechat_official_render import original_html_blocks
+
+            try:
+                if original_html_blocks(item["html_template"]) != blocks or item.get("declarations", []) or item.get("citations", []):
+                    _fail("official_html_content_mismatch")
+            except ValueError as exc:
+                _fail(str(exc))
+            result.update(html_template=item["html_template"], digest=_text(item.get("digest", ""), 120),
+                          author=_text(item.get("author", ""), 16))
+        elif "digest" in item or "author" in item:
+            _fail("official_html_required")
     elif schema == "x.thread.v1":
         item = _object(value, {"posts"} | common)
         posts = []

@@ -48,7 +48,8 @@ def _short_draft_signature(payload: dict) -> str:
     if not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", key):
         raise ValueError("official_experiment_authority_invalid")
     # Purpose separation prevents an experiment receipt from being treated as credential identity.
-    message = b"aics.wechat.short-draft.authority.v1\0" + json.dumps(
+    purpose = b"aics.wechat.html-draft.authority.v1\0" if payload.get("schema") == "wechat.html-draft.authority.v1" else b"aics.wechat.short-draft.authority.v1\0"
+    message = purpose + json.dumps(
         payload, sort_keys=True, ensure_ascii=True, separators=(",", ":"), allow_nan=False).encode()
     return hmac.new(key.encode(), message, hashlib.sha256).hexdigest()
 
@@ -64,11 +65,22 @@ def sign_short_draft_authority(scope: dict, *, expires_at: int, now: int | None 
 
 
 def check_short_draft_authority(authority: object, scope: dict, *, now: int | None = None) -> bool:
+    return check_draft_authority(authority, scope, now=now, schema="wechat.short-draft.authority.v1")
+
+
+def sign_html_draft_authority(scope: dict, *, expires_at: int, now: int | None = None) -> dict:
+    signed = sign_short_draft_authority(scope, expires_at=expires_at, now=now)
+    payload = {key: value for key, value in signed.items() if key != "signature"}
+    payload["schema"] = "wechat.html-draft.authority.v1"
+    return {**payload, "signature": _short_draft_signature(payload)}
+
+
+def check_draft_authority(authority: object, scope: dict, *, now: int | None = None, schema: str | None = None) -> bool:
     current = int(time.time()) if now is None else now
     try:
         if (not isinstance(authority, dict)
                 or set(authority) != {"schema", "scope", "issued_at", "expires_at", "signature"}
-                or authority["schema"] != "wechat.short-draft.authority.v1"
+                or authority["schema"] not in ({schema} if schema else {"wechat.short-draft.authority.v1", "wechat.html-draft.authority.v1"})
                 or type(current) is not int or type(authority["issued_at"]) is not int
                 or type(authority["expires_at"]) is not int
                 or not authority["issued_at"] <= current < authority["expires_at"] <= authority["issued_at"] + 900

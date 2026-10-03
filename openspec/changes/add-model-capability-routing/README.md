@@ -1,5 +1,21 @@
 # Model capability routing
 
+2026-10-03 当前23/23、ARCHIVE_READY：最后2.1/2.5/2.6/2.7/2.9已全部收尾。真实CPA聊天/MiniMax图像、TTS、ASR及本机MLX证据与私有Workflow/浏览器夹具分开；未证明的许可保持false，CPA媒体不可推定执行，真实MiniMax视频/H3为用户排除。五处已有契约缺口修复后全量1660 passed/28 skipped/8 warnings101.93秒、177定向、Web/FE-P1/state、九文件Ruff、strict34/34与diff通过；独立Provider安全APPROVE和消费者复审APPROVE。没有新增表/迁移/依赖/永久测试、付费调用、微信请求、正式库写入或默认变更；main工作区未提交，未推送。剩余生命周期TODO为另行授权的canonical同步与归档，本change完成不代表整个F7/F8已关闭。详见[最终门禁](../../../docs/FE_F7_FINAL_LOCAL_GATES.md)，下方计数与未接入描述均为历史。
+
+2026-10-03 当前18/23：2.8已完成。隔离页面两条生成/预览/接受链路、Unknown不重发、unsupported零task、Settings限额保存及旧prepared发送前409通过；最小中文提示/原task只读回读修复经独立源码复核APPROVE、Web/bundle/state和144定向回归通过。fixture不冒充供应商真实产物或许可，正式库/配置未改、外部0调用；剩2.1/2.5/2.6/2.7/2.9。未提交、推送或归档，下方17/23为先前可靠性记录。
+
+2026-10-03 3.2/3.4已收口：17/23，剩2.1/2.5/2.6/2.7/2.8/2.9。最终后端1660 passed/28 skipped、Web/FE-P1/state、strict34/34、Ruff/diff通过，独立源码复核APPROVE仅适用于可靠性机制。初验38场景及修复后33组证据分开记录；真实MiniMax视频/H3仍为排除，不是PASS。不归档整个change、不提交推送，下一整项验收现有产品路由与页面链路。
+
+2026-10-03 最新：正式TTS已经通过任务→人工接受→MaterialRevision6→Project引用→Unit3 Master9/v3及浏览器回读；未授予公开/商业许可。可靠性初验38场景后，按实际review最小修复原key派生、terminal job/file一致性和known-job unavailable→Unknown，另33组正负向验证通过。claim commit为授权线性化点，接受/复用仍实时检查来源；只改两service及原规格约束，无新依赖/migration/真实供应商调用或正式库写入。整体F7其余复合验收仍待完成。目录和启动方式保持；下方旧15/23和未正式接受为此前快照。详见 [可靠性门禁](../../../docs/FE_F7_FINAL_LOCAL_GATES.md)。
+
+2026-10-03 当前本地接入已完成：用户明确授权后，备份/演练并准确升级现有个人本地库到f7d、加载稳定私有receipt key、补launchd的Homebrew PATH、启用image/TTS/ASR受限绑定；无F8，CPA默认/文本routes/密钥保留。页面准备TTS插件路由但未执行新生成；已验证WAV通过真实素材上传→项目引用→Master2显式保存/刷新/服务重启回读，来源仍upload、public=false/rights=unknown。修正上传metadata query合同和NodeInspector imports开发模式TDZ，不复制跨库Task/ASR回执。118项现有回归、Web/FE-P1、strict33/33、diff及限定只读复核通过，新增付费调用0。任务仍15/23；新正式任务execute/preview/accept及Production ASR仍TODO，不归档/提交/推送。详见[模型验收](../../../docs/FE_F7_MODEL_VALIDATION.md)，下方旧缺schema/key描述仅保留历史。
+
+2026-10-03 最新语音证据：用户批准的三次MiniMax操作全部真实成功，TTS 3.413秒、WAV和测试MP4音轨转写均准确匹配原句；TTS经隔离持久任务API且新进程签名/凭据epoch/字节验签通过。ASR走既有固定adapter，不冒称Production入口/素材接受完成。正式schema/binding/签名配置仍TODO；未改业务源码/依赖/正式配置，现有54项回归、strict33/33及diff-check通过。任务保持15/23，不以单操作PASS勾完复合项；记录见 [模型验收](../../../docs/FE_F7_MODEL_VALIDATION.md)。
+
+2026-10-03 最新范围：按用户明确决定，当前 MiniMax 视频生成/H3下载退出本轮验收，停止请求与查询，不是PASS，不再阻断F7；下方DNS/H3均为历史证据。保留generic视频协议和旧记录，不删除adapter或改已保存配置。MiniMax后续只聚焦TTS、ASR、已有视频音轨→ASR；真实样本/次数/时长确认后执行，未发起新调用。目录、依赖和启动方式不变，语音真实闭环/素材接受等TODO仍保留。
+
+2026-10-03 最新实测：必要配置/界面依赖已本地提交 main@8c0e3b8；CPA 三模型聊天均实际返回正常，模型发现200且含三个精确ID，七用途解析与Gemini JSON消费者调用通过。配置revision3/默认/路由未改。原H3只读查询仍远端succeeded，但OSS域名被VPN解析198.18.4.255，产品0字节、未接受/重发。下方401与未提交为历史步骤；本次只关闭CPA合同部分，复合任务仍15/23。无新依赖/迁移、推送/部署、新媒体生成或规格归档；证据见 [F7模型验收](../../../docs/FE_F7_MODEL_VALIDATION.md)。
+
 2026-10-02 真实 H3 探针：本机 MiniMax CLI 单次 5 秒任务 `448101822222777` 远端 `succeeded`，证明账号可提交/完成 H3；产品安全下载因当前 VPN 将成品 CDN 解析成 `198.18.4.255` 而拒绝，MP4 字节/正式素材/权利未验收。CPA 三模型在本地已登记且 Gemini 为默认，但 `/models` 当前仍鉴权失败；不调用 Gemini/Grok 代替视频。现有目录、依赖、启动方式不变，任务仍 15/23，后续只恢复原任务，不重发。
 
 ## 2026-10-02 本批任务与外部证据边界
@@ -70,7 +86,7 @@ generation_tasks新增同MP4字节ffprobe真实时长限额，私有generation�
 - design.md：配置/能力/插件/预算/执行冻结与供应商协议设计。
 - specs/model-capability-routing/spec.md：新增运行契约。
 - specs/product-settings/spec.md：Settings增量，原主规格保持不变。
-- tasks.md：原两大批20项及已授权持久任务增量5项，共25项。
+- tasks.md：按当前CPA范围调整后的两批18项及已授权持久任务增量5项，共23项；移除的Google/xAI官方专用适配器不计实现。
 
 ## 已完成
 
@@ -81,14 +97,14 @@ MiniMax ASR：核对本机CLI help与[官方转录协议](https://platform.minim
 MiniMax 输出边界修复：`minimax_cli_provider.py` 使用固定argv、有界pipe读取（stdout+stderr合计512 KiB）、单一deadline和超限/超时进程组回收；临时输出只读30 MiB+1并拒绝超限，超时/超限结果保持Unknown不重发。正常输出/单流及合计超限/超时零网络探针通过，现有路由+媒体+ASR回归93 passed；不新增测试文件。完整CLI dispatch、ASR cue、视频任务恢复、认证版本与真实额度验收仍未完成，task2.4/2.5不提前勾选。无需新增依赖或迁移。
 用户“开始执行”已授权 apply。当前实现版本化能力声明/绑定、CAS 保存、Registry-based resolver、frozen plan/revalidate 和 Settings 按需加载编辑入口；Google/xAI/MiniMax native adapter descriptor 已加载，但实际 dispatch 尚未接入，因此真实配置仍 blocked，绝不以声明或测试fixture冒充可执行。未请求供应商生成、未新增迁移。
 
-## 待完成
+## 早期未完成项（历史，当前状态以tasks.md为准）
 
 本地CLI参数纠正：Video/TTS对未实现的source bytes/refs和未知model在发送前拒绝，不让结果挂上未使用来源。纯文本Video已支持的CLI型号为MiniMax-H3/MiniMax-Hailuo-2.3，Fast/SEF/S2V的精确参考输入尚未接，不标可执行。model默认显式传argv；image精确型号选择在当前CLI schema里缺失，需解决后才算完成模型路由。零网络探针和现有定向回归通过，task2.4–2.6仍未完成，无新依赖/迁移。
 
 MiniMax binding-state已关闭未实现chat/未知capability的假可执行状态，媒体allowlist保留；修复后零网络探针和93项现有回归通过。输出边界批全量1661 passed /28 skipped，其启动早于binding-state补丁，不能代替该补丁完整终验。Batch B仍未验收，不切换默认模型/插件优先级，不执行真实生成。
 Batch A 已按 tasks.md 关闭 1.1–1.10；共享 resolver/计划冻结核心、Workflow/Production 规划消费者和 Settings 编辑均已实现。真实供应商媒体 dispatch、浏览器验收和付费额度仍不在本地配置验证之内。
 
-## 官方协议核查（部分完成，task 2.1 仍未勾选）
+## 早期官方协议核查（历史，task 2.1 已按当前账号范围完成）
 
 2026-10-01增量：MiniMax image/TTS/ASR与旧video query/download公共契约已实际读取，下方“MiniMax图像读取失败/未取得协议”为此前记录。TTS使用完整hd/turbo模型ID，拒绝系列简称与>=10000字符；ASR声明/实际WAV均不超过500秒与请求限额。H3创建协议仍读取失败，license/认证版本/原task恢复与完整路由未闭合，不把旧video endpoint当H3协议；task2.1/2.4保持未完成。无新依赖/迁移/默认配置/生成请求。
 2026-10-01 只读取公共文档，没有模型调用或账号探测。Google 当前图像文档列出 `/v1beta/interactions`、API-key header 与 base64 image 输出；需继续核对兼容 generateContent、响应界限和各模型参数，不能把品牌/用户口述版本直接当能力支持。[Google 图像官方文档](https://ai.google.dev/gemini-api/docs/image-generation)。xAI 图像支持 base64 响应；视频是 POST 建任务、按原 request_id GET 结果，不能拿 URL 或 job ID 冒充已生成字节。[xAI 图像](https://docs.x.ai/developers/model-capabilities/images/generation)、[xAI 视频](https://docs.x.ai/developers/rest-api-reference/inference/videos)。MiniMax 图像目标文档读取失败，尚未取得完整 image/video/TTS/ASR 契约；Google/xAI 其他能力与 license/下载安全也未核完，任务保持未勾选。
@@ -99,4 +115,4 @@ Batch A 已按 tasks.md 关闭 1.1–1.10；共享 resolver/计划冻结核心�
 复用SystemSetting/Registry/Run/MaterialRevision；声明不等于verified；自动fallback不得绕过Unknown或预算；真实性素材不可由生成代替；Commons暂缓不算PASS。
 
 ## 依赖与使用
-沿用现有OpenSpec/API/web依赖与启动方式。active User可读 `/api/v1/settings/model-capabilities` GET 与无网络 `/plan` POST；仅管理员可PUT，提交 expected_revision，冲突409保留编辑。内部冻结计划含HMAC签名，当前process-local：重启/跨worker旧签名fail closed需显式replan，不改历史；生产签名key/rotation与消费者授权仍待实现。`OPENSPEC_TELEMETRY=0 openspec validate add-model-capability-routing --strict` 检查规格。完整后端测试须从apps/api运行，私有临时数据库隔离；web纯状态回归 `node scripts/test-model-routing-state.mjs`，构建 `npm run build`，无新增依赖；无密钥或实际账号信息。
+沿用现有OpenSpec/API/web依赖与启动方式。active User可读 `/api/v1/settings/model-capabilities` GET 与无网络 `/plan` POST；仅管理员可PUT，提交 expected_revision，冲突409保留编辑。短期规划签名为process-local，重启/跨worker旧规划失败需显式replan；已提交持久任务另用明确配置的稳定receipt key-ID/key映射验签，保留原job与历史，不因replan补发。个人本地库已按此前授权启用准确f7d schema与固定CLI/PATH配置；启动仍不自动迁移，私有认证/key不入Git。`DO_NOT_TRACK=1 openspec validate add-model-capability-routing --strict` 检查规格。完整后端测试须从apps/api运行，私有临时数据库隔离；web状态回归 `node scripts/test-model-routing-state.mjs`，构建 `npm run build`，无新增依赖；无密钥或实际账号信息。

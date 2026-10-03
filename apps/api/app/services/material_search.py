@@ -98,8 +98,9 @@ class WikimediaSearchProvider:
     version = "1"
 
     def runtime_fingerprint(self):
-        return hashlib.sha256(b"commons.policy.v1.image.5MB.CC0.CCBY4" + marshal.dumps(self.search.__code__)
-                              + marshal.dumps(self.fetch.__code__) + marshal.dumps(commons_fetch.__code__)).hexdigest()
+        # Marshal reference tracking otherwise makes string interning look like code drift.
+        return hashlib.sha256(b"commons.policy.v1.image.5MB.CC0.CCBY4" + marshal.dumps(self.search.__code__, 2)
+                              + marshal.dumps(self.fetch.__code__, 2) + marshal.dumps(commons_fetch.__code__, 2)).hexdigest()
 
     def search(self, query: str, limit: int = 10) -> MaterialSearchResult:
         params = {"action": "query", "format": "json", "formatversion": "2", "generator": "search", "gsrnamespace": "6",

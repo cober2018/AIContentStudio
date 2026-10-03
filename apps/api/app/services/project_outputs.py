@@ -1,7 +1,6 @@
 """Attach verified existing workflow products to the owning project."""
 
 import hashlib
-from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -25,6 +24,7 @@ from .project_events import record_project_event
 OUTPUTS = {
     "builtin.generate": ("draft_id", "draft", Draft),
     "builtin.generate_cover": ("material_revision_id", "material_revision", MaterialRevision),
+    "media.generate": ("material_revision_id", "material_revision", MaterialRevision),
     "media.chart": ("material_revision_id", "material_revision", MaterialRevision),
     "media.screenshot": ("material_revision_id", "material_revision", MaterialRevision),
     "media.video_clip": ("material_revision_id", "material_revision", MaterialRevision),
@@ -52,14 +52,30 @@ def associate_step_output(db: Session, run: WorkflowRun, step: WorkflowStep, att
     if kind == "candidate" and not entity.approved_candidate_hash:
         return None
     if kind == "material_revision":
-        if step.output_json.get("generated") is not True or not entity.file_path or not entity.content_hash or not entity.material or entity.material.kind != MEDIA_KINDS[step.plugin_key]:
-            return None
-        from . import asset_media
+        expected_kind = step.output_json.get("media_kind") if step.plugin_key == "media.generate" else MEDIA_KINDS[step.plugin_key]
+        if step.plugin_key == "media.generate":
+            from ..models import ProviderGenerationTask
 
-        path = Path(entity.file_path)
-        if not path.is_absolute():
-            path = asset_media.MEDIA_ROOT / path
-        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != entity.content_hash:
+            task = db.get(ProviderGenerationTask, step.output_json.get("generation_task_id"))
+            started = db.get(WorkflowStepAttempt, task.workflow_step_attempt_id) if task else None
+            terminal = db.get(WorkflowStepAttempt, attempt_id)
+            if (task is None or task.state != "accepted" or task.accepted_material_revision_id != entity.id
+                    or task.result_hash != entity.content_hash or started is None
+                    or started.run_id != run.id or started.step_id != step.id or started.status != "started"
+                    or terminal is None or terminal.status != "succeeded" or terminal.step_id != step.id
+                    or terminal.run_id != run.id or terminal.output_json != step.output_json
+                    or terminal.output_hash != step.output_hash or terminal.input_hash != started.input_hash
+                    or expected_kind not in {"image", "audio", "video"}):
+                return None
+        if step.output_json.get("generated") is not True or not entity.file_path or not entity.content_hash or not entity.material or entity.material.kind != expected_kind:
+            return None
+        from .materials import read_bytes_checked
+
+        try:
+            content = read_bytes_checked(db, entity)
+        except Exception:  # noqa: BLE001 Output association must fail closed.
+            return None
+        if hashlib.sha256(content).hexdigest() != entity.content_hash:
             return None
     if kind in {"draft", "candidate"}:
         draft = entity if kind == "draft" else db.get(Draft, entity.draft_id)

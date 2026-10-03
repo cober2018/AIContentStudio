@@ -559,24 +559,48 @@ def _prepare_step_params(db: Session, run: WorkflowRun, step: WorkflowStep) -> N
         step.params_json = {**(step.params_json or {}), "inputs": inputs}
 
 
+def _validate_generation_output_mapping(node: dict) -> None:
+    if node.get("plugin") != "media.generate":
+        return
+    reserved = {"generation_task_id", "generation_started_attempt_id", "generation_state", "reason", "generated",
+                "material_revision_id", "content_hash", "media_kind"}
+    for alias, source_key in (node.get("output_mapping") or {}).items():
+        if alias in reserved and source_key != alias:
+            raise ValueError(f"输出映射 {alias} 不能覆盖生成状态或素材身份")
+
+
+def _mapped_output(node: dict, output: dict) -> dict:
+    _validate_generation_output_mapping(node)
+    output = dict(output)
+    deferred = node.get("plugin") == "media.generate" and output.get("generation_state") != "accepted"
+    for alias, source_key in (node.get("output_mapping") or {}).items():
+        if source_key not in output:
+            if deferred and source_key in {"material_revision_id", "content_hash", "media_kind"}:
+                continue
+            raise ValueError(f"输出映射 {alias} 引用了不存在的结果字段 {source_key}")
+        output[alias] = output[source_key]
+    return output
+
+
 def _execute_node(db: Session, run: WorkflowRun, step: WorkflowStep, user, *, payload: dict | None = None) -> dict:
     _prepare_step_params(db, run, step)
     node = _node_config(db, run, step.node_id)
+    _validate_generation_output_mapping(node)
     if run.content_unit_id is not None:
         from .project_workflows import validate_ai_executor_selection
 
         validate_ai_executor_selection(node)
     plugin = _resolve_step_plugin(db, run, step)
     ctx = WorkflowExecutionContext(db=db, run=run, step=step, config=step.params_json or {})
-    if payload is not None:
-        result: NodeResult = plugin.complete(db, ctx, payload, user)
-    else:
-        result = plugin.execute(db, ctx, step.params_json or {}, user)
-    output = dict(result.output or {})
-    for alias, source_key in (node.get("output_mapping") or {}).items():
-        if source_key not in output:
-            raise ValueError(f"输出映射 {alias} 引用了不存在的结果字段 {source_key}")
-        output[alias] = output[source_key]
+    from .generation.providers import model_selection
+
+    chosen_profile = (step.params_json or {}).get("model_profile_id") if node.get("kind") == "AI" and node.get("plugin") in {"builtin.generate", "builtin.humanize"} else None
+    with model_selection(chosen_profile):
+        if payload is not None:
+            result: NodeResult = plugin.complete(db, ctx, payload, user)
+        else:
+            result = plugin.execute(db, ctx, step.params_json or {}, user)
+    output = _mapped_output(node, result.output or {})
     step.input_hash = canonical_checksum(step.params_json or {})
     step.output_hash = canonical_checksum(output)
     return output
@@ -585,6 +609,28 @@ def _execute_node(db: Session, run: WorkflowRun, step: WorkflowStep, user, *, pa
 def _fail_step(db: Session, run: WorkflowRun, step: WorkflowStep, exc: Exception, user=None) -> WorkflowRun:
     db.rollback()
     fresh = db.get(WorkflowStep, step.id)
+    if fresh.plugin_key == "media.generate" and user is not None:
+        from ..models import ProviderGenerationTask
+        from .generation_tasks import _get, _verify, _workflow_context
+
+        _, started = _workflow_context(db, run, fresh, user)
+        if fresh.status == "succeeded":
+            return run
+        task = db.scalar(select(ProviderGenerationTask).where(
+            ProviderGenerationTask.workflow_step_attempt_id == started.id)) if started else None
+        if task is not None:
+            _get(db, user, task.id, mutate=True)
+            _verify(task)
+            # A local validation error cannot prove the paid operation failed.
+            fresh.status = "waiting_input"
+            fresh.error = "原生成任务需核对；请刷新或查询原任务，不会重新提交"
+            fresh.output_json = {"generation_task_id": task.id, "generation_started_attempt_id": started.id,
+                                 "generation_state": task.state, "generated": False}
+            fresh.output_hash = canonical_checksum(fresh.output_json)
+            run.status = "waiting_input"
+            run.error = fresh.error
+            db.commit()
+            return run
     node = _node_config(db, run, fresh.node_id)
     policy = node.get("failure_policy", "stop") if run.content_unit_id is not None else "stop"
     if policy in {"skip", "wait_human"}:
@@ -638,6 +684,43 @@ def _record_attempt(db: Session, step: WorkflowStep, status: str, *, error: str 
     return attempt.id
 
 
+def _finish_generation_step(db: Session, run: WorkflowRun, step: WorkflowStep, output: dict, user) -> WorkflowRun:
+    from fastapi import HTTPException
+
+    from .generation_tasks import _workflow_context
+
+    # Serialize terminal history with resume; a late sender cannot overwrite it.
+    _workflow_context(db, run, step, user)
+    if step.status == "succeeded":
+        return run
+    step.output_json = output
+    step.output_hash = canonical_checksum(output)
+    step.error = None
+    state = output.get("generation_state")
+    if state not in {"accepted", "failed", "cancelled"}:
+        step.status = "waiting_input"
+        run.status = "waiting_input"
+        run.error = None
+        db.commit()
+        return run
+    step.status = "succeeded" if state == "accepted" else "failed"
+    step.finished_at = _now()
+    attempt_id = _record_attempt(db, step, step.status)
+    if state == "accepted":
+        from .project_outputs import associate_step_output
+
+        if associate_step_output(db, run, step, attempt_id) is None:
+            db.rollback()
+            raise HTTPException(409, "generation_workflow_output_unverified")
+        run.status = "running"
+        db.commit()
+        return advance(db, run, user)
+    run.status = "failed"
+    run.error = "生成供应商已确认失败或取消；不能通过通用重跑提交替代任务"
+    db.commit()
+    return run
+
+
 def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
     """从当前断点推进：自动节点逐个执行，人工节点挂起，失败即停。"""
     from .content_harness import registry as plugin_registry
@@ -688,7 +771,7 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
                         step.stale_reason = "执行条件未满足"
                         db.commit()
                         continue
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - 条件准备失败也必须写入节点失败历史，不让 Run 悬挂。
                     return _fail_step(db, run, step, exc, user)
         try:
             _resolve_step_plugin(db, run, step)
@@ -707,6 +790,8 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
         db.commit()
         try:
             output = _execute_node(db, run, step, user)
+            if step.plugin_key == "media.generate":
+                return _finish_generation_step(db, run, step, output, user)
             step.output_json = output
             step.status = "succeeded"
             step.finished_at = _now()
@@ -792,6 +877,14 @@ def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, us
     ).first()
     if not step:
         raise ValueError(f"节点 {node_id} 不存在")
+    if step.plugin_key == "media.generate":
+        from .generation_tasks import workflow_complete
+
+        node = _node_config(db, run, node_id)
+        _validate_generation_output_mapping(node)
+        output = workflow_complete(db, run, step, payload or {}, user)
+        output = _mapped_output(node, output)
+        return _finish_generation_step(db, run, step, output, user)
     if run.status != "waiting_input" or step.status != "waiting_input":
         raise ValueError(f"节点当前状态 {step.status} 不可操作（run={run.status}）")
     node = _node_config(db, run, node_id)
@@ -843,6 +936,9 @@ def retry_run(db: Session, run: WorkflowRun, user) -> WorkflowRun:
         for asset in [db.get(ContentAsset, asset_id)]
     ):
         raise ValueError("M1 人工交付不允许通过旧工作流重试远端副作用")
+    for step in _steps(db, run):
+        if step.status == "failed" and step.plugin_key == "media.generate":
+            raise ValueError("持久生成节点禁止通用retry，请查看原任务")
     for step in _steps(db, run):
         if step.status == "failed":
             step.status = "pending"

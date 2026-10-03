@@ -604,7 +604,9 @@ def _profile_check(db: Session, row: ChannelVariantRevision, assets: list[dict])
 
 def _evidence_check(db: Session, row: ChannelVariantRevision, assets: list[dict], evidence: list[dict]) -> tuple[str, dict]:
     master = db.get(ContentMasterRevision, row.source_master_revision_id)
-    content_without_declarations = {key: value for key, value in row.payload_json.items() if key != "declarations"}
+    # HTML is validated against the canonical visible blocks at save and every live read.
+    presentation = {"declarations", "html_template", "digest", "author"} if row.payload_schema == "wechat.article.v1" else {"declarations"}
+    content_without_declarations = {key: value for key, value in row.payload_json.items() if key not in presentation}
     declaration_coverage = "editor_supplied" if row.payload_json.get("declarations") else "none"
     try:
         _validate_evidence_refs(db, master, evidence)

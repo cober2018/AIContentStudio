@@ -125,6 +125,7 @@ def resolve_material_search() -> MaterialSearchProvider:
 
 def bootstrap_media_providers() -> None:
     from ..local_graphic_renderer import LocalGraphicRenderer
+    from ..local_mlx_asr_provider import bootstrap as bootstrap_local_asr
     from ..material_search import WikimediaSearchProvider
     from ..minimax_cli_provider import bootstrap as bootstrap_minimax_cli
     from ..native_model_adapters import bootstrap_native_model_adapters
@@ -132,6 +133,7 @@ def bootstrap_media_providers() -> None:
 
     bootstrap_native_model_adapters()
     bootstrap_minimax_cli()
+    bootstrap_local_asr(registry)
 
     if OpenAIImageProvider.key not in {d.key for d in registry.list("image_provider")}:
         registry.register("image_provider", OpenAIImageProvider.key, "1", OpenAIImageProvider(), label="Configured OpenAI image preview (explicit acceptance required)")

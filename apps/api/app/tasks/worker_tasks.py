@@ -30,8 +30,25 @@ def _run_generation(db: Session, job_id: int) -> None:
     from .. import runtime_config
 
     runtime_config.load_from_db(db)
+    from ..services.generation.providers import LLMError, effective_llm_config, model_selection
+
+    selected_profile = (job.usage_json or {}).get("selected_model_profile")
     try:
-        orchestrator.run_generation_for_job(db, job)
+        with model_selection(selected_profile):
+            if selected_profile:
+                config = effective_llm_config("generate")
+                from ..services.generation.providers import provider_model_name
+
+                expected_model = provider_model_name("generate")
+                if config["provider"] != job.model_provider or expected_model != job.model_name:
+                    raise LLMError("queued_model_selection_changed")
+            orchestrator.run_generation_for_job(db, job)
+    except LLMError:
+        from ..models import JobStatus, utcnow
+
+        job.status = JobStatus.failed.value
+        job.error = "queued_model_selection_unavailable"
+        job.finished_at = utcnow()
     except orchestrator.GenerationError:
         pass  # job.status/error 已由 orchestrator 落库
     db.commit()

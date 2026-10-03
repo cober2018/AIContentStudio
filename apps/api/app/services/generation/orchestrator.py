@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from ... import models
 from ...models import Draft, DraftStatus, FactPack, FactPackStatus, JobStatus
 from . import mock_content, renderers
-from .providers import GenerateRequest, get_provider, provider_model_name, record_run
+from .providers import GenerateRequest, get_provider, provider_model_name, record_run, selected_model_profile
 
 # legacy prompt 渲染路由：x_thread 复用 wechat prompt（V1 PRD 2.0：渠道合法性一律走 ChannelRegistry）
 X_THREAD = "x_thread"
@@ -132,9 +132,22 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
 
     try:
         result = _run_provider(provider, request)
-        record_run(db, request, result)
+        record_run(
+            db,
+            request,
+            result,
+            provider_name=provider.name,
+            model_name=getattr(provider, "model", None) or "mock-structured-v1",
+        )
     except Exception as exc:
-        record_run(db, request, None, error=str(exc))
+        record_run(
+            db,
+            request,
+            None,
+            error=str(exc),
+            provider_name=provider.name,
+            model_name=getattr(provider, "model", None) or "mock-structured-v1",
+        )
         job.status = JobStatus.failed.value
         job.error = str(exc)
         job.finished_at = models.utcnow()
@@ -172,9 +185,11 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
 
     job.status = JobStatus.succeeded.value
     job.finished_at = models.utcnow()
-    job.usage_json = result.usage
+    job.usage_json = {**(job.usage_json or {}), **result.usage}
+    if result.route_provenance:
+        job.usage_json["model_route"] = dict(result.route_provenance)
     job.model_provider = provider.name
-    job.model_name = provider_model_name("generate")
+    job.model_name = (result.route_provenance or {}).get("model") or getattr(provider, "model", None) or "mock-structured-v1"
     db.flush()
     db.refresh(draft)
     return draft
@@ -252,6 +267,7 @@ def create_jobs_for_topic(
             template_version_id=template.id if template else None,
             model_provider=get_provider("generate").name,
             model_name=provider_model_name("generate"),
+            usage_json={"selected_model_profile": selected_model_profile()} if selected_model_profile() else None,
             fact_pack_snapshot={"id": pack.id, "version": pack.version, "checksum": pack.checksum},
             status=JobStatus.queued.value,
         )

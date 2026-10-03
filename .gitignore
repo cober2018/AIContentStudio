@@ -31,6 +31,7 @@ apps/api/media/
 apps/api/app/media/
 apps/web/tsconfig.tsbuildinfo
 apps/api/scripts/startup/runtime.env
+apps/api/scripts/startup/generation-receipt-keys.json
 # Celery beat 状态文件与 SQLite WAL 伴随文件、本地日志等运行产物
 apps/api/celerybeat-schedule*
 apps/api/*.db-*

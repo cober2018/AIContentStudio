@@ -287,7 +287,7 @@ def _read_cli_config() -> dict | None:
             os.close(parent_fd)
 
 
-def _credential_epoch() -> str | None:
+def _credential_epoch(receipt_key_id: str | None = None) -> str | None:
     """Return an opaque HMAC fingerprint without exposing local CLI secrets."""
     try:
         config = _read_cli_config()
@@ -307,7 +307,7 @@ def _credential_epoch() -> str | None:
         if not any(isinstance(value, str) and value for value in (api_key, access_token, refresh_token)):
             return None
         keys = json.loads(os.environ.get("AICS_GENERATION_RECEIPT_KEYS", "{}"))
-        key_id = os.environ.get("AICS_GENERATION_RECEIPT_KEY_ID")
+        key_id = receipt_key_id if receipt_key_id is not None else os.environ.get("AICS_GENERATION_RECEIPT_KEY_ID")
         key = keys.get(key_id) if isinstance(keys, dict) and isinstance(key_id, str) else None
         if (not _RECEIPT_ID.fullmatch(key_id or "") or not isinstance(key, str)
                 or not re.fullmatch(r"[0-9a-f]{64}", key)):
@@ -347,6 +347,13 @@ class _MiniMaxCredentialIdentity:
         return ({"credential_epoch": epoch, "protocol_version": protocol}
                 if epoch and protocol else None)
 
+    def durable_identity_for_key(self, model_id: str, receipt_key_id: str) -> dict | None:
+        # Historical task authentication must survive an active signing-key change.
+        epoch = _credential_epoch(receipt_key_id)
+        protocol = _protocol_for_model(model_id)
+        return ({"credential_epoch": epoch, "protocol_version": protocol}
+                if epoch and protocol else None)
+
 
 def _image_model() -> str | None:
     result = _run(["image", "generate", "--prompt", "capability-contract-probe", "--dry-run",
@@ -368,6 +375,11 @@ def _image_runtime_identity(expected_model: str | None = None) -> str | None:
     if expected_model is not None and model != expected_model:
         return None
     return hashlib.sha256(f"{runtime}|{model}".encode()).hexdigest() if runtime and model else None
+
+
+def _asr_runtime_identity() -> str | None:
+    runtime, epoch = _runtime_identity(), _credential_epoch()
+    return hashlib.sha256(f"{runtime}|asr-1.0|{epoch}".encode()).hexdigest() if runtime and epoch else None
 
 
 class MiniMaxCLIModelAdapter(_MiniMaxCredentialIdentity):
@@ -399,7 +411,8 @@ class MiniMaxCLIModelAdapter(_MiniMaxCredentialIdentity):
         if configured["reason"] != "credential_continuity_unverified":
             return configured
         model_id = binding["model_id"]
-        runtime = _image_runtime_identity(model_id) if capability == "image_generation" else _runtime_identity()
+        runtime = (_image_runtime_identity(model_id) if capability == "image_generation"
+                   else _asr_runtime_identity() if capability == "asr" else _runtime_identity())
         # Configured credentials make explicit dispatch possible; verified is
         # still reserved for a real accepted provider result.
         ready = runtime is not None and _credential_epoch() is not None
@@ -498,7 +511,7 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
             if status == "expired":
                 return MediaOutput("unknown", metadata={**metadata, "reason": "generation_job_expired"})
             if status in {"failed", "cancelled"}:
-                return MediaOutput("cancelled" if status == "cancelled" else "failed")
+                return MediaOutput("cancelled" if status == "cancelled" else "failed", metadata=metadata)
             url = value.get("url")
             if status != "succeeded" or not isinstance(url, str):
                 return MediaOutput("unknown")
@@ -633,7 +646,7 @@ class MiniMaxCLIASRProvider(_MiniMaxCredentialIdentity):
     version = CLI_VERSION
 
     def runtime_fingerprint(self) -> str | None:
-        return _runtime_identity()
+        return _asr_runtime_identity()
 
     def transcribe(self, request: dict) -> dict:
         content = request.get("source_bytes")

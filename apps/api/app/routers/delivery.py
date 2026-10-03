@@ -28,8 +28,8 @@ from ..models import (
     User,
     utcnow,
 )
+from ..services import capability_integrations, published_history
 from ..services import delivery as delivery_service
-from ..services import published_history
 from ..services.project_authorization import authorize_project_asset, authorize_project_target
 from ..services.project_events import record_project_event
 
@@ -242,6 +242,10 @@ def preview_package(target_id: int, db: Session = Depends(get_db), user: User = 
 def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     target = _own_target(db, target_id, user, mutate=True)
     if (target.publisher_key == "publisher.wechat.official" and target.publisher_version == "1"
+            and target.action == "auto_draft"
+            and (payload.published_at is not None or payload.publication_time_evidence is not None)):
+        raise HTTPException(422, "official_draft_receipt_cannot_claim_publication")
+    if (target.publisher_key == "publisher.wechat.official" and target.publisher_version == "1"
             and target.action == "auto_draft" and db.scalar(select(DeliveryAttempt.id).where(
                 DeliveryAttempt.target_id == target.id, DeliveryAttempt.status.in_(["prepared", "running"])).limit(1))):
         raise HTTPException(409, "official_reconciliation_required")
@@ -308,7 +312,11 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
             record_project_event(db, project_id=asset.project_id, event_type="delivery.receipt_recorded", actor=user.email,
                                  entity_type="delivery_receipt", entity_id=receipt.id,
                                  payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "target_id": target.id, "status": receipt.status})
+        capability_integrations.promote_confirmed_official_draft(db, target, receipt, user.email)
         db.commit()
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(409, str(exc)) from exc
     except IntegrityError:
         db.rollback()
         raise HTTPException(409, "回执或发布历史保存冲突，请重试")

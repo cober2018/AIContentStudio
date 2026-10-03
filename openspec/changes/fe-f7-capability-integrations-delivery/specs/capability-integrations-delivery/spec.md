@@ -76,6 +76,12 @@ A generic Connector or ConnectorEndpoint SHALL become a Data Source executor onl
 
 For the existing mutable ConnectorEndpoint, exact endpoint/version means endpoint ID plus the effective configuration and credential-version fingerprint. A changed endpoint configuration or credential version MUST invalidate verification before execution; absent verifiable credential-version identity MUST NOT be treated as a verified mapping. No secret value is stored or exposed as the fingerprint.
 
+The effective fingerprint SHALL also bind the actually loaded fetch, mapping and pinned HTTP implementation. Changed executable code SHALL invalidate previous evidence; incidental string interning SHALL NOT change unchanged implementation fingerprints.
+
+#### Scenario: Connector executable changes after verification
+- **WHEN** the loaded fetch, mapping or bounded transport code changes while endpoint configuration remains unchanged
+- **THEN** previous verification remains readable but cannot authorize the changed executor, with no source or snapshot write
+
 The registration SHALL explicitly store its typed `data_source_plugin_key` and `endpoint_id` while its own key names a selectable connection profile. A Data Node SHALL select the exact registration ID and version through `source_ref`; deriving a plugin mapping from key prefixes or treating the endpoint ID alone as a source reference is forbidden. Multiple endpoint profiles MAY use the same typed plugin without becoming interchangeable.
 
 The first generic REST `api` executor SHALL accept HTTPS GET endpoints only. Existing POST Connector pulls remain legacy-compatible but SHALL NOT be promoted to a typed read-only Data Source capability without a separate read-only contract. A probe SHALL perform an actual bounded mapped readback and append a scoped verification only when at least one mapped Fact exists; a failed or empty readback SHALL invalidate the prior scope verification.
@@ -189,9 +195,19 @@ ASR transcripts/cues and provider transforms SHALL be bounded outputs with sourc
 ### Requirement: Publisher verification is exact to the action
 Remote Publisher verification MUST bind platform/channel, stable account identity and frozen account reference, content form, action, publisher key/version, config fingerprint and validity time. A verified result requires explicit real-account verification with read-back or documented human evidence. Registration, local mocks, a Settings read, a provider `verified()` boolean or a successful unrelated action MUST NOT verify a new scope.
 
+For a successful WeChat draft-box create, an actual valid `media_id` persisted against the exact DeliveryAttempt and documented operator confirmation in that account's draft box SHALL complete the bounded creation acceptance without a required `draft/get` call. An optional read-back MUST NOT be reported as executed when it was not. This acceptance alone MUST NOT fabricate CapabilityVerification, a publication Receipt or authorization for another draft; uncertain/Unknown attempts still require exact reconciliation and MUST NOT auto-resubmit.
+
+#### Scenario: Historical successful draft cannot verify the current runtime
+- **WHEN** same-account human confirmation is recorded but the successful Attempt's stored runtime fingerprint is absent or differs from the current exact account/config/implementation fingerprint, even after the registration has been updated
+- **THEN** the receipt transaction fails closed with no new Receipt or CapabilityVerification, preserving the historical Attempt and never resending it
+
 #### Scenario: Another account or form
 - **WHEN** `wechat/account-A/article/auto_draft` is verified but authorization selects account B or another content form
 - **THEN** the new remote action is unavailable
+
+#### Scenario: Confirmed draft without optional API read-back
+- **WHEN** one authorized WeChat draft attempt returns a valid `media_id`, saves it to the exact attempt, and the operator documents its presence in the same account's draft box
+- **THEN** that attempt's draft-creation acceptance passes without `draft/get`, while unperformed read-back, broader Publisher verification and public publication remain unclaimed
 
 #### Scenario: WeWrite unverified legacy flag
 - **WHEN** a legacy `allow_unverified_auto_draft` flag is enabled but no scoped verification exists
@@ -237,3 +253,16 @@ Verification or a user-visible `verified` state SHALL require actual configured 
 #### Scenario: Settings inventory read
 - **WHEN** a viewer opens capability inventory
 - **THEN** it returns bounded safe status without invoking a Connector, model, Renderer or Publisher
+
+### Requirement: Original WeChat HTML is frozen and sent without rewriting
+The system SHALL support bounded original article HTML as validated presentation of canonical WeChat blocks, require matching visible text and exact image slots, freeze it before approval, preserve inline styling and original multipart filenames, and only substitute approved resource URLs during dispatch.
+
+#### Scenario: Explicit one-shot original HTML draft
+- **WHEN** the operator authorizes an exact approved HTML Candidate, account, runtime, target and attempt
+- **THEN** a distinct signed HTML-draft authority permits one bounded draft creation without widening short-draft or general remote verification gates
+- **AND** a valid media_id is persisted as draft success, without public publication, mandatory successful readback, fabricated verification or automatic Unknown retry
+
+#### Scenario: Proven WeWrite body-image URL
+- **WHEN** the upload response returns an exact mmbiz.qpic.cn image URL with from=appmsg or a supported wx_fmt value
+- **THEN** the validated URL is preserved for its frozen slot, while unknown query parameters, credentials, other hosts and malformed URLs remain rejected
+- **AND** the frozen v3 preview displays validated inline styles in a script-free opaque sandbox without permitting remote resource fetches
