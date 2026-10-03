@@ -13,8 +13,6 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-import httpx
-
 from ...config import get_settings
 from ...models import LLMRun
 
@@ -131,27 +129,26 @@ class OpenAICompatibleProvider:
         }
         if request.schema_hint:
             payload["response_format"] = {"type": "json_object"}
-        if self.registered_provider is not None:
-            import asyncio
+        import asyncio
 
-            from ..model_registration import provider_request
+        from ..model_registration import provider_request
 
-            try:
-                return await asyncio.to_thread(provider_request, self.registered_provider, "/chat/completions", payload=payload, timeout=120)
-            except Exception as exc:
-                raise LLMError("registered_provider_request_failed") from exc
-        async with httpx.AsyncClient(timeout=120) as client:
-            resp = await client.post(
-                f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json=payload,
-            )
-            resp.raise_for_status()
-            return resp.json()
+        provider = self.registered_provider or {
+            "enabled": True,
+            "api_key": self.api_key,
+            "base_url": self.base_url,
+            # Keep the explicit local-network legacy configuration while using
+            # the same pinned transport and bounded request policy.
+            "trusted_private_endpoint": self.base_url if self.base_url.startswith("http://") else "",
+        }
+        try:
+            return await asyncio.to_thread(provider_request, provider, "/chat/completions", payload=payload, timeout=120)
+        except Exception as exc:
+            raise LLMError("provider_request_failed") from exc
 
     async def generate_json(self, request: GenerateRequest) -> GenerateResult:
         body = await self._chat(request)
-        raw = body["choices"][0]["message"]["content"]
+        raw = _provider_text_content(body)
         return GenerateResult(
             data=parse_llm_json(raw),
             raw_output=raw,
@@ -162,7 +159,20 @@ class OpenAICompatibleProvider:
     async def generate_text(self, request: GenerateRequest) -> str:
         body = await self._chat(request)
         # 思考模型（MiniMax-M3 等）会把 <think> 推理内联在正文里，文本场景同样要剥掉
-        return _THINK_BLOCK.sub("", body["choices"][0]["message"]["content"]).strip()
+        return _THINK_BLOCK.sub("", _provider_text_content(body)).strip()
+
+
+def _provider_text_content(body: Any) -> str:
+    """把兼容协议响应收敛成安全的文本错误，而不是泄漏结构异常。"""
+    try:
+        choices = body["choices"]
+        message = choices[0]["message"]
+        content = message["content"]
+    except (KeyError, IndexError, TypeError):
+        raise LLMError("provider_response_invalid") from None
+    if not isinstance(content, str):
+        raise LLMError("provider_response_invalid")
+    return content
 
 
 # ---------- Registry ----------

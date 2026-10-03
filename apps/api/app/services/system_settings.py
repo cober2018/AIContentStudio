@@ -13,7 +13,6 @@ from .. import runtime_config
 from ..config import get_settings
 from ..models import SystemSetting
 from .plugin_registry import SKILL_DIRS as DEFAULT_SKILL_DIRS
-from .plugin_registry import dsh_status
 from .plugin_registry import scan_skills as discover_local_skills
 from .writing_pipeline import WEWRITE_HOME
 
@@ -203,7 +202,7 @@ def plugins_view() -> dict:
         "skills_enabled": list(stored.get("skills_enabled") or []),
         "mcp": list(stored.get("mcp") or []),
         "skills": discover_local_skills(scan_dirs),
-        "dsh": dsh_status(),
+        "dsh": {"url": "http://localhost:3080", "reachable": False, "status_code": None, "status": "not_probed"},
     }
 
 

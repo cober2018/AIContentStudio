@@ -4,12 +4,10 @@ import copy
 import hashlib
 import ipaddress
 import json
+import math
 import re
 import socket
 import time
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutureTimeout
-from threading import BoundedSemaphore
 from urllib.parse import urlsplit
 
 import httpx
@@ -19,11 +17,19 @@ from pydantic import Field, StrictBool, ValidationError
 from .. import runtime_config
 from .model_capability_routing import Identifier, StrictModel, _stored, commit_configuration
 from .system_settings import mask_secret
-from .url_fetch import _PinnedBackend
+from .url_fetch import (
+    OUTBOUND_HTTP_POLICIES,
+    UnsafeUrlError,
+    _PinnedBackend,
+    enforce_outbound_host,
+    outbound_scope,
+    resolve_addresses,
+)
 
 PURPOSES = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit")
-_DNS_POOL = ThreadPoolExecutor(max_workers=2, thread_name_prefix="provider-dns")
-_DNS_SLOTS = BoundedSemaphore(2)
+PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS = OUTBOUND_HTTP_POLICIES["model_generation"].timeout_seconds
+PROVIDER_REQUEST_MAX_BODY_BYTES = OUTBOUND_HTTP_POLICIES["model_generation"].request_bytes
+PROVIDER_RESPONSE_MAX_BODY_BYTES = OUTBOUND_HTTP_POLICIES["model_generation"].response_bytes
 
 
 class ProviderInput(StrictModel):
@@ -64,6 +70,10 @@ def endpoint(value):
 
 def target(provider):
     base = endpoint(provider["base_url"])
+    try:
+        enforce_outbound_host(base)
+    except UnsafeUrlError:
+        raise HTTPException(422, "provider_target_forbidden") from None
     parsed = urlsplit(base)
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
     try:
@@ -75,20 +85,14 @@ def target(provider):
         return base, parsed, port, str(literal)
     if parsed.scheme != "https":
         raise HTTPException(422, "trusted_private_endpoint_required")
-    if not _DNS_SLOTS.acquire(blocking=False):
-        raise HTTPException(429, "provider_resolution_busy")
     try:
-        future = _DNS_POOL.submit(socket.getaddrinfo, parsed.hostname, port, 0, socket.SOCK_STREAM)
-    except Exception:
-        _DNS_SLOTS.release()
-        raise
-    future.add_done_callback(lambda _: _DNS_SLOTS.release())
-    try:
-        addresses = future.result(timeout=4)
-        if not addresses or any(not ipaddress.ip_address(info[4][0]).is_global or ipaddress.ip_address(info[4][0]).is_multicast for info in addresses):
+        addresses = resolve_addresses(parsed.hostname, port)
+        if not addresses or any(info[0] not in {socket.AF_INET, socket.AF_INET6}
+                                or not ipaddress.ip_address(info[4][0]).is_global
+                                or ipaddress.ip_address(info[4][0]).is_multicast for info in addresses):
             raise ValueError()
         return base, parsed, port, addresses[0][4][0]
-    except (OSError, ValueError, FutureTimeout) as exc:
+    except (OSError, ValueError) as exc:
         raise HTTPException(422, "provider_target_unavailable") from exc
 
 
@@ -98,24 +102,47 @@ def provider_request(provider, path, *, payload=None, timeout=10):
         raise HTTPException(422, "provider_operation_invalid")
     if not provider.get("enabled", True) or not provider.get("api_key"):
         raise HTTPException(422, "provider_credential_unavailable")
-    deadline = time.monotonic() + timeout
-    base, parsed, port, address = target(provider)
+    timeout_value = float(timeout)
+    if not math.isfinite(timeout_value):
+        timeout_value = PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS
+    limit = OUTBOUND_HTTP_POLICIES["model_discovery" if path == "/models" else "model_generation"]
+    deadline = time.monotonic() + min(max(timeout_value, 0.1), limit.timeout_seconds)
+    headers = {"Authorization": "Bearer " + provider["api_key"], "Accept-Encoding": "identity"}
+    request_body = None
+    if payload is not None:
+        try:
+            request_body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+        except (TypeError, ValueError, RecursionError) as exc:
+            raise HTTPException(422, "provider_request_payload_invalid") from exc
+        if len(request_body) > PROVIDER_REQUEST_MAX_BODY_BYTES:
+            raise HTTPException(413, "provider_request_limit")
+        headers["Content-Type"] = "application/json"
+    with outbound_scope(deadline):
+        base, parsed, port, address = target(provider)
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise HTTPException(504, "provider_timeout")
     transport = httpx.HTTPTransport(retries=0, trust_env=False)
-    transport._pool._network_backend = _PinnedBackend(parsed.hostname, port, address)
+    transport._pool._network_backend = _PinnedBackend(parsed.hostname, port, address, deadline)
     try:
         with (
-            httpx.Client(transport=transport, timeout=max(0.1, deadline - time.monotonic()), trust_env=False, follow_redirects=False) as client,
+            outbound_scope(deadline),
+            httpx.Client(transport=transport, timeout=remaining, trust_env=False, follow_redirects=False) as client,
             client.stream("GET" if payload is None else "POST", base + path,
-                          headers={"Authorization": "Bearer " + provider["api_key"]}, json=payload) as response,
+                          headers=headers, content=request_body) as response,
         ):
             if response.status_code != 200:
                 reason = "provider_authentication_rejected" if response.status_code in {401, 403} else "provider_request_rejected"
                 raise HTTPException(502, reason)
+            if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
+                raise HTTPException(502, "provider_response_encoding_invalid")
             data = bytearray()
             for chunk in response.iter_bytes():
-                if len(data) + len(chunk) > 2_000_000 or time.monotonic() >= deadline:
+                if len(data) + len(chunk) > PROVIDER_RESPONSE_MAX_BODY_BYTES or time.monotonic() >= deadline:
                     raise HTTPException(502, "provider_response_limit")
                 data.extend(chunk)
+            if time.monotonic() >= deadline:
+                raise HTTPException(504, "provider_timeout")
             return json.loads(data)
     except HTTPException:
         raise

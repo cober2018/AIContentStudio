@@ -1,6 +1,7 @@
 """Worker 任务：每个任务自建 DB session（worker 进程独立于 FastAPI 生命周期）。"""
 
 import logging
+import time
 
 from sqlalchemy.orm import Session
 
@@ -11,6 +12,11 @@ from ..services.generation import orchestrator
 from .celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+
+def _telemetry_from(payload: dict | None) -> dict:
+    value = (payload or {}).get("_telemetry")
+    return value if isinstance(value, dict) else {}
 
 
 @celery_app.task(name="app.tasks.worker_tasks.retention_sweep")
@@ -26,35 +32,51 @@ def _run_generation(db: Session, job_id: int) -> None:
     if not job:
         logger.error("生成任务取消：ContentJob %s 不存在", job_id)
         return
-    # worker 进程独立于 FastAPI 生命周期：跑 LLM 前刷新运行时配置覆盖
-    from .. import runtime_config
+    from ..observability import correlation_scope, log_operation
 
-    runtime_config.load_from_db(db)
-    from ..services.generation.providers import LLMError, effective_llm_config, model_selection
+    telemetry = _telemetry_from(job.usage_json)
+    started = time.perf_counter()
+    error = None
+    with correlation_scope(
+        trace_id=telemetry.get("trace_id"), operation="generation", job_id=job.id, run_id=job.workflow_run_id,
+    ):
+        # worker 进程独立于 FastAPI 生命周期：跑 LLM 前刷新运行时配置覆盖
+        from .. import runtime_config
 
-    selected_profile = (job.usage_json or {}).get("selected_model_profile")
-    try:
-        with model_selection(selected_profile):
-            if selected_profile:
-                config = effective_llm_config("generate")
-                from ..services.generation.providers import provider_model_name
+        runtime_config.load_from_db(db)
+        from ..services.generation.providers import LLMError, effective_llm_config, model_selection
 
-                expected_model = provider_model_name("generate")
-                if config["provider"] != job.model_provider or expected_model != job.model_name:
-                    raise LLMError("queued_model_selection_changed")
-            orchestrator.run_generation_for_job(db, job)
-    except LLMError:
-        from ..models import JobStatus, utcnow
+        selected_profile = (job.usage_json or {}).get("selected_model_profile")
+        try:
+            with model_selection(selected_profile):
+                if selected_profile:
+                    config = effective_llm_config("generate")
+                    from ..services.generation.providers import provider_model_name
 
-        job.status = JobStatus.failed.value
-        job.error = "queued_model_selection_unavailable"
-        job.finished_at = utcnow()
-    except orchestrator.GenerationError:
-        pass  # job.status/error 已由 orchestrator 落库
-    db.commit()
+                    expected_model = provider_model_name("generate")
+                    if config["provider"] != job.model_provider or expected_model != job.model_name:
+                        raise LLMError("queued_model_selection_changed")
+                orchestrator.run_generation_for_job(db, job)
+        except LLMError as exc:
+            from ..models import JobStatus, utcnow
+
+            error = exc
+            job.status = JobStatus.failed.value
+            job.error = "queued_model_selection_unavailable"
+            job.finished_at = utcnow()
+        except orchestrator.GenerationError as exc:
+            error = exc
+            # job.status/error 已由 orchestrator 落库
+        finally:
+            db.commit()
+            log_operation("worker_generation", status=job.status, duration=time.perf_counter() - started, error=error)
 
 
 def _run_pull(db: Session, endpoint_id: int, actor_email: str) -> None:
+    from ..observability import correlation_scope, log_operation
+
+    started = time.perf_counter()
+    error = None
     endpoint = db.get(ConnectorEndpoint, endpoint_id)
     user = db.query(User).filter(User.email == actor_email).first()
     if user is None:
@@ -65,12 +87,17 @@ def _run_pull(db: Session, endpoint_id: int, actor_email: str) -> None:
     if not endpoint:
         logger.error("拉取任务取消：endpoint=%s user=%s 缺失", endpoint_id, actor_email)
         return
-    try:
-        connector_service.pull_endpoint(db, endpoint, user)
-    except connector_service.ConnectorError as exc:
-        connector_service.record_pull_failure(db, endpoint, str(exc))
-    except Exception as exc:  # noqa: BLE001 网络等未知失败同样回写 endpoint
-        connector_service.record_pull_failure(db, endpoint, str(exc))
+    with correlation_scope(operation="connector_pull", actor=actor_email, endpoint_id=endpoint_id):
+        try:
+            connector_service.pull_endpoint(db, endpoint, user)
+        except connector_service.ConnectorError as exc:
+            error = exc
+            connector_service.record_pull_failure(db, endpoint, str(exc))
+        except Exception as exc:  # noqa: BLE001 网络等未知失败同样回写 endpoint
+            error = exc
+            connector_service.record_pull_failure(db, endpoint, str(exc))
+        finally:
+            log_operation("worker_connector_pull", status=endpoint.last_pull_status or "unknown", duration=time.perf_counter() - started, error=error)
 
 
 @celery_app.task(name="app.tasks.worker_tasks.run_generation_job")
@@ -89,6 +116,11 @@ def _advance_workflow_run(db: Session, run_id: int) -> str:
     run = db.get(WorkflowRun, run_id)
     if not run:
         return "unknown"
+    from ..observability import correlation_scope, log_operation
+
+    started = time.perf_counter()
+    telemetry = _telemetry_from(run.context_json)
+    error = None
     user = db.query(User).filter(User.email == "workflow@studio.local").first()
     if user is None:
         user = User(email="workflow@studio.local", name="工作流执行", role="editor")
@@ -97,12 +129,21 @@ def _advance_workflow_run(db: Session, run_id: int) -> str:
     from .. import runtime_config
 
     runtime_config.load_from_db(db)
-    try:
-        run = workflow_engine.advance(db, run, user)
-        return run.status
-    except Exception as exc:
-        logger.exception("workflow run %s 推进异常", run_id)
-        return f"error: {exc}"[:100]
+    with correlation_scope(
+        trace_id=telemetry.get("trace_id"), operation="workflow", run_id=run.id, unit_id=run.content_unit_id,
+    ):
+        try:
+            run = workflow_engine.advance(db, run, user)
+            return run.status
+        except Exception as exc:  # noqa: BLE001 Worker failures must remain opaque at the task boundary.
+            from ..observability import safe_error_category
+
+            error = exc
+            category = safe_error_category(exc)
+            logger.error("workflow run %s 推进失败：%s", run_id, category)
+            return f"error:{category}"
+        finally:
+            log_operation("worker_workflow", status=run.status, duration=time.perf_counter() - started, error=error)
 
 
 @celery_app.task(name="app.tasks.worker_tasks.advance_workflow_run")
@@ -155,6 +196,12 @@ def dispatch_generation(db: Session, job_id: int) -> str:
     from ..models import JobStatus
 
     if get_settings().task_queue_enabled:
+        from ..observability import persisted_telemetry
+
+        job = db.get(ContentJob, job_id)
+        if job is not None:
+            job.usage_json = persisted_telemetry(job.usage_json)
+            db.flush()
         run_generation_job.delay(job_id)
         return JobStatus.queued.value
     _run_generation(db, job_id)

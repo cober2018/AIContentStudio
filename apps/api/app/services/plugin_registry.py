@@ -1,7 +1,7 @@
 """技能与插件登记（设置页「技能与插件」数据源）。
 
 V1 范围：
-- 自动发现本机 Agent skills（~/.agents/skills、~/.zcode/skills 下带 SKILL.md 的目录），
+- 自动发现本机 Agent skills（~/.agents/skills、~/.zcode/skills、~/.codex/skills 下带 SKILL.md 的目录），
   读 frontmatter 的 name/description，以及 V1 PRD 2.0（D16）扩展元数据
   version/license/kind/capabilities（缺省 unversioned/unknown/skill/[]）；
 - MCP server 手工登记（name + url + enabled），连通性检测留 V2；
@@ -12,12 +12,22 @@ V1 范围：
 """
 
 import re
+import time
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 
-SKILL_DIRS = (Path.home() / ".agents" / "skills", Path.home() / ".zcode" / "skills")
+from .url_fetch import OUTBOUND_HTTP_POLICIES, outbound_scope, pinned_transport
+
+# Preserve older agent-directory precedence while including the catalog used by
+# the current local Codex runtime.
+SKILL_DIRS = (
+    Path.home() / ".agents" / "skills",
+    Path.home() / ".zcode" / "skills",
+    Path.home() / ".codex" / "skills",
+)
 _FRONTMATTER = re.compile(r"\A---\s*\n(.*?)\n---", re.DOTALL)
 # D16：frontmatter 元数据键；capabilities 为逗号分隔列表
 _FIELD = re.compile(r"^(name|description|version|license|kind|capabilities):\s*(.+)$", re.MULTILINE)
@@ -70,7 +80,21 @@ def skill_descriptor(name: str, dirs: list[Path] | tuple[Path, ...] = SKILL_DIRS
 def dsh_status(base_url: str = "http://localhost:3080") -> dict[str, Any]:
     """dsh 存活探测：401 = 在线且要求鉴权（正常）；连接失败 = 未启动。"""
     try:
-        resp = httpx.get(base_url, timeout=2.5)
-        return {"url": base_url, "reachable": True, "status_code": resp.status_code}
-    except httpx.HTTPError:
+        parsed = urlsplit(base_url)
+        port = parsed.port
+    except (TypeError, ValueError):
+        return {"url": "http://localhost:3080", "reachable": False, "status_code": None}
+    if (parsed.scheme != "http" or parsed.hostname not in {"localhost", "127.0.0.1", "::1"}
+            or port != 3080 or parsed.username is not None or parsed.password is not None
+            or parsed.query or parsed.fragment):
+        return {"url": "http://localhost:3080", "reachable": False, "status_code": None}
+    try:
+        deadline = time.monotonic() + OUTBOUND_HTTP_POLICIES["dsh"].timeout_seconds
+        with (outbound_scope(deadline),
+              httpx.Client(timeout=OUTBOUND_HTTP_POLICIES["dsh"].timeout_seconds,
+                           transport=pinned_transport(base_url, allow_http=True, allow_private=True),
+                           follow_redirects=False, trust_env=False) as client,
+              client.stream("GET", base_url) as resp):
+            return {"url": base_url, "reachable": True, "status_code": resp.status_code}
+    except (httpx.HTTPError, ValueError):
         return {"url": base_url, "reachable": False, "status_code": None}

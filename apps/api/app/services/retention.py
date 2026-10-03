@@ -13,7 +13,22 @@ from pathlib import Path
 
 from sqlalchemy import delete, select
 
-from ..models import AssetMedia, AuditLog, DraftMedia, ExportRecord, LLMRun, MaterialRevision, WorkflowRun, WorkflowStep
+from ..models import (
+    AssetMedia,
+    AuditLog,
+    ContentAsset,
+    ContentJob,
+    ContentMasterRevision,
+    DataSnapshot,
+    DraftMedia,
+    ExportRecord,
+    LLMRun,
+    MaterialRevision,
+    ProjectWorkflowOutput,
+    WorkflowRun,
+    WorkflowStep,
+    WorkflowStepAttempt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,23 +47,22 @@ def _cutoff(days: int) -> datetime:
 
 
 def _process_material_orphan_candidates(db, *, cutoff: datetime, batch: int) -> dict:
-    from . import asset_media
     from .material_byte_lock import locked_hash
+    from .material_storage import provider
 
     rows = db.scalars(select(AuditLog).where(AuditLog.event == "material.upload_orphan_candidate", AuditLog.created_at < cutoff).order_by(AuditLog.id).limit(batch)).all()
     removed = referenced = invalid = 0
-    media_root = asset_media.MEDIA_ROOT.resolve()
+    storage = provider()
     for row in rows:
         detail = row.detail_json or {}
         raw_path = detail.get("file_path")
         content_hash = detail.get("content_hash")
         relative = Path(raw_path) if isinstance(raw_path, str) else Path()
-        target = (media_root / relative).resolve()
         safe = (
             isinstance(content_hash, str) and len(content_hash) == 64
             and relative.parts[:2] == ("material", content_hash[:2])
             and relative.name.startswith(content_hash + ".")
-            and target.is_relative_to(media_root / "material")
+            and relative.as_posix().startswith("material/")
         )
         if not safe:
             invalid += 1
@@ -68,9 +82,9 @@ def _process_material_orphan_candidates(db, *, cutoff: datetime, batch: int) -> 
                 row.detail_json = {**detail, "cleanup_status": "retained_referenced"}
             else:
                 try:
-                    target.unlink(missing_ok=True)
-                except OSError:
-                    logger.exception("Could not remove unreferenced material byte candidate: %s", relative)
+                    storage.delete_if_unreferenced(relative.as_posix(), expected_hash=content_hash)
+                except Exception:  # noqa: BLE001 Cleanup leaves unresolved evidence on any storage failure.
+                    logger.warning("material_orphan_cleanup_failed audit_id=%s", row.id)
                     continue
                 removed += 1
                 row.detail_json = {**detail, "cleanup_status": "removed_or_missing"}
@@ -95,17 +109,26 @@ def run_retention(db, cfg: dict | None = None) -> dict:
     for rid in rows:
         run = db.get(LLMRun, rid)
         run.raw_output = None
-        run.parsed_output_json = None
+        # Validated AI receipts remain live provenance for immutable Masters and Variants.
+        if run.purpose not in {"text_master_edit", "channel_variant_adapt"}:
+            run.parsed_output_json = None
     stats["llm_run_payloads_cleared"] = len(rows)
 
     # 2) audit_log: unresolved byte candidates survive normal log expiry.
     res = db.execute(delete(AuditLog).where(AuditLog.created_at < _cutoff(c["audit_log_days"]), AuditLog.event != "material.upload_orphan_candidate"))
     stats["audit_log_deleted"] = res.rowcount
 
-    # 3) workflow 终态运行（steps 级联删）
+    # Immutable project/output/attempt lineage must survive the legacy sweep.
     old_runs = db.scalars(
         select(WorkflowRun.id)
         .where(WorkflowRun.finished_at.is_not(None), WorkflowRun.finished_at < _cutoff(c["workflow_run_days"]))
+        .where(WorkflowRun.content_unit_id.is_(None))
+        .where(~select(WorkflowStepAttempt.id).where(WorkflowStepAttempt.run_id == WorkflowRun.id).exists())
+        .where(~select(ContentAsset.id).where(ContentAsset.workflow_run_id == WorkflowRun.id).exists())
+        .where(~select(ContentJob.id).where(ContentJob.workflow_run_id == WorkflowRun.id).exists())
+        .where(~select(ContentMasterRevision.id).where(ContentMasterRevision.origin_workflow_run_id == WorkflowRun.id).exists())
+        .where(~select(DataSnapshot.id).where(DataSnapshot.run_id == WorkflowRun.id).exists())
+        .where(~select(ProjectWorkflowOutput.id).where(ProjectWorkflowOutput.run_id == WorkflowRun.id).exists())
         .limit(c["batch"])
     ).all()
     if old_runs:

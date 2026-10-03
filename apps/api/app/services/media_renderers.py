@@ -21,7 +21,6 @@ from ..models import (
     MaterialRevision,
 )
 from . import (
-    asset_media,
     capability_integrations,
     content_masters,
     materials,
@@ -82,15 +81,26 @@ def _source_budget(db, master):
     ids = db.scalars(select(ContentMasterAssetRef.material_revision_id).where(
         ContentMasterAssetRef.master_revision_id == master.id, ContentMasterAssetRef.role != "render_output")).all()
     total = 0
-    root = asset_media.MEDIA_ROOT.resolve()
+    from .material_storage import provider as material_storage
+
+    storage = material_storage()
     for source_id in sorted(set(ids)):
         revision = db.get(MaterialRevision, source_id)
-        path = (root / (revision.file_path or "")).resolve() if revision else root
-        if not path.is_relative_to(root) or not path.is_file():
+        if revision is None:
             raise HTTPException(409, "media_renderer_source_unavailable")
-        total += path.stat().st_size
-        if total > 30 * 1024 * 1024:
+        try:
+            size = storage.size(revision.file_path)
+        except (FileNotFoundError, OSError, ValueError):
+            raise HTTPException(409, "media_renderer_source_unavailable") from None
+        if total + size > 30 * 1024 * 1024:
             raise HTTPException(413, "media_renderer_input_too_large")
+        try:
+            content = materials.read_bytes_checked(db, revision)
+        except HTTPException:
+            raise HTTPException(409, "media_renderer_source_unavailable") from None
+        if len(content) != size:
+            raise HTTPException(409, "media_renderer_source_unavailable")
+        total += size
 
 
 def resolve_renderer(key, version):

@@ -108,8 +108,10 @@ def create_url_source(
         content, mime = safe_fetch(payload.url)
     except UnsafeUrlError as exc:
         raise HTTPException(400, f"URL 抓取被拒绝：{exc}")
-    except Exception as exc:  # noqa: BLE001 网络错误统一转为 502 带原因
-        raise HTTPException(502, f"URL 抓取失败：{exc}")
+    except Exception as exc:  # noqa: BLE001 Transport exceptions may include credential-bearing URLs.
+        from ..observability import safe_error_category
+
+        raise HTTPException(502, f"URL 抓取失败：{safe_error_category(exc)}") from None
 
     doc = SourceDocument(
         title=payload.title or payload.url[:200],

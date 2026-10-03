@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import get_current_user, require_editor
+from ..deps import get_current_user, require_admin, require_editor
 from ..models import (
     AuditLog,
     ContentAsset,
@@ -304,6 +304,13 @@ def list_materials(
     if q:
         stmt = stmt.where(Material.title.contains(q))
     return [_material_json(m) for m in db.scalars(stmt.limit(200))]
+
+
+@router.get("/materials/storage-diagnostics")
+def material_storage_diagnostics(db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services.materials import storage_diagnostics
+
+    return storage_diagnostics(db)
 
 
 @router.post("/materials/upload", status_code=201)

@@ -6,6 +6,7 @@
 - 占位渲染：动态 SVG（渠道配色 + 配图说明文字），接入生图平台前的承接层。
 """
 
+import hashlib
 import html
 import os
 from pathlib import Path
@@ -76,10 +77,10 @@ def save_upload(db: Session, asset: ContentAsset, media: AssetMedia, filename: s
         raise ValueError(f"仅支持 {'/'.join(ALLOWED_MIME.values())} 图片")
     if len(content) > MAX_UPLOAD_BYTES:
         raise ValueError("单张图片不能超过 5MB")
-    target_dir = MEDIA_ROOT / str(asset.id)
-    target_dir.mkdir(parents=True, exist_ok=True)
-    target = target_dir / f"{media.id}.{ext}"
-    target.write_bytes(content)
+    from .material_storage import provider
+
+    key = f"legacy/{hashlib.sha256(content).hexdigest()}.{ext}"
+    provider().put(key, content)
     # 上传只增不改：替换 = 新增一条 upload 记录顶到同序位，历史保留（与 revision 不覆盖同哲学）
     db.add(
         AssetMedia(
@@ -87,7 +88,7 @@ def save_upload(db: Session, asset: ContentAsset, media: AssetMedia, filename: s
             kind=media.kind,
             source="upload",
             prompt=media.prompt,
-            file_path=str(target.relative_to(MEDIA_ROOT)),
+            file_path=key,
             mime_type=mime,
             sort_order=media.sort_order,
         )
@@ -98,10 +99,13 @@ def save_upload(db: Session, asset: ContentAsset, media: AssetMedia, filename: s
 def raw_response(db: Session, asset: ContentAsset, media: AssetMedia) -> Response:
     """素材本体：上传图回文件，占位图动态渲染 SVG（渠道配色 + 配图说明）。"""
     if media.source == "upload" and media.file_path:
-        path = (MEDIA_ROOT / media.file_path).resolve()
-        if not str(path).startswith(str(MEDIA_ROOT.resolve())) or not path.is_file():
+        from .material_storage import read_legacy_bytes
+
+        try:
+            content = read_legacy_bytes(media.file_path)
+        except (OSError, ValueError):
             return Response(content="素材文件缺失", status_code=404, media_type="text/plain")
-        return Response(content=path.read_bytes(), media_type=media.mime_type or "application/octet-stream")
+        return Response(content=content, media_type=media.mime_type or "application/octet-stream")
     themes = {
         "douyin": ("#111827", "#22d3ee", "抖音配图"),
         "xiaohongshu": ("#7f1d1d", "#f87171", "小红书配图"),

@@ -10,3 +10,7 @@ Team & Permissions and Advanced Settings SHALL project the actual active develop
 #### Scenario: Read operational status
 - **WHEN** a non-admin inspects safe Advanced Settings
 - **THEN** required readiness categories may be summarized without disclosing raw error text, filesystem paths, secret values or admin-only configuration
+
+#### Scenario: Explicit operational refresh
+- **WHEN** an authorized operator explicitly requests an operational status refresh
+- **THEN** the UI reads the existing readiness endpoint and shows only bounded required-dependency statuses, distinguishing a failed check from an unreadable result; ordinary Settings inventory and navigation do not trigger the probe and no model/publisher is called

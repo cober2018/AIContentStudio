@@ -10,11 +10,15 @@ F8 follows F7 acceptance and closes production operations, not missing product f
 
 ## Decisions
 
+### Draft authorization correction (2026-10-01)
+
+The User-column mapping and HS256 implementation below were written before the required independent identity/schema review. They remain an unaccepted implementation proposal, not an approved production design. Task 0.7 and all authentication gates remain unchecked. Do not apply the draft migration to the local production database or activate production authentication until explicit schema approval and security review. F7 real-platform gates remain open; this draft does not waive task 0.1.
+
 ### 1. Explicit environment and auth mode
 
 Production mode requires an approved signed-token identity adapter with issuer/audience/key/JWKS validation, bounded key refresh and mapping to an existing active User row. Studio role comes from that row, not a token role claim or request header; unknown subjects are denied, not auto-created. Development/test mode may retain the existing Header/default-user behavior. Production startup rejects Header mode, missing auth configuration and a test/mock auth fallback before routes are served. Alternative—placing a reverse proxy in front while continuing to trust `X-Studio-User`—leaves a spoofable bypass inside the API.
 
-Before implementation, resolve and review how a verified issuer plus immutable subject maps to an existing User. Current `User` stores email/role/status but no external issuer/subject binding; an arbitrary or unverified email claim is not a durable identity mapping. A production adapter MUST NOT infer ownership from token email or role alone. If a safe mapping needs an additional persistent binding, stop for an explicit OpenSpec/schema decision instead of silently adding a business object or weakening the mapping to email-only.
+Before implementation, resolve and review how a verified issuer plus immutable subject maps to an existing User. F8 adds only two nullable identity columns on the existing `User` row, `identity_issuer` and `identity_subject`, protected by a unique pair constraint. A production adapter MUST map the verified `iss + sub` pair to an existing active User; it MUST NOT infer ownership from token email or role alone. This is an additive identity-binding migration, not a new tenant or business object, and downgrade refuses to discard bound identities.
 
 ### 2. Startup validates; an operator migrates
 
@@ -30,15 +34,39 @@ Create local and object-backed implementations of bounded `put/read/exists/delet
 
 ### 5. Reuse and harden existing ops endpoints
 
+The formal local deployment pins its approved schema to `f7d000000001`.
+Development readiness uses this head by default; explicit test fixtures may
+disable the check only when they are not being used as acceptance evidence.
+An unapproved descendant migration in the worktree is not permission to upgrade
+the local database. Local compatibility validates the approved revision's
+membership in the application's single migration chain and exact database head;
+production retains exact code/config/database head equality. New local fixtures
+must separately verify the pre-draft User schema, since the historical initial
+migration uses current metadata and can otherwise conceal compatibility gaps.
+
 Keep `/api/v1/health` and `/metrics` compatibility while separating shallow liveness from readiness. Readiness checks DB and schema head, selected storage, configured queue/worker requirement and critical auth/secret config; optional disconnected providers do not fail core readiness. Failed required dependencies return a non-success HTTP status with a safe reason code, not `str(exc)`. Metrics use route templates or a bounded label set, not raw URLs/IDs; access to operational detail is controlled. Existing `x-trace-id` is propagated into worker/Workflow/provider/delivery history as safe correlation, without creating a second business state source. Alternative—add a second uncoordinated health endpoint—would leave old unhealthy-200 consumers and unbounded metrics unchanged.
 
 ### 6. External effects retain F7 gates
 
 F8 threat-models outbound hosts, credential isolation, request/response size/time bounds, SSRF, side-effect confirmation, idempotency and Unknown reconciliation across every capability. Read-only UI/Settings inventory triggers no network call. F7's exact Publisher verification remains authoritative; production readiness cannot replace missing real-account verification. Alternative—mark all installed plugins active when infrastructure is healthy—would fabricate capability coverage.
 
+Outbound limits are centralized per capability, not reduced to one timeout: URL import/Connector and model discovery use 10 seconds, text generation retains its existing bounded 120-second budget, image generation retains 25 seconds, Commons retains 15 seconds, official WeChat steps retain 25 seconds, and local CLI operations retain bounded process deadlines/output limits. Safe streaming rejects compressed/oversized responses, expiry is checked before dispatch and after reading, and no uncertain media/publication call is retried. An optional `OUTBOUND_ALLOWED_HOSTS` CSV restricts controllable HTTP targets to exact hostnames/IPs before DNS; invalid/wildcard entries fail closed. An empty list preserves existing per-capability public-DNS/fixed-host/exact trusted-private-endpoint rules, including the explicitly registered CPA LAN endpoint. The fixed locally installed MiniMax CLI owns its own network protocol; do not pretend the HTTP allowlist controls its internal traffic. Its fixed subcommands, isolated environment, bounded process/output and accepted-result gates remain separately audited.
+
+An absolute operation deadline is propagated to the shared pinned network stream: DNS waits, TCP, TLS, each read and each socket send use its remaining budget, including across redirects. A per-read HTTP idle timeout alone is insufficient against trickling response headers. HTTPX/HTTPcore logs are suppressed only inside the outbound ContextVar scope, so signed/query URLs and private request/exception data never enter third-party logs; safe Studio operation metadata remains available. Official WeChat retains its existing fixed-host deadline transport. Synthetic/in-memory NetworkStreams without sockets use their bounded write contract; real HTTP streams are the fixed SyncBackend's socket streams.
+
 ### 7. Recovery rehearses a restored copy, never live rollback
 
-Back up PostgreSQL and referenced media together; restore into an isolated environment, verify migration head and a sample of exact MaterialRevision hashes, query historic Identity/Fact Boundary/Candidate/Approval/Delivery lineage and rehearse capability disable. Downgrade only where its preflight proves no incompatible history; destructive rollback is not an automatic recovery path. No production backup, restore, migration or deployment is executed by this OpenSpec proposal.
+Legacy retention must also preserve project-bound WorkflowRun history, any run referenced by a Candidate/Master/snapshot/output/immutable Attempt, and validated Text/Variant LLMRun provenance receipts. Raw provider payload pruning is not permission to erase trusted structured receipts or their lineage. Old unreferenced legacy runs remain eligible for the existing policy.
+
+For the formal local profile, back up SQLite and the referenced local media
+together; restore into an isolated local environment, verify migration head and
+a sample of exact MaterialRevision hashes, query historic Identity/Fact
+Boundary/Candidate/Approval/Delivery lineage and rehearse capability disable.
+PostgreSQL/MinIO backup and restore is a future deployment profile, not a gate
+for this single-operator acceptance. Downgrade only where its preflight proves
+no incompatible history; destructive rollback is not an automatic recovery
+path. No production backup, restore, migration or deployment is executed by
+this OpenSpec proposal.
 
 ### 8. Golden and full-chain acceptance are distinct gates
 
@@ -57,12 +85,12 @@ The local-package branch may stop at authorized handoff. It reaches PublishedCon
 
 ## Migration Plan
 
-No new durable business object is planned. Implementation first runs dev/test baseline and security inventory, then introduces auth/storage/observability adapters behind explicit configuration. Validate a production-like isolated environment with PostgreSQL and copied media, rehearsed backup/restore, old/new byte reads and full-chain acceptance before preparing a runbook. A real environment switch requires a separate deployment authorization, an operator-controlled migration/secret cutover and a rollback plan preserving both DB and bytes. If an additive schema change proves necessary, revise the OpenSpec and validate isolated up/down/up before applying it; never perform a destructive migration by default.
+No new durable business object is planned. Implementation first runs dev/test baseline and security inventory, then introduces auth/storage/observability adapters behind explicit configuration. Validate the formal local profile with an isolated SQLite copy, copied local media, rehearsed backup/restore, old/new byte reads and full-chain acceptance before preparing a runbook. Keep a separate PostgreSQL/MinIO rollout note for future deployment work. A real environment switch requires a separate deployment authorization, an operator-controlled migration/secret cutover and a rollback plan preserving both DB and bytes. If an additive schema change proves necessary, revise the OpenSpec and validate isolated up/down/up before applying it; never perform a destructive migration by default.
 
 ## Open Questions
 
 - Which identity issuer and secret provider are approved for an actual deployment? The secure adapter contract can be implemented locally, but no production activation is claimed until configured and verified.
-- How will that issuer's stable subject be bound to a pre-existing active Studio User? The current User table has no issuer/subject binding. Choose and review a secure mapping before production-auth implementation; if it requires new persistence, revise the OpenSpec before any migration or apply.
+- The local production adapter proposes `User.identity_issuer` + `User.identity_subject`; this mapping remains pending explicit schema approval and independent security review. A deployment must choose its actual issuer, audience and secret provider before activation.
 - Which external accounts are available for Real Platform acceptance? Unavailable combinations remain `unverified` in the final capability matrix.
 
 ## Source-package preservation audit

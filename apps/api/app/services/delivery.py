@@ -578,20 +578,20 @@ def _cover_bytes(db: Session, asset: ContentAsset, manifest: dict) -> bytes:
         if isinstance(rid, int):
             revision = db.get(MaterialRevision, rid)
             if revision and revision.file_path:
-                from .asset_media import MEDIA_ROOT
+                from .materials import read_bytes_checked
 
-                path = MEDIA_ROOT / revision.file_path
-                if path.is_file():
-                    return path.read_bytes()
+                return read_bytes_checked(db, revision, require_public=True)
+            raise HTTPException(409, "批准素材版本不存在")
         dm_id = media.get("draft_media_id")
         if isinstance(dm_id, int):
             row = db.get(DraftMedia, dm_id)
             if row and row.file_path:
-                from .asset_media import MEDIA_ROOT
+                from .material_storage import read_legacy_bytes
 
-                path = MEDIA_ROOT / row.file_path
-                if path.is_file():
-                    return path.read_bytes()
+                try:
+                    return read_legacy_bytes(row.file_path, expected_hash=media.get("hash") or row.content_hash)
+                except (OSError, ValueError):
+                    return b""
     return b""
 
 
@@ -752,26 +752,31 @@ def _media_suffix(db: Session, media: dict) -> str:
 
 
 def _media_bytes(db: Session, media: dict) -> bytes | None:
-    from .asset_media import MEDIA_ROOT
+    from .material_storage import read_legacy_bytes
 
     rid = media.get("material_revision_id")
     if isinstance(rid, int):
         revision = db.get(MaterialRevision, rid)
         if revision and revision.file_path:
-            path = MEDIA_ROOT / revision.file_path
-            if path.is_file():
-                return path.read_bytes()
+            from .materials import read_bytes_checked
+
+            return read_bytes_checked(db, revision)
+        raise HTTPException(409, "批准素材版本不存在")
     dm_id = media.get("draft_media_id")
     if isinstance(dm_id, int):
         row = db.get(DraftMedia, dm_id)
-        if row and row.file_path:
-            path = MEDIA_ROOT / row.file_path
-            if path.is_file():
-                return path.read_bytes()
+        if row and row.file_path and not row.material_revision_id:
+            try:
+                return read_legacy_bytes(row.file_path, expected_hash=media.get("hash") or row.content_hash)
+            except (OSError, ValueError):
+                return None
         if row and row.material_revision_id:
             revision = db.get(MaterialRevision, row.material_revision_id)
             if revision and revision.file_path:
-                path = MEDIA_ROOT / revision.file_path
-                if path.is_file():
-                    return path.read_bytes()
+                from .materials import read_bytes_checked
+
+                try:
+                    return read_bytes_checked(db, revision)
+                except HTTPException:
+                    return None
     return None

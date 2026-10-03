@@ -14,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import (
+    AuditLog,
     ContentAsset,
     Draft,
     DraftMedia,
@@ -69,18 +70,15 @@ def validate_upload(content: bytes, declared_mime: str | None) -> str:
 
 def store_bytes(db: Session, content: bytes, *, subdir: str, suffix: str) -> tuple[str, str]:
     """content-addressed 存储；返回 (relative_path, content_hash)。"""
-    from .asset_media import MEDIA_ROOT
-
     content_hash = hashlib.sha256(content).hexdigest()
     if subdir == "material":
         from .material_byte_lock import hold_until_transaction_end
 
         hold_until_transaction_end(db, content_hash)
     relative = Path(subdir) / content_hash[:2] / f"{content_hash}{suffix}"
-    absolute = MEDIA_ROOT / relative
-    absolute.parent.mkdir(parents=True, exist_ok=True)
-    if not absolute.exists():
-        absolute.write_bytes(content)
+    from .material_storage import provider
+
+    provider().put(str(relative), content)
     return str(relative), content_hash
 
 
@@ -229,10 +227,14 @@ def adopt_draft_media(db: Session, media: DraftMedia, *, created_by: str | None 
         created_by=created_by,
     )
     if media.file_path:
-        from .asset_media import MEDIA_ROOT
+        from .material_storage import provider
 
-        if not (MEDIA_ROOT / media.file_path).is_file():
-            raise HTTPException(409, "原素材文件缺失，无法 adoption")
+        try:
+            legacy_bytes = provider().read(media.file_path)
+        except (FileNotFoundError, OSError, ValueError):
+            raise HTTPException(409, "原素材文件缺失，无法 adoption") from None
+        if hashlib.sha256(legacy_bytes).hexdigest() != media.content_hash:
+            raise HTTPException(409, "原素材校验失败，无法 adoption")
     revision = MaterialRevision(
         material_id=material.id,
         revision_no=1,
@@ -276,14 +278,61 @@ def find_usage(db: Session, material_id: int) -> dict:
 
 
 def read_bytes_checked(db: Session, revision: MaterialRevision, *, require_public: bool = False) -> bytes:
-    from .asset_media import MEDIA_ROOT
-
     if require_public and revision.public_use_allowed is not True:
         raise HTTPException(403, "该素材未获公开使用授权")
-    path = MEDIA_ROOT / (revision.file_path or "")
-    if not revision.file_path or not path.is_file():
+    if not revision.file_path:
         raise HTTPException(404, "素材文件缺失")
-    content = path.read_bytes()
+    try:
+        from .material_storage import provider
+
+        content = provider().read(revision.file_path)
+    except (FileNotFoundError, OSError):
+        raise HTTPException(404, "素材文件缺失") from None
+    except (ValueError, RuntimeError):
+        raise HTTPException(409, "素材存储不可用") from None
     if hashlib.sha256(content).hexdigest() != revision.content_hash:
         raise HTTPException(409, "素材字节校验失败（content hash 不一致）")
     return content
+
+
+def storage_diagnostics(db: Session, *, limit: int = 200) -> dict:
+    """Bounded operator diagnostics without exposing storage locations."""
+    from .material_storage import provider
+
+    storage = provider()
+    rows = db.scalars(select(MaterialRevision).order_by(MaterialRevision.id).limit(limit)).all()
+    issues: list[dict] = []
+    for revision in rows:
+        code = None
+        if not revision.file_path:
+            code = "missing_storage_key"
+        else:
+            try:
+                if not storage.exists(revision.file_path):
+                    code = "missing_bytes"
+                elif hashlib.sha256(storage.read(revision.file_path)).hexdigest() != revision.content_hash:
+                    code = "content_hash_mismatch"
+            except FileNotFoundError:
+                code = "missing_bytes"
+            except (OSError, RuntimeError, ValueError):
+                code = "storage_unavailable"
+        if code:
+            issues.append({"revision_id": revision.id, "material_id": revision.material_id, "code": code})
+
+    orphan_rows = db.scalars(
+        select(AuditLog).where(AuditLog.event == "material.upload_orphan_candidate").order_by(AuditLog.id.desc()).limit(limit)
+    ).all()
+    orphan_candidates = [
+        {"audit_id": row.id, "entity_id": row.entity_id}
+        for row in orphan_rows
+        if not (row.detail_json or {}).get("cleanup_status")
+    ]
+    return {
+        "provider": storage.name,
+        "checked_revisions": len(rows),
+        "issue_count": len(issues),
+        "issues": issues,
+        "orphan_candidate_count": len(orphan_candidates),
+        "orphan_candidates": orphan_candidates,
+        "truncated": len(rows) >= limit,
+    }
