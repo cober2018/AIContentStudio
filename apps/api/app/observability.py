@@ -197,7 +197,7 @@ async def trace_middleware(request, call_next):
 
 def check_health(db) -> dict:
     """Truthful readiness probe; diagnostics are bounded safe reason codes."""
-    from .config import get_settings
+    from .config import get_settings, validate_production_settings
 
     settings = get_settings()
     reasons = []
@@ -217,10 +217,13 @@ def check_health(db) -> dict:
             reasons.append("schema_head_mismatch")
     elif expected_head:
         schema_ok = False
-    # Production identity is deferred; the local-only commit must not claim readiness for it.
-    auth_ok = settings.app_env != "production"
-    if not auth_ok:
-        reasons.append("production_configuration_invalid")
+    auth_ok = True
+    if settings.app_env == "production":
+        try:
+            validate_production_settings(settings)
+        except RuntimeError:
+            auth_ok = False
+            reasons.append("production_configuration_invalid")
     storage_ok = True
     if settings.app_env == "production":
         storage_ok = bool(settings.material_storage_backend == "minio" and settings.minio_enabled

@@ -2,6 +2,7 @@
 
 import enum
 from datetime import UTC, datetime
+from typing import ClassVar
 
 from sqlalchemy import (
     JSON,
@@ -15,6 +16,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    null,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -212,12 +214,17 @@ class ClaimCheckStatus(str, enum.Enum):
 
 class User(Base):
     __tablename__ = "user"
+    __table_args__ = (UniqueConstraint("identity_issuer", "identity_subject", name="uq_user_identity_subject"),)
+    __mapper_args__: ClassVar[dict] = {"eager_defaults": False}
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True)
     name: Mapped[str] = mapped_column(String(100))
     role: Mapped[str] = mapped_column(String(20), default="editor")  # admin/editor/reviewer/viewer
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # F7 reads/inserts must not require columns belonging to the unapproved F8 draft.
+    identity_issuer: Mapped[str | None] = mapped_column(String(500), nullable=True, deferred=True, server_default=null())
+    identity_subject: Mapped[str | None] = mapped_column(String(500), nullable=True, deferred=True, server_default=null())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
