@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import get_current_user, require_admin, require_editor, require_editor_or_reviewer
-from ..models import User, Workflow, WorkflowRun, WorkflowStep, utcnow
+from ..models import ContentProject, ContentUnit, User, Workflow, WorkflowRun, WorkflowStep, utcnow
 from ..services import workflow_engine
 from ..services.project_authorization import authorize_project_run, authorize_project_workflow
 from ..services.workflow_templates import TEMPLATES, build_definition
@@ -388,7 +388,7 @@ def list_runs(
     if content_form:
         stmt = stmt.where(WorkflowRun.content_form == content_form)
     runs = db.scalars(stmt).all()
-    runs = [run for run in runs if _may_read_run(db, run, user)]
+    runs = _readable_runs(db, runs, user)
     return [
         {
             "id": r.id,
@@ -421,9 +421,13 @@ def cancel_run(run_id: int, db: Session = Depends(get_db), user: User = Depends(
     return _serialize_run(db, run)
 
 
-def _may_read_run(db: Session, run: WorkflowRun, user: User) -> bool:
-    try:
-        authorize_project_run(db, run, user)
-    except HTTPException:
-        return False
-    return True
+def _readable_runs(db: Session, runs: list[WorkflowRun], user: User) -> list[WorkflowRun]:
+    """批量读授权：一条 join 取全部 unit 归属，替代逐 run 查询（与 authorize_project_run 同口径）。"""
+    unit_ids = {run.content_unit_id for run in runs if run.content_unit_id is not None}
+    owners = dict(db.execute(
+        select(ContentUnit.id, ContentProject.owner_user_id)
+        .join(ContentProject, ContentUnit.project_id == ContentProject.id)
+        .where(ContentUnit.id.in_(unit_ids))
+    ).all()) if unit_ids else {}
+    return [run for run in runs
+            if run.content_unit_id is None or owners.get(run.content_unit_id) == user.id]

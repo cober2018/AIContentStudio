@@ -37,6 +37,10 @@ def build_manifest_v4(inputs: dict) -> dict:
     for section in ("assets", "evidence_refs", "checks", "citations", "declarations"):
         if not isinstance(inputs[section], list):
             raise TypeError(f"invalid manifest section: {section}")
+    if "external_execution" in inputs["production"]:
+        from .creative_packages import validate_external_sources
+
+        validate_external_sources(inputs["production"]["external_execution"], assets=inputs["assets"])
     manifest = {"schema_version": 4, **{key: inputs[key] for key in SECTIONS}}
     errors = validate_json_bounds(manifest)
     if errors:
@@ -80,6 +84,9 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
     payload = master.payload_json
     structured = payload.get("structured") or {}
     exact_citations = (payload.get("document") or {}).get("citations", []) if master.payload_schema == "text.master.v2" else None
+    from .creative_packages import external_material_sources
+
+    external = external_material_sources(db, master.project_id, projection["assets"])
     return {
         "artifact_kind": resolve_content_form(db, master.channel_id, master.content_form).artifact_kind,
         "channel": master.channel_id, "content_form": master.content_form,
@@ -90,7 +97,7 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
         "content_master": {"id": master.id, "revision_no": master.revision_no, "parent_id": master.parent_revision_id, "modality": master.modality, "payload_schema": master.payload_schema, "payload_hash": master.payload_hash, "context_hash": master.context_hash},
         "content": payload, "assets": projection["assets"], "evidence_refs": projection["evidence"], "checks": checks,
         "render": adapter.build_render_snapshot(db, master),
-        "production": {"source_kind": master.source_kind, "workflow": workflow, "output": output_snapshot, "edit_summary": master.edit_summary_json, "created_by": master.created_by},
+        "production": {"source_kind": master.source_kind, "workflow": workflow, "output": output_snapshot, "edit_summary": master.edit_summary_json, "created_by": master.created_by, **({"external_execution": external} if external else {})},
         "citations": exact_citations if exact_citations is not None else (payload.get("citations", structured.get("citations", structured.get("claim_fact_map", []))) or []),
         "declarations": payload.get("declarations", structured.get("declarations", [])) or [],
     }

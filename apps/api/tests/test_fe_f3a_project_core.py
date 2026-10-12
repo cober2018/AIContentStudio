@@ -1,7 +1,6 @@
 """FE-F3A project-core persistence and lifecycle contracts."""
 
 import pytest
-
 from sqlalchemy import inspect, select
 
 from app.models import ContentProject, ProjectEvent
@@ -201,11 +200,12 @@ def test_project_material_upload_creates_reference(client):
 def test_project_upload_db_failure_rolls_back_without_deleting_shared_bytes(client, db_session, monkeypatch, tmp_path):
     from datetime import UTC, datetime, timedelta
 
+    from test_material_library import PNG
+
     from app.models import AuditLog, Material, MaterialRevision, ProjectMaterialReference
     from app.routers import project_assets
     from app.services import asset_media
     from app.services.retention import run_retention
-    from test_material_library import PNG
 
     monkeypatch.setattr(asset_media, "MEDIA_ROOT", tmp_path)
     headers = {"X-Studio-User": "alice@studio.local"}

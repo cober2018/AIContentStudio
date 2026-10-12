@@ -1,12 +1,12 @@
 """Persistent Brand/Persona/Account/Series identity APIs."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import get_current_user, require_admin, require_editor
+from ..deps import get_current_user, get_existing_user, require_admin, require_editor
 from ..models import (
     BrandVoiceVersion,
     ContentAccount,
@@ -17,6 +17,8 @@ from ..models import (
     User,
 )
 from ..services import content_identity as identity
+from ..services import creative_configuration, starter_personas
+from ..services.studio_creative_catalog import inventory
 from . import CapabilityInputRoute
 
 router = APIRouter(prefix="/api/v1", tags=["content-identities"], route_class=CapabilityInputRoute)
@@ -44,9 +46,47 @@ class PublisherConnectionIn(BaseModel):
     credential_version: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,64}$")
 
 
-def _entity_json(db: Session, kind: str, row) -> dict:
-    current = identity.current_revision(db, kind, row.id)
-    data = {"id": row.id, "name": row.name, "status": row.status, "current_revision": current.revision_no if current else 0}
+class CreativeStagePreviewIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    persona_id: int = Field(gt=0)
+    account_id: int | None = Field(default=None, gt=0)
+    series_id: int | None = Field(default=None, gt=0)
+    modality: str = Field(pattern=r"^(text|graphic|audio|video)$")
+    stage: str | None = Field(default=None, max_length=120)
+    override: dict | None = None
+    profile_override: identity.CreativeProfile | None = None
+
+
+class StarterPreviewIn(BaseModel):
+    blueprint_key: str = Field(pattern=r"^starter\.[a-z0-9-]+\.v[0-9]+$")
+
+
+class StarterApplyIn(StarterPreviewIn):
+    model_config = ConfigDict(extra="forbid")
+
+
+class StarterForkIn(StarterApplyIn):
+    name: str = Field(min_length=1, max_length=200)
+    expected_profile_checksum: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+def _current_revision_nos(db: Session, kind: str, entity_ids: list[int]) -> dict[int, int]:
+    """列表页批量取每实体最新 revision_no，替代逐实体查询的 N+1。"""
+    if not entity_ids:
+        return {}
+    _, revision_model, foreign_key = identity.REVISION_MODELS[kind]
+    return dict(db.execute(
+        select(getattr(revision_model, foreign_key), func.max(revision_model.revision_no))
+        .where(getattr(revision_model, foreign_key).in_(entity_ids))
+        .group_by(getattr(revision_model, foreign_key))
+    ).all())
+
+
+def _entity_json(db: Session, kind: str, row, *, current_revision_no: int | None = None) -> dict:
+    if current_revision_no is None:
+        current = identity.current_revision(db, kind, row.id)
+        current_revision_no = current.revision_no if current else 0
+    data = {"id": row.id, "name": row.name, "status": row.status, "current_revision": current_revision_no}
     if kind == "brand":
         data["owner_user_id"] = row.owner_user_id
     else:
@@ -103,7 +143,9 @@ def _save(db: Session, user: User, kind: str, entity_id: int, payload: RevisionI
 
 @router.get("/content-brands")
 def list_brands(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return [_entity_json(db, "brand", row) for row in db.scalars(select(ContentBrand).where(ContentBrand.owner_user_id == user.id).order_by(ContentBrand.id)).all()]
+    rows = db.scalars(select(ContentBrand).where(ContentBrand.owner_user_id == user.id).order_by(ContentBrand.id)).all()
+    revision_nos = _current_revision_nos(db, "brand", [row.id for row in rows])
+    return [_entity_json(db, "brand", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
 
 
 @router.post("/content-brands", status_code=201)
@@ -129,7 +171,9 @@ def archive_brand(brand_id: int, db: Session = Depends(get_db), user: User = Dep
 @router.get("/content-brands/{brand_id}/personas")
 def brand_personas(brand_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     identity.owned_entity(db, user, "brand", brand_id)
-    return [_entity_json(db, "persona", row) for row in db.scalars(select(ContentPersona).where(ContentPersona.brand_id == brand_id, ContentPersona.owner_user_id == user.id).order_by(ContentPersona.id)).all()]
+    rows = db.scalars(select(ContentPersona).where(ContentPersona.brand_id == brand_id, ContentPersona.owner_user_id == user.id).order_by(ContentPersona.id)).all()
+    revision_nos = _current_revision_nos(db, "persona", [row.id for row in rows])
+    return [_entity_json(db, "persona", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
 
 
 @router.post("/content-brands/{brand_id}/personas", status_code=201)
@@ -156,7 +200,9 @@ def archive_persona(persona_id: int, db: Session = Depends(get_db), user: User =
 @router.get("/content-personas/{persona_id}/accounts")
 def persona_accounts(persona_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     identity.owned_entity(db, user, "persona", persona_id)
-    return [_entity_json(db, "account", row) for row in db.scalars(select(ContentAccount).where(ContentAccount.persona_id == persona_id).order_by(ContentAccount.id)).all()]
+    rows = db.scalars(select(ContentAccount).where(ContentAccount.persona_id == persona_id).order_by(ContentAccount.id)).all()
+    revision_nos = _current_revision_nos(db, "account", [row.id for row in rows])
+    return [_entity_json(db, "account", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
 
 
 @router.post("/content-personas/{persona_id}/accounts", status_code=201)
@@ -207,7 +253,9 @@ def archive_account(account_id: int, db: Session = Depends(get_db), user: User =
 @router.get("/content-accounts/{account_id}/series")
 def account_series(account_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     identity.owned_entity(db, user, "account", account_id)
-    return [_entity_json(db, "series", row) for row in db.scalars(select(ContentSeries).where(ContentSeries.account_id == account_id).order_by(ContentSeries.id)).all()]
+    rows = db.scalars(select(ContentSeries).where(ContentSeries.account_id == account_id).order_by(ContentSeries.id)).all()
+    revision_nos = _current_revision_nos(db, "series", [row.id for row in rows])
+    return [_entity_json(db, "series", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
 
 
 @router.post("/content-accounts/{account_id}/series", status_code=201)
@@ -259,6 +307,43 @@ for _kind, _path in (
 @router.get("/content-identities/effective")
 def effective_identity(persona_id: int, account_id: int | None = None, series_id: int | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return identity.effective(db, user, persona_id=persona_id, account_id=account_id, series_id=series_id)
+
+
+@router.get("/content-identities/creative-catalog")
+def creative_catalog(user: User = Depends(get_existing_user)):
+    return inventory()
+
+
+@router.post("/content-identities/creative-preview")
+def creative_preview(payload: CreativeStagePreviewIn, db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    return creative_configuration.resolve(db, user, **payload.model_dump(by_alias=True),
+        has_profile_override="profile_override" in payload.model_fields_set)
+
+
+@router.post("/content-identities/starter-preview")
+def starter_preview(payload: StarterPreviewIn, user: User = Depends(get_existing_user)):
+    try:
+        return starter_personas.preview(payload.blueprint_key)
+    except ValueError:
+        raise HTTPException(404, "starter_blueprint_not_found") from None
+
+
+@router.post("/content-identities/starter-apply", status_code=201)
+def starter_apply(payload: StarterApplyIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    return starter_personas.apply(db, user, payload.blueprint_key)
+
+
+@router.post("/content-identities/starter-fork", status_code=201)
+def starter_fork(payload: StarterForkIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    return starter_personas.fork(db, user, payload.blueprint_key, name=payload.name,
+        expected_profile_checksum=payload.expected_profile_checksum)
+
+
+@router.get("/content-identities/starter-readiness")
+def starter_readiness(persona_id: int = Query(gt=0), account_id: int | None = Query(default=None, gt=0),
+        series_id: int | None = Query(default=None, gt=0), db: Session = Depends(get_db),
+        user: User = Depends(get_existing_user)):
+    return starter_personas.readiness(db, user, persona_id=persona_id, account_id=account_id, series_id=series_id)
 
 
 @router.get("/identity-snapshots/{snapshot_id}")

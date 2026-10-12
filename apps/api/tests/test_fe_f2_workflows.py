@@ -23,7 +23,7 @@ def _definition():
 
 
 def test_override_conflict_and_visual_order_preserves_edges(client, db_session):
-    headers, persona_id, project_id, unit_id = _setup(client)
+    headers, _persona_id, project_id, unit_id = _setup(client)
     path = f"/api/v1/content-projects/{project_id}/units/{unit_id}/workflow-override"
     first = client.post(path, headers=headers, json={"expected_revision": 0, "definition": _definition()})
     assert first.status_code == 201, first.text

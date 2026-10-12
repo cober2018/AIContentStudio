@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { api } from "../api";
+import { api, currentUser } from "../api";
 import { Button, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
 
 interface PackItem {
@@ -15,6 +15,8 @@ interface PackItem {
   as_of: string | null;
   status: string;
   source_document_id: number;
+  public_use_allowed: boolean;
+  public_use_revoked_at: string | null;
 }
 
 interface Pack {
@@ -41,12 +43,14 @@ interface FactRow {
   unit: string | null;
 }
 
-function PackBuilder({ packId }: { packId: number }) {
+export function PackBuilder({ packId, embedded = false, readOnly = false, onClose, onCloned, onChanged }: { packId: number; embedded?: boolean; readOnly?: boolean; onClose?: () => void; onCloned?: (id: number) => void; onChanged?: () => void }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [showFreeze, setShowFreeze] = useState(false);
   const [error, setError] = useState("");
+  const me = useQuery({ queryKey: ["fact-pack-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const canEdit = !readOnly && me.isSuccess && ["admin", "editor"].includes(me.data.role);
 
   const packQuery = useQuery({
     queryKey: ["fact-pack", packId],
@@ -57,12 +61,16 @@ function PackBuilder({ packId }: { packId: number }) {
   const confirmedFacts = useQuery({
     queryKey: ["facts", "confirmed"],
     queryFn: () => api.get<FactRow[]>("/facts?status=confirmed"),
-    enabled: pack?.status === "draft",
+    enabled: canEdit && pack?.status === "draft",
   });
 
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["fact-pack", packId] });
-    queryClient.invalidateQueries({ queryKey: ["fact-packs"] });
+  const invalidate = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["fact-pack", packId] }),
+      queryClient.invalidateQueries({ queryKey: ["fact-packs"] }),
+      queryClient.invalidateQueries({ queryKey: ["system-library"] }),
+    ]);
+    onChanged?.();
   };
 
   const addItem = useMutation({
@@ -75,11 +83,16 @@ function PackBuilder({ packId }: { packId: number }) {
     onSuccess: invalidate,
     onError: (e) => setError(e instanceof Error ? e.message : "移除失败"),
   });
+  const permission = useMutation({
+    mutationFn: ({ itemId, allowed }: { itemId: number; allowed: boolean }) => api.patch(`/fact-packs/${packId}/items/${itemId}`, { public_use_allowed: allowed }),
+    onSuccess: invalidate,
+    onError: (e) => setError(e instanceof Error ? e.message : "权限保存失败"),
+  });
   const freeze = useMutation({
     mutationFn: () => api.post(`/fact-packs/${packId}/freeze`),
     onSuccess: () => {
       setShowFreeze(false);
-      invalidate();
+      return invalidate();
     },
     onError: (e) => {
       setShowFreeze(false);
@@ -88,14 +101,18 @@ function PackBuilder({ packId }: { packId: number }) {
   });
   const clone = useMutation({
     mutationFn: () => api.post<{ id: number }>(`/fact-packs/${packId}/clone`),
-    onSuccess: (data) => {
-      invalidate();
-      navigate(`/fact-packs/${data.id}`);
+    onSuccess: async (data) => {
+      await invalidate();
+      if (embedded) onCloned?.(data.id);
+      else navigate(`/fact-packs/${data.id}`);
     },
     onError: (e) => setError(e instanceof Error ? e.message : "克隆失败"),
   });
 
+  if (packQuery.isError) return <div role="alert" className="text-sm text-rose-700">{packQuery.error.message}<Button variant="secondary" onClick={() => void packQuery.refetch()}>重新读取</Button></div>;
   if (packQuery.isLoading || !pack) return <Spinner />;
+  const writable = canEdit && pack.status !== "archived";
+  const busy = addItem.isPending || removeItem.isPending || permission.isPending || freeze.isPending || clone.isPending;
 
   const inPack = new Set((pack.items || []).map((i) => i.fact_id));
   const conflicts = (pack.items || []).filter((i) => i.status === "conflict");
@@ -105,7 +122,7 @@ function PackBuilder({ packId }: { packId: number }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/fact-packs")}>
+        <Button variant="ghost" size="sm" onClick={() => embedded ? onClose?.() : navigate("/fact-packs")}>
           ← 返回列表
         </Button>
         <h1 className="text-xl font-semibold">
@@ -118,13 +135,13 @@ function PackBuilder({ packId }: { packId: number }) {
           </span>
         )}
         <div className="ml-auto flex gap-2">
-          {pack.status === "draft" && (
-            <Button variant="secondary" onClick={() => clone.mutate()}>
-              Clone
+          {writable && pack.status === "draft" && (
+            <Button variant="secondary" disabled={busy} onClick={() => clone.mutate()}>
+              克隆草稿
             </Button>
           )}
-          {pack.status === "draft" && <Button onClick={() => setShowFreeze(true)}>冻结版本</Button>}
-          {pack.status === "frozen" && <Button onClick={() => clone.mutate()}>Clone 为 v{pack.version + 1}</Button>}
+          {writable && pack.status === "draft" && <Button disabled={busy} onClick={() => setShowFreeze(true)}>冻结版本</Button>}
+          {writable && pack.status === "frozen" && <Button disabled={busy} onClick={() => clone.mutate()}>克隆为 v{pack.version + 1}</Button>}
         </div>
       </div>
 
@@ -138,18 +155,21 @@ function PackBuilder({ packId }: { packId: number }) {
         <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">此版本已归档。</div>
       )}
       {error && <div className="rounded-md bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+      <p className="text-xs text-amber-800">公开使用须逐条明确授权；来源信任等级、事实确认和证据包冻结都不代表发布许可。冻结后只能克隆新版本修改授权。</p>
+      {!canEdit && <p className="text-xs text-slate-500">当前只读，或尚未确认编辑权限。</p>}
 
-      <div className="grid grid-cols-[280px_1fr] gap-4">
+      <div className="grid gap-4 md:grid-cols-[280px_minmax(0,1fr)]">
         <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">Sources</h3>
-            {pack.status === "draft" && (
+            {!embedded && writable && pack.status === "draft" && (
               <Button size="sm" variant="secondary" onClick={() => setShowCreate(true)}>
                 + 添加事实
               </Button>
             )}
           </div>
           <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {confirmedFacts.isError && <p role="alert" className="text-sm text-rose-700">无法读取可添加事实，请重新打开证据包。</p>}
             {available.length === 0 ? (
               <p className="text-xs text-slate-400">没有可添加的 confirmed 事实</p>
             ) : (
@@ -160,7 +180,7 @@ function PackBuilder({ packId }: { packId: number }) {
                     <span className="text-[11px] text-slate-400">
                       {f.ref} · {f.source_title.slice(0, 14)}
                     </span>
-                    <Button size="sm" variant="ghost" onClick={() => addItem.mutate(f.id)}>
+                    <Button size="sm" variant="ghost" disabled={!writable || busy} onClick={() => addItem.mutate(f.id)}>
                       +
                     </Button>
                   </div>
@@ -170,7 +190,7 @@ function PackBuilder({ packId }: { packId: number }) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
           <div className="border-b border-slate-100 px-4 py-3 text-sm font-medium">
             Facts（{pack.item_count}）
           </div>
@@ -185,6 +205,7 @@ function PackBuilder({ packId }: { packId: number }) {
                   <th className="px-4 py-2 font-medium">数值</th>
                   <th className="px-4 py-2 font-medium">as_of</th>
                   <th className="px-4 py-2 font-medium">状态</th>
+                  <th className="px-4 py-2 font-medium">公开使用许可</th>
                   <th className="px-4 py-2" />
                 </tr>
               </thead>
@@ -201,9 +222,18 @@ function PackBuilder({ packId }: { packId: number }) {
                     <td className="px-4 py-2.5">
                       <StatusBadge status={item.status} />
                     </td>
+                    <td className="px-4 py-2.5">
+                      {writable && pack.status === "draft" ? <label className="flex items-center gap-2 text-xs">
+                        <input type="checkbox" aria-label={`允许 ${item.ref} 公开使用`} checked={item.public_use_allowed === true} disabled={busy} onChange={(event) => {
+                          const allowed = event.target.checked;
+                          if (!window.confirm(allowed ? "已核对该证据的公开使用授权，确认允许公开使用？来源信任等级不代表授权。" : "确认将该草稿条目标为不允许公开使用？")) return;
+                          setError(""); permission.mutate({ itemId: item.item_id, allowed });
+                        }} />允许公开使用
+                      </label> : <span className="text-xs">{item.public_use_revoked_at ? "已撤销" : item.public_use_allowed === true ? "已明确允许" : "未授权"}</span>}
+                    </td>
                     <td className="px-4 py-2.5 text-right">
-                      {pack.status === "draft" && (
-                        <Button size="sm" variant="ghost" onClick={() => removeItem.mutate(item.fact_id)}>
+                      {writable && pack.status === "draft" && (
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => removeItem.mutate(item.fact_id)}>
                           移除
                         </Button>
                       )}
@@ -232,7 +262,7 @@ function PackBuilder({ packId }: { packId: number }) {
             <Button variant="secondary" onClick={() => setShowFreeze(false)}>
               取消
             </Button>
-            <Button onClick={() => freeze.mutate()} disabled={conflicts.length > 0 || pack.item_count === 0}>
+            <Button onClick={() => freeze.mutate()} disabled={!writable || busy || conflicts.length > 0 || pack.item_count === 0}>
               确认冻结
             </Button>
           </div>
@@ -311,6 +341,8 @@ export default function FactPacks() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const navigate = useNavigate();
+  const me = useQuery({ queryKey: ["fact-pack-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const canEdit = me.isSuccess && ["admin", "editor"].includes(me.data.role);
 
   const { data, isLoading } = useQuery({
     queryKey: ["fact-packs"],
@@ -329,7 +361,7 @@ export default function FactPacks() {
   if (id) {
     return (
       <div className="mx-auto max-w-6xl p-8">
-        <PackBuilder key={id} packId={Number(id)} />
+        <PackBuilder key={id} packId={Number(id)} readOnly={!canEdit} />
       </div>
     );
   }
@@ -338,7 +370,7 @@ export default function FactPacks() {
     <div className="mx-auto max-w-6xl space-y-4 p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">FactPack</h1>
-        <Button onClick={() => setShowCreate(true)}>新建 FactPack</Button>
+        <Button disabled={!canEdit} onClick={() => setShowCreate(true)}>新建 FactPack</Button>
       </div>
 
       {isLoading ? (
@@ -347,7 +379,7 @@ export default function FactPacks() {
         <EmptyState
           title="暂无 FactPack"
           hint="FactPack 是内容生成唯一允许引用的事实集合，必须冻结后才能绑定选题"
-          action={<Button onClick={() => setShowCreate(true)}>新建 FactPack</Button>}
+          action={<Button disabled={!canEdit} onClick={() => setShowCreate(true)}>新建 FactPack</Button>}
         />
       ) : (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -386,7 +418,7 @@ export default function FactPacks() {
         </div>
       )}
 
-      {showCreate && (
+      {showCreate && canEdit && (
         <Modal title="新建 FactPack" onClose={() => setShowCreate(false)}>
           <NewPackForm onSubmit={(name) => create.mutate(name)} onCancel={() => setShowCreate(false)} />
         </Modal>
@@ -395,7 +427,7 @@ export default function FactPacks() {
   );
 }
 
-function NewPackForm({ onSubmit, onCancel }: { onSubmit: (name: string) => void; onCancel: () => void }) {
+export function NewPackForm({ onSubmit, onCancel, busy = false }: { onSubmit: (name: string) => void; onCancel: () => void; busy?: boolean }) {
   const [name, setName] = useState("");
   return (
     <div className="space-y-3">
@@ -406,7 +438,7 @@ function NewPackForm({ onSubmit, onCancel }: { onSubmit: (name: string) => void;
         <Button variant="secondary" onClick={onCancel}>
           取消
         </Button>
-        <Button disabled={!name} onClick={() => onSubmit(name)}>
+        <Button disabled={busy || !name.trim()} onClick={() => onSubmit(name.trim())}>
           创建空包（稍后添加事实）
         </Button>
       </div>

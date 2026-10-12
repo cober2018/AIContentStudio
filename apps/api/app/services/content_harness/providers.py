@@ -124,6 +124,7 @@ def resolve_material_search() -> MaterialSearchProvider:
 
 
 def bootstrap_media_providers() -> None:
+    from ..cpa_image_provider import CPAImageProvider
     from ..local_graphic_renderer import LocalGraphicRenderer
     from ..local_mlx_asr_provider import bootstrap as bootstrap_local_asr
     from ..material_search import WikimediaSearchProvider
@@ -137,6 +138,14 @@ def bootstrap_media_providers() -> None:
 
     if OpenAIImageProvider.key not in {d.key for d in registry.list("image_provider")}:
         registry.register("image_provider", OpenAIImageProvider.key, "1", OpenAIImageProvider(), label="Configured OpenAI image preview (explicit acceptance required)")
+
+    cpa_image = CPAImageProvider()
+    if "openai.compatible" not in {d.key for d in registry.list("model_provider")}:
+        registry.register("model_provider", "openai.compatible", "1", cpa_image,
+                          label="Registered CPA OpenAI-compatible image protocol")
+    if cpa_image.key not in {d.key for d in registry.list("image_provider")}:
+        registry.register("image_provider", cpa_image.key, "1", cpa_image,
+                          label="Registered CPA image generation (explicit acceptance required)")
 
     if LocalGraphicRenderer.key not in {d.key for d in registry.list("renderer")}:
         registry.register("renderer", LocalGraphicRenderer.key, "1", LocalGraphicRenderer(), label="Local Graphic Chromium renderer (explicit runtime required)")

@@ -29,6 +29,92 @@ def _injected_statement(facts: list[dict[str, Any]]) -> str:
 
 def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> dict[str, Any]:
     context = request.context or {}
+    if request.schema_hint == "creation_recipe.tuning.v1":
+        base, allowed = context.get("base_config", {}), context.get("tunable_schema", {})
+        if "candidate_count" in allowed:
+            value = base.get("candidate_count", 1)
+            patch = {"candidate_count": 3 if value != 3 else 2}
+        elif "instruction" in allowed:
+            patch = {"instruction": f"{base.get('instruction', '')}\n明确展示可选择的结果；等待人工确认。"}
+        else:
+            raise ValueError("Mock tuner has no declared field")
+        return {"config_patch": patch, "explanation": "隔离Mock建议，仅验证可调字段和显式保存链路，不代表AI学习质量。"}
+    if request.schema_hint == "stage.master.proposal.v1":
+        count = context.get("candidate_count", 1)
+        if type(count) is not int or not 1 <= count <= 5:
+            raise ValueError("invalid Mock Stage candidate count")
+        modality = context.get("modality", "text")
+        length = context.get("length", "medium")
+        repeats = {"short": 1, "medium": 2, "long": 3}[length]
+        candidates = []
+        for index in range(1, count + 1):
+            title = f"隔离 Mock 候选 {index}"
+            body = f"这是第 {index} 个隔离验收候选，仅用于验证阶段调节、人工编辑与采用链路，不代表真实模型生成质量。"
+            body = "\n\n".join([body] * repeats)
+            if request.purpose != "generate":
+                body = f"阶段用途：{request.purpose}。\n\n{body}"
+            if modality == "text":
+                from ..text_documents import convert_legacy_text
+
+                payload = convert_legacy_text({"title": title, "markdown": f"# {title}\n\n{body}"})["payload"]
+            elif modality == "graphic":
+                payload = {"title": title, "canvases": [{
+                    "id": "canvas-1", "order": 0, "width": 1080, "height": 1440,
+                    "background": {"color": "#ffffff"},
+                    "layers": [{"id": "text-1", "order": 0, "type": "text", "x": 80, "y": 80,
+                                "width": 920, "height": 1200,
+                                "runs": [{"text": body, "style": {"font_size": 36, "color": "#111111"}}]}],
+                }]}
+            elif modality == "video":
+                duration = {"short": 5000, "medium": 15000, "long": 30000}[length]
+                payload = {
+                    "title": title, "aspect_ratio": [9, 16],
+                    "script": {"blocks": [{"id": "script-1", "order": 0, "text": body}]},
+                    "shots": [{"id": "shot-1", "order": 0, "label": "待绑定素材的镜头计划",
+                               "purpose": request.purpose, "duration_ms": duration, "script_block_id": "script-1"}],
+                    "timeline": {"duration_ms": duration, "tracks": [{
+                        "id": "video-1", "order": 0, "kind": "video",
+                        "items": [{"id": "item-1", "order": 0, "shot_id": "shot-1",
+                                   "start_ms": 0, "end_ms": duration}],
+                    }]},
+                    "voice": {"mode": "none"}, "subtitles": {"cues": []}, "overlays": [],
+                    "music": {}, "cover": {},
+                }
+            else:
+                raise ValueError("invalid Mock Stage modality")
+            candidates.append({"payload_schema": f"{modality}.master.v2", "payload": payload,
+                               "asset_refs": [], "evidence_refs": []})
+        return {"candidates": candidates}
+    if request.schema_hint == "stage.creative.method.v1":
+        schema = context.get("output_schema", "content.outline.v1")
+        count = max(1, min(int(context.get("candidate_count", 1)), 5))
+        candidates = []
+        for index in range(1, count + 1):
+            summary = f"隔离 Mock {schema} 候选 {index}"
+            content = {
+                "title": summary,
+                "sections": [{"id": "section-1", "heading": "下一步", "points": ["保留事实边界", "等待人工确认"]}],
+                "stage_schema": schema,
+            }
+            if schema == "graphic.visual-direction.v1":
+                content = {"intent": summary, "hierarchy": ["标题", "具体观察"],
+                    "visual_language": "隔离合同样例，不代表真实视觉质量", "image_requirements": []}
+            elif schema == "graphic.card-plan.v1":
+                content = {"title": summary, "aspect_ratio": "3:4", "cards": [{
+                    "id": "cover", "order": 0, "role": "cover", "title": "隔离卡片计划",
+                    "body": "只验证语义计划与确定性排版合同。", "visual_type": "none"}]}
+            elif schema == "audio.spoken-adaptation.v1":
+                content = {"script": "这是隔离口语稿合同样例，不代表真实音频质量。", "pronunciation_notes": [],
+                    "source_summary": summary, "warnings": ["mock_output_not_quality_evidence"]}
+            elif schema == "audio.voice-direction.v1":
+                content = {"voice_character": "平静讲解", "pace": "medium", "energy": "自然",
+                    "pause_policy": "段落间停顿", "pronunciation_notes": [], "rate": 1.0}
+            elif schema == "video.shot-plan.v1":
+                content = {"title": summary, "shots": [{"id": "shot-1", "order": 0,
+                    "script": "隔离脚本", "visual": "待准备画面", "asset_requirements": [], "duration_seconds": 5}]}
+            candidates.append({"id": f"method-{index:02d}", "summary": summary, "content": content,
+                               "references": [], "warnings": ["mock_output_not_quality_evidence"]})
+        return {"schema": schema, "candidates": candidates}
     if request.purpose == "text_master_edit":
         return _build_text_master_edit(context)
     topic = context.get("topic", {})

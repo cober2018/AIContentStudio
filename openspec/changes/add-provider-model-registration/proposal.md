@@ -6,7 +6,7 @@
 
 - Settings 增加厂商登记、写入型密钥编辑、模型获取/手动补录和已注册模型列表。
 - 复用现有 SystemSetting 配置及 CAS，不增加业务表或迁移；保存不覆盖现有能力、插件、路由。
-- 支持 OpenAI-compatible CPA 网关；可信局域网 HTTP 仅允许管理员明确登记的精确 endpoint，不放宽媒体下载/其他网络边界。
+- 支持 OpenAI-compatible CPA 网关；可信局域网 HTTP 或 literal `127.0.0.1` 本机隧道仅允许管理员明确登记的精确 endpoint，不放宽媒体下载/其他网络边界。
 - 全局默认为用户选择的 gemini-3.8-flash-high；各环节可选择已注册且适合该能力的模型或继承默认。
 - 模型列表不证明聊天/生图/视频支持；能力仍人工标注并经真实 adapter 验证。
 

@@ -1,7 +1,24 @@
 ## ADDED Requirements
 
+### Requirement: Single-machine production is the final formal deployment
+The owner's computer, SQLite, the configured local immutable media library and loopback-only API/Web SHALL be the final production and acceptance deployment, not a temporary stage pending serverization. Existing startup, local identity, credential configuration and required Worker topology SHALL remain unchanged for this documentation correction. PostgreSQL, MinIO, JWT, independent Secret Provider, containers and reverse proxy MUST NOT become prerequisites merely for the production label. The accepted 82/82 evidence SHALL remain valid; original 18 unchecked entries SHALL remain out-of-scope, unverified extension records rather than current production blockers.
+
+Literal `APP_ENV=production` below denotes an existing technical server-extension branch, not the user's formal-use status. Its identity/startup/Secret Provider activation conditions are conditional extension contracts only; they MUST NOT be inferred as requirements to change this computer's current runtime. Paired database/media backup, restored hash integrity, secret masking, traceable errors, exact authorized external calls, no Unknown automatic retry and protection of real data remain mandatory in single-machine production.
+
+#### Scenario: Formal use without server infrastructure
+- **WHEN** the owner formally uses the accepted SQLite/local-media/loopback installation without PostgreSQL, MinIO, JWT or an independent Secret Provider
+- **THEN** the deployment is classified as single-machine production with its accepted 82/82 scope complete, not blocked or described as temporary due to those absent extensions
+
+#### Scenario: Production terminology is corrected
+- **WHEN** the specifications and runbooks are aligned to the final single-machine use plan
+- **THEN** runtime APP_ENV, database/schema, material paths, credentials, existing identity behavior and Worker topology remain unchanged, with no new dependencies, migrations, service operations or external acceptance calls
+
+#### Scenario: Authorized outbound operation from loopback application
+- **WHEN** an authorized model or WeChat operation is requested from the loopback-only application
+- **THEN** the existing credential isolation, capability authorization and outbound safety apply; loopback limits inbound access and does not itself prohibit outbound calls
+
 ### Requirement: Production identity cannot use development headers
-Production mode SHALL reject `X-Studio-User`, default-user, mock and auto-create-user authentication. It SHALL validate a configured signed identity and map it to an existing active Studio User; authorization SHALL use that User's durable role rather than an untrusted role claim. Development/test Header mode MAY remain available only outside production.
+The optional technical `APP_ENV=production` server-extension mode SHALL reject `X-Studio-User`, default-user, mock and auto-create-user authentication. It SHALL validate a configured signed identity and map it to an existing active Studio User; authorization SHALL use that User's durable role rather than an untrusted role claim. Existing development/test-labeled Header mode MAY remain unchanged for the final loopback-only single-machine production installation; this extension requirement does not force its activation or an identity migration.
 
 The mapping from a configured issuer's stable subject to an existing User MUST be explicitly reviewed and fail closed for unknown or ambiguous subjects. A token email or role claim alone MUST NOT silently bind an account. If the approved mapping requires new durable persistence beyond the current User table, F8 SHALL pause for a separately reviewed specification/migration decision rather than assuming email-only equivalence.
 
@@ -18,7 +35,7 @@ The mapping from a configured issuer's stable subject to an existing User MUST b
 - **THEN** production authentication denies the request instead of inferring the User from that email
 
 ### Requirement: Production startup fails closed on unsafe configuration
-Production startup SHALL validate auth, required secrets, schema-head compatibility and required runtime configuration before accepting traffic. It MUST NOT silently create tables, migrate/downgrade a database or mutate approved templates/settings as part of service boot. Development/test bootstrap MAY retain explicit local behavior.
+Startup in the optional technical `APP_ENV=production` server-extension mode SHALL validate auth, required secrets, schema-head compatibility and required runtime configuration before accepting traffic. It MUST NOT silently create tables, migrate/downgrade a database or mutate approved templates/settings as part of service boot. The single-machine production deployment SHALL keep existing local runtime/startup behavior; this correction MUST NOT activate the extension flag, run seed/migration or overwrite real data.
 
 #### Scenario: Header auth mode selected
 - **WHEN** production is configured with development-header authentication or a missing signing configuration
@@ -29,10 +46,10 @@ Production startup SHALL validate auth, required secrets, schema-head compatibil
 - **THEN** readiness fails and startup does not perform an automatic migration
 
 ### Requirement: Secrets remain out of safe surfaces
-Plaintext credentials, cookies, signed URLs, credential-bearing URLs, secret headers and raw secret values MUST NOT appear in safe API, log, metric, health, audit, worker or capability-verification output. Production enablement SHALL inventory and deliberately remediate any existing plaintext SystemSetting override rather than treating masked display as secure storage.
+Plaintext credentials, cookies, signed URLs, credential-bearing URLs, secret headers and raw secret values MUST NOT appear in safe API, log, metric, health, audit, worker or capability-verification output. The final single-machine production deployment SHALL retain safe local credential configuration and the recorded inventory without silently deleting/migrating overrides. Enabling the optional technical server-extension Secret Provider policy SHALL deliberately remediate applicable overrides rather than treating masked display as secure storage; that cutover is not a prerequisite for current formal use.
 
 #### Scenario: Stored override exists
-- **WHEN** a production startup encounters a legacy persisted secret override without an approved migration/disable policy
+- **WHEN** an explicitly enabled technical server-extension startup encounters a legacy persisted secret override without an approved migration/disable policy
 - **THEN** readiness is blocked with a safe reason that does not reveal the value
 
 #### Scenario: Provider raises a credential-bearing exception
@@ -45,7 +62,7 @@ Plaintext credentials, cookies, signed URLs, credential-bearing URLs, secret hea
 
 #### Scenario: Persisted signed storage URL or signing secret
 - **WHEN** a persisted override contains a nonempty signing-secret/header field or an AWS/GCS/OSS/Azure signed URL, including vendor-prefixed credential or signature query names
-- **THEN** production secret policy rejects it with a fixed safe reason, while environment-variable reference names and public configuration remain usable
+- **THEN** the technical server-extension secret policy rejects it with a fixed safe reason, while reference names/public configuration remain usable and safe local projections never disclose values
 
 ### Requirement: Immutable media uses a replaceable storage boundary
 MaterialRevision SHALL retain its business ID, exact content hash and rights while its bytes are accessed through a configured local/object StorageProvider. Candidate, Review and Delivery reads MUST verify actual bytes against the frozen hash and fail closed on missing/corrupt data. Legacy media and all direct read/write paths SHALL be covered before storage cutover; safe APIs MUST NOT disclose internal storage locations.
@@ -81,16 +98,20 @@ Operational metrics SHALL use route templates or another bounded label set inste
 - **THEN** metrics aggregate them under one `OTHER` label, including unmatched paths
 
 ### Requirement: Liveness and readiness report actual required dependencies
-The existing health surface SHALL distinguish liveness from readiness. Readiness SHALL validate required DB/schema, auth/secret, selected storage and configured worker/queue dependencies, and return a non-success HTTP status with a safe reason when a required dependency fails. Optional disconnected providers SHALL remain visible as unavailable without making core readiness fail or triggering network calls on ordinary reads.
+The existing health surface SHALL distinguish liveness from readiness. Readiness SHALL validate required DB/schema, selected local storage and configured worker/queue dependencies, with auth/secret checks appropriate to the actual unchanged runtime branch; it SHALL return a non-success status and safe reason on required failure. Missing server-extension components alone MUST NOT classify the accepted single-machine production deployment as unready. Optional disconnected providers SHALL remain visible as unavailable without making core readiness fail or triggering network calls on ordinary reads.
 
 #### Scenario: Database unavailable
 - **WHEN** the database cannot be reached
 - **THEN** readiness returns a non-success status and a safe DB reason code, not raw exception text or an HTTP 200 degraded body
 
 #### Scenario: Local approved schema with a pending draft
-- **WHEN** the formal loopback-only local database is at approved `f7d000000001` while an unapproved F8 descendant migration remains in the worktree
+- **WHEN** the formal loopback-only local database is at approved `aco000000001` after separately authorized enablement while unrelated descendant work remains unapproved
 - **THEN** readiness verifies that exact approved database head and its application migration ancestry instead of skipping the check or requiring the unapproved migration
-- **AND** missing, multiple or different database heads fail with a safe schema reason; the production profile still requires exact code/config/database head equality
+- **AND** missing, multiple or different database heads fail with a safe schema reason; only the separately selected technical server-extension profile requires exact code/config/database head equality
+
+#### Scenario: Nullable identity ancestry does not activate authentication
+- **WHEN** the approved local `aco000000001` ancestry includes `f8a000000001` and User issuer/subject columns remain null/inert
+- **THEN** readiness and recovery use the approved aco target without claiming JWT/production identity enabled or verified, preserve historical f7d acceptance, and never downgrade the formal SQLite to reconcile outdated documentation
 
 #### Scenario: Optional Provider disconnected
 - **WHEN** a non-required external provider has no credentials
@@ -144,7 +165,7 @@ Every external capability SHALL enforce existing authorization, bounded outbound
 - **THEN** third-party HTTP client/transport logs are suppressed within that outbound operation and cannot emit the URL, header, body or raw exception; safe operation metadata remains available
 
 ### Requirement: Recovery preserves exact historical truth
-For the formal single-operator local profile, backup/restore and migration rehearsals SHALL use an isolated SQLite restore plus the referenced immutable local media set, verify schema compatibility and sampled bytes, and preserve frozen Identity/Evidence/Master/Variant/Candidate/Approval/Delivery lineage. PostgreSQL/MinIO rehearsal remains a separately documented future deployment profile and is not required for this local acceptance. Downgrade MUST require a preflight and MUST NOT delete incompatible historical records to make rollback appear successful.
+For final single-machine production, backup/restore rehearsals SHALL use SQLite and its same-snapshot referenced immutable local media set, verify schema compatibility and bytes, and preserve frozen Identity/Evidence/Master/Variant/Candidate/Approval/Delivery lineage. PostgreSQL/MinIO is non-applicable extension reference, not a planned upgrade or formal-use gate. Migration or real-data replacement requires separate authorization; downgrade MUST require a preflight and MUST NOT delete incompatible history to make rollback appear successful.
 
 #### Scenario: Restore missing approved media
 - **WHEN** a restored database references approved media absent from the restored byte store

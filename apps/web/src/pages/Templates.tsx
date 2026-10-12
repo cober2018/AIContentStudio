@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { api } from "../api";
+import { api, currentUser } from "../api";
 import { Button, EmptyState, Spinner, StatusBadge } from "../components/ui";
 
 interface BrandVoice {
@@ -50,7 +50,7 @@ const TABS = [
   ["prompts", "Prompt 版本"],
 ] as const;
 
-function TemplatesTab() {
+function TemplatesTab({ readOnly }: { readOnly: boolean }) {
   const queryClient = useQueryClient();
   const [expandedProfile, setExpandedProfile] = useState<number | null>(null);
   const { data, isLoading } = useQuery({
@@ -84,6 +84,7 @@ function TemplatesTab() {
 
   if (isLoading) return <Spinner />;
   if (!data?.length) return <EmptyState title="暂无模板" />;
+  const busy = setStatus.isPending || clone.isPending || del.isPending;
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -129,19 +130,19 @@ function TemplatesTab() {
           )}
           <div className="mt-3 flex gap-2">
             {t.status !== "published" && (
-              <Button size="sm" onClick={() => setStatus.mutate({ id: t.id, status: "published" })}>
+              <Button size="sm" disabled={readOnly || busy} onClick={() => setStatus.mutate({ id: t.id, status: "published" })}>
                 发布
               </Button>
             )}
-            <Button size="sm" variant="secondary" onClick={() => clone.mutate(t.id)}>
+            <Button size="sm" variant="secondary" disabled={readOnly || busy} onClick={() => clone.mutate(t.id)}>
               Clone
             </Button>
             {t.status !== "published" && (
-              <Button size="sm" variant="ghost" onClick={() => setStatus.mutate({ id: t.id, status: "archived" })}>
+              <Button size="sm" variant="ghost" disabled={readOnly || busy} onClick={() => setStatus.mutate({ id: t.id, status: "archived" })}>
                 归档
               </Button>
             )}
-            <Button size="sm" variant="danger" className="ml-auto" onClick={() => remove(t)}>
+            <Button size="sm" variant="danger" className="ml-auto" disabled={readOnly || busy} onClick={() => remove(t)}>
               删除
             </Button>
           </div>
@@ -151,7 +152,7 @@ function TemplatesTab() {
   );
 }
 
-function BrandVoiceTab() {
+function BrandVoiceTab({ readOnly }: { readOnly: boolean }) {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["brand-voices"],
@@ -182,6 +183,7 @@ function BrandVoiceTab() {
 
   if (isLoading) return <Spinner />;
   if (!data?.length) return <EmptyState title="暂无 Brand Voice" />;
+  const busy = setStatus.isPending || clone.isPending || del.isPending;
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -216,14 +218,15 @@ function BrandVoiceTab() {
           </div>
           <div className="mt-3 flex gap-2">
             {bv.status !== "published" && (
-              <Button size="sm" onClick={() => setStatus.mutate({ id: bv.id, status: "published" })}>
+              <Button size="sm" disabled={readOnly || busy} onClick={() => setStatus.mutate({ id: bv.id, status: "published" })}>
                 发布
               </Button>
             )}
-            <Button size="sm" variant="secondary" onClick={() => clone.mutate(bv.id)}>
+            <Button size="sm" variant="secondary" disabled={readOnly || busy} onClick={() => clone.mutate(bv.id)}>
               Clone
             </Button>
-            <Button size="sm" variant="danger" className="ml-auto" onClick={() => remove(bv)}>
+            {bv.status === "draft" && <Button size="sm" variant="ghost" disabled={readOnly || busy} onClick={() => setStatus.mutate({ id: bv.id, status: "archived" })}>归档</Button>}
+            <Button size="sm" variant="danger" className="ml-auto" disabled={readOnly || busy} onClick={() => remove(bv)}>
               删除
             </Button>
           </div>
@@ -233,7 +236,7 @@ function BrandVoiceTab() {
   );
 }
 
-function PromptsTab() {
+function PromptsTab({ readOnly }: { readOnly: boolean }) {
   const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState<number | null>(null);
   const { data, isLoading } = useQuery({
@@ -272,7 +275,7 @@ function PromptsTab() {
                 {expanded === p.id ? "收起" : "查看"}
               </Button>
               {p.status !== "published" && (
-                <Button size="sm" variant="danger" onClick={() => remove(p)}>
+                <Button size="sm" variant="danger" disabled={readOnly || del.isPending} onClick={() => remove(p)}>
                   删除
                 </Button>
               )}
@@ -291,6 +294,8 @@ function PromptsTab() {
 
 export default function Templates() {
   const [tab, setTab] = useState<(typeof TABS)[number][0]>("brand-voice");
+  const me = useQuery({ queryKey: ["template-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const readOnly = !me.isSuccess || me.data.role !== "admin";
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 p-8">
@@ -300,6 +305,7 @@ export default function Templates() {
           内容一律不可编辑（含克隆草稿），变更 = Clone 新版本发布；同渠道仅最新发布版本生效，发布自动下线旧版本
         </span>
       </div>
+      {readOnly && <p className="text-sm text-slate-500">当前只读；克隆、发布、归档与删除仅限管理员。</p>}
       <div className="flex gap-1 rounded-md bg-slate-100 p-0.5 text-sm w-fit">
         {TABS.map(([key, label]) => (
           <button
@@ -311,9 +317,9 @@ export default function Templates() {
           </button>
         ))}
       </div>
-      {tab === "brand-voice" && <BrandVoiceTab />}
-      {tab === "templates" && <TemplatesTab />}
-      {tab === "prompts" && <PromptsTab />}
+      {tab === "brand-voice" && <BrandVoiceTab readOnly={readOnly} />}
+      {tab === "templates" && <TemplatesTab readOnly={readOnly} />}
+      {tab === "prompts" && <PromptsTab readOnly={readOnly} />}
     </div>
   );
 }

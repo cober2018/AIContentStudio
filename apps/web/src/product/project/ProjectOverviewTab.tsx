@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ApiError } from "../../api";
 import { ErrorBanner, Spinner } from "../../components/ui";
+import { ProjectNextStageLink } from "../HomePage";
 import type { Overview } from "./types";
 
 const STAGES: Record<string, string> = { brief_needed: "待完成任务书", evidence_needed: "待建立事实边界", matrix_needed: "待添加内容单元", production: "生产中", attention_required: "需要处理风险", waiting_human: "等待人工", review_ready: "可进入审核" };
@@ -22,6 +23,6 @@ export function ProjectOverviewTab({ projectId }: { projectId: number }) {
     {data.risks.length > 0 && <div><h3 className="text-sm font-medium text-rose-700">需要关注</h3><ul className="mt-1 list-disc pl-5 text-sm text-slate-600">{data.risks.map((risk, index) => <li key={`${risk.code}-${index}`}>{stateLabel(risk.code)}{risk.unit_id ? ` · 单元 #${risk.unit_id}` : ""}</li>)}</ul></div>}
     {data.pendingDecisions.length > 0 && <div><h3 className="text-sm font-medium text-sky-700">等待人工处理</h3><ul className="mt-1 list-disc pl-5 text-sm text-slate-600">{data.pendingDecisions.map((item, index) => <li key={`${item.code}-${index}`}>{stateLabel(item.code)}{item.unit_id ? ` · 单元 #${item.unit_id}` : ""}</li>)}</ul></div>}
     {data.review?.units.some((unit) => unit.current_candidate) && <div><h3 className="text-sm font-medium">候选与交付</h3><ul className="mt-2 space-y-1 text-sm">{data.review.units.filter((unit) => unit.current_candidate).map((unit) => <li key={unit.unit_id}><Link className="text-indigo-700 hover:underline" to={`/review?project=${projectId}&unit=${unit.unit_id}`}>{unit.title} · Candidate #{unit.current_candidate?.id} · {stateLabel(unit.summary)}</Link></li>)}</ul></div>}
-    {data.nextAction && <Link className="text-sm font-medium text-indigo-700" to={data.nextAction.href}>{data.nextAction.label} →</Link>}
+    <ProjectNextStageLink projectId={projectId} overview={data} />
   </section>;
 }

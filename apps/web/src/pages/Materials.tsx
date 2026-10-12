@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { api } from "../api";
+import { useEffect, useRef, useState } from "react";
+import { api, currentUser } from "../api";
 import { Button, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
 import ProviderMediaPanel from "../product/ProviderMediaPanel";
 import ProviderSearchPanel from "../product/ProviderSearchPanel";
@@ -51,9 +51,10 @@ function srcOf(m: MaterialRow, revisionId?: number) {
   return `/api/v1/materials/${m.id}/revisions/${rid}/raw`;
 }
 
-function UploadModal({ onClose }: { onClose: () => void }) {
+export function MaterialUploadModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [hasFile, setHasFile] = useState(false);
   const [form, setForm] = useState({
     kind: "image",
     title: "",
@@ -73,6 +74,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["materials"] });
+      queryClient.invalidateQueries({ queryKey: ["system-library"] });
       onClose();
     },
     onError: (e) => setError(e instanceof Error ? e.message : "上传失败"),
@@ -82,7 +84,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
     <Modal title="上传素材" onClose={onClose}>
       <div className="space-y-3">
         <Field label="文件 *（PNG/JPEG/GIF/WebP/PDF/MP4/MP3/WAV，≤30MB）">
-          <input ref={fileRef} type="file" className={inputClass} />
+          <input ref={fileRef} type="file" className={inputClass} onChange={(event) => setHasFile(!!event.target.files?.length)} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="类型">
@@ -124,7 +126,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
       </div>
       <div className="mt-4 flex justify-end gap-2">
         <Button variant="secondary" onClick={onClose}>取消</Button>
-        <Button disabled={!fileRef.current?.files?.length && !upload.isPending} onClick={() => upload.mutate()}>
+        <Button disabled={!hasFile || upload.isPending} onClick={() => upload.mutate()}>
           {upload.isPending ? "上传中…" : "上传"}
         </Button>
       </div>
@@ -132,20 +134,26 @@ function UploadModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function DetailModal({ material, onClose }: { material: MaterialRow; onClose: () => void }) {
+function DetailModal({ material, readOnly, onClose }: { material: MaterialRow; readOnly: boolean; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [attachDraftId, setAttachDraftId] = useState("");
   const [attachRole, setAttachRole] = useState("inline");
   const [attachMsg, setAttachMsg] = useState("");
+  const [revokeError, setRevokeError] = useState("");
   const { data } = useQuery({
     queryKey: ["material", material.id],
     queryFn: () => api.get<MaterialRow>(`/materials/${material.id}`),
   });
   const row = data || material;
   const revoke = useMutation({
-    mutationFn: (rid: number) =>
-      api.post(`/materials/${material.id}/revisions/${rid}/revoke-public-use`, { note: window.prompt("撤权原因（必填）") || "权限撤销" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["material", material.id] }),
+    mutationFn: ({ rid, note }: { rid: number; note: string }) =>
+      api.post(`/materials/${material.id}/revisions/${rid}/revoke-public-use`, { note }),
+    onSuccess: async () => { await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["material", material.id] }),
+      queryClient.invalidateQueries({ queryKey: ["materials"] }),
+      queryClient.invalidateQueries({ queryKey: ["system-library"] }),
+    ]); },
+    onError: (e) => setRevokeError(e instanceof Error ? e.message : "撤权失败"),
   });
   const attach = useMutation({
     mutationFn: () =>
@@ -191,12 +199,18 @@ function DetailModal({ material, onClose }: { material: MaterialRow; onClose: ()
             <span className="flex items-center gap-2">
               <StatusBadge status={r.status === "revoked" ? "changes_requested" : r.status} />
               {r.public_use_allowed && (
-                <Button size="sm" variant="ghost" onClick={() => revoke.mutate(r.id)}>撤权</Button>
+                <Button size="sm" variant="ghost" disabled={readOnly || revoke.isPending} onClick={() => {
+                  const note = window.prompt("撤权原因（必填）");
+                  if (note === null) return;
+                  if (!note.trim()) { setRevokeError("撤权原因不能为空，未提交。"); return; }
+                  setRevokeError(""); revoke.mutate({ rid: r.id, note: note.trim() });
+                }}>撤权</Button>
               )}
             </span>
           </div>
         ))}
       </div>
+      {revokeError && <p role="alert" className="mt-2 text-xs text-rose-700">{revokeError}</p>}
 
       <h4 className="mb-1 mt-3 text-xs font-medium text-slate-500">挂到稿件</h4>
       <div className="flex items-end gap-2">
@@ -210,7 +224,7 @@ function DetailModal({ material, onClose }: { material: MaterialRow; onClose: ()
             <option value="attachment">attachment</option>
           </select>
         </Field>
-        <Button className="mb-0.5" disabled={!attachDraftId || attach.isPending} onClick={() => attach.mutate()}>挂载</Button>
+        <Button className="mb-0.5" disabled={readOnly || !attachDraftId || attach.isPending} onClick={() => attach.mutate()}>挂载</Button>
       </div>
       {attachMsg && <p className="mt-1 text-xs text-slate-500">{attachMsg}</p>}
 
@@ -221,7 +235,7 @@ function DetailModal({ material, onClose }: { material: MaterialRow; onClose: ()
   );
 }
 
-function GenerateModal({ onClose }: { onClose: () => void }) {
+export function MaterialGenerateModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="AI 生成素材" onClose={onClose}>
       <ProviderMediaPanel />
@@ -229,7 +243,7 @@ function GenerateModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function SearchModal({ onClose }: { onClose: () => void }) {
+export function MaterialSearchModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="素材搜索" onClose={onClose}>
       <ProviderSearchPanel />
@@ -244,9 +258,17 @@ export default function Materials() {
   const [showGenerate, setShowGenerate] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [detail, setDetail] = useState<MaterialRow | null>(null);
+  // 搜索词防抖：避免每敲一个字符就发一次请求
+  const [debouncedQ, setDebouncedQ] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQ(q), 300);
+    return () => clearTimeout(timer);
+  }, [q]);
+  const me = useQuery({ queryKey: ["material-user", currentUser()], queryFn: ({ signal }) => api.get<{ role: string }>("/users/me", signal), retry: false });
+  const canEdit = me.isSuccess && ["admin", "editor"].includes(me.data.role);
   const { data, isLoading } = useQuery({
-    queryKey: ["materials", kind, q],
-    queryFn: () => api.get<MaterialRow[]>(`/materials?${new URLSearchParams({ ...(kind ? { kind } : {}), ...(q ? { q } : {}) })}`),
+    queryKey: ["materials", kind, debouncedQ],
+    queryFn: ({ signal }) => api.get<MaterialRow[]>(`/materials?${new URLSearchParams({ ...(kind ? { kind } : {}), ...(debouncedQ ? { q: debouncedQ } : {}) })}`, signal),
   });
 
   return (
@@ -255,8 +277,8 @@ export default function Materials() {
         <h1 className="text-xl font-semibold">素材库</h1>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={() => setShowSearch(true)}>搜索素材</Button>
-          <Button variant="secondary" onClick={() => setShowGenerate(true)}>AI 生成</Button>
-          <Button onClick={() => setShowUpload(true)}>上传素材</Button>
+          <Button variant="secondary" disabled={!canEdit} onClick={() => setShowGenerate(true)}>AI 生成</Button>
+          <Button disabled={!canEdit} onClick={() => setShowUpload(true)}>上传素材</Button>
         </div>
       </div>
       <div className="flex items-center gap-2 text-sm">
@@ -282,7 +304,7 @@ export default function Materials() {
               onClick={() => setDetail(m)}
             >
               {(m.latest_revision?.mime_type || "").startsWith("image/") ? (
-                <img src={srcOf(m)} alt={m.title} className="mb-2 h-28 w-full rounded bg-slate-50 object-cover" />
+                <img src={srcOf(m)} alt={m.title} loading="lazy" className="mb-2 h-28 w-full rounded bg-slate-50 object-cover" />
               ) : (
                 <div className="mb-2 flex h-28 w-full items-center justify-center rounded bg-slate-50 text-2xl text-slate-300">▦</div>
               )}
@@ -295,10 +317,10 @@ export default function Materials() {
         </div>
       )}
 
-      {showUpload && <UploadModal onClose={() => setShowUpload(false)} />}
-      {showGenerate && <GenerateModal onClose={() => setShowGenerate(false)} />}
-      {showSearch && <SearchModal onClose={() => setShowSearch(false)} />}
-      {detail && <DetailModal material={detail} onClose={() => setDetail(null)} />}
+      {showUpload && canEdit && <MaterialUploadModal onClose={() => setShowUpload(false)} />}
+      {showGenerate && canEdit && <MaterialGenerateModal onClose={() => setShowGenerate(false)} />}
+      {showSearch && <MaterialSearchModal onClose={() => setShowSearch(false)} />}
+      {detail && <DetailModal material={detail} readOnly={!canEdit} onClose={() => setDetail(null)} />}
     </div>
   );
 }

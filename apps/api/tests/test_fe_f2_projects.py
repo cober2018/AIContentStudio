@@ -107,7 +107,7 @@ def test_historic_unit_replaced_and_delete_archives_without_losing_run(client):
 
 
 def test_legacy_workflow_routes_hide_project_bound_run_and_definition(client, db_session):
-    from app.models import ContentUnit, ProjectWorkflowBinding, User, WorkflowStep
+    from app.models import ProjectWorkflowBinding, WorkflowStep
 
     alice = {"X-Studio-User": "alice@studio.local"}
     bob = {"X-Studio-User": "bob@studio.local"}

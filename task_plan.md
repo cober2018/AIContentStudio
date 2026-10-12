@@ -1,4 +1,691 @@
+# 2026-10-09 自动续行：复用已有产物，补图卡渲染接受链
+
+## 网页无法打开：仅恢复现有Web
+
+/// 只读HTTP/监听确认5173无服务、API ready=true → 原npm/Vite入口仅绑定127.0.0.1:5173 → 核验网页及/api代理 → 保留API/Worker与正式数据/配置，不调用模型、不改业务代码或新增部署方式。
+
+- [x] 5173连接拒绝，8000/PID2649正常，根因定位为Web服务未运行。
+- [x] 原Vite命令恢复Web/PID60664，仅127.0.0.1:5173；首页及src/main.tsx均200，Web代理ready=true。API2649/Worker31741不变，无迁移/配置变更/模型调用；浏览器工具策略拒绝，未冒称可视化验收。
+
+## 用户调整：跳过WeWrite，仅处理功能工具
+
+/// 跳过WeWrite Skill安装/测试 → 只读当前apply任务清单 → 确认151完成/5项均为质量或生命周期 → 保留未验收事实，不虚造新功能任务 → 交付当前可用功能入口。不追加测试、生成、正式写入或跨change开发。
+
+- [x] 当前change无未完成功能开发项；WeWrite不是本轮启动/使用阻断。
+- [ ] 人工质量/独立复核及单独生命周期保持后续事项，不替用户通过。
+
+## 最后Audio接线后的集中离线门禁
+
+/// 只读正式90表/素材/配置和四源码指纹 → 新S0LAcx私有SQLite/素材及Mock/禁用native任务 → 现有后端全量一次 → Web构建/FE-P1一次 → 比较前后正式/源码 → strict/diff与准确回执。没有新测试、Provider、正式服务变更或人审替代。
+
+- [x] 当前隔离完整回归2528 passed/12 skipped/81 warnings，156.85秒；同源码Web/FE-P1通过。首轮缺本机wewrite-write的2527 passed/1 failed记录保留；仅临时Skill元数据夹具下复跑，不放宽产品校验。
+- [x] 正式90表/5170行/70素材、runtime.env和四个Audio相关源码指纹保持；19.6/20.6/21.3/22.6/22.8仍开放，总体151/156。
+
+## 集中真实成品验收包
+
+/// 只读WAL-aware快照既有隔离SQLite → 安全allowlist投影精确回执 → 原文字/ZIP/六PNG/两WAV复制到Git忽略的私有backups目录 → 原件与副本哈希/解码核验 → 区分原生活Master与已审编辑稿 → 文档及strict/diff集中校验。零新Provider调用、正式写入或生命周期动作。
+
+- [x] 保存六个角色×模态样本及安全manifest，原SQLite/WAL指纹一致。
+- [x] 历史Text/预览批准与当前final PNG/Audio人工待验分别记录。
+- [ ] 人工试听/全模态rubric、独立质量及单独生命周期仍待；总体151/156不变。
+
+## 当前续行：原拒绝响应确权与正式入口加载
+
+### 用户明确恢复 Gemini 出口后的新批次
+
+/// 用户再次明确Gemini出口已恢复 → 不切Grok、不重发旧Unknown → 从停止的8yAJ14副本创建新独立SQLite/素材快照 → 新Workflow版本/Run与幂等键 → 生活spoken/voice各一次Gemini → 一次MiniMax真实TTS → 显式受限接受/同Run QC → 比较正式与历史指纹。新批CPA最多2、MiniMax最多1，串行、启动间隔10秒、应用不重试；任一Unknown停止。
+
+- [x] 新鲜正式ready=true；原Attempt25/26/31仍Unknown、sourceMaster5/8/hash及isolated integrity=ok。
+- [x] 18341空闲，独立目录persona-life-audio-gemini-recovered-20261009.Ax1pJ5已建立；尚未调用Provider。
+- [x] 新Run9/Attempts32–35全部接受，246.535秒真实WAV/MaterialRevision2/QC pass/零问题；正式5,170行/70素材/配置、源与旧Unknown保全，仅关闭20.4，当前151/156。
+- [ ] 两角色全模态人工rubric、全部样本21.3、独立质量22.6和单独授权22.8仍待；不追加生成来替代人听。
+
+/// 只读原09:22生活CPA错误文件并仅提取安全分类 → 确认HTTP400/FAILED_PRECONDITION/地区不支持，不猜Prompt错误或重发Unknown → 确認正式无运行中任务、90表/5,170行与70素材/私有配置指纹 → 既有launchd只刷新API加载两处修正 → readiness与完整指纹回读 → 保留150/156、6开放；询问生活规划是否明确选已登记Grok，MiniMax合成不变，不改VPN/Provider默认或静默fallback。
+
+- [x] 原错误文件仍存在，安全分类证实unsupported location；原日志未复制，零新供应商请求。
+- [x] 正式API75180启动早于两处修正，已刷新至2649/ready=true；原Worker31741保持。
+- [x] 90表/5,170行、70素材及runtime.env逐指纹完全一致，schema仍crs、身份列null/inert；原Unknown与批次STOP保持。
+- [x] 用户明确“再试一遍，Gemini出口”；采用上述全新有界生活批次，不重启停止副本或复用其剩余额度。
+
+## 当前恢复：用户已修复网络节点，继续新有界Audio批次
+
+/// 用户明确网络已修复、不需VPN修复 → 保留所有旧Unknown → 从停止验收库只读快照建立全新私有SQLite/素材根 → 原产品API创建新Audio Workflow版本/Run → 精确Gemini口语与声音方案/人工接受 → 精确MiniMax一次合成/受限素材接受/QC → 集中回读provenance/历史保全；最多4CPA＋2MiniMax、串行/启动间隔10秒，任何Unknown停止，不改正式库/网络/服务或生命周期。
+
+- [x] 当前阻断解除依据是用户已修复外部网络，不是授权Agent改VPN；旧阻断文档保留为历史。
+- [x] 新私有目录persona-audio-network-restored-20261009.8yAJ14已备份原停止数据库；仅复用原脚本并改独立端口/幂等键，未知安全原因元数据补齐。
+- [x] 科技spoken/voice精确Gemini两次首发成功；接受后的TTS因creative resolver误用inventory计划而在派发前阻断，零MiniMax调用。
+- [x] native TTS Stage本地execution-readiness与普通inventory边界已修正；同一无出站Preview先失败后成功，415现有回归通过，普通inventory仍不探测。
+- [x] 科技TTS已首发成功/接受受限素材；local deterministic QC误用泛用权限门禁已修正，ASR/AI/公开与撤权门禁保持；无出站红绿与497既有集中回归通过。
+- [x] 科技Run7/Attempts27–30全部接受，324.028秒真实WAV/QC pass/0 issues/完整hash与历史保全核对完成，关闭19.4，当前150/156。
+- [ ] 生活Run8/Attempt31首个CPA请求被拒绝且无有效结果，保守Unknown；本批STOP，不重发、无生活TTS。20.4保留。
+- [ ] 完整音频人听/全模态质量保持明确验收，不因模型通了自动关闭。
+
+## 当前阻断审计：完整Audio依赖未解除
+
+/// 三轮同一CPA→Google出口阻断复核 → 最新live路由仍指向原失败HTTP节点、CPA配置hash相同 → 两原Audio Attempt仍Unknown、18338/18339无监听且没有可轮询生成句柄 → 其余质量门禁依赖真实Audio、生命周期另需授权 → 不重发、不扩大VPN/付费调用范围，登记goal受阻并停止重复自动试验；完整目标保留。
+
+- [x] 当前任务仍149/156、7开放；不是全部完成，也不缩减到独立短TTS。
+- [x] live Proxy/CPA配置与前两轮诊断一致；旧Attempt25/26Unknown、isolated integrity=ok。
+- [x] 所有安全只读定位已完成；没有活跃验收任务可等待，不以隧道监听或stop文件冒称任务仍活着。
+- [ ] 需要前一条所问的CPA专用出站修复/新明确有界批次方向确认，或外部传输状态变化后重新核验；旧Unknown永不直接重发。
+
+## 2026-10-09 音频 CPA 失败层定位（只读）
+
+/// 保留360秒成品上限及120秒等待 → 不派发新模型请求 → 读取原两次失败时间窗口的CPA service.log并只提取安全元数据 → 一次无凭据HEAD检查既有Google出口 → 回读旧Unknown/SQLite integrity → 固化诊断，不改VPN/凭据/正式数据，不重发旧任务。
+
+- [x] 两窗口唯一请求dd3ba2b0/44d61fea均记录Google generateContent EOF，最终HTTP500，网关耗时9.409s/10.055s；与本地9.626s/10.165s相符。此处为时间/耗时关联，原错误文件已被轮换，不冒称正文hash匹配。
+- [x] 唯一新出站为无认证、无模型payload、零重试HEAD；既有CPA代理出口TLS握手失败（curl35/HTTP000/4.756078s）。没有新CPA模型调用或MiniMax任务。
+- [x] 保存安全诊断回执，旧Attempt25/26仍Unknown、integrity=ok；未修订合同或虚关7项，149/156保持。
+- [ ] Google生成出口恢复后才考虑新的明确有界Audio批次；不是恢复/重发这两条Unknown，也不以独立短TTS替代完整Recipe。
+
+### 2026-10-09 当前代理路线只读确权
+
+/// 只读现有Clash控制器版本/配置/规则/节点 → 比较磁盘规则与live规则，避免把写在文件里的规则误认成已生效 → 读取04:36对应Google连接日志 → 确认失败出口 → 保留Unknown与原预算；不PUT/PATCH控制器、不改Proxy选择或VPN文件、不试新模型。
+
+- [x] live Mihomo1.19.21为rule模式、mixed49249、TUN启用；Proxy选HTTP-72.245.152.14。
+- [x] 04:36相关日志十条Google连接reset均明确走Proxy和72.245.152.14:9004；不是十次新生成请求。
+- [x] 磁盘手动Google规则未出现在live规则中，不拿磁盘文案证明运行效果；现有日本节点仅有03:17旧health49ms，未重新做连通性/生成测试。
+- [ ] CPA专用Google出站修复涉及当前开发范围之外的VPN策略选择；需要明确方向后才进行定向调整，其他软件/全局Proxy保持不动。
+
+## 2026-10-09 最终图文样本确权
+
+/// 逐张读取六张最终PNG → 发现生活封面在旧功能副本用了纯色fixture → 从保留真实MiniMax MaterialRevision2的技术验收库建立新的独立副本 → 显式绑定原生活Frozen FactPack/真实图片并保留原计划 → 确定性排版/真实渲染/接受/append-only Master → 回读hash和旧行 → 记录固定视觉rubric；不调用模型、不覆盖原副本或正式库，不把Agent评分冒成人工/独立审批。
+
+- [x] 实际查看六张最终PNG，定位生活验收脚本将原计划MaterialRevision2替换为fixture1。
+- [x] 独立真实素材副本完成三个PNG及精确Material/Master/QC回读：原真实Material2→新render revisions9/10/11→Master14/15，六确定性检查pass/两Mock语义warning，既有不可变行保全。
+- [x] 按固定rubric记录视觉自评与provenance；完整Audio、人审和独立质量仍开放，149/156不虚增。
+
+## 2026-10-09 连续实施：13.6 多媒体持久回归
+
+/// 复核当前148/156与此前明确持久回归授权 → 只补已批准13.6到既有测试文件 → 图片1–4候选/精确选择/无Master副作用 → 音色精确scope/目录刷新及CAS失效 → 签名与字节篡改阻断 → 集中离线门禁与进度回执；不新建测试框架、不调用供应商、不重发Unknown、不改正式库/服务或生命周期。
+
+- [x] 将此前no-new-test阶段记录与当前全范围实施授权对齐，只涵盖本change13.6；多平台仍不apply。
+- [x] 图片/音色目录/回执持久覆盖及集中离线冒烟：两个既有文件新增33参数化用例；相关四文件236passed/1既有warning/5.29秒。
+- [x] 五维覆盖逐项回读并关闭13.6，当前149/156、7开放；两项内存保护旁路均被回归抓住。真实完整Audio与人工试听不由离线测试代替。
+
+## 2026-10-09 已授权：音频输出上限 360 秒
+
+/// 用户将已提出的 180 秒方案明确改为 360 秒 → 配套备份正式 SQLite/实际素材根 → 既有 settings CAS 仅改 policies.limits.tts.max_seconds → 回读其余模型/凭据/路由/音色/120 秒等待完全保全 → 后续完整 Audio Recipe 保持最多 4 次 CPA＋2 次 MiniMax、并发≤3、启动间隔≥10秒、旧 Unknown 不重发。
+
+- [x] 正式 TTS 输出上限 10 → 360 秒，routing revision 8 → 9；其余存储配置等值、120 秒等待与 273 音色保留。
+- [x] 再次通过运行中正式API只读确认revision9/max_seconds360/timeout_seconds120/273音色；不重复保存或调用模型。
+- [x] 新内置 Audio Recipe 模板同步 600 → 360 秒，旧已保存流程/Run不改；红绿断言、四模板合同和104项既有Audio回归通过，正式API刷新并回读两角色模板checksum。
+- [x] 完整Audio批新隔离副本复用已接受Master5/8；科技第一次CPA口语改编无响应，Attempt25/Run5记录Unknown，本批停止；CPA应用请求1/4、MiniMax0/2，不重发。原正式Master、素材及旧Unknown不动。
+- [ ] 后续两 Persona 完整 Audio Recipe 与人工试听分别验收；时长配置成功不等于生成/质量成功。
+
+## 2026-10-09 真实 MiniMax 音色样本
+
+/// 已授权两种精确 Voice → 正式 SQLite/实际素材根配套快照 → 每条合成一次、不重发 Unknown → 成功样本明确接受 → live bytes/hash/签名/QC/旧行核对 → 完整 Recipe 与人审保留开放。
+
+- [x] 科技任务首次 422；重复执行请求被 409 阻止，未再次调用 MiniMax；租约到期后现有 recover 记录 Unknown/no original job。
+- [x] 生活任务真实 WAV 已接受为 MaterialRevision 7、项目引用 6；3.622344 秒，Audio QC pass/0 issues。
+- [x] 校正配套快照到真实 app/media，68 文件 hash 相等；5,163 旧行不变、schema crs、无 Master/config 覆写。
+- [ ] 明确长口语稿的输出时长及新的有界调用，再完成同 Run Audio Recipe；不得重发旧任务。
+- [ ] 人工试听/全模态 rubric、持久覆盖 13.6、独立质量及生命周期仍分别验收；当前 148/156。
+- [x] 13.6 现有覆盖逐项核对：Audio voice/rate/receipt/current-binding 有持久用例，Image batch/候选选择与音色目录刷新/新鲜度仍缺；不能提前关闭，未写新测试。
+
+## 2026-10-09 当前配置收口
+
+/// 在既有配置授权范围内只补齐图片多候选上限 → 通过正式 settings CAS 保存并回读 → 用正常 provider bootstrap 做本地 execution-plan 核验 → 不调用 MiniMax、不选音色、不写素材。
+
+- [x] `models` revision 7 → 8，`image_generation.max_items=4`。
+- [x] MiniMax image/TTS/ASR execution plan 均在 fresh process 返回 ready；当前 148/156，8 项开放。
+- [x] 记录 API inventory 与 execution probe 的边界：inventory 不主动读取凭据，dispatch 才做运行时核验。
+
+## 2026-10-09 集中离线冒烟
+
+/// 使用 Mock/隔离 SQLite → 同时跑 Persona、Graphic、Audio、Stage Master、Stage Invocation、model routing 既有回归 → 不访问 MiniMax/CPA、不写正式素材。
+
+- [x] `570 passed / 1 existing warning / 14.47s / exit 0`。
+- [x] 真实 TTS 与人工听感仍单独等待明确 Voice/调用授权，不用离线夹具冒充完成。
+
+/// 前轮已完成配置是实际进展 → 重读当前剩余10项与真实图卡 → 独立复制已校正context的验收SQLite/本地媒体 → 禁止出站及新模型调用 → 原renderer三张真实PNG → 现有接受API写副本MaterialRevision → 显式CAS子Master绑定精确render/hash → 当前checks/readback → 分开记录功能烟测与语义/人工质量。原验收历史、正式库/素材、预算与配置不改；不写新永久测试或执行生命周期。
+
+- [x] 实际apply146/156及剩余10项重计；前轮chat/voice配置已落地，不再重复授权。
+- [x] 复用科技真实Master/源FactPack，独立副本验证三PNG接受及显式render attestation/子Master；生活Persona同样完成。
+- [x] 当前QC/历史保全/零调用检查及回执；功能链已收口，但Mock语义警告不等于整体质量完成。
+
+## 当前交接
+
+图文两条功能链已完成，任务记账148/156、8项开放。下一阶段只剩真实Audio、人工质量rubric、全样本provenance/独立质量复核、13.6持久覆盖和单独授权的生命周期；不重复请求已耗尽的供应商预算。
+
+- [x] Audio/Stage 现有合同回归 211 passed / 8 existing warnings；完成口语稿、声音方向、TTS 请求冻结、接受、QC、估算字幕和 ASR 边界烟测。
+- [x] 明确 Audio 隔离正常页面证据为 `fixture_only=true / quality_claim=false`，不把合成音调冒称真实语音质量。
+
+# 2026-10-09 已授权：补齐聊天预算与音色目录
+
+/// 用户确认既有一次配置方案 → 保存当前SQLite配置备份与旧行/素材/凭据hash → 现有PUT接口CAS仅新增chat8192tokens/3候选/120秒 → 现有音色refresh一次（10秒等待、无重试/生成）→ 回读revision/预算/目录及两个角色Text readiness → 实际页面音色搜索可见 → 更新回执。保持旧配置/角色/媒体限额，零CPA调用、试听生成、自动选声、迁移或生命周期动作。
+
+- [x] 用户明确“同意补齐配置”，本轮仅此预算＋目录范围获准；此前blocked询问已解除。
+- [x] 私有SQLite在线备份与原数据/素材/敏感配置hash保全；5,162其他行、67文件及runtime.env不变。
+- [x] chat8192tokens/3候选/120秒通过CAS保存，revision5→6；一次音色目录同步273项，revision6→7，正式回读一致。
+- [x] 两角色Text readiness=ready，实际页面273项音色/搜索/筛选可见；未选声或生成。回执完成，146/156及剩余10项不虚关。
+
+# 2026-10-09 自动续行停止：待使用配置授权（答复前历史）
+
+/// 原授权启用已完成 → 本轮正式settings只读回读仍revision5/chat=null/voice_count=0 → 同一新增配置授权连续三轮未获人工回答 → 无剩余可安全自主关闭项，登记goal blocked并停止自动重复 → 保留完整目标、146/156及既有服务；确认后再按前述一次补配置方案继续，不重置调用预算、不自动生成或执行生命周期。
+
+# 2026-10-09 已授权本机启用
+
+/// 只读预检当前任务/配置/素材根 → 暂停既有API与Worker写入 → 同快照SQLite在线backup＋素材复制/hash核验 → 原启动入口刷新服务 → 现有API幂等初始化两个Starter及独立默认流程 → 逐旧行/hash与配置/身份字段回读 → 两角色页面、流程选项、图文/音频入口只读冒烟 → 更新回执。零模型调用、迁移、覆写旧数据、归档提交或push。
+
+- [x] 用户同意我完成备份、正式启用和关键功能冒烟，提示词/风格后续由用户调整。
+- [x] 配套备份并核对旧行/素材基线，原API/Worker恢复；5,147条旧行、67个素材文件与运行配置hash不变。
+- [x] 两个Starter/default workflows正式初始化与幂等回读；Persona2/3、独立Workflow7–12，重复初始化无新增/覆写。
+- [x] 关键普通页面/只读接口冒烟及本机启用回执；新接口已加载、API ready=true、角色/默认流程/生产/手动图片入口可见。当前146/156。
+- [x] 后续使用配置已另获授权并完成：revision7/chat预算已补、音色目录273；两个角色仍未钉死voice ID，不把目录或页面通过写成音频生成已就绪。
+- [x] 自动续行仅完成只读配置预检：现有Limits已支持chat预算；现有音色刷新通过MiniMaxCLI读取目录，最多等待10秒、不重试且不会生成音频。无需新接口/表/迁移。
+- [x] 用户已明确“同意补齐配置”，通过现有CAS补上述预算并一次刷新音色；URL/Key/默认Gemini与全部既有媒体限额保全，不自动选声音或试听生成。
+
+# 2026-10-09 功能优先交付与本机启用准备
+
+/// 记录用户对三张生活图卡的人工通过 → 只核对当前页面/API，不追加生成或全量测试 → 区分代码已接通与正式运行未加载 → 一次确认备份、服务刷新和两个角色初始化 → 获准后复用现有入口启用，不覆盖旧数据。
+
+- [x] 用户接受当前生活图卡，提示词与风格留给用户在程序内调整；不重复做审美生成验收。
+- [x] 本机 Web 已启动于 127.0.0.1:5173；实际角色页与只读蓝图预览可见，Web→API 代理返回现有角色。
+- [x] 定位正式 API 未加载新接口：OpenAPI 无 starter-readiness/starter-fork，源码存在；正式库仍 crs000000001，quick_check=ok，无执行中的媒体/Workflow/CreativeExecution。
+- [x] 一次取得正式本机启用授权并执行：配套备份后刷新现有API/Worker，仅新增两个Starter及默认流程；旧行/hash保全、零模型调用/迁移，详见本页当前启用记录。
+
+# 2026-10-08 已授权：生活封面图＋正文文字卡
+
+/// 同一 OpenSpec 明确暖杂志封面图片必需、正文可纯文字 → 复用真实 Attempt36 做离线反例 → Preview/排版/QC 共用角色规则并冻结策略 → 集中已有回归与代码复核 → 更新回执。不新增调用、永久测试、正式写入或生命周期动作；144/156 不虚增。
+
+- [x] 用户已选择混合卡片方向；仅此布局规则获授权。
+- [x] 验证真实既有计划可排版，且缺封面图/纪实缺图/非法替代仍阻断；实际本机renderer生成三张PNG预览，历史请求与源字节保全。
+- [x] 完成集中核验与回执：离线红绿/结构QC/hash保全、同一源码正确隔离配置全量2495通过/12跳过/80既有警告（142.91秒、exit0）、Ruff/strict38/38/diff通过；图文成品质量、人审及其他12项保持独立。
+
+# 2026-10-08 自动续行阻塞审计（方向答复前历史）
+
+/// 重读实际任务清单与调用journal → 当前144/156；主批CPA3/MiniMax2、补偿CPA2均response_received且额度耗尽 → 排查/副本路径已完成，剩余需人工方向、成品验收或单独授权 → 登记blocked，停止自动追加调用/重跑门禁/扩大写入，不关闭运行服务或需求。
+
+- [x] 逐项核对12项，映射到真实成品/人审、13.6新增持久覆盖、正式初始化和生命周期边界。
+- [x] 只读核对7次实际调用已返回，无需为这些journal启动等待或重发；生活continuation停在每卡照片规则。
+- [ ] 用户选择生活混合卡片规则；后续真实调用/权利接受、新永久测试、正式初始化和生命周期仍各按原授权边界执行。
+
+# 2026-10-08 科技图文 context 阻断：独立副本 API 验证
+
+/// 只读原隔离Master5/9与事实包 → 确认新图文Project4未绑定源稿Frozen FactPack1，不是业务代码漏传 → 建立独立SQLite副本，网络禁止 → 现有API显式绑定同一pack，验证旧Master变stale → CAS另存user_edit子revision，正文hash不变、context变current → 确认无render attestation时仍不能freeze → 保留原库/原Stage历史，不关真实质量任务。
+
+- [x] 只读确认源Text Master5绑定Boundary1/Pack1；Graphic Master9的boundary为空。
+- [x] 独立副本API绑定既有pack成功，旧Master9保留原context且显示stale；新user_edit Master10为current，parent9、payload hash不变。
+- [x] readiness仍拒绝Candidate freeze；零Provider/正式写入、不修改原隔离库/Stage血缘，无新业务代码或永久测试。
+
+# 2026-10-08 图文规划传递现有排版规则
+
+/// 首卡已有精确图片、其余两卡为 none → 复现 Preview/Prompt 未明确每卡图片要求 → 同一批准规格内补充现有 preset 规则投影，不修改 composer/历史/模型配置 → 临时离线红绿与集中已有回归 → 更新回执。零真实调用、正式写入、永久测试或生命周期动作；144/156不变。
+
+- [x] 新规划 Preview/执行 Prompt 显式携带当前 preset 的每卡图片与 shape-only 约束，并保留精确 hash；composer 本身不改。
+- [x] 17项临时离线检查、690项已有定向回归（9原有警告，26.90秒，exit0）、源码自复核、Ruff/strict38/38/diff通过；前序631项与Web门禁明确为修复前证据。
+
+# 2026-10-08 已批准收口：隔离图片接受＋生活图卡规划补偿批次
+
+/// 用户批准在同一隔离 SQLite/media 中接受两张 MiniMax 图片：公开使用与模型使用允许，商业使用关闭；随后最多补 2 次 CPA，串行启动间隔至少 10 秒。只做隔离验证与回执，不写正式库、不发布、不新增调用。两次 CPA 已实际返回，启动间隔22.569秒；生活 Visual Direction 与 Card Plan 已接受，但首卡有图、其余两卡为纯文字，不满足暖杂志每卡图片规则。此处不虚关20.3，也不追加重试。
+
+- [x] 技术图片接受为隔离 MaterialRevision 1；生活图片接受为隔离 MaterialRevision 2；两者均保留原字节/hash，`public_use_allowed=true`、`model_use_allowed=true`、`commercial_use_allowed=false`。
+- [x] CPA 仅调用2/2，分别完成生活 Visual Direction Attempt35 与 Card Plan Attempt36；未调用 MiniMax，不重发旧 Unknown。
+- [x] 只读回验：两任务 accepted、无 provider job/query、生活 Run9 无 Master 写入；正式 settings hash 与 `crs000000001` 未变。
+- [ ] 生活图文最终 Master/Render/QC 仍未完成：Card Plan 的 exact accepted MaterialRevision 没有满足 composition gate，阻断码为 `graphic_composition_requested_photo_missing`。
+
+# 2026-10-08 新批次授权已批准：3次规划＋2次图片
+
+/// 用户明确批准上一条有界批次 → 新隔离SQLite/media `/tmp/aics-graphic-120.tXYx6m`，一致备份前序已验收Text/科技规划证据 → 原Unknown不改不重发 → CPA最多3次、MiniMax最多2次、串行启动间隔≥10秒、等待120秒 → 真实返回后仅验证有据合同及既有排版/渲染条件 → 交由用户验收。未批准音频调用、正式写入、永久测试、初始化或生命周期；无权利证明不虚填public/model/commercial许可。
+
+- [x] 建立本批幂等journal/隔离数据及精确配置预检。
+- [x] CPA3/3、MiniMax2/2实际返回；串行最短启动间隔19.850118秒，零付费请求Unknown，额度耗尽停止，不再dispatch。
+- [x] 五张真实图片解码/hash和隔离SQLite/正式配置/schema/源稿检查通过；同一回执记录partial，不虚关19.3/20.3。
+
+实际顺序为科技新Visual→接受后自动Card Plan→显式三卡调整；自动续行占用一个CPA额度，生活规划未完成。科技默认preset经确定性compose/显式隔离Master9/实际renderer得到三张1080×1440文字PNG；素材未接受/绑定，QC被context/evidence条件阻断，仍非完整成品通过。旧Attempt26因跨进程临时runtime指纹失效不能接受，保留不改；本轮新链路在同一进程。生活Attempt33被临时预算守卫在HTTP dispatch前拒绝，但generic Stage记Unknown，保留事实，不当远端超时、不重发。新临时runner补claim前预算检查，零产品代码变化；详情见同一Graphic/Audio回执。
+
+# 2026-10-08 Audio Stage等待范围收口
+
+/// 核对剩余12项及新调用授权未答复 → 跟踪普通Audio Stage到原生任务的等待参数 → 复现v4界面/校验仍限25秒 → 仅与现有1–300秒路由范围一致化，默认25及精确来源/voice/receipt保留 → 临时离线红/绿和集中已有Stage/Audio回归 → 更新同一回执。零模型调用、正式配置/DB/服务或生命周期写入，不新增永久测试；144/156不虚增，13.6仍开放。
+
+- [x] 定位并离线复现Audio v4 Stage残留25秒上限；修改前120/300秒合同和服务探针预期失败。
+- [x] 同步既有Stage合同/服务校验至1–300秒，默认25、历史v2/v3、精确voice及冻结receipt不变。
+- [x] 21项临时离线检查、六组已有回归475passed/8warnings/15.20s、app Ruff/strict38/38/diff通过；范围内源码自复核和同一回执完成。
+
+本次没有重跑全量backend或Web；前序2495passed是下层等待修复后的历史门禁，不冒称覆盖本次上游两行修正。正式models/llm hash及crs head只读确认不变，无Provider调用或永久测试；144/156、13.6及真实质量/初始化/生命周期仍开放。
+
+# 2026-10-08 已批准等待参数消费修复
+
+/// 保持原Unknown与调用预算 → 复现已冻结timeout被截为25秒、外层默认30秒、租约短于等待时间 → 按当前model-routing delta的“不得静默忽略请求字段”修复精确消费、配套外层等待和有界租约 → 仅临时离线红/绿冒烟＋集中已有回归 → 源码复核/strict/diff/回执。不新增模型调用、正式设置/DB写入、永久测试、依赖/迁移或生命周期动作。当前正式image/TTS限额实际120秒，不由本轮修改；现有默认25保留。13.6永久覆盖仍开放。
+
+- [x] 离线证实图片/TTS真实dispatcher的25秒硬上限、外层默认30秒与任务租约问题；扩展同一临时探针后再次得到预期失败。
+- [x] 精确冻结参数消费修复，native仍限1–300秒、外层只加5秒本地处理余量、租约覆盖整个串行批；默认及Unknown不重发保留。
+- [x] 14项临时离线冒烟、已有全量2495passed/12skipped/80warnings（134.64s、exit0）、appRuff/strict38/38/diff通过；三文件hash前后一致，正式配置与原Unknown保全。
+
+本轮仅修改generation_tasks/minimax_cli_provider/provider_calls及范围回执，不新增永久测试。当前144/156不变；Web未改，前序build不冒称本轮重跑。详情见同一Graphic/Audio真实验收文档的等待参数修复节。
+
+# 2026-10-08 新授权图文批次
+
+/// 记录本次明确授权（CPA最多4次规划、MiniMax最多2次生图、启动间隔至少10秒、并发1、未知不重发）→ 新隔离SQLite/media，复用正式已登记模型与当前Persona默认配置 → 真实Visual Direction/Card Plan与原生图片候选 → 已有确定性composer/renderer → 记录实际产物、精确回执与阻断 → 交由用户分别验收。只执行本批图文，不调用音频，不写正式库，不新增永久测试、发布或生命周期动作。
+
+- [x] 本批调用与原任务保护：CPA 1/4、MiniMax 2/2，启动间隔113.615105/32.507775秒；生活图片Unknown后停止全部后续dispatch，未重发。
+- [ ] 两角色规划/确定性排版/PNG产物与真实权利、质量边界。
+- [x] 有界回执与只读集中冒烟：真实科技规划、JPEG解码/哈希、两任务刷新/未接受、正式配置/schema及源稿hash保全；不把部分结果当整套图文通过。
+
+本批未改业务代码；临时验收脚本补齐正式startup已有的runtime配置缓存/media provider注册/CLI opt-in，不修改产品。Mock Attempt25保留、不接受、不算真实证据；科技真实Attempt26来自新Run7。图片25秒等待是本批脚本参数，不是用户要求或MiniMax固定限制。未执行Card Plan/composer/Master/render；19.3/20.3保持开放。校验文档后交接，不重复此前完整代码门禁。
+
+# 2026-10-08 自动续行停止条件核对
+
+/// 重新计数144/156 → 确认四次MiniMax预算已耗尽且新批次未答复 → 同一阻塞连续三轮，无安全可继续的实施项 → 登记goal blocked并停止自动续行，等待人工授权。保持完整目标、12项未完成需求、正式运行环境与所有已有证据；不重跑门禁、不重发Unknown。
+
+# 2026-10-08 当前业务集中最终门禁（不追加真实调用）
+
+/// 核对144/156和未答复的新批次授权 → 新mktemp独立SQLite/素材目录并只建隔离schema → 运行现有完整backend与Web TypeScript/Vite/FE-P1 → 核对实际退出码/警告/懒加载预算 → strict/diff/Ruff → 更新同一回执，保持真实图文/音频人审及正式初始化/生命周期未完成。无需为已有批准规格重新propose，不新增测试代码、模型调用、依赖/迁移或正式服务变更。
+
+- [x] 完整后端新鲜门禁：2495 passed/12 skipped/80 warnings，134.01s，exit0；显式本机renderer使原16项条件跳过实际运行，无新测试文件。
+- [x] 当前Web TypeScript/Vite/FE-P1通过，手动图片面板19466bytes且位于五个日常入口初始静态图之外；临时检查按既有manifest alias映射修正，不改业务代码。
+- [x] 最终strict38/38、app Ruff及tracked diff通过；144/156不变，最新证据另存，等待额外真实调用/质量/测试写入/正式启用与生命周期授权，不重跑同一门禁充当进展。
+
+# 2026-10-08 Persona剩余依赖与确定性图文承接
+
+/// 核对原142/156和冻结调用批次 → 仅纠正后续平台规格的真实Stage名称/持久覆盖计划（不授权代码或测试写入）→ 精确保留原requirements/scenarios → 在新临时输出目录执行现有composer/本地renderer，无模型调用 → 核对实际PNG/QC与隔离链路 → 统一strict/diff及进度回执。人工质量、额外真实调用、正式初始化和生命周期不由自动续行扩大授权。
+
+- [x] 0.3/0.4前置规格纠正完成，22个named scenario保留，当前144/156、12剩余；不启动平台apply或新测试写入。
+- [x] 两张实际1080×1440中文字卡生成/视觉/hash检查；手工计划＋显式preset不冒称默认Persona Graphic全链路。
+- [x] 已有223项图文/真实renderer/API回归通过，1warning、23.45s；strict38/38及tracked diff通过，零额外Provider调用。
+- [ ] 全模态真实Stage/人工质量、13.6新增持久覆盖、正式初始化及生命周期仍有各自权限/验收边界。
+
+# 2026-10-08 已登记 MiniMax 有界真实验收
+
+/// 保留原隔离任务和四次生成上限 → 用本机帮助输出复现音色参数误阻断 → 修正成功帮助命令的 stdout/stderr 兼容 → 既有回归 → 仅剩一次短音频生成 → 实际 bytes/hash/QC 与回执。此前三个真实请求不重发；没有 Provider job ID 的超限音频仅恢复为 Unknown。保持正式配置、SQLite、素材库及服务不变，不新增永久测试、归档或提交。
+
+- [x] CLI帮助兼容最小修正；实际失败→通过断言，165既有回归与Ruff通过，无新增永久测试。
+- [x] 四次真实生成全部已用；两图、一短音频实际返回，一超限音频Unknown、不重发；raw/hash和基本文件检查完成。
+- [x] 授权21.2据实关闭，142/156；完整Graphic/Audio与人工rubric仍开放，样本均未入库/改Master。
+- [x] 最终OpenSpec38/38、diff/范围文档空白核验通过；apply计数142/156，自有8027隔离API已关闭，样本与数据库保留，不影响正式API/Web/Worker。
+
+# 2026-10-08 CPA图片协议 apply（已完成）
+
+当前141/156，10.11已完成，剩15项。/// 增加仅引用已登记模型的`cpa.images.b64.v1`图片绑定 → 冻结安全Prompt/协议/原生1–4候选合同 → 复用ProviderGenerationTask签名/Unknown/选择/MaterialRevision → Settings提供显式绑定与生成前预览 → 集中既有回归和隔离合成响应冒烟 → 更新回执。保留ChatGPT手动路径，不访问真实CPA、不改正式配置/库/服务，不新增迁移或持久测试；真实质量与正式初始化、生命周期仍待各自授权。
+
+# 2026-10-08 ChatGPT手动生图 apply
+
+当前仅10.12已完成，140/156；/// 冻结来源与完整提示词 → 即时暂存多图 → 校验与精确选择 → 仅一张明确接受 → 集中既有回归/隔离页面及API → 自复核与回执。所有环节有本轮证据；实际浏览器文件选择及共享onDrop离线处理器分别验证。CPA/真实质量/正式初始化/新增持久覆盖/生命周期仍开放，不扩大权限。
+
+用户已明确授权开始，仅实施同一change的10.12。/// 复用当前Master/Variant冻结提示词与输出合同 → 手动入口/复制 → 逐文件拖入暂存与校验 → 精确选择并明确接受 → 既有回归/构建与隔离冒烟 → 代码复核与回执。不新增持久测试、表/迁移，不调用真实模型、不改正式库/配置/服务、不自动绑定Master、不提交归档。前端使用独立轻量手动面板，保持原自动生成入口不变。
+
+# 2026-10-08 生图入口范围补齐
+
+最新确认改为ChatGPT手动路径，替代下面的浏览器自动执行计划。/// 同步同一OpenSpec的proposal/design/delta/tasks → 更新既有实施计划与流程 → 定向规格/计划复核 → strict/diff → 待明确apply后才改业务代码。前端选ChatGPT即展示完整提示词/一键复制/图片拖入入口；拖入立即上传临时候选区，明确接受才入库，Master另行绑定。139/156保持；无新请求、正式写入或生命周期动作。
+
+本批规格/计划/流程已同步；新鲜strict38/38、diff-check和九份未跟踪范围文档行尾检查通过。独立定向复核APPROVE_SPEC_PLAN_AMENDMENT、无实质修正；10.12仍未实施，139/156不变，待明确apply。
+
+以下一次Chrome烟测已发送1次并实际生成1张；下载等待被用户打断，完成未核验，不重发。它不等于产品任务完成。
+
+本次人工授权一次ChatGPT网页烟测：1次提交、1张技术示意图，仅取回本地，不入库、不发布。/// 复用已登录Chrome → 一次发送公开通用示意Prompt → 只观察原会话 → 下载实际图片并校验MIME/尺寸/SHA256 → 记录外部网页烟测，不关闭尚未实施的10.12；可能已发送时绝不重发。
+
+用户已回答浏览器问题：复用本机Chrome现有ChatGPT登录，会话选择阻塞解除。/// 只读确认登录 → 保持Cookie在浏览器内 → 明确下一次真实网页生图调用预算 → 按原CreativeExecution链执行，不用登录成功代替图片验收。当前139/156保持；下段自动阻塞记录是回答前的历史。
+
+自动续行阻塞核对：同一协议/浏览器选择与授权边界连续三轮未解除，139/156保持。停止重复检查及猜测性实施，等待人工回答；不取消完整目标。后续真实质量、持久测试写入例外、正式初始化和生命周期仍分别保留原边界。
+
+/// 核对已有生图代码与本机只读登记 → 核对CPA已记录版本的图片协议 → 把遗漏的CPA/ChatGPT入口补回同一OpenSpec → 定向规格复核/strict/diff → 等待未回答的浏览器会话选择与exact协议确认，禁止猜测性dispatch。
+
+- [x] 当前实现是MiniMax/Voice，不是所有生图入口；CPA registered chat不等于image capability。
+- [x] 补10.11/10.12为未完成任务，当前139/156，旧139/154为历史交付检查点。
+- [x] 定向复核APPROVE_SCOPE_AMENDMENT；strict38/38、tracked diff-check及九份新增范围文档空白检查通过（rg无匹配exit1）。不代表详细API契约或业务apply许可。
+- [ ] CPA exact图片protocol/model契约；ChatGPT明确browser/session；两项未实施、不自动调用。
+- [ ] 保留13.6持久覆盖、真实质量、正式初始化与生命周期授权边界。
+
+# 2026-10-08 图片＋音频批收口
+
+/// 共享请求/回执 → 原生四图与精确选择 → 本地音色目录/精确角色配置 → 修复独立复核问题 → 集中现有回归/隔离页面冒烟 → 保留真实质量、永久覆盖与正式初始化边界。
+
+- [x] Image/Audio配置、候选、Voice Catalog和普通/高级页面实施；关闭10.8–10.10/12.7–12.9，139/154。
+- [x] 独立页面复核问题修复，最终限定APPROVE；2479现有后端用例、Web/FE-P1、Ruff、strict和六项隔离页面冒烟通过。
+- [ ] 13.6新增永久回归仍需遵循用户不新增测试代码的当前约束；临时冒烟不替代持久测试。
+- [ ] 继续已有真实Graphic/Audio完整Stage质量及人工验收；Gemini/Grok/ChatGPT网页生图后续接入不冒称完成。
+- [ ] 正式初始化、依赖变更、canonical同步/归档/提交单独保持边界。正式数据、配置及服务不变。
+
+# 2026-10-08 用户确认文字样本，继续全流程框架
+
+/// 记录用户对科技样稿和生活编辑稿的人工确认 → 保持原真实批次和隔离证据不变 → 继续搭建既有 Persona/Recipe/Stage/Master/Variant 框架 → 图文和音频单独验收，不把文字确认扩大为全模态或正式初始化授权。
+
+- [x] 用户确认两篇文字样本可以，后续在程序内自行调节。
+- [ ] 继续核对并收口 Graphic/Audio 的产品承接与集中冒烟入口。
+- [ ] 分别取得 Graphic、Audio 的真实成品与人工验收；正式初始化和生命周期仍单独授权。
+
+# 2026-10-08 生活编辑稿隔离 Master 回接
+
+/// 保留已复核候选和原真实批次 → 新私有 SQLite 副本 → 提取已复核正文（来源/生命周期说明留在回执）→ 重算四条精确 citation locator → 现有 save_revision 追加 user_edit/parent8 → 回读、幂等、旧行保全与未检查冻结阻断 → 独立窄复核和文档记录。零网络、零正式写入，不复用旧 checks，不重发旧请求。
+
+- [ ] 候选、原 Master8/ZIP/SQLite/hash 预检及四条冻结事实匹配。
+- [ ] 追加隔离编辑 Master，验证正文/证据/上下文、幂等与历史保全。
+- [ ] 验证未检查的新稿无法冻结；独立复核和门禁回执。用户文字质量仍单独待确认，133/147 不提前改变。
+
+# 2026-10-08 最终双稿独立复核
+
+/// 只读回验已完成批次与正式配置 → 独立检查两份冻结文字产物及固定七维 rubric → 记录具体结论 → 等用户文字验收后再进入图文；不重启验收 API、不追加 CPA 请求、不提前关闭全模态任务。
+
+/// 接收实际结论（科技通过、生活需改）→ 核对生活稿三处表达问题和四条冻结事实 → 另存离线编辑候选，来源说明与正文分开 → 精确原稿/候选哈希与定向复审；不覆盖原Master8/候选/ZIP，不冒充新的模型直出或完整质量验收。
+
+- [x] 独立结论与原稿精确hash一致；科技样稿通过，生活主体偏系统说明、内部术语与泛化结尾需要最小修订。
+- [x] 生活编辑候选与定向复审：精确f89f645f完整hash获APPROVE_EDITORIAL_SAMPLE，七维5/4/5/4/4/4/5；原文/库/包保留，不等于用户认可或已接回Master。
+
+- [x] 17 次响应、并发/间隔、产物/收据/SQLite 哈希及正式配置与 schema 回验一致；自有 18337 无监听。
+- [x] 独立 reviewer Lagrange（01a1176f-aeb0-73f3-b759-11ff9a201ced）完成：科技原样稿通过，生活原样稿需修改；新生活编辑候选定向通过，reviewer已关闭，不冒称两原稿均通过。
+- [ ] 用户分别确认两个文字样本；不把自动续行或模型调用授权当稿件质量认可。
+
+# 2026-10-08 新一批仅文字真实验收（人工已授权）
+
+/// 只读核对CPA尝试上限和正式模型配置 → 新受保护副本保留Master4与旧Unknown → 科技稿当前检查/冻结/Review/本地ZIP → 生活角色新项目/Run默认文字流程 → 精确hash与固定rubric；≤30请求、≤3在途、启动间隔≥10秒、含首次每请求总尝试≤5，Unknown停止。无正式写入、Graphic/Audio或生命周期动作。
+
+- [x] 新隔离预检与调用护栏；精确配置、原预算8/30恢复，旧Unknown不重发。
+- [x] 科技Master4检查如实阻断无来源日期，追加Master5去除该日期；当前真实checks8pass/1披露warning，Candidate2/Approval/localZIP通过，独立最终复核因工具额度未完成。
+- [x] 生活Project3/Run4九阶段实际接受，三版Master6→7→8、精确四引用、当前checks7pass/2披露warning、Candidate3/Approval/localZIP；Agent已阅稿，不代替用户质量确认。
+- [x] 17/30调用、峰值1/启动间隔≥10秒、原配置/历史hash、SQLite及两ZIP精确回读验证；独立工具额度无结论如实记录。只关闭19.2/20.2，133/147；用户文字验收、全模态独立复核仍开放。
+
+# 2026-10-08 科技编辑稿隔离 Master 回接
+
+/// 保留旧停止批次和已批准编辑稿 → 新建私有 SQLite 副本 → 复用 canonical Text converter 和精确 citation resolver → 经现有 save_revision 追加 user_edit Master → 核对七条证据、正文渲染、历史不变及旧 checks 不可复用 → 记录范围；零 CPA/真实 Provider/正式写入，不冻结未检查的新稿。
+
+- [x] 核对批准规格与现有保存/渲染/检查投影服务；只做既有能力的隔离回接，不变更产品路由或新增业务功能。
+- [x] 在新的受保护副本追加user_edit Master4，保留parent3祖先；七条引用、一事件，原行全部不变，未伪造LLMRun/Stage provenance。
+- [x] 引用/hash/幂等/九条缺失checks及实际freeze409验证通过；独立APPROVE_ISOLATED_ADOPTION、strict38/38/diff通过，不改变131/147或完整质量任务。
+
+# 2026-10-07 科技文字成品离线修订
+
+/// 仅读真实科技稿和七条冻结项目事实 → 另存有来源清单的编辑候选 → 独立按固定Text rubric复核 → 核对原report/launch/文章/ZIP哈希不变 → 记录候选限制；零CPA调用，不覆盖停止批次或旧Master/Candidate。
+
+- [x] 仅修证据之外的承诺、角色术语解释和不可读引用，保留原稿另存编辑候选；正文1394非空白字符，七条本机依据链接均存在。
+- [x] 独立复核事实依据、工程角色、结构、具体性与标题一致性；两处来源定位修正后APPROVE_EDITORIAL_SAMPLE，七项评分4/5/4/4/5/4/5，区分稿件批准和产品全链路验收。
+- [x] 记录新旧文件哈希与本轮结果；19.2/19.6/21.3/22.6不因单篇离线修订整项关闭。131/147保持；新文字整批授权待答，默认真实预算0。
+
+# 2026-10-07 验收批次调度约束（用户确认）
+
+/// 保留已停止批次与历史Unknown → 新私有调度器以Semaphore(3)限制在途请求、单一dispatch锁限制启动间隔≥10秒 → 离线并发/间隔/停止/预算检查 → 记录结果；本轮零真实调用、正式写入或生命周期操作。
+
+- [x] 新建仅验收使用的受限调度入口，默认调用预算0；每个真实请求持有并发槽直到响应/异常结束。
+- [x] 离线验证最多3在途、启动间隔至少10秒、Unknown阻止排队请求、预算不得超额；7项检查通过，peak=3、缩放时间最小间隔10.1278秒。
+- [x] 更新README和进度/发现；不把批次级保护冒称为产品/CPA的全局限流，也不将调度参数确认扩大为30次真实调用授权。
+
+# 2026-10-07 集中门禁与 CPA 单次复测
+
+/// 新鲜隔离后端/前端/OpenSpec/Ruff/diff 门禁 → 仅一次精确 CPA 生成请求 → 保留正式配置和历史 Unknown → 更新当前任务证据
+
+- [x] 重新完成隔离后端、前端构建/预算、OpenSpec strict、Ruff 与 diff-check；0.5 关闭。
+- [x] 新隔离配置一次调用 `gemini-3.8-flash-high`，返回 HTTP 200/内容/usage，零重试/零 fallback。
+- [ ] 继续分别完成两个 Persona 的真实 Text → Graphic → Audio 成品与人工 rubric；单次连通性不替代模态验收。
+
 # F8 Production Readiness Implementation Plan（2026-10-03 继续）
+
+## 2026-10-07 真实Text串联缺陷最小修正
+
+/// 实际隔离数据复现质量→精修Preview溢出 → 保留完整CheckRun/Attempt和原有live校验 → 仅交接精确ID/hash/状态及问题/coverage摘要 → 同数据无网络验证 → 既有回归与独立窄review → 恢复同一授权批次。
+
+修前186597bytes触发128KiB限制；未调用精修模型。修后完整resolution129061bytes可再次canonicalize，9条检查的报告hash/状态、全部问题与coverage均保留，原始报告与Master不变。没有放宽预算、大小限制或质量gate，AudioQC/ASR交接保持原样。既有347项回归通过/8warnings/13.46s；旧2479全量不是修后结果。当前130/147，科技已明确编辑接受初稿并实际完成facts/identity检查，默认批次继续，尚不宣布最终质量。
+
+## 新一批真实Text验收 — 已获人工授权
+
+/// 只读确认CPA现行尝试上限和正式配置 → 新建独立SQLite/素材/预算观察器 → 双Starter各自默认Text Recipe逐阶段Preview/执行/审阅/接受 → 实际成稿与checks/Review/本地ZIP → 固定rubric及hash回执；30次总预算，串行且启动间隔至少15秒，Unknown停止整批。旧Unknown不重发，正式库/配置/服务不动。
+
+- [x] 用户明确“授权，你直接开始”；旧授权等待已解除，goal实际仍active，未执行blocked变更。
+- [ ] 新批次隔离预检与启动。
+- [ ] 两角色默认Text完整真实链路及固定rubric。
+- [ ] 记录实际调用数、产物hash、正式配置不变与未完成边界。
+
+
+### Persona八项持久覆盖补齐（2026-10-07，用户明确授权）
+
+/// 保留main和全部既有dirty内容 → 扩展catalog/schema/ref/recipe/resolver测试 → 分离Identity/Graphic/Audio矩阵 → 隔离SQLite/Mock/本地合成文件集中验证 → 独立SPEC覆盖与代码质量复核 → 全量backend/Ruff/strict/空白门禁 → 只关闭有完整证据的8项；不调用真实模型或写正式库，不提交归档。
+
+- [x] 明确测试例外仅覆盖3.7/4.6/18.1/18.2/18.3/18.7/18.8/18.9，不自动扩大到真实质量或正式初始化。
+- [x] 四组持久测试集中568passed/1现有warning/19.12s；32个Chat tunable消费case、5个Director比例case、双角色模板密度、原生voice/rate均经真实resolver进入实际请求或结果；两Starter×四Recipe改为精确模板key映射并核对隔离apply落库定义和模态集合。
+- [x] 独立覆盖/质量复核八项APPROVE；补强18.9，Video→Audio进程内mutation正确被拒绝，绑定rowID/WorkflowID重放保持；仅这8项checkbox关闭，130/147、17开放。
+- [x] 补强断言后的fresh全量backend2479passed/28skipped/80warnings/120.43s、exit0；Ruff/strict38/38/空白门禁与最终回执完成。修正前122.92s保留历史，不冒充最终结果。
+- [x] 后续自动续行只读复核130/147和剩余权限：真实Text旧Attempt7/8仍Unknown，零Master，integrity=ok，原report hash保持；18336无监听，不存在可等待的本批活跃生成进程。
+- [ ] 等待上一轮提出的真实文字新批次人工授权；自动goal消息不是回答，也不恢复已由CPA尝试上限变更替代的旧30次探测权限。保持完整目标和文字→图文→音频顺序。
+
+真实调用授权阻断审计已满足三轮：八项完成回合末首次请求新批次授权→上一轮自动续行→本轮自动续行，均无人工回答。当前130/147、Unknown7/8、零Master和18336已停止仍经只读确认；不存在可等待job或可替代的授权内业务行动。将自动goal标记blocked停止重复续行，目标不缩小、不标complete；等人工授权后再恢复。
+
+下方三轮权限阻塞为授权前历史；本轮不重发旧Unknown、不访问CPA、不改正式SQLite/素材配置/服务，不做migration或canonical/archive/commit/push。
+
+### Persona权限阻塞审计（2026-10-07，第三次连续确认）
+
+/// 仅读当前README/计划/回执/未完成项与实际测试覆盖 → 确认没有新的人工答复或可等待的活跃测试进程 → 不把重复绿灯或文档状态纠正当剩余需求完成 → 记录三次同一测试写入冲突 → 请求目标blocked以停止重复自动续行；目标范围不缩小，不标complete或paused。
+
+- [x] 当前main@341ead8、122/147、25开放；测试搜索未找到新Graphic composer/Audio QC/Audio recipe永久覆盖。
+- [x] 首次例外提问、上一轮只读复核、本轮复核均未收到撤销“不新增测试代码”的答复；上一轮属于no progress，没有活跃进程可verified-wait。
+- [x] 检查其他未完成项仍是暂停的多平台依赖、无法补造的历史baseline、独立真实质量/正式数据/生命周期权限；不越权推进这些范围或重发Unknown。
+- [ ] 人类明确允许8项本地持久测试后恢复，补齐并集中验证；之后仍按文字→图文→音频分别验收完整目标。
+
+### Persona目标续行：集中回归与剩余覆盖核验（2026-10-07）
+
+/// 保留main及既有dirty工作区 → 读取当前apply与147项清单 → 对照现有永久测试/批准规格确认8项覆盖缺口 → 仅运行现有7组隔离SQLite/Mock回归 → 校正旧121/147摘要为实际122/147 → 请求“不新增测试代码”例外；未获答复前不写新测试，不调用真实模型、不改正式数据/Unknown或生命周期。
+
+- [x] CLI与checkbox均确认122/147、25开放；上一目标轮为CPA运行限制实际推进，不是无进展等待。
+- [x] 现有7组集中回归199passed/9warnings/15.79s，隔离目录/private/tmp/persona-concentrated-smoke.D3wr21，零模型调用。
+- [x] 核对并修正tasks/实施计划的过期顶部摘要，旧验收数字保留为历史。
+- [ ] 获得8项明确持久测试义务的写入例外后实施并验证；只读核验或临时冒烟不能替代它们。
+- [ ] 后续分别完成真实Text、Graphic、Audio质量验收及独立数据/lifecycle授权，不缩减整个目标。
+
+### CPA总尝试上限实施（2026-10-07，用户明确授权落实）
+
+/// 复用已确认的总最多5次含首次约束 → 核对8.0.8/fd48ea68真实重试/401补发/积分兜底源码及应用零重试 → 加密信息不输出的私有副本与远端0600备份 → 只改CPA retry=0、单轮credential cap=2、stream bootstrap=0、credits fallback=false → 精确语义diff/CAS/原权限替换及既有热加载回读 → 离线最坏4次证明与文档门禁；不调用模型、不改VPN/URL/Key/正式SQLite或旧Unknown。
+
+- [x] 根因/源码及应用零重试核对：不能用request-retry=5；一次credential执行还有一次401刷新补发，当前四份OAuth无retry覆盖/模型池。
+- [x] 备份并最小修改现有CPA运行配置：原hash备份0600，精确四字段语义diff及原hash CAS通过，15:58:28原进程热加载、PID700起点未变。
+- [x] 验证热加载、离线12种组合最坏4次及完整安全回执，更新README/progress/findings；新鲜strict38/38、tracked/五份精确untracked空白校验通过，任务122/25不变，零模型请求。
+
+这是既有bounded routing的运行参数修正，不新增业务代码/自动重试引擎/表/测试/迁移，不继续147项业务apply或归档。本次“落实下去”明确批准总上限；固定60秒频率未确认、也未宣称实施。当前采用更保守的最多4次而不是为了凑满5继续发，Unknown应用边界保持。
+
+### 单次网络复查（2026-10-07，用户授权再试一次）
+
+/// 沿既有SSH只读取得CPA代理及内部retry安全字段 → 仅一次无认证Google生成端点HEAD、curl retry=0/总时限20秒 → 如实记录TLS/HTTP结果与一次访问 → 不触发模型/OAuth刷新、不改变配置、不重发旧Unknown；网络连通不等于完整Text质量验收。
+
+- [x] 完成一次无认证HEAD：15:22:12 +0800，HTTP404/证书验证0/1.428312秒，curl retry=0；内部request-retry仍2，未发送生成。
+- [x] 更新README/progress/findings与回执，tracked及回执空白检查通过；不新建测试或修改运行环境。
+
+### CPA访问次数与频率（2026-10-07，用户新约束，待确认间隔）
+
+/// 立即暂停CPA自动探测/真实验收 → 明确5次含首次及内部重试、不将旧30次预算当继续访问授权 → 确认最小请求间隔及计数边界 → 最小OpenSpec提案/用户确认后才实施 → 仅离线核对限制，不通过真实模型调用反复验证。
+
+- [x] 本轮零CPA/Google/代理探针请求，暂停自动真实验收；旧Unknown不重发，不实施待确认的Clash专用路由。
+- [x] 核对已有证据：一次应用请求对应CPA内部9次尝试，仅限制页面/客户端次数不足。
+- [ ] 确认请求间隔与计数边界；建议同账号串行、至少60秒、单次操作总尝试最多5次含首次与内部重试，结果不明确立即停。
+- [ ] 规格确认后实施最小限频/重试约束并离线验证；当前没有代码/配置修改，不宣称限频已生效。
+
+下面8/30是已发生的历史调用记录，不是继续调用的额度。该账号的系统级限频尚未实施，本轮只停止本Agent发起的访问。
+
+### CPA 出站连接最小修复（2026-10-07，用户已授权）
+
+/// 读取当前CPA v8实际transport配置/进程代理与系统出站状态 → 用不生成内容的有界连接探针对照direct/既有proxy → 原因明确后只备份并修正CPA相关配置，验证回读/连通；不改应用模型或系统VPN，不重发旧Unknown，不用HEAD/发现成功冒充文章生成PASS。
+
+- [x] v8端口正确；原失败窗口147条HTTP出口peer reset，新的连接探针复现。专用CPA路由是候选修复，不猜改URL/Key。
+- [ ] 如有可证实的配置修复则先备份、单项修正并验证；否则明确记录证据限制而不猜改。
+
+待方向确认：CPA自身配置正确，真正修复需加入CPA→Google专用Clash策略，使用既有日本节点而不改其他软件出口。当前未安装规则/切换节点，原路径虽暂时恢复HEAD404不等于已修复。
+- [x] 更新回执/README/三份ledger；strict38/38、tracked及五份精确untracked空白检查通过，正式配置/report hash和Unknown7/8保持；修复仍待专用路由方向确认。
+
+### CPA 初稿失败只读排查（2026-10-07，用户已授权）
+
+/// 确认现有8317隧道端点 → 沿同一SSH认证只读定位CPA进程/日志 → 对照13:43–13:45两次初稿与成功请求 → 记录安全错误分类和证据限制；不重发Unknown、不换模型、不改本地或远端运行配置/服务。
+
+- [x] 只读取得对应CPA端请求/错误证据并定位失败层：两组Prompt hash匹配，各九次EOF→HTTP500；更深proxy/TLS/上游断连原因未证明。
+- [x] 更新现有回执/计划/发现；新鲜strict38/38、tracked空白检查通过，report/正式配置hash保持、122/25；不关闭真实质量任务。
+
+### Persona 两角色真实默认Text验收（2026-10-07，新授权）
+
+/// 只读核对正式模型配置并创建fresh隔离SQLite → 冻结当前精确文字模型与30次总预算 → 两角色默认九阶段逐项审阅/明确接受 → checks/Candidate/Review/本地ZIP → 导出原稿/hash/rubric和调用清单 → 停止自有服务、核对正式配置未变；旧Unknown不重发，Graphic/Audio/正式写入/生命周期不授权。
+
+- [x] 新隔离库和安全配置/模型连通预检（不消耗生成预算）。
+- [ ] 科技及生活两角色真实默认Text完整链路与逐稿质量审阅。
+- [x] 集中结果/hash/预算/限制回执，不用Mock或旧单阶段文章冒充本批PASS；本批如实记录PARTIAL。
+
+本次“好的，可以”明确授权最多30次真实文字调用，包括语义checks；不是复用旧18/30批次。当前仍122/147，实际验收后才按覆盖变更。
+
+本批已执行8次：六个中间结果成功、两个初稿Unknown；默认流程在此停止，不以另建Run绕过未明结果。零文章/Master/Candidate，两个完整验收任务不关闭；临时18336已停，正式配置hash前后一致，回执见docs/PERSONA_TEXT_REAL_ACCEPTANCE.md。
+
+### Persona Video normal-page补验（2026-10-07）
+
+/// 上轮实际比例修复/37点API证据属于progress → fresh临时SQLite/Mock与loopback API/Web → 原Starter/Production普通页面四阶段显式接受 → 比例Preview/Director包/零dispatch/刷新hash验证 → 关闭自有服务并记录截图/报告；不重发Unknown或进行任何真实/正式/生命周期动作。
+
+- [x] 两角色默认Video普通页面21检查点通过：脚本/镜头接受、video.master.v2、prepared导演包接受及刷新hash保持。
+- [x] 只读核对隔离库：2Master/2Package/8Attempt，Execution/输出/Provider任务/Material/Candidate均0；包与接受投影hash分别验证，临时服务已停止。
+
+本批关闭19.5的prepared-handoff功能验收，当前122/147、剩25。19.5不要求最终视频或真实Text/Graphic/Audio质量；此前追加的独立窄review未返回结论仍如实保留，不填写新APPROVE，也不替代最终质量复核。其余25项不豁免。
+
+Ruling: 本轮只补19.5缺少的normal-page合同证据，不把automatic goal续行当作上轮30次真实调用授权；当前新永久测试/正式角色初始化/归档等限制保持。现有task_plan/progress/findings继续作为用户指定ledger，不另造提交或workspace体系。
+
+### Persona Video prepared-only handoff（2026-10-07）
+
+/// 核对19.5与真实质量门禁区别 → 隔离SQLite/Mock默认Video Recipe依次接受脚本、镜头计划和Video Master → 实际Director包/精确hash/零dispatch回读 → 独立合同复核 → 只按覆盖更新19.5与回执；不调用真实Provider、不写正式库、不伪称成片或质量验收。
+
+- [x] 两个角色默认Video Recipe的隔离API37点通过，验证显式接受、Director method/constraints/aspect与当前Master绑定；不冒称普通页面或真实质量。
+- [ ] 独立确认19.5覆盖边界，记录prepared-only与真实质量的区别；其他授权缺口保持开放。
+- [x] 最小修正比例字符串/整数数组比较；233项既有回归、Ruff、strict38/38及diff-check通过。独立reviewer额度耗尽未返回结论，19.5仍开放。
+
+### Persona 6.4 resumed closeout review（2026-10-07）
+
+/// 复现Run方法/输出覆盖与Project参数优先级缺口 → 在既有delta补明确场景 → 修复最终方法校验、参数层级和selector禁止替换 → 真内存SQLite到resolver/composer临时冒烟 → 既有回归/独立复核 → 按证据恢复6.4勾选和README；不新增永久测试、真实调用或正式写入。
+
+- [x] 关闭最终配置/Project优先级/方法selector边界及复核新增Director类型、跨模态readiness缺口。
+- [x] 22项临时诊断、最终1968/28skip/102.20s、Web/FE-P1/Ruff/strict/空白和原reviewerAPPROVE通过后关闭6.4，121/147。
+
+上轮6.4提前勾选，本轮已重新打开、实际复现修复并完整验证后恢复勾选。旧116/full结果仅为前序记录，不能替代本轮修后验证；下方“review running”等保留为前序历史。
+
+### Persona 6.4 Composed method consumption（2026-10-07，用户已确认）
+
+/// 先固定非 AI 排版/渲染只消费 Stage Contract 明确支持的参数；Capability Memory 只通过可验证的确定性参数补丁进入确定性工具；需要模型加工的方法必须停留在显式 AI Stage；再集中做源码复核、既有回归和临时冒烟，不新增永久测试、迁移、正式数据写入或真实 Provider 调用。
+
+- [x] 核对 6.4 当前实现与批准规格的差距。
+- [x] 实现 Composed 确定性参数消费、显式来源/哈希与 fail-closed 边界。
+- [x] 集中执行现有回归、临时红绿探针、Ruff、strict、diff-check，并做独立代码复核。
+
+6.4 implementation evidence: targeted Creation Recipe/Persona regressions 116 passed; deterministic parameter smoke passed; independent code review is running. The full backend result is recorded when complete.
+
+### Persona 剩余范围与权限核验（2026-10-07，120/147）
+
+/// 上轮实际修复并关闭whole22.4 → 逐项核对27项仍开放的证据/权限 → 只读旧真实Text库与成稿hash → 区分Unknown/质量/正式启用/测试/暂停change → 不虚勾、不新增调用，等待6.4唯一方向选择。
+
+- [x] 当前147完整范围不缩减，27项全部按证据/权限分类；没有新增已完成项。
+- [x] 只读旧真实验收SQLite：14Attempts、7unknown/2failed/5succeeded、2Master/2Candidate；两编辑稿hash一致、18332无监听。
+- [ ] 用户确认6.4后才改非AI组合消费合同；不把自动续作当授权。
+
+### Persona 集中回执一致性收尾（2026-10-07，120/147）
+
+/// whole22.4返回两个源码缺陷 → 先核对实际recording/selected-input与既有安全模式 → 补既有delta的精确场景 → 隔离临时红色复现 → normalized Master成功回执与live parent/ancestry最小修复 → 集中既有回归/门禁 → 原reviewer整体重审；不新增永久测试，不代定6.4。
+
+/// 上轮只是状态问答 → 读取当前任务与验收文件 → 校验隔离产物hash和临时服务已停止 → 补齐README/进度/发现/集中回执的同一当前状态 → 重跑轻量门禁 → 接收整体backend/data/security独立复核；6.4不代定，真实成品分别待验。
+
+- [x] 将已完成的Text/Graphic/Audio普通页面证据、120/147与服务停止事实统一写回。
+- [x] 重跑Ruff、OpenSpec strict及tracked/范围内untracked空白检查；整体新发现修复后再跑完整backend与Web/FE-P1。
+- [x] 接收整体22.4复核、核对并修正两项实际发现，34项红绿/全量验证后原reviewer完整APPROVE；只关闭22.4。
+
+### Persona 正常页面跨形态冒烟（2026-10-07）
+
+/// 上轮状态答复无新实施证据 → 同一隔离API/Web存活复核 → TTS Stage库存读取崩溃/原生媒体配置遗漏红色复现 → 补既有正常页面合同与最小库存/显示修复 → 双角色Audio到素材/QC/SRT → 独立复核与集中回执；6.4不代定。
+
+/// 中断后确认旧进程句柄和监听均已消失 → 保留现有Graphic证据与失败Audio记录 → 修正临时脚本保存/当前修订投影断言 → 仅重启已隔离API/Web → 双角色Audio正常页面到素材/QC/SRT → 新独立whole UX复核与集中回执；6.4仍不代定。
+
+/// 状态问答未增加实施证据 → 核对同一隔离API/Web仍存活 → 定位Graphic QC接受禁用原因 → 双角色正常图文闭环与并行独立Audio页面冒烟 → 集中门禁/独立产品复核与证据归档；6.4未答不代定。
+
+/// fresh隔离SQLite/素材与Mock规划 → 两个角色Graphic正常Recipe/编辑器/render/显式接受与保存/QC → Audio正常Recipe/固定可播放fixture/显式接受/QC/字幕 → 独立产品复核 → 关闭自有临时服务并记录真实证据。
+
+上一轮状态答复未产生新实施证据，本轮推进whole22.5缺失的正常页面链路。6.4未获答复，不代定；不新增永久测试或真实Provider/ASR/正式数据配置/提交归档。
+
+/// 空身份树Starter成功但回调失效 → 自动选择仅限首次加载，mutation刷新不提前改变用户selection代次 → 保留迟到响应/dirty保护 → 集中页面重验与独立复核。
+
+### Persona 整体验收审计（2026-10-07，118/147）
+
+/// 重新核对当前147项与批准规格 → 逐项审计八个持久回归义务的现有覆盖 → 并行独立backend/data/security及product/UX整体复核 → 只修已确认的既有合同缺陷 → 集中必要冒烟/门禁 → 按完整证据更新状态。
+
+- [x] 审计3.7/4.6/18.1–18.3/18.7–18.9现有持久测试：已有覆盖均为部分，八项保持未关闭；82既有测试通过、1跳过，不新增测试。
+- [x] 已执行独立整体22.4/22.5复核并核实、修复4处发现，限定重审批准；整体任务仍PARTIAL，6.4待答不代选。
+- [x] 已记录覆盖、缺口及本批1968/28skip、构建/strict证据；未改暂停的十二平台change或正式数据/配置，临时Web已停止，无永久测试/迁移/Provider调用/生命周期动作。
+
+上一轮分类为progress：五处实际代码修复、集中新鲜门禁和限定复核已完成；本轮推进整体证据，不重复五处状态当新交付。
+
+### Persona 五处已确认缺陷修复（2026-10-07，118/147）
+
+/// 复现三处后端安全边界和两处前端状态丢失 → 既有批准规格逐项最小修复 → 集中既有回归/临时隔离冒烟 → 独立安全与UX复核 → 更新真实进度，不改正式数据或扩大权限。
+
+- [x] 完整CreativeProfile递归敏感/本地路径/大小校验，精确Installed Skill标识及有界provenance。
+- [x] 两个现代AI Stage先校验再持久化；失败只留固定错误分类/响应hash，成功只存安全canonical projection。
+- [x] 三个只读库存/预览入口不自动创建用户。
+- [x] 身份/默认流程读取及保存回读绑定精确身份/请求代次，拒绝迟到响应与错误归属保存。
+- [x] 按模态保留未保存配置，保存一个不覆盖其他；切换身份页签不卸载脏创作草稿。
+- [x] 集中隔离冒烟/现有测试/构建/strict/diff/独立复核。6.4组合边界仍等待，不新增永久测试、迁移、真实调用或生命周期动作。
+
+最终五处限定复核APPROVE；全量1968passed/28skipped（108.13s）、41安全/15UI临时检查、既有24点双角色Text浏览器、Web/FE-P1、Ruff、strict38/38及空白检查通过。临时API18331/Web15331已停止并确认无监听。118/147保持；这不是whole22.4/22.5或真实成品质量批准。
+
+### Persona browser runtime / modern audio closure（2026-10-07）
+
+/// 已定位 GUI Chrome 的 macOS 启动失败 → 使用既有 Playwright Chromium headless shell 运行本地 Graphic Renderer → 沙盒外真实渲染回归17/17 → Modern Audio 双 Persona receipt/QC探针89/89 → 关闭10.5、10.6、12.3、12.5、13.3、13.5；保留完整 Recipe、持久回归、浏览器和真实成品质量验收。
+
+### Persona Audio-ASR 当前批次（2026-10-07）
+
+/// 已批准optional direct-ASR contract → helper与共享执行/接受/QC/字幕接线 → 独立SPEC后质量复核 → 同Run精确已接受TTS/ASR的隔离串联冒烟 → 最终既有回归/Web/strict/diff → 按证据关闭Audio合同，继续其余功能；不做真实推理/正式数据写入/归档。
+
+上一轮状态核对没有开发进展；本轮以当前文件为准补齐跨层验证，不能把helper-only断言当完整链路验收。
+
+/// 已定位真实task字符串ID误判 → 按现有32位ID合同修正/负向探针 → integrated ASR接受/QC复核 → 继续Composed内置base与显式方法顺序/模型优先级审计，使用隔离内存合同冒烟；不将已写代码、旧全量或计划当本轮交付。
+
+### Persona 精确绑定/图文补料本轮（2026-10-07）
+
+/// Chat Stage/Run明确选择的exact pin优先级 → Graphic缺图lazy复用项目素材 → 独立源码复核 → 修临时锁定/回读失败导致的状态问题 → 165既有回归/Web/FE-P1/strict38/38/Ruff/diff → 99/147保持诚实 → 下一项Audio显式本机ASR入口与跨模态集中冒烟。
+
+两处发现已修正并APPROVE，无正式数据/配置/服务/新Provider/生命周期动作；不以局部代码完成宣称整个OpenSpec完成。
+
+### Persona 本批结果（2026-10-07）
+
+/// 剩余功能承接 → 先查历史兼容失败 → 修supported Stage controls/只读身份依赖 → 限定独立复核 → 全量1968与最终105定向/Web/FE-P1/strict → 精确关闭四项，99/147 → 继续完整Recipe/浏览器，真实文字→图文→音频质量分别验收。
+
+本批实现与限定校验完成；正式初始化、付费调用、生命周期仍不扩大授权。未把48项待关闭等同48个待开发功能，下一批优先跨模态Recipe/现有能力承接，不先归档。
+
+## 2026-10-07 Persona 剩余功能续行
+
+/// 核对95/147实际任务 → 复用Renderer精确预览/接受/绑定链补Graphic阶段 → 接入显式ASR回执及真实/估算字幕标签 → 完成Starter fork与角色readiness → 集中代码复核与已有回归/隔离纯冒烟 → 只关闭证据完整任务。
+
+本批不创建新测试、表或migration，不调用真实模型，不初始化正式Persona或操作运行服务。保留用户独立三种成品质量验收及生命周期授权。
+
+## 2026-10-07 Persona 集中批次收口
+
+/// 按完整任务审计关闭有证据合同 → 回收Audio/Director/窄scope/UI的独立定向复核 → 修复实际blocker → 统一Ruff/strict/diff和进度 → 回交真实剩余功能，不代替三种成品人工验收。
+
+当前95/147；完整后端1,968/28skip、Web/FE-P1、171定向和资源/Recipe纯冒烟及strict38/38、113新增文件空白检查已通过；Director与窄scope定向复核无已确认blocker，Audio/整体UX未覆范围保持开放。保留首次harness失败记录及所有历史任务；不新增测试、正式数据写入、真实provider请求或生命周期操作。
+
+## 2026-10-06 当前实施：Persona Creative Studio 集中串联
+
+/// 既有文字合同 → 全量资源/图文 composer 与 renderer → 音频口语/声音/原生成任务/QC → Video 导演交接 → 配置与方法范围 → 集中代码复核/已有回归/冒烟 → 用户分别验收文字、图文、音频。
+
+本轮继续 `add-persona-creative-studio`，基线65/147；新增实现经过复核和真实合同证明后才更新任务。保留既有F8/ACO/Recipe改动，不新增测试代码、迁移、正式初始化或真实图文/音频调用；提交/归档仍需另行授权。完整执行计划与证据保存在该change的task_plan/progress/findings。
+
+## 2026-10-06 CPA 本机隧道：已授权立即生效
+
+- [x] /// 复现精确可信127.0.0.1在保存/执行目标均返回422；修订现有登记OpenSpec，不扩大网络范围。
+- [x] /// 保存/执行复用可信literal策略；用现有回归和隔离探针验证，不新增测试文件。
+- [x] /// 备份模型配置，确认无执行中任务后刷新原API/Worker；CAS仅改CPA两项URL，产品发现/配置回读确认生效。
+- [x] /// 更新登记README和门禁结果；不生成、重试Unknown、迁移、提交、推送或归档。
+
+## 2026-10-06 Persona Creative Studio：仅materialization
+
+当前用户方向取代下方十二平台下一步计划；旧提案保留/暂缓，不改其中规格或任务。本轮计划与归位记录见[本change计划](openspec/changes/add-persona-creative-studio/task_plan.md)。
+
+/// 全读原包23文件 → 核对147项任务/13份delta及保护指纹 → 按标准目录归位 → 仅修strict格式 → strict/diff/源包与既有dirty保护核验 → 交用户独立SPEC review；不apply。
+
+## 2026-10-06 十二平台本地交付（新增规格，不覆盖下方F8计划）
+
+使用writing-plans维护本轮计划，详细执行入口为openspec/changes/complete-multiplatform-content-handoff/task_plan.md。用户已确定平台专属稿件/素材包标准，公众号保留草稿箱、其他人工发布；十二平台/十七形态，零新表/迁移目标。
+
+/// 规格与exact矩阵 → 独立SPEC/plan复核/strict/diff → 用户确认apply → 批次A后端adapter/v5/local package/Recipe → 批次B页面/集中复核/十七形态冒烟 → 正式profile启用与归档提交各自明确授权。
+
+本轮只生成proposal与计划，既有F8/ACO/Recipe业务dirty和正式crs环境不改；不新增测试代码，不发送模型/平台请求。状态详见本change progress，下面F8历史原样保留。
+
+## 2026-10-04 单机生产环境口径校准（当前授权）
+
+**Goal:** 本电脑的SQLite＋本地素材库＋loopback就是最终正式使用方案，校准既有规格和运维文档，不把服务器扩展当成当前生产缺口。
+
+**Architecture:** 仅改F8 proposal/design/tasks及两份delta、验收状态/能力矩阵、README和既有运行手册；保留82/82证据与原18条范围外未验证记录。技术开关APP_ENV=production与正式使用称呼分开，不改代码、配置、数据库、素材、凭据或Worker。
+
+/// 核对实际main与既有启动/launchd/日志/备份命令 → 先校准F8规格适用范围及完成口径 → 同步当前README/运维/验收记录 → 检查原要求/场景和18条扩展记录仍保留 → OpenSpec strict与diff-check → 核对代码/私有runtime配置哈希未变，交付文档校准结果。
+
+- [x] 核对实际基线main@341ead8及现有脚本、API 127.0.0.1:8000、Web npm入口、launchd标签/日志和配套恢复规则；本轮没有操作服务。
+- [x] 校准规格及文档：单机生产82/82完成；18条范围外扩展不再阻断；APP_ENV技术语义保持不变。F8两份delta保留原有要求/场景并明确技术production分支的条件适用范围；README/验收/能力矩阵/既有运行与配套备份手册已同步。
+- [x] 校验完成：原13条要求/46个场景标题全保留，增加正式单机范围1条要求/3场景；82已验收、18范围外原ID均保留未勾选。OpenSpec strict34/34、diff-check通过；12份代码/startup/runtime.env哈希未变、13个改动文件仅文档/规格。既有launchd标签/命令help、日志/链接路径核对通过；未重跑业务/生成/远端发布，未提交推送或归档。
+
+以下提交记录和批次为历史；其中服务器化production=false及“未来必须补齐”的表述由本段正式部署决定取代，不改变原验收事实。
 
 ## 2026-10-04 本地 main 提交（已授权）
 
@@ -2040,3 +2727,72 @@ F8 仅准备，0.1 前置仍有效；用户同意不代替独立安全/schema �
 
 - [ ] 10.11 的本地最终提交与 ROADMAP 状态记录；须先获明确授权并排除未批准身份/schema draft，不能自动提交整个 dirty tree。
 ///
+# Current Persona continuation — 2026-10-07
+
+/// Chat精确Stage/Run绑定优先级 → Graphic/Audio缺口独立审计 → 最短批准范围实现 → 集中review与既有隔离冒烟 → 分别回交文字/图文/音频真实验收。起点99/147，不新增测试/表/migration/依赖，不写正式数据或调用Provider/ASR，不归档提交。
+### Graphic/Audio接线收口与集中冒烟（2026-10-07）
+
+/// confirm exact Graphic refs/rights/contact-sheet and Audio one-click/TTS/QC/ASR paths with existing checks, then record only implementation-complete tasks
+
+### Persona remaining-function closure — 2026-10-07
+
+/// 独立复核修正：Composed 无绑定执行阻断；Auto 媒体使用既有授权 policy；Graphic 图片绑定与规划 Chat 分离；有序 Memory 使用/反馈逐项记录。确定性/原生阶段的组合消费范围另按冻结 Handoff 验证，不伪造运行时。
+
+/// 复核续修：缺失/禁用 Auto 首选仍通过授权 policy 查找已配置 route，显式绑定不放宽；Graphic 的研究/角度等 Chat executor 同样分离 image pin，规划默认来源如实标记。非 AI 方法分配/继承血缘的窄合同问题已向用户提出，确认前不宣称6.4完成。
+
+- [ ] /// Review approved 6.4/6.6 method composition and exact routing against actual executor consumption; unavailable external runtimes must stay blocked, not be simulated.
+- [x] /// Verify 17.3 scope broadening through the existing owner/CAS lifecycle path; bind visible confirmation to exact revision/hash and before/after scope without mutating any formal record.
+- [x] /// Exercise both default Graphic recipes in isolated SQLite through accepted intermediate output, deterministic composition, real renderer, QC and readiness; no paid provider call.
+- [ ] /// Run concentrated existing backend/frontend/spec smoke and bounded independent review, then reconcile current task counts/README while keeping historical evidence and separate acceptance permissions.
+
+### Persona consolidated receipt / remaining reviews — 2026-10-07
+
+/// 固化最后代码版本1968 passed/28 skipped完整输出、182定向与真实PNG；当前118/147不因门禁绿而全勾。
+
+/// 独立后端/安全22.4与产品/UX22.5分别覆盖当前实现；先验证发现再最小修正，不重复已结束进程，不把静态审查冒充浏览器通过。
+
+/// Chrome只查启动边界；用户随后确认手动Dock正常，隔离核验现有headless启动方式，不删除用户资料或改系统配置。6.4非AI方法分配仍待合同选择。
+
+/// 现有文字验收脚本移除硬编码GUI Chrome，使用显式PERSONA_TEXT_BROWSER或Playwright自身安装；已安装headless启动探针PASS后，复用原隔离Mock验收脚本，不新增测试文件/依赖。
+
+- [x] /// Collect terminal full-backend output from the original session, without restarting a completed run or substituting an earlier result.
+- [ ] /// Persist consolidated root/change evidence, preserve history, and rerun strict/diff-check after documentation changes.
+- [ ] /// Close independent backend/UX findings within approved scope; keep real quality, formal initialization and lifecycle actions separate.
+
+### Persona 浏览器启动最小修正 — 2026-10-07
+
+/// 用户确认Dock手动Chrome正常；只修当前Persona自动验收启动，不重装/清空Chrome、不改变正式API/Web或SQLite。
+
+- [x] /// 核对崩溃发生在应用注册阶段；当前Playwright预期浏览器缺失，本机已有独立headless shell。
+- [x] /// 在现有Persona验收脚本中保留显式浏览器选择；未指定时优先复用本机已有headless shell，不回退日常GUI Chrome、不安装依赖。
+- [x] /// 用全新临时SQLite/素材与隔离18331/15331服务复跑现有两角色Text浏览器链路；仅Mock，结束停止本次临时服务。
+- [x] /// 运行现有脚本语法、OpenSpec strict与diff-check；更新README/进度/发现，不宣称147项或真实创作质量全部完成。38/38、语法/空白通过；限定启动源码独立复核APPROVE，不替代整体22.4/22.5。
+
+### 2026-10-07 真实 Text 批次后的集中门禁
+
+- [x] /// CPA 第 15 次不可用后停止真实批次，不重试、不回放 Unknown、不启动 Graphic/Audio。
+- [x] /// 修复全仓 Ruff 的 12 条无行为格式/导入问题，恢复 pytest draft_env fixture，并通过相关回归。
+- [x] /// 重跑隔离后端全量、前端 build/bundle、Ruff、OpenSpec strict 与 diff-check。
+- [ ] /// CPA 恢复并重新取得新批次授权后，再完成两 Persona Text 质量验收；随后按顺序验收 Graphic、Audio。
+## 2026-10-08 — Real Graphic/Audio acceptance authorized
+
+- [ ] Create a private SQLite/media copy from the accepted Text batch; never point the run at the formal database.
+- [ ] Run both Starter Personas through the real Graphic Stage with the configured local image route, preserving the 3-in-flight/10-second/5-attempt limits.
+- [ ] Run both Starter Personas through the real Audio Stage with the configured local TTS route under the same bounded dispatch policy.
+- [ ] Preserve artifact hashes, provider/runtime receipts, deterministic QC, and human-review evidence; do not mark quality tasks complete before artifact review.
+
+### Real provider dispatch result
+
+- [x] /// Run one isolated MiniMax image task for each Starter Persona; preserve exact task/material/hash evidence.
+- [x] /// Run one isolated MiniMax TTS task for each Starter Persona; preserve exact task/material/hash evidence.
+- [x] /// Read back every artifact and record MIME, dimensions/duration, bytes, SHA-256, rights restriction, and no-retry outcome.
+- [ ] /// Human-review the four artifacts and complete the full Graphic/Audio Stage chains before closing persona quality tasks.
+
+## 2026-10-08 — Authorized Image + Audio continuation
+
+- [ ] /// Seal candidate receipt integrity, exact Custom routing, and legacy single-output compatibility.
+- [ ] /// Connect native 1–4 image candidates to durable task and Stage acceptance, with only the selected candidate entering MaterialRevision.
+- [ ] /// Complete exact Voice Catalog/Persona binding and normal versus Advanced controls.
+- [ ] /// Review code and run existing regressions/build/strict/diff; keep real-provider quality and lifecycle work separate.
+
+No new provider calls, formal database writes, migration, commit, push or archive in this implementation batch.

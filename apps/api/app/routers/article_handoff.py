@@ -11,6 +11,7 @@ from datetime import UTC
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, Response
 from pydantic import AwareDatetime, BaseModel, Field, model_validator
 from sqlalchemy import select
@@ -340,50 +341,55 @@ async def upload_draft_media(
     if role not in {"cover", "inline", "attachment"}:
         raise HTTPException(422, "role 不受支持")
     content = await file.read()
-    from ..services import materials as materials_service
 
-    mime = materials_service.validate_upload(content, file.content_type)
-    content_hash = hashlib.sha256(content).hexdigest()
-    existing = db.scalars(
-        select(DraftMedia).where(DraftMedia.draft_id == draft.id, DraftMedia.content_hash == content_hash)
-    ).first()
-    if existing:
-        return _media_json(existing)
-    material = materials_service.create_material(
-        db, kind="image", title=file.filename or f"material-{content_hash[:8]}", created_by=user.email
-    )
-    suffix = Path(file.filename or "media.bin").suffix.lower()[:10] or ".bin"
-    revision = materials_service.create_revision(
-        db, material,
-        content=content, suffix=suffix, declared_mime=mime,
-        rights_status=rights_status, public_use_allowed=public_use_allowed,
-        metadata={"filename": file.filename, "first_draft_id": draft_id},
-        created_by=user.email,
-    )
-    from ..services.document_composition import sync_document
+    # 校验/hash/落盘（含 flock）是重活，放线程池避免阻塞事件循环
+    def _persist() -> dict:
+        from ..services import materials as materials_service
 
-    row = DraftMedia(
-        draft_id=draft.id,
-        content_hash=revision.content_hash,
-        role=role,
-        sort_order=len(draft.media),
-        # 兼容 M1 raw/package 路径：use 行共享 revision 的 content-addressed 文件
-        file_path=revision.file_path,
-        material_revision_id=revision.id,
-        mime_type=revision.mime_type,
-        rights_status=rights_status,
-        public_use_allowed=public_use_allowed,
-        metadata_json={"filename": file.filename, "uploaded_by": user.email, "via": "material_library"},
-    )
-    draft.media.append(row)
-    db.add(row)
-    db.flush()
-    sync_document(db, draft)
-    draft.candidate_readiness = "stale"
-    db.add(AuditLog(event="draft.media_uploaded", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"content_hash": content_hash, "role": role, "material_revision_id": revision.id}))
-    db.commit()
-    db.refresh(row)
-    return _media_json(row)
+        mime = materials_service.validate_upload(content, file.content_type)
+        content_hash = hashlib.sha256(content).hexdigest()
+        existing = db.scalars(
+            select(DraftMedia).where(DraftMedia.draft_id == draft.id, DraftMedia.content_hash == content_hash)
+        ).first()
+        if existing:
+            return _media_json(existing)
+        material = materials_service.create_material(
+            db, kind="image", title=file.filename or f"material-{content_hash[:8]}", created_by=user.email
+        )
+        suffix = Path(file.filename or "media.bin").suffix.lower()[:10] or ".bin"
+        revision = materials_service.create_revision(
+            db, material,
+            content=content, suffix=suffix, declared_mime=mime,
+            rights_status=rights_status, public_use_allowed=public_use_allowed,
+            metadata={"filename": file.filename, "first_draft_id": draft_id},
+            created_by=user.email,
+        )
+        from ..services.document_composition import sync_document
+
+        row = DraftMedia(
+            draft_id=draft.id,
+            content_hash=revision.content_hash,
+            role=role,
+            sort_order=len(draft.media),
+            # 兼容 M1 raw/package 路径：use 行共享 revision 的 content-addressed 文件
+            file_path=revision.file_path,
+            material_revision_id=revision.id,
+            mime_type=revision.mime_type,
+            rights_status=rights_status,
+            public_use_allowed=public_use_allowed,
+            metadata_json={"filename": file.filename, "uploaded_by": user.email, "via": "material_library"},
+        )
+        draft.media.append(row)
+        db.add(row)
+        db.flush()
+        sync_document(db, draft)
+        draft.candidate_readiness = "stale"
+        db.add(AuditLog(event="draft.media_uploaded", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"content_hash": content_hash, "role": role, "material_revision_id": revision.id}))
+        db.commit()
+        db.refresh(row)
+        return _media_json(row)
+
+    return await run_in_threadpool(_persist)
 
 
 @router.put("/drafts/{draft_id}/media/order")

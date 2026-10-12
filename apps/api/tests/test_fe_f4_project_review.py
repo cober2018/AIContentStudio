@@ -8,9 +8,23 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
+from test_candidate_manifest_v2 import PNG, _ready_checks
+from test_candidate_manifest_v2 import env as draft_env  # noqa: F401
 
-from app.models import ContentAsset, DeliveryAttempt, DeliveryTarget, Draft, FactPackItem, ProjectEvent, ProjectFactBoundaryRevision, ProjectWorkflowOutput, Review, Workflow, WorkflowRun, utcnow
-from test_candidate_manifest_v2 import PNG, _ready_checks, env as draft_env  # noqa: F401
+from app.models import (
+    ContentAsset,
+    DeliveryAttempt,
+    DeliveryTarget,
+    Draft,
+    FactPackItem,
+    ProjectEvent,
+    ProjectFactBoundaryRevision,
+    ProjectWorkflowOutput,
+    Review,
+    Workflow,
+    WorkflowRun,
+    utcnow,
+)
 
 
 def test_candidate_review_and_target_schema_support_project_flow(db_session):
@@ -138,8 +152,8 @@ def test_freeze_without_verified_project_output_is_typed_blocker(client, db_sess
 
 
 def test_v3_manual_package_adapter_does_not_require_legacy_draft_ids(client, draft_env):  # noqa: F811
-    from app.services.candidates import candidate_hash
     from app.services import materials as materials_service
+    from app.services.candidates import candidate_hash
 
     db, topic, _draft = draft_env
     owner = {"X-Studio-User": "editor@studio.local"}
@@ -219,8 +233,8 @@ def test_review_projection_only_uses_current_candidate_targets(client, db_sessio
 
 
 def test_freeze_source_never_substitutes_newer_draft_for_old_workflow_output(client, draft_env):  # noqa: F811
-    from app.services.project_review import _source
     from app.models import ContentUnit
+    from app.services.project_review import _source
 
     db, _topic, draft = draft_env
     owner = {"X-Studio-User": "editor@studio.local"}
@@ -244,7 +258,9 @@ def test_freeze_source_never_substitutes_newer_draft_for_old_workflow_output(cli
 
 
 def test_project_candidate_freeze_then_approve_are_separate_and_idempotent(client, draft_env):  # noqa: F811
-    from app.services import checks as checks_service, factchecker, materials as materials_service
+    from app.services import checks as checks_service
+    from app.services import factchecker
+    from app.services import materials as materials_service
 
     db, topic, draft = draft_env
     editor = {"X-Studio-User": "editor@studio.local"}

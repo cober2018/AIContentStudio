@@ -11,12 +11,13 @@ import { ProjectActivityTab } from "./project/ProjectActivityTab";
 import type { Modality, Persona, Project, SharedAsset, Unit, WorkflowBinding } from "./project/projectTypes";
 
 const ProjectMatrixTab = lazy(() => import("./project/ProjectMatrixTab").then((module) => ({ default: module.ProjectMatrixTab })));
+const ProductionQueuePage = lazy(() => import("./ProductionQueuePage"));
 
 type IdentityChild = { id: number; name: string; status: string; persona_id?: number; account_id?: number };
 type MatrixSuggestion = { personaId: number; accountId: number | null; seriesId: number | null; modality: Modality; channel: string; contentForm: string };
 
-const TABS = ["overview", "brief", "evidence", "assets", "matrix", "versions", "activity"] as const;
-const TAB_NAMES = ["总览", "创作任务书", "来源与证据", "项目素材", "内容矩阵", "版本", "活动"];
+const TABS = ["overview", "brief", "evidence", "assets", "matrix", "variants", "execution", "versions", "activity"] as const;
+const TAB_NAMES = ["总览", "创作任务书", "来源与证据", "项目素材", "内容矩阵", "渠道变体", "执行", "版本", "活动"];
 const MODALITY_NAMES: Record<Modality, string> = { text: "文字", graphic: "图文", video: "视频" };
 
 function message(error: unknown) { return error instanceof ApiError ? error.message : "连接后端失败，请检查 API 服务。"; }
@@ -145,6 +146,8 @@ export function PersistentProjectPage() {
     {tab === "evidence" && <ProjectEvidenceTab projectId={project.id} readOnly={project.status === "archived"} />}
     {tab === "matrix" && <Suspense fallback={<Spinner label="加载内容矩阵…" />}><ProjectMatrixTab project={project} personas={personas} onAddPersona={() => setPersonaModal(true)} onAddUnit={() => { setPersonaId(personas[0]?.id ?? null); setAccountId(null); setSeriesId(null); setUnitModal(true); }} onEditUnit={(unit) => { setEditingUnit(unit); setUnitTitle(unit.title); setPersonaId(unit.persona_id); setAccountId(unit.account_id); setSeriesId(unit.series_id); setModality(unit.modality); setChannel(unit.channel_id || ""); setRebindDefault(false); setRebindIdentity(false); }} onDeleteUnit={deleteUnit} onConfirmSuggestions={confirmMatrixSuggestions} /></Suspense>}
     {tab === "assets" && <ProjectAssetsTab projectId={project.id} readOnly={project.status === "archived"} onChanged={() => { reload().catch((err) => setError(message(err))); }} />}
+    {tab === "variants" && <section className="space-y-4 rounded-xl border bg-white p-5"><h2 className="font-semibold">按内容单元管理渠道变体</h2><p className="text-sm text-slate-500">进入内容单元后，基于已保存 Master 显式创建或查看渠道变体；不会在打开此页时执行适配。</p>{project.units.map(unit => <div key={unit.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"><span>{unit.title} · {MODALITY_NAMES[unit.modality]}{unit.status === "archived" ? " · 归档只读" : ""}</span><Link className="text-sm text-indigo-700 underline" to={`/projects/${project.id}/units/${unit.id}/production?panel=variants`}>查看渠道变体</Link></div>)}{!project.units.length && <p className="text-sm text-slate-500">先在内容矩阵创建内容单元。</p>}</section>}
+    {tab === "execution" && <Suspense fallback={<Spinner label="读取项目执行队列…" />}><ProductionQueuePage projectId={project.id} /></Suspense>}
     {tab === "versions" && <ProjectVersionsTab projectId={project.id} />}
     {tab === "activity" && <ProjectActivityTab projectId={project.id} />}
     {assetsOpen && <Modal title={`项目共享素材 · ${assets.length}`} onClose={() => setAssetsOpen(false)} wide><ProjectAssetsTab projectId={project.id} readOnly={project.status === "archived"} onChanged={() => { reload().catch((err) => setError(message(err))); }} /></Modal>}

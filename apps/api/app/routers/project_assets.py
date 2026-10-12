@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -112,32 +113,37 @@ def detach_material_reference(project_id: int, reference_id: int, db: Session = 
 async def upload_project_material(project_id: int, file: UploadFile, kind: str = "image", title: str | None = None, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     mutable_project(db, project_id, user)
     content = await file.read()
-    mime = materials_service.validate_upload(content, file.content_type)
-    extension = (file.filename or "").rsplit(".", 1)[-1].lower()
-    suffix = f".{extension}" if re.fullmatch(r"[a-z0-9]{1,5}", extension) else ".bin"
-    content_hash = hashlib.sha256(content).hexdigest()
-    relative_path = Path("material") / content_hash[:2] / f"{content_hash}{suffix}"
-    from ..services.material_storage import provider
 
-    storage = provider()
-    existed_before = storage.exists(str(relative_path))
-    try:
-        material = materials_service.create_material(db, kind=kind, title=title or file.filename or "项目素材", created_by=user.email)
-        revision = materials_service.create_revision(db, material, content=content, suffix=suffix, declared_mime=mime, source_kind="upload", created_by=user.email)
-        row = ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="project_upload", status="active", attached_by=user.email)
-        db.add(row)
-        db.flush()
-        db.add(AuditLog(event="material.uploaded", actor=user.email, entity_type="material", entity_id=str(material.id), detail_json={"hash": revision.content_hash, "source_kind": "upload"}))
-        record_project_event(db, project_id=project_id, event_type="asset.attached", actor=user.email, entity_type="material_revision", entity_id=revision.id, payload={"reference_id": row.id, "origin": "project_upload", "content_hash": revision.content_hash})
-        db.commit()
-    except Exception:
-        db.rollback()
-        if not existed_before and storage.exists(str(relative_path)):
-            try:
-                db.add(AuditLog(event="material.upload_orphan_candidate", actor=user.email, entity_type="material_bytes", entity_id=content_hash[:50], detail_json={"project_id": project_id, "file_path": str(relative_path), "content_hash": content_hash, "cleanup_rule": "check_committed_revision_references_after_grace_period"}))
-                db.commit()
-            except Exception:
-                db.rollback()
-                logger.exception("Could not record failed project upload byte candidate: %s", relative_path)
-        raise
-    return reference_json(db, row)
+    # sha256/存储写入（含 flock）放线程池，避免阻塞事件循环
+    def _persist() -> dict:
+        mime = materials_service.validate_upload(content, file.content_type)
+        extension = (file.filename or "").rsplit(".", 1)[-1].lower()
+        suffix = f".{extension}" if re.fullmatch(r"[a-z0-9]{1,5}", extension) else ".bin"
+        content_hash = hashlib.sha256(content).hexdigest()
+        relative_path = Path("material") / content_hash[:2] / f"{content_hash}{suffix}"
+        from ..services.material_storage import provider
+
+        storage = provider()
+        existed_before = storage.exists(str(relative_path))
+        try:
+            material = materials_service.create_material(db, kind=kind, title=title or file.filename or "项目素材", created_by=user.email)
+            revision = materials_service.create_revision(db, material, content=content, suffix=suffix, declared_mime=mime, source_kind="upload", created_by=user.email)
+            row = ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="project_upload", status="active", attached_by=user.email)
+            db.add(row)
+            db.flush()
+            db.add(AuditLog(event="material.uploaded", actor=user.email, entity_type="material", entity_id=str(material.id), detail_json={"hash": revision.content_hash, "source_kind": "upload"}))
+            record_project_event(db, project_id=project_id, event_type="asset.attached", actor=user.email, entity_type="material_revision", entity_id=revision.id, payload={"reference_id": row.id, "origin": "project_upload", "content_hash": revision.content_hash})
+            db.commit()
+        except Exception:
+            db.rollback()
+            if not existed_before and storage.exists(str(relative_path)):
+                try:
+                    db.add(AuditLog(event="material.upload_orphan_candidate", actor=user.email, entity_type="material_bytes", entity_id=content_hash[:50], detail_json={"project_id": project_id, "file_path": str(relative_path), "content_hash": content_hash, "cleanup_rule": "check_committed_revision_references_after_grace_period"}))
+                    db.commit()
+                except Exception:
+                    db.rollback()
+                    logger.exception("Could not record failed project upload byte candidate: %s", relative_path)
+            raise
+        return reference_json(db, row)
+
+    return await run_in_threadpool(_persist)

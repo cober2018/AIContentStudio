@@ -1,8 +1,11 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "../api";
 import { Button, EmptyState, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
 import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
+import StarterPersonaGallery from "./StarterGallery";
+
+const PersonaCreativeConfig = lazy(() => import("./PersonaCreativeConfig"));
 
 type Kind = "brand" | "persona" | "account" | "series";
 type Entity = { kind: Kind; id: number; name: string; status: string; brand_id?: number | null; persona_id?: number; account_id?: number; current_revision: number };
@@ -30,7 +33,7 @@ const FIELDS: { key: FieldKey; label: string; shape: "text" | "lines" | "json" |
 ];
 const TABS = [
   ["identity", "身份"], ["expression", "表达与视觉"], ["boundaries", "观点与边界"],
-  ["accounts", "账号与栏目"], ["workflow", "工作流偏好"], ["memory", "内容记忆"],
+  ["creative", "创作配置"], ["accounts", "账号与栏目"], ["workflow", "工作流偏好"], ["memory", "内容记忆"],
 ] as const;
 const EMPTY_DEFINITION = { nodes: [], edges: [], visual_order: [] };
 
@@ -65,19 +68,67 @@ export default function IdentityWorkspace() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [revisionConflict, setRevisionConflict] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+  const [loadedIdentityKey, setLoadedIdentityKey] = useState<string | null>(null);
+  const [loadedBindingKey, setLoadedBindingKey] = useState<string | null>(null);
+  const creativeDirty = useRef(false);
+  const [creativeVisitedKey, setCreativeVisitedKey] = useState<string | null>(null);
+  const identityKey = selected ? `${selected.kind}:${selected.id}` : null;
+  const selectedIdentity = useRef(identityKey);
+  selectedIdentity.current = identityKey;
+  const detailGeneration = useRef(0);
+  const selectionGeneration = useRef(0);
+  const selectionEpoch = selectionGeneration.current;
+  const bindingGeneration = useRef(0);
 
   const entities = useMemo(() => [...brands, ...personas, ...accounts, ...series], [brands, personas, accounts, series]);
   const current = selected ? entities.find((item) => item.kind === selected.kind && item.id === selected.id) : null;
   const persona = current?.kind === "persona" ? current : current?.kind === "account" ? personas.find((row) => row.id === current.persona_id) : current?.kind === "series" ? personas.find((row) => row.id === accounts.find((account) => account.id === current.account_id)?.persona_id) : null;
   const account = current?.kind === "account" ? current : current?.kind === "series" ? accounts.find((row) => row.id === current.account_id) : null;
+  const brand = current?.kind === "brand" ? current : brands.find(row => row.id === persona?.brand_id);
   const seriesId = current?.kind === "series" ? current.id : null;
   const effectiveQuery = persona ? `persona_id=${persona.id}${account ? `&account_id=${account.id}` : ""}${seriesId ? `&series_id=${seriesId}` : ""}` : null;
   const selectedUrl = current ? `/${ROOT[current.kind]}/${current.id}` : null;
+  const bindingKey = `${identityKey}:${modality}`;
+  const selectedBinding = useRef(bindingKey);
+  selectedBinding.current = bindingKey;
+  const detailReady = loadedIdentityKey === identityKey;
+  const creativeReadOnly = !["editor", "admin"].includes(role ?? "") || !detailReady || detailLoading
+    || [current, brand, persona, account].some(row => row?.status === "archived");
 
-  async function loadTree() {
-    const [nextBrands, nextPersonas, nextVoices] = await Promise.all([
+  function selectIdentity(next: { kind: Kind; id: number } | null) {
+    const nextKey = next ? `${next.kind}:${next.id}` : null;
+    if (nextKey !== selectedIdentity.current && creativeDirty.current
+        && !window.confirm("当前角色有未保存的创作配置。确认丢弃这些草稿并切换身份？")) return false;
+    if (nextKey !== selectedIdentity.current) {
+      selectionGeneration.current++;
+      detailGeneration.current++;
+      bindingGeneration.current++;
+      selectedIdentity.current = nextKey;
+      creativeDirty.current = false;
+    }
+    setSelected(next); setNotice("");
+    return true;
+  }
+
+  async function refreshIdentity(url: string, query: string | null, key: string, epoch: number, resetDraft = false) {
+    if (selectedIdentity.current !== key || selectionGeneration.current !== epoch) return;
+    const generation = ++detailGeneration.current;
+    const [nextRevisions, nextEffective] = await Promise.all([
+      api.get<Revision[]>(`${url}/revisions`),
+      query ? api.get<Effective>(`/content-identities/effective?${query}`) : Promise.resolve(null),
+    ]);
+    if (selectedIdentity.current !== key || selectionGeneration.current !== epoch || detailGeneration.current !== generation) return;
+    setRevisions(nextRevisions); setEffective(nextEffective); setLoadedIdentityKey(key);
+    if (resetDraft) setDraft(draftFrom(nextRevisions[0]?.profile || {}));
+    return nextRevisions;
+  }
+
+  async function loadTree(selectInitial = false) {
+    const [nextBrands, nextPersonas, nextVoices, me] = await Promise.all([
       api.get<Omit<Entity, "kind">[]>("/content-brands"), api.get<Omit<Entity, "kind">[]>("/content-personas"),
       api.get<{ id: number; name: string; version: number }[]>("/content-identities/brand-voices"),
+      api.get<{ role: string }>("/users/me"),
     ]);
     const nextAccounts = (await Promise.all(nextPersonas.map((row) => api.get<Omit<Entity, "kind">[]>(`/content-personas/${row.id}/accounts`)))).flat();
     const nextSeries = (await Promise.all(nextAccounts.map((row) => api.get<Omit<Entity, "kind">[]>(`/content-accounts/${row.id}/series`)))).flat();
@@ -86,26 +137,51 @@ export default function IdentityWorkspace() {
     setAccounts(nextAccounts.map((row) => ({ ...row, kind: "account" })));
     setSeries(nextSeries.map((row) => ({ ...row, kind: "series" })));
     setVoices(nextVoices);
-    if (!selected && (nextBrands[0] || nextPersonas[0])) setSelected(nextBrands[0] ? { kind: "brand", id: nextBrands[0].id } : { kind: "persona", id: nextPersonas[0].id });
+    setRole(me.role);
+    if (selectInitial && selectedIdentity.current === null && selectionGeneration.current === 0 && (nextBrands[0] || nextPersonas[0])) selectIdentity(nextBrands[0] ? { kind: "brand", id: nextBrands[0].id } : { kind: "persona", id: nextPersonas[0].id });
   }
-  useEffect(() => { setLoading(true); loadTree().catch((error) => setError(errText(error))).finally(() => setLoading(false)); }, []);
+  useEffect(() => { setLoading(true); loadTree(true).catch((error) => setError(errText(error))).finally(() => setLoading(false)); }, []);
   useEffect(() => {
-    if (!selectedUrl) return;
+    if (!selectedUrl || !identityKey) return;
+    const key = identityKey;
+    const generation = ++detailGeneration.current;
+    const epoch = selectionEpoch;
+    let active = true;
+    const ownsRequest = () => active && selectedIdentity.current === key
+      && selectionGeneration.current === epoch && detailGeneration.current === generation;
+    setLoadedIdentityKey(null);
     setDetailLoading(true); setError(""); setRevisionConflict(false);
     Promise.all([
       api.get<Revision[]>(`${selectedUrl}/revisions`),
       effectiveQuery ? api.get<Effective>(`/content-identities/effective?${effectiveQuery}`) : Promise.resolve(null),
     ]).then(([nextRevisions, nextEffective]) => {
+      if (!ownsRequest()) return;
       setRevisions(nextRevisions); setEffective(nextEffective); setDraft(draftFrom(nextRevisions[0]?.profile || {}));
-    }).catch((error) => setError(errText(error))).finally(() => setDetailLoading(false));
-  }, [selectedUrl, effectiveQuery]);
+      setLoadedIdentityKey(key);
+    }).catch((error) => { if (ownsRequest()) setError(errText(error)); })
+      .finally(() => { if (ownsRequest()) setDetailLoading(false); });
+    return () => { active = false; };
+  }, [selectedUrl, effectiveQuery, selectionEpoch]);
   useEffect(() => {
+    let active = true;
+    const key = bindingKey;
+    const epoch = selectionEpoch;
+    const generation = ++bindingGeneration.current;
+    const ownsRequest = () => active && selectedBinding.current === key
+      && selectionGeneration.current === epoch && bindingGeneration.current === generation;
+    setLoadedBindingKey(null);
     if (!current || current.kind === "brand" || !effectiveQuery) { setBinding(null); setResolvedBinding(null); return; }
     Promise.all([
       api.get<Binding>(`${selectedUrl}/default-workflows/${modality}`),
       api.get<Binding>(`/content-identities/effective-workflow?${effectiveQuery}&modality=${modality}`),
-    ]).then(([direct, resolved]) => { setBinding(direct); setResolvedBinding(resolved); setDefinitionText(JSON.stringify(direct.workflow_id ? direct.definition : EMPTY_DEFINITION, null, 2)); }).catch((error) => setError(errText(error)));
-  }, [selectedUrl, effectiveQuery, modality]);
+    ]).then(([direct, resolved]) => {
+      if (!ownsRequest()) return;
+      setBinding(direct); setResolvedBinding(resolved); setDefinitionText(JSON.stringify(direct.workflow_id ? direct.definition : EMPTY_DEFINITION, null, 2));
+      setLoadedBindingKey(key);
+    }).catch((error) => { if (ownsRequest()) setError(errText(error)); });
+    return () => { active = false; };
+  }, [selectedUrl, effectiveQuery, modality, selectionEpoch]);
+  useEffect(() => { if (tab === "creative" && identityKey) setCreativeVisitedKey(identityKey); }, [tab, identityKey]);
 
   async function createEntity(event: FormEvent) {
     event.preventDefault();
@@ -114,19 +190,25 @@ export default function IdentityWorkspace() {
     try {
       const created = await api.post<{ id: number }>(path, { name: name.trim() });
       const kind: Kind = !current ? "brand" : current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series";
-      await loadTree(); setSelected({ kind, id: created.id }); setName(""); setNotice(`${KIND_NAME[kind]}已创建。`);
-    } catch (error) { setError(errText(error)); }
+      await loadTree();
+      if (selectionGeneration.current !== selectionEpoch) return;
+      selectIdentity({ kind, id: created.id }); setName(""); setNotice(`${KIND_NAME[kind]}已创建。`);
+    } catch (error) { if (selectionGeneration.current === selectionEpoch) setError(errText(error)); }
   }
   async function archive() {
     if (!current || !selectedUrl || !window.confirm(`归档「${current.name}」？历史版本与生产快照仍可查看。`)) return;
-    try { await api.del(selectedUrl); await loadTree(); setNotice("已归档，历史记录仍可读取。"); }
-    catch (error) { setError(errText(error)); }
+    try { await api.del(selectedUrl); await loadTree(); if (selectionGeneration.current === selectionEpoch) setNotice("已归档，历史记录仍可读取。"); }
+    catch (error) { if (selectionGeneration.current === selectionEpoch) setError(errText(error)); }
   }
   async function saveRevision() {
-    if (!current || !selectedUrl || revisionConflict) return;
+    if (!current || !selectedUrl || !identityKey || !detailReady || detailLoading || revisionConflict
+        || (revisions[0]?.revision_no ?? 0) !== current.current_revision) return;
+    const key = identityKey;
+    const epoch = selectionEpoch;
     try {
-      const profile: Record<string, unknown> = {};
+      const profile: Record<string, unknown> = { ...(revisions[0]?.profile || {}) };
       for (const { key, shape } of FIELDS) {
+        delete profile[key];
         const value = draft[key];
         if (value.mode === "inherit") continue;
         if (value.mode === "clear") { profile[key] = null; continue; }
@@ -137,27 +219,30 @@ export default function IdentityWorkspace() {
       }
       await api.post(`${selectedUrl}/revisions`, { expected_revision: current.current_revision, profile });
       await loadTree();
-      const nextRevisions = await api.get<Revision[]>(`${selectedUrl}/revisions`);
-      setRevisions(nextRevisions); setDraft(draftFrom(nextRevisions[0]?.profile || {}));
-      if (effectiveQuery) setEffective(await api.get<Effective>(`/content-identities/effective?${effectiveQuery}`));
-      setNotice(`修订 v${nextRevisions[0].revision_no} 已保存，旧快照不会改变。`);
+      const next = await refreshIdentity(selectedUrl, effectiveQuery, key, epoch, true);
+      if (next && selectedIdentity.current === key && selectionGeneration.current === epoch) setNotice(`修订 v${next[0]?.revision_no} 已保存，旧快照不会改变。`);
     } catch (error) {
+      if (selectedIdentity.current !== key || selectionGeneration.current !== epoch) return;
       setError(error instanceof SyntaxError ? "JSON 格式不正确，请检查后再保存。" : errText(error));
       if (error instanceof ApiError && error.status === 409) {
         setRevisionConflict(true);
         await loadTree();
-        setRevisions(await api.get<Revision[]>(`${selectedUrl}/revisions`));
-        setNotice("版本已被其他人更新。当前表单仍是旧草稿；请核对最新修订后显式加载，才可再次保存。");
+        const next = await refreshIdentity(selectedUrl, effectiveQuery, key, epoch);
+        if (next && selectedIdentity.current === key && selectionGeneration.current === epoch) setNotice("版本已被其他人更新。当前表单仍是旧草稿；请核对最新修订后显式加载，才可再次保存。");
       }
     }
   }
   async function saveDefault() {
-    if (!selectedUrl || !binding || !current || current.kind === "brand") return;
+    if (!selectedUrl || !binding || !current || current.kind === "brand" || loadedBindingKey !== bindingKey) return;
+    const key = bindingKey;
+    const epoch = selectionEpoch;
+    const generation = bindingGeneration.current;
     try {
       const definition = JSON.parse(definitionText);
       const next = await api.post<Binding>(`${selectedUrl}/default-workflows/${modality}`, { expected_revision: binding.revision, definition });
+      if (selectedBinding.current !== key || selectionGeneration.current !== epoch || bindingGeneration.current !== generation) return;
       setBinding(next); setResolvedBinding({ ...next, source: current.kind }); setNotice("默认工作流已保存为新版本；已有内容单元不会自动重绑。");
-    } catch (error) { setError(error instanceof SyntaxError ? "工作流定义 JSON 格式不正确。" : errText(error)); }
+    } catch (error) { if (selectedBinding.current === key && selectionGeneration.current === epoch && bindingGeneration.current === generation) setError(error instanceof SyntaxError ? "工作流定义 JSON 格式不正确。" : errText(error)); }
   }
   function fieldEditor(key: FieldKey, label: string, shape: string) {
     const value = draft[key];
@@ -170,17 +255,19 @@ export default function IdentityWorkspace() {
     </div>;
   }
   function entityButton(entity: Entity, depth: number) {
-    return <button key={`${entity.kind}-${entity.id}`} onClick={() => { setSelected({ kind: entity.kind, id: entity.id }); setNotice(""); }} className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${current?.kind === entity.kind && current.id === entity.id ? "bg-indigo-50 font-semibold text-indigo-700" : "hover:bg-slate-50"}`} style={{ paddingLeft: 12 + depth * 16 }}><span className="mr-2 text-xs text-slate-400">{KIND_NAME[entity.kind]}</span>{entity.name}{entity.status === "archived" && <span className="ml-1 text-xs text-slate-400">已归档</span>}</button>;
+    return <button key={`${entity.kind}-${entity.id}`} onClick={() => selectIdentity({ kind: entity.kind, id: entity.id })} className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${current?.kind === entity.kind && current.id === entity.id ? "bg-indigo-50 font-semibold text-indigo-700" : "hover:bg-slate-50"}`} style={{ paddingLeft: 12 + depth * 16 }}><span className="mr-2 text-xs text-slate-400">{KIND_NAME[entity.kind]}</span>{entity.name}{entity.status === "archived" && <span className="ml-1 text-xs text-slate-400">已归档</span>}</button>;
   }
   const brandless = personas.filter((row) => row.brand_id == null);
 
   return <div className="mx-auto max-w-7xl px-6 py-9"><div className="mb-6"><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">Identity Workspace</p><h1 className="mt-2 text-3xl font-semibold">内容身份</h1><p className="mt-2 text-sm text-slate-500">品牌 → 角色 → 账号 → 栏目；修订长期保存，生产时固定快照。</p></div>
     {error && <div className="mb-4"><ErrorBanner message={error} /></div>}{notice && <p className="mb-4 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-700">{notice}</p>}
+    <StarterPersonaGallery personaId={persona?.id} accountId={account?.id} seriesId={seriesId} refreshRevision={current?.current_revision} readOnly={!["editor", "admin"].includes(role ?? "")} onInitialized={async personaId => { await loadTree(); if (selectionGeneration.current !== selectionEpoch || !selectIdentity({ kind: "persona", id: personaId })) return; setTab("creative"); setNotice("已保存独立角色与默认流程；配置状态见就绪卡片，不代表真实成品质量已验收。已有记录和人工修改未覆盖。"); }} />
     {loading ? <Spinner label="读取身份树…" /> : <div className="grid gap-5 lg:grid-cols-[280px_1fr]"><aside className="rounded-2xl border border-slate-200 bg-white p-3"><h2 className="px-3 py-2 text-sm font-semibold">身份层级</h2>{brands.length + personas.length === 0 && <EmptyState title="还没有内容身份" hint="先创建品牌，或使用既有无品牌角色。" />}{brands.map((brand) => <div key={brand.id}>{entityButton(brand, 0)}{personas.filter((row) => row.brand_id === brand.id).map((p) => <div key={p.id}>{entityButton(p, 1)}{accounts.filter((row) => row.persona_id === p.id).map((a) => <div key={a.id}>{entityButton(a, 2)}{series.filter((row) => row.account_id === a.id).map((s) => entityButton(s, 3))}</div>)}</div>)}</div>)}{brandless.length > 0 && <div className="mt-3 border-t pt-3"><p className="px-3 text-xs text-slate-500">历史无品牌角色</p>{brandless.map((p) => <div key={p.id}>{entityButton(p, 1)}{accounts.filter((row) => row.persona_id === p.id).map((a) => <div key={a.id}>{entityButton(a, 2)}{series.filter((row) => row.account_id === a.id).map((s) => entityButton(s, 3))}</div>)}</div>)}</div>}
-      <form onSubmit={createEntity} className="mt-4 space-y-2 border-t px-2 pt-4"><label className="text-xs text-slate-600">{!current ? "新建品牌" : current.kind === "series" ? "请选择上级创建子项" : `在${KIND_NAME[current.kind]}下新增${KIND_NAME[current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series"]}`}</label><input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} placeholder="名称" required /><Button type="submit" disabled={current?.kind === "series" || current?.status === "archived"}>新增</Button><button type="button" className="ml-2 text-xs text-indigo-700" onClick={() => setSelected(null)}>新建根品牌</button></form></aside>
+      <form onSubmit={createEntity} className="mt-4 space-y-2 border-t px-2 pt-4"><label className="text-xs text-slate-600">{!current ? "新建品牌" : current.kind === "series" ? "请选择上级创建子项" : `在${KIND_NAME[current.kind]}下新增${KIND_NAME[current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series"]}`}</label><input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} placeholder="名称" required /><Button type="submit" disabled={current?.kind === "series" || current?.status === "archived"}>新增</Button><button type="button" className="ml-2 text-xs text-indigo-700" onClick={() => selectIdentity(null)}>新建根品牌</button></form></aside>
       <main className="min-w-0">{!current ? <EmptyState title="选择左侧身份或创建品牌" /> : <><div className="rounded-2xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-slate-500">{KIND_NAME[current.kind]} · #{current.id}</p><h2 className="mt-1 text-xl font-semibold">{current.name}</h2><p className="mt-1 text-xs text-slate-500">{current.status === "archived" ? "已归档，只能查看历史" : `当前修订 v${current.current_revision}`}</p></div>{current.status !== "archived" && <Button variant="danger" onClick={archive}>归档</Button>}</div></div>
       <div role="tablist" className="mt-5 flex gap-1 overflow-x-auto border-b">{TABS.map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm ${tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-slate-500"}`}>{label}</button>)}</div>
-      {detailLoading ? <Spinner label="读取修订…" /> : <div className="mt-5 space-y-4">{["identity", "expression", "boundaries"].includes(tab) && <>{revisionConflict && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}；当前表单来自旧版本，已停止保存。请先复制需要保留的改动，再加载最新修订。</p><Button variant="secondary" onClick={() => { setDraft(draftFrom(revisions[0]?.profile || {})); setRevisionConflict(false); setError(""); setNotice("已加载最新修订，请重新核对后保存。"); }}>加载最新修订（覆盖当前表单）</Button></div>}<div className="grid gap-3 xl:grid-cols-2">{FIELDS.filter((field) => field.tab === tab).map(({ key, label, shape }) => fieldEditor(key, label, shape))}</div><Button onClick={saveRevision} disabled={current.status === "archived" || revisionConflict}>保存新修订 v{current.current_revision + 1}</Button><section className="rounded-xl border bg-white p-4"><h3 className="font-medium">修订历史</h3>{revisions.length ? <ul className="mt-2 space-y-2 text-xs">{revisions.map((revision) => <li key={revision.id} className="rounded border p-2">v{revision.revision_no} · #{revision.id} · {revision.created_at || ""}<pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-slate-500">{JSON.stringify(revision.profile, null, 2)}</pre></li>)}</ul> : <p className="mt-2 text-xs text-slate-500">尚未提交身份画像修订。</p>}</section></>}
+      {detailLoading || !detailReady ? <Spinner label="读取修订…" /> : <div className="mt-5 space-y-4">{["identity", "expression", "boundaries"].includes(tab) && <>{revisionConflict && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}；当前表单来自旧版本，已停止保存。请先复制需要保留的改动，再加载最新修订。</p><Button variant="secondary" onClick={() => { setDraft(draftFrom(revisions[0]?.profile || {})); setRevisionConflict(false); setError(""); setNotice("已加载最新修订，请重新核对后保存。"); }}>加载最新修订（覆盖当前表单）</Button></div>}<div className="grid gap-3 xl:grid-cols-2">{FIELDS.filter((field) => field.tab === tab).map(({ key, label, shape }) => fieldEditor(key, label, shape))}</div><Button onClick={saveRevision} disabled={current.status === "archived" || revisionConflict}>保存新修订 v{current.current_revision + 1}</Button><section className="rounded-xl border bg-white p-4"><h3 className="font-medium">修订历史</h3>{revisions.length ? <ul className="mt-2 space-y-2 text-xs">{revisions.map((revision) => <li key={revision.id} className="rounded border p-2">v{revision.revision_no} · #{revision.id} · {revision.created_at || ""}<pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-slate-500">{JSON.stringify(revision.profile, null, 2)}</pre></li>)}</ul> : <p className="mt-2 text-xs text-slate-500">尚未提交身份画像修订。</p>}</section></>}
+      {persona && (tab === "creative" || creativeVisitedKey === identityKey) && <div hidden={tab !== "creative"}><Suspense fallback={<Spinner label="读取创作配置…" />}><PersonaCreativeConfig key={`${identityKey}:${selectionEpoch}`} current={current} persona={persona} readOnly={creativeReadOnly} accountId={account?.id || null} seriesId={seriesId} revisions={revisions} effective={effective} onSaved={async () => { const key = identityKey!; if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return; await loadTree(); return refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch); }} onNotice={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) setNotice(value); }} onDirtyChange={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) creativeDirty.current = value; }} /></Suspense></div>}
       {tab === "accounts" && <section className="rounded-xl border bg-white p-5"><h3 className="font-medium">持久化层级</h3><p className="mt-2 text-sm text-slate-500">选择品牌、角色或账号，可创建直属子级；归档不会删除历史快照。</p>{persona && <p className="mt-3 text-sm">角色：{persona.name} · 账号 {accounts.filter((row) => row.persona_id === persona.id).length} 个</p>}{account && <p className="mt-1 text-sm">账号：{account.name} · 栏目 {series.filter((row) => row.account_id === account.id).length} 个</p>}{current.kind !== "series" && <form onSubmit={createEntity} className="mt-4 flex flex-wrap gap-2"><input aria-label="新子级名称" className={inputClass} required value={name} onChange={(event) => setName(event.target.value)} placeholder={`新建${KIND_NAME[current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series"]}名称`} /><Button type="submit" disabled={current.status === "archived"}>创建子级</Button></form>}{current.status !== "archived" && <div className="mt-4"><Button variant="danger" onClick={archive}>归档当前{KIND_NAME[current.kind]}</Button></div>}</section>}
       {tab === "workflow" && <section className="rounded-xl border bg-white p-5"><h3 className="font-medium">角色 / 账号 / 栏目 × 内容形态</h3>{current.kind === "brand" ? <p className="mt-2 text-sm text-slate-500">请选择角色、账号或栏目查看默认工作流。</p> : <><Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value)}><option value="text">文字</option><option value="graphic">图文</option><option value="video">视频</option></select></Field><p className="mt-3 text-sm">本级：{binding?.workflow_id ? `v${binding.workflow_version} · Workflow #${binding.workflow_id}` : "未设置"}；当前生效：{resolvedBinding?.source || "未绑定"}{resolvedBinding?.workflow_id ? ` · Workflow #${resolvedBinding.workflow_id}` : ""}</p><p className="mt-2 text-xs text-slate-500">保存新版本不会自动修改已有内容单元。定义使用现有 Workflow schema；服务端检查可移植性和执行能力。</p><Field label="新默认工作流定义 JSON"><textarea className={`${inputClass} mt-2 min-h-44 font-mono text-xs`} value={definitionText} disabled={current.status === "archived"} onChange={(event) => setDefinitionText(event.target.value)} /></Field><Button onClick={saveDefault} disabled={current.status === "archived" || !binding}>另存为本级默认新版本</Button></>}</section>}
       {tab === "accounts" && account && <AccountPublisherPanel key={account.id} accountId={account.id} archived={current.status === "archived"} />}

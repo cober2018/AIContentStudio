@@ -1,0 +1,25 @@
+{
+  "change": "add-persona-creative-studio",
+  "base": "main@341ead8 + current uncommitted ACO/Creation Recipe implementation",
+  "starter_personas": [
+    "starter.ai-tech-engineer.v1",
+    "starter.lifestyle-observer.v1"
+  ],
+  "spec_count": 13,
+  "specs": [
+    "capability-memory",
+    "content-harness-registry",
+    "creation-recipe-stage-control-loop",
+    "creative-output-quality",
+    "fe-f0-f1-project-experience",
+    "fe-f3b-content-identity",
+    "fe-p1-frontend-bundle-performance",
+    "material-library-v1",
+    "model-capability-routing",
+    "persona-creative-configuration",
+    "product-settings",
+    "production-content-master",
+    "studio-creative-skill-pack"
+  ],
+  "business_apply": "blocked_pending_spec_review"
+}

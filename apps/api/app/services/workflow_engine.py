@@ -583,6 +583,7 @@ def _mapped_output(node: dict, output: dict) -> dict:
 
 
 def _execute_node(db: Session, run: WorkflowRun, step: WorkflowStep, user, *, payload: dict | None = None) -> dict:
+    _require_legacy_definition(_definition_of(db, run))
     _prepare_step_params(db, run, step)
     node = _node_config(db, run, step.node_id)
     _validate_generation_output_mapping(node)
@@ -726,6 +727,7 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
     from .content_harness import registry as plugin_registry
 
     definition = db.get(Workflow, run.workflow_id).definition_json
+    _require_legacy_definition(definition)
     deps: dict[str, list[str]] = {}
     for edge in definition.get("edges", []):
         deps.setdefault(edge["to"], []).append(edge["from"])
@@ -805,7 +807,38 @@ def advance(db: Session, run: WorkflowRun, user) -> WorkflowRun:
             return _fail_step(db, run, step, exc, user)
 
 
-def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, advance_now: bool = True, content_unit_id: int | None = None) -> WorkflowRun:
+def _require_legacy_definition(definition):
+    from .content_harness import registry as plugin_registry
+
+    # Until durable Stage claims are installed, legacy starts cannot bypass Preview/acceptance.
+    for node in (definition or {}).get("nodes", []):
+        try:
+            key, version = resolve_node_key(node)
+            descriptor = plugin_registry.descriptor("node", key, version)
+        except (ValueError, plugin_registry.RegistryError):
+            continue
+        if descriptor.stage_contract is not None:
+            raise ValueError("stage_invocation_required")
+
+
+def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, advance_now: bool = True,
+              content_unit_id: int | None = None, stage_run: bool = False) -> WorkflowRun:
+    if not stage_run:
+        _require_legacy_definition(workflow.definition_json)
+    else:
+        from .content_harness import registry as plugin_registry
+
+        stage_nodes = []
+        for node in workflow.definition_json.get("nodes", []):
+            try:
+                key, version = resolve_node_key(node)
+                descriptor = plugin_registry.descriptor("node", key, version)
+            except (ValueError, plugin_registry.RegistryError):
+                continue
+            if descriptor.stage_contract is not None:
+                stage_nodes.append(node)
+        if not stage_nodes or len(stage_nodes) != len(workflow.definition_json.get("nodes", [])):
+            raise ValueError("stage_workflow_required")
     # D17 preflight：技能缺失在启动前暴露，而不是运行中 ImportError
     from .content_harness.skill_runtime import preflight_workflow
 
@@ -872,6 +905,7 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
 
 
 def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, user) -> WorkflowRun:
+    _require_legacy_definition(_definition_of(db, run))
     step = db.scalars(
         select(WorkflowStep).where(WorkflowStep.run_id == run.id, WorkflowStep.node_id == node_id)
     ).first()
@@ -925,6 +959,7 @@ def complete_node(db: Session, run: WorkflowRun, node_id: str, payload: dict, us
 
 def retry_run(db: Session, run: WorkflowRun, user) -> WorkflowRun:
     """从失败节点重试：失败步骤与下游 pending 重置。"""
+    _require_legacy_definition(_definition_of(db, run))
     if run.status != "failed":
         raise ValueError("只有失败的运行可以重试")
     from ..models import ContentAsset
@@ -988,6 +1023,7 @@ def _resolve_or_none(db: Session, run: WorkflowRun, step: WorkflowStep):
 def rerun_node(db: Session, run: WorkflowRun, node_id: str, user) -> WorkflowRun:
     """Rerun Node：上游不变，当前节点新 attempt；output hash 变化 → downstream 标 stale（不自动重跑）。"""
 
+    _require_legacy_definition(_definition_of(db, run))
     step = db.scalars(select(WorkflowStep).where(WorkflowStep.run_id == run.id, WorkflowStep.node_id == node_id)).first()
     if not step:
         raise ValueError(f"节点 {node_id} 不存在")
@@ -1051,6 +1087,7 @@ def rerun_node(db: Session, run: WorkflowRun, node_id: str, user) -> WorkflowRun
 
 def rerun_from_here(db: Session, run: WorkflowRun, node_id: str, user) -> WorkflowRun:
     """Rerun From Here：当前+downstream 置 pending 重跑；不回滚历史实体（产生新 Revision）。"""
+    _require_legacy_definition(_definition_of(db, run))
     step = db.scalars(select(WorkflowStep).where(WorkflowStep.run_id == run.id, WorkflowStep.node_id == node_id)).first()
     if not step:
         raise ValueError(f"节点 {node_id} 不存在")

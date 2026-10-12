@@ -1,11 +1,17 @@
 # FE-F8 acceptance scope
 
-User-confirmed formal profile: SQLite + configured local media library +
-loopback-only API/web. Of the original 100 tasks, 18 remain explicitly deferred
-and unchecked: 0.7, 1.1–1.10, 2.4–2.6, 3.3 and 9.5–9.7. They retain their original
-requirements for future production/remote acceptance and are NOT verified.
-Local completion uses the remaining 82 tasks; safety tasks 6.1–6.3 and reviews
-10.8–10.9 are not waived. Commit and lifecycle actions require separate authority.
+Final single-machine production: this computer + SQLite + configured local
+media + loopback API/Web; this is not a temporary stage waiting for servers.
+Approved formal-use scope is complete at 82/82. Original 18 entries remain
+unchecked/unverified OUT_OF_SCOPE extension records: 0.7, 1.1–1.10, 2.4–2.6,
+3.3 and 9.5–9.7. They are not current production gaps, not planned upgrades and
+not passed; generic CLI 82/100 counts the preserved original record, not the
+completion percentage of current formal use. Safety 6.1–6.3/reviews 10.8–10.9
+remain mandatory and accepted. Literal APP_ENV=production is a separate technical
+server-extension branch: do not enable it or alter runtime/schema/credentials/
+media/identity/Worker for wording alignment. This round changes documents/specs
+only; no fresh generation/publication calls, full business rerun, commit,
+canonical sync/archive, deployment or migration is authorized.
 
 ## 0. Baseline/security review
 - [x] 0.1 Start after F7 implementation gates pass. F7 implementation `3f28a51` and canonical/archive `a59d5de` are visible locally; `docs/FE_F7_FINAL_LOCAL_GATES.md` retains the scoped 1660/28 backend, Web/performance and independent-review evidence. Commons remains user-deferred, not live verified; draft-only confirmation is not public publication.
@@ -14,34 +20,34 @@ Local completion uses the remaining 82 tasks; safety tasks 6.1–6.3 and reviews
 - [x] 0.4 Record production-readiness gaps without inventing tenant/org/SSO features. Evidence: audit records implementation/configured/verified distinctions and keeps org/tenant/SSO outside scope.
 - [x] 0.5 Record full backend/frontend/OpenSpec baseline. Evidence: audit records backend, build/budget, strict, Ruff-scope and diff gates; no production migration claimed.
 - [x] 0.6 Audit existing `deps.py` default Header user, `main.lifespan()` bootstrap writes, `/api/v1/health` degraded-200/raw error, raw-path metric labels and all direct `MEDIA_ROOT` readers/writers before implementation. Evidence: current seams and direct readers/writers are listed in `docs/FE_F8_BASELINE_AUDIT.md`.
-- [ ] 0.7 Resolve and independently review stable issuer/subject → existing active User mapping before implementation approval. The nullable User-column proposal is a draft awaiting explicit schema authorization; no production migration or activation.
+- [ ] 0.7 OUT_OF_SCOPE: resolve and independently review issuer/subject → active User mapping before separately authorized server identity activation; keep the original unchecked acceptance record regardless of code present. Not a single-machine production prerequisite; no migration/activation in this correction.
 
-## 1. Production authentication
-- [ ] 1.1 Make development-header auth explicitly development/test only.
-- [ ] 1.2 Add secure production auth adapter boundary.
-- [ ] 1.3 Implement and review signed JWT verification with configured issuer/audience/key/JWKS or an approved equivalent. Existing HS256 code is an unaccepted draft, not a completed security gate.
-- [ ] 1.4 Map verified issuer+subject to an existing active User/Role.
-- [ ] 1.5 Prevent untrusted token role claims from bypassing durable authorization.
-- [ ] 1.6 Add expiry/issuer/audience/signature/unknown-user tests.
-- [ ] 1.7 Update Settings auth-mode truth.
-- [ ] 1.8 No org/invite/tenant admin UI is implied.
-- [ ] 1.9 Production identity maps only to an existing active User; reject Header/default-user/auto-create and untrusted token role claims on every protected route.
-- [ ] 1.10 Production startup refuses missing auth/schema configuration and does not run `init_db()`, migration or mutable template/settings seed.
+## 1. Server authentication extension (OUT_OF_SCOPE, all ten entries)
+- [ ] 1.1 OUT_OF_SCOPE: prohibit Header auth in the separately selected technical server-extension mode; retain current single-machine auth behavior.
+- [ ] 1.2 OUT_OF_SCOPE: secure server-extension auth adapter boundary.
+- [ ] 1.3 OUT_OF_SCOPE: signed JWT/issuer/audience/key/JWKS or approved equivalent acceptance. Preserve the original unchecked record; existing HS256 code alone does not prove activation or this extension's verification.
+- [ ] 1.4 OUT_OF_SCOPE: map verified issuer+subject to an existing active User/Role.
+- [ ] 1.5 OUT_OF_SCOPE: prevent untrusted token roles from bypassing durable authorization in that adapter.
+- [ ] 1.6 OUT_OF_SCOPE: expiry/issuer/audience/signature/unknown-user extension regression acceptance.
+- [ ] 1.7 OUT_OF_SCOPE: Settings truth for explicitly activated server auth; do not change current identity UI merely to rename deployment.
+- [ ] 1.8 OUT_OF_SCOPE: no org/invite/tenant admin UI is implied by the original extension record.
+- [ ] 1.9 OUT_OF_SCOPE: server identity maps to active User, rejecting Header/default-user/auto-create and token-role claims; not a mandate to replace current loopback-only identity.
+- [ ] 1.10 OUT_OF_SCOPE: technical server-extension startup rejects missing auth/schema and skips init_db/migration/mutable seed; current startup remains unchanged by this correction.
 
 ## 2. Secrets/config hardening
 - [x] 2.1 Classify public vs secret configuration. Evidence: `runtime_config` classifies API keys, credentials, signed URLs, secret headers and vendor signature fields while allowing non-secret environment-reference names.
 - [x] 2.2 Ensure safe projections never expose plaintext. Evidence: settings, capability, provider and material safe-view regressions plus isolated Settings browser checks preserve masked/allowlisted output.
 - [x] 2.3 Scrub secrets/credential URLs from logs/errors/audit. Evidence: existing connector/media/provider error regressions and bounded F8 secret-policy diagnostics reject credential-bearing values without echoing them.
-- [ ] 2.4 Add production startup validation for required secrets.
-- [ ] 2.5 Prefer env/secret-provider references in production.
-- [ ] 2.6 Document/implement safe handling of existing persisted secret overrides.
+- [ ] 2.4 OUT_OF_SCOPE: add technical server-extension startup validation for required secrets.
+- [ ] 2.5 OUT_OF_SCOPE: prefer independent env/secret-provider references for that extension; current local credentials stay unchanged.
+- [ ] 2.6 OUT_OF_SCOPE: document/implement extension cutover of persisted overrides; never silently delete current credentials.
 - [x] 2.7 Add secret regression tests. Evidence: existing settings, connector, media, provider and F8 secret-classification regressions pass in the fresh full backend run.
-- [x] 2.8 Inventory legacy plaintext SystemSetting overrides and require explicit production remediation without printing values or silently deleting them. Evidence: `docs/FE_F8_SECRET_INVENTORY.md` records 6 rows / 3 secret-bearing rows using boolean-only inspection; local credentials were not changed or printed. Production startup/secret cutover remains a deferred obligation; the local-only commit refuses production readiness without claiming completed production authentication.
+- [x] 2.8 Inventory legacy plaintext SystemSetting overrides without printing values or silently deleting them. Evidence: `docs/FE_F8_SECRET_INVENTORY.md` records 6 rows / 3 secret-bearing rows by boolean-only inspection; credentials remain unchanged. Independent Secret Provider cutover is outside single-machine production scope, not a formal-use blocker. Technical server-extension checks do not determine current formal-use status.
 
 ## 3. Storage provider
 - [x] 3.1 Define internal StorageProvider contract. Evidence: `apps/api/app/services/material_storage.py` exposes bounded `put/read/exists/size/delete_if_unreferenced` operations with safe content-addressed keys.
 - [x] 3.2 Implement local provider preserving current dev/test behavior. Evidence: local provider uses the configured media root, immutable atomic writes, private generation namespace and legacy absolute-read bridge only outside production.
-- [ ] 3.3 Implement production object-storage-compatible provider/config. Deferred under the confirmed SQLite/local-media-only profile. The unaccepted MinIO implementation remains in the working tree, excluded from this local commit; it is not delivered or verified by local-provider tests.
+- [ ] 3.3 OUT_OF_SCOPE: object-storage-compatible provider/config acceptance. MinIO is not needed or planned for the final local-media production deployment; local-provider tests do not verify this extension. Its code, if present, is neither activated nor changed by terminology correction. Historical ade4ce0 scope excluded it.
 - [x] 3.4 Preserve MaterialRevision hash/business IDs. Evidence: storage changes operate on `file_path`/bytes only; `MaterialRevision.id`, `content_hash` and business references remain database truth.
 - [x] 3.5 Verify bytes/hash on reads used by Candidate/package. Evidence: delivery, v4/v5 package and renderer paths use `materials.read_bytes_checked`; targeted material/package/delivery/renderer regression passed.
 - [x] 3.6 Prevent safe API path disclosure. Evidence: material/revision serializers expose IDs, hashes, rights and MIME only; raw endpoints return bytes and the admin diagnostics projection omits storage paths/keys.
@@ -64,7 +70,7 @@ Local completion uses the remaining 82 tasks; safety tasks 6.1–6.3 and reviews
 ## 5. Health/readiness/runtime
 - [x] 5.1 Split the existing `/api/v1/health` behavior into truthful liveness and readiness without adding a conflicting second status source. Evidence: `/api/v1/health/live` is liveness, `/api/v1/health/ready` is the explicit readiness endpoint, and `/api/v1/health` remains a compatibility alias.
 - [x] 5.2 Make required-dependency readiness failures return non-success HTTP status and safe reason codes, never HTTP 200 degraded with raw exception text. Evidence: readiness maps failed checks to HTTP 503 and bounded reason codes.
-- [x] 5.3 Check DB connectivity and migration-head compatibility. Production requires exact configured/code/database head equality. Local development defaults to the approved `f7d000000001` and requires one database head and a single code ancestry containing it; an unapproved descendant is not silently accepted as the database head. Wrong/multi/empty heads fail; old User schema without draft identity columns passed actual startup/ORM/browser. Identity approval remains 0.7/1.x.
+- [x] 5.3 Check DB connectivity and migration-head compatibility. Production requires exact configured/code/database head equality. Local development defaults to the current approved `aco000000001` after separately authorized 2026-10-05 enablement and requires one database head and a single code ancestry containing it; an unapproved descendant is not silently accepted as the database head. Wrong/multi/empty heads fail. Historical F8 acceptance defaulted to `f7d000000001`; old User schema without draft identity columns passed actual startup/ORM/browser. The f8a columns now exist as ancestry but remain null/inert; identity activation/acceptance remains outside 0.7/1.x, and the formal SQLite is not rolled back.
 - [x] 5.4 Check required storage configuration/reachability. Evidence: the selected local provider is probed in all environments; a missing local root returns `storage_unavailable`/503 without creating it or falling back.
 - [x] 5.5 Check worker/queue when required by configured runtime. Evidence: queue connectivity and a bounded valid `{"ok":"pong"}` worker probe are separate; no-worker, live-worker and stopped-worker topology probes fail/ready truthfully, and the ping has an overall timeout.
 - [x] 5.6 Report optional capabilities without network side effects. Readiness projects the optional LLM provider from in-process settings with `not_probed`/`unavailable` status; it neither calls the provider nor makes optional availability part of the core ready predicate. Required storage/queue probes remain separate 5.4/5.5.
@@ -83,14 +89,14 @@ Local completion uses the remaining 82 tasks; safety tasks 6.1–6.3 and reviews
 - [x] 6.8 Add security regressions. Evidence: existing Delivery, Capability, Connector, Media, Settings, Health and Observability regression suites cover fail-closed side effects, redaction, Unknown, no-auto-retry and no-probe inventory behavior; no permanent test code was added under the local-only policy. See `docs/FE_F8_EXTERNAL_CAPABILITY_SECURITY_AUDIT.md`.
 
 ## 7. Migration/backup/recovery
-- [x] 7.1 Document SQLite/local-media backup/restore for the formal local profile; record PostgreSQL/MinIO as a future deployment profile. Evidence: `docs/runbooks/backup-restore.md` now makes the local profile authoritative and labels the other profiles future-only.
+- [x] 7.1 Document paired SQLite/local-media backup/restore for final single-machine production; PostgreSQL/MinIO are non-applicable extension references, not planned upgrades. Evidence: `docs/runbooks/backup-restore.md` keeps the same-snapshot rule and links existing API/Worker stop/start.
 - [x] 7.2 Automate isolated backup→restore rehearsal. Evidence: SQLite online backup and integrity both open the source read-only, refuse an existing destination, and return nonzero on failed integrity. Source/restored integrity were `ok`; WAL backup size equality is not a required correctness condition.
-- [x] 7.3 Run restored DB migrations to head. Evidence: an isolated restore was targeted to the approved `f7d000000001` head and read back at that head with `PRAGMA integrity_check=ok`; unapproved `f8a000000001` was not applied.
+- [x] 7.3 Run restored DB migrations to head. Historical F8 evidence: an isolated restore was targeted to the then-approved `f7d000000001` head and read back at that head with `PRAGMA integrity_check=ok`; `f8a000000001` was not applied in that rehearsal. The current approved recovery target is `aco000000001` after authorized Creative enablement; its f8a identity ancestry is null/inert, not JWT activation. Current paired backup/restore evidence is in `docs/ALIGN_CREATIVE_LOCAL_ENABLEMENT.md`.
 - [x] 7.4 Validate downgrade preflights without deleting incompatible history. Evidence: current local preflight found 1 retained `provider_generation_task` and 1 bound platform identity; it returned `downgrade_allowed=false` and did not execute downgrade or delete history. Existing f7c/f7d migration guards remain fail-closed.
 - [x] 7.5 Sample MaterialRevision byte integrity after restore. Evidence: the current local library's six referenced MaterialRevision byte hashes matched (`matched=6, missing=0, mismatch=0`) and the isolated restored DB remained intact.
 - [x] 7.6 Detect missing referenced bytes/orphans. Evidence: bounded admin storage diagnostics read all 6 current MaterialRevision rows and unresolved orphan candidates; isolated local run returned `issue_count=0`, `orphan_candidate_count=0`, `truncated=false`.
 - [x] 7.7 Document capability disable/rollback procedure. Evidence: `docs/runbooks/backup-restore.md` documents local capability disable, restore-source selection and non-destructive rollback order.
-- [x] 7.8 Add recovery acceptance record. Evidence: recovery DB + copied media started together at approved f7d/no-draft User schema; Project 4's five packages matched every original uncompressed ZIP entry byte. The record does not claim a formal DB cutover.
+- [x] 7.8 Add recovery acceptance record. Historical F8 evidence: recovery DB + copied media started together at then-approved f7d/no-draft User schema; Project 4's five packages matched every original uncompressed ZIP entry byte. That record does not claim a formal DB cutover; later authorized aco enablement is separately recorded in `docs/ALIGN_CREATIVE_LOCAL_ENABLEMENT.md`.
 
 ## 8. Golden suites
 - [x] 8.1 Create versioned Identity Golden fixtures. Evidence: `apps/api/evals/goldens/identity.v1.json` and version manifest.
@@ -108,23 +114,23 @@ Local completion uses the remaining 82 tasks; safety tasks 6.1–6.3 and reviews
 - [x] 9.2 Exercise Matrix→Text/Graphic/Video Masters. Evidence: one Project4, Text Unit6/Master6, Graphic Unit7/Master8, Video Unit8/Master9; browser Matrix read zero writes and explicit selection only. Video9 is a script; final video separately covered by Golden19.
 - [x] 9.3 Exercise ChannelVariants and Candidates. Evidence: same project's five exact v5 series reached Candidate6/7/8/9/10 with currentness/order-response/stale protections; existing suites preserve v3/v4.
 - [x] 9.4 Exercise Approval/Authorization/local delivery. Evidence: browser approved/authorized/downloaded all five local packages; restored DB/media re-export matched all original entry bytes. No remote call or publication claim.
-- [ ] 9.5 Exercise configured verified remote Publisher only with explicit authorization.
-- [ ] 9.6 Read back or human-verify remote result.
-- [ ] 9.7 Materialize PublishedContentRecord/Performance/LearningCandidate only after an actual publication has a qualifying `human_confirmed` DeliveryReceipt with `delivered_at` and exact Candidate/Target/hash; an authorized local package or ZIP download alone stops before this branch. Record absent publication evidence as not exercised, not success.
+- [ ] 9.5 OUT_OF_SCOPE acceptance: execute a new configured remote Publisher only with explicit authorization; existing F7 draft evidence is retained, no resend required for local production status.
+- [ ] 9.6 OUT_OF_SCOPE acceptance: read back or human-verify that new remote result; missing evidence stays unverified, not a server-infrastructure requirement.
+- [ ] 9.7 OUT_OF_SCOPE acceptance: exercise PublishedContentRecord/Performance/LearningCandidate only after actual publication with qualifying human_confirmed Receipt, delivered_at and exact Candidate/Target/hash. This truthfulness invariant remains mandatory: local ZIP alone is not publication or learning success; absent downstream evidence remains not exercised.
 - [x] 9.8 Confirm Unknown/failed delivery never becomes published. Evidence: delivery router Unknown/timeout/no-auto-retry and published-history negative regressions passed; local package does not create downstream published/learning rows.
 - [x] 9.9 Confirm complete lineage queryability. Evidence: project read models, frozen v4/v5 manifests, DeliveryTarget/Receipt, ProjectEvent and bounded admin audit projection retain the exact project/unit/master/variant/candidate/target/check/telemetry chain.
 - [x] 9.10 Produce verified/unverified capability matrix. Evidence: `docs/FE_F8_LOCAL_CAPABILITY_MATRIX.md` separates implemented, locally verified, configured and real-remote-not-exercised statuses.
 
 ## 10. Deployment/runbook/final gates
-- [x] 10.1 Add production configuration template. Evidence: `docs/runbooks/production.env.example` contains placeholders only and explicitly remains future deployment reference.
-- [x] 10.2 Add API/web/worker startup runbook. Evidence: `docs/runbooks/production-readiness.md` defines readiness-first startup and local profile separation.
+- [x] 10.1 Preserve the placeholder-only server-extension template `docs/runbooks/production.env.example` as non-current reference, not instructions to replace single-machine production configuration.
+- [x] 10.2 Add API/Web/Worker runbook. Evidence: `docs/runbooks/production-readiness.md` now prioritizes existing launchd/startup scripts, npm Web, explicit runtime checks, stop/logs and unchanged local configuration.
 - [x] 10.3 Add migration/backup/storage/secret runbook. Evidence: production runbook links the existing backup/recovery and secret inventory rules and requires copy/hash rehearsal before storage cutover.
-- [x] 10.4 Add reverse-proxy/TLS/auth expectations. Evidence: production runbook requires trusted proxy/TLS, JWT subject mapping, admin-only ops surfaces and development Header auth isolation.
+- [x] 10.4 Preserve reverse-proxy/TLS/JWT expectations in a separate non-current extension section; they are not needed for single-machine loopback production. Existing role/operational-detail restrictions remain.
 - [x] 10.5 Run full backend suite. Final approved commit-snapshot evidence on 2026-10-04, cwd `apps/api`: `PYTHONPATH=. APP_ENV=test LLM_PROVIDER=mock DATABASE_URL=sqlite:////private/tmp/aics-f7-close-Ro2XB0/worker-test.sqlite .venv/bin/python -m pytest -q --tb=short` → 1660 passed, 28 skipped, 8 warnings in 85.99 seconds, exit 0. The incorrect repo-root run's 32 path failures and first projection's 3 import failures are not counted as PASS.
 - [x] 10.6 Run full frontend build/bundle/browser suites. Fresh TypeScript/Vite/FE-P1 PASS, 13 current product browser gates plus 7 F8 runtime-status gates/no page errors, and post-fix legacy/new Settings no-probe checks. Evidence paths are in the local full-chain record; historical runs were not used as substitutes.
 - [x] 10.7 Run all OpenSpec strict/lint/diff gates. Evidence: OpenSpec strict 34/34, full app/recovery-script Ruff PASS and `git diff --check` PASS after the final fixes on 2026-10-04.
 - [x] 10.8 Independent security/operations review. Prior overall review plus final targeted re-review closed the absolute-deadline and query-log blockers; Harvey returned local-scope APPROVE on 2026-10-04. Reviewers inspected code, not independently reran the reported full suite/browser gates; production/remote scope remains deferred.
 - [x] 10.9 Independent end-to-end product architecture review. Prior overall review plus final targeted re-review closed special-path SQLite backup and conflicting-reference hash blockers; Copernicus returned 10.9 APPROVE on 2026-10-04, retaining the approved lineage/product portions. See `docs/FE_F8_LOCAL_FINAL_STATUS.md`.
 - [x] 10.10 Record implementation-complete vs provider-configured vs real-platform-verified statuses. Evidence: `docs/FE_F8_LOCAL_CAPABILITY_MATRIX.md` and `docs/FE_F8_LOCAL_FINAL_STATUS.md` keep those states separate.
-- [x] 10.11 Record local final commit and overall ROADMAP_IMPLEMENTED state. Authorized local implementation commit `ade4ce04870b854d262cdbc55250233cb293f54e` is on main; `docs/FE_F8_LOCAL_FINAL_STATUS.md` records ROADMAP_IMPLEMENTED_LOCAL=true for the approved SQLite/local-media/loopback profile and ROADMAP_IMPLEMENTED_PRODUCTION=false. Local tasks 82/82; original tasks 82/100 with 18 deferred obligations preserved unchecked.
+- [x] 10.11 Record final implementation commit and scoped ROADMAP_IMPLEMENTED state. Authorized `ade4ce04870b854d262cdbc55250233cb293f54e` is on main; `docs/FE_F8_LOCAL_FINAL_STATUS.md` records single-machine production complete (82/82) and its document-only ROADMAP_IMPLEMENTED_PRODUCTION=true scoped to SQLite/local-media/loopback. Original 18 out-of-scope extension records stay unchecked/unverified, not current formal-use blockers or runtime settings.
 - [x] 10.12 Do not deploy/push/canonical-archive without explicit authorization. The user separately authorized the above local main commit; no push, deployment, formal migration, canonical synchronization or archive was performed. Lifecycle actions remain subject to separate authority.

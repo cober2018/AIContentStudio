@@ -1,8 +1,9 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { Button, ErrorBanner, Field, Spinner, StatusBadge, inputClass } from "../components/ui";
 import { ModalityWorkspace } from "./ModalityWorkspace";
+import CreativeIntentEditor, { creativeIntentIssue, type CreativeIntent } from "./CreativeIntentEditor";
 import type { GraphicDraft } from "./GraphicStudioModel";
 import type { VideoDraft } from "./VideoStudioModel";
 import { createTextDraft, draftFromMaster, type TextDraft } from "./TextStudioModel";
@@ -10,7 +11,7 @@ import type { Unit } from "./project/projectTypes";
 import type { UnitOutput } from "./useProductionWorkflow";
 
 const RendererVerificationPanel = lazy(() => import("./RendererVerificationPanel"));
-type Master = { id: number; revision_no: number; payload: Record<string, unknown>; payload_hash: string; context_hash: string; payload_schema: string; channel_id: string | null; content_form: string | null; identity_snapshot_id: number | null; creative_brief_revision_id: number | null; fact_boundary_revision_id: number | null; assets: Record<string, unknown>[]; evidence: Record<string, unknown>[]; readiness: { state: string; reasons: string[] }; source_kind: string; edit_summary?: Record<string, unknown>; created_by?: string; created_at?: string };
+type Master = { id: number; revision_no: number; payload: Record<string, unknown>; payload_hash: string; context_hash: string; payload_schema: string; channel_id: string | null; content_form: string | null; identity_snapshot_id: number | null; creative_brief_revision_id: number | null; fact_boundary_revision_id: number | null; creative_intent?: CreativeIntent | null; assets: Record<string, unknown>[]; evidence: Record<string, unknown>[]; readiness: { state: string; reasons: string[] }; source_kind: string; edit_summary?: Record<string, unknown>; created_by?: string; created_at?: string };
 type Readiness = { render_input_hash: string; context: { state: string; reasons: string[] }; render: Record<string, unknown>; preview: Record<string, unknown>; checks: { id: number | null; check_kind: string; status: string; is_current: boolean; report: Record<string, unknown> }[]; candidate_freeze_available: boolean; adapter_availability: { available: boolean; reasons: string[] } };
 type UpgradePreview = { payload: Record<string, unknown>; warnings: { code: string }[]; source_master_id: number; source_revision_no: number; source_payload_hash: string; current_context_hash: string };
 type VideoUpgradePreview = { payload: null; source_fields: { title: string | null; script: string | null; shots: { id: string; order: number }[] }; warnings: string[]; source_master_id: number; source_revision_no: number; source_payload_hash: string; current_context_hash: string };
@@ -28,7 +29,8 @@ function checkProvenance(report: Record<string, unknown>) {
   return `Profile: ${String(report.profile_id || profile.id || requirement.schema || "未指定")} · Provider: ${String(semantic.provider || "未配置/不适用")} / ${String(semantic.model || "未配置/不适用")}`;
 }
 
-export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { projectId: number; unit: Unit; readOnly: boolean; outputs: UnitOutput[] }) {
+export function ContentMasterPanel({ projectId, unit, readOnly: workspaceReadOnly, outputs, onOpenExecution, reloadRequest = 0 }: { projectId: number; unit: Unit; readOnly: boolean; outputs: UnitOutput[]; onOpenExecution?: () => void; reloadRequest?: number }) {
+  const readOnly = workspaceReadOnly || unit.status === "archived";
   const base = `/content-projects/${projectId}/units/${unit.id}`;
   const [history, setHistory] = useState<Master[]>([]);
   const [selected, setSelected] = useState<Master | null>(null);
@@ -44,6 +46,9 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
   const [editorIssue, setEditorIssue] = useState("");
   const [form, setForm] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [contentDirty, setContentDirty] = useState(false);
+  const [intentDraft, setIntentDraft] = useState<CreativeIntent | null>(null);
+  const [intentDirty, setIntentDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -56,8 +61,11 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
   const [revisionDiff, setRevisionDiff] = useState<MasterDiff | null>(null);
   const [graphicDiff, setGraphicDiff] = useState<GraphicDiff | null>(null);
   const [videoDiff, setVideoDiff] = useState<VideoDiff | null>(null);
+  const seenReloadRequest = useRef(reloadRequest);
   const current = history[0] || null;
   const historical = !!selected && selected.id !== current?.id;
+  const intentOnly = !!selected && intentDirty && !contentDirty && !videoUpgradeDraft;
+  const intentIssue = intentDirty ? creativeIntentIssue(intentDraft) : "";
   const disabled = readOnly || historical || busy || (unit.modality === "graphic" && !!selected && selected.payload_schema !== "graphic.master.v2") || (unit.modality === "video" && !!selected && selected.payload_schema !== "video.master.v2");
   useEffect(() => {
     if (!dirty) return;
@@ -76,7 +84,8 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
   }, [dirty]);
 
   async function select(master: Master | null) {
-    setSelected(master); setReadiness(null); setCheckHistory([]); setDirty(false); setAcceptContext(false);
+    setSelected(master); setReadiness(null); setCheckHistory([]); setDirty(false); setContentDirty(false); setAcceptContext(false);
+    setIntentDraft(master?.creative_intent ?? null); setIntentDirty(false);
     setUpgradePreview(null); setRevisionDiff(null); setGraphicDiff(null); setVideoDiff(null); setCompareToId("");
     setVideoUpgradeDraft(null); setVideoUpgradePreview(null); setVideoUpgradeConfirmed(false);
     setTextDraft(unit.modality !== "text" ? null : !master ? createTextDraft() : master.payload_schema === "text.master.v2" ? draftFromMaster(master) : null);
@@ -106,24 +115,41 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
     setHistory(result.items); await select(result.items[0] || null);
   }
   useEffect(() => { reload().catch((cause) => setError(message(cause))).finally(() => setLoading(false)); }, [base]);
-  function change(set: (value: string) => void, value: string) { set(value); setDirty(true); setNotice(""); }
-  function changeText(value: TextDraft) { setTextDraft(value); setDirty(true); setNotice(""); }
-  function changeGraphic(value: GraphicDraft) { if (value === graphicDraft) return; setGraphicDraft(value); setDirty(true); setNotice(""); }
-  function changeVideo(value: VideoDraft) { if (value === (videoUpgradeDraft || videoDraft)) return; if (videoUpgradeDraft) setVideoUpgradeDraft(value); else setVideoDraft(value); setDirty(true); setNotice(""); }
+  useEffect(() => {
+    if (seenReloadRequest.current === reloadRequest) return;
+    seenReloadRequest.current = reloadRequest;
+    if (dirty || busy || loading) {
+      setNotice("已前往内容编辑器，保留当前本地修改；保存或明确重新加载后再读取 Recipe 接受的新版本。");
+      return;
+    }
+    void execute(reload);
+  }, [reloadRequest, dirty, busy, loading]);
+  function change(set: (value: string) => void, value: string) { set(value); setDirty(true); setContentDirty(true); setNotice(""); }
+  function changeText(value: TextDraft) { setTextDraft(value); setDirty(true); setContentDirty(true); setNotice(""); }
+  function changeGraphic(value: GraphicDraft) { if (value === graphicDraft) return; setGraphicDraft(value); setDirty(true); setContentDirty(true); setNotice(""); }
+  function changeVideo(value: VideoDraft) { if (value === (videoUpgradeDraft || videoDraft)) return; if (videoUpgradeDraft) setVideoUpgradeDraft(value); else setVideoDraft(value); setDirty(true); setContentDirty(true); setNotice(""); }
+  function changeIntent(value: CreativeIntent) { setIntentDraft(value); setIntentDirty(true); setDirty(true); setNotice(""); }
   async function execute(action: () => Promise<void>) { setBusy(true); setError(""); setNotice(""); try { await action(); } catch (cause) { setError(message(cause)); } finally { setBusy(false); } }
   async function save(attest = false) {
     await execute(async () => {
-      if (unit.modality === "text" && (!textDraft || editorIssue)) throw new Error(editorIssue || "旧版 Text Master 需先显式升级");
-      if (unit.modality === "graphic" && !graphicDraft) throw new Error("旧版 Graphic Master 需先显式升级");
-      if (unit.modality === "video" && !videoDraft) throw new Error("旧版 Video Master 需先显式升级");
-      const draft = unit.modality === "text" ? textDraft! : unit.modality === "graphic" ? graphicDraft! : videoDraft!;
+      if (readOnly || historical || busy) return;
+      if (intentIssue) throw new Error(intentIssue);
+      if (!intentOnly && unit.modality === "text" && (!textDraft || editorIssue)) throw new Error(editorIssue || "旧版 Text Master 需先显式升级");
+      if (!intentOnly && unit.modality === "graphic" && !graphicDraft) throw new Error("旧版 Graphic Master 需先显式升级");
+      if (!intentOnly && unit.modality === "video" && !videoDraft) throw new Error("旧版 Video Master 需先显式升级");
+      const draft = intentOnly ? {
+        payloadSchema: selected!.payload_schema, payload: selected!.payload,
+        assetRefs: selected!.assets.map((row) => ({ material_revision_id: row.material_revision_id, content_hash: row.content_hash, role: row.role, slot_key: row.slot_key, sort_order: row.sort_order, placement: row.placement })),
+        evidenceRefs: selected!.evidence.map((row) => ({ fact_pack_item_id: row.fact_pack_item_id, snapshot_checksum: row.snapshot_checksum, role: row.role, locator: row.locator, sort_order: row.sort_order })),
+      } : unit.modality === "text" ? textDraft! : unit.modality === "graphic" ? graphicDraft! : videoDraft!;
       await api.post(`${base}/master-revisions`, {
         expected_revision: current?.revision_no || 0,
         expected_context_hash: current && !acceptContext ? current.context_hash : undefined,
         idempotency_key: crypto.randomUUID(), parent_revision_id: current?.id,
         payload_schema: draft.payloadSchema, payload: draft.payload, content_form: form || null,
         asset_refs: draft.assetRefs, evidence_refs: draft.evidenceRefs,
-        edit_summary: unit.modality === "text" && textDraft!.aiEdits.length ? { ai_edits: textDraft!.aiEdits } : unit.modality === "video" && videoDraft?.asrReceiptId ? { asr_receipt_id: videoDraft.asrReceiptId } : {},
+        ...(intentDirty ? { creative_intent: intentDraft } : {}),
+        edit_summary: !intentOnly && unit.modality === "text" && textDraft!.aiEdits.length ? { ai_edits: textDraft!.aiEdits } : !intentOnly && unit.modality === "video" && videoDraft?.asrReceiptId ? { asr_receipt_id: videoDraft.asrReceiptId } : {},
         render_attestation: attest && readiness ? { confirmed: true, render_input_hash: readiness.render_input_hash } : undefined,
       });
       await reload(); setNotice("已保存新的不可变 Master 修订；Workflow 草稿未修改。");
@@ -137,8 +163,9 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
       {unit.modality === "text" && history.length > 0 && <details><summary className="cursor-pointer text-xs">不可变修订历史</summary><ul className="mt-2 space-y-1 text-xs">{history.map((row) => <li key={row.id}>v{row.revision_no} · {row.id === current?.id ? "当前" : "历史"} · {row.payload_schema} · {row.source_kind} · {row.created_by || "作者未知"} · {row.created_at || "时间未知"} · {row.readiness.state} · AI {Array.isArray((row.edit_summary?.ai_provenance as { edits?: unknown[] } | undefined)?.edits) ? (row.edit_summary?.ai_provenance as { edits: unknown[] }).edits.length : 0} 次</li>)}</ul></details>}
       {selected && <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600"><p>Master #{selected.id} · {selected.payload_schema} · {selected.source_kind} · {selected.created_by || "作者未知"} · {selected.created_at || "时间未知"}</p><p className="break-all">Payload {selected.payload_hash} / Context {selected.context_hash}</p><p>Identity #{selected.identity_snapshot_id ?? "缺失"} · Brief #{selected.creative_brief_revision_id ?? "缺失"} · Boundary #{selected.fact_boundary_revision_id ?? "缺失"} · AI 编辑 {Array.isArray((selected.edit_summary?.ai_provenance as { edits?: unknown[] } | undefined)?.edits) ? (selected.edit_summary?.ai_provenance as { edits: unknown[] }).edits.length : 0}</p><StatusBadge status={selected.readiness.state} />{selected.readiness.reasons.length > 0 && <p>{selected.readiness.reasons.join("、")}</p>}</div>}
       {historical && <p className="text-sm text-amber-800">历史 Master 只读；选择当前版本后再创建新修订。</p>}
+      <CreativeIntentEditor label="Master 创作意图" value={intentDraft} onChange={changeIntent} readOnly={readOnly || historical || busy || !!videoUpgradeDraft} />
       {unit.modality === "text" && selected && <Suspense fallback={<Spinner label="加载渲染验证…" />}><RendererVerificationPanel projectId={projectId} unitId={unit.id} master={selected} unavailable={readOnly || historical || dirty || busy || selected.readiness.state === "stale"} /></Suspense>}
-{unit.modality === "text" ? <ModalityWorkspace modality="text" projectId={projectId} unitId={unit.id} masterId={selected?.payload_schema === "text.master.v2" ? selected.id : null} masterHash={selected?.payload_schema === "text.master.v2" ? selected.payload_hash : null} savedAssetIds={(selected?.assets || []).map((row) => Number(row.material_revision_id))} savedCitationIds={(selected?.evidence || []).map((row) => String((row.locator as { citation_id?: string } | undefined)?.citation_id || ""))} identitySnapshotId={selected?.identity_snapshot_id || unit.identity_snapshot_id} boundaryRevisionId={selected?.fact_boundary_revision_id || null} draft={textDraft} legacyPayload={selected?.payload} onChange={changeText} readOnly={disabled || (!!selected && selected.payload_schema !== "text.master.v2")} epoch={textEpoch} onIssue={setEditorIssue} /> : unit.modality === "graphic" ? <ModalityWorkspace modality="graphic" projectId={projectId} unitId={unit.id} renderSource={selected?.payload_schema === "graphic.master.v2" ? selected : null} renderUnavailable={readOnly || historical || dirty || busy || selected?.readiness.state === "stale"} channelId={unit.channel_id} contentForm={form || null} boundaryRevisionId={selected?.fact_boundary_revision_id || null} draft={graphicDraft} legacyPayload={selected?.payload} onChange={changeGraphic} readOnly={disabled || (!!selected && selected.payload_schema !== "graphic.master.v2")} /> : <ModalityWorkspace modality="video" projectId={projectId} unitId={unit.id} masterId={selected?.payload_schema === "video.master.v2" ? selected.id : null} masterHash={selected?.payload_schema === "video.master.v2" ? selected.payload_hash : null} savedSourceIds={Array.from(new Set((selected?.assets || []).filter((row) => ["voice_audio", "music_audio", "timeline_media", "shot_source"].includes(String(row.role))).map((row) => Number(row.material_revision_id))))} dirty={dirty} draft={videoUpgradeDraft || videoDraft} legacyPayload={selected?.payload} upgradeMode={!!videoUpgradeDraft} onChange={changeVideo} readOnly={videoUpgradeDraft ? readOnly || historical || busy : disabled} />}
+{unit.modality === "text" ? <ModalityWorkspace modality="text" projectId={projectId} unitId={unit.id} masterId={selected?.payload_schema === "text.master.v2" ? selected.id : null} masterHash={selected?.payload_schema === "text.master.v2" ? selected.payload_hash : null} savedAssetIds={(selected?.assets || []).map((row) => Number(row.material_revision_id))} savedCitationIds={(selected?.evidence || []).map((row) => String((row.locator as { citation_id?: string } | undefined)?.citation_id || ""))} identitySnapshotId={selected?.identity_snapshot_id || unit.identity_snapshot_id} boundaryRevisionId={selected?.fact_boundary_revision_id || null} draft={textDraft} legacyPayload={selected?.payload} onChange={changeText} readOnly={disabled || (!!selected && selected.payload_schema !== "text.master.v2")} epoch={textEpoch} onIssue={setEditorIssue} /> : unit.modality === "graphic" ? <ModalityWorkspace modality="graphic" projectId={projectId} unitId={unit.id} renderSource={selected?.payload_schema === "graphic.master.v2" ? selected : null} renderUnavailable={readOnly || historical || dirty || busy || selected?.readiness.state === "stale"} channelId={unit.channel_id} contentForm={form || null} boundaryRevisionId={selected?.fact_boundary_revision_id || null} draft={graphicDraft} legacyPayload={selected?.payload} onChange={changeGraphic} readOnly={disabled || (!!selected && selected.payload_schema !== "graphic.master.v2")} /> : <ModalityWorkspace modality="video" onOpenExecution={onOpenExecution} projectId={projectId} unitId={unit.id} masterId={selected?.payload_schema === "video.master.v2" ? selected.id : null} masterHash={selected?.payload_schema === "video.master.v2" ? selected.payload_hash : null} savedSourceIds={Array.from(new Set((selected?.assets || []).filter((row) => ["voice_audio", "music_audio", "timeline_media", "shot_source"].includes(String(row.role))).map((row) => Number(row.material_revision_id))))} dirty={dirty} draft={videoUpgradeDraft || videoDraft} legacyPayload={selected?.payload} upgradeMode={!!videoUpgradeDraft} onChange={changeVideo} readOnly={videoUpgradeDraft ? readOnly || historical || busy : disabled} />}
       {editorIssue && <ErrorBanner message={editorIssue} />}
       <div className="grid gap-3 sm:grid-cols-2"><Field label="渠道内容形态（留空由 Registry 解析）"><input aria-label="Master 内容形态" className={inputClass} value={form} disabled={disabled || (unit.modality === "text" && !!selected && selected.payload_schema !== "text.master.v2")} onChange={(event) => change(setForm, event.target.value)} /></Field><p className="self-center text-xs text-slate-500">渠道：{unit.channel_id || "未选择，不能冻结"}。素材来自项目共享素材，可跨 Unit 引用；不复制字节。</p></div>
       {unit.modality === "text" && selected && <div className="space-y-3 rounded-lg border border-slate-200 p-3"><h3 className="font-medium">Text Master 版本</h3>
@@ -158,8 +185,8 @@ export function ContentMasterPanel({ projectId, unit, readOnly, outputs }: { pro
         <Button variant="secondary" disabled={readOnly || historical || busy || dirty} onClick={() => execute(async () => { const preview = await api.get<VideoUpgradePreview>(`${base}/master-revisions/${selected.id}/video-v2-upgrade-preview`); const { videoUpgradeDraftFromPreview } = await import("./VideoStudioModel"); setVideoUpgradePreview(preview); setVideoUpgradeDraft(videoUpgradeDraftFromPreview(preview.source_fields)); setVideoUpgradeConfirmed(false); })}>预览 Video v1 → v2</Button>
         {videoUpgradePreview?.source_master_id === selected.id && <div className="space-y-2 text-sm"><p>来源 v{videoUpgradePreview.source_revision_no} · {videoUpgradePreview.source_fields.shots.length} 个已存镜头。上方编辑器中的画幅、每镜头 1000 ms 和时间线仅是填写起点，须亲自核对。</p><ul className="list-disc pl-5">{videoUpgradePreview.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul><label className="flex items-start gap-2"><input type="checkbox" checked={videoUpgradeConfirmed} disabled={readOnly || busy} onChange={(event) => setVideoUpgradeConfirmed(event.target.checked)} /><span>我已核对并提交完整画幅、镜头时长、时间线和精确引用，接受上述不可推断信息及全部转换警告；旧 Master/旧 Candidate 保持不变。</span></label><Button disabled={readOnly || historical || busy || !videoUpgradeConfirmed || !videoUpgradeDraft || selected.readiness.state === "stale"} onClick={() => execute(async () => { await api.post(`${base}/master-revisions/${selected.id}/video-v2-upgrade`, { expected_revision: selected.revision_no, expected_payload_hash: videoUpgradePreview.source_payload_hash, expected_context_hash: videoUpgradePreview.current_context_hash, idempotency_key: crypto.randomUUID(), payload: videoUpgradeDraft!.payload, asset_refs: videoUpgradeDraft!.assetRefs, evidence_refs: videoUpgradeDraft!.evidenceRefs, acknowledged_warnings: videoUpgradePreview.warnings }); await reload(); setNotice("已显式追加 Video v2 修订；旧 v1 及历史 Candidate 保持只读。"); })}>确认升级并追加 Video v2 修订</Button></div>}
       </div>}
-      {selected?.readiness.state === "stale" && <label className="flex items-center gap-2 text-sm text-amber-800"><input type="checkbox" disabled={disabled} checked={acceptContext} onChange={(event) => setAcceptContext(event.target.checked)} />明确接纳最新项目上下文，保存为新修订（历史不改写）</label>}
-      <div className="flex flex-wrap gap-2"><Button disabled={disabled || !!editorIssue || (unit.modality === "text" && !textDraft) || (unit.modality === "graphic" && !graphicDraft) || (unit.modality === "video" && !videoDraft) || (selected?.readiness.state === "stale" && !acceptContext)} onClick={() => save()}>保存内容 Master</Button><Button variant="secondary" disabled={disabled || dirty || !selected || selected.readiness.state === "stale"} onClick={() => execute(async () => { await api.post(`${base}/master-revisions/${selected!.id}/checks`); await reload(); setNotice("Master 检查已持久化；旧检查不覆盖。"); })}>运行 Master 检查</Button><Button disabled={disabled || dirty || !readiness?.candidate_freeze_available || !selected} onClick={() => execute(async () => { const frozen = await api.post<{ id: number }>(`${base}/candidates/freeze`, { content_master_revision_id: selected!.id, expected_payload_hash: selected!.payload_hash }); setCandidateId(frozen.id); setNotice(`已冻结 Candidate v4 #${frozen.id}，尚未审批。`); })}>冻结 Master Candidate v4</Button>{candidateId && <Link className="self-center text-sm text-indigo-700 underline" to={`/review?project=${projectId}&unit=${unit.id}&candidate=${candidateId}`}>审阅 Candidate #{candidateId}</Link>}</div>
+      {selected?.readiness.state === "stale" && <label className="flex items-center gap-2 text-sm text-amber-800"><input type="checkbox" disabled={readOnly || historical || busy || (!intentOnly && disabled)} checked={acceptContext} onChange={(event) => setAcceptContext(event.target.checked)} />明确接纳最新项目上下文，保存为新修订（历史不改写）</label>}
+      <div className="flex flex-wrap gap-2"><Button disabled={readOnly || historical || busy || !!intentIssue || (!intentOnly && (disabled || !!editorIssue || (unit.modality === "text" && !textDraft) || (unit.modality === "graphic" && !graphicDraft) || (unit.modality === "video" && !videoDraft))) || (selected?.readiness.state === "stale" && !acceptContext)} onClick={() => save()}>保存内容 Master</Button><Button variant="secondary" disabled={disabled || dirty || !selected || selected.readiness.state === "stale"} onClick={() => execute(async () => { await api.post(`${base}/master-revisions/${selected!.id}/checks`); await reload(); setNotice("Master 检查已持久化；旧检查不覆盖。"); })}>运行 Master 检查</Button><Button disabled={disabled || dirty || !readiness?.candidate_freeze_available || !selected} onClick={() => execute(async () => { const frozen = await api.post<{ id: number }>(`${base}/candidates/freeze`, { content_master_revision_id: selected!.id, expected_payload_hash: selected!.payload_hash }); setCandidateId(frozen.id); setNotice(`已冻结 Candidate v4 #${frozen.id}，尚未审批。`); })}>冻结 Master Candidate v4</Button>{candidateId && <Link className="self-center text-sm text-indigo-700 underline" to={`/review?project=${projectId}&unit=${unit.id}&candidate=${candidateId}`}>审阅 Candidate #{candidateId}</Link>}</div>
       {unit.modality !== "text" && <Button variant="secondary" disabled={disabled || dirty || !selected || !readiness || selected.readiness.state !== "current" || (unit.modality === "video" && !videoDraft?.payload.render_asset_ref)} onClick={() => { if (window.confirm("确认当前 render_output 的真实字节是此 Master 的最终渲染？确认会保存带输入哈希证明的新修订。")) save(true); }}>{unit.modality === "video" ? "确认真实 MP4 与当前输入一致并保存新修订" : "确认当前渲染并保存新修订"}</Button>}
       {unit.modality === "text" && <div className="flex flex-wrap gap-2"><select aria-label="Draft seed 输出" className={inputClass} disabled={disabled || dirty} value={outputId} onChange={(event) => setOutputId(event.target.value)}><option value="">选择真实 Draft 输出</option>{outputs.filter((row) => row.output_kind === "draft").map((row) => <option key={row.id} value={row.id}>输出 #{row.id} · Draft #{row.entity_id} · Run #{row.run_id}</option>)}</select><Button variant="secondary" disabled={disabled || dirty || !outputId} onClick={() => execute(async () => { await api.post(`${base}/master-revisions/from-output`, { expected_revision: current?.revision_no || 0, idempotency_key: crypto.randomUUID(), project_output_id: Number(outputId) }); await reload(); setNotice("已从可验证 Draft 执行输出创建 text.master.v2；未证明的映射仍保持 incomplete，可在修订血缘中核对。"); })}>从 Draft 创建 Text Master</Button></div>}
       {readiness && <div><h3 className="font-medium">Master 当前检查与渲染</h3><p className="mt-1 text-xs text-slate-500">{readiness.candidate_freeze_available ? "可冻结" : "不可冻结"} · {readiness.adapter_availability.reasons.join("、")}</p>{unit.modality === "text" ? <div className="mt-2 space-y-2">{readiness.checks.map((row) => <div key={row.check_kind} className="rounded border border-slate-200 p-2 text-xs"><div className="flex flex-wrap items-center gap-2"><strong>{row.check_kind}</strong><StatusBadge status={row.status} /><span>{row.is_current ? "输入仍是当前版本" : "已过期，需重跑"}</span><span>检查 #{row.id ?? "未运行"}</span></div><p>覆盖：{pretty(row.report.coverage || "未知")}</p><p>{checkProvenance(row.report)}</p>{Array.isArray(row.report.reasons) && row.report.reasons.length > 0 && <p>原因：{row.report.reasons.join("、")}</p>}{Array.isArray(row.report.issues) && row.report.issues.length > 0 && <p>问题：{row.report.issues.map((issue) => typeof issue === "object" && issue ? String((issue as { reason?: string; code?: string }).reason || (issue as { code?: string }).code || "需核对") : String(issue)).join("、")}</p>}</div>)}<details><summary className="cursor-pointer text-xs">历史检查（不覆盖旧结果）</summary><ul className="mt-2 space-y-1 text-xs">{checkHistory.map((row) => <li key={row.id}>#{row.id} · {row.check_kind} · {row.status} · {row.created_at || "时间未知"} · {row.input_hash.slice(0, 12)}…</li>)}</ul></details><p className="text-xs">渲染：{String(readiness.render.status || "未知")}。需要处置 warning 时进入冻结后的 Review，不在此处把 warning 改写为 pass。</p></div> : <><div className="mt-2 flex flex-wrap gap-2">{readiness.checks.map((row) => <span key={row.check_kind} className="text-xs">{row.check_kind}: <StatusBadge status={row.status} /></span>)}</div><pre className="mt-3 max-h-56 overflow-auto rounded bg-slate-50 p-3 text-xs">{pretty({ preview: readiness.preview, render: readiness.render, checks: readiness.checks })}</pre></>}</div>}

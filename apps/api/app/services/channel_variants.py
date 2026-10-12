@@ -32,6 +32,7 @@ from ..models import (
 from .channel_adapters import FIRST_BATCH, AdapterUnavailable, capability_for, executable_adapter_for
 from .channel_variant_documents import VariantDocumentError, canonical_payload, validate_wechat_inline_refs
 from .content_masters import owned_unit
+from .creative_intents import CreativeIntentError, canonical_intent, intent_diff
 from .generation.providers import GenerateRequest, get_provider, record_run
 from .materials import read_bytes_checked, sniff_mime
 from .project_events import record_project_event
@@ -109,6 +110,8 @@ def _serialize(db: Session, row: ChannelVariantRevision) -> dict:
         "payload_schema": row.payload_schema,
         "payload": row.payload_json,
         "payload_hash": row.payload_hash,
+        "creative_intent": row.creative_intent_json,
+        "creative_intent_hash": row.creative_intent_hash,
         "context_hash": row.context_hash,
         "source_kind": row.source_kind,
         "edit_summary": row.edit_summary_json,
@@ -189,7 +192,8 @@ def revision_diff(db: Session, project_id: int, unit_id: int, variant_id: int, u
                   if rows_key and (not previous or previous.payload_schema == current.payload_schema) else None)
     return {"from_revision_id": previous.id if previous else None, "to_revision_id": current.id,
             "variant_key": current.variant_key, "payload_schema": current.payload_schema,
-            "changed_sections": changed, "structured": structured}
+            "changed_sections": changed, "structured": structured,
+            "creative_intent": intent_diff(previous.creative_intent_json if previous else None, current.creative_intent_json)}
 
 
 def _current_source_id(db: Session, unit_id: int) -> int | None:
@@ -442,7 +446,9 @@ def _text_source_cover_refs(db: Session, master: ContentMasterRevision) -> list[
     return result
 
 
-def _check_inputs(db: Session, row: ChannelVariantRevision) -> tuple[str, list[dict], list[dict]]:
+def _check_inputs(db: Session, row: ChannelVariantRevision, *, memo: dict | None = None) -> tuple[str, list[dict], list[dict]]:
+    if memo is not None and "inputs" in memo:
+        return memo["inputs"]
     assets = db.scalars(select(ChannelVariantAssetRef).where(ChannelVariantAssetRef.variant_revision_id == row.id).order_by(ChannelVariantAssetRef.sort_order, ChannelVariantAssetRef.id)).all()
     evidence = db.scalars(select(ChannelVariantEvidenceRef).where(ChannelVariantEvidenceRef.variant_revision_id == row.id).order_by(ChannelVariantEvidenceRef.sort_order, ChannelVariantEvidenceRef.id)).all()
     asset_refs = [{"material_revision_id": item.material_revision_id, "content_hash_snapshot": item.content_hash_snapshot,
@@ -450,15 +456,37 @@ def _check_inputs(db: Session, row: ChannelVariantRevision) -> tuple[str, list[d
                    "rights_snapshot": item.rights_snapshot_json} for item in assets]
     evidence_refs = [{"fact_pack_item_id": item.fact_pack_item_id, "snapshot_checksum": item.snapshot_checksum,
                       "role": item.role, "sort_order": item.sort_order, "content_locator_json": item.content_locator_json} for item in evidence]
-    return _hash({"variant_id": row.id, "payload": row.payload_json, "payload_hash": row.payload_hash,
-                  "context_hash": row.context_hash, "profile_hash": row.profile_hash, "adapter_key": row.adapter_key,
-                  "adapter_version": row.adapter_version, "rule_hash": row.rule_hash, "assets": asset_refs,
-                  "evidence": evidence_refs}), asset_refs, evidence_refs
+    result = (_hash({"variant_id": row.id, "payload": row.payload_json, "payload_hash": row.payload_hash,
+                     "context_hash": row.context_hash, "profile_hash": row.profile_hash, "adapter_key": row.adapter_key,
+                     "adapter_version": row.adapter_version, "rule_hash": row.rule_hash, "assets": asset_refs,
+                     "evidence": evidence_refs}), asset_refs, evidence_refs)
+    if memo is not None:
+        memo["inputs"] = result
+    return result
 
 
-def _drift_reasons(db: Session, row: ChannelVariantRevision) -> list[str]:
+def _shared_master_readiness(db: Session, master: ContentMasterRevision, memo: dict | None) -> dict:
+    """单次投影内的 readiness 备忘：drift 与 source_gate 都需要，避免重复序列化 Master。"""
+    if memo is not None and "master_readiness" in memo:
+        return memo["master_readiness"]
     from .content_masters import _serialize as serialize_master
 
+    readiness = serialize_master(db, master)["readiness"]
+    if memo is not None:
+        memo["master_readiness"] = readiness
+    return readiness
+
+
+def _shared_current_source_id(db: Session, unit_id: int, memo: dict | None) -> int | None:
+    if memo is not None and "source_id" in memo:
+        return memo["source_id"]
+    source_id = _current_source_id(db, unit_id)
+    if memo is not None:
+        memo["source_id"] = source_id
+    return source_id
+
+
+def _drift_reasons(db: Session, row: ChannelVariantRevision, *, memo: dict | None = None) -> list[str]:
     reasons: list[str] = []
     current_variant_id = db.scalar(select(ChannelVariantRevision.id).where(
         ChannelVariantRevision.content_unit_id == row.content_unit_id,
@@ -468,13 +496,13 @@ def _drift_reasons(db: Session, row: ChannelVariantRevision) -> list[str]:
         reasons.append("variant_revision_not_current")
     master = db.get(ContentMasterRevision, row.source_master_revision_id)
     if (master is None or master.project_id != row.project_id or master.content_unit_id != row.content_unit_id
-            or _current_source_id(db, row.content_unit_id) != row.source_master_revision_id):
+            or _shared_current_source_id(db, row.content_unit_id, memo) != row.source_master_revision_id):
         return ["source_master_not_current"]
     if (master.payload_hash != row.source_master_payload_hash or master.payload_hash != _hash(master.payload_json)
             or master.context_hash != row.source_master_context_hash
-            or serialize_master(db, master)["readiness"]["state"] == "stale"):
+            or _shared_master_readiness(db, master, memo)["state"] == "stale"):
         reasons.append("source_master_changed")
-    _, asset_refs, evidence_refs = _check_inputs(db, row)
+    _, asset_refs, evidence_refs = _check_inputs(db, row, memo=memo)
     try:
         _validate_evidence_refs(db, master, evidence_refs)
     except HTTPException:
@@ -521,8 +549,11 @@ def _drift_reasons(db: Session, row: ChannelVariantRevision) -> list[str]:
 
 
 def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
-    input_hash, _, _ = _check_inputs(db, row)
-    drift_reasons = _drift_reasons(db, row)
+    # 单次调用内的查询备忘：_check_inputs/readiness/current_source 在 drift 与
+    # source_gate 里各需要一次，重复执行会让每个变体系列多花 4+ 条查询
+    memo: dict = {}
+    input_hash, _, _ = _check_inputs(db, row, memo=memo)
+    drift_reasons = _drift_reasons(db, row, memo=memo)
     required = ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
     if row.payload_schema == "xiaohongshu.image_note.v1":
         required = (*required, "variant_render")
@@ -539,7 +570,7 @@ def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
                       "is_current": is_current, "stored_status": latest.status if latest else None,
                       "status": latest.status if is_current else "stale" if latest else "incomplete",
                       "report": {"reasons": drift_reasons} if drift_reasons else latest.report_json if latest else {"reason": "check_missing"}})
-    source_gate = _source_gate(db, row)
+    source_gate = _source_gate(db, row, memo=memo)
     return {"items": items, "source_gate": source_gate,
             "ready": not drift_reasons and source_gate["status"] == "pass" and all(item["status"] == "pass" for item in items),
             "drift_reasons": drift_reasons}
@@ -553,16 +584,15 @@ def source_check_exclusions(master: ContentMasterRevision, variant_schema: str) 
     return excluded
 
 
-def _source_gate(db: Session, row: ChannelVariantRevision) -> dict:
-    from .content_masters import _serialize as serialize_master
+def _source_gate(db: Session, row: ChannelVariantRevision, *, memo: dict | None = None) -> dict:
     from .content_masters import projected_checks
 
     master = db.get(ContentMasterRevision, row.source_master_revision_id)
     if (master is None or master.project_id != row.project_id or master.content_unit_id != row.content_unit_id
-            or _current_source_id(db, row.content_unit_id) != row.source_master_revision_id
+            or _shared_current_source_id(db, row.content_unit_id, memo) != row.source_master_revision_id
             or master.payload_hash != row.source_master_payload_hash or master.context_hash != row.source_master_context_hash):
         return {"status": "stale", "reasons": ["source_master_not_current"], "checks": []}
-    readiness = serialize_master(db, master)["readiness"]
+    readiness = _shared_master_readiness(db, master, memo)
     if readiness["state"] != "current":
         return {"status": "stale" if readiness["state"] == "stale" else "incomplete",
                 "reasons": readiness["reasons"], "checks": []}
@@ -894,10 +924,17 @@ def validate_stored_model_provenance(db: Session, row: ChannelVariantRevision, m
         raise ValueError("unverified model provenance")
 
 
-def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
+def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict,
+                  stage_adoption=None) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
     key = payload["variant_key"]
     idempotency_key = payload["idempotency_key"]
+    if "creative_intent" in payload:
+        try:
+            creative_intent, creative_intent_hash = canonical_intent(payload["creative_intent"])
+        except CreativeIntentError as exc:
+            raise HTTPException(422, {"code": str(exc)}) from None
+        payload = {**payload, "creative_intent": creative_intent}
     fingerprint = _hash(payload)
     existing = db.scalar(select(ChannelVariantRevision).where(
         ChannelVariantRevision.content_unit_id == unit_id,
@@ -907,6 +944,9 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     if existing is not None:
         if existing.request_fingerprint != fingerprint:
             raise HTTPException(409, {"code": "variant_idempotency_conflict"})
+        if stage_adoption is not None:
+            stage_adoption(existing)
+            db.commit()
         return _serialize(db, existing)
     if (payload.get("source_kind") == "model_assisted") != (payload.get("llm_provenance") is not None):
         raise HTTPException(422, {"code": "variant_model_receipt_required"})
@@ -942,6 +982,8 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         adapter, capability = executable_adapter_for(db, master.payload_schema, payload["channel_id"], payload["content_form"])
     except AdapterUnavailable as exc:
         raise HTTPException(422, {"code": "variant_adapter_unavailable", "reason": str(exc)}) from exc
+    if payload.get("expected_profile_hash") is not None and payload["expected_profile_hash"] != capability["profile_hash"]:
+        raise HTTPException(409, {"code": "variant_profile_changed"})
     if master.payload_schema == "text.master.v2":
         inherited_evidence = _text_source_evidence_refs(db, master, capability["payload_schema"])
         if inherited_evidence and evidence_refs != inherited_evidence:
@@ -977,6 +1019,9 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         raise HTTPException(409, {"code": "variant_revision_conflict"})
     if head is not None and (head.channel_id != payload["channel_id"] or head.content_form != payload["content_form"]):
         raise HTTPException(409, {"code": "variant_series_target_conflict"})
+    if "creative_intent" not in payload:
+        creative_intent = head.creative_intent_json if head else None
+        creative_intent_hash = head.creative_intent_hash if head else None
     profile = db.get(ChannelTemplateVersion, capability["profile_version_id"])
     form_profile = (profile.profile_json or {}).get("content_forms", {}).get(payload["content_form"], {})
     rule_hash = _hash(form_profile.get("rule_sets") or [])
@@ -992,6 +1037,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         profile_key=f"{payload['channel_id']}/{payload['content_form']}", profile_version=str(profile.version), profile_hash=capability["profile_hash"],
         adapter_key=capability["adapter_key"], adapter_version=capability["adapter_version"], rule_hash=rule_hash,
         payload_schema=capability["payload_schema"], payload_json=canonical, payload_hash=_hash(canonical), context_hash=_hash(context),
+        creative_intent_json=creative_intent, creative_intent_hash=creative_intent_hash,
         source_kind=payload.get("source_kind", "manual_edit"), edit_summary_json=payload.get("edit_summary", {}),
         llm_provenance_json=safe_model_provenance,
         idempotency_key=idempotency_key, request_fingerprint=fingerprint, created_by=user.email, created_at=utcnow(),
@@ -1043,6 +1089,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         if project.status == "archived" or unit.status == "archived" or unit.identity_snapshot_id != master.identity_snapshot_id or current_master["readiness"]["state"] == "stale" or _current_source_id(db, unit_id) != master.id or master.payload_hash != _hash(master.payload_json) or _hash(latest_context) != row.context_hash:
             db.rollback()
             raise HTTPException(409, {"code": "variant_context_conflict"})
+        if stage_adoption is not None:
+            # The trusted Stage bridge owns the association and decision in this transaction.
+            stage_adoption(row)
+            db.flush()
         db.commit()
     except IntegrityError as exc:
         db.rollback()
@@ -1054,6 +1104,9 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         if winner is not None:
             if winner.request_fingerprint != fingerprint:
                 raise HTTPException(409, {"code": "variant_idempotency_conflict"}) from exc
+            if stage_adoption is not None:
+                # A Stage race must replay its verified association, never create one after rollback.
+                raise HTTPException(409, {"code": "stage_adoption_retry_required"}) from exc
             return _serialize(db, winner)
         raise HTTPException(409, {"code": "variant_concurrent_conflict"}) from exc
     db.refresh(row)

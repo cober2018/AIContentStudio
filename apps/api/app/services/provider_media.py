@@ -54,6 +54,8 @@ class Preview:
     acceptance_hash: str | None = None
     search_origin: dict | None = None
     renderer_origin: dict | None = None
+    tts_applied_parameters: dict | None = None
+    multimedia_candidate: dict | None = None
     operation_lock: threading.RLock = field(default_factory=threading.RLock, repr=False, compare=False)
 
 
@@ -164,7 +166,25 @@ def _get(stage_id: str, user: User) -> Preview:
 
 def stage_output(user: User, *, kind: str, key: str, version: str, runtime_hash: str, input_hash: str,
                  output: providers.MediaOutput, project_id: int | None, sources=(), search_origin: dict | None = None,
-                 renderer_origin: dict | None = None) -> dict:
+                 renderer_origin: dict | None = None, tts_applied_parameters: dict | None = None,
+                 multimedia_candidate: dict | None = None) -> dict:
+    if tts_applied_parameters is not None:
+        from .model_capability_routing import validate_tts_applied_parameters
+
+        try:
+            if kind != "tts_provider" or key != "minimax.cli" or version != "1":
+                raise ValueError
+            tts_applied_parameters = validate_tts_applied_parameters(tts_applied_parameters)
+        except ValueError:
+            raise HTTPException(422, "provider_tts_parameters_invalid") from None
+    if multimedia_candidate is not None and (not isinstance(multimedia_candidate, dict)
+                or set(multimedia_candidate) != {"schema", "candidate_index", "manifest_hash", "content_hash"}
+                or multimedia_candidate.get("schema") != "studio.generation.batch.selection.v1"
+                or type(multimedia_candidate.get("candidate_index")) is not int
+                or not 0 <= multimedia_candidate["candidate_index"] <= 3
+                or not _HEX.fullmatch(multimedia_candidate.get("manifest_hash", ""))
+                or not _HEX.fullmatch(multimedia_candidate.get("content_hash", ""))):
+        raise HTTPException(422, "generation_candidate_provenance_invalid")
     media_kind, mime = _decode(output.content, output.mime_type)
     expected_kind = (renderer_origin or {}).get("modality") if kind == "renderer" else {"image_provider": "image", "search_provider": "image", "video_provider": "video", "tts_provider": "audio"}[kind]
     if expected_kind == "graphic":
@@ -172,9 +192,13 @@ def stage_output(user: User, *, kind: str, key: str, version: str, runtime_hash:
     if media_kind != expected_kind:
         raise HTTPException(422, "provider_output_kind_mismatch")
     content_hash = hashlib.sha256(output.content).hexdigest()
+    if multimedia_candidate is not None and multimedia_candidate["content_hash"] != content_hash:
+        raise HTTPException(409, "generation_candidate_provenance_invalid")
     preview = Preview(user.id, kind, key, version, runtime_hash, input_hash,
                       output.content, mime, media_kind, content_hash, project_id, sources, time.monotonic() + _TTL,
-                      search_origin=search_origin, renderer_origin=renderer_origin)
+                      search_origin=search_origin, renderer_origin=renderer_origin,
+                      tts_applied_parameters=tts_applied_parameters,
+                      multimedia_candidate=multimedia_candidate)
     with _lock:
         _prune()
         if (len(_cache) >= 64 or sum(item.actor_id == user.id for item in _cache.values()) >= 8
@@ -267,6 +291,10 @@ def accept(db: Session, user: User, stage_id: str, decision: dict, *, commit: bo
         safe = {"provider_kind": preview.provider_kind, "runtime_hash": preview.runtime_hash,
                 "input_hash": preview.input_hash, "source_refs": [{"revision_id": rid, "content_hash": digest} for rid, digest in preview.sources],
                 "license_code": decision["license_code"], "license_evidence_hash": decision["license_evidence_hash"]}
+        if preview.multimedia_candidate is not None:
+            safe["generation_candidate"] = dict(preview.multimedia_candidate)
+        if preview.tts_applied_parameters is not None:
+            safe["tts_applied_parameters"] = dict(preview.tts_applied_parameters)
         if preview.search_origin:
             safe.update({field: preview.search_origin[field] for field in ("source_id", "fetch_url_hash")})
         if preview.renderer_origin:

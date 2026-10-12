@@ -363,3 +363,222 @@ def test_recomputed_public_hash_cannot_forge_frozen_plan(db_session, loaded_imag
     with pytest.raises(Exception) as error:
         routing.revalidate_plan(db_session, forged)
     assert error.value.status_code == 409
+
+
+@pytest.fixture
+def multimedia_registry(monkeypatch):
+    from app.services.content_harness import providers
+    from app.services.content_harness import registry as registry_module
+    from app.services.content_harness.registry import PluginRegistry
+    from app.services.minimax_cli_provider import MiniMaxCLITTSProvider
+
+    loaded = PluginRegistry()
+
+    class ModelAdapter:
+        key, version = "minimax.cli", "1"
+
+        def binding_state(self, capability, binding):
+            return {"runtime_hash": "a" * 64, "reason": None}
+
+    class NativeImage:
+        def generate_batch(self, request):
+            pytest.fail("planning must not generate images")
+
+    speech = MiniMaxCLITTSProvider()
+    monkeypatch.setattr(speech, "supports_tts_parameters", lambda model, probe=False: model == "speech-2.8-hd")
+    monkeypatch.setattr(speech, "list_voices", lambda **kwargs: pytest.fail("reads must not refresh voices"))
+    loaded.register("model_provider", "minimax.cli", "1", ModelAdapter())
+    loaded.register("image_provider", "minimax.cli", "1", NativeImage())
+    loaded.register("tts_provider", "minimax.cli", "1", speech)
+    monkeypatch.setattr(registry_module, "registry", loaded)
+    monkeypatch.setattr(providers, "registry", loaded)
+    return loaded, speech
+
+
+def multimedia_config():
+    value = config()
+    value["profiles"]["illustrator"]["capability_bindings"]["image_generation"] = {
+        "adapter_key": "minimax.cli", "adapter_version": "1", "model_id": "image-01",
+        "base_url": "local://mmx", "credential_ref": "MEDIA_TEST_KEY",
+    }
+    for profile in ("speaker", "alternate"):
+        value["profiles"][profile] = {"declared_capabilities": ["tts"], "capability_bindings": {"tts": {
+            "adapter_key": "minimax.cli", "adapter_version": "1", "model_id": "speech-2.8-hd",
+            "base_url": "local://mmx", "credential_ref": "MEDIA_TEST_KEY",
+        }}}
+    value["policies"]["limits"]["image_generation"]["max_items"] = 4
+    value["policies"]["limits"]["tts"] = {"max_items": 1, "max_seconds": 360, "timeout_seconds": 120}
+    value["voice_catalog"] = [voice_entry()]
+    return value
+
+
+def voice_entry(**overrides):
+    return {"id": "speaker.voice-a", "label": "Local voice", "provider_key": "minimax.cli",
+            "provider_version": "1", "model_id": "speech-2.8-hd", "profile_id": "speaker",
+            "voice_id": "voice-a", "language": "Chinese", "favorite": True,
+            "verified": True, "rate": 1.0, **overrides}
+
+
+@pytest.mark.parametrize("count", [1, 2, 3, 4])
+def test_native_image_count_is_frozen_without_dispatch(db_session, multimedia_registry, count):
+    from app.services import model_capability_routing as routing
+
+    routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    planned = routing.plan(db_session, capability="image_generation", selected_profile="illustrator",
+                           parameters={"items": count}, input_hash="b" * 64, configuration_mode="custom")
+    assert planned["status"] == "ready"
+    assert planned["multimedia"]["candidate_count"] == count
+    assert planned["multimedia"]["candidate_mode"] == ("native" if count > 1 else "single")
+    assert routing.revalidate_plan(db_session, planned) == planned
+
+
+@pytest.mark.parametrize("count", [0, 5, True, "4", 2.5])
+def test_image_candidate_count_rejected_before_execution(db_session, multimedia_registry, count):
+    from fastapi import HTTPException
+
+    from app.services import model_capability_routing as routing
+
+    routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    before = copy.deepcopy(db_session.get(SystemSetting, "models").value)
+    with pytest.raises(HTTPException) as exc:
+        routing.plan(db_session, capability="image_generation", selected_profile="illustrator",
+                     parameters={"items": count}, input_hash="b" * 64)
+    assert exc.value.status_code == 422
+    assert db_session.get(SystemSetting, "models").value == before
+
+
+def test_single_image_custom_cannot_fan_out(db_session, multimedia_registry, monkeypatch):
+    from app.services import model_capability_routing as routing
+
+    loaded, _speech = multimedia_registry
+    image = loaded.resolve("image_provider", "minimax.cli", "1")
+    monkeypatch.delattr(type(image), "generate_batch")
+    monkeypatch.setattr(image, "supports_candidate_fan_out", True, raising=False)
+    routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    custom = routing.plan(db_session, capability="image_generation", selected_profile="illustrator",
+                          parameters={"items": 4}, configuration_mode="custom")
+    assert custom["status"] == "blocked"
+    assert custom["reason"] == "multimedia_custom_batch_requires_declared_composition"
+    auto = routing.plan(db_session, capability="image_generation", selected_profile="illustrator",
+                        parameters={"items": 4})
+    assert auto["status"] == "ready" and auto["multimedia"]["candidate_mode"] == "fan_out"
+
+
+@pytest.mark.parametrize("selected", ["missing", "writer", "disabled"])
+def test_custom_image_pin_never_uses_available_plugin(db_session, multimedia_registry, selected):
+    from app.services import model_capability_routing as routing
+
+    configuration = multimedia_config()
+    configuration["profiles"]["disabled"] = {**configuration["profiles"]["illustrator"], "enabled": False}
+    routing.save_configuration(db_session, configuration, expected_revision=0, actor="admin")
+    planned = routing.plan(db_session, capability="image_generation", selected_profile=selected,
+                           parameters={"items": 4}, configuration_mode="custom")
+    assert planned["status"] == "blocked" and planned["plugin_id"] is None
+    assert planned["execution_profile"] == selected
+
+
+def test_audio_batch_cannot_reuse_image_candidate_contract(db_session, multimedia_registry):
+    from fastapi import HTTPException
+
+    from app.services import model_capability_routing as routing
+
+    routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    with pytest.raises(HTTPException) as exc:
+        routing.plan(db_session, capability="tts", selected_profile="speaker",
+                     parameters={"items": 4, "voice_id": "voice-a", "rate": 1.0})
+    assert exc.value.status_code == 422 and exc.value.detail == "multimedia_audio_single_output_required"
+
+
+@pytest.mark.parametrize("field,value", [("profile_id", "alternate"), ("model_id", "speech-02-hd"),
+                                         ("provider_version", "2"), ("voice_id", "voice-b")])
+def test_voice_catalog_matches_exact_execution_scope(db_session, multimedia_registry, field, value):
+    from app.services import model_capability_routing as routing
+
+    configuration = multimedia_config()
+    configuration["voice_catalog"][0][field] = value
+    routing.save_configuration(db_session, configuration, expected_revision=0, actor="admin")
+    result = routing.plan(db_session, capability="tts", selected_profile="speaker",
+                          parameters={"voice_id": "voice-a", "rate": 1.0})
+    assert result["status"] == "blocked" and result["reason"] == "voice_catalog_binding_unavailable"
+
+
+def test_manual_voice_registration_cannot_forge_verification(db_session, multimedia_registry):
+    from app.services import model_capability_routing as routing
+
+    saved = routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    assert saved["voice_catalog"][0]["verified"] is False
+    new_voice = voice_entry(id="speaker.clone", voice_id="my-clone", verified=True)
+    view = routing.save_voice_catalog(db_session, [new_voice], expected_revision=1, actor="admin")
+    assert view["voice_catalog"][0]["voice_id"] == "my-clone"
+    assert view["voice_catalog"][0]["verified"] is False
+
+
+def test_catalog_removal_invalidates_frozen_voice_plan(db_session, multimedia_registry):
+    from fastapi import HTTPException
+
+    from app.services import model_capability_routing as routing
+
+    configuration = multimedia_config()
+    configuration["voice_catalog"].append(voice_entry(id="speaker.voice-b", voice_id="voice-b"))
+    routing.save_configuration(db_session, configuration, expected_revision=0, actor="admin")
+    planned = routing.plan(db_session, capability="tts", selected_profile="speaker",
+                           parameters={"voice_id": "voice-a", "rate": 1.0}, input_hash="b" * 64)
+    assert planned["status"] == "ready"
+    routing.save_voice_catalog(db_session, [configuration["voice_catalog"][1]], expected_revision=1, actor="admin")
+    with pytest.raises(HTTPException) as exc:
+        routing.revalidate_plan(db_session, planned)
+    assert exc.value.status_code == 409 and exc.value.detail == "execution_plan_stale"
+
+
+def test_catalog_refresh_preserves_preferences_and_deduplicates_model_reads(db_session, multimedia_registry, monkeypatch):
+    from sqlalchemy import func, select
+
+    from app.models import MaterialRevision, ProviderGenerationTask
+    from app.services import model_capability_routing as routing
+
+    _loaded, speech = multimedia_registry
+    calls = []
+
+    def list_voices(*, model_id):
+        calls.append(model_id)
+        return [voice_entry(label="Provider label", verified=True)]
+
+    monkeypatch.setattr(speech, "list_voices", list_voices)
+    routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    view = routing.refresh_voice_catalog(db_session, actor="admin")
+    assert calls == ["speech-2.8-hd"]
+    assert view["revision"] == 2 and view["voice_catalog_refresh"]["status"] == "updated"
+    exact = next(item for item in view["voice_catalog"] if item["profile_id"] == "speaker")
+    assert exact["favorite"] and exact["label"] == "Local voice" and exact["verified"]
+    assert {item["profile_id"] for item in view["voice_catalog"]} == {"speaker", "alternate"}
+    assert db_session.scalar(select(func.count()).select_from(ProviderGenerationTask)) == 0
+    assert db_session.scalar(select(func.count()).select_from(MaterialRevision)) == 0
+
+
+def test_failed_catalog_refresh_preserves_inventory_without_secrets(db_session, multimedia_registry, monkeypatch):
+    from app.services import model_capability_routing as routing
+
+    _loaded, speech = multimedia_registry
+
+    def unavailable(**kwargs):
+        raise RuntimeError("api_key=never-expose-provider-diagnostic")
+
+    monkeypatch.setattr(speech, "list_voices", unavailable)
+    routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    before = copy.deepcopy(db_session.get(SystemSetting, "models").value)
+    view = routing.refresh_voice_catalog(db_session, actor="admin")
+    assert view["revision"] == 1 and view["voice_catalog_refresh"]["status"] == "unchanged"
+    assert db_session.get(SystemSetting, "models").value == before
+    assert "never-expose" not in str(view)
+
+
+def test_voice_catalog_compare_and_swap_keeps_newer_inventory(db_session, multimedia_registry):
+    from fastapi import HTTPException
+
+    from app.services import model_capability_routing as routing
+
+    routing.save_configuration(db_session, multimedia_config(), expected_revision=0, actor="admin")
+    with pytest.raises(HTTPException) as exc:
+        routing.save_voice_catalog(db_session, [], expected_revision=0, actor="admin")
+    assert exc.value.status_code == 409 and exc.value.detail == "configuration_revision_conflict"
+    assert len(routing.configuration_view(db_session)["voice_catalog"]) == 1

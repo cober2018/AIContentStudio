@@ -57,7 +57,7 @@ def _visible_text(document: dict) -> tuple[str, list[dict]]:
     return "\n".join(item["text"] for item in layers), layers
 
 
-def _structure(master: ContentMasterRevision, projection: dict) -> tuple[str, dict]:
+def _structure(master: ContentMasterRevision, projection: dict, requirement: dict | None = None) -> tuple[str, dict]:
     try:
         document = canonical_payload(master.payload_json)
         validate_references(document, projection["assets"], projection["evidence"])
@@ -66,6 +66,28 @@ def _structure(master: ContentMasterRevision, projection: dict) -> tuple[str, di
     visible = [layer for canvas in document["canvases"] for layer in canvas["layers"] if layer["visible"]]
     if not visible:
         return "incomplete", {"reasons": ["graphic_visible_layer_missing"], "coverage": {"deterministic": "complete"}, "canvas_count": len(document["canvases"])}
+    persona = (requirement or {}).get("metadata", {}).get("persona_quality")
+    if persona:
+        from .graphic_composition import geometry_quality, photo_requirement, requires_photo
+        from .studio_creative_catalog import PRESETS, QUALITY, digest
+
+        ref = persona["ref"]
+        if (ref not in {"studio.quality.graphic.editorial@1", "studio.quality.graphic.lifestyle@1"}
+                or digest(QUALITY[ref]) != persona["hash"]
+                or persona.get("style_preset_ref") not in PRESETS
+                or digest(PRESETS[persona["style_preset_ref"]]) != persona.get("style_preset_hash")):
+            return "incomplete", {"reasons": ["graphic_persona_quality_unavailable"], "coverage": {"deterministic": "partial"}}
+        report = geometry_quality(document)
+        preset = PRESETS.get(persona.get("style_preset_ref"), {}).get("config", {})
+        if "photo_requirement" in persona and persona["photo_requirement"] != photo_requirement(preset):
+            return "incomplete", {"reasons": ["graphic_persona_quality_unavailable"], "coverage": {"deterministic": "partial"}}
+        for canvas in document["canvases"]:
+            if requires_photo(preset, canvas["role"]) and not any(layer["type"] == "image" and layer["visible"] for layer in canvas["layers"]):
+                report["issues"].append({"severity": "blocker", "reason": "graphic_requested_photo_missing", "canvas_id": canvas["id"]})
+        report["status"] = "blocker" if any(item["severity"] == "blocker" for item in report["issues"]) else "warning" if report["issues"] else "pass"
+        return report["status"], {"reasons": [], "persona_quality": {**persona, "report": report},
+            "coverage": {**report["coverage"], "live_bytes_rights": "separate_required_render_rights_checks"},
+            "canvas_count": len(document["canvases"]), "visible_layer_count": len(visible)}
     return "pass", {"reasons": [], "coverage": {"deterministic": "complete"}, "canvas_count": len(document["canvases"]), "visible_layer_count": len(visible)}
 
 
@@ -131,7 +153,7 @@ def _platform(db: Session, master: ContentMasterRevision) -> tuple[str, dict]:
 
 def run_graphic_checks(db: Session, master: ContentMasterRevision, projection: dict, requirements: dict[str, dict]) -> dict[str, tuple[str, dict]]:
     handlers = {
-        "graphic_structure": lambda _: _structure(master, projection),
+        "graphic_structure": lambda requirement: _structure(master, projection, requirement),
         "graphic_fact": lambda requirement: _fact(db, master, requirement),
         "graphic_identity": lambda requirement: _identity(db, master, requirement),
         "graphic_platform": lambda _: _platform(db, master),

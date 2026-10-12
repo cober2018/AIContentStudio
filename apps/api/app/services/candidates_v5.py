@@ -74,7 +74,7 @@ def build_manifest_v5(inputs: dict) -> dict:
     adapter = _object(target["adapter"], "target.adapter", ("key", "version"))
     render = _object(inputs["render"], "render", ("artifact_kind",))
     production = _object(inputs["production"], "production", ("edit_summary", "created_by"))
-    if set(production) - {"workflow", "output", "edit_summary", "created_by", "llm_provenance"}:
+    if set(production) - {"workflow", "output", "edit_summary", "created_by", "llm_provenance", "external_execution"}:
         raise ValueError("unsafe production provenance")
     if any(not _id(value) for value in (project["id"], project["unit_id"], identity["id"], brief["id"],
                                             evidence["boundary_id"], pack["id"], source["id"], variant["id"],
@@ -138,6 +138,10 @@ def build_manifest_v5(inputs: dict) -> dict:
     if package["report"].get("projection_hash") != _hash(render) or package["report"].get("coverage") != "projection_only":
         raise ValueError("Variant package projection mismatch")
     receipt = production.get("llm_provenance")
+    if "external_execution" in production:
+        from .creative_packages import validate_external_sources
+
+        validate_external_sources(production["external_execution"], assets=assets)
     if receipt is not None and (not isinstance(receipt, dict) or set(receipt) != _LLM_FIELDS or not _id(receipt.get("llm_run_id"))
                                 or receipt.get("status") != "succeeded" or receipt.get("accepted_output_hash") != variant["payload_hash"]
                                 or not _hex(receipt.get("input_hash"))):
@@ -251,4 +255,9 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
         from .wechat_official_render import build_material_article_render
 
         inputs["official_render"] = build_material_article_render(db, row.payload_json, assets, evidence_refs)
+    from .creative_packages import external_material_sources
+
+    external = external_material_sources(db, row.project_id, assets)
+    if external:
+        inputs["production"]["external_execution"] = external
     return inputs

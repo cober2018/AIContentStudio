@@ -31,7 +31,7 @@ dev = [
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["llm/prompts/*.txt"]
+app = ["llm/prompts/*.txt", "studio_skills/*/v*/SKILL.md", "studio_skills/*/v*/STUDIO-CONTRACT.json", "studio_skills/*/v*/STUDIO-META.md", "studio_skills/*/v*/tests/fixtures.json"]
 
 [tool.ruff]
 line-length = 120

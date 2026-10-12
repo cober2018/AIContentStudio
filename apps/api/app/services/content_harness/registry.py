@@ -47,15 +47,28 @@ class PluginRegistry:
         label: str | None = None,
         human_gate: bool = False,
         side_effect: bool = False,
+        stage_contract: dict | None = None,
     ) -> None:
         if kind not in RegistryKinds:
             raise RegistryError(f"未知 registry kind: {kind}")
         token = (kind, key, str(version))
         if token in self._items:
             raise RegistryError(f"plugin 重复注册: {kind}/{key}@{version}")
+        contract = None
+        if stage_contract is not None:
+            from ..stage_contracts import StageContract, StageContractError
+
+            if kind != "node" or not callable(getattr(provider, "execute", None)):
+                raise RegistryError("Stage Contract 只属于可执行节点")
+            try:
+                contract = StageContract.from_dict(stage_contract,
+                    consumed_fields=getattr(provider, "stage_consumed_fields", None))
+            except StageContractError as exc:
+                raise RegistryError(str(exc)) from exc
         self._items[token] = provider
         self._descriptors[token] = PluginDescriptor(
-            kind=kind, key=key, version=str(version), label=label, human_gate=human_gate, side_effect=side_effect
+            kind=kind, key=key, version=str(version), label=label, human_gate=human_gate, side_effect=side_effect,
+            stage_contract=contract,
         )
 
     def resolve(self, kind: str, key: str, version: str | None = None) -> object:

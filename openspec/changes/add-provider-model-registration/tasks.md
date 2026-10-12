@@ -6,4 +6,9 @@
 ## 2. Batch B — 各功能选择与验收
 
 - [x] 2.1 /// 接入实际 purpose/Workflow 消费者选择和既有 media plugin 路由；保存默认不覆盖显式 routes，冻结运行 provenance；无新表/迁移，无未授权付费调用。
+
 - [x] 2.2 /// 按用户批准的验收方式验证保存刷新、脱敏、冲突、默认/显式模型路由、遗留兼容与浏览器；运行 TypeScript/Vite、FE-P1、现有相关后端测试、Ruff、OpenSpec strict、diff-check；记录实际 CPA 登记结果，独立复核后请求归档授权，不推送/部署。证据校准重新开放后，2026-10-02 主agent实际隔离浏览器完成保存/刷新、空key保留、两模型默认/显式选择及双窗口409草稿保留；隔离DB实际消费者路由核对通过；新全量1661 passed/28 skipped、实际build/预算、Ruff/strict33/33/diff通过。独立service/UI CAS/脱敏/清key/路由/组件draft复核APPROVE（未独立重跑浏览器）。CPA `/models` 既有实际401继续未验证，未发起生成或付费请求。证据见 docs/FE_F7_FINAL_LOCAL_GATES.md；不以本任务推断供应商可执行/verified。
+
+## 3. 已授权本机 CPA 隧道修正（2026-10-06）
+
+- [x] 3.1 /// 按用户明确要求将 CPA 改为 `http://127.0.0.1:8317/v1` 并直接生效；仅扩展精确可信 literal 127.0.0.1，保存/执行共用策略。通过现有 CAS API 保留 Key/模型/默认/路由，安全刷新原运行服务并从产品入口发现模型；不生成、不重试 Unknown、不改其他安全边界或迁移。正式revision5/认证目录200/32模型；定向95 passed、Web/FE-P1、Ruff/strict38/38/diff通过，详细证据见本目录README。

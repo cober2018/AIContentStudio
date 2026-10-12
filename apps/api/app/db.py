@@ -17,8 +17,8 @@ def _engine_kwargs(url: str) -> dict:
 
 engine = create_engine(get_settings().database_url, **_engine_kwargs(get_settings().database_url))
 
-# Pending identity migrations must not become the local operator's approved head.
-LOCAL_APPROVED_SCHEMA_HEAD = "f7d000000001"
+# Approved local schema includes inert identity ancestry, not JWT activation.
+LOCAL_APPROVED_SCHEMA_HEAD = "idx000000001"
 
 if get_settings().database_url.startswith("sqlite"):
     # 异步队列（Celery 多进程）与 API 并发写 SQLite 的前提：WAL 允许读写并发，
@@ -72,5 +72,7 @@ def init_db() -> None:
 
     # Durable generation schema requires an explicit operator migration even
     # in a local development process that otherwise creates legacy tables.
+    migration_only = {"provider_generation_task", "creative_execution_package", "creative_execution",
+                      "creative_execution_output", "capability_artifact", "capability_artifact_revision", "capability_use"}
     Base.metadata.create_all(engine, tables=[table for table in Base.metadata.sorted_tables
-        if table.name != "provider_generation_task"])
+        if table.name not in migration_only])

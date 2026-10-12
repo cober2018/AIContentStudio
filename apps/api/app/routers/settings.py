@@ -73,6 +73,12 @@ class CapabilityPlanIn(BaseModel):
     explicit_profile: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_.-]{1,100}$")
 
 
+class VoiceCatalogUpdate(BaseModel):
+    model_config = {"extra": "forbid"}
+    expected_revision: int = Field(strict=True, ge=0)
+    items: list[dict[str, Any]] = Field(default_factory=list, max_length=2000)
+
+
 @router.get("/api/v1/settings/model-capabilities")
 def get_model_capabilities(db: Session = Depends(get_db), user=Depends(get_current_user)):
     from ..services import model_capability_routing
@@ -92,6 +98,23 @@ def preview_model_capability_plan(payload: CapabilityPlanIn, db: Session = Depen
     from ..services import model_capability_routing
 
     return model_capability_routing.plan(db, **payload.model_dump())
+
+
+@router.put("/api/v1/settings/model-capabilities/voice-catalog")
+def put_voice_catalog(payload: VoiceCatalogUpdate, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import model_capability_routing
+
+    return model_capability_routing.save_voice_catalog(
+        db, payload.items, expected_revision=payload.expected_revision, actor=user.email,
+    )
+
+
+@router.post("/api/v1/settings/model-capabilities/voice-catalog/refresh")
+def refresh_voice_catalog(db: Session = Depends(get_db), user=Depends(require_admin)):
+    """Explicitly refresh local voice metadata; normal reads never invoke a provider."""
+    from ..services import model_capability_routing
+
+    return model_capability_routing.refresh_voice_catalog(db, actor=user.email)
 
 
 class PluginsUpdate(BaseModel):

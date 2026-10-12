@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from collections.abc import Callable
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -35,6 +36,7 @@ from ..models import (
     utcnow,
 )
 from .content_harness.channel_registry import ChannelRegistryError, resolve_content_form
+from .creative_intents import CreativeIntentError, canonical_intent
 from .materials import read_bytes_checked, sniff_mime
 from .production_modalities import (
     adapter_for,
@@ -101,6 +103,7 @@ def _serialize(db: Session, row: ContentMasterRevision) -> dict:
         "revision_no": row.revision_no, "parent_revision_id": row.parent_revision_id,
         "modality": row.modality, "channel_id": row.channel_id, "content_form": row.content_form,
         "payload_schema": row.payload_schema, "payload": row.payload_json, "payload_hash": row.payload_hash,
+        "creative_intent": row.creative_intent_json, "creative_intent_hash": row.creative_intent_hash,
         "context_hash": row.context_hash, "identity_snapshot_id": row.identity_snapshot_id,
         "creative_brief_revision_id": row.creative_brief_revision_id, "fact_boundary_revision_id": row.fact_boundary_revision_id,
         "source_kind": row.source_kind, "edit_summary": row.edit_summary_json,
@@ -226,6 +229,27 @@ def check_requirements(db: Session, row: ContentMasterRevision, *, require_curre
                         metadata["profile"] = {"id": template.id if template else None, "version": template.version if template else None, "checksum": (template.checksum or _hash(template.profile_json or {})) if template else None, "form_hash": _hash(form.to_dict()), "source": form.source, "artifact_kind": form.artifact_kind}
                     except (ChannelRegistryError, TypeError, ValueError):
                         metadata["profile"] = {"unavailable": True, "channel": row.channel_id, "content_form": row.content_form}
+                elif kind == "graphic_structure":
+                    from .graphic_composition import photo_requirement
+                    from .studio_creative_catalog import PRESETS, QUALITY, digest
+
+                    snapshot = db.get(IdentitySnapshot, row.identity_snapshot_id) if row.identity_snapshot_id else None
+                    creative = (snapshot.effective_profile_json or {}).get("graphic_creative_profile") if snapshot else None
+                    if creative:
+                        ref = creative.get("quality_profile_ref")
+                        effective_preset = creative.get("style_preset_ref")
+                        stage = (row.edit_summary_json or {}).get("stage_provenance") or {}
+                        configuration = stage.get("creative_configuration") or {}
+                        frozen_preset = configuration.get("style_preset") or {}
+                        if (stage.get("accepted_payload_hash") == row.payload_hash
+                                and configuration.get("identity_snapshot_id") == row.identity_snapshot_id
+                                and configuration.get("identity_checksum") == snapshot.checksum):
+                            effective_preset = frozen_preset.get("ref")
+                        metadata["persona_quality"] = {"ref": ref, "hash": digest(QUALITY[ref]) if ref in QUALITY else None,
+                            "style_preset_ref": effective_preset,
+                            "style_preset_hash": digest(PRESETS[effective_preset]) if effective_preset in PRESETS else None,
+                            "photo_requirement": photo_requirement(PRESETS[effective_preset]["config"]) if effective_preset in PRESETS else None,
+                            "implementation": "graphic.geometry.v1"}
                 elif kind in {"graphic_fact", "graphic_identity"}:
                     from .generation.providers import effective_llm_config
 
@@ -273,6 +297,13 @@ def check_requirements(db: Session, row: ContentMasterRevision, *, require_curre
 
                 config = effective_llm_config("fact_review" if kind == "text_fact" else "identity_review")
                 metadata["semantic"] = {"profile": config.get("profile"), "provider": config["provider"], "model": config["model"], "configured": bool(config["provider"] == "openai_compatible" and config["model"] and config["api_key"] and config["base_url"])}
+                if kind == "text_identity":
+                    from .studio_creative_catalog import QUALITY, digest
+                    snapshot = db.get(IdentitySnapshot, row.identity_snapshot_id) if row.identity_snapshot_id else None
+                    creative = (snapshot.effective_profile_json or {}).get("text_creative_profile") if snapshot else None
+                    if creative:
+                        ref = creative.get("quality_profile_ref")
+                        metadata["persona_quality"] = {"ref": ref, "hash": digest(QUALITY[ref]) if ref in QUALITY else None}
                 if kind == "text_fact":
                     boundary = db.get(ProjectFactBoundaryRevision, row.fact_boundary_revision_id) if row.fact_boundary_revision_id else None
                     items = db.scalars(select(FactPackItem).where(FactPackItem.fact_pack_id == boundary.fact_pack_id).order_by(FactPackItem.id)).all() if boundary else []
@@ -454,8 +485,14 @@ def _verified_generated_asset(db: Session, output: ProjectWorkflowOutput, materi
     )
 
 
-def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, workflow_seed: bool = False, upgrade_source: ContentMasterRevision | None = None, derived_source: ContentMasterRevision | None = None) -> dict:
+def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, workflow_seed: bool = False, upgrade_source: ContentMasterRevision | None = None, derived_source: ContentMasterRevision | None = None, stage_adoption: Callable[[ContentMasterRevision], None] | None = None) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
+    if "creative_intent" in payload:
+        try:
+            creative_intent, creative_intent_hash = canonical_intent(payload["creative_intent"])
+        except CreativeIntentError as exc:
+            raise HTTPException(422, {"code": str(exc)}) from None
+        payload = {**payload, "creative_intent": creative_intent}
     modality = payload.get("modality") or unit.modality
     if modality != unit.modality:
         raise HTTPException(422, "Master形态必须与内容单元一致")
@@ -496,9 +533,11 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         except VideoDocumentError as exc:
             raise HTTPException(422, {"code": "invalid_master_document", "reason": str(exc)}) from exc
     refs_fingerprint = {"assets": payload.get("asset_refs", []), "evidence": payload.get("evidence_refs", [])}
-    trusted_kind = "derived_video" if derived_source is not None else "explicit_upgrade" if upgrade_source is not None else "workflow_seed" if workflow_seed else "user_edit"
+    trusted_kind = "workflow_stage" if stage_adoption is not None else "derived_video" if derived_source is not None else "explicit_upgrade" if upgrade_source is not None else "workflow_seed" if workflow_seed else "user_edit"
     if payload.get("source_kind", "user_edit") != trusted_kind:
         raise HTTPException(422, "来源血缘必须通过对应的已验证服务创建")
+    if stage_adoption is None and "stage_provenance" in payload.get("edit_summary", {}):
+        raise HTTPException(422, {"code": "unverified_stage_provenance"})
     if upgrade_source is None and {"upgrade_source", "upgrade_request"} & set(payload.get("edit_summary", {})):
         raise HTTPException(422, {"code": "unverified_upgrade_provenance"})
     if derived_source is None and "derived_video" in payload.get("edit_summary", {}):
@@ -518,6 +557,8 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         request_intent["expected_context_hash"] = payload["expected_context_hash"]
     if payload.get("render_attestation") is not None:
         request_intent["render_attestation"] = payload["render_attestation"]
+    if "creative_intent" in payload:
+        request_intent["creative_intent"] = creative_intent
     fingerprint = _hash(request_intent)
     key = payload["idempotency_key"]
     existing = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id, ContentMasterRevision.idempotency_key == key))
@@ -550,6 +591,9 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     expected = payload.get("expected_revision", 0)
     if expected != head:
         raise HTTPException(409, {"code": "master_revision_conflict", "expected_revision": expected, "current_revision": head})
+    if "creative_intent" not in payload:
+        creative_intent = latest.creative_intent_json if latest else None
+        creative_intent_hash = latest.creative_intent_hash if latest else None
     if "asr_receipt_id" in payload.get("edit_summary", {}):
         from .asr_suggestions import verify_for_save
 
@@ -632,6 +676,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         project_id=project_id, content_unit_id=unit_id, revision_no=head + 1, parent_revision_id=parent_id,
         modality=modality, channel_id=unit.channel_id, content_form=content_form, payload_schema=payload_schema,
         payload_json=payload["payload"], payload_hash=_hash(payload["payload"]), context_hash=_hash(context),
+        creative_intent_json=creative_intent, creative_intent_hash=creative_intent_hash,
         identity_snapshot_id=unit.identity_snapshot_id, creative_brief_revision_id=context["brief"]["id"] if context["brief"] else None,
         fact_boundary_revision_id=context["boundary"]["id"] if context["boundary"] else None,
         origin_workflow_run_id=payload.get("origin_workflow_run_id"), origin_project_output_id=payload.get("origin_project_output_id"),
@@ -683,6 +728,11 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         if attestation is not None and adapter_for(modality, row.payload_schema).build_render_snapshot(db, row)["status"] != "ready":
             db.rollback()
             raise HTTPException(409, {"code": "render_inputs_changed"})
+        if stage_adoption is not None:
+            # The trusted bridge owns association and feedback in this same
+            # transaction; committing the Master first would orphan acceptance.
+            stage_adoption(row)
+            db.flush()
         if "asr_receipt_id" in row.edit_summary_json:
             from .asr_suggestions import commit_guard
 

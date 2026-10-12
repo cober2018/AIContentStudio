@@ -3,6 +3,7 @@
 import logging
 import time
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
@@ -27,10 +28,19 @@ def retention_sweep() -> dict:
         return run_retention(db)
 
 
-def _run_generation(db: Session, job_id: int) -> None:
+def _run_generation(db: Session, job_id: int, dispatch_id: str = "") -> None:
     job = db.get(ContentJob, job_id)
     if not job:
         logger.error("生成任务取消：ContentJob %s 不存在", job_id)
+        return
+    from ..models import JobStatus
+
+    terminal = {JobStatus.succeeded.value, JobStatus.failed.value}
+    if (dispatch_id and job.status in terminal
+            and (job.usage_json or {}).get("_completed_dispatch_id") == dispatch_id):
+        # acks_late 重投护栏：本次派发已完成并落标记，重投同 id 不再执行
+        # （重复跑=重复计费/重复 Draft；regenerate 等显式新派发是新 id，不受影响）
+        logger.warning("生成任务跳过：ContentJob %s 本次派发 %s 已完成", job_id, dispatch_id)
         return
     from ..observability import correlation_scope, log_operation
 
@@ -68,6 +78,9 @@ def _run_generation(db: Session, job_id: int) -> None:
             error = exc
             # job.status/error 已由 orchestrator 落库
         finally:
+            # 与终态同一次提交：重投看到的状态和令牌不会拆开
+            if dispatch_id and job.status in terminal:
+                job.usage_json = {**(job.usage_json or {}), "_completed_dispatch_id": dispatch_id}
             db.commit()
             log_operation("worker_generation", status=job.status, duration=time.perf_counter() - started, error=error)
 
@@ -101,9 +114,10 @@ def _run_pull(db: Session, endpoint_id: int, actor_email: str) -> None:
 
 
 @celery_app.task(name="app.tasks.worker_tasks.run_generation_job")
-def run_generation_job(job_id: int) -> dict:
+def run_generation_job(job_id: int, dispatch_id: str | None = None) -> dict:
+    """dispatch_id 缺省兼容已入队的旧消息；旧消息没有令牌，不做重投去重。"""
     with SessionLocal() as db:
-        _run_generation(db, job_id)
+        _run_generation(db, job_id, dispatch_id or "")
         job = db.get(ContentJob, job_id)
         return {"job_id": job_id, "status": job.status if job else "unknown"}
 
@@ -141,6 +155,26 @@ def _advance_workflow_run(db: Session, run_id: int) -> str:
             error = exc
             category = safe_error_category(exc)
             logger.error("workflow run %s 推进失败：%s", run_id, category)
+            # 立即收口 running 状态：advance 在执行前已把 run/step 置 running 并提交，
+            # 异常穿透会让它们悬挂到 30 分钟后的维护回收器才被处理
+            db.rollback()
+            try:
+                from ..models import WorkflowStep, utcnow
+
+                run = db.get(WorkflowRun, run_id)
+                if run is not None and run.status == "running":
+                    run.status = "failed"
+                    run.finished_at = utcnow()
+                    run.error = f"worker_error:{category}"
+                    for step in db.scalars(select(WorkflowStep).where(
+                            WorkflowStep.run_id == run_id, WorkflowStep.status == "running")).all():
+                        step.status = "failed"
+                        step.finished_at = utcnow()
+                        step.error = step.error or f"worker_error:{category}"
+                    db.commit()
+            except Exception:
+                db.rollback()
+                logger.exception("workflow run %s 异常后状态收口失败", run_id)
             return f"error:{category}"
         finally:
             log_operation("worker_workflow", status=run.status, duration=time.perf_counter() - started, error=error)
@@ -191,10 +225,18 @@ def scan_connector_schedules() -> dict:
 
 
 def dispatch_generation(db: Session, job_id: int) -> str:
-    """按开关决定同步执行或入队。返回最终/预期的 job 状态。"""
+    """按开关决定同步执行或入队。返回最终/预期的 job 状态。
+
+    每次派发生成唯一 dispatch_id：任务完成后把该 id 记入 usage_json，
+    acks_late 下消息重投（同 id）会被终态护栏拦下，而 regenerate 这类
+    显式新派发（新 id）正常执行。
+    """
+    import uuid
+
     from ..config import get_settings
     from ..models import JobStatus
 
+    dispatch_id = uuid.uuid4().hex[:12]
     if get_settings().task_queue_enabled:
         from ..observability import persisted_telemetry
 
@@ -202,9 +244,9 @@ def dispatch_generation(db: Session, job_id: int) -> str:
         if job is not None:
             job.usage_json = persisted_telemetry(job.usage_json)
             db.flush()
-        run_generation_job.delay(job_id)
+        run_generation_job.delay(job_id, dispatch_id)
         return JobStatus.queued.value
-    _run_generation(db, job_id)
+    _run_generation(db, job_id, dispatch_id)
     job = db.get(ContentJob, job_id)
     return job.status if job else JobStatus.failed.value
 

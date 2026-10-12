@@ -3,15 +3,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, currentUser } from "../api";
 import { retargetPlugin } from "./modelRoutingState";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import { previewByteHash } from "./previewByteHash";
 
 const capabilities = ["chat", "image_generation", "video_generation", "tts", "asr"] as const;
 type Capability = typeof capabilities[number];
 const labels: Record<Capability, string> = { chat: "聊天", image_generation: "生图", video_generation: "生视频", tts: "语音生成", asr: "语音识别" };
 type Binding = { adapter_key: string; adapter_version: string; model_id: string; base_url: string; credential_ref: string };
+type VoicePreset = { id: string; label: string; provider_key: string; provider_version: string; model_id: string; profile_id: string; voice_id: string; language?: string; tags?: string[]; favorite?: boolean; verified?: boolean; rate?: number; preview_ref?: string | null };
 type State = { declared: boolean; configured: boolean; executable: boolean; verified: boolean; reason: string };
 type Profile = { enabled?: boolean; declared_capabilities: Capability[]; capability_bindings: Partial<Record<Capability, Binding>>; capabilities: Record<Capability, State> };
 type Limit = { max_items: number; max_pixels?: number | null; max_seconds?: number | null; max_tokens?: number | null; timeout_seconds: number; max_cost?: number | null; currency?: "USD" | "CNY" | null };
-type Configuration = { revision: number; profiles: Record<string, Profile>; media_plugins: Record<string, { enabled: boolean; capability: Capability; model_profile_id: string }>; capability_routes: Partial<Record<Capability, string[]>>; policies: { allow_automatic_fallback: boolean; limits: Partial<Record<Capability, Limit>> } };
+type Configuration = { revision: number; profiles: Record<string, Profile>; voice_catalog?: VoicePreset[]; media_plugins: Record<string, { enabled: boolean; capability: Capability; model_profile_id: string }>; capability_routes: Partial<Record<Capability, string[]>>; policies: { allow_automatic_fallback: boolean; limits: Partial<Record<Capability, Limit>> } };
 type Catalog = { revision: number; providers: Record<string, { name: string }>; profiles: Record<string, { provider_id: string | null; model_id: string; chat: boolean }> };
 type Preview = { status: string; reason: string; plugin_id?: string; execution_profile?: string };
 type Props = { editable?: boolean; onDirtyChange?: (dirty: boolean) => void };
@@ -41,6 +43,12 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
   const [pluginName, setPluginName] = useState("");
+  const [voiceForm, setVoiceForm] = useState({ id: "", label: "", provider_key: "minimax.cli", provider_version: "1", model_id: "speech-2.8-hd", profile_id: "", voice_id: "", language: "", preview_ref: "" });
+  const [voiceSearch, setVoiceSearch] = useState("");
+  const [voiceLanguage, setVoiceLanguage] = useState("");
+  const [voiceFavoritesOnly, setVoiceFavoritesOnly] = useState(false);
+  const [voicePreviewUrl, setVoicePreviewUrl] = useState("");
+  const voicePreview = useRef("");
   const [preview, setPreview] = useState<(Preview & { selected_profile: string }) | null>(null);
   const [previewBusy, setPreviewBusy] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -48,10 +56,10 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
   const previewRequest = useRef(0);
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => { mounted.current = false; if (voicePreview.current) URL.revokeObjectURL(voicePreview.current); };
   }, []);
   const dirty = !!draft;
-  const incompleteEntry = !!name.trim() || !!pluginName.trim();
+  const incompleteEntry = !!name.trim() || !!pluginName.trim() || !!voiceForm.id.trim() || !!voiceForm.label.trim() || !!voiceForm.voice_id.trim();
   useEffect(() => {
     onDirtyChange?.(dirty || incompleteEntry);
     return () => { onDirtyChange?.(false); };
@@ -97,9 +105,69 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
       if (isCurrent() && request === previewRequest.current) setError(caught instanceof Error ? caught.message : "规划失败");
     } finally { if (isCurrent() && request === previewRequest.current) setPreviewBusy(null); }
   }
+  async function saveVoicePreset() {
+    if (!value || !editable || draft || busy || !voiceForm.id.trim() || !voiceForm.label.trim() || !voiceForm.voice_id.trim()) return;
+    if ((value.voice_catalog || []).some(item => item.id === voiceForm.id.trim())) {
+      setError("这个音色 ID 已存在，原配置未修改；请使用新的预设 ID 登记，不会覆盖收藏、语速或试听。"); return;
+    }
+    setBusy(true); setError("");
+    try {
+      const item: VoicePreset = { ...voiceForm, preview_ref: voiceForm.preview_ref.trim() || null, id: voiceForm.id.trim(), label: voiceForm.label.trim(), voice_id: voiceForm.voice_id.trim(), favorite: false, verified: false, rate: 1 };
+      const result = await api.put<Configuration>("/settings/model-capabilities/voice-catalog", { expected_revision: value.revision, items: [...(value.voice_catalog || []), item] });
+      if (!isCurrent()) return;
+      queryClient.setQueryData(queryKey, result); setVoiceForm({ ...voiceForm, id: "", label: "", voice_id: "", language: "", preview_ref: "" }); setSaved(true);
+    } catch (caught) { if (isCurrent()) setError(caught instanceof Error ? caught.message : "音色登记失败"); }
+    finally { if (isCurrent()) setBusy(false); }
+  }
+  async function refreshVoiceCatalog() {
+    if (!value || !editable || draft || busy || !isCurrent()) return;
+    setBusy(true); setError("");
+    try {
+      const result = await api.post<Configuration & { voice_catalog_refresh?: { status: string; count: number } }>("/settings/model-capabilities/voice-catalog/refresh");
+      if (!isCurrent()) return;
+      queryClient.setQueryData(queryKey, result);
+      setSaved(result.voice_catalog_refresh?.status === "updated");
+      if (result.voice_catalog_refresh?.status !== "updated") setError("供应商目录暂不可读，保留原目录；没有生成或重试。");
+    } catch (caught) { if (isCurrent()) setError(caught instanceof Error ? caught.message : "音色目录刷新失败"); }
+    finally { if (isCurrent()) setBusy(false); }
+  }
+  async function favoriteVoice(item: VoicePreset) {
+    if (!value || !editable || draft || busy || !isCurrent()) return;
+    setBusy(true); setError("");
+    try {
+      const result = await api.put<Configuration>("/settings/model-capabilities/voice-catalog", {
+        expected_revision: value.revision, items: (value.voice_catalog || []).map(voice => voice.id === item.id ? { ...voice, favorite: !voice.favorite } : voice),
+      });
+      if (isCurrent()) queryClient.setQueryData(queryKey, result);
+    } catch (caught) { if (isCurrent()) setError(caught instanceof Error ? caught.message : "收藏保存失败，原目录保留。"); }
+    finally { if (isCurrent()) setBusy(false); }
+  }
+  async function previewVoice(item: VoicePreset) {
+    const match = /^material_revision:([1-9][0-9]*):([1-9][0-9]*)$/.exec(item.preview_ref || "");
+    if (!match || busy || !isCurrent()) return;
+    setBusy(true); setError("");
+    if (voicePreview.current) URL.revokeObjectURL(voicePreview.current);
+    voicePreview.current = ""; setVoicePreviewUrl("");
+    try {
+      const revisions = await api.get<{ id: number; status: string; content_hash: string; mime_type: string }[]>(`/materials/${match[1]}/revisions`);
+      const revision = revisions.find(row => row.id === Number(match[2]));
+      if (!revision || !["candidate", "usable", "active"].includes(revision.status) || !/^audio\/(wav|x-wav|mpeg|ogg|mp4)$/.test(revision.mime_type)) throw new Error("试听必须引用现有有效音频素材，不会临时生成。");
+      const response = await fetch(`/api/v1/materials/${match[1]}/revisions/${match[2]}/raw`, { headers: { "X-Studio-User": identity }, cache: "no-store" });
+      if (!response.ok) throw new Error("试听素材不可读。");
+      const bytes = await response.arrayBuffer();
+      if (await previewByteHash(bytes) !== revision.content_hash) throw new Error("试听素材哈希不一致。");
+      if (!isCurrent()) return;
+      voicePreview.current = URL.createObjectURL(new Blob([bytes], { type: revision.mime_type })); setVoicePreviewUrl(voicePreview.current);
+    } catch (caught) { if (isCurrent()) setError(caught instanceof Error ? caught.message : "试听不可用。"); }
+    finally { if (isCurrent()) setBusy(false); }
+  }
   if (query.isPending) return <Spinner label="读取模型能力配置…" />;
   if (query.error) return <ErrorBanner message="模型能力编辑当前仅管理员可用，或配置读取失败。" />;
   if (!value) return null;
+  const filteredVoices = (value.voice_catalog || []).filter(item => (!voiceFavoritesOnly || item.favorite)
+    && (!voiceLanguage || item.language === voiceLanguage)
+    && `${item.label} ${item.voice_id} ${item.model_id} ${(item.tags || []).join(" ")}`.toLocaleLowerCase().includes(voiceSearch.toLocaleLowerCase()))
+    .sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.label.localeCompare(b.label));
   const modelTitle = (id: string) => {
     const registered = catalog.data?.profiles[id];
     const providerName = registered?.provider_id ? catalog.data?.providers[registered.provider_id]?.name : undefined;
@@ -154,7 +222,7 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
           {binding && <div className="grid gap-2 sm:grid-cols-2">
             <Field label="协议适配器"><select className={inputClass} value={binding.adapter_key} onChange={(event) => setBinding({ ...binding, adapter_key: event.target.value })}>{["openai.compatible", "google.native", "xai.native", "minimax.native", "minimax.cli"].map((adapter) => <option key={adapter}>{adapter}</option>)}</select></Field>
             <Field label="实际 API 模型标识"><input className={inputClass} value={binding.model_id} onChange={(event) => setBinding({ ...binding, model_id: event.target.value })} /></Field>
-            <Field label={binding.adapter_key === "minimax.cli" ? "本地 CLI 地址（local://mmx）" : "HTTPS 接口根地址"}><input className={inputClass} value={binding.base_url} onChange={(event) => setBinding({ ...binding, base_url: event.target.value })} /></Field>
+            <Field label={binding.adapter_key === "minimax.cli" ? "本地 CLI 地址（local://mmx）" : binding.adapter_key === "openai.compatible" ? "HTTPS 或本机 CPA 地址" : "HTTPS 接口根地址"}><input className={inputClass} value={binding.base_url} onChange={(event) => setBinding({ ...binding, base_url: event.target.value })} /></Field>
             <Field label={binding.adapter_key === "minimax.cli" ? "受控认证引用标识（不是密钥值或文件路径）" : "密钥环境变量名（不是密钥值）"}><input className={inputClass} autoComplete="off" value={binding.credential_ref} onChange={(event) => setBinding({ ...binding, credential_ref: event.target.value })} /></Field>
             <p className="text-xs text-slate-500 sm:col-span-2">协议版本：{binding.adapter_version}。仅填写引用，不输入密钥明文。</p>
           </div>}
@@ -173,6 +241,18 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
     <details className="rounded-lg border border-slate-200 bg-white p-3">
       <summary className={disclosureClass}>手动添加模型能力配置</summary>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end"><div className="min-w-0 flex-1"><Field label="稳定模型配置 ID"><input className={inputClass} placeholder="如 writer" value={name} onChange={(event) => setName(event.target.value)} /></Field></div><Button disabled={busy || !/^[A-Za-z0-9_.-]{1,100}$/.test(name) || !!value.profiles[name]} onClick={() => { update({ ...value, profiles: { ...value.profiles, [name]: { declared_capabilities: [], capability_bindings: {}, capabilities: {} as Record<Capability, State> } } }); setName(""); }}>添加配置</Button></div>
+    </details>
+    <details className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4">
+      <summary className={disclosureClass}>本地 Voice Catalog <span className="font-normal text-slate-500">· {value.voice_catalog?.length || 0} 个已登记音色</span></summary>
+      <div className="mt-3 space-y-3">
+        <p className="text-xs text-slate-500">目录只保存精确声音配置，不含密钥。克隆音色可手动登记；“Provider 列出”不代表已通过音频质量验收。普通读取不访问供应商。</p>
+        <Button size="sm" variant="secondary" disabled={busy || !editable || !!draft} onClick={() => void refreshVoiceCatalog()}>显式刷新 Provider 音色目录（不生成）</Button>
+        <div className="grid gap-2 sm:grid-cols-3"><Field label="搜索名称 / Voice ID / 标签"><input className={inputClass} value={voiceSearch} onChange={e => setVoiceSearch(e.target.value)} /></Field><Field label="语言"><select className={inputClass} value={voiceLanguage} onChange={e => setVoiceLanguage(e.target.value)}><option value="">全部语言</option>{[...new Set((value.voice_catalog || []).map(item => item.language).filter(Boolean))].map(language => <option key={language} value={language}>{language}</option>)}</select></Field><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={voiceFavoritesOnly} onChange={e => setVoiceFavoritesOnly(e.target.checked)} />只看收藏</label></div>
+        <p className="text-xs text-slate-500">匹配 {filteredVoices.length} 个；最多展示前 100 个，请使用搜索缩小范围。</p>
+        <div className="max-h-80 space-y-2 overflow-auto">{filteredVoices.slice(0, 100).map(item => <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded bg-slate-50 p-2 text-xs"><div><p>{item.label} · {item.provider_key}/{item.model_id} · {item.voice_id}</p><p className="text-slate-500">{item.profile_id} · {item.language || "未标语言"} · {item.verified ? "Provider 目录列出" : "本人登记，尚无目录证据"}</p></div><div className="flex gap-2"><Button size="sm" variant="ghost" disabled={busy || !editable || !!draft} onClick={() => void favoriteVoice(item)}>{item.favorite ? "★ 已收藏" : "☆ 收藏"}</Button><Button size="sm" variant="secondary" disabled={busy || !/^material_revision:[1-9][0-9]*:[1-9][0-9]*$/.test(item.preview_ref || "")} onClick={() => void previewVoice(item)}>试听已有素材</Button></div></div>)}</div>
+        {voicePreviewUrl && <audio controls src={voicePreviewUrl} className="w-full" />}
+        <details><summary className={disclosureClass}>高级设置：登记本人克隆音色 / 精确 Voice ID</summary><div className="mt-3 grid gap-2 sm:grid-cols-2"><Field label="稳定预设 ID"><input className={inputClass} value={voiceForm.id} onChange={e => setVoiceForm({ ...voiceForm, id: e.target.value })} /></Field><Field label="显示名称"><input className={inputClass} value={voiceForm.label} onChange={e => setVoiceForm({ ...voiceForm, label: e.target.value })} /></Field><Field label="声音 ID"><input className={inputClass} value={voiceForm.voice_id} onChange={e => setVoiceForm({ ...voiceForm, voice_id: e.target.value })} /></Field><Field label="已登记 TTS 模型"><select className={inputClass} value={voiceForm.profile_id} onChange={e => { const binding = value.profiles[e.target.value]?.capability_bindings.tts; if (binding) setVoiceForm({ ...voiceForm, profile_id: e.target.value, provider_key: binding.adapter_key, provider_version: binding.adapter_version, model_id: binding.model_id }); }}><option value="">请选择精确模型配置</option>{Object.entries(value.profiles).filter(([, profile]) => profile.capability_bindings.tts).map(([id, profile]) => <option key={id} value={id}>{profile.capability_bindings.tts?.model_id} · {id}</option>)}</select></Field><Field label="语言（可选）"><input className={inputClass} value={voiceForm.language} onChange={e => setVoiceForm({ ...voiceForm, language: e.target.value })} /></Field><Field label="现有试听素材（可选）"><input className={inputClass} placeholder="material_revision:素材ID:修订ID" value={voiceForm.preview_ref} onChange={e => setVoiceForm({ ...voiceForm, preview_ref: e.target.value })} /></Field></div><p className="mt-2 text-xs text-slate-500">{voiceForm.provider_key} / {voiceForm.model_id}；登记或试听不会调用 TTS，已有预设 ID 不会被覆盖。</p><Button size="sm" variant="secondary" disabled={busy || !editable || !!draft || !voiceForm.profile_id || !voiceForm.id.trim() || !voiceForm.label.trim() || !voiceForm.voice_id.trim()} onClick={() => void saveVoicePreset()}>登记新声音</Button></details>
+      </div>
     </details>
     </div>
     <details className="rounded-lg border border-slate-200 bg-white p-3 sm:p-4">

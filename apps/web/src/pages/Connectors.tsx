@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { api } from "../api";
+import { api, currentUser } from "../api";
 import { Button, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
 
 interface Endpoint {
@@ -156,10 +156,11 @@ function AddEndpointModal({ connectorId, onClose }: { connectorId: number; onClo
   );
 }
 
-function ConnectorCard({ connector }: { connector: Connector }) {
+function ConnectorCard({ connector, readOnly, allowPull }: { connector: Connector; readOnly: boolean; allowPull: boolean }) {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [message, setMessage] = useState("");
+  const [intervals, setIntervals] = useState<Record<number, number>>({});
 
   const detail = useQuery({
     queryKey: ["connector", connector.id],
@@ -172,6 +173,8 @@ function ConnectorCard({ connector }: { connector: Connector }) {
       api.post<{ source_id: number; facts: number; unchanged?: boolean }>(`/endpoints/${endpointId}/pull`, {}),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["connector", connector.id] });
+      queryClient.invalidateQueries({ queryKey: ["system-library"] });
+      queryClient.invalidateQueries({ queryKey: ["sources"] });
       if (result.unchanged) {
         setMessage(`内容无变化（来源 #${result.source_id} 保持不变），未新建来源`);
       } else {
@@ -183,8 +186,12 @@ function ConnectorCard({ connector }: { connector: Connector }) {
   const saveInterval = useMutation({
     mutationFn: ({ endpoint, minutes }: { endpoint: Endpoint; minutes: number }) =>
       api.patch(`/endpoints/${endpoint.id}`, { ...endpoint, interval_minutes: minutes }),
-    onSuccess: () => {
+    onSuccess: (_data, { endpoint, minutes }) => {
       queryClient.invalidateQueries({ queryKey: ["connector", connector.id] });
+      setIntervals(previous => {
+        if (previous[endpoint.id] !== minutes) return previous;
+        const next = { ...previous }; delete next[endpoint.id]; return next;
+      });
       setMessage("拉取周期已更新");
     },
     onError: (e) => setMessage(e instanceof Error ? e.message : "保存失败"),
@@ -200,7 +207,7 @@ function ConnectorCard({ connector }: { connector: Connector }) {
           {connector.auth_style === "none" ? "无鉴权" : `$${connector.api_key_env}`}
         </span>
         <div className="ml-auto">
-          <Button size="sm" variant="secondary" onClick={() => setShowAdd(true)}>+ 添加端点</Button>
+          {!readOnly && <Button size="sm" variant="secondary" onClick={() => setShowAdd(true)}>+ 添加端点</Button>}
         </div>
       </div>
 
@@ -227,9 +234,11 @@ function ConnectorCard({ connector }: { connector: Connector }) {
               </div>
               <select
                 className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-600"
-                value={ep.interval_minutes ?? 0}
-                onChange={(e) => saveInterval.mutate({ endpoint: ep, minutes: Number(e.target.value) })}
+                value={intervals[ep.id] ?? ep.interval_minutes ?? 0}
+                disabled={readOnly || saveInterval.isPending || pull.isPending}
+                onChange={(e) => setIntervals(previous => ({ ...previous, [ep.id]: Number(e.target.value) }))}
                 title="自动拉取周期；仅手动 = 不自动拉取"
+                aria-label={`${ep.name} 拉取周期`}
               >
                 <option value={0}>仅手动</option>
                 <option value={15}>每 15 分钟</option>
@@ -239,7 +248,8 @@ function ConnectorCard({ connector }: { connector: Connector }) {
                 <option value={720}>每 12 小时</option>
                 <option value={1440}>每天</option>
               </select>
-              <Button size="sm" onClick={() => pull.mutate(ep.id)} disabled={pull.isPending}>
+              <Button size="sm" variant="secondary" disabled={readOnly || saveInterval.isPending || pull.isPending || intervals[ep.id] === undefined || intervals[ep.id] === (ep.interval_minutes ?? 0)} onClick={() => saveInterval.mutate({ endpoint: ep, minutes: intervals[ep.id] })}>保存周期</Button>
+              <Button size="sm" onClick={() => { if (window.confirm("确认拉取此端点一次？这会访问外部 API 并可能创建来源与候选事实。")) pull.mutate(ep.id); }} disabled={!allowPull || pull.isPending || saveInterval.isPending}>
                 {pull.isPending ? "拉取中…" : "立即拉取"}
               </Button>
             </div>
@@ -252,15 +262,18 @@ function ConnectorCard({ connector }: { connector: Connector }) {
   );
 }
 
-export default function Connectors() {
+export default function Connectors({ embedded = false, readOnly = false, allowPull = true }: { embedded?: boolean; readOnly?: boolean; allowPull?: boolean }) {
   const [showCreate, setShowCreate] = useState(false);
-  const { data, isLoading } = useQuery({
+  const me = useQuery({ queryKey: ["connector-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
+  const canConfigure = !readOnly && me.isSuccess && me.data.role === "admin";
+  const canPull = allowPull && me.isSuccess && ["admin", "editor"].includes(me.data.role);
+  const { data, isLoading, error } = useQuery({
     queryKey: ["connectors"],
     queryFn: () => api.get<Connector[]>("/connectors"),
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 p-8">
+    <div className={embedded ? "space-y-4 p-4" : "mx-auto max-w-6xl space-y-4 p-8"}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">数据接入 Connector</h1>
@@ -268,26 +281,26 @@ export default function Connectors() {
             从量化平台等外部 API 定时拉取结构化数据，自动映射为候选事实——拉取后到「来源库」确认，再进 FactPack
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>新建 Connector</Button>
+        {canConfigure && <Button onClick={() => setShowCreate(true)}>新建 Connector</Button>}
       </div>
 
-      {isLoading ? (
+      {error ? <p role="alert" className="text-sm text-rose-700">读取 Connector 失败：{error.message}</p> : isLoading ? (
         <Spinner />
       ) : !data || data.length === 0 ? (
         <EmptyState
           title="暂无 Connector"
           hint="配置外部 API 地址与鉴权（密钥只放环境变量），把量化平台的每日数据接进来"
-          action={<Button onClick={() => setShowCreate(true)}>新建 Connector</Button>}
+          action={canConfigure ? <Button onClick={() => setShowCreate(true)}>新建 Connector</Button> : undefined}
         />
       ) : (
         <div className="space-y-4">
           {data.map((c) => (
-            <ConnectorCard key={c.id} connector={c} />
+            <ConnectorCard key={c.id} connector={c} readOnly={!canConfigure} allowPull={canPull} />
           ))}
         </div>
       )}
 
-      {showCreate && <CreateConnectorModal onClose={() => setShowCreate(false)} />}
+      {showCreate && canConfigure && <CreateConnectorModal onClose={() => setShowCreate(false)} />}
     </div>
   );
 }

@@ -1,0 +1,16 @@
+{
+  "change": "creation-recipe-stage-control-loop",
+  "observed_base": "main@341ead8 + implemented uncommitted align implementation",
+  "spec_count": 9,
+  "specs": [
+    "capability-memory",
+    "content-harness-registry",
+    "creation-recipe-stage-control-loop",
+    "fe-f0-f1-project-experience",
+    "fe-f2-persistent-production-workflow",
+    "fe-p1-frontend-bundle-performance",
+    "material-library-v1",
+    "model-capability-routing",
+    "production-content-master"
+  ]
+}

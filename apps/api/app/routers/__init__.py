@@ -9,6 +9,8 @@ class CapabilityInputRoute(APIRoute):
     def get_route_handler(self):
         handler = super().get_route_handler()
         protected = (
+            "/creative-packages" in self.path or "/creative-executions" in self.path
+            or
             self.path.startswith(("/api/v1/provider-search", "/api/v1/provider-media/", "/api/v1/data-source-capabilities"))
             or self.path in {
                 "/api/v1/materials/search", "/api/v1/materials/generate",

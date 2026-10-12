@@ -1,7 +1,7 @@
 """Project-scoped Content Master revision API."""
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -22,6 +22,7 @@ from ..services.content_masters import (
     upgrade_text_master,
     upgrade_video_master,
 )
+from ..services.creative_intents import CreativeIntentError, canonical_intent, intent_diff
 from ..services.graphic_master_diff import structured_graphic_diff
 from ..services.text_master_ai import suggest_text_edit
 from ..services.text_master_diff import structured_diff
@@ -46,6 +47,15 @@ class MasterRevisionIn(BaseModel):
     asset_refs: list[dict] = Field(default_factory=list, max_length=250)
     evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
     render_attestation: dict | None = None
+    creative_intent: dict | None = None
+
+    @field_validator("creative_intent", mode="before")
+    @classmethod
+    def validate_creative_intent(cls, value):
+        try:
+            return canonical_intent(value)[0]
+        except CreativeIntentError as exc:
+            raise HTTPException(422, {"code": str(exc)}) from None
 
 
 class MasterSeedIn(BaseModel):
@@ -203,7 +213,11 @@ def commit_video_derivation(project_id: int, unit_id: int, master_id: int, body:
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions", dependencies=[Depends(require_editor)])
 def create_master_revision(project_id: int, unit_id: int, body: MasterRevisionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
+    payload = body.model_dump()
+    # Preserve defaults in legacy fingerprints while distinguishing intent omission from clearing.
+    if "creative_intent" not in body.model_fields_set:
+        payload.pop("creative_intent")
+    return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=payload)
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/text-suggestions", dependencies=[Depends(require_editor)])
@@ -220,10 +234,14 @@ def get_master_checks(project_id: int, unit_id: int, master_id: int, db: Session
 def diff_master_revision(project_id: int, unit_id: int, master_id: int, compare_to_id: int = Query(..., ge=1), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     target = db.get(ContentMasterRevision, master_id)
     if target is not None and target.payload_schema.startswith("graphic.master."):
-        return structured_graphic_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
-    if target is not None and target.payload_schema == "video.master.v2":
-        return structured_video_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
-    return structured_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
+        diff = structured_graphic_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
+    elif target is not None and target.payload_schema == "video.master.v2":
+        diff = structured_video_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
+    else:
+        diff = structured_diff(db, project_id=project_id, unit_id=unit_id, from_master_id=compare_to_id, to_master_id=master_id, user=user)
+    before = get_revision(db, project_id, unit_id, compare_to_id, user)
+    after = get_revision(db, project_id, unit_id, master_id, user)
+    return {**diff, "creative_intent": intent_diff(before["creative_intent"], after["creative_intent"])}
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/readiness")

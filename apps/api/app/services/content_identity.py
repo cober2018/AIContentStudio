@@ -5,10 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
@@ -27,6 +27,30 @@ from ..models import (
     SystemSetting,
     User,
 )
+from .studio_creative_catalog import validate_creative_profile
+
+
+class CreativeProfile(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    schema_: Literal["persona.creative.text.v1", "persona.creative.graphic.v1", "persona.creative.audio.v1", "persona.creative.video.v1"] = Field(alias="schema")
+    mode: Literal["auto", "custom", "composed"]
+    skill_ref: str = Field(min_length=3, max_length=150)
+    style_preset_ref: str = Field(min_length=3, max_length=150)
+    quality_profile_ref: str = Field(min_length=3, max_length=150)
+    capability: Literal["chat", "image_generation", "video_generation", "tts", "asr"]
+    model_binding: dict[str, str] | None = None
+    model_chain: list[dict[str, str]] = Field(default_factory=list, max_length=8)
+    capability_memory_revision_ids: list[int] = Field(default_factory=list, max_length=8)
+    installed_skill_refs: list[str] = Field(default_factory=list, max_length=8)
+    parameters: dict[str, Any] = Field(default_factory=dict, max_length=32)
+    stage_instruction: str | None = Field(default=None, max_length=4000)
+    provenance: dict[str, Any] = Field(default_factory=dict, max_length=8)
+
+    @model_validator(mode="after")
+    def validate_contract(self):
+        validate_creative_profile(self.model_dump(mode="json", by_alias=True))
+        return self
 
 
 class IdentityProfile(BaseModel):
@@ -43,6 +67,18 @@ class IdentityProfile(BaseModel):
     risk_boundaries: list[str] | None = None
     public_fact_policy: dict[str, Any] | None = None
     brand_voice_version_id: int | None = None
+    text_creative_profile: CreativeProfile | None = None
+    graphic_creative_profile: CreativeProfile | None = None
+    audio_creative_profile: CreativeProfile | None = None
+    video_creative_profile: CreativeProfile | None = None
+
+    @model_validator(mode="after")
+    def validate_creative_modalities(self):
+        for modality in ("text", "graphic", "audio", "video"):
+            profile = getattr(self, f"{modality}_creative_profile")
+            if profile is not None and profile.schema_ != f"persona.creative.{modality}.v1":
+                raise ValueError("creative_profile_modality_mismatch")
+        return self
 
 
 REVISION_MODELS = {
@@ -221,7 +257,10 @@ def revisions(db: Session, kind: str, entity_id: int) -> list:
 
 def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expected_revision: int, profile: IdentityProfile):
     owned_entity(db, user, kind, entity_id, mutable=True)
-    data = profile.model_dump(exclude_unset=True)
+    data = profile.model_dump(exclude_unset=True, by_alias=True)
+    creative_fields = {"text_creative_profile", "graphic_creative_profile", "audio_creative_profile", "video_creative_profile"}
+    if kind == "brand" and creative_fields.intersection(data):
+        raise HTTPException(422, "brand_creative_profile_forbidden")
     voice_id = data.get("brand_voice_version_id")
     if voice_id is not None:
         voice = db.get(BrandVoiceVersion, voice_id)
@@ -247,14 +286,24 @@ def effective(db: Session, user: User, *, persona_id: int, account_id: int | Non
     selected = hierarchy(db, user, persona_id=persona_id, account_id=account_id, series_id=series_id, mutable=mutable)
     profile: dict[str, Any] = {}
     origins: dict[str, str] = {}
+    creative_keys = {"text_creative_profile", "graphic_creative_profile", "audio_creative_profile", "video_creative_profile"}
+    creative_profiles: dict[str, Any] = {}
+    creative_origins: dict[str, str] = {}
     revision_ids: dict[str, int | None] = {}
     for kind, entity in selected.members():
         revision = current_revision(db, kind, entity.id)
         revision_ids[kind] = revision.id if revision else None
         if revision:
             for key, value in (revision.profile_json or {}).items():
+                if key in creative_keys:
+                    if kind != "brand":
+                        creative_profiles[key] = value
+                        creative_origins[key] = kind
+                    continue
                 profile[key] = value
                 origins[key] = kind
+    profile.update(creative_profiles)
+    origins.update(creative_origins)
     voice_id = profile.get("brand_voice_version_id")
     if mutable and voice_id is not None:
         voice = db.get(BrandVoiceVersion, voice_id)
@@ -269,6 +318,7 @@ def effective(db: Session, user: User, *, persona_id: int, account_id: int | Non
         "brand_voice_version_id": voice_id,
         "effective_profile": profile,
         "field_origins": origins,
+        "creative_profile_origins": creative_origins,
     }
 
 
