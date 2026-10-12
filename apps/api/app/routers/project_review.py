@@ -12,6 +12,7 @@ from ..services import delivery as delivery_service
 from ..services import project_review as review_service
 from ..services import project_review_projection as projection
 from ..services.project_authorization import authorize_project_asset
+from ..services.project_projection_context import ProjectProjectionContext
 from .content_projects import owned_project, owned_unit
 from .delivery import GenericTargetIn, _target_json
 
@@ -21,7 +22,9 @@ router = APIRouter(prefix="/api/v1", tags=["project-review"])
 @router.get("/review-center/projects")
 def review_projects(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     projects = db.scalars(select(ContentProject).where(ContentProject.owner_user_id == user.id).order_by(ContentProject.id.desc())).all()
-    return [projection.project_projection(db, project) for project in projects]
+    # 一个批量 context 预取全部单元的候选/评审/投递数据，替代逐单元 N+1
+    context = ProjectProjectionContext(db, [project.id for project in projects])
+    return [projection.project_projection(db, project, context=context) for project in projects]
 
 
 @router.get("/review-center/projects/{project_id}")

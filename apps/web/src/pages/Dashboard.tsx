@@ -40,8 +40,14 @@ function StatCard({ label, value, warn }: { label: string; value: number; warn?:
 export default function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
-    queryFn: () => api.get<DashboardData>("/dashboard"),
-    refetchInterval: 10000,
+    queryFn: ({ signal }) => api.get<DashboardData>("/dashboard", signal),
+    // 有进行中任务时 10s 跟踪，空闲时降到 30s（后台标签页由 react-query 默认暂停）
+    refetchInterval: (query) => {
+      const busy = (query.state.data?.today_flow ?? []).some(
+        (job) => job.status === "queued" || job.status === "running",
+      );
+      return busy ? 10000 : 30000;
+    },
   });
 
   if (isLoading) return <Spinner />;

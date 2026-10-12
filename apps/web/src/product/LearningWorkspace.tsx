@@ -1,10 +1,12 @@
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, StatusBadge, inputClass } from "../components/ui";
 import { categories, evidenceTypes, frozenEvidenceCount, insightReferences, memoryTypes, operationUUID, pageData, promotableClaim, queryString, scopeTypes } from "./learningTypes";
 import type { Analysis as AnalysisData, Coverage, Insight, LearningCandidate, MemoryEntry, MemoryRevision, Observation, Page, PromotableClaim, PublishedContent, ScopeType } from "./learningTypes";
+
+const CapabilityMemoryPanel = lazy(() => import("./CapabilityMemoryPanel"));
 
 const box = "space-y-4 rounded-xl border border-slate-200 bg-white p-5";
 const labels: Record<string, string> = { history: "历史回收", analysis: "长期分析", candidates: "学习候选", memory: "内容记忆" };
@@ -162,11 +164,13 @@ function Candidates({ selected, choose }: { selected: string | null; choose: (id
     <Filters fields={[select("status", "状态", ["collecting", "ready_for_review", "accepted", "rejected", "archived"]), select("category", "类别", categories)]} onChange={setFilters} />
     <ActionForm title="新建学习候选" fields={[text("title", "标题", true), select("category", "类别", categories), { ...text("proposition", "待验证命题", true), type: "textarea" }, { ...text("rationale", "提出理由", true), type: "textarea" }, json("scope", "适用范围"), number("created_from_insight_id", "来源 Insight ID")]} action={(values) => api.post("/learning-candidates", values)} />
     <section className={box}><h2 className="font-semibold">候选列表</h2><Paged<LearningCandidate> key={suffix} path={`/learning-candidates?${suffix}`} render={(row) => <button key={row.id} className="block w-full rounded-lg border p-3 text-left text-sm" onClick={() => choose(row.id)}><span>#{row.id} · {row.title} · </span><StatusBadge status={row.status} /><p className="mt-2 text-slate-600">{row.proposition}</p></button>} /></section>
-    {selected && <Read<LearningCandidate> path={`/learning-candidates/${selected}`} children={(row) => <CandidateDetail key={`${row.id}:${row.revision_no}`} candidate={row} />} />}
+    {selected && <Read<LearningCandidate> path={`/learning-candidates/${selected}`} children={(row) => <CandidateDetail key={row.id} candidate={row} />} />}
   </div>;
 }
 
 function CandidateDetail({ candidate: row }: { candidate: LearningCandidate }) {
+  const [bridgeOpened, setBridgeOpened] = useState(false);
+  const [showBridge, setShowBridge] = useState(false);
   const base = `/learning-candidates/${row.id}`;
   const revision = row.revision_no;
   const claim = promotableClaim(row);
@@ -175,6 +179,7 @@ function CandidateDetail({ candidate: row }: { candidate: LearningCandidate }) {
     {row.status === "collecting" && <><ActionForm title="编辑尚在收集证据的候选" disabled={!Number.isInteger(revision)} fields={[{ ...text("title", "标题", true), value: row.title }, { ...text("proposition", "待验证命题", true), type: "textarea", value: row.proposition }, { ...text("rationale", "提出理由"), type: "textarea", value: row.rationale }, json("scope", "范围", JSON.stringify(row.scope ?? {}))]} action={(values) => api.patch(base, { ...values, expected_revision: revision })} /><ActionForm title="补充支持 / 反对 / 背景证据" disabled={!Number.isInteger(revision)} fields={[select("evidence_type", "证据类型", evidenceTypes), number("entity_id", "证据 ID", true), select("role", "证据作用", ["support", "contradict", "context"]), text("note", "附注")]} action={(values) => api.post(`${base}/evidence`, { ...values, expected_revision: revision })} /><ActionForm title="提交人工审核" submit="提交审核" disabled={!Number.isInteger(revision)} action={() => api.post(`${base}/submit-review`, { expected_revision: revision })} /></>}
     {row.status === "ready_for_review" && <ActionForm title="人工验证（不宣称自动实验或多样本）" submit="记录验证决定" disabled={!Number.isInteger(revision)} fields={[select("decision", "决定", ["accepted", "rejected", "collecting"]), { ...text("rationale", "验证依据、样本独立性与限制", true), type: "textarea" }]} action={(values) => api.post(`${base}/validate`, { expected_revision: revision, decision: values.decision, validation_method: "human", validation_summary: { rationale: values.rationale } })} />}
     {row.status === "accepted" && (claim ? <><p className="text-sm text-slate-600">记忆声明、适用条件和局限来自冻结验证记录，只能查看。不同声明须先建立并接受匹配的新候选。</p><ActionForm title="显式提升为内容记忆" submit="提升为记忆" confirm="确认把这条已接受候选的冻结声明提升为指定范围的内容记忆？" fields={[select("scope_type", "目标范围", scopeTypes), number("scope_id", "目标身份 ID（owner 留空）"), select("memory_type", "记忆类型", memoryTypes), ...claimFields(claim)]} prepare={(values) => { if (values.scope_type !== "owner" && !values.scope_id) throw new Error("请选择目标身份 ID。"); return { ...values, ...claim }; }} action={(values, key) => api.post(`${base}/promote-to-memory`, { ...values, idempotency_key: key })} /></> : <ErrorBanner message="后端未返回完整的冻结可提升声明，暂不能提升。请刷新记录或先完成匹配候选的验证。" />)}
+    {row.status === "accepted" && <section className="space-y-3 rounded-lg border border-slate-200 p-4"><h3 className="font-semibold">独立保留为创作方法</h3><p className="text-sm text-slate-600">学习接受只保留原决定。另行填写可复用方法，后端核对并冻结支持证据，才会创建方法候选；原有内容记忆流程保持独立。</p><Button variant="secondary" disabled={!Number.isSafeInteger(revision) || revision < 1} onClick={() => { setBridgeOpened(true); setShowBridge(previous => !previous); }}>{showBridge ? "收起方法候选表单" : "明确创建方法候选"}</Button>{bridgeOpened && <div hidden={!showBridge}><Suspense fallback={<Spinner label="按需加载学习方法桥接…" />}><CapabilityMemoryPanel learningCandidate={{ id: row.id, revision_no: revision }} /></Suspense></div>}</section>}
     {["accepted", "rejected"].includes(row.status) && <ActionForm title="归档候选（保留决定与证据）" submit="归档" disabled={!Number.isInteger(revision)} confirm="归档此候选？" action={() => api.del(`${base}?expected_revision=${revision}`)} />}
   </section>;
 }

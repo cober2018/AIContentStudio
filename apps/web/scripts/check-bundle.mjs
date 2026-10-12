@@ -8,7 +8,7 @@ const manifest = JSON.parse(readFileSync(join(dist, ".vite/manifest.json"), "utf
 const heavyByChunk = JSON.parse(readFileSync(join(dist, "heavy-dependencies.json"), "utf8"));
 const entryKey = "index.html";
 const projectKey = "src/product/PersistentProjectsPage.tsx";
-const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityPages.tsx", "src/product/LearningWorkspace.tsx", "src/product/SystemAssetsKnowledgePage.tsx", "src/product/ProductSettingsPage.tsx", "src/product/PersistentProductionPage.tsx"];
+const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityPages.tsx", "src/product/LearningWorkspace.tsx", "src/product/SystemAssetsKnowledgePage.tsx", "src/product/ProductSettingsPage.tsx", "src/product/PersistentProductionPage.tsx", "src/product/ProductionQueuePage.tsx"];
 const excludedRoutes = [
   "src/product/PersistentProjectPage.tsx",
   "src/product/PersistentProductionPage.tsx",
@@ -98,6 +98,23 @@ try {
   const graphicModelFile = required(graphicModelKey).file;
   const videoModelFile = required(videoModelKey).file;
   const commonProduction = staticClosure([entryKey, "src/product/PersistentProductionPage.tsx"]);
+  for (const panel of ["src/product/CreativeExecutionPanel.tsx", "src/product/ProductionAutomationPanel.tsx", "src/product/CapabilityMemoryPanel.tsx"]) {
+    if (!production.dynamicImports?.includes(panel)) throw new Error(`Production panel is not lazy-loaded: ${panel}`);
+    const file = required(panel).file;
+    if (initial.has(file) || commonProduction.has(file)) throw new Error(`Optional Production panel leaked into initial graph: ${panel}`);
+    const closure = staticClosure([entryKey, panel]);
+    if ([...closure].some(chunk => heavyByChunk[chunk]?.includes("TipTap"))) throw new Error(`Text editor leaked into ${panel}`);
+    console.log(`${panel}: explicit lazy panel, ${(sizes(closure).raw / 1000).toFixed(2)} kB raw / ${(sizes(closure).gzip / 1000).toFixed(2)} kB gzip`);
+  }
+  const memoryPanel = "src/product/CapabilityMemoryPanel.tsx";
+  const memoryFile = required(memoryPanel).file;
+  for (const route of ["src/product/ProductSettingsPage.tsx", "src/product/LearningWorkspace.tsx"]) {
+    if (!required(route).dynamicImports?.includes(memoryPanel)) throw new Error(`Capability Memory is not lazy from ${route}`);
+    if (staticClosure([entryKey, route]).has(memoryFile)) throw new Error(`Capability Memory leaked into ${route} initial graph`);
+  }
+  const memoryClosure = staticClosure([entryKey, memoryPanel]);
+  if ([...memoryClosure].some(file => heavyByChunk[file]?.length)) throw new Error("Heavy editor dependency leaked into Capability Memory");
+  if (sizes(memoryClosure).raw >= limit) throw new Error("Capability Memory exceeds lazy panel budget");
   if (commonProduction.has(graphicModelFile)) throw new Error("Graphic editor model leaked into common Production static graph");
   if (commonProduction.has(videoModelFile)) throw new Error("Video editor model leaked into common Production static graph");
   if (!production.dynamicImports?.includes(graphicModelKey)) throw new Error("Graphic editor model is not lazy-loaded from Production");

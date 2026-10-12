@@ -1,7 +1,7 @@
 """Project-scoped immutable ChannelVariant read API."""
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -17,6 +17,7 @@ from ..services.channel_variants import (
     save_revision,
     variant_capabilities,
 )
+from ..services.creative_intents import CreativeIntentError, canonical_intent
 
 router = APIRouter(prefix="/api/v1", tags=["channel-variants"])
 
@@ -29,6 +30,7 @@ class VariantRevisionIn(BaseModel):
     source_master_revision_id: int = Field(ge=1)
     expected_source_payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     expected_source_context_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    expected_profile_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     channel_id: str = Field(min_length=1, max_length=100)
     content_form: str = Field(min_length=1, max_length=100)
     idempotency_key: str = Field(min_length=1, max_length=150)
@@ -38,6 +40,15 @@ class VariantRevisionIn(BaseModel):
     asset_refs: list[dict] = Field(default_factory=list, max_length=250)
     evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
     llm_provenance: dict | None = None
+    creative_intent: dict | None = None
+
+    @field_validator("creative_intent", mode="before")
+    @classmethod
+    def validate_creative_intent(cls, value):
+        try:
+            return canonical_intent(value)[0]
+        except CreativeIntentError as exc:
+            raise HTTPException(422, {"code": str(exc)}) from None
 
 
 class VariantAdaptPreviewIn(BaseModel):
@@ -66,7 +77,13 @@ async def suggest_channel_adaptation(project_id: int, unit_id: int, body: Varian
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/channel-variants", status_code=201, dependencies=[Depends(require_editor)])
 def create_channel_variant(project_id: int, unit_id: int, body: VariantRevisionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump())
+    payload = body.model_dump()
+    # Keep existing default fields in the idempotency fingerprint for old clients.
+    if "creative_intent" not in body.model_fields_set:
+        payload.pop("creative_intent")
+    if "expected_profile_hash" not in body.model_fields_set:
+        payload.pop("expected_profile_hash")
+    return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=payload)
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}/channel-variants")

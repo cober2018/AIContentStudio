@@ -113,8 +113,17 @@ def log_operation(event: str, *, status: str, duration: float, error: BaseExcept
     logger.info(json.dumps(payload, ensure_ascii=False, sort_keys=True))
 
 
+_probe_thread: threading.Thread | None = None
+
+
 def _bounded_worker_ping(celery_app, timeout: float = 1.0):
     """Keep broker control retries from blocking a readiness request."""
+    # 单飞：上一探测线程还活着（broker 挂起时 kombu 重试不返回）就不再新起，
+    # 否则高频 readiness 探测会持续积累滞留线程。
+    global _probe_thread
+    previous = _probe_thread
+    if previous is not None and previous.is_alive():
+        return None
     result: queue.Queue = queue.Queue(maxsize=1)
 
     def probe() -> None:
@@ -122,12 +131,16 @@ def _bounded_worker_ping(celery_app, timeout: float = 1.0):
             replies = celery_app.control.inspect(timeout=timeout).ping()
             result.put((True, replies))
         except Exception:  # noqa: BLE001 Worker diagnostics stay opaque.
-            result.put((False, None))
+            try:
+                result.put_nowait((False, None))
+            except queue.Full:
+                pass
 
     # Kombu's control broadcast publishes with its own retry behavior. A
     # daemon thread gives the caller a hard upper bound if the broker drops
     # between the connection check and ping.
     thread = threading.Thread(target=probe, name="readiness-worker-ping", daemon=True)
+    _probe_thread = thread
     thread.start()
     thread.join(timeout + 0.25)
     if thread.is_alive():
@@ -165,34 +178,59 @@ def render_metrics() -> str:
     return "\n".join(lines) + "\n"
 
 
-async def trace_middleware(request, call_next):
-    """BaseHTTPMiddleware dispatch：trace_id 注入响应头，输出结构化访问日志。"""
-    trace_id = uuid.uuid4().hex[:12]
-    start = time.perf_counter()
-    with correlation_scope(trace_id=trace_id, operation="http_request"):
-        response = await call_next(request)
-        duration = time.perf_counter() - start
-        route = request.scope.get("route")
-        # Unmatched URLs can contain arbitrary private strings, not merely IDs.
-        path = getattr(route, "path", None) or "__unmatched__"
-        if path != "/metrics":  # 指标端点自身不计量，避免自增噪声
-            observe(request.method, path, response.status_code, duration)
-        # 结构化访问日志：一行一条 JSON，trace_id 与响应头可对账
-        logger.info(
-            json.dumps(
-                {
-                    "event": "http_request",
-                    **current_correlation(),
-                    "method": request.method,
-                    "path": path,
-                    "status": response.status_code,
-                    "duration_ms": round(duration * 1000, 1),
-                },
-                ensure_ascii=False,
-            )
-        )
-        response.headers["x-trace-id"] = trace_id
-        return response
+class TraceMiddleware:
+    """纯 ASGI 中间件：trace_id 注入响应头，输出结构化访问日志。
+
+    不用 BaseHTTPMiddleware：它会为每个响应引入额外的 task 切换与流缓冲，
+    大文件下载端点（素材 raw / 交付包 zip）的内存与延迟会被放大；
+    纯 ASGI 包一层 send 即可保留全部既有语义。
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        trace_id = uuid.uuid4().hex[:12]
+        start = time.perf_counter()
+        started: dict[str, int | None] = {"status": None}
+
+        async def send_with_trace(message):
+            if message["type"] == "http.response.start":
+                started["status"] = message["status"]
+                from starlette.datastructures import MutableHeaders
+
+                MutableHeaders(scope=message).append("x-trace-id", trace_id)
+            await send(message)
+
+        with correlation_scope(trace_id=trace_id, operation="http_request"):
+            try:
+                await self.app(scope, receive, send_with_trace)
+            finally:
+                status = started["status"]
+                if status is not None:
+                    duration = time.perf_counter() - start
+                    route = scope.get("route")
+                    # Unmatched URLs can contain arbitrary private strings, not merely IDs.
+                    path = getattr(route, "path", None) or "__unmatched__"
+                    if path != "/metrics":  # 指标端点自身不计量，避免自增噪声
+                        observe(scope.get("method", "?"), path, status, duration)
+                    # 结构化访问日志：一行一条 JSON，trace_id 与响应头可对账
+                    logger.info(
+                        json.dumps(
+                            {
+                                "event": "http_request",
+                                **current_correlation(),
+                                "method": scope.get("method", "?"),
+                                "path": path,
+                                "status": status,
+                                "duration_ms": round(duration * 1000, 1),
+                            },
+                            ensure_ascii=False,
+                        )
+                    )
 
 
 def check_health(db) -> dict:

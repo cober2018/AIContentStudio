@@ -12,7 +12,7 @@ Non-Goals：不实现新的原厂生成协议，不凭模型名称启用媒体�
 
 1. 推荐扩展现有 Settings/SystemSetting；不另建独立注册库，也不只修改 env 而让前端缺入口。providers 以稳定 provider_id 保存名称、协议、base_url、启用状态和内部 credential；注册 profile 绑定 provider_id + exact model_id。所有保存同一 models revision CAS，保留既有字段。读取只回 configured/掩码；空白密钥表示保持，清除必须显式操作。复用现有服务端密钥存储边界，不能声称现有数据库明文已加密；生产 secret vault/加密策略属于后续安全收口。
 2. 默认 OpenAI-compatible chat 协议。获取模型由服务器向该厂商的 /models 发起只读认证 GET，限时/限量/限响应字节，不跟随重定向，不返回原始错误或 header。返回 ID 列表，仅用户选中并显式保存后登记。失败不删除已有模型、不自动改默认；可手动补录准确 ID。
-3. HTTPS 保持默认。CPA 的 HTTP + 非标准端口仅通过管理员显式确认可信局域网的精确 scheme/host/port/path allowlist 接受，凭据仅发往该 endpoint。不能全局开启 ssrf_allow_private；拒绝 URL userinfo/query/fragment、回环/链路本地/云 metadata 和未授权目标。HTTP 风险在保存前显示；发现与调用复用相同目标校验，DNS/连接目标必须一致。媒体下载及 native media bindings 不因此放宽。
+3. HTTPS 保持默认。CPA 的 HTTP + 非标准端口仅通过管理员显式确认可信局域网或 literal `127.0.0.1` 本机隧道的精确 scheme/host/port/path allowlist 接受，凭据仅发往该 endpoint。不能全局开启 ssrf_allow_private；拒绝 URL userinfo/query/fragment、未明确登记的回环、其他回环地址/localhost DNS 别名、链路本地/云 metadata 和未授权目标。HTTP 风险在保存前显示；发现与调用复用相同目标校验，DNS/连接目标必须一致。媒体下载及 native media bindings 不因此放宽。
 4. 引用优先级：显式受支持任务/节点选择 > 已保存功能路由 > 全局 default_profile > 无新默认时原 legacy llm/env。disabled/deleted/missing/能力不匹配的显式选择返回原因，不能静默换模型。将新的默认设为 Gemini 不覆盖现有显式 routes。text_master_edit 保留 rewrite 兼容继承；前端列出真实消费者清单，不虚构尚未接入的功能。
 5. 路由 UI 首批覆盖当前六类 purpose 加 text_master_edit，按实际消费者识别标签。Workflow 已有节点选择复用已注册模型目录；生成图片/视频/语音由既有 capability routing 和插件选择处理，不把 chat 默认自动当媒体 executor。运行冻结所选 profile/model/配置版本，不回写历史。
 6. 页面流程：厂商卡片登记协议、API、密钥 → 获取模型列表 → 勾选注册/手动新增 → 设默认 → 功能模型下拉。只读用户可看安全配置，编辑/发现按服务端权限。409 保留草稿；切换用户清空密钥输入与异步结果；Settings lazy 性能不退化。

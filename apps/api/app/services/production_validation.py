@@ -120,7 +120,11 @@ def validate_live_v4_candidate(db: Session, asset: ContentAsset, *, require_curr
     current = validate_live_v4_master(db, master, require_current=require_current, lock_live=lock_live, frozen_checks=manifest.get("checks") if not require_current else None)
     # Display titles and newer checks may change; frozen business provenance may not.
     for key in current:
-        if key not in {"project", "checks"} and manifest.get(key) != current[key]:
+        current_section = current[key]
+        if key == "production" and "external_execution" not in manifest.get(key, {}):
+            # Older frozen manifests remain byte-for-byte unchanged.
+            current_section = {name: value for name, value in current_section.items() if name != "external_execution"}
+        if key not in {"project", "checks"} and manifest.get(key) != current_section:
             raise _blocked("candidate_provenance", f"冻结候选与Master不一致: {key}")
     frozen_project = manifest.get("project") or {}
     if any(frozen_project.get(key) != current["project"][key] for key in ("id", "unit_id", "modality", "channel", "content_form")):
@@ -273,6 +277,11 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
     if "warning_checks" not in source and live_warning_keys:
         raise _blocked("warning_dispositions_required", "旧v5候选缺少来源Master warning快照")
     production = manifest["production"]
+    if "external_execution" in production:
+        from .creative_packages import external_material_sources
+
+        if production["external_execution"] != external_material_sources(db, variant.project_id, assets):
+            raise _blocked("candidate_provenance", "冻结外部成果血缘不一致")
     if (production["edit_summary"] != variant.edit_summary_json or production["created_by"] != variant.created_by
             or production.get("llm_provenance") != variant.llm_provenance_json):
         raise _blocked("candidate_provenance", "历史生产记录不一致")
@@ -322,6 +331,8 @@ def validate_live_v5_candidate(db: Session, asset: ContentAsset, *, require_curr
                     "assets", "evidence_refs", "render", "production", "citations", "declarations"):
         frozen_section = manifest[section]
         current_section = current[section]
+        if section == "production" and "external_execution" not in frozen_section:
+            current_section = {key: value for key, value in current_section.items() if key != "external_execution"}
         if section == "source_master" and "warning_checks" not in frozen_section and current_section.get("warning_checks") == []:
             current_section = {key: value for key, value in current_section.items() if key != "warning_checks"}
         if frozen_section != current_section:

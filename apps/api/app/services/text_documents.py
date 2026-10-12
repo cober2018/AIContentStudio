@@ -217,6 +217,121 @@ def canonical_payload(value: object) -> dict:
     return {"title": _string(item.get("title", ""), 500), "document": canonical_document(item.get("document"))}
 
 
+def proposal_response_schema(candidate_count: int) -> dict:
+    """Expose the existing editable truth to models, not an editor-specific JSON dialect."""
+    if type(candidate_count) is not int or not 1 <= candidate_count <= 5:
+        _fail("invalid_proposal_candidate_count")
+
+    def obj(properties, required):
+        return {"type": "object", "additionalProperties": False, "properties": properties, "required": required}
+
+    def array(items, maximum=256, minimum=0):
+        return {"type": "array", "items": items, "minItems": minimum, "maxItems": maximum}
+
+    def string(maximum, minimum=0):
+        return {"type": "string", "minLength": minimum, "maxLength": maximum}
+
+    identifier, positive = string(150, 1), {"type": "integer", "minimum": 1}
+    checksum = {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+    reference = lambda name: {"$ref": f"#/$defs/{name}"}
+    content = array(reference("run"))
+    blocks = []
+    for kind in sorted(TEXT_BLOCKS):
+        fields = {"id": identifier, "type": {"const": kind}, "content": content}
+        required = ["id", "type", "content"]
+        if kind == "heading":
+            fields["level"] = {"type": "integer", "minimum": 1, "maximum": 4}
+            required.append("level")
+        elif kind == "quote":
+            fields["attribution"] = string(1000)
+        elif kind == "callout":
+            fields["tone"] = {"enum": ["info", "note", "warning"]}
+            required.append("tone")
+        blocks.append(obj(fields, required))
+    for kind in sorted(LIST_BLOCKS):
+        blocks.append(obj({"id": identifier, "type": {"const": kind},
+            "items": array(reference("list_item"), minimum=1)},
+            ["id", "type", "items"]))
+    for kind in sorted(MEDIA_BLOCKS):
+        blocks.append(obj({"id": identifier, "type": {"const": kind}, "material_revision_id": positive,
+            "alt_text": string(2000), "caption": string(2000)}, ["id", "type", "material_revision_id"]))
+    blocks.extend([
+        obj({"id": identifier, "type": {"const": "code"}, "code": string(200_000),
+            "language": {**string(50), "pattern": "^[a-zA-Z0-9_+-]*$"}}, ["id", "type", "code"]),
+        obj({"id": identifier, "type": {"const": "divider"}}, ["id", "type"]),
+    ])
+    range_fields = {"block_id": identifier, "list_item_id": identifier,
+        "start": {"type": "integer", "minimum": 0}, "end": positive, "selected_text_hash": checksum}
+    range_required = ["block_id", "start", "end", "selected_text_hash"]
+    order = {"type": "integer", "minimum": 0, "maximum": 2147483647}
+    defs = {
+        "plain_mark": obj({"type": {"enum": ["bold", "italic", "code"]}}, ["type"]),
+        "link_mark": obj({"type": {"const": "link"}, "href": {**string(1000, 1), "pattern": "^https?://"}},
+            ["type", "href"]),
+        "mark": {"oneOf": [reference("plain_mark"), reference("link_mark")]},
+        "run": obj({"text": string(20_000), "marks": array(reference("mark"), 4)}, ["text"]),
+        "list_item": obj({"id": identifier, "content": content}, ["id", "content"]),
+        "block": {"oneOf": [reference(f"block_{index}") for index in range(len(blocks))]},
+        **{f"block_{index}": block for index, block in enumerate(blocks)},
+        "citation": obj({"id": identifier, **range_fields, "fact_pack_item_id": positive, "label": string(200)},
+            ["id", "fact_pack_item_id", *range_required]),
+        "citation_selection": obj({"id": identifier, "block_id": identifier, "list_item_id": identifier,
+            "quote": string(20_000, 1), "fact_pack_item_id": positive, "label": string(200)},
+            ["id", "block_id", "quote", "fact_pack_item_id"]),
+        "asset_ref": obj({"material_revision_id": positive, "content_hash": checksum,
+            "role": string(40, 1), "slot_key": {"type": ["string", "null"], "maxLength": 100},
+            "sort_order": order, "placement": {"type": "object"}}, ["material_revision_id", "content_hash"]),
+        "evidence_ref": obj({"fact_pack_item_id": positive, "snapshot_checksum": checksum,
+            "role": string(40, 1), "sort_order": order, "locator": reference("locator")},
+            ["fact_pack_item_id", "snapshot_checksum", "locator"]),
+        "locator": obj({"citation_id": identifier, **range_fields}, ["citation_id", *range_required]),
+        "document": obj({"schema": {"const": DOCUMENT_SCHEMA}, "blocks": array(reference("block")),
+            "citations": array(reference("citation"), 250)}, ["schema", "blocks"]),
+        "payload": obj({"title": string(500), "document": reference("document")}, ["title", "document"]),
+    }
+    candidate = obj({"payload_schema": {"const": TEXT_PAYLOAD_SCHEMA}, "payload": reference("payload"),
+        "asset_refs": array(reference("asset_ref"), 250), "evidence_refs": array(reference("evidence_ref"), 250),
+        "citation_selections": array(reference("citation_selection"), 250)},
+        ["payload_schema", "payload"])
+    defs["candidate"] = candidate
+    return {**obj({"schema": {"const": "stage.master.proposal.v1"},
+        "candidates": array(reference("candidate"), candidate_count, candidate_count)}, ["candidates"]), "$defs": defs}
+
+
+def resolve_proposal_citations(value: dict, selections: list, evidence_catalog: list) -> tuple[dict, list]:
+    """Models select words; the service proves locators and hashes without repairing invalid citations."""
+    _bounds(selections)
+    payload = canonical_payload(value)
+    document = payload["document"]
+    if document["citations"]:
+        _fail("mixed_proposal_citation_forms")
+    supplied = {item["item_id"]: item["checksum"] for item in evidence_catalog}
+    refs = []
+    for index, raw in enumerate(_array(selections, 250)):
+        item = _object(raw, {"id", "block_id", "list_item_id", "quote", "fact_pack_item_id", "label"})
+        citation_id, block_id = _id(item.get("id")), _id(item.get("block_id"))
+        fact_id = _positive(item.get("fact_pack_item_id"))
+        checksum = supplied.get(fact_id)
+        if not isinstance(checksum, str) or not re.fullmatch(r"[a-f0-9]{64}", checksum):
+            _fail("foreign_proposal_citation")
+        locator = {"block_id": block_id}
+        if "list_item_id" in item:
+            locator["list_item_id"] = _id(item["list_item_id"])
+        quote = _string(item.get("quote"), 20_000, nonempty=True)
+        text = _target_text(document, locator)
+        start = text.find(quote)
+        if start < 0 or text.find(quote, start + 1) >= 0:
+            _fail("missing_or_ambiguous_proposal_citation")
+        locator.update(start=start, end=start + len(quote), selected_text_hash=hashlib.sha256(quote.encode()).hexdigest())
+        citation = {"id": citation_id, **locator, "fact_pack_item_id": fact_id}
+        if "label" in item:
+            citation["label"] = _string(item["label"], 200)
+        document["citations"].append(citation)
+        refs.append({"fact_pack_item_id": fact_id, "snapshot_checksum": checksum, "role": "claim",
+                     "sort_order": index, "locator": {"citation_id": citation_id, **locator}})
+    return canonical_payload(payload), refs
+
+
 def convert_legacy_text(source: dict, *, asset_refs: list | None = None, evidence_refs: list | None = None) -> dict:
     """Convert proven legacy inputs without trusting layout JSON as editable truth."""
     _bounds(source)

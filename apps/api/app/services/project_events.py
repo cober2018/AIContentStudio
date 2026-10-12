@@ -20,6 +20,13 @@ EVENT_TYPES = frozenset({
     "content_master.saved",
     "content_master.generated",
     "channel_variant.saved",
+    "creative_package.created",
+    "creative_execution.prepared",
+    "creative_execution.updated",
+    "creation_recipe.stage_feedback",
+    "creation_recipe.adjustment_saved",
+    "creation_recipe.method_applied",
+    "creation_recipe.selected",
 })
 
 

@@ -1,6 +1,157 @@
 # AI Content Studio（AI 内容生产中心）
 
-2026-10-04 F8 获准本机实现已提交到本地main：`ade4ce04870b854d262cdbc55250233cb293f54e`。本机82/82完成，原清单82/100，18项生产/远端义务延期且未验证。实际提交快照后端1660 passed/28 skipped、Web/FE-P1、Ruff/strict34/diff与限定提交边界复核通过；未批准身份/MinIO草案及原始包完整保留在工作区、不在提交内。未push/deploy/正式迁移，主规格同步/归档尚未获准。目录、依赖与启动方式不因本次提交改变；见[本机验收及提交记录](docs/FE_F8_LOCAL_FINAL_STATUS.md)。下方等待提交、82/83和17项为历史，不是当前状态。
+2026-10-09网页可达性恢复：5173原无监听，现已沿用原npm/Vite入口启动，仅`127.0.0.1:5173`；主页/前端入口HTTP200，`/api`代理ready=true，API/Worker未重启。Web仍是前台运行方式，不是登录自启；日常命令和停止方式见[本机运行手册](docs/runbooks/production-readiness.md)。无业务代码、数据库/素材、运行配置、依赖或迁移变更；未调用模型或新增部署体系。浏览器可视化未由此次HTTP检查替代。
+
+当前执行口径：WeWrite Skill安装/测试不纳入本轮，不阻塞使用；不再重复跑它或完整回归。`add-persona-creative-studio`功能实施项已完成，剩5项为人工质量/独立复核及另行授权生命周期；不把“暂缓验收”记成“已通过”。两角色文字、图文、音频与配置入口沿用当前版本，公众号适配器和运行配置不因此改动。
+
+集中验收入口：[两个角色的文字、六张图卡、两段完整音频与安全回执](/Users/mshengran/Project/AIContentStudio/backups/persona-review-20261009.O02VLb/README.md)。已保存原件精确副本；最新隔离后端2528 passed/12 skipped、Web/FE-P1与Ruff通过（旧插件测试的临时Skill元数据前提见[回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)）。不再调用模型；人工试听/全模态质量、独立复核与单独授权生命周期仍待，151/156不变。此目录被Git忽略，应纳入本机备份；依赖、正式数据与现有启动方式不变。
+
+2026-10-09 **当前151/156、5开放；两个角色完整真实音频均已走通**。用户恢复Gemini出口后，新隔离生活Run9完成口语/声音规划→MiniMax→246.535秒WAV→受限素材接受→QC pass/零问题；20.4关闭。CPA2/MiniMax1、串行/间隔≥10秒/应用零重试，旧Unknown不重发。正式5,170行/70素材/配置保持，服务继续启用；只剩人听/全模态rubric、独立质量及单独授权生命周期，不冒称整体关单。目录/依赖/启动不变。[真实产物与回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点。
+
+2026-10-09 **完整Audio仍受外部出口阻断，自动试验停止**：第三轮live路由/CPA配置仍一致，两个旧Unknown与停止的验收服务保留；无活生成句柄、新模型调用或VPN修改。149/156、7开放及360秒配置保持，不冒称全部完成；新版API/Web/Worker继续启用、不回滚正式库。待CPA专用出站修复/新有界批次方向确认或外部状态变化后恢复。目录、依赖与启动不变，[完整证据](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+
+2026-10-09 **失败代理出口已只读确权**：live Clash选择HTTP-72.245.152.14，Google连接日志明确记录该peer reset；磁盘Google规则不等于live生效，日本节点只有旧health记录。未切换全局代理/改VPN、未调用模型，149/156及360秒设置保持；下一步是CPA专用出站路线修复的范围选择，不是再测同一Unknown。目录/依赖/启动不变，[当前证据](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+
+2026-10-09 **音频阻断已定位到CPA→Google出口**：原两失败窗口的网关请求最终500/上游EOF，一次无认证、零重试连通性检查也在TLS握手失败；不是360秒音频上限或120秒等待错误，MiniMax未进入。仅安全日志诊断，旧Unknown/正式配置/服务/VPN不改，无新模型调用；149/156、7项仍开放。目录、依赖与启动方式不变，[证据及限制](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)已记录。
+
+2026-10-09 **生活图文真实成品链已补齐**：实物审计发现旧功能副本封面为测试色块；新独立副本复用已有MiniMax真实图，三个1080×1440 PNG→显式接受→Master15→渲染/结构/权利检查通过。原记录保留、零模型调用/正式写入，文字hash与既有批准一致；固定视觉自评及Mock语义警告如实记录，仍149/156，完整Audio/全模态人审与独立质量未关闭。目录、依赖和启动方式不变。[产物和回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+
+2026-10-09 **360秒音频配置再次只读确认**：运行中正式API返回routing revision9、TTS成品上限360秒、接口等待上限120秒、273音色；新内置Audio模板为360秒，历史Workflow/Run不回填。本次核验未调用模型、改配置或重发任务。目录、依赖和启动方式不变，整体仍149/156；音频成品/人工听感不由时长配置代替。[完整回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+
+2026-10-09 **多媒体持久覆盖已补齐，当前149/156、7开放**：只在两个既有测试文件新增33用例，覆盖图片1–4候选、精确选择入库/历史候选保全/不改Master、音色scope/目录刷新/CAS失效及签名/字节完整性。集中离线236passed/1既有warning（5.29秒），两项保护旁路验证按预期失败，Ruff/strict38/38/diff通过。正式360秒配置保留，未调用模型、重发Unknown、改正式数据/服务或做归档提交。完整Audio、人审和独立质量仍待。目录、依赖、启动方式不变；[完整回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点。
+
+2026-10-09 **音频上限已按用户要求设置360秒**：正式routing revision8→9，仅改TTS成品时长上限；120秒接口等待、273音色及其他完整模型配置保全。新内置Audio Recipe模板同步360秒，旧Workflow/Run不改；104项Audio回归、Ruff及正式两角色模板checksum回读通过，API已加载，Worker不变。新完整Audio批首个CPA口语改编无响应/Unknown，已停止，实际CPA1次、MiniMax0次；未重发，完整Audio和人听不冒称通过。当前148/156、8开放。目录、依赖与现有启动方式不变，备份和证据见[回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下文为历史检查点。
+
+2026-10-09 **已授权 MiniMax 真实音色样本，部分通过**：生活指定 `chunzhen_xuedi`/`speech-2.8-hd` 的 3.62 秒真实 WAV 已接受为正式 MaterialRevision 7，并通过字节/hash、签名 voice/rate、当前绑定及 Audio QC；科技样本首发 422、现为 Unknown，不重发。两条均仅实际合成一次，无 CPA/公开发布/自动改 Master。完整 Audio Recipe 和人听仍待验收，当前 **148/156，8 项开放**。本轮持久覆盖审计确认 Audio 回执用例已有，图片 batch/候选选择与音色目录回归仍缺，不用旧总数虚关 13.6；目录/依赖/启动不变。[真实回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)记录正确素材根、配套备份、旧行保全及覆盖缺口。下面是历史检查点。
+
+2026-10-09 **MiniMax 多候选图片配置已补齐**：正式模型路由 revision 8 将 `image_generation.max_items` 从 1 调整为 4；image/TTS/ASR 的本地执行计划均可解析。这里只完成配置与只读能力核验，没有调用供应商、自动选音色或写入素材。当前 OpenSpec 记账 **148/156，8 项开放**；真实音频质量、人审、持久覆盖和生命周期仍按任务清单独立验收。
+
+集中离线冒烟已通过：Persona/Graphic/Audio/Stage/model routing 既有回归 **570 passed / 1 existing warning**；使用 Mock/隔离 SQLite，不代表真实 TTS 或人工质量验收。
+
+2026-10-09 **图文功能链已隔离收口，音频合同烟测通过**：科技 Persona 与生活 Persona 均完成精确素材引用、确定性排版、三张真实 PNG、产品接受、append-only Graphic Master、render attestation 和当前结构/平台/render 检查；Audio/Stage 回归本轮211项通过、8个既有warning，正常页面隔离链覆盖两种 Persona，但使用合成音调夹具。此处只代表功能链通过；真实 TTS、人审质量与生命周期仍未完成。当前 OpenSpec 记账 **148/156，8 项开放**；正式 SQLite/素材/配置未被隔离验收改动。详见[图文音频验收回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+
+2026-10-09 **使用配置已授权补齐并即时生效**：正式routing revision5→7；chat为8192输出tokens、最多3候选、120秒等待，MiniMax音色目录一次同步273项。两个角色文字配置均ready，实际页面音色搜索可用；未自动选声或生成内容。API/Key/默认Gemini、旧媒体限额、5,162条其他数据库行、67素材文件及runtime.env保持不变。配置回执本身不等于全部质量验收；当前总进度以顶部148/156为准。详见[启用与配置回执](docs/PERSONA_CREATIVE_FRAMEWORK_HANDOFF_2026-10-08.md)。以下均为历史检查点。
+
+2026-10-09 **本机初始化已完成，146/156，10项开放**：配套SQLite/素材备份后刷新原API/Worker，正式新增科技Persona2、生活Persona3及各自3个默认Workflow，重复初始化无覆盖。5,147旧行、67素材文件/运行配置hash不变，schema仍crs000000001；[角色与配置页](http://127.0.0.1:5173/identities)和生产/媒体入口实际可见，API ready=true。**尚需补使用配置**：正式chat调用限额缺失、Audio未选voice ID；image1张/TTS10秒等原限额未扩，不能把页面可用当成全部生成已就绪。未调用模型、迁移、归档提交推送或追加全量/审美验收。目录/依赖/启动方式不变，详见[启用与备份回执](docs/PERSONA_CREATIVE_FRAMEWORK_HANDOFF_2026-10-08.md)及[进度](openspec/changes/add-persona-creative-studio/progress.md)。以下均为历史检查点。
+
+当前 **144/156，剩12项**。生活混合卡片方向已明确并落地：暖杂志封面带精确图片、正文可纯文字；Preview、排版和结构QC统一。既有生活计划已生成三张真实1080×1440 PNG预览，未自动接受成品或修改正式库。离线校验及新鲜全量回归 **2495通过/12跳过/80既有警告，142.91秒、exit0**；Ruff/strict38/38/diff通过，Web未改/未重跑。未追加模型调用、依赖/迁移、永久测试或生命周期操作，目录/启动方式不变。[预览与完整验收边界](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点，未答复方向/blocked文案不再代表本项当前状态。
+
+当前 **144/156，剩12项**。已批准的新120秒图文批次实际CPA3/3、MiniMax2/2全部返回；两个JPEG和科技默认流程的三张1080×1440中文字卡已生成。科技链路已到隔离Master/真实renderer，但素材接受、context/evidence、完整GraphicQC与人工质量未完；生活规划因自动续行占用额度尚未完成，不追加调用或虚关19.3/20.3。本轮只改验收脚本/回执，无业务源文件、音频、正式SQLite/素材/配置/服务、依赖/迁移或生命周期变化；目录和启动方式不变。[真实产物与限制](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下均为前序检查点。
+
+当前 **144/156，剩12项**。图片/TTS已精确消费冻结等待参数；进一步修正普通Audio v4 Stage的独立25秒上限，使合同与服务统一为既有1–300秒，默认25秒不变，正式120秒策略仍优先阻断超限请求。最新21项临时离线冒烟、六组已有回归 **475 passed/8 warnings（15.20s、exit0）**、app Ruff、strict38/38、diff通过。前序全量2495passed与Web build保留为历史证据，本次未重跑。未调用模型、写正式库/配置、重启服务、新增永久测试或归档提交；真实图文/音频、13.6、正式初始化及生命周期仍待。目录/依赖/启动不变。[当前回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+
+以下是前序批次记录；“仅验收脚本25秒”由上面的产品执行层诊断补充纠正。
+
+当前 **144/156，剩12项**。新授权图文批次实际调用CPA 1/4、MiniMax 2/2：科技视觉规划和一张1152×864 JPEG返回，生活图片在本批25秒等待上限后为Unknown，无原任务句柄；后续调用已停止，不重发。完整默认图文/人审未通过，剩余CPA额度不因存在而继续派发。正式SQLite/素材/模型配置/服务及依赖、启动方式不变；详见[本批回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下面等待授权及门禁记录均为前序历史。
+
+本轮最新集中门禁：**2495 passed /12 skipped /80 warnings**，134.01秒、exit0；显式已有本机renderer后原16项条件跳过实际运行，无新增测试。当前Web TypeScript/Vite/FE-P1、app Ruff、strict38/38和diff通过；手动生图面板仍在五个日常入口初始静态图之外。进度保持144/156，真实图文/音频验收、13.6、初始化及生命周期不因绿灯关闭；四次MiniMax预算不重置，不重复Provider请求或同一批门禁。正式目录、依赖、启动与服务不变，详见下面同一回执的最新集中门禁节。
+
+2026-10-08 **当前144/156，剩12项**。后续多平台规格已统一真实`stage.variant.adapt@1`及未来持久覆盖计划，仅关闭Persona前置0.3/0.4，不启动多平台业务、不解除当前新测试写入限制。现有composer＋本机headless renderer实际生成两张1080×1440中文PNG，视觉检查无明显溢出；已有图文/渲染/API回归223passed/1warning、strict38/38、diff通过。手工卡片计划不冒称默认Persona完整图文验收；四次MiniMax调用预算耗尽，无新模型调用、正式数据/配置/服务或依赖/迁移变化。真实图文/音频、人工rubric、持久覆盖13.6、正式初始化及生命周期仍待；目录和启动方式不变。[当前回执与产物](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下142/156等均为历史检查点。
+
+2026-10-08 **已登记MiniMax真实生成批结束，当前142/156、剩14项**。隔离环境四次调用，返回两张JPEG和一份3.70秒WAV；科技图有乱码未通过成品检查，原科技音频超限保持Unknown且不重发。修复本机CLI帮助输出stderr导致音色参数误阻断，已有165项回归与Ruff通过。只关闭本批真实调用授权21.2，不把原始媒体样本当完整Persona图文/音频或人工质量验收；正式数据、配置和服务未改，无新增依赖/表/迁移/永久测试。图文确定性排版/真实PNG、音频Stage/QC与人听验收、正式初始化和生命周期仍待，启动方式不变。详见[有界真实调用回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下面141/156等为历史检查点。
+
+2026-10-08 **CPA图片协议与ChatGPT手动生图已实施，当前141/156、剩15项**。CPA图片仅引用已登记的 `openai.compatible` provider/model/profile 与 image binding，使用 `cpa.images.b64.v1`、1–4个候选、严格字节校验和现有MaterialRevision接受链；未知网络结果不自动重试，不探测端点，不偷偷换Provider。ChatGPT仍是提示词复制→用户自行生成/下载→拖入或选择→明确接受入库，不读取Cookie、不调用ChatGPT或自动改Master。零新依赖/表/迁移、未改正式配置/素材库/服务；本轮为合成协议/一次性SQLite烟测，未宣称真实CPA图片质量。真实Graphic/Audio验收、初始化/持久覆盖/生命周期仍待完成，未提交归档推送。详细[实施回执](openspec/changes/add-persona-creative-studio/progress.md)。
+
+2026-10-08 **ChatGPT手动生图已实施，当前140/156、剩16项**。入口：素材与知识→生成素材预览与接受→ChatGPT（手动生图）。完整提示词复制→用户自行生成/下载→拖入或选择原图立即暂存→逐张预览/选择→明确接受入库；不会读取Cookie、调用ChatGPT或自动改Master。零新依赖/表/迁移，启动与正式SQLite/素材库/配置/服务不变。既有后端2479 passed/28 skipped、Web/FE-P1、Ruff、strict38/38及隔离合同冒烟通过；测试图不冒称真实创作质量。CPA10.11、真实Graphic/Audio验收、初始化/持久覆盖/生命周期仍待完成，未提交归档推送。详细[实施回执](openspec/changes/add-persona-creative-studio/progress.md)。下方139/156及“未apply”属于本项历史阶段。
+
+2026-10-08 **ChatGPT改为人工生图交接，设计已确认、业务未apply**：前端选择ChatGPT后提供完整提示词/一键复制和图片拖拽上传；拖入立即进入临时候选区，预览选择并明确接受后才成为MaterialRevision，Master另行绑定。取消浏览器Agent/Cookie/session依赖与自动提交/下载，不伪造网站模型回执。同一OpenSpec已同步，仍139/156、17开放；目录、依赖/启动与正式运行环境不变。[当前进度](openspec/changes/add-persona-creative-studio/progress.md)。下面Chrome/blocked记录是历史。
+
+2026-10-08 用户已确认复用Chrome现有ChatGPT登录，页面只读确认可用；Cookie留在浏览器，不导出、不保存为模型Key。会话选择已明确，但网站生成/回传/人工入库尚未验证，仍139/156、17开放。无业务代码、依赖/迁移、正式配置或启动方式变化；下面blocked是回答前的历史，见[当前回执](openspec/changes/add-persona-creative-studio/progress.md)。
+
+2026-10-08 自动续行已停止等待人工信息，当前139/156、17项开放；不是全需求完成，也未关闭本机API/Web。CPA图片协议和ChatGPT浏览器会话尚未明确，其余真实质量/正式初始化/生命周期边界保留。无新业务改动、依赖、迁移、配置或启动方式变化，详见当前[进度](openspec/changes/add-persona-creative-studio/progress.md)。
+
+2026-10-08 **范围补齐：139/156，17项开放**。CPA Gemini/Grok生图与ChatGPT网页生图已作为本次统一多媒体需求的两项未完成任务写回OpenSpec，不能用MiniMax已实施代替它们。当前本机只读设置回读revision5：Gemini/Grok仅声明chat、image binding缺失；MiniMax图片配置存在但运行投影为credential_continuity_unverified，尚不能声称正式生成链可执行。未调用真实Provider或修改正式配置/服务。ChatGPT浏览器会话及CPA exact图片协议待确认/复核；本轮只修规格和回执，目录/依赖/启动方式不变，未归档提交。[当前进度](openspec/changes/add-persona-creative-studio/progress.md)。以下139/154是前批历史检查点。
+
+2026-10-08 **图片＋音频配置批已实施，Persona OpenSpec 139/154，剩15项**。图片支持 MiniMax 原生1–4候选、逐张校验预览、明确选一后入库；音色支持本地目录搜索/语言/收藏、克隆Voice ID登记、已有素材试听以及Persona/Account/Series精确绑定。普通/高级设置只发送适配器声明支持的参数，配置失效时停止、不换模型。新增共享组件 `apps/web/src/product/VoicePresetPicker.tsx`，没有新依赖/表/迁移，正式启动方式不变。后端2479通过/28跳过、Web/FE-P1、Ruff、strict38/38和六项隔离页面冒烟通过；真实Provider调用0，未改正式库/配置/服务。新增持久回归13.6、真实Graphic/Audio质量、初始化及归档仍待完成；Gemini/Grok/ChatGPT网页生图不冒称已接入。[当前完整回执](openspec/changes/add-persona-creative-studio/progress.md)。以下133/147等为历史检查点。
+
+2026-10-08 当前133/147：科技文字样稿与生活文字编辑稿已获用户人工接受；生活编辑候选仍只作为隔离验收证据，不覆盖原Master/Candidate/ZIP，也不冒充新的模型直出。两个角色文字流程框架已串通；图文、音频真实成品验收与正式Persona初始化仍分开，后续在程序内继续调整。原流水线/ZIP/SQLite/回执和正式配置保留，零新增模型调用；[文字回执](docs/PERSONA_TEXT_FINAL_REVIEW_2026-10-08.md)记录样本边界。功能目录、依赖/启动不变，不提交归档推送。
+
+2026-10-08 **两个角色真实文字流程已串通，当前133/147、剩14**。科技稿Master5（真实流程祖先＋明确编辑）、生活稿新Run4九阶段/三版Master均经当前checks→Candidate v4→Approval→本地ZIP；精确引用、冻结正文/ZIP/hash和SQLite回读通过。本批17/30次Gemini请求，实际并发1、启动最短间隔10.0008075秒，零应用重试/fallback/旧Unknown重发，正式库/配置/服务不变，自有验收API18337已停。仅关闭19.2/20.2，**人工稿件质量与独立最终复核仍待完成**，Graphic/Audio没有启动；[完整回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。目录、依赖和正式启动方式不变，无提交/归档/推送。下方131/147及“新检查缺失”是之前的检查点。
+
+2026-10-08 **科技编辑稿已接回新隔离Master4，整体仍131/147**。复用现有保存服务追加user_edit/parent3，七条精确证据引用与渲染正文一致，幂等/刷新/历史行保全通过；缺少新检查时冻结正确409阻断。原停止批次/Master/Candidate/ZIP不覆盖，不冒称双角色Text或全模态验收通过。[稿件](docs/PERSONA_TECH_TEXT_EDITORIAL_2026-10-07.md)与[回执](docs/PERSONA_TECH_TEXT_EDITORIAL_REVIEW_2026-10-07.md)保留；限定独立APPROVE_ISOLATED_ADOPTION、strict38/38/diff通过。零CPA/正式写入，现有产品目录、依赖和启动方式不变。
+
+2026-10-07 **验收批次调度参数已确认并离线落实：最多3在途、请求启动间隔至少10秒**。仅私有验收调度器，7项离线检查/Ruff通过、默认真实调用预算0；不是产品/CPA全局限流，未启动模型调用或改正式配置/库/运行方式。当前131/147，真实Text→Graphic→Audio仍分别验收；旧Unknown保持，完整[回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
+
+## 2026-10-07 真实Text质量→精修交接修正
+
+实际隔离数据修前186597bytes超过128KiB；修后129061bytes且完整resolution可canonicalize。仅传精确CheckRun ID/input hash/status/full-report hash及必要问题/coverage；完整报告留在immutable源头，原live/currentness/人工warning处置不变。科技初稿已明确编辑保存，实际fact/identity完成，正在同批继续精修；347既有回归通过/8warnings/13.46s，130/147暂不改变。未新增持久测试或放宽大小/调用限制；当前真实质量尚未终验。
+
+2026-10-07 **新一批双Persona真实文字验收已获明确授权并开始**：最多30次应用模型请求，首次计入单请求总尝试≤5；Unknown立即停止，不重发旧Unknown。仅fresh隔离SQLite/素材，不做正式初始化、图文、音频、发布或生命周期动作。此前blocked文案是未执行的状态计划：授权先到，goal实际仍active。130/147保持，真实质量以本批产物验收为准。
+
+2026-10-07 **8项持久测试已补齐并独立复核通过，当前130/147、剩17**。仅关闭3.7/4.6/18.1–18.3/18.7–18.9，最新集中568项通过；落库默认模态集合与幂等绑定的漏项已补强、反例正确被拒绝。使用隔离SQLite、Mock和合成PNG/WAV；真实文字→图文→音频质量仍分别待验收。目录新增三个聚焦测试文件，扩展既有Persona测试；依赖/正式启动不变。本轮零CPA/真实Provider/ASR推理、正式数据/配置/服务或生命周期动作。下方122/147与“等待授权/复核”是历史，最终全量回执见[本轮进度](openspec/changes/add-persona-creative-studio/progress.md)。
+
+后续自动续行只读确认旧真实Text的两项Unknown未变、零Master、原证据hash保持且临时验收API已停止；新批次调用授权连续三轮未获答复，自动目标转blocked等待人工回答，不再重复跑检查，也不自动访问CPA或重发。目录/依赖/正式启动方式保持，130/147不虚增，完整目标保留；见同一进度回执。
+
+2026-10-07 **Persona仍122/147，等待8项持久测试写入例外确认**。同一权限冲突连续三轮未获答复，现有测试/进程复核未提供可替代覆盖；停止重复自动检查，不把早前199项绿灯当新进展。允许例外后继续补齐并集中验证，随后分别验收真实文字、图文、音频；目标范围不缩小。目录、依赖/启动、正式库/服务及CPA不变，无新业务代码/测试/调用/提交归档，见[阻塞审计](progress.md)。
+
+2026-10-07 **集中已有合同回归199通过，仍122/147、25开放**。当前任务/计划摘要已纠正旧121/26和95/52数字；历史全量/浏览器结果未冒充本次证据。8项永久测试与后来的“不新增测试代码”要求存在冲突，已提一个明确例外问题，答复前不写新测试。真实文字→图文→音频仍分别验收，199Mock/隔离SQLite回归不证明成品质量。目录、依赖/启动不变，本轮不访问CPA、不改正式库/服务或旧Unknown、不提交归档；见[当前精确进度](openspec/changes/add-persona-creative-studio/progress.md)。
+
+2026-10-07 **CPA总尝试上限已落实并热加载**。首次计入用户最多5次的限制；当前采用保守配置：无额外重试轮次、单轮最多2个凭据，普通失败最多2次生成尝试，即使401刷新补发也最多4次，不为了凑满5次继续调用。禁用stream bootstrap重试和credits兜底；15:58:28运行日志确认加载，PID700未重启，原配置已0600备份。其他配置、VPN、URL/Key、正式库及旧Unknown未改，本轮零模型调用；固定频率间隔没有新增，网络/真实质量不冒称修复。122/147保持，目录、依赖、启动方式不变，完整[回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。下方未修改CPA配置的说法属于实施前历史。
+
+2026-10-07 **CPA初稿出站故障进一步定位，仍122/147、8/30调用**：原失败窗口Clash记录147条当前HTTP出口主动reset；CPA v8代理端口本身正确，不应盲改。日本既有节点Google探针通过，香港节点超时；当前出口也曾恢复HEAD404，但不等于稳定生成或已修复。未改VPN选择/配置/服务或重发Unknown；只让CPA的Google流量使用专用路由需先确认策略，其他软件出口保持。依赖/启动方式不变，完整[回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)，真实质量仍PARTIAL。
+
+2026-10-07 **真实默认Text新验收批次PARTIAL，仍122/147、剩25**。用户新授权最多30次文字调用，本批使用8次：科技/生活两角色研究→角度→大纲六个真实结果已逐项接受；各自默认三候选初稿均未收到可用响应，Attempt7/8保留Unknown，不重发、不换模型。前后CPA认证发现均200/32模型，不能据此宣布生成或质量通过；本批零Master/Candidate/交付，正式模型配置hash不变，自有临时API已停。依赖/正式启动/目录不变，无业务代码、新永久测试、Graphic/Audio、正式数据或生命周期操作。完整[本轮真实文字回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)；下方页面合同PASS不替代真实质量。
+
+2026-10-07 **当前122/147，剩25：Video普通页面交接验收完成**。两角色从内置初始化→默认四阶段→脚本/镜头明确接受→Video Master→导演包明确接受/刷新，21检查点通过、零页面脚本错误；隔离库验证2Master/2Package、零外部执行/素材/候选，关闭19.5。Mock不证明创作质量，独立窄review无新结论；下方121/147与“没有页面验收”为前批历史。本批只更新证据和任务，不新增业务代码/永久测试/真实调用，不改正式库/配置/服务或启动依赖，不提交归档。见[集中回执](docs/PERSONA_NORMAL_PAGE_CONTRACT_ACCEPTANCE.md)。
+
+2026-10-07 **Video导演包合同补验，仍121/147、剩26**：两个角色默认脚本→镜头→Video Master→Director包隔离API37点通过；修正9:16与[9,16]匹配误阻断，不改Master或派发外部执行。新鲜相关233测试、Ruff、strict38/38及diff-check通过；下方1968/full和Web属于6.4前批。独立窄review额度耗尽未返回结论，19.5不提前关闭；Mock不是真实质量，也没有新的Video普通页面验收。正式数据/配置/服务、目录/依赖/启动方式均不变，无永久新测试、真实调用或生命周期动作。见[精确回执](openspec/changes/add-persona-creative-studio/progress.md)。
+
+2026-10-07 **当前121/147，剩26：6.4已验证收口，独立复核APPROVE**。确定性组合参数按“Persona方法默认→Project设置→Run调整”消费；最终方法/output/Director package一起校验，禁止selector补丁偷换执行器，跨模态就绪与执行一致。实际内存服务链22检查点、修后全量1968/28skip（102.20s）、Web/FE-P1、全appRuff、strict38/38和空白检查通过。剩余永久覆盖、真实成品质量、正式初始化/生命周期及历史依赖未冒称完成。正式数据/配置/服务、真实调用和提交归档均未动；目录、依赖和启动方式不变。完整[本批回执](openspec/changes/add-persona-creative-studio/progress.md)，下方120/147和6.4待答均为前序历史。
+
+## 10月7日前序记录
+
+2026-10-07 **Persona120/147，剩27：整体安全与普通页面产品/UX均独立通过**。两个角色Graphic10点、Audio22点合同闭环（试听→明确Material接受→QC→估算SRT）已完成；Text沿用既有24点证据。整体复核新增的Master回执额外字段及中间素材实时权利缺口已最小修正，34项临时红绿检查通过，原reviewer完整22.4重审APPROVE；22.5亦APPROVE。上轮修后1968passed/28skipped（104.40s）、Web/FE-P1、Ruff/strict38/38及空白检查通过；本次只读剩余范围核验，没有重跑全量或新业务变化。不冒充真实质量、ASR或全规格完成；6.4仍待答，永久覆盖/真实成品/正式初始化/生命周期仍开放。正式库/角色/配置/服务未动，临时18331/15331已停止。完整[集中回执](docs/PERSONA_NORMAL_PAGE_CONTRACT_ACCEPTANCE.md)及[剩余范围核验](openspec/changes/add-persona-creative-studio/findings.md)，目录、依赖/启动方式不变；下方118/147为历史。
+
+2026-10-07 **整体复核补充4处修复，仍118/147**：Variant Stage安全回执、Quality模态匹配、创作配置权限/祖先归档、音频QC/素材指引已最小修正。69项后端临时检查、六组UI场景及原15项状态检查通过；最新全量1968passed/28skipped、Web/FE-P1、Ruff与strict38/38通过。限定backend复核APPROVE，但whole22.4/22.5和真实创作质量仍分开验收；完整证据见[最新回执](openspec/changes/add-persona-creative-studio/progress.md)。目录、依赖、启动方式不变，正式库/配置/服务及生命周期未动。
+2026-10-07 **五处复核缺陷已修正，限定安全/UX独立复核通过**：完整创作配置安全校验、现代Stage先校验后记安全回执、只读入口不自动建号、精确身份/请求代次保护、跨形态草稿与保存结果核对。41项隔离安全检查、15项隔离UI状态检查、两个角色24点Text→本地ZIP合同冒烟和最新Web/FE-P1通过；最终全量门禁见[本批回执](openspec/changes/add-persona-creative-studio/progress.md)。目录、依赖及启动方式不变，不改正式库/配置/服务、不做真实模型调用或提交归档。整体仍118/147，限定修复批准不替代whole22.4/22.5、真实成品质量或6.4待决边界。
+
+2026-10-07 **Persona自动浏览器验收入口已修正并复验**：用户手动Chrome正常；脚本优先复用本机已有headless browser，保留显式选择、不修改日常Chrome资料或安装新依赖。两个角色Text→Master→Candidate/Review→本地ZIP重新24检查点通过、零页面脚本错误；临时Mock库/服务已停止，正式服务与数据未动。整体仍118/147，不等于真实创作质量全部验收；范围、启动依赖和证据见[文字合同验收](docs/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。
+
+2026-10-07 **Persona当前118/147，剩29项，尚未全部完成**：两个默认图文流程已通过隔离SQLite/Mock规划、确定性排版、真实1080×1440 PNG、显式素材接受/新Master保存、QC/可冻结；限定独立复核同意关闭10.1/10.2、17.3及6.6路由修正。已补组合路由与逐方法反馈，182项既有定向回归、Web/FE-P1、Ruff及strict38/38通过；全量结果见[当前进度](openspec/changes/add-persona-creative-studio/progress.md)。非AI组合消费边界待一次选择，真实文字/图文/音频质量仍单独验收。没有正式库/配置/服务变更、付费Provider调用、新依赖或迁移，也未提交归档；日常Chrome崩溃未宣称修复，图文使用现有headless renderer。
+
+## 10月6–7日前序批次历史（当前以顶部和进度文档为准）
+
+2026-10-07 **Persona OpenSpec仍99/147、剩48，未全部完成**：最新接通Chat Stage/Run精确模型覆盖和Graphic Recipe内既有素材准备入口，两处连续操作问题已修正、独立定向复核APPROVE。新鲜165项既有回归、Web/FE-P1、Ruff、strict38/38/diff通过；下段1968全量是上一批证据。仍待完整Audio本机ASR入口、跨模态产品冒烟、两个角色真实成品质量及正式初始化/生命周期。没有新增真实调用或改正式数据/配置/运行服务；目录和启动方式不变。当前以[实施进度](openspec/changes/add-persona-creative-studio/progress.md)为准。
+
+2026-10-07 **Persona Creative Studio当前99/147，剩48，尚未全部完成**：已补Recipe→图文编辑器/真实状态、Persona图片尺寸校验、已有ASR对稿/真或估算SRT、Starter Fork与只读就绪卡片；明确操作不覆盖Master草稿、不自动识别/调用模型。限定独立复核、1968项既有全量回归（28skip）、最终105项定向、Web/FE-P1、Ruff、strict38/38通过。48项包括剩余功能/合同、持久测试、真实质量、正式初始化与生命周期，不等于48个都没写。正式库/配置/角色/服务未变，无新测试/迁移/Provider调用/发布/提交归档，目录和启动方式沿用现有方案。见[本批完整进度](openspec/changes/add-persona-creative-studio/progress.md)；下面95/147是此前批次。
+
+2026-10-07 **Persona Creative Studio尚未全部完成，当前95/147、剩52**：本批关闭30项资源/typed中间产物/确定性Graphic排版与基础QC/Text质量/配置库存/导演与角色方法窄scope及轻量UI合同。音频显式模型覆盖和导演指令上限两处定向疑点已闭合，完整Audio复核仍PARTIAL。最终后端1968 passed/28 skipped（106.33s）、Web/FE-P1、Ruff、OpenSpec strict38/38及diff通过；20份资源/八份可移植Recipe纯冒烟通过。完整Renderer阶段承接、ASR/字幕入口、Starter fork/readiness及真实默认Text/Graphic/Audio质量尚待，不以代码/Mock替代成品验收。正式库、配置、运行服务不变，不新增测试/migration/真实调用、不提交推送归档。当前以[本change进度](openspec/changes/add-persona-creative-studio/progress.md)为准，以下65/147、Text-only和图文未开始记录为历史。
+
+2026-10-06 **两个角色真实文字到本地交付已验通，默认Recipe质量仍PARTIAL**：Gemini科技/生活原稿已分别保存，独立复核编辑并补7条精确引用后，隔离Master1/2→真实checks→Candidate v4→Review→copy_package ZIP实际通过，正文/独立标题/hash保持一致。稿件见[科技编辑稿](docs/PERSONA_GEMINI_TECH_EDITED_2026-10-06.md)与[生活编辑稿](docs/PERSONA_GEMINI_LIFESTYLE_EDITED_2026-10-06.md)。Agent复核不代替用户质量确认；默认Text文档grammar/服务端引用选文计算已补，345项既有回归/Ruff通过，但新合同真实call18无响应，Unknown不重发，18/30调用。完整九阶段真实验收与固定rubric仍待，65/147不虚增；图文/音频未开始，正式库/配置/Persona及运行拓扑不动、不发布/迁移/归档/提交。详细当前证据见[真实文字回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)；以下同日一篇/零Master记录为历史。
+
+2026-10-06 **Gemini一次完整文章生成成功，Persona质量验收仍部分完成**：按用户新授权，在隔离库新单阶段Run7/Attempt11中使用exact Gemini，50.79秒返回并校验text.master.v2、导出1822字符[原稿](docs/PERSONA_GEMINI_ARTICLE_2026-10-06.md)。未换模型或重发旧Unknown，未接受Master/发布；两个角色完整默认Recipe/人工质量仍待验收，65/147不变。正式配置/库不动，图文/音频未开始；当前回执见[真实文字验收](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
+
+2026-10-06 **CPA本机隧道已按用户授权直接生效**：`http://127.0.0.1:8317/v1`，正式配置revision5；Key/已登记模型/默认Gemini/各环节路由保持，应用认证发现200/32模型。仅明确登记的literal127.0.0.1开放，原API/Worker已安全刷新；无新生成、Unknown重试或迁移。详细当前结果/依赖见[模型登记](openspec/changes/add-provider-model-registration/README.md)，目录连通不等于真实创作质量验收。
+
+2026-10-06 **当前方向：Persona Creative Studio，两个角色文字先行**。[add-persona-creative-studio](openspec/changes/add-persona-creative-studio/README.md)已获SPEC APPROVE及apply授权，当前65/147项完成。两个Starter Persona的九阶段文字流程已在隔离SQLite/Mock中走通：证据→角度→大纲→初稿→检查→精修→标题→最终Master→最终检查，再经Candidate v4/审批/授权生成本地ZIP。浏览器24个检查点、后端1968 passed/28 skipped、Web/FE-P1通过；这证明合同与产品链路，不证明真实文章质量。真实模型文字质量单独待授权验收，图文之后、音频最后；部分高级配置/UX仍待补齐。十二平台提案继续暂缓，不初始化正式Persona，不改正式crs数据/运行拓扑，不新增migration，不提交推送归档。见[文字合同验收](docs/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。
+
+2026-10-06 **下一项范围已确认：十二平台专属稿件＋素材交付包**，公众号保留草稿箱、其他平台人工发布；知乎/B站/X各形态独立，共十七形态。标准提案与两批计划见[complete-multiplatform-content-handoff](openspec/changes/complete-multiplatform-content-handoff/README.md)。本轮仅规格，尚未business apply/正式profile写入或公开发送；原有Recipe/F8/ACO完成状态不因此改变。
+
+2026-10-06 **Creation Recipe已在本机正式启用，141/144**。正式SQLite、approved默认/readiness及私有配置均为`crs000000001`，API/原Worker已恢复，Web仅`127.0.0.1:5173`。配套备份/副本演练/正式升级后确认5,145行原数据、65个素材hash不变；健康/Recipe选择/MCP只读入口通过。旧Unit不自动绑定新流程。永久新回归、完整backend和规格生命周期仍待收尾；本轮未调用模型/公众号、未提交推送归档。见[本change](openspec/changes/creation-recipe-stage-control-loop/README.md)和[正式启用与备份](docs/CREATION_RECIPE_LOCAL_ENABLEMENT.md)。
+
+## 10月4–5日历史状态（当前以10月6日crs启用记录为准）
+
+2026-10-05 Creation Recipe批次五/六：新change为56/144（剩88）。已接入真实Prompt分层预览、按阶段临时调节、Text候选选择/结构化修改/显式接受、Master正文与版本回读，以及接受后自动执行下一阶段并停在人工审阅处。刷新只恢复原Attempt，不再次调用模型；回读延迟/失败禁止新调用，恢复固定原Run/key，独立Master未保存编辑保持不变。隔离Mock浏览器9项通过；完整后端1908 passed/28 skipped、Web/FE-P1/strict36/36通过。拒绝反馈、保存有效调整、跨形态和完整Candidate→Review→Package仍待后续批次，不冒称全部完成。现有API/Web/Worker、SQLite/素材及启动方式不变；无正式库升级、真实供应商调用或提交归档。范围、设计与进度见[本change说明](openspec/changes/creation-recipe-stage-control-loop/README.md)。
+
+2026-10-05当前正式schema校准：Creative Orchestration已另行获准在本机启用，SQLite为`aco000000001`（f7d→f8a→aco），API/Web/原Worker/MCP保持运行。local approved默认、readiness和恢复目标以aco为准；f8a两列nullable身份字段全空/inert，不启用JWT/服务器认证，也不回滚真实库。原F8 82/82和f7d验收记录保留为历史，不重写成新测试结果。新版见[正式启用](docs/ALIGN_CREATIVE_LOCAL_ENABLEMENT.md)；core implementation通过，R1/R2修正和108项永久回归已完成（完整后端1768 passed/28 skipped），153/154只剩最终closeout复核，尚未canonical归档/新功能提交/push；见[收尾回执](docs/ALIGN_CREATIVE_LEGACY_FINAL_PARTIAL_ACCEPTANCE.md)。
+
+2026-10-04正式部署决定（部署范围继续有效，以下动作记录为当时历史，当前schema以10月5日说明为准）：**这台电脑就是最终单机生产环境**，SQLite＋当前本地素材库＋仅本机API/Web，维护目标为易启动、易排查、可备份恢复，不是等待服务器升级的临时方案。F8批准范围82/82已验收，功能ade4ce0、收尾1aa0024；原18条是范围外扩展/未验证，不是当前生产缺口。缺少PostgreSQL、MinIO、JWT或独立Secret Provider不阻断正式使用。技术APP_ENV=production与使用称呼分开，不改配置/身份/凭据/Worker。当前main基线341ead8保持，此轮仅文档/规格校准，不重跑模型/公众号、不push/deploy/迁移/主规格同步归档。
+
+## 当前单机生产：日常入口
+
+| 操作 | 现有入口 |
+|---|---|
+| 启动/停止/重启API和Worker | [单机生产运行手册](docs/runbooks/production-readiness.md)，现有launchd/startup脚本；API为127.0.0.1:8000，不新增部署体系 |
+| Web | `cd apps/web && npm run dev`，localhost:5173；不新增对外绑定 |
+| 排查 | 显式Settings运行状态/health readiness；`logs/api.log`、`logs/worker.log`按trace/reason定位，避免复制私密内容 |
+| 备份恢复 | [配套备份恢复手册](docs/runbooks/backup-restore.md)，SQLite＋素材同快照、隔离验integrity/head/hash/历史包；make backup仅数据库，make stop仅API |
+| 验收状态 | [正式验收](docs/FE_F8_LOCAL_FINAL_STATUS.md)、[能力矩阵](docs/FE_F8_LOCAL_CAPABILITY_MATRIX.md)；ZIP不等于公开发布，契约测试不等于生成质量 |
+
+仅本机访问限制入站，不禁止既有获准模型/公众号出站。不要为“生产”改APP_ENV、复制服务器模板、运行seed/迁移、切换素材目录或删除Worker。主规格同步/归档属于另行授权的文档生命周期，不是服务器设施阻断。
+
+## 历史阶段记录（不作为当前部署或完成口径）
+
+以下等待提交、未生产就绪、82/83及17项是历史时点，当前以顶部正式范围和运行手册为准。
 
 2026-10-04 F8 本机实施验收通过，等待本地提交及主规格同步/归档授权。正式基准为个人本机 SQLite、本地素材库、仅 loopback 访问；本机 `82/83`，原清单 `82/100`，只剩本地最终提交/ROADMAP记录。17项生产身份/Secret Provider/新增真实远端发布义务已确认延期，保留未勾选/未验证。此前总体复核及最终定向复审闭合四项恢复/安全blocker，安全与架构均APPROVE；正确apps/api cwd全量1660 passed/28 skipped/8 warnings、186定向、Web/预算、strict34/34、Ruff/diff通过。三形态/五渠道本地闭环、20个新浏览器gate、恢复重新导出和确定性Golden证据保留，真实模型质量未验收。CLI内部HTTP/供应商后台grant不由本机helper证明。未commit/push/deploy/正式迁移/主规格同步归档；未批准身份draft不得混入提交。目录增加恢复脚本和Golden夹具，依赖与启动方式不变。见[本机验收](docs/FE_F8_LOCAL_FINAL_STATUS.md)、[出站审计](docs/FE_F8_EXTERNAL_CAPABILITY_SECURITY_AUDIT.md)、[本机闭环](docs/FE_F8_LOCAL_FULL_CHAIN_ACCEPTANCE.md)、[恢复验收](docs/FE_F8_RECOVERY_ACCEPTANCE.md)与[Golden夹具](apps/api/evals/goldens/README.md)；下方旧计数为历史。
 
@@ -454,15 +605,14 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
 - 依赖与启动：沿用当前 API/Vite 启动方式。F7 加法迁移 `f7a000000001` 已在代码中并经隔离 SQLite 测试，未执行生产迁移；不 push/deploy，不同步 canonical 或归档。
 
-### FE-F8 Production Readiness + Operations（本地 apply 中）
+### FE-F8 单机生产运行可靠性与运维（正式范围82/82完成）
 
-- PRD/需求背景：North Star 的完整产品链路还需生产安全认证、可替换字节存储、真实运行健康状态、恢复演练及 Golden/全链路验收；F8 是部署前的工程收口，不增加 Organization/Invite/Tenant/SSO 产品管理。
-- 目录结构：[`openspec/changes/fe-f8-production-readiness-operations/`](openspec/changes/fe-f8-production-readiness-operations/proposal.md) 含 proposal/design、100 项任务（增加身份映射前置审定）、新 Production Readiness 规格与 Product Settings delta；未来实施以现有 `apps/api/app/deps.py`、`main.py`、`observability.py`、`routers/health.py`、`services/materials.py` 与 worker、Settings 为基线。用户原始包不改。
-- 已完成：规格校准了原十条目标，补生产 Header/default-user 拒绝、启动只读预检、健康状态真实 HTTP 失败、metrics 有界标签、全媒体读写者存储切换、存量明文 Secret 处理和实际平台验证边界；当前已在本地 main 实施存储第一批，未运行生产迁移或切生产配置。
-- 规格预审补丁：现有 User 只有 email/role/status，没有外部 issuer/subject 绑定；F8 明确生产身份不能仅凭 token email/role 猜测映射，须在实施前审定稳定 subject→现有 User 的安全绑定，若需新持久结构先修订规格。完整链路验收也明确：本地 ZIP/人工交付不能直接制造 PublishedContentRecord 或 Learning；须另有符合 F5B 的 `human_confirmed` Receipt 与 `delivered_at`。本批未实施 F8、未改变现有开发认证。
-- 待完成/TODO：F8 当前为 76/100，仍进行中。本机产品/恢复/浏览器/Golden 确定性契约已实测；统一 outbound/host/最小权限安全仍须完成，总体独立复核和最终提交未完成。生产身份/Secret Provider 草案未批准，远端公开发布/下游 Learning 未执行，不能靠本地 ZIP 或 loopback 限制代替。
-- 关键设计决策：复用现有 User/Role、MaterialRevision、Run/Attempt/Review/Receipt 真源；生产禁用开发 Header 与自动建号，不在应用启动时迁移；存储切换前验完整引用字节并保留可恢复回退；Golden 质量与真实发布按证据分别验收。
-- 依赖与启动：规格预计不新增长期业务表；实际生产启动/迁移/部署须有独立授权和运行手册。本轮不 push/deploy/运行生产迁移或同步 canonical/归档。
+- PRD/需求背景：这台电脑上的个人正式生产易启动、易排查、可恢复；最终SQLite＋本地素材＋loopback，不要求服务器化/多用户登录或对象存储。
+- 目录结构：[`openspec/changes/fe-f8-production-readiness-operations/`](openspec/changes/fe-f8-production-readiness-operations/proposal.md)保留proposal/design、100原记录及两份delta；82正式项、18范围外未验证。资料在`docs/FE_F8_*.md`、既有runbooks/恢复脚本；原始包不改。
+- 已完成：本地素材hash、脱敏、日志/审计关联、真实readiness、出站隔离/Unknown不重发、SQLite＋素材恢复、三形态五渠道本地闭环、确定性Golden和独立复核；既有1660 passed/28 skipped、Web/预算、strict34/34、Ruff/diff证据保留，不冒称本轮重跑。
+- 待完成/TODO：canonical同步/归档需另行授权；18条JWT/Secret Provider/MinIO/新增远端验收是范围外记录，不阻断正式使用，也不自动安排后续实施。
+- 关键设计决策：复用User/Role、MaterialRevision、Run/Attempt/Review/Receipt；保留当前技术APP_ENV、身份、凭据、Worker与真实数据；配套恢复hash一致；ZIP/公开发布与契约/模型质量按证据分别判断。
+- 依赖与启动：无新增依赖/迁移/配置体系，沿用顶部入口及[运行手册](docs/runbooks/production-readiness.md)；此轮不改运行环境、不推送部署/主规格归档。
 
 ### FE-F6C Graphic Production Studio（本地实施 74/74；待主规格同步与归档授权）
 
@@ -527,7 +677,9 @@ Source → Fact → FactPack(类型化冻结) → Topic Brief → MotherRevision
 - 重新生成 / 人工保存产生新 revision，旧 Draft 永不覆盖
 - 已生成内容永远记录生成时的 FactPack 版本与 checksum
 
-## 快速启动
+## 快速启动（历史开发/首次初始化参考）
+
+当前单机生产日常维护使用顶部入口与[运行手册](docs/runbooks/production-readiness.md)，不对真实库重复seed、迁移或重新配置。下方首次安装/开发命令仅适用于独立环境，不是正式启动前置。
 
 ### Codex with ChatGPT 连接
 
@@ -552,9 +704,13 @@ npm install && npm run dev         # http://localhost:5173（/api 代理到 8000
 
 或使用根目录 `Makefile`（`make seed` / `make dev` / `make dev-web` / `make worker` / `make test` / `make lint` / `make backup`）。
 
-> 本机代理若为 fake-ip 模式（Clash 等），在 `.env` 设 `SSRF_ALLOW_PRIVATE=true`，否则 URL 抓取/Connector 全部会被 SSRF 防护拦截。生产必须保持 false。
+> 历史开发代理参考：fake-ip可能影响URL/Connector地址校验。当前单机生产不为名称改变SSRF_ALLOW_PRIVATE或现有代理配置；保留各能力的精确目标/SSRF边界，任何放宽须另行诊断授权。字面技术production分支的限制不构成改写当前配置的理由。
 
-生产部署（docker compose 全栈）：`docker compose up -d --build` 一键起 postgres / redis / minio /
+### 服务器扩展参考（非当前适用，不执行或作为待升级计划）
+
+下方compose/PostgreSQL/MinIO/代理仅适用于另行选择并授权的服务器扩展，非当前本机正式使用前置，不因此复制其配置。
+
+服务器扩展部署（docker compose 全栈）：`docker compose up -d --build` 一键起 postgres / redis / minio /
 api / web / worker / beat。标准流程：先 `up -d postgres redis minio minio-init`，等 postgres 健康，
 宿主机 `DATABASE_URL=postgresql+psycopg://studio:studio@localhost:15432/content_studio make migrate`
 （再跑 `python -m app.seed` 做幂等种子），最后 `up -d --build` 其余服务。
@@ -591,18 +747,19 @@ curl -X POST http://localhost:8000/api/v1/endpoints/1/pull -H "X-Studio-User: ed
 
 ### 运维
 
-- 监控：`GET /api/v1/health`（深探针：DB/provider/队列），`GET /metrics`（Prometheus 文本格式），
+- 当前正式运维以[单机生产手册](docs/runbooks/production-readiness.md)为准，多副本/容器仅为非当前适用的扩展参考。
+- 监控：显式`GET /api/v1/health/ready`检查DB/schema/素材/必要队列与Worker，不自动探测模型；存活用`/api/v1/health/live`，旧health兼容；metrics使用有界安全标签，
   每个响应带 `x-trace-id` 并输出 JSON 结构化访问日志
 - 多副本指标聚合：Prometheus 按 replica 逐个抓 `/metrics`（service discovery 自动发现实例），
   指标自带 `instance` label 天然区分副本；**不需要** Pushgateway——它适用于批任务，长驻服务抓取即可
 - 异步队列：`.env` 设 `TASK_QUEUE_ENABLED=true` + Redis（`CELERY_BROKER_URL`），生成走 `llm` 队列、
   Connector 拉取走 `ingestion` 队列；`make worker` 启动 Celery worker（compose 部署含 worker 服务）
-- 数据库迁移：开发环境 `make seed` 幂等建库；生产/PostgreSQL 执行 `make migrate`
+- 数据库迁移：仅独立开发/首次初始化可make seed；当前生产日常启动不执行seed/迁移，另行获准schema扩展才用make migrate
   （`alembic upgrade head`，已在 PG 16 实测），后续 schema 变更用 `alembic revision --autogenerate`
-- 备份恢复：`make backup`（SQLite 开发库，保留 7 份）；生产 PostgreSQL 流程见
+- 备份恢复：当前SQLite＋素材同快照；make backup仅数据库、保留7份，不构成完整备份。配套流程及范围外PostgreSQL参考见
   `docs/runbooks/backup-restore.md`
 - **常驻服务（launchd）**：API 与 Celery worker/beat 由 launchd 管理（崩溃自动拉起、开机自启）：
-  `launchctl list | grep aicontent` 查看状态，`launchctl kickstart -k gui/$UID/com.aicontent.api` 重启；
+  `launchctl list`查看两个aicontent标签，必要重启用`launchctl kickstart -k gui/$(id -u)/com.aicontent.api`；完整停止API/Worker见运行手册，不用make stop替代；
   日志在 `logs/api.log` / `logs/worker.log`；运行时密钥集中在 `apps/api/scripts/startup/runtime.env`
   （600 权限、已 gitignore，DreamO token 过期只需改这一个文件后 kickstart worker）
 - **数据保留**：beat 每日 03:30 自动清理——llm_run 超期清空大字段（行保留 30 天）、audit_log /
@@ -754,6 +911,14 @@ docs/runbooks/              # backup-restore.md
     FactCheck 的 LLM Reviewer 注入误读红线节（数字对但方向/口径/确定性写错 → warning）。
     知识是解读规则不是事实：不进 FactPack、不参与数字校验；文档缺席时全链路优雅降级为
     原行为（空串注入，模板不破），落盘即生效零代码改动。
+
+## Persona Creative Studio 当前验收状态（2026-10-08）
+
+- 2026-10-09最新：`add-persona-creative-studio`150/156。科技完整Audio Recipe在隔离副本完成实际5分24秒音频、受限素材接受和QC通过；生活新CPA请求Unknown后停批，人工试听/全模态与独立质量/生命周期仍分别开放。实际串接修正不改正式数据/配置/服务；继续沿用本机启动方式与依赖，[当前回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。本节下面为早期验收状态。
+- 两个 Starter Persona 的真实 Text 样本已分别通过用户人工确认。
+- 本次已在隔离 SQLite + 本地素材副本中完成 MiniMax `image-01` 与 `speech-2.8-hd` 的两角色真实 provider/material 回接；证据见 [PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+- 真实图片/音频结果尚待用户做创意质量确认；完整 Graphic deterministic compose/render/QC 与 Audio QC/ASR Stage 仍是后续验收项，不以 provider 连通代替。
+- 当前不写正式 SQLite/正式素材库，不做正式 Persona 初始化、发布、push 或归档提交。
 
 ## TODO（按优先级）
 

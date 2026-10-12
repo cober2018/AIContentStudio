@@ -1,0 +1,21 @@
+{
+  "schema": "studio.skill.fixtures.v1",
+  "cases": [
+    {
+      "name": "bounded_exact_input",
+      "input_schema": "stage.handoff.v1",
+      "expected_output_schemas": [
+        "creative.angles.v1"
+      ]
+    },
+    {
+      "name": "unknown_reference_rejected",
+      "reference": {
+        "kind": "fact_pack_item",
+        "id": 999999,
+        "checksum": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected": "creative_method_output_invalid"
+    }
+  ]
+}

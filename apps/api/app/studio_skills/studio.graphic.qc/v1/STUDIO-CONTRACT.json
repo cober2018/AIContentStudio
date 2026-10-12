@@ -1,0 +1,59 @@
+{
+  "schema": "studio.skill.contract.v1",
+  "key": "studio.graphic.qc",
+  "version": "1",
+  "ref": "studio.graphic.qc@1",
+  "kind": "tool",
+  "modality": "graphic",
+  "purpose": "检查真实渲染的尺寸、边界、可读性和素材权利",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [],
+  "output_schemas": [],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": false,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  },
+  "checks": [
+    "graphic_canvas",
+    "graphic_bounds",
+    "graphic_rights"
+  ],
+  "tools": [
+    "studio.graphic.qc@1"
+  ],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.graphic.technical-editorial@1",
+    "studio.graphic.architecture-diagram@1",
+    "studio.graphic.clean-infographic@1",
+    "studio.graphic.warm-magazine@1",
+    "studio.graphic.documentary-photo@1",
+    "studio.graphic.lifestyle-cards@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.graphic.editorial@1",
+    "studio.quality.graphic.lifestyle@1"
+  ],
+  "references": []
+}

@@ -68,6 +68,17 @@ def endpoint(value):
         raise HTTPException(422, "provider_endpoint_invalid") from exc
 
 
+def trusted_literal_address(host):
+    try:
+        literal = ipaddress.ip_address(host)
+    except ValueError:
+        return None
+    if literal.version == 4 and (host == "127.0.0.1" or any(
+            literal in ipaddress.ip_network(net) for net in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))):
+        return str(literal)
+    return None
+
+
 def target(provider):
     base = endpoint(provider["base_url"])
     try:
@@ -76,13 +87,9 @@ def target(provider):
         raise HTTPException(422, "provider_target_forbidden") from None
     parsed = urlsplit(base)
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
-    try:
-        literal = ipaddress.ip_address(parsed.hostname)
-    except ValueError:
-        literal = None
-    rfc1918 = literal is not None and literal.version == 4 and any(literal in ipaddress.ip_network(net) for net in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
-    if rfc1918 and provider.get("trusted_private_endpoint") == base:
-        return base, parsed, port, str(literal)
+    address = trusted_literal_address(parsed.hostname)
+    if address is not None and provider.get("trusted_private_endpoint") == base:
+        return base, parsed, port, address
     if parsed.scheme != "https":
         raise HTTPException(422, "trusted_private_endpoint_required")
     try:
@@ -98,14 +105,15 @@ def target(provider):
 
 def provider_request(provider, path, *, payload=None, timeout=10):
     """Pin validated TCP target while retaining TLS hostname and suppress raw diagnostics."""
-    if path not in {"/models", "/chat/completions"}:
+    if path not in {"/models", "/chat/completions", "/images/generations"}:
         raise HTTPException(422, "provider_operation_invalid")
     if not provider.get("enabled", True) or not provider.get("api_key"):
         raise HTTPException(422, "provider_credential_unavailable")
     timeout_value = float(timeout)
     if not math.isfinite(timeout_value):
         timeout_value = PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS
-    limit = OUTBOUND_HTTP_POLICIES["model_discovery" if path == "/models" else "model_generation"]
+    policy = "model_discovery" if path == "/models" else "image" if path == "/images/generations" else "model_generation"
+    limit = OUTBOUND_HTTP_POLICIES[policy]
     deadline = time.monotonic() + min(max(timeout_value, 0.1), limit.timeout_seconds)
     headers = {"Authorization": "Bearer " + provider["api_key"], "Accept-Encoding": "identity"}
     request_body = None
@@ -198,13 +206,8 @@ def save_configuration(db, raw, *, actor):
                 raise HTTPException(422, "trusted_endpoint_mismatch")
             # No discovery or DNS on save; execution validates and pins the actual target.
             parsed = urlsplit(base)
-            if parsed.scheme == "http":
-                try:
-                    ip = ipaddress.ip_address(parsed.hostname)
-                    if not (ip.version == 4 and any(ip in ipaddress.ip_network(net) for net in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16")) and private == base):
-                        raise ValueError()
-                except ValueError as exc:
-                    raise HTTPException(422, "trusted_private_endpoint_required") from exc
+            if parsed.scheme == "http" and (trusted_literal_address(parsed.hostname) is None or private != base):
+                raise HTTPException(422, "trusted_private_endpoint_required")
             credential = "" if config.clear_key else config.api_key or providers.get(key, {}).get("api_key", "")
             if any(ord(c) < 33 or ord(c) > 126 for c in credential):
                 raise HTTPException(422, "provider_credential_invalid")

@@ -1,14 +1,22 @@
 """Small, explicit modality registry for Production Core."""
 
 import hashlib
+import io
 import json
 from dataclasses import dataclass
 
 from fastapi import HTTPException
+from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentMasterAssetRef, ContentMasterEvidenceRef, ContentMasterRevision, MaterialRevision
+from ..models import (
+    ContentMasterAssetRef,
+    ContentMasterEvidenceRef,
+    ContentMasterRevision,
+    IdentitySnapshot,
+    MaterialRevision,
+)
 from .content_harness.channel_registry import ChannelRegistryError, resolve_content_form
 from .materials import read_bytes_checked, sniff_mime
 
@@ -345,12 +353,31 @@ class GraphicMasterV2Adapter(GraphicMasterAdapter):
         if [output["canvas_id"] for output in render["outputs"]] != canvas_ids:
             return {"status": "incomplete", "reasons": ["render_canvas_order_mismatch"]}
         refs = {ref.material_revision_id: ref for ref in db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id, ContentMasterAssetRef.role == "render_output")).all()}
+        snapshot = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
+        creative = (snapshot.effective_profile_json or {}).get("graphic_creative_profile") if snapshot else None
         for index, output in enumerate(render["outputs"]):
             ref = refs[output["material_revision_id"]]
             canvas_id = canvas_ids[index]
             if ref.slot_key != canvas_id or ref.sort_order != index or ref.placement_json != {"canvas_id": canvas_id}:
                 return {"status": "incomplete", "reasons": ["render_canvas_binding_mismatch"]}
-        return render
+            # Persona QC adds decoded-image guarantees without reinterpreting legacy manual attestations.
+            if not creative:
+                continue
+            canvas = master.payload_json["canvases"][index]
+            try:
+                revision = db.get(MaterialRevision, output["material_revision_id"])
+                content = read_bytes_checked(db, revision, require_public=True)
+                if len(content) > 30 * 1024 * 1024:
+                    return {"status": "incomplete", "reasons": ["render_image_budget_exceeded"]}
+                with Image.open(io.BytesIO(content)) as image:
+                    if image.size != (canvas["width"], canvas["height"]):
+                        return {"status": "incomplete", "reasons": ["render_canvas_dimensions_mismatch"]}
+                    if image.width * image.height > 16_000_000 or getattr(image, "is_animated", False):
+                        return {"status": "incomplete", "reasons": ["render_image_budget_exceeded"]}
+                    image.load()
+            except (HTTPException, OSError, ValueError, Image.DecompressionBombError):
+                return {"status": "incomplete", "reasons": ["render_bytes_unverified"]}
+        return {**render, "canvas_dimensions_verified": True} if creative else render
 
 
 class VideoMasterAdapter(MediaMasterAdapter):

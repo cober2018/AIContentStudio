@@ -1,0 +1,57 @@
+{
+  "schema": "studio.skill.contract.v1",
+  "key": "studio.audio.qc",
+  "version": "1",
+  "ref": "studio.audio.qc@1",
+  "kind": "tool",
+  "modality": "audio",
+  "purpose": "检查真实音频字节、MIME、时长和可听性",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": ["stage.audio.qc.v1"],
+  "output_schemas": ["stage.checks.result.v1"],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": false,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  },
+  "checks": [
+    "audio_bytes",
+    "audio_duration",
+    "audio_loudness"
+  ],
+  "tools": [
+    "studio.audio.qc@1"
+  ],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.audio.calm-engineer@1",
+    "studio.audio.clear-explainer@1",
+    "studio.audio.warm-conversational@1",
+    "studio.audio.reflective-story@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.audio.explainer@1",
+    "studio.quality.audio.conversational@1"
+  ],
+  "references": []
+}

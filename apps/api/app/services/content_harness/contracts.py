@@ -12,6 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.orm import Session
 
     from ...models import User, WorkflowRun, WorkflowStep
+    from ..stage_contracts import StageContract
 
 
 # ---------- Node ----------
@@ -36,6 +37,7 @@ class PluginDescriptor:
     label: str | None = None
     human_gate: bool = False
     side_effect: bool = False  # 远端副作用 plugin：禁止泛化 rerun（Phase 6 生效）
+    stage_contract: StageContract | None = None
 
 
 @dataclass

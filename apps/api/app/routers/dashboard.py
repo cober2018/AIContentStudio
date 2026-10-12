@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_db
 from ..deps import get_current_user
@@ -16,6 +16,7 @@ from ..models import (
     ExportRecord,
     Fact,
     FactPack,
+    FactPackItem,
     FactStatus,
     TopicBrief,
     User,
@@ -42,7 +43,9 @@ def dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_us
     exported_count = db.scalar(select(func.count(ExportRecord.id))) or 0
 
     recent_jobs = db.scalars(
-        select(ContentJob).order_by(ContentJob.created_at.desc()).limit(10)
+        select(ContentJob).options(
+            selectinload(ContentJob.topic_brief), selectinload(ContentJob.drafts),
+        ).order_by(ContentJob.created_at.desc()).limit(10)
     ).all()
     today_flow = [
         {
@@ -58,16 +61,21 @@ def dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_us
         for job in recent_jobs
     ]
 
+    recent_pack_rows = db.scalars(select(FactPack).order_by(FactPack.created_at.desc()).limit(5)).all()
+    # 批量计数替代逐 pack 加载全部 items
+    pack_item_counts = dict(db.execute(
+        select(FactPackItem.fact_pack_id, func.count()).where(FactPackItem.fact_pack_id.in_([p.id for p in recent_pack_rows])).group_by(FactPackItem.fact_pack_id)
+    ).all()) if recent_pack_rows else {}
     recent_packs = [
         {
             "id": p.id,
             "name": p.name,
             "version": p.version,
             "status": p.status,
-            "fact_count": len(p.items),
+            "fact_count": pack_item_counts.get(p.id, 0),
             "created_at": p.created_at.isoformat() if p.created_at else None,
         }
-        for p in db.scalars(select(FactPack).order_by(FactPack.created_at.desc()).limit(5))
+        for p in recent_pack_rows
     ]
     recent_exports = [
         {"id": e.id, "asset_id": e.asset_id, "fmt": e.fmt, "created_at": e.created_at.isoformat() if e.created_at else None}
@@ -75,7 +83,9 @@ def dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_us
     ]
     failed_jobs = [
         {"id": j.id, "topic": j.topic_brief.title, "channel": j.channel, "error": j.error}
-        for j in db.scalars(select(ContentJob).where(ContentJob.status == "failed").limit(5))
+        for j in db.scalars(select(ContentJob).options(
+            selectinload(ContentJob.topic_brief),
+        ).where(ContentJob.status == "failed").limit(5))
     ]
     topics_count = db.scalar(select(func.count(TopicBrief.id))) or 0
     assets_count = db.scalar(select(func.count(ContentAsset.id))) or 0

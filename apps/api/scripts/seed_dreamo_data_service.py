@@ -25,8 +25,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.db import SessionLocal  # noqa: E402
-from app.models import Connector, ConnectorEndpoint  # noqa: E402
+from app.db import SessionLocal
+from app.models import Connector, ConnectorEndpoint
 
 CONNECTOR_NAME = "DreamO 量化平台（生产）"
 SERVICE_PATH = "/api/v1/data/apis/{key}/records"
@@ -374,7 +374,7 @@ def main() -> None:
                     setattr(ep, k, v)
                 updated += 1
         db.commit()
-        print(f"✓ Connector 切换到 X-API-Key（env: DREAMO_DATA_API_KEY）")
+        print("✓ Connector 切换到 X-API-Key（env: DREAMO_DATA_API_KEY）")
         print(f"✓ 删除旧临时端点 {removed} 个；新建 {created} 个，更新 {updated} 个")
         for ep in connector.endpoints:
             print(f"  - {ep.name} → {ep.path}（{ep.interval_minutes or 0} 分钟周期，0=仅手动）")

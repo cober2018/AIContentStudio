@@ -3,6 +3,7 @@
 import hashlib
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -153,20 +154,24 @@ async def upload_source(
     if not content:
         raise HTTPException(400, "空文件")
 
-    doc = SourceDocument(
-        title=filename,
-        source_type="file",
-        original_uri=filename,
-        mime_type=file.content_type,
-        as_of=as_of,
-        trust_level=trust_level,
-        sha256=hashlib.sha256(content).hexdigest(),
-    )
-    db.add(doc)
-    db.flush()
-    _parse_and_store(db, doc, content, file.content_type, extension)
-    db.commit()
-    return _serialize(doc)
+    # sha256 + PDF/HTML 解析放线程池，避免大文件阻塞事件循环
+    def _persist() -> dict:
+        doc = SourceDocument(
+            title=filename,
+            source_type="file",
+            original_uri=filename,
+            mime_type=file.content_type,
+            as_of=as_of,
+            trust_level=trust_level,
+            sha256=hashlib.sha256(content).hexdigest(),
+        )
+        db.add(doc)
+        db.flush()
+        _parse_and_store(db, doc, content, file.content_type, extension)
+        db.commit()
+        return _serialize(doc)
+
+    return await run_in_threadpool(_persist)
 
 
 @router.get("")

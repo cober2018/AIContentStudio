@@ -8,10 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings, validate_production_settings
 from .db import SessionLocal, init_db, schema_head_matches
-from .observability import trace_middleware
+from .observability import TraceMiddleware
 from .routers import (
     article_handoff,
     assets,
+    capability_memory,
     channel_variants,
     channels,
     checks,
@@ -19,6 +20,9 @@ from .routers import (
     content_identities,
     content_masters,
     content_projects,
+    creation_recipe_learning,
+    creative_mcp,
+    creative_orchestration,
     dashboard,
     delivery,
     discoverability,
@@ -41,6 +45,7 @@ from .routers import (
     reviews,
     settings,
     sources,
+    stage_integrations,
     system_library,
     templates,
     topics,
@@ -90,7 +95,14 @@ async def lifespan(app: FastAPI):
         if settings.app_env != "production":
             disco.seed_default_profiles(db)
             db.commit()
-    yield
+    # 兜底维护（僵尸 running 回收/retention/WAL checkpoint），beat 不可用时的默认执行者
+    from .services import maintenance
+
+    maintenance.start()
+    try:
+        yield
+    finally:
+        maintenance.stop()
 
 
 app = FastAPI(title="AI Content Studio API", version="0.1.0", lifespan=lifespan)
@@ -105,6 +117,7 @@ app.add_middleware(
 
 for router in (
     sources,
+    capability_memory,
     facts,
     fact_packs,
     topics,
@@ -127,8 +140,12 @@ for router in (
     workflows,
     content_identities,
     content_projects,
+    creation_recipe_learning,
+    stage_integrations,
     content_masters,
     learning,
+    creative_orchestration,
+    creative_mcp,
     opportunities,
     home,
     performance_history,
@@ -144,6 +161,4 @@ for router in (
     app.include_router(router.router)
 
 # trace_id + 访问日志 + 指标采集（放在 CORS 之后注册，实际处于最外层）
-from starlette.middleware.base import BaseHTTPMiddleware
-
-app.add_middleware(BaseHTTPMiddleware, dispatch=trace_middleware)
+app.add_middleware(TraceMiddleware)

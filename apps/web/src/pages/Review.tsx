@@ -36,8 +36,9 @@ export default function Review() {
 
   const queueQuery = useQuery({
     queryKey: ["reviews", tab],
-    queryFn: () => api.get<QueueItem[]>(`/reviews/${tab === "queue" ? "queue" : "history"}`),
-    refetchInterval: 15000,
+    queryFn: ({ signal }) => api.get<QueueItem[]>(`/reviews/${tab === "queue" ? "queue" : "history"}`, signal),
+    // 队列有待审项时 15s 跟踪，空队列降到 60s 等新稿件
+    refetchInterval: (query) => (query.state.data?.length ? 15000 : 60000),
   });
 
   const draftQuery = useQuery({

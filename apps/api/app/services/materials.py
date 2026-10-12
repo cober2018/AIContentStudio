@@ -40,6 +40,71 @@ _SIGNATURES: list[tuple[bytes, str]] = [
 ]
 FALLBACK_MIME = "application/octet-stream"
 
+# Passive project files are allowed only through explicit external acceptance.
+EXECUTION_OTHER_MIME = {
+    "text/plain", "text/vtt", "text/srt", "application/x-subrip",
+    "application/json", "application/xml", "text/xml", "application/zip",
+    "application/x-premiere-project", "application/vnd.adobe.premiere",
+    "application/x-after-effects-project", "application/vnd.adobe.aftereffects.project",
+    "application/x-aep", "application/x-resolve-project",
+    "application/vnd.blackmagic-design.resolve",
+}
+EXECUTION_TEXT_MIME = {"text/plain", "text/vtt", "text/srt", "application/x-subrip"}
+
+# JSON provenance cannot authorize library creation from an executor result.
+_EXTERNAL_EXECUTION_ACCEPTANCE = object()
+
+
+def validate_execution_file(content: bytes, declared_mime: str, kind: str) -> str:
+    if not isinstance(declared_mime, str) or kind not in {"image", "video", "audio", "other"}:
+        raise HTTPException(422, {"code": "execution_mime_unsupported"})
+    if not content or len(content) > 30 * 1024 * 1024:
+        raise HTTPException(413, {"code": "execution_file_size_invalid"})
+    detected = sniff_mime(content, None)
+    if detected == FALLBACK_MIME:
+        if content.startswith(b"fLaC"):
+            detected = "audio/flac"
+        elif content.startswith(b"OggS"):
+            detected = "audio/ogg" if kind == "audio" else "video/ogg"
+        elif content.startswith(b"\x1a\x45\xdf\xa3"):
+            detected = "audio/webm" if kind == "audio" else "video/webm"
+        elif len(content) > 1 and content[0] == 255 and content[1] & 0xE0 == 0xE0:
+            detected = "audio/mpeg"
+        elif len(content) > 12 and content[4:8] == b"ftyp":
+            detected = "video/quicktime" if content[8:12] == b"qt  " else "video/mp4"
+    if kind == "audio" and detected == "video/mp4" and declared_mime == "audio/mp4":
+        detected = "audio/mp4"
+    if detected != FALLBACK_MIME:
+        if detected != declared_mime or (kind != "other" and not detected.startswith(kind + "/")):
+            raise HTTPException(422, {"code": "execution_mime_mismatch"})
+        return detected
+    if kind != "other" or declared_mime not in EXECUTION_OTHER_MIME:
+        raise HTTPException(422, {"code": "execution_mime_unsupported"})
+    if declared_mime in EXECUTION_TEXT_MIME | {"application/json", "application/xml", "text/xml"}:
+        try:
+            decoded = content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            raise HTTPException(422, {"code": "execution_text_invalid"}) from None
+        if "\x00" in decoded or (declared_mime == "text/vtt" and not decoded.startswith("WEBVTT")):
+            raise HTTPException(422, {"code": "execution_text_invalid"})
+        if declared_mime == "application/json":
+            from .creative_contracts import bounded_json
+
+            try:
+                import json
+
+                parsed = json.loads(decoded)
+            except (ValueError, RecursionError):
+                raise HTTPException(422, {"code": "execution_text_invalid"}) from None
+            bounded_json(parsed, max_bytes=30 * 1024 * 1024)
+        if declared_mime in {"application/xml", "text/xml"} and (
+            not decoded.lstrip().startswith("<") or "<!DOCTYPE" in decoded.upper() or "<!ENTITY" in decoded.upper()
+        ):
+            raise HTTPException(422, {"code": "execution_text_invalid"})
+    if declared_mime == "application/zip" and not content.startswith((b"PK\x03\x04", b"PK\x05\x06")):
+        raise HTTPException(422, {"code": "execution_mime_mismatch"})
+    return declared_mime
+
 
 def sniff_mime(content: bytes, declared: str | None) -> str:
     """魔数优先；识别不出时回退声明的白名单前缀，再回退 octet-stream。"""
@@ -51,6 +116,8 @@ def sniff_mime(content: bytes, declared: str | None) -> str:
                 continue
             if mime == "video/mp4" and content[4:8] != b"ftyp":
                 continue
+            if mime == "video/mp4" and content[8:12] == b"qt  ":
+                return "video/quicktime"
             return mime
     if declared and declared.startswith(("image/", "audio/", "video/", "application/pdf")):
         return declared
@@ -121,10 +188,20 @@ def create_revision(
     duration_ms: int | None = None,
     metadata: dict | None = None,
     created_by: str | None = None,
+    _execution_acceptance: object | None = None,
 ) -> MaterialRevision:
     if source_kind not in {k.value for k in MaterialSourceKind}:
         raise HTTPException(422, f"非法素材来源: {source_kind}")
-    mime = validate_upload(content, declared_mime) if source_kind != MaterialSourceKind.legacy.value else (declared_mime or FALLBACK_MIME)
+    if source_kind == "external_execution":
+        if _execution_acceptance is not _EXTERNAL_EXECUTION_ACCEPTANCE:
+            raise HTTPException(403, {"code": "external_execution_acceptance_required"})
+        if (not isinstance(source_metadata, dict)
+                or any(type(source_metadata.get(key)) is not int or source_metadata[key] < 1 for key in ("execution_id", "output_id", "package_id"))
+                or not isinstance(source_metadata.get("package_hash"), str) or len(source_metadata["package_hash"]) != 64):
+            raise HTTPException(422, {"code": "external_execution_provenance_required"})
+        mime = validate_execution_file(content, declared_mime, material.kind)
+    else:
+        mime = validate_upload(content, declared_mime) if source_kind != MaterialSourceKind.legacy.value else (declared_mime or FALLBACK_MIME)
     relative, content_hash = store_bytes(db, content, subdir="material", suffix=suffix)
     latest_no = db.scalar(
         select(MaterialRevision.revision_no)
@@ -161,11 +238,17 @@ def create_revision(
 
 
 def approved_revision_ids(db: Session) -> set[int]:
-    """被 schema v2 批准候选引用的 material_revision ids（v1 manifest 只引用 DraftMedia）。"""
+    """被 schema v2 批准候选引用的 material_revision ids（v1 manifest 只引用 DraftMedia）。
+
+    只取 manifest 列而不是整行 ORM：该表 final_body/structured_json 都是大字段，
+    逐行反序列化整行只为读 manifest 的代价随候选数线性放大。
+    """
     ids: set[int] = set()
-    assets = db.scalars(select(ContentAsset).where(ContentAsset.approved_candidate_hash.is_not(None))).all()
-    for asset in assets:
-        for media in (asset.candidate_manifest_json or {}).get("media", []):
+    manifests = db.scalars(
+        select(ContentAsset.candidate_manifest_json).where(ContentAsset.approved_candidate_hash.is_not(None))
+    )
+    for manifest in manifests:
+        for media in (manifest or {}).get("media", []):
             rid = media.get("material_revision_id")
             if isinstance(rid, int):
                 ids.add(rid)

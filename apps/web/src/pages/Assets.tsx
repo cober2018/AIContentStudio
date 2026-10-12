@@ -17,7 +17,7 @@ interface AssetRow {
   export_count: number;
   mother_revision_id: number | null;
   approved_candidate_hash: string | null;
-  candidate_manifest: { media?: unknown[]; citations?: unknown[] } | null;
+  candidate_manifest_summary: { media_count: number; citations_count: number; schema_version: number | null } | null;
 }
 
 function copyText(text: string) {
@@ -91,7 +91,7 @@ function DeliveryPanel({ asset, onClose }: { asset: AssetRow; onClose: () => voi
   return <Modal title={`人工交付 · ${asset.title.slice(0, 24)}`} onClose={onClose} wide>
     <p className="mb-4 text-xs leading-relaxed text-slate-500">内容批准与账号授权是两件事。这里仅生成本地成品包；人工回填只记录操作人确认，不会标成平台已发布。</p>
     <div className="rounded-lg border border-slate-200 p-4">
-      <div className="flex flex-wrap items-center gap-2 text-sm"><ChannelBadge channel={asset.channel} /><span>批准哈希 {asset.approved_candidate_hash?.slice(0, 16)}</span><span>素材 {asset.candidate_manifest?.media?.length || 0} 项</span></div>
+      <div className="flex flex-wrap items-center gap-2 text-sm"><ChannelBadge channel={asset.channel} /><span>批准哈希 {asset.approved_candidate_hash?.slice(0, 16)}</span><span>素材 {asset.candidate_manifest_summary?.media_count || 0} 项</span></div>
       <div className="mt-3 grid gap-3 md:grid-cols-[1fr_160px_auto] md:items-end">
         <label className="block text-xs font-medium text-slate-500">账号标识<input className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={accountRef} onChange={(event) => setAccountRef(event.target.value)} placeholder="公众号或 X 账号" /></label>
         <label className="block text-xs font-medium text-slate-500">授权版本<input className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={authorizationVersion} onChange={(event) => setAuthorizationVersion(event.target.value)} /></label>

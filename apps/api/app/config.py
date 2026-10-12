@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     task_queue_enabled: bool = False
     celery_broker_url: str = "redis://localhost:6379/0"
 
+    # 进程内维护线程（僵尸 running 回收 + retention 清理 + WAL checkpoint）；
+    # interval<=0 关闭。stale 阈值必须大于任何合法执行时长（媒体 305s、轮询 420s）。
+    maintenance_interval_seconds: int = 300
+    stale_running_seconds: int = 1800
+
     # 对象存储（S3 兼容，如 MinIO）：默认关闭，导出内容内联返回；开启后导出产物另传存储并返回预签名 URL
     minio_enabled: bool = False
     minio_endpoint: str = "localhost:9000"

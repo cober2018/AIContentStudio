@@ -2,8 +2,20 @@
 
 import json
 
+from sqlalchemy import text
 
-def test_health_deep_probe(client):
+
+def _approved_schema(db):
+    from app.db import LOCAL_APPROVED_SCHEMA_HEAD
+
+    # Metadata-only fixtures have no migration ledger; readiness must not pretend otherwise.
+    db.execute(text("CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL PRIMARY KEY)"))
+    db.execute(text("INSERT INTO alembic_version VALUES (:head)"), {"head": LOCAL_APPROVED_SCHEMA_HEAD})
+    db.commit()
+
+
+def test_health_deep_probe(client, db_session):
+    _approved_schema(db_session)
     resp = client.get("/api/v1/health")
     assert resp.status_code == 200
     data = resp.json()
@@ -11,6 +23,13 @@ def test_health_deep_probe(client):
     assert data["db"] is True
     assert data["provider"] == "mock"
     assert "queue_enabled" in data
+
+
+def test_health_rejects_database_without_migration_ledger(client):
+    resp = client.get("/api/v1/health")
+    assert resp.status_code == 503
+    assert resp.json()["schema"] is False
+    assert "schema_head_mismatch" in resp.json()["reasons"]
 
 
 def test_metrics_counts_requests(client):
@@ -26,9 +45,10 @@ def test_metrics_counts_requests(client):
     assert 'path="/metrics"' not in body
 
 
-def test_trace_id_in_response_header_and_log(client, caplog):
+def test_trace_id_in_response_header_and_log(client, caplog, db_session):
     import logging
 
+    _approved_schema(db_session)
     with caplog.at_level(logging.INFO, logger="studio.request"):
         resp = client.get("/api/v1/health")
     trace_id = resp.headers.get("x-trace-id")

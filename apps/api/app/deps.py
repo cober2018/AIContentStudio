@@ -82,6 +82,19 @@ def get_current_user(
     x_studio_user: str | None = Header(default=None, alias="X-Studio-User"),
     authorization: str | None = Header(default=None, alias="Authorization"),
 ) -> User:
+    return _current_user(db, x_studio_user, authorization, provision=True)
+
+
+def get_existing_user(
+    db: Session = Depends(get_db),
+    x_studio_user: str | None = Header(default=None, alias="X-Studio-User"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+) -> User:
+    # Pure previews must not create an identity while authorizing a read.
+    return _current_user(db, x_studio_user, authorization, provision=False)
+
+
+def _current_user(db, x_studio_user, authorization, *, provision):
     from .config import get_settings, validate_production_settings
 
     settings = get_settings()
@@ -100,6 +113,8 @@ def get_current_user(
         email = (x_studio_user or "admin@studio.local").strip().lower()
         user = db.query(User).filter(User.email == email).first()
         if user is None:
+            if not provision:
+                raise HTTPException(status.HTTP_403_FORBIDDEN, "local_identity_unknown")
             user = User(email=email, name=email.split("@")[0], role=ROLE_EDITOR)
             db.add(user)
             db.commit()

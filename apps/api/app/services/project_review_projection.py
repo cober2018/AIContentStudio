@@ -175,9 +175,10 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
     }
 
 
-def project_projection(db: Session, project: ContentProject) -> dict:
-    units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project.id).order_by(ContentUnit.id)).all()
-    return {"project_id": project.id, "title": project.title, "status": project.status, "units": [unit_projection(db, unit) for unit in units]}
+def project_projection(db: Session, project: ContentProject, *, context: ProjectProjectionContext | None = None) -> dict:
+    units = (context.units.get(project.id, []) if context is not None
+             else db.scalars(select(ContentUnit).where(ContentUnit.project_id == project.id).order_by(ContentUnit.id)).all())
+    return {"project_id": project.id, "title": project.title, "status": project.status, "units": [unit_projection(db, unit, context=context) for unit in units]}
 
 
 def diff_variant_rows(before: list[dict], after: list[dict]) -> list[dict]:
@@ -361,7 +362,8 @@ def candidate_preview(asset: ContentAsset) -> dict:
         render = manifest["render"]
         preview = {"modality": manifest["project"]["modality"], "title": asset.title,
                 "target": {"channel": asset.channel, "content_form": asset.content_form, "artifact_kind": asset.artifact_kind},
-                "render": render, "content": manifest["content"], "checks": manifest["checks"]}
+                "render": render, "content": manifest["content"], "checks": manifest["checks"],
+                "external_execution": (manifest.get("production") or {}).get("external_execution", [])}
         if "official_render" in manifest:
             preview["official_render"] = manifest["official_render"]
         if target["artifact_kind"] == "text":
@@ -377,7 +379,8 @@ def candidate_preview(asset: ContentAsset) -> dict:
         return preview
     content = manifest.get("content") or {}
     modality = (manifest.get("project") or {}).get("modality", "text")
-    preview = {"modality": modality, "title": asset.title, "render": manifest.get("render") or {}}
+    preview = {"modality": modality, "title": asset.title, "render": manifest.get("render") or {},
+               "external_execution": (manifest.get("production") or {}).get("external_execution", [])}
     if manifest.get("schema_version") != 4:
         markdown = str(content.get("body_markdown") or "")
         return {**preview, "modality": "text", "source_modality": modality, "markdown": markdown[:20_000], "truncated": len(markdown) > 20_000}

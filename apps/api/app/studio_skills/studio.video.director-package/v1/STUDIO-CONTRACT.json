@@ -1,0 +1,72 @@
+{
+  "schema": "studio.skill.contract.v1",
+  "key": "studio.video.director-package",
+  "version": "1",
+  "ref": "studio.video.director-package@1",
+  "kind": "skill",
+  "modality": "video",
+  "purpose": "生成交给外部专业执行的导演包",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": ["stage.professional.prepare.v2"],
+  "output_schemas": ["director.video.v1"],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [
+    "instruction",
+    "aspect_ratio"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "instruction": {
+        "type": "string",
+        "maxLength": 2000
+      },
+      "aspect_ratio": {
+        "type": "string",
+        "enum": [
+          "1:1",
+          "4:3",
+          "3:4",
+          "16:9",
+          "9:16"
+        ],
+        "maxLength": 5
+      }
+    }
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.graphic.technical-editorial@1",
+    "studio.graphic.architecture-diagram@1",
+    "studio.graphic.clean-infographic@1",
+    "studio.graphic.warm-magazine@1",
+    "studio.graphic.documentary-photo@1",
+    "studio.graphic.lifestyle-cards@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.graphic.editorial@1",
+    "studio.quality.graphic.lifestyle@1"
+  ],
+  "references": []
+}

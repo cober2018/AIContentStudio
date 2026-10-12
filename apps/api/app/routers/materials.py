@@ -8,9 +8,10 @@
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
+from fastapi.concurrency import run_in_threadpool
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_db
 from ..deps import get_current_user, require_admin, require_editor
@@ -64,10 +65,25 @@ class GenerationTaskIn(BaseModel):
     capability: Literal["image_generation", "video_generation", "tts"]
     selected_profile: str = Field(pattern=r"^[A-Za-z0-9_.-]{1,100}$")
     explicit_plugin: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_.-]{1,100}$")
+    configuration_mode: Literal["auto", "custom"] = "auto"
     prompt: str = Field(min_length=1, max_length=2000)
     project_id: int | None = Field(default=None, ge=1)
     source_revision_ids: list[int] = Field(default_factory=list, max_length=4)
-    parameters: dict[Literal["items", "pixels", "seconds", "tokens", "timeout_seconds"], StrictInt] = Field(default_factory=dict, max_length=5)
+    parameters: dict[Literal["items", "pixels", "seconds", "tokens", "timeout_seconds", "aspect_ratio", "voice_id", "rate"], StrictInt | StrictFloat | StrictStr] = Field(default_factory=dict, max_length=8)
+
+    @field_validator("parameters")
+    @classmethod
+    def bounded_parameters(cls, value, info):
+        from ..services.model_capability_routing import tts_parameters
+
+        numeric = {"items", "pixels", "seconds", "tokens", "timeout_seconds"}
+        if any(type(value[key]) is not int for key in numeric.intersection(value)):
+            raise ValueError("generation_parameters_invalid")
+        try:
+            spoken = tts_parameters(value, capability=info.data.get("capability"))
+        except (TypeError, ValueError):
+            raise ValueError("generation_parameters_invalid") from None
+        return {**value, **spoken} if spoken is not None else value
 
 
 class GenerationRevisionIn(BaseModel):
@@ -77,6 +93,7 @@ class GenerationRevisionIn(BaseModel):
 
 class GenerationAcceptIn(ProviderAcceptIn):
     expected_revision: int = Field(strict=True, ge=1)
+    candidate_index: int = Field(default=0, strict=True, ge=0, le=3)
 
 
 @router.get("/generation-tasks")
@@ -115,10 +132,11 @@ def recover_generation_task(task_id: str, payload: GenerationRevisionIn, db: Ses
 
 
 @router.get("/generation-tasks/{task_id}/raw")
-def preview_generation_task(task_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def preview_generation_task(task_id: str, candidate_index: int | None = None,
+                            db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     from ..services import generation_tasks
 
-    content, mime = generation_tasks.raw(db, user, task_id)
+    content, mime = generation_tasks.raw(db, user, task_id, candidate_index)
     return Response(content=content, media_type=mime, headers={"Cache-Control": "private, no-store"})
 
 
@@ -209,6 +227,7 @@ class GenerateIn(BaseModel):
     title: str | None = None
     draft_id: int | None = None
     role: str = "inline"
+    candidate_count: int = Field(default=1, ge=1, le=4)
 
 
 class DocumentIn(BaseModel):
@@ -296,7 +315,8 @@ def list_materials(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    stmt = select(Material).order_by(Material.id.desc())
+    # selectinload：一条批量查询取全部 revisions，避免逐行 lazy load（200 条=200 次查询）
+    stmt = select(Material).options(selectinload(Material.revisions)).order_by(Material.id.desc())
     if status:
         stmt = stmt.where(Material.status == status)
     if kind:
@@ -328,25 +348,32 @@ async def upload_material(
     db: Session = Depends(get_db),
     user: User = Depends(require_editor),
 ):
+    if source_kind == "external_execution":
+        raise HTTPException(403, {"code": "external_execution_acceptance_required"})
     content = await file.read()
-    suffix = (file.filename or "").rsplit(".", 1)[-1].lower()[:5]
-    mime = materials_service.validate_upload(content, file.content_type)
-    material = materials_service.create_material(
-        db, kind=kind, title=title or file.filename or f"material-{utcnow().timestamp():.0f}",
-        tags=[t for t in (tags or "").split(",") if t], created_by=user.email,
-    )
-    revision = materials_service.create_revision(
-        db, material,
-        content=content, suffix=f".{suffix}" if suffix else "",
-        declared_mime=mime, source_kind=source_kind, source_url=source_url,
-        rights_status=rights_status, public_use_allowed=public_use_allowed,
-        model_use_allowed=model_use_allowed, attribution_text=attribution_text,
-        metadata={"filename": file.filename},
-        created_by=user.email,
-    )
-    db.add(AuditLog(event="material.uploaded", actor=user.email, entity_type="material", entity_id=str(material.id), detail_json={"hash": revision.content_hash, "source_kind": source_kind}))
-    db.commit()
-    return _material_json(material, with_revisions=True)
+
+    # 校验/hash/落盘（含 flock）是重活，放线程池避免阻塞事件循环
+    def _persist() -> dict:
+        suffix = (file.filename or "").rsplit(".", 1)[-1].lower()[:5]
+        mime = materials_service.validate_upload(content, file.content_type)
+        material = materials_service.create_material(
+            db, kind=kind, title=title or file.filename or f"material-{utcnow().timestamp():.0f}",
+            tags=[t for t in (tags or "").split(",") if t], created_by=user.email,
+        )
+        revision = materials_service.create_revision(
+            db, material,
+            content=content, suffix=f".{suffix}" if suffix else "",
+            declared_mime=mime, source_kind=source_kind, source_url=source_url,
+            rights_status=rights_status, public_use_allowed=public_use_allowed,
+            model_use_allowed=model_use_allowed, attribution_text=attribution_text,
+            metadata={"filename": file.filename},
+            created_by=user.email,
+        )
+        db.add(AuditLog(event="material.uploaded", actor=user.email, entity_type="material", entity_id=str(material.id), detail_json={"hash": revision.content_hash, "source_kind": source_kind}))
+        db.commit()
+        return _material_json(material, with_revisions=True)
+
+    return await run_in_threadpool(_persist)
 
 
 @router.get("/materials/{material_id}")
@@ -435,11 +462,17 @@ def generate_material(
     except CapabilityUnavailable as exc:
         raise HTTPException(422, f"capability_unavailable: {exc}") from exc
 
+    if payload.candidate_count != 1:
+        # Multi-candidate generation must use the durable task route.  The
+        # legacy preview endpoint has no receipt or selection state to bind.
+        raise HTTPException(422, "generation_task_required")
+
     from ..services import provider_media
 
-    return provider_media.stage(db, user, {"provider_kind": "image_provider", "provider_key": provider.key,
-                                          "provider_version": provider.version, "prompt": payload.prompt,
-                                          "project_id": None, "source_revision_ids": []})
+    request = {"provider_kind": "image_provider", "provider_key": provider.key,
+               "provider_version": provider.version, "prompt": payload.prompt,
+               "project_id": None, "source_revision_ids": []}
+    return provider_media.stage(db, user, request)
 
 
 # ---------- Draft × Material（Use/Placement）----------
@@ -504,22 +537,26 @@ async def upload_draft_material(
     if role not in ROLES:
         raise HTTPException(422, "role 不受支持")
     content = await file.read()
-    mime = materials_service.validate_upload(content, file.content_type)
-    material = materials_service.create_material(
-        db, kind="image", title=file.filename or "draft-upload", created_by=user.email
-    )
-    suffix = (file.filename or "").rsplit(".", 1)[-1].lower()[:5]
-    revision = materials_service.create_revision(
-        db, material, content=content, suffix=f".{suffix}" if suffix else "",
-        declared_mime=mime, rights_status=rights_status, public_use_allowed=public_use_allowed,
-        metadata={"filename": file.filename, "first_draft_id": draft_id}, created_by=user.email,
-    )
-    use = materials_service.attach_to_draft(db, draft, revision, role=role)
-    document_composition.sync_document(db, draft)
-    db.add(AuditLog(event="material.attached", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"draft_media_id": use.id, "material_revision_id": revision.id, "via": "upload"}))
-    db.commit()
-    db.refresh(use)
-    return _media_json(use)
+
+    def _persist() -> dict:
+        mime = materials_service.validate_upload(content, file.content_type)
+        material = materials_service.create_material(
+            db, kind="image", title=file.filename or "draft-upload", created_by=user.email
+        )
+        suffix = (file.filename or "").rsplit(".", 1)[-1].lower()[:5]
+        revision = materials_service.create_revision(
+            db, material, content=content, suffix=f".{suffix}" if suffix else "",
+            declared_mime=mime, rights_status=rights_status, public_use_allowed=public_use_allowed,
+            metadata={"filename": file.filename, "first_draft_id": draft_id}, created_by=user.email,
+        )
+        use = materials_service.attach_to_draft(db, draft, revision, role=role)
+        document_composition.sync_document(db, draft)
+        db.add(AuditLog(event="material.attached", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"draft_media_id": use.id, "material_revision_id": revision.id, "via": "upload"}))
+        db.commit()
+        db.refresh(use)
+        return _media_json(use)
+
+    return await run_in_threadpool(_persist)
 
 
 @router.patch("/drafts/{draft_id}/materials/{media_id}")

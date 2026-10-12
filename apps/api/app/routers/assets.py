@@ -3,8 +3,9 @@
 import html
 
 from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -20,8 +21,18 @@ class ExportIn(BaseModel):
     fmt: str  # md / txt / json / srt
 
 
-def _serialize(db: Session, asset: ContentAsset) -> dict:
+def _manifest_summary(asset: ContentAsset) -> dict:
+    """列表页用的轻量摘要：manifest 本体可能非常大，只在详情端点返回。"""
+    manifest = asset.candidate_manifest_json or {}
     return {
+        "schema_version": manifest.get("schema_version"),
+        "media_count": len(manifest.get("media") or []),
+        "citations_count": len(manifest.get("citations") or []),
+    }
+
+
+def _serialize(db: Session, asset: ContentAsset, *, export_count: int | None = None, include_manifest: bool = True) -> dict:
+    data = {
         "id": asset.id,
         "draft_id": asset.draft_id,
         "topic_id": asset.topic_brief_id,
@@ -39,15 +50,29 @@ def _serialize(db: Session, asset: ContentAsset) -> dict:
         "approved_revision": asset.approved_revision,
         "mother_revision_id": asset.mother_revision_id,
         "approved_candidate_hash": asset.approved_candidate_hash,
-        "candidate_manifest": asset.candidate_manifest_json,
         "created_at": asset.created_at.isoformat() if asset.created_at else None,
         "allowed_formats": exports.CHANNEL_ALLOWED_FORMATS.get(asset.channel, ["md", "txt", "json"]),
-        "export_count": _export_count(db, asset.id),
+        "export_count": export_count if export_count is not None else _export_count(db, asset.id),
     }
+    if include_manifest:
+        data["candidate_manifest"] = asset.candidate_manifest_json
+    else:
+        data["candidate_manifest_summary"] = _manifest_summary(asset)
+    return data
 
 
 def _export_count(db: Session, asset_id: int) -> int:
-    return len(db.scalars(select(ExportRecord).where(ExportRecord.asset_id == asset_id)).all())
+    return db.scalar(select(func.count()).select_from(ExportRecord).where(ExportRecord.asset_id == asset_id)) or 0
+
+
+def _export_counts(db: Session, asset_ids: list[int]) -> dict[int, int]:
+    """列表页批量计数：一条 GROUP BY 替代逐资产 COUNT。"""
+    if not asset_ids:
+        return {}
+    rows = db.execute(
+        select(ExportRecord.asset_id, func.count()).where(ExportRecord.asset_id.in_(asset_ids)).group_by(ExportRecord.asset_id)
+    ).all()
+    return {asset_id: count for asset_id, count in rows}
 
 
 @router.get("")
@@ -67,7 +92,9 @@ def list_assets(
     visible = stmt.outerjoin(ContentProject, ContentProject.id == ContentAsset.project_id).where(
         (ContentAsset.project_id.is_(None)) | (ContentProject.owner_user_id == user.id)
     )
-    return [_serialize(db, a) for a in db.scalars(visible)]
+    assets = db.scalars(visible).all()
+    counts = _export_counts(db, [asset.id for asset in assets])
+    return [_serialize(db, asset, export_count=counts.get(asset.id, 0), include_manifest=False) for asset in assets]
 
 
 @router.get("/{asset_id}")
@@ -173,14 +200,18 @@ async def upload_asset_media(
     if asset.project_id is not None:
         raise HTTPException(409, "项目候选不可通过旧素材接口修改")
     content = await file.read()
-    try:
-        asset_media.save_upload(db, asset, media, file.filename or "", content, file.content_type or "")
-    except ValueError as exc:
-        raise HTTPException(400, str(exc))
-    db.add(AuditLog(event="asset.media_uploaded", actor=user.email, entity_type="content_asset",
-                    entity_id=str(asset_id), detail_json={"media_id": media_id}))
-    db.commit()
-    return {"ok": True}
+
+    def _persist() -> dict:
+        try:
+            asset_media.save_upload(db, asset, media, file.filename or "", content, file.content_type or "")
+        except ValueError as exc:
+            raise HTTPException(400, str(exc))
+        db.add(AuditLog(event="asset.media_uploaded", actor=user.email, entity_type="content_asset",
+                        entity_id=str(asset_id), detail_json={"media_id": media_id}))
+        db.commit()
+        return {"ok": True}
+
+    return await run_in_threadpool(_persist)
 
 
 @router.get("/{asset_id}/media/{media_id}/raw")

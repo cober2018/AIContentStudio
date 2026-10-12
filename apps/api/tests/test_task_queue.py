@@ -59,14 +59,19 @@ def test_generation_dispatches_to_queue_when_enabled(client, db_session, seed_ad
         delayed = []
         from app.tasks import worker_tasks
 
-        monkeypatch.setattr(worker_tasks.run_generation_job, "delay", lambda job_id: delayed.append(job_id))
+        monkeypatch.setattr(
+            worker_tasks.run_generation_job, "delay",
+            lambda job_id, dispatch_id: delayed.append((job_id, dispatch_id)),
+        )
 
         resp = client.post(f"/api/v1/topics/{topic_id}/generate", headers={"X-Studio-User": "editor@studio.local"})
         assert resp.status_code == 201
         job = resp.json()["jobs"][0]
         assert job["status"] == JobStatus.queued.value
         assert "draft_id" not in job
-        assert delayed == [job["job_id"]]
+        assert len(delayed) == 1
+        assert delayed[0][0] == job["job_id"]
+        assert isinstance(delayed[0][1], str) and len(delayed[0][1]) == 12
 
         # job 落库为 queued，生成接口重复触发被 409 拒绝
         detail = client.get(f"/api/v1/content-jobs/{job['job_id']}", headers={"X-Studio-User": "editor@studio.local"}).json()

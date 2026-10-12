@@ -1,5 +1,6 @@
 """Validation and immutable versions for project production workflows."""
 
+import json
 import re
 from copy import deepcopy
 
@@ -25,6 +26,7 @@ PORTABLE_ROOT_KEYS = {"nodes", "edges", "visual_order"}
 PORTABLE_NODE_KEYS = {
     "id", "kind", "plugin", "plugin_version", "label", "config", "input_mapping", "output_mapping",
     "condition", "failure_policy", "enabled", "layout",
+    "stage_schema",
 }
 BOUND_KEYS = {
     "project_id", "content_unit_id", "unit_id", "run_id", "snapshot_id", "data_snapshot_id",
@@ -120,12 +122,19 @@ def validate_definition(definition: dict) -> dict:
         plugin = node.get("plugin")
         if not isinstance(plugin, str):
             raise ValueError(f"节点 {node['id']} 未选择执行插件")  # noqa: TRY004 - API 将配置错误统一映射为 422。
-        if plugin not in KIND_PLUGINS[node["kind"]]:
-            raise ValueError(f"节点 {node['id']} 的执行插件与类型不匹配")
         try:
             descriptor = registry.descriptor("node", plugin, str(node.get("plugin_version") or "1"))
         except RegistryError as exc:
             raise ValueError(f"节点 {node['id']} 执行插件不可用：{exc}") from exc
+        stage = descriptor.stage_contract
+        if stage:
+            metadata = stage.to_dict()
+            if (node.get("stage_schema") != metadata["stage_schema"]
+                    or node.get("plugin_version") != descriptor.version or node["kind"] != metadata["category"]):
+                raise ValueError("stage_contract_pin_mismatch")
+            stage.validate_config(node.get("config", {}))
+        elif plugin not in KIND_PLUGINS[node["kind"]] or "stage_schema" in node:
+            raise ValueError(f"节点 {node['id']} 的执行插件与类型不匹配")
         if descriptor.side_effect and plugin != "media.generate":
             raise ValueError(f"节点 {node['id']} 包含禁止泛化执行的远端副作用")
         if node.get("kind") == "Human" and not descriptor.human_gate:
@@ -136,13 +145,21 @@ def validate_definition(definition: dict) -> dict:
             raise ValueError(f"节点 {node['id']} 配置无效")  # noqa: TRY004 - API 将配置错误统一映射为 422。
         config = node.get("config") or {}
         if plugin == "media.generate":
-            from .generation_tasks import workflow_request
+            if descriptor.version in {"2", "3"}:
+                from .stage_domain_integrations import media_request
 
-            mapped = node.get("input_mapping") or {}
-            workflow_request({**config, "inputs": {key: "mapped" if key == "prompt" else [] for key in mapped}})
+                media_request(config, allow_aspect=descriptor.version == "3")
+            elif descriptor.version != "4":
+                from .generation_tasks import workflow_request
+
+                mapped = node.get("input_mapping") or {}
+                workflow_request({**config, "inputs": {key: "mapped" if key == "prompt" else [] for key in mapped}})
+            elif node.get("input_mapping"):
+                raise ValueError("Audio Stage 仅接受明确接受的上游稿件，不支持原始输入映射")
             if node.get("failure_policy", "stop") != "stop":
                 raise ValueError("持久生成节点不允许跳过或泛化重试失败")
-        validate_ai_executor_selection(node)
+        if not stage:
+            validate_ai_executor_selection(node)
         if node["kind"] == "Data":
             keys = {item["key"] for item in data_source_descriptors()}
             source_ref = config.get("source_ref")
@@ -196,13 +213,33 @@ def validate_portable(definition: dict, *, source_project_id: int | None, source
         config = node.get("config") or {}
         if node.get("plugin") == "media.generate" and config.get("source_revision_ids"):
             raise ValueError("默认模板不能固定项目素材版本；请使用输入映射")
-        if set(config) - PORTABLE_CONFIG_KEYS:
+        stage = registry.descriptor("node", node["plugin"], str(node.get("plugin_version") or "1")).stage_contract
+        portable_keys = set(stage.to_dict()["config_schema"]["properties"]) if stage else PORTABLE_CONFIG_KEYS
+        if set(config) - portable_keys:
             raise ValueError(f"节点 {node['id']} 配置包含不可移植字段")
+        if stage:
+            stage.validate_config(config)
+            if any(config.get(key) for key in ("source_revision_ids", "material_revision_ids", "source_master_revision_id")):
+                raise ValueError("默认模板不能固定当前素材或Master版本")
         if node["kind"] == "Data" and "source_ref" in config:
             config["source_ref"] = {"$run_param": "source_ref"}
 
     def inspect(value: object, *, resolve_at_runtime: bool) -> object:
         if isinstance(value, dict):
+            if value.get("source_kind") == "capability_memory":
+                keys = {"source_kind", "artifact_id", "revision_id"}
+                if (set(value) not in (keys, keys | {"arguments"}, keys | {"arguments_json"})
+                        or type(value["artifact_id"]) is not int or type(value["revision_id"]) is not int):
+                    raise ValueError("默认模板包含无效方法引用")
+                if "arguments_json" in value:
+                    arguments = json.loads(value["arguments_json"])
+                    if type(arguments) is not dict:
+                        raise ValueError("默认模板包含无效方法参数")
+                    return {**value, "arguments_json": json.dumps(inspect(arguments, resolve_at_runtime=False),
+                                                                  ensure_ascii=False, sort_keys=True, separators=(",", ":"))}
+                if "arguments" in value:
+                    return {**value, "arguments": inspect(value["arguments"], resolve_at_runtime=False)}
+                return value
             if set(value) == {"node_id", "output"} and isinstance(value["node_id"], str) and isinstance(value["output"], str):
                 return value
             result = {}
@@ -241,8 +278,20 @@ def validate_portable(definition: dict, *, source_project_id: int | None, source
     return portable
 
 
-def validate_reusable_profiles(db: Session, definition: dict) -> None:
+def validate_reusable_profiles(db: Session, definition: dict, *, user) -> None:
     for node in definition["nodes"]:
+        method = (node.get("config") or {}).get("method")
+        if type(method) is dict and method.get("source_kind") == "capability_memory":
+            from ..models import CapabilityArtifact, CapabilityArtifactRevision
+
+            artifact = db.get(CapabilityArtifact, method["artifact_id"])
+            revision = db.get(CapabilityArtifactRevision, method["revision_id"])
+            if (artifact is None or revision is None or revision.artifact_id != artifact.id
+                    or artifact.status not in {"saved", "pinned"}
+                    or revision.metadata_json.get("status") not in {"saved", "pinned"}
+                    or artifact.scope_type == "project" or revision.metadata_json.get("scope_type") == "project"
+                    or artifact.owner_user_id != user.id):
+                raise ValueError("默认模板不能固化项目范围或不可用方法")
         profile_key = (node.get("config") or {}).get("profile_key")
         if profile_key is None:
             continue

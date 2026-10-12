@@ -43,7 +43,7 @@ interface SourceDetail extends SourceItem {
   facts: FactItem[];
 }
 
-function ImportModal({ onClose }: { onClose: () => void }) {
+export function SourceImportModal({ onClose, onCreated }: { onClose: () => void; onCreated?: (id: number) => void }) {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"text" | "url" | "file">("text");
   const [title, setTitle] = useState("");
@@ -58,17 +58,21 @@ function ImportModal({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     try {
+      let source: { id: number };
       if (tab === "text") {
-        await api.post("/sources/text", { title, content, as_of: asOf || null });
+        source = await api.post("/sources/text", { title, content, as_of: asOf || null });
       } else if (tab === "url") {
-        await api.post("/sources/url", { url, as_of: asOf || null });
+        source = await api.post("/sources/url", { url, as_of: asOf || null });
       } else if (file) {
         const form = new FormData();
         form.append("file", file);
-        if (asOf) form.append("as_of", asOf);
-        await api.upload("/sources/upload", form);
-      }
-      queryClient.invalidateQueries({ queryKey: ["sources"] });
+        source = await api.upload(`/sources/upload${asOf ? `?as_of=${encodeURIComponent(asOf)}` : ""}`, form);
+      } else throw new Error("请选择文件。");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["sources"] }),
+        queryClient.invalidateQueries({ queryKey: ["system-library"] }),
+      ]);
+      onCreated?.(source.id);
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "导入失败");
@@ -140,7 +144,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
         <Button variant="secondary" onClick={onClose}>
           取消
         </Button>
-        <Button onClick={submit} disabled={busy}>
+        <Button onClick={submit} disabled={busy || (tab === "text" ? !title.trim() || !content.trim() : tab === "url" ? !url.trim() : !file)}>
           {busy ? "导入中…" : "导入"}
         </Button>
       </div>
@@ -148,20 +152,28 @@ function ImportModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => void }) {
+export function SourceDrawer({ sourceId, onClose, readOnly = false }: { sourceId: number; onClose: () => void; readOnly?: boolean }) {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["source", sourceId],
     queryFn: () => api.get<SourceDetail>(`/sources/${sourceId}`),
   });
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [factOffset, setFactOffset] = useState(0);
   const [editing, setEditing] = useState<FactItem | null>(null);
   const [editStatement, setEditStatement] = useState("");
+  const [error, setError] = useState("");
+  const invalidate = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["source", sourceId] }),
+    queryClient.invalidateQueries({ queryKey: ["sources"] }),
+    queryClient.invalidateQueries({ queryKey: ["facts"] }),
+    queryClient.invalidateQueries({ queryKey: ["system-library"] }),
+  ]);
 
   const extract = useMutation({
     mutationFn: () => api.post(`/sources/${sourceId}/extract-facts`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["source", sourceId] }),
-    onError: (e) => alert(e instanceof Error ? e.message : "抽取失败"),
+    onSuccess: invalidate,
+    onError: (e) => setError(e instanceof Error ? e.message : "抽取失败"),
   });
 
   const bulkStatus = useMutation({
@@ -169,20 +181,26 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
       api.post("/facts/bulk-status", { fact_ids: [...selected], action }),
     onSuccess: () => {
       setSelected(new Set());
-      queryClient.invalidateQueries({ queryKey: ["source", sourceId] });
-      queryClient.invalidateQueries({ queryKey: ["sources"] });
+      return invalidate();
     },
-    onError: (e) => alert(e instanceof Error ? e.message : "操作失败"),
+    onError: (e) => setError(e instanceof Error ? e.message : "操作失败"),
   });
 
   const saveFact = useMutation({
     mutationFn: () => api.patch(`/facts/${editing!.id}`, { statement: editStatement }),
     onSuccess: () => {
       setEditing(null);
-      queryClient.invalidateQueries({ queryKey: ["source", sourceId] });
+      return invalidate();
     },
-    onError: (e) => alert(e instanceof Error ? e.message : "保存失败"),
+    onError: (e) => setError(e instanceof Error ? e.message : "保存失败"),
   });
+  const decide = useMutation({
+    mutationFn: ({ action, id }: { action: "confirm" | "reject"; id: number }) => bulkOne(action, id),
+    onSuccess: invalidate,
+    onError: (e) => setError(e instanceof Error ? e.message : "事实操作失败"),
+  });
+  const busy = extract.isPending || bulkStatus.isPending || saveFact.isPending || decide.isPending;
+  const writable = !readOnly && !data?.is_archived;
 
   function toggle(id: number) {
     setSelected((prev) => {
@@ -195,7 +213,8 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
 
   return (
     <Drawer title={data ? data.title : "来源详情"} onClose={onClose}>
-      {isLoading || !data ? (
+      {error && <ErrorBanner message={error} />}
+      {!isLoading && !data ? <ErrorBanner message="来源读取失败，请关闭后重试。" /> : isLoading || !data ? (
         <Spinner />
       ) : (
         <div className="space-y-6">
@@ -220,15 +239,15 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
                 候选 Facts（{data.facts.length}）
               </h3>
               <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => extract.mutate()}>
+                {writable && <Button size="sm" variant="secondary" disabled={busy} onClick={() => extract.mutate()}>
                   抽取候选
-                </Button>
-                {selected.size > 0 && (
+                </Button>}
+                {writable && selected.size > 0 && (
                   <>
-                    <Button size="sm" onClick={() => bulkStatus.mutate("confirm")}>
+                    <Button size="sm" disabled={busy} onClick={() => bulkStatus.mutate("confirm")}>
                       确认选中（{selected.size}）
                     </Button>
-                    <Button size="sm" variant="danger" onClick={() => bulkStatus.mutate("reject")}>
+                    <Button size="sm" variant="danger" disabled={busy} onClick={() => bulkStatus.mutate("reject")}>
                       拒绝选中
                     </Button>
                   </>
@@ -239,11 +258,12 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
               <EmptyState title="尚无候选事实" hint="点击「抽取候选」从解析结果中抽取" />
             ) : (
               <div className="space-y-2">
-                {data.facts.map((fact) => (
+                {data.facts.slice(factOffset, factOffset + 100).map((fact) => (
                   <div key={fact.id} className="rounded-md border border-slate-200 p-3">
                     <div className="flex items-start gap-2">
                       <input
                         type="checkbox"
+                        disabled={!writable || busy}
                         checked={selected.has(fact.id)}
                         onChange={() => toggle(fact.id)}
                         className="mt-1"
@@ -257,7 +277,7 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
                               onChange={(e) => setEditStatement(e.target.value)}
                             />
                             <div className="flex gap-2">
-                              <Button size="sm" onClick={() => saveFact.mutate()}>
+                              <Button size="sm" disabled={!writable || busy || !editStatement.trim()} onClick={() => saveFact.mutate()}>
                                 保存
                               </Button>
                               <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
@@ -283,22 +303,20 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
                           </>
                         )}
                       </div>
-                      {editing?.id !== fact.id && (
+                      {writable && editing?.id !== fact.id && (
                         <div className="flex shrink-0 gap-1">
                           {fact.status === "candidate" && (
                             <Button
                               size="sm"
-                              onClick={() =>
-                                bulkOne("confirm", fact.id).then(() =>
-                                  queryClient.invalidateQueries({ queryKey: ["source", sourceId] }),
-                                )
-                              }
+                              disabled={busy}
+                              onClick={() => decide.mutate({ action: "confirm", id: fact.id })}
                             >
                               确认
                             </Button>
                           )}
                           <Button
                             size="sm"
+                            disabled={busy}
                             variant="secondary"
                             onClick={() => {
                               setEditing(fact);
@@ -310,11 +328,8 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() =>
-                              bulkOne("reject", fact.id).then(() =>
-                                queryClient.invalidateQueries({ queryKey: ["source", sourceId] }),
-                              )
-                            }
+                            disabled={busy}
+                            onClick={() => decide.mutate({ action: "reject", id: fact.id })}
                           >
                             拒绝
                           </Button>
@@ -323,6 +338,11 @@ function SourceDrawer({ sourceId, onClose }: { sourceId: number; onClose: () => 
                     </div>
                   </div>
                 ))}
+                <div className="flex items-center gap-3 text-xs text-slate-500">
+                  <span>每页最多 100 条，批量操作仅限当前页选择。</span>
+                  <Button size="sm" variant="secondary" disabled={busy || factOffset === 0} onClick={() => { setFactOffset(Math.max(0, factOffset - 100)); setSelected(new Set()); setEditing(null); }}>上一页</Button>
+                  <Button size="sm" variant="secondary" disabled={busy || factOffset + 100 >= data.facts.length} onClick={() => { setFactOffset(factOffset + 100); setSelected(new Set()); setEditing(null); }}>下一页</Button>
+                </div>
               </div>
             )}
           </section>
@@ -394,7 +414,7 @@ export default function Sources() {
         </div>
       )}
 
-      {showImport && <ImportModal onClose={() => setShowImport(false)} />}
+      {showImport && <SourceImportModal onClose={() => setShowImport(false)} />}
       {drawerId && <SourceDrawer sourceId={drawerId} onClose={() => setDrawerId(null)} />}
     </div>
   );

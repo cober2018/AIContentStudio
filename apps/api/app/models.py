@@ -147,6 +147,67 @@ class MaterialSourceKind(str, enum.Enum):
     screenshot = "screenshot"
     upstream = "upstream"
     legacy = "legacy"
+    external_execution = "external_execution"
+
+
+class CreativeExecutionState(str, enum.Enum):
+    prepared = "prepared"
+    claimed = "claimed"
+    in_progress = "in_progress"
+    failed_before_dispatch = "failed_before_dispatch"
+    blocked = "blocked"
+    unknown = "unknown"
+    result_ready = "result_ready"
+    accepted = "accepted"
+    rejected = "rejected"
+    cancelled = "cancelled"
+    superseded = "superseded"
+
+
+class CreativeDispatchCertainty(str, enum.Enum):
+    not_dispatched = "not_dispatched"
+    possibly_dispatched = "possibly_dispatched"
+    confirmed_dispatched = "confirmed_dispatched"
+
+
+class CreativeExecutionOutputState(str, enum.Enum):
+    staged = "staged"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
+class CapabilityArtifactKind(str, enum.Enum):
+    prompt_skill = "prompt_skill"
+    recipe = "recipe"
+    creative_pattern = "creative_pattern"
+    preference = "preference"
+    execution_template = "execution_template"
+    tool = "tool"
+
+
+class CapabilityArtifactStatus(str, enum.Enum):
+    candidate = "candidate"
+    saved = "saved"
+    pinned = "pinned"
+    archived = "archived"
+    deprecated = "deprecated"
+
+
+class CapabilityScopeType(str, enum.Enum):
+    owner = "owner"
+    persona = "persona"
+    account = "account"
+    series = "series"
+    project = "project"
+    channel = "channel"
+    executor = "executor"
+
+
+class CapabilityUseOutcome(str, enum.Enum):
+    used = "used"
+    accepted = "accepted"
+    rejected = "rejected"
+    unknown = "unknown"
 
 
 class DiscoverabilityStage(str, enum.Enum):
@@ -488,7 +549,7 @@ class ContentJob(Base):
     model_name: Mapped[str | None] = mapped_column(String(100))
     prompt_version: Mapped[int | None] = mapped_column(String(30))
     fact_pack_snapshot: Mapped[dict | None] = mapped_column(JSON)  # id/version/checksum
-    status: Mapped[str] = mapped_column(String(20), default=JobStatus.queued.value)
+    status: Mapped[str] = mapped_column(String(20), default=JobStatus.queued.value, index=True)
     error: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -519,10 +580,10 @@ class Draft(Base):
     content_form: Mapped[str | None] = mapped_column(String(50))
     document_schema_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     document_json: Mapped[dict | None] = mapped_column(JSON)
-    status: Mapped[str] = mapped_column(String(20), default=DraftStatus.draft.value)
+    status: Mapped[str] = mapped_column(String(20), default=DraftStatus.draft.value, index=True)
     created_by_type: Mapped[str] = mapped_column(String(10), default="ai")  # ai/user
     created_by: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
     content_job: Mapped["ContentJob"] = relationship(back_populates="drafts")
     mother_revision: Mapped["MotherRevision | None"] = relationship(back_populates="drafts")
@@ -623,10 +684,10 @@ class Material(Base):
     __tablename__ = "material"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    kind: Mapped[str] = mapped_column(String(20), default=MaterialKind.image.value)
+    kind: Mapped[str] = mapped_column(String(20), default=MaterialKind.image.value, index=True)
     title: Mapped[str] = mapped_column(String(500))
     tags_json: Mapped[list | None] = mapped_column(JSON)
-    status: Mapped[str] = mapped_column(String(20), default="active")  # active/archived
+    status: Mapped[str] = mapped_column(String(20), default="active", index=True)  # active/archived
     created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -768,7 +829,7 @@ class ContentAsset(Base):
     __table_args__ = (UniqueConstraint("project_id", "content_unit_id", "candidate_hash", name="uq_project_candidate_hash"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int | None] = mapped_column(ForeignKey("draft.id"))
+    draft_id: Mapped[int | None] = mapped_column(ForeignKey("draft.id"), index=True)
     topic_brief_id: Mapped[int | None] = mapped_column(ForeignKey("topic_brief.id"))
     project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id"), index=True)
     content_unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"), index=True)
@@ -801,7 +862,7 @@ class ContentAsset(Base):
     tags: Mapped[list | None] = mapped_column(JSON)
     content_master_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
     channel_variant_revision_id: Mapped[int | None] = mapped_column(ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
 class ContentMasterRevision(Base):
@@ -812,6 +873,8 @@ class ContentMasterRevision(Base):
         UniqueConstraint("content_unit_id", "revision_no", name="uq_master_unit_revision"),
         UniqueConstraint("content_unit_id", "idempotency_key", name="uq_master_unit_idempotency"),
         Index("ix_master_project_unit_created", "project_id", "content_unit_id", "created_at"),
+        CheckConstraint("creative_intent_hash IS NULL OR length(creative_intent_hash) = 64",
+                        name="ck_master_creative_intent_hash"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -826,6 +889,8 @@ class ContentMasterRevision(Base):
     payload_json: Mapped[dict] = mapped_column(JSON, default=dict)
     payload_hash: Mapped[str] = mapped_column(String(64), index=True)
     context_hash: Mapped[str] = mapped_column(String(64), index=True)
+    creative_intent_json: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    creative_intent_hash: Mapped[str | None] = mapped_column(String(64))
     identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"))
     creative_brief_revision_id: Mapped[int | None] = mapped_column(ForeignKey("creative_brief_revision.id"))
     fact_boundary_revision_id: Mapped[int | None] = mapped_column(ForeignKey("project_fact_boundary_revision.id"))
@@ -897,6 +962,8 @@ class ChannelVariantRevision(Base):
         CheckConstraint("source_kind IN ('manual_edit', 'deterministic_adapt', 'model_assisted')", name="ck_variant_source_kind"),
         CheckConstraint("length(payload_hash) = 64 AND length(context_hash) = 64", name="ck_variant_hash_lengths"),
         Index("ix_variant_project_unit_target", "project_id", "content_unit_id", "channel_id", "content_form"),
+        CheckConstraint("creative_intent_hash IS NULL OR length(creative_intent_hash) = 64",
+                        name="ck_variant_creative_intent_hash"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -925,6 +992,8 @@ class ChannelVariantRevision(Base):
     payload_json: Mapped[dict] = mapped_column(JSON)
     payload_hash: Mapped[str] = mapped_column(String(64), index=True)
     context_hash: Mapped[str] = mapped_column(String(64), index=True)
+    creative_intent_json: Mapped[dict | None] = mapped_column(JSON(none_as_null=True))
+    creative_intent_hash: Mapped[str | None] = mapped_column(String(64))
     source_kind: Mapped[str] = mapped_column(String(40))
     edit_summary_json: Mapped[dict] = mapped_column(JSON, default=dict)
     llm_provenance_json: Mapped[dict | None] = mapped_column(JSON)
@@ -1372,7 +1441,7 @@ class WorkflowStep(Base):
     __tablename__ = "workflow_step"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    run_id: Mapped[int] = mapped_column(ForeignKey("workflow_run.id"))
+    run_id: Mapped[int] = mapped_column(ForeignKey("workflow_run.id"), index=True)
     node_id: Mapped[str] = mapped_column(String(50))
     node_type: Mapped[str] = mapped_column(String(30))
     label: Mapped[str | None] = mapped_column(String(200))
@@ -1397,6 +1466,9 @@ class WorkflowStepAttempt(Base):
     """
 
     __tablename__ = "workflow_step_attempt"
+    # Legacy inserts must not RETURN the additive receipt columns before the
+    # separately authorized local schema upgrade.
+    __mapper_args__: ClassVar[dict] = {"eager_defaults": False}
     __table_args__ = (
         Index("ix_workflow_step_attempt_step", "step_id", "attempt_no"),
     )
@@ -1413,6 +1485,14 @@ class WorkflowStepAttempt(Base):
     output_hash: Mapped[str | None] = mapped_column(String(64))
     input_hash: Mapped[str | None] = mapped_column(String(64))
     error: Mapped[str | None] = mapped_column(Text)
+    # Creation Recipe receipts are additive and deliberately deferred: the formal
+    # local database is upgraded only after this change is accepted.
+    input_snapshot_json: Mapped[dict | None] = mapped_column(
+        JSON(none_as_null=True), nullable=True, deferred=True, server_default=null()
+    )
+    execution_receipt_json: Mapped[dict | None] = mapped_column(
+        JSON(none_as_null=True), nullable=True, deferred=True, server_default=null()
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -2024,6 +2104,212 @@ class ProviderGenerationTask(Base):
     reason_code: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CreativeExecutionPackage(Base):
+    __tablename__ = "creative_execution_package"
+    __table_args__ = (
+        CheckConstraint(
+            "(source_master_revision_id IS NOT NULL AND source_variant_revision_id IS NULL) OR "
+            "(source_master_revision_id IS NULL AND source_variant_revision_id IS NOT NULL)",
+            name="ck_creative_package_one_source",
+        ),
+        CheckConstraint("package_schema IN ('creative.execution.v1','director.video.v1')",
+                        name="ck_creative_package_schema"),
+        CheckConstraint("length(package_hash) = 64 AND length(source_payload_hash) = 64 "
+                        "AND length(source_context_hash) = 64", name="ck_creative_package_hashes"),
+        CheckConstraint("creative_intent_hash IS NULL OR length(creative_intent_hash) = 64",
+                        name="ck_creative_package_intent_hash"),
+        CheckConstraint("created_by IS NULL OR length(created_by) <= 255", name="ck_creative_package_actor"),
+        Index("ix_creative_package_owner_hash", "owner_user_id", "package_hash"),
+        Index("ix_creative_package_project_unit", "project_id", "content_unit_id", "created_at"),
+        Index("ix_creative_package_master", "source_master_revision_id"),
+        Index("ix_creative_package_variant", "source_variant_revision_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="RESTRICT"))
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id", ondelete="RESTRICT"))
+    content_unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id", ondelete="RESTRICT"))
+    source_master_revision_id: Mapped[int | None] = mapped_column(
+        ForeignKey("content_master_revision.id", ondelete="RESTRICT"))
+    source_variant_revision_id: Mapped[int | None] = mapped_column(
+        ForeignKey("channel_variant_revision.id", ondelete="RESTRICT"))
+    package_schema: Mapped[str] = mapped_column(String(100))
+    package_json: Mapped[dict] = mapped_column(JSON)
+    package_hash: Mapped[str] = mapped_column(String(64))
+    source_payload_hash: Mapped[str] = mapped_column(String(64))
+    source_context_hash: Mapped[str] = mapped_column(String(64))
+    creative_intent_hash: Mapped[str | None] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CreativeExecution(Base):
+    __tablename__ = "creative_execution"
+    __table_args__ = (
+        UniqueConstraint("owner_user_id", "idempotency_key", name="uq_creative_execution_owner_key"),
+        CheckConstraint("state IN ('prepared','claimed','in_progress','failed_before_dispatch','blocked',"
+                        "'unknown','result_ready','accepted','rejected','cancelled','superseded')",
+                        name="ck_creative_execution_state"),
+        CheckConstraint("dispatch_certainty IN ('not_dispatched','possibly_dispatched','confirmed_dispatched')",
+                        name="ck_creative_execution_dispatch"),
+        CheckConstraint("state != 'failed_before_dispatch' OR dispatch_certainty = 'not_dispatched'",
+                        name="ck_creative_execution_predispatch"),
+        CheckConstraint("revision_no > 0", name="ck_creative_execution_revision"),
+        CheckConstraint("length(idempotency_key) BETWEEN 1 AND 150", name="ck_creative_execution_key"),
+        CheckConstraint("length(request_fingerprint) = 64", name="ck_creative_execution_fingerprint"),
+        CheckConstraint("length(executor_kind) BETWEEN 1 AND 30 AND length(executor_key) BETWEEN 1 AND 150 "
+                        "AND length(executor_version) BETWEEN 1 AND 50", name="ck_creative_execution_executor"),
+        CheckConstraint("safe_reason IS NULL OR length(safe_reason) BETWEEN 1 AND 100",
+                        name="ck_creative_execution_reason"),
+        CheckConstraint("retry_of_id IS NULL OR retry_of_id != id", name="ck_creative_execution_retry"),
+        CheckConstraint("created_by IS NULL OR length(created_by) <= 255", name="ck_creative_execution_actor"),
+        Index("ix_creative_execution_owner_state", "owner_user_id", "state", "updated_at"),
+        Index("ix_creative_execution_project_unit_state", "project_id", "content_unit_id", "state"),
+        Index("ix_creative_execution_package", "package_id"),
+        Index("ix_creative_execution_retry", "retry_of_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="RESTRICT"))
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id", ondelete="RESTRICT"))
+    content_unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id", ondelete="RESTRICT"))
+    package_id: Mapped[int] = mapped_column(ForeignKey("creative_execution_package.id", ondelete="RESTRICT"))
+    idempotency_key: Mapped[str] = mapped_column(String(150))
+    request_fingerprint: Mapped[str] = mapped_column(String(64))
+    executor_kind: Mapped[str] = mapped_column(String(30))
+    executor_key: Mapped[str] = mapped_column(String(150))
+    executor_version: Mapped[str] = mapped_column(String(50))
+    state: Mapped[str] = mapped_column(String(30), default=CreativeExecutionState.prepared.value)
+    revision_no: Mapped[int] = mapped_column(Integer, default=1)
+    dispatch_certainty: Mapped[str] = mapped_column(String(30), default=CreativeDispatchCertainty.not_dispatched.value)
+    safe_reason: Mapped[str | None] = mapped_column(String(100))
+    checkpoint_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    recovery_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    materialized_inputs_json: Mapped[list] = mapped_column(JSON, default=list)
+    retry_of_id: Mapped[int | None] = mapped_column(ForeignKey("creative_execution.id", ondelete="RESTRICT"))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class CreativeExecutionOutput(Base):
+    __tablename__ = "creative_execution_output"
+    __table_args__ = (
+        UniqueConstraint("execution_id", "role_id", "output_index", "attempt_no", name="uq_creative_output_attempt"),
+        CheckConstraint("output_index > 0 AND attempt_no > 0", name="ck_creative_output_slot"),
+        CheckConstraint("kind IN ('image','chart','screenshot','video','audio','brand','other')",
+                        name="ck_creative_output_kind"),
+        CheckConstraint("state IN ('staged','accepted','rejected')", name="ck_creative_output_state"),
+        CheckConstraint("length(role_id) BETWEEN 1 AND 100", name="ck_creative_output_role"),
+        CheckConstraint("length(staging_key) BETWEEN 1 AND 500 AND length(mime_type) BETWEEN 1 AND 100",
+                        name="ck_creative_output_storage"),
+        CheckConstraint("length(content_hash) = 64", name="ck_creative_output_hash"),
+        CheckConstraint("size_bytes > 0", name="ck_creative_output_size"),
+        CheckConstraint("state != 'accepted' OR material_revision_id IS NOT NULL",
+                        name="ck_creative_output_accepted_ref"),
+        CheckConstraint("(created_by IS NULL OR length(created_by) <= 255) "
+                        "AND (decided_by IS NULL OR length(decided_by) <= 255)", name="ck_creative_output_actors"),
+        Index("ix_creative_output_execution_state", "execution_id", "state"),
+        Index("ix_creative_output_material", "material_revision_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    execution_id: Mapped[int] = mapped_column(ForeignKey("creative_execution.id", ondelete="RESTRICT"))
+    role_id: Mapped[str] = mapped_column(String(100))
+    kind: Mapped[str] = mapped_column(String(20))
+    output_index: Mapped[int] = mapped_column(Integer)
+    attempt_no: Mapped[int] = mapped_column(Integer)
+    staging_key: Mapped[str] = mapped_column(String(500))
+    mime_type: Mapped[str] = mapped_column(String(100))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    state: Mapped[str] = mapped_column(String(20), default=CreativeExecutionOutputState.staged.value)
+    material_revision_id: Mapped[int | None] = mapped_column(ForeignKey("material_revision.id", ondelete="RESTRICT"))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_by: Mapped[str | None] = mapped_column(String(255))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class CapabilityArtifact(Base):
+    __tablename__ = "capability_artifact"
+    __table_args__ = (
+        CheckConstraint("kind IN ('prompt_skill','recipe','creative_pattern','preference','execution_template','tool')",
+                        name="ck_capability_artifact_kind"),
+        CheckConstraint("status IN ('candidate','saved','pinned','archived','deprecated')",
+                        name="ck_capability_artifact_status"),
+        CheckConstraint("scope_type IN ('owner','persona','account','series','project','channel','executor')",
+                        name="ck_capability_artifact_scope"),
+        CheckConstraint("length(name) BETWEEN 1 AND 255", name="ck_capability_artifact_name"),
+        Index("ix_capability_artifact_owner_scope_status", "owner_user_id", "scope_type", "status", "kind"),
+        Index("ix_capability_artifact_current", "current_revision_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="RESTRICT"))
+    kind: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(20), default=CapabilityArtifactStatus.candidate.value)
+    scope_type: Mapped[str] = mapped_column(String(30))
+    scope_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    name: Mapped[str] = mapped_column(String(255))
+    current_revision_id: Mapped[int | None] = mapped_column(ForeignKey(
+        "capability_artifact_revision.id", name="fk_capability_artifact_current_revision",
+        ondelete="RESTRICT", use_alter=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deprecated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class CapabilityArtifactRevision(Base):
+    __tablename__ = "capability_artifact_revision"
+    __table_args__ = (
+        UniqueConstraint("artifact_id", "revision_no", name="uq_capability_artifact_revision"),
+        CheckConstraint("revision_no > 0", name="ck_capability_artifact_revision_no"),
+        CheckConstraint("length(content_hash) = 64", name="ck_capability_artifact_revision_hash"),
+        CheckConstraint("created_by IS NULL OR length(created_by) <= 255", name="ck_capability_artifact_revision_actor"),
+        Index("ix_capability_artifact_revision_hash", "artifact_id", "content_hash"),
+        Index("ix_capability_artifact_revision_execution", "source_execution_id"),
+        Index("ix_capability_artifact_revision_learning", "source_learning_candidate_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    artifact_id: Mapped[int] = mapped_column(ForeignKey("capability_artifact.id", ondelete="RESTRICT"))
+    revision_no: Mapped[int] = mapped_column(Integer)
+    content_json: Mapped[dict] = mapped_column(JSON)
+    args_schema_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    source_execution_id: Mapped[int | None] = mapped_column(ForeignKey("creative_execution.id", ondelete="RESTRICT"))
+    source_learning_candidate_id: Mapped[int | None] = mapped_column(
+        ForeignKey("learning_candidate.id", ondelete="RESTRICT"))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CapabilityUse(Base):
+    __tablename__ = "capability_use"
+    __table_args__ = (
+        CheckConstraint("outcome IN ('used','accepted','rejected','unknown')", name="ck_capability_use_outcome"),
+        CheckConstraint("length(rendered_arguments_hash) = 64", name="ck_capability_use_arguments_hash"),
+        CheckConstraint("created_by IS NULL OR length(created_by) <= 255", name="ck_capability_use_actor"),
+        Index("ix_capability_use_revision_time", "artifact_revision_id", "used_at"),
+        Index("ix_capability_use_owner_project_time", "owner_user_id", "project_id", "used_at"),
+        Index("ix_capability_use_execution", "execution_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    artifact_revision_id: Mapped[int] = mapped_column(ForeignKey("capability_artifact_revision.id", ondelete="RESTRICT"))
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="RESTRICT"))
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id", ondelete="RESTRICT"))
+    execution_id: Mapped[int | None] = mapped_column(ForeignKey("creative_execution.id", ondelete="RESTRICT"))
+    rendered_arguments_hash: Mapped[str] = mapped_column(String(64))
+    outcome: Mapped[str] = mapped_column(String(20), default=CapabilityUseOutcome.used.value)
+    used_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_by: Mapped[str | None] = mapped_column(String(255))
 
 
 class ContentMemoryRevision(Base):

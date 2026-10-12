@@ -4,6 +4,7 @@ import copy
 import hashlib
 import hmac
 import json
+import math
 import re
 import secrets
 from typing import Annotated, Literal
@@ -22,6 +23,45 @@ CAPABILITIES = ("chat", "image_generation", "video_generation", "tts", "asr")
 Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9_.-]{1,100}$")]
 Positive = Annotated[int, Field(strict=True, ge=1, le=100_000_000)]
 _PLAN_SIGNING_KEY = secrets.token_bytes(32)
+TTS_APPLIED_SCHEMA = "studio.audio.tts-applied.v1"
+
+
+def tts_parameters(parameters, *, capability):
+    """Normalize only an explicit pair; legacy requests never acquire implicit defaults."""
+    if not isinstance(parameters, dict):
+        raise TypeError("tts_parameters_invalid")
+    fields = {"voice_id", "rate"}.intersection(parameters)
+    if not fields:
+        return None
+    if capability != "tts" or fields != {"voice_id", "rate"}:
+        raise ValueError("tts_parameters_invalid")
+    voice, rate = parameters["voice_id"], parameters["rate"]
+    if (not isinstance(voice, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,149}", voice)
+            or type(rate) not in {int, float} or not 0.5 <= rate <= 2 or not math.isfinite(rate)):
+        raise ValueError("tts_parameters_invalid")
+    return {"voice_id": voice, "rate": float(rate)}
+
+
+def validate_tts_applied_parameters(value):
+    if (not isinstance(value, dict) or set(value) != {"schema", "voice_id", "rate"}
+            or value["schema"] != TTS_APPLIED_SCHEMA):
+        raise ValueError("tts_applied_parameters_invalid")
+    return {"schema": TTS_APPLIED_SCHEMA, **tts_parameters(value, capability="tts")}
+
+
+def tts_parameters_supported(binding, *, probe=False):
+    # A declaration on a model adapter cannot stand in for the actual media executor.
+    from .content_harness.registry import RegistryError, registry
+    from .minimax_cli_provider import MiniMaxCLITTSProvider
+
+    if binding.get("adapter_key") != "minimax.cli" or binding.get("adapter_version") != "1":
+        return False
+    try:
+        provider = registry.resolve("tts_provider", "minimax.cli", "1")
+        return (type(provider) is MiniMaxCLITTSProvider
+                and provider.supports_tts_parameters(binding.get("model_id"), probe=probe))
+    except RegistryError:
+        return False
 
 
 class StrictModel(BaseModel):
@@ -48,6 +88,12 @@ class Binding(StrictModel):
                 path = decoded
             if parsed.scheme == "local":
                 if parsed.hostname != "mmx" or parsed.username or parsed.password or parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
+                    raise ValueError("invalid_connection")
+                return value.rstrip("/")
+            if parsed.scheme == "http":
+                host = parsed.hostname
+                if (not host or parsed.username or parsed.password or parsed.query or parsed.fragment
+                        or parsed.port is None or host not in {"localhost", "127.0.0.1", "::1"}):
                     raise ValueError("invalid_connection")
                 return value.rstrip("/")
             if (parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password
@@ -95,9 +141,10 @@ class Configuration(StrictModel):
     media_plugins: dict[Identifier, Plugin] = Field(default_factory=dict, max_length=100)
     capability_routes: dict[Capability, list[Identifier]] = Field(default_factory=dict, max_length=5)
     policies: Policy = Field(default_factory=Policy)
+    voice_catalog: list[dict] = Field(default_factory=list, max_length=2000)
 
 
-def validate_configuration(value):
+def validate_configuration(value, *, trusted_voice_catalog: bool = False):
     try:
         result = Configuration.model_validate(value).model_dump(mode="json")
     except ValidationError as exc:
@@ -123,6 +170,10 @@ def validate_configuration(value):
         limit = result["policies"]["limits"].get(capability)
         if ids and result["policies"]["allow_automatic_fallback"] and not _bounded(capability, limit):
             raise HTTPException(422, "capability_limit_required")
+    from .multimedia_generation import voice_catalog_projection
+
+    result["voice_catalog"] = voice_catalog_projection(result.get("voice_catalog", []),
+                                                       trusted_verified=trusted_voice_catalog)
     return result
 
 
@@ -160,7 +211,7 @@ def _binding_state(binding, capability, enabled, *, _for_execution=False):
         valid_runtime = isinstance(runtime_hash, str) and re.fullmatch(r"[0-9a-f]{64}", runtime_hash) is not None
         ready = state.get("reason") is None and valid_runtime
         reason = state.get("reason")
-        if reason not in {"credential_not_configured", "credential_continuity_unverified", "adapter_capability_unsupported", "model_operation_unsupported", "connection_unavailable"}:
+        if reason is not None and reason not in {"credential_not_configured", "credential_continuity_unverified", "adapter_capability_unsupported", "model_operation_unsupported", "connection_unavailable"}:
             reason = "adapter_runtime_unavailable"
         return {"executable": bool(ready), "reason": None if ready else reason,
             "runtime_hash": runtime_hash if valid_runtime and (ready or reason == "credential_continuity_unverified") else None}
@@ -189,6 +240,10 @@ def configuration_view(db):
                                    "verified": False, **_binding_state(bindings.get(cap) if cap in declarations else None, cap, profile.get("enabled", True) is True)}
                              for cap in CAPABILITIES},
         }
+        profiles[key]["multimedia_controls"] = {
+            cap: _multimedia_controls(binding, cap) for cap, binding in bindings.items()
+            if cap in {"image_generation", "tts"}
+        }
     plugins = {}
     for key, raw in stored.get("media_plugins", {}).items():
         if not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", key) or not isinstance(raw, dict):
@@ -208,9 +263,18 @@ def configuration_view(db):
             limits[cap] = Limits.model_validate({name: raw[name] for name in Limits.model_fields if name in raw}).model_dump(mode="json")
         except ValidationError:
             continue
+    from .multimedia_generation import voice_preset_projection
+
+    voice_catalog = []
+    for item in stored.get("voice_catalog", []):
+        try:
+            voice_catalog.append(voice_preset_projection(item, trusted_verified=True))
+        except HTTPException:
+            continue
     return {"schema_version": stored.get("schema_version", 1), "revision": stored.get("revision", 0),
             "profiles": profiles, "media_plugins": plugins, "capability_routes": routes,
-            "policies": {"allow_automatic_fallback": raw_policy.get("allow_automatic_fallback") is True, "limits": limits}}
+            "policies": {"allow_automatic_fallback": raw_policy.get("allow_automatic_fallback") is True, "limits": limits},
+            "voice_catalog": voice_catalog}
 
 
 def save_configuration(db, value, *, expected_revision, actor):
@@ -221,6 +285,10 @@ def save_configuration(db, value, *, expected_revision, actor):
         stored = _stored(db)
         if stored.get("revision", 0) != expected_revision:
             raise HTTPException(409, "configuration_revision_conflict")
+        if "voice_catalog" not in value:
+            config.pop("voice_catalog", None)
+        else:
+            _preserve_voice_evidence(config["voice_catalog"], stored.get("voice_catalog", []))
         profiles = copy.deepcopy(stored.get("profiles", {}))
         for key, profile in config["profiles"].items():
             if profile["enabled"] is None:
@@ -229,6 +297,91 @@ def save_configuration(db, value, *, expected_revision, actor):
         merged = {**stored, **config, "profiles": profiles, "schema_version": 2, "revision": expected_revision + 1}
         commit_configuration(db, merged, expected_revision=expected_revision, actor=actor)
         return configuration_view(db)
+
+
+def save_voice_catalog(db, value, *, expected_revision, actor):
+    """Persist a secret-free local voice inventory without contacting a provider."""
+    if type(expected_revision) is not int or expected_revision < 0 or not isinstance(value, list) or len(value) > 2000:
+        raise HTTPException(422, "voice_catalog_invalid")
+    from .multimedia_generation import voice_catalog_projection
+
+    catalog = voice_catalog_projection(value)
+    with runtime_config.configuration_guard():
+        stored = _stored(db)
+        if stored.get("revision", 0) != expected_revision:
+            raise HTTPException(409, "configuration_revision_conflict")
+        _preserve_voice_evidence(catalog, stored.get("voice_catalog", []))
+        merged = {**stored, "voice_catalog": catalog, "schema_version": 2, "revision": expected_revision + 1}
+        commit_configuration(db, merged, expected_revision=expected_revision, actor=actor)
+        return configuration_view(db)
+
+
+def refresh_voice_catalog(db, *, actor):
+    """Refresh voice metadata only on an explicit admin action.
+
+    This intentionally performs no retry and never runs from configuration reads
+    or route planning. Provider failures return the existing local inventory.
+    """
+    stored = _stored(db)
+    existing = []
+    from .multimedia_generation import voice_preset_projection
+
+    for item in stored.get("voice_catalog", []):
+        try:
+            existing.append(voice_preset_projection(item, trusted_verified=True))
+        except HTTPException:
+            continue
+    discovered: list[dict] = []
+    try:
+        from .content_harness.registry import registry
+        from .minimax_cli_provider import MiniMaxCLITTSProvider
+
+        provider = registry.resolve("tts_provider", "minimax.cli", "1")
+        if type(provider) is MiniMaxCLITTSProvider:
+            seen = {}
+            for profile_id, profile in (stored.get("profiles") or {}).items():
+                binding = (profile.get("capability_bindings") or {}).get("tts") if isinstance(profile, dict) else None
+                model_id = binding.get("model_id") if isinstance(binding, dict) and binding.get("adapter_key") == "minimax.cli" and binding.get("adapter_version") == "1" else None
+                if not isinstance(model_id, str) or profile.get("enabled") is False:
+                    continue
+                if model_id not in seen:
+                    seen[model_id] = provider.list_voices(model_id=model_id)
+                for item in seen[model_id]:
+                    try:
+                        discovered.append(voice_preset_projection({**item,
+                            "id": f"{profile_id}.{item['voice_id']}", "profile_id": profile_id}, trusted_verified=True))
+                    except (HTTPException, KeyError, TypeError):
+                        continue
+    except Exception:  # noqa: BLE001 Explicit refresh reports a bounded unavailable result.
+        discovered = []
+    by_key = {(item["provider_key"], item["provider_version"], item["model_id"], item["profile_id"], item["voice_id"]): item
+              for item in existing}
+    for item in discovered:
+        key = (item["provider_key"], item["provider_version"], item["model_id"], item["profile_id"], item["voice_id"])
+        previous = by_key.get(key)
+        by_key[key] = {**item, **({field: previous[field] for field in ("id", "label", "tags", "favorite", "preview_ref", "rate")}
+                                  if previous else {})}
+    revision = stored.get("revision", 0)
+    if discovered:
+        if len(by_key) > 2000:
+            raise HTTPException(422, "voice_catalog_invalid")
+        merged = {**stored, "voice_catalog": list(by_key.values()), "schema_version": 2, "revision": revision + 1}
+        commit_configuration(db, merged, expected_revision=revision, actor=actor)
+        result = configuration_view(db)
+        result["voice_catalog_refresh"] = {"status": "updated", "count": len(discovered)}
+        return result
+    result = configuration_view(db)
+    result["voice_catalog_refresh"] = {"status": "unchanged", "count": len(existing),
+                                        "reason": "voice_catalog_provider_unavailable"}
+    return result
+
+
+def _preserve_voice_evidence(catalog, existing):
+    fields = ("id", "provider_key", "provider_version", "model_id", "profile_id", "voice_id")
+    verified = {tuple(item.get(field) for field in fields) for item in existing
+                if isinstance(item, dict) and item.get("verified") is True}
+    for item in catalog:
+        item["verified"] = tuple(item[field] for field in fields) in verified
 
 
 def commit_configuration(db, merged, *, expected_revision, actor):
@@ -260,10 +413,43 @@ def _hash(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode()).hexdigest()
 
 
+def _native_batch_supported(capability: str, adapter_key: str, adapter_version: str) -> bool:
+    """Read the registered adapter contract without probing the provider."""
+    if capability != "image_generation":
+        return False
+    from .content_harness.providers import registry
+
+    try:
+        provider_kind = {"image_generation": "image_provider"}[capability]
+        provider = registry.resolve(provider_kind, adapter_key, adapter_version)
+    except Exception:  # noqa: BLE001 Registry lookup must not expose provider diagnostics.
+        return False
+    return callable(getattr(provider, "generate_batch", None))
+
+
+def _multimedia_controls(binding, capability):
+    if capability == "image_generation" and binding["adapter_key"] == "openai.compatible":
+        return {"supported_fields": ["items", "pixels", "aspect_ratio", "timeout_seconds"],
+                "candidate_counts": [1, 2, 3, 4], "reference_images": False,
+                "native_batch": _native_batch_supported(capability, binding["adapter_key"], binding["adapter_version"])}
+    if capability == "image_generation" and binding["adapter_key"] == "minimax.cli":
+        return {"supported_fields": ["items", "pixels", "aspect_ratio", "timeout_seconds"],
+                "candidate_counts": [1, 2, 3, 4], "reference_images": False,
+                "native_batch": _native_batch_supported(capability, binding["adapter_key"], binding["adapter_version"])}
+    if capability == "tts" and tts_parameters_supported(binding):
+        return {"supported_fields": ["items", "seconds", "timeout_seconds", "voice_id", "rate"],
+                "candidate_counts": [1], "voice_catalog": True}
+    return {"supported_fields": [], "candidate_counts": [1], "reference_images": False}
+
+
 def plan(db, *, capability, selected_profile, parameters=None, explicit_plugin=None,
-         explicit_profile=None, input_hash=None, source_refs=None, _for_execution=False):
+         explicit_profile=None, input_hash=None, source_refs=None, configuration_mode="auto",
+         _for_execution=False):
     if capability not in CAPABILITIES:
         raise HTTPException(422, "capability_unknown")
+    if configuration_mode not in {"auto", "custom"}:
+        # Composed stages resolve their declared chain before calling this planner.
+        raise HTTPException(422, "multimedia_configuration_mode_invalid")
     view = configuration_view(db)
     params = copy.deepcopy(parameters or {})
     refs = copy.deepcopy(source_refs or [])
@@ -278,17 +464,39 @@ def plan(db, *, capability, selected_profile, parameters=None, explicit_plugin=N
         for ref in refs
     )):
         raise HTTPException(422, "plan_source_refs_invalid")
-    if not isinstance(params, dict) or set(params) - {"items", "pixels", "seconds", "tokens", "timeout_seconds"}:
+    if not isinstance(params, dict) or set(params) - {"items", "pixels", "seconds", "tokens", "timeout_seconds", "aspect_ratio", "voice_id", "rate"}:
         raise HTTPException(422, "plan_parameters_invalid")
+    if capability == "image_generation":
+        from .multimedia_generation import normalize_parameters
+
+        params = normalize_parameters(capability, params)
+    elif capability == "tts":
+        if set(params) - {"items", "seconds", "timeout_seconds", "voice_id", "rate"}:
+            raise HTTPException(422, "multimedia_parameters_unsupported")
+        if type(params.get("items", 1)) is not int or params.get("items", 1) != 1:
+            raise HTTPException(422, "multimedia_audio_single_output_required")
+    try:
+        spoken_parameters = tts_parameters(params, capability=capability)
+    except (TypeError, ValueError):
+        raise HTTPException(422, "plan_tts_parameters_invalid") from None
+    if spoken_parameters is not None:
+        params.update(spoken_parameters)
+    if "aspect_ratio" in params:
+        from .media_dimensions import canonical_aspect_ratio
+
+        if capability != "image_generation":
+            raise HTTPException(422, "plan_aspect_ratio_unsupported")
+        try:
+            params["aspect_ratio"] = canonical_aspect_ratio(params["aspect_ratio"])
+        except ValueError:
+            raise HTTPException(422, "plan_aspect_ratio_unsupported") from None
     result = {"status": "blocked", "reason": "binding_not_configured", "configuration_revision": view["revision"],
               "required_capability": capability, "selected_profile": selected_profile,
               "execution_profile": selected_profile, "plugin_id": None}
     selected = view["profiles"].get(selected_profile)
-    if selected is None and not (explicit_profile or explicit_plugin):
-        result["reason"] = "selected_profile_missing"
-        return result
-    if selected is not None and not selected["enabled"] and not (explicit_profile or explicit_plugin):
-        result["reason"] = "profile_disabled"
+    unavailable = "selected_profile_missing" if selected is None else "profile_disabled" if not selected["enabled"] else None
+    if unavailable and not (explicit_profile or explicit_plugin) and not view["policies"].get("allow_automatic_fallback"):
+        result["reason"] = unavailable
         return result
     limits = view["policies"].get("limits", {}).get(capability)
     if not _bounded(capability, limits):
@@ -328,12 +536,68 @@ def plan(db, *, capability, selected_profile, parameters=None, explicit_plugin=N
         if not state["executable"]:
             return False
         binding = target["capability_bindings"][capability]
+        if (capability == "image_generation" and "aspect_ratio" in params
+                and "aspect_ratio" not in _multimedia_controls(binding, capability)["supported_fields"]):
+            result["reason"] = "multimedia_parameters_unsupported"
+            return False
+        if capability == "image_generation" and binding["adapter_key"] == "minimax.cli" and refs:
+            result["reason"] = "multimedia_reference_images_unsupported"
+            return False
+        candidate_mode = "single"
+        if capability == "image_generation" and params.get("items", 1) > 1:
+            candidate_mode = ("native" if _native_batch_supported(capability, binding["adapter_key"],
+                                                                   binding["adapter_version"]) else "fan_out")
+            if candidate_mode == "fan_out" and configuration_mode == "custom":
+                result["reason"] = "multimedia_custom_batch_requires_declared_composition"
+                return False
+            if candidate_mode == "fan_out":
+                from .content_harness.registry import RegistryError, registry
+
+                try:
+                    adapter = registry.resolve("image_provider", binding["adapter_key"], binding["adapter_version"])
+                except RegistryError:
+                    adapter = None
+                if getattr(adapter, "supports_candidate_fan_out", False) is not True:
+                    result["reason"] = "multimedia_candidate_fan_out_unavailable"
+                    return False
+        if spoken_parameters is not None and not tts_parameters_supported(binding, probe=_for_execution):
+            result["reason"] = "tts_parameters_unsupported"
+            return False
+        if spoken_parameters is not None and view.get("voice_catalog"):
+            voice = spoken_parameters["voice_id"]
+            exact = next((item for item in view["voice_catalog"]
+                          if item["provider_key"] == binding["adapter_key"]
+                          and item["provider_version"] == binding["adapter_version"]
+                          and item["model_id"] == binding["model_id"]
+                          and item["voice_id"] == voice
+                          and item["profile_id"] == profile_id), None)
+            if exact is None:
+                result["reason"] = "voice_catalog_binding_unavailable"
+                return False
         result.update(status="ready", reason=None, route_reason=route_reason,
                       adapter_key=binding["adapter_key"], adapter_version=binding["adapter_version"],
                       model_id=binding["model_id"], runtime_hash=state["runtime_hash"],
                       binding_hash=_hash(binding), parameters=params, limits=copy.deepcopy(limits),
                       input_hash=input_hash, source_refs=refs, explicit_profile=explicit_profile,
-                      explicit_plugin=explicit_plugin, dispatch_ready=input_hash is not None)
+                      explicit_plugin=explicit_plugin, configuration_mode=configuration_mode,
+                      dispatch_ready=input_hash is not None)
+        if capability in {"image_generation", "tts"}:
+            from .multimedia_generation import digest
+
+            result["multimedia"] = {
+                "schema": "studio.multimedia.request.v1", "capability": capability,
+                "parameters": copy.deepcopy(params),
+                "candidate_count": params.get("items", 1),
+                "candidate_mode": candidate_mode,
+                "configuration_mode": configuration_mode,
+                "binding": {"adapter_key": binding["adapter_key"], "adapter_version": binding["adapter_version"],
+                            "model_id": binding["model_id"], "profile_id": profile_id},
+            }
+            result["multimedia"]["config_hash"] = digest(result["multimedia"])
+        if spoken_parameters is not None:
+            result["voice_binding"] = {"voice_id": spoken_parameters["voice_id"], "rate": spoken_parameters["rate"],
+                                        "provider_key": binding["adapter_key"], "provider_version": binding["adapter_version"],
+                                        "model_id": binding["model_id"], "profile_id": profile_id}
         result["plan_hash"] = _hash(result)
         result["plan_signature"] = hmac.new(_PLAN_SIGNING_KEY, result["plan_hash"].encode(), hashlib.sha256).hexdigest()
         return True
@@ -341,11 +605,14 @@ def plan(db, *, capability, selected_profile, parameters=None, explicit_plugin=N
     if explicit_profile:
         choose(explicit_profile, None, "explicit_workflow_binding")
         return result
+    if configuration_mode == "custom" and not explicit_plugin:
+        choose(selected_profile, None, "selected_model_binding")
+        return result
     if explicit_plugin:
         candidates = [explicit_plugin]
     else:
-        selected_state = state_for(selected_profile)
-        if selected_state["executable"]:
+        selected_state = state_for(selected_profile) if unavailable is None else None
+        if selected_state is not None and selected_state["executable"]:
             choose(selected_profile, None, "selected_model_binding")
             return result
         if not view["policies"].get("allow_automatic_fallback"):
@@ -385,7 +652,7 @@ def revalidate_plan(db, frozen):
     current = plan(db, capability=frozen["required_capability"], selected_profile=frozen["selected_profile"],
                    parameters=frozen["parameters"], explicit_profile=frozen["explicit_profile"],
                    explicit_plugin=frozen["explicit_plugin"], input_hash=frozen["input_hash"], source_refs=frozen["source_refs"],
-                   _for_execution=True)
+                   configuration_mode=frozen.get("configuration_mode", "auto"), _for_execution=True)
     if current.get("plan_hash") != frozen["plan_hash"]:
         raise HTTPException(409, "execution_plan_stale")
     return current

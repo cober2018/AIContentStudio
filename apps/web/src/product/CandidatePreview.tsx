@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { currentUser } from "../api";
 import { ErrorBanner } from "../components/ui";
 import { OfficialArticlePreview, type OfficialArticleRender } from "./OfficialArticlePreview";
@@ -26,7 +27,8 @@ type CandidatePreviewProps = { preview: FrozenPreview & { official_render?: Offi
 
 export function CandidatePreview(props: CandidatePreviewProps) {
   const official = props.preview.official_render;
-  return <>{official && <OfficialArticlePreview render={official} path={props.path} />}<ContentPreview {...props} /></>;
+  const sources = (props.preview as FrozenPreview & { external_execution?: { material_revision_id: number; content_hash: string; project_id: number; unit_id: number; package_id: number; package_hash: string; execution_id: number; output_id: number; executor_key: string; executor_version: string }[] }).external_execution || [];
+  return <>{official && <OfficialArticlePreview render={official} path={props.path} />}<ContentPreview {...props} />{sources.length > 0 && <section aria-label="冻结外部成果血缘" className="mt-4 space-y-2 rounded-lg border border-indigo-100 bg-indigo-50 p-4"><h4 className="text-sm font-semibold">已纳入正文的外部成果</h4><p className="text-xs text-slate-600">仅展示已人工接受、明确绑定并随正文冻结的素材；原始待接受成果不属于审核内容。</p>{sources.map(source => <div key={source.material_revision_id} className="break-all text-xs text-slate-600"><Link className="text-indigo-700" to={`/projects/${source.project_id}/units/${source.unit_id}/production?panel=execution&execution=${source.execution_id}`}>素材 Revision #{source.material_revision_id} · 执行 #{source.execution_id} · 输出 #{source.output_id} →</Link><p>包 #{source.package_id} · {source.executor_key}@{source.executor_version}</p><p>素材哈希：{source.content_hash}</p><p>冻结包哈希：{source.package_hash}</p></div>)}</section>}</>;
 }
 
 function ContentPreview({ preview, path, assets = [] }: CandidatePreviewProps) {

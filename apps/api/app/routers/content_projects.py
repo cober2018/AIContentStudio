@@ -1,13 +1,18 @@
 """Persistent content projects, personas, and units."""
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from fastapi.exceptions import RequestValidationError
+from fastapi.routing import APIRoute
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 from ..db import get_db
-from ..deps import get_current_user, require_editor, require_editor_or_reviewer
+from ..deps import get_current_user, get_existing_user, require_editor, require_editor_or_reviewer
 from ..models import (
     AccountWorkflowDefault,
     ContentAsset,
@@ -43,6 +48,197 @@ from ..services.project_workflows import (
 from .workflows import NodeCompleteIn, _serialize_run, list_node_attempts
 
 router = APIRouter(prefix="/api/v1", tags=["content-projects"])
+
+
+class StagePreviewRoute(APIRoute):
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+
+        async def bounded(request):
+            chunks, size = [], 0
+            async for chunk in request.stream():
+                size += len(chunk)
+                if size > 128 * 1024:
+                    return JSONResponse(status_code=422, content={"detail": {"code": "stage_input_bounds"}})
+                chunks.append(chunk)
+            request._body = b"".join(chunks)
+            def pairs(items):
+                value = {}
+                for key, child in items:
+                    if key in value:
+                        raise ValueError("duplicate_json_key")
+                    value[key] = child
+                return value
+            def constant(_value):
+                raise ValueError("non_finite_json")
+            try:
+                json.loads(request._body, object_pairs_hook=pairs, parse_constant=constant)
+            except (ValueError, UnicodeError, RecursionError):
+                return JSONResponse(status_code=422, content={"detail": {"code": "stage_input_invalid"}})
+            try:
+                return await handler(request)
+            except RequestValidationError:
+                # Validation inputs can contain secrets; never echo an unsafe request into diagnostics.
+                return JSONResponse(status_code=422, content={"detail": {"code": "stage_input_invalid"}})
+        return bounded
+
+
+stage_preview_router = APIRouter(route_class=StagePreviewRoute)
+
+
+class StagePreviewIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    run_id: int | None = Field(default=None, strict=True, ge=1)
+    stage_override: dict = Field(default_factory=dict)
+
+
+class StageRunIn(StagePreviewIn):
+    expected_resolution_hash: str = Field(min_length=64, max_length=64)
+    invocation_key: str = Field(min_length=1, max_length=150)
+
+
+class StageReconcileIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    run_id: int = Field(strict=True, ge=1)
+    attempt_id: int = Field(strict=True, ge=1)
+
+
+class StageMasterAcceptanceIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    run_id: int = Field(strict=True, ge=1)
+    attempt_id: int = Field(strict=True, ge=1)
+    expected_output_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    expected_resolution_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    expected_context_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    candidate_id: str = Field(min_length=1, max_length=100)
+    candidate_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    expected_revision: int = Field(strict=True, ge=0)
+    adoption_key: str = Field(min_length=1, max_length=150)
+    payload: dict
+    payload_schema: str | None = Field(default=None, pattern="^(text|graphic|video)\\.master\\.v2$")
+    asset_refs: list[dict] = Field(default_factory=list, max_length=250)
+    evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
+    decision: str = Field(pattern="^(accepted|accepted_with_edits)$")
+    note: str = Field(default="", max_length=2000)
+
+
+class StageCreativeAcceptanceIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    run_id: int = Field(strict=True, ge=1)
+    attempt_id: int = Field(strict=True, ge=1)
+    expected_output_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    expected_resolution_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    expected_context_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    candidate_id: str = Field(min_length=1, max_length=100)
+    candidate_hash: str = Field(pattern="^[0-9a-f]{64}$")
+    acceptance_key: str = Field(pattern="^[A-Za-z0-9][A-Za-z0-9_.:-]{0,149}$")
+    note: str = Field(default="", max_length=2000)
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/creation-recipe")
+def get_creation_recipe(project_id: int, unit_id: int, run_id: int | None = None,
+                        db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    from ..services.creation_recipes import recipe_view
+    from ..services.stage_contracts import StageContractError
+
+    try:
+        return recipe_view(db, project_id, unit_id, user, run_id=run_id)
+    except StageContractError as exc:
+        raise HTTPException(422, {"code": str(exc)}) from exc
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/result")
+def read_creation_stage_result(project_id: int, unit_id: int, node_id: str, run_id: int,
+                               attempt_id: int | None = None, invocation_key: str | None = None,
+                               db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    from ..services.creation_recipes import stage_result
+    from ..services.stage_contracts import StageContractError
+    from ..services.stage_invocations import StageInvocationError
+
+    try:
+        return stage_result(db, project_id, unit_id, node_id, user,
+                            run_id=run_id, attempt_id=attempt_id, invocation_key=invocation_key)
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+    except StageContractError:
+        raise HTTPException(409, {"code": "stage_attempt_integrity"}) from None
+
+
+@stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/preview")
+def preview_creation_stage(payload: StagePreviewIn, project_id: int, unit_id: int, node_id: str,
+                           db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    from ..services.creation_recipes import preview_stage
+    from ..services.stage_contracts import StageContractError
+    from ..services.stage_invocations import StageInvocationError
+
+    try:
+        return preview_stage(db, project_id, unit_id, node_id, user,
+            run_id=payload.run_id, stage_override=payload.stage_override)
+    except StageContractError as exc:
+        raise HTTPException(422, {"code": str(exc)}) from exc
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+
+
+@stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/run")
+def run_creation_stage(payload: StageRunIn, project_id: int, unit_id: int, node_id: str,
+                       db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    from ..services.stage_invocations import StageInvocationError, execute_stage
+
+    if payload.run_id is None:
+        raise HTTPException(422, {"code": "stage_run_required"})
+    try:
+        return execute_stage(
+            db, project_id, unit_id, node_id, user,
+            run_id=payload.run_id,
+            expected_resolution_hash=payload.expected_resolution_hash,
+            invocation_key=payload.invocation_key,
+            stage_override=payload.stage_override,
+        )
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, {"code": exc.code}) from exc
+
+
+@stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/reconcile")
+def reconcile_creation_stage(payload: StageReconcileIn, project_id: int, unit_id: int, node_id: str,
+                             db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    from ..services.stage_invocations import StageInvocationError, reconcile_running_attempt
+
+    try:
+        return reconcile_running_attempt(db, project_id=project_id, unit_id=unit_id, node_id=node_id,
+                                         run_id=payload.run_id, attempt_id=payload.attempt_id, user=user)
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, {"code": exc.code}) from exc
+
+
+@stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/accept-master")
+def accept_creation_stage_master(payload: StageMasterAcceptanceIn, project_id: int, unit_id: int, node_id: str,
+                                 db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    from ..services.stage_contracts import StageContractError
+    from ..services.stage_invocations import StageInvocationError
+    from ..services.stage_master_adoptions import accept_master
+    from ..services.text_documents import TextDocumentError
+
+    try:
+        return accept_master(db, project_id, unit_id, node_id, user, payload.model_dump(exclude_none=True))
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+    except (StageContractError, TextDocumentError) as exc:
+        raise HTTPException(422, {"code": str(exc)}) from None
+
+
+@stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/accept-creative")
+def accept_creative_stage(project_id: int, unit_id: int, node_id: str, payload: StageCreativeAcceptanceIn,
+                          db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services.creative_method_stage import CreativeMethodStageError, accept
+    from ..services.stage_contracts import StageContractError
+    from ..services.stage_invocations import StageInvocationError
+    try:
+        return accept(db, project_id, unit_id, node_id, user, payload.model_dump())
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+    except (StageContractError, CreativeMethodStageError) as exc:
+        raise HTTPException(422, {"code": str(exc)}) from None
 
 
 class PersonaIn(BaseModel):
@@ -176,9 +372,7 @@ def _default_version_matches(workflow: Workflow, *, persona_id: int, account_id:
     )
 
 
-def _project_json(project: ContentProject, db: Session) -> dict:
-    units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project.id).order_by(ContentUnit.id)).all()
-    brief = current_brief(db, project.id)
+def _project_payload(project: ContentProject, units: list[ContentUnit], brief) -> dict:
     return {
         "id": project.id,
         "title": project.title,
@@ -186,6 +380,11 @@ def _project_json(project: ContentProject, db: Session) -> dict:
         "status": project.status,
         "units": [_unit_json(unit) for unit in units],
     }
+
+
+def _project_json(project: ContentProject, db: Session) -> dict:
+    units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project.id).order_by(ContentUnit.id)).all()
+    return _project_payload(project, units, current_brief(db, project.id))
 
 
 @router.get("/content-personas")
@@ -215,7 +414,15 @@ def create_persona(payload: PersonaIn, db: Session = Depends(get_db), user: User
 @router.get("/content-projects")
 def list_projects(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     rows = db.scalars(select(ContentProject).where(ContentProject.owner_user_id == user.id).order_by(ContentProject.id.desc())).all()
-    return [_project_json(row, db) for row in rows]
+    # 批量取 units 与最新 brief，替代逐项目 2 次查询的 1+2N
+    project_ids = [row.id for row in rows]
+    units_by_project: dict[int, list[ContentUnit]] = {project_id: [] for project_id in project_ids}
+    for unit in db.scalars(select(ContentUnit).where(ContentUnit.project_id.in_(project_ids)).order_by(ContentUnit.id)).all():
+        units_by_project[unit.project_id].append(unit)
+    briefs: dict[int, CreativeBriefRevision] = {}
+    for brief in db.scalars(select(CreativeBriefRevision).where(CreativeBriefRevision.project_id.in_(project_ids)).order_by(CreativeBriefRevision.revision_no)).all():
+        briefs[brief.project_id] = brief  # 后写覆盖＝保留最高 revision_no，与 current_brief 一致
+    return [_project_payload(row, units_by_project[row.id], briefs.get(row.id)) for row in rows]
 
 
 @router.post("/content-projects", status_code=201)
@@ -589,7 +796,7 @@ def save_persona_default(payload: WorkflowSaveIn, persona_id: int, modality: str
         raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存")
     try:
         definition = validate_portable(validate_definition(payload.definition), source_project_id=payload.source_project_id, source_unit_id=payload.source_unit_id)
-        validate_reusable_profiles(db, definition)
+        validate_reusable_profiles(db, definition, user=user)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     try:
@@ -652,7 +859,7 @@ def _save_scoped_default(db: Session, user: User, *, kind: str, entity_id: int, 
         raise HTTPException(409, "默认工作流已被更新，请刷新后再保存")
     try:
         definition = validate_portable(validate_definition(payload.definition), source_project_id=payload.source_project_id, source_unit_id=payload.source_unit_id)
-        validate_reusable_profiles(db, definition)
+        validate_reusable_profiles(db, definition, user=user)
         workflow = new_workflow_version(db, key=f"{kind}.{entity_id}.{modality}", name=f"{entity.name} × {modality}", definition=definition, owner_user_id=user.id, scope=f"{kind}_default", created_by=user.email)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
@@ -730,6 +937,22 @@ def start_project_run(payload: ProjectRunIn, project_id: int, unit_id: int, db: 
         validate_definition(workflow.definition_json)
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
+    stage_run = False
+    from ..services.content_harness import registry as plugin_registry
+    for node in workflow.definition_json.get("nodes", []):
+        try:
+            plugin_key, plugin_version = workflow_engine.resolve_node_key(node)
+            descriptor = plugin_registry.descriptor("node", plugin_key, plugin_version)
+        except (ValueError, plugin_registry.RegistryError):
+            continue
+        stage_run = stage_run or descriptor.stage_contract is not None
+    if stage_run:
+        from ..services.stage_invocations import StageInvocationError, require_receipt_schema
+
+        try:
+            require_receipt_schema(db)
+        except StageInvocationError as exc:
+            raise HTTPException(exc.status_code, {"code": exc.code}) from None
     for node in workflow.definition_json.get("nodes", []):
         if node.get("kind") == "Data":
             try:
@@ -741,7 +964,10 @@ def start_project_run(payload: ProjectRunIn, project_id: int, unit_id: int, db: 
             except ValueError as exc:
                 raise HTTPException(409, str(exc)) from exc
     try:
-        run = workflow_engine.start_run(db, workflow, payload.params, user, content_unit_id=unit.id)
+        run = workflow_engine.start_run(
+            db, workflow, payload.params, user, content_unit_id=unit.id,
+            advance_now=not stage_run, stage_run=stage_run,
+        )
     except ValueError as exc:
         raise HTTPException(409, str(exc)) from exc
     return _serialize_run(db, run)
@@ -839,3 +1065,6 @@ def list_unit_outputs(project_id: int, unit_id: int, db: Session = Depends(get_d
         "attempt_id": row.attempt_id,
         "provenance": row.provenance_json,
     } for row in rows]
+
+
+router.include_router(stage_preview_router)

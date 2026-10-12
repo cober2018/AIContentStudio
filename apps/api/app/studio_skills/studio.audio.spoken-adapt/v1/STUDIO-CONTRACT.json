@@ -1,0 +1,72 @@
+{
+  "schema": "studio.skill.contract.v1",
+  "key": "studio.audio.spoken-adapt",
+  "version": "1",
+  "ref": "studio.audio.spoken-adapt@1",
+  "kind": "skill",
+  "modality": "audio",
+  "purpose": "在不改变事实的前提下把文字改成口语稿",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.creative.method.v1"
+  ],
+  "output_schemas": [
+    "audio.spoken-adaptation.v1"
+  ],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [
+    "instruction",
+    "pace"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "instruction": {
+        "type": "string",
+        "maxLength": 4000
+      },
+      "pace": {
+        "type": "string",
+        "enum": [
+          "slow",
+          "medium",
+          "fast"
+        ],
+        "maxLength": 6
+      }
+    }
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.audio.calm-engineer@1",
+    "studio.audio.clear-explainer@1",
+    "studio.audio.warm-conversational@1",
+    "studio.audio.reflective-story@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.audio.explainer@1",
+    "studio.quality.audio.conversational@1"
+  ],
+  "references": []
+}

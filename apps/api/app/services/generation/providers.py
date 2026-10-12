@@ -31,6 +31,9 @@ class GenerateRequest:
     user_prompt: str
     schema_hint: str = ""
     context: dict[str, Any] | None = None  # mock provider 使用；真实 provider 只看 prompt
+    temperature: float | None = None
+    max_tokens: int | None = None
+    timeout_seconds: int | None = None
 
 
 @dataclass
@@ -125,10 +128,17 @@ class OpenAICompatibleProvider:
                 {"role": "system", "content": request.system_prompt},
                 {"role": "user", "content": request.user_prompt},
             ],
-            "temperature": 0.4,
+            "temperature": request.temperature if request.temperature is not None else 0.4,
         }
         if request.schema_hint:
             payload["response_format"] = {"type": "json_object"}
+        if request.max_tokens is not None:
+            if type(request.max_tokens) is not int or not 1 <= request.max_tokens <= 1000000:
+                raise LLMError("chat_token_limit_invalid")
+            payload["max_tokens"] = request.max_tokens
+        timeout = request.timeout_seconds if request.timeout_seconds is not None else 120
+        if type(timeout) is not int or not 1 <= timeout <= 300:
+            raise LLMError("chat_timeout_invalid")
         import asyncio
 
         from ..model_registration import provider_request
@@ -142,7 +152,7 @@ class OpenAICompatibleProvider:
             "trusted_private_endpoint": self.base_url if self.base_url.startswith("http://") else "",
         }
         try:
-            return await asyncio.to_thread(provider_request, provider, "/chat/completions", payload=payload, timeout=120)
+            return await asyncio.to_thread(provider_request, provider, "/chat/completions", payload=payload, timeout=timeout)
         except Exception as exc:
             raise LLMError("provider_request_failed") from exc
 
@@ -299,20 +309,27 @@ def provider_model_name(purpose: str | None = None) -> str:
 
 
 def input_hash(request: GenerateRequest) -> str:
+    value = {"purpose": request.purpose, "system": request.system_prompt, "user": request.user_prompt}
+    if request.temperature is not None:
+        value["temperature"] = request.temperature
+    if request.max_tokens is not None:
+        value["max_tokens"] = request.max_tokens
+    if request.timeout_seconds is not None:
+        value["timeout_seconds"] = request.timeout_seconds
     payload = json.dumps(
-        {"purpose": request.purpose, "system": request.system_prompt, "user": request.user_prompt},
+        value,
         ensure_ascii=False,
         sort_keys=True,
     )
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-def record_run(db, request: GenerateRequest, result: GenerateResult | None, error: str | None = None, *, provider_name: str | None = None, model_name: str | None = None, prompt_version: str | None = None) -> LLMRun:
+def record_run(db, request: GenerateRequest, result: GenerateResult | None, error: str | None = None, *, provider_name: str | None = None, model_name: str | None = None, prompt_version: str | None = None, route_provenance: dict | None = None) -> LLMRun:
     usage = dict(result.usage or {}) if result else None
-    actual_route = getattr(result, "route_provenance", None) if result else None
+    actual_route = route_provenance or (getattr(result, "route_provenance", None) if result else None)
     config = actual_route or effective_llm_config(request.purpose)
     if actual_route:
-        usage["model_route"] = dict(actual_route)
+        usage = {**(usage or {}), "model_route": dict(actual_route)}
     run = LLMRun(
         provider=provider_name or (actual_route or {}).get("provider") or config["provider"],
         model=model_name or config.get("model") or "mock-structured-v1",
@@ -327,4 +344,27 @@ def record_run(db, request: GenerateRequest, result: GenerateResult | None, erro
     )
     db.add(run)
     db.flush()
+    return run
+
+
+def record_validated_stage_run(db, request: GenerateRequest, result: GenerateResult, *,
+                               validated_data: dict | None = None, error: str | None = None,
+                               provider_name: str, model_name: str, prompt_version: str,
+                               route_provenance: dict) -> LLMRun:
+    from ..stage_contracts import canonical
+
+    response_hash = (hashlib.sha256(result.raw_output.encode()).hexdigest()
+                     if isinstance(result.raw_output, str) else None)
+    safe_result = None
+    if validated_data is not None:
+        data = canonical(validated_data)
+        usage = {key: value for key, value in (result.usage if isinstance(result.usage, dict) else {}).items()
+                 if key in {"prompt_tokens", "completion_tokens", "total_tokens", "input_tokens", "output_tokens"}
+                 and type(value) is int and 0 <= value <= 2**53}
+        # Raw reasoning/diagnostics are not accepted output and must never be retained here.
+        safe_result = GenerateResult(data=data, raw_output=json.dumps(data, ensure_ascii=False,
+            sort_keys=True, separators=(",", ":")), usage=usage)
+    run = record_run(db, request, safe_result, error=error, provider_name=provider_name,
+        model_name=model_name, prompt_version=prompt_version, route_provenance=route_provenance)
+    run.usage_json = {**(run.usage_json or {}), "response_hash": response_hash}
     return run

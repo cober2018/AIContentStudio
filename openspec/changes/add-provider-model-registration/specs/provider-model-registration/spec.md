@@ -22,11 +22,20 @@ The system SHALL fetch an authenticated bounded model list only on an authorized
 - **THEN** the UI displays a safe reason, keeps existing configuration and allows manual IDs without claiming validation success
 
 ### Requirement: Private gateway access is narrowly authorized
-HTTP/private gateway access SHALL require administrator confirmation of the exact trusted endpoint. Both discovery and execution MUST use the same bounded destination policy, prohibit redirects/credential-bearing URLs/unapproved targets and preserve unrelated SSRF and media download restrictions.
+HTTP/private gateway access SHALL require administrator confirmation of the exact trusted endpoint. Authorized private destinations SHALL be limited to existing RFC1918 literal IPv4 gateways or the literal `127.0.0.1` local tunnel; this MUST NOT authorize other loopback addresses, localhost DNS aliases, link-local or metadata destinations. Both discovery and execution MUST use the same bounded destination policy, prohibit redirects/credential-bearing URLs/unapproved targets and preserve unrelated SSRF and media download restrictions.
 
 #### Scenario: CPA gateway registration
 - **WHEN** the administrator explicitly registers the trusted LAN HTTP endpoint
 - **THEN** only that endpoint is authorized and the UI discloses unencrypted credential transport
+
+#### Scenario: Explicit local CPA tunnel
+- **WHEN** the administrator saves `http://127.0.0.1:8317/v1` with an identical trusted endpoint
+- **THEN** both model discovery and registered chat execution pin that literal destination without using DNS, proxies or redirects
+- **AND** existing credentials, profiles, defaults and purpose routes remain unchanged unless separately edited
+
+#### Scenario: Unapproved local destination
+- **WHEN** an HTTP provider omits the exact trusted endpoint, specifies a mismatched endpoint, or uses another loopback address or localhost alias
+- **THEN** registration or execution rejects the destination without partially saving configuration or sending credentials
 
 ### Requirement: Default and purpose selections are executed truthfully
 Model selection SHALL resolve supported explicit task/node selection, then saved purpose selection, then global default, then existing legacy fallback only when no new default exists. Invalid explicit choices MUST fail with a typed reason. Setting a default MUST preserve existing explicit routes and historical runs.

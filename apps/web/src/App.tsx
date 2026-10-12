@@ -18,7 +18,7 @@ const Templates = lazy(() => import("./pages/Templates"));
 const Topics = lazy(() => import("./pages/Topics"));
 const Workflows = lazy(() => import("./pages/Workflows"));
 const Workspace = lazy(() => import("./pages/Workspace"));
-const ProductPlaceholder = lazy(() => import("./product/ProductPlaceholders"));
+const ProductionQueuePage = lazy(() => import("./product/ProductionQueuePage"));
 const IdentityWorkspace = lazy(() => import("./product/IdentityWorkspace"));
 const LearningWorkspace = lazy(() => import("./product/LearningWorkspace"));
 const SystemAssetsKnowledgePage = lazy(() => import("./product/SystemAssetsKnowledgePage"));
@@ -43,22 +43,12 @@ const NAV = [
   { to: "/home", label: "今日工作台", icon: "◧" },
   { to: "/opportunities", label: "内容机会", icon: "✧" },
   { to: "/projects", label: "内容项目", icon: "▤" },
-  { to: "/production", label: "生产工作台", icon: "✍" },
+  { to: "/production", label: "创作与执行", icon: "✍" },
   { to: "/review", label: "审阅与发布", icon: "✓" },
   { to: "/identities", label: "内容身份", icon: "◉" },
   { to: "/assets", label: "素材与知识", icon: "▦" },
   { to: "/learning", label: "效果与学习", icon: "▥" },
   { to: "/settings", label: "设置", icon: "⚙" },
-];
-
-const LEGACY_NAV = [
-  { to: "/dashboard", label: "旧总览" }, { to: "/sources", label: "来源与证据" },
-  { to: "/connectors", label: "数据接入" }, { to: "/fact-packs", label: "FactPack" },
-  { to: "/topics", label: "选题中心" }, { to: "/workspace", label: "旧生产页" },
-  { to: "/materials", label: "旧素材库" }, { to: "/review-publish", label: "旧审核与发布" },
-  { to: "/legacy/review", label: "旧审核中心" }, { to: "/legacy/assets", label: "旧内容资产" },
-  { to: "/handoff", label: "文章交付" }, { to: "/workflows", label: "旧工作流" },
-  { to: "/templates", label: "模板与规则" },
 ];
 
 function RouteLoading() {
@@ -90,14 +80,14 @@ export default function App() {
 
 function Shell() {
   const location = useLocation();
-  const isLanding = location.pathname === "/";
+  const isLanding = location.pathname === "/legacy/landing";
   if (isLanding) {
     return (
       <RouteFailureBoundary key={location.pathname}>
         <Suspense fallback={<RouteLoading />}>
           <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/legacy/landing" element={<Landing />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </Suspense>
       </RouteFailureBoundary>
@@ -122,17 +112,14 @@ function Shell() {
                   {item.label}
                 </NavLink>
               ))}
-              <details className="mt-7 hidden border-t border-slate-700/70 pt-4 md:block">
-                <summary className="cursor-pointer px-3 text-xs text-slate-400">现有功能入口</summary>
-                <div className="mt-3 space-y-0.5">{LEGACY_NAV.map((item) => <Link key={item.to} to={item.to} className="block rounded-lg px-3 py-1.5 text-xs text-slate-400 hover:bg-[#252936] hover:text-white">{item.label}</Link>)}</div>
-              </details>
             </nav>
-            <div className="hidden border-t border-slate-700/70 px-5 py-4 text-[11px] text-slate-400 md:block">FE-F3A · 项目核心由后端保存</div>
+            <div className="hidden border-t border-slate-700/70 px-5 py-4 text-[11px] text-slate-400 md:block">本机工作台 · 项目与素材持久保存</div>
           </aside>
           <main className="min-w-0 flex-1" id="main-content">
             <RouteFailureBoundary key={location.pathname}>
               <Suspense fallback={<RouteLoading />}>
                 <Routes>
+              <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/opportunities" element={<OpportunitiesPage />} />
               <Route path="/opportunities/:id" element={<OpportunityDetailPage />} />
@@ -140,7 +127,7 @@ function Shell() {
               <Route path="/projects/demo" element={<ProjectsPage />} />
               <Route path="/projects/:projectId" element={<ProjectRoute />} />
               <Route path="/projects/:projectId/units/:unitId/production" element={<ProductionRoute />} />
-              <Route path="/production" element={<ProductPlaceholder kind="production" />} />
+              <Route path="/production" element={<ProductionQueuePage />} />
               <Route path="/review" element={<ProjectReviewCenter />} />
               <Route path="/identities" element={<IdentityWorkspace />} />
               <Route path="/assets" element={<SystemAssetsKnowledgePage />} />

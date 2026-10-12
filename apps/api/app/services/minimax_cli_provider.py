@@ -14,7 +14,6 @@ import hmac
 import io
 import json
 import logging
-import math
 import multiprocessing
 import os
 import pwd
@@ -438,10 +437,12 @@ class MiniMaxCLIImageProvider(_MiniMaxCredentialIdentity):
         parameters = request.get("parameters")
         pixels = parameters.get("pixels") if isinstance(parameters, dict) else None
         timeout = request.get("timeout_seconds", 25)
-        if (not isinstance(parameters, dict) or type(parameters.get("items")) is not int or parameters.get("items") != 1
+        if (not isinstance(parameters, dict) or type(parameters.get("items")) is not int or not 1 <= parameters.get("items") <= 4
                 or type(pixels) is not int or pixels < 512 * 512
-                or type(timeout) not in {int, float} or not 0 < timeout <= 25):
+                or type(timeout) not in {int, float} or not 0 < timeout <= 300):
             return MediaOutput("unavailable")
+        if parameters.get("items") > 1:
+            return self.generate_batch(request)
         return self.generate(request)
 
     def generate(self, request: dict) -> MediaOutput:
@@ -454,15 +455,62 @@ class MiniMaxCLIImageProvider(_MiniMaxCredentialIdentity):
         pixels = parameters.get("pixels", 1024 * 1024) if isinstance(parameters, dict) else None
         if type(pixels) is not int or pixels < 512 * 512:
             return MediaOutput("unavailable")
-        side = min(2048, math.isqrt(pixels) // 8 * 8)
+        from .media_dimensions import image_dimensions
+
+        try:
+            width, height = image_dimensions(pixels, parameters.get("aspect_ratio", "1:1"))
+        except ValueError:
+            return MediaOutput("unavailable")
         with tempfile.TemporaryDirectory(prefix="aics-mmx-") as directory:
             output = Path(directory) / "image.png"
             # Base64 avoids the CLI's unbounded CDN download/retry path.
             args = ["image", "generate", "--prompt", prompt, "--out", str(output), "--n", "1",
-                    "--width", str(side), "--height", str(side), "--response-format", "base64",
+                    "--width", str(width), "--height", str(height), "--response-format", "base64",
                     "--quiet", "--non-interactive", "--no-color"]
             command = _run(args, timeout=request.get("timeout_seconds", 25))
             return _read_output(output, mime=None, command=command)
+
+    def generate_batch(self, request: dict) -> MediaOutput:
+        prompt = _prompt(request)
+        model = request.get("model_id", "image-01")
+        parameters = request.get("parameters", {})
+        count = parameters.get("items") if isinstance(parameters, dict) else None
+        if (prompt is None or request.get("source_bytes") or request.get("source_revision_ids")
+                or not isinstance(model, str) or model not in _IMAGE_MODELS or model != _image_model()
+                or type(count) is not int or not 2 <= count <= 4):
+            return MediaOutput("unavailable")
+        pixels = parameters.get("pixels", 1024 * 1024)
+        if type(pixels) is not int or pixels < 512 * 512:
+            return MediaOutput("unavailable")
+        from .media_dimensions import image_dimensions
+
+        try:
+            width, height = image_dimensions(pixels, parameters.get("aspect_ratio", "1:1"))
+        except ValueError:
+            return MediaOutput("unavailable")
+        with tempfile.TemporaryDirectory(prefix="aics-mmx-batch-") as directory:
+            output_dir = Path(directory) / "images"
+            output_dir.mkdir()
+            args = ["image", "generate", "--prompt", prompt, "--out-dir", str(output_dir), "--out-prefix", "image",
+                    "--n", str(count), "--response-format", "base64", "--quiet", "--non-interactive", "--no-color"]
+            if model == "image-01":
+                args[4:4] = ["--width", str(width), "--height", str(height)]
+            else:
+                args[4:4] = ["--aspect-ratio", parameters.get("aspect_ratio", "1:1")]
+            command = _run(args, timeout=request.get("timeout_seconds", 25))
+            if command is None or command.returncode != 0:
+                return MediaOutput("unknown")
+            files = sorted(path for path in output_dir.iterdir() if path.is_file() and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"})
+            if len(files) != count:
+                return MediaOutput("unknown")
+            candidates = []
+            for path in files:
+                result = _read_output(path, mime=None, command=command)
+                if result.status != "succeeded":
+                    return MediaOutput(result.status)
+                candidates.append({"content": result.content, "mime_type": result.mime_type,
+                                   "metadata": result.metadata})
+            return MediaOutput("succeeded", metadata={"candidates": candidates, "native_batch": True})
 
 
 class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
@@ -560,6 +608,56 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
 class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
     key = CLI_KEY
     version = CLI_VERSION
+    consumed_parameters = frozenset({"voice_id", "rate"})
+
+    def list_voices(self, *, model_id: str | None = None, language: str | None = None) -> list[dict]:
+        """Read the CLI voice inventory only for an explicit catalog refresh."""
+        args = ["speech", "voices", "--output", "json", "--non-interactive", "--no-color"]
+        if language:
+            args.extend(["--language", language])
+        command = _run(args, timeout=10)
+        if command is None or command.returncode != 0:
+            return []
+        try:
+            result = json.loads(command.stdout)
+        except (TypeError, ValueError):
+            return []
+        # The installed CLI returns a bare ID array without a language filter.
+        raw = result if isinstance(result, list) else result.get("voices", result.get("data")) if isinstance(result, dict) else None
+        if not isinstance(raw, list):
+            return []
+        items = []
+        for item in raw:
+            if isinstance(item, str):
+                item = {"voice_id": item}
+            if not isinstance(item, dict):
+                continue
+            voice_id = item.get("voice_id", item.get("id", item.get("voice")))
+            if not isinstance(voice_id, str) or not _RECEIPT_ID.fullmatch(voice_id):
+                continue
+            label = item.get("voice_name", item.get("name", item.get("label", voice_id)))
+            if not isinstance(label, str) or not label.strip():
+                label = voice_id
+            items.append({
+                "id": f"minimax.cli.{model_id or 'speech'}.{voice_id}",
+                "label": label[:200], "provider_key": CLI_KEY, "provider_version": CLI_VERSION,
+                "model_id": model_id or "speech-2.8-hd", "profile_id": "minimax.cli",
+                "voice_id": voice_id, "language": str(item.get("language") or voice_id.split("_", 1)[0]),
+                "tags": [str(tag) for tag in item.get("tags", []) if isinstance(tag, str)][:20],
+                "favorite": False, "preview_ref": None, "verified": True, "rate": 1.0,
+            })
+        return items
+
+    def supports_tts_parameters(self, model_id: str, *, probe: bool = False) -> bool:
+        if not isinstance(model_id, str) or model_id not in _TTS_MODELS:
+            return False
+        if not probe:
+            return True
+        result = _run(["speech", "synthesize", "--help"], timeout=5)
+        help_text = f"{result.stdout}\n{result.stderr}" if result is not None else ""
+        return (result is not None and result.returncode == 0
+                and all(re.search(r"(?m)^\s*" + flag + r"\s+<", help_text)
+                        for flag in ("--voice", "--speed")))
 
     def runtime_fingerprint(self) -> str | None:
         return _runtime_identity()
@@ -570,22 +668,37 @@ class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
         timeout = request.get("timeout_seconds", 25)
         if (not isinstance(parameters, dict) or type(parameters.get("items")) is not int or parameters.get("items") != 1
                 or type(seconds) is not int or seconds < 1
-                or type(timeout) not in {int, float} or not 0 < timeout <= 25):
+                or type(timeout) not in {int, float} or not 0 < timeout <= 300):
             return MediaOutput("unavailable")
         return self.generate(request)
 
     def generate(self, request: dict) -> MediaOutput:
+        from .model_capability_routing import TTS_APPLIED_SCHEMA, tts_parameters
+
         text = _prompt(request)
         model = request.get("model_id", "speech-2.8-hd")
         if (text is None or len(text) >= 10_000 or not isinstance(model, str) or model not in _TTS_MODELS
                 or request.get("source_bytes") or request.get("source_revision_ids")):
             return MediaOutput("unavailable")
+        try:
+            applied = tts_parameters(request.get("parameters", {}), capability="tts")
+        except (TypeError, ValueError):
+            return MediaOutput("unavailable")
+        if applied is not None and not self.supports_tts_parameters(model, probe=True):
+            return MediaOutput("unavailable")
         with tempfile.TemporaryDirectory(prefix="aics-mmx-") as directory:
             output = Path(directory) / "speech.wav"
             args = ["speech", "synthesize", "--text", text, "--format", "wav", "--out", str(output), "--quiet", "--non-interactive", "--no-color"]
             args[2:2] = ["--model", model]
+            if applied is not None:
+                args[4:4] = ["--voice", applied["voice_id"], "--speed", str(applied["rate"])]
             command = _run(args, timeout=request.get("timeout_seconds", 25))
-            return _read_output(output, mime="audio/wav", command=command)
+            result = _read_output(output, mime="audio/wav", command=command)
+            if applied is not None and result.status == "succeeded":
+                # This records the exact flags consumed by this successful dispatcher, not a voice default.
+                return MediaOutput(result.status, result.content, result.mime_type,
+                                   {**result.metadata, "tts_applied_parameters": {"schema": TTS_APPLIED_SCHEMA, **applied}})
+            return result
 
 
 def _media_command(program: str, args: list[str], deadline: float):

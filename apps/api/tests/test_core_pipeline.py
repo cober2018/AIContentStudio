@@ -319,6 +319,23 @@ def test_regenerate_keeps_old_draft(client):
     assert len(resp.json()["drafts"]) == 2
 
 
+def test_completed_dispatch_redelivery_does_not_duplicate_draft(client, db_session):
+    """acks_late 重投同一个 dispatch_id 不得再写一版 Draft。"""
+    from app.models import ContentJob, Draft
+    from app.tasks.worker_tasks import _run_generation
+
+    frozen = _build_frozen_pack(client, name="重投口径")
+    topic = _create_topic(client, frozen["id"], channels=("douyin",))
+    resp = client.post(f"/api/v1/topics/{topic['id']}/generate", json={}, headers=ADMIN)
+    job_id = resp.json()["jobs"][0]["job_id"]
+    job = db_session.get(ContentJob, job_id)
+    dispatch_id = (job.usage_json or {}).get("_completed_dispatch_id")
+    assert dispatch_id
+    _run_generation(db_session, job_id, dispatch_id)
+    drafts = db_session.query(Draft).filter(Draft.content_job_id == job_id).count()
+    assert drafts == 1
+
+
 def test_request_changes_flow(client):
     frozen = _build_frozen_pack(client, name="退回口径")
     topic = _create_topic(client, frozen["id"], channels=("xiaohongshu",))
