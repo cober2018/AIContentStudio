@@ -1,0 +1,1077 @@
+{
+  "schema": "daily-production.configuration-readback.v1",
+  "checked_at": "2026-10-14T15:24:56.425332+00:00",
+  "method": "formal SQLite mode=ro/query_only transaction snapshot plus GET-only local API/HTTP; no browser mutations, supplier dispatch or private configuration disclosure",
+  "code_head": "6ff0d7ac02045c752436d8c2261e6862a3f2a19f",
+  "configuration_pass": true,
+  "errors": [],
+  "personas": [
+    {
+      "persona_id": 2,
+      "latest_revision_id": 4,
+      "latest_revision_no": 3,
+      "profile_checksum": "d841f1d38067311b32b01b5133c636fa5fb59b536a31827f076d99b90a25a46f",
+      "changed_profile_fields": [
+        "audio_creative_profile"
+      ],
+      "audio": {
+        "model_binding": {
+          "provider": "minimax.cli",
+          "model": "speech-2.8-hd",
+          "profile": "minimax.speech"
+        },
+        "voice": "lengdan_xiongzhang",
+        "rate": 1,
+        "skill_ref": "studio.audio.tts@1",
+        "quality_profile_ref": "studio.quality.audio.explainer@1",
+        "blueprint_key": "starter.ai-tech-engineer.v1"
+      },
+      "defaults": [
+        {
+          "modality": "graphic",
+          "workflow_id": 8,
+          "revision": 1,
+          "workflow_version": 1,
+          "definition_checksum": "9d5ef5c90be2bced8c43499852f7d4e4b2ce3962a28b6325160439554137125f"
+        },
+        {
+          "modality": "text",
+          "workflow_id": 17,
+          "revision": 3,
+          "workflow_version": 3,
+          "definition_checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68"
+        },
+        {
+          "modality": "video",
+          "workflow_id": 18,
+          "revision": 3,
+          "workflow_version": 3,
+          "definition_checksum": "49919f9692d4d7dda91df2774973f8c80ca0f404514f5a4f97b00b4f55c407ea"
+        }
+      ],
+      "checks": {
+        "latest_revision_matches": true,
+        "profile_checksum_matches": true,
+        "only_audio_profile_changed": true,
+        "voice_matches": true,
+        "binding_matches": true,
+        "text_default_matches": true,
+        "graphic_default_matches": true
+      }
+    },
+    {
+      "persona_id": 3,
+      "latest_revision_id": 5,
+      "latest_revision_no": 2,
+      "profile_checksum": "49d9d0e094479c083ec4cd8c94c461781d61f8d5bc7f2900c0be93adc6438bc6",
+      "changed_profile_fields": [
+        "audio_creative_profile"
+      ],
+      "audio": {
+        "model_binding": {
+          "provider": "minimax.cli",
+          "model": "speech-2.8-hd",
+          "profile": "minimax.speech"
+        },
+        "voice": "chunzhen_xuedi",
+        "rate": 1,
+        "skill_ref": "studio.audio.tts@1",
+        "quality_profile_ref": "studio.quality.audio.conversational@1",
+        "blueprint_key": "starter.lifestyle-observer.v1"
+      },
+      "defaults": [
+        {
+          "modality": "graphic",
+          "workflow_id": 11,
+          "revision": 1,
+          "workflow_version": 1,
+          "definition_checksum": "417e26e2597f9145e5d7cfaa4dff5f76300959e4c7355283b7e87b67f0f6a7c6"
+        },
+        {
+          "modality": "text",
+          "workflow_id": 19,
+          "revision": 3,
+          "workflow_version": 3,
+          "definition_checksum": "3c59e3443b2070277d8b17138ea6842e12bbf6d5d3a8451e885a14fb2c86095b"
+        },
+        {
+          "modality": "video",
+          "workflow_id": 20,
+          "revision": 3,
+          "workflow_version": 3,
+          "definition_checksum": "49919f9692d4d7dda91df2774973f8c80ca0f404514f5a4f97b00b4f55c407ea"
+        }
+      ],
+      "checks": {
+        "latest_revision_matches": true,
+        "profile_checksum_matches": true,
+        "only_audio_profile_changed": true,
+        "voice_matches": true,
+        "binding_matches": true,
+        "text_default_matches": true,
+        "graphic_default_matches": true
+      }
+    }
+  ],
+  "units": [
+    {
+      "id": 7,
+      "project_id": 3,
+      "persona_id": 2,
+      "modality": "text",
+      "channel_id": "wechat",
+      "status": "draft",
+      "pinned_workflow_id": 26,
+      "identity_snapshot_id": 7,
+      "identity_persona_revision_id": 4,
+      "identity_checksum": "08ccf21feddbe9e6660fd2ebe58481cbdb36228077fdc6581db9871174976777",
+      "pinned_audio_voice": "lengdan_xiongzhang",
+      "pinned_audio_binding": {
+        "provider": "minimax.cli",
+        "model": "speech-2.8-hd",
+        "profile": "minimax.speech"
+      },
+      "project_binding_revision": 2,
+      "workflow_version": 2,
+      "workflow_checksum": "cf4e5d9bbe71d7e6bfbba44b07442c27aa909323c7c6a57510ae5f362603e104",
+      "nodes": [
+        {
+          "id": "spoken",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "audio.spoken-adaptation.v1"
+          },
+          "instruction_sha256": "e717cfda340c7fdcfbbfb499e5d92136ceede07adad203347878a641206082c8"
+        },
+        {
+          "id": "voice",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "audio.voice-direction.v1"
+          },
+          "instruction_sha256": "1342567de90114ad95a090a8708ebb0d59ae9e6ee251a64e2309c3299f61cc23"
+        },
+        {
+          "id": "tts",
+          "plugin": "media.generate",
+          "version": "4",
+          "config": {
+            "items": 1,
+            "seconds": 360,
+            "timeout_seconds": 120
+          },
+          "instruction_sha256": null
+        },
+        {
+          "id": "audio_quality",
+          "plugin": "stage.audio.qc",
+          "version": "1",
+          "config": {},
+          "instruction_sha256": null
+        }
+      ],
+      "latest_master": {
+        "id": 24,
+        "revision_no": 5,
+        "payload_schema": "text.master.v2",
+        "payload_hash": "e32c930f09d747988f7990a6d59df7a62327691805bf0d4ca60c5c22786264ca",
+        "context_hash": "bc706a2871de529b207474f83386452a87e9f56d95b4b01c15b3a98d871bc927"
+      },
+      "runs": [
+        {
+          "id": 7,
+          "workflow_id": 17,
+          "status": "waiting_input"
+        },
+        {
+          "id": 8,
+          "workflow_id": 17,
+          "status": "succeeded"
+        },
+        {
+          "id": 12,
+          "workflow_id": 26,
+          "status": "succeeded"
+        }
+      ],
+      "normal_url": "http://127.0.0.1:5173/projects/3/units/7/production"
+    },
+    {
+      "id": 8,
+      "project_id": 4,
+      "persona_id": 3,
+      "modality": "text",
+      "channel_id": "wechat",
+      "status": "draft",
+      "pinned_workflow_id": 28,
+      "identity_snapshot_id": 8,
+      "identity_persona_revision_id": 5,
+      "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+      "pinned_audio_voice": "chunzhen_xuedi",
+      "pinned_audio_binding": {
+        "provider": "minimax.cli",
+        "model": "speech-2.8-hd",
+        "profile": "minimax.speech"
+      },
+      "project_binding_revision": 3,
+      "workflow_version": 3,
+      "workflow_checksum": "d7be95096d361c9d6a4a3df727eaebaf2e0bd8183e5f82d6e8fbdc6ef55170db",
+      "nodes": [
+        {
+          "id": "spoken",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "audio.spoken-adaptation.v1",
+            "fact_mode": "reflection"
+          },
+          "instruction_sha256": "f5c7b8fc318b91c8134dc9aa65379241868ea965376cdd47fb8f3e59ab13b018"
+        },
+        {
+          "id": "voice",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "audio.voice-direction.v1",
+            "fact_mode": "reflection"
+          },
+          "instruction_sha256": "d7fa817ef66609026404fe97b4f8ba7efe2af2fb17744892b5a50d435e39be42"
+        },
+        {
+          "id": "tts",
+          "plugin": "media.generate",
+          "version": "4",
+          "config": {
+            "items": 1,
+            "seconds": 360,
+            "timeout_seconds": 120
+          },
+          "instruction_sha256": null
+        },
+        {
+          "id": "audio_quality",
+          "plugin": "stage.audio.qc",
+          "version": "1",
+          "config": {},
+          "instruction_sha256": null
+        }
+      ],
+      "latest_master": {
+        "id": 22,
+        "revision_no": 3,
+        "payload_schema": "text.master.v2",
+        "payload_hash": "3bc264df747f992de1fe168c4eed40e235826659ed7d419bea8452c1f98739b3",
+        "context_hash": "ac59d20228b4657f52647a394e521d120dcb30dbd38ebbb4d35a314547b9c872"
+      },
+      "runs": [
+        {
+          "id": 10,
+          "workflow_id": 21,
+          "status": "succeeded"
+        },
+        {
+          "id": 13,
+          "workflow_id": 28,
+          "status": "succeeded"
+        }
+      ],
+      "normal_url": "http://127.0.0.1:5173/projects/4/units/8/production"
+    },
+    {
+      "id": 9,
+      "project_id": 3,
+      "persona_id": 2,
+      "modality": "graphic",
+      "channel_id": "xiaohongshu",
+      "status": "draft",
+      "pinned_workflow_id": 22,
+      "identity_snapshot_id": 9,
+      "identity_persona_revision_id": 4,
+      "identity_checksum": "08ccf21feddbe9e6660fd2ebe58481cbdb36228077fdc6581db9871174976777",
+      "pinned_audio_voice": "lengdan_xiongzhang",
+      "pinned_audio_binding": {
+        "provider": "minimax.cli",
+        "model": "speech-2.8-hd",
+        "profile": "minimax.speech"
+      },
+      "project_binding_revision": 1,
+      "workflow_version": 1,
+      "workflow_checksum": "6f1b21dd170277768658f8f297ed60031fe1e984571df7cb9d62f62db895c99c",
+      "nodes": [
+        {
+          "id": "visual",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "graphic.visual-direction.v1",
+            "canvas_count": 3,
+            "aspect_ratio": "3:4"
+          },
+          "instruction_sha256": "6df1fda918be7fb3cda8f535b561f571f866edd34b8ccdba1c4afba51ce6a74f"
+        },
+        {
+          "id": "cards",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "graphic.card-plan.v1",
+            "canvas_count": 3,
+            "aspect_ratio": "3:4"
+          },
+          "instruction_sha256": "30b888c0a6f8606cb885436f6ba58608e8ab3d19085df1c6b9320631075dc6c1"
+        },
+        {
+          "id": "master",
+          "plugin": "stage.graphic.compose",
+          "version": "1",
+          "config": {},
+          "instruction_sha256": null
+        },
+        {
+          "id": "quality",
+          "plugin": "stage.checks",
+          "version": "1",
+          "config": {},
+          "instruction_sha256": null
+        }
+      ],
+      "latest_master": {
+        "id": 28,
+        "revision_no": 10,
+        "payload_schema": "graphic.master.v2",
+        "payload_hash": "a9a2ad3bf3fb87ba2d0da4f6143fdaafc5e4ef276125ed4a340fd6453e77aec3",
+        "context_hash": "d09bc7a08632c00c63e711c81d72dbb6898415e0b6052717890409812b0ec996"
+      },
+      "runs": [
+        {
+          "id": 9,
+          "workflow_id": 22,
+          "status": "succeeded"
+        }
+      ],
+      "normal_url": "http://127.0.0.1:5173/projects/3/units/9/production"
+    },
+    {
+      "id": 10,
+      "project_id": 4,
+      "persona_id": 3,
+      "modality": "graphic",
+      "channel_id": "xiaohongshu",
+      "status": "draft",
+      "pinned_workflow_id": 24,
+      "identity_snapshot_id": 10,
+      "identity_persona_revision_id": 5,
+      "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+      "pinned_audio_voice": "chunzhen_xuedi",
+      "pinned_audio_binding": {
+        "provider": "minimax.cli",
+        "model": "speech-2.8-hd",
+        "profile": "minimax.speech"
+      },
+      "project_binding_revision": 2,
+      "workflow_version": 2,
+      "workflow_checksum": "5d569860d160b5b3d5f5b0c36aba9ed97c824b573dd04589954b11ef35293d0b",
+      "nodes": [
+        {
+          "id": "visual",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "graphic.visual-direction.v1",
+            "fact_mode": "reflection",
+            "canvas_count": 3,
+            "aspect_ratio": "3:4"
+          },
+          "instruction_sha256": "b86bea8f8adabfd51bf52cb167713a0386f8c2a369ec74a85eb0d96d04da4931"
+        },
+        {
+          "id": "cards",
+          "plugin": "stage.creative.method",
+          "version": "1",
+          "config": {
+            "output_schema": "graphic.card-plan.v1",
+            "fact_mode": "reflection",
+            "canvas_count": 3,
+            "aspect_ratio": "3:4"
+          },
+          "instruction_sha256": "93cfa870cc5556d92cdf60d59e6226298ea3c4ce580238e0d966a5bb25a64d63"
+        },
+        {
+          "id": "master",
+          "plugin": "stage.graphic.compose",
+          "version": "1",
+          "config": {},
+          "instruction_sha256": null
+        },
+        {
+          "id": "quality",
+          "plugin": "stage.checks",
+          "version": "1",
+          "config": {},
+          "instruction_sha256": null
+        }
+      ],
+      "latest_master": {
+        "id": 33,
+        "revision_no": 5,
+        "payload_schema": "graphic.master.v2",
+        "payload_hash": "874e0417a3b2a721c46edd57aeb6bf7d4882a9925d1a3a5c29cb032498a12266",
+        "context_hash": "0ae92ac1909abfad28ea15f47e730fb5aab15e9aba8efd1e454edb132631005b"
+      },
+      "runs": [
+        {
+          "id": 11,
+          "workflow_id": 24,
+          "status": "succeeded"
+        }
+      ],
+      "normal_url": "http://127.0.0.1:5173/projects/4/units/10/production"
+    }
+  ],
+  "projects": [
+    {
+      "id": 3,
+      "title": "科技日常｜生成之后，先别覆盖原稿",
+      "status": "draft",
+      "brief": {
+        "id": 3,
+        "revision_no": 1,
+        "checksum": "d6f03ccb91f5bfc481c057e587403037617273ff3ed3b0913bb4ccd35d1e2519",
+        "objective": "用科技研发角色写一篇600至800字的工程观点文章：生成之后先保留候选，再审阅和明确采用。衍生三张图卡和完整口播。",
+        "core_message": "生成成功与采用为正式内容是两个决定。保留候选和历史，便于比较、拒绝或修订；同时说明版本管理与维护成本。",
+        "required_evidence": [
+          "使用本项目原创作者说明与已确认写作边界",
+          "技术方案只作为观点和建议"
+        ],
+        "content_constraints": [
+          "不编造benchmark、效率百分比、版本日期或用户案例",
+          "不把观点说成实测结论",
+          "中文600至800字，具体、低夸张；音频不超过360秒"
+        ]
+      },
+      "fact_boundary": {
+        "id": 2,
+        "revision_no": 1,
+        "fact_pack_id": 2,
+        "fact_pack_version": 1,
+        "fact_pack_checksum": "8bde963c5d9250f71643dc16b1718bbb3515413caece68358492f99acab076ad"
+      },
+      "fact_pack": {
+        "id": 2,
+        "version": 1,
+        "status": "frozen",
+        "checksum": "8bde963c5d9250f71643dc16b1718bbb3515413caece68358492f99acab076ad"
+      },
+      "evidence": [
+        {
+          "id": 2,
+          "fact_id": 1,
+          "evidence_kind": "fact",
+          "sort_order": 0,
+          "public_use_allowed": 1,
+          "model_use_allowed": 1,
+          "public_use_revoked_at": null,
+          "snapshot_checksum": "7c397e666d6b3bc888761f5235e4251cf4899e3a74515f027dbc544e3277f498",
+          "snapshot_checksum_matches": true,
+          "statement": "这份原创创作说明建立于2026年10月14日，内容仅是关于候选保留与明确采用的软件架构观点，不是性能实测或产品新闻",
+          "as_of": "2026-10-14",
+          "source_document_id": 2,
+          "fact_status": "confirmed",
+          "source_active": true,
+          "source_parse_status": "done",
+          "source_sha256": "8cada9063c897e49e85f28ae0611f88b0ecb7cafaff5a9f05bef4640e89d1d2e"
+        }
+      ],
+      "checks": {
+        "brief_checksum_matches": true,
+        "pack_frozen": true,
+        "pack_checksum_matches": true,
+        "all_evidence_rights_explicit": true,
+        "all_snapshot_hashes_valid": true,
+        "all_source_facts_confirmed_active": true,
+        "architecture_opinion_explicit": true,
+        "does_not_claim_benchmark": true
+      },
+      "normal_url": "http://127.0.0.1:5173/projects/3"
+    },
+    {
+      "id": 4,
+      "title": "生活日常｜给晚饭留一点空白",
+      "status": "draft",
+      "brief": {
+        "id": 4,
+        "revision_no": 1,
+        "checksum": "343ed950b3a585b4a980162c39d4d86177bc7281453cb2c4c825c2d281ab3da7",
+        "objective": "以生活方式角色写一篇500至650字的温和假想叙事，主题是给晚饭留一点空白，并衍生三张图卡和完整口播。",
+        "core_message": "想象晚饭前暂时放下手机，重新留意饭菜、声音和眼前的人。这只是一个可供体会的小场景，不替别人规定生活方式。",
+        "required_evidence": [
+          "使用本项目明确日期的原创创作说明",
+          "作者仅确认创作边界，不把虚构情节确认为真实经历"
+        ],
+        "content_constraints": [
+          "开头明确假想；不声称作者真实经历或做过实验",
+          "不引用未提供的研究，不制造焦虑或声称心理/健康疗效",
+          "十分钟只是叙事设定，不是科学结论或必须执行的规则",
+          "自然具体，不说教；中文500至650字；口播不超过360秒",
+          "不向读者暴露Master、FactPack等系统术语"
+        ]
+      },
+      "fact_boundary": {
+        "id": 3,
+        "revision_no": 1,
+        "fact_pack_id": 3,
+        "fact_pack_version": 1,
+        "fact_pack_checksum": "fe483c5b9e0100d374f928b08a5270585a3035624502bbef6ff14b9524d85f41"
+      },
+      "fact_pack": {
+        "id": 3,
+        "version": 1,
+        "status": "frozen",
+        "checksum": "fe483c5b9e0100d374f928b08a5270585a3035624502bbef6ff14b9524d85f41"
+      },
+      "evidence": [
+        {
+          "id": 3,
+          "fact_id": 2,
+          "evidence_kind": "fact",
+          "sort_order": 0,
+          "public_use_allowed": 1,
+          "model_use_allowed": 1,
+          "public_use_revoked_at": null,
+          "snapshot_checksum": "23bee4d390fc102c53ff598aaa659c05d31f43faef29a3a8d1f69a43dec0feb5",
+          "snapshot_checksum_matches": true,
+          "statement": "本项目创作说明建立于2026年10月14日，晚饭前放下手机的情节是明确假想场景，不是作者真实经历，也不是健康效益结论",
+          "as_of": "2026-10-14",
+          "source_document_id": 3,
+          "fact_status": "confirmed",
+          "source_active": true,
+          "source_parse_status": "done",
+          "source_sha256": "052396e887e16585d2aa18f485bef06506124758f46c2d412ec831139416bfde"
+        }
+      ],
+      "checks": {
+        "brief_checksum_matches": true,
+        "pack_frozen": true,
+        "pack_checksum_matches": true,
+        "all_evidence_rights_explicit": true,
+        "all_snapshot_hashes_valid": true,
+        "all_source_facts_confirmed_active": true,
+        "fiction_explicit": true,
+        "does_not_claim_real_experience": true,
+        "does_not_claim_health_effect": true
+      },
+      "normal_url": "http://127.0.0.1:5173/projects/4"
+    }
+  ],
+  "provider_task_snapshot": [
+    {
+      "id": "be0c3abd7bbc4c6a87160039c597be27",
+      "project_id": 3,
+      "workflow_step_attempt_id": null,
+      "provider_kind": "image_provider",
+      "provider_key": "minimax.cli",
+      "provider_version": "1",
+      "model_id": "image-01",
+      "state": "prepared",
+      "result_hash": null,
+      "result_mime": null,
+      "accepted_material_revision_id": null,
+      "parameters": {
+        "items": 1,
+        "pixels": 1048576,
+        "aspect_ratio": "1:1"
+      },
+      "script_or_prompt_sha256": "a49f9c113f9f0ded9016eefa3ce2e366edaf9b9e9ecc6480e2ca28bff6eb75b3",
+      "note": "prepared is not a supplier call; result_ready is not adoption"
+    },
+    {
+      "id": "65ea23b7493749a19286beb25177c269",
+      "project_id": 3,
+      "workflow_step_attempt_id": null,
+      "provider_kind": "image_provider",
+      "provider_key": "minimax.cli",
+      "provider_version": "1",
+      "model_id": "image-01",
+      "state": "result_ready",
+      "result_hash": "548278b4019189e46a223903b2a332d7404887f5e417407e4219075c42fe476c",
+      "result_mime": "image/jpeg",
+      "accepted_material_revision_id": null,
+      "parameters": {
+        "items": 1,
+        "pixels": 1048576,
+        "aspect_ratio": "16:9"
+      },
+      "script_or_prompt_sha256": "a49f9c113f9f0ded9016eefa3ce2e366edaf9b9e9ecc6480e2ca28bff6eb75b3",
+      "note": "prepared is not a supplier call; result_ready is not adoption"
+    },
+    {
+      "id": "5a586f539e264793b8f6ec02db0cb322",
+      "project_id": 4,
+      "workflow_step_attempt_id": null,
+      "provider_kind": "image_provider",
+      "provider_key": "minimax.cli",
+      "provider_version": "1",
+      "model_id": "image-01",
+      "state": "accepted",
+      "result_hash": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0",
+      "result_mime": "image/jpeg",
+      "accepted_material_revision_id": 9,
+      "parameters": {
+        "items": 1,
+        "pixels": 1048576,
+        "aspect_ratio": "16:9"
+      },
+      "script_or_prompt_sha256": "3c925f09122bf6166b48fe37a9dd5542e0983ab1a7deb82e56578bf324f32118",
+      "note": "prepared is not a supplier call; result_ready is not adoption"
+    },
+    {
+      "id": "ac5133d011be47079c5945f9f07e18ea",
+      "project_id": 3,
+      "workflow_step_attempt_id": 70,
+      "provider_kind": "tts_provider",
+      "provider_key": "minimax.cli",
+      "provider_version": "1",
+      "model_id": "speech-2.8-hd",
+      "state": "accepted",
+      "result_hash": "841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0",
+      "result_mime": "audio/wav",
+      "accepted_material_revision_id": 14,
+      "parameters": {
+        "items": 1,
+        "seconds": 360,
+        "timeout_seconds": 120,
+        "voice_id": "lengdan_xiongzhang",
+        "rate": 1.0
+      },
+      "script_or_prompt_sha256": "28fb81c39ad8aea78175dcef76a80498e0514234145e400f7c360e6b4391f925",
+      "note": "prepared is not a supplier call; result_ready is not adoption"
+    },
+    {
+      "id": "9a5c1dec5109480dbc01a83431a30ee3",
+      "project_id": 4,
+      "workflow_step_attempt_id": 77,
+      "provider_kind": "tts_provider",
+      "provider_key": "minimax.cli",
+      "provider_version": "1",
+      "model_id": "speech-2.8-hd",
+      "state": "accepted",
+      "result_hash": "79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c",
+      "result_mime": "audio/wav",
+      "accepted_material_revision_id": 18,
+      "parameters": {
+        "items": 1,
+        "seconds": 360,
+        "timeout_seconds": 120,
+        "voice_id": "chunzhen_xuedi",
+        "rate": 1.0
+      },
+      "script_or_prompt_sha256": "f5e5f8371652c78bec25096a611ee8549784e19e2029938c402bb597aa36298e",
+      "note": "prepared is not a supplier call; result_ready is not adoption"
+    }
+  ],
+  "model_configuration": {
+    "revision": 13,
+    "limits": {
+      "image_generation": {
+        "max_items": 4,
+        "max_pixels": 1048576,
+        "max_seconds": null,
+        "max_tokens": null,
+        "timeout_seconds": 120,
+        "max_cost": null,
+        "currency": null
+      },
+      "tts": {
+        "max_items": 1,
+        "max_pixels": null,
+        "max_seconds": 360,
+        "max_tokens": null,
+        "timeout_seconds": 120,
+        "max_cost": null,
+        "currency": null
+      },
+      "asr": {
+        "max_items": 1,
+        "max_pixels": null,
+        "max_seconds": 10,
+        "max_tokens": null,
+        "timeout_seconds": 120,
+        "max_cost": null,
+        "currency": null
+      },
+      "chat": {
+        "max_items": 3,
+        "max_pixels": null,
+        "max_seconds": null,
+        "max_tokens": 8192,
+        "timeout_seconds": 120,
+        "max_cost": null,
+        "currency": null
+      },
+      "video_generation": {
+        "max_items": 1,
+        "max_pixels": null,
+        "max_seconds": 15,
+        "max_tokens": null,
+        "timeout_seconds": 25,
+        "max_cost": null,
+        "currency": null
+      }
+    },
+    "allow_automatic_fallback": true,
+    "selected_voice_catalog_entries": [
+      {
+        "voice_id": "chunzhen_xuedi",
+        "provider_key": "minimax.cli",
+        "provider_version": "1",
+        "model_id": "speech-2.8-hd",
+        "profile_id": "minimax.speech",
+        "verified": true
+      },
+      {
+        "voice_id": "lengdan_xiongzhang",
+        "provider_key": "minimax.cli",
+        "provider_version": "1",
+        "model_id": "speech-2.8-hd",
+        "profile_id": "minimax.speech",
+        "verified": true
+      }
+    ],
+    "media_inventory_note": "normal inventory intentionally returns credential_continuity_unverified; actual Stage execution performs local continuity checks, and accepted tasks are distinct evidence"
+  },
+  "api_readback": [
+    {
+      "path": "/api/v1/health/ready",
+      "status": 200,
+      "safe_readback": {
+        "status": "ok",
+        "ready": true,
+        "db": true,
+        "schema": true,
+        "storage": true,
+        "worker": true,
+        "reasons": []
+      }
+    },
+    {
+      "path": "/api/v1/content-personas/2",
+      "status": 200,
+      "safe_readback": {
+        "id": 2,
+        "status": "active",
+        "current_revision": 3
+      }
+    },
+    {
+      "path": "/api/v1/content-personas/3",
+      "status": 200,
+      "safe_readback": {
+        "id": 3,
+        "status": "active",
+        "current_revision": 2
+      }
+    },
+    {
+      "path": "/api/v1/settings/model-capabilities",
+      "status": 200,
+      "safe_readback": {
+        "revision": 13
+      }
+    }
+  ],
+  "web_reachability": {
+    "status": 200,
+    "body_sha256": "166abd7fd4fcf937a7bf28469d2196094aa40c90e4999ef0b6ac1d1abbefec15",
+    "note": "HTTP reachability only; not browser-flow acceptance"
+  },
+  "boundaries": [
+    "Persona revision ID4/5 are DB revision identities; API current_revision values are revision numbers3/2.",
+    "Audio is a project Recipe on accepted Text Unit, not an Audio ContentUnit/default Workflow.",
+    "Project/Unit draft status is preserved and does not replace individual artifact/check evidence.",
+    "No direct human listening is asserted; human_required and unavailable semantic/alignment coverage remain explicit.",
+    "Final six-flow run/check adoption was re-read; creative quality, listening boundaries and monetary claims remain separate."
+  ],
+  "six_flow_snapshot": [
+    {
+      "kind": "text",
+      "unit_id": 7,
+      "run_id": 8,
+      "run_status": "succeeded",
+      "final_stage": "final_quality",
+      "stage_status": "succeeded",
+      "attempt_id": 62,
+      "attempt_status": "succeeded",
+      "check_statuses": [
+        {
+          "id": 147,
+          "kind": "master_schema",
+          "status": "pass"
+        },
+        {
+          "id": 148,
+          "kind": "evidence",
+          "status": "pass"
+        },
+        {
+          "id": 149,
+          "kind": "rights",
+          "status": "pass"
+        },
+        {
+          "id": 150,
+          "kind": "render",
+          "status": "pass"
+        },
+        {
+          "id": 151,
+          "kind": "text_structure",
+          "status": "pass"
+        },
+        {
+          "id": 152,
+          "kind": "text_fact",
+          "status": "pass"
+        },
+        {
+          "id": 153,
+          "kind": "text_identity",
+          "status": "pass"
+        },
+        {
+          "id": 154,
+          "kind": "text_platform",
+          "status": "pass"
+        },
+        {
+          "id": 155,
+          "kind": "text_discoverability",
+          "status": "warning"
+        }
+      ],
+      "checks_pass": false,
+      "accepted_project_output_id": 17,
+      "accepted_output_kind": "workflow_step_attempt",
+      "acceptance_decision": "accepted"
+    },
+    {
+      "kind": "text",
+      "unit_id": 8,
+      "run_id": 10,
+      "run_status": "succeeded",
+      "final_stage": "final_quality",
+      "stage_status": "succeeded",
+      "attempt_id": 60,
+      "attempt_status": "succeeded",
+      "check_statuses": [
+        {
+          "id": 129,
+          "kind": "master_schema",
+          "status": "pass"
+        },
+        {
+          "id": 130,
+          "kind": "evidence",
+          "status": "pass"
+        },
+        {
+          "id": 131,
+          "kind": "rights",
+          "status": "pass"
+        },
+        {
+          "id": 132,
+          "kind": "render",
+          "status": "pass"
+        },
+        {
+          "id": 133,
+          "kind": "text_structure",
+          "status": "pass"
+        },
+        {
+          "id": 134,
+          "kind": "text_fact",
+          "status": "pass"
+        },
+        {
+          "id": 135,
+          "kind": "text_identity",
+          "status": "pass"
+        },
+        {
+          "id": 136,
+          "kind": "text_platform",
+          "status": "pass"
+        },
+        {
+          "id": 137,
+          "kind": "text_discoverability",
+          "status": "warning"
+        }
+      ],
+      "checks_pass": false,
+      "accepted_project_output_id": 16,
+      "accepted_output_kind": "workflow_step_attempt",
+      "acceptance_decision": "accepted"
+    },
+    {
+      "kind": "graphic",
+      "unit_id": 9,
+      "run_id": 9,
+      "run_status": "succeeded",
+      "final_stage": "quality",
+      "stage_status": "succeeded",
+      "attempt_id": 72,
+      "attempt_status": "succeeded",
+      "check_statuses": [
+        {
+          "id": 164,
+          "kind": "master_schema",
+          "status": "pass"
+        },
+        {
+          "id": 165,
+          "kind": "evidence",
+          "status": "pass"
+        },
+        {
+          "id": 166,
+          "kind": "rights",
+          "status": "pass"
+        },
+        {
+          "id": 167,
+          "kind": "render",
+          "status": "pass"
+        },
+        {
+          "id": 168,
+          "kind": "graphic_structure",
+          "status": "pass"
+        },
+        {
+          "id": 169,
+          "kind": "graphic_fact",
+          "status": "pass"
+        },
+        {
+          "id": 170,
+          "kind": "graphic_identity",
+          "status": "warning"
+        },
+        {
+          "id": 171,
+          "kind": "graphic_platform",
+          "status": "pass"
+        }
+      ],
+      "checks_pass": false,
+      "accepted_project_output_id": 19,
+      "accepted_output_kind": "workflow_step_attempt",
+      "acceptance_decision": "accepted"
+    },
+    {
+      "kind": "graphic",
+      "unit_id": 10,
+      "run_id": 11,
+      "run_status": "succeeded",
+      "final_stage": "quality",
+      "stage_status": "succeeded",
+      "attempt_id": 78,
+      "attempt_status": "succeeded",
+      "check_statuses": [
+        {
+          "id": 180,
+          "kind": "master_schema",
+          "status": "pass"
+        },
+        {
+          "id": 181,
+          "kind": "evidence",
+          "status": "pass"
+        },
+        {
+          "id": 182,
+          "kind": "rights",
+          "status": "pass"
+        },
+        {
+          "id": 183,
+          "kind": "render",
+          "status": "pass"
+        },
+        {
+          "id": 184,
+          "kind": "graphic_structure",
+          "status": "pass"
+        },
+        {
+          "id": 185,
+          "kind": "graphic_fact",
+          "status": "pass"
+        },
+        {
+          "id": 186,
+          "kind": "graphic_identity",
+          "status": "warning"
+        },
+        {
+          "id": 187,
+          "kind": "graphic_platform",
+          "status": "pass"
+        }
+      ],
+      "checks_pass": false,
+      "accepted_project_output_id": 22,
+      "accepted_output_kind": "workflow_step_attempt",
+      "acceptance_decision": "accepted"
+    },
+    {
+      "kind": "audio",
+      "unit_id": 7,
+      "run_id": 12,
+      "run_status": "succeeded",
+      "final_stage": "audio_quality",
+      "stage_status": "succeeded",
+      "attempt_id": 75,
+      "attempt_status": "succeeded",
+      "check_statuses": [
+        {
+          "id": 14,
+          "kind": "audio_quality",
+          "status": "pass"
+        }
+      ],
+      "checks_pass": true,
+      "accepted_project_output_id": 21,
+      "accepted_output_kind": "workflow_step_attempt",
+      "acceptance_decision": "accepted"
+    },
+    {
+      "kind": "audio",
+      "unit_id": 8,
+      "run_id": 13,
+      "run_status": "succeeded",
+      "final_stage": "audio_quality",
+      "stage_status": "succeeded",
+      "attempt_id": 79,
+      "attempt_status": "succeeded",
+      "check_statuses": [
+        {
+          "id": 18,
+          "kind": "audio_quality",
+          "status": "pass"
+        }
+      ],
+      "checks_pass": true,
+      "accepted_project_output_id": 24,
+      "accepted_output_kind": "workflow_step_attempt",
+      "acceptance_decision": "accepted"
+    }
+  ],
+  "final_configuration_and_boundary_recheck_pass": true,
+  "final_recheck_errors": [],
+  "six_flow_persistence_complete": true
+}

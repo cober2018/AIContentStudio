@@ -1,0 +1,184 @@
+### Page
+- Page URL: http://127.0.0.1:5173/projects/3?tab=evidence
+- Page Title: AI Content Studio
+- Console: 0 errors, 2 warnings
+### Snapshot
+```yaml
+- generic [ref=f1e3]:
+  - complementary [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - link "AI Content Studio" [ref=f1e6] [cursor=pointer]:
+        - /url: /home
+      - generic [ref=f1e7]: 项目驱动 · 图文视频协作
+    - navigation "主导航" [ref=f1e8]:
+      - paragraph [ref=f1e9]: 工作区
+      - link "◧ 今日工作台" [ref=f1e10] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f1e11]: ◧
+        - text: 今日工作台
+      - link "✧ 内容机会" [ref=f1e12] [cursor=pointer]:
+        - /url: /opportunities
+        - generic [ref=f1e13]: ✧
+        - text: 内容机会
+      - link "▤ 内容项目" [ref=f1e14] [cursor=pointer]:
+        - /url: /projects
+        - generic [ref=f1e15]: ▤
+        - text: 内容项目
+      - link "✍ 创作与执行" [ref=f1e16] [cursor=pointer]:
+        - /url: /production
+        - generic [ref=f1e17]: ✍
+        - text: 创作与执行
+      - link "✓ 审阅与发布" [ref=f1e18] [cursor=pointer]:
+        - /url: /review
+        - generic [ref=f1e19]: ✓
+        - text: 审阅与发布
+      - link "◉ 内容身份" [ref=f1e20] [cursor=pointer]:
+        - /url: /identities
+        - generic [ref=f1e21]: ◉
+        - text: 内容身份
+      - link "▦ 素材与知识" [ref=f1e22] [cursor=pointer]:
+        - /url: /assets
+        - generic [ref=f1e23]: ▦
+        - text: 素材与知识
+      - link "▥ 效果与学习" [ref=f1e24] [cursor=pointer]:
+        - /url: /learning
+        - generic [ref=f1e25]: ▥
+        - text: 效果与学习
+      - link "⚙ 设置" [ref=f1e26] [cursor=pointer]:
+        - /url: /settings
+        - generic [ref=f1e27]: ⚙
+        - text: 设置
+    - generic [ref=f1e28]: 本机工作台 · 项目与素材持久保存
+  - main [ref=f1e29]:
+    - generic [ref=f1e65]:
+      - link "← 内容项目" [ref=f1e66] [cursor=pointer]:
+        - /url: /projects
+      - generic [ref=f1e67]:
+        - generic [ref=f1e68]:
+          - paragraph [ref=f1e69]: Content Project
+          - heading "科技日常｜生成之后，先别覆盖原稿" [level=1] [ref=f1e70]
+          - paragraph [ref=f1e71]: 项目目标待填写
+        - generic [ref=f1e72]:
+          - button "编辑项目" [ref=f1e73] [cursor=pointer]
+          - button "项目共享素材 · 0" [ref=f1e74] [cursor=pointer]
+          - button "归档项目" [ref=f1e75] [cursor=pointer]
+      - tablist "项目工作区" [ref=f1e76]:
+        - tab "总览" [ref=f1e77] [cursor=pointer]
+        - tab "创作任务书" [ref=f1e78] [cursor=pointer]
+        - tab "来源与证据" [selected] [ref=f1e79] [cursor=pointer]
+        - tab "项目素材" [ref=f1e80] [cursor=pointer]
+        - tab "内容矩阵" [ref=f1e81] [cursor=pointer]
+        - tab "渠道变体" [ref=f1e82] [cursor=pointer]
+        - tab "执行" [ref=f1e83] [cursor=pointer]
+        - tab "版本" [ref=f1e84] [cursor=pointer]
+        - tab "活动" [ref=f1e85] [cursor=pointer]
+      - generic [ref=f1e142]:
+        - generic [ref=f1e143]:
+          - heading "项目来源" [level=2] [ref=f1e144]
+          - paragraph [ref=f1e145]: 引用现有 Source；从项目解除引用不会更改历史冻结事实边界。
+          - list [ref=f1e185]:
+            - listitem [ref=f1e186]:
+              - generic [ref=f1e187]: 科技稿原创创作说明｜架构观点边界 · text · done
+              - generic [ref=f1e188]:
+                - button "查看事实" [ref=f1e189] [cursor=pointer]
+                - button "解除引用" [ref=f1e190] [cursor=pointer]
+            - listitem [ref=f1e214]:
+              - generic [ref=f1e215]: 科技稿原创资料｜有日期的观点与写作边界 · text · done
+              - generic [ref=f1e216]:
+                - button "查看事实" [ref=f1e217] [cursor=pointer]
+                - button "解除引用" [ref=f1e218] [cursor=pointer]
+          - generic [ref=f1e148]:
+            - combobox [ref=f1e149]:
+              - option "选择已有 Source" [selected]
+            - button "引用" [disabled] [ref=f1e150]
+          - generic [ref=f1e151]:
+            - generic [ref=f1e152]: 项目导入资料日期 as_of（可选）
+            - textbox "项目导入资料日期 as_of（可选）" [ref=f1e153]: 2026-10-14
+          - generic [ref=f1e154]:
+            - generic [ref=f1e155]:
+              - generic [ref=f1e156]:
+                - generic [ref=f1e157]: 创建文本 Source
+                - textbox "创建文本 Source" [ref=f1e158]:
+                  - /placeholder: 标题
+              - textbox "原文" [ref=f1e159]
+              - button "创建并引用" [ref=f1e160] [cursor=pointer]
+            - generic [ref=f1e161]:
+              - generic [ref=f1e162]:
+                - generic [ref=f1e163]:
+                  - generic [ref=f1e164]: 创建 URL Source
+                  - textbox "创建 URL Source" [ref=f1e165]
+                - button "抓取并引用" [ref=f1e166] [cursor=pointer]
+              - generic [ref=f1e167]:
+                - generic [ref=f1e168]: 上传 Source 文件
+                - button "上传 Source 文件" [ref=f1e169]
+        - generic [ref=f1e170]:
+          - heading "项目证据" [level=2] [ref=f1e171]
+          - paragraph [ref=f1e172]: 以下条目来自当前冻结 FactPack；Source 引用变化不会改写这些历史快照。
+          - list [ref=f1e353]:
+            - listitem [ref=f1e354]:
+              - paragraph [ref=f1e355]: F001 · 这份原创创作说明建立于2026年10月14日，内容仅是关于候选保留与明确采用的软件架构观点，不是性能实测或产品新闻
+              - paragraph [ref=f1e356]: "fact · 科技稿原创资料｜有日期的观点与写作边界 · {\"block\":0} · 允许公开"
+        - generic [ref=f1e175]:
+          - heading "事实边界" [level=2] [ref=f1e176]
+          - paragraph [ref=f1e357]: "第 1 版 · FactPack #2 v1 · 8bde963c5d92…"
+          - generic [ref=f1e179]:
+            - combobox [ref=f1e180]:
+              - option "选择已冻结 FactPack"
+              - option "科技日常创作边界 v1" [selected]
+              - option "项目2创作简报约束 v1"
+            - button "绑定为新版本" [ref=f1e181] [cursor=pointer]
+          - button "新建项目证据包" [ref=f1e182] [cursor=pointer]
+          - button "克隆当前边界为草稿" [ref=f1e359] [cursor=pointer]
+          - button "查看当前冻结证据包" [active] [ref=f1e360] [cursor=pointer]
+          - generic [ref=f1e183]:
+            - heading "历史边界" [level=3] [ref=f1e184]
+            - list [ref=f1e361]:
+              - listitem [ref=f1e362]: "第 1 版 · FactPack #2 v1"
+        - generic [ref=f1e364]:
+          - generic [ref=f1e365]:
+            - heading "项目证据包" [level=2] [ref=f1e366]
+            - button "✕" [ref=f1e367] [cursor=pointer]
+          - generic [ref=f1e368]:
+            - generic [ref=f1e369]:
+              - button "← 返回列表" [ref=f1e370] [cursor=pointer]
+              - heading "科技日常创作边界 v1" [level=1] [ref=f1e371]:
+                - text: 科技日常创作边界
+                - generic [ref=f1e372]: v1
+              - generic "frozen" [ref=f1e373]
+              - generic "8bde963c5d9250f71643dc16b1718bbb3515413caece68358492f99acab076ad" [ref=f1e374]: checksum 8bde963c5d92…
+              - button "克隆为 v2" [ref=f1e376] [cursor=pointer]
+            - generic [ref=f1e377]: 此版本已冻结（2026/10/14 12:59:54），不可修改。 引用它的内容永远记录此版本；如需修改请 Clone。
+            - paragraph [ref=f1e378]: 模型使用与公开使用须分别逐条明确授权；来源信任等级、事实确认和证据包冻结都不代表授权。冻结后只能克隆新版本修改授权。
+            - generic [ref=f1e379]:
+              - generic [ref=f1e380]:
+                - heading "Sources" [level=3] [ref=f1e382]
+                - paragraph [ref=f1e384]: 没有可添加的 confirmed 事实
+              - generic [ref=f1e385]:
+                - generic [ref=f1e386]: Facts（1）
+                - table [ref=f1e387]:
+                  - rowgroup [ref=f1e388]:
+                    - row [ref=f1e389]:
+                      - columnheader "编号" [ref=f1e390]
+                      - columnheader "陈述" [ref=f1e391]
+                      - columnheader "数值" [ref=f1e392]
+                      - columnheader "as_of" [ref=f1e393]
+                      - columnheader "状态" [ref=f1e394]
+                      - columnheader "公开使用许可" [ref=f1e395]
+                      - columnheader "模型使用许可" [ref=f1e396]
+                      - columnheader [ref=f1e397]
+                  - rowgroup [ref=f1e398]:
+                    - row [ref=f1e399]:
+                      - cell "F001" [ref=f1e400]
+                      - cell "这份原创创作说明建立于2026年10月14日，内容仅是关于候选保留与明确采用的软件架构观点，不是性能实测或产品新闻" [ref=f1e401]
+                      - cell "2026年10月14日" [ref=f1e402]
+                      - cell "2026-10-14" [ref=f1e403]
+                      - cell "confirmed" [ref=f1e404]
+                      - cell "已明确允许" [ref=f1e406]
+                      - cell "已明确允许" [ref=f1e407]
+                      - cell [ref=f1e408]
+            - generic [ref=f1e409]:
+              - text: 冲突检测：
+              - generic [ref=f1e410]: 0 个
+              - text: ｜ 缺失日期：
+              - generic [ref=f1e411]: 0 个
+```

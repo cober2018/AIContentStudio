@@ -1,0 +1,26 @@
+# Findings
+
+- 前两归档真实完成，但不覆盖本轮正式新实跑；使用新change独立证据。
+- 原日常回执表明Audio缺真实voice ID、Graphiccontinuity未确认，生活新项目缺当前证据会正确阻断；要准备真实边界而非绕过。
+- 代码图MCP当前工具清单未提供；必要发现采用最小范围代码/接口fallback，不全库扫描。
+- 用户本轮全权授权允许选择并保存真实可用音色/配置、建立正式项目及有界新供应商调用；原归档和相邻修改保留。
+
+- 独立源码合同检查确认Audio不是ContentUnit形态，也没有Persona audio默认Workflow。沿用Persona音色默认＋已接受Text Unit中的项目Audio Recipe；不为日常验收新增Audio形态。评审只读，零HTTP请求/正式修改。
+- 已从正式API进程确权apps/api/content_studio.db，在线backup integrity ok；91表482旧行/53素材逐hash配套备份，263旧归档文件与65相邻文件SHA已存私有目录。历史5170行/71素材指的是其他时期或隔离副本，本次正式基线以482/53为准。
+
+- 独立计划APPROVE；确认真实阻断：FactPackItemIn.model_use_allowed默认false、更新API支持，但_serialize不返回且FactPacks.tsx无控件；creative_method_stage.selected_input会拒绝未授权事实。仅补两现有文件的返回字段/独立控件/既有PATCH，不改默认权限或冻结门禁。
+- 接受结果可能自动续行并派发下阶段，ledger和10秒开始间隔必须覆盖接受动作。生活默认AI fact_mode=current，假想项目必须显式用reflection/speculation并保留非空真实边界包。
+
+- 首次任务书输入把identity_scope写成对象，接口要求数组，任务书未保存；根执行者在派发前漏了回读。Run7的两次成功请求26/27仅收到边界资料，角度偏题不采用。已正常页面去掉可选scope错误并保存Brief3/revision1，GET和hash确认；需新Run，不重发Unknown或伪称旧候选满足目标。
+- QA事实/身份调用不写LLMRun；每次Text/Graphic QC按最多2次语义请求预留。现有内部顺序调用无10秒间隔，计划精确为外层页面操作≥10秒，不声称所有网关请求满足间隔；不为自拟验收节奏引入无关产品节流。已核对实际httpx retries=0及JSON本地修复无新请求。
+
+- 新科技Draft42已正常候选编辑后采用，QC43 facts/identity semantic verified且rubric4/4/4/3/4；唯一blocker为公众号article要求cover。真实UI缺口：TextStudioModel.insertAsset硬编码inline且Shell无cover控件；最小两TS文件补现有精确图引用的明确设封面动作。保留imageblock/ref对应避免unusedasset，不改平台规则。Refine/Final不自动继承refs，采用前须在同一控件明确保留封面。
+- 原Run8可在新cover Master保存后重跑quality规则检查，无需重跑上游成功模型；新增QC语义调用保守计数。
+
+科技image任务65ea23b7返回真实1280x720 JPEG（SHA548278b4），AI视觉检查发现图中文字乱码，未采用/未入素材库。正常页面已放弃预览，原任务result_ready保留；不重发。科技图文采用既有受控文字/形状renderer三图卡，先以已采用Draft11设计，再与最终文章回验；可用已检查PNG作为文章实际封面，形成正常产品内可追溯引用。此路径不新增功能或降低质量。
+
+正常中间候选当前不支持编辑。生活cards64的claim.target错误填正文而非body，结构合同允许非空string、compose正确保守阻断，未派发排版Attempt。采用正常阶段更具体要求/已知成功结果新尝试，旧记录保留，不做功能扩展。科技spoken65扩大了源观点，未采用；新尝试67已按明确完整口语稿生成，764字、原论点/条件/代价均保留，无来源地址或日期朗读，包含AI合成标识。
+科技Graphic完整QC66发现第二卡标题bounding box与diagram文字框相交，真实PNG没有字形重叠但依然保留结构阻断；正常页把该标题height从180改110，只重渲染受影响第二卡并重新绑定/确认/QC，不放宽几何规则。
+
+最终四份内容必需检查均无blocker，但text_discoverability及graphic_identity原warning必须逐项明确处理，不能把checks_pass=false改写成全检查pass。两Audio当前QC是真实pass；完整离线ASR由独立审阅补充，产品本身asr_alignment仍not_run。Material14/18历史duration_ms未写入，时长依据当前AudioQC和全文件解码，不篡改正式元数据补数。
+两Text当前项目Recipe按既有合同显式切到Audio-only，Text Master和已成功九阶段Run保留；新建同角色Text Unit仍继承17/19默认。生活原默认fact_mode=current，假想项目高级覆盖reflection保存21/24；新任务应按真实主题准备证据/明确非时事模式，不能复制本次事实包去支撑其他事实。

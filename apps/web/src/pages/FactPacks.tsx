@@ -16,6 +16,7 @@ interface PackItem {
   status: string;
   source_document_id: number;
   public_use_allowed: boolean;
+  model_use_allowed: boolean;
   public_use_revoked_at: string | null;
 }
 
@@ -84,7 +85,7 @@ export function PackBuilder({ packId, embedded = false, readOnly = false, onClos
     onError: (e) => setError(e instanceof Error ? e.message : "移除失败"),
   });
   const permission = useMutation({
-    mutationFn: ({ itemId, allowed }: { itemId: number; allowed: boolean }) => api.patch(`/fact-packs/${packId}/items/${itemId}`, { public_use_allowed: allowed }),
+    mutationFn: ({ itemId, field, allowed }: { itemId: number; field: "public_use_allowed" | "model_use_allowed"; allowed: boolean }) => api.patch(`/fact-packs/${packId}/items/${itemId}`, { [field]: allowed }),
     onSuccess: invalidate,
     onError: (e) => setError(e instanceof Error ? e.message : "权限保存失败"),
   });
@@ -155,7 +156,7 @@ export function PackBuilder({ packId, embedded = false, readOnly = false, onClos
         <div className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">此版本已归档。</div>
       )}
       {error && <div className="rounded-md bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
-      <p className="text-xs text-amber-800">公开使用须逐条明确授权；来源信任等级、事实确认和证据包冻结都不代表发布许可。冻结后只能克隆新版本修改授权。</p>
+      <p className="text-xs text-amber-800">模型使用与公开使用须分别逐条明确授权；来源信任等级、事实确认和证据包冻结都不代表授权。冻结后只能克隆新版本修改授权。</p>
       {!canEdit && <p className="text-xs text-slate-500">当前只读，或尚未确认编辑权限。</p>}
 
       <div className="grid gap-4 md:grid-cols-[280px_minmax(0,1fr)]">
@@ -206,6 +207,7 @@ export function PackBuilder({ packId, embedded = false, readOnly = false, onClos
                   <th className="px-4 py-2 font-medium">as_of</th>
                   <th className="px-4 py-2 font-medium">状态</th>
                   <th className="px-4 py-2 font-medium">公开使用许可</th>
+                  <th className="px-4 py-2 font-medium">模型使用许可</th>
                   <th className="px-4 py-2" />
                 </tr>
               </thead>
@@ -227,9 +229,18 @@ export function PackBuilder({ packId, embedded = false, readOnly = false, onClos
                         <input type="checkbox" aria-label={`允许 ${item.ref} 公开使用`} checked={item.public_use_allowed === true} disabled={busy} onChange={(event) => {
                           const allowed = event.target.checked;
                           if (!window.confirm(allowed ? "已核对该证据的公开使用授权，确认允许公开使用？来源信任等级不代表授权。" : "确认将该草稿条目标为不允许公开使用？")) return;
-                          setError(""); permission.mutate({ itemId: item.item_id, allowed });
+                          setError(""); permission.mutate({ itemId: item.item_id, field: "public_use_allowed", allowed });
                         }} />允许公开使用
                       </label> : <span className="text-xs">{item.public_use_revoked_at ? "已撤销" : item.public_use_allowed === true ? "已明确允许" : "未授权"}</span>}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {writable && pack.status === "draft" ? <label className="flex items-center gap-2 text-xs">
+                        <input type="checkbox" aria-label={`允许 ${item.ref} 模型使用`} checked={item.model_use_allowed === true} disabled={busy} onChange={(event) => {
+                          const allowed = event.target.checked;
+                          if (!window.confirm(allowed ? "已核对该证据可提供给模型使用，确认允许模型使用？这不会授予公开使用许可。" : "确认将该草稿条目标为不允许模型使用？")) return;
+                          setError(""); permission.mutate({ itemId: item.item_id, field: "model_use_allowed", allowed });
+                        }} />允许模型使用
+                      </label> : <span className="text-xs">{item.model_use_allowed === true ? "已明确允许" : "未授权"}</span>}
                     </td>
                     <td className="px-4 py-2.5 text-right">
                       {writable && pack.status === "draft" && (

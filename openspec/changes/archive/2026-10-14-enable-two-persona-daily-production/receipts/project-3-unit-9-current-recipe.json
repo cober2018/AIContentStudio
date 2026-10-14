@@ -1,0 +1,127 @@
+{
+  "schema": "creation.recipe.v1",
+  "workflow_id": 22,
+  "workflow_version": 1,
+  "source": "project_override",
+  "run_id": 9,
+  "stages": [
+    {
+      "node_id": "visual",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "5d725c97212c56995c40e5ccb861e873743bd78934b6fcd2c951458f1e12d590",
+        "attempt_id": 44,
+        "attempt_no": 1,
+        "candidate_id": "cand-0",
+        "decision": "accepted",
+        "entity_id": 44,
+        "feedback_event_id": 80,
+        "node_id": "visual",
+        "output_hash": "211fc9b3b8120c185617376dad44a01957631d21cfafd17f504196539ce0c82a",
+        "output_kind": "creative_attempt",
+        "output_schema": "graphic.visual-direction.v1",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "references": [
+          {
+            "checksum": "7c397e666d6b3bc888761f5235e4251cf4899e3a74515f027dbc544e3277f498",
+            "id": 2,
+            "kind": "fact_pack_item"
+          }
+        ],
+        "run_id": 9,
+        "schema": "stage.handoff.v1",
+        "summary": "基于技术编辑部风格的 3:4 架构图视觉方向，聚焦候选保留与采用解耦的三步状态流转与工程权衡。"
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 44,
+        "input_hash": "7f70e34b4c995f0f4bf841d13979e0e9cefd07544f8fdcc91b4b2ecf24d5837d",
+        "output_hash": "211fc9b3b8120c185617376dad44a01957631d21cfafd17f504196539ce0c82a",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "cards",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "ada7d2e587b8c7d35fd06fa63c122d300339c984221b19761678ec6730dae5b3",
+        "attempt_id": 45,
+        "attempt_no": 1,
+        "candidate_id": "candidate-0",
+        "decision": "accepted",
+        "entity_id": 45,
+        "feedback_event_id": 81,
+        "node_id": "cards",
+        "output_hash": "ff0aaf5140aa5333df8e7d1c20328320099bcb161e7152d6ace0923e959db9e1",
+        "output_kind": "creative_attempt",
+        "output_schema": "graphic.card-plan.v1",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "references": [],
+        "run_id": 9,
+        "schema": "stage.handoff.v1",
+        "summary": "规划了三张3:4低密度图卡，阐明生成与采用解耦的三步流转与工程维护成本。"
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 45,
+        "input_hash": "6abbc4c9081466e5af9879cda70100c52c240d1f310c5ddf5ec260aa4d01723b",
+        "output_hash": "ff0aaf5140aa5333df8e7d1c20328320099bcb161e7152d6ace0923e959db9e1",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "master",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "b1dd878d3a555ab6c1e96c680542dd3572b9eb1c770b2826aacd5fcdcdc02527",
+        "attempt_id": 46,
+        "context_hash": "d09bc7a08632c00c63e711c81d72dbb6898415e0b6052717890409812b0ec996",
+        "decision": "accepted_with_edits",
+        "entity_id": 12,
+        "node_id": "master",
+        "output_kind": "content_master_revision",
+        "payload_hash": "b1dd878d3a555ab6c1e96c680542dd3572b9eb1c770b2826aacd5fcdcdc02527",
+        "payload_schema": "graphic.master.v2",
+        "project_output_id": 8,
+        "revision_no": 1
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 46,
+        "input_hash": "348e8bc06a4e8c2f5ec12e4b7ef83821aec8dcb9fdebb2bd082381f18e0b8e39",
+        "output_hash": "fda9f3a583a709d8d676c9923f04e4191ed9a1bcd54d77e1aea4b5b9be87d6f2",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "quality",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "00873f1abd59e72de4fe3b158031056d13abdde17553141bf5198ac88fabd8e4",
+        "attempt_id": 72,
+        "context_hash": null,
+        "decision": "accepted",
+        "domain": "checks",
+        "entity_id": 72,
+        "feedback_event_id": 139,
+        "node_id": "quality",
+        "output_kind": "workflow_step_attempt",
+        "payload_hash": "00873f1abd59e72de4fe3b158031056d13abdde17553141bf5198ac88fabd8e4",
+        "project_output_id": 19,
+        "revision_no": null,
+        "warning_dispositions": {
+          "170:4a7db89f71e642781c35538ecbc651c0db54219d73df1cfad5996bf32bdf78e7": "graphic_identity已完成文字语义检查，模型视觉语义未执行，保留warning与human_review_required。本次委托AI已逐张查看真实PNG10/13/12：文字清晰、无字形溢出，状态图与文章一致；不声称人类审美验收或平台发布。"
+        }
+      },
+      "last_attempt": {
+        "attempt_no": 3,
+        "id": 72,
+        "input_hash": "bb28bbaf917156fbf7b92b15542325f9c621406c8697fe91e997b5af0dec1712",
+        "output_hash": "79957a751ec12dacd95877e049afbff0de39caf54fa26e5d5a0262f64fa52246",
+        "status": "succeeded"
+      }
+    }
+  ]
+}

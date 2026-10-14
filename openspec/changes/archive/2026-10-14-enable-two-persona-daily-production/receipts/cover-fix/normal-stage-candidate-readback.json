@@ -1,0 +1,66 @@
+{
+  "master_id": 16,
+  "payload_hash": "5063690e3e7ea211ef31ad0ef3d4812314cae244c360e8d3682a37f09d3ff567",
+  "image_blocks": [
+    {
+      "id": "aafe6f62-a91d-449e-b66e-20e25102cae4",
+      "type": "image",
+      "material_revision_id": 9
+    }
+  ],
+  "asset_refs": [
+    {
+      "material_revision_id": 9,
+      "role": "cover",
+      "sort_order": 0,
+      "content_hash_snapshot": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0"
+    }
+  ],
+  "check_statuses": [
+    {
+      "id": 111,
+      "check_kind": "master_schema",
+      "status": "pass"
+    },
+    {
+      "id": 112,
+      "check_kind": "evidence",
+      "status": "pass"
+    },
+    {
+      "id": 113,
+      "check_kind": "rights",
+      "status": "pass"
+    },
+    {
+      "id": 114,
+      "check_kind": "render",
+      "status": "pass"
+    },
+    {
+      "id": 115,
+      "check_kind": "text_structure",
+      "status": "pass"
+    },
+    {
+      "id": 116,
+      "check_kind": "text_fact",
+      "status": "pass"
+    },
+    {
+      "id": 117,
+      "check_kind": "text_identity",
+      "status": "pass"
+    },
+    {
+      "id": 118,
+      "check_kind": "text_platform",
+      "status": "pass"
+    },
+    {
+      "id": 119,
+      "check_kind": "text_discoverability",
+      "status": "warning"
+    }
+  ]
+}

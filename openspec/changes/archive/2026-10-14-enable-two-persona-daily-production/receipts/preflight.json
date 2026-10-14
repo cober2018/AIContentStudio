@@ -1,0 +1,19 @@
+{
+  "backup": "/Users/mshengran/Project/AIContentStudio/backups/daily-production-20261014.6kc8s1o0",
+  "formal_db": "/Users/mshengran/Project/AIContentStudio/apps/api/content_studio.db",
+  "media_root": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media",
+  "runtime_config": "/Users/mshengran/Project/AIContentStudio/apps/api/scripts/startup/runtime.env",
+  "head": "6ff0d7ac02045c752436d8c2261e6862a3f2a19f",
+  "api_pid": 56254,
+  "before_rows": 482,
+  "tables": 91,
+  "media_files": 53,
+  "archive_files": 263,
+  "adjacent_fingerprinted": 65,
+  "checked_at": "2026-10-14T12:43:19.356893+00:00",
+  "backup_integrity": "ok",
+  "config_sha256": "246d395fd8ea9d903d8bfa72afeda729699b0ed839ed2811ebba8ce29435037e",
+  "media_copied_byte_exact": true,
+  "backup_private_ignored": true,
+  "provider_dispatches": 0
+}

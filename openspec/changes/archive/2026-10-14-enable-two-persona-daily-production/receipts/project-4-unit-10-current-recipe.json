@@ -1,0 +1,143 @@
+{
+  "schema": "creation.recipe.v1",
+  "workflow_id": 24,
+  "workflow_version": 2,
+  "source": "project_override",
+  "run_id": 11,
+  "stages": [
+    {
+      "node_id": "visual",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "2d5623f5b8d9f86cebd64eeaf78d6829ae51e517279d7e01129de2bab8873417",
+        "attempt_id": 63,
+        "attempt_no": 1,
+        "candidate_id": "visual-dir-0",
+        "decision": "accepted",
+        "entity_id": 63,
+        "feedback_event_id": 119,
+        "node_id": "visual",
+        "output_hash": "b600b9f0234f7e1a28e21f228a46eccb88b59f7a37a57afe22bd8b41314846e7",
+        "output_kind": "creative_attempt",
+        "output_schema": "graphic.visual-direction.v1",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "references": [
+          {
+            "checksum": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0",
+            "id": 9,
+            "kind": "material_revision"
+          },
+          {
+            "checksum": "23bee4d390fc102c53ff598aaa659c05d31f43faef29a3a8d1f69a43dec0feb5",
+            "id": 3,
+            "kind": "fact_pack_item"
+          }
+        ],
+        "run_id": 11,
+        "schema": "stage.handoff.v1",
+        "summary": "确立假想晚饭主题的三张3:4暖调杂志卡片视觉方向，首卡采用既有插画分区排版，内页以低密度纯文本留白呈现。"
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 63,
+        "input_hash": "f32ac1a00d58663fdc8b9d08b41eb929dde1d8e3bac4f51575688df3a3b1ed54",
+        "output_hash": "b600b9f0234f7e1a28e21f228a46eccb88b59f7a37a57afe22bd8b41314846e7",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "cards",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "f65865988c59a0619d8779df701208d74ce3ad542b1088b9727b0019e393dd8f",
+        "attempt_id": 68,
+        "attempt_no": 2,
+        "candidate_id": "card-plan-0",
+        "decision": "accepted",
+        "entity_id": 68,
+        "feedback_event_id": 132,
+        "node_id": "cards",
+        "output_hash": "3141f17561f930145fed6af072c8078f97f663003038d9d404b70c36fc1f43d5",
+        "output_kind": "creative_attempt",
+        "output_schema": "graphic.card-plan.v1",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "references": [
+          {
+            "checksum": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0",
+            "id": 9,
+            "kind": "material_revision"
+          },
+          {
+            "checksum": "23bee4d390fc102c53ff598aaa659c05d31f43faef29a3a8d1f69a43dec0feb5",
+            "id": 3,
+            "kind": "fact_pack_item"
+          }
+        ],
+        "run_id": 11,
+        "schema": "stage.handoff.v1",
+        "summary": "生成修正claim目标字段定位的三张3:4暖调卡片计划，首卡绑定插画素材并声明假想设定，内页采用纯文本杂志排版。"
+      },
+      "last_attempt": {
+        "attempt_no": 2,
+        "id": 68,
+        "input_hash": "9632541d0d54bb661e404651fc816bbd1f0b746c1d6b981691fb6e4eb509b229",
+        "output_hash": "3141f17561f930145fed6af072c8078f97f663003038d9d404b70c36fc1f43d5",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "master",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "705196757dafcf841782713ea41c0dcbd98461f3be62490f975078dfc466bba4",
+        "attempt_id": 71,
+        "context_hash": "0ae92ac1909abfad28ea15f47e730fb5aab15e9aba8efd1e454edb132631005b",
+        "decision": "accepted_with_edits",
+        "entity_id": 29,
+        "node_id": "master",
+        "output_kind": "content_master_revision",
+        "payload_hash": "705196757dafcf841782713ea41c0dcbd98461f3be62490f975078dfc466bba4",
+        "payload_schema": "graphic.master.v2",
+        "project_output_id": 18,
+        "revision_no": 1
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 71,
+        "input_hash": "ddc66ac6b920e3b6addfbee1136b8cd3ee863a4bc91c7856e85c9da178b8f30b",
+        "output_hash": "13f890cefc5f9e0ac115d4b8437d1511978b9dd7507d77d638e66d88177e580a",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "quality",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "9b1e13f8aef7e7bbab74115673e47d2a9bbca5df8a031da252dc59b702ab5ea3",
+        "attempt_id": 78,
+        "context_hash": null,
+        "decision": "accepted",
+        "domain": "checks",
+        "entity_id": 78,
+        "feedback_event_id": 153,
+        "node_id": "quality",
+        "output_kind": "workflow_step_attempt",
+        "payload_hash": "9b1e13f8aef7e7bbab74115673e47d2a9bbca5df8a031da252dc59b702ab5ea3",
+        "project_output_id": 22,
+        "revision_no": null,
+        "warning_dispositions": {
+          "186:bab7880fdfa2df6c3cc8fd11df1bba7523dbdd45da76f3e62ba253b8863e45dd": "graphic_identity文本语义已verified；visual_semantics unavailable原样保留。根按用户委托逐张查看三张实际1080x1440 PNG：暖色版式、字号与裁切、假想边界和AI插图标识符合生活角色，无假真实经历或疗效主张；human_review_required保留，不冒称系统视觉语义已覆盖。"
+        }
+      },
+      "last_attempt": {
+        "attempt_no": 2,
+        "id": 78,
+        "input_hash": "f31aedb84656c2843e865d580d61c485c5d262e8d9ed4ab4dae1b1e1e483d3b4",
+        "output_hash": "65806ba63f70b01c9038ad020c3cf3c242d917f15b87485ee463a58c3528dc53",
+        "status": "succeeded"
+      }
+    }
+  ]
+}

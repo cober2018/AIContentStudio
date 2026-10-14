@@ -1,0 +1,56 @@
+{
+  "run_id": 9,
+  "workflow_id": 22,
+  "source": "project_override",
+  "definition_checksum": "6f1b21dd170277768658f8f297ed60031fe1e984571df7cb9d62f62db895c99c",
+  "stages": [
+    {
+      "node_id": "visual",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 44,
+        "input_hash": "7f70e34b4c995f0f4bf841d13979e0e9cefd07544f8fdcc91b4b2ecf24d5837d",
+        "output_hash": "211fc9b3b8120c185617376dad44a01957631d21cfafd17f504196539ce0c82a",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "cards",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 45,
+        "input_hash": "6abbc4c9081466e5af9879cda70100c52c240d1f310c5ddf5ec260aa4d01723b",
+        "output_hash": "ff0aaf5140aa5333df8e7d1c20328320099bcb161e7152d6ace0923e959db9e1",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "master",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 46,
+        "input_hash": "348e8bc06a4e8c2f5ec12e4b7ef83821aec8dcb9fdebb2bd082381f18e0b8e39",
+        "output_hash": "fda9f3a583a709d8d676c9923f04e4191ed9a1bcd54d77e1aea4b5b9be87d6f2",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "quality",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 3,
+        "id": 72,
+        "input_hash": "bb28bbaf917156fbf7b92b15542325f9c621406c8697fe91e997b5af0dec1712",
+        "output_hash": "79957a751ec12dacd95877e049afbff0de39caf54fa26e5d5a0262f64fa52246",
+        "status": "succeeded"
+      }
+    }
+  ]
+}

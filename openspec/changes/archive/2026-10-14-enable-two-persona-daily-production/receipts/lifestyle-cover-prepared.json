@@ -1,0 +1,37 @@
+{
+  "id": "5a586f539e264793b8f6ec02db0cb322",
+  "project_id": 4,
+  "state": "prepared",
+  "revision": 1,
+  "request_hash": "5eec704b727a3a00fc9e068ab52589fc354b135ed4485e69f0c396518c03422c",
+  "plan_hash": "dbc447632503a6d5205bad606414a2565f229cdd892f58777df6ae6ea345420d",
+  "provider_key": "minimax.cli",
+  "provider_version": "1",
+  "model_id": "image-01",
+  "input_hash": "1bd562bb60f144e9dedea0791f9dd2841c5bf639ef64325e0088cf99f251ede8",
+  "created_at": "2026-10-14 14:15:38.307723",
+  "plan": {
+    "status": "ready",
+    "reason": null,
+    "required_capability": "image_generation",
+    "execution_profile": "minimax.image",
+    "adapter_key": "minimax.cli",
+    "model_id": "image-01",
+    "parameters": {
+      "items": 1,
+      "pixels": 1048576,
+      "aspect_ratio": "16:9",
+      "timeout_seconds": 120
+    },
+    "limits": {
+      "max_items": 4,
+      "max_pixels": 1048576,
+      "max_seconds": null,
+      "max_tokens": null,
+      "timeout_seconds": 120,
+      "max_cost": null,
+      "currency": null
+    },
+    "dispatch_ready": true
+  }
+}

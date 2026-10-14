@@ -1,0 +1,2043 @@
+{
+  "definition_checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68",
+  "history": [
+    {
+      "checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68",
+      "diff": {
+        "added_node_ids": [],
+        "changed_node_ids": [],
+        "dependencies_changed": false,
+        "removed_node_ids": [],
+        "visual_order_changed": false
+      },
+      "parent_id": 13,
+      "version": 3,
+      "workflow_id": 17
+    },
+    {
+      "checksum": "51dd17762b258e619043b63431a0598781f46af7cac8b2c5ab9bc0a6543599fe",
+      "diff": {
+        "added_node_ids": [],
+        "changed_node_ids": [
+          "draft",
+          "refine"
+        ],
+        "dependencies_changed": false,
+        "removed_node_ids": [],
+        "visual_order_changed": false
+      },
+      "parent_id": 7,
+      "version": 2,
+      "workflow_id": 13
+    },
+    {
+      "checksum": "8099e41a3077bb8f85235da51cf9a354f4456622d70bbfad27b6dd2ee3da3578",
+      "diff": {
+        "added_node_ids": [],
+        "changed_node_ids": [
+          "draft",
+          "refine",
+          "title"
+        ],
+        "dependencies_changed": false,
+        "removed_node_ids": [],
+        "visual_order_changed": false
+      },
+      "parent_id": null,
+      "version": 1,
+      "workflow_id": 7
+    }
+  ],
+  "inherited_default": {
+    "checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68",
+    "diff": {
+      "added_node_ids": [],
+      "changed_node_ids": [],
+      "dependencies_changed": false,
+      "removed_node_ids": [],
+      "visual_order_changed": false
+    },
+    "revision": 3,
+    "source": "persona",
+    "workflow_id": 17
+  },
+  "readonly": false,
+  "run_id": 7,
+  "schema": "creation.recipe.v1",
+  "source": "persona_default",
+  "source_revision": 3,
+  "stages": [
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {
+        "candidate_count": 1,
+        "fact_mode": "grounded",
+        "instruction": "整理可核验来源、事实、时间边界和未知项。",
+        "length": "medium",
+        "method": {
+          "skill_ref": "studio.research.evidence-brief@1",
+          "source_kind": "studio_builtin"
+        },
+        "output_schema": "research.brief.v1",
+        "purpose": "完成当前中间创作阶段",
+        "temperature": 0.4
+      },
+      "blockers": [],
+      "controls": {
+        "category": "AI",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "aspect_ratio": {
+              "enum": [
+                "1:1",
+                "4:3",
+                "3:4",
+                "16:9",
+                "9:16"
+              ],
+              "maxLength": 5,
+              "type": "string"
+            },
+            "candidate_count": {
+              "default": 1,
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "canvas_count": {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "density": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "energy": {
+              "maxLength": 100,
+              "type": "string"
+            },
+            "fact_mode": {
+              "default": "grounded",
+              "enum": [
+                "grounded",
+                "current",
+                "reflection",
+                "speculation"
+              ],
+              "maxLength": 11,
+              "type": "string"
+            },
+            "instruction": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "length": {
+              "default": "medium",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ],
+              "maxLength": 6,
+              "minLength": 1,
+              "type": "string"
+            },
+            "method": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments_json": {
+                  "maxLength": 4000,
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "revision_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "runtime_key": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "runtime_version": {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                "skill_id": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "skill_ref": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "source_kind": {
+                  "enum": [
+                    "studio_builtin",
+                    "capability_memory",
+                    "installed_agent_skill"
+                  ],
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                "version": {
+                  "maxLength": 100,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_kind"
+              ],
+              "type": "object"
+            },
+            "model_profile_id": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "output_schema": {
+              "enum": [
+                "research.brief.v1",
+                "creative.angles.v1",
+                "creative.title-hook.v1",
+                "content.outline.v1",
+                "graphic.visual-direction.v1",
+                "graphic.card-plan.v1",
+                "audio.spoken-adaptation.v1",
+                "audio.voice-direction.v1",
+                "video.script.v1",
+                "video.shot-plan.v1"
+              ],
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "pace": {
+              "enum": [
+                "slow",
+                "medium",
+                "fast"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "pause_policy": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "purpose": {
+              "default": "完成当前中间创作阶段",
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "shot_count": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "temperature": {
+              "default": 0.4,
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "tone": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          "required": [
+            "output_schema",
+            "instruction"
+          ],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [
+            "identity"
+          ],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin",
+          "studio_builtin",
+          "capability_memory",
+          "installed_agent_skill"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "stage.creative.method.result.v1"
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.creative.method.v1",
+        "supports_candidates": false,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "中间创作方法",
+        "tunable_fields": [
+          "output_schema",
+          "instruction",
+          "purpose",
+          "candidate_count",
+          "length",
+          "temperature",
+          "method",
+          "model_profile_id",
+          "tone",
+          "fact_mode",
+          "density",
+          "canvas_count",
+          "aspect_ratio",
+          "pace",
+          "energy",
+          "pause_policy",
+          "shot_count"
+        ],
+        "ui_schema": {
+          "candidate_count": {
+            "control": "number",
+            "label": "候选数量"
+          },
+          "fact_mode": {
+            "control": "select",
+            "label": "事实时效模式"
+          },
+          "instruction": {
+            "control": "textarea",
+            "label": "阶段要求"
+          },
+          "length": {
+            "control": "select",
+            "label": "内容长度"
+          },
+          "method": {
+            "control": "method",
+            "label": "使用方法"
+          },
+          "model_profile_id": {
+            "control": "text",
+            "label": "模型配置"
+          },
+          "output_schema": {
+            "control": "select",
+            "label": "中间产物类型"
+          },
+          "purpose": {
+            "control": "text",
+            "label": "阶段目的"
+          },
+          "temperature": {
+            "control": "number",
+            "label": "创意程度"
+          }
+        }
+      },
+      "dependencies": [],
+      "kind": "AI",
+      "label": "证据简报",
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 37,
+        "input_hash": "2708e4e014b5a1408a12f14691fa19e264d6fd785207c1daadd0c1a614a6e046",
+        "output_hash": "9662b9cd58abbbc6f299408dee383cca29f380a1a8fc41472fcbfb66efb43dbb",
+        "status": "succeeded"
+      },
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "evidence",
+      "plugin": "stage.creative.method",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "waiting_input"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {
+        "candidate_count": 1,
+        "fact_mode": "grounded",
+        "instruction": "提出可解释、可比较的内容角度。",
+        "length": "medium",
+        "method": {
+          "skill_ref": "studio.research.angle-lab@1",
+          "source_kind": "studio_builtin"
+        },
+        "output_schema": "creative.angles.v1",
+        "purpose": "完成当前中间创作阶段",
+        "temperature": 0.4
+      },
+      "blockers": [],
+      "controls": {
+        "category": "AI",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "aspect_ratio": {
+              "enum": [
+                "1:1",
+                "4:3",
+                "3:4",
+                "16:9",
+                "9:16"
+              ],
+              "maxLength": 5,
+              "type": "string"
+            },
+            "candidate_count": {
+              "default": 1,
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "canvas_count": {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "density": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "energy": {
+              "maxLength": 100,
+              "type": "string"
+            },
+            "fact_mode": {
+              "default": "grounded",
+              "enum": [
+                "grounded",
+                "current",
+                "reflection",
+                "speculation"
+              ],
+              "maxLength": 11,
+              "type": "string"
+            },
+            "instruction": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "length": {
+              "default": "medium",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ],
+              "maxLength": 6,
+              "minLength": 1,
+              "type": "string"
+            },
+            "method": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments_json": {
+                  "maxLength": 4000,
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "revision_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "runtime_key": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "runtime_version": {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                "skill_id": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "skill_ref": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "source_kind": {
+                  "enum": [
+                    "studio_builtin",
+                    "capability_memory",
+                    "installed_agent_skill"
+                  ],
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                "version": {
+                  "maxLength": 100,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_kind"
+              ],
+              "type": "object"
+            },
+            "model_profile_id": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "output_schema": {
+              "enum": [
+                "research.brief.v1",
+                "creative.angles.v1",
+                "creative.title-hook.v1",
+                "content.outline.v1",
+                "graphic.visual-direction.v1",
+                "graphic.card-plan.v1",
+                "audio.spoken-adaptation.v1",
+                "audio.voice-direction.v1",
+                "video.script.v1",
+                "video.shot-plan.v1"
+              ],
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "pace": {
+              "enum": [
+                "slow",
+                "medium",
+                "fast"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "pause_policy": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "purpose": {
+              "default": "完成当前中间创作阶段",
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "shot_count": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "temperature": {
+              "default": 0.4,
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "tone": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          "required": [
+            "output_schema",
+            "instruction"
+          ],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [
+            "identity"
+          ],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin",
+          "studio_builtin",
+          "capability_memory",
+          "installed_agent_skill"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "stage.creative.method.result.v1"
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.creative.method.v1",
+        "supports_candidates": false,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "中间创作方法",
+        "tunable_fields": [
+          "output_schema",
+          "instruction",
+          "purpose",
+          "candidate_count",
+          "length",
+          "temperature",
+          "method",
+          "model_profile_id",
+          "tone",
+          "fact_mode",
+          "density",
+          "canvas_count",
+          "aspect_ratio",
+          "pace",
+          "energy",
+          "pause_policy",
+          "shot_count"
+        ],
+        "ui_schema": {
+          "candidate_count": {
+            "control": "number",
+            "label": "候选数量"
+          },
+          "fact_mode": {
+            "control": "select",
+            "label": "事实时效模式"
+          },
+          "instruction": {
+            "control": "textarea",
+            "label": "阶段要求"
+          },
+          "length": {
+            "control": "select",
+            "label": "内容长度"
+          },
+          "method": {
+            "control": "method",
+            "label": "使用方法"
+          },
+          "model_profile_id": {
+            "control": "text",
+            "label": "模型配置"
+          },
+          "output_schema": {
+            "control": "select",
+            "label": "中间产物类型"
+          },
+          "purpose": {
+            "control": "text",
+            "label": "阶段目的"
+          },
+          "temperature": {
+            "control": "number",
+            "label": "创意程度"
+          }
+        }
+      },
+      "dependencies": [
+        "evidence"
+      ],
+      "kind": "AI",
+      "label": "角度实验",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "angles",
+      "plugin": "stage.creative.method",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {
+        "candidate_count": 1,
+        "fact_mode": "grounded",
+        "instruction": "把已接受的角度组织成结构化大纲。",
+        "length": "medium",
+        "method": {
+          "skill_ref": "studio.text.outline@1",
+          "source_kind": "studio_builtin"
+        },
+        "output_schema": "content.outline.v1",
+        "purpose": "完成当前中间创作阶段",
+        "temperature": 0.4
+      },
+      "blockers": [],
+      "controls": {
+        "category": "AI",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "aspect_ratio": {
+              "enum": [
+                "1:1",
+                "4:3",
+                "3:4",
+                "16:9",
+                "9:16"
+              ],
+              "maxLength": 5,
+              "type": "string"
+            },
+            "candidate_count": {
+              "default": 1,
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "canvas_count": {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "density": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "energy": {
+              "maxLength": 100,
+              "type": "string"
+            },
+            "fact_mode": {
+              "default": "grounded",
+              "enum": [
+                "grounded",
+                "current",
+                "reflection",
+                "speculation"
+              ],
+              "maxLength": 11,
+              "type": "string"
+            },
+            "instruction": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "length": {
+              "default": "medium",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ],
+              "maxLength": 6,
+              "minLength": 1,
+              "type": "string"
+            },
+            "method": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments_json": {
+                  "maxLength": 4000,
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "revision_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "runtime_key": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "runtime_version": {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                "skill_id": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "skill_ref": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "source_kind": {
+                  "enum": [
+                    "studio_builtin",
+                    "capability_memory",
+                    "installed_agent_skill"
+                  ],
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                "version": {
+                  "maxLength": 100,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_kind"
+              ],
+              "type": "object"
+            },
+            "model_profile_id": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "output_schema": {
+              "enum": [
+                "research.brief.v1",
+                "creative.angles.v1",
+                "creative.title-hook.v1",
+                "content.outline.v1",
+                "graphic.visual-direction.v1",
+                "graphic.card-plan.v1",
+                "audio.spoken-adaptation.v1",
+                "audio.voice-direction.v1",
+                "video.script.v1",
+                "video.shot-plan.v1"
+              ],
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "pace": {
+              "enum": [
+                "slow",
+                "medium",
+                "fast"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "pause_policy": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "purpose": {
+              "default": "完成当前中间创作阶段",
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "shot_count": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "temperature": {
+              "default": 0.4,
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "tone": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          "required": [
+            "output_schema",
+            "instruction"
+          ],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [
+            "identity"
+          ],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin",
+          "studio_builtin",
+          "capability_memory",
+          "installed_agent_skill"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "stage.creative.method.result.v1"
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.creative.method.v1",
+        "supports_candidates": false,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "中间创作方法",
+        "tunable_fields": [
+          "output_schema",
+          "instruction",
+          "purpose",
+          "candidate_count",
+          "length",
+          "temperature",
+          "method",
+          "model_profile_id",
+          "tone",
+          "fact_mode",
+          "density",
+          "canvas_count",
+          "aspect_ratio",
+          "pace",
+          "energy",
+          "pause_policy",
+          "shot_count"
+        ],
+        "ui_schema": {
+          "candidate_count": {
+            "control": "number",
+            "label": "候选数量"
+          },
+          "fact_mode": {
+            "control": "select",
+            "label": "事实时效模式"
+          },
+          "instruction": {
+            "control": "textarea",
+            "label": "阶段要求"
+          },
+          "length": {
+            "control": "select",
+            "label": "内容长度"
+          },
+          "method": {
+            "control": "method",
+            "label": "使用方法"
+          },
+          "model_profile_id": {
+            "control": "text",
+            "label": "模型配置"
+          },
+          "output_schema": {
+            "control": "select",
+            "label": "中间产物类型"
+          },
+          "purpose": {
+            "control": "text",
+            "label": "阶段目的"
+          },
+          "temperature": {
+            "control": "number",
+            "label": "创意程度"
+          }
+        }
+      },
+      "dependencies": [
+        "angles"
+      ],
+      "kind": "AI",
+      "label": "内容大纲",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "outline",
+      "plugin": "stage.creative.method",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {
+        "candidate_count": 1,
+        "fact_mode": "grounded",
+        "instruction": "基于已接受的证据、角度和大纲生成一篇完整候选。只返回标题和 Markdown 正文，不要编造数字、版本或来源。",
+        "length": "long",
+        "method": {
+          "skill_ref": "studio.text.longform@1",
+          "source_kind": "studio_builtin"
+        },
+        "purpose": "生成第一版 Master 候选"
+      },
+      "blockers": [],
+      "controls": {
+        "category": "AI",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "candidate_count": {
+              "default": 3,
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "fact_mode": {
+              "default": "grounded",
+              "enum": [
+                "grounded",
+                "current",
+                "reflection",
+                "speculation"
+              ],
+              "maxLength": 11,
+              "type": "string"
+            },
+            "instruction": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "length": {
+              "default": "medium",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ],
+              "maxLength": 6,
+              "minLength": 1,
+              "type": "string"
+            },
+            "method": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments_json": {
+                  "maxLength": 4000,
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "revision_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "runtime_key": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "runtime_version": {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                "skill_id": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "skill_ref": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "source_kind": {
+                  "enum": [
+                    "studio_builtin",
+                    "capability_memory",
+                    "installed_agent_skill"
+                  ],
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                "version": {
+                  "maxLength": 100,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_kind"
+              ],
+              "type": "object"
+            },
+            "model_profile_id": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "purpose": {
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "temperature": {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "tone": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          "required": [
+            "instruction"
+          ],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin",
+          "studio_builtin",
+          "capability_memory",
+          "installed_agent_skill"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "candidate_shape": {
+            "asset_refs": "exact supplied MaterialRevision refs only",
+            "evidence_refs": "exact supplied FactPackItem refs only",
+            "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+          },
+          "max_candidates": 5,
+          "response_shape": "object with candidates array; honor requested candidate_count",
+          "schema": "stage.master.proposal.v1",
+          "supported_modalities": [
+            "text",
+            "graphic",
+            "video"
+          ]
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.master.propose.v1",
+        "supports_candidates": true,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "生成 Master 候选",
+        "tunable_fields": [
+          "purpose",
+          "instruction",
+          "candidate_count",
+          "length",
+          "temperature",
+          "model_profile_id",
+          "method",
+          "tone",
+          "fact_mode"
+        ],
+        "ui_schema": {
+          "candidate_count": {
+            "control": "number",
+            "label": "候选数量"
+          },
+          "fact_mode": {
+            "control": "select",
+            "label": "事实时效模式"
+          },
+          "instruction": {
+            "control": "textarea",
+            "label": "阶段要求"
+          },
+          "length": {
+            "control": "select",
+            "label": "内容长度"
+          },
+          "method": {
+            "control": "method",
+            "label": "使用方法"
+          },
+          "model_profile_id": {
+            "control": "text",
+            "label": "模型配置"
+          },
+          "purpose": {
+            "control": "textarea",
+            "label": "创作目的"
+          },
+          "temperature": {
+            "control": "number",
+            "label": "创意程度"
+          },
+          "tone": {
+            "control": "text",
+            "label": "表达语气"
+          }
+        }
+      },
+      "dependencies": [
+        "outline"
+      ],
+      "kind": "AI",
+      "label": "初稿候选",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "draft",
+      "plugin": "stage.master.propose",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {},
+      "blockers": [],
+      "controls": {
+        "category": "Rule",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [
+            "master"
+          ],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "schema": "stage.checks.result.v1"
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.checks.v1",
+        "supports_candidates": false,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "检查 Master",
+        "tunable_fields": [],
+        "ui_schema": {}
+      },
+      "dependencies": [
+        "draft"
+      ],
+      "kind": "Rule",
+      "label": "质量检查",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "quality",
+      "plugin": "stage.checks",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {
+        "candidate_count": 1,
+        "fact_mode": "grounded",
+        "instruction": "保留已验证事实，改善结构、具体性和角色表达。只返回标题和完整 Markdown 正文。",
+        "length": "long",
+        "method": {
+          "skill_ref": "studio.text.humanize@1",
+          "source_kind": "studio_builtin"
+        },
+        "purpose": "精修 Master 候选"
+      },
+      "blockers": [],
+      "controls": {
+        "category": "AI",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "candidate_count": {
+              "default": 3,
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "fact_mode": {
+              "default": "grounded",
+              "enum": [
+                "grounded",
+                "current",
+                "reflection",
+                "speculation"
+              ],
+              "maxLength": 11,
+              "type": "string"
+            },
+            "instruction": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "length": {
+              "default": "medium",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ],
+              "maxLength": 6,
+              "minLength": 1,
+              "type": "string"
+            },
+            "method": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments_json": {
+                  "maxLength": 4000,
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "revision_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "runtime_key": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "runtime_version": {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                "skill_id": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "skill_ref": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "source_kind": {
+                  "enum": [
+                    "studio_builtin",
+                    "capability_memory",
+                    "installed_agent_skill"
+                  ],
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                "version": {
+                  "maxLength": 100,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_kind"
+              ],
+              "type": "object"
+            },
+            "model_profile_id": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "purpose": {
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "temperature": {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "tone": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          "required": [
+            "instruction"
+          ],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin",
+          "studio_builtin",
+          "capability_memory",
+          "installed_agent_skill"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "candidate_shape": {
+            "asset_refs": "exact supplied MaterialRevision refs only",
+            "evidence_refs": "exact supplied FactPackItem refs only",
+            "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+          },
+          "max_candidates": 5,
+          "response_shape": "object with candidates array; honor requested candidate_count",
+          "schema": "stage.master.proposal.v1",
+          "supported_modalities": [
+            "text",
+            "graphic",
+            "video"
+          ]
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.master.propose.v1",
+        "supports_candidates": true,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "生成 Master 候选",
+        "tunable_fields": [
+          "purpose",
+          "instruction",
+          "candidate_count",
+          "length",
+          "temperature",
+          "model_profile_id",
+          "method",
+          "tone",
+          "fact_mode"
+        ],
+        "ui_schema": {
+          "candidate_count": {
+            "control": "number",
+            "label": "候选数量"
+          },
+          "fact_mode": {
+            "control": "select",
+            "label": "事实时效模式"
+          },
+          "instruction": {
+            "control": "textarea",
+            "label": "阶段要求"
+          },
+          "length": {
+            "control": "select",
+            "label": "内容长度"
+          },
+          "method": {
+            "control": "method",
+            "label": "使用方法"
+          },
+          "model_profile_id": {
+            "control": "text",
+            "label": "模型配置"
+          },
+          "purpose": {
+            "control": "textarea",
+            "label": "创作目的"
+          },
+          "temperature": {
+            "control": "number",
+            "label": "创意程度"
+          },
+          "tone": {
+            "control": "text",
+            "label": "表达语气"
+          }
+        }
+      },
+      "dependencies": [
+        "quality"
+      ],
+      "kind": "AI",
+      "label": "精修候选",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "refine",
+      "plugin": "stage.master.propose",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {
+        "candidate_count": 1,
+        "fact_mode": "grounded",
+        "instruction": "生成与正文一致、不过度夸张的标题和开头方向。",
+        "length": "medium",
+        "method": {
+          "skill_ref": "studio.text.title-hook@1",
+          "source_kind": "studio_builtin"
+        },
+        "output_schema": "creative.title-hook.v1",
+        "purpose": "完成当前中间创作阶段",
+        "temperature": 0.4
+      },
+      "blockers": [],
+      "controls": {
+        "category": "AI",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "aspect_ratio": {
+              "enum": [
+                "1:1",
+                "4:3",
+                "3:4",
+                "16:9",
+                "9:16"
+              ],
+              "maxLength": 5,
+              "type": "string"
+            },
+            "candidate_count": {
+              "default": 1,
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "canvas_count": {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "density": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "energy": {
+              "maxLength": 100,
+              "type": "string"
+            },
+            "fact_mode": {
+              "default": "grounded",
+              "enum": [
+                "grounded",
+                "current",
+                "reflection",
+                "speculation"
+              ],
+              "maxLength": 11,
+              "type": "string"
+            },
+            "instruction": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "length": {
+              "default": "medium",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ],
+              "maxLength": 6,
+              "minLength": 1,
+              "type": "string"
+            },
+            "method": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments_json": {
+                  "maxLength": 4000,
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "revision_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "runtime_key": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "runtime_version": {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                "skill_id": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "skill_ref": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "source_kind": {
+                  "enum": [
+                    "studio_builtin",
+                    "capability_memory",
+                    "installed_agent_skill"
+                  ],
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                "version": {
+                  "maxLength": 100,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_kind"
+              ],
+              "type": "object"
+            },
+            "model_profile_id": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "output_schema": {
+              "enum": [
+                "research.brief.v1",
+                "creative.angles.v1",
+                "creative.title-hook.v1",
+                "content.outline.v1",
+                "graphic.visual-direction.v1",
+                "graphic.card-plan.v1",
+                "audio.spoken-adaptation.v1",
+                "audio.voice-direction.v1",
+                "video.script.v1",
+                "video.shot-plan.v1"
+              ],
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            "pace": {
+              "enum": [
+                "slow",
+                "medium",
+                "fast"
+              ],
+              "maxLength": 6,
+              "type": "string"
+            },
+            "pause_policy": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "purpose": {
+              "default": "完成当前中间创作阶段",
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "shot_count": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "temperature": {
+              "default": 0.4,
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "tone": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          "required": [
+            "output_schema",
+            "instruction"
+          ],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [
+            "identity"
+          ],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin",
+          "studio_builtin",
+          "capability_memory",
+          "installed_agent_skill"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "stage.creative.method.result.v1"
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.creative.method.v1",
+        "supports_candidates": false,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "中间创作方法",
+        "tunable_fields": [
+          "output_schema",
+          "instruction",
+          "purpose",
+          "candidate_count",
+          "length",
+          "temperature",
+          "method",
+          "model_profile_id",
+          "tone",
+          "fact_mode",
+          "density",
+          "canvas_count",
+          "aspect_ratio",
+          "pace",
+          "energy",
+          "pause_policy",
+          "shot_count"
+        ],
+        "ui_schema": {
+          "candidate_count": {
+            "control": "number",
+            "label": "候选数量"
+          },
+          "fact_mode": {
+            "control": "select",
+            "label": "事实时效模式"
+          },
+          "instruction": {
+            "control": "textarea",
+            "label": "阶段要求"
+          },
+          "length": {
+            "control": "select",
+            "label": "内容长度"
+          },
+          "method": {
+            "control": "method",
+            "label": "使用方法"
+          },
+          "model_profile_id": {
+            "control": "text",
+            "label": "模型配置"
+          },
+          "output_schema": {
+            "control": "select",
+            "label": "中间产物类型"
+          },
+          "purpose": {
+            "control": "text",
+            "label": "阶段目的"
+          },
+          "temperature": {
+            "control": "number",
+            "label": "创意程度"
+          }
+        }
+      },
+      "dependencies": [
+        "refine"
+      ],
+      "kind": "AI",
+      "label": "标题与开头",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "title",
+      "plugin": "stage.creative.method",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {
+        "candidate_count": 1,
+        "fact_mode": "grounded",
+        "instruction": "采用已接受的精修正文和标题/开头候选，保留全部精确引用与事实边界；不要增加新的事实。生成完整最终稿等待人工接受。",
+        "length": "long",
+        "method": {
+          "skill_ref": "studio.text.longform@1",
+          "source_kind": "studio_builtin"
+        },
+        "purpose": "整合最终 Master"
+      },
+      "blockers": [],
+      "controls": {
+        "category": "AI",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "candidate_count": {
+              "default": 3,
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "fact_mode": {
+              "default": "grounded",
+              "enum": [
+                "grounded",
+                "current",
+                "reflection",
+                "speculation"
+              ],
+              "maxLength": 11,
+              "type": "string"
+            },
+            "instruction": {
+              "maxLength": 4000,
+              "minLength": 1,
+              "type": "string"
+            },
+            "length": {
+              "default": "medium",
+              "enum": [
+                "short",
+                "medium",
+                "long"
+              ],
+              "maxLength": 6,
+              "minLength": 1,
+              "type": "string"
+            },
+            "method": {
+              "additionalProperties": false,
+              "properties": {
+                "arguments_json": {
+                  "maxLength": 4000,
+                  "type": "string"
+                },
+                "artifact_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "revision_id": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "runtime_key": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "runtime_version": {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                "skill_id": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "skill_ref": {
+                  "maxLength": 150,
+                  "type": "string"
+                },
+                "source_kind": {
+                  "enum": [
+                    "studio_builtin",
+                    "capability_memory",
+                    "installed_agent_skill"
+                  ],
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                "version": {
+                  "maxLength": 100,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_kind"
+              ],
+              "type": "object"
+            },
+            "model_profile_id": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            "purpose": {
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "temperature": {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            "tone": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          "required": [
+            "instruction"
+          ],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin",
+          "studio_builtin",
+          "capability_memory",
+          "installed_agent_skill"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "candidate_shape": {
+            "asset_refs": "exact supplied MaterialRevision refs only",
+            "evidence_refs": "exact supplied FactPackItem refs only",
+            "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+          },
+          "max_candidates": 5,
+          "response_shape": "object with candidates array; honor requested candidate_count",
+          "schema": "stage.master.proposal.v1",
+          "supported_modalities": [
+            "text",
+            "graphic",
+            "video"
+          ]
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.master.propose.v1",
+        "supports_candidates": true,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "生成 Master 候选",
+        "tunable_fields": [
+          "purpose",
+          "instruction",
+          "candidate_count",
+          "length",
+          "temperature",
+          "model_profile_id",
+          "method",
+          "tone",
+          "fact_mode"
+        ],
+        "ui_schema": {
+          "candidate_count": {
+            "control": "number",
+            "label": "候选数量"
+          },
+          "fact_mode": {
+            "control": "select",
+            "label": "事实时效模式"
+          },
+          "instruction": {
+            "control": "textarea",
+            "label": "阶段要求"
+          },
+          "length": {
+            "control": "select",
+            "label": "内容长度"
+          },
+          "method": {
+            "control": "method",
+            "label": "使用方法"
+          },
+          "model_profile_id": {
+            "control": "text",
+            "label": "模型配置"
+          },
+          "purpose": {
+            "control": "textarea",
+            "label": "创作目的"
+          },
+          "temperature": {
+            "control": "number",
+            "label": "创意程度"
+          },
+          "tone": {
+            "control": "text",
+            "label": "表达语气"
+          }
+        }
+      },
+      "dependencies": [
+        "refine",
+        "title"
+      ],
+      "kind": "AI",
+      "label": "最终稿确认",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "final",
+      "plugin": "stage.master.propose",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    },
+    {
+      "accepted_target": null,
+      "associated_outputs": [],
+      "base_config": {},
+      "blockers": [],
+      "controls": {
+        "category": "Rule",
+        "config_schema": {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        },
+        "input_contract": {
+          "required_context": [
+            "master"
+          ],
+          "upstream": "accepted"
+        },
+        "method_sources": [
+          "builtin"
+        ],
+        "output_contract": {
+          "accepted_content_required": true,
+          "schema": "stage.checks.result.v1"
+        },
+        "requires_human_acceptance": true,
+        "stage_schema": "stage.checks.v1",
+        "supports_candidates": false,
+        "supports_preview": true,
+        "supports_run_override": true,
+        "title": "检查 Master",
+        "tunable_fields": [],
+        "ui_schema": {}
+      },
+      "dependencies": [
+        "final"
+      ],
+      "kind": "Rule",
+      "label": "最终稿质量检查",
+      "last_attempt": null,
+      "local_dirty": null,
+      "mode": "stage",
+      "node_id": "final_quality",
+      "plugin": "stage.checks",
+      "plugin_version": "1",
+      "readiness": "preview_required",
+      "requires_human_acceptance": true,
+      "status": "pending"
+    }
+  ],
+  "workflow_id": 17,
+  "workflow_version": 3
+}

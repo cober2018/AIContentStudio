@@ -1,0 +1,132 @@
+{
+  "schema": "creation.recipe.v1",
+  "workflow_id": 26,
+  "workflow_version": 2,
+  "source": "project_override",
+  "run_id": 12,
+  "stages": [
+    {
+      "node_id": "spoken",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "093765ce2ea3a00c7a9108e943d3a247f0108685ff44ed702268b7afd2489764",
+        "attempt_id": 67,
+        "attempt_no": 2,
+        "candidate_id": "spoken-adaptation-0",
+        "decision": "accepted",
+        "entity_id": 67,
+        "feedback_event_id": 129,
+        "node_id": "spoken",
+        "output_hash": "01ffcf31f13fa3d60827d6e501e4c0d1710296391e549a3bc1d94083dcc39dc1",
+        "output_kind": "creative_attempt",
+        "output_schema": "audio.spoken-adaptation.v1",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "references": [
+          {
+            "checksum": "7c397e666d6b3bc888761f5235e4251cf4899e3a74515f027dbc544e3277f498",
+            "id": 2,
+            "kind": "fact_pack_item"
+          }
+        ],
+        "run_id": 12,
+        "schema": "stage.handoff.v1",
+        "summary": "探讨将模型生成与采用拆分为独立状态的软件架构选择及其管理成本取舍。"
+      },
+      "last_attempt": {
+        "attempt_no": 2,
+        "id": 67,
+        "input_hash": "b59f6e7d85d8f7ff9afd109409aeb4e9ca9617dba99c6c2950327a4b819ba56e",
+        "output_hash": "01ffcf31f13fa3d60827d6e501e4c0d1710296391e549a3bc1d94083dcc39dc1",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "voice",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "0c5b0d69c6ddcf5c23fbe9b71a9e603f7b62647a1a641587d033c16df6afee65",
+        "attempt_id": 69,
+        "attempt_no": 1,
+        "candidate_id": "voice-direction-0",
+        "decision": "accepted",
+        "entity_id": 69,
+        "feedback_event_id": 133,
+        "node_id": "voice",
+        "output_hash": "8765f1b0f281bbb9d56738242f8fb90dbb5c2507e043261559f10e82e31a79aa",
+        "output_kind": "creative_attempt",
+        "output_schema": "audio.voice-direction.v1",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "references": [
+          {
+            "checksum": "7c397e666d6b3bc888761f5235e4251cf4899e3a74515f027dbc544e3277f498",
+            "id": 2,
+            "kind": "fact_pack_item"
+          }
+        ],
+        "run_id": 12,
+        "schema": "stage.handoff.v1",
+        "summary": "为架构解耦口语稿制定冷静清晰、节奏平稳的工程师解说声音方向。"
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 69,
+        "input_hash": "edc5aac380ee9c871ac031b79e7ee77a2bfe2c2d77ec6e9e335d86882b4c01f0",
+        "output_hash": "8765f1b0f281bbb9d56738242f8fb90dbb5c2507e043261559f10e82e31a79aa",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "tts",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0",
+        "attempt_id": 70,
+        "context_hash": null,
+        "decision": "accepted",
+        "domain": "media",
+        "entity_id": 14,
+        "feedback_event_id": 141,
+        "node_id": "tts",
+        "output_kind": "material_revision",
+        "payload_hash": "841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0",
+        "project_output_id": 20,
+        "revision_no": 1
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 70,
+        "input_hash": "9aeecd3dcb82407349be5862098e67e6cd8ad11cccbdfc6cb4d13e1a4d534a99",
+        "output_hash": "297bcdb71050a8ae959eb914b20cabc23d3423be2b5fa7fc38e9ce7b3f555428",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "audio_quality",
+      "status": "succeeded",
+      "accepted_target": {
+        "accepted_hash": "da0c65ea96ed9e3bf6f91986c3a2599b488a7edd248b3448692322e345b82211",
+        "attempt_id": 75,
+        "context_hash": null,
+        "decision": "accepted",
+        "domain": "checks",
+        "entity_id": 75,
+        "feedback_event_id": 144,
+        "node_id": "audio_quality",
+        "output_kind": "workflow_step_attempt",
+        "payload_hash": "da0c65ea96ed9e3bf6f91986c3a2599b488a7edd248b3448692322e345b82211",
+        "project_output_id": 21,
+        "revision_no": null,
+        "warning_dispositions": {}
+      },
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 75,
+        "input_hash": "398d4667f7b5a25dac9ba666a0375f1247fd766e1c581704077eda070c9e365c",
+        "output_hash": "64e07fd00921a18ec4841d60945060fd078929d00a9a86dcb3d48a6415e4031a",
+        "status": "succeeded"
+      }
+    }
+  ]
+}

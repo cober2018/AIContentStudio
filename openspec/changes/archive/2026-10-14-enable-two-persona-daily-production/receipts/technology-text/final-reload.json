@@ -1,0 +1,116 @@
+{
+  "run_id": 8,
+  "workflow_id": 17,
+  "source": "persona_default",
+  "definition_checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68",
+  "stages": [
+    {
+      "node_id": "evidence",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 39,
+        "input_hash": "ee5f3b3bfac52fbf94ddf4976e70a8da08babb667aa41f842972a59087b30792",
+        "output_hash": "15bd77d69970b4c71b60135821d6210d56589cf6353beda91f403662a47c99a3",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "angles",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 40,
+        "input_hash": "6dbce8105f6434363c085cf431427275d40da647874131a9b39168df994f5d08",
+        "output_hash": "6dfd6c9353ebea77784854e9f70bbaba2bd43ceaa3dbc70c9497d2b75d7db028",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "outline",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 41,
+        "input_hash": "473932649627ff91de78275fce43fdbcaac9f5dd54fde5030f8350e706a0f9e8",
+        "output_hash": "ebf3b989753c71c01c4d2f5efeea15b5f949147174043b36c24e392ad683788b",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "draft",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 42,
+        "input_hash": "1cabdc4ad12bf44e21d7387c54e75a804d7e48883601580bef23b4d7d4fdc450",
+        "output_hash": "cbb18f989fc1de345363ac0ea7d271f992de3cd3f725a87f4693927a5def8a32",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "quality",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 2,
+        "id": 54,
+        "input_hash": "d492a2216a66497820e048bc128ed95b0f9b9947f08f383d5df9369309d1c9bc",
+        "output_hash": "ac0529419b28c3a09bb852a165495001fbd04bf016e1179b935a19284237a3e9",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "refine",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 55,
+        "input_hash": "babd741424aee96922552ad15b48e1919e3980751d44279cf7115dafb5641b83",
+        "output_hash": "3e28fab6ea7d57198d7d8d3cd89e8673a7425593f7f7db8e2a724ba22e548785",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "title",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 57,
+        "input_hash": "9dc33df47292d37daf55a1593ea63a6346b386db12937fc78abd7b34d061cbaf",
+        "output_hash": "0518e9d875f0daeb3c9b79cce9714a23632f4ae259b19c12e67f16f9e5ea236c",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "final",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 1,
+        "id": 59,
+        "input_hash": "738f759e01e5457d7e7ff1a2010f8b2fc1398652f800b3b7929e996068ea16c1",
+        "output_hash": "f14bb115c9cf576d0e3835cbddc09af23a4d8f6b8371de17fca5d1244e4e6785",
+        "status": "succeeded"
+      }
+    },
+    {
+      "node_id": "final_quality",
+      "status": "succeeded",
+      "accepted": true,
+      "last_attempt": {
+        "attempt_no": 2,
+        "id": 62,
+        "input_hash": "daf1fe4bf1c448aba38f725dc12e91c3dce23229b752fd3516cbcedadffecae2",
+        "output_hash": "136379f6e281d623b769648d64081bada38c9f5a496cc397026088265ef0081c",
+        "status": "succeeded"
+      }
+    }
+  ]
+}

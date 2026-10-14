@@ -88,6 +88,7 @@ def _serialize(pack: FactPack, with_items: bool = False) -> dict:
                 "status": item.fact.status if item.fact else "legacy_untyped",
                 "source_document_id": (item.snapshot_json or {}).get("source_id") or (item.fact.source_document_id if item.fact else None),
                 "public_use_allowed": item.public_use_allowed,
+                "model_use_allowed": item.model_use_allowed,
                 "public_use_revoked_at": item.public_use_revoked_at.isoformat() if item.public_use_revoked_at else None,
                 "note": item.note,
                 "sort_order": item.sort_order,

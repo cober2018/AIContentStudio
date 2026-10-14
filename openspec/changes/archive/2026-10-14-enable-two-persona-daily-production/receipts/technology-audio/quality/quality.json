@@ -1,0 +1,646 @@
+{
+  "schema": "daily-production.delegated-audio-review.v1",
+  "reviewer": "independent Codex AI reviewer",
+  "source_path": "apps/api/app/media/generation/ac5133d011be47079c5945f9f07e18ea/841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0.bin",
+  "source_sha256": "841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0",
+  "source_bytes": 10220642,
+  "source_unchanged_after_review": true,
+  "accepted_spoken_candidate_hash": "093765ce2ea3a00c7a9108e943d3a247f0108685ff44ed702268b7afd2489764",
+  "expected_script_sha256": "28fb81c39ad8aea78175dcef76a80498e0514234145e400f7c360e6b4391f925",
+  "source_master_revision_id": 24,
+  "method": "Complete WAV decoded with wave/ffprobe, full-file ffmpeg acoustics, complete existing LocalMLXASRProvider transcription under sandbox-exec deny network and local cached model; no direct listening",
+  "direct_listening": false,
+  "network_requests": 0,
+  "model_downloads": 0,
+  "paid_asr_calls": 0,
+  "audio_edited": false,
+  "duration_seconds": 159.67934375,
+  "channels": 1,
+  "sample_width_bytes": 2,
+  "sample_rate_hz": 32000,
+  "pcm_frames": 5109739,
+  "ffprobe": {
+    "streams": [
+      {
+        "index": 0,
+        "codec_name": "pcm_s16le",
+        "codec_long_name": "PCM signed 16-bit little-endian",
+        "codec_type": "audio",
+        "codec_tag_string": "[1][0][0][0]",
+        "codec_tag": "0x0001",
+        "sample_fmt": "s16",
+        "sample_rate": "32000",
+        "channels": 1,
+        "bits_per_sample": 16,
+        "initial_padding": 0,
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "0/0",
+        "time_base": "1/32000",
+        "duration_ts": 5109739,
+        "duration": "159.679344",
+        "bit_rate": "512000",
+        "disposition": {
+          "default": 0,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        }
+      }
+    ],
+    "format": {
+      "filename": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/generation/ac5133d011be47079c5945f9f07e18ea/841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0.bin",
+      "nb_streams": 1,
+      "nb_programs": 0,
+      "nb_stream_groups": 0,
+      "format_name": "wav",
+      "format_long_name": "WAV / WAVE (Waveform Audio)",
+      "duration": "159.679344",
+      "size": "10220642",
+      "bit_rate": "512058",
+      "probe_score": 99,
+      "tags": {
+        "encoder": "Lavf59.27.100"
+      }
+    }
+  },
+  "acoustics": {
+    "peak_pcm_ratio": 0.881500244140625,
+    "peak_dbfs": -1.0955512616457288,
+    "rms_ratio": 0.06484334217895485,
+    "rms_dbfs": -23.762692173672683,
+    "full_scale_sample_count": 0,
+    "near_full_scale_threshold": 32760,
+    "near_full_scale_sample_count": 0,
+    "near_full_scale_ratio": 0.0,
+    "loudness_summary": "Integrated loudness:\n    I:         -23.2 LUFS\n    Threshold: -33.7 LUFS\n\n  Loudness range:\n    LRA:         3.2 LU\n    Threshold: -43.9 LUFS\n    LRA low:   -25.5 LUFS\n    LRA high:  -22.2 LUFS\n\n  True peak:\n    Peak:       -1.1 dBFS\n[out#0/null @ 0x94b034180] video:0KiB audio:9980KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown\nsize=N/A time=00:02:39.67 bitrate=N/A speed= 637x elapsed=0:00:00.25",
+    "silence_detection": {
+      "threshold_dbfs": -45,
+      "minimum_seconds": 0.5,
+      "segments": [
+        {
+          "start": 4.642344,
+          "end": 5.20925,
+          "duration_seconds": 0.566906
+        },
+        {
+          "start": 11.64825,
+          "end": 12.455969,
+          "duration_seconds": 0.807719
+        },
+        {
+          "start": 17.242875,
+          "end": 17.766687,
+          "duration_seconds": 0.523813
+        },
+        {
+          "start": 20.173906,
+          "end": 20.736719,
+          "duration_seconds": 0.562813
+        },
+        {
+          "start": 29.62875,
+          "end": 30.149625,
+          "duration_seconds": 0.520875
+        },
+        {
+          "start": 33.162438,
+          "end": 34.117719,
+          "duration_seconds": 0.955281
+        },
+        {
+          "start": 41.208688,
+          "end": 41.840031,
+          "duration_seconds": 0.631344
+        },
+        {
+          "start": 44.663313,
+          "end": 45.301938,
+          "duration_seconds": 0.638625
+        },
+        {
+          "start": 48.249781,
+          "end": 48.750312,
+          "duration_seconds": 0.500531
+        },
+        {
+          "start": 52.575594,
+          "end": 53.302969,
+          "duration_seconds": 0.727375
+        },
+        {
+          "start": 55.002813,
+          "end": 55.754156,
+          "duration_seconds": 0.751344
+        },
+        {
+          "start": 58.265094,
+          "end": 58.812344,
+          "duration_seconds": 0.54725
+        },
+        {
+          "start": 61.1105,
+          "end": 61.676406,
+          "duration_seconds": 0.565906
+        },
+        {
+          "start": 62.553,
+          "end": 63.505063,
+          "duration_seconds": 0.952063
+        },
+        {
+          "start": 71.155531,
+          "end": 71.965,
+          "duration_seconds": 0.809469
+        },
+        {
+          "start": 72.950812,
+          "end": 73.542406,
+          "duration_seconds": 0.591594
+        },
+        {
+          "start": 75.921,
+          "end": 76.477563,
+          "duration_seconds": 0.556562
+        },
+        {
+          "start": 79.184156,
+          "end": 79.845781,
+          "duration_seconds": 0.661625
+        },
+        {
+          "start": 83.898656,
+          "end": 84.583562,
+          "duration_seconds": 0.684906
+        },
+        {
+          "start": 87.592281,
+          "end": 88.549281,
+          "duration_seconds": 0.957
+        },
+        {
+          "start": 94.333281,
+          "end": 95.204156,
+          "duration_seconds": 0.870875
+        },
+        {
+          "start": 96.253594,
+          "end": 97.025219,
+          "duration_seconds": 0.771625
+        },
+        {
+          "start": 99.268594,
+          "end": 100.105031,
+          "duration_seconds": 0.836438
+        },
+        {
+          "start": 103.810688,
+          "end": 104.687906,
+          "duration_seconds": 0.877219
+        },
+        {
+          "start": 112.927906,
+          "end": 113.562562,
+          "duration_seconds": 0.634656
+        },
+        {
+          "start": 122.566281,
+          "end": 123.170938,
+          "duration_seconds": 0.604656
+        },
+        {
+          "start": 125.414406,
+          "end": 125.942437,
+          "duration_seconds": 0.528031
+        },
+        {
+          "start": 129.182625,
+          "end": 129.716844,
+          "duration_seconds": 0.534219
+        },
+        {
+          "start": 136.906719,
+          "end": 137.466187,
+          "duration_seconds": 0.559469
+        },
+        {
+          "start": 140.737469,
+          "end": 141.367094,
+          "duration_seconds": 0.629625
+        },
+        {
+          "start": 149.848688,
+          "end": 150.843625,
+          "duration_seconds": 0.994938
+        }
+      ],
+      "longest_pause_seconds": 0.994938,
+      "total_detected_silence_seconds": 21.354752
+    }
+  },
+  "offline_asr": {
+    "provider": "local.mlx_whisper@1",
+    "model_cache": "/Users/mshengran/.cache/huggingface/hub/models--mlx-community--whisper-medium/snapshots/29c89182c8557049c004210f96febc8b5ee97c89",
+    "execution_elapsed_seconds": 8.403057208051905,
+    "complete_file_submitted": true,
+    "status": "succeeded",
+    "transcript": "今天聊一个架构选择\n生成之后先别覆盖原稿\n设想一种模型生成内容的工作流\n模型返回了新内容\n系统就覆盖原稿\n这样的工作流把两个决定合在了一起\n生成了一份候选\n以及愿不愿意正式采用它\n输出可能偏提\n也可能遗漏条件\n接口成功\n无法替使用者判断内容是否合适\n如果没有保留历史版本\n一次偏离目标的生成就可能让原稿难以找回\n下游若继续读取这个状态\n排查时还要先分清偏差从哪一步开始\n本文讨论一种架构选择\n不把它当成性能实测或产品效果结论\n也不假定每个流程都需要完整的版本系统\n一个可选做法\n是把生成与采用拆成独立状态\n生成只铲除待审候选\n正式内容由明确的采用动作更新\n可以从以下步骤开始\n第一步保留候选\n把生成结果暂存在候选区\n记录输入与版本信息\n暂不更新正式内容\n第二步审阅比对\n展示候选与原稿的差异\n让使用者或教练规则能够比较\n拒绝与提出修改\n第三步显示采用\n收到明确确认后再更新正式版本\n未选候选按约定归档或过期\n这三个步骤把两个决定摆到了明初\n模型生成了什么\n以及我们愿意把什么写进正式版本\n候选不必立即成为新的基准\n这种设计也有代价\n候选和历史占用存储\n版本关系\n清理策略与比对界面\n都要维护\n本文没有开销比例或效率数据\n实际成本要结合调用规模\n保留期限和协作方式判断\n对需要反复修改\n多人审阅或追溯来源的内容\n候选层可能值得管理成本\n对一次性容易重做的低风险操稿\n也可以采用更轻的确认方式\n应让复杂度与用途相称\n可以从一个小问题检查现有工具\n模型返回新文本时\n系统会直接覆盖原稿\n还是允许你看一眼差异\n拒绝结果或明确采用\n先把这个决定说清楚\n再判断是否需要更完整的版本机制\n保留选择空间\n比让每个流程都承担相同的复杂度\n更有意义\n本段内容由AI辅助创作\n声音为AI合成",
+    "cues": [
+      {
+        "text": "今天聊一个架构选择",
+        "start_ms": 0,
+        "end_ms": 2000
+      },
+      {
+        "text": "生成之后先别覆盖原稿",
+        "start_ms": 2000,
+        "end_ms": 4800
+      },
+      {
+        "text": "设想一种模型生成内容的工作流",
+        "start_ms": 4800,
+        "end_ms": 8200
+      },
+      {
+        "text": "模型返回了新内容",
+        "start_ms": 8200,
+        "end_ms": 10000
+      },
+      {
+        "text": "系统就覆盖原稿",
+        "start_ms": 10000,
+        "end_ms": 11800
+      },
+      {
+        "text": "这样的工作流把两个决定合在了一起",
+        "start_ms": 11800,
+        "end_ms": 15600
+      },
+      {
+        "text": "生成了一份候选",
+        "start_ms": 15600,
+        "end_ms": 17400
+      },
+      {
+        "text": "以及愿不愿意正式采用它",
+        "start_ms": 17400,
+        "end_ms": 20400
+      },
+      {
+        "text": "输出可能偏提",
+        "start_ms": 20400,
+        "end_ms": 22200
+      },
+      {
+        "text": "也可能遗漏条件",
+        "start_ms": 22200,
+        "end_ms": 23800
+      },
+      {
+        "text": "接口成功",
+        "start_ms": 23800,
+        "end_ms": 25000
+      },
+      {
+        "text": "无法替使用者判断内容是否合适",
+        "start_ms": 25000,
+        "end_ms": 27800
+      },
+      {
+        "text": "如果没有保留历史版本",
+        "start_ms": 27800,
+        "end_ms": 29800
+      },
+      {
+        "text": "一次偏离目标的生成就可能让原稿难以找回",
+        "start_ms": 29800,
+        "end_ms": 33800
+      },
+      {
+        "text": "下游若继续读取这个状态",
+        "start_ms": 33800,
+        "end_ms": 35800
+      },
+      {
+        "text": "排查时还要先分清偏差从哪一步开始",
+        "start_ms": 35800,
+        "end_ms": 39200
+      },
+      {
+        "text": "本文讨论一种架构选择",
+        "start_ms": 39200,
+        "end_ms": 41400
+      },
+      {
+        "text": "不把它当成性能实测或产品效果结论",
+        "start_ms": 41400,
+        "end_ms": 44800
+      },
+      {
+        "text": "也不假定每个流程都需要完整的版本系统",
+        "start_ms": 44800,
+        "end_ms": 48400
+      },
+      {
+        "text": "一个可选做法",
+        "start_ms": 48400,
+        "end_ms": 49800
+      },
+      {
+        "text": "是把生成与采用拆成独立状态",
+        "start_ms": 49800,
+        "end_ms": 52800
+      },
+      {
+        "text": "生成只铲除待审候选",
+        "start_ms": 52800,
+        "end_ms": 55400
+      },
+      {
+        "text": "正式内容由明确的采用动作更新",
+        "start_ms": 55400,
+        "end_ms": 58400
+      },
+      {
+        "text": "可以从以下步骤开始",
+        "start_ms": 58400,
+        "end_ms": 60200
+      },
+      {
+        "text": "第一步保留候选",
+        "start_ms": 60200,
+        "end_ms": 63200
+      },
+      {
+        "text": "把生成结果暂存在候选区",
+        "start_ms": 63200,
+        "end_ms": 66000
+      },
+      {
+        "text": "记录输入与版本信息",
+        "start_ms": 66000,
+        "end_ms": 68400
+      },
+      {
+        "text": "暂不更新正式内容",
+        "start_ms": 68400,
+        "end_ms": 70200
+      },
+      {
+        "text": "第二步审阅比对",
+        "start_ms": 70200,
+        "end_ms": 73400
+      },
+      {
+        "text": "展示候选与原稿的差异",
+        "start_ms": 73400,
+        "end_ms": 76200
+      },
+      {
+        "text": "让使用者或教练规则能够比较",
+        "start_ms": 76200,
+        "end_ms": 79400
+      },
+      {
+        "text": "拒绝与提出修改",
+        "start_ms": 79400,
+        "end_ms": 81600
+      },
+      {
+        "text": "第三步显示采用",
+        "start_ms": 81600,
+        "end_ms": 84200
+      },
+      {
+        "text": "收到明确确认后再更新正式版本",
+        "start_ms": 84200,
+        "end_ms": 88200
+      },
+      {
+        "text": "未选候选按约定归档或过期",
+        "start_ms": 88200,
+        "end_ms": 91400
+      },
+      {
+        "text": "这三个步骤把两个决定摆到了明初",
+        "start_ms": 91400,
+        "end_ms": 94800
+      },
+      {
+        "text": "模型生成了什么",
+        "start_ms": 94800,
+        "end_ms": 96600
+      },
+      {
+        "text": "以及我们愿意把什么写进正式版本",
+        "start_ms": 96600,
+        "end_ms": 99800
+      },
+      {
+        "text": "候选不必立即成为新的基准",
+        "start_ms": 99800,
+        "end_ms": 102400
+      },
+      {
+        "text": "这种设计也有代价",
+        "start_ms": 102400,
+        "end_ms": 104400
+      },
+      {
+        "text": "候选和历史占用存储",
+        "start_ms": 104400,
+        "end_ms": 106400
+      },
+      {
+        "text": "版本关系",
+        "start_ms": 106400,
+        "end_ms": 107600
+      },
+      {
+        "text": "清理策略与比对界面",
+        "start_ms": 107600,
+        "end_ms": 109400
+      },
+      {
+        "text": "都要维护",
+        "start_ms": 109400,
+        "end_ms": 110400
+      },
+      {
+        "text": "本文没有开销比例或效率数据",
+        "start_ms": 110400,
+        "end_ms": 113200
+      },
+      {
+        "text": "实际成本要结合调用规模",
+        "start_ms": 113200,
+        "end_ms": 115800
+      },
+      {
+        "text": "保留期限和协作方式判断",
+        "start_ms": 116000,
+        "end_ms": 118600
+      },
+      {
+        "text": "对需要反复修改",
+        "start_ms": 118600,
+        "end_ms": 120200
+      },
+      {
+        "text": "多人审阅或追溯来源的内容",
+        "start_ms": 120200,
+        "end_ms": 123200
+      },
+      {
+        "text": "候选层可能值得管理成本",
+        "start_ms": 123200,
+        "end_ms": 126000
+      },
+      {
+        "text": "对一次性容易重做的低风险操稿",
+        "start_ms": 126000,
+        "end_ms": 129600
+      },
+      {
+        "text": "也可以采用更轻的确认方式",
+        "start_ms": 129600,
+        "end_ms": 132000
+      },
+      {
+        "text": "应让复杂度与用途相称",
+        "start_ms": 132000,
+        "end_ms": 134600
+      },
+      {
+        "text": "可以从一个小问题检查现有工具",
+        "start_ms": 134600,
+        "end_ms": 137400
+      },
+      {
+        "text": "模型返回新文本时",
+        "start_ms": 137400,
+        "end_ms": 139000
+      },
+      {
+        "text": "系统会直接覆盖原稿",
+        "start_ms": 139000,
+        "end_ms": 141200
+      },
+      {
+        "text": "还是允许你看一眼差异",
+        "start_ms": 141200,
+        "end_ms": 143000
+      },
+      {
+        "text": "拒绝结果或明确采用",
+        "start_ms": 143000,
+        "end_ms": 145400
+      },
+      {
+        "text": "先把这个决定说清楚",
+        "start_ms": 145400,
+        "end_ms": 147400
+      },
+      {
+        "text": "再判断是否需要更完整的版本机制",
+        "start_ms": 147400,
+        "end_ms": 150800
+      },
+      {
+        "text": "保留选择空间",
+        "start_ms": 150800,
+        "end_ms": 152200
+      },
+      {
+        "text": "比让每个流程都承担相同的复杂度",
+        "start_ms": 152200,
+        "end_ms": 154400
+      },
+      {
+        "text": "更有意义",
+        "start_ms": 154400,
+        "end_ms": 155600
+      },
+      {
+        "text": "本段内容由AI辅助创作",
+        "start_ms": 155600,
+        "end_ms": 158000
+      },
+      {
+        "text": "声音为AI合成",
+        "start_ms": 158000,
+        "end_ms": 159600
+      }
+    ],
+    "source_duration_ms": 159680
+  },
+  "alignment": {
+    "normalization": "NFKC and CoreFoundation Traditional-Simplified; retain Chinese, Latin letters and digits; case-insensitive; punctuation/whitespace removed; no semantic substitutions",
+    "expected_characters": 670,
+    "asr_characters": 670,
+    "sequence_matcher_ratio": 0.9880597014925373,
+    "differences": [
+      {
+        "kind": "replace",
+        "expected": "题",
+        "asr": "提"
+      },
+      {
+        "kind": "replace",
+        "expected": "产出",
+        "asr": "铲除"
+      },
+      {
+        "kind": "replace",
+        "expected": "校验",
+        "asr": "教练"
+      },
+      {
+        "kind": "replace",
+        "expected": "式",
+        "asr": "示"
+      },
+      {
+        "kind": "replace",
+        "expected": "处",
+        "asr": "初"
+      },
+      {
+        "kind": "replace",
+        "expected": "草",
+        "asr": "操"
+      }
+    ]
+  },
+  "verdict": "ACCEPTED_WITH_SCOPE_BOUNDARIES",
+  "limitations": [
+    "ASR differences may be recognition substitutions rather than audible TTS errors.",
+    "Voice identity, actual pronunciation, prosody and perceived naturalness were not directly heard; human_review_required remains.",
+    "This read-only report does not adopt a MaterialRevision or change runtime QC."
+  ],
+  "quality_assessment": {
+    "content_fidelity": "accepted: architecture opinion, conditional tradeoffs, generation/review/adoption separation and AI disclosure remain complete; no unsupported numerical/product-effect claim added",
+    "completeness": "accepted: all expected sections appear in full ASR; closing disclosure ends at159.6s of159.67934375s; normalized expected and ASR each670characters; no omission/repetition or truncated-file evidence",
+    "file_integrity": "accepted: exact SHA matches original result filename before/after inspection; full159.679s PCM decode and ffmpeg processing succeeded",
+    "acoustics": "accepted within current scope: full-scale and near-full-scale counts0; peak-1.10dBFS, integrated loudness-23.2LUFS, LRA3.2LU; longest detected pause0.994938s; no required platform loudness target was supplied",
+    "asr_discrepancies": "six substitution spans preserve eight different normalized characters; most are same/near-sounding Chinese recognitions. 产出/铲除 and 校验/教练 deserve attention during later listening; ASR alone cannot establish whether the synthesizer or recognizer caused them. No semantic correction was applied to the saved ASR.",
+    "pronunciation_voice_naturalness": "not directly observed; no human sensory approval claimed",
+    "required_action": "no confirmed artifact defect requires resynthesis; preserve existing human_review_required and these exact ASR discrepancies",
+    "runtime_qc_and_adoption": "handled separately by the normal product workflow; this audit does not claim adoption, current runtime QC or signed voice matching"
+  },
+  "source_master_revision_provenance": "Master24 supplied by root; exact DB linkage and signed provider voice are independently handled by root, not claimed verified by this file-only audit"
+}

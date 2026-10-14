@@ -1,0 +1,801 @@
+### Open tabs
+- 0: [AI Content Studio](http://127.0.0.1:5173/projects/3/units/9/production?stage=quality)
+- 1: [AI Content Studio](http://127.0.0.1:5173/projects/4/units/8/production?stage=audio_quality)
+- 2: (current) [AI Content Studio](http://127.0.0.1:5173/projects/3/units/7/production?stage=audio_quality)
+- 3: [AI Content Studio](http://127.0.0.1:5173/projects/4/units/10/production?stage=quality)
+### Page
+- Page URL: http://127.0.0.1:5173/projects/3/units/7/production?stage=audio_quality
+- Page Title: AI Content Studio
+- Console: 0 errors, 2 warnings
+### Snapshot
+```yaml
+- generic [ref=f4e3]:
+  - complementary [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - link "AI Content Studio" [ref=f4e6] [cursor=pointer]:
+        - /url: /home
+      - generic [ref=f4e7]: 项目驱动 · 图文视频协作
+    - navigation "主导航" [ref=f4e8]:
+      - paragraph [ref=f4e9]: 工作区
+      - link "◧ 今日工作台" [ref=f4e10] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f4e11]: ◧
+        - text: 今日工作台
+      - link "✧ 内容机会" [ref=f4e12] [cursor=pointer]:
+        - /url: /opportunities
+        - generic [ref=f4e13]: ✧
+        - text: 内容机会
+      - link "▤ 内容项目" [ref=f4e14] [cursor=pointer]:
+        - /url: /projects
+        - generic [ref=f4e15]: ▤
+        - text: 内容项目
+      - link "✍ 创作与执行" [ref=f4e16] [cursor=pointer]:
+        - /url: /production
+        - generic [ref=f4e17]: ✍
+        - text: 创作与执行
+      - link "✓ 审阅与发布" [ref=f4e18] [cursor=pointer]:
+        - /url: /review
+        - generic [ref=f4e19]: ✓
+        - text: 审阅与发布
+      - link "◉ 内容身份" [ref=f4e20] [cursor=pointer]:
+        - /url: /identities
+        - generic [ref=f4e21]: ◉
+        - text: 内容身份
+      - link "▦ 素材与知识" [ref=f4e22] [cursor=pointer]:
+        - /url: /assets
+        - generic [ref=f4e23]: ▦
+        - text: 素材与知识
+      - link "▥ 效果与学习" [ref=f4e24] [cursor=pointer]:
+        - /url: /learning
+        - generic [ref=f4e25]: ▥
+        - text: 效果与学习
+      - link "⚙ 设置" [ref=f4e26] [cursor=pointer]:
+        - /url: /settings
+        - generic [ref=f4e27]: ⚙
+        - text: 设置
+    - generic [ref=f4e28]: 本机工作台 · 项目与素材持久保存
+  - main [ref=f4e29]:
+    - generic [ref=f4e31]:
+      - link "← 科技日常｜生成之后，先别覆盖原稿 / 内容矩阵" [ref=f4e32] [cursor=pointer]:
+        - /url: /projects/3?tab=matrix
+      - generic [ref=f4e33]:
+        - generic [ref=f4e34]:
+          - paragraph [ref=f4e35]: 文字生产
+          - heading "生成之后，先别覆盖原稿｜文字与音频" [level=1] [ref=f4e36]
+          - paragraph [ref=f4e37]: 当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · wechat
+          - paragraph [ref=f4e38]: "历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。"
+          - paragraph [ref=f4e39]: "历史 Run #12身份：快照 #7 · 08ccf21feddb · 固定工作流 #26"
+        - button "项目共享素材 · 6" [ref=f4e40] [cursor=pointer]
+      - group [ref=f4e41]:
+        - generic "本内容使用的身份快照（只读）" [ref=f4e42] [cursor=pointer]
+      - region "Creation Recipe 创作流程" [ref=f4e43]:
+        - generic [ref=f4e44]:
+          - generic [ref=f4e45]:
+            - paragraph [ref=f4e46]: Creation Recipe
+            - heading "按阶段完成内容生产" [level=2] [ref=f4e47]
+            - paragraph [ref=f4e48]: 先查看阶段细节与实际请求，再执行；结果仍需人工接受，不会自动写入 Master。
+          - generic [ref=f4e49]:
+            - button "选择创作流程" [ref=f4e50] [cursor=pointer]
+            - button "高级工作流" [ref=f4e51] [cursor=pointer]
+        - generic [ref=f4e52]:
+          - generic [ref=f4e53]: "项目覆盖 · Workflow #26 v2 · 来源版本 2"
+          - generic [ref=f4e54]: checksum cf4e5d9bbe71d7e6bfbba44b07442c27aa909323c7c6a57510ae5f362603e104
+          - button "准备新的运行（不调用模型）" [ref=f4e55] [cursor=pointer]
+        - group [ref=f4e56]:
+          - generic "默认差异与流程历史" [ref=f4e57] [cursor=pointer]
+        - button "前往下一个可处理阶段" [ref=f4e58] [cursor=pointer]
+        - tablist "Creation Recipe 阶段" [ref=f4e59]:
+          - tab "1 · AI 口语稿确认 succeeded 已接受" [ref=f4e60] [cursor=pointer]:
+            - generic [ref=f4e61]: 1 · AI
+            - generic [ref=f4e62]: 口语稿确认
+            - generic [ref=f4e63]:
+              - generic "succeeded" [ref=f4e64]
+              - generic [ref=f4e65]: 已接受
+          - tab "2 · AI 声音方案确认 succeeded 已接受" [ref=f4e66] [cursor=pointer]:
+            - generic [ref=f4e67]: 2 · AI
+            - generic [ref=f4e68]: 声音方案确认
+            - generic [ref=f4e69]:
+              - generic "succeeded" [ref=f4e70]
+              - generic [ref=f4e71]: 已接受
+          - tab "3 · Tool 生成并接受真实音频 succeeded 已接受" [ref=f4e72] [cursor=pointer]:
+            - generic [ref=f4e73]: 3 · Tool
+            - generic [ref=f4e74]: 生成并接受真实音频
+            - generic [ref=f4e75]:
+              - generic "succeeded" [ref=f4e76]
+              - generic [ref=f4e77]: 已接受
+          - tab "4 · Rule 音频质量确认 succeeded 已接受" [selected] [ref=f4e78] [cursor=pointer]:
+            - generic [ref=f4e79]: 4 · Rule
+            - generic [ref=f4e80]: 音频质量确认
+            - generic [ref=f4e81]:
+              - generic "succeeded" [ref=f4e82]
+              - generic [ref=f4e83]: 已接受
+        - tabpanel "4 · Rule 音频质量确认 succeeded 已接受" [ref=f4e84]:
+          - generic [ref=f4e85]:
+            - generic [ref=f4e86]:
+              - generic [ref=f4e87]:
+                - heading "音频质量确认" [level=3] [ref=f4e88]
+                - paragraph [ref=f4e89]: stage.audio.qc@1 · stage.audio.qc.v1
+              - generic "succeeded" [ref=f4e90]
+            - paragraph [ref=f4e91]: 依赖阶段：tts
+            - generic [ref=f4e92]:
+              - paragraph [ref=f4e93]: "已接受：workflow_step_attempt #75 · accepted"
+              - paragraph [ref=f4e94]: accepted hash：da0c65ea96ed9e3bf6f91986c3a2599b488a7edd248b3448692322e345b82211
+            - generic [ref=f4e95]: "最近尝试 #1 · succeeded · output 64e07fd00921…"
+          - generic [ref=f4e96]:
+            - tablist "阶段控制模式" [ref=f4e97]:
+              - tab "基本" [selected] [ref=f4e98] [cursor=pointer]
+              - tab "高级" [ref=f4e99] [cursor=pointer]
+            - tabpanel "基本" [ref=f4e100]:
+              - generic [ref=f4e101]:
+                - heading "本次调整" [level=3] [ref=f4e102]
+                - generic [ref=f4e103]: 只影响本次 Run
+              - generic [ref=f4e104]:
+                - generic [ref=f4e105]:
+                  - generic [ref=f4e106]:
+                    - group "method" [ref=f4e107]:
+                      - generic [ref=f4e109]:
+                        - generic [ref=f4e110]: arguments_json
+                        - textbox "arguments_json" [ref=f4e111]
+                      - generic [ref=f4e112]:
+                        - generic [ref=f4e113]: artifact_id
+                        - spinbutton "artifact_id" [ref=f4e114]
+                      - generic [ref=f4e115]:
+                        - generic [ref=f4e116]: revision_id
+                        - spinbutton "revision_id" [ref=f4e117]
+                      - generic [ref=f4e118]:
+                        - generic [ref=f4e119]: runtime_key
+                        - textbox "runtime_key" [ref=f4e120]
+                      - generic [ref=f4e121]:
+                        - generic [ref=f4e122]: runtime_version
+                        - textbox "runtime_version" [ref=f4e123]
+                      - generic [ref=f4e124]:
+                        - generic [ref=f4e125]: skill_id
+                        - textbox "skill_id" [ref=f4e126]
+                      - generic [ref=f4e127]:
+                        - generic [ref=f4e128]: skill_ref
+                        - textbox "skill_ref" [ref=f4e129]: studio.audio.qc@1
+                      - generic [ref=f4e130]:
+                        - generic [ref=f4e131]: source_kind
+                        - combobox "source_kind" [ref=f4e132]:
+                          - option "请选择"
+                          - option "studio_builtin" [selected]
+                          - option "capability_memory"
+                          - option "installed_agent_skill"
+                      - generic [ref=f4e133]:
+                        - generic [ref=f4e134]: version
+                        - textbox "version" [ref=f4e135]
+                    - paragraph [ref=f4e136]: 已保存：skill_ref：studio.audio.qc@1；source_kind：studio_builtin · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f4e137]
+                - generic [ref=f4e138]:
+                  - generic [ref=f4e139]:
+                    - generic [ref=f4e140]:
+                      - generic [ref=f4e141]: 音频质量标准
+                      - combobox "音频质量标准" [ref=f4e142]:
+                        - option "请选择" [selected]
+                        - option "studio.quality.audio.explainer@1"
+                        - option "studio.quality.audio.conversational@1"
+                    - paragraph [ref=f4e143]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f4e144]
+                - generic [ref=f4e145]:
+                  - generic [ref=f4e146]:
+                    - generic [ref=f4e147]:
+                      - generic [ref=f4e148]: 对照已接受的 ASR 回执（不调用识别）
+                      - combobox "对照已接受的 ASR 回执（不调用识别）" [ref=f4e149]:
+                        - option "未设置"
+                        - option "开启"
+                        - option "关闭" [selected]
+                    - paragraph [ref=f4e150]: 已保存：false · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f4e151]
+                - generic [ref=f4e152]:
+                  - generic [ref=f4e153]:
+                    - generic [ref=f4e154]:
+                      - generic [ref=f4e155]: 已保存 ASR 字幕的 Video Master 版本 ID
+                      - spinbutton "已保存 ASR 字幕的 Video Master 版本 ID" [ref=f4e156]
+                    - paragraph [ref=f4e157]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f4e158]
+                - generic [ref=f4e159]:
+                  - generic [ref=f4e160]:
+                    - generic [ref=f4e161]:
+                      - generic [ref=f4e162]: 该版本的精确 ASR 回执 ID
+                      - textbox "该版本的精确 ASR 回执 ID" [ref=f4e163]
+                    - paragraph [ref=f4e164]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f4e165]
+                - generic [ref=f4e166]:
+                  - generic [ref=f4e167]:
+                    - generic [ref=f4e168]:
+                      - generic [ref=f4e169]: 该 ASR 回执的输出 SHA-256
+                      - textbox "该 ASR 回执的输出 SHA-256" [ref=f4e170]
+                    - paragraph [ref=f4e171]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f4e172]
+                - generic [ref=f4e173]:
+                  - generic [ref=f4e174]:
+                    - generic [ref=f4e175]:
+                      - generic [ref=f4e176]: 字幕导出（none 无 / asr 真实分段 / estimated 估计）
+                      - combobox "字幕导出（none 无 / asr 真实分段 / estimated 估计）" [ref=f4e177]:
+                        - option "请选择"
+                        - option "none" [selected]
+                        - option "asr"
+                        - option "estimated"
+                    - paragraph [ref=f4e178]: 已保存：none · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f4e179]
+            - generic [ref=f4e180]:
+              - button "预览实际请求" [ref=f4e181] [cursor=pointer]
+              - button "再次生成（新尝试）" [disabled] [ref=f4e182]
+            - paragraph [ref=f4e183]: Preview 只解析，不调用模型；执行会重新解析并校验 resolution hash。
+        - generic [ref=f4e184]:
+          - button "查看本次结果" [ref=f4e185] [cursor=pointer]
+          - button "历史与反馈" [ref=f4e186] [cursor=pointer]
+          - button "保存有效调整 / 复用方法" [ref=f4e187] [cursor=pointer]
+      - generic "Recipe 内容编辑承接" [ref=f4e188]:
+        - region "Content Master" [ref=f4e189]:
+          - generic [ref=f4e190]:
+            - heading "Content Master · text" [level=2] [ref=f4e191]
+            - generic [ref=f4e192]: 内容已同步 · 与 Workflow 保存独立
+          - generic [ref=f4e193]:
+            - generic [ref=f4e194]:
+              - button "重新加载 Master" [ref=f4e195] [cursor=pointer]
+              - button "Master v5 · 当前" [ref=f4e196] [cursor=pointer]
+              - button "Master v4 · 历史" [ref=f4e197] [cursor=pointer]
+              - button "Master v3 · 历史" [ref=f4e198] [cursor=pointer]
+              - button "Master v2 · 历史" [ref=f4e199] [cursor=pointer]
+              - button "Master v1 · 历史" [ref=f4e200] [cursor=pointer]
+            - group [ref=f4e201]:
+              - generic "不可变修订历史" [ref=f4e202] [cursor=pointer]
+            - generic [ref=f4e203]:
+              - paragraph [ref=f4e204]: "Master #24 · text.master.v2 · user_edit · admin@studio.local · 2026-10-14T14:42:29.732239"
+              - paragraph [ref=f4e205]: Payload e32c930f09d747988f7990a6d59df7a62327691805bf0d4ca60c5c22786264ca / Context bc706a2871de529b207474f83386452a87e9f56d95b4b01c15b3a98d871bc927
+              - paragraph [ref=f4e206]: "Identity #7 · Brief #3 · Boundary #2 · AI 编辑 0"
+              - generic "current" [ref=f4e207]
+            - region "Master 创作意图" [ref=f4e208]:
+              - heading "Master 创作意图" [level=3] [ref=f4e209]
+              - paragraph [ref=f4e210]: 随内容明确保存为新修订。请记录创作决定，不填写密钥、原始模型输出或整份来源正文。
+              - generic [ref=f4e211]:
+                - paragraph [ref=f4e212]: 此版本未记录创作意图。
+                - button "记录创作意图" [ref=f4e213] [cursor=pointer]
+            - region "文字渲染验证" [ref=f4e214]:
+              - heading "文字渲染能力" [level=3] [ref=f4e215]
+              - paragraph [ref=f4e216]: text.studio.document.v1 / 2 · wechat / article → Markdown
+              - paragraph [ref=f4e217]: 当前精确范围尚未验证 / 已失效
+              - paragraph [ref=f4e218]: 验证会实际渲染已保存的当前版本，只记录输入与输出摘要；不会保存 Master、批准内容或发布。它是能力验证，不代表此稿已通过审核。
+              - generic [ref=f4e219]:
+                - button "刷新渲染状态" [ref=f4e220] [cursor=pointer]
+                - button "实际渲染并验证" [ref=f4e221] [cursor=pointer]
+                - button "撤销渲染验证" [disabled] [ref=f4e222]
+            - generic "专业文字工作台" [ref=f4e223]:
+              - generic [ref=f4e224]:
+                - generic [ref=f4e225]: 标题
+                - textbox "Text Master 标题" [ref=f4e226]: 生成之后，先别覆盖原稿：把生成与采用拆成两个状态
+              - generic [ref=f4e227]:
+                - generic [ref=f4e228]:
+                  - generic [ref=f4e229]:
+                    - generic [ref=f4e230]: heading 区块 1 · legacy-b
+                    - generic [ref=f4e231]:
+                      - button "上移" [disabled] [ref=f4e232]
+                      - button "下移" [ref=f4e233] [cursor=pointer]
+                      - button "删除" [ref=f4e234] [cursor=pointer]
+                  - generic [ref=f4e235]:
+                    - combobox "heading 区块 1 层级" [ref=f4e236]:
+                      - option "H1"
+                      - option "H2" [selected]
+                      - option "H3"
+                      - option "H4"
+                    - generic [ref=f4e237]:
+                      - group "heading 区块 1 格式" [ref=f4e238]:
+                        - button "加粗" [ref=f4e239] [cursor=pointer]
+                        - button "斜体" [ref=f4e240] [cursor=pointer]
+                        - button "行内代码" [ref=f4e241] [cursor=pointer]
+                        - button "链接" [ref=f4e242] [cursor=pointer]
+                        - button "移除链接" [ref=f4e243] [cursor=pointer]
+                      - generic "heading 区块 1" [ref=f4e245]:
+                        - paragraph [ref=f4e246]: 直接覆盖原稿带来的上下文污染风险
+                - generic [ref=f4e247]:
+                  - generic [ref=f4e248]:
+                    - generic [ref=f4e249]: paragraph 区块 2 · legacy-b
+                    - generic [ref=f4e250]:
+                      - button "上移" [ref=f4e251] [cursor=pointer]
+                      - button "下移" [ref=f4e252] [cursor=pointer]
+                      - button "删除" [ref=f4e253] [cursor=pointer]
+                  - generic [ref=f4e255]:
+                    - group "paragraph 区块 2 格式" [ref=f4e256]:
+                      - button "加粗" [ref=f4e257] [cursor=pointer]
+                      - button "斜体" [ref=f4e258] [cursor=pointer]
+                      - button "行内代码" [ref=f4e259] [cursor=pointer]
+                      - button "链接" [ref=f4e260] [cursor=pointer]
+                      - button "移除链接" [ref=f4e261] [cursor=pointer]
+                    - generic "paragraph 区块 2" [ref=f4e263]:
+                      - paragraph [ref=f4e264]: 模型返回了新内容，系统就覆盖原稿，这样的工作流把两个决定合在了一起：生成了一份候选，以及愿不愿意正式采用它。输出可能偏题，也可能遗漏条件；接口成功无法替使用者判断内容是否合适。
+                - generic [ref=f4e265]:
+                  - generic [ref=f4e266]:
+                    - generic [ref=f4e267]: paragraph 区块 3 · legacy-b
+                    - generic [ref=f4e268]:
+                      - button "上移" [ref=f4e269] [cursor=pointer]
+                      - button "下移" [ref=f4e270] [cursor=pointer]
+                      - button "删除" [ref=f4e271] [cursor=pointer]
+                  - generic [ref=f4e273]:
+                    - group "paragraph 区块 3 格式" [ref=f4e274]:
+                      - button "加粗" [ref=f4e275] [cursor=pointer]
+                      - button "斜体" [ref=f4e276] [cursor=pointer]
+                      - button "行内代码" [ref=f4e277] [cursor=pointer]
+                      - button "链接" [ref=f4e278] [cursor=pointer]
+                      - button "移除链接" [ref=f4e279] [cursor=pointer]
+                    - generic "paragraph 区块 3" [ref=f4e281]:
+                      - paragraph [ref=f4e282]: 如果没有保留历史版本，一次偏离目标的生成就可能让原稿难以找回。下游若继续读取这个状态，排查时还要先分清偏差从哪一步开始。
+                - generic [ref=f4e283]:
+                  - generic [ref=f4e284]:
+                    - generic [ref=f4e285]: paragraph 区块 4 · legacy-b
+                    - generic [ref=f4e286]:
+                      - button "上移" [ref=f4e287] [cursor=pointer]
+                      - button "下移" [ref=f4e288] [cursor=pointer]
+                      - button "删除" [ref=f4e289] [cursor=pointer]
+                  - generic [ref=f4e291]:
+                    - group "paragraph 区块 4 格式" [ref=f4e292]:
+                      - button "加粗" [ref=f4e293] [cursor=pointer]
+                      - button "斜体" [ref=f4e294] [cursor=pointer]
+                      - button "行内代码" [ref=f4e295] [cursor=pointer]
+                      - button "链接" [ref=f4e296] [cursor=pointer]
+                      - button "移除链接" [ref=f4e297] [cursor=pointer]
+                    - generic "paragraph 区块 4" [ref=f4e299]:
+                      - paragraph [ref=f4e300]: 本文讨论一种架构选择，不把它当成性能实测或产品效果结论；也不假定每个流程都需要完整的版本系统。
+                - generic [ref=f4e301]:
+                  - generic [ref=f4e302]:
+                    - generic [ref=f4e303]: heading 区块 5 · legacy-b
+                    - generic [ref=f4e304]:
+                      - button "上移" [ref=f4e305] [cursor=pointer]
+                      - button "下移" [ref=f4e306] [cursor=pointer]
+                      - button "删除" [ref=f4e307] [cursor=pointer]
+                  - generic [ref=f4e308]:
+                    - combobox "heading 区块 5 层级" [ref=f4e309]:
+                      - option "H1"
+                      - option "H2" [selected]
+                      - option "H3"
+                      - option "H4"
+                    - generic [ref=f4e310]:
+                      - group "heading 区块 5 格式" [ref=f4e311]:
+                        - button "加粗" [ref=f4e312] [cursor=pointer]
+                        - button "斜体" [ref=f4e313] [cursor=pointer]
+                        - button "行内代码" [ref=f4e314] [cursor=pointer]
+                        - button "链接" [ref=f4e315] [cursor=pointer]
+                        - button "移除链接" [ref=f4e316] [cursor=pointer]
+                      - generic "heading 区块 5" [ref=f4e318]:
+                        - paragraph [ref=f4e319]: 架构解耦：保留候选、审阅与显式采用
+                - generic [ref=f4e320]:
+                  - generic [ref=f4e321]:
+                    - generic [ref=f4e322]: paragraph 区块 6 · legacy-b
+                    - generic [ref=f4e323]:
+                      - button "上移" [ref=f4e324] [cursor=pointer]
+                      - button "下移" [ref=f4e325] [cursor=pointer]
+                      - button "删除" [ref=f4e326] [cursor=pointer]
+                  - generic [ref=f4e328]:
+                    - group "paragraph 区块 6 格式" [ref=f4e329]:
+                      - button "加粗" [ref=f4e330] [cursor=pointer]
+                      - button "斜体" [ref=f4e331] [cursor=pointer]
+                      - button "行内代码" [ref=f4e332] [cursor=pointer]
+                      - button "链接" [ref=f4e333] [cursor=pointer]
+                      - button "移除链接" [ref=f4e334] [cursor=pointer]
+                    - generic "paragraph 区块 6" [ref=f4e336]:
+                      - paragraph [ref=f4e337]: 一个可选做法，是把生成与采用拆成独立状态。生成只产出待审候选，正式内容由明确的采用动作更新，可以从以下步骤开始：
+                - generic [ref=f4e338]:
+                  - generic [ref=f4e339]:
+                    - generic [ref=f4e340]: ordered_list 区块 7 · legacy-b
+                    - generic [ref=f4e341]:
+                      - button "上移" [ref=f4e342] [cursor=pointer]
+                      - button "下移" [ref=f4e343] [cursor=pointer]
+                      - button "删除" [ref=f4e344] [cursor=pointer]
+                  - generic [ref=f4e345]:
+                    - generic [ref=f4e346]:
+                      - generic [ref=f4e347]: "1."
+                      - generic [ref=f4e349]:
+                        - group "ordered_list 区块 7 第 1 项 格式" [ref=f4e350]:
+                          - button "加粗" [pressed] [ref=f4e351] [cursor=pointer]
+                          - button "斜体" [ref=f4e352] [cursor=pointer]
+                          - button "行内代码" [ref=f4e353] [cursor=pointer]
+                          - button "链接" [ref=f4e354] [cursor=pointer]
+                          - button "移除链接" [ref=f4e355] [cursor=pointer]
+                        - generic "ordered_list 区块 7 第 1 项" [ref=f4e357]:
+                          - paragraph [ref=f4e358]:
+                            - strong [ref=f4e359]: 保留候选
+                            - text: ：把生成结果暂存在候选区，记录输入与版本信息，暂不更新正式内容。
+                      - button "移除项" [ref=f4e360] [cursor=pointer]
+                    - generic [ref=f4e361]:
+                      - generic [ref=f4e362]: "2."
+                      - generic [ref=f4e364]:
+                        - group "ordered_list 区块 7 第 2 项 格式" [ref=f4e365]:
+                          - button "加粗" [pressed] [ref=f4e366] [cursor=pointer]
+                          - button "斜体" [ref=f4e367] [cursor=pointer]
+                          - button "行内代码" [ref=f4e368] [cursor=pointer]
+                          - button "链接" [ref=f4e369] [cursor=pointer]
+                          - button "移除链接" [ref=f4e370] [cursor=pointer]
+                        - generic "ordered_list 区块 7 第 2 项" [ref=f4e372]:
+                          - paragraph [ref=f4e373]:
+                            - strong [ref=f4e374]: 审阅比对
+                            - text: ：展示候选与原稿的差异，让使用者或校验规则能够比较、拒绝与提出修改。
+                      - button "移除项" [ref=f4e375] [cursor=pointer]
+                    - generic [ref=f4e376]:
+                      - generic [ref=f4e377]: "3."
+                      - generic [ref=f4e379]:
+                        - group "ordered_list 区块 7 第 3 项 格式" [ref=f4e380]:
+                          - button "加粗" [pressed] [ref=f4e381] [cursor=pointer]
+                          - button "斜体" [ref=f4e382] [cursor=pointer]
+                          - button "行内代码" [ref=f4e383] [cursor=pointer]
+                          - button "链接" [ref=f4e384] [cursor=pointer]
+                          - button "移除链接" [ref=f4e385] [cursor=pointer]
+                        - generic "ordered_list 区块 7 第 3 项" [ref=f4e387]:
+                          - paragraph [ref=f4e388]:
+                            - strong [ref=f4e389]: 显式采用
+                            - text: ：收到明确确认后再更新正式版本；未选候选按约定归档或过期。
+                      - button "移除项" [ref=f4e390] [cursor=pointer]
+                    - button "添加列表项" [ref=f4e391] [cursor=pointer]
+                - generic [ref=f4e392]:
+                  - generic [ref=f4e393]:
+                    - generic [ref=f4e394]: paragraph 区块 8 · legacy-b
+                    - generic [ref=f4e395]:
+                      - button "上移" [ref=f4e396] [cursor=pointer]
+                      - button "下移" [ref=f4e397] [cursor=pointer]
+                      - button "删除" [ref=f4e398] [cursor=pointer]
+                  - generic [ref=f4e400]:
+                    - group "paragraph 区块 8 格式" [ref=f4e401]:
+                      - button "加粗" [ref=f4e402] [cursor=pointer]
+                      - button "斜体" [ref=f4e403] [cursor=pointer]
+                      - button "行内代码" [ref=f4e404] [cursor=pointer]
+                      - button "链接" [ref=f4e405] [cursor=pointer]
+                      - button "移除链接" [ref=f4e406] [cursor=pointer]
+                    - generic "paragraph 区块 8" [ref=f4e408]:
+                      - paragraph [ref=f4e409]: 这三个步骤把两个决定摆到了明处：模型生成了什么，以及我们愿意把什么写进正式版本。候选不必立即成为新的基准。
+                - generic [ref=f4e410]:
+                  - generic [ref=f4e411]:
+                    - generic [ref=f4e412]: heading 区块 9 · legacy-b
+                    - generic [ref=f4e413]:
+                      - button "上移" [ref=f4e414] [cursor=pointer]
+                      - button "下移" [ref=f4e415] [cursor=pointer]
+                      - button "删除" [ref=f4e416] [cursor=pointer]
+                  - generic [ref=f4e417]:
+                    - combobox "heading 区块 9 层级" [ref=f4e418]:
+                      - option "H1"
+                      - option "H2" [selected]
+                      - option "H3"
+                      - option "H4"
+                    - generic [ref=f4e419]:
+                      - group "heading 区块 9 格式" [ref=f4e420]:
+                        - button "加粗" [ref=f4e421] [cursor=pointer]
+                        - button "斜体" [ref=f4e422] [cursor=pointer]
+                        - button "行内代码" [ref=f4e423] [cursor=pointer]
+                        - button "链接" [ref=f4e424] [cursor=pointer]
+                        - button "移除链接" [ref=f4e425] [cursor=pointer]
+                      - generic "heading 区块 9" [ref=f4e427]:
+                        - paragraph [ref=f4e428]: 工程权衡：以管理开销换取系统容错
+                - generic [ref=f4e429]:
+                  - generic [ref=f4e430]:
+                    - generic [ref=f4e431]: paragraph 区块 10 · legacy-b
+                    - generic [ref=f4e432]:
+                      - button "上移" [ref=f4e433] [cursor=pointer]
+                      - button "下移" [ref=f4e434] [cursor=pointer]
+                      - button "删除" [ref=f4e435] [cursor=pointer]
+                  - generic [ref=f4e437]:
+                    - group "paragraph 区块 10 格式" [ref=f4e438]:
+                      - button "加粗" [ref=f4e439] [cursor=pointer]
+                      - button "斜体" [ref=f4e440] [cursor=pointer]
+                      - button "行内代码" [ref=f4e441] [cursor=pointer]
+                      - button "链接" [ref=f4e442] [cursor=pointer]
+                      - button "移除链接" [ref=f4e443] [cursor=pointer]
+                    - generic "paragraph 区块 10" [ref=f4e445]:
+                      - paragraph [ref=f4e446]: 这种设计也有代价：候选和历史占用存储，版本关系、清理策略与比对界面都要维护。本文没有开销比例或效率数据，实际成本要结合调用规模、保留期限和协作方式判断。
+                - generic [ref=f4e447]:
+                  - generic [ref=f4e448]:
+                    - generic [ref=f4e449]: paragraph 区块 11 · legacy-b
+                    - generic [ref=f4e450]:
+                      - button "上移" [ref=f4e451] [cursor=pointer]
+                      - button "下移" [ref=f4e452] [cursor=pointer]
+                      - button "删除" [ref=f4e453] [cursor=pointer]
+                  - generic [ref=f4e455]:
+                    - group "paragraph 区块 11 格式" [ref=f4e456]:
+                      - button "加粗" [ref=f4e457] [cursor=pointer]
+                      - button "斜体" [ref=f4e458] [cursor=pointer]
+                      - button "行内代码" [ref=f4e459] [cursor=pointer]
+                      - button "链接" [ref=f4e460] [cursor=pointer]
+                      - button "移除链接" [ref=f4e461] [cursor=pointer]
+                    - generic "paragraph 区块 11" [ref=f4e463]:
+                      - paragraph [ref=f4e464]: 对需要反复修改、多人审阅或追溯来源的内容，候选层可能值得管理成本。对一次性、容易重做的低风险草稿，也可以采用更轻的确认方式。应让复杂度与用途相称。
+                - generic [ref=f4e465]:
+                  - generic [ref=f4e466]:
+                    - generic [ref=f4e467]: heading 区块 12 · legacy-b
+                    - generic [ref=f4e468]:
+                      - button "上移" [ref=f4e469] [cursor=pointer]
+                      - button "下移" [ref=f4e470] [cursor=pointer]
+                      - button "删除" [ref=f4e471] [cursor=pointer]
+                  - generic [ref=f4e472]:
+                    - combobox "heading 区块 12 层级" [ref=f4e473]:
+                      - option "H1"
+                      - option "H2" [selected]
+                      - option "H3"
+                      - option "H4"
+                    - generic [ref=f4e474]:
+                      - group "heading 区块 12 格式" [ref=f4e475]:
+                        - button "加粗" [ref=f4e476] [cursor=pointer]
+                        - button "斜体" [ref=f4e477] [cursor=pointer]
+                        - button "行内代码" [ref=f4e478] [cursor=pointer]
+                        - button "链接" [ref=f4e479] [cursor=pointer]
+                        - button "移除链接" [ref=f4e480] [cursor=pointer]
+                      - generic "heading 区块 12" [ref=f4e482]:
+                        - paragraph [ref=f4e483]: 实践建议：审视现有管线的状态流转
+                - generic [ref=f4e484]:
+                  - generic [ref=f4e485]:
+                    - generic [ref=f4e486]: paragraph 区块 13 · legacy-b
+                    - generic [ref=f4e487]:
+                      - button "上移" [ref=f4e488] [cursor=pointer]
+                      - button "下移" [ref=f4e489] [cursor=pointer]
+                      - button "删除" [ref=f4e490] [cursor=pointer]
+                  - generic [ref=f4e492]:
+                    - group "paragraph 区块 13 格式" [ref=f4e493]:
+                      - button "加粗" [ref=f4e494] [cursor=pointer]
+                      - button "斜体" [ref=f4e495] [cursor=pointer]
+                      - button "行内代码" [ref=f4e496] [cursor=pointer]
+                      - button "链接" [ref=f4e497] [cursor=pointer]
+                      - button "移除链接" [ref=f4e498] [cursor=pointer]
+                    - generic "paragraph 区块 13" [ref=f4e500]:
+                      - paragraph [ref=f4e501]: 可以从一个小问题检查现有工具：模型返回新文本时，系统会直接覆盖原稿，还是允许你看一眼差异、拒绝结果，或明确采用？
+                - generic [ref=f4e502]:
+                  - generic [ref=f4e503]:
+                    - generic [ref=f4e504]: paragraph 区块 14 · legacy-b
+                    - generic [ref=f4e505]:
+                      - button "上移" [ref=f4e506] [cursor=pointer]
+                      - button "下移" [ref=f4e507] [cursor=pointer]
+                      - button "删除" [ref=f4e508] [cursor=pointer]
+                  - generic [ref=f4e510]:
+                    - group "paragraph 区块 14 格式" [ref=f4e511]:
+                      - button "加粗" [ref=f4e512] [cursor=pointer]
+                      - button "斜体" [ref=f4e513] [cursor=pointer]
+                      - button "行内代码" [ref=f4e514] [cursor=pointer]
+                      - button "链接" [ref=f4e515] [cursor=pointer]
+                      - button "移除链接" [ref=f4e516] [cursor=pointer]
+                    - generic "paragraph 区块 14" [ref=f4e518]:
+                      - paragraph [ref=f4e519]: 先把这个决定说清楚，再判断是否需要更完整的版本机制。保留选择空间，比让每个流程都承担相同的复杂度更有意义。
+                - generic [ref=f4e520]:
+                  - generic [ref=f4e521]:
+                    - generic [ref=f4e522]: image 区块 15 · efec5db1
+                    - generic [ref=f4e523]:
+                      - button "上移" [ref=f4e524] [cursor=pointer]
+                      - button "下移" [ref=f4e525] [cursor=pointer]
+                      - button "删除" [ref=f4e526] [cursor=pointer]
+                  - paragraph [ref=f4e527]: "MaterialRevision #10 · 未填写替代文字 · 无说明"
+                - generic [ref=f4e528]:
+                  - generic [ref=f4e529]:
+                    - generic [ref=f4e530]: paragraph 区块 16 · c0188178
+                    - generic [ref=f4e531]:
+                      - button "上移" [ref=f4e532] [cursor=pointer]
+                      - button "下移" [disabled] [ref=f4e533]
+                      - button "删除" [ref=f4e534] [cursor=pointer]
+                  - generic [ref=f4e536]:
+                    - group "paragraph 区块 16 格式" [ref=f4e537]:
+                      - button "加粗" [ref=f4e538] [cursor=pointer]
+                      - button "斜体" [ref=f4e539] [cursor=pointer]
+                      - button "行内代码" [ref=f4e540] [cursor=pointer]
+                      - button "链接" [ref=f4e541] [cursor=pointer]
+                      - button "移除链接" [ref=f4e542] [cursor=pointer]
+                    - generic "paragraph 区块 16" [ref=f4e544]:
+                      - paragraph [ref=f4e545]: AI辅助创作；配图为工程观点示意图。
+              - generic [ref=f4e546]:
+                - combobox "添加区块类型" [ref=f4e547]:
+                  - option "正文" [selected]
+                  - option "标题"
+                  - option "引用"
+                  - option "无序列表"
+                  - option "有序列表"
+                  - option "提示"
+                  - option "代码"
+                  - option "分隔线"
+                - button "添加区块" [ref=f4e548] [cursor=pointer]
+              - generic [ref=f4e549]:
+                - heading "项目共享素材" [level=3] [ref=f4e550]
+                - paragraph [ref=f4e551]: 仅引用精确 MaterialRevision；插入或移除不会复制或删除素材。设为封面会保留对应图片区块，保存时后端重新校验权利。
+                - generic [ref=f4e552]:
+                  - generic [ref=f4e553]:
+                    - paragraph [ref=f4e554]: "科技日常图卡2｜保留审阅采用（最终） · Revision #13"
+                    - paragraph [ref=f4e555]: cleared · 允许公开
+                    - generic [ref=f4e556]:
+                      - button "插入图片" [ref=f4e557] [cursor=pointer]
+                      - button "设为封面" [ref=f4e558] [cursor=pointer]
+                  - generic [ref=f4e559]:
+                    - paragraph [ref=f4e560]: "科技日常图卡3｜选择与维护成本 · Revision #12"
+                    - paragraph [ref=f4e561]: cleared · 允许公开
+                    - generic [ref=f4e562]:
+                      - button "插入图片" [ref=f4e563] [cursor=pointer]
+                      - button "设为封面" [ref=f4e564] [cursor=pointer]
+                  - generic [ref=f4e565]:
+                    - paragraph [ref=f4e566]: "科技日常图卡2｜保留审阅采用 · Revision #11"
+                    - paragraph [ref=f4e567]: cleared · 允许公开
+                    - generic [ref=f4e568]:
+                      - button "插入图片" [ref=f4e569] [cursor=pointer]
+                      - button "设为封面" [ref=f4e570] [cursor=pointer]
+                  - generic [ref=f4e571]:
+                    - paragraph [ref=f4e572]: "科技日常图卡1｜生成与采用 · Revision #10"
+                    - paragraph [ref=f4e573]: cleared · 允许公开
+                    - generic [ref=f4e574]:
+                      - button "插入图片" [ref=f4e575] [cursor=pointer]
+                      - button "已设为封面" [pressed] [ref=f4e576] [cursor=pointer]
+              - generic [ref=f4e577]:
+                - heading "事实边界与引用" [level=3] [ref=f4e578]
+                - paragraph [ref=f4e579]: 选中正文或列表文字，再绑定当前冻结 FactPack 的精确条目；文本变化会使无法重定位的引用失效。
+                - paragraph [ref=f4e580]: "FactPack #2 v1 · 8bde963c5d92…"
+                - generic [ref=f4e582]:
+                  - generic [ref=f4e583]:
+                    - paragraph [ref=f4e584]: "#2 · fact · 这份原创创作说明建立于2026年10月14日，内容仅是关于候选保留与明确采用的软件架构观点，不是性能实测或产品新闻 · 允许公开"
+                    - paragraph [ref=f4e585]: 快照 7c397e666d6b… · 来源 科技稿原创资料｜有日期的观点与写作边界 · 模型使用覆盖以 Text Fact Check 为准
+                  - button "绑定" [disabled] [ref=f4e586]
+              - generic [ref=f4e587]:
+                - heading "AI 建议 · 不会自动保存" [level=3] [ref=f4e588]
+                - paragraph [ref=f4e589]: "基于已保存 Master #24；先看差异，再选择接受或拒绝。"
+                - generic [ref=f4e590]:
+                  - combobox "AI 编辑动作" [ref=f4e591]:
+                    - option "改写" [selected]
+                    - option "扩写"
+                    - option "压缩"
+                    - option "调整语气"
+                    - option "结构重组"
+                  - button "生成建议" [disabled] [ref=f4e592]
+                - textbox "AI 编辑要求" [ref=f4e593]:
+                  - /placeholder: 可选：说明风格或目标；模型输出仅作为待审建议
+              - generic [ref=f4e594]:
+                - heading "固定身份（只读）" [level=3] [ref=f4e595]
+                - generic [ref=f4e596]:
+                  - paragraph [ref=f4e597]: "IdentitySnapshot #7 · 08ccf21feddb…"
+                  - generic [ref=f4e598]:
+                    - generic [ref=f4e599]:
+                      - term [ref=f4e600]: positioning · persona
+                      - definition [ref=f4e601]: AI Agent、软件架构与开发工具的工程实践型内容角色
+                    - generic [ref=f4e602]:
+                      - term [ref=f4e603]: target_audience · persona
+                      - definition [ref=f4e604]: "[\"开发者\",\"技术负责人\",\"关注 AI 工程化的人\"]"
+                    - generic [ref=f4e605]:
+                      - term [ref=f4e606]: content_domains · persona
+                      - definition [ref=f4e607]: "[\"AI Agent\",\"软件架构\",\"开发工具\",\"工程实践\"]"
+                    - generic [ref=f4e608]:
+                      - term [ref=f4e609]: expression_style · persona
+                      - definition [ref=f4e610]: "{\"voice\":\"engineering_first\",\"hype\":\"low\",\"tradeoffs\":\"explicit\",\"evidence\":\"required\"}"
+                    - generic [ref=f4e611]:
+                      - term [ref=f4e612]: visual_language · persona
+                      - definition [ref=f4e613]: "{\"preset\":\"technical_editorial\",\"diagram_first\":true,\"density\":\"medium\"}"
+                    - generic [ref=f4e614]:
+                      - term [ref=f4e615]: content_boundaries · persona
+                      - definition [ref=f4e616]: "[\"不夸大能力\",\"明确限制和 trade-off\",\"事实与推测分开\"]"
+                    - generic [ref=f4e617]:
+                      - term [ref=f4e618]: risk_boundaries · persona
+                      - definition [ref=f4e619]: "[\"不伪造 benchmark\",\"不把未验证模型输出当事实\"]"
+                    - generic [ref=f4e620]:
+                      - term [ref=f4e621]: public_fact_policy · persona
+                      - definition [ref=f4e622]: "{\"fresh_source_required_for_current_claims\":true,\"label_speculation\":true}"
+                    - generic [ref=f4e623]:
+                      - term [ref=f4e624]: text_creative_profile · persona
+                      - definition [ref=f4e625]: "{\"schema\":\"persona.creative.text.v1\",\"mode\":\"auto\",\"skill_ref\":\"studio.text.longform@1\",\"style_preset_ref\":\"studio.text.deep-technical@1\",\"quality_profile_ref\":\"studio.quality.text.technical@1\",\"capability\":\"chat\",\"model_binding\":null,\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.ai-tech-engineer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.text.ai-tech.v1\"}}"
+                    - generic [ref=f4e626]:
+                      - term [ref=f4e627]: graphic_creative_profile · persona
+                      - definition [ref=f4e628]: "{\"schema\":\"persona.creative.graphic.v1\",\"mode\":\"auto\",\"skill_ref\":\"studio.graphic.visual-director@1\",\"style_preset_ref\":\"studio.graphic.architecture-diagram@1\",\"quality_profile_ref\":\"studio.quality.graphic.editorial@1\",\"capability\":\"image_generation\",\"model_binding\":null,\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.ai-tech-engineer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.graphic.ai-tech.v1\"}}"
+                    - generic [ref=f4e629]:
+                      - term [ref=f4e630]: audio_creative_profile · persona
+                      - definition [ref=f4e631]: "{\"schema\":\"persona.creative.audio.v1\",\"mode\":\"custom\",\"skill_ref\":\"studio.audio.tts@1\",\"style_preset_ref\":\"studio.audio.calm-engineer@1\",\"quality_profile_ref\":\"studio.quality.audio.explainer@1\",\"capability\":\"tts\",\"model_binding\":{\"provider\":\"minimax.cli\",\"model\":\"speech-2.8-hd\",\"profile\":\"minimax.speech\"},\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{\"voice\":\"lengdan_xiongzhang\",\"rate\":1},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.ai-tech-engineer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.audio.ai-tech.v1\"}}"
+                    - generic [ref=f4e632]:
+                      - term [ref=f4e633]: video_creative_profile · persona
+                      - definition [ref=f4e634]: "{\"schema\":\"persona.creative.video.v1\",\"mode\":\"auto\",\"skill_ref\":\"studio.video.director-package@1\",\"style_preset_ref\":\"studio.graphic.technical-editorial@1\",\"quality_profile_ref\":\"studio.quality.text.technical@1\",\"capability\":\"chat\",\"model_binding\":null,\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.ai-tech-engineer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.video.ai-tech.v1\"}}"
+            - generic [ref=f4e635]:
+              - generic [ref=f4e636]:
+                - generic [ref=f4e637]: 渠道内容形态（留空由 Registry 解析）
+                - textbox "Master 内容形态" [ref=f4e638]: article
+              - paragraph [ref=f4e639]: 渠道：wechat。素材来自项目共享素材，可跨 Unit 引用；不复制字节。
+            - generic [ref=f4e640]:
+              - heading "Text Master 版本" [level=3] [ref=f4e641]
+              - generic [ref=f4e642]:
+                - combobox "对比 Master 版本" [ref=f4e643]:
+                  - option "选择对比版本" [selected]
+                  - option "v4 · text.master.v2"
+                  - option "v3 · text.master.v2"
+                  - option "v2 · text.master.v2"
+                  - option "v1 · text.master.v2"
+                - button "查看结构化差异" [disabled] [ref=f4e644]
+            - generic [ref=f4e645]:
+              - button "保存内容 Master" [ref=f4e646] [cursor=pointer]
+              - button "运行 Master 检查" [ref=f4e647] [cursor=pointer]
+              - button "冻结 Master Candidate v4" [ref=f4e648] [cursor=pointer]
+            - generic [ref=f4e649]:
+              - combobox "Draft seed 输出" [ref=f4e650]:
+                - option "选择真实 Draft 输出" [selected]
+              - button "从 Draft 创建 Text Master" [disabled] [ref=f4e651]
+            - generic [ref=f4e652]:
+              - heading "Master 当前检查与渲染" [level=3] [ref=f4e653]
+              - paragraph [ref=f4e654]: 可冻结 ·
+              - generic [ref=f4e655]:
+                - generic [ref=f4e656]:
+                  - generic [ref=f4e657]:
+                    - strong [ref=f4e658]: master_schema
+                    - generic "pass" [ref=f4e659]
+                    - generic [ref=f4e660]: 输入仍是当前版本
+                    - generic [ref=f4e661]: "检查 #147"
+                  - paragraph [ref=f4e662]: 覆盖："未知"
+                  - paragraph [ref=f4e663]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f4e664]:
+                  - generic [ref=f4e665]:
+                    - strong [ref=f4e666]: evidence
+                    - generic "pass" [ref=f4e667]
+                    - generic [ref=f4e668]: 输入仍是当前版本
+                    - generic [ref=f4e669]: "检查 #148"
+                  - paragraph [ref=f4e670]: 覆盖："未知"
+                  - paragraph [ref=f4e671]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f4e672]:
+                  - generic [ref=f4e673]:
+                    - strong [ref=f4e674]: rights
+                    - generic "pass" [ref=f4e675]
+                    - generic [ref=f4e676]: 输入仍是当前版本
+                    - generic [ref=f4e677]: "检查 #149"
+                  - paragraph [ref=f4e678]: 覆盖："未知"
+                  - paragraph [ref=f4e679]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f4e680]:
+                  - generic [ref=f4e681]:
+                    - strong [ref=f4e682]: render
+                    - generic "pass" [ref=f4e683]
+                    - generic [ref=f4e684]: 输入仍是当前版本
+                    - generic [ref=f4e685]: "检查 #150"
+                  - paragraph [ref=f4e686]: 覆盖："未知"
+                  - paragraph [ref=f4e687]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f4e688]:
+                  - generic [ref=f4e689]:
+                    - strong [ref=f4e690]: text_structure
+                    - generic "pass" [ref=f4e691]
+                    - generic [ref=f4e692]: 输入仍是当前版本
+                    - generic [ref=f4e693]: "检查 #151"
+                  - paragraph [ref=f4e694]: "覆盖：{ \"deterministic\": \"complete\" }"
+                  - paragraph [ref=f4e695]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f4e696]:
+                  - generic [ref=f4e697]:
+                    - strong [ref=f4e698]: text_fact
+                    - generic "pass" [ref=f4e699]
+                    - generic [ref=f4e700]: 输入仍是当前版本
+                    - generic [ref=f4e701]: "检查 #152"
+                  - paragraph [ref=f4e702]: "覆盖：{ \"semantic\": \"verified\", \"reason\": null, \"deterministic\": \"complete\", \"model_use_excluded_item_ids\": [], \"fact_count\": 1, \"semantic_fact_count\": 1, \"deterministic_issue_count\": 0 }"
+                  - paragraph [ref=f4e703]: "Profile: text.master.v2 · Provider: openai_compatible / gemini-3.8-flash-high"
+                - generic [ref=f4e704]:
+                  - generic [ref=f4e705]:
+                    - strong [ref=f4e706]: text_identity
+                    - generic "pass" [ref=f4e707]
+                    - generic [ref=f4e708]: 输入仍是当前版本
+                    - generic [ref=f4e709]: "检查 #153"
+                  - paragraph [ref=f4e710]: "覆盖：{ \"deterministic\": \"persona_rules_and_explicit_phrases\", \"explicit_phrase_count\": 0, \"semantic\": \"verified\", \"reason\": null, \"advisory_critic\": { \"status\": \"verified\", \"reason\": null, \"rubric\": [ { \"dimension\": \"factual_grounding\", \"score\": 4, \"reason\": \"严格遵守边界声明，明确说明非实测数据与产品定论，未虚构 benchmark 或性能指标。\" }, { \"dimension\": \"engineering_fit\", \"score\": 4, \"reason\": \"架构解耦思路切中 LLM 工作流常见问题，符合软件工程与 Agent 系统设计的健壮性要求。\" }, { \"dimension\": \"clarity\", \"score\": 4, \"reason\": \"结构层次分明，阶段划分（候选、审阅、显式采用）准确且逻辑清晰。\" }, { \"dimension\": \"specificity\", \"score\": 3, \"reason\": \"给出了明确的三步设计与自查清单，但缺少具体的数据结构定义或特定平台落地示例。\" }, { \"dimension\": \"tradeoffs\", \"score\": 4, \"reason\": \"设专门小节深入探讨了存储、清理成本与系统复杂度的权衡，明确指出了不同业务风险等级下的适用差异。\" } ], \"can_override_deterministic\": false } }"
+                  - paragraph [ref=f4e711]: "Profile: text.master.v2 · Provider: openai_compatible / gemini-3.8-flash-high"
+                - generic [ref=f4e712]:
+                  - generic [ref=f4e713]:
+                    - strong [ref=f4e714]: text_platform
+                    - generic "pass" [ref=f4e715]
+                    - generic [ref=f4e716]: 输入仍是当前版本
+                    - generic [ref=f4e717]: "检查 #154"
+                  - paragraph [ref=f4e718]: "覆盖：{ \"deterministic\": \"complete\" }"
+                  - paragraph [ref=f4e719]: "Profile: 26 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f4e720]:
+                  - generic [ref=f4e721]:
+                    - strong [ref=f4e722]: text_discoverability
+                    - generic "warning" [ref=f4e723]
+                    - generic [ref=f4e724]: 输入仍是当前版本
+                    - generic [ref=f4e725]: "检查 #155"
+                  - paragraph [ref=f4e726]: "覆盖：{ \"deterministic\": \"partial\", \"unexecuted_fields\": [ \"description_length\", \"pre_fields\", \"post_fields\" ], \"semantic\": \"not_required\" }"
+                  - paragraph [ref=f4e727]: "Profile: 2 · Provider: 未配置/不适用 / 未配置/不适用"
+                  - paragraph [ref=f4e728]: 原因：legacy_profile_rules_not_executed
+                - group [ref=f4e729]:
+                  - generic "历史检查（不覆盖旧结果）" [ref=f4e730] [cursor=pointer]
+                - paragraph [ref=f4e731]: 渲染：ready。需要处置 warning 时进入冻结后的 Review，不在此处把 warning 改写为 pass。
+      - generic [ref=f4e733]:
+        - generic [ref=f4e734]:
+          - heading "渠道适配" [level=2] [ref=f4e735]
+          - paragraph [ref=f4e736]: 基于已保存的 Content Master 创建渠道专属变体；不修改 Master 或 Workflow 草稿。
+        - button "打开渠道变体" [ref=f4e737] [cursor=pointer]
+      - generic [ref=f4e739]:
+        - generic [ref=f4e740]:
+          - heading "创意执行与成果" [level=2] [ref=f4e741]
+          - paragraph [ref=f4e742]: 从已保存的内容生成执行包，交给外部 Agent 或工具；成果经人工接受后进入素材库。
+        - button "打开创意执行" [ref=f4e743] [cursor=pointer]
+      - generic [ref=f4e745]:
+        - generic [ref=f4e746]:
+          - heading "适用方法与创作偏好" [level=2] [ref=f4e747]
+          - paragraph [ref=f4e748]: 按项目与内容单元查看所有适用方法；明确选择版本、填写参数后查看渲染结果，可不采用或写下本任务覆盖说明。
+        - button "查看适用方法" [ref=f4e749] [cursor=pointer]
+      - generic [ref=f4e751]:
+        - generic [ref=f4e752]:
+          - heading "高级自动化" [level=2] [ref=f4e753]
+          - paragraph [ref=f4e754]: 保留工作流设计器与真实运行调试；不作为日常内容创作的默认入口。
+        - button "打开高级自动化" [ref=f4e755] [cursor=pointer]
+```

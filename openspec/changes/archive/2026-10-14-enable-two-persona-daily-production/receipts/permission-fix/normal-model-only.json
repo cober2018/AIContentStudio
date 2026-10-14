@@ -1,0 +1,36 @@
+{
+  "id": 2,
+  "name": "科技日常创作边界",
+  "description": null,
+  "version": 1,
+  "status": "draft",
+  "parent_id": null,
+  "checksum": null,
+  "frozen_at": null,
+  "item_count": 1,
+  "created_at": "2026-10-14T12:57:23.688660",
+  "items": [
+    {
+      "item_id": 2,
+      "fact_id": 1,
+      "evidence_kind": "fact",
+      "snapshot_checksum": null,
+      "snapshot": null,
+      "ref": "F001",
+      "statement": "这份原创创作说明建立于2026年10月14日，内容仅是关于候选保留与明确采用的软件架构观点，不是性能实测或产品新闻",
+      "subject": "这份原创创作说明建立于2",
+      "predicate": "日期",
+      "value": "2026年10月14日",
+      "unit": null,
+      "as_of": "2026-10-14",
+      "confidence": 0.6,
+      "status": "confirmed",
+      "source_document_id": 2,
+      "public_use_allowed": false,
+      "model_use_allowed": true,
+      "public_use_revoked_at": null,
+      "note": null,
+      "sort_order": 0
+    }
+  ]
+}

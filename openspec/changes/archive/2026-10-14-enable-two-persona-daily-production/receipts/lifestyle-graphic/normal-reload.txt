@@ -1,0 +1,424 @@
+### Open tabs
+- 0: [AI Content Studio](http://127.0.0.1:5173/projects/3/units/9/production?stage=quality)
+- 1: [AI Content Studio](http://127.0.0.1:5173/projects/4/units/8/production?stage=voice)
+- 2: [AI Content Studio](http://127.0.0.1:5173/projects/3/units/7/production?stage=audio_quality)
+- 3: (current) [AI Content Studio](http://127.0.0.1:5173/projects/4/units/10/production?stage=quality)
+### Page
+- Page URL: http://127.0.0.1:5173/projects/4/units/10/production?stage=quality
+- Page Title: AI Content Studio
+- Console: 0 errors, 2 warnings
+### Snapshot
+```yaml
+- generic [ref=f3e3]:
+  - complementary [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - link "AI Content Studio" [ref=f3e6] [cursor=pointer]:
+        - /url: /home
+      - generic [ref=f3e7]: 项目驱动 · 图文视频协作
+    - navigation "主导航" [ref=f3e8]:
+      - paragraph [ref=f3e9]: 工作区
+      - link "◧ 今日工作台" [ref=f3e10] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f3e11]: ◧
+        - text: 今日工作台
+      - link "✧ 内容机会" [ref=f3e12] [cursor=pointer]:
+        - /url: /opportunities
+        - generic [ref=f3e13]: ✧
+        - text: 内容机会
+      - link "▤ 内容项目" [ref=f3e14] [cursor=pointer]:
+        - /url: /projects
+        - generic [ref=f3e15]: ▤
+        - text: 内容项目
+      - link "✍ 创作与执行" [ref=f3e16] [cursor=pointer]:
+        - /url: /production
+        - generic [ref=f3e17]: ✍
+        - text: 创作与执行
+      - link "✓ 审阅与发布" [ref=f3e18] [cursor=pointer]:
+        - /url: /review
+        - generic [ref=f3e19]: ✓
+        - text: 审阅与发布
+      - link "◉ 内容身份" [ref=f3e20] [cursor=pointer]:
+        - /url: /identities
+        - generic [ref=f3e21]: ◉
+        - text: 内容身份
+      - link "▦ 素材与知识" [ref=f3e22] [cursor=pointer]:
+        - /url: /assets
+        - generic [ref=f3e23]: ▦
+        - text: 素材与知识
+      - link "▥ 效果与学习" [ref=f3e24] [cursor=pointer]:
+        - /url: /learning
+        - generic [ref=f3e25]: ▥
+        - text: 效果与学习
+      - link "⚙ 设置" [ref=f3e26] [cursor=pointer]:
+        - /url: /settings
+        - generic [ref=f3e27]: ⚙
+        - text: 设置
+    - generic [ref=f3e28]: 本机工作台 · 项目与素材持久保存
+  - main [ref=f3e29]:
+    - generic [ref=f3e31]:
+      - link "← 生活日常｜给晚饭留一点空白 / 内容矩阵" [ref=f3e32] [cursor=pointer]:
+        - /url: /projects/4?tab=matrix
+      - generic [ref=f3e33]:
+        - generic [ref=f3e34]:
+          - paragraph [ref=f3e35]: 图文生产
+          - heading "给晚饭留一点空白｜三张图卡" [level=1] [ref=f3e36]
+          - paragraph [ref=f3e37]: 当前名称：无品牌 → 日常生活方式博主 → 无账号 → 无栏目 · xiaohongshu
+          - paragraph [ref=f3e38]: "历史 Run 固定身份 ID：品牌 #无 → 角色 #3 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。"
+          - paragraph [ref=f3e39]: "历史 Run #11身份：快照 #10 · 99fdc16b9405 · 固定工作流 #24"
+        - button "项目共享素材 · 4" [ref=f3e40] [cursor=pointer]
+      - group [ref=f3e41]:
+        - generic "本内容使用的身份快照（只读）" [ref=f3e42] [cursor=pointer]
+      - region "Creation Recipe 创作流程" [ref=f3e43]:
+        - generic [ref=f3e44]:
+          - generic [ref=f3e45]:
+            - paragraph [ref=f3e46]: Creation Recipe
+            - heading "按阶段完成内容生产" [level=2] [ref=f3e47]
+            - paragraph [ref=f3e48]: 先查看阶段细节与实际请求，再执行；结果仍需人工接受，不会自动写入 Master。
+          - generic [ref=f3e49]:
+            - button "选择创作流程" [ref=f3e50] [cursor=pointer]
+            - button "高级工作流" [ref=f3e51] [cursor=pointer]
+        - generic [ref=f3e52]:
+          - generic [ref=f3e53]: "项目覆盖 · Workflow #24 v2 · 来源版本 2"
+          - generic [ref=f3e54]: checksum 5d569860d160b5b3d5f5b0c36aba9ed97c824b573dd04589954b11ef35293d0b
+          - button "准备新的运行（不调用模型）" [ref=f3e55] [cursor=pointer]
+        - group [ref=f3e56]:
+          - generic "默认差异与流程历史" [ref=f3e57] [cursor=pointer]
+        - button "前往下一个可处理阶段" [ref=f3e58] [cursor=pointer]
+        - tablist "Creation Recipe 阶段" [ref=f3e59]:
+          - tab "1 · AI 视觉方向 succeeded 已接受" [ref=f3e60] [cursor=pointer]:
+            - generic [ref=f3e61]: 1 · AI
+            - generic [ref=f3e62]: 视觉方向
+            - generic [ref=f3e63]:
+              - generic "succeeded" [ref=f3e64]
+              - generic [ref=f3e65]: 已接受
+          - tab "2 · AI 卡片计划 succeeded 已接受" [ref=f3e66] [cursor=pointer]:
+            - generic [ref=f3e67]: 2 · AI
+            - generic [ref=f3e68]: 卡片计划
+            - generic [ref=f3e69]:
+              - generic "succeeded" [ref=f3e70]
+              - generic [ref=f3e71]: 已接受
+          - tab "3 · Tool 确定性排版候选 succeeded 已接受" [ref=f3e72] [cursor=pointer]:
+            - generic [ref=f3e73]: 3 · Tool
+            - generic [ref=f3e74]: 确定性排版候选
+            - generic [ref=f3e75]:
+              - generic "succeeded" [ref=f3e76]
+              - generic [ref=f3e77]: 已接受
+          - tab "4 · Rule 图文质量检查 succeeded 已接受" [selected] [ref=f3e78] [cursor=pointer]:
+            - generic [ref=f3e79]: 4 · Rule
+            - generic [ref=f3e80]: 图文质量检查
+            - generic [ref=f3e81]:
+              - generic "succeeded" [ref=f3e82]
+              - generic [ref=f3e83]: 已接受
+        - tabpanel "4 · Rule 图文质量检查 succeeded 已接受" [ref=f3e84]:
+          - generic [ref=f3e85]:
+            - generic [ref=f3e86]:
+              - generic [ref=f3e87]:
+                - heading "图文质量检查" [level=3] [ref=f3e88]
+                - paragraph [ref=f3e89]: stage.checks@1 · stage.checks.v1
+              - generic "succeeded" [ref=f3e90]
+            - paragraph [ref=f3e91]: 依赖阶段：master
+            - generic [ref=f3e92]:
+              - paragraph [ref=f3e93]: "已接受：workflow_step_attempt #78 · accepted"
+              - paragraph [ref=f3e94]: accepted hash：9b1e13f8aef7e7bbab74115673e47d2a9bbca5df8a031da252dc59b702ab5ea3
+            - generic [ref=f3e95]: "最近尝试 #2 · succeeded · output 65806ba63f70…"
+          - generic [ref=f3e96]:
+            - tablist "阶段控制模式" [ref=f3e97]:
+              - tab "基本" [selected] [ref=f3e98] [cursor=pointer]
+              - tab "高级" [ref=f3e99] [cursor=pointer]
+            - tabpanel "基本" [ref=f3e100]:
+              - generic [ref=f3e101]:
+                - heading "本次调整" [level=3] [ref=f3e102]
+                - generic [ref=f3e103]: 只影响本次 Run
+            - region "Recipe 图文成品承接" [ref=f3e104]:
+              - heading "真实 PNG → 图文质量确认" [level=4] [ref=f3e105]
+              - paragraph [ref=f3e106]: 排版候选只是内容。逐画布渲染、查看并接受真实素材、绑定到本地画布，明确保存 Master 后再确认当前渲染并运行本阶段质量检查。
+              - generic [ref=f3e107]:
+                - button "前往图文编辑器渲染 / 接受 / 保存" [ref=f3e108] [cursor=pointer]
+                - button "读取当前成品状态（不渲染）" [ref=f3e109] [cursor=pointer]
+              - generic [ref=f3e110]:
+                - paragraph [ref=f3e111]: "Master #33 v5 · 上下文 current"
+                - paragraph [ref=f3e112]: 服务端已验证全部画布的真实图片与当前输入绑定；仍不代表审美或用户验收通过。
+                - list [ref=f3e113]:
+                  - listitem [ref=f3e114]: "1. 1080×1440 · 素材版本 #15 · 字节 / 哈希 / 尺寸已验证"
+                  - listitem [ref=f3e115]: "2. 1080×1440 · 素材版本 #16 · 字节 / 哈希 / 尺寸已验证"
+                  - listitem [ref=f3e116]: "3. 1080×1440 · 素材版本 #17 · 字节 / 哈希 / 尺寸已验证"
+                - paragraph [ref=f3e117]: 只读投影；打开编辑器不会覆盖已有本地内容。画布或素材变化后重新 Preview / 运行检查，不复用旧结果。
+            - generic [ref=f3e118]:
+              - button "预览实际请求" [ref=f3e119] [cursor=pointer]
+              - button "再次生成（新尝试）" [disabled] [ref=f3e120]
+            - paragraph [ref=f3e121]: Preview 只解析，不调用模型；执行会重新解析并校验 resolution hash。
+        - generic [ref=f3e122]:
+          - button "查看本次结果" [ref=f3e123] [cursor=pointer]
+          - button "历史与反馈" [ref=f3e124] [cursor=pointer]
+          - button "保存有效调整 / 复用方法" [ref=f3e125] [cursor=pointer]
+      - generic "Recipe 内容编辑承接" [ref=f3e126]:
+        - region "Content Master" [ref=f3e127]:
+          - generic [ref=f3e128]:
+            - heading "Content Master · graphic" [level=2] [ref=f3e129]
+            - generic [ref=f3e130]: 内容已同步 · 与 Workflow 保存独立
+          - generic [ref=f3e131]:
+            - generic [ref=f3e132]:
+              - button "重新加载 Master" [ref=f3e133] [cursor=pointer]
+              - button "Master v5 · 当前" [ref=f3e134] [cursor=pointer]
+              - button "Master v4 · 历史" [ref=f3e135] [cursor=pointer]
+              - button "Master v3 · 历史" [ref=f3e136] [cursor=pointer]
+              - button "Master v2 · 历史" [ref=f3e137] [cursor=pointer]
+              - button "Master v1 · 历史" [ref=f3e138] [cursor=pointer]
+            - generic [ref=f3e139]:
+              - paragraph [ref=f3e140]: "Master #33 · graphic.master.v2 · user_edit · admin@studio.local · 2026-10-14T15:18:19.749340"
+              - paragraph [ref=f3e141]: Payload 874e0417a3b2a721c46edd57aeb6bf7d4882a9925d1a3a5c29cb032498a12266 / Context 0ae92ac1909abfad28ea15f47e730fb5aab15e9aba8efd1e454edb132631005b
+              - paragraph [ref=f3e142]: "Identity #10 · Brief #4 · Boundary #3 · AI 编辑 0"
+              - generic "current" [ref=f3e143]
+            - region "Master 创作意图" [ref=f3e144]:
+              - heading "Master 创作意图" [level=3] [ref=f3e145]
+              - paragraph [ref=f3e146]: 随内容明确保存为新修订。请记录创作决定，不填写密钥、原始模型输出或整份来源正文。
+              - generic [ref=f3e147]:
+                - paragraph [ref=f3e148]: 此版本未记录创作意图。
+                - button "记录创作意图" [ref=f3e149] [cursor=pointer]
+            - generic "Graphic Studio" [ref=f3e150]:
+              - region "图文真实图片联系表" [ref=f3e151]:
+                - generic [ref=f3e152]:
+                  - heading "整组图片审阅" [level=3] [ref=f3e153]
+                  - button "读取已保存稿的真实图片" [ref=f3e154] [cursor=pointer]
+                - paragraph [ref=f3e155]: 只读取精确绑定的实际图片，校验字节哈希、MIME与尺寸；布局草图不当成成品。此预览不替代服务端渲染证明、当前权利检查或人工美感验收。
+              - region "图文渲染预览" [ref=f3e156]:
+                - heading "真实画布渲染（管理员预览）" [level=3] [ref=f3e157]
+                - paragraph [ref=f3e158]: "Master #33 · 画布 card-0。运行环境未探测；可尝试不等于已配置或已验证。当前仅支持显式配置字体的普通文字；缺字/样式会拒绝。"
+                - paragraph [ref=f3e159]: 渲染 → 明确接受素材 → 绑定到本地画布 → 单独保存 Master / 人工确认。不会自动入库、改稿、验证能力或发布。
+                - button "渲染当前已保存画布" [ref=f3e160] [cursor=pointer]
+                - button "撤销此渲染范围验证" [ref=f3e161] [cursor=pointer]
+              - generic [ref=f3e162]:
+                - generic [ref=f3e163]: 图文标题
+                - textbox "图文标题" [ref=f3e164]: 给晚饭留一点空白：一个假想的傍晚观察
+              - generic [ref=f3e165]:
+                - heading "目标渠道 Profile" [level=3] [ref=f3e166]
+                - paragraph [ref=f3e167]: "xiaohongshu / image_note · profile · #29"
+                - paragraph [ref=f3e168]: 画布数：未限制–未限制；封面：未要求；允许尺寸：未限制。
+              - generic [ref=f3e169]:
+                - generic [ref=f3e170]:
+                  - heading "画布 · 3/24" [level=3] [ref=f3e171]
+                  - button "新增画布" [ref=f3e172] [cursor=pointer]
+                - group "选择画布" [ref=f3e173]:
+                  - button "封面 · 1080×1440" [pressed] [ref=f3e174] [cursor=pointer]
+                  - button "画布 2 · 1080×1440" [ref=f3e175] [cursor=pointer]
+                  - button "画布 3 · 1080×1440" [ref=f3e176] [cursor=pointer]
+              - generic [ref=f3e177]:
+                - generic [ref=f3e178]:
+                  - heading "当前画布 · card-0" [level=3] [ref=f3e179]
+                  - generic [ref=f3e180]:
+                    - button "前移" [disabled] [ref=f3e181]
+                    - button "后移" [ref=f3e182] [cursor=pointer]
+                    - button "复制" [ref=f3e183] [cursor=pointer]
+                    - button "删除" [ref=f3e184] [cursor=pointer]
+                - generic [ref=f3e185]:
+                  - generic [ref=f3e186]:
+                    - generic [ref=f3e187]: 宽度
+                    - spinbutton "宽度" [ref=f3e188]: "1080"
+                  - generic [ref=f3e189]:
+                    - generic [ref=f3e190]: 高度
+                    - spinbutton "高度" [ref=f3e191]: "1440"
+                  - generic [ref=f3e192]:
+                    - generic [ref=f3e193]: 角色
+                    - combobox "角色" [ref=f3e194]:
+                      - option "普通画布"
+                      - option "封面" [selected]
+                      - option "正文"
+                  - generic [ref=f3e195]:
+                    - generic [ref=f3e196]: 背景色
+                    - textbox "背景色" [ref=f3e197]: "#fff6e9"
+                - generic [ref=f3e198]:
+                  - heading "图层 · 6/128" [level=4] [ref=f3e199]
+                  - generic [ref=f3e200]:
+                    - button "新增文字层" [ref=f3e201] [cursor=pointer]
+                    - button "新增矩形" [ref=f3e202] [cursor=pointer]
+                    - button "新增椭圆" [ref=f3e203] [cursor=pointer]
+                    - button "新增线条" [ref=f3e204] [cursor=pointer]
+                - generic [ref=f3e205]:
+                  - generic [ref=f3e206]:
+                    - strong [ref=f3e207]: 画布预览与选择
+                    - generic [ref=f3e208]:
+                      - text: 缩放 100%
+                      - slider "画布缩放" [ref=f3e209]: "100"
+                    - generic [ref=f3e210]: 预览不是最终渲染；交付仍需真实图片和输入绑定确认。
+                  - group "图层画布" [ref=f3e212]:
+                    - button "选择shape图层 1" [ref=f3e213] [cursor=pointer]: rectangle
+                    - button "选择text图层 2" [ref=f3e214] [cursor=pointer]: 给晚饭留一点空白
+                    - button "选择image图层 3" [ref=f3e215] [cursor=pointer]:
+                      - img "项目素材版本 9" [ref=f3e216]
+                    - button "选择text图层 4" [ref=f3e217] [cursor=pointer]: 这是一个假想的普通傍晚。刚关火的汤锅还在冒着热气，饭菜摆上桌，手机顺手扣在桌角，把注意力还给眼前温热的饭菜与周围的声音。
+                    - button "选择text图层 5" [ref=f3e218] [cursor=pointer]: • AI插图 · 假想晚饭
+                    - button "选择text图层 6" [ref=f3e219] [cursor=pointer]: • 手机暂时朝下，饭菜还热着
+                - group "图层列表" [ref=f3e221]:
+                  - generic [ref=f3e222]:
+                    - button "shape · card-0-a · 1" [ref=f3e223] [cursor=pointer]
+                    - button "上移" [disabled] [ref=f3e224]
+                    - button "下移" [ref=f3e225] [cursor=pointer]
+                    - generic [ref=f3e226]:
+                      - checkbox "图层 1 可见" [checked] [ref=f3e227]
+                      - text: 可见
+                    - generic [ref=f3e228]:
+                      - checkbox "图层 1 锁定" [ref=f3e229]
+                      - text: 锁定
+                    - button "删除" [ref=f3e230] [cursor=pointer]
+                  - generic [ref=f3e231]:
+                    - button "text · card-0-t · 2" [ref=f3e232] [cursor=pointer]
+                    - button "上移" [ref=f3e233] [cursor=pointer]
+                    - button "下移" [ref=f3e234] [cursor=pointer]
+                    - generic [ref=f3e235]:
+                      - checkbox "图层 2 可见" [checked] [ref=f3e236]
+                      - text: 可见
+                    - generic [ref=f3e237]:
+                      - checkbox "图层 2 锁定" [ref=f3e238]
+                      - text: 锁定
+                    - button "删除" [ref=f3e239] [cursor=pointer]
+                  - generic [ref=f3e240]:
+                    - button "image · card-0-v · 3" [ref=f3e241] [cursor=pointer]
+                    - button "上移" [ref=f3e242] [cursor=pointer]
+                    - button "下移" [ref=f3e243] [cursor=pointer]
+                    - generic [ref=f3e244]:
+                      - checkbox "图层 3 可见" [checked] [ref=f3e245]
+                      - text: 可见
+                    - generic [ref=f3e246]:
+                      - checkbox "图层 3 锁定" [ref=f3e247]
+                      - text: 锁定
+                    - button "删除" [ref=f3e248] [cursor=pointer]
+                  - generic [ref=f3e249]:
+                    - button "text · card-0-b · 4" [ref=f3e250] [cursor=pointer]
+                    - button "上移" [ref=f3e251] [cursor=pointer]
+                    - button "下移" [ref=f3e252] [cursor=pointer]
+                    - generic [ref=f3e253]:
+                      - checkbox "图层 4 可见" [checked] [ref=f3e254]
+                      - text: 可见
+                    - generic [ref=f3e255]:
+                      - checkbox "图层 4 锁定" [ref=f3e256]
+                      - text: 锁定
+                    - button "删除" [ref=f3e257] [cursor=pointer]
+                  - generic [ref=f3e258]:
+                    - button "text · card-0-b · 5" [ref=f3e259] [cursor=pointer]
+                    - button "上移" [ref=f3e260] [cursor=pointer]
+                    - button "下移" [ref=f3e261] [cursor=pointer]
+                    - generic [ref=f3e262]:
+                      - checkbox "图层 5 可见" [checked] [ref=f3e263]
+                      - text: 可见
+                    - generic [ref=f3e264]:
+                      - checkbox "图层 5 锁定" [ref=f3e265]
+                      - text: 锁定
+                    - button "删除" [ref=f3e266] [cursor=pointer]
+                  - generic [ref=f3e267]:
+                    - button "text · card-0-b · 6" [ref=f3e268] [cursor=pointer]
+                    - button "上移" [ref=f3e269] [cursor=pointer]
+                    - button "下移" [disabled] [ref=f3e270]
+                    - generic [ref=f3e271]:
+                      - checkbox "图层 6 可见" [checked] [ref=f3e272]
+                      - text: 可见
+                    - generic [ref=f3e273]:
+                      - checkbox "图层 6 锁定" [ref=f3e274]
+                      - text: 锁定
+                    - button "删除" [ref=f3e275] [cursor=pointer]
+                - paragraph [ref=f3e276]: 本地画布修改不会自动保存。最终图片必须绑定真实 MaterialRevision，并对当前输入哈希做明确渲染确认。
+                - generic [ref=f3e277]:
+                  - paragraph [ref=f3e278]: "当前画布最终图片：Revision #15"
+                  - paragraph [ref=f3e279]: 绑定真实图片后先保存 Master，再按服务端当前输入哈希明确确认；仅绑定不等于已验证渲染。
+                  - button "解除此画布最终图片" [ref=f3e280] [cursor=pointer]
+              - group [ref=f3e281]:
+                - generic "项目共享素材 · 精确版本" [ref=f3e282] [cursor=pointer]
+              - generic [ref=f3e283]:
+                - heading "事实边界与文字引用" [level=3] [ref=f3e284]
+                - paragraph [ref=f3e285]: 选中当前文字层的一段文字，再绑定冻结 FactPack 的精确条目；文字改动会使该层旧引用失效。
+                - paragraph [ref=f3e286]: "FactPack #3 v1 · fe483c5b9e01…"
+                - generic [ref=f3e288]:
+                  - generic [ref=f3e289]: "#3 · 本项目创作说明建立于2026年10月14日，晚饭前放下手机的情节是明确假想场景，不是作者真实经历，也不是健康效益结论 · 23bee4d390fc… · 允许公开"
+                  - button "绑定" [disabled] [ref=f3e290]
+                - generic [ref=f3e292]:
+                  - generic [ref=f3e293]: "图层 card-0-b · Fact #3 · [0, 11)"
+                  - button "解除引用" [ref=f3e294] [cursor=pointer]
+              - generic [ref=f3e295]:
+                - heading "外部素材与渲染能力" [level=3] [ref=f3e296]
+                - generic [ref=f3e297]:
+                  - generic [ref=f3e298]:
+                    - strong [ref=f3e299]: 素材搜索
+                    - paragraph [ref=f3e300]: 未连接 / 不可执行
+                    - paragraph [ref=f3e301]: project_provider_not_verified
+                  - generic [ref=f3e302]:
+                    - strong [ref=f3e303]: AI 生图
+                    - paragraph [ref=f3e304]: 未连接 / 不可执行
+                    - paragraph [ref=f3e305]: project_provider_not_verified
+                  - generic [ref=f3e306]:
+                    - strong [ref=f3e307]: 图片变体
+                    - paragraph [ref=f3e308]: 未连接 / 不可执行
+                    - paragraph [ref=f3e309]: project_provider_not_verified
+                  - generic [ref=f3e310]:
+                    - strong [ref=f3e311]: 自动渲染
+                    - paragraph [ref=f3e312]: 未连接 / 不可执行
+                    - paragraph [ref=f3e313]: project_provider_not_verified
+                - paragraph [ref=f3e314]: 通用生成接口不是已验证的项目级授权；未验证前不会生成假素材，也不会自动授予公开或商用权。人工确认最终图片不等于自动渲染已验证。
+            - generic [ref=f3e315]:
+              - generic [ref=f3e316]:
+                - generic [ref=f3e317]: 渠道内容形态（留空由 Registry 解析）
+                - textbox "Master 内容形态" [ref=f3e318]: image_note
+              - paragraph [ref=f3e319]: 渠道：xiaohongshu。素材来自项目共享素材，可跨 Unit 引用；不复制字节。
+            - generic [ref=f3e320]:
+              - heading "Graphic Master 版本" [level=3] [ref=f3e321]
+              - generic [ref=f3e322]:
+                - combobox "对比 Graphic Master 版本" [ref=f3e323]:
+                  - option "选择对比版本" [selected]
+                  - option "v4 · graphic.master.v2"
+                  - option "v3 · graphic.master.v2"
+                  - option "v2 · graphic.master.v2"
+                  - option "v1 · graphic.master.v2"
+                - button "查看画布差异" [disabled] [ref=f3e324]
+            - generic [ref=f3e325]:
+              - button "保存内容 Master" [ref=f3e326] [cursor=pointer]
+              - button "运行 Master 检查" [ref=f3e327] [cursor=pointer]
+              - button "冻结 Master Candidate v4" [ref=f3e328] [cursor=pointer]
+            - button "确认当前渲染并保存新修订" [ref=f3e329] [cursor=pointer]
+            - generic [ref=f3e330]:
+              - heading "Master 当前检查与渲染" [level=3] [ref=f3e331]
+              - paragraph [ref=f3e332]: 可冻结 ·
+              - generic [ref=f3e333]:
+                - generic [ref=f3e334]:
+                  - text: "master_schema:"
+                  - generic "pass" [ref=f3e335]
+                - generic [ref=f3e336]:
+                  - text: "evidence:"
+                  - generic "pass" [ref=f3e337]
+                - generic [ref=f3e338]:
+                  - text: "rights:"
+                  - generic "pass" [ref=f3e339]
+                - generic [ref=f3e340]:
+                  - text: "render:"
+                  - generic "pass" [ref=f3e341]
+                - generic [ref=f3e342]:
+                  - text: "graphic_structure:"
+                  - generic "pass" [ref=f3e343]
+                - generic [ref=f3e344]:
+                  - text: "graphic_fact:"
+                  - generic "pass" [ref=f3e345]
+                - generic [ref=f3e346]:
+                  - text: "graphic_identity:"
+                  - generic "warning" [ref=f3e347]
+                - generic [ref=f3e348]:
+                  - text: "graphic_platform:"
+                  - generic "pass" [ref=f3e349]
+              - generic [ref=f3e350]: "{ \"preview\": { \"modality\": \"graphic\", \"title\": \"给晚饭留一点空白：一个假想的傍晚观察\", \"payload_schema\": \"graphic.master.v2\", \"canvas_count\": 3, \"canvases\": [ { \"id\": \"card-0\", \"order\": 0, \"width\": 1080, \"height\": 1440, \"layer_count\": 6 }, { \"id\": \"card-1\", \"order\": 1, \"width\": 1080, \"height\": 1440, \"layer_count\": 5 }, { \"id\": \"card-2\", \"order\": 2, \"width\": 1080, \"height\": 1440, \"layer_count\": 5 } ] }, \"render\": { \"status\": \"ready\", \"origin\": \"manual\", \"attested_by\": \"admin@studio.local\", \"render_input_hash\": \"627778888497576118fb42dfcad5322e93d58037873c55427ce90923ca5c2360\", \"outputs\": [ { \"material_revision_id\": 15, \"content_hash\": \"fdfbbea2abbf7097ce581e14ddcc67ba6015b0d9f6c5a7b70d77529d9f6c4ae1\", \"mime_type\": \"image/png\", \"canvas_id\": \"card-0\", \"rights_snapshot\": { \"rights_status\": \"cleared\", \"public_use_allowed\": true, \"model_use_allowed\": true, \"commercial_use_allowed\": false } }, { \"material_revision_id\": 16, \"content_hash\": \"8d719437ffda0e495fe57a1e24ea48d9acf1bf28aa72f551e4547f2439a7d7a2\", \"mime_type\": \"image/png\", \"canvas_id\": \"card-1\", \"rights_snapshot\": { \"rights_status\": \"cleared\", \"public_use_allowed\": true, \"model_use_allowed\": true, \"commercial_use_allowed\": false } }, { \"material_revision_id\": 17, \"content_hash\": \"d6e380333b58e0299fbd6a6a7e8dd25efa52ea853c975d560ee56296e0e66407\", \"mime_type\": \"image/png\", \"canvas_id\": \"card-2\", \"rights_snapshot\": { \"rights_status\": \"cleared\", \"public_use_allowed\": true, \"model_use_allowed\": true, \"commercial_use_allowed\": false } } ], \"reasons\": [], \"canvas_dimensions_verified\": true }, \"checks\": [ { \"id\": 180, \"check_kind\": \"master_schema\", \"input_hash\": \"7409632fa5953eb892111cd50c76395ecd8d55f3fe5d2a406a374b37412fd678\", \"is_current\": true, \"stored_status\": \"pass\", \"status\": \"pass\", \"report\": { \"reasons\": [], \"requirement\": { \"kind\": \"master_schema\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\" } } }, { \"id\": 181, \"check_kind\": \"evidence\", \"input_hash\": \"90f0acdfa6ed46ff85d64ab02d81aa22dcbbc5aa015a504f17a591d118a19b4d\", \"is_current\": true, \"stored_status\": \"pass\", \"status\": \"pass\", \"report\": { \"reasons\": [], \"requirement\": { \"kind\": \"evidence\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\" } } }, { \"id\": 182, \"check_kind\": \"rights\", \"input_hash\": \"4766313cdba476b7ee58fbe37ac0822fab2c1fe22b4cbc998a1c292e9739cd1b\", \"is_current\": true, \"stored_status\": \"pass\", \"status\": \"pass\", \"report\": { \"reasons\": [], \"requirement\": { \"kind\": \"rights\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\" } } }, { \"id\": 183, \"check_kind\": \"render\", \"input_hash\": \"f0fc0a4d04685cb3bf78e1ef418b72dfb4d9fdd2944af6daaf66c712071f39c0\", \"is_current\": true, \"stored_status\": \"pass\", \"status\": \"pass\", \"report\": { \"status\": \"ready\", \"origin\": \"manual\", \"attested_by\": \"admin@studio.local\", \"render_input_hash\": \"627778888497576118fb42dfcad5322e93d58037873c55427ce90923ca5c2360\", \"outputs\": [ { \"material_revision_id\": 15, \"content_hash\": \"fdfbbea2abbf7097ce581e14ddcc67ba6015b0d9f6c5a7b70d77529d9f6c4ae1\", \"mime_type\": \"image/png\", \"canvas_id\": \"card-0\", \"rights_snapshot\": { \"rights_status\": \"cleared\", \"public_use_allowed\": true, \"model_use_allowed\": true, \"commercial_use_allowed\": false } }, { \"material_revision_id\": 16, \"content_hash\": \"8d719437ffda0e495fe57a1e24ea48d9acf1bf28aa72f551e4547f2439a7d7a2\", \"mime_type\": \"image/png\", \"canvas_id\": \"card-1\", \"rights_snapshot\": { \"rights_status\": \"cleared\", \"public_use_allowed\": true, \"model_use_allowed\": true, \"commercial_use_allowed\": false } }, { \"material_revision_id\": 17, \"content_hash\": \"d6e380333b58e0299fbd6a6a7e8dd25efa52ea853c975d560ee56296e0e66407\", \"mime_type\": \"image/png\", \"canvas_id\": \"card-2\", \"rights_snapshot\": { \"rights_status\": \"cleared\", \"public_use_allowed\": true, \"model_use_allowed\": true, \"commercial_use_allowed\": false } } ], \"reasons\": [], \"canvas_dimensions_verified\": true, \"requirement\": { \"kind\": \"render\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\" } } }, { \"id\": 184, \"check_kind\": \"graphic_structure\", \"input_hash\": \"01c1b18420d946248aa8cde114e76235d5f9ee083c4fbf420947976619e6f7cb\", \"is_current\": true, \"stored_status\": \"pass\", \"status\": \"pass\", \"report\": { \"reasons\": [], \"persona_quality\": { \"ref\": \"studio.quality.graphic.lifestyle@1\", \"hash\": \"eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483\", \"style_preset_ref\": \"studio.graphic.warm-magazine@1\", \"style_preset_hash\": \"e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208\", \"photo_requirement\": \"cover\", \"implementation\": \"graphic.geometry.v1\", \"report\": { \"schema\": \"studio.graphic.geometry-qc.v1\", \"payload_hash\": \"874e0417a3b2a721c46edd57aeb6bf7d4882a9925d1a3a5c29cb032498a12266\", \"status\": \"pass\", \"issues\": [], \"coverage\": { \"geometry\": \"axis_aligned\", \"text_fit\": \"estimated\", \"bytes\": \"not_rendered\", \"contrast\": \"text_vs_solid_canvas_only\", \"aesthetic_quality\": \"human_review_required\" }, \"human_review_required\": true } }, \"coverage\": { \"geometry\": \"axis_aligned\", \"text_fit\": \"estimated\", \"bytes\": \"not_rendered\", \"contrast\": \"text_vs_solid_canvas_only\", \"aesthetic_quality\": \"human_review_required\", \"live_bytes_rights\": \"separate_required_render_rights_checks\" }, \"canvas_count\": 3, \"visible_layer_count\": 16, \"requirement\": { \"kind\": \"graphic_structure\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\", \"persona_quality\": { \"ref\": \"studio.quality.graphic.lifestyle@1\", \"hash\": \"eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483\", \"style_preset_ref\": \"studio.graphic.warm-magazine@1\", \"style_preset_hash\": \"e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208\", \"photo_requirement\": \"cover\", \"implementation\": \"graphic.geometry.v1\" } } } }, { \"id\": 185, \"check_kind\": \"graphic_fact\", \"input_hash\": \"4d994ba6f7c1bde87a7471af42589a88101ba25bb32307153822c8f763dc9d74\", \"is_current\": true, \"stored_status\": \"pass\", \"status\": \"pass\", \"report\": { \"reasons\": [], \"issues\": [], \"coverage\": { \"semantic\": \"verified\", \"reason\": null, \"deterministic\": \"exact_claim_refs_only\", \"model_use_excluded_item_ids\": [], \"invalid_snapshot_item_ids\": [], \"fact_count\": 1, \"text_layer_count\": 12 }, \"requirement\": { \"kind\": \"graphic_fact\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\", \"semantic\": { \"profile\": \"registered.ddd9b006056eae2bfb76b2ee\", \"provider\": \"openai_compatible\", \"model\": \"gemini-3.8-flash-high\", \"configured\": true }, \"model_use\": [ { \"id\": 3, \"checksum\": \"23bee4d390fc102c53ff598aaa659c05d31f43faef29a3a8d1f69a43dec0feb5\", \"allowed\": true, \"revoked\": false } ] } } }, { \"id\": 186, \"check_kind\": \"graphic_identity\", \"input_hash\": \"bab7880fdfa2df6c3cc8fd11df1bba7523dbdd45da76f3e62ba253b8863e45dd\", \"is_current\": true, \"stored_status\": \"warning\", \"status\": \"warning\", \"report\": { \"reasons\": [], \"identity_snapshot_id\": 10, \"identity_checksum\": \"99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031\", \"issues\": [], \"coverage\": { \"semantic\": \"verified\", \"reason\": null, \"deterministic\": \"explicit_phrases_only\", \"text_layer_count\": 12, \"visual_semantics\": \"unavailable\" }, \"requirement\": { \"kind\": \"graphic_identity\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\", \"semantic\": { \"profile\": \"registered.ddd9b006056eae2bfb76b2ee\", \"provider\": \"openai_compatible\", \"model\": \"gemini-3.8-flash-high\", \"configured\": true } } } }, { \"id\": 187, \"check_kind\": \"graphic_platform\", \"input_hash\": \"d1dd1c5dbf5b93dd38db5c6da60a54fad4eb0fb9c54ae6a76c999a18055ae482\", \"is_current\": true, \"stored_status\": \"pass\", \"status\": \"pass\", \"report\": { \"reasons\": [], \"channel\": \"xiaohongshu\", \"content_form\": \"image_note\", \"profile_version_id\": 29, \"coverage\": { \"deterministic\": \"complete\" }, \"requirement\": { \"kind\": \"graphic_platform\", \"schema\": \"graphic.master.v2\", \"adapter_version\": \"2\", \"implementation\": \"1\", \"profile\": { \"id\": 29, \"version\": 3, \"checksum\": \"84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70\", \"form_hash\": \"d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6\", \"source\": \"profile\", \"artifact_kind\": \"image\" } } } } ] }"
+      - generic [ref=f3e352]:
+        - generic [ref=f3e353]:
+          - heading "渠道适配" [level=2] [ref=f3e354]
+          - paragraph [ref=f3e355]: 基于已保存的 Content Master 创建渠道专属变体；不修改 Master 或 Workflow 草稿。
+        - button "打开渠道变体" [ref=f3e356] [cursor=pointer]
+      - generic [ref=f3e358]:
+        - generic [ref=f3e359]:
+          - heading "创意执行与成果" [level=2] [ref=f3e360]
+          - paragraph [ref=f3e361]: 从已保存的内容生成执行包，交给外部 Agent 或工具；成果经人工接受后进入素材库。
+        - button "打开创意执行" [ref=f3e362] [cursor=pointer]
+      - generic [ref=f3e364]:
+        - generic [ref=f3e365]:
+          - heading "适用方法与创作偏好" [level=2] [ref=f3e366]
+          - paragraph [ref=f3e367]: 按项目与内容单元查看所有适用方法；明确选择版本、填写参数后查看渲染结果，可不采用或写下本任务覆盖说明。
+        - button "查看适用方法" [ref=f3e368] [cursor=pointer]
+      - generic [ref=f3e370]:
+        - generic [ref=f3e371]:
+          - heading "高级自动化" [level=2] [ref=f3e372]
+          - paragraph [ref=f3e373]: 保留工作流设计器与真实运行调试；不作为日常内容创作的默认入口。
+        - button "打开高级自动化" [ref=f3e374] [cursor=pointer]
+```

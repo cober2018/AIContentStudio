@@ -1,0 +1,654 @@
+### Open tabs
+- 0: [AI Content Studio](http://127.0.0.1:5173/projects/3/units/9/production?stage=quality)
+- 1: (current) [AI Content Studio](http://127.0.0.1:5173/projects/4/units/8/production?stage=audio_quality)
+- 2: [AI Content Studio](http://127.0.0.1:5173/projects/3/units/7/production?stage=audio_quality)
+- 3: [AI Content Studio](http://127.0.0.1:5173/projects/4/units/10/production?stage=quality)
+### Page
+- Page URL: http://127.0.0.1:5173/projects/4/units/8/production?stage=audio_quality
+- Page Title: AI Content Studio
+- Console: 0 errors, 2 warnings
+### Snapshot
+```yaml
+- generic [ref=f5e3]:
+  - complementary [ref=f5e4]:
+    - generic [ref=f5e5]:
+      - link "AI Content Studio" [ref=f5e6] [cursor=pointer]:
+        - /url: /home
+      - generic [ref=f5e7]: 项目驱动 · 图文视频协作
+    - navigation "主导航" [ref=f5e8]:
+      - paragraph [ref=f5e9]: 工作区
+      - link "◧ 今日工作台" [ref=f5e10] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f5e11]: ◧
+        - text: 今日工作台
+      - link "✧ 内容机会" [ref=f5e12] [cursor=pointer]:
+        - /url: /opportunities
+        - generic [ref=f5e13]: ✧
+        - text: 内容机会
+      - link "▤ 内容项目" [ref=f5e14] [cursor=pointer]:
+        - /url: /projects
+        - generic [ref=f5e15]: ▤
+        - text: 内容项目
+      - link "✍ 创作与执行" [ref=f5e16] [cursor=pointer]:
+        - /url: /production
+        - generic [ref=f5e17]: ✍
+        - text: 创作与执行
+      - link "✓ 审阅与发布" [ref=f5e18] [cursor=pointer]:
+        - /url: /review
+        - generic [ref=f5e19]: ✓
+        - text: 审阅与发布
+      - link "◉ 内容身份" [ref=f5e20] [cursor=pointer]:
+        - /url: /identities
+        - generic [ref=f5e21]: ◉
+        - text: 内容身份
+      - link "▦ 素材与知识" [ref=f5e22] [cursor=pointer]:
+        - /url: /assets
+        - generic [ref=f5e23]: ▦
+        - text: 素材与知识
+      - link "▥ 效果与学习" [ref=f5e24] [cursor=pointer]:
+        - /url: /learning
+        - generic [ref=f5e25]: ▥
+        - text: 效果与学习
+      - link "⚙ 设置" [ref=f5e26] [cursor=pointer]:
+        - /url: /settings
+        - generic [ref=f5e27]: ⚙
+        - text: 设置
+    - generic [ref=f5e28]: 本机工作台 · 项目与素材持久保存
+  - main [ref=f5e29]:
+    - generic [ref=f5e31]:
+      - link "← 生活日常｜给晚饭留一点空白 / 内容矩阵" [ref=f5e32] [cursor=pointer]:
+        - /url: /projects/4?tab=matrix
+      - generic [ref=f5e33]:
+        - generic [ref=f5e34]:
+          - paragraph [ref=f5e35]: 文字生产
+          - heading "给晚饭留一点空白｜文字与音频" [level=1] [ref=f5e36]
+          - paragraph [ref=f5e37]: 当前名称：无品牌 → 日常生活方式博主 → 无账号 → 无栏目 · wechat
+          - paragraph [ref=f5e38]: "历史 Run 固定身份 ID：品牌 #无 → 角色 #3 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。"
+          - paragraph [ref=f5e39]: "历史 Run #13身份：快照 #8 · 99fdc16b9405 · 固定工作流 #28"
+        - button "项目共享素材 · 6" [ref=f5e40] [cursor=pointer]
+      - group [ref=f5e41]:
+        - generic "本内容使用的身份快照（只读）" [ref=f5e42] [cursor=pointer]
+      - region "Creation Recipe 创作流程" [ref=f5e77]:
+        - generic [ref=f5e78]:
+          - generic [ref=f5e79]:
+            - paragraph [ref=f5e80]: Creation Recipe
+            - heading "按阶段完成内容生产" [level=2] [ref=f5e81]
+            - paragraph [ref=f5e82]: 先查看阶段细节与实际请求，再执行；结果仍需人工接受，不会自动写入 Master。
+          - generic [ref=f5e83]:
+            - button "选择创作流程" [ref=f5e84] [cursor=pointer]
+            - button "高级工作流" [ref=f5e85] [cursor=pointer]
+        - generic [ref=f5e86]:
+          - generic [ref=f5e87]: "项目覆盖 · Workflow #28 v3 · 来源版本 3"
+          - generic [ref=f5e88]: checksum d7be95096d361c9d6a4a3df727eaebaf2e0bd8183e5f82d6e8fbdc6ef55170db
+          - button "准备新的运行（不调用模型）" [ref=f5e89] [cursor=pointer]
+        - group [ref=f5e90]:
+          - generic "默认差异与流程历史" [ref=f5e91] [cursor=pointer]
+        - button "前往下一个可处理阶段" [ref=f5e92] [cursor=pointer]
+        - tablist "Creation Recipe 阶段" [ref=f5e93]:
+          - tab "1 · AI 口语稿确认 succeeded 已接受" [ref=f5e94] [cursor=pointer]:
+            - generic [ref=f5e95]: 1 · AI
+            - generic [ref=f5e96]: 口语稿确认
+            - generic [ref=f5e97]:
+              - generic "succeeded" [ref=f5e98]
+              - generic [ref=f5e99]: 已接受
+          - tab "2 · AI 声音方案确认 succeeded 已接受" [ref=f5e100] [cursor=pointer]:
+            - generic [ref=f5e101]: 2 · AI
+            - generic [ref=f5e102]: 声音方案确认
+            - generic [ref=f5e103]:
+              - generic "succeeded" [ref=f5e104]
+              - generic [ref=f5e105]: 已接受
+          - tab "3 · Tool 生成并接受真实音频 succeeded 已接受" [ref=f5e106] [cursor=pointer]:
+            - generic [ref=f5e107]: 3 · Tool
+            - generic [ref=f5e108]: 生成并接受真实音频
+            - generic [ref=f5e109]:
+              - generic "succeeded" [ref=f5e110]
+              - generic [ref=f5e111]: 已接受
+          - tab "4 · Rule 音频质量确认 succeeded 已接受" [selected] [ref=f5e112] [cursor=pointer]:
+            - generic [ref=f5e113]: 4 · Rule
+            - generic [ref=f5e114]: 音频质量确认
+            - generic [ref=f5e115]:
+              - generic "succeeded" [ref=f5e116]
+              - generic [ref=f5e117]: 已接受
+        - tabpanel "4 · Rule 音频质量确认 succeeded 已接受" [ref=f5e118]:
+          - generic [ref=f5e119]:
+            - generic [ref=f5e120]:
+              - generic [ref=f5e121]:
+                - heading "音频质量确认" [level=3] [ref=f5e122]
+                - paragraph [ref=f5e123]: stage.audio.qc@1 · stage.audio.qc.v1
+              - generic "succeeded" [ref=f5e124]
+            - paragraph [ref=f5e125]: 依赖阶段：tts
+            - generic [ref=f5e126]:
+              - paragraph [ref=f5e127]: "已接受：workflow_step_attempt #79 · accepted"
+              - paragraph [ref=f5e128]: accepted hash：c7ad620b9314a8f1b2ae1c1636a630d73a3351cd834523de3e31eacf92513973
+            - generic [ref=f5e129]: "最近尝试 #1 · succeeded · output cb63573c087c…"
+          - generic [ref=f5e130]:
+            - tablist "阶段控制模式" [ref=f5e131]:
+              - tab "基本" [selected] [ref=f5e132] [cursor=pointer]
+              - tab "高级" [ref=f5e133] [cursor=pointer]
+            - tabpanel "基本" [ref=f5e134]:
+              - generic [ref=f5e135]:
+                - heading "本次调整" [level=3] [ref=f5e136]
+                - generic [ref=f5e137]: 只影响本次 Run
+              - generic [ref=f5e138]:
+                - generic [ref=f5e139]:
+                  - generic [ref=f5e140]:
+                    - group "method" [ref=f5e141]:
+                      - generic [ref=f5e143]:
+                        - generic [ref=f5e144]: arguments_json
+                        - textbox "arguments_json" [ref=f5e145]
+                      - generic [ref=f5e146]:
+                        - generic [ref=f5e147]: artifact_id
+                        - spinbutton "artifact_id" [ref=f5e148]
+                      - generic [ref=f5e149]:
+                        - generic [ref=f5e150]: revision_id
+                        - spinbutton "revision_id" [ref=f5e151]
+                      - generic [ref=f5e152]:
+                        - generic [ref=f5e153]: runtime_key
+                        - textbox "runtime_key" [ref=f5e154]
+                      - generic [ref=f5e155]:
+                        - generic [ref=f5e156]: runtime_version
+                        - textbox "runtime_version" [ref=f5e157]
+                      - generic [ref=f5e158]:
+                        - generic [ref=f5e159]: skill_id
+                        - textbox "skill_id" [ref=f5e160]
+                      - generic [ref=f5e161]:
+                        - generic [ref=f5e162]: skill_ref
+                        - textbox "skill_ref" [ref=f5e163]: studio.audio.qc@1
+                      - generic [ref=f5e164]:
+                        - generic [ref=f5e165]: source_kind
+                        - combobox "source_kind" [ref=f5e166]:
+                          - option "请选择"
+                          - option "studio_builtin" [selected]
+                          - option "capability_memory"
+                          - option "installed_agent_skill"
+                      - generic [ref=f5e167]:
+                        - generic [ref=f5e168]: version
+                        - textbox "version" [ref=f5e169]
+                    - paragraph [ref=f5e170]: 已保存：skill_ref：studio.audio.qc@1；source_kind：studio_builtin · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f5e171]
+                - generic [ref=f5e172]:
+                  - generic [ref=f5e173]:
+                    - generic [ref=f5e174]:
+                      - generic [ref=f5e175]: 音频质量标准
+                      - combobox "音频质量标准" [ref=f5e176]:
+                        - option "请选择" [selected]
+                        - option "studio.quality.audio.explainer@1"
+                        - option "studio.quality.audio.conversational@1"
+                    - paragraph [ref=f5e177]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f5e178]
+                - generic [ref=f5e179]:
+                  - generic [ref=f5e180]:
+                    - generic [ref=f5e181]:
+                      - generic [ref=f5e182]: 对照已接受的 ASR 回执（不调用识别）
+                      - combobox "对照已接受的 ASR 回执（不调用识别）" [ref=f5e183]:
+                        - option "未设置"
+                        - option "开启"
+                        - option "关闭" [selected]
+                    - paragraph [ref=f5e184]: 已保存：false · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f5e185]
+                - generic [ref=f5e186]:
+                  - generic [ref=f5e187]:
+                    - generic [ref=f5e188]:
+                      - generic [ref=f5e189]: 已保存 ASR 字幕的 Video Master 版本 ID
+                      - spinbutton "已保存 ASR 字幕的 Video Master 版本 ID" [ref=f5e190]
+                    - paragraph [ref=f5e191]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f5e192]
+                - generic [ref=f5e193]:
+                  - generic [ref=f5e194]:
+                    - generic [ref=f5e195]:
+                      - generic [ref=f5e196]: 该版本的精确 ASR 回执 ID
+                      - textbox "该版本的精确 ASR 回执 ID" [ref=f5e197]
+                    - paragraph [ref=f5e198]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f5e199]
+                - generic [ref=f5e200]:
+                  - generic [ref=f5e201]:
+                    - generic [ref=f5e202]:
+                      - generic [ref=f5e203]: 该 ASR 回执的输出 SHA-256
+                      - textbox "该 ASR 回执的输出 SHA-256" [ref=f5e204]
+                    - paragraph [ref=f5e205]: 已保存：未设置 · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f5e206]
+                - generic [ref=f5e207]:
+                  - generic [ref=f5e208]:
+                    - generic [ref=f5e209]:
+                      - generic [ref=f5e210]: 字幕导出（none 无 / asr 真实分段 / estimated 估计）
+                      - combobox "字幕导出（none 无 / asr 真实分段 / estimated 估计）" [ref=f5e211]:
+                        - option "请选择"
+                        - option "none" [selected]
+                        - option "asr"
+                        - option "estimated"
+                    - paragraph [ref=f5e212]: 已保存：none · 当前继承
+                  - button "恢复已保存配置" [disabled] [ref=f5e213]
+            - generic [ref=f5e214]:
+              - button "预览实际请求" [ref=f5e215] [cursor=pointer]
+              - button "再次生成（新尝试）" [disabled] [ref=f5e216]
+            - paragraph [ref=f5e217]: Preview 只解析，不调用模型；执行会重新解析并校验 resolution hash。
+        - generic [ref=f5e218]:
+          - button "查看本次结果" [ref=f5e219] [cursor=pointer]
+          - button "历史与反馈" [ref=f5e220] [cursor=pointer]
+          - button "保存有效调整 / 复用方法" [ref=f5e221] [cursor=pointer]
+      - generic "Recipe 内容编辑承接" [ref=f5e46]:
+        - region "Content Master" [ref=f5e47]:
+          - generic [ref=f5e48]:
+            - heading "Content Master · text" [level=2] [ref=f5e49]
+            - generic [ref=f5e50]: 内容已同步 · 与 Workflow 保存独立
+          - generic [ref=f5e222]:
+            - generic [ref=f5e223]:
+              - button "重新加载 Master" [ref=f5e224] [cursor=pointer]
+              - button "Master v3 · 当前" [ref=f5e225] [cursor=pointer]
+              - button "Master v2 · 历史" [ref=f5e226] [cursor=pointer]
+              - button "Master v1 · 历史" [ref=f5e227] [cursor=pointer]
+            - group [ref=f5e228]:
+              - generic "不可变修订历史" [ref=f5e229] [cursor=pointer]
+            - generic [ref=f5e230]:
+              - paragraph [ref=f5e231]: "Master #22 · text.master.v2 · workflow_stage · admin@studio.local · 2026-10-14T14:38:40.719547"
+              - paragraph [ref=f5e232]: Payload 3bc264df747f992de1fe168c4eed40e235826659ed7d419bea8452c1f98739b3 / Context ac59d20228b4657f52647a394e521d120dcb30dbd38ebbb4d35a314547b9c872
+              - paragraph [ref=f5e233]: "Identity #8 · Brief #4 · Boundary #3 · AI 编辑 0"
+              - generic "current" [ref=f5e234]
+            - region "Master 创作意图" [ref=f5e235]:
+              - heading "Master 创作意图" [level=3] [ref=f5e236]
+              - paragraph [ref=f5e237]: 随内容明确保存为新修订。请记录创作决定，不填写密钥、原始模型输出或整份来源正文。
+              - generic [ref=f5e238]:
+                - paragraph [ref=f5e239]: 此版本未记录创作意图。
+                - button "记录创作意图" [ref=f5e240] [cursor=pointer]
+            - region "文字渲染验证" [ref=f5e241]:
+              - heading "文字渲染能力" [level=3] [ref=f5e242]
+              - paragraph [ref=f5e243]: text.studio.document.v1 / 2 · wechat / article → Markdown
+              - paragraph [ref=f5e244]: 当前精确范围尚未验证 / 已失效
+              - paragraph [ref=f5e245]: 验证会实际渲染已保存的当前版本，只记录输入与输出摘要；不会保存 Master、批准内容或发布。它是能力验证，不代表此稿已通过审核。
+              - generic [ref=f5e246]:
+                - button "刷新渲染状态" [ref=f5e247] [cursor=pointer]
+                - button "实际渲染并验证" [ref=f5e248] [cursor=pointer]
+                - button "撤销渲染验证" [disabled] [ref=f5e249]
+            - generic "专业文字工作台" [ref=f5e250]:
+              - generic [ref=f5e251]:
+                - generic [ref=f5e252]: 标题
+                - textbox "Text Master 标题" [ref=f5e253]: 给晚饭留一点空白：一个假想傍晚的十分钟
+              - generic [ref=f5e254]:
+                - generic [ref=f5e255]:
+                  - generic [ref=f5e256]:
+                    - generic [ref=f5e257]: paragraph 区块 1 · legacy-b
+                    - generic [ref=f5e258]:
+                      - button "上移" [disabled] [ref=f5e259]
+                      - button "下移" [ref=f5e260] [cursor=pointer]
+                      - button "删除" [ref=f5e261] [cursor=pointer]
+                  - generic [ref=f5e263]:
+                    - group "paragraph 区块 1 格式" [ref=f5e264]:
+                      - button "加粗" [ref=f5e265] [cursor=pointer]
+                      - button "斜体" [ref=f5e266] [cursor=pointer]
+                      - button "行内代码" [ref=f5e267] [cursor=pointer]
+                      - button "链接" [ref=f5e268] [cursor=pointer]
+                      - button "移除链接" [ref=f5e269] [cursor=pointer]
+                    - generic "paragraph 区块 1" [ref=f5e271]:
+                      - paragraph [ref=f5e272]: 想象一个普通的傍晚：饭菜刚端上桌，手边的屏幕还亮着微光，你顺手将它屏幕朝下轻轻扣在桌垫上，由着它在手边安静片刻。这是一个纯粹假想的生活切片，没有关机，也没打算给自己立下严苛的新规矩。
+                - generic [ref=f5e273]:
+                  - generic [ref=f5e274]:
+                    - generic [ref=f5e275]: paragraph 区块 2 · legacy-b
+                    - generic [ref=f5e276]:
+                      - button "上移" [ref=f5e277] [cursor=pointer]
+                      - button "下移" [ref=f5e278] [cursor=pointer]
+                      - button "删除" [ref=f5e279] [cursor=pointer]
+                  - generic [ref=f5e281]:
+                    - group "paragraph 区块 2 格式" [ref=f5e282]:
+                      - button "加粗" [ref=f5e283] [cursor=pointer]
+                      - button "斜体" [ref=f5e284] [cursor=pointer]
+                      - button "行内代码" [ref=f5e285] [cursor=pointer]
+                      - button "链接" [ref=f5e286] [cursor=pointer]
+                      - button "移除链接" [ref=f5e287] [cursor=pointer]
+                    - generic "paragraph 区块 2" [ref=f5e289]:
+                      - paragraph [ref=f5e290]: 不妨把这段留白设想成短短的十分钟。不用特意掐表计时，也不必为它预设任何目标或成果。未读的消息完全可以稍后再回；眼前的热气还散着，筷子已经摆好，先踏实坐下来，就已经很好。
+                - generic [ref=f5e291]:
+                  - generic [ref=f5e292]:
+                    - generic [ref=f5e293]: heading 区块 3 · legacy-b
+                    - generic [ref=f5e294]:
+                      - button "上移" [ref=f5e295] [cursor=pointer]
+                      - button "下移" [ref=f5e296] [cursor=pointer]
+                      - button "删除" [ref=f5e297] [cursor=pointer]
+                  - generic [ref=f5e298]:
+                    - combobox "heading 区块 3 层级" [ref=f5e299]:
+                      - option "H1"
+                      - option "H2" [selected]
+                      - option "H3"
+                      - option "H4"
+                    - generic [ref=f5e300]:
+                      - group "heading 区块 3 格式" [ref=f5e301]:
+                        - button "加粗" [ref=f5e302] [cursor=pointer]
+                        - button "斜体" [ref=f5e303] [cursor=pointer]
+                        - button "行内代码" [ref=f5e304] [cursor=pointer]
+                        - button "链接" [ref=f5e305] [cursor=pointer]
+                        - button "移除链接" [ref=f5e306] [cursor=pointer]
+                      - generic "heading 区块 3" [ref=f5e308]:
+                        - paragraph [ref=f5e309]: 汤的白汽与窗外的声响
+                - generic [ref=f5e310]:
+                  - generic [ref=f5e311]:
+                    - generic [ref=f5e312]: paragraph 区块 4 · legacy-b
+                    - generic [ref=f5e313]:
+                      - button "上移" [ref=f5e314] [cursor=pointer]
+                      - button "下移" [ref=f5e315] [cursor=pointer]
+                      - button "删除" [ref=f5e316] [cursor=pointer]
+                  - generic [ref=f5e318]:
+                    - group "paragraph 区块 4 格式" [ref=f5e319]:
+                      - button "加粗" [ref=f5e320] [cursor=pointer]
+                      - button "斜体" [ref=f5e321] [cursor=pointer]
+                      - button "行内代码" [ref=f5e322] [cursor=pointer]
+                      - button "链接" [ref=f5e323] [cursor=pointer]
+                      - button "移除链接" [ref=f5e324] [cursor=pointer]
+                    - generic "paragraph 区块 4" [ref=f5e326]:
+                      - paragraph [ref=f5e327]: 刚关火的汤锅还在升腾着细细的白汽，清淡温润的香气在厨房与餐桌之间慢慢晕开。汤勺盛起温热的清汤，碗沿留下一道浅浅的水痕。瓷碗碰上木筷，带出一声清脆的轻响。指尖轻触碗壁，温热透过瓷面缓缓传到手心，才发觉这一餐已经在这里静静等候了一会儿。
+                - generic [ref=f5e328]:
+                  - generic [ref=f5e329]:
+                    - generic [ref=f5e330]: paragraph 区块 5 · legacy-b
+                    - generic [ref=f5e331]:
+                      - button "上移" [ref=f5e332] [cursor=pointer]
+                      - button "下移" [ref=f5e333] [cursor=pointer]
+                      - button "删除" [ref=f5e334] [cursor=pointer]
+                  - generic [ref=f5e336]:
+                    - group "paragraph 区块 5 格式" [ref=f5e337]:
+                      - button "加粗" [ref=f5e338] [cursor=pointer]
+                      - button "斜体" [ref=f5e339] [cursor=pointer]
+                      - button "行内代码" [ref=f5e340] [cursor=pointer]
+                      - button "链接" [ref=f5e341] [cursor=pointer]
+                      - button "移除链接" [ref=f5e342] [cursor=pointer]
+                    - generic "paragraph 区块 5" [ref=f5e344]:
+                      - paragraph [ref=f5e345]: 窗外的动静也悄悄渗了进来：楼下推着自行车走过的脚步声、隔壁邻居关门时锁舌弹扣的轻响，还有远处主路上平缓起伏的晚高峰车流。厨房水龙头的一滴余水轻落进水槽，同桌的人轻声问了一句，锅里的汤还要不要再盛一碗。没有哪样细节需要郑重记录，却让这个假想的傍晚有了安稳清晰的轮廓。
+                - generic [ref=f5e346]:
+                  - generic [ref=f5e347]:
+                    - generic [ref=f5e348]: heading 区块 6 · legacy-b
+                    - generic [ref=f5e349]:
+                      - button "上移" [ref=f5e350] [cursor=pointer]
+                      - button "下移" [ref=f5e351] [cursor=pointer]
+                      - button "删除" [ref=f5e352] [cursor=pointer]
+                  - generic [ref=f5e353]:
+                    - combobox "heading 区块 6 层级" [ref=f5e354]:
+                      - option "H1"
+                      - option "H2" [selected]
+                      - option "H3"
+                      - option "H4"
+                    - generic [ref=f5e355]:
+                      - group "heading 区块 6 格式" [ref=f5e356]:
+                        - button "加粗" [ref=f5e357] [cursor=pointer]
+                        - button "斜体" [ref=f5e358] [cursor=pointer]
+                        - button "行内代码" [ref=f5e359] [cursor=pointer]
+                        - button "链接" [ref=f5e360] [cursor=pointer]
+                        - button "移除链接" [ref=f5e361] [cursor=pointer]
+                      - generic "heading 区块 6" [ref=f5e363]:
+                        - paragraph [ref=f5e364]: 饭桌前的一小块从容
+                - generic [ref=f5e365]:
+                  - generic [ref=f5e366]:
+                    - generic [ref=f5e367]: paragraph 区块 7 · legacy-b
+                    - generic [ref=f5e368]:
+                      - button "上移" [ref=f5e369] [cursor=pointer]
+                      - button "下移" [ref=f5e370] [cursor=pointer]
+                      - button "删除" [ref=f5e371] [cursor=pointer]
+                  - generic [ref=f5e373]:
+                    - group "paragraph 区块 7 格式" [ref=f5e374]:
+                      - button "加粗" [ref=f5e375] [cursor=pointer]
+                      - button "斜体" [ref=f5e376] [cursor=pointer]
+                      - button "行内代码" [ref=f5e377] [cursor=pointer]
+                      - button "链接" [ref=f5e378] [cursor=pointer]
+                      - button "移除链接" [ref=f5e379] [cursor=pointer]
+                    - generic "paragraph 区块 7" [ref=f5e381]:
+                      - paragraph [ref=f5e382]: 手机依然搁在桌角，偶尔泛起微光。这里没有必须坚持的自律挑战，更不试图证明暂离屏幕会带来某种神奇的疗效。它只是让你能定心夹一口温热的菜，等滚烫的汤稍稍放凉，或是安安静静听完对面那句还没讲完的琐碎日常。若是独自一人用餐，也可以看着窗外天色一寸寸暗下去，踏实把饭吃完。
+                - generic [ref=f5e383]:
+                  - generic [ref=f5e384]:
+                    - generic [ref=f5e385]: paragraph 区块 8 · legacy-b
+                    - generic [ref=f5e386]:
+                      - button "上移" [ref=f5e387] [cursor=pointer]
+                      - button "下移" [ref=f5e388] [cursor=pointer]
+                      - button "删除" [ref=f5e389] [cursor=pointer]
+                  - generic [ref=f5e391]:
+                    - group "paragraph 区块 8 格式" [ref=f5e392]:
+                      - button "加粗" [ref=f5e393] [cursor=pointer]
+                      - button "斜体" [ref=f5e394] [cursor=pointer]
+                      - button "行内代码" [ref=f5e395] [cursor=pointer]
+                      - button "链接" [ref=f5e396] [cursor=pointer]
+                      - button "移除链接" [ref=f5e397] [cursor=pointer]
+                    - generic "paragraph 区块 8" [ref=f5e399]:
+                      - paragraph [ref=f5e400]: 晚饭本身或许并不会改变什么，这个假想的场景也无须推导出沉重的结论。只要在饭菜变凉之前，给当下的感官腾出一小块位置就好。今晚开饭那一刻，最先落入你眼帘与心头的，会是飘起的一缕香气，还是身旁某声熟悉的动静？
+                - generic [ref=f5e401]:
+                  - generic [ref=f5e402]:
+                    - generic [ref=f5e403]: image 区块 9 · e6e59460
+                    - generic [ref=f5e404]:
+                      - button "上移" [ref=f5e405] [cursor=pointer]
+                      - button "下移" [ref=f5e406] [cursor=pointer]
+                      - button "删除" [ref=f5e407] [cursor=pointer]
+                  - paragraph [ref=f5e408]: "MaterialRevision #9 · 未填写替代文字 · 无说明"
+                - generic [ref=f5e409]:
+                  - generic [ref=f5e410]:
+                    - generic [ref=f5e411]: paragraph 区块 10 · a691efe2
+                    - generic [ref=f5e412]:
+                      - button "上移" [ref=f5e413] [cursor=pointer]
+                      - button "下移" [disabled] [ref=f5e414]
+                      - button "删除" [ref=f5e415] [cursor=pointer]
+                  - generic [ref=f5e417]:
+                    - group "paragraph 区块 10 格式" [ref=f5e418]:
+                      - button "加粗" [ref=f5e419] [cursor=pointer]
+                      - button "斜体" [ref=f5e420] [cursor=pointer]
+                      - button "行内代码" [ref=f5e421] [cursor=pointer]
+                      - button "链接" [ref=f5e422] [cursor=pointer]
+                      - button "移除链接" [ref=f5e423] [cursor=pointer]
+                    - generic "paragraph 区块 10" [ref=f5e425]:
+                      - paragraph [ref=f5e426]: AI辅助创作；配图为AI生成的假想场景。
+              - generic [ref=f5e427]:
+                - combobox "添加区块类型" [ref=f5e428]:
+                  - option "正文" [selected]
+                  - option "标题"
+                  - option "引用"
+                  - option "无序列表"
+                  - option "有序列表"
+                  - option "提示"
+                  - option "代码"
+                  - option "分隔线"
+                - button "添加区块" [ref=f5e429] [cursor=pointer]
+              - generic [ref=f5e430]:
+                - heading "项目共享素材" [level=3] [ref=f5e431]
+                - paragraph [ref=f5e432]: 仅引用精确 MaterialRevision；插入或移除不会复制或删除素材。设为封面会保留对应图片区块，保存时后端重新校验权利。
+                - generic [ref=f5e433]:
+                  - generic [ref=f5e434]:
+                    - paragraph [ref=f5e435]: "生活日常图卡3｜不必立下新的规矩 · Revision #17"
+                    - paragraph [ref=f5e436]: cleared · 允许公开
+                    - generic [ref=f5e437]:
+                      - button "插入图片" [ref=f5e438] [cursor=pointer]
+                      - button "设为封面" [ref=f5e439] [cursor=pointer]
+                  - generic [ref=f5e440]:
+                    - paragraph [ref=f5e441]: "生活日常图卡2｜汤的白汽，窗外的声响 · Revision #16"
+                    - paragraph [ref=f5e442]: cleared · 允许公开
+                    - generic [ref=f5e443]:
+                      - button "插入图片" [ref=f5e444] [cursor=pointer]
+                      - button "设为封面" [ref=f5e445] [cursor=pointer]
+                  - generic [ref=f5e446]:
+                    - paragraph [ref=f5e447]: "生活日常图卡1｜给晚饭留一点空白（AI插图） · Revision #15"
+                    - paragraph [ref=f5e448]: cleared · 允许公开
+                    - generic [ref=f5e449]:
+                      - button "插入图片" [ref=f5e450] [cursor=pointer]
+                      - button "设为封面" [ref=f5e451] [cursor=pointer]
+                  - generic [ref=f5e452]:
+                    - paragraph [ref=f5e453]: "给晚饭留一点空白｜AI想象插图 · Revision #9"
+                    - paragraph [ref=f5e454]: cleared · 允许公开
+                    - generic [ref=f5e455]:
+                      - button "插入图片" [ref=f5e456] [cursor=pointer]
+                      - button "已设为封面" [pressed] [ref=f5e457] [cursor=pointer]
+              - generic [ref=f5e458]:
+                - heading "事实边界与引用" [level=3] [ref=f5e459]
+                - paragraph [ref=f5e460]: 选中正文或列表文字，再绑定当前冻结 FactPack 的精确条目；文本变化会使无法重定位的引用失效。
+                - paragraph [ref=f5e461]: "FactPack #3 v1 · fe483c5b9e01…"
+                - generic [ref=f5e463]:
+                  - generic [ref=f5e464]:
+                    - paragraph [ref=f5e465]: "#3 · fact · 本项目创作说明建立于2026年10月14日，晚饭前放下手机的情节是明确假想场景，不是作者真实经历，也不是健康效益结论 · 允许公开"
+                    - paragraph [ref=f5e466]: 快照 23bee4d390fc… · 来源 生活稿原创资料｜假想晚饭的创作边界 · 模型使用覆盖以 Text Fact Check 为准
+                  - button "绑定" [disabled] [ref=f5e467]
+              - generic [ref=f5e468]:
+                - heading "AI 建议 · 不会自动保存" [level=3] [ref=f5e469]
+                - paragraph [ref=f5e470]: "基于已保存 Master #22；先看差异，再选择接受或拒绝。"
+                - generic [ref=f5e471]:
+                  - combobox "AI 编辑动作" [ref=f5e472]:
+                    - option "改写" [selected]
+                    - option "扩写"
+                    - option "压缩"
+                    - option "调整语气"
+                    - option "结构重组"
+                  - button "生成建议" [disabled] [ref=f5e473]
+                - textbox "AI 编辑要求" [ref=f5e474]:
+                  - /placeholder: 可选：说明风格或目标；模型输出仅作为待审建议
+              - generic [ref=f5e475]:
+                - heading "固定身份（只读）" [level=3] [ref=f5e476]
+                - generic [ref=f5e477]:
+                  - paragraph [ref=f5e478]: "IdentitySnapshot #8 · 99fdc16b9405…"
+                  - generic [ref=f5e479]:
+                    - generic [ref=f5e480]:
+                      - term [ref=f5e481]: positioning · persona
+                      - definition [ref=f5e482]: 观察正在发生的有趣事情、未来变化与日常生活感受的内容角色
+                    - generic [ref=f5e483]:
+                      - term [ref=f5e484]: target_audience · persona
+                      - definition [ref=f5e485]: "[\"对生活变化好奇的人\",\"希望获得具体观察的普通读者\"]"
+                    - generic [ref=f5e486]:
+                      - term [ref=f5e487]: content_domains · persona
+                      - definition [ref=f5e488]: "[\"日常生活\",\"新鲜变化\",\"个人观察\",\"近未来趣事\"]"
+                    - generic [ref=f5e489]:
+                      - term [ref=f5e490]: expression_style · persona
+                      - definition [ref=f5e491]: "{\"voice\":\"warm_observational\",\"hype\":\"low\",\"preachiness\":\"low\",\"specificity\":\"high\"}"
+                    - generic [ref=f5e492]:
+                      - term [ref=f5e493]: visual_language · persona
+                      - definition [ref=f5e494]: "{\"preset\":\"warm_magazine\",\"documentary\":true,\"density\":\"low\"}"
+                    - generic [ref=f5e495]:
+                      - term [ref=f5e496]: content_boundaries · persona
+                      - definition [ref=f5e497]: "[\"不说教\",\"不制造焦虑\",\"事实与个人感受分开\"]"
+                    - generic [ref=f5e498]:
+                      - term [ref=f5e499]: risk_boundaries · persona
+                      - definition [ref=f5e500]: "[\"当前事实必须有 fresh source\",\"未来内容明确标注推测\"]"
+                    - generic [ref=f5e501]:
+                      - term [ref=f5e502]: public_fact_policy · persona
+                      - definition [ref=f5e503]: "{\"fresh_source_required_for_current_claims\":true,\"label_speculation\":true}"
+                    - generic [ref=f5e504]:
+                      - term [ref=f5e505]: text_creative_profile · persona
+                      - definition [ref=f5e506]: "{\"schema\":\"persona.creative.text.v1\",\"mode\":\"auto\",\"skill_ref\":\"studio.text.longform@1\",\"style_preset_ref\":\"studio.text.observational-lifestyle@1\",\"quality_profile_ref\":\"studio.quality.text.lifestyle@1\",\"capability\":\"chat\",\"model_binding\":null,\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.lifestyle-observer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.text.lifestyle.v1\"}}"
+                    - generic [ref=f5e507]:
+                      - term [ref=f5e508]: graphic_creative_profile · persona
+                      - definition [ref=f5e509]: "{\"schema\":\"persona.creative.graphic.v1\",\"mode\":\"auto\",\"skill_ref\":\"studio.graphic.visual-director@1\",\"style_preset_ref\":\"studio.graphic.warm-magazine@1\",\"quality_profile_ref\":\"studio.quality.graphic.lifestyle@1\",\"capability\":\"image_generation\",\"model_binding\":null,\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.lifestyle-observer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.graphic.lifestyle.v1\"}}"
+                    - generic [ref=f5e510]:
+                      - term [ref=f5e511]: audio_creative_profile · persona
+                      - definition [ref=f5e512]: "{\"schema\":\"persona.creative.audio.v1\",\"mode\":\"custom\",\"skill_ref\":\"studio.audio.tts@1\",\"style_preset_ref\":\"studio.audio.warm-conversational@1\",\"quality_profile_ref\":\"studio.quality.audio.conversational@1\",\"capability\":\"tts\",\"model_binding\":{\"provider\":\"minimax.cli\",\"model\":\"speech-2.8-hd\",\"profile\":\"minimax.speech\"},\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{\"voice\":\"chunzhen_xuedi\",\"rate\":1},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.lifestyle-observer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.audio.lifestyle.v1\"}}"
+                    - generic [ref=f5e513]:
+                      - term [ref=f5e514]: video_creative_profile · persona
+                      - definition [ref=f5e515]: "{\"schema\":\"persona.creative.video.v1\",\"mode\":\"auto\",\"skill_ref\":\"studio.video.director-package@1\",\"style_preset_ref\":\"studio.graphic.warm-magazine@1\",\"quality_profile_ref\":\"studio.quality.text.lifestyle@1\",\"capability\":\"chat\",\"model_binding\":null,\"model_chain\":[],\"capability_memory_revision_ids\":[],\"installed_skill_refs\":[],\"parameters\":{},\"stage_instruction\":null,\"provenance\":{\"blueprint_key\":\"starter.lifestyle-observer.v1\",\"blueprint_version\":\"1\",\"default_recipe_key\":\"persona.video.lifestyle.v1\"}}"
+            - generic [ref=f5e516]:
+              - generic [ref=f5e517]:
+                - generic [ref=f5e518]: 渠道内容形态（留空由 Registry 解析）
+                - textbox "Master 内容形态" [ref=f5e519]: article
+              - paragraph [ref=f5e520]: 渠道：wechat。素材来自项目共享素材，可跨 Unit 引用；不复制字节。
+            - generic [ref=f5e521]:
+              - heading "Text Master 版本" [level=3] [ref=f5e522]
+              - generic [ref=f5e523]:
+                - combobox "对比 Master 版本" [ref=f5e524]:
+                  - option "选择对比版本" [selected]
+                  - option "v2 · text.master.v2"
+                  - option "v1 · text.master.v2"
+                - button "查看结构化差异" [disabled] [ref=f5e525]
+            - generic [ref=f5e526]:
+              - button "保存内容 Master" [ref=f5e527] [cursor=pointer]
+              - button "运行 Master 检查" [ref=f5e528] [cursor=pointer]
+              - button "冻结 Master Candidate v4" [ref=f5e529] [cursor=pointer]
+            - generic [ref=f5e530]:
+              - combobox "Draft seed 输出" [ref=f5e531]:
+                - option "选择真实 Draft 输出" [selected]
+              - button "从 Draft 创建 Text Master" [disabled] [ref=f5e532]
+            - generic [ref=f5e533]:
+              - heading "Master 当前检查与渲染" [level=3] [ref=f5e534]
+              - paragraph [ref=f5e535]: 可冻结 ·
+              - generic [ref=f5e536]:
+                - generic [ref=f5e537]:
+                  - generic [ref=f5e538]:
+                    - strong [ref=f5e539]: master_schema
+                    - generic "pass" [ref=f5e540]
+                    - generic [ref=f5e541]: 输入仍是当前版本
+                    - generic [ref=f5e542]: "检查 #129"
+                  - paragraph [ref=f5e543]: 覆盖："未知"
+                  - paragraph [ref=f5e544]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f5e545]:
+                  - generic [ref=f5e546]:
+                    - strong [ref=f5e547]: evidence
+                    - generic "pass" [ref=f5e548]
+                    - generic [ref=f5e549]: 输入仍是当前版本
+                    - generic [ref=f5e550]: "检查 #130"
+                  - paragraph [ref=f5e551]: 覆盖："未知"
+                  - paragraph [ref=f5e552]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f5e553]:
+                  - generic [ref=f5e554]:
+                    - strong [ref=f5e555]: rights
+                    - generic "pass" [ref=f5e556]
+                    - generic [ref=f5e557]: 输入仍是当前版本
+                    - generic [ref=f5e558]: "检查 #131"
+                  - paragraph [ref=f5e559]: 覆盖："未知"
+                  - paragraph [ref=f5e560]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f5e561]:
+                  - generic [ref=f5e562]:
+                    - strong [ref=f5e563]: render
+                    - generic "pass" [ref=f5e564]
+                    - generic [ref=f5e565]: 输入仍是当前版本
+                    - generic [ref=f5e566]: "检查 #132"
+                  - paragraph [ref=f5e567]: 覆盖："未知"
+                  - paragraph [ref=f5e568]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f5e569]:
+                  - generic [ref=f5e570]:
+                    - strong [ref=f5e571]: text_structure
+                    - generic "pass" [ref=f5e572]
+                    - generic [ref=f5e573]: 输入仍是当前版本
+                    - generic [ref=f5e574]: "检查 #133"
+                  - paragraph [ref=f5e575]: "覆盖：{ \"deterministic\": \"complete\" }"
+                  - paragraph [ref=f5e576]: "Profile: text.master.v2 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f5e577]:
+                  - generic [ref=f5e578]:
+                    - strong [ref=f5e579]: text_fact
+                    - generic "pass" [ref=f5e580]
+                    - generic [ref=f5e581]: 输入仍是当前版本
+                    - generic [ref=f5e582]: "检查 #134"
+                  - paragraph [ref=f5e583]: "覆盖：{ \"semantic\": \"verified\", \"reason\": null, \"deterministic\": \"complete\", \"model_use_excluded_item_ids\": [], \"fact_count\": 1, \"semantic_fact_count\": 1, \"deterministic_issue_count\": 0 }"
+                  - paragraph [ref=f5e584]: "Profile: text.master.v2 · Provider: openai_compatible / gemini-3.8-flash-high"
+                - generic [ref=f5e585]:
+                  - generic [ref=f5e586]:
+                    - strong [ref=f5e587]: text_identity
+                    - generic "pass" [ref=f5e588]
+                    - generic [ref=f5e589]: 输入仍是当前版本
+                    - generic [ref=f5e590]: "检查 #135"
+                  - paragraph [ref=f5e591]: "覆盖：{ \"deterministic\": \"persona_rules_and_explicit_phrases\", \"explicit_phrase_count\": 0, \"semantic\": \"verified\", \"reason\": null, \"advisory_critic\": { \"status\": \"verified\", \"reason\": null, \"rubric\": [ { \"dimension\": \"factual_grounding\", \"score\": 4, \"reason\": \"全文明确设定为假想的生活切片，未断言未经证实的客观事实，并按要求进行了创作声明。\" }, { \"dimension\": \"naturalness\", \"score\": 4, \"reason\": \"语言温和细腻，叙述节奏舒缓自然，日常感官描写生动真实。\" }, { \"dimension\": \"specificity\", \"score\": 4, \"reason\": \"包含了水滴声、邻居关门声、碗沿水痕等大量微观具象的生活细节。\" }, { \"dimension\": \"non_preachy\", \"score\": 4, \"reason\": \"明确表示不设规矩、不搞自律挑战与价值升华，完全不具说教色彩。\" }, { \"dimension\": \"title_alignment\", \"score\": 4, \"reason\": \"正文分段小标题与整体描摹的晚餐场景高度吻合，内容连贯聚焦。\" } ], \"can_override_deterministic\": false } }"
+                  - paragraph [ref=f5e592]: "Profile: text.master.v2 · Provider: openai_compatible / gemini-3.8-flash-high"
+                - generic [ref=f5e593]:
+                  - generic [ref=f5e594]:
+                    - strong [ref=f5e595]: text_platform
+                    - generic "pass" [ref=f5e596]
+                    - generic [ref=f5e597]: 输入仍是当前版本
+                    - generic [ref=f5e598]: "检查 #136"
+                  - paragraph [ref=f5e599]: "覆盖：{ \"deterministic\": \"complete\" }"
+                  - paragraph [ref=f5e600]: "Profile: 26 · Provider: 未配置/不适用 / 未配置/不适用"
+                - generic [ref=f5e601]:
+                  - generic [ref=f5e602]:
+                    - strong [ref=f5e603]: text_discoverability
+                    - generic "warning" [ref=f5e604]
+                    - generic [ref=f5e605]: 输入仍是当前版本
+                    - generic [ref=f5e606]: "检查 #137"
+                  - paragraph [ref=f5e607]: "覆盖：{ \"deterministic\": \"partial\", \"unexecuted_fields\": [ \"description_length\", \"pre_fields\", \"post_fields\" ], \"semantic\": \"not_required\" }"
+                  - paragraph [ref=f5e608]: "Profile: 2 · Provider: 未配置/不适用 / 未配置/不适用"
+                  - paragraph [ref=f5e609]: 原因：legacy_profile_rules_not_executed
+                - group [ref=f5e610]:
+                  - generic "历史检查（不覆盖旧结果）" [ref=f5e611] [cursor=pointer]
+                - paragraph [ref=f5e612]: 渲染：ready。需要处置 warning 时进入冻结后的 Review，不在此处把 warning 改写为 pass。
+      - generic [ref=f5e54]:
+        - generic [ref=f5e55]:
+          - heading "渠道适配" [level=2] [ref=f5e56]
+          - paragraph [ref=f5e57]: 基于已保存的 Content Master 创建渠道专属变体；不修改 Master 或 Workflow 草稿。
+        - button "打开渠道变体" [ref=f5e58] [cursor=pointer]
+      - generic [ref=f5e60]:
+        - generic [ref=f5e61]:
+          - heading "创意执行与成果" [level=2] [ref=f5e62]
+          - paragraph [ref=f5e63]: 从已保存的内容生成执行包，交给外部 Agent 或工具；成果经人工接受后进入素材库。
+        - button "打开创意执行" [ref=f5e64] [cursor=pointer]
+      - generic [ref=f5e66]:
+        - generic [ref=f5e67]:
+          - heading "适用方法与创作偏好" [level=2] [ref=f5e68]
+          - paragraph [ref=f5e69]: 按项目与内容单元查看所有适用方法；明确选择版本、填写参数后查看渲染结果，可不采用或写下本任务覆盖说明。
+        - button "查看适用方法" [ref=f5e70] [cursor=pointer]
+      - generic [ref=f5e72]:
+        - generic [ref=f5e73]:
+          - heading "高级自动化" [level=2] [ref=f5e74]
+          - paragraph [ref=f5e75]: 保留工作流设计器与真实运行调试；不作为日常内容创作的默认入口。
+        - button "打开高级自动化" [ref=f5e76] [cursor=pointer]
+```

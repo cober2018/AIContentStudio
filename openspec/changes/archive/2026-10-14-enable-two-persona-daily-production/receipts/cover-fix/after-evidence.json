@@ -1,0 +1,29 @@
+{
+  "after": {
+    "apps/web/src/product/TextStudioModel.ts": {
+      "sha256": "a354a16d1449068efd9db47da55de732180e4ddf02118b0756fd0364c1835ee4",
+      "bytes": 12269
+    },
+    "apps/web/src/product/TextStudioShell.tsx": {
+      "sha256": "d0beced1355e6ff3514b018eeeb554906899767888dd66cf055355aae3141e48",
+      "bytes": 27139
+    }
+  },
+  "explicit_cover_role": true,
+  "cover_only_image": true,
+  "preserves_public_rights_guard": true,
+  "preserves_exact_hash_guard": true,
+  "existing_cover_block_reused": true,
+  "cover_orders_contiguous": true,
+  "explicit_cover_control": true,
+  "normal_inline_control_retained": true,
+  "verification": {
+    "existing_text_model_and_tiptap_tests": "9 passed, 0 failed",
+    "git_diff_check": "passed",
+    "web_build": "tsc -b, vite build --manifest and check:bundle passed"
+  },
+  "pending_root_verification": [
+    "independent TypeScript review",
+    "normal Master and Stage-candidate cover save and current platform QC readback"
+  ]
+}

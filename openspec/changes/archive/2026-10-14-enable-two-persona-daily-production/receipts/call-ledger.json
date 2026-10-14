@@ -1,0 +1,778 @@
+{
+  "schema": "daily-production.real-calls.v1",
+  "maximum_supplier_requests": 80,
+  "maximum_concurrency": 1,
+  "minimum_start_interval_seconds": 10,
+  "max_images": 2,
+  "max_tts": 2,
+  "max_audio_seconds": 360,
+  "application_retry": 0,
+  "unknown_policy": "preserve original identity, stop that chain; no replay or provider switch",
+  "price_unknown_not_zero": true,
+  "ui_actions": [
+    {
+      "action": "execute technology evidence stage",
+      "project_id": 3,
+      "unit_id": 7,
+      "operator_started_at": "2026-10-14T13:03:44.611228+00:00",
+      "normal_page": "/projects/3/units/7/production",
+      "preview": "ready",
+      "observed_model": "gemini-3.8-flash-high"
+    },
+    {
+      "action": "accept technology evidence; allow existing continuation",
+      "project_id": 3,
+      "unit_id": 7,
+      "operator_started_at": "2026-10-14T13:05:17.454725+00:00",
+      "review": "Correct fact/inference boundary, exact FactPackItem2 reference, no invented benchmarks or source claims",
+      "first_call_confirmed_llm_run_id": 26
+    },
+    {
+      "action": "execute technology evidence in correct-input Run8",
+      "project_id": 3,
+      "unit_id": 7,
+      "run_id": 8,
+      "brief_id": 3,
+      "operator_started_at": "2026-10-14T13:12:53.241786+00:00",
+      "old_run7_preserved": true
+    },
+    {
+      "action": "accept correct-input technology evidence39 and continue angles",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T13:14:30.500416+00:00",
+      "reviewed_output_hash": "257d474b0258c302401e4ee604c3f7e0146dea077f27ff7e4ae966587f5e444b",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept technology angle40 and continue outline",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T13:15:59.727712+00:00",
+      "reviewed_candidate_hash": "62c90c027ed2e315935de38c3bb280562a1881c0ff251490df7e8ece11846bea",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept technology outline41 and continue draft",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T13:17:40.044723+00:00",
+      "reviewed_candidate_hash": "f5c4f4605278637ee2cc67fad0fcc619d374aeebb4cd13f46160af9d6b44f872",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "edit and accept technology draft42; existing QC and continuation",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T13:24:27.744969+00:00",
+      "original_candidate_hash": "934890e2c5f7d03f01214a42d89cbac6f8cd8bb49711eb4ba34e2105387e863d",
+      "edit_reason": "Remove unsupported prevalence/degree/universal benchmark claims and unneeded provenance date; preserve architecture trade-offs",
+      "conservative_supplier_reservation": 3
+    },
+    {
+      "action": "execute technology cover once",
+      "task_id": "65ea23b7493749a19286beb25177c269",
+      "operator_started_at": "2026-10-14T14:10:07.956984+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "execute technology graphic visual",
+      "run_id": 9,
+      "operator_started_at": "2026-10-14T14:13:14.010835+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept technology graphic visual44; continue cards",
+      "run_id": 9,
+      "operator_started_at": "2026-10-14T14:14:11.802130+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "execute lifestyle image once",
+      "task_id": "5a586f539e264793b8f6ec02db0cb322",
+      "operator_started_at": "2026-10-14T14:15:38.877488+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "edit and adopt technology graphic composition46; initial QC",
+      "run_id": 9,
+      "operator_started_at": "2026-10-14T14:18:05.924642+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "execute lifestyle evidence correct-input reflection",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:18:49.140221+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept lifestyle evidence48; continue angles",
+      "run_id": 10,
+      "recorded_after_click_at": "2026-10-14T14:20:23.920031+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept lifestyle angle49; continue outline",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:21:39.923978+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept lifestyle outline50; continue draft",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:23:34.354352+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "edit and adopt lifestyle draft51 with exact real cover9; QC and continuation",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:26:29.966059+00:00",
+      "conservative_supplier_reservation": 3
+    },
+    {
+      "action": "accept lifestyle quality52 warning explicitly; continue refine",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:28:26.407612+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "technology quality rerun same Run8 after actual cover19",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T14:29:18.668123+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "accept technology quality54 warning; continue refine",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T14:32:05.327673+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "adopt lifestyle refine53 with cover; continue title",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:33:47.344316+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "edit technology refine55 remove unsupported multiplier/date and restore bounds; continue title",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T14:35:09.281178+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept lifestyle title56; continue final",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:36:32.307991+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept technology title57; continue final",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T14:37:20.125588+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "adopt lifestyle final58 with cover9 and AI disclosure; final QC",
+      "run_id": 10,
+      "operator_started_at": "2026-10-14T14:38:37.474306+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "edit/adopt technology final59 restore accepted bounded refine; final QC",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T14:39:31.656433+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "technology final QC rerun after verified corrected Master24",
+      "run_id": 8,
+      "operator_started_at": "2026-10-14T14:42:50.699272+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "execute lifestyle Graphic visual",
+      "run_id": 11,
+      "operator_started_at": "2026-10-14T14:44:14.417454+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept lifestyle visual63 exact cleared illustration9; continue cards",
+      "run_id": 11,
+      "operator_started_at": "2026-10-14T14:46:24.104347+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "execute technology complete spoken adaptation from current24",
+      "run_id": 12,
+      "operator_started_at": "2026-10-14T14:49:02.731770+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "technology Graphic current QC with 3 actual accepted bound PNGs and attestation",
+      "run_id": 9,
+      "operator_started_at": "2026-10-14T14:51:46.842563+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "new technology spoken attempt correcting known65 output; original not accepted",
+      "run_id": 12,
+      "operator_started_at": "2026-10-14T14:53:44.406827+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "new lifestyle cards attempt correcting known64 claim location; no source edits",
+      "run_id": 11,
+      "operator_started_at": "2026-10-14T14:55:12.955110+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept corrected technology spoken67; continue voice design",
+      "run_id": 12,
+      "operator_started_at": "2026-10-14T14:56:44.398534+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept technology voice69; dispatch one frozen TTS via normal continuation",
+      "run_id": 12,
+      "expected_voice": "lengdan_xiongzhang",
+      "expected_model": "speech-2.8-hd",
+      "items": 1,
+      "seconds_limit": 360,
+      "timeout_seconds": 120,
+      "operator_started_at": "2026-10-14T14:59:31.429491+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "technology Graphic QC after exact geometry fix and all-three rebinding/attestation",
+      "run_id": 9,
+      "operator_started_at": "2026-10-14T15:04:26.855516+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "edit and adopt lifestyle Graphic composition71; initial QC",
+      "run_id": 11,
+      "operator_started_at": "2026-10-14T15:05:43.893525+00:00",
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "action": "execute full lifestyle spoken adaptation",
+      "run_id": 13,
+      "operator_started_at": "2026-10-14T15:06:45.665696+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept lifestyle complete fictional spoken74; continue voice",
+      "run_id": 13,
+      "operator_started_at": "2026-10-14T15:16:07.066889+00:00",
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "accept lifestyle voice76; one frozen actual TTS",
+      "run_id": 13,
+      "operator_started_at": "2026-10-14T15:17:17.324871+00:00",
+      "expected_voice": "chunzhen_xuedi",
+      "expected_model": "speech-2.8-hd",
+      "items": 1,
+      "seconds_limit": 360,
+      "timeout_seconds": 120,
+      "conservative_supplier_reservation": 1
+    },
+    {
+      "action": "lifestyle Graphic current QC after three accepted actual PNGs and attestation33",
+      "run_id": 11,
+      "operator_started_at": "2026-10-14T15:19:15.122907+00:00",
+      "conservative_supplier_reservation": 2
+    }
+  ],
+  "minimum_start_interval_seconds_applies_to": "top-level normal-page execution/acceptance actions; existing QC internals are sequential without this delay",
+  "qc_counting": "Two semantic attempts conservatively reserved per actual Text/Graphic QC, separate from LLMRun",
+  "transport_retry_evidence": "existing registered provider HTTPTransport(retries=0), one stream POST; local JSON cleanup does not call a model; CPA internal upstream retry not observed",
+  "semantic_qc_attempts": [
+    {
+      "attempt_id": 43,
+      "run_id": 8,
+      "attempt_status": "failed",
+      "checks": [
+        {
+          "kind": "text_fact",
+          "input_hash": "a67cfd1df6f36af33a23440363dd6cc4fd272c43842fdd33a8a0aaa64554e0d5",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "text_identity",
+          "input_hash": "03f09dd4af75a60f680e09810577cb148ec671b708c14c8e34606d239bc49a92",
+          "status": "pass",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 47,
+      "run_id": 9,
+      "attempt_status": "failed",
+      "checks": [
+        {
+          "kind": "graphic_fact",
+          "input_hash": "51a12dde5e7fc25d485742cd975ae78fee3195a1573c7efe8e3cf3b032847b93",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "graphic_identity",
+          "input_hash": "d5eef9184741a72499f7672b4415e9b516666bb1aa29eef6ef10e4d55a625272",
+          "status": "warning",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 52,
+      "run_id": 10,
+      "attempt_status": "succeeded",
+      "checks": [
+        {
+          "kind": "text_fact",
+          "input_hash": "3948a9f10641e49947c010a70e48785954a6cf645f8134d603af9dd389a2fa0e",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "text_identity",
+          "input_hash": "55bdd1f2e91d437ba0605a60c15aa4ec15d3c6fd7a30ac400b36271d821ebf84",
+          "status": "pass",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 54,
+      "run_id": 8,
+      "attempt_status": "succeeded",
+      "checks": [
+        {
+          "kind": "text_fact",
+          "input_hash": "f38624da50980954a279e7f57d0324fed801ba8b48917ab3ad36ed80cc919f94",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "text_identity",
+          "input_hash": "c11a272b72f3195fbd416df3cebad9f454d25cc37780f1c3318ff2a76faad61d",
+          "status": "pass",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 60,
+      "run_id": 10,
+      "attempt_status": "succeeded",
+      "checks": [
+        {
+          "kind": "text_fact",
+          "input_hash": "7bd0c24458f548eb6fe9e0380fdcf40c05cbdcd8241482b0afa39f5f26f9d1b6",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "text_identity",
+          "input_hash": "5a0c8cf34cfc8d3d6d246c663c80cf0752e446587c5680f0c8e2047fc88059c4",
+          "status": "pass",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 61,
+      "run_id": 8,
+      "attempt_status": "succeeded",
+      "checks": [
+        {
+          "kind": "text_fact",
+          "input_hash": "66bfb715e22e1b0be79190531a8f937851815493545e392ada3a485f3e069fd6",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "text_identity",
+          "input_hash": "49a272958baeac416de391266686a37c5117a8444595d082481a8e9f700f1e05",
+          "status": "pass",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 62,
+      "run_id": 8,
+      "attempt_status": "succeeded",
+      "checks": [
+        {
+          "kind": "text_fact",
+          "input_hash": "916eeafc47f08c6b07c3e947ed104fd655418be6e047f340fde23f567f230d54",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "text_identity",
+          "input_hash": "405220aac55d1112a1fb44d3ba21b96d7f244ea6fa61155d45e63fe5b8959fa4",
+          "status": "pass",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 66,
+      "run_id": 9,
+      "attempt_status": "failed",
+      "checks": [
+        {
+          "kind": "graphic_fact",
+          "input_hash": "e711050a075de336aff0eaf34eb14e71ca02b2a9df6b8c2936973352228d5d33",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "graphic_identity",
+          "input_hash": "31aa4df851cf2b723563ff2af11c78ad5d5b8ee9d745778847d48401a0a5f0e6",
+          "status": "warning",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 72,
+      "run_id": 9,
+      "attempt_status": "succeeded",
+      "checks": [
+        {
+          "kind": "graphic_fact",
+          "input_hash": "ec3711f9e264abb138ac842240ad6cbe7003912882f192aba88ab45065c74a1b",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "graphic_identity",
+          "input_hash": "4a7db89f71e642781c35538ecbc651c0db54219d73df1cfad5996bf32bdf78e7",
+          "status": "warning",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 73,
+      "run_id": 11,
+      "attempt_status": "failed",
+      "checks": [
+        {
+          "kind": "graphic_fact",
+          "input_hash": "672dcb94b31c746b638156b983e3ba12424df33df7aa064c19605ce2006b9e8d",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "graphic_identity",
+          "input_hash": "60447189483818b3f80623a650bf7f5736c12e5282dbba99ef15f400a65f9259",
+          "status": "warning",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    },
+    {
+      "attempt_id": 78,
+      "run_id": 11,
+      "attempt_status": "succeeded",
+      "checks": [
+        {
+          "kind": "graphic_fact",
+          "input_hash": "4d994ba6f7c1bde87a7471af42589a88101ba25bb32307153822c8f763dc9d74",
+          "status": "pass",
+          "semantic": "verified"
+        },
+        {
+          "kind": "graphic_identity",
+          "input_hash": "bab7880fdfa2df6c3cc8fd11df1bba7523dbdd45da76f3e62ba253b8863e45dd",
+          "status": "warning",
+          "semantic": "verified"
+        }
+      ],
+      "conservative_supplier_reservation": 2
+    }
+  ],
+  "registered_chat_completions": [
+    {
+      "id": 26,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 13:04:04.264825"
+    },
+    {
+      "id": 27,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 13:05:39.256604"
+    },
+    {
+      "id": 28,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 13:13:11.942531"
+    },
+    {
+      "id": 29,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 13:14:52.121249"
+    },
+    {
+      "id": 30,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 13:16:17.933709"
+    },
+    {
+      "id": 31,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "generate",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 13:18:04.541802"
+    },
+    {
+      "id": 32,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:13:28.070185"
+    },
+    {
+      "id": 33,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:14:38.953218"
+    },
+    {
+      "id": 34,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:19:06.295600"
+    },
+    {
+      "id": 35,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:20:21.052980"
+    },
+    {
+      "id": 36,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:22:05.194388"
+    },
+    {
+      "id": 37,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "generate",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:23:52.891375"
+    },
+    {
+      "id": 38,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "generate",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:28:47.249931"
+    },
+    {
+      "id": 39,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "generate",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:32:29.850933"
+    },
+    {
+      "id": 40,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:34:01.080688"
+    },
+    {
+      "id": 41,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:35:24.335346"
+    },
+    {
+      "id": 42,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "generate",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:36:53.838194"
+    },
+    {
+      "id": 43,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "generate",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:37:43.084695"
+    },
+    {
+      "id": 44,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:44:39.749356"
+    },
+    {
+      "id": 45,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:46:40.273503"
+    },
+    {
+      "id": 46,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:49:40.503481"
+    },
+    {
+      "id": 47,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:54:03.684781"
+    },
+    {
+      "id": 48,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:55:39.520076"
+    },
+    {
+      "id": 49,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 14:57:01.335881"
+    },
+    {
+      "id": 50,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 15:07:12.984547"
+    },
+    {
+      "id": 51,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "purpose": "creative_method",
+      "status": "succeeded",
+      "completed_at": "2026-10-14 15:16:19.524095"
+    }
+  ],
+  "registered_chat_timestamp_scope": "LLMRun.created_at is persisted completion, not dispatch start; normal UI action starts recorded separately.",
+  "new_persistent_media_tasks": [
+    {
+      "id": "be0c3abd7bbc4c6a87160039c597be27",
+      "state": "prepared",
+      "provider_key": "minimax.cli",
+      "model_id": "image-01",
+      "accepted_material_revision_id": null,
+      "created_at": "2026-10-14 14:09:22.791929",
+      "result_hash": null
+    },
+    {
+      "id": "65ea23b7493749a19286beb25177c269",
+      "state": "result_ready",
+      "provider_key": "minimax.cli",
+      "model_id": "image-01",
+      "accepted_material_revision_id": null,
+      "created_at": "2026-10-14 14:09:41.576192",
+      "result_hash": "548278b4019189e46a223903b2a332d7404887f5e417407e4219075c42fe476c"
+    },
+    {
+      "id": "5a586f539e264793b8f6ec02db0cb322",
+      "state": "accepted",
+      "provider_key": "minimax.cli",
+      "model_id": "image-01",
+      "accepted_material_revision_id": 9,
+      "created_at": "2026-10-14 14:15:38.307723",
+      "result_hash": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0"
+    },
+    {
+      "id": "ac5133d011be47079c5945f9f07e18ea",
+      "state": "accepted",
+      "provider_key": "minimax.cli",
+      "model_id": "speech-2.8-hd",
+      "accepted_material_revision_id": 14,
+      "created_at": "2026-10-14 14:59:36.409960",
+      "result_hash": "841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0"
+    },
+    {
+      "id": "9a5c1dec5109480dbc01a83431a30ee3",
+      "state": "accepted",
+      "provider_key": "minimax.cli",
+      "model_id": "speech-2.8-hd",
+      "accepted_material_revision_id": 18,
+      "created_at": "2026-10-14 15:17:22.904586",
+      "result_hash": "79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c"
+    }
+  ],
+  "count_summary": {
+    "observed_registered_chat_calls": 26,
+    "observed_media_dispatches": 4,
+    "images": 2,
+    "tts": 2,
+    "prepared_unsent_media": 1,
+    "semantic_qc_conservative_requests": 22,
+    "conservative_total_supplier_requests": 52,
+    "ui_reserved_total_including_unsent_conflict": 54,
+    "new_unknown_tasks": 0
+  },
+  "count_scope": "Persisted registered/provider dispatches independently observed; QC supplier requests conservatively budgeted per verified semantic result, no external billing audit or gateway-internal retry claim."
+}

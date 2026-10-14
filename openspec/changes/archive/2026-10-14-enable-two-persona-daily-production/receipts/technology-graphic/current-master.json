@@ -1,0 +1,662 @@
+{
+  "master": {
+    "id": 28,
+    "payload_hash": "a9a2ad3bf3fb87ba2d0da4f6143fdaafc5e4ef276125ed4a340fd6453e77aec3",
+    "identity_snapshot_id": 9,
+    "revision_no": 10
+  },
+  "payload": {
+    "title": "生成之后，先别覆盖原稿：工作流解耦思考",
+    "canvases": [
+      {
+        "id": "card-0",
+        "order": 0,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "card-0-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-0-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 140,
+            "width": 936,
+            "height": 240,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "生成之后\n先别覆盖原稿",
+                "style": {
+                  "font_size": 72,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-0-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 450,
+            "width": 936,
+            "height": 220,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "生成结果只是候选，采用才是正式决定。若未保留历史，直接覆盖可能让原稿难以找回。先保留，再审阅和确认。",
+                "style": {
+                  "font_size": 42,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-0-bullet-0",
+            "order": 3,
+            "type": "text",
+            "x": 72,
+            "y": 770,
+            "width": 936,
+            "height": 100,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 生成不等于采纳",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-0-bullet-1",
+            "order": 4,
+            "type": "text",
+            "x": 72,
+            "y": 920,
+            "width": 936,
+            "height": 100,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 候选先保留",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-0-bullet-2",
+            "order": 5,
+            "type": "text",
+            "x": 72,
+            "y": 1070,
+            "width": 936,
+            "height": 100,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 采用再确认",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "cover"
+      },
+      {
+        "id": "card-1",
+        "order": 1,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "card-1-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-1-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 130,
+            "width": 936,
+            "height": 110,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "保留 · 审阅 · 采用",
+                "style": {
+                  "font_size": 64,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-node-0-box",
+            "order": 2,
+            "type": "shape",
+            "x": 72,
+            "y": 266.4,
+            "width": 288,
+            "height": 71.19999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#101827",
+            "stroke": "#6ee7b7",
+            "stroke_width": 2
+          },
+          {
+            "id": "card-1-node-0",
+            "order": 3,
+            "type": "text",
+            "x": 88,
+            "y": 282.4,
+            "width": 256,
+            "height": 39.19999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "保留候选",
+                "style": {
+                  "font_size": 28,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-link-0",
+            "order": 4,
+            "type": "shape",
+            "x": 360,
+            "y": 302,
+            "width": 36,
+            "height": 2,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-1-node-1-box",
+            "order": 5,
+            "type": "shape",
+            "x": 396,
+            "y": 266.4,
+            "width": 288,
+            "height": 71.19999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#101827",
+            "stroke": "#6ee7b7",
+            "stroke_width": 2
+          },
+          {
+            "id": "card-1-node-1",
+            "order": 6,
+            "type": "text",
+            "x": 412,
+            "y": 282.4,
+            "width": 256,
+            "height": 39.19999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "审阅比对",
+                "style": {
+                  "font_size": 28,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-link-1",
+            "order": 7,
+            "type": "shape",
+            "x": 684,
+            "y": 302,
+            "width": 36,
+            "height": 2,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-1-node-2-box",
+            "order": 8,
+            "type": "shape",
+            "x": 720,
+            "y": 266.4,
+            "width": 288,
+            "height": 71.19999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#101827",
+            "stroke": "#6ee7b7",
+            "stroke_width": 2
+          },
+          {
+            "id": "card-1-node-2",
+            "order": 9,
+            "type": "text",
+            "x": 736,
+            "y": 282.4,
+            "width": 256,
+            "height": 39.19999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "显式采用",
+                "style": {
+                  "font_size": 28,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-body",
+            "order": 10,
+            "type": "text",
+            "x": 72,
+            "y": 440,
+            "width": 936,
+            "height": 200,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "把生成和采用拆开，为每次改动保留对比、拒绝与追溯的机会。",
+                "style": {
+                  "font_size": 42,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-bullet-0",
+            "order": 11,
+            "type": "text",
+            "x": 72,
+            "y": 710,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 保留：生成结果写入候选区，原稿保持不变",
+                "style": {
+                  "font_size": 42,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-bullet-1",
+            "order": 12,
+            "type": "text",
+            "x": 72,
+            "y": 890,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 审阅：比对候选内容与原始上下文的差异",
+                "style": {
+                  "font_size": 42,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-bullet-2",
+            "order": 13,
+            "type": "text",
+            "x": 72,
+            "y": 1070,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 采用：由人或规则显式触发替换与提交",
+                "style": {
+                  "font_size": 42,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      },
+      {
+        "id": "card-2",
+        "order": 2,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "card-2-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-2-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 130,
+            "width": 936,
+            "height": 240,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "多一道选择，也多一份维护",
+                "style": {
+                  "font_size": 64,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-2-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 430,
+            "width": 936,
+            "height": 210,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "候选层可能值得管理成本，也需要额外维护。是否采用，要看内容用途与协作方式。",
+                "style": {
+                  "font_size": 42,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-2-bullet-0",
+            "order": 3,
+            "type": "text",
+            "x": 72,
+            "y": 710,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 存储成本：多候选与历史上下文带来数据冗余",
+                "style": {
+                  "font_size": 40,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-2-bullet-1",
+            "order": 4,
+            "type": "text",
+            "x": 72,
+            "y": 890,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 版本管理：分支生命周期与状态同步复杂度上升",
+                "style": {
+                  "font_size": 40,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-2-bullet-2",
+            "order": 5,
+            "type": "text",
+            "x": 72,
+            "y": 1070,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 比对开销：审阅与差异比对需要额外的交互和流程投入",
+                "style": {
+                  "font_size": 40,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      }
+    ],
+    "render_asset_ref": [
+      {
+        "canvas_id": "card-0",
+        "material_revision_id": 10
+      },
+      {
+        "canvas_id": "card-1",
+        "material_revision_id": 13
+      },
+      {
+        "canvas_id": "card-2",
+        "material_revision_id": 12
+      }
+    ]
+  }
+}

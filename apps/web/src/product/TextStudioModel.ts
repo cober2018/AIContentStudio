@@ -93,15 +93,18 @@ export function removeBlock(draft: TextDraft, blockId: string): TextDraft {
   return { ...rebased, assetRefs: rebased.assetRefs.filter((ref) => ref.material_revision_id !== removed.material_revision_id || blocks.some((block) => (block.type === "image" || block.type === "chart") && block.material_revision_id === ref.material_revision_id)) };
 }
 
-export function insertAsset(draft: TextDraft, asset: { material_revision_id: number; kind: string | null; content_hash: string; public_use_allowed: boolean | null }): TextDraft {
+export function insertAsset(draft: TextDraft, asset: { material_revision_id: number; kind: string | null; content_hash: string; public_use_allowed: boolean | null }, role: "inline" | "cover" = "inline"): TextDraft {
   if ((asset.kind !== "image" && asset.kind !== "chart") || asset.public_use_allowed !== true) throw new Error("Asset kind or public-use rights unavailable");
+  if (role === "cover" && asset.kind !== "image") throw new Error("Cover requires an image");
   if (!Number.isSafeInteger(asset.material_revision_id) || asset.material_revision_id <= 0 || !/^[0-9a-f]{64}$/.test(asset.content_hash)) throw new Error("Invalid exact asset revision");
   const current = draft.assetRefs.find((ref) => ref.material_revision_id === asset.material_revision_id);
   if (current && current.content_hash !== asset.content_hash) throw new Error("Asset revision hash changed");
+  const assetRefs = current ? draft.assetRefs : [...draft.assetRefs, { material_revision_id: asset.material_revision_id, content_hash: asset.content_hash, role, sort_order: draft.assetRefs.length }];
+  const hasCoverBlock = role === "cover" && draft.payload.document.blocks.some((block) => block.type === "image" && block.material_revision_id === asset.material_revision_id);
   return {
     ...draft,
-    payload: { ...draft.payload, document: { ...draft.payload.document, blocks: [...draft.payload.document.blocks, { id: crypto.randomUUID(), type: asset.kind, material_revision_id: asset.material_revision_id }] } },
-    assetRefs: current ? draft.assetRefs : [...draft.assetRefs, { material_revision_id: asset.material_revision_id, content_hash: asset.content_hash, role: "inline", sort_order: draft.assetRefs.length }],
+    payload: { ...draft.payload, document: { ...draft.payload.document, blocks: hasCoverBlock ? draft.payload.document.blocks : [...draft.payload.document.blocks, { id: crypto.randomUUID(), type: asset.kind, material_revision_id: asset.material_revision_id }] } },
+    assetRefs: role === "cover" ? assetRefs.map((ref, index) => ({ ...ref, ...(ref.material_revision_id === asset.material_revision_id ? { role: "cover" } : ref.role === "cover" ? { role: "inline" } : {}), sort_order: index })) : assetRefs,
   };
 }
 

@@ -1,0 +1,781 @@
+{
+  "schema": "daily-production.delegated-audio-review.v1",
+  "reviewer": "independent Codex AI reviewer",
+  "source_path": "apps/api/app/media/generation/9a5c1dec5109480dbc01a83431a30ee3/79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c.bin",
+  "source_sha256": "79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c",
+  "source_bytes": 8271650,
+  "source_unchanged_after_review": true,
+  "accepted_spoken_candidate_hash": "19dffd1ed1d5eb13b67e0289a17d57519f9d790cb42b79e3a9b736a39bc2155f",
+  "expected_script_sha256": "f5e5f8371652c78bec25096a611ee8549784e19e2029938c402bb597aa36298e",
+  "method": "Complete WAV decoded with wave/ffprobe, full-file ffmpeg acoustics, complete existing LocalMLXASRProvider transcription under sandbox-exec deny network and local cached model; no direct listening",
+  "direct_listening": false,
+  "network_requests": 0,
+  "model_downloads": 0,
+  "paid_asr_calls": 0,
+  "audio_edited": false,
+  "duration_seconds": 129.22634375,
+  "channels": 1,
+  "sample_width_bytes": 2,
+  "sample_rate_hz": 32000,
+  "pcm_frames": 4135243,
+  "ffprobe": {
+    "streams": [
+      {
+        "index": 0,
+        "codec_name": "pcm_s16le",
+        "codec_long_name": "PCM signed 16-bit little-endian",
+        "codec_type": "audio",
+        "codec_tag_string": "[1][0][0][0]",
+        "codec_tag": "0x0001",
+        "sample_fmt": "s16",
+        "sample_rate": "32000",
+        "channels": 1,
+        "bits_per_sample": 16,
+        "initial_padding": 0,
+        "r_frame_rate": "0/0",
+        "avg_frame_rate": "0/0",
+        "time_base": "1/32000",
+        "duration_ts": 4135243,
+        "duration": "129.226344",
+        "bit_rate": "512000",
+        "disposition": {
+          "default": 0,
+          "dub": 0,
+          "original": 0,
+          "comment": 0,
+          "lyrics": 0,
+          "karaoke": 0,
+          "forced": 0,
+          "hearing_impaired": 0,
+          "visual_impaired": 0,
+          "clean_effects": 0,
+          "attached_pic": 0,
+          "timed_thumbnails": 0,
+          "non_diegetic": 0,
+          "captions": 0,
+          "descriptions": 0,
+          "metadata": 0,
+          "dependent": 0,
+          "still_image": 0,
+          "multilayer": 0
+        }
+      }
+    ],
+    "format": {
+      "filename": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/generation/9a5c1dec5109480dbc01a83431a30ee3/79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c.bin",
+      "nb_streams": 1,
+      "nb_programs": 0,
+      "nb_stream_groups": 0,
+      "format_name": "wav",
+      "format_long_name": "WAV / WAVE (Waveform Audio)",
+      "duration": "129.226344",
+      "size": "8271650",
+      "bit_rate": "512072",
+      "probe_score": 99,
+      "tags": {
+        "encoder": "Lavf59.27.100"
+      }
+    }
+  },
+  "acoustics": {
+    "peak_pcm_ratio": 0.552490234375,
+    "peak_dbfs": -5.153507880260916,
+    "rms_ratio": 0.06486990566202078,
+    "rms_dbfs": -23.75913467296433,
+    "full_scale_sample_count": 0,
+    "near_full_scale_threshold": 32760,
+    "near_full_scale_sample_count": 0,
+    "near_full_scale_ratio": 0.0,
+    "loudness_summary": "Integrated loudness:\n    I:         -23.7 LUFS\n    Threshold: -34.2 LUFS\n\n  Loudness range:\n    LRA:         3.2 LU\n    Threshold: -44.3 LUFS\n    LRA low:   -26.0 LUFS\n    LRA high:  -22.7 LUFS\n\n  True peak:\n    Peak:       -4.9 dBFS\n[out#0/null @ 0x7fec0c6c0] video:0KiB audio:8077KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown\nsize=N/A time=00:02:09.22 bitrate=N/A speed= 627x elapsed=0:00:00.20",
+    "silence_detection": {
+      "threshold_dbfs": -45,
+      "minimum_seconds": 0.5,
+      "segments": [
+        {
+          "start": 1.378937,
+          "end": 2.011062,
+          "duration_seconds": 0.632125
+        },
+        {
+          "start": 11.091719,
+          "end": 11.611688,
+          "duration_seconds": 0.519969
+        },
+        {
+          "start": 22.987344,
+          "end": 23.543,
+          "duration_seconds": 0.555656
+        },
+        {
+          "start": 48.326313,
+          "end": 48.888156,
+          "duration_seconds": 0.561844
+        },
+        {
+          "start": 50.951656,
+          "end": 51.747906,
+          "duration_seconds": 0.79625
+        },
+        {
+          "start": 72.925375,
+          "end": 73.558656,
+          "duration_seconds": 0.633281
+        },
+        {
+          "start": 75.3085,
+          "end": 76.071125,
+          "duration_seconds": 0.762625
+        },
+        {
+          "start": 91.713469,
+          "end": 92.222906,
+          "duration_seconds": 0.509437
+        },
+        {
+          "start": 108.270375,
+          "end": 108.806,
+          "duration_seconds": 0.535625
+        },
+        {
+          "start": 112.336625,
+          "end": 112.874719,
+          "duration_seconds": 0.538094
+        }
+      ],
+      "longest_pause_seconds": 0.79625,
+      "total_detected_silence_seconds": 6.044906
+    }
+  },
+  "offline_asr": {
+    "provider": "local.mlx_whisper@1",
+    "model_cache": "/Users/mshengran/.cache/huggingface/hub/models--mlx-community--whisper-medium/snapshots/29c89182c8557049c004210f96febc8b5ee97c89",
+    "execution_elapsed_seconds": 8.262110834009945,
+    "complete_file_submitted": true,
+    "status": "succeeded",
+    "transcript": "想像一個普通的傍晚, 飯菜剛端上桌,手邊的屏幕還亮著微光。\n你順手將它屏幕朝下輕輕扣在桌墊上, 由著它在手邊安靜片刻。\n這是一個純粹假想的生活切片,沒有關機, 也沒打算給自己立下嚴苛的新規矩。\n不妨把這段留白設想成短短的十分鐘, 不用特意掐表計時,\n也不必為它預設任何目標或成果。\n未讀的消息完全可以稍後再回,眼前的熱氣還散著,\n筷子已經擺好,先踏實坐下來,就已經很好。\n剛關火的湯鍋還在生騰著細細的白氣, 清淡溫潤的香氣在廚房與餐桌之間慢慢蘊開,\n湯勺盛起溫熱的清湯, 碗鹽留下一道淺淺的水痕。\n此晚碰上木塊,帶出一聲清脆的清響, 指尖輕觸碗壁,\n溫熱透過瓷面緩緩傳到手心, 才發覺這一餐已經在這裡靜靜等候了一會兒。\n窗外的動靜也悄悄滲了進來, 樓下推著自行車走過的腳步聲,\n隔壁鄰居關門時,鎖蛇彈扣的清響, 還有遠處主路上平緩起伏的碗高峰車流。\n廚房水龍頭的一滴雨水傾落進水槽, 同桌的人親身問了一句,\n鍋裡的湯還要不要再盛一碗。\n沒有哪樣細節需要鄭重記錄, 卻讓這個假想的傍晚有了安穩清晰的輪廓,\n手機依然擱在桌角,偶爾泛起微光。\n這裡沒有必須堅持的自律挑戰, 更不是圖證明暫離屏幕會帶來某種神奇的療效。\n它只是讓你能定心,夾一口溫熱的菜, 等滾燙的湯稍稍放涼,\n或是安安靜靜聽完對面那句還沒講完的瑣碎日常。\n若是獨自一人用餐,也可以看著窗外天色 一寸寸按下去,踏實把飯吃完。\n晚飯本身或許並不會改變什麼。\n這個假想的場景也無需推導出沉重的結論。\n只要在飯菜變涼之前,給當下的感官騰出一小塊位置就好。\n今晚開飯那一刻,最先落入你眼簾與心頭的 會是飄起的一縷香氣,\n還是身旁某聲熟悉的動靜。\n本段內容由 AI 輔助創作,聲音為 AI 合成。",
+    "cues": [
+      {
+        "text": "想像一個普通的傍晚, 飯菜剛端上桌,手邊的屏幕還亮著微光。",
+        "start_ms": 0,
+        "end_ms": 5280
+      },
+      {
+        "text": "你順手將它屏幕朝下輕輕扣在桌墊上, 由著它在手邊安靜片刻。",
+        "start_ms": 5280,
+        "end_ms": 11280
+      },
+      {
+        "text": "這是一個純粹假想的生活切片,沒有關機, 也沒打算給自己立下嚴苛的新規矩。",
+        "start_ms": 11280,
+        "end_ms": 17760
+      },
+      {
+        "text": "不妨把這段留白設想成短短的十分鐘, 不用特意掐表計時,",
+        "start_ms": 17760,
+        "end_ms": 23160
+      },
+      {
+        "text": "也不必為它預設任何目標或成果。",
+        "start_ms": 23160,
+        "end_ms": 25720
+      },
+      {
+        "text": "未讀的消息完全可以稍後再回,眼前的熱氣還散著,",
+        "start_ms": 25880,
+        "end_ms": 30040
+      },
+      {
+        "text": "筷子已經擺好,先踏實坐下來,就已經很好。",
+        "start_ms": 30040,
+        "end_ms": 33600
+      },
+      {
+        "text": "剛關火的湯鍋還在生騰著細細的白氣, 清淡溫潤的香氣在廚房與餐桌之間慢慢蘊開,",
+        "start_ms": 33600,
+        "end_ms": 39960
+      },
+      {
+        "text": "湯勺盛起溫熱的清湯, 碗鹽留下一道淺淺的水痕。",
+        "start_ms": 39960,
+        "end_ms": 43760
+      },
+      {
+        "text": "此晚碰上木塊,帶出一聲清脆的清響, 指尖輕觸碗壁,",
+        "start_ms": 43760,
+        "end_ms": 48560
+      },
+      {
+        "text": "溫熱透過瓷面緩緩傳到手心, 才發覺這一餐已經在這裡靜靜等候了一會兒。",
+        "start_ms": 48560,
+        "end_ms": 55200
+      },
+      {
+        "text": "窗外的動靜也悄悄滲了進來, 樓下推著自行車走過的腳步聲,",
+        "start_ms": 55240,
+        "end_ms": 60880
+      },
+      {
+        "text": "隔壁鄰居關門時,鎖蛇彈扣的清響, 還有遠處主路上平緩起伏的碗高峰車流。",
+        "start_ms": 60880,
+        "end_ms": 68440
+      },
+      {
+        "text": "廚房水龍頭的一滴雨水傾落進水槽, 同桌的人親身問了一句,",
+        "start_ms": 68440,
+        "end_ms": 73160
+      },
+      {
+        "text": "鍋裡的湯還要不要再盛一碗。",
+        "start_ms": 73160,
+        "end_ms": 75560
+      },
+      {
+        "text": "沒有哪樣細節需要鄭重記錄, 卻讓這個假想的傍晚有了安穩清晰的輪廓,",
+        "start_ms": 75560,
+        "end_ms": 81640
+      },
+      {
+        "text": "手機依然擱在桌角,偶爾泛起微光。",
+        "start_ms": 81640,
+        "end_ms": 84480
+      },
+      {
+        "text": "這裡沒有必須堅持的自律挑戰, 更不是圖證明暫離屏幕會帶來某種神奇的療效。",
+        "start_ms": 84520,
+        "end_ms": 90120
+      },
+      {
+        "text": "它只是讓你能定心,夾一口溫熱的菜, 等滾燙的湯稍稍放涼,",
+        "start_ms": 90120,
+        "end_ms": 95880
+      },
+      {
+        "text": "或是安安靜靜聽完對面那句還沒講完的瑣碎日常。",
+        "start_ms": 95880,
+        "end_ms": 100120
+      },
+      {
+        "text": "若是獨自一人用餐,也可以看著窗外天色 一寸寸按下去,踏實把飯吃完。",
+        "start_ms": 100120,
+        "end_ms": 105640
+      },
+      {
+        "text": "晚飯本身或許並不會改變什麼。",
+        "start_ms": 105640,
+        "end_ms": 108520
+      },
+      {
+        "text": "這個假想的場景也無需推導出沉重的結論。",
+        "start_ms": 109160,
+        "end_ms": 112560
+      },
+      {
+        "text": "只要在飯菜變涼之前,給當下的感官騰出一小塊位置就好。",
+        "start_ms": 113200,
+        "end_ms": 117800
+      },
+      {
+        "text": "今晚開飯那一刻,最先落入你眼簾與心頭的 會是飄起的一縷香氣,",
+        "start_ms": 117800,
+        "end_ms": 123160
+      },
+      {
+        "text": "還是身旁某聲熟悉的動靜。",
+        "start_ms": 123160,
+        "end_ms": 125560
+      },
+      {
+        "text": "本段內容由 AI 輔助創作,聲音為 AI 合成。",
+        "start_ms": 125560,
+        "end_ms": 129080
+      }
+    ],
+    "source_duration_ms": 129227
+  },
+  "alignment": {
+    "normalization": "NFKC and CoreFoundation Traditional-Simplified; retain Chinese, Latin letters and digits; case-insensitive; punctuation/whitespace removed; no semantic substitutions",
+    "expected_characters": 621,
+    "asr_characters": 621,
+    "sequence_matcher_ratio": 0.9694041867954911,
+    "differences": [
+      {
+        "kind": "replace",
+        "expected": "象",
+        "asr": "像"
+      },
+      {
+        "kind": "replace",
+        "expected": "升",
+        "asr": "生"
+      },
+      {
+        "kind": "replace",
+        "expected": "汽",
+        "asr": "气"
+      },
+      {
+        "kind": "replace",
+        "expected": "晕",
+        "asr": "蕴"
+      },
+      {
+        "kind": "replace",
+        "expected": "沿",
+        "asr": "盐"
+      },
+      {
+        "kind": "replace",
+        "expected": "瓷碗",
+        "asr": "此晚"
+      },
+      {
+        "kind": "replace",
+        "expected": "筷",
+        "asr": "块"
+      },
+      {
+        "kind": "replace",
+        "expected": "轻",
+        "asr": "清"
+      },
+      {
+        "kind": "replace",
+        "expected": "舌",
+        "asr": "蛇"
+      },
+      {
+        "kind": "replace",
+        "expected": "轻",
+        "asr": "清"
+      },
+      {
+        "kind": "replace",
+        "expected": "晚",
+        "asr": "碗"
+      },
+      {
+        "kind": "replace",
+        "expected": "余",
+        "asr": "雨"
+      },
+      {
+        "kind": "replace",
+        "expected": "轻",
+        "asr": "倾"
+      },
+      {
+        "kind": "replace",
+        "expected": "轻声",
+        "asr": "亲身"
+      },
+      {
+        "kind": "replace",
+        "expected": "试",
+        "asr": "是"
+      },
+      {
+        "kind": "replace",
+        "expected": "暗",
+        "asr": "按"
+      },
+      {
+        "kind": "replace",
+        "expected": "须",
+        "asr": "需"
+      }
+    ],
+    "paragraphs": [
+      {
+        "paragraph": 1,
+        "expected_spoken": "想象一个普通的傍晚：饭菜刚端上桌，手边的屏幕还亮着微光，你顺手将它屏幕朝下轻轻扣在桌垫上，由着它在手边安静片刻。这是一个纯粹假想的生活切片，没有关机，也没打算给自己立下严苛的新规矩。",
+        "expected_normalized": "想象一个普通的傍晚饭菜刚端上桌手边的屏幕还亮着微光你顺手将它屏幕朝下轻轻扣在桌垫上由着它在手边安静片刻这是一个纯粹假想的生活切片没有关机也没打算给自己立下严苛的新规矩",
+        "asr_normalized": "想像一个普通的傍晚饭菜刚端上桌手边的屏幕还亮着微光你顺手将它屏幕朝下轻轻扣在桌垫上由着它在手边安静片刻这是一个纯粹假想的生活切片没有关机也没打算给自己立下严苛的新规矩",
+        "expected_characters": 83,
+        "asr_characters": 83,
+        "sequence_matcher_ratio": 0.9879518072289156,
+        "differences": [
+          {
+            "kind": "replace",
+            "expected": "象",
+            "asr": "像",
+            "global_expected_start": 1,
+            "global_expected_end": 2,
+            "cue_indices": [
+              1
+            ],
+            "start_ms": 0,
+            "end_ms": 5280,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          }
+        ],
+        "cue_indices": [
+          1,
+          2,
+          3
+        ],
+        "start_ms": 0,
+        "end_ms": 17760,
+        "precision": "whole ASR cue spans; not forced word alignment"
+      },
+      {
+        "paragraph": 2,
+        "expected_spoken": "不妨把这段留白设想成短短的十分钟。不用特意掐表计时，也不必为它预设任何目标或成果。未读的消息完全可以稍后再回；眼前的热气还散着，筷子已经摆好，先踏实坐下来，就已经很好。",
+        "expected_normalized": "不妨把这段留白设想成短短的十分钟不用特意掐表计时也不必为它预设任何目标或成果未读的消息完全可以稍后再回眼前的热气还散着筷子已经摆好先踏实坐下来就已经很好",
+        "asr_normalized": "不妨把这段留白设想成短短的十分钟不用特意掐表计时也不必为它预设任何目标或成果未读的消息完全可以稍后再回眼前的热气还散着筷子已经摆好先踏实坐下来就已经很好",
+        "expected_characters": 76,
+        "asr_characters": 76,
+        "sequence_matcher_ratio": 1.0,
+        "differences": [],
+        "cue_indices": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "start_ms": 17760,
+        "end_ms": 33600,
+        "precision": "whole ASR cue spans; not forced word alignment"
+      },
+      {
+        "paragraph": 3,
+        "expected_spoken": "刚关火的汤锅还在升腾着细细的白汽，清淡温润的香气在厨房与餐桌之间慢慢晕开。汤勺盛起温热的清汤，碗沿留下一道浅浅的水痕。瓷碗碰上木筷，带出一声清脆的轻响。指尖轻触碗壁，温热透过瓷面缓缓传到手心，才发觉这一餐已经在这里静静等候了一会儿。",
+        "expected_normalized": "刚关火的汤锅还在升腾着细细的白汽清淡温润的香气在厨房与餐桌之间慢慢晕开汤勺盛起温热的清汤碗沿留下一道浅浅的水痕瓷碗碰上木筷带出一声清脆的轻响指尖轻触碗壁温热透过瓷面缓缓传到手心才发觉这一餐已经在这里静静等候了一会儿",
+        "asr_normalized": "刚关火的汤锅还在生腾着细细的白气清淡温润的香气在厨房与餐桌之间慢慢蕴开汤勺盛起温热的清汤碗盐留下一道浅浅的水痕此晚碰上木块带出一声清脆的清响指尖轻触碗壁温热透过瓷面缓缓传到手心才发觉这一餐已经在这里静静等候了一会儿",
+        "expected_characters": 107,
+        "asr_characters": 107,
+        "sequence_matcher_ratio": 0.9252336448598131,
+        "differences": [
+          {
+            "kind": "replace",
+            "expected": "升",
+            "asr": "生",
+            "global_expected_start": 167,
+            "global_expected_end": 168,
+            "cue_indices": [
+              8
+            ],
+            "start_ms": 33600,
+            "end_ms": 39960,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "汽",
+            "asr": "气",
+            "global_expected_start": 174,
+            "global_expected_end": 175,
+            "cue_indices": [
+              8
+            ],
+            "start_ms": 33600,
+            "end_ms": 39960,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "晕",
+            "asr": "蕴",
+            "global_expected_start": 192,
+            "global_expected_end": 193,
+            "cue_indices": [
+              8
+            ],
+            "start_ms": 33600,
+            "end_ms": 39960,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "沿",
+            "asr": "盐",
+            "global_expected_start": 204,
+            "global_expected_end": 205,
+            "cue_indices": [
+              9
+            ],
+            "start_ms": 39960,
+            "end_ms": 43760,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "瓷碗",
+            "asr": "此晚",
+            "global_expected_start": 214,
+            "global_expected_end": 216,
+            "cue_indices": [
+              10
+            ],
+            "start_ms": 43760,
+            "end_ms": 48560,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "筷",
+            "asr": "块",
+            "global_expected_start": 219,
+            "global_expected_end": 220,
+            "cue_indices": [
+              10
+            ],
+            "start_ms": 43760,
+            "end_ms": 48560,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "轻",
+            "asr": "清",
+            "global_expected_start": 227,
+            "global_expected_end": 228,
+            "cue_indices": [
+              10
+            ],
+            "start_ms": 43760,
+            "end_ms": 48560,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          }
+        ],
+        "cue_indices": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "start_ms": 33600,
+        "end_ms": 55200,
+        "precision": "whole ASR cue spans; not forced word alignment"
+      },
+      {
+        "paragraph": 4,
+        "expected_spoken": "窗外的动静也悄悄渗了进来：楼下推着自行车走过的脚步声、隔壁邻居关门时锁舌弹扣的轻响，还有远处主路上平缓起伏的晚高峰车流。厨房水龙头的一滴余水轻落进水槽，同桌的人轻声问了一句，锅里的汤还要不要再盛一碗。没有哪样细节需要郑重记录，却让这个假想的傍晚有了安稳清晰的轮廓。",
+        "expected_normalized": "窗外的动静也悄悄渗了进来楼下推着自行车走过的脚步声隔壁邻居关门时锁舌弹扣的轻响还有远处主路上平缓起伏的晚高峰车流厨房水龙头的一滴余水轻落进水槽同桌的人轻声问了一句锅里的汤还要不要再盛一碗没有哪样细节需要郑重记录却让这个假想的傍晚有了安稳清晰的轮廓",
+        "asr_normalized": "窗外的动静也悄悄渗了进来楼下推着自行车走过的脚步声隔壁邻居关门时锁蛇弹扣的清响还有远处主路上平缓起伏的碗高峰车流厨房水龙头的一滴雨水倾落进水槽同桌的人亲身问了一句锅里的汤还要不要再盛一碗没有哪样细节需要郑重记录却让这个假想的傍晚有了安稳清晰的轮廓",
+        "expected_characters": 123,
+        "asr_characters": 123,
+        "sequence_matcher_ratio": 0.943089430894309,
+        "differences": [
+          {
+            "kind": "replace",
+            "expected": "舌",
+            "asr": "蛇",
+            "global_expected_start": 299,
+            "global_expected_end": 300,
+            "cue_indices": [
+              13
+            ],
+            "start_ms": 60880,
+            "end_ms": 68440,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "轻",
+            "asr": "清",
+            "global_expected_start": 303,
+            "global_expected_end": 304,
+            "cue_indices": [
+              13
+            ],
+            "start_ms": 60880,
+            "end_ms": 68440,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "晚",
+            "asr": "碗",
+            "global_expected_start": 317,
+            "global_expected_end": 318,
+            "cue_indices": [
+              13
+            ],
+            "start_ms": 60880,
+            "end_ms": 68440,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "余",
+            "asr": "雨",
+            "global_expected_start": 330,
+            "global_expected_end": 331,
+            "cue_indices": [
+              14
+            ],
+            "start_ms": 68440,
+            "end_ms": 73160,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "轻",
+            "asr": "倾",
+            "global_expected_start": 332,
+            "global_expected_end": 333,
+            "cue_indices": [
+              14
+            ],
+            "start_ms": 68440,
+            "end_ms": 73160,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "轻声",
+            "asr": "亲身",
+            "global_expected_start": 341,
+            "global_expected_end": 343,
+            "cue_indices": [
+              14
+            ],
+            "start_ms": 68440,
+            "end_ms": 73160,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          }
+        ],
+        "cue_indices": [
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "start_ms": 55240,
+        "end_ms": 81640,
+        "precision": "whole ASR cue spans; not forced word alignment"
+      },
+      {
+        "paragraph": 5,
+        "expected_spoken": "手机依然搁在桌角，偶尔泛起微光。这里没有必须坚持的自律挑战，更不试图证明暂离屏幕会带来某种神奇的疗效。它只是让你能定心夹一口温热的菜，等滚烫的汤稍稍放凉，或是安安静静听完对面那句还没讲完的琐碎日常。若是独自一人用餐，也可以看着窗外天色一寸寸暗下去，踏实把饭吃完。",
+        "expected_normalized": "手机依然搁在桌角偶尔泛起微光这里没有必须坚持的自律挑战更不试图证明暂离屏幕会带来某种神奇的疗效它只是让你能定心夹一口温热的菜等滚烫的汤稍稍放凉或是安安静静听完对面那句还没讲完的琐碎日常若是独自一人用餐也可以看着窗外天色一寸寸暗下去踏实把饭吃完",
+        "asr_normalized": "手机依然搁在桌角偶尔泛起微光这里没有必须坚持的自律挑战更不是图证明暂离屏幕会带来某种神奇的疗效它只是让你能定心夹一口温热的菜等滚烫的汤稍稍放凉或是安安静静听完对面那句还没讲完的琐碎日常若是独自一人用餐也可以看着窗外天色一寸寸按下去踏实把饭吃完",
+        "expected_characters": 121,
+        "asr_characters": 121,
+        "sequence_matcher_ratio": 0.9834710743801653,
+        "differences": [
+          {
+            "kind": "replace",
+            "expected": "试",
+            "asr": "是",
+            "global_expected_start": 418,
+            "global_expected_end": 419,
+            "cue_indices": [
+              18
+            ],
+            "start_ms": 84520,
+            "end_ms": 90120,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          },
+          {
+            "kind": "replace",
+            "expected": "暗",
+            "asr": "按",
+            "global_expected_start": 501,
+            "global_expected_end": 502,
+            "cue_indices": [
+              21
+            ],
+            "start_ms": 100120,
+            "end_ms": 105640,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          }
+        ],
+        "cue_indices": [
+          17,
+          18,
+          19,
+          20,
+          21
+        ],
+        "start_ms": 81640,
+        "end_ms": 105640,
+        "precision": "whole ASR cue spans; not forced word alignment"
+      },
+      {
+        "paragraph": 6,
+        "expected_spoken": "晚饭本身或许并不会改变什么，这个假想的场景也无须推导出沉重的结论。只要在饭菜变凉之前，给当下的感官腾出一小块位置就好。今晚开饭那一刻，最先落入你眼帘与心头的，会是飘起的一缕香气，还是身旁某声熟悉的动静？",
+        "expected_normalized": "晚饭本身或许并不会改变什么这个假想的场景也无须推导出沉重的结论只要在饭菜变凉之前给当下的感官腾出一小块位置就好今晚开饭那一刻最先落入你眼帘与心头的会是飘起的一缕香气还是身旁某声熟悉的动静",
+        "asr_normalized": "晚饭本身或许并不会改变什么这个假想的场景也无需推导出沉重的结论只要在饭菜变凉之前给当下的感官腾出一小块位置就好今晚开饭那一刻最先落入你眼帘与心头的会是飘起的一缕香气还是身旁某声熟悉的动静",
+        "expected_characters": 93,
+        "asr_characters": 93,
+        "sequence_matcher_ratio": 0.989247311827957,
+        "differences": [
+          {
+            "kind": "replace",
+            "expected": "须",
+            "asr": "需",
+            "global_expected_start": 532,
+            "global_expected_end": 533,
+            "cue_indices": [
+              23
+            ],
+            "start_ms": 109160,
+            "end_ms": 112560,
+            "precision": "whole ASR cue spans; not forced word alignment"
+          }
+        ],
+        "cue_indices": [
+          22,
+          23,
+          24,
+          25,
+          26
+        ],
+        "start_ms": 105640,
+        "end_ms": 125560,
+        "precision": "whole ASR cue spans; not forced word alignment"
+      },
+      {
+        "paragraph": 7,
+        "expected_spoken": "本段内容由AI辅助创作，声音为AI合成。",
+        "expected_normalized": "本段内容由ai辅助创作声音为ai合成",
+        "asr_normalized": "本段内容由ai辅助创作声音为ai合成",
+        "expected_characters": 18,
+        "asr_characters": 18,
+        "sequence_matcher_ratio": 1.0,
+        "differences": [],
+        "cue_indices": [
+          27
+        ],
+        "start_ms": 125560,
+        "end_ms": 129080,
+        "precision": "whole ASR cue spans; not forced word alignment"
+      }
+    ],
+    "insertions": 0,
+    "deletions": 0,
+    "substituted_characters": 19
+  },
+  "verdict": "ACCEPTED_WITH_SCOPE_BOUNDARIES",
+  "limitations": [
+    "ASR differences may be recognition substitutions rather than audible TTS errors.",
+    "Voice identity, actual pronunciation, prosody and perceived naturalness were not directly heard; human_review_required remains.",
+    "This read-only report does not adopt a MaterialRevision or change runtime QC."
+  ],
+  "provider_result_readonly_snapshot": {
+    "id": "9a5c1dec5109480dbc01a83431a30ee3",
+    "project_id": 4,
+    "workflow_step_attempt_id": 77,
+    "state": "result_ready",
+    "provider_key": "minimax.cli",
+    "model_id": "speech-2.8-hd",
+    "result_storage_key": "generation/9a5c1dec5109480dbc01a83431a30ee3/79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c.bin",
+    "result_mime": "audio/wav",
+    "result_hash": "79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c",
+    "result_size": 8271650,
+    "accepted_material_revision_id": null
+  },
+  "provider_result_readonly_snapshot_scope": "Exact formal task/path/hash/MIME/size read at review start; no signature, credential or request payload read; adoption/current QC handled separately by root",
+  "quality_assessment": {
+    "content_fidelity": "accepted: all six fictional evening/dinner paragraphs and the AI disclosure are present; imagined scene, optional ten-minute framing, no strict self-discipline requirement and no health/effect claim stay explicit",
+    "completeness": "accepted: seven paragraph alignments, expected and ASR each621 normalized characters; zero insertions/deletions,17 substitution spans affecting19characters; last cue ends129.080s of129.22634375s",
+    "file_integrity": "accepted: formal task id/path/hash/MIME/size match physical WAV; original SHA unchanged after full decode and offline recognition",
+    "acoustics": "accepted within current scope: full-scale/near-full-scale counts0; true peak-4.9dBFS, integrated loudness-23.7LUFS, LRA3.2LU; longest detected pause0.79625s. No required platform loudness target was supplied",
+    "asr_discrepancies": "All17 spans are retained in JSON; examples include瓷碗/此晚,木筷/木块,锁舌/锁蛇,轻声/亲身 and试图/是图. These are same/near-sounding recognition outputs and do not establish actual TTS mispronunciation without listening. No semantic substitutions or ASR text repairs were made",
+    "pronunciation_voice_naturalness": "not directly observed; no human sensory approval claimed",
+    "required_action": "no confirmed defect requires resynthesis; retain human_review_required and exact uncertain recognition spans",
+    "runtime_qc_and_adoption": "not executed by this audit; root independently completes normal-page explicit adoption and current AudioQC"
+  }
+}

@@ -1,0 +1,497 @@
+{
+  "schema": "daily-production.current-artifacts.v1",
+  "checked_at": "2026-10-14T15:23:30.936492+00:00",
+  "normal_web": "http://127.0.0.1:5173",
+  "items": [
+    {
+      "role": "technology",
+      "kind": "text",
+      "project_id": 3,
+      "unit_id": 7,
+      "normal_url": "http://127.0.0.1:5173/projects/3/units/7/production",
+      "master": {
+        "id": 24,
+        "payload_hash": "e32c930f09d747988f7990a6d59df7a62327691805bf0d4ca60c5c22786264ca",
+        "identity_snapshot_id": 7,
+        "revision_no": 5
+      },
+      "payload_file": "/Users/mshengran/Project/AIContentStudio/openspec/changes/archive/2026-10-14-enable-two-persona-daily-production/receipts/technology-text/current-master.json",
+      "asset_refs": [
+        {
+          "material_revision_id": 10,
+          "role": "cover",
+          "slot_key": null,
+          "sort_order": 0,
+          "content_hash_snapshot": "4a768692a6defc8783868dc12b355679325960bee36afd51e5b96af3b5bd829a"
+        }
+      ],
+      "run_id": 8,
+      "final_qc_attempt": 62,
+      "checks": [
+        {
+          "kind": "master_schema",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "evidence",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "rights",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "render",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_structure",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_fact",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_identity",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_platform",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_discoverability",
+          "status": "warning",
+          "is_current": true
+        }
+      ]
+    },
+    {
+      "role": "lifestyle",
+      "kind": "text",
+      "project_id": 4,
+      "unit_id": 8,
+      "normal_url": "http://127.0.0.1:5173/projects/4/units/8/production",
+      "master": {
+        "id": 22,
+        "payload_hash": "3bc264df747f992de1fe168c4eed40e235826659ed7d419bea8452c1f98739b3",
+        "identity_snapshot_id": 8,
+        "revision_no": 3
+      },
+      "payload_file": "/Users/mshengran/Project/AIContentStudio/openspec/changes/archive/2026-10-14-enable-two-persona-daily-production/receipts/lifestyle-text/current-master.json",
+      "asset_refs": [
+        {
+          "material_revision_id": 9,
+          "role": "cover",
+          "slot_key": null,
+          "sort_order": 0,
+          "content_hash_snapshot": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0"
+        }
+      ],
+      "run_id": 10,
+      "final_qc_attempt": 60,
+      "checks": [
+        {
+          "kind": "master_schema",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "evidence",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "rights",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "render",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_structure",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_fact",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_identity",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_platform",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "text_discoverability",
+          "status": "warning",
+          "is_current": true
+        }
+      ]
+    },
+    {
+      "role": "technology",
+      "kind": "graphic",
+      "project_id": 3,
+      "unit_id": 9,
+      "normal_url": "http://127.0.0.1:5173/projects/3/units/9/production",
+      "master": {
+        "id": 28,
+        "payload_hash": "a9a2ad3bf3fb87ba2d0da4f6143fdaafc5e4ef276125ed4a340fd6453e77aec3",
+        "identity_snapshot_id": 9,
+        "revision_no": 10
+      },
+      "payload_file": "/Users/mshengran/Project/AIContentStudio/openspec/changes/archive/2026-10-14-enable-two-persona-daily-production/receipts/technology-graphic/current-master.json",
+      "asset_refs": [
+        {
+          "material_revision_id": 10,
+          "role": "render_output",
+          "slot_key": "card-0",
+          "sort_order": 0,
+          "content_hash_snapshot": "4a768692a6defc8783868dc12b355679325960bee36afd51e5b96af3b5bd829a"
+        },
+        {
+          "material_revision_id": 13,
+          "role": "render_output",
+          "slot_key": "card-1",
+          "sort_order": 1,
+          "content_hash_snapshot": "9582d30d79502364b2ae265ce30ccafa9e43ff73a22e781ca93cce97bfe607ba"
+        },
+        {
+          "material_revision_id": 12,
+          "role": "render_output",
+          "slot_key": "card-2",
+          "sort_order": 2,
+          "content_hash_snapshot": "7f9910d468ae847f1b777ded8d9e9d1302647a82457322b1701db5392177c16a"
+        }
+      ],
+      "run_id": 9,
+      "final_qc_attempt": 72,
+      "checks": [
+        {
+          "kind": "master_schema",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "evidence",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "rights",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "render",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_structure",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_fact",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_identity",
+          "status": "warning",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_platform",
+          "status": "pass",
+          "is_current": true
+        }
+      ]
+    },
+    {
+      "role": "lifestyle",
+      "kind": "graphic",
+      "project_id": 4,
+      "unit_id": 10,
+      "normal_url": "http://127.0.0.1:5173/projects/4/units/10/production",
+      "master": {
+        "id": 33,
+        "payload_hash": "874e0417a3b2a721c46edd57aeb6bf7d4882a9925d1a3a5c29cb032498a12266",
+        "identity_snapshot_id": 10,
+        "revision_no": 5
+      },
+      "payload_file": "/Users/mshengran/Project/AIContentStudio/openspec/changes/archive/2026-10-14-enable-two-persona-daily-production/receipts/lifestyle-graphic/current-master.json",
+      "asset_refs": [
+        {
+          "material_revision_id": 9,
+          "role": "graphic_layer",
+          "slot_key": "card-0-visual",
+          "sort_order": 0,
+          "content_hash_snapshot": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0"
+        },
+        {
+          "material_revision_id": 15,
+          "role": "render_output",
+          "slot_key": "card-0",
+          "sort_order": 0,
+          "content_hash_snapshot": "fdfbbea2abbf7097ce581e14ddcc67ba6015b0d9f6c5a7b70d77529d9f6c4ae1"
+        },
+        {
+          "material_revision_id": 16,
+          "role": "render_output",
+          "slot_key": "card-1",
+          "sort_order": 1,
+          "content_hash_snapshot": "8d719437ffda0e495fe57a1e24ea48d9acf1bf28aa72f551e4547f2439a7d7a2"
+        },
+        {
+          "material_revision_id": 17,
+          "role": "render_output",
+          "slot_key": "card-2",
+          "sort_order": 2,
+          "content_hash_snapshot": "d6e380333b58e0299fbd6a6a7e8dd25efa52ea853c975d560ee56296e0e66407"
+        }
+      ],
+      "run_id": 11,
+      "final_qc_attempt": 78,
+      "checks": [
+        {
+          "kind": "master_schema",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "evidence",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "rights",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "render",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_structure",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_fact",
+          "status": "pass",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_identity",
+          "status": "warning",
+          "is_current": true
+        },
+        {
+          "kind": "graphic_platform",
+          "status": "pass",
+          "is_current": true
+        }
+      ]
+    },
+    {
+      "role": "technology",
+      "kind": "audio",
+      "project_id": 3,
+      "unit_id": 7,
+      "normal_url": "http://127.0.0.1:5173/projects/3/units/7/production?stage=audio_quality",
+      "run_id": 12,
+      "tts_attempt": 70,
+      "qc_attempt": 75,
+      "material_revision_id": 14,
+      "checks_pass": true,
+      "human_review_required": true
+    },
+    {
+      "role": "lifestyle",
+      "kind": "audio",
+      "project_id": 4,
+      "unit_id": 8,
+      "normal_url": "http://127.0.0.1:5173/projects/4/units/8/production?stage=audio_quality",
+      "run_id": 13,
+      "tts_attempt": 77,
+      "qc_attempt": 79,
+      "material_revision_id": 18,
+      "checks_pass": true,
+      "human_review_required": true
+    }
+  ],
+  "quality_boundary": "Delegated AI review; no direct human listening; semantic visual coverage warnings preserved; no public publication",
+  "media": [
+    {
+      "id": 9,
+      "content_hash": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0",
+      "file_path": "material/b6/b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0.jpg",
+      "mime_type": "image/jpeg",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "minimax.cli",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/b6/b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0.jpg",
+      "actual_sha256": "b6b04dff75906c88177fdc299b34c4a64471253b2d791b458343c9c098f167e0",
+      "bytes_verified": true
+    },
+    {
+      "id": 10,
+      "content_hash": "4a768692a6defc8783868dc12b355679325960bee36afd51e5b96af3b5bd829a",
+      "file_path": "material/4a/4a768692a6defc8783868dc12b355679325960bee36afd51e5b96af3b5bd829a.png",
+      "mime_type": "image/png",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "graphic.chromium",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/4a/4a768692a6defc8783868dc12b355679325960bee36afd51e5b96af3b5bd829a.png",
+      "actual_sha256": "4a768692a6defc8783868dc12b355679325960bee36afd51e5b96af3b5bd829a",
+      "bytes_verified": true
+    },
+    {
+      "id": 12,
+      "content_hash": "7f9910d468ae847f1b777ded8d9e9d1302647a82457322b1701db5392177c16a",
+      "file_path": "material/7f/7f9910d468ae847f1b777ded8d9e9d1302647a82457322b1701db5392177c16a.png",
+      "mime_type": "image/png",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "graphic.chromium",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/7f/7f9910d468ae847f1b777ded8d9e9d1302647a82457322b1701db5392177c16a.png",
+      "actual_sha256": "7f9910d468ae847f1b777ded8d9e9d1302647a82457322b1701db5392177c16a",
+      "bytes_verified": true
+    },
+    {
+      "id": 13,
+      "content_hash": "9582d30d79502364b2ae265ce30ccafa9e43ff73a22e781ca93cce97bfe607ba",
+      "file_path": "material/95/9582d30d79502364b2ae265ce30ccafa9e43ff73a22e781ca93cce97bfe607ba.png",
+      "mime_type": "image/png",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "graphic.chromium",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/95/9582d30d79502364b2ae265ce30ccafa9e43ff73a22e781ca93cce97bfe607ba.png",
+      "actual_sha256": "9582d30d79502364b2ae265ce30ccafa9e43ff73a22e781ca93cce97bfe607ba",
+      "bytes_verified": true
+    },
+    {
+      "id": 14,
+      "content_hash": "841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0",
+      "file_path": "material/84/841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0.wav",
+      "mime_type": "audio/wav",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "minimax.cli",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/84/841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0.wav",
+      "actual_sha256": "841a8d481d1aff15876b7eba2f4876d26564dd7578680058d944f48a429541f0",
+      "bytes_verified": true,
+      "decoded_duration_seconds": 159.67934375,
+      "duration_scope": "Decoded from full real WAV; material_revision.duration_ms remains null, current AudioQC has measured duration."
+    },
+    {
+      "id": 15,
+      "content_hash": "fdfbbea2abbf7097ce581e14ddcc67ba6015b0d9f6c5a7b70d77529d9f6c4ae1",
+      "file_path": "material/fd/fdfbbea2abbf7097ce581e14ddcc67ba6015b0d9f6c5a7b70d77529d9f6c4ae1.png",
+      "mime_type": "image/png",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "graphic.chromium",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/fd/fdfbbea2abbf7097ce581e14ddcc67ba6015b0d9f6c5a7b70d77529d9f6c4ae1.png",
+      "actual_sha256": "fdfbbea2abbf7097ce581e14ddcc67ba6015b0d9f6c5a7b70d77529d9f6c4ae1",
+      "bytes_verified": true
+    },
+    {
+      "id": 16,
+      "content_hash": "8d719437ffda0e495fe57a1e24ea48d9acf1bf28aa72f551e4547f2439a7d7a2",
+      "file_path": "material/8d/8d719437ffda0e495fe57a1e24ea48d9acf1bf28aa72f551e4547f2439a7d7a2.png",
+      "mime_type": "image/png",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "graphic.chromium",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/8d/8d719437ffda0e495fe57a1e24ea48d9acf1bf28aa72f551e4547f2439a7d7a2.png",
+      "actual_sha256": "8d719437ffda0e495fe57a1e24ea48d9acf1bf28aa72f551e4547f2439a7d7a2",
+      "bytes_verified": true
+    },
+    {
+      "id": 17,
+      "content_hash": "d6e380333b58e0299fbd6a6a7e8dd25efa52ea853c975d560ee56296e0e66407",
+      "file_path": "material/d6/d6e380333b58e0299fbd6a6a7e8dd25efa52ea853c975d560ee56296e0e66407.png",
+      "mime_type": "image/png",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "graphic.chromium",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/d6/d6e380333b58e0299fbd6a6a7e8dd25efa52ea853c975d560ee56296e0e66407.png",
+      "actual_sha256": "d6e380333b58e0299fbd6a6a7e8dd25efa52ea853c975d560ee56296e0e66407",
+      "bytes_verified": true
+    },
+    {
+      "id": 18,
+      "content_hash": "79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c",
+      "file_path": "material/79/79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c.wav",
+      "mime_type": "audio/wav",
+      "width": null,
+      "height": null,
+      "duration_ms": null,
+      "public_use_allowed": 1,
+      "model_use_allowed": 1,
+      "commercial_use_allowed": 0,
+      "provider_key": "minimax.cli",
+      "absolute_path": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media/material/79/79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c.wav",
+      "actual_sha256": "79c8709d4795b33cf7764cd99e34c2697ff411f46e042d9eb116411a8fe1486c",
+      "bytes_verified": true,
+      "decoded_duration_seconds": 129.22634375,
+      "duration_scope": "Decoded from full real WAV; material_revision.duration_ms remains null, current AudioQC has measured duration."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "after": {
+    "apps/api/app/routers/fact_packs.py": {
+      "sha256": "fcdd512ff99e486c8da5ed24b4fc562d8f256819fe2e93fb9b67fa882df9bb9e",
+      "bytes": 12596
+    },
+    "apps/web/src/pages/FactPacks.tsx": {
+      "sha256": "2d90d3b4bc5317d3abad88f2aea09fefa5b377629cf9bb1cafc30b2ae44a1006",
+      "bytes": 20859
+    }
+  },
+  "serializer_returns_model_use": true,
+  "model_use_input_default_denied": true,
+  "public_use_input_default_denied": true,
+  "web_model_use_checkbox_defaults_denied": true,
+  "web_model_use_patch_single_field": true,
+  "web_public_use_patch_single_field": true,
+  "web_permission_field_union": true,
+  "verification": {
+    "pytest": "10 passed, 1 existing StarletteDeprecationWarning in 1.30s",
+    "web_build": "tsc -b, vite build --manifest and check:bundle passed",
+    "ruff": "All checks passed!",
+    "git_diff_check": "passed"
+  }
+}

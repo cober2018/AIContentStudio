@@ -1,0 +1,25 @@
+{
+  "master_id": 19,
+  "payload_hash": "fe825c3105c8cc11579aea65c98d9acfd3947aeabe9c84f7e8d0749f6d595117",
+  "image_blocks": [
+    {
+      "id": "1bd5e675-6843-4090-b969-8ff29b16a4fa",
+      "type": "image",
+      "material_revision_id": 10
+    }
+  ],
+  "asset_refs": [
+    {
+      "id": 36,
+      "master_revision_id": 19,
+      "material_revision_id": 10,
+      "role": "cover",
+      "slot_key": null,
+      "sort_order": 0,
+      "placement_json": "{}",
+      "rights_snapshot_json": "{\"rights_status\": \"cleared\", \"public_use_allowed\": true, \"model_use_allowed\": true, \"commercial_use_allowed\": false}",
+      "content_hash_snapshot": "4a768692a6defc8783868dc12b355679325960bee36afd51e5b96af3b5bd829a",
+      "created_at": "2026-10-14 14:28:58.962929"
+    }
+  ]
+}

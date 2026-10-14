@@ -1,0 +1,445 @@
+{
+  "master": {
+    "id": 33,
+    "payload_hash": "874e0417a3b2a721c46edd57aeb6bf7d4882a9925d1a3a5c29cb032498a12266",
+    "identity_snapshot_id": 10,
+    "revision_no": 5
+  },
+  "payload": {
+    "title": "给晚饭留一点空白：一个假想的傍晚观察",
+    "canvases": [
+      {
+        "id": "card-0",
+        "order": 0,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#fff6e9"
+        },
+        "layers": [
+          {
+            "id": "card-0-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#b85c38",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-0-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 168,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "给晚饭留一点空白",
+                "style": {
+                  "font_size": 72,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-0-visual",
+            "order": 2,
+            "type": "image",
+            "x": 72,
+            "y": 300,
+            "width": 936,
+            "height": 403,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "material_revision_id": 9,
+            "fit": "contain"
+          },
+          {
+            "id": "card-0-body",
+            "order": 3,
+            "type": "text",
+            "x": 72,
+            "y": 731,
+            "width": 936,
+            "height": 159.6,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "这是一个假想的普通傍晚。刚关火的汤锅还在冒着热气，饭菜摆上桌，手机顺手扣在桌角，把注意力还给眼前温热的饭菜与周围的声音。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": [
+              {
+                "fact_pack_item_id": 3,
+                "snapshot_checksum": "23bee4d390fc102c53ff598aaa659c05d31f43faef29a3a8d1f69a43dec0feb5",
+                "start": 0,
+                "end": 11
+              }
+            ]
+          },
+          {
+            "id": "card-0-bullet-0",
+            "order": 4,
+            "type": "text",
+            "x": 72,
+            "y": 920,
+            "width": 936,
+            "height": 80,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• AI插图 · 假想晚饭",
+                "style": {
+                  "font_size": 38,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-0-bullet-1",
+            "order": 5,
+            "type": "text",
+            "x": 72,
+            "y": 1040,
+            "width": 936,
+            "height": 80,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 手机暂时朝下，饭菜还热着",
+                "style": {
+                  "font_size": 38,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "cover"
+      },
+      {
+        "id": "card-1",
+        "order": 1,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#fff6e9"
+        },
+        "layers": [
+          {
+            "id": "card-1-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#b85c38",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-1-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 140,
+            "width": 936,
+            "height": 200,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "汤的白汽，窗外的声响",
+                "style": {
+                  "font_size": 64,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 430,
+            "width": 936,
+            "height": 260,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "在这个假想傍晚，汤的白汽慢慢升起。瓷碗碰上木筷，窗外有人推着自行车经过。没有哪个细节必须记录，只是刚好留意到。",
+                "style": {
+                  "font_size": 44,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-bullet-0",
+            "order": 3,
+            "type": "text",
+            "x": 72,
+            "y": 820,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 一缕热气，一声碗筷轻响",
+                "style": {
+                  "font_size": 44,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-1-bullet-1",
+            "order": 4,
+            "type": "text",
+            "x": 72,
+            "y": 1040,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 饭菜变凉之前，慢慢坐下来",
+                "style": {
+                  "font_size": 44,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      },
+      {
+        "id": "card-2",
+        "order": 2,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#fff6e9"
+        },
+        "layers": [
+          {
+            "id": "card-2-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#b85c38",
+            "stroke_width": 0
+          },
+          {
+            "id": "card-2-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 140,
+            "width": 936,
+            "height": 200,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "不必立下新的规矩",
+                "style": {
+                  "font_size": 64,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-2-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 430,
+            "width": 936,
+            "height": 260,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "不必掐表，也不用安排一个成果。一个人吃饭，或和身边人聊几句，都可以是这个假想场景的一部分。",
+                "style": {
+                  "font_size": 44,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-2-bullet-0",
+            "order": 3,
+            "type": "text",
+            "x": 72,
+            "y": 820,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 不用打卡，不要求改变习惯",
+                "style": {
+                  "font_size": 44,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "card-2-bullet-1",
+            "order": 4,
+            "type": "text",
+            "x": 72,
+            "y": 1040,
+            "width": 936,
+            "height": 140,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "• 今晚最先注意到什么声音或香气？",
+                "style": {
+                  "font_size": 44,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      }
+    ],
+    "render_asset_ref": [
+      {
+        "canvas_id": "card-0",
+        "material_revision_id": 15
+      },
+      {
+        "canvas_id": "card-1",
+        "material_revision_id": 16
+      },
+      {
+        "canvas_id": "card-2",
+        "material_revision_id": 17
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "baseline_commit": "6ff0d7ac02045c752436d8c2261e6862a3f2a19f",
+  "owned_source_files": [
+    {
+      "path": "apps/api/app/routers/fact_packs.py",
+      "sha256": "fcdd512ff99e486c8da5ed24b4fc562d8f256819fe2e93fb9b67fa882df9bb9e",
+      "reviewed_sha_matches": true
+    },
+    {
+      "path": "apps/web/src/pages/FactPacks.tsx",
+      "sha256": "2d90d3b4bc5317d3abad88f2aea09fefa5b377629cf9bb1cafc30b2ae44a1006",
+      "reviewed_sha_matches": true
+    },
+    {
+      "path": "apps/web/src/product/TextStudioModel.ts",
+      "sha256": "a354a16d1449068efd9db47da55de732180e4ddf02118b0756fd0364c1835ee4",
+      "reviewed_sha_matches": true
+    },
+    {
+      "path": "apps/web/src/product/TextStudioShell.tsx",
+      "sha256": "d0beced1355e6ff3514b018eeeb554906899767888dd66cf055355aae3141e48",
+      "reviewed_sha_matches": true
+    }
+  ],
+  "root_readme_preservation": {
+    "preexisting_bytes": 203918,
+    "preexisting_sha256": "de18afc0909cec23d465fd042804769ca5b167205fdfe8a0f3b601dae1af3c0b",
+    "post_prefix_suffix_sha256": "de18afc0909cec23d465fd042804769ca5b167205fdfe8a0f3b601dae1af3c0b",
+    "unchanged_suffix": true,
+    "staging_scope": "new daily-production prefix only; pre-existing dirty README suffix excluded from commit"
+  },
+  "tests": "10 existing backend + 9 existing frontend; tsc/vite/bundle/FE-P1/Ruff and scoped diff passed",
+  "strict_before_archive": "43 passed / 0 failed",
+  "lifecycle": "own change only; canonical sync, archive and whitelisted local main commit; no push/publication",
+  "archive_confirmed": "openspec/changes/archive/2026-10-14-enable-two-persona-daily-production",
+  "canonical_requirements_added": 6,
+  "strict_after_archive": "43 passed / 0 failed",
+  "tasks_complete": 18,
+  "tasks_total": 18,
+  "commit_title": "Complete two-persona daily production through normal UI"
+}

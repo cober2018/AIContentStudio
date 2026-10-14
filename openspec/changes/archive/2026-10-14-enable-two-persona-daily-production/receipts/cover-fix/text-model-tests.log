@@ -1,0 +1,17 @@
+✔ new Text Master uses the Studio document envelope, not Markdown (3.126958ms)
+✔ existing v2 Master keeps exact refs; v1 cannot be silently edited as v2 (0.843708ms)
+✔ block edit retains stable ID and drops changed citation with its exact ref (0.195791ms)
+✔ block removal keeps unrelated refs; a new block receives a distinct stable ID (0.096625ms)
+✔ selection conversion uses Unicode code points, not JavaScript UTF-16 units (0.109917ms)
+✔ asset insertion and removal update document plus exact declaration together (0.141709ms)
+✔ citation bind/unbind updates matching locator and reference atomically (0.14225ms)
+✔ Studio runs round-trip through bounded TipTap JSON without persisting editor schema (1.303167ms)
+✔ unsupported editor nodes or marks fail closed (0.205375ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 119.708208

@@ -1,0 +1,802 @@
+{
+  "schema": "daily-production.preservation-readback.v1",
+  "checked_at": "2026-10-14T15:24:56.500644+00:00",
+  "method": "SQLite mode=ro/query_only, transaction snapshot, compare actual baseline and current full rows by original primary keys; SHA256 of specifically fingerprinted files; no formal mutations",
+  "baseline_id": "daily-production-20261014.6kc8s1o0",
+  "baseline_db_sha256": "78b193711c50fc16df4e9d3e95513e184aef0496483dbad396792859088c55c3",
+  "database": {
+    "tables_compared": 91,
+    "baseline_rows": 482,
+    "original_rows_identical": 482,
+    "allowed_original_row_changes": 0,
+    "new_rows": 487,
+    "schema_differences": [],
+    "deleted_original_rows": [],
+    "changed_original_rows": [],
+    "table_audit": [
+      {
+        "table": "account_workflow_default",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "alembic_version",
+        "baseline_rows": 1,
+        "current_rows": 1,
+        "old_rows_identical": 1,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "asset_media",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "audit_log",
+        "baseline_rows": 20,
+        "current_rows": 38,
+        "old_rows_identical": 20,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 18
+      },
+      {
+        "table": "brand_voice_version",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "capability_artifact",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "capability_artifact_revision",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "capability_registration",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "capability_use",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "capability_verification",
+        "baseline_rows": 1,
+        "current_rows": 2,
+        "old_rows_identical": 1,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 1
+      },
+      {
+        "table": "channel_template_version",
+        "baseline_rows": 30,
+        "current_rows": 30,
+        "old_rows_identical": 30,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "channel_variant_asset_ref",
+        "baseline_rows": 4,
+        "current_rows": 4,
+        "old_rows_identical": 4,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "channel_variant_check_run",
+        "baseline_rows": 6,
+        "current_rows": 6,
+        "old_rows_identical": 6,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "channel_variant_evidence_ref",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "channel_variant_revision",
+        "baseline_rows": 1,
+        "current_rows": 1,
+        "old_rows_identical": 1,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "connector",
+        "baseline_rows": 4,
+        "current_rows": 4,
+        "old_rows_identical": 4,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "connector_endpoint",
+        "baseline_rows": 7,
+        "current_rows": 7,
+        "old_rows_identical": 7,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_account",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_account_revision",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_asset",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_brand",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_brand_revision",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_insight",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_job",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_master_asset_ref",
+        "baseline_rows": 25,
+        "current_rows": 62,
+        "old_rows_identical": 25,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 37
+      },
+      {
+        "table": "content_master_check_run",
+        "baseline_rows": 93,
+        "current_rows": 187,
+        "old_rows_identical": 93,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 94
+      },
+      {
+        "table": "content_master_evidence_ref",
+        "baseline_rows": 0,
+        "current_rows": 5,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 5
+      },
+      {
+        "table": "content_master_revision",
+        "baseline_rows": 10,
+        "current_rows": 33,
+        "old_rows_identical": 10,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 23
+      },
+      {
+        "table": "content_memory_entry",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_memory_revision",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_opportunity",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_opportunity_assessment_revision",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_opportunity_signal",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_persona",
+        "baseline_rows": 3,
+        "current_rows": 3,
+        "old_rows_identical": 3,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_persona_revision",
+        "baseline_rows": 3,
+        "current_rows": 5,
+        "old_rows_identical": 3,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 2
+      },
+      {
+        "table": "content_project",
+        "baseline_rows": 2,
+        "current_rows": 4,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 2
+      },
+      {
+        "table": "content_series",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_series_revision",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "content_unit",
+        "baseline_rows": 6,
+        "current_rows": 10,
+        "old_rows_identical": 6,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 4
+      },
+      {
+        "table": "creative_brief_revision",
+        "baseline_rows": 2,
+        "current_rows": 4,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 2
+      },
+      {
+        "table": "creative_execution",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "creative_execution_output",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "creative_execution_package",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "data_snapshot",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "delivery_attempt",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "delivery_feedback",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "delivery_receipt",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "delivery_target",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "discoverability_profile_version",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "discoverability_report",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "draft",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "draft_check_run",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "draft_claim",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "draft_media",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "export_record",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "external_content",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "fact",
+        "baseline_rows": 0,
+        "current_rows": 2,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 2
+      },
+      {
+        "table": "fact_pack",
+        "baseline_rows": 1,
+        "current_rows": 3,
+        "old_rows_identical": 1,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 2
+      },
+      {
+        "table": "fact_pack_item",
+        "baseline_rows": 1,
+        "current_rows": 3,
+        "old_rows_identical": 1,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 2
+      },
+      {
+        "table": "identity_snapshot",
+        "baseline_rows": 6,
+        "current_rows": 10,
+        "old_rows_identical": 6,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 4
+      },
+      {
+        "table": "knowledge_collection",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "knowledge_collection_item",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "learning_candidate",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "learning_candidate_evidence",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "llm_run",
+        "baseline_rows": 25,
+        "current_rows": 51,
+        "old_rows_identical": 25,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 26
+      },
+      {
+        "table": "material",
+        "baseline_rows": 8,
+        "current_rows": 18,
+        "old_rows_identical": 8,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 10
+      },
+      {
+        "table": "material_revision",
+        "baseline_rows": 8,
+        "current_rows": 18,
+        "old_rows_identical": 8,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 10
+      },
+      {
+        "table": "mother_revision",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "opportunity_project_conversion",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "performance_observation",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "persona_workflow_default",
+        "baseline_rows": 6,
+        "current_rows": 6,
+        "old_rows_identical": 6,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "project_event",
+        "baseline_rows": 59,
+        "current_rows": 156,
+        "old_rows_identical": 59,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 97
+      },
+      {
+        "table": "project_fact_boundary_revision",
+        "baseline_rows": 1,
+        "current_rows": 3,
+        "old_rows_identical": 1,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 2
+      },
+      {
+        "table": "project_material_reference",
+        "baseline_rows": 8,
+        "current_rows": 18,
+        "old_rows_identical": 8,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 10
+      },
+      {
+        "table": "project_source_binding",
+        "baseline_rows": 0,
+        "current_rows": 3,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 3
+      },
+      {
+        "table": "project_workflow_binding",
+        "baseline_rows": 0,
+        "current_rows": 4,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 4
+      },
+      {
+        "table": "project_workflow_output",
+        "baseline_rows": 6,
+        "current_rows": 24,
+        "old_rows_identical": 6,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 18
+      },
+      {
+        "table": "prompt_version",
+        "baseline_rows": 8,
+        "current_rows": 8,
+        "old_rows_identical": 8,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "provider_generation_task",
+        "baseline_rows": 4,
+        "current_rows": 9,
+        "old_rows_identical": 4,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 5
+      },
+      {
+        "table": "published_content_record",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "review",
+        "baseline_rows": 2,
+        "current_rows": 2,
+        "old_rows_identical": 2,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "series_account_target",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "series_workflow_default",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "source_document",
+        "baseline_rows": 0,
+        "current_rows": 3,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 3
+      },
+      {
+        "table": "system_settings",
+        "baseline_rows": 6,
+        "current_rows": 6,
+        "old_rows_identical": 6,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "topic_brief",
+        "baseline_rows": 0,
+        "current_rows": 0,
+        "old_rows_identical": 0,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "user",
+        "baseline_rows": 8,
+        "current_rows": 8,
+        "old_rows_identical": 8,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 0
+      },
+      {
+        "table": "workflow",
+        "baseline_rows": 17,
+        "current_rows": 25,
+        "old_rows_identical": 17,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 8
+      },
+      {
+        "table": "workflow_run",
+        "baseline_rows": 6,
+        "current_rows": 13,
+        "old_rows_identical": 6,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 7
+      },
+      {
+        "table": "workflow_step",
+        "baseline_rows": 34,
+        "current_rows": 77,
+        "old_rows_identical": 34,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 43
+      },
+      {
+        "table": "workflow_step_attempt",
+        "baseline_rows": 36,
+        "current_rows": 79,
+        "old_rows_identical": 36,
+        "old_rows_allowed_changed": 0,
+        "new_rows": 43
+      }
+    ],
+    "canonical_audit_sha256": "fb2080599162401bdc099d7f3d34e30ad955f40aaa1fe68c1bb5b1c6bd911d15",
+    "persona_schema_note": "content_persona has no current_revision/updated_at columns; API revision head is derived from append-only content_persona_revision"
+  },
+  "media": {
+    "checked": 53,
+    "identical": 53,
+    "missing": [],
+    "changed": [],
+    "current_total_files": 75,
+    "new_file_count": 22
+  },
+  "archives": {
+    "checked": 263,
+    "identical": 263,
+    "missing": [],
+    "changed": [],
+    "archive_count": 3,
+    "added_files": []
+  },
+  "adjacent": {
+    "checked": 65,
+    "identical": 65,
+    "missing": [],
+    "owned_changes": [],
+    "unexpected_changes": [],
+    "owned_source_exemptions": [
+      {
+        "path": "apps/api/app/routers/fact_packs.py",
+        "baseline_fingerprinted": false,
+        "current_sha256": "fcdd512ff99e486c8da5ed24b4fc562d8f256819fe2e93fb9b67fa882df9bb9e"
+      },
+      {
+        "path": "apps/web/src/pages/FactPacks.tsx",
+        "baseline_fingerprinted": false,
+        "current_sha256": "2d90d3b4bc5317d3abad88f2aea09fefa5b377629cf9bb1cafc30b2ae44a1006"
+      },
+      {
+        "path": "apps/web/src/product/TextStudioModel.ts",
+        "baseline_fingerprinted": false,
+        "current_sha256": "a354a16d1449068efd9db47da55de732180e4ddf02118b0756fd0364c1835ee4"
+      },
+      {
+        "path": "apps/web/src/product/TextStudioShell.tsx",
+        "baseline_fingerprinted": false,
+        "current_sha256": "d0beced1355e6ff3514b018eeeb554906899767888dd66cf055355aae3141e48"
+      }
+    ],
+    "exemption_note": "The baseline65 fingerprint set excludes these four owned source paths; all65 checked adjacent paths were identical before root final README append.",
+    "root_readme_sha256_before_final_append": "de18afc0909cec23d465fd042804769ca5b167205fdfe8a0f3b601dae1af3c0b"
+  },
+  "runtime_configuration": {
+    "unchanged": true,
+    "before_sha256": "246d395fd8ea9d903d8bfa72afeda729699b0ed839ed2811ebba8ce29435037e",
+    "after_sha256": "246d395fd8ea9d903d8bfa72afeda729699b0ed839ed2811ebba8ce29435037e"
+  },
+  "preservation_pass": true
+}

@@ -1,0 +1,14 @@
+{
+  "baseline": {
+    "apps/web/src/product/TextStudioModel.ts": {
+      "sha256": "3371c7f36cc95737efeae768a71b6378a13b2624ba380ab97abf2cbc5b0f3eb6",
+      "bytes": 11678
+    },
+    "apps/web/src/product/TextStudioShell.tsx": {
+      "sha256": "bf48093c2b5fa146e0ec05665d9843c10e7f4239833053c338c5d4c7f5b8864e",
+      "bytes": 26451
+    }
+  },
+  "asset_insert_hardcodes_inline": true,
+  "shell_has_explicit_cover_control": false
+}

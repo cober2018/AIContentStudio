@@ -1,0 +1,711 @@
+{
+  "domain": "checks",
+  "resolution_hash": "daf1fe4bf1c448aba38f725dc12e91c3dce23229b752fd3516cbcedadffecae2",
+  "result": {
+    "blockers": [],
+    "checks": [
+      {
+        "check_kind": "master_schema",
+        "id": 147,
+        "input_hash": "68e9a5b310f84352a4b346b0a8c203f56d7c9965fa1273d2a47d82f38fcbd13d",
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "master_schema",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "evidence",
+        "id": 148,
+        "input_hash": "a1279fc13b414e1766b2bdec88165d6905a530e44b2573f508c0253311856573",
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "evidence",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "rights",
+        "id": 149,
+        "input_hash": "de04934e7026946376a1dce452f09d383b588648624d250789d84e7de699cc50",
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "rights",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "render",
+        "id": 150,
+        "input_hash": "ee092855ec3bba415a58bff40450e34bcdf70eebd5cedc9a1faf433fa43c8d2a",
+        "report": {
+          "body_markdown": "## 直接覆盖原稿带来的上下文污染风险\n\n模型返回了新内容，系统就覆盖原稿，这样的工作流把两个决定合在了一起：生成了一份候选，以及愿不愿意正式采用它。输出可能偏题，也可能遗漏条件；接口成功无法替使用者判断内容是否合适。\n\n如果没有保留历史版本，一次偏离目标的生成就可能让原稿难以找回。下游若继续读取这个状态，排查时还要先分清偏差从哪一步开始。\n\n本文讨论一种架构选择，不把它当成性能实测或产品效果结论；也不假定每个流程都需要完整的版本系统。\n\n## 架构解耦：保留候选、审阅与显式采用\n\n一个可选做法，是把生成与采用拆成独立状态。生成只产出待审候选，正式内容由明确的采用动作更新，可以从以下步骤开始：\n\n1. **保留候选**：把生成结果暂存在候选区，记录输入与版本信息，暂不更新正式内容。\n2. **审阅比对**：展示候选与原稿的差异，让使用者或校验规则能够比较、拒绝与提出修改。\n3. **显式采用**：收到明确确认后再更新正式版本；未选候选按约定归档或过期。\n\n这三个步骤把两个决定摆到了明处：模型生成了什么，以及我们愿意把什么写进正式版本。候选不必立即成为新的基准。\n\n## 工程权衡：以管理开销换取系统容错\n\n这种设计也有代价：候选和历史占用存储，版本关系、清理策略与比对界面都要维护。本文没有开销比例或效率数据，实际成本要结合调用规模、保留期限和协作方式判断。\n\n对需要反复修改、多人审阅或追溯来源的内容，候选层可能值得管理成本。对一次性、容易重做的低风险草稿，也可以采用更轻的确认方式。应让复杂度与用途相称。\n\n## 实践建议：审视现有管线的状态流转\n\n可以从一个小问题检查现有工具：模型返回新文本时，系统会直接覆盖原稿，还是允许你看一眼差异、拒绝结果，或明确采用？\n\n先把这个决定说清楚，再判断是否需要更完整的版本机制。保留选择空间，比让每个流程都承担相同的复杂度更有意义。\n\n![](media/00-10.png)\n\nAI辅助创作；配图为工程观点示意图。",
+          "content_hash": "232f144b75d2f29b18412340d8d99d1cb2902fa12c57b11f93471bd41cc42810",
+          "origin": "deterministic",
+          "reasons": [],
+          "render_input_hash": "06bfcf4988c5646aaa1069a21d47b5c8431c1c3106300f16328da34defbddf18",
+          "renderer_key": "text.studio.document.v1",
+          "renderer_version": "2",
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "render",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          },
+          "status": "ready",
+          "unused_asset_ids": [],
+          "warnings": []
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "text_structure",
+        "id": 151,
+        "input_hash": "a50989b841835f20888ed65b5664f558dfb39f8730e2554b533d2947a93d0651",
+        "report": {
+          "block_count": 16,
+          "coverage": {
+            "deterministic": "complete"
+          },
+          "issues": [],
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_structure",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "text_fact",
+        "id": 152,
+        "input_hash": "916eeafc47f08c6b07c3e947ed104fd655418be6e047f340fde23f567f230d54",
+        "report": {
+          "coverage": {
+            "deterministic": "complete",
+            "deterministic_issue_count": 0,
+            "fact_count": 1,
+            "model_use_excluded_item_ids": [],
+            "reason": null,
+            "semantic": "verified",
+            "semantic_fact_count": 1
+          },
+          "issues": [],
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_fact",
+            "model_use": [
+              {
+                "allowed": true,
+                "checksum": "7c397e666d6b3bc888761f5235e4251cf4899e3a74515f027dbc544e3277f498",
+                "id": 2,
+                "revoked": false
+              }
+            ],
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2",
+            "semantic": {
+              "configured": true,
+              "model": "gemini-3.8-flash-high",
+              "profile": "registered.ddd9b006056eae2bfb76b2ee",
+              "provider": "openai_compatible"
+            }
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "text_identity",
+        "id": 153,
+        "input_hash": "405220aac55d1112a1fb44d3ba21b96d7f244ea6fa61155d45e63fe5b8959fa4",
+        "report": {
+          "coverage": {
+            "advisory_critic": {
+              "can_override_deterministic": false,
+              "reason": null,
+              "rubric": [
+                {
+                  "dimension": "factual_grounding",
+                  "reason": "严格遵守边界声明，明确说明非实测数据与产品定论，未虚构 benchmark 或性能指标。",
+                  "score": 4
+                },
+                {
+                  "dimension": "engineering_fit",
+                  "reason": "架构解耦思路切中 LLM 工作流常见问题，符合软件工程与 Agent 系统设计的健壮性要求。",
+                  "score": 4
+                },
+                {
+                  "dimension": "clarity",
+                  "reason": "结构层次分明，阶段划分（候选、审阅、显式采用）准确且逻辑清晰。",
+                  "score": 4
+                },
+                {
+                  "dimension": "specificity",
+                  "reason": "给出了明确的三步设计与自查清单，但缺少具体的数据结构定义或特定平台落地示例。",
+                  "score": 3
+                },
+                {
+                  "dimension": "tradeoffs",
+                  "reason": "设专门小节深入探讨了存储、清理成本与系统复杂度的权衡，明确指出了不同业务风险等级下的适用差异。",
+                  "score": 4
+                }
+              ],
+              "status": "verified"
+            },
+            "deterministic": "persona_rules_and_explicit_phrases",
+            "explicit_phrase_count": 0,
+            "reason": null,
+            "semantic": "verified"
+          },
+          "identity_checksum": "08ccf21feddbe9e6660fd2ebe58481cbdb36228077fdc6581db9871174976777",
+          "identity_snapshot_id": 7,
+          "issues": [],
+          "persona_quality": {
+            "coverage": {
+              "deterministic": "bounded_phrase_structure_citation_rules",
+              "fact_speculation": "existing_text_fact_check",
+              "factual_truth": "existing_text_fact_check",
+              "semantic": "not_run",
+              "title_body_alignment": "human_review_required"
+            },
+            "critic_dimensions": [
+              "factual_grounding",
+              "engineering_fit",
+              "clarity",
+              "specificity",
+              "tradeoffs"
+            ],
+            "human_review_required": true,
+            "issues": [],
+            "payload_hash": "e32c930f09d747988f7990a6d59df7a62327691805bf0d4ca60c5c22786264ca",
+            "quality_profile_hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+            "quality_profile_ref": "studio.quality.text.technical@1",
+            "status": "pass"
+          },
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_identity",
+            "persona_quality": {
+              "hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+              "ref": "studio.quality.text.technical@1"
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2",
+            "semantic": {
+              "configured": true,
+              "model": "gemini-3.8-flash-high",
+              "profile": "registered.ddd9b006056eae2bfb76b2ee",
+              "provider": "openai_compatible"
+            }
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "text_platform",
+        "id": 154,
+        "input_hash": "fe8e1ba6d7ec3196264002e147fa202b78a24361be0fcc9cb8d786d2c0eff95e",
+        "report": {
+          "channel": "wechat",
+          "content_form": "article",
+          "coverage": {
+            "deterministic": "complete"
+          },
+          "profile_version_id": 26,
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_platform",
+            "profile": {
+              "checksum": "8a9d195a821cd0dcf30e381f5e2d0d88174eaa7e61704a11ea1143bbdcd83a69",
+              "checksum_origin": "stored",
+              "form": {
+                "artifact_kind": "text",
+                "channel": "wechat",
+                "content_form": "article",
+                "discoverability_profile": null,
+                "graphic_requirements": {},
+                "label": "公众号文章",
+                "media_requirements": {
+                  "cover": "required"
+                },
+                "profile_version_id": 26,
+                "publisher_candidates": [
+                  "publisher.wechat.official"
+                ],
+                "renderer_key": "wechat.official.html",
+                "rule_sets": [],
+                "source": "profile",
+                "video_requirements": {},
+                "workflow_key": null
+              },
+              "id": 26,
+              "version": 3
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          },
+          "rule_sets": [],
+          "source": "profile"
+        },
+        "status": "pass"
+      },
+      {
+        "check_kind": "text_discoverability",
+        "id": 155,
+        "input_hash": "274568d1f9e31cb1933c5f7b23f7790de7ce234505449e97f338c86cab6294a9",
+        "report": {
+          "coverage": {
+            "deterministic": "partial",
+            "semantic": "not_required",
+            "unexecuted_fields": [
+              "description_length",
+              "pre_fields",
+              "post_fields"
+            ]
+          },
+          "profile_checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+          "profile_id": 2,
+          "profile_version": 1,
+          "reasons": [
+            "legacy_profile_rules_not_executed"
+          ],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_discoverability",
+            "profile": {
+              "checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+              "checksum_origin": "stored",
+              "config_hash": "1d21db60e5ea45c15e736aebb69289787404358841e8351083aeb188cf1a0c98",
+              "id": 2,
+              "key": "seo.wechat.article",
+              "version": 1
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "warning"
+      }
+    ],
+    "checks_pass": false,
+    "checks_reviewable": true,
+    "current_checks": [
+      {
+        "check_kind": "master_schema",
+        "id": 147,
+        "input_hash": "68e9a5b310f84352a4b346b0a8c203f56d7c9965fa1273d2a47d82f38fcbd13d",
+        "is_current": true,
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "master_schema",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "evidence",
+        "id": 148,
+        "input_hash": "a1279fc13b414e1766b2bdec88165d6905a530e44b2573f508c0253311856573",
+        "is_current": true,
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "evidence",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "rights",
+        "id": 149,
+        "input_hash": "de04934e7026946376a1dce452f09d383b588648624d250789d84e7de699cc50",
+        "is_current": true,
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "rights",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "render",
+        "id": 150,
+        "input_hash": "ee092855ec3bba415a58bff40450e34bcdf70eebd5cedc9a1faf433fa43c8d2a",
+        "is_current": true,
+        "report": {
+          "body_markdown": "## 直接覆盖原稿带来的上下文污染风险\n\n模型返回了新内容，系统就覆盖原稿，这样的工作流把两个决定合在了一起：生成了一份候选，以及愿不愿意正式采用它。输出可能偏题，也可能遗漏条件；接口成功无法替使用者判断内容是否合适。\n\n如果没有保留历史版本，一次偏离目标的生成就可能让原稿难以找回。下游若继续读取这个状态，排查时还要先分清偏差从哪一步开始。\n\n本文讨论一种架构选择，不把它当成性能实测或产品效果结论；也不假定每个流程都需要完整的版本系统。\n\n## 架构解耦：保留候选、审阅与显式采用\n\n一个可选做法，是把生成与采用拆成独立状态。生成只产出待审候选，正式内容由明确的采用动作更新，可以从以下步骤开始：\n\n1. **保留候选**：把生成结果暂存在候选区，记录输入与版本信息，暂不更新正式内容。\n2. **审阅比对**：展示候选与原稿的差异，让使用者或校验规则能够比较、拒绝与提出修改。\n3. **显式采用**：收到明确确认后再更新正式版本；未选候选按约定归档或过期。\n\n这三个步骤把两个决定摆到了明处：模型生成了什么，以及我们愿意把什么写进正式版本。候选不必立即成为新的基准。\n\n## 工程权衡：以管理开销换取系统容错\n\n这种设计也有代价：候选和历史占用存储，版本关系、清理策略与比对界面都要维护。本文没有开销比例或效率数据，实际成本要结合调用规模、保留期限和协作方式判断。\n\n对需要反复修改、多人审阅或追溯来源的内容，候选层可能值得管理成本。对一次性、容易重做的低风险草稿，也可以采用更轻的确认方式。应让复杂度与用途相称。\n\n## 实践建议：审视现有管线的状态流转\n\n可以从一个小问题检查现有工具：模型返回新文本时，系统会直接覆盖原稿，还是允许你看一眼差异、拒绝结果，或明确采用？\n\n先把这个决定说清楚，再判断是否需要更完整的版本机制。保留选择空间，比让每个流程都承担相同的复杂度更有意义。\n\n![](media/00-10.png)\n\nAI辅助创作；配图为工程观点示意图。",
+          "content_hash": "232f144b75d2f29b18412340d8d99d1cb2902fa12c57b11f93471bd41cc42810",
+          "origin": "deterministic",
+          "reasons": [],
+          "render_input_hash": "06bfcf4988c5646aaa1069a21d47b5c8431c1c3106300f16328da34defbddf18",
+          "renderer_key": "text.studio.document.v1",
+          "renderer_version": "2",
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "render",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          },
+          "status": "ready",
+          "unused_asset_ids": [],
+          "warnings": []
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "text_structure",
+        "id": 151,
+        "input_hash": "a50989b841835f20888ed65b5664f558dfb39f8730e2554b533d2947a93d0651",
+        "is_current": true,
+        "report": {
+          "block_count": 16,
+          "coverage": {
+            "deterministic": "complete"
+          },
+          "issues": [],
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_structure",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "text_fact",
+        "id": 152,
+        "input_hash": "916eeafc47f08c6b07c3e947ed104fd655418be6e047f340fde23f567f230d54",
+        "is_current": true,
+        "report": {
+          "coverage": {
+            "deterministic": "complete",
+            "deterministic_issue_count": 0,
+            "fact_count": 1,
+            "model_use_excluded_item_ids": [],
+            "reason": null,
+            "semantic": "verified",
+            "semantic_fact_count": 1
+          },
+          "issues": [],
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_fact",
+            "model_use": [
+              {
+                "allowed": true,
+                "checksum": "7c397e666d6b3bc888761f5235e4251cf4899e3a74515f027dbc544e3277f498",
+                "id": 2,
+                "revoked": false
+              }
+            ],
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2",
+            "semantic": {
+              "configured": true,
+              "model": "gemini-3.8-flash-high",
+              "profile": "registered.ddd9b006056eae2bfb76b2ee",
+              "provider": "openai_compatible"
+            }
+          }
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "text_identity",
+        "id": 153,
+        "input_hash": "405220aac55d1112a1fb44d3ba21b96d7f244ea6fa61155d45e63fe5b8959fa4",
+        "is_current": true,
+        "report": {
+          "coverage": {
+            "advisory_critic": {
+              "can_override_deterministic": false,
+              "reason": null,
+              "rubric": [
+                {
+                  "dimension": "factual_grounding",
+                  "reason": "严格遵守边界声明，明确说明非实测数据与产品定论，未虚构 benchmark 或性能指标。",
+                  "score": 4
+                },
+                {
+                  "dimension": "engineering_fit",
+                  "reason": "架构解耦思路切中 LLM 工作流常见问题，符合软件工程与 Agent 系统设计的健壮性要求。",
+                  "score": 4
+                },
+                {
+                  "dimension": "clarity",
+                  "reason": "结构层次分明，阶段划分（候选、审阅、显式采用）准确且逻辑清晰。",
+                  "score": 4
+                },
+                {
+                  "dimension": "specificity",
+                  "reason": "给出了明确的三步设计与自查清单，但缺少具体的数据结构定义或特定平台落地示例。",
+                  "score": 3
+                },
+                {
+                  "dimension": "tradeoffs",
+                  "reason": "设专门小节深入探讨了存储、清理成本与系统复杂度的权衡，明确指出了不同业务风险等级下的适用差异。",
+                  "score": 4
+                }
+              ],
+              "status": "verified"
+            },
+            "deterministic": "persona_rules_and_explicit_phrases",
+            "explicit_phrase_count": 0,
+            "reason": null,
+            "semantic": "verified"
+          },
+          "identity_checksum": "08ccf21feddbe9e6660fd2ebe58481cbdb36228077fdc6581db9871174976777",
+          "identity_snapshot_id": 7,
+          "issues": [],
+          "persona_quality": {
+            "coverage": {
+              "deterministic": "bounded_phrase_structure_citation_rules",
+              "fact_speculation": "existing_text_fact_check",
+              "factual_truth": "existing_text_fact_check",
+              "semantic": "not_run",
+              "title_body_alignment": "human_review_required"
+            },
+            "critic_dimensions": [
+              "factual_grounding",
+              "engineering_fit",
+              "clarity",
+              "specificity",
+              "tradeoffs"
+            ],
+            "human_review_required": true,
+            "issues": [],
+            "payload_hash": "e32c930f09d747988f7990a6d59df7a62327691805bf0d4ca60c5c22786264ca",
+            "quality_profile_hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+            "quality_profile_ref": "studio.quality.text.technical@1",
+            "status": "pass"
+          },
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_identity",
+            "persona_quality": {
+              "hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+              "ref": "studio.quality.text.technical@1"
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2",
+            "semantic": {
+              "configured": true,
+              "model": "gemini-3.8-flash-high",
+              "profile": "registered.ddd9b006056eae2bfb76b2ee",
+              "provider": "openai_compatible"
+            }
+          }
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "text_platform",
+        "id": 154,
+        "input_hash": "fe8e1ba6d7ec3196264002e147fa202b78a24361be0fcc9cb8d786d2c0eff95e",
+        "is_current": true,
+        "report": {
+          "channel": "wechat",
+          "content_form": "article",
+          "coverage": {
+            "deterministic": "complete"
+          },
+          "profile_version_id": 26,
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_platform",
+            "profile": {
+              "checksum": "8a9d195a821cd0dcf30e381f5e2d0d88174eaa7e61704a11ea1143bbdcd83a69",
+              "checksum_origin": "stored",
+              "form": {
+                "artifact_kind": "text",
+                "channel": "wechat",
+                "content_form": "article",
+                "discoverability_profile": null,
+                "graphic_requirements": {},
+                "label": "公众号文章",
+                "media_requirements": {
+                  "cover": "required"
+                },
+                "profile_version_id": 26,
+                "publisher_candidates": [
+                  "publisher.wechat.official"
+                ],
+                "renderer_key": "wechat.official.html",
+                "rule_sets": [],
+                "source": "profile",
+                "video_requirements": {},
+                "workflow_key": null
+              },
+              "id": 26,
+              "version": 3
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          },
+          "rule_sets": [],
+          "source": "profile"
+        },
+        "status": "pass",
+        "stored_status": "pass"
+      },
+      {
+        "check_kind": "text_discoverability",
+        "id": 155,
+        "input_hash": "274568d1f9e31cb1933c5f7b23f7790de7ce234505449e97f338c86cab6294a9",
+        "is_current": true,
+        "report": {
+          "coverage": {
+            "deterministic": "partial",
+            "semantic": "not_required",
+            "unexecuted_fields": [
+              "description_length",
+              "pre_fields",
+              "post_fields"
+            ]
+          },
+          "profile_checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+          "profile_id": 2,
+          "profile_version": 1,
+          "reasons": [
+            "legacy_profile_rules_not_executed"
+          ],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_discoverability",
+            "profile": {
+              "checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+              "checksum_origin": "stored",
+              "config_hash": "1d21db60e5ea45c15e736aebb69289787404358841e8351083aeb188cf1a0c98",
+              "id": 2,
+              "key": "seo.wechat.article",
+              "version": 1
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "warning",
+        "stored_status": "warning"
+      }
+    ],
+    "expected_revision": 0,
+    "master_revision_id": 24
+  },
+  "result_hash": "e67f46afcec5ab27ebd5aabf53dacf8b9b705b2d518114ce627ba4001eac0c2f",
+  "schema": "stage.checks.result.v1"
+}

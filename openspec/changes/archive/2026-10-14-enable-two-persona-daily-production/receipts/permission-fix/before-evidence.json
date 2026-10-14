@@ -1,0 +1,18 @@
+{
+  "baseline": {
+    "apps/api/app/routers/fact_packs.py": {
+      "sha256": "ac4bdbe527d38538276bd50e9b48b9899b2e43c13450acdcec1a8cc83b9b40d6",
+      "bytes": 12535
+    },
+    "apps/web/src/pages/FactPacks.tsx": {
+      "sha256": "2e858bf1039ec8455d9f4ea70e5c5fcc006b48fc0d2d66a56ea4386f2a56bfc5",
+      "bytes": 19690
+    }
+  },
+  "model_use_input_default_denied": true,
+  "existing_patch_accepts_model_use": true,
+  "serializer_returns_model_use": false,
+  "web_packitem_has_model_use": false,
+  "web_has_model_use_control": false,
+  "web_has_public_use_control": true
+}

@@ -1,0 +1,45 @@
+{
+  "workflow_id": 21,
+  "source": "project_override",
+  "source_revision": 1,
+  "run_id": null,
+  "definition_checksum": "a7072ac1a4111f7e4210c383fd52eb9be927e29f69ebe236ef2fc964e01c169a",
+  "stages": [
+    {
+      "id": "evidence",
+      "fact_mode": "reflection"
+    },
+    {
+      "id": "angles",
+      "fact_mode": "reflection"
+    },
+    {
+      "id": "outline",
+      "fact_mode": "reflection"
+    },
+    {
+      "id": "draft",
+      "fact_mode": "reflection"
+    },
+    {
+      "id": "quality",
+      "fact_mode": null
+    },
+    {
+      "id": "refine",
+      "fact_mode": "reflection"
+    },
+    {
+      "id": "title",
+      "fact_mode": "reflection"
+    },
+    {
+      "id": "final",
+      "fact_mode": "reflection"
+    },
+    {
+      "id": "final_quality",
+      "fact_mode": null
+    }
+  ]
+}

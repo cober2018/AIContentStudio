@@ -1,0 +1,76 @@
+[
+  {
+    "id": "be0c3abd7bbc4c6a87160039c597be27",
+    "project_id": 3,
+    "state": "prepared",
+    "revision": 1,
+    "request_hash": "64a0e7649cc73126c222992c3f5594205c97922f000a107ca00d56139694beb5",
+    "plan_hash": "3fead7ec832f172cb0c6eee5254334338ac6b2aaf2fa7f2076117683176913a6",
+    "provider_key": "minimax.cli",
+    "provider_version": "1",
+    "model_id": "image-01",
+    "input_hash": "bf0c36dbae195705feb0af27f14aec92685caacbaa5df3ab94f0520c4652998f",
+    "created_at": "2026-10-14 14:09:22.791929",
+    "plan": {
+      "status": "ready",
+      "reason": null,
+      "required_capability": "image_generation",
+      "execution_profile": "minimax.image",
+      "adapter_key": "minimax.cli",
+      "model_id": "image-01",
+      "parameters": {
+        "items": 1,
+        "pixels": 1048576,
+        "aspect_ratio": "1:1",
+        "timeout_seconds": 120
+      },
+      "limits": {
+        "max_items": 4,
+        "max_pixels": 1048576,
+        "max_seconds": null,
+        "max_tokens": null,
+        "timeout_seconds": 120,
+        "max_cost": null,
+        "currency": null
+      },
+      "dispatch_ready": true
+    }
+  },
+  {
+    "id": "65ea23b7493749a19286beb25177c269",
+    "project_id": 3,
+    "state": "prepared",
+    "revision": 1,
+    "request_hash": "4ac87b2a5dbe3504e4263c814c3d32544c03d0debd04f8f57fdd9422c58f0eeb",
+    "plan_hash": "33884fcd51d256edcbd7a92fa3d58d3b37531d6c5dbe02a0ededf654137bb12d",
+    "provider_key": "minimax.cli",
+    "provider_version": "1",
+    "model_id": "image-01",
+    "input_hash": "a03dc31a404c840220c55b80b634c6e820a4d342bf066d172d43556964d3691d",
+    "created_at": "2026-10-14 14:09:41.576192",
+    "plan": {
+      "status": "ready",
+      "reason": null,
+      "required_capability": "image_generation",
+      "execution_profile": "minimax.image",
+      "adapter_key": "minimax.cli",
+      "model_id": "image-01",
+      "parameters": {
+        "items": 1,
+        "pixels": 1048576,
+        "aspect_ratio": "16:9",
+        "timeout_seconds": 120
+      },
+      "limits": {
+        "max_items": 4,
+        "max_pixels": 1048576,
+        "max_seconds": null,
+        "max_tokens": null,
+        "timeout_seconds": 120,
+        "max_cost": null,
+        "currency": null
+      },
+      "dispatch_ready": true
+    }
+  }
+]

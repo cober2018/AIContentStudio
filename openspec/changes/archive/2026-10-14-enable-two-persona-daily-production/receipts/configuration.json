@@ -1,0 +1,82 @@
+{
+  "schema": "daily-production.persona-config.v1",
+  "checked_at": "2026-10-14T12:48:28.850639+00:00",
+  "method": "Normal /identities UI, explicit voice picker/Effective Preview/full-diff confirmation/save; read-only API reload",
+  "personas": {
+    "2": {
+      "old_revision_id": 3,
+      "new_revision_id": 4,
+      "revision_no": 3,
+      "changed_profile_fields": [
+        "audio_creative_profile"
+      ],
+      "audio_profile": {
+        "schema": "persona.creative.audio.v1",
+        "mode": "custom",
+        "skill_ref": "studio.audio.tts@1",
+        "style_preset_ref": "studio.audio.calm-engineer@1",
+        "quality_profile_ref": "studio.quality.audio.explainer@1",
+        "capability": "tts",
+        "model_binding": {
+          "provider": "minimax.cli",
+          "model": "speech-2.8-hd",
+          "profile": "minimax.speech"
+        },
+        "model_chain": [],
+        "capability_memory_revision_ids": [],
+        "installed_skill_refs": [],
+        "parameters": {
+          "voice": "lengdan_xiongzhang",
+          "rate": 1
+        },
+        "stage_instruction": null,
+        "provenance": {
+          "blueprint_key": "starter.ai-tech-engineer.v1",
+          "blueprint_version": "1",
+          "default_recipe_key": "persona.audio.ai-tech.v1"
+        }
+      },
+      "text_graphic_video_profiles_unchanged": true,
+      "old_revisions_unchanged": true,
+      "normal_UI_preview_readiness": "credential_continuity_unverified as expected for read-only inventory; execution Preview verifies locally"
+    },
+    "3": {
+      "old_revision_id": 2,
+      "new_revision_id": 5,
+      "revision_no": 2,
+      "changed_profile_fields": [
+        "audio_creative_profile"
+      ],
+      "audio_profile": {
+        "schema": "persona.creative.audio.v1",
+        "mode": "custom",
+        "skill_ref": "studio.audio.tts@1",
+        "style_preset_ref": "studio.audio.warm-conversational@1",
+        "quality_profile_ref": "studio.quality.audio.conversational@1",
+        "capability": "tts",
+        "model_binding": {
+          "provider": "minimax.cli",
+          "model": "speech-2.8-hd",
+          "profile": "minimax.speech"
+        },
+        "model_chain": [],
+        "capability_memory_revision_ids": [],
+        "installed_skill_refs": [],
+        "parameters": {
+          "voice": "chunzhen_xuedi",
+          "rate": 1
+        },
+        "stage_instruction": null,
+        "provenance": {
+          "blueprint_key": "starter.lifestyle-observer.v1",
+          "blueprint_version": "1",
+          "default_recipe_key": "persona.audio.lifestyle.v1"
+        }
+      },
+      "text_graphic_video_profiles_unchanged": true,
+      "old_revisions_unchanged": true,
+      "normal_UI_preview_readiness": "credential_continuity_unverified as expected for read-only inventory; execution Preview verifies locally"
+    }
+  },
+  "paid_provider_dispatches": 0
+}
