@@ -1,0 +1,102 @@
+{
+  "schema": "persona.original-artifact-verification.v1",
+  "source_manifest_sha256": "dbedadc1c5370571148111a1f32374cc95e42fe1dbeb4f394b98073ced4980fa",
+  "all_match": true,
+  "count": 13,
+  "files": [
+    {
+      "file": "tech/text-frozen.md",
+      "expected_sha256": "b9548fb13effc82bde16fea1c3bc73d8cc9145c2d1ab9c3150542ac4641aab9e",
+      "actual_sha256": "b9548fb13effc82bde16fea1c3bc73d8cc9145c2d1ab9c3150542ac4641aab9e",
+      "bytes": 4141,
+      "match": true
+    },
+    {
+      "file": "tech/text-frozen-package.zip",
+      "expected_sha256": "c16663aa7d18739e38a57c937ec74ab4e6e895cab6da671a76d581d699a4218b",
+      "actual_sha256": "c16663aa7d18739e38a57c937ec74ab4e6e895cab6da671a76d581d699a4218b",
+      "bytes": 12259,
+      "match": true
+    },
+    {
+      "file": "tech/graphic-1.png",
+      "expected_sha256": "13af0c00e3279a84bcdf90038fc38393d687f877c86bb9057d81d3a0b9cd948d",
+      "actual_sha256": "13af0c00e3279a84bcdf90038fc38393d687f877c86bb9057d81d3a0b9cd948d",
+      "bytes": 73823,
+      "match": true
+    },
+    {
+      "file": "tech/graphic-2.png",
+      "expected_sha256": "a03b0d340cb8f7be6042f7a77681a9625d4081a88687eafc4320b855808c52fc",
+      "actual_sha256": "a03b0d340cb8f7be6042f7a77681a9625d4081a88687eafc4320b855808c52fc",
+      "bytes": 76569,
+      "match": true
+    },
+    {
+      "file": "tech/graphic-3.png",
+      "expected_sha256": "6fbb64a5c8f05d8c36b408f0771fbaac2f91cd4abf1ceacc3b28cec37b9d9f5d",
+      "actual_sha256": "6fbb64a5c8f05d8c36b408f0771fbaac2f91cd4abf1ceacc3b28cec37b9d9f5d",
+      "bytes": 129092,
+      "match": true
+    },
+    {
+      "file": "tech/audio.wav",
+      "expected_sha256": "49076937e2e1564fe4aac142cc906a84f3c68b7f40b56d2903032cc93dc77530",
+      "actual_sha256": "49076937e2e1564fe4aac142cc906a84f3c68b7f40b56d2903032cc93dc77530",
+      "bytes": 20738954,
+      "match": true
+    },
+    {
+      "file": "lifestyle/text-frozen.md",
+      "expected_sha256": "31a039658ceb65cd813a0a899c3f0618ae6bbd73af46c47836796611c62db877",
+      "actual_sha256": "31a039658ceb65cd813a0a899c3f0618ae6bbd73af46c47836796611c62db877",
+      "bytes": 3559,
+      "match": true
+    },
+    {
+      "file": "lifestyle/text-frozen-package.zip",
+      "expected_sha256": "d24704630e70670190197c96d0b23958289a57732b4de7564cc2a4fd5fc43e89",
+      "actual_sha256": "d24704630e70670190197c96d0b23958289a57732b4de7564cc2a4fd5fc43e89",
+      "bytes": 14270,
+      "match": true
+    },
+    {
+      "file": "lifestyle/text-editorial-reviewed.md",
+      "expected_sha256": "f89f645fa6a582f4e027aa1bf786fd62a4cf30b113610ca7e0192939bd7dfffb",
+      "actual_sha256": "f89f645fa6a582f4e027aa1bf786fd62a4cf30b113610ca7e0192939bd7dfffb",
+      "bytes": 3584,
+      "match": true
+    },
+    {
+      "file": "lifestyle/graphic-1.png",
+      "expected_sha256": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+      "actual_sha256": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+      "bytes": 325681,
+      "match": true
+    },
+    {
+      "file": "lifestyle/graphic-2.png",
+      "expected_sha256": "d88d0bd9ad9e3a1ee0f9a522e9593c2eb203af63c81144e88e66a3fdf0f73c6c",
+      "actual_sha256": "d88d0bd9ad9e3a1ee0f9a522e9593c2eb203af63c81144e88e66a3fdf0f73c6c",
+      "bytes": 83900,
+      "match": true
+    },
+    {
+      "file": "lifestyle/graphic-3.png",
+      "expected_sha256": "0998abd7fb8adfece28e4568d7fee8317a6ab20f9fca1bdc31bed1825a343caf",
+      "actual_sha256": "0998abd7fb8adfece28e4568d7fee8317a6ab20f9fca1bdc31bed1825a343caf",
+      "bytes": 77089,
+      "match": true
+    },
+    {
+      "file": "lifestyle/audio.wav",
+      "expected_sha256": "d87df12df901e0610382fff3da9b614fb1faea6c49f9a8bc98fd677c6caf88c5",
+      "actual_sha256": "d87df12df901e0610382fff3da9b614fb1faea6c49f9a8bc98fd677c6caf88c5",
+      "bytes": 15779418,
+      "match": true
+    }
+  ],
+  "historical_databases": "original isolated databases removed; manifest is a frozen historical record, not current readback",
+  "new_generations": 0,
+  "formal_writes": 0
+}

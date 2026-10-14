@@ -1,0 +1,130 @@
+{
+  "schema": "persona.default-graphic.repair.verification.v1",
+  "verified_at": "2026-10-14T12:02:26.089924+00:00",
+  "method": "Fresh read-only filesystem SHA, Pillow decode, SQLite rights readback and exact original-row/hash comparisons after complete resume-aware repair",
+  "checks": {
+    "six_exact_PNG": true,
+    "all_outputs_1080x1440": true,
+    "six_explicit_public_true_model_false_commercial_false": true,
+    "two_exact_default_presets": true,
+    "all_product_checks_current": true,
+    "product_semantic_warning_not_pass": true,
+    "source_database_unchanged": true,
+    "source_database_sha256": "f36e059f513acacf973759e73bfe22f5ea17587b9673b1a44d234912c585821a",
+    "source_media_files": 71,
+    "source_media_aggregate_sha256": "223ba0667501ab479366aaee877c7cd5c1396ebda48eafa6ab49c41b81d9b94c",
+    "source_media_unchanged": true,
+    "archive_files": 160,
+    "archive_aggregate_sha256": "08334dc41c5adeb37cb35c5f646fe90771008248cb48fe9f387cee0dec17ae00",
+    "archive_unchanged": true
+  },
+  "original_preservation": {
+    "old_tables": 91,
+    "old_rows": 779,
+    "changed_original_rows": [],
+    "deleted_original_rows": [],
+    "whole_sqlite_integrity": "ok",
+    "foreign_key_violations": [],
+    "old_generation_execution_counts": {
+      "workflow_step_attempt": 51,
+      "llm_run": 34,
+      "provider_generation_task": 6
+    },
+    "new_generation_execution_counts": {
+      "workflow_step_attempt": 51,
+      "llm_run": 34,
+      "provider_generation_task": 6
+    }
+  },
+  "execution_tables_present": {
+    "workflow_step_attempt": true,
+    "llm_run": true,
+    "provider_generation_task": true
+  },
+  "outputs": [
+    {
+      "file": "tech/graphic-1.png",
+      "sha256": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+      "bytes": 57431,
+      "width": 1080,
+      "height": 1440,
+      "material_revision_id": 29,
+      "rights": {
+        "public": true,
+        "model": false,
+        "commercial": false
+      }
+    },
+    {
+      "file": "tech/graphic-2.png",
+      "sha256": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+      "bytes": 83247,
+      "width": 1080,
+      "height": 1440,
+      "material_revision_id": 30,
+      "rights": {
+        "public": true,
+        "model": false,
+        "commercial": false
+      }
+    },
+    {
+      "file": "tech/graphic-3.png",
+      "sha256": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+      "bytes": 84427,
+      "width": 1080,
+      "height": 1440,
+      "material_revision_id": 31,
+      "rights": {
+        "public": true,
+        "model": false,
+        "commercial": false
+      }
+    },
+    {
+      "file": "lifestyle/graphic-1.png",
+      "sha256": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+      "bytes": 278588,
+      "width": 1080,
+      "height": 1440,
+      "material_revision_id": 34,
+      "rights": {
+        "public": true,
+        "model": false,
+        "commercial": false
+      }
+    },
+    {
+      "file": "lifestyle/graphic-2.png",
+      "sha256": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+      "bytes": 86627,
+      "width": 1080,
+      "height": 1440,
+      "material_revision_id": 35,
+      "rights": {
+        "public": true,
+        "model": false,
+        "commercial": false
+      }
+    },
+    {
+      "file": "lifestyle/graphic-3.png",
+      "sha256": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+      "bytes": 79399,
+      "width": 1080,
+      "height": 1440,
+      "material_revision_id": 36,
+      "rights": {
+        "public": true,
+        "model": false,
+        "commercial": false
+      }
+    }
+  ],
+  "supplier_dispatch_count": 0,
+  "generation_dispatch_count": 0,
+  "formal_database_writes": 0,
+  "human_sensory_review_claimed": false,
+  "current_API_semantic_checks": "fact/identity unavailable warning by explicit incremental dispatch budget 0; independent delegated AI report must supply separate evidence and cannot rewrite product QC as pass",
+  "readback_evidence_file": "current-readback.json"
+}

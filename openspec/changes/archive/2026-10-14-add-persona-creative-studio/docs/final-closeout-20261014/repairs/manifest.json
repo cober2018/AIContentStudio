@@ -1,0 +1,4142 @@
+{
+  "schema": "persona.default-graphic.repair.v1",
+  "samples": {
+    "tech": {
+      "persona_id": 2,
+      "source_project_id": 3,
+      "source_text_master_id": 21,
+      "default_preset": "studio.graphic.technical-editorial@1",
+      "plan_authorship": {
+        "kind": "user_edit",
+        "author": "Codex acting under explicit user delegated AI closeout",
+        "provider_generated": false
+      },
+      "source_text_master": {
+        "id": 21,
+        "project_id": 3,
+        "content_unit_id": 7,
+        "revision_no": 3,
+        "parent_revision_id": 15,
+        "modality": "text",
+        "channel_id": "wechat",
+        "content_form": "article",
+        "payload_schema": "text.master.v2",
+        "payload": {
+          "title": "为什么创作架构中需要将人设与平台账号解耦",
+          "document": {
+            "schema": "studio.text.document.v1",
+            "blocks": [
+              {
+                "id": "legacy-b2",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "在设计内容创作的工作流时，一个常见的直觉是将“人设”直接绑定在某个具体的平台账号上。账号拥有发布权限、受众关系和特定的展示界面，看似天然代表了创作者的身份。然而从系统设计的视角来看，这种强耦合会给后续的创作与分发带来不必要的维护负担。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b3",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "表达逻辑与分发通道的边界",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b4",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "人设本质上是创作的逻辑内核，它定义了表达风格、专业领域、事实边界以及价值取舍。这是一种对“如何思考与组织内容”的高层抽象。相比之下，平台账号仅仅是分发层的基础设施终端，负责处理身份鉴权、网络协议、格式限制与交互接口。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b5",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "当人设与账号绑定在一起时，表达规则就会不可避免地迁就单一通道的特性。一旦需要跨通道分发，或者底层渠道的接入规则发生变化，创作者就必须在多个端点重复配置身份约束，极易导致不同通道之间的表达一致性出现漂移。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b6",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "架构抽象的代价与取舍",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b7",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "把人设独立出来，并不意味着没有代价。解耦意味着系统需要额外设计一套映射机制，将统一的人设输出转换为符合各个平台规格的内容，这增加了前期的设计复杂度与转换开销。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b8",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "但这种取舍换来的是核心资产的便携性。将表达原则收拢在分发通道之外，不仅能保障跨渠道输出时基调的稳定，也让创作本身不再受制于任何单一基础设施的变动，从而保有独立决定表达方式的能力。",
+                    "marks": []
+                  }
+                ]
+              }
+            ],
+            "citations": []
+          }
+        },
+        "payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "context_hash": "d2ebd521e965bee8ce21b002b77bcf5e71f0c03071ab0ba765c7eebc79726d69",
+        "identity_snapshot_id": 7,
+        "creative_brief_revision_id": 3,
+        "fact_boundary_revision_id": 2,
+        "source_kind": "user_edit",
+        "edit_summary": {
+          "original_master_revision_id": 11,
+          "original_payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+          "reason": "微信article合同明确封面；引用同角色已接受自有完整图卡，不改正文payload/字符，不插正文照片。"
+        },
+        "origin_workflow_run_id": null,
+        "origin_project_output_id": null,
+        "readiness": {
+          "state": "current",
+          "reasons": []
+        },
+        "assets": [
+          {
+            "id": 32,
+            "material_revision_id": 23,
+            "role": "cover",
+            "slot_key": "cover",
+            "sort_order": 0,
+            "placement": {},
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68"
+          }
+        ],
+        "evidence": [],
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T10:26:19.136812"
+      },
+      "series": {
+        "id": 3,
+        "name": "默认图文修复-tech-20261014",
+        "status": "active",
+        "current_revision": 0,
+        "account_id": null,
+        "scope": "persona_editorial",
+        "persona_id": 2
+      },
+      "series_revision": {
+        "id": 3,
+        "revision_no": 1,
+        "profile": {
+          "graphic_creative_profile": {
+            "schema": "persona.creative.graphic.v1",
+            "mode": "auto",
+            "skill_ref": "studio.graphic.visual-director@1",
+            "style_preset_ref": "studio.graphic.technical-editorial@1",
+            "quality_profile_ref": "studio.quality.graphic.editorial@1",
+            "capability": "image_generation",
+            "model_binding": null,
+            "model_chain": [],
+            "capability_memory_revision_ids": [],
+            "installed_skill_refs": [],
+            "parameters": {},
+            "stage_instruction": null,
+            "provenance": {
+              "blueprint_key": "starter.ai-tech-engineer.v1",
+              "blueprint_version": "1",
+              "default_recipe_key": "persona.graphic.ai-tech.v1"
+            }
+          }
+        },
+        "checksum": "ec79e62989e6bfccc5481e768ee97524cd8724493967b063a497a53ae1a205e9",
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T11:51:07.644092"
+      },
+      "unit": {
+        "id": 13,
+        "project_id": 3,
+        "persona_id": 2,
+        "account_id": null,
+        "series_id": 3,
+        "identity_snapshot_id": 13,
+        "identity_state": "frozen",
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "title": "默认三卡实物修复-tech",
+        "status": "draft",
+        "pinned_workflow_id": 8
+      },
+      "editorial_plan": {
+        "title": "人设与平台账号解耦的取舍",
+        "aspect_ratio": "3:4",
+        "cards": [
+          {
+            "id": "cover",
+            "order": 0,
+            "role": "cover",
+            "title": "人设与账号为何分开",
+            "body": "一个架构取舍：把表达原则留在人设层，让账号承担平台身份与分发规则。跨平台时复用创作内核，也要付出映射成本。",
+            "bullets": [],
+            "visual_type": "none"
+          },
+          {
+            "id": "body-1",
+            "order": 1,
+            "role": "body",
+            "title": "表达与分发的边界",
+            "body": "人设定义表达风格、专业领域、事实边界与价值取舍。账号持有发布权限、受众关系，处理平台格式与交互。\n\n若表达规则绑死在一个账号，换通道时便要重复配置；规则漂移会让各处声音不一致。",
+            "bullets": [],
+            "visual_type": "none"
+          },
+          {
+            "id": "body-2",
+            "order": 2,
+            "role": "body",
+            "title": "解耦也有成本",
+            "body": "独立的人设仍需要一套映射，把内容转为各平台接受的规格。前期复杂度和转换开销并不会消失。\n\n取舍的理由是核心表达更便于迁移：渠道变化时，可以单独调整适配，也保留决定如何表达的空间。",
+            "bullets": [],
+            "visual_type": "none"
+          }
+        ]
+      },
+      "editorial_provenance": {
+        "source_text_master_id": 21,
+        "source_text_payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+        "source_context_hash": "d2ebd521e965bee8ce21b002b77bcf5e71f0c03071ab0ba765c7eebc79726d69",
+        "source_identity_snapshot_id": 7,
+        "fact_boundary_revision_id": 2,
+        "author": "Codex editorial compression under user delegation",
+        "provider_generated": false,
+        "stage_provenance_copied": false,
+        "added_external_factual_claims": false
+      },
+      "composition": {
+        "asset_refs": [],
+        "composition": {
+          "density": "medium",
+          "photo_requirement": "none",
+          "plan_hash": "6a7c789c3e5269b14bd2272f6f5e8007ac5ca4d1483619d8a0aa8c9221015e2d",
+          "preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+          "preset_ref": "studio.graphic.technical-editorial@1",
+          "template": "editorial",
+          "tool": "studio.graphic.layout-compose@1"
+        },
+        "evidence_refs": [],
+        "payload": {
+          "canvases": [
+            {
+              "background": {
+                "color": "#101827"
+              },
+              "height": 1440,
+              "id": "cover",
+              "layers": [
+                {
+                  "fill": "#60a5fa",
+                  "height": 8,
+                  "id": "cover-accent",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 0,
+                  "rotation": 0,
+                  "shape": "rectangle",
+                  "stroke_width": 0,
+                  "type": "shape",
+                  "visible": true,
+                  "width": 88,
+                  "x": 72,
+                  "y": 72
+                },
+                {
+                  "claims": [],
+                  "height": 168.0,
+                  "id": "cover-title",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 1,
+                  "rotation": 0,
+                  "runs": [
+                    {
+                      "style": {
+                        "align": "left",
+                        "color": "#f5f7fa",
+                        "font_size": 60,
+                        "italic": false,
+                        "weight": 400
+                      },
+                      "text": "人设与账号为何分开"
+                    }
+                  ],
+                  "type": "text",
+                  "visible": true,
+                  "width": 936,
+                  "x": 72,
+                  "y": 104
+                },
+                {
+                  "claims": [],
+                  "height": 95.19999999999999,
+                  "id": "cover-body",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 2,
+                  "rotation": 0,
+                  "runs": [
+                    {
+                      "style": {
+                        "align": "left",
+                        "color": "#f5f7fa",
+                        "font_size": 34,
+                        "italic": false,
+                        "weight": 400
+                      },
+                      "text": "一个架构取舍：把表达原则留在人设层，让账号承担平台身份与分发规则。跨平台时复用创作内核，也要付出映射成本。"
+                    }
+                  ],
+                  "type": "text",
+                  "visible": true,
+                  "width": 936,
+                  "x": 72,
+                  "y": 300.0
+                }
+              ],
+              "order": 0,
+              "role": "cover",
+              "width": 1080
+            },
+            {
+              "background": {
+                "color": "#101827"
+              },
+              "height": 1440,
+              "id": "body-1",
+              "layers": [
+                {
+                  "fill": "#60a5fa",
+                  "height": 8,
+                  "id": "body-1-accent",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 0,
+                  "rotation": 0,
+                  "shape": "rectangle",
+                  "stroke_width": 0,
+                  "type": "shape",
+                  "visible": true,
+                  "width": 88,
+                  "x": 72,
+                  "y": 72
+                },
+                {
+                  "claims": [],
+                  "height": 134.39999999999998,
+                  "id": "body-1-title",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 1,
+                  "rotation": 0,
+                  "runs": [
+                    {
+                      "style": {
+                        "align": "left",
+                        "color": "#f5f7fa",
+                        "font_size": 48,
+                        "italic": false,
+                        "weight": 400
+                      },
+                      "text": "表达与分发的边界"
+                    }
+                  ],
+                  "type": "text",
+                  "visible": true,
+                  "width": 936,
+                  "x": 72,
+                  "y": 104
+                },
+                {
+                  "claims": [],
+                  "height": 285.59999999999997,
+                  "id": "body-1-body",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 2,
+                  "rotation": 0,
+                  "runs": [
+                    {
+                      "style": {
+                        "align": "left",
+                        "color": "#f5f7fa",
+                        "font_size": 34,
+                        "italic": false,
+                        "weight": 400
+                      },
+                      "text": "人设定义表达风格、专业领域、事实边界与价值取舍。账号持有发布权限、受众关系，处理平台格式与交互。\n\n若表达规则绑死在一个账号，换通道时便要重复配置；规则漂移会让各处声音不一致。"
+                    }
+                  ],
+                  "type": "text",
+                  "visible": true,
+                  "width": 936,
+                  "x": 72,
+                  "y": 266.4
+                }
+              ],
+              "order": 1,
+              "role": "body",
+              "width": 1080
+            },
+            {
+              "background": {
+                "color": "#101827"
+              },
+              "height": 1440,
+              "id": "body-2",
+              "layers": [
+                {
+                  "fill": "#60a5fa",
+                  "height": 8,
+                  "id": "body-2-accent",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 0,
+                  "rotation": 0,
+                  "shape": "rectangle",
+                  "stroke_width": 0,
+                  "type": "shape",
+                  "visible": true,
+                  "width": 88,
+                  "x": 72,
+                  "y": 72
+                },
+                {
+                  "claims": [],
+                  "height": 134.39999999999998,
+                  "id": "body-2-title",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 1,
+                  "rotation": 0,
+                  "runs": [
+                    {
+                      "style": {
+                        "align": "left",
+                        "color": "#f5f7fa",
+                        "font_size": 48,
+                        "italic": false,
+                        "weight": 400
+                      },
+                      "text": "解耦也有成本"
+                    }
+                  ],
+                  "type": "text",
+                  "visible": true,
+                  "width": 936,
+                  "x": 72,
+                  "y": 104
+                },
+                {
+                  "claims": [],
+                  "height": 285.59999999999997,
+                  "id": "body-2-body",
+                  "locked": false,
+                  "opacity": 1,
+                  "order": 2,
+                  "rotation": 0,
+                  "runs": [
+                    {
+                      "style": {
+                        "align": "left",
+                        "color": "#f5f7fa",
+                        "font_size": 34,
+                        "italic": false,
+                        "weight": 400
+                      },
+                      "text": "独立的人设仍需要一套映射，把内容转为各平台接受的规格。前期复杂度和转换开销并不会消失。\n\n取舍的理由是核心表达更便于迁移：渠道变化时，可以单独调整适配，也保留决定如何表达的空间。"
+                    }
+                  ],
+                  "type": "text",
+                  "visible": true,
+                  "width": 936,
+                  "x": 72,
+                  "y": 266.4
+                }
+              ],
+              "order": 2,
+              "role": "body",
+              "width": 1080
+            }
+          ],
+          "title": "人设与平台账号解耦的取舍"
+        },
+        "payload_schema": "graphic.master.v2",
+        "quality": {
+          "coverage": {
+            "aesthetic_quality": "human_review_required",
+            "bytes": "not_rendered",
+            "contrast": "text_vs_solid_canvas_only",
+            "geometry": "axis_aligned",
+            "text_fit": "estimated"
+          },
+          "human_review_required": true,
+          "issues": [],
+          "payload_hash": "52d36ecbf9d499464c67626a185460e80d70f2ee73e76b2ec593eec08285bdee",
+          "schema": "studio.graphic.geometry-qc.v1",
+          "status": "pass"
+        }
+      },
+      "layout_master": {
+        "id": 23,
+        "project_id": 3,
+        "content_unit_id": 13,
+        "revision_no": 1,
+        "parent_revision_id": null,
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "content_form": "image_note",
+        "payload_schema": "graphic.master.v2",
+        "payload": {
+          "title": "人设与平台账号解耦的取舍",
+          "canvases": [
+            {
+              "id": "cover",
+              "order": 0,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "cover-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#60a5fa",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "cover-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 168.0,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "人设与账号为何分开",
+                      "style": {
+                        "font_size": 60,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "cover-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 300.0,
+                  "width": 936,
+                  "height": 95.19999999999999,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "一个架构取舍：把表达原则留在人设层，让账号承担平台身份与分发规则。跨平台时复用创作内核，也要付出映射成本。",
+                      "style": {
+                        "font_size": 34,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "cover"
+            },
+            {
+              "id": "body-1",
+              "order": 1,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "body-1-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#60a5fa",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-1-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "表达与分发的边界",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-1-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 285.59999999999997,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "人设定义表达风格、专业领域、事实边界与价值取舍。账号持有发布权限、受众关系，处理平台格式与交互。\n\n若表达规则绑死在一个账号，换通道时便要重复配置；规则漂移会让各处声音不一致。",
+                      "style": {
+                        "font_size": 34,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            },
+            {
+              "id": "body-2",
+              "order": 2,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "body-2-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#60a5fa",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-2-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "解耦也有成本",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-2-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 285.59999999999997,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "独立的人设仍需要一套映射，把内容转为各平台接受的规格。前期复杂度和转换开销并不会消失。\n\n取舍的理由是核心表达更便于迁移：渠道变化时，可以单独调整适配，也保留决定如何表达的空间。",
+                      "style": {
+                        "font_size": 34,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            }
+          ]
+        },
+        "payload_hash": "52d36ecbf9d499464c67626a185460e80d70f2ee73e76b2ec593eec08285bdee",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "context_hash": "e7f71c0914df76563810e733d8b279e524f3638ea5da0201b8cafdee0ae0c147",
+        "identity_snapshot_id": 13,
+        "creative_brief_revision_id": 3,
+        "fact_boundary_revision_id": 2,
+        "source_kind": "user_edit",
+        "edit_summary": {
+          "editorial_plan_hash": "6a7c789c3e5269b14bd2272f6f5e8007ac5ca4d1483619d8a0aa8c9221015e2d",
+          "editorial_plan_authorship": {
+            "kind": "user_edit",
+            "author": "Codex acting under explicit user delegated AI closeout",
+            "provider_generated": false
+          },
+          "source_text_master_revision_id": 21,
+          "source_text_payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+          "composition": {
+            "density": "medium",
+            "photo_requirement": "none",
+            "plan_hash": "6a7c789c3e5269b14bd2272f6f5e8007ac5ca4d1483619d8a0aa8c9221015e2d",
+            "preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+            "preset_ref": "studio.graphic.technical-editorial@1",
+            "template": "editorial",
+            "tool": "studio.graphic.layout-compose@1"
+          },
+          "reason": "用户委托的最小默认风格质量修复；既有真实正文压缩，不复制旧Stageprovenance，不调用生成Provider。"
+        },
+        "origin_workflow_run_id": null,
+        "origin_project_output_id": null,
+        "readiness": {
+          "state": "current",
+          "reasons": []
+        },
+        "assets": [],
+        "evidence": [],
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T11:51:07.665525"
+      },
+      "render_artifacts": [
+        {
+          "canvas_id": "cover",
+          "order": 0,
+          "private_file": "/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aics-persona-default-graphic-20261014.z8yqmbwm/artifacts/tech-graphic-1.png",
+          "sha256": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+          "bytes": 57431,
+          "width": 1080,
+          "height": 1440,
+          "mime_type": "image/png",
+          "renderer": {
+            "stage_id": "0485040beb1d4ab4942b4ef4d28f6d90",
+            "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+            "mime_type": "image/png",
+            "kind": "image",
+            "provider_key": "graphic.chromium",
+            "provider_version": "1",
+            "input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "public_ready": false,
+            "verified": false,
+            "expires_in_seconds": 900
+          },
+          "accepted": {
+            "material_id": 29,
+            "material_revision_id": 29,
+            "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66"
+          },
+          "rights_basis": {
+            "schema": "persona.owned.layout.derived-source.v1",
+            "renderer": "graphic.chromium@1",
+            "renderer_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "output_sha256": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+            "user_delegation": "2026-10-14 explicit user authorized AI closeout and minimally necessary repairs",
+            "upstream_images": [],
+            "public": true,
+            "model": false,
+            "commercial": false
+          },
+          "artifact": "tech/graphic-1.png"
+        },
+        {
+          "canvas_id": "body-1",
+          "order": 1,
+          "private_file": "/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aics-persona-default-graphic-20261014.z8yqmbwm/artifacts/tech-graphic-2.png",
+          "sha256": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+          "bytes": 83247,
+          "width": 1080,
+          "height": 1440,
+          "mime_type": "image/png",
+          "renderer": {
+            "stage_id": "ef7467cf8b86495eaadbb9f07164ca58",
+            "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+            "mime_type": "image/png",
+            "kind": "image",
+            "provider_key": "graphic.chromium",
+            "provider_version": "1",
+            "input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "public_ready": false,
+            "verified": false,
+            "expires_in_seconds": 900
+          },
+          "accepted": {
+            "material_id": 30,
+            "material_revision_id": 30,
+            "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780"
+          },
+          "rights_basis": {
+            "schema": "persona.owned.layout.derived-source.v1",
+            "renderer": "graphic.chromium@1",
+            "renderer_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "output_sha256": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+            "user_delegation": "2026-10-14 explicit user authorized AI closeout and minimally necessary repairs",
+            "upstream_images": [],
+            "public": true,
+            "model": false,
+            "commercial": false
+          },
+          "artifact": "tech/graphic-2.png"
+        },
+        {
+          "canvas_id": "body-2",
+          "order": 2,
+          "private_file": "/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aics-persona-default-graphic-20261014.z8yqmbwm/artifacts/tech-graphic-3.png",
+          "sha256": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+          "bytes": 84427,
+          "width": 1080,
+          "height": 1440,
+          "mime_type": "image/png",
+          "renderer": {
+            "stage_id": "cade34e1aab94d3489d989637bb8fe99",
+            "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+            "mime_type": "image/png",
+            "kind": "image",
+            "provider_key": "graphic.chromium",
+            "provider_version": "1",
+            "input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "public_ready": false,
+            "verified": false,
+            "expires_in_seconds": 900
+          },
+          "accepted": {
+            "material_id": 31,
+            "material_revision_id": 31,
+            "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662"
+          },
+          "rights_basis": {
+            "schema": "persona.owned.layout.derived-source.v1",
+            "renderer": "graphic.chromium@1",
+            "renderer_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "output_sha256": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+            "user_delegation": "2026-10-14 explicit user authorized AI closeout and minimally necessary repairs",
+            "upstream_images": [],
+            "public": true,
+            "model": false,
+            "commercial": false
+          },
+          "artifact": "tech/graphic-3.png"
+        }
+      ],
+      "graphic_master": {
+        "id": 24,
+        "project_id": 3,
+        "content_unit_id": 13,
+        "revision_no": 2,
+        "parent_revision_id": 23,
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "content_form": "image_note",
+        "payload_schema": "graphic.master.v2",
+        "payload": {
+          "title": "人设与平台账号解耦的取舍",
+          "canvases": [
+            {
+              "id": "cover",
+              "order": 0,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "cover-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#60a5fa",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "cover-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 168.0,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "人设与账号为何分开",
+                      "style": {
+                        "font_size": 60,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "cover-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 300.0,
+                  "width": 936,
+                  "height": 95.19999999999999,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "一个架构取舍：把表达原则留在人设层，让账号承担平台身份与分发规则。跨平台时复用创作内核，也要付出映射成本。",
+                      "style": {
+                        "font_size": 34,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "cover"
+            },
+            {
+              "id": "body-1",
+              "order": 1,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "body-1-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#60a5fa",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-1-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "表达与分发的边界",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-1-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 285.59999999999997,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "人设定义表达风格、专业领域、事实边界与价值取舍。账号持有发布权限、受众关系，处理平台格式与交互。\n\n若表达规则绑死在一个账号，换通道时便要重复配置；规则漂移会让各处声音不一致。",
+                      "style": {
+                        "font_size": 34,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            },
+            {
+              "id": "body-2",
+              "order": 2,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "body-2-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#60a5fa",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-2-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "解耦也有成本",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-2-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 285.59999999999997,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "独立的人设仍需要一套映射，把内容转为各平台接受的规格。前期复杂度和转换开销并不会消失。\n\n取舍的理由是核心表达更便于迁移：渠道变化时，可以单独调整适配，也保留决定如何表达的空间。",
+                      "style": {
+                        "font_size": 34,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            }
+          ],
+          "render_asset_ref": [
+            {
+              "canvas_id": "cover",
+              "material_revision_id": 29
+            },
+            {
+              "canvas_id": "body-1",
+              "material_revision_id": 30
+            },
+            {
+              "canvas_id": "body-2",
+              "material_revision_id": 31
+            }
+          ]
+        },
+        "payload_hash": "e4880adff3979ebe7f3fc11ba5265f1112d2c46927c8514e956dc55d622d5adf",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "context_hash": "e7f71c0914df76563810e733d8b279e524f3638ea5da0201b8cafdee0ae0c147",
+        "identity_snapshot_id": 13,
+        "creative_brief_revision_id": 3,
+        "fact_boundary_revision_id": 2,
+        "source_kind": "user_edit",
+        "edit_summary": {
+          "editorial_plan_hash": "6a7c789c3e5269b14bd2272f6f5e8007ac5ca4d1483619d8a0aa8c9221015e2d",
+          "editorial_plan_authorship": {
+            "kind": "user_edit",
+            "author": "Codex acting under explicit user delegated AI closeout",
+            "provider_generated": false
+          },
+          "source_text_master_revision_id": 21,
+          "source_text_payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+          "composition": {
+            "density": "medium",
+            "photo_requirement": "none",
+            "plan_hash": "6a7c789c3e5269b14bd2272f6f5e8007ac5ca4d1483619d8a0aa8c9221015e2d",
+            "preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+            "preset_ref": "studio.graphic.technical-editorial@1",
+            "template": "editorial",
+            "tool": "studio.graphic.layout-compose@1"
+          },
+          "layout_master_revision_id": 23,
+          "reason": "精确绑定本轮6张实际渲染PNG；明示确认完整成品与输入hash，不伪造AI Stage或人类视觉审批。",
+          "render_attestation": {
+            "origin": "manual",
+            "confirmed": true,
+            "render_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "attested_by": "admin@studio.local",
+            "outputs": [
+              {
+                "material_revision_id": 29,
+                "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+                "canvas_id": "cover"
+              },
+              {
+                "material_revision_id": 30,
+                "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+                "canvas_id": "body-1"
+              },
+              {
+                "material_revision_id": 31,
+                "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+                "canvas_id": "body-2"
+              }
+            ]
+          }
+        },
+        "origin_workflow_run_id": null,
+        "origin_project_output_id": null,
+        "readiness": {
+          "state": "current",
+          "reasons": []
+        },
+        "assets": [
+          {
+            "id": 34,
+            "material_revision_id": 29,
+            "role": "render_output",
+            "slot_key": "cover",
+            "sort_order": 0,
+            "placement": {
+              "canvas_id": "cover"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66"
+          },
+          {
+            "id": 35,
+            "material_revision_id": 30,
+            "role": "render_output",
+            "slot_key": "body-1",
+            "sort_order": 1,
+            "placement": {
+              "canvas_id": "body-1"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780"
+          },
+          {
+            "id": 36,
+            "material_revision_id": 31,
+            "role": "render_output",
+            "slot_key": "body-2",
+            "sort_order": 2,
+            "placement": {
+              "canvas_id": "body-2"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662"
+          }
+        ],
+        "evidence": [],
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T11:51:14.287400"
+      },
+      "render_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+      "checks": [
+        {
+          "id": 128,
+          "check_kind": "master_schema",
+          "input_hash": "3278d4fce420296ec67d4505d34821f0b80f470dbf17250e6200563b77b937c6",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "master_schema",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 129,
+          "check_kind": "evidence",
+          "input_hash": "8146db7b1dbc2a07b9f77aa899b6f2570b45e1f3ea12715a11dcb01107fef815",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "evidence",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 130,
+          "check_kind": "rights",
+          "input_hash": "676edcfbc6d8de9cc978ed3792777549532a3d46c0cc86bf7af82d80ee52f3ff",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "rights",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 131,
+          "check_kind": "render",
+          "input_hash": "f56f41ca43f0b0e42977c8ebdcfe72df017f94f9b40b4355e1e33eaa602e8aa9",
+          "status": "pass",
+          "report": {
+            "status": "ready",
+            "origin": "manual",
+            "attested_by": "admin@studio.local",
+            "render_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "outputs": [
+              {
+                "material_revision_id": 29,
+                "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+                "mime_type": "image/png",
+                "canvas_id": "cover",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 30,
+                "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+                "mime_type": "image/png",
+                "canvas_id": "body-1",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 31,
+                "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+                "mime_type": "image/png",
+                "canvas_id": "body-2",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              }
+            ],
+            "reasons": [],
+            "canvas_dimensions_verified": true,
+            "requirement": {
+              "kind": "render",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 132,
+          "check_kind": "graphic_structure",
+          "input_hash": "2f9df939f7cbe70f6932b98f822bada5d7071c1e3780753f53728458024c2bca",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "persona_quality": {
+              "ref": "studio.quality.graphic.editorial@1",
+              "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+              "style_preset_ref": "studio.graphic.technical-editorial@1",
+              "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+              "photo_requirement": "none",
+              "implementation": "graphic.geometry.v1",
+              "report": {
+                "schema": "studio.graphic.geometry-qc.v1",
+                "payload_hash": "e4880adff3979ebe7f3fc11ba5265f1112d2c46927c8514e956dc55d622d5adf",
+                "status": "pass",
+                "issues": [],
+                "coverage": {
+                  "geometry": "axis_aligned",
+                  "text_fit": "estimated",
+                  "bytes": "not_rendered",
+                  "contrast": "text_vs_solid_canvas_only",
+                  "aesthetic_quality": "human_review_required"
+                },
+                "human_review_required": true
+              }
+            },
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required",
+              "live_bytes_rights": "separate_required_render_rights_checks"
+            },
+            "canvas_count": 3,
+            "visible_layer_count": 9,
+            "requirement": {
+              "kind": "graphic_structure",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "persona_quality": {
+                "ref": "studio.quality.graphic.editorial@1",
+                "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+                "style_preset_ref": "studio.graphic.technical-editorial@1",
+                "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+                "photo_requirement": "none",
+                "implementation": "graphic.geometry.v1"
+              }
+            }
+          }
+        },
+        {
+          "id": 133,
+          "check_kind": "graphic_fact",
+          "input_hash": "095094f7c8bea48608a4d73b09408da618c5908b3ee0a3953eac579f4a131e7f",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "fact_review",
+              "deterministic": "exact_claim_refs_only",
+              "model_use_excluded_item_ids": [],
+              "invalid_snapshot_item_ids": [],
+              "fact_count": 2,
+              "text_layer_count": 6
+            },
+            "requirement": {
+              "kind": "graphic_fact",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              },
+              "model_use": [
+                {
+                  "id": 2,
+                  "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+                  "allowed": true,
+                  "revoked": false
+                },
+                {
+                  "id": 3,
+                  "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+                  "allowed": true,
+                  "revoked": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 134,
+          "check_kind": "graphic_identity",
+          "input_hash": "a810861b14d028e8662861b8828041287fb4b3077fa3779084805183edd25aa2",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "identity_snapshot_id": 13,
+            "identity_checksum": "3b8f193164f88d8c67079f0815dc0a41999cd6cd7d664362f8d59851b8263a86",
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "identity_review",
+              "deterministic": "explicit_phrases_only",
+              "text_layer_count": 6,
+              "visual_semantics": "unavailable"
+            },
+            "requirement": {
+              "kind": "graphic_identity",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              }
+            }
+          }
+        },
+        {
+          "id": 135,
+          "check_kind": "graphic_platform",
+          "input_hash": "b00175f6a0a8ee5a92026930d00fc1890be401a8291a43708d05e5c18b1ffbe3",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "channel": "xiaohongshu",
+            "content_form": "image_note",
+            "profile_version_id": 29,
+            "coverage": {
+              "deterministic": "complete"
+            },
+            "requirement": {
+              "kind": "graphic_platform",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "profile": {
+                "id": 29,
+                "version": 3,
+                "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+                "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+                "source": "profile",
+                "artifact_kind": "image"
+              }
+            }
+          }
+        }
+      ],
+      "current_checks": [
+        {
+          "id": 128,
+          "check_kind": "master_schema",
+          "input_hash": "3278d4fce420296ec67d4505d34821f0b80f470dbf17250e6200563b77b937c6",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "master_schema",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 129,
+          "check_kind": "evidence",
+          "input_hash": "8146db7b1dbc2a07b9f77aa899b6f2570b45e1f3ea12715a11dcb01107fef815",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "evidence",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 130,
+          "check_kind": "rights",
+          "input_hash": "676edcfbc6d8de9cc978ed3792777549532a3d46c0cc86bf7af82d80ee52f3ff",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "rights",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 131,
+          "check_kind": "render",
+          "input_hash": "f56f41ca43f0b0e42977c8ebdcfe72df017f94f9b40b4355e1e33eaa602e8aa9",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "status": "ready",
+            "origin": "manual",
+            "attested_by": "admin@studio.local",
+            "render_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+            "outputs": [
+              {
+                "material_revision_id": 29,
+                "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+                "mime_type": "image/png",
+                "canvas_id": "cover",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 30,
+                "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+                "mime_type": "image/png",
+                "canvas_id": "body-1",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 31,
+                "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+                "mime_type": "image/png",
+                "canvas_id": "body-2",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              }
+            ],
+            "reasons": [],
+            "canvas_dimensions_verified": true,
+            "requirement": {
+              "kind": "render",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 132,
+          "check_kind": "graphic_structure",
+          "input_hash": "2f9df939f7cbe70f6932b98f822bada5d7071c1e3780753f53728458024c2bca",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "persona_quality": {
+              "ref": "studio.quality.graphic.editorial@1",
+              "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+              "style_preset_ref": "studio.graphic.technical-editorial@1",
+              "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+              "photo_requirement": "none",
+              "implementation": "graphic.geometry.v1",
+              "report": {
+                "schema": "studio.graphic.geometry-qc.v1",
+                "payload_hash": "e4880adff3979ebe7f3fc11ba5265f1112d2c46927c8514e956dc55d622d5adf",
+                "status": "pass",
+                "issues": [],
+                "coverage": {
+                  "geometry": "axis_aligned",
+                  "text_fit": "estimated",
+                  "bytes": "not_rendered",
+                  "contrast": "text_vs_solid_canvas_only",
+                  "aesthetic_quality": "human_review_required"
+                },
+                "human_review_required": true
+              }
+            },
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required",
+              "live_bytes_rights": "separate_required_render_rights_checks"
+            },
+            "canvas_count": 3,
+            "visible_layer_count": 9,
+            "requirement": {
+              "kind": "graphic_structure",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "persona_quality": {
+                "ref": "studio.quality.graphic.editorial@1",
+                "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+                "style_preset_ref": "studio.graphic.technical-editorial@1",
+                "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+                "photo_requirement": "none",
+                "implementation": "graphic.geometry.v1"
+              }
+            }
+          }
+        },
+        {
+          "id": 133,
+          "check_kind": "graphic_fact",
+          "input_hash": "095094f7c8bea48608a4d73b09408da618c5908b3ee0a3953eac579f4a131e7f",
+          "is_current": true,
+          "stored_status": "warning",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "fact_review",
+              "deterministic": "exact_claim_refs_only",
+              "model_use_excluded_item_ids": [],
+              "invalid_snapshot_item_ids": [],
+              "fact_count": 2,
+              "text_layer_count": 6
+            },
+            "requirement": {
+              "kind": "graphic_fact",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              },
+              "model_use": [
+                {
+                  "id": 2,
+                  "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+                  "allowed": true,
+                  "revoked": false
+                },
+                {
+                  "id": 3,
+                  "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+                  "allowed": true,
+                  "revoked": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 134,
+          "check_kind": "graphic_identity",
+          "input_hash": "a810861b14d028e8662861b8828041287fb4b3077fa3779084805183edd25aa2",
+          "is_current": true,
+          "stored_status": "warning",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "identity_snapshot_id": 13,
+            "identity_checksum": "3b8f193164f88d8c67079f0815dc0a41999cd6cd7d664362f8d59851b8263a86",
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "identity_review",
+              "deterministic": "explicit_phrases_only",
+              "text_layer_count": 6,
+              "visual_semantics": "unavailable"
+            },
+            "requirement": {
+              "kind": "graphic_identity",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              }
+            }
+          }
+        },
+        {
+          "id": 135,
+          "check_kind": "graphic_platform",
+          "input_hash": "b00175f6a0a8ee5a92026930d00fc1890be401a8291a43708d05e5c18b1ffbe3",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "channel": "xiaohongshu",
+            "content_form": "image_note",
+            "profile_version_id": 29,
+            "coverage": {
+              "deterministic": "complete"
+            },
+            "requirement": {
+              "kind": "graphic_platform",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "profile": {
+                "id": 29,
+                "version": 3,
+                "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+                "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+                "source": "profile",
+                "artifact_kind": "image"
+              }
+            }
+          }
+        }
+      ],
+      "identity": {
+        "id": 13,
+        "checksum": "3b8f193164f88d8c67079f0815dc0a41999cd6cd7d664362f8d59851b8263a86",
+        "effective_graphic_profile": {
+          "schema": "persona.creative.graphic.v1",
+          "mode": "auto",
+          "skill_ref": "studio.graphic.visual-director@1",
+          "style_preset_ref": "studio.graphic.technical-editorial@1",
+          "quality_profile_ref": "studio.quality.graphic.editorial@1",
+          "capability": "image_generation",
+          "model_binding": null,
+          "model_chain": [],
+          "capability_memory_revision_ids": [],
+          "installed_skill_refs": [],
+          "parameters": {},
+          "stage_instruction": null,
+          "provenance": {
+            "blueprint_key": "starter.ai-tech-engineer.v1",
+            "blueprint_version": "1",
+            "default_recipe_key": "persona.graphic.ai-tech.v1"
+          }
+        }
+      }
+    },
+    "lifestyle": {
+      "persona_id": 3,
+      "source_project_id": 4,
+      "source_text_master_id": 22,
+      "default_preset": "studio.graphic.warm-magazine@1",
+      "plan_authorship": {
+        "kind": "user_edit",
+        "author": "Codex acting under explicit user delegated AI closeout",
+        "provider_generated": false
+      },
+      "source_text_master": {
+        "id": 22,
+        "project_id": 4,
+        "content_unit_id": 8,
+        "revision_no": 3,
+        "parent_revision_id": 16,
+        "modality": "text",
+        "channel_id": "wechat",
+        "content_form": "article",
+        "payload_schema": "text.master.v2",
+        "payload": {
+          "title": "晚饭前的十分钟留白",
+          "document": {
+            "schema": "studio.text.document.v1",
+            "blocks": [
+              {
+                "id": "legacy-b2",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "如果设想一个寻常的傍晚，在晚饭端上桌、热气还没散去前的十分钟里，特意把手机留在隔壁房间的柜子上，屋子里大概会多出一段略显空白的安静。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b3",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "想要记录的惯性",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b4",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "在这段假想的时间里，人可能会有好几次下意识地伸手摸向口袋。看见热汤表面泛起的油花、窗外慢慢沉下去的暮色，脑海里总会自然浮现出一个念头：要是拍下来就好了。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b5",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "这种随时想记录的冲动，往往并不带有明确的目的。它更像是一种对流逝的挽留——生活的细节太容易过去，握着手机时，按下快门似乎能给某个平淡的片刻贴上一枚书签，让人觉得时间的流淌有了痕迹。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b6",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "留在当下的片刻",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b7",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "如果任由手机放在远处，不去取它，起初的几分钟或许会有些悬空的不适感，像是日常仪式里漏掉了一道步骤。但当注意力从“寻找取景角度”慢慢抽离出来，感官就会重新被周围细微的事物填满。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b8",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "饭菜的热气在灯光下缓缓上升，筷子碰到碗沿发出轻微的脆响，厨房里还有水滴落的声音。没有取景框的过滤，香气和温度是直接迎面而来的。记录是记录者的自由，而偶尔把目光完完全全留给眼前热腾腾的饭菜，也是一种舒适的日常选择。",
+                    "marks": []
+                  }
+                ]
+              }
+            ],
+            "citations": []
+          }
+        },
+        "payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "context_hash": "e7138cf7a85b4cccb186ec57256768aa50376498a8194c3b6a020e8ae479a934",
+        "identity_snapshot_id": 8,
+        "creative_brief_revision_id": 4,
+        "fact_boundary_revision_id": 3,
+        "source_kind": "user_edit",
+        "edit_summary": {
+          "original_master_revision_id": 12,
+          "original_payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+          "reason": "微信article合同明确封面；引用同角色已接受自有完整图卡，不改正文payload/字符，不插正文照片。"
+        },
+        "origin_workflow_run_id": null,
+        "origin_project_output_id": null,
+        "readiness": {
+          "state": "current",
+          "reasons": []
+        },
+        "assets": [
+          {
+            "id": 33,
+            "material_revision_id": 26,
+            "role": "cover",
+            "slot_key": "cover",
+            "sort_order": 0,
+            "placement": {},
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "872645140089eb89e9493bfb8a2bd70b285706b4bb2e5ab3131fa2f1db606213"
+          }
+        ],
+        "evidence": [],
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T10:26:19.153062"
+      },
+      "series": {
+        "id": 4,
+        "name": "默认图文修复-lifestyle-20261014",
+        "status": "active",
+        "current_revision": 0,
+        "account_id": null,
+        "scope": "persona_editorial",
+        "persona_id": 3
+      },
+      "series_revision": {
+        "id": 4,
+        "revision_no": 1,
+        "profile": {
+          "graphic_creative_profile": {
+            "schema": "persona.creative.graphic.v1",
+            "mode": "auto",
+            "skill_ref": "studio.graphic.visual-director@1",
+            "style_preset_ref": "studio.graphic.warm-magazine@1",
+            "quality_profile_ref": "studio.quality.graphic.lifestyle@1",
+            "capability": "image_generation",
+            "model_binding": null,
+            "model_chain": [],
+            "capability_memory_revision_ids": [],
+            "installed_skill_refs": [],
+            "parameters": {},
+            "stage_instruction": null,
+            "provenance": {
+              "blueprint_key": "starter.lifestyle-observer.v1",
+              "blueprint_version": "1",
+              "default_recipe_key": "persona.graphic.lifestyle.v1"
+            }
+          }
+        },
+        "checksum": "ab3c16bad93a6bdaef03a2d7a57192e8d764a163014de1b549871b452eb0106e",
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T11:54:31.076974"
+      },
+      "unit": {
+        "id": 14,
+        "project_id": 4,
+        "persona_id": 3,
+        "account_id": null,
+        "series_id": 4,
+        "identity_snapshot_id": 14,
+        "identity_state": "frozen",
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "title": "默认三卡实物修复-lifestyle",
+        "status": "draft",
+        "pinned_workflow_id": 11
+      },
+      "harness_runtime_deviations": [
+        {
+          "field": "current_checks.is_current",
+          "reason": "Actual response is boolean; historical harness incorrectly expected a state string."
+        },
+        {
+          "field": "material.commercial_use_allowed",
+          "method": "Existing materials.create_revision product service, same exact bytes, append-only",
+          "reason": "HTTP upload omits commercial flag and creates null/ungranted; explicit false appended without modifying imported history."
+        }
+      ],
+      "historical_cover_input": {
+        "original_artifact": {
+          "file": "lifestyle/graphic-1.png",
+          "source": "/private/tmp/aics-lifestyle-real-render.368dZy/media/material/a0/a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20.png",
+          "sha256": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+          "bytes": 325681,
+          "mime": "image/png",
+          "width": 1080,
+          "height": 1440,
+          "material": {
+            "id": 9,
+            "revision_no": 1,
+            "status": "usable",
+            "source_kind": "upstream",
+            "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+            "mime_type": "image/png",
+            "public_use_allowed": 1,
+            "model_use_allowed": 1,
+            "commercial_use_allowed": 0,
+            "rights_status": "cleared",
+            "attribution_text": "AI-generated image; MiniMax provider terms recorded from the user-approved isolated acceptance.",
+            "provider_key": "graphic.chromium",
+            "provider_version": "1"
+          }
+        },
+        "original_manifest_sha256": "dbedadc1c5370571148111a1f32374cc95e42fe1dbeb4f394b98073ced4980fa",
+        "current_material": {
+          "id": 32,
+          "kind": "image",
+          "title": "历史真实生活插图成品（只复用精确PNG像素）",
+          "tags": [],
+          "status": "active",
+          "created_at": "2026-10-14T11:54:31.090145",
+          "latest_revision": {
+            "id": 33,
+            "material_id": 32,
+            "revision_no": 2,
+            "parent_revision_id": null,
+            "status": "candidate",
+            "source_kind": "upload",
+            "source_url": null,
+            "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+            "mime_type": "image/png",
+            "rights_status": "cleared",
+            "public_use_allowed": true,
+            "model_use_allowed": false,
+            "commercial_use_allowed": false,
+            "attribution_text": "Historical AI-generated illustration from exact user-approved 2026-10-09 isolated MiniMax/graphic.chromium acceptance; original manifest SHA-256 dbedadc1c5370571148111a1f32374cc95e42fe1dbeb4f394b98073ced4980fa. Public permission retained; model/commercial use not granted. Decorative hypothetical mood, not real dinner photography.",
+            "provider_key": null,
+            "prompt_text": null,
+            "created_at": "2026-10-14T11:56:28.625795"
+          },
+          "revisions": [
+            {
+              "id": 32,
+              "material_id": 32,
+              "revision_no": 1,
+              "parent_revision_id": null,
+              "status": "candidate",
+              "source_kind": "upload",
+              "source_url": null,
+              "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+              "mime_type": "image/png",
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": null,
+              "attribution_text": "Historical AI-generated illustration from exact user-approved 2026-10-09 isolated MiniMax/graphic.chromium acceptance; original manifest SHA-256 dbedadc1c5370571148111a1f32374cc95e42fe1dbeb4f394b98073ced4980fa. Public permission retained; model/commercial use not granted. Decorative hypothetical mood, not real dinner photography.",
+              "provider_key": null,
+              "prompt_text": null,
+              "created_at": "2026-10-14T11:54:31.093169"
+            },
+            {
+              "id": 33,
+              "material_id": 32,
+              "revision_no": 2,
+              "parent_revision_id": null,
+              "status": "candidate",
+              "source_kind": "upload",
+              "source_url": null,
+              "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+              "mime_type": "image/png",
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false,
+              "attribution_text": "Historical AI-generated illustration from exact user-approved 2026-10-09 isolated MiniMax/graphic.chromium acceptance; original manifest SHA-256 dbedadc1c5370571148111a1f32374cc95e42fe1dbeb4f394b98073ced4980fa. Public permission retained; model/commercial use not granted. Decorative hypothetical mood, not real dinner photography.",
+              "provider_key": null,
+              "prompt_text": null,
+              "created_at": "2026-10-14T11:56:28.625795"
+            }
+          ],
+          "usage": {
+            "material_id": 32,
+            "revisions": 2,
+            "draft_media_uses": []
+          }
+        },
+        "current_revision": {
+          "id": 33,
+          "material_id": 32,
+          "revision_no": 2,
+          "parent_revision_id": null,
+          "status": "candidate",
+          "source_kind": "upload",
+          "source_url": null,
+          "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+          "mime_type": "image/png",
+          "rights_status": "cleared",
+          "public_use_allowed": true,
+          "model_use_allowed": false,
+          "commercial_use_allowed": false,
+          "attribution_text": "Historical AI-generated illustration from exact user-approved 2026-10-09 isolated MiniMax/graphic.chromium acceptance; original manifest SHA-256 dbedadc1c5370571148111a1f32374cc95e42fe1dbeb4f394b98073ced4980fa. Public permission retained; model/commercial use not granted. Decorative hypothetical mood, not real dinner photography.",
+          "provider_key": null,
+          "prompt_text": null,
+          "created_at": "2026-10-14T11:56:28.625795"
+        },
+        "attribution": "Exact surviving rendered PNG containing original MiniMax illustration; not recovered original JPEG",
+        "crop": {
+          "x": 0.25092592592592594,
+          "y": 0.20833333333333334,
+          "width": 0.4981481481481482,
+          "height": 0.2791666666666667
+        },
+        "crop_pixel_bounds": {
+          "x": 271,
+          "y": 300,
+          "width": 538,
+          "height": 402
+        },
+        "permissions": {
+          "public_use_allowed": true,
+          "model_use_allowed": false,
+          "commercial_use_allowed": false
+        }
+      },
+      "editorial_plan": {
+        "title": "晚饭前的十分钟留白",
+        "aspect_ratio": "3:4",
+        "cards": [
+          {
+            "id": "cover",
+            "order": 0,
+            "role": "cover",
+            "title": "晚饭前的十分钟留白",
+            "body": "假想一个寻常傍晚：饭菜将要上桌，把手机留在隔壁。热气还在，眼前暂时没有取景框。",
+            "bullets": [],
+            "visual_type": "image",
+            "material_revision_id": 33
+          },
+          {
+            "id": "body-1",
+            "order": 1,
+            "role": "body",
+            "title": "想要记录的惯性",
+            "body": "在这段假想时间里，也许会几次下意识地摸向口袋。汤面泛着油花，窗外暮色慢慢沉下去，脑海里冒出“拍下来就好了”。\n\n按下快门，像替流逝的片刻夹上一枚书签。想记录的冲动，未必总带着明确的目的。",
+            "bullets": [],
+            "visual_type": "none"
+          },
+          {
+            "id": "body-2",
+            "order": 2,
+            "role": "body",
+            "title": "留在当下的片刻",
+            "body": "假想手机还在远处：筷子轻轻碰着碗沿，厨房传来水滴声，饭菜的香气与温度直接迎面而来。\n\n记录是自己的自由。偶尔把目光留给眼前热腾腾的饭菜，也可以是一种舒服的日常选择。",
+            "bullets": [],
+            "visual_type": "none"
+          }
+        ]
+      },
+      "editorial_provenance": {
+        "source_text_master_id": 22,
+        "source_text_payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+        "source_context_hash": "e7138cf7a85b4cccb186ec57256768aa50376498a8194c3b6a020e8ae479a934",
+        "source_identity_snapshot_id": 8,
+        "fact_boundary_revision_id": 3,
+        "author": "Codex editorial compression under user delegation",
+        "provider_generated": false,
+        "stage_provenance_copied": false,
+        "added_external_factual_claims": false
+      },
+      "composition": {
+        "asset_refs": [
+          {
+            "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+            "material_revision_id": 33,
+            "placement": {
+              "canvas_id": "cover",
+              "layer_id": "cover-visual"
+            },
+            "role": "graphic_layer",
+            "slot_key": "cover-visual",
+            "sort_order": 0
+          }
+        ],
+        "composition": {
+          "density": "low",
+          "photo_requirement": "cover",
+          "plan_hash": "f0573881f4bcff185417b417d3dd00d4c39218f63bbe198b368411e87ed25c9a",
+          "preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+          "preset_ref": "studio.graphic.warm-magazine@1",
+          "template": "editorial",
+          "tool": "studio.graphic.layout-compose@1"
+        },
+        "evidence_refs": [],
+        "payload": {
+          "title": "晚饭前的十分钟留白",
+          "canvases": [
+            {
+              "id": "cover",
+              "order": 0,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "cover-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "cover-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 168.0,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "晚饭前的十分钟留白",
+                      "style": {
+                        "font_size": 60,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "cover-visual",
+                  "order": 2,
+                  "type": "image",
+                  "x": 72,
+                  "y": 300.0,
+                  "width": 936,
+                  "height": 403,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "material_revision_id": 33,
+                  "fit": "contain",
+                  "crop": {
+                    "x": 0.25092592592592594,
+                    "y": 0.20833333333333334,
+                    "width": 0.4981481481481482,
+                    "height": 0.2791666666666667
+                  }
+                },
+                {
+                  "id": "cover-body",
+                  "order": 3,
+                  "type": "text",
+                  "x": 72,
+                  "y": 731.0,
+                  "width": 936,
+                  "height": 106.39999999999999,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "假想一个寻常傍晚：饭菜将要上桌，把手机留在隔壁。热气还在，眼前暂时没有取景框。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "cover"
+            },
+            {
+              "id": "body-1",
+              "order": 1,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "body-1-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-1-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "想要记录的惯性",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-1-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 319.2,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "在这段假想时间里，也许会几次下意识地摸向口袋。汤面泛着油花，窗外暮色慢慢沉下去，脑海里冒出“拍下来就好了”。\n\n按下快门，像替流逝的片刻夹上一枚书签。想记录的冲动，未必总带着明确的目的。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            },
+            {
+              "id": "body-2",
+              "order": 2,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "body-2-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-2-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "留在当下的片刻",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-2-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 319.2,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "假想手机还在远处：筷子轻轻碰着碗沿，厨房传来水滴声，饭菜的香气与温度直接迎面而来。\n\n记录是自己的自由。偶尔把目光留给眼前热腾腾的饭菜，也可以是一种舒服的日常选择。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            }
+          ]
+        },
+        "payload_schema": "graphic.master.v2",
+        "quality": {
+          "schema": "studio.graphic.geometry-qc.v1",
+          "payload_hash": "bf575765a94ed4238540ebb087ede5c686659faa5007c7f1ddc25d9378f0b1bc",
+          "status": "pass",
+          "issues": [],
+          "coverage": {
+            "geometry": "axis_aligned",
+            "text_fit": "estimated",
+            "bytes": "not_rendered",
+            "contrast": "text_vs_solid_canvas_only",
+            "aesthetic_quality": "human_review_required"
+          },
+          "human_review_required": true
+        }
+      },
+      "layout_master": {
+        "id": 25,
+        "project_id": 4,
+        "content_unit_id": 14,
+        "revision_no": 1,
+        "parent_revision_id": null,
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "content_form": "image_note",
+        "payload_schema": "graphic.master.v2",
+        "payload": {
+          "title": "晚饭前的十分钟留白",
+          "canvases": [
+            {
+              "id": "cover",
+              "order": 0,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "cover-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "cover-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 168.0,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "晚饭前的十分钟留白",
+                      "style": {
+                        "font_size": 60,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "cover-visual",
+                  "order": 2,
+                  "type": "image",
+                  "x": 72,
+                  "y": 300.0,
+                  "width": 936,
+                  "height": 403,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "material_revision_id": 33,
+                  "fit": "contain",
+                  "crop": {
+                    "x": 0.25092592592592594,
+                    "y": 0.20833333333333334,
+                    "width": 0.4981481481481482,
+                    "height": 0.2791666666666667
+                  }
+                },
+                {
+                  "id": "cover-body",
+                  "order": 3,
+                  "type": "text",
+                  "x": 72,
+                  "y": 731.0,
+                  "width": 936,
+                  "height": 106.39999999999999,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "假想一个寻常傍晚：饭菜将要上桌，把手机留在隔壁。热气还在，眼前暂时没有取景框。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "cover"
+            },
+            {
+              "id": "body-1",
+              "order": 1,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "body-1-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-1-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "想要记录的惯性",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-1-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 319.2,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "在这段假想时间里，也许会几次下意识地摸向口袋。汤面泛着油花，窗外暮色慢慢沉下去，脑海里冒出“拍下来就好了”。\n\n按下快门，像替流逝的片刻夹上一枚书签。想记录的冲动，未必总带着明确的目的。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            },
+            {
+              "id": "body-2",
+              "order": 2,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "body-2-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-2-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "留在当下的片刻",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-2-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 319.2,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "假想手机还在远处：筷子轻轻碰着碗沿，厨房传来水滴声，饭菜的香气与温度直接迎面而来。\n\n记录是自己的自由。偶尔把目光留给眼前热腾腾的饭菜，也可以是一种舒服的日常选择。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            }
+          ]
+        },
+        "payload_hash": "bf575765a94ed4238540ebb087ede5c686659faa5007c7f1ddc25d9378f0b1bc",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "context_hash": "27837efdeae7ceeea099f5ef59b2101feb775c95afc616990e6813258c623f8a",
+        "identity_snapshot_id": 14,
+        "creative_brief_revision_id": 4,
+        "fact_boundary_revision_id": 3,
+        "source_kind": "user_edit",
+        "edit_summary": {
+          "editorial_plan_hash": "f0573881f4bcff185417b417d3dd00d4c39218f63bbe198b368411e87ed25c9a",
+          "editorial_plan_authorship": {
+            "kind": "user_edit",
+            "author": "Codex acting under explicit user delegated AI closeout",
+            "provider_generated": false
+          },
+          "source_text_master_revision_id": 22,
+          "source_text_payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+          "composition": {
+            "density": "low",
+            "photo_requirement": "cover",
+            "plan_hash": "f0573881f4bcff185417b417d3dd00d4c39218f63bbe198b368411e87ed25c9a",
+            "preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+            "preset_ref": "studio.graphic.warm-magazine@1",
+            "template": "editorial",
+            "tool": "studio.graphic.layout-compose@1"
+          },
+          "reason": "用户委托的最小默认风格质量修复；既有真实正文压缩，不复制旧Stageprovenance，不调用生成Provider。"
+        },
+        "origin_workflow_run_id": null,
+        "origin_project_output_id": null,
+        "readiness": {
+          "state": "current",
+          "reasons": []
+        },
+        "assets": [
+          {
+            "id": 37,
+            "material_revision_id": 33,
+            "role": "graphic_layer",
+            "slot_key": "cover-visual",
+            "sort_order": 0,
+            "placement": {
+              "canvas_id": "cover",
+              "layer_id": "cover-visual"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20"
+          }
+        ],
+        "evidence": [],
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T11:56:28.720429"
+      },
+      "render_artifacts": [
+        {
+          "canvas_id": "cover",
+          "order": 0,
+          "private_file": "/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aics-persona-default-graphic-20261014.z8yqmbwm/artifacts/lifestyle-graphic-1.png",
+          "sha256": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+          "bytes": 278588,
+          "width": 1080,
+          "height": 1440,
+          "mime_type": "image/png",
+          "renderer": {
+            "stage_id": "87cfb5a881ef47e286c899febfc33b5f",
+            "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+            "mime_type": "image/png",
+            "kind": "image",
+            "provider_key": "graphic.chromium",
+            "provider_version": "1",
+            "input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "public_ready": false,
+            "verified": false,
+            "expires_in_seconds": 900
+          },
+          "accepted": {
+            "material_id": 33,
+            "material_revision_id": 34,
+            "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003"
+          },
+          "rights_basis": {
+            "schema": "persona.owned.layout.derived-source.v1",
+            "renderer": "graphic.chromium@1",
+            "renderer_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "output_sha256": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+            "user_delegation": "2026-10-14 explicit user authorized AI closeout and minimally necessary repairs",
+            "upstream_images": [
+              {
+                "material_revision_id": 33,
+                "sha256": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+                "source_manifest_sha256": "dbedadc1c5370571148111a1f32374cc95e42fe1dbeb4f394b98073ced4980fa",
+                "crop": {
+                  "x": 0.25092592592592594,
+                  "y": 0.20833333333333334,
+                  "width": 0.4981481481481482,
+                  "height": 0.2791666666666667
+                },
+                "original_rights": {
+                  "id": 9,
+                  "revision_no": 1,
+                  "status": "usable",
+                  "source_kind": "upstream",
+                  "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20",
+                  "mime_type": "image/png",
+                  "public_use_allowed": 1,
+                  "model_use_allowed": 1,
+                  "commercial_use_allowed": 0,
+                  "rights_status": "cleared",
+                  "attribution_text": "AI-generated image; MiniMax provider terms recorded from the user-approved isolated acceptance.",
+                  "provider_key": "graphic.chromium",
+                  "provider_version": "1"
+                },
+                "public": true,
+                "model": false,
+                "commercial": false
+              }
+            ],
+            "public": true,
+            "model": false,
+            "commercial": false
+          },
+          "artifact": "lifestyle/graphic-1.png"
+        },
+        {
+          "canvas_id": "body-1",
+          "order": 1,
+          "private_file": "/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aics-persona-default-graphic-20261014.z8yqmbwm/artifacts/lifestyle-graphic-2.png",
+          "sha256": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+          "bytes": 86627,
+          "width": 1080,
+          "height": 1440,
+          "mime_type": "image/png",
+          "renderer": {
+            "stage_id": "d1ae65b428f345569cbcebcabc66dcc2",
+            "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+            "mime_type": "image/png",
+            "kind": "image",
+            "provider_key": "graphic.chromium",
+            "provider_version": "1",
+            "input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "public_ready": false,
+            "verified": false,
+            "expires_in_seconds": 900
+          },
+          "accepted": {
+            "material_id": 34,
+            "material_revision_id": 35,
+            "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a"
+          },
+          "rights_basis": {
+            "schema": "persona.owned.layout.derived-source.v1",
+            "renderer": "graphic.chromium@1",
+            "renderer_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "output_sha256": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+            "user_delegation": "2026-10-14 explicit user authorized AI closeout and minimally necessary repairs",
+            "upstream_images": [],
+            "public": true,
+            "model": false,
+            "commercial": false
+          },
+          "artifact": "lifestyle/graphic-2.png"
+        },
+        {
+          "canvas_id": "body-2",
+          "order": 2,
+          "private_file": "/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aics-persona-default-graphic-20261014.z8yqmbwm/artifacts/lifestyle-graphic-3.png",
+          "sha256": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+          "bytes": 79399,
+          "width": 1080,
+          "height": 1440,
+          "mime_type": "image/png",
+          "renderer": {
+            "stage_id": "ef892116a19e40feafbed910465c2001",
+            "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+            "mime_type": "image/png",
+            "kind": "image",
+            "provider_key": "graphic.chromium",
+            "provider_version": "1",
+            "input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "public_ready": false,
+            "verified": false,
+            "expires_in_seconds": 900
+          },
+          "accepted": {
+            "material_id": 35,
+            "material_revision_id": 36,
+            "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395"
+          },
+          "rights_basis": {
+            "schema": "persona.owned.layout.derived-source.v1",
+            "renderer": "graphic.chromium@1",
+            "renderer_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "output_sha256": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+            "user_delegation": "2026-10-14 explicit user authorized AI closeout and minimally necessary repairs",
+            "upstream_images": [],
+            "public": true,
+            "model": false,
+            "commercial": false
+          },
+          "artifact": "lifestyle/graphic-3.png"
+        }
+      ],
+      "graphic_master": {
+        "id": 26,
+        "project_id": 4,
+        "content_unit_id": 14,
+        "revision_no": 2,
+        "parent_revision_id": 25,
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "content_form": "image_note",
+        "payload_schema": "graphic.master.v2",
+        "payload": {
+          "title": "晚饭前的十分钟留白",
+          "canvases": [
+            {
+              "id": "cover",
+              "order": 0,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "cover-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "cover-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 168.0,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "晚饭前的十分钟留白",
+                      "style": {
+                        "font_size": 60,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "cover-visual",
+                  "order": 2,
+                  "type": "image",
+                  "x": 72,
+                  "y": 300.0,
+                  "width": 936,
+                  "height": 403,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "material_revision_id": 33,
+                  "fit": "contain",
+                  "crop": {
+                    "x": 0.25092592592592594,
+                    "y": 0.20833333333333334,
+                    "width": 0.4981481481481482,
+                    "height": 0.2791666666666667
+                  }
+                },
+                {
+                  "id": "cover-body",
+                  "order": 3,
+                  "type": "text",
+                  "x": 72,
+                  "y": 731.0,
+                  "width": 936,
+                  "height": 106.39999999999999,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "假想一个寻常傍晚：饭菜将要上桌，把手机留在隔壁。热气还在，眼前暂时没有取景框。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "cover"
+            },
+            {
+              "id": "body-1",
+              "order": 1,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "body-1-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-1-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "想要记录的惯性",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-1-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 319.2,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "在这段假想时间里，也许会几次下意识地摸向口袋。汤面泛着油花，窗外暮色慢慢沉下去，脑海里冒出“拍下来就好了”。\n\n按下快门，像替流逝的片刻夹上一枚书签。想记录的冲动，未必总带着明确的目的。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            },
+            {
+              "id": "body-2",
+              "order": 2,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff6e9"
+              },
+              "layers": [
+                {
+                  "id": "body-2-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b85c38",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-2-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "留在当下的片刻",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-2-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 319.2,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "假想手机还在远处：筷子轻轻碰着碗沿，厨房传来水滴声，饭菜的香气与温度直接迎面而来。\n\n记录是自己的自由。偶尔把目光留给眼前热腾腾的饭菜，也可以是一种舒服的日常选择。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#392d27",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            }
+          ],
+          "render_asset_ref": [
+            {
+              "canvas_id": "cover",
+              "material_revision_id": 34
+            },
+            {
+              "canvas_id": "body-1",
+              "material_revision_id": 35
+            },
+            {
+              "canvas_id": "body-2",
+              "material_revision_id": 36
+            }
+          ]
+        },
+        "payload_hash": "76f7d03ca5ddec266f85582f8cd7d0d50bd255f1f09c50e405ae6ad9fde90196",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "context_hash": "27837efdeae7ceeea099f5ef59b2101feb775c95afc616990e6813258c623f8a",
+        "identity_snapshot_id": 14,
+        "creative_brief_revision_id": 4,
+        "fact_boundary_revision_id": 3,
+        "source_kind": "user_edit",
+        "edit_summary": {
+          "editorial_plan_hash": "f0573881f4bcff185417b417d3dd00d4c39218f63bbe198b368411e87ed25c9a",
+          "editorial_plan_authorship": {
+            "kind": "user_edit",
+            "author": "Codex acting under explicit user delegated AI closeout",
+            "provider_generated": false
+          },
+          "source_text_master_revision_id": 22,
+          "source_text_payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+          "composition": {
+            "density": "low",
+            "photo_requirement": "cover",
+            "plan_hash": "f0573881f4bcff185417b417d3dd00d4c39218f63bbe198b368411e87ed25c9a",
+            "preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+            "preset_ref": "studio.graphic.warm-magazine@1",
+            "template": "editorial",
+            "tool": "studio.graphic.layout-compose@1"
+          },
+          "layout_master_revision_id": 25,
+          "reason": "精确绑定本轮6张实际渲染PNG；明示确认完整成品与输入hash，不伪造AI Stage或人类视觉审批。",
+          "render_attestation": {
+            "origin": "manual",
+            "confirmed": true,
+            "render_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "attested_by": "admin@studio.local",
+            "outputs": [
+              {
+                "material_revision_id": 34,
+                "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+                "canvas_id": "cover"
+              },
+              {
+                "material_revision_id": 35,
+                "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+                "canvas_id": "body-1"
+              },
+              {
+                "material_revision_id": 36,
+                "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+                "canvas_id": "body-2"
+              }
+            ]
+          }
+        },
+        "origin_workflow_run_id": null,
+        "origin_project_output_id": null,
+        "readiness": {
+          "state": "current",
+          "reasons": []
+        },
+        "assets": [
+          {
+            "id": 38,
+            "material_revision_id": 33,
+            "role": "graphic_layer",
+            "slot_key": "cover-visual",
+            "sort_order": 0,
+            "placement": {
+              "canvas_id": "cover",
+              "layer_id": "cover-visual"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20"
+          },
+          {
+            "id": 39,
+            "material_revision_id": 34,
+            "role": "render_output",
+            "slot_key": "cover",
+            "sort_order": 0,
+            "placement": {
+              "canvas_id": "cover"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003"
+          },
+          {
+            "id": 40,
+            "material_revision_id": 35,
+            "role": "render_output",
+            "slot_key": "body-1",
+            "sort_order": 1,
+            "placement": {
+              "canvas_id": "body-1"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a"
+          },
+          {
+            "id": 41,
+            "material_revision_id": 36,
+            "role": "render_output",
+            "slot_key": "body-2",
+            "sort_order": 2,
+            "placement": {
+              "canvas_id": "body-2"
+            },
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            },
+            "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395"
+          }
+        ],
+        "evidence": [],
+        "created_by": "admin@studio.local",
+        "created_at": "2026-10-14T11:56:35.085857"
+      },
+      "render_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+      "checks": [
+        {
+          "id": 136,
+          "check_kind": "master_schema",
+          "input_hash": "f62cf42aee661941fedf508f63697a82d608b4b99e1610e84cf5dac478760f51",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "master_schema",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 137,
+          "check_kind": "evidence",
+          "input_hash": "ecd8bc58d43c1c59b06a3882b93f5074be19a72198c44c2f5b786f95e6e33ce6",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "evidence",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 138,
+          "check_kind": "rights",
+          "input_hash": "a402c049b40f4f2b9184edc627e458b910d86b2ea4d50178e6db9193a327307f",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "rights",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 139,
+          "check_kind": "render",
+          "input_hash": "0b499a319c275424ab0bdac9277f863012a5ddc556b94cfb7a35b72a5064cc77",
+          "status": "pass",
+          "report": {
+            "status": "ready",
+            "origin": "manual",
+            "attested_by": "admin@studio.local",
+            "render_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "outputs": [
+              {
+                "material_revision_id": 34,
+                "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+                "mime_type": "image/png",
+                "canvas_id": "cover",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 35,
+                "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+                "mime_type": "image/png",
+                "canvas_id": "body-1",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 36,
+                "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+                "mime_type": "image/png",
+                "canvas_id": "body-2",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              }
+            ],
+            "reasons": [],
+            "canvas_dimensions_verified": true,
+            "requirement": {
+              "kind": "render",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 140,
+          "check_kind": "graphic_structure",
+          "input_hash": "cd3bfbd29a665e8471565c3eedeba794c786d4ff8673bbd4fbc632bfe1a554af",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "persona_quality": {
+              "ref": "studio.quality.graphic.lifestyle@1",
+              "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+              "style_preset_ref": "studio.graphic.warm-magazine@1",
+              "style_preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+              "photo_requirement": "cover",
+              "implementation": "graphic.geometry.v1",
+              "report": {
+                "schema": "studio.graphic.geometry-qc.v1",
+                "payload_hash": "76f7d03ca5ddec266f85582f8cd7d0d50bd255f1f09c50e405ae6ad9fde90196",
+                "status": "pass",
+                "issues": [],
+                "coverage": {
+                  "geometry": "axis_aligned",
+                  "text_fit": "estimated",
+                  "bytes": "not_rendered",
+                  "contrast": "text_vs_solid_canvas_only",
+                  "aesthetic_quality": "human_review_required"
+                },
+                "human_review_required": true
+              }
+            },
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required",
+              "live_bytes_rights": "separate_required_render_rights_checks"
+            },
+            "canvas_count": 3,
+            "visible_layer_count": 10,
+            "requirement": {
+              "kind": "graphic_structure",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "persona_quality": {
+                "ref": "studio.quality.graphic.lifestyle@1",
+                "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+                "style_preset_ref": "studio.graphic.warm-magazine@1",
+                "style_preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+                "photo_requirement": "cover",
+                "implementation": "graphic.geometry.v1"
+              }
+            }
+          }
+        },
+        {
+          "id": 141,
+          "check_kind": "graphic_fact",
+          "input_hash": "076069710497b607252cc50fdf10fe576d3ac97cb8173f431a28f91d037d0d26",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "fact_review",
+              "deterministic": "exact_claim_refs_only",
+              "model_use_excluded_item_ids": [],
+              "invalid_snapshot_item_ids": [],
+              "fact_count": 2,
+              "text_layer_count": 6
+            },
+            "requirement": {
+              "kind": "graphic_fact",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              },
+              "model_use": [
+                {
+                  "id": 4,
+                  "checksum": "184575c28f1b730d0f3794cf67a49a456ae385469b35260111d98a539c162ef7",
+                  "allowed": true,
+                  "revoked": false
+                },
+                {
+                  "id": 5,
+                  "checksum": "de3422baa0e9b244332137f945aebd9e1134a968ea4bdd8256468b4cebb7a41e",
+                  "allowed": true,
+                  "revoked": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 142,
+          "check_kind": "graphic_identity",
+          "input_hash": "cb8f8cb059e5b467d3b886744cc8728dcace8767720427177302389b9f76ee6a",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "identity_snapshot_id": 14,
+            "identity_checksum": "ff0e00943fba0d644dbfb8326171f06cf7a09b1a48ed890dd6ac2ee26c668acc",
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "identity_review",
+              "deterministic": "explicit_phrases_only",
+              "text_layer_count": 6,
+              "visual_semantics": "unavailable"
+            },
+            "requirement": {
+              "kind": "graphic_identity",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              }
+            }
+          }
+        },
+        {
+          "id": 143,
+          "check_kind": "graphic_platform",
+          "input_hash": "6b40eb0fc6910141ee6517baa18ea234d5b0ea85c6e691c5bccf64cfbffa91ea",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "channel": "xiaohongshu",
+            "content_form": "image_note",
+            "profile_version_id": 29,
+            "coverage": {
+              "deterministic": "complete"
+            },
+            "requirement": {
+              "kind": "graphic_platform",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "profile": {
+                "id": 29,
+                "version": 3,
+                "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+                "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+                "source": "profile",
+                "artifact_kind": "image"
+              }
+            }
+          }
+        }
+      ],
+      "current_checks": [
+        {
+          "id": 136,
+          "check_kind": "master_schema",
+          "input_hash": "f62cf42aee661941fedf508f63697a82d608b4b99e1610e84cf5dac478760f51",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "master_schema",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 137,
+          "check_kind": "evidence",
+          "input_hash": "ecd8bc58d43c1c59b06a3882b93f5074be19a72198c44c2f5b786f95e6e33ce6",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "evidence",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 138,
+          "check_kind": "rights",
+          "input_hash": "a402c049b40f4f2b9184edc627e458b910d86b2ea4d50178e6db9193a327307f",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "requirement": {
+              "kind": "rights",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 139,
+          "check_kind": "render",
+          "input_hash": "0b499a319c275424ab0bdac9277f863012a5ddc556b94cfb7a35b72a5064cc77",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "status": "ready",
+            "origin": "manual",
+            "attested_by": "admin@studio.local",
+            "render_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+            "outputs": [
+              {
+                "material_revision_id": 34,
+                "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+                "mime_type": "image/png",
+                "canvas_id": "cover",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 35,
+                "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+                "mime_type": "image/png",
+                "canvas_id": "body-1",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              },
+              {
+                "material_revision_id": 36,
+                "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+                "mime_type": "image/png",
+                "canvas_id": "body-2",
+                "rights_snapshot": {
+                  "rights_status": "cleared",
+                  "public_use_allowed": true,
+                  "model_use_allowed": false,
+                  "commercial_use_allowed": false
+                }
+              }
+            ],
+            "reasons": [],
+            "canvas_dimensions_verified": true,
+            "requirement": {
+              "kind": "render",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1"
+            }
+          }
+        },
+        {
+          "id": 140,
+          "check_kind": "graphic_structure",
+          "input_hash": "cd3bfbd29a665e8471565c3eedeba794c786d4ff8673bbd4fbc632bfe1a554af",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "persona_quality": {
+              "ref": "studio.quality.graphic.lifestyle@1",
+              "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+              "style_preset_ref": "studio.graphic.warm-magazine@1",
+              "style_preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+              "photo_requirement": "cover",
+              "implementation": "graphic.geometry.v1",
+              "report": {
+                "schema": "studio.graphic.geometry-qc.v1",
+                "payload_hash": "76f7d03ca5ddec266f85582f8cd7d0d50bd255f1f09c50e405ae6ad9fde90196",
+                "status": "pass",
+                "issues": [],
+                "coverage": {
+                  "geometry": "axis_aligned",
+                  "text_fit": "estimated",
+                  "bytes": "not_rendered",
+                  "contrast": "text_vs_solid_canvas_only",
+                  "aesthetic_quality": "human_review_required"
+                },
+                "human_review_required": true
+              }
+            },
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required",
+              "live_bytes_rights": "separate_required_render_rights_checks"
+            },
+            "canvas_count": 3,
+            "visible_layer_count": 10,
+            "requirement": {
+              "kind": "graphic_structure",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "persona_quality": {
+                "ref": "studio.quality.graphic.lifestyle@1",
+                "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+                "style_preset_ref": "studio.graphic.warm-magazine@1",
+                "style_preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+                "photo_requirement": "cover",
+                "implementation": "graphic.geometry.v1"
+              }
+            }
+          }
+        },
+        {
+          "id": 141,
+          "check_kind": "graphic_fact",
+          "input_hash": "076069710497b607252cc50fdf10fe576d3ac97cb8173f431a28f91d037d0d26",
+          "is_current": true,
+          "stored_status": "warning",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "fact_review",
+              "deterministic": "exact_claim_refs_only",
+              "model_use_excluded_item_ids": [],
+              "invalid_snapshot_item_ids": [],
+              "fact_count": 2,
+              "text_layer_count": 6
+            },
+            "requirement": {
+              "kind": "graphic_fact",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              },
+              "model_use": [
+                {
+                  "id": 4,
+                  "checksum": "184575c28f1b730d0f3794cf67a49a456ae385469b35260111d98a539c162ef7",
+                  "allowed": true,
+                  "revoked": false
+                },
+                {
+                  "id": 5,
+                  "checksum": "de3422baa0e9b244332137f945aebd9e1134a968ea4bdd8256468b4cebb7a41e",
+                  "allowed": true,
+                  "revoked": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": 142,
+          "check_kind": "graphic_identity",
+          "input_hash": "cb8f8cb059e5b467d3b886744cc8728dcace8767720427177302389b9f76ee6a",
+          "is_current": true,
+          "stored_status": "warning",
+          "status": "warning",
+          "report": {
+            "reasons": [],
+            "identity_snapshot_id": 14,
+            "identity_checksum": "ff0e00943fba0d644dbfb8326171f06cf7a09b1a48ed890dd6ac2ee26c668acc",
+            "issues": [],
+            "coverage": {
+              "semantic": "unavailable",
+              "reason": "explicit_incremental_quality_budget_zero",
+              "review_mode": "delegated_AI_review_recorded_separately",
+              "configured_runtime_unchanged": true,
+              "purpose": "identity_review",
+              "deterministic": "explicit_phrases_only",
+              "text_layer_count": 6,
+              "visual_semantics": "unavailable"
+            },
+            "requirement": {
+              "kind": "graphic_identity",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "semantic": {
+                "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                "provider": "openai_compatible",
+                "model": "gemini-3.8-flash-high",
+                "configured": true
+              }
+            }
+          }
+        },
+        {
+          "id": 143,
+          "check_kind": "graphic_platform",
+          "input_hash": "6b40eb0fc6910141ee6517baa18ea234d5b0ea85c6e691c5bccf64cfbffa91ea",
+          "is_current": true,
+          "stored_status": "pass",
+          "status": "pass",
+          "report": {
+            "reasons": [],
+            "channel": "xiaohongshu",
+            "content_form": "image_note",
+            "profile_version_id": 29,
+            "coverage": {
+              "deterministic": "complete"
+            },
+            "requirement": {
+              "kind": "graphic_platform",
+              "schema": "graphic.master.v2",
+              "adapter_version": "2",
+              "implementation": "1",
+              "profile": {
+                "id": 29,
+                "version": 3,
+                "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+                "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+                "source": "profile",
+                "artifact_kind": "image"
+              }
+            }
+          }
+        }
+      ],
+      "identity": {
+        "id": 14,
+        "checksum": "ff0e00943fba0d644dbfb8326171f06cf7a09b1a48ed890dd6ac2ee26c668acc",
+        "effective_graphic_profile": {
+          "schema": "persona.creative.graphic.v1",
+          "mode": "auto",
+          "skill_ref": "studio.graphic.visual-director@1",
+          "style_preset_ref": "studio.graphic.warm-magazine@1",
+          "quality_profile_ref": "studio.quality.graphic.lifestyle@1",
+          "capability": "image_generation",
+          "model_binding": null,
+          "model_chain": [],
+          "capability_memory_revision_ids": [],
+          "installed_skill_refs": [],
+          "parameters": {},
+          "stage_instruction": null,
+          "provenance": {
+            "blueprint_key": "starter.lifestyle-observer.v1",
+            "blueprint_version": "1",
+            "default_recipe_key": "persona.graphic.lifestyle.v1"
+          }
+        }
+      }
+    }
+  },
+  "provider_calls": 0,
+  "generation_calls": 0,
+  "formal_writes": 0,
+  "clone_provenance": {
+    "source_database": "/private/tmp/aics-persona-series-20261014.ane8u3as/studio.db",
+    "copy_method": "SQLite online backup from read-only source connection",
+    "copy_database_sha256": "317b0b5ab727d7236978fca8780847e1df07126ec635559c464f005a204a1ff6",
+    "source_media_root": "/private/tmp/aics-persona-series-20261014.ane8u3as/media",
+    "clone_root": "/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/aics-persona-default-graphic-20261014.z8yqmbwm",
+    "formal_database_not_opened": true,
+    "provider_budget": 0
+  },
+  "limitations": [
+    "No model generation or semantic API dispatch occurred; new product semantic coverage is explicitly unavailable until separately reviewed.",
+    "Editorial card plan is Codex user-edit, never asserted as a model-generated Stage.",
+    "Historical AI illustration is decorative, not a photograph of an actual dinner or a recovered missing original JPEG.",
+    "Human visual/audio sensory approval is not claimed."
+  ],
+  "archive_hashes": {
+    "file_count": 160,
+    "aggregate_sha256": "08334dc41c5adeb37cb35c5f646fe90771008248cb48fe9f387cee0dec17ae00"
+  },
+  "original_preservation": {
+    "old_tables": 91,
+    "old_rows": 779,
+    "changed_original_rows": [],
+    "deleted_original_rows": [],
+    "whole_sqlite_integrity": "ok",
+    "foreign_key_violations": [],
+    "old_generation_execution_counts": {
+      "workflow_step_attempt": 51,
+      "llm_run": 34,
+      "provider_generation_task": 6
+    },
+    "new_generation_execution_counts": {
+      "workflow_step_attempt": 51,
+      "llm_run": 34,
+      "provider_generation_task": 6
+    }
+  },
+  "archived_multiplatform_unchanged": true,
+  "completed_at": "2026-10-14T12:00:14.827418+00:00",
+  "postrepair_verification_file": "verification.json",
+  "fresh_current_readback_file": "current-readback.json",
+  "source_preservation": {
+    "source_database_unchanged": true,
+    "source_database_sha256": "f36e059f513acacf973759e73bfe22f5ea17587b9673b1a44d234912c585821a",
+    "source_media_files": 71,
+    "source_media_aggregate_sha256": "223ba0667501ab479366aaee877c7cd5c1396ebda48eafa6ab49c41b81d9b94c",
+    "source_media_unchanged": true
+  },
+  "harness_runtime_deviations": [
+    {
+      "field": "current_checks.is_current",
+      "reason": "Boolean contract corrected in temporary harness only."
+    },
+    {
+      "field": "material.commercial_use_allowed",
+      "method": "Existing product materials.create_revision service appended explicit false; original import Revision32 with null remains."
+    },
+    {
+      "field": "archive_aggregate_sha256",
+      "reason": "Ordinary receipt SHA-256 replaces bounded Stage digest for larger evidence vector; product size guard unchanged."
+    },
+    {
+      "field": "provider_generation_task",
+      "reason": "Actual generation storage table has 6 preserved rows; historical tasks are not counted as new dispatches."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "persona.runtime.closeout.v1",
+  "checked_at": "2026-10-14T12:19:47.444329+00:00",
+  "temporary_processes_stopped": [
+    {
+      "port": 18767,
+      "pid": 44113
+    },
+    {
+      "port": 5174,
+      "pid": 44114
+    }
+  ],
+  "formal_API_reloaded": "com.aicontent.api via existing launchctl kickstart",
+  "worker_config_and_other_projects": "unchanged",
+  "urls": {
+    "http://127.0.0.1:8000/api/v1/health/ready": {
+      "status": 200,
+      "ready": true
+    },
+    "http://127.0.0.1:5173/": {
+      "status": 200
+    },
+    "http://127.0.0.1:5173/api/v1/health/ready": {
+      "status": 200,
+      "ready": true
+    }
+  },
+  "temporary_ports_closed": [
+    18767,
+    5174
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "schema": "persona.independent-final-quality.v1",
+  "reviewer": "Codex delegated reviewer",
+  "independent_review": "persona_independent_closeout APPROVE_WITH_SCOPE_BOUNDARIES",
+  "quality_accepted": true,
+  "tasks_supported": [
+    "19.6",
+    "20.6",
+    "21.3",
+    "22.6"
+  ],
+  "selected_samples": {
+    "tech": {
+      "text": "backups/persona-review-20261009.O02VLb/tech/text-frozen.md",
+      "graphic_master": 24,
+      "graphic_snapshot": 13,
+      "preset": "studio.graphic.technical-editorial@1",
+      "audio": "backups/persona-review-20261009.O02VLb/tech/audio.wav",
+      "audio_sha256": "49076937e2e1564fe4aac142cc906a84f3c68b7f40b56d2903032cc93dc77530",
+      "duration_seconds": 324.027969,
+      "normalized_script_alignment": 0.995614,
+      "text_sha256": "b9548fb13effc82bde16fea1c3bc73d8cc9145c2d1ab9c3150542ac4641aab9e",
+      "graphic_artifacts": [
+        {
+          "path": "tech/graphic-1.png",
+          "sha256": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+          "bytes": 57431
+        },
+        {
+          "path": "tech/graphic-2.png",
+          "sha256": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+          "bytes": 83247
+        },
+        {
+          "path": "tech/graphic-3.png",
+          "sha256": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+          "bytes": 84427
+        }
+      ]
+    },
+    "lifestyle": {
+      "text": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/final/lifestyle/article.md",
+      "text_master": 22,
+      "graphic_master": 26,
+      "graphic_snapshot": 14,
+      "preset": "studio.graphic.warm-magazine@1",
+      "audio": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/lifestyle/audio.wav",
+      "audio_sha256": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+      "duration_seconds": 84.68340625,
+      "normalized_script_alignment": 0.9910313901345291,
+      "text_sha256": "2f4c66ee74217793c26c48af6f84818770e5a0bf1ce941a90e894f9a04ff1284",
+      "graphic_artifacts": [
+        {
+          "path": "lifestyle/graphic-1.png",
+          "sha256": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+          "bytes": 278588
+        },
+        {
+          "path": "lifestyle/graphic-2.png",
+          "sha256": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+          "bytes": 86627
+        },
+        {
+          "path": "lifestyle/graphic-3.png",
+          "sha256": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+          "bytes": 79399
+        }
+      ]
+    }
+  },
+  "minimum_scores": 3,
+  "tech_rubric": {
+    "factual_grounding": 4,
+    "engineering_fit": 4,
+    "clarity": 3,
+    "specificity": 3,
+    "visual_readability": 4,
+    "audio_intelligibility_proxy": 3
+  },
+  "life_rubric": {
+    "naturalness": 3,
+    "specificity": 4,
+    "non_preachy_tone": 4,
+    "warm_visuals": 3,
+    "visual_readability": 4,
+    "audio_conversational_content_proxy": 3
+  },
+  "human_listening": false,
+  "direct_AI_listening": false,
+  "subjective_voice_rhythm_pronunciation": "not observed",
+  "original_human_review_required": "preserved",
+  "product_graphic_check_status": "6 pass + 2 current semantic-unavailable warning each, not changed to pass",
+  "old_rejections_preserved": [
+    "oldtechhumanportrait",
+    "originalLifestyleMaster8 and246sAudio rolefit"
+  ],
+  "provenance_stage_count_checked": 31,
+  "graphic_plan": "explicit Codex editor plan, notnewmodelgeneration",
+  "repaired_vision_method": "Codex and independent native actualpixel review; MiniMax6requests quota2067noresults noretry",
+  "formal_data_writes": 0,
+  "new_generation_provider_calls": 0,
+  "new_semantic_provider_calls": 0
+}

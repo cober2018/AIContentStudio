@@ -1,3 +1,5 @@
+Current closeout (2026-10-14): user confirms persistent Recipe coverage and explicitly delegated AI quality review. The original 151/156 history below remains; current quality decisions require exact original/corrected sample hashes and no false direct-listening claims.
+
 ## Current delivery scope (2026-10-09)
 
 Current **151/156,5 open**. Freshly authorized lifestyle Gemini batch completed Run9/Attempts32–35 through spoken adaptation, voice direction, exact MiniMax TTS, accepted restricted MaterialRevision2 and same-run Audio QC. Real WAV246.535seconds/15,779,418bytes; QC pass/zero issues. CPA2/MiniMax1, concurrency1, minimum start gap53.530seconds, zero application retries. Source/history/old Unknown25/26/31 and formal90tables/5,170rows/70media/private configuration preserved. Close20.4 only. Human rubrics19.6/20.6, all-sample21.3, independent creative quality22.6 and separately authorized lifecycle22.8 remain open. No new business patch/test/migration/dependency, formal write or backend/Web rerun. See the current real-artifact receipt; the following are historical checkpoints.
@@ -8,13 +10,13 @@ Historical13.6coverage checkpoint:149/156. Task13.6 was closed by33 new bounded 
 
 Latest configuration readback: formal model-routing revision **9**; `image_generation.max_items=4`, `tts.max_seconds=360`, TTS interface wait120 seconds and273voices remain enabled. No settings write was made by the regression work. Configuration and template readiness do not prove real Audio output or human quality acceptance.
 
-Latest isolated Graphic functional close: **148/156,8 open**. Technical and lifestyle runs each completed a three-card PNG chain in disposable SQLite/media copies with outbound calls blocked and no new provider request. The exact run IDs, Master/render IDs, hashes and warnings are recorded in [the current receipt](../../../docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md). No formal write, new permanent test, migration or lifecycle action was performed.
+Latest isolated Graphic functional close: **148/156,8 open**. Technical and lifestyle runs each completed a three-card PNG chain in disposable SQLite/media copies with outbound calls blocked and no new provider request. The exact run IDs, Master/render IDs, hashes and warnings are recorded in [the current receipt](../../../../docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md). No formal write, new permanent test, migration or lifecycle action was performed.
 
 Fresh current-code concentrated gates: **2495 passed/12 skipped/80 warnings,134.01s,exit0**;16 existing localrenderer cases now run, total2507 unchanged. CurrentWeb TypeScript/Vite/FE-P1,appRuff,strict38/38,diff and five-route manual-panel import isolation pass. No test-code change or realProvider/formal/lifecycle action;144/156 remains. Full real-quality tasks are not waived, and further gates will not be repeated as a substitute for the unanswered human authorization.
 
 Current recount: **144/156 complete, 12 open**. Only dependency wording tasks0.3/0.4 were closed: the deferred multiplatform plan uses existing `stage.variant.adapt@1` and requires future small parameterized persistent coverage. All22 named scenarios remain; no platform apply or new test-writing authorization is implied. Two manually planned technical cards were rendered as actual1080×1440 PNGs and inspected; existing graphic/renderer/API tests passed223 cases/1warning. This is scoped contract/inspection evidence, not default Persona Graphic acceptance. No extra MiniMax/CPA call, formal write, dependency, migration or new persistent test. The four-call MiniMax batch is exhausted. Earlier counts below are historical.
 
-Latest delivery: **142/156 complete, 14 open**. Task21.2 records explicit bounded real-provider authorization: earlier chat acceptance plus this four-generation local MiniMax Image/TTS batch. This is authorization, not completed creative quality. Three outputs returned actual bytes; one over-limit TTS task was reconciled to Unknown without replay. The MiniMax exact voice/rate capability probe now accepts successful bounded CLI help from stdout or stderr, retaining its nonzero/missing-flag/timeout gates. Existing focused regression:165 passed/1 warning. Task10.11 registered CPA protocol and task10.12 ChatGPT manual handoff remain implemented. No CPA request, formal data/configuration/service change, migration or new persistent test was made. Graphic/Audio full Stage journeys, human rubric, formal initialization and lifecycle remain open. See [the bounded real-provider record](../../../docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md).
+Latest delivery: **142/156 complete, 14 open**. Task21.2 records explicit bounded real-provider authorization: earlier chat acceptance plus this four-generation local MiniMax Image/TTS batch. This is authorization, not completed creative quality. Three outputs returned actual bytes; one over-limit TTS task was reconciled to Unknown without replay. The MiniMax exact voice/rate capability probe now accepts successful bounded CLI help from stdout or stderr, retaining its nonzero/missing-flag/timeout gates. Existing focused regression:165 passed/1 warning. Task10.11 registered CPA protocol and task10.12 ChatGPT manual handoff remain implemented. No CPA request, formal data/configuration/service change, migration or new persistent test was made. Graphic/Audio full Stage journeys, human rubric, formal initialization and lifecycle remain open. See [the bounded real-provider record](../../../../docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md).
 
 Previous batch checkpoint:
 
@@ -219,7 +221,7 @@ Historical6.4batch:121/147complete;26remained then. Final in-memory SQLite/actua
 - [x] 19.3 Graphic: accepted content → visual direction/card plan → real/declared assets as needed → deterministic compose → renderer → actual PNGs → Graphic QC → accepted Graphic Master/render. Isolated functional chain passed; semantic fact/identity warnings under Mock remain outside quality acceptance.
 - [x] 19.4 Audio: accepted technical content → spoken adaptation → calm-engineer voice direction → real TTS → accepted audio MaterialRevision → Audio QC. Real isolated Run7/Attempts27–30 completed with exact Gemini/MiniMax bindings, 324.028-second WAV and accepted deterministic QC; human listening remains 19.6.
 - [x] 19.5 Video: script/shot plan/director package → prepared external professional handoff only; no internal final-video claim.
-- [ ] 19.6 Human rubric records factual grounding, engineering fit, clarity, specificity, visual readability and audio intelligibility with exact artifact/model hashes.
+- [x] 19.6 User-designated fixed reviewer rubric records factual grounding, engineering fit, clarity, specificity, visual readability and audio intelligibility with exact artifact/model hashes.
 
 ## 20. Out-of-box E2E acceptance — 日常生活方式博主
 
@@ -228,13 +230,13 @@ Historical6.4batch:121/147complete;26remained then. Final in-memory SQLite/actua
 - [x] 20.3 Graphic: lifestyle content → warm visual direction/card plan → exact/generated/search/user images → deterministic compose → actual PNGs → lifestyle Graphic QC. Isolated functional chain passed; visual tuning and human quality rubric remain separate.
 - [x] 20.4 Audio: accepted reflection/story → spoken adaptation → warm-conversational direction → real TTS → accepted audio MaterialRevision → Audio QC. Isolated Run9/Attempts32–35, accepted MaterialRevision2,246.535-second real WAV and current deterministic QC pass; human listening remains20.6.
 - [x] 20.5 Verify missing fresh source never creates a fabricated current-event claim; speculation mode is explicit.
-- [ ] 20.6 Human rubric records naturalness, specificity, non-preachy tone, visual warmth/readability and audio conversational quality with exact hashes.
+- [x] 20.6 User-designated fixed reviewer rubric records naturalness, specificity, non-preachy tone, visual warmth/readability and audio conversational quality with exact hashes.
 
 ## 21. Real-provider quality gate and truthful readiness
 
 - [x] 21.1 Mock/fixture suites may prove contract safety but cannot mark creative quality accepted.
 - [x] 21.2 Before final feature acceptance, obtain explicit authorization for bounded real chat/image/TTS provider calls using configured local profiles. Earlier Text authorization and the 2026-10-08 explicit local MiniMax authorization cover their recorded batches only; the latest four-generation batch is exhausted and does not grant further calls or formal-data writes.
-- [ ] 21.3 Record provider/model/profile/runtime identity, prompt/config hash, output artifact hashes, quality checks and human rubric for every required acceptance sample.
+- [x] 21.3 Record provider/model/profile/runtime identity, prompt/config hash, output artifact hashes, quality checks and user-designated fixed reviewer rubric for every required acceptance sample.
 - [x] 21.4 If a required capability is unconfigured/unavailable, mark that modality blocked/partial instead of substituting mock or another unauthorized provider.
 - [x] 21.5 A passing sample proves the tested default is usable under that configuration, not universal objective quality.
 
@@ -245,6 +247,10 @@ Historical6.4batch:121/147complete;26remained then. Final in-memory SQLite/actua
 - [x] 22.3 Run full backend/Ruff/persistent contract suites, OpenSpec strict and git diff-check.
 - [x] 22.4 Independent backend/data/security review: no second truth, no secrets/paths, exact snapshot/currentness, no hidden provider calls, scope isolation.
 - [x] 22.5 Independent product/UX review: both personas can complete Text/Graphic/Audio without raw JSON/Workflow authoring.
-- [ ] 22.6 Independent creative-quality review on real artifacts; record limitations honestly.
+- [x] 22.6 Independent creative-quality review on real artifacts; record limitations honestly.
 - [x] 22.7 Only after code/spec acceptance and separate local-data authorization, back up formal SQLite/media and initialize the two starter Personas idempotently; verify historical rows/hashes unaffected.
-- [ ] 22.8 Canonical sync/archive/local commit/push remain separately authorized lifecycle actions.
+- [x] 22.8 Canonical sync/archive/local commit are completed under explicit user authorization on 2026-10-14. Push was not requested/performed and is not an acceptance claim; historical formal initialization remains separately recorded.
+
+2026-10-14独立AI收尾：四质量/出处任务通过，155/156，原缺陷与修订/补充代表样本精确区分。仅22.8生命周期待实际完成；未直接试听、未把productwarning标pass。
+
+Final closeout:156/156,13capability54added/0modified/0removed sync andarchive; localcommit exactGitreadback. Originalfailures/scope remain; nohumanlistening/push/publication claims.

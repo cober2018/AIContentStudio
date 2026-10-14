@@ -1,0 +1,23 @@
+{
+  "capabilities": [
+    "model-capability-routing",
+    "material-library-v1",
+    "creation-recipe-stage-control-loop",
+    "persona-creative-configuration",
+    "fe-p1-frontend-bundle-performance",
+    "content-harness-registry",
+    "product-settings",
+    "creative-output-quality",
+    "production-content-master",
+    "fe-f0-f1-project-experience",
+    "fe-f3b-content-identity",
+    "capability-memory",
+    "studio-creative-skill-pack"
+  ],
+  "added": 54,
+  "modified": 0,
+  "removed": 0,
+  "original_requirements_and_scenarios_retained": true,
+  "other_active_tasks_hashes_unchanged": true,
+  "multiplatform_archive_unchanged": true
+}

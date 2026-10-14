@@ -531,3 +531,21 @@ Human authorityText-only≤30/≤3/≥10seconds/≤5totalattempts,Unknownstop. R
 # 2026-10-09 Duration ceiling不等于wait或生成成功
 
 正式max_seconds360/timeout120与新模板seconds360/原默认wait25分开；本批显式wait120。旧600模板会超过新政策，单行同步360并保全历史Workflow。首个新CPA口语改编response_unavailable只证明Unknown，不足以定位原因；批次停止、不重发/换模型，不能用配置或104离线回归代替真实Audio成品。
+
+## 独立收尾事实边界（2026-10-14）
+
+C2C最终复核确认多平台归档，仅本change独立余项推进。用户现确认Recipe持久覆盖和AI委托质量；代码图MCP工具不可用，按已知相关模块和字符串搜索回退。旧临时验收DB多数已消失，耐久原件仍在；不能用新音频指标给旧成品记质量通过，或把旧投影当livecurrentness。保留untracked channel_methods及相邻plugin依赖，不将脏工作区等同独立已验证提交。
+## 2026-10-14 原始质量缺陷与最小修复依据
+
+- 原默认科技第三卡的真实 AI 人像违反历史明确 no-human 提示；其存在与历史“已渲染”证明不是同一问题。technical-editorial 的原有 photo_requirement 为 none，可以通过原 preset 的正式纯文字/shape composition 修复，不能把替代 preset 冒称默认。
+- 原生活卡第 2/3 页与原 Master8/246 秒口播有相同的系统说明腔。已通过的离线编辑稿没有进入旧 Master/口播，质量结论不能传递。已生成的新假想生活文章与 84 秒 Audio 是独立可评的 Persona3 默认写作/声音代表，须单独核对 Stage、身份和哈希。
+- 原 MiniMax JPEG 文件及完整旧图文 payload 已移除；保存的生活封面 PNG 含真实插图。修复时只能将精确 PNG 作为真实 input，复用现有 `crop` 画布视窗显示图片区，不能伪称原 JPEG 恢复或新增供应商回执。封面图片像素区约 x271/y300/538×402（原 PNG1080×1440）。
+- 六次视觉工具评审中的“纯文字内文必须照片”和固定留白占比属于超出已确认合同的建议，已排除；角色错配、违规人像属于实际缺陷。音频采用完整 ASR/声学与签名 voice/rate 代理评审；没有直接试听，不能替代实际音色、韵律、发音的感官验收。
+
+### 2026-10-14 默认图卡隔离质量修复的实际发现
+
+科技三卡改为默认technical-editorial、人设/账号边界与解耦成本；生活三卡改为默认warm-magazine、假想晚饭的记录惯性与当下感受，复用历史真实PNG中的精确插图像素而非缺失JPEG或真实晚饭照片。新计划为用户授权的Codex user_edit，不复制模型Stage provenance。生活上传API未暴露商业字段，新Rev32 null保留，经现有materials.create_revision追加同字节Rev33显式public=true/model=false/commercial=false，六个渲染输出也采用该权限。产品语义增量调用预算0，fact/identity当前warning/coverage unavailable，不能当成pass；结构/权利/render/平台等6项当前pass。数据修复回执与原件见[repairs](docs/final-closeout-20261014/repairs/README.md)，独立AI质量另行判断。
+
+### 2026-10-14 最终入口与运行回读
+
+隔离正常UI创建项目5及两角色Unit13/14、Snapshot13/14，分别继承默认Workflow17/19 v3。准备Run与Preview均不调模型；科技Preview ready，生活因空项目缺当前事实证据明确fresh_current_evidence_required/执行禁用。已有科技/生活真实结果审阅可达。源库SHA保持，workflow_step_attempt/llm_run/provider_generation_task计数均51/34/6，零新增调用。正式API按既有标签重载后8000和5173代理ready=true，Web HTTP200；仅本轮18767/5174临时进程组和浏览器已关闭。归档strict42/42，两个owner全部delta requirement保留，多平台160文件与其他8active tasks哈希不变。精确证据见final-closeout-20261014的daily-product-entry/runtime-readback/index；本地选择性提交，不push。

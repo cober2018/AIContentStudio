@@ -1,0 +1,84 @@
+{
+  "schema": "persona.daily-product-entry.v1",
+  "checked_at": "2026-10-14T12:21:16.777806+00:00",
+  "method": "Actual Playwright CLI on existing UI and isolated SQLite API; no fake fetch fixtures",
+  "scope": "Normal UI creation, default inheritance, request preview and prior accepted result inspection; no fresh paid generation",
+  "isolated_project": {
+    "id": 5,
+    "title": "双角色日常入口验收20261014",
+    "formal_project_write": false
+  },
+  "new_units": [
+    {
+      "persona_id": 2,
+      "unit_id": 13,
+      "snapshot_id": 13,
+      "workflow_id": 17,
+      "workflow_revision": 3,
+      "modality": "text",
+      "source_kind": "persona_default",
+      "prepared_without_model": true,
+      "preview": "ready",
+      "resolved_model": "gemini-3.8-flash-high"
+    },
+    {
+      "persona_id": 3,
+      "unit_id": 14,
+      "snapshot_id": 14,
+      "workflow_id": 19,
+      "workflow_revision": 3,
+      "modality": "text",
+      "source_kind": "persona_default",
+      "prepared_without_model": true,
+      "preview": "blocked",
+      "reason": "fresh_current_evidence_required",
+      "execute_disabled": true,
+      "resolved_model": "gemini-3.8-flash-high"
+    }
+  ],
+  "existing_results_inspected": {
+    "technology": "Project3/Unit7 Production accepted spoken/voice/TTS results and exact hashes; preview correctly blocks model_use=false material",
+    "lifestyle": "Project4/Unit8 Production actual accepted draft/spoken/voice/TTS/QC history"
+  },
+  "formal_identity_readiness": {
+    "text": "ready",
+    "graphic": "partial credential_continuity_unverified disclosed",
+    "audio": "voice ID unconfigured; explicitly select project Audio Recipe and actual voice"
+  },
+  "source_db_preserved_sha256": "f36e059f513acacf973759e73bfe22f5ea17587b9673b1a44d234912c585821a",
+  "execution_counts": {
+    "source": {
+      "workflow_step_attempt": 51,
+      "llm_run": 34,
+      "provider_generation_task": 6
+    },
+    "clone": {
+      "workflow_step_attempt": 51,
+      "llm_run": 34,
+      "provider_generation_task": 6
+    }
+  },
+  "new_provider_calls": 0,
+  "new_generation_calls": 0,
+  "full_fresh_daily_generation_claimed": false,
+  "human_listening": false,
+  "limitations": [
+    "New blank project has no Brief/FactPack; lifestyle current-evidence block is preserved",
+    "Existing short representative audio workflow is not a complete nine-stage default rerun",
+    "No remote account verification or public publication"
+  ],
+  "DOM_evidence": [
+    {
+      "local_path": "/Users/mshengran/Project/AIContentStudio/.playwright-cli/page-2026-10-14T12-15-11-221Z.yml",
+      "sha256": "0303b23fa6624ebe3ba104ccffa8f0c83a12e87e54034c979c903b1408ab8b40"
+    },
+    {
+      "local_path": "/Users/mshengran/Project/AIContentStudio/.playwright-cli/page-2026-10-14T12-15-57-805Z.yml",
+      "sha256": "801bbbe7585c4aef8568025b2191cce840a73134f7e87df192645467ba8d5a2e"
+    },
+    {
+      "local_path": "/tmp/aics-life-new-preview-snapshot.txt",
+      "sha256": "d94e31e9976cb4b2ace69c6fcda3ff3f257f0b88df3f0cb3e59f09f9556d702f"
+    }
+  ]
+}

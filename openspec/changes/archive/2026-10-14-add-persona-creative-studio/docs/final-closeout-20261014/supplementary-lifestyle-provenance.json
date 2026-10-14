@@ -1,0 +1,832 @@
+{
+  "schema": "persona.supplementary.lifestyle-provenance.v1",
+  "read_policy": "isolated SQLite mode=ro; formal database untouched",
+  "persona_id": 3,
+  "identity_snapshot": {
+    "id": 8,
+    "owner_user_id": 1,
+    "brand_id": null,
+    "brand_revision_id": null,
+    "persona_id": 3,
+    "persona_revision_id": 2,
+    "account_id": null,
+    "account_revision_id": null,
+    "series_id": 2,
+    "series_revision_id": null,
+    "brand_voice_version_id": null,
+    "checksum": "3a9ee8a64aaf4e4043e6b0e41980bb5388274a8e8c3866125c551737428dec64",
+    "created_by": "admin@studio.local",
+    "created_at": "2026-10-14 09:34:28.115465",
+    "effective_profile": {
+      "positioning": "观察正在发生的有趣事情、未来变化与日常生活感受的内容角色",
+      "target_audience": [
+        "对生活变化好奇的人",
+        "希望获得具体观察的普通读者"
+      ],
+      "content_domains": [
+        "日常生活",
+        "新鲜变化",
+        "个人观察",
+        "近未来趣事"
+      ],
+      "expression_style": {
+        "voice": "warm_observational",
+        "hype": "low",
+        "preachiness": "low",
+        "specificity": "high"
+      },
+      "visual_language": {
+        "preset": "warm_magazine",
+        "documentary": true,
+        "density": "low"
+      },
+      "content_boundaries": [
+        "不说教",
+        "不制造焦虑",
+        "事实与个人感受分开"
+      ],
+      "risk_boundaries": [
+        "当前事实必须有 fresh source",
+        "未来内容明确标注推测"
+      ],
+      "public_fact_policy": {
+        "fresh_source_required_for_current_claims": true,
+        "label_speculation": true
+      },
+      "text_creative_profile": {
+        "schema": "persona.creative.text.v1",
+        "mode": "auto",
+        "skill_ref": "studio.text.longform@1",
+        "style_preset_ref": "studio.text.observational-lifestyle@1",
+        "quality_profile_ref": "studio.quality.text.lifestyle@1",
+        "capability": "chat",
+        "model_binding": null,
+        "model_chain": [],
+        "capability_memory_revision_ids": [],
+        "installed_skill_refs": [],
+        "parameters": {},
+        "stage_instruction": null,
+        "provenance": {
+          "blueprint_key": "starter.lifestyle-observer.v1",
+          "blueprint_version": "1",
+          "default_recipe_key": "persona.text.lifestyle.v1"
+        }
+      },
+      "graphic_creative_profile": {
+        "schema": "persona.creative.graphic.v1",
+        "mode": "auto",
+        "skill_ref": "studio.graphic.visual-director@1",
+        "style_preset_ref": "studio.graphic.warm-magazine@1",
+        "quality_profile_ref": "studio.quality.graphic.lifestyle@1",
+        "capability": "image_generation",
+        "model_binding": null,
+        "model_chain": [],
+        "capability_memory_revision_ids": [],
+        "installed_skill_refs": [],
+        "parameters": {},
+        "stage_instruction": null,
+        "provenance": {
+          "blueprint_key": "starter.lifestyle-observer.v1",
+          "blueprint_version": "1",
+          "default_recipe_key": "persona.graphic.lifestyle.v1"
+        }
+      },
+      "audio_creative_profile": {
+        "schema": "persona.creative.audio.v1",
+        "mode": "auto",
+        "skill_ref": "studio.audio.tts@1",
+        "style_preset_ref": "studio.audio.warm-conversational@1",
+        "quality_profile_ref": "studio.quality.audio.conversational@1",
+        "capability": "tts",
+        "model_binding": null,
+        "model_chain": [],
+        "capability_memory_revision_ids": [],
+        "installed_skill_refs": [],
+        "parameters": {},
+        "stage_instruction": null,
+        "provenance": {
+          "blueprint_key": "starter.lifestyle-observer.v1",
+          "blueprint_version": "1",
+          "default_recipe_key": "persona.audio.lifestyle.v1"
+        }
+      },
+      "video_creative_profile": {
+        "schema": "persona.creative.video.v1",
+        "mode": "auto",
+        "skill_ref": "studio.video.director-package@1",
+        "style_preset_ref": "studio.graphic.warm-magazine@1",
+        "quality_profile_ref": "studio.quality.text.lifestyle@1",
+        "capability": "chat",
+        "model_binding": null,
+        "model_chain": [],
+        "capability_memory_revision_ids": [],
+        "installed_skill_refs": [],
+        "parameters": {},
+        "stage_instruction": null,
+        "provenance": {
+          "blueprint_key": "starter.lifestyle-observer.v1",
+          "blueprint_version": "1",
+          "default_recipe_key": "persona.video.lifestyle.v1"
+        }
+      }
+    },
+    "field_origins": {
+      "positioning": "persona",
+      "target_audience": "persona",
+      "content_domains": "persona",
+      "expression_style": "persona",
+      "visual_language": "persona",
+      "content_boundaries": "persona",
+      "risk_boundaries": "persona",
+      "public_fact_policy": "persona",
+      "text_creative_profile": "persona",
+      "graphic_creative_profile": "persona",
+      "audio_creative_profile": "persona",
+      "video_creative_profile": "persona"
+    }
+  },
+  "workflow": {
+    "id": 22,
+    "name": "完整文章与声音 lifestyle 工作流",
+    "workflow_key": "project.unit.8",
+    "version": 1,
+    "checksum": "fde6f488cf2715f2cd7b73597b313b6a3fc5e79c3969a9c330403e190a5b517a",
+    "parent_id": null,
+    "scope": "project",
+    "status": "published"
+  },
+  "definition": {
+    "nodes": [
+      {
+        "id": "draft",
+        "kind": "AI",
+        "plugin": "stage.master.propose",
+        "plugin_version": "1",
+        "stage_schema": "stage.master.propose.v1",
+        "label": "初稿候选",
+        "config": {
+          "purpose": "生成第一版 Master 候选",
+          "instruction": "写一篇约500汉字的生活随笔：假设晚饭前把手机放远十分钟，观察自己为什么总想记录。用明确的假想场景，不冒充作者真实经历，不添加新闻、趋势、数据或系统功能事实。温暖自然，不说教。 只返回title和body。正文必须完整，有开头、展开与收束，不需要引用编号。",
+          "candidate_count": 1,
+          "length": "medium",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.longform@1"
+          },
+          "fact_mode": "grounded"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "spoken",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "口语稿确认",
+        "config": {
+          "output_schema": "audio.spoken-adaptation.v1",
+          "instruction": "只将同一内容单元当前已接受的Text正文改成约450汉字口语稿，不添加事实，保留假想标记。",
+          "length": "medium",
+          "pace": "medium",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.spoken-adapt@1"
+          }
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "voice",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "声音方案确认",
+        "config": {
+          "output_schema": "audio.voice-direction.v1",
+          "instruction": "为已接受口语稿制定声音方案：自然聊天、温暖而不说教。描述停顿、节奏和语速；风格名称不是供应商voice ID，不得编造ID或声纹。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.voice-director@1"
+          }
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "tts",
+        "kind": "Tool",
+        "plugin": "media.generate",
+        "plugin_version": "4",
+        "stage_schema": "media.generate.stage.v4",
+        "label": "生成并接受真实音频",
+        "config": {
+          "capability": "tts",
+          "tts_source": "accepted_spoken",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.tts@1"
+          },
+          "items": 1,
+          "seconds": 360,
+          "timeout_seconds": 120,
+          "voice": "chunzhen_xuedi",
+          "rate": 1.0
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "audio_quality",
+        "kind": "Rule",
+        "plugin": "stage.audio.qc",
+        "plugin_version": "1",
+        "stage_schema": "stage.audio.qc.v1",
+        "label": "音频质量确认",
+        "config": {
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.qc@1"
+          }
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "draft",
+        "to": "spoken"
+      },
+      {
+        "from": "spoken",
+        "to": "voice"
+      },
+      {
+        "from": "spoken",
+        "to": "tts"
+      },
+      {
+        "from": "voice",
+        "to": "tts"
+      },
+      {
+        "from": "tts",
+        "to": "audio_quality"
+      }
+    ],
+    "visual_order": [
+      "draft",
+      "spoken",
+      "voice",
+      "tts",
+      "audio_quality"
+    ]
+  },
+  "run": {
+    "id": 8,
+    "workflow_id": 22,
+    "status": "waiting_input",
+    "error": null,
+    "started_at": "2026-10-14 09:34:28.124768",
+    "finished_at": null,
+    "topic_id": null,
+    "channel": null,
+    "content_form": null,
+    "workflow_key": "project.unit.8",
+    "workflow_version": 1,
+    "definition_checksum": "fde6f488cf2715f2cd7b73597b313b6a3fc5e79c3969a9c330403e190a5b517a",
+    "content_unit_id": 8,
+    "identity_snapshot_id": 8
+  },
+  "stages": [
+    {
+      "id": 39,
+      "node_id": "draft",
+      "plugin_key": "stage.master.propose",
+      "plugin_version": "1",
+      "status": "succeeded",
+      "input_hash": "2c4396cf58af60bfbe502ab7f457c4ea6f38548f9fa3e430c693eace169a3182",
+      "output_hash": "d5e3fcc6a442d8b66fc294fa8c4fb03d0925cb79492ad02753e7c37fa8c8db77",
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "4de53ad45b1156b641601fbc7619a5c2c500d014fade395331ed67927906681d",
+        "created_at": "2026-10-14T09:41:06.773119+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:41:25.839154+00:00",
+        "invocation_key": "series-lifestyle-8-draft",
+        "method_hash": "2e96984b4c888a61f0f38ea0026f49acf614b5866bbe3b7c06f34fe107f731ef",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "draft",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "candidate_shape": {
+            "asset_refs": "exact supplied MaterialRevision refs only",
+            "evidence_refs": "exact supplied FactPackItem refs only",
+            "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+          },
+          "max_candidates": 5,
+          "payload_schema": "text.master.v2",
+          "reference_rules": [
+            "Return exactly candidate_count candidates. Each candidate has only title and body.",
+            "body is Markdown. The service converts it into text.master.v2 and assigns block ids.",
+            "Do not return payload, payload_schema, citations, hashes, asset_refs, or evidence_refs.",
+            "Do not invent numbers, versions, sources, or material ids. Keep unknowns explicit in the prose."
+          ],
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "maxLength": 12000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "title": {
+                      "maxLength": 200,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "body"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "const": "stage.master.proposal.v1"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object with candidates array; honor requested candidate_count",
+          "schema": "stage.master.proposal.v1",
+          "supported_modalities": [
+            "text",
+            "graphic",
+            "video"
+          ]
+        },
+        "output_hash": "d5e3fcc6a442d8b66fc294fa8c4fb03d0925cb79492ad02753e7c37fa8c8db77",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.master.propose",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "31962062ea694ff7546aae288bc26c67e474792233e4c4ddbedd0141743f00a1",
+        "request_fingerprint": "018feda4d5d2f3444eb995c7de1fa9a078634749743f6d80ba4db0d6e8ae4cba",
+        "request_mode": "explicit",
+        "resolution_hash": "2c4396cf58af60bfbe502ab7f457c4ea6f38548f9fa3e430c693eace169a3182",
+        "runtime_identity_hash": "fbd9fcdc64cecc41a0e1f49642195128db5e61754bf89f1f7fc8a214304d4cda",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "b675489fa280f6b0d1458e6d7e7ddbde895f9197c843b362cff9a404e31c64b6",
+        "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      }
+    },
+    {
+      "id": 40,
+      "node_id": "spoken",
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "status": "succeeded",
+      "input_hash": "28ee796867f47f6e71dfb47e520268668bffabbfa1bdd88d153984c38478e750",
+      "output_hash": "a857ae696557b80f8b5104ae30033fcbee3dc3b837ac3e7707adc60a53e5e01a",
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "40ffac1cff6c7ebbfea3b7d88c35f303f794a2ec1e0c2ba882c5195cd1283490",
+        "created_at": "2026-10-14T09:41:36.011541+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:41:55.463533+00:00",
+        "invocation_key": "auto-accept:9e27e08a22fdc136765ffd0045163ef51a38ac5e2dd12b7ea722ef158c7ded3c",
+        "method_hash": "5c34e148e50819f9bcfd38469c6038ba437bcfc18d6d48cebb99d1962120f0af",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "spoken",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "pronunciation_notes": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "minItems": 0,
+                "type": "array"
+              },
+              "script": {
+                "maxLength": 24000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "source_summary": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "script",
+              "pronunciation_notes",
+              "source_summary"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "audio.spoken-adaptation.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "audio.spoken-adaptation.v1"
+        },
+        "output_hash": "a857ae696557b80f8b5104ae30033fcbee3dc3b837ac3e7707adc60a53e5e01a",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "fbba14f7cfc8a473bdb14814905a642c85df1c146cccc359d6340d48b831d12c",
+        "request_fingerprint": "ec6ca6e92b6e69ef71f35a01dbd43db1b406750ac800d602fb45326a8adbf722",
+        "request_mode": "automatic",
+        "resolution_hash": "28ee796867f47f6e71dfb47e520268668bffabbfa1bdd88d153984c38478e750",
+        "runtime_identity_hash": "fbd9fcdc64cecc41a0e1f49642195128db5e61754bf89f1f7fc8a214304d4cda",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "c704c4d633b6885cf8400a6d0800cc86a168fb7099339733ab17de765f304598",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      }
+    },
+    {
+      "id": 41,
+      "node_id": "voice",
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "status": "succeeded",
+      "input_hash": "fb3aa1c3f69c17e077326f59a780bbc986aa6dde0378580ac6115f8ac83c47dc",
+      "output_hash": "b6baa744c8e015011d7a1ba121aad47dd91598be6ddd88b19736b73983e72e4c",
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "1ede3c467101caf85ed908ab5765f21a56cc3eb7c7c18b1a770687405fc6b664",
+        "created_at": "2026-10-14T09:42:05.615959+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:42:20.950707+00:00",
+        "invocation_key": "auto-accept:1d867f5fe828930e55ae0129e9b58180eae75d1cdca2f656541af27853b3dd48",
+        "method_hash": "782a4eff095c86e7a4855a17b4e7e4766f64ac4f8d4c9d6c9f3394c19fc18564",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "voice",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "energy": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "pace": {
+                "enum": [
+                  "slow",
+                  "medium",
+                  "fast"
+                ],
+                "maxLength": 6,
+                "type": "string"
+              },
+              "pause_policy": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "pronunciation_notes": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "minItems": 0,
+                "type": "array"
+              },
+              "rate": {
+                "maximum": 2,
+                "minimum": 0.5,
+                "type": "number"
+              },
+              "voice_character": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "voice_character",
+              "pace",
+              "energy",
+              "pause_policy",
+              "pronunciation_notes",
+              "rate"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "audio.voice-direction.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "audio.voice-direction.v1"
+        },
+        "output_hash": "b6baa744c8e015011d7a1ba121aad47dd91598be6ddd88b19736b73983e72e4c",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "3c2426962d2cfbd7f37dc7fc49e15651898e9609720f7bbc10d7aaed06f0e643",
+        "request_fingerprint": "43ec963cd99e33fe6c007b2f53a84b4e15f890a0fc33e488c742a27d0f9066f2",
+        "request_mode": "automatic",
+        "resolution_hash": "fb3aa1c3f69c17e077326f59a780bbc986aa6dde0378580ac6115f8ac83c47dc",
+        "runtime_identity_hash": "fbd9fcdc64cecc41a0e1f49642195128db5e61754bf89f1f7fc8a214304d4cda",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "c46c80922f21906af35dea747e38c88e9e510b505c8eb21c031b3e73e97dae69",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      }
+    },
+    {
+      "id": 42,
+      "node_id": "tts",
+      "plugin_key": "media.generate",
+      "plugin_version": "4",
+      "status": "succeeded",
+      "input_hash": "2ac847ccb13acac696195b928050c4fc7777ad247a38e484c956182beb9b97e2",
+      "output_hash": "a08a05183825002f8e7ad1cca17d169b124780c70c9843e8a37efdf52d6f5dc2",
+      "receipt": {
+        "adapter_hash": "b5de02acf29d56dc038c3f6f91514ea17c4c80cad8ae34eaf427c652c6f737ae",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "f50a8927787933bcb0ea8bcbb359d05a4ea61aad42214d10d386c2e26f4f2fa4",
+        "created_at": "2026-10-14T09:44:38.498680+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:44:43.199526+00:00",
+        "invocation_key": "series-lifestyle-8-tts",
+        "method_hash": "ec456c99539fa5181ba913d68ddf4ad0a9a4a71b64b2b671589df7de89f56dcd",
+        "model_route_hash": "96594f51589463895d14bb41facc4d9c5d63ba47682aebff37797c1164a8cb2a",
+        "node_id": "tts",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "schema": "stage.media.result.v1"
+        },
+        "output_hash": "a08a05183825002f8e7ad1cca17d169b124780c70c9843e8a37efdf52d6f5dc2",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "media.generate",
+        "plugin_version": "4",
+        "prepared_by_server": true,
+        "prompt_hash": "0d4e577b5a6b80aaedf164b0fd6350a2e4011d6a46e0ed71befced29f13d50bd",
+        "request_fingerprint": "854e3829b49aa2411c188e0712d06bd4c7fbd3c4860efb7b22edbbf8f68020d0",
+        "request_mode": "explicit",
+        "resolution_hash": "2ac847ccb13acac696195b928050c4fc7777ad247a38e484c956182beb9b97e2",
+        "runtime_identity_hash": "8371611390f4953f1f0914cdd50d8308bb851c79792c7bf57b9c756758c76e3a",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "8532825e98a4e4eefff2c0b83af32c6f715bfb662362f80e8dedc1af76c27754",
+        "upstream_hash": "d9aca33b8d7e6af69d571869943409afa20c94bcfe711bf145a7cce4c3d8dd6c",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      }
+    },
+    {
+      "id": 43,
+      "node_id": "audio_quality",
+      "plugin_key": "stage.audio.qc",
+      "plugin_version": "1",
+      "status": "succeeded",
+      "input_hash": "2f620e66b68bb73cccd887e5f48d4e2bbba8bff9a91bf4eeeb227fc1dfe4527a",
+      "output_hash": "d17c63615a5cfbb2b4e6157fcbb21f1c97acc0e9d9fc875ad7c439b2e0bb47ce",
+      "receipt": {
+        "adapter_hash": "68bd3b87e8f87d0b0a08856a8c8767482abb3df447658ab3f062e166da5661ec",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "72229e3c9556aa0579e37954795ae44face5ac96cb7c248a87ad406406863151",
+        "created_at": "2026-10-14T09:44:56.616649+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:44:59.415385+00:00",
+        "invocation_key": "auto-accept:80cd5c7f5c147faa45ada007a603be2083ebed4f13f9fb44ff92893e2c44791a",
+        "method_hash": "8fae15b9510459722ece6b3874aa5e34cf99bae98364f9763cb6cb093193d5c9",
+        "model_route_hash": "0bd4c0d91723158f5cc9fa88fda22d69df7f734c92e7635a79a8fdadc6c915ca",
+        "node_id": "audio_quality",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "schema": "stage.checks.result.v1"
+        },
+        "output_hash": "d17c63615a5cfbb2b4e6157fcbb21f1c97acc0e9d9fc875ad7c439b2e0bb47ce",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.audio.qc",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "e3b20b8c6bd611958a5426bea0f885fe5d2c8b6e6ab3b5a5761e300b0f2757eb",
+        "request_fingerprint": "4a74da70c68b679bdc517895f5d355f595d2bb64409de5c5f381df99fe7219dd",
+        "request_mode": "automatic",
+        "resolution_hash": "2f620e66b68bb73cccd887e5f48d4e2bbba8bff9a91bf4eeeb227fc1dfe4527a",
+        "runtime_identity_hash": "938071a8f05aec1428b5e203fa195ad6bff7d701fe7763914cefde6394406d86",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "b7a2d46d66bf96dc26b570c1639d5ebe6bf9a8543136264fdd1b5a51a5806c70",
+        "upstream_hash": "cebc55148e3521da8a52ad56278e80e815ce6703bb82fc9f07117fc0ec7ce45e",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      }
+    }
+  ],
+  "source_files": [
+    {
+      "path": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/final/lifestyle/article.md",
+      "sha256": "2f4c66ee74217793c26c48af6f84818770e5a0bf1ce941a90e894f9a04ff1284",
+      "bytes": 1367
+    },
+    {
+      "path": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/final/lifestyle/text-master.json",
+      "sha256": "7a09bdc1970d887b5760e0154ca40c45571ef62a53a1e8e4b35f81e66a2ccbd1",
+      "bytes": 4480
+    },
+    {
+      "path": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/final/lifestyle/text-checks.json",
+      "sha256": "b11c053437cf5cf5e0f3008b7f36bcb343e20d1505c3f0c4bab4612da88346e8",
+      "bytes": 25693
+    },
+    {
+      "path": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/final/lifestyle/audio.wav",
+      "sha256": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+      "bytes": 5420902
+    },
+    {
+      "path": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/final/lifestyle/audio-qc.json",
+      "sha256": "d966e5e0111a00426ad0b7d012e43013661bfa1ad3912bfd4f50ad6ac620335a",
+      "bytes": 2282
+    }
+  ],
+  "boundary": "Separate newly accepted real sample; same Persona3 and built-in longform/spoken/voice/TTS/QC methods; this shortened representative workflow is not falsely called full nine-stage default Text. Old frozen Master8 and old Audio remain unchanged."
+}

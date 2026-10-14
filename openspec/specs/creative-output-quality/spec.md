@@ -1,5 +1,8 @@
-## ADDED Requirements
+# creative-output-quality Specification
 
+## Purpose
+Require exact real output provenance, deterministic gates and explicitly delegated reviewer quality evidence while retaining truthful listening, rights and publication boundaries.
+## Requirements
 ### Requirement: Image and Audio generation use one normalized multimedia contract
 
 Image and Audio generation SHALL be presented as one user-facing multimedia generation surface with modality-specific adapters. Both SHALL support server-derived Effective Preview, exact provider/model/profile binding, adapter-declared controls, immutable attempt provenance, candidate output validation and explicit acceptance before durable MaterialRevision/Master/Variant use. Adapter-specific fields that are unsupported or unavailable MUST be hidden or reported unavailable; they MUST NOT be silently ignored.
@@ -114,10 +117,15 @@ For each Persona/modality the product SHALL expose `ready`, `partial` or `blocke
 
 ### Requirement: Real-provider acceptance is required to claim out-of-box quality
 
-Before this change is marked fully accepted, explicitly authorized real configured providers SHALL be used for bounded representative Text, Graphic and Audio journeys for both starter Personas. The acceptance record SHALL freeze provider/model/profile/runtime identities, prompt/config hashes, output artifact hashes, deterministic quality results and a fixed human rubric.
+Before this change is marked fully accepted, explicitly authorized real configured providers SHALL be used for bounded representative Text, Graphic and Audio journeys for both starter Personas. The acceptance record SHALL freeze provider/model/profile/runtime identities, prompt/config hashes, output artifact hashes, deterministic quality results and a fixed reviewer rubric. The reviewer SHALL be the human or the explicitly user-designated AI reviewer; an AI delegation MUST record the actual assessment methods, exact artifacts, limitations and any unrepaired rejection, and MUST NOT be described as direct human listening. Product human-review gates and historic permission/QC fields remain unchanged.
 
 Contract/mock tests SHALL be labeled as contract evidence only. A passing real sample proves usability under the tested configuration, not universal objective quality.
 
 #### Scenario: Only mocks were exercised
 - **WHEN** all schema and workflow tests pass but no authorized real provider outputs were reviewed
 - **THEN** implementation may be contract-complete but MUST NOT claim the shipped defaults produce proven good creative results
+
+#### Scenario: Explicit delegated AI closeout with artifact repair
+- **WHEN** the user explicitly delegates the fixed quality rubric to Codex and a historic representative sample is rejected
+- **THEN** the assessment preserves that rejection and exact original artifacts, and evaluates a separately identified corrected or supplementary real artifact before accepting that dimension
+- **AND** offline ASR, timing and acoustic assessment are labeled with their actual coverage and do not become a claim of direct listening, public-use rights or remote publication

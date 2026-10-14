@@ -1,0 +1,52 @@
+{
+  "plan": {
+    "title": "晚饭前的十分钟留白",
+    "aspect_ratio": "3:4",
+    "cards": [
+      {
+        "id": "cover",
+        "order": 0,
+        "role": "cover",
+        "title": "晚饭前的十分钟留白",
+        "body": "假想一个寻常傍晚：饭菜将要上桌，把手机留在隔壁。热气还在，眼前暂时没有取景框。",
+        "bullets": [],
+        "visual_type": "image",
+        "material_revision_id": 33
+      },
+      {
+        "id": "body-1",
+        "order": 1,
+        "role": "body",
+        "title": "想要记录的惯性",
+        "body": "在这段假想时间里，也许会几次下意识地摸向口袋。汤面泛着油花，窗外暮色慢慢沉下去，脑海里冒出“拍下来就好了”。\n\n按下快门，像替流逝的片刻夹上一枚书签。想记录的冲动，未必总带着明确的目的。",
+        "bullets": [],
+        "visual_type": "none"
+      },
+      {
+        "id": "body-2",
+        "order": 2,
+        "role": "body",
+        "title": "留在当下的片刻",
+        "body": "假想手机还在远处：筷子轻轻碰着碗沿，厨房传来水滴声，饭菜的香气与温度直接迎面而来。\n\n记录是自己的自由。偶尔把目光留给眼前热腾腾的饭菜，也可以是一种舒服的日常选择。",
+        "bullets": [],
+        "visual_type": "none"
+      }
+    ]
+  },
+  "authorship": {
+    "kind": "user_edit",
+    "author": "Codex acting under explicit user delegated AI closeout",
+    "provider_generated": false
+  },
+  "source": {
+    "source_text_master_id": 22,
+    "source_text_payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+    "source_context_hash": "e7138cf7a85b4cccb186ec57256768aa50376498a8194c3b6a020e8ae479a934",
+    "source_identity_snapshot_id": 8,
+    "fact_boundary_revision_id": 3,
+    "author": "Codex editorial compression under user delegation",
+    "provider_generated": false,
+    "stage_provenance_copied": false,
+    "added_external_factual_claims": false
+  }
+}

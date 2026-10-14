@@ -1,0 +1,78 @@
+{
+  "schema": "persona.delegated-repaired-pixel-review.v1",
+  "reviewer": "Codex",
+  "tool": "native view_image, six exact actual pixel files",
+  "external_vision_review_completed": 0,
+  "external_vision_attempts": 6,
+  "external_vision_unavailable": "MiniMaxAPI2067 TokenPlanlimit, zero retries",
+  "human_review": false,
+  "rows": [
+    {
+      "persona": "tech",
+      "file": "tech/graphic-1.png",
+      "sha256": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+      "readability": 3,
+      "hierarchy": 3,
+      "role_fit": 3,
+      "source_match": 3,
+      "actual_pixel_observations": "complete Chinese text, no crop/overlap/garble; tech no portrait; life cover decorative reused illustration without original title text, body explicit hypothetical/choice; optional density not blocker"
+    },
+    {
+      "persona": "tech",
+      "file": "tech/graphic-2.png",
+      "sha256": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+      "readability": 3,
+      "hierarchy": 3,
+      "role_fit": 3,
+      "source_match": 3,
+      "actual_pixel_observations": "complete Chinese text, no crop/overlap/garble; tech no portrait; life cover decorative reused illustration without original title text, body explicit hypothetical/choice; optional density not blocker"
+    },
+    {
+      "persona": "tech",
+      "file": "tech/graphic-3.png",
+      "sha256": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+      "readability": 3,
+      "hierarchy": 3,
+      "role_fit": 3,
+      "source_match": 3,
+      "actual_pixel_observations": "complete Chinese text, no crop/overlap/garble; tech no portrait; life cover decorative reused illustration without original title text, body explicit hypothetical/choice; optional density not blocker"
+    },
+    {
+      "persona": "lifestyle",
+      "file": "lifestyle/graphic-1.png",
+      "sha256": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+      "readability": 3,
+      "hierarchy": 3,
+      "role_fit": 3,
+      "source_match": 3,
+      "actual_pixel_observations": "complete Chinese text, no crop/overlap/garble; tech no portrait; life cover decorative reused illustration without original title text, body explicit hypothetical/choice; optional density not blocker"
+    },
+    {
+      "persona": "lifestyle",
+      "file": "lifestyle/graphic-2.png",
+      "sha256": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+      "readability": 3,
+      "hierarchy": 3,
+      "role_fit": 3,
+      "source_match": 3,
+      "actual_pixel_observations": "complete Chinese text, no crop/overlap/garble; tech no portrait; life cover decorative reused illustration without original title text, body explicit hypothetical/choice; optional density not blocker"
+    },
+    {
+      "persona": "lifestyle",
+      "file": "lifestyle/graphic-3.png",
+      "sha256": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+      "readability": 3,
+      "hierarchy": 3,
+      "role_fit": 3,
+      "source_match": 3,
+      "actual_pixel_observations": "complete Chinese text, no crop/overlap/garble; tech no portrait; life cover decorative reused illustration without original title text, body explicit hypothetical/choice; optional density not blocker"
+    }
+  ],
+  "verdict": "local delegatedAI graphicqualitypassed, productsemanticwarnings retained",
+  "forbidden_claims": [
+    "no human sensory approval",
+    "no model-created new plan",
+    "no originalJPEG recovered",
+    "no actualdinnerphotograph"
+  ]
+}

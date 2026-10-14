@@ -1,0 +1,155 @@
+{
+  "schema": "persona.final-closeout.artifact-index.v1",
+  "created_at": "2026-10-14T12:22:27.216909+00:00",
+  "scope": "All durable final-closeout files except this index; old raw evidence is preserved",
+  "files": {
+    "README.md": {
+      "sha256": "7a8a7bf2e42dc267301b4103ce9343af7343852ded39b3414b00be5541b844d0",
+      "bytes": 2559
+    },
+    "archive.log": {
+      "sha256": "79782f44804aa2ac0f42c3b003e9e42883f6f11d78d71d419e651aea09fb54e6",
+      "bytes": 1947
+    },
+    "artifact-verification.json": {
+      "sha256": "00b905e223b7de5c98f283c1b73e2475792704cca9af92b22ec1ead4fedd00a6",
+      "bytes": 4024
+    },
+    "canonical-preservation.json": {
+      "sha256": "832bb01cb7f29c2751b06f4b7e4c2ef54e639ba28cb0c4d7eaeb2d1c7847e472",
+      "bytes": 646
+    },
+    "daily-product-entry.json": {
+      "sha256": "c2f577838cfa12bc092755b242d58ef1a0848286fe07873182d9b281cd8f284f",
+      "bytes": 3068
+    },
+    "final-quality.json": {
+      "sha256": "f8af25d7a1fb0c3786d0dd5c92a1919ce2ebc2d782e4cb17673cf7a67f644fb3",
+      "bytes": 3859
+    },
+    "lifestyle-audio-review.json": {
+      "sha256": "fdc5d69b61fed606797be506a98ea2e7b312385503a2b653cda8002afbf7ef44",
+      "bytes": 27659
+    },
+    "quality-review.json": {
+      "sha256": "cdab3e2fe5b5a55a5cde0865e613f624d7d88eafa98502c62d546341d6af1e25",
+      "bytes": 74553
+    },
+    "quality-review.md": {
+      "sha256": "8c77905265cdd31f9b64c9588f0848f0ffe743bc39a0189e869fa9851903b2c2",
+      "bytes": 8309
+    },
+    "repaired-pixel-review.json": {
+      "sha256": "1416577ab69264064828bb27452177f596e9d3b03ef751e9074203bf54f31081",
+      "bytes": 3541
+    },
+    "repairs/README.md": {
+      "sha256": "258a429d8ab2e72d88acf22a765a54c243ab598a3e46885e4b442f87d9fbd221",
+      "bytes": 5329
+    },
+    "repairs/current-readback.json": {
+      "sha256": "b6b3ed16805161197ad253a17a99a4a51b9965a17bc9fb2b8d83430d1a480a77",
+      "bytes": 22591
+    },
+    "repairs/current-readback.log": {
+      "sha256": "4f26e4e67e88606082b831ca536513ae184d89740b10a19a1c241589bb0166b1",
+      "bytes": 2581
+    },
+    "repairs/lifestyle/checks.json": {
+      "sha256": "d0f669d950fed190591c7491b49843b39223eac15bbe1d8adaad09f933077985",
+      "bytes": 18854
+    },
+    "repairs/lifestyle/editorial-plan.json": {
+      "sha256": "87e2fe2d514da23443144208767f5b9f1409336a6d91c9c09f5e905c8b6d8c09",
+      "bytes": 2045
+    },
+    "repairs/lifestyle/graphic-1.png": {
+      "sha256": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+      "bytes": 278588
+    },
+    "repairs/lifestyle/graphic-2.png": {
+      "sha256": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+      "bytes": 86627
+    },
+    "repairs/lifestyle/graphic-3.png": {
+      "sha256": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+      "bytes": 79399
+    },
+    "repairs/lifestyle/graphic-master.json": {
+      "sha256": "c59888cde5f37461bd9af7dbedabc88a7882f501876038132b733355cb921444",
+      "bytes": 12201
+    },
+    "repairs/lifestyle/identity-preset.json": {
+      "sha256": "8b891f6290677518d107afcab26d31cf4283c4eb8f4e5e1dd7378ff56bf31f80",
+      "bytes": 763
+    },
+    "repairs/manifest.json": {
+      "sha256": "325fa954258f1ad4fb1d617a10b3471c6cf373fd04536a794192502a7c7e967e",
+      "bytes": 156038
+    },
+    "repairs/repair-run.log": {
+      "sha256": "0c1b9ace73f9139a863b2e9c7de49e903f1a6545619118818dd5a5750fe44b7c",
+      "bytes": 970
+    },
+    "repairs/tech/checks.json": {
+      "sha256": "3fae913cd3faa053c6d57658a12df5bd42b504d02d9f930af424e4a912d1de65",
+      "bytes": 18872
+    },
+    "repairs/tech/editorial-plan.json": {
+      "sha256": "fe93e15057675ab1dcc26da9fc9ef4bfd4215583fbd35aff9e6cbe848841a5b8",
+      "bytes": 2065
+    },
+    "repairs/tech/graphic-1.png": {
+      "sha256": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+      "bytes": 57431
+    },
+    "repairs/tech/graphic-2.png": {
+      "sha256": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+      "bytes": 83247
+    },
+    "repairs/tech/graphic-3.png": {
+      "sha256": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+      "bytes": 84427
+    },
+    "repairs/tech/graphic-master.json": {
+      "sha256": "859d4d042432a8dfb51bc49baa4d3522b5fad919102f0bf2688487bc9e222418",
+      "bytes": 11179
+    },
+    "repairs/tech/identity-preset.json": {
+      "sha256": "7cac41eaa8226c10edac82f62fc83a48776d30dc69adea8a5f3e6fcf603bf57b",
+      "bytes": 765
+    },
+    "repairs/verification.json": {
+      "sha256": "a44740e57a3cbb3d2b42284e871861880d8648933670adfec91f93e19fbd4bfc",
+      "bytes": 4080
+    },
+    "repairs/vision-provider-unavailable.json": {
+      "sha256": "f9f7d5a1eb99519475875431b733bdd92b183d9783274f663f80e82a32bec410",
+      "bytes": 279
+    },
+    "runtime-readback.json": {
+      "sha256": "cd3b8f0b98c973e6007cbecdd56bd48559cae1c6c183eddd046fe9414087822f",
+      "bytes": 700
+    },
+    "strict-after-archive.log": {
+      "sha256": "dc0f687fa1386e0be7db9b7cfb4750e8268e87430097e40e0dc109d34abcea2b",
+      "bytes": 1613
+    },
+    "supplementary-lifestyle-audio-review.json": {
+      "sha256": "a4ce7e701131976a41c47ce32dba74b6474e8d332840792027a9faf01ce8060a",
+      "bytes": 3435
+    },
+    "supplementary-lifestyle-provenance.json": {
+      "sha256": "c244fdbaffd18cddb6872181e4dbd5d4d0f276a832eaa7857abd04728f9e753c",
+      "bytes": 33106
+    },
+    "tech-audio-review.json": {
+      "sha256": "31054580cb6d8ec27d65dbfd4e238d340b04731c5891f551d226e1541d7ce692",
+      "bytes": 43208
+    },
+    "vision-review.json": {
+      "sha256": "9f6b4131b5df7de4b3a74239e877817fb7311f450c2d649132a39589bc44b109",
+      "bytes": 23941
+    }
+  }
+}

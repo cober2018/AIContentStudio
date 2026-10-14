@@ -724,3 +724,7 @@ Persona creative configuration may influence target adaptation instructions thro
 - **Graphic LLM produces brittle pixel layouts** → semantic visual plan + deterministic composition templates + existing renderer.
 - **Cross-persona learning pollution** → Persona/Account/Series narrow scope by default; owner is not implicit creative scope.
 - **Third-party licensing risk** → provenance required; method inspiration may be rewritten; vendoring/copying requires per-source license review.
+
+## 2026-10-14 委托评审收尾校准
+
+用户确认按委托AI评审收口，fixedrubric由署名Codex/独立代理按实际方法执行。原human_review_required、模型/权限/Unknown历史不改；未直接听音频不能写成人听。原生活Master8与旧Audio质量问题保留；需要有精确身份/来源/实际文件的另一个正确代表样本或显式修订，不转借离线编辑的批准。原默认图文违约人像/生活报告腔由现有composer追加合法默认preset的新layout/render/acceptedrefs纠正，原件不覆盖；复用cleared真实旧PNG作input时只保留其精确bytes与已有权利依据，不伪称已遗失原JPEG。

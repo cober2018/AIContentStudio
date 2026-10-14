@@ -1,0 +1,23 @@
+{
+  "id": 13,
+  "checksum": "3b8f193164f88d8c67079f0815dc0a41999cd6cd7d664362f8d59851b8263a86",
+  "effective_graphic_profile": {
+    "schema": "persona.creative.graphic.v1",
+    "mode": "auto",
+    "skill_ref": "studio.graphic.visual-director@1",
+    "style_preset_ref": "studio.graphic.technical-editorial@1",
+    "quality_profile_ref": "studio.quality.graphic.editorial@1",
+    "capability": "image_generation",
+    "model_binding": null,
+    "model_chain": [],
+    "capability_memory_revision_ids": [],
+    "installed_skill_refs": [],
+    "parameters": {},
+    "stage_instruction": null,
+    "provenance": {
+      "blueprint_key": "starter.ai-tech-engineer.v1",
+      "blueprint_version": "1",
+      "default_recipe_key": "persona.graphic.ai-tech.v1"
+    }
+  }
+}

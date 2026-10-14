@@ -1,0 +1,23 @@
+{
+  "id": 14,
+  "checksum": "ff0e00943fba0d644dbfb8326171f06cf7a09b1a48ed890dd6ac2ee26c668acc",
+  "effective_graphic_profile": {
+    "schema": "persona.creative.graphic.v1",
+    "mode": "auto",
+    "skill_ref": "studio.graphic.visual-director@1",
+    "style_preset_ref": "studio.graphic.warm-magazine@1",
+    "quality_profile_ref": "studio.quality.graphic.lifestyle@1",
+    "capability": "image_generation",
+    "model_binding": null,
+    "model_chain": [],
+    "capability_memory_revision_ids": [],
+    "installed_skill_refs": [],
+    "parameters": {},
+    "stage_instruction": null,
+    "provenance": {
+      "blueprint_key": "starter.lifestyle-observer.v1",
+      "blueprint_version": "1",
+      "default_recipe_key": "persona.graphic.lifestyle.v1"
+    }
+  }
+}

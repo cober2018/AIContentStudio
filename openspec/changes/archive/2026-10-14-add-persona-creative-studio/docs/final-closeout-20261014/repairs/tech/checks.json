@@ -1,0 +1,560 @@
+{
+  "checks": [
+    {
+      "id": 128,
+      "check_kind": "master_schema",
+      "input_hash": "3278d4fce420296ec67d4505d34821f0b80f470dbf17250e6200563b77b937c6",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 129,
+      "check_kind": "evidence",
+      "input_hash": "8146db7b1dbc2a07b9f77aa899b6f2570b45e1f3ea12715a11dcb01107fef815",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 130,
+      "check_kind": "rights",
+      "input_hash": "676edcfbc6d8de9cc978ed3792777549532a3d46c0cc86bf7af82d80ee52f3ff",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 131,
+      "check_kind": "render",
+      "input_hash": "f56f41ca43f0b0e42977c8ebdcfe72df017f94f9b40b4355e1e33eaa602e8aa9",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "manual",
+        "attested_by": "admin@studio.local",
+        "render_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+        "outputs": [
+          {
+            "material_revision_id": 29,
+            "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+            "mime_type": "image/png",
+            "canvas_id": "cover",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 30,
+            "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+            "mime_type": "image/png",
+            "canvas_id": "body-1",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 31,
+            "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+            "mime_type": "image/png",
+            "canvas_id": "body-2",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          }
+        ],
+        "reasons": [],
+        "canvas_dimensions_verified": true,
+        "requirement": {
+          "kind": "render",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 132,
+      "check_kind": "graphic_structure",
+      "input_hash": "2f9df939f7cbe70f6932b98f822bada5d7071c1e3780753f53728458024c2bca",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "persona_quality": {
+          "ref": "studio.quality.graphic.editorial@1",
+          "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+          "style_preset_ref": "studio.graphic.technical-editorial@1",
+          "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+          "photo_requirement": "none",
+          "implementation": "graphic.geometry.v1",
+          "report": {
+            "schema": "studio.graphic.geometry-qc.v1",
+            "payload_hash": "e4880adff3979ebe7f3fc11ba5265f1112d2c46927c8514e956dc55d622d5adf",
+            "status": "pass",
+            "issues": [],
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required"
+            },
+            "human_review_required": true
+          }
+        },
+        "coverage": {
+          "geometry": "axis_aligned",
+          "text_fit": "estimated",
+          "bytes": "not_rendered",
+          "contrast": "text_vs_solid_canvas_only",
+          "aesthetic_quality": "human_review_required",
+          "live_bytes_rights": "separate_required_render_rights_checks"
+        },
+        "canvas_count": 3,
+        "visible_layer_count": 9,
+        "requirement": {
+          "kind": "graphic_structure",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "persona_quality": {
+            "ref": "studio.quality.graphic.editorial@1",
+            "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+            "style_preset_ref": "studio.graphic.technical-editorial@1",
+            "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+            "photo_requirement": "none",
+            "implementation": "graphic.geometry.v1"
+          }
+        }
+      }
+    },
+    {
+      "id": 133,
+      "check_kind": "graphic_fact",
+      "input_hash": "095094f7c8bea48608a4d73b09408da618c5908b3ee0a3953eac579f4a131e7f",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "semantic": "unavailable",
+          "reason": "explicit_incremental_quality_budget_zero",
+          "review_mode": "delegated_AI_review_recorded_separately",
+          "configured_runtime_unchanged": true,
+          "purpose": "fact_review",
+          "deterministic": "exact_claim_refs_only",
+          "model_use_excluded_item_ids": [],
+          "invalid_snapshot_item_ids": [],
+          "fact_count": 2,
+          "text_layer_count": 6
+        },
+        "requirement": {
+          "kind": "graphic_fact",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 2,
+              "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 3,
+              "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 134,
+      "check_kind": "graphic_identity",
+      "input_hash": "a810861b14d028e8662861b8828041287fb4b3077fa3779084805183edd25aa2",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "identity_snapshot_id": 13,
+        "identity_checksum": "3b8f193164f88d8c67079f0815dc0a41999cd6cd7d664362f8d59851b8263a86",
+        "issues": [],
+        "coverage": {
+          "semantic": "unavailable",
+          "reason": "explicit_incremental_quality_budget_zero",
+          "review_mode": "delegated_AI_review_recorded_separately",
+          "configured_runtime_unchanged": true,
+          "purpose": "identity_review",
+          "deterministic": "explicit_phrases_only",
+          "text_layer_count": 6,
+          "visual_semantics": "unavailable"
+        },
+        "requirement": {
+          "kind": "graphic_identity",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": 135,
+      "check_kind": "graphic_platform",
+      "input_hash": "b00175f6a0a8ee5a92026930d00fc1890be401a8291a43708d05e5c18b1ffbe3",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "channel": "xiaohongshu",
+        "content_form": "image_note",
+        "profile_version_id": 29,
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "graphic_platform",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "profile": {
+            "id": 29,
+            "version": 3,
+            "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+            "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "source": "profile",
+            "artifact_kind": "image"
+          }
+        }
+      }
+    }
+  ],
+  "current_checks": [
+    {
+      "id": 128,
+      "check_kind": "master_schema",
+      "input_hash": "3278d4fce420296ec67d4505d34821f0b80f470dbf17250e6200563b77b937c6",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 129,
+      "check_kind": "evidence",
+      "input_hash": "8146db7b1dbc2a07b9f77aa899b6f2570b45e1f3ea12715a11dcb01107fef815",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 130,
+      "check_kind": "rights",
+      "input_hash": "676edcfbc6d8de9cc978ed3792777549532a3d46c0cc86bf7af82d80ee52f3ff",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 131,
+      "check_kind": "render",
+      "input_hash": "f56f41ca43f0b0e42977c8ebdcfe72df017f94f9b40b4355e1e33eaa602e8aa9",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "manual",
+        "attested_by": "admin@studio.local",
+        "render_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+        "outputs": [
+          {
+            "material_revision_id": 29,
+            "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+            "mime_type": "image/png",
+            "canvas_id": "cover",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 30,
+            "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+            "mime_type": "image/png",
+            "canvas_id": "body-1",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 31,
+            "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+            "mime_type": "image/png",
+            "canvas_id": "body-2",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          }
+        ],
+        "reasons": [],
+        "canvas_dimensions_verified": true,
+        "requirement": {
+          "kind": "render",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 132,
+      "check_kind": "graphic_structure",
+      "input_hash": "2f9df939f7cbe70f6932b98f822bada5d7071c1e3780753f53728458024c2bca",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "persona_quality": {
+          "ref": "studio.quality.graphic.editorial@1",
+          "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+          "style_preset_ref": "studio.graphic.technical-editorial@1",
+          "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+          "photo_requirement": "none",
+          "implementation": "graphic.geometry.v1",
+          "report": {
+            "schema": "studio.graphic.geometry-qc.v1",
+            "payload_hash": "e4880adff3979ebe7f3fc11ba5265f1112d2c46927c8514e956dc55d622d5adf",
+            "status": "pass",
+            "issues": [],
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required"
+            },
+            "human_review_required": true
+          }
+        },
+        "coverage": {
+          "geometry": "axis_aligned",
+          "text_fit": "estimated",
+          "bytes": "not_rendered",
+          "contrast": "text_vs_solid_canvas_only",
+          "aesthetic_quality": "human_review_required",
+          "live_bytes_rights": "separate_required_render_rights_checks"
+        },
+        "canvas_count": 3,
+        "visible_layer_count": 9,
+        "requirement": {
+          "kind": "graphic_structure",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "persona_quality": {
+            "ref": "studio.quality.graphic.editorial@1",
+            "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+            "style_preset_ref": "studio.graphic.technical-editorial@1",
+            "style_preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+            "photo_requirement": "none",
+            "implementation": "graphic.geometry.v1"
+          }
+        }
+      }
+    },
+    {
+      "id": 133,
+      "check_kind": "graphic_fact",
+      "input_hash": "095094f7c8bea48608a4d73b09408da618c5908b3ee0a3953eac579f4a131e7f",
+      "is_current": true,
+      "stored_status": "warning",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "semantic": "unavailable",
+          "reason": "explicit_incremental_quality_budget_zero",
+          "review_mode": "delegated_AI_review_recorded_separately",
+          "configured_runtime_unchanged": true,
+          "purpose": "fact_review",
+          "deterministic": "exact_claim_refs_only",
+          "model_use_excluded_item_ids": [],
+          "invalid_snapshot_item_ids": [],
+          "fact_count": 2,
+          "text_layer_count": 6
+        },
+        "requirement": {
+          "kind": "graphic_fact",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 2,
+              "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 3,
+              "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 134,
+      "check_kind": "graphic_identity",
+      "input_hash": "a810861b14d028e8662861b8828041287fb4b3077fa3779084805183edd25aa2",
+      "is_current": true,
+      "stored_status": "warning",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "identity_snapshot_id": 13,
+        "identity_checksum": "3b8f193164f88d8c67079f0815dc0a41999cd6cd7d664362f8d59851b8263a86",
+        "issues": [],
+        "coverage": {
+          "semantic": "unavailable",
+          "reason": "explicit_incremental_quality_budget_zero",
+          "review_mode": "delegated_AI_review_recorded_separately",
+          "configured_runtime_unchanged": true,
+          "purpose": "identity_review",
+          "deterministic": "explicit_phrases_only",
+          "text_layer_count": 6,
+          "visual_semantics": "unavailable"
+        },
+        "requirement": {
+          "kind": "graphic_identity",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": 135,
+      "check_kind": "graphic_platform",
+      "input_hash": "b00175f6a0a8ee5a92026930d00fc1890be401a8291a43708d05e5c18b1ffbe3",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "channel": "xiaohongshu",
+        "content_form": "image_note",
+        "profile_version_id": 29,
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "graphic_platform",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "profile": {
+            "id": 29,
+            "version": 3,
+            "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+            "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "source": "profile",
+            "artifact_kind": "image"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,384 @@
+{
+  "id": 24,
+  "project_id": 3,
+  "content_unit_id": 13,
+  "revision_no": 2,
+  "parent_revision_id": 23,
+  "modality": "graphic",
+  "channel_id": "xiaohongshu",
+  "content_form": "image_note",
+  "payload_schema": "graphic.master.v2",
+  "payload": {
+    "title": "人设与平台账号解耦的取舍",
+    "canvases": [
+      {
+        "id": "cover",
+        "order": 0,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "cover-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#60a5fa",
+            "stroke_width": 0
+          },
+          {
+            "id": "cover-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 168.0,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "人设与账号为何分开",
+                "style": {
+                  "font_size": 60,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "cover-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 300.0,
+            "width": 936,
+            "height": 95.19999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "一个架构取舍：把表达原则留在人设层，让账号承担平台身份与分发规则。跨平台时复用创作内核，也要付出映射成本。",
+                "style": {
+                  "font_size": 34,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "cover"
+      },
+      {
+        "id": "body-1",
+        "order": 1,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "body-1-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#60a5fa",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-1-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "表达与分发的边界",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-1-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 285.59999999999997,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "人设定义表达风格、专业领域、事实边界与价值取舍。账号持有发布权限、受众关系，处理平台格式与交互。\n\n若表达规则绑死在一个账号，换通道时便要重复配置；规则漂移会让各处声音不一致。",
+                "style": {
+                  "font_size": 34,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      },
+      {
+        "id": "body-2",
+        "order": 2,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "body-2-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#60a5fa",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-2-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "解耦也有成本",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-2-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 285.59999999999997,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "独立的人设仍需要一套映射，把内容转为各平台接受的规格。前期复杂度和转换开销并不会消失。\n\n取舍的理由是核心表达更便于迁移：渠道变化时，可以单独调整适配，也保留决定如何表达的空间。",
+                "style": {
+                  "font_size": 34,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      }
+    ],
+    "render_asset_ref": [
+      {
+        "canvas_id": "cover",
+        "material_revision_id": 29
+      },
+      {
+        "canvas_id": "body-1",
+        "material_revision_id": 30
+      },
+      {
+        "canvas_id": "body-2",
+        "material_revision_id": 31
+      }
+    ]
+  },
+  "payload_hash": "e4880adff3979ebe7f3fc11ba5265f1112d2c46927c8514e956dc55d622d5adf",
+  "creative_intent": null,
+  "creative_intent_hash": null,
+  "context_hash": "e7f71c0914df76563810e733d8b279e524f3638ea5da0201b8cafdee0ae0c147",
+  "identity_snapshot_id": 13,
+  "creative_brief_revision_id": 3,
+  "fact_boundary_revision_id": 2,
+  "source_kind": "user_edit",
+  "edit_summary": {
+    "editorial_plan_hash": "6a7c789c3e5269b14bd2272f6f5e8007ac5ca4d1483619d8a0aa8c9221015e2d",
+    "editorial_plan_authorship": {
+      "kind": "user_edit",
+      "author": "Codex acting under explicit user delegated AI closeout",
+      "provider_generated": false
+    },
+    "source_text_master_revision_id": 21,
+    "source_text_payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+    "composition": {
+      "density": "medium",
+      "photo_requirement": "none",
+      "plan_hash": "6a7c789c3e5269b14bd2272f6f5e8007ac5ca4d1483619d8a0aa8c9221015e2d",
+      "preset_hash": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+      "preset_ref": "studio.graphic.technical-editorial@1",
+      "template": "editorial",
+      "tool": "studio.graphic.layout-compose@1"
+    },
+    "layout_master_revision_id": 23,
+    "reason": "精确绑定本轮6张实际渲染PNG；明示确认完整成品与输入hash，不伪造AI Stage或人类视觉审批。",
+    "render_attestation": {
+      "origin": "manual",
+      "confirmed": true,
+      "render_input_hash": "4a7ea09d55bc5a9eb4d2584d4a9e3d53ccbef490dabb0b76f053439254cd802d",
+      "attested_by": "admin@studio.local",
+      "outputs": [
+        {
+          "material_revision_id": 29,
+          "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66",
+          "canvas_id": "cover"
+        },
+        {
+          "material_revision_id": 30,
+          "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780",
+          "canvas_id": "body-1"
+        },
+        {
+          "material_revision_id": 31,
+          "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662",
+          "canvas_id": "body-2"
+        }
+      ]
+    }
+  },
+  "origin_workflow_run_id": null,
+  "origin_project_output_id": null,
+  "readiness": {
+    "state": "current",
+    "reasons": []
+  },
+  "assets": [
+    {
+      "id": 34,
+      "material_revision_id": 29,
+      "role": "render_output",
+      "slot_key": "cover",
+      "sort_order": 0,
+      "placement": {
+        "canvas_id": "cover"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "95de3049c1a5a5d63f8ba60725992c6a65a4cbb147c50bdf078c1c12c28abd66"
+    },
+    {
+      "id": 35,
+      "material_revision_id": 30,
+      "role": "render_output",
+      "slot_key": "body-1",
+      "sort_order": 1,
+      "placement": {
+        "canvas_id": "body-1"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "7fae0c1d0b0e145f2462d0c9c3aeb54c03e4d1c068e4c3f75cff855a84c70780"
+    },
+    {
+      "id": 36,
+      "material_revision_id": 31,
+      "role": "render_output",
+      "slot_key": "body-2",
+      "sort_order": 2,
+      "placement": {
+        "canvas_id": "body-2"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "3c6c54aee5d642cf66d5ce1c3c06354b556b1ddaf65cf1a5036c08c031cd0662"
+    }
+  ],
+  "evidence": [],
+  "created_by": "admin@studio.local",
+  "created_at": "2026-10-14T11:51:14.287400"
+}

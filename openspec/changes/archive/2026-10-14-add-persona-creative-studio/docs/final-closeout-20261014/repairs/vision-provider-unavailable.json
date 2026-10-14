@@ -1,0 +1,8 @@
+{
+  "schema": "studio.repaired-vision-provider-attempts.v1",
+  "completed_vision_reviews": 0,
+  "attempts": 6,
+  "reason": "MiniMax API2067 Token Plan limit",
+  "retry": false,
+  "fallback": "native Codex actual pixel review and independent agent review, no external provider"
+}

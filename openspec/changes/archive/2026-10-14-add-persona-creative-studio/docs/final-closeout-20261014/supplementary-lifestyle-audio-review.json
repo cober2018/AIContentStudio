@@ -1,0 +1,45 @@
+{
+  "schema": "persona.supplementary.audio-review.v1",
+  "origin": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/docs/BATCH_B_RECEIPTS/persona-real/lifestyle/audio-review-asr.json",
+  "origin_sha256": "88bdaedffa02382fa2e36dfd4e8cbdf3d5c9441aff6baf1b51ce160ed17954a0",
+  "source_sha256": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+  "asr_original_raw_ratio": 0.6838565022421524,
+  "asr_traditional_simplified_ratio": 0.9910313901345291,
+  "expected_chars": 446,
+  "asr_chars": 446,
+  "differences": [
+    {
+      "kind": "replace",
+      "expected": "暮",
+      "asr": "木"
+    },
+    {
+      "kind": "replace",
+      "expected": "取景",
+      "asr": "趋近"
+    },
+    {
+      "kind": "replace",
+      "expected": "脆",
+      "asr": "翠"
+    }
+  ],
+  "transcript_simplified": "我们不妨设想这样一个寻常的傍晚\n在晚饭刚端上桌\n热气还没散去前的十分钟里\n特意把手机留在隔壁房间的柜子上\n屋子里大概会突然多出一段\n略显空白的安静\n在这段假想的时间里\n人可能会有好几次\n下意识地伸手去摸口袋\n看见热汤表面泛起的油花\n或者窗外正慢慢沉下去的木色\n脑子里总会自然而然地冒出一个念头\n要是顺手拍下来就好了\n这种随时想要记录的冲动\n其实往往并不带着什么明确的目的\n它更像是一种对时间流逝的本能挽留\n生活里的很多细节太容易过去了\n而握着手机的时候\n轻轻按一下快门\n就像是给某个平淡的片刻\n贴上了一枚小小的书签\n让人觉得时间的流淌有了痕迹\n要是任由手机继续放在远处\n不去拿它\n刚开始的几分钟\n可能确实会有一种悬空的不适感\n就像日常仪式里漏掉了一道步骤\n但只要注意力从寻找趋近角度这件事上慢慢抽离出来\n感官就会重新被周围那些细微的事物填满\n饭菜的热气在灯光底下慢慢升腾\n筷子碰到碗沿\n发出轻微的翠响\n厨房里还有水滴落的声音\n没有了取景框的过滤\n饭菜的香气和温度是直接迎面而来的\n记录是记录者的自由\n而偶尔把目光完完全全留给眼前热腾腾的饭菜\n也是一种很舒适的日常选择",
+  "exact_spoken_sha256": "83f7f1c05adb9b8536b2a650d47a70b09880b2b737d7e2b68fe3fc6a50120aca",
+  "loudness_summary": "Integrated loudness:\n    I:         -23.7 LUFS\n    Threshold: -34.2 LUFS\n\n  Loudness range:\n    LRA:         3.5 LU\n    Threshold: -44.3 LUFS\n    LRA low:   -26.2 LUFS\n    LRA high:  -22.6 LUFS\n\n  True peak:\n    Peak:       -6.4 dBFS\n[out#0/null @ 0x7f7038180] video:0KiB audio:5293KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown\nsize=N/A time=00:01:24.68 bitrate=N/A speed= 635x elapsed=0:00:00.13",
+  "silence_events": [
+    "silence_start: 23.474125",
+    "silence_end: 24.208687 | silence_duration: 0.734563",
+    "silence_start: 25.689875",
+    "silence_end: 26.207781 | silence_duration: 0.517906",
+    "silence_start: 30.063562",
+    "silence_end: 30.943969 | silence_duration: 0.880406",
+    "silence_start: 78.215812",
+    "silence_end: 78.760625 | silence_duration: 0.544813",
+    "silence_start: 81.910594",
+    "silence_end: 82.474781 | silence_duration: 0.564188"
+  ],
+  "direct_listening": false,
+  "prior_quality_decision": "not inherited; re-evaluated independently",
+  "generations_this_review": 0
+}

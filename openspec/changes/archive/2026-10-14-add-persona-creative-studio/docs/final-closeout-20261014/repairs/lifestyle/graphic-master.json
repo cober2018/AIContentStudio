@@ -1,0 +1,423 @@
+{
+  "id": 26,
+  "project_id": 4,
+  "content_unit_id": 14,
+  "revision_no": 2,
+  "parent_revision_id": 25,
+  "modality": "graphic",
+  "channel_id": "xiaohongshu",
+  "content_form": "image_note",
+  "payload_schema": "graphic.master.v2",
+  "payload": {
+    "title": "晚饭前的十分钟留白",
+    "canvases": [
+      {
+        "id": "cover",
+        "order": 0,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#fff6e9"
+        },
+        "layers": [
+          {
+            "id": "cover-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#b85c38",
+            "stroke_width": 0
+          },
+          {
+            "id": "cover-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 168.0,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "晚饭前的十分钟留白",
+                "style": {
+                  "font_size": 60,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "cover-visual",
+            "order": 2,
+            "type": "image",
+            "x": 72,
+            "y": 300.0,
+            "width": 936,
+            "height": 403,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "material_revision_id": 33,
+            "fit": "contain",
+            "crop": {
+              "x": 0.25092592592592594,
+              "y": 0.20833333333333334,
+              "width": 0.4981481481481482,
+              "height": 0.2791666666666667
+            }
+          },
+          {
+            "id": "cover-body",
+            "order": 3,
+            "type": "text",
+            "x": 72,
+            "y": 731.0,
+            "width": 936,
+            "height": 106.39999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "假想一个寻常傍晚：饭菜将要上桌，把手机留在隔壁。热气还在，眼前暂时没有取景框。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "cover"
+      },
+      {
+        "id": "body-1",
+        "order": 1,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#fff6e9"
+        },
+        "layers": [
+          {
+            "id": "body-1-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#b85c38",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-1-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "想要记录的惯性",
+                "style": {
+                  "font_size": 48,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-1-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 319.2,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "在这段假想时间里，也许会几次下意识地摸向口袋。汤面泛着油花，窗外暮色慢慢沉下去，脑海里冒出“拍下来就好了”。\n\n按下快门，像替流逝的片刻夹上一枚书签。想记录的冲动，未必总带着明确的目的。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      },
+      {
+        "id": "body-2",
+        "order": 2,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#fff6e9"
+        },
+        "layers": [
+          {
+            "id": "body-2-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#b85c38",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-2-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "留在当下的片刻",
+                "style": {
+                  "font_size": 48,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-2-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 319.2,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "假想手机还在远处：筷子轻轻碰着碗沿，厨房传来水滴声，饭菜的香气与温度直接迎面而来。\n\n记录是自己的自由。偶尔把目光留给眼前热腾腾的饭菜，也可以是一种舒服的日常选择。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#392d27",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      }
+    ],
+    "render_asset_ref": [
+      {
+        "canvas_id": "cover",
+        "material_revision_id": 34
+      },
+      {
+        "canvas_id": "body-1",
+        "material_revision_id": 35
+      },
+      {
+        "canvas_id": "body-2",
+        "material_revision_id": 36
+      }
+    ]
+  },
+  "payload_hash": "76f7d03ca5ddec266f85582f8cd7d0d50bd255f1f09c50e405ae6ad9fde90196",
+  "creative_intent": null,
+  "creative_intent_hash": null,
+  "context_hash": "27837efdeae7ceeea099f5ef59b2101feb775c95afc616990e6813258c623f8a",
+  "identity_snapshot_id": 14,
+  "creative_brief_revision_id": 4,
+  "fact_boundary_revision_id": 3,
+  "source_kind": "user_edit",
+  "edit_summary": {
+    "editorial_plan_hash": "f0573881f4bcff185417b417d3dd00d4c39218f63bbe198b368411e87ed25c9a",
+    "editorial_plan_authorship": {
+      "kind": "user_edit",
+      "author": "Codex acting under explicit user delegated AI closeout",
+      "provider_generated": false
+    },
+    "source_text_master_revision_id": 22,
+    "source_text_payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+    "composition": {
+      "density": "low",
+      "photo_requirement": "cover",
+      "plan_hash": "f0573881f4bcff185417b417d3dd00d4c39218f63bbe198b368411e87ed25c9a",
+      "preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+      "preset_ref": "studio.graphic.warm-magazine@1",
+      "template": "editorial",
+      "tool": "studio.graphic.layout-compose@1"
+    },
+    "layout_master_revision_id": 25,
+    "reason": "精确绑定本轮6张实际渲染PNG；明示确认完整成品与输入hash，不伪造AI Stage或人类视觉审批。",
+    "render_attestation": {
+      "origin": "manual",
+      "confirmed": true,
+      "render_input_hash": "14f7e8a74a338e60c892a1edb422db9df89e55baa371a829756c8f264442fcff",
+      "attested_by": "admin@studio.local",
+      "outputs": [
+        {
+          "material_revision_id": 34,
+          "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003",
+          "canvas_id": "cover"
+        },
+        {
+          "material_revision_id": 35,
+          "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a",
+          "canvas_id": "body-1"
+        },
+        {
+          "material_revision_id": 36,
+          "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395",
+          "canvas_id": "body-2"
+        }
+      ]
+    }
+  },
+  "origin_workflow_run_id": null,
+  "origin_project_output_id": null,
+  "readiness": {
+    "state": "current",
+    "reasons": []
+  },
+  "assets": [
+    {
+      "id": 38,
+      "material_revision_id": 33,
+      "role": "graphic_layer",
+      "slot_key": "cover-visual",
+      "sort_order": 0,
+      "placement": {
+        "canvas_id": "cover",
+        "layer_id": "cover-visual"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "a0f86a965df961f6edca8b08ee2707e71155b0cbed863113ebc49c6486b34e20"
+    },
+    {
+      "id": 39,
+      "material_revision_id": 34,
+      "role": "render_output",
+      "slot_key": "cover",
+      "sort_order": 0,
+      "placement": {
+        "canvas_id": "cover"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "c3ff212ad999321241ec48792a0e2f76f91e6252624129e1d1637a2e9b727003"
+    },
+    {
+      "id": 40,
+      "material_revision_id": 35,
+      "role": "render_output",
+      "slot_key": "body-1",
+      "sort_order": 1,
+      "placement": {
+        "canvas_id": "body-1"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "01a185c0c10f6a69dc9594d922e55f6ec544e4b783108ddb2ef80190c1f52d4a"
+    },
+    {
+      "id": 41,
+      "material_revision_id": 36,
+      "role": "render_output",
+      "slot_key": "body-2",
+      "sort_order": 2,
+      "placement": {
+        "canvas_id": "body-2"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "f7dfd1a243183203399b251e29500b20b9f2f2c4231620244ede4513cf547395"
+    }
+  ],
+  "evidence": [],
+  "created_by": "admin@studio.local",
+  "created_at": "2026-10-14T11:56:35.085857"
+}

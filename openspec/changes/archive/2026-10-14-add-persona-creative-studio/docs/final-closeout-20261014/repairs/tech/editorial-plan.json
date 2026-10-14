@@ -1,0 +1,51 @@
+{
+  "plan": {
+    "title": "人设与平台账号解耦的取舍",
+    "aspect_ratio": "3:4",
+    "cards": [
+      {
+        "id": "cover",
+        "order": 0,
+        "role": "cover",
+        "title": "人设与账号为何分开",
+        "body": "一个架构取舍：把表达原则留在人设层，让账号承担平台身份与分发规则。跨平台时复用创作内核，也要付出映射成本。",
+        "bullets": [],
+        "visual_type": "none"
+      },
+      {
+        "id": "body-1",
+        "order": 1,
+        "role": "body",
+        "title": "表达与分发的边界",
+        "body": "人设定义表达风格、专业领域、事实边界与价值取舍。账号持有发布权限、受众关系，处理平台格式与交互。\n\n若表达规则绑死在一个账号，换通道时便要重复配置；规则漂移会让各处声音不一致。",
+        "bullets": [],
+        "visual_type": "none"
+      },
+      {
+        "id": "body-2",
+        "order": 2,
+        "role": "body",
+        "title": "解耦也有成本",
+        "body": "独立的人设仍需要一套映射，把内容转为各平台接受的规格。前期复杂度和转换开销并不会消失。\n\n取舍的理由是核心表达更便于迁移：渠道变化时，可以单独调整适配，也保留决定如何表达的空间。",
+        "bullets": [],
+        "visual_type": "none"
+      }
+    ]
+  },
+  "authorship": {
+    "kind": "user_edit",
+    "author": "Codex acting under explicit user delegated AI closeout",
+    "provider_generated": false
+  },
+  "source": {
+    "source_text_master_id": 21,
+    "source_text_payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+    "source_context_hash": "d2ebd521e965bee8ce21b002b77bcf5e71f0c03071ab0ba765c7eebc79726d69",
+    "source_identity_snapshot_id": 7,
+    "fact_boundary_revision_id": 2,
+    "author": "Codex editorial compression under user delegation",
+    "provider_generated": false,
+    "stage_provenance_copied": false,
+    "added_external_factual_claims": false
+  }
+}

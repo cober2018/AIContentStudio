@@ -343,7 +343,7 @@ No formal initialization, new provider/publication calls, new test files/migrati
 
 当前95/147，剩52；从65基线关闭30项完整合同。全量1,968/28skip、Web/FE-P1、171定向、Ruff、strict38/38、diff及113新增文件空白检查通过；Director/窄scope已定向复核，Audio/整体UX未覆范围继续保留。完整任务据实现和证据更新，复合项不虚勾。主Agent负责catalog/Stage/Recipe集成，独立Audio QC委派到单独文件避免共享写集。图工具当前不可用，代码使用相关文件窄定位。
 
-> 2026-10-06: OpenSpec 已独立复核通过，用户已授权 business apply。以下旧 materialization 记录保留；当前实施提示词见 [AGENT_IMPLEMENTATION_PROMPT.md](AGENT_IMPLEMENTATION_PROMPT.md)，执行计划见 [docs/superpowers/plans/2026-10-06-add-persona-creative-studio.md](../../../docs/superpowers/plans/2026-10-06-add-persona-creative-studio.md)。
+> 2026-10-06: OpenSpec 已独立复核通过，用户已授权 business apply。以下旧 materialization 记录保留；当前实施提示词见 [AGENT_IMPLEMENTATION_PROMPT.md](AGENT_IMPLEMENTATION_PROMPT.md)，执行计划见 [docs/superpowers/plans/2026-10-06-add-persona-creative-studio.md](../../../../docs/superpowers/plans/2026-10-06-add-persona-creative-studio.md)。
 
 ## Goal / Boundary
 
@@ -367,7 +367,7 @@ Current apply scope (2026-10-06): **Text first for both Personas, separately acc
 
 ## Business Plan
 
-实施任务保存在[tasks.md](tasks.md)，当前65/147；仅整项完成的合同勾选。完整新鲜证据见[progress.md](progress.md)和[文字合同验收](../../../docs/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。下一步两个Persona真实文字质量单独验收，再依次图文/音频；不运行未授权真实provider或初始化正式Persona。
+实施任务保存在[tasks.md](tasks.md)，当前65/147；仅整项完成的合同勾选。完整新鲜证据见[progress.md](progress.md)和[文字合同验收](../../../../docs/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。下一步两个Persona真实文字质量单独验收，再依次图文/音频；不运行未授权真实provider或初始化正式Persona。
 
 ## Authorized real Text acceptance — 2026-10-06
 
@@ -415,7 +415,7 @@ Current apply scope (2026-10-06): **Text first for both Personas, separately acc
 - [ ] 按事实、角色、清晰、结构、具体性、自然表达、标题一致性固定rubric复核；模型产物不自动通过。
 - [x] 报告真实成功/失败及限制，保留不可重发的原Attempt，不改正式数据库/配置。
 
-本轮被CPA连接阻断：科技角色evidence原Attempt为unknown、无响应；生活角色只准备未调用。禁止自动重发或换Provider。正式模型配置前后hash相同，业务任务仍65/147；真实文章和rubric三项保持未完成。证据见[真实文字尝试记录](../../../docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
+本轮被CPA连接阻断：科技角色evidence原Attempt为unknown、无响应；生活角色只准备未调用。禁止自动重发或换Provider。正式模型配置前后hash相同，业务任务仍65/147；真实文章和rubric三项保持未完成。证据见[真实文字尝试记录](../../../../docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
 
 /// 用户指定本机隧道127.0.0.1:8317 → 直接连接与监听检查 → 登记入口兼容确认 → 仅地址变更并回读，保留Key/模型/路由。当前第一步连接被拒绝，登记入口也返回422；地址尚未写入，不绕过现有校验。
 
@@ -433,3 +433,18 @@ Current apply scope (2026-10-06): **Text first for both Personas, separately acc
 # 2026-10-08 task10.12 apply已授权
 
 /// 窄prepare/upload复用CreativeExecution → 轻量手动图像UI/复制/拖入 → exact选中接受 → 集中既有门禁/隔离冒烟 → 独立复核。只推进10.12；139/156在验收前不变，不新增持久测试/表/迁移，不操作网站或正式库/配置/服务，不提交归档。
+
+## 2026-10-14 独立收尾（用户确认）
+
+用户确认“补齐持久测试，按委托AI评审收口”。保全已归档multiplatform/main5e6b8b4，不由其43/43自动勾选本change。独立审阅真实版本/成果；质量采用署名AI评审，原human_review_required与未直接试听边界保留；Recipe19.4新持久测试获明确授权。生命周期按当前授权仅本地规范归档/提交，未请求push或公开发布。
+
+- [ ] /// 读取本change未完成项/需求/旧真实产物，逐hash核对；恢复正常Web入口，不重放Unknown或已成功生成。
+- [ ] /// Persona：独立评审2文章/6实际图卡/2完整旧音频；恢复原Stage脚本/安全provenance，缺失处明记；新wholeASR/声学仅作本地QA，不改素材权限。
+- [ ] /// Recipe：补齐反馈/保存调整/默认隔离/方法绑定/调优/领域接受的有意义持久覆盖；真实缺陷先红后绿最小修复，复用已有核心合同/receipt测试。
+- [ ] /// 从正常内容身份/Production入口验证两角色默认流程、预览/审阅/接受路径；Provider/发布不从只读菜单推定，必要新生成有界单列。
+- [ ] /// 独立规范/代码/质量复核，新鲜backend/Web/FE-P1/Ruff/strict/diff及真实staged候选门禁；只关闭真实通过项。
+- [ ] /// 对各自delta/canonical及相邻change做保全比较，分别归档、分别白名单本地提交；相邻plugins/运行配置/未追踪channel_methods保全。
+
+/// 独立收尾完成：修订六图、代表Text/Audio及provenance/AI委托rubric独立通过；13capability54新增同步归档，156/156。产品入口实际read/preview与配置门槛如实记录，未宣称本轮正式新生成。
+
+2026-10-14 final closeout. /// Verify both archived task counts and all delta requirements → compare 160 immutable owner files and eight active-task hashes → inspect normal two-Persona UI creation/preview without dispatch → reload existing API, retain Web5173 and stop only owned temporary UI → index evidence and whitelist Persona docs/specs plus root README hunk → local commit and Git/runtime readback. No further feature, provider, formal business write or push.

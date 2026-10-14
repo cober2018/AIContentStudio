@@ -1,0 +1,1206 @@
+{
+  "schema": "persona.delegated.audio-review.v1",
+  "reviewer": "Codex delegated AI quality reviewer",
+  "authorization": "2026-10-14 user explicitly delegated AI quality review",
+  "method": "full-recording sandboxed offline MLX Whisper, acoustic/timing inspection; no direct listening",
+  "direct_listening": false,
+  "source_sha256": "49076937e2e1564fe4aac142cc906a84f3c68b7f40b56d2903032cc93dc77530",
+  "source_bytes": 20738954,
+  "source_duration_seconds": 324.02796875,
+  "source_material_rights_unchanged": true,
+  "asr": {
+    "status": "succeeded",
+    "transcript": "一套AI创作工具\n在实际使用中\n往往既要写技术分析\n也要写生活观察\n底层的模型连接可以共用\n但默认应该怎么写\n却不适合只放在一项全局设置里\n我们今天聊的\n是AI Content Studio\n当前已经批准的项目设计\n不是行业统计\n也不保证生成结果一定更好\n我们可以先看一个假设\n同一位创作者\n上午写架构分析\n晚上写日常随笔\n如果把多讲技术边界\n少用感性表达保存成\n所有内容的统一默认\n那么生活稿\n也可能收到完全不适合它的要求\n这里的问题\n不在于一个模型能不能写两类文章\n而在于这条配置究竟影响谁\n在本项目中\n权限、模型接入\n和基础设施放在用户层\n创作配置则以Persona\n也就是内容角色为根\nAccount平台账号和Series栏目\n可以进行明确覆盖\n需要说明的是\nPersona是内容角色\n并不是另一个登录用户\nAccount对应平台账号\nSeries对应栏目\n产品内置的科技研发博主\n和生活方式博主\n各自有独立的文字配置和默认流程\n这种拆法允许两个角色\n引用同一套模型连接\n又分别维护默认写法\n但从工程上看\n必须讲清这里的权衡\n它不意味着两条执行链完全隔离\n也不证明事实错误会更少\n是否写出了合适的文章\n依然要看实际产物\n第二点是\n品牌约束与角色写法是两件事\nBrand的身份和品牌约束\n可以进入创作上下文\n但不能成为\nSkill,Style,Quality,Recipe\n或写作风格默认值的来源\n这些英文术语在系统里分别指\n方法,风格,质量配置和创作流程\n可以用一个假设来理解这条边界\n品牌要求内容遵守某项表达边界\n两个角色都需要考虑\n但技术稿用什么结构\n生活稿用什么语气\n不应该只因他们属于同一品牌\n就自动采用同一个默认\n这不是说品牌对表达没有影响\n而是把共同约束和角色默认分开\n工程上的收益\n使配置来源更容易解释\n代价则是增加了层级\n排查稿件不合适时\n需要先看配置来自角色\n账号还是栏目\n这里说的是设计取舍\n不是已经测得的效率提升\n第三点\n大纲接受了\n不等于正文定稿\n研究角度与大纲\n属于中间创作结果\n接受他们不会创建Content Master\n也就是作为正式内容真源的主稿\n这给探索留出空间\n选定一个角度\n仍可以调整大纲\n认可大纲\n也不等于认可后面生成的正文\n文字候选\n只有经过明确接受\n才会追加保存为\nContent Master Revision\n也就是主稿的新版本\n模型调用本身\n绝不会静默修改正文\n因而调用有响印和内容已定稿\n是两个完全不同的结果\n我倾向把这个确认点\n看作一道内容决策边界\n而不是质量保证\n它让创作者有机会挑选\n修改或放弃候选\n但也增加了审阅操作\n接受后的文字是否准确\n是否符合角色\n不能由已保存三个字代替判断\n第四点\n指定模型就应该尊重指定\nCustom指定单个精确模型时\n该模型不可用必须停止\nCustom Composition\n只允许在事先声明的\n有序精确模型链内回退\n例如\n明确只选模型A\n就不能把模型B的稿件\n当作A的结果交回来\n如果提前配置的是A到B\n走B才属于执行既定选择\n这能解释本次为什么用了这个模型\n却不能保证请求一定成功\n也不能替代对结果的检查\n事实来源也是同样的逻辑\n生活方式角色\n讨论正在发生的事情时\n需要新鲜来源\n不能拿模型旧知识\n冒充实实事实\n换成更自然的口吻\n不会让过时信息变新\n没有来源的现实断言\n也不能靠写得流畅来成立\n我的判断是\n这套设计首先解决配置属于谁\n什么才算定稿的问题\n共用模型连接可以减少重复配置\n分开角色默认\n可以避免把一种写法\n直接当作另一种内容的默认要求\n代价则是更多配置层级\n和明确确认\n它是否值得\n最终还要有两类真实稿件\n和实际使用体验来检验",
+    "cues": [
+      {
+        "text": "一套AI创作工具",
+        "start_ms": 0,
+        "end_ms": 1800
+      },
+      {
+        "text": "在实际使用中",
+        "start_ms": 1800,
+        "end_ms": 3400
+      },
+      {
+        "text": "往往既要写技术分析",
+        "start_ms": 3400,
+        "end_ms": 5400
+      },
+      {
+        "text": "也要写生活观察",
+        "start_ms": 5400,
+        "end_ms": 7400
+      },
+      {
+        "text": "底层的模型连接可以共用",
+        "start_ms": 7400,
+        "end_ms": 10200
+      },
+      {
+        "text": "但默认应该怎么写",
+        "start_ms": 10200,
+        "end_ms": 12200
+      },
+      {
+        "text": "却不适合只放在一项全局设置里",
+        "start_ms": 12200,
+        "end_ms": 15200
+      },
+      {
+        "text": "我们今天聊的",
+        "start_ms": 15200,
+        "end_ms": 16600
+      },
+      {
+        "text": "是AI Content Studio",
+        "start_ms": 16600,
+        "end_ms": 18400
+      },
+      {
+        "text": "当前已经批准的项目设计",
+        "start_ms": 18400,
+        "end_ms": 20800
+      },
+      {
+        "text": "不是行业统计",
+        "start_ms": 20800,
+        "end_ms": 22400
+      },
+      {
+        "text": "也不保证生成结果一定更好",
+        "start_ms": 22400,
+        "end_ms": 24800
+      },
+      {
+        "text": "我们可以先看一个假设",
+        "start_ms": 24800,
+        "end_ms": 26800
+      },
+      {
+        "text": "同一位创作者",
+        "start_ms": 26800,
+        "end_ms": 28200
+      },
+      {
+        "text": "上午写架构分析",
+        "start_ms": 28200,
+        "end_ms": 30000
+      },
+      {
+        "text": "晚上写日常随笔",
+        "start_ms": 30000,
+        "end_ms": 31800
+      },
+      {
+        "text": "如果把多讲技术边界",
+        "start_ms": 31800,
+        "end_ms": 34200
+      },
+      {
+        "text": "少用感性表达保存成",
+        "start_ms": 34200,
+        "end_ms": 36200
+      },
+      {
+        "text": "所有内容的统一默认",
+        "start_ms": 36200,
+        "end_ms": 38600
+      },
+      {
+        "text": "那么生活稿",
+        "start_ms": 38600,
+        "end_ms": 39800
+      },
+      {
+        "text": "也可能收到完全不适合它的要求",
+        "start_ms": 39800,
+        "end_ms": 42800
+      },
+      {
+        "text": "这里的问题",
+        "start_ms": 42800,
+        "end_ms": 44000
+      },
+      {
+        "text": "不在于一个模型能不能写两类文章",
+        "start_ms": 44000,
+        "end_ms": 47600
+      },
+      {
+        "text": "而在于这条配置究竟影响谁",
+        "start_ms": 47600,
+        "end_ms": 51200
+      },
+      {
+        "text": "在本项目中",
+        "start_ms": 51200,
+        "end_ms": 52600
+      },
+      {
+        "text": "权限、模型接入",
+        "start_ms": 52600,
+        "end_ms": 54600
+      },
+      {
+        "text": "和基础设施放在用户层",
+        "start_ms": 54600,
+        "end_ms": 57000
+      },
+      {
+        "text": "创作配置则以Persona",
+        "start_ms": 57000,
+        "end_ms": 59200
+      },
+      {
+        "text": "也就是内容角色为根",
+        "start_ms": 59200,
+        "end_ms": 61200
+      },
+      {
+        "text": "Account平台账号和Series栏目",
+        "start_ms": 61200,
+        "end_ms": 63800
+      },
+      {
+        "text": "可以进行明确覆盖",
+        "start_ms": 63800,
+        "end_ms": 65600
+      },
+      {
+        "text": "需要说明的是",
+        "start_ms": 65600,
+        "end_ms": 67400
+      },
+      {
+        "text": "Persona是内容角色",
+        "start_ms": 67400,
+        "end_ms": 70200
+      },
+      {
+        "text": "并不是另一个登录用户",
+        "start_ms": 70200,
+        "end_ms": 72400
+      },
+      {
+        "text": "Account对应平台账号",
+        "start_ms": 72400,
+        "end_ms": 75200
+      },
+      {
+        "text": "Series对应栏目",
+        "start_ms": 75200,
+        "end_ms": 77600
+      },
+      {
+        "text": "产品内置的科技研发博主",
+        "start_ms": 77600,
+        "end_ms": 79800
+      },
+      {
+        "text": "和生活方式博主",
+        "start_ms": 79800,
+        "end_ms": 81600
+      },
+      {
+        "text": "各自有独立的文字配置和默认流程",
+        "start_ms": 81600,
+        "end_ms": 84600
+      },
+      {
+        "text": "这种拆法允许两个角色",
+        "start_ms": 84600,
+        "end_ms": 86600
+      },
+      {
+        "text": "引用同一套模型连接",
+        "start_ms": 86600,
+        "end_ms": 88400
+      },
+      {
+        "text": "又分别维护默认写法",
+        "start_ms": 88400,
+        "end_ms": 90400
+      },
+      {
+        "text": "但从工程上看",
+        "start_ms": 90400,
+        "end_ms": 92000
+      },
+      {
+        "text": "必须讲清这里的权衡",
+        "start_ms": 92000,
+        "end_ms": 94000
+      },
+      {
+        "text": "它不意味着两条执行链完全隔离",
+        "start_ms": 94000,
+        "end_ms": 97000
+      },
+      {
+        "text": "也不证明事实错误会更少",
+        "start_ms": 97000,
+        "end_ms": 99600
+      },
+      {
+        "text": "是否写出了合适的文章",
+        "start_ms": 99600,
+        "end_ms": 101800
+      },
+      {
+        "text": "依然要看实际产物",
+        "start_ms": 101800,
+        "end_ms": 103800
+      },
+      {
+        "text": "第二点是",
+        "start_ms": 103800,
+        "end_ms": 105200
+      },
+      {
+        "text": "品牌约束与角色写法是两件事",
+        "start_ms": 105200,
+        "end_ms": 109000
+      },
+      {
+        "text": "Brand的身份和品牌约束",
+        "start_ms": 109000,
+        "end_ms": 111000
+      },
+      {
+        "text": "可以进入创作上下文",
+        "start_ms": 111000,
+        "end_ms": 113200
+      },
+      {
+        "text": "但不能成为",
+        "start_ms": 113200,
+        "end_ms": 114400
+      },
+      {
+        "text": "Skill,Style,Quality,Recipe",
+        "start_ms": 114400,
+        "end_ms": 118000
+      },
+      {
+        "text": "或写作风格默认值的来源",
+        "start_ms": 118000,
+        "end_ms": 120600
+      },
+      {
+        "text": "这些英文术语在系统里分别指",
+        "start_ms": 120600,
+        "end_ms": 122800
+      },
+      {
+        "text": "方法,风格,质量配置和创作流程",
+        "start_ms": 122800,
+        "end_ms": 127000
+      },
+      {
+        "text": "可以用一个假设来理解这条边界",
+        "start_ms": 127000,
+        "end_ms": 130400
+      },
+      {
+        "text": "品牌要求内容遵守某项表达边界",
+        "start_ms": 130400,
+        "end_ms": 134200
+      },
+      {
+        "text": "两个角色都需要考虑",
+        "start_ms": 134200,
+        "end_ms": 136400
+      },
+      {
+        "text": "但技术稿用什么结构",
+        "start_ms": 136400,
+        "end_ms": 138600
+      },
+      {
+        "text": "生活稿用什么语气",
+        "start_ms": 138600,
+        "end_ms": 140800
+      },
+      {
+        "text": "不应该只因他们属于同一品牌",
+        "start_ms": 140800,
+        "end_ms": 143600
+      },
+      {
+        "text": "就自动采用同一个默认",
+        "start_ms": 143600,
+        "end_ms": 146400
+      },
+      {
+        "text": "这不是说品牌对表达没有影响",
+        "start_ms": 146400,
+        "end_ms": 149400
+      },
+      {
+        "text": "而是把共同约束和角色默认分开",
+        "start_ms": 149400,
+        "end_ms": 153000
+      },
+      {
+        "text": "工程上的收益",
+        "start_ms": 153000,
+        "end_ms": 154400
+      },
+      {
+        "text": "使配置来源更容易解释",
+        "start_ms": 154400,
+        "end_ms": 157000
+      },
+      {
+        "text": "代价则是增加了层级",
+        "start_ms": 157000,
+        "end_ms": 160000
+      },
+      {
+        "text": "排查稿件不合适时",
+        "start_ms": 160000,
+        "end_ms": 162000
+      },
+      {
+        "text": "需要先看配置来自角色",
+        "start_ms": 162000,
+        "end_ms": 164200
+      },
+      {
+        "text": "账号还是栏目",
+        "start_ms": 164200,
+        "end_ms": 166200
+      },
+      {
+        "text": "这里说的是设计取舍",
+        "start_ms": 166200,
+        "end_ms": 169000
+      },
+      {
+        "text": "不是已经测得的效率提升",
+        "start_ms": 169000,
+        "end_ms": 171400
+      },
+      {
+        "text": "第三点",
+        "start_ms": 171400,
+        "end_ms": 172800
+      },
+      {
+        "text": "大纲接受了",
+        "start_ms": 172800,
+        "end_ms": 174200
+      },
+      {
+        "text": "不等于正文定稿",
+        "start_ms": 174200,
+        "end_ms": 176400
+      },
+      {
+        "text": "研究角度与大纲",
+        "start_ms": 176400,
+        "end_ms": 178600
+      },
+      {
+        "text": "属于中间创作结果",
+        "start_ms": 178600,
+        "end_ms": 181000
+      },
+      {
+        "text": "接受他们不会创建Content Master",
+        "start_ms": 181000,
+        "end_ms": 184000
+      },
+      {
+        "text": "也就是作为正式内容真源的主稿",
+        "start_ms": 184000,
+        "end_ms": 187000
+      },
+      {
+        "text": "这给探索留出空间",
+        "start_ms": 187000,
+        "end_ms": 189600
+      },
+      {
+        "text": "选定一个角度",
+        "start_ms": 189600,
+        "end_ms": 191200
+      },
+      {
+        "text": "仍可以调整大纲",
+        "start_ms": 191200,
+        "end_ms": 193600
+      },
+      {
+        "text": "认可大纲",
+        "start_ms": 193600,
+        "end_ms": 195000
+      },
+      {
+        "text": "也不等于认可后面生成的正文",
+        "start_ms": 195000,
+        "end_ms": 198000
+      },
+      {
+        "text": "文字候选",
+        "start_ms": 198000,
+        "end_ms": 199000
+      },
+      {
+        "text": "只有经过明确接受",
+        "start_ms": 199000,
+        "end_ms": 200600
+      },
+      {
+        "text": "才会追加保存为",
+        "start_ms": 200600,
+        "end_ms": 202000
+      },
+      {
+        "text": "Content Master Revision",
+        "start_ms": 202000,
+        "end_ms": 203800
+      },
+      {
+        "text": "也就是主稿的新版本",
+        "start_ms": 203800,
+        "end_ms": 205600
+      },
+      {
+        "text": "模型调用本身",
+        "start_ms": 205600,
+        "end_ms": 207000
+      },
+      {
+        "text": "绝不会静默修改正文",
+        "start_ms": 207000,
+        "end_ms": 209000
+      },
+      {
+        "text": "因而调用有响印和内容已定稿",
+        "start_ms": 209000,
+        "end_ms": 212600
+      },
+      {
+        "text": "是两个完全不同的结果",
+        "start_ms": 212600,
+        "end_ms": 215200
+      },
+      {
+        "text": "我倾向把这个确认点",
+        "start_ms": 215200,
+        "end_ms": 217200
+      },
+      {
+        "text": "看作一道内容决策边界",
+        "start_ms": 217200,
+        "end_ms": 219600
+      },
+      {
+        "text": "而不是质量保证",
+        "start_ms": 219600,
+        "end_ms": 221400
+      },
+      {
+        "text": "它让创作者有机会挑选",
+        "start_ms": 221400,
+        "end_ms": 223800
+      },
+      {
+        "text": "修改或放弃候选",
+        "start_ms": 223800,
+        "end_ms": 226600
+      },
+      {
+        "text": "但也增加了审阅操作",
+        "start_ms": 226600,
+        "end_ms": 229200
+      },
+      {
+        "text": "接受后的文字是否准确",
+        "start_ms": 229200,
+        "end_ms": 231800
+      },
+      {
+        "text": "是否符合角色",
+        "start_ms": 231800,
+        "end_ms": 233600
+      },
+      {
+        "text": "不能由已保存三个字代替判断",
+        "start_ms": 233600,
+        "end_ms": 236800
+      },
+      {
+        "text": "第四点",
+        "start_ms": 236800,
+        "end_ms": 237800
+      },
+      {
+        "text": "指定模型就应该尊重指定",
+        "start_ms": 237800,
+        "end_ms": 241000
+      },
+      {
+        "text": "Custom指定单个精确模型时",
+        "start_ms": 241000,
+        "end_ms": 244600
+      },
+      {
+        "text": "该模型不可用必须停止",
+        "start_ms": 244600,
+        "end_ms": 247600
+      },
+      {
+        "text": "Custom Composition",
+        "start_ms": 247600,
+        "end_ms": 249200
+      },
+      {
+        "text": "只允许在事先声明的",
+        "start_ms": 249200,
+        "end_ms": 251400
+      },
+      {
+        "text": "有序精确模型链内回退",
+        "start_ms": 251400,
+        "end_ms": 254200
+      },
+      {
+        "text": "例如",
+        "start_ms": 254200,
+        "end_ms": 255200
+      },
+      {
+        "text": "明确只选模型A",
+        "start_ms": 255200,
+        "end_ms": 257000
+      },
+      {
+        "text": "就不能把模型B的稿件",
+        "start_ms": 257000,
+        "end_ms": 258800
+      },
+      {
+        "text": "当作A的结果交回来",
+        "start_ms": 258800,
+        "end_ms": 261000
+      },
+      {
+        "text": "如果提前配置的是A到B",
+        "start_ms": 261000,
+        "end_ms": 263400
+      },
+      {
+        "text": "走B才属于执行既定选择",
+        "start_ms": 263400,
+        "end_ms": 266200
+      },
+      {
+        "text": "这能解释本次为什么用了这个模型",
+        "start_ms": 266200,
+        "end_ms": 270000
+      },
+      {
+        "text": "却不能保证请求一定成功",
+        "start_ms": 270000,
+        "end_ms": 273000
+      },
+      {
+        "text": "也不能替代对结果的检查",
+        "start_ms": 273000,
+        "end_ms": 275800
+      },
+      {
+        "text": "事实来源也是同样的逻辑",
+        "start_ms": 275800,
+        "end_ms": 278800
+      },
+      {
+        "text": "生活方式角色",
+        "start_ms": 278800,
+        "end_ms": 280200
+      },
+      {
+        "text": "讨论正在发生的事情时",
+        "start_ms": 280200,
+        "end_ms": 282400
+      },
+      {
+        "text": "需要新鲜来源",
+        "start_ms": 282400,
+        "end_ms": 284200
+      },
+      {
+        "text": "不能拿模型旧知识",
+        "start_ms": 284200,
+        "end_ms": 285800
+      },
+      {
+        "text": "冒充实实事实",
+        "start_ms": 285800,
+        "end_ms": 287400
+      },
+      {
+        "text": "换成更自然的口吻",
+        "start_ms": 287400,
+        "end_ms": 289600
+      },
+      {
+        "text": "不会让过时信息变新",
+        "start_ms": 289600,
+        "end_ms": 292200
+      },
+      {
+        "text": "没有来源的现实断言",
+        "start_ms": 292200,
+        "end_ms": 294400
+      },
+      {
+        "text": "也不能靠写得流畅来成立",
+        "start_ms": 294400,
+        "end_ms": 297000
+      },
+      {
+        "text": "我的判断是",
+        "start_ms": 297000,
+        "end_ms": 298800
+      },
+      {
+        "text": "这套设计首先解决配置属于谁",
+        "start_ms": 298800,
+        "end_ms": 302400
+      },
+      {
+        "text": "什么才算定稿的问题",
+        "start_ms": 302400,
+        "end_ms": 304800
+      },
+      {
+        "text": "共用模型连接可以减少重复配置",
+        "start_ms": 304800,
+        "end_ms": 307800
+      },
+      {
+        "text": "分开角色默认",
+        "start_ms": 307800,
+        "end_ms": 309000
+      },
+      {
+        "text": "可以避免把一种写法",
+        "start_ms": 309000,
+        "end_ms": 310600
+      },
+      {
+        "text": "直接当作另一种内容的默认要求",
+        "start_ms": 310600,
+        "end_ms": 313200
+      },
+      {
+        "text": "代价则是更多配置层级",
+        "start_ms": 313200,
+        "end_ms": 315200
+      },
+      {
+        "text": "和明确确认",
+        "start_ms": 315200,
+        "end_ms": 316400
+      },
+      {
+        "text": "它是否值得",
+        "start_ms": 316400,
+        "end_ms": 318600
+      },
+      {
+        "text": "最终还要有两类真实稿件",
+        "start_ms": 318600,
+        "end_ms": 321200
+      },
+      {
+        "text": "和实际使用体验来检验",
+        "start_ms": 321200,
+        "end_ms": 323800
+      }
+    ],
+    "source_duration_ms": 324028
+  },
+  "expected_spoken": "一套 AI 创作工具，在实际使用中往往既要写技术分析，也要写生活观察。底层的模型连接可以共用，但“默认应该怎么写”，却不适合只放在一项全局设置里。我们今天聊的，是 AIContentStudio 当前已经批准的项目设计，不是行业统计，也不保证生成结果一定更好。\n\n我们可以先看一个假设：同一位创作者上午写架构分析，晚上写日常随笔。如果把“多讲技术边界、少用感性表达”保存成所有内容的统一默认，那么生活稿也可能收到完全不适合它的要求。这里的问题不在于一个模型能不能写两类文章，而在于这条配置究竟影响谁。\n\n在本项目中，权限、模型接入和基础设施放在用户层；创作配置则以 Persona，也就是内容角色为根，Account 平台账号和 Series 栏目可以进行明确覆盖。需要说明的是，Persona 是内容角色，并不是另一个登录用户；Account 对应平台账号，Series 对应栏目。产品内置的科技研发博主和生活方式博主，各自有独立的文字配置和默认流程。\n\n这种拆法允许两个角色引用同一套模型连接，又分别维护默认写法。但从工程上看，必须讲清这里的权衡：它不意味着两条执行链完全隔离，也不证明事实错误会更少。是否写出了合适的文章，依然要看实际产物。\n\n第二点是，品牌约束与角色写法是两件事。Brand 的身份和品牌约束可以进入创作上下文，但不能成为 Skill、Style、Quality、Recipe 或写作风格默认值的来源。这些英文术语在系统里分别指方法、风格、质量配置和创作流程。\n\n可以用一个假设来理解这条边界：品牌要求内容遵守某项表达边界，两个角色都需要考虑；但技术稿用什么结构、生活稿用什么语气，不应该只因它们属于同一品牌就自动采用同一个默认。这不是说品牌对表达没有影响，而是把“共同约束”和“角色默认”分开。工程上的收益是配置来源更容易解释；代价则是增加了层级，排查稿件不合适时，需要先看配置来自角色、账号还是栏目。这里说的是设计取舍，不是已经测得的效率提升。\n\n第三点，大纲接受了，不等于正文定稿。研究、角度与大纲属于中间创作结果，接受它们不会创建 Content Master，也就是作为正式内容真源的主稿。这给探索留出空间：选定一个角度，仍可以调整大纲；认可大纲，也不等于认可后面生成的正文。\n\n文字候选只有经过明确接受，才会追加保存为 ContentMasterRevision，也就是主稿的新版本；模型调用本身绝不会静默修改正文。因而，“调用有响应”和“内容已定稿”，是两个完全不同的结果。我倾向把这个确认点看作一道内容决策边界，而不是质量保证。它让创作者有机会挑选、修改或放弃候选，但也增加了审阅操作。接受后的文字是否准确、是否符合角色，不能由“已保存”三个字代替判断。\n\n第四点，指定模型就应该尊重指定。Custom 指定单个精确模型时，该模型不可用必须停止；Custom Composition 只允许在事先声明的有序精确模型链内回退。例如，明确只选模型 A，就不能把模型 B 的稿件当作 A 的结果交回来。如果提前配置的是 A 到 B，走 B 才属于执行既定选择。这能解释本次为什么用了这个模型，却不能保证请求一定成功，也不能替代对结果的检查。\n\n事实来源也是同样的逻辑。生活方式角色讨论正在发生的事情时，需要新鲜来源，不能拿模型旧知识冒充实时事实。换成更自然的口吻，不会让过时信息变新；没有来源的现实断言，也不能靠写得流畅来成立。\n\n我的判断是，这套设计首先解决“配置属于谁、什么才算定稿”的问题。共用模型连接可以减少重复配置，分开角色默认可以避免把一种写法直接当作另一种内容的默认要求。代价则是更多配置层级和明确确认。它是否值得，最终还要由两类真实稿件和实际使用体验来检验。",
+  "expected_source_file": "/private/tmp/persona-audio-network-restored-20261009.8yAJ14/tech-spoken-dispatch.json",
+  "expected_sha256": "817a38ec55514278ab10f8757e21837d6489eaf1bd4675b9ed8289a701e12ed2",
+  "alignment_policy": "technical exact saved spoken candidate; lifestyle exact candidate unavailable, semantic comparison only",
+  "alignment_ratio_raw": 0.9956140350877193,
+  "loudness_summary": "Integrated loudness:\n    I:         -22.8 LUFS\n    Threshold: -33.3 LUFS\n\n  Loudness range:\n    LRA:         4.3 LU\n    Threshold: -43.5 LUFS\n    LRA low:   -25.6 LUFS\n    LRA high:  -21.3 LUFS\n\n  True peak:\n    Peak:       -0.2 dBFS\n[out#0/null @ 0xab9010240] video:0KiB audio:20252KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown\nsize=N/A time=00:05:24.02 bitrate=N/A speed= 622x elapsed=0:00:00.52",
+  "silence_events": [
+    "silence_start: 7.030125",
+    "silence_end: 7.798531 | silence_duration: 0.768406",
+    "silence_start: 9.837719",
+    "silence_end: 10.494719 | silence_duration: 0.657",
+    "silence_start: 14.959969",
+    "silence_end: 15.54575 | silence_duration: 0.585781",
+    "silence_start: 20.543969",
+    "silence_end: 21.141656 | silence_duration: 0.597688",
+    "silence_start: 26.654531",
+    "silence_end: 27.248062 | silence_duration: 0.593531",
+    "silence_start: 29.678",
+    "silence_end: 30.193406 | silence_duration: 0.515406",
+    "silence_start: 31.466531",
+    "silence_end: 31.993469 | silence_duration: 0.526938",
+    "silence_start: 37.981938",
+    "silence_end: 38.824531 | silence_duration: 0.842594",
+    "silence_start: 42.428031",
+    "silence_end: 42.936687 | silence_duration: 0.508656",
+    "silence_start: 47.216219",
+    "silence_end: 47.734531 | silence_duration: 0.518313",
+    "silence_start: 56.427406",
+    "silence_end: 57.150438 | silence_duration: 0.723031",
+    "silence_start: 66.919188",
+    "silence_end: 67.661531 | silence_duration: 0.742344",
+    "silence_start: 69.717594",
+    "silence_end: 70.3975 | silence_duration: 0.679906",
+    "silence_start: 71.97875",
+    "silence_end: 72.623188 | silence_duration: 0.644437",
+    "silence_start: 74.855812",
+    "silence_end: 75.46825 | silence_duration: 0.612437",
+    "silence_start: 77.307",
+    "silence_end: 77.851562 | silence_duration: 0.544563",
+    "silence_start: 81.2115",
+    "silence_end: 81.809406 | silence_duration: 0.597906",
+    "silence_start: 93.592969",
+    "silence_end: 94.173031 | silence_duration: 0.580063",
+    "silence_start: 99.198531",
+    "silence_end: 99.744438 | silence_duration: 0.545906",
+    "silence_start: 101.529875",
+    "silence_end: 102.078531 | silence_duration: 0.548656",
+    "silence_start: 104.772406",
+    "silence_end: 105.395125 | silence_duration: 0.622719",
+    "silence_start: 108.272937",
+    "silence_end: 109.196938 | silence_duration: 0.924",
+    "silence_start: 112.739812",
+    "silence_end: 113.369375 | silence_duration: 0.629563",
+    "silence_start: 124.44675",
+    "silence_end: 125.029688 | silence_duration: 0.582937",
+    "silence_start: 129.805656",
+    "silence_end: 130.574781 | silence_duration: 0.769125",
+    "silence_start: 133.485688",
+    "silence_end: 134.262031 | silence_duration: 0.776344",
+    "silence_start: 135.824469",
+    "silence_end: 136.511969 | silence_duration: 0.6875",
+    "silence_start: 140.282219",
+    "silence_end: 140.898469 | silence_duration: 0.61625",
+    "silence_start: 145.420031",
+    "silence_end: 145.9705 | silence_duration: 0.550469",
+    "silence_start: 148.722062",
+    "silence_end: 149.406844 | silence_duration: 0.684781",
+    "silence_start: 152.575156",
+    "silence_end: 153.128062 | silence_duration: 0.552906",
+    "silence_start: 156.135719",
+    "silence_end: 157.160812 | silence_duration: 1.025094",
+    "silence_start: 158.034",
+    "silence_end: 158.575625 | silence_duration: 0.541625",
+    "silence_start: 159.48875",
+    "silence_end: 160.057625 | silence_duration: 0.568875",
+    "silence_start: 168.330438",
+    "silence_end: 168.994812 | silence_duration: 0.664375",
+    "silence_start: 172.288781",
+    "silence_end: 172.838219 | silence_duration: 0.549438",
+    "silence_start: 173.779063",
+    "silence_end: 174.280188 | silence_duration: 0.501125",
+    "silence_start: 175.487844",
+    "silence_end: 176.079062 | silence_duration: 0.591219",
+    "silence_start: 180.070969",
+    "silence_end: 180.579156 | silence_duration: 0.508188",
+    "silence_start: 186.446625",
+    "silence_end: 187.052906 | silence_duration: 0.606281",
+    "silence_start: 192.685375",
+    "silence_end: 193.411406 | silence_duration: 0.726031",
+    "silence_start: 214.456156",
+    "silence_end: 215.100969 | silence_duration: 0.644813",
+    "silence_start: 221.126063",
+    "silence_end: 221.659063 | silence_duration: 0.533",
+    "silence_start: 226.034719",
+    "silence_end: 226.754156 | silence_duration: 0.719438",
+    "silence_start: 228.455094",
+    "silence_end: 229.345469 | silence_duration: 0.890375",
+    "silence_start: 253.852688",
+    "silence_end: 254.397813 | silence_duration: 0.545125",
+    "silence_start: 254.857594",
+    "silence_end: 255.432437 | silence_duration: 0.574844",
+    "silence_start: 260.471156",
+    "silence_end: 261.230781 | silence_duration: 0.759625",
+    "silence_start: 263.026219",
+    "silence_end: 263.530813 | silence_duration: 0.504594",
+    "silence_start: 265.893344",
+    "silence_end: 266.422188 | silence_duration: 0.528844",
+    "silence_start: 277.950156",
+    "silence_end: 278.937781 | silence_duration: 0.987625",
+    "silence_start: 283.831437",
+    "silence_end: 284.332562 | silence_duration: 0.501125",
+    "silence_start: 289.065812",
+    "silence_end: 289.719313 | silence_duration: 0.6535",
+    "silence_start: 291.499625",
+    "silence_end: 292.3465 | silence_duration: 0.846875",
+    "silence_start: 294.102094",
+    "silence_end: 294.605844 | silence_duration: 0.50375",
+    "silence_start: 298.377281",
+    "silence_end: 298.988187 | silence_duration: 0.610906",
+    "silence_start: 301.91525",
+    "silence_end: 302.509187 | silence_duration: 0.593938",
+    "silence_start: 307.341031",
+    "silence_end: 307.866812 | silence_duration: 0.525781",
+    "silence_start: 312.707938",
+    "silence_end: 313.320906 | silence_duration: 0.612969",
+    "silence_start: 316.064531",
+    "silence_end: 316.571281 | silence_duration: 0.50675",
+    "silence_start: 318.132938",
+    "silence_end: 318.729219 | silence_duration: 0.596281"
+  ],
+  "near_full_scale_sample_count": 0,
+  "near_full_scale_ratio": 0.0,
+  "peak_pcm_ratio": 0.972076416015625,
+  "asr_transcript_simplified": "一套AI创作工具\n在实际使用中\n往往既要写技术分析\n也要写生活观察\n底层的模型连接可以共用\n但默认应该怎么写\n却不适合只放在一项全局设置里\n我们今天聊的\n是AI Content Studio\n当前已经批准的项目设计\n不是行业统计\n也不保证生成结果一定更好\n我们可以先看一个假设\n同一位创作者\n上午写架构分析\n晚上写日常随笔\n如果把多讲技术边界\n少用感性表达保存成\n所有内容的统一默认\n那么生活稿\n也可能收到完全不适合它的要求\n这里的问题\n不在于一个模型能不能写两类文章\n而在于这条配置究竟影响谁\n在本项目中\n权限、模型接入\n和基础设施放在用户层\n创作配置则以Persona\n也就是内容角色为根\nAccount平台账号和Series栏目\n可以进行明确覆盖\n需要说明的是\nPersona是内容角色\n并不是另一个登录用户\nAccount对应平台账号\nSeries对应栏目\n产品内置的科技研发博主\n和生活方式博主\n各自有独立的文字配置和默认流程\n这种拆法允许两个角色\n引用同一套模型连接\n又分别维护默认写法\n但从工程上看\n必须讲清这里的权衡\n它不意味着两条执行链完全隔离\n也不证明事实错误会更少\n是否写出了合适的文章\n依然要看实际产物\n第二点是\n品牌约束与角色写法是两件事\nBrand的身份和品牌约束\n可以进入创作上下文\n但不能成为\nSkill,Style,Quality,Recipe\n或写作风格默认值的来源\n这些英文术语在系统里分别指\n方法,风格,质量配置和创作流程\n可以用一个假设来理解这条边界\n品牌要求内容遵守某项表达边界\n两个角色都需要考虑\n但技术稿用什么结构\n生活稿用什么语气\n不应该只因他们属于同一品牌\n就自动采用同一个默认\n这不是说品牌对表达没有影响\n而是把共同约束和角色默认分开\n工程上的收益\n使配置来源更容易解释\n代价则是增加了层级\n排查稿件不合适时\n需要先看配置来自角色\n账号还是栏目\n这里说的是设计取舍\n不是已经测得的效率提升\n第三点\n大纲接受了\n不等于正文定稿\n研究角度与大纲\n属于中间创作结果\n接受他们不会创建Content Master\n也就是作为正式内容真源的主稿\n这给探索留出空间\n选定一个角度\n仍可以调整大纲\n认可大纲\n也不等于认可后面生成的正文\n文字候选\n只有经过明确接受\n才会追加保存为\nContent Master Revision\n也就是主稿的新版本\n模型调用本身\n绝不会静默修改正文\n因而调用有响印和内容已定稿\n是两个完全不同的结果\n我倾向把这个确认点\n看作一道内容决策边界\n而不是质量保证\n它让创作者有机会挑选\n修改或放弃候选\n但也增加了审阅操作\n接受后的文字是否准确\n是否符合角色\n不能由已保存三个字代替判断\n第四点\n指定模型就应该尊重指定\nCustom指定单个精确模型时\n该模型不可用必须停止\nCustom Composition\n只允许在事先声明的\n有序精确模型链内回退\n例如\n明确只选模型A\n就不能把模型B的稿件\n当作A的结果交回来\n如果提前配置的是A到B\n走B才属于执行既定选择\n这能解释本次为什么用了这个模型\n却不能保证请求一定成功\n也不能替代对结果的检查\n事实来源也是同样的逻辑\n生活方式角色\n讨论正在发生的事情时\n需要新鲜来源\n不能拿模型旧知识\n冒充实实事实\n换成更自然的口吻\n不会让过时信息变新\n没有来源的现实断言\n也不能靠写得流畅来成立\n我的判断是\n这套设计首先解决配置属于谁\n什么才算定稿的问题\n共用模型连接可以减少重复配置\n分开角色默认\n可以避免把一种写法\n直接当作另一种内容的默认要求\n代价则是更多配置层级\n和明确确认\n它是否值得\n最终还要有两类真实稿件\n和实际使用体验来检验",
+  "alignment_ratio_simplified": 0.9956140350877193,
+  "alignment_expected_chars": 1368,
+  "alignment_asr_chars": 1368,
+  "alignment_differences": [
+    {
+      "kind": "replace",
+      "expected": "它",
+      "asr": "他"
+    },
+    {
+      "kind": "replace",
+      "expected": "是",
+      "asr": "使"
+    },
+    {
+      "kind": "replace",
+      "expected": "它",
+      "asr": "他"
+    },
+    {
+      "kind": "replace",
+      "expected": "应",
+      "asr": "印"
+    },
+    {
+      "kind": "replace",
+      "expected": "时",
+      "asr": "实"
+    },
+    {
+      "kind": "replace",
+      "expected": "由",
+      "asr": "有"
+    }
+  ],
+  "silence_segments": [
+    {
+      "start": 7.030125,
+      "end": 7.798531,
+      "duration_seconds": 0.768406
+    },
+    {
+      "start": 9.837719,
+      "end": 10.494719,
+      "duration_seconds": 0.657
+    },
+    {
+      "start": 14.959969,
+      "end": 15.54575,
+      "duration_seconds": 0.585781
+    },
+    {
+      "start": 20.543969,
+      "end": 21.141656,
+      "duration_seconds": 0.597688
+    },
+    {
+      "start": 26.654531,
+      "end": 27.248062,
+      "duration_seconds": 0.593531
+    },
+    {
+      "start": 29.678,
+      "end": 30.193406,
+      "duration_seconds": 0.515406
+    },
+    {
+      "start": 31.466531,
+      "end": 31.993469,
+      "duration_seconds": 0.526938
+    },
+    {
+      "start": 37.981938,
+      "end": 38.824531,
+      "duration_seconds": 0.842594
+    },
+    {
+      "start": 42.428031,
+      "end": 42.936687,
+      "duration_seconds": 0.508656
+    },
+    {
+      "start": 47.216219,
+      "end": 47.734531,
+      "duration_seconds": 0.518313
+    },
+    {
+      "start": 56.427406,
+      "end": 57.150438,
+      "duration_seconds": 0.723031
+    },
+    {
+      "start": 66.919188,
+      "end": 67.661531,
+      "duration_seconds": 0.742344
+    },
+    {
+      "start": 69.717594,
+      "end": 70.3975,
+      "duration_seconds": 0.679906
+    },
+    {
+      "start": 71.97875,
+      "end": 72.623188,
+      "duration_seconds": 0.644437
+    },
+    {
+      "start": 74.855812,
+      "end": 75.46825,
+      "duration_seconds": 0.612437
+    },
+    {
+      "start": 77.307,
+      "end": 77.851562,
+      "duration_seconds": 0.544563
+    },
+    {
+      "start": 81.2115,
+      "end": 81.809406,
+      "duration_seconds": 0.597906
+    },
+    {
+      "start": 93.592969,
+      "end": 94.173031,
+      "duration_seconds": 0.580063
+    },
+    {
+      "start": 99.198531,
+      "end": 99.744438,
+      "duration_seconds": 0.545906
+    },
+    {
+      "start": 101.529875,
+      "end": 102.078531,
+      "duration_seconds": 0.548656
+    },
+    {
+      "start": 104.772406,
+      "end": 105.395125,
+      "duration_seconds": 0.622719
+    },
+    {
+      "start": 108.272937,
+      "end": 109.196938,
+      "duration_seconds": 0.924
+    },
+    {
+      "start": 112.739812,
+      "end": 113.369375,
+      "duration_seconds": 0.629563
+    },
+    {
+      "start": 124.44675,
+      "end": 125.029688,
+      "duration_seconds": 0.582937
+    },
+    {
+      "start": 129.805656,
+      "end": 130.574781,
+      "duration_seconds": 0.769125
+    },
+    {
+      "start": 133.485688,
+      "end": 134.262031,
+      "duration_seconds": 0.776344
+    },
+    {
+      "start": 135.824469,
+      "end": 136.511969,
+      "duration_seconds": 0.6875
+    },
+    {
+      "start": 140.282219,
+      "end": 140.898469,
+      "duration_seconds": 0.61625
+    },
+    {
+      "start": 145.420031,
+      "end": 145.9705,
+      "duration_seconds": 0.550469
+    },
+    {
+      "start": 148.722062,
+      "end": 149.406844,
+      "duration_seconds": 0.684781
+    },
+    {
+      "start": 152.575156,
+      "end": 153.128062,
+      "duration_seconds": 0.552906
+    },
+    {
+      "start": 156.135719,
+      "end": 157.160812,
+      "duration_seconds": 1.025094
+    },
+    {
+      "start": 158.034,
+      "end": 158.575625,
+      "duration_seconds": 0.541625
+    },
+    {
+      "start": 159.48875,
+      "end": 160.057625,
+      "duration_seconds": 0.568875
+    },
+    {
+      "start": 168.330438,
+      "end": 168.994812,
+      "duration_seconds": 0.664375
+    },
+    {
+      "start": 172.288781,
+      "end": 172.838219,
+      "duration_seconds": 0.549438
+    },
+    {
+      "start": 173.779063,
+      "end": 174.280188,
+      "duration_seconds": 0.501125
+    },
+    {
+      "start": 175.487844,
+      "end": 176.079062,
+      "duration_seconds": 0.591219
+    },
+    {
+      "start": 180.070969,
+      "end": 180.579156,
+      "duration_seconds": 0.508188
+    },
+    {
+      "start": 186.446625,
+      "end": 187.052906,
+      "duration_seconds": 0.606281
+    },
+    {
+      "start": 192.685375,
+      "end": 193.411406,
+      "duration_seconds": 0.726031
+    },
+    {
+      "start": 214.456156,
+      "end": 215.100969,
+      "duration_seconds": 0.644813
+    },
+    {
+      "start": 221.126063,
+      "end": 221.659063,
+      "duration_seconds": 0.533
+    },
+    {
+      "start": 226.034719,
+      "end": 226.754156,
+      "duration_seconds": 0.719438
+    },
+    {
+      "start": 228.455094,
+      "end": 229.345469,
+      "duration_seconds": 0.890375
+    },
+    {
+      "start": 253.852688,
+      "end": 254.397813,
+      "duration_seconds": 0.545125
+    },
+    {
+      "start": 254.857594,
+      "end": 255.432437,
+      "duration_seconds": 0.574844
+    },
+    {
+      "start": 260.471156,
+      "end": 261.230781,
+      "duration_seconds": 0.759625
+    },
+    {
+      "start": 263.026219,
+      "end": 263.530813,
+      "duration_seconds": 0.504594
+    },
+    {
+      "start": 265.893344,
+      "end": 266.422188,
+      "duration_seconds": 0.528844
+    },
+    {
+      "start": 277.950156,
+      "end": 278.937781,
+      "duration_seconds": 0.987625
+    },
+    {
+      "start": 283.831437,
+      "end": 284.332562,
+      "duration_seconds": 0.501125
+    },
+    {
+      "start": 289.065812,
+      "end": 289.719313,
+      "duration_seconds": 0.6535
+    },
+    {
+      "start": 291.499625,
+      "end": 292.3465,
+      "duration_seconds": 0.846875
+    },
+    {
+      "start": 294.102094,
+      "end": 294.605844,
+      "duration_seconds": 0.50375
+    },
+    {
+      "start": 298.377281,
+      "end": 298.988187,
+      "duration_seconds": 0.610906
+    },
+    {
+      "start": 301.91525,
+      "end": 302.509187,
+      "duration_seconds": 0.593938
+    },
+    {
+      "start": 307.341031,
+      "end": 307.866812,
+      "duration_seconds": 0.525781
+    },
+    {
+      "start": 312.707938,
+      "end": 313.320906,
+      "duration_seconds": 0.612969
+    },
+    {
+      "start": 316.064531,
+      "end": 316.571281,
+      "duration_seconds": 0.50675
+    },
+    {
+      "start": 318.132938,
+      "end": 318.729219,
+      "duration_seconds": 0.596281
+    }
+  ],
+  "longest_detected_pause_seconds": 1.025094,
+  "audio_quality_scope": "Proxy AI review from complete offline ASR, acoustic/timing measures and signed voice/rate receipts; perceived voice, prosody and actual word pronunciation remain unobserved."
+}

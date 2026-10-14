@@ -1,0 +1,719 @@
+{
+  "schema": "persona.delegated.audio-review.v1",
+  "reviewer": "Codex delegated AI quality reviewer",
+  "authorization": "2026-10-14 user explicitly delegated AI quality review",
+  "method": "full-recording sandboxed offline MLX Whisper, acoustic/timing inspection; no direct listening",
+  "direct_listening": false,
+  "source_sha256": "d87df12df901e0610382fff3da9b614fb1faea6c49f9a8bc98fd677c6caf88c5",
+  "source_bytes": 15779418,
+  "source_duration_seconds": 246.53521875,
+  "source_material_rights_unchanged": true,
+  "asr": {
+    "status": "succeeded",
+    "transcript": "你好,今天想和你聊聊我們日常打字和記錄時\n一種挺微妙的感受。\n不妨先設想這樣一個場景。\n這只是一個方便大家體會語境的日常例子。\n白天,你坐在電腦前,\n屏幕上是一份嚴肅的工作筆記,\n密密麻麻列著待辦排期、風險規避,\n還有那些尚未定論的技術選行。\n到了傍晚,你合上筆記本電腦,\n穿過有些涼意的街道,\n推開一家小麵館的玻璃門,\n熱氣騰騰的麵端上來那一刻,\n你可能也想順手記上兩句,\n寫寫熱湯入口時的溫熱,\n或者窗外路燈剛剛亮起時的安靜。\n你看,同樣是打字記錄,\n此刻的心境和目的卻截然不同。\n在白天的備忘錄裡,\n我們需要的是清晰的調理與準確的判斷。\n而在傍晚的便簽裡,\n一句麵湯剛好暖胃,\n天黑得比昨天更早了,\n就已經足夠真切。\n要是輔助工具把晚飯的隨筆\n也寫成一份調分履息的進度通報,\n難免讓人覺得生硬梳理。\n反過來講,\n如果把需要明確責任的分工寫成\n鬆散閒聊,也同樣不合時宜。\n我們這裡聊的並不是哪一種表達風格更高級,\n而是同一個工具究竟能不能為這兩種\n截然不同的日常狀態\n各自留出恰如其分的表達可能。\n在我們手頭的本機項目系統設計裡,\n正好提供了一個很清晰的切片觀察。\n系統內置了AI科技研發技術博主\n和日常生活方式博主這兩種角色。\n它們各自擁有獨立的文字創作配置\n以及各自的默認流程。\n需要說明的是,\n這僅僅是當前本機項目的本地規格,\n並不是什麼全行業的通用規則。\n在推敲工作架構時,\n我們可以依靠技術博主的嚴謹,\n而在記錄生活瑣事時,\n則可以借助生活博主的溫和。\n預設的作用是搭建起一條起跑線,\n但寫出來的文字順不順手,\n依然需要我們在實際閱讀中去慢慢體會。\n不過,放慢語調並不等於可以憑空虛構生活。\n剛才提到的小麵館與熱湯麵\n只是為了說明問題而設定的舉例。\n如果真要落到具體的文字裡,\n比如寫到某家餐廳新推出了什麼季節菜單,\n那就必須以確切的信息作為依據。\n本機項目對此有著非常明確的規範。\n日常生活方式角色在涉及正在發生的事情時,\n必須要求有新鮮來源,\n絕不能用模型的舊知識來冒充實實事實。\n倘若手頭沒有即時的依據,\n就必須坦誠標明這只是想像,\n或者乾脆留白不寫。\n生活記錄雖然不用字字千鈞,\n但事實與個人感觸之間的那條界線\n依然值得我們認真對待。\n更重要的一點是,\n即便有了角色預設的輔助,\n定稿的權力也始終緊緊握在寫作者自己的手中。\n在本機系統的流轉規則裡,\n前期的研究、角度和大綱\n都只是待接受的中間創作結果。\n直接接受這些結果並不會自動創建為 Content Master。\n當真正進入文本生成階段後,\n規則也同樣清晰。\n文字候選生成出來之後,\n依然需要經過人工的明確接受,\n才會被保存為追加式的 Content Master Revision。\n模型本身的調用,\n絕對不會寂寞地去修改正文。\n從最初的大綱雛形,\n到後來生成的候選段落,\n每一步都只是供人甄別參考的草案。\n我們可以逐段翻看、\n刪掉生硬的說辭、\n修正不夠自然的修飾。\n只有在我們明確確認之後,\n文字才會被保存為正式的正文。\n在同一個工具裡,\n為工作筆記與生活片段分別保留各自的寫法。\n是本機項目做的一種務實探索。\n它不會替人品嘗食物的味道,\n無法帶人察覺身邊的微小美好,\n更不可能做出毫無瑕疵的生成保證。\n但它的意義在於,\n提供了一個清晰可調的尺度。\n當工作筆記顯得散漫時,\n就收攏結構。\n當生活隨筆顯得刻板時,\n就剝離說教與彙報腔調,\n在草稿裡慢慢修正,\n直到字裡行間,\n重新流淌出真切的生活氣息。\n然後,再把它們好好保留下來。",
+    "cues": [
+      {
+        "text": "你好,今天想和你聊聊我們日常打字和記錄時",
+        "start_ms": 0,
+        "end_ms": 3600
+      },
+      {
+        "text": "一種挺微妙的感受。",
+        "start_ms": 3600,
+        "end_ms": 5200
+      },
+      {
+        "text": "不妨先設想這樣一個場景。",
+        "start_ms": 5200,
+        "end_ms": 7600
+      },
+      {
+        "text": "這只是一個方便大家體會語境的日常例子。",
+        "start_ms": 7600,
+        "end_ms": 11000
+      },
+      {
+        "text": "白天,你坐在電腦前,",
+        "start_ms": 11000,
+        "end_ms": 13760
+      },
+      {
+        "text": "屏幕上是一份嚴肅的工作筆記,",
+        "start_ms": 13760,
+        "end_ms": 16520
+      },
+      {
+        "text": "密密麻麻列著待辦排期、風險規避,",
+        "start_ms": 16520,
+        "end_ms": 19800
+      },
+      {
+        "text": "還有那些尚未定論的技術選行。",
+        "start_ms": 19800,
+        "end_ms": 22520
+      },
+      {
+        "text": "到了傍晚,你合上筆記本電腦,",
+        "start_ms": 22520,
+        "end_ms": 25320
+      },
+      {
+        "text": "穿過有些涼意的街道,",
+        "start_ms": 25320,
+        "end_ms": 27200
+      },
+      {
+        "text": "推開一家小麵館的玻璃門,",
+        "start_ms": 27200,
+        "end_ms": 29200
+      },
+      {
+        "text": "熱氣騰騰的麵端上來那一刻,",
+        "start_ms": 29200,
+        "end_ms": 31400
+      },
+      {
+        "text": "你可能也想順手記上兩句,",
+        "start_ms": 31400,
+        "end_ms": 33400
+      },
+      {
+        "text": "寫寫熱湯入口時的溫熱,",
+        "start_ms": 33400,
+        "end_ms": 36000
+      },
+      {
+        "text": "或者窗外路燈剛剛亮起時的安靜。",
+        "start_ms": 36000,
+        "end_ms": 39400
+      },
+      {
+        "text": "你看,同樣是打字記錄,",
+        "start_ms": 39400,
+        "end_ms": 41400
+      },
+      {
+        "text": "此刻的心境和目的卻截然不同。",
+        "start_ms": 41400,
+        "end_ms": 44200
+      },
+      {
+        "text": "在白天的備忘錄裡,",
+        "start_ms": 44200,
+        "end_ms": 45800
+      },
+      {
+        "text": "我們需要的是清晰的調理與準確的判斷。",
+        "start_ms": 45800,
+        "end_ms": 48800
+      },
+      {
+        "text": "而在傍晚的便簽裡,",
+        "start_ms": 48800,
+        "end_ms": 50400
+      },
+      {
+        "text": "一句麵湯剛好暖胃,",
+        "start_ms": 50400,
+        "end_ms": 52400
+      },
+      {
+        "text": "天黑得比昨天更早了,",
+        "start_ms": 52400,
+        "end_ms": 54400
+      },
+      {
+        "text": "就已經足夠真切。",
+        "start_ms": 54400,
+        "end_ms": 55800
+      },
+      {
+        "text": "要是輔助工具把晚飯的隨筆",
+        "start_ms": 55800,
+        "end_ms": 58400
+      },
+      {
+        "text": "也寫成一份調分履息的進度通報,",
+        "start_ms": 58400,
+        "end_ms": 60800
+      },
+      {
+        "text": "難免讓人覺得生硬梳理。",
+        "start_ms": 60800,
+        "end_ms": 63600
+      },
+      {
+        "text": "反過來講,",
+        "start_ms": 63600,
+        "end_ms": 64800
+      },
+      {
+        "text": "如果把需要明確責任的分工寫成",
+        "start_ms": 64800,
+        "end_ms": 67000
+      },
+      {
+        "text": "鬆散閒聊,也同樣不合時宜。",
+        "start_ms": 67000,
+        "end_ms": 69600
+      },
+      {
+        "text": "我們這裡聊的並不是哪一種表達風格更高級,",
+        "start_ms": 69600,
+        "end_ms": 73600
+      },
+      {
+        "text": "而是同一個工具究竟能不能為這兩種",
+        "start_ms": 73600,
+        "end_ms": 76200
+      },
+      {
+        "text": "截然不同的日常狀態",
+        "start_ms": 76200,
+        "end_ms": 77800
+      },
+      {
+        "text": "各自留出恰如其分的表達可能。",
+        "start_ms": 77800,
+        "end_ms": 80400
+      },
+      {
+        "text": "在我們手頭的本機項目系統設計裡,",
+        "start_ms": 80400,
+        "end_ms": 82600
+      },
+      {
+        "text": "正好提供了一個很清晰的切片觀察。",
+        "start_ms": 82600,
+        "end_ms": 85200
+      },
+      {
+        "text": "系統內置了AI科技研發技術博主",
+        "start_ms": 85200,
+        "end_ms": 87600
+      },
+      {
+        "text": "和日常生活方式博主這兩種角色。",
+        "start_ms": 87600,
+        "end_ms": 90000
+      },
+      {
+        "text": "它們各自擁有獨立的文字創作配置",
+        "start_ms": 90000,
+        "end_ms": 92400
+      },
+      {
+        "text": "以及各自的默認流程。",
+        "start_ms": 92400,
+        "end_ms": 94000
+      },
+      {
+        "text": "需要說明的是,",
+        "start_ms": 94000,
+        "end_ms": 95600
+      },
+      {
+        "text": "這僅僅是當前本機項目的本地規格,",
+        "start_ms": 95600,
+        "end_ms": 98400
+      },
+      {
+        "text": "並不是什麼全行業的通用規則。",
+        "start_ms": 98400,
+        "end_ms": 100600
+      },
+      {
+        "text": "在推敲工作架構時,",
+        "start_ms": 100600,
+        "end_ms": 102400
+      },
+      {
+        "text": "我們可以依靠技術博主的嚴謹,",
+        "start_ms": 102400,
+        "end_ms": 105200
+      },
+      {
+        "text": "而在記錄生活瑣事時,",
+        "start_ms": 105200,
+        "end_ms": 107000
+      },
+      {
+        "text": "則可以借助生活博主的溫和。",
+        "start_ms": 107000,
+        "end_ms": 109200
+      },
+      {
+        "text": "預設的作用是搭建起一條起跑線,",
+        "start_ms": 109200,
+        "end_ms": 111800
+      },
+      {
+        "text": "但寫出來的文字順不順手,",
+        "start_ms": 111800,
+        "end_ms": 113800
+      },
+      {
+        "text": "依然需要我們在實際閱讀中去慢慢體會。",
+        "start_ms": 113800,
+        "end_ms": 117000
+      },
+      {
+        "text": "不過,放慢語調並不等於可以憑空虛構生活。",
+        "start_ms": 117000,
+        "end_ms": 121400
+      },
+      {
+        "text": "剛才提到的小麵館與熱湯麵",
+        "start_ms": 121400,
+        "end_ms": 124000
+      },
+      {
+        "text": "只是為了說明問題而設定的舉例。",
+        "start_ms": 124000,
+        "end_ms": 126800
+      },
+      {
+        "text": "如果真要落到具體的文字裡,",
+        "start_ms": 126800,
+        "end_ms": 129000
+      },
+      {
+        "text": "比如寫到某家餐廳新推出了什麼季節菜單,",
+        "start_ms": 129000,
+        "end_ms": 133200
+      },
+      {
+        "text": "那就必須以確切的信息作為依據。",
+        "start_ms": 133200,
+        "end_ms": 136000
+      },
+      {
+        "text": "本機項目對此有著非常明確的規範。",
+        "start_ms": 136000,
+        "end_ms": 139200
+      },
+      {
+        "text": "日常生活方式角色在涉及正在發生的事情時,",
+        "start_ms": 139200,
+        "end_ms": 142800
+      },
+      {
+        "text": "必須要求有新鮮來源,",
+        "start_ms": 142800,
+        "end_ms": 145000
+      },
+      {
+        "text": "絕不能用模型的舊知識來冒充實實事實。",
+        "start_ms": 145000,
+        "end_ms": 148200
+      },
+      {
+        "text": "倘若手頭沒有即時的依據,",
+        "start_ms": 148200,
+        "end_ms": 150200
+      },
+      {
+        "text": "就必須坦誠標明這只是想像,",
+        "start_ms": 150200,
+        "end_ms": 152200
+      },
+      {
+        "text": "或者乾脆留白不寫。",
+        "start_ms": 152200,
+        "end_ms": 154200
+      },
+      {
+        "text": "生活記錄雖然不用字字千鈞,",
+        "start_ms": 154200,
+        "end_ms": 157000
+      },
+      {
+        "text": "但事實與個人感觸之間的那條界線",
+        "start_ms": 157000,
+        "end_ms": 159600
+      },
+      {
+        "text": "依然值得我們認真對待。",
+        "start_ms": 159600,
+        "end_ms": 161400
+      },
+      {
+        "text": "更重要的一點是,",
+        "start_ms": 161400,
+        "end_ms": 162800
+      },
+      {
+        "text": "即便有了角色預設的輔助,",
+        "start_ms": 162800,
+        "end_ms": 164800
+      },
+      {
+        "text": "定稿的權力也始終緊緊握在寫作者自己的手中。",
+        "start_ms": 164800,
+        "end_ms": 168400
+      },
+      {
+        "text": "在本機系統的流轉規則裡,",
+        "start_ms": 168400,
+        "end_ms": 170600
+      },
+      {
+        "text": "前期的研究、角度和大綱",
+        "start_ms": 170600,
+        "end_ms": 173600
+      },
+      {
+        "text": "都只是待接受的中間創作結果。",
+        "start_ms": 173800,
+        "end_ms": 176400
+      },
+      {
+        "text": "直接接受這些結果並不會自動創建為 Content Master。",
+        "start_ms": 176400,
+        "end_ms": 180200
+      },
+      {
+        "text": "當真正進入文本生成階段後,",
+        "start_ms": 180200,
+        "end_ms": 182400
+      },
+      {
+        "text": "規則也同樣清晰。",
+        "start_ms": 182400,
+        "end_ms": 184200
+      },
+      {
+        "text": "文字候選生成出來之後,",
+        "start_ms": 184200,
+        "end_ms": 186000
+      },
+      {
+        "text": "依然需要經過人工的明確接受,",
+        "start_ms": 186000,
+        "end_ms": 188000
+      },
+      {
+        "text": "才會被保存為追加式的 Content Master Revision。",
+        "start_ms": 188000,
+        "end_ms": 191200
+      },
+      {
+        "text": "模型本身的調用,",
+        "start_ms": 191200,
+        "end_ms": 192800
+      },
+      {
+        "text": "絕對不會寂寞地去修改正文。",
+        "start_ms": 192800,
+        "end_ms": 195400
+      },
+      {
+        "text": "從最初的大綱雛形,",
+        "start_ms": 195400,
+        "end_ms": 197200
+      },
+      {
+        "text": "到後來生成的候選段落,",
+        "start_ms": 197200,
+        "end_ms": 199400
+      },
+      {
+        "text": "每一步都只是供人甄別參考的草案。",
+        "start_ms": 199400,
+        "end_ms": 202600
+      },
+      {
+        "text": "我們可以逐段翻看、",
+        "start_ms": 202600,
+        "end_ms": 204000
+      },
+      {
+        "text": "刪掉生硬的說辭、",
+        "start_ms": 204000,
+        "end_ms": 205400
+      },
+      {
+        "text": "修正不夠自然的修飾。",
+        "start_ms": 205400,
+        "end_ms": 207400
+      },
+      {
+        "text": "只有在我們明確確認之後,",
+        "start_ms": 207400,
+        "end_ms": 209200
+      },
+      {
+        "text": "文字才會被保存為正式的正文。",
+        "start_ms": 209200,
+        "end_ms": 211400
+      },
+      {
+        "text": "在同一個工具裡,",
+        "start_ms": 211400,
+        "end_ms": 212800
+      },
+      {
+        "text": "為工作筆記與生活片段分別保留各自的寫法。",
+        "start_ms": 212800,
+        "end_ms": 217000
+      },
+      {
+        "text": "是本機項目做的一種務實探索。",
+        "start_ms": 217000,
+        "end_ms": 219800
+      },
+      {
+        "text": "它不會替人品嘗食物的味道,",
+        "start_ms": 219800,
+        "end_ms": 221800
+      },
+      {
+        "text": "無法帶人察覺身邊的微小美好,",
+        "start_ms": 221800,
+        "end_ms": 224000
+      },
+      {
+        "text": "更不可能做出毫無瑕疵的生成保證。",
+        "start_ms": 224000,
+        "end_ms": 226800
+      },
+      {
+        "text": "但它的意義在於,",
+        "start_ms": 226800,
+        "end_ms": 228200
+      },
+      {
+        "text": "提供了一個清晰可調的尺度。",
+        "start_ms": 228200,
+        "end_ms": 230400
+      },
+      {
+        "text": "當工作筆記顯得散漫時,",
+        "start_ms": 230600,
+        "end_ms": 232800
+      },
+      {
+        "text": "就收攏結構。",
+        "start_ms": 232800,
+        "end_ms": 234000
+      },
+      {
+        "text": "當生活隨筆顯得刻板時,",
+        "start_ms": 234000,
+        "end_ms": 236200
+      },
+      {
+        "text": "就剝離說教與彙報腔調,",
+        "start_ms": 236200,
+        "end_ms": 238600
+      },
+      {
+        "text": "在草稿裡慢慢修正,",
+        "start_ms": 238600,
+        "end_ms": 240600
+      },
+      {
+        "text": "直到字裡行間,",
+        "start_ms": 240600,
+        "end_ms": 241800
+      },
+      {
+        "text": "重新流淌出真切的生活氣息。",
+        "start_ms": 241800,
+        "end_ms": 244200
+      },
+      {
+        "text": "然後,再把它們好好保留下來。",
+        "start_ms": 244200,
+        "end_ms": 246400
+      }
+    ],
+    "source_duration_ms": 246536
+  },
+  "expected_spoken": null,
+  "expected_source_file": null,
+  "expected_sha256": null,
+  "alignment_policy": "technical exact saved spoken candidate; lifestyle exact candidate unavailable, semantic comparison only",
+  "alignment_ratio_raw": null,
+  "loudness_summary": "Integrated loudness:\n    I:         -23.6 LUFS\n    Threshold: -34.1 LUFS\n\n  Loudness range:\n    LRA:         2.9 LU\n    Threshold: -44.2 LUFS\n    LRA low:   -25.7 LUFS\n    LRA high:  -22.7 LUFS\n\n  True peak:\n    Peak:       -5.2 dBFS\n[out#0/null @ 0xaf8c0c6c0] video:0KiB audio:15408KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown\nsize=N/A time=00:04:06.53 bitrate=N/A speed= 621x elapsed=0:00:00.39",
+  "silence_events": [
+    "silence_start: 11.693094",
+    "silence_end: 12.297125 | silence_duration: 0.604031",
+    "silence_start: 19.474906",
+    "silence_end: 19.995438 | silence_duration: 0.520531",
+    "silence_start: 21.961281",
+    "silence_end: 22.733844 | silence_duration: 0.772563",
+    "silence_start: 23.340937",
+    "silence_end: 23.865063 | silence_duration: 0.524125",
+    "silence_start: 26.827438",
+    "silence_end: 27.41275 | silence_duration: 0.585313",
+    "silence_start: 55.602625",
+    "silence_end: 56.186156 | silence_duration: 0.583531",
+    "silence_start: 62.86275",
+    "silence_end: 63.735531 | silence_duration: 0.872781",
+    "silence_start: 72.963281",
+    "silence_end: 73.464094 | silence_duration: 0.500812",
+    "silence_start: 80.0055",
+    "silence_end: 80.526969 | silence_duration: 0.521469",
+    "silence_start: 95.094",
+    "silence_end: 95.765781 | silence_duration: 0.671781",
+    "silence_start: 97.817781",
+    "silence_end: 98.607188 | silence_duration: 0.789406",
+    "silence_start: 100.303281",
+    "silence_end: 100.805063 | silence_duration: 0.501781",
+    "silence_start: 126.460938",
+    "silence_end: 126.990625 | silence_duration: 0.529687",
+    "silence_start: 135.58475",
+    "silence_end: 136.155563 | silence_duration: 0.570813",
+    "silence_start: 138.420594",
+    "silence_end: 138.964656 | silence_duration: 0.544063",
+    "silence_start: 156.714656",
+    "silence_end: 157.346156 | silence_duration: 0.6315",
+    "silence_start: 170.365844",
+    "silence_end: 170.891469 | silence_duration: 0.525625",
+    "silence_start: 175.995625",
+    "silence_end: 176.633062 | silence_duration: 0.637437",
+    "silence_start: 194.772281",
+    "silence_end: 195.6625 | silence_duration: 0.890219",
+    "silence_start: 196.98425",
+    "silence_end: 197.535906 | silence_duration: 0.551656",
+    "silence_start: 198.915719",
+    "silence_end: 199.590719 | silence_duration: 0.675",
+    "silence_start: 202.336344",
+    "silence_end: 202.837125 | silence_duration: 0.500781",
+    "silence_start: 216.530812",
+    "silence_end: 217.298344 | silence_duration: 0.767531",
+    "silence_start: 226.44475",
+    "silence_end: 226.999969 | silence_duration: 0.555219"
+  ],
+  "near_full_scale_sample_count": 0,
+  "near_full_scale_ratio": 0.0,
+  "peak_pcm_ratio": 0.531402587890625,
+  "asr_transcript_simplified": "你好,今天想和你聊聊我们日常打字和记录时\n一种挺微妙的感受。\n不妨先设想这样一个场景。\n这只是一个方便大家体会语境的日常例子。\n白天,你坐在电脑前,\n屏幕上是一份严肃的工作笔记,\n密密麻麻列着待办排期、风险规避,\n还有那些尚未定论的技术选行。\n到了傍晚,你合上笔记本电脑,\n穿过有些凉意的街道,\n推开一家小面馆的玻璃门,\n热气腾腾的面端上来那一刻,\n你可能也想顺手记上两句,\n写写热汤入口时的温热,\n或者窗外路灯刚刚亮起时的安静。\n你看,同样是打字记录,\n此刻的心境和目的却截然不同。\n在白天的备忘录里,\n我们需要的是清晰的调理与准确的判断。\n而在傍晚的便签里,\n一句面汤刚好暖胃,\n天黑得比昨天更早了,\n就已经足够真切。\n要是辅助工具把晚饭的随笔\n也写成一份调分履息的进度通报,\n难免让人觉得生硬梳理。\n反过来讲,\n如果把需要明确责任的分工写成\n松散闲聊,也同样不合时宜。\n我们这里聊的并不是哪一种表达风格更高级,\n而是同一个工具究竟能不能为这两种\n截然不同的日常状态\n各自留出恰如其分的表达可能。\n在我们手头的本机项目系统设计里,\n正好提供了一个很清晰的切片观察。\n系统内置了AI科技研发技术博主\n和日常生活方式博主这两种角色。\n它们各自拥有独立的文字创作配置\n以及各自的默认流程。\n需要说明的是,\n这仅仅是当前本机项目的本地规格,\n并不是什么全行业的通用规则。\n在推敲工作架构时,\n我们可以依靠技术博主的严谨,\n而在记录生活琐事时,\n则可以借助生活博主的温和。\n预设的作用是搭建起一条起跑线,\n但写出来的文字顺不顺手,\n依然需要我们在实际阅读中去慢慢体会。\n不过,放慢语调并不等于可以凭空虚构生活。\n刚才提到的小面馆与热汤面\n只是为了说明问题而设定的举例。\n如果真要落到具体的文字里,\n比如写到某家餐厅新推出了什么季节菜单,\n那就必须以确切的信息作为依据。\n本机项目对此有着非常明确的规范。\n日常生活方式角色在涉及正在发生的事情时,\n必须要求有新鲜来源,\n绝不能用模型的旧知识来冒充实实事实。\n倘若手头没有即时的依据,\n就必须坦诚标明这只是想像,\n或者干脆留白不写。\n生活记录虽然不用字字千钧,\n但事实与个人感触之间的那条界线\n依然值得我们认真对待。\n更重要的一点是,\n即便有了角色预设的辅助,\n定稿的权力也始终紧紧握在写作者自己的手中。\n在本机系统的流转规则里,\n前期的研究、角度和大纲\n都只是待接受的中间创作结果。\n直接接受这些结果并不会自动创建为 Content Master。\n当真正进入文本生成阶段后,\n规则也同样清晰。\n文字候选生成出来之后,\n依然需要经过人工的明确接受,\n才会被保存为追加式的 Content Master Revision。\n模型本身的调用,\n绝对不会寂寞地去修改正文。\n从最初的大纲雏形,\n到后来生成的候选段落,\n每一步都只是供人甄别参考的草案。\n我们可以逐段翻看、\n删掉生硬的说辞、\n修正不够自然的修饰。\n只有在我们明确确认之后,\n文字才会被保存为正式的正文。\n在同一个工具里,\n为工作笔记与生活片段分别保留各自的写法。\n是本机项目做的一种务实探索。\n它不会替人品尝食物的味道,\n无法带人察觉身边的微小美好,\n更不可能做出毫无瑕疵的生成保证。\n但它的意义在于,\n提供了一个清晰可调的尺度。\n当工作笔记显得散漫时,\n就收拢结构。\n当生活随笔显得刻板时,\n就剥离说教与汇报腔调,\n在草稿里慢慢修正,\n直到字里行间,\n重新流淌出真切的生活气息。\n然后,再把它们好好保留下来。",
+  "alignment_ratio_simplified": null,
+  "alignment_limitation": "exact saved spoken candidate unavailable; no exact alignment claim",
+  "silence_segments": [
+    {
+      "start": 11.693094,
+      "end": 12.297125,
+      "duration_seconds": 0.604031
+    },
+    {
+      "start": 19.474906,
+      "end": 19.995438,
+      "duration_seconds": 0.520531
+    },
+    {
+      "start": 21.961281,
+      "end": 22.733844,
+      "duration_seconds": 0.772563
+    },
+    {
+      "start": 23.340937,
+      "end": 23.865063,
+      "duration_seconds": 0.524125
+    },
+    {
+      "start": 26.827438,
+      "end": 27.41275,
+      "duration_seconds": 0.585313
+    },
+    {
+      "start": 55.602625,
+      "end": 56.186156,
+      "duration_seconds": 0.583531
+    },
+    {
+      "start": 62.86275,
+      "end": 63.735531,
+      "duration_seconds": 0.872781
+    },
+    {
+      "start": 72.963281,
+      "end": 73.464094,
+      "duration_seconds": 0.500812
+    },
+    {
+      "start": 80.0055,
+      "end": 80.526969,
+      "duration_seconds": 0.521469
+    },
+    {
+      "start": 95.094,
+      "end": 95.765781,
+      "duration_seconds": 0.671781
+    },
+    {
+      "start": 97.817781,
+      "end": 98.607188,
+      "duration_seconds": 0.789406
+    },
+    {
+      "start": 100.303281,
+      "end": 100.805063,
+      "duration_seconds": 0.501781
+    },
+    {
+      "start": 126.460938,
+      "end": 126.990625,
+      "duration_seconds": 0.529687
+    },
+    {
+      "start": 135.58475,
+      "end": 136.155563,
+      "duration_seconds": 0.570813
+    },
+    {
+      "start": 138.420594,
+      "end": 138.964656,
+      "duration_seconds": 0.544063
+    },
+    {
+      "start": 156.714656,
+      "end": 157.346156,
+      "duration_seconds": 0.6315
+    },
+    {
+      "start": 170.365844,
+      "end": 170.891469,
+      "duration_seconds": 0.525625
+    },
+    {
+      "start": 175.995625,
+      "end": 176.633062,
+      "duration_seconds": 0.637437
+    },
+    {
+      "start": 194.772281,
+      "end": 195.6625,
+      "duration_seconds": 0.890219
+    },
+    {
+      "start": 196.98425,
+      "end": 197.535906,
+      "duration_seconds": 0.551656
+    },
+    {
+      "start": 198.915719,
+      "end": 199.590719,
+      "duration_seconds": 0.675
+    },
+    {
+      "start": 202.336344,
+      "end": 202.837125,
+      "duration_seconds": 0.500781
+    },
+    {
+      "start": 216.530812,
+      "end": 217.298344,
+      "duration_seconds": 0.767531
+    },
+    {
+      "start": 226.44475,
+      "end": 226.999969,
+      "duration_seconds": 0.555219
+    }
+  ],
+  "longest_detected_pause_seconds": 0.890219,
+  "audio_quality_scope": "Proxy AI review from complete offline ASR, acoustic/timing measures and signed voice/rate receipts; perceived voice, prosody and actual word pronunciation remain unobserved."
+}
