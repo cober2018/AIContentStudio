@@ -38,6 +38,9 @@ export default function StageContractControls({ base, nodeId, contract, baseConf
   base: string; nodeId: string; contract: StageContract; baseConfig: Record<string, unknown>;
   override: Record<string, unknown>; disabled: boolean; mode?: "run" | "authored"; hiddenFields?: string[]; onChange: (field: string, value: unknown) => void;
 }) {
+  const variantStage = contract.stage_schema === "stage.variant.adapt.v1";
+  const [variantInventory, setVariantInventory] = useState<{ targets: { channel: string; content_form: string }[]; channels: { channel: string; label: string; content_forms: { content_form: string; label: string }[] }[]; accounts: { id: number; name: string; status: string; persona_id: number; platform_channel?: string | null }[]; bindings: { account_id: number; content_form: string; enabled: boolean }[] } | null>(null);
+  const [variantError, setVariantError] = useState("");
   const [inventory, setInventory] = useState<StageMethods | null>(null);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
@@ -54,6 +57,26 @@ export default function StageContractControls({ base, nodeId, contract, baseConf
     }).catch(() => { if (alive) setError("模型和方法清单暂不可用，请刷新清单后选择。"); });
     return () => { alive = false; };
   }, [base, needsInventory, refresh]);
+  useEffect(() => {
+    let alive = true;
+    setVariantInventory(null); setVariantError("");
+    if (!variantStage) return;
+    Promise.all([
+      api.get<{ persona_id: number; series_id: number | null }>(base),
+      api.get<{ items: { channel: string; content_form: string }[] }>(`${base}/channel-variants/capabilities`),
+      api.get<{ channel: string; label: string; content_forms: { content_form: string; label: string }[] }[]>("/channels"),
+    ]).then(async ([unit, targets, channels]) => {
+      const [accounts, bindings] = await Promise.all([
+        api.get<{ id: number; name: string; status: string; persona_id: number; platform_channel?: string | null }[]>(`/content-personas/${unit.persona_id}/accounts`),
+        unit.series_id ? api.get<{ account_id: number; content_form: string; enabled: boolean }[]>(`/content-series/${unit.series_id}/targets`) : Promise.resolve([]),
+      ]);
+      if (alive) setVariantInventory({ targets: targets.items, channels, accounts: accounts.filter(account => account.persona_id === unit.persona_id), bindings });
+    }).catch(() => { if (alive) setVariantError("渠道形态和目标账号清单暂不可用，请刷新后选择；已保存的配置仍保留。"); });
+    return () => { alive = false; };
+  }, [base, variantStage, refresh]);
+  const selectedChannel = String(override.channel_id ?? baseConfig.channel_id ?? "");
+  const selectedForm = String(override.content_form ?? baseConfig.content_form ?? "");
+  function variantKey(channel: string, form: string, account?: unknown) { return `${channel}.${form}.${account ? `account-${account}` : "primary"}`; }
   const methods: StageMethod[] = (inventory?.methods || []).filter(item => item.selection
     && contract.method_sources?.includes(item.source_kind)
     && (!item.applicable_node_ids || item.applicable_node_ids.includes(nodeId)));
@@ -66,7 +89,29 @@ export default function StageContractControls({ base, nodeId, contract, baseConf
     const effective = current === undefined ? baseConfig[field] ?? schema.default : current;
     const hint = `已保存：${stageValue(baseConfig[field] ?? schema.default)} · ${current === undefined ? "当前继承" : mode === "authored" ? "人工拟保存，尚未实测" : "仅本次调整"}`;
     let control;
-    if (field === "selected_profile") {
+    if (variantStage && (field === "channel_id" || field === "content_form")) {
+      const catalog = variantInventory?.targets || [];
+      const values = field === "channel_id" ? Array.from(new Set(catalog.map(target => target.channel))) : catalog.filter(target => target.channel === selectedChannel).map(target => target.content_form);
+      const chosen = String(effective ?? "");
+      control = <Field label={label} hint={hint}><select aria-label={`阶段 ${label}`} className={inputClass} disabled={disabled || !variantInventory} value={chosen} onChange={event => {
+        const next = event.target.value;
+        onChange(field, next || undefined);
+        onChange("target_account_id", 0);
+        if (field === "channel_id") {
+          const form = catalog.find(target => target.channel === next)?.content_form;
+          onChange("content_form", form);
+          if (next && form) onChange("variant_key", variantKey(next, form));
+        } else if (next && selectedChannel) onChange("variant_key", variantKey(selectedChannel, next));
+      }}><option value="">请选择</option>{chosen && !values.includes(chosen) && <option value={chosen} disabled>{chosen} · 当前目录不可用（保留原值）</option>}{values.map(value => { const channel = variantInventory?.channels.find(item => item.channel === (field === "channel_id" ? value : selectedChannel)); return <option key={value} value={value}>{field === "channel_id" ? channel?.label || value : channel?.content_forms.find(item => item.content_form === value)?.label || value} · {value}</option>; })}</select></Field>;
+    } else if (variantStage && field === "target_account_id") {
+      const accounts = variantInventory?.accounts.filter(account => account.status === "active" && account.platform_channel === selectedChannel) || [];
+      const chosen = effective == null || effective === 0 ? "" : String(effective);
+      control = <Field label="目标投放账号（与来源创作账号分别选择）" hint={hint}><select aria-label="阶段目标投放账号" className={inputClass} disabled={disabled || !variantInventory} value={chosen} onChange={event => {
+        const next = Number(event.target.value) || 0;
+        onChange(field, next);
+        if (selectedChannel && selectedForm) onChange("variant_key", variantKey(selectedChannel, selectedForm, next));
+      }}><option value="">仅渠道适配 · 未选目标账号</option>{chosen && !accounts.some(account => String(account.id) === chosen) && <option value={chosen} disabled>当前账号不属于此角色/平台（保留原值）</option>}{accounts.map(account => <option key={account.id} value={account.id} disabled={variantInventory?.bindings.some(binding => binding.account_id === account.id && binding.content_form === selectedForm && !binding.enabled)}>{account.name} · #{account.id}</option>)}</select><p className="mt-1 text-xs text-slate-500">按服务端角色与平台筛选。选择“仅渠道适配”会明确清除已保存的目标账号。选择账号后使用独立版本标识；接受与审核仍须明确确认。</p></Field>;
+    } else if (field === "selected_profile") {
       const capability = String(override.capability ?? baseConfig.capability ?? "");
       const profiles = inventory?.media_profiles?.filter(profile => profile.capabilities?.[capability]?.declared) || [];
       control = <Field label={label} hint={`${hint} · 能力：${capability}`}><select className={inputClass} disabled={disabled || !inventory} value={current === undefined ? "" : String(current)} onChange={event => onChange(field, event.target.value || undefined)}><option value="">使用已保存的媒体配置</option>{current !== undefined && !profiles.some(profile => profile.id === current) && <option value={String(current)} disabled>当前媒体配置不支持所选能力</option>}{profiles.map(profile => { const state = profile.capabilities?.[capability]; return <option key={profile.id} value={profile.id} disabled={!profile.available || state?.configured !== true || state.executable !== true}>{profile.label} · {state?.provider || profile.provider || "未配置"} / {state?.model || profile.model || "未配置"} · {state?.state}{state?.reason ? ` · ${state.reason}` : ""}</option>; })}</select><p className="mt-1 text-xs text-slate-500">配置声明和可用性供选择参考，不代表真实生成已验收；实际执行路由以阶段预览为准。</p></Field>;
@@ -84,5 +129,5 @@ export default function StageContractControls({ base, nodeId, contract, baseConf
       control = <div><Field label={label} hint={hint}><select className={inputClass} disabled={disabled || !inventory} value={current === undefined ? "" : chosenKey} onChange={event => { const method = methods.find(item => methodKey(item.selection) === event.target.value); onChange(field, method ? methodConfig(method.selection) : undefined); }}><option value="">使用已保存的方法</option>{current !== undefined && !selected && <option value={chosenKey} disabled>当前固定方法版本（不在可用清单中）</option>}{methods.map(item => <option key={methodKey(item.selection)} value={methodKey(item.selection)} disabled={item.available === false || item.executable === false}>{item.label || item.name || methodKey(item.selection)} · {item.source_kind} · {item.scope_type || "固定来源"}{item.reason ? ` · ${item.reason}` : ""}</option>)}</select></Field>{selected?.selection.source_kind === "capability_memory" && <p className="mt-1 text-xs text-slate-500">方法 #{selected.selection.artifact_id} · 精确版本 #{selected.selection.revision_id} · {stageValue(selected.matched_scope || selected.scope)}</p>}{selected?.selection.source_kind === "capability_memory" && argsSchema?.properties && Object.keys(argsSchema.properties).length > 0 && <div className="mt-2"><TypedStageField label={mode === "authored" ? "方法参数（拟保存）" : "方法参数（仅本次）"} schema={argsSchema} value={argumentsValue} disabled={disabled} onChange={value => onChange(field, { source_kind: "capability_memory", artifact_id: selected.selection.source_kind === "capability_memory" ? selected.selection.artifact_id : undefined, revision_id: selected.selection.source_kind === "capability_memory" ? selected.selection.revision_id : undefined, arguments_json: JSON.stringify(value) })} /></div>}</div>;
     } else control = <div><TypedStageField label={label} schema={schema} value={effective} disabled={disabled} onChange={value => onChange(field, value)} /><p className="mt-1 text-xs text-slate-500">{hint}</p></div>;
     return <div key={field}>{control}<button type="button" className="mt-1 text-xs text-indigo-600 disabled:text-slate-400" disabled={disabled || current === undefined} onClick={() => onChange(field, undefined)}>恢复已保存配置</button></div>;
-  })}{inventory?.installed_skills?.length ? <details className="rounded-lg bg-slate-50 p-3 text-xs"><summary>已安装 Skills 库存（只读）</summary>{inventory.installed_skills.map(skill => <p key={`${skill.id}:${skill.version}`} className="mt-2">{skill.name || skill.id} · {skill.version} · {skill.reason || "库存不代表已验证的阶段执行绑定"}</p>)}</details> : null}{error && <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800" role="status">{error}<Button size="sm" variant="secondary" onClick={() => setRefresh(value => value + 1)}>刷新模型与方法</Button></div>}{contract.supports_run_override !== true && <p className="text-xs text-slate-500">此阶段不支持本次调节；参数以固定流程版本为准。</p>}</div>;
+  })}{variantError && <p className="rounded bg-amber-50 p-3 text-xs text-amber-800" role="status">{variantError}<Button size="sm" variant="secondary" onClick={() => setRefresh(value => value + 1)}>刷新渠道与账号</Button></p>}{inventory?.installed_skills?.length ? <details className="rounded-lg bg-slate-50 p-3 text-xs"><summary>已安装 Skills 库存（只读）</summary>{inventory.installed_skills.map(skill => <p key={`${skill.id}:${skill.version}`} className="mt-2">{skill.name || skill.id} · {skill.version} · {skill.reason || "库存不代表已验证的阶段执行绑定"}</p>)}</details> : null}{error && <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800" role="status">{error}<Button size="sm" variant="secondary" onClick={() => setRefresh(value => value + 1)}>刷新模型与方法</Button></div>}{contract.supports_run_override !== true && <p className="text-xs text-slate-500">此阶段不支持本次调节；参数以固定流程版本为准。</p>}</div>;
 }

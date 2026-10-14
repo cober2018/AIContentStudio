@@ -1,0 +1,75 @@
+{
+  "schema": "studio.spec-archive-readback.v1",
+  "archive": "openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff",
+  "totals": {
+    "added": 23,
+    "modified": 2,
+    "removed": 0,
+    "renamed": 0
+  },
+  "capabilities": [
+    {
+      "capability": "content-harness-registry",
+      "old_requirements_preserved": true,
+      "old_scenarios_preserved": true,
+      "delta_applied": true,
+      "requirements": 3
+    },
+    {
+      "capability": "creation-recipe-stage-control-loop",
+      "old_requirements_preserved": true,
+      "old_scenarios_preserved": true,
+      "delta_applied": true,
+      "requirements": 1
+    },
+    {
+      "capability": "delivery-router-v1",
+      "old_requirements_preserved": true,
+      "old_scenarios_preserved": true,
+      "delta_applied": true,
+      "requirements": 7
+    },
+    {
+      "capability": "fe-f0-f1-project-experience",
+      "old_requirements_preserved": true,
+      "old_scenarios_preserved": true,
+      "delta_applied": true,
+      "requirements": 6
+    },
+    {
+      "capability": "fe-f3b-content-identity",
+      "old_requirements_preserved": true,
+      "old_scenarios_preserved": true,
+      "delta_applied": true,
+      "requirements": 14
+    },
+    {
+      "capability": "multiplatform-content-handoff",
+      "old_requirements_preserved": true,
+      "old_scenarios_preserved": true,
+      "delta_applied": true,
+      "requirements": 11
+    },
+    {
+      "capability": "persona-channel-series-operations",
+      "old_requirements_preserved": true,
+      "old_scenarios_preserved": true,
+      "delta_applied": true,
+      "requirements": 4
+    }
+  ],
+  "adjacent_tasks_unchanged": {
+    "add-persona-creative-studio": {
+      "sha256": "7eee4e6027aa261e19c329941fdb9a0441311880f13786da4f99bf02df20455b",
+      "done": 151,
+      "todo": 5
+    },
+    "creation-recipe-stage-control-loop": {
+      "sha256": "226a3d9b645aa596082f9f7bb068a6d305c86417fc3ce4024f684a8945c29ebd",
+      "done": 141,
+      "todo": 3
+    }
+  },
+  "archive_started_with_tasks": "42/43; only lifecycle task3.1 itself remained; explicit user authorization used --yes",
+  "local_commit_scope": "46 owner code paths + exact archive/canonical + selective root README, adjacent work preserved"
+}

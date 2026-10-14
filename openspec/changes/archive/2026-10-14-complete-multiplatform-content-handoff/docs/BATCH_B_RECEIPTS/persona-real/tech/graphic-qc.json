@@ -1,0 +1,68 @@
+{
+  "geometry": {
+    "schema": "studio.graphic.geometry-qc.v1",
+    "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+    "status": "pass",
+    "issues": [],
+    "coverage": {
+      "geometry": "axis_aligned",
+      "text_fit": "estimated",
+      "bytes": "not_rendered",
+      "contrast": "text_vs_solid_canvas_only",
+      "aesthetic_quality": "human_review_required"
+    },
+    "human_review_required": true
+  },
+  "graphic_structure": [
+    "pass",
+    {
+      "reasons": [],
+      "persona_quality": {
+        "ref": "studio.quality.graphic.editorial@1",
+        "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+        "style_preset_ref": "studio.graphic.architecture-diagram@1",
+        "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+        "photo_requirement": "none",
+        "implementation": "graphic.geometry.v1",
+        "report": {
+          "schema": "studio.graphic.geometry-qc.v1",
+          "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+          "status": "pass",
+          "issues": [],
+          "coverage": {
+            "geometry": "axis_aligned",
+            "text_fit": "estimated",
+            "bytes": "not_rendered",
+            "contrast": "text_vs_solid_canvas_only",
+            "aesthetic_quality": "human_review_required"
+          },
+          "human_review_required": true
+        }
+      },
+      "coverage": {
+        "geometry": "axis_aligned",
+        "text_fit": "estimated",
+        "bytes": "not_rendered",
+        "contrast": "text_vs_solid_canvas_only",
+        "aesthetic_quality": "human_review_required",
+        "live_bytes_rights": "separate_required_render_rights_checks"
+      },
+      "canvas_count": 3,
+      "visible_layer_count": 9
+    }
+  ],
+  "graphic_platform": [
+    "blocker",
+    {
+      "reasons": [
+        "graphic_inline_media_required"
+      ],
+      "channel": "xiaohongshu",
+      "content_form": "image_note",
+      "profile_version_id": 29,
+      "coverage": {
+        "deterministic": "complete"
+      }
+    }
+  ]
+}

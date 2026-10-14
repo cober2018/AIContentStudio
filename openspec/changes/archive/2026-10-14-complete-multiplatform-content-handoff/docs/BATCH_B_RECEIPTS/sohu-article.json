@@ -1,0 +1,14 @@
+{
+  "channel": "sohu",
+  "form": "article",
+  "payload_hash": "6c5dd8855f67ab340fdc352a60b1d30fb2ae823d16b3c93d5d792603141ab3fa",
+  "candidate_hash": "35db5bc769a1f526aef1a7beb93c834d58300b26727d8ea376fbee6c8f51148a",
+  "export_hash": "d8d5afc9fe69b3422b5b958e7ef943014b1389c5758317d9ef682501fd11b5df",
+  "zip_hash": "7fe0dec68696b5337617543af70ae069b9976e00381670db42e920e4e9a17aef",
+  "media": [],
+  "schema": "sohu.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

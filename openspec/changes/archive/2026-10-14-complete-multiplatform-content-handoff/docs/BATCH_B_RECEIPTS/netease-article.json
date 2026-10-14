@@ -1,0 +1,14 @@
+{
+  "channel": "netease",
+  "form": "article",
+  "payload_hash": "6c5dd8855f67ab340fdc352a60b1d30fb2ae823d16b3c93d5d792603141ab3fa",
+  "candidate_hash": "88dd69bcf510ab1a68d4a4be23d4d63d8903e1da4d316f84532bd5f86d07cf53",
+  "export_hash": "305e3d962e320683c5a80e441dd1d07d77579fc9987ada7faa3beed00c1daad3",
+  "zip_hash": "35963523806c6ce239fae33e4b952f7decc669a51b922987173c0b5ffe630193",
+  "media": [],
+  "schema": "netease.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

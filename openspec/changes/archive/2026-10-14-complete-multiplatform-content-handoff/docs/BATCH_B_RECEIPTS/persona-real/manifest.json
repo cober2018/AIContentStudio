@@ -1,0 +1,3064 @@
+{
+  "schema": "studio.persona-series-real-acceptance.v1",
+  "change": "complete-multiplatform-content-handoff",
+  "created_at": "2026-10-14T09:52:03.789502+00:00",
+  "isolated_root": "/private/tmp/aics-persona-series-20261014.ane8u3as",
+  "database_scope": "isolated WAL-aware clone; no formal writes by this worker",
+  "generation_reuse": "none; all delivered Text, card plans, PNG and WAV are new in this run",
+  "quality_accepted": false,
+  "human_review": "pending",
+  "independent_creative_review": "pending",
+  "publish": "not_run",
+  "asr": "not_run",
+  "lufs": "not_measured",
+  "provider_calls": [
+    {
+      "persona_id": 2,
+      "node_id": "draft",
+      "attempt_id": 37,
+      "run_id": 7,
+      "status": "succeeded",
+      "input_hash": "f1fdba341ec4e2816f0a391d333f5d6e6f9c7405c742e34a39838bc966007b63",
+      "output_hash": "3fee69ef1b8aa2bf882b0b5a5dffc4de47b8750f14fa19a4b71783b6bcefefe2",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "52c837a4615ef0ae397730621f917a235ab6b40565ce945d10250ac8b5162f1f",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "6aed31ffc44ce552f1962071e3ed51626604e701e5dff57c2e3af2f93e3ca2bb",
+        "created_at": "2026-10-14T09:34:55.767396+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:35:15.390337+00:00",
+        "invocation_key": "persona-series-tech-draft",
+        "method_hash": "2e96984b4c888a61f0f38ea0026f49acf614b5866bbe3b7c06f34fe107f731ef",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "draft",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "candidate_shape": {
+            "asset_refs": "exact supplied MaterialRevision refs only",
+            "evidence_refs": "exact supplied FactPackItem refs only",
+            "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+          },
+          "max_candidates": 5,
+          "payload_schema": "text.master.v2",
+          "reference_rules": [
+            "Return exactly candidate_count candidates. Each candidate has only title and body.",
+            "body is Markdown. The service converts it into text.master.v2 and assigns block ids.",
+            "Do not return payload, payload_schema, citations, hashes, asset_refs, or evidence_refs.",
+            "Do not invent numbers, versions, sources, or material ids. Keep unknowns explicit in the prose."
+          ],
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "maxLength": 12000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "title": {
+                      "maxLength": 200,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "body"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "const": "stage.master.proposal.v1"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object with candidates array; honor requested candidate_count",
+          "schema": "stage.master.proposal.v1",
+          "supported_modalities": [
+            "text",
+            "graphic",
+            "video"
+          ]
+        },
+        "output_hash": "3fee69ef1b8aa2bf882b0b5a5dffc4de47b8750f14fa19a4b71783b6bcefefe2",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.master.propose",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "410381918f95c22e54b1a99bf9dec04d8c9c9b6686ffc2e47a2d15f783f03d94",
+        "request_fingerprint": "9f994c7265a126113dc5195048a6f7b561f7f5e822bc7e09dc2426e0cc859565",
+        "request_mode": "explicit",
+        "resolution_hash": "f1fdba341ec4e2816f0a391d333f5d6e6f9c7405c742e34a39838bc966007b63",
+        "runtime_identity_hash": "7951afb6bf9902198ee08e9c09517feb3eb3a5103747d59e41aeda477fdf74eb",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "b675489fa280f6b0d1458e6d7e7ddbde895f9197c843b362cff9a404e31c64b6",
+        "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "workflow_id": 21,
+        "workflow_run_id": 7
+      },
+      "llm_run_id": 26,
+      "adoption": "accepted"
+    },
+    {
+      "persona_id": 2,
+      "node_id": "spoken",
+      "attempt_id": 38,
+      "run_id": 7,
+      "status": "succeeded",
+      "input_hash": "6466b1b1c2348083876b8df3d4fd0a33ac87bfd823e2eb23ceec8e99a0c3ba9c",
+      "output_hash": "57651daf78480ab0de7a2dc7dbf8ed98208d2a7a92c5c34c518085c6b9561b5b",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "0caf52c2517f37f659490532fec6858f872d9b0b39a4909f384758430aa81b4c",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "40ffac1cff6c7ebbfea3b7d88c35f303f794a2ec1e0c2ba882c5195cd1283490",
+        "created_at": "2026-10-14T09:36:15.861159+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:36:32.081520+00:00",
+        "invocation_key": "auto-accept:efcadf822b5618017be92aca80d0b196ebe41dba963f1c7864c380d402f1a698",
+        "method_hash": "5c34e148e50819f9bcfd38469c6038ba437bcfc18d6d48cebb99d1962120f0af",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "spoken",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "pronunciation_notes": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "minItems": 0,
+                "type": "array"
+              },
+              "script": {
+                "maxLength": 24000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "source_summary": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "script",
+              "pronunciation_notes",
+              "source_summary"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "audio.spoken-adaptation.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "audio.spoken-adaptation.v1"
+        },
+        "output_hash": "57651daf78480ab0de7a2dc7dbf8ed98208d2a7a92c5c34c518085c6b9561b5b",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "b5e91c8f89c679508f909f9a4ae7dd747bb20d0a3b434b310b8ee7bcfc029872",
+        "request_fingerprint": "6f161f87f43c7a8c71d4e3ee414b5b1968ac181b1750a59638697c7587fc7597",
+        "request_mode": "automatic",
+        "resolution_hash": "6466b1b1c2348083876b8df3d4fd0a33ac87bfd823e2eb23ceec8e99a0c3ba9c",
+        "runtime_identity_hash": "193b8a5a4da875878498cb6d0c0ca1388f3084ff1bdede6bc0b7ddb0d9a46202",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "3a6079dbae5992e43f457177ba16e2c9964f5c750c29138e443cff265300b6cb",
+        "workflow_id": 21,
+        "workflow_run_id": 7
+      },
+      "llm_run_id": 27,
+      "adoption": "unaccepted_harness_continuity"
+    },
+    {
+      "persona_id": 3,
+      "node_id": "draft",
+      "attempt_id": 39,
+      "run_id": 8,
+      "status": "succeeded",
+      "input_hash": "2c4396cf58af60bfbe502ab7f457c4ea6f38548f9fa3e430c693eace169a3182",
+      "output_hash": "d5e3fcc6a442d8b66fc294fa8c4fb03d0925cb79492ad02753e7c37fa8c8db77",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "81f6f03c7b403b03e74471ad51e9c88cc6d6235ee53513dbf6bd7ab9866df236",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "4de53ad45b1156b641601fbc7619a5c2c500d014fade395331ed67927906681d",
+        "created_at": "2026-10-14T09:41:06.773119+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:41:25.839154+00:00",
+        "invocation_key": "series-lifestyle-8-draft",
+        "method_hash": "2e96984b4c888a61f0f38ea0026f49acf614b5866bbe3b7c06f34fe107f731ef",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "draft",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "candidate_shape": {
+            "asset_refs": "exact supplied MaterialRevision refs only",
+            "evidence_refs": "exact supplied FactPackItem refs only",
+            "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+          },
+          "max_candidates": 5,
+          "payload_schema": "text.master.v2",
+          "reference_rules": [
+            "Return exactly candidate_count candidates. Each candidate has only title and body.",
+            "body is Markdown. The service converts it into text.master.v2 and assigns block ids.",
+            "Do not return payload, payload_schema, citations, hashes, asset_refs, or evidence_refs.",
+            "Do not invent numbers, versions, sources, or material ids. Keep unknowns explicit in the prose."
+          ],
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "maxLength": 12000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "title": {
+                      "maxLength": 200,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "body"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "const": "stage.master.proposal.v1"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object with candidates array; honor requested candidate_count",
+          "schema": "stage.master.proposal.v1",
+          "supported_modalities": [
+            "text",
+            "graphic",
+            "video"
+          ]
+        },
+        "output_hash": "d5e3fcc6a442d8b66fc294fa8c4fb03d0925cb79492ad02753e7c37fa8c8db77",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.master.propose",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "31962062ea694ff7546aae288bc26c67e474792233e4c4ddbedd0141743f00a1",
+        "request_fingerprint": "018feda4d5d2f3444eb995c7de1fa9a078634749743f6d80ba4db0d6e8ae4cba",
+        "request_mode": "explicit",
+        "resolution_hash": "2c4396cf58af60bfbe502ab7f457c4ea6f38548f9fa3e430c693eace169a3182",
+        "runtime_identity_hash": "fbd9fcdc64cecc41a0e1f49642195128db5e61754bf89f1f7fc8a214304d4cda",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "b675489fa280f6b0d1458e6d7e7ddbde895f9197c843b362cff9a404e31c64b6",
+        "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      },
+      "llm_run_id": 28,
+      "adoption": "accepted"
+    },
+    {
+      "persona_id": 3,
+      "node_id": "spoken",
+      "attempt_id": 40,
+      "run_id": 8,
+      "status": "succeeded",
+      "input_hash": "28ee796867f47f6e71dfb47e520268668bffabbfa1bdd88d153984c38478e750",
+      "output_hash": "a857ae696557b80f8b5104ae30033fcbee3dc3b837ac3e7707adc60a53e5e01a",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "81f6f03c7b403b03e74471ad51e9c88cc6d6235ee53513dbf6bd7ab9866df236",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "40ffac1cff6c7ebbfea3b7d88c35f303f794a2ec1e0c2ba882c5195cd1283490",
+        "created_at": "2026-10-14T09:41:36.011541+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:41:55.463533+00:00",
+        "invocation_key": "auto-accept:9e27e08a22fdc136765ffd0045163ef51a38ac5e2dd12b7ea722ef158c7ded3c",
+        "method_hash": "5c34e148e50819f9bcfd38469c6038ba437bcfc18d6d48cebb99d1962120f0af",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "spoken",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "pronunciation_notes": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "minItems": 0,
+                "type": "array"
+              },
+              "script": {
+                "maxLength": 24000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "source_summary": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "script",
+              "pronunciation_notes",
+              "source_summary"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "audio.spoken-adaptation.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "audio.spoken-adaptation.v1"
+        },
+        "output_hash": "a857ae696557b80f8b5104ae30033fcbee3dc3b837ac3e7707adc60a53e5e01a",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "fbba14f7cfc8a473bdb14814905a642c85df1c146cccc359d6340d48b831d12c",
+        "request_fingerprint": "ec6ca6e92b6e69ef71f35a01dbd43db1b406750ac800d602fb45326a8adbf722",
+        "request_mode": "automatic",
+        "resolution_hash": "28ee796867f47f6e71dfb47e520268668bffabbfa1bdd88d153984c38478e750",
+        "runtime_identity_hash": "fbd9fcdc64cecc41a0e1f49642195128db5e61754bf89f1f7fc8a214304d4cda",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "c704c4d633b6885cf8400a6d0800cc86a168fb7099339733ab17de765f304598",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      },
+      "llm_run_id": 29,
+      "adoption": "accepted"
+    },
+    {
+      "persona_id": 3,
+      "node_id": "voice",
+      "attempt_id": 41,
+      "run_id": 8,
+      "status": "succeeded",
+      "input_hash": "fb3aa1c3f69c17e077326f59a780bbc986aa6dde0378580ac6115f8ac83c47dc",
+      "output_hash": "b6baa744c8e015011d7a1ba121aad47dd91598be6ddd88b19736b73983e72e4c",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "81f6f03c7b403b03e74471ad51e9c88cc6d6235ee53513dbf6bd7ab9866df236",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "1ede3c467101caf85ed908ab5765f21a56cc3eb7c7c18b1a770687405fc6b664",
+        "created_at": "2026-10-14T09:42:05.615959+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:42:20.950707+00:00",
+        "invocation_key": "auto-accept:1d867f5fe828930e55ae0129e9b58180eae75d1cdca2f656541af27853b3dd48",
+        "method_hash": "782a4eff095c86e7a4855a17b4e7e4766f64ac4f8d4c9d6c9f3394c19fc18564",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "voice",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "energy": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "pace": {
+                "enum": [
+                  "slow",
+                  "medium",
+                  "fast"
+                ],
+                "maxLength": 6,
+                "type": "string"
+              },
+              "pause_policy": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "pronunciation_notes": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "minItems": 0,
+                "type": "array"
+              },
+              "rate": {
+                "maximum": 2,
+                "minimum": 0.5,
+                "type": "number"
+              },
+              "voice_character": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "voice_character",
+              "pace",
+              "energy",
+              "pause_policy",
+              "pronunciation_notes",
+              "rate"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "audio.voice-direction.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "audio.voice-direction.v1"
+        },
+        "output_hash": "b6baa744c8e015011d7a1ba121aad47dd91598be6ddd88b19736b73983e72e4c",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "3c2426962d2cfbd7f37dc7fc49e15651898e9609720f7bbc10d7aaed06f0e643",
+        "request_fingerprint": "43ec963cd99e33fe6c007b2f53a84b4e15f890a0fc33e488c742a27d0f9066f2",
+        "request_mode": "automatic",
+        "resolution_hash": "fb3aa1c3f69c17e077326f59a780bbc986aa6dde0378580ac6115f8ac83c47dc",
+        "runtime_identity_hash": "fbd9fcdc64cecc41a0e1f49642195128db5e61754bf89f1f7fc8a214304d4cda",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "c46c80922f21906af35dea747e38c88e9e510b505c8eb21c031b3e73e97dae69",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      },
+      "llm_run_id": 30,
+      "adoption": "accepted"
+    },
+    {
+      "persona_id": 3,
+      "node_id": "tts",
+      "attempt_id": 42,
+      "run_id": 8,
+      "status": "succeeded",
+      "input_hash": "2ac847ccb13acac696195b928050c4fc7777ad247a38e484c956182beb9b97e2",
+      "output_hash": "a08a05183825002f8e7ad1cca17d169b124780c70c9843e8a37efdf52d6f5dc2",
+      "model": {
+        "adapter_key": "minimax.cli",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "credential_continuity_hash": "71187171c00e2c8e389f38e8050c8dffefb61de71f4e3a7ae81d1b8d8b69aca6",
+        "model": "speech-2.8-hd",
+        "profile_id": "minimax.speech",
+        "provider": "minimax.cli",
+        "receipt_key_id": "local-minimax-20261003",
+        "routing_plan_hash": "ae775f80352531e97c341ee6dc2b5deb8d543ae810f8af84259d9d69cb5cd24f",
+        "runtime_hash": "deda9caa514c7a25bb564352a0a9e0df56aee8ddf16d4012c722ebf445a44541"
+      },
+      "receipt": {
+        "adapter_hash": "b5de02acf29d56dc038c3f6f91514ea17c4c80cad8ae34eaf427c652c6f737ae",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "f50a8927787933bcb0ea8bcbb359d05a4ea61aad42214d10d386c2e26f4f2fa4",
+        "created_at": "2026-10-14T09:44:38.498680+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:44:43.199526+00:00",
+        "invocation_key": "series-lifestyle-8-tts",
+        "method_hash": "ec456c99539fa5181ba913d68ddf4ad0a9a4a71b64b2b671589df7de89f56dcd",
+        "model_route_hash": "96594f51589463895d14bb41facc4d9c5d63ba47682aebff37797c1164a8cb2a",
+        "node_id": "tts",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "schema": "stage.media.result.v1"
+        },
+        "output_hash": "a08a05183825002f8e7ad1cca17d169b124780c70c9843e8a37efdf52d6f5dc2",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "media.generate",
+        "plugin_version": "4",
+        "prepared_by_server": true,
+        "prompt_hash": "0d4e577b5a6b80aaedf164b0fd6350a2e4011d6a46e0ed71befced29f13d50bd",
+        "request_fingerprint": "854e3829b49aa2411c188e0712d06bd4c7fbd3c4860efb7b22edbbf8f68020d0",
+        "request_mode": "explicit",
+        "resolution_hash": "2ac847ccb13acac696195b928050c4fc7777ad247a38e484c956182beb9b97e2",
+        "runtime_identity_hash": "8371611390f4953f1f0914cdd50d8308bb851c79792c7bf57b9c756758c76e3a",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "8532825e98a4e4eefff2c0b83af32c6f715bfb662362f80e8dedc1af76c27754",
+        "upstream_hash": "d9aca33b8d7e6af69d571869943409afa20c94bcfe711bf145a7cce4c3d8dd6c",
+        "workflow_id": 22,
+        "workflow_run_id": 8
+      },
+      "llm_run_id": null,
+      "adoption": "accepted",
+      "task": {
+        "id": "4f651de32ac34bf5ba3ef837bcdf74ef",
+        "state": "accepted",
+        "model_id": "speech-2.8-hd",
+        "result_hash": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+        "result_size": 5420902,
+        "result_mime": "audio/wav",
+        "accepted_material_revision_id": 9,
+        "request_hash": "30a4d94fc5f10726feee07d7e75fce506125d1910e42153ac3a606e1313106a8",
+        "plan_hash": "3edfeb993a1f89bc85f42acabce004a072e148530b0788ec8599245dff8a9fc4",
+        "input_hash": "d2e076dbb40233ecd727fa58a5ff4460317f2e8095d0187d2f6f100c64325e0e",
+        "runtime_hash": "deda9caa514c7a25bb564352a0a9e0df56aee8ddf16d4012c722ebf445a44541",
+        "query_count": 0
+      }
+    },
+    {
+      "persona_id": 2,
+      "node_id": "spoken",
+      "attempt_id": 44,
+      "run_id": 9,
+      "status": "succeeded",
+      "input_hash": "4f2bcc2a458838ea5e88d795e5ab7f155cebcb3913f3de938d7c36ed3d3d1e61",
+      "output_hash": "81bbd25c3d96113a1560e6bc16ddb580befbf5355a4d7e290369d1ab1cd27999",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "d2b1af5b546a3e531100715e1fb4e19b7a7a6d94a05cc93eef1eed227dba1c98",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "027e03cb55c65f6668911735832b367a311b72b428bda4b82d145ed6f9f27036",
+        "created_at": "2026-10-14T09:44:59.508503+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:45:21.522905+00:00",
+        "invocation_key": "series-tech-9-spoken",
+        "method_hash": "5c34e148e50819f9bcfd38469c6038ba437bcfc18d6d48cebb99d1962120f0af",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "spoken",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "pronunciation_notes": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "minItems": 0,
+                "type": "array"
+              },
+              "script": {
+                "maxLength": 24000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "source_summary": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "warnings": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "minItems": 0,
+                "type": "array"
+              }
+            },
+            "required": [
+              "script",
+              "pronunciation_notes",
+              "source_summary"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "audio.spoken-adaptation.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "audio.spoken-adaptation.v1"
+        },
+        "output_hash": "81bbd25c3d96113a1560e6bc16ddb580befbf5355a4d7e290369d1ab1cd27999",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "39ce33ff5f2d9cb165123eba577ac55816e781ed72f983290e3f30d7df63ab21",
+        "request_fingerprint": "f76642e8ea4c5527eb49a86f7608bada653a6b3dfc6c0387d368886ddcea7b86",
+        "request_mode": "explicit",
+        "resolution_hash": "4f2bcc2a458838ea5e88d795e5ab7f155cebcb3913f3de938d7c36ed3d3d1e61",
+        "runtime_identity_hash": "da2a64851c066ea8db7d133e3105589b6a15a2fe7b38e6167a3b191768e4d7f8",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "866df9e7e3c104caa5dfeaea0c56c57375867457119eb8b066527752eaa638a4",
+        "workflow_id": 23,
+        "workflow_run_id": 9
+      },
+      "llm_run_id": 31,
+      "adoption": "accepted"
+    },
+    {
+      "persona_id": 2,
+      "node_id": "voice",
+      "attempt_id": 45,
+      "run_id": 9,
+      "status": "succeeded",
+      "input_hash": "ff9d29a18ad6bb7d26c29fc021a8b93ee21ddedd0c4e4aebf4a382710fb490be",
+      "output_hash": "d6efd0f4ea6ee8d06de311ada69b64e6ebe4c901892751e69a16acfe890c3c90",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "d2b1af5b546a3e531100715e1fb4e19b7a7a6d94a05cc93eef1eed227dba1c98",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "5bde3c9953fbdb3f695de405ddefcac6c1e3427dbc35e7f6c30670445534b611",
+        "created_at": "2026-10-14T09:45:31.683469+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:45:46.065332+00:00",
+        "invocation_key": "auto-accept:6ec657a4ba65e7ababbfa81bd2e7887b34f967d4364fa7a485269cc5fd229aef",
+        "method_hash": "782a4eff095c86e7a4855a17b4e7e4766f64ac4f8d4c9d6c9f3394c19fc18564",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "voice",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "energy": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "pace": {
+                "enum": [
+                  "slow",
+                  "medium",
+                  "fast"
+                ],
+                "maxLength": 6,
+                "type": "string"
+              },
+              "pause_policy": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "pronunciation_notes": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "minItems": 0,
+                "type": "array"
+              },
+              "rate": {
+                "maximum": 2,
+                "minimum": 0.5,
+                "type": "number"
+              },
+              "voice_character": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "voice_character",
+              "pace",
+              "energy",
+              "pause_policy",
+              "pronunciation_notes",
+              "rate"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "audio.voice-direction.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "audio.voice-direction.v1"
+        },
+        "output_hash": "d6efd0f4ea6ee8d06de311ada69b64e6ebe4c901892751e69a16acfe890c3c90",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "17e3ac37e9224927c32e646420c1358558a5b781c359e82e84183c25a0f6a7db",
+        "request_fingerprint": "fa1011f51e0bc7c7088cc083e9530a4df510f2c3eeb43d75672f9e67b9379057",
+        "request_mode": "automatic",
+        "resolution_hash": "ff9d29a18ad6bb7d26c29fc021a8b93ee21ddedd0c4e4aebf4a382710fb490be",
+        "runtime_identity_hash": "da2a64851c066ea8db7d133e3105589b6a15a2fe7b38e6167a3b191768e4d7f8",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "6fa34009810321cfef9b4fa2818f57b323fd131dc1134909dba786ce4ee49c5e",
+        "workflow_id": 23,
+        "workflow_run_id": 9
+      },
+      "llm_run_id": 32,
+      "adoption": "accepted"
+    },
+    {
+      "persona_id": 2,
+      "node_id": "tts",
+      "attempt_id": 46,
+      "run_id": 9,
+      "status": "succeeded",
+      "input_hash": "0ce17e357d0618c4867955a4e9ed62a4b717e27a9b95fa879a22d3d9a67b22c5",
+      "output_hash": "7541181fc703048064b3476592ddf08d9a4173b6a09e5d8632b788c5f580b1e3",
+      "model": {
+        "adapter_key": "minimax.cli",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "credential_continuity_hash": "71187171c00e2c8e389f38e8050c8dffefb61de71f4e3a7ae81d1b8d8b69aca6",
+        "model": "speech-2.8-hd",
+        "profile_id": "minimax.speech",
+        "provider": "minimax.cli",
+        "receipt_key_id": "local-minimax-20261003",
+        "routing_plan_hash": "d5ec9d483ddb2fe3af3b41c1ec70a0f06ab7d2c47abe5f37dcd13acbd1b23a68",
+        "runtime_hash": "deda9caa514c7a25bb564352a0a9e0df56aee8ddf16d4012c722ebf445a44541"
+      },
+      "receipt": {
+        "adapter_hash": "b5de02acf29d56dc038c3f6f91514ea17c4c80cad8ae34eaf427c652c6f737ae",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "950fde7cb58ef3f3d045b1de7705c780f094284a4e62e41b998bebb6231cabe9",
+        "created_at": "2026-10-14T09:45:57.029904+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:46:02.414238+00:00",
+        "invocation_key": "auto-accept:05c98be00543e311ffbd864350e2776f8bb3cd5b223da532e17e6e9c3c0934c6",
+        "method_hash": "ec456c99539fa5181ba913d68ddf4ad0a9a4a71b64b2b671589df7de89f56dcd",
+        "model_route_hash": "96594f51589463895d14bb41facc4d9c5d63ba47682aebff37797c1164a8cb2a",
+        "node_id": "tts",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "schema": "stage.media.result.v1"
+        },
+        "output_hash": "7541181fc703048064b3476592ddf08d9a4173b6a09e5d8632b788c5f580b1e3",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "media.generate",
+        "plugin_version": "4",
+        "prepared_by_server": true,
+        "prompt_hash": "c10cfe180bbbc0f172390625a9f96aab62751f0ca56358792d24c5250782e9b4",
+        "request_fingerprint": "d234f58f1e1ca34917f3f81f91360a8a51630d5bb54a2387387acf4fab8cc0af",
+        "request_mode": "automatic",
+        "resolution_hash": "0ce17e357d0618c4867955a4e9ed62a4b717e27a9b95fa879a22d3d9a67b22c5",
+        "runtime_identity_hash": "8371611390f4953f1f0914cdd50d8308bb851c79792c7bf57b9c756758c76e3a",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "8532825e98a4e4eefff2c0b83af32c6f715bfb662362f80e8dedc1af76c27754",
+        "upstream_hash": "5d20b3a53233e4968014f180630b9d0ccb4da39bac539743423b41871f9bc4f2",
+        "workflow_id": 23,
+        "workflow_run_id": 9
+      },
+      "llm_run_id": null,
+      "adoption": "accepted",
+      "task": {
+        "id": "8d9154d37a974de6b974e7552534df47",
+        "state": "accepted",
+        "model_id": "speech-2.8-hd",
+        "result_hash": "c517c722c3476bdce5ae46514475111606c3b69cb674875b60a28d77270a722c",
+        "result_size": 6857070,
+        "result_mime": "audio/wav",
+        "accepted_material_revision_id": 10,
+        "request_hash": "f28e61416e4961002cf2ed6123beb2fde88e4e3a601d418593a39d11ab19523e",
+        "plan_hash": "6c8b5fa8a7c1a5ae66a462930d5bb0530358cecf586343ba8326dbb865f579b2",
+        "input_hash": "0649d299d31cfd7c40396970ac7fe3f5bba96f8f220d6715e71b69a11bdca119",
+        "runtime_hash": "deda9caa514c7a25bb564352a0a9e0df56aee8ddf16d4012c722ebf445a44541",
+        "query_count": 0
+      }
+    },
+    {
+      "persona_id": 2,
+      "node_id": "cards",
+      "attempt_id": 48,
+      "run_id": 10,
+      "status": "succeeded",
+      "input_hash": "3b3f0bf7ff482c2b5de0f2eed7950bd6798382a47952e9b57cc026bae72c5b2a",
+      "output_hash": "6cb7d7b7818abcf58a607da165180458d7574c31f4f6828ac591b7162c9c6d61",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "98a42054ca5893949e305a41860d5c0236429f6a9d5ffdbd76fa08dcab8d646c",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "4875d15287b2492a778eff185edd49255fab0de1974d10ee73a0c44060d0cf4d",
+        "created_at": "2026-10-14T09:48:12.896492+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:48:32.946812+00:00",
+        "invocation_key": "series-tech-graphic-cards",
+        "method_hash": "b543555978be212013aa998c321e471883926a3da3ba1b74a9bd8242dbb450c9",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "cards",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "aspect_ratio": {
+                "enum": [
+                  "1:1",
+                  "4:3",
+                  "3:4",
+                  "16:9",
+                  "9:16"
+                ],
+                "maxLength": 5,
+                "type": "string"
+              },
+              "cards": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "maxLength": 1200,
+                      "type": "string"
+                    },
+                    "bullets": {
+                      "items": {
+                        "maxLength": 240,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 6,
+                      "minItems": 0,
+                      "type": "array"
+                    },
+                    "claims": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "fact_pack_item_id": {
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "quote": {
+                            "maxLength": 2000,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "target": {
+                            "maxLength": 100,
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "target",
+                          "quote",
+                          "fact_pack_item_id"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 20,
+                      "minItems": 0,
+                      "type": "array"
+                    },
+                    "diagram_nodes": {
+                      "items": {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 4,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "id": {
+                      "maxLength": 60,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "material_revision_id": {
+                      "maximum": 2147483647,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "order": {
+                      "maximum": 9,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "role": {
+                      "enum": [
+                        "cover",
+                        "body"
+                      ],
+                      "maxLength": 5,
+                      "type": "string"
+                    },
+                    "title": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "visual_type": {
+                      "enum": [
+                        "none",
+                        "image",
+                        "chart",
+                        "diagram"
+                      ],
+                      "maxLength": 7,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "order",
+                    "role",
+                    "title",
+                    "body",
+                    "visual_type"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 10,
+                "minItems": 1,
+                "type": "array"
+              },
+              "title": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "aspect_ratio",
+              "cards"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "graphic.card-plan.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "graphic.card-plan.v1",
+          "visual_requirements": {
+            "diagram_fallback_allowed": true,
+            "image_required_on_cover": false,
+            "image_required_per_card": false,
+            "photo_requirement": "none",
+            "rule": "When image_required_per_card is true, every planned card requires visual_type=image with an exact supplied image MaterialRevision reference; text-only/chart/diagram cards do not satisfy it. When only image_required_on_cover is true, the cover requires that exact image reference and body cards may use visual_type=none for text-only layouts. Diagram fallback is allowed only when diagram_fallback_allowed is true. Do not invent missing images, substitute another preset or claim an incomplete plan is composition-ready; report unavailable suitable images in candidate warnings. Final composition, rights and QC gates still apply.",
+            "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+            "style_preset_ref": "studio.graphic.architecture-diagram@1"
+          }
+        },
+        "output_hash": "6cb7d7b7818abcf58a607da165180458d7574c31f4f6828ac591b7162c9c6d61",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "54c97d6509018afd0dcbd604f3ccea931b55cff8f8317c5ea4a54049b84bc355",
+        "request_fingerprint": "bbb6e0f05d8494825e241b6c7b4b25c82cefa063c106ec693690c7778293a462",
+        "request_mode": "explicit",
+        "resolution_hash": "3b3f0bf7ff482c2b5de0f2eed7950bd6798382a47952e9b57cc026bae72c5b2a",
+        "runtime_identity_hash": "48eb731f7a065d320efcb58e6442404cb4d1583433a4b9b4d07a6feb7395fe78",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "workflow_id": 24,
+        "workflow_run_id": 10
+      },
+      "llm_run_id": 33,
+      "adoption": "accepted"
+    },
+    {
+      "persona_id": 3,
+      "node_id": "cards",
+      "attempt_id": 50,
+      "run_id": 11,
+      "status": "succeeded",
+      "input_hash": "85880015f6d3c8e3bbaf3585cd75f7466a2013b7dafff4a942f95f4f023daf4c",
+      "output_hash": "fc9fa0ea28d80d759946dfd371cba3bcfb82f2f0691b9738783249cf4237710a",
+      "model": {
+        "adapter_key": "generation.openai_compatible",
+        "adapter_version": "1",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+        "provider": "openai_compatible",
+        "runtime_hash": "98a42054ca5893949e305a41860d5c0236429f6a9d5ffdbd76fa08dcab8d646c",
+        "status": "configured_not_probed"
+      },
+      "receipt": {
+        "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "7ee16aad69f67c8a83f03de3577e9aa9231689ca880ccb912709de1f0d6c9427",
+        "created_at": "2026-10-14T09:48:49.115632+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-14T09:49:13.734986+00:00",
+        "invocation_key": "series-lifestyle-graphic-cards",
+        "method_hash": "b543555978be212013aa998c321e471883926a3da3ba1b74a9bd8242dbb450c9",
+        "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+        "node_id": "cards",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "aspect_ratio": {
+                "enum": [
+                  "1:1",
+                  "4:3",
+                  "3:4",
+                  "16:9",
+                  "9:16"
+                ],
+                "maxLength": 5,
+                "type": "string"
+              },
+              "cards": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "maxLength": 1200,
+                      "type": "string"
+                    },
+                    "bullets": {
+                      "items": {
+                        "maxLength": 240,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 6,
+                      "minItems": 0,
+                      "type": "array"
+                    },
+                    "claims": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "fact_pack_item_id": {
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "quote": {
+                            "maxLength": 2000,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "target": {
+                            "maxLength": 100,
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "target",
+                          "quote",
+                          "fact_pack_item_id"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 20,
+                      "minItems": 0,
+                      "type": "array"
+                    },
+                    "diagram_nodes": {
+                      "items": {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 4,
+                      "minItems": 2,
+                      "type": "array"
+                    },
+                    "id": {
+                      "maxLength": 60,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "material_revision_id": {
+                      "maximum": 2147483647,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "order": {
+                      "maximum": 9,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "role": {
+                      "enum": [
+                        "cover",
+                        "body"
+                      ],
+                      "maxLength": 5,
+                      "type": "string"
+                    },
+                    "title": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "visual_type": {
+                      "enum": [
+                        "none",
+                        "image",
+                        "chart",
+                        "diagram"
+                      ],
+                      "maxLength": 7,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "order",
+                    "role",
+                    "title",
+                    "body",
+                    "visual_type"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 10,
+                "minItems": 1,
+                "type": "array"
+              },
+              "title": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "aspect_ratio",
+              "cards"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "graphic.card-plan.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "graphic.card-plan.v1",
+          "visual_requirements": {
+            "diagram_fallback_allowed": false,
+            "image_required_on_cover": true,
+            "image_required_per_card": false,
+            "photo_requirement": "cover",
+            "rule": "When image_required_per_card is true, every planned card requires visual_type=image with an exact supplied image MaterialRevision reference; text-only/chart/diagram cards do not satisfy it. When only image_required_on_cover is true, the cover requires that exact image reference and body cards may use visual_type=none for text-only layouts. Diagram fallback is allowed only when diagram_fallback_allowed is true. Do not invent missing images, substitute another preset or claim an incomplete plan is composition-ready; report unavailable suitable images in candidate warnings. Final composition, rights and QC gates still apply.",
+            "style_preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+            "style_preset_ref": "studio.graphic.warm-magazine@1"
+          }
+        },
+        "output_hash": "fc9fa0ea28d80d759946dfd371cba3bcfb82f2f0691b9738783249cf4237710a",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "prepared_by_server": true,
+        "prompt_hash": "b6045ef673022e2d37d4bd79774c2c98b9db0fb0e3bb8b3082b0cffd8327f928",
+        "request_fingerprint": "44a4259c5f9f788807ccfee32586af527934816c1b6db1733a6d6de30db19380",
+        "request_mode": "explicit",
+        "resolution_hash": "85880015f6d3c8e3bbaf3585cd75f7466a2013b7dafff4a942f95f4f023daf4c",
+        "runtime_identity_hash": "48eb731f7a065d320efcb58e6442404cb4d1583433a4b9b4d07a6feb7395fe78",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "4fd0ab25b955b0d7c3b7744d0b27e6392fb9c28e3beedaa45f40fa9a439c623f",
+        "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "workflow_id": 25,
+        "workflow_run_id": 11
+      },
+      "llm_run_id": 34,
+      "adoption": "accepted"
+    }
+  ],
+  "samples": {
+    "tech": {
+      "persona_id": 2,
+      "series": {
+        "id": 1,
+        "name": "工程思考与日常创作",
+        "status": "active",
+        "current_revision": 0,
+        "account_id": null,
+        "scope": "persona_editorial",
+        "persona_id": 2
+      },
+      "text_unit": {
+        "id": 7,
+        "project_id": 3,
+        "persona_id": 2,
+        "account_id": null,
+        "series_id": 1,
+        "identity_snapshot_id": 7,
+        "identity_state": "frozen",
+        "modality": "text",
+        "channel_id": "wechat",
+        "title": "完整文章与声音 tech",
+        "status": "draft",
+        "pinned_workflow_id": 23
+      },
+      "graphic_unit": {
+        "id": 9,
+        "project_id": 3,
+        "persona_id": 2,
+        "account_id": null,
+        "series_id": 1,
+        "identity_snapshot_id": 9,
+        "identity_state": "frozen",
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "title": "三卡图文 tech",
+        "status": "draft",
+        "pinned_workflow_id": 24
+      },
+      "text_master": {
+        "id": 11,
+        "project_id": 3,
+        "content_unit_id": 7,
+        "revision_no": 1,
+        "modality": "text",
+        "payload_schema": "text.master.v2",
+        "payload": {
+          "title": "为什么创作架构中需要将人设与平台账号解耦",
+          "document": {
+            "schema": "studio.text.document.v1",
+            "blocks": [
+              {
+                "id": "legacy-b2",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "在设计内容创作的工作流时，一个常见的直觉是将“人设”直接绑定在某个具体的平台账号上。账号拥有发布权限、受众关系和特定的展示界面，看似天然代表了创作者的身份。然而从系统设计的视角来看，这种强耦合会给后续的创作与分发带来不必要的维护负担。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b3",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "表达逻辑与分发通道的边界",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b4",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "人设本质上是创作的逻辑内核，它定义了表达风格、专业领域、事实边界以及价值取舍。这是一种对“如何思考与组织内容”的高层抽象。相比之下，平台账号仅仅是分发层的基础设施终端，负责处理身份鉴权、网络协议、格式限制与交互接口。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b5",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "当人设与账号绑定在一起时，表达规则就会不可避免地迁就单一通道的特性。一旦需要跨通道分发，或者底层渠道的接入规则发生变化，创作者就必须在多个端点重复配置身份约束，极易导致不同通道之间的表达一致性出现漂移。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b6",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "架构抽象的代价与取舍",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b7",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "把人设独立出来，并不意味着没有代价。解耦意味着系统需要额外设计一套映射机制，将统一的人设输出转换为符合各个平台规格的内容，这增加了前期的设计复杂度与转换开销。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b8",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "但这种取舍换来的是核心资产的便携性。将表达原则收拢在分发通道之外，不仅能保障跨渠道输出时基调的稳定，也让创作本身不再受制于任何单一基础设施的变动，从而保有独立决定表达方式的能力。",
+                    "marks": []
+                  }
+                ]
+              }
+            ],
+            "citations": []
+          }
+        },
+        "payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+        "context_hash": "1163772567af88ab917a239de246f41ae238532f6e6ee5ee83cd63f4d68be442",
+        "identity_snapshot_id": 7,
+        "creative_brief_revision_id": 3,
+        "fact_boundary_revision_id": null,
+        "source_kind": "workflow_stage",
+        "origin_workflow_run_id": 7,
+        "origin_project_output_id": 7,
+        "readiness": {
+          "state": "incomplete_context",
+          "reasons": [
+            "evidence_missing"
+          ]
+        }
+      },
+      "text_artifact": {
+        "file": "tech/article.md",
+        "sha256": "8d587ec84249c9542eefa459c52ee635b2d3190ab256a88eadac02368338696a",
+        "bytes": 1631
+      },
+      "graphic_master": {
+        "id": 13,
+        "project_id": 3,
+        "content_unit_id": 9,
+        "revision_no": 1,
+        "modality": "graphic",
+        "payload_schema": "graphic.master.v2",
+        "payload": {
+          "title": "人设与账号的解耦设计",
+          "canvases": [
+            {
+              "id": "cover",
+              "order": 0,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "cover-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#6ee7b7",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "cover-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 168.0,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "人设与账号解耦",
+                      "style": {
+                        "font_size": 60,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "cover-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 300.0,
+                  "width": 936,
+                  "height": 106.39999999999999,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "创作人设不应绑定平台账号。强耦合会增加系统维护负担，解耦才能保持创作独立性。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "cover"
+            },
+            {
+              "id": "body-1",
+              "order": 1,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "body-1-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#6ee7b7",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-1-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "逻辑内核与通道边界",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-1-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 212.79999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "人设是关于风格、领域与取舍的高层逻辑内核，账号仅是负责鉴权与格式的分发终端。若两者混淆，表达规则将受制于单一渠道，跨平台时容易导致风格漂移与重复配置成本。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            },
+            {
+              "id": "body-2",
+              "order": 2,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#101827"
+              },
+              "layers": [
+                {
+                  "id": "body-2-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#6ee7b7",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-2-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "架构抽象与工程取舍",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-2-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 212.79999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "解耦需要额外的规格映射转换机制，虽然增加了设计复杂度，却换来了核心资产的便携性。把表达原则独立于通道之外，才能确保基调稳定，不被底层基础设施变动所绑架。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#f5f7fa",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            }
+          ]
+        },
+        "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+        "context_hash": "82b80b0bc05684ba8ca70f33732946b2c4cd4c3b0f8fa7d50101cd4117376e69",
+        "identity_snapshot_id": 9,
+        "creative_brief_revision_id": 3,
+        "fact_boundary_revision_id": null,
+        "source_kind": "workflow_stage",
+        "origin_workflow_run_id": 10,
+        "origin_project_output_id": 11,
+        "readiness": {
+          "state": "incomplete_context",
+          "reasons": [
+            "evidence_missing"
+          ]
+        }
+      },
+      "graphic_preset": {
+        "ref": "studio.graphic.architecture-diagram@1",
+        "origin": "explicit_project_stage_override",
+        "persona_default_unchanged": true
+      },
+      "graphic_artifacts": [
+        {
+          "file": "tech/graphic-1.png",
+          "sha256": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68",
+          "bytes": 52708,
+          "canvas_id": "cover",
+          "order": 0,
+          "width": 1080,
+          "height": 1440,
+          "mime": "image/png",
+          "accepted": {
+            "material_id": 11,
+            "material_revision_id": 11,
+            "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68"
+          },
+          "render_input_hash": "0ee2e8a678f2aa485ad30813db64013da0fb622279ad2a7201e74fd34f0e7ea2",
+          "rights": {
+            "rights_status": "cleared",
+            "public_use_allowed": false,
+            "model_use_allowed": false,
+            "commercial_use_allowed": false
+          },
+          "renderer_origin": {
+            "project_id": 3,
+            "unit_id": 9,
+            "master_id": 13,
+            "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+            "context_hash": "82b80b0bc05684ba8ca70f33732946b2c4cd4c3b0f8fa7d50101cd4117376e69",
+            "canvas_id": "cover",
+            "modality": "graphic",
+            "profile_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "render_input_hash": "0ee2e8a678f2aa485ad30813db64013da0fb622279ad2a7201e74fd34f0e7ea2"
+          }
+        },
+        {
+          "file": "tech/graphic-2.png",
+          "sha256": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed",
+          "bytes": 88318,
+          "canvas_id": "body-1",
+          "order": 1,
+          "width": 1080,
+          "height": 1440,
+          "mime": "image/png",
+          "accepted": {
+            "material_id": 12,
+            "material_revision_id": 12,
+            "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed"
+          },
+          "render_input_hash": "0ee2e8a678f2aa485ad30813db64013da0fb622279ad2a7201e74fd34f0e7ea2",
+          "rights": {
+            "rights_status": "cleared",
+            "public_use_allowed": false,
+            "model_use_allowed": false,
+            "commercial_use_allowed": false
+          },
+          "renderer_origin": {
+            "project_id": 3,
+            "unit_id": 9,
+            "master_id": 13,
+            "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+            "context_hash": "82b80b0bc05684ba8ca70f33732946b2c4cd4c3b0f8fa7d50101cd4117376e69",
+            "canvas_id": "body-1",
+            "modality": "graphic",
+            "profile_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "render_input_hash": "0ee2e8a678f2aa485ad30813db64013da0fb622279ad2a7201e74fd34f0e7ea2"
+          }
+        },
+        {
+          "file": "tech/graphic-3.png",
+          "sha256": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455",
+          "bytes": 87140,
+          "canvas_id": "body-2",
+          "order": 2,
+          "width": 1080,
+          "height": 1440,
+          "mime": "image/png",
+          "accepted": {
+            "material_id": 13,
+            "material_revision_id": 13,
+            "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455"
+          },
+          "render_input_hash": "0ee2e8a678f2aa485ad30813db64013da0fb622279ad2a7201e74fd34f0e7ea2",
+          "rights": {
+            "rights_status": "cleared",
+            "public_use_allowed": false,
+            "model_use_allowed": false,
+            "commercial_use_allowed": false
+          },
+          "renderer_origin": {
+            "project_id": 3,
+            "unit_id": 9,
+            "master_id": 13,
+            "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+            "context_hash": "82b80b0bc05684ba8ca70f33732946b2c4cd4c3b0f8fa7d50101cd4117376e69",
+            "canvas_id": "body-2",
+            "modality": "graphic",
+            "profile_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "render_input_hash": "0ee2e8a678f2aa485ad30813db64013da0fb622279ad2a7201e74fd34f0e7ea2"
+          }
+        }
+      ],
+      "graphic_qc": {
+        "geometry": {
+          "schema": "studio.graphic.geometry-qc.v1",
+          "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+          "status": "pass",
+          "issues": [],
+          "coverage": {
+            "geometry": "axis_aligned",
+            "text_fit": "estimated",
+            "bytes": "not_rendered",
+            "contrast": "text_vs_solid_canvas_only",
+            "aesthetic_quality": "human_review_required"
+          },
+          "human_review_required": true
+        },
+        "graphic_structure": [
+          "pass",
+          {
+            "reasons": [],
+            "persona_quality": {
+              "ref": "studio.quality.graphic.editorial@1",
+              "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+              "style_preset_ref": "studio.graphic.architecture-diagram@1",
+              "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+              "photo_requirement": "none",
+              "implementation": "graphic.geometry.v1",
+              "report": {
+                "schema": "studio.graphic.geometry-qc.v1",
+                "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+                "status": "pass",
+                "issues": [],
+                "coverage": {
+                  "geometry": "axis_aligned",
+                  "text_fit": "estimated",
+                  "bytes": "not_rendered",
+                  "contrast": "text_vs_solid_canvas_only",
+                  "aesthetic_quality": "human_review_required"
+                },
+                "human_review_required": true
+              }
+            },
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required",
+              "live_bytes_rights": "separate_required_render_rights_checks"
+            },
+            "canvas_count": 3,
+            "visible_layer_count": 9
+          }
+        ],
+        "graphic_platform": [
+          "blocker",
+          {
+            "reasons": [
+              "graphic_inline_media_required"
+            ],
+            "channel": "xiaohongshu",
+            "content_form": "image_note",
+            "profile_version_id": 29,
+            "coverage": {
+              "deterministic": "complete"
+            }
+          }
+        ]
+      },
+      "audio_artifact": {
+        "file": "tech/audio.wav",
+        "sha256": "c517c722c3476bdce5ae46514475111606c3b69cb674875b60a28d77270a722c",
+        "bytes": 6857070,
+        "duration_seconds": 107.12353125,
+        "channels": 1,
+        "sample_rate": 32000,
+        "sample_width_bytes": 2,
+        "material": {
+          "id": 10,
+          "content_hash": "c517c722c3476bdce5ae46514475111606c3b69cb674875b60a28d77270a722c",
+          "source_kind": "ai_generated",
+          "public_use_allowed": 0,
+          "model_use_allowed": 0,
+          "commercial_use_allowed": 0
+        }
+      },
+      "audio_qc": {
+        "content_hash": "c517c722c3476bdce5ae46514475111606c3b69cb674875b60a28d77270a722c",
+        "coverage": {
+          "accepted_task": "verified",
+          "asr_alignment": "not_run",
+          "bytes_hash": "verified_live_bytes",
+          "complete": true,
+          "current_binding": "verified",
+          "loudness": "rms_dbfs_only_lufs_not_measured",
+          "mime_duration": "verified_decoded_bytes",
+          "perceptual_quality": "human_review_required",
+          "provider_model": "verified_receipt",
+          "voice_rate": "verified_signed_result_and_material_receipt",
+          "waveform": "wave"
+        },
+        "human_review_required": true,
+        "issues": [],
+        "material_id": 10,
+        "material_revision_id": 10,
+        "measured": {
+          "byte_size": 6857070,
+          "channels": 1,
+          "clipping_ratio": 2.9e-07,
+          "duration_ms": 107123.531,
+          "leading_silence_ms": 177.219,
+          "peak": 0.99996948,
+          "rms": 0.06590289,
+          "rms_dbfs": -23.622,
+          "sample_rate_hz": 32000,
+          "sample_width_bytes": 2,
+          "silence_ratio": 0.21708903,
+          "trailing_silence_ms": 198.188
+        },
+        "quality_profile_hash": "28088c2ada823a3c171ee553343587ca291360e7fd2670c2fc1bfafea1867e16",
+        "quality_profile_ref": "studio.quality.audio.explainer@1",
+        "rules_hash": "c85438151c293aa9f5030ba789d15acc5025a2904cdc556c29d22746cb7434e8",
+        "schema": "studio.audio.qc.v1",
+        "status": "pass",
+        "task": {
+          "execution_profile": "minimax.speech",
+          "model_id": "speech-2.8-hd",
+          "plan_hash": "6c8b5fa8a7c1a5ae66a462930d5bb0530358cecf586343ba8326dbb865f579b2",
+          "provider_key": "minimax.cli",
+          "provider_version": "1",
+          "request_hash": "f28e61416e4961002cf2ed6123beb2fde88e4e3a601d418593a39d11ab19523e",
+          "selected_profile": "minimax.speech",
+          "task_id": "8d9154d37a974de6b974e7552534df47",
+          "tts_applied_parameters": {
+            "rate": 1.0,
+            "schema": "studio.audio.tts-applied.v1",
+            "voice_id": "lengdan_xiongzhang"
+          }
+        },
+        "thresholds": {
+          "clipping_amplitude": 0.999,
+          "clipping_blocker_ratio": 0.01,
+          "clipping_warning_ratio": 0.001,
+          "edge_silence_warning_ms": 2000,
+          "max_bytes": 31457280,
+          "max_duration_ms": 600000,
+          "max_samples": 12000000,
+          "process_timeout_seconds": 10,
+          "rms_warning_max_dbfs": -6,
+          "rms_warning_min_dbfs": -35,
+          "silence_amplitude": 0.001,
+          "silence_warning_ratio": 0.9
+        }
+      },
+      "human_listening": "pending",
+      "human_whole_modality_quality": "pending",
+      "technical_acceptance": "accepted_artifacts_with_explicit_quality_limits"
+    },
+    "lifestyle": {
+      "persona_id": 3,
+      "series": {
+        "id": 2,
+        "name": "日常观察与记录",
+        "status": "active",
+        "current_revision": 0,
+        "account_id": null,
+        "scope": "persona_editorial",
+        "persona_id": 3
+      },
+      "text_unit": {
+        "id": 8,
+        "project_id": 4,
+        "persona_id": 3,
+        "account_id": null,
+        "series_id": 2,
+        "identity_snapshot_id": 8,
+        "identity_state": "frozen",
+        "modality": "text",
+        "channel_id": "wechat",
+        "title": "完整文章与声音 lifestyle",
+        "status": "draft",
+        "pinned_workflow_id": 22
+      },
+      "graphic_unit": {
+        "id": 10,
+        "project_id": 4,
+        "persona_id": 3,
+        "account_id": null,
+        "series_id": 2,
+        "identity_snapshot_id": 10,
+        "identity_state": "frozen",
+        "modality": "graphic",
+        "channel_id": "xiaohongshu",
+        "title": "三卡图文 lifestyle",
+        "status": "draft",
+        "pinned_workflow_id": 25
+      },
+      "text_master": {
+        "id": 12,
+        "project_id": 4,
+        "content_unit_id": 8,
+        "revision_no": 1,
+        "modality": "text",
+        "payload_schema": "text.master.v2",
+        "payload": {
+          "title": "晚饭前的十分钟留白",
+          "document": {
+            "schema": "studio.text.document.v1",
+            "blocks": [
+              {
+                "id": "legacy-b2",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "如果设想一个寻常的傍晚，在晚饭端上桌、热气还没散去前的十分钟里，特意把手机留在隔壁房间的柜子上，屋子里大概会多出一段略显空白的安静。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b3",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "想要记录的惯性",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b4",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "在这段假想的时间里，人可能会有好几次下意识地伸手摸向口袋。看见热汤表面泛起的油花、窗外慢慢沉下去的暮色，脑海里总会自然浮现出一个念头：要是拍下来就好了。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b5",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "这种随时想记录的冲动，往往并不带有明确的目的。它更像是一种对流逝的挽留——生活的细节太容易过去，握着手机时，按下快门似乎能给某个平淡的片刻贴上一枚书签，让人觉得时间的流淌有了痕迹。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b6",
+                "type": "heading",
+                "content": [
+                  {
+                    "text": "留在当下的片刻",
+                    "marks": []
+                  }
+                ],
+                "level": 2
+              },
+              {
+                "id": "legacy-b7",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "如果任由手机放在远处，不去取它，起初的几分钟或许会有些悬空的不适感，像是日常仪式里漏掉了一道步骤。但当注意力从“寻找取景角度”慢慢抽离出来，感官就会重新被周围细微的事物填满。",
+                    "marks": []
+                  }
+                ]
+              },
+              {
+                "id": "legacy-b8",
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "饭菜的热气在灯光下缓缓上升，筷子碰到碗沿发出轻微的脆响，厨房里还有水滴落的声音。没有取景框的过滤，香气和温度是直接迎面而来的。记录是记录者的自由，而偶尔把目光完完全全留给眼前热腾腾的饭菜，也是一种舒适的日常选择。",
+                    "marks": []
+                  }
+                ]
+              }
+            ],
+            "citations": []
+          }
+        },
+        "payload_hash": "d40d8d7aa75a70f93529c4dca5d6b039625ff7417119e802bb686287864bdf16",
+        "context_hash": "238f8776acda591a3b87138532bf5f69dab755da57c79e536090209e1d948568",
+        "identity_snapshot_id": 8,
+        "creative_brief_revision_id": 4,
+        "fact_boundary_revision_id": null,
+        "source_kind": "workflow_stage",
+        "origin_workflow_run_id": 8,
+        "origin_project_output_id": 8,
+        "readiness": {
+          "state": "incomplete_context",
+          "reasons": [
+            "evidence_missing"
+          ]
+        }
+      },
+      "text_artifact": {
+        "file": "lifestyle/article.md",
+        "sha256": "2f4c66ee74217793c26c48af6f84818770e5a0bf1ce941a90e894f9a04ff1284",
+        "bytes": 1367
+      },
+      "graphic_master": {
+        "id": 14,
+        "project_id": 4,
+        "content_unit_id": 10,
+        "revision_no": 1,
+        "modality": "graphic",
+        "payload_schema": "graphic.master.v2",
+        "payload": {
+          "title": "晚饭前的十分钟",
+          "canvases": [
+            {
+              "id": "cover",
+              "order": 0,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff4e8"
+              },
+              "layers": [
+                {
+                  "id": "cover-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b66545",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "cover-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 168.0,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "晚饭前的十分钟",
+                      "style": {
+                        "font_size": 60,
+                        "color": "#443328",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "cover-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 300.0,
+                  "width": 936,
+                  "height": 106.39999999999999,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "设想在寻常傍晚，饭前特意把手机留在隔壁房间，屋里会多出一整段空白的安静。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#443328",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "cover"
+            },
+            {
+              "id": "body-1",
+              "order": 1,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff4e8"
+              },
+              "layers": [
+                {
+                  "id": "body-1-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b66545",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-1-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "想要记录的惯性",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#443328",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-1-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 159.6,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "假想在这段空白里，人总会下意识摸口袋想拍下热汤与暮色。这种冲动并无目的，更像对流逝的挽留，想用快门在平淡日常里夹上一枚书签。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#443328",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            },
+            {
+              "id": "body-2",
+              "order": 2,
+              "width": 1080,
+              "height": 1440,
+              "background": {
+                "color": "#fff4e8"
+              },
+              "layers": [
+                {
+                  "id": "body-2-accent",
+                  "order": 0,
+                  "type": "shape",
+                  "x": 72,
+                  "y": 72,
+                  "width": 88,
+                  "height": 8,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "shape": "rectangle",
+                  "fill": "#b66545",
+                  "stroke_width": 0
+                },
+                {
+                  "id": "body-2-title",
+                  "order": 1,
+                  "type": "text",
+                  "x": 72,
+                  "y": 104,
+                  "width": 936,
+                  "height": 134.39999999999998,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "留在当下的片刻",
+                      "style": {
+                        "font_size": 48,
+                        "color": "#443328",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                },
+                {
+                  "id": "body-2-body",
+                  "order": 2,
+                  "type": "text",
+                  "x": 72,
+                  "y": 266.4,
+                  "width": 936,
+                  "height": 159.6,
+                  "rotation": 0,
+                  "opacity": 1,
+                  "visible": true,
+                  "locked": false,
+                  "runs": [
+                    {
+                      "text": "当注意力离开取景框，细微感知便重新充盈：热气升腾、餐具脆响与扑面而来的饭菜香气。记录是自由，而把目光完整留给眼前，也是舒适的选择。",
+                      "style": {
+                        "font_size": 38,
+                        "color": "#443328",
+                        "weight": 400,
+                        "italic": false,
+                        "align": "left"
+                      }
+                    }
+                  ],
+                  "claims": []
+                }
+              ],
+              "role": "body"
+            }
+          ]
+        },
+        "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+        "context_hash": "a072989cf237971fc513e9284033d5f50065c0a197aff4c73d2346d3d446e6b0",
+        "identity_snapshot_id": 10,
+        "creative_brief_revision_id": 4,
+        "fact_boundary_revision_id": null,
+        "source_kind": "workflow_stage",
+        "origin_workflow_run_id": 11,
+        "origin_project_output_id": 12,
+        "readiness": {
+          "state": "incomplete_context",
+          "reasons": [
+            "evidence_missing"
+          ]
+        }
+      },
+      "graphic_preset": {
+        "ref": "studio.graphic.lifestyle-cards@1",
+        "origin": "explicit_project_stage_override",
+        "persona_default_unchanged": true
+      },
+      "graphic_artifacts": [
+        {
+          "file": "lifestyle/graphic-1.png",
+          "sha256": "872645140089eb89e9493bfb8a2bd70b285706b4bb2e5ab3131fa2f1db606213",
+          "bytes": 45797,
+          "canvas_id": "cover",
+          "order": 0,
+          "width": 1080,
+          "height": 1440,
+          "mime": "image/png",
+          "accepted": {
+            "material_id": 14,
+            "material_revision_id": 14,
+            "content_hash": "872645140089eb89e9493bfb8a2bd70b285706b4bb2e5ab3131fa2f1db606213"
+          },
+          "render_input_hash": "45b220287da91473f64278666c13cfb28ad48269ca87d54fa0a9d61ca6163801",
+          "rights": {
+            "rights_status": "cleared",
+            "public_use_allowed": false,
+            "model_use_allowed": false,
+            "commercial_use_allowed": false
+          },
+          "renderer_origin": {
+            "project_id": 4,
+            "unit_id": 10,
+            "master_id": 14,
+            "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+            "context_hash": "a072989cf237971fc513e9284033d5f50065c0a197aff4c73d2346d3d446e6b0",
+            "canvas_id": "cover",
+            "modality": "graphic",
+            "profile_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "render_input_hash": "45b220287da91473f64278666c13cfb28ad48269ca87d54fa0a9d61ca6163801"
+          }
+        },
+        {
+          "file": "lifestyle/graphic-2.png",
+          "sha256": "b2081f63eaa44cbc50ad8504d7a8fed3d88a8b05846df7c28293377ff301a802",
+          "bytes": 66011,
+          "canvas_id": "body-1",
+          "order": 1,
+          "width": 1080,
+          "height": 1440,
+          "mime": "image/png",
+          "accepted": {
+            "material_id": 15,
+            "material_revision_id": 15,
+            "content_hash": "b2081f63eaa44cbc50ad8504d7a8fed3d88a8b05846df7c28293377ff301a802"
+          },
+          "render_input_hash": "45b220287da91473f64278666c13cfb28ad48269ca87d54fa0a9d61ca6163801",
+          "rights": {
+            "rights_status": "cleared",
+            "public_use_allowed": false,
+            "model_use_allowed": false,
+            "commercial_use_allowed": false
+          },
+          "renderer_origin": {
+            "project_id": 4,
+            "unit_id": 10,
+            "master_id": 14,
+            "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+            "context_hash": "a072989cf237971fc513e9284033d5f50065c0a197aff4c73d2346d3d446e6b0",
+            "canvas_id": "body-1",
+            "modality": "graphic",
+            "profile_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "render_input_hash": "45b220287da91473f64278666c13cfb28ad48269ca87d54fa0a9d61ca6163801"
+          }
+        },
+        {
+          "file": "lifestyle/graphic-3.png",
+          "sha256": "7d88fdd34c0f8b67eaa585c1a23f56a06015ca0a547c0794a02b272d461a9148",
+          "bytes": 66762,
+          "canvas_id": "body-2",
+          "order": 2,
+          "width": 1080,
+          "height": 1440,
+          "mime": "image/png",
+          "accepted": {
+            "material_id": 16,
+            "material_revision_id": 16,
+            "content_hash": "7d88fdd34c0f8b67eaa585c1a23f56a06015ca0a547c0794a02b272d461a9148"
+          },
+          "render_input_hash": "45b220287da91473f64278666c13cfb28ad48269ca87d54fa0a9d61ca6163801",
+          "rights": {
+            "rights_status": "cleared",
+            "public_use_allowed": false,
+            "model_use_allowed": false,
+            "commercial_use_allowed": false
+          },
+          "renderer_origin": {
+            "project_id": 4,
+            "unit_id": 10,
+            "master_id": 14,
+            "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+            "context_hash": "a072989cf237971fc513e9284033d5f50065c0a197aff4c73d2346d3d446e6b0",
+            "canvas_id": "body-2",
+            "modality": "graphic",
+            "profile_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "render_input_hash": "45b220287da91473f64278666c13cfb28ad48269ca87d54fa0a9d61ca6163801"
+          }
+        }
+      ],
+      "graphic_qc": {
+        "geometry": {
+          "schema": "studio.graphic.geometry-qc.v1",
+          "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+          "status": "pass",
+          "issues": [],
+          "coverage": {
+            "geometry": "axis_aligned",
+            "text_fit": "estimated",
+            "bytes": "not_rendered",
+            "contrast": "text_vs_solid_canvas_only",
+            "aesthetic_quality": "human_review_required"
+          },
+          "human_review_required": true
+        },
+        "graphic_structure": [
+          "pass",
+          {
+            "reasons": [],
+            "persona_quality": {
+              "ref": "studio.quality.graphic.lifestyle@1",
+              "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+              "style_preset_ref": "studio.graphic.lifestyle-cards@1",
+              "style_preset_hash": "f0b905895832c0bb1a2919afe1459e8d64985d9f9d65daa4b830952170b85166",
+              "photo_requirement": "none",
+              "implementation": "graphic.geometry.v1",
+              "report": {
+                "schema": "studio.graphic.geometry-qc.v1",
+                "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+                "status": "pass",
+                "issues": [],
+                "coverage": {
+                  "geometry": "axis_aligned",
+                  "text_fit": "estimated",
+                  "bytes": "not_rendered",
+                  "contrast": "text_vs_solid_canvas_only",
+                  "aesthetic_quality": "human_review_required"
+                },
+                "human_review_required": true
+              }
+            },
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required",
+              "live_bytes_rights": "separate_required_render_rights_checks"
+            },
+            "canvas_count": 3,
+            "visible_layer_count": 9
+          }
+        ],
+        "graphic_platform": [
+          "blocker",
+          {
+            "reasons": [
+              "graphic_inline_media_required"
+            ],
+            "channel": "xiaohongshu",
+            "content_form": "image_note",
+            "profile_version_id": 29,
+            "coverage": {
+              "deterministic": "complete"
+            }
+          }
+        ]
+      },
+      "audio_artifact": {
+        "file": "lifestyle/audio.wav",
+        "sha256": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+        "bytes": 5420902,
+        "duration_seconds": 84.68340625,
+        "channels": 1,
+        "sample_rate": 32000,
+        "sample_width_bytes": 2,
+        "material": {
+          "id": 9,
+          "content_hash": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+          "source_kind": "ai_generated",
+          "public_use_allowed": 0,
+          "model_use_allowed": 0,
+          "commercial_use_allowed": 0
+        }
+      },
+      "audio_qc": {
+        "content_hash": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+        "coverage": {
+          "accepted_task": "verified",
+          "asr_alignment": "not_run",
+          "bytes_hash": "verified_live_bytes",
+          "complete": true,
+          "current_binding": "verified",
+          "loudness": "rms_dbfs_only_lufs_not_measured",
+          "mime_duration": "verified_decoded_bytes",
+          "perceptual_quality": "human_review_required",
+          "provider_model": "verified_receipt",
+          "voice_rate": "verified_signed_result_and_material_receipt",
+          "waveform": "wave"
+        },
+        "human_review_required": true,
+        "issues": [],
+        "material_id": 9,
+        "material_revision_id": 9,
+        "measured": {
+          "byte_size": 5420902,
+          "channels": 1,
+          "clipping_ratio": 0.0,
+          "duration_ms": 84683.406,
+          "leading_silence_ms": 166.688,
+          "peak": 0.47848511,
+          "rms": 0.06463748,
+          "rms_dbfs": -23.79,
+          "sample_rate_hz": 32000,
+          "sample_width_bytes": 2,
+          "silence_ratio": 0.23230348,
+          "trailing_silence_ms": 138.531
+        },
+        "quality_profile_hash": "1050b8c1f51329d3223c56660a622368597b471482186d232838bc33af826007",
+        "quality_profile_ref": "studio.quality.audio.conversational@1",
+        "rules_hash": "c85438151c293aa9f5030ba789d15acc5025a2904cdc556c29d22746cb7434e8",
+        "schema": "studio.audio.qc.v1",
+        "status": "pass",
+        "task": {
+          "execution_profile": "minimax.speech",
+          "model_id": "speech-2.8-hd",
+          "plan_hash": "3edfeb993a1f89bc85f42acabce004a072e148530b0788ec8599245dff8a9fc4",
+          "provider_key": "minimax.cli",
+          "provider_version": "1",
+          "request_hash": "30a4d94fc5f10726feee07d7e75fce506125d1910e42153ac3a606e1313106a8",
+          "selected_profile": "minimax.speech",
+          "task_id": "4f651de32ac34bf5ba3ef837bcdf74ef",
+          "tts_applied_parameters": {
+            "rate": 1.0,
+            "schema": "studio.audio.tts-applied.v1",
+            "voice_id": "chunzhen_xuedi"
+          }
+        },
+        "thresholds": {
+          "clipping_amplitude": 0.999,
+          "clipping_blocker_ratio": 0.01,
+          "clipping_warning_ratio": 0.001,
+          "edge_silence_warning_ms": 2000,
+          "max_bytes": 31457280,
+          "max_duration_ms": 600000,
+          "max_samples": 12000000,
+          "process_timeout_seconds": 10,
+          "rms_warning_max_dbfs": -6,
+          "rms_warning_min_dbfs": -35,
+          "silence_amplitude": 0.001,
+          "silence_warning_ratio": 0.9
+        }
+      },
+      "human_listening": "pending",
+      "human_whole_modality_quality": "pending",
+      "technical_acceptance": "accepted_artifacts_with_explicit_quality_limits"
+    }
+  },
+  "limitations": [
+    "Current articles are general design reflection and explicitly hypothetical lifestyle scenes; no current news claims were generated.",
+    "Text and Graphic whole semantic/fact/identity checks were not dispatched in this bounded batch; no source fact boundary is invented.",
+    "Graphic render material rights remain false for public/model/commercial use, and no final public-use attestation is claimed.",
+    "The lifestyle project explicitly selects lifestyle-cards; the Persona warm-magazine photo-cover default is unchanged.",
+    "The first tech spoken attempt succeeded but could not be adopted after the harness process continuity key changed; it is retained unaccepted and a separately authorized new Audio Run produced the accepted chain."
+  ],
+  "calls_actual": {
+    "chat": 9,
+    "tts": 2,
+    "total": 11,
+    "by_node": {
+      "draft": 2,
+      "cards": 2,
+      "spoken": 3,
+      "voice": 2,
+      "tts": 2
+    },
+    "retries": 0,
+    "unknown_new": 0
+  },
+  "integrity": {
+    "integrity_check": "ok",
+    "foreign_key_check": [],
+    "schema_head": "a3series00000001"
+  },
+  "artifact_hash_readback": {
+    "verified_count": 10,
+    "all_exact": true,
+    "files": [
+      "tech/article.md",
+      "tech/graphic-1.png",
+      "tech/graphic-2.png",
+      "tech/graphic-3.png",
+      "tech/audio.wav",
+      "lifestyle/article.md",
+      "lifestyle/graphic-1.png",
+      "lifestyle/graphic-2.png",
+      "lifestyle/graphic-3.png",
+      "lifestyle/audio.wav"
+    ]
+  },
+  "existing_rows_readback": {
+    "comparison": "current formal read-only rows vs isolated clone at receipt time; does not claim other workers made no formal changes",
+    "table_count": 91,
+    "row_count": 482,
+    "different_rows": [],
+    "all_exact": true
+  },
+  "graphic_qc_summary": {
+    "geometry": "pass both",
+    "structure": "pass both",
+    "platform": "blocked both: graphic_inline_media_required",
+    "whole_semantic_checks": "not_run",
+    "render_public_attestation": "not_claimed_local_only_rights"
+  }
+}

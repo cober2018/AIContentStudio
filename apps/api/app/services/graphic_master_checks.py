@@ -28,10 +28,16 @@ def profile_reasons(form: ContentFormSpec, document: dict) -> list[str]:
     if presets is not None and (not isinstance(presets, list) or len(presets) > 50 or any(not isinstance(item, dict) or set(item) != {"key", "label", "width", "height"} or not isinstance(item["key"], str) or not item["key"] or not isinstance(item["label"], str) or not item["label"] or any(type(item[field]) is not int or not 1 <= item[field] <= 8192 for field in ("width", "height")) for item in presets)):
         return ["graphic_profile_rules_invalid"]
     media_rules = form.media_requirements
-    if not isinstance(media_rules, dict) or any(value not in {"required", "optional"} for value in media_rules.values()):
+    if not isinstance(media_rules, dict) or any(not isinstance(value, str) or value not in {"required", "optional"} for key, value in media_rules.items() if key != "required_roles"):
         return ["graphic_profile_rules_invalid"]
-    if set(media_rules) - {"cover", "inline"}:
+    if set(media_rules) - {"cover", "inline", "required_roles"}:
         return ["graphic_profile_rule_unavailable"]
+    if "required_roles" in media_rules:
+        roles = media_rules["required_roles"]
+        if not isinstance(roles, list) or any(not isinstance(role, str) for role in roles) or len(roles) != len(set(roles)):
+            return ["graphic_profile_rules_invalid"]
+        if form.content_form != "image_note" or set(roles) - {"card_image"}:
+            return ["graphic_profile_rule_unavailable"]
     canvases = document["canvases"]
     reasons = []
     if minimum is not None and len(canvases) < minimum:
@@ -42,8 +48,13 @@ def profile_reasons(form: ContentFormSpec, document: dict) -> list[str]:
         reasons.append("graphic_dimensions_not_allowed")
     if (rules.get("cover_required") is True or form.media_requirements.get("cover") == "required") and canvases[0].get("role") != "cover":
         reasons.append("graphic_cover_required")
-    if media_rules.get("inline") == "required" and not any(layer["type"] in {"image", "chart"} and layer["visible"] for canvas in canvases for layer in canvas["layers"]):
-        reasons.append("graphic_inline_media_required")
+    if media_rules.get("inline") == "required":
+        if form.content_form == "image_note":
+            has_inline = any(canvas.get("role") == "body" for canvas in canvases)
+        else:
+            has_inline = any(layer["type"] in {"image", "chart"} and layer["visible"] for canvas in canvases for layer in canvas["layers"])
+        if not has_inline:
+            reasons.append("graphic_inline_media_required")
     return reasons
 
 

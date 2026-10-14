@@ -156,6 +156,12 @@ def _legacy_form(channel: str, source: str, template: ChannelTemplateVersion | N
     )
 
 
+def ensure_channel_in_service(channel_key: str | None) -> None:
+    """Keep historical x_thread out of new public-account and Series-target writes."""
+    if channel_key == "x_thread":
+        raise ChannelRegistryError("渠道 x_thread 已下线，请使用渠道 x 的 single 或 thread")
+
+
 def resolve_channel(db: Session, channel_key: str) -> ChannelSpec | None:
     """解析渠道；未注册返回 None（调用方决定报错或忽略）。"""
     templates = _published_templates(db).get(channel_key, [])

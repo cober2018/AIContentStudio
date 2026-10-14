@@ -1,0 +1,140 @@
+{
+  "schema": "studio.formal-final-old-row-readback.v1",
+  "backup": "backups/pre-multiplatform-profile-20261014-172151/content_studio.db",
+  "tables_compared": 91,
+  "old_rows_compared": 470,
+  "missing_old_rows": [],
+  "only_approved_profile_status_differences": [
+    {
+      "table": "channel_template_version",
+      "pk": [
+        5
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        6
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        7
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        8
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        9
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        10
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        11
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        12
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        13
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        14
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        15
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    },
+    {
+      "table": "channel_template_version",
+      "pk": [
+        18
+      ],
+      "changed_fields": [
+        "status"
+      ],
+      "approved_change": "previous published profile archived"
+    }
+  ],
+  "integrity": [
+    [
+      "ok"
+    ]
+  ],
+  "foreign_keys": [],
+  "schema_head": [
+    [
+      "a3series00000001"
+    ]
+  ]
+}

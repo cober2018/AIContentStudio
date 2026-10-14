@@ -48,3 +48,20 @@ export const api = {
   del: <T>(path: string) => request<T>("DELETE", path),
   upload: <T>(path: string, form: FormData) => request<T>("POST", path, form, { isForm: true }),
 };
+
+export type ChannelFormField = {
+  path: string; type: string; label?: string; required?: boolean; readonly?: boolean; default?: unknown;
+  min_length?: number; max_length?: number; minimum?: number; maximum?: number; pattern?: string;
+  enum?: unknown[]; min_items?: number; max_items?: number; ordered?: boolean; unique_ids?: boolean;
+  unique_values?: boolean; global_unique_ids?: boolean; additional_fields?: boolean; exact_evidence_ref?: boolean;
+  fields?: ChannelFormField[]; item?: ChannelFormField; discriminator?: string;
+  variants?: Record<string, Record<string, ChannelFormField>>; first_kind?: string;
+  kind_counts?: Record<string, { min?: number; max?: number }>;
+};
+export type ChannelFormDescriptor = {
+  descriptor_version: number; channel_id?: string; content_form?: string; schema_id: string; schema_version?: string;
+  fields: ChannelFormField[]; additional_fields?: boolean;
+  media_roles?: { role: string; required?: boolean; exact_slot?: boolean; max_items?: number }[];
+  error_mapping?: Record<string, { path: string; message: string }>;
+  technical_limits?: { canonical_bytes?: number; platform_verified?: boolean };
+};

@@ -130,6 +130,7 @@ function Shell() {
               <Route path="/production" element={<ProductionQueuePage />} />
               <Route path="/review" element={<ProjectReviewCenter />} />
               <Route path="/identities" element={<IdentityWorkspace />} />
+              <Route path="/accounts" element={<Navigate to="/identities" replace />} />
               <Route path="/assets" element={<SystemAssetsKnowledgePage />} />
               <Route path="/learning" element={<LearningWorkspace />} />
               <Route path="/dashboard" element={<Dashboard />} />

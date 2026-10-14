@@ -1,0 +1,14 @@
+{
+  "channel": "toutiao",
+  "form": "article",
+  "payload_hash": "6c5dd8855f67ab340fdc352a60b1d30fb2ae823d16b3c93d5d792603141ab3fa",
+  "candidate_hash": "e57fca1b1fa331aaf0eae4890c62bf1ef2848856e171c792fa47ff7e41004fc0",
+  "export_hash": "257cc7ef20e8310d7c60b027603fc1cf3d281f30248096622690b69156bb5bce",
+  "zip_hash": "b987215416f55dac9a0d02561fac550cee1ea87c8a958482b2266113061f67cf",
+  "media": [],
+  "schema": "toutiao.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

@@ -1119,7 +1119,10 @@ def test_official_inline_source_to_frozen_review_and_exact_local_package(client,
     assert package.status_code == 200, package.text
     with zipfile.ZipFile(io.BytesIO(package.content)) as archive:
         frozen_manifest = json.loads(archive.read("manifest.json"))
-        assert frozen_manifest["official_render"] == official
+        assert frozen_manifest["export_schema"] == "studio.channel-export.v1"
+        assert "official_render" not in frozen_manifest
+        assert "content.html" in archive.namelist()
+        assert candidate["manifest"]["official_render"] == official
         media = [archive.read(name) for name in archive.namelist() if name.endswith(".png")]
         assert all(content in media for content in exact_bytes)
     revisions[1].public_use_allowed = False

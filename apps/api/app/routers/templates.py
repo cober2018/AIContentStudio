@@ -22,8 +22,9 @@ from ..models import (
     User,
 )
 from ..services.generation import renderers
+from . import CapabilityInputRoute
 
-router = APIRouter(prefix="/api/v1/templates", tags=["templates"])
+router = APIRouter(prefix="/api/v1/templates", tags=["templates"], route_class=CapabilityInputRoute)
 
 
 def _checksum(payload: dict) -> str:
@@ -233,6 +234,35 @@ def list_channel_templates(db: Session = Depends(get_db), user: User = Depends(g
             select(ChannelTemplateVersion).order_by(ChannelTemplateVersion.channel, ChannelTemplateVersion.version)
         )
     ]
+
+
+class ProfileDryRunIn(BaseModel):
+    channels: list[str] = Field(min_length=1, max_length=12)
+
+
+class ProfileApplyIn(BaseModel):
+    plan: dict
+    expected_plan_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+@router.post("/channel-profiles/dry-run")
+def dry_run_channel_profiles(payload: ProfileDryRunIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services.multiplatform_profiles import dry_run_profiles
+
+    try:
+        return dry_run_profiles(db, payload.channels)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@router.post("/channel-profiles/apply")
+def apply_channel_profiles(payload: ProfileApplyIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services.multiplatform_profiles import apply_profiles
+
+    try:
+        return apply_profiles(db, payload.plan, expected_plan_hash=payload.expected_plan_hash)
+    except ValueError as exc:
+        raise HTTPException(409 if str(exc) in {"profile_stale", "profile_plan_changed"} else 422, str(exc)) from exc
 
 
 @router.post("/channel-templates/clone", status_code=201)

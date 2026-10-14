@@ -1,0 +1,14 @@
+{
+  "channel": "douyin",
+  "form": "spoken_script",
+  "payload_hash": "ce8e6de171dbee3bc27d18ba19f308a763e22d08eaf7461470ba948ea9592d13",
+  "candidate_hash": "72d9ef92381da5b88c05d55e09b4b24b2b96810674c0373f958a7342ce5a4088",
+  "export_hash": "7e698535caafdaeba747bb271f13cc3a9ea4e76ef8c43bd520e57889666f53dc",
+  "zip_hash": "0241c7a181ba2e5f66459a25b1242ea99b5e12221b82864d17d552c37f9cd426",
+  "media": [],
+  "schema": "douyin.spoken_script.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

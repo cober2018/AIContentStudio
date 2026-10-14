@@ -1,0 +1,14 @@
+{
+  "channel": "zhihu",
+  "form": "answer",
+  "payload_hash": "982aec9aeba1ffa520fe1c525a3fca66383c844e55234b499037c08bf03c7e2a",
+  "candidate_hash": "b93b23bcbf16bc844fb138c5f3b80b9d2b4dd05c125ffbe502432d9a4ee9b39e",
+  "export_hash": "c57f659e303642f449bcd2aad3b7feaffcfa560dedb1b81557d1a2d9c7a5bd2a",
+  "zip_hash": "0a6d26871c7ec96e08388189ec38ecf7f42cc20540a7ce478d74aa57a6dbccb5",
+  "media": [],
+  "schema": "zhihu.answer.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

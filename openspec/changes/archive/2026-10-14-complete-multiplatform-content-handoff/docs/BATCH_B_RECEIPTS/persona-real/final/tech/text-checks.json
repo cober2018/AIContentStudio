@@ -1,0 +1,730 @@
+{
+  "checks": [
+    {
+      "id": 94,
+      "check_kind": "master_schema",
+      "input_hash": "bfae3c6a4ffca8b6f81b802a2c13f0d284acb69e066bbed00c5164596ce8095a",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 95,
+      "check_kind": "evidence",
+      "input_hash": "83c659b26ffbd8ad92ffc87079385b37222dd0b0ac8ccf668833a23afe7a5ab0",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 96,
+      "check_kind": "rights",
+      "input_hash": "94f7f6c61de79d26a6f3c53452fbc8b4b9a37754d49d31443ed1e0c4a9f8e1dd",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 97,
+      "check_kind": "render",
+      "input_hash": "59c7450765a3f7a884b19b6dbe391dc8032629fb22010e4372b683aef0c53e86",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "deterministic",
+        "renderer_key": "text.studio.document.v1",
+        "renderer_version": "2",
+        "render_input_hash": "f08718306adee427b35f1bd20a613202906479edb50081319f4f7db6a7ec5e95",
+        "content_hash": "b161e6a2a746822189e9887c2b9e5507a496dcad9573968f051212775c53d299",
+        "body_markdown": "在设计内容创作的工作流时，一个常见的直觉是将“人设”直接绑定在某个具体的平台账号上。账号拥有发布权限、受众关系和特定的展示界面，看似天然代表了创作者的身份。然而从系统设计的视角来看，这种强耦合会给后续的创作与分发带来不必要的维护负担。\n\n## 表达逻辑与分发通道的边界\n\n人设本质上是创作的逻辑内核，它定义了表达风格、专业领域、事实边界以及价值取舍。这是一种对“如何思考与组织内容”的高层抽象。相比之下，平台账号仅仅是分发层的基础设施终端，负责处理身份鉴权、网络协议、格式限制与交互接口。\n\n当人设与账号绑定在一起时，表达规则就会不可避免地迁就单一通道的特性。一旦需要跨通道分发，或者底层渠道的接入规则发生变化，创作者就必须在多个端点重复配置身份约束，极易导致不同通道之间的表达一致性出现漂移。\n\n## 架构抽象的代价与取舍\n\n把人设独立出来，并不意味着没有代价。解耦意味着系统需要额外设计一套映射机制，将统一的人设输出转换为符合各个平台规格的内容，这增加了前期的设计复杂度与转换开销。\n\n但这种取舍换来的是核心资产的便携性。将表达原则收拢在分发通道之外，不仅能保障跨渠道输出时基调的稳定，也让创作本身不再受制于任何单一基础设施的变动，从而保有独立决定表达方式的能力。",
+        "unused_asset_ids": [
+          23
+        ],
+        "warnings": [
+          "declared_asset_unused"
+        ],
+        "reasons": [],
+        "requirement": {
+          "kind": "render",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 98,
+      "check_kind": "text_structure",
+      "input_hash": "0550e8410497ea2cfdea796e4ef31a8c1d3c3413c479d81943d20e9613253a93",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "issues": [
+          {
+            "code": "declared_asset_unused",
+            "material_revision_id": 23
+          }
+        ],
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "block_count": 7,
+        "requirement": {
+          "kind": "text_structure",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 99,
+      "check_kind": "text_fact",
+      "input_hash": "4580eef6f778220f78b6d5d607fae022e5d0b4bc91c53801512e38773f5076e7",
+      "status": "pass",
+      "report": {
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "complete",
+          "model_use_excluded_item_ids": [],
+          "fact_count": 2,
+          "semantic_fact_count": 2,
+          "deterministic_issue_count": 0
+        },
+        "reasons": [],
+        "requirement": {
+          "kind": "text_fact",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 2,
+              "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 3,
+              "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 100,
+      "check_kind": "text_identity",
+      "input_hash": "257b8840a5aa2f6c93679f21809efc539be8c341cb51d8d443e9634f7ded9366",
+      "status": "pass",
+      "report": {
+        "identity_snapshot_id": 7,
+        "identity_checksum": "eac2cac3e6328232e8b14f75c6ef26f6dae5bcf6b15cd746578f52217e461bb0",
+        "issues": [],
+        "coverage": {
+          "deterministic": "persona_rules_and_explicit_phrases",
+          "explicit_phrase_count": 0,
+          "semantic": "verified",
+          "reason": null,
+          "advisory_critic": {
+            "status": "verified",
+            "reason": null,
+            "rubric": [
+              {
+                "dimension": "factual_grounding",
+                "score": 4,
+                "reason": "内容属于架构设计与系统抽象维度的逻辑推导，不存在未经验证的事实断言或伪造数据。"
+              },
+              {
+                "dimension": "engineering_fit",
+                "score": 4,
+                "reason": "严格遵循工程化思考方式，将人设与分发通道分别映射为业务逻辑层与基础设施层，完全契合角色定位。"
+              },
+              {
+                "dimension": "clarity",
+                "score": 4,
+                "reason": "结构清晰，层次分明，对边界、耦合带来的问题以及解耦方案的表达十分透彻。"
+              },
+              {
+                "dimension": "specificity",
+                "score": 3,
+                "reason": "架构概念与分层阐述明确，但若能补充具体的映射层模式或接口适配样例，具体性会更强。"
+              },
+              {
+                "dimension": "tradeoffs",
+                "score": 4,
+                "reason": "专门设立小节探讨解耦带来的设计复杂度与转换开销，明确权衡了便携性与前期投入。"
+              }
+            ],
+            "can_override_deterministic": false
+          }
+        },
+        "reasons": [],
+        "persona_quality": {
+          "status": "pass",
+          "quality_profile_ref": "studio.quality.text.technical@1",
+          "quality_profile_hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+          "payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+          "issues": [],
+          "human_review_required": true,
+          "critic_dimensions": [
+            "factual_grounding",
+            "engineering_fit",
+            "clarity",
+            "specificity",
+            "tradeoffs"
+          ],
+          "coverage": {
+            "deterministic": "bounded_phrase_structure_citation_rules",
+            "semantic": "not_run",
+            "title_body_alignment": "human_review_required",
+            "fact_speculation": "existing_text_fact_check",
+            "factual_truth": "existing_text_fact_check"
+          }
+        },
+        "requirement": {
+          "kind": "text_identity",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "persona_quality": {
+            "ref": "studio.quality.text.technical@1",
+            "hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f"
+          }
+        }
+      }
+    },
+    {
+      "id": 101,
+      "check_kind": "text_platform",
+      "input_hash": "ac1a3fd7675d41f3cea167da37e52d6d4092a54a18e9b98cdd62377ded0e0103",
+      "status": "pass",
+      "report": {
+        "channel": "wechat",
+        "content_form": "article",
+        "profile_version_id": 26,
+        "source": "profile",
+        "rule_sets": [],
+        "reasons": [],
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "text_platform",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "profile": {
+            "id": 26,
+            "version": 3,
+            "checksum": "8a9d195a821cd0dcf30e381f5e2d0d88174eaa7e61704a11ea1143bbdcd83a69",
+            "checksum_origin": "stored",
+            "form": {
+              "channel": "wechat",
+              "content_form": "article",
+              "artifact_kind": "text",
+              "source": "profile",
+              "profile_version_id": 26,
+              "label": "公众号文章",
+              "workflow_key": null,
+              "renderer_key": "wechat.official.html",
+              "rule_sets": [],
+              "discoverability_profile": null,
+              "publisher_candidates": [
+                "publisher.wechat.official"
+              ],
+              "media_requirements": {
+                "cover": "required"
+              },
+              "graphic_requirements": {},
+              "video_requirements": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 102,
+      "check_kind": "text_discoverability",
+      "input_hash": "50c0a281a8caf316a05260da84eb07652385df267097df51312caf309724ddd3",
+      "status": "warning",
+      "report": {
+        "reasons": [
+          "legacy_profile_rules_not_executed"
+        ],
+        "profile_id": 2,
+        "profile_version": 1,
+        "profile_checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+        "coverage": {
+          "deterministic": "partial",
+          "unexecuted_fields": [
+            "description_length",
+            "pre_fields",
+            "post_fields"
+          ],
+          "semantic": "not_required"
+        },
+        "requirement": {
+          "kind": "text_discoverability",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "profile": {
+            "id": 2,
+            "key": "seo.wechat.article",
+            "version": 1,
+            "checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+            "checksum_origin": "stored",
+            "config_hash": "1d21db60e5ea45c15e736aebb69289787404358841e8351083aeb188cf1a0c98"
+          }
+        }
+      }
+    }
+  ],
+  "current_checks": [
+    {
+      "id": 94,
+      "check_kind": "master_schema",
+      "input_hash": "bfae3c6a4ffca8b6f81b802a2c13f0d284acb69e066bbed00c5164596ce8095a",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 95,
+      "check_kind": "evidence",
+      "input_hash": "83c659b26ffbd8ad92ffc87079385b37222dd0b0ac8ccf668833a23afe7a5ab0",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 96,
+      "check_kind": "rights",
+      "input_hash": "94f7f6c61de79d26a6f3c53452fbc8b4b9a37754d49d31443ed1e0c4a9f8e1dd",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 97,
+      "check_kind": "render",
+      "input_hash": "59c7450765a3f7a884b19b6dbe391dc8032629fb22010e4372b683aef0c53e86",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "deterministic",
+        "renderer_key": "text.studio.document.v1",
+        "renderer_version": "2",
+        "render_input_hash": "f08718306adee427b35f1bd20a613202906479edb50081319f4f7db6a7ec5e95",
+        "content_hash": "b161e6a2a746822189e9887c2b9e5507a496dcad9573968f051212775c53d299",
+        "body_markdown": "在设计内容创作的工作流时，一个常见的直觉是将“人设”直接绑定在某个具体的平台账号上。账号拥有发布权限、受众关系和特定的展示界面，看似天然代表了创作者的身份。然而从系统设计的视角来看，这种强耦合会给后续的创作与分发带来不必要的维护负担。\n\n## 表达逻辑与分发通道的边界\n\n人设本质上是创作的逻辑内核，它定义了表达风格、专业领域、事实边界以及价值取舍。这是一种对“如何思考与组织内容”的高层抽象。相比之下，平台账号仅仅是分发层的基础设施终端，负责处理身份鉴权、网络协议、格式限制与交互接口。\n\n当人设与账号绑定在一起时，表达规则就会不可避免地迁就单一通道的特性。一旦需要跨通道分发，或者底层渠道的接入规则发生变化，创作者就必须在多个端点重复配置身份约束，极易导致不同通道之间的表达一致性出现漂移。\n\n## 架构抽象的代价与取舍\n\n把人设独立出来，并不意味着没有代价。解耦意味着系统需要额外设计一套映射机制，将统一的人设输出转换为符合各个平台规格的内容，这增加了前期的设计复杂度与转换开销。\n\n但这种取舍换来的是核心资产的便携性。将表达原则收拢在分发通道之外，不仅能保障跨渠道输出时基调的稳定，也让创作本身不再受制于任何单一基础设施的变动，从而保有独立决定表达方式的能力。",
+        "unused_asset_ids": [
+          23
+        ],
+        "warnings": [
+          "declared_asset_unused"
+        ],
+        "reasons": [],
+        "requirement": {
+          "kind": "render",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 98,
+      "check_kind": "text_structure",
+      "input_hash": "0550e8410497ea2cfdea796e4ef31a8c1d3c3413c479d81943d20e9613253a93",
+      "is_current": true,
+      "stored_status": "warning",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "issues": [
+          {
+            "code": "declared_asset_unused",
+            "material_revision_id": 23
+          }
+        ],
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "block_count": 7,
+        "requirement": {
+          "kind": "text_structure",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 99,
+      "check_kind": "text_fact",
+      "input_hash": "4580eef6f778220f78b6d5d607fae022e5d0b4bc91c53801512e38773f5076e7",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "complete",
+          "model_use_excluded_item_ids": [],
+          "fact_count": 2,
+          "semantic_fact_count": 2,
+          "deterministic_issue_count": 0
+        },
+        "reasons": [],
+        "requirement": {
+          "kind": "text_fact",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 2,
+              "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 3,
+              "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 100,
+      "check_kind": "text_identity",
+      "input_hash": "257b8840a5aa2f6c93679f21809efc539be8c341cb51d8d443e9634f7ded9366",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "identity_snapshot_id": 7,
+        "identity_checksum": "eac2cac3e6328232e8b14f75c6ef26f6dae5bcf6b15cd746578f52217e461bb0",
+        "issues": [],
+        "coverage": {
+          "deterministic": "persona_rules_and_explicit_phrases",
+          "explicit_phrase_count": 0,
+          "semantic": "verified",
+          "reason": null,
+          "advisory_critic": {
+            "status": "verified",
+            "reason": null,
+            "rubric": [
+              {
+                "dimension": "factual_grounding",
+                "score": 4,
+                "reason": "内容属于架构设计与系统抽象维度的逻辑推导，不存在未经验证的事实断言或伪造数据。"
+              },
+              {
+                "dimension": "engineering_fit",
+                "score": 4,
+                "reason": "严格遵循工程化思考方式，将人设与分发通道分别映射为业务逻辑层与基础设施层，完全契合角色定位。"
+              },
+              {
+                "dimension": "clarity",
+                "score": 4,
+                "reason": "结构清晰，层次分明，对边界、耦合带来的问题以及解耦方案的表达十分透彻。"
+              },
+              {
+                "dimension": "specificity",
+                "score": 3,
+                "reason": "架构概念与分层阐述明确，但若能补充具体的映射层模式或接口适配样例，具体性会更强。"
+              },
+              {
+                "dimension": "tradeoffs",
+                "score": 4,
+                "reason": "专门设立小节探讨解耦带来的设计复杂度与转换开销，明确权衡了便携性与前期投入。"
+              }
+            ],
+            "can_override_deterministic": false
+          }
+        },
+        "reasons": [],
+        "persona_quality": {
+          "status": "pass",
+          "quality_profile_ref": "studio.quality.text.technical@1",
+          "quality_profile_hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+          "payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+          "issues": [],
+          "human_review_required": true,
+          "critic_dimensions": [
+            "factual_grounding",
+            "engineering_fit",
+            "clarity",
+            "specificity",
+            "tradeoffs"
+          ],
+          "coverage": {
+            "deterministic": "bounded_phrase_structure_citation_rules",
+            "semantic": "not_run",
+            "title_body_alignment": "human_review_required",
+            "fact_speculation": "existing_text_fact_check",
+            "factual_truth": "existing_text_fact_check"
+          }
+        },
+        "requirement": {
+          "kind": "text_identity",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "persona_quality": {
+            "ref": "studio.quality.text.technical@1",
+            "hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f"
+          }
+        }
+      }
+    },
+    {
+      "id": 101,
+      "check_kind": "text_platform",
+      "input_hash": "ac1a3fd7675d41f3cea167da37e52d6d4092a54a18e9b98cdd62377ded0e0103",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "channel": "wechat",
+        "content_form": "article",
+        "profile_version_id": 26,
+        "source": "profile",
+        "rule_sets": [],
+        "reasons": [],
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "text_platform",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "profile": {
+            "id": 26,
+            "version": 3,
+            "checksum": "8a9d195a821cd0dcf30e381f5e2d0d88174eaa7e61704a11ea1143bbdcd83a69",
+            "checksum_origin": "stored",
+            "form": {
+              "channel": "wechat",
+              "content_form": "article",
+              "artifact_kind": "text",
+              "source": "profile",
+              "profile_version_id": 26,
+              "label": "公众号文章",
+              "workflow_key": null,
+              "renderer_key": "wechat.official.html",
+              "rule_sets": [],
+              "discoverability_profile": null,
+              "publisher_candidates": [
+                "publisher.wechat.official"
+              ],
+              "media_requirements": {
+                "cover": "required"
+              },
+              "graphic_requirements": {},
+              "video_requirements": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": 102,
+      "check_kind": "text_discoverability",
+      "input_hash": "50c0a281a8caf316a05260da84eb07652385df267097df51312caf309724ddd3",
+      "is_current": true,
+      "stored_status": "warning",
+      "status": "warning",
+      "report": {
+        "reasons": [
+          "legacy_profile_rules_not_executed"
+        ],
+        "profile_id": 2,
+        "profile_version": 1,
+        "profile_checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+        "coverage": {
+          "deterministic": "partial",
+          "unexecuted_fields": [
+            "description_length",
+            "pre_fields",
+            "post_fields"
+          ],
+          "semantic": "not_required"
+        },
+        "requirement": {
+          "kind": "text_discoverability",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "profile": {
+            "id": 2,
+            "key": "seo.wechat.article",
+            "version": 1,
+            "checksum": "859e3a59e31481aadfc02e636238e059700e8cdcc2b3eb07b39a51561a1d5a23",
+            "checksum_origin": "stored",
+            "config_hash": "1d21db60e5ea45c15e736aebb69289787404358841e8351083aeb188cf1a0c98"
+          }
+        }
+      }
+    }
+  ]
+}

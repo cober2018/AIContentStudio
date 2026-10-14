@@ -1,0 +1,64 @@
+{
+  "files": [
+    {
+      "file": "README.md",
+      "bytes": 5362,
+      "sha256": "51bce496d0dfece2519536fcbf237269559ef1edbf6d8b1ab81c3408d198d7ab"
+    },
+    {
+      "file": "adapt-preview-limitations.json",
+      "bytes": 1106,
+      "sha256": "4a1081de3bd40a191c93a328e29a36e7b3f902801abca286df3a63927ead62e6"
+    },
+    {
+      "file": "index.json",
+      "bytes": 30114,
+      "sha256": "86958f0ec2b406916eddd2cbc68d7b403db69b289b98d8cb455548e8768ef76e"
+    },
+    {
+      "file": "source-equivalence-and-review-readback.json",
+      "bytes": 10384,
+      "sha256": "7aa7f4f1fe6b865e5de035e12c1471cf6fc497cc33bccb406fca8f6b3309cd7a"
+    },
+    {
+      "file": "wechat-article.json",
+      "bytes": 7146,
+      "sha256": "ad440561227f707cc8b4b581a4602f37d9df38e6db41a079a28d6661a9335499"
+    },
+    {
+      "file": "wechat-article.zip",
+      "bytes": 711002,
+      "sha256": "f6b28d230692d0ef3e268b76b50d8d30e910f386811b81ea44d5b8e81e719e38"
+    },
+    {
+      "file": "xiaohongshu-a.json",
+      "bytes": 6754,
+      "sha256": "94932156e3d9d209dc47d624c6ac515a6f29f9bc068786c182f807feadcfe250"
+    },
+    {
+      "file": "xiaohongshu-a.zip",
+      "bytes": 2393717,
+      "sha256": "fbf42393e33da7eea35bec17571720f3b5447eb5760728a22e69d1b99da93f35"
+    },
+    {
+      "file": "xiaohongshu-b.json",
+      "bytes": 6772,
+      "sha256": "bf92d9568f14b7e0e06f9bc6df27a686e8fd132eae1a1b82364e1833948a549f"
+    },
+    {
+      "file": "xiaohongshu-b.zip",
+      "bytes": 2393719,
+      "sha256": "106faa0f16ecf810623774f7a79e8a57a555fd96763bf7d09dca792548af29fc"
+    },
+    {
+      "file": "zhihu-article.json",
+      "bytes": 7154,
+      "sha256": "8412d243ffed31414bee61fdbd949aebed39cde604374bdf6341336d4ad113fe"
+    },
+    {
+      "file": "zhihu-article.zip",
+      "bytes": 711021,
+      "sha256": "16bffd731e160bf07fe9c9fc386d60e9aa3b7b00646205fc8e75356bdc6e93e5"
+    }
+  ]
+}

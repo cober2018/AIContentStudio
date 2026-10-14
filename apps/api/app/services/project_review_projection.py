@@ -18,6 +18,7 @@ from ..models import (
     WorkflowRun,
 )
 from .candidates import candidate_hash
+from .channel_variant_documents import collection_key
 from .project_evidence import current_boundary
 from .project_projection_context import ProjectProjectionContext
 
@@ -222,8 +223,7 @@ def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict
         after = latest["render"].get("text", "")
         text = ({"before_chars": len(before), "after_chars": len(after),
                  "similarity": round(SequenceMatcher(None, before, after).ratio(), 4)} if kind == "text" else None)
-        rows_key = {"wechat.article.v1": "blocks", "x.thread.v1": "posts",
-                    "xiaohongshu.image_note.v1": "cards", "douyin.spoken_script.v1": "scenes"}.get(latest["variant"]["payload_schema"])
+        rows_key = collection_key(latest["variant"]["payload_schema"])
         structured = diff_variant_rows((prior.get("content") or {}).get(rows_key, []), latest["content"][rows_key]) if rows_key else None
         return {"from_candidate_id": previous.id if previous else None, "to_candidate_id": current.id,
                 "modality": latest["project"]["modality"], "changed_sections": changed,
@@ -364,6 +364,12 @@ def candidate_preview(asset: ContentAsset) -> dict:
                 "target": {"channel": asset.channel, "content_form": asset.content_form, "artifact_kind": asset.artifact_kind},
                 "render": render, "content": manifest["content"], "checks": manifest["checks"],
                 "external_execution": (manifest.get("production") or {}).get("external_execution", [])}
+        from .channel_form_descriptors import form_descriptor_for
+
+        preview["payload_schema"] = manifest["variant"]["payload_schema"]
+        preview["form_descriptor"] = form_descriptor_for(preview["payload_schema"], asset.channel, asset.content_form)
+        preview["target_account"] = target.get("account")
+        preview["delivery_notice"] = "本地包供人工交付；公众号草稿不是公开发布。"
         if "official_render" in manifest:
             preview["official_render"] = manifest["official_render"]
         if target["artifact_kind"] == "text":

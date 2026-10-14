@@ -53,7 +53,7 @@ def _hex(value: object) -> bool:
 
 def build_manifest_v5(inputs: dict) -> dict:
     """Freeze explicit, already-authorized snapshots; live DB gates belong to the caller."""
-    if not isinstance(inputs, dict) or set(inputs) - {"official_render"} != set(SECTIONS):
+    if not isinstance(inputs, dict) or set(inputs) - {"official_render", "export_metadata"} != set(SECTIONS):
         raise ValueError("incomplete v5 manifest sections")
     project = _object(inputs["project"], "project", ("id", "unit_id", "modality"))
     identity = _object(inputs["identity"], "identity", ("id", "checksum"))
@@ -70,6 +70,14 @@ def build_manifest_v5(inputs: dict) -> dict:
     variant = _object(inputs["variant"], "variant", ("id", "variant_key", "revision_no", "source_master_revision_id",
                                                        "identity_snapshot_id", "payload_schema", "payload_hash", "context_hash", "source_kind"))
     target = _object(inputs["target"], "target", ("channel", "content_form", "artifact_kind", "profile", "adapter", "rule_hash"))
+    if "account" in target:
+        account = target["account"]
+        if (not isinstance(account, dict) or not _id(account.get("content_account_id"))
+                or (account.get("account_revision_id") is not None and not _id(account["account_revision_id"]))
+                or not _hex(account.get("account_profile_checksum"))
+                or account.get("platform_channel") != target["channel"]
+                or account != inputs["production"].get("edit_summary", {}).get("target_account")):
+            raise ValueError("variant target account mismatch")
     profile = _object(target["profile"], "target.profile", ("id", "key", "version", "hash", "artifact_kind"))
     adapter = _object(target["adapter"], "target.adapter", ("key", "version"))
     render = _object(inputs["render"], "render", ("artifact_kind",))
@@ -120,7 +128,7 @@ def build_manifest_v5(inputs: dict) -> dict:
     if render["artifact_kind"] != target["artifact_kind"]:
         raise ValueError("Variant render target mismatch")
     required_checks = {"variant_schema", "variant_evidence", "variant_rights", "variant_profile", "variant_package"}
-    if variant["payload_schema"] == "xiaohongshu.image_note.v1":
+    if target["artifact_kind"] == "image":
         required_checks.add("variant_render")
     checks = inputs["checks"]
     if len(checks) != len(required_checks) or {check.get("kind") for check in checks if isinstance(check, dict)} != required_checks:
@@ -147,6 +155,11 @@ def build_manifest_v5(inputs: dict) -> dict:
                                 or not _hex(receipt.get("input_hash"))):
         raise ValueError("invalid or unsafe llm provenance")
     manifest = {"schema_version": 5, **{section: inputs[section] for section in SECTIONS}}
+    if "export_metadata" in inputs:
+        metadata = inputs["export_metadata"]
+        if not isinstance(metadata, dict) or set(metadata) != {"sources", "media"}:
+            raise ValueError("invalid export metadata")
+        manifest["export_metadata"] = metadata
     if "official_render" in inputs:
         from .wechat_official_render import validate_article_render
 
@@ -251,6 +264,14 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
                        "created_by": row.created_by, "llm_provenance": row.llm_provenance_json},
         "citations": row.payload_json["citations"], "declarations": row.payload_json["declarations"],
     }
+    from .channel_variants import validate_target_account
+
+    account_context = validate_target_account(db, row)
+    if account_context is not None:
+        inputs["target"]["account"] = account_context
+    from .production_packages import public_export_metadata
+
+    inputs["export_metadata"] = public_export_metadata(db, assets, evidence_refs)
     if row.payload_schema == "wechat.article.v1":
         from .wechat_official_render import build_material_article_render
 

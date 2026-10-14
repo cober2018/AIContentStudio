@@ -659,6 +659,9 @@ def accept_result(db, project_id, unit_id, node_id, user, request):
                 "idempotency_key": "stage-adopt:" + digest({"run_id": run.id, "node_id": node_id, "key": request["adoption_key"]}),
                 "source_kind": "manual_edit" if edited else "model_assisted" if result.get("llm_run_id") else "deterministic_adapt",
                 "edit_summary": {"stage_source_output_hash": attempt.output_hash, "original_llm_run_id": result.get("llm_run_id")}}
+            if result.get("target_account") is not None:
+                save["target_account_id"] = result["target_account"]["content_account_id"]
+                save["expected_target_context_hash"] = result["target_context_hash"]
             if result.get("llm_run_id") and not edited:
                 save["llm_provenance"] = {"llm_run_id": result["llm_run_id"]}
             channel_variants.save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=save,

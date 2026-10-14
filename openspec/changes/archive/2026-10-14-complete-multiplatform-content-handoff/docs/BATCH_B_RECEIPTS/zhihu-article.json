@@ -1,0 +1,14 @@
+{
+  "channel": "zhihu",
+  "form": "article",
+  "payload_hash": "6c5dd8855f67ab340fdc352a60b1d30fb2ae823d16b3c93d5d792603141ab3fa",
+  "candidate_hash": "00007f3d3ee8cebb9b0da206683c2b62f1a96b5585575c4fed1112564b7b6b75",
+  "export_hash": "9f170bac6edd99c2231164aa7d18b879fdb07ba472ee6f3aa9a91ac71069d0cd",
+  "zip_hash": "4c473aa70bf113166516723c8b6d6832beddc090689730d686f35af2b3473a15",
+  "media": [],
+  "schema": "zhihu.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

@@ -1,0 +1,17 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_missing_editorial_series_is_rejected_without_default_fallback ______
+tests/test_series_targets.py:254: in test_missing_editorial_series_is_rejected_without_default_fallback
+    assert effective.status_code == 404, effective.text
+E   AssertionError: {"brand_id":null,"persona_id":1,"account_id":null,"series_id":null,"revision_ids":{"persona":null},"brand_voice_version_id":null,"effective_profile":{},"field_origins":{},"creative_profile_origins":{}}
+E   assert 200 == 404
+E    +  where 200 = <Response [200 OK]>.status_code
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /Users/mshengran/Project/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_series_targets.py::test_missing_editorial_series_is_rejected_without_default_fallback
+1 failed, 1 warning in 0.62s

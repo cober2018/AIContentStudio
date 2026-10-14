@@ -1,0 +1,44 @@
+{
+  "schema": "studio.audio.review-alignment.v1",
+  "reviewer": "Codex delegated AI quality reviewer",
+  "source_sha256": "c517c722c3476bdce5ae46514475111606c3b69cb674875b60a28d77270a722c",
+  "method": "macOS CoreFoundation Traditional-Simplified conversion then CJK/alphanumeric normalized SequenceMatcher; original raw ASR retained",
+  "original_alignment_ratio": 0.5991735537190083,
+  "traditional_to_simplified_transcript": "在设计内容创作的工作流时\n我们经常会有一个直觉\n就是把人设直接绑定在某个具体的平台账号上\n账号拥有发布权限\n受众关系和特定的展示界面\n表面上看\n天然代表了创作者的身份\n但如果从系统设计的视角来看\n这种强偶核会给后续的创作与分发带来不必要的维护负担\n关键在于分清表达逻辑\n与分发通道的边界\n人设本质上是创作的逻辑内核\n它定义了表达风格\n专业领域\n事实边界\n以及价值取舍\n这是一套针对如何思考与组织内容的高层抽象\n相比之下\n平台账号仅仅是分发层的基础设施终端\n只负责处理身份健全\n网络协议\n格式限制\n和交互接口\n一旦人设与账号绑定在一起\n表达规则就会不可避免地迁就单一通道的特性\n如果需要做跨通道分发\n或者底层渠道的规则发生变化\n创作者就必须在多个端点重复配置身份约束\n即易导致各个通道之间的表达一致性出现飘移\n当然\n把人设独立出来并不是没有代价的\n节偶意味着系统需要额外设计一套映射机制\n把统一的人设输出转换为符合各个平台规格的内容\n这增加了前期的设计复杂度与转换开销\n但这种取舍换来的是核心资产的变协性\n把表达原则收拢在分发通道之外\n不仅能保障跨渠道输出时基调的稳定\n也让创作本身不再受制于任何单一基础设施的变动\n从而保有独立决定表达方式的能力",
+  "script_normalized_chars": 484,
+  "transcript_normalized_chars": 484,
+  "normalized_alignment_ratio": 0.9793388429752066,
+  "differences": [
+    {
+      "expected": "耦合",
+      "asr": "偶核",
+      "kind": "replace"
+    },
+    {
+      "expected": "鉴权",
+      "asr": "健全",
+      "kind": "replace"
+    },
+    {
+      "expected": "极",
+      "asr": "即",
+      "kind": "replace"
+    },
+    {
+      "expected": "漂",
+      "asr": "飘",
+      "kind": "replace"
+    },
+    {
+      "expected": "解耦",
+      "asr": "节偶",
+      "kind": "replace"
+    },
+    {
+      "expected": "便携",
+      "asr": "变协",
+      "kind": "replace"
+    }
+  ],
+  "interpretation": "ASR is a content/timing check, not direct listening; homophone substitutions cannot determine auditory pronunciation quality."
+}

@@ -1,0 +1,267 @@
+{
+  "id": 13,
+  "project_id": 3,
+  "content_unit_id": 9,
+  "revision_no": 1,
+  "modality": "graphic",
+  "payload_schema": "graphic.master.v2",
+  "payload": {
+    "title": "人设与账号的解耦设计",
+    "canvases": [
+      {
+        "id": "cover",
+        "order": 0,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "cover-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "cover-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 168.0,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "人设与账号解耦",
+                "style": {
+                  "font_size": 60,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "cover-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 300.0,
+            "width": 936,
+            "height": 106.39999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "创作人设不应绑定平台账号。强耦合会增加系统维护负担，解耦才能保持创作独立性。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "cover"
+      },
+      {
+        "id": "body-1",
+        "order": 1,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "body-1-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-1-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "逻辑内核与通道边界",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-1-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 212.79999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "人设是关于风格、领域与取舍的高层逻辑内核，账号仅是负责鉴权与格式的分发终端。若两者混淆，表达规则将受制于单一渠道，跨平台时容易导致风格漂移与重复配置成本。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      },
+      {
+        "id": "body-2",
+        "order": 2,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "body-2-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-2-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "架构抽象与工程取舍",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-2-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 212.79999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "解耦需要额外的规格映射转换机制，虽然增加了设计复杂度，却换来了核心资产的便携性。把表达原则独立于通道之外，才能确保基调稳定，不被底层基础设施变动所绑架。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      }
+    ]
+  },
+  "payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+  "context_hash": "82b80b0bc05684ba8ca70f33732946b2c4cd4c3b0f8fa7d50101cd4117376e69",
+  "identity_snapshot_id": 9,
+  "creative_brief_revision_id": 3,
+  "fact_boundary_revision_id": null,
+  "source_kind": "workflow_stage",
+  "origin_workflow_run_id": 10,
+  "origin_project_output_id": 11,
+  "readiness": {
+    "state": "incomplete_context",
+    "reasons": [
+      "evidence_missing"
+    ]
+  }
+}

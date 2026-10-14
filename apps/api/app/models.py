@@ -1573,13 +1573,44 @@ class ContentAccountRevision(Base):
 
 
 class ContentSeries(Base):
+    """唯一栏目真源：account_legacy 挂账号（历史语义不变），persona_editorial 属角色、可跨平台投放。"""
+
     __tablename__ = "content_series"
+    __table_args__ = (
+        CheckConstraint(
+            "(scope = 'account_legacy' AND account_id IS NOT NULL AND persona_id IS NULL) "
+            "OR (scope = 'persona_editorial' AND persona_id IS NOT NULL AND account_id IS NULL)",
+            name="ck_content_series_scope",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    account_id: Mapped[int] = mapped_column(ForeignKey("content_account.id"), index=True)
+    persona_id: Mapped[int | None] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    account_id: Mapped[int | None] = mapped_column(ForeignKey("content_account.id"), index=True)
+    scope: Mapped[str] = mapped_column(String(20), default="account_legacy", server_default="account_legacy")
     name: Mapped[str] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SeriesAccountTarget(Base):
+    """栏目 × 账号 × 内容形态的显式投放绑定。它是可选择性默认，不是授权书，也不含任何凭据。"""
+
+    __tablename__ = "series_account_target"
+    __table_args__ = (
+        UniqueConstraint("series_id", "account_id", "content_form", name="uq_series_account_target"),
+        CheckConstraint("length(content_form) BETWEEN 1 AND 100", name="ck_series_target_form_length"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    series_id: Mapped[int] = mapped_column(ForeignKey("content_series.id"), index=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("content_account.id"), index=True)
+    content_form: Mapped[str] = mapped_column(String(100))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
 class ContentSeriesRevision(Base):

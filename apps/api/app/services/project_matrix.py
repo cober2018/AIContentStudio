@@ -45,6 +45,14 @@ def _history_coverage(db: Session, owner_id: int) -> dict[tuple[str, str | None]
     return result
 
 
+def _series_matches(series: ContentSeries, persona: ContentPersona, account: ContentAccount | None) -> bool:
+    if series.status != "active":
+        return False
+    if getattr(series, "scope", "account_legacy") == "persona_editorial":
+        return series.persona_id == persona.id and series.account_id is None and account is None
+    return account is not None and series.account_id == account.id
+
+
 def matrix_suggestions(db: Session, project_id: int, user: User, *, limit: int) -> dict:
     brief = current_brief(db, project_id)
     units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id)).all()
@@ -61,7 +69,7 @@ def matrix_suggestions(db: Session, project_id: int, user: User, *, limit: int) 
             series = db.get(ContentSeries, entry["series_id"]) if type(entry.get("series_id")) is int else None
             if (persona is None or persona.owner_user_id != user.id or persona.status != "active"
                     or account is not None and (account.persona_id != persona.id or account.status != "active")
-                    or series is not None and (account is None or series.account_id != account.id or series.status != "active")):
+                    or series is not None and not _series_matches(series, persona, account)):
                 continue
             identities.append((persona, account, series))
     elif any(unit.status != "archived" for unit in units):
@@ -73,7 +81,7 @@ def matrix_suggestions(db: Session, project_id: int, user: User, *, limit: int) 
             series = db.get(ContentSeries, series_id) if series_id is not None else None
             if (persona is None or persona.owner_user_id != user.id or persona.status != "active"
                     or account_id is not None and (account is None or account.persona_id != persona.id or account.status != "active")
-                    or series_id is not None and (series is None or account is None or series.account_id != account.id or series.status != "active")):
+                    or series_id is not None and (series is None or not _series_matches(series, persona, account))):
                 continue
             identities.append((persona, account, series))
     else:

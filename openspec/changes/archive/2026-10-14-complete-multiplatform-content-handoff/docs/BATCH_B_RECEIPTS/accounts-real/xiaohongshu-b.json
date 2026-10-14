@@ -1,0 +1,223 @@
+{
+  "status": "LOCAL_REAL_CONTENT_ACCOUNT_CHAIN_PASSED",
+  "name": "xiaohongshu-b",
+  "channel": "xiaohongshu",
+  "content_form": "image_note",
+  "persona_id": 2,
+  "series_id": 1,
+  "series_revision_id": 1,
+  "project_id": 3,
+  "unit_id": 8,
+  "source_account_id": null,
+  "original_master_id": 10,
+  "source_master_id": 14,
+  "source_master_payload_hash": "ed8d215e8b69f046cc56b59dac3c9b8eda3b346ab09f6bc4aa6f3d6d559330de",
+  "source_master_context_hash": "48aaff29e944376b93e516b3f86b8a69144fbdb12dd3c7e7487821c41008fac4",
+  "source_identity_snapshot_id": 8,
+  "original_reaccepted_master_id": 14,
+  "source_reacceptance_payload_unchanged": true,
+  "source_form_normalization": null,
+  "account_kind": "isolated_manual_sample_bound_unverified",
+  "account": {
+    "id": 6,
+    "name": "隔离手工验收样本｜xiaohongshu-b",
+    "platform_channel": "xiaohongshu",
+    "platform_account_id": "isolated-xhs-b-7004",
+    "platform_binding_state": "bound_unverified"
+  },
+  "account_revision_id": 4,
+  "series_target_binding": {
+    "id": 4,
+    "series_id": 1,
+    "account_id": 6,
+    "account_name": "隔离手工验收样本｜xiaohongshu-b",
+    "platform_channel": "xiaohongshu",
+    "content_form": "image_note",
+    "enabled": true,
+    "version": 1
+  },
+  "target_context_hash": "347c812c7300365880085537ae9ecac42a17a16ecb275655efd63a109dd5dedc",
+  "target_account_context": {
+    "content_account_id": 6,
+    "platform_channel": "xiaohongshu",
+    "platform_account_id": "isolated-xhs-b-7004",
+    "account_revision_id": 4,
+    "account_profile_checksum": "c3eaeac7526f66ff8a0e58d5b0e309e5fbc47c94ecd908a36f9993e89919ea32",
+    "profile": {
+      "expression_style": {
+        "tone": "独立手工目标，使用原图组和原说明"
+      },
+      "content_boundaries": [
+        "隔离验收登记，不代表真实远端账号、认证或发布资格"
+      ]
+    },
+    "series_binding": {
+      "id": 4,
+      "version": 1
+    }
+  },
+  "variant_id": 5,
+  "variant_key": "real-accounts.xiaohongshu-b",
+  "variant_payload_hash": "996e94e7e34c14c538bfa752ef1428e29c4af0572d8dc589b095b5635e69c56b",
+  "variant_schema": "xiaohongshu.image_note.v1",
+  "checks": {
+    "ready": true,
+    "items": [
+      {
+        "id": 23,
+        "kind": "variant_schema",
+        "status": "pass"
+      },
+      {
+        "id": 25,
+        "kind": "variant_evidence",
+        "status": "pass"
+      },
+      {
+        "id": 26,
+        "kind": "variant_rights",
+        "status": "pass"
+      },
+      {
+        "id": 24,
+        "kind": "variant_profile",
+        "status": "pass"
+      },
+      {
+        "id": 27,
+        "kind": "variant_render",
+        "status": "pass"
+      },
+      {
+        "id": 28,
+        "kind": "variant_package",
+        "status": "pass"
+      }
+    ]
+  },
+  "candidate_id": 6,
+  "candidate_hash": "f388215e858e1d6912439af64ac78ad3b796f712689a0d85c939741d7c252def",
+  "candidate_target_account": {
+    "account_profile_checksum": "c3eaeac7526f66ff8a0e58d5b0e309e5fbc47c94ecd908a36f9993e89919ea32",
+    "account_revision_id": 4,
+    "content_account_id": 6,
+    "platform_account_id": "isolated-xhs-b-7004",
+    "platform_channel": "xiaohongshu",
+    "profile": {
+      "content_boundaries": [
+        "隔离验收登记，不代表真实远端账号、认证或发布资格"
+      ],
+      "expression_style": {
+        "tone": "独立手工目标，使用原图组和原说明"
+      }
+    },
+    "series_binding": {
+      "id": 4,
+      "version": 1
+    }
+  },
+  "review_id": 6,
+  "review_decision": "approved",
+  "warning_dispositions_recorded": 2,
+  "authorization_id": 6,
+  "authorization_hash": "e9dd6ac223714355a8d3cc978ed7afa0cac061470e3d37679e3ae859e8fafc63",
+  "authorization_hash_kind": "local_receipt_projection_sha256_not_product_stored_hash",
+  "authorization": {
+    "id": 6,
+    "candidate_id": 6,
+    "content_account_id": 6,
+    "authorization_account_key": "content-account:6",
+    "action": "copy_package",
+    "authorization_version": "accounts-real-v1",
+    "approved_candidate_hash": "f388215e858e1d6912439af64ac78ad3b796f712689a0d85c939741d7c252def",
+    "capability_snapshot": {
+      "publisher_key": "publisher.copy",
+      "action": "copy_package",
+      "available": true,
+      "reason": null,
+      "verified": true,
+      "manual": true,
+      "remote_verified": false,
+      "target_account": {
+        "content_account_id": 6,
+        "platform_channel": "xiaohongshu",
+        "platform_account_id": "isolated-xhs-b-7004",
+        "account_revision_id": 4,
+        "account_profile_checksum": "c3eaeac7526f66ff8a0e58d5b0e309e5fbc47c94ecd908a36f9993e89919ea32"
+      }
+    }
+  },
+  "swap_account_rejected": {
+    "other_account_id": 5,
+    "status": 409,
+    "code": "candidate_target_account_mismatch"
+  },
+  "export_hash": "65bfed6e14a9cf6376a6ea60f6555305ef6fa7ce27707ede93f914a9c952cac2",
+  "zip_hash": "106faa0f16ecf810623774f7a79e8a57a555fd96763bf7d09dca792548af29fc",
+  "zip_bytes": 2393719,
+  "package_members": [
+    "manifest.json",
+    "content.md",
+    "cards.json",
+    "image-note.json",
+    "sources.json",
+    "declarations.json",
+    "publish-guide.md",
+    "media/00-5.png",
+    "media/01-6.png",
+    "media/02-7.png",
+    "media/03-8.png"
+  ],
+  "media": [
+    {
+      "name": "media/00-5.png",
+      "material_revision_id": 5,
+      "sha256": "672938769269e1d289bc5878ba5ff79ae0ddad35e9f8c503c4afc13338ea685d",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    },
+    {
+      "name": "media/01-6.png",
+      "material_revision_id": 6,
+      "sha256": "7c73f472b0f5a311fe78451e9d31f0b786dc1c33890d40a4fd40f0b2c21af0f6",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    },
+    {
+      "name": "media/02-7.png",
+      "material_revision_id": 7,
+      "sha256": "0f3e8fef5f32c9cb5ffc7b3ffc67c416a6b725763a8c685332c799ced520719f",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    },
+    {
+      "name": "media/03-8.png",
+      "material_revision_id": 8,
+      "sha256": "1e5002b746323a9f9c628d706d1b6eacad96960d6a7da1c340d6af347f74a7ed",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    }
+  ],
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "network_calls": 0,
+  "remote_account_verification": false,
+  "publication_succeeded": false,
+  "quality_accepted_by_human": false
+}

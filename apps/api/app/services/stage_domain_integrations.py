@@ -137,10 +137,19 @@ def _variant_request(context, config):
     master = context.get("master") or {}
     if not master:
         raise StageInvocationError("master_required", status_code=409)
-    return {"source_master_revision_id": master["id"],
+    request = {"source_master_revision_id": master["id"],
             "expected_source_payload_hash": master["payload_hash"],
             "expected_source_context_hash": master["context_hash"],
             "channel_id": config["channel_id"], "content_form": config["content_form"]}
+    for key in ("target_account_id",):
+        if key in config:
+            request[key] = config[key] or None
+    if "question_text" in config:
+        request["question"] = {"text": config["question_text"], "confirmed": config.get("question_confirmed", False)}
+        for key in ("url", "context"):
+            if "question_" + key in config:
+                request["question"][key] = config["question_" + key]
+    return request
 
 
 def professional_request(context, config, *, method=None):
@@ -259,11 +268,14 @@ def prepare_domain(db, user, unit, node, config, context, *, creative=None):
             ).order_by(ChannelVariantRevision.revision_no.desc()).limit(1))
             if head and (head.channel_id != config["channel_id"] or head.content_form != config["content_form"]):
                 blockers.append("stage_variant_target_conflict")
+            if head and (head.edit_summary_json or {}).get("target_account", {}).get("content_account_id") != (config.get("target_account_id") or None):
+                blockers.append("stage_variant_account_conflict")
             snapshot = {"request": request, "preview": preview,
                         "variant_key": config["variant_key"], "expected_revision": head.revision_no if head else 0}
             if config["mode"] == "model_assisted":
                 from .stage_master_adoptions import _live_refs
 
+                channel_variants.guard_unknown_adaptation(db, channel_variants._model_binding(unit.project_id, unit.id, user.email, preview))
                 _live_refs(db, db.get(ContentMasterRevision, context["master"]["id"]), require_model_use=True)
                 if preview["evidence_refs"]:
                     blockers.append("variant_model_citation_mapping_unavailable")
@@ -396,6 +408,11 @@ def _model_variant(db, resolved, preview, user):
         record_validated_stage_run,
     )
 
+    binding = channel_variants._model_binding(resolved["context"]["project_id"], resolved["context"]["unit_id"], user.email, preview)
+    try:
+        channel_variants.guard_unknown_adaptation(db, binding)
+    except HTTPException as exc:
+        raise StageDomainError("variant_model_unknown_unresolved") from exc
     model = resolved["model"]
     live, blockers = creation_recipes._model(resolved["effective_config"])
     if blockers or live != model:
@@ -413,8 +430,11 @@ def _model_variant(db, resolved, preview, user):
         result = asyncio.run(provider.generate_json(request))
     except Exception as exc:
         try:
-            record_run(db, request, None, error="stage_provider_failed", provider_name=provider.name,
+            run = record_run(db, request, None, error="stage_provider_result_unknown", provider_name=provider.name,
                        model_name=model["model"], prompt_version=channel_variants._MODEL_PROMPT_VERSION)
+            run.status = "unknown"
+            run.parsed_output_json = {"unknown_binding": binding}
+            db.flush()
         except Exception as record_error:
             raise StageDomainError("stage_provider_failed", dispatch_certainty="possibly_dispatched") from record_error
         raise StageDomainError("stage_provider_failed", dispatch_certainty="possibly_dispatched") from exc

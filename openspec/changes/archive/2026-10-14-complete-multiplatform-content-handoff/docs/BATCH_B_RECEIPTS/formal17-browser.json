@@ -1,0 +1,186 @@
+[
+  {
+    "channel": "baijia",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "bilibili",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "bilibili",
+    "form": "image_note",
+    "unit": 5,
+    "selected": true,
+    "preview": true,
+    "payload_schema": "bilibili.image_note.v1",
+    "profile_hash": "90676307cbc0651106d5f7aae3ebc574ce11467fdcedf8f246451e36363811ec",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "douyin",
+    "form": "spoken_script",
+    "unit": 6,
+    "selected": true,
+    "preview": true,
+    "payload_schema": "douyin.spoken_script.v1",
+    "profile_hash": "fb2dabc3ada620e98d77da6b00f6f65eb66ecb7dec0031f5f97e4fc762c3d580",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "netease",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "penguin",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "sohu",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "toutiao",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "wechat",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "weibo",
+    "form": "single",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "x",
+    "form": "articles",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "x",
+    "form": "long_post",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "source_refs_require_exact_variant_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "x",
+    "form": "single",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "source_refs_require_exact_variant_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "x",
+    "form": "thread",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "source_refs_require_exact_variant_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "xiaohongshu",
+    "form": "image_note",
+    "unit": 5,
+    "selected": true,
+    "preview": true,
+    "payload_schema": "xiaohongshu.image_note.v1",
+    "profile_hash": "1b47ac2020e4eae2a1f4247c1df50d042aaf7436f07df5d9d1f386ea6530de17",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "zhihu",
+    "form": "answer",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  },
+  {
+    "channel": "zhihu",
+    "form": "article",
+    "unit": 4,
+    "selected": true,
+    "preview": false,
+    "blocked_reason": "variant_adaptation_unavailable",
+    "detail": "source_structure_requires_explicit_mapping",
+    "provider_calls": 0,
+    "remote_calls": 0
+  }
+]

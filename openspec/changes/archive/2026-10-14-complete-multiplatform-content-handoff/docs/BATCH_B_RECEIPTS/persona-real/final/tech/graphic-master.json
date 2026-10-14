@@ -1,0 +1,369 @@
+{
+  "id": 18,
+  "project_id": 3,
+  "content_unit_id": 11,
+  "revision_no": 2,
+  "parent_revision_id": 17,
+  "modality": "graphic",
+  "channel_id": "xiaohongshu",
+  "content_form": "image_note",
+  "payload_schema": "graphic.master.v2",
+  "payload": {
+    "title": "人设与账号的解耦设计",
+    "canvases": [
+      {
+        "id": "cover",
+        "order": 0,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "cover-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "cover-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 168.0,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "人设与账号解耦",
+                "style": {
+                  "font_size": 60,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "cover-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 300.0,
+            "width": 936,
+            "height": 106.39999999999999,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "创作人设不应绑定平台账号。强耦合会增加系统维护负担，解耦才能保持创作独立性。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "cover"
+      },
+      {
+        "id": "body-1",
+        "order": 1,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "body-1-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-1-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "逻辑内核与通道边界",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-1-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 212.79999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "人设是关于风格、领域与取舍的高层逻辑内核，账号仅是负责鉴权与格式的分发终端。若两者混淆，表达规则将受制于单一渠道，跨平台时容易导致风格漂移与重复配置成本。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      },
+      {
+        "id": "body-2",
+        "order": 2,
+        "width": 1080,
+        "height": 1440,
+        "background": {
+          "color": "#101827"
+        },
+        "layers": [
+          {
+            "id": "body-2-accent",
+            "order": 0,
+            "type": "shape",
+            "x": 72,
+            "y": 72,
+            "width": 88,
+            "height": 8,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "shape": "rectangle",
+            "fill": "#6ee7b7",
+            "stroke_width": 0
+          },
+          {
+            "id": "body-2-title",
+            "order": 1,
+            "type": "text",
+            "x": 72,
+            "y": 104,
+            "width": 936,
+            "height": 134.39999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "架构抽象与工程取舍",
+                "style": {
+                  "font_size": 48,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          },
+          {
+            "id": "body-2-body",
+            "order": 2,
+            "type": "text",
+            "x": 72,
+            "y": 266.4,
+            "width": 936,
+            "height": 212.79999999999998,
+            "rotation": 0,
+            "opacity": 1,
+            "visible": true,
+            "locked": false,
+            "runs": [
+              {
+                "text": "解耦需要额外的规格映射转换机制，虽然增加了设计复杂度，却换来了核心资产的便携性。把表达原则独立于通道之外，才能确保基调稳定，不被底层基础设施变动所绑架。",
+                "style": {
+                  "font_size": 38,
+                  "color": "#f5f7fa",
+                  "weight": 400,
+                  "italic": false,
+                  "align": "left"
+                }
+              }
+            ],
+            "claims": []
+          }
+        ],
+        "role": "body"
+      }
+    ],
+    "render_asset_ref": [
+      {
+        "canvas_id": "cover",
+        "material_revision_id": 23
+      },
+      {
+        "canvas_id": "body-1",
+        "material_revision_id": 24
+      },
+      {
+        "canvas_id": "body-2",
+        "material_revision_id": 25
+      }
+    ]
+  },
+  "payload_hash": "eb62c45ceef85a9a7afbf13c823a15adc73bc6be2afd89de630d2a00629e710e",
+  "creative_intent": null,
+  "creative_intent_hash": null,
+  "context_hash": "b319ba9190eae5ec7483650869f37149ee111670a3c7d3a9b603ea94aa60627b",
+  "identity_snapshot_id": 11,
+  "creative_brief_revision_id": 3,
+  "fact_boundary_revision_id": 2,
+  "source_kind": "user_edit",
+  "edit_summary": {
+    "original_master_revision_id": 13,
+    "original_payload_hash": "800315e9ed6d49dd32fb15c87ae47fa14cd64400fbda4220689061226c79deef",
+    "layout_source_master_revision_id": 17,
+    "reason": "明确确认本轮实际deterministic renderer的完整3PNG；只绑定真实bytes，保留旧stage/source/rights历史。",
+    "render_attestation": {
+      "origin": "manual",
+      "confirmed": true,
+      "render_input_hash": "4198f2c54264279eaa43228f8be8b6e9254f56738c1b2c71dd2f18871eac6038",
+      "attested_by": "admin@studio.local",
+      "outputs": [
+        {
+          "material_revision_id": 23,
+          "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68",
+          "canvas_id": "cover"
+        },
+        {
+          "material_revision_id": 24,
+          "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed",
+          "canvas_id": "body-1"
+        },
+        {
+          "material_revision_id": 25,
+          "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455",
+          "canvas_id": "body-2"
+        }
+      ]
+    }
+  },
+  "origin_workflow_run_id": null,
+  "origin_project_output_id": null,
+  "readiness": {
+    "state": "current",
+    "reasons": []
+  },
+  "assets": [
+    {
+      "id": 26,
+      "material_revision_id": 23,
+      "role": "render_output",
+      "slot_key": "cover",
+      "sort_order": 0,
+      "placement": {
+        "canvas_id": "cover"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68"
+    },
+    {
+      "id": 27,
+      "material_revision_id": 24,
+      "role": "render_output",
+      "slot_key": "body-1",
+      "sort_order": 1,
+      "placement": {
+        "canvas_id": "body-1"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed"
+    },
+    {
+      "id": 28,
+      "material_revision_id": 25,
+      "role": "render_output",
+      "slot_key": "body-2",
+      "sort_order": 2,
+      "placement": {
+        "canvas_id": "body-2"
+      },
+      "rights_snapshot": {
+        "rights_status": "cleared",
+        "public_use_allowed": true,
+        "model_use_allowed": false,
+        "commercial_use_allowed": false
+      },
+      "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455"
+    }
+  ],
+  "evidence": [],
+  "created_by": "admin@studio.local",
+  "created_at": "2026-10-14T10:25:24.485994"
+}

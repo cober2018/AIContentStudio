@@ -1,3 +1,5 @@
+2026-10-14 **十二平台/十七形态交付已验收并归档，43/43**：事实边界、图文平台检查及用户委托的AI整模态评审通过。七capability同步23新增/2修改，选择性本地main提交保全相邻改动；2639后端通过/28跳过/1既有wewrite环境豁免，实际候选368通过/1跳过、Web/FE-P1/Node/Ruff与独立复核通过。未直接试听、push或公开发布；相邻Persona151/156、Stage141/144保持。[成果与精确边界](openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/README.md)。以下保留阶段历史。
+
 # AI Content Studio（AI 内容生产中心）
 
 2026-10-09网页可达性恢复：5173原无监听，现已沿用原npm/Vite入口启动，仅`127.0.0.1:5173`；主页/前端入口HTTP200，`/api`代理ready=true，API/Worker未重启。Web仍是前台运行方式，不是登录自启；日常命令和停止方式见[本机运行手册](docs/runbooks/production-readiness.md)。无业务代码、数据库/素材、运行配置、依赖或迁移变更；未调用模型或新增部署体系。浏览器可视化未由此次HTTP检查替代。
@@ -125,7 +127,7 @@
 
 2026-10-06 **当前方向：Persona Creative Studio，两个角色文字先行**。[add-persona-creative-studio](openspec/changes/add-persona-creative-studio/README.md)已获SPEC APPROVE及apply授权，当前65/147项完成。两个Starter Persona的九阶段文字流程已在隔离SQLite/Mock中走通：证据→角度→大纲→初稿→检查→精修→标题→最终Master→最终检查，再经Candidate v4/审批/授权生成本地ZIP。浏览器24个检查点、后端1968 passed/28 skipped、Web/FE-P1通过；这证明合同与产品链路，不证明真实文章质量。真实模型文字质量单独待授权验收，图文之后、音频最后；部分高级配置/UX仍待补齐。十二平台提案继续暂缓，不初始化正式Persona，不改正式crs数据/运行拓扑，不新增migration，不提交推送归档。见[文字合同验收](docs/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。
 
-2026-10-06 **下一项范围已确认：十二平台专属稿件＋素材交付包**，公众号保留草稿箱、其他平台人工发布；知乎/B站/X各形态独立，共十七形态。标准提案与两批计划见[complete-multiplatform-content-handoff](openspec/changes/complete-multiplatform-content-handoff/README.md)。本轮仅规格，尚未business apply/正式profile写入或公开发送；原有Recipe/F8/ACO完成状态不因此改变。
+2026-10-06 **下一项范围已确认：十二平台专属稿件＋素材交付包**，公众号保留草稿箱、其他平台人工发布；知乎/B站/X各形态独立，共十七形态。标准提案与两批计划见[complete-multiplatform-content-handoff](openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/README.md)。本轮仅规格，尚未business apply/正式profile写入或公开发送；原有Recipe/F8/ACO完成状态不因此改变。
 
 2026-10-06 **Creation Recipe已在本机正式启用，141/144**。正式SQLite、approved默认/readiness及私有配置均为`crs000000001`，API/原Worker已恢复，Web仅`127.0.0.1:5173`。配套备份/副本演练/正式升级后确认5,145行原数据、65个素材hash不变；健康/Recipe选择/MCP只读入口通过。旧Unit不自动绑定新流程。永久新回归、完整backend和规格生命周期仍待收尾；本轮未调用模型/公众号、未提交推送归档。见[本change](openspec/changes/creation-recipe-stage-control-loop/README.md)和[正式启用与备份](docs/CREATION_RECIPE_LOCAL_ENABLEMENT.md)。
 

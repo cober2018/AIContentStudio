@@ -1,0 +1,14 @@
+{
+  "channel": "penguin",
+  "form": "article",
+  "payload_hash": "6c5dd8855f67ab340fdc352a60b1d30fb2ae823d16b3c93d5d792603141ab3fa",
+  "candidate_hash": "60b5207b75b4f3dc54a910929d50408bfcac58b5d0ac273e9cab312aa2b07724",
+  "export_hash": "1bead5fd84d9c02adc16c35959fe1d3e2620232326aba6b82733827b9dedee3b",
+  "zip_hash": "c424986282f689270b72b34fb16625bc77b4b1d81ba2193c1573db653408c65b",
+  "media": [],
+  "schema": "penguin.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

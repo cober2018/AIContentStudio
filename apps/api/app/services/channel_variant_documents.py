@@ -1,21 +1,45 @@
-"""Bounded, deterministic durable payloads for the first five F6E forms."""
+"""Bounded, deterministic durable payloads for published channel variants."""
 
 import hashlib
 import json
 import re
 import unicodedata
 
+from .channel_form_descriptors import ARTICLE_BLOCK_FIELDS, CALLOUT_TONES, MODERN_ARTICLE_SCHEMAS, TEXT_LIMITS
+
 
 class VariantDocumentError(ValueError):
-    pass
+    def __init__(self, reason: str, path: str = ""):
+        super().__init__(reason)
+        self.code = reason
+        self.path = path
 
 
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$")
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 
+# Long-form text targets. They share one document shape and do not inherit WeChat's cover or official HTML.
+ARTICLE_SCHEMAS = frozenset({
+    "toutiao.article.v1",
+    "baijia.article.v1",
+    "zhihu.article.v1",
+    "zhihu.answer.v1",
+    "bilibili.article.v1",
+    "sohu.article.v1",
+    "penguin.article.v1",
+    "netease.article.v1",
+    "xueqiu.quant_research.v1",
+    "xueqiu.market_recap.v1",
+    "juejin.tech_article.v1",
+    "x.articles.v1",
+})
+# x.single stays at 280. Weibo uses the long-post bound, not a remote publish claim.
+SINGLE_TEXT_SCHEMAS = frozenset({"x.single.v1", "weibo.single.v1", "x.long_post.v1"})
+_SINGLE_TEXT_LIMITS = {"x.single.v1": 280, "weibo.single.v1": 2000, "x.long_post.v1": TEXT_LIMITS["long_post"]}
 
-def _fail(reason: str) -> None:
-    raise VariantDocumentError(reason)
+
+def _fail(reason: str, path: str = "") -> None:
+    raise VariantDocumentError(reason, path)
 
 
 def _object(value: object, allowed: set[str]) -> dict:
@@ -160,6 +184,93 @@ def validate_wechat_inline_refs(blocks: list[dict], refs: list[dict]) -> None:
             _fail("inline_mapping_invalid")
 
 
+def _tags(raw: object) -> list[str]:
+    if not isinstance(raw, list) or len(raw) > 50:
+        _fail("collection_bound", "tags")
+    result = [_text(value, TEXT_LIMITS["tag"], required=True) for value in raw]
+    if len(set(result)) != len(result):
+        _fail("duplicate_tag", "tags")
+    return result
+
+
+def _question(raw: object) -> dict:
+    item = _object(raw, {"text", "url", "context", "confirmed"})
+    if item.get("confirmed") is not True:
+        _fail("question_confirmation_required", "question.confirmed")
+    result = {"text": _text(item.get("text"), TEXT_LIMITS["question"], required=True), "confirmed": True}
+    for key in ("url", "context"):
+        if key in item:
+            result[key] = _text(item[key], TEXT_LIMITS[key])
+    if result.get("url"):
+        from urllib.parse import urlsplit
+
+        try:
+            url = urlsplit(result["url"])
+            if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password:
+                _fail("question_url_invalid", "question.url")
+        except ValueError as exc:
+            if isinstance(exc, VariantDocumentError):
+                raise
+            _fail("question_url_invalid", "question.url")
+    return result
+
+
+def _article_blocks(value: object, schema: str, asset_keys: set[str], locations: dict[str, str]) -> list[dict]:
+    blocks = _ordered(value, 250)
+    identifiers = {block["id"] for block in blocks}
+    result = []
+    direct_count = 0
+    for raw in blocks:
+        kind = raw.get("kind")
+        if not isinstance(kind, str) or kind not in ARTICLE_BLOCK_FIELDS or kind == "direct_answer" and schema != "zhihu.answer.v1":
+            _fail("block_kind_invalid", f"blocks[{raw['order']}].kind")
+        raw = _object(raw, ARTICLE_BLOCK_FIELDS[kind])
+        block = {"id": raw["id"], "order": raw["order"], "kind": kind}
+        if kind == "list":
+            ordered = raw.get("ordered", False)
+            if type(ordered) is not bool:
+                _fail("boolean_required", f"blocks[{raw['order']}].ordered")
+            items = []
+            for item in _ordered(raw.get("items"), 250):
+                item = _object(item, {"id", "order", "text"})
+                if item["id"] in identifiers:
+                    _fail("duplicate_id", f"blocks[{raw['order']}].items")
+                identifiers.add(item["id"])
+                normalized = {"id": item["id"], "order": item["order"],
+                              "text": _text(item.get("text"), TEXT_LIMITS["block_text"], required=True)}
+                locations[item["id"]] = normalized["text"]
+                items.append(normalized)
+            block.update(ordered=ordered, items=items)
+        elif kind == "image":
+            key = _id(raw.get("image_ref_key"))
+            if key not in asset_keys:
+                _fail("asset_ref_missing", f"blocks[{raw['order']}].image_ref_key")
+            block.update(image_ref_key=key, text=_text(raw.get("text", ""), TEXT_LIMITS["image_text"]),
+                         alt_text=_text(raw.get("alt_text", ""), TEXT_LIMITS["image_text"]))
+            locations[block["id"]] = block["text"]
+        elif kind != "divider":
+            block["text"] = _text(raw.get("text"), TEXT_LIMITS["block_text"], required=True)
+            locations[block["id"]] = block["text"]
+        if kind == "heading":
+            level = raw.get("level", 2)
+            if type(level) is not int or not 1 <= level <= 6:
+                _fail("heading_level_invalid", f"blocks[{raw['order']}].level")
+            block["level"] = level
+        elif kind == "callout":
+            tone = raw.get("tone", "note")
+            if not isinstance(tone, str) or tone not in CALLOUT_TONES:
+                _fail("callout_tone_invalid", f"blocks[{raw['order']}].tone")
+            block["tone"] = tone
+        elif kind == "code":
+            block["language"] = _text(raw.get("language", ""), TEXT_LIMITS["language"])
+        elif kind == "direct_answer":
+            direct_count += 1
+        result.append(block)
+    if schema == "zhihu.answer.v1" and (direct_count != 1 or result[0]["kind"] != "direct_answer"):
+        _fail("direct_answer_required", "blocks")
+    return result
+
+
 def canonical_payload(schema: str, value: object, *, asset_refs: object = None, evidence_refs: object = None) -> dict:
     asset_keys = _asset_keys([] if asset_refs is None else asset_refs)
     evidence = [] if evidence_refs is None else evidence_refs
@@ -208,10 +319,48 @@ def canonical_payload(schema: str, value: object, *, asset_refs: object = None, 
             locations[post["id"]] = post["text"]
             posts.append(post)
         result = {"posts": posts}
-    elif schema == "x.single.v1":
-        item = _object(value, {"text"} | common)
-        result = {"text": _text(item.get("text"), 280, required=True)}
+    elif schema in SINGLE_TEXT_SCHEMAS:
+        item = _object(value, {"text", "tags", "images"} | common if schema == "weibo.single.v1" else {"text"} | common)
+        result = {"text": _text(item.get("text"), _SINGLE_TEXT_LIMITS[schema], required=True)}
         locations["single"] = result["text"]
+        if schema == "weibo.single.v1":
+            images = item.get("images", [])
+            if not isinstance(images, list):
+                _fail("collection_bound", "images")
+            result.update(tags=_tags(item.get("tags", [])), images=[])
+            image_keys = set()
+            for raw in _ordered(images, 250) if images else []:
+                raw = _object(raw, {"id", "order", "image_ref_key"})
+                key = _id(raw.get("image_ref_key"))
+                if key not in asset_keys:
+                    _fail("asset_ref_missing", f"images[{raw['order']}].image_ref_key")
+                if key in image_keys:
+                    _fail("duplicate_image_ref", "images")
+                image_keys.add(key)
+                result["images"].append({"id": raw["id"], "order": raw["order"], "image_ref_key": key})
+    elif schema in MODERN_ARTICLE_SCHEMAS:
+        item = _object(value, {"title", "summary", "blocks", "tags"} | common | ({"question"} if schema == "zhihu.answer.v1" else set()))
+        if schema == "zhihu.answer.v1":
+            if "question" not in item:
+                _fail("question_confirmation_required", "question")
+            question = _question(item["question"])
+        result = {"title": _text(item.get("title"), TEXT_LIMITS["title"], required=True),
+                  "summary": _text(item.get("summary", ""), TEXT_LIMITS["summary"]),
+                  "blocks": _article_blocks(item.get("blocks"), schema, asset_keys, locations),
+                  "tags": _tags(item.get("tags", []))}
+        if schema == "zhihu.answer.v1":
+            result["question"] = question
+    elif schema in ARTICLE_SCHEMAS:
+        item = _object(value, {"title", "blocks"} | common)
+        blocks = []
+        for raw in _ordered(item.get("blocks"), 200):
+            raw = _object(raw, {"id", "order", "kind", "text"})
+            if not isinstance(raw.get("kind"), str) or raw["kind"] not in {"heading", "paragraph", "quote", "list"}:
+                _fail("block_kind_invalid")
+            block = {"id": raw["id"], "order": raw["order"], "kind": raw["kind"], "text": _text(raw.get("text"), 10000, required=True)}
+            locations[block["id"]] = block["text"]
+            blocks.append(block)
+        result = {"title": _text(item.get("title"), 200, required=True), "blocks": blocks}
     elif schema == "xiaohongshu.image_note.v1":
         item = _object(value, {"title", "cards"} | common)
         cards = []
@@ -224,6 +373,25 @@ def canonical_payload(schema: str, value: object, *, asset_refs: object = None, 
             locations[card["id"]] = card["caption"]
             cards.append(card)
         result = {"title": _text(item.get("title"), 200, required=True), "cards": cards}
+    elif schema == "bilibili.image_note.v1":
+        item = _object(value, {"title", "description", "tags", "cards"} | common)
+        cards = []
+        keys = set()
+        for raw in _ordered(item.get("cards"), 250):
+            raw = _object(raw, {"id", "order", "image_ref_key", "caption"})
+            key = _id(raw.get("image_ref_key"))
+            if key not in asset_keys:
+                _fail("asset_ref_missing", f"cards[{raw['order']}].image_ref_key")
+            if key in keys:
+                _fail("duplicate_image_ref", "cards")
+            keys.add(key)
+            card = {"id": raw["id"], "order": raw["order"], "image_ref_key": key,
+                    "caption": _text(raw.get("caption", ""), TEXT_LIMITS["caption"])}
+            locations[card["id"]] = card["caption"]
+            cards.append(card)
+        result = {"title": _text(item.get("title"), TEXT_LIMITS["title"], required=True),
+                  "description": _text(item.get("description", ""), TEXT_LIMITS["description"]),
+                  "tags": _tags(item.get("tags", [])), "cards": cards}
     elif schema == "douyin.spoken_script.v1":
         item = _object(value, {"scenes", "estimated_srt"} | common)
         scenes = []
@@ -254,6 +422,18 @@ def canonical_payload(schema: str, value: object, *, asset_refs: object = None, 
     if len(encoded) > 2_000_000:
         _fail("payload_too_large")
     return result
+
+
+def collection_key(schema: str) -> str | None:
+    if schema == "wechat.article.v1" or schema in ARTICLE_SCHEMAS:
+        return "blocks"
+    if schema == "x.thread.v1":
+        return "posts"
+    if schema in {"xiaohongshu.image_note.v1", "bilibili.image_note.v1"}:
+        return "cards"
+    if schema == "douyin.spoken_script.v1":
+        return "scenes"
+    return None
 
 
 def payload_hash(schema: str, value: object, *, asset_refs: object = None, evidence_refs: object = None) -> str:

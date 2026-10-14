@@ -4,6 +4,8 @@ import importlib
 import importlib.util
 from types import SimpleNamespace
 
+import pytest
+
 from app.services.content_harness.channel_registry import ContentFormSpec, resolve_content_form
 from app.services.graphic_documents import canonical_payload
 
@@ -18,6 +20,76 @@ def _canvas(canvas_id: str, order: int, *, width: int = 1080, height: int = 1440
     if role is not None:
         row["role"] = role
     return row
+
+
+def _pure_cards() -> dict:
+    canvases = [_canvas("cover", 0, role="cover"), _canvas("body-1", 1, role="body"), _canvas("body-2", 2, role="body")]
+    for canvas in canvases:
+        canvas["layers"] = [
+            {"id": "accent", "order": 0, "type": "shape", "x": 24, "y": 24, "width": 300,
+             "height": 8, "shape": "rectangle", "fill": "#123456"},
+            {"id": "copy", "order": 1, "type": "text", "x": 24, "y": 80, "width": 600,
+             "height": 80, "runs": [{"text": "明确选择的纯图卡", "style": {"font_size": 30, "color": "#123456"}}]},
+        ]
+    return canonical_payload({"canvases": canvases})
+
+
+def test_image_note_inline_requires_a_body_card_without_requiring_an_input_photo():
+    form = ContentFormSpec(channel="xiaohongshu", content_form="image_note", artifact_kind="image", source="profile",
+                           profile_version_id=29, media_requirements={"cover": "required", "inline": "required"})
+    document = _pure_cards()
+    assert profile_reasons(form, document) == []
+    assert profile_reasons(form, canonical_payload({"canvases": document["canvases"][:1]})) == ["graphic_inline_media_required"]
+    document["canvases"][1]["role"] = "cover"
+    document["canvases"][2]["role"] = "cover"
+    assert profile_reasons(form, document) == ["graphic_inline_media_required"]
+    document["canvases"][0]["role"] = "body"
+    assert profile_reasons(form, document) == ["graphic_cover_required"]
+
+
+@pytest.mark.parametrize("kind", ["image", "chart"])
+def test_other_graphic_forms_still_require_a_visible_input_image_or_chart(kind):
+    form = ContentFormSpec(channel="fixture", content_form="image", artifact_kind="image", source="profile",
+                           profile_version_id=42, media_requirements={"inline": "required"})
+    document = _pure_cards()
+    assert profile_reasons(form, document) == ["graphic_inline_media_required"]
+    layer = {"id": "media", "order": 2, "type": kind, "visible": False, "x": 24, "y": 200,
+             "width": 600, "height": 400, "material_revision_id": 7}
+    document["canvases"][1]["layers"].append(layer)
+    document = canonical_payload(document)
+    assert profile_reasons(form, document) == ["graphic_inline_media_required"]
+    document["canvases"][1]["layers"][-1]["visible"] = True
+    assert profile_reasons(form, document) == []
+
+
+def test_image_note_card_image_role_accepts_output_canvases():
+    form = ContentFormSpec(channel="bilibili", content_form="image_note", artifact_kind="image", source="profile",
+                           profile_version_id=20, media_requirements={"required_roles": ["card_image"]})
+    document = _pure_cards()
+    assert profile_reasons(form, document) == []
+    assert profile_reasons(form, canonical_payload({"canvases": document["canvases"][:1]})) == []
+
+
+@pytest.mark.parametrize("roles, reason", [
+    (["unknown_role"], "graphic_profile_rule_unavailable"),
+    (["card_image", "unknown_role"], "graphic_profile_rule_unavailable"),
+    (["card_image", "card_image"], "graphic_profile_rules_invalid"),
+    ([7], "graphic_profile_rules_invalid"),
+    ([["card_image"]], "graphic_profile_rules_invalid"),
+    ("card_image", "graphic_profile_rules_invalid"),
+    ({"card_image": "required"}, "graphic_profile_rules_invalid"),
+    (None, "graphic_profile_rules_invalid"),
+])
+def test_image_note_card_image_role_declarations_fail_closed(roles, reason):
+    form = ContentFormSpec(channel="bilibili", content_form="image_note", artifact_kind="image", source="profile",
+                           profile_version_id=20, media_requirements={"required_roles": roles})
+    assert profile_reasons(form, _pure_cards()) == [reason]
+
+
+def test_other_graphic_forms_do_not_gain_card_image_role_support():
+    form = ContentFormSpec(channel="fixture", content_form="image", artifact_kind="image", source="profile",
+                           profile_version_id=42, media_requirements={"required_roles": ["card_image"]})
+    assert profile_reasons(form, _pure_cards()) == ["graphic_profile_rule_unavailable"]
 
 
 def test_exact_graphic_profile_enforces_only_declared_canvas_rules(db_session):

@@ -1,0 +1,14 @@
+{
+  "channel": "x",
+  "form": "long_post",
+  "payload_hash": "c507c1774997ba5e3885558501206a183fec9677da3cdb3ee5cf9059ff5bfc71",
+  "candidate_hash": "74834b61b97f7c628094841b537cb616b3cdb4f68d1f52f76fd4ce8f00767ce0",
+  "export_hash": "33f84a5cc0a21f4448e84805f0352605752285b60b7dc5ebb5a82011085e2af6",
+  "zip_hash": "d8e29c037aaa4c6be60d05c2dfe520bdc9206fd7cd998577b643806696f0f67b",
+  "media": [],
+  "schema": "x.long_post.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

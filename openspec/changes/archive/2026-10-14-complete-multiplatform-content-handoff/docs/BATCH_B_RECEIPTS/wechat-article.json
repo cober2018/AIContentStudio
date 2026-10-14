@@ -1,0 +1,32 @@
+{
+  "channel": "wechat",
+  "form": "article",
+  "payload_hash": "55d148894db19a95de7202cc50a67b4ee42b616abcae1fc18a664dbab0db12ea",
+  "candidate_hash": "0d89662107efe3273b2c59fe7c489a75d2b8ef18b6d0f29c27db7fd8789b1843",
+  "export_hash": "38a2bc1f9c9150e4935c8d18dc768448cf27e3025b00e2561cbfc36900cd95a9",
+  "zip_hash": "f281d1fe9633eca745a331b2df2a944876b4b9fe09c85f316e272105c3331c08",
+  "media": [
+    {
+      "content_hash_snapshot": "672938769269e1d289bc5878ba5ff79ae0ddad35e9f8c503c4afc13338ea685d",
+      "material_revision_id": 1,
+      "name": "media/00-1.png",
+      "placement": {
+        "usage": "cover"
+      },
+      "rights_snapshot": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      },
+      "role": "cover",
+      "slot_key": "cover",
+      "sort_order": 0
+    }
+  ],
+  "schema": "wechat.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

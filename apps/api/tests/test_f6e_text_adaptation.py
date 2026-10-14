@@ -24,11 +24,18 @@ def _text_payload(*paragraphs: str) -> dict:
         ("wechat", "article", "wechat.article.v1", "blocks"),
         ("x", "thread", "x.thread.v1", "posts"),
         ("x", "single", "x.single.v1", "text"),
+        ("toutiao", "article", "toutiao.article.v1", "blocks"),
+        ("zhihu", "answer", "zhihu.answer.v1", "blocks"),
+        ("juejin", "tech_article", "juejin.tech_article.v1", "blocks"),
+        ("weibo", "single", "weibo.single.v1", "text"),
     ],
 )
 def test_simple_text_source_adapts_to_canonical_target(channel, form, expected_schema, expected_field):
     adapter = TextChannelAdapter(channel, form)
-    result = adapter.adapt(_text_payload("原文"), asset_refs=[], evidence_refs=[])
+    source = _text_payload("原文")
+    if (channel, form) == ("zhihu", "answer"):
+        source["_target_question"] = {"text": "原文回答什么问题？", "confirmed": True}
+    result = adapter.adapt(source, asset_refs=[], evidence_refs=[])
     assert adapter.contract.payload_schema == expected_schema
     assert expected_field in result
     assert "原文" in str(result)
@@ -36,7 +43,7 @@ def test_simple_text_source_adapts_to_canonical_target(channel, form, expected_s
     rendered = adapter.render(result)
     assert rendered["artifact_kind"] == "text"
     assert "原文" in rendered["text"]
-    if form == "article":
+    if expected_field == "blocks":
         assert rendered["text"].startswith("源文章\n\n")
 
 
@@ -50,10 +57,20 @@ def test_adaptation_rejects_unmapped_citations_or_assets_and_overlong_single():
         adapter.adapt(_text_payload("原文"), asset_refs=[{"material_revision_id": 1}], evidence_refs=[])
     with pytest.raises(AdapterUnavailable, match="adapted_payload_invalid"):
         adapter.adapt(_text_payload("很" * 281), asset_refs=[], evidence_refs=[])
+    weibo = TextChannelAdapter("weibo", "single")
+    assert len(weibo.adapt(_text_payload("很" * 2000), asset_refs=[], evidence_refs=[])["text"]) == 2000
+    with pytest.raises(AdapterUnavailable, match="adapted_payload_invalid"):
+        weibo.adapt(_text_payload("很" * 2001), asset_refs=[], evidence_refs=[])
+    article = TextChannelAdapter("toutiao", "article")
+    headed = _text_payload("原文")
+    headed["document"]["blocks"].insert(0, {"id": "h", "type": "heading", "level": 2, "content": [{"text": "一节", "marks": []}]})
+    adapted = article.adapt(headed, asset_refs=[], evidence_refs=[])
+    assert adapted["blocks"][0] == {"id": "h", "order": 0, "kind": "heading", "text": "一节", "level": 2}
 
 
 @pytest.mark.parametrize(("channel", "form", "location"),
-                         [("wechat", "article", "b0"), ("x", "thread", "b0"), ("x", "single", "single")])
+                         [("wechat", "article", "b0"), ("x", "thread", "b0"), ("x", "single", "single"),
+                          ("toutiao", "article", "b0"), ("weibo", "single", "single")])
 def test_exact_source_citation_survives_deterministic_adaptation(channel, form, location):
     adapter = TextChannelAdapter(channel, form)
     source = _text_payload("有来源的原文")

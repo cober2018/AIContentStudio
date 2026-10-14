@@ -1,0 +1,135 @@
+{
+  "schema": "safe.final.artifact-index.v1",
+  "files": [
+    {
+      "file": "README.md",
+      "bytes": 5726,
+      "sha256": "d30266e9215d148c0f7a8ff9288670155811012d4194d58e8aa3411db1924235"
+    },
+    {
+      "file": "lifestyle/article.md",
+      "bytes": 1367,
+      "sha256": "2f4c66ee74217793c26c48af6f84818770e5a0bf1ce941a90e894f9a04ff1284"
+    },
+    {
+      "file": "lifestyle/audio-qc.json",
+      "bytes": 2282,
+      "sha256": "d966e5e0111a00426ad0b7d012e43013661bfa1ad3912bfd4f50ad6ac620335a"
+    },
+    {
+      "file": "lifestyle/audio.wav",
+      "bytes": 5420902,
+      "sha256": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9"
+    },
+    {
+      "file": "lifestyle/graphic-1.png",
+      "bytes": 45797,
+      "sha256": "872645140089eb89e9493bfb8a2bd70b285706b4bb2e5ab3131fa2f1db606213"
+    },
+    {
+      "file": "lifestyle/graphic-2.png",
+      "bytes": 66011,
+      "sha256": "b2081f63eaa44cbc50ad8504d7a8fed3d88a8b05846df7c28293377ff301a802"
+    },
+    {
+      "file": "lifestyle/graphic-3.png",
+      "bytes": 66762,
+      "sha256": "7d88fdd34c0f8b67eaa585c1a23f56a06015ca0a547c0794a02b272d461a9148"
+    },
+    {
+      "file": "lifestyle/graphic-checks.json",
+      "bytes": 18067,
+      "sha256": "f1da01c414bdaf4b7e3187b1ed802f59a21d5b3024e08e08955665058abfc8d0"
+    },
+    {
+      "file": "lifestyle/graphic-master.json",
+      "bytes": 10261,
+      "sha256": "9a53230bca0f9fd82d85851f82ac41a886502368f79f6824aabfb50ccdf7a0ab"
+    },
+    {
+      "file": "lifestyle/source-boundary.json",
+      "bytes": 6821,
+      "sha256": "50a572138b51aff8e58872c2cee1e3f931a67890556287bf677d5eb2677ef339"
+    },
+    {
+      "file": "lifestyle/source-excerpt.md",
+      "bytes": 510,
+      "sha256": "b16e86db61021f61ca05daf88a2f2442dfab599e59fd5282506f9157ce426b54"
+    },
+    {
+      "file": "lifestyle/text-checks.json",
+      "bytes": 25693,
+      "sha256": "b11c053437cf5cf5e0f3008b7f36bcb343e20d1505c3f0c4bab4612da88346e8"
+    },
+    {
+      "file": "lifestyle/text-master.json",
+      "bytes": 4480,
+      "sha256": "7a09bdc1970d887b5760e0154ca40c45571ef62a53a1e8e4b35f81e66a2ccbd1"
+    },
+    {
+      "file": "review.md",
+      "bytes": 3376,
+      "sha256": "9615b4243243eaba353fa3d7ad25dba69e8d082fb291703db5af4860a10c2c6e"
+    },
+    {
+      "file": "tech/article.md",
+      "bytes": 1631,
+      "sha256": "8d587ec84249c9542eefa459c52ee635b2d3190ab256a88eadac02368338696a"
+    },
+    {
+      "file": "tech/audio-qc.json",
+      "bytes": 2289,
+      "sha256": "b1545a9a63eb80ff26b1bd26ff9417652ac9ca5bf107e5c56d80003d8a40e265"
+    },
+    {
+      "file": "tech/audio.wav",
+      "bytes": 6857070,
+      "sha256": "c517c722c3476bdce5ae46514475111606c3b69cb674875b60a28d77270a722c"
+    },
+    {
+      "file": "tech/graphic-1.png",
+      "bytes": 52708,
+      "sha256": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68"
+    },
+    {
+      "file": "tech/graphic-2.png",
+      "bytes": 88318,
+      "sha256": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed"
+    },
+    {
+      "file": "tech/graphic-3.png",
+      "bytes": 87140,
+      "sha256": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455"
+    },
+    {
+      "file": "tech/graphic-checks.json",
+      "bytes": 18087,
+      "sha256": "a70b191ef979c4d757bbff1174a52abcd2dd4555dbb559b0f768b1d30e2da2b5"
+    },
+    {
+      "file": "tech/graphic-master.json",
+      "bytes": 10392,
+      "sha256": "e3e6ae2386c5123bf7d5f545ac86f92ec3536bb6be0cf9e07599c5dad0607024"
+    },
+    {
+      "file": "tech/source-boundary.json",
+      "bytes": 9411,
+      "sha256": "2b9af81ce5e05dde3b9066b538b62560fd9e8e9ead74a4e06b4866780122c9d0"
+    },
+    {
+      "file": "tech/source-excerpt.md",
+      "bytes": 3096,
+      "sha256": "392e365966997974036ecfa039e50ea3426c2524ecef0076124f14ddcf6ddb34"
+    },
+    {
+      "file": "tech/text-checks.json",
+      "bytes": 26397,
+      "sha256": "4ca310562226705ab2737735c8d87741fe84f758c109596424bcfc095a59f028"
+    },
+    {
+      "file": "tech/text-master.json",
+      "bytes": 4744,
+      "sha256": "0886bdece9c1ebaa19acd70592194af3c271a761066e268632d32987e30c9043"
+    }
+  ]
+}

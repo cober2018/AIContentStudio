@@ -1,0 +1,83 @@
+{
+  "channel": "bilibili",
+  "form": "image_note",
+  "payload_hash": "9a20c16ff8593c8e0215905c4275ba79844adfa8b7573c78bd7499e7a81e9ba6",
+  "candidate_hash": "04a42c4f62b409b676f736f6a8c4abc151fd6fc145cca23309994cf14aef68a0",
+  "export_hash": "8cbad2d3acf45a03a14107f33117e0c95c1db79c03a8bf43bca978ac4c61151d",
+  "zip_hash": "2c36f1dc2847b87b4b0cd13d4a02e6d8efaf76e2384e10daca9530dcb81e9b59",
+  "media": [
+    {
+      "content_hash_snapshot": "672938769269e1d289bc5878ba5ff79ae0ddad35e9f8c503c4afc13338ea685d",
+      "material_revision_id": 5,
+      "name": "media/00-5.png",
+      "placement": {
+        "canvas_id": "card-cover"
+      },
+      "rights_snapshot": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      },
+      "role": "card_image",
+      "slot_key": "card-cover",
+      "sort_order": 0
+    },
+    {
+      "content_hash_snapshot": "7c73f472b0f5a311fe78451e9d31f0b786dc1c33890d40a4fd40f0b2c21af0f6",
+      "material_revision_id": 6,
+      "name": "media/01-6.png",
+      "placement": {
+        "canvas_id": "card-context"
+      },
+      "rights_snapshot": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      },
+      "role": "card_image",
+      "slot_key": "card-context",
+      "sort_order": 1
+    },
+    {
+      "content_hash_snapshot": "0f3e8fef5f32c9cb5ffc7b3ffc67c416a6b725763a8c685332c799ced520719f",
+      "material_revision_id": 7,
+      "name": "media/02-7.png",
+      "placement": {
+        "canvas_id": "card-boundary"
+      },
+      "rights_snapshot": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      },
+      "role": "card_image",
+      "slot_key": "card-boundary",
+      "sort_order": 2
+    },
+    {
+      "content_hash_snapshot": "1e5002b746323a9f9c628d706d1b6eacad96960d6a7da1c340d6af347f74a7ed",
+      "material_revision_id": 8,
+      "name": "media/03-8.png",
+      "placement": {
+        "canvas_id": "card-units"
+      },
+      "rights_snapshot": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      },
+      "role": "card_image",
+      "slot_key": "card-units",
+      "sort_order": 3
+    }
+  ],
+  "schema": "bilibili.image_note.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

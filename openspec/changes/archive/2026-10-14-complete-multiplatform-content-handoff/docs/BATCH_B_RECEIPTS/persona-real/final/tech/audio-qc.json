@@ -1,0 +1,68 @@
+{
+  "content_hash": "c517c722c3476bdce5ae46514475111606c3b69cb674875b60a28d77270a722c",
+  "coverage": {
+    "accepted_task": "verified",
+    "asr_alignment": "not_run",
+    "bytes_hash": "verified_live_bytes",
+    "complete": true,
+    "current_binding": "verified",
+    "loudness": "rms_dbfs_only_lufs_not_measured",
+    "mime_duration": "verified_decoded_bytes",
+    "perceptual_quality": "human_review_required",
+    "provider_model": "verified_receipt",
+    "voice_rate": "verified_signed_result_and_material_receipt",
+    "waveform": "wave"
+  },
+  "human_review_required": true,
+  "issues": [],
+  "material_id": 10,
+  "material_revision_id": 10,
+  "measured": {
+    "byte_size": 6857070,
+    "channels": 1,
+    "clipping_ratio": 2.9e-07,
+    "duration_ms": 107123.531,
+    "leading_silence_ms": 177.219,
+    "peak": 0.99996948,
+    "rms": 0.06590289,
+    "rms_dbfs": -23.622,
+    "sample_rate_hz": 32000,
+    "sample_width_bytes": 2,
+    "silence_ratio": 0.21708903,
+    "trailing_silence_ms": 198.188
+  },
+  "quality_profile_hash": "28088c2ada823a3c171ee553343587ca291360e7fd2670c2fc1bfafea1867e16",
+  "quality_profile_ref": "studio.quality.audio.explainer@1",
+  "rules_hash": "c85438151c293aa9f5030ba789d15acc5025a2904cdc556c29d22746cb7434e8",
+  "schema": "studio.audio.qc.v1",
+  "status": "pass",
+  "task": {
+    "execution_profile": "minimax.speech",
+    "model_id": "speech-2.8-hd",
+    "plan_hash": "6c8b5fa8a7c1a5ae66a462930d5bb0530358cecf586343ba8326dbb865f579b2",
+    "provider_key": "minimax.cli",
+    "provider_version": "1",
+    "request_hash": "f28e61416e4961002cf2ed6123beb2fde88e4e3a601d418593a39d11ab19523e",
+    "selected_profile": "minimax.speech",
+    "task_id": "8d9154d37a974de6b974e7552534df47",
+    "tts_applied_parameters": {
+      "rate": 1.0,
+      "schema": "studio.audio.tts-applied.v1",
+      "voice_id": "lengdan_xiongzhang"
+    }
+  },
+  "thresholds": {
+    "clipping_amplitude": 0.999,
+    "clipping_blocker_ratio": 0.01,
+    "clipping_warning_ratio": 0.001,
+    "edge_silence_warning_ms": 2000,
+    "max_bytes": 31457280,
+    "max_duration_ms": 600000,
+    "max_samples": 12000000,
+    "process_timeout_seconds": 10,
+    "rms_warning_max_dbfs": -6,
+    "rms_warning_min_dbfs": -35,
+    "silence_amplitude": 0.001,
+    "silence_warning_ratio": 0.9
+  }
+}

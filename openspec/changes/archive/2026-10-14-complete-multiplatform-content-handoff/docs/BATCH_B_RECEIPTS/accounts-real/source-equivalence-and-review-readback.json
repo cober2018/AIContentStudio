@@ -1,0 +1,329 @@
+{
+  "status": "READBACK_PASSED",
+  "source_article_original_payload_sha256": "6ff90e3c931018ed973ea57964ae968fe6c988b54e08ac7085e048a6fe8e93de",
+  "source_article_reaccepted_payload_sha256": "6ff90e3c931018ed973ea57964ae968fe6c988b54e08ac7085e048a6fe8e93de",
+  "source_article_normalized_payload_sha256": "13b22c7a438ae2f7935abf7c174a069af4f52886a67cab71ed7a9406c1921d1c",
+  "ordered_visible_content_sha256": "96e4b70ccce1cc86ea4a6191a3877f794bbce5b2f7c973c2e5bc68729af12216",
+  "source_original_rows_unmodified": true,
+  "targets": [
+    {
+      "name": "wechat-article",
+      "account_id": 3,
+      "candidate_id": 3,
+      "source_content_equivalence": {
+        "all_original_text_values_equal": true,
+        "all_original_image_block_ids_and_media_ids_equal": true,
+        "ordered_visible_content_sha256": "96e4b70ccce1cc86ea4a6191a3877f794bbce5b2f7c973c2e5bc68729af12216",
+        "original_ordered_visible_content_sha256": "96e4b70ccce1cc86ea4a6191a3877f794bbce5b2f7c973c2e5bc68729af12216",
+        "original_block_count": 19,
+        "title_equal": true
+      },
+      "media_decode": [
+        {
+          "material_revision_id": 1,
+          "file": "media/00-1.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "cdd3d380db8a89c7df0f9f07b8b42cf14837eb3aa86118a7209ef474fef4ca5d",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 2,
+          "file": "media/01-2.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "0d68201f8ba1559c8b6ffd94c83a27d35ba5ee23a65c56c2c31746e7c3f6ffa2",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 3,
+          "file": "media/02-3.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "88bf74ec605a9cacd19e491253f8849b8ce848990d73a1e19712f1f3f7c1513a",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 4,
+          "file": "media/03-4.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "ac37a361ec809e89d58cf1f2fd8ea29bf9ca8f4332843b7cb5cc8d3be457175a",
+          "rights_equal_original": true
+        }
+      ],
+      "review_api_readback": {
+        "status": 200,
+        "candidate_status": "approved",
+        "candidate_hash_equal": true,
+        "approved_hash_equal": true,
+        "target_account_id": 3,
+        "preview_present": true,
+        "preview_keys": [
+          "modality",
+          "title",
+          "target",
+          "render",
+          "content",
+          "checks",
+          "external_execution",
+          "payload_schema",
+          "form_descriptor",
+          "target_account",
+          "delivery_notice",
+          "official_render",
+          "markdown",
+          "truncated"
+        ]
+      },
+      "sample_account_state_readback": "bound_unverified"
+    },
+    {
+      "name": "zhihu-article",
+      "account_id": 4,
+      "candidate_id": 4,
+      "source_content_equivalence": {
+        "all_original_text_values_equal": true,
+        "all_original_image_block_ids_and_media_ids_equal": true,
+        "ordered_visible_content_sha256": "96e4b70ccce1cc86ea4a6191a3877f794bbce5b2f7c973c2e5bc68729af12216",
+        "original_ordered_visible_content_sha256": "96e4b70ccce1cc86ea4a6191a3877f794bbce5b2f7c973c2e5bc68729af12216",
+        "original_block_count": 19,
+        "title_equal": true
+      },
+      "media_decode": [
+        {
+          "material_revision_id": 1,
+          "file": "media/00-1.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "cdd3d380db8a89c7df0f9f07b8b42cf14837eb3aa86118a7209ef474fef4ca5d",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 2,
+          "file": "media/01-2.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "0d68201f8ba1559c8b6ffd94c83a27d35ba5ee23a65c56c2c31746e7c3f6ffa2",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 3,
+          "file": "media/02-3.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "88bf74ec605a9cacd19e491253f8849b8ce848990d73a1e19712f1f3f7c1513a",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 4,
+          "file": "media/03-4.jpg",
+          "format": "JPEG",
+          "width": 1280,
+          "height": 720,
+          "bytes_equal_original": true,
+          "sha256": "ac37a361ec809e89d58cf1f2fd8ea29bf9ca8f4332843b7cb5cc8d3be457175a",
+          "rights_equal_original": true
+        }
+      ],
+      "review_api_readback": {
+        "status": 200,
+        "candidate_status": "approved",
+        "candidate_hash_equal": true,
+        "approved_hash_equal": true,
+        "target_account_id": 4,
+        "preview_present": true,
+        "preview_keys": [
+          "modality",
+          "title",
+          "target",
+          "render",
+          "content",
+          "checks",
+          "external_execution",
+          "payload_schema",
+          "form_descriptor",
+          "target_account",
+          "delivery_notice",
+          "markdown",
+          "truncated"
+        ]
+      },
+      "sample_account_state_readback": "bound_unverified"
+    },
+    {
+      "name": "xiaohongshu-a",
+      "account_id": 5,
+      "candidate_id": 5,
+      "source_content_equivalence": {
+        "original_graphic_payload_unchanged": true,
+        "render_output_ids": [
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "media_decode": [
+        {
+          "material_revision_id": 5,
+          "file": "media/00-5.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "672938769269e1d289bc5878ba5ff79ae0ddad35e9f8c503c4afc13338ea685d",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 6,
+          "file": "media/01-6.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "7c73f472b0f5a311fe78451e9d31f0b786dc1c33890d40a4fd40f0b2c21af0f6",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 7,
+          "file": "media/02-7.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "0f3e8fef5f32c9cb5ffc7b3ffc67c416a6b725763a8c685332c799ced520719f",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 8,
+          "file": "media/03-8.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "1e5002b746323a9f9c628d706d1b6eacad96960d6a7da1c340d6af347f74a7ed",
+          "rights_equal_original": true
+        }
+      ],
+      "review_api_readback": {
+        "status": 200,
+        "candidate_status": "approved",
+        "candidate_hash_equal": true,
+        "approved_hash_equal": true,
+        "target_account_id": 5,
+        "preview_present": true,
+        "preview_keys": [
+          "modality",
+          "title",
+          "target",
+          "render",
+          "content",
+          "checks",
+          "external_execution",
+          "payload_schema",
+          "form_descriptor",
+          "target_account",
+          "delivery_notice",
+          "canvas_count",
+          "cards"
+        ]
+      },
+      "sample_account_state_readback": "bound_unverified"
+    },
+    {
+      "name": "xiaohongshu-b",
+      "account_id": 6,
+      "candidate_id": 6,
+      "source_content_equivalence": {
+        "original_graphic_payload_unchanged": true,
+        "render_output_ids": [
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "media_decode": [
+        {
+          "material_revision_id": 5,
+          "file": "media/00-5.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "672938769269e1d289bc5878ba5ff79ae0ddad35e9f8c503c4afc13338ea685d",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 6,
+          "file": "media/01-6.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "7c73f472b0f5a311fe78451e9d31f0b786dc1c33890d40a4fd40f0b2c21af0f6",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 7,
+          "file": "media/02-7.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "0f3e8fef5f32c9cb5ffc7b3ffc67c416a6b725763a8c685332c799ced520719f",
+          "rights_equal_original": true
+        },
+        {
+          "material_revision_id": 8,
+          "file": "media/03-8.png",
+          "format": "PNG",
+          "width": 1280,
+          "height": 960,
+          "bytes_equal_original": true,
+          "sha256": "1e5002b746323a9f9c628d706d1b6eacad96960d6a7da1c340d6af347f74a7ed",
+          "rights_equal_original": true
+        }
+      ],
+      "review_api_readback": {
+        "status": 200,
+        "candidate_status": "approved",
+        "candidate_hash_equal": true,
+        "approved_hash_equal": true,
+        "target_account_id": 6,
+        "preview_present": true,
+        "preview_keys": [
+          "modality",
+          "title",
+          "target",
+          "render",
+          "content",
+          "checks",
+          "external_execution",
+          "payload_schema",
+          "form_descriptor",
+          "target_account",
+          "delivery_notice",
+          "canvas_count",
+          "cards"
+        ]
+      },
+      "sample_account_state_readback": "bound_unverified"
+    }
+  ]
+}

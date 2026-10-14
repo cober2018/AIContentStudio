@@ -1,0 +1,68 @@
+{
+  "geometry": {
+    "schema": "studio.graphic.geometry-qc.v1",
+    "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+    "status": "pass",
+    "issues": [],
+    "coverage": {
+      "geometry": "axis_aligned",
+      "text_fit": "estimated",
+      "bytes": "not_rendered",
+      "contrast": "text_vs_solid_canvas_only",
+      "aesthetic_quality": "human_review_required"
+    },
+    "human_review_required": true
+  },
+  "graphic_structure": [
+    "pass",
+    {
+      "reasons": [],
+      "persona_quality": {
+        "ref": "studio.quality.graphic.lifestyle@1",
+        "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+        "style_preset_ref": "studio.graphic.lifestyle-cards@1",
+        "style_preset_hash": "f0b905895832c0bb1a2919afe1459e8d64985d9f9d65daa4b830952170b85166",
+        "photo_requirement": "none",
+        "implementation": "graphic.geometry.v1",
+        "report": {
+          "schema": "studio.graphic.geometry-qc.v1",
+          "payload_hash": "f46f3ec3a75a4c0f6383b5221dde8e93bde2c8d8eb47c2c150fbb011a9a6415e",
+          "status": "pass",
+          "issues": [],
+          "coverage": {
+            "geometry": "axis_aligned",
+            "text_fit": "estimated",
+            "bytes": "not_rendered",
+            "contrast": "text_vs_solid_canvas_only",
+            "aesthetic_quality": "human_review_required"
+          },
+          "human_review_required": true
+        }
+      },
+      "coverage": {
+        "geometry": "axis_aligned",
+        "text_fit": "estimated",
+        "bytes": "not_rendered",
+        "contrast": "text_vs_solid_canvas_only",
+        "aesthetic_quality": "human_review_required",
+        "live_bytes_rights": "separate_required_render_rights_checks"
+      },
+      "canvas_count": 3,
+      "visible_layer_count": 9
+    }
+  ],
+  "graphic_platform": [
+    "blocker",
+    {
+      "reasons": [
+        "graphic_inline_media_required"
+      ],
+      "channel": "xiaohongshu",
+      "content_form": "image_note",
+      "profile_version_id": 29,
+      "coverage": {
+        "deterministic": "complete"
+      }
+    }
+  ]
+}

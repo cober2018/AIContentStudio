@@ -32,7 +32,6 @@ from .channel_variants import (
     _check_inputs,
     _validate_graphic_assets,
     _validate_video_assets,
-    _validate_wechat_assets,
     source_check_exclusions,
 )
 from .content_masters import _evidence_check, _hash, _rights_check, _serialize, frozen_context
@@ -252,10 +251,10 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
         _validate_graphic_assets(db, variant.project_id, master, assets)
     elif master.payload_schema == "video.master.v2":
         _validate_video_assets(db, variant.project_id, master, assets)
-    elif variant.payload_schema == "wechat.article.v1":
-        _validate_wechat_assets(db, variant.project_id, assets, variant.payload_json)
-    elif assets:
-        raise _blocked("candidate_provenance", "历史文本渠道不支持未验证素材")
+    else:
+        from .channel_variants import _validate_text_target_assets
+
+        _validate_text_target_assets(db, variant.project_id, assets, variant.payload_json, variant.payload_schema)
     for ref in assets:
         revision = db.get(MaterialRevision, ref["material_revision_id"])
         if revision is None or revision.content_hash != ref["content_hash_snapshot"]:
@@ -311,6 +310,16 @@ def validate_live_v5_candidate(db: Session, asset: ContentAsset, *, require_curr
             or variant.project_id != asset.project_id or variant.content_unit_id != asset.content_unit_id
             or variant.id != manifest["variant"]["id"]):
         raise _blocked("candidate_source_mismatch", "v5候选必须且只能使用本项目准确的渠道版本")
+    from .channel_variants import validate_target_account
+
+    account_context = validate_target_account(db, variant)
+    if account_context != manifest["target"].get("account"):
+        raise _blocked("candidate_target_account", "冻结目标账号与渠道版本不一致")
+    if "export_metadata" in manifest:
+        from .production_packages import public_export_metadata
+
+        if public_export_metadata(db, manifest["assets"], manifest["evidence_refs"]) != manifest["export_metadata"]:
+            raise _blocked("candidate_export_metadata", "冻结的公开来源或署名已变化")
     target = manifest["target"]
     pack = manifest["evidence"]["fact_pack"]
     if (asset.channel != target["channel"] or asset.content_form != target["content_form"]

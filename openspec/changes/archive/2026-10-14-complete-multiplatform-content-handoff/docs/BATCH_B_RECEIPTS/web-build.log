@@ -1,0 +1,108 @@
+
+> ai-content-studio-web@0.1.0 build
+> tsc -b && vite build --manifest && npm run check:bundle
+
+vite v5.4.21 building for production...
+transforming...
+✓ 2385 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/heavy-dependencies.json                         0.12 kB │ gzip:  0.11 kB
+dist/index.html                                      1.06 kB │ gzip:  0.52 kB
+dist/.vite/manifest.json                            25.17 kB │ gzip:  2.97 kB
+dist/assets/Workflows-BnuhLJ6X.css                  15.87 kB │ gzip:  2.67 kB
+dist/assets/index-DgzusMJf.css                      37.16 kB │ gzip:  7.36 kB
+dist/assets/ProviderGuidancePanel-CPkphXVd.js        1.67 kB │ gzip:  1.16 kB
+dist/assets/systemLibraryTypes-ziHfRqT9.js           1.73 kB │ gzip:  1.12 kB
+dist/assets/previewByteHash-BfEccHF7.js              1.80 kB │ gzip:  1.07 kB
+dist/assets/creationRecipeState-Du76HOR7.js          2.37 kB │ gzip:  0.97 kB
+dist/assets/StudioCreativeInventory-DJpUY3i-.js      2.45 kB │ gzip:  1.40 kB
+dist/assets/ChannelPluginPanel-2SJMNCZ5.js           2.46 kB │ gzip:  1.39 kB
+dist/assets/PersistentProjectsPage-CHNeSF3-.js       2.47 kB │ gzip:  1.36 kB
+dist/assets/RendererVerificationPanel-Byg_qSeu.js    2.59 kB │ gzip:  1.58 kB
+dist/assets/ProviderSearchPanel-u-SHHPD-.js          2.83 kB │ gzip:  1.84 kB
+dist/assets/GraphicRecipeReadiness-z-ZIOjZb.js       2.92 kB │ gzip:  1.90 kB
+dist/assets/StageRecipePicker-BMkeUmmd.js            2.97 kB │ gzip:  1.80 kB
+dist/assets/useMutation-DBaPJ3zM.js                  3.21 kB │ gzip:  1.30 kB
+dist/assets/VoicePresetPicker-C8m4--ju.js            3.21 kB │ gzip:  1.80 kB
+dist/assets/StageCreativeResultPanel-CamJwL3s.js     4.03 kB │ gzip:  2.24 kB
+dist/assets/AsrSuggestionPanel-LAwm9ZvB.js           4.21 kB │ gzip:  2.48 kB
+dist/assets/Dashboard-DuTplR5B.js                    4.38 kB │ gzip:  1.53 kB
+dist/assets/AccountPublisherPanel-CiOWOwIw.js        4.70 kB │ gzip:  2.49 kB
+dist/assets/ProjectMatrixTab-K6BBKbZg.js             4.87 kB │ gzip:  2.28 kB
+dist/assets/StageTuningPanel-2vewQZyO.js             4.93 kB │ gzip:  2.65 kB
+dist/assets/Review-B0UNaNg2.js                       4.98 kB │ gzip:  2.01 kB
+dist/assets/GraphicRenderPanel-BDsv-NdO.js           5.12 kB │ gzip:  2.82 kB
+dist/assets/capabilityMemoryTypes-DwB_6TPJ.js        5.24 kB │ gzip:  2.48 kB
+dist/assets/ui-DRN7fOLJ.js                           5.28 kB │ gzip:  1.80 kB
+dist/assets/StageProposalReview-B3MHLbC_.js          5.35 kB │ gzip:  2.77 kB
+dist/assets/ChannelVariantForm-C3FwZ-WY.js           5.68 kB │ gzip:  2.45 kB
+dist/assets/ProjectAssetsTab-BBsAR9xc.js             6.05 kB │ gzip:  2.79 kB
+dist/assets/ChannelVariantModel-BXWar8wO.js          6.30 kB │ gzip:  3.22 kB
+dist/assets/StageHistoryPanel-BP6qJwfE.js            7.10 kB │ gzip:  3.32 kB
+dist/assets/Templates-Cb2Bcr-B.js                    8.00 kB │ gzip:  2.48 kB
+dist/assets/Landing-Disx4oTC.js                      8.07 kB │ gzip:  2.97 kB
+dist/assets/CapabilitySettings-DtpZYFLS.js           8.12 kB │ gzip:  3.78 kB
+dist/assets/Handoff-DI0CNWPJ.js                      8.21 kB │ gzip:  3.44 kB
+dist/assets/Connectors-DKSbTxwI.js                   8.84 kB │ gzip:  3.55 kB
+dist/assets/Topics-Cy5AsHGi.js                       9.05 kB │ gzip:  3.25 kB
+dist/assets/Sources-BUmOPvfu.js                      9.16 kB │ gzip:  3.39 kB
+dist/assets/HomePage-kT9IoSKF.js                     9.40 kB │ gzip:  3.78 kB
+dist/assets/Materials-Dhs-VOBZ.js                    9.70 kB │ gzip:  3.76 kB
+dist/assets/ReviewPublish-P0gyFjgW.js                9.97 kB │ gzip:  3.68 kB
+dist/assets/Assets-Vc_ItibP.js                      11.23 kB │ gzip:  4.18 kB
+dist/assets/ProductionQueuePage-BRbtWb44.js         11.51 kB │ gzip:  4.72 kB
+dist/assets/StageContractControls-BelR45o1.js       11.83 kB │ gzip:  4.68 kB
+dist/assets/FactPacks-CtwUP-DR.js                   12.22 kB │ gzip:  4.05 kB
+dist/assets/GraphicStudioModel-B8gdEOns.js          12.98 kB │ gzip:  3.73 kB
+dist/assets/ModelRegistrationSettings-BsgFAs-w.js   13.07 kB │ gzip:  5.01 kB
+dist/assets/StageLearningPanel-Cd41zIxh.js          13.36 kB │ gzip:  5.96 kB
+dist/assets/ProductionAutomationPanel-B_r9zUva.js   14.68 kB │ gzip:  5.71 kB
+dist/assets/ManualChatGPTImagePanel-BHeMnIhW.js     17.03 kB │ gzip:  7.64 kB
+dist/assets/VideoStudioModel-BbZ6zsP2.js            17.61 kB │ gzip:  4.86 kB
+dist/assets/StageDomainResultPanel-BexzqFeQ.js      18.23 kB │ gzip:  7.69 kB
+dist/assets/TextStudioShell-B34gMuu2.js             18.62 kB │ gzip:  7.18 kB
+dist/assets/ProductSettingsPage-D5ZT3R8t.js         18.78 kB │ gzip:  7.85 kB
+dist/assets/OpportunityPages-DUrPlTN1.js            20.07 kB │ gzip:  7.32 kB
+dist/assets/ChannelVariantsPanel-Ca0BZZhT.js        20.40 kB │ gzip:  7.68 kB
+dist/assets/PersonaCreativeConfig-CvkTQDOo.js       21.52 kB │ gzip:  7.69 kB
+dist/assets/ProjectPages-CMfs36fK.js                22.26 kB │ gzip:  7.83 kB
+dist/assets/GraphicStudioShell-Be4EYeXT.js          23.28 kB │ gzip:  8.37 kB
+dist/assets/ProviderMediaPanel-C1LHQu_q.js          23.33 kB │ gzip:  9.70 kB
+dist/assets/ModelRoutingSettings-CNpdAGLG.js        23.61 kB │ gzip:  8.18 kB
+dist/assets/CreationRecipePanel-BTa3BYwt.js         26.93 kB │ gzip:  9.35 kB
+dist/assets/LearningWorkspace-D0GL340K.js           27.26 kB │ gzip: 10.75 kB
+dist/assets/Settings-CxufT_-L.js                    29.37 kB │ gzip:  9.40 kB
+dist/assets/VideoStudioShell-Bes1o8QM.js            30.59 kB │ gzip:  8.89 kB
+dist/assets/PersistentProjectPage-Bf6MEiZC.js       31.76 kB │ gzip: 10.71 kB
+dist/assets/IdentityWorkspace-CHypaAuu.js           32.09 kB │ gzip: 12.05 kB
+dist/assets/ProjectReviewCenter-rGj9OoQ8.js         34.07 kB │ gzip: 12.72 kB
+dist/assets/SystemAssetsKnowledgePage-CWk8o5rG.js   34.40 kB │ gzip: 11.49 kB
+dist/assets/CapabilityMemoryPanel-CGQ8REYj.js       38.49 kB │ gzip: 13.81 kB
+dist/assets/CreativeExecutionPanel-CRUDDJOA.js      38.97 kB │ gzip: 14.74 kB
+dist/assets/PersistentProductionPage-Xj2Lcjci.js    57.07 kB │ gzip: 19.36 kB
+dist/assets/Workspace-BGDypIiZ.js                  135.59 kB │ gzip: 59.02 kB
+dist/assets/Workflows-B5hv-Ouo.js                  197.46 kB │ gzip: 64.49 kB
+dist/assets/index-CeSCgpwA.js                      216.23 kB │ gzip: 69.73 kB
+dist/assets/index-B-Zp5c-I.js                      306.69 kB │ gzip: 93.03 kB
+✓ built in 2.00s
+
+> ai-content-studio-web@0.1.0 check:bundle
+> node scripts/check-bundle.mjs
+
+src/product/HomePage.tsx: lazy route, no TipTap/XYFlow, 232.29 kB initial JS / 75.31 kB gzip
+src/product/OpportunityPages.tsx: lazy route, no TipTap/XYFlow, 247.32 kB initial JS / 80.15 kB gzip
+src/product/LearningWorkspace.tsx: lazy route, no TipTap/XYFlow, 253.13 kB initial JS / 82.28 kB gzip
+src/product/SystemAssetsKnowledgePage.tsx: lazy route, no TipTap/XYFlow, 261.79 kB initial JS / 84.13 kB gzip
+src/product/ProductSettingsPage.tsx: lazy route, no TipTap/XYFlow, 243.34 kB initial JS / 79.38 kB gzip
+src/product/PersistentProductionPage.tsx: lazy route, no TipTap/XYFlow, 284.26 kB initial JS / 90.89 kB gzip
+src/product/ProductionQueuePage.tsx: lazy route, no TipTap/XYFlow, 234.19 kB initial JS / 76.25 kB gzip
+src/product/CreativeExecutionPanel.tsx: explicit lazy panel, 267.21 kB raw / 86.27 kB gzip
+src/product/ProductionAutomationPanel.tsx: explicit lazy panel, 300.54 kB raw / 96.60 kB gzip
+src/product/CapabilityMemoryPanel.tsx: explicit lazy panel, 271.76 kB raw / 87.82 kB gzip
+Text Studio: lazy TipTap closure 611.01 kB raw / 191.10 kB gzip; Graphic/Video exclude TipTap
+Channel Variants: lazy closure 320.26 kB raw / 104.23 kB gzip; no TipTap/XYFlow
+/projects initial JS: 224.58 kB raw, 72.89 kB gzip across 3 chunks
+FE-F4 baseline single JS: 1095.28 kB raw; reduction 79.5%
+All emitted JS: 1896.62 kB raw, 639.64 kB gzip (not an initial-load gate)
+Project detail, production, TipTap Workspace, and XYFlow Workflows chunks are outside /projects initial graph

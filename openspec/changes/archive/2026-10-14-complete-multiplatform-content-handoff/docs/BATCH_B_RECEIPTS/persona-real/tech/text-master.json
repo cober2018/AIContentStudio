@@ -1,0 +1,103 @@
+{
+  "id": 11,
+  "project_id": 3,
+  "content_unit_id": 7,
+  "revision_no": 1,
+  "modality": "text",
+  "payload_schema": "text.master.v2",
+  "payload": {
+    "title": "为什么创作架构中需要将人设与平台账号解耦",
+    "document": {
+      "schema": "studio.text.document.v1",
+      "blocks": [
+        {
+          "id": "legacy-b2",
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "在设计内容创作的工作流时，一个常见的直觉是将“人设”直接绑定在某个具体的平台账号上。账号拥有发布权限、受众关系和特定的展示界面，看似天然代表了创作者的身份。然而从系统设计的视角来看，这种强耦合会给后续的创作与分发带来不必要的维护负担。",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "id": "legacy-b3",
+          "type": "heading",
+          "content": [
+            {
+              "text": "表达逻辑与分发通道的边界",
+              "marks": []
+            }
+          ],
+          "level": 2
+        },
+        {
+          "id": "legacy-b4",
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "人设本质上是创作的逻辑内核，它定义了表达风格、专业领域、事实边界以及价值取舍。这是一种对“如何思考与组织内容”的高层抽象。相比之下，平台账号仅仅是分发层的基础设施终端，负责处理身份鉴权、网络协议、格式限制与交互接口。",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "id": "legacy-b5",
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "当人设与账号绑定在一起时，表达规则就会不可避免地迁就单一通道的特性。一旦需要跨通道分发，或者底层渠道的接入规则发生变化，创作者就必须在多个端点重复配置身份约束，极易导致不同通道之间的表达一致性出现漂移。",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "id": "legacy-b6",
+          "type": "heading",
+          "content": [
+            {
+              "text": "架构抽象的代价与取舍",
+              "marks": []
+            }
+          ],
+          "level": 2
+        },
+        {
+          "id": "legacy-b7",
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "把人设独立出来，并不意味着没有代价。解耦意味着系统需要额外设计一套映射机制，将统一的人设输出转换为符合各个平台规格的内容，这增加了前期的设计复杂度与转换开销。",
+              "marks": []
+            }
+          ]
+        },
+        {
+          "id": "legacy-b8",
+          "type": "paragraph",
+          "content": [
+            {
+              "text": "但这种取舍换来的是核心资产的便携性。将表达原则收拢在分发通道之外，不仅能保障跨渠道输出时基调的稳定，也让创作本身不再受制于任何单一基础设施的变动，从而保有独立决定表达方式的能力。",
+              "marks": []
+            }
+          ]
+        }
+      ],
+      "citations": []
+    }
+  },
+  "payload_hash": "c950a3e68918868140742fc10d1e165c9e179bf22422656839b0cc5a9aa7725d",
+  "context_hash": "1163772567af88ab917a239de246f41ae238532f6e6ee5ee83cd63f4d68be442",
+  "identity_snapshot_id": 7,
+  "creative_brief_revision_id": 3,
+  "fact_boundary_revision_id": null,
+  "source_kind": "workflow_stage",
+  "origin_workflow_run_id": 7,
+  "origin_project_output_id": 7,
+  "readiness": {
+    "state": "incomplete_context",
+    "reasons": [
+      "evidence_missing"
+    ]
+  }
+}

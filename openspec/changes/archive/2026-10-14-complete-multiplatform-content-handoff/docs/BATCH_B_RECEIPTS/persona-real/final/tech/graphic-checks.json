@@ -1,0 +1,548 @@
+{
+  "checks": [
+    {
+      "id": 103,
+      "check_kind": "master_schema",
+      "input_hash": "7335f13c2401a6c48a9efad65d23032dffb081a1f914a26dab269eaefa23f32f",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 104,
+      "check_kind": "evidence",
+      "input_hash": "d2772ffc8d53b5705f34909ae5a67b230f53c536aaff5feedc2be8cf1236e7ea",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 105,
+      "check_kind": "rights",
+      "input_hash": "34739b304b40e6c23aa44dab5f764de8dacf1e21d7b2ce849119e4f75194d6a2",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 106,
+      "check_kind": "render",
+      "input_hash": "427e2e4d65df934ade2f33af6185063025cd4b3cd3b1ca1a34d21556388f3ee9",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "manual",
+        "attested_by": "admin@studio.local",
+        "render_input_hash": "4198f2c54264279eaa43228f8be8b6e9254f56738c1b2c71dd2f18871eac6038",
+        "outputs": [
+          {
+            "material_revision_id": 23,
+            "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68",
+            "mime_type": "image/png",
+            "canvas_id": "cover",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 24,
+            "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed",
+            "mime_type": "image/png",
+            "canvas_id": "body-1",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 25,
+            "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455",
+            "mime_type": "image/png",
+            "canvas_id": "body-2",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          }
+        ],
+        "reasons": [],
+        "canvas_dimensions_verified": true,
+        "requirement": {
+          "kind": "render",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 107,
+      "check_kind": "graphic_structure",
+      "input_hash": "803054ee03ffab7af4bf8800fb393927d308aaf966cf7ab6b1d0de7af7c3aa83",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "persona_quality": {
+          "ref": "studio.quality.graphic.editorial@1",
+          "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+          "style_preset_ref": "studio.graphic.architecture-diagram@1",
+          "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+          "photo_requirement": "none",
+          "implementation": "graphic.geometry.v1",
+          "report": {
+            "schema": "studio.graphic.geometry-qc.v1",
+            "payload_hash": "eb62c45ceef85a9a7afbf13c823a15adc73bc6be2afd89de630d2a00629e710e",
+            "status": "pass",
+            "issues": [],
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required"
+            },
+            "human_review_required": true
+          }
+        },
+        "coverage": {
+          "geometry": "axis_aligned",
+          "text_fit": "estimated",
+          "bytes": "not_rendered",
+          "contrast": "text_vs_solid_canvas_only",
+          "aesthetic_quality": "human_review_required",
+          "live_bytes_rights": "separate_required_render_rights_checks"
+        },
+        "canvas_count": 3,
+        "visible_layer_count": 9,
+        "requirement": {
+          "kind": "graphic_structure",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "persona_quality": {
+            "ref": "studio.quality.graphic.editorial@1",
+            "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+            "style_preset_ref": "studio.graphic.architecture-diagram@1",
+            "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+            "photo_requirement": "none",
+            "implementation": "graphic.geometry.v1"
+          }
+        }
+      }
+    },
+    {
+      "id": 108,
+      "check_kind": "graphic_fact",
+      "input_hash": "a711109d2384bcdc19d25ea0e4532f4c68c3193d9e6a1c23ae9034be8df8307e",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "exact_claim_refs_only",
+          "model_use_excluded_item_ids": [],
+          "invalid_snapshot_item_ids": [],
+          "fact_count": 2,
+          "text_layer_count": 6
+        },
+        "requirement": {
+          "kind": "graphic_fact",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 2,
+              "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 3,
+              "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 109,
+      "check_kind": "graphic_identity",
+      "input_hash": "fe9d4019ad49ea282b4c406d9bb03d01e21a3e9365966632a0b61d5cadab61bd",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "identity_snapshot_id": 11,
+        "identity_checksum": "0910e01c89dcb9a459b567b176bbb550b8649ad33aa722f6875b3afded5c915a",
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "explicit_phrases_only",
+          "text_layer_count": 6,
+          "visual_semantics": "unavailable"
+        },
+        "requirement": {
+          "kind": "graphic_identity",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": 110,
+      "check_kind": "graphic_platform",
+      "input_hash": "351dc4a196ceab343ac38016b5e23ef9b4ec32989dbd3de3fb2e0061bfc1066b",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "channel": "xiaohongshu",
+        "content_form": "image_note",
+        "profile_version_id": 29,
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "graphic_platform",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "profile": {
+            "id": 29,
+            "version": 3,
+            "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+            "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "source": "profile",
+            "artifact_kind": "image"
+          }
+        }
+      }
+    }
+  ],
+  "current_checks": [
+    {
+      "id": 103,
+      "check_kind": "master_schema",
+      "input_hash": "7335f13c2401a6c48a9efad65d23032dffb081a1f914a26dab269eaefa23f32f",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 104,
+      "check_kind": "evidence",
+      "input_hash": "d2772ffc8d53b5705f34909ae5a67b230f53c536aaff5feedc2be8cf1236e7ea",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 105,
+      "check_kind": "rights",
+      "input_hash": "34739b304b40e6c23aa44dab5f764de8dacf1e21d7b2ce849119e4f75194d6a2",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 106,
+      "check_kind": "render",
+      "input_hash": "427e2e4d65df934ade2f33af6185063025cd4b3cd3b1ca1a34d21556388f3ee9",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "manual",
+        "attested_by": "admin@studio.local",
+        "render_input_hash": "4198f2c54264279eaa43228f8be8b6e9254f56738c1b2c71dd2f18871eac6038",
+        "outputs": [
+          {
+            "material_revision_id": 23,
+            "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68",
+            "mime_type": "image/png",
+            "canvas_id": "cover",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 24,
+            "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed",
+            "mime_type": "image/png",
+            "canvas_id": "body-1",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 25,
+            "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455",
+            "mime_type": "image/png",
+            "canvas_id": "body-2",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          }
+        ],
+        "reasons": [],
+        "canvas_dimensions_verified": true,
+        "requirement": {
+          "kind": "render",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 107,
+      "check_kind": "graphic_structure",
+      "input_hash": "803054ee03ffab7af4bf8800fb393927d308aaf966cf7ab6b1d0de7af7c3aa83",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "persona_quality": {
+          "ref": "studio.quality.graphic.editorial@1",
+          "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+          "style_preset_ref": "studio.graphic.architecture-diagram@1",
+          "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+          "photo_requirement": "none",
+          "implementation": "graphic.geometry.v1",
+          "report": {
+            "schema": "studio.graphic.geometry-qc.v1",
+            "payload_hash": "eb62c45ceef85a9a7afbf13c823a15adc73bc6be2afd89de630d2a00629e710e",
+            "status": "pass",
+            "issues": [],
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required"
+            },
+            "human_review_required": true
+          }
+        },
+        "coverage": {
+          "geometry": "axis_aligned",
+          "text_fit": "estimated",
+          "bytes": "not_rendered",
+          "contrast": "text_vs_solid_canvas_only",
+          "aesthetic_quality": "human_review_required",
+          "live_bytes_rights": "separate_required_render_rights_checks"
+        },
+        "canvas_count": 3,
+        "visible_layer_count": 9,
+        "requirement": {
+          "kind": "graphic_structure",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "persona_quality": {
+            "ref": "studio.quality.graphic.editorial@1",
+            "hash": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+            "style_preset_ref": "studio.graphic.architecture-diagram@1",
+            "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+            "photo_requirement": "none",
+            "implementation": "graphic.geometry.v1"
+          }
+        }
+      }
+    },
+    {
+      "id": 108,
+      "check_kind": "graphic_fact",
+      "input_hash": "a711109d2384bcdc19d25ea0e4532f4c68c3193d9e6a1c23ae9034be8df8307e",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "exact_claim_refs_only",
+          "model_use_excluded_item_ids": [],
+          "invalid_snapshot_item_ids": [],
+          "fact_count": 2,
+          "text_layer_count": 6
+        },
+        "requirement": {
+          "kind": "graphic_fact",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 2,
+              "checksum": "8370d5ebef5491e25633886f4545b78207bcc6372ddebb1f720da9aeb29d010a",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 3,
+              "checksum": "3d06ed9845299e08092ec0eb750d115a2e824af444185beca5d365a5dda0af0f",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 109,
+      "check_kind": "graphic_identity",
+      "input_hash": "fe9d4019ad49ea282b4c406d9bb03d01e21a3e9365966632a0b61d5cadab61bd",
+      "is_current": true,
+      "stored_status": "warning",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "identity_snapshot_id": 11,
+        "identity_checksum": "0910e01c89dcb9a459b567b176bbb550b8649ad33aa722f6875b3afded5c915a",
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "explicit_phrases_only",
+          "text_layer_count": 6,
+          "visual_semantics": "unavailable"
+        },
+        "requirement": {
+          "kind": "graphic_identity",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": 110,
+      "check_kind": "graphic_platform",
+      "input_hash": "351dc4a196ceab343ac38016b5e23ef9b4ec32989dbd3de3fb2e0061bfc1066b",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "channel": "xiaohongshu",
+        "content_form": "image_note",
+        "profile_version_id": 29,
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "graphic_platform",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "profile": {
+            "id": 29,
+            "version": 3,
+            "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+            "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "source": "profile",
+            "artifact_kind": "image"
+          }
+        }
+      }
+    }
+  ]
+}

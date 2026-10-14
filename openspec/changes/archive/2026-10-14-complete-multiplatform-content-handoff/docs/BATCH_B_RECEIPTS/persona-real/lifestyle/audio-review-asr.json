@@ -1,0 +1,220 @@
+{
+  "reviewer": "Codex delegated AI quality reviewer",
+  "authorization": "2026-10-14 user explicitly delegated quality review",
+  "scope": "offline full-recording quality inspection only; no material permission or product ASR adoption change",
+  "source_sha256": "4d8db4fbf1246c5f7555c88eaebbc382cf5587f6c466ecbd44b71e415d1012d9",
+  "asr": {
+    "status": "succeeded",
+    "transcript": "我們不妨設想這樣一個尋常的傍晚\n在晚飯剛端上桌\n熱氣還沒散去前的十分鐘裡\n特意把手機留在隔壁房間的櫃子上\n屋子裡大概會突然多出一段\n略顯空白的安靜\n在這段假想的時間裡\n人可能會有好幾次\n下意識地伸手去摸口袋\n看見熱湯表面泛起的油花\n或者窗外正慢慢沉下去的木色\n腦子裡總會自然而然地冒出一個念頭\n要是順手拍下來就好了\n這種隨時想要記錄的衝動\n其實往往並不帶著什麼明確的目的\n它更像是一種對時間流逝的本能挽留\n生活裡的很多細節太容易過去了\n而握著手機的時候\n輕輕按一下快門\n就像是給某個平淡的片刻\n貼上了一枚小小的書籤\n讓人覺得時間的流淌有了痕跡\n要是任由手機繼續放在遠處\n不去拿它\n剛開始的幾分鐘\n可能確實會有一種懸空的不適感\n就像日常儀式裡漏掉了一道步驟\n但只要注意力從尋找趨近角度這件事上慢慢抽離出來\n感官就會重新被周圍那些細微的事物填滿\n飯菜的熱氣在燈光底下慢慢升騰\n筷子碰到碗沿\n發出輕微的翠響\n廚房裡還有水滴落的聲音\n沒有了取景框的過濾\n飯菜的香氣和溫度是直接迎面而來的\n記錄是記錄者的自由\n而偶爾把目光完完全全留給眼前熱騰騰的飯菜\n也是一種很舒適的日常選擇",
+    "cues": [
+      {
+        "text": "我們不妨設想這樣一個尋常的傍晚",
+        "start_ms": 0,
+        "end_ms": 2300
+      },
+      {
+        "text": "在晚飯剛端上桌",
+        "start_ms": 2300,
+        "end_ms": 3840
+      },
+      {
+        "text": "熱氣還沒散去前的十分鐘裡",
+        "start_ms": 3840,
+        "end_ms": 5760
+      },
+      {
+        "text": "特意把手機留在隔壁房間的櫃子上",
+        "start_ms": 5760,
+        "end_ms": 8100
+      },
+      {
+        "text": "屋子裡大概會突然多出一段",
+        "start_ms": 8100,
+        "end_ms": 9940
+      },
+      {
+        "text": "略顯空白的安靜",
+        "start_ms": 9940,
+        "end_ms": 11260
+      },
+      {
+        "text": "在這段假想的時間裡",
+        "start_ms": 11260,
+        "end_ms": 13040
+      },
+      {
+        "text": "人可能會有好幾次",
+        "start_ms": 13040,
+        "end_ms": 14640
+      },
+      {
+        "text": "下意識地伸手去摸口袋",
+        "start_ms": 14640,
+        "end_ms": 16540
+      },
+      {
+        "text": "看見熱湯表面泛起的油花",
+        "start_ms": 16540,
+        "end_ms": 18800
+      },
+      {
+        "text": "或者窗外正慢慢沉下去的木色",
+        "start_ms": 18800,
+        "end_ms": 21100
+      },
+      {
+        "text": "腦子裡總會自然而然地冒出一個念頭",
+        "start_ms": 21100,
+        "end_ms": 24040
+      },
+      {
+        "text": "要是順手拍下來就好了",
+        "start_ms": 24040,
+        "end_ms": 26060
+      },
+      {
+        "text": "這種隨時想要記錄的衝動",
+        "start_ms": 26060,
+        "end_ms": 28040
+      },
+      {
+        "text": "其實往往並不帶著什麼明確的目的",
+        "start_ms": 28080,
+        "end_ms": 30800
+      },
+      {
+        "text": "它更像是一種對時間流逝的本能挽留",
+        "start_ms": 30800,
+        "end_ms": 34080
+      },
+      {
+        "text": "生活裡的很多細節太容易過去了",
+        "start_ms": 34080,
+        "end_ms": 37480
+      },
+      {
+        "text": "而握著手機的時候",
+        "start_ms": 37480,
+        "end_ms": 39040
+      },
+      {
+        "text": "輕輕按一下快門",
+        "start_ms": 39040,
+        "end_ms": 40980
+      },
+      {
+        "text": "就像是給某個平淡的片刻",
+        "start_ms": 40980,
+        "end_ms": 42980
+      },
+      {
+        "text": "貼上了一枚小小的書籤",
+        "start_ms": 42980,
+        "end_ms": 45240
+      },
+      {
+        "text": "讓人覺得時間的流淌有了痕跡",
+        "start_ms": 45240,
+        "end_ms": 47940
+      },
+      {
+        "text": "要是任由手機繼續放在遠處",
+        "start_ms": 47940,
+        "end_ms": 50340
+      },
+      {
+        "text": "不去拿它",
+        "start_ms": 50340,
+        "end_ms": 51300
+      },
+      {
+        "text": "剛開始的幾分鐘",
+        "start_ms": 51300,
+        "end_ms": 52680
+      },
+      {
+        "text": "可能確實會有一種懸空的不適感",
+        "start_ms": 52680,
+        "end_ms": 55040
+      },
+      {
+        "text": "就像日常儀式裡漏掉了一道步驟",
+        "start_ms": 55040,
+        "end_ms": 57880
+      },
+      {
+        "text": "但只要注意力從尋找趨近角度這件事上慢慢抽離出來",
+        "start_ms": 57920,
+        "end_ms": 61680
+      },
+      {
+        "text": "感官就會重新被周圍那些細微的事物填滿",
+        "start_ms": 61680,
+        "end_ms": 64680
+      },
+      {
+        "text": "飯菜的熱氣在燈光底下慢慢升騰",
+        "start_ms": 64680,
+        "end_ms": 67180
+      },
+      {
+        "text": "筷子碰到碗沿",
+        "start_ms": 67180,
+        "end_ms": 68380
+      },
+      {
+        "text": "發出輕微的翠響",
+        "start_ms": 68380,
+        "end_ms": 69680
+      },
+      {
+        "text": "廚房裡還有水滴落的聲音",
+        "start_ms": 69680,
+        "end_ms": 71520
+      },
+      {
+        "text": "沒有了取景框的過濾",
+        "start_ms": 71520,
+        "end_ms": 73080
+      },
+      {
+        "text": "飯菜的香氣和溫度是直接迎面而來的",
+        "start_ms": 73080,
+        "end_ms": 75980
+      },
+      {
+        "text": "記錄是記錄者的自由",
+        "start_ms": 75980,
+        "end_ms": 78640
+      },
+      {
+        "text": "而偶爾把目光完完全全留給眼前熱騰騰的飯菜",
+        "start_ms": 78640,
+        "end_ms": 82380
+      },
+      {
+        "text": "也是一種很舒適的日常選擇",
+        "start_ms": 82380,
+        "end_ms": 84620
+      }
+    ],
+    "source_duration_ms": 84684
+  },
+  "expected_spoken": "我们不妨设想这样一个寻常的傍晚。在晚饭刚端上桌、热气还没散去前的十分钟里，特意把手机留在隔壁房间的柜子上，屋子里大概会突然多出一段略显空白的安静。\n\n在这段假想的时间里，人可能会有好几次，下意识地伸手去摸口袋。看见热汤表面泛起的油花，或者窗外正慢慢沉下去的暮色，脑子里总会自然而然地冒出一个念头：要是顺手拍下来就好了。\n\n这种随时想要记录的冲动，其实往往并不带着什么明确的目的。它更像是一种对时间流逝的本能挽留。生活里的很多细节太容易过去了，而握着手机的时候，轻轻按一下快门，就像是给某个平淡的片刻贴上了一枚小小的书签，让人觉得时间的流淌有了痕迹。\n\n要是任由手机继续放在远处，不去拿它，刚开始的几分钟，可能确实会有一种悬空的不适感，就像日常仪式里漏掉了一道步骤。但只要注意力从寻找取景角度这件事上慢慢抽离出来，感官就会重新被周围那些细微的事物填满。\n\n饭菜的热气在灯光底下慢慢升腾，筷子碰到碗沿发出轻微的脆响，厨房里还有水滴落的声音。没有了取景框的过滤，饭菜的香气和温度是直接迎面而来的。记录是记录者的自由；而偶尔把目光完完全全留给眼前热腾腾的饭菜，也是一种很舒适的日常选择。",
+  "expected_normalized_chars": 446,
+  "asr_normalized_chars": 446,
+  "alignment_ratio": 0.6838565022421524,
+  "loudness_summary": "Integrated loudness:\n    I:         -23.7 LUFS\n    Threshold: -34.2 LUFS\n\n  Loudness range:\n    LRA:         3.5 LU\n    Threshold: -44.3 LUFS\n    LRA low:   -26.2 LUFS\n    LRA high:  -22.6 LUFS\n\n  True peak:\n    Peak:       -6.4 dBFS\n[out#0/null @ 0x7f7038180] video:0KiB audio:5293KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown\nsize=N/A time=00:01:24.68 bitrate=N/A speed= 635x elapsed=0:00:00.13",
+  "silence_events": [
+    "silence_start: 23.474125",
+    "silence_end: 24.208687 | silence_duration: 0.734563",
+    "silence_start: 25.689875",
+    "silence_end: 26.207781 | silence_duration: 0.517906",
+    "silence_start: 30.063562",
+    "silence_end: 30.943969 | silence_duration: 0.880406",
+    "silence_start: 78.215812",
+    "silence_end: 78.760625 | silence_duration: 0.544813",
+    "silence_start: 81.910594",
+    "silence_end: 82.474781 | silence_duration: 0.564188"
+  ]
+}

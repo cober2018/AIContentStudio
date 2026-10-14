@@ -1,0 +1,14 @@
+{
+  "channel": "baijia",
+  "form": "article",
+  "payload_hash": "6c5dd8855f67ab340fdc352a60b1d30fb2ae823d16b3c93d5d792603141ab3fa",
+  "candidate_hash": "3772f26f11de7848fda2faae2886cc6d2be57c0d7737dde1f64025197fca387f",
+  "export_hash": "e3db790bf33a1613f16f5c8fea27e628b069c27279e37908b067cfb86f14fe7e",
+  "zip_hash": "ef376b737597feb4c1798a806d4a3e285820e9bcaa7e1b6029301bd8014c42e6",
+  "media": [],
+  "schema": "baijia.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

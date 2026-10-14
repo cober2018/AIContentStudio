@@ -1,0 +1,14 @@
+{
+  "channel": "bilibili",
+  "form": "article",
+  "payload_hash": "6c5dd8855f67ab340fdc352a60b1d30fb2ae823d16b3c93d5d792603141ab3fa",
+  "candidate_hash": "37eefd94430c9c83ac67458738a6028f657190b4d540ad0b8a12d158a9950a01",
+  "export_hash": "32f9a8ece1467430c2b7f4be7a2990750a3d7e77954c0b4e6ffbc1d6a9e88908",
+  "zip_hash": "4202de6ca9ed2aeb99ea9172e44901289dd82e1f2f2aff03a9b9058a22dab104",
+  "media": [],
+  "schema": "bilibili.article.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

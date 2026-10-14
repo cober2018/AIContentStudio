@@ -1,0 +1,31 @@
+{
+  "observed_failures": [
+    {
+      "source_master_id": 11,
+      "source_payload_hash": "6ff90e3c931018ed973ea57964ae968fe6c988b54e08ac7085e048a6fe8e93de",
+      "target_account_id": 3,
+      "channel": "wechat",
+      "content_form": "article",
+      "status": 422,
+      "detail": {
+        "code": "variant_adaptation_unavailable",
+        "reason": "source_structure_requires_explicit_mapping"
+      },
+      "resolution": "explicit source formatting revision; conservative subset unchanged"
+    },
+    {
+      "source_master_id": 11,
+      "source_payload_hash": "6ff90e3c931018ed973ea57964ae968fe6c988b54e08ac7085e048a6fe8e93de",
+      "target_account_id": 4,
+      "channel": "zhihu",
+      "content_form": "article",
+      "status": 422,
+      "detail": {
+        "code": "variant_adaptation_unavailable",
+        "reason": "source_structure_requires_explicit_mapping"
+      },
+      "resolution": "explicit source formatting revision; conservative subset unchanged"
+    }
+  ],
+  "resolution": "explicit source formatting revision preserving all text and media; no subset or gate relaxation"
+}

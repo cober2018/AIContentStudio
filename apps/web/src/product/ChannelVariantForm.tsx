@@ -1,102 +1,59 @@
-import { ErrorBanner, inputClass } from "../components/ui";
+import { useState } from "react";
+import { Button, ErrorBanner, inputClass } from "../components/ui";
+import type { ChannelFormDescriptor, ChannelFormField } from "../api";
+import { changeList, descriptorHasExactMedia, descriptorIssue, fieldName, fieldsForObject, isObject, normalizeText, newListItem, pathLabel, setAtPath, type FieldPath, type Payload } from "./ChannelVariantModel";
 
-type Payload = Record<string, unknown>;
-type TextField = { key: string; label: string; limit: number; required?: boolean; collection?: string; index?: number; locationId?: string; locked?: boolean };
-const normalize = (text: string) => text.replace(/\r\n?/g, "\n").normalize("NFC");
-
-function fieldsFor(schema: string, payload: Payload): TextField[] {
-  const fields: TextField[] = [];
-  function rows(collection: string, build: (row: Payload, index: number) => TextField[]) {
-    for (const [index, row] of (payload[collection] as Payload[]).entries()) {
-      fields.push(...build(row, index).map(field => ({ ...field, collection, index })));
-    }
-  }
-  if (schema === "wechat.article.v1") {
-    fields.push({ key: "title", label: "公众号标题", limit: 200, required: true });
-    rows("blocks", row => [
-      { key: "text", label: `${row.kind === "image" ? "图片图注" : "公众号正文"} · ${row.id}`, limit: row.kind === "image" ? 2000 : 10000, required: row.kind !== "image", locationId: String(row.id), locked: "html_template" in payload },
-      ...(row.kind === "image" ? [{ key: "alt_text", label: `图片替代文字 · ${row.id}`, limit: 2000, locked: "html_template" in payload }] : []),
-    ]);
-    if ("html_template" in payload) fields.push(
-      { key: "digest", label: "公众号摘要", limit: 120 },
-      { key: "author", label: "公众号署名", limit: 16 },
-    );
-  } else if (schema === "x.thread.v1") {
-    rows("posts", row => [{ key: "text", label: `X 推串正文 · ${row.id}`, limit: 280, required: true, locationId: String(row.id) }]);
-  } else if (schema === "x.single.v1") {
-    fields.push({ key: "text", label: "X 单条正文", limit: 280, required: true, locationId: "single" });
-  } else if (schema === "xiaohongshu.image_note.v1") {
-    fields.push({ key: "title", label: "小红书标题", limit: 200, required: true });
-    rows("cards", row => [{ key: "caption", label: `小红书图文文案 · ${row.id}`, limit: 500, locationId: String(row.id) }]);
-  } else if (schema === "douyin.spoken_script.v1") {
-    rows("scenes", row => [
-      { key: "script", label: `口播脚本 · ${row.id}`, limit: 10000, required: true, locationId: String(row.id) },
-      { key: "voice_text", label: `配音文字 · ${row.id}`, limit: 10000, required: true },
-    ]);
-    if ("estimated_srt" in payload) fields.push({ key: "text", label: "估算字幕 SRT", limit: 20000, collection: "estimated_srt" });
-  }
-  return fields;
+export function variantBodyIssue(schema: string, payload: Payload, descriptor?: ChannelFormDescriptor | null, original?: Payload): string {
+  if (descriptor?.schema_id !== schema) return "服务端字段描述与正文版本不一致，正文只读，不能保存。";
+  return descriptorIssue(descriptor, payload, original);
 }
 
-function fieldValue(payload: Payload, field: TextField): string {
-  if (!field.collection) return payload[field.key] as string;
-  const container = field.index === undefined ? payload[field.collection] as Payload : (payload[field.collection] as Payload[])[field.index];
-  return container[field.key] as string;
-}
-
-export function variantBodyIssue(schema: string, payload: Payload): string {
-  const fields = fieldsFor(schema, payload);
-  if (!fields.length) return "此正文版本暂不支持编辑。";
-  const locations = new Map<string, string>();
-  for (const field of fields) {
-    const raw = fieldValue(payload, field);
-    if (typeof raw !== "string") return `${field.label}须为文字。`;
-    const text = normalize(raw);
-    const characters = Array.from(text);
-    if (characters.length > field.limit || field.required && !text.trim()) return `${field.label}${field.required ? "须填写，" : ""}最多 ${field.limit} 字。`;
-    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text) || characters.some(character => {
-      const point = character.codePointAt(0)!;
-      return point >= 0xd800 && point <= 0xdfff;
-    })) return `${field.label}含无效字符，请修改后保存。`;
-    if (field.locationId) locations.set(field.locationId, text);
-  }
-  for (const citation of (payload.citations || []) as Payload[]) {
-    const locator = citation.locator as { start: number; end: number };
-    const text = locations.get(citation.location_id as string);
-    if (text === undefined || locator.end > Array.from(text).length) return `引用 ${citation.id} 的文字范围已超出正文；请恢复足够长度的正文，引用位置不会自动改变。`;
-  }
-  if (new TextEncoder().encode(JSON.stringify(payload)).length > 2_000_000) return "正文总大小不能超过 2 MB。";
-  return "";
-}
-
-export default function ChannelVariantForm({ schema, value, readOnly, onChange }: {
-  schema: string; value: Payload; readOnly: boolean; onChange: (value: Payload) => void;
+export default function ChannelVariantForm({ schema, descriptor, value, original, readOnly, onChange }: {
+  schema: string; descriptor?: ChannelFormDescriptor | null; value: Payload; original?: Payload; readOnly: boolean; onChange: (value: Payload) => void;
 }) {
-  const fields = fieldsFor(schema, value);
-  const issue = variantBodyIssue(schema, value);
-  function update(field: TextField, text: string) {
-    if (readOnly || field.locked) return;
-    if (!field.collection) onChange({ ...value, [field.key]: text });
-    else if (field.index === undefined) onChange({ ...value, [field.collection]: { ...value[field.collection] as Payload, [field.key]: text } });
-    else onChange({ ...value, [field.collection]: (value[field.collection] as Payload[]).map((row, index) => index === field.index ? { ...row, [field.key]: text } : row) });
+  const [operationIssue, setOperationIssue] = useState("");
+  const compatible = descriptor?.schema_id === schema && descriptor.descriptor_version === 1;
+  const issue = variantBodyIssue(schema, value, descriptor, original);
+  const locked = readOnly || !compatible;
+  function update(path: FieldPath, next: unknown) {
+    if (locked) return;
+    setOperationIssue(""); onChange(setAtPath(value, path, next));
   }
-  return <section aria-label="Variant 正文编辑" className="space-y-3 rounded-lg border border-slate-200 p-4">
-    <h3 className="font-medium">渠道正文</h3>
-    <p className="text-xs text-slate-500">编辑文字后明确保存为新修订；段落、卡片和镜头的 ID、顺序、素材槽、引用与声明随修订保留。</p>
-    {"html_template" in value && <p className="text-xs text-amber-700">此文章保留原始 HTML，正文块与模板须一致，因此正文块只读；标题、摘要和署名仍可编辑。</p>}
-    {issue && <ErrorBanner message={issue} />}
-    {fields.map(field => {
-      const text = fieldValue(value, field);
-      const row = field.collection && field.index !== undefined ? (value[field.collection] as Payload[])[field.index] : null;
-      return <label key={`${field.collection || "root"}.${field.index ?? ""}.${field.key}`} className="block text-sm">
-        {field.label}<span className="ml-2 text-xs text-slate-500">{Array.from(normalize(text)).length}/{field.limit} 字{field.required ? " · 必填" : ""}</span>
-        <textarea aria-label={field.label} className={`${inputClass} mt-1 min-h-24`} value={text} readOnly={readOnly || field.locked} onChange={event => update(field, event.target.value)} />
-        {row && <span className="mt-1 block text-xs text-slate-500">顺序 {String(row.order) + " · ID " + String(row.id)}{row.image_ref_key ? ` · 图片槽 ${row.image_ref_key}` : ""}{Array.isArray(row.b_roll_ref_keys) ? ` · B-roll ${(row.b_roll_ref_keys as string[]).join("、") || "无"}` : ""}</span>}
-      </label>;
-    })}
-    <details className="text-xs text-slate-600"><summary className="cursor-pointer">保留的引用与声明（只读）</summary>
-      {((value.citations || []) as Payload[]).map(citation => <p key={String(citation.id)} className="mt-2">引用 {String(citation.id)} · {String(citation.location_id)} · FactPackItem #{String(citation.fact_pack_item_id)} · 范围 {JSON.stringify(citation.locator)}</p>)}
-      {((value.declarations || []) as Payload[]).map(declaration => <p key={String(declaration.id)} className="mt-2 whitespace-pre-wrap">{String(declaration.kind)} · {String(declaration.text)}</p>)}
-    </details>
-  </section>;
+  function editList(field: ChannelFormField, path: FieldPath, action: "add" | "remove" | "move", index?: number, destination?: number, kind?: string) {
+    if (locked) return;
+    try { const next = changeList(value, path, field, action, index, destination, kind); setOperationIssue(""); onChange(next); }
+    catch (cause) { setOperationIssue(`${pathLabel(path)}：${cause instanceof Error ? cause.message : "列表不能安全修改。"}`); }
+  }
+  function objectFields(fields: ChannelFormField[], object: Payload, path: FieldPath, inheritedReadOnly: boolean) {
+    const known = new Set(fields.map(fieldName));
+    return <>{fields.map(field => renderField(field, object[fieldName(field)], [...path, fieldName(field)], inheritedReadOnly))}{Object.keys(object).filter(key => !known.has(key)).map(key => <div key={key} className="rounded border border-amber-300 p-2 text-xs"><p>{pathLabel([...path, key])} · 未知字段（只读，不能保存）</p><pre className="overflow-auto whitespace-pre-wrap">{JSON.stringify(object[key], null, 2)}</pre></div>)}</>;
+  }
+  function renderField(field: ChannelFormField, item: unknown, path: FieldPath, inheritedReadOnly: boolean): JSX.Element {
+    const key = pathLabel(path), label = field.label || fieldName(field);
+    const fieldLocked = locked || inheritedReadOnly || !!field.readonly || field.type === "media_ref" || path[0] === "citations" || path[0] === "blocks" && typeof value.html_template === "string";
+    const fullLabel = `${label} · ${key}`;
+    if (field.type === "object") {
+      if (item === undefined && !field.required) return <div key={key} className="text-sm">{fullLabel} · 未启用{!fieldLocked && <Button className="ml-2" size="sm" variant="secondary" onClick={() => update(path, newListItem({ path: field.path, type: "list", item: field }))}>启用{label}</Button>}</div>;
+      if (item !== undefined && !isObject(item)) return <div key={key} className="rounded border p-2 text-xs">{fullLabel} · 结构异常（只读）<pre>{JSON.stringify(item)}</pre></div>;
+      const object = isObject(item) ? item : {};
+      const fields = fieldsForObject(field, object);
+      return <fieldset key={key} className="space-y-3 rounded-lg border border-slate-200 p-3"><legend className="px-1 text-sm">{label} · {key}</legend>{objectFields(fields, object, path, fieldLocked)}</fieldset>;
+    }
+    if (field.type === "list") {
+      if (!field.item || item !== undefined && !Array.isArray(item)) return <div key={key} className="text-xs">{fullLabel} · 列表结构不支持编辑<pre>{JSON.stringify(item)}</pre></div>;
+      const rows = Array.isArray(item) ? item : [];
+      const kinds = (field.item.variants ? Object.keys(field.item.variants) : [undefined]).filter(kind => !descriptorHasExactMedia(field, kind));
+      return <fieldset key={key} className="space-y-3 rounded-lg border border-slate-200 p-3"><legend className="px-1 text-sm">{label} · {key}（{rows.length}{field.max_items ? `/${field.max_items}` : ""}）</legend>{rows.map((row, index) => <div key={isObject(row) && typeof row.id === "string" ? row.id : index} className="space-y-2 border-b border-slate-100 pb-3">
+        {renderField(field.item!, row, [...path, index], fieldLocked)}
+        {!fieldLocked && <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" disabled={rows.length <= (field.min_items ?? 0)} onClick={() => editList(field, path, "remove", index)}>删除条目 {index + 1}</Button>{field.ordered && <><Button size="sm" variant="secondary" disabled={index === 0} onClick={() => editList(field, path, "move", index, index - 1)}>上移条目 {index + 1}</Button><Button size="sm" variant="secondary" disabled={index === rows.length - 1} onClick={() => editList(field, path, "move", index, index + 1)}>下移条目 {index + 1}</Button></>}</div>}
+      </div>)}{!fieldLocked && <div className="flex flex-wrap gap-2">{kinds.map(kind => <Button key={kind || "item"} size="sm" variant="secondary" disabled={rows.length >= (field.max_items ?? Infinity)} onClick={() => editList(field, path, "add", undefined, undefined, kind)}>新增{kind ? ` ${kind}` : "条目"}</Button>)}</div>}{path[0] === "citations" && <p className="text-xs text-slate-500">引用与精确事实链接只读；文字修改不自动迁移引用。</p>}</fieldset>;
+    }
+    if (!["string", "integer", "boolean", "media_ref"].includes(field.type)) return <div key={key} className="rounded border border-amber-300 p-2 text-xs">{fullLabel} · 不支持的字段（只读）<pre>{JSON.stringify(item, null, 2)}</pre></div>;
+    if (field.type === "boolean") return <label key={key} className="flex items-center gap-2 text-sm"><input aria-label={fullLabel} type="checkbox" checked={item === true} disabled={fieldLocked} onChange={event => update(path, event.target.checked)} />{fullLabel}{field.required ? " · 必填" : ""}</label>;
+    if (field.enum) return <label key={key} className="block text-sm">{fullLabel}<select aria-label={fullLabel} className={`${inputClass} mt-1`} value={item === undefined ? "" : String(item)} disabled={fieldLocked || field.enum.length === 1} onChange={event => update(path, field.type === "integer" ? Number(event.target.value) : event.target.value)}>{item === undefined && <option value="">请选择</option>}{field.enum.map(option => <option key={String(option)} value={String(option)}>{String(option)}</option>)}</select></label>;
+    if (field.type === "integer") return <label key={key} className="block text-sm">{fullLabel}<input aria-label={fullLabel} className={`${inputClass} mt-1`} type="number" step="1" min={field.minimum} max={field.maximum} value={typeof item === "number" ? item : ""} readOnly={fieldLocked} onChange={event => update(path, event.target.value === "" ? undefined : Number(event.target.value))} /></label>;
+    const text = typeof item === "string" ? item : "";
+    return <label key={key} className="block text-sm">{fullLabel}<span className="ml-2 text-xs text-slate-500">{Array.from(normalizeText(text)).length}{field.max_length ? `/${field.max_length}` : ""} 字{field.required ? " · 必填" : ""}{fieldLocked ? " · 只读" : ""}</span><textarea aria-label={fullLabel} className={`${inputClass} mt-1 ${fieldLocked || field.type === "media_ref" ? "min-h-12" : "min-h-24"}`} value={text} readOnly={fieldLocked} onChange={event => update(path, event.target.value)} />{field.type === "media_ref" && <span className="mt-1 block text-xs text-slate-500">精确素材槽保持原样；素材版本与权利由服务端校验。</span>}</label>;
+  }
+  return <section aria-label="Variant 正文编辑" className="space-y-3 rounded-lg border border-slate-200 p-4"><h3 className="font-medium">渠道正文</h3><p className="text-xs text-slate-500">服务端字段描述：{schema} · v{descriptor?.descriptor_version ?? "未知"}。保存追加新修订；稳定 ID、精确素材和事实链接保留。</p>{typeof value.html_template === "string" && <p className="text-xs text-amber-700">公众号原版 HTML 与正文块须一致，因此正文块只读；标题、摘要和署名可编辑。</p>}{(operationIssue || issue) && <ErrorBanner message={operationIssue || issue} />}{compatible ? objectFields(descriptor.fields, value, [], false) : <pre className="max-h-96 overflow-auto whitespace-pre-wrap text-xs">{JSON.stringify(value, null, 2)}</pre>}</section>;
 }

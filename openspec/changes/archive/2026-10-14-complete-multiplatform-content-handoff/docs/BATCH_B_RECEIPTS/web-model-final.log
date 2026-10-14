@@ -1,0 +1,16 @@
+✔ nested typed editing preserves IDs, order and exact citations (1.075209ms)
+✔ unknown payload or descriptor fields block save without dropping data (0.477166ms)
+✔ nested validation reports the exact path and counts Unicode code points (0.211958ms)
+✔ safe list edits retain stable identity; deleting cited or media rows is blocked (0.880625ms)
+✔ new nested list items use descriptor defaults and new stable IDs (2.076458ms)
+✔ optional omitted lists can be explicitly started without mutating the original payload (0.074084ms)
+✔ cited text changes block save while edits outside the citation retain the exact link (0.128833ms)
+✔ exact media lists reject additions before creating dangling empty slots (0.0785ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 97.624042

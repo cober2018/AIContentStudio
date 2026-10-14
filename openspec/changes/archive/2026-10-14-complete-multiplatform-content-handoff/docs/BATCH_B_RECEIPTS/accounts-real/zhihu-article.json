@@ -1,0 +1,227 @@
+{
+  "status": "LOCAL_REAL_CONTENT_ACCOUNT_CHAIN_PASSED",
+  "name": "zhihu-article",
+  "channel": "zhihu",
+  "content_form": "article",
+  "persona_id": 2,
+  "series_id": 1,
+  "series_revision_id": 1,
+  "project_id": 3,
+  "unit_id": 7,
+  "source_account_id": null,
+  "original_master_id": 6,
+  "source_master_id": 12,
+  "source_master_payload_hash": "13b22c7a438ae2f7935abf7c174a069af4f52886a67cab71ed7a9406c1921d1c",
+  "source_master_context_hash": "0299c9322a19bd559ec303d22a614405e58ea5861d2e434a2330ca6a540179e0",
+  "source_identity_snapshot_id": 7,
+  "original_reaccepted_master_id": 11,
+  "source_reacceptance_payload_unchanged": true,
+  "source_form_normalization": {
+    "original_reaccepted_master_id": 11,
+    "normalized_master_id": 12,
+    "original_payload_hash": "6ff90e3c931018ed973ea57964ae968fe6c988b54e08ac7085e048a6fe8e93de",
+    "normalized_payload_hash": "13b22c7a438ae2f7935abf7c174a069af4f52886a67cab71ed7a9406c1921d1c",
+    "only_presentation_mapping": true,
+    "transformation": "heading->paragraph; ordered_list->newline text; inline marks->plain runs; source cover ref->explicit slot; all image blocks unchanged",
+    "all_text_values_and_media_ids_preserved": true,
+    "original_revision_retained": true
+  },
+  "account_kind": "isolated_manual_sample_bound_unverified",
+  "account": {
+    "id": 4,
+    "name": "隔离手工验收样本｜zhihu-article",
+    "platform_channel": "zhihu",
+    "platform_account_id": "isolated-zhihu-7002",
+    "platform_binding_state": "bound_unverified"
+  },
+  "account_revision_id": 2,
+  "series_target_binding": {
+    "id": 2,
+    "series_id": 1,
+    "account_id": 4,
+    "account_name": "隔离手工验收样本｜zhihu-article",
+    "platform_channel": "zhihu",
+    "content_form": "article",
+    "enabled": true,
+    "version": 1
+  },
+  "target_context_hash": "40e156da5594ef2a12c58fe14087eecb19455f28446532b0a65acd3b2addfae8",
+  "target_account_context": {
+    "content_account_id": 4,
+    "platform_channel": "zhihu",
+    "platform_account_id": "isolated-zhihu-7002",
+    "account_revision_id": 2,
+    "account_profile_checksum": "33a9d63410897586576c16a312e574d51932da5dd2627c21e1c2d1cc4f58a22a",
+    "profile": {
+      "expression_style": {
+        "tone": "完整逻辑和明确方法边界"
+      },
+      "content_boundaries": [
+        "隔离验收登记，不代表真实远端账号、认证或发布资格"
+      ]
+    },
+    "series_binding": {
+      "id": 2,
+      "version": 1
+    }
+  },
+  "variant_id": 3,
+  "variant_key": "real-accounts.zhihu-article",
+  "variant_payload_hash": "f3e79b813e54d31b05a1e5ead287fbedf058c647278e10ba3e791375096e52f9",
+  "variant_schema": "zhihu.article.v1",
+  "checks": {
+    "ready": true,
+    "items": [
+      {
+        "id": 12,
+        "kind": "variant_schema",
+        "status": "pass"
+      },
+      {
+        "id": 14,
+        "kind": "variant_evidence",
+        "status": "pass"
+      },
+      {
+        "id": 15,
+        "kind": "variant_rights",
+        "status": "pass"
+      },
+      {
+        "id": 13,
+        "kind": "variant_profile",
+        "status": "pass"
+      },
+      {
+        "id": 16,
+        "kind": "variant_package",
+        "status": "pass"
+      }
+    ]
+  },
+  "candidate_id": 4,
+  "candidate_hash": "c9b439a9656d6f45907485eed9cda052c5570b465cb3b107a305cf9b80ca6e07",
+  "candidate_target_account": {
+    "account_profile_checksum": "33a9d63410897586576c16a312e574d51932da5dd2627c21e1c2d1cc4f58a22a",
+    "account_revision_id": 2,
+    "content_account_id": 4,
+    "platform_account_id": "isolated-zhihu-7002",
+    "platform_channel": "zhihu",
+    "profile": {
+      "content_boundaries": [
+        "隔离验收登记，不代表真实远端账号、认证或发布资格"
+      ],
+      "expression_style": {
+        "tone": "完整逻辑和明确方法边界"
+      }
+    },
+    "series_binding": {
+      "id": 2,
+      "version": 1
+    }
+  },
+  "review_id": 4,
+  "review_decision": "approved",
+  "warning_dispositions_recorded": 3,
+  "authorization_id": 4,
+  "authorization_hash": "9fc278e364210b36c65a7970606d228a58ba832d6029793d7c221dd313924675",
+  "authorization_hash_kind": "local_receipt_projection_sha256_not_product_stored_hash",
+  "authorization": {
+    "id": 4,
+    "candidate_id": 4,
+    "content_account_id": 4,
+    "authorization_account_key": "content-account:4",
+    "action": "copy_package",
+    "authorization_version": "accounts-real-v1",
+    "approved_candidate_hash": "c9b439a9656d6f45907485eed9cda052c5570b465cb3b107a305cf9b80ca6e07",
+    "capability_snapshot": {
+      "publisher_key": "publisher.copy",
+      "action": "copy_package",
+      "available": true,
+      "reason": null,
+      "verified": true,
+      "manual": true,
+      "remote_verified": false,
+      "target_account": {
+        "content_account_id": 4,
+        "platform_channel": "zhihu",
+        "platform_account_id": "isolated-zhihu-7002",
+        "account_revision_id": 2,
+        "account_profile_checksum": "33a9d63410897586576c16a312e574d51932da5dd2627c21e1c2d1cc4f58a22a"
+      }
+    }
+  },
+  "swap_account_rejected": {
+    "other_account_id": 3,
+    "status": 409,
+    "code": "candidate_target_account_mismatch"
+  },
+  "export_hash": "7a7e7aaa0444c4b8d60d050e03480b72ae93dca814061c6c63a6dde10213f8b4",
+  "zip_hash": "16bffd731e160bf07fe9c9fc386d60e9aa3b7b00646205fc8e75356bdc6e93e5",
+  "zip_bytes": 711021,
+  "package_members": [
+    "manifest.json",
+    "content.md",
+    "article.json",
+    "content.html",
+    "sources.json",
+    "declarations.json",
+    "publish-guide.md",
+    "media/00-1.jpg",
+    "media/01-2.jpg",
+    "media/02-3.jpg",
+    "media/03-4.jpg"
+  ],
+  "media": [
+    {
+      "name": "media/00-1.jpg",
+      "material_revision_id": 1,
+      "sha256": "cdd3d380db8a89c7df0f9f07b8b42cf14837eb3aa86118a7209ef474fef4ca5d",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    },
+    {
+      "name": "media/01-2.jpg",
+      "material_revision_id": 2,
+      "sha256": "0d68201f8ba1559c8b6ffd94c83a27d35ba5ee23a65c56c2c31746e7c3f6ffa2",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    },
+    {
+      "name": "media/02-3.jpg",
+      "material_revision_id": 3,
+      "sha256": "88bf74ec605a9cacd19e491253f8849b8ce848990d73a1e19712f1f3f7c1513a",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    },
+    {
+      "name": "media/03-4.jpg",
+      "material_revision_id": 4,
+      "sha256": "ac37a361ec809e89d58cf1f2fd8ea29bf9ca8f4332843b7cb5cc8d3be457175a",
+      "rights": {
+        "commercial_use_allowed": false,
+        "model_use_allowed": false,
+        "public_use_allowed": true,
+        "rights_status": "cleared"
+      }
+    }
+  ],
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "network_calls": 0,
+  "remote_account_verification": false,
+  "publication_succeeded": false,
+  "quality_accepted_by_human": false
+}

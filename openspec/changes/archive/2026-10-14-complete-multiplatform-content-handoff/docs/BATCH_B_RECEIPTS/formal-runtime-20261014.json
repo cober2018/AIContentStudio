@@ -1,0 +1,34 @@
+{
+  "missing_series_http": 404,
+  "health": {
+    "status": "ok",
+    "ready": true,
+    "db": true,
+    "schema": true,
+    "auth": true,
+    "storage": true,
+    "queue": true,
+    "worker": true,
+    "secrets": true,
+    "reasons": [],
+    "provider": "openai_compatible",
+    "optional_capabilities": {
+      "llm": {
+        "provider": "openai_compatible",
+        "required": false,
+        "status": "not_probed"
+      }
+    },
+    "queue_enabled": false,
+    "version": "0.1.0"
+  },
+  "schema_head": "a3series00000001",
+  "full_test_pending": false,
+  "backend_result": {
+    "passed": 2626,
+    "skipped": 28,
+    "failed": 1,
+    "exempted_failure": "tests/test_models_plugins.py::test_plugins_put_and_view",
+    "duration_seconds": 122.96
+  }
+}

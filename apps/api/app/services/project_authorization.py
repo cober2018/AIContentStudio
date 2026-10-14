@@ -129,6 +129,12 @@ def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> b
         .join(ContentSeries, ContentSeries.account_id == ContentAccount.id)
         .join(SeriesWorkflowDefault, SeriesWorkflowDefault.series_id == ContentSeries.id)
         .where(SeriesWorkflowDefault.workflow_id == workflow.id)
+    ).all()) | set(db.scalars(
+        # persona_editorial 栏目不经过账号，按 persona 归属解析。
+        select(ContentPersona.owner_user_id)
+        .join(ContentSeries, ContentSeries.persona_id == ContentPersona.id)
+        .join(SeriesWorkflowDefault, SeriesWorkflowDefault.series_id == ContentSeries.id)
+        .where(SeriesWorkflowDefault.workflow_id == workflow.id, ContentSeries.scope == "persona_editorial")
     ).all())
     owners = project_owners | run_owners | persona_owners | account_owners | series_owners
     if workflow.scope in {"project", "persona_default", "account_default", "series_default"}:

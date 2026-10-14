@@ -1,0 +1,548 @@
+{
+  "checks": [
+    {
+      "id": 120,
+      "check_kind": "master_schema",
+      "input_hash": "da42abb2b0ddbb6f526b926e5e0ca7a8046320fc5d71f52c7b233a79aeb63081",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 121,
+      "check_kind": "evidence",
+      "input_hash": "d614dd7d8c148d164162de9d0c06277ed1041224cd611129a7e93e5512b988bd",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 122,
+      "check_kind": "rights",
+      "input_hash": "21173169065faa4a197f2351bcefb7053e479e238a4ed70ca2323d3a4bfcbc31",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 123,
+      "check_kind": "render",
+      "input_hash": "6cb196969acd57b33c02ebbd8145088ba1a9d726fb1f0df6829ec52e85698a8c",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "manual",
+        "attested_by": "admin@studio.local",
+        "render_input_hash": "43d9a34b88d1bdcd0b422102498660f6e2a957680e214e355ec43c5c2813cc7d",
+        "outputs": [
+          {
+            "material_revision_id": 26,
+            "content_hash": "872645140089eb89e9493bfb8a2bd70b285706b4bb2e5ab3131fa2f1db606213",
+            "mime_type": "image/png",
+            "canvas_id": "cover",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 27,
+            "content_hash": "b2081f63eaa44cbc50ad8504d7a8fed3d88a8b05846df7c28293377ff301a802",
+            "mime_type": "image/png",
+            "canvas_id": "body-1",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 28,
+            "content_hash": "7d88fdd34c0f8b67eaa585c1a23f56a06015ca0a547c0794a02b272d461a9148",
+            "mime_type": "image/png",
+            "canvas_id": "body-2",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          }
+        ],
+        "reasons": [],
+        "canvas_dimensions_verified": true,
+        "requirement": {
+          "kind": "render",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 124,
+      "check_kind": "graphic_structure",
+      "input_hash": "d93b04e3eed432951352144e4e6934dcdc6716689555026aac957ec7538f4e0d",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "persona_quality": {
+          "ref": "studio.quality.graphic.lifestyle@1",
+          "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+          "style_preset_ref": "studio.graphic.lifestyle-cards@1",
+          "style_preset_hash": "f0b905895832c0bb1a2919afe1459e8d64985d9f9d65daa4b830952170b85166",
+          "photo_requirement": "none",
+          "implementation": "graphic.geometry.v1",
+          "report": {
+            "schema": "studio.graphic.geometry-qc.v1",
+            "payload_hash": "fd1a6af809344db30278b0fdd8bb83896efd752e67cd6709e6e47f52027f4ddd",
+            "status": "pass",
+            "issues": [],
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required"
+            },
+            "human_review_required": true
+          }
+        },
+        "coverage": {
+          "geometry": "axis_aligned",
+          "text_fit": "estimated",
+          "bytes": "not_rendered",
+          "contrast": "text_vs_solid_canvas_only",
+          "aesthetic_quality": "human_review_required",
+          "live_bytes_rights": "separate_required_render_rights_checks"
+        },
+        "canvas_count": 3,
+        "visible_layer_count": 9,
+        "requirement": {
+          "kind": "graphic_structure",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "persona_quality": {
+            "ref": "studio.quality.graphic.lifestyle@1",
+            "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+            "style_preset_ref": "studio.graphic.lifestyle-cards@1",
+            "style_preset_hash": "f0b905895832c0bb1a2919afe1459e8d64985d9f9d65daa4b830952170b85166",
+            "photo_requirement": "none",
+            "implementation": "graphic.geometry.v1"
+          }
+        }
+      }
+    },
+    {
+      "id": 125,
+      "check_kind": "graphic_fact",
+      "input_hash": "6cc49e57b66d6aeaf3c3dcf0901192a95fc55f0c006f5009c1f07c3f37d4ea61",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "exact_claim_refs_only",
+          "model_use_excluded_item_ids": [],
+          "invalid_snapshot_item_ids": [],
+          "fact_count": 2,
+          "text_layer_count": 6
+        },
+        "requirement": {
+          "kind": "graphic_fact",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 4,
+              "checksum": "184575c28f1b730d0f3794cf67a49a456ae385469b35260111d98a539c162ef7",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 5,
+              "checksum": "de3422baa0e9b244332137f945aebd9e1134a968ea4bdd8256468b4cebb7a41e",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 126,
+      "check_kind": "graphic_identity",
+      "input_hash": "87181454d8b78234f5f6d098b35ad467bf2457b1a74a9be8b4d5ab4abc979297",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "identity_snapshot_id": 12,
+        "identity_checksum": "ab44e907431ade5ca3da7e298605d96834976cd3d51a02e481fc99bf0f51faab",
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "explicit_phrases_only",
+          "text_layer_count": 6,
+          "visual_semantics": "unavailable"
+        },
+        "requirement": {
+          "kind": "graphic_identity",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": 127,
+      "check_kind": "graphic_platform",
+      "input_hash": "9e249d5c9c6e9f3192428d1bf889341fadf276cbc725d64af497ece09abba287",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "channel": "xiaohongshu",
+        "content_form": "image_note",
+        "profile_version_id": 29,
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "graphic_platform",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "profile": {
+            "id": 29,
+            "version": 3,
+            "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+            "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "source": "profile",
+            "artifact_kind": "image"
+          }
+        }
+      }
+    }
+  ],
+  "current_checks": [
+    {
+      "id": 120,
+      "check_kind": "master_schema",
+      "input_hash": "da42abb2b0ddbb6f526b926e5e0ca7a8046320fc5d71f52c7b233a79aeb63081",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 121,
+      "check_kind": "evidence",
+      "input_hash": "d614dd7d8c148d164162de9d0c06277ed1041224cd611129a7e93e5512b988bd",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 122,
+      "check_kind": "rights",
+      "input_hash": "21173169065faa4a197f2351bcefb7053e479e238a4ed70ca2323d3a4bfcbc31",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 123,
+      "check_kind": "render",
+      "input_hash": "6cb196969acd57b33c02ebbd8145088ba1a9d726fb1f0df6829ec52e85698a8c",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "manual",
+        "attested_by": "admin@studio.local",
+        "render_input_hash": "43d9a34b88d1bdcd0b422102498660f6e2a957680e214e355ec43c5c2813cc7d",
+        "outputs": [
+          {
+            "material_revision_id": 26,
+            "content_hash": "872645140089eb89e9493bfb8a2bd70b285706b4bb2e5ab3131fa2f1db606213",
+            "mime_type": "image/png",
+            "canvas_id": "cover",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 27,
+            "content_hash": "b2081f63eaa44cbc50ad8504d7a8fed3d88a8b05846df7c28293377ff301a802",
+            "mime_type": "image/png",
+            "canvas_id": "body-1",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 28,
+            "content_hash": "7d88fdd34c0f8b67eaa585c1a23f56a06015ca0a547c0794a02b272d461a9148",
+            "mime_type": "image/png",
+            "canvas_id": "body-2",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": false,
+              "commercial_use_allowed": false
+            }
+          }
+        ],
+        "reasons": [],
+        "canvas_dimensions_verified": true,
+        "requirement": {
+          "kind": "render",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 124,
+      "check_kind": "graphic_structure",
+      "input_hash": "d93b04e3eed432951352144e4e6934dcdc6716689555026aac957ec7538f4e0d",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "persona_quality": {
+          "ref": "studio.quality.graphic.lifestyle@1",
+          "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+          "style_preset_ref": "studio.graphic.lifestyle-cards@1",
+          "style_preset_hash": "f0b905895832c0bb1a2919afe1459e8d64985d9f9d65daa4b830952170b85166",
+          "photo_requirement": "none",
+          "implementation": "graphic.geometry.v1",
+          "report": {
+            "schema": "studio.graphic.geometry-qc.v1",
+            "payload_hash": "fd1a6af809344db30278b0fdd8bb83896efd752e67cd6709e6e47f52027f4ddd",
+            "status": "pass",
+            "issues": [],
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required"
+            },
+            "human_review_required": true
+          }
+        },
+        "coverage": {
+          "geometry": "axis_aligned",
+          "text_fit": "estimated",
+          "bytes": "not_rendered",
+          "contrast": "text_vs_solid_canvas_only",
+          "aesthetic_quality": "human_review_required",
+          "live_bytes_rights": "separate_required_render_rights_checks"
+        },
+        "canvas_count": 3,
+        "visible_layer_count": 9,
+        "requirement": {
+          "kind": "graphic_structure",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "persona_quality": {
+            "ref": "studio.quality.graphic.lifestyle@1",
+            "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+            "style_preset_ref": "studio.graphic.lifestyle-cards@1",
+            "style_preset_hash": "f0b905895832c0bb1a2919afe1459e8d64985d9f9d65daa4b830952170b85166",
+            "photo_requirement": "none",
+            "implementation": "graphic.geometry.v1"
+          }
+        }
+      }
+    },
+    {
+      "id": 125,
+      "check_kind": "graphic_fact",
+      "input_hash": "6cc49e57b66d6aeaf3c3dcf0901192a95fc55f0c006f5009c1f07c3f37d4ea61",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "exact_claim_refs_only",
+          "model_use_excluded_item_ids": [],
+          "invalid_snapshot_item_ids": [],
+          "fact_count": 2,
+          "text_layer_count": 6
+        },
+        "requirement": {
+          "kind": "graphic_fact",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 4,
+              "checksum": "184575c28f1b730d0f3794cf67a49a456ae385469b35260111d98a539c162ef7",
+              "allowed": true,
+              "revoked": false
+            },
+            {
+              "id": 5,
+              "checksum": "de3422baa0e9b244332137f945aebd9e1134a968ea4bdd8256468b4cebb7a41e",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 126,
+      "check_kind": "graphic_identity",
+      "input_hash": "87181454d8b78234f5f6d098b35ad467bf2457b1a74a9be8b4d5ab4abc979297",
+      "is_current": true,
+      "stored_status": "warning",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "identity_snapshot_id": 12,
+        "identity_checksum": "ab44e907431ade5ca3da7e298605d96834976cd3d51a02e481fc99bf0f51faab",
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "explicit_phrases_only",
+          "text_layer_count": 6,
+          "visual_semantics": "unavailable"
+        },
+        "requirement": {
+          "kind": "graphic_identity",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": 127,
+      "check_kind": "graphic_platform",
+      "input_hash": "9e249d5c9c6e9f3192428d1bf889341fadf276cbc725d64af497ece09abba287",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "channel": "xiaohongshu",
+        "content_form": "image_note",
+        "profile_version_id": 29,
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "graphic_platform",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "profile": {
+            "id": 29,
+            "version": 3,
+            "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+            "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "source": "profile",
+            "artifact_kind": "image"
+          }
+        }
+      }
+    }
+  ]
+}

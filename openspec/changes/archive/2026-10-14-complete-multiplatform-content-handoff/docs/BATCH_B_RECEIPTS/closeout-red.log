@@ -1,0 +1,26 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_____________ test_profile_dry_run_cas_append_only_and_idempotent ______________
+tests/test_multiplatform_contracts.py:151: in test_profile_dry_run_cas_append_only_and_idempotent
+    assert old.status == "archived"
+E   AssertionError: assert 'published' == 'archived'
+E
+E     - archived
+E     + published
+__________ test_legacy_master_cover_maps_without_changing_source_refs __________
+tests/test_multiplatform_exports.py:147: in test_legacy_master_cover_maps_without_changing_source_refs
+    mapped = _text_source_cover_refs(Session(), master)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/services/channel_variants.py:496: in _text_source_cover_refs
+    raise HTTPException(422, {"code": "source_refs_require_exact_variant_mapping"})
+E   fastapi.exceptions.HTTPException: 422: {'code': 'source_refs_require_exact_variant_mapping'}
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /Users/mshengran/Project/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_multiplatform_contracts.py::test_profile_dry_run_cas_append_only_and_idempotent
+FAILED tests/test_multiplatform_exports.py::test_legacy_master_cover_maps_without_changing_source_refs
+2 failed, 1 warning in 0.14s

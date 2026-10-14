@@ -1,0 +1,14 @@
+{
+  "channel": "weibo",
+  "form": "single",
+  "payload_hash": "e973d7d082bb045189885fc94c32e5d7fd92c17112f880724b6ba3a6bbbe5ec2",
+  "candidate_hash": "9fb289d1fff60fde54c647598260ca9c1deb8da2673276aa1a3b245550455a7a",
+  "export_hash": "9a5d045d8069ea365a91267b423c9d50a0e718f58f7a36049f882ac4db422011",
+  "zip_hash": "4bb6f92dbd16b20b75fdf1501d9c4e00f832469b45cc67cf20cb96057613a21a",
+  "media": [],
+  "schema": "weibo.single.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

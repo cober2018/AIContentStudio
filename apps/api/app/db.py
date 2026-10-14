@@ -18,7 +18,7 @@ def _engine_kwargs(url: str) -> dict:
 engine = create_engine(get_settings().database_url, **_engine_kwargs(get_settings().database_url))
 
 # Approved local schema includes inert identity ancestry, not JWT activation.
-LOCAL_APPROVED_SCHEMA_HEAD = "idx000000001"
+LOCAL_APPROVED_SCHEMA_HEAD = "a3series00000001"
 
 if get_settings().database_url.startswith("sqlite"):
     # 异步队列（Celery 多进程）与 API 并发写 SQLite 的前提：WAL 允许读写并发，

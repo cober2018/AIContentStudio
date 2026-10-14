@@ -1,0 +1,14 @@
+{
+  "channel": "x",
+  "form": "thread",
+  "payload_hash": "25f61a1023d8dd7845de213b227cb78defe2554e740a29679513fa9a46c69ca9",
+  "candidate_hash": "36ef792caffa64cb685e21df30cbbd996d2a9365dedd5715d00c3f9269c2601b",
+  "export_hash": "dcac3268538d157d5cdca150519ca965ddec8b38784b34fa2dff93d84383f97e",
+  "zip_hash": "7a8f2ec42e5904a86d9bf835239770310d3e122474f107dedf8627e6b43569e7",
+  "media": [],
+  "schema": "x.thread.v1",
+  "source_mode": "existing_genuine_media_controlled_text",
+  "provider_calls": 0,
+  "remote_calls": 0,
+  "status": "LOCAL_CHAIN_PASSED"
+}

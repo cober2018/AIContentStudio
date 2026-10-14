@@ -17,7 +17,7 @@ from ..models import (
     User,
 )
 from ..services import content_identity as identity
-from ..services import creative_configuration, starter_personas
+from ..services import creative_configuration, series_targets, starter_personas
 from ..services.studio_creative_catalog import inventory
 from . import CapabilityInputRoute
 
@@ -37,6 +37,15 @@ class PlatformBindingIn(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     platform_channel: str = Field(pattern=r"^wechat$")
     platform_account_id: str = Field(pattern=r"^wx[0-9a-f]{16}$")
+
+
+class ChannelAccountIn(BaseModel):
+    """浏览器最后一公里用的公开身份。不能带密码、密钥或其他额外字段。"""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+    name: str = Field(min_length=1, max_length=200)
+    platform_channel: str = Field(min_length=1, max_length=50)
+    platform_account_id: str = Field(min_length=1, max_length=64)
 
 
 class PublisherConnectionIn(BaseModel):
@@ -94,6 +103,8 @@ def _entity_json(db: Session, kind: str, row, *, current_revision_no: int | None
     if kind == "account":
         data.update(platform_channel=row.platform_channel, platform_account_id=row.platform_account_id,
                     platform_binding_state="bound_unverified" if row.platform_account_id else "unbound")
+    if kind == "series":
+        data.update(scope=getattr(row, "scope", "account_legacy"), persona_id=getattr(row, "persona_id", None))
     return data
 
 
@@ -211,6 +222,18 @@ def create_account(payload: NameIn, persona_id: int, db: Session = Depends(get_d
     return _create(db, "account", ContentAccount(persona_id=persona_id, name=payload.name))
 
 
+@router.post("/content-personas/{persona_id}/channel-accounts", status_code=201)
+def create_channel_account(persona_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    try:
+        body = ChannelAccountIn.model_validate(payload)
+    except ValidationError:
+        raise HTTPException(422, "platform_account_public_id_invalid") from None
+    row = identity.register_public_channel_account(
+        db, user, persona_id, name=body.name, channel=body.platform_channel, platform_account_id=body.platform_account_id,
+    )
+    return _entity_json(db, "account", row)
+
+
 @router.get("/content-accounts/{account_id}")
 def get_account(account_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return _entity_json(db, "account", identity.owned_entity(db, user, "account", account_id))
@@ -264,6 +287,20 @@ def create_series(payload: NameIn, account_id: int, db: Session = Depends(get_db
     return _create(db, "series", ContentSeries(account_id=account_id, name=payload.name))
 
 
+@router.get("/content-personas/{persona_id}/series")
+def persona_editorial_series(persona_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    identity.owned_entity(db, user, "persona", persona_id)
+    rows = db.scalars(select(ContentSeries).where(ContentSeries.persona_id == persona_id, ContentSeries.scope == "persona_editorial").order_by(ContentSeries.id)).all()
+    revision_nos = _current_revision_nos(db, "series", [row.id for row in rows])
+    return [_entity_json(db, "series", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
+
+
+@router.post("/content-personas/{persona_id}/series", status_code=201)
+def create_editorial_series(payload: NameIn, persona_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    row = identity.create_editorial_series(db, user, persona_id, name=payload.name)
+    return _entity_json(db, "series", row)
+
+
 @router.get("/content-series/{series_id}")
 def get_series(series_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return _entity_json(db, "series", identity.owned_entity(db, user, "series", series_id))
@@ -277,6 +314,38 @@ def rename_series(payload: NameIn, series_id: int, db: Session = Depends(get_db)
 @router.delete("/content-series/{series_id}", status_code=204)
 def archive_series(series_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     _archive(db, user, "series", series_id)
+
+
+class SeriesTargetIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    account_id: int = Field(gt=0)
+    content_form: str = Field(min_length=1, max_length=100, pattern=r"^[a-z0-9_]+$")
+
+
+class SeriesTargetPatchIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    enabled: bool
+    expected_version: int = Field(ge=1)
+
+
+@router.get("/content-series/{series_id}/targets")
+def list_series_targets(series_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return series_targets.list_targets(db, user, series_id)
+
+
+@router.post("/content-series/{series_id}/targets", status_code=201)
+def bind_series_target(series_id: int, payload: SeriesTargetIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    return series_targets.bind_target(db, user, series_id, account_id=payload.account_id, content_form=payload.content_form)
+
+
+@router.patch("/content-series/{series_id}/targets/{target_id}")
+def update_series_target(series_id: int, target_id: int, payload: SeriesTargetPatchIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    return series_targets.update_target(db, user, series_id, target_id, expected_version=payload.expected_version, enabled=payload.enabled)
+
+
+@router.delete("/content-series/{series_id}/targets/{target_id}", status_code=204)
+def unbind_series_target(series_id: int, target_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    series_targets.unbind_target(db, user, series_id, target_id)
 
 
 def _register_revisions(kind: str, path: str) -> None:

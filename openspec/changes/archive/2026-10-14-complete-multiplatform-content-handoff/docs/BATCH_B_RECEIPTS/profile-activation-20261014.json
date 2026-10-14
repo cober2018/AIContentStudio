@@ -1,0 +1,745 @@
+{
+  "backup": "/Users/mshengran/Project/AIContentStudio/backups/pre-multiplatform-profile-20261014-172151",
+  "database": "/Users/mshengran/Project/AIContentStudio/apps/api/content_studio.db",
+  "media_root": "/Users/mshengran/Project/AIContentStudio/apps/api/app/media",
+  "head": "a3series00000001",
+  "db_sha256": "016eb49ae1ef10d29f9d6f71bc3a9cdd010927beefebd3f00abdf39728fcdadf",
+  "integrity": "ok",
+  "foreign_keys": 0,
+  "plan_hash": "b0e3f1c54e972c4b14c4d08b73b4f5a55117b03c640bc41f688beca0c560d8d5",
+  "media_backup": {
+    "referenced_keys": 8,
+    "referenced_rows": 8,
+    "verified_rows": 8,
+    "copied_and_verified": 8,
+    "failure_count": 0
+  },
+  "rehearsal": {
+    "plan_hash": "b0e3f1c54e972c4b14c4d08b73b4f5a55117b03c640bc41f688beca0c560d8d5",
+    "created": [
+      {
+        "channel_id": "baijia",
+        "profile_version_id": 19,
+        "version": 2,
+        "profile_hash": "1fa4d1a4efe1eb71332a42b7f806ccd1dbb8e13758ad1a37046a1bbcc126e6c2"
+      },
+      {
+        "channel_id": "bilibili",
+        "profile_version_id": 20,
+        "version": 2,
+        "profile_hash": "03afcb4508c5e087b1c8c8268a5d1f8152c71c68fc8d8c876f1629b9ec1e48a1"
+      },
+      {
+        "channel_id": "douyin",
+        "profile_version_id": 21,
+        "version": 4,
+        "profile_hash": "d2d1ed1b05f4e2ced1efed31829285d2ad3ae59f2d50e462c86e4302811bccae"
+      },
+      {
+        "channel_id": "netease",
+        "profile_version_id": 22,
+        "version": 2,
+        "profile_hash": "c9f9e2c59c5d1d15534d96fcd67cc3ce3a367693871a293b5a5f09e331d1e437"
+      },
+      {
+        "channel_id": "penguin",
+        "profile_version_id": 23,
+        "version": 2,
+        "profile_hash": "d4eef46df04a59ad2d85d0466bc91c7b15785e1e457c2a92cdb53cd230944744"
+      },
+      {
+        "channel_id": "sohu",
+        "profile_version_id": 24,
+        "version": 2,
+        "profile_hash": "0c086dbccf287e5f071573235e597cef5ddc3b9e9775d929e1d89285ac5afb3c"
+      },
+      {
+        "channel_id": "toutiao",
+        "profile_version_id": 25,
+        "version": 2,
+        "profile_hash": "b3e8a37d3fd87cb0d6b98d1586865268d293b0bf031fcc04f888d060b8e1522e"
+      },
+      {
+        "channel_id": "wechat",
+        "profile_version_id": 26,
+        "version": 3,
+        "profile_hash": "c9b5d5c1b38ec9b55e14e95c9bb2635c0d70bff6841cd372e7fabc23f2c46dd4"
+      },
+      {
+        "channel_id": "weibo",
+        "profile_version_id": 27,
+        "version": 2,
+        "profile_hash": "ab9a152e17b739a5e3240b70477dbedf56729a2fe5d8a99147d04a2c3e3b58e9"
+      },
+      {
+        "channel_id": "x",
+        "profile_version_id": 28,
+        "version": 2,
+        "profile_hash": "48d2ed61e72c0c210e04a78e1b9f6bf1298e8c6f3cb7703c2727c99d44b1ce33"
+      },
+      {
+        "channel_id": "xiaohongshu",
+        "profile_version_id": 29,
+        "version": 3,
+        "profile_hash": "aa26450467210d1245704775832b2889ec13afb954e76c07607836f94704f55d"
+      },
+      {
+        "channel_id": "zhihu",
+        "profile_version_id": 30,
+        "version": 2,
+        "profile_hash": "eb3af21c8ace70d9320ed3402c3a612c2e119c4c19d6bf33dcaad8a982206249"
+      }
+    ],
+    "unchanged": []
+  },
+  "rehearsal_idempotent": {
+    "plan_hash": "b0e3f1c54e972c4b14c4d08b73b4f5a55117b03c640bc41f688beca0c560d8d5",
+    "created": [],
+    "unchanged": [
+      "baijia",
+      "bilibili",
+      "douyin",
+      "netease",
+      "penguin",
+      "sohu",
+      "toutiao",
+      "wechat",
+      "weibo",
+      "x",
+      "xiaohongshu",
+      "zhihu"
+    ]
+  },
+  "old_rows_preserved": true,
+  "formal_apply": {
+    "plan_hash": "b0e3f1c54e972c4b14c4d08b73b4f5a55117b03c640bc41f688beca0c560d8d5",
+    "created": [
+      {
+        "channel_id": "baijia",
+        "profile_version_id": 19,
+        "version": 2,
+        "profile_hash": "1fa4d1a4efe1eb71332a42b7f806ccd1dbb8e13758ad1a37046a1bbcc126e6c2"
+      },
+      {
+        "channel_id": "bilibili",
+        "profile_version_id": 20,
+        "version": 2,
+        "profile_hash": "03afcb4508c5e087b1c8c8268a5d1f8152c71c68fc8d8c876f1629b9ec1e48a1"
+      },
+      {
+        "channel_id": "douyin",
+        "profile_version_id": 21,
+        "version": 4,
+        "profile_hash": "d2d1ed1b05f4e2ced1efed31829285d2ad3ae59f2d50e462c86e4302811bccae"
+      },
+      {
+        "channel_id": "netease",
+        "profile_version_id": 22,
+        "version": 2,
+        "profile_hash": "c9f9e2c59c5d1d15534d96fcd67cc3ce3a367693871a293b5a5f09e331d1e437"
+      },
+      {
+        "channel_id": "penguin",
+        "profile_version_id": 23,
+        "version": 2,
+        "profile_hash": "d4eef46df04a59ad2d85d0466bc91c7b15785e1e457c2a92cdb53cd230944744"
+      },
+      {
+        "channel_id": "sohu",
+        "profile_version_id": 24,
+        "version": 2,
+        "profile_hash": "0c086dbccf287e5f071573235e597cef5ddc3b9e9775d929e1d89285ac5afb3c"
+      },
+      {
+        "channel_id": "toutiao",
+        "profile_version_id": 25,
+        "version": 2,
+        "profile_hash": "b3e8a37d3fd87cb0d6b98d1586865268d293b0bf031fcc04f888d060b8e1522e"
+      },
+      {
+        "channel_id": "wechat",
+        "profile_version_id": 26,
+        "version": 3,
+        "profile_hash": "c9b5d5c1b38ec9b55e14e95c9bb2635c0d70bff6841cd372e7fabc23f2c46dd4"
+      },
+      {
+        "channel_id": "weibo",
+        "profile_version_id": 27,
+        "version": 2,
+        "profile_hash": "ab9a152e17b739a5e3240b70477dbedf56729a2fe5d8a99147d04a2c3e3b58e9"
+      },
+      {
+        "channel_id": "x",
+        "profile_version_id": 28,
+        "version": 2,
+        "profile_hash": "48d2ed61e72c0c210e04a78e1b9f6bf1298e8c6f3cb7703c2727c99d44b1ce33"
+      },
+      {
+        "channel_id": "xiaohongshu",
+        "profile_version_id": 29,
+        "version": 3,
+        "profile_hash": "aa26450467210d1245704775832b2889ec13afb954e76c07607836f94704f55d"
+      },
+      {
+        "channel_id": "zhihu",
+        "profile_version_id": 30,
+        "version": 2,
+        "profile_hash": "eb3af21c8ace70d9320ed3402c3a612c2e119c4c19d6bf33dcaad8a982206249"
+      }
+    ],
+    "unchanged": []
+  },
+  "formal_idempotent": {
+    "plan_hash": "b0e3f1c54e972c4b14c4d08b73b4f5a55117b03c640bc41f688beca0c560d8d5",
+    "created": [],
+    "unchanged": [
+      "baijia",
+      "bilibili",
+      "douyin",
+      "netease",
+      "penguin",
+      "sohu",
+      "toutiao",
+      "wechat",
+      "weibo",
+      "x",
+      "xiaohongshu",
+      "zhihu"
+    ]
+  },
+  "preservation": {
+    "source_document": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "fact_pack": {
+      "old": 1,
+      "current": 1,
+      "old_rows_exact": true
+    },
+    "brand_voice_version": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "channel_template_version": {
+      "old": 18,
+      "current": 30,
+      "old_rows_exact": true
+    },
+    "prompt_version": {
+      "old": 8,
+      "current": 8,
+      "old_rows_exact": true
+    },
+    "llm_run": {
+      "old": 25,
+      "current": 25,
+      "old_rows_exact": true
+    },
+    "audit_log": {
+      "old": 20,
+      "current": 20,
+      "old_rows_exact": true
+    },
+    "fact": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "topic_brief": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_job": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "draft_claim": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "export_record": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "connector": {
+      "old": 4,
+      "current": 4,
+      "old_rows_exact": true
+    },
+    "connector_endpoint": {
+      "old": 7,
+      "current": 7,
+      "old_rows_exact": true
+    },
+    "external_content": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "alembic_version": {
+      "old": 1,
+      "current": 1,
+      "old_rows_exact": true
+    },
+    "system_settings": {
+      "old": 6,
+      "current": 6,
+      "old_rows_exact": true
+    },
+    "asset_media": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "workflow_step": {
+      "old": 34,
+      "current": 34,
+      "old_rows_exact": true
+    },
+    "mother_revision": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "delivery_feedback": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "draft": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "fact_pack_item": {
+      "old": 1,
+      "current": 1,
+      "old_rows_exact": true
+    },
+    "delivery_receipt": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "draft_check_run": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "material": {
+      "old": 8,
+      "current": 8,
+      "old_rows_exact": true
+    },
+    "material_revision": {
+      "old": 8,
+      "current": 8,
+      "old_rows_exact": true
+    },
+    "discoverability_profile_version": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "discoverability_report": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "draft_media": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "delivery_attempt": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "workflow_step_attempt": {
+      "old": 36,
+      "current": 36,
+      "old_rows_exact": true
+    },
+    "knowledge_collection": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_brand": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_insight": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_opportunity": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_project": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "capability_registration": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "knowledge_collection_item": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_brand_revision": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_opportunity_assessment_revision": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_opportunity_signal": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_persona": {
+      "old": 3,
+      "current": 3,
+      "old_rows_exact": true
+    },
+    "creative_brief_revision": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "learning_candidate": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "project_event": {
+      "old": 59,
+      "current": 59,
+      "old_rows_exact": true
+    },
+    "project_fact_boundary_revision": {
+      "old": 1,
+      "current": 1,
+      "old_rows_exact": true
+    },
+    "project_material_reference": {
+      "old": 8,
+      "current": 8,
+      "old_rows_exact": true
+    },
+    "project_source_binding": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "capability_verification": {
+      "old": 1,
+      "current": 1,
+      "old_rows_exact": true
+    },
+    "content_account": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "content_persona_revision": {
+      "old": 3,
+      "current": 3,
+      "old_rows_exact": true
+    },
+    "learning_candidate_evidence": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "opportunity_project_conversion": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "persona_workflow_default": {
+      "old": 6,
+      "current": 6,
+      "old_rows_exact": true
+    },
+    "account_workflow_default": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_account_revision": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_memory_entry": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_series_revision": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "series_workflow_default": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_memory_revision": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "identity_snapshot": {
+      "old": 6,
+      "current": 6,
+      "old_rows_exact": true
+    },
+    "content_unit": {
+      "old": 6,
+      "current": 6,
+      "old_rows_exact": true
+    },
+    "published_content_record": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "project_workflow_binding": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "data_snapshot": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "project_workflow_output": {
+      "old": 6,
+      "current": 6,
+      "old_rows_exact": true
+    },
+    "performance_observation": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_master_revision": {
+      "old": 10,
+      "current": 10,
+      "old_rows_exact": true
+    },
+    "channel_variant_revision": {
+      "old": 1,
+      "current": 1,
+      "old_rows_exact": true
+    },
+    "content_master_asset_ref": {
+      "old": 25,
+      "current": 25,
+      "old_rows_exact": true
+    },
+    "content_master_check_run": {
+      "old": 93,
+      "current": 93,
+      "old_rows_exact": true
+    },
+    "content_master_evidence_ref": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "channel_variant_asset_ref": {
+      "old": 4,
+      "current": 4,
+      "old_rows_exact": true
+    },
+    "channel_variant_check_run": {
+      "old": 6,
+      "current": 6,
+      "old_rows_exact": true
+    },
+    "channel_variant_evidence_ref": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "workflow": {
+      "old": 17,
+      "current": 17,
+      "old_rows_exact": true
+    },
+    "workflow_run": {
+      "old": 6,
+      "current": 6,
+      "old_rows_exact": true
+    },
+    "review": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "delivery_target": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "content_asset": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "provider_generation_task": {
+      "old": 4,
+      "current": 4,
+      "old_rows_exact": true
+    },
+    "user": {
+      "old": 8,
+      "current": 8,
+      "old_rows_exact": true
+    },
+    "creative_execution_package": {
+      "old": 2,
+      "current": 2,
+      "old_rows_exact": true
+    },
+    "creative_execution": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "creative_execution_output": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "capability_artifact_revision": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "capability_artifact": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "capability_use": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "series_account_target": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    },
+    "content_series": {
+      "old": 0,
+      "current": 0,
+      "old_rows_exact": true
+    }
+  },
+  "after_api_reload": {
+    "archived_previous_profiles": [
+      {
+        "id": 5,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 6,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 7,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 8,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 9,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 10,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 11,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 12,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 13,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 14,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 15,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      },
+      {
+        "id": 18,
+        "before": "published",
+        "after": "archived",
+        "profile_and_hash_exact": true
+      }
+    ],
+    "old_profile_content_hashes_exact": true,
+    "other_old_rows_exact": true
+  }
+}

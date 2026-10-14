@@ -18,8 +18,9 @@ from ..services.channel_variants import (
     variant_capabilities,
 )
 from ..services.creative_intents import CreativeIntentError, canonical_intent
+from . import CapabilityInputRoute
 
-router = APIRouter(prefix="/api/v1", tags=["channel-variants"])
+router = APIRouter(prefix="/api/v1", tags=["channel-variants"], route_class=CapabilityInputRoute)
 
 
 class VariantRevisionIn(BaseModel):
@@ -41,6 +42,8 @@ class VariantRevisionIn(BaseModel):
     evidence_refs: list[dict] = Field(default_factory=list, max_length=250)
     llm_provenance: dict | None = None
     creative_intent: dict | None = None
+    target_account_id: int | None = Field(default=None, ge=1)
+    expected_target_context_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
     @field_validator("creative_intent", mode="before")
     @classmethod
@@ -59,6 +62,8 @@ class VariantAdaptPreviewIn(BaseModel):
     expected_source_context_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     channel_id: str = Field(min_length=1, max_length=100)
     content_form: str = Field(min_length=1, max_length=100)
+    target_account_id: int | None = Field(default=None, ge=1)
+    question: dict | None = None
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/channel-variants/adapt-preview", dependencies=[Depends(require_editor)])
@@ -83,6 +88,9 @@ def create_channel_variant(project_id: int, unit_id: int, body: VariantRevisionI
         payload.pop("creative_intent")
     if "expected_profile_hash" not in body.model_fields_set:
         payload.pop("expected_profile_hash")
+    for field in ("target_account_id", "expected_target_context_hash"):
+        if field not in body.model_fields_set:
+            payload.pop(field)
     return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload=payload)
 
 

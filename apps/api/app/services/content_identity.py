@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -117,11 +118,19 @@ def hierarchy(db: Session, user: User, *, persona_id: int, account_id: int | Non
     account = db.get(ContentAccount, account_id) if account_id is not None else None
     if account_id is not None and (account is None or account.persona_id != persona.id):
         raise HTTPException(404, "账号不存在")
-    if series_id is not None and account is None:
-        raise HTTPException(422, "选择栏目时必须选择所属账号")
     series = db.get(ContentSeries, series_id) if series_id is not None else None
-    if series_id is not None and (series is None or series.account_id != account.id):
+    if series_id is not None and series is None:
         raise HTTPException(404, "栏目不存在")
+    if series is not None:
+        if series.scope == "persona_editorial":
+            # 角色级跨平台栏目：归属按 persona 校验，不要求账号。
+            if series.persona_id != persona.id or series.account_id is not None:
+                raise HTTPException(404, "栏目不存在")
+        else:
+            if account is None:
+                raise HTTPException(422, "选择栏目时必须选择所属账号")
+            if series.account_id != account.id:
+                raise HTTPException(404, "栏目不存在")
     result = Hierarchy(brand, persona, account, series)
     if mutable and any(value.status == "archived" for _, value in result.members()):
         raise HTTPException(409, "已归档身份只可查看历史")
@@ -143,10 +152,13 @@ def owned_entity(db: Session, user: User, kind: str, entity_id: int, *, mutable:
     elif kind == "account":
         hierarchy(db, user, persona_id=entity.persona_id, account_id=entity_id, mutable=mutable)
     else:
-        account = db.get(ContentAccount, entity.account_id)
-        if account is None:
-            raise HTTPException(404, "身份不存在")
-        hierarchy(db, user, persona_id=account.persona_id, account_id=account.id, series_id=entity_id, mutable=mutable)
+        if entity.scope == "persona_editorial":
+            hierarchy(db, user, persona_id=entity.persona_id, series_id=entity_id, mutable=mutable)
+        else:
+            account = db.get(ContentAccount, entity.account_id)
+            if account is None:
+                raise HTTPException(404, "身份不存在")
+            hierarchy(db, user, persona_id=account.persona_id, account_id=account.id, series_id=entity_id, mutable=mutable)
     return entity
 
 
@@ -172,6 +184,59 @@ def _lock_account(db: Session, user: User, account_id: int) -> ContentAccount:
     except HTTPException:
         db.rollback()
         raise
+    return row
+
+
+_WECHAT_APP_ID = re.compile(r"^wx[0-9a-f]{16}$")
+_PUBLIC_HANDLE = re.compile(r"^[\w.@-]{1,64}$")
+_TOKEN_LIKE = re.compile(r"^[A-Za-z0-9+/=_-]{32,}$")
+_SECRET_MARKERS = ("password", "secret", "token", "appsecret", "bearer", "api_key", "apikey", "credential", "sk-")
+
+
+def public_platform_id(channel: str, value: str) -> str:
+    """只接受公开账号标识。拒绝密码、密钥和长令牌，且错误信息不回显原值。"""
+    if channel == "wechat":
+        if _WECHAT_APP_ID.fullmatch(value) is None:
+            raise HTTPException(422, "platform_account_public_id_invalid")
+        return value
+    lowered = value.lower()
+    if any(marker in lowered for marker in _SECRET_MARKERS) or "://" in value or _PUBLIC_HANDLE.fullmatch(value) is None or _TOKEN_LIKE.fullmatch(value) is not None:
+        raise HTTPException(422, "platform_account_public_id_invalid")
+    return value
+
+
+def register_public_channel_account(db: Session, user: User, persona_id: int, *, name: str, channel: str, platform_account_id: str) -> ContentAccount:
+    """在角色下登记一个平台公开身份。不保存密码，也不改已经绑定的账号。"""
+    if user.role != "admin":
+        raise HTTPException(403, "platform_binding_admin_required")
+    owned_entity(db, user, "persona", persona_id, mutable=True)
+    from .content_harness.channel_registry import ChannelRegistryError, ensure_channel_in_service, resolve_channel
+
+    try:
+        ensure_channel_in_service(channel)
+    except ChannelRegistryError as exc:
+        raise HTTPException(422, str(exc)) from None
+    if resolve_channel(db, channel) is None:
+        raise HTTPException(422, "未知渠道")
+    public_id = public_platform_id(channel, platform_account_id)
+    row = ContentAccount(persona_id=persona_id, name=name, platform_channel=channel, platform_account_id=public_id)
+    try:
+        db.add(row)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, "platform_identity_conflict") from None
+    db.refresh(row)
+    return row
+
+
+def create_editorial_series(db: Session, user: User, persona_id: int, *, name: str) -> ContentSeries:
+    """创建 Persona-owned 跨平台栏目。不要求也不接受账号；同名栏目不自动合并。"""
+    owned_entity(db, user, "persona", persona_id, mutable=True)
+    row = ContentSeries(persona_id=persona_id, account_id=None, scope="persona_editorial", name=name)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
     return row
 
 

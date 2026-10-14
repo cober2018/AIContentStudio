@@ -290,6 +290,10 @@ def test_text_variant_save_is_append_only_idempotent_and_series_scoped(client, d
     assert capabilities.json()["source_master_revision_id"] == master["id"]
     assert {(item["channel"], item["content_form"]) for item in capabilities.json()["items"]} == {
         ("wechat", "article"), ("x", "thread"), ("x", "single"),
+        ("x", "long_post"), ("x", "articles"),
+        ("toutiao", "article"), ("baijia", "article"), ("zhihu", "article"), ("zhihu", "answer"),
+        ("bilibili", "article"), ("sohu", "article"), ("penguin", "article"), ("netease", "article"),
+        ("weibo", "single"), ("xueqiu", "quant_research"), ("xueqiu", "market_recap"), ("juejin", "tech_article"),
     }
     assert client.get(f"{path}/capabilities", headers={"X-Studio-User": "foreign@studio.local"}).status_code == 404
     body = {

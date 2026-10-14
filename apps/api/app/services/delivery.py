@@ -164,12 +164,31 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
         unit = db.get(ContentUnit, asset.content_unit_id)
         if unit is None or (not is_variant and unit.channel_id and unit.channel_id != payload.channel):
             raise HTTPException(409, "目标渠道与内容单元不一致")
-        if is_variant and unit.account_id is not None and content_account_id != unit.account_id:
-            raise HTTPException(409, "渠道候选不得绕过内容单元固定账号")
+        frozen_account = (asset.candidate_manifest_json or {}).get("target", {}).get("account") if is_variant else None
+        if frozen_account is not None and frozen_account["content_account_id"] != content_account_id:
+            raise HTTPException(409, {"code": "candidate_target_account_mismatch"})
         if content_account_id is not None:
             account = db.get(ContentAccount, content_account_id)
-            if account is None or account.status != "active" or account.persona_id != unit.persona_id or (unit.account_id is not None and unit.account_id != account.id):
+            if account is None or account.status != "active" or account.persona_id != unit.persona_id:
                 raise HTTPException(404, "内容账号不存在")
+            # v5 现代候选：origin 账号不再是目标锁；每个目标账号独立授权。
+            # legacy（master）候选保持固定账号语义，不得静默松绑。
+            if not is_variant and unit.account_id is not None and unit.account_id != account.id:
+                raise HTTPException(404, "内容账号不存在")
+            # 已登记平台的账号必须与目标渠道一致；老式未绑平台账号保持原行为。
+            if account.platform_channel and account.platform_channel != payload.channel:
+                raise HTTPException(422, "内容账号平台与目标渠道不一致")
+            if is_variant:
+                from .series_targets import guard_enabled_binding
+
+                guard_enabled_binding(db, series_id=unit.series_id, account_id=account.id, content_form=payload.content_form)
+                if frozen_account is None:
+                    from ..models import ContentAccountRevision
+
+                    target_revision = db.scalar(select(ContentAccountRevision).where(ContentAccountRevision.account_id == account.id)
+                        .order_by(ContentAccountRevision.revision_no.desc()).limit(1))
+                    if target_revision is not None and target_revision.profile_json:
+                        raise HTTPException(409, {"code": "target_specific_adaptation_required"})
         if payload.action in {DeliveryAction.auto_draft.value, DeliveryAction.assisted_draft.value} and not is_variant:
             raise HTTPException(422, "capability_unavailable: 内容账号尚无已验证的渠道/远端发布映射")
     elif content_account_id is not None:
@@ -229,6 +248,18 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
         capability = {**capability, "verified": True, "remote_verified": True}
     elif is_variant:
         capability = {**capability, "manual": True, "remote_verified": False}
+    if content_account_id is not None:
+        # 冻结精确目标账号身份：平台字符串不是账号，同平台 A/B 是不同目标。
+        from ..models import ContentAccountRevision
+
+        account = db.get(ContentAccount, content_account_id)
+        account_revision = db.scalar(select(ContentAccountRevision).where(ContentAccountRevision.account_id == account.id).order_by(ContentAccountRevision.revision_no.desc()).limit(1))
+        capability = {**capability, "target_account": {
+            "content_account_id": account.id, "platform_channel": account.platform_channel,
+            "platform_account_id": account.platform_account_id,
+            "account_revision_id": account_revision.id if account_revision else None,
+            "account_profile_checksum": account_revision.checksum if account_revision else None,
+        }}
     # 渠道一致性：v1 资产仍要求与批准渠道一致；v2 同样
     if asset.channel != payload.channel:
         raise HTTPException(409, "目标渠道必须与批准资产渠道一致")
