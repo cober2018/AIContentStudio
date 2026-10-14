@@ -60,3 +60,5 @@ This change is intentionally built on the current implemented working tree for `
 One additive migration is expected after the current `aco000000001` head to add bounded nullable `input_snapshot_json` and `execution_receipt_json` to `workflow_step_attempt`. No new Recipe/Feedback/Improvement business tables are planned. Stage feedback uses ProjectEvent; improvement candidates use Capability Memory; accepted entities use existing Master/Variant/Material/CreativeExecution truths.
 
 No remote publication, professional-tool pilot, push, canonical sync/archive or destructive legacy deletion is authorized by this proposal.
+
+2026-10-14 lifecycle clarification: the user now directs independent closeout of this Recipe change and Persona while preserving other active changes. Only this change’s ADDED delta requirements will synchronize; the previously implemented align dependency and its 15.7 gate remain separate and are not implicitly completed/archived. This supersedes the earlier lifecycle-order recommendation for these scoped local closeouts; it does not expand ACO implementation, push or publication authority.

@@ -18,7 +18,7 @@ NEW_TABLES = {
 def test_local_approved_schema_default_is_enabled_crs():
     from app.db import LOCAL_APPROVED_SCHEMA_HEAD
 
-    assert LOCAL_APPROVED_SCHEMA_HEAD == "idx000000001"
+    assert LOCAL_APPROVED_SCHEMA_HEAD == "a3series00000001"
 
 
 @pytest.fixture
@@ -214,7 +214,9 @@ def test_local_readiness_default_accepts_crs_without_jwt_activation(db_session, 
     monkeypatch.setattr("app.config.get_settings", lambda: settings)
     monkeypatch.setattr("app.services.material_storage.provider", lambda: SimpleNamespace(probe=lambda: True))
     db_session.execute(text("CREATE TABLE alembic_version (version_num VARCHAR(32) PRIMARY KEY)"))
-    db_session.execute(text("INSERT INTO alembic_version VALUES ('idx000000001')"))
+    from app.db import LOCAL_APPROVED_SCHEMA_HEAD
+
+    db_session.execute(text("INSERT INTO alembic_version VALUES (:head)"), {"head": LOCAL_APPROVED_SCHEMA_HEAD})
     db_session.commit()
     result = check_health(db_session)
     assert result["ready"] and result["reasons"] == []

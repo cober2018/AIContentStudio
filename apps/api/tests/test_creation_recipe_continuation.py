@@ -298,3 +298,88 @@ def test_stage_result_recovers_exact_invocation_after_new_run_without_dispatch(c
     assert missing.status_code == 404, missing.text
     mixed = client.get(url, headers=headers, params={**params, "attempt_id": execution["attempt_id"]})
     assert mixed.status_code == 422, mixed.text
+
+
+@pytest.mark.parametrize("status", ["waiting_input", "succeeded", "running", "unknown"])
+def test_edited_acceptance_invalidates_downstream_without_releasing_unresolved_claim(client, db_session, status):
+    from copy import deepcopy
+
+    from app.models import LLMRun, WorkflowStep, WorkflowStepAttempt
+
+    headers, _, _, base, run_id, original_execution, acceptance = _two_stage_run(client)
+    initial = _accept(client, base, headers, acceptance)
+    assert initial.status_code == 200, initial.text
+    draft = db_session.query(WorkflowStep).filter_by(run_id=run_id, node_id="draft").one()
+    draft_attempt = db_session.query(WorkflowStepAttempt).filter_by(run_id=run_id, node_id="draft").one()
+    assert draft_attempt.input_snapshot_json["resolved_stage"]["upstream"]["outline"]["accepted_hash"] == initial.json()["master"]["payload_hash"]
+    draft.status = status
+    draft.error = "stage_dispatch_unknown" if status == "unknown" else None
+    if status in {"running", "unknown"}:
+        draft_attempt.status = status
+        draft_attempt.output_json = {}
+        draft_attempt.output_hash = digest({})
+        draft_attempt.execution_receipt_json = {**draft_attempt.execution_receipt_json,
+            "outcome_state": status, "dispatch_certainty": "possibly_dispatched", "output_hash": digest({})}
+    db_session.commit()
+    original = deepcopy((draft_attempt.input_snapshot_json, draft_attempt.output_json, draft_attempt.execution_receipt_json))
+    stage = f"{base}/creation-recipe/stages/outline"
+    preview = client.post(f"{stage}/preview", headers=headers, json={"run_id": run_id})
+    assert preview.status_code == 200 and preview.json()["ready"], preview.text
+    resolved = preview.json()
+    execution = client.post(f"{stage}/run", headers=headers, json={
+        "run_id": run_id, "expected_resolution_hash": resolved["resolution_hash"],
+        "invocation_key": "outline-explicit-after-acceptance",
+    })
+    assert execution.status_code == 200 and execution.json()["status"] == "waiting_input", execution.text
+    proposed = execution.json()
+    candidate = proposed["output"]["candidates"][0]
+    acceptance = {**acceptance, "attempt_id": proposed["attempt_id"],
+        "expected_output_hash": proposed["receipt"]["output_hash"],
+        "expected_resolution_hash": resolved["resolution_hash"], "expected_context_hash": digest(resolved["context"]),
+        "candidate_id": candidate["candidate_id"],
+        "candidate_hash": digest({key: value for key, value in candidate.items() if key != "candidate_hash"}),
+        "expected_revision": initial.json()["master"]["revision_no"], "adoption_key": "outline-edited-acceptance",
+        "payload": {**candidate["payload"], "title": "明确修改后采用的标题"},
+        "asset_refs": candidate["asset_refs"], "evidence_refs": candidate["evidence_refs"],
+        "decision": "accepted_with_edits"}
+    calls_before = db_session.query(LLMRun).count()
+    accepted = _accept(client, base, headers, acceptance)
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["master"]["payload"]["title"] == "明确修改后采用的标题"
+    assert accepted.json()["decision"] == "accepted_with_edits"
+    db_session.refresh(draft)
+    expected_status = status if status in {"running", "unknown"} else "stale"
+    assert draft.status == expected_status
+    assert draft.stale_reason == "accepted_stage_input_changed"
+    assert accepted.json()["continuation"]["status"] == expected_status
+    assert draft.attempt_no == 1
+    assert db_session.query(WorkflowStepAttempt).filter_by(run_id=run_id, node_id="draft").count() == 1
+    assert db_session.query(LLMRun).count() == calls_before
+    db_session.refresh(draft_attempt)
+    assert (draft_attempt.input_snapshot_json, draft_attempt.output_json, draft_attempt.execution_receipt_json) == original
+    outline = db_session.get(WorkflowStepAttempt, original_execution["attempt_id"])
+    assert outline.output_json == original_execution["output"]
+    assert outline.execution_receipt_json == original_execution["receipt"]
+
+
+def test_unchanged_accepted_hash_does_not_invalidate_current_downstream(client, db_session):
+    from copy import deepcopy
+
+    from app.models import WorkflowRun, WorkflowStep, WorkflowStepAttempt
+    from app.services.stage_feedback import invalidate_downstream
+
+    headers, _, _, base, run_id, _, acceptance = _two_stage_run(client)
+    accepted = _accept(client, base, headers, acceptance)
+    assert accepted.status_code == 200, accepted.text
+    run = db_session.get(WorkflowRun, run_id)
+    outline = db_session.query(WorkflowStep).filter_by(run_id=run_id, node_id="outline").one()
+    draft = db_session.query(WorkflowStep).filter_by(run_id=run_id, node_id="draft").one()
+    attempt = db_session.query(WorkflowStepAttempt).filter_by(run_id=run_id, node_id="draft").one()
+    original = deepcopy((draft.status, draft.stale_reason, attempt.input_snapshot_json,
+                         attempt.output_json, attempt.execution_receipt_json))
+    invalidate_downstream(db_session, run, outline, accepted.json()["master"]["payload_hash"])
+    db_session.commit()
+    db_session.refresh(draft)
+    db_session.refresh(attempt)
+    assert (draft.status, draft.stale_reason, attempt.input_snapshot_json,
+            attempt.output_json, attempt.execution_receipt_json) == original

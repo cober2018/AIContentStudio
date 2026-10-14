@@ -194,12 +194,12 @@
 - [x] 19.1 Stage preview/read inventory performs no provider/Agent/Connector/professional-tool call.
 - [x] 19.2 Secret/log/audit redaction covers prompts, stage receipts, feedback and tuning suggestions.
 - [x] 19.3 Stage overrides and improvement patches cannot bypass evidence/rights/approval/delivery gates.
-- [ ] 19.4 Add persistent backend tests for every new stage contract/resolver/receipt/adoption/feedback/promotion safety rule.
+- [x] 19.4 Add persistent backend tests for every new stage contract/resolver/receipt/adoption/feedback/promotion safety rule.
 - [x] 19.5 Keep Stage Drawer/plugin-specific editors lazy; raw automation/TipTap/media-heavy modules remain outside unrelated initial route closures.
-- [ ] 19.6 Run full backend, TypeScript/Vite/FE-P1, Ruff, OpenSpec strict and diff-check.
+- [x] 19.6 Run full backend, TypeScript/Vite/FE-P1, Ruff, OpenSpec strict and diff-check.
 - [x] 19.7 Rehearse new migration on copied current `aco` SQLite and extend backup/restore acceptance.
 - [x] 19.8 Independent backend/data/security review.
 - [x] 19.9 Independent frontend/product review centered on “can a user actually control and complete the flow.”
 - [x] 19.10 Independent workflow/Agent contract review proving visible tuning equals executed tuning.
 - [x] 19.11 Record limitations: professional-tool automation quality and public publication remain separate evidence.
-- [ ] 19.12 Formal SQLite upgrade, canonical sync/archive, local commit and push each require their appropriate explicit authorization. Formal crs upgrade alone authorized/completed on 2026-10-06; canonical/archive/commit/push not performed.
+- [x] 19.12 Formal SQLite upgrade, canonical sync/archive, local commit and push each require their appropriate explicit authorization. Formal crs upgrade was separately completed on 2026-10-06; 2026-10-14 user authorized scoped canonical/archive/local commit, now completed with 144/144. Push remains unrequested and not performed, not an acceptance claim.

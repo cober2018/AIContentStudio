@@ -279,3 +279,16 @@
 
 /// 父任务 TypeScript 错误回传→核对当前第118行 unknown 条件→仅加 != null JSX 守卫→更新记录并冻结，不运行测试/构建。
 - [x] StageDomainResultPanel 第118行 unknown 条件窄修；无 as any；父任务统一验证仍待重跑。
+
+## 2026-10-14 独立收尾（用户确认）
+
+用户确认“补齐持久测试，按委托AI评审收口”。保全已归档multiplatform/main5e6b8b4，不由其43/43自动勾选本change。独立审阅真实版本/成果；质量采用署名AI评审，原human_review_required与未直接试听边界保留；Recipe19.4新持久测试获明确授权。生命周期按当前授权仅本地规范归档/提交，未请求push或公开发布。
+
+- [ ] /// 读取本change未完成项/需求/旧真实产物，逐hash核对；恢复正常Web入口，不重放Unknown或已成功生成。
+- [ ] /// Persona：独立评审2文章/6实际图卡/2完整旧音频；恢复原Stage脚本/安全provenance，缺失处明记；新wholeASR/声学仅作本地QA，不改素材权限。
+- [ ] /// Recipe：补齐反馈/保存调整/默认隔离/方法绑定/调优/领域接受的有意义持久覆盖；真实缺陷先红后绿最小修复，复用已有核心合同/receipt测试。
+- [ ] /// 从正常内容身份/Production入口验证两角色默认流程、预览/审阅/接受路径；Provider/发布不从只读菜单推定，必要新生成有界单列。
+- [ ] /// 独立规范/代码/质量复核，新鲜backend/Web/FE-P1/Ruff/strict/diff及真实staged候选门禁；只关闭真实通过项。
+- [ ] /// 对各自delta/canonical及相邻change做保全比较，分别归档、分别白名单本地提交；相邻plugins/运行配置/未追踪channel_methods保全。
+
+/// 收尾完成：本轮66持久案例/两最小缺陷修复及实际候选门禁通过；9capability32新增同步归档，144/144。align15.7/Persona和multiplatform各自成果保全；本地提交白名单7代码路径，不push。

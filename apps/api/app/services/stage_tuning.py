@@ -31,8 +31,8 @@ def _input(db, project_id, unit_id, node_id, user, request):
     if descriptor is None or descriptor.stage_contract is None:
         raise StageInvocationError("recipe_stage_contract_required")
     ids = request.get("feedback_event_ids")
-    if (type(ids) is not list or not 1 <= len(ids) <= 20 or len(set(ids)) != len(ids)
-            or any(type(value) is not int or value <= 0 for value in ids)):
+    if (type(ids) is not list or not 1 <= len(ids) <= 20
+            or any(type(value) is not int or value <= 0 for value in ids) or len(set(ids)) != len(ids)):
         raise StageInvocationError("recipe_tuning_feedback_required", status_code=422)
     evidence = []
     for event_id in ids:

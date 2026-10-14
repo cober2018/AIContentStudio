@@ -258,3 +258,23 @@ backend/data/security、domain/Master/Agent、frontend静态复核最终均APPRO
 实际技能：using-superpowers、receiving-code-review、writing-plans、executing-plans、openspec-apply-change；用户的禁止测试要求优先于技能中的逐项测试流程。
 
 父任务回传 TypeScript 第118行 unknown → ReactNode 错误：当前源码实际是 professional.execution.checkpoint（unknown）的直接 && 条件，并无 variant.preview 表达式。仅将该条件改成 != null 守卫，保持 unknown 和 stageValue 内容展示；未使用 as any，未运行测试/TypeScript/build，文件再次冻结。技能：using-superpowers、receiving-code-review、systematic-debugging（仅源码根因核对，用户禁止测试）。
+
+## 2026-10-14 独立收尾启动
+
+用户确认补齐Recipe持久测试并采用委托AI质量评审，历史禁写测试/等待真人评审口径由此收尾标准替代。当前141/144保持，尚未勾选；当前main5e6b8b4与67相邻dirty条目保全。归档multiplatform所有文件SHA已保存私有baseline。APIready=true，5173未监听，需要沿用既有Vite恢复入口。旧Persona324/246秒WAV不同于新multiplatform107/84秒，不复用后者ASR。
+
+## 新持久覆盖与最小修复
+
+learning新文件48参数化案例，真实API/SQLite覆盖反馈、显式调整、CAS未来Unit隔离、候选方法/精确复用、调优exactfeedback/receipt/claim/允许字段/Unknown。此前malformedIDs dict/list原TypeError两例RED，判型在set去重前的两行修复GREEN2；关联159 passed、Ruff/diff通过。日志私有recipe-learning-feedback-red.log与recipe-learning-resume-green.log将收录。领域wrapper/continuation覆盖独立推进中，任务尚未勾选。
+
+## 实际候选版本边界修复与独立复核
+
+实际HEAD+5路径候选首轮全量2665通过/28跳过/4失败：2真实Variant stage_receipt_bounds、1已知wewrite断链环境失败、1缺初始runtime表的旧Worker本地会话测试。独立追踪XVariant冻结包包含合法Descriptor深度13，超过旧12；选择性纳入stage_contracts仅MAX_DEPTH16小块、不纳入相邻remember_validation_code；保留其他秘密/集合/字节/类型边界，加16通过/17拒绝持久用例。四组143通过/Ruff及独立code-reviewer APPROVE，新增共66例；19.4关闭，142/144。Worker自身SessionLocal不走HTTP测试内存覆盖，候选目录default数据库预置空真实schema后最终全量复验；没有复制正式DB/素材或改产品测试入口。最终全量在candidate-backend-final.log，不将首轮/中断写成通过。
+
+## 新鲜完整候选门禁通过（2026-10-14）
+
+实际HEAD＋7归属文件候选：全量2670 passed / 28 skipped / 1既有wewrite环境失败 / 101 warnings / 152.00秒；该唯一断链已按用户口径豁免。Variant深度错误已关闭，旧Worker runtime schema初始化前提明确记录。TypeScript/Vite/FE-P1、Ruff全app＋归属测试、strict40/40、diff通过；两位独立代码/Python复核批准。19.6关闭，143/144，唯一剩生命周期19.12；本轮66持久案例和两处最小缺陷修复，无新增依赖/正式迁移/生成调用。
+
+## Recipe归档回验
+
+CLI九capability仅32新增、0修改/删除，原canonical所有requirement/scenario保全，无重复；相邻8任务hash保持。本change已归档2026-10-14-creation-recipe-stage-control-loop，144/144。执行时143/144仅生命周期自身，--yes依据用户独立收尾授权；原日志保留。只纳入本轮7代码路径（含stage_contracts必要depth单hunk），不纳入plugin/Studio/视频修正。实际本地commit以Git回读确认，无push/公开发布。

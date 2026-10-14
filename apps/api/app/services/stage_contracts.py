@@ -25,9 +25,13 @@ class StageContractError(ValueError):
     pass
 
 
+# Versioned nested Stage output contracts need room inside their frozen invocation envelope.
+MAX_DEPTH = 16
+
+
 def canonical(value, *, max_bytes=128 * 1024):
     def visit(item, depth=0):
-        if depth > 12:
+        if depth > MAX_DEPTH:
             raise StageContractError("stage_value_too_deep")
         if type(item) is dict:
             if len(item) > 128:

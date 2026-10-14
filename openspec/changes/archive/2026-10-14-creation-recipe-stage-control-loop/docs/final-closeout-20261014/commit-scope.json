@@ -1,0 +1,53 @@
+{
+  "schema": "recipe.local-candidate-scope.v1",
+  "base_head": "5e6b8b4ea4348f02968628ac56421505c0920ee0",
+  "code_files": [
+    {
+      "path": "apps/api/app/services/stage_tuning.py",
+      "candidate_sha256": "52879c8b3293c53a35f4258bd9998e06fba98cc912ebd6c84e4314b628049613",
+      "worktree_sha256": "52879c8b3293c53a35f4258bd9998e06fba98cc912ebd6c84e4314b628049613",
+      "selective_hunk": false
+    },
+    {
+      "path": "apps/api/tests/test_creation_recipe_learning.py",
+      "candidate_sha256": "338cf298ff8cd016346a307ce144839483f43c6e438ded76a3c8fd6d1c36794d",
+      "worktree_sha256": "338cf298ff8cd016346a307ce144839483f43c6e438ded76a3c8fd6d1c36794d",
+      "selective_hunk": false
+    },
+    {
+      "path": "apps/api/tests/test_aco_schema_lifecycle.py",
+      "candidate_sha256": "0d0e338b87e40101d626db565ee844b3803caf137ad085a698d71dd647c2f322",
+      "worktree_sha256": "0d0e338b87e40101d626db565ee844b3803caf137ad085a698d71dd647c2f322",
+      "selective_hunk": false
+    },
+    {
+      "path": "apps/api/tests/test_creation_recipe_domain_adoptions.py",
+      "candidate_sha256": "69a6b54f0fc83063fa2d82a8a36bb47ed6911bf98bddff8adbaacb357d576871",
+      "worktree_sha256": "69a6b54f0fc83063fa2d82a8a36bb47ed6911bf98bddff8adbaacb357d576871",
+      "selective_hunk": false
+    },
+    {
+      "path": "apps/api/tests/test_creation_recipe_continuation.py",
+      "candidate_sha256": "551e12316ac38d3971771e0941362070bff26046439df19cc2d8d95ca4fed6fd",
+      "worktree_sha256": "551e12316ac38d3971771e0941362070bff26046439df19cc2d8d95ca4fed6fd",
+      "selective_hunk": false
+    },
+    {
+      "path": "apps/api/app/services/stage_contracts.py",
+      "candidate_sha256": "fdaee17f665370f56189d17787e5d6fe11af4e49849befbf8f00d8dedac32b59",
+      "worktree_sha256": "c5c8f5c56b74b000df408ec3fbffcd1eab673a879536b139b8005c1b4d54c8e1",
+      "selective_hunk": true
+    },
+    {
+      "path": "apps/api/tests/test_creation_recipe_stages.py",
+      "candidate_sha256": "72212abcfff60cb8f761334161bf651cd8d28afa2cf79783cac1644b6f035320",
+      "worktree_sha256": "72212abcfff60cb8f761334161bf651cd8d28afa2cf79783cac1644b6f035320",
+      "selective_hunk": false
+    }
+  ],
+  "count": 7,
+  "excluded": "all adjacent plugin/channel_methods/Studio schema/preset/video changes",
+  "tests": "2670 passed/28skipped/1knownwewriteenvironmentexception; related143 passed; 66newpersistentcases;Web/Ruff/strict",
+  "formal_schema": "no new production changes; existinga3",
+  "push": false
+}

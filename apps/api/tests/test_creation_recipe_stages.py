@@ -602,3 +602,17 @@ def test_legacy_mutation_entrypoints_cannot_bypass_stage_claim(client, db_sessio
     db_session.expire_all()
     assert before == (run.status, step.status, step.output_json, step.output_hash)
     assert db_session.scalar(select(func.count(WorkflowStepAttempt.id))) == 0
+
+
+@pytest.mark.parametrize("depth, accepted", [(16, True), (17, False)])
+def test_nested_invocation_envelope_remains_bounded(depth, accepted):
+    from app.services.stage_contracts import StageContractError, canonical
+
+    value = "frozen field"
+    for _ in range(depth):
+        value = {"item": value}
+    if accepted:
+        assert canonical(value) == value
+    else:
+        with pytest.raises(StageContractError, match="stage_value_too_deep"):
+            canonical(value)

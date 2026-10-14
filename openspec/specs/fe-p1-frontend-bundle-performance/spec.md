@@ -57,3 +57,15 @@ The change SHALL be accepted only after a successful frontend type-check/build, 
 #### Scenario: Existing routes remain reachable
 - **WHEN** the FE-P1 implementation is reviewed for acceptance
 - **THEN** the verification record identifies each sampled direct URL and transition result, and any unverified browser behavior is reported as unverified rather than passed
+
+### Requirement: Creation Recipe normal controls remain lightweight and advanced tooling stays lazy
+
+The stage strip/control drawer and lightweight typed controls SHALL be available in normal Production without eagerly loading raw graph automation, TipTap, heavy Graphic/Video editors, Capability Memory management or professional-execution panels until opened.
+
+#### Scenario: Open Production stage list
+- **WHEN** the user views the recipe and a simple Text stage
+- **THEN** Advanced canvas, heavy unrelated modality editors and professional execution UI remain outside the initial closure
+
+#### Scenario: Open Advanced
+- **WHEN** the user explicitly opens graph/mapping automation
+- **THEN** the existing WorkflowMiniCanvas/NodeInspector bundle loads lazily without changing recipe state

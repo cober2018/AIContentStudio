@@ -1,0 +1,45 @@
+{
+  "schema": "recipe.persistent-coverage.v1",
+  "new_cases": 66,
+  "requirement_to_tests": {
+    "Contract/resolver/receipt/exactclaims": [
+      "test_creation_recipe_stages.py",
+      "test_creation_recipe_receipts.py",
+      "test_stage_invocations.py"
+    ],
+    "Master explicit/atomic/immutable adoption": [
+      "test_stage_master_adoptions.py",
+      "test_stage_master_proposals.py"
+    ],
+    "feedback gating/append/idempotency/noadoption shortcut": [
+      "test_creation_recipe_learning.py"
+    ],
+    "explicit override/contentedits/CAS/default future Unit isolation": [
+      "test_creation_recipe_learning.py"
+    ],
+    "method candidate/live scope/revision/plugin/checksum/exact apply": [
+      "test_creation_recipe_learning.py"
+    ],
+    "optional tuning exact feedback/allowlist/claim/pre-dispatch drift/Unknownnoresend": [
+      "test_creation_recipe_learning.py"
+    ],
+    "media signedtask/ratio/nobindMaster/association/rollback": [
+      "test_creation_recipe_domain_adoptions.py"
+    ],
+    "Variant/Checks/Professional explicit association/feedback atomic/warnings/preparationonly": [
+      "test_creation_recipe_domain_adoptions.py"
+    ],
+    "accepted content edited downstreamstale/oldrunningunknownproofpreserved": [
+      "test_creation_recipe_continuation.py"
+    ],
+    "nested frozen invocation depth bound16 allowed/17 rejected": [
+      "test_creation_recipe_stages.py"
+    ]
+  },
+  "product_fix": "stage_tuning _input validate exact positive integers before set uniqueness",
+  "extra_inherited_gate": "test_aco_schema_lifecycle acknowledges existing a3series00000001, no schema changes",
+  "live_provider_calls": 0,
+  "formal_db_writes": 0,
+  "adjacent_work_committed": false,
+  "necessary_compatibility_fix": "stage_contracts MAX_DEPTH16: committed exact X Variant Descriptor reaches depth13 inside claim envelope; retain strict bytes/secret/types/collections, candidate excludes adjacentvalidation helper"
+}

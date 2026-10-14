@@ -188,3 +188,13 @@ CLI1.2.0 artifacts齐备，strict36/36、tracked与19owned文件空白检查通�
 - 本轮新增所有权仅限 ProductionWorkspace/useProductionWorkflow 的同步片段；其他 dirty 修改保持现状。无新后端字段/API 需求，无测试/build 证据。
 
 - TypeScript 回传的 StageDomainResultPanel 第118行当前字段是 checkpoint?: unknown。unknown && JSX 的表达式仍可能为 unknown，不能当 ReactNode；!= null 使条件成为 boolean，同时收窄可空 execution 链，正文继续只渲染 stageValue 返回的字符串。只改该守卫，不更改领域协议或使用 as any；未自行重跑门禁。
+
+## 独立收尾事实边界（2026-10-14）
+
+C2C最终复核确认多平台归档，仅本change独立余项推进。用户现确认Recipe持久覆盖和AI委托质量；代码图MCP工具不可用，按已知相关模块和字符串搜索回退。旧临时验收DB多数已消失，耐久原件仍在；不能用新音频指标给旧成品记质量通过，或把旧投影当livecurrentness。保留untracked channel_methods及相邻plugin依赖，不将脏工作区等同独立已验证提交。
+
+核心Recipe/Persona实现在4646ad3已提交。现余dirty包含相邻channel插件/视频/schema资源扩展，收尾以HEAD+本轮最小测试/修复候选验证，不整体收编。Recipe9份delta全ADDED，Persona与Recipe同capability的requirement名无重叠；按用户独立收尾意图仅同步各自delta，align15.7保持。
+
+## 实际候选版本边界修复与独立复核
+
+实际HEAD+5路径候选首轮全量2665通过/28跳过/4失败：2真实Variant stage_receipt_bounds、1已知wewrite断链环境失败、1缺初始runtime表的旧Worker本地会话测试。独立追踪XVariant冻结包包含合法Descriptor深度13，超过旧12；选择性纳入stage_contracts仅MAX_DEPTH16小块、不纳入相邻remember_validation_code；保留其他秘密/集合/字节/类型边界，加16通过/17拒绝持久用例。四组143通过/Ruff及独立code-reviewer APPROVE，新增共66例；19.4关闭，142/144。Worker自身SessionLocal不走HTTP测试内存覆盖，候选目录default数据库预置空真实schema后最终全量复验；没有复制正式DB/素材或改产品测试入口。最终全量在candidate-backend-final.log，不将首轮/中断写成通过。

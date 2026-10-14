@@ -468,3 +468,11 @@ Browser-prove Text, Graphic and Video journeys without raw graph use; separately
 - **Prompt leakage** → bounded safe preview; secrets remain excluded; execution receipts store hashes/allowlisted projections.
 - **Too many stage-specific executors** → common Stage Contract and proposal/adoption envelope; modality validation remains in existing adapters.
 - **Migration lifecycle confusion** → Phase 0 aligns `aco` before any new migration and persistent tests become mandatory.
+
+## 2026-10-14 独立生命周期与持久覆盖
+
+用户明确补齐19.4持久测试并独立收尾Recipe/Persona，不顺带关闭align15.7。核心ACO/Recipe代码已在main，当前Recipe九delta全ADDED且与Persona新增requirement名无重叠，故可只同步本change增量并保全align原文/任务；不把新增capability-memory中Recipe职责当align整体完成。19.4复用已存核心Contract/Resolver/claim/Master覆盖，补反馈/保存调整/方法/调优及领域wrapper/stale保全。新增持久测试发现非法feedbackID先set导致500；只交换类型校验与去重顺序。本批无新产品状态表、依赖、生产数据迁移或公开发布。
+
+### 合法版本合同的有界冻结深度
+
+已提交多平台Descriptor的nested字段，在Recipe冻结envelope内合法达到深度13，旧12误拒正常Variant。收尾兼容修复把Stage JSON深度上限保留为有界16，17层拒绝；128KiB与集合数/类型/秘密字段限制不变。仅纳入必要depth常量hunk，未更改已确认Text/Graphic/Video模型响应形状或复制相邻验证诊断工具。

@@ -1,0 +1,83 @@
+{
+  "schema": "studio.daily-product-entry.v1",
+  "formal_api": "127.0.0.1:8000 ready true",
+  "formal_web": "127.0.0.1:5173 recovered via existing Vite; interruption kills ephemeral session so final recovery rechecked",
+  "formal_personas": [
+    {
+      "id": 2,
+      "name": "AI科技研发技术博主",
+      "text": "配置可开始",
+      "graphic": "部分就绪，project-specific render/credential check",
+      "audio": "requires explicit project Recipe + voice ID; no silent selection"
+    },
+    {
+      "id": 3,
+      "name": "日常生活方式博主",
+      "text": "配置可开始",
+      "graphic": "部分就绪",
+      "audio": "requires explicit project Recipe + voice ID"
+    }
+  ],
+  "isolated_ui_source": "clone of actual real acceptance SQLite, normal app routes; no mock fetches",
+  "routes": [
+    {
+      "persona": 2,
+      "path": "/projects/3/units/7/production",
+      "read": "currentMaster21, accepted spoken44, voice45/TTS46 realhistory visible",
+      "preview": "current source cover is model_use=false -> stage_asset_model_use_blocked; correct current rights guard, no forced new generation"
+    },
+    {
+      "persona": 3,
+      "path": "/projects/4/units/8/production",
+      "read": "currentMaster22, accepted real draft/spoken40/TTS42 result visible",
+      "preview": "no external provider dispatched"
+    }
+  ],
+  "observations": [
+    {
+      "file": "aics-tech-identity.txt",
+      "actual_source": "PlaywrightCLI normal product route snapshot",
+      "lines": 201,
+      "contains_direct_provider_output": false,
+      "warnings": [
+        "0 errors, 2 warnings"
+      ]
+    },
+    {
+      "file": "aics-life-identity.txt",
+      "actual_source": "PlaywrightCLI normal product route snapshot",
+      "lines": 198,
+      "contains_direct_provider_output": false,
+      "warnings": [
+        "0 errors, 2 warnings"
+      ]
+    },
+    {
+      "file": "aics-tech-result-snapshot.txt",
+      "actual_source": "PlaywrightCLI normal product route snapshot",
+      "lines": 718,
+      "contains_direct_provider_output": false,
+      "warnings": [
+        "2 errors, 2 warnings"
+      ]
+    },
+    {
+      "file": "aics-tech-preview-snapshot.txt",
+      "actual_source": "PlaywrightCLI normal product route snapshot",
+      "lines": 803,
+      "contains_direct_provider_output": false,
+      "warnings": [
+        "2 errors, 2 warnings"
+      ]
+    },
+    {
+      "file": "aics-life-result-snapshot.txt",
+      "actual_source": "PlaywrightCLI normal product route snapshot",
+      "lines": 0,
+      "contains_direct_provider_output": false,
+      "warnings": []
+    }
+  ],
+  "writes": "preview POST only resolves; no new Run/adoption/model dispatch",
+  "completion_boundary": "UI read/history/explicit preview verified; fresh daily new generation on formal two roles not claimed"
+}

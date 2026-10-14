@@ -1,0 +1,18 @@
+{
+  "capabilities": [
+    "model-capability-routing",
+    "material-library-v1",
+    "creation-recipe-stage-control-loop",
+    "fe-p1-frontend-bundle-performance",
+    "content-harness-registry",
+    "production-content-master",
+    "fe-f0-f1-project-experience",
+    "capability-memory",
+    "fe-f2-persistent-production-workflow"
+  ],
+  "added": 32,
+  "modified": 0,
+  "removed": 0,
+  "original_requirements_and_scenarios_retained": true,
+  "other_active_tasks_hashes_unchanged": true
+}
