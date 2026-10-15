@@ -1,0 +1,65 @@
+{
+  "files": [
+    {
+      "path": "apps/api/app/models.py",
+      "before_sha256": "c0238989a806245c7d8979163f9959688664a888fb83d9b60ff08d3624f4b2e0",
+      "after_sha256": "16debbcf8ecbbaa5813d5fd4b8d9b4296c34435acf822eecce9a9473a50a39bd"
+    },
+    {
+      "path": "apps/api/app/db.py",
+      "before_sha256": "0c8c0e2b2dab058ab2063ad6dbe4c82ff069941e61dec69c936edee7820a1523",
+      "after_sha256": "6ebbc2359629fc5e525e19b5da25e1235420a809fcdd47e7c695acd0722f2334"
+    },
+    {
+      "path": "apps/api/app/main.py",
+      "before_sha256": "5079a90c88a371d508f681419e0eaf7796abe2612d297eda0890eec2c35044b4",
+      "after_sha256": "5a6ed020f776bb7f0d672035f31cb135ff89b6eea9e260e134bddc8ed99e7d6a"
+    },
+    {
+      "path": "apps/api/app/services/creation_recipes.py",
+      "before_sha256": "95edb11e636afaae3a86118d0966ab5b849bcdcc8be198115a2406b611869756",
+      "after_sha256": "6baba076a998d36f31e340ae7f7265cc5cd09086c2d8fd4a36f3290e98fd7f87"
+    },
+    {
+      "path": "apps/api/app/services/workflow_engine.py",
+      "before_sha256": "bcbb5455939d886e4076d46b55929be59bde74b15c3f6712cc9eedc62092cf83",
+      "after_sha256": "5c87c2c7d7f26c9240567b378b2f047328d1d4d0e61878e01f41aab3c45b779b"
+    },
+    {
+      "path": "apps/api/app/services/stage_resolver.py",
+      "before_sha256": "e6a8261212b15af3587019b0a442e4883e99c1de1c45ff99dbef411e0112f036",
+      "after_sha256": "412cfc386da75727daabc01898e363feb5e0a083c61cacc281d3f895c34f52e9"
+    },
+    {
+      "path": "apps/web/src/product/project/ProjectEvidenceTab.tsx",
+      "before_sha256": "542ddd70f9c17b9f95cc6cb35e47811c48a92eb200f447cac9c48badc80530dd",
+      "after_sha256": "b94c98220d5b1062cab95f827b0b5ad55b63a2c19a28b8f5d146aeb2ce3def53"
+    },
+    {
+      "path": "apps/web/src/product/project/ObsidianKnowledgePanel.tsx",
+      "before_sha256": null,
+      "after_sha256": "c5abb34fc9ca357848be7e973cbdf60a691008ed6d477ebe6e04ee037c9e2f2c"
+    },
+    {
+      "path": "apps/api/app/services/obsidian_knowledge.py",
+      "before_sha256": null,
+      "after_sha256": "28caa180573fcee49cc731f4fdc763a960d30e8c15a0b0e7f3106ea9a5d51cce"
+    },
+    {
+      "path": "apps/api/app/routers/obsidian_knowledge.py",
+      "before_sha256": null,
+      "after_sha256": "ea8c0f4df37f2ad95641b7b8b1375a97474f2250112f8a64081600be83f0fbe8"
+    },
+    {
+      "path": "apps/api/alembic/versions/obsidian000001_project_knowledge_context.py",
+      "before_sha256": null,
+      "after_sha256": "0d66a000c55a13554311ec8ae762a62c01d0b8278d4f7b9fb309ba5258fee14e"
+    }
+  ],
+  "worktree": "/Users/mshengran/.codex/worktrees/obsidian-knowledge/AIContentStudio",
+  "independent_python": "APPROVE",
+  "independent_typescript": "APPROVE",
+  "independent_overall": "APPROVE",
+  "baseline_existing_checks": "114 passed",
+  "candidate_existing_checks": "181 passed"
+}

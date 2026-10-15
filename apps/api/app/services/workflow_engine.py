@@ -876,6 +876,12 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
         workflow_version=workflow.version,
         definition_checksum=workflow.checksum or definition_checksum(workflow.definition_json),
     )
+    if content_unit_id is not None:
+        from .obsidian_knowledge import freeze_for_unit
+
+        knowledge = freeze_for_unit(db, unit)
+        if knowledge is not None:
+            run.context_json = {"knowledge_context": knowledge}
     db.add(run)
     db.flush()
     from .content_harness.nodes import node_config_of

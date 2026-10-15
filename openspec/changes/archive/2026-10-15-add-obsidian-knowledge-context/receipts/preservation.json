@@ -1,0 +1,30 @@
+{
+  "old_business_rows": 968,
+  "old_business_rows_changed": 0,
+  "old_business_rows_deleted": 0,
+  "schema_change": {
+    "before": "a3series00000001",
+    "after": "obsidian000001",
+    "additive_table": "project_knowledge_context_revision"
+  },
+  "sqlite_integrity": "ok",
+  "foreign_key_violations": 0,
+  "files": {
+    "media.json": {
+      "checked": 75,
+      "changed_or_missing": []
+    },
+    "archives.json": {
+      "checked": 477,
+      "changed_or_missing": []
+    },
+    "selected_vault_files": {
+      "checked": 3,
+      "changed_or_missing": []
+    }
+  },
+  "adjacent_paths_outside_ownership_checked": 62,
+  "adjacent_paths_changed": [],
+  "runtime_only_required_schema_head_changed": true,
+  "runtime_mode": "0o600"
+}

@@ -7,6 +7,7 @@ import { readableValue } from "../systemLibraryTypes";
 const SourceDrawer = lazy(() => import("../../pages/Sources").then(module => ({ default: module.SourceDrawer })));
 const PackBuilder = lazy(() => import("../../pages/FactPacks").then(module => ({ default: module.PackBuilder })));
 const NewPackForm = lazy(() => import("../../pages/FactPacks").then(module => ({ default: module.NewPackForm })));
+const ObsidianKnowledgePanel = lazy(() => import("./ObsidianKnowledgePanel").then(module => ({ default: module.ObsidianKnowledgePanel })));
 
 type Source = { id: number; title: string; source_type: string; parse_status: string; is_archived?: boolean; facts?: { id: number; statement: string; status: string }[] };
 type SourceBinding = { id: number; source_document_id: number; title: string; source_type: string; parse_status: string };
@@ -60,6 +61,7 @@ export function ProjectEvidenceTab({ projectId, readOnly: archived = false }: { 
   return <section className="space-y-5">
     {error && <ErrorBanner message={error} />}
     {me.isError && <ErrorBanner message="无法核对操作权限；当前仅可查看，不能修改证据。" />}
+    <Suspense fallback={<Spinner label="读取知识参考…" />}><ObsidianKnowledgePanel projectId={projectId} readOnly={readOnly} onSaved={() => reload().catch(err => setError(messageOf(err)))} /></Suspense>
     <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4"><h2 className="font-semibold">项目来源</h2><p className="text-xs text-slate-500">引用现有 Source；从项目解除引用不会更改历史冻结事实边界。</p>
       {sources.length ? <ul className="space-y-2">{sources.map((item) => <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm"><span>{item.title} · {item.source_type} · {item.parse_status}</span><div className="flex gap-2"><Button size="sm" variant="secondary" onClick={() => inspect(item.source_document_id)}>查看事实</Button>{!readOnly && <Button size="sm" variant="danger" disabled={busy} onClick={() => action(() => api.del(`${base}/sources/${item.source_document_id}`))}>解除引用</Button>}</div></li>)}</ul> : <EmptyState title="项目尚无来源引用" />}
       {!readOnly && <><div className="flex gap-2"><select className={inputClass} value={sourceId} onChange={(event) => setSourceId(event.target.value)}><option value="">选择已有 Source</option>{library.filter((item) => !sources.some((bound) => bound.source_document_id === item.id)).map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select><Button disabled={!sourceId || busy} onClick={() => action(() => attach(Number(sourceId)))}>引用</Button></div>

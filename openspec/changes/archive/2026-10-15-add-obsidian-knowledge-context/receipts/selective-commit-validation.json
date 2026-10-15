@@ -1,0 +1,13 @@
+{
+  "baseline_head": "ea6f65ef21c4549ea82a4afa256e8eefe7799acb",
+  "code_tree": "e95df9b07c68735f465f59a1298a52687b2d964e",
+  "selection_method": "Apply only private before-source to reviewed current source delta to HEAD; all 11 owned changes apply cleanly. No baseline adjacent changes staged.",
+  "owned_source_paths": 11,
+  "insertions": 711,
+  "deletions": 2,
+  "isolated_candidate_existing_tests": "173 passed, 8 warnings",
+  "isolated_candidate_web_build": "passed TypeScript / Vite / bundle gate",
+  "dirty_worktree_existing_tests": "181 passed, 8 warnings; includes 8 adjacent existing tests absent in committed HEAD",
+  "new_persistent_tests": 0,
+  "push": false
+}

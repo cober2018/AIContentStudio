@@ -37,6 +37,8 @@ def resolve_stage(*, workflow, node, contract, context, upstream, method, model,
     )
     if creative is not None:
         values = (*values, ("persona_creative_configuration", creative))
+    if context.get("knowledge_context") is not None:
+        values = (*values, ("selected_knowledge_and_style", context["knowledge_context"]))
     if "shared_asset_refs" in context:
         values = (*values, ("project_shared_assets", {"exact_refs": context["shared_asset_refs"],
             "coverage": context.get("shared_assets_coverage"),

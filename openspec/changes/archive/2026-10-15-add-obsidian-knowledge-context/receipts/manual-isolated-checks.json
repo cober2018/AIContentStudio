@@ -1,0 +1,22 @@
+{
+  "kind": "manual-isolated-http-and-persistence-check",
+  "formal_database_writes": 0,
+  "real_vault_reads": 0,
+  "provider_calls": 0,
+  "passed": [
+    "admin connection save",
+    "bounded search excludes hidden/symlink",
+    "path traversal and symlink denied",
+    "explicit selection defaults model grant false",
+    "ungranted text excluded from model snapshot",
+    "explicit model grant new version",
+    "idempotent repeated selection",
+    "stale revision denied",
+    "same excerpt dedup with independent note version locators",
+    "resave preserves separate same-source scope provenance",
+    "pending note cannot silently change vault",
+    "saved-source grant edit does not require live vault",
+    "revoked grant blocks frozen input"
+  ],
+  "count": 13
+}

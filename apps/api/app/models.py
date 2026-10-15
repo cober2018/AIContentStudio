@@ -1659,6 +1659,23 @@ class ContentProject(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
 
+class ProjectKnowledgeContextRevision(Base):
+    __tablename__ = "project_knowledge_context_revision"
+    __table_args__ = (
+        UniqueConstraint("project_id", "revision_no", name="uq_project_knowledge_revision"),
+        CheckConstraint("revision_no > 0", name="ck_project_knowledge_revision_positive"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("project_knowledge_context_revision.id"))
+    items_json: Mapped[list] = mapped_column(JSON)
+    checksum: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ContentOpportunity(Base):
     __tablename__ = "content_opportunity"
     __table_args__ = (

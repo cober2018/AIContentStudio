@@ -1,0 +1,112 @@
+{
+  "created_at": "2026-10-15T03:03:10.762966+00:00",
+  "limit_registered_dispatches": 4,
+  "limit_semantic_qc": 4,
+  "limit_total": 8,
+  "concurrency": 1,
+  "minimum_top_level_start_interval_seconds": 10,
+  "unknown_retry": "forbidden_without_reconciliation",
+  "price": "unknown_not_zero",
+  "entries": [
+    {
+      "project_id": 5,
+      "unit_id": 11,
+      "run_id": 14,
+      "node_id": "draft",
+      "purpose": "initial",
+      "ui_dispatch_reserved_at": "2026-10-15T03:04:09.816603+00:00",
+      "status": "succeeded",
+      "attempt_id": 80,
+      "llm_run_id": 52,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "created_at": "2026-10-15T03:04:12.910414+00:00",
+      "finalized_at": "2026-10-15T03:04:21.354211+00:00",
+      "dispatch_certainty": "confirmed_dispatched",
+      "usage": {
+        "prompt_tokens": 4493,
+        "completion_tokens": 476,
+        "total_tokens": 4969
+      },
+      "price": "unknown_not_zero"
+    },
+    {
+      "project_id": 5,
+      "unit_id": 11,
+      "run_id": 15,
+      "node_id": "draft",
+      "purpose": "refine_accepted_master_34",
+      "ui_dispatch_reserved_at": "2026-10-15T03:05:44.552636+00:00",
+      "status": "succeeded",
+      "attempt_id": 81,
+      "llm_run_id": 53,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "created_at": "2026-10-15T03:06:14.775493+00:00",
+      "finalized_at": "2026-10-15T03:06:38.718577+00:00",
+      "dispatch_certainty": "confirmed_dispatched",
+      "usage": {
+        "prompt_tokens": 5380,
+        "completion_tokens": 2725,
+        "total_tokens": 8105
+      },
+      "price": "unknown_not_zero"
+    },
+    {
+      "project_id": 6,
+      "unit_id": 12,
+      "run_id": 16,
+      "node_id": "draft",
+      "purpose": "initial",
+      "ui_dispatch_reserved_at": "2026-10-15T03:14:57.295979+00:00",
+      "status": "succeeded",
+      "attempt_id": 82,
+      "llm_run_id": 54,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "created_at": "2026-10-15T03:15:00.395117+00:00",
+      "finalized_at": "2026-10-15T03:15:25.753573+00:00",
+      "dispatch_certainty": "confirmed_dispatched",
+      "usage": {
+        "prompt_tokens": 4605,
+        "completion_tokens": 2018,
+        "total_tokens": 6623
+      },
+      "price": "unknown_not_zero"
+    },
+    {
+      "project_id": 6,
+      "unit_id": 12,
+      "run_id": 17,
+      "node_id": "draft",
+      "purpose": "refine_accepted_master",
+      "ui_dispatch_reserved_at": "2026-10-15T03:16:26.699891+00:00",
+      "status": "succeeded",
+      "attempt_id": 83,
+      "llm_run_id": 55,
+      "provider": "openai_compatible",
+      "model": "gemini-3.8-flash-high",
+      "created_at": "2026-10-15T03:16:29.831209+00:00",
+      "finalized_at": "2026-10-15T03:16:48.578303+00:00",
+      "dispatch_certainty": "confirmed_dispatched",
+      "usage": {
+        "prompt_tokens": 5253,
+        "completion_tokens": 2184,
+        "total_tokens": 7437
+      },
+      "price": "unknown_not_zero"
+    }
+  ],
+  "completed_at": "2026-10-15T03:17:54.260855+00:00",
+  "registered_dispatches_actual": 4,
+  "semantic_qc_calls_actual": 0,
+  "total_provider_calls_actual": 4,
+  "application_retries": 0,
+  "public_publications": 0,
+  "start_intervals_seconds": [
+    121.865079,
+    525.619624,
+    89.436092
+  ],
+  "total_tokens_reported": 27134
+}

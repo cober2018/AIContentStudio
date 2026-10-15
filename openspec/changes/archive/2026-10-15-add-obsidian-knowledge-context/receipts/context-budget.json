@@ -1,0 +1,35 @@
+{
+  "kind": "bounded_actual_registered_contract",
+  "max_bytes": 131072,
+  "knowledge_chars": 6000,
+  "notes": 5,
+  "brief_chars": 351,
+  "accepted_text_chars": 267,
+  "cases": {
+    "tech_draft": [
+      108328,
+      126328
+    ],
+    "tech_refine": [
+      106448,
+      124448
+    ],
+    "life_draft": [
+      109216,
+      127216
+    ],
+    "life_refine": [
+      107336,
+      125336
+    ]
+  },
+  "columns": [
+    "chinese_bytes",
+    "four_byte_character_bytes"
+  ],
+  "all_ready": true,
+  "limit": "Larger brief or upstream content can still hit existing canonical budget; this does not guarantee arbitrary Master size.",
+  "formal_db_writes": 0,
+  "vault_writes": 0,
+  "provider_calls": 0
+}

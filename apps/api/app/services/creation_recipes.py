@@ -502,6 +502,13 @@ def _context(db, project, unit, run):
     }
     if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
         blockers.append("stage_master_refs_limit")
+    if unit.modality == "text":
+        from .obsidian_knowledge import stage_context
+
+        knowledge, knowledge_blockers = stage_context(db, unit, run)
+        if knowledge is not None:
+            context["knowledge_context"] = knowledge
+        blockers.extend(knowledge_blockers)
     workflow = db.get(Workflow, run.workflow_id if run else unit.pinned_workflow_id) if (run or unit.pinned_workflow_id) else None
     if workflow and any(node.get("plugin") == "stage.graphic.compose" for node in workflow.definition_json.get("nodes", [])):
         from ..models import MaterialRevision, ProjectMaterialReference

@@ -1,0 +1,8 @@
+{
+  "schema_head": "obsidian000001",
+  "upgrade_idempotent": true,
+  "old_business_tables_unchanged": true,
+  "integrity": "ok",
+  "foreign_key_violations": 0,
+  "new_context_rows": 0
+}

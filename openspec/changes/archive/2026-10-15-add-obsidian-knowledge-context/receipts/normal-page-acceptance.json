@@ -1,0 +1,65 @@
+{
+  "normal_browser": "Playwright CLI real browser; no mocked responses",
+  "connection_revision": 1,
+  "configured_folders": [
+    "knowledge/permanent",
+    "自媒体/文章"
+  ],
+  "search_scanned": 72,
+  "projects": [
+    {
+      "project_id": 5,
+      "unit_id": 11,
+      "persona_id": 2,
+      "knowledge_revision": 1,
+      "selection_chars": 619,
+      "source_ids": [
+        4,
+        5
+      ],
+      "accepted_master_ids": [
+        34,
+        35
+      ],
+      "evidence_reload": true,
+      "master_reload": true
+    },
+    {
+      "project_id": 6,
+      "unit_id": 12,
+      "persona_id": 3,
+      "knowledge_revision": 1,
+      "selection_chars": 545,
+      "source_ids": [
+        6,
+        5
+      ],
+      "accepted_master_ids": [
+        36,
+        37
+      ],
+      "evidence_reload": true,
+      "master_reload": true
+    }
+  ],
+  "normal_ui_writes": [
+    "connection",
+    "project",
+    "brief",
+    "unit",
+    "note_search_preview",
+    "explicit_selection_grant",
+    "knowledge_save",
+    "recipe_choice",
+    "run_prepare",
+    "request_preview",
+    "execute",
+    "accept_master"
+  ],
+  "workflow": "Existing direct-generate recipe; initial and explicit refine of accepted Master in separate runs",
+  "persona_default_workflows_modified": false,
+  "fact_boundary": "reflection / hypothetical opinion, selected knowledge not automatically facts",
+  "vault_writes": 0,
+  "mcp_installations": 0,
+  "public_publications": 0
+}

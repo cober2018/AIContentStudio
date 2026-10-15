@@ -34,6 +34,7 @@ from .routers import (
     home,
     learning,
     materials,
+    obsidian_knowledge,
     opportunities,
     performance_history,
     product_settings,
@@ -155,6 +156,7 @@ for router in (
     project_assets,
     project_read_models,
     project_review,
+    obsidian_knowledge,
     health,
     external,
 ):
