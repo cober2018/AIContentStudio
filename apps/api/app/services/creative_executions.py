@@ -6,6 +6,7 @@ import hashlib
 import inspect
 import io
 import re
+from contextlib import ExitStack
 from functools import wraps
 
 from fastapi import HTTPException
@@ -26,6 +27,7 @@ from ..models import (
     utcnow,
 )
 from . import creative_execution_files as files
+from . import creative_media_stream as streams
 from .content_masters import owned_unit
 from .creative_contracts import (
     EXECUTOR_DECLARATION_FIELDS,
@@ -199,6 +201,7 @@ def _atomic(function):
 
     @wraps(function)
     def call(db, *args, **kwargs):
+        transport_scope = ExitStack()
         try:
             arguments = signature.bind(db, *args, **kwargs).arguments
             user = arguments["user"]
@@ -208,6 +211,10 @@ def _atomic(function):
                     CreativeExecution.owner_user_id == user.id,
                     CreativeExecution.idempotency_key == arguments["payload"].get("idempotency_key"),
                 ))
+            if execution_id is not None and function.__name__ in {"submit_output", "_reserve_inputs"}:
+                transfer_row = _owned(db, arguments["project_id"], arguments["unit_id"], execution_id, user, mutate=True)
+                if streams.policy(_package(db, transfer_row, user)):
+                    transport_scope.enter_context(streams.transfer(user.id, execution_id))
             before = db.scalar(select(CreativeExecution.revision_no).where(
                 CreativeExecution.id == execution_id, CreativeExecution.owner_user_id == user.id,
             )) if execution_id is not None else None
@@ -240,6 +247,8 @@ def _atomic(function):
         except BaseException:
             db.rollback()
             raise
+        finally:
+            transport_scope.close()
     return call
 
 
@@ -490,7 +499,7 @@ def _projection(db: Session, row: CreativeExecution, user: User, *, include_outp
 
 
 @_atomic
-def prepare_execution(db: Session, project_id: int, unit_id: int, payload: dict, user: User) -> dict:
+def prepare_execution(db: Session, project_id: int, unit_id: int, payload: dict, user: User, *, _historical_web_takeover: bool = False) -> dict:
     _payload(payload, {"package_id", "idempotency_key", "executor_kind", "executor_key", "executor_version", "retry_of_id", "metadata"})
     owned_unit(db, project_id, unit_id, user, mutate=True)
     package = owned_package(db, project_id, unit_id, _id(payload.get("package_id")), user)
@@ -511,6 +520,13 @@ def prepare_execution(db: Session, project_id: int, unit_id: int, payload: dict,
         if existing.request_fingerprint != fingerprint:
             raise _error("creative_execution_idempotency_conflict")
         return _projection(db, existing, user)
+    if package.package_json.get("web_video") is not None and not _historical_web_takeover:
+        from .web_video_handoff import validate_new_web_package
+        validate_new_web_package(package.package_json)
+    if package.package_json.get("web_video") is not None and executor != {
+        "executor_kind": "human", "executor_key": "manual-web-video", "executor_version": "1",
+    }:
+        raise _error("web_video_manual_generation_required", 422)
     descriptor = executor_descriptor(executor, metadata, require_complete=True)
     if descriptor["declaration_status"] == "declared" and any(role["kind"] not in descriptor["output_kinds"] for role in _roles(package)):
         raise _error("creative_execution_output_kinds_contract_mismatch", 422)
@@ -535,6 +551,9 @@ def prepare_execution(db: Session, project_id: int, unit_id: int, payload: dict,
 
 
 def _cleanup_references(db: Session, row: CreativeExecution, output: CreativeExecutionOutput, user: User) -> list[int]:
+    package = _package(db, row, user)
+    if streams.policy(package) and package.package_schema == "director.video.v1":
+        raise _error("creative_execution_project_dependencies_retained")
     if row.state == "unknown" or (row.state == "blocked" and row.safe_reason != "needs_output_replacement"):
         raise _error("creative_execution_cleanup_unresolved")
     if (output.state not in {"rejected", "accepted"}
@@ -565,9 +584,14 @@ def _cleanup_references(db: Session, row: CreativeExecution, output: CreativeExe
                     or not isinstance(revision.file_path, str)
                     or not re.fullmatch(r"material/[0-9a-f]{2}/" + ref.content_hash + r"(?:\.[A-Za-z0-9]+)?", revision.file_path)):
                 raise _error("creative_execution_cleanup_material_unverified")
-            content = files.read_material(revision)
-            if len(content) != ref.size_bytes or hashlib.sha256(content).hexdigest() != ref.content_hash:
-                raise _error("creative_execution_cleanup_material_unverified")
+            if streams.policy(package):
+                with streams.material_file(revision, streams.policy(package)["max_file_bytes"]) as source:
+                    if streams.inspect(source, streams.policy(package)["max_file_bytes"]) != (ref.size_bytes, ref.content_hash):
+                        raise _error("creative_execution_cleanup_material_unverified")
+            else:
+                content = files.read_material(revision)
+                if len(content) != ref.size_bytes or hashlib.sha256(content).hexdigest() != ref.content_hash:
+                    raise _error("creative_execution_cleanup_material_unverified")
     return [ref.id for ref in refs]
 
 
@@ -821,6 +845,8 @@ def _reserve_inputs(db: Session, project_id: int, unit_id: int, execution_id: in
     _executor(payload, row)
     package = _package(db, row, user, current=True)
     revisions = {revision.id: revision for revision in check_inputs(db, package)}
+    if streams.policy(package):
+        streams.budget(db, row, package, 0)
     requested = payload.get("material_revision_ids", list(revisions))
     if not isinstance(requested, list) or len(requested) > MAX_INPUTS or len(revisions) > MAX_INPUTS:
         raise _error("creative_execution_input_count_invalid", 422)
@@ -832,21 +858,29 @@ def _reserve_inputs(db: Session, project_id: int, unit_id: int, execution_id: in
     snapshots = {item["material_revision_id"]: item for item in previous}
     if set(requested) - snapshots.keys() and any(output.state == "accepted" for output in _outputs(db, row)):
         raise _error("creative_execution_input_boundary_frozen")
-    total_bytes = sum(item["size_bytes"] for item in snapshots.values())
-    if total_bytes > MAX_INPUT_BYTES:
+    limit = streams.policy(package)
+    maximum_total = limit["max_total_bytes"] if limit else MAX_INPUT_BYTES
+    maximum_file = limit["max_file_bytes"] if limit else MAX_FILE_BYTES
+    output_bytes = sum(item.size_bytes for item in _outputs(db, row)) if limit else 0
+    total_bytes = sum(item["size_bytes"] for item in snapshots.values()) + output_bytes
+    if total_bytes > maximum_total:
         raise _error("creative_execution_input_bytes_exceeded", 413)
     for revision_id in requested:
         previous_size = snapshots[revision_id]["size_bytes"] if revision_id in snapshots else 0
-        remaining = MAX_INPUT_BYTES - total_bytes + previous_size
+        remaining = maximum_total - total_bytes + previous_size
         if remaining <= 0:
             raise _error("creative_execution_input_bytes_exceeded", 413)
-        content = files.read_material(revisions[revision_id], maximum=min(MAX_FILE_BYTES, remaining))
-        snapshot = _input_snapshot(revisions[revision_id], package, size=len(content))
+        if limit:
+            with streams.material_file(revisions[revision_id], min(maximum_file, remaining)) as source:
+                size, _digest = streams.inspect(source, min(maximum_file, remaining))
+        else:
+            size = len(files.read_material(revisions[revision_id], maximum=min(MAX_FILE_BYTES, remaining)))
+        snapshot = _input_snapshot(revisions[revision_id], package, size=size)
         if revision_id in snapshots and snapshots[revision_id] != snapshot:
             raise _error("creative_execution_materialized_input_changed")
-        total_bytes += len(content) - previous_size
+        total_bytes += size - previous_size
         snapshots[revision_id] = snapshot
-    if len(snapshots) > MAX_INPUTS or total_bytes > MAX_INPUT_BYTES:
+    if len(snapshots) > MAX_INPUTS or total_bytes > maximum_total:
         raise _error("creative_execution_input_bytes_exceeded", 413)
     manifest = [snapshots[key] for key in sorted(snapshots)]
     _cas(db, row, expected, materialized_inputs_json=manifest)
@@ -870,10 +904,17 @@ def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id:
     snapshots = {item["material_revision_id"]: item for item in result["materialized_inputs"]}
     for target in result["files"]:
         revision_id = target["material_revision_id"]
-        content = files.read_material(revisions[revision_id], maximum=target["size_bytes"])
-        if _input_snapshot(revisions[revision_id], package, size=len(content)) != snapshots[revision_id]:
-            raise _error("creative_execution_materialized_input_changed")
-        files.write_file(user.id, row.id, target["relative_path"], content)
+        if streams.policy(package):
+            with streams.transfer(user.id, row.id), streams.material_file(revisions[revision_id], target["size_bytes"]) as source:
+                size, _digest = streams.inspect(source, target["size_bytes"])
+                if _input_snapshot(revisions[revision_id], package, size=size) != snapshots[revision_id]:
+                    raise _error("creative_execution_materialized_input_changed")
+                streams.copy_private(user.id, row.id, target["relative_path"], source, target["size_bytes"], expected_hash=target["content_hash"])
+        else:
+            content = files.read_material(revisions[revision_id], maximum=target["size_bytes"])
+            if _input_snapshot(revisions[revision_id], package, size=len(content)) != snapshots[revision_id]:
+                raise _error("creative_execution_materialized_input_changed")
+            files.write_file(user.id, row.id, target["relative_path"], content)
     if not result["files"]:
         with files.root_fd(user.id, row.id, create=True):
             pass
@@ -882,7 +923,7 @@ def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id:
 
 
 @_atomic
-def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User, *, uploaded_content: bytes | None = None) -> dict:
+def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User, *, uploaded_content: bytes | None = None, uploaded_stream=None) -> dict:
     _payload(payload, {"expected_revision", "executor_kind", "executor_key", "executor_version", "role_id", "kind",
         "output_index", "attempt_no", "relative_path", "mime_type", "content_hash", "metadata"})
     row = _owned(db, project_id, unit_id, execution_id, user, mutate=True)
@@ -913,22 +954,56 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
     if mime not in role["allowed_mime"]:
         raise _error("creative_execution_output_mime_invalid", 422)
     metadata = _metadata(payload.get("metadata"))
-    content = uploaded_content if uploaded_content is not None else files.read_file(user.id, row.id, payload.get("relative_path"), maximum=role["max_bytes"], output=True)
-    if not 0 < len(content) <= role["max_bytes"]:
-        raise _error("execution_file_size_invalid", 413)
-    validate_execution_file(content, mime, role["kind"])
-    digest = hashlib.sha256(content).hexdigest()
-    if "content_hash" in payload and payload["content_hash"] != digest:
-        raise _error("creative_execution_output_hash_mismatch")
-    key = f"staging/{digest}.bin"
-    files.write_file(user.id, row.id, key, content)
+    web = package.package_json.get("web_video")
+    if web:
+        if metadata.get("web_provider", web["provider"]) != web["provider"]:
+            raise _error("creative_web_provider_mismatch", 422)
+        metadata = {**metadata, "web_provider": web["provider"]}
+    if streams.policy(package):
+        with streams.transfer(user.id, row.id), ExitStack() as stack:
+            source = uploaded_stream if uploaded_stream is not None else stack.enter_context(streams.execution_file(user.id, row.id, payload.get("relative_path"), role["max_bytes"]))
+            size, digest = streams.inspect(source, role["max_bytes"])
+            streams.budget(db, row, package, size)
+            streams.validate(source, mime, role["kind"], package, role_id=role_id)
+            if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
+                import json
+
+                from .web_video_handoff import validate_edit_manifest
+                source.seek(0)
+                validate_edit_manifest(package.package_json, json.loads(source.read(2_000_001)))
+                source.seek(0)
+            if "content_hash" in payload and payload["content_hash"] != digest:
+                raise _error("creative_execution_output_hash_mismatch")
+            key = f"staging/{digest}.bin"
+            streams.copy_private(user.id, row.id, key, source, role["max_bytes"], expected_hash=digest)
+    else:
+        content = uploaded_content if uploaded_content is not None else files.read_file(user.id, row.id, payload.get("relative_path"), maximum=role["max_bytes"], output=True)
+        if not 0 < len(content) <= role["max_bytes"]:
+            raise _error("execution_file_size_invalid", 413)
+        validate_execution_file(content, mime, role["kind"])
+        digest, size = hashlib.sha256(content).hexdigest(), len(content)
+        if "content_hash" in payload and payload["content_hash"] != digest:
+            raise _error("creative_execution_output_hash_mismatch")
+        key = f"staging/{digest}.bin"
+        files.write_file(user.id, row.id, key, content)
     output = CreativeExecutionOutput(execution_id=row.id, role_id=role["role_id"], kind=role["kind"],
         output_index=index, attempt_no=attempt, staging_key=key, mime_type=mime, content_hash=digest,
-        size_bytes=len(content), metadata_json=metadata, state="staged", created_by=user.email)
+        size_bytes=size, metadata_json=metadata, state="staged", created_by=user.email)
     db.add(output)
     db.flush()
     outputs.append(output)
     ready, accepted = _completion(package, outputs)
+    if ready and streams.policy(package) and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
+        import json
+
+        from .web_video_handoff import validate_edit_output_hashes
+        manifest = _latest(outputs).get(("edit_manifest", 1))
+        if manifest is None:
+            raise _error("creative_execution_required_outputs_missing")
+        with streams.execution_file(user.id, row.id, manifest.staging_key, 2_000_000) as source:
+            if streams.inspect(source, 2_000_000) != (manifest.size_bytes, manifest.content_hash):
+                raise _error("creative_execution_staged_output_changed")
+            validate_edit_output_hashes(package.package_json, outputs, json.loads(source.read(2_000_001)))
     replacement_missing = _needs_replacement(package, outputs)
     target = "blocked" if replacement_missing else "accepted" if accepted else "result_ready" if ready else "in_progress"
     _cas(db, row, expected, state=target, safe_reason="needs_output_replacement" if replacement_missing else None,
@@ -956,12 +1031,22 @@ def _live_materialized(db: Session, row: CreativeExecution, package: CreativeExe
         if revision_id in seen or revision_id not in revisions:
             raise _error("creative_execution_input_not_in_package")
         seen.add(revision_id)
-        content = files.read_material(revisions[revision_id])
-        if snapshot != _input_snapshot(revisions[revision_id], package, size=len(content)):
-            raise _error("creative_execution_materialized_input_changed")
-        transported = files.read_file(row.owner_user_id, row.id, f"inputs/{revision_id}-{snapshot['content_hash']}.bin")
-        if hashlib.sha256(transported).hexdigest() != snapshot["content_hash"] or len(transported) != snapshot["size_bytes"]:
-            raise _error("creative_execution_materialized_input_changed")
+        if streams.policy(package):
+            maximum = streams.policy(package)["max_file_bytes"]
+            with streams.material_file(revisions[revision_id], maximum) as source:
+                size, digest = streams.inspect(source, maximum)
+            if snapshot != _input_snapshot(revisions[revision_id], package, size=size):
+                raise _error("creative_execution_materialized_input_changed")
+            with streams.execution_file(row.owner_user_id, row.id, f"inputs/{revision_id}-{snapshot['content_hash']}.bin", maximum) as source:
+                if streams.inspect(source, maximum) != (size, digest):
+                    raise _error("creative_execution_materialized_input_changed")
+        else:
+            content = files.read_material(revisions[revision_id])
+            if snapshot != _input_snapshot(revisions[revision_id], package, size=len(content)):
+                raise _error("creative_execution_materialized_input_changed")
+            transported = files.read_file(row.owner_user_id, row.id, f"inputs/{revision_id}-{snapshot['content_hash']}.bin")
+            if hashlib.sha256(transported).hexdigest() != snapshot["content_hash"] or len(transported) != snapshot["size_bytes"]:
+                raise _error("creative_execution_materialized_input_changed")
     return snapshots
 
 
@@ -1043,10 +1128,19 @@ def decide_output(db: Session, project_id: int, unit_id: int, execution_id: int,
         if not isinstance(title, str) or not 1 <= len(title.strip()) <= 255:
             raise _error("creative_execution_title_invalid", 422)
         _metadata({"summary": title})
-        content = files.read_file(user.id, row.id, output.staging_key)
-        if hashlib.sha256(content).hexdigest() != output.content_hash or len(content) != output.size_bytes:
-            raise _error("creative_execution_staged_output_changed")
-        validate_execution_file(content, output.mime_type, output.kind)
+        limit = streams.policy(package)
+        media_info = {}
+        if limit:
+            with streams.execution_file(user.id, row.id, output.staging_key, limit["max_file_bytes"]) as source:
+                if streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
+                    raise _error("creative_execution_staged_output_changed")
+                media_info = streams.validate(source, output.mime_type, output.kind, package, role_id=output.role_id)
+            content = b""
+        else:
+            content = files.read_file(user.id, row.id, output.staging_key)
+            if hashlib.sha256(content).hexdigest() != output.content_hash or len(content) != output.size_bytes:
+                raise _error("creative_execution_staged_output_changed")
+            validate_execution_file(content, output.mime_type, output.kind)
         from .material_storage import LocalMaterialStorage, provider
 
         if not isinstance(provider(), LocalMaterialStorage):
@@ -1058,6 +1152,10 @@ def decide_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             "output_hash": output.content_hash, "input_manifest_hash": canonical_hash(snapshots),
             "result_metadata": _metadata(output.metadata_json), "inherited_inputs": rights["inherited_inputs"],
             **rights["license"], "license_obligations": rights["license_obligations"]}, max_bytes=1_000_000)
+        if media_info:
+            provenance["media_inspection"] = media_info
+        if package.package_json.get("web_video") is not None:
+            provenance["web_video"] = package.package_json["web_video"]
         if package.package_json.get("manual_image") is not None:
             manual_package = _manual_package(db, row, user)
             handoff = manual_package.package_json["manual_image"]
@@ -1066,17 +1164,27 @@ def decide_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             provenance["manual_acceptance_hash"] = canonical_hash({key: value for key, value in payload.items() if key != "expected_revision"})
         material = create_material(db, kind=output.kind, title=title.strip(), created_by=user.email)
         try:
-            revision = create_revision(db, material, content=content, suffix=".bin", declared_mime=output.mime_type,
-                source_kind="external_execution", source_metadata=provenance,
-                _execution_acceptance=_EXTERNAL_EXECUTION_ACCEPTANCE,
-                rights_status=rights["rights_status"], public_use_allowed=rights["public_use_allowed"],
-                model_use_allowed=rights["model_use_allowed"], commercial_use_allowed=rights["commercial_use_allowed"],
-                attribution_text=rights["attribution_text"], metadata={"external_execution": provenance}, created_by=user.email)
+            with ExitStack() as stack:
+                source = stack.enter_context(streams.execution_file(user.id, row.id, output.staging_key, limit["max_file_bytes"])) if limit else None
+                if source is not None and streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
+                    raise _error("creative_execution_staged_output_changed")
+                revision = create_revision(db, material, content=content, suffix=".bin", declared_mime=output.mime_type,
+                    source_kind="external_execution", source_metadata=provenance,
+                    _execution_acceptance=_EXTERNAL_EXECUTION_ACCEPTANCE,
+                    rights_status=rights["rights_status"], public_use_allowed=rights["public_use_allowed"],
+                    model_use_allowed=rights["model_use_allowed"], commercial_use_allowed=rights["commercial_use_allowed"],
+                    attribution_text=rights["attribution_text"], metadata={"external_execution": provenance}, created_by=user.email,
+                    _execution_stream=source, _stream_maximum=limit["max_file_bytes"] if limit else MAX_FILE_BYTES,
+                    **{key: media_info[key] for key in ("width", "height", "duration_ms") if key in media_info})
         except (OSError, ValueError, RuntimeError):
             raise _error("creative_execution_material_storage_unavailable") from None
         if revision.content_hash != output.content_hash or revision.mime_type != output.mime_type:
             raise _error("creative_execution_accepted_output_mismatch")
-        if files.read_material(revision) != content:
+        if limit:
+            with streams.material_file(revision, limit["max_file_bytes"]) as source:
+                if streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
+                    raise _error("creative_execution_accepted_output_mismatch")
+        elif files.read_material(revision) != content:
             raise _error("creative_execution_accepted_output_mismatch")
         if attach:
             db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id,
@@ -1096,3 +1204,45 @@ def decide_output(db: Session, project_id: int, unit_id: int, execution_id: int,
     target = "blocked" if rejected_required else "accepted" if accepted else "result_ready" if ready else "in_progress"
     _cas(db, row, expected, state=target, safe_reason="needs_output_replacement" if rejected_required else None)
     return _projection(db, row, user)
+
+
+def upload_stream(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, source, user: User) -> dict:
+    row = _owned(db, project_id, unit_id, execution_id, user, mutate=True)
+    _expected(row, payload)
+    package = _package(db, row, user, current=True)
+    if not streams.policy(package) or not package.package_json.get("web_video"):
+        raise _error("creative_manual_web_video_required", 422)
+    if row.executor_kind != "human" or row.executor_key != "manual-web-video":
+        raise _error("creative_execution_manual_takeover_required")
+    executor = {key: getattr(row, key) for key in ("executor_kind", "executor_key", "executor_version")}
+    if row.state == "prepared":
+        transition_execution(db, project_id, unit_id, row.id, {**executor, "expected_revision": row.revision_no, "action": "claim"}, user)
+        db.refresh(row)
+    _writable(db, row, output=True)
+    if not row.materialized_inputs_json:
+        materialize_inputs(db, project_id, unit_id, row.id, {**executor, "expected_revision": row.revision_no}, user)
+        db.refresh(row)
+    return submit_output(db, project_id, unit_id, row.id,
+        {**payload, **executor, "expected_revision": row.revision_no,
+         "metadata": {**(payload.get("metadata") or {}), "origin": "manual_web"}}, user, uploaded_stream=source)
+
+
+def manual_takeover(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User) -> dict:
+    row = _owned(db, project_id, unit_id, execution_id, user, mutate=True)
+    previous = db.scalar(select(CreativeExecution).where(CreativeExecution.owner_user_id == user.id, CreativeExecution.idempotency_key == payload["idempotency_key"]))
+    if previous is not None:
+        if (previous.package_id, previous.executor_kind, previous.executor_key) != (row.package_id, "human", "manual-web-video"):
+            raise _error("creative_execution_idempotency_conflict")
+        return get_execution(db, project_id, unit_id, previous.id, user)
+    _expected(row, payload)
+    package = _package(db, row, user, current=True)
+    if not package.package_json.get("web_video") or row.executor_kind == "human":
+        raise _error("creative_execution_manual_takeover_invalid", 422)
+    if row.dispatch_certainty != "not_dispatched" or row.state not in {"prepared", "claimed", "blocked"}:
+        raise _error("creative_execution_reconciliation_required")
+    transition_execution(db, project_id, unit_id, row.id,
+        {"expected_revision": row.revision_no, "action": "cancel", "safe_reason": "cancelled_by_user"}, user)
+    return prepare_execution(db, project_id, unit_id,
+        {"package_id": package.id, "idempotency_key": payload["idempotency_key"],
+         "executor_kind": "human", "executor_key": "manual-web-video", "executor_version": "1",
+         "metadata": {"summary": f"用户明确接管未派发执行 {row.id}，原记录保留"}}, user, _historical_web_takeover=True)

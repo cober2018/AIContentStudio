@@ -1,3 +1,5 @@
+2026-10-15 **网页视频与有声样片验收完成**：图片先确认、据图提示词、人工Grok/Gemini回传、平台CLI/MCP、达芬奇主剪与AE合成已跑通；60秒科技音色旁白/字幕/原生工程通过独立AI评审，Master46/执行8本地采用；公开门禁保持，未直接试听。29/29已归档，31路径选择性本地集成，正式发布未声明、未push。[同一成果](openspec/changes/archive/2026-10-15-verify-grok-gemini-media-capabilities/README.md)。
+
 2026-10-15 **Obsidian本地只读知识与风格接入完成，14/14**：正常“来源与证据”可检索已保存笔记、选连续片段、分别指定专业参考/风格样本与Persona范围、明确模型授权；Run冻结和真实预览/生成/精修已接通。两个角色正常页各初稿+精修，Master35/37，独立AI质量通过；181既有回归、Web/TypeScript/bundle与strict通过。加法迁移obsidian000001，968旧业务行/75媒体/477归档/相邻修改保全；未安装MCP、不写Obsidian、不push或公开发布。[入口、步骤与完整回执](openspec/changes/archive/2026-10-15-add-obsidian-knowledge-context/README.md)。
 
 2026-10-14 **两角色日常生产已完成，18/18**：正常页面六链真实完成并刷新，两篇文章、六张1080×1440 PNG、两段完整音频159.679/129.226秒已正式保存；真实音色/Recipe/事实权限齐备。独立AI全模态评审接受，SEO/视觉语义提醒和未直接试听边界保留。四文件最小修复、19既有检查及Web/FE-P1通过，strict43/43；482旧行/53旧素材/三归档/相邻修改保全。已归档并选择性本地提交，未push或公开发布。[直接使用与完整回执](openspec/changes/archive/2026-10-14-enable-two-persona-daily-production/README.md)。

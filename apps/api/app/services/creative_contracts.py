@@ -15,7 +15,7 @@ SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,99}$")
 _UNSAFE_KEYS = {"api_key", "access_token", "secret", "password", "raw_output", "raw_error", "raw_response", "authorization", "file_path", "absolute_path", "local_path"}
 EXECUTOR_DECLARATION_FIELDS = {"supports_checkpoint", "supports_revert", "supports_recover", "output_kinds"}
 _OUTPUT_KINDS = {"image", "video", "audio", "other"}
-_METADATA_KEYS = {"summary", "checkpoint_ref", "observation_ref", "observation_hash", "recovery_action", "readback_status", "license", "license_id", "license_url", "attribution", "correlation_id"} | EXECUTOR_DECLARATION_FIELDS
+_METADATA_KEYS = {"web_provider", "visible_model", "generated_at", "origin", "summary", "checkpoint_ref", "observation_ref", "observation_hash", "recovery_action", "readback_status", "license", "license_id", "license_url", "attribution", "correlation_id"} | EXECUTOR_DECLARATION_FIELDS
 
 
 def canonical_hash(value: object) -> str:
@@ -56,6 +56,10 @@ def safe_metadata(value: dict | None) -> dict:
     value = value or {}
     if not isinstance(value, dict) or set(value) - _METADATA_KEYS:
         raise HTTPException(422, {"code": "creative_metadata_field_invalid"})
+    if "web_provider" in value and (not isinstance(value["web_provider"], str) or value["web_provider"] not in {"grok", "gemini"}):
+        raise HTTPException(422, {"code": "creative_web_provider_invalid"})
+    if "origin" in value and (not isinstance(value["origin"], str) or value["origin"] not in {"manual_web", "codex_web"}):
+        raise HTTPException(422, {"code": "creative_web_origin_invalid"})
     for key, item in value.items():
         if key == "output_kinds":
             if (not isinstance(item, list) or not 1 <= len(item) <= 4
@@ -81,8 +85,16 @@ def executor_descriptor(identity: dict, metadata: dict, *, require_complete: boo
 
 
 def canonical_output_contract(value: dict) -> dict:
-    if not isinstance(value, dict) or set(value) != {"roles"} or not isinstance(value["roles"], list) or not 1 <= len(value["roles"]) <= 20:
+    if not isinstance(value, dict) or set(value) - {"roles", "media_transfer_policy"} or not isinstance(value.get("roles"), list) or not 1 <= len(value["roles"]) <= 20:
         raise HTTPException(422, {"code": "creative_output_contract_invalid"})
+    policy = value.get("media_transfer_policy")
+    if policy is not None and (not isinstance(policy, dict) or set(policy) != {"schema", "max_file_bytes", "max_total_bytes", "max_concurrent_transfers"}
+                or policy["schema"] != "creative.media-transfer.v1"
+                or type(policy["max_file_bytes"]) is not int or not 1 <= policy["max_file_bytes"] <= 512 * 1024 * 1024
+                or type(policy["max_total_bytes"]) is not int or not policy["max_file_bytes"] <= policy["max_total_bytes"] <= 4 * 1024**3
+                or type(policy["max_concurrent_transfers"]) is not int or policy["max_concurrent_transfers"] != 1):
+        raise HTTPException(422, {"code": "creative_transfer_policy_invalid"})
+    maximum = policy["max_file_bytes"] if policy else MAX_FILE_BYTES
     roles = []
     ids = set()
     for role in value["roles"]:
@@ -92,7 +104,7 @@ def canonical_output_contract(value: dict) -> dict:
         if not isinstance(role["kind"], str) or role["kind"] not in {"image", "video", "audio", "other"} or type(role["required"]) is not bool:
             raise HTTPException(422, {"code": "creative_output_kind_invalid"})
         lo, hi, size = role["min_count"], role["max_count"], role["max_bytes"]
-        if any(type(item) is not int for item in (lo, hi, size)) or not 0 <= lo <= hi <= 20 or hi < 1 or not 1 <= size <= MAX_FILE_BYTES or (role["required"] and lo < 1) or (not role["required"] and lo != 0):
+        if any(type(item) is not int for item in (lo, hi, size)) or not 0 <= lo <= hi <= 20 or hi < 1 or not 1 <= size <= maximum or (role["required"] and lo < 1) or (not role["required"] and lo != 0):
             raise HTTPException(422, {"code": "creative_output_counts_invalid"})
         mimes = role["allowed_mime"]
         if not isinstance(mimes, list) or not 1 <= len(mimes) <= 10 or any(not isinstance(mime, str) or not re.fullmatch(r"[a-z0-9.+-]+/[a-z0-9.+-]+", mime) for mime in mimes) or len(set(mimes)) != len(mimes):
@@ -104,4 +116,4 @@ def canonical_output_contract(value: dict) -> dict:
         roles.append({**role, "allowed_mime": sorted(mimes)})
     if not any(role["required"] for role in roles):
         raise HTTPException(422, {"code": "creative_required_output_missing"})
-    return {"roles": sorted(roles, key=lambda item: item["role_id"])}
+    return {"roles": sorted(roles, key=lambda item: item["role_id"]), **({"media_transfer_policy": dict(policy)} if policy else {})}

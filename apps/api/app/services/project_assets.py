@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import MaterialRevision, ProjectMaterialReference, ProjectWorkflowOutput
+from ..models import ContentProject, MaterialRevision, ProjectMaterialReference, ProjectWorkflowOutput
 
 
 def _asset_json(revision: MaterialRevision, *, source_type: str, reference_id: int | None = None, output: ProjectWorkflowOutput | None = None) -> dict:
@@ -49,6 +49,8 @@ def reference_json(db: Session, row: ProjectMaterialReference) -> dict:
 
 
 def shared_assets(db: Session, project_id: int) -> list[dict]:
+    from .content_masters import local_final_use_allowed
+
     refs = db.scalars(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.status == "active").order_by(ProjectMaterialReference.id.desc()).limit(200)).all()
     outputs = db.scalars(select(ProjectWorkflowOutput).where(ProjectWorkflowOutput.project_id == project_id, ProjectWorkflowOutput.output_kind == "material_revision").order_by(ProjectWorkflowOutput.id.desc()).limit(200)).all()
     items = [reference_json(db, row) for row in refs if db.get(MaterialRevision, row.material_revision_id) is not None]
@@ -56,4 +58,9 @@ def shared_assets(db: Session, project_id: int) -> list[dict]:
         revision = db.get(MaterialRevision, output.entity_id)
         if revision is not None:
             items.append(_asset_json(revision, source_type="workflow", output=output))
+    project = db.get(ContentProject, project_id)
+    for item in items:
+        revision = db.get(MaterialRevision, item["material_revision_id"])
+        unit_id = (revision.source_metadata_json or {}).get("content_unit_id")
+        item["local_final_use_allowed"] = project is not None and type(unit_id) is int and local_final_use_allowed(db, project_id, unit_id, project.owner_user_id, revision)
     return items

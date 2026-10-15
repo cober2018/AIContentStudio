@@ -1,6 +1,5 @@
 """One live gate for Master freeze, v4 approval, authorization and local delivery."""
 
-import hashlib
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -35,7 +34,6 @@ from .channel_variants import (
     source_check_exclusions,
 )
 from .content_masters import _evidence_check, _hash, _rights_check, _serialize, frozen_context
-from .materials import read_bytes_checked
 from .production_modalities import adapter_for
 
 
@@ -259,9 +257,8 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
         revision = db.get(MaterialRevision, ref["material_revision_id"])
         if revision is None or revision.content_hash != ref["content_hash_snapshot"]:
             raise _blocked("media_unready", "历史素材版本不一致")
-        data = read_bytes_checked(db, revision, require_public=True)
-        if hashlib.sha256(data).hexdigest() != ref["content_hash_snapshot"]:
-            raise _blocked("media_unready", "历史素材字节已变化")
+        from .materials import verify_bytes_checked
+        verify_bytes_checked(db, revision, require_public=True)
     items = db.scalars(select(FactPackItem).where(FactPackItem.fact_pack_id == pack.id)).all()
     if any(item.public_use_allowed is not True or item.public_use_revoked_at is not None or item.evidence_kind == "legacy_untyped" or not item.snapshot_checksum for item in items):
         raise _blocked("evidence_unready", "历史事实包中有失效证据")

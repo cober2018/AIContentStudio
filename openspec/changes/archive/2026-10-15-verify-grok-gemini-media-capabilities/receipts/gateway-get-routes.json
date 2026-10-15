@@ -1,0 +1,59 @@
+[
+  {
+    "method": "GET",
+    "path": "/v1/videos/00000000-0000-0000-0000-000000000000",
+    "status": 404,
+    "bytes": 58,
+    "body": {
+      "code": "not-found",
+      "error": "Failed to read static file."
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/v1beta/models",
+    "status": 200,
+    "bytes": 7026,
+    "top_keys": [
+      "models"
+    ],
+    "model_ids": [
+      "models/gemini-3.1-flash-lite",
+      "models/gemini-4-argon-high",
+      "models/gemini-3.5-flash-lite",
+      "models/grok-build-0.1",
+      "models/grok-imagine-video-1.5",
+      "models/claude-opus-4-6-thinking",
+      "models/gemini-3.8-flash-high",
+      "models/gemini-3-flash",
+      "models/grok-4.7-build-fast",
+      "models/grok-4.5",
+      "models/grok-3-mini-fast",
+      "models/grok-composer-2.5-fast",
+      "models/grok-imagine-image-quality",
+      "models/grok-4.3",
+      "models/grok-4.20-multi-agent-0309",
+      "models/grok-imagine-video-1.5-preview",
+      "models/grok-4.20-0309-reasoning",
+      "models/grok-4.20-0309-non-reasoning",
+      "models/grok-imagine-image",
+      "models/claude-sonnet-5-5-high",
+      "models/grok-imagine-image-2.0",
+      "models/claude-sonnet-4-6",
+      "models/grok-4.7",
+      "models/claude-opus-5-5-high",
+      "models/gemini-3.1-flash-image",
+      "models/gpt-oss-120b-medium",
+      "models/grok-4.6",
+      "models/grok-3-mini"
+    ],
+    "media_ids": [
+      "models/grok-imagine-video-1.5",
+      "models/grok-imagine-image-quality",
+      "models/grok-imagine-video-1.5-preview",
+      "models/grok-imagine-image",
+      "models/grok-imagine-image-2.0",
+      "models/gemini-3.1-flash-image"
+    ]
+  }
+]

@@ -1,0 +1,144 @@
+{
+  "schema": "video.sample-acceptance.v2",
+  "date": "2026-10-15",
+  "state": "ACCEPTED_LOCAL_ONLY",
+  "project_id": 7,
+  "unit_id": 13,
+  "source_master_id": 45,
+  "bound_master_id": 46,
+  "bound_material_revision_id": 40,
+  "execution_id": 8,
+  "execution_state": "accepted",
+  "original_rough_execution_id": 6,
+  "silent_previous_execution_id": 7,
+  "video_seconds": 60,
+  "container_seconds": 60.01,
+  "fps": 30,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "logical_shots": 6,
+  "native_video_segments": 7,
+  "ae_seconds": 14,
+  "ae_layers": 23,
+  "narration": {
+    "material_revision_id": 36,
+    "voice_id": "lengdan_xiongzhang",
+    "model": "speech-2.8-hd",
+    "rate": 1,
+    "original_seconds": 25.309844,
+    "segments": 10,
+    "offline_asr_exact_characters": 102,
+    "offline_asr_total_characters": 102,
+    "new_tts_submissions": 1,
+    "fullscale_samples": 0,
+    "integrated_lufs": -15.3,
+    "true_peak_dbfs": -1.5,
+    "waveform_correlation_min": 0.9999938270741369,
+    "max_lag_ms": 0,
+    "direct_listening": false
+  },
+  "outputs": [
+    {
+      "id": 15,
+      "role_id": "ae_intermediate",
+      "state": "accepted",
+      "material_revision_id": 37,
+      "content_hash": "1d07338739125d34d25084f4fd7187d426b62e43d261755507ab4d496b801f43"
+    },
+    {
+      "id": 16,
+      "role_id": "ae_project",
+      "state": "accepted",
+      "material_revision_id": 38,
+      "content_hash": "fcf0bb2e68768dd48d9cd0537074db3efa4ff3b9f89fb3d64eec9a5ccf440141"
+    },
+    {
+      "id": 17,
+      "role_id": "resolve_project",
+      "state": "accepted",
+      "material_revision_id": 39,
+      "content_hash": "b17d46efd50ffaee2efb921a1f03e763a8335234c57a59a3dc41c4bec306d1a9"
+    },
+    {
+      "id": 18,
+      "role_id": "final",
+      "state": "accepted",
+      "material_revision_id": 40,
+      "content_hash": "c97527a32290561081fe626a8ab4bbac259b2eb861929ff6adf5beef9f940ecc"
+    },
+    {
+      "id": 19,
+      "role_id": "subtitles",
+      "state": "accepted",
+      "material_revision_id": 41,
+      "content_hash": "96c7187329d1dd4f1cf26189a51457f52384d09737d6595b982645b2b4cc7f84"
+    },
+    {
+      "id": 20,
+      "role_id": "edit_manifest",
+      "state": "accepted",
+      "material_revision_id": 42,
+      "content_hash": "f266f7b322edacde8c837fa81f50139b995a6cfb96a29ccb8036961ea38dc13b"
+    }
+  ],
+  "private_preview": {
+    "session_status": 200,
+    "range_status": 206,
+    "range_bytes": 1024,
+    "content_range": "bytes 0-1023/86746590"
+  },
+  "rights": {
+    "public_use_allowed": false,
+    "model_use_allowed": true,
+    "commercial_use_allowed": false,
+    "local_final_use_allowed": true
+  },
+  "public_candidate_status": 409,
+  "native_reopen": {
+    "resolve_version": "21.1.0.14",
+    "resolve_timeline": "04_Narrated_Final_60s",
+    "resolve_verified_dependencies": 44,
+    "resolve_rerender_has_same_native_audio": true,
+    "ae_version": "26.5x89",
+    "ae_unchanged_project_reused": true,
+    "missing_media": 0
+  },
+  "quality_review": "ACCEPTED_FOR_SLOW_PACED_LOCAL_DEMONSTRATION_WITH_DIRECT_LISTENING_UNVERIFIED",
+  "quality_review_sha256": "52824ce82dc122f9a0cc3ba4f330994fc4172a8ff6ef9b5bcc1bd6f9b19de7b1",
+  "boundaries": [
+    "Slow-paced local demonstration with intentional visual pauses and no background music",
+    "Gemini is independent atmospheric B-roll, not strict scene continuity",
+    "Original provider website attribution from user filenames and declaration; hidden model not independently verified",
+    "Full decode, offline word ASR and actual10-clause waveform verification; no human listening claimed",
+    "Local workstation native projects require preserved local media paths; no portable bundle claimed",
+    "No push, public publication or formal database migration/write claimed"
+  ],
+  "checks": {
+    "candidate_code_paths": 31,
+    "candidate_existing_passed": 244,
+    "known_baseline_failed": 1,
+    "known_baseline_failure": "test_aco_schema_lifecycle.py:21 expects a3series00000001 while HEAD is obsidian000001",
+    "local_binding_temp_passed": 14,
+    "large_video_variant_temp_passed": 5,
+    "large_video_variant_existing_passed": 81,
+    "web_typescript_vite_FE_P1": "passed",
+    "ruff_diff": "passed",
+    "persistent_new_tests": 0,
+    "adjacent_dirty_files_byte_preserved_during_install": 70,
+    "openspec_archive_strict": {
+      "passed": 45,
+      "failed": 0
+    }
+  },
+  "archive": "2026-10-15-verify-grok-gemini-media-capabilities",
+  "canonical_sync": {
+    "added": 13,
+    "modified": 1,
+    "removed": 0
+  },
+  "tasks_complete": 29,
+  "tasks_total": 29,
+  "local_commit": "scoped contents recorded by associated local Git commit; no push"
+}

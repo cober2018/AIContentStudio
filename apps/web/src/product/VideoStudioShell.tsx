@@ -1,12 +1,13 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { api, currentUser } from "../api";
 import { Button, Field, inputClass } from "../components/ui";
-import { addOverlay, addScriptBlock, addShot, addSubtitleCue, addTrack, addTimelineItem, bindFinalRender, bindShotSource, importSubtitleSrt, removeOverlay, removeShot, removeSubtitleCue, removeTimelineItem, removeTrack, reorderShots, setCover, setMusic, setVoice, updateAspectRatio, updateOverlay, updateScriptBlock, updateShot, updateSubtitleCue, updateTimelineDuration, updateTimelineItem, updateVideoTitle, type VideoDraft, type VideoTimelineItem, type VideoTrack } from "./VideoStudioModel";
+import { addOverlay, addScriptBlock, addShot, addSubtitleCue, addTrack, addTimelineItem, bindFinalRender, canUseFinalRender, bindShotSource, importSubtitleSrt, removeOverlay, removeShot, removeSubtitleCue, removeTimelineItem, removeTrack, reorderShots, setCover, setMusic, setVoice, updateAspectRatio, updateOverlay, updateScriptBlock, updateShot, updateSubtitleCue, updateTimelineDuration, updateTimelineItem, updateVideoTitle, type VideoDraft, type VideoTimelineItem, type VideoTrack } from "./VideoStudioModel";
 
-type ProjectAsset = { key: string; material_id: number; material_revision_id: number; content_hash: string; kind: string; mime_type: string | null; title: string | null; rights_status: string | null; public_use_allowed: boolean; model_use_allowed: boolean; source_type: string; provenance?: { source_kind?: string | null; provider_key?: string | null } };
+type ProjectAsset = { key: string; material_id: number; material_revision_id: number; content_hash: string; kind: string; mime_type: string | null; title: string | null; rights_status: string | null; public_use_allowed: boolean; model_use_allowed: boolean; local_final_use_allowed?: boolean; source_type: string; provenance?: { source_kind?: string | null; provider_key?: string | null } };
 type Capability = { configured: boolean; executable: boolean; verified: boolean; reason: string };
 type VideoCapabilities = { video_generation: Capability; tts: Capability; asr: Capability };
 const AsrSuggestionPanel = lazy(() => import("./AsrSuggestionPanel"));
+const VideoShotMaterialPanel = lazy(() => import("./VideoShotMaterialPanel"));
 const ProviderMediaPanel = lazy(() => import("./ProviderMediaPanel"));
 export type VideoStudioProps = { projectId: number; unitId?: number; masterId?: number | null; masterHash?: string | null; savedSourceIds?: number[]; dirty?: boolean; draft: VideoDraft | null; legacyPayload?: Record<string, unknown>; upgradeMode?: boolean; onChange: (draft: VideoDraft) => void; onOpenExecution?: () => void; readOnly: boolean };
 
@@ -51,7 +52,7 @@ export default function VideoStudioShell({ projectId, unitId, masterId = null, m
   const sourceAssets = assets.filter((item) => (item.kind === "image" || item.kind === "video") && (item.public_use_allowed || item.model_use_allowed));
   const audioAssets = assets.filter((item) => item.kind === "audio" && (item.public_use_allowed || item.model_use_allowed));
   const coverAssets = assets.filter((item) => item.kind === "image" && (item.public_use_allowed || item.model_use_allowed));
-  const finalAssets = assets.filter((item) => item.kind === "video" && item.mime_type === "video/mp4" && item.public_use_allowed);
+  const finalAssets = assets.filter((item) => item.mime_type === "video/mp4" && canUseFinalRender(item));
   const assetSelectionDisabled = readOnly || assetLoading || !!assetIssue;
   return <div className="space-y-4" aria-label="Video Studio">
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><h3 className="font-semibold">视频主稿 · 导演工作台</h3><p className="text-xs text-slate-500">先确定脚本、镜头意图、素材、配音、字幕和封面，再准备导演包。编辑只改变本地草稿；点击“保存内容 Master”才会创建不可变修订。可以先保存没有最终成片的草稿。</p>
@@ -59,6 +60,7 @@ export default function VideoStudioShell({ projectId, unitId, masterId = null, m
       <p className="mt-1 text-xs text-slate-500">常见约分比例：9:16、16:9、1:1。{upgradeMode ? "当前值只是升级编辑起点，请亲自核对画幅、时间线和每个镜头时长。" : "改变画幅会令既有最终成片绑定失效。"}</p>
       <div className="mt-3"><Field label="目标时长（毫秒）"><input aria-label="导演目标时长" className={inputClass} type="number" min="0" max="28800000" value={draft.payload.timeline.duration_ms} disabled={readOnly} onChange={(event) => edit(() => updateTimelineDuration(draft, Number(event.target.value)))} /></Field><p className="mt-1 text-xs text-slate-500">字幕时间码按此时长校验；详细轨道和成片绑定在下方“高级与兼容工具”。结构预览不是已渲染视频。</p></div>
     </div>
+    {unitId && !upgradeMode && <Suspense fallback={<p className="text-sm">加载分镜素材制作…</p>}><VideoShotMaterialPanel key={`${projectId}:${unitId}`} projectId={projectId} unitId={unitId} masterId={masterId} dirty={dirty} draft={draft} assets={assets} readOnly={readOnly} onChange={onChange} onRefreshAssets={() => setAssetRefresh(value => value + 1)} /></Suspense>}
     <section aria-label="导演包与外部执行" className="rounded-xl border border-indigo-200 bg-indigo-50 p-4"><div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">导演包与外部执行</h3><Button variant="secondary" size="sm" disabled={!onOpenExecution || upgradeMode} onClick={onOpenExecution}>打开导演包与外部执行</Button></div><p className="mt-2 text-xs text-slate-600">从已保存的视频主稿准备导演包，无需先绑定最终 MP4。外部成果经人工接受并引用到本项目后，刷新项目素材，再明确绑定并保存主稿；冻结 Candidate 仍需通过现有成片检查。</p>{dirty && <p className="mt-2 text-xs text-amber-800">当前有未保存的修改。打开执行工作区会保留本地草稿；导演包读取已保存的版本，请先保存要交给执行者的内容。</p>}{!onOpenExecution && <p className="mt-2 text-xs text-slate-500">可从本工作台“创意执行与成果”入口查看导演包。</p>}{upgradeMode && <p className="mt-2 text-xs text-amber-800">请先核对并保存 v2 升级修订，再准备导演包。</p>}</section>
     <section className="rounded-xl border border-slate-200 p-4"><div className="flex items-center justify-between"><h3 className="font-semibold">脚本</h3><Button variant="secondary" size="sm" disabled={readOnly || upgradeMode} onClick={() => edit(() => addScriptBlock(draft))}>添加脚本段落</Button></div>
       <div className="mt-3 space-y-3">{draft.payload.script.blocks.map((block) => <Field key={block.id} label={`段落 ${block.order + 1} · ${block.id.slice(0, 8)}`}><textarea aria-label={`脚本段落 ${block.order + 1}`} className={inputClass} rows={3} value={block.text} readOnly={readOnly || upgradeMode} onChange={(event) => edit(() => updateScriptBlock(draft, block.id, event.target.value))} /></Field>)}{draft.payload.script.blocks.length === 0 && <p className="text-sm text-slate-500">尚无脚本段落。</p>}</div>
@@ -92,9 +94,10 @@ export default function VideoStudioShell({ projectId, unitId, masterId = null, m
     </section>
     <OverlayEditor draft={draft} readOnly={readOnly} edit={edit} />
     <section className="rounded-xl border border-amber-200 bg-amber-50 p-4"><h3 className="font-semibold">最终 MP4 与能力状态</h3><p className="mt-1 text-xs">脚本/时间线是本地结构声明，绝不是已渲染视频。最终成片必须从项目可见的真实 MP4 Revision 选择，保存 Master 后再按当前输入哈希明确确认。</p>
-      <Field label="真实最终 MP4（精确版本）"><select aria-label="最终 MP4 素材" className={`${inputClass} mt-2`} value={draft.payload.render_asset_ref?.material_revision_id || ""} disabled={assetSelectionDisabled || upgradeMode} onChange={(event) => edit(() => bindFinalRender(draft, assets.find((item) => item.material_revision_id === Number(event.target.value)) || null))}><option value="">{upgradeMode ? "升级首修订禁止继承或绑定成片" : "尚未绑定；不可冻结"}</option>{draft.payload.render_asset_ref && !finalAssets.some((item) => item.material_revision_id === draft.payload.render_asset_ref?.material_revision_id) && <option value={draft.payload.render_asset_ref.material_revision_id}>已存 MP4 #{draft.payload.render_asset_ref.material_revision_id}（当前项目库不可用）</option>}{finalAssets.map((item) => <option key={item.key} value={item.material_revision_id}>{item.title || "未命名 MP4"} · Revision #{item.material_revision_id}</option>)}</select></Field>
+      <Field label="真实最终 MP4（精确版本）"><select aria-label="最终 MP4 素材" className={`${inputClass} mt-2`} value={draft.payload.render_asset_ref?.material_revision_id || ""} disabled={assetSelectionDisabled || upgradeMode} onChange={(event) => edit(() => bindFinalRender(draft, assets.find((item) => item.material_revision_id === Number(event.target.value)) || null))}><option value="">{upgradeMode ? "升级首修订禁止继承或绑定成片" : "尚未绑定；不可冻结"}</option>{draft.payload.render_asset_ref && !finalAssets.some((item) => item.material_revision_id === draft.payload.render_asset_ref?.material_revision_id) && <option value={draft.payload.render_asset_ref.material_revision_id}>已存 MP4 #{draft.payload.render_asset_ref.material_revision_id}（当前项目库不可用）</option>}{finalAssets.map((item) => <option key={item.key} value={item.material_revision_id}>{item.title || "未命名 MP4"} · Revision #{item.material_revision_id}{!item.public_use_allowed ? " · 仅本地使用" : ""}</option>)}</select></Field>
       {draft.payload.render_asset_ref && <p className="mt-1 break-all text-xs">当前绑定 #{draft.payload.render_asset_ref.material_revision_id} · Hash {draft.assetRefs.find((ref) => ref.role === "render_output")?.content_hash || "未知"}。绑定本身不生成 render attestation。</p>}
-      <div className="mt-2"><Button variant="secondary" size="sm" disabled={!draft.payload.render_asset_ref || !assets.some((item) => item.material_revision_id === draft.payload.render_asset_ref?.material_revision_id && item.mime_type === "video/mp4" && item.public_use_allowed)} onClick={() => setShowFinalPreview((value) => !value)}>{showFinalPreview ? "关闭精确 MP4 预览" : "验证字节并预览已绑定 MP4"}</Button>{showFinalPreview && <ExactMp4Preview asset={assets.find((item) => item.material_revision_id === draft.payload.render_asset_ref?.material_revision_id)} />}</div>
+      <p className="mt-2 text-xs text-amber-800">受限已接受成片仅本地使用；公开交付仍需授权。绑定和私有预览不改变素材权利，冻结 Candidate 仍需公开使用授权。</p>
+      <div className="mt-2"><Button variant="secondary" size="sm" disabled={!draft.payload.render_asset_ref || !assets.some((item) => item.material_revision_id === draft.payload.render_asset_ref?.material_revision_id && item.mime_type === "video/mp4" && canUseFinalRender(item))} onClick={() => setShowFinalPreview((value) => !value)}>{showFinalPreview ? "关闭精确 MP4 预览" : "验证字节并预览已绑定 MP4"}</Button>{showFinalPreview && <ExactMp4Preview asset={assets.find((item) => item.material_revision_id === draft.payload.render_asset_ref?.material_revision_id)} />}</div>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">{(["video_generation", "tts", "asr"] as const).map((key) => <div key={key} className="rounded bg-white p-2 text-xs"><strong>{key}</strong><p>{capabilities?.[key].verified ? "已验证" : "未验证/不可执行"}</p><p>原因：{capabilities?.[key].reason || capabilityIssue || "状态读取中"}</p></div>)}</div>
     </section>
     <details className="rounded-xl border border-slate-200 p-3"><summary className="cursor-pointer font-medium">本地结构预览（非成片）</summary><p className="mt-2 text-xs text-amber-800">仅按当前草稿列出可知的脚本、镜头与时间线；不能播放尚未真正合成的画面。</p><ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">{draft.payload.shots.map((shot) => <li key={shot.id}>{shot.label || "未命名镜头"} · {shot.duration_ms} ms · {shot.source_material_revision_id ? `素材 #${shot.source_material_revision_id}` : "无视觉素材"} · {shot.script_block_id ? draft.payload.script.blocks.find((block) => block.id === shot.script_block_id)?.text || "脚本缺失" : "未关联脚本"}</li>)}</ol><p className="mt-2 text-xs">轨道 {draft.payload.timeline.tracks.length} · 片段 {draft.payload.timeline.tracks.reduce((sum, track) => sum + track.items.length, 0)} · 字幕 {draft.payload.subtitles.cues.length} · 叠字 {draft.payload.overlays.length}</p></details>
@@ -111,8 +114,18 @@ function ExactMp4Preview({ asset }: { asset: ProjectAsset | undefined }) {
     let active = true;
     let objectUrl = "";
     setUrl(""); setIssue("");
-    if (!asset || !asset.public_use_allowed || asset.mime_type !== "video/mp4") { setIssue("最终 MP4 不可见或已撤权"); return () => { active = false; }; }
+    if (!asset || !canUseFinalRender(asset) || asset.mime_type !== "video/mp4") { setIssue("最终 MP4 不可见或已撤权"); return () => { active = false; }; }
     const controller = new AbortController();
+    if (asset.provenance?.source_kind === "external_execution") {
+      const path = `/api/v1/materials/${asset.material_id}/revisions/${asset.material_revision_id}/preview`;
+      fetch(`${path}-session`, { method: "POST", headers: { "X-Studio-User": currentUser() }, signal: controller.signal }).then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const session = await response.json() as { url: string };
+        if (session.url !== path) throw new Error("MP4 预览地址不匹配");
+        if (active) setUrl(session.url);
+      }).catch((cause) => { if (active && cause?.name !== "AbortError") setIssue(cause instanceof Error ? cause.message : "MP4 不可预览"); });
+      return () => { active = false; controller.abort(); };
+    }
     fetch(`/api/v1/materials/${asset.material_id}/revisions/${asset.material_revision_id}/raw`, { headers: { "X-Studio-User": currentUser() }, signal: controller.signal }).then(async (response) => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const length = Number(response.headers.get("Content-Length"));
@@ -128,9 +141,9 @@ function ExactMp4Preview({ asset }: { asset: ProjectAsset | undefined }) {
       setUrl(objectUrl); setIssue("");
     }).catch((cause) => { if (active && cause?.name !== "AbortError") setIssue(cause instanceof Error ? cause.message : "MP4 不可预览"); });
     return () => { active = false; controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [asset?.material_id, asset?.material_revision_id, asset?.content_hash, asset?.public_use_allowed, asset?.mime_type]);
+  }, [asset?.material_id, asset?.material_revision_id, asset?.content_hash, asset?.public_use_allowed, asset?.model_use_allowed, asset?.local_final_use_allowed, asset?.mime_type, asset?.provenance?.source_kind]);
   if (issue) return <p role="alert" className="mt-2 text-xs text-rose-800">{issue}</p>;
-  if (!url) return <p className="mt-2 text-xs">正在读取并验证精确 MP4 字节…</p>;
+  if (!url) return <p className="mt-2 text-xs">正在验证精确 MP4 字节并建立预览…</p>;
   return <div className="mt-2"><video controls preload="metadata" className="max-h-96 w-full rounded bg-black" src={url} /><p className="text-xs text-slate-600">已验证所选素材字节与存储 hash 一致；这不证明其与当前 Master 输入匹配，仍需单独确认。</p></div>;
 }
 

@@ -137,6 +137,41 @@ class LocalMaterialStorage:
         finally:
             Path(temporary).unlink(missing_ok=True)
 
+    def put_stream(self, key: str, source, *, maximum: int, expected_hash: str) -> None:
+        from .creative_media_stream import CHUNK, inspect
+        _validate_material_key(key, expected_hash)
+        size, digest = inspect(source, maximum)
+        if digest != expected_hash:
+            raise ValueError("storage_object_hash_mismatch")
+        path = self._path(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(prefix=".pending-", dir=path.parent)
+        try:
+            with os.fdopen(descriptor, "wb") as target:
+                os.fchmod(target.fileno(), 0o600)
+                copied, actual = 0, hashlib.sha256()
+                while chunk := source.read(CHUNK):
+                    copied += len(chunk)
+                    if copied > maximum:
+                        raise ValueError("storage_object_too_large")
+                    actual.update(chunk)
+                    target.write(chunk)
+                target.flush()
+                os.fsync(target.fileno())
+            if (copied, actual.hexdigest()) != (size, digest):
+                raise ValueError("storage_object_hash_mismatch")
+            try:
+                os.link(temporary, path, follow_symlinks=False)
+            except FileExistsError:
+                fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                with os.fdopen(fd, "rb") as existing:
+                    import stat
+                    if not stat.S_ISREG(os.fstat(existing.fileno()).st_mode) or inspect(existing, maximum) != (size, digest):
+                        raise ValueError("storage_object_conflict")
+            _sync_directory(path.parent)
+        finally:
+            Path(temporary).unlink(missing_ok=True)
+
     def read(self, key: str) -> bytes:
         # Pre-F8 local revisions may reference an absolute fixture/import path.
         # Only authenticated DB revision reads in dev/test retain this bridge;

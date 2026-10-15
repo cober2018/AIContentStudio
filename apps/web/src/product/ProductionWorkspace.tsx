@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button, ErrorBanner, Spinner } from "../components/ui";
 import { useProductionWorkflow } from "./useProductionWorkflow";
@@ -34,6 +34,11 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
     else if (panel === "automation") setAutomationOpen(previous => !previous);
     else setMemoryOpen(previous => !previous);
   }
+  useEffect(() => {
+    if (params.get("panel") === "execution") {
+      setOpened(previous => ({ ...previous, execution: true })); setExecutionOpen(true);
+    }
+  }, [params]);
   const executionId = Number(params.get("execution")) || undefined;
   const workflow = useProductionWorkflow(projectId, unitId);
   const { readOnly, project, unit, dirty, outputs, loading, error, notice, workflowConflict, workflowRevision, refreshWorkflowFromRecipe } = workflow;

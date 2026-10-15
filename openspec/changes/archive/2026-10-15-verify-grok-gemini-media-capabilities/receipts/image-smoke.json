@@ -1,0 +1,65 @@
+{
+  "max_dispatches": 2,
+  "actual_dispatches": 2,
+  "application_retries": 0,
+  "fallback": false,
+  "configuration_unchanged": true,
+  "model_settings_revision": 13,
+  "start_interval_seconds": 10.005020380020142,
+  "entries": [
+    {
+      "model": "grok-imagine-image",
+      "profile": "registered.8164fbc8b1eb2b98d203b016",
+      "started_at": "2026-10-15T05:23:49.593611+00:00",
+      "status": "succeeded",
+      "request_sha256": "b1398b74e96feb8a28c826c124ffbfb6787d001444f4fa27e12c3d517cef4a9b",
+      "elapsed_seconds": 6.47,
+      "mime_type": "image/jpeg",
+      "bytes": 129118,
+      "transport": {
+        "path": "/images/generations",
+        "transport": "response_received",
+        "response_top_level_keys": [
+          "created",
+          "data",
+          "usage"
+        ],
+        "output_fields": [
+          [
+            "b64_json"
+          ]
+        ]
+      },
+      "finished_at": "2026-10-15T05:23:56.063822+00:00",
+      "sha256": "5c7792eeb6f5051f2407e44372c530394eec6224e12603ec34b8ba29a09170bc",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "decoded_image_valid": true
+    },
+    {
+      "model": "gemini-3.1-flash-image",
+      "profile": "registered.76b1305b769a0050570461af",
+      "started_at": "2026-10-15T05:23:59.598634+00:00",
+      "status": "unknown",
+      "request_sha256": "1500e7a9e35b4fccbddce61fbbf947279ad11ebf409f0dd8ea5fcceb60f3b3d2",
+      "elapsed_seconds": 0.054,
+      "mime_type": null,
+      "bytes": 0,
+      "transport": {
+        "path": "/images/generations",
+        "transport": "http_error_or_policy_failure",
+        "safe_http_status": 502,
+        "safe_error_code": "provider_request_rejected"
+      },
+      "finished_at": "2026-10-15T05:23:59.652951+00:00"
+    }
+  ],
+  "limits": "Adapter-level image smoke only, not normal-page acceptance or automatic verified promotion. Upstream HTTP code/body not retained by existing exception sanitizer, so Gemini failure cause and billing are not established. No repeated request.",
+  "image_visual_review": "Grok JPEG 1024x1024 decoded and visually inspected: red cube on left, blue sphere on right, white table/background; matches prompt.",
+  "video_requests": 0,
+  "business_database_writes": 0,
+  "media_library_acceptances": 0,
+  "gateway_build_identity": "not confirmed; models/root responses expose no verifiable deployed version; public upstream/fork source is not proof of this deployment"
+}

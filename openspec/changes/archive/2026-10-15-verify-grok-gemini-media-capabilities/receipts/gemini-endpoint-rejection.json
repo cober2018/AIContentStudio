@@ -1,0 +1,18 @@
+{
+  "started_at": "2026-10-15T05:27:57.553427+00:00",
+  "max_new_diagnostic_requests": 1,
+  "retry": false,
+  "purpose": "capture original gateway rejection, new diagnostic; preserve earlier unknown record",
+  "request_sha256": "7f12ac0c4a8ee988f941d97ac4037921f4fb1b022b25a86884028f10dfc67116",
+  "http_status": 400,
+  "elapsed_seconds": 0.098,
+  "bytes": 361,
+  "response_sha256": "b19465895205e1bc04544a552bac2d3666c285016a76fa55bca6b0f9cdbdffb8",
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "error": {
+    "message": "Model gemini-3.1-flash-image is not supported on /v1/images/generations or /v1/images/edits. Use gpt-image-1.5, gpt-image-2, gpt-image-2.5-flare, gpt-image-2.5-sunburst, gpt-image-2.5, grok-imagine-image, grok-imagine-image-quality, grok-imagine-image-2.0, or a configured openai-compatibility image model.",
+    "type": "invalid_request_error"
+  }
+}

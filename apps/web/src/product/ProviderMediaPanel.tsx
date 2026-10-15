@@ -352,6 +352,7 @@ export default function ProviderMediaPanel({ initialPreview, initialTaskId, obse
   const modeSelector = <Field label="图片生成方式"><select className={inputClass} value={imageMode} disabled={busy || !!prepared || !!preview || !!batchCandidates.length} onChange={event => setImageMode(event.target.value as "automatic" | "chatgpt_manual")}><option value="automatic">已配置模型 / 插件（自动生成）</option><option value="chatgpt_manual">ChatGPT（手动生图）</option></select></Field>;
   if (canChooseMode && imageMode === "chatgpt_manual") return <section aria-label="生成预览与接受" className="space-y-4 rounded-xl border bg-white p-5"><h2 className="font-semibold">ChatGPT：手动生成，上传后选择</h2>{modeSelector}<Suspense fallback={<p className="text-sm">加载手动交接入口…</p>}><ManualChatGPTImagePanel projectId={projectId} unitId={unitId} readOnly={unavailable} onAccepted={onAccepted} /></Suspense></section>;
   return <section aria-label={mediaOrigin === "renderer" ? "渲染预览与接受" : observedLicense ? "素材预览与接受" : "生成预览与接受"} className="space-y-4 rounded-xl border bg-white p-5">
+    <p className="text-xs text-slate-500">这里使用已配置的API生成素材。Grok / Gemini网页视频请从视频主稿的“分镜素材制作与剪辑交接”准备，结果回传对应分镜。</p>
     <h2 className="font-semibold">{mediaOrigin === "renderer" ? "渲染图片：先预览，再接受" : observedLicense ? "搜索素材：核对许可后接受" : "AI 素材：先预览，再接受"}</h2>
     {canChooseMode && modeSelector}
     {!initialPreview && !initialTaskId && !observedLicense && !mediaOrigin && <div className="space-y-2">

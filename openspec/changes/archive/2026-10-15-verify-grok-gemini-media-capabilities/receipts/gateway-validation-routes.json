@@ -1,0 +1,29 @@
+[
+  {
+    "method": "POST",
+    "path": "/v1/videos/generations",
+    "status": 400,
+    "body": {
+      "code": "invalid-argument",
+      "error": "Prompt cannot be empty. Please provide a prompt."
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/v1beta/models/gemini-3.1-flash-image",
+    "status": 200,
+    "body": {
+      "description": "Gemini 3.1 Flash Image",
+      "displayName": "Gemini 3.1 Flash Image",
+      "name": "models/gemini-3.1-flash-image",
+      "supportedInputModalities": [
+        "text",
+        "image"
+      ],
+      "supportedOutputModalities": [
+        "text",
+        "image"
+      ]
+    }
+  }
+]

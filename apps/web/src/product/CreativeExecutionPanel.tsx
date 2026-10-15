@@ -361,6 +361,12 @@ function ScopedCreativeExecutionPanel({ projectId, unitId, readOnly, executionId
     clearPreview(); const controller = new AbortController(); previewController.current = controller;
     setPreviewBusy(true); setError("");
     try {
+      if (output.kind === "video") {
+        const session = await request<{ url: string }>(actor, `${base}/creative-executions/${execution.id}/outputs/${output.id}/preview-session`, controller.signal, {});
+        if (!session.url.startsWith("/api/v1/content-projects/")) throw new Error("视频预览地址不符合本地授权范围。");
+        if (alive() && !controller.signal.aborted) setPreview({ outputId: output.id, url: session.url, mime: output.mime_type });
+        return;
+      }
       if (output.size_bytes > MAX_BYTES) throw new Error("成果超过受控预览上限。");
       const response = await fetch(`/api/v1${base}/creative-executions/${execution.id}/outputs/${output.id}/content`, { credentials: "same-origin", cache: "no-store", signal: controller.signal, headers: { "X-Studio-User": actor } });
       if (!response.ok) throw new Error(await responseError(response));

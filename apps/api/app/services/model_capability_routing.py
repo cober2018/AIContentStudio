@@ -70,8 +70,8 @@ class StrictModel(BaseModel):
 
 class Binding(StrictModel):
     adapter_key: Literal["openai.compatible", "google.native", "xai.native", "minimax.native", "minimax.cli"]
-    adapter_version: Literal["1"] = "1"
-    model_id: Identifier
+    adapter_version: Literal["1", "2"] = "1"
+    model_id: str = Field(pattern=r"^[A-Za-z0-9_./:-]{1,160}$")
     base_url: str = Field(max_length=500)
     credential_ref: str = Field(pattern=r"^[A-Z][A-Z0-9_]{0,127}$")
 
@@ -118,7 +118,7 @@ class Plugin(StrictModel):
     capability: Capability
     model_profile_id: Identifier
     registry_key: Identifier | None = None
-    registry_version: Literal["1"] = "1"
+    registry_version: Literal["1", "2"] = "1"
 
 
 class Limits(StrictModel):
@@ -154,6 +154,9 @@ def validate_configuration(value, *, trusted_voice_catalog: bool = False):
         declared = profile["declared_capabilities"]
         if len(declared) != len(set(declared)) or set(profile["capability_bindings"]) - set(declared):
             raise HTTPException(422, "capability_declaration_invalid")
+        for capability, binding in profile["capability_bindings"].items():
+            if binding["adapter_version"] == "2" and (capability != "image_generation" or binding["adapter_key"] != "openai.compatible"):
+                raise HTTPException(422, "capability_configuration_invalid")
     for plugin in result["media_plugins"].values():
         target = result["profiles"].get(plugin["model_profile_id"])
         if target is None or plugin["capability"] not in target["capability_bindings"]:
@@ -430,8 +433,8 @@ def _native_batch_supported(capability: str, adapter_key: str, adapter_version: 
 def _multimedia_controls(binding, capability):
     if capability == "image_generation" and binding["adapter_key"] == "openai.compatible":
         return {"supported_fields": ["items", "pixels", "aspect_ratio", "timeout_seconds"],
-                "candidate_counts": [1, 2, 3, 4], "reference_images": False,
-                "native_batch": _native_batch_supported(capability, binding["adapter_key"], binding["adapter_version"])}
+                "candidate_counts": [1] if binding["adapter_version"] == "2" else [1, 2, 3, 4], "reference_images": False,
+                "native_batch": binding["adapter_version"] != "2" and _native_batch_supported(capability, binding["adapter_key"], binding["adapter_version"])}
     if capability == "image_generation" and binding["adapter_key"] == "minimax.cli":
         return {"supported_fields": ["items", "pixels", "aspect_ratio", "timeout_seconds"],
                 "candidate_counts": [1, 2, 3, 4], "reference_images": False,
@@ -536,6 +539,10 @@ def plan(db, *, capability, selected_profile, parameters=None, explicit_plugin=N
         if not state["executable"]:
             return False
         binding = target["capability_bindings"][capability]
+        if (capability == "image_generation" and binding["adapter_key"] == "openai.compatible"
+                and binding["adapter_version"] == "2" and (refs or params.get("items", 1) != 1)):
+            result["reason"] = "multimedia_parameters_unsupported"
+            return False
         if (capability == "image_generation" and "aspect_ratio" in params
                 and "aspect_ratio" not in _multimedia_controls(binding, capability)["supported_fields"]):
             result["reason"] = "multimedia_parameters_unsupported"

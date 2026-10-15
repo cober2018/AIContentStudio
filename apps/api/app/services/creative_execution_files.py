@@ -241,7 +241,7 @@ def check_input_manifest(owner_id: int, execution_id: int, filenames: set[str]) 
 def cleanup_staging(owner_id: int, execution_id: int, key: str, *, content_hash: str, size_bytes: int) -> str:
     if (not isinstance(content_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", content_hash)
             or key != f"staging/{content_hash}.bin" or type(size_bytes) is not int
-            or not 0 < size_bytes <= MAX_FILE_BYTES):
+            or not 0 < size_bytes <= 512 * 1024 * 1024):
         raise _error("execution_cleanup_target_invalid", 409)
     with (root_fd(owner_id, execution_id) as root,
           _parent_fd(root, _parts(key)) as parent, _locked(parent, exclusive=True)):
@@ -252,12 +252,19 @@ def cleanup_staging(owner_id: int, execution_id: int, key: str, *, content_hash:
             # A retry after unlink/fsync failure must still sync the directory.
             os.fsync(parent)
             return "already_absent"
-        content = _read(parent, name, size_bytes)
+        if size_bytes > MAX_FILE_BYTES:
+            from .creative_media_stream import inspect
+            descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+            with os.fdopen(descriptor, "rb") as source:
+                size, digest = inspect(source, size_bytes)
+        else:
+            content = _read(parent, name, size_bytes)
+            size, digest = len(content), hashlib.sha256(content).hexdigest()
         after = os.stat(name, dir_fd=parent, follow_symlinks=False)
         if (not stat.S_ISREG(before.st_mode) or before.st_nlink != 1
                 or (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns)
                 != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns)
-                or len(content) != size_bytes or hashlib.sha256(content).hexdigest() != content_hash):
+                or size != size_bytes or digest != content_hash):
             raise _error("execution_cleanup_file_changed", 409)
         os.unlink(name, dir_fd=parent)
         os.fsync(parent)

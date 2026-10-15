@@ -88,8 +88,81 @@ def _time_bounds(row: dict, duration: int, code: str) -> None:
         _fail(code)
 
 
+def canonical_production(value: object) -> dict:
+    row = _object(value, {"schema", "source_mode", "web_provider", "prompt", "reference_material_revision_id", "prompt_reference", "requested_generation_duration_ms", "audio_intent"}, "video_production_invalid")
+    if row.get("schema") not in ("video.shot-production.v1", "video.shot-production.v2"):
+        _fail("video_production_schema_invalid")
+    result = {"schema": row["schema"], "source_mode": _enum(row.get("source_mode"), {"existing", "api_image", "web_video", "ae"}, "video_production_mode_invalid")}
+    if "prompt" in row:
+        result["prompt"] = _text(row["prompt"], 2000, "video_production_prompt_invalid")
+    if "reference_material_revision_id" in row:
+        result["reference_material_revision_id"] = _revision_id(row["reference_material_revision_id"], "video_production_reference_invalid")
+    if "prompt_reference" in row:
+        if row["schema"] != "video.shot-production.v2":
+            _fail("video_production_prompt_reference_invalid")
+        reference = _object(row["prompt_reference"], {"revision_id", "content_hash"}, "video_production_prompt_reference_invalid")
+        content_hash = reference.get("content_hash")
+        if not isinstance(content_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", content_hash):
+            _fail("video_production_prompt_reference_invalid")
+        result["prompt_reference"] = {"revision_id": _revision_id(reference.get("revision_id"), "video_production_prompt_reference_invalid"), "content_hash": content_hash}
+    if result["source_mode"] == "web_video":
+        result["web_provider"] = _enum(row.get("web_provider"), {"grok", "gemini"}, "video_web_provider_invalid")
+        if row["schema"] == "video.shot-production.v1" and not result.get("prompt", "").strip():
+            _fail("video_production_prompt_required")
+        result["requested_generation_duration_ms"] = _int(row.get("requested_generation_duration_ms"), 1000, 15000, "video_generation_duration_invalid")
+        result["audio_intent"] = _enum(row.get("audio_intent", "mute"), {"mute", "keep"}, "video_audio_intent_invalid")
+    elif any(key in row for key in ("web_provider", "requested_generation_duration_ms", "audio_intent")):
+        _fail("video_web_fields_require_web_mode")
+    return result
+
+
+def canonical_postproduction(value: object, shot_ids: set[str], duration: int) -> dict:
+    row = _object(value, {"schema", "phase", "fps", "resolution", "ae_shot_ids", "parent_output_id", "parent_output_hash", "parent_material_revision_id", "feedback", "ae_compositions"}, "video_postproduction_invalid")
+    if row.get("schema") != "video.postproduction.v1":
+        _fail("video_postproduction_schema_invalid")
+    result = {"schema": row["schema"], "phase": _enum(row.get("phase"), {"rough_cut", "refinement", "final"}, "video_postproduction_phase_invalid"), "fps": _int(row.get("fps", 30), 1, 60, "video_postproduction_fps_invalid")}
+    resolution = row.get("resolution")
+    if not isinstance(resolution, list) or len(resolution) != 2:
+        _fail("video_postproduction_resolution_invalid")
+    result["resolution"] = [_int(n, 16, 8192, "video_postproduction_resolution_invalid") for n in resolution]
+    ae = row.get("ae_shot_ids", [])
+    if not isinstance(ae, list) or len(ae) > 300 or any(not isinstance(i, str) or i not in shot_ids for i in ae) or len(set(ae)) != len(ae):
+        _fail("video_ae_shot_invalid")
+    result["ae_shot_ids"] = ae
+    compositions = row.get("ae_compositions", [])
+    if not isinstance(compositions, list) or len(compositions) != len(ae) or len(ae) > 15:
+        _fail("video_ae_compositions_invalid")
+    result["ae_compositions"] = []
+    for index, raw in enumerate(compositions):
+        comp = _object(raw, {"shot_id", "role_id", "duration_ms", "resolution", "fps", "alpha_required"}, "video_ae_compositions_invalid")
+        role_id = "ae_intermediate" if len(ae) == 1 else f"ae_intermediate_{index + 1}"
+        size = comp.get("resolution")
+        if comp.get("shot_id") != ae[index] or comp.get("role_id", role_id) != role_id or not isinstance(size, list) or len(size) != 2 or type(comp.get("alpha_required")) is not bool:
+            _fail("video_ae_compositions_invalid")
+        result["ae_compositions"].append({"shot_id": ae[index], "role_id": role_id,
+            "duration_ms": _int(comp.get("duration_ms"), 1, duration, "video_ae_duration_invalid"),
+            "resolution": [_int(n, 16, 8192, "video_ae_resolution_invalid") for n in size],
+            "fps": _int(comp.get("fps"), 1, 60, "video_ae_fps_invalid"), "alpha_required": comp["alpha_required"]})
+    parent = {"parent_output_id", "parent_output_hash", "parent_material_revision_id"}
+    if parent & row.keys():
+        if not parent <= row.keys() or not isinstance(row["parent_output_hash"], str) or not re.fullmatch(r"[0-9a-f]{64}", row["parent_output_hash"]):
+            _fail("video_feedback_parent_invalid")
+        result.update({"parent_output_id": _revision_id(row["parent_output_id"], "video_feedback_parent_invalid"), "parent_output_hash": row["parent_output_hash"], "parent_material_revision_id": _revision_id(row["parent_material_revision_id"], "video_feedback_parent_invalid")})
+    feedback = row.get("feedback", [])
+    if not isinstance(feedback, list) or len(feedback) > 100 or (feedback and not parent <= row.keys()):
+        _fail("video_feedback_invalid")
+    result["feedback"] = []
+    for item in feedback:
+        item = _object(item, {"time_ms", "note"}, "video_feedback_invalid")
+        note = _text(item.get("note"), 2000, "video_feedback_invalid")
+        if not note.strip():
+            _fail("video_feedback_invalid")
+        result["feedback"].append({"time_ms": _int(item.get("time_ms"), 0, duration, "video_feedback_invalid"), "note": note})
+    return result
+
+
 def canonical_payload(raw: object) -> dict:
-    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref"}, "video_payload_invalid")
+    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref", "postproduction"}, "video_payload_invalid")
     result = {
         "title": _text(payload.get("title", ""), 500, "video_title_invalid"),
         "aspect_ratio": _ratio(payload.get("aspect_ratio")),
@@ -104,7 +177,7 @@ def canonical_payload(raw: object) -> dict:
 
     shots = []
     for raw_shot in _ordered(payload.get("shots"), maximum=300, code="video_shots_invalid"):
-        shot = _object(raw_shot, {"id", "order", "label", "purpose", "duration_ms", "script_block_id", "source_material_revision_id", "framing", "transition"}, "video_shot_invalid")
+        shot = _object(raw_shot, {"id", "order", "label", "purpose", "duration_ms", "script_block_id", "source_material_revision_id", "framing", "transition", "production"}, "video_shot_invalid")
         normalized = {
             "id": shot["id"], "order": shot["order"],
             "label": _text(shot.get("label", ""), 200, "video_shot_label_invalid"),
@@ -122,6 +195,8 @@ def canonical_payload(raw: object) -> dict:
             normalized["framing"] = _enum(shot["framing"], {"wide", "medium", "close", "custom"}, "video_framing_invalid")
         if "transition" in shot:
             normalized["transition"] = _enum(shot["transition"], {"cut", "fade", "dissolve"}, "video_transition_invalid")
+        if "production" in shot:
+            normalized["production"] = canonical_production(shot["production"])
         shots.append(normalized)
     result["shots"] = shots
     shot_ids = {shot["id"] for shot in shots}
@@ -212,6 +287,11 @@ def canonical_payload(raw: object) -> dict:
     if "render_asset_ref" in payload:
         ref = _object(payload["render_asset_ref"], {"material_revision_id"}, "video_render_ref_invalid")
         result["render_asset_ref"] = {"material_revision_id": _revision_id(ref.get("material_revision_id"), "video_render_ref_invalid")}
+    if "postproduction" in payload:
+        result["postproduction"] = canonical_postproduction(payload["postproduction"], shot_ids, duration)
+        width, height = result["postproduction"]["resolution"]
+        if width * result["aspect_ratio"][1] != height * result["aspect_ratio"][0]:
+            _fail("video_postproduction_aspect_mismatch")
     return result
 
 
@@ -291,6 +371,9 @@ def _expected_media(document: dict) -> list[dict]:
     for shot in document["shots"]:
         if "source_material_revision_id" in shot:
             add("shot_source", shot["id"], shot["source_material_revision_id"], {"shot_id": shot["id"]})
+        reference = (shot.get("production") or {}).get("reference_material_revision_id")
+        if reference is not None:
+            add("shot_reference", shot["id"], reference, {"shot_id": shot["id"]})
     for track in document["timeline"]["tracks"]:
         for item in track["items"]:
             if "material_revision_id" in item:
@@ -302,6 +385,9 @@ def _expected_media(document: dict) -> list[dict]:
     for field, role in (("voice", "voice_audio"), ("music", "music_audio"), ("cover", "cover_image")):
         if "material_revision_id" in document[field]:
             add(role, field, document[field]["material_revision_id"], {field: "main"})
+    parent = (document.get("postproduction") or {}).get("parent_material_revision_id")
+    if parent is not None:
+        add("postproduction_parent", "rough_cut", parent, {"postproduction": "parent"})
     if "render_asset_ref" in document:
         add("render_output", "final", document["render_asset_ref"]["material_revision_id"], {"render": "final"})
     return expected

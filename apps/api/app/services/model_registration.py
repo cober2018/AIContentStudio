@@ -28,8 +28,6 @@ from .url_fetch import (
 
 PURPOSES = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit")
 PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS = OUTBOUND_HTTP_POLICIES["model_generation"].timeout_seconds
-PROVIDER_REQUEST_MAX_BODY_BYTES = OUTBOUND_HTTP_POLICIES["model_generation"].request_bytes
-PROVIDER_RESPONSE_MAX_BODY_BYTES = OUTBOUND_HTTP_POLICIES["model_generation"].response_bytes
 
 
 class ProviderInput(StrictModel):
@@ -105,14 +103,15 @@ def target(provider):
 
 def provider_request(provider, path, *, payload=None, timeout=10):
     """Pin validated TCP target while retaining TLS hostname and suppress raw diagnostics."""
-    if path not in {"/models", "/chat/completions", "/images/generations"}:
+    native_image = re.fullmatch(r"/v1beta/models/([A-Za-z0-9_.~-]|%[0-9A-F]{2}){1,480}:generateContent", path) is not None
+    if path not in {"/models", "/chat/completions", "/images/generations"} and not native_image:
         raise HTTPException(422, "provider_operation_invalid")
     if not provider.get("enabled", True) or not provider.get("api_key"):
         raise HTTPException(422, "provider_credential_unavailable")
     timeout_value = float(timeout)
     if not math.isfinite(timeout_value):
         timeout_value = PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS
-    policy = "model_discovery" if path == "/models" else "image" if path == "/images/generations" else "model_generation"
+    policy = "model_discovery" if path == "/models" else "image" if path == "/images/generations" or native_image else "model_generation"
     limit = OUTBOUND_HTTP_POLICIES[policy]
     deadline = time.monotonic() + min(max(timeout_value, 0.1), limit.timeout_seconds)
     headers = {"Authorization": "Bearer " + provider["api_key"], "Accept-Encoding": "identity"}
@@ -122,11 +121,17 @@ def provider_request(provider, path, *, payload=None, timeout=10):
             request_body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
         except (TypeError, ValueError, RecursionError) as exc:
             raise HTTPException(422, "provider_request_payload_invalid") from exc
-        if len(request_body) > PROVIDER_REQUEST_MAX_BODY_BYTES:
+        if len(request_body) > limit.request_bytes:
             raise HTTPException(413, "provider_request_limit")
         headers["Content-Type"] = "application/json"
     with outbound_scope(deadline):
         base, parsed, port, address = target(provider)
+    if native_image:
+        # The registered gateway's OpenAI /v1 prefix maps to its native sibling.
+        # Validate/pin the original endpoint so private endpoint trust is unchanged.
+        if parsed.path not in {"", "/v1"}:
+            raise HTTPException(422, "provider_operation_invalid")
+        base = parsed._replace(path="").geturl().rstrip("/")
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise HTTPException(504, "provider_timeout")
@@ -140,13 +145,15 @@ def provider_request(provider, path, *, payload=None, timeout=10):
                           headers=headers, content=request_body) as response,
         ):
             if response.status_code != 200:
-                reason = "provider_authentication_rejected" if response.status_code in {401, 403} else "provider_request_rejected"
+                reason = ("provider_authentication_rejected" if response.status_code in {401, 403}
+                          else "provider_image_protocol_rejected" if response.status_code == 400 and (native_image or path == "/images/generations")
+                          else "provider_request_rejected")
                 raise HTTPException(502, reason)
             if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
                 raise HTTPException(502, "provider_response_encoding_invalid")
             data = bytearray()
             for chunk in response.iter_bytes():
-                if len(data) + len(chunk) > PROVIDER_RESPONSE_MAX_BODY_BYTES or time.monotonic() >= deadline:
+                if len(data) + len(chunk) > limit.response_bytes or time.monotonic() >= deadline:
                     raise HTTPException(502, "provider_response_limit")
                 data.extend(chunk)
             if time.monotonic() >= deadline:

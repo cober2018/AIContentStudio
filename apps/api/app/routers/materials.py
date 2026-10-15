@@ -5,9 +5,10 @@
 - 旧 DraftMedia（无 material_revision_id）保持可读。
 """
 
+from http.cookies import SimpleCookie
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from sqlalchemy import select
@@ -407,6 +408,54 @@ def revoke_material_public_use(
     db.add(AuditLog(event="material.public_use_revoked", actor=user.email, entity_type="material_revision", entity_id=str(revision.id), detail_json={"note": payload.note, "affected_drafts": result["affected_drafts"]}))
     db.commit()
     return {**result, "revision": _revision_json(revision)}
+
+
+def _external_video_target(db, material_id, revision_id, user=None):
+    from ..services.content_masters import local_final_use_allowed
+
+    revision = _get_revision(db, material_id, revision_id)
+    provenance = revision.source_metadata_json or {}
+    keys = ("project_id", "content_unit_id", "execution_id", "output_id")
+    if (revision.source_kind != "external_execution" or revision.mime_type != "video/mp4"
+            or any(type(provenance.get(key)) is not int or provenance[key] < 1 for key in keys)
+            or (user is not None and provenance.get("owner_user_id") != user.id)):
+        raise HTTPException(404, {"code": "creative_output_not_found"})
+    if (revision.status in {"revoked", "archived"} or revision.material.status != "active"
+            or (revision.public_use_allowed is not True and not local_final_use_allowed(
+                db, provenance["project_id"], provenance["content_unit_id"], provenance.get("owner_user_id"), revision))):
+        raise HTTPException(409, {"code": "creative_output_material_rights_changed"})
+    return revision, [provenance[key] for key in keys]
+
+
+@router.post("/materials/{material_id}/revisions/{revision_id}/preview-session")
+def material_preview_session(material_id: int, revision_id: int, request: Request, response: Response,
+                             db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from .creative_orchestration import _preview_output, preview_session
+
+    revision, target = _external_video_target(db, material_id, revision_id, user)
+    _execution, output = _preview_output(db, *target, user)
+    if output["state"] != "accepted" or output["material_revision_id"] != revision.id or output["content_hash"] != revision.content_hash:
+        raise HTTPException(409, {"code": "creative_output_material_integrity"})
+    # Reuse the execution signature and Range reader, while limiting its cookie to this exact material URL.
+    session_response = Response()
+    result = preview_session(*target, request, session_response, db, user)
+    cookie = SimpleCookie()
+    cookie.load(session_response.headers["set-cookie"])
+    path = f"/api/v1/materials/{material_id}/revisions/{revision_id}/preview"
+    response.set_cookie("creative_preview", cookie["creative_preview"].value, max_age=300, path=path,
+                        httponly=True, samesite="strict", secure=request.url.scheme == "https")
+    response.headers["Cache-Control"] = "no-store"
+    return {**result, "url": path}
+
+
+@router.get("/materials/{material_id}/revisions/{revision_id}/preview")
+def material_preview(material_id: int, revision_id: int, request: Request, db: Session = Depends(get_db)):
+    from .creative_orchestration import preview_output
+
+    if not request.cookies.get("creative_preview"):
+        raise HTTPException(401, {"code": "creative_preview_session_required"})
+    _revision, target = _external_video_target(db, material_id, revision_id)
+    return preview_output(*target, request, db)
 
 
 @router.get("/materials/{material_id}/revisions/{revision_id}/raw")

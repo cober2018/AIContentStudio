@@ -27,7 +27,7 @@ from ..models import (
 )
 from .content_masters import frozen_context, get_revision, owned_unit
 from .creative_contracts import bounded_json, canonical_hash, canonical_output_contract
-from .materials import read_bytes_checked
+from .materials import verify_bytes_checked
 from .production_modalities import adapter_for
 from .project_events import record_project_event
 
@@ -189,7 +189,7 @@ def _check_asset(db: Session, project_id: int, ref: dict) -> MaterialRevision:
     if material.model_use_allowed is not True:
         raise HTTPException(403, {"code": "creative_input_model_use_denied"})
     _check_derived_rights(db, material)
-    read_bytes_checked(db, material)
+    verify_bytes_checked(db, material)
     return material
 
 
@@ -234,7 +234,7 @@ def _check_derived_rights(db: Session, material: MaterialRevision) -> None:
                 attribution = item["rights"].get("attribution_text")
                 if attribution and attribution not in (revision.attribution_text or ""):
                     raise ValueError("external material attribution missing")
-                read_bytes_checked(db, source)
+                verify_bytes_checked(db, source)
                 check(source, depth + 1)
         active.remove(revision.id)
         checked.add(revision.id)
@@ -279,10 +279,19 @@ def build_package(*, schema: str, source: dict, context: dict, assets: list[dict
 def create_package(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, manual_image: dict | None = None) -> dict:
     owned_unit(db, project_id, unit_id, user, mutate=True)
     row, projection, master = _source(db, project_id, unit_id, user, master_id=payload.get("source_master_revision_id"), variant_id=payload.get("source_variant_revision_id"), current=True)
+    from .web_video_handoff import build_web_handoff, source_asset_refs
+    web_video = None
+    if payload.get("web_video_shot_id") is not None:
+        if isinstance(row, ChannelVariantRevision):
+            raise HTTPException(422, {"code": "web_video_requires_video_master"})
+        web_video = build_web_handoff({"payload_schema": row.payload_schema, "content": row.payload_json,
+            "id": row.id, "payload_hash": row.payload_hash}, payload["web_video_shot_id"], new_execution=True)
     assets = []
-    for ref in projection["assets"]:
+    for ref in source_asset_refs(projection, web_video):
         material = _check_asset(db, project_id, ref)
         assets.append({**{key: ref[key] for key in ("material_revision_id", "role", "slot_key", "sort_order", "placement", "content_hash")}, "mime_type": material.mime_type, "rights": _rights(material)})
+    if web_video is not None and web_video.get("reference_material_revision_id") is not None and (len(assets) != 1 or not str(assets[0]["mime_type"]).startswith("image/")):
+        raise HTTPException(422, {"code": "web_video_reference_image_required"})
     evidence = [{key: ref[key] for key in ("fact_pack_item_id", "role", "locator", "sort_order", "snapshot_checksum")} for ref in projection["evidence"]]
     _check_evidence(db, master, evidence)
     is_variant = isinstance(row, ChannelVariantRevision)
@@ -304,9 +313,18 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
         director = {key: document.get(key) for key in ("title", "aspect_ratio", "script", "shots", "voice", "subtitles", "overlays", "music", "cover", "timeline")}
         director["final_render_required"] = render["status"] != "ready"
         director["candidate_ready"] = False
+        if document.get("postproduction"):
+            from .web_video_handoff import validate_parent
+            validate_parent(db, project_id, unit_id, document, user.id)
+            director["postproduction"] = document["postproduction"]
     package_json = build_package(schema=schema, source=source, context=context, assets=assets, evidence=evidence,
         intent=row.creative_intent_json, objective=payload["objective"], constraints=payload.get("constraints", []),
         output_contract=payload["output_contract"], acceptance_criteria=payload.get("acceptance_criteria", []), director=director)
+    if web_video is not None:
+        package_json["web_video"] = {**web_video, "reference_assets": assets}
+        from .web_video_handoff import validate_new_web_package
+        validate_new_web_package(package_json)
+        package_json = bounded_json(package_json)
     if manual_image is not None:
         identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
         brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id) if master.creative_brief_revision_id else None
@@ -314,6 +332,20 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
             "brief": {key: getattr(brief, key) for key in ("objective", "primary_audience", "core_message", "angle", "content_constraints_json", "required_evidence_json")} if brief else None}
         package_json["manual_image"] = manual_image_handoff(manual_image, package_json, creative_context=creative_context)
         package_json = bounded_json(package_json)
+    policy = package_json["output_contract"].get("media_transfer_policy")
+    if policy is not None:
+        if row.payload_schema != "video.master.v2" or not (web_video is not None or schema == "director.video.v1"):
+            raise HTTPException(422, {"code": "creative_media_transfer_scope_invalid"})
+        from .material_storage import provider as storage_provider
+        total = 0
+        for asset in assets:
+            material = db.get(MaterialRevision, asset["material_revision_id"])
+            size = storage_provider().size(material.file_path)
+            if not 0 < size <= policy["max_file_bytes"]:
+                raise HTTPException(413, {"code": "creative_input_file_limit"})
+            total += size
+        if total > policy["max_total_bytes"]:
+            raise HTTPException(413, {"code": "creative_input_total_limit"})
     package = CreativeExecutionPackage(owner_user_id=user.id, project_id=project_id, content_unit_id=unit_id,
         source_master_revision_id=None if is_variant else row.id, source_variant_revision_id=row.id if is_variant else None,
         package_schema=schema, package_json=package_json, package_hash=canonical_hash(package_json),
@@ -391,12 +423,19 @@ def owned_package(db: Session, project_id: int, unit_id: int, package_id: int, u
         source, projection, master = _source(db, project_id, unit_id, user, master_id=package.source_master_revision_id, variant_id=package.source_variant_revision_id, current=True)
         if (source.payload_hash, source.context_hash, source.creative_intent_hash) != (package.source_payload_hash, package.source_context_hash, package.creative_intent_hash):
             raise HTTPException(409, {"code": "creative_package_stale"})
+        from .web_video_handoff import build_web_handoff, source_asset_refs
+        handoff = package.package_json.get("web_video")
+        if handoff is not None:
+            rebuilt = build_web_handoff({"payload_schema": source.payload_schema, "content": source.payload_json,
+                "id": source.id, "payload_hash": source.payload_hash}, handoff["shot_id"])
+            if any(handoff.get(key) != value for key, value in rebuilt.items()):
+                raise HTTPException(409, {"code": "web_video_package_integrity"})
         asset_fields = ("material_revision_id", "role", "slot_key", "sort_order", "placement", "content_hash")
         evidence_fields = ("fact_pack_item_id", "role", "locator", "sort_order", "snapshot_checksum")
         if (frozen_source.get("content") != source.payload_json
                 or frozen_source.get("profile") != _profile(db, source)
                 or package.package_json.get("context") != {**frozen_context(db, master), "workflow": {"run_id": master.origin_workflow_run_id, "project_output_id": master.origin_project_output_id}}
-                or [{key: ref[key] for key in asset_fields} for ref in package.package_json["assets"]] != [{key: ref[key] for key in asset_fields} for ref in projection["assets"]]
+                or [{key: ref[key] for key in asset_fields} for ref in package.package_json["assets"]] != [{key: ref[key] for key in asset_fields} for ref in source_asset_refs(projection, handoff)]
                 or package.package_json["evidence"] != [{key: ref[key] for key in evidence_fields} for ref in projection["evidence"]]):
             raise HTTPException(409, {"code": "creative_package_source_mismatch"})
         _check_evidence(db, master, projection["evidence"])

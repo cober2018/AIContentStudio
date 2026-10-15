@@ -146,6 +146,10 @@ def bootstrap_media_providers() -> None:
     if cpa_image.key not in {d.key for d in registry.list("image_provider")}:
         registry.register("image_provider", cpa_image.key, "1", cpa_image,
                           label="Registered CPA image generation (explicit acceptance required)")
+    for kind in ("model_provider", "image_provider"):
+        if ("openai.compatible", "2") not in {(d.key, d.version) for d in registry.list(kind)}:
+            registry.register(kind, "openai.compatible", "2", CPAImageProvider("2"),
+                              label="Registered CPA Gemini native image protocol (explicit acceptance required)")
 
     if LocalGraphicRenderer.key not in {d.key for d in registry.list("renderer")}:
         registry.register("renderer", LocalGraphicRenderer.key, "1", LocalGraphicRenderer(), label="Local Graphic Chromium renderer (explicit runtime required)")

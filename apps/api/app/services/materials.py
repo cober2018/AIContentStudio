@@ -189,6 +189,8 @@ def create_revision(
     metadata: dict | None = None,
     created_by: str | None = None,
     _execution_acceptance: object | None = None,
+    _execution_stream=None,
+    _stream_maximum: int = 30 * 1024 * 1024,
 ) -> MaterialRevision:
     if source_kind not in {k.value for k in MaterialSourceKind}:
         raise HTTPException(422, f"非法素材来源: {source_kind}")
@@ -199,10 +201,24 @@ def create_revision(
                 or any(type(source_metadata.get(key)) is not int or source_metadata[key] < 1 for key in ("execution_id", "output_id", "package_id"))
                 or not isinstance(source_metadata.get("package_hash"), str) or len(source_metadata["package_hash"]) != 64):
             raise HTTPException(422, {"code": "external_execution_provenance_required"})
-        mime = validate_execution_file(content, declared_mime, material.kind)
+        mime = declared_mime if _execution_stream is not None else validate_execution_file(content, declared_mime, material.kind)
     else:
         mime = validate_upload(content, declared_mime) if source_kind != MaterialSourceKind.legacy.value else (declared_mime or FALLBACK_MIME)
-    relative, content_hash = store_bytes(db, content, subdir="material", suffix=suffix)
+    if _execution_stream is not None:
+        if source_kind != "external_execution" or _execution_acceptance is not _EXTERNAL_EXECUTION_ACCEPTANCE:
+            raise HTTPException(403, {"code": "external_execution_acceptance_required"})
+        from .creative_media_stream import inspect
+        from .material_byte_lock import hold_until_transaction_end
+        from .material_storage import LocalMaterialStorage, provider
+        _size, content_hash = inspect(_execution_stream, _stream_maximum)
+        hold_until_transaction_end(db, content_hash)
+        relative = f"material/{content_hash[:2]}/{content_hash}{suffix}"
+        storage = provider()
+        if not isinstance(storage, LocalMaterialStorage):
+            raise HTTPException(409, {"code": "execution_local_storage_required"})
+        storage.put_stream(relative, _execution_stream, maximum=_stream_maximum, expected_hash=content_hash)
+    else:
+        relative, content_hash = store_bytes(db, content, subdir="material", suffix=suffix)
     latest_no = db.scalar(
         select(MaterialRevision.revision_no)
         .where(MaterialRevision.material_id == material.id)
@@ -419,3 +435,17 @@ def storage_diagnostics(db: Session, *, limit: int = 200) -> dict:
         "orphan_candidates": orphan_candidates,
         "truncated": len(rows) >= limit,
     }
+
+
+def verify_bytes_checked(db: Session, revision: MaterialRevision, *, require_public: bool = False) -> bytes:
+    """Verify opted-in execution media incrementally; return only a MIME header."""
+    if revision.source_kind != "external_execution":
+        return read_bytes_checked(db, revision, require_public=require_public)
+    if require_public and revision.public_use_allowed is not True:
+        raise HTTPException(403, "该素材未获公开使用授权")
+    from .creative_media_stream import material_file
+    try:
+        with material_file(revision, 512 * 1024 * 1024) as source:
+            return source.read(64)
+    except OSError:
+        raise HTTPException(409, {"code": "execution_input_unavailable"}) from None

@@ -1,0 +1,22 @@
+[
+  {
+    "model": "gemini-omni-1.1-flash",
+    "http_status": 404,
+    "body": {
+      "error": {
+        "message": "Not Found",
+        "type": "not_found"
+      }
+    }
+  },
+  {
+    "model": "veo-3.1-generate-preview",
+    "http_status": 404,
+    "body": {
+      "error": {
+        "message": "Not Found",
+        "type": "not_found"
+      }
+    }
+  }
+]

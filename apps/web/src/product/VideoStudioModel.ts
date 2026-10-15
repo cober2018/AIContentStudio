@@ -1,11 +1,14 @@
 export type VideoScriptBlock = { id: string; order: number; text: string };
-export type VideoShot = { id: string; order: number; label: string; duration_ms: number; purpose?: string; script_block_id?: string; source_material_revision_id?: number; framing?: "wide" | "medium" | "close" | "custom"; transition?: "cut" | "fade" | "dissolve" };
+export type VideoShotProduction = { schema: "video.shot-production.v1" | "video.shot-production.v2"; prompt_reference?: { revision_id: number; content_hash: string }; source_mode: "existing" | "api_image" | "web_video" | "ae"; web_provider?: "grok" | "gemini"; prompt?: string; reference_material_revision_id?: number; requested_generation_duration_ms?: number; audio_intent?: "mute" | "keep" };
+export type VideoAEComposition = { shot_id: string; role_id: string; duration_ms: number; resolution: [number, number]; fps: number; alpha_required: boolean };
+export type VideoPostproduction = { ae_compositions?: VideoAEComposition[]; schema: "video.postproduction.v1"; phase: "rough_cut" | "refinement" | "final"; fps: number; resolution: [number, number]; ae_shot_ids: string[]; parent_output_id?: number; parent_output_hash?: string; parent_material_revision_id?: number; feedback: { time_ms: number; note: string }[] };
+export type VideoShot = { id: string; order: number; label: string; duration_ms: number; purpose?: string; script_block_id?: string; source_material_revision_id?: number; framing?: "wide" | "medium" | "close" | "custom"; transition?: "cut" | "fade" | "dissolve"; production?: VideoShotProduction };
 export type VideoTimelineItem = { id: string; order: number; start_ms: number; end_ms: number; shot_id?: string; material_revision_id?: number; trim_start_ms?: number; trim_end_ms?: number; volume?: number };
 export type VideoTrack = { id: string; order: number; kind: "video" | "audio" | "subtitle" | "overlay" | "music"; items: VideoTimelineItem[] };
 export type VideoCue = { id: string; order: number; text: string; start_ms: number; end_ms: number };
 export type VideoOverlay = { id: string; order: number; text: string; start_ms: number; end_ms: number; x: number; y: number };
 export type VideoPayload = {
-  title: string; aspect_ratio: [number, number]; script: { blocks: VideoScriptBlock[] }; shots: VideoShot[];
+  postproduction?: VideoPostproduction; title: string; aspect_ratio: [number, number]; script: { blocks: VideoScriptBlock[] }; shots: VideoShot[];
   timeline: { duration_ms: number; tracks: VideoTrack[] }; voice: { mode: "none" | "recorded" | "tts"; material_revision_id?: number };
   subtitles: { cues: VideoCue[] }; overlays: VideoOverlay[]; music: { material_revision_id?: number }; cover: { material_revision_id?: number };
   render_asset_ref?: { material_revision_id: number };
@@ -13,7 +16,7 @@ export type VideoPayload = {
 export type VideoAssetRef = { material_revision_id: number; content_hash: string; role: string; slot_key?: string; sort_order?: number; placement?: Record<string, unknown> };
 export type VideoEvidenceRef = { fact_pack_item_id: number; snapshot_checksum: string; role?: string; sort_order?: number; locator: Record<string, unknown> };
 export type VideoDraft = { payloadSchema: "video.master.v2"; payload: VideoPayload; assetRefs: VideoAssetRef[]; evidenceRefs: VideoEvidenceRef[]; asrReceiptId?: string };
-export type ExactVideoAsset = { material_revision_id: number; content_hash: string; kind: string; public_use_allowed: boolean; model_use_allowed: boolean };
+export type ExactVideoAsset = { material_revision_id: number; content_hash: string; kind: string; public_use_allowed: boolean; model_use_allowed: boolean; mime_type?: string | null; local_final_use_allowed?: boolean };
 
 const MAX_DURATION = 8 * 60 * 60 * 1000;
 function reordered<T extends { order: number }>(rows: T[]): T[] { return rows.map((row, order) => ({ ...row, order })); }
@@ -24,7 +27,10 @@ function orderedAssetRefs(payload: VideoPayload, refs: VideoAssetRef[]): VideoAs
     if (!ref) throw new Error("Exact video media reference missing");
     ordered.push({ ...ref, sort_order: ordered.length, placement });
   }
-  for (const shot of payload.shots) if (shot.source_material_revision_id) add("shot_source", shot.id, shot.source_material_revision_id, { shot_id: shot.id });
+  for (const shot of payload.shots) {
+    if (shot.source_material_revision_id) add("shot_source", shot.id, shot.source_material_revision_id, { shot_id: shot.id });
+    if (shot.production?.reference_material_revision_id) add("shot_reference", shot.id, shot.production.reference_material_revision_id, { shot_id: shot.id });
+  }
   for (const track of payload.timeline.tracks) for (const item of track.items) if (item.material_revision_id) {
     const placement: Record<string, unknown> = { track_id: track.id, item_id: item.id, start_ms: item.start_ms, end_ms: item.end_ms };
     for (const field of ["trim_start_ms", "trim_end_ms", "volume"] as const) if (item[field] !== undefined) placement[field] = item[field];
@@ -34,6 +40,7 @@ function orderedAssetRefs(payload: VideoPayload, refs: VideoAssetRef[]): VideoAs
     const revision = payload[field].material_revision_id;
     if (revision) add(role, field, revision, { [field]: "main" });
   }
+  if (payload.postproduction?.parent_material_revision_id) add("postproduction_parent", "rough_cut", payload.postproduction.parent_material_revision_id, { postproduction: "parent" });
   if (payload.render_asset_ref) add("render_output", "final", payload.render_asset_ref.material_revision_id, { render: "final" });
   return ordered;
 }
@@ -143,7 +150,7 @@ export function removeShot(draft: VideoDraft, id: string): VideoDraft {
   if (!draft.payload.shots.some((shot) => shot.id === id)) throw new Error("Shot not found");
   if (draft.payload.timeline.tracks.some((track) => track.items.some((item) => item.shot_id === id))) throw new Error("Remove timeline placement before deleting shot");
   const shots = reordered(draft.payload.shots.filter((shot) => shot.id !== id));
-  const payload = { ...draft.payload, shots };
+  const payload = { ...draft.payload, shots, ...(draft.payload.postproduction ? { postproduction: { ...draft.payload.postproduction, ae_shot_ids: draft.payload.postproduction.ae_shot_ids.filter(shotId => shotId !== id), ae_compositions: draft.payload.postproduction.ae_compositions?.filter(comp => comp.shot_id !== id).map((comp, index, remaining) => ({ ...comp, role_id: remaining.length === 1 ? "ae_intermediate" : `ae_intermediate_${index + 1}` })) } } : {}) };
   return changed(draft, payload, orderedAssetRefs(payload, draft.assetRefs));
 }
 
@@ -280,8 +287,13 @@ export function setCover(draft: VideoDraft, asset: ExactVideoAsset | null): Vide
   return replaceWholeMedia(draft, { ...draft.payload, cover: asset ? { material_revision_id: asset.material_revision_id } : {} }, "cover_image", "cover", asset);
 }
 
+export function canUseFinalRender(asset: ExactVideoAsset): boolean {
+  return asset.kind === "video" && (asset.public_use_allowed || (asset.model_use_allowed && asset.local_final_use_allowed === true && asset.mime_type === "video/mp4"));
+}
+
 export function bindFinalRender(draft: VideoDraft, asset: ExactVideoAsset | null): VideoDraft {
-  validateMedia(asset, "video", "Final render", true);
+  validateMedia(asset, "video", "Final render");
+  if (asset && !canUseFinalRender(asset)) throw new Error("最终 MP4 尚未接受或本地使用授权已失效");
   const old = draft.assetRefs.find((ref) => ref.role === "render_output");
   if (draft.payload.render_asset_ref?.material_revision_id === asset?.material_revision_id && (!asset || old?.content_hash === asset.content_hash)) return draft;
   const payload = { ...draft.payload };
@@ -369,4 +381,54 @@ export function updateOverlay(draft: VideoDraft, id: string, patch: Partial<Pick
 export function removeOverlay(draft: VideoDraft, id: string): VideoDraft {
   if (!draft.payload.overlays.some((overlay) => overlay.id === id)) throw new Error("Overlay not found");
   return changed(draft, { ...draft.payload, overlays: reordered(draft.payload.overlays.filter((overlay) => overlay.id !== id)) });
+}
+
+
+export function setShotProduction(draft: VideoDraft, shotId: string, production: VideoShotProduction, reference?: ExactVideoAsset | null): VideoDraft {
+  if (!draft.payload.shots.some(shot => shot.id === shotId)) throw new Error("分镜已不存在");
+  if (!['existing', 'api_image', 'web_video', 'ae'].includes(production.source_mode) || (production.prompt?.length || 0) > 2000) throw new Error("素材制作设置无效");
+  if (production.source_mode === 'web_video' && (!['grok', 'gemini'].includes(production.web_provider || '') || !Number.isInteger(production.requested_generation_duration_ms) || production.requested_generation_duration_ms! < 1000 || production.requested_generation_duration_ms! > 15000)) throw new Error("请填写网页、提示词和1–15秒生成时长");
+  const previous = draft.payload.shots.find(shot => shot.id === shotId)?.production;
+  const config = { ...production };
+  if (previous?.prompt !== config.prompt) delete config.prompt_reference;
+  if (reference !== undefined) {
+    delete config.reference_material_revision_id;
+    if (reference) {
+      if (reference.kind !== 'image' || !reference.model_use_allowed || !/^[0-9a-f]{64}$/.test(reference.content_hash)) throw new Error("参考图必须是有模型使用权的精确图片版本");
+      config.reference_material_revision_id = reference.material_revision_id;
+    }
+  }
+  const previousReference = draft.assetRefs.find(ref => ref.role === 'shot_reference' && ref.slot_key === shotId && ref.material_revision_id === previous?.reference_material_revision_id);
+  if (previous?.reference_material_revision_id !== config.reference_material_revision_id || (reference !== undefined && previousReference?.content_hash !== reference?.content_hash)) delete config.prompt_reference;
+  const payload = { ...draft.payload, shots: draft.payload.shots.map(shot => shot.id === shotId ? { ...shot, production: config } : shot) };
+  const refs = reference === undefined ? draft.assetRefs : [...draft.assetRefs.filter(ref => !(ref.role === 'shot_reference' && ref.slot_key === shotId)), ...(reference ? [{ material_revision_id: reference.material_revision_id, content_hash: reference.content_hash, role: 'shot_reference', slot_key: shotId, placement: { shot_id: shotId } }] : [])];
+  return changed(draft, payload, orderedAssetRefs(payload, refs));
+}
+
+export function confirmShotVideoPrompt(draft: VideoDraft, shotId: string): VideoDraft {
+  const production = draft.payload.shots.find(shot => shot.id === shotId)?.production;
+  const reference = draft.assetRefs.find(ref => ref.role === 'shot_reference' && ref.slot_key === shotId && ref.material_revision_id === production?.reference_material_revision_id);
+  if (!production || production.source_mode !== 'web_video' || !production.prompt?.trim() || !reference) throw new Error("请先确认图片，再查看该图并填写视频提示词");
+  return setShotProduction(draft, shotId, { ...production, schema: "video.shot-production.v2", prompt_reference: { revision_id: reference.material_revision_id, content_hash: reference.content_hash } });
+}
+
+export function setVideoPostproduction(draft: VideoDraft, postproduction: VideoPostproduction, parent?: ExactVideoAsset | null): VideoDraft {
+  if (!['rough_cut', 'refinement', 'final'].includes(postproduction.phase) || !Number.isInteger(postproduction.fps) || postproduction.fps < 1 || postproduction.fps > 60 || postproduction.resolution.some(n => !Number.isInteger(n) || n < 16 || n > 8192)) throw new Error("后期画幅或帧率无效");
+  if (postproduction.ae_shot_ids.some(id => !draft.payload.shots.some(shot => shot.id === id))) throw new Error("AE分镜不存在");
+  const post = structuredClone(postproduction);
+  if (post.ae_shot_ids.length > 15) throw new Error("一次导演包最多15个AE合成；请分批制作");
+  post.ae_compositions = post.ae_shot_ids.map((shotId, index) => {
+    const saved = post.ae_compositions?.find(comp => comp.shot_id === shotId);
+    return { shot_id: shotId, duration_ms: draft.payload.shots.find(shot => shot.id === shotId)!.duration_ms, resolution: [...post.resolution] as [number, number], fps: post.fps, alpha_required: false, ...saved, role_id: post.ae_shot_ids.length === 1 ? "ae_intermediate" : `ae_intermediate_${index + 1}` };
+  });
+  if (parent !== undefined) {
+    delete post.parent_material_revision_id;
+    if (parent) {
+      if (parent.kind !== 'video' || !parent.model_use_allowed || !/^[0-9a-f]{64}$/.test(parent.content_hash)) throw new Error("父粗剪素材不可用");
+      post.parent_material_revision_id = parent.material_revision_id;
+    } else { delete post.parent_output_id; delete post.parent_output_hash; post.feedback = []; }
+  }
+  const payload = { ...draft.payload, postproduction: post };
+  const refs = parent === undefined ? draft.assetRefs : [...draft.assetRefs.filter(ref => ref.role !== 'postproduction_parent'), ...(parent ? [{ material_revision_id: parent.material_revision_id, content_hash: parent.content_hash, role: 'postproduction_parent', slot_key: 'rough_cut', placement: { postproduction: 'parent' } }] : [])];
+  return changed(draft, payload, orderedAssetRefs(payload, refs));
 }

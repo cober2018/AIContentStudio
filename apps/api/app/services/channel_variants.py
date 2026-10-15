@@ -373,7 +373,8 @@ def _validate_graphic_assets(db: Session, project_id: int, master: ContentMaster
         if material is None or (visible is None and not any(_verified_generated_asset(db, output, material) for output in generated)) or material.content_hash != source["content_hash_snapshot"] or material.material.kind != "image" or material.material.status != "active" or material.status in {"revoked", "archived"} or material.public_use_allowed is not True:
             raise HTTPException(422, {"code": "variant_asset_unready"})
         try:
-            content = read_bytes_checked(db, material, require_public=True)
+            from .materials import verify_bytes_checked
+            content = verify_bytes_checked(db, material, require_public=True)
         except (HTTPException, OSError) as exc:
             raise HTTPException(422, {"code": "variant_asset_bytes_unverified"}) from exc
         if not material.mime_type or not material.mime_type.startswith("image/") or sniff_mime(content, None) != material.mime_type:
@@ -405,6 +406,7 @@ def _video_source_refs(db: Session, master: ContentMasterRevision) -> list[dict]
 
 def _validate_video_assets(db: Session, project_id: int, master: ContentMasterRevision, refs: list[dict]) -> list[MaterialRevision]:
     from .content_masters import _verified_generated_asset
+    from .materials import verify_bytes_checked
 
     expected = _video_source_refs(db, master)
     if len(refs) != len(expected) or not all(isinstance(ref, dict) for ref in refs):
@@ -430,7 +432,7 @@ def _validate_video_assets(db: Session, project_id: int, master: ContentMasterRe
                 or material.public_use_allowed is not True):
             raise HTTPException(422, {"code": "variant_b_roll_unready"})
         try:
-            content = read_bytes_checked(db, material, require_public=True)
+            content = verify_bytes_checked(db, material, require_public=True)
         except (HTTPException, OSError) as exc:
             raise HTTPException(422, {"code": "variant_b_roll_bytes_unverified"}) from exc
         expected_prefix = "image/" if material.material.kind == "image" else "video/"

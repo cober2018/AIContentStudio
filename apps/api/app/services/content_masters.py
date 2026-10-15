@@ -37,7 +37,7 @@ from ..models import (
 )
 from .content_harness.channel_registry import ChannelRegistryError, resolve_content_form
 from .creative_intents import CreativeIntentError, canonical_intent
-from .materials import read_bytes_checked, sniff_mime
+from .materials import read_bytes_checked, sniff_mime, verify_bytes_checked
 from .production_modalities import (
     adapter_for,
     default_payload_schema,
@@ -52,6 +52,38 @@ from .project_evidence import current_boundary
 
 def _hash(value: object) -> str:
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+
+
+def local_final_use_allowed(db: Session, project_id: int, unit_id: int, owner_id: int, material: MaterialRevision, *, document: dict | None = None) -> bool:
+    from .creative_packages import _check_derived_rights, _external_lineage
+
+    if (material.source_kind != "external_execution" or material.mime_type != "video/mp4"
+            or material.material.kind != "video" or material.material.status != "active"
+            or material.status in {"revoked", "archived"}
+            or (material.model_use_allowed is not True and material.public_use_allowed is not True)):
+        return False
+    try:
+        lineage, execution = _external_lineage(db, material)
+        if ((execution.owner_user_id, execution.project_id, execution.content_unit_id) != (owner_id, project_id, unit_id)
+                or material.source_metadata_json.get("owner_user_id") != owner_id or lineage["role_id"] != "final"):
+            return False
+        from ..models import CreativeExecutionPackage
+
+        package = db.get(CreativeExecutionPackage, execution.package_id)
+        source = package.package_json.get("source", {})
+        if source.get("payload_schema") != "video.master.v2" or not isinstance(source.get("content"), dict):
+            return False
+        latest = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        if latest is None or latest.project_id != project_id or latest.payload_schema != "video.master.v2":
+            return False
+        # Binding a render cannot silently adopt a film made for different editorial content.
+        source_content = {key: value for key, value in source["content"].items() if key != "render_asset_ref"}
+        if any({key: value for key, value in content.items() if key != "render_asset_ref"} != source_content for content in (latest.payload_json, document if document is not None else latest.payload_json)):
+            return False
+        _check_derived_rights(db, material)
+    except (HTTPException, ValueError):
+        return False
+    return True
 
 
 def owned_unit(db: Session, project_id: int, unit_id: int, user: User, *, mutate: bool = False) -> tuple[ContentProject, ContentUnit]:
@@ -314,7 +346,7 @@ def check_requirements(db: Session, row: ContentMasterRevision, *, require_curre
 
 def _material_live_state(db: Session, material: MaterialRevision) -> dict:
     try:
-        read_bytes_checked(db, material)
+        verify_bytes_checked(db, material)
         bytes_state = "verified"
     except HTTPException as exc:
         bytes_state = "missing" if exc.status_code == 404 else "invalid"
@@ -460,7 +492,7 @@ def _verified_generated_asset(db: Session, output: ProjectWorkflowOutput, materi
     from .project_outputs import MEDIA_KINDS
 
     try:
-        read_bytes_checked(db, material)
+        verify_bytes_checked(db, material)
     except (HTTPException, OSError):
         return False
     attempt = db.get(WorkflowStepAttempt, output.attempt_id) if output.attempt_id else None
@@ -653,16 +685,18 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
                 allowed_kinds = {
                     "shot_source": {"image", "video"}, "voice_audio": {"audio"}, "music_audio": {"audio"},
                     "cover_image": {"image"}, "render_output": {"video"},
+                    "shot_reference": {"image"}, "postproduction_parent": {"video"},
                 }[role]
-            # Local production/ASR may use a model-authorized source that is not
-            # cleared for publication; candidate/render gates still require public rights.
+            local_render = role == "render_output" and material.public_use_allowed is not True and local_final_use_allowed(
+                db, project_id, unit_id, user.id, material, document=payload["payload"])
+            # Accepted local renders preserve restricted rights; Candidate still requires public rights.
             if (material.material.kind not in allowed_kinds or material.material.status != "active"
                     or material.status in {"revoked", "archived"}
                     or (material.model_use_allowed is not True and material.public_use_allowed is not True)
-                    or (role == "render_output" and material.public_use_allowed is not True)):
+                    or (role == "render_output" and material.public_use_allowed is not True and not local_render)):
                 raise HTTPException(422, {"code": "video_asset_kind_or_rights_invalid"})
             try:
-                content = read_bytes_checked(db, material, require_public=role == "render_output")
+                content = verify_bytes_checked(db, material, require_public=role == "render_output" and not local_render)
             except (HTTPException, OSError) as exc:
                 raise HTTPException(422, {"code": "video_asset_bytes_unverified"}) from exc
             expected_prefix = "image/" if material.material.kind == "image" else "audio/" if material.material.kind == "audio" else "video/"
@@ -908,7 +942,7 @@ def _draft_references(db: Session, draft: Draft, project_id: int) -> tuple[list,
         proven = material is not None and material.content_hash == media.content_hash and media.public_use_allowed is True and media.public_use_revoked_at is None and (visible is not None or any(_verified_generated_asset(db, output, material) for output in generated))
         if proven:
             try:
-                read_bytes_checked(db, material)
+                verify_bytes_checked(db, material)
             except (HTTPException, OSError):
                 proven = False
         if not proven:

@@ -1,0 +1,39 @@
+{
+  "method": "POST",
+  "path": "/v1beta/models/gemini-3.1-flash-image:generateContent",
+  "requested_model": "gemini-3.1-flash-image",
+  "started_at": "2026-10-15T05:29:31.387741+00:00",
+  "one_new_diagnostic_only": true,
+  "retries": 0,
+  "application_configuration_writes": 0,
+  "request_sha256": "17d7975ed2588142dc753cc8d59bee5ae491042e6c854a02e6603637d8c0ac40",
+  "http_status": 200,
+  "elapsed_seconds": 15.682,
+  "bytes": 1144715,
+  "response_sha256": "61e28c65d8ba929e0090fd0c8bad4ab8376dbe53e6149cf1f868826b88893d59",
+  "response_top_keys": [
+    "candidates",
+    "usageMetadata",
+    "modelVersion",
+    "responseId"
+  ],
+  "images": [
+    {
+      "mime_type": "image/jpeg",
+      "bytes": 361211,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "sha256": "2c95ec5ee644ad063d4dcccd811ac5dc1716d86441b3bb9576b433c8fe217f52",
+      "decoded": true
+    }
+  ],
+  "reported_model_version": "gemini-3.1-flash-image",
+  "usage": {
+    "promptTokenCount": 21,
+    "candidatesTokenCount": 1447,
+    "totalTokenCount": 1468
+  },
+  "visual_review": "Passed: a green circle on white background, no text."
+}

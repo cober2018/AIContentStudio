@@ -1,0 +1,20 @@
+{
+  "checked_date": "2026-10-15",
+  "primary_sources": [
+    "https://docs.x.ai/developers/tools/image-generation",
+    "https://docs.x.ai/developers/model-capabilities/images/generation",
+    "https://docs.x.ai/developers/model-capabilities/video/generation",
+    "https://docs.x.ai/developers/models/grok-4.7",
+    "https://ai.google.dev/gemini-api/docs/image-generation",
+    "https://ai.google.dev/gemini-api/docs/video",
+    "https://ai.google.dev/gemini-api/docs/omni",
+    "https://ai.google.dev/gemini-api/docs/models"
+  ],
+  "local_code_evidence": {
+    "chat": "apps/api/app/services/generation/providers.py: OpenAICompatibleProvider._chat sends chat/completions with no image_generation tool",
+    "registered_http": "apps/api/app/services/model_registration.py:provider_request allows only /models,/chat/completions,/images/generations",
+    "image": "apps/api/app/services/cpa_image_provider.py:CPAImageProvider.generate exact registered image models",
+    "native": "apps/api/app/services/native_model_adapters.py: codecs only, no bound executor; no native video operation"
+  },
+  "claim_boundary": "Native branded UI internal routing cannot be proven without its trace; official explicit tools/media APIs establish supported integration patterns only."
+}

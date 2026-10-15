@@ -658,7 +658,14 @@ def _validate_result_bytes(row: ProviderGenerationTask, content: bytes, mime: st
             if aspect_ratio:
                 from .media_dimensions import image_dimensions
 
-                expected_width, expected_height = image_dimensions(limits["pixels"], aspect_ratio)
+                # Native Gemini 1K sizes come from the model contract; the
+                # legacy adapter instead requests deterministic local geometry.
+                native_sizes = {"1:1": (1024, 1024), "4:3": (1200, 896), "3:4": (896, 1200),
+                                "16:9": (1376, 768), "9:16": (768, 1376)}
+                native = (row.provider_key == "openai.compatible" and row.provider_version == "2"
+                          and row.model_id == "gemini-3.1-flash-image")
+                expected_width, expected_height = (native_sizes[aspect_ratio] if native
+                                                   else image_dimensions(limits["pixels"], aspect_ratio))
                 if (image.width, image.height) != (expected_width, expected_height):
                     raise HTTPException(422, "generation_output_aspect_mismatch")
     elif kind == "audio" and decoded_mime == "audio/wav":
@@ -750,7 +757,10 @@ def _output(db: Session, row: ProviderGenerationTask, user: User, token: str, ou
     else:
         confirmed_failure = output.status == "failed" or output.status == "unavailable" and row.provider_job_id is None
         state = "failed" if confirmed_failure else "cancelled" if output.status == "cancelled" else "unknown"
-        values.update(state=state, reason_code="provider_execution_failed" if state == "failed" else "provider_outcome_unknown")
+        safe_rejections = {"provider_image_protocol_rejected", "provider_authentication_rejected", "provider_request_rejected"}
+        safe_reason = output.metadata.get("reason")
+        values.update(state=state, reason_code=(safe_reason if safe_reason in safe_rejections else "provider_execution_failed")
+                      if state == "failed" else "provider_outcome_unknown")
         if state == "unknown" and output.metadata.get("reason") == "generation_job_expired":
             values["reason_code"] = "generation_job_expired"
     _cas(db, row, row.revision, **values)
