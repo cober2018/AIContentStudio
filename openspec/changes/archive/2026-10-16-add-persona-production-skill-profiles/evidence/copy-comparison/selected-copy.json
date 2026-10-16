@@ -1,0 +1,8 @@
+{
+  "topic": "关掉写作 Skill，为什么角色风格还应该保留？",
+  "selection": "off baseline revised after independent review; neither single nor combined promoted",
+  "narration": "关掉写作 Skill，角色风格也要消失吗？在这套流程里，风格管角色怎么表达，阶段 Skill 管这一步怎么做。关掉可选方法，角色定位、已采用的风格、知识证据和输出技术合同仍应保留。一个阶段能按顺序选多个方法，也能全部关闭，让模型自由选择做法，但开关不改变模型能力。准备执行时，冻结方法的具体版本和参数；以后编辑方法，不应悄悄改变旧任务。收到方法，不等于正确执行，更不等于质量通过。最终还得逐项检查文案、声画和实际成片，才能判断作品是否符合要求。",
+  "direct_voice_listening": false,
+  "final_style_default": false,
+  "review": "All three raw samples exceeded requested length; removed unsupported many people or teams claims and restored exact distinction between output contracts, delivery and quality. One sample per condition is not statistical evidence."
+}

@@ -1,0 +1,683 @@
+{
+  "schema": "aics.trial.actual-edit.v1",
+  "fps": 24,
+  "video_duration_frames": 1128,
+  "items": [
+    {
+      "type": "video",
+      "track": 1,
+      "name": "ae_intermediate_1.mp4",
+      "start": 0,
+      "end": 258,
+      "duration": 258,
+      "source_start": 0,
+      "source_end": 257,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": null
+    },
+    {
+      "type": "video",
+      "track": 1,
+      "name": "ae_intermediate_2.mp4",
+      "start": 258,
+      "end": 666,
+      "duration": 408,
+      "source_start": 0,
+      "source_end": 407,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": null
+    },
+    {
+      "type": "video",
+      "track": 1,
+      "name": "ae_intermediate_3.mp4",
+      "start": 666,
+      "end": 1128,
+      "duration": 462,
+      "source_start": 0,
+      "source_end": 461,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": null
+    },
+    {
+      "type": "audio",
+      "track": 1,
+      "name": "material-16.wav",
+      "start": 0,
+      "end": 752,
+      "duration": 752,
+      "source_start": 0,
+      "source_end": 752,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": 0.0
+    },
+    {
+      "type": "audio",
+      "track": 1,
+      "name": "material-16.wav",
+      "start": 752,
+      "end": 942,
+      "duration": 190,
+      "source_start": 764,
+      "source_end": 954,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": 0.0
+    },
+    {
+      "type": "audio",
+      "track": 1,
+      "name": "material-16.wav",
+      "start": 942,
+      "end": 1105,
+      "duration": 163,
+      "source_start": 962,
+      "source_end": 1125,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": 0.0
+    },
+    {
+      "type": "audio",
+      "track": 2,
+      "name": "material-12.mp3",
+      "start": 0,
+      "end": 1103,
+      "duration": 1103,
+      "source_start": 0,
+      "source_end": 1103,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 24.0,
+        "FadeOut": 12.0
+      },
+      "volume_db": -28.0
+    },
+    {
+      "type": "audio",
+      "track": 3,
+      "name": "material-12.mp3",
+      "start": 1091,
+      "end": 1128,
+      "duration": 37,
+      "source_start": 1091,
+      "source_end": 1128,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 12.0,
+        "FadeOut": 23.999999999999943
+      },
+      "volume_db": -20.0
+    }
+  ],
+  "narration_edit_map": [
+    {
+      "source_start_frame": 0,
+      "source_end_frame": 752,
+      "output_start_frame": 0,
+      "output_end_frame": 752
+    },
+    {
+      "source_start_frame": 764,
+      "source_end_frame": 954,
+      "output_start_frame": 752,
+      "output_end_frame": 942
+    },
+    {
+      "source_start_frame": 962,
+      "source_end_frame": 1125,
+      "output_start_frame": 942,
+      "output_end_frame": 1105
+    }
+  ],
+  "timing_provenance": "MiniMax asr-1.0 word alignment estimates plus measured low-energy windows; frame-rounded edits",
+  "music": {
+    "method": "native Resolve audio clips with manual gains and native fades; not automatic sidechain",
+    "base_frames": [
+      0,
+      1103
+    ],
+    "base_gain_db": -28,
+    "base_fade_in_frames": [
+      0,
+      24
+    ],
+    "base_fade_out_frames": [
+      1091,
+      1103
+    ],
+    "tail_frames": [
+      1091,
+      1128
+    ],
+    "tail_gain_db": -20,
+    "tail_fade_in_frames": [
+      1091,
+      1103
+    ],
+    "tail_fade_out_frames": [
+      1104,
+      1128
+    ],
+    "adjustment": "Initial crossfade candidate [1093,1105) was moved two frames earlier to [1091,1103), leaving 37 tail frames so Resolve retains the 12-frame in and 24-frame out. Frozen plan remains unchanged; this record reports actual native edit. Voice ends1105; tail music starts14 frames before voice end."
+  },
+  "no_bgm_validation": {
+    "initial_failed_file": "outputs/no_bgm_validation.mp4",
+    "reason": "SetTrackEnable returned true but actual GetIsTrackEnabled remained true; initial export still contains music. Not accepted as no-BGM evidence.",
+    "verified_file": "outputs/no_bgm_verified.mp4",
+    "method": "Both music TimelineItems SetClipEnabled(False), readback false; native MP4 render completed. Restored true before final render.",
+    "hash": "5e099400039cca7852222c0ff89ec7ce853e2627d41119611f36b17a52d1aef2",
+    "job_id": "5d3113db-0546-4d31-8196-4551b748dd64",
+    "status": "Complete"
+  },
+  "final_render": {
+    "job_id": "26f93fc8-7cbf-485f-90d1-911a8f9cf67d",
+    "status": "Complete",
+    "hash": "4cd00a8b572863181fd21a25f71c09d426b20398867bdb138bfead22e705b4a7",
+    "codec": "H264/AAC",
+    "video_kbps": 8000
+  },
+  "subtitles": {
+    "owner": "Resolve determines shared source-to-edit mapping; AE burns the same 21 cue captions; SRT sidecar retained.",
+    "native_resolve_subtitle_track": false
+  },
+  "color": "Original graphic shots use a consistent palette; no live-action white-balance/exposure correction or blanket LUT was applied.",
+  "technical_qc": {
+    "sample_rate": 48000,
+    "channels": 2,
+    "layout": "native interleaved stereo, no downmix",
+    "final": {
+      "peak": 0.7995620965957642,
+      "rms": 0.06636298176040394,
+      "full_scale_samples": 0
+    },
+    "no_bgm": {
+      "peak": 0.7964391112327576,
+      "rms": 0.06620229790291034,
+      "full_scale_samples": 0
+    },
+    "difference": {
+      "peak": 0.06499815950519405,
+      "rms": 0.004771289665627038,
+      "full_scale_samples": 0
+    },
+    "windows": {
+      "early": {
+        "final": {
+          "peak": 0.742608904838562,
+          "rms": 0.08833065436486874,
+          "full_scale_samples": 0
+        },
+        "no_bgm": {
+          "peak": 0.7416105270385742,
+          "rms": 0.08825489798920469,
+          "full_scale_samples": 0
+        },
+        "difference": {
+          "peak": 0.022103741765022278,
+          "rms": 0.004326945092590643,
+          "full_scale_samples": 0
+        }
+      },
+      "tail_speech": {
+        "final": {
+          "peak": 0.4299561083316803,
+          "rms": 0.053367836485247164,
+          "full_scale_samples": 0
+        },
+        "no_bgm": {
+          "peak": 0.4266119599342346,
+          "rms": 0.052105704873136184,
+          "full_scale_samples": 0
+        },
+        "difference": {
+          "peak": 0.06499815950519405,
+          "rms": 0.01205965176951543,
+          "full_scale_samples": 0
+        }
+      },
+      "tail_only": {
+        "final": {
+          "peak": 0.056570861488580704,
+          "rms": 0.010637917231115747,
+          "full_scale_samples": 0
+        },
+        "no_bgm": {
+          "peak": 5.486695218168483e-14,
+          "rms": 1.7563737828447905e-15,
+          "full_scale_samples": 0
+        },
+        "difference": {
+          "peak": 0.056570861488580704,
+          "rms": 0.010637917231115733,
+          "full_scale_samples": 0
+        }
+      }
+    },
+    "direct_listening": false,
+    "note": "Decoded native AAC exports; subtraction includes AAC coding differences and is not a lossless music stem. AAC container audio has padding; actual video is exactly 47 seconds. Initial no_bgm_validation did not mute music and is excluded.",
+    "tail_speech_difference_below_narration_db": -12.711010157173776,
+    "sha256": {
+      "final.mp4": "4cd00a8b572863181fd21a25f71c09d426b20398867bdb138bfead22e705b4a7",
+      "no_bgm_verified.mp4": "5e099400039cca7852222c0ff89ec7ce853e2627d41119611f36b17a52d1aef2"
+    }
+  },
+  "direct_listening": false,
+  "user_style_adoption": "pending; isolated trial only",
+  "container_correction": {
+    "method": "Authorized stream-copy remux only, no re-encode, remix or timeline change; maps video+audio, native metadata timecode retained by muxer",
+    "command": "ffmpeg -i final.mp4 -map 0:v:0 -map 0:a:0 -c copy -t 47 -movflags +faststart final_aac_delivery.mp4",
+    "files": {
+      "final.mp4": {
+        "sha256": "4cd00a8b572863181fd21a25f71c09d426b20398867bdb138bfead22e705b4a7",
+        "probe": {
+          "streams": [
+            {
+              "index": 0,
+              "codec_name": "h264",
+              "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+              "profile": "High",
+              "codec_type": "video",
+              "codec_tag_string": "avc1",
+              "codec_tag": "0x31637661",
+              "mime_codec_string": "avc1.64001f",
+              "width": 1280,
+              "height": 720,
+              "coded_width": 1280,
+              "coded_height": 720,
+              "has_b_frames": 2,
+              "sample_aspect_ratio": "1:1",
+              "display_aspect_ratio": "16:9",
+              "pix_fmt": "yuv420p",
+              "level": 31,
+              "color_range": "tv",
+              "color_space": "bt709",
+              "color_transfer": "bt709",
+              "color_primaries": "bt709",
+              "chroma_location": "left",
+              "field_order": "progressive",
+              "is_avc": "true",
+              "nal_length_size": "4",
+              "id": "0x1",
+              "r_frame_rate": "24/1",
+              "avg_frame_rate": "24/1",
+              "time_base": "1/12288",
+              "start_pts": 0,
+              "start_time": "0.000000",
+              "duration_ts": 577536,
+              "duration": "47.000000",
+              "bit_rate": "455643",
+              "bits_per_raw_sample": "8",
+              "nb_frames": "1128",
+              "extradata_size": 34,
+              "disposition": {
+                "default": 1,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              },
+              "tags": {
+                "creation_time": "2026-10-15T18:48:11.000000Z",
+                "language": "und",
+                "handler_name": "VideoHandler",
+                "encoder": "H.264",
+                "timecode": "00:00:00:00"
+              }
+            },
+            {
+              "index": 1,
+              "codec_name": "aac",
+              "codec_long_name": "AAC (Advanced Audio Coding)",
+              "profile": "LC",
+              "codec_type": "audio",
+              "codec_tag_string": "mp4a",
+              "codec_tag": "0x6134706d",
+              "mime_codec_string": "mp4a.40.2",
+              "sample_fmt": "fltp",
+              "sample_rate": "48000",
+              "channels": 2,
+              "channel_layout": "stereo",
+              "bits_per_sample": 0,
+              "initial_padding": 0,
+              "id": "0x2",
+              "r_frame_rate": "0/0",
+              "avg_frame_rate": "0/0",
+              "time_base": "1/48000",
+              "start_pts": 0,
+              "start_time": "0.000000",
+              "duration_ts": 2259968,
+              "duration": "47.082667",
+              "bit_rate": "319988",
+              "nb_frames": "2207",
+              "extradata_size": 2,
+              "disposition": {
+                "default": 1,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              },
+              "tags": {
+                "creation_time": "2026-10-15T18:48:11.000000Z",
+                "language": "und",
+                "handler_name": "SoundHandler"
+              }
+            },
+            {
+              "index": 2,
+              "codec_type": "data",
+              "codec_tag_string": "tmcd",
+              "codec_tag": "0x64636d74",
+              "id": "0x3",
+              "r_frame_rate": "0/0",
+              "avg_frame_rate": "12288/512",
+              "time_base": "1/12288",
+              "start_pts": 0,
+              "start_time": "0.000000",
+              "duration_ts": 577536,
+              "duration": "47.000000",
+              "nb_frames": "1",
+              "extradata_size": 20,
+              "disposition": {
+                "default": 1,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              },
+              "tags": {
+                "creation_time": "2026-10-15T18:48:11.000000Z",
+                "language": "eng",
+                "handler_name": "TimeCodeHandler",
+                "timecode": "00:00:00:00"
+              }
+            }
+          ],
+          "format": {
+            "filename": "/tmp/aics-persona-skills-validation-20261016/media/.creative-executions/1/1/outputs/final.mp4",
+            "nb_streams": 3,
+            "nb_programs": 0,
+            "nb_stream_groups": 0,
+            "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+            "format_long_name": "QuickTime / MOV",
+            "start_time": "0.000000",
+            "duration": "47.082667",
+            "size": "4586050",
+            "bit_rate": "779233",
+            "probe_score": 100,
+            "tags": {
+              "major_brand": "isom",
+              "minor_version": "512",
+              "compatible_brands": "isomiso2avc1mp41",
+              "creation_time": "2026-10-15T18:48:11.000000Z",
+              "encoder": "Blackmagic Design DaVinci Resolve Studio"
+            }
+          }
+        },
+        "video_decode_hash": "SHA256=16f7c8f8a2c3c36ee776445ef3505c6ba2838ee2d72fa7d0b342da4a6299e012",
+        "audio_decoded_sha256": "e9efa58c3fe0526a6d851368266143d98135b4eb979f62205d9ace79a76f1a1e"
+      },
+      "final_aac_delivery.mp4": {
+        "sha256": "01dfed359d15b039d6bebc52eb3be89fa0df73a1460bc790f0b4da9cc9da2d77",
+        "probe": {
+          "streams": [
+            {
+              "index": 0,
+              "codec_name": "h264",
+              "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+              "profile": "High",
+              "codec_type": "video",
+              "codec_tag_string": "avc1",
+              "codec_tag": "0x31637661",
+              "mime_codec_string": "avc1.64001f",
+              "width": 1280,
+              "height": 720,
+              "coded_width": 1280,
+              "coded_height": 720,
+              "has_b_frames": 2,
+              "sample_aspect_ratio": "1:1",
+              "display_aspect_ratio": "16:9",
+              "pix_fmt": "yuv420p",
+              "level": 31,
+              "color_range": "tv",
+              "color_space": "bt709",
+              "color_transfer": "bt709",
+              "color_primaries": "bt709",
+              "chroma_location": "left",
+              "field_order": "progressive",
+              "is_avc": "true",
+              "nal_length_size": "4",
+              "id": "0x1",
+              "r_frame_rate": "24/1",
+              "avg_frame_rate": "24/1",
+              "time_base": "1/12288",
+              "start_pts": 0,
+              "start_time": "0.000000",
+              "duration_ts": 577536,
+              "duration": "47.000000",
+              "bit_rate": "455643",
+              "bits_per_raw_sample": "8",
+              "nb_frames": "1128",
+              "extradata_size": 34,
+              "disposition": {
+                "default": 1,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              },
+              "tags": {
+                "language": "und",
+                "handler_name": "VideoHandler",
+                "encoder": "H.264",
+                "timecode": "00:00:00:00"
+              }
+            },
+            {
+              "index": 1,
+              "codec_name": "aac",
+              "codec_long_name": "AAC (Advanced Audio Coding)",
+              "profile": "LC",
+              "codec_type": "audio",
+              "codec_tag_string": "mp4a",
+              "codec_tag": "0x6134706d",
+              "mime_codec_string": "mp4a.40.2",
+              "sample_fmt": "fltp",
+              "sample_rate": "48000",
+              "channels": 2,
+              "channel_layout": "stereo",
+              "bits_per_sample": 0,
+              "initial_padding": 0,
+              "id": "0x2",
+              "r_frame_rate": "0/0",
+              "avg_frame_rate": "0/0",
+              "time_base": "1/48000",
+              "start_pts": 0,
+              "start_time": "0.000000",
+              "duration_ts": 2256864,
+              "duration": "47.018000",
+              "bit_rate": "320014",
+              "nb_frames": "2206",
+              "extradata_size": 2,
+              "disposition": {
+                "default": 1,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              },
+              "tags": {
+                "language": "und",
+                "handler_name": "SoundHandler"
+              }
+            },
+            {
+              "index": 2,
+              "codec_type": "data",
+              "codec_tag_string": "tmcd",
+              "codec_tag": "0x64636d74",
+              "id": "0x3",
+              "r_frame_rate": "0/0",
+              "avg_frame_rate": "12288/512",
+              "time_base": "1/12288",
+              "start_pts": 0,
+              "start_time": "0.000000",
+              "duration_ts": 577536,
+              "duration": "47.000000",
+              "nb_frames": "1",
+              "extradata_size": 20,
+              "disposition": {
+                "default": 0,
+                "dub": 0,
+                "original": 0,
+                "comment": 0,
+                "lyrics": 0,
+                "karaoke": 0,
+                "forced": 0,
+                "hearing_impaired": 0,
+                "visual_impaired": 0,
+                "clean_effects": 0,
+                "attached_pic": 0,
+                "timed_thumbnails": 0,
+                "non_diegetic": 0,
+                "captions": 0,
+                "descriptions": 0,
+                "metadata": 0,
+                "dependent": 0,
+                "still_image": 0,
+                "multilayer": 0
+              },
+              "tags": {
+                "language": "eng",
+                "handler_name": "VideoHandler",
+                "timecode": "00:00:00:00"
+              }
+            }
+          ],
+          "format": {
+            "filename": "/tmp/aics-persona-skills-validation-20261016/media/.creative-executions/1/1/outputs/final_aac_delivery.mp4",
+            "nb_streams": 3,
+            "nb_programs": 0,
+            "nb_stream_groups": 0,
+            "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+            "format_long_name": "QuickTime / MOV",
+            "start_time": "0.000000",
+            "duration": "47.018000",
+            "size": "4594205",
+            "bit_rate": "781692",
+            "probe_score": 100,
+            "tags": {
+              "major_brand": "isom",
+              "minor_version": "512",
+              "compatible_brands": "isomiso2avc1mp41",
+              "encoder": "Lavf62.12.102"
+            }
+          }
+        },
+        "video_decode_hash": "SHA256=16f7c8f8a2c3c36ee776445ef3505c6ba2838ee2d72fa7d0b342da4a6299e012",
+        "audio_decoded_sha256": "bc1f945ae44c6c973b6cdc6b4623d3a78f9af7cbb0a1768e79808739c9cfc8e4"
+      }
+    },
+    "audio_prefix_identical": true,
+    "decoded_samples_per_channel": [
+      2257856,
+      2256832
+    ],
+    "removed_tail_peak": 8.455975475385458e-09,
+    "retained_through_seconds": 47.01733333333333,
+    "last_narration_end_frame": 1105
+  }
+}

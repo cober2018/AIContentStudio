@@ -1,0 +1,138 @@
+{
+  "id": 13,
+  "kind": "creative_pattern",
+  "name": "科技角色试用风格 2026-10-16",
+  "status": "saved",
+  "scope_type": "persona",
+  "scope": {
+    "id": 1
+  },
+  "source_kind": "capability_memory",
+  "current_revision": {
+    "id": 28,
+    "revision_no": 4,
+    "content": {
+      "content_schema": "persona.reference-style.v1",
+      "observations": [
+        {
+          "certainty": "direct",
+          "locator": "标题、首段与「表达逻辑与分发通道的边界」段落",
+          "modality": "text",
+          "reference": {
+            "content_hash": "8d587ec84249c9542eefa459c52ee635b2d3190ab256a88eadac02368338696a",
+            "id": 1,
+            "kind": "source"
+          },
+          "statement": "文章先提出人设绑定平台账号的常见直觉与维护问题，再分节解释表达逻辑和分发通道的边界。"
+        },
+        {
+          "certainty": "direct",
+          "locator": "「架构抽象的代价与取舍」两段",
+          "modality": "text",
+          "reference": {
+            "content_hash": "8d587ec84249c9542eefa459c52ee635b2d3190ab256a88eadac02368338696a",
+            "id": 1,
+            "kind": "source"
+          },
+          "statement": "文章明确讨论解耦的设计复杂度和转换开销，并解释换来的便携性；没有把参考作者个人经历写作论据。"
+        },
+        {
+          "certainty": "direct",
+          "locator": "1080×1440整页；左上标题区、顶部短横线、正文区",
+          "modality": "image",
+          "reference": {
+            "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68",
+            "id": 1,
+            "kind": "material_revision"
+          },
+          "statement": "卡片使用深色整页底、白色大字标题与正文，左上有一条薄荷绿色短横线；大面积留白。"
+        },
+        {
+          "certainty": "direct",
+          "locator": "graphic-2.png标题和正文；同系列graphic-3.png作为已导入对照",
+          "modality": "image",
+          "reference": {
+            "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed",
+            "id": 2,
+            "kind": "material_revision"
+          },
+          "statement": "第二张用标题和正文区分逻辑内核与通道边界，第三张延续同版式说明工程取舍；图片为文字卡，并非关系图。"
+        },
+        {
+          "certainty": "inferred",
+          "locator": "graphic-3.png整页配色与标题层级",
+          "modality": "image",
+          "reference": {
+            "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455",
+            "id": 3,
+            "kind": "material_revision"
+          },
+          "statement": "深蓝、白、薄荷绿可作为科技角色试用配色，来自这组三卡的局部样本；尚未证明适合所有主题，不定为永久规则。"
+        },
+        {
+          "certainty": "direct",
+          "locator": "原参考视频00:01:00.000静帧；左中录屏、右侧用途卡/出镜、底部字幕",
+          "modality": "video",
+          "reference": {
+            "content_hash": "291b0271d12b3b56f33c4b5057edbcf57139516f50b4cf7fd42b3fa801090738",
+            "id": 4,
+            "kind": "material_revision"
+          },
+          "statement": "60秒静帧以软件录屏为主体，右侧出现用途说明卡和出镜者，底部是中英字幕；该帧只能支持画面布局观察，不能推定镜头节奏。"
+        },
+        {
+          "certainty": "inferred",
+          "locator": "00:01:00.000右上用途卡与主体录屏；仅据静帧提出试用方向",
+          "modality": "video",
+          "reference": {
+            "content_hash": "291b0271d12b3b56f33c4b5057edbcf57139516f50b4cf7fd42b3fa801090738",
+            "id": 4,
+            "kind": "material_revision"
+          },
+          "statement": "试用作品可优先使用真实操作录屏和解释关系的图示，选择性强调关键字或数字；关系图和选择性强调是经用户采纳的迁移方向，不声称原参考每段都使用。"
+        },
+        {
+          "certainty": "unknown",
+          "locator": "00:01:00.000静帧无音轨；全片声音未直接试听",
+          "modality": "video",
+          "reference": {
+            "content_hash": "291b0271d12b3b56f33c4b5057edbcf57139516f50b4cf7fd42b3fa801090738",
+            "id": 4,
+            "kind": "material_revision"
+          },
+          "statement": "此轮未直接试听原片，不能判断BGM类型、混音、声纹或全片语气。"
+        }
+      ],
+      "tags": [
+        "persona-production",
+        "trial",
+        "not-default"
+      ],
+      "text": "科技角色试用标准（用户本轮明确采纳；试用资产，不是永久默认）\n1. 以读者的问题或可观察结果开头，接着解释机制、适用边界与成本。\n2. 使用具体、平实的技术表达，不借用参考作者的身份、经历或旧结论。\n3. 画面优先真实操作录屏与关系图；只在关键字、关键数字处做选择性强调。\n4. 深蓝底、白字和薄荷绿强调作为暂定视觉方向，后续作品仍需评审。\n5. 沿用已只读核验的角色音色 lengdan_xiongzhang，rate=1，minimax.cli / speech-2.8-hd / minimax.speech；本隔离库未执行配音。配乐按场景可选，允许无BGM。\n观察、推断与未知见逐条证据。当前仅核对文章、三张卡与视频60秒静帧；未直接试听，不将此卡标为最终标准。"
+    },
+    "args_schema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "content_hash": "9b90a2223780f93bed34272f44913b476901a25bc6f2123932244dea518020a2",
+    "metadata": {
+      "kind": "creative_pattern",
+      "name": "科技角色试用风格 2026-10-16",
+      "provenance": {},
+      "scope": {
+        "id": 1
+      },
+      "scope_type": "persona",
+      "status": "saved"
+    },
+    "source_execution_id": null,
+    "source_learning_candidate_id": null,
+    "created_at": "2026-10-15T18:16:11.706769"
+  },
+  "usage": {
+    "use_count": 0,
+    "last_used": null
+  }
+}

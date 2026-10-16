@@ -1,0 +1,53 @@
+{
+  "old_rows": 2350,
+  "new_rows": 2631,
+  "changed_old_rows": {
+    "discovery_source": [
+      "[3]",
+      "[5]",
+      "[17]",
+      "[24]",
+      "[25]",
+      "[41]",
+      "[42]",
+      "[48]",
+      "[50]"
+    ],
+    "system_settings": [
+      "[\"discovery.heartbeat\"]",
+      "[\"discovery.catchup_clock\"]"
+    ]
+  },
+  "deleted_old_rows": {},
+  "added_counts": {
+    "audit_log": 48,
+    "capability_artifact": 13,
+    "capability_artifact_revision": 26,
+    "content_master_asset_ref": 27,
+    "content_master_check_run": 8,
+    "content_master_evidence_ref": 10,
+    "content_master_revision": 2,
+    "content_persona_revision": 1,
+    "content_project": 1,
+    "content_unit": 1,
+    "creative_brief_revision": 1,
+    "creative_execution": 1,
+    "creative_execution_output": 8,
+    "creative_execution_package": 1,
+    "discovery_catchup_batch": 4,
+    "discovery_catchup_source": 9,
+    "discovery_item": 2,
+    "fact_pack": 1,
+    "fact_pack_item": 5,
+    "identity_snapshot": 1,
+    "material": 20,
+    "material_revision": 24,
+    "project_event": 52,
+    "project_fact_boundary_revision": 1,
+    "project_material_reference": 13,
+    "source_document": 1
+  },
+  "old_media_files": 75,
+  "old_media_missing": [],
+  "old_media_changed": []
+}

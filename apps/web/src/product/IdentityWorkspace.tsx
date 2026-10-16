@@ -5,6 +5,7 @@ import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
 import StarterPersonaGallery from "./StarterGallery";
 
+const PersonaReferenceStylePanel = lazy(() => import("./CapabilityMemoryPanel").then(module => ({ default: module.PersonaReferenceStylePanel })));
 const PersonaCreativeConfig = lazy(() => import("./PersonaCreativeConfig"));
 
 type Kind = "brand" | "persona" | "account" | "series";
@@ -60,6 +61,8 @@ export default function IdentityWorkspace() {
   const [effective, setEffective] = useState<Effective | null>(null);
   const [voices, setVoices] = useState<{ id: number; name: string; version: number }[]>([]);
   const [draft, setDraft] = useState<Record<FieldKey, DraftField>>(draftFrom({}));
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const [tab, setTab] = useState<string>("identity");
   const [modality, setModality] = useState("text");
   const [binding, setBinding] = useState<Binding | null>(null);
@@ -75,6 +78,7 @@ export default function IdentityWorkspace() {
   const [loadedIdentityKey, setLoadedIdentityKey] = useState<string | null>(null);
   const [loadedBindingKey, setLoadedBindingKey] = useState<string | null>(null);
   const creativeDirty = useRef(false);
+  const referenceStyleDirty = useRef(false);
   const [creativeVisitedKey, setCreativeVisitedKey] = useState<string | null>(null);
   const identityKey = selected ? `${selected.kind}:${selected.id}` : null;
   const selectedIdentity = useRef(identityKey);
@@ -105,7 +109,7 @@ export default function IdentityWorkspace() {
 
   function selectIdentity(next: { kind: Kind; id: number } | null) {
     const nextKey = next ? `${next.kind}:${next.id}` : null;
-    if (nextKey !== selectedIdentity.current && creativeDirty.current
+    if (nextKey !== selectedIdentity.current && (creativeDirty.current || referenceStyleDirty.current)
         && !window.confirm("当前角色有未保存的创作配置。确认丢弃这些草稿并切换身份？")) return false;
     if (nextKey !== selectedIdentity.current) {
       selectionGeneration.current++;
@@ -113,6 +117,7 @@ export default function IdentityWorkspace() {
       bindingGeneration.current++;
       selectedIdentity.current = nextKey;
       creativeDirty.current = false;
+      referenceStyleDirty.current = false;
     }
     setSelected(next); setNotice("");
     return true;
@@ -279,7 +284,17 @@ export default function IdentityWorkspace() {
       <main className="min-w-0">{!current ? <EmptyState title="选择左侧身份或创建品牌" /> : <><div className="rounded-2xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-slate-500">{KIND_NAME[current.kind]} · #{current.id}</p><h2 className="mt-1 text-xl font-semibold">{current.name}</h2><p className="mt-1 text-xs text-slate-500">{current.status === "archived" ? "已归档，只能查看历史" : `当前修订 v${current.current_revision}`}</p></div>{current.status !== "archived" && <Button variant="danger" onClick={archive}>归档</Button>}</div></div>
       <div role="tablist" className="mt-5 flex gap-1 overflow-x-auto border-b">{TABS.map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm ${tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-slate-500"}`}>{label}</button>)}</div>
       {detailLoading || !detailReady ? <Spinner label="读取修订…" /> : <div className="mt-5 space-y-4">{["identity", "expression", "boundaries"].includes(tab) && <>{revisionConflict && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}；当前表单来自旧版本，已停止保存。请先复制需要保留的改动，再加载最新修订。</p><Button variant="secondary" onClick={() => { setDraft(draftFrom(revisions[0]?.profile || {})); setRevisionConflict(false); setError(""); setNotice("已加载最新修订，请重新核对后保存。"); }}>加载最新修订（覆盖当前表单）</Button></div>}<div className="grid gap-3 xl:grid-cols-2">{FIELDS.filter((field) => field.tab === tab).map(({ key, label, shape }) => fieldEditor(key, label, shape))}</div><Button onClick={saveRevision} disabled={current.status === "archived" || revisionConflict}>保存新修订 v{current.current_revision + 1}</Button><section className="rounded-xl border bg-white p-4"><h3 className="font-medium">修订历史</h3>{revisions.length ? <ul className="mt-2 space-y-2 text-xs">{revisions.map((revision) => <li key={revision.id} className="rounded border p-2">v{revision.revision_no} · #{revision.id} · {revision.created_at || ""}<pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-slate-500">{JSON.stringify(revision.profile, null, 2)}</pre></li>)}</ul> : <p className="mt-2 text-xs text-slate-500">尚未提交身份画像修订。</p>}</section></>}
-      {persona && (tab === "creative" || creativeVisitedKey === identityKey) && <div hidden={tab !== "creative"}><Suspense fallback={<Spinner label="读取创作配置…" />}><PersonaCreativeConfig key={`${identityKey}:${selectionEpoch}`} current={current} persona={persona} readOnly={creativeReadOnly} accountId={account?.id || null} seriesId={seriesId} revisions={revisions} effective={effective} onSaved={async () => { const key = identityKey!; if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return; await loadTree(); return refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch); }} onNotice={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) setNotice(value); }} onDirtyChange={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) creativeDirty.current = value; }} /></Suspense></div>}
+      {persona && (tab === "creative" || creativeVisitedKey === identityKey) && <div hidden={tab !== "creative"}><Suspense fallback={<Spinner label="读取创作配置…" />}><PersonaCreativeConfig key={`${identityKey}:${selectionEpoch}`} current={current} persona={persona} readOnly={creativeReadOnly} accountId={account?.id || null} seriesId={seriesId} revisions={revisions} effective={effective} onSaved={async () => { const key = identityKey!; if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return; await loadTree(); return refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch); }} onNotice={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) setNotice(value); }} onDirtyChange={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) creativeDirty.current = value; }} /></Suspense>{current.kind === "persona" && <Suspense fallback={<Spinner label="读取参考风格…" />}><PersonaReferenceStylePanel key={`style:${identityKey}:${selectionEpoch}`} personaId={persona.id} readOnly={creativeReadOnly} identityRevision={revisions[0]} onIdentityRefresh={async () => {
+        const key = identityKey!;
+        if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return;
+        const baseline = JSON.stringify(draftFrom(revisions[0]?.profile || {}));
+        await loadTree();
+        const next = await refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch);
+        if (next) {
+          if (JSON.stringify(draftRef.current) !== baseline) setRevisionConflict(true);
+          else setDraft(draftFrom(next[0]?.profile || {}));
+        }
+      }} onDirtyChange={value => { referenceStyleDirty.current = value; }} /></Suspense>}</div>}
       {tab === "accounts" && <section className="rounded-xl border bg-white p-5"><h3 className="font-medium">持久化层级</h3><p className="mt-2 text-sm text-slate-500">选择品牌、角色或账号，可创建直属子级；归档不会删除历史快照。各平台的公开账号名在这里登记（不要填写密码或 AppSecret）；登记公开标识不等于平台已登录，也不等于可以自动发布。</p>{persona && <p className="mt-3 text-sm">角色：{persona.name} · 账号 {accounts.filter((row) => row.persona_id === persona.id).length} 个 · 跨平台栏目 {series.filter((row) => row.scope === "persona_editorial" && row.persona_id === persona.id).length} 档</p>}{account && <p className="mt-1 text-sm">账号：{account.name} · 栏目 {series.filter((row) => row.account_id === account.id).length} 个</p>}{current.kind !== "series" && <form onSubmit={createEntity} className="mt-4 flex flex-wrap gap-2"><input aria-label="新子级名称" className={inputClass} required value={name} onChange={(event) => setName(event.target.value)} placeholder={`新建${KIND_NAME[current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series"]}名称`} /><Button type="submit" disabled={current.status === "archived"}>创建子级</Button></form>}{current.status !== "archived" && <div className="mt-4"><Button variant="danger" onClick={archive}>归档当前{KIND_NAME[current.kind]}</Button></div>}</section>}
       {tab === "accounts" && persona && current.status !== "archived" && <div className="grid gap-4 lg:grid-cols-2">
         <EditorialSeriesCreate personaId={persona.id} onDone={async (created) => { await loadTree(); if (selectionGeneration.current === selectionEpoch) selectIdentity({ kind: "series", id: created }); }} onError={setError} />

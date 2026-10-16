@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-16",
+  "decision": "accepted_as_first_technology_persona_default_direction",
+  "authority": "direct_user_message",
+  "user_instruction": "采纳这支样片作为科技角色的首版默认方向，剩下的你全权处理，完成平台接入和验收后归档提交。",
+  "preview_sha256": "4cd00a8b572863181fd21a25f71c09d426b20398867bdb138bfead22e705b4a7",
+  "equivalent_delivery_sha256": "01dfed359d15b039d6bebc52eb3be89fa0df73a1460bc790f0b4da9cc9da2d77",
+  "direct_listening_claimed": false,
+  "timing": "ASR estimates with shared frame edit mapping"
+}

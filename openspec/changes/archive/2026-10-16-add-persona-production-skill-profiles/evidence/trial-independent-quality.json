@@ -1,0 +1,182 @@
+{
+  "schema": "aics.independent-trial-quality-review.v1",
+  "reviewed_at": "2026-10-16T02:51:50.079168+08:00",
+  "reviewer": "independent_read_only_agent",
+  "recommendation": "accept_trial_with_explicit_unverified_audio_and_alignment",
+  "final_file": "/private/tmp/aics-persona-skills-validation-20261016/media/.creative-executions/1/1/outputs/final_aac_delivery.mp4",
+  "final_sha256": "01dfed359d15b039d6bebc52eb3be89fa0df73a1460bc790f0b4da9cc9da2d77",
+  "unchanged_after_review": true,
+  "scope": {
+    "product_mutations": false,
+    "native_project_mutations": false,
+    "platform_state_mutations": false,
+    "native_project_reopen_independently_verified": false
+  },
+  "technical": {
+    "media_checks": "pass",
+    "full_contract_acceptance": "not_claimed",
+    "verified_alignment": "open_estimates_only",
+    "video": {
+      "codec": "h264",
+      "width": 1280,
+      "height": 720,
+      "fps": 24,
+      "frame_count": 1128,
+      "duration_seconds": 47
+    },
+    "audio": {
+      "codec": "aac",
+      "sample_rate": 48000,
+      "channels": 2,
+      "stream_duration_seconds": 47.082667,
+      "integrated_loudness_lufs": -20.1,
+      "true_peak_dbfs": -1.9,
+      "loudness_range_lu": 3.6,
+      "direct_listening": false,
+      "pcm_sha256": "e9efa58c3fe0526a6d851368266143d98135b4eb979f62205d9ace79a76f1a1e",
+      "sample_peak": 0.7995620965957642,
+      "rms": 0.06636298176040394,
+      "sample_peak_dbfs": -1.9429560376885437,
+      "rms_dbfs": -23.561482177788584,
+      "samples_total": 4515712,
+      "cut_windows": [
+        {
+          "time_seconds": 10.75,
+          "window_ms": 20,
+          "sample_peak": 0.008123692125082016,
+          "rms": 0.0027444914974939583,
+          "adjacent_sample_delta_at_cut": [
+            8.716434240341187e-05,
+            0.00040858914144337177
+          ]
+        },
+        {
+          "time_seconds": 27.75,
+          "window_ms": 20,
+          "sample_peak": 0.013362188823521137,
+          "rms": 0.004885365709974932,
+          "adjacent_sample_delta_at_cut": [
+            0.00033479277044534683,
+            0.0005931383930146694
+          ]
+        },
+        {
+          "time_seconds": 31.333333333333332,
+          "window_ms": 20,
+          "sample_peak": 0.009149814955890179,
+          "rms": 0.0029174681144938878,
+          "adjacent_sample_delta_at_cut": [
+            0.0003038484137505293,
+            0.0001667613396421075
+          ]
+        },
+        {
+          "time_seconds": 39.25,
+          "window_ms": 20,
+          "sample_peak": 0.011726022697985172,
+          "rms": 0.0039209328042642344,
+          "adjacent_sample_delta_at_cut": [
+            6.277707871049643e-05,
+            4.9549154937267303e-05
+          ]
+        }
+      ],
+      "blackdetect": []
+    },
+    "decode": "full decode completed with no reported error",
+    "ae_intermediate_durations_seconds": [
+      10.75,
+      17,
+      19.25
+    ],
+    "cut_frames": [
+      258,
+      666
+    ],
+    "narration_edit_output_frames": [
+      752,
+      942
+    ],
+    "caption_count": 21,
+    "caption_text_matches_approved_copy_ignoring_punctuation_and_spaces": true,
+    "caption_start_mapping_arithmetic": "all 21 start timestamps match source-to-output removed interval offsets within 1ms",
+    "caption_alignment_to_actual_spoken_words": "not independently verified",
+    "measured_media": "/private/tmp/aics-persona-skills-validation-20261016/media/.creative-executions/1/1/outputs/final.mp4"
+  },
+  "ai_creative_review": {
+    "status": "accept_for_trial",
+    "actual_frames_inspected": "45 final frames including all 21 cue midpoints, first/last frames, ±1 frame at visual and narration edit boundaries; 6 AE intermediate frames",
+    "factual_support": "Matches approved copy and requirement distinctions: Persona versus methods; four retained layers; ordered multiple/off; unchanged model capability; frozen versions; delivery versus execution versus quality. No borrowed identity or invented personal/team experience.",
+    "style": "navy/white/mint; restrained relationship diagrams and progressive text reveals; concrete opening question; no real screen capture in this trial; diagrams satisfy the approved visual route",
+    "captions": "all 21 visible cue midpoints inspected, legible high contrast and unobstructed; long cue inspected at native resolution",
+    "pacing": "opening question through ~4s, two concept cards, retained layers and method order, then final three-step relation diagram. No sampled flash/black gap; final frame holds rather than fades. No direct listening-based pacing claim."
+  },
+  "confirmed_defects": [
+    {
+      "id": "native_container_duration",
+      "status": "fixed_in_delivery_file",
+      "evidence": "Native container duration 47.082667s exceeded the stated one-frame final-output tolerance around 47s. Delivery remux duration 47.018s is within 1/24s.",
+      "impact": "Original native file unsuitable for that platform delivery validation; equivalent corrected delivery file passes duration criterion. No visual or narration edit was needed."
+    }
+  ],
+  "acceptance_gaps": [
+    {
+      "id": "alignment",
+      "evidence": "trial-edit-plan.json explicitly labels MiniMax ASR times as estimates; this review has no direct listening",
+      "impact": "Must not mark shared narration timeline verified phrase/word alignment complete; low-energy measurements and correct mapping arithmetic do not establish word boundaries."
+    },
+    {
+      "id": "sound",
+      "evidence": "No direct listening performed",
+      "impact": "Voice identity, pronunciation, naturalness, music masking and audible cut quality remain unaccepted; objective metrics are not listening."
+    }
+  ],
+  "optional_suggestions": [
+    {
+      "time_range": "27.75–47.00",
+      "suggestion": "The three-card layout stays on screen for most of the final 19.25s. If the user wants a stronger demonstration later, show one concrete frozen-version example. This is optional and does not block the current trial."
+    }
+  ],
+  "user_style_acceptance": {
+    "trial_criteria_adopted": true,
+    "this_final_work_accepted_by_user": false,
+    "promote_persona_default": false
+  },
+  "evidence_files": [
+    "selected-copy.json",
+    "trial-edit-plan.json",
+    "trial-independent-quality-frames/",
+    "trial-independent-quality-audio.log",
+    "trial-independent-quality-blackdetect.log",
+    "trial-independent-quality-measurements.json",
+    "trial-independent-quality-container-equivalence.json"
+  ],
+  "skills_used": [
+    "video-production-handoff (read-only review boundary)",
+    "video-use (rendered-output inspection rules)"
+  ],
+  "using_superpowers": "read; skipped pursuant to explicit subagent clause",
+  "original_reviewed_file": "/private/tmp/aics-persona-skills-validation-20261016/media/.creative-executions/1/1/outputs/final.mp4",
+  "original_reviewed_sha256": "4cd00a8b572863181fd21a25f71c09d426b20398867bdb138bfead22e705b4a7",
+  "delivery_incremental_review": {
+    "reviewed_at": "2026-10-16T02:54:55.000068+08:00",
+    "verdict": "pass_equivalent_creative_content_container_tail_corrected",
+    "evidence": "trial-independent-quality-container-equivalence.json",
+    "container_duration_seconds": 47.018,
+    "video_duration_seconds": 47.0,
+    "audio_duration_seconds": 47.018,
+    "within_single_24fps_frame_tolerance": true,
+    "video_decoded_sha256": "SHA256=16f7c8f8a2c3c36ee776445ef3505c6ba2838ee2d72fa7d0b342da4a6299e012",
+    "video_frames_and_packets_identical": true,
+    "audio_retained_packets_and_pcm_prefix_identical": true,
+    "retained_packet_pts_dts_identical": true,
+    "audio_removed_samples_per_channel": 1024,
+    "audio_removed_tail_abs_peak": 8.455975475385458e-09,
+    "delivery_pcm_sha256": "bc1f945ae44c6c973b6cdc6b4623d3a78f9af7cbb0a1768e79808739c9cfc8e4",
+    "original_native_media_preserved": true,
+    "creative_review_carries_forward": true,
+    "direct_listening": false,
+    "word_alignment_remains_estimated": true,
+    "user_final_style_adoption": false
+  }
+}

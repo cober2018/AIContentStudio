@@ -205,6 +205,11 @@ def record_outcome(use_id: int, body: OutcomeInput, db: Session = Depends(get_db
     return service.record_outcome(db, user, use_id, body.model_dump())
 
 
+@router.get("/persona-reference-styles/{persona_id}")
+def persona_reference_styles(persona_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return service.reference_styles(db, user, persona_id)
+
+
 @router.get("/{artifact_id}")
 def get_artifact(artifact_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return service.get_artifact(db, user, artifact_id)

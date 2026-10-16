@@ -1,0 +1,19 @@
+{
+  "scope": "production_modalities.py local render snapshot and explicit public freeze gate",
+  "cause": "normal save accepted exact local final, later render snapshot incorrectly required public permission",
+  "implementation": "reuse existing local_final_use_allowed only for video.master.v2; preserve hash/bytes/MIME; local_only=true; reject public freeze/package",
+  "source_sha256": "b4f0746368fd7963248d9176a3a41896d5b4b606e1d4d19f9e4852cbcb4d3bd2",
+  "independent_python_review": "APPROVE",
+  "temporary_clone_checks": [
+    "accepted private same owner/project/unit/editorial final succeeds",
+    "cross owner/project/unit rejected",
+    "unaccepted/non-final/upload/private graphic rejected",
+    "editorial/bytes/hash/MIME change rejected",
+    "ancestor model rights revocation rejected",
+    "public freeze and package rejected",
+    "public existing path preserved"
+  ],
+  "existing_regression": "268 passed, 2 warnings in 13.39s",
+  "formal_writes_by_fix_or_reviewer": false,
+  "persistent_tests_added": false
+}

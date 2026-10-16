@@ -1,5 +1,6 @@
 """Pure exact request preparation shared by Preview and the invocation gate."""
 
+import copy
 import json
 import re
 
@@ -25,9 +26,19 @@ def resolve_stage(*, workflow, node, contract, context, upstream, method, model,
     if method and method.get("source_kind") not in metadata["method_sources"]:
         raise StageContractError("stage_method_source_unsupported")
     sections = []
+    prompt_identity = context.get("identity")
+    prompt_creative = creative
+    if creative is not None and creative.get("production_stage"):
+        # Raw profile history contains disabled instructions; only the manifest is task input.
+        prompt_identity = copy.deepcopy(prompt_identity)
+        if prompt_identity and isinstance(prompt_identity.get("content"), dict):
+            prompt_identity["content"] = {key: value for key, value in prompt_identity["content"].items()
+                                          if not key.endswith("_creative_profile")}
+        prompt_creative = {key: value for key, value in creative.items()
+                           if key not in {"profile", "method_stack"}}
     values = (
         ("method", method.get("instruction", "") if method else ""),
-        ("identity", context.get("identity")),
+        ("identity", prompt_identity),
         ("stage_instruction", effective.get("instruction", "")),
         ("execution_controls", {
             key: effective.get(key) for key in metadata["tunable_fields"] if key != "instruction"
@@ -36,7 +47,7 @@ def resolve_stage(*, workflow, node, contract, context, upstream, method, model,
         ("evidence", context.get("boundary")), ("upstream", upstream), ("task_override", override),
     )
     if creative is not None:
-        values = (*values, ("persona_creative_configuration", creative))
+        values = (*values, ("persona_creative_configuration", prompt_creative))
     if context.get("knowledge_context") is not None:
         values = (*values, ("selected_knowledge_and_style", context["knowledge_context"]))
     if "shared_asset_refs" in context:

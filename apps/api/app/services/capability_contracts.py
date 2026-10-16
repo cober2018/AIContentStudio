@@ -198,6 +198,34 @@ def validate_argument(value, spec):
         raise error("capability_argument_enum_invalid")
 
 
+def reference_style(content):
+    fields(content, {"content_schema", "text", "tags", "observations"})
+    text(content.get("text"), required=True)
+    observations = content.get("observations")
+    if type(observations) is not list or len(observations) > 100:
+        raise error("reference_style_observations_invalid")
+    for observation in observations:
+        if type(observation) is not dict:
+            raise error("reference_style_observation_invalid")
+        fields(observation, {"modality", "certainty", "statement", "reference", "locator"})
+        modality = observation.get("modality")
+        if (type(modality) is not str or modality not in {"text", "image", "video"}
+                or type(observation.get("certainty")) is not str
+                or observation["certainty"] not in {"direct", "inferred", "unknown"}):
+            raise error("reference_style_observation_invalid")
+        text(observation.get("statement"), 2048, required=True)
+        text(observation.get("locator"), 2048, required=True)
+        reference = observation.get("reference")
+        if type(reference) is not dict:
+            raise error("reference_style_reference_invalid")
+        fields(reference, {"kind", "id", "content_hash"})
+        if type(reference.get("kind")) is not str or reference["kind"] not in {"material_revision", "source"}:
+            raise error("reference_style_reference_invalid")
+        positive_id(reference.get("id"))
+        if not re.fullmatch(r"[0-9a-f]{64}", text(reference.get("content_hash"), 64, required=True)):
+            raise error("reference_style_reference_invalid")
+
+
 def artifact(kind, content, schema):
     if type(kind) is not str or kind not in KINDS or type(content) is not dict or not content:
         raise error("capability_artifact_invalid")
@@ -211,6 +239,10 @@ def artifact(kind, content, schema):
             validate_recipe(content)
         except ValueError:
             raise error("workflow_stage_recipe_invalid") from None
+    if content.get("content_schema") == "persona.reference-style.v1":
+        if kind != "creative_pattern":
+            raise error("reference_style_kind_invalid")
+        reference_style(content)
     schema = args_schema(schema)
     tags = content.get("tags", [])
     if type(tags) is not list or len(tags) > 30 or any(type(tag) is not str or not tag.strip() for tag in tags):

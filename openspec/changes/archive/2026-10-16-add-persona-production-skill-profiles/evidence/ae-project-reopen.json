@@ -1,0 +1,29 @@
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"ok\":true,\"content\":\"{\\\"path\\\":\\\"/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-probes.aep\\\",\\\"version\\\":\\\"26.5x89\\\",\\\"missing_media\\\":[],\\\"compositions\\\":[{\\\"id\\\":29,\\\"name\\\":\\\"aics.layered-relationship.v1\\\",\\\"layers\\\":15,\\\"width\\\":1280,\\\"height\\\":720,\\\"fps\\\":24,\\\"duration\\\":4},{\\\"id\\\":1,\\\"name\\\":\\\"aics.screen-emphasis.v1\\\",\\\"layers\\\":8,\\\"width\\\":1280,\\\"height\\\":720,\\\"fps\\\":24,\\\"duration\\\":4},{\\\"id\\\":60,\\\"name\\\":\\\"aics.title-number-reveal.v1\\\",\\\"layers\\\":5,\\\"width\\\":1280,\\\"height\\\":720,\\\"fps\\\":24,\\\"duration\\\":4}]}\",\"contentType\":\"text\",\"artifactId\":\"user:d8619bb2-2a91-45df-b195-4da7b9f9e999\"}"
+      },
+      {
+        "type": "text",
+        "text": "{\"execution_source\":{\"instance_id\":\"63c1536ae8e39974feb87e171d54fef4\",\"workspace_id\":\"workspace_127f4263138601652f566f2a6b35ea80\",\"context_id\":\"63c1536ae8e39974feb87e171d54fef4:3c26a621444e928a66e62eb226452e79\",\"mode\":\"live\",\"project_path\":\"/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-probes.aep\"}}"
+      }
+    ],
+    "structuredContent": {
+      "ok": true,
+      "content": "{\"path\":\"/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-probes.aep\",\"version\":\"26.5x89\",\"missing_media\":[],\"compositions\":[{\"id\":29,\"name\":\"aics.layered-relationship.v1\",\"layers\":15,\"width\":1280,\"height\":720,\"fps\":24,\"duration\":4},{\"id\":1,\"name\":\"aics.screen-emphasis.v1\",\"layers\":8,\"width\":1280,\"height\":720,\"fps\":24,\"duration\":4},{\"id\":60,\"name\":\"aics.title-number-reveal.v1\",\"layers\":5,\"width\":1280,\"height\":720,\"fps\":24,\"duration\":4}]}",
+      "contentType": "text",
+      "artifactId": "user:d8619bb2-2a91-45df-b195-4da7b9f9e999",
+      "execution_source": {
+        "instance_id": "63c1536ae8e39974feb87e171d54fef4",
+        "workspace_id": "workspace_127f4263138601652f566f2a6b35ea80",
+        "context_id": "63c1536ae8e39974feb87e171d54fef4:3c26a621444e928a66e62eb226452e79",
+        "mode": "live",
+        "project_path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-probes.aep"
+      }
+    }
+  }
+}

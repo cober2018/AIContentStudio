@@ -18,7 +18,9 @@ from ..models import (
     CreativeExecution,
     IdentitySnapshot,
     LearningCandidate,
+    MaterialRevision,
     ProjectFactBoundaryRevision,
+    SourceDocument,
     User,
     utcnow,
 )
@@ -254,6 +256,55 @@ def _append(db, user, row, content, schema, content_hash, *, previous=None, prov
     return revision
 
 
+def _style_references(db, content, scope_type):
+    if content.get("content_schema") != "persona.reference-style.v1":
+        return
+    if scope_type != "persona":
+        raise error("reference_style_persona_required")
+    for observation in content["observations"]:
+        reference = observation["reference"]
+        model = MaterialRevision if reference["kind"] == "material_revision" else SourceDocument
+        source = db.get(model, reference["id"])
+        actual_hash = getattr(source, "content_hash", None) if model is MaterialRevision else getattr(source, "sha256", None)
+        if source is None or actual_hash != reference["content_hash"]:
+            raise error("reference_style_source_changed", 409)
+
+
+def reference_styles(db, user, persona_id):
+    _ready(db)
+    scope = _scope(db, user, "persona", {"id": persona_id})
+    rows = db.scalars(select(CapabilityArtifact).where(
+        CapabilityArtifact.owner_user_id == user.id, CapabilityArtifact.scope_type == "persona",
+        CapabilityArtifact.kind == "creative_pattern",
+    ).order_by(CapabilityArtifact.id.desc())).all()
+    return {"items": [_detail(db, row) for row in rows if row.scope_json == scope
+        and _revision(db, row).content_json.get("content_schema") == "persona.reference-style.v1"]}
+
+
+def freeze_reference_style(db, user, persona_id, reference):
+    _ready(db)
+    fields(reference, {"artifact_id", "revision_id", "content_hash", "content_schema", "text", "observations"})
+    scope = _scope(db, user, "persona", {"id": persona_id}, mutable=True)
+    row = _owned(db, user, reference.get("artifact_id"))
+    _revision(db, row)
+    revision = db.get(CapabilityArtifactRevision, positive_id(reference.get("revision_id")))
+    if revision is None or revision.artifact_id != row.id:
+        raise error("reference_style_revision_not_found", 404)
+    _validate_revision(revision)
+    frozen = revision.metadata_json
+    if (row.kind != "creative_pattern" or row.scope_type != "persona" or row.scope_json != scope
+            or row.status in {"archived", "deprecated"} or frozen.get("kind") != "creative_pattern"
+            or frozen.get("scope_type") != "persona" or frozen.get("scope") != scope
+            or frozen.get("status") not in {"saved", "pinned"}
+            or revision.content_json.get("content_schema") != "persona.reference-style.v1"):
+        raise error("reference_style_revision_not_adopted", 409)
+    if reference.get("content_hash") != revision.content_hash:
+        raise error("reference_style_revision_changed", 409)
+    _style_references(db, revision.content_json, "persona")
+    return canonical({"artifact_id": row.id, "revision_id": revision.id, "content_hash": revision.content_hash,
+        **{key: copy.deepcopy(revision.content_json[key]) for key in ("content_schema", "text", "observations")}})
+
+
 def _create(db, user, data, *, scope_type=None, scope=None, provenance=None, execution_id=None, learning_id=None,
             dedupe=False, candidate_only=False):
     kind = data.get("kind")
@@ -261,6 +312,7 @@ def _create(db, user, data, *, scope_type=None, scope=None, provenance=None, exe
     name = text(data.get("name"), 255, required=True).strip()
     scope_type = scope_type or data.get("scope_type", "owner")
     scope = _scope(db, user, scope_type, scope if scope is not None else data.get("scope", {}), mutable=True)
+    _style_references(db, content, scope_type)
     if dedupe:
         rows = db.scalars(select(CapabilityArtifact).join(CapabilityArtifactRevision,
             CapabilityArtifact.current_revision_id == CapabilityArtifactRevision.id).where(
@@ -333,8 +385,14 @@ def update_revision(db, user, artifact_id, data):
         raise error("capability_archived_read_only", 409)
     _scope(db, user, row.scope_type, row.scope_json, mutable=True)
     content, schema, content_hash = artifact(row.kind, data.get("content"), data.get("args_schema", {}))
-    revision = _append(db, user, row, content, schema, content_hash, previous=previous)
-    return _advance(db, row, previous, revision)
+    if previous.content_json.get("content_schema") == "persona.reference-style.v1" and content.get("content_schema") != "persona.reference-style.v1":
+        raise error("reference_style_schema_required")
+    _style_references(db, content, row.scope_type)
+    if content.get("content_schema") == "persona.reference-style.v1":
+        row.status = "candidate"
+    with db.no_autoflush:
+        revision = _append(db, user, row, content, schema, content_hash, previous=previous)
+        return _advance(db, row, previous, revision)
 
 
 @_write
@@ -354,6 +412,11 @@ def lifecycle(db, user, artifact_id, data):
         raise error("capability_scope_confirmation_required", 409)
     if "confirm_scope_broadening" in data and type(data["confirm_scope_broadening"]) is not bool:
         raise error("capability_scope_confirmation_invalid")
+    if previous.content_json.get("content_schema") == "persona.reference-style.v1":
+        if (kind, scope) != (row.scope_type, row.scope_json):
+            raise error("reference_style_scope_immutable")
+        if status in {"saved", "pinned"}:
+            _style_references(db, previous.content_json, kind)
     name = text(data.get("name", row.name), 255, required=True).strip()
     if (status, kind, scope, name) == (row.status, row.scope_type, row.scope_json, row.name):
         return _detail(db, row)
@@ -433,6 +496,14 @@ def use_artifact(db, user, artifact_id, data):
     fields(data, {"artifact_revision_id", "arguments", "project_id", "unit_id", "execution_id"})
     row = _owned(db, user, artifact_id)
     revision = _revision(db, row)
+    if data.get("execution_id") is not None:
+        execution = db.get(CreativeExecution, positive_id(data["execution_id"]))
+        if execution is None:
+            raise error("capability_execution_not_found", 404)
+        execution = creative_executions._owned(db, data.get("project_id", execution.project_id), data.get("unit_id", execution.content_unit_id), execution.id, user, mutate=True)
+        package = creative_executions._package(db, execution, user)
+        if package.package_json.get("production_methods") is not None:
+            raise error("production_method_stage_loader_required", 409)
     if row.status not in {"saved", "pinned"}:
         raise error("capability_not_discoverable", 409)
     if positive_id(data.get("artifact_revision_id")) != revision.id:

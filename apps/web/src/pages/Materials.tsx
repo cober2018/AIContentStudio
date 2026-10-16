@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { api, currentUser } from "../api";
+import { api, ApiError, currentUser } from "../api";
 import { Button, EmptyState, Field, Modal, Spinner, StatusBadge, inputClass } from "../components/ui";
 import ProviderMediaPanel from "../product/ProviderMediaPanel";
 import ProviderSearchPanel from "../product/ProviderSearchPanel";
@@ -8,6 +8,11 @@ import ProviderSearchPanel from "../product/ProviderSearchPanel";
 // 素材库（V1 PRD 2.0 / material-library-v1）：
 // Material = 全局逻辑素材；MaterialRevision = 不可变字节版本；稿件通过 DraftMedia(use) 引用。
 
+interface MusicMetadata {
+  scene: string[]; mood: string[]; energy: string[]; instruments: string[];
+  vocal: "unknown" | "instrumental" | "vocal"; tempo_bpm: number | null; loop_suitable: boolean | null;
+  source: string; license: string; listening_status: "not_listened" | "partially_listened" | "listened";
+}
 interface MaterialRevision {
   id: number;
   material_id: number;
@@ -22,6 +27,8 @@ interface MaterialRevision {
   provider_key: string | null;
   prompt_text: string | null;
   created_at: string | null;
+  duration_ms?: number | null;
+  metadata?: { music?: MusicMetadata; tags?: string[]; previous_tags?: string[] };
 }
 
 interface MaterialRow {
@@ -134,6 +141,38 @@ export function MaterialUploadModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function MusicMetadataEditor({ row, readOnly }: { row: MaterialRow; readOnly: boolean }) {
+  const client = useQueryClient();
+  const saved = row.latest_revision?.metadata?.music;
+  const [tags, setTags] = useState(row.tags.join(", "));
+  const [music, setMusic] = useState<MusicMetadata>(() => saved ?? { scene: [], mood: [], energy: [], instruments: [], vocal: "unknown", tempo_bpm: null, loop_suitable: null, source: "", license: "", listening_status: "not_listened" });
+  const [labels, setLabels] = useState(() => ({ scene: music.scene.join(", "), mood: music.mood.join(", "), energy: music.energy.join(", "), instruments: music.instruments.join(", ") }));
+  const [error, setError] = useState("");
+  const [conflict, setConflict] = useState(false);
+  const split = (value: string) => [...new Set(value.split(/[,，]/).map(item => item.trim()).filter(Boolean))];
+  const save = useMutation({
+    mutationFn: () => api.post<MaterialRow>(`/materials/${row.id}/music-metadata`, { expected_revision_id: row.latest_revision!.id,
+      tags: split(tags), music: { ...music, ...Object.fromEntries(Object.entries(labels).map(([key, value]) => [key, split(value)])) } }),
+    onSuccess: async () => { await Promise.all([client.invalidateQueries({ queryKey: ["material", row.id] }), client.invalidateQueries({ queryKey: ["materials"] }), client.invalidateQueries({ queryKey: ["system-library"] })]); },
+    onError: (cause) => { setError(cause instanceof Error ? cause.message : "保存失败"); setConflict(cause instanceof ApiError && cause.status === 409); },
+  });
+  const disabled = readOnly || save.isPending || conflict || row.status !== "active" || row.latest_revision?.status === "revoked";
+  return <fieldset className="mt-4 space-y-3 rounded border p-3" disabled={disabled}><legend className="text-sm font-medium">场景配乐信息 · 保存为新素材版本</legend>
+    <p className="text-xs text-slate-500">标签按场景共享。未知节奏、人声和循环适用性留空；来源及许可说明不会自动授予公开使用权限。</p>
+    <Field label="检索标签（逗号分隔）"><input className={inputClass} value={tags} onChange={event => setTags(event.target.value)} /></Field>
+    <div className="grid gap-3 sm:grid-cols-2">{([["scene", "场景"], ["mood", "情绪"], ["energy", "能量"], ["instruments", "器乐"]] as const).map(([key, label]) => <Field key={key} label={`${label}（逗号分隔）`}><input className={inputClass} value={labels[key]} onChange={event => setLabels({ ...labels, [key]: event.target.value })} /></Field>)}
+      <Field label="人声"><select className={inputClass} value={music.vocal} onChange={event => setMusic({ ...music, vocal: event.target.value as MusicMetadata["vocal"] })}><option value="unknown">未知</option><option value="instrumental">纯器乐</option><option value="vocal">有人声</option></select></Field>
+      <Field label="节奏 BPM（未知留空）"><input className={inputClass} type="number" min="0.01" max="1000" step="any" value={music.tempo_bpm ?? ""} onChange={event => setMusic({ ...music, tempo_bpm: event.target.value === "" ? null : Number(event.target.value) })} /></Field>
+      <Field label="适合循环"><select className={inputClass} value={music.loop_suitable === null ? "unknown" : String(music.loop_suitable)} onChange={event => setMusic({ ...music, loop_suitable: event.target.value === "unknown" ? null : event.target.value === "true" })}><option value="unknown">未知</option><option value="true">适合</option><option value="false">不适合</option></select></Field>
+      <Field label="试听状态"><select className={inputClass} value={music.listening_status} onChange={event => setMusic({ ...music, listening_status: event.target.value as MusicMetadata["listening_status"] })}><option value="not_listened">未试听</option><option value="partially_listened">部分试听</option><option value="listened">已完整试听</option></select></Field>
+    </div>
+    <Field label="曲目来源说明"><textarea className={inputClass} maxLength={2000} value={music.source} onChange={event => setMusic({ ...music, source: event.target.value })} /></Field>
+    <Field label="逐曲许可说明与证据"><textarea className={inputClass} maxLength={2000} value={music.license} onChange={event => setMusic({ ...music, license: event.target.value })} /></Field>
+    {error && <p role="alert" className="text-sm text-rose-700">{error}{conflict && "。本地编辑已保留，请关闭后重新打开素材核对最新版本。"}</p>}
+    <Button disabled={disabled} onClick={() => { setError(""); save.mutate(); }}>保存配乐信息新版本</Button>
+  </fieldset>;
+}
+
 function DetailModal({ material, readOnly, onClose }: { material: MaterialRow; readOnly: boolean; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [attachDraftId, setAttachDraftId] = useState("");
@@ -191,11 +230,12 @@ function DetailModal({ material, readOnly, onClose }: { material: MaterialRow; r
         </div>
       </div>
 
+      {row.kind === "audio" && row.latest_revision && <MusicMetadataEditor key={row.latest_revision.id} row={row} readOnly={readOnly} />}
       <h4 className="mb-1 mt-3 text-xs font-medium text-slate-500">版本（替换=新版本，旧版本不可变）</h4>
       <div className="max-h-40 space-y-1 overflow-y-auto">
         {(row.revisions || []).map((r: MaterialRevision) => (
           <div key={r.id} className="flex items-center justify-between rounded border border-slate-200 px-2 py-1 text-[11px]">
-            <span>v{r.revision_no} · {r.source_kind} · {r.public_use_allowed ? "公开✅" : "未公开⛔"}</span>
+            <div><span>v{r.revision_no} · {r.source_kind} · {r.public_use_allowed ? "公开✅" : "未公开⛔"}</span>{r.metadata?.music && <details><summary className="cursor-pointer">此版本配乐标签与依据</summary><pre className="whitespace-pre-wrap break-all">{JSON.stringify(r.metadata, null, 2)}</pre></details>}</div>
             <span className="flex items-center gap-2">
               <StatusBadge status={r.status === "revoked" ? "changes_requested" : r.status} />
               {r.public_use_allowed && (
@@ -288,7 +328,7 @@ export default function Materials() {
             <option key={k} value={k}>{label}</option>
           ))}
         </select>
-        <input className={`${inputClass} w-64`} placeholder="按标题筛选…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className={`${inputClass} w-64`} aria-label="按标题、标签或配乐场景筛选" placeholder="标题、标签或配乐场景…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
       {isLoading ? (

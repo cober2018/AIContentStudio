@@ -1,0 +1,457 @@
+{
+  "master_revision_id": 39,
+  "payload_schema": "video.master.v2",
+  "adapter_version": "2",
+  "render_input_hash": "d2a334de4b360cb4b8190797278a4f1de44e3901efc18f8b7a27f2c50f539608",
+  "preview": {
+    "modality": "video",
+    "title": "关掉写作 Skill，为什么角色风格还应该保留？",
+    "payload_schema": "video.master.v2",
+    "kind": "local_assembly_preview",
+    "final_render_verified": false,
+    "shot_count": 3,
+    "duration_ms": 47000,
+    "script_blocks": [
+      {
+        "id": "trial-script",
+        "order": 0,
+        "text": "关掉写作 Skill，角色风格也要消失吗？在这套流程里，风格管角色怎么表达，阶段 Skill 管这一步怎么做。关掉可选方法，角色定位、已采用的风格、知识证据和输出技术合同仍应保留。一个阶段能按顺序选多个方法，也能全部关闭，让模型自由选择做法，但开关不改变模型能力。准备执行时，冻结方法的具体版本和参数；以后编辑方法，不应悄悄改变旧任务。收到方法，不等于正确执行，更不等于质量通过。最终还得逐项检查文案、声画和实际成片，才能判断作品是否符合要求。"
+      }
+    ],
+    "shots": [
+      {
+        "id": "trial-shot-1",
+        "order": 0,
+        "label": "角色风格与阶段方法的职责关系",
+        "duration_ms": 10750,
+        "purpose": "本主题原创原生 AE 合成：角色风格与阶段方法的职责关系",
+        "script_block_id": "trial-script",
+        "source_material_revision_id": 29,
+        "framing": "wide",
+        "transition": "cut",
+        "production": {
+          "schema": "video.shot-production.v2",
+          "source_mode": "ae"
+        }
+      },
+      {
+        "id": "trial-shot-2",
+        "order": 1,
+        "label": "关闭写作方法仍保留角色风格",
+        "duration_ms": 17000,
+        "purpose": "本主题原创原生 AE 合成：关闭写作方法仍保留角色风格",
+        "script_block_id": "trial-script",
+        "source_material_revision_id": 30,
+        "framing": "wide",
+        "transition": "cut",
+        "production": {
+          "schema": "video.shot-production.v2",
+          "source_mode": "ae"
+        }
+      },
+      {
+        "id": "trial-shot-3",
+        "order": 2,
+        "label": "选择、冻结与成片评审",
+        "duration_ms": 19250,
+        "purpose": "本主题原创原生 AE 合成：选择、冻结与成片评审",
+        "script_block_id": "trial-script",
+        "source_material_revision_id": 31,
+        "framing": "wide",
+        "transition": "cut",
+        "production": {
+          "schema": "video.shot-production.v2",
+          "source_mode": "ae"
+        }
+      }
+    ],
+    "timeline": {
+      "duration_ms": 47000,
+      "tracks": [
+        {
+          "id": "picture",
+          "order": 0,
+          "kind": "video",
+          "items": [
+            {
+              "id": "video-1",
+              "order": 0,
+              "start_ms": 0,
+              "end_ms": 10750,
+              "shot_id": "trial-shot-1",
+              "material_revision_id": 29
+            },
+            {
+              "id": "video-2",
+              "order": 1,
+              "start_ms": 10750,
+              "end_ms": 27750,
+              "shot_id": "trial-shot-2",
+              "material_revision_id": 30
+            },
+            {
+              "id": "video-3",
+              "order": 2,
+              "start_ms": 27750,
+              "end_ms": 47000,
+              "shot_id": "trial-shot-3",
+              "material_revision_id": 31
+            }
+          ]
+        },
+        {
+          "id": "narration",
+          "order": 1,
+          "kind": "audio",
+          "items": [
+            {
+              "id": "voice-1",
+              "order": 0,
+              "start_ms": 0,
+              "end_ms": 31333,
+              "material_revision_id": 32,
+              "trim_start_ms": 0,
+              "trim_end_ms": 31333,
+              "volume": 1
+            },
+            {
+              "id": "voice-2",
+              "order": 1,
+              "start_ms": 31333,
+              "end_ms": 39250,
+              "material_revision_id": 32,
+              "trim_start_ms": 31833,
+              "trim_end_ms": 39750,
+              "volume": 1
+            },
+            {
+              "id": "voice-3",
+              "order": 2,
+              "start_ms": 39250,
+              "end_ms": 46042,
+              "material_revision_id": 32,
+              "trim_start_ms": 40083,
+              "trim_end_ms": 46875,
+              "volume": 1
+            }
+          ]
+        },
+        {
+          "id": "music",
+          "order": 2,
+          "kind": "music",
+          "items": [
+            {
+              "id": "music-under-voice",
+              "order": 0,
+              "start_ms": 0,
+              "end_ms": 46042,
+              "material_revision_id": 34,
+              "trim_start_ms": 0,
+              "trim_end_ms": 46042,
+              "volume": 0.039810717055349734
+            },
+            {
+              "id": "music-tail",
+              "order": 1,
+              "start_ms": 46042,
+              "end_ms": 47000,
+              "material_revision_id": 34,
+              "trim_start_ms": 46042,
+              "trim_end_ms": 47000,
+              "volume": 0.1
+            }
+          ]
+        }
+      ]
+    },
+    "voice": {
+      "mode": "tts",
+      "material_revision_id": 32
+    },
+    "subtitles": {
+      "cues": [
+        {
+          "id": "cue-1",
+          "order": 0,
+          "text": "关掉写作Skill，",
+          "start_ms": 120,
+          "end_ms": 1550
+        },
+        {
+          "id": "cue-2",
+          "order": 1,
+          "text": "角色风格也要消失吗？",
+          "start_ms": 1860,
+          "end_ms": 3930
+        },
+        {
+          "id": "cue-3",
+          "order": 2,
+          "text": "在这套流程里，",
+          "start_ms": 4380,
+          "end_ms": 5670
+        },
+        {
+          "id": "cue-4",
+          "order": 3,
+          "text": "风格管角色怎么表达，",
+          "start_ms": 6060,
+          "end_ms": 7910
+        },
+        {
+          "id": "cue-5",
+          "order": 4,
+          "text": "阶段Skill管这一步怎么做。",
+          "start_ms": 8320,
+          "end_ms": 10490
+        },
+        {
+          "id": "cue-6",
+          "order": 5,
+          "text": "关掉可选方法，",
+          "start_ms": 10880,
+          "end_ms": 12210
+        },
+        {
+          "id": "cue-7",
+          "order": 6,
+          "text": "角色定位、",
+          "start_ms": 12400,
+          "end_ms": 13330
+        },
+        {
+          "id": "cue-8",
+          "order": 7,
+          "text": "已采用的风格、",
+          "start_ms": 13580,
+          "end_ms": 14770
+        },
+        {
+          "id": "cue-9",
+          "order": 8,
+          "text": "知识证据和输出技术合同仍应保留。",
+          "start_ms": 14940,
+          "end_ms": 18430
+        },
+        {
+          "id": "cue-10",
+          "order": 9,
+          "text": "一个阶段能按顺序选多个方法，",
+          "start_ms": 18700,
+          "end_ms": 21450
+        },
+        {
+          "id": "cue-11",
+          "order": 10,
+          "text": "也能全部关闭，",
+          "start_ms": 21560,
+          "end_ms": 22770
+        },
+        {
+          "id": "cue-12",
+          "order": 11,
+          "text": "让模型自由选择做法。",
+          "start_ms": 23100,
+          "end_ms": 25210
+        },
+        {
+          "id": "cue-13",
+          "order": 12,
+          "text": "但开关不改变模型能力，",
+          "start_ms": 25360,
+          "end_ms": 27570
+        },
+        {
+          "id": "cue-14",
+          "order": 13,
+          "text": "准备执行时，",
+          "start_ms": 27780,
+          "end_ms": 28890
+        },
+        {
+          "id": "cue-15",
+          "order": 14,
+          "text": "冻结方法的具体版本和参数。",
+          "start_ms": 29020,
+          "end_ms": 31210
+        },
+        {
+          "id": "cue-16",
+          "order": 15,
+          "text": "以后编辑方法不应悄悄改变旧任务。",
+          "start_ms": 31560,
+          "end_ms": 34750
+        },
+        {
+          "id": "cue-17",
+          "order": 16,
+          "text": "收到方法不等于正确执行，",
+          "start_ms": 34940,
+          "end_ms": 37530
+        },
+        {
+          "id": "cue-18",
+          "order": 17,
+          "text": "更不等于质量通过。",
+          "start_ms": 37720,
+          "end_ms": 39170
+        },
+        {
+          "id": "cue-19",
+          "order": 18,
+          "text": "最终还得逐项检查文案、",
+          "start_ms": 39527,
+          "end_ms": 41467
+        },
+        {
+          "id": "cue-20",
+          "order": 19,
+          "text": "声画和实际成片，",
+          "start_ms": 41487,
+          "end_ms": 43357
+        },
+        {
+          "id": "cue-21",
+          "order": 20,
+          "text": "才能判断作品是否符合要求。",
+          "start_ms": 43627,
+          "end_ms": 45997
+        }
+      ]
+    },
+    "overlays": [],
+    "music": {
+      "material_revision_id": 34
+    },
+    "cover": {}
+  },
+  "render": {
+    "status": "ready",
+    "origin": "manual",
+    "attested_by": "admin@studio.local",
+    "render_input_hash": "d2a334de4b360cb4b8190797278a4f1de44e3901efc18f8b7a27f2c50f539608",
+    "outputs": [
+      {
+        "material_revision_id": 39,
+        "content_hash": "01dfed359d15b039d6bebc52eb3be89fa0df73a1460bc790f0b4da9cc9da2d77",
+        "mime_type": "video/mp4",
+        "canvas_id": null,
+        "rights_snapshot": {
+          "rights_status": "cleared",
+          "public_use_allowed": false,
+          "model_use_allowed": true,
+          "commercial_use_allowed": false
+        }
+      }
+    ],
+    "reasons": [],
+    "local_only": true,
+    "video_profile": {
+      "unavailable": true
+    }
+  },
+  "adapter_availability": {
+    "available": false,
+    "reasons": [
+      "channel_form_missing",
+      "render_asset_rights_or_kind_invalid"
+    ],
+    "adapter_version": "2"
+  },
+  "context": {
+    "state": "current",
+    "reasons": []
+  },
+  "checks": [
+    {
+      "id": null,
+      "check_kind": "master_schema",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    },
+    {
+      "id": null,
+      "check_kind": "evidence",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    },
+    {
+      "id": null,
+      "check_kind": "rights",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    },
+    {
+      "id": null,
+      "check_kind": "render",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    },
+    {
+      "id": null,
+      "check_kind": "video_structure",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    },
+    {
+      "id": null,
+      "check_kind": "video_timeline",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    },
+    {
+      "id": null,
+      "check_kind": "video_identity",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    },
+    {
+      "id": null,
+      "check_kind": "video_platform",
+      "input_hash": null,
+      "is_current": false,
+      "stored_status": null,
+      "status": "incomplete",
+      "report": {
+        "reason": "check_missing"
+      }
+    }
+  ],
+  "candidate_freeze_available": false
+}

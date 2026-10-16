@@ -1,0 +1,31 @@
+{
+  "model": "MiniMax-M3",
+  "temperature": 0.2,
+  "max_tokens": 1800,
+  "same_brief_sha256": "80b49bd4e8f209b541d76845a31fd3289e17099649a4bff4a0050fe258f9cf93",
+  "seed": null,
+  "conditions": [
+    {
+      "condition": "off",
+      "method_keys": [],
+      "input_sha256": "c1ff591d1a54f50987aeca098fad3311aa10b6fbd2e63d6653432863dac797da"
+    },
+    {
+      "condition": "single",
+      "method_keys": [
+        "grounded-writing"
+      ],
+      "input_sha256": "8cfb9159ec5c0f638b5a7090595225c2feb91ef32cb320ac1b83cd37ecca78ab"
+    },
+    {
+      "condition": "combined",
+      "method_keys": [
+        "grounded-writing",
+        "concept-explanation",
+        "chinese-polish"
+      ],
+      "input_sha256": "a230ebad226975c2b522730896d2742d9e43ff2cc64fcaee65d7659b03b2dabc"
+    }
+  ],
+  "purpose": "single-sample qualitative comparison, not statistical proof"
+}

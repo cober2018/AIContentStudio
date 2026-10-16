@@ -1,0 +1,44 @@
+{
+  "candidate": "/tmp/aics-persona-pure-candidate-20261016",
+  "base_head": "49e4fdc11b433d3c32326f78eea7151dd5f8c0a6",
+  "manifest": "/tmp/aics-persona-pure-candidate-manifest-20261016.json",
+  "manifest_sha256": "f23643fcedb9da5cd84632d5591552e156334bd7a8bea68a4ddd4ef8c2a96016",
+  "patch": "/tmp/aics-persona-owner-only.patch",
+  "patch_sha256": "c02699617e419cdf306fa707e706e454cc1ef16160967651dfc724425216582f",
+  "scope_paths": 60,
+  "backend": {
+    "path": "/tmp/aics-persona-pure-backend-20261016.log",
+    "sha256": "191c7d3d3f48d5a5df9c8e6b3a430b05c96ee8967d51616b61ff62676d2f3890",
+    "exit_code": 0,
+    "result": "521 passed, 66 warnings in 23.81s",
+    "cwd": "/tmp/aics-persona-pure-candidate-20261016/apps/api",
+    "command": "PYTHONPATH=/tmp/aics-persona-pure-candidate-20261016/apps/api DATABASE_URL=sqlite:// .venv/bin/python -m pytest -q tests/test_persona_creative_identity.py tests/test_persona_creative_studio.py tests/test_aco_capability_memory.py tests/test_aco_creative_executions.py tests/test_aco_creative_mcp.py tests/test_material_library.py tests/test_f7_material_search.py tests/test_creation_recipe_stages.py tests/test_stage_invocations.py",
+    "test_data": "existing SQLite fixtures and Mock provider; no formal DB/model calls"
+  },
+  "web": {
+    "path": "/tmp/aics-persona-pure-web-20261016.log",
+    "sha256": "5223ef5fa95edc1d63f7624e600d293d8f11e5f15a5ffe32cabf5e7af6c01bc8",
+    "exit_code": 0,
+    "command": "npm run build",
+    "cwd": "/tmp/aics-persona-pure-candidate-20261016/apps/web",
+    "checks": [
+      "tsc -b",
+      "vite build --manifest",
+      "check:bundle / FE-P1"
+    ]
+  },
+  "patch_reverse_check": {
+    "command": "git apply --check --reverse --no-index /tmp/aics-persona-owner-only.patch",
+    "exit_code": 0
+  },
+  "candidate_source_hashes_match_manifest": true,
+  "original_worktree_code_hashes_match_export_snapshot": true,
+  "source_worktree_mutated_by_this_task": false,
+  "index_mutated": false,
+  "commit_created": false,
+  "archived": false,
+  "limitations": [
+    "Focused existing regression and build coverage only; no browser click or creative quality acceptance.",
+    "Sample rendering and final owner closeout remain with root agent."
+  ]
+}

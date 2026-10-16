@@ -121,8 +121,13 @@ class CapabilityDiscoveryInput(Scope):
 
 class CapabilityUseInput(Scope):
     execution_id: ID | None = None
-    artifact_id: ID
-    artifact_revision_id: ID
+    artifact_id: ID | None = None
+    artifact_revision_id: ID | None = None
+    stage: str | None = Field(default=None, min_length=1, max_length=50, pattern=IDENTIFIER)
+    expected_revision: ID | None = None
+    executor_kind: str | None = Field(default=None, min_length=1, max_length=30, pattern=IDENTIFIER)
+    executor_key: str | None = Field(default=None, min_length=1, max_length=150, pattern=IDENTIFIER)
+    executor_version: str | None = Field(default=None, min_length=1, max_length=50, pattern=IDENTIFIER)
     arguments: dict = Field(default_factory=dict, max_length=30)
 
 
@@ -175,7 +180,7 @@ TOOLS = {
     "get_package": (PackageInput, "Read an exact frozen package, including its authorized input manifest.", True),
     "get_execution": (ExecutionInput, "Read exact execution state, contract, counts and staged output metadata.", True),
     "find_capabilities": (CapabilityDiscoveryInput, "Read every applicable saved/pinned method with exact scope/revision. Ordering is not automatic selection.", True),
-    "use_capability": (CapabilityUseInput, "Explicitly render one exact applicable method and record its use; never execute code or change content.", False),
+    "use_capability": (CapabilityUseInput, "Render an exact applicable capability, or supply stage plus execution_id, exact executor and expected_revision to load only that frozen production stage and record delivery. No automatic skills or quality acceptance.", False),
     "claim_execution": (ClaimInput, "Claim an already prepared current execution with its exact executor and CAS.", False),
     "start_execution": (ClaimInput, "Start a claimed current execution; possible dispatch cannot be auto-retried.", False),
     "materialize_inputs": (MaterializeInput, "Materialize only authorized exact package inputs into the private work root.", False),
@@ -289,6 +294,11 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
     if name == "find_capabilities":
         return capability_memory.discover(db, user, args.model_dump(exclude_none=True))
     if name == "use_capability":
+        if args.stage is not None:
+            if args.execution_id is None or args.artifact_id is not None or args.artifact_revision_id is not None or args.arguments:
+                raise MCPError("production_method_selection_invalid", "validation", rpc_code=-32602)
+            return creative_executions.load_production_methods(db, args.project_id, args.unit_id, args.execution_id,
+                args.model_dump(exclude_none=True, exclude={"project_id", "unit_id", "execution_id", "artifact_id", "artifact_revision_id", "arguments"}), user)
         return capability_memory.use_artifact(db, user, args.artifact_id,
             args.model_dump(exclude_none=True, exclude={"artifact_id"}))
     payload = args.model_dump(exclude_none=True, exclude={"project_id", "unit_id", "execution_id"})

@@ -78,6 +78,7 @@ class CreativeInput(BaseModel):
 
 
 class PackageInput(CreativeInput):
+    production_stages: dict | None = None
     source_master_revision_id: int | None = Field(default=None, ge=1)
     source_variant_revision_id: int | None = Field(default=None, ge=1)
     package_schema: str = Field(default="creative.execution.v1", pattern=r"^(creative.execution.v1|director.video.v1)$")
@@ -102,6 +103,10 @@ class ExecutorInput(CreativeInput):
     executor_kind: str | None = Field(default=None, min_length=1, max_length=30)
     executor_key: str | None = Field(default=None, min_length=1, max_length=150)
     executor_version: str | None = Field(default=None, min_length=1, max_length=50)
+
+
+class ProductionMethodsInput(ExecutorInput):
+    stage: str = Field(min_length=1, max_length=50)
 
 
 class TransitionInput(ExecutorInput):
@@ -185,6 +190,13 @@ def accept_manual_image(project_id: int, unit_id: int, execution_id: int, output
         body.model_dump(exclude_none=True, exclude={"reusable_artifact"}), user)
 
 
+@router.get("/production-method-configuration")
+def production_method_configuration(project_id: int, unit_id: int, source_master_revision_id: int | None = Query(None, ge=1),
+        source_variant_revision_id: int | None = Query(None, ge=1), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return creative_packages.production_method_configuration(db, project_id, unit_id, user,
+        master_id=source_master_revision_id, variant_id=source_variant_revision_id)
+
+
 @router.post("/creative-packages", dependencies=[Depends(require_editor)], status_code=201)
 def create_package(project_id: int, unit_id: int, body: PackageInput, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return creative_packages.create_package(db, project_id=project_id, unit_id=unit_id, user=user, payload=body.model_dump(exclude_none=True))
@@ -213,6 +225,13 @@ def list_executions(project_id: int, unit_id: int, limit: int = Query(50, ge=1, 
 @router.get("/creative-executions/{execution_id}")
 def read_execution(project_id: int, unit_id: int, execution_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return creative_executions.get_execution(db, project_id, unit_id, execution_id, user)
+
+
+@router.post("/creative-executions/{execution_id}/production-methods", dependencies=[Depends(require_editor)])
+def load_production_methods(project_id: int, unit_id: int, execution_id: int, body: ProductionMethodsInput,
+        db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return creative_executions.load_production_methods(db, project_id, unit_id, execution_id,
+        body.model_dump(exclude_none=True), user)
 
 
 @router.post("/creative-executions/{execution_id}/transition", dependencies=[Depends(require_editor)])

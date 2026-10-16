@@ -5,13 +5,14 @@
 - 旧 DraftMedia（无 material_revision_id）保持可读。
 """
 
+import json
 from http.cookies import SimpleCookie
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
-from sqlalchemy import select
+from sqlalchemy import String, cast, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_db
@@ -245,6 +246,8 @@ def _revision_json(row: MaterialRevision) -> dict:
         "source_kind": row.source_kind,
         "source_url": row.source_url,
         "content_hash": row.content_hash,
+        "metadata": {key: value for key, value in (row.metadata_json or {}).items() if key in {"music", "tags", "previous_tags"}},
+        "duration_ms": row.duration_ms,
         "mime_type": row.mime_type,
         "rights_status": row.rights_status,
         "public_use_allowed": row.public_use_allowed,
@@ -323,7 +326,16 @@ def list_materials(
     if kind:
         stmt = stmt.where(Material.kind == kind)
     if q:
-        stmt = stmt.where(Material.title.contains(q))
+        encoded_query = json.dumps(q, ensure_ascii=True)[1:-1]
+        music_match = select(MaterialRevision.material_id).where(
+            MaterialRevision.id == select(MaterialRevision.id).where(MaterialRevision.material_id == Material.id)
+                .order_by(MaterialRevision.revision_no.desc()).limit(1).correlate(Material).scalar_subquery(),
+            or_(cast(MaterialRevision.metadata_json["music"], String).contains(q, autoescape=True),
+                cast(MaterialRevision.metadata_json["music"], String).contains(encoded_query, autoescape=True)),
+        ).correlate(Material).exists()
+        stmt = stmt.where(or_(Material.title.contains(q, autoescape=True),
+            cast(Material.tags_json, String).contains(q, autoescape=True),
+            cast(Material.tags_json, String).contains(encoded_query, autoescape=True), music_match))
     return [_material_json(m) for m in db.scalars(stmt.limit(200))]
 
 
@@ -385,6 +397,58 @@ def get_material(material_id: int, db: Session = Depends(get_db), user: User = D
     data = _material_json(row, with_revisions=True)
     data["usage"] = materials_service.find_usage(db, material_id)
     return data
+
+
+class MusicMetadataIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    scene: list[str] = Field(default_factory=list, max_length=30)
+    mood: list[str] = Field(default_factory=list, max_length=30)
+    energy: list[str] = Field(default_factory=list, max_length=30)
+    instruments: list[str] = Field(default_factory=list, max_length=30)
+    vocal: Literal["unknown", "instrumental", "vocal"] = "unknown"
+    tempo_bpm: float | None = Field(default=None, gt=0, le=1000, allow_inf_nan=False)
+    loop_suitable: bool | None = None
+    source: str = Field(default="", max_length=2000)
+    license: str = Field(default="", max_length=2000)
+    listening_status: Literal["not_listened", "partially_listened", "listened"] = "not_listened"
+
+    @field_validator("scene", "mood", "energy", "instruments")
+    @classmethod
+    def labels(cls, value):
+        if any(not item.strip() or len(item) > 100 for item in value):
+            raise ValueError("标签不能为空且最多100字")
+        return list(dict.fromkeys(item.strip() for item in value))
+
+
+class MusicRevisionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    expected_revision_id: int = Field(ge=1)
+    tags: list[str] = Field(max_length=30)
+    music: MusicMetadataIn
+
+    @field_validator("tags")
+    @classmethod
+    def labels(cls, value):
+        return MusicMetadataIn.labels(value)
+
+
+@router.post("/materials/{material_id}/music-metadata", status_code=201)
+def revise_music_metadata(material_id: int, payload: MusicRevisionIn,
+                          db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from sqlalchemy.exc import IntegrityError, OperationalError
+
+    try:
+        materials_service.revise_music_metadata(db, material_id, payload.expected_revision_id,
+            tags=payload.tags, music=payload.music.model_dump(), actor=user.email)
+        db.commit()
+    except (IntegrityError, OperationalError):
+        db.rollback()
+        raise HTTPException(409, "素材版本写入冲突，请读取最新版本后重试") from None
+    except BaseException:
+        db.rollback()
+        raise
+    db.expire_all()
+    return _material_json(db.get(Material, material_id), with_revisions=True)
 
 
 @router.get("/materials/{material_id}/revisions")

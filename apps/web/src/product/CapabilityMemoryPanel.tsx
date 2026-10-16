@@ -482,3 +482,106 @@ export default function CapabilityMemoryPanel(props: CapabilityMemoryPanelProps)
   // A different owner/source/context must never inherit an unsent decision from this view.
   return <CapabilityWorkspace key={`${currentUser()}:${props.projectId ?? "library"}:${props.unitId ?? ""}:${props.executionId ?? ""}:${props.learningCandidate?.id ?? ""}`} {...props} />;
 }
+
+type StyleObservation = { modality: "text" | "image" | "video"; certainty: "direct" | "inferred" | "unknown"; statement: string; locator: string; reference: { kind: "material_revision" | "source"; id: number; content_hash: string } };
+const blankStyle = () => ({ name: "参考风格草案", text: "", observations: [] as StyleObservation[] });
+
+export function PersonaReferenceStylePanel({ personaId, readOnly, identityRevision, onIdentityRefresh, onDirtyChange }: {
+  personaId: number; readOnly: boolean; identityRevision?: { revision_no: number; profile: Record<string, unknown> };
+  onIdentityRefresh: () => Promise<unknown>; onDirtyChange: (dirty: boolean) => void;
+}) {
+  const [selected, setSelected] = useState<CapabilityArtifact>();
+  const [draft, setDraft] = useState(blankStyle);
+  const [baseline, setBaseline] = useState(() => JSON.stringify(blankStyle()));
+  const [history, setHistory] = useState<CapabilityRevision[]>([]);
+  const historyRequest = useRef(0);
+  const state = useWrite();
+  const application = useWrite();
+  const dirty = JSON.stringify(draft) !== baseline;
+  useDraftDirty(dirty || state.busy || application.busy, onDirtyChange);
+  useMemoryNavigationGuard(dirty || state.busy || application.busy, false);
+  const records = useQuery({ queryKey: ["capability-memory", currentUser(), "reference-styles", personaId],
+    queryFn: () => api.get<{ items: CapabilityArtifact[] }>(`/capability-memory/persona-reference-styles/${personaId}`) });
+  const disabled = readOnly || state.busy || application.busy || ["archived", "deprecated"].includes(selected?.status ?? "");
+  const expression = identityRevision?.profile.expression_style as Record<string, unknown> | null | undefined;
+  const applied = expression?.reference_style as { artifact_id: number; revision_id: number } | undefined;
+  function load(record?: CapabilityArtifact) {
+    historyRequest.current += 1;
+    const next = record ? { name: record.name, text: String(record.current_revision.content.text ?? ""), observations: record.current_revision.content.observations as unknown as StyleObservation[] } : blankStyle();
+    setSelected(record); setDraft(next); setBaseline(JSON.stringify(next)); setHistory([]); state.setConflict(false); state.setError("");
+  }
+  function choose(record?: CapabilityArtifact) {
+    if (dirty && !window.confirm("参考风格有未保存编辑，确认放弃？")) return;
+    load(record);
+  }
+  async function readHistory() {
+    if (!selected) return;
+    const request = ++historyRequest.current;
+    setHistory([]);
+    try {
+      const page = await capabilityApi.history(selected.id);
+      if (request === historyRequest.current) setHistory(page.items);
+    } catch (cause) {
+      if (request === historyRequest.current) state.setError(errorText(cause));
+    }
+  }
+  function changeObservation(index: number, patch: Partial<StyleObservation>) {
+    setDraft(previous => ({ ...previous, observations: previous.observations.map((item, at) => at === index ? { ...item, ...patch } : item) }));
+  }
+  async function save() {
+    const content = { content_schema: "persona.reference-style.v1", text: draft.text,
+      tags: selected?.current_revision.content.tags ?? [], observations: draft.observations } as unknown as JsonObject;
+    await state.run(() => selected
+      ? capabilityApi.revise(selected.id, { expected_revision: selected.current_revision.revision_no, content, args_schema: emptyArgsSchema })
+      : capabilityApi.create({ kind: "creative_pattern", name: draft.name, content, args_schema: emptyArgsSchema, scope_type: "persona", scope: { id: personaId } }), load);
+  }
+  async function applyStyle(revision: CapabilityRevision) {
+    if (!selected || disabled || dirty) return;
+    await application.run(async () => {
+      await api.post(`/content-personas/${personaId}/revisions`, {
+        expected_revision: identityRevision?.revision_no ?? 0,
+        profile: { ...identityRevision?.profile, expression_style: { ...expression, reference_style: {
+          artifact_id: selected.id, revision_id: revision.id, content_hash: revision.content_hash,
+        } } },
+      });
+      await onIdentityRefresh();
+    });
+  }
+  function applyButton(revision: CapabilityRevision) {
+    const isApplied = applied?.artifact_id === selected?.id && applied?.revision_id === revision.id;
+    return ["saved", "pinned"].includes(String(revision.metadata.status)) && <Button variant="secondary"
+      disabled={disabled || dirty || application.conflict || isApplied} onClick={() => void applyStyle(revision)}>
+      {isApplied ? "此精确版本已用于角色风格" : `将 v${revision.revision_no}（修订 #${revision.id}）用于角色风格`}</Button>;
+  }
+  return <section className={`${box} mt-4`} aria-label="参考风格草案"><h3 className="font-semibold">参考风格草案</h3>
+    <p className="text-sm text-slate-600">文字、图片、视频分别保留直接观察、推断与未知。保存并明确采纳后，可单独将精确版本用于角色风格，生成新的角色身份修订。阶段方法全部关闭时仍保留已应用的角色风格。参考作者身份、经历与旧事实不属于角色事实。</p>
+    <p className="text-xs text-slate-500">角色身份 v{identityRevision?.revision_no ?? 0} · {applied ? `已应用方法 #${applied.artifact_id} / 修订 #${applied.revision_id}` : "未应用参考风格版本"}；应用不改动旧身份快照。</p>
+    {records.error && <ErrorBanner message={errorText(records.error)} />}
+    <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={state.busy || application.busy || readOnly} onClick={() => choose()}>新建草案</Button>{records.data?.items.map(item => <Button key={item.id} variant="secondary" disabled={state.busy || application.busy} onClick={() => choose(item)}>{item.name} · v{item.current_revision.revision_no} · {item.status === "candidate" ? "暂定" : statusLabels[item.status]}</Button>)}</div>
+    <Field label="草案名称"><input className={inputClass} value={draft.name} disabled={disabled || !!selected} onChange={event => setDraft({ ...draft, name: event.target.value })} /></Field>
+    <Field label="可编辑的风格规则"><textarea className={`${inputClass} min-h-32`} disabled={disabled} value={draft.text} onChange={event => setDraft({ ...draft, text: event.target.value })} /></Field>
+    {draft.observations.map((observation, index) => <fieldset key={index} className="space-y-2 rounded border p-3" disabled={disabled}><legend className="text-sm">观察 {index + 1}</legend>
+      <div className="grid gap-2 sm:grid-cols-2"><Field label="通道"><select className={inputClass} value={observation.modality} onChange={event => changeObservation(index, { modality: event.target.value as StyleObservation["modality"] })}><option value="text">文字</option><option value="image">图片</option><option value="video">视频</option></select></Field>
+      <Field label="依据程度"><select className={inputClass} value={observation.certainty} onChange={event => changeObservation(index, { certainty: event.target.value as StyleObservation["certainty"] })}><option value="direct">直接观察</option><option value="inferred">推断</option><option value="unknown">未知 / 未检查</option></select></Field></div>
+      <Field label="观察说明"><textarea className={inputClass} value={observation.statement} onChange={event => changeObservation(index, { statement: event.target.value })} /></Field>
+      <Field label={observation.modality === "text" ? "原文段落 / 样本范围" : observation.modality === "image" ? "图像区域" : "视频时间码 / 区间"}><input className={inputClass} value={observation.locator} onChange={event => changeObservation(index, { locator: event.target.value })} /></Field>
+      <div className="grid gap-2 sm:grid-cols-2"><Field label="参考类型"><select className={inputClass} value={observation.reference.kind} onChange={event => changeObservation(index, { reference: { ...observation.reference, kind: event.target.value as StyleObservation["reference"]["kind"] } })}><option value="material_revision">素材版本</option><option value="source">来源快照</option></select></Field><Field label="素材版本 / 来源 ID"><input type="number" min="1" className={inputClass} value={observation.reference.id || ""} onChange={event => changeObservation(index, { reference: { ...observation.reference, id: Number(event.target.value) } })} /></Field></div>
+      <Field label="来源内容 SHA256"><input className={inputClass} maxLength={64} value={observation.reference.content_hash} onChange={event => changeObservation(index, { reference: { ...observation.reference, content_hash: event.target.value } })} /></Field>
+      <Button variant="secondary" onClick={() => setDraft({ ...draft, observations: draft.observations.filter((_, at) => at !== index) })}>移除此条</Button>
+    </fieldset>)}
+    <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={disabled} onClick={() => setDraft({ ...draft, observations: [...draft.observations, { modality: "text", certainty: "unknown", statement: "", locator: "", reference: { kind: "material_revision", id: 0, content_hash: "" } }] })}>添加参考观察</Button>
+      <Button disabled={disabled || state.conflict || !draft.name.trim() || !draft.text.trim() || (!!selected && !dirty)} onClick={() => void save()}>保存暂定草案新版本</Button>
+      {selected && <><Button disabled={disabled || dirty || state.conflict || selected.status !== "candidate"} onClick={() => {
+        if (!window.confirm("确认采纳此草案为本角色的风格资产？采纳后仍需点击应用，才会写入角色身份。")) return;
+        void state.run(() => capabilityApi.lifecycle(selected.id, { expected_revision: selected.current_revision.revision_no, status: "saved" }), load);
+      }}>明确采纳此版本</Button><Button variant="secondary" disabled={state.busy} onClick={() => void readHistory()}>查看历史观察与规则</Button></>}
+      {selected && applyButton(selected.current_revision)}
+    </div><WriteStatus state={state} /><WriteStatus state={application} />
+    {application.conflict && <Button variant="secondary" disabled={application.busy} onClick={() => {
+      void onIdentityRefresh().then(() => { application.setConflict(false); application.setError(""); }).catch(cause => application.setError(errorText(cause)));
+    }}>读取最新角色修订后重新核对（不自动应用）</Button>}
+    {!selected && state.conflict && <Button variant="secondary" disabled={state.busy || readOnly} onClick={() => { state.setConflict(false); state.setError(""); }}>已修正来源，保留新草案继续保存</Button>}
+    {selected && <ConflictReview id={selected.id} state={state} onAdopt={record => setSelected(record)} />}
+    {history.map(revision => <div key={revision.id} className="space-y-2"><RecordView label={`v${revision.revision_no} · ${revision.metadata.status === "candidate" ? "暂定" : "历史状态：" + revision.metadata.status}`} value={revision} />{applyButton(revision)}</div>)}
+  </section>;
+}

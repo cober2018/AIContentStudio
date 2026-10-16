@@ -1,0 +1,276 @@
+{
+  "schema": "aics.production-method-delivery-evidence.v1",
+  "project_id": 1,
+  "unit_id": 1,
+  "execution_id": 1,
+  "package_id": 1,
+  "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+  "frozen_file_sha256": "3d9c1590bc7d3ef195bab0dd4cddaee2085c1d3fb7b6ff8b481d81b5c3c3e4b3",
+  "delivery_is_quality_acceptance": false,
+  "stages": {
+    "research": {
+      "loaded_methods": [
+        {
+          "id": "research-evidence",
+          "artifact_id": 1,
+          "revision_id": 2,
+          "content_hash": "8783ce171c8caac6ddfc54ce35c00440c28b15b4933a44af357a4f94eaeb112c",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "research",
+        "method_hashes": [
+          "0e13e99be81417c57eb6f222410027682ade55ccc429955dcdb7029e020991bb"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 4,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "script": {
+      "loaded_methods": [],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "script",
+        "method_hashes": [],
+        "disabled_method_ids": [
+          "grounded-writing",
+          "concept-explanation",
+          "chinese-polish"
+        ],
+        "status": "delivered_to_executor",
+        "execution_revision": 5,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "voice": {
+      "loaded_methods": [
+        {
+          "id": "narration-alignment",
+          "artifact_id": 5,
+          "revision_id": 10,
+          "content_hash": "a34a76224e84329911ed83a8ceba9fb1e81bfb6c073c261f5096dd2d46442053",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "voice",
+        "method_hashes": [
+          "89079d323d400529782e403f78fd193ff060680fdcae84ce6b1a8d479eea2c9d"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 6,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "storyboard": {
+      "loaded_methods": [
+        {
+          "id": "visual-shot-plan",
+          "artifact_id": 6,
+          "revision_id": 12,
+          "content_hash": "d6620f26137a0d12b5e5a612d1823a05bc85e13ec2b5af923fda91d8066c5b2e",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "storyboard",
+        "method_hashes": [
+          "62faa0109153d003adae7a2b6a395ed5dcc9ac270cb2d86db42fbe4e1584df70"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 7,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "sound_edit": {
+      "loaded_methods": [
+        {
+          "id": "dialogue-semantic-cut",
+          "artifact_id": 7,
+          "revision_id": 14,
+          "content_hash": "93461c0f885061f4280e7ff246d2650f75121d2c159acf2acf74f8fff7d4c692",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "sound_edit",
+        "method_hashes": [
+          "0b3caf2c653f0a0116d6032c1df28abfa1c8aca905c82ddf6c641b95de666cf5"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 8,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "picture_edit": {
+      "loaded_methods": [
+        {
+          "id": "picture-pacing",
+          "artifact_id": 8,
+          "revision_id": 16,
+          "content_hash": "37b14d2ad707da20aa6eab7e5f04dd6d50e92b21e3ad68d348c24f4ca182eb61",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "picture_edit",
+        "method_hashes": [
+          "e3af9bc66ef256e605fdeb67c68fd6bab95f1ab8e15a6831a0cd90e943c87c8b"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 9,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "subtitle_color": {
+      "loaded_methods": [
+        {
+          "id": "captions-color",
+          "artifact_id": 9,
+          "revision_id": 18,
+          "content_hash": "0765fa1190d7be861e912d2adf6004cf346db5676d49523dc9755a5b651db6b6",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "subtitle_color",
+        "method_hashes": [
+          "c1bca6db07147440474b6eb9ad3c284044a32c4c42ea93e1bd115c569c40ce2c"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 10,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "packaging": {
+      "loaded_methods": [
+        {
+          "id": "ae-layered-packaging",
+          "artifact_id": 10,
+          "revision_id": 20,
+          "content_hash": "4e4a29918b3a3fe1d9caba759329f4a54d7bcedf3452da146e9d9b9bab901039",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "packaging",
+        "method_hashes": [
+          "6460ff95faf26fa963e1e13c37e272ce664ce07cb88666b8c39ba065b7334411"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 11,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "finish": {
+      "loaded_methods": [
+        {
+          "id": "resolve-mix-export",
+          "artifact_id": 11,
+          "revision_id": 22,
+          "content_hash": "cbea0c755dc82666c83bd1b1c14ccf0a02100d1146b99be3ea95ba2f4953e98a",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "finish",
+        "method_hashes": [
+          "1caf2bc5c7c4167d3f74de1b9137df66848a6c5fa48c0cd8fd6e58446f004d80"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 12,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    },
+    "review": {
+      "loaded_methods": [
+        {
+          "id": "delivery-review",
+          "artifact_id": 12,
+          "revision_id": 24,
+          "content_hash": "b679d08bbf99a04979d86ffb40191254998cca5318719c2b3150cf8e59301702",
+          "arguments_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "receipt": {
+        "operation": "production_methods_loaded",
+        "package_id": 1,
+        "package_hash": "93f01fb99c87d391edda75906a4d70339ff1145daa687d6b5f4ed10d92154a94",
+        "manifest_hash": "6519bba54d615f7bd0d9271780e47b77ea486657d00fad7b25c5b1e823aa7f95",
+        "stage": "review",
+        "method_hashes": [
+          "ce00299c29f8c61d75ab9cffe36f004473065e0765c4649abd0e569cd38aa571"
+        ],
+        "disabled_method_ids": [],
+        "status": "delivered_to_executor",
+        "execution_revision": 13,
+        "executor_kind": "agent",
+        "executor_key": "codex-video-production",
+        "executor_version": "1"
+      }
+    }
+  }
+}

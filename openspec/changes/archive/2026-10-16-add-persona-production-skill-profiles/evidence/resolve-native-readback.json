@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"output\": \"{\\\"version\\\": \\\"21.1.0.14\\\", \\\"project\\\": \\\"AICS_Skill_Adaptation_Reopen_20261016\\\", \\\"timeline\\\": \\\"native_adapter_comparison\\\", \\\"fps\\\": 24.0, \\\"start\\\": 86400, \\\"end\\\": 86688, \\\"video\\\": [{\\\"name\\\": \\\"aics.screen-emphasis.v2.mp4\\\", \\\"start\\\": 86400, \\\"end\\\": 86496, \\\"duration\\\": 96}, {\\\"name\\\": \\\"aics.layered-relationship.v1.mp4\\\", \\\"start\\\": 86496, \\\"end\\\": 86592, \\\"duration\\\": 96}, {\\\"name\\\": \\\"aics.title-number-reveal.v1.mp4\\\", \\\"start\\\": 86592, \\\"end\\\": 86688, \\\"duration\\\": 96}], \\\"audio\\\": [{\\\"name\\\": \\\"Dream Culture.mp3\\\", \\\"volume\\\": -18.0, \\\"fades\\\": {\\\"FadeIn\\\": 24.0, \\\"FadeOut\\\": 48.0}, \\\"duration\\\": 288}]}\\n\"}"
+    }
+  ]
+}

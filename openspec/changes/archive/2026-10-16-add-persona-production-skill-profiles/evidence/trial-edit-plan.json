@@ -1,0 +1,219 @@
+{
+  "schema": "aics.trial-edit-plan.v1",
+  "fps": 24,
+  "resolution": [
+    1280,
+    720
+  ],
+  "duration_ms": 47000,
+  "shots": [
+    {
+      "index": 1,
+      "start_frame": 0,
+      "end_frame": 258
+    },
+    {
+      "index": 2,
+      "start_frame": 258,
+      "end_frame": 666
+    },
+    {
+      "index": 3,
+      "start_frame": 666,
+      "end_frame": 1128
+    }
+  ],
+  "narration_sha256": "c41ee6c809cd1a258edd4a03c90eafd00da288c9593a9791f8c8b2166d530d8c",
+  "narration_edits": [
+    {
+      "source_start_frame": 0,
+      "source_end_frame": 752,
+      "output_start_frame": 0,
+      "output_end_frame": 752
+    },
+    {
+      "source_start_frame": 764,
+      "source_end_frame": 954,
+      "output_start_frame": 752,
+      "output_end_frame": 942
+    },
+    {
+      "source_start_frame": 962,
+      "source_end_frame": 1125,
+      "output_start_frame": 942,
+      "output_end_frame": 1105
+    }
+  ],
+  "timing_source": "MiniMax asr-1.0 word alignment estimates plus measured low-energy windows; frame-rounded edits",
+  "removed_intervals": [
+    {
+      "start_frame": 752,
+      "end_frame": 764,
+      "rms": 0.0006536833
+    },
+    {
+      "start_frame": 954,
+      "end_frame": 962,
+      "rms": 0.0018661483
+    }
+  ],
+  "cues": [
+    {
+      "text": "\u5173\u6389\u5199\u4f5cSkill\uff0c",
+      "source_start": 0.12,
+      "source_end": 1.42,
+      "start_ms": 120,
+      "end_ms": 1550
+    },
+    {
+      "text": "\u89d2\u8272\u98ce\u683c\u4e5f\u8981\u6d88\u5931\u5417\uff1f",
+      "source_start": 1.86,
+      "source_end": 3.8,
+      "start_ms": 1860,
+      "end_ms": 3930
+    },
+    {
+      "text": "\u5728\u8fd9\u5957\u6d41\u7a0b\u91cc\uff0c",
+      "source_start": 4.38,
+      "source_end": 5.54,
+      "start_ms": 4380,
+      "end_ms": 5670
+    },
+    {
+      "text": "\u98ce\u683c\u7ba1\u89d2\u8272\u600e\u4e48\u8868\u8fbe\uff0c",
+      "source_start": 6.06,
+      "source_end": 7.78,
+      "start_ms": 6060,
+      "end_ms": 7910
+    },
+    {
+      "text": "\u9636\u6bb5Skill\u7ba1\u8fd9\u4e00\u6b65\u600e\u4e48\u505a\u3002",
+      "source_start": 8.32,
+      "source_end": 10.36,
+      "start_ms": 8320,
+      "end_ms": 10490
+    },
+    {
+      "text": "\u5173\u6389\u53ef\u9009\u65b9\u6cd5\uff0c",
+      "source_start": 10.88,
+      "source_end": 12.08,
+      "start_ms": 10880,
+      "end_ms": 12210
+    },
+    {
+      "text": "\u89d2\u8272\u5b9a\u4f4d\u3001",
+      "source_start": 12.4,
+      "source_end": 13.2,
+      "start_ms": 12400,
+      "end_ms": 13330
+    },
+    {
+      "text": "\u5df2\u91c7\u7528\u7684\u98ce\u683c\u3001",
+      "source_start": 13.58,
+      "source_end": 14.64,
+      "start_ms": 13580,
+      "end_ms": 14770
+    },
+    {
+      "text": "\u77e5\u8bc6\u8bc1\u636e\u548c\u8f93\u51fa\u6280\u672f\u5408\u540c\u4ecd\u5e94\u4fdd\u7559\u3002",
+      "source_start": 14.94,
+      "source_end": 18.3,
+      "start_ms": 14940,
+      "end_ms": 18430
+    },
+    {
+      "text": "\u4e00\u4e2a\u9636\u6bb5\u80fd\u6309\u987a\u5e8f\u9009\u591a\u4e2a\u65b9\u6cd5\uff0c",
+      "source_start": 18.7,
+      "source_end": 21.32,
+      "start_ms": 18700,
+      "end_ms": 21450
+    },
+    {
+      "text": "\u4e5f\u80fd\u5168\u90e8\u5173\u95ed\uff0c",
+      "source_start": 21.56,
+      "source_end": 22.64,
+      "start_ms": 21560,
+      "end_ms": 22770
+    },
+    {
+      "text": "\u8ba9\u6a21\u578b\u81ea\u7531\u9009\u62e9\u505a\u6cd5\u3002",
+      "source_start": 23.1,
+      "source_end": 25.08,
+      "start_ms": 23100,
+      "end_ms": 25210
+    },
+    {
+      "text": "\u4f46\u5f00\u5173\u4e0d\u6539\u53d8\u6a21\u578b\u80fd\u529b\uff0c",
+      "source_start": 25.36,
+      "source_end": 27.44,
+      "start_ms": 25360,
+      "end_ms": 27570
+    },
+    {
+      "text": "\u51c6\u5907\u6267\u884c\u65f6\uff0c",
+      "source_start": 27.78,
+      "source_end": 28.76,
+      "start_ms": 27780,
+      "end_ms": 28890
+    },
+    {
+      "text": "\u51bb\u7ed3\u65b9\u6cd5\u7684\u5177\u4f53\u7248\u672c\u548c\u53c2\u6570\u3002",
+      "source_start": 29.02,
+      "source_end": 31.08,
+      "start_ms": 29020,
+      "end_ms": 31210
+    },
+    {
+      "text": "\u4ee5\u540e\u7f16\u8f91\u65b9\u6cd5\u4e0d\u5e94\u6084\u6084\u6539\u53d8\u65e7\u4efb\u52a1\u3002",
+      "source_start": 32.06,
+      "source_end": 35.12,
+      "start_ms": 31560,
+      "end_ms": 34750
+    },
+    {
+      "text": "\u6536\u5230\u65b9\u6cd5\u4e0d\u7b49\u4e8e\u6b63\u786e\u6267\u884c\uff0c",
+      "source_start": 35.44,
+      "source_end": 37.9,
+      "start_ms": 34940,
+      "end_ms": 37530
+    },
+    {
+      "text": "\u66f4\u4e0d\u7b49\u4e8e\u8d28\u91cf\u901a\u8fc7\u3002",
+      "source_start": 38.22,
+      "source_end": 39.54,
+      "start_ms": 37720,
+      "end_ms": 39170
+    },
+    {
+      "text": "\u6700\u7ec8\u8fd8\u5f97\u9010\u9879\u68c0\u67e5\u6587\u6848\u3001",
+      "source_start": 40.36,
+      "source_end": 42.18,
+      "start_ms": 39527,
+      "end_ms": 41467
+    },
+    {
+      "text": "\u58f0\u753b\u548c\u5b9e\u9645\u6210\u7247\uff0c",
+      "source_start": 42.32,
+      "source_end": 44.06,
+      "start_ms": 41487,
+      "end_ms": 43357
+    },
+    {
+      "text": "\u624d\u80fd\u5224\u65ad\u4f5c\u54c1\u662f\u5426\u7b26\u5408\u8981\u6c42\u3002",
+      "source_start": 44.46,
+      "source_end": 46.7,
+      "start_ms": 43627,
+      "end_ms": 45997
+    }
+  ],
+  "sfx": null,
+  "music": {
+    "method": "manual native timeline level segments with fades, not automatic Fairlight sidechain plugin",
+    "under_voice_db": -28,
+    "tail_db": -20,
+    "intro_fade_frames": 24,
+    "tail_fade_frames": 24,
+    "crossfade_frames": 12
+  },
+  "direct_listening": false
+}

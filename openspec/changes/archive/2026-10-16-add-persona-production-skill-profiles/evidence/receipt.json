@@ -1,0 +1,640 @@
+{
+  "schema": "persona.production.isolated-acceptance.v1",
+  "database": "/private/tmp/aics-persona-skills-validation-20261016/studio.db",
+  "media_root": "/private/tmp/aics-persona-skills-validation-20261016/media",
+  "script": "/private/tmp/aics-persona-skills-validation-20261016/prepare_acceptance.py",
+  "production_modified": false,
+  "browser_verified": false,
+  "user_email": "persona-trial-acceptance@studio.local",
+  "starter": {
+    "status": "initialized",
+    "created": true,
+    "persona_id": 1,
+    "revision_id": 1,
+    "revision_no": 1,
+    "profile_checksum": "e6f2a18dcebc9cfbbf7eb79ee27eba3acf94e0fbcc72defb135e84562aeb9bf0",
+    "workflows": [
+      {
+        "modality": "text",
+        "workflow_id": 1,
+        "checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68"
+      },
+      {
+        "modality": "graphic",
+        "workflow_id": 2,
+        "checksum": "9d5ef5c90be2bced8c43499852f7d4e4b2ce3962a28b6325160439554137125f"
+      },
+      {
+        "modality": "video",
+        "workflow_id": 3,
+        "checksum": "49919f9692d4d7dda91df2774973f8c80ca0f404514f5a4f97b00b4f55c407ea"
+      }
+    ],
+    "blueprint": "starter.ai-tech-engineer.v1"
+  },
+  "default_profile_unchanged": false,
+  "methods": [
+    {
+      "key": "research-evidence",
+      "id": 1,
+      "revision_id": 2,
+      "revision_no": 2,
+      "content_hash": "8783ce171c8caac6ddfc54ce35c00440c28b15b4933a44af357a4f94eaeb112c",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "grounded-writing",
+      "id": 2,
+      "revision_id": 4,
+      "revision_no": 2,
+      "content_hash": "99e15f3cdd8a0704f35d187dd9d933379de42f991e514387524defbea1d82feb",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "concept-explanation",
+      "id": 3,
+      "revision_id": 6,
+      "revision_no": 2,
+      "content_hash": "45875774be16cb42867dd7ef0f5aec28c5f50ff08ee9901a0f79a9778cf3cdba",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "chinese-polish",
+      "id": 4,
+      "revision_id": 8,
+      "revision_no": 2,
+      "content_hash": "35ff92a4fec0a5fda1987c20a0e995cf977b16122f5103082790a23e1c7cf1c4",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "narration-alignment",
+      "id": 5,
+      "revision_id": 10,
+      "revision_no": 2,
+      "content_hash": "a34a76224e84329911ed83a8ceba9fb1e81bfb6c073c261f5096dd2d46442053",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "visual-shot-plan",
+      "id": 6,
+      "revision_id": 12,
+      "revision_no": 2,
+      "content_hash": "d6620f26137a0d12b5e5a612d1823a05bc85e13ec2b5af923fda91d8066c5b2e",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "dialogue-semantic-cut",
+      "id": 7,
+      "revision_id": 14,
+      "revision_no": 2,
+      "content_hash": "93461c0f885061f4280e7ff246d2650f75121d2c159acf2acf74f8fff7d4c692",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "picture-pacing",
+      "id": 8,
+      "revision_id": 16,
+      "revision_no": 2,
+      "content_hash": "37b14d2ad707da20aa6eab7e5f04dd6d50e92b21e3ad68d348c24f4ca182eb61",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "captions-color",
+      "id": 9,
+      "revision_id": 18,
+      "revision_no": 2,
+      "content_hash": "0765fa1190d7be861e912d2adf6004cf346db5676d49523dc9755a5b651db6b6",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "ae-layered-packaging",
+      "id": 10,
+      "revision_id": 20,
+      "revision_no": 2,
+      "content_hash": "4e4a29918b3a3fe1d9caba759329f4a54d7bcedf3452da146e9d9b9bab901039",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "resolve-mix-export",
+      "id": 11,
+      "revision_id": 22,
+      "revision_no": 2,
+      "content_hash": "cbea0c755dc82666c83bd1b1c14ccf0a02100d1146b99be3ea95ba2f4953e98a",
+      "status": "saved",
+      "default": false
+    },
+    {
+      "key": "delivery-review",
+      "id": 12,
+      "revision_id": 24,
+      "revision_no": 2,
+      "content_hash": "b679d08bbf99a04979d86ffb40191254998cca5318719c2b3150cf8e59301702",
+      "status": "saved",
+      "default": false
+    }
+  ],
+  "article": {
+    "kind": "source",
+    "id": 1,
+    "content_hash": "8d587ec84249c9542eefa459c52ee635b2d3190ab256a88eadac02368338696a"
+  },
+  "reference_materials": [
+    {
+      "material_id": 1,
+      "id": 1,
+      "revision_no": 1,
+      "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68",
+      "filename": "graphic-1.png",
+      "bytes": 52708
+    },
+    {
+      "material_id": 2,
+      "id": 2,
+      "revision_no": 1,
+      "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed",
+      "filename": "graphic-2.png",
+      "bytes": 88318
+    },
+    {
+      "material_id": 3,
+      "id": 3,
+      "revision_no": 1,
+      "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455",
+      "filename": "graphic-3.png",
+      "bytes": 87140
+    },
+    {
+      "material_id": 4,
+      "id": 4,
+      "revision_no": 1,
+      "content_hash": "291b0271d12b3b56f33c4b5057edbcf57139516f50b4cf7fd42b3fa801090738",
+      "filename": "reference-screen-60s.png",
+      "bytes": 541024
+    }
+  ],
+  "original_video": {
+    "path": "/Users/mshengran/Downloads/v0200fg10000db7cfanog65qujvnaha0.MP4",
+    "sha256": "997c21772904eb7100c104288c8e9045a3f341072896437976a804493bb19330",
+    "bytes": 44683442,
+    "imported_full_video": false,
+    "frame_timecode_ms": 60000
+  },
+  "music": [
+    {
+      "title": "Dream Culture",
+      "material_id": 5,
+      "original_revision_id": 5,
+      "current_revision_id": 6,
+      "revision_no": 2,
+      "content_hash": "f12cbb52bd4b92bd6cf8a343645567c119627e9cbf98108a3eb6ac2cc275ee46",
+      "isrc": "USUAN1300046",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300046",
+      "license": "CC-BY-4.0",
+      "public_use_allowed": false,
+      "listening_status": "not_listened"
+    },
+    {
+      "title": "Cipher",
+      "material_id": 6,
+      "original_revision_id": 7,
+      "current_revision_id": 8,
+      "revision_no": 2,
+      "content_hash": "d3d0614535a61d748e2fd8d5117fc4d781022a7624794802a2462d8af3fdd522",
+      "isrc": "USUAN1100844",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100844",
+      "license": "CC-BY-4.0",
+      "public_use_allowed": false,
+      "listening_status": "not_listened"
+    },
+    {
+      "title": "Thinking Music",
+      "material_id": 7,
+      "original_revision_id": 9,
+      "current_revision_id": 10,
+      "revision_no": 2,
+      "content_hash": "891d3ea47e443e590a6562a1e2bff37c8830817b3cdf604091f92bfe87e5cc4f",
+      "isrc": "USUAN1600060",
+      "source_url": "https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600060",
+      "license": "CC-BY-4.0",
+      "public_use_allowed": false,
+      "listening_status": "not_listened"
+    }
+  ],
+  "style": {
+    "id": 13,
+    "draft_revision_id": 25,
+    "adopted_revision_id": 28,
+    "revision_no": 4,
+    "content_hash": "9b90a2223780f93bed34272f44913b476901a25bc6f2123932244dea518020a2",
+    "status": "saved",
+    "adoption_scope": "user_accepted_trial_not_final_default",
+    "observation_count": 8
+  },
+  "route_checks": [
+    {
+      "method": "POST",
+      "path": "/content-identities/starter-apply",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/1/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/2/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/3/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/4/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/5/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/6/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/7/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/8/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/9/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/10/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/11/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/12/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/sources/text",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/5/music-metadata",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/materials?kind=audio&q=解释铺底",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/materials/6/music-metadata",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/materials?kind=audio&q=演示推进",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/materials/7/music-metadata",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/materials?kind=audio&q=轻悬念",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/13/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/capability-memory/persona-reference-styles/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/capability-memory/13/revisions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-personas/1/revisions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/capability-memory/13",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-personas/1/revisions",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-personas/1/revisions",
+      "status": 200
+    }
+  ],
+  "checks_passed": [
+    "12 exact method candidates saved for trial",
+    "7 material assets and 1 source imported",
+    "3 music metadata revisions preserve bytes and rights",
+    "Chinese scene search returns current metadata",
+    "style candidate/adoption history read through normal APIs",
+    "starter revision preserved; isolated trial Persona revision appended",
+    "all 10 video production stages explicitly enabled with exact 12 method revisions",
+    "current voice copied from sanitized read-only snapshot; no runtime call",
+    "10 material revisions verified against actual isolated stored byte hashes"
+  ],
+  "limitations": [
+    "No browser visual acceptance",
+    "No direct listening",
+    "No full-video import",
+    "No final default promotion",
+    "Provider registration and new-theme production remain separate"
+  ],
+  "production_default_profile_unchanged": true,
+  "starter_revision_preserved": true,
+  "trial_persona_profile": {
+    "revision_id": 2,
+    "revision_no": 2,
+    "checksum": "6aaf0a9dc1c21f4c448a73fa6135e83ca94819fc8439ae32cf93ccfb0da5cb14",
+    "source_snapshot_sha256": "475d999224111c17afea856b694bdb3862424867b5f229e02d7a113bcb838074",
+    "source_scope": "sanitized_live_readonly_effective_profile_no_live_entity_ids",
+    "production_stages": {
+      "research": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "research-evidence",
+            "source_kind": "capability_memory",
+            "artifact_id": 1,
+            "revision_id": 2,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "script": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "grounded-writing",
+            "source_kind": "capability_memory",
+            "artifact_id": 2,
+            "revision_id": 4,
+            "enabled": true,
+            "parameters": {}
+          },
+          {
+            "id": "concept-explanation",
+            "source_kind": "capability_memory",
+            "artifact_id": 3,
+            "revision_id": 6,
+            "enabled": true,
+            "parameters": {}
+          },
+          {
+            "id": "chinese-polish",
+            "source_kind": "capability_memory",
+            "artifact_id": 4,
+            "revision_id": 8,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "voice": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "narration-alignment",
+            "source_kind": "capability_memory",
+            "artifact_id": 5,
+            "revision_id": 10,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "storyboard": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "visual-shot-plan",
+            "source_kind": "capability_memory",
+            "artifact_id": 6,
+            "revision_id": 12,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "sound_edit": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "dialogue-semantic-cut",
+            "source_kind": "capability_memory",
+            "artifact_id": 7,
+            "revision_id": 14,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "picture_edit": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "picture-pacing",
+            "source_kind": "capability_memory",
+            "artifact_id": 8,
+            "revision_id": 16,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "subtitle_color": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "captions-color",
+            "source_kind": "capability_memory",
+            "artifact_id": 9,
+            "revision_id": 18,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "packaging": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "ae-layered-packaging",
+            "source_kind": "capability_memory",
+            "artifact_id": 10,
+            "revision_id": 20,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "finish": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "resolve-mix-export",
+            "source_kind": "capability_memory",
+            "artifact_id": 11,
+            "revision_id": 22,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      },
+      "review": {
+        "enabled": true,
+        "methods": [
+          {
+            "id": "delivery-review",
+            "source_kind": "capability_memory",
+            "artifact_id": 12,
+            "revision_id": 24,
+            "enabled": true,
+            "parameters": {}
+          }
+        ]
+      }
+    },
+    "voice": {
+      "voice_id": "lengdan_xiongzhang",
+      "rate": 1,
+      "provider": "minimax.cli",
+      "model": "speech-2.8-hd",
+      "profile": "minimax.speech"
+    },
+    "runtime_model_registered": false,
+    "tts_executed": false
+  },
+  "scripts": [
+    "/private/tmp/aics-persona-skills-validation-20261016/prepare_acceptance.py",
+    "/private/tmp/aics-persona-skills-validation-20261016/configure_trial_profile.py"
+  ],
+  "script_sha256": {
+    "prepare_acceptance.py": "99e2d7e548baa9a9d03bb11b5039df4d72ba49170c7102a33175e023c469a1b0",
+    "configure_trial_profile.py": "d033d1160ab2821f591efced2704b19f16a42dcea512dbe1510def5adf2b1d27"
+  },
+  "execution_notes": [
+    "An isolated profile write first rejected unsupported provenance.trial_scope with HTTP422; no Persona revision was written by that request. The field was removed, exact same profile saved via normal API. Already saved style revision28 was reused without additional revision."
+  ]
+}

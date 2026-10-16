@@ -27,7 +27,7 @@ from ..models import (
 )
 from .content_masters import frozen_context, get_revision, owned_unit
 from .creative_contracts import bounded_json, canonical_hash, canonical_output_contract
-from .materials import verify_bytes_checked
+from .materials import music_metadata_ancestor, verify_bytes_checked
 from .production_modalities import adapter_for
 from .project_events import record_project_event
 
@@ -68,8 +68,9 @@ def _external_lineage(db: Session, revision: MaterialRevision) -> tuple[dict, Cr
     output = db.get(CreativeExecutionOutput, provenance["output_id"])
     execution = db.get(CreativeExecution, provenance["execution_id"])
     package = db.get(CreativeExecutionPackage, execution.package_id) if execution else None
+    accepted = music_metadata_ancestor(db, revision, output.material_revision_id) if output else None
     if (not output or not execution or not package or output.state != "accepted"
-            or output.material_revision_id != revision.id or output.execution_id != execution.id
+            or accepted is None or output.material_revision_id != accepted.id or output.execution_id != execution.id
             or execution.project_id != package.project_id or execution.owner_user_id != package.owner_user_id
             or execution.content_unit_id != package.content_unit_id
             or output.content_hash != revision.content_hash or output.mime_type != revision.mime_type
@@ -275,9 +276,24 @@ def build_package(*, schema: str, source: dict, context: dict, assets: list[dict
     return bounded_json(package)
 
 
+def production_method_configuration(db, project_id, unit_id, user, *, master_id=None, variant_id=None):
+    from . import capability_memory
+    from .studio_creative_catalog import inventory
+
+    _, _, master = _source(db, project_id, unit_id, user, master_id=master_id, variant_id=variant_id, current=True)
+    identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
+    profile = (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
+    field = f"{master.modality}_creative_profile"
+    origin = (identity.field_origins_json or {}).get(field, "identity_snapshot") if identity else "unset"
+    methods = capability_memory.discover(db, user, {"project_id": project_id, "unit_id": unit_id, "limit": 100})
+    return {"production_stages": (profile or {}).get("production_stages"), "origin": origin,
+            "identity_snapshot_id": identity.id if identity else None,
+            "catalog": inventory(), "methods": methods["items"], "methods_total": methods["total"]}
+
+
 @_atomic_write
 def create_package(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, manual_image: dict | None = None) -> dict:
-    owned_unit(db, project_id, unit_id, user, mutate=True)
+    _, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
     row, projection, master = _source(db, project_id, unit_id, user, master_id=payload.get("source_master_revision_id"), variant_id=payload.get("source_variant_revision_id"), current=True)
     from .web_video_handoff import build_web_handoff, source_asset_refs
     web_video = None
@@ -320,6 +336,27 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
     package_json = build_package(schema=schema, source=source, context=context, assets=assets, evidence=evidence,
         intent=row.creative_intent_json, objective=payload["objective"], constraints=payload.get("constraints", []),
         output_contract=payload["output_contract"], acceptance_criteria=payload.get("acceptance_criteria", []), director=director)
+    identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
+    profile = (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
+    stages = (profile or {}).get("production_stages")
+    origin = "identity_snapshot"
+    if "production_stages" in payload:
+        stages = payload["production_stages"]
+        origin = "project_execution_override"
+    if stages is not None:
+        from .creative_configuration import freeze_production_stages
+        from .studio_creative_catalog import validate_creative_profile
+        try:
+            if profile:
+                validate_creative_profile({**profile, "production_stages": stages})
+            package_json["production_methods"] = freeze_production_stages(db, user, unit, stages, origin=origin)
+        except ValueError as exc:
+            raise HTTPException(422, {"code": str(exc)}) from None
+        package_json["identity_content"] = {
+            key: value for key, value in (identity.effective_profile_json or {}).items()
+            if not key.endswith("_creative_profile")
+        } if identity else None
+        package_json = bounded_json(package_json)
     if web_video is not None:
         package_json["web_video"] = {**web_video, "reference_assets": assets}
         from .web_video_handoff import validate_new_web_package
@@ -388,6 +425,13 @@ def manual_image_handoff(value: dict, package: dict, *, creative_context: dict) 
     config = manual_image_configuration(value)
     context = {"source": package["source"], "identity": package["context"].get("identity"),
         "creative_intent": package["creative_intent"], "references": package["assets"], "evidence": package["evidence"], **creative_context}
+    if package.get("production_methods") is not None:
+        # The copied prompt must share the frozen selection, not raw identity method history.
+        raw_identity = context.get("identity_profile")
+        context["identity_profile"] = package.get("identity_content", {
+            key: item for key, item in (raw_identity or {}).items() if not key.endswith("_creative_profile")
+        })
+        context["production_methods"] = package["production_methods"]
     serialized = json.dumps(context, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(serialized) > 60_000:
         raise HTTPException(422, {"code": "manual_image_prompt_bounds"})

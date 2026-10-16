@@ -14,6 +14,7 @@ from ..models import (
     ContentMasterAssetRef,
     ContentMasterEvidenceRef,
     ContentMasterRevision,
+    ContentProject,
     IdentitySnapshot,
     MaterialRevision,
 )
@@ -145,6 +146,8 @@ class ProductionModalityAdapter:
         render = self.build_render_snapshot(db, master)
         if render["status"] != "ready":
             reasons.extend(render["reasons"])
+        if render.get("local_only"):
+            reasons.append("render_asset_rights_or_kind_invalid")
         return {"available": not reasons, "reasons": list(dict.fromkeys(reasons)), "adapter_version": self.version}
 
     def build_package_projection(self, db: Session, master: ContentMasterRevision) -> dict:
@@ -267,6 +270,7 @@ class MediaMasterAdapter(ProductionModalityAdapter):
                 return {"status": "incomplete", "reasons": ["video_final_render_must_be_single"]}
         refs = {item.material_revision_id: item for item in db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == master.id, ContentMasterAssetRef.role == "render_output")).all()}
         outputs = []
+        local_only = False
         seen = set()
         for declaration in declarations:
             revision_id = declaration.get("material_revision_id")
@@ -274,19 +278,27 @@ class MediaMasterAdapter(ProductionModalityAdapter):
                 return {"status": "incomplete", "reasons": ["render_asset_ref_invalid"]}
             seen.add(revision_id)
             revision = db.get(MaterialRevision, revision_id)
-            if revision is None or revision.content_hash != refs[revision_id].content_hash_snapshot or revision.status in {"revoked", "archived"} or revision.material.status != "active" or revision.material.kind != self.material_kind or revision.public_use_allowed is not True:
+            local_render = False
+            if revision is not None and revision.public_use_allowed is not True and master.payload_schema == "video.master.v2" and self.modality == "video":
+                from .content_masters import local_final_use_allowed
+
+                project = db.get(ContentProject, master.project_id)
+                local_render = project is not None and local_final_use_allowed(
+                    db, master.project_id, master.content_unit_id, project.owner_user_id, revision, document=master.payload_json)
+            if revision is None or revision.content_hash != refs[revision_id].content_hash_snapshot or revision.status in {"revoked", "archived"} or revision.material.status != "active" or revision.material.kind != self.material_kind or (revision.public_use_allowed is not True and not local_render):
                 return {"status": "incomplete", "reasons": ["render_asset_rights_or_kind_invalid"]}
             try:
-                content = read_bytes_checked(db, revision, require_public=True)
+                content = read_bytes_checked(db, revision, require_public=not local_render)
             except (HTTPException, OSError):
                 return {"status": "incomplete", "reasons": ["render_bytes_unverified"]}
             if not revision.mime_type or not revision.mime_type.startswith(self.mime_prefix) or sniff_mime(content, None) != revision.mime_type:
                 return {"status": "incomplete", "reasons": ["render_mime_invalid"]}
             outputs.append({"material_revision_id": revision.id, "content_hash": revision.content_hash, "mime_type": revision.mime_type, "canvas_id": declaration.get("canvas_id"), "rights_snapshot": refs[revision_id].rights_snapshot_json})
+            local_only = local_only or local_render
         bindings = [{key: output[key] for key in ("material_revision_id", "content_hash", "canvas_id")} for output in outputs]
         if bindings != attestation.get("outputs"):
             return {"status": "incomplete", "reasons": ["render_output_binding_changed"]}
-        return {"status": "ready", "origin": "manual", "attested_by": attestation["attested_by"], "render_input_hash": inputs_hash, "outputs": outputs, "reasons": []}
+        return {"status": "ready", "origin": "manual", "attested_by": attestation["attested_by"], "render_input_hash": inputs_hash, "outputs": outputs, "reasons": [], **({"local_only": True} if local_only else {})}
 
     def build_package_projection(self, db: Session, master: ContentMasterRevision) -> dict:
         available = self.freeze_availability(db, master)

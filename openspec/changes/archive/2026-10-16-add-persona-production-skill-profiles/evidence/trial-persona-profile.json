@@ -1,0 +1,503 @@
+{
+  "id": 2,
+  "revision_no": 2,
+  "profile": {
+    "positioning": "AI Agent、软件架构与开发工具的工程实践型内容角色",
+    "target_audience": [
+      "开发者",
+      "技术负责人",
+      "关注 AI 工程化的人"
+    ],
+    "content_domains": [
+      "AI Agent",
+      "软件架构",
+      "开发工具",
+      "工程实践"
+    ],
+    "expression_style": {
+      "voice": "engineering_first",
+      "hype": "low",
+      "tradeoffs": "explicit",
+      "evidence": "required"
+    },
+    "visual_language": {
+      "preset": "technical_editorial",
+      "diagram_first": true,
+      "density": "medium"
+    },
+    "content_boundaries": [
+      "不夸大能力",
+      "明确限制和 trade-off",
+      "事实与推测分开"
+    ],
+    "risk_boundaries": [
+      "不伪造 benchmark",
+      "不把未验证模型输出当事实"
+    ],
+    "public_fact_policy": {
+      "fresh_source_required_for_current_claims": true,
+      "label_speculation": true
+    },
+    "text_creative_profile": {
+      "schema": "persona.creative.text.v1",
+      "mode": "auto",
+      "skill_ref": "studio.text.longform@1",
+      "style_preset_ref": "studio.text.deep-technical@1",
+      "quality_profile_ref": "studio.quality.text.technical@1",
+      "capability": "chat",
+      "model_binding": null,
+      "model_chain": [],
+      "capability_memory_revision_ids": [
+        28
+      ],
+      "installed_skill_refs": [],
+      "production_stages": {
+        "research": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "research-evidence",
+              "source_kind": "capability_memory",
+              "artifact_id": 1,
+              "revision_id": 2,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "script": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "grounded-writing",
+              "source_kind": "capability_memory",
+              "artifact_id": 2,
+              "revision_id": 4,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "concept-explanation",
+              "source_kind": "capability_memory",
+              "artifact_id": 3,
+              "revision_id": 6,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "chinese-polish",
+              "source_kind": "capability_memory",
+              "artifact_id": 4,
+              "revision_id": 8,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "review": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "delivery-review",
+              "source_kind": "capability_memory",
+              "artifact_id": 12,
+              "revision_id": 24,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        }
+      },
+      "parameters": {},
+      "stage_instruction": null,
+      "provenance": {
+        "blueprint_key": "starter.ai-tech-engineer.v1",
+        "blueprint_version": "1"
+      }
+    },
+    "graphic_creative_profile": {
+      "schema": "persona.creative.graphic.v1",
+      "mode": "auto",
+      "skill_ref": "studio.graphic.visual-director@1",
+      "style_preset_ref": "studio.graphic.architecture-diagram@1",
+      "quality_profile_ref": "studio.quality.graphic.editorial@1",
+      "capability": "image_generation",
+      "model_binding": null,
+      "model_chain": [],
+      "capability_memory_revision_ids": [
+        28
+      ],
+      "installed_skill_refs": [],
+      "production_stages": {
+        "research": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "research-evidence",
+              "source_kind": "capability_memory",
+              "artifact_id": 1,
+              "revision_id": 2,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "script": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "grounded-writing",
+              "source_kind": "capability_memory",
+              "artifact_id": 2,
+              "revision_id": 4,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "concept-explanation",
+              "source_kind": "capability_memory",
+              "artifact_id": 3,
+              "revision_id": 6,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "chinese-polish",
+              "source_kind": "capability_memory",
+              "artifact_id": 4,
+              "revision_id": 8,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "storyboard": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "visual-shot-plan",
+              "source_kind": "capability_memory",
+              "artifact_id": 6,
+              "revision_id": 12,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "review": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "delivery-review",
+              "source_kind": "capability_memory",
+              "artifact_id": 12,
+              "revision_id": 24,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        }
+      },
+      "parameters": {},
+      "stage_instruction": null,
+      "provenance": {
+        "blueprint_key": "starter.ai-tech-engineer.v1",
+        "blueprint_version": "1"
+      }
+    },
+    "audio_creative_profile": {
+      "schema": "persona.creative.audio.v1",
+      "mode": "custom",
+      "skill_ref": "studio.audio.tts@1",
+      "style_preset_ref": "studio.audio.calm-engineer@1",
+      "quality_profile_ref": "studio.quality.audio.explainer@1",
+      "capability": "tts",
+      "model_binding": {
+        "provider": "minimax.cli",
+        "model": "speech-2.8-hd",
+        "profile": "minimax.speech"
+      },
+      "model_chain": [],
+      "capability_memory_revision_ids": [
+        28
+      ],
+      "installed_skill_refs": [],
+      "production_stages": {
+        "research": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "research-evidence",
+              "source_kind": "capability_memory",
+              "artifact_id": 1,
+              "revision_id": 2,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "script": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "grounded-writing",
+              "source_kind": "capability_memory",
+              "artifact_id": 2,
+              "revision_id": 4,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "concept-explanation",
+              "source_kind": "capability_memory",
+              "artifact_id": 3,
+              "revision_id": 6,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "chinese-polish",
+              "source_kind": "capability_memory",
+              "artifact_id": 4,
+              "revision_id": 8,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "voice": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "narration-alignment",
+              "source_kind": "capability_memory",
+              "artifact_id": 5,
+              "revision_id": 10,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "sound_edit": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "dialogue-semantic-cut",
+              "source_kind": "capability_memory",
+              "artifact_id": 7,
+              "revision_id": 14,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "finish": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "resolve-mix-export",
+              "source_kind": "capability_memory",
+              "artifact_id": 11,
+              "revision_id": 22,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "review": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "delivery-review",
+              "source_kind": "capability_memory",
+              "artifact_id": 12,
+              "revision_id": 24,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        }
+      },
+      "parameters": {
+        "voice": "lengdan_xiongzhang",
+        "rate": 1
+      },
+      "stage_instruction": null,
+      "provenance": {
+        "blueprint_key": "starter.ai-tech-engineer.v1",
+        "blueprint_version": "1"
+      }
+    },
+    "video_creative_profile": {
+      "schema": "persona.creative.video.v1",
+      "mode": "auto",
+      "skill_ref": "studio.video.director-package@1",
+      "style_preset_ref": "studio.graphic.technical-editorial@1",
+      "quality_profile_ref": "studio.quality.text.technical@1",
+      "capability": "chat",
+      "model_binding": null,
+      "model_chain": [],
+      "capability_memory_revision_ids": [
+        28
+      ],
+      "installed_skill_refs": [],
+      "production_stages": {
+        "research": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "research-evidence",
+              "source_kind": "capability_memory",
+              "artifact_id": 1,
+              "revision_id": 2,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "script": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "grounded-writing",
+              "source_kind": "capability_memory",
+              "artifact_id": 2,
+              "revision_id": 4,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "concept-explanation",
+              "source_kind": "capability_memory",
+              "artifact_id": 3,
+              "revision_id": 6,
+              "enabled": true,
+              "parameters": {}
+            },
+            {
+              "id": "chinese-polish",
+              "source_kind": "capability_memory",
+              "artifact_id": 4,
+              "revision_id": 8,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "voice": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "narration-alignment",
+              "source_kind": "capability_memory",
+              "artifact_id": 5,
+              "revision_id": 10,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "storyboard": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "visual-shot-plan",
+              "source_kind": "capability_memory",
+              "artifact_id": 6,
+              "revision_id": 12,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "sound_edit": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "dialogue-semantic-cut",
+              "source_kind": "capability_memory",
+              "artifact_id": 7,
+              "revision_id": 14,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "picture_edit": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "picture-pacing",
+              "source_kind": "capability_memory",
+              "artifact_id": 8,
+              "revision_id": 16,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "subtitle_color": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "captions-color",
+              "source_kind": "capability_memory",
+              "artifact_id": 9,
+              "revision_id": 18,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "packaging": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "ae-layered-packaging",
+              "source_kind": "capability_memory",
+              "artifact_id": 10,
+              "revision_id": 20,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "finish": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "resolve-mix-export",
+              "source_kind": "capability_memory",
+              "artifact_id": 11,
+              "revision_id": 22,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        },
+        "review": {
+          "enabled": true,
+          "methods": [
+            {
+              "id": "delivery-review",
+              "source_kind": "capability_memory",
+              "artifact_id": 12,
+              "revision_id": 24,
+              "enabled": true,
+              "parameters": {}
+            }
+          ]
+        }
+      },
+      "parameters": {},
+      "stage_instruction": null,
+      "provenance": {
+        "blueprint_key": "starter.ai-tech-engineer.v1",
+        "blueprint_version": "1"
+      }
+    }
+  },
+  "checksum": "6aaf0a9dc1c21f4c448a73fa6135e83ca94819fc8439ae32cf93ccfb0da5cb14",
+  "created_by": "persona-trial-acceptance@studio.local",
+  "created_at": "2026-10-15T18:16:24.606528"
+}

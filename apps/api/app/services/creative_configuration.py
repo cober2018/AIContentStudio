@@ -179,6 +179,120 @@ def _chat_stage_binding(profile, config, source, override, db):
     return chat_binding({"mode": "custom", "model_binding": binding}, config, db=db), origin
 
 
+def production_stage_key(node, config):
+    from .creative_method_stage import OUTPUT_SCHEMAS
+
+    schema = config.get("output_schema", "")
+    if OUTPUT_SCHEMAS.get(schema) == "research":
+        return "research"
+    if schema.startswith(("graphic.", "video.shot")):
+        return "storyboard"
+    if schema.startswith("audio.") or node["plugin"] == "media.generate":
+        return "voice"
+    if node["plugin"] == "stage.audio.qc":
+        return "review"
+    if node["plugin"] == "stage.graphic.compose":
+        return "storyboard"
+    if node["plugin"] == "stage.professional.prepare":
+        return "finish"
+    return "script"
+
+
+def freeze_production_stages(db, user, unit, stages, *, origin, node=None, config=None):
+    """Pin selected content once; disabled selections contribute identifiers only."""
+    from ..models import CapabilityArtifactRevision
+    from . import capability_memory
+    from .capability_contracts import render
+    from .creative_method_stage import OUTPUT_SCHEMAS
+    from .studio_creative_catalog import PRODUCTION_STAGES, SKILLS, load_skill, validate_production_stages
+
+    validate_production_stages(stages)
+    rows = []
+    context = None
+    for definition in PRODUCTION_STAGES:
+        key = definition["id"]
+        if key not in stages:
+            continue
+        stage = stages[key]
+        active, disabled, not_applicable = [], [], []
+        for selected in stage["methods"]:
+            if not stage["enabled"] or not selected["enabled"]:
+                disabled.append(selected["id"])
+                continue
+            kind = selected["source_kind"]
+            params = selected["parameters"]
+            if kind == "installed_agent_skill":
+                raise ValueError("installed_skill_exact_source_adapter_unavailable")
+            applicability = None
+            if kind == "studio_builtin":
+                resource = SKILLS[selected["skill_ref"]]
+                applicability = {"compatible_stage_schemas": resource["compatible_stage_schemas"],
+                                 "output_schemas": resource["output_schemas"]}
+                if node is not None:
+                    output = ((config or {}).get("output_schema") if node["plugin"] == "stage.creative.method" else
+                              (config or {}).get("package_schema") if node["plugin"] == "stage.professional.prepare" else None)
+                    modality = (OUTPUT_SCHEMAS.get(output) if node["plugin"] == "stage.creative.method" else
+                                "audio" if node["plugin"] in {"media.generate", "stage.audio.qc"} else unit.modality)
+                    reason = ("stage_schema_not_compatible" if node.get("stage_schema") not in resource["compatible_stage_schemas"] else
+                              "output_schema_not_compatible" if output is not None and output not in resource["output_schemas"] else
+                              "modality_not_compatible" if modality is not None and resource["modality"] != modality else None)
+                    applicability = {**applicability, "node_id": node["id"], "stage_schema": node.get("stage_schema"),
+                                     "output_schema": output, "modality": modality, "status": "not_applicable" if reason else "applicable"}
+                    if reason:
+                        not_applicable.append({"id": selected["id"], "source_kind": kind, "skill_ref": selected["skill_ref"],
+                            "version": resource["version"], "resource_hash": digest(resource), "reason": reason,
+                            "applicability": applicability})
+                        continue
+                else:
+                    applicability["status"] = "external_guidance_not_recipe_node_execution"
+            if node is not None:
+                from .creation_recipes import _method
+                ref = ({"source_kind": kind, "skill_ref": selected["skill_ref"]} if kind == "studio_builtin" else
+                       {"source_kind": kind, "artifact_id": selected["artifact_id"], "revision_id": selected["revision_id"], "arguments": params})
+                method, blockers = _method(db, user, unit, node, {**(config or {}), "method": ref})
+                if blockers or method is None:
+                    raise ValueError(blockers[0] if blockers else "production_method_unavailable")
+            elif kind == "studio_builtin":
+                package = load_skill(selected["skill_ref"])
+                resource = SKILLS[selected["skill_ref"]]
+                method = {"source_kind": kind, "skill_ref": selected["skill_ref"], "version": resource["version"],
+                          "package_hash": package["package_hash"], "contract_hash": digest(package["contract"]),
+                          "provenance": package["provenance"], "instruction": package["instruction"]}
+            else:
+                row = capability_memory._owned(db, user, selected["artifact_id"])
+                revision = db.get(CapabilityArtifactRevision, selected["revision_id"])
+                if revision is None or revision.artifact_id != row.id:
+                    raise ValueError("method_revision_unavailable")
+                capability_memory._validate_revision(revision)
+                frozen = revision.metadata_json
+                if row.status not in {"saved", "pinned"} or frozen.get("status") not in {"saved", "pinned"}:
+                    raise ValueError("method_not_saved")
+                if row.kind not in {"prompt_skill", "recipe"} or frozen.get("kind") not in {"prompt_skill", "recipe"}:
+                    raise ValueError("production_method_kind_invalid")
+                if context is None:
+                    context = capability_memory._context(db, user, {"project_id": unit.project_id, "unit_id": unit.id})
+                if (context.get(row.scope_type) != row.scope_json
+                        or context.get(frozen["scope_type"]) != frozen["scope"]):
+                    raise ValueError("method_scope_mismatch")
+                rendered, arguments_hash = render(revision.content_json, revision.args_schema_json, params)
+                method = {"source_kind": kind, "artifact_id": row.id, "revision_id": revision.id,
+                          "content_hash": revision.content_hash, "metadata_hash": digest(frozen),
+                          "arguments_hash": arguments_hash, "rendered_hash": digest(rendered),
+                          "instruction": json.dumps(rendered, ensure_ascii=False, sort_keys=True)}
+            method = {**method, "id": selected["id"], "parameters": copy.deepcopy(params)}
+            if applicability is not None:
+                method["applicability"] = applicability
+            method["method_hash"] = digest(method)
+            active.append(method)
+        rows.append({"stage": key, "title": definition["title"], "enabled": stage["enabled"],
+                     "origin": origin, "methods": active, "disabled_method_ids": disabled,
+                     "not_applicable_methods": not_applicable})
+    manifest = {"schema": "production.methods.manifest.v1", "stages": rows,
+                "legacy_stage_ids": [item["id"] for item in PRODUCTION_STAGES if item["id"] not in stages],
+                "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance."}
+    return {**manifest, "manifest_hash": digest(manifest)}
+
+
 def frozen_stage(db, user, unit, node, contract, context, override):
     """Read only the pinned snapshot; live Persona edits cannot change a Run."""
     from ..models import CapabilityArtifactRevision, IdentitySnapshot
@@ -209,7 +323,12 @@ def frozen_stage(db, user, unit, node, contract, context, override):
     method_selection = (override or {}).get("method", saved_method)
     if type(method_selection) is not dict:
         raise StageContractError("stage_method_selection_invalid")
+    stage_key = production_stage_key(node, creative_input if node["plugin"] == "stage.creative.method" else
+                                     contract.effective_config(source, override or {})[1])
+    selection = profile.get("production_stages", {}).get(stage_key)
     defaults = profile.get("parameters", {}) if method_selection.get("skill_ref") == profile["skill_ref"] else {}
+    if selection is not None:
+        defaults = {key: value for key, value in defaults.items() if key != "instruction"}
     prepared = {**defaults, **source, "method": saved_method}
     composition = node["plugin"] == "stage.graphic.compose"
     deterministic = composition or director or audio_qc
@@ -225,7 +344,7 @@ def frozen_stage(db, user, unit, node, contract, context, override):
         methods.append(base)
     deterministic_parameter_sources = []
     parameter_defaults = {}
-    if profile["mode"] == "composed":
+    if selection is None and profile["mode"] == "composed":
         if base is not None and base.get("source_kind") != "studio_builtin":
             blockers.append("creative_composition_builtin_base_required")
         for revision_id in profile.get("capability_memory_revision_ids", []):
@@ -261,8 +380,28 @@ def frozen_stage(db, user, unit, node, contract, context, override):
                             })
         if profile.get("installed_skill_refs"):
             blockers.append("installed_skill_stage_execution_unavailable")
-    elif profile.get("capability_memory_revision_ids") or profile.get("installed_skill_refs"):
+    elif selection is None and (profile.get("capability_memory_revision_ids") or profile.get("installed_skill_refs")):
         blockers.append("creative_composition_mode_required")
+    production_manifest = None
+    if selection is not None:
+        methods, blockers = [], []
+        try:
+            production_manifest = freeze_production_stages(db, user, unit, {stage_key: selection},
+                origin="identity_snapshot", node=node, config=base_config)
+            methods = production_manifest["stages"][0]["methods"]
+        except ValueError as exc:
+            blockers.append(str(exc))
+        for item in methods:
+            if deterministic and item.get("source_kind") == "capability_memory":
+                patch = item.get("deterministic_parameters")
+                if patch is None:
+                    blockers.append("deterministic_stage_method_parameters_required")
+                else:
+                    contract.validate_config({**prepared, **parameter_defaults, **patch})
+                    parameter_defaults.update(patch)
+                    deterministic_parameter_sources.append({"method_hash": item["method_hash"], "config_patch": patch})
+            elif item.get("source_kind") == "studio_builtin":
+                parameter_defaults.update(item["parameters"])
     prepared = {**prepared, **parameter_defaults, **source}
     _, config, _ = contract.effective_config(prepared, override)
     freshness = freshness_projection(context.get("boundary"), config.get("fact_mode", "grounded")) if unit.modality == "text" else None
@@ -280,7 +419,8 @@ def frozen_stage(db, user, unit, node, contract, context, override):
                 "profile": config["selected_profile"], "provider": actual.get("adapter_key"), "model": actual.get("model_id")})
         # Stage preparation needs local continuity checks; ordinary profile inventory stays unprobed.
         route = _configured_binding(db, route_profile, "tts", _for_execution=True)
-        if len(methods) != 1:
+        if (selection is None and len(methods) != 1 or selection is not None
+                and any(item.get("source_kind") != "studio_builtin" for item in methods)):
             blockers.append("native_tts_method_stack_unsupported")
         if route["status"] == "ready":
             prepared["selected_profile"] = route["selected_binding"]["profile"]
@@ -302,7 +442,8 @@ def frozen_stage(db, user, unit, node, contract, context, override):
         # The environment default is not a registered profile and must retain its existing resolution semantics.
         if route["selected_binding"]["profile"] == "default":
             prepared.pop("model_profile_id", None)
-    method = {**(base or {"source_kind": "studio_builtin"}), "stack": methods,
+    method_base = (methods[0] if methods else {"source_kind": "studio_builtin"}) if selection is not None else base
+    method = {**(method_base or {"source_kind": "studio_builtin"}), "stack": methods,
               "instruction": "\n\n".join(item["instruction"] for item in methods)}
     snapshot = db.get(IdentitySnapshot, identity["id"]) if identity.get("id") else None
     projection = {
@@ -319,6 +460,10 @@ def frozen_stage(db, user, unit, node, contract, context, override):
         "freshness": freshness,
         "status": "blocked" if blockers else "configured_not_probed",
     }
+    if selection is not None:
+        projection["production_manifest"] = production_manifest
+        projection["production_stage"] = stage_key
+        projection["creative_methods_enabled"] = selection["enabled"]
     if audio_planning or (graphic_planning and profile["capability"] != "chat"):
         projection["binding_purpose"] = "planning_chat_stage_not_native_tts" if audio_planning else "planning_chat_stage_not_image_generation"
         projection["native_tts_policy" if audio_planning else "image_policy"] = {
@@ -385,8 +530,10 @@ def resolve(db, user, *, persona_id: int, account_id: int | None = None, series_
         layers[0]["scope"] = "unsaved_preview"
     effective_profile = copy.deepcopy(profile)
     if override is not None:
-        if not isinstance(override, dict) or set(override) - {"stage_instruction", "parameters"}:
+        if not isinstance(override, dict) or set(override) - {"stage_instruction", "parameters", "production_stages"}:
             raise HTTPException(422, "creative_override_invalid")
+        if "production_stages" in override:
+            effective_profile["production_stages"] = copy.deepcopy(override["production_stages"])
         if "stage_instruction" in override:
             if not isinstance(override["stage_instruction"], str) or len(override["stage_instruction"]) > 4000:
                 raise HTTPException(422, "creative_override_invalid")
@@ -406,6 +553,7 @@ def resolve(db, user, *, persona_id: int, account_id: int | None = None, series_
         "status": route["status"], "reason": route.get("reason"), "layers": layers,
         "identity_revision_ids": identity.get("revision_ids"), "identity_checksum": digest(identity),
         "profile": effective_profile, "profile_hash": digest(effective_profile),
+        "production_stages": copy.deepcopy(effective_profile.get("production_stages")),
         "selected_binding": route.get("selected_binding"), "declared_chain": route.get("declared_chain"),
         "fallback_reason": route.get("fallback_reason"), "route": route.get("route"),
     }

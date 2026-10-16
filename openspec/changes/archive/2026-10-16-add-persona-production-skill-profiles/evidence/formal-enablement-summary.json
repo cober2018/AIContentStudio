@@ -1,0 +1,897 @@
+{
+  "schema": "aics.persona-production.formal-enable.v1",
+  "route_checks": [
+    {
+      "method": "GET",
+      "path": "/content-personas/2/revisions",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/content-personas/2/revisions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-personas/3/revisions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-identities/effective?persona_id=2",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/capability-memory/",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/materials",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/health/ready",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/1/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/2/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/3/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/4/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/5/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/6/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/7/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/8/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/9/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/10/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/11/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/12/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/sources/text",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/23/music-metadata",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/materials",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/24/music-metadata",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/materials",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/25/music-metadata",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/materials",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/capability-memory/13/lifecycle",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-personas/2/revisions",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-personas/2/revisions",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-personas/2/revisions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-personas/3/revisions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-identities/effective?persona_id=2",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/brief/revisions",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/identity-snapshots/13",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/materials/references",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/materials/references",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/materials/references",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/materials/references",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/upload",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/materials/30/music-metadata",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/materials/references",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/fact-packs",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/fact-packs/4/items",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/fact-packs/4/items",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/fact-packs/4/items",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/fact-packs/4/items",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/fact-packs/4/items",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/fact-packs/4/freeze",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/fact-boundary",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/master-revisions",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-packages",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/transition",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/materialize-inputs",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/production-methods",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/transition",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/1/decision",
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/1/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/2/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/3/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/4/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/5/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/6/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/7/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/creative-executions/1/outputs/8/decision",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/creative-executions/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/38/readiness",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/38/readiness",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/master-revisions",
+      "status": 422
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/38/readiness",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/master-revisions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/39/readiness",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/content-projects/7/units/13/master-revisions/39/checks",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/39/readiness",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/content-projects/7/units/13/master-revisions/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/health/ready",
+      "status": 200
+    }
+  ],
+  "warnings": [
+    "No direct listening; ASR alignment is estimated.",
+    "Existing 47-second native render bytes are imported; no new render or generation.",
+    "Three writing comparison groups all needed revision; revised method-off copy was selected.",
+    "Local workstation native projects retain preserved absolute dependency paths; not portable bundle."
+  ],
+  "persona_revision": {
+    "id": 6,
+    "revision_no": 4,
+    "checksum": "b5984163c4c0f294600fcb9f87782510056e4e3a761bc264ae7eddd3f170a613"
+  },
+  "methods": [
+    {
+      "key": "research-evidence",
+      "id": 1,
+      "revision_id": 2,
+      "revision_no": 2,
+      "content_hash": "8783ce171c8caac6ddfc54ce35c00440c28b15b4933a44af357a4f94eaeb112c",
+      "stage": "research"
+    },
+    {
+      "key": "grounded-writing",
+      "id": 2,
+      "revision_id": 4,
+      "revision_no": 2,
+      "content_hash": "99e15f3cdd8a0704f35d187dd9d933379de42f991e514387524defbea1d82feb",
+      "stage": "script"
+    },
+    {
+      "key": "concept-explanation",
+      "id": 3,
+      "revision_id": 6,
+      "revision_no": 2,
+      "content_hash": "45875774be16cb42867dd7ef0f5aec28c5f50ff08ee9901a0f79a9778cf3cdba",
+      "stage": "script"
+    },
+    {
+      "key": "chinese-polish",
+      "id": 4,
+      "revision_id": 8,
+      "revision_no": 2,
+      "content_hash": "35ff92a4fec0a5fda1987c20a0e995cf977b16122f5103082790a23e1c7cf1c4",
+      "stage": "script"
+    },
+    {
+      "key": "narration-alignment",
+      "id": 5,
+      "revision_id": 10,
+      "revision_no": 2,
+      "content_hash": "a34a76224e84329911ed83a8ceba9fb1e81bfb6c073c261f5096dd2d46442053",
+      "stage": "voice"
+    },
+    {
+      "key": "visual-shot-plan",
+      "id": 6,
+      "revision_id": 12,
+      "revision_no": 2,
+      "content_hash": "d6620f26137a0d12b5e5a612d1823a05bc85e13ec2b5af923fda91d8066c5b2e",
+      "stage": "storyboard"
+    },
+    {
+      "key": "dialogue-semantic-cut",
+      "id": 7,
+      "revision_id": 14,
+      "revision_no": 2,
+      "content_hash": "93461c0f885061f4280e7ff246d2650f75121d2c159acf2acf74f8fff7d4c692",
+      "stage": "sound_edit"
+    },
+    {
+      "key": "picture-pacing",
+      "id": 8,
+      "revision_id": 16,
+      "revision_no": 2,
+      "content_hash": "37b14d2ad707da20aa6eab7e5f04dd6d50e92b21e3ad68d348c24f4ca182eb61",
+      "stage": "picture_edit"
+    },
+    {
+      "key": "captions-color",
+      "id": 9,
+      "revision_id": 18,
+      "revision_no": 2,
+      "content_hash": "0765fa1190d7be861e912d2adf6004cf346db5676d49523dc9755a5b651db6b6",
+      "stage": "subtitle_color"
+    },
+    {
+      "key": "ae-layered-packaging",
+      "id": 10,
+      "revision_id": 20,
+      "revision_no": 2,
+      "content_hash": "4e4a29918b3a3fe1d9caba759329f4a54d7bcedf3452da146e9d9b9bab901039",
+      "stage": "packaging"
+    },
+    {
+      "key": "resolve-mix-export",
+      "id": 11,
+      "revision_id": 22,
+      "revision_no": 2,
+      "content_hash": "cbea0c755dc82666c83bd1b1c14ccf0a02100d1146b99be3ea95ba2f4953e98a",
+      "stage": "finish"
+    },
+    {
+      "key": "delivery-review",
+      "id": 12,
+      "revision_id": 24,
+      "revision_no": 2,
+      "content_hash": "b679d08bbf99a04979d86ffb40191254998cca5318719c2b3150cf8e59301702",
+      "stage": "review"
+    }
+  ],
+  "style": {
+    "artifact_id": 13,
+    "revision_id": 26,
+    "content_hash": "e59b00f334ba8e2940e037ebff9771ddf7ca2f23aaadd05558c444d577c622d6"
+  },
+  "ids": {
+    "project": 7,
+    "unit": 13,
+    "master": 39,
+    "package": 3,
+    "execution": 1
+  },
+  "full_private_receipt": "/Users/mshengran/Project/AIContentStudio/backups/persona-production-enable-20261016/formal-data/receipt.json"
+}

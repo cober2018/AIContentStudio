@@ -1,0 +1,536 @@
+{
+  "schema": "aics.production-method-candidates.v1",
+  "status": "candidate_not_default",
+  "methods": [
+    {
+      "key": "research-evidence",
+      "kind": "prompt_skill",
+      "name": "选题：横纵证据",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "research",
+        "tags": [
+          "persona-production",
+          "research",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "KKKKhazix/khazix-skills",
+            "commit": "322346ded8129436b3f64707789a73e732ae24d9",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "hv-analysis/SKILL.md",
+                "sha256": "898f21b1f7b45456a54419b1b31765c896662a1e3f614d2c3413f809824de3a2"
+              },
+              {
+                "name": "khazix-writer/SKILL.md",
+                "sha256": "081bfbf5bc0f0c9a2c5a6410eaaa9de18a0cc50f932a1195f45df04e30018602"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "先明确本次作品要回答的问题与知识库范围。按需要梳理时间演变与同一时间截面的比较；比较口径、日期与对象保持一致。每个承重事实关联可回查来源，区分观察、解释与未知；资料不足保留缺口。输出可供当前篇幅使用的事实与观点材料，不强制长报告或PDF，不继承上游安装和并行代理要求。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "grounded-writing",
+      "kind": "prompt_skill",
+      "name": "文案：角色观点与证据",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "script",
+        "tags": [
+          "persona-production",
+          "script",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "KKKKhazix/khazix-skills",
+            "commit": "322346ded8129436b3f64707789a73e732ae24d9",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "hv-analysis/SKILL.md",
+                "sha256": "898f21b1f7b45456a54419b1b31765c896662a1e3f614d2c3413f809824de3a2"
+              },
+              {
+                "name": "khazix-writer/SKILL.md",
+                "sha256": "081bfbf5bc0f0c9a2c5a6410eaaa9de18a0cc50f932a1195f45df04e30018602"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "采用本次冻结的角色定位、事实和作品要求。先写读者真正关心的问题与核心判断，再用具体场景、证据和必要边界展开；段落顺着理解过程推进。保留专业判断，避免宣传式夸张。上游作者身份、口头禅、个人经历不得移植给角色；第一人称事实只能来自角色明确提供的材料。输出当前合同要求的正文或口播，不自行改变篇幅或渠道。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "concept-explanation",
+      "kind": "prompt_skill",
+      "name": "讲解：从问题到机制",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "script",
+        "tags": [
+          "persona-production",
+          "script",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "lijigang/ljg-skills",
+            "commit": "2c82b3d06a2d84405ec971d21c64f71b6a8dd900",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/ljg-explain/SKILL.md",
+                "sha256": "991c537eea77960460c7c48772a0cd562d485afd5f4fb589d637509117de2a63"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "围绕一个具体疑惑串起用途、关键要素与作用关系、成立条件。用贯穿案例解释机制，必要时改变一个条件展示结果如何变化；类比标明对应和失效边界。检查新情境能否沿同一关系作判断，不能把流畅当作理解证明。不要机械套五个栏目；保留原事实和角色表达。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "chinese-polish",
+      "kind": "prompt_skill",
+      "name": "精修：自然中文",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "script",
+        "tags": [
+          "persona-production",
+          "script",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "op7418/Humanizer-zh",
+            "commit": "f4518a8eab97b8bfebc66a89d34320a89bef6930",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "95627fd4437d886f98032ccc62d79136e6310f1fc04e354bb86431795ff206df"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "在已完成事实核验的稿件上清理空洞形容、重复总结、机械转折、翻译腔和无信息的开场。用具体对象和主动动词，保留长短句变化及必要术语。逐项保留数字、条件、引用与不确定性；没有依据不添加个人经历、细节或情绪。不以检测器分数作为质量目标。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "narration-alignment",
+      "kind": "prompt_skill",
+      "name": "配音：修字与可靠时轴",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "voice",
+        "tags": [
+          "persona-production",
+          "voice",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "cclank/lanshu-create-ai-presenter-video",
+            "commit": "762d3ee42623b75a4ec63ad6aa61ace69d78ce6e",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "references/styled-explainer.md",
+                "sha256": "52276dcb9e3d057f84253f77e044c97b2e6f66730bdb703f07311ecfd38ea288"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "读取已批准口播与角色音色，先检查专名、数字和自然停顿，再使用现有配音渠道。保存原音频及修订稿，区分引擎返回时标、对真实音频做出的对齐和估计时标；估计值不可冒充已验证词级定位。用真实音频决定镜头长度，核对开头、结尾、专名与删改位置。词序或音频变化后重新生成对应字幕与动画锚点。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "visual-shot-plan",
+      "kind": "prompt_skill",
+      "name": "分镜：句意与镜头用途",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "storyboard",
+        "tags": [
+          "persona-production",
+          "storyboard",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "Vincentwei1021/video-shotcraft",
+            "commit": "13c74a707786872a18e3317e48c5c94011027620",
+            "license": "Apache-2.0",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "a94f87f093d07c96ddf3245d442acece7ceb6c544035855c63e26a216a068820"
+              },
+              {
+                "name": "references/sound-design.md",
+                "sha256": "cac6f23c0b360cef7c7d04655f3009cf5e45f79e5f775594a622e680b0301521"
+              }
+            ]
+          },
+          {
+            "repository": "cclank/lanshu-create-ai-presenter-video",
+            "commit": "762d3ee42623b75a4ec63ad6aa61ace69d78ce6e",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "references/styled-explainer.md",
+                "sha256": "52276dcb9e3d057f84253f77e044c97b2e6f66730bdb703f07311ecfd38ea288"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "逐句确定视觉用途：展示事实用真实界面或原素材，解释关系用图层，强调判断用关键词或数字卡。记录镜头对应句子、素材版本、图层关系、入场停留退出及声音意图；让观众有时间读完，不把统一秒数当规则。静帧先确认再写图生视频运动提示词。需要包装时给AE明确参数，剪辑主时间线留在Resolve。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "dialogue-semantic-cut",
+      "kind": "prompt_skill",
+      "name": "粗剪：保留语义与停顿",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "sound_edit",
+        "tags": [
+          "persona-production",
+          "sound_edit",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "Agentchengfeng/chengfeng-videocut-skills",
+            "commit": "a33b43e08c34fa8beeb5e78498e852f4e80975a5",
+            "license": "Apache-2.0",
+            "files": [
+              {
+                "name": "plugins/chengfeng-videocut/skills/chengfeng-cut/SKILL.md",
+                "sha256": "56322f1f988785167a6aca73eecc73ec5a672c9861532d0ba4ef8e2d1e796a75"
+              },
+              {
+                "name": "plugins/chengfeng-videocut/skills/chengfeng-subtitle/SKILL.md",
+                "sha256": "5ec0144f9ec9ec855c0e7d238ca1c10bb1e1038f6659b562859e86c87b2735a8"
+              }
+            ]
+          },
+          {
+            "repository": "ChaiWithJai/davinci-resolve-claude-skills",
+            "commit": "cf7e4275f10d6d7b709a5c50155769715c8d14f0",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/davinci-resolve-social-editor/SKILL.md",
+                "sha256": "9913d76a63163ed76497a84ab4638b1aefcdffb85fc08ac5cb8f5ebfd7c7a733"
+              },
+              {
+                "name": "skills/davinci-resolve-audio-cleanup-podcast/SKILL.md",
+                "sha256": "b1db9c9f629254e7182cd066cebec132afc32fcc50865cab98a878acfdad6d4b"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "以原音频和可靠转录为准，分别识别重说、残句、口误更正、卡壳和多余语气词。记录词或句锚点、源起止、保留或删除及原因；没有听到的缺字不补成事实。保留语气与自然停顿，整句删除须检查前后因果。先处理人声，再按同一保留区间映射画面与字幕；静音检测仅给候选点，不能独立决定删句。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "picture-pacing",
+      "kind": "prompt_skill",
+      "name": "画面：证据和阅读节奏",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "picture_edit",
+        "tags": [
+          "persona-production",
+          "picture_edit",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "ChaiWithJai/davinci-resolve-claude-skills",
+            "commit": "cf7e4275f10d6d7b709a5c50155769715c8d14f0",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/davinci-resolve-social-editor/SKILL.md",
+                "sha256": "9913d76a63163ed76497a84ab4638b1aefcdffb85fc08ac5cb8f5ebfd7c7a733"
+              },
+              {
+                "name": "skills/davinci-resolve-audio-cleanup-podcast/SKILL.md",
+                "sha256": "b1db9c9f629254e7182cd066cebec132afc32fcc50865cab98a878acfdad6d4b"
+              }
+            ]
+          },
+          {
+            "repository": "odaiouattara0022-del/davinci-resolve-skill",
+            "commit": "71d243773caa34502666c4d53e0b0b050f069918",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "eb34e5342e9755fcdb0a9e9630f736db6a6bcdadca94798f851ab73b5c6ee8ee"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "在已确认声音主线上安排录屏、图解和必要B-roll，展示对象与正在说的内容相符。按源素材精确标识与入出点装配，不以文件名片段模糊匹配。使用当前时间线起始帧加相对偏移；逐片段回读实际时长、落点、轨道和返回数量，不能将部分成功当整批成功。留出读屏时间，不为固定切镜频率牺牲理解。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "captions-color",
+      "kind": "prompt_skill",
+      "name": "字幕校色：共同剪辑映射",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "subtitle_color",
+        "tags": [
+          "persona-production",
+          "subtitle_color",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "Agentchengfeng/chengfeng-videocut-skills",
+            "commit": "a33b43e08c34fa8beeb5e78498e852f4e80975a5",
+            "license": "Apache-2.0",
+            "files": [
+              {
+                "name": "plugins/chengfeng-videocut/skills/chengfeng-cut/SKILL.md",
+                "sha256": "56322f1f988785167a6aca73eecc73ec5a672c9861532d0ba4ef8e2d1e796a75"
+              },
+              {
+                "name": "plugins/chengfeng-videocut/skills/chengfeng-subtitle/SKILL.md",
+                "sha256": "5ec0144f9ec9ec855c0e7d238ca1c10bb1e1038f6659b562859e86c87b2735a8"
+              }
+            ]
+          },
+          {
+            "repository": "ChaiWithJai/davinci-resolve-claude-skills",
+            "commit": "cf7e4275f10d6d7b709a5c50155769715c8d14f0",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/davinci-resolve-social-editor/SKILL.md",
+                "sha256": "9913d76a63163ed76497a84ab4638b1aefcdffb85fc08ac5cb8f5ebfd7c7a733"
+              },
+              {
+                "name": "skills/davinci-resolve-audio-cleanup-podcast/SKILL.md",
+                "sha256": "b1db9c9f629254e7182cd066cebec132afc32fcc50865cab98a878acfdad6d4b"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "字幕使用修字后的文本与同一剪辑映射，检查中文断句、专名、数字、切点和遮挡；不要重新均分字幕时间。根据真实素材修曝光和白平衡，先匹配镜头，再应用已选角色视觉意图。保留原片与可回退版本，不把固定高通或统一LUT当作每个片子的答案。读回当前工具真实支持，缺失功能明确记录。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "ae-layered-packaging",
+      "kind": "prompt_skill",
+      "name": "包装：AE分层镜头",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "packaging",
+        "tags": [
+          "persona-production",
+          "packaging",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "yumehiko/ae-agent-skills",
+            "commit": "760cc5b135a0a5f5e5f3e7427ec51af35488d25e",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/aftereffects-declarative/SKILL.md",
+                "sha256": "35a49a2790fd0f9c720d1ea19a1cc831c3dd1e9cd6626d23d4f780852e00a54e"
+              }
+            ]
+          },
+          {
+            "repository": "Vincentwei1021/video-shotcraft",
+            "commit": "13c74a707786872a18e3317e48c5c94011027620",
+            "license": "Apache-2.0",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "a94f87f093d07c96ddf3245d442acece7ceb6c544035855c63e26a216a068820"
+              },
+              {
+                "name": "references/sound-design.md",
+                "sha256": "cac6f23c0b360cef7c7d04655f3009cf5e45f79e5f775594a622e680b0301521"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "只处理冻结清单中要求的合成。先确定视觉目的、层级和时间锚点，再用已有AE MCP创建原生图层、关键帧与缓动；不把React或CSS工具名直接替换成AE。稳定图层标识与合成引用，局部修改只触及本次管理对象。按每个合成的帧率、尺寸、时长和透明要求输出；检查文字边界、遮挡、入场中间与落定帧。输出实际片段和可重开工程，回到Resolve核对。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "resolve-mix-export",
+      "kind": "prompt_skill",
+      "name": "终混：场景配乐与交付",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "finish",
+        "tags": [
+          "persona-production",
+          "finish",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "ChaiWithJai/davinci-resolve-claude-skills",
+            "commit": "cf7e4275f10d6d7b709a5c50155769715c8d14f0",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/davinci-resolve-social-editor/SKILL.md",
+                "sha256": "9913d76a63163ed76497a84ab4638b1aefcdffb85fc08ac5cb8f5ebfd7c7a733"
+              },
+              {
+                "name": "skills/davinci-resolve-audio-cleanup-podcast/SKILL.md",
+                "sha256": "b1db9c9f629254e7182cd066cebec132afc32fcc50865cab98a878acfdad6d4b"
+              }
+            ]
+          },
+          {
+            "repository": "odaiouattara0022-del/davinci-resolve-skill",
+            "commit": "71d243773caa34502666c4d53e0b0b050f069918",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "eb34e5342e9755fcdb0a9e9630f736db6a6bcdadca94798f851ab73b5c6ee8ee"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "音乐按当前场景挑选，读取曲目版本、许可和标签。允许无配乐；有配乐时先保障人声清楚，再调入出淡化、段落留白和必要闪避。原片声音按冻结意图保留或关闭，避免修复前后人声叠加。记录实际支持的处理、音轨、增益与测量，试听与客观检测分别记录。AE回片检查帧率、尺寸、色彩及透明，再由Resolve导出实际成片与可编辑工程。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "delivery-review",
+      "kind": "prompt_skill",
+      "name": "评审：内容、声音与工程",
+      "content": {
+        "adaptation_version": "aics-native-v1",
+        "stage": "review",
+        "tags": [
+          "persona-production",
+          "review",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "ChaiWithJai/davinci-resolve-claude-skills",
+            "commit": "cf7e4275f10d6d7b709a5c50155769715c8d14f0",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/davinci-resolve-social-editor/SKILL.md",
+                "sha256": "9913d76a63163ed76497a84ab4638b1aefcdffb85fc08ac5cb8f5ebfd7c7a733"
+              },
+              {
+                "name": "skills/davinci-resolve-audio-cleanup-podcast/SKILL.md",
+                "sha256": "b1db9c9f629254e7182cd066cebec132afc32fcc50865cab98a878acfdad6d4b"
+              }
+            ]
+          }
+        ],
+        "modifications": "Adapted to existing platform contracts and native AE/Resolve; removed upstream identity, automatic installation, cloud uploads and fixed universal presets.",
+        "text": "分别核验事实与风格、字幕阅读、镜头是否帮助句意、声音清晰、切点和首尾。读取实际导出文件，检查音视频轨、时长、黑帧、素材缺失；重新打开工程并读取真实时间线。明确谁进行了试听、哪些仅做ASR或声学检查。记录真正加载的方法版本及其结果，不把文件存在或工具成功当创意质量通过，也不代替用户采纳角色标准。"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

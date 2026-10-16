@@ -465,6 +465,61 @@ def _cleanup_order():
     return intent_revision.desc(), ProjectEvent.id.desc()
 
 
+def production_method_receipts(db, row):
+    events = db.scalars(select(ProjectEvent).where(
+        ProjectEvent.project_id == row.project_id,
+        ProjectEvent.entity_type == "creative_execution", ProjectEvent.entity_id == str(row.id),
+        ProjectEvent.event_type == "creative_execution.updated",
+        ProjectEvent.payload_json["operation"].as_string() == "production_methods_loaded",
+    ).order_by(ProjectEvent.id)).all()
+    return [{"event_id": event.id, **event.payload_json} for event in events]
+
+
+@_atomic
+def load_production_methods(db, project_id, unit_id, execution_id, payload, user):
+    _payload(payload, {"expected_revision", "executor_kind", "executor_key", "executor_version", "stage"})
+    row = _owned(db, project_id, unit_id, execution_id, user, mutate=True)
+    expected = _expected(row, payload)
+    executor = _executor(payload, row)
+    if row.state not in {"claimed", "in_progress"}:
+        raise _error("production_methods_execution_not_claimed")
+    package = _package(db, row, user, current=True)
+    manifest = package.package_json.get("production_methods")
+    stage = next((item for item in (manifest or {}).get("stages", []) if item["stage"] == payload.get("stage")), None)
+    if stage is None:
+        raise _error("production_stage_not_in_manifest", 422)
+    from ..models import CapabilityArtifactRevision
+    from . import capability_memory
+    from .stage_contracts import digest
+    context = None
+    for method in stage["methods"]:
+        if method["source_kind"] != "capability_memory":
+            continue
+        artifact = capability_memory._owned(db, user, method["artifact_id"])
+        revision = db.get(CapabilityArtifactRevision, method["revision_id"])
+        if revision is None or revision.artifact_id != artifact.id:
+            raise _error("production_method_revision_unavailable")
+        capability_memory._validate_revision(revision)
+        if (revision.content_hash != method["content_hash"] or digest(revision.metadata_json) != method["metadata_hash"]
+                or artifact.status not in {"saved", "pinned"}):
+            raise _error("production_method_revision_unavailable")
+        if context is None:
+            context = capability_memory._context(db, user, {"project_id": project_id, "unit_id": unit_id, "execution_id": row.id})
+        if (context.get(artifact.scope_type) != artifact.scope_json
+                or context.get(revision.metadata_json["scope_type"]) != revision.metadata_json["scope"]):
+            raise _error("production_method_scope_changed")
+    receipt = {"operation": "production_methods_loaded", "package_id": package.id,
+               "package_hash": package.package_hash, "manifest_hash": manifest["manifest_hash"],
+               "stage": stage["stage"], "method_hashes": [item["method_hash"] for item in stage["methods"]],
+               "disabled_method_ids": stage["disabled_method_ids"], "status": "delivered_to_executor",
+               "execution_revision": expected + 1, **executor}
+    _cas(db, row, expected)
+    record_project_event(db, project_id=project_id, event_type="creative_execution.updated", actor=user.email,
+        entity_type="creative_execution", entity_id=row.id, payload=receipt)
+    db.flush()
+    return {**_projection(db, row, user), "loaded_methods": stage["methods"], "method_receipt": receipt}
+
+
 def _projection(db: Session, row: CreativeExecution, user: User, *, include_outputs: bool = True) -> dict:
     package = _package(db, row, user)
     checkpoint, checkpoint_binding = _read_checkpoint(row, package)
@@ -477,6 +532,8 @@ def _projection(db: Session, row: CreativeExecution, user: User, *, include_outp
         "recovery": _checkpoint(row.recovery_json),
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None})
+    if package.package_json.get("production_methods") is not None:
+        result["production_method_receipts"] = production_method_receipts(db, row)
     if include_outputs:
         result["outputs"] = [_output_json(output) for output in outputs]
         ranked = _cleanup_query(row).with_only_columns(ProjectEvent.id.label("event_id"),

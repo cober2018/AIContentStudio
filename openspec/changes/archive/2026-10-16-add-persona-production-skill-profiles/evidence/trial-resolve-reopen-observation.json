@@ -1,0 +1,178 @@
+{
+  "operation": "ExportProject then ImportProject into new name then LoadProject and actual readback",
+  "verified": true,
+  "tool_version": "21.1.0.14",
+  "project": "AICS_Tech_Style_Trial_Reopen_20261016",
+  "timeline": "Tech_Style_Final_47s",
+  "start": 0,
+  "end": 1128,
+  "missing_media": 0,
+  "media": [
+    {
+      "File Name": "material-12.mp3",
+      "File Path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/trial-dependencies/material-12.mp3",
+      "Online Status": "Online",
+      "FPS": 24.0,
+      "Resolution": ""
+    },
+    {
+      "File Name": "material-16.wav",
+      "File Path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/trial-dependencies/material-16.wav",
+      "Online Status": "Online",
+      "FPS": 24.0,
+      "Resolution": ""
+    },
+    {
+      "File Name": "ae_intermediate_1.mp4",
+      "File Path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/trial-dependencies/ae_intermediate_1.mp4",
+      "Online Status": "Online",
+      "FPS": 24.0,
+      "Resolution": "1280x720"
+    },
+    {
+      "File Name": "ae_intermediate_2.mp4",
+      "File Path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/trial-dependencies/ae_intermediate_2.mp4",
+      "Online Status": "Online",
+      "FPS": 24.0,
+      "Resolution": "1280x720"
+    },
+    {
+      "File Name": "ae_intermediate_3.mp4",
+      "File Path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/trial-dependencies/ae_intermediate_3.mp4",
+      "Online Status": "Online",
+      "FPS": 24.0,
+      "Resolution": "1280x720"
+    }
+  ],
+  "items": [
+    {
+      "type": "video",
+      "track": 1,
+      "name": "ae_intermediate_1.mp4",
+      "start": 0,
+      "end": 258,
+      "duration": 258,
+      "source_start": 0,
+      "source_end": 257,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": null
+    },
+    {
+      "type": "video",
+      "track": 1,
+      "name": "ae_intermediate_2.mp4",
+      "start": 258,
+      "end": 666,
+      "duration": 408,
+      "source_start": 0,
+      "source_end": 407,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": null
+    },
+    {
+      "type": "video",
+      "track": 1,
+      "name": "ae_intermediate_3.mp4",
+      "start": 666,
+      "end": 1128,
+      "duration": 462,
+      "source_start": 0,
+      "source_end": 461,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": null
+    },
+    {
+      "type": "audio",
+      "track": 1,
+      "name": "material-16.wav",
+      "start": 0,
+      "end": 752,
+      "duration": 752,
+      "source_start": 0,
+      "source_end": 752,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": 0.0
+    },
+    {
+      "type": "audio",
+      "track": 1,
+      "name": "material-16.wav",
+      "start": 752,
+      "end": 942,
+      "duration": 190,
+      "source_start": 764,
+      "source_end": 954,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": 0.0
+    },
+    {
+      "type": "audio",
+      "track": 1,
+      "name": "material-16.wav",
+      "start": 942,
+      "end": 1105,
+      "duration": 163,
+      "source_start": 962,
+      "source_end": 1125,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 0.0,
+        "FadeOut": 0.0
+      },
+      "volume_db": 0.0
+    },
+    {
+      "type": "audio",
+      "track": 2,
+      "name": "material-12.mp3",
+      "start": 0,
+      "end": 1103,
+      "duration": 1103,
+      "source_start": 0,
+      "source_end": 1103,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 24.0,
+        "FadeOut": 12.0
+      },
+      "volume_db": -28.0
+    },
+    {
+      "type": "audio",
+      "track": 3,
+      "name": "material-12.mp3",
+      "start": 1091,
+      "end": 1128,
+      "duration": 37,
+      "source_start": 1091,
+      "source_end": 1128,
+      "enabled": true,
+      "fades": {
+        "FadeIn": 12.0,
+        "FadeOut": 23.999999999999943
+      },
+      "volume_db": -20.0
+    }
+  ],
+  "render_jobs": []
+}

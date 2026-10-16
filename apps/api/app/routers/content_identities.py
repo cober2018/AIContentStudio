@@ -385,7 +385,10 @@ def creative_catalog(user: User = Depends(get_existing_user)):
 
 @router.post("/content-identities/creative-preview")
 def creative_preview(payload: CreativeStagePreviewIn, db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
-    return creative_configuration.resolve(db, user, **payload.model_dump(by_alias=True),
+    values = payload.model_dump(by_alias=True)
+    if payload.profile_override is not None and "production_stages" not in payload.profile_override.model_fields_set:
+        values["profile_override"].pop("production_stages", None)
+    return creative_configuration.resolve(db, user, **values,
         has_profile_override="profile_override" in payload.model_fields_set)
 
 

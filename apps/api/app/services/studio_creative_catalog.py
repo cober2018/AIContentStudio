@@ -424,13 +424,69 @@ def validate_ref(value: Any, *, kind: str | None = None) -> str:
     return value
 
 
+PRODUCTION_STAGES = [
+    {"id": key, "title": title, "order": index, "modalities": modalities}
+    for index, (key, title, modalities) in enumerate([
+        ("research", "选题与证据", ["text", "graphic", "audio", "video"]),
+        ("script", "文案与脚本", ["text", "graphic", "audio", "video"]),
+        ("voice", "配音与声音准备", ["audio", "video"]),
+        ("storyboard", "分镜与素材", ["graphic", "video"]),
+        ("sound_edit", "声音粗剪", ["audio", "video"]),
+        ("picture_edit", "画面粗剪与节奏", ["video"]),
+        ("subtitle_color", "字幕与校色", ["video"]),
+        ("packaging", "后期包装", ["video"]),
+        ("finish", "终混与导出", ["audio", "video"]),
+        ("review", "质量评审与回收", ["text", "graphic", "audio", "video"]),
+    ])
+]
+
+
+def validate_production_stages(value):
+    from .stage_contracts import _validate, canonical
+
+    if type(value) is not dict or set(value) - {item["id"] for item in PRODUCTION_STAGES}:
+        raise ValueError("production_stages_invalid")
+    canonical(value, max_bytes=16 * 1024)
+    for stage in value.values():
+        if (type(stage) is not dict or set(stage) != {"enabled", "methods"}
+                or type(stage["enabled"]) is not bool or type(stage["methods"]) is not list
+                or len(stage["methods"]) > 12):
+            raise ValueError("production_stage_invalid")
+        identifiers = set()
+        for method in stage["methods"]:
+            if type(method) is not dict:
+                raise ValueError("production_method_invalid")
+            kind = method.get("source_kind")
+            if type(kind) is not str:
+                raise ValueError("production_method_invalid")
+            refs = {"studio_builtin": {"skill_ref"}, "capability_memory": {"artifact_id", "revision_id"},
+                    "installed_agent_skill": {"skill_id", "version"}}.get(kind)
+            if (refs is None or set(method) != {"id", "source_kind", "enabled", "parameters"} | refs
+                    or type(method.get("enabled")) is not bool or type(method.get("parameters")) is not dict
+                    or len(method["parameters"]) > 30 or not isinstance(method.get("id"), str)
+                    or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,99}", method["id"])
+                    or method["id"] in identifiers):
+                raise ValueError("production_method_invalid")
+            identifiers.add(method["id"])
+            canonical(method["parameters"], max_bytes=4000)
+            if kind == "studio_builtin":
+                validate_ref(method["skill_ref"], kind="skill")
+                _validate(method["parameters"], SKILLS[method["skill_ref"]]["parameter_schema"])
+            elif kind == "capability_memory":
+                if any(type(method[key]) is not int or method[key] < 1 for key in refs):
+                    raise ValueError("production_method_revision_invalid")
+            elif any(not isinstance(method[key], str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:@-]{0,199}", method[key]) for key in refs):
+                raise ValueError("production_method_installed_invalid")
+    return copy.deepcopy(value)
+
+
 def validate_creative_profile(value: Any) -> dict:
     if value is None:
         return None
     if not isinstance(value, dict) or set(value) - {
         "schema", "mode", "skill_ref", "style_preset_ref", "quality_profile_ref", "capability",
         "model_binding", "model_chain", "capability_memory_revision_ids", "installed_skill_refs",
-        "parameters", "stage_instruction", "provenance",
+        "parameters", "stage_instruction", "provenance", "production_stages",
     }:
         raise ValueError("creative_profile_invalid")
     from fastapi import HTTPException
@@ -516,6 +572,8 @@ def validate_creative_profile(value: Any) -> dict:
             or any(not isinstance(item, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:@-]{0,199}", item)
                    for item in installed)):
         raise ValueError("creative_profile_installed_refs_invalid")
+    if "production_stages" in value:
+        validate_production_stages(value["production_stages"])
     params = value.get("parameters", {})
     if (not isinstance(params, dict) or len(params) > 32
             or set(params) - set(SKILLS[value["skill_ref"]]["tunable_fields"])):
@@ -547,6 +605,7 @@ def inventory() -> dict:
     return {
         "schema": "studio.creative.inventory.v1",
         "skills": skills,
+        "production_stages": copy.deepcopy(PRODUCTION_STAGES),
         "style_presets": copy.deepcopy(list(PRESETS.values())),
         "quality_profiles": copy.deepcopy(list(QUALITY.values())),
         "starter_personas": [

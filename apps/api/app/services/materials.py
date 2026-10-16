@@ -6,11 +6,12 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 from pathlib import Path
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from ..models import (
@@ -251,6 +252,62 @@ def create_revision(
     db.add(row)
     db.flush()
     return row
+
+
+def music_metadata_ancestor(db: Session, revision: MaterialRevision, accepted_revision_id: int) -> MaterialRevision:
+    current = revision
+    immutable = [column.name for column in MaterialRevision.__table__.columns
+        if column.name not in {"id", "revision_no", "parent_revision_id", "metadata_json", "status", "created_by", "created_at"}]
+    editable_metadata = {"music", "tags", "previous_tags"}
+    while True:
+        if current.material.status != "active" or current.status not in {"candidate", "usable"}:
+            raise ValueError("external metadata ancestor unavailable")
+        if current.id == accepted_revision_id:
+            return current
+        parent = db.get(MaterialRevision, current.parent_revision_id) if current.parent_revision_id else None
+        if (parent is None or current.material.kind != "audio" or current.revision_no != parent.revision_no + 1
+                or any(getattr(current, key) != getattr(parent, key) for key in immutable)):
+            raise ValueError("external metadata ancestry changed")
+        child_metadata, parent_metadata = current.metadata_json or {}, parent.metadata_json or {}
+        if (not isinstance(child_metadata, dict) or not isinstance(parent_metadata, dict)
+                or {key: value for key, value in child_metadata.items() if key not in editable_metadata}
+                != {key: value for key, value in parent_metadata.items() if key not in editable_metadata}):
+            raise ValueError("external metadata provenance changed")
+        # Revision numbers strictly decrease, so cycles cannot reach an accepted ancestor.
+        current = parent
+
+
+def revise_music_metadata(db: Session, material_id: int, expected_revision_id: int, *, tags: list[str], music: dict, actor: str) -> MaterialRevision:
+    # Serialize the root before reading its latest revision, including on SQLite.
+    changed = db.execute(update(Material).where(Material.id == material_id, Material.kind == "audio",
+        Material.status == "active").values(id=Material.id))
+    if changed.rowcount != 1:
+        raise HTTPException(409, "只能修改有效音频素材的配乐信息")
+    material = db.get(Material, material_id, populate_existing=True)
+    previous = db.scalar(select(MaterialRevision).where(MaterialRevision.material_id == material_id)
+        .order_by(MaterialRevision.revision_no.desc()).limit(1).execution_options(populate_existing=True))
+    if previous is None or previous.id != expected_revision_id:
+        raise HTTPException(409, "素材版本已变化，请重新读取后修改")
+    if previous.status == MaterialRevisionStatus.revoked.value:
+        raise HTTPException(409, "已撤销素材不能通过标签修订恢复")
+    if previous.source_kind == "external_execution":
+        from .creative_packages import _check_derived_rights
+
+        _check_derived_rights(db, previous)
+    values = {column.name: copy.deepcopy(getattr(previous, column.name)) for column in MaterialRevision.__table__.columns
+        if column.name not in {"id", "revision_no", "parent_revision_id", "metadata_json", "created_by", "created_at"}}
+    metadata = copy.deepcopy(previous.metadata_json or {})
+    metadata.update({"music": copy.deepcopy(music), "tags": list(tags), "previous_tags": list(material.tags_json or [])})
+    revision = MaterialRevision(**values, revision_no=previous.revision_no + 1, parent_revision_id=previous.id,
+        metadata_json=metadata, created_by=actor)
+    db.add(revision)
+    material.tags_json = list(tags)
+    db.flush()
+    db.add(AuditLog(event="material.music_metadata_revised", actor=actor, entity_type="material",
+        entity_id=str(material_id), detail_json={"previous_revision_id": previous.id,
+            "revision_id": revision.id, "before_tags": metadata["previous_tags"], "tags": tags,
+            "before_music": (previous.metadata_json or {}).get("music"), "music": music}))
+    return revision
 
 
 def approved_revision_ids(db: Session) -> set[int]:

@@ -44,6 +44,7 @@ class CreativeProfile(BaseModel):
     model_chain: list[dict[str, str]] = Field(default_factory=list, max_length=8)
     capability_memory_revision_ids: list[int] = Field(default_factory=list, max_length=8)
     installed_skill_refs: list[str] = Field(default_factory=list, max_length=8)
+    production_stages: dict[str, Any] = Field(default_factory=dict, max_length=10)
     parameters: dict[str, Any] = Field(default_factory=dict, max_length=32)
     stage_instruction: str | None = Field(default=None, max_length=4000)
     provenance: dict[str, Any] = Field(default_factory=dict, max_length=8)
@@ -335,6 +336,13 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
     current_no = previous.revision_no if previous else 0
     if expected_revision != current_no:
         raise HTTPException(409, "身份版本已更新，请刷新后重试")
+    expression = data.get("expression_style")
+    if isinstance(expression, dict) and "reference_style" in expression:
+        from .capability_memory import freeze_reference_style
+
+        if kind != "persona":
+            raise HTTPException(422, "reference_style_persona_required")
+        expression["reference_style"] = freeze_reference_style(db, user, entity_id, expression["reference_style"])
     _, revision_model, foreign_key = REVISION_MODELS[kind]
     row = revision_model(**{foreign_key: entity_id}, revision_no=current_no + 1, profile_json=data, checksum=checksum(data), created_by=user.email)
     db.add(row)

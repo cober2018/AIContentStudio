@@ -3,13 +3,14 @@ import { api, ApiError } from "../api";
 import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
 import { capabilityApi, type CapabilityArtifact, type InstalledSkill } from "./capabilityMemoryTypes";
 import { TypedStageField } from "./StageContractControls";
+import ProductionStageControls from "./ProductionStageControls";
 import VoicePresetPicker, { type VoicePresetOption } from "./VoicePresetPicker";
 
 type Kind = "brand" | "persona" | "account" | "series";
 type Entity = { kind: Kind; id: number; name: string; status: string; current_revision: number };
 type Revision = { revision_no: number; profile: Record<string, any> };
 type Effective = { effective_profile: Record<string, any>; creative_profile_origins?: Record<string, string>; revision_ids?: Record<string, number | null> };
-type Catalog = { skills: any[]; style_presets: any[]; quality_profiles: any[]; starter_personas: any[] };
+type Catalog = { production_stages?: { id: string; title: string; order: number; modalities: string[] }[]; skills: any[]; style_presets: any[]; quality_profiles: any[]; starter_personas: any[] };
 type VoicePreset = VoicePresetOption;
 type Modality = "text" | "graphic" | "audio" | "video";
 type Mode = "inherit" | "override" | "clear";
@@ -117,7 +118,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
       .filter(key => JSON.stringify(profileBefore?.[key]) !== JSON.stringify(profileAfter?.[key]));
   const matchingMethods = methods.filter(item => ["prompt_skill", "recipe"].includes(item.kind)
     && ["saved", "pinned"].includes(item.status)
-    && ((item.scope_type === "persona" && item.scope.id === persona?.id)
+    && (item.scope_type === "owner" || (item.scope_type === "persona" && item.scope.id === persona?.id)
       || (item.scope_type === "account" && item.scope.id === accountId)
       || (item.scope_type === "series" && item.scope.id === seriesId)));
 
@@ -286,6 +287,10 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
               {(draft.profile.installed_skill_refs || []).map((id: string) => <div key={id} className="flex gap-2 text-xs"><span className="flex-1">外部 Skill：{id} · 库存不代表 Stage 可执行</span><Button variant="ghost" size="sm" disabled={readonly} onClick={() => updateProfile("installed_skill_refs", draft.profile.installed_skill_refs.filter((value: string) => value !== id))}>移除</Button></div>)}
               {methodsLoaded && installed.length > 0 && <Field label="外部 Installed Skill（当前无已验证 Stage 绑定）"><select className={inputClass} value="" disabled><option value="">不可执行，不能代替内置方法</option>{installed.map(item => <option key={item.id} value={item.id}>{item.name} · {item.id}</option>)}</select></Field>}
             </div>}
+            <section className="space-y-3 rounded-lg border p-3"><h4 className="text-sm font-medium">阶段方法与独立开关</h4>
+              <Button variant="secondary" disabled={methodsBusy} onClick={loadMethods}>{methodsBusy ? "读取中…" : "读取可选方法库存"}</Button>
+              <ProductionStageControls catalog={catalog} methods={matchingMethods} value={draft.profile.production_stages} disabled={readonly} origin={current.kind} onChange={value => updateProfile("production_stages", value)} />
+            </section>
             <Field label="本级阶段说明"><textarea disabled={readonly} className={`${inputClass} min-h-20`} value={draft.profile.stage_instruction || ""} onChange={(e) => updateProfile("stage_instruction", e.target.value || null)} placeholder="只影响本级创作配置的说明" /></Field>
           </>}
         </div>
@@ -296,6 +301,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
             <p className="mt-1 text-xs text-slate-500">当前身份修订 v{current.current_revision}；下方草稿和预览不会改写此摘要。</p>
             {effectiveCreative ? <div className="mt-3 space-y-2 break-all text-xs text-slate-600">
               <p>模式：{effectiveCreative.mode || "未设置"}</p>
+              {effectiveCreative.production_stages && <ProductionStageControls catalog={catalog} methods={matchingMethods} value={effectiveCreative.production_stages} disabled origin={effectiveOrigin || "未设置"} onChange={() => {}} />}
               <p>Studio Skill：{effectiveCreative.skill_ref || "未设置"}</p>
               <p>Style Preset：{effectiveCreative.style_preset_ref || "未设置"}</p>
               <p>Quality Profile：{effectiveCreative.quality_profile_ref || "未设置"}</p>

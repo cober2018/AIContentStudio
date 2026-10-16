@@ -1,0 +1,36 @@
+{
+  "api_readiness": {
+    "status": "ok",
+    "ready": true,
+    "schema": true,
+    "storage": true,
+    "worker": true
+  },
+  "web_build": {
+    "exit_code": 0,
+    "log": "/tmp/aics-persona-live-web-20261016.log",
+    "checks": [
+      "tsc",
+      "vite",
+      "FE-P1"
+    ]
+  },
+  "backend": {
+    "result": "521 passed, 66 warnings in 24.24s",
+    "log": "/tmp/aics-persona-live-backend-20261016.log",
+    "scope": "same nine focused existing suites as pure candidate, sqlite fixtures"
+  },
+  "scope": "running original workspace including retained adjacent changes; no browser clicks",
+  "new_tests_added": false,
+  "post_integration": {
+    "adjacent_paths_checked": 136,
+    "changed_paths": [],
+    "worker_ping": "1 node online pong",
+    "api_ready": true,
+    "pure_candidate_final_result": "521 passed, 66 warnings in 25.19s",
+    "adapter_existing_regression": "268 passed, 2 warnings in 13.39s",
+    "review": "independent Python and final code reviewer APPROVE",
+    "local_main_commit_completed": true,
+    "push": false
+  }
+}

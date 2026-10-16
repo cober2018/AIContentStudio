@@ -1,0 +1,80 @@
+{
+  "sample_rate": 48000,
+  "channels": 2,
+  "layout": "native interleaved stereo, no downmix",
+  "final": {
+    "peak": 0.7995620965957642,
+    "rms": 0.06636298176040394,
+    "full_scale_samples": 0
+  },
+  "no_bgm": {
+    "peak": 0.7964391112327576,
+    "rms": 0.06620229790291034,
+    "full_scale_samples": 0
+  },
+  "difference": {
+    "peak": 0.06499815950519405,
+    "rms": 0.004771289665627038,
+    "full_scale_samples": 0
+  },
+  "windows": {
+    "early": {
+      "final": {
+        "peak": 0.742608904838562,
+        "rms": 0.08833065436486874,
+        "full_scale_samples": 0
+      },
+      "no_bgm": {
+        "peak": 0.7416105270385742,
+        "rms": 0.08825489798920469,
+        "full_scale_samples": 0
+      },
+      "difference": {
+        "peak": 0.022103741765022278,
+        "rms": 0.004326945092590643,
+        "full_scale_samples": 0
+      }
+    },
+    "tail_speech": {
+      "final": {
+        "peak": 0.4299561083316803,
+        "rms": 0.053367836485247164,
+        "full_scale_samples": 0
+      },
+      "no_bgm": {
+        "peak": 0.4266119599342346,
+        "rms": 0.052105704873136184,
+        "full_scale_samples": 0
+      },
+      "difference": {
+        "peak": 0.06499815950519405,
+        "rms": 0.01205965176951543,
+        "full_scale_samples": 0
+      }
+    },
+    "tail_only": {
+      "final": {
+        "peak": 0.056570861488580704,
+        "rms": 0.010637917231115747,
+        "full_scale_samples": 0
+      },
+      "no_bgm": {
+        "peak": 5.486695218168483e-14,
+        "rms": 1.7563737828447905e-15,
+        "full_scale_samples": 0
+      },
+      "difference": {
+        "peak": 0.056570861488580704,
+        "rms": 0.010637917231115733,
+        "full_scale_samples": 0
+      }
+    }
+  },
+  "direct_listening": false,
+  "note": "Decoded native AAC exports; subtraction includes AAC coding differences and is not a lossless music stem. AAC container audio has padding; actual video is exactly 47 seconds. Initial no_bgm_validation did not mute music and is excluded.",
+  "tail_speech_difference_below_narration_db": -12.711010157173776,
+  "sha256": {
+    "final.mp4": "4cd00a8b572863181fd21a25f71c09d426b20398867bdb138bfead22e705b4a7",
+    "no_bgm_verified.mp4": "5e099400039cca7852222c0ff89ec7ce853e2627d41119611f36b17a52d1aef2"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "schema": "aics.native-adapter-evidence.v1",
+  "status": "technical_probe_only",
+  "narration": false,
+  "creative_quality_accepted": false,
+  "files": [
+    {
+      "name": "native-adapter-probes.aep",
+      "path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-probes.aep",
+      "sha256": "c3c0afa4864e38a3cdd5373af2f6c63b985e4b889cb9673bfe96a63d81255031",
+      "bytes": 815393
+    },
+    {
+      "name": "native-adapter-probes.jsx",
+      "path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-probes.jsx",
+      "sha256": "6fbbce8e45c66cf3a34dc3a732c9c99b898097159448f87e853d815055497f97",
+      "bytes": 3462
+    },
+    {
+      "name": "native-adapter-comparison.drp",
+      "path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-comparison.drp",
+      "sha256": "cbf8ef12ad506c6a4455a29bbdb7f2485cf8b5952ac5bb11a8953a977163c6a6",
+      "bytes": 85357
+    },
+    {
+      "name": "native-adapter-comparison.mp4",
+      "path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/native-adapter-comparison.mp4",
+      "sha256": "cb287f5b08ad4b13aa4c118568093b7f83ee2e930f9dce6725890238cd463b21",
+      "bytes": 1543263,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1280,
+            "height": 720,
+            "r_frame_rate": "24/1",
+            "duration": "12.000000"
+          },
+          {
+            "codec_type": "data",
+            "r_frame_rate": "0/0",
+            "duration": "12.000000"
+          }
+        ],
+        "format": {
+          "duration": "12.000000"
+        }
+      }
+    },
+    {
+      "name": "aics.screen-emphasis.v2.mp4",
+      "path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/aics.screen-emphasis.v2.mp4",
+      "sha256": "c266d32538d1530c906c1b99f00048801749964ef166c46787a14edc1507da95",
+      "bytes": 1011606,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1280,
+            "height": 720,
+            "r_frame_rate": "24/1",
+            "duration": "4.000000"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      }
+    },
+    {
+      "name": "aics.layered-relationship.v1.mp4",
+      "path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/aics.layered-relationship.v1.mp4",
+      "sha256": "7c819b32aa888ecedef0ec56b605dff5db95e2bde201273cc578fd9093918ff4",
+      "bytes": 291496,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1280,
+            "height": 720,
+            "r_frame_rate": "24/1",
+            "duration": "4.000000"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      }
+    },
+    {
+      "name": "aics.title-number-reveal.v1.mp4",
+      "path": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/aics.title-number-reveal.v1.mp4",
+      "sha256": "1b40b1d792b57542089442ff7b20051380fd327484e1b019852a2f1827e20ee4",
+      "bytes": 365180,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1280,
+            "height": 720,
+            "r_frame_rate": "24/1",
+            "duration": "4.000000"
+          }
+        ],
+        "format": {
+          "duration": "4.000000"
+        }
+      }
+    }
+  ]
+}

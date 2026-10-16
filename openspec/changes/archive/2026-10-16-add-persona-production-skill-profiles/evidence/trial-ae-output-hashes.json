@@ -1,0 +1,22 @@
+{
+  "trial.aep": {
+    "sha256": "a285392fe99fd91cc5e100d312a725878475fbcac565dcf5523663683882c769",
+    "size_bytes": 3282850
+  },
+  "subtitles.srt": {
+    "sha256": "8642018f567f99d736d4ec56a0bb93e4cea133bfd7b81491edd9f1daeda27bfc",
+    "size_bytes": 1356
+  },
+  "ae_intermediate_1.mp4": {
+    "sha256": "de142dde69f2b57dde99d81930a5f7cabde8b1656e78a64e2ca9586cc841a882",
+    "size_bytes": 764619
+  },
+  "ae_intermediate_3.mp4": {
+    "sha256": "76111e16becbdd9a0efbda18bcb79493a8fc5be2cf126a605234ff792a19e274",
+    "size_bytes": 1559714
+  },
+  "ae_intermediate_2.mp4": {
+    "sha256": "447c442e2050855e635deca309f8dad01e8b8709a701157eebae3780617034d6",
+    "size_bytes": 1293816
+  }
+}

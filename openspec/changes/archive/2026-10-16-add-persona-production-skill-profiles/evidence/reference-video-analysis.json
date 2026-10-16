@@ -1,0 +1,22 @@
+{
+  "schema": "persona.reference-video-analysis.v1",
+  "source_file": "/Users/mshengran/Downloads/v0200fg10000db7cfanog65qujvnaha0.MP4",
+  "source_sha256": "997c21772904eb7100c104288c8e9045a3f341072896437976a804493bb19330",
+  "duration_seconds": 254.07275,
+  "method": "local contact-sheet observation plus MiniMax ASR word timestamps; Hypit runtime not installed",
+  "asr_model": "asr-1.0",
+  "asr_timestamp_provenance": "provider ASR alignment estimates; not TTS engine timing or human verified transcript",
+  "word_segments": 1767,
+  "time_bounds_valid": true,
+  "asr_sha256": "8c923fedf452f2f4dbc9ed71251d33e93580c48190f5cadab187a76bdc101141",
+  "asr_file": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/reference-analysis/words.json",
+  "frames_file": "/Users/mshengran/DaVinci Resolve Media/AICS-Persona-Skills-20261016/reference-analysis/contact.jpg",
+  "direct_audio_listening": false,
+  "voice_identity_transferred": false,
+  "limitations": [
+    "Ten-second frame sampling does not establish exact edit points",
+    "ASR may mistranscribe proper nouns and numbers",
+    "Background music and mix style were not auditioned",
+    "No perfect-replication claim"
+  ]
+}

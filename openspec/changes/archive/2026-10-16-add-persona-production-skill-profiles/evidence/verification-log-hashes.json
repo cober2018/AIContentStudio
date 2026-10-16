@@ -1,0 +1,18 @@
+{
+  "pure-backend.log": {
+    "sha256": "191c7d3d3f48d5a5df9c8e6b3a430b05c96ee8967d51616b61ff62676d2f3890",
+    "size_bytes": 1542
+  },
+  "pure-web.log": {
+    "sha256": "5223ef5fa95edc1d63f7624e600d293d8f11e5f15a5ffe32cabf5e7af6c01bc8",
+    "size_bytes": 8202
+  },
+  "live-backend.log": {
+    "sha256": "a913120007a806d1dd1131ecc161479b7267d6c1db17b24c21677fb449cb6a42",
+    "size_bytes": 1524
+  },
+  "live-web.log": {
+    "sha256": "c4586defe0e94a823d962c33aeb393810eb37515de2fb4b8248e61bbb2c769f1",
+    "size_bytes": 8362
+  }
+}
