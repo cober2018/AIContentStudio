@@ -206,13 +206,19 @@ def recipe_view(db, project_id, unit_id, user, *, run_id=None):
         accepted = accepted_stage_target(db, run, node_id) if run else None
         outputs = db.scalars(select(ProjectWorkflowOutput).where(ProjectWorkflowOutput.run_id == run.id,
             ProjectWorkflowOutput.node_id == node_id).order_by(ProjectWorkflowOutput.id.desc()).limit(10)).all() if run else []
+        product_stale = False
+        if attempt:
+            committed = current_brief(db, project.id)
+            frozen_brief = ((attempt.input_snapshot_json or {}).get("resolved_stage", {}).get("context", {}).get("brief") or {})
+            product_stale = bool(committed and committed.product_context_json and frozen_brief
+                                 and frozen_brief.get("checksum") != committed.checksum)
         stages.append({
             "node_id": node_id, "kind": node.get("kind", node.get("type")),
             "plugin": node.get("plugin"), "plugin_version": str(node.get("plugin_version") or "1"),
             "base_config": descriptor.stage_contract.validate_config(node.get("config", {})) if contract else None,
             "label": canonical(node.get("label") or (contract or {}).get("title") or node_id),
             "mode": "stage" if contract else "advanced_legacy", "controls": contract,
-            "status": step.status if step else "not_started", "requires_human_acceptance":
+            "status": "stale" if product_stale else step.status if step else "not_started", "requires_human_acceptance":
                 contract["requires_human_acceptance"] if contract else None,
             "readiness": "readonly" if readonly else "preview_required" if contract else "advanced_legacy",
             "dependencies": [edge["from"] for edge in workflow.definition_json.get("edges", []) if edge["to"] == node_id],
@@ -220,7 +226,7 @@ def recipe_view(db, project_id, unit_id, user, *, run_id=None):
                 "input_hash": attempt.input_hash, "output_hash": attempt.output_hash} if attempt else None,
             "accepted_target": accepted, "associated_outputs": [{"id": item.id, "kind": item.output_kind,
                 "entity_id": item.entity_id, "attempt_id": item.attempt_id} for item in outputs],
-            "blockers": (["historical_or_archived"] if readonly else []) + ([step.error] if step and step.error else []),
+            "blockers": (["historical_or_archived"] if readonly else []) + (["product_inputs_changed"] if product_stale else []) + ([step.error] if step and step.error else []),
             "local_dirty": None,
         })
     history = db.scalars(select(Workflow).where(Workflow.workflow_key == workflow.workflow_key,
@@ -472,6 +478,16 @@ def _context(db, project, unit, run):
     if identity and identity.owner_user_id != project.owner_user_id:
         raise HTTPException(409, {"code": "stage_identity_integrity"})
     brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+    if brief and brief.product_context_json:
+        from ..models import MaterialRevision
+        from .project_brief import validate_product_context
+
+        try:
+            product = validate_product_context(db, brief.product_context_json)
+            if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                blockers.append("product_material_model_use_required")
+        except (HTTPException, ValueError):
+            blockers.append("product_evidence_unavailable")
     master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
         .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     context = {
@@ -613,6 +629,15 @@ def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_
     from .creative_configuration import frozen_stage
     node, creative_method, creative, creative_blockers = frozen_stage(
         db, user, unit, node, contract, context, stage_override)
+    if context.get("identity") and isinstance(context["identity"].get("content"), dict):
+        identity_content = context["identity"]["content"]
+        manifests = identity_content.get("product_production_methods")
+        if manifests is not None:
+            # The snapshot retains every stage; this execution carries its selected stage and source hashes.
+            context["identity"] = {**context["identity"], "content": {
+                **{key: value for key, value in identity_content.items() if key not in {"product_production_methods", "product_production_stages"}},
+                "product_production_manifest_refs": {key: value["manifest_hash"] for key, value in manifests.items()},
+            }}
     _, config, _ = contract.effective_config(node.get("config", {}), stage_override)
     if node.get("enabled") is False:
         blockers.append("stage_disabled")

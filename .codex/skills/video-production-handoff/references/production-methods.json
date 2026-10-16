@@ -531,6 +531,499 @@
         "required": [],
         "additionalProperties": false
       }
+    },
+    {
+      "key": "product-truth-brief",
+      "kind": "prompt_skill",
+      "name": "商品：事实底稿",
+      "content": {
+        "adaptation_version": "aics-product-native-v2",
+        "stage": "research",
+        "execution_targets": [
+          "ai_planning",
+          "external_executor"
+        ],
+        "tags": [
+          "product-production",
+          "research",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "HiAPIAI/awesome-ai-video-workflows",
+            "commit": "ad5deeef59029a24db393f10ca44fcf8371a5f2b",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "d3a4877d5400042ead3db335015413d112af0d271e06293cf35c93db113dc206"
+              },
+              {
+                "name": "workflows/01-product-image-audit.md",
+                "sha256": "9f0dd1678e2d3fc4ce1e56fd9c967275049aeb695901d03cde73ec0d6f837303"
+              },
+              {
+                "name": "workflows/02-product-image-to-hero-visual.md",
+                "sha256": "1d4f2cab2b3d29a636f451404dc647fd0f56d121bcf3d091a34f8fb93413f606"
+              },
+              {
+                "name": "workflows/03-hero-visual-to-product-video.md",
+                "sha256": "6b38b5faadc39fd2a5585aef455deab1bca369434abe11c68ac86a4be5e362b4"
+              }
+            ]
+          },
+          {
+            "repository": "Longxiaohao/AIvideo",
+            "commit": "d64e14582ac549ca96dd0fd39b8554571f63478b",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/facebook-diy-video-workflow/SKILL.md",
+                "sha256": "ea8bb7ce8ed417b093e2001f17e7ad903aa849baa9a2a57b7a36b6a57b6099e3"
+              },
+              {
+                "name": "skills/facebook-diy-video-workflow/references/complex-product-generation-risks.md",
+                "sha256": "eeab27e81243e2535047593d4e5e0290755d9e6b51f85ba784cc92b138299c55"
+              }
+            ]
+          }
+        ],
+        "method_card": "product-methods/product-truth-brief.md",
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
+        "text": "先从本次冻结任务书和授权资料确定商品名称、SKU/颜色/尺寸、受众、目标、已有照片与来源。将用户提供、来源证明、未知分开；卖点不是自动确认事实。保留来源版本与素材hash。逐项列出能展示的事实、可解释的价值和缺口，不把生成画面当功能证据。只在本次作品需要时整理价格/条件/时间；缺促销不阻断普通介绍。输出给当前Recipe需要的证据/选题格式，不自行换输出schema。",
+        "method_card_text": "# 商品：事实底稿\n\n版本：aics-product-native-v1。适用阶段：research；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n先从本次冻结任务书和授权资料确定商品名称、SKU/颜色/尺寸、受众、目标、已有照片与来源。将用户提供、来源证明、未知分开；卖点不是自动确认事实。保留来源版本与素材hash。逐项列出能展示的事实、可解释的价值和缺口，不把生成画面当功能证据。只在本次作品需要时整理价格/条件/时间；缺促销不阻断普通介绍。输出给当前Recipe需要的证据/选题格式，不自行换输出schema。\n\n## 操作与判断\n\n1. 对照SKU分开列资料，不混其他型号的价格/功能。2. 一镜要展示的结构/功能对应真实来源。3. 未知和冲突留在任务缺口，不凭视觉常识补齐。4. 检查检查时间/优惠时效只用于本次作品，不自动联网抓报价。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "04766f948ad1df6dc7d77c6b803a3b2fbe5f502bee094ff4ebb003e755c19ab7"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "product-sales-story",
+      "kind": "prompt_skill",
+      "name": "商品：带货叙事",
+      "content": {
+        "adaptation_version": "aics-product-native-v2",
+        "stage": "script",
+        "execution_targets": [
+          "ai_planning",
+          "external_executor"
+        ],
+        "tags": [
+          "product-production",
+          "script",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "Longxiaohao/AIvideo",
+            "commit": "d64e14582ac549ca96dd0fd39b8554571f63478b",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/facebook-diy-video-workflow/SKILL.md",
+                "sha256": "ea8bb7ce8ed417b093e2001f17e7ad903aa849baa9a2a57b7a36b6a57b6099e3"
+              },
+              {
+                "name": "skills/facebook-diy-video-workflow/references/complex-product-generation-risks.md",
+                "sha256": "eeab27e81243e2535047593d4e5e0290755d9e6b51f85ba784cc92b138299c55"
+              }
+            ]
+          },
+          {
+            "repository": "chandreshpv/remotion-product-videos-claude-skill",
+            "commit": "ef2fbcfedf182e526d3bca8ea778c517cdc37fad",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "49924c76bbc83c07580401d9cad0f9b01a2873b7bd0b8519e6e338310c36e83f"
+              },
+              {
+                "name": "VIDEO_SOP.md",
+                "sha256": "29b159a0cbb3ed48e3523a78343ac60b41b2d0e285332927e6fd28602846f6c6"
+              }
+            ]
+          },
+          {
+            "repository": "HiAPIAI/awesome-ai-video-workflows",
+            "commit": "ad5deeef59029a24db393f10ca44fcf8371a5f2b",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "d3a4877d5400042ead3db335015413d112af0d271e06293cf35c93db113dc206"
+              },
+              {
+                "name": "workflows/01-product-image-audit.md",
+                "sha256": "9f0dd1678e2d3fc4ce1e56fd9c967275049aeb695901d03cde73ec0d6f837303"
+              },
+              {
+                "name": "workflows/02-product-image-to-hero-visual.md",
+                "sha256": "1d4f2cab2b3d29a636f451404dc647fd0f56d121bcf3d091a34f8fb93413f606"
+              },
+              {
+                "name": "workflows/03-hero-visual-to-product-video.md",
+                "sha256": "6b38b5faadc39fd2a5585aef455deab1bca369434abe11c68ac86a4be5e362b4"
+              }
+            ]
+          }
+        ],
+        "method_card": "product-methods/product-sales-story.md",
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
+        "text": "保持冻结角色语气和任务受众，选一个真实问题或结果开场，然后演示有证据的商品特点、解释适用边界，以本次CTA结束。每句承重说法对应来源或明确用户资料。避免继承上游作者身份、固定Facebook受众、虚构使用体验/评价/销量/库存。先口播可懂再设计画面，不强制爆款钩子、英语词数、镜头数。输出逐镜表达目的、口播、可支持的画面证据和阅读时长；原生字幕待真实配音对齐。",
+        "method_card_text": "# 商品：带货叙事\n\n版本：aics-product-native-v1。适用阶段：script；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n保持冻结角色语气和任务受众，选一个真实问题或结果开场，然后演示有证据的商品特点、解释适用边界，以本次CTA结束。每句承重说法对应来源或明确用户资料。避免继承上游作者身份、固定Facebook受众、虚构使用体验/评价/销量/库存。先口播可懂再设计画面，不强制爆款钩子、英语词数、镜头数。输出逐镜表达目的、口播、可支持的画面证据和阅读时长；原生字幕待真实配音对齐。\n\n## 操作与判断\n\n1. 按真实证据选一个受众问题。2. 商品价值用具体场景解释，避免空泛夸赞。3. 逐镜写口播与画面承担的信息。4. 录制后以实际时长调整画面，不机械剪到固定镜头数。5. 配乐有无人声/许可/强度由场景决定，无音乐也是有效选择。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "f50ab7a927ee0970770775ca3a18679cba4c5c12e353f110c74dc455af09d04c"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "product-visual-consistency",
+      "kind": "prompt_skill",
+      "name": "商品：视觉与一致性",
+      "content": {
+        "adaptation_version": "aics-product-native-v2",
+        "stage": "storyboard",
+        "execution_targets": [
+          "ai_planning",
+          "external_executor"
+        ],
+        "tags": [
+          "product-production",
+          "storyboard",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "motiful/product-shots",
+            "commit": "063c508b0b7f4db5cda89f10bdf20df25026dfc5",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/product-shots/SKILL.md",
+                "sha256": "f75b52195100c49eeb4e23525bcc63aab504fdb634053c0133ac375e2ae143d9"
+              },
+              {
+                "name": "skills/product-shots/references/hard-constraints.md",
+                "sha256": "546a8cca7eddb937d797ee3ec9164ad4ae25eeea88fce46013ea5eadefd6598f"
+              },
+              {
+                "name": "skills/product-shots-image-gen/SKILL.md",
+                "sha256": "31038b6c806545343c152d577890a9db32e29654c7edd2c691cf9135223f37d0"
+              },
+              {
+                "name": "skills/product-shots-image-gen/references/reference-image-handling.md",
+                "sha256": "cc9321bb79fa87464df59159bfaef3ef332e216753f11d45c817dd3df2c7ef3a"
+              },
+              {
+                "name": "skills/product-shots-main-image/SKILL.md",
+                "sha256": "77536ea78d9b2eb22ff39af0a557951636c627f6ae77282cbde3d34aeb00127f"
+              },
+              {
+                "name": "skills/product-shots-main-image/references/consistency-rules.md",
+                "sha256": "a49df1905dfde91e198ea44a2ba87cf1fcb1752b53d4af79fc4859970088ff98"
+              },
+              {
+                "name": "skills/product-shots-multi-angle/SKILL.md",
+                "sha256": "58e920029774ee0fbb3283dbf54b5329e1b3c7c3da7a16c4f4fe05d1d839cbd3"
+              }
+            ]
+          },
+          {
+            "repository": "HiAPIAI/awesome-ai-video-workflows",
+            "commit": "ad5deeef59029a24db393f10ca44fcf8371a5f2b",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "d3a4877d5400042ead3db335015413d112af0d271e06293cf35c93db113dc206"
+              },
+              {
+                "name": "workflows/01-product-image-audit.md",
+                "sha256": "9f0dd1678e2d3fc4ce1e56fd9c967275049aeb695901d03cde73ec0d6f837303"
+              },
+              {
+                "name": "workflows/02-product-image-to-hero-visual.md",
+                "sha256": "1d4f2cab2b3d29a636f451404dc647fd0f56d121bcf3d091a34f8fb93413f606"
+              },
+              {
+                "name": "workflows/03-hero-visual-to-product-video.md",
+                "sha256": "6b38b5faadc39fd2a5585aef455deab1bca369434abe11c68ac86a4be5e362b4"
+              }
+            ]
+          }
+        ],
+        "method_card": "product-methods/product-visual-consistency.md",
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
+        "text": "最初真实商品图是身份基准，生成主视觉仅作次级风格参考。记录已知颜色/结构/Logo/按钮数量/比例与未知视角。先核对实际图像通道支持参考图；必须传真实授权图像才可称参考生成，提示词提到图片不算。当前通道不支持时选原图/实拍或保留商品主体像素的AE合成，不静默用文生图替换商品。每张候选和动态镜头都对照基准检查；单图不保证真实背面或360度。服装多角度仅服装使用；平台白底规则只按实际渠道需要。输出主视觉描述、身份锚点、候选差异和检查结论；不向确定性compose节点注入此prompt作为配置。",
+        "method_card_text": "# 商品：视觉与一致性\n\n版本：aics-product-native-v1。适用阶段：storyboard；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n最初真实商品图是身份基准，生成主视觉仅作次级风格参考。记录已知颜色/结构/Logo/按钮数量/比例与未知视角。先核对实际图像通道支持参考图；必须传真实授权图像才可称参考生成，提示词提到图片不算。当前通道不支持时选原图/实拍或保留商品主体像素的AE合成，不静默用文生图替换商品。每张候选和动态镜头都对照基准检查；单图不保证真实背面或360度。服装多角度仅服装使用；平台白底规则只按实际渠道需要。输出主视觉描述、身份锚点、候选差异和检查结论；不向确定性compose节点注入此prompt作为配置。\n\n## 操作与判断\n\n1. 原图列出可观察锚点，背面/内部列未知。2. 每次生成输入同时保留原始基准，不只传上一张生成图。3. 比对Logo、文字、按钮/孔数、附件、手接触点、颜色、比例。4. 原图分辨率按实际输出和端点合同处理；不能继承统一1024px压缩。5. 环境/背景可生成，不能改变商品主体后宣称真实。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "be2e986c87b7987ef8bdd578c2bfac29a124081d98300ed3c9521226cf1e4520"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "product-shot-routing",
+      "kind": "prompt_skill",
+      "name": "商品：素材与镜头路由",
+      "content": {
+        "adaptation_version": "aics-product-native-v2",
+        "stage": "storyboard",
+        "execution_targets": [
+          "ai_planning",
+          "external_executor"
+        ],
+        "tags": [
+          "product-production",
+          "storyboard",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "Longxiaohao/AIvideo",
+            "commit": "d64e14582ac549ca96dd0fd39b8554571f63478b",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/facebook-diy-video-workflow/SKILL.md",
+                "sha256": "ea8bb7ce8ed417b093e2001f17e7ad903aa849baa9a2a57b7a36b6a57b6099e3"
+              },
+              {
+                "name": "skills/facebook-diy-video-workflow/references/complex-product-generation-risks.md",
+                "sha256": "eeab27e81243e2535047593d4e5e0290755d9e6b51f85ba784cc92b138299c55"
+              }
+            ]
+          },
+          {
+            "repository": "HiAPIAI/awesome-ai-video-workflows",
+            "commit": "ad5deeef59029a24db393f10ca44fcf8371a5f2b",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "d3a4877d5400042ead3db335015413d112af0d271e06293cf35c93db113dc206"
+              },
+              {
+                "name": "workflows/01-product-image-audit.md",
+                "sha256": "9f0dd1678e2d3fc4ce1e56fd9c967275049aeb695901d03cde73ec0d6f837303"
+              },
+              {
+                "name": "workflows/02-product-image-to-hero-visual.md",
+                "sha256": "1d4f2cab2b3d29a636f451404dc647fd0f56d121bcf3d091a34f8fb93413f606"
+              },
+              {
+                "name": "workflows/03-hero-visual-to-product-video.md",
+                "sha256": "6b38b5faadc39fd2a5585aef455deab1bca369434abe11c68ac86a4be5e362b4"
+              }
+            ]
+          },
+          {
+            "repository": "Vincentwei1021/video-shotcraft",
+            "commit": "13c74a707786872a18e3317e48c5c94011027620",
+            "license": "Apache-2.0",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "a94f87f093d07c96ddf3245d442acece7ceb6c544035855c63e26a216a068820"
+              },
+              {
+                "name": "references/pipeline.md",
+                "sha256": "1d0236da0cc0cf251543d34ddffd292362e31db1b87250d593c66588444bfe35"
+              },
+              {
+                "name": "references/shots/effects/scanline-annotate-focus.md",
+                "sha256": "63526d1e29812533d5f7a86a4c7ebbf99cd44c2a73bc16f7751c2f88a3b991ce"
+              },
+              {
+                "name": "references/shots/effects/spotlight-sweep-moves.md",
+                "sha256": "35b5a5bde17662af0e303315c5a34f9d79bce89b4779e0c74f0452a80c99af94"
+              }
+            ]
+          }
+        ],
+        "method_card": "product-methods/product-shot-routing.md",
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
+        "text": "每镜明确目的、事实依据、source mode和所需输入：真实动作/结构/效果用实拍；氛围运动可用已确认图片的人工图生视频；解释/标注用AE原生平面动效。实拍清单给景别、角度、光线、动作、时长与必要补拍；不把复杂装配交给生成模型证明。图片先由用户确认精确版本，再写匹配该图的运动/镜头提示词，人工网页生成回传。未知背面改正面二维运动或请补真实角度；不能用Y轴旋转伪装背面。保留source duration与edit use duration区别，回传检查结构漂移再接受。",
+        "method_card_text": "# 商品：素材与镜头路由\n\n版本：aics-product-native-v1。适用阶段：storyboard；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n每镜明确目的、事实依据、source mode和所需输入：真实动作/结构/效果用实拍；氛围运动可用已确认图片的人工图生视频；解释/标注用AE原生平面动效。实拍清单给景别、角度、光线、动作、时长与必要补拍；不把复杂装配交给生成模型证明。图片先由用户确认精确版本，再写匹配该图的运动/镜头提示词，人工网页生成回传。未知背面改正面二维运动或请补真实角度；不能用Y轴旋转伪装背面。保留source duration与edit use duration区别，回传检查结构漂移再接受。\n\n## 操作与判断\n\n1. 记录shot ID、目的、素材路径、source/use duration、声音保留意图。2. 实拍选手机固定机位、整品/细节/动作所需角度，具体光线按反光材质调整。3. 只有正面图时给正面运动方案，不生成假背面。4. 高风险线缆、装配或接触改真实镜头/静图说明。5. 图片或提示词变化后沿用现有失效重审机制，不重盖确认戳。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "3fd12cd3085fb74e17a279dc1240f6b49ed2f12e1b10b4befb9420589f2eca45"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "product-demo-motion",
+      "kind": "prompt_skill",
+      "name": "商品：原生展示动效",
+      "content": {
+        "adaptation_version": "aics-product-native-v2",
+        "stage": "packaging",
+        "execution_targets": [
+          "external_executor"
+        ],
+        "tags": [
+          "product-production",
+          "packaging",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "Vincentwei1021/video-shotcraft",
+            "commit": "13c74a707786872a18e3317e48c5c94011027620",
+            "license": "Apache-2.0",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "a94f87f093d07c96ddf3245d442acece7ceb6c544035855c63e26a216a068820"
+              },
+              {
+                "name": "references/pipeline.md",
+                "sha256": "1d0236da0cc0cf251543d34ddffd292362e31db1b87250d593c66588444bfe35"
+              },
+              {
+                "name": "references/shots/effects/scanline-annotate-focus.md",
+                "sha256": "63526d1e29812533d5f7a86a4c7ebbf99cd44c2a73bc16f7751c2f88a3b991ce"
+              },
+              {
+                "name": "references/shots/effects/spotlight-sweep-moves.md",
+                "sha256": "35b5a5bde17662af0e303315c5a34f9d79bce89b4779e0c74f0452a80c99af94"
+              }
+            ]
+          },
+          {
+            "repository": "chandreshpv/remotion-product-videos-claude-skill",
+            "commit": "ef2fbcfedf182e526d3bca8ea778c517cdc37fad",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "49924c76bbc83c07580401d9cad0f9b01a2873b7bd0b8519e6e338310c36e83f"
+              },
+              {
+                "name": "VIDEO_SOP.md",
+                "sha256": "29b159a0cbb3ed48e3523a78343ac60b41b2d0e285332927e6fd28602846f6c6"
+              }
+            ]
+          },
+          {
+            "repository": "iart-ai/ecommerce-video-skills",
+            "commit": "2bd0dd19c9b2df5230f5d8f7453861b9681e49b4",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/photo-slideshow/SKILL.md",
+                "sha256": "cb234b7c2882840213787a223217527814cfceaf47a17aff37055a4989eae942"
+              },
+              {
+                "name": "skills/product-demo-video/SKILL.md",
+                "sha256": "094889976b6d8dffe476c0d93592afb2ef2d8881b6db30391f3268d1dd4769f2"
+              },
+              {
+                "name": "skills/promo-video/SKILL.md",
+                "sha256": "c2836cc83ac7edb933185e27cace9f4d871c8a548a439bb06228a52a1d829687"
+              },
+              {
+                "name": "skills/promo-video/references/promo-components.md",
+                "sha256": "02190b96ebf47e0cae43799b3a1c86f68abc27bcf7a76d9ffae873f3f8b053d0"
+              }
+            ]
+          }
+        ],
+        "method_card": "product-methods/product-demo-motion.md",
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
+        "text": "按本次Director的每镜分辨率/fps/时长/alpha制作AE可编辑合成。实物默认真实商品图层、局部焦点、材质细节与用途标注；只有软件且有真实状态截图才做光标点击/界面过渡，不能冒充实测交互。二维平移/缩放/分层视差不是3D转台。源图保持比例与可读标识；留完整定格阅读区间。关键帧按动作目的用线性或缓动，不照抄Remotion spring数值。搜索已有AE组合，读取前后状态和实际帧，核对商品颜色与透明边缘；中间片回Resolve，保存AEP和依赖并重开。",
+        "method_card_text": "# 商品：原生展示动效\n\n版本：aics-product-native-v1。适用阶段：packaging；执行目标：external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n按本次Director的每镜分辨率/fps/时长/alpha制作AE可编辑合成。实物默认真实商品图层、局部焦点、材质细节与用途标注；只有软件且有真实状态截图才做光标点击/界面过渡，不能冒充实测交互。二维平移/缩放/分层视差不是3D转台。源图保持比例与可读标识；留完整定格阅读区间。关键帧按动作目的用线性或缓动，不照抄Remotion spring数值。搜索已有AE组合，读取前后状态和实际帧，核对商品颜色与透明边缘；中间片回Resolve，保存AEP和依赖并重开。\n\n## 操作与判断\n\n1. 确认素材和焦点bbox；创建Comp、真实素材层、独立标注/形状/文字层。2. 统一锚点/父子层后设置关键帧，保留定格。3. 只有有真实截图状态才能演示软件点击因果；光标与镜头不要同时抢焦点。4. 文字/产品层与背景分开，可选alpha；不将产品压扁或拉伸。5. 检查首帧、运动峰值、阅读停留与尾帧；先编辑保存，再独立渲染。6. 核对中间片实际alpha/色彩/fps并在Resolve回读。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "bf77a4e9f4893884c5197c85a9dbea2f83ee4b370f821da5ccb007b4859d3229"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "key": "product-offer-motion",
+      "kind": "prompt_skill",
+      "name": "商品：价格与促销动效",
+      "content": {
+        "adaptation_version": "aics-product-native-v2",
+        "stage": "packaging",
+        "execution_targets": [
+          "external_executor"
+        ],
+        "tags": [
+          "product-production",
+          "packaging",
+          "candidate"
+        ],
+        "upstream": [
+          {
+            "repository": "iart-ai/ecommerce-video-skills",
+            "commit": "2bd0dd19c9b2df5230f5d8f7453861b9681e49b4",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "skills/photo-slideshow/SKILL.md",
+                "sha256": "cb234b7c2882840213787a223217527814cfceaf47a17aff37055a4989eae942"
+              },
+              {
+                "name": "skills/product-demo-video/SKILL.md",
+                "sha256": "094889976b6d8dffe476c0d93592afb2ef2d8881b6db30391f3268d1dd4769f2"
+              },
+              {
+                "name": "skills/promo-video/SKILL.md",
+                "sha256": "c2836cc83ac7edb933185e27cace9f4d871c8a548a439bb06228a52a1d829687"
+              },
+              {
+                "name": "skills/promo-video/references/promo-components.md",
+                "sha256": "02190b96ebf47e0cae43799b3a1c86f68abc27bcf7a76d9ffae873f3f8b053d0"
+              }
+            ]
+          },
+          {
+            "repository": "chandreshpv/remotion-product-videos-claude-skill",
+            "commit": "ef2fbcfedf182e526d3bca8ea778c517cdc37fad",
+            "license": "MIT",
+            "files": [
+              {
+                "name": "SKILL.md",
+                "sha256": "49924c76bbc83c07580401d9cad0f9b01a2873b7bd0b8519e6e338310c36e83f"
+              },
+              {
+                "name": "VIDEO_SOP.md",
+                "sha256": "29b159a0cbb3ed48e3523a78343ac60b41b2d0e285332927e6fd28602846f6c6"
+              }
+            ]
+          }
+        ],
+        "method_card": "product-methods/product-offer-motion.md",
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
+        "text": "从本次版本化任务书读取已核实SKU、原价/售价、币种、条件和可用时间；方法参数不放独立报价。用十进制按币种精度算差额与比例，售价不为凑折扣而改写。原价1000售价800是省200、降价20%或八折，不是二折；有冲突保留资料并停冲突文案。无原价可仅显示售价，无促销跳过本方法。已核实截止日期才以含时区静态文字显示；无期限不造限时/倒计时，不用当前时钟生成固定成片倒计时。AE独立旧价/划线/新价/条件/CTA图层，先划线再落新价，清楚停留，返Resolve终混。",
+        "method_card_text": "# 商品：价格与促销动效\n\n版本：aics-product-native-v1。适用阶段：packaging；执行目标：external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n从本次版本化任务书读取已核实SKU、原价/售价、币种、条件和可用时间；方法参数不放独立报价。用十进制按币种精度算差额与比例，售价不为凑折扣而改写。原价1000售价800是省200、降价20%或八折，不是二折；有冲突保留资料并停冲突文案。无原价可仅显示售价，无促销跳过本方法。已核实截止日期才以含时区静态文字显示；无期限不造限时/倒计时，不用当前时钟生成固定成片倒计时。AE独立旧价/划线/新价/条件/CTA图层，先划线再落新价，清楚停留，返Resolve终混。\n\n## 操作与判断\n\n1. 价格来自冻结ProductContext，来源/checked_at和条件可回查。2. 按币种计算，不默认USD和两位小数；区分降价比例与中文折数。3. 创建OldPrice、Strike、CurrentPrice、Condition、CTA独立层，不在多层手抄不一致数字。4. 旧价划线→新价出现→定格，条件不能闪过。5. 无期限省略期限层；无原价省略划线/省钱/折扣层。6. 对照实际渲染画面数字，交付时再核对已知时效。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "38e71bba984058701604a9ee4b1baa25af3c58079a69175034eeed7206347f27"
+      },
+      "args_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
     }
   ]
 }

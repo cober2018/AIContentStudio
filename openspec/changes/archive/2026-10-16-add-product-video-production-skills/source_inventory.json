@@ -1,0 +1,201 @@
+{
+  "status": "research_snapshot_not_installed",
+  "date": "2026-10-16",
+  "repositories": [
+    {
+      "repository": "HiAPIAI/awesome-ai-video-workflows",
+      "commit": "ad5deeef59029a24db393f10ca44fcf8371a5f2b",
+      "license": "MIT",
+      "reviewed_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "1a780df387e3397067a5e1430670d9a39864662cd89193edfcb9c939c3048e70"
+        },
+        {
+          "path": "README.md",
+          "sha256": "347c5641958cfacdeb43f4e774382ef123a6582a270c28e1a966f28865e2029c"
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "d3a4877d5400042ead3db335015413d112af0d271e06293cf35c93db113dc206"
+        },
+        {
+          "path": "workflows/01-product-image-audit.md",
+          "sha256": "9f0dd1678e2d3fc4ce1e56fd9c967275049aeb695901d03cde73ec0d6f837303"
+        },
+        {
+          "path": "workflows/02-product-image-to-hero-visual.md",
+          "sha256": "1d4f2cab2b3d29a636f451404dc647fd0f56d121bcf3d091a34f8fb93413f606"
+        },
+        {
+          "path": "workflows/03-hero-visual-to-product-video.md",
+          "sha256": "6b38b5faadc39fd2a5585aef455deab1bca369434abe11c68ac86a4be5e362b4"
+        }
+      ],
+      "license_verification": "pinned_LICENSE_text_checked",
+      "review_scope": "README and selected method sections; hashes identify inspected snapshot files, not executed upstream code"
+    },
+    {
+      "repository": "Longxiaohao/AIvideo",
+      "commit": "d64e14582ac549ca96dd0fd39b8554571f63478b",
+      "license": "MIT",
+      "reviewed_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "33a6ae5ff8d5d779db2776f5293e6922b07064bdd42274aaef9da21c3fe34bf0"
+        },
+        {
+          "path": "README.md",
+          "sha256": "e9589b2cbf920f657adbe2cffa8cb472b6d4f229432be07a1e0c50a47a650eee"
+        },
+        {
+          "path": "skills/facebook-diy-video-workflow/SKILL.md",
+          "sha256": "ea8bb7ce8ed417b093e2001f17e7ad903aa849baa9a2a57b7a36b6a57b6099e3"
+        },
+        {
+          "path": "skills/facebook-diy-video-workflow/references/complex-product-generation-risks.md",
+          "sha256": "eeab27e81243e2535047593d4e5e0290755d9e6b51f85ba784cc92b138299c55"
+        }
+      ],
+      "license_verification": "pinned_LICENSE_text_checked",
+      "review_scope": "README and selected method sections; hashes identify inspected snapshot files, not executed upstream code"
+    },
+    {
+      "repository": "Vincentwei1021/video-shotcraft",
+      "commit": "13c74a707786872a18e3317e48c5c94011027620",
+      "license": "Apache-2.0",
+      "reviewed_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b2ce9877a55547ada9b870150664d1468ff777e67cc9888806a73927d31c5771"
+        },
+        {
+          "path": "README.md",
+          "sha256": "530469fda79ec042220d587193a57734867dd8e0d04d6ef796ca9ec35d595dc3"
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "a94f87f093d07c96ddf3245d442acece7ceb6c544035855c63e26a216a068820"
+        },
+        {
+          "path": "references/pipeline.md",
+          "sha256": "1d0236da0cc0cf251543d34ddffd292362e31db1b87250d593c66588444bfe35"
+        },
+        {
+          "path": "references/shots/effects/scanline-annotate-focus.md",
+          "sha256": "63526d1e29812533d5f7a86a4c7ebbf99cd44c2a73bc16f7751c2f88a3b991ce"
+        },
+        {
+          "path": "references/shots/effects/spotlight-sweep-moves.md",
+          "sha256": "35b5a5bde17662af0e303315c5a34f9d79bce89b4779e0c74f0452a80c99af94"
+        }
+      ],
+      "license_verification": "pinned_LICENSE_text_checked",
+      "review_scope": "README and selected method sections; hashes identify inspected snapshot files, not executed upstream code"
+    },
+    {
+      "repository": "chandreshpv/remotion-product-videos-claude-skill",
+      "commit": "ef2fbcfedf182e526d3bca8ea778c517cdc37fad",
+      "license": "MIT",
+      "reviewed_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "c75a856848b65777ae3b14757fc924b386b09ef4668befd6b841bab5c93ccf7c"
+        },
+        {
+          "path": "README.md",
+          "sha256": "27a5207eb2bbdbd40c1b1d7fed46c30b409052ed42fa12415900c4ddd81217d3"
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "49924c76bbc83c07580401d9cad0f9b01a2873b7bd0b8519e6e338310c36e83f"
+        },
+        {
+          "path": "VIDEO_SOP.md",
+          "sha256": "29b159a0cbb3ed48e3523a78343ac60b41b2d0e285332927e6fd28602846f6c6"
+        }
+      ],
+      "license_verification": "pinned_LICENSE_text_checked",
+      "review_scope": "README and selected method sections; hashes identify inspected snapshot files, not executed upstream code"
+    },
+    {
+      "repository": "iart-ai/ecommerce-video-skills",
+      "commit": "2bd0dd19c9b2df5230f5d8f7453861b9681e49b4",
+      "license": "MIT",
+      "reviewed_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "33d6cd35a20903b5e968a76a1e584a7aeae2c83e3e58ea58ecc50b889b83e668"
+        },
+        {
+          "path": "README.md",
+          "sha256": "cc603105740557d608977e360726e4aaa6dab00f1e4494d31304321998ba5bd2"
+        },
+        {
+          "path": "skills/photo-slideshow/SKILL.md",
+          "sha256": "cb234b7c2882840213787a223217527814cfceaf47a17aff37055a4989eae942"
+        },
+        {
+          "path": "skills/product-demo-video/SKILL.md",
+          "sha256": "094889976b6d8dffe476c0d93592afb2ef2d8881b6db30391f3268d1dd4769f2"
+        },
+        {
+          "path": "skills/promo-video/SKILL.md",
+          "sha256": "c2836cc83ac7edb933185e27cace9f4d871c8a548a439bb06228a52a1d829687"
+        },
+        {
+          "path": "skills/promo-video/references/promo-components.md",
+          "sha256": "02190b96ebf47e0cae43799b3a1c86f68abc27bcf7a76d9ffae873f3f8b053d0"
+        }
+      ],
+      "license_verification": "pinned_LICENSE_text_checked",
+      "review_scope": "README and selected method sections; hashes identify inspected snapshot files, not executed upstream code"
+    },
+    {
+      "repository": "motiful/product-shots",
+      "commit": "063c508b0b7f4db5cda89f10bdf20df25026dfc5",
+      "license": "MIT",
+      "reviewed_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "c01737b5fc0d5d7051f4b48ec30b7dc08f8e8e3e69a5e77728d32d4c51228b20"
+        },
+        {
+          "path": "README.md",
+          "sha256": "5230b1436cb3e11c1f66f454b06725508bec48c94907448e8ed1262f838ee61a"
+        },
+        {
+          "path": "skills/product-shots/SKILL.md",
+          "sha256": "f75b52195100c49eeb4e23525bcc63aab504fdb634053c0133ac375e2ae143d9"
+        },
+        {
+          "path": "skills/product-shots/references/hard-constraints.md",
+          "sha256": "546a8cca7eddb937d797ee3ec9164ad4ae25eeea88fce46013ea5eadefd6598f"
+        },
+        {
+          "path": "skills/product-shots-image-gen/SKILL.md",
+          "sha256": "31038b6c806545343c152d577890a9db32e29654c7edd2c691cf9135223f37d0"
+        },
+        {
+          "path": "skills/product-shots-image-gen/references/reference-image-handling.md",
+          "sha256": "cc9321bb79fa87464df59159bfaef3ef332e216753f11d45c817dd3df2c7ef3a"
+        },
+        {
+          "path": "skills/product-shots-main-image/SKILL.md",
+          "sha256": "77536ea78d9b2eb22ff39af0a557951636c627f6ae77282cbde3d34aeb00127f"
+        },
+        {
+          "path": "skills/product-shots-main-image/references/consistency-rules.md",
+          "sha256": "a49df1905dfde91e198ea44a2ba87cf1fcb1752b53d4af79fc4859970088ff98"
+        },
+        {
+          "path": "skills/product-shots-multi-angle/SKILL.md",
+          "sha256": "58e920029774ee0fbb3283dbf54b5329e1b3c7c3da7a16c4f4fe05d1d839cbd3"
+        }
+      ],
+      "license_verification": "pinned_LICENSE_text_checked",
+      "review_scope": "README and selected method sections; hashes identify inspected snapshot files, not executed upstream code"
+    }
+  ],
+  "review_revision": 2
+}

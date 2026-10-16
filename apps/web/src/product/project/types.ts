@@ -3,6 +3,7 @@ export type Brief = {
   primary_audience: string | null; core_message: string | null; angle: string | null;
   required_evidence: string[]; content_constraints: string[]; identity_scope: (number | Record<string, number | null>)[];
   modality_scope: string[]; channel_scope: string[]; cta: string | null;
+  product_context?: { name: string; variant: string; description: string; url: string | null; selling_points: string[]; excluded_claims: string[]; source_refs?: { source_id: number; checksum: string }[]; material_refs?: { material_revision_id: number; content_hash: string }[]; [key: string]: unknown } | null;
   references: { kind: string; id: number }[]; created_at: string | null;
 };
 

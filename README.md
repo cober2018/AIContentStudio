@@ -1,3 +1,5 @@
+2026-10-16 **商品视频Skills正式接入、样片已回收，20/20**：六项方法/首轮冻结/阶段开关及AE/Resolve适配完成；懒人沙发16秒有声样片、8项接受产物和Master41本地绑定通过委托AI质量评审。纯候选564项既有检查/1跳过、Web及独立复核通过；已归档同步10条规范并选择性本地提交。未直接试听，公开门禁保留、角色默认不变、未push。[使用入口与验收](openspec/changes/archive/2026-10-16-add-product-video-production-skills/README.md)。
+
 2026-10-16 **角色风格与阶段Skills已正式启用并归档，22/22**：科技角色v4、12项方法/十阶段开关/3首场景配乐已接入；47秒有声样片及8个产物正式接受，Master39本地绑定，32项API回读通过。纯候选521项既有检查、Web及独立复核通过；未直接试听、公开门禁保持，已选择性本地提交、未push。[使用入口与验收](openspec/changes/archive/2026-10-16-add-persona-production-skill-profiles/README.md)。
 
 2026-10-15 **网页视频与有声样片验收完成**：图片先确认、据图提示词、人工Grok/Gemini回传、平台CLI/MCP、达芬奇主剪与AE合成已跑通；60秒科技音色旁白/字幕/原生工程通过独立AI评审，Master46/执行8本地采用；公开门禁保持，未直接试听。29/29已归档，31路径选择性本地集成，正式发布未声明、未push。[同一成果](openspec/changes/archive/2026-10-15-verify-grok-gemini-media-capabilities/README.md)。

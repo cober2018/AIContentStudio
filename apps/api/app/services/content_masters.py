@@ -59,8 +59,7 @@ def local_final_use_allowed(db: Session, project_id: int, unit_id: int, owner_id
 
     if (material.source_kind != "external_execution" or material.mime_type != "video/mp4"
             or material.material.kind != "video" or material.material.status != "active"
-            or material.status in {"revoked", "archived"}
-            or (material.model_use_allowed is not True and material.public_use_allowed is not True)):
+            or material.status in {"revoked", "archived"}):
         return False
     try:
         lineage, execution = _external_lineage(db, material)
@@ -692,7 +691,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             # Accepted local renders preserve restricted rights; Candidate still requires public rights.
             if (material.material.kind not in allowed_kinds or material.material.status != "active"
                     or material.status in {"revoked", "archived"}
-                    or (material.model_use_allowed is not True and material.public_use_allowed is not True)
+                    or (not local_render and material.model_use_allowed is not True and material.public_use_allowed is not True)
                     or (role == "render_output" and material.public_use_allowed is not True and not local_render)):
                 raise HTTPException(422, {"code": "video_asset_kind_or_rights_invalid"})
             try:

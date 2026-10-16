@@ -1,0 +1,8 @@
+## ADDED Requirements
+
+### Requirement: Product method candidates preserve selective reuse and native mappings
+The product method inventory SHALL include product-truth-brief, product-sales-story, product-visual-consistency, product-shot-routing, product-demo-motion and product-offer-motion with pinned upstream repositories, commits, exact referenced subfiles, hashes, license notices and local adaptation versions. It SHALL describe input/output, applicable stages and node kinds, parameters, native mappings and actual verification state. Each method SHALL provide a bounded selectable instruction and a detailed on-demand native method card whose exact text and UTF-8 SHA256 are embedded in the versioned frozen instruction; a local path SHALL be provenance only, and historic manifests without embedded cards SHALL use their existing frozen text rather than loading a mutable card; executors SHALL not treat registration or a brief prompt as implementation validation. Physical products, apparel and software UI methods SHALL be differentiated, and unverified marketing lift statistics, upstream gateway-specific defaults and author-specific styles SHALL not be copied as universal rules. Upstream dependency installers, provider gateways and runtime-specific implementation code MUST NOT become active merely by registering a candidate.
+
+#### Scenario: A Remotion motion recipe is selected for native AE work
+- **WHEN** a local product method derives from the recipe
+- **THEN** it preserves the creative intent and source attribution, implements only the selected supported AE operations, and records its native validation instead of claiming all upstream components are supported

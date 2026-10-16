@@ -822,7 +822,7 @@ def _require_legacy_definition(definition):
 
 
 def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, advance_now: bool = True,
-              content_unit_id: int | None = None, stage_run: bool = False) -> WorkflowRun:
+              content_unit_id: int | None = None, stage_run: bool = False, commit: bool = True) -> WorkflowRun:
     if not stage_run:
         _require_legacy_definition(workflow.definition_json)
     else:
@@ -903,7 +903,10 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
                 plugin_version=plugin_version,
             )
         )
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     if not advance_now:
         # R2-B1：异步模式下由 worker 任务推进（HTTP 请求不阻塞等待真实模型）
         return run

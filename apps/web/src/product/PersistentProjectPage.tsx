@@ -2,6 +2,7 @@ import { FormEvent, lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
+import { ProductLaunchPanel } from "./ProductLaunchPanel";
 import { ProjectOverviewTab } from "./project/ProjectOverviewTab";
 import { ProjectBriefTab } from "./project/ProjectBriefTab";
 import { ProjectEvidenceTab } from "./project/ProjectEvidenceTab";
@@ -136,6 +137,7 @@ export function PersistentProjectPage() {
   if (loading) return <div className="p-9"><Spinner label="读取项目…" /></div>;
   if (!project) return <div className="p-9"><ErrorBanner message={error || "项目不存在或无权访问。"} /></div>;
   return <div className="mx-auto max-w-7xl px-6 py-9">
+    {tab === "brief" && <ProductLaunchPanel projectId={project.id} readOnly={project.status === "archived"} />}
     <Link to="/projects" className="text-sm text-slate-500">← 内容项目</Link>
     <div className="mt-4 mb-6 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">Content Project</p><h1 className="mt-2 text-3xl font-semibold">{project.title}</h1><p className="mt-2 text-sm text-slate-500">{project.objective || "项目目标待填写"}</p></div><div className="flex flex-wrap gap-2">{project.status !== "archived" && <Button variant="secondary" onClick={() => { setProjectTitle(project.title); setProjectModal(true); }}>编辑项目</Button>}<Button variant="secondary" onClick={() => setAssetsOpen(true)}>项目共享素材 · {assets.length}</Button>{project.status !== "archived" && <Button variant="danger" onClick={deleteProject}>归档项目</Button>}</div></div>
     {project.status === "archived" && <p className="mb-4 rounded-lg bg-slate-100 p-3 text-sm text-slate-600">项目已归档，仅可查看历史；所有项目级保存和运行操作均被服务端拒绝。</p>}

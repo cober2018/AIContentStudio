@@ -1676,16 +1676,172 @@ class ProjectKnowledgeContextRevision(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class DiscoverySource(Base):
+    __tablename__ = "discovery_source"
+    __table_args__ = (UniqueConstraint("owner_user_id", "canonical_url", name="uq_discovery_source_url"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    canonical_url: Mapped[str] = mapped_column(String(1000))
+    name: Mapped[str] = mapped_column(String(300))
+    actor_key: Mapped[str] = mapped_column(String(300))
+    kind: Mapped[str] = mapped_column(String(30), default="website")
+    language: Mapped[str] = mapped_column(String(20), default="unknown")
+    status: Mapped[str] = mapped_column(String(40), default="candidate")
+    adapter_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    evidence_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    processing_allowed: Mapped[bool] = mapped_column(Boolean, default=False)
+    manually_paused: Mapped[bool] = mapped_column(Boolean, default=False)
+    cursor_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    failures: Mapped[int] = mapped_column(Integer, default=0)
+    last_error: Mapped[str | None] = mapped_column(String(100))
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    lease_token: Mapped[str | None] = mapped_column(String(40))
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class DiscoveryCatchupBatch(Base):
+    __tablename__ = "discovery_catchup_batch"
+    __table_args__ = (UniqueConstraint("owner_user_id", "window_key", name="uq_catchup_window"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    window_key: Mapped[str] = mapped_column(String(100))
+    cutoff_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    reason: Mapped[str] = mapped_column(String(40))
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    active_seconds: Mapped[float] = mapped_column(Float, default=0)
+    last_tick_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class DiscoveryCatchupSource(Base):
+    __tablename__ = "discovery_catchup_source"
+    __table_args__ = (UniqueConstraint("batch_id", "source_id", name="uq_catchup_source"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    batch_id: Mapped[int] = mapped_column(ForeignKey("discovery_catchup_batch.id"), index=True)
+    source_id: Mapped[int] = mapped_column(ForeignKey("discovery_source.id"), index=True)
+    start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    reason: Mapped[str | None] = mapped_column(String(100))
+    progress_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    counts_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    coverage_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    persona_ids_json: Mapped[list] = mapped_column(JSON, default=list)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PersonaSourceSubscription(Base):
+    __tablename__ = "persona_source_subscription"
+    __table_args__ = (UniqueConstraint("persona_id", "source_id", name="uq_persona_discovery_source"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    source_id: Mapped[int] = mapped_column(ForeignKey("discovery_source.id"), index=True)
+    profile_hash: Mapped[str] = mapped_column(String(64))
+    relevance: Mapped[str] = mapped_column(Text, default="")
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    manually_paused: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class DiscoveryItem(Base):
+    __tablename__ = "discovery_item"
+    __table_args__ = (UniqueConstraint("source_id", "item_key", "checksum", name="uq_discovery_item_version"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source_id: Mapped[int] = mapped_column(ForeignKey("discovery_source.id"), index=True)
+    item_key: Mapped[str] = mapped_column(String(64))
+    url: Mapped[str] = mapped_column(String(1000))
+    title: Mapped[str] = mapped_column(String(500))
+    text: Mapped[str] = mapped_column(Text)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    checksum: Mapped[str] = mapped_column(String(64))
+    provenance_json: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class DiscoveryEvent(Base):
+    __tablename__ = "discovery_event"
+    __table_args__ = (UniqueConstraint("owner_user_id", "event_key", "version", name="uq_discovery_event_version"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    event_key: Mapped[str] = mapped_column(String(64))
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    evidence_json: Mapped[list] = mapped_column(JSON, default=list)
+    actors_json: Mapped[list] = mapped_column(JSON, default=list)
+    heat: Mapped[float] = mapped_column(Float, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PersonaResearchRun(Base):
+    __tablename__ = "persona_research_run"
+    __table_args__ = (UniqueConstraint("owner_user_id", "run_key", name="uq_persona_research_run_key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    persona_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_persona_revision.id"))
+    profile_hash: Mapped[str] = mapped_column(String(64))
+    run_key: Mapped[str] = mapped_column(String(200))
+    kind: Mapped[str] = mapped_column(String(20))
+    business_date: Mapped[str] = mapped_column(String(10))
+    status: Mapped[str] = mapped_column(String(20), default="queued", index=True)
+    attempt: Mapped[int] = mapped_column(Integer, default=0)
+    searches: Mapped[int] = mapped_column(Integer, default=0)
+    model_requests: Mapped[int] = mapped_column(Integer, default=0)
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    input_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    output_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    reason: Mapped[str | None] = mapped_column(String(100))
+    lease_token: Mapped[str | None] = mapped_column(String(40))
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ProductCreationLaunch(Base):
+    __tablename__ = "product_creation_launch"
+    __table_args__ = (UniqueConstraint("owner_user_id", "launch_key", name="uq_product_creation_launch"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    launch_key: Mapped[str] = mapped_column(String(100))
+    input_checksum: Mapped[str] = mapped_column(String(64))
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"))
+    unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"))
+    run_id: Mapped[int | None] = mapped_column(ForeignKey("workflow_run.id"))
+    invocation_key: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(30), default="saved")
+    reason: Mapped[str | None] = mapped_column(String(100))
+    lease_token: Mapped[str | None] = mapped_column(String(40))
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ContentOpportunity(Base):
     __tablename__ = "content_opportunity"
     __table_args__ = (
         CheckConstraint("status IN ('new','watching','qualified','dismissed','converted','archived')", name="ck_content_opportunity_status"),
         CheckConstraint("priority IN ('low','normal','high')", name="ck_content_opportunity_priority"),
         Index("ix_content_opportunity_owner_status_priority", "owner_user_id", "status", "priority", "updated_at"),
+        UniqueConstraint("owner_user_id", "persona_id", "event_key", "angle_key", name="uq_opportunity_discovery_angle"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    persona_id: Mapped[int | None] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    persona_revision_id: Mapped[int | None] = mapped_column(ForeignKey("content_persona_revision.id"))
+    research_run_id: Mapped[int | None] = mapped_column(ForeignKey("persona_research_run.id"))
+    business_date: Mapped[str | None] = mapped_column(String(10), index=True)
+    event_key: Mapped[str | None] = mapped_column(String(100))
+    angle_key: Mapped[str | None] = mapped_column(String(64))
     title: Mapped[str] = mapped_column(String(300))
     summary: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(20), default="new")
@@ -1870,6 +2026,7 @@ class CreativeBriefRevision(Base):
     channel_scope_json: Mapped[list] = mapped_column(JSON, default=list)
     cta: Mapped[str | None] = mapped_column(Text)
     references_json: Mapped[list] = mapped_column(JSON, default=list)
+    product_context_json: Mapped[dict | None] = mapped_column(JSON)
     checksum: Mapped[str] = mapped_column(String(64))
     created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

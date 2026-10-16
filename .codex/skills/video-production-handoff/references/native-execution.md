@@ -16,10 +16,20 @@ Use exact media IDs/paths, explicit tracks, source ranges and record frames. Rea
 
 Keep the narration timing provenance: provider timestamps, aligned ASR, or estimated. ASR word intervals are estimates, not proof of the spoken words. Maintain one edit-decision mapping from source intervals to output intervals; derive picture, subtitles and any sound effects from that mapping after dialogue edits. Preserve natural pauses according to the selected method, not a fixed silence threshold.
 
-Mute generated source sound unless explicitly retained. Set and read back intended audio volume and fades; `SetProperty`/`GetProperty` and `SetFades`/`GetFades` were verified on native timeline items. This does not prove that ducking, EQ or intelligibility succeeded. Inspect the rendered audio and preserve whether it was directly auditioned. For ducking, verify the actual automation/level changes using an available supported route, or report the uncompleted operation; do not label a constant gain as ducking.
+Mute generated source sound unless explicitly retained. Set and read back intended audio volume and fades; `SetProperties`/`GetProperties` and `SetFades`/`GetFades` were verified on native timeline items. This does not prove that ducking, EQ or intelligibility succeeded. Inspect the rendered audio and preserve whether it was directly auditioned. For ducking, verify the actual automation/level changes using an available supported route, or report the uncompleted operation; do not label a constant gain as ducking.
 
 ## Interchange and recovery
 
 AE intermediates return to the Resolve main timeline for final mixing/export. Save source dependencies and export/reopen the native projects. Check file-backed media for missing paths; timeline objects may legitimately have an empty FilePath. Verify actual render duration, dimensions, frame rate, audio presence, required alpha and content hashes. A technical silent three-shot probe is not a finished narrated work.
 
 Music references pin a MaterialRevision and preserve attribution/license and source metadata. Tag revisions affect future selection, not existing edit references. No-music is a valid choice; never fill missing licensing, vocal, tempo or looping data by guessing.
+
+## Product combinations verified on 2026-10-16
+
+AE 26.5x89 and Resolve 21.1.0.14 rendered and reopened a three-scene, 1080×1920/30fps single-photo product test. Independent photo windows preserved source aspect, editable headlines and estimated subtitles. The separate offer probe used a visibly fictional 1000→800 TWD example, never the sample product price. Use the actual source/task values and supported easing, not these probe values as a preset. A decorative grid has no measurement meaning.
+
+Read available AE output templates from the active installation; the verified H.264 template was localized. Save the current project before opening another to avoid an unsaved-project modal. A timed-out open was reconciled from an actual read of the target file and compositions; do not replay it blindly. Protected edits require an absolute work_dir and a current project binding. Native render was scheduled after the edit wrapper returned.
+
+Resolve's main timeline had exact 150/150/180-frame picture spans, independent narration and music tracks, and read-back segmented music levels/fades. It was exported, its DRP imported under a separate reopen project name, and file-backed dependencies checked with missing_media=0. AE's three source comps reopened with exact 150/150/180 frames and missing_media=0. The rendered 480-frame video retained original pixels; no alpha was requested, so this sample is not a new alpha-path acceptance. Existing alpha verification remains separate.
+
+The final H.264/AAC delivery container was bounded with stream copy; retain the native render and verify actual decoded duration. Full narration ASR matched, fine subtitle divisions were estimated, and direct listening was not performed. These are evidence boundaries, not inferred hearing approval.

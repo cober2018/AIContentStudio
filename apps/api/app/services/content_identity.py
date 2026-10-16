@@ -395,8 +395,23 @@ def effective(db: Session, user: User, *, persona_id: int, account_id: int | Non
     }
 
 
-def create_snapshot(db: Session, user: User, *, persona_id: int, account_id: int | None = None, series_id: int | None = None) -> IdentitySnapshot:
+def create_snapshot(db: Session, user: User, *, persona_id: int, account_id: int | None = None, series_id: int | None = None,
+                    production_stages: dict | None = None, modality: str | None = None) -> IdentitySnapshot:
     resolved = effective(db, user, persona_id=persona_id, account_id=account_id, series_id=series_id, mutable=True)
+    if production_stages is not None and production_stages != {}:
+        from copy import deepcopy
+
+        from .studio_creative_catalog import validate_production_stages
+
+        validate_production_stages(production_stages)
+        field = f"{modality}_creative_profile"
+        profile = deepcopy(resolved["effective_profile"].get(field))
+        if profile is None:
+            raise HTTPException(409, "creative_profile_missing")
+        profile["production_stages"] = {**profile.get("production_stages", {}), **deepcopy(production_stages)}
+        validate_creative_profile(profile)
+        resolved["effective_profile"] = {**resolved["effective_profile"], field: profile,
+            "production_stage_origins": {modality: "product_task"}}
     revisions = resolved["revision_ids"]
     payload = {**resolved, "owner_user_id": user.id}
     row = IdentitySnapshot(

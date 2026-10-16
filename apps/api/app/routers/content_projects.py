@@ -35,7 +35,13 @@ from ..services.data_source_plugins import assert_executable
 from ..services.data_source_plugins import descriptors as data_source_descriptors
 from ..services.project_assets import shared_assets
 from ..services.project_authorization import authorize_project_run, authorize_project_workflow
-from ..services.project_brief import checksum_brief, current_brief, serialize_brief
+from ..services.project_brief import (
+    ProductContext,
+    checksum_brief,
+    current_brief,
+    serialize_brief,
+    validate_product_context,
+)
 from ..services.project_events import record_project_event
 from ..services.project_workflows import (
     execution_options,
@@ -45,9 +51,11 @@ from ..services.project_workflows import (
     validate_portable,
     validate_reusable_profiles,
 )
+from .product_creation import router as product_creation_router
 from .workflows import NodeCompleteIn, _serialize_run, list_node_attempts
 
 router = APIRouter(prefix="/api/v1", tags=["content-projects"])
+router.include_router(product_creation_router)
 
 
 class StagePreviewRoute(APIRoute):
@@ -303,6 +311,7 @@ class BriefRevisionIn(BaseModel):
     channel_scope: list = Field(default_factory=list)
     cta: str | None = None
     references: list = Field(default_factory=list)
+    product_context: ProductContext | None = None
 
 
 def owned_project(db: Session, project_id: int, user: User) -> ContentProject:
@@ -512,7 +521,8 @@ def save_project_brief(payload: BriefRevisionIn, project_id: int, db: Session = 
     current_revision = previous.revision_no if previous else 0
     if payload.expected_revision != current_revision:
         raise HTTPException(409, "Brief 已更新，请刷新后重试")
-    data = payload.model_dump(exclude={"expected_revision"})
+    data = payload.model_dump(mode="json", exclude={"expected_revision"})
+    data["product_context"] = validate_product_context(db, data.get("product_context"))
     row = CreativeBriefRevision(
         project_id=project_id,
         revision_no=current_revision + 1,
@@ -528,6 +538,7 @@ def save_project_brief(payload: BriefRevisionIn, project_id: int, db: Session = 
         channel_scope_json=payload.channel_scope,
         cta=payload.cta,
         references_json=payload.references,
+        product_context_json=data.get("product_context"),
         checksum=checksum_brief(data),
         created_by=user.email,
     )

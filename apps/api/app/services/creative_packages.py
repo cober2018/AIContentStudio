@@ -285,6 +285,8 @@ def production_method_configuration(db, project_id, unit_id, user, *, master_id=
     profile = (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
     field = f"{master.modality}_creative_profile"
     origin = (identity.field_origins_json or {}).get(field, "identity_snapshot") if identity else "unset"
+    if identity:
+        origin = (identity.effective_profile_json or {}).get("production_stage_origins", {}).get(master.modality, origin)
     methods = capability_memory.discover(db, user, {"project_id": project_id, "unit_id": unit_id, "limit": 100})
     return {"production_stages": (profile or {}).get("production_stages"), "origin": origin,
             "identity_snapshot_id": identity.id if identity else None,
@@ -339,7 +341,7 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
     identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
     profile = (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
     stages = (profile or {}).get("production_stages")
-    origin = "identity_snapshot"
+    origin = (identity.effective_profile_json or {}).get("production_stage_origins", {}).get(master.modality, "identity_snapshot") if identity else "identity_snapshot"
     if "production_stages" in payload:
         stages = payload["production_stages"]
         origin = "project_execution_override"
@@ -347,16 +349,25 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
         from .creative_configuration import freeze_production_stages
         from .studio_creative_catalog import validate_creative_profile
         try:
-            if profile:
+            if profile and ("production_stages" in payload or not identity
+                    or master.modality not in (identity.effective_profile_json or {}).get("product_production_methods", {})):
                 validate_creative_profile({**profile, "production_stages": stages})
-            package_json["production_methods"] = freeze_production_stages(db, user, unit, stages, origin=origin)
+            package_json["production_methods"] = freeze_production_stages(db, user, unit, stages, origin=origin,
+                frozen_manifest=((identity.effective_profile_json or {}).get("product_production_methods", {}).get(master.modality)
+                    if identity and "production_stages" not in payload else None), execution_target="external_executor")
         except ValueError as exc:
             raise HTTPException(422, {"code": str(exc)}) from None
         package_json["identity_content"] = {
             key: value for key, value in (identity.effective_profile_json or {}).items()
-            if not key.endswith("_creative_profile")
+            if not key.endswith("_creative_profile") and key not in {"product_production_methods", "product_production_stages"}
         } if identity else None
         package_json = bounded_json(package_json)
+    if master.creative_brief_revision_id:
+        brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id)
+        if brief and brief.product_context_json:
+            package_json["commercial_context"] = {"brief_revision_id": brief.id,
+                "brief_checksum": brief.checksum, "product_context": brief.product_context_json}
+            package_json = bounded_json(package_json)
     if web_video is not None:
         package_json["web_video"] = {**web_video, "reference_assets": assets}
         from .web_video_handoff import validate_new_web_package
@@ -429,7 +440,7 @@ def manual_image_handoff(value: dict, package: dict, *, creative_context: dict) 
         # The copied prompt must share the frozen selection, not raw identity method history.
         raw_identity = context.get("identity_profile")
         context["identity_profile"] = package.get("identity_content", {
-            key: item for key, item in (raw_identity or {}).items() if not key.endswith("_creative_profile")
+            key: item for key, item in (raw_identity or {}).items() if not key.endswith("_creative_profile") and key not in {"product_production_methods", "product_production_stages"}
         })
         context["production_methods"] = package["production_methods"]
     serialized = json.dumps(context, ensure_ascii=False, sort_keys=True, separators=(",", ":"))

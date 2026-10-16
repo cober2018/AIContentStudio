@@ -243,6 +243,11 @@ def artifact(kind, content, schema):
         if kind != "creative_pattern":
             raise error("reference_style_kind_invalid")
         reference_style(content)
+    targets = content.get("execution_targets")
+    if targets is not None and (type(targets) is not list or not targets or len(targets) > 2
+            or any(type(target) is not str or target not in {"ai_planning", "external_executor"} for target in targets)
+            or len(set(targets)) != len(targets)):
+        raise error("capability_execution_targets_invalid")
     schema = args_schema(schema)
     tags = content.get("tags", [])
     if type(tags) is not list or len(tags) > 30 or any(type(tag) is not str or not tag.strip() for tag in tags):
