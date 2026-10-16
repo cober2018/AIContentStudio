@@ -423,6 +423,11 @@ def frozen_stage(db, user, unit, node, contract, context, override):
     selection = profile.get("production_stages", {}).get(stage_key)
     task_stages = (identity.get("content") or {}).get("product_production_stages", {})
     task_manifest = (identity.get("content") or {}).get("product_production_methods", {}).get(unit.modality)
+    product = ((context.get("brief") or {}).get("content") or {}).get("product_context") or {}
+    explicit_stages = product.get("production_stages")
+    if explicit_stages is not None:
+        task_stages = {**task_stages, **copy.deepcopy(explicit_stages)}
+        task_manifest = freeze_production_stages(db, user, unit, task_stages, origin="product_brief")
     if stage_key in task_stages:
         selection = task_stages[stage_key]
     elif modality != unit.modality:

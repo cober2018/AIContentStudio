@@ -3,6 +3,7 @@
 import hashlib
 import uuid
 from datetime import timedelta
+from decimal import Decimal
 
 from fastapi import HTTPException
 from sqlalchemy import or_, select, update
@@ -18,6 +19,7 @@ from ..models import (
     ProjectMaterialReference,
     ProjectSourceBinding,
     SourceDocument,
+    SystemSetting,
     Workflow,
     WorkflowStep,
     WorkflowStepAttempt,
@@ -26,7 +28,7 @@ from ..models import (
 from . import content_identity, creation_recipes, workflow_engine
 from .discovery_runtime import digest
 from .project_authorization import authorize_project_workflow
-from .project_brief import ProductContext, checksum_brief, current_brief, validate_product_context
+from .project_brief import ProductContext, ProductOffer, checksum_brief, current_brief, validate_product_context
 from .project_events import record_project_event
 
 
@@ -34,6 +36,34 @@ def launch_json(row):
     return {"launch_id": row.id, "project_id": row.project_id, "unit_id": row.unit_id,
             "run_id": row.run_id, "status": row.status, "reason": row.reason,
             "href": f"/projects/{row.project_id}/units/{row.unit_id}/production"}
+
+
+def save_private_costs(db, user, project_id, value):
+    # Separate storage keeps internal economics out of versioned creative inputs and exports.
+    key = f"product_costs.{user.id}.{project_id}"
+    row = db.get(SystemSetting, key)
+    if row is None:
+        db.add(SystemSetting(key=key, value=value, updated_by=user.email))
+    else:
+        row.value, row.updated_by = value, user.email
+
+
+def product_costs_view(db, owner_id, project_id):
+    row = db.get(SystemSetting, f"product_costs.{owner_id}.{project_id}")
+    costs = row.value if row else None
+    contribution = None
+    brief = current_brief(db, project_id)
+    offer = (brief.product_context_json or {}).get("offer") if brief else None
+    fields = ("purchase", "packaging", "shipping", "platform", "promotion", "production", "returns_service")
+    if (costs and offer and costs.get("currency") and costs["currency"] == offer.get("currency")
+            and offer.get("sale_price") is not None and all(costs.get(key) is not None for key in fields)):
+        sale = ProductOffer(currency=offer["currency"], sale_price=offer["sale_price"])
+        if {"price_currency_precision_invalid", "currency_required_or_unsupported"}.intersection(sale.promotion_issues):
+            return {"costs": costs, "estimated_contribution": None}
+        orders = 1 if costs.get("basis") == "per_order" else costs.get("order_count") if costs.get("basis") == "total" else None
+        if orders:
+            contribution = str(Decimal(str(offer["sale_price"])) * orders - sum(Decimal(str(costs[key])) for key in fields))
+    return {"costs": costs, "estimated_contribution": contribution}
 
 
 def save_launch(db, user, payload):
@@ -91,9 +121,14 @@ def save_launch(db, user, payload):
         revision = db.get(MaterialRevision, revision_id)
         if not revision:
             raise HTTPException(404, "商品素材不存在")
+        supplied = next((ref for ref in product["material_refs"] if ref["material_revision_id"] == revision_id), None)
+        if supplied and supplied["content_hash"] != revision.content_hash:
+            raise HTTPException(409, "商品素材版本已变化，请重新读取")
         materials.append(revision)
-    product["material_refs"] = [{"material_revision_id": r.id, "content_hash": r.content_hash} for r in materials]
-    product = validate_product_context(db, product)
+    categories = {r["material_revision_id"]: r["categories"] for r in product["material_refs"]}
+    product["material_refs"] = [{"material_revision_id": r.id, "content_hash": r.content_hash,
+                                 "categories": categories.get(r.id, [])} for r in materials]
+    product = validate_product_context(db, product, user=user)
     workflow_id = payload.workflow_id
     if workflow_id is None:
         binding = db.scalar(select(PersonaWorkflowDefault).where(PersonaWorkflowDefault.persona_id == payload.persona_id,
@@ -111,7 +146,7 @@ def save_launch(db, user, payload):
     db.flush()
     brief_data = {"objective": payload.objective,
         "primary_audience": payload.primary_audience or "、".join(identity.effective_profile_json.get("target_audience") or []),
-        "core_message": "；".join(product["selling_points"]), "angle": None,
+        "core_message": payload.core_message or "；".join(product["selling_points"]), "angle": payload.angle,
         "required_evidence": ["商品事实需沿用来源与证据的确认和冻结规则"],
         "content_constraints": ["不得虚构规格、功效、价格、亲测或用户评价", *product["excluded_claims"]],
         "identity_scope": [{"persona_id": payload.persona_id}], "modality_scope": [payload.modality],
@@ -122,6 +157,8 @@ def save_launch(db, user, payload):
         **{k + "_json": brief_data[k] for k in ("required_evidence", "content_constraints", "identity_scope",
             "modality_scope", "channel_scope", "references", "product_context")}, checksum=checksum_brief(brief_data))
     db.add(brief)
+    if payload.private_costs is not None:
+        save_private_costs(db, user, project.id, payload.private_costs.model_dump(mode="json"))
     unit = ContentUnit(project_id=project.id, persona_id=payload.persona_id, identity_snapshot_id=identity.id,
                        modality=payload.modality, channel_id=payload.channel, title=payload.title or product["name"],
                        pinned_workflow_id=workflow_id)
@@ -190,7 +227,7 @@ def resume_launch(db, user, launch):
                 and not brief.product_context_json.get("source_refs")):
             launch.status, launch.reason = "blocked", "product_information_required"
             return launch_json(launch)
-        validate_product_context(db, brief.product_context_json)
+        validate_product_context(db, brief.product_context_json, user=user, project_id=project.id)
         if not brief.product_context_json.get("description", "").strip():
             source_refs = brief.product_context_json.get("source_refs", [])
             if any((not db.get(SourceDocument, r["source_id"]).raw_text

@@ -6,7 +6,7 @@ import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/u
 type Provider = { name: string; base_url: string; enabled: boolean; trusted_private_endpoint: string; api_key: { configured: boolean; masked: string } };
 type Profile = { provider_id: string | null; model_id: string; enabled: boolean; chat: boolean };
 type Catalog = { revision: number; providers: Record<string, Provider>; profiles: Record<string, Profile>; default_profile: string; routes: Record<string, string>; purposes: string[] };
-const names: Record<string, string> = { generate: "内容生成", rewrite: "内容改写", fact_check: "事实核查", topic_discovery: "选题发现", discoverability: "可发现性分析", platform_adaptation: "渠道适配", text_master_edit: "文字工作台 AI 编辑" };
+const names: Record<string, string> = { generate: "内容生成", rewrite: "内容改写", fact_check: "事实核查", topic_discovery: "选题发现", discoverability: "可发现性分析", platform_adaptation: "渠道适配", text_master_edit: "文字工作台 AI 编辑", form_autofill: "表单自动补齐", field_polish: "当前字段润色" };
 
 export default function ModelRegistrationSettings({ editable = false, view = "providers", onDirtyChange }: {
   editable?: boolean; view?: "providers" | "routes"; onDirtyChange?: (dirty: boolean) => void;

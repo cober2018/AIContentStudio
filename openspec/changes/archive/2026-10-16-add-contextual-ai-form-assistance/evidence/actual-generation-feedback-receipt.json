@@ -1,0 +1,368 @@
+{
+  "text": {
+    "id": 1,
+    "request_key": "real-text1",
+    "surface": "product_brief",
+    "mode": "autofill",
+    "project_id": 9,
+    "unit_id": null,
+    "context_hash": "3a24324e8fa11db00c7b5ca7f709a8d5e530c8a408fba167f49307606826a9bc",
+    "revision": 1,
+    "status": "ready",
+    "llm_run_id": 83,
+    "items": [
+      {
+        "key": "core_message",
+        "baseline": "",
+        "status": "suggested",
+        "suggestion": "在周末的草地上随心小憩，享受户外休闲的放松时光。",
+        "note": "依据受众与草地休闲场景设定，避开承重、尺寸、防水及充气方式等未核实规格。",
+        "source_refs": [],
+        "attempt_id": 1
+      },
+      {
+        "key": "buyer_situation",
+        "baseline": "",
+        "status": "suggested",
+        "suggestion": "周末前往公园或草坪户外休闲时，希望有一处可以随地躺坐放松的休息位置。",
+        "note": "结合用户给出的目标受众（周末想去公园/草地放松的人）进行场景化描述，未添加未经证实的具体参数。",
+        "source_refs": [],
+        "attempt_id": 1
+      }
+    ],
+    "attempts": [
+      {
+        "id": 1,
+        "request_key": "real-text1",
+        "feedback": null,
+        "items": [
+          {
+            "key": "core_message",
+            "baseline": "",
+            "status": "suggested",
+            "suggestion": "在周末的草地上随心小憩，享受户外休闲的放松时光。",
+            "note": "依据受众与草地休闲场景设定，避开承重、尺寸、防水及充气方式等未核实规格。",
+            "source_refs": [],
+            "attempt_id": 1
+          },
+          {
+            "key": "buyer_situation",
+            "baseline": "",
+            "status": "suggested",
+            "suggestion": "周末前往公园或草坪户外休闲时，希望有一处可以随地躺坐放松的休息位置。",
+            "note": "结合用户给出的目标受众（周末想去公园/草地放松的人）进行场景化描述，未添加未经证实的具体参数。",
+            "source_refs": [],
+            "attempt_id": 1
+          }
+        ],
+        "llm_run_id": 83,
+        "model_receipt": {
+          "profile": "registered.ddd9b006056eae2bfb76b2ee",
+          "configuration_revision": 13,
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "prompt_version": "form-assist-v1",
+        "method_refs": [],
+        "context_hash": "3a24324e8fa11db00c7b5ca7f709a8d5e530c8a408fba167f49307606826a9bc",
+        "image_references": [],
+        "project_snapshot": {
+          "brief": {
+            "id": 9,
+            "checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "product_context": {
+              "name": "懒人沙发",
+              "description": "用户提供草地上多色沙发合照，可见蓝色表面和黑色底部。没有尺寸、价格或承重数据。",
+              "selling_points": [],
+              "excluded_claims": [
+                "承重",
+                "防水",
+                "秒充气"
+              ]
+            },
+            "objective": "为懒人沙发写有依据的场景视频",
+            "primary_audience": "周末想在草地休息的人"
+          }
+        }
+      }
+    ],
+    "decisions": [],
+    "feedback": [],
+    "selection": null,
+    "skipped_keys": [],
+    "source_refs": [],
+    "method_refs": []
+  },
+  "feedback": {
+    "id": 1,
+    "request_key": "real-text1",
+    "surface": "product_brief",
+    "mode": "autofill",
+    "project_id": 9,
+    "unit_id": null,
+    "context_hash": "3a24324e8fa11db00c7b5ca7f709a8d5e530c8a408fba167f49307606826a9bc",
+    "revision": 2,
+    "status": "ready",
+    "llm_run_id": 84,
+    "items": [
+      {
+        "key": "core_message",
+        "baseline": "",
+        "status": "suggested",
+        "suggestion": "周末去公园草地放松时，为自己准备一个随身放置的坐卧位置",
+        "note": "依据反馈将核心信息聚焦于草地户外的坐卧位置需求，未涉及舒适度体验、承重、防水或充气方式等未证实效果，仅作为待审阅创意建议。",
+        "source_refs": [],
+        "attempt_id": 2
+      },
+      {
+        "key": "buyer_situation",
+        "baseline": "",
+        "status": "suggested",
+        "suggestion": "周末前往公园或草坪户外休闲时，希望有一处可以随地躺坐放松的休息位置。",
+        "note": "结合用户给出的目标受众（周末想去公园/草地放松的人）进行场景化描述，未添加未经证实的具体参数。",
+        "source_refs": [],
+        "attempt_id": 1
+      }
+    ],
+    "attempts": [
+      {
+        "id": 1,
+        "request_key": "real-text1",
+        "feedback": null,
+        "items": [
+          {
+            "key": "core_message",
+            "baseline": "",
+            "status": "suggested",
+            "suggestion": "在周末的草地上随心小憩，享受户外休闲的放松时光。",
+            "note": "依据受众与草地休闲场景设定，避开承重、尺寸、防水及充气方式等未核实规格。",
+            "source_refs": [],
+            "attempt_id": 1
+          },
+          {
+            "key": "buyer_situation",
+            "baseline": "",
+            "status": "suggested",
+            "suggestion": "周末前往公园或草坪户外休闲时，希望有一处可以随地躺坐放松的休息位置。",
+            "note": "结合用户给出的目标受众（周末想去公园/草地放松的人）进行场景化描述，未添加未经证实的具体参数。",
+            "source_refs": [],
+            "attempt_id": 1
+          }
+        ],
+        "llm_run_id": 83,
+        "model_receipt": {
+          "profile": "registered.ddd9b006056eae2bfb76b2ee",
+          "configuration_revision": 13,
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "prompt_version": "form-assist-v1",
+        "method_refs": [],
+        "context_hash": "3a24324e8fa11db00c7b5ca7f709a8d5e530c8a408fba167f49307606826a9bc",
+        "image_references": [],
+        "project_snapshot": {
+          "brief": {
+            "id": 9,
+            "checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "product_context": {
+              "name": "懒人沙发",
+              "description": "用户提供草地上多色沙发合照，可见蓝色表面和黑色底部。没有尺寸、价格或承重数据。",
+              "selling_points": [],
+              "excluded_claims": [
+                "承重",
+                "防水",
+                "秒充气"
+              ]
+            },
+            "objective": "为懒人沙发写有依据的场景视频",
+            "primary_audience": "周末想在草地休息的人"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "request_key": "real-feedback1",
+        "feedback": "不要泛泛说舒适，把购买理由写成在草地上有一个坐卧位置，不声称真实舒适效果。",
+        "items": [
+          {
+            "key": "core_message",
+            "baseline": "",
+            "status": "suggested",
+            "suggestion": "周末去公园草地放松时，为自己准备一个随身放置的坐卧位置",
+            "note": "依据反馈将核心信息聚焦于草地户外的坐卧位置需求，未涉及舒适度体验、承重、防水或充气方式等未证实效果，仅作为待审阅创意建议。",
+            "source_refs": [],
+            "attempt_id": 2
+          }
+        ],
+        "llm_run_id": 84,
+        "model_receipt": {
+          "profile": "registered.ddd9b006056eae2bfb76b2ee",
+          "configuration_revision": 13,
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "prompt_version": "form-assist-v1",
+        "method_refs": [],
+        "context_hash": "3a24324e8fa11db00c7b5ca7f709a8d5e530c8a408fba167f49307606826a9bc",
+        "image_references": [],
+        "project_snapshot": {
+          "brief": {
+            "id": 9,
+            "checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "product_context": {
+              "name": "懒人沙发",
+              "description": "用户提供草地上多色沙发合照，可见蓝色表面和黑色底部。没有尺寸、价格或承重数据。",
+              "selling_points": [],
+              "excluded_claims": [
+                "承重",
+                "防水",
+                "秒充气"
+              ]
+            },
+            "objective": "为懒人沙发写有依据的场景视频",
+            "primary_audience": "周末想在草地休息的人"
+          }
+        }
+      }
+    ],
+    "decisions": [],
+    "feedback": [
+      {
+        "expected_revision": 1,
+        "request_key": "real-feedback1",
+        "context": {
+          "name": "懒人沙发",
+          "description": "草地上的蓝色沙发，黑色底部；无承重、尺寸、价格资料。",
+          "objective": "写一条休闲场景商品视频",
+          "primary_audience": "周末想去公园放松的人",
+          "core_message": "",
+          "buyer_situation": ""
+        },
+        "keys": [
+          "core_message"
+        ],
+        "reason": "不要泛泛说舒适，把购买理由写成在草地上有一个坐卧位置，不声称真实舒适效果。",
+        "correction_target": "presentation_style",
+        "request_hash": "ae07c43ae275d07d1885df4d7b749a8b5ae62637f88910d7c052e2115fdde461",
+        "candidate": null
+      }
+    ],
+    "selection": null,
+    "skipped_keys": [],
+    "source_refs": [],
+    "method_refs": []
+  },
+  "vision": {
+    "id": 2,
+    "request_key": "real-image1",
+    "surface": "video",
+    "mode": "polish",
+    "project_id": 9,
+    "unit_id": 15,
+    "context_hash": "50680a9ebb201113948842f48f2df1ac647dd14a568c7b51c1c733d478c9e2ed",
+    "revision": 1,
+    "status": "ready",
+    "llm_run_id": 85,
+    "items": [
+      {
+        "key": "shots.probe.production.prompt",
+        "baseline": "",
+        "status": "suggested",
+        "suggestion": "俯拍微推镜头。阳光草坪上整齐排列多色拼黑底充气沙发，中心粉色沙发上一名白裙女子舒适仰躺伸展，微风拂过草地，沙发形态饱满稳定。",
+        "note": "依据实拍场景设计开场运镜，保持沙发双拼色外观，不涉及承重或功能宣称。",
+        "source_refs": [],
+        "image_reference": {
+          "master_revision_id": 42,
+          "master_payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "shot_id": "probe",
+          "material_revision_id": 43,
+          "content_hash": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321",
+          "observation_method": "openai_compatible_image_input"
+        },
+        "attempt_id": 1,
+        "image_observation": "实际画面观察：日光草坪上排列多款上层彩色、底层黑色的充气沙发，女子躺于中间粉色沙发上面带微笑展开双臂；可执行动作：低速推镜头或俯拍微升，女子轻微呼吸或微风吹动草坪；保持细节：沙发的舟形充气外观、彩色表面与黑色底面拼色结构；风险：避免沙发塌陷形变，切勿体现防水、承重等未验证特性。",
+        "review_status": "draft_requires_human_confirmation"
+      }
+    ],
+    "attempts": [
+      {
+        "id": 1,
+        "request_key": "real-image1",
+        "feedback": null,
+        "items": [
+          {
+            "key": "shots.probe.production.prompt",
+            "baseline": "",
+            "status": "suggested",
+            "suggestion": "俯拍微推镜头。阳光草坪上整齐排列多色拼黑底充气沙发，中心粉色沙发上一名白裙女子舒适仰躺伸展，微风拂过草地，沙发形态饱满稳定。",
+            "note": "依据实拍场景设计开场运镜，保持沙发双拼色外观，不涉及承重或功能宣称。",
+            "source_refs": [],
+            "image_reference": {
+              "master_revision_id": 42,
+              "master_payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "shot_id": "probe",
+              "material_revision_id": 43,
+              "content_hash": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321",
+              "observation_method": "openai_compatible_image_input"
+            },
+            "attempt_id": 1,
+            "image_observation": "实际画面观察：日光草坪上排列多款上层彩色、底层黑色的充气沙发，女子躺于中间粉色沙发上面带微笑展开双臂；可执行动作：低速推镜头或俯拍微升，女子轻微呼吸或微风吹动草坪；保持细节：沙发的舟形充气外观、彩色表面与黑色底面拼色结构；风险：避免沙发塌陷形变，切勿体现防水、承重等未验证特性。",
+            "review_status": "draft_requires_human_confirmation"
+          }
+        ],
+        "llm_run_id": 85,
+        "model_receipt": {
+          "profile": "registered.ddd9b006056eae2bfb76b2ee",
+          "configuration_revision": 13,
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "prompt_version": "form-assist-v1",
+        "method_refs": [],
+        "context_hash": "50680a9ebb201113948842f48f2df1ac647dd14a568c7b51c1c733d478c9e2ed",
+        "image_references": [
+          {
+            "key": "shots.probe.production.prompt",
+            "master_revision_id": 42,
+            "master_payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "shot_id": "probe",
+            "material_revision_id": 43,
+            "content_hash": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321",
+            "observation_method": "openai_compatible_image_input"
+          }
+        ],
+        "project_snapshot": {
+          "brief": {
+            "id": 9,
+            "checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "product_context": {
+              "name": "懒人沙发",
+              "description": "用户提供草地上多色沙发合照，可见蓝色表面和黑色底部。没有尺寸、价格或承重数据。",
+              "selling_points": [],
+              "excluded_claims": [
+                "承重",
+                "防水",
+                "秒充气"
+              ]
+            },
+            "objective": "为懒人沙发写有依据的场景视频",
+            "primary_audience": "周末想在草地休息的人"
+          },
+          "master": {
+            "id": 42,
+            "payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "creative_intent": null,
+            "creative_intent_hash": null
+          }
+        }
+      }
+    ],
+    "decisions": [],
+    "feedback": [],
+    "selection": null,
+    "skipped_keys": [],
+    "source_refs": [],
+    "method_refs": []
+  },
+  "isolation": "cloned DB only; no formal image selected or webpage video generated"
+}

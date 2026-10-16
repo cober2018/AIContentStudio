@@ -1,9 +1,30 @@
+export type ProductMaterialRef = { material_revision_id: number; content_hash: string; categories?: string[] };
+export type ProductOffer = { text: string; checked_at: string | null; valid_until: string | null; currency: string | null; original_price: string | null; sale_price: string | null; source_id: number | null; conditions: string | null; timezone: string | null; [key: string]: unknown };
+export type ProductSalesSetup = {
+  production_stages?: import("../ProductionStageControls").ProductionStages | null; category?: string; style_ref?: { artifact_id: number; revision_id: number; content_hash: string } | null;
+  buyer_situation?: string; purchase_reason_evidence?: string;
+  purchase_reason_source_ids?: number[]; purchase_reason_material_revision_ids?: number[];
+  main_objection?: string; objection_answer?: string; unsuitable_for?: string; seller_advantage?: string;
+  target_duration_seconds?: number | null; expression_test?: "scene" | "demo" | "compare" | "faq" | "selection" | null;
+};
+export type ProductContext = ProductSalesSetup & {
+  name: string; variant: string; description: string; url: string | null; selling_points: string[]; excluded_claims: string[];
+  source_refs?: { source_id: number; checksum: string }[]; material_refs?: ProductMaterialRef[]; offer?: ProductOffer | null;
+  [key: string]: unknown;
+};
+export type ProductCosts = {
+  currency: string | null; basis: "per_order" | "total" | null; order_count: number | null;
+  purchase: string | null; packaging: string | null; shipping: string | null; platform: string | null;
+  promotion: string | null; production: string | null; returns_service: string | null;
+};
+export type ProductCostsView = { costs: ProductCosts | null; estimated_contribution: string | null };
+
 export type Brief = {
   id: number; revision_no: number; checksum: string; objective: string;
   primary_audience: string | null; core_message: string | null; angle: string | null;
   required_evidence: string[]; content_constraints: string[]; identity_scope: (number | Record<string, number | null>)[];
   modality_scope: string[]; channel_scope: string[]; cta: string | null;
-  product_context?: { name: string; variant: string; description: string; url: string | null; selling_points: string[]; excluded_claims: string[]; source_refs?: { source_id: number; checksum: string }[]; material_refs?: { material_revision_id: number; content_hash: string }[]; [key: string]: unknown } | null;
+  product_context?: ProductContext | null;
   references: { kind: string; id: number }[]; created_at: string | null;
 };
 

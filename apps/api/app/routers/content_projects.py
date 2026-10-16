@@ -522,7 +522,7 @@ def save_project_brief(payload: BriefRevisionIn, project_id: int, db: Session = 
     if payload.expected_revision != current_revision:
         raise HTTPException(409, "Brief 已更新，请刷新后重试")
     data = payload.model_dump(mode="json", exclude={"expected_revision"})
-    data["product_context"] = validate_product_context(db, data.get("product_context"))
+    data["product_context"] = validate_product_context(db, data.get("product_context"), user=user, project_id=project_id)
     row = CreativeBriefRevision(
         project_id=project_id,
         revision_no=current_revision + 1,

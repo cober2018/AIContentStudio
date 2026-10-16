@@ -28,6 +28,7 @@ def resolve_stage(*, workflow, node, contract, context, upstream, method, model,
     sections = []
     prompt_identity = context.get("identity")
     prompt_creative = creative
+    prompt_brief = copy.deepcopy(context.get("brief"))
     if creative is not None and creative.get("production_stage"):
         # Raw profile history contains disabled instructions; only the manifest is task input.
         prompt_identity = copy.deepcopy(prompt_identity)
@@ -36,6 +37,9 @@ def resolve_stage(*, workflow, node, contract, context, upstream, method, model,
                                           if not key.endswith("_creative_profile")}
         prompt_creative = {key: value for key, value in creative.items()
                            if key not in {"profile", "method_stack"}}
+        product = ((prompt_brief or {}).get("content") or {}).get("product_context")
+        if isinstance(product, dict):
+            product.pop("production_stages", None)
     values = (
         ("method", method.get("instruction", "") if method else ""),
         ("identity", prompt_identity),
@@ -43,7 +47,7 @@ def resolve_stage(*, workflow, node, contract, context, upstream, method, model,
         ("execution_controls", {
             key: effective.get(key) for key in metadata["tunable_fields"] if key != "instruction"
         }),
-        ("brief", context.get("brief")), ("intent", context.get("intent")),
+        ("brief", prompt_brief), ("intent", context.get("intent")),
         ("evidence", context.get("boundary")), ("upstream", upstream), ("task_override", override),
     )
     if creative is not None:

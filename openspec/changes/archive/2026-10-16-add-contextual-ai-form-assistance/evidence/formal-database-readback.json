@@ -1,0 +1,18 @@
+{
+  "legacy_tables_compared": 100,
+  "unchanged_count_tables": 98,
+  "concurrent_discovery_scheduler_counts": {
+    "discovery_catchup_batch": [
+      186,
+      187
+    ],
+    "discovery_catchup_source": [
+      732,
+      781
+    ]
+  },
+  "new_sessions": 0,
+  "schema": "formassist000001",
+  "integrity": "ok",
+  "foreign_keys": 0
+}

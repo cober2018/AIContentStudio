@@ -1,3 +1,5 @@
+2026-10-16 **AI表单补齐、定点润色与商品素材导演已接入，17/17**：任意已填内容补空白、逐项确认、固定浮窗润色、反馈与明确偏好版本、品类/风格阶段配置和实际看图动态提示词已可用。纯候选286检查/Web构建及独立复核通过；备份后加法迁移、本机API/Worker和页面回读通过。旧商品关键帧仍待确认，未生成新视频、未push。[使用与验收](openspec/changes/archive/2026-10-16-add-contextual-ai-form-assistance/README.md)。
+
 2026-10-16 **商品视频Skills正式接入、样片已回收，20/20**：六项方法/首轮冻结/阶段开关及AE/Resolve适配完成；懒人沙发16秒有声样片、8项接受产物和Master41本地绑定通过委托AI质量评审。纯候选564项既有检查/1跳过、Web及独立复核通过；已归档同步10条规范并选择性本地提交。未直接试听，公开门禁保留、角色默认不变、未push。[使用入口与验收](openspec/changes/archive/2026-10-16-add-product-video-production-skills/README.md)。
 
 2026-10-16 **角色风格与阶段Skills已正式启用并归档，22/22**：科技角色v4、12项方法/十阶段开关/3首场景配乐已接入；47秒有声样片及8个产物正式接受，Master39本地绑定，32项API回读通过。纯候选521项既有检查、Web及独立复核通过；未直接试听、公开门禁保持，已选择性本地提交、未push。[使用入口与验收](openspec/changes/archive/2026-10-16-add-persona-production-skill-profiles/README.md)。

@@ -38,6 +38,7 @@ OUTBOUND_HTTP_POLICIES = MappingProxyType({
     "connector": OutboundLimits(10, 1_000_000, 1_000_000),
     "model_discovery": OutboundLimits(10, 1_000_000, 2_000_000),
     "model_generation": OutboundLimits(120, 1_000_000, 2_000_000),
+    "model_vision": OutboundLimits(120, 42 * 1024 * 1024, 2_000_000),
     "image": OutboundLimits(120, 1_000_000, 8 * 1024 * 1024),
     "commons": OutboundLimits(15, 0, 5_000_000),
     "wechat": OutboundLimits(25, 11 * 1024 * 1024, 1_048_576),

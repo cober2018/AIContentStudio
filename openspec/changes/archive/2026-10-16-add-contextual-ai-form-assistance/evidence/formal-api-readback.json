@@ -1,0 +1,24 @@
+[
+  {
+    "path": "/api/v1/health/ready",
+    "http": 200,
+    "ready": true
+  },
+  {
+    "path": "/api/v1/form-assistance/fields?surface=video",
+    "http": 200
+  },
+  {
+    "path": "/api/v1/form-assistance?surface=product_brief&project_id=8",
+    "http": 200
+  },
+  {
+    "path": "/api/v1/content-projects/8/brief",
+    "http": 200
+  },
+  {
+    "path": "/api/v1/settings/model-registration",
+    "http": 200,
+    "new_routes_visible": true
+  }
+]

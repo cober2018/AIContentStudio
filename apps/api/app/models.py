@@ -2535,3 +2535,25 @@ class ContentMemoryRevision(Base):
     checksum: Mapped[str] = mapped_column(String(64))
     created_by: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class FormAssistanceSession(Base):
+    __tablename__ = "form_assistance_session"
+    __table_args__ = (UniqueConstraint("owner_user_id", "request_key", name="uq_form_assistance_owner_request"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="RESTRICT"), index=True)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id", ondelete="RESTRICT"), index=True)
+    unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id", ondelete="RESTRICT"))
+    request_key: Mapped[str] = mapped_column(String(100))
+    surface: Mapped[str] = mapped_column(String(30))
+    mode: Mapped[str] = mapped_column(String(20))
+    context_hash: Mapped[str] = mapped_column(String(64))
+    request_hash: Mapped[str] = mapped_column(String(64))
+    context_json: Mapped[dict] = mapped_column(JSON)
+    state_json: Mapped[dict] = mapped_column(JSON)
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    llm_run_id: Mapped[int | None] = mapped_column(ForeignKey("llm_run.id", ondelete="RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

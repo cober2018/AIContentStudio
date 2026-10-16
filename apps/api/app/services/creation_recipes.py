@@ -479,11 +479,11 @@ def _context(db, project, unit, run):
         raise HTTPException(409, {"code": "stage_identity_integrity"})
     brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
     if brief and brief.product_context_json:
-        from ..models import MaterialRevision
+        from ..models import MaterialRevision, User
         from .project_brief import validate_product_context
 
         try:
-            product = validate_product_context(db, brief.product_context_json)
+            product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
             if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
                 blockers.append("product_material_model_use_required")
         except (HTTPException, ValueError):
@@ -527,7 +527,7 @@ def _context(db, project, unit, run):
         blockers.extend(knowledge_blockers)
     workflow = db.get(Workflow, run.workflow_id if run else unit.pinned_workflow_id) if (run or unit.pinned_workflow_id) else None
     if workflow and any(node.get("plugin") == "stage.graphic.compose" for node in workflow.definition_json.get("nodes", [])):
-        from ..models import MaterialRevision, ProjectMaterialReference
+        from ..models import MaterialRevision, ProjectMaterialReference, User
         from .content_masters import _verified_generated_asset
         from .materials import read_bytes_checked
         from .project_assets import shared_assets

@@ -26,7 +26,7 @@ from .url_fetch import (
     resolve_addresses,
 )
 
-PURPOSES = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit")
+PURPOSES = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit", "form_autofill", "field_polish")
 PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS = OUTBOUND_HTTP_POLICIES["model_generation"].timeout_seconds
 
 
@@ -49,7 +49,7 @@ class RegistrationInput(StrictModel):
     providers: dict[Identifier, ProviderInput] = Field(default_factory=dict, max_length=100)
     models: list[RegisteredModelInput] = Field(default_factory=list, max_length=100)
     default_profile: str = Field(default="", max_length=100)
-    routes: dict[str, str] = Field(default_factory=dict, max_length=7)
+    routes: dict[str, str] = Field(default_factory=dict, max_length=9)
 
 
 def endpoint(value):
@@ -101,7 +101,7 @@ def target(provider):
         raise HTTPException(422, "provider_target_unavailable") from exc
 
 
-def provider_request(provider, path, *, payload=None, timeout=10):
+def provider_request(provider, path, *, payload=None, timeout=10, image_input=False):
     """Pin validated TCP target while retaining TLS hostname and suppress raw diagnostics."""
     native_image = re.fullmatch(r"/v1beta/models/([A-Za-z0-9_.~-]|%[0-9A-F]{2}){1,480}:generateContent", path) is not None
     if path not in {"/models", "/chat/completions", "/images/generations"} and not native_image:
@@ -112,6 +112,10 @@ def provider_request(provider, path, *, payload=None, timeout=10):
     if not math.isfinite(timeout_value):
         timeout_value = PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS
     policy = "model_discovery" if path == "/models" else "image" if path == "/images/generations" or native_image else "model_generation"
+    if image_input:
+        if path != "/chat/completions":
+            raise HTTPException(422, "provider_image_operation_invalid")
+        policy = "model_vision"
     limit = OUTBOUND_HTTP_POLICIES[policy]
     deadline = time.monotonic() + min(max(timeout_value, 0.1), limit.timeout_seconds)
     headers = {"Authorization": "Bearer " + provider["api_key"], "Accept-Encoding": "identity"}

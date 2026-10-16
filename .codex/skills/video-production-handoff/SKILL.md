@@ -25,6 +25,8 @@ Preserve historic v1 text/image tasks, exact idempotent replays, playback, retur
 
 ## Product work
 
+For unified product image-to-clip direction, use [product-video-material-director](../product-video-material-director/SKILL.md) with selected method versions and the contracts below.
+
 When the frozen brief contains product_context, keep its original SKU/source/material revisions and selected Persona style. Product methods must have been chosen before the first generation Run, not first added after writing the script. For selected product methods use the exact method_card_text embedded in the frozen versioned instruction and verify its UTF-8 SHA256 against method_card_sha256. The method_card path is provenance only; never reload its mutable local file as execution guidance. A legacy frozen instruction without embedded card content uses only its already frozen text; adding a newer card requires an explicit new method revision and task. Ordinary capability instructions are not JSX or deterministic config patches. Do not read all candidate methods by default.
 
 A single front photograph supports front-view framing, zoom and planar motion; it does not prove a backside or a 360-degree product. Check actual reference-input support before requesting reference-preserving generation. If unavailable, retain original pixels through real capture or native compositing; textual image mention is not a reference upload. Keep the original photo as identity truth rather than chaining only generated images. Physical product, apparel and software UI recipes have different applicability.

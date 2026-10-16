@@ -30,6 +30,7 @@ class ProductMaterialRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
     material_revision_id: int = Field(gt=0)
     content_hash: str = Field(min_length=64, max_length=64)
+    categories: list[Literal["front", "side", "back", "detail", "dimensions", "real_product", "real_demo", "measurement", "comparison", "specification", "authorized_feedback", "ai_scene"]] = Field(default_factory=list, max_length=12)
 
 
 class ProductClaim(BaseModel):
@@ -115,9 +116,19 @@ class ProductOffer(BaseModel):
         return self
 
 
+class ProductStyleRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    artifact_id: int = Field(gt=0)
+    revision_id: int = Field(gt=0)
+    content_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
 class ProductContext(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=300)
+    category: str = Field(default="", max_length=300)
+    style_ref: ProductStyleRef | None = None
+    production_stages: dict | None = None
     variant: str = Field(default="", max_length=1000)
     description: str = Field(default="", max_length=12000)
     url: str | None = Field(default=None, max_length=1000)
@@ -127,9 +138,28 @@ class ProductContext(BaseModel):
     source_refs: list[ProductSourceRef] = Field(default_factory=list, max_length=30)
     material_refs: list[ProductMaterialRef] = Field(default_factory=list, max_length=30)
     offer: ProductOffer | None = None
+    buyer_situation: str = Field(default="", max_length=2000)
+    purchase_reason_evidence: str = Field(default="", max_length=2000)
+    purchase_reason_source_ids: list[int] = Field(default_factory=list, max_length=30)
+    purchase_reason_material_revision_ids: list[int] = Field(default_factory=list, max_length=30)
+    main_objection: str = Field(default="", max_length=2000)
+    objection_answer: str = Field(default="", max_length=2000)
+    unsuitable_for: str = Field(default="", max_length=2000)
+    seller_advantage: str = Field(default="", max_length=2000)
+    target_duration_seconds: int | None = Field(default=None, gt=0, le=3600)
+    expression_test: Literal["scene", "demo", "compare", "faq", "selection"] | None = None
 
 
-def validate_product_context(db, value):
+    @model_validator(mode="after")
+    def validate_explicit_stages(self):
+        if self.production_stages is not None:
+            from .studio_creative_catalog import validate_production_stages
+
+            validate_production_stages(self.production_stages)
+        return self
+
+
+def validate_product_context(db, value, *, user=None, project_id=None):
     from ..models import Fact, MaterialRevision, SourceDocument
     from .discovery_search import canonical_url
 
@@ -138,6 +168,23 @@ def validate_product_context(db, value):
     data = ProductContext.model_validate(value).model_dump(mode="json")
     if any(len(v) > 2000 for v in data["selling_points"] + data["excluded_claims"]):
         raise HTTPException(422, "商品描述过长")
+    if data.get("style_ref"):
+        from ..models import CapabilityArtifact, CapabilityArtifactRevision
+
+        ref = data["style_ref"]
+        selected = db.get(CapabilityArtifact, ref["artifact_id"])
+        revision = db.get(CapabilityArtifactRevision, ref["revision_id"])
+        if (not selected or not revision or revision.artifact_id != selected.id
+                or revision.content_hash != ref["content_hash"] or selected.status not in {"saved", "pinned"}
+                or revision.content_json.get("content_schema") != "product.presentation-style.v1"):
+            raise HTTPException(409, "商品风格版本不可用")
+        if user is not None:
+            from .form_assistance import method_reference
+
+            method_reference(db, user, ref, project_id, context=data)
+        categories = revision.content_json.get("categories", [])
+        if categories and data["category"] not in categories:
+            raise HTTPException(422, "当前品类不在已选风格适用范围内")
     if data["url"]:
         try:
             data["url"] = canonical_url(data["url"])
@@ -166,6 +213,10 @@ def validate_product_context(db, value):
         if (not revision or not revision.material or revision.material.status != "active"
                 or revision.status in {"revoked", "archived"} or revision.content_hash != ref["content_hash"]):
             raise HTTPException(409, "商品素材不存在、已撤销或版本已变化")
+    if not set(data["purchase_reason_source_ids"]).issubset(sources):
+        raise HTTPException(422, "购买理由依据必须引用已选择的来源版本")
+    if not set(data["purchase_reason_material_revision_ids"]).issubset({r["material_revision_id"] for r in data["material_refs"]}):
+        raise HTTPException(422, "购买理由依据必须引用已选择的素材版本")
     return data
 
 

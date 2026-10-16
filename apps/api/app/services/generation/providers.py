@@ -34,6 +34,7 @@ class GenerateRequest:
     temperature: float | None = None
     max_tokens: int | None = None
     timeout_seconds: int | None = None
+    image_inputs: list[dict[str, str]] | None = None
 
 
 @dataclass
@@ -130,6 +131,33 @@ class OpenAICompatibleProvider:
             ],
             "temperature": request.temperature if request.temperature is not None else 0.4,
         }
+        if request.image_inputs:
+            import base64
+
+            if len(request.image_inputs) > 4:
+                raise LLMError("chat_image_count_invalid")
+            content = [{"type": "text", "text": request.user_prompt}]
+            total_image_bytes = 0
+            for image in request.image_inputs:
+                if set(image) != {"mime_type", "data_base64", "content_hash"} or image["mime_type"] not in {"image/png", "image/jpeg", "image/webp", "image/gif"}:
+                    raise LLMError("chat_image_input_invalid")
+                try:
+                    if len(image["data_base64"]) > 40 * 1024 * 1024:
+                        raise ValueError("image_size")
+                    raw = base64.b64decode(image["data_base64"], validate=True)
+                    total_image_bytes += len(raw)
+                    if total_image_bytes > 30 * 1024 * 1024:
+                        raise ValueError("image_batch_size")
+                    if not raw or len(raw) > 30 * 1024 * 1024 or hashlib.sha256(raw).hexdigest() != image["content_hash"]:
+                        raise ValueError("image_hash")
+                    from ..materials import sniff_mime
+
+                    if sniff_mime(raw, None) != image["mime_type"]:
+                        raise ValueError("image_mime")
+                except (ValueError, TypeError) as exc:
+                    raise LLMError("chat_image_input_invalid") from exc
+                content.append({"type": "image_url", "image_url": {"url": "data:" + image["mime_type"] + ";base64," + image["data_base64"]}})
+            payload["messages"][1]["content"] = content
         if request.schema_hint:
             payload["response_format"] = {"type": "json_object"}
         if request.max_tokens is not None:
@@ -152,7 +180,8 @@ class OpenAICompatibleProvider:
             "trusted_private_endpoint": self.base_url if self.base_url.startswith("http://") else "",
         }
         try:
-            return await asyncio.to_thread(provider_request, provider, "/chat/completions", payload=payload, timeout=timeout)
+            image_options = {"image_input": True} if request.image_inputs else {}
+            return await asyncio.to_thread(provider_request, provider, "/chat/completions", payload=payload, timeout=timeout, **image_options)
         except Exception as exc:
             raise LLMError("provider_request_failed") from exc
 
@@ -201,7 +230,7 @@ def model_selection(profile):
         _explicit_profile.reset(token)
 
 # 场景路由键：内容生成 / 选区改写 / 事实校验与审核复核 / 选题发现（基于 FactPack 荐题）
-ROUTE_KEYS = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation")
+ROUTE_KEYS = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit", "form_autofill", "field_polish")
 
 
 def _models_override() -> dict:
@@ -266,7 +295,7 @@ def effective_llm_config(purpose: str | None = None, *, profile: str | None = No
                 return {"provider": "openai_compatible", "base_url": provider["base_url"], "api_key": provider["api_key"],
                         "model": raw_profile["model"], "profile": route_name, "configuration_revision": models.get("revision", 0),
                         "registered_provider": dict(provider)}
-            if (explicit or models.get("default_profile")) and (not raw_profile or not raw_profile.get("enabled", True)):
+            if (explicit or models.get("default_profile") or routes.get(purpose)) and (not raw_profile or not raw_profile.get("enabled", True)):
                 raise LLMError("model_selection_unavailable")
             if raw_profile and raw_profile.get("enabled", True):
                 if "declared_capabilities" in raw_profile and "chat" not in raw_profile["declared_capabilities"]:
@@ -274,8 +303,10 @@ def effective_llm_config(purpose: str | None = None, *, profile: str | None = No
                 profile = _profile_config(route_name, models.get("profiles") or {})
                 if profile and profile["provider"]:
                     profile["profile"] = route_name
+                    profile["configuration_revision"] = models.get("revision", 0)
                     return profile
     fallback["profile"] = "default"
+    fallback["configuration_revision"] = models.get("revision", 0)
     return fallback
 
 
@@ -310,6 +341,8 @@ def provider_model_name(purpose: str | None = None) -> str:
 
 def input_hash(request: GenerateRequest) -> str:
     value = {"purpose": request.purpose, "system": request.system_prompt, "user": request.user_prompt}
+    if request.image_inputs:
+        value["images"] = [{"content_hash": image["content_hash"], "mime_type": image["mime_type"]} for image in request.image_inputs]
     if request.temperature is not None:
         value["temperature"] = request.temperature
     if request.max_tokens is not None:

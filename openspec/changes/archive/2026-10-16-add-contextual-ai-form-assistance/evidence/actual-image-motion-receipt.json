@@ -1,0 +1,131 @@
+{
+  "id": 3,
+  "request_key": "final-motion-20261016",
+  "surface": "video",
+  "mode": "polish",
+  "project_id": 9,
+  "unit_id": 15,
+  "context_hash": "50680a9ebb201113948842f48f2df1ac647dd14a568c7b51c1c733d478c9e2ed",
+  "revision": 1,
+  "status": "ready",
+  "llm_run_id": 86,
+  "context": {
+    "shots.probe.purpose": "环境开场，保持商品外观",
+    "shots.probe.production.prompt": ""
+  },
+  "items": [
+    {
+      "key": "shots.probe.production.prompt",
+      "baseline": "",
+      "status": "suggested",
+      "suggestion": "【单镜目的】环境开场，展示草地多色充气懒人沙发陈列与休闲状态。\n【画面细节保持】草地上并排陈列长椭圆中凹造型懒人沙发（前排浅蓝、明黄、粉色、灰蓝，后排深蓝、紫、红、绿、玫红），均为上层彩色、底座与外围黑色；中心粉色沙发上一名穿白裙女子平躺展臂。\n【主体动作】女子保持平躺微呼吸起伏，所有沙发静止稳固于草坪，无位移与形变。\n【相机运动】固定俯角中远景平稳缓慢向前微推。\n【节奏（时长待确认）】\n- 开始状态：俯拍展示多色沙发草地整齐阵列，中心人物静卧；\n- 中间节奏：镜头匀速推进，草地与产品受光稳定；\n- 结束状态：平稳停在以中心人物与邻近沙发为主的构图。\n【负向限制】禁止人物剧烈动作或起立，严禁沙发边缘闪烁、漂移、充放气变形，禁止添加文字、LOGO、隐藏结构或未提供的功能说明。",
+      "note": "时长待确认。已排除承重、防水、秒充气等未证实宣称，仅基于画面可见多色外观及静态姿态设计镜头。",
+      "source_refs": [],
+      "image_reference": {
+        "master_revision_id": 42,
+        "master_payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "shot_id": "probe",
+        "material_revision_id": 43,
+        "content_hash": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321",
+        "shot_purpose": "呈现草地休闲场景，保持原商品外观",
+        "shot_duration_ms": null,
+        "requested_generation_duration_ms": null,
+        "web_provider": null,
+        "audio_intent": null,
+        "observation_method": "openai_compatible_image_input"
+      },
+      "attempt_id": 1,
+      "image_observation": "实际画面观察：日光草坪上整齐排列多色充气懒人沙发（彩色上表层拼黑色底座），中间浅粉色沙发上躺有一名身穿白色吊带裙、张开双臂的女性。无法认证内容：具体尺寸、耐磨度、承重能力、防水及充气速度。可行性风险：同屏多物体容易在视频生成中产生色彩溢出或形变，需严格限制相机位移幅度与肢体动作以保真。",
+      "review_status": "draft_requires_human_confirmation"
+    }
+  ],
+  "attempts": [
+    {
+      "id": 1,
+      "request_key": "final-motion-20261016",
+      "feedback": null,
+      "items": [
+        {
+          "key": "shots.probe.production.prompt",
+          "baseline": "",
+          "status": "suggested",
+          "suggestion": "【单镜目的】环境开场，展示草地多色充气懒人沙发陈列与休闲状态。\n【画面细节保持】草地上并排陈列长椭圆中凹造型懒人沙发（前排浅蓝、明黄、粉色、灰蓝，后排深蓝、紫、红、绿、玫红），均为上层彩色、底座与外围黑色；中心粉色沙发上一名穿白裙女子平躺展臂。\n【主体动作】女子保持平躺微呼吸起伏，所有沙发静止稳固于草坪，无位移与形变。\n【相机运动】固定俯角中远景平稳缓慢向前微推。\n【节奏（时长待确认）】\n- 开始状态：俯拍展示多色沙发草地整齐阵列，中心人物静卧；\n- 中间节奏：镜头匀速推进，草地与产品受光稳定；\n- 结束状态：平稳停在以中心人物与邻近沙发为主的构图。\n【负向限制】禁止人物剧烈动作或起立，严禁沙发边缘闪烁、漂移、充放气变形，禁止添加文字、LOGO、隐藏结构或未提供的功能说明。",
+          "note": "时长待确认。已排除承重、防水、秒充气等未证实宣称，仅基于画面可见多色外观及静态姿态设计镜头。",
+          "source_refs": [],
+          "image_reference": {
+            "master_revision_id": 42,
+            "master_payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "shot_id": "probe",
+            "material_revision_id": 43,
+            "content_hash": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321",
+            "shot_purpose": "呈现草地休闲场景，保持原商品外观",
+            "shot_duration_ms": null,
+            "requested_generation_duration_ms": null,
+            "web_provider": null,
+            "audio_intent": null,
+            "observation_method": "openai_compatible_image_input"
+          },
+          "attempt_id": 1,
+          "image_observation": "实际画面观察：日光草坪上整齐排列多色充气懒人沙发（彩色上表层拼黑色底座），中间浅粉色沙发上躺有一名身穿白色吊带裙、张开双臂的女性。无法认证内容：具体尺寸、耐磨度、承重能力、防水及充气速度。可行性风险：同屏多物体容易在视频生成中产生色彩溢出或形变，需严格限制相机位移幅度与肢体动作以保真。",
+          "review_status": "draft_requires_human_confirmation"
+        }
+      ],
+      "llm_run_id": 86,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "prompt_version": "form-assist-v1",
+      "method_refs": [],
+      "context_hash": "50680a9ebb201113948842f48f2df1ac647dd14a568c7b51c1c733d478c9e2ed",
+      "image_references": [
+        {
+          "key": "shots.probe.production.prompt",
+          "master_revision_id": 42,
+          "master_payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "shot_id": "probe",
+          "material_revision_id": 43,
+          "content_hash": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321",
+          "shot_purpose": "呈现草地休闲场景，保持原商品外观",
+          "shot_duration_ms": null,
+          "requested_generation_duration_ms": null,
+          "web_provider": null,
+          "audio_intent": null,
+          "observation_method": "openai_compatible_image_input"
+        }
+      ],
+      "project_snapshot": {
+        "brief": {
+          "id": 9,
+          "checksum": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "product_context": {
+            "name": "懒人沙发",
+            "description": "用户提供草地上多色沙发合照，可见蓝色表面和黑色底部。没有尺寸、价格或承重数据。",
+            "selling_points": [],
+            "excluded_claims": [
+              "承重",
+              "防水",
+              "秒充气"
+            ]
+          },
+          "objective": "为懒人沙发写有依据的场景视频",
+          "primary_audience": "周末想在草地休息的人"
+        },
+        "master": {
+          "id": 42,
+          "payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "creative_intent": null,
+          "creative_intent_hash": null
+        }
+      }
+    }
+  ],
+  "decisions": [],
+  "feedback": [],
+  "selection": null,
+  "skipped_keys": [],
+  "source_refs": [],
+  "method_refs": []
+}

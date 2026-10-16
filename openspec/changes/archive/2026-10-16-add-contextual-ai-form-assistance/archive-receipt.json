@@ -1,0 +1,13 @@
+{
+  "change": "add-contextual-ai-form-assistance",
+  "date": "2026-10-16",
+  "tasks": {
+    "complete": 17,
+    "total": 17
+  },
+  "canonical_added": 11,
+  "canonical_modified": 0,
+  "canonical_removed": 0,
+  "scope": "functional acceptance only; sofa exact image selection remains pending in original change",
+  "push": false
+}

@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "check": "form_assist",
+      "exit_code": 0,
+      "log": "/tmp/form-backend-validation/form_assist.log"
+    },
+    {
+      "check": "form_vision",
+      "exit_code": 0,
+      "log": "/tmp/form-backend-validation/form_vision.log"
+    },
+    {
+      "check": "form_stage",
+      "exit_code": 0,
+      "log": "/tmp/form-backend-validation/form_stage.log"
+    },
+    {
+      "check": "form_route",
+      "exit_code": 0,
+      "log": "/tmp/form-backend-validation/form_route.log"
+    }
+  ],
+  "existing_regression": {
+    "passed": 286,
+    "warnings": 65,
+    "tests": [
+      "test_product_settings",
+      "test_model_capability_routing",
+      "test_aco_capability_memory",
+      "test_creation_recipe_stages",
+      "test_f6d_video_documents",
+      "test_f7_openai_image_provider"
+    ]
+  },
+  "schema_regression": {
+    "passed": 12,
+    "failed": 4,
+    "failures": "two stale a3series00000001-head assertions and two old downgrade expectations stopped earlier by existing catchup destructive guard"
+  },
+  "isolation": "All probes in-memory or /tmp SQLite; no production runtime or data/config writes"
+}

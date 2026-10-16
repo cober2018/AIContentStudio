@@ -1,0 +1,16 @@
+[]
+PASS actual app TestClient /api/v1 unique registration+fields/generate/read/list/styles/decisions; no lifespan or production connection
+/Users/mshengran/.codex/worktrees/contextual-form-ai/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-16 19:32:04,916 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "03da2c8571ab", "method": "GET", "path": "/api/v1/form-assistance/fields", "status": 200, "duration_ms": 21.4}
+2026-10-16 19:32:04,916 INFO httpx HTTP Request: GET http://testserver/api/v1/form-assistance/fields?surface=product_creation "HTTP/1.1 200 OK"
+2026-10-16 19:32:04,920 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "db75ad43971f", "method": "POST", "path": "/api/v1/form-assistance", "status": 200, "duration_ms": 3.1}
+2026-10-16 19:32:04,920 INFO httpx HTTP Request: POST http://testserver/api/v1/form-assistance "HTTP/1.1 200 OK"
+2026-10-16 19:32:04,922 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "936e773e1a47", "method": "GET", "path": "/api/v1/form-assistance/{session_id}", "status": 200, "duration_ms": 1.1}
+2026-10-16 19:32:04,922 INFO httpx HTTP Request: GET http://testserver/api/v1/form-assistance/1 "HTTP/1.1 200 OK"
+2026-10-16 19:32:04,923 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "9d316c59daf3", "method": "GET", "path": "/api/v1/form-assistance", "status": 200, "duration_ms": 1.2}
+2026-10-16 19:32:04,924 INFO httpx HTTP Request: GET http://testserver/api/v1/form-assistance?surface=product_creation "HTTP/1.1 200 OK"
+2026-10-16 19:32:04,925 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "4cd214f63620", "method": "GET", "path": "/api/v1/form-assistance/styles", "status": 200, "duration_ms": 1.0}
+2026-10-16 19:32:04,925 INFO httpx HTTP Request: GET http://testserver/api/v1/form-assistance/styles "HTTP/1.1 200 OK"
+2026-10-16 19:32:04,928 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "c369d293b7b9", "method": "POST", "path": "/api/v1/form-assistance/{session_id}/decisions", "status": 200, "duration_ms": 1.7}
+2026-10-16 19:32:04,928 INFO httpx HTTP Request: POST http://testserver/api/v1/form-assistance/1/decisions "HTTP/1.1 200 OK"

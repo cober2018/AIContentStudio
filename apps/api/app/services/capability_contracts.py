@@ -99,7 +99,10 @@ def canonical(value, *, max_bytes=MAX_BYTES):
                     raise error("capability_normalization_key_collision")
                 normalized = unicodedata.normalize("NFKC", key).lower().replace("-", "_").replace(" ", "_")
                 compact = normalized.replace("_", "")
-                if (normalized in _FORBIDDEN or normalized.startswith(("$", "raw_", "full_source_"))
+                stage_slot = (normalized == "script" and type(child) is dict
+                              and set(child) == {"enabled", "methods"} and type(child["enabled"]) is bool
+                              and type(child["methods"]) is list)
+                if not stage_slot and (normalized in _FORBIDDEN or normalized.startswith(("$", "raw_", "full_source_"))
                         or compact in _FORBIDDEN_COMPACT
                         or compact.startswith(("rawsource", "rawprovider", "fullsource"))):
                     raise error("capability_unsafe_payload")
@@ -239,6 +242,18 @@ def artifact(kind, content, schema):
             validate_recipe(content)
         except ValueError:
             raise error("workflow_stage_recipe_invalid") from None
+    if content.get("content_schema") == "product.presentation-style.v1":
+        from .studio_creative_catalog import validate_production_stages
+
+        if kind != "creative_pattern":
+            raise error("product_style_kind_invalid")
+        categories = content.get("categories", [])
+        if type(categories) is not list or len(categories) > 30 or any(type(c) is not str or not c.strip() or len(c) > 300 for c in categories):
+            raise error("product_style_categories_invalid")
+        try:
+            validate_production_stages(content.get("production_stages", {}))
+        except ValueError:
+            raise error("product_style_stages_invalid") from None
     if content.get("content_schema") == "persona.reference-style.v1":
         if kind != "creative_pattern":
             raise error("reference_style_kind_invalid")

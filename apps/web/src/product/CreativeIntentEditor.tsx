@@ -85,7 +85,7 @@ export default function CreativeIntentEditor({ value, onChange, readOnly, label 
     <p className="text-xs text-slate-500">随内容明确保存为新修订。请记录创作决定，不填写密钥、原始模型输出或整份来源正文。</p>
     {!value ? <div className="space-y-2"><p className="text-sm text-slate-500">此版本未记录创作意图。</p>{!readOnly && <Button variant="secondary" size="sm" onClick={() => onChange({ schema: "creative.intent.v1" })}>记录创作意图</Button>}</div> : <>
       {issue && <ErrorBanner message={issue} />}
-      <div className="grid gap-3 sm:grid-cols-2">{([["objective", "创作目标"], ["audience", "面向谁"], ["creative_freedom", "允许自由发挥的范围"]] as const).map(([field, title]) => <Field key={field} label={title} hint="最多 2000 字"><textarea aria-label={`${label} · ${title}`} className={inputClass} rows={3} maxLength={2000} value={typeof value[field] === "string" ? value[field] : ""} disabled={disabled} onChange={(event) => update({ [field]: event.target.value })} /></Field>)}</div>
+      <div className="grid gap-3 sm:grid-cols-2">{([["objective", "创作目标"], ["audience", "面向谁"], ["creative_freedom", "允许自由发挥的范围"]] as const).map(([field, title]) => <Field key={field} label={title} hint="最多 2000 字"><textarea data-ai-field={`intent.${field}`} aria-label={`${label} · ${title}`} className={inputClass} rows={3} maxLength={2000} value={typeof value[field] === "string" ? value[field] : ""} disabled={disabled} onChange={(event) => update({ [field]: event.target.value })} /></Field>)}</div>
       <div className="grid gap-4 sm:grid-cols-2">{CONSTRAINT_FIELDS.map((field) => {
         const title = field === "must_keep" ? "必须保留" : "必须避免";
         const items = Array.isArray(value[field]) ? value[field] : [];
