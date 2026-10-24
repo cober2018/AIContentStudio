@@ -1,0 +1,18 @@
+{
+ "at": "2026-10-20T02:31:45+0800",
+ "reason": "A19 persona shared assets carry source_kind/title; ai_generated never described as photo (product unchanged)",
+ "checks": {
+  "persona_related_10_files": "624 passed",
+  "graphic_quality+fe_f2_outputs": "156 passed",
+  "product_settings": "53 passed",
+  "ruff": "only pre-existing I001 at creation_recipes.py:485"
+ },
+ "pid_before": "48857",
+ "pid_after": "63528",
+ "ready": true,
+ "source_sha256": {
+  "apps/api/app/services/creation_recipes.py": "7af17e581678583bebfcda71a12ddbeec216870ff962aae24b4d3e77e0fe927d",
+  "apps/api/app/services/stage_resolver.py": "250ccd198f503b315c1b137f8d1c2ddd4438dfb80309727a23a90d0ddc237ad0",
+  "apps/api/app/services/stage_feedback.py": "2df03f74418d2c8f3024805534c7aab0f9a7b014766d9a464ef33cbc53e69c8b"
+ }
+}

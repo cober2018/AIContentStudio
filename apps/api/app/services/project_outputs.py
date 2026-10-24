@@ -95,7 +95,7 @@ def associate_step_output(db: Session, run: WorkflowRun, step: WorkflowStep, att
             entity.project_id != project.id or entity.content_unit_id != unit.id
             or entity.origin_workflow_run_id != run.id
             or entity.identity_snapshot_id != run.identity_snapshot_id
-            or run.identity_snapshot_id != unit.identity_snapshot_id
+            or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)
             or step.run_id != run.id or step.status != "succeeded"
             or attempt is None or attempt.id != latest or attempt.status != "succeeded"
             or attempt.run_id != run.id or attempt.step_id != step.id or attempt.node_id != step.node_id

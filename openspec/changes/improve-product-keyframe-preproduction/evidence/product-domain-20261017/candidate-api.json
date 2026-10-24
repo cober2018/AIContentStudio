@@ -1,0 +1,30 @@
+[
+  {
+    "path": "/product-context",
+    "status": 200,
+    "production_domain": "product",
+    "persona_id": 2,
+    "identity_snapshot_id": 15,
+    "pinned_workflow_id": 31
+  },
+  {
+    "path": "/creation-recipe",
+    "status": 200,
+    "source": "product_default"
+  },
+  {
+    "path": "/creation-recipe/stages/script/preview",
+    "status": 200,
+    "ready": true,
+    "blockers": [],
+    "response_bytes": 135362
+  },
+  {
+    "path": "/master-revisions",
+    "status": 200,
+    "history_ids": [
+      47,
+      46
+    ]
+  }
+]

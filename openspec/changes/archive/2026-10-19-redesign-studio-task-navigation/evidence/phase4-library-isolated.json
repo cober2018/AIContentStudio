@@ -1,0 +1,479 @@
+{
+  "role": "admin",
+  "userError": false,
+  "listError": false,
+  "detailError": false,
+  "conflict": false,
+  "postDelay": 100,
+  "detailDelay": 0,
+  "collectionRevision": 2,
+  "memberRevision": 2,
+  "archivedCollection": false,
+  "calls": [
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library",
+      "query": "?type=material&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library",
+      "query": "?type=material&limit=20&offset=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/25",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/25/revisions/251",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library",
+      "query": "?type=material&limit=20&offset=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1/revisions",
+      "query": "?limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1/revisions/11",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1/revisions/10",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1/revisions/10",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/materials/references",
+      "query": "",
+      "method": "POST",
+      "body": "{\"material_revision_id\":10}"
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1/revisions/10",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/fact_pack/3",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/fact-packs/3",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/fact-boundary",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/fact-boundary",
+      "query": "",
+      "method": "POST",
+      "body": "{\"fact_pack_id\":3,\"expected_revision\":4}"
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/fact_pack/3",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/fact-packs/3",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/fact-boundary",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/source/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/sources/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/source/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/fact_pack/3",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/material/1/revisions/11",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/knowledge-collections/5",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/knowledge-collections/5/items",
+      "query": "?status=active&offset=0&limit=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/source/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/knowledge-collections/5/items/61",
+      "query": "",
+      "method": "PATCH",
+      "body": "{\"note\":\"冲突后仍保留的备注\",\"sort_order\":0,\"expected_revision\":2}"
+    },
+    {
+      "path": "/knowledge-collections/5",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/knowledge-collections/5/items",
+      "query": "?status=active&offset=0&limit=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/source/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/knowledge-collections/5",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/knowledge-collections/5/items",
+      "query": "?status=active&offset=0&limit=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/source/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/source/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library/source/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/system-library",
+      "query": "?limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/generation-tasks/existing-task",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/generation-tasks/existing-task",
+      "query": "",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "unexpected": [],
+  "errors": [],
+  "checks": [
+    "list does not load resource bytes or full detail",
+    "detail does not also render list",
+    "real pagination survives detail return",
+    "exact revision in URL",
+    "exact revision survives refresh",
+    "project selection uses meaningful names",
+    "material reference uses exact selected revision",
+    "FactPack boundary retains expected revision",
+    "source summary no body read",
+    "source body explicitly loaded",
+    "viewer cannot open mutable source child",
+    "viewer cannot open mutable pack child",
+    "viewer cannot attach",
+    "collection overview no mutation form",
+    "member viewing readonly",
+    "collection conflict preserves input",
+    "collection conflict blocks automatic retry",
+    "collection member snapshot mismatch blocks writes",
+    "archived collection mutations disabled",
+    "prototype property is invalid tool",
+    "constructor property is invalid tool",
+    "invalid resource panel never loads wrong material versions",
+    "invalid ID not replaced by stale resource",
+    "detail error never displays prior body",
+    "list failure not zero",
+    "existing task read does not generate execute accept",
+    "no unexpected API requests",
+    "no page errors"
+  ],
+  "scope": "All API requests intercepted; no formal writes"
+}

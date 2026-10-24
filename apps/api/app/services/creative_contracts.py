@@ -15,7 +15,7 @@ SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,99}$")
 _UNSAFE_KEYS = {"api_key", "access_token", "secret", "password", "raw_output", "raw_error", "raw_response", "authorization", "file_path", "absolute_path", "local_path"}
 EXECUTOR_DECLARATION_FIELDS = {"supports_checkpoint", "supports_revert", "supports_recover", "output_kinds"}
 _OUTPUT_KINDS = {"image", "video", "audio", "other"}
-_METADATA_KEYS = {"web_provider", "visible_model", "generated_at", "origin", "summary", "checkpoint_ref", "observation_ref", "observation_hash", "recovery_action", "readback_status", "license", "license_id", "license_url", "attribution", "correlation_id"} | EXECUTOR_DECLARATION_FIELDS
+_METADATA_KEYS = {"web_provider", "visible_model", "generated_at", "origin", "summary", "checkpoint_ref", "observation_ref", "observation_hash", "recovery_action", "readback_status", "license", "license_id", "license_url", "attribution", "correlation_id", "loudness"} | EXECUTOR_DECLARATION_FIELDS
 
 
 def canonical_hash(value: object) -> str:

@@ -1,0 +1,33 @@
+/Users/mshengran/Project/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-18 19:38:33,981 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "301692c1f101", "method": "POST", "path": "/product-skus", "status": 201, "duration_ms": 142.1}
+2026-10-18 19:38:33,982 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus "HTTP/1.1 201 Created"
+2026-10-18 19:38:33,993 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "997b1ec606c5", "method": "POST", "path": "/product-skus/{sku_id}/works", "status": 201, "duration_ms": 10.1}
+2026-10-18 19:38:33,993 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/works "HTTP/1.1 201 Created"
+work {'launch_id': 1, 'project_id': 1, 'unit_id': 1, 'run_id': None, 'status': 'saved', 'reason': None, 'href': '/projects/1/units/1/production?workstep=goal', 'sku_id': 1}
+2026-10-18 19:38:34,025 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "539b571aa0bb", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 31.6}
+2026-10-18 19:38:34,026 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,033 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "648b0c11ae1e", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 6.6}
+2026-10-18 19:38:34,033 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,040 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "6b3fa721cccd", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 6.0}
+2026-10-18 19:38:34,040 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,114 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "2517984200f1", "method": "POST", "path": "/api/v1/materials/upload", "status": 201, "duration_ms": 73.2}
+2026-10-18 19:38:34,115 INFO httpx HTTP Request: POST http://testserver/api/v1/materials/upload?kind=video&inspect_video=true&model_use_allowed=true "HTTP/1.1 201 Created"
+2026-10-18 19:38:34,226 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "b4f12aca3aae", "method": "POST", "path": "/api/v1/content-projects/{project_id}/materials/references", "status": 201, "duration_ms": 110.8}
+2026-10-18 19:38:34,227 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/materials/references "HTTP/1.1 201 Created"
+2026-10-18 19:38:34,235 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "cc9d71262f1b", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 8.4}
+2026-10-18 19:38:34,236 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,244 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "09393b4e7fbd", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 7.3}
+2026-10-18 19:38:34,244 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,252 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "28c2dd3875bb", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 7.7}
+2026-10-18 19:38:34,253 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,260 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "762c36445a81", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 7.4}
+2026-10-18 19:38:34,261 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,265 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "901d35648c77", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 409, "duration_ms": 3.8}
+2026-10-18 19:38:34,265 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 409 Conflict"
+2026-10-18 19:38:34,273 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "221572e44782", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 7.2}
+2026-10-18 19:38:34,273 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-18 19:38:34,278 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "138e7513d290", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 422, "duration_ms": 3.7}
+2026-10-18 19:38:34,278 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 422 Unprocessable Entity"
+PASS: isolated upload probe, pending, review, adoption, valid timeline, invalid timeline rejected; no narration
+EVIDENCE /tmp/capture-engineering-ingkq4xf/evidence.json

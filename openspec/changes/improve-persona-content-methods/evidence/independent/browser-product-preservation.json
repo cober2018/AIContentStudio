@@ -1,0 +1,71 @@
+{
+  "environment": "isolated /tmp SQLite; normal SKU -> persona-free work, no models/formal writes",
+  "checks": [
+    {
+      "name": "normal SKU launch creates independent product work with persona_id null",
+      "pass": true
+    },
+    {
+      "name": "1440px keyboard step 1 商品与本条目标 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "1440px keyboard step 2 导演方案 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "1440px keyboard step 3 视觉与声音定样 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "1440px keyboard step 4 逐镜素材 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "1440px keyboard step 5 剪辑包装 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "1440px keyboard step 6 成片与反馈 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "1440px return source retains product workspace",
+      "pass": true
+    },
+    {
+      "name": "375px keyboard step 1 商品与本条目标 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "375px keyboard step 2 导演方案 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "375px keyboard step 3 视觉与声音定样 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "375px keyboard step 4 逐镜素材 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "375px keyboard step 5 剪辑包装 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "375px keyboard step 6 成片与反馈 retains product navigation/no overflow",
+      "pass": true
+    },
+    {
+      "name": "375px return source retains product workspace",
+      "pass": true
+    },
+    {
+      "name": "all inspected pages only GET business requests and zero page errors",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "writes": []
+}

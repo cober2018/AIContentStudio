@@ -1,0 +1,5 @@
+PASS: six unsafe/unsupported return destinations rejected
+PASS: full seven-page chain preserves Home view/persona, opportunity pagination and detail view
+PASS: exact queue workspace/search/pagination return
+PASS: 30 alternating review/production transitions have stable URLs and retain exact review candidate/step plus queue origin
+All temporary helper assertions passed; no business requests or persistent tests.

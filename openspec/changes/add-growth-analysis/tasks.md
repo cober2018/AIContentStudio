@@ -1,0 +1,7 @@
+- [ ] 1.1 Account snapshot model, migration and API.
+- [ ] 1.2 Imports: manual, CSV, screenshot with confirmation (account and post).
+- [ ] 2.1 Analysis read models: trends, rankings, comparisons by attributes.
+- [ ] 2.2 Suggestion drafts linked to evidence → Learning Candidate on accept.
+- [ ] 3.1 增长分析 page: account trend, post table, comparisons, suggestions.
+- [ ] 3.2 Brand report export.
+- [ ] 4.1 Tests and screenshot review.

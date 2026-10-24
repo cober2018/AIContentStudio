@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "../api";
-import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
+import { Button, Chip, ErrorBanner, Field, Notice, Section, Segmented, Stat, inputClass } from "../components/ui";
+import { CreativeProfile, refName, useNames } from "./IdentityProfileView";
 import { capabilityApi, type CapabilityArtifact, type InstalledSkill } from "./capabilityMemoryTypes";
 import { TypedStageField } from "./StageContractControls";
 import ProductionStageControls from "./ProductionStageControls";
@@ -37,6 +38,21 @@ function stableJson(value: any): string {
   return JSON.stringify(sorted(value));
 }
 
+function rebaseDraft(before: any, draft: any, latest: any): any {
+  if (stableJson(before) === stableJson(draft)) return structuredClone(latest);
+  if (before && draft && latest && typeof before === "object" && typeof draft === "object" && typeof latest === "object"
+      && !Array.isArray(before) && !Array.isArray(draft) && !Array.isArray(latest)) {
+    const next = { ...latest };
+    for (const key of new Set([...Object.keys(before), ...Object.keys(draft)])) {
+      if (stableJson(before[key]) === stableJson(draft[key])) continue;
+      if (!(key in draft)) delete next[key];
+      else next[key] = rebaseDraft(before[key], draft[key], latest[key]);
+    }
+    return next;
+  }
+  return structuredClone(draft);
+}
+
 function initialDraft(modality: Modality, direct: Record<string, any>, effective: Record<string, any>) {
   const field = FIELDS[modality];
   const value = direct[field] ?? effective[field];
@@ -56,6 +72,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
 }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [voiceCatalog, setVoiceCatalog] = useState<VoicePreset[]>([]);
+  const names = useNames();
   const [audioAdvanced, setAudioAdvanced] = useState(false);
   const [modality, setModality] = useState<Modality>("text");
   const [drafts, setDrafts] = useState<Record<Modality, any>>({} as Record<Modality, any>);
@@ -91,7 +108,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
     setDrafts(previous => Object.fromEntries(MODALITIES.map(({ key }) => [key,
       previous[key] && (editVersions.current[key] !== rebasedVersions.current[key]
         || stableJson(previous[key]) !== stableJson(previousBaselines[key]))
-        ? previous[key] : nextBaselines[key],
+        ? rebaseDraft(previousBaselines[key], previous[key], nextBaselines[key]) : nextBaselines[key],
     ])) as Record<Modality, any>);
     baselines.current = nextBaselines;
   }, [revisions, effective]);
@@ -100,6 +117,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
   useEffect(() => { onDirtyChange(dirty || pendingSave !== null); }, [dirty, pendingSave, onDirtyChange]);
 
   const draft = drafts[modality] || initialDraft(modality, direct, effectiveProfile);
+  const modalityDirty = stableJson(draft) !== stableJson(baselines.current[modality]);
   const fingerprint = JSON.stringify([current.kind, current.id, current.current_revision, modality, draft]);
   const currentFingerprint = useRef(fingerprint);
   currentFingerprint.current = fingerprint;
@@ -129,10 +147,15 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
     return true;
   }
   function updateProfile(key: string, value: any) {
+    const parameterFields = key === "skill_ref" ? Object.keys(resourceOptions.skills.find(item => item.ref === value)?.parameter_schema?.properties || {}) : [];
+    if (key === "skill_ref" && ["voice", "rate"].some(field => field in (draft.profile.parameters || {}) && !parameterFields.includes(field))) {
+      setError("此方法不接收现有音色或语速参数。请在作品阶段试用口播/声音方向方法；原声音配置保留。");
+      return;
+    }
     if (!markEdited()) return;
     setPreview(null);
     const reset = key === "mode" && value !== "composed" ? { model_chain: [], capability_memory_revision_ids: [], installed_skill_refs: [] }
-      : key === "skill_ref" ? { parameters: {} } : {};
+      : key === "skill_ref" ? { parameters: Object.fromEntries(Object.entries(draft.profile.parameters || {}).filter(([field]) => parameterFields.includes(field))) } : {};
     setDrafts(current => {
       const currentDraft = current[modality] || draft;
       return { ...current, [modality]: { ...currentDraft, profile: { ...currentDraft.profile, ...reset,
@@ -183,7 +206,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
     finally { setMethodsBusy(false); }
   }
   async function save() {
-    if (!persona || readonly || saving || pendingSave || current.kind === "brand" || !shownPreview || !confirmDiff
+    if (!persona || readonly || !modalityDirty || saving || pendingSave || current.kind === "brand" || !shownPreview || !confirmDiff
         || (revisions[0]?.revision_no ?? 0) !== current.current_revision) return;
     const profile = { ...direct };
     if (draft.mode === "inherit") delete profile[FIELDS[modality]];
@@ -240,84 +263,105 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
     finally { setSaving(false); }
   }
 
-  if (current.kind === "brand") return <section className="rounded-xl border bg-white p-5"><h3 className="font-medium">创作配置</h3><p className="mt-2 text-sm text-slate-600">Brand 只提供品牌约束上下文，不提供 Persona 的 Skill、风格、质量或 Recipe 默认值。请选择 Persona、账号或栏目配置创作方式。</p></section>;
-  return <div className="space-y-4">
+  if (current.kind === "brand") return <Section eyebrow="创作配置" title="品牌不设创作方式"><p className="text-[14px] leading-relaxed text-ink-600">品牌只提供约束与语气，不决定用哪种方法、风格或质量标准。请到角色、账号或栏目里配置。</p></Section>;
+  const label = MODALITIES.find(item => item.key === modality)?.label || modality;
+  return <div className="space-y-6">
     {error && <ErrorBanner message={error} />}
-    {pendingSave && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"><p>{pendingSave.confirmed ? "新修订写入已确认，等待回读核对。" : "本次保存结果尚未确认，已暂停再次保存。"}</p><Button variant="secondary" disabled={saving} onClick={readBackSave}>回读核对保存结果</Button></div>}
-    <section className="rounded-xl border bg-white p-5">
-      {dirty && <p className="mb-3 text-xs text-amber-700">有未保存的创作配置；保存当前形态不会丢弃其他形态的草稿。</p>}
-      <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-medium">创作配置</h3><p className="mt-1 text-sm text-slate-500">Persona 是创作根；账号和栏目只替换完整的形态配置，不做隐藏深合并。</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{readonly ? "只读" : current.kind === "persona" ? "创作根" : "本级覆盖"}</span></div>
-      <div className="mt-4 flex flex-wrap gap-2">{MODALITIES.map((item) => <button key={item.key} onClick={() => { setModality(item.key); setPreview(null); }} className={`rounded-lg px-3 py-2 text-sm ${modality === item.key ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700"}`}>{item.label}</button>)}</div>
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="space-y-3">
-          <Field label="配置方式"><select disabled={readonly} className={inputClass} value={draft.mode} onChange={(e) => { if (!markEdited()) return; setDrafts({ ...drafts, [modality]: { ...draft, mode: e.target.value as Mode } }); }}><option value="inherit">{current.kind === "persona" ? "移除本级创作配置（不继承 Brand 风格）" : "继承角色 / 上级"}</option><option value="override">本级完整覆盖</option><option value="clear">显式清空</option></select></Field>
+    {pendingSave && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-[14px] text-amber-900"><p>{pendingSave.confirmed ? "新修订已写入，等待回读核对。" : "这次保存的结果还没确认，已暂停再次保存。"}</p><Button variant="secondary" size="sm" disabled={saving} onClick={readBackSave}>回读核对</Button></div>}
+    <Section eyebrow="创作配置" title={`${label}内容怎么做`} aside={<><Chip tone={readonly ? "neutral" : "accent"}>{readonly ? "只读" : current.kind === "persona" ? "角色默认" : `${current.kind === "account" ? "账号" : "栏目"}单独设置`}</Chip></>}>
+      <p className="-mt-2 mb-5 max-w-2xl text-[13.5px] leading-relaxed text-ink-500">角色是默认来源；账号和栏目可以整套替换某种形态的配置，不会悄悄混合两边。</p>
+      <Segmented label="内容形态" value={modality} onChange={(key) => { setModality(key as Modality); setPreview(null); }} items={MODALITIES.map(item => [item.key, item.label] as const)} />
+      {dirty && <div className="mt-4"><Notice tone="warn">有未保存的修改。保存当前形态不会丢掉其他形态的草稿；版本更新时保留你改过的字段，请重新预览差异。</Notice></div>}
+      <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="space-y-5">
+          <Field label="配置方式"><select disabled={readonly} className={inputClass} value={draft.mode} onChange={(e) => { if (!markEdited()) return; setDrafts({ ...drafts, [modality]: { ...draft, mode: e.target.value as Mode } }); }}><option value="inherit">{current.kind === "persona" ? "不设置（不继承品牌风格）" : "继承角色 / 上级"}</option><option value="override">在这里完整设置</option><option value="clear">明确清空</option></select></Field>
           {draft.mode === "override" && <>
-            <Field label="Studio Skill"><select disabled={readonly} className={inputClass} value={draft.profile.skill_ref} onChange={(e) => updateProfile("skill_ref", e.target.value)}><option value="">请选择 Skill</option>{resourceOptions.skills.map((item) => <option key={item.ref} value={item.ref}>{item.ref} · {item.purpose}</option>)}</select></Field>
-            <Field label="Style Preset"><select disabled={readonly} className={inputClass} value={draft.profile.style_preset_ref} onChange={(e) => updateProfile("style_preset_ref", e.target.value)}><option value="">请选择风格</option>{resourceOptions.presets.map((item) => <option key={item.ref} value={item.ref}>{item.ref}</option>)}</select></Field>
-            <Field label="Quality Profile"><select disabled={readonly} className={inputClass} value={draft.profile.quality_profile_ref} onChange={(e) => updateProfile("quality_profile_ref", e.target.value)}><option value="">请选择质量门禁</option>{resourceOptions.quality.map((item) => <option key={item.ref} value={item.ref}>{item.ref}</option>)}</select></Field>
-            {modality === "audio" && selectedSkill?.ref === "studio.audio.tts@1" && <div className="space-y-3 rounded-lg border border-slate-200 p-3">
-              <div className="flex items-center justify-between gap-3"><div><p className="text-sm font-medium">声音</p><p className="text-xs text-slate-500">选择音色会钉死对应的模型和声音；不可用就停止，不自动替换。</p></div><button type="button" className="text-xs text-indigo-700 underline" onClick={() => setAudioAdvanced(value => !value)}>{audioAdvanced ? "收起高级设置" : "展开高级设置"}</button></div>
+            <Field label="主方法"><select disabled={readonly} className={inputClass} value={draft.profile.skill_ref} onChange={(e) => updateProfile("skill_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.skills.map((item) => <option key={item.ref} value={item.ref}>{item.purpose}（{refName(item.ref)}）</option>)}</select></Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="风格预设"><select disabled={readonly} className={inputClass} value={draft.profile.style_preset_ref} onChange={(e) => updateProfile("style_preset_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.presets.map((item) => <option key={item.ref} value={item.ref}>{refName(item.ref)}</option>)}</select></Field>
+              <Field label="质量标准"><select disabled={readonly} className={inputClass} value={draft.profile.quality_profile_ref} onChange={(e) => updateProfile("quality_profile_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.quality.map((item) => <option key={item.ref} value={item.ref}>{refName(item.ref)}</option>)}</select></Field>
+            </div>
+            {modality === "audio" && selectedSkill?.ref === "studio.audio.tts@1" && <div className="space-y-4 rounded-[14px] border border-ink-200 bg-ink-50/60 p-4">
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[14px] font-medium text-ink-900">声音</p><p className="mt-0.5 text-[12.5px] text-ink-500">选定音色会固定对应的模型和声音；不可用时停下，不会自动换。</p></div><Button variant="ghost" size="sm" onClick={() => setAudioAdvanced(value => !value)}>{audioAdvanced ? "收起高级" : "高级设置"}</Button></div>
               <VoicePresetPicker voices={voiceCatalog} selectedId={chosenVoice?.id || ""} disabled={readonly} onSelect={chooseVoice} />
-              <Field label={`语速 ${Number(draft.profile.parameters?.rate ?? 1).toFixed(2)}×`}><input type="range" min="0.5" max="2" step="0.05" disabled={readonly} value={Number(draft.profile.parameters?.rate ?? 1)} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), rate: Number(e.target.value) })} /></Field>
-              {audioAdvanced && <div className="space-y-2"><p className="text-xs text-slate-500">供应商/模型/Profile 在下面的“指定模型”中设置。只支持此适配器声明的 voice 与 rate；不展示未实现的情绪、音调或暂停控制。</p><Field label="精确 voice ID（含本人克隆音色）"><input disabled={readonly} className={inputClass} maxLength={150} value={draft.profile.parameters?.voice || ""} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), voice: e.target.value })} /></Field></div>}
+              <Field label={`语速 ${Number(draft.profile.parameters?.rate ?? 1).toFixed(2)}×`}><input type="range" className="w-full accent-accent-500" min="0.5" max="2" step="0.05" disabled={readonly} value={Number(draft.profile.parameters?.rate ?? 1)} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), rate: Number(e.target.value) })} /></Field>
+              {audioAdvanced && <Field label="精确音色 ID（含本人克隆音色）" hint="服务商、模型在下方“指定模型”里设置；只支持音色与语速。"><input disabled={readonly} className={inputClass} maxLength={150} value={draft.profile.parameters?.voice || ""} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), voice: e.target.value })} /></Field>}
             </div>}
-            {selectedSkill?.parameter_schema && <TypedStageField label="默认阶段参数（受 Skill 合同限制）" schema={selectedSkill.parameter_schema} value={draft.profile.parameters || {}} disabled={readonly} onChange={value => updateProfile("parameters", value)} />}
-            <Field label="模式"><select disabled={readonly} className={inputClass} value={draft.profile.mode} onChange={(e) => updateProfile("mode", e.target.value)}><option value="auto">自动选择</option><option value="custom">指定模型</option><option value="composed">自定义组合</option></select></Field>
-            {draft.profile.mode !== "auto" && <div className="rounded-lg border border-slate-200 p-3"><p className="text-xs font-medium text-slate-600">精确模型绑定</p><div className="mt-2 grid gap-2 sm:grid-cols-3">{["provider", "model", "profile"].map((key) => <input key={key} disabled={readonly} className={inputClass} placeholder={key} value={draft.profile.model_binding?.[key] || ""} onChange={(e) => updateBinding(key, e.target.value)} />)}</div>{draft.profile.mode === "composed" && <p className="mt-2 text-xs text-slate-500">Custom Composition 只允许使用已保存的有序绑定链；未声明的 Provider 不会自动发现。</p>}</div>}
-            {draft.profile.mode === "composed" && <div className="space-y-2 rounded-lg border p-3">
-              <p className="text-xs font-medium text-slate-600">按顺序尝试的后备模型</p>
-              {(draft.profile.model_chain || []).map((binding: Record<string, string>, index: number) => <div key={index} className="space-y-2 rounded-lg bg-slate-50 p-2">
-                <p className="text-xs text-slate-500">后备 {index + 1}</p>
-                <div className="grid gap-2 sm:grid-cols-3">{["provider", "model", "profile"].map(key => <input key={key} className={inputClass} disabled={readonly} placeholder={key} value={binding[key] || ""} onChange={event => updateProfile("model_chain", draft.profile.model_chain.map((item: Record<string, string>, position: number) => position === index ? { ...item, [key]: event.target.value } : item))} />)}</div>
-                <Button variant="ghost" disabled={readonly} onClick={() => updateProfile("model_chain", draft.profile.model_chain.filter((_: unknown, position: number) => position !== index))}>移除此后备模型</Button>
+            {selectedSkill?.parameter_schema && <TypedStageField label="主方法参数" schema={selectedSkill.parameter_schema} value={draft.profile.parameters || {}} disabled={readonly} onChange={value => updateProfile("parameters", value)} />}
+            <Field label="模型选择"><select disabled={readonly} className={inputClass} value={draft.profile.mode} onChange={(e) => updateProfile("mode", e.target.value)}><option value="auto">自动选择</option><option value="custom">指定模型</option><option value="composed">指定模型 + 后备</option></select></Field>
+            {draft.profile.mode !== "auto" && <div className="rounded-[14px] border border-ink-200 p-4"><p className="text-[13px] font-medium text-ink-800">指定模型</p><div className="mt-3 grid gap-2 sm:grid-cols-3">{[["provider", "服务商"], ["model", "模型"], ["profile", "配置名"]].map(([key, text]) => <input key={key} aria-label={text} disabled={readonly} className={inputClass} placeholder={text} value={draft.profile.model_binding?.[key] || ""} onChange={(e) => updateBinding(key, e.target.value)} />)}</div></div>}
+            {draft.profile.mode === "composed" && <div className="space-y-3 rounded-[14px] border border-ink-200 p-4">
+              <p className="text-[13px] font-medium text-ink-800">后备模型（按顺序尝试）</p>
+              {(draft.profile.model_chain || []).map((binding: Record<string, string>, index: number) => <div key={index} className="space-y-2 rounded-xl bg-ink-50 p-3">
+                <div className="flex items-center justify-between"><p className="text-[12.5px] text-ink-500">后备 {index + 1}</p><Button variant="ghost" size="sm" disabled={readonly} onClick={() => updateProfile("model_chain", draft.profile.model_chain.filter((_: unknown, position: number) => position !== index))}>移除</Button></div>
+                <div className="grid gap-2 sm:grid-cols-3">{[["provider", "服务商"], ["model", "模型"], ["profile", "配置名"]].map(([key, text]) => <input key={key} aria-label={text} className={inputClass} disabled={readonly} placeholder={text} value={binding[key] || ""} onChange={event => updateProfile("model_chain", draft.profile.model_chain.map((item: Record<string, string>, position: number) => position === index ? { ...item, [key]: event.target.value } : item))} />)}</div>
               </div>)}
-              <Button variant="secondary" disabled={readonly || (draft.profile.model_chain || []).length >= 8} onClick={() => updateProfile("model_chain", [...(draft.profile.model_chain || []), { provider: "", model: "", profile: "" }])}>添加后备模型</Button>
-              <p className="pt-2 text-xs font-medium text-slate-600">方法组合顺序：内置 Skill → 下列精确方法修订 → Stage 说明</p>
-              {(draft.profile.capability_memory_revision_ids || []).map((id: number, index: number) => {
-                const item = methods.find(value => value.current_revision.id === id);
-                return <div key={`${id}:${index}`} className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 p-2 text-xs"><span className="min-w-0 flex-1">{index + 1}. {item?.name || "固定方法"} · Revision #{id}{item ? ` · ${item.scope_type} #${item.scope.id}` : "（回读后核对）"}</span><Button variant="ghost" size="sm" disabled={readonly || index === 0} onClick={() => {
-                  const next = [...draft.profile.capability_memory_revision_ids]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; updateProfile("capability_memory_revision_ids", next);
-                }}>上移</Button><Button variant="ghost" size="sm" disabled={readonly} onClick={() => updateProfile("capability_memory_revision_ids", draft.profile.capability_memory_revision_ids.filter((_: number, at: number) => at !== index))}>移除</Button></div>;
-              })}
-              <Button variant="secondary" disabled={methodsBusy} onClick={loadMethods}>{methodsBusy ? "读取中…" : methodsLoaded ? "刷新方法 / 外部 Skill 库存" : "读取可选方法 / 外部 Skill 库存"}</Button>
-              {methodsLoaded && <Field label="明确添加当前角色 / 账号 / 栏目的方法"><select className={inputClass} value="" disabled={readonly || (draft.profile.capability_memory_revision_ids || []).length >= 8} onChange={event => {
-                if (event.target.value) updateProfile("capability_memory_revision_ids", [...(draft.profile.capability_memory_revision_ids || []), Number(event.target.value)]);
-              }}><option value="">不自动选择方法</option>{matchingMethods.filter(item => !(draft.profile.capability_memory_revision_ids || []).includes(item.current_revision.id)).map(item => <option key={item.id} value={item.current_revision.id}>{item.name} · {item.scope_type} #{String(item.scope.id)} · Revision #{item.current_revision.id}</option>)}</select></Field>}
-              {methodsTruncated && <p className="text-xs text-amber-700">当前只读前 100 项。更多方法请在能力方法库查看；不自动扩大角色范围。</p>}
-              {(draft.profile.installed_skill_refs || []).map((id: string) => <div key={id} className="flex gap-2 text-xs"><span className="flex-1">外部 Skill：{id} · 库存不代表 Stage 可执行</span><Button variant="ghost" size="sm" disabled={readonly} onClick={() => updateProfile("installed_skill_refs", draft.profile.installed_skill_refs.filter((value: string) => value !== id))}>移除</Button></div>)}
-              {methodsLoaded && installed.length > 0 && <Field label="外部 Installed Skill（当前无已验证 Stage 绑定）"><select className={inputClass} value="" disabled><option value="">不可执行，不能代替内置方法</option>{installed.map(item => <option key={item.id} value={item.id}>{item.name} · {item.id}</option>)}</select></Field>}
+              <Button variant="secondary" size="sm" disabled={readonly || (draft.profile.model_chain || []).length >= 8} onClick={() => updateProfile("model_chain", [...(draft.profile.model_chain || []), { provider: "", model: "", profile: "" }])}>添加后备模型</Button>
+              <div className="border-t border-ink-200/80 pt-3">
+                <p className="text-[13px] font-medium text-ink-800">附加方法</p><p className="mt-0.5 text-[12px] text-ink-500">顺序：主方法 → 下列方法 → 本级说明</p>
+                <div className="mt-2 space-y-2">{(draft.profile.capability_memory_revision_ids || []).map((id: number, index: number) => {
+                  const item = methods.find(value => value.current_revision.id === id);
+                  return <div key={`${id}:${index}`} className="flex flex-wrap items-center gap-2 rounded-xl bg-ink-50 px-3 py-2 text-[13px]"><span className="min-w-0 flex-1 text-ink-800">{index + 1}. {item?.name || "固定方法"} <span className="text-ink-500">· 修订 #{id}</span></span><Button variant="ghost" size="sm" disabled={readonly || index === 0} onClick={() => {
+                    const next = [...draft.profile.capability_memory_revision_ids]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; updateProfile("capability_memory_revision_ids", next);
+                  }}>上移</Button><Button variant="ghost" size="sm" disabled={readonly} onClick={() => updateProfile("capability_memory_revision_ids", draft.profile.capability_memory_revision_ids.filter((_: number, at: number) => at !== index))}>移除</Button></div>;
+                })}</div>
+                <div className="mt-3"><Button variant="secondary" size="sm" disabled={methodsBusy} onClick={loadMethods}>{methodsBusy ? "读取中…" : methodsLoaded ? "刷新方法库" : "读取方法库"}</Button></div>
+                {methodsLoaded && <div className="mt-3"><Field label="加入方法"><select className={inputClass} value="" disabled={readonly || (draft.profile.capability_memory_revision_ids || []).length >= 8} onChange={event => {
+                  if (event.target.value) updateProfile("capability_memory_revision_ids", [...(draft.profile.capability_memory_revision_ids || []), Number(event.target.value)]);
+                }}><option value="">选择方法</option>{matchingMethods.filter(item => !(draft.profile.capability_memory_revision_ids || []).includes(item.current_revision.id)).map(item => <option key={item.id} value={item.current_revision.id}>{item.name} · 修订 #{item.current_revision.id}</option>)}</select></Field></div>}
+                {methodsTruncated && <p className="mt-2 text-[12px] text-amber-700">只显示前 100 项，更多请到方法库查看。</p>}
+                {(draft.profile.installed_skill_refs || []).map((id: string) => <div key={id} className="mt-2 flex items-center gap-2 text-[12.5px] text-ink-600"><span className="flex-1">外部 Skill：{id}（只是库存，不会执行）</span><Button variant="ghost" size="sm" disabled={readonly} onClick={() => updateProfile("installed_skill_refs", draft.profile.installed_skill_refs.filter((value: string) => value !== id))}>移除</Button></div>)}
+                {methodsLoaded && installed.length > 0 && <p className="mt-2 text-[12px] text-ink-500">外部已安装 {installed.length} 个 Skill，未适配前不能选用。</p>}
+              </div>
             </div>}
-            <section className="space-y-3 rounded-lg border p-3"><h4 className="text-sm font-medium">阶段方法与独立开关</h4>
-              <Button variant="secondary" disabled={methodsBusy} onClick={loadMethods}>{methodsBusy ? "读取中…" : "读取可选方法库存"}</Button>
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3"><h4 className="text-[14px] font-medium text-ink-900">制作步骤与方法</h4><Button variant="ghost" size="sm" disabled={methodsBusy} onClick={loadMethods}>{methodsBusy ? "读取中…" : "读取方法库"}</Button></div>
               <ProductionStageControls catalog={catalog} methods={matchingMethods} value={draft.profile.production_stages} disabled={readonly} origin={current.kind} onChange={value => updateProfile("production_stages", value)} />
-            </section>
-            <Field label="本级阶段说明"><textarea disabled={readonly} className={`${inputClass} min-h-20`} value={draft.profile.stage_instruction || ""} onChange={(e) => updateProfile("stage_instruction", e.target.value || null)} placeholder="只影响本级创作配置的说明" /></Field>
+            </div>
+            <Field label="本级补充说明" hint="只影响这里的创作配置。"><textarea disabled={readonly} className={`${inputClass} min-h-24`} value={draft.profile.stage_instruction || ""} onChange={(e) => updateProfile("stage_instruction", e.target.value || null)} placeholder="例如：每期结尾留一个开放问题" /></Field>
           </>}
         </div>
-        <div className="rounded-xl bg-slate-50 p-4 text-sm">
-          <section aria-label="当前生效创作配置">
-            <p className="font-medium">当前生效创作配置（只读）</p>
-            <p className="mt-2 text-slate-600">来源：{effectiveOrigin || "未设置"}{effectiveRevisionId != null && ` · 来源 Revision #${effectiveRevisionId}`}</p>
-            <p className="mt-1 text-xs text-slate-500">当前身份修订 v{current.current_revision}；下方草稿和预览不会改写此摘要。</p>
-            {effectiveCreative ? <div className="mt-3 space-y-2 break-all text-xs text-slate-600">
-              <p>模式：{effectiveCreative.mode || "未设置"}</p>
-              {effectiveCreative.production_stages && <ProductionStageControls catalog={catalog} methods={matchingMethods} value={effectiveCreative.production_stages} disabled origin={effectiveOrigin || "未设置"} onChange={() => {}} />}
-              <p>Studio Skill：{effectiveCreative.skill_ref || "未设置"}</p>
-              <p>Style Preset：{effectiveCreative.style_preset_ref || "未设置"}</p>
-              <p>Quality Profile：{effectiveCreative.quality_profile_ref || "未设置"}</p>
-              <p>声明的主绑定：{effectiveCreative.model_binding ? JSON.stringify(effectiveCreative.model_binding) : effectiveCreative.mode === "auto" ? "自动路由（实际绑定以 Effective Preview 为准）" : "未设置"}</p>
-              <div><p>声明的后备绑定（按顺序）：</p>{effectiveCreative.model_chain?.length ? <ol className="ml-4 mt-1 list-decimal space-y-1">{effectiveCreative.model_chain.map((binding: Record<string, string>, index: number) => <li key={index}>{JSON.stringify(binding)}</li>)}</ol> : <p className="mt-1 text-slate-500">无声明的后备绑定</p>}</div>
-              <div><p>Capability Memory 方法（按顺序）：</p>{effectiveCreative.capability_memory_revision_ids?.length ? <ol className="ml-4 mt-1 list-decimal space-y-1">{effectiveCreative.capability_memory_revision_ids.map((id: number, index: number) => <li key={`${id}:${index}`}>Revision #{id}</li>)}</ol> : <p className="mt-1 text-slate-500">无扩展方法</p>}</div>
-              {effectiveCreative.installed_skill_refs?.length > 0 && <div><p>声明的 Installed Skill（不代表 Stage 可执行）：</p><ol className="ml-4 mt-1 list-decimal space-y-1">{effectiveCreative.installed_skill_refs.map((ref: string, index: number) => <li key={`${ref}:${index}`}>{ref}</li>)}</ol></div>}
-            </div> : <p className="mt-3 text-xs text-slate-500">{!effective ? "尚未读取生效配置" : effectiveCreative === null ? "当前生效配置已显式清空" : "当前未设置创作配置"}</p>}
-          </section>
-          <div className="mt-4 border-t pt-3"><p className="font-medium">本次完整替换的差异</p><p className="mt-1 text-xs text-slate-500">未明确修改的上级字段只复制到草稿，不自动写回或深合并。</p>{changedFields.map(key => <div key={key} className="mt-2 min-w-0 text-xs"><p className="font-medium">{key}</p>{draft.mode === "override" && <><p className="break-all text-slate-500">原：{JSON.stringify(profileBefore?.[key]) ?? "继承 / 未设置"}</p><p className="break-all text-indigo-700">拟保存：{JSON.stringify(profileAfter?.[key]) ?? "移除"}</p></>}</div>)}{changedFields.length === 0 && <p className="mt-2 text-xs text-slate-500">配置未变化。</p>}</div>
-          {shownPreview && <div className="mt-4 border-t pt-3"><p className="font-medium">Effective 配置路由预览</p><p className={`mt-1 ${shownPreview.status === "ready" ? "text-emerald-700" : "text-amber-700"}`}>{shownPreview.status !== "ready" ? `blocked · ${shownPreview.reason || "需要配置"}` : selectedSkill?.execution_support?.status === "partial" || draft.profile.capability_memory_revision_ids?.length || draft.profile.installed_skill_refs?.length ? "partial · 需在具体 Stage 验证方法与输入" : "ready · 配置路由已就绪，尚非成品验收"}</p><p className="mt-1 break-all text-xs text-slate-500">resolution: {shownPreview.resolution_hash || "无可执行配置"}</p>{shownPreview.selected_binding && <p className="mt-1 text-xs text-slate-600">实际绑定：{shownPreview.selected_binding.provider} / {shownPreview.selected_binding.model} / {shownPreview.selected_binding.profile}</p>}{shownPreview.declared_chain?.map((item: any, index: number) => <p key={index} className="mt-1 text-xs text-slate-600">声明顺序 {index + 1}：{item.provider} / {item.model} / {item.profile}</p>)}{shownPreview.fallback_reason && <p className="mt-1 text-xs text-amber-700">选择原因：{shownPreview.fallback_reason}</p>}</div>}
-        </div>
+        <aside className="space-y-5 xl:sticky xl:top-6">
+          <div>
+            <div className="mb-3 flex items-baseline justify-between gap-3"><p className="eyebrow">当前实际生效</p><span className="text-[12px] text-ink-500">来源：{effectiveOrigin ? ({ persona: "角色", account: "账号", series: "栏目", brand: "品牌" } as Record<string, string>)[effectiveOrigin] || effectiveOrigin : "未设置"}{effectiveRevisionId != null && ` · 修订 #${effectiveRevisionId}`}</span></div>
+            {effectiveCreative ? <CreativeProfile label={label} value={effectiveCreative} names={names} /> : <p className="rounded-[14px] border border-dashed border-ink-300 p-5 text-[13.5px] text-ink-500">{!effective ? "还没读取生效配置" : effectiveCreative === null ? "已明确清空" : "还没有设置"}</p>}
+            {effectiveCreative?.capability_memory_revision_ids?.length > 0 && <p className="mt-2 text-[12.5px] text-ink-500">附加方法：{effectiveCreative.capability_memory_revision_ids.map((id: number) => methods.find(item => item.current_revision.id === id)?.name || `修订 #${id}`).join("、")}</p>}
+          </div>
+          <div className="rounded-[14px] border border-ink-200 bg-surface p-5">
+            <p className="eyebrow">这次会改动</p>
+            {changedFields.length === 0 ? <p className="mt-2 text-[13.5px] text-ink-500">还没有改动。</p> : <ul className="mt-3 space-y-3">{changedFields.map(key => <li key={key} className="min-w-0 text-[13px]"><p className="font-medium text-ink-900">{CHANGE_LABELS[key] || key}</p>{draft.mode === "override" && <div className="mt-1 grid gap-1"><p className="break-all text-ink-500"><span className="mr-1.5 rounded bg-ink-100 px-1 text-[11px]">原</span>{summarize(profileBefore?.[key])}</p><p className="break-all text-accent-700"><span className="mr-1.5 rounded bg-accent-50 px-1 text-[11px]">新</span>{summarize(profileAfter?.[key])}</p></div>}</li>)}</ul>}
+          </div>
+          {shownPreview && <div className={`rounded-[14px] border p-5 ${shownPreview.status === "ready" ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60"}`}>
+            <p className="eyebrow">预览结果</p>
+            <p className={`mt-2 text-[14px] font-medium ${shownPreview.status === "ready" ? "text-emerald-800" : "text-amber-800"}`}>{shownPreview.status !== "ready" ? `暂不可用：${shownPreview.reason || "还需要配置"}` : selectedSkill?.execution_support?.status === "partial" || draft.profile.capability_memory_revision_ids?.length || draft.profile.installed_skill_refs?.length ? "部分就绪：还要在具体步骤里验证方法与输入" : "已就绪：配置可用（还不代表成品合格）"}</p>
+            {shownPreview.selected_binding && <p className="mt-2 text-[13px] text-ink-700">实际使用：{shownPreview.selected_binding.model} · {shownPreview.selected_binding.provider}</p>}
+            {shownPreview.declared_chain?.map((item: any, index: number) => <p key={index} className="mt-1 text-[12.5px] text-ink-600">后备 {index + 1}：{item.model} · {item.provider}</p>)}
+            {shownPreview.fallback_reason && <p className="mt-1 text-[12.5px] text-amber-700">选择原因：{shownPreview.fallback_reason}</p>}
+          </div>}
+        </aside>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2"><Button variant="secondary" onClick={loadPreview} disabled={!persona}>查看 Effective Preview</Button><Button onClick={save} disabled={readonly || saving || !!pendingSave || !shownPreview || !confirmDiff}>{saving ? "保存中…" : "保存本级创作配置"}</Button></div>
-      {shownPreview && <label className="mt-3 flex gap-2 text-xs text-slate-600"><input type="checkbox" disabled={readonly} checked={confirmDiff} onChange={event => setConfirmDiff(event.target.checked)} />我已核对本级完整替换差异；保存创建新身份修订，不改历史 Snapshot 或其他角色。</label>}
-    </section>
-    <section className="rounded-xl border bg-white p-5"><h3 className="font-medium">Studio 内置资源</h3><p className="mt-1 text-sm text-slate-500">只读产品资源，不等于 Installed Agent Skill，也不会自动调用模型。</p><div className="mt-3 grid gap-3 sm:grid-cols-3"><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Built-in Skills</p><p className="mt-1 text-xl font-semibold">{catalog?.skills.length ?? "—"}</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Style Presets</p><p className="mt-1 text-xl font-semibold">{catalog?.style_presets.length ?? "—"}</p></div><div className="rounded-lg bg-slate-50 p-3"><p className="text-xs text-slate-500">Quality Profiles</p><p className="mt-1 text-xl font-semibold">{catalog?.quality_profiles.length ?? "—"}</p></div></div></section>
+      <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-ink-200/80 pt-5">
+        <Button variant="secondary" onClick={loadPreview} disabled={!persona}>预览生效结果</Button>
+        {shownPreview && <label className="flex items-center gap-2 text-[13px] text-ink-600"><input type="checkbox" className="accent-accent-500" disabled={readonly} checked={confirmDiff} onChange={event => setConfirmDiff(event.target.checked)} />我已核对改动；保存会生成新修订，不影响历史作品和其他角色</label>}
+        <Button className="ml-auto" onClick={save} disabled={readonly || saving || !!pendingSave || !shownPreview || !confirmDiff}>{saving ? "保存中…" : `保存${label}配置`}</Button>
+      </div>
+    </Section>
+    <Section eyebrow="内置资源" title="平台自带的方法与标准" aside={<span>只读 · 不会自动调用模型</span>}>
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Stat label="内置方法" value={catalog?.skills.length ?? "—"} />
+        <Stat label="风格预设" value={catalog?.style_presets.length ?? "—"} />
+        <Stat label="质量标准" value={catalog?.quality_profiles.length ?? "—"} />
+      </div>
+    </Section>
   </div>;
+}
+
+const CHANGE_LABELS: Record<string, string> = { mode: "模型选择", skill_ref: "主方法", style_preset_ref: "风格预设", quality_profile_ref: "质量标准", model_binding: "指定模型", model_chain: "后备模型", capability_memory_revision_ids: "附加方法", installed_skill_refs: "外部 Skill", production_stages: "制作步骤", parameters: "参数", stage_instruction: "补充说明" };
+function summarize(value: unknown): string {
+  if (value === undefined) return "继承 / 未设置";
+  if (value === null) return "清空";
+  if (typeof value === "string") return refName(value) || value;
+  if (Array.isArray(value)) return value.length ? `${value.length} 项` : "无";
+  if (typeof value === "object") return `${Object.keys(value as object).length} 项设置`;
+  return String(value);
 }

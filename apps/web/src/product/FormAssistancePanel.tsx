@@ -2,14 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { capabilityApi, type CapabilityArtifact } from "./capabilityMemoryTypes";
 import { api, ApiError, currentUser } from "../api";
 import { Button, inputClass } from "../components/ui";
-import { displayValue, editedValue, isUnfilled, type AssistanceField, type AssistanceValue } from "./formAssistanceTypes";
+import { displayValue, editedValue, isUnfilled, type AssistanceField, type AssistanceSurface, type AssistanceValue } from "./formAssistanceTypes";
 
 type Item = { key: string; baseline: AssistanceValue; status: string; suggestion: AssistanceValue; note?: string; image_observation?: string; image_reference?: Record<string, unknown> };
 type Pending = { requestKey: string; kind: "generate" | "feedback"; sessionId?: number };
-type Session = { context: Record<string, unknown>; request_key: string; id: number; revision: number; context_hash: string; status: string; items: Item[]; attempts: { id: number; items: Item[]; model_receipt?: Record<string, unknown>; feedback?: unknown }[]; decisions?: unknown; feedback?: unknown };
+type Session = { context: Record<string, unknown>; request_key: string; id: number; revision: number; context_hash: string; status: string; items: Item[]; attempts: { id: number; items: Item[]; model_receipt?: Record<string, unknown>; feedback?: unknown; project_snapshot?: { product_context?: { sku?: { sku_id: number } | null } } }[]; decisions?: unknown; feedback?: unknown };
 type SourceRef = { source_id: number; checksum: string };
 type MethodRef = { artifact_id: number; revision_id: number; content_hash: string };
-type Props = { productionStages?: import("./ProductionStageControls").ProductionStages | null; versionKey?: string; surface: "product_creation" | "product_brief" | "video"; projectId?: number; unitId?: number; fields: AssistanceField[]; context?: Record<string, unknown>; sourceRefs?: SourceRef[]; methodRefs?: MethodRef[]; readOnly?: boolean; children: ReactNode };
+type Props = { productionStages?: import("./ProductionStageControls").ProductionStages | null; versionKey?: string; surface: AssistanceSurface; assistantVisible?: boolean; onFieldFocus?: () => void; projectId?: number; unitId?: number; fields: AssistanceField[]; context?: Record<string, unknown>; sourceRefs?: SourceRef[]; methodRefs?: MethodRef[]; readOnly?: boolean; methodArea?: ReactNode; tools?: (focusKey: string) => ReactNode; children: ReactNode };
 const AssistanceContext = createContext<{ focus: (key: string) => void; register: (scope: string, values: AssistanceField[]) => void; unregister: (scope: string) => void } | null>(null);
 export function useAssistanceFields(scope: string, fields: AssistanceField[]) {
   const controller = useContext(AssistanceContext), latest = useRef(fields); latest.current = fields;
@@ -21,7 +21,7 @@ export function useAssistanceFields(scope: string, fields: AssistanceField[]) {
 export function useAssistanceFocus() { return useContext(AssistanceContext)?.focus; }
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-export default function FormAssistancePanel({ productionStages, versionKey = "", surface, projectId, unitId, fields: baseFields, context = {}, sourceRefs = [], methodRefs = [], readOnly = false, children }: Props) {
+export default function FormAssistancePanel({ productionStages, versionKey = "", surface, projectId, unitId, fields: baseFields, context = {}, sourceRefs = [], methodRefs = [], readOnly = false, assistantVisible = true, onFieldFocus, methodArea, tools, children }: Props) {
   const [extra, setExtra] = useState<Record<string, AssistanceField[]>>({});
   const register = useCallback((scope: string, values: AssistanceField[]) => setExtra(previous => ({ ...previous, [scope]: values })), []);
   const unregister = useCallback((scope: string) => setExtra(previous => Object.fromEntries(Object.entries(previous).filter(([key]) => key !== scope))), []);
@@ -59,9 +59,10 @@ export default function FormAssistancePanel({ productionStages, versionKey = "",
   const identityRef = useRef(identity); identityRef.current = identity;
   const focused = fields.find(field => field.key === focusKey);
   const item = session?.items[index];
+  const currentSkuId = session?.attempts[session.attempts.length - 1]?.project_snapshot?.product_context?.sku?.sku_id;
   const target = fields.find(field => field.key === item?.key);
   const actorSafe = alive.current && currentUser() === actor;
-  const disabled = busy || readOnly || !actorSafe;
+  const disabled = busy || readOnly || !actorSafe || !assistantVisible;
   const snapshot = () => ({ ...context, ...Object.fromEntries(latest.current.map(field => [field.key, field.value])) });
   const latestSnapshot = useRef(snapshot()); latestSnapshot.current = snapshot();
   const chosenMethods = [...methodRefs, ...preferences.filter(row => selectedPreferences.includes(row.current_revision.id)).map(row => ({ artifact_id: row.id, revision_id: row.current_revision.id, content_hash: row.current_revision.content_hash }))];
@@ -84,7 +85,7 @@ export default function FormAssistancePanel({ productionStages, versionKey = "",
     return () => { active = false; };
   }, [identity]);
   useEffect(() => { setCandidate(item && item.status === "suggested" ? displayValue(item.suggestion) : ""); }, [session?.id, session?.revision, index]);
-  function focus(key: string) { if (fields.some(field => field.key === key)) setFocusKey(key); }
+  function focus(key: string) { if (fields.some(field => field.key === key)) { setFocusKey(key); onFieldFocus?.(); } }
   async function run(action: () => Promise<void>) {
     if (disabled || locked.current) return;
     locked.current = true; setBusy(true); setIssue(""); setNotice("");
@@ -140,10 +141,11 @@ export default function FormAssistancePanel({ productionStages, versionKey = "",
       if (!keys.length) throw new Error("没有仍待确认的空白项；已填内容可定点润色。");
       if (reuse && !rule.trim()) throw new Error("请写清以后要复用的规则。");
       const base = snapshot(), requestIdentity = identity, requestKey = crypto.randomUUID(), sentVersion = currentVersion.current, sentMethods = currentMethods.current;
+      if (reuse && reuseKind === "sku" && !currentSkuId) throw new Error("当前作品尚未关联SKU，不能保存本SKU偏好。");
       if (reuse && reuseKind === "category" && !base.category) throw new Error("请先确认商品品类再保存此范围的偏好。");
       if (reuse && reuseKind === "style" && !base.style_revision_id) throw new Error("请先选定表现风格，再保存此风格的偏好。");
       setPending({ requestKey, kind: "feedback", sessionId: session.id });
-      const result = await api.post<Session>(`/form-assistance/${session.id}/feedback`, { expected_revision: session.revision, request_key: requestKey, context: base, keys, reason, correction_target: correction, ...(reuse ? { reuse: { rule, name: rule.slice(0, 60), scope_type: projectId && reuseKind !== "general" ? "project" : "owner", ...(reuseKind === "category" ? { category: base.category } : {}), ...(reuseKind === "style" ? { style_revision_id: base.style_revision_id } : {}), ...(reuseStage ? { stage: reuseStage } : {}) } } : {}) });
+      const result = await api.post<Session>(`/form-assistance/${session.id}/feedback`, { expected_revision: session.revision, request_key: requestKey, context: base, keys, reason, correction_target: correction, ...(reuse ? { reuse: { rule, name: rule.slice(0, 60), scope_type: projectId && reuseKind === "project" ? "project" : "owner", ...(reuseKind === "sku" ? { sku_id: currentSkuId } : {}), ...(reuseKind === "category" ? { category: base.category } : {}), ...(reuseKind === "style" ? { style_revision_id: base.style_revision_id } : {}), ...(reuseStage ? { stage: reuseStage } : {}) } } : {}) });
       receive(result, base, requestIdentity); generationVersion.current = sentVersion; generationMethods.current = sentMethods; setNotice(reuse ? "反馈已记录；复用规则仅保存为候选，请在方法库明确选择版本后使用。" : "已按本次反馈生成新建议，旧版本保留。");
     });
   }
@@ -169,11 +171,15 @@ export default function FormAssistancePanel({ productionStages, versionKey = "",
     if (typeof input.value !== "string" || input.selectionStart === null || input.selectionEnd === null || input.selectionStart === input.selectionEnd) { selection.current = null; return; }
     selection.current = { field_key: key, start: input.selectionStart, end: input.selectionEnd, text: input.value.slice(input.selectionStart, input.selectionEnd) };
   }}>{children}</div>
-    <aside aria-label="AI创作助手" className={`fixed bottom-4 right-4 z-[70] rounded-xl border border-indigo-200 bg-white p-3 shadow-xl ${open ? "max-h-[80vh] w-[min(28rem,calc(100vw-2rem))] overflow-auto" : "max-w-[calc(100vw-2rem)]"}`}>
-      <div className="flex items-center justify-between gap-3"><strong className="text-sm">AI创作助手</strong><Button size="sm" variant="ghost" onClick={() => setOpen(value => !value)}>{open ? "收起" : "展开"}</Button></div>
-      <p className="my-2 text-xs text-slate-600">当前字段：{focused?.label || "尚未选择"}{focused?.unavailable && ` · ${focused.unavailable}`}</p>
+    {/* Collapsed, the assistant is a single pill so it never covers the form it helps with. */}
+    {!open && assistantVisible && <button type="button" onClick={() => setOpen(true)} aria-label="展开 AI创作助手" className="fixed bottom-5 right-5 z-[70] inline-flex items-center gap-2 rounded-pill border border-ink-200 bg-surface/95 py-2 pl-3 pr-4 text-[13px] text-ink-800 shadow-lift backdrop-blur transition-transform hover:-translate-y-0.5"><span aria-hidden className="grid h-6 w-6 place-items-center rounded-full bg-accent-500 text-[12px] text-paper">✦</span>AI 创作助手{available.length > 0 && <span className="rounded-pill bg-ink-100 px-1.5 text-[11.5px] text-ink-600">{available.length} 项可补</span>}{pending && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />}</button>}
+    <aside hidden={!assistantVisible || !open} aria-label="AI创作助手" className="fixed bottom-5 right-5 z-[70] max-h-[80vh] w-[min(28rem,calc(100vw-2rem))] animate-rise overflow-auto rounded-card border border-ink-200 bg-surface p-5 shadow-lift">
+      <div className="flex items-center justify-between gap-3"><strong className="flex items-center gap-2 text-[14px] text-ink-900"><span aria-hidden className="grid h-6 w-6 place-items-center rounded-full bg-accent-500 text-[12px] font-normal text-paper">✦</span>AI 创作助手</strong><Button size="sm" variant="ghost" onClick={() => setOpen(false)}>收起</Button></div>
+      {tools && <div className="mt-4 border-b border-ink-200/80 pb-4">{tools(focusKey)}</div>}
+      <p className="my-3 text-[12.5px] text-ink-600">当前字段：{focused?.label || "尚未选择"}{focused?.unavailable && ` · ${focused.unavailable}`}</p>
       <div className="flex flex-wrap gap-2"><Button size="sm" disabled={disabled || !!pending} onClick={() => void generate("autofill")}>补齐未填项（{available.length}）</Button><Button size="sm" variant="secondary" disabled={disabled || !!pending || !focused || !!focused.unavailable} onClick={() => void generate("polish")}>{focused && isUnfilled(focused.value) ? "生成当前项" : "润色当前项"}</Button></div>
-      {open && <div className="mt-3 space-y-3 text-sm"><p className="text-xs text-slate-500">已填内容与创作意图不会被批量改写。待补字段：{available.map(field => field.label).join("、") || "无"}。建议采用后仍需保存原页面。</p>
+      {<div className="mt-3 space-y-3 text-sm"><p className="text-xs text-slate-500">已填内容与创作意图不会被批量改写。待补字段：{available.map(field => field.label).join("、") || "无"}。建议采用后仍需保存原页面。</p>
+        {methodArea}
         <p className="text-xs"><a className="text-indigo-700 underline" href="/settings?section=models">配置补齐／润色模型</a></p>
         {preferences.length > 0 && <details><summary className="cursor-pointer text-xs">本次明确选用的偏好版本（可不选）</summary><div className="space-y-2 py-2">{preferences.map(row => <label key={row.id} className="flex gap-2 text-xs"><input type="checkbox" checked={selectedPreferences.includes(row.current_revision.id)} onChange={event => setSelectedPreferences(previous => event.target.checked ? [...previous,row.current_revision.id] : previous.filter(id=>id!==row.current_revision.id))} /><span>{row.name} · v{row.current_revision.revision_no}<span className="block text-slate-500">{String(row.current_revision.content.text || "")}</span></span></label>)}</div></details>}
         {sessions.length > 0 && <label className="block text-xs">历史建议<select className={inputClass} value={chosen} disabled={disabled || !!pending} onChange={event => { setChosen(event.target.value); if (event.target.value) void restore(Number(event.target.value)); }}><option value="">选择历史批次</option>{sessions.map(row => <option key={row.id} value={row.id}>批次 #{row.id} · {row.status}</option>)}</select></label>}
@@ -186,7 +192,7 @@ export default function FormAssistancePanel({ productionStages, versionKey = "",
           <label className="block text-xs">这次希望如何改<textarea className={inputClass} maxLength={2000} rows={2} value={reason} onChange={event => setReason(event.target.value)} placeholder="例如：太空泛，请围绕具体场景讲清一个购买理由" /></label>
           <select aria-label="反馈改动类型" className={inputClass} value={correction} onChange={event => setCorrection(event.target.value)}><option value="product_fact">商品资料/事实</option><option value="category_method">品类展示方法</option><option value="presentation_style">表现风格</option><option value="stage_method">阶段技巧</option></select>
           <label className="flex gap-2 text-xs"><input type="checkbox" checked={reuse} onChange={event => setReuse(event.target.checked)} />以后也这样：保存一条偏好候选</label>
-          {reuse && <div className="space-y-2"><textarea aria-label="长期复用规则" maxLength={2000} className={inputClass} value={rule} onChange={event => setRule(event.target.value)} placeholder="明确规则，不填写商品参数或私人费用" /><select aria-label="反馈适用范围" className={inputClass} value={reuseKind} onChange={event => setReuseKind(event.target.value)}><option value="project">{projectId ? "当前商品项目" : "我的方法库候选（需明确选择才使用）"}</option><option value="category">当前商品品类</option><option value="style">所选表现风格</option><option value="general">商品通用方法候选</option></select><select aria-label="复用阶段" className={inputClass} value={reuseStage} onChange={event=>setReuseStage(event.target.value)}><option value="">不限阶段</option><option value="research">商品资料与依据</option><option value="script">文案与脚本</option><option value="storyboard">分镜与素材</option><option value="subtitle_color">字幕与校色</option><option value="packaging">后期包装</option><option value="review">质量评审</option></select><p className="text-xs">候选不会自动更改角色、Skills或其他商品。</p></div>}
+          {reuse && <div className="space-y-2"><textarea aria-label="长期复用规则" maxLength={2000} className={inputClass} value={rule} onChange={event => setRule(event.target.value)} placeholder="明确规则，不填写商品参数或私人费用" /><select aria-label="反馈适用范围" className={inputClass} value={reuseKind} onChange={event => setReuseKind(event.target.value)}><option value="project">{projectId ? "当前商品项目" : "我的方法库候选（需明确选择才使用）"}</option>{currentSkuId && <option value="sku">本SKU的作品</option>}<option value="category">此品类的作品</option><option value="style">所选表现风格</option><option value="general">商品通用方法候选</option></select><select aria-label="复用阶段" className={inputClass} value={reuseStage} onChange={event=>setReuseStage(event.target.value)}><option value="">不限阶段</option><option value="research">商品资料与依据</option><option value="script">文案与脚本</option><option value="storyboard">分镜与素材</option><option value="subtitle_color">字幕与校色</option><option value="packaging">后期包装</option><option value="review">质量评审</option></select><p className="text-xs">本SKU、品类和风格范围会保存到我的方法库，后续作品需明确选用已保存的版本；候选不会自动更改任何默认设置。</p></div>}
           <div className="flex gap-2"><Button size="sm" disabled={disabled || !!pending || !reason.trim()} onClick={() => void feedback(false)}>反馈并重写本项</Button><Button size="sm" variant="secondary" disabled={disabled || !!pending || !reason.trim()} onClick={() => void feedback(true)}>本批待确认项重写</Button></div>
           <details><summary className="cursor-pointer text-xs">查看历史结果和模型版本</summary>{session.attempts.map((attempt, n) => <div key={attempt.id || n} className="my-2 rounded border p-2 text-xs"><p>版本 {n + 1} · {JSON.stringify(attempt.model_receipt || {})}</p>{attempt.items.map(row => <p key={row.key} className="whitespace-pre-wrap">{row.key}：{displayValue(row.suggestion)} · {row.note}</p>)}{!!attempt.feedback && <p>{JSON.stringify(attempt.feedback)}</p>}</div>)}</details>
         </>}

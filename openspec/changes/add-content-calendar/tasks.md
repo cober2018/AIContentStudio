@@ -1,0 +1,5 @@
+- [ ] 1.1 Slot model, migration and API.
+- [ ] 1.2 Readiness from candidates and delivery receipts.
+- [ ] 2.1 Calendar page (week, month), drag to schedule; home upcoming and missed.
+- [ ] 2.2 Brand deal dates on the calendar.
+- [ ] 3.1 Tests and screenshot review.

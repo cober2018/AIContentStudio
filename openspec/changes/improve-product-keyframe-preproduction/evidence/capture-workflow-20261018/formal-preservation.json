@@ -1,0 +1,27 @@
+{
+  "content_master_revision": {
+    "old_rows": 49,
+    "new_rows": 50,
+    "old_rows_preserved": true
+  },
+  "material_revision": {
+    "old_rows": 68,
+    "new_rows": 68,
+    "old_rows_preserved": true
+  },
+  "content_unit": {
+    "old_rows": 40,
+    "new_rows": 40,
+    "old_rows_preserved": true
+  },
+  "creative_brief_revision": {
+    "old_rows": 36,
+    "new_rows": 36,
+    "old_rows_preserved": true
+  },
+  "product_sku": {
+    "old_rows": 3,
+    "new_rows": 3,
+    "old_rows_preserved": true
+  }
+}

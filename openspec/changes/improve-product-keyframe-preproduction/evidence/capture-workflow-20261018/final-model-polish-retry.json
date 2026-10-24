@@ -1,0 +1,97 @@
+{
+  "id": 1,
+  "request_key": "probe-1",
+  "surface": "video",
+  "mode": "polish",
+  "project_id": 1,
+  "unit_id": null,
+  "context_hash": "9530aeaf1a33bd0b155fb29cb4135fd78cb66349e50bce44fb3feaa857e0be96",
+  "revision": 1,
+  "status": "ready",
+  "llm_run_id": 1,
+  "context": {
+    "name": "儿童拖鞋",
+    "category": "鞋履",
+    "description": "仅提供商品外观。尺寸、防滑、舒适度、耐磨性均无测试依据。",
+    "core_message": "帮助家长看清拖鞋外观与穿脱动作，再按实际尺码资料选择。",
+    "capture_plan.script_structure": "先呈现家门口穿脱场景，再展示鞋面与鞋底外观，最后提醒核对尺码。不声称实测防滑或舒适。",
+    "shots.s.purpose": "看清商品外观与穿脱动作，不证明防滑性能",
+    "shots.s.filming.scene_id": "",
+    "shots.s.filming.filming_order": null,
+    "shots.s.filming.raw_duration_ms": null,
+    "shots.s.filming.subject": "",
+    "shots.s.filming.action": "",
+    "shots.s.filming.camera_position": "",
+    "shots.s.filming.angle": "",
+    "shots.s.filming.focus": "",
+    "shots.s.filming.evidence_requirement": "",
+    "shots.s.filming.audio_note": ""
+  },
+  "items": [
+    {
+      "key": "capture_plan.script_structure",
+      "baseline": "先呈现家门口穿脱场景，再展示鞋面与鞋底外观，最后提醒核对尺码。不声称实测防滑或舒适。",
+      "status": "suggested",
+      "suggestion": "开篇呈现玄关处的穿脱过程演示，再展示鞋面与鞋底外观，最后提醒核对尺码。不声称实测防滑或舒适。",
+      "note": "仅针对选区文字进行润色，强化动作展示的具体情境，与后续外观展示及无功效声称的设定保持一致。",
+      "source_refs": [],
+      "attempt_id": 1,
+      "selection": {
+        "field_key": "capture_plan.script_structure",
+        "start": 0,
+        "end": 10,
+        "text": "先呈现家门口穿脱场景"
+      }
+    }
+  ],
+  "attempts": [
+    {
+      "id": 1,
+      "request_key": "probe-1",
+      "feedback": null,
+      "items": [
+        {
+          "key": "capture_plan.script_structure",
+          "baseline": "先呈现家门口穿脱场景，再展示鞋面与鞋底外观，最后提醒核对尺码。不声称实测防滑或舒适。",
+          "status": "suggested",
+          "suggestion": "开篇呈现玄关处的穿脱过程演示，再展示鞋面与鞋底外观，最后提醒核对尺码。不声称实测防滑或舒适。",
+          "note": "仅针对选区文字进行润色，强化动作展示的具体情境，与后续外观展示及无功效声称的设定保持一致。",
+          "source_refs": [],
+          "attempt_id": 1,
+          "selection": {
+            "field_key": "capture_plan.script_structure",
+            "start": 0,
+            "end": 10,
+            "text": "先呈现家门口穿脱场景"
+          }
+        }
+      ],
+      "llm_run_id": 1,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "prompt_version": "form-assist-v1",
+      "method_refs": [],
+      "context_hash": "9530aeaf1a33bd0b155fb29cb4135fd78cb66349e50bce44fb3feaa857e0be96",
+      "image_references": [],
+      "project_snapshot": {
+        "explicit_draft_stages": {}
+      }
+    }
+  ],
+  "decisions": [],
+  "feedback": [],
+  "selection": {
+    "field_key": "capture_plan.script_structure",
+    "start": 0,
+    "end": 10,
+    "text": "先呈现家门口穿脱场景"
+  },
+  "skipped_keys": [],
+  "source_refs": [],
+  "method_refs": [],
+  "production_stages": {}
+}

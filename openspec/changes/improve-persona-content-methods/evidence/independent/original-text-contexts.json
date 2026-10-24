@@ -1,0 +1,133 @@
+{
+  "date": "2026-10-19",
+  "source": "aicontentstudio_creative.get_context read-only",
+  "purpose": "Original accepted text baseline preservation; no model comparison asserted",
+  "contexts": [
+    {
+      "brief": {
+        "angle": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+        "checksum": "2d95276c8654e1d58e563a525db60ce67901f446c1b3d9eebf648c17fb0e931f",
+        "core_message": null,
+        "id": 39,
+        "objective": "为开发者和技术负责人写一篇可操作的评估方法文章。以作者复盘为启发，清楚区分作者自述、我们的实践建议和未知项。不引用未核验统计，不冒充作者经历。仅本地审阅交付，不公开发布。",
+        "primary_audience": "提示开发者与负责人重视系统工程设计与评测标准，避免重模型、轻工程导致的资源浪费。",
+        "revision_no": 1
+      },
+      "context": {
+        "boundary": {
+          "checksum": "1bf156e77eb1620b96a024a4a9bf948bb7099ad60cfb4fee9a0441de7d94e3e9",
+          "fact_pack_id": 4,
+          "id": 4
+        },
+        "brief": {
+          "checksum": "2d95276c8654e1d58e563a525db60ce67901f446c1b3d9eebf648c17fb0e931f",
+          "id": 39
+        },
+        "channel_id": "baijia",
+        "content_form": "article",
+        "identity": {
+          "checksum": "117d969b44bb042ba0b3d2d0d8c34d20c06e4803b45ee885b38578a3ed5225fb",
+          "id": 17
+        }
+      },
+      "fact_boundary": {
+        "checksum": "1bf156e77eb1620b96a024a4a9bf948bb7099ad60cfb4fee9a0441de7d94e3e9",
+        "fact_pack_id": 4,
+        "fact_pack_version": 1,
+        "id": 4,
+        "revision_no": 1
+      },
+      "master": {
+        "channel_id": "baijia",
+        "content_form": "article",
+        "content_unit_id": 41,
+        "context_hash": "3e6d4ee2e9da27428f3752c343a9eccc9f6df9d8d3edd4ebf0aec30153ec825c",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "id": 61,
+        "modality": "text",
+        "payload_hash": "8a91b15b22e77234b6e08efd5412fb95cd8ff7bce86545e1da724e2e7e6016df",
+        "payload_schema": "text.master.v2",
+        "project_id": 35,
+        "readiness": {
+          "reasons": [],
+          "state": "current"
+        },
+        "revision_no": 4
+      },
+      "project": {
+        "id": 35,
+        "status": "draft"
+      },
+      "unit": {
+        "channel_id": "baijia",
+        "id": 41,
+        "status": "draft"
+      },
+      "variant": null
+    },
+    {
+      "brief": {
+        "angle": "聚焦日常生活中的巧思器具，观察便携物理工具如何改变人们随时停下、记录与创作的习惯。",
+        "checksum": "8b235c8c80be3c1d2c69d6541017de7e82d2c6764e4483a2cdd1cd849712b33a",
+        "core_message": null,
+        "id": 40,
+        "objective": "写一篇生活角色的中文观察文章，约900至1200字。以便携画架Lap Easel为引子，讨论把创作准备变简单的日常小念头。轻巧具体、不说教、不制造焦虑。来源为Colossal 2026-10-13带商店链接的产品介绍，并非独立测评；只归属转述便携、可调、膝上或桌面支撑，不声称亲测、舒适、减轻疲劳或提高效率。不写价格、购买建议或推广口号。想象的场景明确用“可以想象”“比如”引入，不假装作者真实经历。不把文章写成产品说明书或检查清单。只本地交付，不公开发布。",
+        "primary_audience": "给喜欢画画、手工或随笔记录的读者提供新鲜有趣的物件观察，带来轻量创作的生活灵感。",
+        "revision_no": 1
+      },
+      "context": {
+        "boundary": {
+          "checksum": "1a611e4d882f00e5ee948eb6dad82aa33285847bc2cf6418c68213cd0d55824c",
+          "fact_pack_id": 6,
+          "id": 6
+        },
+        "brief": {
+          "checksum": "8b235c8c80be3c1d2c69d6541017de7e82d2c6764e4483a2cdd1cd849712b33a",
+          "id": 40
+        },
+        "channel_id": "baijia",
+        "content_form": "article",
+        "identity": {
+          "checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+          "id": 18
+        }
+      },
+      "fact_boundary": {
+        "checksum": "1a611e4d882f00e5ee948eb6dad82aa33285847bc2cf6418c68213cd0d55824c",
+        "fact_pack_id": 6,
+        "fact_pack_version": 1,
+        "id": 6,
+        "revision_no": 2
+      },
+      "master": {
+        "channel_id": "baijia",
+        "content_form": "article",
+        "content_unit_id": 42,
+        "context_hash": "986700c60e0dd289ee939767eb75603a75e08af52d6602af41ea403f3d3cbf0f",
+        "creative_intent": null,
+        "creative_intent_hash": null,
+        "id": 65,
+        "modality": "text",
+        "payload_hash": "a2fe83dcd29d3367eabebd77ff437e555e730186245f7b0042400514693f9491",
+        "payload_schema": "text.master.v2",
+        "project_id": 36,
+        "readiness": {
+          "reasons": [],
+          "state": "current"
+        },
+        "revision_no": 4
+      },
+      "project": {
+        "id": 36,
+        "status": "draft"
+      },
+      "unit": {
+        "channel_id": "baijia",
+        "id": 42,
+        "status": "draft"
+      },
+      "variant": null
+    }
+  ]
+}

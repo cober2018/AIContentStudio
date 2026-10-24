@@ -1,0 +1,15 @@
+{
+  "kind": "mock-isolated-not-quality",
+  "preview_status": 200,
+  "compact_error": null,
+  "sizes": {},
+  "structure": {
+    "payload_ref_count": 3,
+    "canvas_copies": 1,
+    "context_master_payload": true
+  },
+  "compact_check": {
+    "ok": true,
+    "bytes": 120383
+  }
+}

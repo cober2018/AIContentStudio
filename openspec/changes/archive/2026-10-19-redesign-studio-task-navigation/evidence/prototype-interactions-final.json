@@ -1,0 +1,58 @@
+{
+  "rows": [
+    {
+      "name": "no evidence cannot confirm",
+      "pass": true
+    },
+    {
+      "name": "note excerpt available",
+      "pass": true
+    },
+    {
+      "name": "selection retained after excerpt",
+      "pass": true
+    },
+    {
+      "name": "simulated creation handoff",
+      "pass": true
+    },
+    {
+      "name": "role draft survives refresh",
+      "pass": true
+    },
+    {
+      "name": "review blocker visible",
+      "pass": true
+    },
+    {
+      "name": "authorization separate",
+      "pass": true
+    },
+    {
+      "name": "delivery states no public publish",
+      "pass": true
+    },
+    {
+      "name": "preview v3",
+      "pass": true
+    },
+    {
+      "name": "longterm choice retained",
+      "pass": true
+    },
+    {
+      "name": "adopted status updated",
+      "pass": true
+    },
+    {
+      "name": "product independent account",
+      "pass": true
+    },
+    {
+      "name": "product delivery path",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "unexpectedRequests": []
+}

@@ -1,0 +1,47 @@
+{
+  "checks": [
+    {
+      "path": "/opportunities/8",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/projects/36",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/projects/36/units/42/production?workstep=delivery",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/review?project=36&unit=42&candidate=5&step=delivery",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/opportunities/8",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/projects/36",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/projects/36/units/42/production?workstep=delivery",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/review?project=36&unit=42&candidate=5&step=delivery",
+      "width": 390,
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "writes": [],
+  "scope": "live read-only browser; all business mutations used CLI APIs"
+}

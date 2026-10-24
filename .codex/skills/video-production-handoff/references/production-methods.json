@@ -537,7 +537,7 @@
       "kind": "prompt_skill",
       "name": "商品：事实底稿",
       "content": {
-        "adaptation_version": "aics-product-native-v2",
+        "adaptation_version": "aics-product-native-v3",
         "stage": "research",
         "execution_targets": [
           "ai_planning",
@@ -589,10 +589,10 @@
           }
         ],
         "method_card": "product-methods/product-truth-brief.md",
-        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied. v3: purchase-question coverage, inspectable shot keyframes, explicit image selection before video, and separate creative acceptance.",
         "text": "先从本次冻结任务书和授权资料确定商品名称、SKU/颜色/尺寸、受众、目标、已有照片与来源。将用户提供、来源证明、未知分开；卖点不是自动确认事实。保留来源版本与素材hash。逐项列出能展示的事实、可解释的价值和缺口，不把生成画面当功能证据。只在本次作品需要时整理价格/条件/时间；缺促销不阻断普通介绍。输出给当前Recipe需要的证据/选题格式，不自行换输出schema。",
-        "method_card_text": "# 商品：事实底稿\n\n版本：aics-product-native-v1。适用阶段：research；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n先从本次冻结任务书和授权资料确定商品名称、SKU/颜色/尺寸、受众、目标、已有照片与来源。将用户提供、来源证明、未知分开；卖点不是自动确认事实。保留来源版本与素材hash。逐项列出能展示的事实、可解释的价值和缺口，不把生成画面当功能证据。只在本次作品需要时整理价格/条件/时间；缺促销不阻断普通介绍。输出给当前Recipe需要的证据/选题格式，不自行换输出schema。\n\n## 操作与判断\n\n1. 对照SKU分开列资料，不混其他型号的价格/功能。2. 一镜要展示的结构/功能对应真实来源。3. 未知和冲突留在任务缺口，不凭视觉常识补齐。4. 检查检查时间/优惠时效只用于本次作品，不自动联网抓报价。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
-        "method_card_sha256": "04766f948ad1df6dc7d77c6b803a3b2fbe5f502bee094ff4ebb003e755c19ab7"
+        "method_card_text": "# 商品：事实底稿\n\n版本：aics-product-native-v3。适用阶段：research；执行目标：ai_planning, external_executor。执行时按冻结manifest选择加载；前期策划可按用户选择读取仓库候选，候选注册不表示正式采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n先从本次冻结任务书和授权资料确定商品名称、SKU/颜色/尺寸、受众、目标、已有照片与来源。将用户提供、来源证明、未知分开；卖点不是自动确认事实。保留来源版本与素材hash。逐项列出能展示的事实、可解释的价值和缺口，不把生成画面当功能证据。只在本次作品需要时整理价格/条件/时间；缺促销不阻断普通介绍。输出给当前Recipe需要的证据/选题格式，不自行换输出schema。\n\n## 操作与判断\n\n把“谁在什么场景需要它”写为受众/场景假设，并将购买理由连到真实资料与可展示素材。给当前作品列出简短的“购买问题→依据→所需画面→现有素材/缺口”，交给叙事与镜头阶段。区分外观可见信息、使用情境演绎和有证据的功能效果；生成画面不能补成缺失的商品事实。缺一项资料只影响依赖它的表达，不阻止已有依据的场景创意。\n\n销售任务书检查七项：具体买家与需求场景；一个核心购买理由；能证明好处的素材；最大购买顾虑与不适用边界；真实商家优势；一个明确购买入口；经营成本与预期收益。参数翻译成好处时保留依据，例如可折叠有资料支持后才能解释收起省空间；“年轻人、女性、高级、好用”不足以定义场景或理由。商家服务、优惠和反馈须有来源，不编造库存、倒计时或体验。\n\n证据素材与AI情境分别标记。真实操作、同条件对比、实测、准确参数和获准使用的真实反馈才承担相应证明；AI人物不冒充买家说“我买了/用了几个月”。无实测时把范围收在有依据的外观、结构和用途介绍。经营检查留在内部：进货、包装、运费、平台、推广、制作及退货售后成本均有口径才估算单笔贡献；缺失值保持未知，估算不称实际净利润，不把内部成本自动带入广告。\n\n1. 对照SKU分开列资料，不混其他型号的价格/功能。2. 一镜要展示的结构/功能对应真实来源。3. 未知和冲突留在任务缺口，不凭视觉常识补齐。4. 检查检查时间/优惠时效只用于本次作品，不自动联网抓报价。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "3bb34b30142bcdf421775f361cdc1988f2cbace6f7adc38c315d06f7a8854cc3"
       },
       "args_schema": {
         "type": "object",
@@ -606,7 +606,7 @@
       "kind": "prompt_skill",
       "name": "商品：带货叙事",
       "content": {
-        "adaptation_version": "aics-product-native-v2",
+        "adaptation_version": "aics-product-native-v4",
         "stage": "script",
         "execution_targets": [
           "ai_planning",
@@ -673,10 +673,10 @@
           }
         ],
         "method_card": "product-methods/product-sales-story.md",
-        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
-        "text": "保持冻结角色语气和任务受众，选一个真实问题或结果开场，然后演示有证据的商品特点、解释适用边界，以本次CTA结束。每句承重说法对应来源或明确用户资料。避免继承上游作者身份、固定Facebook受众、虚构使用体验/评价/销量/库存。先口播可懂再设计画面，不强制爆款钩子、英语词数、镜头数。输出逐镜表达目的、口播、可支持的画面证据和阅读时长；原生字幕待真实配音对齐。",
-        "method_card_text": "# 商品：带货叙事\n\n版本：aics-product-native-v1。适用阶段：script；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n保持冻结角色语气和任务受众，选一个真实问题或结果开场，然后演示有证据的商品特点、解释适用边界，以本次CTA结束。每句承重说法对应来源或明确用户资料。避免继承上游作者身份、固定Facebook受众、虚构使用体验/评价/销量/库存。先口播可懂再设计画面，不强制爆款钩子、英语词数、镜头数。输出逐镜表达目的、口播、可支持的画面证据和阅读时长；原生字幕待真实配音对齐。\n\n## 操作与判断\n\n1. 按真实证据选一个受众问题。2. 商品价值用具体场景解释，避免空泛夸赞。3. 逐镜写口播与画面承担的信息。4. 录制后以实际时长调整画面，不机械剪到固定镜头数。5. 配乐有无人声/许可/强度由场景决定，无音乐也是有效选择。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
-        "method_card_sha256": "f50ab7a927ee0970770775ca3a18679cba4c5c12e353f110c74dc455af09d04c"
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied. v3: purchase-question coverage, inspectable shot keyframes, explicit image selection before video, and separate creative acceptance.; Independently authored shooting-type, reference-analysis and continuous-action decisions; no third-party prompt or runtime copied.",
+        "text": "保持冻结角色语气和任务受众，选一个真实问题或结果开场，然后演示有证据的商品特点、解释适用边界，以本次CTA结束。每句承重说法对应来源或明确用户资料。避免继承上游作者身份、固定Facebook受众、虚构使用体验/评价/销量/库存。先口播可懂再设计画面，不强制爆款钩子、英语词数、镜头数。输出逐镜表达目的、口播、可支持的画面证据和阅读时长；原生字幕待真实配音对齐。\n\n## 拍摄类型与参考拆解\n\n本条先明确商品展示、品牌场景或人物UGC；再按具体表达选演示、答疑、选购或同条件对比，不把拍摄类型当性能证据。展示侧重可见结构和选择；场景让买家认出需求；UGC可用自然说话与接触动作，但虚拟人物不声称真实购买或长期体验。旁白、人物对白、无讲话或混合声音由本条配置决定，不自动切换。\n\n有用户参考片时先看实际画面并记录时间范围：开头让谁停留、购买理由如何被展示、景别/动作/声音怎样配合、顾虑何时回答。把可以学习的节奏、镜头用途和表现方法，与不能继承的身份、商品性能、评价、优惠分开。写出这次保留什么、改变什么，再改写成当前SKU有依据的脚本。没有实际参考片时只给待拆解清单，不伪造时间点。",
+        "method_card_text": "# 商品：带货叙事\n\n版本：aics-product-native-v4。适用阶段：script；执行目标：ai_planning, external_executor。执行时按冻结manifest选择加载；前期策划可按用户选择读取仓库候选，候选注册不表示正式采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n保持冻结角色语气和任务受众，选一个真实问题或结果开场，然后演示有证据的商品特点、解释适用边界，以本次CTA结束。每句承重说法对应来源或明确用户资料。避免继承上游作者身份、固定Facebook受众、虚构使用体验/评价/销量/库存。先口播可懂再设计画面，不强制爆款钩子、英语词数、镜头数。输出逐镜表达目的、口播、可支持的画面证据和阅读时长；原生字幕待真实配音对齐。\n\n## 操作与判断\n\n先选本次最有依据的购买理由，形成可讨论的销售主线，再让口播与画面共同承接它。逐镜记录观众的问题、该镜提供的新信息、对应依据、文案和所需素材。场景吸引、整品辨识、细节、使用情境、选择/CTA都是可用功能，不是必须凑齐的固定顺序或数量。删除仅重复上一镜信息的镜头；同一商品不同角度也须有表达目的。缺少性能证据时可做明确的场景型创意，不用空泛“高级/舒服”补充功能承诺。\n\n图片先行的任务交付销售思路、分镜和候选关键帧供用户审阅。仅有技术检查不能宣称销售创意通过；用户否定销售表达时记为新创意反馈，保留旧执行的真实历史。\n\n常规电商片可从约30秒规划，围绕一类买家、一个主要问题和一个核心好处；“具体场景→核心好处→真实演示→回答一个顾虑→单一购买入口”用于检查遗漏，不要求每条塞满。最大顾虑若缺依据，标出待核验和补拍，不让气氛镜头假装已经解答。视频的款式、规格、价格、服务承诺与落地商品页对照；没有真实入口先留为待配置，不能宣称购买链路已完成。\n\n试拍可选择场景型、演示型、同条件对比型、答疑型、选购型。需要少量版本比较时，以同商品同卖点的场景/细节/答疑方向为起点，仅改变一个测试因素，如开头或表达方式，保持音色、价格和其他条件一致；不是每次都强制生成三版。选购型如实说明适合与不需要购买的人，不虚构实验或效果差异。\n\n1. 按真实证据选一个受众问题。2. 商品价值用具体场景解释，避免空泛夸赞。3. 逐镜写口播与画面承担的信息。4. 录制后以实际时长调整画面，不机械剪到固定镜头数。5. 配乐有无人声/许可/强度由场景决定，无音乐也是有效选择。\n\n## 拍摄类型与参考拆解\n\n本条先明确商品展示、品牌场景或人物UGC；再按具体表达选演示、答疑、选购或同条件对比，不把拍摄类型当性能证据。展示侧重可见结构和选择；场景让买家认出需求；UGC可用自然说话与接触动作，但虚拟人物不声称真实购买或长期体验。旁白、人物对白、无讲话或混合声音由本条配置决定，不自动切换。\n\n有用户参考片时先看实际画面并记录时间范围：开头让谁停留、购买理由如何被展示、景别/动作/声音怎样配合、顾虑何时回答。把可以学习的节奏、镜头用途和表现方法，与不能继承的身份、商品性能、评价、优惠分开。写出这次保留什么、改变什么，再改写成当前SKU有依据的脚本。没有实际参考片时只给待拆解清单，不伪造时间点。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "fce8268ac7ed4dbfce6365d4f10e6373ef71151a3f4b4b91e3f24b944ed72287"
       },
       "args_schema": {
         "type": "object",
@@ -690,7 +690,7 @@
       "kind": "prompt_skill",
       "name": "商品：视觉与一致性",
       "content": {
-        "adaptation_version": "aics-product-native-v2",
+        "adaptation_version": "aics-product-native-v4",
         "stage": "storyboard",
         "execution_targets": [
           "ai_planning",
@@ -762,10 +762,10 @@
           }
         ],
         "method_card": "product-methods/product-visual-consistency.md",
-        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
-        "text": "最初真实商品图是身份基准，生成主视觉仅作次级风格参考。记录已知颜色/结构/Logo/按钮数量/比例与未知视角。先核对实际图像通道支持参考图；必须传真实授权图像才可称参考生成，提示词提到图片不算。当前通道不支持时选原图/实拍或保留商品主体像素的AE合成，不静默用文生图替换商品。每张候选和动态镜头都对照基准检查；单图不保证真实背面或360度。服装多角度仅服装使用；平台白底规则只按实际渠道需要。输出主视觉描述、身份锚点、候选差异和检查结论；不向确定性compose节点注入此prompt作为配置。",
-        "method_card_text": "# 商品：视觉与一致性\n\n版本：aics-product-native-v1。适用阶段：storyboard；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n最初真实商品图是身份基准，生成主视觉仅作次级风格参考。记录已知颜色/结构/Logo/按钮数量/比例与未知视角。先核对实际图像通道支持参考图；必须传真实授权图像才可称参考生成，提示词提到图片不算。当前通道不支持时选原图/实拍或保留商品主体像素的AE合成，不静默用文生图替换商品。每张候选和动态镜头都对照基准检查；单图不保证真实背面或360度。服装多角度仅服装使用；平台白底规则只按实际渠道需要。输出主视觉描述、身份锚点、候选差异和检查结论；不向确定性compose节点注入此prompt作为配置。\n\n## 操作与判断\n\n1. 原图列出可观察锚点，背面/内部列未知。2. 每次生成输入同时保留原始基准，不只传上一张生成图。3. 比对Logo、文字、按钮/孔数、附件、手接触点、颜色、比例。4. 原图分辨率按实际输出和端点合同处理；不能继承统一1024px压缩。5. 环境/背景可生成，不能改变商品主体后宣称真实。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
-        "method_card_sha256": "be2e986c87b7987ef8bdd578c2bfac29a124081d98300ed3c9521226cf1e4520"
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied. v3: purchase-question coverage, inspectable shot keyframes, explicit image selection before video, and separate creative acceptance.; Independently authored shooting-type, reference-analysis and continuous-action decisions; no third-party prompt or runtime copied.",
+        "text": "最初真实商品图是身份基准，生成主视觉仅作次级风格参考。记录已知颜色/结构/Logo/按钮数量/比例与未知视角。先核对实际图像通道支持参考图；必须传真实授权图像才可称参考生成，提示词提到图片不算。当前通道不支持时选原图/实拍或保留商品主体像素的AE合成，不静默用文生图替换商品。每张候选和动态镜头都对照基准检查；单图不保证真实背面或360度。服装多角度仅服装使用；平台白底规则只按实际渠道需要。输出主视觉描述、身份锚点、候选差异和检查结论；不向确定性compose节点注入此prompt作为配置。\n\n## 共同定样与相邻镜头\n\n为当前作品保存商品、人物和场景的精确参考版本，明确各自负责外观身份、人物衣着或空间光线；同一张合照不是所有未知角度的证明。用实际可见锚点串联镜头：商品朝向、人物站位、手从哪侧进入、视线、光源与动作起止。景别可以变，空间关系不能无意反转。\n\n逐镜候选可以全部拒绝。推荐只给实际观察和原因，不替代用户选图或上传后的明确采用。参考换图时只重审依赖它的镜头；原批准、旧提示词、旧包及旧片保留历史。若需要上镜尾帧，必须使用实际从已回传片提取/入库的精确图像；未取得尾帧时只写衔接意图，不宣称首尾帧控制已支持。",
+        "method_card_text": "# 商品：视觉与一致性\n\n版本：aics-product-native-v4。适用阶段：storyboard；执行目标：ai_planning, external_executor。执行时按冻结manifest选择加载；前期策划可按用户选择读取仓库候选，候选注册不表示正式采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n最初真实商品图是身份基准，生成主视觉仅作次级风格参考。记录已知颜色/结构/Logo/按钮数量/比例与未知视角。先核对实际图像通道支持参考图；必须传真实授权图像才可称参考生成，提示词提到图片不算。当前通道不支持时选原图/实拍或保留商品主体像素的AE合成，不静默用文生图替换商品。每张候选和动态镜头都对照基准检查；单图不保证真实背面或360度。服装多角度仅服装使用；平台白底规则只按实际渠道需要。输出主视觉描述、身份锚点、候选差异和检查结论；不向确定性compose节点注入此prompt作为配置。\n\n## 操作与判断\n\n依据逐镜目的制作可单独审阅的关键帧，保持本次选定商品/颜色、场景光线和人物关系的一致性，同时让景别变化提供有用信息。先展示整品身份，再核对细节和交互；不能从模糊原图推断精确织法、隐藏接头、厚度或性能。每张记录 shot ID、候选版本/hash、原图引用、生成路线、实际观察和待确认问题。审图检查主体轮廓、比例、颜色、可见结构、手脚接触及是否完成镜头任务；不以提示词写了“保持一致”代替看图。\n\n候选生成/技术检查/用户选图分开记录。用户确认精确图片后才交给视频提示词阶段；换图即重新选择。若通过外部执行器生图，如实标注其路线，不声称平台原图像API具备未验证的参考图能力。\n\n把同款真实正面/侧面/背面/细节及尺寸资料归类为参考集，按当前镜头需要索引；缺少视角记录缺口而非强求所有商品补齐全部角度。逐镜检查颜色、结构、配件数量、比例与标识，好看但货不对板的候选须修改。AI场景、实拍、参数资料和真实反馈保留不同的来源标签，用户可更正分类；分类本身不升级真实性或权限。价格、参数、字幕与CTA留给后期添加，避免生成文字错误并方便核对。\n\n1. 原图列出可观察锚点，背面/内部列未知。2. 每次生成输入同时保留原始基准，不只传上一张生成图。3. 比对Logo、文字、按钮/孔数、附件、手接触点、颜色、比例。4. 原图分辨率按实际输出和端点合同处理；不能继承统一1024px压缩。5. 环境/背景可生成，不能改变商品主体后宣称真实。\n\n## 共同定样与相邻镜头\n\n为当前作品保存商品、人物和场景的精确参考版本，明确各自负责外观身份、人物衣着或空间光线；同一张合照不是所有未知角度的证明。用实际可见锚点串联镜头：商品朝向、人物站位、手从哪侧进入、视线、光源与动作起止。景别可以变，空间关系不能无意反转。\n\n逐镜候选可以全部拒绝。推荐只给实际观察和原因，不替代用户选图或上传后的明确采用。参考换图时只重审依赖它的镜头；原批准、旧提示词、旧包及旧片保留历史。若需要上镜尾帧，必须使用实际从已回传片提取/入库的精确图像；未取得尾帧时只写衔接意图，不宣称首尾帧控制已支持。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "4d5b48d19378d8fe78f5aa91eb4194bacb54ba19232e6fbffbdb4b1901c77ad5"
       },
       "args_schema": {
         "type": "object",
@@ -779,7 +779,7 @@
       "kind": "prompt_skill",
       "name": "商品：素材与镜头路由",
       "content": {
-        "adaptation_version": "aics-product-native-v2",
+        "adaptation_version": "aics-product-native-v4",
         "stage": "storyboard",
         "execution_targets": [
           "ai_planning",
@@ -854,10 +854,10 @@
           }
         ],
         "method_card": "product-methods/product-shot-routing.md",
-        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied.",
-        "text": "每镜明确目的、事实依据、source mode和所需输入：真实动作/结构/效果用实拍；氛围运动可用已确认图片的人工图生视频；解释/标注用AE原生平面动效。实拍清单给景别、角度、光线、动作、时长与必要补拍；不把复杂装配交给生成模型证明。图片先由用户确认精确版本，再写匹配该图的运动/镜头提示词，人工网页生成回传。未知背面改正面二维运动或请补真实角度；不能用Y轴旋转伪装背面。保留source duration与edit use duration区别，回传检查结构漂移再接受。",
-        "method_card_text": "# 商品：素材与镜头路由\n\n版本：aics-product-native-v1。适用阶段：storyboard；执行目标：ai_planning, external_executor。只按冻结manifest选择加载；候选注册不表示已采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n每镜明确目的、事实依据、source mode和所需输入：真实动作/结构/效果用实拍；氛围运动可用已确认图片的人工图生视频；解释/标注用AE原生平面动效。实拍清单给景别、角度、光线、动作、时长与必要补拍；不把复杂装配交给生成模型证明。图片先由用户确认精确版本，再写匹配该图的运动/镜头提示词，人工网页生成回传。未知背面改正面二维运动或请补真实角度；不能用Y轴旋转伪装背面。保留source duration与edit use duration区别，回传检查结构漂移再接受。\n\n## 操作与判断\n\n1. 记录shot ID、目的、素材路径、source/use duration、声音保留意图。2. 实拍选手机固定机位、整品/细节/动作所需角度，具体光线按反光材质调整。3. 只有正面图时给正面运动方案，不生成假背面。4. 高风险线缆、装配或接触改真实镜头/静图说明。5. 图片或提示词变化后沿用现有失效重审机制，不重盖确认戳。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
-        "method_card_sha256": "3fd12cd3085fb74e17a279dc1240f6b49ed2f12e1b10b4befb9420589f2eca45"
+        "modifications": "Selective native adaptation; removed upstream gateways, runtimes, identity, unsupported statistics and universal presets. No author footage or audio copied. v3: purchase-question coverage, inspectable shot keyframes, explicit image selection before video, and separate creative acceptance.; Independently authored shooting-type, reference-analysis and continuous-action decisions; no third-party prompt or runtime copied.",
+        "text": "每镜明确目的、事实依据、source mode和所需输入：真实动作/结构/效果用实拍；氛围运动可用已确认图片的人工图生视频；解释/标注用AE原生平面动效。实拍清单给景别、角度、光线、动作、时长与必要补拍；不把复杂装配交给生成模型证明。图片先由用户确认精确版本，再写匹配该图的运动/镜头提示词，人工网页生成回传。未知背面改正面二维运动或请补真实角度；不能用Y轴旋转伪装背面。保留source duration与edit use duration区别，回传检查结构漂移再接受。\n\n## 连续使用动作与手机拍摄感\n\n先将购买理由转为可观察的动作链，再拆成少量可完成的短镜头。手机实拍感来自观察位置、接近商品、手与商品的接触、视线和自然停顿，不是每镜都加摇晃。根据商品资料选接近/整品识别、触摸或真实操作、细节、使用与选择等镜头功能；不是固定数量，也不为填满镜头编造操作。\n\n每镜记录入镜状态、一个主要动作、出镜状态及与相邻镜头的连接；换景别继续同一方向和动作，不让人物每镜重新开始。只有静态原图且缺真实演示时，可提议标明AI演绎的触摸/使用情境，不能用它证明材质手感、舒适度、承重、充气速度或实测效果。真实演示仍走实拍分支。\n\n图像阶段先让关键帧具备该动作的空间和接触关系，实际审图再选定；视频提示词分别描述主体动作和镜头动作，约束可见结构、光线与起止状态。禁止把无意义的全程静止微推视为所有商品的默认答案。回片逐镜检查动作完成度、接触可信度、商品漂移、首尾衔接与可剪时长；失败优先局部改图/改一个动作，不全部重生成。专业执行仍为用户手工网站生成、Resolve修声音/节奏/调色和AE按需包装。",
+        "method_card_text": "# 商品：素材与镜头路由\n\n版本：aics-product-native-v4。适用阶段：storyboard；执行目标：ai_planning, external_executor。执行时按冻结manifest选择加载；前期策划可按用户选择读取仓库候选，候选注册不表示正式采用。\n\n## 输入与输出\n\n输入为当前冻结任务书、角色、授权来源与精确素材引用；输出服从当前Recipe/Director合同。\n\n每镜明确目的、事实依据、source mode和所需输入：真实动作/结构/效果用实拍；氛围运动可用已确认图片的人工图生视频；解释/标注用AE原生平面动效。实拍清单给景别、角度、光线、动作、时长与必要补拍；不把复杂装配交给生成模型证明。图片先由用户确认精确版本，再写匹配该图的运动/镜头提示词，人工网页生成回传。未知背面改正面二维运动或请补真实角度；不能用Y轴旋转伪装背面。保留source duration与edit use duration区别，回传检查结构漂移再接受。\n\n## 操作与判断\n\n剪辑前对照销售分镜判断素材能否承担各镜的信息。缺素材先给具体补拍、参考图关键帧或有标识的情境演绎方案，再进入制作；不要把重复裁切/缩放同一照片默认为完整商品销售片。用户明确选择单图动态海报时可按其有限目标制作，不强加多镜头或补拍门槛。\n\n图片先行的交接顺序是：分镜与缺口→逐镜关键帧→实际视觉检查→用户确认精确图片→据图运动提示词→用户网页生成回传→素材检查→Resolve主剪/AE按需包装。分镜可写景别与表达意图，但未选图前不交付已确认的视频提示词，不发起视频生成。各镜保留原图身份依据和当前候选引用；生成片段回传后按形变、连续性与信息用途筛选，不因模型已生成而强行剪入。\n\n每镜写清目的、画面与一个主要动作、参考素材、当前阶段适用的图像提示词或已确认图对应的视频提示词、旁白、字幕和待核验细节。静态阶段视频提示词标为待选图，不提前伪造确认。动态可从约3–5秒短镜头试起，按动作和实际平台能力调整，复杂操作拆镜。确认后的运动提示词包含精确商品参考、场景、一个动作、景别、镜头运动、光线及必须保持细节。真实演示和同条件比较必须用可核验素材，不用生成“前后效果”补证据。\n\n1. 记录shot ID、目的、素材路径、source/use duration、声音保留意图。2. 实拍选手机固定机位、整品/细节/动作所需角度，具体光线按反光材质调整。3. 只有正面图时给正面运动方案，不生成假背面。4. 高风险线缆、装配或接触改真实镜头/静图说明。5. 图片或提示词变化后沿用现有失效重审机制，不重盖确认戳。\n\n## 连续使用动作与手机拍摄感\n\n先将购买理由转为可观察的动作链，再拆成少量可完成的短镜头。手机实拍感来自观察位置、接近商品、手与商品的接触、视线和自然停顿，不是每镜都加摇晃。根据商品资料选接近/整品识别、触摸或真实操作、细节、使用与选择等镜头功能；不是固定数量，也不为填满镜头编造操作。\n\n每镜记录入镜状态、一个主要动作、出镜状态及与相邻镜头的连接；换景别继续同一方向和动作，不让人物每镜重新开始。只有静态原图且缺真实演示时，可提议标明AI演绎的触摸/使用情境，不能用它证明材质手感、舒适度、承重、充气速度或实测效果。真实演示仍走实拍分支。\n\n图像阶段先让关键帧具备该动作的空间和接触关系，实际审图再选定；视频提示词分别描述主体动作和镜头动作，约束可见结构、光线与起止状态。禁止把无意义的全程静止微推视为所有商品的默认答案。回片逐镜检查动作完成度、接触可信度、商品漂移、首尾衔接与可剪时长；失败优先局部改图/改一个动作，不全部重生成。专业执行仍为用户手工网站生成、Resolve修声音/节奏/调色和AE按需包装。\n\n## 失败与退路\n\n缺实际商品资料就记录缺口；原生调用unknown先核对原操作，不重复提交。普通prompt不代替确定性工具配置，不触发上游安装/付费生成/公开发布。\n\n## 检查与回执\n\n保留本次选中版本/hash、采用的具体判断、输出及未检查边界。原生操作先读后写再读和看实际帧；保存工程依赖并真实重开。只有文档或接口成功不能宣布成片通过。音频技术检查与直接试听分开。\n\n## 来源\n\n固定仓库、commit、文件hash与许可在production-methods.json/THIRD_PARTY_NOTICES.md；自己的改写独立版本化，源文件不覆盖。\n",
+        "method_card_sha256": "d8eb921681064d2f19cd26e01b20e996ac12098b203dd2f731584b6ceb4dedfe"
       },
       "args_schema": {
         "type": "object",

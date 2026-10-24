@@ -13,9 +13,6 @@ from ...models import Draft, DraftStatus, FactPack, FactPackStatus, JobStatus
 from . import mock_content, renderers
 from .providers import GenerateRequest, get_provider, provider_model_name, record_run, selected_model_profile
 
-# legacy prompt 渲染路由：x_thread 复用 wechat prompt（V1 PRD 2.0：渠道合法性一律走 ChannelRegistry）
-X_THREAD = "x_thread"
-
 logger = logging.getLogger(__name__)
 
 
@@ -99,7 +96,9 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
     source_raws = [f.get("statement") or "" for f in facts_payload]
     knowledge_block = generation_block(facts_payload, source_raws)
 
-    generation_channel = "wechat" if job.channel == X_THREAD else job.channel
+    from ..content_harness.channel_methods import generation_prompt_channel, numbered_thread_body
+
+    generation_channel = generation_prompt_channel(job.channel)
     prompt = renderers.compose_prompt(
         generation_channel,
         renderers.topic_brief_text(topic),
@@ -166,8 +165,8 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
     title = result.data.get("titles", [result.data.get("title", topic.title)])[0]
     thread_posts = result.data.get("posts") or result.data.get("thread_posts")
     job_form = job.content_form or ""
-    if (job.channel == X_THREAD or job_form == "thread") and not thread_posts:
-        thread_posts = _thread_posts_from_wechat(result.data)
+    if (numbered_thread_body(job.channel) or job_form == "thread") and not thread_posts:
+        thread_posts = _thread_posts_from_article(result.data)
 
     # 重试/重新生成不覆盖旧 Draft：revision_no 递增（PRD 验收 13）
     last_revision = max((d.revision_no for d in job.drafts), default=0)
@@ -196,13 +195,15 @@ def run_generation_for_job(db: Session, job: models.ContentJob) -> Draft:
 
 
 def _render_job_body(channel: str, structured: dict) -> str:
-    if channel != X_THREAD:
+    from ..content_harness.channel_methods import numbered_thread_body
+
+    if not numbered_thread_body(channel):
         return renderers.render_body(channel, structured)
-    posts = structured.get("posts") or structured.get("thread_posts") or _thread_posts_from_wechat(structured)
+    posts = structured.get("posts") or structured.get("thread_posts") or _thread_posts_from_article(structured)
     return "\n\n".join(f"{index}. {post.get('text', post.get('body', ''))}" for index, post in enumerate(posts, 1))
 
 
-def _thread_posts_from_wechat(structured: dict) -> list[dict]:
+def _thread_posts_from_article(structured: dict) -> list[dict]:
     posts = []
     title = (structured.get("titles") or [structured.get("title", "")])[0]
     if title:

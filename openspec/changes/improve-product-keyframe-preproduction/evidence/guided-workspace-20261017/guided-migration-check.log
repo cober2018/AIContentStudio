@@ -1,0 +1,127 @@
+..FFF                                                                    [100%]
+=================================== FAILURES ===================================
+_________ test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite _________
+
+fresh_sqlite_url = 'sqlite:////private/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/pytest-of-mshengran/pytest-460/test_f6e_additive_schema_up_do0/migrate.db'
+
+    def test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite(fresh_sqlite_url):
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+    
+        from alembic import command
+    
+        cfg = Config("alembic.ini")
+        cfg.attributes["configure_logger"] = False
+>       assert ScriptDirectory.from_config(cfg).get_heads() == ["a3series00000001"]
+E       AssertionError: assert ['sku000000001'] == ['a3series00000001']
+E         
+E         At index 0 diff: 'sku000000001' != 'a3series00000001'
+E         Use -v to get more diff
+
+tests/test_migrations.py:95: AssertionError
+____ test_f6e_downgrade_refuses_v5_candidate_even_if_variant_fk_is_missing _____
+
+fresh_sqlite_url = 'sqlite:////private/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/pytest-of-mshengran/pytest-460/test_f6e_downgrade_refuses_v5_0/migrate.db'
+
+    def test_f6e_downgrade_refuses_v5_candidate_even_if_variant_fk_is_missing(fresh_sqlite_url):
+        from alembic.config import Config
+    
+        from alembic import command
+    
+        cfg = Config("alembic.ini")
+        cfg.attributes["configure_logger"] = False
+        command.upgrade(cfg, "head")
+        engine = create_engine(fresh_sqlite_url)
+        try:
+            with engine.begin() as connection:
+                connection.execute(
+                    text("INSERT INTO content_asset (channel, title, status, candidate_manifest_json, created_at) VALUES (:channel, :title, :status, :manifest, CURRENT_TIMESTAMP)"),
+                    {"channel": "wechat", "title": "历史候选", "status": "frozen", "manifest": '{"schema_version": 5}'},
+                )
+        finally:
+            engine.dispose()
+>       with pytest.raises(RuntimeError, match="retained v5 Candidate history"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'retained v5 Candidate history'
+E         Actual message: 'destructive_downgrade_blocked: retain catchup receipts'
+
+tests/test_migrations.py:142: AssertionError
+_______ test_f7_capability_schema_up_down_up_and_retained_evidence_guard _______
+
+fresh_sqlite_url = 'sqlite:////private/var/folders/g6/h9g70y1957s6_qn5hx6480nm0000gn/T/pytest-of-mshengran/pytest-460/test_f7_capability_schema_up_d0/migrate.db'
+
+    def test_f7_capability_schema_up_down_up_and_retained_evidence_guard(fresh_sqlite_url):
+        from alembic.config import Config
+    
+        from alembic import command
+    
+        cfg = Config("alembic.ini")
+        cfg.attributes["configure_logger"] = False
+        command.upgrade(cfg, "head")
+        engine = create_engine(fresh_sqlite_url)
+        try:
+            inspector = inspect(engine)
+            assert inspector.has_table("capability_registration")
+            assert inspector.has_table("capability_verification")
+            assert {"ck_capability_registration_identity_nonempty", "ck_capability_registration_status",
+                    "ck_capability_registration_data_mapping"}.issubset(
+                        {row["name"] for row in inspector.get_check_constraints("capability_registration")})
+            assert {"ck_capability_verification_scope_kind", "ck_capability_verification_result"}.issubset(
+                {row["name"] for row in inspector.get_check_constraints("capability_verification")})
+            assert "ix_capability_verification_registration_scope_id" in {
+                row["name"] for row in inspector.get_indexes("capability_verification")}
+        finally:
+            engine.dispose()
+>       command.downgrade(cfg, "f6e000000001")
+
+tests/test_migrations.py:175: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/alembic/command.py:534: in downgrade
+    script.run_env()
+.venv/lib/python3.13/site-packages/alembic/script/base.py:550: in run_env
+    util.load_python_file(self.dir, "env.py")
+.venv/lib/python3.13/site-packages/alembic/util/pyfiles.py:114: in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/alembic/util/pyfiles.py:132: in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:1023: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+alembic/env.py:85: in <module>
+    run_migrations_online()
+alembic/env.py:79: in run_migrations_online
+    context.run_migrations()
+<string>:8: in run_migrations
+    ???
+.venv/lib/python3.13/site-packages/alembic/runtime/environment.py:970: in run_migrations
+    self.get_context().run_migrations(**kw)
+.venv/lib/python3.13/site-packages/alembic/runtime/migration.py:616: in run_migrations
+    step.migration_fn(**kw)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def downgrade():
+>       raise RuntimeError("destructive_downgrade_blocked: retain catchup receipts")
+E       RuntimeError: destructive_downgrade_blocked: retain catchup receipts
+
+alembic/versions/catchup000001_offline_collection.py:18: RuntimeError
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /Users/mshengran/.codex/worktrees/guided-product-workspace/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_migrations.py::test_alembic_upgrade_head_on_fresh_db
+tests/test_migrations.py::test_f6e_downgrade_refuses_v5_candidate_even_if_variant_fk_is_missing
+tests/test_migrations.py::test_f7_capability_schema_up_down_up_and_retained_evidence_guard
+  /opt/homebrew/Caskroom/miniconda/base/lib/python3.13/contextlib.py:148: SAWarning: WARNING: SQL-parsed foreign key constraint '('parent_id', 'workflow', 'id')' could not be located in PRAGMA foreign_keys for table workflow
+    next(self.gen)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_migrations.py::test_f6e_additive_schema_up_down_up_on_empty_isolated_sqlite
+FAILED tests/test_migrations.py::test_f6e_downgrade_refuses_v5_candidate_even_if_variant_fk_is_missing
+FAILED tests/test_migrations.py::test_f7_capability_schema_up_down_up_and_retained_evidence_guard
+3 failed, 2 passed, 4 warnings in 1.04s

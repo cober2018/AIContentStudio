@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-20",
+  "fact_rules_existing_checks": {
+    "command": "apps/api/.venv/bin/python -m pytest tests/test_checks_v2.py tests/test_f6b_master_checks.py -q (cwd apps/api)",
+    "exit_code": 0,
+    "result": "19 passed, 1 existing deprecation warning, 1.89s",
+    "timing": "before conservative outer-negation followup; final probe covers final code"
+  },
+  "web": {
+    "command": "npm run build (cwd apps/web)",
+    "exit_code": 0,
+    "result": "tsc -b, vite build and check:bundle passed after A14",
+    "vite_seconds": 2.21
+  },
+  "stage_checks_final": {
+    "command": "pytest test_persona_creative_studio.py test_creation_recipe_stages.py test_stage_invocations.py test_stage_master_proposals.py test_stage_master_adoptions.py test_checks_v2.py test_f6b_master_checks.py -q",
+    "result": "476 passed, 8 existing deprecation warnings, 17.61s",
+    "exit_code": 0,
+    "log": "continued-stage-checks.txt"
+  },
+  "python_static_checks": {
+    "ruff": "2 business files passed",
+    "compileall": "2 business files passed",
+    "diff_check": "passed"
+  }
+}

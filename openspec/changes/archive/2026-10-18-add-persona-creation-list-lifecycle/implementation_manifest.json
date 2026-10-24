@@ -1,0 +1,151 @@
+{
+  "backup": "backups/persona-list-lifecycle-20261018-194534",
+  "head": "8539806eb3a1bebf5bf71ee08df3a286cdf9e00a",
+  "files": [
+    {
+      "path": "apps/api/alembic/versions/unitlife000001_unit_lifecycle.py",
+      "baseline_sha256": null,
+      "implemented_sha256": "fa13a5c3fd125cf01d37953bbdaa2dbbe9fe86851aa13b90fefe50deb67a1d8e"
+    },
+    {
+      "path": "apps/api/app/db.py",
+      "baseline_sha256": "9f92273f419fad25472f55e59c88c34c9acf4eaf8fe124e823cf0f7a191218cc",
+      "implemented_sha256": "75375d0d2e3165d5a4786262b687d8f8d3d4c7d68d5fd1ef3fa2b1062ccc4833"
+    },
+    {
+      "path": "apps/api/app/models.py",
+      "baseline_sha256": "b12c3ec6be7b0872b9b1adf1b5c02a2dccd38377dc91d169796ee804430932f0",
+      "implemented_sha256": "6bf464509b90aff08e5c45c22d47cbfcfd2378b92e75622cb41a96e4e2071837"
+    },
+    {
+      "path": "apps/api/app/routers/content_projects.py",
+      "baseline_sha256": "d6e861cea7dca254600f7a2a6db8fc5496cab4d78d2700f0ecfe64049b464924",
+      "implemented_sha256": "a87f99ef07433d91028f901dc643757540a712e09fed828bc1fe9553c1134b16"
+    },
+    {
+      "path": "apps/api/app/routers/product_skus.py",
+      "baseline_sha256": "fb0e5689bf643f18727a85b663e697a927b745a7cfeccc541fc2259e32866698",
+      "implemented_sha256": "6503835e440eeb39acde5113b39d2cc851efdd0861864fdfa56a12016b1dd950"
+    },
+    {
+      "path": "apps/api/app/services/audio_quality.py",
+      "baseline_sha256": "4900e01c11744f61fddac55bd649098e523797b91c9f7a34f540b214d1edc6c1",
+      "implemented_sha256": "2b81c267ad1f15cc4b92edc48d12e191b5c4c5fdfc6c6ae195c3d5840196472a"
+    },
+    {
+      "path": "apps/api/app/services/channel_variants.py",
+      "baseline_sha256": "f026404d754ba01b5724cf77df3f2cd02479aa9e8de15046b3b36f841a8d02de",
+      "implemented_sha256": "8e12a583bfcc52c1542be278035fb90aebb69d719a104b9d2e2d1aef3f6c8ed8"
+    },
+    {
+      "path": "apps/api/app/services/content_masters.py",
+      "baseline_sha256": "2c8b621c509ec509d2abfc1cf977222dcded273a6ad7a442809f773f8047ffcc",
+      "implemented_sha256": "844e4d687346e98036c0127389c3932ab7552429c5a0252fbd28b8b8b3c6e11a"
+    },
+    {
+      "path": "apps/api/app/services/creation_recipes.py",
+      "baseline_sha256": "1185a398a949991e2e21df843fc05db04046fe7ad23ec97d31c485ead796af1d",
+      "implemented_sha256": "6d4f306b723133432b899279f016d62828cc214649e6f5398230f4f36c2d69d7"
+    },
+    {
+      "path": "apps/api/app/services/creative_method_stage.py",
+      "baseline_sha256": "0589b11d179d6cb7e110ab32a9d781bdd91556e754686095fc5e4478c6cad2f3",
+      "implemented_sha256": "6fd834c7917bb1129185e68146298cdc3545b48009049d028dc7c76bd73073a1"
+    },
+    {
+      "path": "apps/api/app/services/data_source_plugins.py",
+      "baseline_sha256": "4418201b82875c78eda588ebd11dedd4601674228576c0718c927186b214574a",
+      "implemented_sha256": "521798f9499bb145db8a303e3a81b552c3e649cb350cf2e52c1ead3ff43711ad"
+    },
+    {
+      "path": "apps/api/app/services/home_projection.py",
+      "baseline_sha256": "02493592ea29b16f25c3663b65f6378c2311691dd4d2d85d54526e9948ec5eaf",
+      "implemented_sha256": "d3832f50b13ca2a7c9a62ab4188d164318a7be1f9dac22b167d522f5e08eb517"
+    },
+    {
+      "path": "apps/api/app/services/obsidian_knowledge.py",
+      "baseline_sha256": "28caa180573fcee49cc731f4fdc763a960d30e8c15a0b0e7f3106ea9a5d51cce",
+      "implemented_sha256": "5b69c30fcbdd7619f1d5922d9e89c21b2b01117b09f0b646e1364c659c7469a6"
+    },
+    {
+      "path": "apps/api/app/services/product_creation.py",
+      "baseline_sha256": "a0d1fb75acfa175fe8c92f05eb2ae2e035ab3928d6c4be796f3e46dbccbb28db",
+      "implemented_sha256": "a6417883b92f669be10614cf21a74cc0cb834d255391c0021e47a393a79a73d1"
+    },
+    {
+      "path": "apps/api/app/services/project_authorization.py",
+      "baseline_sha256": "1b46c7b6b9349148d682e2eb464036c697a82cd76d9ec56bf0d8b0b1c34c25a5",
+      "implemented_sha256": "649f275c8005404d012b11bcd0b4ec5a9b7d812cc1c22e7d52f0fb61c1ebbdf5"
+    },
+    {
+      "path": "apps/api/app/services/project_events.py",
+      "baseline_sha256": "64d3d6a0d05b57b5afb2986429c00cb8f48af31203748824b1639a47a1d0cc33",
+      "implemented_sha256": "7341095382e9eaecd33144ec9d193844cdc75a6b3532ed409d651cf2221fb39a"
+    },
+    {
+      "path": "apps/api/app/services/project_matrix.py",
+      "baseline_sha256": "61252fadfe5abf95fb997f6240ac9991f68e4a3e1ad4e250be59ae768be05ac4",
+      "implemented_sha256": "047d9efeb088fec0ba240b65dd67f05d86b59da8042ee40eb4ba22d5992ffdba"
+    },
+    {
+      "path": "apps/api/app/services/project_overview.py",
+      "baseline_sha256": "b26f82dcfb42f1a64b0563852e955053500dc04e781d9fe95f6dec510a7c9e03",
+      "implemented_sha256": "eaedcee0668bd3fd7342ee5338326a16c2fea03236860e580b6d813a9834ac5c"
+    },
+    {
+      "path": "apps/api/app/services/project_projection_context.py",
+      "baseline_sha256": "8f9d2be89d60ea2a817403bb12f5efcdac7e238d7bfe499605273161a4763294",
+      "implemented_sha256": "254a23171d750910a199c098fd418315c177f9de2f05dbc6b370addc5b32213f"
+    },
+    {
+      "path": "apps/api/app/services/project_review.py",
+      "baseline_sha256": "ca1f32c3840ae4018a93747e6e72bece61c2cb1bda8466eba148c49fe9050789",
+      "implemented_sha256": "54d7152670dddb815c69c7319dc823ffcfc0b6534e204be355e7d5efa5460294"
+    },
+    {
+      "path": "apps/api/app/services/project_versions.py",
+      "baseline_sha256": "e7e4e7fdfefc4f181ce13c8dea735cf7e409c2036ed407958f20c6bf50ba9a96",
+      "implemented_sha256": "3a742279dbc27a659c2af0c04a775d36efd2dba83fe180446b0026c25cbe09de"
+    },
+    {
+      "path": "apps/api/app/services/stage_feedback.py",
+      "baseline_sha256": "c8f62ceae69902f1cf7e10db7a7226b21d804473f2218d8a9dfb345d72fda8ad",
+      "implemented_sha256": "bc20f9d365bb5364ad3c1376c4ebbd024c3d4afa7478562603968ee899e1da3a"
+    },
+    {
+      "path": "apps/api/app/services/stage_invocations.py",
+      "baseline_sha256": "8d4ac64a17cee23d9db53cbee80647d21250aeba0a73c3b2f450ee2c333eeba6",
+      "implemented_sha256": "bc829a3abb96d6cc528e39609a3be8c41c2e4127fcba860cd9123c464da1d525"
+    },
+    {
+      "path": "apps/api/app/services/text_master_ai.py",
+      "baseline_sha256": "614e7121951ae4a4889c006e5eb6d730b6c26be6994da0d890e1a416e30482be",
+      "implemented_sha256": "3989ccab030cb81d5b58a9750346fdcf5dc4fbe35c7f4fd5178a0cf9601ee90a"
+    },
+    {
+      "path": "apps/api/app/services/workflow_engine.py",
+      "baseline_sha256": "2224427b716d9795287edc4476aae5964fc8d23441f3d1cbe48efad3af5b2a29",
+      "implemented_sha256": "4cd45754e4ef9749d9a22a14475c0aa70c0d47c9c907929abc48fe3e8596e7c2"
+    },
+    {
+      "path": "apps/web/src/product/ProductionQueuePage.tsx",
+      "baseline_sha256": "666dab6dc215d2924336a210b9a72da8ad37706712a7e6a4828ebb2031b15a70",
+      "implemented_sha256": "4f3d5f9ece77039879d97ef7604a63911b465331ac90bafff0e5ba6f41e20b20"
+    },
+    {
+      "path": "apps/web/src/product/project/ProjectMatrixTab.tsx",
+      "baseline_sha256": "eaca0780a1bc352aec3135741aea6788face2d5fc3cf44a6ac9153e0ec406155",
+      "implemented_sha256": "b4b7f4fb3a30680c5eabb53b778f39b01ef850de111980f8c171a1e821b004d6"
+    },
+    {
+      "path": "apps/web/src/product/project/projectTypes.ts",
+      "baseline_sha256": "ace3b3c0b6fcb5976786913858a2b513f6ee4d9bfcd36556c06fb401db25bca6",
+      "implemented_sha256": "318574f8668bd7f4245086499f0fd4b7c18d1b4b989eed5d44532757927620a4"
+    },
+    {
+      "path": "apps/web/src/product/useProductionWorkflow.ts",
+      "baseline_sha256": "29a7a46ac7f9d22d48bab2602e72d4d2d79a5dd9db8883ecf55f9e8b87f27f21",
+      "implemented_sha256": "662726d2600354fa3ff2585a925eb1326877bf32294b621a16042d0e27b61239"
+    }
+  ]
+}

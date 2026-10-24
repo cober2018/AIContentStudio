@@ -1,0 +1,24 @@
+- 2026-10-22 Proposal, design, spec and tasks written; `openspec validate --strict` passes. Waiting for confirmation.
+- 2026-10-22 Applied after the user confirmed.
+  - API: `services/shot_slots.py` (new). In `routers/material_match.py`: `GET …/shot-slots`, `PATCH …/shot-slots/{id}/brief`, `POST …/shot-slots/{id}/upload-target`, `POST …/shot-slots/briefs`.
+  - Planner gains `prompt` (material-match.v2).
+  - MCP `get_shot_slots` (read-only), with its settings summary.
+  - The edit handoff names missing shots (`missing_shots`).
+  - Web: `ShotSlotsBoard.tsx` and `shotSlots.ts` (new). The 「镜头素材」 section is in the video production header (`?panel=shots`). Changes: `SegmentResult` gets `bare`, `UploadOwn` is exported, the web-video route pre-fills its prompt from the brief, and the missing-shot message is wired.
+  - Verification: tests `-k "mcp or material or web_video or handoff or settings"` give 222 passed; the web build passes. The browser shows 15 slots on U80 (7 with candidates, 8 missing). Prompts were written for all 15 (53 s); MCP `get_shot_slots` read them. Upload into a draft slot was tested on a DB copy.
+- 2026-10-22 Two prompts per shot (task 4.1), plus the user's follow-up ("视频提示词加上时间，该加的都加上").
+  - Planner (material-match.v4) writes `frame_prompt`: aspect, subject, scene, composition, lighting, one shared style, bottom third left for subtitles, no text.
+  - It also writes `prompt`: "N-second clip, vertical 9:16, starting from the provided first frame", then motion, camera movement, pace and end frame, ending with "no text, no watermark, no audio". The shot duration comes from the plan.
+  - Briefs record `brief_version`. 「更新首帧和视频提示词」 refreshes outdated ones; briefs edited by the user (`brief_edited`) are kept.
+  - The web-video route pre-fills the prompt and the generation length (shot length rounded up to whole seconds). The API-image route shows the frame prompt to copy.
+  - Verified: all 15 U80 shots updated in one call, read back via MCP `get_shot_slots`. Tests: 222 passed; the web build passes.
+- 2026-10-22 Generation mode toggle and upload windows (tasks 4.2–4.3).
+  - The planner writes all three prompts plus a suggested mode. On U80 it suggested 先生成首帧 for shots 5, 6, 10, 12 and 13, and 直接生成视频 for the rest.
+  - In the browser, toggling shot 2 showed the right prompts, was saved, and did not mark the brief edited. It was switched back afterwards.
+  - The upload windows no longer close on outside clicks. That change was checked by the build only, not clicked through.
+  - Tests: 222 passed. The web build passes.
+- 2026-10-22 ✕ to withdraw an upload (task 4.4).
+  - It asks for confirmation first. The 「你上传的」 badge moved to the bottom left to make room.
+  - Tested on a DB copy: run 8 shot-0 upload.137 was removed from picks and its project reference was detached.
+  - In the browser the ✕ shows on the real upload for shot 1, which was not clicked.
+  - Tests: 222 passed. The web build passes.

@@ -1,0 +1,174 @@
+{
+  "schema": "aics.product-keyframe-review.v1",
+  "created_date": "2026-10-16",
+  "source": {
+    "path": "source.png",
+    "sha256": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321"
+  },
+  "route": "Codex built-in imagegen with actual referenced_image_paths; not the platform image API",
+  "user_image_approval": "confirmed_S01_to_S05_by_user",
+  "video_generation": "manual_pending_user",
+  "shots": [
+    {
+      "shot_id": "S01",
+      "candidate_version": 2,
+      "path": "S01-v2.png",
+      "prompt": "Create ONE photorealistic portrait 9:16 WIDE ESTABLISHING keyframe S01 v2 for an outdoor lounger advertisement, no text/logos/watermarks. Image1 is real identity truth: the LIGHT CYAN SKY BLUE elongated lounger lower-left with black lower outer base. Image2 is a proposed scene/color continuity reference only. IMPORTANT CHANGE from image2: use a MUCH WIDER environmental view; the entire lounger must occupy only about 38-42 percent of frame HEIGHT, located in the lower center-right, with plenty of visible lawn all around, no cropped product. A mature leafy tree trunk fills the far left and its canopy frames the top; a modest footpath runs in the distant background with lawn between, tranquil garden and sunlight. Camera standing at a natural slightly elevated three-quarter angle from the product foot-side, wide 28mm photographic feel, warm late afternoon light from upper right, soft leafy shade over the grass, calm believable everyday park. The blue lounger is the inviting focal point through blue/green contrast, surrounded by peaceful space. Preserve the ORIGINAL shape: two soft blue long side volumes and recessed central channel, rounded joined ends, loose mildly shiny wrinkled skin, black lower exterior, no rigid legs or frame, no separate pillow, handles, valves or extra accessories. No person, no additional furniture, no other products. The purpose is to show the use setting of a weekend park break, clearly visually distinct from a tight full-product view. Illustrative concept only, not performance or exact-scale proof.",
+      "reference_paths": [
+        "source.png",
+        "S01-v1.png"
+      ],
+      "reference_roles": [
+        "original_identity",
+        "unapproved_scene_continuity_only"
+      ],
+      "user_selected": true,
+      "technical_review": "visually_inspected_candidate_only",
+      "video_prompt": null,
+      "sha256": "3849c36fc2c18d156714fea81d3abaa43766fda6b356953c8c7ccfc7b7bf1dfb",
+      "resolution": [
+        941,
+        1672
+      ],
+      "original_generation_path": "/Users/mshengran/.codex/generated_images/01a1396b-5ff0-79b0-822f-9ffab6ab006e/exec-9bf039e7-c24f-473c-82de-b69bf64087bc.png",
+      "previous_candidates": [
+        {
+          "shot_id": "S01",
+          "candidate_version": 1,
+          "path": "S01-v1.png",
+          "prompt": "Create ONE photorealistic premium outdoor product advertising keyframe, portrait 9:16, no text, no logo, no watermark, no collage. Image 1 is the original product identity reference, not a style to copy. The hero is ONLY the light cyan / sky-blue lounger in the bottom-left of that photo: a long oval air-lounger-shaped seat with two thick parallel inflated-looking blue sides surrounding a deep longitudinal blue recess, rounded joined ends, black lower outer skirt/base. Faithfully retain its very elongated proportions, loose slightly shiny wrinkled blue skin and black base; no hard legs, frame, separate pillows, added cushions, straps, cupholders, invented seams or accessories. Preserve recognizable visible geometry from the original elevated foot-end three-quarter view; do not invent a backside. Frame S01 'the invitation': one sky-blue lounger in a tranquil sunlit lawn with a mature tree offscreen casting soft leaf shadows, uncluttered distant green trees, gentle late-afternoon warm light. Camera a little above lounger, looking down from its foot end, full object visible, product occupies 60 percent of image height in foreground, diagonal composition, ample clean breathing space above. Sharp credible product, restrained real grass, subtle background depth, no people, no other sofas. This is a reference-based concept keyframe for user review, not documentation of performance. Make the PRODUCT the visual focus, not a generic park landscape.",
+          "reference_paths": [
+            "source.png"
+          ],
+          "reference_roles": [
+            "original_identity"
+          ],
+          "user_selected": false,
+          "technical_review": "pending",
+          "video_prompt": null,
+          "sha256": "4e3430a48b601234e00a99e75942c7f0f356b4f0e2bdd9bd2f54c0a109fe259d",
+          "resolution": [
+            941,
+            1672
+          ],
+          "original_generation_path": "/Users/mshengran/.codex/generated_images/01a1396b-5ff0-79b0-822f-9ffab6ab006e/exec-da738cfc-45e4-4fa6-b60a-2d4885132d34.png"
+        }
+      ],
+      "revision_reason": "S01 v1 and S02 had insufficient framing difference; v2 adds a wider establishing view.",
+      "review_notes": "较远场景v2与S02分工改善；精确外观待用户核对",
+      "selected_material_revision_id": 59,
+      "approval_scope": "selected image bytes for local image-to-video; public/commercial rights not claimed"
+    },
+    {
+      "shot_id": "S02",
+      "candidate_version": 1,
+      "path": "S02-v1.png",
+      "prompt": "Create ONE photorealistic product advertising keyframe, portrait 9:16, no text/logos/watermarks, no collage. Image 1 ORIGINAL photo is identity authority: hero is the light cyan blue long lounger at lower-left. Image 2 is a proposed matching scene/color treatment, NOT authority for geometry. S02: show this single blue product clearly from a higher elevated almost top-down foot-end viewpoint, full elongated shape entirely visible, filling roughly 78 percent of image height, centered diagonally on uncluttered soft real grass, little background. Warm natural sunlight from upper-right, gentle leaf shadow near outside edge, no people or props. Two thick soft elongated blue side volumes enclosing the long recessed blue central trough, rounded joined ends, substantial black lower exterior/base visible on near edge, very elongated original proportions, loose slightly shiny wrinkled skin. Faithfully follow the original lounger; no hard furniture legs, no separate cushion, no added pillows, no tufted seams, no invented handles/valves/labels. Camera looks only at surfaces visible in the real reference, not hidden underside. Distinct from image 2: higher top-down composition to explain the overall shape; entire outline fits comfortably inside frame. Professional natural ecommerce product photography, detailed enough to read silhouette but not invent material weave or construction. Candidate illustration only, not verified specification.",
+      "reference_paths": [
+        "source.png",
+        "S01-v1.png"
+      ],
+      "reference_roles": [
+        "original_identity",
+        "unapproved_scene_continuity_only"
+      ],
+      "user_selected": true,
+      "technical_review": "visually_inspected_candidate_only",
+      "video_prompt": null,
+      "sha256": "1adaea44a1934e95988cb1e8968886c38872bfae83a6e682f73c4117881e4820",
+      "resolution": [
+        941,
+        1672
+      ],
+      "original_generation_path": "/Users/mshengran/.codex/generated_images/01a1396b-5ff0-79b0-822f-9ffab6ab006e/exec-7aa42fcd-80f3-4a13-bff8-0751141cbebb.png",
+      "review_notes": "完整轮廓可见；精确比例未确认",
+      "selected_material_revision_id": 60,
+      "approval_scope": "selected image bytes for local image-to-video; public/commercial rights not claimed"
+    },
+    {
+      "shot_id": "S03",
+      "candidate_version": 1,
+      "path": "S03-v1.png",
+      "prompt": "Create ONE photorealistic outdoor product advertising detail keyframe S03, portrait 9:16, NO text/logos/watermarks/collage. Image 1 ORIGINAL photo defines the product: use the light sky-blue long lounger lower-left; image 2 only guides matching daylight and color. Show a tight detail of the VISIBLE near-end blue rim, its curved inflated-looking blue side, the recessed blue sitting channel and the junction to the black outer skirt. Product fills 85 percent of frame; grass occupies a slim softly blurred margin. Camera in close elevated three-quarter view, photographic 65mm feel, shallow but not extreme depth of field. Preserve original loose smooth slightly shiny synthetic-looking blue surface with large natural folds and softly rounded volumes, black lower exterior and observed shape. Do not invent woven texture, zips, valves, seams, labels, waterproof droplets, hands squeezing, cushioning claims or demonstrations. This is a detail composition of observed outer forms, not microscopic fabric or a cross-section. Warm sun grazes blue folds from upper-right; subtle leafy shade keeps continuity with image2. Make the image CLEARLY a detail shot, substantially different framing from a full product photo. Not luxury upholstery, not rigid furniture, not quilted foam. Candidate for aesthetic approval, not verified technical material evidence.",
+      "reference_paths": [
+        "source.png",
+        "S01-v1.png"
+      ],
+      "reference_roles": [
+        "original_identity",
+        "unapproved_scene_continuity_only"
+      ],
+      "user_selected": true,
+      "technical_review": "visually_inspected_candidate_only",
+      "video_prompt": null,
+      "sha256": "1003e068d2146bcc7a43edb4550e8c3c9c9d96c98877fdc0886ff5401bffe69c",
+      "resolution": [
+        941,
+        1672
+      ],
+      "original_generation_path": "/Users/mshengran/.codex/generated_images/01a1396b-5ff0-79b0-822f-9ffab6ab006e/exec-9581a68e-a75c-46c0-a124-ca38a10fac9d.png",
+      "review_notes": "生成褶皱/光泽不能证明材质或工艺",
+      "selected_material_revision_id": 61,
+      "approval_scope": "selected image bytes for local image-to-video; public/commercial rights not claimed"
+    },
+    {
+      "shot_id": "S04",
+      "candidate_version": 1,
+      "path": "S04-v1.png",
+      "prompt": "Create ONE photorealistic lifestyle product advertising keyframe S04, portrait 9:16, no text/logos/watermarks/collage. Image 1 original photo is product identity reference and shows a real reclining pose on the pastel-pink lounger. Hero for this new scene must instead be the same LIGHT SKY-BLUE / CYAN lounger at original lower-left, with black lower skirt/base. Image 2 is secondary matching garden light/color reference only. Show one generic adult East Asian woman, about 30, in a plain ivory short-sleeved shirt, light beige trousers and clean white casual shoes, reclining lengthwise in this sky-blue lounger on a quiet lawn. Full head-to-toe person AND full lounger visible, comfortably framed with margins. Her head at the far rounded end, feet near the near end, one hand resting on abdomen and the other resting beside her, calm face looking toward tree canopy; anatomically natural body and hands. Do not copy the original woman's identity. Keep blue product rims and black exterior visible around the person. The seat is a long soft oval with two inflated-looking side volumes and a deep longitudinal recess, not a rigid chair, no legs/frame, no extra cushions/pillows/armrests. Do not enlarge, thicken or redesign it to fit. High three-quarter camera from foot-side, same visible-surface range as original reference, dappled warm late afternoon light, gentle green garden background with subtle tree shade. Product and person fill around 70 percent of frame height. Prioritize credible grounded human-product contact with no floating body or intersecting limbs. No phone, drinks, pets or unrelated objects. This is an illustrative lifestyle concept for review, not evidence of comfort/load capacity or a customer testimonial.",
+      "reference_paths": [
+        "source.png",
+        "S01-v1.png"
+      ],
+      "reference_roles": [
+        "original_identity",
+        "unapproved_scene_continuity_only"
+      ],
+      "user_selected": true,
+      "technical_review": "visually_inspected_candidate_only",
+      "video_prompt": null,
+      "sha256": "e3213733532d211967b9ed754afd0e74f7059e6529ce7e1c066514081c07d5ac",
+      "resolution": [
+        941,
+        1672
+      ],
+      "original_generation_path": "/Users/mshengran/.codex/generated_images/01a1396b-5ff0-79b0-822f-9ffab6ab006e/exec-edf53c50-04f5-4b5e-b7be-a2eda09afc24.png",
+      "review_notes": "未见明显肢体穿帮；接触尺度为演绎",
+      "selected_material_revision_id": 62,
+      "approval_scope": "selected image bytes for local image-to-video; public/commercial rights not claimed"
+    },
+    {
+      "shot_id": "S05",
+      "candidate_version": 1,
+      "path": "S05-v1.png",
+      "prompt": "Create ONE photorealistic product advertising keyframe S05, vertical 9:16, no text/logos/watermarks/collage or inset panels. Use original image1 as product truth: THREE long loungers, the light CYAN BLUE lower-left, the LEMON YELLOW lower-center and the PALE LAVENDER PINK beneath the reclining woman. Ignore bright magenta and darkblue variants. All retain original long oval silhouette, soft rounded inflated-looking sides with a deep central longitudinal seat recess, slightly shiny wrinkled colored skin and BLACK lower exterior/base; no hard legs/frames/separate pillows/handles or added features. Image2 only guides warm green garden scene and sky-blue hero color, not authority for hidden geometry. Arrange the three whole loungers side by side on the same sunny grass with modest natural spacing: blue hero center a little forward, lemon yellow left and pale lavender pink right slightly behind, parallel diagonals so all complete objects fit within portrait frame. High elevated three-quarter view of visible upper surfaces, believable consistent scale, the group occupies about 70 percent of image height, trees softly blurred in upper background. Warm late afternoon sunlight and faint leaf shadows, uncluttered premium but natural outdoor ecommerce photography. No person, no unrelated props. Show clear distinct actual-reference colors without a fantastical rainbow or new textures. This is the choice/closing frame; clear full silhouettes and color comparison matter. Illustrative proposed color lineup, not a verified inventory availability claim.",
+      "reference_paths": [
+        "source.png",
+        "S01-v1.png"
+      ],
+      "reference_roles": [
+        "original_identity",
+        "unapproved_scene_continuity_only"
+      ],
+      "user_selected": true,
+      "technical_review": "visually_inspected_candidate_only",
+      "video_prompt": null,
+      "sha256": "e83e78b484de937be80f7449880964977b0b9194634381f7cb707a1016d59a7b",
+      "resolution": [
+        941,
+        1672
+      ],
+      "original_generation_path": "/Users/mshengran/.codex/generated_images/01a1396b-5ff0-79b0-822f-9ffab6ab006e/exec-c7dad92f-efbf-488f-bda3-b8518084bb11.png",
+      "review_notes": "颜色有原图依据；精确色号与库存未确认",
+      "selected_material_revision_id": 63,
+      "approval_scope": "selected image bytes for local image-to-video; public/commercial rights not claimed"
+    }
+  ],
+  "evidence_gap": {
+    "shot_id": "E01",
+    "purpose": "真实尺寸答疑",
+    "status": "awaiting_real_dimensions_or_measurement_capture",
+    "ai_generation_allowed_for_proof": false
+  },
+  "approval_evidence": "用户明确答复：S01–S05全部保留，确认用于下一步图生视频；2026-10-16。"
+}

@@ -1,0 +1,23 @@
+fresh work: project=21 unit=27
+
+===== R3/R4/B1 E2E RESULTS =====
+PASS B1-首次启用保存成功
+PASS B1-首次保存PUT-200  [(200, 'PUT', '/127.0.0.1:5173/api/v1/content-projects/21/units/27/production-profile')]
+PASS B1-保存后两项selected+enabled  {('studio.product.audience-need@1', True, True), ('studio.product.purchase-reason@1', True, True)}
+PASS R3-整组关闭后保存按钮可用
+PASS R3-未保存方法修改提示
+PASS R3-整组关闭保存成功
+PASS R3-关闭态PUT-200  [(200, 'PUT', '/127.0.0.1:5173/api/v1/content-projects/21/units/27/production-profile')]
+PASS R3-保存后API为selected+disabled  {('studio.product.purchase-reason@1', True, False), ('studio.product.audience-need@1', True, False)}
+PASS R3-重载后摘要已配置·全关  商品方法（已配置·全关）
+PASS R3-重载后组开关为关
+PASS R3-找到站内离开锚点  http://127.0.0.1:5173/home
+PASS R3-未保存方法改动触发离开提醒(含商品方法选择文案)  [('confirm', '离开会丢弃未保存的目标与受众草稿或商品方法选择，继续？')]
+PASS R3-dismiss后页面停留
+PASS R4-其他入口并发保存成功  200 
+PASS R4-本页保存成功
+PASS R4-本页PUT-200  [(200, 'PUT', '/127.0.0.1:5173/api/v1/content-projects/21/units/27/production-profile')]
+PASS R4-review关闭与product-script保留  {"enabled": false, "methods": [{"id": "studio.video.product-script", "source_kind": "studio_builtin", "skill_ref": "studio.video.product-script@1", "enabled": t
+PASS R4-两项按本页选择(受众开/购买理由关)  {'studio.product.audience-need@1': (True, True), 'studio.product.purchase-reason@1': (True, False)}
+PASS R4-本页无409/422
+console errors: []

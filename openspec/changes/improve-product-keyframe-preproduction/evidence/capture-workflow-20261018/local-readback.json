@@ -1,0 +1,27 @@
+{
+  "ready": true,
+  "master_id": 50,
+  "revision": 3,
+  "payload_hash": "1a1d0f5636d18605155b0208923d96f8b3ce7cc27e381ee35c1b9cc2c57ba532",
+  "capture_status": {
+    "production_profile_revision_id": 142,
+    "script": {
+      "state": "draft",
+      "content_hash": "0c0dead833b7ddb4b17cc5f042a5c7d0e835a740ae6dae68c06ff0f916801502"
+    },
+    "task": {
+      "state": "draft",
+      "content_hash": "97faf0bbf918c749f4587da29b1714cd2cef606a72c1c1baa4eb8d3f32a2c946"
+    },
+    "ready_to_shoot": false,
+    "adoptions": {}
+  },
+  "mobile": {
+    "width": 390,
+    "document_width": 390,
+    "filming_fields": 40,
+    "script_confirmation_and_download_visible": true
+  },
+  "adjacent_schema": "unitlife000001 added by adjacent task; runtime REQUIRED_SCHEMA_HEAD aligned after inspecting migration; no schema mutation by capture task",
+  "review": "Independent incremental reviews completed; actual footage and end-to-end creative quality pending"
+}

@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-16",
+  "sites": {
+    "aitech.kayoyo.top": {
+      "persona_id": 2,
+      "openapi_http": 200,
+      "sample_items_http": 200,
+      "sample_count": 2
+    },
+    "wonderlife.kayoyo.top": {
+      "persona_id": 3,
+      "openapi_http": 200,
+      "sample_items_http": 200,
+      "sample_count": 2
+    }
+  },
+  "client_observation": "urllib 403/1010; documented curl successful without cookies or impersonation",
+  "not_verified": [
+    "snapshot and changes actual responses",
+    "full original body and nested attribution",
+    "formal worker reading",
+    "natural schedule with new sources"
+  ]
+}

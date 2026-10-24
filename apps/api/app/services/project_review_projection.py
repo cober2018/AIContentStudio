@@ -89,7 +89,21 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
         dimensions[name] = {"status": status, "reasons": reasons or []}
 
     dimension("content", "ready" if current else "blocked", [] if current else ["candidate_missing"])
-    dimension("identity", "ready" if unit.identity_snapshot_id else "blocked", [] if unit.identity_snapshot_id else ["identity_unready"])
+    from .product_context import context_snapshot, is_product
+
+    identity_ready = bool(unit.identity_snapshot_id)
+    identity_reason = "identity_unready"
+    if is_product(unit):
+        identity_reason = "product_context_missing"
+        try:
+            identity_ready = bool((context_snapshot(db, unit) or {}).get("product_context"))
+        except ValueError:
+            identity_ready, identity_reason = False, "product_configuration_unavailable"
+        except HTTPException as exc:
+            if not 400 <= exc.status_code < 500:
+                raise
+            identity_ready, identity_reason = False, "product_configuration_unavailable"
+    dimension("identity", "ready" if identity_ready else "blocked", [] if identity_ready else [identity_reason])
     boundary = context.boundaries.get(unit.project_id) if context is not None else current_boundary(db, unit.project_id)
     evidence = (current.candidate_manifest_json or {}).get("evidence", {}) if current else {}
     evidence_stale = bool(current and evidence.get("boundary_id") and boundary and evidence["boundary_id"] != boundary.id)
@@ -155,12 +169,13 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
         summary = "delivered"
     elif relevant_targets:
         summary = "delivery_ready"
-    elif not unit.identity_snapshot_id or boundary is None:
+    elif not identity_ready or boundary is None:
         summary = "blocked"
     else:
         summary = "ready"
     return {
         "unit_id": unit.id, "project_id": unit.project_id, "title": unit.title, "modality": unit.modality,
+        "production_domain": unit.production_domain,
         "persona_id": unit.persona_id, "account_id": unit.account_id, "channel_id": unit.channel_id,
         "identity_snapshot_id": unit.identity_snapshot_id,
         "unit_status": unit.status, "summary": summary, "dimensions": dimensions,

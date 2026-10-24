@@ -123,16 +123,10 @@ def bootstrap_renderers() -> None:
 
 
 def resolve_renderer_key(channel: str, content_form: str | None) -> str:
-    """渠道×形态 → renderer key（profile 未定义时的静态映射；profile 可覆盖）。"""
-    if channel == "wechat":
-        return "renderer.wechat.article"
-    if channel in {"x", "x_thread"} and content_form in {None, "thread"}:
-        return "renderer.x.thread"
-    if channel == "x_thread":
-        return "renderer.x.thread"
-    if channel == "xiaohongshu":
-        return "renderer.xhs.cards"
-    return "renderer.generic.markdown"
+    """渠道×形态 → renderer key。profile 未声明时问渠道方法插件。"""
+    from .channel_methods import renderer_key_for
+
+    return renderer_key_for(channel, content_form)
 
 
 def render_for(db, draft, *, media: list[dict] | None = None) -> RenderResult:

@@ -1,3 +1,4 @@
+export type AssistanceSurface = "product_creation" | "product_brief" | "video" | "production_profile";
 export type AssistanceValue = string | number | boolean | string[] | null;
 export type AssistanceField = { key: string; label: string; value: AssistanceValue; apply: (value: AssistanceValue) => void; protected?: boolean; kind?: "text" | "number" | "list" | "fact" | "choice"; options?: string[]; unavailable?: string };
 export const isUnfilled = (value: AssistanceValue) => value === null || (typeof value === "string" && !value.trim()) || (Array.isArray(value) && value.length === 0);

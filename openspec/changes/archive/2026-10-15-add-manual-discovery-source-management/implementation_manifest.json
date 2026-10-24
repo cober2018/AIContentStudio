@@ -1,0 +1,45 @@
+{
+  "baseline": "main@636d60e",
+  "worktree": "/Users/mshengran/.codex/worktrees/daily-persona-product-creation/AIContentStudio",
+  "formal_root": "/Users/mshengran/Project/AIContentStudio",
+  "status": "archived 16/16; formally integrated and enabled, uncommitted",
+  "files": {
+    "apps/api/app/routers/discovery.py": "d529848c7de409bf0b0c61dc6f44e2c0ce83ece886eecf505e7122b488a0c9a6",
+    "apps/api/app/services/discovery_ingestion.py": "c36a0d9e0a8bc247ea1667eebfb0b5502137cd3062a64020afcad5bec6afe3f9",
+    "apps/api/app/services/source_discovery.py": "1f2ace9a70917efffbe40c07a1d921b84731e598adb94882f99b6ea2c80fb841",
+    "apps/api/app/services/discovery_runtime.py": "f7a3aa27273cd7f766b261f044c185304ad8d851d6d8f109e4969d8ebbab662c",
+    "apps/api/app/tasks/worker_tasks.py": "95ad29aea60a5d86d90277f9414a1ef57378e8cb221c7c3d5d2e8a734e6c6c18",
+    "apps/web/src/product/DiscoveryPanel.tsx": "d6b8d8ac9d4134e42bf61f6b5d651f9c420c9a8553295b970deacbdc3ec58c47",
+    "apps/api/app/services/discovery_sources.py": "6265fcf512acec67e565765f6afff4f4587124e0dd08054ae1ab1a1ce5208649"
+  },
+  "backup": "/Users/mshengran/Project/AIContentStudio/backups/manual-sources-20261015-2bf76qck",
+  "natural_isolated_acceptance": {
+    "kind": "isolated natural minute scan and daily consumption, NOT formal next-day acceptance",
+    "business_date": "2026-10-15",
+    "persona_id": 4,
+    "run_id": 9,
+    "status": "succeeded",
+    "reason": "fewer_qualifying_topics",
+    "origin": "celery_beat",
+    "execution_origin": "celery_worker",
+    "task_id": "3ebc8f27-56e8-4450-b827-e6d93e148e66",
+    "source_ids": [
+      54
+    ],
+    "summary": {
+      "count": 1,
+      "opportunity_ids": [
+        11
+      ],
+      "reason": "fewer_qualifying_topics",
+      "coverage": "succeeded"
+    },
+    "model_requests": 5,
+    "reserved_input": 56758,
+    "source_54_items": 10
+  },
+  "formal_mutations": "code only; no test sources, Personas or topics added",
+  "formal_history": "Persona/revision/opportunity/assessment tables byte-for-value equal to before-formal backup",
+  "schema": "discovery000001, unchanged",
+  "archive": "openspec/changes/archive/2026-10-15-add-manual-discovery-source-management"
+}

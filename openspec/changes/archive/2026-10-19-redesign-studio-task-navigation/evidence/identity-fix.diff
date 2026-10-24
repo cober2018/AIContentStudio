@@ -1,0 +1,24 @@
+--- before/apps/api/app/services/text_master_checks.py
++++ after/apps/api/app/services/text_master_checks.py
+@@ -172,7 +172,10 @@
+         if expected and (expected["ref"] != quality["quality_profile_ref"] or expected["hash"] != quality["quality_profile_hash"]):
+             return "incomplete", {"reasons": ["persona_quality_profile_changed"], "coverage": {"semantic": "unavailable"}}
+         deterministic.extend({**issue, "source": "persona_quality", "locator": _issue_locator(document, issue.get("span", ""))} for issue in quality["issues"])
+-    semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"],
++    # Text review needs shared identity rules, not other media production settings.
++    text_profile = {key: value for key, value in profile.items()
++        if key not in {"graphic_creative_profile", "audio_creative_profile", "video_creative_profile"}}
++    semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": text_profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"],
+         critic_dimensions=quality["critic_dimensions"] if quality else ())
+     issues = deterministic + semantic
+     status = "blocker" if any(issue["severity"] == "blocker" for issue in issues) else "warning" if issues or coverage["semantic"] != "verified" else "pass"
+--- before/apps/api/app/services/content_masters.py
++++ after/apps/api/app/services/content_masters.py
+@@ -353,6 +353,7 @@
+ 
+ 
+ TEXT_CHECK_VERSIONS = {kind: "1" for kind in ("master_schema", "evidence", "rights", "render", "text_structure", "text_fact", "text_identity", "text_platform", "text_discoverability")}
++TEXT_CHECK_VERSIONS["text_identity"] = "2"
+ 
+ 
+ def check_requirements(db: Session, row: ContentMasterRevision, *, require_current: bool = True, frozen_checks: list[dict] | None = None) -> dict[str, dict]:

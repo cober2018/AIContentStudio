@@ -85,7 +85,7 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
     available: sourceCapability.executable, reason: sourceCapability.executable ? null : "所选连接版本未验证或已失效",
   } : pluginDescriptor;
   const executor = selectedNode?.kind === "AI" ? executionOptions[selectedNode.plugin] : null;
-  const readOnly = !["editor", "admin"].includes(role ?? "") || project?.status === "archived" || unit?.status === "archived";
+  const readOnly = !["editor", "admin"].includes(role ?? "") || project?.status === "archived" || unit?.status === "archived" || unit?.lifecycle === "archived" || unit?.lifecycle === "deleted";
   const inspectorDirty = Boolean(design && selectedNode && (configText !== pretty(selectedNode.config)
     || inputText !== pretty(selectedNode.input_mapping) || outputText !== pretty(selectedNode.output_mapping)
     || conditionText !== pretty(selectedNode.condition)
@@ -101,7 +101,6 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       api.get<{ role: string }>("/users/me", controller.signal),
       api.get<Project>(`/content-projects/${projectId}`, controller.signal),
       api.get<Unit>(base, controller.signal),
-      api.get<Persona[]>("/content-personas", controller.signal),
       api.get<WorkflowBinding>(`${base}/workflow-override`, controller.signal),
       api.get<WorkflowBinding>(`${base}/effective-workflow`, controller.signal),
       api.get<DataPlugin[]>("/data-source-plugins", controller.signal),
@@ -110,8 +109,12 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       api.get<SharedAsset[]>(`/content-projects/${projectId}/shared-assets`, controller.signal),
       api.get<UnitOutput[]>(`${base}/outputs`, controller.signal),
       api.get<DataCapability[]>("/data-source-capabilities", controller.signal),
-    ]).then(async ([me, nextProject, nextUnit, personas, nextBinding, nextEffective, nextPlugins, nextExecutors, nextRuns, nextAssets, nextOutputs, nextCapabilities]) => {
-      const nextDefault = await api.get<WorkflowBinding>(`/content-personas/${nextUnit.persona_id}/default-workflows/${nextUnit.modality}`, controller.signal);
+    ]).then(async ([me, nextProject, nextUnit, nextBinding, nextEffective, nextPlugins, nextExecutors, nextRuns, nextAssets, nextOutputs, nextCapabilities]) => {
+      const product = nextUnit.production_domain === "product";
+      const [personas, nextDefault] = await Promise.all([
+        product ? Promise.resolve([] as Persona[]) : api.get<Persona[]>("/content-personas", controller.signal),
+        product ? Promise.resolve(nextEffective) : api.get<WorkflowBinding>(`/content-personas/${nextUnit.persona_id}/default-workflows/${nextUnit.modality}`, controller.signal),
+      ]);
       setRole(me.role); setProject(nextProject); setUnit(nextUnit); setPersona(personas.find((item) => item.id === nextUnit.persona_id) || null);
       setBinding(nextBinding); setDefaultBinding(nextDefault); setDefinition(structuredClone(nextEffective.workflow_id ? nextEffective.definition : EMPTY));
       savedWorkflowStamp.current = workflowStamp(nextBinding, nextEffective, nextDefault);
@@ -134,7 +137,7 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       unit.series_id ? api.get<{ name: string }>(`/content-series/${unit.series_id}`) : Promise.resolve(null),
     ]).then(([brand, account, series]) => { setBrandName(brand?.name || null); setAccountName(account?.name || null); setSeriesName(series?.name || null); }).catch((err) => setError(problem(err)));
   }, [unit?.id, persona?.brand_id]);
-  const displayedSnapshotId = !design && run ? run.identity_snapshot_id : unit?.identity_snapshot_id;
+  const displayedSnapshotId = unit?.production_domain === "product" ? null : !design && run ? run.identity_snapshot_id : unit?.identity_snapshot_id;
   useEffect(() => {
     setSnapshot(null);
     if (!displayedSnapshotId) return;
@@ -192,7 +195,7 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       const [nextBinding, nextEffective, nextDefault] = await Promise.all([
         api.get<WorkflowBinding>(`${base}/workflow-override`),
         api.get<WorkflowBinding>(`${base}/effective-workflow`),
-        api.get<WorkflowBinding>(`/content-personas/${nextUnit.persona_id}/default-workflows/${nextUnit.modality}`),
+        nextUnit.production_domain === "product" ? api.get<WorkflowBinding>(`${base}/effective-workflow`) : api.get<WorkflowBinding>(`/content-personas/${nextUnit.persona_id}/default-workflows/${nextUnit.modality}`),
       ]);
       if (refresh !== workflowRefresh.current || liveWorkflow.current.base !== base) return;
       const stamp = workflowStamp(nextBinding, nextEffective, nextDefault);
@@ -207,7 +210,7 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       }
       setBinding(nextBinding); setDefaultBinding(nextDefault);
       setDefinition(structuredClone(nextEffective.workflow_id ? nextEffective.definition : EMPTY));
-      setUnit(value => value ? { ...value, pinned_workflow_id: nextUnit.pinned_workflow_id } : value);
+      setUnit(nextUnit);
       setSelected(value => value && nextEffective.definition.nodes.some(node => node.id === value) ? value : null);
       setDirty(false); setWorkflowConflict(""); savedWorkflowStamp.current = stamp;
       savedEffectiveWorkflow.current = nextEffective;
@@ -278,6 +281,7 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
     } catch (err) { setError(problem(err)); } finally { setBusy(false); }
   }
   async function saveDefault() {
+    if (unit?.production_domain === "product") return;
     if (readOnly) { setError("已归档单元只可查看历史。" ); return; }
     if (workflowConflict) { setError("流程版本有冲突，请先核对并同步；高级草稿仍保留。" ); return; }
     if (!unit || !defaultBinding || !window.confirm(`将当前流程另存为「${persona?.name || "当前身份"} × ${unit.modality}」的新默认版本？现有内容单元不会自动改绑。`)) return;
@@ -289,7 +293,22 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       setWorkflowRevision(value => value + 1);
     } catch (err) { setError(problem(err)); } finally { setBusy(false); }
   }
+  const needsProductContext = unit?.production_domain === "product" && !!(unit.identity_snapshot_id || run?.identity_snapshot_id) && !["product_default", "project_override"].includes(defaultBinding?.source || "");
+  async function continueProduct() {
+    if (readOnly || busy) return;
+    setBusy(true); setError("");
+    try {
+      const nextUnit = await api.post<Unit>(`${base}/product-context`);
+      setUnit(nextUnit);
+      setBusy(false);
+      liveWorkflow.current = { ...liveWorkflow.current, busy: false };
+      await refreshWorkflowFromRecipe();
+      setWorkflowRevision(value => value + 1);
+      setNotice("已切换为独立商品配置；历史运行与身份快照保留。");
+    } catch (err) { setError(problem(err)); } finally { setBusy(false); }
+  }
   async function startRun() {
+    if (needsProductContext) { setError("请先按商品流程继续，再准备新的运行。"); return; }
     if (readOnly) { setError("已归档单元只可查看历史。" ); return; }
     if (workflowConflict) { setError("请先解决流程版本冲突，再准备运行。" ); return; }
     if (dirty) { setError("请先保存项目覆盖，再运行。" ); return; }
@@ -305,5 +324,5 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
     catch (err) { setError(problem(err)); } finally { setBusy(false); }
   }
 
-  return { readOnly, base, project, unit, persona, brandName, accountName, seriesName, snapshot, binding, defaultBinding, definition, dirty, design, setDesign, selected, setSelected, runs, run, setRun, attempts, plugins, dataCapabilities, executionOptions, assets, outputs, assetsOpen, setAssetsOpen, loading, busy, error, setError, notice, workflowConflict, workflowRevision, refreshWorkflowFromRecipe, configText, setConfigText, inputText, setInputText, outputText, setOutputText, conditionText, setConditionText, depsText, setDepsText, dragging, setDragging, newKind, setNewKind, runSourceRef, setRunSourceRef, canvasDefinition, selectedNode, selectedStep, sourcePlugin, sourceCapability, executor, change, editNode, addNode, removeNode, moveNode, moveBy, applyInspector, saveOverride, saveDefault, startRun, runAction };
+  return { readOnly, base, project, unit, persona, brandName, accountName, seriesName, snapshot, binding, defaultBinding, definition, dirty, design, setDesign, selected, setSelected, runs, run, setRun, attempts, plugins, dataCapabilities, executionOptions, assets, outputs, assetsOpen, setAssetsOpen, loading, busy, error, setError, notice, workflowConflict, workflowRevision, refreshWorkflowFromRecipe, configText, setConfigText, inputText, setInputText, outputText, setOutputText, conditionText, setConditionText, depsText, setDepsText, dragging, setDragging, newKind, setNewKind, runSourceRef, setRunSourceRef, canvasDefinition, selectedNode, selectedStep, sourcePlugin, sourceCapability, executor, change, editNode, addNode, removeNode, moveNode, moveBy, applyInspector, saveOverride, saveDefault, continueProduct, needsProductContext, startRun, runAction };
 }

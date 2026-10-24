@@ -1,0 +1,12 @@
+{
+  "/content-opportunities?limit=100": {
+    "identical": true,
+    "sha256": "f8cd63450fc5d8064ce51834c3cbf2811e3cd1e91de83563587d4b18eb4cd148",
+    "count": 18
+  },
+  "/content-personas": {
+    "identical": true,
+    "sha256": "8d70c872a6d33d8a8b9467fcfde28c0706a1789a5ab10b7d57093662a78b3289",
+    "count": 3
+  }
+}

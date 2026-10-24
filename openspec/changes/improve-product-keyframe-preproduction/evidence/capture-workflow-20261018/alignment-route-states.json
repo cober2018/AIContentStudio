@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "real",
+    "mixed",
+    "ai",
+    "legacy",
+    "error",
+    "loading",
+    "dirty"
+  ],
+  "boundary": "Browser-only intercepted GET fixtures; no saved data or backend writes."
+}

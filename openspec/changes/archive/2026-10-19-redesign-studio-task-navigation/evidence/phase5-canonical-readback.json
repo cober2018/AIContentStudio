@@ -1,0 +1,40 @@
+{
+  "requirements_added": 21,
+  "capabilities": {
+    "openspec/specs/studio-task-navigation/spec.md": {
+      "added": 8,
+      "delta_present": true,
+      "previous_requirements_preserved": true
+    },
+    "openspec/specs/content-home-workspace/spec.md": {
+      "added": 2,
+      "delta_present": true,
+      "previous_requirements_preserved": true
+    },
+    "openspec/specs/fe-f3b-content-identity/spec.md": {
+      "added": 1,
+      "delta_present": true,
+      "previous_requirements_preserved": true
+    },
+    "openspec/specs/fe-f4-project-review-distribution/spec.md": {
+      "added": 3,
+      "delta_present": true,
+      "previous_requirements_preserved": true
+    },
+    "openspec/specs/system-assets-knowledge/spec.md": {
+      "added": 2,
+      "delta_present": true,
+      "previous_requirements_preserved": true
+    },
+    "openspec/specs/content-opportunities/spec.md": {
+      "added": 3,
+      "delta_present": true,
+      "previous_requirements_preserved": true
+    },
+    "openspec/specs/fe-f3a-content-project-core/spec.md": {
+      "added": 2,
+      "delta_present": true,
+      "previous_requirements_preserved": true
+    }
+  }
+}

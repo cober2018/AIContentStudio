@@ -74,7 +74,7 @@ def _mapped_endpoint(db: Session, plugin_key: str, source_ref: str, user: User |
     from .content_masters import owned_unit
 
     project, unit = owned_unit(db, unit.project_id, unit_id, user)
-    if project.status == "archived" or unit.status == "archived":
+    if project.status == "archived" or unit.lifecycle_readonly:
         raise ValueError("Data Source capability 项目或内容单元已归档")
     return verified_data_endpoint(db, registration, plugin_key), registration
 

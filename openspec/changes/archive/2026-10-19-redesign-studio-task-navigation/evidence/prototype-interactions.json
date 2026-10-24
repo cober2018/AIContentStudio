@@ -1,0 +1,36 @@
+{
+  "rows": [
+    {
+      "name": "pagination advances",
+      "pass": true
+    },
+    {
+      "name": "browser back retains page",
+      "pass": true
+    },
+    {
+      "name": "role filter",
+      "pass": true
+    },
+    {
+      "name": "empty state",
+      "pass": true
+    },
+    {
+      "name": "skip preserves route",
+      "pass": true
+    },
+    {
+      "name": "direction draft survives refresh",
+      "pass": true
+    },
+    {
+      "name": "empty evidence blocked",
+      "pass": false
+    }
+  ],
+  "errors": [
+    "locator.check: Timeout 3000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#source-form input[value=note]')\u001b[22m\n\u001b[2m    - locator resolved to <input value=\"note\" name=\"source\" type=\"checkbox\"/>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m  - element was detached from the DOM, retrying\u001b[22m\n"
+  ],
+  "unexpectedRequests": []
+}

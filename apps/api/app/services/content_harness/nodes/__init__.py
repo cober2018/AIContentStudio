@@ -244,9 +244,9 @@ class StageCreativeMethodNodePlugin:
     stage_contract: ClassVar[dict] = _stage_contract(
         "stage.creative.method.v1", "中间创作方法", "AI", {
             "output_schema": {"type": "string", "minLength": 1, "maxLength": 80, "enum": [
-                "research.brief.v1", "creative.angles.v1", "content.outline.v1",
+                "research.brief.v1", "creative.angles.v1", "creative.title-hook.v1", "content.outline.v1",
                 "graphic.visual-direction.v1", "graphic.card-plan.v1",
-                "audio.spoken-adaptation.v1", "audio.voice-direction.v1", "video.shot-plan.v1",
+                "audio.spoken-adaptation.v1", "audio.voice-direction.v1", "video.script.v1", "video.shot-plan.v1",
             ]},
             "instruction": {"type": "string", "minLength": 1, "maxLength": 4000},
             "purpose": {"type": "string", "minLength": 1, "maxLength": 150, "default": "完成当前中间创作阶段"},
@@ -288,6 +288,20 @@ class StageCreativeMethodNodePlugin:
         from ...creative_method_stage import execute
 
         return NodeResult(output=execute(db, ctx, resolved, user))
+
+
+class StageCreativeMethodV2NodePlugin(StageCreativeMethodNodePlugin):
+    version = "2"
+    stage_contract = deepcopy(StageCreativeMethodNodePlugin.stage_contract)
+    stage_contract["stage_schema"] = "stage.creative.method.v2"
+    stage_contract["config_schema"]["properties"]["output_schema"]["enum"] += ["graphic.card-plan.v2", "video.shot-plan.v2"]
+
+
+class StageCreativeMethodV3NodePlugin(StageCreativeMethodNodePlugin):
+    version = "3"
+    stage_contract = deepcopy(StageCreativeMethodV2NodePlugin.stage_contract)
+    stage_contract["stage_schema"] = "stage.creative.method.v3"
+    stage_contract["config_schema"]["properties"]["output_schema"]["enum"] += ["article.plan.v1"]
 
 
 class StageGraphicCompositionNodePlugin:
@@ -594,7 +608,7 @@ _BUILTIN_SPECS: list[tuple[str, str, str, str | None, bool]] = [
 _DIRECT_PLUGINS = [SkillNodePlugin, SystemConstantNodePlugin, DataSourceNodePlugin, MediaGenerationNodePlugin,
                    StageMasterProposalNodePlugin, StageMediaGenerationNodePlugin, StageMediaGenerationV3NodePlugin,
                    StageMediaGenerationV4NodePlugin, StageAudioASRNodePlugin, StageAudioQCNodePlugin,
-                   StageCreativeMethodNodePlugin, StageGraphicCompositionNodePlugin, StageVariantAdaptNodePlugin,
+                   StageCreativeMethodNodePlugin, StageCreativeMethodV2NodePlugin, StageCreativeMethodV3NodePlugin, StageGraphicCompositionNodePlugin, StageVariantAdaptNodePlugin,
                    StageProfessionalPrepareNodePlugin, StageProfessionalPrepareV2NodePlugin,
                    StageChecksNodePlugin, StageHumanReviewNodePlugin]
 

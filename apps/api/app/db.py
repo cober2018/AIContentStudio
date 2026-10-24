@@ -18,7 +18,7 @@ def _engine_kwargs(url: str) -> dict:
 engine = create_engine(get_settings().database_url, **_engine_kwargs(get_settings().database_url))
 
 # Approved local schema includes inert identity ancestry, not JWT activation.
-LOCAL_APPROVED_SCHEMA_HEAD = "formassist000001"
+LOCAL_APPROVED_SCHEMA_HEAD = "matmatch0001"
 
 if get_settings().database_url.startswith("sqlite"):
     # 异步队列（Celery 多进程）与 API 并发写 SQLite 的前提：WAL 允许读写并发，
@@ -72,7 +72,7 @@ def init_db() -> None:
 
     # Durable generation schema requires an explicit operator migration even
     # in a local development process that otherwise creates legacy tables.
-    migration_only = {"form_assistance_session", "discovery_catchup_batch", "discovery_catchup_source", "discovery_source", "persona_source_subscription", "discovery_item", "discovery_event", "persona_research_run", "product_creation_launch", "project_knowledge_context_revision", "provider_generation_task", "creative_execution_package", "creative_execution",
+    migration_only = {"product_sku", "product_sku_revision", "product_sku_plan", "product_sku_work", "production_profile_revision", "product_sku_reference", "form_assistance_session", "discovery_catchup_batch", "discovery_catchup_source", "discovery_source", "persona_source_subscription", "discovery_item", "discovery_event", "persona_research_run", "product_creation_launch", "project_knowledge_context_revision", "provider_generation_task", "creative_execution_package", "creative_execution",
                       "creative_execution_output", "capability_artifact", "capability_artifact_revision", "capability_use"}
     Base.metadata.create_all(engine, tables=[table for table in Base.metadata.sorted_tables
         if table.name not in migration_only])

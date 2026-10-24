@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api, ApiError, currentUser } from "../api";
+import { stageErrorText } from "./stageErrors";
 import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
 import type { StageResult } from "./stageProposalState";
 
@@ -11,7 +12,8 @@ type AcceptanceRequest = { run_id: number; attempt_id: number; expected_output_h
   expected_context_hash: string; candidate_id: string; candidate_hash: string; acceptance_key: string; note: string };
 const labels: Record<string, string> = { title: "标题", sections: "结构", heading: "段落", points: "要点", body: "内容",
   facts: "事实", unknowns: "未知", risks: "风险", angles: "角度", cards: "卡片", script: "口语稿", voice: "声音方向",
-  shots: "镜头", notes: "说明", evidence: "证据", observations: "观察", summary: "概述", content: "内容" };
+  shots: "镜头", notes: "说明", evidence: "证据", observations: "观察", summary: "概述", content: "内容",
+  angle: "角度", reader_stake: "读者为什么关心", known: "用到的事实", statement: "事实", purpose: "作用", open_questions: "待确认" };
 
 function contentView(value: unknown, depth = 0): ReactNode {
   if (depth > 6) return <p className="text-slate-500">更多细节已保存在原始尝试中。</p>;
@@ -56,7 +58,7 @@ export default function StageCreativeResultPanel({ base, result, readOnly, onBus
     } catch (cause) {
       if (!mounted.current || currentUser() !== actor) return;
       if (cause instanceof ApiError && cause.status >= 400 && cause.status < 500) setPending(null);
-      setError(cause instanceof ApiError ? `${cause.status} · ${cause.message}` : "接受结果未知，请重试同一接受请求或回读原尝试。");
+      setError(cause instanceof ApiError ? stageErrorText(cause) : "接受结果未知，请重试同一接受请求或回读原尝试。");
     } finally { if (mounted.current) { setBusy(false); onBusy(false); } }
   }
 

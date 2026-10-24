@@ -61,6 +61,29 @@ _TRAILING_COMMA = re.compile(r",\s*([}\]])")
 _THINK_BLOCK = re.compile(r"<think>.*?</think>", re.DOTALL)
 
 
+# The provider answered with an error or an unusable body: the request is settled, not lost in transit.
+_ANSWERED_FAILURES = {"provider_authentication_rejected", "provider_request_rejected", "provider_image_protocol_rejected",
+                      "provider_response_encoding_invalid", "provider_response_invalid", "provider_output_unparseable"}
+
+
+def provider_failure(exc: BaseException) -> dict:
+    """Why a model call failed, and whether the provider definitely answered (so a retry cannot double a result)."""
+    from fastapi import HTTPException
+
+    seen, reason, status = exc, "provider_request_failed", None
+    while seen is not None:
+        if isinstance(seen, HTTPException):
+            reason = seen.detail if isinstance(seen.detail, str) else reason
+            status = (seen.headers or {}).get("X-Provider-Status")
+            break
+        if isinstance(seen, LLMError):
+            reason = "provider_output_unparseable" if str(seen).startswith("模型输出无法解析") else str(seen)
+            if reason != "provider_request_failed":
+                break
+        seen = seen.__cause__
+    return {"reason": reason, "status": int(status) if status and status.isdigit() else None, "answered": reason in _ANSWERED_FAILURES}
+
+
 def parse_llm_json(raw: str) -> dict[str, Any]:
     # 思考模型（MiniMax-M3 / DeepSeek-R1 等）把 reasoning 以 <think> 内联在 content 里
     raw = _THINK_BLOCK.sub("", raw)

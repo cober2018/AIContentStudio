@@ -1,0 +1,24 @@
+{
+  "environment": "isolated /tmp SQLite + Mock; fixture transitions only; production data untouched",
+  "checks": [
+    {
+      "name": "viewer normal work readback with run and feedback writes disabled",
+      "pass": true
+    },
+    {
+      "name": "archived work normal readback blocks execution",
+      "pass": true
+    },
+    {
+      "name": "unknown durable attempt recovery shown after page load; no new dispatch",
+      "pass": true,
+      "action": "回读原尝试（不重发）"
+    },
+    {
+      "name": "375px boundary states zero overflow, console errors and mutating business requests",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "writes": []
+}

@@ -86,8 +86,9 @@ def accept_stage_result(project_id: int, unit_id: int, node_id: str, body: Stage
     try:
         return accept_result(db, project_id, unit_id, node_id, user, body.model_dump(exclude_none=True))
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from exc
+        raise HTTPException(exc.status_code, exc.body) from exc
     except StageContractError as exc:
         raise HTTPException(422, {"code": str(exc)}) from exc
     except (ValueError, KeyError, TypeError):
         raise HTTPException(422, {"code": "stage_domain_adoption_invalid"}) from None
+

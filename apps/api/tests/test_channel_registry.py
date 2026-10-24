@@ -95,17 +95,34 @@ def test_duplicate_content_form_rejected(client, seed_users, db_session):
 
 
 def test_legacy_channels_still_valid_with_default_forms(client, seed_users):
-    """legacy 四渠道经兜底可用；默认 content form 与迁移 backfill 映射一致。"""
+    """legacy 三渠道经兜底可用；已下线的 x_thread 不再出现在渠道列表。"""
     channels = {c["channel"]: c for c in client.get("/api/v1/channels", headers=EDITOR).json()}
-    assert {"douyin", "xiaohongshu", "wechat", "x_thread"} <= set(channels)
+    assert {"douyin", "xiaohongshu", "wechat"} <= set(channels)
+    assert "x_thread" not in channels
     default_form = {ch: forms["content_forms"][0]["content_form"] for ch, forms in channels.items()}
     assert default_form["wechat"] == "article"
     assert default_form["douyin"] == "spoken_script"
     assert default_form["xiaohongshu"] == "image_note"
-    assert default_form["x_thread"] == "thread"
     kinds = {ch: forms["content_forms"][0]["artifact_kind"] for ch, forms in channels.items()}
     assert kinds["douyin"] == "script"
     assert kinds["wechat"] == "text"
+
+
+def test_retired_x_thread_is_not_selectable(client, seed_users, frozen_pack):
+    """旧键不能再被列出、查询或写成新选题。"""
+    listed = client.get("/api/v1/channels", headers=EDITOR)
+    assert listed.status_code == 200
+    assert "x_thread" not in {item["channel"] for item in listed.json()}
+    detail = client.get("/api/v1/channels/x_thread", headers=EDITOR)
+    assert detail.status_code == 404
+    assert "已下线" in detail.json()["detail"]
+    created = client.post(
+        "/api/v1/topics",
+        json={"title": "旧渠道", "fact_pack_id": frozen_pack.id, "channels": ["x_thread"]},
+        headers=EDITOR,
+    )
+    assert created.status_code == 400
+    assert "已下线" in created.json()["detail"]
 
 
 def test_exact_video_profile_projects_video_requirements(db_session):

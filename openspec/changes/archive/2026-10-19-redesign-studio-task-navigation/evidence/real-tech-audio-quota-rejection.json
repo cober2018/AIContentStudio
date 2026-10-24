@@ -1,0 +1,12 @@
+{
+  "returncode": 1,
+  "elapsed": 0.46601754100993276,
+  "stdout": "",
+  "stderr": "{\n  \"error\": {\n    \"code\": 1,\n    \"message\": \"API error: 当前已达到 Token Plan 用量上限。为避免调用中断，请升级 Token Plan 套餐，或购买积分补充用量并开启积分自动消耗。 (HTTP 200)\"\n  }\n}\n",
+  "model": "speech-2.8-hd",
+  "voice_id": "lengdan_xiongzhang",
+  "rate": 1.0,
+  "prompt_sha256": "aa6541dca772bc222610034c1b84f8fa5c74215147d9211ecfb296dd2f8755ef",
+  "audio_file_created": false,
+  "scope": "User-authorized same-input CLI diagnostic retry; no configuration changes, purchase or publication. Original unknown receipt preserved."
+}

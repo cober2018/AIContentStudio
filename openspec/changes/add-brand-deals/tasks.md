@@ -1,0 +1,9 @@
+- [ ] 1.1 Models and migration: rate card, deal, events, review rounds, payments.
+- [ ] 1.2 Deal API: create, stage changes, quote versions, brief → project brief and fact boundary.
+- [ ] 1.3 Contract terms → rights on works.
+- [ ] 2.1 Platform registration checklist and publish warning.
+- [ ] 2.2 Brand review rounds over frozen versions.
+- [ ] 2.3 Ad-law rule check.
+- [ ] 2.4 Results report from growth data.
+- [ ] 3.1 商单 pages: pipeline board, deal detail, quote, review rounds, payments; media kit page.
+- [ ] 4.1 Tests and screenshot review.

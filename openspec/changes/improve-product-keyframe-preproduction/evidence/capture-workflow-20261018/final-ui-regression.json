@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "checks": [
+    "mobile current shoot/reshoot only",
+    "reshoot reason",
+    "independent filming/edit view with stable draft",
+    "capture status classification",
+    "real no AI continuity/keyframe summary",
+    "mixed source-specific filming fields",
+    "AI route preserved",
+    "unconfirmed upload disabled",
+    "390/1440 no overflow",
+    "script default and taskbook view switch",
+    "zero page errors",
+    "zero API writes"
+  ],
+  "summary": {
+    "state": "ready",
+    "total": 6,
+    "missing": 2,
+    "waitingReturn": 0,
+    "reviewable": 1,
+    "waitingAdoption": 1,
+    "needsAttention": 1,
+    "working": 0,
+    "savedAdopted": 1,
+    "editState": null,
+    "editExecutionId": null
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "read_only": true,
+  "new_model_calls": 0,
+  "new_media_generation": 0,
+  "results": {
+    "/health/ready": {
+      "status": 200,
+      "readiness": {
+        "status": "ok",
+        "ready": true,
+        "db": true,
+        "schema": true,
+        "auth": true,
+        "storage": true,
+        "queue": true,
+        "worker": true,
+        "secrets": true,
+        "reasons": [],
+        "provider": "openai_compatible",
+        "optional_capabilities": {
+          "llm": {
+            "provider": "openai_compatible",
+            "required": false,
+            "status": "not_probed"
+          }
+        },
+        "queue_enabled": false,
+        "version": "0.1.0"
+      }
+    },
+    "/product-skus?limit=10": {
+      "status": 200,
+      "sku": {
+        "code": "SKU-000001",
+        "revision": 1,
+        "external_code": "",
+        "primary_image_revision_id": 43,
+        "primary_image_kind": "reference"
+      },
+      "product": {
+        "name": "懒人沙发 · 待确认规格（流程测试）",
+        "category": "户外休闲／懒人沙发",
+        "style_ref": null,
+        "production_stages": null,
+        "variant": "图片所示多种颜色，具体SKU未知",
+        "description": "用户提供了一张彩色懒人沙发摆放在草地上的原图，画面中有人躺在其中一张上。仅凭图片可描述颜色和摆放场景；具体材质、尺寸、承重、防水、价格、安装方式均未知。此图仅用于用户授权本地流程测试。 商品档案仅承接本次已授权流程测试；尚未确认单款可售规格，不代表真实在售SKU。",
+        "url": null,
+        "claims": [],
+        "selling_points": [
+          "多种颜色可见",
+          "草地休息场景展示"
+        ],
+        "excluded_claims": [
+          "防水",
+          "承重参数",
+          "尺寸参数",
+          "方便携带",
+          "免安装",
+          "虚构价格折扣",
+          "真人使用体验"
+        ],
+        "source_refs": [],
+        "material_refs": [
+          {
+            "material_revision_id": 43,
+            "content_hash": "999b760148e69ded0e13fd46c09fe7491aa12cfa882001abd075055c0298d321",
+            "categories": []
+          }
+        ],
+        "offer": null,
+        "buyer_situation": "周末公园停留、走累后想找一个躺靠的位置；场景假设待用户验证。",
+        "purchase_reason_evidence": "原始合照可见草地摆放与人物躺卧；生成图仅作场景演绎，不证明舒适、承重或其他性能。",
+        "purchase_reason_source_ids": [],
+        "purchase_reason_material_revision_ids": [],
+        "main_objection": "尺寸是否适合自己（本次策划假设）",
+        "objection_answer": "待同款真实尺寸资料或测量实拍；暂只提醒核对实际尺寸。",
+        "unsuitable_for": "适用身高、体重及地面条件均待真实资料，不自行给结论。",
+        "seller_advantage": "待提供商家、选品、交付或服务依据。",
+        "target_duration_seconds": 30,
+        "expression_test": null
+      }
+    },
+    "/content-projects/9/units/15/production-profile": {
+      "status": 200,
+      "profile": {
+        "revision": 4,
+        "voice_id": null,
+        "speech_mode": "voiceover",
+        "music_direction": "不使用配乐",
+        "shared_references": []
+      }
+    },
+    "/content-projects/9/units/15/master-revisions/current": {
+      "status": 200,
+      "master": {
+        "id": 47,
+        "revision_no": 2,
+        "payload_schema": "video.master.v2",
+        "payload_hash": "261ac32edf71be9fae539e1274371d465fd4716cca350e6b63e37e5734f5f025"
+      },
+      "shots": [
+        {
+          "id": "shot-1",
+          "order": 0,
+          "label": "走近发现",
+          "duration_ms": 6500,
+          "purpose": "平视中景，草坪自然光线下静置着多色长条沙发，镜头模拟手持视角平缓走近并停在斜前方定格，画面保留AI场景演绎标识。",
+          "script_block_id": "script-1",
+          "production": {
+            "schema": "video.shot-production.v2",
+            "source_mode": "web_video",
+            "web_provider": "gemini",
+            "requested_generation_duration_ms": 8000,
+            "audio_intent": "mute"
+          }
+        },
+        {
+          "id": "shot-2",
+          "order": 1,
+          "label": "触摸外缘（AI演绎）",
+          "duration_ms": 7500,
+          "purpose": "微俯近景，聚焦单款沙发的侧边轮廓，单手入镜轻触边缘结构后移出画面，展示长条可见边缘与褶皱，画面保留AI场景演绎标识。",
+          "script_block_id": "script-2",
+          "production": {
+            "schema": "video.shot-production.v2",
+            "source_mode": "web_video",
+            "web_provider": "gemini",
+            "requested_generation_duration_ms": 8000,
+            "audio_intent": "mute"
+          }
+        },
+        {
+          "id": "shot-3",
+          "order": 2,
+          "label": "躺卧情境（AI演绎）",
+          "duration_ms": 8000,
+          "purpose": "侧视全景转中景，展示草坪上人物平躺在沙发上的静态比例，镜头保持平视自左向右微幅横移后定格，画面标注非实测性能说明。",
+          "script_block_id": "script-3",
+          "production": {
+            "schema": "video.shot-production.v2",
+            "source_mode": "web_video",
+            "web_provider": "gemini",
+            "requested_generation_duration_ms": 8000,
+            "audio_intent": "mute"
+          }
+        },
+        {
+          "id": "shot-4",
+          "order": 3,
+          "label": "选购提醒",
+          "duration_ms": 8000,
+          "purpose": "中景俯拍，多色沙发静置陈列于草坪上，镜头平稳后退抬升，右侧浮现核对尺寸提示卡片，保持客观选购建议。",
+          "script_block_id": "script-4",
+          "production": {
+            "schema": "video.shot-production.v2",
+            "source_mode": "web_video",
+            "web_provider": "gemini",
+            "requested_generation_duration_ms": 8000,
+            "audio_intent": "mute"
+          }
+        }
+      ]
+    },
+    "/content-projects/9/materials/references": {
+      "status": 405
+    }
+  }
+}

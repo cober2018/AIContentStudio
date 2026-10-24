@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-19",
+  "head": "8539806eb3a1bebf5bf71ee08df3a286cdf9e00a",
+  "branch": "main",
+  "scope": "proposal only; file fingerprints do not assert database or deployed state",
+  "files": {
+    "apps/web/src/product/ProductionWorkspace.tsx": "c12912d6eaeb06b6c47509ff86ed28eed1ec3df517743221023acd99b485946d",
+    "apps/web/src/product/ProductWorkbench.tsx": "0d9090fbbd733649bee8a7cca0806beb2ac7a2ba38394da2347f7bad45450cdd",
+    "apps/web/src/product/ProductSettingsPage.tsx": "f38a3e6c03b2c0a38276a2f487d43b568bb6568ee372da69429cec0747b347db",
+    "apps/web/src/product/PersonaCreativeConfig.tsx": "bf982970e22bcaaa89bbb811ac4d124db78fae24200749b5eac21bd1ac18fbf8",
+    "apps/web/src/product/CreationRecipePanel.tsx": "03bf8c30698da89575ac499b3b8a9c2870dded155ca12361ca462796eb688a8e",
+    "apps/web/src/product/IdentityWorkspace.tsx": "635af447c357b7334139c091a853f4402ebd9f3c022e17afa5648aa0c430aa4f",
+    "apps/web/src/product/CapabilityMemoryPanel.tsx": "2f6b442105fb3aa019a33b531ad0928f007c39732ba83b220cc22157483749dc",
+    "apps/web/src/product/HomePage.tsx": "24f8f6a0e52b96a7385a41c075bb5826657240bd5ba130871f5bebe40d0c2e3d",
+    "apps/web/src/product/OpportunityPages.tsx": "4c77b446c1ff422b239a4cb6268d6031ffeb6782d20d0099fa2c660cd05860fa",
+    "apps/web/src/product/ProjectReviewCenter.tsx": "079216357a2d45b6e2db27a2dcde328a577b4d8005ebf2a247928cffe2e39a97",
+    "apps/web/src/product/LearningWorkspace.tsx": "88f3efcf02944561fc0d76cab08932926ee70d8b88e9513f4ab297d32db15434",
+    "apps/api/app/runtime_config.py": "d13ae68fed4a9da14087ef4435292a9ca9acff01cc5b73d0c1af58e61865abd4",
+    "apps/api/app/services/studio_creative_catalog.py": "a0c82e216f7b59476f3237dce25ef1ca3038f49a0830d797980fc4c7b527904b",
+    "apps/api/app/services/creative_configuration.py": "ba500fb93504bc3cf5006c638fd2406c354e51beef6a7b29024449e5a9aa3975",
+    "apps/api/app/services/starter_personas.py": "bfb50fdfa50260b5a757094c123047b503a18d2be0afb9dbe76681c7a5ddfc7e",
+    "apps/api/app/services/stage_resolver.py": "d321a07e5f8e42fb412957001b838cba330be0697f4c0ab07cea89a615991527",
+    "apps/api/app/services/creative_artifacts.py": "adfb6f4967f53151d2176b3adf78d435cb607635ba6a72c2b6e024d5c26520a6",
+    "apps/api/app/services/content_harness/renderers.py": "4999c400efb47c8804bfe4d5e265a359048b25b0e8be9081c4a7ec90c97adcfb",
+    "apps/api/app/services/audio_quality.py": "2b81c267ad1f15cc4b92edc48d12e191b5c4c5fdfc6c6ae195c3d5840196472a",
+    "apps/api/app/services/product_creation.py": "a6417883b92f669be10614cf21a74cc0cb834d255391c0021e47a393a79a73d1",
+    "apps/api/app/services/production_profiles.py": "f3707ad2d67f85e7b8c3304b1d58e09e8eb9ea5c33814360c5fb7f5008e9f9ba"
+  }
+}

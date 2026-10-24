@@ -180,7 +180,7 @@ def test_two_channel_scopes_remain_verified_independently(client, db_session, re
     persona = client.post("/api/v1/content-personas", headers=ADMIN, json={"name": "第二作者"}).json()["id"]
     project = renderer_setup["body"]["project_id"]
     unit = client.post(f"/api/v1/content-projects/{project}/units", headers=ADMIN, json={
-        "title": "线程", "modality": "text", "persona_id": persona, "channel_id": "x_thread"}).json()["id"]
+        "title": "口播", "modality": "text", "persona_id": persona, "channel_id": "douyin"}).json()["id"]
     master = client.post(f"/api/v1/content-projects/{project}/units/{unit}/master-revisions", headers=ADMIN,
         json={"payload_schema": "text.master.v1", "payload": {"markdown": "第二渠道"}, "idempotency_key": "second-scope"}).json()
     result = probe(client, renderer_setup, unit_id=unit, master_id=master["id"],

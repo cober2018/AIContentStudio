@@ -53,7 +53,7 @@ def recipe_stage_actions(db: Session, project_ids: list[int]) -> list[dict]:
         WorkflowRun.workflow_version.label("run_version"), WorkflowRun.definition_checksum.label("run_checksum"),
     ).select_from(ContentUnit).join(Workflow, Workflow.id == ContentUnit.pinned_workflow_id).outerjoin(
         WorkflowRun, WorkflowRun.id == latest_run,
-    ).where(ContentUnit.project_id.in_(project_ids), ContentUnit.status != "archived")
+    ).where(ContentUnit.project_id.in_(project_ids), ContentUnit.status != "archived", ContentUnit.lifecycle == "active")
       .order_by(ContentUnit.id)).all()
     run_ids = [row.run_id for row in rows if row.run_id is not None]
     steps = {}
@@ -129,7 +129,7 @@ def creative_decisions(db: Session, user: User) -> tuple[list[dict], bool]:
     ).join(ContentUnit, ContentUnit.id == CreativeExecution.content_unit_id).where(
         CreativeExecution.owner_user_id == user.id, ContentProject.owner_user_id == user.id,
         ContentUnit.project_id == ContentProject.id, ContentProject.status != "archived",
-        ContentUnit.status != "archived", CreativeExecution.state.in_(["unknown", "blocked", "result_ready"]),
+        ContentUnit.status != "archived", ContentUnit.lifecycle == "active", CreativeExecution.state.in_(["unknown", "blocked", "result_ready"]),
     ).order_by(case({"unknown": 0, "blocked": 1, "result_ready": 2}, value=CreativeExecution.state),
                CreativeExecution.id).limit(100)).all()
     decisions = []
@@ -237,7 +237,10 @@ def compose_decisions(project_id: int, overview: dict) -> list[dict]:
 
 
 def home_projection(db: Session, user: User, limit: int = 20) -> dict:
+    from .opportunity_policy import tech_persona_ids
+
     now = datetime.now(UTC)
+    tech_ids = tech_persona_ids(db, user.id)
     sensitivity = (
         select(ContentOpportunityAssessmentRevision.assessment_json["time_sensitivity"].as_string())
         .where(ContentOpportunityAssessmentRevision.opportunity_id == ContentOpportunity.id)
@@ -249,8 +252,11 @@ def home_projection(db: Session, user: User, limit: int = 20) -> dict:
         select(ContentOpportunity)
         .where(
             ContentOpportunity.owner_user_id == user.id,
-            ContentOpportunity.status.in_(["new", "watching", "qualified"]),
+            ContentOpportunity.status.in_(["new", "qualified"]) | (
+                (ContentOpportunity.research_run_id.is_(None)) & (ContentOpportunity.status == "watching")),
             (ContentOpportunity.relevant_until.is_(None)) | (ContentOpportunity.relevant_until >= now),
+            (ContentOpportunity.persona_id.is_(None)) | (ContentOpportunity.persona_id.not_in(tech_ids)) | (
+                ContentOpportunity.status.in_(["new", "qualified"]) & (ContentOpportunity.relevant_until > now)),
         )
         .order_by(
             case(PRIORITY_ORDER, value=ContentOpportunity.priority, else_=1),
@@ -337,7 +343,17 @@ def home_projection(db: Session, user: User, limit: int = 20) -> dict:
         .order_by(ProjectEvent.created_at.desc(), ProjectEvent.id.desc())
         .limit(limit)
     ).all()
+    discovery = None
+    discovery_error = []
+    if "persona_research_run" in inspect(db.connection()).get_table_names():
+        from ..routers.discovery import status_projection
+
+        try:
+            discovery = status_projection(db, user)
+        except Exception:  # noqa: BLE001 Read projection reports unavailable rather than a false empty success.
+            discovery_error = [{"section": "daily_discovery", "code": "status_unavailable", "message": "角色研究状态读取失败"}]
     return {
+        "discovery_status": discovery,
         "opportunities": opportunity_list_json(db, rows),
         "projects": cards,
         "decisions": decisions[:100],
@@ -355,8 +371,8 @@ def home_projection(db: Session, user: User, limit: int = 20) -> dict:
             for event in activity
         ],
         "upcoming": [],
-        "capabilities": {"schedule": False, "opportunity_analysis": False, "creative_execution": execution_available},
+        "capabilities": {"daily_discovery": bool(discovery and discovery["settings"]["enabled"] and discovery["settings"]["worker_enabled"] and discovery["settings"]["search_configured"] and discovery["settings"]["public_processing_allowed"]), "schedule": False, "opportunity_analysis": False, "creative_execution": execution_available},
         "generated_at": now.isoformat(),
-        "incomplete": not execution_available,
-        "section_errors": [] if execution_available else [{"section": "creative_execution", "code": "schema_unavailable", "message": "创意执行数据结构尚未启用，不能确认待处理成果。"}],
+        "incomplete": not execution_available or bool(discovery_error),
+        "section_errors": discovery_error + ([] if execution_available else [{"section": "creative_execution", "code": "schema_unavailable", "message": "创意执行数据结构尚未启用，不能确认待处理成果。"}]),
     }

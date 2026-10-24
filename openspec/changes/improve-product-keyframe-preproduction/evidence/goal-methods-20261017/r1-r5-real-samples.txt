@@ -1,0 +1,50 @@
+isolated work: project=23 unit=29
+methods saved ON ✓
+
+--- 整字段·方法开 [200] 7s
+status=suggested
+suggestion: 适合需要随时喝鲜榨的上班族：USB充电随身携带，400ml杯体与主机可分离拆洗，在办公室轻松现榨不繁琐。
+CHECK whole-field no-selection rewrite (manual review)
+
+--- 开头选区·方法开 [200] 8s
+status=suggested
+suggestion: 工位下午随时来一杯鲜榨，不用洗复杂零件，随身携带很轻松
+prefix=「」 suffix=「一杯鲜榨，不用洗复杂零件，随身携带很轻松」
+fragment=「工位下午随时来」
+CHECK startswith-prefix=True endswith-suffix=True dup-prefix= dup-suffix=False
+
+--- 中间选区·方法开 [200] 8s
+status=suggested
+suggestion: 办公室下午来一杯现榨饮品，无需洗复杂零件，随身携带很轻松
+prefix=「办公室下午来一」 suffix=「洗复杂零件，随身携带很轻松」
+fragment=「杯现榨饮品，无需」
+CHECK startswith-prefix=True endswith-suffix=True dup-prefix=False dup-suffix=False
+
+--- 结尾选区·方法开 [200] 8s
+status=suggested
+suggestion: 办公室下午来一杯鲜榨，不用洗复杂零件，装进包里随身带
+prefix=「办公室下午来一杯鲜榨，不用洗复杂零件，」 suffix=「」
+fragment=「装进包里随身带」
+CHECK startswith-prefix=True endswith-suffix=True dup-prefix=False dup-suffix=
+
+--- 代理对选区·方法开 [200] 9s
+status=suggested
+suggestion: 办公室下午随手来一杯鲜榨，不用洗复杂零件
+prefix=「办公室下午」 suffix=「来一杯鲜榨，不用洗复杂零件」
+fragment=「随手」
+CHECK startswith-prefix=True endswith-suffix=True dup-prefix=False dup-suffix=False
+
+--- 中间选区·方法关 [200] 6s
+status=suggested
+suggestion: 办公室下午来一杯现榨饮品，无需洗复杂零件，随身携带很轻松
+prefix=「办公室下午来一」 suffix=「洗复杂零件，随身携带很轻松」
+fragment=「杯现榨饮品，无需」
+CHECK startswith-prefix=True endswith-suffix=True dup-prefix=False dup-suffix=False
+
+===== R5 真实样本结构校验 =====
+PASS 整字段·方法开
+PASS 开头选区·方法开
+PASS 中间选区·方法开
+PASS 结尾选区·方法开
+PASS 代理对选区·方法开
+PASS 中间选区·方法关

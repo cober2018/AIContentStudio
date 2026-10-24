@@ -1,0 +1,13 @@
+== 2026-10-18 00:30:22 R1–R5 返修门禁 ==
+-- compileall
+OK
+-- 442 项既有检查
+442 passed, 8 warnings in 17.30s
+-- 27 项隔离探针
+== 探针结果：27 passed, 0 failed ==
+-- R1–R5 探针
+===== R1–R5 探针结果：20 passed, 0 failed =====
+-- web build
+✓ built in 2.19s
+-- openspec strict
+Change 'improve-product-keyframe-preproduction' is valid

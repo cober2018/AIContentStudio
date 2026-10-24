@@ -1,0 +1,525 @@
+{
+  "environment": "isolated /tmp SQLite API8019, Web5174, read-only UI; no formal application requests",
+  "checks": [
+    {
+      "name": "A13 technical details collapsed on normal plan entry",
+      "pass": true,
+      "details": 5
+    },
+    {
+      "name": "five step entry, preserved work and return source, browser back/forward",
+      "pass": true
+    },
+    {
+      "name": "375px review no page overflow",
+      "pass": true
+    },
+    {
+      "name": "reference resource lookup, exact version preview, mobile no page overflow",
+      "pass": true
+    },
+    {
+      "name": "zero page errors and all business requests read-only isolated GET",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "requests": [
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/brief"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/users/me"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/workflow-override"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/effective-workflow"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-plugins"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/workflow-execution-options"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/runs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/shared-assets"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/outputs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-capabilities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/brief"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/users/me"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/workflow-override"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/effective-workflow"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-plugins"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/workflow-execution-options"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/runs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/shared-assets"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/outputs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-capabilities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas/2/default-workflows/text"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/runs/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/identity-snapshots/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/knowledge"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/fact-boundary"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/brief"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/capability-memory/?kind=preference&status=saved&limit=100&offset=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/form-assistance?surface=product_brief&project_id=2&unit_id=2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/capability-memory/?kind=preference&status=saved&limit=100&offset=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/form-assistance?surface=product_brief&project_id=2&unit_id=2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/readiness"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/checks"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/readiness"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/checks"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe/stages/draft/result?run_id=2&attempt_id=2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe/methods"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe/methods"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe/methods"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe/methods"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/settings/capabilities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/identity-snapshots/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/shared-assets"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/fact-boundary"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/identity-snapshots/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/shared-assets"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/fact-boundary"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/brief"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/users/me"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/workflow-override"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/effective-workflow"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-plugins"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/workflow-execution-options"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/runs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/shared-assets"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/outputs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-capabilities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/brief"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/users/me"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/workflow-override"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/effective-workflow"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-plugins"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/workflow-execution-options"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/runs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/shared-assets"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/outputs"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/data-source-capabilities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas/2/default-workflows/text"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/runs/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/identity-snapshots/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/knowledge"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/fact-boundary"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/brief"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/capability-memory/?kind=preference&status=saved&limit=100&offset=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/form-assistance?surface=product_brief&project_id=2&unit_id=2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/capability-memory/?kind=preference&status=saved&limit=100&offset=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/form-assistance?surface=product_brief&project_id=2&unit_id=2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/readiness"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/checks"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/readiness"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/master-revisions/2/checks"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-projects/2/units/2/creation-recipe/stages/draft/result?run_id=2&attempt_id=2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-brands"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-identities/brand-voices"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/users/me"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/channels"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-brands"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-identities/brand-voices"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/users/me"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/channels"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-accounts"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas/1/series"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas/2/series"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-accounts"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas/1/series"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas/2/series"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-personas/2/revisions"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-identities/effective?persona_id=2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-opportunities/discovery/status"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/capability-memory/persona-reference-styles/2"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-identities/creative-catalog"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/settings/model-capabilities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/content-identities/creative-catalog"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/settings/model-capabilities"
+    },
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:5174/api/v1/capability-memory/persona-reference-styles/2/resources?kind=source&q=%E9%9A%94%E7%A6%BB%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0&offset=0"
+    }
+  ]
+}

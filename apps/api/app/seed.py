@@ -3,6 +3,7 @@
 from .db import SessionLocal, init_db
 from .models import BrandVoiceVersion, ChannelTemplateVersion, User
 from .routers.templates import sync_prompt_versions_from_files
+from .services.content_harness.channel_methods import length_guidance_for
 
 DOUYIN_STRUCTURE = ["Hook 3-8s", "背景", "核心观点 1", "证据", "核心观点 2", "风险/反面信息", "总结", "CTA"]
 XHS_STRUCTURE = ["标题候选", "封面文案", "正文", "小标题", "卡片文案", "图片 Prompt", "Tags"]
@@ -26,13 +27,9 @@ def _article(label, family, *, seo=None, media=None, publishers=None):
     return _form("text", family, renderer="renderer.generic.markdown", seo=seo, media=media, publishers=publishers, label=label)
 
 
-def seed_v1_channel_profiles(db) -> int:
-    """V1 PRD 2.0 的 14 平台 profile seeding（§9/7.1）。幂等：以 (channel, workflow 标记 version) 判重。
-
-    注意：profile 是「配置存在」，不代表该平台 auto publish 已验证（PRD：不得伪装 verified）。
-    """
-    created = 0
-    profiles: list[tuple[str, str, dict]] = [
+def v1_channel_profile_definitions() -> list[tuple[str, str, dict]]:
+    """V1 的 14 个渠道档案。配置存在不等于远端发布已验证。"""
+    return [
         ("wechat", "公众号", {"content_forms": {"article": _article(
             "文章", "workflow.article.editorial", seo="seo.wechat.article",
             publishers=["publisher.wechat.wewrite", "publisher.copy"],
@@ -72,7 +69,15 @@ def seed_v1_channel_profiles(db) -> int:
             "script", "workflow.script.spoken", renderer="renderer.generic.markdown",
         )}}),
     ]
-    for channel, name, profile in profiles:
+
+
+def seed_v1_channel_profiles(db) -> int:
+    """V1 PRD 2.0 的 14 平台 profile seeding（§9/7.1）。幂等：以 (channel, workflow 标记 version) 判重。
+
+    注意：profile 是「配置存在」，不代表该平台 auto publish 已验证（PRD：不得伪装 verified）。
+    """
+    created = 0
+    for channel, name, profile in v1_channel_profile_definitions():
         exists = (
             db.query(ChannelTemplateVersion)
             .filter(ChannelTemplateVersion.channel == channel, ChannelTemplateVersion.profile_json.is_not(None))
@@ -94,6 +99,56 @@ def seed_v1_channel_profiles(db) -> int:
         )
         created += 1
     db.flush()
+    return created
+
+
+def install_missing_channel_profiles(db) -> list[str]:
+    """Publish a V1 profile only where no published profile exists.
+
+    A channel that already has a published profile, including the live WeChat
+    official profile and the Xiaohongshu image profile, is not rewritten.
+    A published legacy template without profile_json is archived by the new
+    published version. This does not verify remote publishing.
+    """
+    from .routers.templates import _checksum, _demote_other_published, validate_profile_json
+
+    created: list[str] = []
+    for channel, name, profile in v1_channel_profile_definitions():
+        published = (
+            db.query(ChannelTemplateVersion)
+            .filter(ChannelTemplateVersion.channel == channel, ChannelTemplateVersion.status == "published")
+            .all()
+        )
+        if any(isinstance(row.profile_json, dict) and row.profile_json.get("content_forms") for row in published):
+            continue
+        validate_profile_json(profile, channel)
+        max_version = (
+            db.query(ChannelTemplateVersion.version)
+            .filter(ChannelTemplateVersion.channel == channel)
+            .order_by(ChannelTemplateVersion.version.desc())
+            .limit(1)
+            .scalar()
+        ) or 0
+        row = ChannelTemplateVersion(
+            channel=channel,
+            name=f"{name} V1 Profile",
+            version=int(max_version) + 1,
+            structure=[],
+            output_schema={"type": "object", "required": ["claim_fact_map"]},
+            profile_schema_version=1,
+            profile_json=profile,
+            status="published",
+        )
+        row.checksum = _checksum({
+            "structure": row.structure,
+            "output_schema": row.output_schema,
+            "profile_schema_version": row.profile_schema_version,
+            "profile_json": row.profile_json,
+        })
+        db.add(row)
+        db.flush()
+        _demote_other_published(db, ChannelTemplateVersion, {"channel": channel}, keep_id=row.id)
+        created.append(channel)
     return created
 
 
@@ -140,11 +195,7 @@ def seed() -> None:
                         name=name,
                         version=1,
                         structure=structure,
-                        length_guidance=(
-                            {"seconds": "45-90", "chars": "300-600"} if channel == "douyin"
-                            else {"body_chars": "300-800"} if channel == "xiaohongshu"
-                            else {"body_chars": "1500-3000"}
-                        ),
+                        length_guidance=length_guidance_for(channel),
                         forbidden_patterns=["确定性投资承诺", "夸张收益表述"],
                         output_schema={"type": "object", "required": ["claim_fact_map"]},
                         status="published",

@@ -1,0 +1,120 @@
+{
+  "scope": "read-only existing project23 unit29; no new model calls",
+  "samples": [
+    {
+      "session_id": 13,
+      "llm_run_id": 113,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "baseline": "办公室下午来一杯鲜榨，不用洗复杂零件，随身携带很轻松",
+      "selection": null,
+      "suggestion": "适合需要随时喝鲜榨的上班族：USB充电随身携带，400ml杯体与主机可分离拆洗，在办公室轻松现榨不繁琐。",
+      "outside_selection_preserved": null,
+      "old_suffix_occurrences": 0
+    },
+    {
+      "session_id": 14,
+      "llm_run_id": 114,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "baseline": "办公室下午来一杯鲜榨，不用洗复杂零件，随身携带很轻松",
+      "selection": {
+        "field_key": "core_message",
+        "start": 0,
+        "end": 6,
+        "text": "办公室下午来"
+      },
+      "suggestion": "工位下午随时来一杯鲜榨，不用洗复杂零件，随身携带很轻松",
+      "outside_selection_preserved": true,
+      "old_suffix_occurrences": 1
+    },
+    {
+      "session_id": 15,
+      "llm_run_id": 115,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "baseline": "办公室下午来一杯鲜榨，不用洗复杂零件，随身携带很轻松",
+      "selection": {
+        "field_key": "core_message",
+        "start": 7,
+        "end": 13,
+        "text": "杯鲜榨，不用"
+      },
+      "suggestion": "办公室下午来一杯现榨饮品，无需洗复杂零件，随身携带很轻松",
+      "outside_selection_preserved": true,
+      "old_suffix_occurrences": 0
+    },
+    {
+      "session_id": 16,
+      "llm_run_id": 116,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "baseline": "办公室下午来一杯鲜榨，不用洗复杂零件，随身携带很轻松",
+      "selection": {
+        "field_key": "core_message",
+        "start": 19,
+        "end": 26,
+        "text": "随身携带很轻松"
+      },
+      "suggestion": "办公室下午来一杯鲜榨，不用洗复杂零件，装进包里随身带",
+      "outside_selection_preserved": true,
+      "old_suffix_occurrences": 1
+    },
+    {
+      "session_id": 17,
+      "llm_run_id": 117,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "baseline": "办公室下午🥤来一杯鲜榨，不用洗复杂零件",
+      "selection": {
+        "field_key": "core_message",
+        "start": 5,
+        "end": 7,
+        "text": "🥤"
+      },
+      "suggestion": "办公室下午随手来一杯鲜榨，不用洗复杂零件",
+      "outside_selection_preserved": true,
+      "old_suffix_occurrences": 1
+    },
+    {
+      "session_id": 18,
+      "llm_run_id": 118,
+      "model_receipt": {
+        "profile": "registered.ddd9b006056eae2bfb76b2ee",
+        "configuration_revision": 13,
+        "model": "gemini-3.8-flash-high",
+        "provider": "openai_compatible"
+      },
+      "baseline": "办公室下午来一杯鲜榨，不用洗复杂零件，随身携带很轻松",
+      "selection": {
+        "field_key": "core_message",
+        "start": 7,
+        "end": 13,
+        "text": "杯鲜榨，不用"
+      },
+      "suggestion": "办公室下午来一杯现榨饮品，无需洗复杂零件，随身携带很轻松",
+      "outside_selection_preserved": true,
+      "old_suffix_occurrences": 0
+    }
+  ]
+}

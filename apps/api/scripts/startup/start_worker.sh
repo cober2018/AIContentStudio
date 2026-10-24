@@ -6,4 +6,4 @@ source ./scripts/startup/runtime.env
 set +a
 export TASK_QUEUE_ENABLED=true
 export CELERY_BROKER_URL=redis://localhost:6379/2
-exec .venv/bin/python -m celery -A app.tasks.celery_app worker -Q default,llm,ingestion,export -B -c 1 --loglevel=info
+exec .venv/bin/python -m celery -A app.tasks.celery_app worker -Q default,llm,ingestion,export -B -c 1 -P solo --loglevel=info

@@ -1,0 +1,15 @@
+{
+  "kind": "mock-isolated-not-quality",
+  "records": [
+    {
+      "attempt_id": 2,
+      "feedback_event_id": 4,
+      "note": "第1次仅调整此段"
+    },
+    {
+      "attempt_id": 3,
+      "feedback_event_id": 5,
+      "note": "第2次仅调整此段"
+    }
+  ]
+}

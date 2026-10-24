@@ -1,0 +1,63 @@
+{
+  "api": [
+    {
+      "path": "",
+      "status": 200,
+      "production_domain": "product",
+      "persona_id": 2,
+      "identity_snapshot_id": 15,
+      "pinned_workflow_id": 31
+    },
+    {
+      "path": "/creation-recipe",
+      "status": 200,
+      "source": "product_default"
+    },
+    {
+      "path": "/creation-recipe/stages/script/preview",
+      "status": 200,
+      "ready": true,
+      "blockers": []
+    },
+    {
+      "path": "/master-revisions",
+      "status": 200,
+      "history_ids": [
+        47,
+        46
+      ]
+    },
+    {
+      "path": "/production-profile",
+      "status": 200,
+      "revision": 4,
+      "voice_explicit": false
+    }
+  ],
+  "counts": {
+    "content_master_revision": 47,
+    "llm_run": 101,
+    "provider_generation_task": 9,
+    "workflow_run": 19,
+    "identity_snapshot": 15
+  },
+  "old_history_identical": [
+    "content_master_revision",
+    "llm_run",
+    "provider_generation_task",
+    "workflow_run",
+    "identity_snapshot"
+  ],
+  "integrity": [
+    [
+      "ok"
+    ]
+  ],
+  "foreign_key_errors": [],
+  "intentional_writes": [
+    "Unit15.pinned_workflow_id:18->31",
+    "new product workflow31/default version",
+    "product.context_prepared event"
+  ],
+  "real_model_calls": 0
+}

@@ -1,7 +1,7 @@
 """FE-F5A Content Opportunity APIs."""
 
 import json
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -27,6 +27,9 @@ from ..services.project_brief import checksum_brief
 from ..services.project_events import record_project_event
 
 router = APIRouter(prefix="/api/v1/content-opportunities", tags=["content-opportunities"])
+from .discovery import router as discovery_router
+
+router.include_router(discovery_router)
 
 
 def get_db(db: Session = Depends(base_get_db)):
@@ -95,6 +98,10 @@ def list_opportunities(
     q: str | None = None,
     signal_type: str | None = None,
     time_sensitivity: str | None = None,
+    recommended_only: bool = False,
+    actionable_only: bool = False,
+    persona_id: int | None = None,
+    business_date: date | None = None,
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -105,10 +112,23 @@ def list_opportunities(
         .where(ContentOpportunity.owner_user_id == user.id)
         .order_by(ContentOpportunity.updated_at.desc(), ContentOpportunity.id.desc())
     )
+    if persona_id is not None:
+        stmt = stmt.where(ContentOpportunity.persona_id == persona_id)
+    if actionable_only:
+        from ..services.opportunity_policy import TECH, persona_policy
+
+        if persona_id is None or persona_policy(db, user.id, persona_id) != TECH:
+            raise HTTPException(422, "有效建议筛选需要明确选择科技角色")
+        stmt = stmt.where(ContentOpportunity.status.in_(["new", "qualified"]),
+                          ContentOpportunity.relevant_until > utcnow())
+    if business_date is not None:
+        stmt = stmt.where(ContentOpportunity.business_date == business_date.isoformat())
     if status:
         if status not in service.TRIAGE_STATUSES | {"archived", "converted"}:
             raise HTTPException(422, "机会状态不受支持")
         stmt = stmt.where(ContentOpportunity.status == status)
+    if recommended_only:
+        stmt = stmt.where(ContentOpportunity.status.in_(["new", "qualified"]))
     if priority:
         _validate_priority(priority)
         stmt = stmt.where(ContentOpportunity.priority == priority)

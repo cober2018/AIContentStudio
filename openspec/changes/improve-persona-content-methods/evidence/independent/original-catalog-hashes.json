@@ -1,0 +1,60 @@
+{
+  "SKILLS": {
+    "studio.research.evidence-brief@1": "6bf49adee8a3cfa79408350154a5bf83e2913f7a6ed5dd30ee5c43b598f90f4a",
+    "studio.research.angle-lab@1": "c88f681271fcee86375976655eba25093d470ebbb02e6d56a54392b3edeb1476",
+    "studio.text.outline@1": "6dde970f4017c237f7eae15556db9f89925f6008652b676e8698168f17c4a868",
+    "studio.text.longform@1": "bfb8b3aa39866fe31a6e17b635f60953938de489ea6be6a7786799916abdf1cb",
+    "studio.text.answer@1": "bc4d2e518d962a342e44cb005933291c23680f7a7ac7264bbb7d1ef6031965d5",
+    "studio.text.social-short@1": "2bb198474ca6d887deda7680949445e36f24d226b9d07881cda3012f596ae608",
+    "studio.text.humanize@1": "54789bc220f3b306d8249fa4a68ddd1e35f6b397ed4941cd47e261fa631db752",
+    "studio.text.title-hook@1": "d96f8077b262e1dec872b8adec74905a0477691ecb8e50a60afeab1f49a1ff74",
+    "studio.graphic.visual-director@1": "fe807b593df788c4ac3f93f742159f806d80b75e7730cca4a04d5d0c57c49395",
+    "studio.graphic.card-plan@1": "eb7fd0475c4f4a09c8c30675918fdd0475bbb34d9ee3baf93551166d84258c54",
+    "studio.graphic.image-brief@1": "7aaeb12f0f3fda60a4d17cd5dcc4baa49f9f6cdbd808fd351ee54e70580bc2b3",
+    "studio.graphic.layout-compose@1": "47db7f9a569438c62bc300634e035018562d4dea80a656440019851c3d0f0ec6",
+    "studio.graphic.qc@1": "a56be36aa4cf37a568dd13f9ff4a60c9d4e7e35cad822ee32bbb350839f6afec",
+    "studio.audio.spoken-adapt@1": "014bfabce0d3c9c7ffeb8b52b35eb5def2fb6d08b8aaba3c0980c7da0f61b39b",
+    "studio.audio.voice-director@1": "965c593417814bf22b61a01776b49f1aa173769a46f061638daf28dda855144c",
+    "studio.audio.tts@1": "093f8a8bc8b24ea99068a03d5e098e98825627b7424eb880379617252f92310f",
+    "studio.audio.qc@1": "2c87b2f8366fbc28199ed9e325c6e4b20bbbfbd87565128f6d1c55fc76d4e76e",
+    "studio.video.product-script@1": "ea743d8a50ffeb9336a946d664a753499ecdc8a1696a835dd5120d98f804874b",
+    "studio.video.product-shots@1": "75360c16a55c82422294c19ec1638f2d6fe8bc31871c22c098a9265ef9d95b38",
+    "studio.video.product-filming@1": "40155bf27ddf581546d378f1f23ee7511cbf19ef8504602b3c66cf3181abb0f9",
+    "studio.product.audience-need@1": "2fd17ef5da53b0a2645f22ac7c74819520c8c62a7ab253123037f20db6db5580",
+    "studio.product.purchase-reason@1": "3813544980aa7cff00f002044216f9a45f583c5982459c78fa149d0ce4bd3b77",
+    "studio.video.script@1": "6f30eeb0c28201b978d9663b62970fce5fe17b2ad1ef7c7ba56bd00f33429818",
+    "studio.video.shot-director@1": "7e2af94935159e3e66872f3e423c6b554d2d282f759eb66869473b1208a2dde5",
+    "studio.video.director-package@1": "a939209dc50f79fe4d22eec19cf832e821ee4920a46bc1aea8d74e8fb6ee95db"
+  },
+  "PRESETS": {
+    "studio.text.deep-technical@1": "b4977bbafc78758d1162bf882a9d6c56500326f8eb4dcb21c24df24214b65ab3",
+    "studio.text.engineering-explainer@1": "4a9b0438b887616c661b636f3f0ec4dc2c7cc35c472d2e3832020bf3def48a99",
+    "studio.text.observational-lifestyle@1": "69bc3e47ecbe167497861647bb858dbd3e5afc25fc8c550ef4f89121c6d7e842",
+    "studio.text.reflective-lifestyle@1": "afc2be4ba53f513c5b8790002dae4927869069cbf26bd129495bb595f1895af6",
+    "studio.text.concise-social@1": "022a7206d75835e8d3ae44745bf21fc512d4c424d0d541c3b4d51405c871a65b",
+    "studio.graphic.technical-editorial@1": "8a64f4bdbcf369e591207989903cfbdcff0e4e0c7a04e1aa5a79ba636620f560",
+    "studio.graphic.architecture-diagram@1": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+    "studio.graphic.clean-infographic@1": "16da5d6748b564b5baa20ca98d19e5997daefb2a5bb917fa2b6b2348fbeda64d",
+    "studio.graphic.warm-magazine@1": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+    "studio.graphic.documentary-photo@1": "05d84d833712bc498392441d71979c5bcd35c8fae141516062651274140b9b61",
+    "studio.graphic.lifestyle-cards@1": "f0b905895832c0bb1a2919afe1459e8d64985d9f9d65daa4b830952170b85166",
+    "studio.graphic.product-neutral@1": "76335e21123cd792bbab21558305a636b75ade7a2dfbfa7447eb6543e5f3bb09",
+    "studio.audio.calm-engineer@1": "ddf7e912e9e28a6b6488b0f95913f4b9af7c1bf1ba150c2463183940c94ebcad",
+    "studio.audio.clear-explainer@1": "d86cb3e30002e5b674d4a85407087676397319ba25d34f43d41e93243ede5b46",
+    "studio.audio.warm-conversational@1": "dbf4f2bbc3caccf412094844be8644cd27e87ae7d2b7129d1c55786bd1981d90",
+    "studio.audio.reflective-story@1": "494b395698df488d1c900007d6b2662a77db46034efc6a8403b3a22b563daaae"
+  },
+  "QUALITY": {
+    "studio.quality.video.product@1": "7151a6117e7707162a7459ecf47c6ef0ad18dfbf29500f4edf42611946948940",
+    "studio.quality.text.technical@1": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+    "studio.quality.text.lifestyle@1": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+    "studio.quality.graphic.editorial@1": "8adb02ff3942f976308e306a2782d1d3bae8eeab716dcf42b04da88584e3e3a0",
+    "studio.quality.graphic.lifestyle@1": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+    "studio.quality.audio.explainer@1": "28088c2ada823a3c171ee553343587ca291360e7fd2670c2fc1bfafea1867e16",
+    "studio.quality.audio.conversational@1": "1050b8c1f51329d3223c56660a622368597b471482186d232838bc33af826007"
+  },
+  "BLUEPRINTS": {
+    "starter.ai-tech-engineer.v1": "ffed3b1f587fa087379d4789959cc0fd97acbee2ee29fb38d64f6c92dfd7c4f2",
+    "starter.lifestyle-observer.v1": "1dccb854e03a36535cbd9abc338813d1378ffc50e097eb92b89e62806fc3c99d"
+  }
+}

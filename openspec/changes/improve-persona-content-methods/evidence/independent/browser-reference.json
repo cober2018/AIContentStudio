@@ -1,0 +1,37 @@
+{
+  "environment": "isolated /tmp SQLite references, no formal data or model calls",
+  "checks": [
+    {
+      "name": "31 sources paged via normal selector; page 2 exact source preview",
+      "pass": true,
+      "source_id": 3
+    },
+    {
+      "name": "negative observation saved as provisional exact source/hash with inspection and reason",
+      "pass": true,
+      "id": 5,
+      "observation": {
+        "certainty": "direct",
+        "inspection": "read",
+        "location": {
+          "quote": "示例1。先给结论，随后给证据，最后说明限制。"
+        },
+        "locator": "本例整段",
+        "modality": "text",
+        "polarity": "avoid",
+        "reason": "固定重复会遮住实际问题",
+        "reference": {
+          "content_hash": "02e85410ba38e2f2e937310fc0eb298d1e3b37774640dcd937e1d4e74770fe7e",
+          "id": 3,
+          "kind": "source"
+        },
+        "statement": "反例：不要把这类模板当成固定的开头句。"
+      }
+    },
+    {
+      "name": "negative reference survives refresh without default adoption",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

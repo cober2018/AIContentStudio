@@ -1,15 +1,16 @@
 """Persistent content projects, personas, and units."""
 
 import json
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from ..db import get_db
 from ..deps import get_current_user, get_existing_user, require_editor, require_editor_or_reviewer
@@ -31,6 +32,7 @@ from ..models import (
     WorkflowRun,
 )
 from ..services import content_identity, workflow_engine
+from ..services.content_harness import channel_registry
 from ..services.data_source_plugins import assert_executable
 from ..services.data_source_plugins import descriptors as data_source_descriptors
 from ..services.project_assets import shared_assets
@@ -56,6 +58,8 @@ from .workflows import NodeCompleteIn, _serialize_run, list_node_attempts
 
 router = APIRouter(prefix="/api/v1", tags=["content-projects"])
 router.include_router(product_creation_router)
+from .product_skus import router as product_skus_router
+router.include_router(product_skus_router)
 
 
 class StagePreviewRoute(APIRoute):
@@ -167,9 +171,26 @@ def read_creation_stage_result(project_id: int, unit_id: int, node_id: str, run_
         return stage_result(db, project_id, unit_id, node_id, user,
                             run_id=run_id, attempt_id=attempt_id, invocation_key=invocation_key)
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+        raise HTTPException(exc.status_code, exc.body) from None
     except StageContractError:
         raise HTTPException(409, {"code": "stage_attempt_integrity"}) from None
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/candidate-previews")
+def candidate_preview(project_id: int, unit_id: int, node_id: str, run_id: int, attempt_id: int, candidate_id: str, canvas_id: str,
+                      width: int | None = Query(default=None, ge=240, le=960), db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import stage_candidate_previews
+    from ..services.stage_contracts import StageContractError
+    from ..services.stage_invocations import StageInvocationError
+
+    try:
+        content = stage_candidate_previews.png(db, user, project_id, unit_id, node_id, run_id=run_id, attempt_id=attempt_id,
+                                               candidate_id=candidate_id, canvas_id=canvas_id, width=width)
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, exc.body) from None
+    except StageContractError:
+        raise HTTPException(409, {"code": "stage_attempt_integrity"}) from None
+    return Response(content, media_type="image/png", headers={"Cache-Control": "private, max-age=86400"})
 
 
 @stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/preview")
@@ -185,7 +206,7 @@ def preview_creation_stage(payload: StagePreviewIn, project_id: int, unit_id: in
     except StageContractError as exc:
         raise HTTPException(422, {"code": str(exc)}) from exc
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+        raise HTTPException(exc.status_code, exc.body) from None
 
 
 @stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/run")
@@ -204,7 +225,7 @@ def run_creation_stage(payload: StageRunIn, project_id: int, unit_id: int, node_
             stage_override=payload.stage_override,
         )
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from exc
+        raise HTTPException(exc.status_code, exc.body) from exc
 
 
 @stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/reconcile")
@@ -216,7 +237,19 @@ def reconcile_creation_stage(payload: StageReconcileIn, project_id: int, unit_id
         return reconcile_running_attempt(db, project_id=project_id, unit_id=unit_id, node_id=node_id,
                                          run_id=payload.run_id, attempt_id=payload.attempt_id, user=user)
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from exc
+        raise HTTPException(exc.status_code, exc.body) from exc
+
+
+@stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/abandon-unknown")
+def abandon_unknown_creation_stage(payload: StageReconcileIn, project_id: int, unit_id: int, node_id: str,
+                                   db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services.stage_invocations import StageInvocationError, abandon_unknown_attempt
+
+    try:
+        return abandon_unknown_attempt(db, project_id=project_id, unit_id=unit_id, node_id=node_id,
+                                       run_id=payload.run_id, attempt_id=payload.attempt_id, user=user)
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, exc.body) from exc
 
 
 @stage_preview_router.post("/content-projects/{project_id}/units/{unit_id}/creation-recipe/stages/{node_id}/accept-master")
@@ -230,7 +263,7 @@ def accept_creation_stage_master(payload: StageMasterAcceptanceIn, project_id: i
     try:
         return accept_master(db, project_id, unit_id, node_id, user, payload.model_dump(exclude_none=True))
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+        raise HTTPException(exc.status_code, exc.body) from None
     except (StageContractError, TextDocumentError) as exc:
         raise HTTPException(422, {"code": str(exc)}) from None
 
@@ -244,7 +277,7 @@ def accept_creative_stage(project_id: int, unit_id: int, node_id: str, payload: 
     try:
         return accept(db, project_id, unit_id, node_id, user, payload.model_dump())
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+        raise HTTPException(exc.status_code, exc.body) from None
     except (StageContractError, CreativeMethodStageError) as exc:
         raise HTTPException(422, {"code": str(exc)}) from None
 
@@ -347,15 +380,17 @@ def _unit_json(unit: ContentUnit) -> dict:
     return {
         "id": unit.id,
         "project_id": unit.project_id,
+        "production_domain": unit.production_domain,
         "persona_id": unit.persona_id,
         "account_id": unit.account_id,
         "series_id": unit.series_id,
         "identity_snapshot_id": unit.identity_snapshot_id,
-        "identity_state": "frozen" if unit.identity_snapshot_id else "legacy_identity",
+        "identity_state": "product_context" if unit.production_domain == "product" else "frozen" if unit.identity_snapshot_id else "legacy_identity",
         "modality": unit.modality,
         "channel_id": unit.channel_id,
         "title": unit.title,
         "status": unit.status,
+        "lifecycle": unit.lifecycle,
         "pinned_workflow_id": unit.pinned_workflow_id,
     }
 
@@ -387,7 +422,7 @@ def _project_payload(project: ContentProject, units: list[ContentUnit], brief) -
         "title": project.title,
         "objective": brief.objective if brief else project.objective,
         "status": project.status,
-        "units": [_unit_json(unit) for unit in units],
+        "units": [_unit_json(unit) for unit in units if unit.lifecycle != "deleted"],
     }
 
 
@@ -561,6 +596,10 @@ def create_unit(payload: UnitIn, project_id: int, db: Session = Depends(get_db),
         raise HTTPException(404, "内容角色不存在")
     if payload.modality not in {"text", "graphic", "video"}:
         raise HTTPException(422, "不支持的内容形态")
+    try:
+        channel_registry.ensure_channel_in_service(payload.channel_id)
+    except channel_registry.ChannelRegistryError as exc:
+        raise HTTPException(422, str(exc)) from exc
     snapshot = content_identity.create_snapshot(db, user, persona_id=persona.id, account_id=payload.account_id, series_id=payload.series_id)
     selected_workflow = payload.pinned_workflow_id
     if selected_workflow is not None:
@@ -586,7 +625,7 @@ def create_unit(payload: UnitIn, project_id: int, db: Session = Depends(get_db),
 def list_units(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     owned_project(db, project_id, user)
     rows = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id).order_by(ContentUnit.id)).all()
-    return [_unit_json(row) for row in rows]
+    return [_unit_json(row) for row in rows if row.lifecycle != "deleted"]
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}")
@@ -598,11 +637,25 @@ def get_unit(project_id: int, unit_id: int, db: Session = Depends(get_db), user:
 def patch_unit(payload: UnitPatch, project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     mutable_project(db, project_id, user)
     unit = owned_unit(db, project_id, unit_id, user)
-    if unit.status == "archived":
+    if unit.lifecycle_readonly:
         raise HTTPException(409, "已归档单元不可编辑")
     if payload.status == "archived":
         raise HTTPException(422, "请使用删除接口归档内容单元")
     fields = payload.model_fields_set
+    if "channel_id" in fields:
+        try:
+            channel_registry.ensure_channel_in_service(payload.channel_id)
+        except channel_registry.ChannelRegistryError as exc:
+            raise HTTPException(422, str(exc)) from exc
+    if unit.production_domain == "product":
+        if fields.intersection({"persona_id", "account_id", "series_id", "modality", "pinned_workflow_id"}) or payload.rebind_identity or payload.rebind_default:
+            raise HTTPException(422, "商品作品请使用商品配置与工作流入口，不绑定内容角色")
+        for name in ("title", "channel_id", "status"):
+            if name in fields:
+                setattr(unit, name, getattr(payload, name))
+        db.commit()
+        db.refresh(unit)
+        return _unit_json(unit)
     persona_id = payload.persona_id if "persona_id" in fields else unit.persona_id
     account_id = payload.account_id if "account_id" in fields else unit.account_id
     series_id = payload.series_id if "series_id" in fields else unit.series_id
@@ -674,10 +727,53 @@ def patch_unit(payload: UnitPatch, project_id: int, unit_id: int, db: Session = 
     return _unit_json(unit)
 
 
+class UnitLifecycleIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["archive", "restore", "delete"]
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/lifecycle")
+def change_unit_lifecycle(payload: UnitLifecycleIn, project_id: int, unit_id: int,
+                          db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..models import CreativeExecution, ProviderGenerationTask, WorkflowStepAttempt
+
+    mutable_project(db, project_id, user)
+    unit = owned_unit(db, project_id, unit_id, user)
+    db.refresh(unit)
+    if unit.production_domain != "persona":
+        raise HTTPException(409, "此入口仅管理角色作品")
+    if unit.status == "archived":
+        raise HTTPException(409, "旧归档或身份替换版本仅供查看历史，不能通过此入口修改")
+    target = {"archive": "archived", "restore": "active", "delete": "deleted"}[payload.action]
+    if unit.lifecycle == target:
+        return _unit_json(unit)
+    if unit.lifecycle == "deleted":
+        raise HTTPException(409, "此作品已从清单删除，仅保留历史")
+    running = db.scalar(select(WorkflowRun.id).where(WorkflowRun.content_unit_id == unit_id,
+        WorkflowRun.status.not_in(["succeeded", "failed", "canceled", "cancelled"])).limit(1))
+    external = db.scalar(select(CreativeExecution.id).where(CreativeExecution.content_unit_id == unit_id,
+        CreativeExecution.state.in_(["claimed", "in_progress", "unknown", "blocked"])).limit(1))
+    native = db.scalar(select(ProviderGenerationTask.id).join(WorkflowStepAttempt,
+        ProviderGenerationTask.workflow_step_attempt_id == WorkflowStepAttempt.id).join(WorkflowRun,
+        WorkflowStepAttempt.run_id == WorkflowRun.id).where(WorkflowRun.content_unit_id == unit_id,
+        ProviderGenerationTask.state.in_(["submitting", "running", "unknown"])).limit(1))
+    if running is not None or external is not None or native is not None:
+        raise HTTPException(409, "仍有执行中或结果待核对的任务，请先到任务与执行记录完成、取消或核对原任务；不会自动重发")
+    previous = unit.lifecycle
+    unit.lifecycle = target
+    record_project_event(db, project_id=project_id, event_type=f"unit.lifecycle.{payload.action}",
+        actor=user.email, entity_type="content_unit", entity_id=unit.id,
+        payload={"previous": previous, "lifecycle": target})
+    db.commit()
+    return _unit_json(unit)
+
+
 @router.delete("/content-projects/{project_id}/units/{unit_id}", status_code=204)
 def delete_unit(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     mutable_project(db, project_id, user)
     unit = owned_unit(db, project_id, unit_id, user)
+    if unit.lifecycle != "active":
+        raise HTTPException(409, "此作品已归档或删除，请使用清单管理入口")
     event_type = "unit.archived" if _has_execution_history(db, unit.id) else "unit.deleted"
     if _has_execution_history(db, unit.id):
         unit.status = "archived"
@@ -740,9 +836,10 @@ def get_effective_workflow(project_id: int, unit_id: int, db: Session = Depends(
 def save_workflow_override(payload: WorkflowSaveIn, project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     mutable_project(db, project_id, user)
     unit = owned_unit(db, project_id, unit_id, user)
-    if unit.status == "archived":
+    if unit.lifecycle_readonly:
         raise HTTPException(409, "已归档单元不可修改工作流")
-    content_identity.hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
+    if unit.production_domain != "product":
+        content_identity.hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
     binding = db.scalar(select(ProjectWorkflowBinding).where(ProjectWorkflowBinding.unit_id == unit_id))
     current_revision = binding.revision if binding else 0
     if payload.expected_revision != current_revision:
@@ -938,7 +1035,7 @@ def list_project_runs(project_id: int, unit_id: int, db: Session = Depends(get_d
 def start_project_run(payload: ProjectRunIn, project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     mutable_project(db, project_id, user)
     unit = owned_unit(db, project_id, unit_id, user)
-    if unit.status == "archived":
+    if unit.lifecycle_readonly:
         raise HTTPException(409, "已归档单元不可启动新运行")
     workflow = db.get(Workflow, unit.pinned_workflow_id) if unit.pinned_workflow_id else None
     if workflow is None or not workflow.enabled or workflow.status != "published":
@@ -963,7 +1060,7 @@ def start_project_run(payload: ProjectRunIn, project_id: int, unit_id: int, db: 
         try:
             require_receipt_schema(db)
         except StageInvocationError as exc:
-            raise HTTPException(exc.status_code, {"code": exc.code}) from None
+            raise HTTPException(exc.status_code, exc.body) from None
     for node in workflow.definition_json.get("nodes", []):
         if node.get("kind") == "Data":
             try:
@@ -1058,9 +1155,16 @@ def get_unit_snapshot(project_id: int, unit_id: int, snapshot_id: int, db: Sessi
 
 
 @router.get("/content-projects/{project_id}/shared-assets")
-def list_project_shared_assets(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def list_project_shared_assets(project_id: int, exclude_outputs: bool = False, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     owned_project(db, project_id, user)
-    return shared_assets(db, project_id)
+    rows = shared_assets(db, project_id)
+    if exclude_outputs:
+        from ..services.project_folders import output_material_ids
+
+        # The material views leave out 小样 / 成片; binding a cut to the master still needs the full list.
+        outputs = set(output_material_ids(db))
+        rows = [row for row in rows if row["material_id"] not in outputs]
+    return rows
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}/outputs")
@@ -1079,3 +1183,17 @@ def list_unit_outputs(project_id: int, unit_id: int, db: Session = Depends(get_d
 
 
 router.include_router(stage_preview_router)
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/product-context")
+def continue_product_context(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    mutable_project(db, project_id, user)
+    unit = owned_unit(db, project_id, unit_id, user)
+    if unit.production_domain != "product" or unit.lifecycle_readonly:
+        raise HTTPException(409, "此作品不能进入商品流程")
+    from ..services.workflow_templates import ensure_product_workflow
+    workflow = ensure_product_workflow(db, unit.modality, user)
+    unit.pinned_workflow_id = workflow.id
+    record_project_event(db, project_id=project_id, event_type="product.context_prepared", actor=user.email,
+        entity_type="content_unit", entity_id=unit.id, payload={"workflow_id": workflow.id, "historical_identity_snapshot_id": unit.identity_snapshot_id})
+    db.commit()
+    return _unit_json(unit)

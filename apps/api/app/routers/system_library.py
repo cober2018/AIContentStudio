@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 from sqlalchemy.orm import Session
 
@@ -33,6 +33,14 @@ class LibraryFilters(Payload):
     source_type: SourceType | None = None
     rights: Literal["allowed", "denied", "unknown", "revoked"] | None = None
     collection_id: int | None = Field(default=None, gt=0)
+    material_source_kind: Literal["upload", "web_search", "ai_generated", "chart", "screenshot", "upstream", "legacy",
+                                  "external_execution", "drive"] | None = None
+    model_use: Literal["allowed", "denied", "unknown", "revoked"] | None = None
+    material_source_id: int | None = Field(default=None, gt=0)
+    material_collection_id: int | None = Field(default=None, gt=0)
+    place: Literal["external", "common", "project"] | None = None
+    place_project_id: int | None = Field(default=None, gt=0)
+    order: Literal["oldest", "newest"] = "oldest"
     limit: int = Field(default=50, ge=1, le=200)
     offset: int = Field(default=0, ge=0)
 
@@ -95,6 +103,23 @@ class Reorder(RevisionPayload):
 @router.get("/system-library")
 def list_library(db: DB, user: Reader, filters: Annotated[LibraryFilters, Query()]):
     values = filters.model_dump(mode="json")
+    if values.get("material_collection_id"):
+        from ..models import MaterialCollection
+
+        collection = db.get(MaterialCollection, values["material_collection_id"])
+        if collection is None or collection.owner_user_id != user.id:
+            raise HTTPException(404, {"code": "material_collection_not_found"})
+    place, place_project = values.pop("place", None), values.pop("place_project_id", None)
+    from ..services import project_folders
+
+    # 小样 / 成片 are a project's results, not material.
+    values["exclude_material_ids"] = project_folders.output_material_ids(db)
+    if place:
+        # Where a file sits is read from the drive, so the matching ids are worked out before the query.
+        # A project also shows what it reuses from other projects (shortcuts) and from 通用素材库.
+        values["material_ids"] = [item["material_id"] for item in project_folders.tree(db)["items"]
+                                  if (item["library"] == place and (not place_project or item["project_id"] == place_project))
+                                  or (place == "project" and place_project and place_project in item["used_by"])]
     return system_library.list_library(db, values, values.pop("limit"), values.pop("offset"))
 
 

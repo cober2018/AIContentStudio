@@ -1,0 +1,315 @@
+{
+  "items": [
+    {
+      "id": 236,
+      "check_kind": "master_schema",
+      "input_hash": "ef179ab0e9d35e3bf16a9cec48bae2a0ce83d2a4f4dc6f346254a3735f756ba9",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 237,
+      "check_kind": "evidence",
+      "input_hash": "f7d47191b3b8c864621956b3b0322e1ea3338e3837a0b50fbc6dd384c50af877",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 238,
+      "check_kind": "rights",
+      "input_hash": "3249e9b93b7625c006531b0abac5c4c1d2cca24f5979fb7deb6669a2100c8e9f",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 239,
+      "check_kind": "render",
+      "input_hash": "ef1b4360682dc2ce1f0f6b0411a891d79b759de56f5f9b00dfc727e1399f1ac0",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "deterministic",
+        "renderer_key": "text.studio.document.v1",
+        "renderer_version": "2",
+        "render_input_hash": "ed5aeabb27b83ffe1664f93e660f30f4277eb5d10d114b4a71ebdad64e51e100",
+        "content_hash": "84ebc8761b97930aaf323491f5d9777eb7b498c9f83ae12755f10c27c014ce04",
+        "body_markdown": "比如你刚想画下窗边那盆植物，低头看看桌子：水杯、充电线，还有几张随手搁着的快递单，几乎把平整的地方占满了。笔不知道收在哪个抽屉，本子还压在包底。画画的念头才冒出个头，倒像先领到了一份收拾屋子的差事。这只是日常里常见的一个设想场景，却很适合用来琢磨一个小问题：每次想随手画两笔，前置的准备能不能少一点？\n\n其实并不一定要把整张桌子打扫得一尘不染。很多时候，我们需要的不过是一个能容下一本掌心大小册子的角落，外加一支随时能拿出来的笔。把注意力收束到这里，比“给自己张罗一个完美的创作角”要轻省得多，也具体得多。\n\n## 一个可以换地方的支撑面\n\n在Colossal的一篇介绍里，Bill Groot制作的Lap Easel被描述为一种便携、可调的支撑装置，既能放在膝上，也可以架在桌面使用。吸引我的倒不是多买一件新装备，而是它提示了一个日常细节：画画和记东西，真的必须固定在书桌前吗？\\[1\\]\n\n需要说明的是，这篇介绍直接附带了Colossal Shop的商店链接，带有明确的导购性质。我并没有亲手使用过这款画架，在现有资料里也没有查到独立第三方的长期使用测评，因此无法判断它的稳固程度、材质手感，或者久用之后是否舒适。这里仅借用它所呈现的支撑思路，来聊聊纸笔、身体与日常物理空间之间的关系。\\[2\\]\n\n## 先想象一个小场景\n\n可以想象这样一个情境：午后翻开随身小本子的空白页，只想勾一下手边水杯的把手。要是书桌刚好空着，就随手放在桌上；要是窗边的阳光正好，想挪过去坐一会儿，便看看窗台或膝盖上有没有可以依靠的平整支撑。不用专门搬来一整套工具，也不用下定决心非得画满整张纸。\n\n比如只勾出杯口的一小段弧线，或是随手记下百叶窗影子落在木地板上的间距。画得不够周正也没关系，在旁边写几个字标注一下时间，留给以后的自己看。这里设想的只是一种随时停下、记录片刻的节奏，绝非对Lap Easel具体使用效果的展示；实际生活里怎么摆放、顺不顺手，终究取决于每个人自己的房间布局与个人习惯。\n\n反过来想，那些喜欢把颜料排布得整整齐齐、享受完整仪式感的人，也未必觉得准备工作是一种累赘，那或许恰恰是他们专注与沉浸的开始。想省去哪些琐碎步骤，本就没有标准答案：有人觉得每次翻找笔最耗耐心，有人只是不想为了画两笔而把餐桌反复腾空。看清自己容易卡在哪一个微小的动作上，往往比直接照搬一份工具清单更有帮助。\n\n## 不添置新物件，也可以尝试的微调\n\n如果我们暂时不想添置任何新工具，生活里同样藏着很多可以尝试的微调。要是总在找笔上耗费兴致，不妨把最顺手的那支笔直接夹在常看的本子里；要是桌面长期被工作杂物填满，换一本开本更小的速写本，或许就能在键盘旁边找到落笔的空隙。这些都只是可选的生活尝试，既不能保证让人立刻变得勤快，也不必把随笔记录变成一项需要准时打卡的任务。\n\n看过关于这件画架的报道后，真正留在脑海里的是一个轻巧的自问：下一次心里冒出记录的想法时，能不能少找一样东西，少挪换一次位置？想动笔的时候画上两笔，被琐事打断了就顺手合上。纸页间哪怕只留下一道没画完的线条，也完全不妨碍这只是平凡、自在的一天。\n\n参考：Colossal《Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere》。该文为附带商店链接的产品介绍；文中所述生活场景均为设想观察，并非作者亲测体验。\\[3\\]",
+        "unused_asset_ids": [],
+        "warnings": [],
+        "reasons": [],
+        "requirement": {
+          "kind": "render",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 240,
+      "check_kind": "text_structure",
+      "input_hash": "b80878600ef7cbf88f1ed93e8c93ec47a07ec442dafcc5aa6d314fdc3a3bc1ec",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "block_count": 13,
+        "requirement": {
+          "kind": "text_structure",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          }
+        }
+      }
+    },
+    {
+      "id": 241,
+      "check_kind": "text_fact",
+      "input_hash": "662bbbb70495df1e7227407fed5c643fedb29e62ffc05ec10e4c05155b0acca7",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "complete",
+          "model_use_excluded_item_ids": [],
+          "fact_count": 1,
+          "semantic_fact_count": 1,
+          "deterministic_issue_count": 0
+        },
+        "reasons": [],
+        "requirement": {
+          "kind": "text_fact",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 6,
+              "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 242,
+      "check_kind": "text_identity",
+      "input_hash": "ea98ce40fa41530b9a2a70f6afe392faf34c834b93bf4f635b67f3b1c8004d9b",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "identity_snapshot_id": 18,
+        "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+        "issues": [],
+        "coverage": {
+          "deterministic": "persona_rules_and_explicit_phrases",
+          "explicit_phrase_count": 0,
+          "semantic": "verified",
+          "reason": null,
+          "advisory_critic": {
+            "status": "verified",
+            "reason": null,
+            "rubric": [
+              {
+                "dimension": "factual_grounding",
+                "score": 4,
+                "reason": "准确说明了信息源自Colossal的报道，并主动厘清该报道带导购性质、自己未亲测实物，事实边界与个人推想区分得极为清晰。"
+              },
+              {
+                "dimension": "naturalness",
+                "score": 4,
+                "reason": "语调温和自然，生活场景的描摹与心理流转非常真实，符合观察者的角色定位。"
+              },
+              {
+                "dimension": "specificity",
+                "score": 4,
+                "reason": "包含大量具体细腻的动作与场景（如勾勒杯口弧线、百叶窗在木地板的投影间距、把笔夹在本子里等），细节充实生动。"
+              },
+              {
+                "dimension": "non_preachy",
+                "score": 4,
+                "reason": "完全没有居高临下的指导或制造焦虑，明确表达不同生活习惯各有所好，仅提供开放式的微调视角。"
+              },
+              {
+                "dimension": "title_alignment",
+                "score": 4,
+                "reason": "小标题层次分明，正文各部分紧扣段落主题及随手记录与物理支撑的核心讨论。"
+              }
+            ],
+            "can_override_deterministic": false
+          }
+        },
+        "reasons": [],
+        "persona_quality": {
+          "status": "pass",
+          "quality_profile_ref": "studio.quality.text.lifestyle@1",
+          "quality_profile_hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+          "payload_hash": "a2fe83dcd29d3367eabebd77ff437e555e730186245f7b0042400514693f9491",
+          "issues": [],
+          "human_review_required": true,
+          "critic_dimensions": [
+            "factual_grounding",
+            "naturalness",
+            "specificity",
+            "non_preachy",
+            "title_alignment"
+          ],
+          "coverage": {
+            "deterministic": "bounded_phrase_structure_citation_rules",
+            "semantic": "not_run",
+            "title_body_alignment": "bounded_numeric_detail_only",
+            "fact_speculation": "bounded_prediction_label_rule",
+            "factual_truth": "existing_text_fact_check"
+          }
+        },
+        "requirement": {
+          "kind": "text_identity",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "3",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "persona_quality": {
+            "ref": "studio.quality.text.lifestyle@1",
+            "hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9"
+          }
+        }
+      }
+    },
+    {
+      "id": 243,
+      "check_kind": "text_platform",
+      "input_hash": "c3c6aa6e10dc4e0cb9687488f451ed3bfdc1f4a4ad9fdfc29580dbb8f7d90c6b",
+      "is_current": true,
+      "stored_status": "pass",
+      "status": "pass",
+      "report": {
+        "channel": "baijia",
+        "content_form": "article",
+        "profile_version_id": 19,
+        "source": "profile",
+        "rule_sets": [],
+        "reasons": [],
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "text_platform",
+          "schema": "text.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "renderer": {
+            "key": "text.studio.document.v1",
+            "version": "2"
+          },
+          "profile": {
+            "id": 19,
+            "version": 2,
+            "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+            "checksum_origin": "stored",
+            "form": {
+              "channel": "baijia",
+              "content_form": "article",
+              "artifact_kind": "text",
+              "source": "profile",
+              "profile_version_id": 19,
+              "label": "文章",
+              "workflow_key": "workflow.article.feed",
+              "renderer_key": "renderer.generic.markdown",
+              "rule_sets": [],
+              "discoverability_profile": null,
+              "publisher_candidates": [
+                "publisher.copy"
+              ],
+              "media_requirements": {},
+              "graphic_requirements": {},
+              "video_requirements": {}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

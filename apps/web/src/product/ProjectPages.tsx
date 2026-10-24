@@ -54,7 +54,7 @@ export function ProjectsPage() {
     catch { setError("浏览器未允许保存本地演示数据，请检查存储权限。"); }
   }
 
-  return <div className="mx-auto max-w-7xl px-6 py-9">
+  return <div className="mx-auto w-full max-w-[1240px] px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12">
     <PageHead eyebrow="Content Projects" title="内容项目" description="围绕一件事组织身份、证据、图文视频、素材与交付。这里使用本地演示数据。" action={<Button onClick={() => setCreating(true)}>新建项目</Button>} />
     {error && <div className="mb-4"><ErrorBanner message={error} /></div>}
     {loading ? <Spinner label="正在读取项目…" /> : projects.length === 0 ? <EmptyState title="还没有内容项目" hint="新建项目后可添加内容单元。" action={<Button onClick={() => setCreating(true)}>新建项目</Button>} /> :
@@ -90,7 +90,7 @@ export function ProjectPage() {
   }
 
   if (loading) return <Spinner label="正在读取项目…" />;
-  if (!project) return <div className="mx-auto max-w-5xl px-6 py-9"><ErrorBanner message={error || "找不到该内容项目。"} /><Link className="mt-4 inline-block text-sm text-indigo-600" to="/projects">返回项目列表</Link></div>;
+  if (!project) return <div className="mx-auto w-full max-w-[1240px] px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12"><ErrorBanner message={error || "找不到该内容项目。"} /><Link className="mt-4 inline-block text-sm text-indigo-600" to="/projects">返回项目列表</Link></div>;
   const showStatusLegend = [project.status, ...project.contentUnits.map((unit) => unit.status)].some((status) => status === "blocked" || status === "stale" || status === "unknown");
 
   function saveUnit(input: Omit<ContentUnitView, "id" | "updatedAt">) {
@@ -108,7 +108,7 @@ export function ProjectPage() {
     setDeleting(null);
   }
 
-  return <div className="mx-auto max-w-7xl px-6 py-9">
+  return <div className="mx-auto w-full max-w-[1240px] px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12">
     <Link to="/projects" className="text-sm text-slate-500 hover:text-indigo-700">← 内容项目</Link>
     <div className="mt-4"><PageHead eyebrow="Content Project" title={project.title} description={project.objective || "请在创作任务书中补充项目目标。"} action={<div className="flex items-center gap-3"><StatusBadge status={project.status} /><Button variant="secondary" onClick={() => setAssetsOpen(true)}>项目共享素材 · {project.assets.length}</Button></div>} /></div>
     {error && <div className="mb-4"><ErrorBanner message={error} /></div>}
@@ -145,6 +145,6 @@ export function ProductionShellPage() {
   const [assetsOpen, setAssetsOpen] = useState(false);
   const project = listMockProjects().find((item) => item.id === projectId);
   const unit = project?.contentUnits.find((item) => item.id === unitId);
-  if (!project || !unit) return <div className="mx-auto max-w-5xl px-6 py-9"><ErrorBanner message="找不到这个内容单元。" /><Link className="mt-4 inline-block text-sm text-indigo-600" to="/projects">返回项目列表</Link></div>;
-  return <div className="mx-auto max-w-7xl px-6 py-9"><Link to={`/projects/${project.id}?tab=matrix`} className="text-sm text-slate-500 hover:text-indigo-700">← {project.title} / 内容矩阵</Link><div className="mt-4"><PageHead eyebrow="Production Workspace" title={unit.title} description={`${project.identities.find((identity) => identity.id === unit.identityId)?.name || unit.identityId} · ${MODALITIES[unit.modality]} · ${unit.channelId}`} action={<Button variant="secondary" onClick={() => setAssetsOpen(true)}>项目共享素材 · {project.assets.length}</Button>} /></div><div className="grid gap-5 lg:grid-cols-[1fr_270px]"><section className="rounded-2xl border border-slate-200 bg-white p-6"><div className="flex items-center justify-between"><h2 className="font-semibold">当前生产单元</h2><StatusBadge status={unit.status} /></div><p className="mt-3 text-sm text-slate-600">使用「{unit.workflowName}」。内容编辑与流程调试将在 FE-F2 接入。</p><div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">{MODALITIES[unit.modality]}生产工作区入口</div></section><aside className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-semibold">项目上下文</h2><p className="mt-3 text-sm text-slate-600">{project.brief.message || project.objective || "尚未填写核心信息"}</p><p className="mt-5 text-xs text-slate-500">{STATUS_EXPLANATION[unit.status] || "当前状态由项目模拟数据展示。"}</p><Button variant="secondary" className="mt-5 w-full" onClick={() => setAssetsOpen(true)}>查看共享素材</Button></aside></div>{assetsOpen && <ProjectAssetsDrawer project={project} onClose={() => setAssetsOpen(false)} />}</div>;
+  if (!project || !unit) return <div className="mx-auto w-full max-w-[1240px] px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12"><ErrorBanner message="找不到这个内容单元。" /><Link className="mt-4 inline-block text-sm text-indigo-600" to="/projects">返回项目列表</Link></div>;
+  return <div className="mx-auto w-full max-w-[1240px] px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12"><Link to={`/projects/${project.id}?tab=matrix`} className="text-sm text-slate-500 hover:text-indigo-700">← {project.title} / 内容矩阵</Link><div className="mt-4"><PageHead eyebrow="Production Workspace" title={unit.title} description={`${project.identities.find((identity) => identity.id === unit.identityId)?.name || unit.identityId} · ${MODALITIES[unit.modality]} · ${unit.channelId}`} action={<Button variant="secondary" onClick={() => setAssetsOpen(true)}>项目共享素材 · {project.assets.length}</Button>} /></div><div className="grid gap-5 lg:grid-cols-[1fr_270px]"><section className="rounded-2xl border border-slate-200 bg-white p-6"><div className="flex items-center justify-between"><h2 className="font-semibold">当前生产单元</h2><StatusBadge status={unit.status} /></div><p className="mt-3 text-sm text-slate-600">使用「{unit.workflowName}」。内容编辑与流程调试将在 FE-F2 接入。</p><div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">{MODALITIES[unit.modality]}生产工作区入口</div></section><aside className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-semibold">项目上下文</h2><p className="mt-3 text-sm text-slate-600">{project.brief.message || project.objective || "尚未填写核心信息"}</p><p className="mt-5 text-xs text-slate-500">{STATUS_EXPLANATION[unit.status] || "当前状态由项目模拟数据展示。"}</p><Button variant="secondary" className="mt-5 w-full" onClick={() => setAssetsOpen(true)}>查看共享素材</Button></aside></div>{assetsOpen && <ProjectAssetsDrawer project={project} onClose={() => setAssetsOpen(false)} />}</div>;
 }

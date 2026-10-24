@@ -1,0 +1,21 @@
+/Users/mshengran/.codex/worktrees/guided-product-workspace/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-17 13:55:37,969 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "2892aa5b57a4", "method": "POST", "path": "/api/v1/content-personas", "status": 201, "duration_ms": 139.1}
+2026-10-17 13:55:37,969 INFO httpx HTTP Request: POST http://testserver/api/v1/content-personas "HTTP/1.1 201 Created"
+2026-10-17 13:55:37,975 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "f02600b4dd1a", "method": "POST", "path": "/api/v1/content-projects", "status": 201, "duration_ms": 4.7}
+2026-10-17 13:55:37,975 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects "HTTP/1.1 201 Created"
+2026-10-17 13:55:37,980 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "b4d3ab6eb8b5", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units", "status": 201, "duration_ms": 5.1}
+2026-10-17 13:55:37,981 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units "HTTP/1.1 201 Created"
+2026-10-17 13:55:37,984 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "3ef48f84a60f", "method": "POST", "path": "/api/v1/content-projects/{project_id}/brief/revisions", "status": 201, "duration_ms": 3.3}
+2026-10-17 13:55:37,985 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/brief/revisions "HTTP/1.1 201 Created"
+2026-10-17 13:55:38,123 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "68df89641c76", "method": "POST", "path": "/api/v1/content-projects/{project_id}/fact-boundary", "status": 201, "duration_ms": 137.0}
+2026-10-17 13:55:38,123 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/fact-boundary "HTTP/1.1 201 Created"
+2026-10-17 13:55:38,133 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "fb5762d4e5f6", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/master-revisions", "status": 200, "duration_ms": 8.7}
+2026-10-17 13:55:38,133 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/master-revisions "HTTP/1.1 200 OK"
+2026-10-17 13:55:38,186 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "562ca34da3fd", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/creative-executions/{execution_id}/outputs/{output_id}/decision", "status": 200, "duration_ms": 7.6}
+2026-10-17 13:55:38,186 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/creative-executions/1/outputs/1/decision "HTTP/1.1 200 OK"
+2026-10-17 13:55:38,192 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "c6567171cff6", "method": "POST", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/creative-executions/{execution_id}/outputs/{output_id}/decision", "status": 200, "duration_ms": 5.0}
+2026-10-17 13:55:38,192 INFO httpx HTTP Request: POST http://testserver/api/v1/content-projects/1/units/1/creative-executions/1/outputs/2/decision "HTTP/1.1 200 OK"
+ALL_CANDIDATES_REJECTED PASS blocked
+TARGETED_REPLACEMENT_RETAINS_OLD_REJECTIONS PASS
+NO_AUTOMATIC_SELECTION_ADOPTION_OR_ASSET_CREATION PASS

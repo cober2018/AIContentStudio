@@ -8,6 +8,7 @@ from ..models import (
     KnowledgeCollection,
     KnowledgeCollectionItem,
     Material,
+    MaterialCollectionItem,
     MaterialRevision,
     SourceDocument,
 )
@@ -87,6 +88,10 @@ EXTRA_COLUMNS = (
         "source_count",
         "snapshot_public_allowed_count",
         "snapshot_model_allowed_count",
+        "drive_source_id",
+        "width",
+        "height",
+        "duration_ms",
     )
     + tuple(f"{p}_{s}_count" for p in ("public", "model") for s in ("allowed", "denied", "unknown", "revoked"))
     + tuple(f"evidence_{k}" for k in ("fact", "event", "third_party_quote", "author_opinion", "legacy_untyped"))
@@ -97,7 +102,7 @@ def projection(kind, model, title, status, subtype, **extras):
     def empty(key):
         datatype = (
             Integer
-            if key.endswith("_count") or key.startswith("evidence_") or key in {"revision_id", "revision_no"}
+            if key.endswith("_count") or key.startswith("evidence_") or key in {"revision_id", "revision_no", "width", "height", "duration_ms", "drive_source_id"}
             else Boolean
             if key == "attribution_present" or key.endswith("_use_allowed")
             else Float
@@ -151,6 +156,11 @@ def library_query(filters):
         commercial_use=permission(revision.commercial_use_allowed, revoked),
         attribution_present=func.length(func.trim(func.coalesce(revision.attribution_text, ""))) > 0,
         created_by=material.created_by,
+        # Linked drive files record their folder here; storage paths stay out of library queries.
+        drive_source_id=revision.source_metadata_json["material_source_id"].as_integer(),
+        width=revision.width,
+        height=revision.height,
+        duration_ms=revision.duration_ms,
     ).outerjoin(revision, (revision.material_id == material.id) & (revision.revision_no == latest))
     source = SourceDocument
     source_query = projection(
@@ -214,6 +224,9 @@ def library_query(filters):
         raise HTTPException(422, "rights requires material or fact_pack type")
     if filters.get("material_kind") and requested_type != "material":
         raise HTTPException(422, "material_kind requires material type")
+    material_only = ("material_source_kind", "model_use", "material_source_id", "material_collection_id")
+    if any(filters.get(key) for key in material_only) and requested_type != "material":
+        raise HTTPException(422, "material filters require material type")
     if filters.get("source_type") and requested_type != "source":
         raise HTTPException(422, "source_type requires source type")
     status = filters.get("status")
@@ -235,6 +248,21 @@ def library_query(filters):
             statement = statement.where(rows.c.subtype == filters[key])
     if filters.get("rights"):
         statement = statement.where(rows.c.public_use == filters["rights"])
+    if filters.get("model_use"):
+        statement = statement.where(rows.c.model_use == filters["model_use"])
+    if filters.get("material_source_kind") == "drive":
+        statement = statement.where(rows.c.drive_source_id.is_not(None))
+    elif filters.get("material_source_kind"):
+        statement = statement.where(rows.c.source_kind == filters["material_source_kind"], rows.c.drive_source_id.is_(None))
+    if filters.get("material_source_id"):
+        statement = statement.where(rows.c.drive_source_id == filters["material_source_id"])
+    if filters.get("material_ids") is not None:
+        statement = statement.where(rows.c.type == "material", rows.c.id.in_(filters["material_ids"]))
+    if filters.get("exclude_material_ids"):
+        statement = statement.where(~((rows.c.type == "material") & rows.c.id.in_(filters["exclude_material_ids"])))
+    if filters.get("material_collection_id"):
+        statement = statement.where(rows.c.id.in_(select(MaterialCollectionItem.material_id).where(
+            MaterialCollectionItem.collection_id == filters["material_collection_id"])))
     if filters.get("collection_id"):
         membership = KnowledgeCollectionItem
         statement = statement.where(
@@ -288,6 +316,7 @@ def serialize(row):
             k: row[k] for k in ("source_kind", "source_url", "provider_key", "provider_version", "created_by")
         }
         value["kind"] = row["subtype"]
+        value["drive"] = {"source_id": row["drive_source_id"]} if row["drive_source_id"] else None
         if value["latest_revision"] is not None:
             value["latest_revision"].update(
                 {
@@ -303,6 +332,9 @@ def serialize(row):
                         "provider_key",
                         "provider_version",
                         "attribution_present",
+                        "width",
+                        "height",
+                        "duration_ms",
                     )
                 }
             )
@@ -339,10 +371,26 @@ def serialize(row):
 def list_library(db, filters, limit, offset):
     statement, rows = library_query(filters)
     total = db.scalar(select(func.count()).select_from(statement.subquery()))
-    result = db.execute(
-        statement.order_by(rows.c.created_at, rows.c.type, rows.c.id).limit(limit).offset(offset)
-    ).mappings()
-    return {"items": [serialize(row) for row in result], "total": total, "limit": limit, "offset": offset}
+    order = ((rows.c.created_at.desc(), rows.c.type, rows.c.id.desc()) if filters.get("order") == "newest"
+             else (rows.c.created_at, rows.c.type, rows.c.id))
+    items = [serialize(row) for row in db.execute(statement.order_by(*order).limit(limit).offset(offset)).mappings()]
+    _drive_status(db, items)
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
+
+
+def _drive_status(db, items):
+    from ..models import MaterialSource
+    from .material_external import source_status
+
+    # One volume check per folder per page keeps listing fast while an unplugged drive stays visible.
+    states = {}
+    for item in items:
+        drive = item.get("drive")
+        if drive:
+            if drive["source_id"] not in states:
+                source = db.get(MaterialSource, drive["source_id"])
+                states[drive["source_id"]] = (source_status(source), source.label) if source else ("unavailable", None)
+            drive["status"], drive["label"] = states[drive["source_id"]]
 
 
 def summary(db):
@@ -358,7 +406,9 @@ def resource_detail(db, kind, resource_id):
     row = db.execute(statement.where(rows.c.id == resource_id)).mappings().first()
     if row is None:
         raise HTTPException(404, "Resource not found")
-    return serialize(row)
+    item = serialize(row)
+    _drive_status(db, [item])
+    return item
 
 
 def material_revisions(db, material_id, limit, offset, *, revision_id=None):

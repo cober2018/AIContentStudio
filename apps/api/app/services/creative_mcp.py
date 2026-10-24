@@ -19,7 +19,15 @@ from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session
 
 from ..models import User
-from . import capability_memory, channel_variants, content_masters, creative_executions, creative_packages
+from . import (
+    agent_review,
+    capability_memory,
+    channel_variants,
+    content_masters,
+    creative_executions,
+    creative_packages,
+    project_folders,
+)
 from .creative_contracts import bounded_json
 from .project_brief import current_brief
 from .project_evidence import current_boundary
@@ -175,6 +183,111 @@ class ReconcileInput(MutationInput):
     recovery: dict | None = Field(default=None, max_length=20)
 
 
+class StagesInput(Scope):
+    run_id: ID | None = None
+
+
+class StageInput(Scope):
+    run_id: ID
+    node_id: str = Field(min_length=1, max_length=100, pattern=IDENTIFIER)
+
+
+class StagePreviewInput(StageInput):
+    instruction: str | None = Field(default=None, min_length=1, max_length=4000)
+
+
+class StageRunInput(StagePreviewInput):
+    expected_resolution_hash: str = Field(pattern=HASH)
+    invocation_key: str = Field(min_length=1, max_length=200, pattern=IDENTIFIER)
+
+
+class StageResultInput(StageInput):
+    attempt_id: ID | None = None
+    invocation_key: str | None = Field(default=None, min_length=1, max_length=200, pattern=IDENTIFIER)
+
+
+class StageDecisionInput(StageResultInput):
+    wait_seconds: int = Field(default=0, ge=0, le=agent_review.MAX_WAIT_SECONDS)
+
+
+class MatchShotInput(Input):
+    id: str = Field(min_length=1, max_length=100)
+    label: str | None = Field(default=None, max_length=120)
+    text: str = Field(min_length=1, max_length=4000)
+
+
+class MatchStartInput(Input):
+    scope: Literal["script", "shots"]
+    text: str | None = Field(default=None, min_length=1, max_length=20000)
+    shots: list[MatchShotInput] | None = Field(default=None, min_length=1, max_length=40)
+    title: str | None = Field(default=None, max_length=300)
+    project_id: ID | None = None
+    unit_id: ID | None = None
+    aspect: Literal["9:16", "16:9", "3:4", "1:1", "4:3"] = "9:16"
+    min_short_side: Literal[540, 720, 1080] = 720
+    strict_aspect: bool = False
+    providers: list[str] | None = Field(default=None, max_length=10)
+
+
+class ShotSlotsInput(Scope):
+    pass
+
+
+class CraftSkillInput(Input):
+    skill: Literal["ae-motion", "resolve-edit"]
+    entry: str | None = Field(default=None, min_length=1, max_length=200)
+
+
+class TemplateListInput(Input):
+    pass
+
+
+class TemplateRenderInput(Scope):
+    template: str = Field(min_length=1, max_length=60)
+    version: str = Field(min_length=1, max_length=20)
+    content: dict[str, str | int | float]
+    images: dict[str, ID] | None = None
+    duration_ms: int | None = Field(default=None, ge=1, le=600000)
+
+
+class MatchReadInput(Input):
+    run_id: ID
+    wait_seconds: int = Field(default=0, ge=0, le=agent_review.MAX_WAIT_SECONDS)
+
+
+class VideoDraftInput(Scope):
+    payload: dict
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class VideoMaterialsInput(Scope):
+    picks: dict[Annotated[str, Field(min_length=1, max_length=100)], ID] = Field(default_factory=dict, max_length=100)
+    music: ID | None = None
+    silent_durations: dict[Annotated[str, Field(min_length=1, max_length=100)], Annotated[int, Field(ge=1000, le=15000)]] = Field(default_factory=dict, max_length=10)
+
+
+class VideoImageInput(Scope):
+    prompt: str = Field(min_length=1, max_length=2000)
+    label: str = Field(min_length=1, max_length=120)
+
+
+class VideoCandidateInput(Scope):
+    run_id: ID
+    segment_id: str = Field(min_length=1, max_length=100)
+    candidate_id: str = Field(min_length=1, max_length=200)
+
+
+class VideoCommonInput(Scope):
+    material_revision_id: ID
+
+
+class VideoEditInput(Scope):
+    phase: Literal["rough_cut", "final"]
+    ae_shot_ids: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=15)
+    alpha_shot_ids: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=15)
+    notes: str | None = Field(default=None, max_length=2000)
+
+
 TOOLS = {
     "get_context": (ContextInput, "Read current owned unit context and content metadata.", True),
     "get_package": (PackageInput, "Read an exact frozen package, including its authorized input manifest.", True),
@@ -191,6 +304,28 @@ TOOLS = {
     "mark_unknown": (ReportInput, "Record dispatch uncertainty without resending or starting another execution.", False),
     "reconcile_unknown": (ReconcileInput, "Reconcile Unknown using an observation hash/summary and explicit certainty.", False),
     "request_human_review": (MutationInput, "Record a human-review request for result_ready; cannot accept outputs.", False),
+    "get_stages": (StagesInput, "Read the unit's production stages, their status and the current run, with the platform review URL.", True),
+    "start_run": (Scope, "Start a new production run for the unit (e.g. after an Unknown attempt); never accepts anything.", False),
+    "preview_stage": (StagePreviewInput, "Check whether a stage is ready and get its exact resolution hash; instruction is the only tunable field.", True),
+    "run_stage": (StageRunInput, "Run one stage once with the previewed resolution hash; options then wait for the user on the platform.", False),
+    "get_stage_result": (StageResultInput, "Read a stage attempt's options as excerpts, its quality and the review URL to send the user to.", True),
+    "get_stage_decision": (StageDecisionInput, "Read the user's decision on an attempt (waiting_for_you/accepted/accepted_with_edits/rejected/rerun_requested/commented) with note; wait_seconds waits up to 25s.", True),
+    "start_material_match": (MatchStartInput, "Search own and open libraries for a script or shots; the user picks or rejects on the platform.", False),
+    "get_material_match": (MatchReadInput, "Read a material search with the user's picks and rejections per segment; wait_seconds returns early on any change.", True),
+    "get_craft_skill": (CraftSkillInput, "Read a craft skill's index (ae-motion: After Effects templates and components; resolve-edit: DaVinci Resolve edit and finishing), or one entry it lists. Read the index first, then only the entry you need.", True),
+    "list_ae_templates": (TemplateListInput, "List AE template manifests: use, fields, images, duration range, fonts and status (ready after two checked renders, else draft; do not auto-use drafts).", True),
+    "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project. Never binds it to a shot.", False),
+    "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
+    "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model.", True),
+    "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
+    "get_video_decision": (Scope, "Read the chain state and the user's latest decisions and notes (导演稿 / 小样 / 成片). Continue only after approval; notes mean a new version.", True),
+    "set_shot_materials": (VideoMaterialsInput, "After the 导演稿 is approved: put material revisions on shots {shot_id: material_revision_id}, optionally the music bed (music: an audio material_revision_id) and the length of shots without a line (silent_durations, ms; e.g. a closing that must stay long enough to read its text). Picture content stays as approved.", False),
+    "accept_material_candidate": (VideoCandidateInput, "Import one stock candidate from a start_material_match run into the library and this project; returns its material_revision_id.", False),
+    "generate_video_image": (VideoImageInput, "Generate one still with the platform image tool into this project's folder; returns its material_revision_id.", False),
+    "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines.", False),
+    "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
+    "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects.", False),
+    "get_shot_slots": (ShotSlotsInput, "Read every shot of a video as a material slot: narration, visual, brief (search words; gen_mode text|frame chosen on the platform; t2v_prompt for direct text-to-video; frame_prompt for the first-frame still and prompt for image-to-video from it; route), status missing/candidates/chosen, the user's picks and the review link. Add candidates with start_material_match; only the user binds a shot.", True),
 }
 _ACTIONS = {"claim_execution": "claim", "start_execution": "start", "report_progress": "progress",
             "report_blocker": "block", "report_checkpoint": "progress", "mark_unknown": "unknown",
@@ -301,6 +436,21 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
                 args.model_dump(exclude_none=True, exclude={"project_id", "unit_id", "execution_id", "artifact_id", "artifact_revision_id", "arguments"}), user)
         return capability_memory.use_artifact(db, user, args.artifact_id,
             args.model_dump(exclude_none=True, exclude={"artifact_id"}))
+    if name in {"get_craft_skill", "list_ae_templates", "render_ae_template"}:
+        from . import craft_skills
+
+        if name == "get_craft_skill":
+            if args.entry is None:
+                return {"skill": args.skill, "index": craft_skills.skill_index(args.skill)}
+            return {"skill": args.skill, "entry": args.entry, "text": craft_skills.skill_entry(args.skill, args.entry)}
+        if name == "list_ae_templates":
+            return craft_skills.list_templates()
+        return craft_skills.render(db, user, project_id=args.project_id, unit_id=args.unit_id, template_id=args.template,
+                                   version=args.version, content=args.content, images=args.images, duration_ms=args.duration_ms)
+    if name in _REVIEW_TOOLS:
+        return _review(db, name, args, user)
+    if name in _VIDEO_TOOLS:
+        return _video(db, name, args, user)
     payload = args.model_dump(exclude_none=True, exclude={"project_id", "unit_id", "execution_id"})
     if name in _ACTIONS:
         payload["action"] = _ACTIONS[name]
@@ -309,12 +459,93 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
             if current["state"] != "result_ready":
                 raise MCPError("creative_mcp_result_not_ready", "conflict", status=409)
             payload["metadata"] = {"summary": "Human review requested"}
-        return creative_executions.transition_execution(db, args.project_id, args.unit_id, args.execution_id, payload, user)
+        result = creative_executions.transition_execution(db, args.project_id, args.unit_id, args.execution_id, payload, user)
+        project_folders.after_execution(db, args.execution_id)
+        return result
     if name == "materialize_inputs":
         return creative_executions.materialize_inputs(db, args.project_id, args.unit_id, args.execution_id, payload, user)
     if name == "submit_output":
         return creative_executions.submit_output(db, args.project_id, args.unit_id, args.execution_id, payload, user)
     raise MCPError("creative_mcp_unknown_tool", "invalid_arguments", rpc_code=-32602)
+
+
+_REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_stage_result", "get_stage_decision",
+                 "start_material_match", "get_material_match", "get_shot_slots", "start_material_autofill"}
+
+
+_VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
+                "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common"}
+
+
+def _video(db: Session, name: str, args: Input, user: User) -> dict:
+    from . import video_chain as chain
+
+    p, u = args.project_id, args.unit_id
+    if name == "get_video_brief":
+        return chain.brief(db, user, p, u)
+    if name == "save_director_draft":
+        return chain.save_draft(db, user, p, u, args.payload, args.note)
+    if name == "get_video_decision":
+        return chain.decisions(db, user, p, u)
+    if name == "set_shot_materials":
+        return chain.set_materials(db, user, p, u, args.picks, args.music, args.silent_durations)
+    if name == "accept_material_candidate":
+        return chain.accept_candidate(db, user, p, args.run_id, args.segment_id, args.candidate_id)
+    if name == "generate_video_image":
+        return chain.generate_image(db, user, p, args.prompt, args.label)
+    if name == "generate_video_voiceover":
+        return chain.voiceover(db, user, p, u)
+    if name == "file_as_common":
+        return chain.file_as_common(db, user, p, u, args.material_revision_id)
+    return chain.prepare_edit(db, user, p, u, args.phase, args.ae_shot_ids, args.alpha_shot_ids, args.notes)
+
+
+def _review(db: Session, name: str, args: Input, user: User) -> dict:
+    from .stage_contracts import StageContractError
+    from .stage_invocations import StageInvocationError
+
+    try:
+        return _review_call(db, name, args, user)
+    except StageInvocationError as exc:
+        raise HTTPException(exc.status_code, exc.body) from None
+    except StageContractError as exc:
+        raise HTTPException(422, {"code": str(exc)}) from None
+
+
+def _review_call(db: Session, name: str, args: Input, user: User) -> dict:
+    if name == "get_stages":
+        return agent_review.stages(db, user, args.project_id, args.unit_id, args.run_id)
+    if name == "start_run":
+        return agent_review.start_run(db, user, args.project_id, args.unit_id)
+    if name in {"preview_stage", "run_stage"}:
+        override = {"instruction": args.instruction} if args.instruction else {}
+        if name == "preview_stage":
+            return agent_review.preview(db, user, args.project_id, args.unit_id, args.run_id, args.node_id, override)
+        return agent_review.run(db, user, args.project_id, args.unit_id, args.run_id, args.node_id,
+                                expected_resolution_hash=args.expected_resolution_hash, invocation_key=args.invocation_key, override=override)
+    if name in {"get_stage_result", "get_stage_decision"}:
+        if (args.attempt_id is None) == (args.invocation_key is None):
+            raise MCPError("stage_result_selector_required", "invalid_arguments", status=422, rpc_code=-32602)
+        if name == "get_stage_result":
+            return agent_review.result_view(db, user, args.project_id, args.unit_id, args.node_id, args.run_id,
+                                            attempt_id=args.attempt_id, invocation_key=args.invocation_key)
+        return agent_review.decision(db, user, args.project_id, args.unit_id, args.node_id, args.run_id,
+                                     attempt_id=args.attempt_id, invocation_key=args.invocation_key, wait_seconds=args.wait_seconds)
+    if name == "start_material_autofill":
+        from . import material_autofill
+
+        return material_autofill.start(db, user, args.project_id, args.unit_id)
+    if name == "get_shot_slots":
+        from . import shot_slots
+
+        return shot_slots.view(db, user, args.project_id, args.unit_id)
+    if name == "start_material_match":
+        payload = args.model_dump()
+        payload["shots"] = [shot.model_dump() for shot in args.shots] if args.shots else None
+        if (payload["scope"] == "script") != (payload["text"] is not None) or (payload["scope"] == "shots") != (payload["shots"] is not None):
+            raise MCPError("material_match_source_invalid", "invalid_arguments", status=422, rpc_code=-32602)
+        return agent_review.start_match(db, user, payload)
+    return agent_review.read_match(db, user, args.run_id, args.wait_seconds)
 
 
 def error_data(code: str, category: str, trace_id: str, **extra) -> dict:
@@ -324,8 +555,14 @@ def error_data(code: str, category: str, trace_id: str, **extra) -> dict:
 def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
-    return error_data(code if code in _SAFE_CODES else f"creative_domain_{category}", category, trace_id,
+    # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|video|voiceover|edit_handoff)_[a-z0-9_]{1,80}", code))
+    data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
+    # Video chain messages are written for the model so it can correct its own 导演稿.
+    if known and code.startswith("video_chain_") and isinstance(exc.detail.get("message"), str):
+        data["message"] = exc.detail["message"][:1000]
+    return data
 
 
 def tool_result(data: dict, *, failed: bool = False) -> dict:

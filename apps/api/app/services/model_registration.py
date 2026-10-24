@@ -26,7 +26,7 @@ from .url_fetch import (
     resolve_addresses,
 )
 
-PURPOSES = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit", "form_autofill", "field_polish")
+PURPOSES = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit", "form_autofill", "field_polish", "material_match")
 PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS = OUTBOUND_HTTP_POLICIES["model_generation"].timeout_seconds
 
 
@@ -152,7 +152,7 @@ def provider_request(provider, path, *, payload=None, timeout=10, image_input=Fa
                 reason = ("provider_authentication_rejected" if response.status_code in {401, 403}
                           else "provider_image_protocol_rejected" if response.status_code == 400 and (native_image or path == "/images/generations")
                           else "provider_request_rejected")
-                raise HTTPException(502, reason)
+                raise HTTPException(502, reason, headers={"X-Provider-Status": str(response.status_code)})
             if response.headers.get("content-encoding", "identity").strip().lower() != "identity":
                 raise HTTPException(502, "provider_response_encoding_invalid")
             data = bytearray()

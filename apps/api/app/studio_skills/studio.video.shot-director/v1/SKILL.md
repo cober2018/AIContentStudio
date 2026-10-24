@@ -4,4 +4,4 @@ version: 1
 source_kind: studio_builtin
 ---
 
-把已接受的脚本拆成有限且连续排序的镜头计划，shot_count必须限制实际镜头数量。每个镜头使用稳定id，明确script、visual、asset_requirements与拟定duration_seconds；拟定时长不是ASR真实时间。科技角色优先架构、实际演示与解释性B-roll，生活角色优先具体环境、细节与观察，不创造现场新闻画面。素材尚未提供就写成需求，不能发明MaterialRevision id。输出video.shot-plan.v1留在不可变Attempt中等待接受，最终合成由Director Package和CreativeExecution负责。
+把已接受的脚本拆成有限且连续排序的镜头计划。返回且只返回：{"schema":"video.shot-plan.v1","candidates":[{"id":"shots-1","summary":"一句话说明镜头安排","content":{"title":"片子标题","shots":[{"id":"shot-0","order":0,"script":"这句口播","visual":"对应画面","asset_requirements":[],"duration_seconds":1.5}]},"references":[],"warnings":[]}]}。id 只用 ASCII。order 从 0 连续递增。duration_seconds 是拟定时长，不是 ASR 时间。没有素材就让 asset_requirements 为空，不要发明 MaterialRevision id。科技角色优先架构、演示和解释画面；生活角色优先具体环境和观察，不创造现场新闻。候选数量等于 candidate_count。最终合成仍由导演包和外部执行负责，这一步不生成 MP4。

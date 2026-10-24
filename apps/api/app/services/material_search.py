@@ -57,7 +57,9 @@ def commons_fetch(url: str, max_bytes: int) -> tuple[bytes, str]:
         current = url
         for _ in range(4):
             with outbound_scope(deadline):
-                transport = pinned_transport(current)
+                from .open_media import _proxy_fake_ip
+
+                transport = pinned_transport(current, **({"allow_private": True} if _proxy_fake_ip(urlsplit(current).hostname) else {}))
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 if transport is not None:

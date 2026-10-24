@@ -525,18 +525,39 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
         parameters = request.get("parameters")
         seconds = parameters.get("seconds") if isinstance(parameters, dict) else None
         timeout = request.get("timeout_seconds", 25)
-        # V1 does not expose this duration contract; do not silently discard it.
-        if (prompt is None or request.get("model_id") != "MiniMax-H3"
+        model = request.get("model_id")
+        # Hailuo's installed CLI cannot set duration. Omitting it yields the
+        # provider default of 6 seconds, so any other request would be discarded.
+        duration_ok = (model == "MiniMax-H3" and type(seconds) is int and 4 <= seconds <= 15
+                       or model == "MiniMax-Hailuo-2.3" and seconds == 6)
+        if (prompt is None or not duration_ok
                 or len(prompt.encode("utf-16-le")) // 2 > 7000
-                or type(seconds) is not int or not 4 <= seconds <= 15
                 or type(timeout) not in {int, float} or not 0 < timeout <= 25
                 or request.get("source_bytes") or request.get("source_revision_ids")):
             return MediaOutput("unavailable")
-        value = _command_json(["video", "generate", "--model", "MiniMax-H3", "--prompt", prompt,
-            "--duration", str(seconds), "--async", "--output", "json", "--non-interactive", "--no-color"],
-            timeout)
-        job = _job_id(value.get("taskId")) if value else None
-        return MediaOutput("running", metadata={"job_id": job}) if job else MediaOutput("unknown")
+        # The installed CLI only returns immediately for --no-wait. Its --async
+        # flag submits, then polls until the process is killed.
+        args = ["video", "generate", "--model", model, "--prompt", prompt, "--no-wait",
+                "--output", "json", "--non-interactive", "--no-color"]
+        if model == "MiniMax-H3":
+            args[5:5] = ["--duration", str(seconds)]
+        result = _run(args, timeout=timeout)
+        if result is None:
+            return MediaOutput("unknown")
+        try:
+            value = json.loads(result.stdout) if result.stdout else None
+        except (TypeError, ValueError):
+            value = None
+        raw_id = value.get("taskId") if isinstance(value, dict) else None
+        if raw_id is None and isinstance(value, dict):
+            raw_id = value.get("task_id")
+        job = _job_id(raw_id)
+        if job:
+            return MediaOutput("running", metadata={"job_id": job})
+        # A finished rejection has no task receipt. Timeouts stay unknown above.
+        if result.returncode != 0:
+            return MediaOutput("failed")
+        return MediaOutput("unknown")
 
     def query_task(self, request: dict) -> MediaOutput:
         job = _job_id(request.get("job_id"))
@@ -582,8 +603,18 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
             file_id = _job_id(value.get("file_id"))
             if not file_id:
                 return MediaOutput("unknown")
-            return MediaOutput("running", metadata={**metadata, "file_id": file_id,
-                "reason": "generation_download_unavailable"})
+            metadata = {**metadata, "file_id": file_id}
+            remaining = int(deadline - time.monotonic())
+            if remaining <= 0:
+                return MediaOutput("running", metadata={**metadata, "reason": "generation_download_unavailable"})
+            with tempfile.TemporaryDirectory(prefix="aics-mmx-") as directory:
+                output = Path(directory) / "video.mp4"
+                command = _run(["video", "download", "--file-id", file_id, "--out", str(output),
+                    "--quiet", "--non-interactive", "--no-color"], timeout=remaining)
+                downloaded = _read_output(output, mime="video/mp4", command=command)
+            if downloaded.status != "succeeded":
+                return MediaOutput("running", metadata={**metadata, "reason": "generation_download_unavailable"})
+            return MediaOutput("succeeded", downloaded.content, "video/mp4", metadata)
         # Unproven terminal spellings remain unknown rather than authorizing retry.
         return MediaOutput("unknown")
 
@@ -608,7 +639,8 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
 class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
     key = CLI_KEY
     version = CLI_VERSION
-    consumed_parameters = frozenset({"voice_id", "rate"})
+    consumed_parameters = frozenset({"voice_id", "rate", "volume", "pitch", "emotion", "format", "sample_rate", "bitrate",
+                                     "channels", "text_normalization", "latex_read", "subtitles"})
 
     def list_voices(self, *, model_id: str | None = None, language: str | None = None) -> list[dict]:
         """Read the CLI voice inventory only for an explicit catalog refresh."""
@@ -686,18 +718,32 @@ class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
             return MediaOutput("unavailable")
         if applied is not None and not self.supports_tts_parameters(model, probe=True):
             return MediaOutput("unavailable")
+        fmt = (applied or {}).get("format", "wav")
         with tempfile.TemporaryDirectory(prefix="aics-mmx-") as directory:
-            output = Path(directory) / "speech.wav"
-            args = ["speech", "synthesize", "--text", text, "--format", "wav", "--out", str(output), "--quiet", "--non-interactive", "--no-color"]
+            output = Path(directory) / f"speech.{fmt}"
+            args = ["speech", "synthesize", "--text", text, "--format", fmt, "--out", str(output), "--quiet", "--non-interactive", "--no-color"]
             args[2:2] = ["--model", model]
             if applied is not None:
-                args[4:4] = ["--voice", applied["voice_id"], "--speed", str(applied["rate"])]
+                flags = ["--voice", applied["voice_id"], "--speed", str(applied["rate"])]
+                for key, flag in (("volume", "--volume"), ("pitch", "--pitch"), ("emotion", "--emotion"),
+                                  ("sample_rate", "--sample-rate"), ("bitrate", "--bitrate"), ("channels", "--channels")):
+                    if key in applied:
+                        flags += [flag, str(applied[key])]
+                for key, flag in (("text_normalization", "--text-normalization"), ("latex_read", "--latex-read"), ("subtitles", "--subtitles")):
+                    if applied.get(key):
+                        flags.append(flag)
+                args[4:4] = flags
             command = _run(args, timeout=request.get("timeout_seconds", 25))
-            result = _read_output(output, mime="audio/wav", command=command)
+            result = _read_output(output, mime={"mp3": "audio/mpeg", "flac": "audio/flac"}.get(fmt, "audio/wav"), command=command)
             if applied is not None and result.status == "succeeded":
+                extra = {}
+                sidecar = output.with_suffix(".srt")
+                if applied.get("subtitles") and sidecar.is_file() and sidecar.stat().st_size <= 512 * 1024:
+                    # Line timings come from the supplier, so the edit and captions follow the real voice.
+                    extra["subtitles_srt"] = sidecar.read_text(encoding="utf-8", errors="replace")
                 # This records the exact flags consumed by this successful dispatcher, not a voice default.
                 return MediaOutput(result.status, result.content, result.mime_type,
-                                   {**result.metadata, "tts_applied_parameters": {"schema": TTS_APPLIED_SCHEMA, **applied}})
+                                   {**result.metadata, **extra, "tts_applied_parameters": {"schema": TTS_APPLIED_SCHEMA, **applied}})
             return result
 
 

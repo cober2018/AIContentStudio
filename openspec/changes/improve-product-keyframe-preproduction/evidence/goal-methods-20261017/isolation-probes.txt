@@ -1,0 +1,29 @@
+PASS combo-off: 普通辅助 configured_methods 为空
+PASS combo-off: 空目标/受众/cta获建议
+PASS combo-both: 两项方法进入实际请求
+PASS combo-both: 冻结 package_hash 非空
+PASS combo-both: applicable_fields 正确
+PASS combo-audience: 仅 audience-need 进入请求
+PASS combo-reason: 仅 purchase-reason 进入请求
+PASS stage-disabled: 阶段关闭无方法指令
+PASS 非空objective被保护
+PASS 跳过项不参与补齐
+PASS 空白core_message之外的字段按保护规则
+PASS persona作品objective仍保护
+PASS persona作品方法不进请求（前端不传stages时）
+PASS persona普通路径无方法指令
+PASS polish选区进入请求
+PASS polish单目标
+PASS 选区漂移409
+PASS product-methods: 两张卡
+PASS product-methods: 未配置 selected=False
+PASS product-methods: effective_stages 可合并
+PASS product-methods: 已配置 selected=True/enabled=True
+PASS product-methods: script_stage 配置态
+PASS 跨用户读取拒绝
+PASS persona作品404
+PASS 漂移阻止采用409
+PASS 正常采用写回决策
+PASS 历史会话可读取
+
+== 探针结果：27 passed, 0 failed ==

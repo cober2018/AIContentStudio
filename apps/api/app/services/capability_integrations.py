@@ -42,14 +42,9 @@ _BOUNDED_WECHAT_DRAFT_REASON = "account_bound_draft_confirmed"
 
 
 def is_bounded_official_draft_scope(scope: dict) -> bool:
-    return (
-        isinstance(scope, dict)
-        and scope.get("publisher_key") == "publisher.wechat.official"
-        and scope.get("publisher_version") == "1"
-        and scope.get("channel") == "wechat"
-        and scope.get("content_form") == "article"
-        and scope.get("action") == "auto_draft"
-    )
+    from .content_harness.channel_methods import matches_official_scope
+
+    return matches_official_scope(scope)
 
 
 def _contains_sensitive_key(value: object) -> bool:

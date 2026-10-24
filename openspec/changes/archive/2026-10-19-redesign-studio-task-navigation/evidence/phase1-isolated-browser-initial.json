@@ -1,0 +1,607 @@
+{
+  "checks": [
+    {
+      "name": "Home role handoff",
+      "pass": true
+    },
+    {
+      "name": "tech cross-day query",
+      "pass": true
+    },
+    {
+      "name": "sources unchecked",
+      "pass": true
+    },
+    {
+      "name": "raw body readable",
+      "pass": true
+    },
+    {
+      "name": "unsafe URL absent",
+      "pass": true
+    },
+    {
+      "name": "draft survives reload",
+      "pass": true
+    },
+    {
+      "name": "stale blocks conversion",
+      "pass": true
+    },
+    {
+      "name": "creation reaches project",
+      "pass": true
+    },
+    {
+      "name": "only explicit qualify and convert",
+      "pass": true
+    },
+    {
+      "name": "selected body and revision respected",
+      "pass": true
+    },
+    {
+      "name": "unassessed reader can read",
+      "pass": true
+    },
+    {
+      "name": "unassessed reader cannot create",
+      "pass": true
+    },
+    {
+      "name": "reader no write forms",
+      "pass": true
+    },
+    {
+      "name": "409 no auto retry",
+      "pass": true
+    },
+    {
+      "name": "409 draft retained",
+      "pass": true
+    },
+    {
+      "name": "existing project shown",
+      "pass": true
+    },
+    {
+      "name": "duplicate conversion disabled",
+      "pass": true
+    },
+    {
+      "name": "partial visible",
+      "pass": true
+    },
+    {
+      "name": "missing count unknown",
+      "pass": true
+    },
+    {
+      "name": "null today run not zero",
+      "pass": true
+    },
+    {
+      "name": "no false manual required",
+      "pass": true
+    },
+    {
+      "name": "unknown first",
+      "pass": true
+    },
+    {
+      "name": "system correction not new model",
+      "pass": true
+    },
+    {
+      "name": "source error preserved",
+      "pass": true
+    }
+  ],
+  "errors": [
+    "navigation: locator.click: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: '下一页', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rounded-md font-medium transition-colors disabled:cursor-not-allowed bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 disabled:text-slate-400 px-3.5 py-1.5 text-sm \">下一页</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    9 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n"
+  ],
+  "unexpectedRequests": [],
+  "apiCalls": [
+    {
+      "scenario": "navigation",
+      "path": "/home",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/discovery/status",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities",
+      "method": "GET",
+      "query": {
+        "recommended_only": "true",
+        "actionable_only": "true",
+        "priority": "",
+        "offset": "0",
+        "limit": "30",
+        "persona_id": "2"
+      },
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "PATCH",
+      "query": {},
+      "body": {
+        "status": "qualified"
+      }
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/convert-to-project",
+      "method": "POST",
+      "query": {},
+      "body": {
+        "expected_assessment_revision": 2,
+        "idempotency_key": "51337563-c4e2-4d68-9721-e78564a61301",
+        "title": "我的修改标题",
+        "objective": "只解释一个具体问题。",
+        "selected_signal_ids": [
+          501
+        ]
+      }
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901",
+      "method": "PATCH",
+      "query": {},
+      "body": {
+        "status": "qualified"
+      }
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/convert-to-project",
+      "method": "POST",
+      "query": {},
+      "body": {
+        "expected_assessment_revision": 1,
+        "idempotency_key": "cccf8bee-0ac4-4aef-8cd6-ea641ca4ddda",
+        "title": "冲突保留",
+        "objective": "用一个具体任务说明边界。",
+        "selected_signal_ids": []
+      }
+    },
+    {
+      "scenario": "conflict",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "home-uncertainty",
+      "path": "/home",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# Findings: video-chain-led-by-mcp-model
+
+- User decisions: video led by the external model via MCP; articles / images keep platform abilities; stop after the 导演稿 (option 1); 小样 first, then 排版, then 成片; rights default allowed, web materials keep credit (option 1).
+- Platform-model calls in the video chain today: 导演稿 stage run (`run_stage` / page 生成导演稿), AI 补齐素材 (`start_material_autofill`), AE decision (`edit_handoff._decide_ae`). Editing is already done by the external model.
+- `video.postproduction.v1` already has phases `rough_cut` and `final` (with `parent_material_revision_id`), which map to 小样 and 成片.
+- Rights today: 45 active materials lack AI or public permission (upload 5, AI generated 24, web 12, upstream 4).
+- User addition: the 导演稿 comes with a per-shot material request; the user supplies what they can, the model covers the rest and picks every shot's material, all through platform tools; 小样 / 排版 / 成片 made in DaVinci Resolve and After Effects as far as possible.
+- The cheap look of cut #7 came largely from the footage: AI clips with garbled fake text (globe, fiber), a big green ✕ over the shark, a flat white phone mockup, and mixed colour. v13 asks for replacements or crops for each and fixes one palette (deep blue + cyan) and restrained AE type.
+- Accepting a 小样 / 成片 used to mean accepting each output by hand; 通过 on the panel now accepts all latest staged outputs (media allowed, project files private as the platform requires).
+- Rights: `rights_status` set to cleared for active materials so AI-made outputs can be published; attribution text kept.
+- Platform errors were masked for the model; `video_chain_*` errors now carry a readable message so the external model can fix its own 导演稿.
+- The AE toolkit's card / headline / chip layout was the main reason earlier cuts looked like cheap explainers; the cinema mode keeps data-driven building but drops cards for full-bleed, graded footage and thin type.
+- AE in Chinese localizes effect property names; scripts must address effect parameters by match name (e.g. `ADBE Exposure2-0003`, `ADBE Glo2-0003`).
+- 24 fps clips on a 30 fps Resolve timeline floor to whole frames; place by checking actual item start/end and adjust source ranges to avoid one-frame gaps.
+- Resolve mono voice on a stereo timeline measures about 3 dB louder than the mastered file; −2 dB on the clip lands at −14 LUFS.
+- No music or sound effects in the 小样: the master has no sound materials; to add in 排版.
+- Picture and voice ending together reads as cut off; a silent closing shot (picture holds, fades to black, music trails off) is now possible because trailing shots without a line keep their length after the voice.
+- Resolve's Dialogue Leveler (moderate) dropped the mix to −21.5 LUFS; switched off. Resolve scripting has no EQ, so voice timbre is left to the MiniMax settings.
+- Any master save after a 小样 (voice, timing) blocked its approval through the platform's "source must be current" rule; the chain now records the approval without accepting the files instead.
+- 24 fps clips on a 30 fps timeline can only take certain lengths (floor of n × 1.25); when a needed length is unreachable, end the neighbouring AE shot one frame early.
+- Accepted edit outputs are stored as <hash>.bin; any filing by name must take the extension from the declared MIME type.
+- The T1000 USB drive dropped twice under heavy write bursts (saving ~0.5 GB of accepted outputs): macOS kept it mounted but listings came back empty and writes failed with EINVAL. The platform's reachability check (folder exists) did not notice; a write probe would.
+- The material raw endpoint reads whole files with a 30 MB cap, so large videos (the 119 MB 成片) answer 素材存储不可用 there; playback uses the preview stream.

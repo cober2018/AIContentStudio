@@ -41,6 +41,8 @@ OUTBOUND_HTTP_POLICIES = MappingProxyType({
     "model_vision": OutboundLimits(120, 42 * 1024 * 1024, 2_000_000),
     "image": OutboundLimits(120, 1_000_000, 8 * 1024 * 1024),
     "commons": OutboundLimits(15, 0, 5_000_000),
+    "open_media": OutboundLimits(20, 0, 3_000_000),
+    "open_media_download": OutboundLimits(120, 0, 30 * 1024 * 1024),
     "wechat": OutboundLimits(25, 11 * 1024 * 1024, 1_048_576),
     "minimax_download": OutboundLimits(120, 0, 30 * 1024 * 1024),
     "dsh": OutboundLimits(2.5, 0, 0),
@@ -51,6 +53,7 @@ MAX_OUTBOUND_RESPONSE_BYTES = OUTBOUND_HTTP_POLICIES["fetch"].response_bytes
 _DNS_POOL = ThreadPoolExecutor(max_workers=2, thread_name_prefix="fetch-dns")
 _DNS_SLOTS = BoundedSemaphore(2)
 _OUTBOUND_DEADLINE = ContextVar("outbound_deadline", default=None)
+_PUBLIC_DNS = ContextVar("public_dns", default=None)
 
 
 class _PrivateOutboundLogs(logging.Filter):
@@ -170,7 +173,22 @@ def enforce_outbound_host(url: str) -> None:
         raise UnsafeUrlError("outbound_host_forbidden")
 
 
+@contextmanager
+def resolved_public_addresses(host: str, addresses: list[str]):
+    # Scoped public answers preserve DNS pinning when a local proxy returns fake IPs.
+    if not addresses or any(not ipaddress.ip_address(a).is_global or ipaddress.ip_address(a).is_multicast for a in addresses):
+        raise UnsafeUrlError("禁止访问内网/保留地址")
+    token = _PUBLIC_DNS.set((host.lower(), tuple(addresses)))
+    try:
+        yield
+    finally:
+        _PUBLIC_DNS.reset(token)
+
+
 def resolve_addresses(host: str, port: int, *, timeout: float = 4):
+    override = _PUBLIC_DNS.get()
+    if override and host.lower() == override[0]:
+        return [(socket.AF_INET6 if ":" in a else socket.AF_INET, socket.SOCK_STREAM, 6, "", (a, port)) for a in override[1]]
     if not _DNS_SLOTS.acquire(blocking=False):
         raise UnsafeUrlError("来源网络解析繁忙")
     try:
@@ -268,6 +286,8 @@ def safe_fetch(
     headers: dict[str, str] | None = None,
     method: str = "GET",
     json_body: dict | None = None,
+    *,
+    response_metadata: dict | None = None,
 ) -> tuple[bytes, str]:
     """返回 (响应体, mime_type)。重定向逐跳重新校验目标，防止跳转到内网。"""
 
@@ -309,6 +329,11 @@ def safe_fetch(
                         raise UnsafeUrlError("带凭据或正文的请求不允许跨域重定向")
                     current_url = str(redirected)
                     continue
+                if response_metadata is not None:
+                    response_metadata.update(status=resp.status_code, final_url=str(resp.url), etag=resp.headers.get("etag"),
+                                             last_modified=resp.headers.get("last-modified"))
+                    if resp.status_code == 304:
+                        return b"", ""
                 resp.raise_for_status()
                 if resp.headers.get("content-encoding", "identity").strip().lower() != "identity":
                     raise UnsafeUrlError("不允许压缩响应")

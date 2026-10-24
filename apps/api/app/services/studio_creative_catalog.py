@@ -12,7 +12,7 @@ import hashlib
 import json
 import re
 import unicodedata
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
@@ -40,13 +40,17 @@ OUTPUT_SCHEMAS = {
     "studio.research.evidence-brief": ["research.brief.v1"],
     "studio.research.angle-lab": ["creative.angles.v1"],
     "studio.text.outline": ["content.outline.v1"],
-    "studio.text.title-hook": ["creative.angles.v1"],
+    "studio.text.title-hook": ["creative.title-hook.v1"],
+    "studio.text.article-plan": ["article.plan.v1"],
     "studio.graphic.visual-director": ["graphic.visual-direction.v1"],
     "studio.graphic.card-plan": ["graphic.card-plan.v1"],
     "studio.graphic.image-brief": ["graphic.visual-direction.v1"],
     "studio.audio.spoken-adapt": ["audio.spoken-adaptation.v1"],
     "studio.audio.voice-director": ["audio.voice-direction.v1"],
-    "studio.video.script": ["content.outline.v1"],
+    "studio.video.script": ["video.script.v1"],
+    "studio.video.product-script": ["video.script.v1"],
+    "studio.video.product-shots": ["video.shot-plan.v1"],
+    "studio.video.product-filming": ["video.shot-plan.v1"],
     "studio.video.shot-director": ["video.shot-plan.v1"],
 }
 
@@ -55,8 +59,12 @@ def _ref(key: str, version: int = 1) -> str:
     return f"{key}@{version}"
 
 
-def _resource(key: str, kind: str, modality: str, *, purpose: str, tunable_fields=(), checks=(), tools=()):
-    return {
+PRODUCT_CONTEXT_SKILLS = frozenset({"studio.video.product-script", "studio.video.product-shots", "studio.video.product-filming",
+                                    "studio.product.audience-need", "studio.product.purchase-reason"})
+
+
+def _resource(key: str, kind: str, modality: str, *, purpose: str, tunable_fields=(), checks=(), tools=(), applicable_fields=()):
+    resource = {
         "key": key,
         "version": "1",
         "ref": _ref(key),
@@ -66,21 +74,22 @@ def _resource(key: str, kind: str, modality: str, *, purpose: str, tunable_field
         "source_kind": "studio_builtin",
         "provenance": "self_developed",
         "license": "product_owned",
-        "compatible_stage_schemas": ["stage.creative.method.v1", "stage.master.propose.v1"] if key == "studio.video.script" else
+        "compatible_stage_schemas": ["stage.creative.method.v1", "stage.master.propose.v1"] if key in {"studio.video.script", "studio.video.product-script"} else
+            ["stage.creative.method.v3"] if key == "studio.text.article-plan" else
             ["stage.creative.method.v1"] if key in OUTPUT_SCHEMAS else
             ["stage.master.propose.v1"] if modality == "text" else
             ["stage.graphic.compose.v1"] if key == "studio.graphic.layout-compose" else
             ["media.generate.stage.v4"] if key == "studio.audio.tts" else
             ["stage.audio.qc.v1"] if key == "studio.audio.qc" else
             ["stage.professional.prepare.v2"] if key == "studio.video.director-package" else [],
-        "output_schemas": ["content.outline.v1", "video.master.v2"] if key == "studio.video.script" else OUTPUT_SCHEMAS.get(key, ["text.master.v2"] if modality == "text" else
+        "output_schemas": ["video.script.v1", "video.master.v2"] if key in {"studio.video.script", "studio.video.product-script"} else OUTPUT_SCHEMAS.get(key, ["text.master.v2"] if modality == "text" else
             ["graphic.master.v2"] if key == "studio.graphic.layout-compose" else
             ["stage.media.result.v1"] if key == "studio.audio.tts" else
             ["stage.checks.result.v1"] if key == "studio.audio.qc" else
             ["director.video.v1"] if key == "studio.video.director-package" else []),
-        "required_context": ["identity"],
+        "required_context": ["product_context"] if key in PRODUCT_CONTEXT_SKILLS else ["identity"],
         "requires_selected_upstream": kind == "skill" or key == "studio.graphic.layout-compose",
-        "prompt_sections": ["method", "identity", "stage_instruction", "evidence", "upstream"],
+        "prompt_sections": ["method", "product_context" if key in PRODUCT_CONTEXT_SKILLS else "identity", "stage_instruction", "evidence", "upstream"],
         "tunable_fields": list(tunable_fields),
         "parameter_schema": {"type": "object", "additionalProperties": False,
                              "properties": {field: {**PARAMETER_SCHEMAS[field],
@@ -90,6 +99,9 @@ def _resource(key: str, kind: str, modality: str, *, purpose: str, tunable_field
         "tools": list(tools),
         "bounds": {"max_instruction_chars": 4000, "max_context_bytes": 128 * 1024, "max_output_bytes": 128 * 1024},
     }
+    if applicable_fields:
+        resource["applicable_fields"] = list(applicable_fields)
+    return resource
 
 
 SKILLS = {
@@ -102,6 +114,9 @@ SKILLS = {
         _resource("studio.text.answer", "skill", "text", purpose="生成有证据边界的直接回答", tunable_fields=("instruction", "length"), checks=("text_fact",)),
         _resource("studio.text.social-short", "skill", "text", purpose="生成短内容表达", tunable_fields=("instruction", "length")),
         _resource("studio.text.humanize", "skill", "text", purpose="在不改变事实的前提下精修表达", tunable_fields=("instruction", "tone"), checks=("text_identity",)),
+        _resource("studio.text.article-plan", "skill", "text", purpose="一次给出含角度、事实、未知和大纲的完整写作方案", tunable_fields=("instruction", "candidate_count")),
+        _resource("studio.text.article-write", "skill", "text", purpose="按选定方案一次写成完整文章并给出备选标题", tunable_fields=("instruction", "length", "candidate_count"),
+                  checks=("text_structure", "text_fact", "text_identity", "text_platform")),
         _resource("studio.text.title-hook", "skill", "text", purpose="生成与正文一致的标题和开头候选", tunable_fields=("instruction", "candidate_count"), checks=("text_platform",)),
         _resource("studio.graphic.visual-director", "skill", "graphic", purpose="定义视觉方向而不直接计算像素", tunable_fields=("instruction", "density")),
         _resource("studio.graphic.card-plan", "skill", "graphic", purpose="把视觉方向转为卡片语义计划", tunable_fields=("instruction", "canvas_count")),
@@ -112,11 +127,36 @@ SKILLS = {
         _resource("studio.audio.voice-director", "skill", "audio", purpose="把 Persona 声音偏好转成 TTS 方向", tunable_fields=("instruction", "energy", "pause_policy")),
         _resource("studio.audio.tts", "skill", "audio", purpose="复用 ProviderGenerationTask 执行 TTS", tunable_fields=("voice", "rate")),
         _resource("studio.audio.qc", "tool", "audio", purpose="检查真实音频字节、MIME、时长和可听性", checks=("audio_bytes", "audio_duration", "audio_loudness"), tools=("studio.audio.qc@1",)),
+        _resource("studio.video.product-script", "skill", "video", purpose="依据SKU资料生成商品销售脚本", tunable_fields=("instruction", "length")),
+        _resource("studio.video.product-shots", "skill", "video", purpose="规划商品连续镜头、关键帧与图生视频素材", tunable_fields=("instruction", "shot_count")),
+        _resource("studio.video.product-filming", "skill", "video", purpose="将购买理由和脚本拆成手机可执行的实拍任务书", tunable_fields=("instruction", "shot_count")),
+        _resource("studio.product.audience-need", "skill", "video", purpose="把商品已知事实梳理为具体受众、购买情境与最大顾虑",
+                  applicable_fields=("primary_audience", "buyer_situation", "main_objection")),
+        _resource("studio.product.purchase-reason", "skill", "video", purpose="围绕单一购买理由组织目标、核心表达与行动引导",
+                  applicable_fields=("objective", "core_message", "cta")),
         _resource("studio.video.script", "skill", "video", purpose="生成角色化视频脚本", tunable_fields=("instruction", "length")),
         _resource("studio.video.shot-director", "skill", "video", purpose="把脚本拆为镜头和素材计划", tunable_fields=("instruction", "shot_count")),
         _resource("studio.video.director-package", "skill", "video", purpose="生成交给外部专业执行的导演包", tunable_fields=("instruction", "aspect_ratio")),
     )
 }
+
+PERSONA_METHOD_TRIAL_KEYS = ('studio.research.evidence-brief', 'studio.research.angle-lab', 'studio.text.outline', 'studio.text.title-hook', 'studio.text.longform', 'studio.text.humanize', 'studio.graphic.card-plan', 'studio.graphic.visual-director', 'studio.graphic.image-brief', 'studio.audio.spoken-adapt', 'studio.audio.voice-director', 'studio.video.script', 'studio.video.shot-director', 'studio.video.director-package')
+
+for _trial_key in PERSONA_METHOD_TRIAL_KEYS:
+    _trial_resource = copy.deepcopy(SKILLS[_ref(_trial_key)])
+    _trial_resource.update(version="2", ref=_ref(_trial_key, 2))
+    if "stage.creative.method.v1" in _trial_resource["compatible_stage_schemas"]:
+        _trial_resource["compatible_stage_schemas"].append("stage.creative.method.v2")
+    if _trial_key in {"studio.graphic.card-plan", "studio.video.shot-director"}:
+        _trial_resource["output_schemas"].append(_trial_resource["output_schemas"][0].replace(".v1", ".v2"))
+    SKILLS[_trial_resource["ref"]] = _trial_resource
+
+# Material-aware video planning is a further trial version; @1/@2 stay byte-identical.
+for _trial_key in ("studio.video.script", "studio.video.shot-director"):
+    _trial_resource = copy.deepcopy(SKILLS[_ref(_trial_key, 2)])
+    _trial_resource.update(version="3", ref=_ref(_trial_key, 3))
+    SKILLS[_trial_resource["ref"]] = _trial_resource
+
 
 PRESETS = {
     ref: {"key": ref.split("@", 1)[0], "version": "1", "ref": ref, "kind": "style_preset", "source_kind": "studio_builtin", "provenance": "self_developed", "license": "product_owned", "config": config}
@@ -132,6 +172,7 @@ PRESETS = {
         _ref("studio.graphic.warm-magazine"): {"modality": "graphic", "palette": "warm_magazine", "density": "low", "image_fallback": "blocked"},
         _ref("studio.graphic.documentary-photo"): {"modality": "graphic", "palette": "documentary", "density": "low", "image_fallback": "blocked"},
         _ref("studio.graphic.lifestyle-cards"): {"modality": "graphic", "palette": "lifestyle", "density": "low", "image_fallback": "shape_only"},
+        _ref("studio.graphic.product-neutral"): {"modality": "graphic", "product_consistency": "original_references", "motion": "one_action_per_shot"},
         _ref("studio.audio.calm-engineer"): {"modality": "audio", "voice": "calm_clear", "pace": "medium", "energy": "steady"},
         _ref("studio.audio.clear-explainer"): {"modality": "audio", "voice": "clear_explainer", "pace": "medium", "energy": "clear"},
         _ref("studio.audio.warm-conversational"): {"modality": "audio", "voice": "warm_conversational", "pace": "medium", "energy": "warm"},
@@ -142,6 +183,7 @@ PRESETS = {
 QUALITY = {
     ref: {"key": ref.split("@", 1)[0], "version": "1", "ref": ref, "kind": "quality_profile", "source_kind": "studio_builtin", "provenance": "self_developed", "license": "product_owned", "checks": checks, "human_review_required": True}
     for ref, checks in {
+        _ref("studio.quality.video.product"): ["product_evidence", "product_consistency", "shot_continuity", "sound_clarity", "purchase_reason", "truthful_cta"],
         _ref("studio.quality.text.technical"): ["text_structure", "text_fact", "text_identity", "text_anti_hype"],
         _ref("studio.quality.text.lifestyle"): ["text_structure", "text_fact_speculation", "text_identity", "text_anti_clickbait"],
         _ref("studio.quality.graphic.editorial"): ["graphic_canvas", "graphic_bounds", "graphic_readability", "graphic_rights"],
@@ -279,6 +321,9 @@ def freshness_projection(boundary: dict | None, mode: str, *, now=None, max_age_
     if mode not in {"grounded", "current", "reflection", "speculation"} or type(max_age_hours) is not int or not 1 <= max_age_hours <= 720:
         raise ValueError("creative_fact_mode_invalid")
     now = now or datetime.now(UTC)
+    # A same-day as_of in the operator's timezone is not future evidence; the cutoff is the end of that local day.
+    local = now.astimezone()
+    local_day_end = datetime.combine(local.date(), time.max, tzinfo=local.tzinfo).astimezone(UTC)
     eligible = []
     for item in (boundary or {}).get("items", []):
         snapshot = item.get("snapshot") or {}
@@ -290,7 +335,7 @@ def freshness_projection(boundary: dict | None, mode: str, *, now=None, max_age_
             observed = datetime.fromisoformat(as_of) if type(as_of) is str else None
             if observed is not None:
                 observed = observed.replace(tzinfo=UTC) if observed.tzinfo is None else observed
-                if now - timedelta(hours=max_age_hours) <= observed <= now:
+                if now - timedelta(hours=max_age_hours) <= observed <= local_day_end:
                     eligible.append({"item_id": item["item_id"], "checksum": item["checksum"], "as_of": as_of})
         except ValueError:
             continue
@@ -387,7 +432,7 @@ BLUEPRINTS = {
         "risk_boundaries": ["不伪造 benchmark", "不把未验证模型输出当事实"],
         "public_fact_policy": {"fresh_source_required_for_current_claims": True, "label_speculation": True},
         "text_creative_profile": _profile("auto", "studio.text.longform", "studio.text.deep-technical", "studio.quality.text.technical", capability="chat", recipe="persona.text.ai-tech.v1"),
-        "graphic_creative_profile": _profile("auto", "studio.graphic.visual-director", "studio.graphic.technical-editorial", "studio.quality.graphic.editorial", capability="image_generation", recipe="persona.graphic.ai-tech.v1"),
+        "graphic_creative_profile": _profile("auto", "studio.graphic.visual-director", "studio.graphic.architecture-diagram", "studio.quality.graphic.editorial", capability="image_generation", recipe="persona.graphic.ai-tech.v1"),
         "audio_creative_profile": _profile("auto", "studio.audio.tts", "studio.audio.calm-engineer", "studio.quality.audio.explainer", capability="tts", recipe="persona.audio.ai-tech.v1"),
         "video_creative_profile": _profile("auto", "studio.video.director-package", "studio.graphic.technical-editorial", "studio.quality.text.technical", capability="chat", recipe="persona.video.ai-tech.v1"),
     },
@@ -544,7 +589,7 @@ def validate_creative_profile(value: Any) -> dict:
         raise ValueError("creative_profile_preset_mismatch")
     # Video planning retains its existing script-quality profiles, not a new final-video QC.
     quality_modality = "text" if modality == "video" else modality
-    if not QUALITY[value["quality_profile_ref"]]["key"].startswith(f"studio.quality.{quality_modality}."):
+    if not QUALITY[value["quality_profile_ref"]]["key"].startswith(f"studio.quality.{quality_modality}.") and not (modality == "video" and value["quality_profile_ref"] == "studio.quality.video.product@1"):
         raise ValueError("creative_profile_quality_mismatch")
     if value.get("capability") not in {"chat", "image_generation", "tts", "video_generation", "asr"}:
         raise ValueError("creative_profile_capability_invalid")

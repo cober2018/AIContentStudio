@@ -1,0 +1,15 @@
+{
+  "environment": "isolated /tmp SQLite, explicit mock Persona default change; not user style acceptance",
+  "checks": [
+    {
+      "name": "normal explicit preview -> diff confirmation -> new Persona revision, other fields/model/params preserved",
+      "pass": true,
+      "revision": 2
+    },
+    {
+      "name": "saved default survives browser refresh and old revision remains exact",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

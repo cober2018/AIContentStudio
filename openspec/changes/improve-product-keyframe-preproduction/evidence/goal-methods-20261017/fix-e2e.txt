@@ -1,0 +1,18 @@
+# B1/S1 浏览器端到端（2026-10-17，/tmp/probe_frontend_e2e.py，Playwright+真实模型MiniMax-M3）
+# 全新隔离作品（goalprobe@studio.local，Project16/Unit22）首次启用→保存→真实补齐→焦点高亮
+fresh work: project=16 unit=22 methods unselected ✓
+first suggestion: 展示便携榨汁杯400ml容量、USB充电随身携带及杯体与主机分离拆洗的使用过程，说明其便于收纳与清洁的特点。
+
+===== E2E RESULTS =====
+PASS fresh-group-unchecked
+PASS explicit-enable-defaults-both-on  [True, True]
+PASS B1-save-success-notice
+PASS B1-save-PUT-200  [(200, 'PUT', '/127.0.0.1:5173/api/v1/content-projects/16/units/22/production-profile')]
+PASS after-save-summary-2of2  商品方法（2/2 启用）
+PASS S1-reason-card-highlighted
+PASS S1-audience-card-not-highlighted
+PASS B1-autofill-session-created
+PASS B1-autofill-POST-200  [(200, 'POST', 'http://127.0.0.1:5173/api/v1/form-assistance')]
+PASS B1-autofill-no-error  alert=0 批次 #9 · ready · 第 1/5 项
+console errors: []
+writes: [[200, "GET", "/127.0.0.1:5173/api/v1/content-projects/16/units/22/production-profile"], [200, "GET", "/127.0.0.1:5173/api/v1/content-projects/16/units/22/production-profile"], [200, "GET", "/127.0.0.1:5173/api/v1/content-projects/16/units/22/production-profile"], [200, "GET", "/127.0.0.1:5173/api/v1/content-projects/16/units/22/production-profile"], [200, "GET", "/127.0.0.1:5173/api/v1/content-projects/16/units/22/production-profile"], [200, "PUT", "/127.0.0.1:5173/api/v1/content-projects/16/units/22/production-profile"], [200, "POST", "http://127.0.0.1:5173/api/v1/form-assistance"]]

@@ -1,0 +1,35 @@
+{
+  "integrity": "ok",
+  "foreign_keys": 0,
+  "ready": true,
+  "content_master_revision": {
+    "old_rows": 51,
+    "current_rows": 55,
+    "preserved": true
+  },
+  "production_profile_revision": {
+    "old_rows": 142,
+    "current_rows": 143,
+    "preserved": true
+  },
+  "creative_brief_revision": {
+    "old_rows": 36,
+    "current_rows": 37,
+    "preserved": true
+  },
+  "material_revision": {
+    "old_rows": 68,
+    "current_rows": 68,
+    "preserved": true
+  },
+  "product_sku": {
+    "old_rows": 3,
+    "current_rows": 3,
+    "preserved": true
+  },
+  "product_sku_revision": {
+    "old_rows": 3,
+    "current_rows": 3,
+    "preserved": true
+  }
+}

@@ -1,0 +1,196 @@
+ M .codex/skills/product-video-material-director/SKILL.md
+ M .codex/skills/video-production-handoff/SKILL.md
+ M .codex/skills/video-production-handoff/references/product-methods/product-sales-story.md
+ M .codex/skills/video-production-handoff/references/product-methods/product-shot-routing.md
+ M .codex/skills/video-production-handoff/references/product-methods/product-truth-brief.md
+ M .codex/skills/video-production-handoff/references/product-methods/product-visual-consistency.md
+ M .codex/skills/video-production-handoff/references/production-methods.json
+ M README.md
+ M apps/api/app/db.py
+ M apps/api/app/models.py
+ M apps/api/app/routers/article_handoff.py
+ M apps/api/app/routers/channels.py
+ M apps/api/app/routers/content_identities.py
+ M apps/api/app/routers/content_projects.py
+ M apps/api/app/routers/form_assistance.py
+ M apps/api/app/routers/generate.py
+ M apps/api/app/routers/materials.py
+ M apps/api/app/routers/opportunities.py
+ M apps/api/app/routers/product_creation.py
+ M apps/api/app/runtime_config.py
+ M apps/api/app/seed.py
+ M apps/api/app/services/audio_quality.py
+ M apps/api/app/services/candidates.py
+ M apps/api/app/services/candidates_v4.py
+ M apps/api/app/services/candidates_v5.py
+ M apps/api/app/services/capability_integrations.py
+ M apps/api/app/services/capability_memory.py
+ M apps/api/app/services/channel_variants.py
+ M apps/api/app/services/content_harness/channel_registry.py
+ M apps/api/app/services/content_harness/nodes/__init__.py
+ M apps/api/app/services/content_harness/renderers.py
+ M apps/api/app/services/content_harness/rules.py
+ M apps/api/app/services/content_identity.py
+ M apps/api/app/services/content_masters.py
+ M apps/api/app/services/creation_recipes.py
+ M apps/api/app/services/creative_artifacts.py
+ M apps/api/app/services/creative_configuration.py
+ M apps/api/app/services/creative_media_stream.py
+ M apps/api/app/services/creative_method_stage.py
+ M apps/api/app/services/creative_packages.py
+ M apps/api/app/services/data_source_plugins.py
+ M apps/api/app/services/delivery.py
+ M apps/api/app/services/discovery_runtime.py
+ M apps/api/app/services/form_assistance.py
+ M apps/api/app/services/generation/mock_content.py
+ M apps/api/app/services/generation/orchestrator.py
+ M apps/api/app/services/home_projection.py
+ M apps/api/app/services/minimax_cli_provider.py
+ M apps/api/app/services/obsidian_knowledge.py
+ M apps/api/app/services/opportunities.py
+ M apps/api/app/services/product_creation.py
+ M apps/api/app/services/production_validation.py
+ M apps/api/app/services/project_authorization.py
+ M apps/api/app/services/project_events.py
+ M apps/api/app/services/project_matrix.py
+ M apps/api/app/services/project_outputs.py
+ M apps/api/app/services/project_overview.py
+ M apps/api/app/services/project_projection_context.py
+ M apps/api/app/services/project_review.py
+ M apps/api/app/services/project_review_projection.py
+ M apps/api/app/services/project_versions.py
+ M apps/api/app/services/stage_contracts.py
+ M apps/api/app/services/stage_domain_adoptions.py
+ M apps/api/app/services/stage_feedback.py
+ M apps/api/app/services/stage_invocations.py
+ M apps/api/app/services/stage_master_adoptions.py
+ M apps/api/app/services/stage_master_proposals.py
+ M apps/api/app/services/stage_resolver.py
+ M apps/api/app/services/starter_personas.py
+ M apps/api/app/services/studio_creative_catalog.py
+ M apps/api/app/services/text_documents.py
+ M apps/api/app/services/text_master_ai.py
+ M apps/api/app/services/text_master_checks.py
+ M apps/api/app/services/url_fetch.py
+ M apps/api/app/services/video_documents.py
+ M apps/api/app/services/video_master_checks.py
+ M apps/api/app/services/web_video_handoff.py
+ M apps/api/app/services/workflow_engine.py
+ M apps/api/app/services/workflow_templates.py
+ M apps/api/app/studio_skills/studio.graphic.card-plan/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.research.angle-lab/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.research.evidence-brief/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.text.humanize/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.text.longform/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.text.outline/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.text.title-hook/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.text.title-hook/v1/STUDIO-CONTRACT.json
+ M apps/api/app/studio_skills/studio.text.title-hook/v1/tests/fixtures.json
+ M apps/api/app/studio_skills/studio.video.script/v1/SKILL.md
+ M apps/api/app/studio_skills/studio.video.script/v1/STUDIO-CONTRACT.json
+ M apps/api/app/studio_skills/studio.video.shot-director/v1/SKILL.md
+ M apps/api/app/tasks/celery_app.py
+ M apps/api/app/tasks/worker_tasks.py
+ M apps/api/scripts/startup/start_worker.sh
+ M apps/api/tests/test_channel_registry.py
+ M apps/api/tests/test_f6b_text_documents.py
+ M apps/api/tests/test_f6e_channel_adapters.py
+ M apps/api/tests/test_f7_renderer_capabilities.py
+ M apps/api/tests/test_fe_f3b_content_identity.py
+ M apps/api/tests/test_persona_creative_studio.py
+ M apps/api/tests/test_platform_profiles.py
+ M apps/api/tests/test_stage_master_proposals.py
+ M apps/web/src/App.tsx
+ M apps/web/src/components/ui.tsx
+ M apps/web/src/pages/Assets.tsx
+ M apps/web/src/pages/Handoff.tsx
+ M apps/web/src/product/ChannelVariantsPanel.tsx
+ M apps/web/src/product/ContentMasterPanel.tsx
+ M apps/web/src/product/CreationRecipePanel.tsx
+ M apps/web/src/product/FormAssistancePanel.tsx
+ M apps/web/src/product/HomePage.tsx
+ M apps/web/src/product/IdentityWorkspace.tsx
+ M apps/web/src/product/LearningWorkspace.tsx
+ M apps/web/src/product/OpportunityPages.tsx
+ M apps/web/src/product/PersistentProjectPage.tsx
+ M apps/web/src/product/PersistentProjectsPage.tsx
+ M apps/web/src/product/ProductLaunchPanel.tsx
+ M apps/web/src/product/ProductSettingsPage.tsx
+ M apps/web/src/product/ProductionAutomationPanel.tsx
+ M apps/web/src/product/ProductionContextHeader.tsx
+ M apps/web/src/product/ProductionQueuePage.tsx
+ M apps/web/src/product/ProductionWorkspace.tsx
+ M apps/web/src/product/ProjectReviewCenter.tsx
+ M apps/web/src/product/ProviderMediaPanel.tsx
+ M apps/web/src/product/SystemAssetsKnowledgePage.tsx
+ M apps/web/src/product/VideoShotMaterialPanel.tsx
+ M apps/web/src/product/VideoStudioModel.ts
+ M apps/web/src/product/VideoStudioShell.tsx
+ M apps/web/src/product/formAssistanceTypes.ts
+ M apps/web/src/product/opportunityTypes.ts
+ M apps/web/src/product/project/ProjectMatrixTab.tsx
+ M apps/web/src/product/project/ProjectOverviewTab.tsx
+ M apps/web/src/product/project/projectTypes.ts
+ M apps/web/src/product/systemLibraryTypes.ts
+ M apps/web/src/product/useProductionWorkflow.ts
+ M docs/runbooks/production-readiness.md
+ M openspec/specs/content-home-workspace/spec.md
+ M openspec/specs/content-opportunities/spec.md
+ M openspec/specs/fe-f3a-content-project-core/spec.md
+ M openspec/specs/fe-f3b-content-identity/spec.md
+ M openspec/specs/fe-f4-project-review-distribution/spec.md
+ M openspec/specs/system-assets-knowledge/spec.md
+?? .playwright-cli/
+?? apps/api/alembic/versions/productdomain0001_product_domain.py
+?? apps/api/alembic/versions/sku000000001_product_content_assets.py
+?? apps/api/alembic/versions/unitlife000001_unit_lifecycle.py
+?? apps/api/app/routers/discovery.py
+?? apps/api/app/routers/product_skus.py
+?? apps/api/app/services/content_harness/channel_methods.py
+?? apps/api/app/services/daily_opportunities.py
+?? apps/api/app/services/discovery_aggregation.py
+?? apps/api/app/services/discovery_catchup.py
+?? apps/api/app/services/discovery_ingestion.py
+?? apps/api/app/services/discovery_source_inventory.json
+?? apps/api/app/services/discovery_sources.py
+?? apps/api/app/services/opportunity_policy.py
+?? apps/api/app/services/product_context.py
+?? apps/api/app/services/production_profiles.py
+?? apps/api/app/services/radar_discovery.py
+?? apps/api/app/services/radar_producer.py
+?? apps/api/app/services/source_discovery.py
+?? apps/api/app/studio_skills/studio.product.audience-need/
+?? apps/api/app/studio_skills/studio.product.purchase-reason/
+?? apps/api/app/studio_skills/studio.video.product-filming/
+?? apps/api/app/studio_skills/studio.video.product-script/
+?? apps/api/app/studio_skills/studio.video.product-shots/
+?? apps/api/tests/test_channel_methods.py
+?? apps/api/tests/test_minimax_video_submit.py
+?? apps/web/src/product/AccountDesk.tsx
+?? apps/web/src/product/ChannelPluginPanel.tsx
+?? apps/web/src/product/DiscoveryPanel.tsx
+?? apps/web/src/product/GuidedProductionGoal.tsx
+?? apps/web/src/product/GuidedProductionProfile.tsx
+?? apps/web/src/product/ProductWorkbench.tsx
+?? apps/web/src/product/SkuWorkRetention.tsx
+?? apps/web/src/product/WorkbenchEntry.tsx
+?? apps/web/src/product/taskNavigation.ts
+?? docs/PRODUCTION_ACCEPTANCE_REPORT_2026-10-13.md
+?? docs/easel-workflow-research/
+?? openspec/AIContentStudio_OpenSpec_Multiplatform_Operations_v2.md
+?? openspec/AIContentStudio_add_persona_creative_studio_OpenSpec.zip
+?? openspec/changes/add-aihot-persona-source-integration/
+?? openspec/changes/add-daily-persona-content-opportunities/
+?? openspec/changes/archive/2026-10-15-add-discovery-offline-catchup/
+?? openspec/changes/archive/2026-10-15-add-manual-discovery-source-management/
+?? openspec/changes/archive/2026-10-18-add-persona-creation-list-lifecycle/
+?? openspec/changes/archive/2026-10-18-purge-confirmed-test-projects/
+?? openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/
+?? openspec/changes/improve-persona-content-methods/
+?? openspec/changes/improve-product-keyframe-preproduction/
+?? openspec/changes/improve-tech-opportunity-selection/
+?? openspec/specs/discovery-offline-catchup/
+?? openspec/specs/manual-discovery-source-management/
+?? openspec/specs/persona-creation-list-lifecycle/
+?? openspec/specs/studio-task-navigation/
+?? output/

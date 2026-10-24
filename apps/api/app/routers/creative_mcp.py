@@ -169,7 +169,11 @@ def _dispatch(request: Request, db: Session, binding: service.Binding, message: 
     if method == "initialize":
         return {"protocolVersion": service.PROTOCOL_VERSION, "serverInfo": {"name": "aics-creative", "version": "1.0"},
                 "capabilities": {"tools": {"listChanged": False}, "resources": {"subscribe": False, "listChanged": False}},
-                "instructions": "Use prepared executions only. Results require human acceptance and a separate content save."}
+                "instructions": ("Use prepared executions only. Results require human acceptance and a separate content save. "
+                                 "Production stages: get_stages -> preview_stage -> run_stage -> send the user review_url -> "
+                                 "get_stage_decision (wait_seconds<=25, call again while waiting_for_you) -> continue only on accepted; "
+                                 "on rejected or rerun_requested use the note. Footage: start_material_match -> review_url -> get_material_match. "
+                                 "Never accept, reject, bind or publish for the user, and never use the REST API to do so.")}
     if method == "ping":
         _params(params, set())
         return {}

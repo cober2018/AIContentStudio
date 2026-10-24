@@ -276,19 +276,72 @@ def build_package(*, schema: str, source: dict, context: dict, assets: list[dict
     return bounded_json(package)
 
 
+def accepted_director_plans(db, unit, master):
+    if unit.production_domain == "product" or master.payload_schema != "video.master.v2" or not master.origin_project_output_id:
+        return []
+    from ..models import WorkflowRun, WorkflowStepAttempt
+    from .creation_recipes import accepted_stage_target
+    from .creative_method_stage import selected_input
+    from .stage_invocations import StageInvocationError
+
+    output = db.get(ProjectWorkflowOutput, master.origin_project_output_id)
+    attempt = db.get(WorkflowStepAttempt, output.attempt_id) if output else None
+    run = db.get(WorkflowRun, output.run_id) if output else None
+    if (output is None or attempt is None or run is None or output.entity_id != master.id
+            or output.unit_id != unit.id or run.content_unit_id != unit.id
+            or accepted_stage_target(db, run, output.node_id, project_output_id=output.id) is None):
+        raise HTTPException(409, {"code": "stage_director_master_provenance_changed"})
+    plans = []
+    # Master retains its existing schema; the accepted planning artifact supplies the richer handoff.
+    upstream = ((attempt.input_snapshot_json or {}).get("resolved_stage") or {}).get("upstream") or {}
+    for frozen in upstream.values():
+        if not isinstance(frozen, dict) or frozen.get("output_schema") != "video.shot-plan.v2":
+            continue
+        try:
+            target = accepted_stage_target(db, run, frozen["node_id"])
+        except StageInvocationError as exc:
+            raise HTTPException(409, {"code": exc.code}) from exc
+        if target != {key: value for key, value in frozen.items() if key != "selected_content"}:
+            raise HTTPException(409, {"code": "stage_director_plan_changed"})
+        try:
+            selected = selected_input(db, target, include_content=True)
+        except StageInvocationError as exc:
+            raise HTTPException(409, {"code": exc.code}) from exc
+        plans.append({"source_master_revision_id": master.id, "source_master_payload_hash": master.payload_hash,
+            "accepted_stage": target, "content": selected["selected_content"]})
+    return plans
+
+
 def production_method_configuration(db, project_id, unit_id, user, *, master_id=None, variant_id=None):
     from . import capability_memory
     from .studio_creative_catalog import inventory
 
     _, _, master = _source(db, project_id, unit_id, user, master_id=master_id, variant_id=variant_id, current=True)
-    identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
-    profile = (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
+    _, unit = owned_unit(db, project_id, unit_id, user)
+    from .product_context import is_product, effective_profile
+    product_domain = is_product(unit)
+    product_profiles = ((master.edit_summary_json or {}).get("product_context_snapshot") or {}).get("creative_profiles") or (effective_profile(db, unit) if product_domain else {})
+    identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id and not product_domain else None
+    profile = product_profiles.get(f"{master.modality}_creative_profile") if product_domain else (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
     field = f"{master.modality}_creative_profile"
-    origin = (identity.field_origins_json or {}).get(field, "identity_snapshot") if identity else "unset"
+    origin = "product_configuration" if product_domain else (identity.field_origins_json or {}).get(field, "identity_snapshot") if identity else "unset"
     if identity:
         origin = (identity.effective_profile_json or {}).get("production_stage_origins", {}).get(master.modality, origin)
+    from .production_profiles import profile_snapshot
+    saved_profile = profile_snapshot(db, unit_id)
+    work_settings = (saved_profile or {}).get("settings") or {}
+    work_creative = work_settings.get(field)
+    if work_creative is not None and not product_domain:
+        profile = work_creative
+        origin = "work_profile"
+    stages = product_profiles.get("product_production_stages") if product_domain else work_settings.get("production_stages")
+    if stages is not None and not product_domain:
+        origin = "work_profile"
+        stages = {**((profile or {}).get("production_stages") or {}), **stages}
+    elif stages is None:
+        stages = (profile or {}).get("production_stages")
     methods = capability_memory.discover(db, user, {"project_id": project_id, "unit_id": unit_id, "limit": 100})
-    return {"production_stages": (profile or {}).get("production_stages"), "origin": origin,
+    return {"production_stages": stages, "origin": origin,
             "identity_snapshot_id": identity.id if identity else None,
             "catalog": inventory(), "methods": methods["items"], "methods_total": methods["total"]}
 
@@ -327,8 +380,19 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
         if is_variant or master.payload_schema != "video.master.v2":
             raise HTTPException(422, {"code": "creative_director_video_v2_required"})
         document = master.payload_json
+        if document.get("capture_plan"):
+            from .content_masters import capture_status
+
+            state = capture_status(db, master)
+            if not state or not state["ready_to_shoot"] or any(value != "current" for value in state.get("adoptions", {}).values()):
+                raise HTTPException(409, {"code": "capture_edit_requires_current_review"})
         render = adapter_for(master.modality, master.payload_schema).build_render_snapshot(db, master)
         director = {key: document.get(key) for key in ("title", "aspect_ratio", "script", "shots", "voice", "subtitles", "overlays", "music", "cover", "timeline")}
+        plans = accepted_director_plans(db, unit, master)
+        if plans:
+            director["accepted_shot_plans"] = plans
+        if document.get("capture_plan"):
+            director["capture_plan"] = document["capture_plan"]
         director["final_render_required"] = render["status"] != "ready"
         director["candidate_ready"] = False
         if document.get("postproduction"):
@@ -338,10 +402,27 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
     package_json = build_package(schema=schema, source=source, context=context, assets=assets, evidence=evidence,
         intent=row.creative_intent_json, objective=payload["objective"], constraints=payload.get("constraints", []),
         output_contract=payload["output_contract"], acceptance_criteria=payload.get("acceptance_criteria", []), director=director)
-    identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
-    profile = (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
-    stages = (profile or {}).get("production_stages")
+    from .production_profiles import profile_snapshot
+    work_profile = profile_snapshot(db, unit_id)
+    if work_profile is not None:
+        package_json["production_profile"] = work_profile
+        if web_video is not None and work_profile["settings"].get("speech_mode") in {"lip_sync", "mixed"} and web_video.get("audio_intent") != "keep":
+            raise HTTPException(422, {"code": "speech_mode_requires_preserved_clip_audio"})
+    from .product_context import is_product, effective_profile, context_snapshot
+    product_domain = is_product(unit)
+    product_profiles = ((master.edit_summary_json or {}).get("product_context_snapshot") or {}).get("creative_profiles") or (effective_profile(db, unit) if product_domain else {})
+    identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id and not product_domain else None
+    profile = product_profiles.get(f"{master.modality}_creative_profile") if product_domain else (identity.effective_profile_json or {}).get(f"{master.modality}_creative_profile") if identity else None
+    work_settings = (work_profile or {}).get("settings") or {}
+    if not product_domain and master.modality == "video" and work_settings.get("video_creative_profile") is not None:
+        profile = work_settings["video_creative_profile"]
+    # A work setting names only the stages it changes; the Persona keeps the rest.
+    work_stages, profile_stages = work_settings.get("production_stages"), (profile or {}).get("production_stages")
+    stages = product_profiles.get("product_production_stages") if product_domain else {**(profile_stages or {}), **work_stages} if work_stages is not None else profile_stages
     origin = (identity.effective_profile_json or {}).get("production_stage_origins", {}).get(master.modality, "identity_snapshot") if identity else "identity_snapshot"
+    work_method_override = work_settings.get("production_stages") is not None or work_settings.get(f"{master.modality}_creative_profile") is not None
+    if work_method_override:
+        origin = "work_profile"
     if "production_stages" in payload:
         stages = payload["production_stages"]
         origin = "project_execution_override"
@@ -353,8 +434,8 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
                     or master.modality not in (identity.effective_profile_json or {}).get("product_production_methods", {})):
                 validate_creative_profile({**profile, "production_stages": stages})
             package_json["production_methods"] = freeze_production_stages(db, user, unit, stages, origin=origin,
-                frozen_manifest=((identity.effective_profile_json or {}).get("product_production_methods", {}).get(master.modality)
-                    if identity and "production_stages" not in payload else None), execution_target="external_executor")
+                frozen_manifest=(product_profiles.get("product_production_methods", {}).get(master.modality) if product_domain and "production_stages" not in payload else (identity.effective_profile_json or {}).get("product_production_methods", {}).get(master.modality)
+                    if identity and "production_stages" not in payload and not work_method_override else None), execution_target="external_executor")
         except ValueError as exc:
             raise HTTPException(422, {"code": str(exc)}) from None
         package_json["identity_content"] = {
@@ -373,11 +454,17 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
         from .web_video_handoff import validate_new_web_package
         validate_new_web_package(package_json)
         package_json = bounded_json(package_json)
+    if product_domain:
+        package_json["product_context"] = context_snapshot(db, unit, user)
+        package_json.pop("identity_content", None)
     if manual_image is not None:
-        identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
+        identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id and not product_domain else None
         brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id) if master.creative_brief_revision_id else None
         creative_context = {"identity_profile": identity.effective_profile_json if identity else None,
             "brief": {key: getattr(brief, key) for key in ("objective", "primary_audience", "core_message", "angle", "content_constraints_json", "required_evidence_json")} if brief else None}
+        if product_domain:
+            creative_context.pop("identity_profile", None)
+            creative_context["product_context"] = package_json["product_context"]
         package_json["manual_image"] = manual_image_handoff(manual_image, package_json, creative_context=creative_context)
         package_json = bounded_json(package_json)
     policy = package_json["output_contract"].get("media_transfer_policy")
@@ -443,6 +530,10 @@ def manual_image_handoff(value: dict, package: dict, *, creative_context: dict) 
             key: item for key, item in (raw_identity or {}).items() if not key.endswith("_creative_profile") and key not in {"product_production_methods", "product_production_stages"}
         })
         context["production_methods"] = package["production_methods"]
+    if package.get("product_context") is not None:
+        context.pop("identity", None)
+        context.pop("identity_profile", None)
+        context["product_context"] = package["product_context"]
     serialized = json.dumps(context, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(serialized) > 60_000:
         raise HTTPException(422, {"code": "manual_image_prompt_bounds"})
@@ -475,6 +566,10 @@ def owned_package(db: Session, project_id: int, unit_id: int, package_id: int, u
             or frozen_source.get("creative_intent_hash") != package.creative_intent_hash):
         raise HTTPException(409, {"code": "creative_package_projection_mismatch"})
     if current:
+        if package.package_json.get("production_profile") is not None:
+            from .production_profiles import profile_snapshot
+            if package.package_json["production_profile"] != profile_snapshot(db, unit_id):
+                raise HTTPException(409, {"code": "production_profile_changed_prepare_new_package"})
         source, projection, master = _source(db, project_id, unit_id, user, master_id=package.source_master_revision_id, variant_id=package.source_variant_revision_id, current=True)
         if (source.payload_hash, source.context_hash, source.creative_intent_hash) != (package.source_payload_hash, package.source_context_hash, package.creative_intent_hash):
             raise HTTPException(409, {"code": "creative_package_stale"})

@@ -26,12 +26,19 @@ _PLAN_SIGNING_KEY = secrets.token_bytes(32)
 TTS_APPLIED_SCHEMA = "studio.audio.tts-applied.v1"
 
 
+TTS_EMOTIONS = {"happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm", "fluent", "whisper"}
+TTS_FORMATS = {"mp3", "wav", "flac"}
+# Optional MiniMax fields; a request names them explicitly, nothing is filled in.
+_TTS_OPTIONAL = {"volume", "pitch", "emotion", "format", "sample_rate", "bitrate", "channels", "text_normalization", "latex_read", "subtitles"}
+
+
 def tts_parameters(parameters, *, capability):
-    """Normalize only an explicit pair; legacy requests never acquire implicit defaults."""
+    """Normalize only an explicit voice/rate pair plus named optional fields; legacy requests never acquire implicit defaults."""
     if not isinstance(parameters, dict):
         raise TypeError("tts_parameters_invalid")
     fields = {"voice_id", "rate"}.intersection(parameters)
-    if not fields:
+    extra = _TTS_OPTIONAL.intersection(parameters)
+    if not fields and not extra:
         return None
     if capability != "tts" or fields != {"voice_id", "rate"}:
         raise ValueError("tts_parameters_invalid")
@@ -39,14 +46,31 @@ def tts_parameters(parameters, *, capability):
     if (not isinstance(voice, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,149}", voice)
             or type(rate) not in {int, float} or not 0.5 <= rate <= 2 or not math.isfinite(rate)):
         raise ValueError("tts_parameters_invalid")
-    return {"voice_id": voice, "rate": float(rate)}
+    result = {"voice_id": voice, "rate": float(rate)}
+    checks = {
+        "volume": lambda v: type(v) in {int, float} and 0 < v <= 10 and math.isfinite(v),
+        "pitch": lambda v: type(v) is int and -12 <= v <= 12,
+        "emotion": lambda v: v in TTS_EMOTIONS,
+        "format": lambda v: v in TTS_FORMATS,
+        "sample_rate": lambda v: v in {8000, 16000, 22050, 24000, 32000, 44100},
+        "bitrate": lambda v: v in {32000, 64000, 128000, 256000},
+        "channels": lambda v: v in {1, 2},
+        "text_normalization": lambda v: type(v) is bool,
+        "latex_read": lambda v: type(v) is bool,
+        "subtitles": lambda v: type(v) is bool,
+    }
+    for key in sorted(extra):
+        if not checks[key](parameters[key]):
+            raise ValueError("tts_parameters_invalid")
+        result[key] = float(parameters[key]) if key == "volume" else parameters[key]
+    return result
 
 
 def validate_tts_applied_parameters(value):
-    if (not isinstance(value, dict) or set(value) != {"schema", "voice_id", "rate"}
-            or value["schema"] != TTS_APPLIED_SCHEMA):
+    if (not isinstance(value, dict) or value.get("schema") != TTS_APPLIED_SCHEMA
+            or not {"schema", "voice_id", "rate"} <= set(value) or set(value) - {"schema", "voice_id", "rate", *_TTS_OPTIONAL}):
         raise ValueError("tts_applied_parameters_invalid")
-    return {"schema": TTS_APPLIED_SCHEMA, **tts_parameters(value, capability="tts")}
+    return {"schema": TTS_APPLIED_SCHEMA, **tts_parameters({k: v for k, v in value.items() if k != "schema"}, capability="tts")}
 
 
 def tts_parameters_supported(binding, *, probe=False):

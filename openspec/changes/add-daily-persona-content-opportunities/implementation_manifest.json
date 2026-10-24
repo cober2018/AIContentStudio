@@ -1,0 +1,138 @@
+{
+  "baseline": "636d60e",
+  "worktree": "/Users/mshengran/Project/AIContentStudio",
+  "status": "DATE_PROOF_FIXED_WAITING_NEW_NATURAL_RUN",
+  "files": {
+    "apps/api/alembic/versions/discovery000001_daily_persona_product.py": "3c6eaf46b342398a50f3dab8839ce58bf8b5b8f6009d32b591c6350860f99977",
+    "apps/api/app/db.py": "b98c57b4432c137035791a2aebd7b15ece07e1c69f99f1f21f01c86aec655129",
+    "apps/api/app/models.py": "c6ad9170598cb9c5b4363b6a76c739ea8a4de856e2839a9a461ae20a5af4c549",
+    "apps/api/app/routers/content_projects.py": "eade5619cf03b942ba272551caa3ca4b1ea9a97f8e45ad1decd089c3b6a42ffb",
+    "apps/api/app/routers/discovery.py": "d529848c7de409bf0b0c61dc6f44e2c0ce83ece886eecf505e7122b488a0c9a6",
+    "apps/api/app/routers/opportunities.py": "7d165be985c3971ee7c0afcbcbca00a12b9631ab920869d4b819120c05d3b815",
+    "apps/api/app/routers/product_creation.py": "f64ed5a75a8717b9ccb1fdd69f1bb3b0927e655d7dfe6d387c0e66f0031e9bd1",
+    "apps/api/app/services/content_identity.py": "4943c63b5b83e6126a1d61e96639b1bb235ba6a484a2f7f989f545e9c625d8b8",
+    "apps/api/app/services/creation_recipes.py": "eb943951611f737a8cb3904772da7266b27c85fe957dcf69a128a8f602e68d89",
+    "apps/api/app/services/daily_opportunities.py": "c465411ddd580f2daf4bfc9de260974847f9aa8e5b16240d314f300e636ad4f8",
+    "apps/api/app/services/discovery_ingestion.py": "c36a0d9e0a8bc247ea1667eebfb0b5502137cd3062a64020afcad5bec6afe3f9",
+    "apps/api/app/services/discovery_runtime.py": "f7a3aa27273cd7f766b261f044c185304ad8d851d6d8f109e4969d8ebbab662c",
+    "apps/api/app/services/discovery_search.py": "135de0dec46cfe22f970dbd51d4e8d453e80ccfcfcb58082f74d18711be6f188",
+    "apps/api/app/services/discovery_source_inventory.json": "b42e207ede3c1d6c3c9a05799688f22d7fdce58a35c6680968cb221ac65c4ddd",
+    "apps/api/app/services/home_projection.py": "02493592ea29b16f25c3663b65f6378c2311691dd4d2d85d54526e9948ec5eaf",
+    "apps/api/app/services/opportunities.py": "8710ecbc0b1dfb2e2eea9595a0f18442ba129099b429972e098533c77ac085fb",
+    "apps/api/app/services/product_creation.py": "cbf447ec3584efabe863ba9aad3a9e20c526c355baa5795eb341dc150f8c1bc1",
+    "apps/api/app/services/project_brief.py": "65cdf06dd720c3db09f405af1b042a96dd6d9f16173c642e07e8d1507048a50b",
+    "apps/api/app/services/source_discovery.py": "1f2ace9a70917efffbe40c07a1d921b84731e598adb94882f99b6ea2c80fb841",
+    "apps/api/app/services/url_fetch.py": "0436ef2486e4250bfbd7ed2e50c8f2eeb6defe650706006fc63d119726cf616f",
+    "apps/api/app/services/workflow_engine.py": "7a143e0ae1dddc0290a0b86748712a8ed243fd17c56f4669389265a948f6367b",
+    "apps/api/app/tasks/celery_app.py": "191213702cb04fc434ffe95f20c724603fb11b8820c5a1ab2cf09b40915ebcbc",
+    "apps/api/app/tasks/worker_tasks.py": "95ad29aea60a5d86d90277f9414a1ef57378e8cb221c7c3d5d2e8a734e6c6c18",
+    "apps/api/scripts/startup/start_worker.sh": "e4ece6262dd246b568480bf8155e1284deb01d54c2a312477f50c296bab608db",
+    "apps/web/src/product/DiscoveryPanel.tsx": "d6b8d8ac9d4134e42bf61f6b5d651f9c420c9a8553295b970deacbdc3ec58c47",
+    "apps/web/src/product/HomePage.tsx": "264d8fc17eb055aafaff235bb4142c8fb8635a0ff0b4e0a3828f6a6dd6ec43fb",
+    "apps/web/src/product/IdentityWorkspace.tsx": "3516e15f453663cb0e1d1f93225d4907de69e4b02363469cc000ee3aee26dadd",
+    "apps/web/src/product/OpportunityPages.tsx": "eaed5a53798bf44456a0fa6b3e28385d5ec217c68216b24721b3aa08edd177b5",
+    "apps/web/src/product/PersistentProjectPage.tsx": "40d2cb186b3eee6552af14798e287f2d07e63cb9f18d8d25f1d8b8d7273020c0",
+    "apps/web/src/product/PersistentProjectsPage.tsx": "1d279e1d96b019abf11668846fe607a48456c131787713e458c8d3d93ebc1fad",
+    "apps/web/src/product/ProductCreationDialog.tsx": "ecf174fddf7572936c5145372b58835c78d44618a6304ed6c54ac5c268de22db",
+    "apps/web/src/product/ProductLaunchPanel.tsx": "998eb4a0387f18304bd9f2307c304d382e129f404a72bbdb9b375003e60623c8",
+    "apps/web/src/product/opportunityTypes.ts": "29b12f004a9f8398058f80fc71257dd9947efc40e3b4689fb75874b0bf1fb624",
+    "apps/web/src/product/project/ProjectBriefTab.tsx": "6be552ee4a45978005548f13bbebc301c842e60fe14fdc681de429d9747986c7",
+    "apps/web/src/product/project/types.ts": "10339b6cea9b9a729a3fd97dd639f623a9bebfed9414d703b74c430d649bf198"
+  },
+  "manual_source_extension": {
+    "change": "add-manual-discovery-source-management",
+    "paths": {
+      "apps/api/app/routers/discovery.py": "d529848c7de409bf0b0c61dc6f44e2c0ce83ece886eecf505e7122b488a0c9a6",
+      "apps/api/app/services/discovery_ingestion.py": "c36a0d9e0a8bc247ea1667eebfb0b5502137cd3062a64020afcad5bec6afe3f9",
+      "apps/api/app/services/source_discovery.py": "1f2ace9a70917efffbe40c07a1d921b84731e598adb94882f99b6ea2c80fb841",
+      "apps/api/app/services/discovery_runtime.py": "f7a3aa27273cd7f766b261f044c185304ad8d851d6d8f109e4969d8ebbab662c",
+      "apps/api/app/tasks/worker_tasks.py": "95ad29aea60a5d86d90277f9414a1ef57378e8cb221c7c3d5d2e8a734e6c6c18",
+      "apps/web/src/product/DiscoveryPanel.tsx": "d6b8d8ac9d4134e42bf61f6b5d651f9c420c9a8553295b970deacbdc3ec58c47",
+      "apps/api/app/services/discovery_sources.py": "6265fcf512acec67e565765f6afff4f4587124e0dd08054ae1ab1a1ce5208649"
+    },
+    "note": "Existing six source-management paths extended under separately confirmed spec; original daily quality receipts and 9.5/9.6 remain unchanged."
+  },
+  "offline_catchup_extension": {
+    "change": "add-discovery-offline-catchup",
+    "schema_head": "catchup000001",
+    "paths": {
+      "apps/api/app/models.py": "e2788dcba217537085c7bec6f4e831578adf436b0f7d37321e2d61eb1ed4f934",
+      "apps/api/app/db.py": "5b0c04489ed8667f7da46c02458b53c000da56e8e403b7565cad95f287e9d9b2",
+      "apps/api/app/services/discovery_ingestion.py": "9710d0364645df1cba3775da1c715aec4219b28c0d26a99087ce920158766f1b",
+      "apps/api/app/services/discovery_runtime.py": "e685ef5f69ac728e99285c0878ee94c9a8d2360a6fbb07945706ff7522b86a32",
+      "apps/api/app/services/daily_opportunities.py": "b69d8238013ef16e4f3bbe3a90683fada7ec17066790ed89131620ecc4b0d349",
+      "apps/api/app/tasks/worker_tasks.py": "1fe9172fbc39f8e51a0adaabbd148981152074a4abd65422fa2f6b89d9224185",
+      "apps/api/app/routers/discovery.py": "a5d8b0cc5c3b3a706e15766742f65a707701b039cf0ad04b571699d46a924ef1",
+      "apps/web/src/product/DiscoveryPanel.tsx": "1bb4da14f3d922f731fdd14cd7cfdf1e3be026d278189bfe85937b0e56dd42a7",
+      "apps/api/app/services/discovery_catchup.py": "8a163b4d4dcb69ff5034c7e846878c9b1474733efe256e282ebd4c91ff96b177",
+      "apps/api/alembic/versions/catchup000001_offline_collection.py": "ec0c6d374859d827a0a651d4ba378d093f203a1bef2ae8b074fbb1d2d7933689"
+    },
+    "note": "Separately approved prerequisite and gap reporting; original natural daily tasks 9.5/9.6 remain pending.",
+    "status": "formally accepted; original next-day natural daily acceptance remains pending",
+    "archive": "openspec/changes/archive/2026-10-15-add-discovery-offline-catchup"
+  },
+  "natural_date_proof_extension": {
+    "date": "2026-10-16",
+    "git_head": "49e4fdc11b433d3c32326f78eea7151dd5f8c0a6",
+    "paths": {
+      "apps/api/app/services/daily_opportunities.py": "d5b84f991ccdd2310b308f2cfc1013207126758f0f89d506b001bc980cc4a1ac"
+    },
+    "backup": "backups/daily-natural-20261016-3x15zlfq",
+    "natural_runs": [
+      8,
+      9
+    ],
+    "natural_acceptance": "failed_publication_label_as_event_date; pending_next_natural_run",
+    "precedence": "Apply this paths overlay after files, manual_source_extension.paths and offline_catchup_extension.paths"
+  },
+  "aggregate_source_extension": {
+    "change": "add-aihot-persona-source-integration",
+    "status": "FORMALLY_SWITCHED_WAITING_NATURAL_RUN",
+    "paths": {
+      "apps/api/app/services/discovery_aggregation.py": "c9ad17971f7decc55ecac2118960a8dc9959939de15d1170567d4a0b2bcdedf0",
+      "apps/api/app/services/discovery_ingestion.py": "c4696238ede6a56b84980b8c8c9e57a2982fdb52e32933e8fb4dc6fa0fe6c27e",
+      "apps/api/app/services/discovery_catchup.py": "acde2fe6b223e9ca83ca4a3b66b165b641542b4caa4220af8d324bc95104bafd",
+      "apps/api/app/services/discovery_runtime.py": "8bf603da57652a7faca2dd80dfe17f3acc0509f3b729f63019dee791c2622cd9",
+      "apps/api/app/services/source_discovery.py": "c0d005358454f22b40abe9210a10ab99bc2721708ff4aa173517111a870e9dc8",
+      "apps/api/app/services/daily_opportunities.py": "2a4846c8a1abbed7917f72d792faaca3b2e574ba04fdfd8629d8c50a4ee7a6ca",
+      "apps/api/app/services/discovery_sources.py": "397015a57f2c644181fb23e4d5e1ea1fc589d5a41f8a74a11ba98a0230f26282",
+      "apps/api/app/services/url_fetch.py": "63664161d42e358308121b90a771ca6ff16586b2d8d4acebc2dcd1dbb9715eaa",
+      "apps/api/app/routers/discovery.py": "2640be173756ce802d70b514e5c6b29dbd7ea62d1904ac9883332a6aa3c3572c",
+      "apps/web/src/product/DiscoveryPanel.tsx": "77e42ae21433e88775c03a419398a1bbf55c42e34a7f543b65354d8a7b3270ea"
+    },
+    "precedence": "Apply after all earlier overlays; original quality rules remain active",
+    "mode": {
+      "2": 54,
+      "3": 55
+    }
+  },
+  "natural_body_scope_extension": {
+    "date": "2026-10-17",
+    "git_head": "8539806eb3a1bebf5bf71ee08df3a286cdf9e00a",
+    "paths": {
+      "apps/api/app/services/daily_opportunities.py": "f583eac79973204f77a2eb068116201690f9227d68bb3d4019fabee9ea545151",
+      "apps/api/app/services/url_fetch.py": "533fed388458ac4258e855c44c96e7094140b95e5f6c29f065e1280c4accb39c"
+    },
+    "backup": "backups/daily-natural-20261017-o3nb90tg",
+    "natural_runs": [
+      12,
+      13
+    ],
+    "natural_acceptance": "failed_body_scope; pending_2026-10-18_or_later_08:00_Asia_Taipei",
+    "precedence": "Apply after all earlier overlays, including aggregate_source_extension. url_fetch model_vision limit is preserved authorized adjacent work."
+  },
+  "natural_publication_role_extension": {
+    "date": "2026-10-18",
+    "git_head": "8539806eb3a1bebf5bf71ee08df3a286cdf9e00a",
+    "paths": {
+      "apps/api/app/services/daily_opportunities.py": "6435df371efd93d016b3951f14409a505b14a9657658f6e5a32d52c2d1f6553f"
+    },
+    "backup": "backups/daily-natural-20261018-2cp4tmro",
+    "natural_runs": [
+      16,
+      17
+    ],
+    "natural_acceptance": "failed_republication_as_original; pending_2026-10-19_or_later_08:00_Asia_Taipei",
+    "precedence": "Apply after all earlier overlays including natural_body_scope_extension; preserve unrelated shared-file extensions"
+  }
+}

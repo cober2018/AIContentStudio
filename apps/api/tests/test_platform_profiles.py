@@ -266,3 +266,46 @@ def test_all_golden_targets_end_to_end(seeded):
         package = client.post(f"/api/v1/delivery-targets/{target.json()['id']}/package", headers=EDITOR)
         assert package.status_code == 200, f"{channel}/{form}: {package.json()}"
         assert package.json()["manifest"]["schema_version"] == 2
+
+
+def test_install_missing_profiles_keeps_existing_published_profile_and_promotes_legacy(db_session):
+    from types import SimpleNamespace
+
+    from app.models import ChannelTemplateVersion
+    from app.seed import install_missing_channel_profiles
+    from app.services.channel_variants import _profile_check
+
+    db_session.add(ChannelTemplateVersion(channel="douyin", name="旧口播模板", version=2, status="published", structure=[]))
+    db_session.commit()
+    created = install_missing_channel_profiles(db_session)
+    db_session.commit()
+    assert "wechat" in created and "xiaohongshu" in created and "douyin" in created
+    assert "xueqiu" in created and "juejin" in created
+    legacy = db_session.query(ChannelTemplateVersion).filter_by(channel="douyin", version=2).one()
+    assert legacy.status == "archived"
+    current = db_session.query(ChannelTemplateVersion).filter_by(channel="douyin", status="published").one()
+    assert current.profile_json["content_forms"]["spoken_script"]["artifact_kind"] == "script"
+    wechat = db_session.query(ChannelTemplateVersion).filter_by(channel="wechat", status="published").one()
+    wechat.profile_json = {"content_forms": {"article": {
+        "artifact_kind": "text", "renderer_key": "wechat.official.html",
+        "publisher_candidates": ["publisher.wechat.official"], "media_requirements": {"cover": "required"},
+    }}}
+    db_session.commit()
+    assert install_missing_channel_profiles(db_session) == []
+    db_session.refresh(wechat)
+    assert wechat.profile_json["content_forms"]["article"]["publisher_candidates"] == ["publisher.wechat.official"]
+
+    xueqiu = db_session.query(ChannelTemplateVersion).filter_by(channel="xueqiu", status="published").one()
+    blocked = SimpleNamespace(profile_template_version_id=xueqiu.id, content_form="quant_research", payload_schema="xueqiu.quant_research.v1",
+                              payload_json={"title": "研究", "blocks": [{"text": "这是保证收益"}]})
+    status, report = _profile_check(db_session, blocked, [])
+    assert status == "blocker"
+    assert "finance_as_of_missing" in report["reasons"] and "finance_return_guarantee" in report["reasons"]
+    dated = SimpleNamespace(profile_template_version_id=xueqiu.id, content_form="market_recap", payload_schema="xueqiu.market_recap.v1",
+                            payload_json={"title": "复盘", "blocks": [{"text": "截至2026-09，指数上涨1.2%。"}]})
+    assert _profile_check(db_session, dated, [])[0] == "pass"
+    juejin = db_session.query(ChannelTemplateVersion).filter_by(channel="juejin", status="published").one()
+    coded = SimpleNamespace(profile_template_version_id=juejin.id, content_form="tech_article", payload_schema="juejin.tech_article.v1",
+                            payload_json={"title": "实现", "blocks": [{"text": "```\nprint(1)\n```"}]})
+    warned, warning = _profile_check(db_session, coded, [])
+    assert warned == "warning" and warning["reasons"] == ["tech_code_provenance_missing"]

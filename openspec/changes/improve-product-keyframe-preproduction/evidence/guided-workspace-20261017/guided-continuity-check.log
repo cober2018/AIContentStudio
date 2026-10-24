@@ -1,0 +1,7 @@
+VALID_CHAIN True
+FROZEN_CHAIN 2 False
+REJECT_MISSING video_continuity_shot_missing
+REJECT_SELF video_continuity_self_reference
+REJECT_CYCLE video_continuity_cycle
+STALE_HASH_REJECTED 409
+LEGACY_STRUCTURE_UNCHANGED True

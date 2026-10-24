@@ -1,0 +1,76 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "diagram-flow",
+  "version": "v1",
+  "name": "流程图解",
+  "use": "把一个过程拆成 2–4 步，自上而下依次出现并用箭头连接。例：手机→基站→登陆站→海底光缆。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 16,
+      "required": true
+    },
+    {
+      "name": "step1",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "step2",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "step3",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    },
+    {
+      "name": "step4",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 2000,
+    "max": 10000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "PingFangSC-Semibold",
+    "PingFangSC-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "0a5124cdc880072e3d554eb884f39e99b469cbb6b1a6bc236fbdf48ed203948c"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-23",
+      "content": "2 步（后两步为空）",
+      "frames": "入场 0.3s、中段 1.2s、定格 3.5s",
+      "result": "文字替换、空字段隐藏、超宽缩放、动画时序正确"
+    },
+    {
+      "date": "2026-10-23",
+      "content": "4 步全满",
+      "frames": "入场 0.3s、中段 1.2s、定格 3.5s",
+      "result": "文字替换、空字段隐藏、超宽缩放、动画时序正确"
+    }
+  ]
+}

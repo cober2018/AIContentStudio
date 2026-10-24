@@ -1,0 +1,52 @@
+{
+  "key": "studio.product.purchase-reason",
+  "version": "1",
+  "ref": "studio.product.purchase-reason@1",
+  "kind": "skill",
+  "modality": "video",
+  "purpose": "围绕单一购买理由组织目标、核心表达与行动引导",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [],
+  "output_schemas": [],
+  "required_context": [
+    "product_context"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "product_context",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "applicable_fields": [
+    "objective",
+    "core_message",
+    "cta"
+  ],
+  "schema": "studio.skill.contract.v1",
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.graphic.product-neutral@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.video.product@1"
+  ],
+  "references": []
+}

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+from contextlib import contextmanager
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -146,8 +147,19 @@ def store_bytes(db: Session, content: bytes, *, subdir: str, suffix: str) -> tup
     relative = Path(subdir) / content_hash[:2] / f"{content_hash}{suffix}"
     from .material_storage import provider
 
-    provider().put(str(relative), content)
+    with library_guard():
+        provider().put(str(relative), content)
     return str(relative), content_hash
+
+
+@contextmanager
+def library_guard():
+    try:
+        yield
+    except FileNotFoundError as exc:
+        if str(exc) == "material_library_unavailable":
+            raise HTTPException(409, {"code": "material_library_unavailable", "message": "素材库未连接"}) from None
+        raise
 
 
 def create_material(
@@ -177,8 +189,9 @@ def create_revision(
     source_url: str | None = None,
     source_metadata: dict | None = None,
     rights_status: str = "cleared",
-    public_use_allowed: bool = False,
-    model_use_allowed: bool = False,
+    # Anything the user puts in the library may be edited by AI and published unless a caller says otherwise.
+    public_use_allowed: bool = True,
+    model_use_allowed: bool = True,
     commercial_use_allowed: bool | None = None,
     attribution_text: str | None = None,
     provider_key: str | None = None,
@@ -217,7 +230,8 @@ def create_revision(
         storage = provider()
         if not isinstance(storage, LocalMaterialStorage):
             raise HTTPException(409, {"code": "execution_local_storage_required"})
-        storage.put_stream(relative, _execution_stream, maximum=_stream_maximum, expected_hash=content_hash)
+        with library_guard():
+            storage.put_stream(relative, _execution_stream, maximum=_stream_maximum, expected_hash=content_hash)
     else:
         relative, content_hash = store_bytes(db, content, subdir="material", suffix=suffix)
     latest_no = db.scalar(
@@ -433,6 +447,70 @@ def find_usage(db: Session, material_id: int) -> dict:
     }
 
 
+_LIBRARY_DOWN = {"code": "material_library_unavailable", "message": "素材库未连接"}
+_verified: dict[tuple[str, int, int], str] = {}
+
+
+def file_location(db: Session, revision: MaterialRevision) -> Path | None:
+    """Where this revision's bytes sit on this machine, or None when storage is not local."""
+    from .material_storage import LocalMaterialStorage, provider
+
+    storage = provider()
+    key = revision.file_path or ""
+    if not isinstance(storage, LocalMaterialStorage) or not key:
+        return None
+    if key.startswith("external/"):
+        from ..models import MaterialSource
+        from .material_external import parse_key, path_of
+
+        source = db.get(MaterialSource, parse_key(key)[0])
+        return path_of(source, revision) if source is not None else None
+    if storage.legacy_absolute_reads and Path(key).is_absolute():
+        return Path(key).resolve()
+    return storage._path(key)
+
+
+def _library_down(db: Session, revision: MaterialRevision) -> bool:
+    from .storage_locations import library_reachable, library_root
+
+    root = library_root()
+    if root is None or library_reachable():
+        return False
+    try:
+        path = file_location(db, revision)
+    except (OSError, ValueError):
+        return True
+    return path is not None and path.is_relative_to(root)
+
+
+def local_file_checked(db: Session, revision: MaterialRevision) -> Path | None:
+    """The verified local file for streaming; None means storage is not local and callers read bytes instead."""
+    if not revision.file_path:
+        raise HTTPException(404, "素材文件缺失")
+    if _library_down(db, revision):
+        raise HTTPException(409, _LIBRARY_DOWN)
+    path = file_location(db, revision)
+    if path is None:
+        return None
+    try:
+        info = path.stat()
+        if not path.is_file():
+            raise FileNotFoundError(str(path))
+        # Hashing a 100 MB cut on every seek request is wasteful; the same file with the same size and time was already checked.
+        stamp = (str(path), info.st_size, info.st_mtime_ns)
+        if _verified.get(stamp) != revision.content_hash:
+            digest = hashlib.sha256()
+            with path.open("rb") as source:
+                while chunk := source.read(1024 * 1024):
+                    digest.update(chunk)
+            if digest.hexdigest() != revision.content_hash:
+                raise HTTPException(409, "素材字节校验失败（content hash 不一致）")
+            _verified[stamp] = revision.content_hash
+    except OSError:
+        raise HTTPException(404, "素材文件缺失") from None
+    return path
+
+
 def read_bytes_checked(db: Session, revision: MaterialRevision, *, require_public: bool = False) -> bytes:
     if require_public and revision.public_use_allowed is not True:
         raise HTTPException(403, "该素材未获公开使用授权")
@@ -443,8 +521,12 @@ def read_bytes_checked(db: Session, revision: MaterialRevision, *, require_publi
 
         content = provider().read(revision.file_path)
     except (FileNotFoundError, OSError):
+        if _library_down(db, revision):
+            raise HTTPException(409, _LIBRARY_DOWN) from None
         raise HTTPException(404, "素材文件缺失") from None
     except (ValueError, RuntimeError):
+        if _library_down(db, revision):
+            raise HTTPException(409, _LIBRARY_DOWN) from None
         raise HTTPException(409, "素材存储不可用") from None
     if hashlib.sha256(content).hexdigest() != revision.content_hash:
         raise HTTPException(409, "素材字节校验失败（content hash 不一致）")

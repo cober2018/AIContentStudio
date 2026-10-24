@@ -1,0 +1,24 @@
+markers: 已知信息说明平台能否回应它；无法回应也如实说明， | 已知购买入口写明确下一步，入口、优惠、售后缺失时
+saved profile revision 1 (真实 PUT 冻结链) ✓
+PASS R1-全关：完整请求无任何方法正文（含嵌套副本）
+PASS R1-全关：configured_methods 为空
+PASS R1-全关：选择记录为空，关闭以 id 记入审计清单
+PASS R1-单关：被关方法正文不出现，启用方法仅经执行投影出现一次  [countA=1]
+PASS R1-阶段总关：两方法正文均不出现
+PASS R1/R2-默认继承：统一解析后按目标过滤（objective 只带购买理由一次）
+PASS R1-decide：显式选择下采用不误报漂移  [decision=adopt]
+PASS R2-objective 单目标只带购买理由方法（无字段限定的其他方法保留）  [refs=['studio.product.purchase-reason@1', 'studio.video.product-script@1']]
+PASS R2-完整配置与执行投影分别记录（选择含全部启用，投影仅适用）  [sel=['studio.product.audience-need@1', 'studio.product.purchase-reason@1', 'studio.video.product-script@1'] exec=['studio.product.purchase-reason@1', 'studio.video.product-script@1']]
+PASS R2-primary_audience 单目标只带受众方法＋其他方法  [refs=['studio.product.audience-need@1', 'studio.video.product-script@1']]
+PASS R2-混合目标按适用并集  [refs=['studio.product.audience-need@1', 'studio.product.purchase-reason@1', 'studio.video.product-script@1']]
+PASS R2-cta 只带购买理由方法  [refs=['studio.product.purchase-reason@1', 'studio.video.product-script@1']]
+PASS R2-反馈重写按本次目标重新匹配  [refs=['studio.product.purchase-reason@1', 'studio.video.product-script@1'] status=ready]
+PASS R5-中间选区：前缀＋片段＋后缀，无重复  [办公室下午更顺口的改写片段不用洗复杂零件，随身携带很轻松]
+PASS R5-开头选区  [更顺口的改写片段一杯鲜榨，不用洗复杂零件，随身携带很轻松]
+PASS R5-结尾选区  [办公室下午来一杯鲜榨，不用洗复杂零件，随更顺口的改写片段]
+PASS R5-代理对选区按UTF-16码元定位  [办公室下午更顺口的改写片段来一杯鲜榨]
+PASS R5-切半代理对被拒绝  [HTTPException: 409: 选区必须包含完整字符]
+PASS R5-无选区整字段原样返回  [更顺口的改写片段]
+PASS R5-系统提示词包含选区片段合同
+
+===== R1–R5 探针结果：20 passed, 0 failed =====

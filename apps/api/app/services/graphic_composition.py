@@ -29,6 +29,15 @@ def requires_photo(preset, role):
     return requirement == "every_card" or (requirement == "cover" and role == "cover")
 
 
+def _text_height(text, width, size):
+    # Same estimate as geometry_quality, so a fitted card never fails its own overflow check.
+    return (math.ceil(len(text) / max(1, width // size)) + text.count("\n")) * size * 1.4
+
+
+def _node_height(labels, width, size):
+    return max(math.ceil(len(label) / max(1, (width - 32) // size)) for label in labels) * size * 1.4 + 32
+
+
 def compose(plan, *, preset_ref, asset_catalog=(), evidence_catalog=(), template="editorial", density=None):
     from .studio_creative_catalog import PRESETS, validate_ref
 
@@ -39,7 +48,8 @@ def compose(plan, *, preset_ref, asset_catalog=(), evidence_catalog=(), template
     density = density or preset["density"]
     if density not in {"low", "medium", "high"}:
         raise ValueError("graphic_composition_density_invalid")
-    plan = validate_artifact("graphic.card-plan.v1", plan)
+    plan_schema = "graphic.card-plan.v2" if any("visual_structure" in card for card in plan.get("cards", [])) else "graphic.card-plan.v1"
+    plan = validate_artifact(plan_schema, plan)
     width, height = DIMENSIONS[plan["aspect_ratio"]]
     background, foreground, accent = PALETTES[preset["palette"]]
     supplied_assets = {item["material_revision_id"]: item for item in asset_catalog}
@@ -52,8 +62,34 @@ def compose(plan, *, preset_ref, asset_catalog=(), evidence_catalog=(), template
         evidence_start = len(evidence_refs)
         margin = 72
         content_width = width - 2 * margin
-        title_size = 60 if card["role"] == "cover" else 48
-        body_size = {"low": 38, "medium": 34, "high": 30}[density]
+        visual = card["visual_type"]
+        visual_height = round(height * (0.32 if template == "split" else 0.28))
+        labels = card["diagram_nodes"] if visual == "diagram" else []
+        gap = 36
+        node_width = (content_width - gap * (len(labels) - 1)) / len(labels) if labels else 0
+        bullet_gap = 32 if template == "cards" else 24
+        base_title, title_cap = (60, 120) if card["role"] == "cover" else (48, 84)
+        base_body = {"low": 38, "medium": 34, "high": 30}[density]
+        # Caps are for medium density and follow the density ratio, otherwise short cards would hit the same caps at every density.
+        ratio = base_body / 34
+        def sizes(scale, _base_title=base_title, _title_cap=title_cap, _base_body=base_body, _ratio=ratio):
+            return (min(round(_base_title * scale), round(_title_cap * _ratio)), min(round(_base_body * scale), round(56 * _ratio)),
+                min(round(28 * scale), round(40 * _ratio)))
+        def stack(title_size, body_size, label_size, _card=card, _visual=visual, _visual_height=visual_height,
+                  _labels=labels, _node_width=node_width, _width=content_width, _bullet_gap=bullet_gap):
+            total = 32 + _text_height(_card["title"], _width, title_size) + 28
+            if _visual in {"image", "chart"}:
+                total += _visual_height + 28
+            if _labels:
+                total += _node_height(_labels, _node_width, label_size) + 28
+            if _card["body"]:
+                total += _text_height(_card["body"], _width, body_size) + 24
+            return total + sum(_text_height("• " + bullet, _width, body_size) + _bullet_gap for bullet in _card.get("bullets", []))
+        # Largest scale that leaves breathing room; base sizes are the floor so dense cards behave exactly as before.
+        safe = height - 2 * margin
+        title_size, body_size, label_size = next((sizes(step / 20) for step in range(50, 20, -1)
+            if stack(*sizes(step / 20)) <= safe * .9), sizes(1))
+        top = margin + round(max(0, safe - stack(title_size, body_size, label_size)) * .45)
         def layer(kind, lid, x, y, w, h, *, _layers=layers, **content):
             value = {"id": lid, "type": kind, "order": len(_layers), "x": x, "y": y,
                 "width": w, "height": h, **content}
@@ -77,11 +113,10 @@ def compose(plan, *, preset_ref, asset_catalog=(), evidence_catalog=(), template
                     "locator": {"canvas_id": _cid, "layer_id": lid, "start": item["start"], "end": item["end"]}})
             _layer("text", lid, _margin if x is None else x, y, _width if box_width is None else box_width, box_height, claims=claims,
                 runs=[{"text": value, "style": {"font_size": size, "color": foreground, "weight": 400, "align": "left"}}])
-        layer("shape", f"{cid}-accent", margin, margin, 88, 8, shape="rectangle", fill=accent)
-        title_height = 2 * title_size * 1.4
-        write(f"{cid}-title", card["title"], margin + 32, title_size, title_height, "title")
-        cursor = margin + 32 + title_height + 28
-        visual = card["visual_type"]
+        layer("shape", f"{cid}-accent", margin, top, 88, 8, shape="rectangle", fill=accent)
+        title_height = _text_height(card["title"], content_width, title_size)
+        write(f"{cid}-title", card["title"], top + 32, title_size, title_height, "title")
+        cursor = top + 32 + title_height + 28
         if requires_photo(preset, card["role"]) and visual != "image":
             raise ValueError("graphic_composition_requested_photo_missing")
         if visual in {"image", "chart"}:
@@ -91,7 +126,6 @@ def compose(plan, *, preset_ref, asset_catalog=(), evidence_catalog=(), template
             if revision.get("kind") is not None and revision["kind"] != visual:
                 raise ValueError("graphic_composition_asset_kind_mismatch")
             lid = f"{cid}-visual"
-            visual_height = round(height * (0.32 if template == "split" else 0.28))
             layer(visual, lid, margin, cursor, content_width, visual_height,
                 material_revision_id=revision["material_revision_id"], fit="contain")
             asset_refs.append({"material_revision_id": revision["material_revision_id"], "content_hash": revision["content_hash"],
@@ -101,31 +135,27 @@ def compose(plan, *, preset_ref, asset_catalog=(), evidence_catalog=(), template
         elif visual == "diagram" and preset.get("image_fallback") != "shape_only":
             raise ValueError("graphic_composition_shape_fallback_unavailable")
         if visual == "diagram":
-            labels = card["diagram_nodes"]
-            gap = 36
-            box_width = (content_width - gap * (len(labels) - 1)) / len(labels)
-            size = 28
-            box_height = max(math.ceil(len(label) / max(1, (box_width - 32) // size)) for label in labels) * size * 1.4 + 32
+            box_width, size = node_width, label_size
+            box_height = _node_height(labels, box_width, size)
             for index, label in enumerate(labels):
                 x = margin + index * (box_width + gap)
                 layer("shape", f"{cid}-node-{index}-box", x, cursor, box_width, box_height,
                     shape="rectangle", fill=background, stroke=accent, stroke_width=2)
                 write(f"{cid}-node-{index}", label, cursor + 16, size, box_height - 32,
                     f"diagram-{index}", x=x + 16, box_width=box_width - 32)
-                if index + 1 < len(labels):
+                if index + 1 < len(labels) and card.get("visual_structure", "sequence") == "sequence":
                     layer("shape", f"{cid}-link-{index}", x + box_width, cursor + box_height / 2,
                         gap, 2, shape="rectangle", fill=accent)
             cursor += box_height + 28
         if card["body"]:
-            lines = math.ceil(len(card["body"]) / max(1, content_width // body_size))
-            box = (lines + card["body"].count("\n")) * body_size * 1.4
+            box = _text_height(card["body"], content_width, body_size)
             write(f"{cid}-body", card["body"], cursor, body_size, box, "body")
             cursor += box + 24
         for index, bullet in enumerate(card.get("bullets", [])):
             value = "• " + bullet
-            box = math.ceil(len(value) / max(1, content_width // body_size)) * body_size * 1.4
+            box = _text_height(value, content_width, body_size)
             write(f"{cid}-bullet-{index}", value, cursor, body_size, box, f"bullet-{index}")
-            cursor += box + (32 if template == "cards" else 24)
+            cursor += box + bullet_gap
         valid_targets = {"title", *(("body",) if card["body"] else ()), *(f"bullet-{i}" for i in range(len(card.get("bullets", [])))),
             *(f"diagram-{i}" for i in range(len(card.get("diagram_nodes", []))))}
         if any(claim["target"] not in valid_targets for claim in card.get("claims", [])):
@@ -144,6 +174,7 @@ def compose(plan, *, preset_ref, asset_catalog=(), evidence_catalog=(), template
     return canonical({"payload_schema": "graphic.master.v2", "payload": payload, "asset_refs": asset_refs,
         "evidence_refs": evidence_refs, "composition": {"tool": "studio.graphic.layout-compose@1", "plan_hash": digest(plan),
             "preset_ref": preset_ref, "preset_hash": digest(PRESETS[preset_ref]),
+            **({"plan_schema": plan_schema, "page_purposes": [{"id": card["id"], "purpose": card["purpose"], "visual_structure": card["visual_structure"]} for card in plan["cards"]]} if plan_schema.endswith(".v2") else {}),
             "photo_requirement": photo_requirement(preset), "template": template, "density": density},
         "quality": report})
 
@@ -168,7 +199,7 @@ def build_proposal(resolved):
     if method.get("package_hash") != package["package_hash"]:
         raise ValueError("graphic_composition_tool_changed")
     plans = [value for value in resolved.get("upstream", {}).values()
-        if value.get("output_schema") == "graphic.card-plan.v1" and value.get("selected_content") is not None]
+        if value.get("output_schema") in {"graphic.card-plan.v1", "graphic.card-plan.v2"} and value.get("selected_content") is not None]
     if len(plans) != 1:
         raise ValueError("graphic_composition_one_accepted_plan_required")
     context = resolved["context"]

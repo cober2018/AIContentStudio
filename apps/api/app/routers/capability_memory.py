@@ -210,6 +210,14 @@ def persona_reference_styles(persona_id: int, db: Session = Depends(get_db), use
     return service.reference_styles(db, user, persona_id)
 
 
+@router.get("/persona-reference-styles/{persona_id}/resources")
+def persona_reference_resources(persona_id: int, q: str = Query("", max_length=200),
+                                kind: Literal["material_revision", "source"] = "material_revision",
+                                offset: int = Query(0, ge=0), reference_id: int | None = Query(None, ge=1),
+                                db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return service.reference_resources(db, user, persona_id, q=q, kind=kind, offset=offset, reference_id=reference_id)
+
+
 @router.get("/{artifact_id}")
 def get_artifact(artifact_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return service.get_artifact(db, user, artifact_id)

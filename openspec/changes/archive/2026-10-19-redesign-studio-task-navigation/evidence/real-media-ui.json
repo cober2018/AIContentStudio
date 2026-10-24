@@ -1,0 +1,67 @@
+{
+  "checks": [
+    {
+      "path": "/projects/35/units/43/production?stage=master",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/projects/35/units/44/production?stage=master",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/projects/36/units/45/production?stage=master",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/projects/36/units/46/production?stage=master",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/review?project=35&unit=43&candidate=6&step=delivery",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/review?project=36&unit=45&candidate=7&step=delivery",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/projects/35/units/43/production?stage=master",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/projects/35/units/44/production?stage=master",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/projects/36/units/45/production?stage=master",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/projects/36/units/46/production?stage=master",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/review?project=35&unit=43&candidate=6&step=delivery",
+      "width": 390,
+      "pass": true
+    },
+    {
+      "path": "/review?project=36&unit=45&candidate=7&step=delivery",
+      "width": 390,
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "writes": [],
+  "scope": "live read-only browser; all business mutations used CLI APIs"
+}

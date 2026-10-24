@@ -1,0 +1,8 @@
+- 2026-10-22 海底光缆样片（项目41，角色2默认工作流，用户授权代为采用中间阶段，仅本地）：
+  - 文字（单元78）：evidence→angles→outline→draft→quality→refine→title→final→final_quality 全部完成。默认 longform 初稿 2,300 字且加了事实包外细节；带“精简+只用事实包”指令重跑后约 1,200 字。质量检查拦下推算数字“130 年”与无引注“99%”——均有效。根因之一是事实陈述里写了编辑提示（“表述时用几乎都”），模型照抄进正文；事实包只写事实，表述要求放创作任务书。
+  - 平台缺口：检查失败后重跑上游，下游检查只显示 stale、不会自动重跑，需要手动触发。
+  - 图文（单元79）：卡片计划按文案逐句成卡可行；但 `studio.graphic.layout-compose@1` 只按固定字号自上而下堆叠，1080×1440 卡片下方三分之二空白，没有比例、重心或数字强调——这是图文质量的主要瓶颈。新项目还需先做渲染器范围验证。
+  - 角色语义检查提示主题偏离角色领域（AI Agent/架构），属实，作为提醒保留。
+  - 视频（单元80）：script@3 首次输出不合合同（已失败可重试，原文不留存），重试后 7 节拍；shot-director@3 产出 15 镜、每镜带素材需求。
+  - 镜头找素材实测（运行6–10）：长描述句在档案库零结果，短关键词有效；历史图片多为公有领域且尺寸小；自由版权的现代海缆船/接续作业实拍几乎不存在，判为缺口属实。
+- 2026-10-22: user wants storage location configurable — both (1) change main storage location with copy/verify/switch and (2) move selected materials to an external drive with offline state. Separate proposal after this change.

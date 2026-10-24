@@ -14,8 +14,8 @@ from ..models import (
     ContentUnit,
     CreativeBriefRevision,
     MaterialRevision,
-    PersonaWorkflowDefault,
     ProductCreationLaunch,
+    ProductionProfileRevision,
     ProjectMaterialReference,
     ProjectSourceBinding,
     SourceDocument,
@@ -25,7 +25,7 @@ from ..models import (
     WorkflowStepAttempt,
     utcnow,
 )
-from . import content_identity, creation_recipes, workflow_engine
+from . import creation_recipes, product_context, workflow_engine
 from .discovery_runtime import digest
 from .project_authorization import authorize_project_workflow
 from .project_brief import ProductContext, ProductOffer, checksum_brief, current_brief, validate_product_context
@@ -73,11 +73,18 @@ def save_launch(db, user, payload):
     existing = db.scalar(select(ProductCreationLaunch).where(ProductCreationLaunch.owner_user_id == user.id,
         ProductCreationLaunch.launch_key == payload.launch_key))
     if existing:
-        if existing.input_checksum != checksum:
+        accepted_checksums = {checksum}
+        legacy_defaults = {"core_message": None, "angle": None, "creative_profile": None,
+            "audio_creative_profile": None, "fetch_product_url": True, "private_costs": None}
+        data = payload.model_dump(mode="json", exclude={"launch_key"})
+        # Older launch hashes predate these optional fields; only their exact defaults may be omitted.
+        if all(data.get(key) == value for key, value in legacy_defaults.items()):
+            accepted_checksums.add(digest({key: value for key, value in data.items() if key not in legacy_defaults}))
+        if existing.input_checksum not in accepted_checksums:
             raise HTTPException(409, "此发起标识已用于另一份商品资料，请继续原项目或重新发起")
         return existing
-    identity = content_identity.create_snapshot(db, user, persona_id=payload.persona_id,
-            production_stages=payload.production_stages, modality=payload.modality)
+    if payload.modality != "video":
+        raise HTTPException(422, "商品工作台仅制作视频；文字与图文请使用角色内容工作台，旧商品记录仍可读取")
     ensure_channel_in_service(payload.channel)
     product = ProductContext.model_validate(payload.product_context).model_dump(mode="json")
     sources = []
@@ -86,7 +93,7 @@ def save_launch(db, user, payload):
         if source is None or source.is_archived:
             raise HTTPException(404, "商品资料不存在")
         sources.append(source)
-    if not product["description"].strip() and product["url"] and not sources:
+    if payload.fetch_product_url and not product["description"].strip() and product["url"] and not sources:
         from ..routers.sources import _parse_and_store
         from .url_fetch import safe_fetch
 
@@ -102,8 +109,6 @@ def save_launch(db, user, payload):
             sources.append(source)
         except Exception:  # noqa: BLE001 URL errors can contain sensitive URL parameters.
             db.rollback()
-            identity = content_identity.create_snapshot(db, user, persona_id=payload.persona_id,
-            production_stages=payload.production_stages, modality=payload.modality)
     # A pasted description is an ordinary source, not an automatically confirmed fact.
     if product["description"].strip():
         from ..routers.sources import _parse_and_store
@@ -129,28 +134,34 @@ def save_launch(db, user, payload):
     product["material_refs"] = [{"material_revision_id": r.id, "content_hash": r.content_hash,
                                  "categories": categories.get(r.id, [])} for r in materials]
     product = validate_product_context(db, product, user=user)
-    workflow_id = payload.workflow_id
-    if workflow_id is None:
-        binding = db.scalar(select(PersonaWorkflowDefault).where(PersonaWorkflowDefault.persona_id == payload.persona_id,
-                                                                 PersonaWorkflowDefault.modality == payload.modality))
-        workflow_id = binding.workflow_id if binding else None
-    if workflow_id:
-        workflow = db.get(Workflow, workflow_id)
-        if not workflow or not workflow.enabled or workflow.status != "published":
-            raise HTTPException(409, "所选创作流程不可运行")
-        authorize_project_workflow(db, workflow, user)
-        if workflow.scope != "persona_default" or workflow.workflow_key != f"persona.{payload.persona_id}.{payload.modality}":
-            raise HTTPException(409, "所选流程与商品角色或内容形态不匹配")
+    from copy import deepcopy
+
+    from .workflow_templates import ensure_product_workflow
+
+    settings = {}
+    if payload.creative_profile is not None:
+        settings[f"{payload.modality}_creative_profile"] = deepcopy(payload.creative_profile)
+    if payload.audio_creative_profile is not None:
+        settings["audio_creative_profile"] = deepcopy(payload.audio_creative_profile)
+    if payload.production_stages is not None:
+        settings["production_stages"] = deepcopy(payload.production_stages)
+    workflow = db.get(Workflow, payload.workflow_id) if payload.workflow_id else ensure_product_workflow(db, payload.modality, user)
+    if not workflow or not workflow.enabled or workflow.status != "published":
+        raise HTTPException(409, "所选创作流程不可运行")
+    authorize_project_workflow(db, workflow, user)
+    if workflow.scope != "product_default" or workflow.workflow_key != f"product.{user.id}.{payload.modality}":
+        raise HTTPException(409, "所选流程与商品生产领域或内容形态不匹配")
+    workflow_id = workflow.id
     project = ContentProject(owner_user_id=user.id, title=payload.title or product["name"], objective=payload.objective)
     db.add(project)
     db.flush()
     brief_data = {"objective": payload.objective,
-        "primary_audience": payload.primary_audience or "、".join(identity.effective_profile_json.get("target_audience") or []),
+        "primary_audience": payload.primary_audience or "",
         "core_message": payload.core_message or "；".join(product["selling_points"]), "angle": payload.angle,
         "required_evidence": ["商品事实需沿用来源与证据的确认和冻结规则"],
         "content_constraints": ["不得虚构规格、功效、价格、亲测或用户评价", *product["excluded_claims"]],
-        "identity_scope": [{"persona_id": payload.persona_id}], "modality_scope": [payload.modality],
-        "channel_scope": [payload.channel], "cta": payload.cta,
+        "identity_scope": [], "modality_scope": [payload.modality],
+        "channel_scope": [payload.channel] if payload.channel else [], "cta": payload.cta,
         "references": [{"kind": "source_document", "id": s.id} for s in sources], "product_context": product}
     brief = CreativeBriefRevision(project_id=project.id, revision_no=1, created_by=user.email,
         **{k: brief_data[k] for k in ("objective", "primary_audience", "core_message", "angle", "cta")},
@@ -159,22 +170,20 @@ def save_launch(db, user, payload):
     db.add(brief)
     if payload.private_costs is not None:
         save_private_costs(db, user, project.id, payload.private_costs.model_dump(mode="json"))
-    unit = ContentUnit(project_id=project.id, persona_id=payload.persona_id, identity_snapshot_id=identity.id,
+    unit = ContentUnit(project_id=project.id, persona_id=None, identity_snapshot_id=None, production_domain="product",
                        modality=payload.modality, channel_id=payload.channel, title=payload.title or product["name"],
                        pinned_workflow_id=workflow_id)
     db.add(unit)
     db.flush()
+    settings.setdefault(f"{payload.modality}_creative_profile", product_context.default_creative_profile(payload.modality))
     if payload.production_stages is not None and payload.production_stages != {}:
         from .creative_configuration import freeze_production_stages
 
-        stages = identity.effective_profile_json[f"{payload.modality}_creative_profile"]["production_stages"]
-        manifest = freeze_production_stages(db, user, unit, stages, origin="product_task")
-        identity.effective_profile_json = {**identity.effective_profile_json,
-            "product_production_methods": {payload.modality: manifest},
-            "product_production_stages": payload.production_stages}
-        identity.checksum = content_identity.checksum({"identity_checksum": identity.checksum,
-            "product_production_methods": {payload.modality: manifest},
-            "product_production_stages": payload.production_stages})
+        settings[f"{payload.modality}_creative_profile"]["production_stages"] = deepcopy(payload.production_stages)
+        manifest = freeze_production_stages(db, user, unit, payload.production_stages, origin="product_task")
+        settings["product_production_methods"] = {payload.modality: manifest}
+    db.add(ProductionProfileRevision(unit_id=unit.id, revision=1, settings_json=settings,
+        settings_hash=digest(settings), created_by=user.email))
     for source in sources:
         db.add(ProjectSourceBinding(project_id=project.id, source_document_id=source.id, attached_by=user.email))
     for revision in materials:
@@ -206,9 +215,10 @@ def resume_launch(db, user, launch):
 
     project = db.get(ContentProject, launch.project_id)
     unit = db.get(ContentUnit, launch.unit_id)
-    if project.owner_user_id != user.id or project.status == "archived" or unit.status == "archived":
+    if project.owner_user_id != user.id or project.status == "archived" or unit.lifecycle_readonly:
         raise HTTPException(409, "项目不可继续创作")
-    content_identity.hierarchy(db, user, persona_id=unit.persona_id, mutable=True)
+    if not product_context.is_product(unit):
+        raise HTTPException(409, "作品尚未迁移至商品生产领域")
     if launch.status in {"started", "unknown"}:
         return launch_json(launch)
     token, now = uuid.uuid4().hex, utcnow()
@@ -239,6 +249,11 @@ def resume_launch(db, user, launch):
                 return launch_json(launch)
 
         workflow = db.get(Workflow, unit.pinned_workflow_id) if unit.pinned_workflow_id else None
+        if launch.run_id is None and (not workflow or workflow.scope in {"persona_default", "account_default", "series_default"}):
+            from .workflow_templates import ensure_product_workflow
+
+            workflow = ensure_product_workflow(db, unit.modality, user)
+            unit.pinned_workflow_id = workflow.id
         if not workflow or not workflow.enabled or workflow.status != "published":
             launch.status, launch.reason = "blocked", "workflow_required"
             return launch_json(launch)

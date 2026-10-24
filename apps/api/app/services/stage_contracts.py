@@ -25,8 +25,10 @@ class StageContractError(ValueError):
     pass
 
 
-# Versioned nested Stage output contracts need room inside their frozen invocation envelope.
+# A text-master list mark is depth 10 under its payload, 13 in a proposal, and 14 in the invocation snapshot.
 MAX_DEPTH = 16
+# A resolved stage carries the accepted Master (itself capped at 128 KiB) in context, upstream and prompt.
+RESOLVED_STAGE_MAX_BYTES = 512 * 1024
 
 
 def canonical(value, *, max_bytes=128 * 1024):
@@ -59,8 +61,15 @@ def canonical(value, *, max_bytes=128 * 1024):
     return json.loads(encoded)
 
 
+def remember_validation_code(run, exc) -> None:
+    code = str(exc)
+    if re.fullmatch(r"[a-z0-9_]{1,80}", code):
+        run.usage_json = {**(run.usage_json or {}), "validation_code": code}
+
+
 def digest(value):
-    return hashlib.sha256(json.dumps(canonical(value), ensure_ascii=False, sort_keys=True,
+    # Hashing stores nothing; persisted values keep their own bounds where they are written.
+    return hashlib.sha256(json.dumps(canonical(value, max_bytes=RESOLVED_STAGE_MAX_BYTES), ensure_ascii=False, sort_keys=True,
                                      separators=(",", ":")).encode()).hexdigest()
 
 

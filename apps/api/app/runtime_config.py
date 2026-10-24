@@ -15,6 +15,7 @@ _OVERRIDES: dict[str, dict] = {}
 KEY_LLM = "llm"
 KEY_MODELS = "models"  # {"profiles": {name: {...}}, "routes": {purpose: profile_name}}
 KEY_PLUGINS = "plugins"  # {"skill_dirs": [...], "skills_enabled": [...], "mcp": [{name, url, enabled}]}
+KEY_CHANNEL_PLUGINS = "channel_plugins"  # {"unplugged": [channel key, ...]}；与技能插件分开，避免互相覆盖
 KEY_DSH = "dsh"
 KEY_IMAGE = "image"  # {"enabled","provider","model","base_url","api_key","size"}  # {"default_provider","default_model","fallback_provider","timeout_sec","max_retries","output_dir"}
 KEY_DELIVERY = "delivery"  # 历史配置保留读取；allow_unverified_auto_draft 不再授权远端效果

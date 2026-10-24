@@ -1,0 +1,5 @@
+/Users/mshengran/.codex/worktrees/product-workflow-ui/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+PASS: invalid negative/CNY precision/JPY precision/unsupported currency -> null; valid unverified sale remains calculable; unrelated original-price error does not block; explicit zero is retained
+PASS: create/idempotency; versioned brief and exact material hash/tags; preview/frozen history; nullable private costs and owner/archive guards; legacy compatibility
+PASS: saved Brief -> first Run -> actual MockProvider dispatch receives sales fields; frozen input matches; costs excluded; generated candidates wait for acceptance

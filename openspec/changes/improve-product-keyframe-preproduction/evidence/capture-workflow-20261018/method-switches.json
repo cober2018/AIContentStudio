@@ -1,0 +1,155 @@
+{
+  "results": [
+    {
+      "stage_enabled": true,
+      "method_enabled": true,
+      "manifest": {
+        "schema": "production.methods.manifest.v1",
+        "stages": [
+          {
+            "stage": "storyboard",
+            "title": "分镜与素材",
+            "enabled": true,
+            "origin": "isolated-probe",
+            "methods": [
+              {
+                "source_kind": "studio_builtin",
+                "skill_ref": "studio.video.product-filming@1",
+                "version": "1",
+                "package_hash": "16949af24d7d02e3af88fb2d7701b5d7b4e71db0243f9a3210d99bfdd2e628ab",
+                "contract_hash": "d7ead26c10717ee42013d33af7e919b97358418945d37ce1cea732d14ca08909",
+                "provenance": {
+                  "classification": "self_developed",
+                  "license": "product_owned",
+                  "method_reference": "user_approved_product_capture_workflow",
+                  "vendored_code": "none"
+                },
+                "instruction": "# 商品实拍任务书\n\n输入：当前SKU事实与原图、购买者和使用场景、核心购买理由、脚本结构、已知拍摄条件、选中的方法及版本。只使用当前作品授权资料；未知的尺码、鞋底结构、性能、价格与优惠写待核验。\n\n先判断每个镜头要回答哪个购买问题、增加哪条信息。将购买理由转成看得见的动作：主体做什么、手机放哪里、朝哪个角度、什么景别、必须看清什么。用普通手机可以执行的语言，避免仅写“高级”“柔软”“好用”。复杂动作拆开；不强制固定镜头数或每镜6–8秒，一场景可以包含多个镜头。\n\n先审阅脚本结构，再形成可拍任务书；缺少确认时只给草稿，不声称已经可拍。完整旁白不是拍摄前置条件，可留空并说明后期配音。现场对白仅在用户选择时列收音要求，不替用户编造体验证言。\n\n每镜输出稳定镜头ID、场景、成片顺序、目的、主体、动作、机位、角度、景别、拍摄重点、商品核验项、素材路线；独立列拍摄顺序与建议原片时长（动作前后留余量）、预计剪入时长。按场地机位合并拍摄顺序，不能因此改镜头ID和成片逻辑。留出自然起止动作，检查相邻镜头的人物、商品颜色、方向与光线是否连贯。\n\n证据必须与购买理由相称。看见绒状表面不证明材质成分，按压只能展示当次可见形变，鞋底特写不证明长期耐磨，孩子出镜不证明普遍喜爱。不具备证据时缩小文案主张或明确需要补拍/资料，不补造事实。AI情境不能伪装成真实实测。\n\n审阅真实回片时记录实际时间点、清晰度、曝光、动作完整性、商品是否一致与可剪范围。普通手机画质只要说得清卖点即可；优先指出一个具体补拍动作，保留原片，不要求无意义重拍。没有原片就不填实际时长、可用范围或质量通过。\n\n按执行端要求的输出schema返回结构化结果；若为表单补齐/润色，严格返回本次字段合同，任意已填内容作为依据，只补空白或修改指定字段，不输出另一套整稿。保存简短依据、待确认项与采用/排除理由，不输出隐含推理过程。反馈默认只修本作品，跨SKU复用需明确作用域并形成新方法版本，不改变历史冻结结果。",
+                "id": "filming",
+                "parameters": {},
+                "applicability": {
+                  "compatible_stage_schemas": [
+                    "stage.creative.method.v1"
+                  ],
+                  "output_schemas": [
+                    "video.shot-plan.v1"
+                  ],
+                  "resource_modality": "video",
+                  "status": "external_guidance_not_recipe_node_execution"
+                },
+                "method_hash": "87f1ae12877b244840a2a9f75f7863e21412467ee7a7db327ab031c39e35836f"
+              }
+            ],
+            "disabled_method_ids": [],
+            "not_applicable_methods": []
+          }
+        ],
+        "legacy_stage_ids": [
+          "research",
+          "script",
+          "voice",
+          "sound_edit",
+          "picture_edit",
+          "subtitle_color",
+          "packaging",
+          "finish",
+          "review"
+        ],
+        "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.",
+        "manifest_hash": "9774021599d923a4374c5326a790992781f57f87ba2006bf5dda567eb58e3ebb"
+      },
+      "projection": [
+        {
+          "stage": "storyboard",
+          "id": "filming",
+          "skill_ref": "studio.video.product-filming@1",
+          "version": "1",
+          "package_hash": "16949af24d7d02e3af88fb2d7701b5d7b4e71db0243f9a3210d99bfdd2e628ab",
+          "applicable_fields": [],
+          "instruction": "# 商品实拍任务书\n\n输入：当前SKU事实与原图、购买者和使用场景、核心购买理由、脚本结构、已知拍摄条件、选中的方法及版本。只使用当前作品授权资料；未知的尺码、鞋底结构、性能、价格与优惠写待核验。\n\n先判断每个镜头要回答哪个购买问题、增加哪条信息。将购买理由转成看得见的动作：主体做什么、手机放哪里、朝哪个角度、什么景别、必须看清什么。用普通手机可以执行的语言，避免仅写“高级”“柔软”“好用”。复杂动作拆开；不强制固定镜头数或每镜6–8秒，一场景可以包含多个镜头。\n\n先审阅脚本结构，再形成可拍任务书；缺少确认时只给草稿，不声称已经可拍。完整旁白不是拍摄前置条件，可留空并说明后期配音。现场对白仅在用户选择时列收音要求，不替用户编造体验证言。\n\n每镜输出稳定镜头ID、场景、成片顺序、目的、主体、动作、机位、角度、景别、拍摄重点、商品核验项、素材路线；独立列拍摄顺序与建议原片时长（动作前后留余量）、预计剪入时长。按场地机位合并拍摄顺序，不能因此改镜头ID和成片逻辑。留出自然起止动作，检查相邻镜头的人物、商品颜色、方向与光线是否连贯。\n\n证据必须与购买理由相称。看见绒状表面不证明材质成分，按压只能展示当次可见形变，鞋底特写不证明长期耐磨，孩子出镜不证明普遍喜爱。不具备证据时缩小文案主张或明确需要补拍/资料，不补造事实。AI情境不能伪装成真实实测。\n\n审阅真实回片时记录实际时间点、清晰度、曝光、动作完整性、商品是否一致与可剪范围。普通手机画质只要说得清卖点即可；优先指出一个具体补拍动作，保留原片，不要求无意义重拍。没有原片就不填实际时长、可用范围或质量通过。\n\n按执行端要求的输出schema返回结构化结果；若为表单补齐/润色，严格返回本次字段合同，任意已填内容作为依据，只补空白或修改指定字段，不输出另一套整稿。保存简短依据、待确认项与采用/排除理由，不输出隐含推理过程。反馈默认只修本作品，跨SKU复用需明确作用域并形成新方法版本，不改变历史冻结结果。"
+        }
+      ]
+    },
+    {
+      "stage_enabled": true,
+      "method_enabled": false,
+      "manifest": {
+        "schema": "production.methods.manifest.v1",
+        "stages": [
+          {
+            "stage": "storyboard",
+            "title": "分镜与素材",
+            "enabled": true,
+            "origin": "isolated-probe",
+            "methods": [],
+            "disabled_method_ids": [
+              "filming"
+            ],
+            "not_applicable_methods": []
+          }
+        ],
+        "legacy_stage_ids": [
+          "research",
+          "script",
+          "voice",
+          "sound_edit",
+          "picture_edit",
+          "subtitle_color",
+          "packaging",
+          "finish",
+          "review"
+        ],
+        "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.",
+        "manifest_hash": "c37f7bbdffef4bcf7f1b875c68e97be02b1db05804db18bbed4610b67a8d4511"
+      },
+      "projection": []
+    },
+    {
+      "stage_enabled": false,
+      "method_enabled": true,
+      "manifest": {
+        "schema": "production.methods.manifest.v1",
+        "stages": [
+          {
+            "stage": "storyboard",
+            "title": "分镜与素材",
+            "enabled": false,
+            "origin": "isolated-probe",
+            "methods": [],
+            "disabled_method_ids": [
+              "filming"
+            ],
+            "not_applicable_methods": []
+          }
+        ],
+        "legacy_stage_ids": [
+          "research",
+          "script",
+          "voice",
+          "sound_edit",
+          "picture_edit",
+          "subtitle_color",
+          "packaging",
+          "finish",
+          "review"
+        ],
+        "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.",
+        "manifest_hash": "1e5f6897c886b016a8c647fb6eb9cd3d3a5434dbcea45b41e6ff4149255d903c"
+      },
+      "projection": []
+    }
+  ],
+  "field_acceptance": {
+    "scene_id": "scene",
+    "filming_order": 0,
+    "raw_duration_ms": 3000,
+    "subject": "fixture",
+    "action": "static",
+    "camera_position": "fixed",
+    "angle": "front",
+    "focus": "transport",
+    "evidence_requirement": "engineering only",
+    "audio_note": "none"
+  },
+  "boundary": "No provider execution; feedback pipeline statically inspected only"
+}

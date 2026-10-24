@@ -1,0 +1,10 @@
+{
+  "head": "8539806eb3a1bebf5bf71ee08df3a286cdf9e00a",
+  "source_sha256": {
+    "apps/api/app/services/form_assistance.py": "3bafdf531b33cbfd8cd310b8543bd4fc6e6e92ebba26124cc5392ca10bd43ead",
+    "apps/web/src/product/GuidedProductionGoal.tsx": "6bf940733b84508049147baafd272ea4f7f8525627925d0f5752473d3ac38af2"
+  },
+  "business_code_edits": false,
+  "production_data_writes": false,
+  "new_model_calls": 0
+}

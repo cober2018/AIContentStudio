@@ -1,0 +1,37 @@
+{
+  "formal_api": {
+    "status": 200,
+    "body": {
+      "status": "ok",
+      "ready": true,
+      "db": true,
+      "schema": true,
+      "auth": true,
+      "storage": true,
+      "queue": true,
+      "worker": true,
+      "secrets": true,
+      "reasons": [],
+      "provider": "openai_compatible",
+      "optional_capabilities": {
+        "llm": {
+          "provider": "openai_compatible",
+          "required": false,
+          "status": "not_probed"
+        }
+      },
+      "queue_enabled": false,
+      "version": "0.1.0"
+    }
+  },
+  "isolated_api": {
+    "unverified_reason": "URLError"
+  },
+  "formal_web": {
+    "status": 200,
+    "body": "html reachable"
+  },
+  "isolated_web": {
+    "unverified_reason": "URLError"
+  }
+}

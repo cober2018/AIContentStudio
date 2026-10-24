@@ -1,0 +1,17 @@
+== 2026-10-18 01:19:40 R2/R4 返修门禁 ==
+-- compileall
+OK
+-- 442 项既有检查
+442 passed, 8 warnings in 17.91s
+-- 27 项隔离探针（原）
+== 探针结果：27 passed, 0 failed ==
+-- 20 项 R1–R5 探针
+===== R1–R5 探针结果：20 passed, 0 failed =====
+-- 18 项 R2 继承探针
+===== R2 继承探针结果：18 passed, 0 failed =====
+-- web tsc+build
+✓ built in 2.22s
+-- openspec strict
+Change 'improve-product-keyframe-preproduction' is valid
+-- git diff --check
+git diff --check OK

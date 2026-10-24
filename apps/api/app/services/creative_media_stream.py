@@ -66,15 +66,67 @@ def execution_file(owner, execution, key, maximum):
 
 
 @contextmanager
+def _external_file(revision, maximum):
+    from .material_external import ExternalMaterialError, _lookup, open_verified
+
+    try:
+        source_row, _revision = _lookup(revision.file_path)
+        with open_verified(source_row, revision, full_hash=True) as source:
+            if not 0 < os.fstat(source.fileno()).st_size <= maximum:
+                fail("execution_file_size_invalid", 413)
+            before = os.fstat(source.fileno())
+            yield source
+            after = os.fstat(source.fileno())
+    except ExternalMaterialError as exc:
+        fail("execution_input_hash_changed" if exc.code == "material_external_changed" else "execution_input_unavailable")
+    if (before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns):
+        fail("execution_file_changed")
+
+
+def external_target(revision):
+    from .material_external import ExternalMaterialError, _lookup, path_of
+
+    try:
+        source_row, _revision = _lookup(revision.file_path)
+    except ExternalMaterialError:
+        fail("execution_input_unavailable")
+    return path_of(source_row, revision)
+
+
+def link_external(owner, execution, key, revision, expected_hash):
+    """Expose a drive file by symbolic link: a clone cannot cross volumes and a copy is what linking avoids."""
+    from .material_external import is_external
+
+    parts = files._parts(key)
+    if len(parts) != 2 or parts[0] != "inputs" or not is_external(revision.file_path) or revision.content_hash != expected_hash:
+        fail("execution_path_invalid", 422)
+    target = str(external_target(revision))
+    with files.root_fd(owner, execution, create=True) as root, files._parent_fd(root, parts) as parent, files._locked(parent, exclusive=True):
+        try:
+            os.symlink(target, parts[-1], dir_fd=parent)
+        except FileExistsError:
+            if os.readlink(parts[-1], dir_fd=parent) != target:
+                fail("execution_file_conflict")
+        os.fsync(parent)
+    return "external_link", None
+
+
+@contextmanager
 def material_file(revision, maximum):
+    from .material_external import is_external
     from .material_storage import LocalMaterialStorage, provider
+    if is_external(revision.file_path):
+        with _external_file(revision, maximum) as source:
+            yield source
+        return
     storage = provider()
     if not isinstance(storage, LocalMaterialStorage):
         fail("execution_local_storage_required")
-    parts = files._parts(revision.file_path)
+    files._parts(revision.file_path)
+    base, parts = storage.locate(revision.file_path)
     descriptor = os.open("/", files._DIRECTORY)
     try:
-        for part in storage.root.parts[1:]:
+        for part in base.parts[1:]:
             child = os.open(part, files._DIRECTORY, dir_fd=descriptor)
             os.close(descriptor)
             descriptor = child
@@ -152,6 +204,57 @@ def copy_private(owner, execution, key, source, maximum, *, expected_hash=None):
             os.unlink(temporary, dir_fd=parent)
             os.fsync(parent)
     return size, digest
+
+
+def _clone_function():
+    import ctypes
+    import ctypes.util
+
+    try:
+        function = ctypes.CDLL(ctypes.util.find_library("c"), use_errno=True).fclonefileat
+    except (OSError, AttributeError):
+        return None
+    function.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint32]
+    return function
+
+
+def clone_private(owner, execution, key, source, maximum, *, expected_hash):
+    """Expose a library file as a copy-on-write clone: no duplicated bytes, and writes never reach the library."""
+    parts = files._parts(key)
+    if len(parts) != 2 or parts[0] != "inputs":
+        fail("execution_path_invalid", 422)
+    clone = _clone_function()
+    if clone is None:
+        return (*copy_private(owner, execution, key, source, maximum, expected_hash=expected_hash), "copy", "clone_unsupported_platform")
+    with files.root_fd(owner, execution, create=True) as root, files._parent_fd(root, parts) as parent, files._locked(parent, exclusive=True):
+        temporary = "pending-" + os.urandom(16).hex()
+        if clone(source.fileno(), parent, temporary.encode(), 0) != 0:
+            import ctypes
+
+            reason = os.strerror(ctypes.get_errno())
+        else:
+            reason = None
+            try:
+                fd = os.open(temporary, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+                with os.fdopen(fd, "rb") as cloned:
+                    size, digest = inspect(cloned, maximum)
+                    os.fchmod(cloned.fileno(), 0o400)
+                if digest != expected_hash:
+                    fail("execution_file_changed")
+                try:
+                    os.link(temporary, parts[-1], src_dir_fd=parent, dst_dir_fd=parent, follow_symlinks=False)
+                except FileExistsError:
+                    fd = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+                    with os.fdopen(fd, "rb") as existing:
+                        if (not stat.S_ISREG(os.fstat(existing.fileno()).st_mode) or os.fstat(existing.fileno()).st_nlink != 1) or inspect(existing, maximum) != (size, digest):
+                            fail("execution_file_conflict")
+                os.fsync(parent)
+            finally:
+                os.unlink(temporary, dir_fd=parent)
+                os.fsync(parent)
+    if reason is not None:
+        return (*copy_private(owner, execution, key, source, maximum, expected_hash=expected_hash), "copy", f"clone_failed: {reason}")
+    return size, digest, "clone", None
 
 
 def validate(source, mime, kind, package, *, role_id=None):
@@ -249,8 +352,40 @@ def validate(source, mime, kind, package, *, role_id=None):
                 alpha = pix_fmt.startswith(("yuva", "gbrap", "rgba", "argb", "bgra", "abgr", "ya8", "ya16", "ayuv64")) or pix_fmt == "vuya"
                 if mime != "video/quicktime" or not alpha:
                     fail("creative_video_alpha_required", 422)
-    return {"width": width, "height": height, "duration_ms": duration, "frame_rate": numerator / denominator,
+    result = {"width": width, "height": height, "duration_ms": duration,
+            "video_duration_ms": video_duration_ms if video.get("duration") not in {None, "N/A"} else None,
+            "frame_rate": numerator / denominator,
             "average_frame_rate": float(average_rate), "has_audio": audio, "pix_fmt": pix_fmt}
+    if post and role_id in {"rough_cut", "final"} and audio:
+        result["loudness"] = loudness(source)
+    return result
+
+
+LOUDNESS_WINDOW_LUFS = (-18.0, -12.0)
+TRUE_PEAK_CEILING_DBTP = -1.0
+
+
+def loudness(source):
+    """EBU R128 reading for review; a clipping or quiet mix is a warning, never a rejection."""
+    try:
+        done = subprocess.run(["ffmpeg", "-nostdin", "-hide_banner", "-max_alloc", "67108864", "-protocol_whitelist", "file,pipe", "-threads", "1",
+                               "-i", f"/dev/fd/{source.fileno()}", "-vn", "-af", "loudnorm=print_format=json", "-f", "null", "-"],
+                              pass_fds=(source.fileno(),), stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                              timeout=MEDIA_DECODE_TIMEOUT_SECONDS, check=True)
+        text = done.stderr[-8192:].decode("utf-8", "replace")
+        data = json.loads(text[text.rindex("{"):text.rindex("}") + 1])
+        integrated, peak, spread = float(data["input_i"]), float(data["input_tp"]), float(data["input_lra"])
+        if not all(math.isfinite(value) for value in (integrated, peak, spread)):
+            raise ValueError()
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError):
+        return {"status": "unmeasured"}
+    finally:
+        source.seek(0)
+    warnings = [code for code, hit in (("true_peak_above_ceiling", peak > TRUE_PEAK_CEILING_DBTP),
+                                       ("loudness_below_window", integrated < LOUDNESS_WINDOW_LUFS[0]),
+                                       ("loudness_above_window", integrated > LOUDNESS_WINDOW_LUFS[1])) if hit]
+    return {"status": "measured", "integrated_lufs": integrated, "true_peak_dbtp": peak, "lra_lu": spread,
+            "window_lufs": list(LOUDNESS_WINDOW_LUFS), "true_peak_ceiling_dbtp": TRUE_PEAK_CEILING_DBTP, "warnings": warnings}
 
 
 def budget(db, row, package, incoming):

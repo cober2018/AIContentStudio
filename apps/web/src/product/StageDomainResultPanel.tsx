@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, currentUser } from "../api";
+import { stageErrorText } from "./stageErrors";
 import { Button, ErrorBanner, Field, StatusBadge, inputClass } from "../components/ui";
 import ChannelVariantForm, { variantBodyIssue } from "./ChannelVariantForm";
 import { stageValue } from "./creationRecipeState";
@@ -179,7 +180,7 @@ export default function StageDomainResultPanel({ base, result, readOnly, onBusy,
     } catch (cause) {
       uncertain = !(cause instanceof ApiError && cause.status < 500);
       if (!uncertain) setPending(null);
-      setError(uncertain ? "接受结果尚未确认。保留完整原请求，重试仅回放这次接受。" : "结果或上下文版本已变化，请回读原结果后重新确认；本地编辑仍保留。");
+      setError(uncertain ? "接受结果尚未确认。保留完整原请求，重试仅回放这次接受。" : `${stageErrorText(cause)}本地编辑仍保留。`);
     } finally { setBusy(false); onBusy(uncertain); }
   }
 

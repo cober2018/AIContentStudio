@@ -56,6 +56,10 @@ def _workflow(db, project_id, unit_id, user, run_id=None):
 
 
 def _default(db, unit):
+    if unit.production_domain == "product":
+        workflow = db.get(Workflow, unit.pinned_workflow_id) if unit.pinned_workflow_id else None
+        from types import SimpleNamespace
+        return (SimpleNamespace(workflow_id=workflow.id, revision=workflow.version), "product") if workflow and workflow.scope == "product_default" else (None, None)
     for model, column, entity_id, source in (
         (SeriesWorkflowDefault, SeriesWorkflowDefault.series_id, unit.series_id, "series"),
         (AccountWorkflowDefault, AccountWorkflowDefault.account_id, unit.account_id, "account"),
@@ -96,7 +100,7 @@ def accepted_stage_target(db, run, node_id, *, project_output_id=None, accepted_
     if unit is None:
         return None
     step = db.scalar(select(WorkflowStep).where(WorkflowStep.run_id == run.id, WorkflowStep.node_id == node_id))
-    if step is not None and step.plugin_key == "stage.creative.method" and step.plugin_version == "1":
+    if step is not None and step.plugin_key == "stage.creative.method" and step.plugin_version in {"1", "2", "3"}:
         if project_output_id is not None:
             return None
         attempt = (db.get(WorkflowStepAttempt, accepted_attempt_id) if accepted_attempt_id is not None else
@@ -178,7 +182,7 @@ def accepted_stage_target(db, run, node_id, *, project_output_id=None, accepted_
 
 def recipe_view(db, project_id, unit_id, user, *, run_id=None):
     project, unit, workflow, run = _workflow(db, project_id, unit_id, user, run_id)
-    readonly = project.status == "archived" or unit.status == "archived" or user.role not in {"editor", "admin"}
+    readonly = project.status == "archived" or unit.lifecycle_readonly or user.role not in {"editor", "admin"}
     if workflow is None:
         return {"workflow_id": None, "source": "unbound", "stages": [], "history": [], "readonly": readonly}
     binding = db.scalar(select(ProjectWorkflowBinding).where(ProjectWorkflowBinding.unit_id == unit.id))
@@ -191,7 +195,7 @@ def recipe_view(db, project_id, unit_id, user, *, run_id=None):
         run = db.scalar(select(WorkflowRun).where(WorkflowRun.content_unit_id == unit.id,
             WorkflowRun.workflow_id == workflow.id).order_by(WorkflowRun.id.desc()).limit(1))
     readonly = readonly or bool(run and (run.workflow_id != unit.pinned_workflow_id
-                                        or run.identity_snapshot_id != unit.identity_snapshot_id))
+                                        or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)))
     steps = {row.node_id: row for row in db.scalars(select(WorkflowStep).where(
         WorkflowStep.run_id == run.id)).all()} if run else {}
     nodes = {node["id"]: node for node in workflow.definition_json.get("nodes", [])}
@@ -237,6 +241,9 @@ def recipe_view(db, project_id, unit_id, user, *, run_id=None):
         "definition_checksum": workflow.checksum, "source": source,
         "source_revision": binding.revision if binding and binding.workflow_id == workflow.id else workflow.version,
         "readonly": readonly, "run_id": run.id if run else None,
+        "knowledge_context": {"revision_no": knowledge["revision_no"], "checksum": knowledge["checksum"],
+            "items": [{key: item.get(key) for key in ("title", "purposes", "source_document_id", "source_checksum")}
+                      for item in knowledge["items"]]} if (knowledge := ((run.context_json or {}).get("knowledge_context") if run else None)) else None,
         "stages": [{**stage, "controls": None} for stage in stages],
         "inherited_default": {"source": default_source, "revision": default.revision, "workflow_id": default.workflow_id,
             "checksum": default_workflow.checksum, "diff": _definition_diff(default_workflow.definition_json,
@@ -296,8 +303,8 @@ def stage_result(db, project_id, unit_id, node_id, user, *, run_id, attempt_id=N
             "expected_context_hash": digest(resolved.get("context")),
             "expected_revision": domain.get("expected_revision",
                 (resolved.get("context", {}).get("master") or {}).get("revision_no", 0)),
-            "is_current": project.status != "archived" and unit.status != "archived"
-                and run.workflow_id == unit.pinned_workflow_id and run.identity_snapshot_id == unit.identity_snapshot_id
+            "is_current": project.status != "archived" and not unit.lifecycle_readonly
+                and run.workflow_id == unit.pinned_workflow_id and run.identity_snapshot_id == (None if unit.production_domain == "product" else unit.identity_snapshot_id)
                 and step.attempt_no == attempt.attempt_no and (step.status in {"waiting_input", "succeeded"} or recovered_media),
             "accepted_target": accepted, "accepted_master": accepted_master,
             "domain_output": projected, "accepted_entity": accepted_entity,
@@ -401,8 +408,10 @@ def _method(db, user, unit, node, config):
         revision = next((item for item in revisions if item["id"] == selected["revision_id"]), None)
         if revision is None or revision["metadata"].get("status") not in {"saved", "pinned"}:
             return None, ["method_revision_unavailable"]
-        expected = {"owner": user.id, "project": unit.project_id, "persona": unit.persona_id,
-                    "account": unit.account_id, "series": unit.series_id}
+        expected = {"owner": user.id, "project": unit.project_id,
+                    "persona": None if unit.production_domain == "product" else unit.persona_id,
+                    "account": None if unit.production_domain == "product" else unit.account_id,
+                    "series": None if unit.production_domain == "product" else unit.series_id}
         def applies(scope_type, scope):
             return not (scope_type in expected and scope.get("id") != expected[scope_type]
                 or scope_type == "channel" and scope.get("channel_id") != unit.channel_id
@@ -469,11 +478,13 @@ def _method(db, user, unit, node, config):
     raise StageContractError("stage_method_selection_invalid")
 
 
-def _context(db, project, unit, run):
+def _context(db, project, unit, run, *, node=None, config=None, rework_current=True):
     from .factpack_service import pack_snapshot_checksum, snapshot_checksum
 
     blockers = []
-    snapshot_id = run.identity_snapshot_id if run else unit.identity_snapshot_id
+    from .product_context import is_product, context_snapshot
+    product_domain = is_product(unit)
+    snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
     identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
     if identity and identity.owner_user_id != project.owner_user_id:
         raise HTTPException(409, {"code": "stage_identity_integrity"})
@@ -516,15 +527,20 @@ def _context(db, project, unit, run):
                 ContentMasterEvidenceRef.master_revision_id == master.id
             ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
     }
+    from .production_profiles import profile_snapshot
+    production_profile = profile_snapshot(db, unit.id)
+    if product_domain:
+        product_context = context_snapshot(db, unit)
+        frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+        if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+            blockers.append("product_context_changed_new_run_required")
+        context["production_domain"] = "product"
+        context["product_context"] = frozen_product or product_context
+        production_profile = context["product_context"].get("production_profile")
+    if production_profile is not None:
+        context["production_profile"] = production_profile
     if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
         blockers.append("stage_master_refs_limit")
-    if unit.modality == "text":
-        from .obsidian_knowledge import stage_context
-
-        knowledge, knowledge_blockers = stage_context(db, unit, run)
-        if knowledge is not None:
-            context["knowledge_context"] = knowledge
-        blockers.extend(knowledge_blockers)
     workflow = db.get(Workflow, run.workflow_id if run else unit.pinned_workflow_id) if (run or unit.pinned_workflow_id) else None
     if workflow and any(node.get("plugin") == "stage.graphic.compose" for node in workflow.definition_json.get("nodes", [])):
         from ..models import MaterialRevision, ProjectMaterialReference, User
@@ -562,10 +578,41 @@ def _context(db, project, unit, run):
                 excluded.append({"material_revision_id": revision_id, "reason": reason})
             else:
                 eligible.append({"material_revision_id": revision_id, "content_hash": material.content_hash,
-                    "kind": material.material.kind, "mime_type": material.mime_type})
+                    "kind": material.material.kind, "mime_type": material.mime_type,
+                    # 角色方法只看到hash时会把AI示意图写成实拍；商品上下文保持原样。
+                    **({} if product_domain else {"source_kind": material.source_kind,
+                                                  "title": (material.material.title or "")[:120]})})
         context["shared_asset_refs"] = sorted(eligible, key=lambda item: item["material_revision_id"])
         context["shared_assets_coverage"] = {"limit": 100, "truncated": len({item["material_revision_id"] for item in items}) > 100,
             "excluded": sorted(excluded, key=lambda item: item["material_revision_id"])}
+    elif unit.modality == "video" and not product_domain:
+        from ..models import MaterialRevision, ProjectMaterialReference
+        from .content_masters import _verified_generated_asset
+        from .project_assets import shared_assets
+
+        # Video plans may cite local-only footage, so model use (not public use) is the gate; the flag stays visible.
+        items = shared_assets(db, project.id)
+        eligible, seen = [], set()
+        for item in items:
+            revision_id = item["material_revision_id"]
+            if revision_id in seen or len(seen) >= 100:
+                continue
+            seen.add(revision_id)
+            material = db.get(MaterialRevision, revision_id)
+            reference = db.get(ProjectMaterialReference, item["reference_id"]) if item.get("reference_id") else None
+            output = db.get(ProjectWorkflowOutput, item["project_output_id"]) if item.get("project_output_id") else None
+            if (material is None or material.status in {"revoked", "archived", "rejected"}
+                    or material.material.status != "active" or material.material.kind not in {"image", "video", "audio"}
+                    or material.model_use_allowed is not True
+                    or not (reference and reference.project_id == project.id and reference.status == "active"
+                            or output and output.project_id == project.id and _verified_generated_asset(db, output, material))):
+                continue
+            eligible.append({"material_revision_id": revision_id, "content_hash": material.content_hash,
+                "kind": material.material.kind, "mime_type": material.mime_type, "source_kind": material.source_kind,
+                "title": (material.material.title or "")[:120], "duration_ms": material.duration_ms,
+                "local_only": material.public_use_allowed is not True})
+        context["shared_asset_refs"] = sorted(eligible, key=lambda item: item["material_revision_id"])
+        context["shared_assets_coverage"] = {"limit": 100, "truncated": len({item["material_revision_id"] for item in items}) > 100}
     if master:
         if master.payload_hash != digest(master.payload_json):
             blockers.append("stage_master_payload_integrity")
@@ -606,13 +653,62 @@ def _context(db, project, unit, run):
             context["boundary"] = {"id": boundary.id, "revision": boundary.revision_no,
                 "fact_pack_id": pack.id, "fact_pack_version": pack.version, "checksum": pack.checksum,
                 "items": included, "excluded": excluded}
-    if project.status == "archived" or unit.status == "archived":
+    if project.status == "archived" or unit.lifecycle_readonly:
         blockers.append("archived_readonly")
-    if run and (run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != unit.identity_snapshot_id):
+    if run and (run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if product_domain else unit.identity_snapshot_id)):
         blockers.append("historical_context_readonly")
     if run and run.status in {"canceled", "cancelled"}:
         blockers.append("run_cancelled")
+    if unit.production_domain != "product":
+        from .obsidian_knowledge import stage_context
+
+        knowledge_purposes = (set() if node is not None and node["kind"] != "AI" else
+                              {"professional"} if (config or {}).get("output_schema") == "research.brief.v1" else
+                              {"style"} if (config or {}).get("output_schema") == "audio.voice-direction.v1" else
+                              {"professional", "style"})
+        knowledge, knowledge_blockers = stage_context(db, unit, run, purposes=knowledge_purposes)
+        if knowledge is not None:
+            context["knowledge_context"] = knowledge
+        blockers.extend(knowledge_blockers)
+    if unit.production_domain != "product" and node is not None:
+        from .stage_feedback import rework_context
+        from .stage_invocations import StageInvocationError
+
+        try:
+            located = rework_context(db, unit, run, node["id"], require_current=rework_current)
+            if located:
+                context["located_feedback"] = located
+        except StageInvocationError as exc:
+            blockers.append(exc.code)
     return context, blockers
+
+
+def context_basis(context: dict) -> dict:
+    # Project materials are offered to the AI, not relied on; what a result cites is re-checked when it is used.
+    return {key: value for key, value in (context or {}).items() if key not in {"shared_asset_refs", "shared_assets_coverage"}}
+
+
+def adoption_basis(resolved: dict) -> dict:
+    """What a waiting result was based on; adding material or restarting the API must not make it unacceptable."""
+    derived = {"prompt_hash", "prompt_sections", "effective_prompt", "context_hash", "resolution_hash"}
+    basis = {key: value for key, value in resolved.items() if key not in derived}
+    basis["context"] = context_basis(resolved.get("context"))
+    # runtime_hash is keyed per API process; profile, provider, model and configuration revision identify the model.
+    basis["model"] = {key: value for key, value in (resolved.get("model") or {}).items() if key not in {"runtime_hash", "status"}}
+    return basis
+
+
+_CHANGE_LABELS = {"upstream": "upstream", "model": "model", "master": "master", "boundary": "facts",
+                  "asset_refs": "references", "evidence_refs": "references"}
+
+
+def changed_inputs(frozen: dict, current: dict) -> list[str]:
+    """Names what changed so the page can say why the result must be regenerated."""
+    old, new = adoption_basis(frozen), adoption_basis(current)
+    labels = {_CHANGE_LABELS.get(key, "settings") for key in set(old) | set(new) if key != "context" and old.get(key) != new.get(key)}
+    labels |= {_CHANGE_LABELS.get(key, "context") for key in set(old["context"]) | set(new["context"])
+               if old["context"].get(key) != new["context"].get(key)}
+    return sorted(labels)
 
 
 def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_override=None):
@@ -625,7 +721,8 @@ def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_
         raise HTTPException(409, {"code": "legacy_stage_preview_unsupported"})
     contract = descriptor.stage_contract
     stage_override = {} if stage_override is None else stage_override
-    context, blockers = _context(db, project, unit, run)
+    _, input_config, _ = contract.effective_config(node.get("config", {}), stage_override)
+    context, blockers = _context(db, project, unit, run, node=node, config=input_config)
     from .creative_configuration import frozen_stage
     node, creative_method, creative, creative_blockers = frozen_stage(
         db, user, unit, node, contract, context, stage_override)
@@ -656,12 +753,23 @@ def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_
     method, method_blockers = (creative_method, []) if creative is not None else _method(db, user, unit, node, config)
     upstream = {}
     if "domain" in context:
-        upstream["__domain_input__"] = context["domain"]
+        # Audio QC executes the sealed domain snapshot; copying its ASR report into prompts exhausts receipt bounds.
+        upstream["__domain_input__"] = ({"context_ref": "domain", "input_hash": digest(context["domain"])}
+            if node["plugin"] == "stage.audio.qc" or
+               node["plugin"] == "media.generate" and config.get("capability") == "tts"
+            else context["domain"])
     elif context.get("master"):
         master = db.get(ContentMasterRevision, context["master"]["id"])
         upstream["__current_master__"] = {"payload_schema": master.payload_schema,
             "payload_hash": master.payload_hash, "payload": canonical(master.payload_json),
             "asset_refs": context["asset_refs"], "evidence_refs": context["evidence_refs"]}
+        if node["plugin"] == "stage.creative.method" and config.get("output_schema") == "audio.voice-direction.v1":
+            # Voice direction reads the accepted spoken adaptation below, retaining the original Master identity only.
+            upstream["__current_master__"].pop("payload")
+        if node["plugin"] == "stage.checks":
+            # Rule checks re-read the master by revision id; the context payload stays the single frozen copy.
+            upstream["__current_master__"] = {key: value for key, value in upstream["__current_master__"].items()
+                                              if key != "payload"} | {"payload_ref": "context.master"}
     for edge in workflow.definition_json.get("edges", []):
         if edge["to"] != node_id:
             continue
@@ -702,6 +810,9 @@ def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_
                     upstream[edge["from"]] = accepted_domain_input(db, accepted,
                         require_model_use=node["kind"] == "AI",
                         local_audio_qc=node["plugin"] == "stage.audio.qc" and str(node.get("plugin_version")) == "1")
+                    if node["plugin"] == "stage.audio.qc":
+                        # prepare_qc already verified and froze these inputs in the domain report.
+                        upstream[edge["from"]] = {**accepted, "payload_ref": "context.domain"}
                 except (StageInvocationError, HTTPException) as exc:
                     blockers.append(exc.code if isinstance(exc, StageInvocationError) else "accepted_domain_input_unavailable")
                 continue
@@ -717,11 +828,13 @@ def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_
             except StageInvocationError as exc:
                 blockers.append(exc.code)
                 continue
-            if (creative is not None and node["plugin"] == "stage.master.propose" and "__current_master__" in upstream
+            if (creative is not None and node["plugin"] in {"stage.master.propose", "stage.creative.method"} and "__current_master__" in upstream
                     and master.id == context["master"]["id"]):
                 # The exact current payload is already present; retain adoption lineage
                 # without copying the same document into the final-stage prompt twice.
                 upstream[edge["from"]] = {**accepted, "payload_ref": "__current_master__"}
+            elif node["plugin"] == "stage.checks" and master.id == context["master"]["id"]:
+                upstream[edge["from"]] = {**accepted, "payload_ref": "context.master"}
             else:
                 upstream[edge["from"]] = {**accepted, "payload": canonical(master.payload_json)}
             continue

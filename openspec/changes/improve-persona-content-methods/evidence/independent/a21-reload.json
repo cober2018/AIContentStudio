@@ -1,0 +1,14 @@
+{
+ "at": "2026-10-20T04:04:47+0800",
+ "reason": "A21 persona stage.professional.prepare without method stack: compact only prompt_sections that are verbatim slices of the full prompt (product excluded)",
+ "trigger": "technew video B prepare snapshot over 128KiB (context 38.7K + sections 37K + prompt 36K)",
+ "checks": "846 passed incl. creative package/execution tests; ruff clean; read-only probe FAIL->OK",
+ "pid_before": "17124",
+ "pid_after": "46716",
+ "ready": true,
+ "source_sha256": {
+  "apps/api/app/services/stage_resolver.py": "e82afbe2f1db1cdec32c8588893cbcf399843f6dd5902e73ccef281312241eba",
+  "apps/api/app/services/creation_recipes.py": "7af17e581678583bebfcda71a12ddbeec216870ff962aae24b4d3e77e0fe927d",
+  "apps/api/app/services/stage_feedback.py": "2df03f74418d2c8f3024805534c7aab0f9a7b014766d9a464ef33cbc53e69c8b"
+ }
+}

@@ -1,0 +1,85 @@
+/Users/mshengran/.codex/worktrees/guided-product-workspace/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-17 12:36:51,379 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "977c6856df61", "method": "GET", "path": "/api/v1/content-personas", "status": 200, "duration_ms": 108.9}
+2026-10-17 12:36:51,380 INFO httpx HTTP Request: GET http://testserver/api/v1/content-personas "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,385 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "6dbe6fb1f7c2", "method": "GET", "path": "/api/v1/channels", "status": 200, "duration_ms": 5.0}
+2026-10-17 12:36:51,386 INFO httpx HTTP Request: GET http://testserver/api/v1/channels "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,398 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "a5836340d329", "method": "POST", "path": "/api/v1/materials/upload", "status": 201, "duration_ms": 11.1}
+2026-10-17 12:36:51,398 INFO httpx HTTP Request: POST http://testserver/api/v1/materials/upload?kind=image&rights_status=unknown "HTTP/1.1 201 Created"
+2026-10-17 12:36:51,402 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "2eaddbff7efe", "method": "POST", "path": "/product-skus", "status": 201, "duration_ms": 3.9}
+2026-10-17 12:36:51,403 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus "HTTP/1.1 201 Created"
+2026-10-17 12:36:51,405 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "3556a3937d1b", "method": "POST", "path": "/product-skus", "status": 201, "duration_ms": 1.7}
+2026-10-17 12:36:51,405 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus "HTTP/1.1 201 Created"
+2026-10-17 12:36:51,407 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "5baa2f235ae3", "method": "GET", "path": "/product-skus", "status": 200, "duration_ms": 2.0}
+2026-10-17 12:36:51,408 INFO httpx HTTP Request: GET http://testserver/api/v1/product-skus?q=SKU-000001 "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,411 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "59614fb1747c", "method": "GET", "path": "/product-skus/{sku_id}/image", "status": 200, "duration_ms": 2.5}
+2026-10-17 12:36:51,411 INFO httpx HTTP Request: GET http://testserver/api/v1/product-skus/1/image?revision=1 "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,420 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "0020d7abbd88", "method": "POST", "path": "/product-skus/{sku_id}/works", "status": 201, "duration_ms": 8.3}
+2026-10-17 12:36:51,420 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/works "HTTP/1.1 201 Created"
+2026-10-17 12:36:51,422 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "ee519d863519", "method": "GET", "path": "/content-projects/{project_id}/units/{unit_id}/production-profile", "status": 200, "duration_ms": 1.9}
+2026-10-17 12:36:51,422 INFO httpx HTTP Request: GET http://testserver/api/v1/content-projects/9/units/15/production-profile "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,425 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "c1c1ee9720e1", "method": "PUT", "path": "/content-projects/{project_id}/units/{unit_id}/production-profile", "status": 200, "duration_ms": 1.7}
+2026-10-17 12:36:51,425 INFO httpx HTTP Request: PUT http://testserver/api/v1/content-projects/9/units/15/production-profile "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,426 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "f059257dbec9", "method": "PUT", "path": "/content-projects/{project_id}/units/{unit_id}/production-profile", "status": 409, "duration_ms": 1.1}
+2026-10-17 12:36:51,426 INFO httpx HTTP Request: PUT http://testserver/api/v1/content-projects/9/units/15/production-profile "HTTP/1.1 409 Conflict"
+2026-10-17 12:36:51,429 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "2edc41c4b05b", "method": "POST", "path": "/product-skus/{sku_id}/plans", "status": 201, "duration_ms": 2.8}
+2026-10-17 12:36:51,430 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/plans "HTTP/1.1 201 Created"
+2026-10-17 12:36:51,432 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "ae01773794b3", "method": "PUT", "path": "/product-skus/{sku_id}/default-plan/{plan_id}", "status": 200, "duration_ms": 1.5}
+2026-10-17 12:36:51,432 INFO httpx HTTP Request: PUT http://testserver/api/v1/product-skus/1/default-plan/1 "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,435 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "db6c77aa90ec", "method": "POST", "path": "/product-skus/{sku_id}/works", "status": 201, "duration_ms": 3.0}
+2026-10-17 12:36:51,435 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/works "HTTP/1.1 201 Created"
+2026-10-17 12:36:51,437 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "0907f2b7b469", "method": "GET", "path": "/content-projects/{project_id}/units/{unit_id}/production-profile", "status": 200, "duration_ms": 1.1}
+2026-10-17 12:36:51,437 INFO httpx HTTP Request: GET http://testserver/api/v1/content-projects/10/units/16/production-profile "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,439 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "4b85d461fd4a", "method": "GET", "path": "/product-skus/{sku_id}/works", "status": 200, "duration_ms": 1.4}
+2026-10-17 12:36:51,439 INFO httpx HTTP Request: GET http://testserver/api/v1/product-skus/1/works "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,443 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "a29cb8281bcf", "method": "GET", "path": "/production-workspaces", "status": 200, "duration_ms": 3.8}
+2026-10-17 12:36:51,443 INFO httpx HTTP Request: GET http://testserver/api/v1/production-workspaces?workspace=product "HTTP/1.1 200 OK"
+2026-10-17 12:36:51,445 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "6e564df6db1c", "method": "GET", "path": "/product-skus/{sku_id}", "status": 404, "duration_ms": 1.5}
+2026-10-17 12:36:51,445 INFO httpx HTTP Request: GET http://testserver/api/v1/product-skus/1 "HTTP/1.1 404 Not Found"
+GET /content-personas 200 {}
+GET /channels 200 {}
+upload 201
+POST /product-skus 201 {'id': 1, 'code': 'SKU-000001', 'revision': 1}
+POST /product-skus 201 {'id': 1, 'code': 'SKU-000001', 'revision': 1}
+GET /product-skus?q=SKU-000001 200 {}
+sku image 200 image/png 1853217
+POST /product-skus/1/works 201 {'sku_id': 1, 'project_id': 9, 'unit_id': 15, 'status': 'saved'}
+GET /content-projects/9/units/15/production-profile 200 {'revision': 1, 'sku_id': 1}
+PUT /content-projects/9/units/15/production-profile 200 {'revision': 2}
+PUT /content-projects/9/units/15/production-profile 409 {}
+POST /product-skus/1/plans 201 {'id': 1, 'revision': 1}
+PUT /product-skus/1/default-plan/1 200 {'id': 1, 'code': 'SKU-000001', 'revision': 1}
+POST /product-skus/1/works 201 {'sku_id': 1, 'project_id': 10, 'unit_id': 16, 'status': 'saved'}
+GET /content-projects/10/units/16/production-profile 200 {'revision': 1, 'sku_id': 1}
+GET /product-skus/1/works 200 {}
+GET /production-workspaces?workspace=product 200 {}
+cross owner read 404
+COUNTS {'llm_run': 95, 'provider_generation_task': 9, 'content_project': 8, 'content_unit': 14, 'content_master_revision': 45} {'llm_run': 95, 'provider_generation_task': 9, 'content_project': 10, 'content_unit': 16, 'content_master_revision': 45}
+INTEGRITY ok FK []
+/Users/mshengran/.codex/worktrees/guided-product-workspace/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-17 12:39:42,999 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "5528317afc77", "method": "GET", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/creation-recipe", "status": 200, "duration_ms": 104.7}
+2026-10-17 12:39:42,999 INFO httpx HTTP Request: GET http://testserver/api/v1/content-projects/9/units/15/creation-recipe "HTTP/1.1 200 OK"
+2026-10-17 12:39:43,002 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "f180a8cbfc93", "method": "GET", "path": "/product-skus/{sku_id}", "status": 200, "duration_ms": 2.4}
+2026-10-17 12:39:43,002 INFO httpx HTTP Request: GET http://testserver/api/v1/product-skus/1 "HTTP/1.1 200 OK"
+2026-10-17 12:39:43,008 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "3a4910b4200a", "method": "PUT", "path": "/product-skus/{sku_id}", "status": 200, "duration_ms": 5.5}
+2026-10-17 12:39:43,009 INFO httpx HTTP Request: PUT http://testserver/api/v1/product-skus/1 "HTTP/1.1 200 OK"
+INHERITED [(15, None, 'voiceover'), (16, 1, 'lip_sync')]
+PLAN_EXACT_KEYS ['shared_references', 'production_stages', 'video_creative_profile', 'model_profile_ref', 'voice_id', 'work_type', 'creation_mode', 'speech_mode', 'reference_notes', 'visual_style', 'continuity_notes', 'dialogue', 'dialogue_language', 'music_direction', 'ae_packaging', 'target_duration_seconds']
+recipe GET 200
+recipe stages []
+SKU REV UPDATE 200 2
+OLD WORK FACT NAMES ['懒人沙发 · 浅蓝款', '懒人沙发 · 浅蓝款']
+FOREIGN KEY CHECK []
+/Users/mshengran/.codex/worktrees/guided-product-workspace/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-17 12:41:27,900 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "e2038f6c0a66", "method": "POST", "path": "/product-skus/{sku_id}/works", "status": 201, "duration_ms": 118.1}
+2026-10-17 12:41:27,901 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/works "HTTP/1.1 201 Created"
+2026-10-17 12:41:27,909 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "8bd6d6208dc5", "method": "GET", "path": "/api/v1/content-projects/{project_id}/units/{unit_id}/creation-recipe", "status": 200, "duration_ms": 7.2}
+2026-10-17 12:41:27,909 INFO httpx HTTP Request: GET http://testserver/api/v1/content-projects/11/units/17/creation-recipe "HTTP/1.1 200 OK"
+2026-10-17 12:41:27,912 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "7b55a65fb30b", "method": "GET", "path": "/content-projects/{project_id}/units/{unit_id}/production-profile", "status": 200, "duration_ms": 1.9}
+2026-10-17 12:41:27,912 INFO httpx HTTP Request: GET http://testserver/api/v1/content-projects/11/units/17/production-profile "HTTP/1.1 200 OK"
+SCIENCE WORK 201
+SCIENCE RECIPE 200 [('script', 'stage.creative.method'), ('shots', 'stage.creative.method'), ('master', 'stage.master.propose'), ('prepare', 'stage.professional.prepare')]
+SCIENCE INHERIT 200 lip_sync
+NO GENERATION 95 9

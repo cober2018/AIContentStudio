@@ -38,7 +38,7 @@ from ..models import (
     User,
     utcnow,
 )
-from ..services import capability_integrations, exports, published_history
+from ..services import capability_integrations, published_history
 from ..services.project_authorization import authorize_project_asset, authorize_project_draft, authorize_project_target
 
 router = APIRouter(prefix="/api/v1/article-handoff", tags=["article-handoff"])
@@ -270,15 +270,13 @@ def create_adaptation(
     revision = db.get(MotherRevision, revision_id)
     if not revision:
         raise HTTPException(404, "MotherRevision 不存在")
-    if payload.channel not in {"wechat", "x_thread"}:
-        raise HTTPException(400, "M1 只支持公众号和 X Thread")
+    from ..services.content_harness.channel_methods import m1_rejection
+
+    reason = m1_rejection(payload.channel)
+    if reason:
+        raise HTTPException(400, reason)
     thread_posts = None
     body = payload.body_markdown or revision.body_markdown
-    if payload.channel == "x_thread":
-        if not payload.thread_posts or any(not post.strip() for post in payload.thread_posts):
-            raise HTTPException(422, "X Thread 必须提供有序且非空的 thread_posts")
-        thread_posts = [{"index": index, "text": post.strip()} for index, post in enumerate(payload.thread_posts, 1)]
-        body = "\n\n".join(f"{post['index']}. {post['text']}" for post in thread_posts)
     input_hash = _hash(payload.title or revision.title or "", body, json.dumps(thread_posts or [], ensure_ascii=False, sort_keys=True), revision.evidence_checksum or "")
     job = ContentJob(
         topic_brief_id=revision.topic_brief_id,
@@ -506,13 +504,16 @@ def create_target(
         raise HTTPException(409, "只有已批准内容才能创建人工交付目标")
     if asset.project_id is not None:
         raise HTTPException(409, "项目候选须使用项目交付授权")
-    if payload.channel not in {"wechat", "x_thread"}:
-        raise HTTPException(400, "M1 只支持公众号和 X Thread")
+    from ..services.content_harness.channel_methods import m1_rejection
+
+    reason = m1_rejection(payload.channel)
+    if reason:
+        raise HTTPException(400, reason)
     if asset.channel != payload.channel:
         raise HTTPException(409, "目标渠道必须与批准资产渠道一致")
-    expected_form = "wechat_article" if payload.channel == "wechat" else "x_thread"
-    if payload.content_form != expected_form:
-        raise HTTPException(400, f"{payload.channel} 的 M1 content_form 必须是 {expected_form}")
+    reason = m1_rejection(payload.channel, content_form=payload.content_form)
+    if reason:
+        raise HTTPException(400, reason)
     if not asset.approved_candidate_hash:
         raise HTTPException(409, "批准资产缺少 candidate hash")
     if not asset.mother_revision_id or not asset.candidate_manifest_json:
@@ -631,27 +632,15 @@ def get_package(target_id: int, db: Session = Depends(get_db), user: User = Depe
     approved_body = approved_manifest.get("body_markdown")
     if not isinstance(approved_title, str) or not isinstance(approved_body, str):
         raise HTTPException(409, "批准候选清单缺少不可变正文")
-    if target.channel == "wechat":
-        content = {
-            "markdown": approved_body,
-            "html": exports.render_wechat_html(
-                approved_title,
-                approved_body,
-                f"批准候选 {asset.approved_candidate_hash}；仅限人工发布回填",
-            ),
-            "title": approved_title,
-        }
-    else:
-        content = {
-            "markdown": approved_body,
-            "json": json.dumps(
-                {"title": approved_title, "thread_posts": approved_manifest.get("thread_posts") or []},
-                ensure_ascii=False,
-                sort_keys=True,
-                separators=(",", ":"),
-            ),
-            "title": approved_title,
-        }
+    from ..services.content_harness.channel_methods import m1_package_content
+
+    content = m1_package_content(
+        target.channel,
+        title=approved_title,
+        body=approved_body,
+        thread_posts=approved_manifest.get("thread_posts") or [],
+        note=f"批准候选 {asset.approved_candidate_hash}；仅限人工发布回填",
+    )
     manifest = {
         "schema_version": 1,
         "target_id": target.id,

@@ -1,0 +1,395 @@
+{
+  "role": "admin",
+  "userError": false,
+  "error": false,
+  "conflict": true,
+  "calls": [
+    {
+      "path": "/published-content",
+      "query": "?&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?&limit=20&offset=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content/21",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?&limit=20&offset=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content/1/observations",
+      "query": "?limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning/analysis",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates/7",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates/7",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates/7/promote-to-memory",
+      "query": "",
+      "method": "POST",
+      "body": "{\"scope_type\":\"owner\",\"memory_type\":\"historical_viewpoint\",\"statement\":\"已冻结声明\",\"applicability\":{\"scene\":\"商品展示\"},\"limitations\":[\"单一样本不能外推\"],\"idempotency_key\":\"6aabcc49-b315-4b44-8736-08e51aefc9b7\"}"
+    },
+    {
+      "path": "/learning-candidates/7",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-memory/8",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content/1",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates/7",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-memory/8",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates/7",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning/insights",
+      "query": "?limit=20&offset=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning/insights/21",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning/insights",
+      "query": "?limit=20&offset=20",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?channel=wechat&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?channel=wechat&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?date_from=invalid&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates",
+      "query": "?status=accepted&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates",
+      "query": "?status=rejected&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates",
+      "query": "?status=accepted&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates",
+      "query": "?status=rejected&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?channel=wechat&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?channel=douyin&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/published-content",
+      "query": "?channel=wechat&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates/7",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/learning-candidates/7/validate",
+      "query": "",
+      "method": "POST",
+      "body": "{\"expected_revision\":3,\"decision\":\"accepted\",\"validation_method\":\"human\",\"validation_summary\":{\"rationale\":\"已核对当前样本\"}}"
+    }
+  ],
+  "errors": [],
+  "unexpected": [],
+  "checks": [
+    "default published list",
+    "no import form on default",
+    "default no writes",
+    "default no analysis request",
+    "bounded pagination URL",
+    "selected detail URL",
+    "detail excludes list",
+    "browser return preserves page",
+    "legacy published deep link",
+    "detail does not expose mutation form",
+    "missing metric not zero",
+    "real zero retained",
+    "no comparable metric explained",
+    "insight form not on report",
+    "legacy candidate deep link",
+    "adoption separate from overview",
+    "method independent and not automatically opened",
+    "frozen statement readonly",
+    "explicit adoption single request",
+    "frozen claim and explicit scope",
+    "adoption never triggers method bridge",
+    "memory details readonly overview",
+    "memory statement displayed",
+    "viewer no writable controls /learning?tab=history&view=import",
+    "viewer no writable controls /learning?tab=history&published=1&view=add-observation",
+    "viewer no writable controls /learning?tab=candidates&candidate=7&view=adopt",
+    "viewer no writable controls /learning?tab=memory&memory=8&memory_view=manage",
+    "failed identity no adoption",
+    "list failure not empty success",
+    "malformed tab falls back to published list",
+    "insight return preserves second page",
+    "active filters expanded",
+    "URL filter restores input",
+    "filter survives reload",
+    "invalid date query no crash",
+    "filter apply updates URL",
+    "browser back restores filter control",
+    "browser back restores API filter",
+    "browser forward restores filter control",
+    "text filter browser back agrees with URL",
+    "final mobile filtered view no overflow",
+    "candidate review conflict stops retry",
+    "review sends frozen expected revision",
+    "review conflict one request",
+    "zero page errors",
+    "zero unexpected requests"
+  ],
+  "scope": "All API intercepted, no formal writes"
+}

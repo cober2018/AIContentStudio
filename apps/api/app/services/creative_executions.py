@@ -884,6 +884,16 @@ def _writable(db: Session, row: CreativeExecution, *, output: bool = False) -> N
         raise _error("creative_execution_output_not_started")
 
 
+_INPUT_EXTENSIONS = {"video/mp4": "mp4", "video/quicktime": "mov", "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp",
+                     "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav", "audio/mpeg": "mp3", "audio/mp4": "m4a"}
+
+
+def _input_names(snapshot: dict) -> tuple[str, str]:
+    # Professional tools detect media by extension; executions materialized before carry the legacy .bin name.
+    stem = f"{snapshot['material_revision_id']}-{snapshot['content_hash']}"
+    return f"{stem}.{_INPUT_EXTENSIONS.get(snapshot.get('mime_type'), 'bin')}", f"{stem}.bin"
+
+
 def _input_snapshot(revision: MaterialRevision, package: CreativeExecutionPackage, *, size: int) -> dict:
     refs = [ref for ref in package.package_json["assets"] if ref["material_revision_id"] == revision.id]
     if not refs or any(ref["content_hash"] != revision.content_hash or ref["rights"] != refs[0]["rights"] for ref in refs):
@@ -943,7 +953,7 @@ def _reserve_inputs(db: Session, project_id: int, unit_id: int, execution_id: in
     _cas(db, row, expected, materialized_inputs_json=manifest)
     result = _projection(db, row, user)
     result["files"] = [{"material_revision_id": revision_id,
-        "relative_path": f"inputs/{revision_id}-{snapshots[revision_id]['content_hash']}.bin",
+        "relative_path": f"inputs/{_input_names(snapshots[revision_id])[0]}",
         "content_hash": snapshots[revision_id]["content_hash"], "size_bytes": snapshots[revision_id]["size_bytes"]}
         for revision_id in requested]
     return result
@@ -966,15 +976,25 @@ def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id:
                 size, _digest = streams.inspect(source, target["size_bytes"])
                 if _input_snapshot(revisions[revision_id], package, size=size) != snapshots[revision_id]:
                     raise _error("creative_execution_materialized_input_changed")
-                streams.copy_private(user.id, row.id, target["relative_path"], source, target["size_bytes"], expected_hash=target["content_hash"])
+                if revisions[revision_id].file_path.startswith("external/"):
+                    mode, reason = streams.link_external(user.id, row.id, target["relative_path"], revisions[revision_id], target["content_hash"])
+                else:
+                    *_measured, mode, reason = streams.clone_private(user.id, row.id, target["relative_path"], source, target["size_bytes"], expected_hash=target["content_hash"])
+                target["materialization"] = mode
+                db.add(AuditLog(event="creative_execution.input_materialized", actor=user.email, entity_type="creative_execution",
+                                entity_id=str(row.id), detail_json={"material_revision_id": revision_id, "mode": mode, "fallback_reason": reason}))
         else:
             content = files.read_material(revisions[revision_id], maximum=target["size_bytes"])
             if _input_snapshot(revisions[revision_id], package, size=len(content)) != snapshots[revision_id]:
                 raise _error("creative_execution_materialized_input_changed")
-            files.write_file(user.id, row.id, target["relative_path"], content)
+            if revisions[revision_id].file_path.startswith("external/"):
+                streams.link_external(user.id, row.id, target["relative_path"], revisions[revision_id], target["content_hash"])
+            else:
+                files.write_file(user.id, row.id, target["relative_path"], content)
     if not result["files"]:
         with files.root_fd(user.id, row.id, create=True):
             pass
+    db.commit()
     result["work_root"] = str(files.work_root(user.id, row.id))
     return result
 
@@ -1021,7 +1041,14 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             source = uploaded_stream if uploaded_stream is not None else stack.enter_context(streams.execution_file(user.id, row.id, payload.get("relative_path"), role["max_bytes"]))
             size, digest = streams.inspect(source, role["max_bytes"])
             streams.budget(db, row, package, size)
-            streams.validate(source, mime, role["kind"], package, role_id=role_id)
+            inspected = streams.validate(source, mime, role["kind"], package, role_id=role_id)
+            # Loudness is the platform's own reading; an executor-supplied value is never kept.
+            metadata = {key: value for key, value in metadata.items() if key != "loudness"}
+            if inspected.get("loudness"):
+                # Output metadata holds only flat strings, so the reading is kept as compact JSON.
+                import json
+
+                metadata = {**metadata, "loudness": json.dumps(inspected["loudness"], sort_keys=True, separators=(",", ":"))}
             if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
                 import json
 
@@ -1068,6 +1095,11 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
     return _projection(db, row, user)
 
 
+def _present_input(row: CreativeExecution, snapshot: dict) -> str:
+    current, legacy = _input_names(snapshot)
+    return current if (files.work_root(row.owner_user_id, row.id) / "inputs" / current).exists() else legacy
+
+
 def _live_materialized(db: Session, row: CreativeExecution, package: CreativeExecutionPackage) -> list[dict]:
     revisions = {revision.id: revision for revision in check_inputs(db, package)}
     snapshots = row.materialized_inputs_json or []
@@ -1079,9 +1111,10 @@ def _live_materialized(db: Session, row: CreativeExecution, package: CreativeExe
            or snapshot["material_revision_id"] < 1 or not isinstance(snapshot.get("content_hash"), str)
            or not _HASH.fullmatch(snapshot["content_hash"]) for snapshot in snapshots):
         raise _error("creative_execution_materialized_input_invalid")
-    files.check_input_manifest(row.owner_user_id, row.id, {
-        f"{snapshot['material_revision_id']}-{snapshot['content_hash']}.bin" for snapshot in snapshots
-    })
+    linked = {_input_names(snapshot)[0]: str(streams.external_target(revisions[snapshot["material_revision_id"]]))
+              for snapshot in snapshots if isinstance(snapshot, dict) and snapshot.get("material_revision_id") in revisions
+              and revisions[snapshot["material_revision_id"]].file_path.startswith("external/")}
+    files.check_input_manifest(row.owner_user_id, row.id, {name for snapshot in snapshots for name in _input_names(snapshot)}, linked)
     seen = set()
     for snapshot in snapshots:
         revision_id = snapshot.get("material_revision_id")
@@ -1094,14 +1127,19 @@ def _live_materialized(db: Session, row: CreativeExecution, package: CreativeExe
                 size, digest = streams.inspect(source, maximum)
             if snapshot != _input_snapshot(revisions[revision_id], package, size=size):
                 raise _error("creative_execution_materialized_input_changed")
-            with streams.execution_file(row.owner_user_id, row.id, f"inputs/{revision_id}-{snapshot['content_hash']}.bin", maximum) as source:
+            if revisions[revision_id].file_path.startswith("external/"):
+                # The link points at the drive file just verified above; there is no second copy to compare.
+                continue
+            with streams.execution_file(row.owner_user_id, row.id, f"inputs/{_present_input(row, snapshot)}", maximum) as source:
                 if streams.inspect(source, maximum) != (size, digest):
                     raise _error("creative_execution_materialized_input_changed")
         else:
             content = files.read_material(revisions[revision_id])
             if snapshot != _input_snapshot(revisions[revision_id], package, size=len(content)):
                 raise _error("creative_execution_materialized_input_changed")
-            transported = files.read_file(row.owner_user_id, row.id, f"inputs/{revision_id}-{snapshot['content_hash']}.bin")
+            if revisions[revision_id].file_path.startswith("external/"):
+                continue
+            transported = files.read_file(row.owner_user_id, row.id, f"inputs/{_present_input(row, snapshot)}")
             if hashlib.sha256(transported).hexdigest() != snapshot["content_hash"] or len(transported) != snapshot["size_bytes"]:
                 raise _error("creative_execution_materialized_input_changed")
     return snapshots

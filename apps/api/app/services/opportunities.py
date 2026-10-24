@@ -145,6 +145,12 @@ def _opportunity_summary(row, signals, latest) -> dict:
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
         "signal_types": sorted({signal.signal_type for signal in signals}),
         "signal_count": len(signals),
+        "persona_id": row.persona_id,
+        "persona_revision_id": row.persona_revision_id,
+        "research_run_id": row.research_run_id,
+        "business_date": row.business_date,
+        "event_key": row.event_key,
+        "angle_key": row.angle_key,
         "latest_assessment": assessment_json(latest) if latest else None,
     }
 
@@ -284,7 +290,7 @@ def current_assessment(db: Session, opportunity_id: int):
     )
 
 
-def save_assessment(
+def _persist_assessment(
     db: Session,
     user: User,
     opportunity: ContentOpportunity,
@@ -294,6 +300,7 @@ def save_assessment(
     analysis_source: str = "manual",
     provider_key: str | None = None,
     provider_version: str | None = None,
+    trusted_system: bool = False,
 ):
     opportunity = lock_opportunity(db, opportunity.id, user)
     owned_opportunity(db, opportunity.id, user, mutable=True)
@@ -303,7 +310,7 @@ def save_assessment(
         raise HTTPException(422, "评估格式无效：" + str(exc)) from exc
     if len(json.dumps(assessment, ensure_ascii=False)) > 50000:
         raise HTTPException(422, "评估内容过长")
-    if analysis_source != "manual" or provider_key is not None or provider_version is not None:
+    if not trusted_system and (analysis_source != "manual" or provider_key is not None or provider_version is not None):
         raise HTTPException(422, "人工评估不能冒充自动分析来源")
     validate_assessment(db, user, assessment)
     for signal_id in assessment.get("evidence_signal_ids", []):
@@ -336,9 +343,19 @@ def save_assessment(
             opportunity_id=opportunity.id,
             detail={"revision_no": row.revision_no, "checksum": row.checksum},
         )
-        db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(409, "内容机会评估已更新，请刷新后重试") from exc
+    return row
+
+
+def save_assessment(db, user, opportunity, **kwargs):
+    row = _persist_assessment(db, user, opportunity, **kwargs)
+    db.commit()
     db.refresh(row)
     return row
+
+
+def persist_system_assessment(db, user, opportunity, *, assessment, provider_key, provider_version):
+    return _persist_assessment(db, user, opportunity, expected_revision=0, assessment=assessment,
+        analysis_source="system", provider_key=provider_key, provider_version=provider_version, trusted_system=True)

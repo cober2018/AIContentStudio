@@ -125,6 +125,24 @@ async def upload_project_material(project_id: int, file: UploadFile, kind: str =
 
         storage = provider()
         existed_before = storage.exists(str(relative_path))
+        from ..services.material_dedupe import existing_revision
+
+        existing = existing_revision(db, content_hash)
+        if existing is not None:
+            # Same bytes already in the library: reference that entry instead of adding a second one.
+            row = db.scalar(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id,
+                                                                   ProjectMaterialReference.material_revision_id == existing.id))
+            if row is None:
+                row = ProjectMaterialReference(project_id=project_id, material_revision_id=existing.id, origin="project_upload", status="active", attached_by=user.email)
+                try:
+                    db.add(row)
+                    db.flush()
+                    record_project_event(db, project_id=project_id, event_type="asset.attached", actor=user.email, entity_type="material_revision", entity_id=existing.id, payload={"reference_id": row.id, "origin": "project_upload", "content_hash": existing.content_hash})
+                    db.commit()
+                except Exception:
+                    db.rollback()
+                    raise
+            return reference_json(db, row)
         try:
             material = materials_service.create_material(db, kind=kind, title=title or file.filename or "项目素材", created_by=user.email)
             revision = materials_service.create_revision(db, material, content=content, suffix=suffix, declared_mime=mime, source_kind="upload", created_by=user.email)

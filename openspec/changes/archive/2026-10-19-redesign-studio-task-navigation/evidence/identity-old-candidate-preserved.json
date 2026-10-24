@@ -1,0 +1,2224 @@
+{
+  "id": 3,
+  "project_id": 35,
+  "unit_id": 41,
+  "identity_snapshot_id": 17,
+  "workflow_run_id": 18,
+  "draft_id": null,
+  "title": "AI Demo 答对了，为什么还不能上线？先写清这几条判断标准",
+  "channel": "baijia",
+  "content_form": "article",
+  "status": "approved",
+  "artifact_kind": "text",
+  "content_master_revision_id": 61,
+  "channel_variant_revision_id": null,
+  "manifest_schema_version": 4,
+  "candidate_hash": "4eb1843afe9bbc742a41c5aa799e657e3f28fb81553de87e447c59987d6d4ae1",
+  "approved_candidate_hash": "4eb1843afe9bbc742a41c5aa799e657e3f28fb81553de87e447c59987d6d4ae1",
+  "created_at": "2026-10-19T05:08:01.419403",
+  "manifest": {
+    "artifact_kind": "text",
+    "assets": [],
+    "brief": {
+      "checksum": "2d95276c8654e1d58e563a525db60ce67901f446c1b3d9eebf648c17fb0e931f",
+      "id": 39,
+      "revision_no": 1,
+      "snapshot": {
+        "angle": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+        "channel_scope": [],
+        "constraints": [],
+        "core_message": null,
+        "cta": null,
+        "identity_scope": [
+          {
+            "persona_id": 2
+          }
+        ],
+        "modality_scope": [
+          "text"
+        ],
+        "objective": "为开发者和技术负责人写一篇可操作的评估方法文章。以作者复盘为启发，清楚区分作者自述、我们的实践建议和未知项。不引用未核验统计，不冒充作者经历。仅本地审阅交付，不公开发布。",
+        "primary_audience": "提示开发者与负责人重视系统工程设计与评测标准，避免重模型、轻工程导致的资源浪费。",
+        "references": [
+          {
+            "assessment_revision": 2,
+            "opportunity_id": 3
+          }
+        ],
+        "required_evidence": [
+          "AI 项目死在工程，不是模型",
+          "常青参考：原文2026-04-17；事件具体时间未知，不按今日新事件推荐。",
+          "suggested:opportunity_signal:3"
+        ]
+      }
+    },
+    "channel": "baijia",
+    "checks": [
+      {
+        "id": 204,
+        "input_hash": "18efc51a472f12ffa5715e939e6f44301a80b2909913d3be3356e9a637f09953",
+        "kind": "master_schema",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "master_schema",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "id": 205,
+        "input_hash": "3bcc0a11f74840c731807f204b2323d84a9254550df8fbf2f891c9cd5f6b498f",
+        "kind": "evidence",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "evidence",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "id": 206,
+        "input_hash": "a5a30c6d2e765ead4290333155a347bd081c923a2450878898901ba20b2d8efe",
+        "kind": "rights",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "rights",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "id": 207,
+        "input_hash": "04f43bed46e63f40020d741e699d6c0af84fe8b2b3ae8ffa94f19a728d6af52f",
+        "kind": "render",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "body_markdown": "## 引言与工程视角重构：超越基准指标的系统性评估\n\n一个知识问答 Demo 能答对演示题，不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评分，而是一套明确约定的工程契约：什么输入该处理、答案依据何处、检索缺失或冲突时如何安全降级。\n\n需要明确的是，外部作者的个案复盘仅代表其特定上下文下的经验，其中涉及的宽泛行业统计若未经过独立核验，不能直接作为通用结论引用。本文立足于软件工程视角，重点讨论系统契约、防御机制与异常分支设计。文中所提出的评估框架属于实践建议，不作为特定业务场景下的效果保证或通用性能测试结论。\n\n工程化落地的首要任务，是将对「模型智能程度」的模糊期待，转译为传统软件工程中确定性的端到端约束体系。\n\n---\n\n## 契约化拆解：将模糊需求转化为输入、预期输出与判定标准\n\n要让模型在生产链路中具备可维护性，必须建立明确的输入、预期输出以及判定标准规范。\n\n### 1\\. 输入边界定义\n\n系统必须对上游输入建立严格的校验契约，而不是直接将不可控的原始文本丢入上下文：\n\n- **长度与超限策略**：按模型的 token 上限预留输出空间，字符限制只作为前置筛查；明确超限时拒绝、分块还是截断，并保留必要上下文。\n- **结构化载荷**：尽量将自由文本封装在具备元数据的 Schema 中（例如包含请求来源、用户角色标识与权限标签），便于后续做前置过滤。\n- **噪声容忍度与清洗**：在进入推理层前，通过轻量级规则过滤不可识别字符、格式错误及低效填充符，降低模型推理的无谓开销。\n\n### 2\\. 预期输出规范\n\n针对模型输出，应尽量避免非结构化的散漫文本，转向强契约的格式化输出：\n\n- **格式约束**：优先采用 JSON Schema、结构化字段或受控枚举值，确保输出可以直接被下游系统反序列化与解析。\n- **字段完整性检查**：定义关键响应字段的必填属性与取值范围。若缺失必要字段，系统应直接将其标记为解析失败。\n- **时延指标基线**：不仅要求输出内容合法，还需设定 P95/P99 响应耗时基线，超出阈值时必须具备超时处理策略。\n\n### 3\\. 可执行的判定规则\n\n把能确定检查的格式交给规则，把需要业务判断的内容交给已约定的评估标准。可解析并不等于答得正确，语义判断仍需要人工核对样本。\n\n- 先检查格式、必填字段和取值范围。这些检查也有执行成本，且不能单独判断答案是否符合真实业务。\n- 再对照预先标注的答案要点与来源。模型自报置信度、词概率或多次回答一致，都不能直接当作事实正确率。\n- **判定分流**：根据评分结果，将请求明确分流至「直接放行」、「降级响应」或「转人工接入」，杜绝模糊状态上线。\n\n---\n\n## 假设场景推演：知识问答中的资料缺失、冲突与置信边界\n\n为了展示工程约束的运作方式，我们以一个**明确标注为假设的知识问答系统**展开推演。在实际部署中，该类系统通常会面临三类典型场景：\n\n### 场景 A：标准正常流程（资料充足且一致）\n\n- **输入**：用户查询符合业务边界，检索增强系统（RAG）召回了高相关度、高置信度的单一来源文档。\n- **系统表现**：模型依据检索内容完成提炼，并在输出中携带引用源标识与字段结构。\n- **判定标准**：输出格式校验通过，关键事实与检索文档无偏差，直接返回用户。\n\n### 场景 B：资料缺失（零召回或低相关度）\n\n- **输入**：用户提出了冷门业务规则、系统未收录的问题，或经过检索后各文档的相关度得分均低于安全阈值。\n- **工程防御**：严禁系统让模型在此类状态下基于通用预训练参数进行自由发挥或产生事实性幻觉。\n- **预期输出**：系统触发快速失败分支，直接返回预设的结构化错误码或确定性引导话术（例如「未检索到对应规则，建议查阅某知识库索引」），跳过模型深度推理阶段以降低时延与成本。\n\n### 场景 C：资料冲突（多源矛盾或时间戳不一致）\n\n- **输入**：检索结果中包含两份相互冲突的规定（例如旧版手册与新版暂行条例），或不同业务线给出了相反的业务动作建议。\n- **工程处理**：先核对文件适用范围、生效状态和来源权威性。不能仅凭日期较新就覆盖旧规定；无法确认适用版本时，不替业务方自行裁决。\n- **防守姿态**：系统输出需明确指出冲突点，并输出结构化提示「当前存在冲突信息，请参考特定条款」，同时将该请求路由至人工核查队列。\n\n---\n\n## 防御性降级与转人工分流：不可控风险的工程兜底\n\n不能假设模型每次都会遵守规则。建议为无法处理的请求提供明确的转人工路径，并验证这条路径确实能接通。\n\n### 1\\. 转人工触发条件\n\n- 证据不足或无法判断答案是否符合已确认规则时，按预先约定的边界转人工。任何评分阈值都应在业务样本上验证。\n- 涉及有实质影响的业务决定时，由业务负责人明确哪些问题只能辅助、哪些必须人工终审，而不是仅靠敏感词决定。\n- 多轮无法解决或用户明确要求人工时，提供退出自动流程的路径；轮次数上限按业务自行确定，不设通用阈值。\n\n### 2\\. 人机上下文接管协议\n\n转交人工不仅是一个分流开关，还需要保证工作流连续性：\n\n- **保留会话快照**：完整传递用户原始请求、历史对话、检索到的支撑片段以及模型中间生成的候选草稿。\n- **结构化摘要呈现**：为人工坐席提供快速排查摘要，标注系统因何种规则触发转接（如：资料冲突、时延超时或合规拦截），避免坐席从头阅读长文本。\n\n### 3\\. 工程代价与取舍\n\n人工接入会带来人力和排队成本；快速失败可能减少模型调用。整体成本需结合实际触发比例评估。\n\n- **排队与响应延迟**：转人工会显著拉长单次请求的端到端耗时。\n- **人工支持负荷**：阈值设置过严会导致大量误报请求涌入人工坐席，造成运营资源挤兑；阈值过宽则削弱了安全防护作用。这一参数需要在受控环境中反复校准。\n\n---\n\n## 工程权衡与上线检查清单：面向负责人的评估复盘\n\n架构设计本质上是权衡的艺术。严苛的输入校验、复杂的冲突判定与频繁的转人工机制，换来的是系统在确定性与安全性上的提升，但代价是调用链路拉长、开发与维护复杂度上升。\n\n对于技术负责人而言，在决定系统上线之前，建议逐一核对以下工程检查清单：\n\n1. **输入契约覆盖率**：系统是否具备前置的 Schema 格式检查、长度限制与基础噪声清洗？\n2. **输出 Schema 校验**：下游服务是否对接了严格的格式反序列化？是否存在因非标准输出导致下游挂起的隐患？\n3. **空数据防御分支**：检索无结果或低置信度时，是否能稳定触发模板化快速失败，而不是放任模型产生幻觉？\n4. **冲突核对机制**：是否明确资料的适用范围、生效状态与来源，无法确认时保守输出并转人工？\n5. **降级与人工接入通路**：转人工协议是否能在端到端链路中真实跑通并附带完整的上下文摘要？\n6. **监控与告警埋点**：是否建立了对降级率、异常拦截率、P95 响应耗时与人工接入量的实时看板？\n\n### 总结\n\n开始时不必先造复杂的评测平台。先拿一组真实、可脱敏的问题，逐条写下答案依据、允许的失败方式和负责确认的人。每次修改后重跑同一组问题，记录变好和变差的地方，再逐步补充难例。这些是方法建议，不是已经完成的测试或效果保证。",
+          "content_hash": "fd47d32d7979d1a6c349c51f263d68e0c746f9ef2c1af40cb3b651aecb4d6233",
+          "origin": "deterministic",
+          "reasons": [],
+          "render_input_hash": "edb68e937cd9ed2bf65502458bfd8d4677dc9bd2d41e42c8317b67aaeeb98bc0",
+          "renderer_key": "text.studio.document.v1",
+          "renderer_version": "2",
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "render",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          },
+          "status": "ready",
+          "unused_asset_ids": [],
+          "warnings": []
+        },
+        "status": "pass"
+      },
+      {
+        "id": 208,
+        "input_hash": "734ca07df6461fa6abf8f6a30e15a0674a366a8dcebf275f65f3f36d2cc021ff",
+        "kind": "text_structure",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "block_count": 43,
+          "coverage": {
+            "deterministic": "complete"
+          },
+          "issues": [],
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_structure",
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "id": 209,
+        "input_hash": "071943cdfcd09eb9f42d9d6d18b3f1678c57efde82e378e63fb798a4bd52e9af",
+        "kind": "text_fact",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "coverage": {
+            "deterministic": "complete",
+            "deterministic_issue_count": 0,
+            "fact_count": 1,
+            "model_use_excluded_item_ids": [],
+            "reason": null,
+            "semantic": "verified",
+            "semantic_fact_count": 1
+          },
+          "issues": [],
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_fact",
+            "model_use": [
+              {
+                "allowed": true,
+                "checksum": "3b975e41488c13458e1f2dec89d7f8121ee273ea4171db17ac8be517e06b32a6",
+                "id": 4,
+                "revoked": false
+              }
+            ],
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2",
+            "semantic": {
+              "configured": true,
+              "model": "gemini-3.8-flash-high",
+              "profile": "registered.ddd9b006056eae2bfb76b2ee",
+              "provider": "openai_compatible"
+            }
+          }
+        },
+        "status": "pass"
+      },
+      {
+        "id": 210,
+        "input_hash": "6455190fbb2505f6a41ce687e06ba7586c28f0541e9ebcf7a12522f2bca06475",
+        "kind": "text_identity",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "coverage": {
+            "advisory_critic": {
+              "can_override_deterministic": false,
+              "reason": "input_truncated",
+              "rubric": [
+                {
+                  "dimension": "factual_grounding",
+                  "reason": "文内明确将推演案例标记为假设场景，声明实践建议不作通用性能保证，对模型置信度与外部统计的局限性有清晰界定，无虚构基准。",
+                  "score": 4
+                },
+                {
+                  "dimension": "engineering_fit",
+                  "reason": "全面切合生产系统工程实践，涵盖 Schema 输入输出校验、P95/P99 时延基线、快速失败防御及上下文接管协议等关键工程环节。",
+                  "score": 4
+                },
+                {
+                  "dimension": "clarity",
+                  "reason": "结构严谨，分节逻辑清晰，从契约定义、场景推演到降级兜底与上线检查清单层层递进，概念表达准确。",
+                  "score": 4
+                },
+                {
+                  "dimension": "specificity",
+                  "reason": "给出了具体的校验字段策略、冲突解决步骤及人工接管快照要素，具备可操作的落地方向而非抽象泛谈。",
+                  "score": 4
+                },
+                {
+                  "dimension": "tradeoffs",
+                  "reason": "详尽分析了严苛校验与转人工机制在提高确定性的同时所带来的端到端延迟增加、开发复杂度提升及人工坐席负荷等工程代价。",
+                  "score": 4
+                }
+              ],
+              "status": "partial"
+            },
+            "deterministic": "persona_rules_and_explicit_phrases",
+            "explicit_phrase_count": 0,
+            "reason": "input_truncated",
+            "semantic": "partial"
+          },
+          "identity_checksum": "117d969b44bb042ba0b3d2d0d8c34d20c06e4803b45ee885b38578a3ed5225fb",
+          "identity_snapshot_id": 17,
+          "issues": [],
+          "persona_quality": {
+            "coverage": {
+              "deterministic": "bounded_phrase_structure_citation_rules",
+              "fact_speculation": "existing_text_fact_check",
+              "factual_truth": "existing_text_fact_check",
+              "semantic": "not_run",
+              "title_body_alignment": "human_review_required"
+            },
+            "critic_dimensions": [
+              "factual_grounding",
+              "engineering_fit",
+              "clarity",
+              "specificity",
+              "tradeoffs"
+            ],
+            "human_review_required": true,
+            "issues": [],
+            "payload_hash": "8a91b15b22e77234b6e08efd5412fb95cd8ff7bce86545e1da724e2e7e6016df",
+            "quality_profile_hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+            "quality_profile_ref": "studio.quality.text.technical@1",
+            "status": "pass"
+          },
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_identity",
+            "persona_quality": {
+              "hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+              "ref": "studio.quality.text.technical@1"
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2",
+            "semantic": {
+              "configured": true,
+              "model": "gemini-3.8-flash-high",
+              "profile": "registered.ddd9b006056eae2bfb76b2ee",
+              "provider": "openai_compatible"
+            }
+          }
+        },
+        "status": "warning"
+      },
+      {
+        "id": 211,
+        "input_hash": "4b5f34a13535e77ca6dd479c790765a83ac37afdb1fc086689126b2474aaf5c0",
+        "kind": "text_platform",
+        "profile_key": "text.master.v2",
+        "profile_version": "2",
+        "report": {
+          "channel": "baijia",
+          "content_form": "article",
+          "coverage": {
+            "deterministic": "complete"
+          },
+          "profile_version_id": 19,
+          "reasons": [],
+          "requirement": {
+            "adapter_version": "2",
+            "implementation": "1",
+            "kind": "text_platform",
+            "profile": {
+              "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+              "checksum_origin": "stored",
+              "form": {
+                "artifact_kind": "text",
+                "channel": "baijia",
+                "content_form": "article",
+                "discoverability_profile": null,
+                "graphic_requirements": {},
+                "label": "文章",
+                "media_requirements": {},
+                "profile_version_id": 19,
+                "publisher_candidates": [
+                  "publisher.copy"
+                ],
+                "renderer_key": "renderer.generic.markdown",
+                "rule_sets": [],
+                "source": "profile",
+                "video_requirements": {},
+                "workflow_key": "workflow.article.feed"
+              },
+              "id": 19,
+              "version": 2
+            },
+            "renderer": {
+              "key": "text.studio.document.v1",
+              "version": "2"
+            },
+            "schema": "text.master.v2"
+          },
+          "rule_sets": [],
+          "source": "profile"
+        },
+        "status": "pass"
+      }
+    ],
+    "citations": [],
+    "content": {
+      "document": {
+        "blocks": [
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "引言与工程视角重构：超越基准指标的系统性评估"
+              }
+            ],
+            "id": "legacy-b2",
+            "level": 2,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "一个知识问答 Demo 能答对演示题，不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评分，而是一套明确约定的工程契约：什么输入该处理、答案依据何处、检索缺失或冲突时如何安全降级。"
+              }
+            ],
+            "id": "legacy-b3",
+            "type": "paragraph"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "需要明确的是，外部作者的个案复盘仅代表其特定上下文下的经验，其中涉及的宽泛行业统计若未经过独立核验，不能直接作为通用结论引用。本文立足于软件工程视角，重点讨论系统契约、防御机制与异常分支设计。文中所提出的评估框架属于实践建议，不作为特定业务场景下的效果保证或通用性能测试结论。"
+              }
+            ],
+            "id": "legacy-b4",
+            "type": "paragraph"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "工程化落地的首要任务，是将对「模型智能程度」的模糊期待，转译为传统软件工程中确定性的端到端约束体系。"
+              }
+            ],
+            "id": "legacy-b5",
+            "type": "paragraph"
+          },
+          {
+            "id": "legacy-b6",
+            "type": "divider"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "契约化拆解：将模糊需求转化为输入、预期输出与判定标准"
+              }
+            ],
+            "id": "legacy-b7",
+            "level": 2,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "要让模型在生产链路中具备可维护性，必须建立明确的输入、预期输出以及判定标准规范。"
+              }
+            ],
+            "id": "legacy-b8",
+            "type": "paragraph"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "1. 输入边界定义"
+              }
+            ],
+            "id": "legacy-b9",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "系统必须对上游输入建立严格的校验契约，而不是直接将不可控的原始文本丢入上下文："
+              }
+            ],
+            "id": "legacy-b10",
+            "type": "paragraph"
+          },
+          {
+            "id": "legacy-b11",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "长度与超限策略"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：按模型的 token 上限预留输出空间，字符限制只作为前置筛查；明确超限时拒绝、分块还是截断，并保留必要上下文。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "结构化载荷"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：尽量将自由文本封装在具备元数据的 Schema 中（例如包含请求来源、用户角色标识与权限标签），便于后续做前置过滤。"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "噪声容忍度与清洗"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：在进入推理层前，通过轻量级规则过滤不可识别字符、格式错误及低效填充符，降低模型推理的无谓开销。"
+                  }
+                ],
+                "id": "legacy-i3"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "2. 预期输出规范"
+              }
+            ],
+            "id": "legacy-b12",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "针对模型输出，应尽量避免非结构化的散漫文本，转向强契约的格式化输出："
+              }
+            ],
+            "id": "legacy-b13",
+            "type": "paragraph"
+          },
+          {
+            "id": "legacy-b14",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "格式约束"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：优先采用 JSON Schema、结构化字段或受控枚举值，确保输出可以直接被下游系统反序列化与解析。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "字段完整性检查"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：定义关键响应字段的必填属性与取值范围。若缺失必要字段，系统应直接将其标记为解析失败。"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "时延指标基线"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：不仅要求输出内容合法，还需设定 P95/P99 响应耗时基线，超出阈值时必须具备超时处理策略。"
+                  }
+                ],
+                "id": "legacy-i3"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "3. 可执行的判定规则"
+              }
+            ],
+            "id": "legacy-b15",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "把能确定检查的格式交给规则，把需要业务判断的内容交给已约定的评估标准。可解析并不等于答得正确，语义判断仍需要人工核对样本。"
+              }
+            ],
+            "id": "legacy-b16",
+            "type": "paragraph"
+          },
+          {
+            "id": "legacy-b17",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [],
+                    "text": "先检查格式、必填字段和取值范围。这些检查也有执行成本，且不能单独判断答案是否符合真实业务。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [],
+                    "text": "再对照预先标注的答案要点与来源。模型自报置信度、词概率或多次回答一致，都不能直接当作事实正确率。"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "判定分流"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：根据评分结果，将请求明确分流至「直接放行」、「降级响应」或「转人工接入」，杜绝模糊状态上线。"
+                  }
+                ],
+                "id": "legacy-i3"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "id": "legacy-b18",
+            "type": "divider"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "假设场景推演：知识问答中的资料缺失、冲突与置信边界"
+              }
+            ],
+            "id": "legacy-b19",
+            "level": 2,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "为了展示工程约束的运作方式，我们以一个"
+              },
+              {
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "明确标注为假设的知识问答系统"
+              },
+              {
+                "marks": [],
+                "text": "展开推演。在实际部署中，该类系统通常会面临三类典型场景："
+              }
+            ],
+            "id": "legacy-b20",
+            "type": "paragraph"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "场景 A：标准正常流程（资料充足且一致）"
+              }
+            ],
+            "id": "legacy-b21",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "id": "legacy-b22",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "输入"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：用户查询符合业务边界，检索增强系统（RAG）召回了高相关度、高置信度的单一来源文档。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "系统表现"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：模型依据检索内容完成提炼，并在输出中携带引用源标识与字段结构。"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "判定标准"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：输出格式校验通过，关键事实与检索文档无偏差，直接返回用户。"
+                  }
+                ],
+                "id": "legacy-i3"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "场景 B：资料缺失（零召回或低相关度）"
+              }
+            ],
+            "id": "legacy-b23",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "id": "legacy-b24",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "输入"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：用户提出了冷门业务规则、系统未收录的问题，或经过检索后各文档的相关度得分均低于安全阈值。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "工程防御"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：严禁系统让模型在此类状态下基于通用预训练参数进行自由发挥或产生事实性幻觉。"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "预期输出"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：系统触发快速失败分支，直接返回预设的结构化错误码或确定性引导话术（例如「未检索到对应规则，建议查阅某知识库索引」），跳过模型深度推理阶段以降低时延与成本。"
+                  }
+                ],
+                "id": "legacy-i3"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "场景 C：资料冲突（多源矛盾或时间戳不一致）"
+              }
+            ],
+            "id": "legacy-b25",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "id": "legacy-b26",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "输入"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：检索结果中包含两份相互冲突的规定（例如旧版手册与新版暂行条例），或不同业务线给出了相反的业务动作建议。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "工程处理"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：先核对文件适用范围、生效状态和来源权威性。不能仅凭日期较新就覆盖旧规定；无法确认适用版本时，不替业务方自行裁决。"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "防守姿态"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：系统输出需明确指出冲突点，并输出结构化提示「当前存在冲突信息，请参考特定条款」，同时将该请求路由至人工核查队列。"
+                  }
+                ],
+                "id": "legacy-i3"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "id": "legacy-b27",
+            "type": "divider"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "防御性降级与转人工分流：不可控风险的工程兜底"
+              }
+            ],
+            "id": "legacy-b28",
+            "level": 2,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "不能假设模型每次都会遵守规则。建议为无法处理的请求提供明确的转人工路径，并验证这条路径确实能接通。"
+              }
+            ],
+            "id": "legacy-b29",
+            "type": "paragraph"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "1. 转人工触发条件"
+              }
+            ],
+            "id": "legacy-b30",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "id": "legacy-b31",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [],
+                    "text": "证据不足或无法判断答案是否符合已确认规则时，按预先约定的边界转人工。任何评分阈值都应在业务样本上验证。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [],
+                    "text": "涉及有实质影响的业务决定时，由业务负责人明确哪些问题只能辅助、哪些必须人工终审，而不是仅靠敏感词决定。"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [],
+                    "text": "多轮无法解决或用户明确要求人工时，提供退出自动流程的路径；轮次数上限按业务自行确定，不设通用阈值。"
+                  }
+                ],
+                "id": "legacy-i3"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "2. 人机上下文接管协议"
+              }
+            ],
+            "id": "legacy-b32",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "转交人工不仅是一个分流开关，还需要保证工作流连续性："
+              }
+            ],
+            "id": "legacy-b33",
+            "type": "paragraph"
+          },
+          {
+            "id": "legacy-b34",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "保留会话快照"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：完整传递用户原始请求、历史对话、检索到的支撑片段以及模型中间生成的候选草稿。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "结构化摘要呈现"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：为人工坐席提供快速排查摘要，标注系统因何种规则触发转接（如：资料冲突、时延超时或合规拦截），避免坐席从头阅读长文本。"
+                  }
+                ],
+                "id": "legacy-i2"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "3. 工程代价与取舍"
+              }
+            ],
+            "id": "legacy-b35",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "人工接入会带来人力和排队成本；快速失败可能减少模型调用。整体成本需结合实际触发比例评估。"
+              }
+            ],
+            "id": "legacy-b36",
+            "type": "paragraph"
+          },
+          {
+            "id": "legacy-b37",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "排队与响应延迟"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：转人工会显著拉长单次请求的端到端耗时。"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "人工支持负荷"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：阈值设置过严会导致大量误报请求涌入人工坐席，造成运营资源挤兑；阈值过宽则削弱了安全防护作用。这一参数需要在受控环境中反复校准。"
+                  }
+                ],
+                "id": "legacy-i2"
+              }
+            ],
+            "type": "bullet_list"
+          },
+          {
+            "id": "legacy-b38",
+            "type": "divider"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "工程权衡与上线检查清单：面向负责人的评估复盘"
+              }
+            ],
+            "id": "legacy-b39",
+            "level": 2,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "架构设计本质上是权衡的艺术。严苛的输入校验、复杂的冲突判定与频繁的转人工机制，换来的是系统在确定性与安全性上的提升，但代价是调用链路拉长、开发与维护复杂度上升。"
+              }
+            ],
+            "id": "legacy-b40",
+            "type": "paragraph"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "对于技术负责人而言，在决定系统上线之前，建议逐一核对以下工程检查清单："
+              }
+            ],
+            "id": "legacy-b41",
+            "type": "paragraph"
+          },
+          {
+            "id": "legacy-b42",
+            "items": [
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "输入契约覆盖率"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：系统是否具备前置的 Schema 格式检查、长度限制与基础噪声清洗？"
+                  }
+                ],
+                "id": "legacy-i1"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "输出 Schema 校验"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：下游服务是否对接了严格的格式反序列化？是否存在因非标准输出导致下游挂起的隐患？"
+                  }
+                ],
+                "id": "legacy-i2"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "空数据防御分支"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：检索无结果或低置信度时，是否能稳定触发模板化快速失败，而不是放任模型产生幻觉？"
+                  }
+                ],
+                "id": "legacy-i3"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "冲突核对机制"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：是否明确资料的适用范围、生效状态与来源，无法确认时保守输出并转人工？"
+                  }
+                ],
+                "id": "legacy-i4"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "降级与人工接入通路"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：转人工协议是否能在端到端链路中真实跑通并附带完整的上下文摘要？"
+                  }
+                ],
+                "id": "legacy-i5"
+              },
+              {
+                "content": [
+                  {
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ],
+                    "text": "监控与告警埋点"
+                  },
+                  {
+                    "marks": [],
+                    "text": "：是否建立了对降级率、异常拦截率、P95 响应耗时与人工接入量的实时看板？"
+                  }
+                ],
+                "id": "legacy-i6"
+              }
+            ],
+            "type": "ordered_list"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "总结"
+              }
+            ],
+            "id": "legacy-b43",
+            "level": 3,
+            "type": "heading"
+          },
+          {
+            "content": [
+              {
+                "marks": [],
+                "text": "开始时不必先造复杂的评测平台。先拿一组真实、可脱敏的问题，逐条写下答案依据、允许的失败方式和负责确认的人。每次修改后重跑同一组问题，记录变好和变差的地方，再逐步补充难例。这些是方法建议，不是已经完成的测试或效果保证。"
+              }
+            ],
+            "id": "legacy-b44",
+            "type": "paragraph"
+          }
+        ],
+        "citations": [],
+        "schema": "studio.text.document.v1"
+      },
+      "title": "AI Demo 答对了，为什么还不能上线？先写清这几条判断标准"
+    },
+    "content_form": "article",
+    "content_master": {
+      "context_hash": "3e6d4ee2e9da27428f3752c343a9eccc9f6df9d8d3edd4ebf0aec30153ec825c",
+      "id": 61,
+      "modality": "text",
+      "parent_id": 60,
+      "payload_hash": "8a91b15b22e77234b6e08efd5412fb95cd8ff7bce86545e1da724e2e7e6016df",
+      "payload_schema": "text.master.v2",
+      "revision_no": 4
+    },
+    "declarations": [],
+    "evidence": {
+      "boundary_id": 4,
+      "fact_pack": {
+        "checksum": "1bf156e77eb1620b96a024a4a9bf948bb7099ad60cfb4fee9a0441de7d94e3e9",
+        "id": 4,
+        "version": 1
+      },
+      "revision_no": 1
+    },
+    "evidence_refs": [],
+    "identity": {
+      "account_id": 2,
+      "account_revision_id": null,
+      "brand_id": null,
+      "brand_revision_id": null,
+      "brand_voice_version_id": null,
+      "checksum": "117d969b44bb042ba0b3d2d0d8c34d20c06e4803b45ee885b38578a3ed5225fb",
+      "effective_profile": {
+        "audio_creative_profile": {
+          "capability": "tts",
+          "capability_memory_revision_ids": [
+            26
+          ],
+          "installed_skill_refs": [],
+          "mode": "custom",
+          "model_binding": {
+            "model": "speech-2.8-hd",
+            "profile": "minimax.speech",
+            "provider": "minimax.cli"
+          },
+          "model_chain": [],
+          "parameters": {
+            "rate": 1,
+            "voice": "lengdan_xiongzhang"
+          },
+          "production_stages": {
+            "finish": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 11,
+                  "enabled": true,
+                  "id": "resolve-mix-export",
+                  "parameters": {},
+                  "revision_id": 22,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "research": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 1,
+                  "enabled": true,
+                  "id": "research-evidence",
+                  "parameters": {},
+                  "revision_id": 2,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "review": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 12,
+                  "enabled": true,
+                  "id": "delivery-review",
+                  "parameters": {},
+                  "revision_id": 24,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "script": {
+              "enabled": false,
+              "methods": [
+                {
+                  "artifact_id": 2,
+                  "enabled": true,
+                  "id": "grounded-writing",
+                  "parameters": {},
+                  "revision_id": 4,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 3,
+                  "enabled": true,
+                  "id": "concept-explanation",
+                  "parameters": {},
+                  "revision_id": 6,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 4,
+                  "enabled": true,
+                  "id": "chinese-polish",
+                  "parameters": {},
+                  "revision_id": 8,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "sound_edit": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 7,
+                  "enabled": true,
+                  "id": "dialogue-semantic-cut",
+                  "parameters": {},
+                  "revision_id": 14,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "voice": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 5,
+                  "enabled": true,
+                  "id": "narration-alignment",
+                  "parameters": {},
+                  "revision_id": 10,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            }
+          },
+          "provenance": {
+            "blueprint_key": "starter.ai-tech-engineer.v1",
+            "blueprint_version": "1",
+            "default_recipe_key": "persona.audio.ai-tech.v1"
+          },
+          "quality_profile_ref": "studio.quality.audio.explainer@1",
+          "schema": "persona.creative.audio.v1",
+          "skill_ref": "studio.audio.tts@1",
+          "stage_instruction": null,
+          "style_preset_ref": "studio.audio.calm-engineer@1"
+        },
+        "content_boundaries": [
+          "不夸大能力",
+          "明确限制和 trade-off",
+          "事实与推测分开"
+        ],
+        "content_domains": [
+          "AI Agent",
+          "软件架构",
+          "开发工具",
+          "工程实践"
+        ],
+        "expression_style": {
+          "evidence": "required",
+          "hype": "low",
+          "reference_style": {
+            "artifact_id": 13,
+            "content_hash": "e59b00f334ba8e2940e037ebff9771ddf7ca2f23aaadd05558c444d577c622d6",
+            "content_schema": "persona.reference-style.v1",
+            "observations": [
+              {
+                "certainty": "direct",
+                "locator": "标题、首段与「表达逻辑与分发通道的边界」段落",
+                "modality": "text",
+                "reference": {
+                  "content_hash": "8d587ec84249c9542eefa459c52ee635b2d3190ab256a88eadac02368338696a",
+                  "id": 25,
+                  "kind": "source"
+                },
+                "statement": "文章先提出人设绑定平台账号的常见直觉与维护问题，再分节解释表达逻辑和分发通道的边界。"
+              },
+              {
+                "certainty": "direct",
+                "locator": "「架构抽象的代价与取舍」两段",
+                "modality": "text",
+                "reference": {
+                  "content_hash": "8d587ec84249c9542eefa459c52ee635b2d3190ab256a88eadac02368338696a",
+                  "id": 25,
+                  "kind": "source"
+                },
+                "statement": "文章明确讨论解耦的设计复杂度和转换开销，并解释换来的便携性；没有把参考作者个人经历写作论据。"
+              },
+              {
+                "certainty": "direct",
+                "locator": "1080×1440整页；左上标题区、顶部短横线、正文区",
+                "modality": "image",
+                "reference": {
+                  "content_hash": "114cecba9142629d899fd673d3a3baa515adcb870346bc52ccf3d0a565430d68",
+                  "id": 19,
+                  "kind": "material_revision"
+                },
+                "statement": "卡片使用深色整页底、白色大字标题与正文，左上有一条薄荷绿色短横线；大面积留白。"
+              },
+              {
+                "certainty": "direct",
+                "locator": "graphic-2.png标题和正文；同系列graphic-3.png作为已导入对照",
+                "modality": "image",
+                "reference": {
+                  "content_hash": "2997a4067304558838a0374c0b9ce9e62f47a425611b4fe32bfd231d9c7246ed",
+                  "id": 20,
+                  "kind": "material_revision"
+                },
+                "statement": "第二张用标题和正文区分逻辑内核与通道边界，第三张延续同版式说明工程取舍；图片为文字卡，并非关系图。"
+              },
+              {
+                "certainty": "inferred",
+                "locator": "graphic-3.png整页配色与标题层级",
+                "modality": "image",
+                "reference": {
+                  "content_hash": "2f5ab95b71e16d253c42612a2e2e29271e2fa6a13be5e85e1bb43ff7edc48455",
+                  "id": 21,
+                  "kind": "material_revision"
+                },
+                "statement": "深蓝、白、薄荷绿可作为科技角色试用配色，来自这组三卡的局部样本；尚未证明适合所有主题，不定为永久规则。"
+              },
+              {
+                "certainty": "direct",
+                "locator": "原参考视频00:01:00.000静帧；左中录屏、右侧用途卡/出镜、底部字幕",
+                "modality": "video",
+                "reference": {
+                  "content_hash": "291b0271d12b3b56f33c4b5057edbcf57139516f50b4cf7fd42b3fa801090738",
+                  "id": 22,
+                  "kind": "material_revision"
+                },
+                "statement": "60秒静帧以软件录屏为主体，右侧出现用途说明卡和出镜者，底部是中英字幕；该帧只能支持画面布局观察，不能推定镜头节奏。"
+              },
+              {
+                "certainty": "inferred",
+                "locator": "00:01:00.000右上用途卡与主体录屏；仅据静帧提出试用方向",
+                "modality": "video",
+                "reference": {
+                  "content_hash": "291b0271d12b3b56f33c4b5057edbcf57139516f50b4cf7fd42b3fa801090738",
+                  "id": 22,
+                  "kind": "material_revision"
+                },
+                "statement": "试用作品可优先使用真实操作录屏和解释关系的图示，选择性强调关键字或数字；关系图和选择性强调是经用户采纳的迁移方向，不声称原参考每段都使用。"
+              },
+              {
+                "certainty": "unknown",
+                "locator": "00:01:00.000静帧无音轨；全片声音未直接试听",
+                "modality": "video",
+                "reference": {
+                  "content_hash": "291b0271d12b3b56f33c4b5057edbcf57139516f50b4cf7fd42b3fa801090738",
+                  "id": 22,
+                  "kind": "material_revision"
+                },
+                "statement": "此轮未直接试听原片，不能判断BGM类型、混音、声纹或全片语气。"
+              }
+            ],
+            "revision_id": 26,
+            "text": "科技角色首版风格（用户已采纳2026-10-16的47秒完整样片为首版默认；后续作品继续独立评审）\n1. 以读者问题或可观察结果开头，解释机制、适用边界与成本。\n2. 用具体平实的技术表达，不借用参考作者身份、经历或旧结论。\n3. 优先真实操作画面与关系图，仅选择性强调关键词和数字；本次实际以原创AE图示验证。\n4. 深蓝、白、薄荷绿作为首版视觉方向。\n5. 沿用现有科技角色音色lengdan_xiongzhang/rate=1与既有Recipe、知识来源；配乐按场景选择，允许无BGM。\n写作方法默认关闭：三组对照文案均需修订，完整片采用关闭组修订稿，不能据此宣称写作组合胜出。其他阶段使用已实际验证的方法。\n用户采纳作品不代表直接试听完成；原参考片仅观察单帧，音频未直接试听，ASR对齐仍是估计。"
+          },
+          "tradeoffs": "explicit",
+          "voice": "engineering_first"
+        },
+        "graphic_creative_profile": {
+          "capability": "image_generation",
+          "capability_memory_revision_ids": [
+            26
+          ],
+          "installed_skill_refs": [],
+          "mode": "auto",
+          "model_binding": null,
+          "model_chain": [],
+          "parameters": {},
+          "production_stages": {
+            "research": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 1,
+                  "enabled": true,
+                  "id": "research-evidence",
+                  "parameters": {},
+                  "revision_id": 2,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "review": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 12,
+                  "enabled": true,
+                  "id": "delivery-review",
+                  "parameters": {},
+                  "revision_id": 24,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "script": {
+              "enabled": false,
+              "methods": [
+                {
+                  "artifact_id": 2,
+                  "enabled": true,
+                  "id": "grounded-writing",
+                  "parameters": {},
+                  "revision_id": 4,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 3,
+                  "enabled": true,
+                  "id": "concept-explanation",
+                  "parameters": {},
+                  "revision_id": 6,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 4,
+                  "enabled": true,
+                  "id": "chinese-polish",
+                  "parameters": {},
+                  "revision_id": 8,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "storyboard": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 6,
+                  "enabled": true,
+                  "id": "visual-shot-plan",
+                  "parameters": {},
+                  "revision_id": 12,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            }
+          },
+          "provenance": {
+            "blueprint_key": "starter.ai-tech-engineer.v1",
+            "blueprint_version": "1",
+            "default_recipe_key": "persona.graphic.ai-tech.v1"
+          },
+          "quality_profile_ref": "studio.quality.graphic.editorial@1",
+          "schema": "persona.creative.graphic.v1",
+          "skill_ref": "studio.graphic.visual-director@1",
+          "stage_instruction": null,
+          "style_preset_ref": "studio.graphic.architecture-diagram@1"
+        },
+        "positioning": "AI Agent、软件架构与开发工具的工程实践型内容角色",
+        "public_fact_policy": {
+          "fresh_source_required_for_current_claims": true,
+          "label_speculation": true
+        },
+        "risk_boundaries": [
+          "不伪造 benchmark",
+          "不把未验证模型输出当事实"
+        ],
+        "target_audience": [
+          "开发者",
+          "技术负责人",
+          "关注 AI 工程化的人"
+        ],
+        "text_creative_profile": {
+          "capability": "chat",
+          "capability_memory_revision_ids": [
+            26
+          ],
+          "installed_skill_refs": [],
+          "mode": "auto",
+          "model_binding": null,
+          "model_chain": [],
+          "parameters": {},
+          "production_stages": {
+            "research": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 1,
+                  "enabled": true,
+                  "id": "research-evidence",
+                  "parameters": {},
+                  "revision_id": 2,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "review": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 12,
+                  "enabled": true,
+                  "id": "delivery-review",
+                  "parameters": {},
+                  "revision_id": 24,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "script": {
+              "enabled": false,
+              "methods": [
+                {
+                  "artifact_id": 2,
+                  "enabled": true,
+                  "id": "grounded-writing",
+                  "parameters": {},
+                  "revision_id": 4,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 3,
+                  "enabled": true,
+                  "id": "concept-explanation",
+                  "parameters": {},
+                  "revision_id": 6,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 4,
+                  "enabled": true,
+                  "id": "chinese-polish",
+                  "parameters": {},
+                  "revision_id": 8,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            }
+          },
+          "provenance": {
+            "blueprint_key": "starter.ai-tech-engineer.v1",
+            "blueprint_version": "1",
+            "default_recipe_key": "persona.text.ai-tech.v1"
+          },
+          "quality_profile_ref": "studio.quality.text.technical@1",
+          "schema": "persona.creative.text.v1",
+          "skill_ref": "studio.text.longform@1",
+          "stage_instruction": null,
+          "style_preset_ref": "studio.text.deep-technical@1"
+        },
+        "video_creative_profile": {
+          "capability": "chat",
+          "capability_memory_revision_ids": [
+            26
+          ],
+          "installed_skill_refs": [],
+          "mode": "auto",
+          "model_binding": null,
+          "model_chain": [],
+          "parameters": {},
+          "production_stages": {
+            "finish": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 11,
+                  "enabled": true,
+                  "id": "resolve-mix-export",
+                  "parameters": {},
+                  "revision_id": 22,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "packaging": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 10,
+                  "enabled": true,
+                  "id": "ae-layered-packaging",
+                  "parameters": {},
+                  "revision_id": 20,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "picture_edit": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 8,
+                  "enabled": true,
+                  "id": "picture-pacing",
+                  "parameters": {},
+                  "revision_id": 16,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "research": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 1,
+                  "enabled": true,
+                  "id": "research-evidence",
+                  "parameters": {},
+                  "revision_id": 2,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "review": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 12,
+                  "enabled": true,
+                  "id": "delivery-review",
+                  "parameters": {},
+                  "revision_id": 24,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "script": {
+              "enabled": false,
+              "methods": [
+                {
+                  "artifact_id": 2,
+                  "enabled": true,
+                  "id": "grounded-writing",
+                  "parameters": {},
+                  "revision_id": 4,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 3,
+                  "enabled": true,
+                  "id": "concept-explanation",
+                  "parameters": {},
+                  "revision_id": 6,
+                  "source_kind": "capability_memory"
+                },
+                {
+                  "artifact_id": 4,
+                  "enabled": true,
+                  "id": "chinese-polish",
+                  "parameters": {},
+                  "revision_id": 8,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "sound_edit": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 7,
+                  "enabled": true,
+                  "id": "dialogue-semantic-cut",
+                  "parameters": {},
+                  "revision_id": 14,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "storyboard": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 6,
+                  "enabled": true,
+                  "id": "visual-shot-plan",
+                  "parameters": {},
+                  "revision_id": 12,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "subtitle_color": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 9,
+                  "enabled": true,
+                  "id": "captions-color",
+                  "parameters": {},
+                  "revision_id": 18,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            },
+            "voice": {
+              "enabled": true,
+              "methods": [
+                {
+                  "artifact_id": 5,
+                  "enabled": true,
+                  "id": "narration-alignment",
+                  "parameters": {},
+                  "revision_id": 10,
+                  "source_kind": "capability_memory"
+                }
+              ]
+            }
+          },
+          "provenance": {
+            "blueprint_key": "starter.ai-tech-engineer.v1",
+            "blueprint_version": "1",
+            "default_recipe_key": "persona.video.ai-tech.v1"
+          },
+          "quality_profile_ref": "studio.quality.text.technical@1",
+          "schema": "persona.creative.video.v1",
+          "skill_ref": "studio.video.director-package@1",
+          "stage_instruction": null,
+          "style_preset_ref": "studio.graphic.technical-editorial@1"
+        },
+        "visual_language": {
+          "density": "medium",
+          "diagram_first": true,
+          "preset": "technical_editorial"
+        }
+      },
+      "field_origins": {
+        "audio_creative_profile": "persona",
+        "content_boundaries": "persona",
+        "content_domains": "persona",
+        "expression_style": "persona",
+        "graphic_creative_profile": "persona",
+        "positioning": "persona",
+        "public_fact_policy": "persona",
+        "risk_boundaries": "persona",
+        "target_audience": "persona",
+        "text_creative_profile": "persona",
+        "video_creative_profile": "persona",
+        "visual_language": "persona"
+      },
+      "id": 17,
+      "persona_id": 2,
+      "persona_revision_id": 6,
+      "series_id": null,
+      "series_revision_id": null
+    },
+    "production": {
+      "created_by": "admin@studio.local",
+      "edit_summary": {
+        "stage_provenance": {
+          "accepted_payload_hash": "8a91b15b22e77234b6e08efd5412fb95cd8ff7bce86545e1da724e2e7e6016df",
+          "adoption_fingerprint": "d9a99b0d705a500192b262acfcc14d4c10a55877cfd88e489553ecb6a4af608e",
+          "attempt_id": 94,
+          "attempt_no": 1,
+          "base_config_hash": "a9b1b8dc5c9cb46f069bb40fe32288fff130272d2b6a3cceb754d01f1272228e",
+          "candidate_hash": "3892f160a7e9aa42c65e4b7bd1f188e168c13a0209bdec820b0f939e9624f1ee",
+          "candidate_id": "candidate-01-8a91b15b22e77234",
+          "config_hash": "a9b1b8dc5c9cb46f069bb40fe32288fff130272d2b6a3cceb754d01f1272228e",
+          "context_hash": "d78dad3cc7c9beeac5187bbd7b2c7be563d315fe2aeec104225031f2f14bc5dd",
+          "creative_configuration": {
+            "binding_origin": "identity_creative_profile",
+            "chat_limits": {
+              "max_items": 3,
+              "max_tokens": 8192,
+              "timeout_seconds": 120
+            },
+            "creative_methods_enabled": false,
+            "declared_chain": null,
+            "deterministic_parameter_sources": [],
+            "fallback_reason": null,
+            "fallback_reasons": [],
+            "freshness": {
+              "current_facts_permitted": false,
+              "fresh_refs": [],
+              "max_age_hours": 168,
+              "mode": "grounded",
+              "ready": true,
+              "reason": null
+            },
+            "identity_checksum": "117d969b44bb042ba0b3d2d0d8c34d20c06e4803b45ee885b38578a3ed5225fb",
+            "identity_snapshot_id": 17,
+            "method_stack": [],
+            "modality": "text",
+            "production_manifest": {
+              "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.",
+              "legacy_stage_ids": [
+                "research",
+                "voice",
+                "storyboard",
+                "sound_edit",
+                "picture_edit",
+                "subtitle_color",
+                "packaging",
+                "finish",
+                "review"
+              ],
+              "manifest_hash": "abad47e16c28161acdfa8b06b275e59ec57556b2af4deff7bedb1e003ca0f96c",
+              "schema": "production.methods.manifest.v1",
+              "stages": [
+                {
+                  "disabled_method_ids": [
+                    "grounded-writing",
+                    "concept-explanation",
+                    "chinese-polish"
+                  ],
+                  "enabled": false,
+                  "methods": [],
+                  "not_applicable_methods": [],
+                  "origin": "identity_snapshot",
+                  "stage": "script",
+                  "title": "文案与脚本"
+                }
+              ]
+            },
+            "production_stage": "script",
+            "profile": {
+              "capability": "chat",
+              "capability_memory_revision_ids": [
+                26
+              ],
+              "installed_skill_refs": [],
+              "mode": "auto",
+              "model_binding": null,
+              "model_chain": [],
+              "parameters": {},
+              "production_stages": {
+                "research": {
+                  "enabled": true,
+                  "methods": [
+                    {
+                      "artifact_id": 1,
+                      "enabled": true,
+                      "id": "research-evidence",
+                      "parameters": {},
+                      "revision_id": 2,
+                      "source_kind": "capability_memory"
+                    }
+                  ]
+                },
+                "review": {
+                  "enabled": true,
+                  "methods": [
+                    {
+                      "artifact_id": 12,
+                      "enabled": true,
+                      "id": "delivery-review",
+                      "parameters": {},
+                      "revision_id": 24,
+                      "source_kind": "capability_memory"
+                    }
+                  ]
+                },
+                "script": {
+                  "enabled": false,
+                  "methods": [
+                    {
+                      "artifact_id": 2,
+                      "enabled": true,
+                      "id": "grounded-writing",
+                      "parameters": {},
+                      "revision_id": 4,
+                      "source_kind": "capability_memory"
+                    },
+                    {
+                      "artifact_id": 3,
+                      "enabled": true,
+                      "id": "concept-explanation",
+                      "parameters": {},
+                      "revision_id": 6,
+                      "source_kind": "capability_memory"
+                    },
+                    {
+                      "artifact_id": 4,
+                      "enabled": true,
+                      "id": "chinese-polish",
+                      "parameters": {},
+                      "revision_id": 8,
+                      "source_kind": "capability_memory"
+                    }
+                  ]
+                }
+              },
+              "provenance": {
+                "blueprint_key": "starter.ai-tech-engineer.v1",
+                "blueprint_version": "1",
+                "default_recipe_key": "persona.text.ai-tech.v1"
+              },
+              "quality_profile_ref": "studio.quality.text.technical@1",
+              "schema": "persona.creative.text.v1",
+              "skill_ref": "studio.text.longform@1",
+              "stage_instruction": null,
+              "style_preset_ref": "studio.text.deep-technical@1"
+            },
+            "profile_hash": "93148db6f16c12495cda53b583c50137df8e5d8afdf5dc6450946cfbf5aec835",
+            "profile_origin": "persona",
+            "quality_profile": {
+              "checks": [
+                "text_structure",
+                "text_fact",
+                "text_identity",
+                "text_anti_hype"
+              ],
+              "critic_contract": "advisory.rubric.v1",
+              "human_review_required": true,
+              "key": "studio.quality.text.technical",
+              "kind": "quality_profile",
+              "license": "product_owned",
+              "provenance": "self_developed",
+              "ref": "studio.quality.text.technical@1",
+              "rules": {
+                "blocked_phrases": [
+                  "颠覆一切",
+                  "百分之百保证",
+                  "稳赚不赔",
+                  "躺赚"
+                ],
+                "citation_required_for_numeric_claims": true,
+                "critic_dimensions": [
+                  "factual_grounding",
+                  "engineering_fit",
+                  "clarity",
+                  "specificity",
+                  "tradeoffs"
+                ],
+                "warning_phrases": [
+                  "王炸",
+                  "赋能一切",
+                  "必看",
+                  "无敌"
+                ]
+              },
+              "source_kind": "studio_builtin",
+              "thresholds": {
+                "critic": "advisory_only",
+                "empty_sections": "blocker",
+                "numeric_claim_without_citation": "blocker",
+                "repeated_paragraphs": "warning"
+              },
+              "version": "1"
+            },
+            "schema": "effective.creative.stage.v1",
+            "selected_binding": {
+              "model": "gemini-3.8-flash-high",
+              "profile": "registered.ddd9b006056eae2bfb76b2ee",
+              "provider": "cpa"
+            },
+            "status": "configured_not_probed",
+            "style_preset": {
+              "config": {
+                "hype": "low",
+                "modality": "text",
+                "specificity": "high",
+                "voice": "evidence_led_engineering"
+              },
+              "key": "studio.text.deep-technical",
+              "kind": "style_preset",
+              "license": "product_owned",
+              "provenance": "self_developed",
+              "ref": "studio.text.deep-technical@1",
+              "source_kind": "studio_builtin",
+              "version": "1"
+            }
+          },
+          "decision": "accepted",
+          "definition_checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68",
+          "edit_summary": {
+            "asset_refs_changed": false,
+            "evidence_refs_changed": false,
+            "payload_changed": false
+          },
+          "llm_run_id": 144,
+          "method": {
+            "deterministic_parameter_sources": [],
+            "instruction": "",
+            "source_kind": "studio_builtin",
+            "stack": []
+          },
+          "modality": "text",
+          "model": {
+            "adapter_key": "generation.openai_compatible",
+            "adapter_version": "1",
+            "configuration_revision": 13,
+            "model": "gemini-3.8-flash-high",
+            "profile_id": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "runtime_hash": "5bea1743fca74f1cbc974f2211aebe06ee88990fa5063610733b39584f7d3581",
+            "status": "configured_not_probed"
+          },
+          "node_id": "final",
+          "note": "按用户委托AI审阅后采用，仅用于本地创作交付；不代表人类手工审核或公开发布。",
+          "output_hash": "8a35340e04ac3adf25534a56ffe9e642696b5cdeae47a082f3c8c5f14e7f88ac",
+          "payload_schema": "text.master.v2",
+          "plugin_key": "stage.master.propose",
+          "plugin_version": "1",
+          "project_output_id": 32,
+          "prompt_hash": "cc2c1cc9f9daa7410018c096453eacc046a4b8d0248c644b9069e1b2876da1e2",
+          "proposal_hash": "06c396617e15b5256aa287bf9d8c59cbca4ac1e8c098579234883185f6efb5a1",
+          "proposal_payload_hash": "8a91b15b22e77234b6e08efd5412fb95cd8ff7bce86545e1da724e2e7e6016df",
+          "resolution_hash": "3ac059eb7834bb290f999c9215346cf8434cbd2ee19bcbcad2e32eb94e8f807e",
+          "run_id": 18,
+          "schema": "creation_recipe.stage_provenance.v1",
+          "workflow_id": 17,
+          "workflow_version": 3
+        }
+      },
+      "output": {
+        "attempt_id": 94,
+        "attempt_no": 1,
+        "entity_id": 61,
+        "id": 32,
+        "input_hash": "3ac059eb7834bb290f999c9215346cf8434cbd2ee19bcbcad2e32eb94e8f807e",
+        "kind": "content_master_revision",
+        "node_id": "final",
+        "output_hash": "8a35340e04ac3adf25534a56ffe9e642696b5cdeae47a082f3c8c5f14e7f88ac"
+      },
+      "source_kind": "workflow_stage",
+      "workflow": {
+        "definition_checksum": "730e14b14a4763a8accf60bbb90b2d7a24a8731e7d476d7dc1a642ba9678ab68",
+        "run_id": 18,
+        "version": 3,
+        "workflow_id": 17
+      }
+    },
+    "project": {
+      "channel": "baijia",
+      "content_form": "article",
+      "id": 35,
+      "modality": "text",
+      "title": "AI科技实作｜让评估成为上线前的共同标准",
+      "unit_id": 41,
+      "unit_title": "从 Demo 到可用：先写清楚怎样才算答对"
+    },
+    "render": {
+      "body_markdown": "## 引言与工程视角重构：超越基准指标的系统性评估\n\n一个知识问答 Demo 能答对演示题，不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评分，而是一套明确约定的工程契约：什么输入该处理、答案依据何处、检索缺失或冲突时如何安全降级。\n\n需要明确的是，外部作者的个案复盘仅代表其特定上下文下的经验，其中涉及的宽泛行业统计若未经过独立核验，不能直接作为通用结论引用。本文立足于软件工程视角，重点讨论系统契约、防御机制与异常分支设计。文中所提出的评估框架属于实践建议，不作为特定业务场景下的效果保证或通用性能测试结论。\n\n工程化落地的首要任务，是将对「模型智能程度」的模糊期待，转译为传统软件工程中确定性的端到端约束体系。\n\n---\n\n## 契约化拆解：将模糊需求转化为输入、预期输出与判定标准\n\n要让模型在生产链路中具备可维护性，必须建立明确的输入、预期输出以及判定标准规范。\n\n### 1\\. 输入边界定义\n\n系统必须对上游输入建立严格的校验契约，而不是直接将不可控的原始文本丢入上下文：\n\n- **长度与超限策略**：按模型的 token 上限预留输出空间，字符限制只作为前置筛查；明确超限时拒绝、分块还是截断，并保留必要上下文。\n- **结构化载荷**：尽量将自由文本封装在具备元数据的 Schema 中（例如包含请求来源、用户角色标识与权限标签），便于后续做前置过滤。\n- **噪声容忍度与清洗**：在进入推理层前，通过轻量级规则过滤不可识别字符、格式错误及低效填充符，降低模型推理的无谓开销。\n\n### 2\\. 预期输出规范\n\n针对模型输出，应尽量避免非结构化的散漫文本，转向强契约的格式化输出：\n\n- **格式约束**：优先采用 JSON Schema、结构化字段或受控枚举值，确保输出可以直接被下游系统反序列化与解析。\n- **字段完整性检查**：定义关键响应字段的必填属性与取值范围。若缺失必要字段，系统应直接将其标记为解析失败。\n- **时延指标基线**：不仅要求输出内容合法，还需设定 P95/P99 响应耗时基线，超出阈值时必须具备超时处理策略。\n\n### 3\\. 可执行的判定规则\n\n把能确定检查的格式交给规则，把需要业务判断的内容交给已约定的评估标准。可解析并不等于答得正确，语义判断仍需要人工核对样本。\n\n- 先检查格式、必填字段和取值范围。这些检查也有执行成本，且不能单独判断答案是否符合真实业务。\n- 再对照预先标注的答案要点与来源。模型自报置信度、词概率或多次回答一致，都不能直接当作事实正确率。\n- **判定分流**：根据评分结果，将请求明确分流至「直接放行」、「降级响应」或「转人工接入」，杜绝模糊状态上线。\n\n---\n\n## 假设场景推演：知识问答中的资料缺失、冲突与置信边界\n\n为了展示工程约束的运作方式，我们以一个**明确标注为假设的知识问答系统**展开推演。在实际部署中，该类系统通常会面临三类典型场景：\n\n### 场景 A：标准正常流程（资料充足且一致）\n\n- **输入**：用户查询符合业务边界，检索增强系统（RAG）召回了高相关度、高置信度的单一来源文档。\n- **系统表现**：模型依据检索内容完成提炼，并在输出中携带引用源标识与字段结构。\n- **判定标准**：输出格式校验通过，关键事实与检索文档无偏差，直接返回用户。\n\n### 场景 B：资料缺失（零召回或低相关度）\n\n- **输入**：用户提出了冷门业务规则、系统未收录的问题，或经过检索后各文档的相关度得分均低于安全阈值。\n- **工程防御**：严禁系统让模型在此类状态下基于通用预训练参数进行自由发挥或产生事实性幻觉。\n- **预期输出**：系统触发快速失败分支，直接返回预设的结构化错误码或确定性引导话术（例如「未检索到对应规则，建议查阅某知识库索引」），跳过模型深度推理阶段以降低时延与成本。\n\n### 场景 C：资料冲突（多源矛盾或时间戳不一致）\n\n- **输入**：检索结果中包含两份相互冲突的规定（例如旧版手册与新版暂行条例），或不同业务线给出了相反的业务动作建议。\n- **工程处理**：先核对文件适用范围、生效状态和来源权威性。不能仅凭日期较新就覆盖旧规定；无法确认适用版本时，不替业务方自行裁决。\n- **防守姿态**：系统输出需明确指出冲突点，并输出结构化提示「当前存在冲突信息，请参考特定条款」，同时将该请求路由至人工核查队列。\n\n---\n\n## 防御性降级与转人工分流：不可控风险的工程兜底\n\n不能假设模型每次都会遵守规则。建议为无法处理的请求提供明确的转人工路径，并验证这条路径确实能接通。\n\n### 1\\. 转人工触发条件\n\n- 证据不足或无法判断答案是否符合已确认规则时，按预先约定的边界转人工。任何评分阈值都应在业务样本上验证。\n- 涉及有实质影响的业务决定时，由业务负责人明确哪些问题只能辅助、哪些必须人工终审，而不是仅靠敏感词决定。\n- 多轮无法解决或用户明确要求人工时，提供退出自动流程的路径；轮次数上限按业务自行确定，不设通用阈值。\n\n### 2\\. 人机上下文接管协议\n\n转交人工不仅是一个分流开关，还需要保证工作流连续性：\n\n- **保留会话快照**：完整传递用户原始请求、历史对话、检索到的支撑片段以及模型中间生成的候选草稿。\n- **结构化摘要呈现**：为人工坐席提供快速排查摘要，标注系统因何种规则触发转接（如：资料冲突、时延超时或合规拦截），避免坐席从头阅读长文本。\n\n### 3\\. 工程代价与取舍\n\n人工接入会带来人力和排队成本；快速失败可能减少模型调用。整体成本需结合实际触发比例评估。\n\n- **排队与响应延迟**：转人工会显著拉长单次请求的端到端耗时。\n- **人工支持负荷**：阈值设置过严会导致大量误报请求涌入人工坐席，造成运营资源挤兑；阈值过宽则削弱了安全防护作用。这一参数需要在受控环境中反复校准。\n\n---\n\n## 工程权衡与上线检查清单：面向负责人的评估复盘\n\n架构设计本质上是权衡的艺术。严苛的输入校验、复杂的冲突判定与频繁的转人工机制，换来的是系统在确定性与安全性上的提升，但代价是调用链路拉长、开发与维护复杂度上升。\n\n对于技术负责人而言，在决定系统上线之前，建议逐一核对以下工程检查清单：\n\n1. **输入契约覆盖率**：系统是否具备前置的 Schema 格式检查、长度限制与基础噪声清洗？\n2. **输出 Schema 校验**：下游服务是否对接了严格的格式反序列化？是否存在因非标准输出导致下游挂起的隐患？\n3. **空数据防御分支**：检索无结果或低置信度时，是否能稳定触发模板化快速失败，而不是放任模型产生幻觉？\n4. **冲突核对机制**：是否明确资料的适用范围、生效状态与来源，无法确认时保守输出并转人工？\n5. **降级与人工接入通路**：转人工协议是否能在端到端链路中真实跑通并附带完整的上下文摘要？\n6. **监控与告警埋点**：是否建立了对降级率、异常拦截率、P95 响应耗时与人工接入量的实时看板？\n\n### 总结\n\n开始时不必先造复杂的评测平台。先拿一组真实、可脱敏的问题，逐条写下答案依据、允许的失败方式和负责确认的人。每次修改后重跑同一组问题，记录变好和变差的地方，再逐步补充难例。这些是方法建议，不是已经完成的测试或效果保证。",
+      "content_hash": "fd47d32d7979d1a6c349c51f263d68e0c746f9ef2c1af40cb3b651aecb4d6233",
+      "origin": "deterministic",
+      "reasons": [],
+      "render_input_hash": "edb68e937cd9ed2bf65502458bfd8d4677dc9bd2d41e42c8317b67aaeeb98bc0",
+      "renderer_key": "text.studio.document.v1",
+      "renderer_version": "2",
+      "status": "ready",
+      "unused_asset_ids": [],
+      "warnings": []
+    },
+    "schema_version": 4
+  },
+  "preview": {
+    "modality": "text",
+    "title": "AI Demo 答对了，为什么还不能上线？先写清这几条判断标准",
+    "render": {
+      "body_markdown": "## 引言与工程视角重构：超越基准指标的系统性评估\n\n一个知识问答 Demo 能答对演示题，不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评分，而是一套明确约定的工程契约：什么输入该处理、答案依据何处、检索缺失或冲突时如何安全降级。\n\n需要明确的是，外部作者的个案复盘仅代表其特定上下文下的经验，其中涉及的宽泛行业统计若未经过独立核验，不能直接作为通用结论引用。本文立足于软件工程视角，重点讨论系统契约、防御机制与异常分支设计。文中所提出的评估框架属于实践建议，不作为特定业务场景下的效果保证或通用性能测试结论。\n\n工程化落地的首要任务，是将对「模型智能程度」的模糊期待，转译为传统软件工程中确定性的端到端约束体系。\n\n---\n\n## 契约化拆解：将模糊需求转化为输入、预期输出与判定标准\n\n要让模型在生产链路中具备可维护性，必须建立明确的输入、预期输出以及判定标准规范。\n\n### 1\\. 输入边界定义\n\n系统必须对上游输入建立严格的校验契约，而不是直接将不可控的原始文本丢入上下文：\n\n- **长度与超限策略**：按模型的 token 上限预留输出空间，字符限制只作为前置筛查；明确超限时拒绝、分块还是截断，并保留必要上下文。\n- **结构化载荷**：尽量将自由文本封装在具备元数据的 Schema 中（例如包含请求来源、用户角色标识与权限标签），便于后续做前置过滤。\n- **噪声容忍度与清洗**：在进入推理层前，通过轻量级规则过滤不可识别字符、格式错误及低效填充符，降低模型推理的无谓开销。\n\n### 2\\. 预期输出规范\n\n针对模型输出，应尽量避免非结构化的散漫文本，转向强契约的格式化输出：\n\n- **格式约束**：优先采用 JSON Schema、结构化字段或受控枚举值，确保输出可以直接被下游系统反序列化与解析。\n- **字段完整性检查**：定义关键响应字段的必填属性与取值范围。若缺失必要字段，系统应直接将其标记为解析失败。\n- **时延指标基线**：不仅要求输出内容合法，还需设定 P95/P99 响应耗时基线，超出阈值时必须具备超时处理策略。\n\n### 3\\. 可执行的判定规则\n\n把能确定检查的格式交给规则，把需要业务判断的内容交给已约定的评估标准。可解析并不等于答得正确，语义判断仍需要人工核对样本。\n\n- 先检查格式、必填字段和取值范围。这些检查也有执行成本，且不能单独判断答案是否符合真实业务。\n- 再对照预先标注的答案要点与来源。模型自报置信度、词概率或多次回答一致，都不能直接当作事实正确率。\n- **判定分流**：根据评分结果，将请求明确分流至「直接放行」、「降级响应」或「转人工接入」，杜绝模糊状态上线。\n\n---\n\n## 假设场景推演：知识问答中的资料缺失、冲突与置信边界\n\n为了展示工程约束的运作方式，我们以一个**明确标注为假设的知识问答系统**展开推演。在实际部署中，该类系统通常会面临三类典型场景：\n\n### 场景 A：标准正常流程（资料充足且一致）\n\n- **输入**：用户查询符合业务边界，检索增强系统（RAG）召回了高相关度、高置信度的单一来源文档。\n- **系统表现**：模型依据检索内容完成提炼，并在输出中携带引用源标识与字段结构。\n- **判定标准**：输出格式校验通过，关键事实与检索文档无偏差，直接返回用户。\n\n### 场景 B：资料缺失（零召回或低相关度）\n\n- **输入**：用户提出了冷门业务规则、系统未收录的问题，或经过检索后各文档的相关度得分均低于安全阈值。\n- **工程防御**：严禁系统让模型在此类状态下基于通用预训练参数进行自由发挥或产生事实性幻觉。\n- **预期输出**：系统触发快速失败分支，直接返回预设的结构化错误码或确定性引导话术（例如「未检索到对应规则，建议查阅某知识库索引」），跳过模型深度推理阶段以降低时延与成本。\n\n### 场景 C：资料冲突（多源矛盾或时间戳不一致）\n\n- **输入**：检索结果中包含两份相互冲突的规定（例如旧版手册与新版暂行条例），或不同业务线给出了相反的业务动作建议。\n- **工程处理**：先核对文件适用范围、生效状态和来源权威性。不能仅凭日期较新就覆盖旧规定；无法确认适用版本时，不替业务方自行裁决。\n- **防守姿态**：系统输出需明确指出冲突点，并输出结构化提示「当前存在冲突信息，请参考特定条款」，同时将该请求路由至人工核查队列。\n\n---\n\n## 防御性降级与转人工分流：不可控风险的工程兜底\n\n不能假设模型每次都会遵守规则。建议为无法处理的请求提供明确的转人工路径，并验证这条路径确实能接通。\n\n### 1\\. 转人工触发条件\n\n- 证据不足或无法判断答案是否符合已确认规则时，按预先约定的边界转人工。任何评分阈值都应在业务样本上验证。\n- 涉及有实质影响的业务决定时，由业务负责人明确哪些问题只能辅助、哪些必须人工终审，而不是仅靠敏感词决定。\n- 多轮无法解决或用户明确要求人工时，提供退出自动流程的路径；轮次数上限按业务自行确定，不设通用阈值。\n\n### 2\\. 人机上下文接管协议\n\n转交人工不仅是一个分流开关，还需要保证工作流连续性：\n\n- **保留会话快照**：完整传递用户原始请求、历史对话、检索到的支撑片段以及模型中间生成的候选草稿。\n- **结构化摘要呈现**：为人工坐席提供快速排查摘要，标注系统因何种规则触发转接（如：资料冲突、时延超时或合规拦截），避免坐席从头阅读长文本。\n\n### 3\\. 工程代价与取舍\n\n人工接入会带来人力和排队成本；快速失败可能减少模型调用。整体成本需结合实际触发比例评估。\n\n- **排队与响应延迟**：转人工会显著拉长单次请求的端到端耗时。\n- **人工支持负荷**：阈值设置过严会导致大量误报请求涌入人工坐席，造成运营资源挤兑；阈值过宽则削弱了安全防护作用。这一参数需要在受控环境中反复校准。\n\n---\n\n## 工程权衡与上线检查清单：面向负责人的评估复盘\n\n架构设计本质上是权衡的艺术。严苛的输入校验、复杂的冲突判定与频繁的转人工机制，换来的是系统在确定性与安全性上的提升，但代价是调用链路拉长、开发与维护复杂度上升。\n\n对于技术负责人而言，在决定系统上线之前，建议逐一核对以下工程检查清单：\n\n1. **输入契约覆盖率**：系统是否具备前置的 Schema 格式检查、长度限制与基础噪声清洗？\n2. **输出 Schema 校验**：下游服务是否对接了严格的格式反序列化？是否存在因非标准输出导致下游挂起的隐患？\n3. **空数据防御分支**：检索无结果或低置信度时，是否能稳定触发模板化快速失败，而不是放任模型产生幻觉？\n4. **冲突核对机制**：是否明确资料的适用范围、生效状态与来源，无法确认时保守输出并转人工？\n5. **降级与人工接入通路**：转人工协议是否能在端到端链路中真实跑通并附带完整的上下文摘要？\n6. **监控与告警埋点**：是否建立了对降级率、异常拦截率、P95 响应耗时与人工接入量的实时看板？\n\n### 总结\n\n开始时不必先造复杂的评测平台。先拿一组真实、可脱敏的问题，逐条写下答案依据、允许的失败方式和负责确认的人。每次修改后重跑同一组问题，记录变好和变差的地方，再逐步补充难例。这些是方法建议，不是已经完成的测试或效果保证。",
+      "content_hash": "fd47d32d7979d1a6c349c51f263d68e0c746f9ef2c1af40cb3b651aecb4d6233",
+      "origin": "deterministic",
+      "reasons": [],
+      "render_input_hash": "edb68e937cd9ed2bf65502458bfd8d4677dc9bd2d41e42c8317b67aaeeb98bc0",
+      "renderer_key": "text.studio.document.v1",
+      "renderer_version": "2",
+      "status": "ready",
+      "unused_asset_ids": [],
+      "warnings": []
+    },
+    "external_execution": [],
+    "markdown": "## 引言与工程视角重构：超越基准指标的系统性评估\n\n一个知识问答 Demo 能答对演示题，不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评分，而是一套明确约定的工程契约：什么输入该处理、答案依据何处、检索缺失或冲突时如何安全降级。\n\n需要明确的是，外部作者的个案复盘仅代表其特定上下文下的经验，其中涉及的宽泛行业统计若未经过独立核验，不能直接作为通用结论引用。本文立足于软件工程视角，重点讨论系统契约、防御机制与异常分支设计。文中所提出的评估框架属于实践建议，不作为特定业务场景下的效果保证或通用性能测试结论。\n\n工程化落地的首要任务，是将对「模型智能程度」的模糊期待，转译为传统软件工程中确定性的端到端约束体系。\n\n---\n\n## 契约化拆解：将模糊需求转化为输入、预期输出与判定标准\n\n要让模型在生产链路中具备可维护性，必须建立明确的输入、预期输出以及判定标准规范。\n\n### 1\\. 输入边界定义\n\n系统必须对上游输入建立严格的校验契约，而不是直接将不可控的原始文本丢入上下文：\n\n- **长度与超限策略**：按模型的 token 上限预留输出空间，字符限制只作为前置筛查；明确超限时拒绝、分块还是截断，并保留必要上下文。\n- **结构化载荷**：尽量将自由文本封装在具备元数据的 Schema 中（例如包含请求来源、用户角色标识与权限标签），便于后续做前置过滤。\n- **噪声容忍度与清洗**：在进入推理层前，通过轻量级规则过滤不可识别字符、格式错误及低效填充符，降低模型推理的无谓开销。\n\n### 2\\. 预期输出规范\n\n针对模型输出，应尽量避免非结构化的散漫文本，转向强契约的格式化输出：\n\n- **格式约束**：优先采用 JSON Schema、结构化字段或受控枚举值，确保输出可以直接被下游系统反序列化与解析。\n- **字段完整性检查**：定义关键响应字段的必填属性与取值范围。若缺失必要字段，系统应直接将其标记为解析失败。\n- **时延指标基线**：不仅要求输出内容合法，还需设定 P95/P99 响应耗时基线，超出阈值时必须具备超时处理策略。\n\n### 3\\. 可执行的判定规则\n\n把能确定检查的格式交给规则，把需要业务判断的内容交给已约定的评估标准。可解析并不等于答得正确，语义判断仍需要人工核对样本。\n\n- 先检查格式、必填字段和取值范围。这些检查也有执行成本，且不能单独判断答案是否符合真实业务。\n- 再对照预先标注的答案要点与来源。模型自报置信度、词概率或多次回答一致，都不能直接当作事实正确率。\n- **判定分流**：根据评分结果，将请求明确分流至「直接放行」、「降级响应」或「转人工接入」，杜绝模糊状态上线。\n\n---\n\n## 假设场景推演：知识问答中的资料缺失、冲突与置信边界\n\n为了展示工程约束的运作方式，我们以一个**明确标注为假设的知识问答系统**展开推演。在实际部署中，该类系统通常会面临三类典型场景：\n\n### 场景 A：标准正常流程（资料充足且一致）\n\n- **输入**：用户查询符合业务边界，检索增强系统（RAG）召回了高相关度、高置信度的单一来源文档。\n- **系统表现**：模型依据检索内容完成提炼，并在输出中携带引用源标识与字段结构。\n- **判定标准**：输出格式校验通过，关键事实与检索文档无偏差，直接返回用户。\n\n### 场景 B：资料缺失（零召回或低相关度）\n\n- **输入**：用户提出了冷门业务规则、系统未收录的问题，或经过检索后各文档的相关度得分均低于安全阈值。\n- **工程防御**：严禁系统让模型在此类状态下基于通用预训练参数进行自由发挥或产生事实性幻觉。\n- **预期输出**：系统触发快速失败分支，直接返回预设的结构化错误码或确定性引导话术（例如「未检索到对应规则，建议查阅某知识库索引」），跳过模型深度推理阶段以降低时延与成本。\n\n### 场景 C：资料冲突（多源矛盾或时间戳不一致）\n\n- **输入**：检索结果中包含两份相互冲突的规定（例如旧版手册与新版暂行条例），或不同业务线给出了相反的业务动作建议。\n- **工程处理**：先核对文件适用范围、生效状态和来源权威性。不能仅凭日期较新就覆盖旧规定；无法确认适用版本时，不替业务方自行裁决。\n- **防守姿态**：系统输出需明确指出冲突点，并输出结构化提示「当前存在冲突信息，请参考特定条款」，同时将该请求路由至人工核查队列。\n\n---\n\n## 防御性降级与转人工分流：不可控风险的工程兜底\n\n不能假设模型每次都会遵守规则。建议为无法处理的请求提供明确的转人工路径，并验证这条路径确实能接通。\n\n### 1\\. 转人工触发条件\n\n- 证据不足或无法判断答案是否符合已确认规则时，按预先约定的边界转人工。任何评分阈值都应在业务样本上验证。\n- 涉及有实质影响的业务决定时，由业务负责人明确哪些问题只能辅助、哪些必须人工终审，而不是仅靠敏感词决定。\n- 多轮无法解决或用户明确要求人工时，提供退出自动流程的路径；轮次数上限按业务自行确定，不设通用阈值。\n\n### 2\\. 人机上下文接管协议\n\n转交人工不仅是一个分流开关，还需要保证工作流连续性：\n\n- **保留会话快照**：完整传递用户原始请求、历史对话、检索到的支撑片段以及模型中间生成的候选草稿。\n- **结构化摘要呈现**：为人工坐席提供快速排查摘要，标注系统因何种规则触发转接（如：资料冲突、时延超时或合规拦截），避免坐席从头阅读长文本。\n\n### 3\\. 工程代价与取舍\n\n人工接入会带来人力和排队成本；快速失败可能减少模型调用。整体成本需结合实际触发比例评估。\n\n- **排队与响应延迟**：转人工会显著拉长单次请求的端到端耗时。\n- **人工支持负荷**：阈值设置过严会导致大量误报请求涌入人工坐席，造成运营资源挤兑；阈值过宽则削弱了安全防护作用。这一参数需要在受控环境中反复校准。\n\n---\n\n## 工程权衡与上线检查清单：面向负责人的评估复盘\n\n架构设计本质上是权衡的艺术。严苛的输入校验、复杂的冲突判定与频繁的转人工机制，换来的是系统在确定性与安全性上的提升，但代价是调用链路拉长、开发与维护复杂度上升。\n\n对于技术负责人而言，在决定系统上线之前，建议逐一核对以下工程检查清单：\n\n1. **输入契约覆盖率**：系统是否具备前置的 Schema 格式检查、长度限制与基础噪声清洗？\n2. **输出 Schema 校验**：下游服务是否对接了严格的格式反序列化？是否存在因非标准输出导致下游挂起的隐患？\n3. **空数据防御分支**：检索无结果或低置信度时，是否能稳定触发模板化快速失败，而不是放任模型产生幻觉？\n4. **冲突核对机制**：是否明确资料的适用范围、生效状态与来源，无法确认时保守输出并转人工？\n5. **降级与人工接入通路**：转人工协议是否能在端到端链路中真实跑通并附带完整的上下文摘要？\n6. **监控与告警埋点**：是否建立了对降级率、异常拦截率、P95 响应耗时与人工接入量的实时看板？\n\n### 总结\n\n开始时不必先造复杂的评测平台。先拿一组真实、可脱敏的问题，逐条写下答案依据、允许的失败方式和负责确认的人。每次修改后重跑同一组问题，记录变好和变差的地方，再逐步补充难例。这些是方法建议，不是已经完成的测试或效果保证。",
+    "truncated": false,
+    "document_present": true
+  }
+}

@@ -177,7 +177,8 @@ def test_build_proposal_consumes_template_density_and_binds_exact_canonical_cand
     editorial, split = (layers(templates[key], "cover") for key in ("editorial", "split"))
     assert editorial["cover-visual"]["height"] == 403
     assert split["cover-visual"]["height"] == 461
-    assert split["cover-body"]["y"] - editorial["cover-body"]["y"] == 58
+    assert (split["cover-body"]["y"] - split["cover-visual"]["y"]) - (
+        editorial["cover-body"]["y"] - editorial["cover-visual"]["y"]) == 58
     for key, spacing in (("editorial", 24), ("split", 24), ("cards", 32)):
         detail = layers(templates[key], "details")
         left, right = detail["details-bullet-0"], detail["details-bullet-1"]
@@ -185,14 +186,14 @@ def test_build_proposal_consumes_template_density_and_binds_exact_canonical_cand
     densities = {key: _compose(graphic_case, template=template, density=key)["payload"]
                  for key in ("low", "medium", "high")}
     assert len({document_hash(payload) for payload in densities.values()}) == 3
-    for key, size in (("low", 38), ("medium", 34), ("high", 30)):
+    fitted = {}
+    for key, base in (("low", 38), ("medium", 34), ("high", 30)):
         detail = layers(densities[key], "details")
+        fitted[key] = detail["details-body"]["runs"][0]["style"]["font_size"]
+        assert base <= fitted[key] <= round(56 * base / 34)
         for lid in ("details-body", "details-bullet-0", "details-bullet-1"):
-            assert detail[lid]["runs"][0]["style"]["font_size"] == size
-            assert detail[lid]["height"] == pytest.approx(size * 1.4)
-    assert layers(densities["low"], "details")["details-bullet-1"]["y"] > layers(
-        densities["medium"], "details")["details-bullet-1"]["y"] > layers(
-        densities["high"], "details")["details-bullet-1"]["y"]
+            assert detail[lid]["runs"][0]["style"]["font_size"] == fitted[key]
+    assert fitted["low"] > fitted["medium"] > fitted["high"]
     changed = deepcopy(resolved)
     changed["upstream"]["plan"]["selected_content"]["cards"][0]["title"] = "另一个明确标题"
     changed["upstream"]["plan"]["accepted_hash"] = digest(changed["upstream"]["plan"]["selected_content"])

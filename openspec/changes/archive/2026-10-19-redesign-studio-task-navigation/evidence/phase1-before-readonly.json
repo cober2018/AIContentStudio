@@ -1,0 +1,4432 @@
+{
+  "/content-opportunities?limit=100": {
+    "items": [
+      {
+        "id": 17,
+        "title": "网购“发菜”实为国家一级保护野生植物，网店经营者被查获",
+        "summary": "江苏扬州一消费者网购发菜后怀疑是国家一级保护野生植物并报警。经鉴定，涉案发菜确属国家一级重点保护野生植物发状念珠藻，警方在宁夏查获网店经营者并扣押600多克野生发菜。专家与法官指出，市面上常见且可食用的是海发菜或人工合成仿发菜，而西北荒漠草原生长的野生发菜受法律严格保护禁止售卖。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-20T00:04:21.122239",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-18T00:04:21.122947",
+        "updated_at": "2026-10-18T00:18:53.094932",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 17,
+        "business_date": "2026-10-18",
+        "event_key": "f8d42d6659be1b1b8ff8966478c61efdc704a0eb67029e93c2da548ebe21e046:1",
+        "angle_key": "0c38d9cff7c1c3093284a3ddc7ed7b02e0cf35e754b466832af14fdf0c4a5e54",
+        "latest_assessment": {
+          "id": 32,
+          "opportunity_id": 17,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "江苏扬州一消费者网购发菜后怀疑是国家一级保护野生植物并报警。经鉴定，涉案发菜确属国家一级重点保护野生植物发状念珠藻，警方在宁夏查获网店经营者并扣押600多克野生发菜。专家与法官指出，市面上常见且可食用的是海发菜或人工合成仿发菜，而西北荒漠草原生长的野生发菜受法律严格保护禁止售卖。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-17T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "切合“日常生活”与“个人观察”中的生活新奇事，不做生硬普法说教，而是以案件引出实用生活知识。",
+            "audience_fit": "帮助普通消费者理清日常可食用的海发菜/仿发菜与国家保护野生发菜的区别，避免误触法律红线或上当受骗。",
+            "suggested_angle": "从一次看似寻常的网购食材经历切入，科普日常餐桌“发菜”与荒漠野生受保护念珠藻的区别，带来生活常识上的新鲜冷知识。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              21
+            ],
+            "evidence_summary": [
+              "男子网购发菜疑为国保植物报警，店主因采卖野生发菜获刑"
+            ],
+            "risk_flags": [
+              "报道未说明涉案经营者丁某最终获刑的具体刑期与判决文书细节",
+              "冻结正文仅称经鉴定，鉴定程序不作额外推断；原评分保留，未重新评分。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.87375
+          },
+          "checksum": "ae4343f67903142df2a5c66259dec4ec1124004e90ccf69ef84388baa4b0a74c",
+          "analysis_source": "system",
+          "analysis_provider_key": "system-body-scope-correction",
+          "analysis_provider_version": "discovery.v2.body-scope-fix",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-18T00:18:53.094611"
+        }
+      },
+      {
+        "id": 18,
+        "title": "较强冷空气波及全国多地，局地降温超12℃并伴随大范围雨雪",
+        "summary": "中国气象局与中央气象台消息显示，受较强冷空气影响，10月16日夜间至18日中国出现大范围降水、大风和降温天气。局地降温幅度超过12℃，西北、华北、东北等多地降温4至8℃，多省份迎大到暴雨，部分高海拔地区出现雨雪天气。中央气象台发布了暴雨、强对流及大风蓝色预警。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:04:21.128851",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-18T00:04:21.129112",
+        "updated_at": "2026-10-18T00:18:53.085332",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 2,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 17,
+        "business_date": "2026-10-18",
+        "event_key": "98046e3a975f78ca8755f55af778a8169ae360034ca5e5c09ef30091253491fe:1",
+        "angle_key": "f05097d0440d1ec6c4b01a8fc52711febe9e3151d18bb7fdc4865386c1f67694",
+        "latest_assessment": {
+          "id": 31,
+          "opportunity_id": 18,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "中国气象局与中央气象台消息显示，受较强冷空气影响，10月16日夜间至18日中国出现大范围降水、大风和降温天气。局地降温幅度超过12℃，西北、华北、东北等多地降温4至8℃，多省份迎大到暴雨，部分高海拔地区出现雨雪天气。中央气象台发布了暴雨、强对流及大风蓝色预警。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。来源发布时间不代表全网热度。中新社报道原文：2026-10-17，转载/更新：未知，事件：未知；澎湃转载央视新闻：原文未知，转载：2026-10-17，事件：未知。",
+            "brand_relevance": "符合“日常生活感受”定位，用权威气象事实描述生活体感变化，语气平实不制造焦虑。",
+            "audience_fit": "帮助普通读者直观感知近期急剧换季降温的宏观背景，为周末或日常通勤防寒防雨提供切实参考。",
+            "suggested_angle": "聚焦换季换温的日常生活体感变化，从全国范围气温骤降和暴雨强风切入，提醒日常添衣保暖和出行安全。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              22,
+              24
+            ],
+            "evidence_summary": [
+              "大范围雨雪降温影响中国 局地降温幅度超12℃",
+              "中央气象台最新预报：12省份迎大到暴雨，北方多地气温创新低"
+            ],
+            "risk_flags": [
+              "各城市具体供暖计划或交通受影响的具体情况未在报道中说明",
+              "澎湃页面署名央视新闻，其页面日期仅证明转载时间，央视原文时间未知。",
+              "原双次评分保留为自然运行历史，本次修订未重新调用模型评分。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.835
+          },
+          "checksum": "a41efed6f79f9fc4363ebe6c3779f26cb4273260eb63dff52cb72f30ebf59bcb",
+          "analysis_source": "system",
+          "analysis_provider_key": "system-publication-role-correction",
+          "analysis_provider_version": "discovery.v2.publication-role-fix",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-18T00:18:53.091351"
+        }
+      },
+      {
+        "id": 16,
+        "title": "特斯拉发布Roadster飞行跑车并展示喷气翻滚，国内车企负责人公开点赞",
+        "summary": "10月16日，特斯拉Roadster飞行跑车正式发布，在现场展示了加速能力与喷气特技低空翻滚能力，引发关注与讨论。面对舆论讨论，蔚来创始人李斌和小鹏集团董事长何小鹏等国内车企负责人公开发声点赞与评价，李斌表示“太厉害了！这个我们真没有”，何小鹏称其为“非常酷的另外一种形态飞行汽车”。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-20T00:04:21.098670",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-18T00:04:21.099362",
+        "updated_at": "2026-10-18T00:04:21.101469",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 17,
+        "business_date": "2026-10-18",
+        "event_key": "3ee9528b93ff2595153864f265c4e67a0ccabe64600ed8d4bcd59b7adb391132:1",
+        "angle_key": "a40c0b409d6ed484463b133d33da12d6ad45eebb5e1f5e8dd79d74c43ad9552d",
+        "latest_assessment": {
+          "id": 28,
+          "opportunity_id": 16,
+          "revision_no": 1,
+          "assessment": {
+            "what_happened": "10月16日，特斯拉Roadster飞行跑车正式发布，在现场展示了加速能力与喷气特技低空翻滚能力，引发关注与讨论。面对舆论讨论，蔚来创始人李斌和小鹏集团董事长何小鹏等国内车企负责人公开发声点赞与评价，李斌表示“太厉害了！这个我们真没有”，何小鹏称其为“非常酷的另外一种形态飞行汽车”。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-17T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "紧扣“新鲜变化”与“近未来趣事”的定位，客观呈现新鲜产品展示与舆论反应，保持事实与感受分开。",
+            "audience_fit": "满足读者对近未来交通工具形态的好奇心，以轻松围观的心态了解科技新动向与行业大佬的真实反应，不带焦虑或说教。",
+            "suggested_angle": "从日常生活视角观察科技新玩物的亮相：跑车加上喷气特技翻滚带来了科幻照进现实的趣味感，同时同行动态也展现出行业互动的鲜活切片。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              20
+            ],
+            "evidence_summary": [
+              "特斯拉飞行跑车引热议，评论：从三电技术底座看中国新能源车优势"
+            ],
+            "risk_flags": [
+              "报道未披露该飞行跑车的量产交付时间及技术细节参数",
+              "该产品是否具备实际道路或空域合法上路飞行资质尚无相关信息"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8797499999999999
+          },
+          "checksum": "6ea53c1a5efaf78117d743f560633cda5a7583831406860479dba5729d153c17",
+          "analysis_source": "system",
+          "analysis_provider_key": "daily-discovery",
+          "analysis_provider_version": "discovery.v2",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-18T00:04:21.121436"
+        }
+      },
+      {
+        "id": 14,
+        "title": "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战",
+        "summary": "Google Research 介绍将 AI 智能体与物理实验室机器人结合、用于分子设计闭环的研究方向。冻结正文指出，前沿模型对三维几何与物理状态的推理仍不可靠，真实湿实验反馈也未能跟上假设生成和计算设计的进展。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:02:20.231310",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-17T00:02:20.231971",
+        "updated_at": "2026-10-17T00:20:18.797600",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 6,
+        "research_run_id": 12,
+        "business_date": "2026-10-17",
+        "event_key": "02e27b78d543e15efd6e6739bc636ee3f7283e95ada07980a017d398638bdba0:1",
+        "angle_key": "f6cec7e144d5ce43a3bba536b3913d6dbb96727db551d6cd7ccca02a87560441",
+        "latest_assessment": {
+          "id": 27,
+          "opportunity_id": 14,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "Google Research 介绍将 AI 智能体与物理实验室机器人结合、用于分子设计闭环的研究方向。冻结正文指出，前沿模型对三维几何与物理状态的推理仍不可靠，真实湿实验反馈也未能跟上假设生成和计算设计的进展。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-16T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "符合 AI Agent 与工程实践领域定位，探讨智能体在非纯软件环境下的系统状态维护与工具交互限制，坚持明确限制与 trade-off。",
+            "audience_fit": "帮助关注 AI Agent 工程化的开发者理解智能体在缺乏确定性数字模拟环境时，如何构建状态感知和自动化闭环，识别大模型在空间状态推理上的局限与应对思路。",
+            "suggested_angle": "从 AI Agent 系统架构与真实世界交互约束切入：探讨当 Agent 走出纯软件/代码沙箱进入实体物理环境时，状态跟踪（State Tracking）与闭环执行（Closed-Loop Feedback）所面临的工程挑战。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              19
+            ],
+            "evidence_summary": [
+              "Google Research：AI 智能体在湿实验中的物理基础"
+            ],
+            "risk_flags": [
+              "物理操作机器人的错误率与自动化闭环中的人工干预比例数据未在节选给出。",
+              "冻结正文只显示VERID论文链接名，不足以说明其功能；未读正文细节不能作为已核实事实。",
+              "原双次评分保留为自然运行历史，修订未重新调用模型评分。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8495000000000001
+          },
+          "checksum": "4dd4d97d345b31739f101be6d221c963f37fcd21e31a1b8a22e9e9aaa88d273b",
+          "analysis_source": "system",
+          "analysis_provider_key": "system-body-scope-correction",
+          "analysis_provider_version": "discovery.v2.body-scope-fix",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-17T00:20:18.796926"
+        }
+      },
+      {
+        "id": 15,
+        "title": "苹果首款折叠屏iPhone Duo开启预购：现货秒空与折叠屏生活观察",
+        "summary": "2026年10月16日20时，苹果首款折叠屏手机iPhone Duo正式开启预售，起售价15999元。预售开启后官网与App访问受阻，首发日到店取货名额迅速被抢空，邮寄发货时间已排至明年1月下旬，二级市场亦出现较大幅度溢价，同时相关生态应用的适配仍在跟进中。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:03:11.090615",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-17T00:03:11.090887",
+        "updated_at": "2026-10-17T00:03:11.091611",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 13,
+        "business_date": "2026-10-17",
+        "event_key": "e383e602b85557ac6a2965fcd897e246320cb502e741d8db95b80c6f3094ebfb:1",
+        "angle_key": "1940b62030e6643db50dcf982d6af3d4748aa86bf4c95f4732c53f1b5675dd79",
+        "latest_assessment": {
+          "id": 26,
+          "opportunity_id": 15,
+          "revision_no": 1,
+          "assessment": {
+            "what_happened": "2026年10月16日20时，苹果首款折叠屏手机iPhone Duo正式开启预售，起售价15999元。预售开启后官网与App访问受阻，首发日到店取货名额迅速被抢空，邮寄发货时间已排至明年1月下旬，二级市场亦出现较大幅度溢价，同时相关生态应用的适配仍在跟进中。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-16T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "切合“近未来趣事”、“新鲜变化”与“日常生活”的内容定位，不推销、不说教、不制造抢购焦虑，记录正在发生的新鲜消费现实。",
+            "audience_fit": "让对数码硬件和生活变化好奇的读者直观了解首款折叠屏苹果手机的发售行情、到货周期及溢价情况，并提供客观冷静的生态适配观察。",
+            "suggested_angle": "以日常观察者的平实视角，记录折叠屏手机进入苹果产品线后的首发抢购现象与生活消费动态，关注新形态硬件对日常使用习惯的潜在改变，同时客观看待生态适配现状，避免制造盲目跟风与消费焦虑。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              18
+            ],
+            "evidence_summary": [
+              "苹果首款折叠屏手机iPhone Duo开启预购，首发现货秒空发货排到明年"
+            ],
+            "risk_flags": [
+              "iPhone Duo 实际展开后的真机手感与日常耐用度表现",
+              "主流日常应用针对该双屏/折叠屏的专属适配进度与优化体验",
+              "官方后续产能爬坡与补货的具体计划"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.866
+          },
+          "checksum": "27947f8c262e2665c8049394b967b794fe58c554d9de6990af37bcd353028e4b",
+          "analysis_source": "system",
+          "analysis_provider_key": "daily-discovery",
+          "analysis_provider_version": "discovery.v2",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-17T00:03:11.098020"
+        }
+      },
+      {
+        "id": 13,
+        "title": "Reflection 开源 501B MoE 模型 Beam：面向 Coding 与 Agent 场景的部署与工程适配",
+        "summary": "Reflection 实验室在 Hugging Face 上发布了采用 Apache 2.0 许可证的开源 MoE 模型 Beam。该模型总参数量为 501B、单 token 激活 23B，提供 1M tokens 上下文窗口，主打代码与智能体场景，并同步提供了原生 transformers、vLLM、SGLang 支持、Rust harness 以及微调与强化学习方案。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:02:20.207520",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-17T00:02:20.208264",
+        "updated_at": "2026-10-17T00:02:20.212183",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 6,
+        "research_run_id": 12,
+        "business_date": "2026-10-17",
+        "event_key": "78e8df2bdbbcdc5d3e6824ab701e95251c0ed050b964f917456ef9ca90f0097b:1",
+        "angle_key": "11e37fb9a5a8a2234b237470efcf363fcf92990b1a9ff1388c01912a0eb974ad",
+        "latest_assessment": {
+          "id": 24,
+          "opportunity_id": 13,
+          "revision_no": 1,
+          "assessment": {
+            "what_happened": "Reflection 实验室在 Hugging Face 上发布了采用 Apache 2.0 许可证的开源 MoE 模型 Beam。该模型总参数量为 501B、单 token 激活 23B，提供 1M tokens 上下文窗口，主打代码与智能体场景，并同步提供了原生 transformers、vLLM、SGLang 支持、Rust harness 以及微调与强化学习方案。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-16T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "切合 AI Agent、软件架构与开发工具的工程定位，从开源模型服务化、推理框架集成与训练配方角度展开分析。",
+            "audience_fit": "帮助技术负责人和开发者了解百亿级激活规模 MoE 模型的服务化落地路径，评估针对 Agent 和编程场景将超大开源模型私有化部署的工程可行性与工具链配套。",
+            "suggested_angle": "聚焦私有化大模型基础设施选型：剖析 501B MoE（激活 23B）在长上下文（1M）下的工程适配支持（vLLM、SGLang、Rust harness）及 Agent/Coding 场景的落地可行性与资源权衡。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              16
+            ],
+            "evidence_summary": [
+              "Reflection 发布 Beam：首个可拥有、可定制、可扩展的 501B 开源 MoE 模型"
+            ],
+            "risk_flags": [
+              "不同精度（如 BF16/FP8/NVFP4）在具体 GPU 拓扑下的显存占用与延迟吞吐基准数据在节选中未完整呈现。",
+              "Rust harness 的具体架构设计与相对 Python 推理框架的性能收益细节未在节选正文详述。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.9059999999999999
+          },
+          "checksum": "75de556157d755aa5412eec645a5f6283caa440f821521c2f9c22077e5a252f6",
+          "analysis_source": "system",
+          "analysis_provider_key": "daily-discovery",
+          "analysis_provider_version": "discovery.v2",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-17T00:02:20.230567"
+        }
+      },
+      {
+        "id": 11,
+        "title": "Granite Switch 4.1：基于 aLoRA 的多适配器共享端点与 KV Cache 复用架构解析",
+        "summary": "IBM 发布 Granite Switch 4.1，将通用决策 Decision aLoRA、安全决策 Guardian aLoRA 以及 Granite-Speech-5.0-Turbo-CTC 语音识别模型整合至单一边界端点。其核心架构特征是利用 Activated LoRAs 实现 KV Cache 复用，在保持单底模近似显存占用的同时提供多任务能力。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-18T00:04:14.443213",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-16T00:04:14.444023",
+        "updated_at": "2026-10-16T00:28:02.267286",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 8,
+        "business_date": "2026-10-16",
+        "event_key": "19545ee5a7cd276743af7f5582fc08ab3efafc56107785e1965726511e5e7fb4:1",
+        "angle_key": "4d9619573c858fe1f5a472130a52fecea6bd8e99df2e4978601054e96ef10510",
+        "latest_assessment": {
+          "id": 23,
+          "opportunity_id": 11,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "IBM 发布 Granite Switch 4.1，将通用决策 Decision aLoRA、安全决策 Guardian aLoRA 以及 Granite-Speech-5.0-Turbo-CTC 语音识别模型整合至单一边界端点。其核心架构特征是利用 Activated LoRAs 实现 KV Cache 复用，在保持单底模近似显存占用的同时提供多任务能力。",
+            "why_now": "近期报道：原文发表于2026-10-15；页面更新于2026-10-15。发布时间标签不能证明事件发生日期，事件时间未知，不认定为当天发布或全网热点。",
+            "brand_relevance": "紧扣软件架构与工程实践定位，关注推理端点资源利用率与 KV Cache 共享的技术实现细节，明确 trade-off。",
+            "audience_fit": "为面临多模型并存、显存成本高昂困境的技术负责人与后端架构师提供单端点组合多 LoRA 适配器的工程落地参考。",
+            "suggested_angle": "从大模型微服务架构与推理成本角度，深度剖析如何通过动态加载 aLoRA 和复用 Base Model 的 KV Cache，在单个端点内承接对话、决策与语音识别混合负载，兼顾显存与推理延迟。",
+            "time_sensitivity": "medium",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              15
+            ],
+            "evidence_summary": [
+              "Granite Switch 4.1: Chat, Decisions, and Speech from One Endpoint"
+            ],
+            "risk_flags": [
+              "文章未披露生产环境下高并发多 adapter 切换时的实际端到端 P99 延迟表现",
+              "缺乏不同硬件平台上的吞吐量量化对比数据",
+              "事件时间未知；保留的原双次评分为自然运行原始结果，非修正后重新评分。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8932499999999999
+          },
+          "checksum": "07b36b5794c0e187703e5e82fd622d2b007fbce5de13b9f83f826e64f22f8917",
+          "analysis_source": "system",
+          "analysis_provider_key": "system-date-proof-correction",
+          "analysis_provider_version": "discovery.v2.date-label-fix",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-16T00:28:02.273435"
+        }
+      },
+      {
+        "id": 12,
+        "title": "随身网络配件小体验：从接口统一看数码出行的微小变化",
+        "summary": "在少数派编辑部的新玩意栏目中，编辑分享了近期选用 5G RedCap 随身 WiFi 的原因：因随身充电生态已全面转向 Type-C，为了避免外出携带 USB-A 转接线的不便而更换设备。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-18T00:06:02.606872",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-16T00:06:02.607045",
+        "updated_at": "2026-10-16T00:06:02.607551",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 9,
+        "business_date": "2026-10-16",
+        "event_key": "ae552214dba8adb37d93d1807574584678c43f3b6f2ced13c14d1294a7bd67c5:1",
+        "angle_key": "f624f0fd89079e32e795ea1aca1fd8b58623470b84d52981061e14bfac2728d8",
+        "latest_assessment": {
+          "id": 22,
+          "opportunity_id": 12,
+          "revision_no": 1,
+          "assessment": {
+            "what_happened": "在少数派编辑部的新玩意栏目中，编辑分享了近期选用 5G RedCap 随身 WiFi 的原因：因随身充电生态已全面转向 Type-C，为了避免外出携带 USB-A 转接线的不便而更换设备。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-15T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "高度契合“日常生活”、“个人观察”定位，文风轻松，尊重生活细节，不推销产品，不做焦虑引导。",
+            "audience_fit": "贴近普通读者的数码生活痛点，通过真实的生活体验分享给出具体、不夸张的出行随身设备选择参考。",
+            "suggested_angle": "以日常出行装备中的接口细节（Type-C 与 USB-A）为切入点，记录普通人在数码配件更替中的真实便利感受与选择逻辑。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              14
+            ],
+            "evidence_summary": [
+              "新玩意 253｜少数派的编辑们最近买了啥？"
+            ],
+            "risk_flags": [
+              "仅反映单人短途场景的使用感受，缺乏不同网络环境下的长期测速与续航表现数据",
+              "文章未提及插卡版本资费与运营商适配细节"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8422499999999999
+          },
+          "checksum": "35433c46d62e3f981c56618e5cc07951b6f2079b3db4491142f25e1155d91ff4",
+          "analysis_source": "system",
+          "analysis_provider_key": "daily-discovery",
+          "analysis_provider_version": "discovery.v2",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-16T00:06:02.616076"
+        }
+      },
+      {
+        "id": 10,
+        "title": "Apple Watch 睡眠呼吸暂停迹象提示在中国大陆上线",
+        "summary": "Apple 于2026-10-14宣布在中国大陆推出睡眠呼吸暂停迹象提示功能；关注这次地区可用性变化及功能边界，不把旧功能包装成全球首次发布。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-17T07:55:46.426898",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:55:46.427229",
+        "updated_at": "2026-10-15T09:01:06.700890",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 2,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 4,
+        "business_date": "2026-10-15",
+        "event_key": "65f545d0c7a6aa3775c9da5444be26b75d9b096ea8a83c90e4ad63b43331a228:1",
+        "angle_key": "aa532cbb8ddf827fef72c4f061e427eaa063ae4468565ea6404453740e5e557c",
+        "latest_assessment": {
+          "id": 20,
+          "opportunity_id": 10,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "Apple 于2026-10-14宣布在中国大陆推出睡眠呼吸暂停迹象提示功能；关注这次地区可用性变化及功能边界，不把旧功能包装成全球首次发布。",
+            "why_now": "热点：事件2026-10-14为中国大陆上线，Apple官方公告同日发布；少数派原文2024-10-10、更新2026-10-14。旧文章包含新的地区进展，须分别记录。",
+            "brand_relevance": "契合‘日常生活’与‘新鲜变化’领域，遵循陈述事实与分开个人感受的边界，不制造疾病焦虑。",
+            "audience_fit": "让关心健康科技与生活设备变化的读者了解夜间监测的新功能及其在日常生活中的具体提示作用。",
+            "suggested_angle": "聚焦可穿戴设备融入日常生理监测的微小变化，观察健康科技如何在无感状态下介入睡眠日常，不做健康恐吓，仅呈现功能演进。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              10,
+              12
+            ],
+            "evidence_summary": [
+              "已经能测夜间体征的 Apple Watch，为什么要再做一个睡眠呼吸暂停提醒",
+              "Apple 官方：中国大陆上线公告 2026-10-14",
+              "热点：事件2026-10-14为中国大陆上线，Apple官方公告同日发布；少数派原文2024-10-10、更新2026-10-14。旧文章包含新的地区进展，须分别记录。"
+            ],
+            "risk_flags": [
+              "功能帮助发现相关迹象，不能用于确诊、治疗或排除疾病",
+              "不能据此断言所有型号或所有用户均可用，须核对官方适用条件"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8347500000000001
+          },
+          "checksum": "60f3073a69df510f7e094b0b047a39c9307b0ad5c436aff4c8173296a9a45aa5",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.704041"
+        }
+      },
+      {
+        "id": 9,
+        "title": "从 Austin Mann 的旧评测看日常摄影取舍（常青备选）",
+        "summary": "基于 Austin Mann 的 iPhone 18 Pro 摄影评测讨论日常记录的取舍；原文与少数派转载的时间分开标注。",
+        "status": "watching",
+        "priority": "low",
+        "relevant_until": "2026-10-17T07:53:53.909143",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:53:53.909320",
+        "updated_at": "2026-10-15T09:01:06.697887",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 2,
+        "business_date": "2026-10-15",
+        "event_key": "d976c62ed0077f1fff1faf2846143fb76cf1035468650de48a2d440a8376f182:1",
+        "angle_key": "fff6d952e404be980d23ca4c2a9cf294c15a7e4b9333d5924aeddb8568707f18",
+        "latest_assessment": {
+          "id": 19,
+          "opportunity_id": 9,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "基于 Austin Mann 的 iPhone 18 Pro 摄影评测讨论日常记录的取舍；原文与少数派转载的时间分开标注。",
+            "why_now": "常青备选：Austin Mann 原文2026-09-17，少数派转载2026-10-14；事件具体日未知。转载没有让旧评测变成新热点。",
+            "brand_relevance": "符合近未来趣事与新鲜变化的观察者角色，事实依据明确且不贩卖设备焦虑。",
+            "audience_fit": "为对日常记录工具演进好奇的读者提供来自专业摄影师体验维度的参考观察。",
+            "suggested_angle": "跳过冷冰冰的参数跑分，从日常记录与创作者自由的角度，观察移动影像技术演进对具体拍摄体验的改变。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              9
+            ],
+            "evidence_summary": [
+              "带给摄影师更多自由：Austin Mann 评 iPhone 18 Pro 影像体验",
+              "常青备选：Austin Mann 原文2026-09-17，少数派转载2026-10-14；事件具体日未知。转载没有让旧评测变成新热点。"
+            ],
+            "risk_flags": [
+              "转载日期不得充当原文或新品事件日期",
+              "摄影师体验不等于角色亲测"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.7857500000000002
+          },
+          "checksum": "84ea546d526811ace7d777fae0f511de9e3507d81d2a40f296cf62d134c154ca",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.700400"
+        }
+      },
+      {
+        "id": 8,
+        "title": "把创作架在膝上：Lap Easel 的便携生活设计",
+        "summary": "Colossal 介绍了 Bill Groot 设计的 Lap Easel，这是一款可调节的便携支撑装置，能够安稳放置在膝盖或桌面上，方便随时随地进行创作。",
+        "status": "watching",
+        "priority": "low",
+        "relevant_until": "2026-10-20T07:53:53.905967",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:53:53.906109",
+        "updated_at": "2026-10-15T09:01:06.694809",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 2,
+        "business_date": "2026-10-15",
+        "event_key": "71d9d8daaa98c0bb4ce0d475dc5d451cfe32d638f5652baa950483d8806ce127:1",
+        "angle_key": "bdcd1ee7f12443d6a30b09f874a3b5677d575621e5424650682479a6913e776c",
+        "latest_assessment": {
+          "id": 18,
+          "opportunity_id": 8,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "Colossal 介绍了 Bill Groot 设计的 Lap Easel，这是一款可调节的便携支撑装置，能够安稳放置在膝盖或桌面上，方便随时随地进行创作。",
+            "why_now": "常青备选：近期报道的便携画架设计，可用于日常创作观察；不把导购介绍当独立使用测评。",
+            "brand_relevance": "符合关注日常生活与有趣事物的角色定位，以纯粹的好奇心介绍创新生活工具。",
+            "audience_fit": "给喜欢画画、手工或随笔记录的读者提供新鲜有趣的物件观察，带来轻量创作的生活灵感。",
+            "suggested_angle": "聚焦日常生活中的巧思器具，观察便携物理工具如何改变人们随时停下、记录与创作的习惯。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "graphic",
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              8
+            ],
+            "evidence_summary": [
+              "Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere",
+              "常青备选：近期报道的便携画架设计，可用于日常创作观察；不把导购介绍当独立使用测评。"
+            ],
+            "risk_flags": [
+              "报道链接媒体自营商店，存在导购关系",
+              "未实际体验，不编造亲测效果"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.82875
+          },
+          "checksum": "913703c155b32893a05b09668c80c8e388aa0638c631a6ca6b0f0405067188e1",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.697396"
+        }
+      },
+      {
+        "id": 7,
+        "title": "走进 221 个针孔暗箱：不保存影像的充气光影装置",
+        "summary": "Pneuhaus 的 Compound Camera 3 通过 221 个镜头让人体验当下光影，作品不录制影像；它已于上月底在 MODE Festival 首展。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-17T07:53:53.902801",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:53:53.903010",
+        "updated_at": "2026-10-15T09:01:06.691526",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 2,
+        "business_date": "2026-10-15",
+        "event_key": "6a7f96772638ae3817973e14528cd6056ce52f921e67fa7f580e20a810b7b3b5:1",
+        "angle_key": "c91e3247a336d1e2063d2c7cae16760148a49ab071d65c8bd1722092e45f5ad4",
+        "latest_assessment": {
+          "id": 17,
+          "opportunity_id": 7,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "Pneuhaus 的 Compound Camera 3 通过 221 个镜头让人体验当下光影，作品不录制影像；它已于上月底在 MODE Festival 首展。",
+            "why_now": "近期报道：报道2026-10-13（UTC）；原文说首展在上月底，具体日未确认；不是今天首展，也未确认当前开放参观。",
+            "brand_relevance": "契合“观察正在发生的有趣事情”与“新鲜变化”内容领域，保持生动与无说教的叙述。",
+            "audience_fit": "让对视觉艺术和奇妙空间感兴趣的读者领略光学原理在日常生活之外的趣味实践。",
+            "suggested_angle": "以好奇视角观察复古小孔成像原理与现代充气建筑结合的趣味空间，分享新鲜的视觉与空间感受。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "graphic",
+              "video"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              7
+            ],
+            "evidence_summary": [
+              "221 Camera Obscuras Fill Pneuhaus’ Immersive, Inflatable, Image-Capturing Installation",
+              "近期报道：报道2026-10-13（UTC）；原文说首展在上月底，具体日未确认；不是今天首展，也未确认当前开放参观。"
+            ],
+            "risk_flags": [
+              "不录制、不保存影像",
+              "具体首展日和当前参观安排未确认"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.83475
+          },
+          "checksum": "cee0ea8cf9555159de0d91582bad215b7a3adf10f90c97e7dcd0be388f840676",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.694322"
+        }
+      },
+      {
+        "id": 6,
+        "title": "散步不为打卡：从 Mangata 看轻量记录的日常感",
+        "summary": "从 Mangata 开发者的产品介绍出发，观察散步时轻量记录的设计与日常感；不冒充亲测或独立测评。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-17T07:53:53.896231",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:53:53.896453",
+        "updated_at": "2026-10-15T09:01:06.688426",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 2,
+        "business_date": "2026-10-15",
+        "event_key": "a103a0adc30861337a9b999486f22e1e8d2b73b4cf30c023341b017f04c07926:1",
+        "angle_key": "b793a62b15b2d9660aac2fb7d9e47b9791704ae611c871ad382a7b880699f5dd",
+        "latest_assessment": {
+          "id": 16,
+          "opportunity_id": 6,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "从 Mangata 开发者的产品介绍出发，观察散步时轻量记录的设计与日常感；不冒充亲测或独立测评。",
+            "why_now": "近期报道：原文2026-10-15，转载时间不适用，事件时间未知；这是近期产品介绍，并非已证实的新品发布热点。",
+            "brand_relevance": "完美契合日常生活、个人感受与新鲜变化的定位，遵循不说教、不制造焦虑的边界。",
+            "audience_fit": "为希望记录生活但厌倦了社交展示压力的普通读者，提供一种更轻盈、专注个人体验的生活记录方式。",
+            "suggested_angle": "从低压力的散步记录工具切入，探讨如何在日常漫步中保留观察与感受，摆脱社交打卡式的记录负担。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              6
+            ],
+            "evidence_summary": [
+              "App+1｜Mangata：把每次散步当作一次探索旅行",
+              "近期报道：原文2026-10-15，转载时间不适用，事件时间未知；这是近期产品介绍，并非已证实的新品发布热点。"
+            ],
+            "risk_flags": [
+              "原文利益声明：作者与产品有直接利益相关（开发者/自家产品）",
+              "产品自述，不是独立测评；不得编造角色使用经历"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8815000000000001
+          },
+          "checksum": "68a500c5f00fbe79b6065efe92a36adb392ca7fb349c933b353b7f4f9d2692ec",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.691021"
+        }
+      },
+      {
+        "id": 5,
+        "title": "AI Agent 架构建议（缺正文证据，暂缓）",
+        "summary": "生成时只保存了标题、正文为空，不能据此声称经受生产检验；补齐正文与可核对案例后再另行评估。",
+        "status": "dismissed",
+        "priority": "low",
+        "relevant_until": "2026-10-22T07:50:39.989386",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:50:39.989571",
+        "updated_at": "2026-10-15T09:01:06.685163",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 1,
+        "business_date": "2026-10-15",
+        "event_key": "7deb974dd9207c28a3cb120afb64d1b4dfcd451b66ab924f8db2079a06456410:1",
+        "angle_key": "dd613e6d20519b14146d298c600e607a6142b3d8ce553d2b5217a10e6f3db330",
+        "latest_assessment": {
+          "id": 15,
+          "opportunity_id": 5,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "生成时只保存了标题、正文为空，不能据此声称经受生产检验；补齐正文与可核对案例后再另行评估。",
+            "why_now": "暂缓：生成时缺正文；标题和总体高分不能替代证据。Feed标注2026-08-15，事件时间未核实。",
+            "brand_relevance": "完全符合“AI Agent”与“软件架构”工程实践的核心人设。",
+            "audience_fit": "帮助开发者规避生产环境中常见的 Agent 失控与性能劣化陷阱。",
+            "suggested_angle": "归纳生产级 Agent 在容错、状态管理、上下文控制等方面的实用设计模式。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              5
+            ],
+            "evidence_summary": [
+              "AI Agent Architecture Patterns That Actually Survive Production",
+              "暂缓：生成时缺正文；标题和总体高分不能替代证据。Feed标注2026-08-15，事件时间未核实。"
+            ],
+            "risk_flags": [
+              "缺少生成时可用的正文",
+              "未独立证实生产案例；不能使用“生产验证”强表述"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.0
+          },
+          "checksum": "0f2969c7424ba45f69bb1179bb36bf89003da565de84db7c15888dcf7c1eef28",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.687816"
+        }
+      },
+      {
+        "id": 4,
+        "title": "工程师职业演化观察：从传统开发向 Business Builder 与 Harness Engineer 的分流",
+        "summary": "讨论分析了在软件投资逻辑与 AI 范式转变下，工程师技术路径向业务构建者（Business Builder）与底座工程架构师（Harness Engineer）的分化趋势。",
+        "status": "watching",
+        "priority": "low",
+        "relevant_until": "2026-10-22T07:50:39.984576",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:50:39.984813",
+        "updated_at": "2026-10-15T09:01:06.681941",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 1,
+        "business_date": "2026-10-15",
+        "event_key": "4828ffb8c012a1411968c286ffb244ab886def460647d44f362c33067c1552c0:1",
+        "angle_key": "34b2c71595b2ecc51251f7f77513f53d135035482a4bda46f7ac55a311ecd698",
+        "latest_assessment": {
+          "id": 14,
+          "opportunity_id": 4,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "讨论分析了在软件投资逻辑与 AI 范式转变下，工程师技术路径向业务构建者（Business Builder）与底座工程架构师（Harness Engineer）的分化趋势。",
+            "why_now": "常青备选：原文2026-05-01，是作者对工程师职业路径的观点；与当前工程主线接近，今日不再单独推荐。",
+            "brand_relevance": "贴合关注技术演进的开发者与技术负责人受众，内容紧密围绕 Harness 与工程定位。",
+            "audience_fit": "为技术人员和研发团队提供明确的技能拓展路径，分析工程基础设施掌控力在当下的核心价值。",
+            "suggested_angle": "从软件架构与工程能力重构的视角，分析工程师如何通过深度业务理解或基础设施/Harness 构建建立长期价值。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              4
+            ],
+            "evidence_summary": [
+              "工程师的两条上行路：从 Software Engineer 到 Business Builder 和 Harness Engineer",
+              "常青备选：原文2026-05-01，是作者对工程师职业路径的观点；与当前工程主线接近，今日不再单独推荐。"
+            ],
+            "risk_flags": [
+              "Business Builder / Harness Engineer 是作者的分类观点，非既定行业事实"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8539999999999999
+          },
+          "checksum": "2ca17ce4f74c0b3ebff3b23ae1fc0e4a99d0fe9bc2460ef6a7b91266563f8776",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.684534"
+        }
+      },
+      {
+        "id": 3,
+        "title": "从一位开发者的项目复盘，看 Eval 如何连接 Demo 与生产",
+        "summary": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-22T07:50:39.979490",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:50:39.979783",
+        "updated_at": "2026-10-15T09:01:06.678723",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 1,
+        "business_date": "2026-10-15",
+        "event_key": "ec927c4f71bdc2d20d158c9daeafed9030b8adf8667ed7ade3184357d5da92e4:1",
+        "angle_key": "0caa1e3cc4c9f6258b3faa2d303120c57b99aac5fe2e1ae0296c8948c30cb6d6",
+        "latest_assessment": {
+          "id": 13,
+          "opportunity_id": 3,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+            "why_now": "常青参考：原文2026-04-17；事件具体时间未知，不按今日新事件推荐。",
+            "brand_relevance": "高度贴合技术负责人与开发者关注的工程实践问题，符合“不把未验证模型输出当事实、关注真实落地”的原则。",
+            "audience_fit": "提示开发者与负责人重视系统工程设计与评测标准，避免重模型、轻工程导致的资源浪费。",
+            "suggested_angle": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              3
+            ],
+            "evidence_summary": [
+              "AI 项目死在工程，不是模型",
+              "常青参考：原文2026-04-17；事件具体时间未知，不按今日新事件推荐。"
+            ],
+            "risk_flags": [
+              "作者自述的单个项目复盘",
+              "未核验的行业统计不作为结论依据"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.88775
+          },
+          "checksum": "5e3c8221e64a88943908e59aa20e7b3de6387ad8427c6e56cc21be608f21ef3a",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.681405"
+        }
+      },
+      {
+        "id": 2,
+        "title": "从 Harness Engineering 看 AI Agent 工程化：概念辨析与投入边界",
+        "summary": "业界围绕 Harness Engineering 展开讨论，相关博文梳理了从 Mitchell Hashimoto 提出概念到 OpenAI、Anthropic 讨论的演进过程，聚焦哪些技术属于原有工程经验的包装，哪些具有实际投入价值。",
+        "status": "dismissed",
+        "priority": "low",
+        "relevant_until": "2026-10-22T07:50:39.973323",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:50:39.974141",
+        "updated_at": "2026-10-15T09:01:06.675278",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 1,
+        "business_date": "2026-10-15",
+        "event_key": "a3c4aa0af8cabc533db331a7689773d616b2e1868ee60ed2510f8987fd48bf71:1",
+        "angle_key": "bbb78e31a83d23a1318fed68969020da10876edcd6f4697fe09122918f882777",
+        "latest_assessment": {
+          "id": 12,
+          "opportunity_id": 2,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "业界围绕 Harness Engineering 展开讨论，相关博文梳理了从 Mitchell Hashimoto 提出概念到 OpenAI、Anthropic 讨论的演进过程，聚焦哪些技术属于原有工程经验的包装，哪些具有实际投入价值。",
+            "why_now": "同类合并：已并入 #1 的工程投入问题，本条保留原文与历史，不再作为单独的今日建议。",
+            "brand_relevance": "切合“AI Agent、软件架构与开发工具”的定位，坚持不夸大能力、重在工程实践辨析。",
+            "audience_fit": "帮助技术负责人和开发者厘清 Harness Engineering 的工程内涵，避免盲目跟风，聚焦基础设施和评估体系建设。",
+            "suggested_angle": "结合工程落地视角，拆解 Harness 在 Agent 架构中的实质支撑作用，区分炒作叙事与务实架构实践。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              2
+            ],
+            "evidence_summary": [
+              "Harness Engineering：拆开看看，哪些是新瓶装旧酒，哪些值得你真金白银投入",
+              "同类合并：已并入 #1 的工程投入问题，本条保留原文与历史，不再作为单独的今日建议。"
+            ],
+            "risk_flags": [
+              "已合并至内容机会 #1"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8885
+          },
+          "checksum": "00d594be23bbe4e02adcbaa630a64a7fa362356e7897cb93c4433ae3105822c1",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.678117"
+        }
+      },
+      {
+        "id": 1,
+        "title": "通用 Agent 与确定性编排：从开发者观点拆解工程投入",
+        "summary": "结合作者的两篇观点文章，讨论垂直场景的原子工具、确定性编排和 Harness 的工程投入边界；不把个人判断写成行业定论。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-22T07:50:39.958725",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:50:39.960106",
+        "updated_at": "2026-10-15T09:01:06.666256",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 2,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 1,
+        "business_date": "2026-10-15",
+        "event_key": "7fafe7aeb56770c86b262cdec29bade910d54b2503a752c0f0d1a739611dff2f:1",
+        "angle_key": "af26561e40179531a1a7ce9d1133e43688b2057bf6e6381fb9df5327a2ee2bf3",
+        "latest_assessment": {
+          "id": 11,
+          "opportunity_id": 1,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "结合作者的两篇观点文章，讨论垂直场景的原子工具、确定性编排和 Harness 的工程投入边界；不把个人判断写成行业定论。",
+            "why_now": "常青参考：原文分别发布于2026-05-01、2026-04-15，事件时间未知；不称为今日热点。已将同类选题 #2 的依据合并至本条。",
+            "brand_relevance": "符合“软件架构与工程实践”定位，坚持明确限制和 trade-off，拒绝夸大模型通用自主性。",
+            "audience_fit": "给需要落地垂直业务场景的架构师提供清晰的架构权衡参考，明确确定性编排与工具接口的壁垒所在。",
+            "suggested_angle": "结合作者的两篇观点文章，讨论垂直场景的原子工具、确定性编排和 Harness 的工程投入边界；不把个人判断写成行业定论。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              1,
+              11
+            ],
+            "evidence_summary": [
+              "激动人心的噪音里，你的护城河反而变厚了——一个写给 AI 工程化落地从业者的反常识判断",
+              "Harness Engineering：拆开看看，哪些是新瓶装旧酒，哪些值得你真金白银投入",
+              "常青参考：原文分别发布于2026-05-01、2026-04-15，事件时间未知；不称为今日热点。已将同类选题 #2 的依据合并至本条。"
+            ],
+            "risk_flags": [
+              "作者观点，不代表经过独立验证的行业共识",
+              "合并来源为同一作者，不计为两个独立主体"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8995000000000001
+          },
+          "checksum": "6c498bd0fcadac1c4d7b537d655a507f6ed3c1831e09ee44fdc147cc3cca24f8",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.674019"
+        }
+      }
+    ],
+    "offset": 0,
+    "limit": 100,
+    "has_more": false
+  },
+  "/content-personas": [
+    {
+      "id": 1,
+      "name": "MiniMax 本地能力验收（非经营身份）",
+      "brand_id": null,
+      "status": "active",
+      "current_revision": 0
+    },
+    {
+      "id": 2,
+      "name": "AI科技研发技术博主",
+      "brand_id": null,
+      "status": "active",
+      "current_revision": 4
+    },
+    {
+      "id": 3,
+      "name": "日常生活方式博主",
+      "brand_id": null,
+      "status": "active",
+      "current_revision": 2
+    }
+  ],
+  "/home": {
+    "discovery_status": {
+      "settings": {
+        "enabled": true,
+        "public_processing_allowed": true,
+        "search_provider": "minimax",
+        "credential_source": "codex_mcp",
+        "timezone": "Asia/Taipei",
+        "daily_hour": 8,
+        "daily_limit": 5,
+        "bootstrap_searches": 8,
+        "weekly_searches": 4,
+        "daily_searches": 4,
+        "source_validations": 40,
+        "active_sources": 24,
+        "model_requests": 12,
+        "input_tokens": 120000,
+        "output_tokens": 24000,
+        "paused_persona_ids": [
+          1
+        ],
+        "search_configured": true,
+        "worker_enabled": true
+      },
+      "personas": [
+        {
+          "persona_id": 1,
+          "collection_mode": "direct",
+          "name": "MiniMax 本地能力验收（非经营身份）",
+          "opportunity_policy": "discovery.v2",
+          "business_date": "2026-10-19",
+          "status": "positioning_incomplete",
+          "reason": "positioning_incomplete",
+          "last_run": null,
+          "today_run": null,
+          "radar": {
+            "status": "unconfigured",
+            "reason": null,
+            "persona_id": 1,
+            "config": {},
+            "generation": null,
+            "source_id": null,
+            "counts": null,
+            "issues": null,
+            "last_imported_at": null,
+            "report_hash": null,
+            "availability_checked": false
+          },
+          "next_due_at": null
+        },
+        {
+          "persona_id": 2,
+          "collection_mode": "aggregate",
+          "name": "AI科技研发技术博主",
+          "opportunity_policy": "technology.v1",
+          "business_date": "2026-10-19",
+          "status": "not_yet_due",
+          "reason": null,
+          "last_run": {
+            "id": 16,
+            "persona_id": 2,
+            "persona_revision_id": 6,
+            "kind": "daily",
+            "business_date": "2026-10-18",
+            "origin": "celery_beat",
+            "execution_origin": "celery_worker",
+            "task_id": "db2e88c5-da0e-4074-9812-92cc26089537",
+            "status": "partial",
+            "reason": "no_grounded_candidates",
+            "summary": {
+              "count": 0,
+              "opportunity_ids": [],
+              "reason": "no_grounded_candidates",
+              "coverage": "partial",
+              "collection_reason": "catchup_coverage_incomplete"
+            },
+            "diagnostics": null,
+            "collection_snapshot": {
+              "status": "partial",
+              "target_at": "2026-10-18T00:00:00+00:00",
+              "frozen_at": "2026-10-18T00:02:33.314876+00:00",
+              "sources": [
+                {
+                  "id": 1666,
+                  "batch_id": 389,
+                  "source_id": 54,
+                  "name": "卡哟哟 AI 热点",
+                  "start_at": "2026-10-17T23:51:34.902200+00:00",
+                  "end_at": "2026-10-18T00:00:00+00:00",
+                  "status": "covered",
+                  "reason": null,
+                  "counts": {
+                    "requests": 1,
+                    "pages": 1,
+                    "scanned": 0,
+                    "new_versions": 0,
+                    "duplicates": 0
+                  },
+                  "coverage": {
+                    "complete": true,
+                    "basis": {
+                      "scope": "upstream_selected_set",
+                      "ledger_cursor": "ax1.eyJrIjoic3luYyIsImUiOiJrUDhWR1RVeSIsInciOjg2LCJmIjoiZGVmYXVsdCJ9"
+                    },
+                    "unconfirmed_interval": null
+                  },
+                  "finished_at": "2026-10-18T00:01:35.622730+00:00",
+                  "persona_ids": [
+                    2
+                  ],
+                  "earlier_gap": {
+                    "id": 1576,
+                    "batch_id": 318,
+                    "source_id": 54,
+                    "name": "卡哟哟 AI 热点",
+                    "start_at": "2026-10-17T11:15:00+00:00",
+                    "end_at": "2026-10-17T11:20:00+00:00",
+                    "status": "failed",
+                    "reason": "catchup_unsafe_url",
+                    "counts": {
+                      "requests": 1,
+                      "pages": 0,
+                      "scanned": 0,
+                      "new_versions": 0,
+                      "duplicates": 0
+                    },
+                    "coverage": {
+                      "complete": false,
+                      "basis": {},
+                      "unconfirmed_interval": {
+                        "start_at": "2026-10-17T11:15:00+00:00",
+                        "end_at": "2026-10-17T11:20:00+00:00",
+                        "missing_count": null
+                      }
+                    },
+                    "finished_at": "2026-10-17T11:20:28.655919+00:00",
+                    "persona_ids": [
+                      2
+                    ]
+                  }
+                }
+              ]
+            },
+            "collection_notice": "catchup_not_in_frozen_run",
+            "collection_target_at": "2026-10-18T00:00:00+00:00",
+            "created_at": "2026-10-18T00:00:33.160431",
+            "finished_at": "2026-10-18T00:03:26.607143",
+            "searches": 0,
+            "attempt": 1,
+            "model_requests": 2,
+            "reserved_input_tokens": 23678,
+            "reserved_output_tokens": 4400
+          },
+          "today_run": null,
+          "radar": {
+            "status": "partial",
+            "reason": null,
+            "persona_id": 2,
+            "config": {
+              "enabled": true,
+              "auto_daily": true,
+              "persona_id": 2,
+              "source_id": 56,
+              "report_path": "/Users/mshengran/Project/new-term-radar/report.json",
+              "producer_version": "0.4.0",
+              "producer_revision": "2568cdcba5691cd21d03f2c0a86f4461dbcb7234",
+              "producer_verified": true,
+              "verified_by": "admin@studio.local",
+              "parser_version": "radar.daily.v1"
+            },
+            "generation": null,
+            "source_id": 56,
+            "counts": {
+              "lead_rows": 15,
+              "resolved_leads": 15,
+              "unresolved_leads": 0,
+              "url_items": 15,
+              "unknown_published_at_leads": 15,
+              "unknown_published_at_items": 15,
+              "unknown_discovered_at_leads": 15,
+              "unknown_observed_at_leads": 15,
+              "budget_unexamined_items": 0
+            },
+            "issues": [
+              "breakout_first_run",
+              "hf_first_run"
+            ],
+            "last_imported_at": "2026-10-18T17:23:44.925380+00:00",
+            "report_hash": "bc63d56d7e7d0deee14efcc965a1a692fe2feea4fe27bcac7e33187a536233b5",
+            "availability_checked": false
+          },
+          "next_due_at": "2026-10-19T08:00:00+08:00"
+        },
+        {
+          "persona_id": 3,
+          "collection_mode": "aggregate",
+          "name": "日常生活方式博主",
+          "opportunity_policy": "discovery.v2",
+          "business_date": "2026-10-19",
+          "status": "not_yet_due",
+          "reason": null,
+          "last_run": {
+            "id": 17,
+            "persona_id": 3,
+            "persona_revision_id": 5,
+            "kind": "daily",
+            "business_date": "2026-10-18",
+            "origin": "celery_beat",
+            "execution_origin": "celery_worker",
+            "task_id": "65c52de5-2aab-4d51-92b3-63e0a195fbd9",
+            "status": "partial",
+            "reason": "fewer_qualifying_topics",
+            "summary": {
+              "count": 3,
+              "opportunity_ids": [
+                16,
+                17,
+                18
+              ],
+              "reason": "fewer_qualifying_topics",
+              "coverage": "partial",
+              "collection_reason": "catchup_coverage_incomplete"
+            },
+            "diagnostics": null,
+            "collection_snapshot": {
+              "status": "partial",
+              "target_at": "2026-10-18T00:00:00+00:00",
+              "frozen_at": "2026-10-18T00:03:26.648037+00:00",
+              "sources": [
+                {
+                  "id": 1667,
+                  "batch_id": 389,
+                  "source_id": 55,
+                  "name": "卡哟哟 生活热点",
+                  "start_at": "2026-10-17T23:50:34.731809+00:00",
+                  "end_at": "2026-10-18T00:00:00+00:00",
+                  "status": "covered",
+                  "reason": null,
+                  "counts": {
+                    "requests": 1,
+                    "pages": 1,
+                    "scanned": 0,
+                    "new_versions": 0,
+                    "duplicates": 0
+                  },
+                  "coverage": {
+                    "complete": true,
+                    "basis": {
+                      "scope": "upstream_selected_set",
+                      "ledger_cursor": "ax1.eyJrIjoic3luYyIsImUiOiJwS0Z2MXE0NyIsInciOjM4LCJmIjoiZGVmYXVsdCJ9"
+                    },
+                    "unconfirmed_interval": null
+                  },
+                  "finished_at": "2026-10-18T00:01:38.074705+00:00",
+                  "persona_ids": [
+                    3
+                  ],
+                  "earlier_gap": {
+                    "id": 1577,
+                    "batch_id": 318,
+                    "source_id": 55,
+                    "name": "卡哟哟 生活热点",
+                    "start_at": "2026-10-17T11:15:00+00:00",
+                    "end_at": "2026-10-17T11:20:00+00:00",
+                    "status": "failed",
+                    "reason": "catchup_unsafe_url",
+                    "counts": {
+                      "requests": 1,
+                      "pages": 0,
+                      "scanned": 0,
+                      "new_versions": 0,
+                      "duplicates": 0
+                    },
+                    "coverage": {
+                      "complete": false,
+                      "basis": {},
+                      "unconfirmed_interval": {
+                        "start_at": "2026-10-17T11:15:00+00:00",
+                        "end_at": "2026-10-17T11:20:00+00:00",
+                        "missing_count": null
+                      }
+                    },
+                    "finished_at": "2026-10-17T11:20:28.659431+00:00",
+                    "persona_ids": [
+                      3
+                    ]
+                  }
+                }
+              ]
+            },
+            "collection_notice": "catchup_not_in_frozen_run",
+            "collection_target_at": "2026-10-18T00:00:00+00:00",
+            "created_at": "2026-10-18T00:00:33.162384",
+            "finished_at": "2026-10-18T00:04:21.147749",
+            "searches": 0,
+            "attempt": 1,
+            "model_requests": 5,
+            "reserved_input_tokens": 72389,
+            "reserved_output_tokens": 9800
+          },
+          "today_run": null,
+          "radar": {
+            "status": "unconfigured",
+            "reason": null,
+            "persona_id": 3,
+            "config": {},
+            "generation": null,
+            "source_id": null,
+            "counts": null,
+            "issues": null,
+            "last_imported_at": null,
+            "report_hash": null,
+            "availability_checked": false
+          },
+          "next_due_at": "2026-10-19T08:00:00+08:00"
+        }
+      ],
+      "scheduler": {
+        "last_scan_at": "2026-10-18T17:25:40.193464+00:00",
+        "origin": "celery_beat",
+        "queued_runs": 0
+      },
+      "catchup": [
+        {
+          "id": 2183,
+          "batch_id": 458,
+          "source_id": 56,
+          "name": "New-term Radar",
+          "start_at": "2026-10-18T17:07:44.091506+00:00",
+          "end_at": "2026-10-18T17:23:00+00:00",
+          "status": "partial",
+          "reason": "radar_partial",
+          "counts": {
+            "requests": 1,
+            "pages": 1,
+            "scanned": 15,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {
+              "scope": "configured_report_only",
+              "ledger_cursor": "bc63d56d7e7d0deee14efcc965a1a692fe2feea4fe27bcac7e33187a536233b5",
+              "issues": [
+                "breakout_first_run",
+                "hf_first_run"
+              ],
+              "counts": {
+                "lead_rows": 15,
+                "resolved_leads": 15,
+                "unresolved_leads": 0,
+                "url_items": 15,
+                "unknown_published_at_leads": 15,
+                "unknown_published_at_items": 15,
+                "unknown_discovered_at_leads": 15,
+                "unknown_observed_at_leads": 15,
+                "budget_unexamined_items": 0
+              }
+            },
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:07:44.091506+00:00",
+              "end_at": "2026-10-18T17:23:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:23:44.926617+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 2180,
+            "batch_id": 457,
+            "source_id": 56,
+            "name": "New-term Radar",
+            "start_at": "2026-10-18T17:05:44.950287+00:00",
+            "end_at": "2026-10-18T17:07:00+00:00",
+            "status": "partial",
+            "reason": "radar_partial",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 15,
+              "new_versions": 0,
+              "duplicates": 0
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {
+                "scope": "configured_report_only",
+                "ledger_cursor": "bc63d56d7e7d0deee14efcc965a1a692fe2feea4fe27bcac7e33187a536233b5",
+                "issues": [
+                  "breakout_first_run",
+                  "hf_first_run"
+                ],
+                "counts": {
+                  "lead_rows": 15,
+                  "resolved_leads": 15,
+                  "unresolved_leads": 0,
+                  "url_items": 15,
+                  "unknown_published_at_leads": 15,
+                  "unknown_published_at_items": 15,
+                  "unknown_discovered_at_leads": 15,
+                  "unknown_observed_at_leads": 15,
+                  "budget_unexamined_items": 0
+                }
+              },
+              "unconfirmed_interval": {
+                "start_at": "2026-10-18T17:05:44.950287+00:00",
+                "end_at": "2026-10-18T17:07:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-18T17:07:44.093362+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2182,
+          "batch_id": 458,
+          "source_id": 55,
+          "name": "卡哟哟 生活热点",
+          "start_at": "2026-10-18T17:07:44.069786+00:00",
+          "end_at": "2026-10-18T17:23:00+00:00",
+          "status": "covered",
+          "reason": null,
+          "counts": {
+            "requests": 1,
+            "pages": 1,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": true,
+            "basis": {
+              "scope": "upstream_selected_set",
+              "ledger_cursor": "ax1.eyJrIjoic3luYyIsImUiOiJwS0Z2MXE0NyIsInciOjQ5LCJmIjoiZGVmYXVsdCJ9",
+              "issues": null,
+              "counts": null
+            },
+            "unconfirmed_interval": null
+          },
+          "finished_at": "2026-10-18T17:23:44.912299+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": {
+            "id": 1819,
+            "batch_id": 418,
+            "source_id": 55,
+            "name": "卡哟哟 生活热点",
+            "start_at": "2026-10-18T07:16:34.530382+00:00",
+            "end_at": "2026-10-18T07:39:00+00:00",
+            "status": "failed",
+            "reason": "catchup_unsafe_url",
+            "counts": {
+              "requests": 1,
+              "pages": 0,
+              "scanned": 0,
+              "new_versions": 0,
+              "duplicates": 0
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-18T07:16:34.530382+00:00",
+                "end_at": "2026-10-18T07:39:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-18T07:39:17.660831+00:00",
+            "persona_ids": [
+              3
+            ]
+          }
+        },
+        {
+          "id": 2181,
+          "batch_id": 458,
+          "source_id": 54,
+          "name": "卡哟哟 AI 热点",
+          "start_at": "2026-10-18T17:07:41.652665+00:00",
+          "end_at": "2026-10-18T17:23:00+00:00",
+          "status": "covered",
+          "reason": null,
+          "counts": {
+            "requests": 1,
+            "pages": 1,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": true,
+            "basis": {
+              "scope": "upstream_selected_set",
+              "ledger_cursor": "ax1.eyJrIjoic3luYyIsImUiOiJrUDhWR1RVeSIsInciOjg3LCJmIjoiZGVmYXVsdCJ9",
+              "issues": null,
+              "counts": null
+            },
+            "unconfirmed_interval": null
+          },
+          "finished_at": "2026-10-18T17:23:42.421657+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 1818,
+            "batch_id": 418,
+            "source_id": 54,
+            "name": "卡哟哟 AI 热点",
+            "start_at": "2026-10-18T07:16:32.168828+00:00",
+            "end_at": "2026-10-18T07:39:00+00:00",
+            "status": "failed",
+            "reason": "catchup_unsafe_url",
+            "counts": {
+              "requests": 1,
+              "pages": 0,
+              "scanned": 0,
+              "new_versions": 0,
+              "duplicates": 0
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-18T07:16:32.168828+00:00",
+                "end_at": "2026-10-18T07:39:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-18T07:39:17.656168+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2177,
+          "batch_id": 457,
+          "source_id": 53,
+          "name": "從跟風消費到“純過日子”務實才是生活的底氣 - 科普中国",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "source_validation_failed",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.199598+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2176,
+          "batch_id": 457,
+          "source_id": 52,
+          "name": "Digital Divinity - Rest of World",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.198829+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2175,
+          "batch_id": 457,
+          "source_id": 51,
+          "name": "一位教育学博士生的数码生活实验室 - 少数派",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "source_validation_failed",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.198064+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2174,
+          "batch_id": 457,
+          "source_id": 50,
+          "name": "打造墨水屏体验空间,让数字生活回归｢纸感｣ - 少数派",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.197268+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": {
+            "id": 542,
+            "batch_id": 107,
+            "source_id": 50,
+            "name": "打造墨水屏体验空间,让数字生活回归｢纸感｣ - 少数派",
+            "start_at": "2026-10-16T07:25:11.872003+00:00",
+            "end_at": "2026-10-16T08:25:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 10,
+              "new_versions": 0,
+              "duplicates": 10
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:25:11.872003+00:00",
+                "end_at": "2026-10-16T08:25:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:25:33.414290+00:00",
+            "persona_ids": [
+              3
+            ]
+          }
+        },
+        {
+          "id": 2173,
+          "batch_id": 457,
+          "source_id": 49,
+          "name": "这些好物和小技巧,让我保持数字健康 - 少数派",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "source_validation_failed",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.195725+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2172,
+          "batch_id": 457,
+          "source_id": 48,
+          "name": "《2025有意思生活方式报告》发布 - 中国日报网",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.194984+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": {
+            "id": 541,
+            "batch_id": 107,
+            "source_id": 48,
+            "name": "《2025有意思生活方式报告》发布 - 中国日报网",
+            "start_at": "2026-10-16T07:25:11.682458+00:00",
+            "end_at": "2026-10-16T08:25:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 1,
+              "new_versions": 0,
+              "duplicates": 1
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:25:11.682458+00:00",
+                "end_at": "2026-10-16T08:25:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:25:33.215781+00:00",
+            "persona_ids": [
+              3
+            ]
+          }
+        },
+        {
+          "id": 2171,
+          "batch_id": 457,
+          "source_id": 47,
+          "name": "拒绝“预制生活”与表演自律 - 南方都市报",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.193584+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2170,
+          "batch_id": 457,
+          "source_id": 46,
+          "name": "Dense Discovery",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.192793+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2169,
+          "batch_id": 457,
+          "source_id": 45,
+          "name": "Making the Future Tangible",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.190935+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2168,
+          "batch_id": 457,
+          "source_id": 44,
+          "name": "Near Future Laboratory Blog",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.190153+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2167,
+          "batch_id": 457,
+          "source_id": 43,
+          "name": "DEV Community (Claude Pedagogy)",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.189389+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 523,
+            "batch_id": 104,
+            "source_id": 43,
+            "name": "DEV Community (Claude Pedagogy)",
+            "start_at": "2026-10-16T01:50:45.541668+00:00",
+            "end_at": "2026-10-16T07:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 1,
+              "new_versions": 0,
+              "duplicates": 1
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T01:50:45.541668+00:00",
+                "end_at": "2026-10-16T07:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T07:25:11.364174+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2166,
+          "batch_id": 457,
+          "source_id": 42,
+          "name": "V2EX Built for Agents",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.187697+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 540,
+            "batch_id": 107,
+            "source_id": 42,
+            "name": "V2EX Built for Agents",
+            "start_at": "2026-10-16T07:25:07.349882+00:00",
+            "end_at": "2026-10-16T08:25:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 1,
+              "new_versions": 0,
+              "duplicates": 1
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:25:07.349882+00:00",
+                "end_at": "2026-10-16T08:25:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:25:33.083100+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2165,
+          "batch_id": 457,
+          "source_id": 41,
+          "name": "V2EX Agent排障框架讨论",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.186055+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 539,
+            "batch_id": 107,
+            "source_id": 41,
+            "name": "V2EX Agent排障框架讨论",
+            "start_at": "2026-10-16T07:25:04.389329+00:00",
+            "end_at": "2026-10-16T08:25:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 1,
+              "new_versions": 0,
+              "duplicates": 1
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:25:04.389329+00:00",
+                "end_at": "2026-10-16T08:25:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:25:29.303915+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2164,
+          "batch_id": 457,
+          "source_id": 40,
+          "name": "少林码僧 CSDN",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.184280+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 520,
+            "batch_id": 104,
+            "source_id": 40,
+            "name": "少林码僧 CSDN",
+            "start_at": "2026-10-16T01:50:37.671393+00:00",
+            "end_at": "2026-10-16T07:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 20,
+              "new_versions": 0,
+              "duplicates": 20
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T01:50:37.671393+00:00",
+                "end_at": "2026-10-16T07:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T07:25:01.851828+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2163,
+          "batch_id": 457,
+          "source_id": 39,
+          "name": "Madden's Blog",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.182532+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2162,
+          "batch_id": 457,
+          "source_id": 38,
+          "name": "DEV Community (Agent Architecture Patterns)",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.180716+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 518,
+            "batch_id": 104,
+            "source_id": 38,
+            "name": "DEV Community (Agent Architecture Patterns)",
+            "start_at": "2026-10-16T01:50:34.548297+00:00",
+            "end_at": "2026-10-16T07:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 1,
+              "new_versions": 0,
+              "duplicates": 1
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T01:50:34.548297+00:00",
+                "end_at": "2026-10-16T07:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T07:24:58.643834+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2161,
+          "batch_id": 457,
+          "source_id": 37,
+          "name": "Thoughtworks Technology Radar",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.178740+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2160,
+          "batch_id": 457,
+          "source_id": 36,
+          "name": "LlamaIndex Observability",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "source_validation_failed",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.177951+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2159,
+          "batch_id": 457,
+          "source_id": 35,
+          "name": "Langfuse",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.177193+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2158,
+          "batch_id": 457,
+          "source_id": 30,
+          "name": "盗月社食遇记",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "source_validation_failed",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.176257+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2157,
+          "batch_id": 457,
+          "source_id": 29,
+          "name": "日食记",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "source_validation_failed",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.175475+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2156,
+          "batch_id": 457,
+          "source_id": 28,
+          "name": "Maria Popova / The Marginalian",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.174617+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": {
+            "id": 512,
+            "batch_id": 104,
+            "source_id": 28,
+            "name": "Maria Popova / The Marginalian",
+            "start_at": "2026-10-16T01:50:31.520736+00:00",
+            "end_at": "2026-10-16T07:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 20,
+              "new_versions": 0,
+              "duplicates": 20
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T01:50:31.520736+00:00",
+                "end_at": "2026-10-16T07:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T07:24:55.577050+00:00",
+            "persona_ids": [
+              3
+            ]
+          }
+        },
+        {
+          "id": 2155,
+          "batch_id": 457,
+          "source_id": 27,
+          "name": "Austin Kleon",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "credential_required",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.172954+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2154,
+          "batch_id": 457,
+          "source_id": 26,
+          "name": "Atlas Obscura",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "credential_required",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.171804+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2153,
+          "batch_id": 457,
+          "source_id": 25,
+          "name": "Colossal",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.171009+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": {
+            "id": 538,
+            "batch_id": 107,
+            "source_id": 25,
+            "name": "Colossal",
+            "start_at": "2026-10-16T07:24:51.251764+00:00",
+            "end_at": "2026-10-16T08:25:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 10,
+              "new_versions": 0,
+              "duplicates": 10
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:24:51.251764+00:00",
+                "end_at": "2026-10-16T08:25:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:25:26.696885+00:00",
+            "persona_ids": [
+              3
+            ]
+          }
+        },
+        {
+          "id": 2152,
+          "batch_id": 457,
+          "source_id": 24,
+          "name": "Dezeen",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.169399+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": {
+            "id": 543,
+            "batch_id": 108,
+            "source_id": 24,
+            "name": "Dezeen",
+            "start_at": "2026-10-16T07:55:24.997770+00:00",
+            "end_at": "2026-10-16T08:26:00+00:00",
+            "status": "partial",
+            "reason": "credential_required",
+            "counts": {
+              "requests": 2,
+              "pages": 1,
+              "scanned": 1,
+              "new_versions": 0,
+              "duplicates": 1
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {
+                "http_status": 403
+              },
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:55:24.997770+00:00",
+                "end_at": "2026-10-16T08:26:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:27:25.329076+00:00",
+            "persona_ids": [
+              3
+            ]
+          }
+        },
+        {
+          "id": 2151,
+          "batch_id": 457,
+          "source_id": 23,
+          "name": "豆瓣生活社区",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "source_validation_failed",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.167703+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2150,
+          "batch_id": 457,
+          "source_id": 22,
+          "name": "下厨房",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.166922+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2149,
+          "batch_id": 457,
+          "source_id": 21,
+          "name": "一条",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.166072+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2148,
+          "batch_id": 457,
+          "source_id": 20,
+          "name": "新周刊",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.165110+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2147,
+          "batch_id": 457,
+          "source_id": 19,
+          "name": "果壳",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.163992+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2146,
+          "batch_id": 457,
+          "source_id": 18,
+          "name": "爱范儿",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.163127+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2145,
+          "batch_id": 457,
+          "source_id": 17,
+          "name": "少数派",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.162101+00:00",
+          "persona_ids": [
+            3
+          ],
+          "earlier_gap": {
+            "id": 537,
+            "batch_id": 107,
+            "source_id": 17,
+            "name": "少数派",
+            "start_at": "2026-10-16T07:24:44.957426+00:00",
+            "end_at": "2026-10-16T08:25:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 10,
+              "new_versions": 0,
+              "duplicates": 10
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:24:44.957426+00:00",
+                "end_at": "2026-10-16T08:25:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:25:23.366043+00:00",
+            "persona_ids": [
+              3
+            ]
+          }
+        },
+        {
+          "id": 2144,
+          "batch_id": 457,
+          "source_id": 16,
+          "name": "InfoQ中文",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.160474+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2143,
+          "batch_id": 457,
+          "source_id": 14,
+          "name": "Addy Osmani",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.159563+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2142,
+          "batch_id": 457,
+          "source_id": 13,
+          "name": "阮一峰",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.157685+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 498,
+            "batch_id": 104,
+            "source_id": 13,
+            "name": "阮一峰",
+            "start_at": "2026-10-16T01:50:19.865983+00:00",
+            "end_at": "2026-10-16T07:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 6,
+              "new_versions": 0,
+              "duplicates": 6
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T01:50:19.865983+00:00",
+                "end_at": "2026-10-16T07:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T07:24:42.509145+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2141,
+          "batch_id": 457,
+          "source_id": 11,
+          "name": "宝玉",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.155535+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2140,
+          "batch_id": 457,
+          "source_id": 10,
+          "name": "Andrej Karpathy",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.153756+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2139,
+          "batch_id": 457,
+          "source_id": 9,
+          "name": "Lilian Weng",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.152924+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2138,
+          "batch_id": 457,
+          "source_id": 8,
+          "name": "Chip Huyen",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.150838+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2137,
+          "batch_id": 457,
+          "source_id": 7,
+          "name": "Hamel Husain",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.148406+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2136,
+          "batch_id": 457,
+          "source_id": 6,
+          "name": "Simon Willison",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.146558+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 492,
+            "batch_id": 104,
+            "source_id": 6,
+            "name": "Simon Willison",
+            "start_at": "2026-10-16T01:50:00.887833+00:00",
+            "end_at": "2026-10-16T07:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 30,
+              "new_versions": 0,
+              "duplicates": 30
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T01:50:00.887833+00:00",
+                "end_at": "2026-10-16T07:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T07:24:25.346701+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2135,
+          "batch_id": 457,
+          "source_id": 5,
+          "name": "GitHub Blog",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.144623+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 536,
+            "batch_id": 106,
+            "source_id": 5,
+            "name": "GitHub Blog",
+            "start_at": "2026-10-16T07:24:22.709340+00:00",
+            "end_at": "2026-10-16T08:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_history_unavailable",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 1,
+              "new_versions": 0,
+              "duplicates": 1
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:24:22.709340+00:00",
+                "end_at": "2026-10-16T08:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:24:30.954735+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2134,
+          "batch_id": 457,
+          "source_id": 4,
+          "name": "LangChain Blog",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.142457+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2133,
+          "batch_id": 457,
+          "source_id": 3,
+          "name": "Hugging Face Blog",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "no_eligible_subscription",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.141441+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": {
+            "id": 535,
+            "batch_id": 106,
+            "source_id": 3,
+            "name": "Hugging Face Blog",
+            "start_at": "2026-10-16T07:24:19.620518+00:00",
+            "end_at": "2026-10-16T08:24:00+00:00",
+            "status": "partial",
+            "reason": "catchup_source_budget",
+            "counts": {
+              "requests": 1,
+              "pages": 1,
+              "scanned": 300,
+              "new_versions": 0,
+              "duplicates": 300
+            },
+            "coverage": {
+              "complete": false,
+              "basis": {},
+              "unconfirmed_interval": {
+                "start_at": "2026-10-16T07:24:19.620518+00:00",
+                "end_at": "2026-10-16T08:24:00+00:00",
+                "missing_count": null
+              }
+            },
+            "finished_at": "2026-10-16T08:24:26.733299+00:00",
+            "persona_ids": [
+              2
+            ]
+          }
+        },
+        {
+          "id": 2132,
+          "batch_id": 457,
+          "source_id": 2,
+          "name": "Anthropic Engineering",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "adapter_unavailable",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.135847+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        },
+        {
+          "id": 2131,
+          "batch_id": 457,
+          "source_id": 1,
+          "name": "OpenAI News",
+          "start_at": "2026-10-18T17:05:00+00:00",
+          "end_at": "2026-10-18T17:07:00+00:00",
+          "status": "excluded",
+          "reason": "credential_required",
+          "counts": {
+            "requests": 0,
+            "pages": 0,
+            "scanned": 0,
+            "new_versions": 0,
+            "duplicates": 0
+          },
+          "coverage": {
+            "complete": false,
+            "basis": {},
+            "unconfirmed_interval": {
+              "start_at": "2026-10-18T17:05:00+00:00",
+              "end_at": "2026-10-18T17:07:00+00:00",
+              "missing_count": null
+            }
+          },
+          "finished_at": "2026-10-18T17:07:39.134347+00:00",
+          "persona_ids": [
+            2
+          ],
+          "earlier_gap": null
+        }
+      ]
+    },
+    "opportunities": [
+      {
+        "id": 13,
+        "title": "Reflection 开源 501B MoE 模型 Beam：面向 Coding 与 Agent 场景的部署与工程适配",
+        "summary": "Reflection 实验室在 Hugging Face 上发布了采用 Apache 2.0 许可证的开源 MoE 模型 Beam。该模型总参数量为 501B、单 token 激活 23B，提供 1M tokens 上下文窗口，主打代码与智能体场景，并同步提供了原生 transformers、vLLM、SGLang 支持、Rust harness 以及微调与强化学习方案。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:02:20.207520",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-17T00:02:20.208264",
+        "updated_at": "2026-10-17T00:02:20.212183",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 6,
+        "research_run_id": 12,
+        "business_date": "2026-10-17",
+        "event_key": "78e8df2bdbbcdc5d3e6824ab701e95251c0ed050b964f917456ef9ca90f0097b:1",
+        "angle_key": "11e37fb9a5a8a2234b237470efcf363fcf92990b1a9ff1388c01912a0eb974ad",
+        "latest_assessment": {
+          "id": 24,
+          "opportunity_id": 13,
+          "revision_no": 1,
+          "assessment": {
+            "what_happened": "Reflection 实验室在 Hugging Face 上发布了采用 Apache 2.0 许可证的开源 MoE 模型 Beam。该模型总参数量为 501B、单 token 激活 23B，提供 1M tokens 上下文窗口，主打代码与智能体场景，并同步提供了原生 transformers、vLLM、SGLang 支持、Rust harness 以及微调与强化学习方案。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-16T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "切合 AI Agent、软件架构与开发工具的工程定位，从开源模型服务化、推理框架集成与训练配方角度展开分析。",
+            "audience_fit": "帮助技术负责人和开发者了解百亿级激活规模 MoE 模型的服务化落地路径，评估针对 Agent 和编程场景将超大开源模型私有化部署的工程可行性与工具链配套。",
+            "suggested_angle": "聚焦私有化大模型基础设施选型：剖析 501B MoE（激活 23B）在长上下文（1M）下的工程适配支持（vLLM、SGLang、Rust harness）及 Agent/Coding 场景的落地可行性与资源权衡。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              16
+            ],
+            "evidence_summary": [
+              "Reflection 发布 Beam：首个可拥有、可定制、可扩展的 501B 开源 MoE 模型"
+            ],
+            "risk_flags": [
+              "不同精度（如 BF16/FP8/NVFP4）在具体 GPU 拓扑下的显存占用与延迟吞吐基准数据在节选中未完整呈现。",
+              "Rust harness 的具体架构设计与相对 Python 推理框架的性能收益细节未在节选正文详述。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.9059999999999999
+          },
+          "checksum": "75de556157d755aa5412eec645a5f6283caa440f821521c2f9c22077e5a252f6",
+          "analysis_source": "system",
+          "analysis_provider_key": "daily-discovery",
+          "analysis_provider_version": "discovery.v2",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-17T00:02:20.230567"
+        }
+      },
+      {
+        "id": 14,
+        "title": "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战",
+        "summary": "Google Research 介绍将 AI 智能体与物理实验室机器人结合、用于分子设计闭环的研究方向。冻结正文指出，前沿模型对三维几何与物理状态的推理仍不可靠，真实湿实验反馈也未能跟上假设生成和计算设计的进展。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:02:20.231310",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-17T00:02:20.231971",
+        "updated_at": "2026-10-17T00:20:18.797600",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 6,
+        "research_run_id": 12,
+        "business_date": "2026-10-17",
+        "event_key": "02e27b78d543e15efd6e6739bc636ee3f7283e95ada07980a017d398638bdba0:1",
+        "angle_key": "f6cec7e144d5ce43a3bba536b3913d6dbb96727db551d6cd7ccca02a87560441",
+        "latest_assessment": {
+          "id": 27,
+          "opportunity_id": 14,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "Google Research 介绍将 AI 智能体与物理实验室机器人结合、用于分子设计闭环的研究方向。冻结正文指出，前沿模型对三维几何与物理状态的推理仍不可靠，真实湿实验反馈也未能跟上假设生成和计算设计的进展。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-16T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "符合 AI Agent 与工程实践领域定位，探讨智能体在非纯软件环境下的系统状态维护与工具交互限制，坚持明确限制与 trade-off。",
+            "audience_fit": "帮助关注 AI Agent 工程化的开发者理解智能体在缺乏确定性数字模拟环境时，如何构建状态感知和自动化闭环，识别大模型在空间状态推理上的局限与应对思路。",
+            "suggested_angle": "从 AI Agent 系统架构与真实世界交互约束切入：探讨当 Agent 走出纯软件/代码沙箱进入实体物理环境时，状态跟踪（State Tracking）与闭环执行（Closed-Loop Feedback）所面临的工程挑战。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              19
+            ],
+            "evidence_summary": [
+              "Google Research：AI 智能体在湿实验中的物理基础"
+            ],
+            "risk_flags": [
+              "物理操作机器人的错误率与自动化闭环中的人工干预比例数据未在节选给出。",
+              "冻结正文只显示VERID论文链接名，不足以说明其功能；未读正文细节不能作为已核实事实。",
+              "原双次评分保留为自然运行历史，修订未重新调用模型评分。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8495000000000001
+          },
+          "checksum": "4dd4d97d345b31739f101be6d221c963f37fcd21e31a1b8a22e9e9aaa88d273b",
+          "analysis_source": "system",
+          "analysis_provider_key": "system-body-scope-correction",
+          "analysis_provider_version": "discovery.v2.body-scope-fix",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-17T00:20:18.796926"
+        }
+      },
+      {
+        "id": 15,
+        "title": "苹果首款折叠屏iPhone Duo开启预购：现货秒空与折叠屏生活观察",
+        "summary": "2026年10月16日20时，苹果首款折叠屏手机iPhone Duo正式开启预售，起售价15999元。预售开启后官网与App访问受阻，首发日到店取货名额迅速被抢空，邮寄发货时间已排至明年1月下旬，二级市场亦出现较大幅度溢价，同时相关生态应用的适配仍在跟进中。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:03:11.090615",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-17T00:03:11.090887",
+        "updated_at": "2026-10-17T00:03:11.091611",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 13,
+        "business_date": "2026-10-17",
+        "event_key": "e383e602b85557ac6a2965fcd897e246320cb502e741d8db95b80c6f3094ebfb:1",
+        "angle_key": "1940b62030e6643db50dcf982d6af3d4748aa86bf4c95f4732c53f1b5675dd79",
+        "latest_assessment": {
+          "id": 26,
+          "opportunity_id": 15,
+          "revision_no": 1,
+          "assessment": {
+            "what_happened": "2026年10月16日20时，苹果首款折叠屏手机iPhone Duo正式开启预售，起售价15999元。预售开启后官网与App访问受阻，首发日到店取货名额迅速被抢空，邮寄发货时间已排至明年1月下旬，二级市场亦出现较大幅度溢价，同时相关生态应用的适配仍在跟进中。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-16T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "切合“近未来趣事”、“新鲜变化”与“日常生活”的内容定位，不推销、不说教、不制造抢购焦虑，记录正在发生的新鲜消费现实。",
+            "audience_fit": "让对数码硬件和生活变化好奇的读者直观了解首款折叠屏苹果手机的发售行情、到货周期及溢价情况，并提供客观冷静的生态适配观察。",
+            "suggested_angle": "以日常观察者的平实视角，记录折叠屏手机进入苹果产品线后的首发抢购现象与生活消费动态，关注新形态硬件对日常使用习惯的潜在改变，同时客观看待生态适配现状，避免制造盲目跟风与消费焦虑。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              18
+            ],
+            "evidence_summary": [
+              "苹果首款折叠屏手机iPhone Duo开启预购，首发现货秒空发货排到明年"
+            ],
+            "risk_flags": [
+              "iPhone Duo 实际展开后的真机手感与日常耐用度表现",
+              "主流日常应用针对该双屏/折叠屏的专属适配进度与优化体验",
+              "官方后续产能爬坡与补货的具体计划"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.866
+          },
+          "checksum": "27947f8c262e2665c8049394b967b794fe58c554d9de6990af37bcd353028e4b",
+          "analysis_source": "system",
+          "analysis_provider_key": "daily-discovery",
+          "analysis_provider_version": "discovery.v2",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-17T00:03:11.098020"
+        }
+      },
+      {
+        "id": 18,
+        "title": "较强冷空气波及全国多地，局地降温超12℃并伴随大范围雨雪",
+        "summary": "中国气象局与中央气象台消息显示，受较强冷空气影响，10月16日夜间至18日中国出现大范围降水、大风和降温天气。局地降温幅度超过12℃，西北、华北、东北等多地降温4至8℃，多省份迎大到暴雨，部分高海拔地区出现雨雪天气。中央气象台发布了暴雨、强对流及大风蓝色预警。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-19T00:04:21.128851",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-18T00:04:21.129112",
+        "updated_at": "2026-10-18T00:18:53.085332",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 2,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 17,
+        "business_date": "2026-10-18",
+        "event_key": "98046e3a975f78ca8755f55af778a8169ae360034ca5e5c09ef30091253491fe:1",
+        "angle_key": "f05097d0440d1ec6c4b01a8fc52711febe9e3151d18bb7fdc4865386c1f67694",
+        "latest_assessment": {
+          "id": 31,
+          "opportunity_id": 18,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "中国气象局与中央气象台消息显示，受较强冷空气影响，10月16日夜间至18日中国出现大范围降水、大风和降温天气。局地降温幅度超过12℃，西北、华北、东北等多地降温4至8℃，多省份迎大到暴雨，部分高海拔地区出现雨雪天气。中央气象台发布了暴雨、强对流及大风蓝色预警。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。来源发布时间不代表全网热度。中新社报道原文：2026-10-17，转载/更新：未知，事件：未知；澎湃转载央视新闻：原文未知，转载：2026-10-17，事件：未知。",
+            "brand_relevance": "符合“日常生活感受”定位，用权威气象事实描述生活体感变化，语气平实不制造焦虑。",
+            "audience_fit": "帮助普通读者直观感知近期急剧换季降温的宏观背景，为周末或日常通勤防寒防雨提供切实参考。",
+            "suggested_angle": "聚焦换季换温的日常生活体感变化，从全国范围气温骤降和暴雨强风切入，提醒日常添衣保暖和出行安全。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              22,
+              24
+            ],
+            "evidence_summary": [
+              "大范围雨雪降温影响中国 局地降温幅度超12℃",
+              "中央气象台最新预报：12省份迎大到暴雨，北方多地气温创新低"
+            ],
+            "risk_flags": [
+              "各城市具体供暖计划或交通受影响的具体情况未在报道中说明",
+              "澎湃页面署名央视新闻，其页面日期仅证明转载时间，央视原文时间未知。",
+              "原双次评分保留为自然运行历史，本次修订未重新调用模型评分。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.835
+          },
+          "checksum": "a41efed6f79f9fc4363ebe6c3779f26cb4273260eb63dff52cb72f30ebf59bcb",
+          "analysis_source": "system",
+          "analysis_provider_key": "system-publication-role-correction",
+          "analysis_provider_version": "discovery.v2.publication-role-fix",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-18T00:18:53.091351"
+        }
+      },
+      {
+        "id": 16,
+        "title": "特斯拉发布Roadster飞行跑车并展示喷气翻滚，国内车企负责人公开点赞",
+        "summary": "10月16日，特斯拉Roadster飞行跑车正式发布，在现场展示了加速能力与喷气特技低空翻滚能力，引发关注与讨论。面对舆论讨论，蔚来创始人李斌和小鹏集团董事长何小鹏等国内车企负责人公开发声点赞与评价，李斌表示“太厉害了！这个我们真没有”，何小鹏称其为“非常酷的另外一种形态飞行汽车”。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-20T00:04:21.098670",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-18T00:04:21.099362",
+        "updated_at": "2026-10-18T00:04:21.101469",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 17,
+        "business_date": "2026-10-18",
+        "event_key": "3ee9528b93ff2595153864f265c4e67a0ccabe64600ed8d4bcd59b7adb391132:1",
+        "angle_key": "a40c0b409d6ed484463b133d33da12d6ad45eebb5e1f5e8dd79d74c43ad9552d",
+        "latest_assessment": {
+          "id": 28,
+          "opportunity_id": 16,
+          "revision_no": 1,
+          "assessment": {
+            "what_happened": "10月16日，特斯拉Roadster飞行跑车正式发布，在现场展示了加速能力与喷气特技低空翻滚能力，引发关注与讨论。面对舆论讨论，蔚来创始人李斌和小鹏集团董事长何小鹏等国内车企负责人公开发声点赞与评价，李斌表示“太厉害了！这个我们真没有”，何小鹏称其为“非常酷的另外一种形态飞行汽车”。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-17T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "紧扣“新鲜变化”与“近未来趣事”的定位，客观呈现新鲜产品展示与舆论反应，保持事实与感受分开。",
+            "audience_fit": "满足读者对近未来交通工具形态的好奇心，以轻松围观的心态了解科技新动向与行业大佬的真实反应，不带焦虑或说教。",
+            "suggested_angle": "从日常生活视角观察科技新玩物的亮相：跑车加上喷气特技翻滚带来了科幻照进现实的趣味感，同时同行动态也展现出行业互动的鲜活切片。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              20
+            ],
+            "evidence_summary": [
+              "特斯拉飞行跑车引热议，评论：从三电技术底座看中国新能源车优势"
+            ],
+            "risk_flags": [
+              "报道未披露该飞行跑车的量产交付时间及技术细节参数",
+              "该产品是否具备实际道路或空域合法上路飞行资质尚无相关信息"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8797499999999999
+          },
+          "checksum": "6ea53c1a5efaf78117d743f560633cda5a7583831406860479dba5729d153c17",
+          "analysis_source": "system",
+          "analysis_provider_key": "daily-discovery",
+          "analysis_provider_version": "discovery.v2",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-18T00:04:21.121436"
+        }
+      },
+      {
+        "id": 17,
+        "title": "网购“发菜”实为国家一级保护野生植物，网店经营者被查获",
+        "summary": "江苏扬州一消费者网购发菜后怀疑是国家一级保护野生植物并报警。经鉴定，涉案发菜确属国家一级重点保护野生植物发状念珠藻，警方在宁夏查获网店经营者并扣押600多克野生发菜。专家与法官指出，市面上常见且可食用的是海发菜或人工合成仿发菜，而西北荒漠草原生长的野生发菜受法律严格保护禁止售卖。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-20T00:04:21.122239",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-18T00:04:21.122947",
+        "updated_at": "2026-10-18T00:18:53.094932",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 3,
+        "persona_revision_id": 5,
+        "research_run_id": 17,
+        "business_date": "2026-10-18",
+        "event_key": "f8d42d6659be1b1b8ff8966478c61efdc704a0eb67029e93c2da548ebe21e046:1",
+        "angle_key": "0c38d9cff7c1c3093284a3ddc7ed7b02e0cf35e754b466832af14fdf0c4a5e54",
+        "latest_assessment": {
+          "id": 32,
+          "opportunity_id": 17,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "江苏扬州一消费者网购发菜后怀疑是国家一级保护野生植物并报警。经鉴定，涉案发菜确属国家一级重点保护野生植物发状念珠藻，警方在宁夏查获网店经营者并扣押600多克野生发菜。专家与法官指出，市面上常见且可食用的是海发菜或人工合成仿发菜，而西北荒漠草原生长的野生发菜受法律严格保护禁止售卖。",
+            "why_now": "近期报道：事件时间不等于报道时间，不代表刚发生。 来源发布时间不代表全网热度。 原文：2026-10-17T00:00:00+00:00；转载/更新：未知；事件：未知。",
+            "brand_relevance": "切合“日常生活”与“个人观察”中的生活新奇事，不做生硬普法说教，而是以案件引出实用生活知识。",
+            "audience_fit": "帮助普通消费者理清日常可食用的海发菜/仿发菜与国家保护野生发菜的区别，避免误触法律红线或上当受骗。",
+            "suggested_angle": "从一次看似寻常的网购食材经历切入，科普日常餐桌“发菜”与荒漠野生受保护念珠藻的区别，带来生活常识上的新鲜冷知识。",
+            "time_sensitivity": "high",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 3,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              21
+            ],
+            "evidence_summary": [
+              "男子网购发菜疑为国保植物报警，店主因采卖野生发菜获刑"
+            ],
+            "risk_flags": [
+              "报道未说明涉案经营者丁某最终获刑的具体刑期与判决文书细节",
+              "冻结正文仅称经鉴定，鉴定程序不作额外推断；原评分保留，未重新评分。"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.87375
+          },
+          "checksum": "ae4343f67903142df2a5c66259dec4ec1124004e90ccf69ef84388baa4b0a74c",
+          "analysis_source": "system",
+          "analysis_provider_key": "system-body-scope-correction",
+          "analysis_provider_version": "discovery.v2.body-scope-fix",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-18T00:18:53.094611"
+        }
+      },
+      {
+        "id": 1,
+        "title": "通用 Agent 与确定性编排：从开发者观点拆解工程投入",
+        "summary": "结合作者的两篇观点文章，讨论垂直场景的原子工具、确定性编排和 Harness 的工程投入边界；不把个人判断写成行业定论。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-22T07:50:39.958725",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:50:39.960106",
+        "updated_at": "2026-10-15T09:01:06.666256",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 2,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 1,
+        "business_date": "2026-10-15",
+        "event_key": "7fafe7aeb56770c86b262cdec29bade910d54b2503a752c0f0d1a739611dff2f:1",
+        "angle_key": "af26561e40179531a1a7ce9d1133e43688b2057bf6e6381fb9df5327a2ee2bf3",
+        "latest_assessment": {
+          "id": 11,
+          "opportunity_id": 1,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "结合作者的两篇观点文章，讨论垂直场景的原子工具、确定性编排和 Harness 的工程投入边界；不把个人判断写成行业定论。",
+            "why_now": "常青参考：原文分别发布于2026-05-01、2026-04-15，事件时间未知；不称为今日热点。已将同类选题 #2 的依据合并至本条。",
+            "brand_relevance": "符合“软件架构与工程实践”定位，坚持明确限制和 trade-off，拒绝夸大模型通用自主性。",
+            "audience_fit": "给需要落地垂直业务场景的架构师提供清晰的架构权衡参考，明确确定性编排与工具接口的壁垒所在。",
+            "suggested_angle": "结合作者的两篇观点文章，讨论垂直场景的原子工具、确定性编排和 Harness 的工程投入边界；不把个人判断写成行业定论。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text",
+              "graphic"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              1,
+              11
+            ],
+            "evidence_summary": [
+              "激动人心的噪音里，你的护城河反而变厚了——一个写给 AI 工程化落地从业者的反常识判断",
+              "Harness Engineering：拆开看看，哪些是新瓶装旧酒，哪些值得你真金白银投入",
+              "常青参考：原文分别发布于2026-05-01、2026-04-15，事件时间未知；不称为今日热点。已将同类选题 #2 的依据合并至本条。"
+            ],
+            "risk_flags": [
+              "作者观点，不代表经过独立验证的行业共识",
+              "合并来源为同一作者，不计为两个独立主体"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.8995000000000001
+          },
+          "checksum": "6c498bd0fcadac1c4d7b537d655a507f6ed3c1831e09ee44fdc147cc3cca24f8",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.674019"
+        }
+      },
+      {
+        "id": 3,
+        "title": "从一位开发者的项目复盘，看 Eval 如何连接 Demo 与生产",
+        "summary": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+        "status": "new",
+        "priority": "normal",
+        "relevant_until": "2026-10-22T07:50:39.979490",
+        "created_by": "system:daily-discovery",
+        "created_at": "2026-10-15T07:50:39.979783",
+        "updated_at": "2026-10-15T09:01:06.678723",
+        "signal_types": [
+          "external_ref"
+        ],
+        "signal_count": 1,
+        "persona_id": 2,
+        "persona_revision_id": 4,
+        "research_run_id": 1,
+        "business_date": "2026-10-15",
+        "event_key": "ec927c4f71bdc2d20d158c9daeafed9030b8adf8667ed7ade3184357d5da92e4:1",
+        "angle_key": "0caa1e3cc4c9f6258b3faa2d303120c57b99aac5fe2e1ae0296c8948c30cb6d6",
+        "latest_assessment": {
+          "id": 13,
+          "opportunity_id": 3,
+          "revision_no": 2,
+          "assessment": {
+            "what_happened": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+            "why_now": "常青参考：原文2026-04-17；事件具体时间未知，不按今日新事件推荐。",
+            "brand_relevance": "高度贴合技术负责人与开发者关注的工程实践问题，符合“不把未验证模型输出当事实、关注真实落地”的原则。",
+            "audience_fit": "提示开发者与负责人重视系统工程设计与评测标准，避免重模型、轻工程导致的资源浪费。",
+            "suggested_angle": "以作者自述的项目经历讨论评估样本、工程约束与上线判断；案例仅代表该作者的复盘，引用的行业统计尚未独立核验。",
+            "time_sensitivity": "timeless",
+            "recommended_identity_refs": [
+              {
+                "brand_id": null,
+                "persona_id": 2,
+                "account_id": null,
+                "series_id": null
+              }
+            ],
+            "recommended_modalities": [
+              "text"
+            ],
+            "recommended_channels": [],
+            "evidence_signal_ids": [
+              3
+            ],
+            "evidence_summary": [
+              "AI 项目死在工程，不是模型",
+              "常青参考：原文2026-04-17；事件具体时间未知，不按今日新事件推荐。"
+            ],
+            "risk_flags": [
+              "作者自述的单个项目复盘",
+              "未核验的行业统计不作为结论依据"
+            ],
+            "similarity_state": "unknown",
+            "similar_content_refs": [],
+            "confidence": 0.88775
+          },
+          "checksum": "5e3c8221e64a88943908e59aa20e7b3de6387ad8427c6e56cc21be608f21ef3a",
+          "analysis_source": "system",
+          "analysis_provider_key": "editorial-quality-review",
+          "analysis_provider_version": "discovery.v2-human-directed",
+          "created_by": "admin@studio.local",
+          "created_at": "2026-10-15T09:01:06.681405"
+        }
+      }
+    ],
+    "projects": [
+      {
+        "id": 34,
+        "title": "儿童拖鞋｜棕灰两双装｜旁白商品视频",
+        "updated_at": "2026-10-18T01:14:22.364057",
+        "overview": {
+          "stage": "evidence_needed",
+          "activeUnitCount": 1,
+          "archivedUnitCount": 0,
+          "modalityCounts": {
+            "text": 0,
+            "graphic": 0,
+            "video": 1
+          },
+          "personas": [],
+          "brief": {
+            "ready": true,
+            "revision": 4
+          },
+          "factBoundary": {
+            "ready": false,
+            "revision": null,
+            "factPackId": null,
+            "factPackVersion": null,
+            "checksum": null
+          },
+          "risks": [
+            {
+              "code": "master_incomplete",
+              "reasons": [
+                "evidence_missing"
+              ],
+              "master_revision_id": 57,
+              "unit_id": 40
+            },
+            {
+              "code": "master_incomplete",
+              "reasons": [
+                "master_schema:incomplete",
+                "evidence:incomplete",
+                "rights:incomplete",
+                "render:incomplete",
+                "video_structure:incomplete",
+                "video_timeline:incomplete",
+                "video_identity:incomplete",
+                "video_platform:incomplete"
+              ],
+              "master_revision_id": 57,
+              "unit_id": 40
+            },
+            {
+              "code": "master_render_unready",
+              "reasons": [
+                "render_attestation_missing"
+              ],
+              "master_revision_id": 57,
+              "unit_id": 40
+            }
+          ],
+          "pendingDecisions": [],
+          "nextAction": {
+            "code": "evidence.bind",
+            "label": "建立事实边界",
+            "href": "/projects/34?tab=evidence"
+          }
+        },
+        "origin": null
+      }
+    ],
+    "decisions": [
+      {
+        "code": "blocked",
+        "project_id": 34,
+        "unit_id": 40,
+        "run_id": null,
+        "label": "解决审核阻断",
+        "href": "/review?project=34&unit=40"
+      },
+      {
+        "code": "recipe_stage",
+        "project_id": 34,
+        "unit_id": 40,
+        "run_id": null,
+        "node_id": "script",
+        "entity_kind": "recipe_stage",
+        "label": "继续创作阶段：视频脚本",
+        "href": "/projects/34/units/40/production?stage=script"
+      }
+    ],
+    "recipe_stages": [
+      {
+        "code": "recipe_stage",
+        "project_id": 34,
+        "unit_id": 40,
+        "run_id": null,
+        "node_id": "script",
+        "entity_kind": "recipe_stage",
+        "label": "继续创作阶段：视频脚本",
+        "href": "/projects/34/units/40/production?stage=script"
+      }
+    ],
+    "identity_alerts": [],
+    "recent_activity": [
+      {
+        "id": 197,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T14:19:21.117382"
+      },
+      {
+        "id": 196,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T14:19:21.108153"
+      },
+      {
+        "id": 195,
+        "project_id": 34,
+        "event_type": "brief.revision_created",
+        "created_at": "2026-10-18T14:18:52.034671"
+      },
+      {
+        "id": 194,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T12:19:24.885228"
+      },
+      {
+        "id": 193,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T12:19:24.877267"
+      },
+      {
+        "id": 192,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T12:18:52.461394"
+      },
+      {
+        "id": 191,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T12:18:52.449910"
+      },
+      {
+        "id": 190,
+        "project_id": 34,
+        "event_type": "brief.revision_created",
+        "created_at": "2026-10-18T12:18:52.442844"
+      },
+      {
+        "id": 189,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T11:58:18.212036"
+      },
+      {
+        "id": 188,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T11:45:11.147663"
+      },
+      {
+        "id": 187,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T08:39:58.935489"
+      },
+      {
+        "id": 186,
+        "project_id": 34,
+        "event_type": "asset.attached",
+        "created_at": "2026-10-18T08:14:29.988341"
+      },
+      {
+        "id": 185,
+        "project_id": 34,
+        "event_type": "asset.attached",
+        "created_at": "2026-10-18T08:14:29.963682"
+      },
+      {
+        "id": 184,
+        "project_id": 34,
+        "event_type": "asset.attached",
+        "created_at": "2026-10-18T08:14:29.936807"
+      },
+      {
+        "id": 183,
+        "project_id": 34,
+        "event_type": "asset.attached",
+        "created_at": "2026-10-18T02:14:30.265759"
+      },
+      {
+        "id": 182,
+        "project_id": 34,
+        "event_type": "content_master.saved",
+        "created_at": "2026-10-18T01:18:37.305252"
+      },
+      {
+        "id": 181,
+        "project_id": 34,
+        "event_type": "brief.revision_created",
+        "created_at": "2026-10-18T01:18:37.292319"
+      },
+      {
+        "id": 180,
+        "project_id": 34,
+        "event_type": "brief.revision_created",
+        "created_at": "2026-10-18T01:14:22.367148"
+      },
+      {
+        "id": 179,
+        "project_id": 34,
+        "event_type": "project.created",
+        "created_at": "2026-10-18T01:14:22.367146"
+      }
+    ],
+    "upcoming": [],
+    "capabilities": {
+      "daily_discovery": true,
+      "schedule": false,
+      "opportunity_analysis": false,
+      "creative_execution": true
+    },
+    "generated_at": "2026-10-18T17:26:02.672838+00:00",
+    "incomplete": false,
+    "section_errors": []
+  }
+}

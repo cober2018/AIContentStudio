@@ -573,6 +573,19 @@ def recipe_options(db, project_id, unit_id, user):
                 options.insert(2, {"key": f"{audio_key}.audio-asr", "title": f"{BLUEPRINTS[audio_key]['name']} · 音频＋本机ASR对稿／字幕（须明确执行）",
                     "definition": aligned, "definition_hash": digest(aligned), "modality": unit.modality,
                     "output_kind": "audio_material", "requires_explicit_save": True})
+    if unit.production_domain != "product" and unit.identity_snapshot_id:
+        from .starter_personas import method_trial_definition
+
+        if key in BLUEPRINTS:
+            candidate = validate_definition(method_trial_definition(unit.modality, key))
+            options.append({"key": f"{key}.{unit.modality}.methods-v2-trial", "title": "新方法 v2 · 仅本作品试用（默认不变）",
+                "definition": candidate, "definition_hash": digest(candidate), "modality": unit.modality,
+                "requires_explicit_save": True})
+        if unit.modality in {"text", "video"} and snapshot and audio_key in BLUEPRINTS and source:
+            candidate = validate_definition(method_trial_definition(unit.modality, audio_key, audio=True))
+            options.append({"key": f"{audio_key}.audio.methods-v2-trial", "title": "新口播方法 v2 · 原音色与ASR（仅本作品）",
+                "definition": candidate, "definition_hash": digest(candidate), "modality": unit.modality,
+                "output_kind": "audio_material", "requires_explicit_save": True})
     return {"items": options, "expected_revision": binding.revision if binding else 0,
             "current_workflow_id": workflow.id if workflow else None,
             "current_checksum": workflow.checksum if workflow else None}

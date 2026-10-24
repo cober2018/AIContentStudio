@@ -1,0 +1,26 @@
+--- /tmp/real-tech-stage_resolver-before-inference.py
++++ apps/api/app/services/stage_resolver.py
+@@ -162,6 +162,12 @@
+                 "Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. "
+                 "references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids."
+             )
++            if effective["output_schema"] == "research.brief.v1":
++                output_contract["content_rule"] += (
++                    " For known items with kind=inference, omit fact_pack_item_id entirely. "
++                    "Only fact items may carry a fact_pack_item_id copied from the supplied evidence. "
++                    "Author opinions and practice suggestions must retain their attribution and must not be presented as verified external facts."
++                )
+         preset = (creative or {}).get("style_preset") or {}
+         preset_config = preset.get("config") or {}
+         if (effective["output_schema"] in {"graphic.visual-direction.v1", "graphic.card-plan.v1"}
+--- /tmp/real-tech-creation_recipes-before-title-dedup.py
++++ apps/api/app/services/creation_recipes.py
+@@ -737,7 +737,7 @@
+             except StageInvocationError as exc:
+                 blockers.append(exc.code)
+                 continue
+-            if (creative is not None and node["plugin"] == "stage.master.propose" and "__current_master__" in upstream
++            if (creative is not None and node["plugin"] in {"stage.master.propose", "stage.creative.method"} and "__current_master__" in upstream
+                     and master.id == context["master"]["id"]):
+                 # The exact current payload is already present; retain adoption lineage
+                 # without copying the same document into the final-stage prompt twice.

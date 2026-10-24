@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Studio · 任务导航原型</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<div class="demo-banner"><span><i></i>交互原型 · 模拟数据 · 不写正式系统</span><button id="reset-demo" type="button">重置演示</button></div>
+<div class="shell"><aside class="sidebar"><a href="#/home" class="brand"><span class="brand-symbol">S</span><span>Studio<small>让创作有条理</small></span></a><nav id="navigation" aria-label="主导航"></nav><div class="sidebar-foot"><span class="avatar">林</span><div>我的创作空间<small>本地演示会话</small></div><span class="online-dot"></span></div></aside>
+<div class="workspace"><header class="topbar"><div><span class="workspace-dot"></span>个人工作空间 <span class="slash">/</span> <span id="section-label">今日工作</span></div><span class="top-date">2026 年 10 月 19 日 · 周一</span></header><main id="main" tabindex="-1"></main><footer>只展示页面关系与交互。草稿保留在当前浏览器标签页，刷新可恢复；关闭标签页后不保证保留。</footer></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="reset-dialog"><h2>重新开始演示？</h2><p>清空此标签页中的筛选、草稿和模拟回执。正式系统不受影响。</p><div class="actions"><button id="cancel-reset" type="button">保留当前演示</button><button class="primary" id="confirm-reset" type="button">确认重置演示</button></div></dialog>
+<script src="app.js"></script></body></html>

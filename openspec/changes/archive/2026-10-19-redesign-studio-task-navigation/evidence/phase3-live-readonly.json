@@ -1,0 +1,140 @@
+{
+  "checks": [
+    {
+      "url": "/review",
+      "width": 1440
+    },
+    {
+      "url": "/review?status=unknown",
+      "width": 1440
+    },
+    {
+      "url": "/review?q=不存在的筛选",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=34&unit=40",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=34&unit=40&step=issues",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=34&unit=40&step=authorization",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=34&unit=40&step=delivery",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=34&unit=40&step=history",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=2&unit=4",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=2&unit=4&step=issues",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=2&unit=4&step=authorization",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=2&unit=4&step=delivery",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=2&unit=4&step=history",
+      "width": 1440
+    },
+    {
+      "url": "/review?project=999999&unit=999999",
+      "width": 1440
+    },
+    {
+      "url": "/review",
+      "width": 390
+    },
+    {
+      "url": "/review?status=unknown",
+      "width": 390
+    },
+    {
+      "url": "/review?q=不存在的筛选",
+      "width": 390
+    },
+    {
+      "url": "/review?project=34&unit=40",
+      "width": 390
+    },
+    {
+      "url": "/review?project=34&unit=40&step=issues",
+      "width": 390
+    },
+    {
+      "url": "/review?project=34&unit=40&step=authorization",
+      "width": 390
+    },
+    {
+      "url": "/review?project=34&unit=40&step=delivery",
+      "width": 390
+    },
+    {
+      "url": "/review?project=34&unit=40&step=history",
+      "width": 390
+    },
+    {
+      "url": "/review?project=2&unit=4",
+      "width": 390
+    },
+    {
+      "url": "/review?project=2&unit=4&step=issues",
+      "width": 390
+    },
+    {
+      "url": "/review?project=2&unit=4&step=authorization",
+      "width": 390
+    },
+    {
+      "url": "/review?project=2&unit=4&step=delivery",
+      "width": 390
+    },
+    {
+      "url": "/review?project=2&unit=4&step=history",
+      "width": 390
+    },
+    {
+      "url": "/review?project=999999&unit=999999",
+      "width": 390
+    }
+  ],
+  "writes": [],
+  "errors": [],
+  "httpErrors": [],
+  "comparisons": {
+    "/content-projects": {
+      "same": true,
+      "before": "5a3cb2853d5cb287b51fd161187a1f8958ee28474577e6e02bbcfe98d5e64168",
+      "after": "5a3cb2853d5cb287b51fd161187a1f8958ee28474577e6e02bbcfe98d5e64168"
+    },
+    "/review-center/projects": {
+      "same": true,
+      "before": "c5e126df719895cf30b2787aafa78d10692ffb75ae4ddf37f6bf1d9f9f4149e2",
+      "after": "c5e126df719895cf30b2787aafa78d10692ffb75ae4ddf37f6bf1d9f9f4149e2"
+    },
+    "/content-accounts": {
+      "same": true,
+      "before": "366474e92d7c87dacf1aced86ca178dd53959ae0561950c061f2242ccc642a22",
+      "after": "366474e92d7c87dacf1aced86ca178dd53959ae0561950c061f2242ccc642a22"
+    }
+  },
+  "codePreserved": true,
+  "projectCount": 7,
+  "accountCount": 2,
+  "additiveProjection": "production_domain from Unit; existing review fields unchanged"
+}

@@ -1,0 +1,14 @@
+- [x] 1.1 Providers: Openverse, Pexels, Pixabay, NASA Images search adapters (Coverr dropped: API unconfirmed) with license mapping, aspect/resolution filters, dedupe; keys from runtime env; outbound policies.
+- [x] 1.2 `material_match_run` model and migration; schema head update.
+- [x] 1.3 Segment planner (chat routing) with roles, constraints, queries; bounds.
+- [x] 1.4 Own-library matcher over material metadata and drive links, rights-filtered.
+- [x] 1.5 Text pre-filter and visual judge through `model_vision`; score breakdown, seen-picture rule, unreadable-preview handling.
+- [x] 1.6 Background job: progress, cancel, resume after restart; API endpoints (start, read, cancel, accept candidate).
+- [x] 1.7 Accept: reuse staging and acceptance into Material revision with license and attribution; optional project reference with segment note.
+- [x] 2.1 素材库 "按文案找素材" view: input (paste or project script), settings, cost estimate, progress.
+- [x] 2.2 Plan review: segments with main pick, alternates, previews, reasons, license; accept; gaps as material requests.
+- [x] 2.3 Entry from each piece's production page (「找素材」: list the piece's runs, open, start from the piece's content); run page shows project/piece with link back; 素材库 history lists all scopes labelled with project/piece, project filter.
+- [x] 2.4 AI 创作助手「找素材」on the video 分镜 step: focused shot or all shots without material; candidates with previews/reasons/licence; pick → accept + project reference (shot note) + set shot source material in the draft; gaps as material requests.
+- [x] 3.1 `video-material-scout` skill: use match runs as the first online step.
+- [x] 2.5 「上传自己的」 per segment: existing upload with rights → `POST /material-match-runs/{id}/segments/{sid}/attach` records choice, project reference with segment note, clears rejection; readable by MCP.
+- [ ] 4.1 Real run on a past script (U72) with keys provided by the user; screenshot review; README.

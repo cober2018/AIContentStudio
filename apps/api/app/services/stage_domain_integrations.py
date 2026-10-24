@@ -17,7 +17,7 @@ from ..models import (
     WorkflowStep,
     WorkflowStepAttempt,
 )
-from .stage_contracts import canonical, digest
+from .stage_contracts import RESOLVED_STAGE_MAX_BYTES, canonical, digest
 from .stage_invocations import StageInvocationError
 
 DOMAIN_PLUGINS = {
@@ -87,7 +87,7 @@ def native_media_resolution(resolved):
     if resolved["node"].get("plugin_version") == "4" and not resolved["ready"]:
         result = canonical({**resolved, "system_prompt": "", "effective_prompt": "", "prompt_sections": [],
             "prompt_projection": {"kind": "native_media", "request_unavailable": True, "context_layers_sent": False},
-            "prompt_hash": digest({"system": "", "user": ""})})
+            "prompt_hash": digest({"system": "", "user": ""})}, max_bytes=RESOLVED_STAGE_MAX_BYTES)
         result.pop("resolution_hash", None)
         result["resolution_hash"] = digest(result)
         return result
@@ -99,7 +99,7 @@ def native_media_resolution(resolved):
         "prompt_sections": [{"key": "native_media_prompt", "text": prompt, "hash": digest(prompt)}],
         "prompt_projection": {"kind": "native_media", "context_layers_sent": False,
                               "source_revision_ids": request["source_revision_ids"]},
-        "prompt_hash": digest({"system": "", "user": prompt})})
+        "prompt_hash": digest({"system": "", "user": prompt})}, max_bytes=RESOLVED_STAGE_MAX_BYTES)
     result.pop("resolution_hash", None)
     result["resolution_hash"] = digest(result)
     return result
@@ -288,8 +288,11 @@ def prepare_domain(db, user, unit, node, config, context, *, creative=None):
             if str(node.get("plugin_version")) == "2":
                 from .creation_recipes import _method
 
-                method, reasons = _method(db, user, unit, node, config)
-                blockers.extend(reasons)
+                if creative is not None and getattr(unit, "production_domain", "persona") != "product":
+                    method = {"instruction": "\n\n".join(item["instruction"] for item in creative.get("method_stack", []))}
+                else:
+                    method, reasons = _method(db, user, unit, node, config)
+                    blockers.extend(reasons)
                 if not method:
                     raise StageInvocationError("stage_professional_method_required")
             request = professional_request(context, config, method=method)
@@ -311,6 +314,10 @@ def prepare_domain(db, user, unit, node, config, context, *, creative=None):
                 "evidence": projection["evidence"], "expected_revision": 0,
                 "prepare_execution": config["prepare_execution"],
                 "executor": {key: config[key] for key in ("executor_kind", "executor_key", "executor_version") if key in config}}
+            if request["package_schema"] == "director.video.v1":
+                plans = creative_packages.accepted_director_plans(db, unit, master)
+                if plans:
+                    snapshot["accepted_shot_plans"] = plans
         elif domain == "audio_asr":
             from .stage_audio_asr import prepare_asr
 

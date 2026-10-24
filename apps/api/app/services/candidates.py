@@ -56,10 +56,13 @@ def readiness_reasons(draft: Draft) -> list[str]:
     for media in draft.media:
         if media.public_use_allowed is not True or not media.rights_status or media.public_use_revoked_at:
             reasons.append(f"media_rights_incomplete:{media.id}")
-    if draft.content_job.channel == "wechat" and not any(media.role == "cover" for media in draft.media):
-        reasons.append("missing_required_cover")
-    if draft.content_job.channel == "x_thread" and not draft.thread_posts_json:
-        reasons.append("missing_thread_boundaries")
+    from .content_harness.channel_methods import readiness_gaps
+
+    reasons.extend(readiness_gaps(
+        draft.content_job.channel,
+        has_cover=any(media.role == "cover" for media in draft.media),
+        has_thread_posts=bool(draft.thread_posts_json),
+    ))
     return reasons
 
 

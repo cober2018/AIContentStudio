@@ -37,6 +37,28 @@ def test_legacy_converter_is_deterministic_and_markdown_is_authoritative():
     assert "矛盾正文" not in service().plain_text(converted["payload"]["document"])
     assert converted["warnings"] == [{"code": "legacy_document_not_equivalent"}]
     assert "markdown" not in converted["payload"]
+    assert converted["payload"]["document"]["blocks"][0]["level"] == 2
+
+
+def test_converter_normalizes_title_repeat_empty_sections_and_heading_jumps():
+    title = "审查者的认知界限"
+    markdown = f"# {title}\n\n### 先看粒度\n\n小步提交更容易审。\n\n### 再看上下文\n\n上下文再大也不能代替人看过的差异。"
+    converted = service().convert_legacy_text({"title": title, "markdown": markdown})
+    blocks = converted["payload"]["document"]["blocks"]
+    assert [block["type"] for block in blocks] == ["heading", "paragraph", "heading", "paragraph"]
+    assert [block["level"] for block in blocks if block["type"] == "heading"] == [2, 2]
+    assert title not in service().plain_text(converted["payload"]["document"])
+    assert blocks[-1]["type"] != "heading"
+    assert all(blocks[index + 1]["type"] != "heading" for index, block in enumerate(blocks[:-1]) if block["type"] == "heading")
+    jumped = service().convert_legacy_text({"title": "别的标题", "markdown": "# 总览\n\n正文\n\n#### 细节\n\n继续"})
+    assert [block["level"] for block in jumped["payload"]["document"]["blocks"] if block["type"] == "heading"] == [2, 3]
+    assert service().plain_text(jumped["payload"]["document"]) == "总览\n正文\n细节\n继续"
+    trailing = service().convert_legacy_text({"title": "别的标题", "markdown": "正文\n\n## 没有下文"})
+    assert [block["type"] for block in trailing["payload"]["document"]["blocks"]] == ["paragraph"]
+    listed = service().convert_legacy_text({"title": "小步修改", "markdown": "# 标题\n\n- 先看**差异**，再看 [依据](https://example.com/a)。\n"})
+    listed_blocks = listed["payload"]["document"]["blocks"]
+    assert listed_blocks[0]["type"] == "heading" and listed_blocks[0]["level"] == 2
+    assert "差异" in service().plain_text(listed["payload"]["document"])
 
 
 @pytest.mark.parametrize("markdown", ["<script>不执行</script>", "| a | b |\n| -- | -- |", "##### 五级标题", "  - 嵌套列表", "![远程](https://example.com/x.png)", "```bad language\n原文\n```", "```python\n未闭合"])

@@ -83,8 +83,8 @@ def test_upload_creates_material_and_revision(client):
     revision = body["revisions"][0]
     assert revision["source_kind"] == "upload"
     assert revision["content_hash"] == hashlib.sha256(PNG).hexdigest()
-    # 上传默认未公开授权：web-found 规则的前置
-    assert revision["public_use_allowed"] is False
+    # 用户放进素材库的素材默认可剪、可发布
+    assert revision["public_use_allowed"] is True
 
 
 def test_same_material_reused_across_drafts(client, db_session, draft):

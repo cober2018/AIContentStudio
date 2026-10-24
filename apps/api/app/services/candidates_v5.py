@@ -21,6 +21,7 @@ from ..models import (
     WorkflowRun,
     WorkflowStepAttempt,
 )
+from .candidates_v4 import frozen_product_identity, validate_product_identity
 from .channel_adapters import FIRST_BATCH, executable_adapter_for
 from .channel_variant_documents import VariantDocumentError, canonical_payload
 from .channel_variants import _check_inputs, projected_variant_checks, validate_stored_model_provenance
@@ -56,7 +57,8 @@ def build_manifest_v5(inputs: dict) -> dict:
     if not isinstance(inputs, dict) or set(inputs) - {"official_render", "export_metadata"} != set(SECTIONS):
         raise ValueError("incomplete v5 manifest sections")
     project = _object(inputs["project"], "project", ("id", "unit_id", "modality"))
-    identity = _object(inputs["identity"], "identity", ("id", "checksum"))
+    product = validate_product_identity(inputs["identity"])
+    identity = _object(inputs["identity"], "identity", ("checksum",) if product else ("id", "checksum"))
     brief = _object(inputs["brief"], "brief", ("id", "revision_no", "checksum"))
     evidence = _object(inputs["evidence"], "evidence", ("boundary_id", "revision_no", "fact_pack"))
     pack = _object(evidence["fact_pack"], "fact_pack", ("id", "version", "checksum"))
@@ -68,7 +70,9 @@ def build_manifest_v5(inputs: dict) -> dict:
                    for check in warnings)):
         raise ValueError("invalid source Master warning provenance")
     variant = _object(inputs["variant"], "variant", ("id", "variant_key", "revision_no", "source_master_revision_id",
-                                                       "identity_snapshot_id", "payload_schema", "payload_hash", "context_hash", "source_kind"))
+                                                       "payload_schema", "payload_hash", "context_hash", "source_kind"))
+    if "identity_snapshot_id" not in variant or (product and variant["identity_snapshot_id"] is not None):
+        raise ValueError("invalid frozen product identity ID")
     target = _object(inputs["target"], "target", ("channel", "content_form", "artifact_kind", "profile", "adapter", "rule_hash"))
     if "account" in target:
         account = target["account"]
@@ -84,10 +88,12 @@ def build_manifest_v5(inputs: dict) -> dict:
     production = _object(inputs["production"], "production", ("edit_summary", "created_by"))
     if set(production) - {"workflow", "output", "edit_summary", "created_by", "llm_provenance", "external_execution"}:
         raise ValueError("unsafe production provenance")
-    if any(not _id(value) for value in (project["id"], project["unit_id"], identity["id"], brief["id"],
+    if any(not _id(value) for value in (project["id"], project["unit_id"], brief["id"],
                                             evidence["boundary_id"], pack["id"], source["id"], variant["id"],
-                                            variant["source_master_revision_id"], variant["identity_snapshot_id"], profile["id"])):
+                                            variant["source_master_revision_id"], profile["id"])):
         raise ValueError("invalid frozen identity or provenance ID")
+    if not product and (not _id(identity["id"]) or not _id(variant["identity_snapshot_id"])):
+        raise ValueError("invalid frozen identity ID")
     if any(type(value) is not int or value <= 0 for value in (brief["revision_no"], evidence["revision_no"], pack["version"], source["revision_no"], variant["revision_no"])):
         raise ValueError("invalid frozen revision")
     if any(not _hex(value) for value in (identity["checksum"], brief["checksum"], pack["checksum"], source["payload_hash"],
@@ -179,10 +185,12 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
     unit = db.get(ContentUnit, row.content_unit_id)
     master = db.get(ContentMasterRevision, row.source_master_revision_id)
     identity = db.get(IdentitySnapshot, row.identity_snapshot_id) if row.identity_snapshot_id else None
-    if not all((project, unit, master, identity)) or unit.project_id != project.id or project.owner_user_id != identity.owner_user_id:
+    product_identity = frozen_product_identity(db, master, unit, require_current=True) if unit and master else None
+    identity_id = None if product_identity else identity.id if identity else None
+    if not all((project, unit, master)) or (not product_identity and identity is None) or unit.project_id != project.id or (identity and project.owner_user_id != identity.owner_user_id):
         raise ValueError("variant project, source or identity unavailable")
-    if (master.project_id != project.id or master.content_unit_id != unit.id or master.identity_snapshot_id != identity.id
-            or unit.identity_snapshot_id != identity.id or master.payload_hash != row.source_master_payload_hash
+    if (row.identity_snapshot_id != identity_id or master.project_id != project.id or master.content_unit_id != unit.id or master.identity_snapshot_id != identity_id
+            or (not product_identity and unit.identity_snapshot_id != identity_id) or master.payload_hash != row.source_master_payload_hash
             or master.context_hash != row.source_master_context_hash or master.channel_id != row.source_channel_id
             or master.content_form != row.source_content_form):
         raise ValueError("variant source provenance mismatch")
@@ -215,7 +223,7 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
         project_output = db.get(ProjectWorkflowOutput, master.origin_project_output_id) if master.origin_project_output_id else None
         attempt = db.get(WorkflowStepAttempt, project_output.attempt_id) if project_output and project_output.attempt_id else None
         if (not run or not project_output or not attempt or not run.definition_checksum or run.workflow_version is None
-                or run.content_unit_id != unit.id or run.identity_snapshot_id != identity.id
+                or run.content_unit_id != unit.id or run.identity_snapshot_id != identity_id
                 or project_output.project_id != project.id or project_output.unit_id != unit.id or project_output.run_id != run.id
                 or attempt.run_id != run.id or attempt.node_id != project_output.node_id or attempt.status != "succeeded" or not attempt.output_hash):
             raise ValueError("unverified source Master workflow provenance")
@@ -238,7 +246,7 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
     warning_checks.sort(key=lambda check: check["kind"])
     inputs = {
         "project": {"id": project.id, "title": project.title, "unit_id": unit.id, "unit_title": unit.title, "modality": master.modality},
-        "identity": {"id": identity.id, "checksum": identity.checksum, "effective_profile": identity.effective_profile_json,
+        "identity": product_identity or {"id": identity.id, "checksum": identity.checksum, "effective_profile": identity.effective_profile_json,
                      "field_origins": identity.field_origins_json},
         "brief": {"id": brief.id, "revision_no": brief.revision_no, "checksum": brief.checksum,
                   "snapshot": {"objective": brief.objective, "primary_audience": brief.primary_audience,
@@ -250,7 +258,7 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
                           "context_hash": master.context_hash, "channel": master.channel_id,
                           "content_form": master.content_form, "warning_checks": warning_checks},
         "variant": {"id": row.id, "variant_key": row.variant_key, "revision_no": row.revision_no,
-                    "source_master_revision_id": master.id, "identity_snapshot_id": identity.id,
+                    "source_master_revision_id": master.id, "identity_snapshot_id": identity_id,
                     "payload_schema": row.payload_schema, "payload_hash": row.payload_hash,
                     "context_hash": row.context_hash, "source_kind": row.source_kind,
                     "source_channel": row.source_channel_id, "source_content_form": row.source_content_form},

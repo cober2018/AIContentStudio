@@ -24,7 +24,7 @@ from ..models import (
 )
 from . import creation_recipes
 from .content_masters import owned_unit
-from .stage_contracts import IDENTIFIER, canonical, digest
+from .stage_contracts import IDENTIFIER, RESOLVED_STAGE_MAX_BYTES, canonical, digest
 from .stage_domain_integrations import (
     _visible_sources,
     build_variant_request,
@@ -46,7 +46,7 @@ def _sealed(db, run, step, attempt, request, actor_email):
             or attempt.node_id != step.node_id or attempt.status not in {"succeeded", "unknown"}):
         _conflict()
     receipt = canonical(attempt.execution_receipt_json or {})
-    resolved = canonical((attempt.input_snapshot_json or {}).get("resolved_stage") or {})
+    resolved = canonical((attempt.input_snapshot_json or {}).get("resolved_stage") or {}, max_bytes=RESOLVED_STAGE_MAX_BYTES)
     output = canonical(attempt.output_json or {})
     original = _same_key_result(db, step, receipt.get("invocation_key"), receipt.get("request_fingerprint"))
     domain = domain_for(resolved.get("node") or {})
@@ -220,6 +220,7 @@ def _professional_entity(db, resolved, result):
             or package.source_variant_revision_id != request.get("source_variant_revision_id")
             or package.source_payload_hash != snapshot["source_payload_hash"]
             or package.source_context_hash != snapshot["source_context_hash"]
+            or (package.package_json.get("director") or {}).get("accepted_shot_plans", []) != snapshot.get("accepted_shot_plans", [])
             or any(package.package_json.get(key) != request[key] for key in (
                 "objective", "constraints", "output_contract", "acceptance_criteria"))):
         _conflict("stage_professional_package_proof_invalid")
@@ -492,13 +493,13 @@ def _current(db, project_id, unit_id, node_id, user, run, step, attempt, resolve
     _assert_access(db, run, user)
     recovered_media = (request["domain"] == "media" and step.status == "unknown"
                        and attempt.status == "unknown")
-    if (run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != unit.identity_snapshot_id
+    if (run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)
             or step.attempt_no != attempt.attempt_no or not (step.status == "waiting_input" or recovered_media)
             or step.output_hash != attempt.output_hash or step.output_json != attempt.output_json):
         _conflict("stage_attempt_not_current")
     if db.scalar(select(ProjectWorkflowOutput.id).where(ProjectWorkflowOutput.attempt_id == attempt.id).limit(1)):
         _conflict("stage_already_accepted")
-    current, blockers = creation_recipes._context(db, project, unit, run)
+    current, blockers = creation_recipes._context(db, project, unit, run, node=resolved["node"], config=resolved["effective_config"])
     if resolved.get("node", {}).get("plugin") == "media.generate" and resolved["node"].get("plugin_version") == "4":
         from .stage_audio import prepare_tts, tts_request
 
@@ -507,8 +508,11 @@ def _current(db, project_id, unit_id, node_id, user, run, step, attempt, resolve
         if not audio_blockers and tts_request(effective, current) != tts_request(resolved["effective_config"], resolved["context"]):
             _conflict("stage_audio_tts_config_changed")
     frozen = {key: value for key, value in resolved["context"].items() if key != "domain"}
-    if blockers or current != frozen or digest(resolved["context"]) != request["expected_context_hash"]:
+    if blockers or digest(resolved["context"]) != request["expected_context_hash"]:
         _conflict("stage_adoption_context_changed")
+    if creation_recipes.context_basis(current) != creation_recipes.context_basis(frozen):
+        raise StageInvocationError("stage_adoption_context_changed", status_code=409,
+                                   detail={"changed": creation_recipes.changed_inputs({"context": frozen}, {"context": current})})
     return project, unit
 
 

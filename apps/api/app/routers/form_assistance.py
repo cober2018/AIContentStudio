@@ -9,7 +9,7 @@ from ..deps import get_current_user, require_editor
 from ..services import form_assistance as service
 
 router = APIRouter(prefix="/api/v1/form-assistance", tags=["form-assistance"])
-Surface = Literal["product_creation", "product_brief", "video"]
+Surface = Literal["product_creation", "product_brief", "video", "production_profile"]
 
 
 class Input(BaseModel):
@@ -74,6 +74,7 @@ class Reuse(Input):
     rule: str = Field(min_length=1, max_length=4000)
     name: str = Field(min_length=1, max_length=255)
     scope_type: Literal["owner", "project"]
+    sku_id: int | None = Field(default=None, gt=0, strict=True)
     category: str | None = Field(default=None, max_length=300)
     style_revision_id: int | None = Field(default=None, gt=0)
     stage: str | None = Field(default=None, max_length=100)
@@ -108,6 +109,12 @@ async def generate(payload: GenerateInput, db=Depends(get_db), user=Depends(requ
 def sessions(surface: Surface, project_id: int | None = None, unit_id: int | None = None,
              limit: int = Query(20, ge=1, le=100), db=Depends(get_db), user=Depends(get_current_user)):
     return service.list_sessions(db, user, surface, project_id, unit_id, limit)
+
+
+@router.get("/product-methods")
+def product_methods(project_id: int = Query(gt=0), unit_id: int = Query(gt=0), db=Depends(get_db), user=Depends(get_current_user)):
+    """第9节：商品目标与受众两项方法的只读有效开关状态（声明在 /{session_id} 之前）。"""
+    return service.product_goal_methods(db, user, project_id, unit_id)
 
 
 @router.get("/{session_id}")

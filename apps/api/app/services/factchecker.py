@@ -14,6 +14,7 @@ RISK_BLOCKER_WORDS = ["保证收益", "稳赚", "必涨", "一定上涨", "包�
 RISK_WARNING_WORDS = ["大概率", "肯定会", "绝对", "必然"]
 # 标准金融术语中的“无风险”不是收益承诺
 _RISK_TERM_MASK = re.compile(r"无风险(?:利率|收益率)")
+_RISK_GOAL_DENIAL_MASK = re.compile(r"(?:不应|不该|不要|切勿)追求(?:绝对)?(?:零风险|无风险)")
 
 # 结构性数字白名单：行首列表编号、第X、Fact 编号、版本号、时长/字数等元信息
 # 注意不能用 \b：中文字符同属 \w，“3分钟读懂”里“钟”后是“读”，\b 永不成立
@@ -138,7 +139,12 @@ def check_numbers(text: str, facts: list[dict], topic_text: str) -> list[CheckIs
 
 def check_dates(text: str, facts: list[dict]) -> list[CheckIssue]:
     issues = []
-    valid_dates = {f.get("as_of") for f in facts if f.get("as_of")}
+    as_of_dates = {f.get("as_of") for f in facts if f.get("as_of")}
+    # 发布或事件日期可能早于回读日，不能只用 as_of 判断日期是否有依据。
+    valid_dates = set(as_of_dates)
+    for match in _FULL_DATE.finditer(_fact_texts(facts)):
+        parts = [int(p) for p in re.sub(r"[年月/]", "-", match.group(0)).replace("日", "").split("-")]
+        valid_dates.add(f"{parts[0]:04d}-{parts[1]:02d}-{parts[2]:02d}")
     for match in _FULL_DATE.finditer(text):
         found = re.sub(r"[年月/]", "-", match.group(0)).replace("日", "")
         parts = [int(p) for p in found.split("-")]
@@ -149,21 +155,22 @@ def check_dates(text: str, facts: list[dict]) -> list[CheckIssue]:
                     severity="blocker",
                     category="date",
                     span=match.group(0),
-                    reason=f"日期 {normalized} 不在 FactPack 任何事实的 as_of 范围内",
+                    reason=f"日期 {normalized} 未见于 FactPack 事实正文或 as_of",
                     suggestion=f"允许的日期：{sorted(valid_dates)}",
                 )
             )
-    if _TODAY_WORDS.search(text) and valid_dates:
+    if _TODAY_WORDS.search(text) and as_of_dates:
         from datetime import datetime
 
-        today = datetime.now(UTC).date().isoformat()
-        if today not in valid_dates:
+        # "今天" is judged in the operator's timezone, not UTC, so early-morning local entries stay same-day.
+        today = datetime.now(UTC).astimezone().date().isoformat()
+        if today not in as_of_dates:
             issues.append(
                 CheckIssue(
                     severity="warning",
                     category="date",
                     span="今天/当前",
-                    reason=f"稿件使用『今天/当前』表述，但 FactPack 事实日期为 {sorted(valid_dates)}，非当日",
+                    reason=f"稿件使用『今天/当前』表述，但 FactPack 事实日期为 {sorted(as_of_dates)}，非当日",
                     suggestion="改为明确日期，或刷新 FactPack",
                 )
             )
@@ -174,6 +181,16 @@ def check_risk_words(text: str, forbidden_words: list[str]) -> list[CheckIssue]:
     issues = []
     # “无风险利率/无风险收益率”是标准金融术语（夏普比率等），不是收益承诺
     masked = _RISK_TERM_MASK.sub(lambda m: " " * len(m.group(0)), text)
+    # 反对追求零风险不是收益承诺，同句其它承诺和显式禁语仍须检查。
+    def mask_goal_denial(match: re.Match) -> str:
+        before = re.split(r"[。！？；\n]", masked[:match.start()])[-1]
+        after = re.split(r"[。！？；\n]", masked[match.end():], maxsplit=1)[0]
+        # 外层否定、引用或反问不靠短语规则判断，保守保留原检查。
+        if re.search(r"[不非未?？\"'“”‘’「」]|否认|反对|反驳|难道", before + after) or masked[match.end() + len(after):].startswith("？"):
+            return match.group(0)
+        return " " * len(match.group(0))
+
+    masked = _RISK_GOAL_DENIAL_MASK.sub(mask_goal_denial, masked)
     for word in RISK_BLOCKER_WORDS:
         if word in masked:
             issues.append(
@@ -186,7 +203,7 @@ def check_risk_words(text: str, forbidden_words: list[str]) -> list[CheckIssue]:
                 )
             )
     for word in RISK_WARNING_WORDS:
-        if word in text:
+        if word in masked:
             issues.append(
                 CheckIssue(
                     severity="warning",

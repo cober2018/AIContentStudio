@@ -1,0 +1,13 @@
+{
+ "at": "2026-10-20T02:19:11+0800",
+ "reason": "A18 stale-step located feedback not silently reapplied",
+ "pid_before": "39562",
+ "pid_after": "48857",
+ "ready": true,
+ "precondition": "only unknown 129/155",
+ "source_sha256": {
+  "apps/api/app/services/stage_feedback.py": "2df03f74418d2c8f3024805534c7aab0f9a7b014766d9a464ef33cbc53e69c8b",
+  "apps/api/app/services/stage_resolver.py": "7c8f473969ba168ed5203b2f1a2382b0cbdc961de05d7beb0f4026fbb6bb9dd5",
+  "apps/api/app/services/factchecker.py": "42ff88f1a70389cfa213a4d047a2b9452d5f0a4ed8464bf8863617f5cdb90c54"
+ }
+}

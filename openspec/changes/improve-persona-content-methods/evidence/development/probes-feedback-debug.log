@@ -1,0 +1,46 @@
+/Users/mshengran/Project/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_located_feedback_rerun_accept_then_no_stale_reinjection _________
+
+client = <starlette.testclient.TestClient object at 0x1223697f0>
+db_session = <sqlalchemy.orm.session.Session object at 0x117c552b0>
+
+    def test_located_feedback_rerun_accept_then_no_stale_reinjection(client,db_session):
+        headers,project,unit,base,result,acceptance=_proposal(client)
+        first=_accept(client,base,headers,acceptance)
+        assert first.status_code==200,first.text
+        stage=f'{base}/creation-recipe/stages/draft'
+        targets=client.get(f'{stage}/feedback-targets',headers=headers,params={'run_id':result['run_id'],'attempt_id':result['attempt_id']})
+        assert targets.status_code==200,targets.text
+        item=targets.json()['items'][0]
+        location=next(loc['location'] for loc in item['locations'] if loc['location']['kind']=='text')
+        request={key:acceptance[key] for key in ('run_id','attempt_id','expected_output_hash','expected_resolution_hash')}
+        request.update(target=item['target'],location=location,note='把选中段落改得更清楚，保留其余事实',feedback_key='located-rerun',decision='rerun_requested')
+        feedback=client.post(f'{stage}/feedback',headers=headers,json=request)
+        assert feedback.status_code==200,feedback.text
+        preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':result['run_id']}).json()
+        assert preview['ready'],preview['blockers']
+        assert preview['context']['located_feedback']['target']==item['target']
+        next_result=client.post(f'{stage}/run',headers=headers,json={'run_id':result['run_id'],'expected_resolution_hash':preview['resolution_hash'],'invocation_key':'located-second'})
+        assert next_result.status_code==200,next_result.text
+        next_result=next_result.json(); choice=next_result['output']['candidates'][0]
+        from app.models import ContentProject, WorkflowRun
+        from app.services import creation_recipes
+        sealed=db_session.get(WorkflowStepAttempt,next_result['attempt_id']).input_snapshot_json['resolved_stage']
+        current,blockers=creation_recipes._context(db_session,db_session.get(ContentProject,project),db_session.get(ContentUnit,unit),db_session.get(WorkflowRun,result['run_id']),node=sealed['node'],config=sealed['effective_config'])
+        assert current==sealed['context'], {'blockers':blockers,'diff':{key:[current.get(key),sealed['context'].get(key)] for key in set(current)|set(sealed['context']) if current.get(key)!=sealed['context'].get(key)}}
+        adopted=client.post(f'{stage}/accept-master',headers=headers,json={'run_id':result['run_id'],'attempt_id':next_result['attempt_id'],
+          'expected_output_hash':next_result['receipt']['output_hash'],'expected_resolution_hash':next_result['receipt']['resolution_hash'],
+          'expected_context_hash':preview['context_hash'],'candidate_id':choice['candidate_id'],'candidate_hash':choice['candidate_hash'],
+          'expected_revision':1,'adoption_key':'located-adopt-second','payload':choice['payload'],'asset_refs':choice['asset_refs'],'evidence_refs':choice['evidence_refs'],'decision':'accepted'})
+>       assert adopted.status_code==200,adopted.text
+E       AssertionError: {"detail":{"code":"stage_adoption_context_changed"}}
+E       assert 409 == 200
+E        +  where 409 = <Response [409 Conflict]>.status_code
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:144: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_located_feedback_rerun_accept_then_no_stale_reinjection
+1 failed, 11 deselected in 0.96s

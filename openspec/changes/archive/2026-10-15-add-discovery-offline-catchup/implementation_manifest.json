@@ -1,0 +1,83 @@
+{
+  "baseline": "49e4fdc11b433d3c32326f78eea7151dd5f8c0a6",
+  "worktree": "/private/tmp/aicontent-offline-catchup",
+  "formal_workspace": "/Users/mshengran/Project/AIContentStudio",
+  "code_sha256": {
+    "apps/api/app/models.py": "e2788dcba217537085c7bec6f4e831578adf436b0f7d37321e2d61eb1ed4f934",
+    "apps/api/app/db.py": "5b0c04489ed8667f7da46c02458b53c000da56e8e403b7565cad95f287e9d9b2",
+    "apps/api/app/services/discovery_ingestion.py": "9710d0364645df1cba3775da1c715aec4219b28c0d26a99087ce920158766f1b",
+    "apps/api/app/services/discovery_runtime.py": "e685ef5f69ac728e99285c0878ee94c9a8d2360a6fbb07945706ff7522b86a32",
+    "apps/api/app/services/daily_opportunities.py": "b69d8238013ef16e4f3bbe3a90683fada7ec17066790ed89131620ecc4b0d349",
+    "apps/api/app/tasks/worker_tasks.py": "1fe9172fbc39f8e51a0adaabbd148981152074a4abd65422fa2f6b89d9224185",
+    "apps/api/app/routers/discovery.py": "a5d8b0cc5c3b3a706e15766742f65a707701b039cf0ad04b571699d46a924ef1",
+    "apps/web/src/product/DiscoveryPanel.tsx": "1bb4da14f3d922f731fdd14cd7cfdf1e3be026d278189bfe85937b0e56dd42a7",
+    "apps/api/app/services/discovery_catchup.py": "8a163b4d4dcb69ff5034c7e846878c9b1474733efe256e282ebd4c91ff96b177",
+    "apps/api/alembic/versions/catchup000001_offline_collection.py": "ec0c6d374859d827a0a651d4ba378d093f203a1bef2ae8b074fbb1d2d7933689"
+  },
+  "schema_head": "catchup000001",
+  "runtime_change": "REQUIRED_SCHEMA_HEAD aligned only; backup retained privately",
+  "backup": "/Users/mshengran/Project/AIContentStudio/backups/offline-catchup-20261015-_ow9lrpu",
+  "validation": {
+    "existing_checks_passed": 41,
+    "web_build": true,
+    "ruff": true,
+    "review": "APPROVE",
+    "isolated_persona": 5,
+    "isolated_generated_topics": 1,
+    "model_requests": 5,
+    "partial_snapshot": true,
+    "receipt_ids": [
+      48,
+      49
+    ],
+    "frozen_at": "2026-10-15T11:02:45.665519+00:00",
+    "latest_receipt_finish": "2026-10-15T11:02:45.637291+00:00",
+    "stop_resume_source": 56,
+    "resume_receipt": 50,
+    "post_resume_topics": 1,
+    "post_resume_model_requests": 5,
+    "fixture_mapping": "logical loopback80 to local8029 in isolated launcher only",
+    "beat_interval_seconds": 10
+  },
+  "status": "19/19 formally accepted and archived",
+  "formal_acceptance": {
+    "integrity": "ok",
+    "head": "catchup000001",
+    "counts": {
+      "covered": 21,
+      "excluded": 52,
+      "partial": 21
+    },
+    "batches": [
+      [
+        1,
+        "partial",
+        "2026-10-15 11:14:27.115561"
+      ],
+      [
+        2,
+        "partial",
+        "2026-10-15 11:17:27.403371"
+      ]
+    ],
+    "unchanged_protected_tables": [
+      "content_persona",
+      "content_persona_revision",
+      "content_opportunity",
+      "content_opportunity_assessment_revision",
+      "creative_execution"
+    ],
+    "topics_by_persona": [
+      [
+        2,
+        5
+      ],
+      [
+        3,
+        5
+      ]
+    ]
+  },
+  "archive": "openspec/changes/archive/2026-10-15-add-discovery-offline-catchup",
+  "temporary_services": "stopped"
+}

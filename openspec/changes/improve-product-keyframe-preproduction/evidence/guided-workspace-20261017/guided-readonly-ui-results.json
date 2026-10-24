@@ -1,0 +1,3742 @@
+{
+  "out": [
+    {
+      "width": 1440,
+      "url": "/production?workspace=product",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n\n工作区\n\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n本机工作台 · 项目与素材持久保存\n工作台\n商品视频工作台\n\n先选择这次要制作的商品；同一 SKU 可以制作和保留多条作品。\n\n已有作品\n选择商品\n本条讲述角色与交付渠道：AI科技研发技术博主 / 小红书图文\n搜索 SKU、商品名称或商家编码\n品类\n新建 SKU\n\n户外休闲／懒人沙发\n\n懒人沙发 · 待确认规格（流程测试）\n\nSKU-000001\n\n图片所示多种颜色，具体SKU未知\n\n资料与已有作品\n参考图片 · 非单款主图\n选择商品，制作视频\n\n显示前40条匹配商品，更多商品请用编码或名称查找。",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "已有作品",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "选择商品",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本条讲述角色与交付渠道：AI科技研发技术博主 / 小红书图文",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "输入编码或名称",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "全部品类",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "新建 SKU",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/production?workspace=persona",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n\n工作区\n\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n本机工作台 · 项目与素材持久保存\n\nCreation & Execution\n\n角色内容工作台\n\n从内容单元进入创作；生成任务读取既有记录。查看队列不会生成、重发或接受结果。\n\n查找项目或内容\n内容形态\n全部\n文字\n图文\n视频\n 包含归档历史\n刷新\n从想法创建项目\n内容创作\n\n科技首版风格｜关掉写作Skill，为什么角色风格还应该保留？ · 项目 #7\n\n47秒科技首版样片｜原生工程与完整来源\n\n视频 · 渠道未选 · 内容单元 #13\n\n草稿\n继续创作\n共 1 条 · 每页 20 条\n上一页\n下一页\n任务与执行记录",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SELECT",
+          "label": "全部文字图文视频",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "刷新",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "从想法创建项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "继续创作",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "任务与执行记录",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?workstep=goal",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n\n工作区\n\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n本机工作台 · 项目与素材持久保存\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 1 步 / 6\n\n商品与本条目标\n\n复用商品事实，填写这一条作品要表达的购买理由。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n目标与受众\n任务书 v2\n\n保存在项目任务书；同项目作品共享这些资料。单作品的表现方式与声音另存制作设置。\n\n本条创作目标\n面向谁\n核心购买理由 / 表达\n使用情境\n主要顾虑\n行动引导\n保存目标与受众\n重新载入\n切换步骤保留草稿；AI建议须逐项采用并保存。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n详细商品资料\n来源与事实边界\n角色身份与声音配置\n查看共享资料\n本作品制作设置\n已保存 v4\n作品类型\n待选择\n商品展示\n品牌 / 使用场景\n人物 UGC\n创作方式\n待选择\n原创\n参考二创\n目标时长（秒，未知可留空）\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\n上一步\n前往导演方案\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?workstep=plan",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": " 4 · script-4\n镜头\n添加镜头\n\n镜头 ID 保持稳定；调整顺序只改变镜头排列，时间线片段另行编辑。\n\n镜头 1 · shot-1\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 2 · shot-2\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 3 · shot-3\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 4 · shot-4\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往视觉与声音定样\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [
+        "1 · AI视频脚本succeeded已接受",
+        "2 · AI镜头计划succeeded已接受",
+        "3 · AI导演稿确认succeeded已接受"
+      ],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?workstep=style",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "台 · 项目与素材持久保存\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 3 步 / 6\n\n视觉与声音定样\n\n先确定共同视觉参考、讲话方式与配乐方向，再制作镜头。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n讲话方式\n待选择\n旁白\n人物对白 / 口型同步\n无讲话\n混合声音\n共同视觉定样：商品、人物、场景、光线\n跨镜头参考与动作衔接\n本条台词 / 口语稿\n台词语言\n预计旁白时长（秒，可留空）\n\n规划值，非已生成音频时长；实际时长以精确音频素材为准。\n\n环境声与配乐方向（可明确不使用配乐）\n共同视觉参考 · 精确素材版本\n\n从已入项目且允许模型使用的真实图片选取；保存引用不代表已批准，也不代表网站已收到这些输入。\n\n商品参考\n未选择\n懒人沙发｜用户原图｜仅本地测试 · #43\n人物参考\n未选择\n懒人沙发｜用户原图｜仅本地测试 · #43\n场景参考\n未选择\n懒人沙发｜用户原图｜仅本地测试 · #43\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（2）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n配音、音乐与封面\n\n这里只引用已进入项目的精确素材；选择 TTS 模式不代表系统已连接或执行语音生成。\n\n配音来源类型\n录音素材\n已导入 TTS 音频\n精确配音素材\n无\n整片音乐\n无\n封面图片\n无\n懒人沙发｜用户原图｜仅本地测试 #43\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往逐镜素材\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?workstep=materials",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "，本镜头会在这里接收网页原始MP4。\n\n镜头2明确选用素材\n选择本镜头可用素材\n懒人沙发｜用户原图｜仅本地测试 #43\n采用到本镜头草稿\n3. 躺卧情境（AI演绎） · 剪入 8 秒 · 待确认并保存关键帧\n\n侧视全景转中景，展示草坪上人物平躺在沙发上的静态比例，镜头保持平视自左向右微幅横移后定格，画面标注非实测性能说明。\n\n旁白与画面信息\n连续性构图参考（可选）\n镜头3素材来源\n真实资料 / 已有素材\nAPI生成图片\n网页生成视频\nAE动效合成\n镜头3起始图片\n选择已入库且允许模型使用的图片\n懒人沙发｜用户原图｜仅本地测试 #43\n确认这张图用于本镜头\n\n图片入库不等于选定。换图后需重新核对视频提示词。\n\n镜头3生成网站\nGrok网页\nGemini网页\n选择此提示词交给AI助手\n基于已确认图片的视频动作 / 运镜提示词\n\n先确认图片并保存主稿，再写视频提示词。\n\n确认视频提示词\n期望生成时长（秒）\n原片声音\n静音，使用统一旁白\n保留并审阅\n准备本镜网页生成包\n\n完成左侧选图和中间提示词后，本镜头会在这里接收网页原始MP4。\n\n镜头3明确选用素材\n选择本镜头可用素材\n懒人沙发｜用户原图｜仅本地测试 #43\n采用到本镜头草稿\n4. 选购提醒 · 剪入 8 秒 · 待确认并保存关键帧\n\n中景俯拍，多色沙发静置陈列于草坪上，镜头平稳后退抬升，右侧浮现核对尺寸提示卡片，保持客观选购建议。\n\n旁白与画面信息\n连续性构图参考（可选）\n镜头4素材来源\n真实资料 / 已有素材\nAPI生成图片\n网页生成视频\nAE动效合成\n镜头4起始图片\n选择已入库且允许模型使用的图片\n懒人沙发｜用户原图｜仅本地测试 #43\n确认这张图用于本镜头\n\n图片入库不等于选定。换图后需重新核对视频提示词。\n\n镜头4生成网站\nGrok网页\nGemini网页\n选择此提示词交给AI助手\n基于已确认图片的视频动作 / 运镜提示词\n\n先确认图片并保存主稿，再写视频提示词。\n\n确认视频提示词\n期望生成时长（秒）\n原片声音\n静音，使用统一旁白\n保留并审阅\n准备本镜网页生成包\n\n完成左侧选图和中间提示词后，本镜头会在这里接收网页原始MP4。\n\n镜头4明确选用素材\n选择本镜头可用素材\n懒人沙发｜用户原图｜仅本地测试 #43\n采用到本镜头草稿\n\n网页生成由你手工完成；已上传不等于已接受或已采用。准备剪辑前保存已采用的精确素材、旁白与配乐。\n\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往剪辑包装\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?workstep=edit",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 5 步 / 6\n\n剪辑包装\n\n保存已采用素材与声音，交接达芬奇主剪和按需AE包装。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n本作品需要 AE 包装（未勾选则按需跳过）\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n分镜素材制作与剪辑交接\n刷新任务与素材\n达芬奇主剪 / AE按需制作\n制作阶段\n粗剪\n修改 / 精剪\n最终导出\n帧率\n输出宽\n输出高\nAE制作：走近发现\nAE制作：触摸外缘（AI演绎）\nAE制作：躺卧情境（AI演绎）\nAE制作：选购提醒\n\n先保存后期设置和精确素材，再准备导演包；接受后的粗剪修改会成为新执行。成片与工程回传后仍需明确审阅。\n\n应用后期设置到草稿准备剪辑任务 / 交给Codex\n导演包与外部执行\n打开导演包与外部执行\n\n从已保存的视频主稿准备导演包，无需先绑定最终 MP4。外部成果经人工接受并引用到本项目后，刷新项目素材，再明确绑定并保存主稿；冻结 Candidate 仍需通过现有成片检查。\n\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n配音、音乐与封面\n\n这里只引用已进入项目的精确素材；选择 TTS 模式不代表系统已连接或执行语音生成。\n\n配音来源类型\n录音素材\n已导入 TTS 音频\n精确配音素材\n无\n整片音乐\n无\n封面图片\n无\n懒人沙发｜用户原图｜仅本地测试 #43\nASR 转录与字幕建议\n\n仅从已保存 Master 的精确音频/视频版本转录；最多 10 分钟、30 MiB。本机识别不上传云端，最多等待 2 分钟；失败不自动切换云端。接受只替换本地字幕，显式保存才写不可变修订。\n\n请选择识别引擎\n本机 MLX Whisper · 离线 · 请求时核验\nMiniMax 云端转录 · 云端 · 请求时核验\n选择已保存的音频/视频版本\n明确请求 ASR 建议\n字幕\n\n时间码使用毫秒；重叠、越界和非连续排序会被拒绝。字幕只是内容声明，不是 ASR 已执行证明。\n\n字幕文本\n开始 ms\n结束 ms\n添加字幕\n导入 SRT 字幕\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往成片与反馈\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?workstep=review",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n\n工作区\n\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n本机工作台 · 项目与素材持久保存\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 6 步 / 6\n\n成片与反馈\n\n核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n成片反馈位置\n反馈范围（保存不自动采用到其他作品）\n本作品\n此SKU\n品类\n风格\n通用方法候选\n具体反馈\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n保留作品与可复用设置\n上一步\n前往下一步\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/8/units/14/production?stage=script",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "际尺寸。\n段落 6 · 选好颜色，再看这款的具体规格。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜S05用户已选v1｜仅本地图生视频 · image #63\n懒人沙发｜S04用户已选v1｜仅本地图生视频 · image #62\n懒人沙发｜S03用户已选v1｜仅本地图生视频 · image #61\n懒人沙发｜S02用户已选v1｜仅本地图生视频 · image #60\n懒人沙发｜S01用户已选v2｜仅本地图生视频 · image #59\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 5 · E01\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 公园逛累了，想找个地方躺一会儿？\n段落 2 · 这一款懒人沙发，先带你看清楚。\n段落 3 · 先看看它的外观细节。\n段落 4 · 在树荫下，给自己留一点休息的时间。\n段落 5 · 下单前，先核对实际尺寸。\n段落 6 · 选好颜色，再看这款的具体规格。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜S05用户已选v1｜仅本地图生视频 · image #63\n懒人沙发｜S04用户已选v1｜仅本地图生视频 · image #62\n懒人沙发｜S03用户已选v1｜仅本地图生视频 · image #61\n懒人沙发｜S02用户已选v1｜仅本地图生视频 · image #60\n懒人沙发｜S01用户已选v2｜仅本地图生视频 · image #59\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 6 · S05\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 公园逛累了，想找个地方躺一会儿？\n段落 2 · 这一款懒人沙发，先带你看清楚。\n段落 3 · 先看看它的外观细节。\n段落 4 · 在树荫下，给自己留一点休息的时间。\n段落 5 · 下单前，先核对实际尺寸。\n段落 6 · 选好颜色，再看这款的具体规格。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜S05用户已选v1｜仅本地图生视频 · image #63\n懒人沙发｜S04用户已选v1｜仅本地图生视频 · image #62\n懒人沙发｜S03用户已选v1｜仅本地图生视频 · image #61\n懒人沙发｜S02用户已选v1｜仅本地图生视频 · image #60\n懒人沙发｜S01用户已选v2｜仅本地图生视频 · image #59\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n\n时间线 30000 ms · 0 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（2）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · channel_form_missing\n上一步\n前往视觉与声音定样\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [
+        "2 · AI镜头计划已过期已接受",
+        "3 · AI导演稿确认已过期已接受",
+        "4 · Tool专业执行准备已过期"
+      ],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜16秒商品流程样片 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 21",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "4. 逐镜素材待人工回传 5 镜",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/8/units/14/production?workstep=review&master=41",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n\n工作区\n\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n本机工作台 · 项目与素材持久保存\n← 懒人沙发｜16秒商品流程样片 / 内容矩阵\n\n视频生产\n\n给周末一点颜色｜懒人沙发16秒样片\n\n当前名称：无品牌 → 日常生活方式博主 → 无账号 → 无栏目 · 未选渠道\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #3 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #18身份：快照 #14 · 99fdc16b9405 · 固定工作流 #20\n\n项目共享素材 · 21\n本内容使用的身份快照（只读）\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n已保存采用 3/3 镜\n5. 剪辑包装\n最近后期 #2 · 已接受，需核对版本\n6. 成片与反馈\n已引用成片 · 待核对\n\n商品视频 · 第 6 步 / 6\n\n成片与反馈\n\n核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v0\n\n旧作品待关联SKU；保留现有商品资料，不根据名称自动匹配。\n\n成片反馈位置\n反馈范围（保存不自动采用到其他作品）\n本作品\n此SKU\n品类\n风格\n通用方法候选\n具体反馈\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n\n历史 Master 只读；选择当前版本后再创建新修订。\n\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 16000 ms · 3 条轨道 · 5 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n明确接纳最新项目上下文，保存为新修订（历史不改写）\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · channel_form_missing\n保留作品与可复用设置\n上一步\n前往下一步\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜16秒商品流程样片 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 21",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "4. 逐镜素材已保存采用 3/3 镜",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?workstep=review&master=999999",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n\n工作区\n\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n本机工作台 · 项目与素材持久保存\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待分镜与资料\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 6 步 / 6\n\n成片与反馈\n\n核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n成片反馈位置\n反馈范围（保存不自动采用到其他作品）\n本作品\n此SKU\n品类\n风格\n通用方法候选\n具体反馈\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n参考作品指定的主稿版本无效、不属于本作品或当前不可见。没有自动切换到最新版；请在版本历史中明确选择可见版本。\n主稿版本与历史（历史版本只读）\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 0 ms · 0 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\n保留作品与可复用设置\n上一步\n前往下一步\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "url": "/projects/9/units/15/production?panel=execution",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 1440,
+      "text": "确素材；选择 TTS 模式不代表系统已连接或执行语音生成。\n\n配音来源类型\n录音素材\n已导入 TTS 音频\n精确配音素材\n无\n整片音乐\n无\n封面图片\n无\n懒人沙发｜用户原图｜仅本地测试 #43\nASR 转录与字幕建议\n\n仅从已保存 Master 的精确音频/视频版本转录；最多 10 分钟、30 MiB。本机识别不上传云端，最多等待 2 分钟；失败不自动切换云端。接受只替换本地字幕，显式保存才写不可变修订。\n\n请选择识别引擎\n本机 MLX Whisper · 离线 · 请求时核验\nMiniMax 云端转录 · 云端 · 请求时核验\n选择已保存的音频/视频版本\n明确请求 ASR 建议\n字幕\n\n时间码使用毫秒；重叠、越界和非连续排序会被拒绝。字幕只是内容声明，不是 ASR 已执行证明。\n\n字幕文本\n开始 ms\n结束 ms\n添加字幕\n导入 SRT 字幕\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往成片与反馈\n渠道、执行、方法与高级工作流\n渠道适配\n\n基于已保存的 Content Master 创建渠道专属变体；不修改 Master 或 Workflow 草稿。\n\n打开渠道变体\n创意执行与成果\n\n从已保存的内容生成执行包，交给外部 Agent 或工具；成果经人工接受后进入素材库。\n\n收起创意执行\n外部创作与成果审阅\n\n冻结已保存的创作来源，明确准备后由执行者领取；每份成果由你决定是否收入素材库。\n\n重新读取状态\n从当前内容创建冻结包\n已保存的来源\n选择来源\nMaster #46 · v1 · video.master.v2\n包类型\n通用创作包\n视频导演包（Video Master v2）\n\n来源：evidence_missing · 读取最近 100 条变体；只使用明确选择的已保存版本。\n\n来源没有记录创作意图。\n\n阶段方法：继承与本次覆盖\n这次执行要完成什么\n额外约束（每行一条）\n人工验收标准（每行一条）\n输出合同\n角色 1 标识\n类型\nimage\nvideo\naudio\nother\n允许的 MIME（逗号分隔）\n必需输出\n最少数量\n最多数量\n每文件最多 bytes\n移除此角色\n增加输出角色\n预览待冻结要求\n明确创建不可变包\n冻结包历史\n\n此页暂无冻结包。\n\n准备包 #未选择：仅建立持久执行记录，随后由外部执行者明确领取并开始。\n\n执行者类型\n执行者标识\n执行者版本\n明确填写此版本执行者的能力声明（可保留未声明）\n明确准备执行（不发送）\n执行历史与待审阅成果\n\n尚无执行记录。\n\n适用方法与创作偏好\n\n按项目与内容单元查看所有适用方法；明确选择版本、填写参数后查看渲染结果，可不采用或写下本任务覆盖说明。\n\n查看适用方法\n高级自动化\n\n保留工作流设计器与真实运行调试；不作为日常内容创作的默认入口。\n\n打开高级自动化",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/production?workspace=product",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n工作台\n商品视频工作台\n\n先选择这次要制作的商品；同一 SKU 可以制作和保留多条作品。\n\n已有作品\n选择商品\n本条讲述角色与交付渠道：AI科技研发技术博主 / 小红书图文\n搜索 SKU、商品名称或商家编码\n品类\n新建 SKU\n\n户外休闲／懒人沙发\n\n懒人沙发 · 待确认规格（流程测试）\n\nSKU-000001\n\n图片所示多种颜色，具体SKU未知\n\n资料与已有作品\n参考图片 · 非单款主图\n选择商品，制作视频\n\n显示前40条匹配商品，更多商品请用编码或名称查找。",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "已有作品",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "选择商品",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本条讲述角色与交付渠道：AI科技研发技术博主 / 小红书图文",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "输入编码或名称",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "全部品类",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "新建 SKU",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/production?workspace=persona",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n\nCreation & Execution\n\n角色内容工作台\n\n从内容单元进入创作；生成任务读取既有记录。查看队列不会生成、重发或接受结果。\n\n查找项目或内容\n内容形态\n全部\n文字\n图文\n视频\n 包含归档历史\n刷新\n从想法创建项目\n内容创作\n\n科技首版风格｜关掉写作Skill，为什么角色风格还应该保留？ · 项目 #7\n\n47秒科技首版样片｜原生工程与完整来源\n\n视频 · 渠道未选 · 内容单元 #13\n\n草稿\n继续创作\n共 1 条 · 每页 20 条\n上一页\n下一页\n任务与执行记录",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SELECT",
+          "label": "全部文字图文视频",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "INPUT",
+          "label": "",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "刷新",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "从想法创建项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "继续创作",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "任务与执行记录",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?workstep=goal",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 1 步 / 6\n\n商品与本条目标\n\n复用商品事实，填写这一条作品要表达的购买理由。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n目标与受众\n任务书 v2\n\n保存在项目任务书；同项目作品共享这些资料。单作品的表现方式与声音另存制作设置。\n\n本条创作目标\n面向谁\n核心购买理由 / 表达\n使用情境\n主要顾虑\n行动引导\n保存目标与受众\n重新载入\n切换步骤保留草稿；AI建议须逐项采用并保存。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n详细商品资料\n来源与事实边界\n角色身份与声音配置\n查看共享资料\n本作品制作设置\n已保存 v4\n作品类型\n待选择\n商品展示\n品牌 / 使用场景\n人物 UGC\n创作方式\n待选择\n原创\n参考二创\n目标时长（秒，未知可留空）\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\n上一步\n前往导演方案\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?workstep=plan",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": " 4 · script-4\n镜头\n添加镜头\n\n镜头 ID 保持稳定；调整顺序只改变镜头排列，时间线片段另行编辑。\n\n镜头 1 · shot-1\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 2 · shot-2\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 3 · shot-3\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 4 · shot-4\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 周末在公园草地上休息，走累时会想找个能躺靠的位置。\n段落 2 · 从外观上看，整体是长条躺靠造型，画面里能看到多种明亮颜色。\n段落 3 · 草地躺歇可以这样想象，支撑与舒适表现还需实际体验确认。\n段落 4 · 选购前建议先核对商品的实际尺寸，确认是否适合自己的使用需求。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往视觉与声音定样\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [
+        "1 · AI视频脚本succeeded已接受",
+        "2 · AI镜头计划succeeded已接受",
+        "3 · AI导演稿确认succeeded已接受"
+      ],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?workstep=style",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "\n▥\n效果与学习\n⚙\n设置\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 3 步 / 6\n\n视觉与声音定样\n\n先确定共同视觉参考、讲话方式与配乐方向，再制作镜头。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n讲话方式\n待选择\n旁白\n人物对白 / 口型同步\n无讲话\n混合声音\n共同视觉定样：商品、人物、场景、光线\n跨镜头参考与动作衔接\n本条台词 / 口语稿\n台词语言\n预计旁白时长（秒，可留空）\n\n规划值，非已生成音频时长；实际时长以精确音频素材为准。\n\n环境声与配乐方向（可明确不使用配乐）\n共同视觉参考 · 精确素材版本\n\n从已入项目且允许模型使用的真实图片选取；保存引用不代表已批准，也不代表网站已收到这些输入。\n\n商品参考\n未选择\n懒人沙发｜用户原图｜仅本地测试 · #43\n人物参考\n未选择\n懒人沙发｜用户原图｜仅本地测试 · #43\n场景参考\n未选择\n懒人沙发｜用户原图｜仅本地测试 · #43\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（2）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n配音、音乐与封面\n\n这里只引用已进入项目的精确素材；选择 TTS 模式不代表系统已连接或执行语音生成。\n\n配音来源类型\n录音素材\n已导入 TTS 音频\n精确配音素材\n无\n整片音乐\n无\n封面图片\n无\n懒人沙发｜用户原图｜仅本地测试 #43\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往逐镜素材\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?workstep=materials",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "，本镜头会在这里接收网页原始MP4。\n\n镜头2明确选用素材\n选择本镜头可用素材\n懒人沙发｜用户原图｜仅本地测试 #43\n采用到本镜头草稿\n3. 躺卧情境（AI演绎） · 剪入 8 秒 · 待确认并保存关键帧\n\n侧视全景转中景，展示草坪上人物平躺在沙发上的静态比例，镜头保持平视自左向右微幅横移后定格，画面标注非实测性能说明。\n\n旁白与画面信息\n连续性构图参考（可选）\n镜头3素材来源\n真实资料 / 已有素材\nAPI生成图片\n网页生成视频\nAE动效合成\n镜头3起始图片\n选择已入库且允许模型使用的图片\n懒人沙发｜用户原图｜仅本地测试 #43\n确认这张图用于本镜头\n\n图片入库不等于选定。换图后需重新核对视频提示词。\n\n镜头3生成网站\nGrok网页\nGemini网页\n选择此提示词交给AI助手\n基于已确认图片的视频动作 / 运镜提示词\n\n先确认图片并保存主稿，再写视频提示词。\n\n确认视频提示词\n期望生成时长（秒）\n原片声音\n静音，使用统一旁白\n保留并审阅\n准备本镜网页生成包\n\n完成左侧选图和中间提示词后，本镜头会在这里接收网页原始MP4。\n\n镜头3明确选用素材\n选择本镜头可用素材\n懒人沙发｜用户原图｜仅本地测试 #43\n采用到本镜头草稿\n4. 选购提醒 · 剪入 8 秒 · 待确认并保存关键帧\n\n中景俯拍，多色沙发静置陈列于草坪上，镜头平稳后退抬升，右侧浮现核对尺寸提示卡片，保持客观选购建议。\n\n旁白与画面信息\n连续性构图参考（可选）\n镜头4素材来源\n真实资料 / 已有素材\nAPI生成图片\n网页生成视频\nAE动效合成\n镜头4起始图片\n选择已入库且允许模型使用的图片\n懒人沙发｜用户原图｜仅本地测试 #43\n确认这张图用于本镜头\n\n图片入库不等于选定。换图后需重新核对视频提示词。\n\n镜头4生成网站\nGrok网页\nGemini网页\n选择此提示词交给AI助手\n基于已确认图片的视频动作 / 运镜提示词\n\n先确认图片并保存主稿，再写视频提示词。\n\n确认视频提示词\n期望生成时长（秒）\n原片声音\n静音，使用统一旁白\n保留并审阅\n准备本镜网页生成包\n\n完成左侧选图和中间提示词后，本镜头会在这里接收网页原始MP4。\n\n镜头4明确选用素材\n选择本镜头可用素材\n懒人沙发｜用户原图｜仅本地测试 #43\n采用到本镜头草稿\n\n网页生成由你手工完成；已上传不等于已接受或已采用。准备剪辑前保存已采用的精确素材、旁白与配乐。\n\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往剪辑包装\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?workstep=edit",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 5 步 / 6\n\n剪辑包装\n\n保存已采用素材与声音，交接达芬奇主剪和按需AE包装。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n本作品需要 AE 包装（未勾选则按需跳过）\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n分镜素材制作与剪辑交接\n刷新任务与素材\n达芬奇主剪 / AE按需制作\n制作阶段\n粗剪\n修改 / 精剪\n最终导出\n帧率\n输出宽\n输出高\nAE制作：走近发现\nAE制作：触摸外缘（AI演绎）\nAE制作：躺卧情境（AI演绎）\nAE制作：选购提醒\n\n先保存后期设置和精确素材，再准备导演包；接受后的粗剪修改会成为新执行。成片与工程回传后仍需明确审阅。\n\n应用后期设置到草稿准备剪辑任务 / 交给Codex\n导演包与外部执行\n打开导演包与外部执行\n\n从已保存的视频主稿准备导演包，无需先绑定最终 MP4。外部成果经人工接受并引用到本项目后，刷新项目素材，再明确绑定并保存主稿；冻结 Candidate 仍需通过现有成片检查。\n\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n配音、音乐与封面\n\n这里只引用已进入项目的精确素材；选择 TTS 模式不代表系统已连接或执行语音生成。\n\n配音来源类型\n录音素材\n已导入 TTS 音频\n精确配音素材\n无\n整片音乐\n无\n封面图片\n无\n懒人沙发｜用户原图｜仅本地测试 #43\nASR 转录与字幕建议\n\n仅从已保存 Master 的精确音频/视频版本转录；最多 10 分钟、30 MiB。本机识别不上传云端，最多等待 2 分钟；失败不自动切换云端。接受只替换本地字幕，显式保存才写不可变修订。\n\n请选择识别引擎\n本机 MLX Whisper · 离线 · 请求时核验\nMiniMax 云端转录 · 云端 · 请求时核验\n选择已保存的音频/视频版本\n明确请求 ASR 建议\n字幕\n\n时间码使用毫秒；重叠、越界和非连续排序会被拒绝。字幕只是内容声明，不是 ASR 已执行证明。\n\n字幕文本\n开始 ms\n结束 ms\n添加字幕\n导入 SRT 字幕\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往成片与反馈\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?workstep=review",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待资料 / 准备 4 镜\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 6 步 / 6\n\n成片与反馈\n\n核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n成片反馈位置\n反馈范围（保存不自动采用到其他作品）\n本作品\n此SKU\n品类\n风格\n通用方法候选\n具体反馈\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n保留作品与可复用设置\n上一步\n前往下一步\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/8/units/14/production?stage=script",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "际尺寸。\n段落 6 · 选好颜色，再看这款的具体规格。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜S05用户已选v1｜仅本地图生视频 · image #63\n懒人沙发｜S04用户已选v1｜仅本地图生视频 · image #62\n懒人沙发｜S03用户已选v1｜仅本地图生视频 · image #61\n懒人沙发｜S02用户已选v1｜仅本地图生视频 · image #60\n懒人沙发｜S01用户已选v2｜仅本地图生视频 · image #59\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 5 · E01\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 公园逛累了，想找个地方躺一会儿？\n段落 2 · 这一款懒人沙发，先带你看清楚。\n段落 3 · 先看看它的外观细节。\n段落 4 · 在树荫下，给自己留一点休息的时间。\n段落 5 · 下单前，先核对实际尺寸。\n段落 6 · 选好颜色，再看这款的具体规格。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜S05用户已选v1｜仅本地图生视频 · image #63\n懒人沙发｜S04用户已选v1｜仅本地图生视频 · image #62\n懒人沙发｜S03用户已选v1｜仅本地图生视频 · image #61\n懒人沙发｜S02用户已选v1｜仅本地图生视频 · image #60\n懒人沙发｜S01用户已选v2｜仅本地图生视频 · image #59\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n镜头 6 · S05\n上移\n下移\n删除\n镜头名称\n时长（毫秒）\n关联脚本\n未关联\n段落 1 · 公园逛累了，想找个地方躺一会儿？\n段落 2 · 这一款懒人沙发，先带你看清楚。\n段落 3 · 先看看它的外观细节。\n段落 4 · 在树荫下，给自己留一点休息的时间。\n段落 5 · 下单前，先核对实际尺寸。\n段落 6 · 选好颜色，再看这款的具体规格。\n景别\n未指定\n远景\n中景\n近景\n自定义\n转场\n未指定\n切换\n淡入淡出\n叠化\n镜头素材（精确版本）\n未绑定\n懒人沙发｜S05用户已选v1｜仅本地图生视频 · image #63\n懒人沙发｜S04用户已选v1｜仅本地图生视频 · image #62\n懒人沙发｜S03用户已选v1｜仅本地图生视频 · image #61\n懒人沙发｜S02用户已选v1｜仅本地图生视频 · image #60\n懒人沙发｜S01用户已选v2｜仅本地图生视频 · image #59\n懒人沙发｜用户原图｜仅本地测试 · image #43\n镜头用途\n\n时间线 30000 ms · 0 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（2）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · channel_form_missing\n上一步\n前往视觉与声音定样\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [
+        "2 · AI镜头计划已过期已接受",
+        "3 · AI导演稿确认已过期已接受",
+        "4 · Tool专业执行准备已过期"
+      ],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜16秒商品流程样片 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 21",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "4. 逐镜素材待人工回传 5 镜",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/8/units/14/production?workstep=review&master=41",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n← 懒人沙发｜16秒商品流程样片 / 内容矩阵\n\n视频生产\n\n给周末一点颜色｜懒人沙发16秒样片\n\n当前名称：无品牌 → 日常生活方式博主 → 无账号 → 无栏目 · 未选渠道\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #3 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #18身份：快照 #14 · 99fdc16b9405 · 固定工作流 #20\n\n项目共享素材 · 21\n本内容使用的身份快照（只读）\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n已保存采用 3/3 镜\n5. 剪辑包装\n最近后期 #2 · 已接受，需核对版本\n6. 成片与反馈\n已引用成片 · 待核对\n\n商品视频 · 第 6 步 / 6\n\n成片与反馈\n\n核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v0\n\n旧作品待关联SKU；保留现有商品资料，不根据名称自动匹配。\n\n成片反馈位置\n反馈范围（保存不自动采用到其他作品）\n本作品\n此SKU\n品类\n风格\n通用方法候选\n具体反馈\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n主稿版本与历史（历史版本只读）\n已保存主稿的精确版本与来源\n\n历史 Master 只读；选择当前版本后再创建新修订。\n\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 16000 ms · 3 条轨道 · 5 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n明确接纳最新项目上下文，保存为新修订（历史不改写）\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · channel_form_missing\n保留作品与可复用设置\n上一步\n前往下一步\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜16秒商品流程样片 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 21",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "4. 逐镜素材已保存采用 3/3 镜",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?workstep=review&master=999999",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "AI Content Studio\n项目驱动 · 图文视频协作\n◧\n今日工作台\n✧\n内容机会\n▤\n内容项目\n✍\n角色内容工作台\n▧\n商品视频工作台\n✓\n审阅与发布\n◉\n角色与账号\n▦\n素材与知识\n▥\n效果与学习\n⚙\n设置\n← 懒人沙发｜六步工作台草稿 / 内容矩阵\n\n视频生产\n\n懒人沙发｜六步工作台草稿\n\n当前名称：无品牌 → AI科技研发技术博主 → 无账号 → 无栏目 · xiaohongshu\n\n历史 Run 固定身份 ID：品牌 #无 → 角色 #2 → 账号 #无 → 栏目 #无；上方名称是当前名称，不代表运行时名称。\n\n历史 Run #19身份：快照 #15 · b0b2e3561a24 · 固定工作流 #18\n\n项目共享素材 · 1\n本内容使用的身份快照（只读）\n\n主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。 来源与事实边界\n\n1. 商品与本条目标\n可进入准备\n2. 导演方案\n已有主稿 · 方案接受另行核对\n3. 视觉与声音定样\n可进入准备\n4. 逐镜素材\n待分镜与资料\n5. 剪辑包装\n待后期素材\n6. 成片与反馈\n等成片\n\n商品视频 · 第 6 步 / 6\n\n成片与反馈\n\n核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。\n\n当前没有未保存草稿。浏览步骤不代表完成。\n\n本作品制作设置\n已保存 v4\n成片反馈位置\n反馈范围（保存不自动采用到其他作品）\n本作品\n此SKU\n品类\n风格\n通用方法候选\n具体反馈\n保存制作设置\n重新载入\n主稿与制作设置分别保存。打开步骤不会生成内容。\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（1）\n润色当前项\n作品主稿\n内容已同步 · 与 Workflow 保存独立\n参考作品指定的主稿版本无效、不属于本作品或当前不可见。没有自动切换到最新版；请在版本历史中明确选择可见版本。\n主稿版本与历史（历史版本只读）\n项目共享素材 · 精确版本\n刷新项目素材\n打开原生生图 / TTS\n\n新接受的图片、音频或 MP4 需先引用到本项目，再刷新此列表。刷新只读取素材，保留未保存的主稿和现有绑定；选择素材只改本地草稿。\n\n项目素材已刷新；选择精确版本后，另行保存内容 Master。\n\n查看素材版本、来源与权利\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 0 ms · 0 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\n保留作品与可复用设置\n上一步\n前往下一步\n渠道、执行、方法与高级工作流",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "url": "/projects/9/units/15/production?panel=execution",
+      "title": "AI Content Studio",
+      "overflow": false,
+      "bodyWidth": 390,
+      "text": "确素材；选择 TTS 模式不代表系统已连接或执行语音生成。\n\n配音来源类型\n录音素材\n已导入 TTS 音频\n精确配音素材\n无\n整片音乐\n无\n封面图片\n无\n懒人沙发｜用户原图｜仅本地测试 #43\nASR 转录与字幕建议\n\n仅从已保存 Master 的精确音频/视频版本转录；最多 10 分钟、30 MiB。本机识别不上传云端，最多等待 2 分钟；失败不自动切换云端。接受只替换本地字幕，显式保存才写不可变修订。\n\n请选择识别引擎\n本机 MLX Whisper · 离线 · 请求时核验\nMiniMax 云端转录 · 云端 · 请求时核验\n选择已保存的音频/视频版本\n明确请求 ASR 建议\n字幕\n\n时间码使用毫秒；重叠、越界和非连续排序会被拒绝。字幕只是内容声明，不是 ASR 已执行证明。\n\n字幕文本\n开始 ms\n结束 ms\n添加字幕\n导入 SRT 字幕\n高级与兼容工具 · 时间线、叠字、最终成片\n\n时间线 30000 ms · 1 条轨道 · 0 条字幕。未绑定最终成片时不能冻结 Candidate。\n\nAI创作助手\n展开\n\n当前字段：尚未选择\n\n补齐未填项（13）\n润色当前项\n版本详情与高级检查\n保存当前主稿\n运行 Master 检查\n冻结 Master Candidate v4\n确认真实 MP4 与当前输入一致并保存新修订\nMaster 当前检查与渲染 · 不可冻结 · unsupported_channel_modality\n上一步\n前往成片与反馈\n渠道、执行、方法与高级工作流\n渠道适配\n\n基于已保存的 Content Master 创建渠道专属变体；不修改 Master 或 Workflow 草稿。\n\n打开渠道变体\n创意执行与成果\n\n从已保存的内容生成执行包，交给外部 Agent 或工具；成果经人工接受后进入素材库。\n\n收起创意执行\n外部创作与成果审阅\n\n冻结已保存的创作来源，明确准备后由执行者领取；每份成果由你决定是否收入素材库。\n\n重新读取状态\n从当前内容创建冻结包\n已保存的来源\n选择来源\nMaster #46 · v1 · video.master.v2\n包类型\n通用创作包\n视频导演包（Video Master v2）\n\n来源：evidence_missing · 读取最近 100 条变体；只使用明确选择的已保存版本。\n\n来源没有记录创作意图。\n\n阶段方法：继承与本次覆盖\n这次执行要完成什么\n额外约束（每行一条）\n人工验收标准（每行一条）\n输出合同\n角色 1 标识\n类型\nimage\nvideo\naudio\nother\n允许的 MIME（逗号分隔）\n必需输出\n最少数量\n最多数量\n每文件最多 bytes\n移除此角色\n增加输出角色\n预览待冻结要求\n明确创建不可变包\n冻结包历史\n\n此页暂无冻结包。\n\n准备包 #未选择：仅建立持久执行记录，随后由外部执行者明确领取并开始。\n\n执行者类型\n执行者标识\n执行者版本\n明确填写此版本执行者的能力声明（可保留未声明）\n明确准备执行（不发送）\n执行历史与待审阅成果\n\n尚无执行记录。\n\n适用方法与创作偏好\n\n按项目与内容单元查看所有适用方法；明确选择版本、填写参数后查看渲染结果，可不采用或写下本任务覆盖说明。\n\n查看适用方法\n高级自动化\n\n保留工作流设计器与真实运行调试；不作为日常内容创作的默认入口。\n\n打开高级自动化",
+      "hiddenFocus": [],
+      "focuses": [
+        {
+          "tag": "A",
+          "label": "AI Content Studio",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◧今日工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✧内容机会",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▤内容项目",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✍角色内容工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▧商品视频工作台",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "✓审阅与发布",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "◉角色与账号",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▦素材与知识",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "▥效果与学习",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "⚙设置",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "← 懒人沙发｜六步工作台草稿 / 内容矩阵",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "项目共享素材 · 1",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "SUMMARY",
+          "label": "本内容使用的身份快照（只读）",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "A",
+          "label": "来源与事实边界",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "1px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "1. 商品与本条目标可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "2. 导演方案已有主稿 · 方案接受另行核对",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        },
+        {
+          "tag": "BUTTON",
+          "label": "3. 视觉与声音定样可进入准备",
+          "visible": true,
+          "focusVisible": true,
+          "outline": "2px",
+          "shadow": "none"
+        }
+      ]
+    }
+  ],
+  "writes": [],
+  "errors": []
+}

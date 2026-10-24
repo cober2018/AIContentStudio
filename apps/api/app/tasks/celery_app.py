@@ -26,6 +26,7 @@ celery_app.conf.update(
     # beat 周期触发扫描任务；任务内部按每个 endpoint 的 interval_minutes 决定是否拉取。
     # 300s：端点最短周期是分钟级，5 分钟扫描粒度足够，空闲时少 4/5 的空转唤醒
     beat_schedule={
+        "scan-persona-discovery": {"task": "app.tasks.worker_tasks.scan_persona_discovery", "schedule": 60.0},
         "scan-connector-schedules": {
             "task": "app.tasks.worker_tasks.scan_connector_schedules",
             "schedule": 300.0,

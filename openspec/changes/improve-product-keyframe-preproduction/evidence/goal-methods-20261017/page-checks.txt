@@ -1,0 +1,7 @@
+[desktop-1440] product goal page: overflow=False goal_section=True
+[desktop-1440] method area rendered=True: 商品方法（2/2 启用）
+[narrow-390] product goal page: overflow=False goal_section=True
+[narrow-390] method area rendered=True: 商品方法（2/2 启用）
+console errors: []
+write requests: []
+product-methods calls: ["[desktop-1440] 200 /v1/form-assistance/product-methods?project_id=11&unit_id=17", "[desktop-1440] 200 /v1/form-assistance/product-methods?project_id=11&unit_id=17", "[narrow-390] 200 /v1/form-assistance/product-methods?project_id=11&unit_id=17", "[narrow-390] 200 /v1/form-assistance/product-methods?project_id=11&unit_id=17"]

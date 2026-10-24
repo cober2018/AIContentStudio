@@ -1,0 +1,529 @@
+{
+  "project_id": 36,
+  "unit_id": 42,
+  "source_id": 123,
+  "fact_pack_id": 5,
+  "fact_item_id": 5,
+  "run": {
+    "id": 19,
+    "workflow_id": 19,
+    "workflow_name": "日常生活方式博主 × text",
+    "workflow_key": "persona.3.text",
+    "workflow_version": 3,
+    "definition_checksum": "3c59e3443b2070277d8b17138ea6842e12bbf6d5d3a8451e885a14fb2c86095b",
+    "identity_snapshot_id": 18,
+    "identity_state": "frozen",
+    "topic_id": null,
+    "channel": null,
+    "content_form": null,
+    "status": "running",
+    "error": null,
+    "params": {},
+    "context": {},
+    "started_at": "2026-10-19T05:20:00.101525+00:00",
+    "finished_at": null,
+    "definition": {
+      "nodes": [
+        {
+          "id": "evidence",
+          "kind": "AI",
+          "plugin": "stage.creative.method",
+          "plugin_version": "1",
+          "stage_schema": "stage.creative.method.v1",
+          "label": "证据简报",
+          "config": {
+            "output_schema": "research.brief.v1",
+            "instruction": "整理可核验来源、事实、时间边界和未知项。",
+            "method": {
+              "source_kind": "studio_builtin",
+              "skill_ref": "studio.research.evidence-brief@1"
+            },
+            "fact_mode": "current"
+          },
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "angles",
+          "kind": "AI",
+          "plugin": "stage.creative.method",
+          "plugin_version": "1",
+          "stage_schema": "stage.creative.method.v1",
+          "label": "角度实验",
+          "config": {
+            "output_schema": "creative.angles.v1",
+            "instruction": "提出可解释、可比较的内容角度。",
+            "method": {
+              "source_kind": "studio_builtin",
+              "skill_ref": "studio.research.angle-lab@1"
+            },
+            "fact_mode": "current"
+          },
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "outline",
+          "kind": "AI",
+          "plugin": "stage.creative.method",
+          "plugin_version": "1",
+          "stage_schema": "stage.creative.method.v1",
+          "label": "内容大纲",
+          "config": {
+            "output_schema": "content.outline.v1",
+            "instruction": "把已接受的角度组织成结构化大纲。",
+            "method": {
+              "source_kind": "studio_builtin",
+              "skill_ref": "studio.text.outline@1"
+            },
+            "fact_mode": "current"
+          },
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "draft",
+          "kind": "AI",
+          "plugin": "stage.master.propose",
+          "plugin_version": "1",
+          "stage_schema": "stage.master.propose.v1",
+          "label": "初稿候选",
+          "config": {
+            "purpose": "生成第一版 Master 候选",
+            "instruction": "基于已接受的证据、角度和大纲生成一篇完整候选。只返回标题和 Markdown 正文，不要编造数字、版本或来源。",
+            "candidate_count": 1,
+            "length": "long",
+            "method": {
+              "source_kind": "studio_builtin",
+              "skill_ref": "studio.text.longform@1"
+            },
+            "fact_mode": "current"
+          },
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "quality",
+          "kind": "Rule",
+          "plugin": "stage.checks",
+          "plugin_version": "1",
+          "stage_schema": "stage.checks.v1",
+          "label": "质量检查",
+          "config": {},
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "refine",
+          "kind": "AI",
+          "plugin": "stage.master.propose",
+          "plugin_version": "1",
+          "stage_schema": "stage.master.propose.v1",
+          "label": "精修候选",
+          "config": {
+            "purpose": "精修 Master 候选",
+            "instruction": "保留已验证事实，改善结构、具体性和角色表达。只返回标题和完整 Markdown 正文。",
+            "candidate_count": 1,
+            "length": "long",
+            "method": {
+              "source_kind": "studio_builtin",
+              "skill_ref": "studio.text.humanize@1"
+            },
+            "fact_mode": "current"
+          },
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "title",
+          "kind": "AI",
+          "plugin": "stage.creative.method",
+          "plugin_version": "1",
+          "stage_schema": "stage.creative.method.v1",
+          "label": "标题与开头",
+          "config": {
+            "output_schema": "creative.title-hook.v1",
+            "instruction": "生成与正文一致、不过度夸张的标题和开头方向。",
+            "method": {
+              "source_kind": "studio_builtin",
+              "skill_ref": "studio.text.title-hook@1"
+            },
+            "fact_mode": "current"
+          },
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "final",
+          "kind": "AI",
+          "plugin": "stage.master.propose",
+          "plugin_version": "1",
+          "stage_schema": "stage.master.propose.v1",
+          "label": "最终稿确认",
+          "config": {
+            "purpose": "整合最终 Master",
+            "instruction": "采用已接受的精修正文和标题/开头候选，保留全部精确引用与事实边界；不要增加新的事实。生成完整最终稿等待人工接受。",
+            "candidate_count": 1,
+            "length": "long",
+            "method": {
+              "source_kind": "studio_builtin",
+              "skill_ref": "studio.text.longform@1"
+            },
+            "fact_mode": "current"
+          },
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "id": "final_quality",
+          "kind": "Rule",
+          "plugin": "stage.checks",
+          "plugin_version": "1",
+          "stage_schema": "stage.checks.v1",
+          "label": "最终稿质量检查",
+          "config": {},
+          "input_mapping": {},
+          "output_mapping": {},
+          "failure_policy": "stop",
+          "enabled": true,
+          "layout": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "evidence",
+          "to": "angles"
+        },
+        {
+          "from": "angles",
+          "to": "outline"
+        },
+        {
+          "from": "outline",
+          "to": "draft"
+        },
+        {
+          "from": "draft",
+          "to": "quality"
+        },
+        {
+          "from": "quality",
+          "to": "refine"
+        },
+        {
+          "from": "refine",
+          "to": "title"
+        },
+        {
+          "from": "refine",
+          "to": "final"
+        },
+        {
+          "from": "title",
+          "to": "final"
+        },
+        {
+          "from": "final",
+          "to": "final_quality"
+        }
+      ],
+      "visual_order": [
+        "evidence",
+        "angles",
+        "outline",
+        "draft",
+        "quality",
+        "refine",
+        "title",
+        "final",
+        "final_quality"
+      ]
+    },
+    "steps": [
+      {
+        "id": 91,
+        "node_id": "evidence",
+        "node_type": "AI",
+        "label": "证据简报",
+        "params": {
+          "output_schema": "research.brief.v1",
+          "instruction": "整理可核验来源、事实、时间边界和未知项。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.research.evidence-brief@1"
+          },
+          "fact_mode": "current"
+        },
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 92,
+        "node_id": "angles",
+        "node_type": "AI",
+        "label": "角度实验",
+        "params": {
+          "output_schema": "creative.angles.v1",
+          "instruction": "提出可解释、可比较的内容角度。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.research.angle-lab@1"
+          },
+          "fact_mode": "current"
+        },
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 93,
+        "node_id": "outline",
+        "node_type": "AI",
+        "label": "内容大纲",
+        "params": {
+          "output_schema": "content.outline.v1",
+          "instruction": "把已接受的角度组织成结构化大纲。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.outline@1"
+          },
+          "fact_mode": "current"
+        },
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 94,
+        "node_id": "draft",
+        "node_type": "AI",
+        "label": "初稿候选",
+        "params": {
+          "purpose": "生成第一版 Master 候选",
+          "instruction": "基于已接受的证据、角度和大纲生成一篇完整候选。只返回标题和 Markdown 正文，不要编造数字、版本或来源。",
+          "candidate_count": 1,
+          "length": "long",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.longform@1"
+          },
+          "fact_mode": "current"
+        },
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.master.propose",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 95,
+        "node_id": "quality",
+        "node_type": "Rule",
+        "label": "质量检查",
+        "params": {},
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.checks",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 96,
+        "node_id": "refine",
+        "node_type": "AI",
+        "label": "精修候选",
+        "params": {
+          "purpose": "精修 Master 候选",
+          "instruction": "保留已验证事实，改善结构、具体性和角色表达。只返回标题和完整 Markdown 正文。",
+          "candidate_count": 1,
+          "length": "long",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.humanize@1"
+          },
+          "fact_mode": "current"
+        },
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.master.propose",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 97,
+        "node_id": "title",
+        "node_type": "AI",
+        "label": "标题与开头",
+        "params": {
+          "output_schema": "creative.title-hook.v1",
+          "instruction": "生成与正文一致、不过度夸张的标题和开头方向。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.title-hook@1"
+          },
+          "fact_mode": "current"
+        },
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 98,
+        "node_id": "final",
+        "node_type": "AI",
+        "label": "最终稿确认",
+        "params": {
+          "purpose": "整合最终 Master",
+          "instruction": "采用已接受的精修正文和标题/开头候选，保留全部精确引用与事实边界；不要增加新的事实。生成完整最终稿等待人工接受。",
+          "candidate_count": 1,
+          "length": "long",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.longform@1"
+          },
+          "fact_mode": "current"
+        },
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.master.propose",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      },
+      {
+        "id": 99,
+        "node_id": "final_quality",
+        "node_type": "Rule",
+        "label": "最终稿质量检查",
+        "params": {},
+        "status": "pending",
+        "output": {},
+        "error": null,
+        "layout": {
+          "x": 0,
+          "y": 0
+        },
+        "channel": null,
+        "plugin_key": "stage.checks",
+        "plugin_version": "1",
+        "attempt_no": 0,
+        "stale_reason": null
+      }
+    ]
+  }
+}

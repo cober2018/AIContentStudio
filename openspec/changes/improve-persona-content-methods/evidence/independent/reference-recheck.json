@@ -1,0 +1,65 @@
+{
+  "scope": "SQLite memory only, no real media playback or model calls",
+  "checks": [
+    {
+      "name": "A2 31 revisions pagination",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "exact revision query",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "A2 Obsidian pre-limit filtering",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "A3 screenshot selectable as image",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "A3 screenshot exact ref validates",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "A5 polarity dict",
+      "passed": true,
+      "detail": "{'code': 'reference_style_polarity_invalid'}"
+    },
+    {
+      "name": "A5 polarity list",
+      "passed": true,
+      "detail": "{'code': 'reference_style_polarity_invalid'}"
+    },
+    {
+      "name": "A5 inspection dict",
+      "passed": true,
+      "detail": "{'code': 'reference_style_inspection_invalid'}"
+    },
+    {
+      "name": "A5 inspection list",
+      "passed": true,
+      "detail": "{'code': 'reference_style_inspection_invalid'}"
+    },
+    {
+      "name": "A4 external video projects existing preview session",
+      "passed": true,
+      "detail": "Projection only; real stream/UI playback not checked here"
+    },
+    {
+      "name": "revoked reference removed from selector",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "revoked exact ref refused",
+      "passed": true,
+      "detail": null
+    }
+  ]
+}

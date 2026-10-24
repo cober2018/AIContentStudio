@@ -88,7 +88,7 @@ export function MaterialUploadModal({ onClose }: { onClose: () => void }) {
   });
   const set = (k: string, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
   return (
-    <Modal title="上传素材" onClose={onClose}>
+    <Modal title="上传素材" onClose={onClose} closeOnBackdrop={false}>
       <div className="space-y-3">
         <Field label="文件 *（PNG/JPEG/GIF/WebP/PDF/MP4/MP3/WAV，≤30MB）">
           <input ref={fileRef} type="file" className={inputClass} onChange={(event) => setHasFile(!!event.target.files?.length)} />

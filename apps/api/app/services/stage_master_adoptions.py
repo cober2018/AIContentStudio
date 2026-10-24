@@ -19,7 +19,7 @@ from . import content_masters, creation_recipes
 from .generation.providers import input_hash
 from .materials import read_bytes_checked
 from .project_events import record_project_event
-from .stage_contracts import IDENTIFIER, canonical, digest
+from .stage_contracts import IDENTIFIER, RESOLVED_STAGE_MAX_BYTES, canonical, digest
 from .stage_invocations import StageInvocationError, _assert_access, require_receipt_schema
 from .stage_master_proposals import (
     MASTER_SCHEMAS,
@@ -34,13 +34,20 @@ def _conflict(code="stage_adoption_integrity"):
     raise StageInvocationError(code, status_code=409)
 
 
+def _context_changed(frozen, current):
+    from .creation_recipes import changed_inputs
+
+    raise StageInvocationError("stage_adoption_context_changed", status_code=409,
+                               detail={"changed": changed_inputs({"context": frozen}, {"context": current})})
+
+
 def _sealed_candidate(db, run, step, attempt, request):
     if (attempt is None or attempt.run_id != run.id or attempt.step_id != step.id
             or attempt.node_id != step.node_id or attempt.plugin_key not in {"stage.master.propose", "stage.graphic.compose"}
             or attempt.plugin_version != "1" or attempt.status != "succeeded"):
         _conflict()
     receipt = canonical(attempt.execution_receipt_json or {}, max_bytes=128 * 1024)
-    resolved = canonical((attempt.input_snapshot_json or {}).get("resolved_stage") or {})
+    resolved = canonical((attempt.input_snapshot_json or {}).get("resolved_stage") or {}, max_bytes=RESOLVED_STAGE_MAX_BYTES)
     output = canonical(attempt.output_json, max_bytes=128 * 1024)
     resolution_hash = digest({key: value for key, value in resolved.items() if key != "resolution_hash"})
     model = resolved.get("model") or {}
@@ -284,7 +291,7 @@ def accept_master(db, project_id, unit_id, node_id, user, request):
             )
             return result
         _assert_access(db, run, user)
-        if unit.modality != modality or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != unit.identity_snapshot_id:
+        if unit.modality != modality or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id):
             _conflict("stage_adoption_context_changed")
         if (step.attempt_no != attempt.attempt_no or step.status != "waiting_input"
                 or step.output_hash != attempt.output_hash or step.output_json != attempt.output_json):
@@ -292,9 +299,11 @@ def accept_master(db, project_id, unit_id, node_id, user, request):
         if db.scalar(select(ProjectWorkflowOutput.id).where(ProjectWorkflowOutput.attempt_id == attempt.id,
                                                            ProjectWorkflowOutput.output_kind == "content_master_revision")):
             _conflict("stage_already_accepted")
-        current, blockers = creation_recipes._context(db, project, unit, run)
-        if blockers or current != resolved["context"] or digest(current) != request["expected_context_hash"]:
+        current, blockers = creation_recipes._context(db, project, unit, run, node=resolved["node"], config=resolved["effective_config"])
+        if blockers or digest(resolved["context"]) != request["expected_context_hash"]:
             _conflict("stage_adoption_context_changed")
+        if creation_recipes.context_basis(current) != creation_recipes.context_basis(resolved["context"]):
+            _context_changed(resolved["context"], current)
         expected_revision = (current.get("master") or {}).get("revision_no", 0)
         if request["expected_revision"] != expected_revision:
             _conflict("stage_master_revision_conflict")
@@ -329,20 +338,22 @@ def accept_master(db, project_id, unit_id, node_id, user, request):
             db.refresh(run)
             _assert_access(db, run, user)
             if (unit.modality != modality or run.workflow_id != unit.pinned_workflow_id
-                    or run.identity_snapshot_id != unit.identity_snapshot_id):
+                    or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)):
                 _conflict("stage_adoption_context_changed")
             if (step.attempt_no != attempt.attempt_no or step.status != "waiting_input"
                     or step.output_hash != attempt.output_hash or step.output_json != attempt.output_json):
                 _conflict("stage_attempt_not_current")
             _sealed_candidate(db, run, step, attempt, request)
-            context, live_blockers = creation_recipes._context(db, project, unit, run)
+            context, live_blockers = creation_recipes._context(db, project, unit, run, node=resolved["node"], config=resolved["effective_config"], rework_current=False)
             # The save replaces the Master and its derived ref projections;
             # compare the frozen source while validating actual live refs below.
             context["master"] = resolved["context"].get("master")
             context["asset_refs"] = resolved["context"].get("asset_refs", [])
             context["evidence_refs"] = resolved["context"].get("evidence_refs", [])
-            if live_blockers or context != resolved["context"]:
+            if live_blockers:
                 _conflict("stage_adoption_context_changed")
+            if creation_recipes.context_basis(context) != creation_recipes.context_basis(resolved["context"]):
+                _context_changed(resolved["context"], context)
             _live_refs(db, master)
             output = _associate_adoption(db, run, step, attempt, master, provenance)
             feedback = _record_feedback(db, master, output, provenance, user)

@@ -79,7 +79,7 @@ def variant_capabilities(db: Session, project_id: int, unit_id: int, user: User)
                       "payload_schema": contract.payload_schema, "capability": state,
                       "form_descriptor": form_descriptor_for(contract.payload_schema, channel, form)})
     return {"source_master_revision_id": master.id if master else None,
-            "archived": project.status == "archived" or unit.status == "archived", "items": items}
+            "archived": project.status == "archived" or unit.lifecycle_readonly, "items": items}
 
 
 def _serialize(db: Session, row: ChannelVariantRevision) -> dict:
@@ -247,7 +247,16 @@ def resolve_target_account(db: Session, unit: ContentUnit, account_id: int | Non
     if account_id is None:
         return None
     account = db.get(ContentAccount, account_id)
-    if account is None or account.status != "active" or account.persona_id != unit.persona_id:
+    from ..models import ContentProject, User
+    from .content_identity import owned_entity, owned_product_account
+    project = db.get(ContentProject, unit.project_id)
+    if project is None:
+        raise HTTPException(404, {"code": "variant_target_account_unavailable"})
+    if unit.production_domain == "product":
+        owned_product_account(db, db.get(User, project.owner_user_id), account_id, mutable=True)
+    else:
+        owned_entity(db, db.get(User, project.owner_user_id), "account", account_id, mutable=True)
+    if account is None or account.status != "active" or (unit.production_domain != "product" and account.persona_id != unit.persona_id):
         raise HTTPException(404, {"code": "variant_target_account_unavailable"})
     if account.platform_channel != channel:
         raise HTTPException(422, {"code": "variant_target_platform_mismatch"})
@@ -519,8 +528,10 @@ def _text_source_cover_refs(db: Session, master: ContentMasterRevision) -> list[
 
 
 def _text_target_refs(db: Session, master: ContentMasterRevision, schema: str) -> list[dict]:
+    from .content_harness.channel_methods import allows_text_cover
+
     if schema not in MODERN_ARTICLE_SCHEMAS | {"weibo.single.v1"}:
-        return _text_source_cover_refs(db, master) if schema == "wechat.article.v1" else []
+        return _text_source_cover_refs(db, master) if allows_text_cover("wechat", "article") and schema == "wechat.article.v1" else []
     refs = _text_source_cover_refs(db, master)
     if schema == "weibo.single.v1":
         return [{**ref, "role": "post_image", "sort_order": index,
@@ -897,7 +908,7 @@ def run_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: i
 
 def adapt_preview(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user)
-    if project.status == "archived" or unit.status == "archived":
+    if project.status == "archived" or unit.lifecycle_readonly:
         raise HTTPException(409, {"code": "variant_source_archived"})
     target_account = resolve_target_account(db, unit, payload.get("target_account_id"), payload["channel_id"], payload["content_form"])
     master = db.get(ContentMasterRevision, payload["source_master_revision_id"])
@@ -1279,7 +1290,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         except HTTPException:
             db.rollback()
             raise HTTPException(409, {"code": "variant_refs_changed"}) from None
-        if project.status == "archived" or unit.status == "archived" or unit.identity_snapshot_id != master.identity_snapshot_id or current_master["readiness"]["state"] == "stale" or _current_source_id(db, unit_id) != master.id or master.payload_hash != _hash(master.payload_json) or _hash(latest_context) != row.context_hash:
+        if project.status == "archived" or unit.lifecycle_readonly or unit.identity_snapshot_id != master.identity_snapshot_id or current_master["readiness"]["state"] == "stale" or _current_source_id(db, unit_id) != master.id or master.payload_hash != _hash(master.payload_json) or _hash(latest_context) != row.context_hash:
             db.rollback()
             raise HTTPException(409, {"code": "variant_context_conflict"})
         if stage_adoption is not None:

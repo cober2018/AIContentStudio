@@ -1,0 +1,290 @@
+{
+  "master": 74,
+  "candidate": 7,
+  "target": 7,
+  "checks": [
+    {
+      "id": 292,
+      "check_kind": "master_schema",
+      "input_hash": "4ce6bc1dc680a48be91b5168729b4c28e107cede4259f6d35eb34b1b7128eb2e",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "master_schema",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 293,
+      "check_kind": "evidence",
+      "input_hash": "1a91d1fa28a2e63826f47c6c6a6a1038a9565e439f4384ffc15075242d52d3f9",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "evidence",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 294,
+      "check_kind": "rights",
+      "input_hash": "bd5af1032e813f46a9085d69726925080446f5e1de3f471c080324acbae63fac",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "requirement": {
+          "kind": "rights",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 295,
+      "check_kind": "render",
+      "input_hash": "05de59c527399a99565f57b0f57af0095df05b090a8697afbfd6ca5993545877",
+      "status": "pass",
+      "report": {
+        "status": "ready",
+        "origin": "manual",
+        "attested_by": "admin@studio.local",
+        "render_input_hash": "349a3478a8a7c41ecc99e9ef7cf046ec133f4ee893e8d56062247b1f7a7554ca",
+        "outputs": [
+          {
+            "material_revision_id": 76,
+            "content_hash": "05762679a67ee58964257ecc9fbed211687edd55e37fa36dec7d815f568205c0",
+            "mime_type": "image/png",
+            "canvas_id": "card-0",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": true,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 77,
+            "content_hash": "c71494e8a640d80ef2f7cd9c2e9468fd0574ca4ada692ef03f4a4196fba37ef0",
+            "mime_type": "image/png",
+            "canvas_id": "card-1",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": true,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 78,
+            "content_hash": "e3eb94bd0df29ac838b663cb7d26fec043b7776856a9616b22a56bb19854a125",
+            "mime_type": "image/png",
+            "canvas_id": "card-2",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": true,
+              "commercial_use_allowed": false
+            }
+          },
+          {
+            "material_revision_id": 79,
+            "content_hash": "8540fa0fba7df5c00ad297b5acce3c9b3d05cf6e47b18767e0cc94c435def864",
+            "mime_type": "image/png",
+            "canvas_id": "card-3",
+            "rights_snapshot": {
+              "rights_status": "cleared",
+              "public_use_allowed": true,
+              "model_use_allowed": true,
+              "commercial_use_allowed": false
+            }
+          }
+        ],
+        "reasons": [],
+        "canvas_dimensions_verified": true,
+        "requirement": {
+          "kind": "render",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1"
+        }
+      }
+    },
+    {
+      "id": 296,
+      "check_kind": "graphic_structure",
+      "input_hash": "6a967b95d1c23a0e053a04cfa9ce5dada7dff5b9432bb710fe77120c0424009f",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "persona_quality": {
+          "ref": "studio.quality.graphic.lifestyle@1",
+          "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+          "style_preset_ref": "studio.graphic.warm-magazine@1",
+          "style_preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+          "photo_requirement": "cover",
+          "implementation": "graphic.geometry.v1",
+          "report": {
+            "schema": "studio.graphic.geometry-qc.v1",
+            "payload_hash": "84d65ca7eddd405947d873c1e923eef2c951ccec70f55cf246c1a54c9f7f72a0",
+            "status": "pass",
+            "issues": [],
+            "coverage": {
+              "geometry": "axis_aligned",
+              "text_fit": "estimated",
+              "bytes": "not_rendered",
+              "contrast": "text_vs_solid_canvas_only",
+              "aesthetic_quality": "human_review_required"
+            },
+            "human_review_required": true
+          }
+        },
+        "coverage": {
+          "geometry": "axis_aligned",
+          "text_fit": "estimated",
+          "bytes": "not_rendered",
+          "contrast": "text_vs_solid_canvas_only",
+          "aesthetic_quality": "human_review_required",
+          "live_bytes_rights": "separate_required_render_rights_checks"
+        },
+        "canvas_count": 4,
+        "visible_layer_count": 21,
+        "requirement": {
+          "kind": "graphic_structure",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "persona_quality": {
+            "ref": "studio.quality.graphic.lifestyle@1",
+            "hash": "eea9e427a57594c532f7ad6ca813fcbba50993ce438b3f556a96212d85193483",
+            "style_preset_ref": "studio.graphic.warm-magazine@1",
+            "style_preset_hash": "e33e29a8fd2df7d03fdde72f2268df187415d31a6069eb552c4bb9ceb1a54208",
+            "photo_requirement": "cover",
+            "implementation": "graphic.geometry.v1"
+          }
+        }
+      }
+    },
+    {
+      "id": 297,
+      "check_kind": "graphic_fact",
+      "input_hash": "04a4ed98a606936c294a64d5425657378a3fd1fb988b1b90ece57b724e6d47bc",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "exact_claim_refs_only",
+          "model_use_excluded_item_ids": [],
+          "invalid_snapshot_item_ids": [],
+          "fact_count": 1,
+          "text_layer_count": 16
+        },
+        "requirement": {
+          "kind": "graphic_fact",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          },
+          "model_use": [
+            {
+              "id": 6,
+              "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+              "allowed": true,
+              "revoked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 298,
+      "check_kind": "graphic_identity",
+      "input_hash": "9f26c85ba1ac8d59dea367e0a8c054359c8c297998784ca68a075444c3aacc20",
+      "status": "warning",
+      "report": {
+        "reasons": [],
+        "identity_snapshot_id": 21,
+        "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+        "issues": [],
+        "coverage": {
+          "semantic": "verified",
+          "reason": null,
+          "deterministic": "explicit_phrases_only",
+          "text_layer_count": 16,
+          "visual_semantics": "unavailable"
+        },
+        "requirement": {
+          "kind": "graphic_identity",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "semantic": {
+            "profile": "registered.ddd9b006056eae2bfb76b2ee",
+            "provider": "openai_compatible",
+            "model": "gemini-3.8-flash-high",
+            "configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": 299,
+      "check_kind": "graphic_platform",
+      "input_hash": "01082374a4fff5a3300408023b3e98686eacf4cb80ad635cd77ac5a5e5336e81",
+      "status": "pass",
+      "report": {
+        "reasons": [],
+        "channel": "xiaohongshu",
+        "content_form": "image_note",
+        "profile_version_id": 29,
+        "coverage": {
+          "deterministic": "complete"
+        },
+        "requirement": {
+          "kind": "graphic_platform",
+          "schema": "graphic.master.v2",
+          "adapter_version": "2",
+          "implementation": "1",
+          "profile": {
+            "id": 29,
+            "version": 3,
+            "checksum": "84e52acea2c83bc796bf83513274c4baaaa053da835fb9bbeedb78ab632a7d70",
+            "form_hash": "d3bb5a5645a940636ad170dea9754a381f481d55f2e511920eddfdf202470cb6",
+            "source": "profile",
+            "artifact_kind": "image"
+          }
+        }
+      }
+    }
+  ],
+  "path": "/Users/mshengran/Project/AIContentStudio/output/persona-36-graphic.zip",
+  "entries": [
+    "manifest.json",
+    "media/00-71.jpg",
+    "media/01-76.png",
+    "media/02-77.png",
+    "media/03-78.png",
+    "media/04-79.png",
+    "render-1.png",
+    "render-2.png",
+    "render-3.png",
+    "render-4.png",
+    "publish-guide.md"
+  ]
+}

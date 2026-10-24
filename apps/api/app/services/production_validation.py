@@ -67,7 +67,7 @@ def validate_live_v4_master(db: Session, master: ContentMasterRevision, *, requi
     unit = db.get(ContentUnit, master.content_unit_id)
     if unit is None or unit.project_id != master.project_id:
         raise _blocked("master_mismatch", "Master所属内容单元不一致")
-    projection = _serialize(db, master)
+    projection = _serialize(db, master, require_current=require_current)
     if require_current:
         latest = db.scalar(select(ContentMasterRevision.id).where(ContentMasterRevision.content_unit_id == unit.id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
         if latest != master.id or unit.modality != master.modality or projection["readiness"]["state"] != "current":
@@ -230,11 +230,19 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
     form_profile = (profile.profile_json or {}).get("content_forms", {}).get(variant.content_form) if profile else None
     if profile is None or not isinstance(form_profile, dict) or _hash(form_profile) != variant.profile_hash:
         raise _blocked("candidate_provenance", "冻结Profile版本或配置已损坏")
-    identity = db.get(IdentitySnapshot, master.identity_snapshot_id)
+    from .candidates_v4 import frozen_product_identity
+
+    unit = db.get(ContentUnit, master.content_unit_id)
+    try:
+        product_identity = frozen_product_identity(db, master, unit, require_current=False) if unit else None
+    except ValueError as exc:
+        raise _blocked("candidate_provenance", "历史商品配置血缘不一致") from exc
+    identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
+    identity_valid = product_identity == manifest["identity"] if product_identity else identity is not None and identity.checksum == manifest["identity"]["checksum"]
     brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id)
     boundary = db.get(ProjectFactBoundaryRevision, master.fact_boundary_revision_id)
     pack = db.get(FactPack, boundary.fact_pack_id) if boundary else None
-    if (identity is None or identity.checksum != manifest["identity"]["checksum"] or brief is None
+    if (not identity_valid or brief is None
             or (brief.id, brief.revision_no, brief.checksum) != (manifest["brief"]["id"], manifest["brief"]["revision_no"], manifest["brief"]["checksum"])
             or boundary is None or (boundary.id, boundary.revision_no) != (manifest["evidence"]["boundary_id"], manifest["evidence"]["revision_no"])
             or pack is None or pack.status != "frozen" or (pack.id, pack.version, pack.checksum) != (

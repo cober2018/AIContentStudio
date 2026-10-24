@@ -1,0 +1,119 @@
+{
+  "schema": "persona-refine-preview-bounds-review.v1",
+  "script_path": "/private/tmp/persona-refine-preview-bounds-review.py",
+  "source_sha256": "95fedbf59696398a27c6b4f8f38f19b8747b5a3f93817a5e4062d362fe8f5691",
+  "baseline": {
+    "kind": "pre_compaction_tail_reconstructed",
+    "ast_edits": {
+      "dict_assignment": 1,
+      "envelope_try": 1,
+      "result_canonical": 1
+    }
+  },
+  "database_mode": "read_only",
+  "formal_writes": 0,
+  "model_calls": 0,
+  "passed": 20,
+  "total": 20,
+  "checks": [
+    {
+      "name": "real_inherited_preview_ready",
+      "passed": true,
+      "blockers": []
+    },
+    {
+      "name": "real_explicit_preview_ready",
+      "passed": true,
+      "blockers": []
+    },
+    {
+      "name": "real_claim_envelope_fits",
+      "passed": true,
+      "resolved_bytes": 127296,
+      "envelope_bytes": 127315,
+      "limit": 131072
+    },
+    {
+      "name": "original_inherited_preview_reproduces_failure",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "original_size_matches_trace",
+      "passed": true,
+      "raw_bytes": 135463
+    },
+    {
+      "name": "complete_generate_request_equal",
+      "passed": true,
+      "input_hash_before": "4966f2059a03b6fbcbd526338d9c2f53cbf00e5ad198e7df10445ab10578ae9e",
+      "input_hash_after": "4966f2059a03b6fbcbd526338d9c2f53cbf00e5ad198e7df10445ab10578ae9e"
+    },
+    {
+      "name": "complete_creative_stack_unchanged",
+      "passed": true
+    },
+    {
+      "name": "complete_manifest_unchanged",
+      "passed": true
+    },
+    {
+      "name": "manifest_hash_valid",
+      "passed": true
+    },
+    {
+      "name": "all_parameters_unchanged",
+      "passed": true
+    },
+    {
+      "name": "each_method_body_once",
+      "passed": true
+    },
+    {
+      "name": "normal_result_and_hash_unchanged",
+      "passed": true,
+      "resolution_hash_before": "f23a18f81876537adb428a70a0d76a3d59644de07eda5ee368ceda5450080f1d",
+      "resolution_hash_after": "f23a18f81876537adb428a70a0d76a3d59644de07eda5ee368ceda5450080f1d"
+    },
+    {
+      "name": "reject_product",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_at1",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_non_builtin",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_non_master_plugin",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_different_stack",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_different_aggregate",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_still_oversized",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_post_compaction_claim_overflow",
+      "passed": true,
+      "error": "stage_value_too_large"
+    }
+  ]
+}

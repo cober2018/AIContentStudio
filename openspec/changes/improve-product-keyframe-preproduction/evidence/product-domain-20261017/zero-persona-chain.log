@@ -1,0 +1,50 @@
+preview keys ['base_config', 'base_config_hash', 'blockers', 'config_hash', 'context', 'context_hash', 'effective_config', 'effective_prompt', 'method', 'model', 'node', 'output_contract', 'override', 'prompt_hash', 'prompt_sections', 'ready', 'schema', 'stage_contract_hash', 'system_prompt', 'upstream', 'workflow', 'creative_configuration', 'resolution_hash']
+{
+  "status": "passed",
+  "checks": [
+    "zero_persona_product_created",
+    "no_hidden_persona_or_identity",
+    "product_default_recipe",
+    "product_prompt_no_role_context",
+    "run_freezes_product_without_identity",
+    "changed_product_profile_marks_run_stale",
+    "defaults_copied_to_new_work_only",
+    "independent_account_created",
+    "cross_owner_null_persona_denied",
+    "owner_account_list_isolated",
+    "role_unit_still_requires_identity",
+    "sku_plan_uses_product_voice"
+  ],
+  "count": 12,
+  "persona_count": 0,
+  "real_model_calls": 0,
+  "real_database_writes": 0
+}
+master candidate keys dict_keys(['candidate_count', 'candidates', 'input_hash', 'llm_run_id', 'model', 'prompt_hash', 'proposal_hash', 'schema'])
+master response keys dict_keys(['schema', 'master', 'project_output_id', 'feedback_event_id', 'decision', 'continuation'])
+package keys ['id', 'project_id', 'content_unit_id', 'package_schema', 'package_hash', 'package', 'is_current', 'reasons', 'created_at']
+{
+  "status": "passed",
+  "checks": [
+    "zero_persona_product_created",
+    "no_hidden_persona_or_identity",
+    "product_default_recipe",
+    "product_prompt_no_role_context",
+    "run_freezes_product_without_identity",
+    "changed_product_profile_marks_run_stale",
+    "defaults_copied_to_new_work_only",
+    "independent_account_created",
+    "cross_owner_null_persona_denied",
+    "owner_account_list_isolated",
+    "role_unit_still_requires_identity",
+    "sku_plan_uses_product_voice",
+    "script_ready_zero_persona",
+    "script_accepted_zero_persona",
+    "shots_ready_zero_persona",
+    "shots_accepted_zero_persona",
+    "product_master_no_identity_block"
+  ],
+  "count": 17,
+  "providers": "mock_only",
+  "real_database_writes": 0
+}

@@ -167,6 +167,51 @@ def test_proposal_receipt_matches_actual_request_and_three_distinct_outputs(clie
     assert db_session.get(LLMRun, body["output"]["llm_run_id"]).input_hash == input_hash(captured[0])
 
 
+def test_text_proposal_contract_asks_for_markdown_not_server_hashes(client):
+    headers, _, _, base, resolved, _ = _running_stage(client)
+    system = resolved["system_prompt"]
+    assert "body is Markdown" in system
+    assert "selected_text_hash" not in system
+    assert resolved["output_contract"]["response_schema"]["properties"]["candidates"]["minItems"] == 2
+
+
+def test_fitting_payload_is_kept_and_a_too_deep_payload_falls_back_to_body():
+    from app.services.stage_master_proposals import project_proposal_input
+    from app.services.text_documents import convert_legacy_text
+
+    payload = convert_legacy_text({"title": "载荷", "markdown": "# 载荷\n\n正文"})["payload"]
+    kept = project_proposal_input({"candidates": [{
+        "title": "忽略", "body": "这不该被采用。", "payload": payload,
+    }]}, "text")["candidates"][0]
+    assert "body" not in kept
+    assert kept["payload"]["title"] == "载荷"
+    dropped = project_proposal_input({"candidates": [{
+        "title": "小步", "body": "先看差异。", "payload": _nested_past_depth_limit(),
+    }]}, "text")["candidates"][0]
+    assert "payload" not in dropped
+    assert dropped["body"] == "先看差异。"
+
+
+def test_director_beats_become_a_video_plan_without_invented_assets():
+    from app.services.creative_artifacts import validate_artifact
+    from app.services.stage_master_proposals import _candidate
+
+    candidate = _candidate({"title": "小步", "beats": [
+        {"narration": "先看差异。", "visual": "代码 diff"},
+        {"narration": "再确认范围。", "visual": "被标出的函数", "duration_ms": 2000},
+    ]}, 1, "video", {})
+    assert candidate["payload"]["voice"] == {"mode": "none"}
+    assert candidate["asset_refs"] == []
+    assert "render_asset_ref" not in candidate["payload"]
+    assert [shot["duration_ms"] for shot in candidate["payload"]["shots"]] == [1500, 2000]
+    script = validate_artifact("video.script.v1", {"title": "小步", "beats": [
+        {"id": "开场", "order": 1, "narration": "先看差异。", "visual": "代码 diff"},
+    ]})
+    assert script["beats"][0]["id"] == "beat-0"
+    assert script["beats"][0]["order"] == 0
+    assert script["beats"][0]["unknowns"] == []
+
+
 @pytest.mark.parametrize("data", [{"candidates": []}, {"candidates": [{}]},
                                   {"candidates": [{"title": "Only title"}]},
                                   {"candidates": [{"body": "a"}] * 6},
@@ -185,6 +230,155 @@ def test_invalid_or_invented_proposal_never_becomes_success(client, db_session, 
     assert db_session.query(ContentMasterRevision).count() == 0
     assert db_session.query(LLMRun).count() == 1
     assert db_session.query(WorkflowStep).filter_by(run_id=request["run_id"]).one().status == "failed"
+
+
+def _nested_past_depth_limit():
+    value = "leaf"
+    for _ in range(16):
+        value = {"nested": value}
+    return value
+
+
+def test_listed_article_with_marks_fits_the_proposal_and_the_invocation_snapshot():
+    from app.services.stage_contracts import MAX_DEPTH, StageContractError, canonical
+    from app.services.stage_master_proposals import _candidate
+
+    body = "# 标题\n\n- 先看**差异**，再看 [依据](https://example.com/a)。\n"
+    candidate = _candidate({"title": "小步修改", "body": body}, 1, "text")
+    output = {"schema": "stage.master.proposal.v1", "candidates": [candidate], "candidate_count": 1,
+              "input_hash": "a" * 64, "prompt_hash": "b" * 64, "model": {"provider": "mock", "model": "m"}}
+    canonical(output)
+    payload = candidate["payload"]
+    heading = next(block for block in payload["document"]["blocks"] if block["type"] == "heading")
+    assert heading["level"] == 2
+    snapshot = {"resolved_stage": {"schema": "resolved.stage.execution.v1",
+                "context": {"master": {"payload": payload}}, "upstream": {"draft": {"payload": payload}}}}
+    canonical(snapshot)
+    wrapped = payload
+    for _ in range(2):
+        wrapped = {"wrap": wrapped}
+    canonical({"resolved_stage": {"context": {"master": {"payload": wrapped}}}})
+    wrapped = {"wrap": wrapped}
+    with pytest.raises(StageContractError, match="stage_value_too_deep"):
+        canonical({"resolved_stage": {"context": {"master": {"payload": wrapped}}}})
+    assert MAX_DEPTH == 16
+
+
+def test_bold_list_article_becomes_a_text_master(client, db_session, monkeypatch):
+    from app.models import ContentMasterRevision
+    from app.services import stage_master_proposals
+    from app.services.generation.providers import GenerateResult
+
+    headers, _, _, base, _, request = _running_stage(client)
+    request["stage_override"] = {"candidate_count": 1}
+    preview = client.post(f"{base}/creation-recipe/stages/draft/preview", headers=headers,
+                          json={"run_id": request["run_id"], "stage_override": request["stage_override"]}).json()
+    request["expected_resolution_hash"] = preview["resolution_hash"]
+    data = {"schema": "stage.master.proposal.v1", "candidates": [
+        {"title": "小步修改", "body": "# 标题\n\n- 先看**差异**，再看 [依据](https://example.com/a)。\n"}]}
+    monkeypatch.setattr(stage_master_proposals, "_run",
+                        lambda *_: GenerateResult(data=data, raw_output="{}", usage={}))
+    response = client.post(f"{base}/creation-recipe/stages/draft/run", headers=headers, json=request)
+    assert response.status_code == 200, response.text
+    candidate = response.json()["output"]["candidates"][0]
+    assert "差异" in json.dumps(candidate["payload"], ensure_ascii=False)
+    assert db_session.query(ContentMasterRevision).count() == 0
+
+
+def test_deep_sibling_beside_title_and_body_still_becomes_a_text_master(client, db_session, monkeypatch):
+    from app.models import ContentMasterRevision
+    from app.services import stage_master_proposals
+    from app.services.generation.providers import GenerateResult
+    from app.services.stage_contracts import digest
+
+    headers, _, _, base, _, request = _running_stage(client)
+    request["stage_override"] = {"candidate_count": 1}
+    preview = client.post(f"{base}/creation-recipe/stages/draft/preview", headers=headers,
+                          json={"run_id": request["run_id"], "stage_override": request["stage_override"]}).json()
+    request["expected_resolution_hash"] = preview["resolution_hash"]
+    data = {"candidates": [{"title": "小步修改", "body": "先看人确认过的差异。",
+                            "payload": _nested_past_depth_limit(), "payload_schema": "text.master.v2",
+                            "echo": _nested_past_depth_limit()}]}
+    monkeypatch.setattr(stage_master_proposals, "_run",
+                        lambda *_: GenerateResult(data=data, raw_output=json.dumps({"candidates": [{"title": "小步修改"}]}), usage={}))
+    response = client.post(f"{base}/creation-recipe/stages/draft/run", headers=headers, json=request)
+    assert response.status_code == 200, response.text
+    body = response.json()
+    candidate = body["output"]["candidates"][0]
+    assert candidate["payload_schema"] == "text.master.v2"
+    assert candidate["asset_refs"] == []
+    rendered = json.dumps(candidate["payload"], ensure_ascii=False)
+    assert "先看人确认过的差异。" in rendered
+    assert "nested" not in rendered
+    accepted = client.post(f"{base}/creation-recipe/stages/draft/accept-master", headers=headers, json={
+        "run_id": request["run_id"], "attempt_id": body["attempt_id"],
+        "expected_output_hash": body["receipt"]["output_hash"],
+        "expected_resolution_hash": preview["resolution_hash"],
+        "expected_context_hash": preview["context_hash"],
+        "candidate_id": candidate["candidate_id"], "candidate_hash": candidate["candidate_hash"],
+        "expected_revision": 0, "adoption_key": "deep-sibling",
+        "payload": candidate["payload"], "asset_refs": [], "evidence_refs": [], "decision": "accepted",
+    })
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["master"]["payload"]["title"] == "小步修改"
+    assert db_session.query(ContentMasterRevision).count() == 1
+    assert digest(candidate["payload"]) == candidate["payload_hash"]
+
+
+def test_deep_sibling_does_not_drop_an_invented_reference(client, db_session, monkeypatch):
+    from app.models import ContentMasterRevision
+    from app.services import stage_master_proposals
+    from app.services.generation.providers import GenerateResult
+
+    headers, _, _, base, _, request = _running_stage(client)
+    request["stage_override"] = {"candidate_count": 1}
+    preview = client.post(f"{base}/creation-recipe/stages/draft/preview", headers=headers,
+                          json={"run_id": request["run_id"], "stage_override": request["stage_override"]}).json()
+    request["expected_resolution_hash"] = preview["resolution_hash"]
+    data = {"candidates": [{"body": "a", "payload": _nested_past_depth_limit(),
+                            "asset_refs": [{"material_revision_id": 999, "blob": _nested_past_depth_limit()}]}]}
+    monkeypatch.setattr(stage_master_proposals, "_run",
+                        lambda *_: GenerateResult(data=data, raw_output="{}", usage={}))
+    response = client.post(f"{base}/creation-recipe/stages/draft/run", headers=headers, json=request)
+    assert response.status_code == 422, response.text
+    assert response.json()["detail"]["code"] == "stage_proposal_output_invalid"
+    assert db_session.query(ContentMasterRevision).count() == 0
+
+
+def test_video_script_with_a_deep_sibling_still_validates(client, monkeypatch):
+    from app.services import creative_method_stage
+    from app.services.generation.providers import GenerateResult
+
+    headers, _, _, base = _setup(client)
+    definition = {"nodes": [{"id": "script", "kind": "AI", "plugin": "stage.creative.method", "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1", "config": {"output_schema": "video.script.v1",
+            "instruction": "生成一条视频脚本", "candidate_count": 1,
+            "method": {"source_kind": "studio_builtin", "skill_ref": "studio.video.script@1"}}}],
+        "edges": [], "visual_order": ["script"]}
+    assert client.post(f"{base}/workflow-override", headers=headers,
+                       json={"expected_revision": 0, "definition": definition}).status_code == 201
+    run_id = client.post(f"{base}/runs", headers=headers, json={"params": {}}).json()["id"]
+    preview = client.post(f"{base}/creation-recipe/stages/script/preview", headers=headers, json={"run_id": run_id})
+    assert preview.status_code == 200, preview.text
+    echo = _nested_past_depth_limit()
+    data = {"schema": "video.script.v1", "echo": echo, "candidates": [{
+        "id": "script-1", "summary": "小步", "echo": echo, "references": [], "warnings": [],
+        "content": {"title": "小步", "echo": echo, "beats": [{
+            "id": "beat-0", "order": 0, "narration": "先看差异。", "visual": "代码 diff",
+            "asset_requirements": [], "unknowns": [], "echo": echo,
+        }]},
+    }]}
+    monkeypatch.setattr(creative_method_stage, "_run",
+                        lambda *_: GenerateResult(data=data, raw_output="{}", usage={}))
+    response = client.post(f"{base}/creation-recipe/stages/script/run", headers=headers, json={
+        "run_id": run_id, "expected_resolution_hash": preview.json()["resolution_hash"], "invocation_key": "script-deep",
+    })
+    assert response.status_code == 200, response.text
+    content = response.json()["output"]["candidates"][0]["content"]
+    assert content["title"] == "小步"
+    assert content["beats"][0]["narration"] == "先看差异。"
+    assert content["beats"][0]["unknowns"] == []
+    assert "echo" not in json.dumps(content, ensure_ascii=False)
 
 
 def test_changed_model_after_durable_claim_is_a_confirmed_zero_dispatch_failure(client, db_session, monkeypatch):

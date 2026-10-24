@@ -14,7 +14,7 @@
     "stage.master.propose.v1"
   ],
   "output_schemas": [
-    "content.outline.v1",
+    "video.script.v1",
     "video.master.v2"
   ],
   "required_context": [

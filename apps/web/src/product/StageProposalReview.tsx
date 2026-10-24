@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { api, ApiError } from "../api";
+import { stageErrorText } from "./stageErrors";
+import { handoffSummary, prepareEdit } from "./editHandoff";
 import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
 import { ModalityWorkspace } from "./ModalityWorkspace";
 import { proposalDraft, proposalEdited, stageAdoption, type StageAdoption, type StageDraft, type StageMaster, type StageResult } from "./stageProposalState";
 
+const StageCandidateCards = lazy(() => import("./StageCandidateCards"));
+const StoryboardTable = lazy(() => import("./StoryboardTable"));
+
 export type StageAcceptance = { master: StageMaster; decision: string; feedback_event_id?: number; continuation?: { status: string; node_id?: string; code?: string } };
 
-export default function StageProposalReview({ projectId, unitId, result, readOnly, onBusy, onAccepted }: {
+export default function StageProposalReview({ projectId, unitId, result, readOnly, onBusy, onAccepted, onHandoff }: {
   projectId: number; unitId: number; result: StageResult; readOnly: boolean;
-  onBusy: (busy: boolean) => void; onAccepted: (value: StageAcceptance) => Promise<void>;
+  onBusy: (busy: boolean) => void; onAccepted: (value: StageAcceptance) => Promise<void>; onHandoff?: (state: { busy: boolean; text: string; issue: string }) => void;
 }) {
   const candidates = result.output.candidates || [];
   const [selectedId, setSelectedId] = useState(candidates[0]?.candidate_id || "");
@@ -19,6 +24,19 @@ export default function StageProposalReview({ projectId, unitId, result, readOnl
   const [busy, setBusy] = useState(false);
   const [issue, setIssue] = useState("");
   const [error, setError] = useState("");
+  const [handoffText, setHandoffText] = useState("");
+  const [handoffIssue, setHandoffIssue] = useState("");
+  async function handoff() {
+    setHandoffIssue("");
+    onHandoff?.({ busy: true, text: "", issue: "" });
+    try {
+      const text = handoffSummary(await prepareEdit(projectId, unitId, value => { setHandoffText(value); onHandoff?.({ busy: true, text: value, issue: "" }); }));
+      setHandoffText(text); onHandoff?.({ busy: false, text, issue: "" });
+    } catch (cause) {
+      const issue = cause instanceof Error ? cause.message : "准备剪辑没完成";
+      setHandoffText(""); setHandoffIssue(issue); onHandoff?.({ busy: false, text: "", issue });
+    }
+  }
   const selected = candidates.find(item => item.candidate_id === selectedId);
   let draft: StageDraft | null = null;
   let formatIssue = "";
@@ -27,6 +45,7 @@ export default function StageProposalReview({ projectId, unitId, result, readOnl
   const adopted = Boolean(saved || result.accepted_target);
   const acceptedMaster = saved?.master || result.accepted_master;
   const locked = readOnly || !result.is_current || adopted || busy || Boolean(pending);
+  const video = draft?.payloadSchema === "video.master.v2";
 
   async function accept() {
     if (!selected || !draft || readOnly || busy || adopted || issue || !pending && !result.is_current) return;
@@ -39,24 +58,34 @@ export default function StageProposalReview({ projectId, unitId, result, readOnl
       setPending(request);
       const value = await api.post<StageAcceptance>(`/content-projects/${projectId}/units/${unitId}/creation-recipe/stages/${encodeURIComponent(result.node_id)}/accept-master`, request);
       setSaved(value); setPending(null);
+      // Video adoption goes straight on to an edit-ready master; the user reviews the cut, not each step.
+      if (video) void handoff();
       try { await onAccepted(value); }
       catch { setError("采用已提交，阶段回读暂时失败。请刷新阶段状态；本地编辑仍保留。"); }
     } catch (cause) {
       if (cause instanceof ApiError && cause.status < 500) setPending(null);
       else uncertain = true;
-      setError(cause instanceof ApiError ? `${cause.status} · ${cause.message}。本地编辑保留，请重新查看上下文或生成新候选。` : "接受结果尚未确认。保留原请求与本地编辑；重试只回放这次精确采用，不改投其他候选。");
+      setError(cause instanceof ApiError ? `${stageErrorText(cause)}本地编辑保留。` : "接受结果尚未确认。保留原请求与本地编辑；重试只回放这次精确采用，不改投其他候选。");
     } finally { setBusy(false); onBusy(uncertain); }
   }
 
   if (formatIssue) return <div className="mt-4"><ErrorBanner message={formatIssue} /></div>;
   if (!selected || !draft) return null;
+  if (draft.payloadSchema === "video.master.v2") return <div className="mt-4 space-y-3" aria-label="导演稿审阅">
+    {candidates.length > 1 && <div className="flex flex-wrap gap-2" role="group" aria-label="选择候选">{candidates.map((candidate, index) => <Button key={candidate.candidate_id} size="sm" variant={selectedId === candidate.candidate_id ? "primary" : "secondary"} disabled={busy || Boolean(pending)} onClick={() => { setSelectedId(candidate.candidate_id); setIssue(""); setError(""); }}>方案 {index + 1}</Button>)}</div>}
+    <Suspense fallback={null}><StoryboardTable projectId={projectId} unitId={unitId} draft={draft} readOnly={locked} onChange={value => setDrafts(current => ({ ...current, [selectedId]: value }))} /></Suspense>
+    {adopted ? <div role="status" className="space-y-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800"><p>已采用这版。{handoffText || (handoffIssue ? "" : "平台会自动补齐素材并准备剪辑。")}</p>{handoffIssue && <div className="flex flex-wrap items-center gap-2 text-rose-700"><span>{handoffIssue}</span><Button size="sm" variant="secondary" onClick={() => void handoff()}>继续准备剪辑</Button></div>}</div>
+      : <div className="flex flex-wrap items-center gap-3"><Button disabled={readOnly || !pending && !result.is_current || busy || Boolean(issue)} onClick={accept}>{pending ? "重试采用" : busy ? "采用中…" : "采用这版"}</Button><span className="text-xs text-slate-500">表格可以直接改，采用后自动保存并开始补齐素材。</span></div>}
+    {issue && <ErrorBanner message={issue} />}{error && <ErrorBanner message={error} />}
+  </div>;
   return <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4" aria-label="阶段候选审阅">
     <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-semibold">查看候选，决定是否采用</h3><p className="mt-1 text-xs text-slate-500">Attempt #{result.attempt_id} · {result.receipt.request_mode === "automatic" ? "接受后自动执行" : "手动执行"}。修改只在本地；明确接受才创建 Master。</p></div><span className="text-xs text-slate-500">{candidates.length} 个候选</span></div>
     <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="选择候选">{candidates.map((candidate, index) => <Button key={candidate.candidate_id} size="sm" variant={selectedId === candidate.candidate_id ? "primary" : "secondary"} disabled={busy || Boolean(pending)} onClick={() => { setSelectedId(candidate.candidate_id); setIssue(""); setError(""); }}>候选 {index + 1} · {candidate.payload.title}</Button>)}</div>
     {adopted && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">已接受为 Master #{saved?.master.id || result.accepted_target?.entity_id}。下方内容母版有独立编辑状态；请用“重新加载 Master”查看新版本，未保存编辑不会被覆盖。</p>}
     {acceptedMaster && <details className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm"><summary>已提交 Master v{acceptedMaster.revision_no} · {acceptedMaster.payload.title}</summary><p className="mt-2 break-all text-xs">精确 hash：{acceptedMaster.payload_hash}</p>{"document" in acceptedMaster.payload ? acceptedMaster.payload.document.blocks.map(block => <p key={block.id} className="mt-2 whitespace-pre-wrap">{"content" in block ? block.content.map(run => run.text).join("") : "items" in block ? block.items.map(item => item.content.map(run => run.text).join("")).join("\n") : block.type === "code" ? block.code : block.type === "image" || block.type === "chart" ? `${block.type} · 精确素材 #${block.material_revision_id}` : "—"}</p>) : "canvases" in acceptedMaster.payload ? acceptedMaster.payload.canvases.map(canvas => <p key={canvas.id} className="mt-2">画布 {canvas.order + 1} · {canvas.width} × {canvas.height} · {canvas.layers.length} 个图层</p>) : acceptedMaster.payload.script.blocks.map(block => <p key={block.id} className="mt-2 whitespace-pre-wrap">{block.text}</p>)}</details>}
     {saved?.continuation && <p className="mt-2 text-xs text-slate-600">接续阶段：{saved.continuation.node_id || "无"} · {saved.continuation.status}{saved.continuation.code ? ` · ${saved.continuation.code}` : ""}。新结果仍需人工接受。</p>}
-    <div className="mt-4">{draft.payloadSchema === "text.master.v2" ? <ModalityWorkspace modality="text" projectId={projectId} unitId={unitId} masterId={null} masterHash={null} savedAssetIds={[]} savedCitationIds={[]} identitySnapshotId={result.resolved_stage?.context?.identity?.id || null} boundaryRevisionId={result.resolved_stage?.context?.boundary?.id || null} draft={draft} readOnly={locked} epoch={candidates.findIndex(item => item.candidate_id === selectedId)} onIssue={setIssue} onChange={value => setDrafts(current => ({ ...current, [selectedId]: value }))} /> : draft.payloadSchema === "graphic.master.v2" ? <ModalityWorkspace key={selectedId} modality="graphic" projectId={projectId} unitId={unitId} renderSource={null} renderUnavailable boundaryRevisionId={result.resolved_stage?.context?.boundary?.id || null} draft={draft} readOnly={locked} onChange={value => setDrafts(current => ({ ...current, [selectedId]: value }))} /> : <ModalityWorkspace key={selectedId} modality="video" projectId={projectId} unitId={unitId} masterId={null} masterHash={null} savedSourceIds={[]} dirty draft={draft} readOnly={locked} onChange={value => setDrafts(current => ({ ...current, [selectedId]: value }))} />}</div>
+    {draft.payloadSchema === "graphic.master.v2" && "canvases" in selected.payload && <Suspense fallback={null}><StageCandidateCards target={{ projectId, unitId, nodeId: result.node_id, runId: result.run_id, attemptId: result.attempt_id, candidateId: selected.candidate_id }} canvases={selected.payload.canvases} edited={proposalEdited(selected, draft)} /></Suspense>}
+    <div className="mt-4">{draft.payloadSchema === "text.master.v2" ? <ModalityWorkspace modality="text" projectId={projectId} unitId={unitId} masterId={null} masterHash={null} savedAssetIds={[]} savedCitationIds={[]} identitySnapshotId={result.resolved_stage?.context?.identity?.id || null} boundaryRevisionId={result.resolved_stage?.context?.boundary?.id || null} draft={draft} readOnly={locked} epoch={candidates.findIndex(item => item.candidate_id === selectedId)} onIssue={setIssue} onChange={value => setDrafts(current => ({ ...current, [selectedId]: value }))} /> : draft.payloadSchema === "graphic.master.v2" ? <ModalityWorkspace key={selectedId} modality="graphic" projectId={projectId} unitId={unitId} renderSource={null} renderUnavailable boundaryRevisionId={result.resolved_stage?.context?.boundary?.id || null} draft={draft} readOnly={locked} onChange={value => setDrafts(current => ({ ...current, [selectedId]: value }))} /> : null}</div>
     {!adopted && <div className="mt-4 space-y-2"><Field label="采用说明（可选）"><textarea className={inputClass} value={note} maxLength={2000} disabled={locked} onChange={event => setNote(event.target.value)} /></Field><p className="text-xs text-slate-500">{proposalEdited(selected, draft) ? "接受后修改：保留原候选与最终 Master 的两个 hash。" : "采用原候选，不改写历史 Proposal。"} 保存仍校验原上下文和 Master 版本，冲突不会自动覆盖。</p><Button disabled={readOnly || !pending && !result.is_current || busy || Boolean(issue)} onClick={accept}>{pending ? "重试原采用请求" : busy ? "采用中…" : "接受为 Content Master"}</Button></div>}
     {issue && <div className="mt-3"><ErrorBanner message={issue} /></div>}{error && <div className="mt-3"><ErrorBanner message={error} /></div>}
   </div>;

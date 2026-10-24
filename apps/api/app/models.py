@@ -65,7 +65,7 @@ class Channel(str, enum.Enum):
     douyin = "douyin"
     xiaohongshu = "xiaohongshu"
     wechat = "wechat"
-    x_thread = "x_thread"
+    x_thread = "x_thread"  # 已下线，只保留历史枚举值，不能再作为可选渠道
 
 
 class EvidenceKind(str, enum.Enum):
@@ -737,6 +737,77 @@ class MaterialRevision(Base):
 
     material: Mapped["Material"] = relationship(back_populates="revisions")
     draft_uses: Mapped[list["DraftMedia"]] = relationship(back_populates="material_revision")
+
+
+class MaterialSource(Base):
+    """用户登记的素材文件夹（如移动硬盘）：素材原地链接，平台不复制、不改写其中文件。"""
+
+    __tablename__ = "material_source"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    label: Mapped[str] = mapped_column(String(200))
+    root_path: Mapped[str] = mapped_column(String(1000))
+    # 同一挂载点换了另一块盘时不能被信任。
+    volume_uuid: Mapped[str | None] = mapped_column(String(64))
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class MaterialCollection(Base):
+    """素材合集：为栏目或主题收拢一组素材；成员指向逻辑素材，用时仍选精确版本。"""
+
+    __tablename__ = "material_collection"
+    __table_args__ = (CheckConstraint("status IN ('active','archived')", name="ck_material_collection_status"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    name: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class MaterialMatchRun(Base):
+    """按文案或分镜找素材的一次运行：只存链接、预览与评分，采用前不下载任何字节。"""
+
+    __tablename__ = "material_match_run"
+    __table_args__ = (
+        CheckConstraint("scope IN ('script','shots')", name="ck_material_match_run_scope"),
+        CheckConstraint("status IN ('queued','running','completed','failed','cancelled','interrupted')", name="ck_material_match_run_status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id"), index=True)
+    unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    scope: Mapped[str] = mapped_column(String(20))
+    title: Mapped[str] = mapped_column(String(300))
+    source_json: Mapped[dict] = mapped_column(JSON)
+    settings_json: Mapped[dict] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(20), default="queued")
+    cancel_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    progress_json: Mapped[dict | None] = mapped_column(JSON)
+    result_json: Mapped[dict | None] = mapped_column(JSON)
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class MaterialCollectionItem(Base):
+    __tablename__ = "material_collection_item"
+    __table_args__ = (UniqueConstraint("collection_id", "material_id", name="uq_material_collection_item"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    collection_id: Mapped[int] = mapped_column(ForeignKey("material_collection.id"), index=True)
+    material_id: Mapped[int] = mapped_column(ForeignKey("material.id"), index=True)
+    note: Mapped[str | None] = mapped_column(Text)
+    added_by: Mapped[str | None] = mapped_column(String(255))
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 # ---------- Discoverability（D14）----------
@@ -1551,7 +1622,8 @@ class ContentAccount(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    persona_id: Mapped[int | None] = mapped_column(ForeignKey("content_persona.id"), index=True)
+    owner_user_id: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True)
     name: Mapped[str] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
     platform_channel: Mapped[str | None] = mapped_column(String(50))
@@ -1914,10 +1986,15 @@ class OpportunityProjectConversion(Base):
 
 class ContentUnit(Base):
     __tablename__ = "content_unit"
+    __table_args__ = (
+        CheckConstraint("production_domain IN ('persona', 'product')", name="ck_content_unit_production_domain"),
+        CheckConstraint("production_domain = 'product' OR persona_id IS NOT NULL", name="ck_content_unit_persona_required"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
-    persona_id: Mapped[int] = mapped_column(ForeignKey("content_persona.id"))
+    persona_id: Mapped[int | None] = mapped_column(ForeignKey("content_persona.id"))
+    production_domain: Mapped[str] = mapped_column(String(20), default="persona", server_default="persona")
     account_id: Mapped[int | None] = mapped_column(ForeignKey("content_account.id"), index=True)
     series_id: Mapped[int | None] = mapped_column(ForeignKey("content_series.id"), index=True)
     identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"), index=True)
@@ -1925,9 +2002,15 @@ class ContentUnit(Base):
     channel_id: Mapped[str | None] = mapped_column(String(100))
     title: Mapped[str] = mapped_column(String(300))
     status: Mapped[str] = mapped_column(String(30), default="draft")
+    lifecycle: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
     pinned_workflow_id: Mapped[int | None] = mapped_column(ForeignKey("workflow.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+    @property
+    def lifecycle_readonly(self) -> bool:
+        return self.status == "archived" or self.lifecycle in {"archived", "deleted"}
 
 
 class PersonaWorkflowDefault(Base):
@@ -2557,3 +2640,77 @@ class FormAssistanceSession(Base):
     llm_run_id: Mapped[int | None] = mapped_column(ForeignKey("llm_run.id", ondelete="RESTRICT"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ProductSku(Base):
+    __tablename__ = "product_sku"
+    __table_args__ = (UniqueConstraint("owner_user_id", "request_key", name="uq_product_sku_request"), {"sqlite_autoincrement": True})
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    code: Mapped[str | None] = mapped_column(String(40), unique=True)
+    request_key: Mapped[str] = mapped_column(String(100))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    default_plan_id: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProductSkuRevision(Base):
+    __tablename__ = "product_sku_revision"
+    __table_args__ = (UniqueConstraint("sku_id", "revision", name="uq_product_sku_revision"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sku_id: Mapped[int] = mapped_column(ForeignKey("product_sku.id"), index=True)
+    revision: Mapped[int] = mapped_column(Integer)
+    external_code: Mapped[str] = mapped_column(String(300), default="")
+    product_json: Mapped[dict] = mapped_column(JSON)
+    primary_image_revision_id: Mapped[int | None] = mapped_column(ForeignKey("material_revision.id"))
+    primary_image_kind: Mapped[str] = mapped_column(String(20), default="primary")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProductSkuPlan(Base):
+    __tablename__ = "product_sku_plan"
+    __table_args__ = (UniqueConstraint("sku_id", "plan_key", "revision", name="uq_product_sku_plan_revision"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sku_id: Mapped[int] = mapped_column(ForeignKey("product_sku.id"), index=True)
+    plan_key: Mapped[str] = mapped_column(String(100))
+    revision: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(200))
+    settings_json: Mapped[dict] = mapped_column(JSON)
+    source_unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProductSkuWork(Base):
+    __tablename__ = "product_sku_work"
+    __table_args__ = (UniqueConstraint("unit_id", name="uq_product_sku_work_unit"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sku_id: Mapped[int] = mapped_column(ForeignKey("product_sku.id"), index=True)
+    sku_revision_id: Mapped[int] = mapped_column(ForeignKey("product_sku_revision.id"))
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"))
+    unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"))
+    plan_id: Mapped[int | None] = mapped_column(ForeignKey("product_sku_plan.id"))
+    settings_snapshot_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProductionProfileRevision(Base):
+    __tablename__ = "production_profile_revision"
+    __table_args__ = (UniqueConstraint("unit_id", "revision", name="uq_production_profile_revision"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    revision: Mapped[int] = mapped_column(Integer)
+    settings_json: Mapped[dict] = mapped_column(JSON)
+    settings_hash: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProductSkuReference(Base):
+    __tablename__ = "product_sku_reference"
+    __table_args__ = (UniqueConstraint("sku_id", "master_id", name="uq_product_sku_reference"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sku_id: Mapped[int] = mapped_column(ForeignKey("product_sku.id"), index=True)
+    master_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id"))
+    master_hash: Mapped[str] = mapped_column(String(64))
+    profile_revision_id: Mapped[int | None] = mapped_column(ForeignKey("production_profile_revision.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

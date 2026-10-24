@@ -230,8 +230,8 @@ TUNABLE_VALUES = {
     "pause_policy": ("段落停顿", "术语前停顿"), "shot_count": (3, 7),
 }
 CHAT_TUNABLE_CASES = [(ref, field) for ref, item in catalog.SKILLS.items()
-    if "stage.creative.method.v1" in item["compatible_stage_schemas"]
-    or "stage.master.propose.v1" in item["compatible_stage_schemas"] for field in item["tunable_fields"]]
+    if {"stage.creative.method.v1", "stage.creative.method.v3", "stage.master.propose.v1"} & set(item["compatible_stage_schemas"])
+    for field in item["tunable_fields"]]
 
 
 def _resolve_builtin_tunable(db, ref, field, value):
@@ -252,7 +252,7 @@ def _resolve_builtin_tunable(db, ref, field, value):
     if resource["modality"] != "research":
         profile.update(skill_ref=ref, parameters={field: TUNABLE_VALUES[field][0]})
     config = {"instruction": "仅整理隔离测试输入", "method": {"source_kind": "studio_builtin", "skill_ref": ref}}
-    if stage_schema == "stage.creative.method.v1":
+    if stage_schema in {"stage.creative.method.v1", "stage.creative.method.v3"}:
         config["output_schema"] = resource["output_schemas"][0]
     config[field] = TUNABLE_VALUES[field][0]
     node = {"id": "method", "kind": descriptor.stage_contract.to_dict()["category"],
@@ -302,10 +302,14 @@ def test_each_exposed_chat_tunable_reaches_the_actual_executor_request(db_sessio
 
 
 def test_consumption_matrix_covers_every_shipped_tunable():
+    tool_fields = {
+        ("studio.graphic.layout-compose", "template"), ("studio.graphic.layout-compose", "density"),
+        ("studio.audio.tts", "voice"), ("studio.audio.tts", "rate"),
+        ("studio.video.director-package", "instruction"), ("studio.video.director-package", "aspect_ratio"),
+    }
     covered = set(CHAT_TUNABLE_CASES) | {
-        ("studio.graphic.layout-compose@1", "template"), ("studio.graphic.layout-compose@1", "density"),
-        ("studio.audio.tts@1", "voice"), ("studio.audio.tts@1", "rate"),
-        ("studio.video.director-package@1", "instruction"), ("studio.video.director-package@1", "aspect_ratio"),
+        (ref, field) for ref, resource in catalog.SKILLS.items() for field in resource["tunable_fields"]
+        if (resource["key"], field) in tool_fields
     }
     declared = {(ref, field) for ref, resource in catalog.SKILLS.items() for field in resource["tunable_fields"]}
     assert covered == declared
@@ -327,16 +331,21 @@ def test_director_instruction_and_aspect_are_consumed_without_dispatch(db_sessio
     from app.services.content_harness.registry import registry
 
     bootstrap_builtin_nodes()
-    node = starter_personas._definition("video", "starter.ai-tech-engineer.v1")["nodes"][-1]
+    # New video workflows no longer include this stage; older runs still do.
+    node = {**starter_personas._node("prepare", "Tool", "stage.professional.prepare", "stage.professional.prepare.v2",
+        {"objective": "准备交给外部专业执行器的视频导演包", "method": starter_personas._method("studio.video.director-package@1"),
+         "package_schema": "director.video.v1", "prepare_execution": False, "constraints": [], "acceptance_criteria": [],
+         "output_kind": "video", "output_mime": "video/mp4", "output_role": "final-render", "output_count": 1,
+         "output_max_bytes": 31457280}, "专业执行准备"), "plugin_version": "2"}
     contract = registry.descriptor("node", node["plugin"], node["plugin_version"]).stage_contract
     saved_config = deepcopy(node["config"])
     override = {"instruction": "镜头停留便于读图", "aspect_ratio": ratio}
-    user, unit = SimpleNamespace(id=1), SimpleNamespace(id=1, project_id=1)
+    user, unit = SimpleNamespace(id=1), SimpleNamespace(id=1, project_id=1, production_domain="persona")
     context = {"master": {"id": 1}, "identity": {"content": {
         "video_creative_profile": deepcopy(catalog.BLUEPRINTS["starter.ai-tech-engineer.v1"]["video_creative_profile"]),
     }}}
     source = SimpleNamespace(payload_schema="video.master.v2", payload_json={"aspect_ratio": [int(part) for part in ratio.split(":")]},
-                             payload_hash="a" * 64, context_hash="b" * 64)
+                             payload_hash="a" * 64, context_hash="b" * 64, origin_project_output_id=None)
     # Source loading is outside this narrow adapter test; the real request/gate remains under test.
     monkeypatch.setattr(creative_packages, "_source", lambda *_args, **_kwargs:
                         (source, {"assets": [], "evidence": []}, source))
@@ -352,6 +361,48 @@ def test_director_instruction_and_aspect_are_consumed_without_dispatch(db_sessio
     request = resolved["domain"]["request"]
     assert "镜头停留便于读图" in request["constraints"]
     assert catalog.load_skill("studio.video.director-package@1")["instruction"] in request["constraints"]
+    instruction_v1 = catalog.load_skill("studio.video.director-package@1")["instruction"]
+    node_v2 = deepcopy(node)
+    node_v2["config"] = {**node["config"], "method": {**node["config"]["method"], "skill_ref": "studio.video.director-package@2"}}
+    effective_v2, method_v2, creative_v2, blockers_v2 = creative_configuration.frozen_stage(
+        db_session, user, SimpleNamespace(id=1, project_id=1, modality="video"), node_v2, contract, context, override)
+    assert not blockers_v2, blockers_v2
+    config_v2 = contract.effective_config(effective_v2["config"], override)[1]
+    resolved_v2, _, blockers_v2 = stage_domain_integrations.prepare_domain(
+        db_session, user, unit, effective_v2, config_v2, context, creative=creative_v2)
+    assert not blockers_v2, blockers_v2
+    instruction_v2 = catalog.load_skill("studio.video.director-package@2")["instruction"]
+    constraints_v2 = resolved_v2["domain"]["request"]["constraints"]
+    assert instruction_v2 in constraints_v2
+    assert instruction_v1 not in constraints_v2
+    assert instruction_v2 != instruction_v1
+    assert method_v2["skill_ref"] == "studio.video.director-package@2"
+    assert config_v2["method"]["skill_ref"] == "studio.video.director-package@2"
+    switched = deepcopy(context)
+    switched["identity"]["content"]["video_creative_profile"]["production_stages"] = {"finish": {
+        "enabled": True, "methods": [{"id": "director-trial", "source_kind": "studio_builtin", "enabled": True,
+            "skill_ref": "studio.video.director-package@2", "parameters": {}}]}}
+    effective_switched, method_switched, creative_switched, blockers_switched = creative_configuration.frozen_stage(
+        db_session, user, SimpleNamespace(id=1, project_id=1, modality="video"), node, contract, switched, override)
+    assert not blockers_switched, blockers_switched
+    config_switched = contract.effective_config(effective_switched["config"], override)[1]
+    resolved_switched, _, blockers_switched = stage_domain_integrations.prepare_domain(
+        db_session, user, unit, effective_switched, config_switched, switched, creative=creative_switched)
+    assert not blockers_switched, blockers_switched
+    switched_constraints = resolved_switched["domain"]["request"]["constraints"]
+    assert instruction_v2 in switched_constraints and instruction_v1 not in switched_constraints
+    assert method_switched["skill_ref"] == "studio.video.director-package@2"
+    disabled = deepcopy(switched)
+    disabled["identity"]["content"]["video_creative_profile"]["production_stages"]["finish"]["enabled"] = False
+    effective_off, _, creative_off, blockers_off = creative_configuration.frozen_stage(
+        db_session, user, SimpleNamespace(id=1, project_id=1, modality="video"), node, contract, disabled, override)
+    assert not blockers_off, blockers_off
+    config_off = contract.effective_config(effective_off["config"], override)[1]
+    resolved_off, _, blockers_off = stage_domain_integrations.prepare_domain(
+        db_session, user, unit, effective_off, config_off, disabled, creative=creative_off)
+    assert not blockers_off, blockers_off
+    assert instruction_v1 not in resolved_off["domain"]["request"]["constraints"]
+    assert instruction_v2 not in resolved_off["domain"]["request"]["constraints"]
     assert request["source_master_revision_id"] == 1 and model is None
     preview = stage_resolver.resolve_stage(
         workflow={"id": 1, "version": 1, "checksum": "c" * 64}, node=effective_node,
@@ -380,14 +431,14 @@ def test_shipped_text_method_package_has_real_instructions_and_exact_contract(re
 
 
 @pytest.mark.parametrize("key", list(catalog.BLUEPRINTS))
-def test_text_recipe_has_explicit_final_master_after_title_and_final_checks(key):
+def test_text_recipe_is_plan_then_write_then_checks(key):
     definition = starter_personas._definition("text", key)
     nodes = {node["id"]: node for node in definition["nodes"]}
-    assert nodes["final"]["plugin"] == "stage.master.propose"
-    assert nodes["final_quality"]["plugin"] == "stage.checks"
-    assert {"from": "title", "to": "final"} in definition["edges"]
-    assert {"from": "refine", "to": "final"} in definition["edges"]
-    assert definition["visual_order"][-1] == "final_quality"
+    assert nodes["plan"]["config"]["output_schema"] == "article.plan.v1"
+    assert nodes["write"]["plugin"] == "stage.master.propose"
+    assert nodes["quality"]["plugin"] == "stage.checks"
+    assert definition["edges"] == [{"from": "plan", "to": "write"}, {"from": "write", "to": "quality"}]
+    assert definition["visual_order"] == ["plan", "write", "quality"]
 
 
 @pytest.mark.parametrize("profile, phrase", [
@@ -761,7 +812,7 @@ def test_two_personas_complete_text_recipe_then_exact_candidate_review_and_zip(c
     assert run_response.status_code == 201, run_response.text
     run = run_response.json()["id"]
     master = None
-    for node_id in ("evidence", "angles", "outline", "draft", "quality", "refine", "title", "final", "final_quality"):
+    for node_id in ("plan", "write", "quality"):
         preview = client.post(f"{base}/creation-recipe/stages/{node_id}/preview", headers=headers, json={"run_id": run})
         assert preview.status_code == 200 and preview.json()["ready"], (node_id, preview.text)
         resolved = preview.json()
@@ -772,7 +823,7 @@ def test_two_personas_complete_text_recipe_then_exact_candidate_review_and_zip(c
         request = {"run_id": run, "attempt_id": result["attempt_id"], "expected_output_hash": result["receipt"]["output_hash"],
             "expected_resolution_hash": result["receipt"]["resolution_hash"], "expected_context_hash": resolved["context_hash"]}
         output = result["output"]
-        if node_id in {"quality", "final_quality"}:
+        if node_id == "quality":
             assert result["status"] == "waiting_input", [(c["check_kind"], c["status"], c["report"].get("reasons")) for c in output["result"]["checks"]]
             warnings = {f"{c['id']}:{c['input_hash']}": "隔离测试确认提醒，不声称语义审核已完成"
                 for c in output["result"]["checks"] if c["status"] == "warning"}
@@ -785,7 +836,7 @@ def test_two_personas_complete_text_recipe_then_exact_candidate_review_and_zip(c
             accepted = client.post(f"{base}/creation-recipe/stages/{node_id}/accept-result", headers=headers,
                 json={**request, "domain": "checks", "expected_revision": 0, "adoption_key": f"accept-{node_id}",
                     "warning_dispositions": warnings, "decision": "accepted"})
-        elif node_id in {"draft", "refine", "final"}:
+        elif node_id == "write":
             choice = output["candidates"][-1]
             accepted = client.post(f"{base}/creation-recipe/stages/{node_id}/accept-master", headers=headers,
                 json={**request, "candidate_id": choice["candidate_id"], "candidate_hash": choice["candidate_hash"],
@@ -800,7 +851,7 @@ def test_two_personas_complete_text_recipe_then_exact_candidate_review_and_zip(c
                 json={**request, "candidate_id": choice["id"], "candidate_hash": choice["candidate_hash"], "acceptance_key": f"accept-{node_id}"})
             assert db_session.query(ContentMasterRevision).count() == count
         assert accepted.status_code == 200, (node_id, accepted.text)
-    assert master["revision_no"] == 3
+    assert master["revision_no"] == 1
     frozen = client.post(f"{base}/candidates/freeze", headers=headers,
         json={"content_master_revision_id": master["id"], "expected_payload_hash": master["payload_hash"]})
     assert frozen.status_code == 201, frozen.text
@@ -917,7 +968,7 @@ def test_intermediate_acceptance_releases_only_the_selected_upstream(client, db_
     handoff = after.json()["upstream"]["research"]
     assert handoff["candidate_id"] == "method-02"
     assert handoff["accepted_hash"] == request["candidate_hash"]
-    assert handoff["selected_content"]["title"].endswith("候选 2")
+    assert handoff["selected_content"]["question"].endswith("候选 2")
     assert "candidates" not in handoff and "raw_output" not in handoff
     assert db_session.query(ProjectWorkflowOutput).count() == 0
     assert db_session.query(ContentMasterRevision).count() == 0

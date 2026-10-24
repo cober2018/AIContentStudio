@@ -1,0 +1,14 @@
+{
+ "at": "2026-10-20T03:28:24+0800",
+ "reason": "A20 extend strict duplicate-audit compaction to persona stage.creative.method (builtin@2 only, only on overflow)",
+ "trigger": "newtopic tech evidence snapshot 133831B > 131072B after fact pack v2 (5 items); same preconditions verified read-only (probe: before fix FAIL, after fix OK with explicit @2 override; with inherited capability_memory still rejected)",
+ "checks": "833 passed (persona 10 files + graphic quality + fe_f2 + product settings), see a20-api-checks.txt",
+ "pid_before": "63528",
+ "pid_after": "17124",
+ "ready": true,
+ "source_sha256": {
+  "apps/api/app/services/stage_resolver.py": "713cef476dec50850fcd56bba749f903b8d533f9d4306441cc141feb2104248c",
+  "apps/api/app/services/creation_recipes.py": "7af17e581678583bebfcda71a12ddbeec216870ff962aae24b4d3e77e0fe927d",
+  "apps/api/app/services/stage_feedback.py": "2df03f74418d2c8f3024805534c7aab0f9a7b014766d9a464ef33cbc53e69c8b"
+ }
+}

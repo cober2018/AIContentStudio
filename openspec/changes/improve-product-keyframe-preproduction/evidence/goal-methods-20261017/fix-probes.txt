@@ -1,0 +1,15 @@
+# B1/B2/S1 修复验证探针（2026-10-17，/tmp/probe_frontend_fixes.py，内存库+假provider）
+# B1=前端新建条目id含@修复；B2=组关显式disabled；护栏=422加固
+PASS A1 修复后新建条目纯校验通过
+PASS A2 助手请求成功且 configured_methods 注入两项  [refs=['studio.product.audience-need@1', 'studio.product.purchase-reason@1']]
+PASS A2b manifest 记录启用方法且无 disabled  [disabled=[]]
+PASS A3 保存链路 validate_settings 通过
+PASS A4a 护栏：id 含 @ 仍被纯校验拒绝
+PASS A4b 护栏：请求链路对 id 含 @ 返回 422（非裸 500）  [status=422 detail=所选制作方法配置无效：production_method_invalid]
+PASS B1 组关显式 disabled 请求成功且只含其他方法  [refs=['studio.video.product-script@1']]
+PASS B2 manifest disabled_method_ids 记录两项（含开关状态）  [disabled=['studio.product.audience-need', 'studio.product.purchase-reason']]
+PASS B3 user_prompt 无两项方法指令文本
+PASS C1 旧作品不传 stages 无 configured_methods（原行为）  [refs=[]]
+INFO D1 已保存方法+不传stages：production_methods 背景路径仍含指令=True（前端修复后此路径不再由 UI 触发，记录现状）
+
+===== 修复探针结果：10 passed, 0 failed =====

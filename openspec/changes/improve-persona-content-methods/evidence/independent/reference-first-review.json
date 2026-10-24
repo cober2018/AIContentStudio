@@ -1,0 +1,15 @@
+{
+  "scope": "Read-only incremental reference v2 review; developer baseline compared, in-memory probes only",
+  "code_verified_unchanged_during_review": true,
+  "findings": ["A2 pagination and pre-LIMIT source filtering", "A3 screenshot compatibility", "A4 large video preview route", "A5 invalid enum types return unhandled TypeError"],
+  "v1_sample_hash_unchanged": true,
+  "real_model_or_full_browser_validation": false,
+  "reviewed_files": {
+    "apps/api/app/services/capability_memory.py": "571fcd3b40e9b5168803eeb864ee67c8a1eaf6f6d8fbb72943c153f545ee3886",
+    "apps/api/app/services/capability_contracts.py": "a67557a7fb4223db94a0361eb24d92f61ab61ce31ca11ae333d5afe76fc3bb6b",
+    "apps/api/app/routers/capability_memory.py": "a2d3bfda6c69c668eb814dfd88a8defcd7b72ed60a0abdf1d8996d9dde19991b",
+    "apps/web/src/product/CapabilityMemoryPanel.tsx": "aa80983f5a55983c6f87101cf674248820552d6a205255016f9d450218616ec1",
+    "apps/web/src/product/capabilityMemoryTypes.ts": "8fe4d98591b41db1ee1b2a459593bb007092fa96a44a2cf8c4ab91f6f68945a4"
+  },
+  "status": "Awaiting fixes and recheck; not final acceptance"
+}

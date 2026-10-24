@@ -1,0 +1,99 @@
+{
+  "environment": "isolated /tmp synthetic 64x48 PNG and 1s WAV/MP4; decoding and saved-location check, no sensory/creative quality claim",
+  "checks": [
+    {
+      "name": "normal exact image preview decoded",
+      "pass": true,
+      "id": 1,
+      "metadata": {
+        "width": 64,
+        "height": 48
+      }
+    },
+    {
+      "name": "normal exact audio preview decoded",
+      "pass": true,
+      "id": 2,
+      "metadata": {
+        "duration": 1
+      }
+    },
+    {
+      "name": "normal exact video preview decoded",
+      "pass": true,
+      "id": 3,
+      "metadata": {
+        "duration": 1,
+        "videoWidth": 64
+      }
+    },
+    {
+      "name": "image region/audio-video range saved with exact hashes and unknown inspection; no default adoption",
+      "pass": true,
+      "id": 6,
+      "observations": [
+        {
+          "certainty": "unknown",
+          "inspection": "unknown",
+          "location": {
+            "height": 1,
+            "width": 0.5,
+            "x": 0.1,
+            "y": 0
+          },
+          "locator": "中央区域",
+          "modality": "image",
+          "polarity": "prefer",
+          "reason": "验证精确版本和范围回读，不是风格质量样本",
+          "reference": {
+            "content_hash": "e4a480990dc63508b00a93f41e3a5e74e18c94606e6406e1cc764e76f9a743f5",
+            "id": 1,
+            "kind": "material_revision"
+          },
+          "statement": "合成image参考，仅用于功能定位验证"
+        },
+        {
+          "certainty": "unknown",
+          "inspection": "unknown",
+          "location": {
+            "end_ms": 500,
+            "start_ms": 0
+          },
+          "locator": "0-500ms",
+          "modality": "audio",
+          "polarity": "prefer",
+          "reason": "验证精确版本和范围回读，不是风格质量样本",
+          "reference": {
+            "content_hash": "f1696cb46f393891c281e4a2d920e81e89d88e063690cada01b29ff7b2ca1310",
+            "id": 2,
+            "kind": "material_revision"
+          },
+          "statement": "合成audio参考，仅用于功能定位验证"
+        },
+        {
+          "certainty": "unknown",
+          "inspection": "unknown",
+          "location": {
+            "end_ms": 500,
+            "start_ms": 0
+          },
+          "locator": "0-500ms",
+          "modality": "video",
+          "polarity": "prefer",
+          "reason": "验证精确版本和范围回读，不是风格质量样本",
+          "reference": {
+            "content_hash": "9fa0b251129e1c268bb8d5b9bac718d0333c669e727f1c90d2a108fb08e792c1",
+            "id": 3,
+            "kind": "material_revision"
+          },
+          "statement": "合成video参考，仅用于功能定位验证"
+        }
+      ]
+    },
+    {
+      "name": "media observations survive reload at 375px; zero page errors/overflow",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

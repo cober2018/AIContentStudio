@@ -97,17 +97,30 @@ def owned_unit(db: Session, project_id: int, unit_id: int, user: User, *, mutate
         db.refresh(unit)
         if unit.project_id != project_id:
             raise HTTPException(404, "内容单元不存在")
-    if mutate and (project.status == "archived" or unit.status == "archived"):
+    if mutate and (project.status == "archived" or unit.lifecycle_readonly):
         raise HTTPException(409, "已归档项目或单元仅可查看历史")
     return project, unit
 
 
-def _context(db: Session, project: ContentProject, unit: ContentUnit, *, content_form: str | None) -> dict:
+def _context(db: Session, project: ContentProject, unit: ContentUnit, *, content_form: str | None, tolerate_unavailable_product: bool = False) -> dict:
     snapshot = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
     brief = current_brief(db, project.id)
     boundary = current_boundary(db, project.id)
+    from .product_context import context_snapshot, is_product
+    product_domain = is_product(unit)
+    product_context = None
+    unavailable = False
+    if product_domain:
+        try:
+            product_context = context_snapshot(db, unit)
+        except (ValueError, HTTPException) as exc:
+            if not tolerate_unavailable_product or isinstance(exc, HTTPException) and not 400 <= exc.status_code < 500:
+                raise
+            unavailable = True
     return {
-        "identity": {"id": snapshot.id, "checksum": snapshot.checksum} if snapshot else None,
+        **({"production_domain": "product", "product_context": product_context} if product_domain else {}),
+        **({"product_context_unavailable": True} if unavailable else {}),
+        "identity": {"id": snapshot.id, "checksum": snapshot.checksum} if snapshot and not product_domain else None,
         "brief": {"id": brief.id, "checksum": brief.checksum} if brief else None,
         "boundary": {"id": boundary.id, "fact_pack_id": boundary.fact_pack_id, "checksum": boundary.fact_pack_checksum} if boundary else None,
         "channel_id": unit.channel_id,
@@ -115,8 +128,141 @@ def _context(db: Session, project: ContentProject, unit: ContentUnit, *, content
     }
 
 
-def _serialize(db: Session, row: ContentMasterRevision) -> dict:
-    context = _context(db, db.get(ContentProject, row.project_id), db.get(ContentUnit, row.content_unit_id), content_form=row.content_form)
+def capture_status(db: Session, row: ContentMasterRevision) -> dict | None:
+    from .production_profiles import capture_profile_current, profile_snapshot
+    from .video_documents import capture_content_hash
+
+    plan = (row.payload_json or {}).get("capture_plan")
+    if row.payload_schema != "video.master.v2" or not plan:
+        return None
+    profile = profile_snapshot(db, row.content_unit_id)
+    status = {"production_profile_revision_id": profile["id"] if profile else None}
+    for kind in ("script", "task"):
+        digest = capture_content_hash(row.payload_json, kind)
+        ref = plan.get(f"{kind}_confirmation")
+        current = bool(ref and ref["content_hash"] == digest)
+        if kind == "task":
+            current = current and capture_profile_current(db, row.content_unit_id, ref["production_profile_revision_id"], profile) and status["script"]["state"] == "confirmed"
+        status[kind] = {"state": "confirmed" if current else "needs_review" if ref else "draft", "content_hash": digest}
+    status["ready_to_shoot"] = status["task"]["state"] == "confirmed"
+    status["adoptions"] = {shot["id"]: ("current" if status["ready_to_shoot"] and _capture_adoption_current(row.payload_json, shot) else "needs_review") for shot in row.payload_json.get("shots", []) if _real_capture_shot(row.payload_json, shot) and shot.get("source_material_revision_id") is not None}
+    return status
+
+
+def _capture_shot_placements(document: dict, shot: dict) -> list[dict]:
+    return [{"track_id": track["id"], **item} for track in document.get("timeline", {}).get("tracks", [])
+            for item in track["items"] if item.get("shot_id") == shot["id"] and "material_revision_id" in item]
+
+
+def _capture_adoption_current(document: dict, shot: dict) -> bool:
+    from .video_documents import capture_content_hash
+
+    placements = _capture_shot_placements(document, shot)
+    return any(take["material_revision_id"] == shot.get("source_material_revision_id")
+               and take["state"] == "usable" and take["task_content_hash"] == capture_content_hash(document, "task")
+               and all(item["material_revision_id"] == take["material_revision_id"]
+                       and "trim_start_ms" in item and "trim_end_ms" in item
+                       and take["trim_start_ms"] <= item["trim_start_ms"] < item["trim_end_ms"] <= take["trim_end_ms"]
+                       for item in placements)
+               for take in shot.get("capture_takes", []))
+
+
+def _real_capture_shot(document: dict, shot: dict) -> bool:
+    route = (document.get("capture_plan") or {}).get("route")
+    return route == "real" or (route == "mixed" and (shot.get("production") or {}).get("source_mode", "existing") == "existing")
+
+
+def _validate_capture_takes(db: Session, unit: ContentUnit, latest: ContentMasterRevision | None, document: dict, context: dict) -> None:
+    from .video_documents import capture_content_hash
+
+    previous_shots = {shot["id"]: shot for shot in (latest.payload_json.get("shots", []) if latest else [])}
+    previous_takes = {take["id"]: (shot["id"], take) for shot in previous_shots.values() for take in shot.get("capture_takes", [])}
+    for shot in document["shots"]:
+        for take in shot.get("capture_takes", []):
+            old = previous_takes.get(take["id"])
+            if context.get("production_domain") != "product" or (not _real_capture_shot(document, shot) and (not old or old[1] != take)):
+                raise HTTPException(422, {"code": "capture_take_route_invalid"})
+            if old and (old[0] != shot["id"] or any(old[1][key] != take[key] for key in ("source_master_revision_id", "task_content_hash", "material_revision_id", "content_hash"))):
+                raise HTTPException(422, {"code": "capture_take_identity_changed"})
+            source = db.get(ContentMasterRevision, take["source_master_revision_id"])
+            if source is None or source.content_unit_id != unit.id or source.payload_schema != "video.master.v2" or not any(item["id"] == shot["id"] for item in source.payload_json["shots"]):
+                raise HTTPException(422, {"code": "capture_take_source_invalid"})
+            source_shot = next(item for item in source.payload_json["shots"] if item["id"] == shot["id"])
+            if not _real_capture_shot(source.payload_json, source_shot):
+                raise HTTPException(422, {"code": "capture_take_source_invalid"})
+            plan = source.payload_json.get("capture_plan") or {}
+            task_ref = plan.get("task_confirmation") or {}
+            script_ref = plan.get("script_confirmation") or {}
+            if (take["task_content_hash"] != capture_content_hash(source.payload_json, "task")
+                    or task_ref.get("content_hash") != take["task_content_hash"]
+                    or script_ref.get("content_hash") != capture_content_hash(source.payload_json, "script")):
+                raise HTTPException(409, {"code": "capture_take_task_unconfirmed"})
+            material = db.get(MaterialRevision, take["material_revision_id"])
+            if material is None or material.content_hash != take["content_hash"]:
+                raise HTTPException(422, {"code": "capture_take_material_invalid"})
+            if "trim_end_ms" in take and (type(material.duration_ms) is not int or material.duration_ms <= 0 or take["trim_end_ms"] > material.duration_ms):
+                raise HTTPException(422, {"code": "capture_take_duration_unverified_or_exceeded"})
+        old_shot = previous_shots.get(shot["id"], {})
+        placements = _capture_shot_placements(document, shot)
+        old_placements = _capture_shot_placements(latest.payload_json, shot) if latest else []
+        adoption_changed = (shot.get("source_material_revision_id") is not None
+                            and shot.get("source_material_revision_id") != old_shot.get("source_material_revision_id"))
+        placements_changed = any(item not in old_placements for item in placements)
+        if _real_capture_shot(document, shot) and (adoption_changed or placements_changed):
+            from .production_profiles import capture_profile_current
+            task_ref = (document.get("capture_plan") or {}).get("task_confirmation") or {}
+            if (task_ref.get("content_hash") != capture_content_hash(document, "task")
+                    or not capture_profile_current(db, unit.id, task_ref.get("production_profile_revision_id"))
+                    or not _capture_adoption_current(document, shot)):
+                raise HTTPException(409, {"code": "capture_take_usable_adoption_required"})
+
+
+def _validate_capture_confirmations(db: Session, unit: ContentUnit, latest: ContentMasterRevision | None, document: dict, context: dict) -> None:
+    from .production_profiles import profile_snapshot
+    from .video_documents import capture_content_hash
+
+    plan = document.get("capture_plan") or {}
+    previous = (latest.payload_json.get("capture_plan") or {}) if latest else {}
+    if not plan:
+        return
+    if context.get("production_domain") != "product":
+        raise HTTPException(422, {"code": "capture_product_domain_required"})
+    profile = profile_snapshot(db, unit.id)
+    for kind in ("script", "task"):
+        ref = plan.get(f"{kind}_confirmation")
+        # Previously recorded approvals survive edits; their status is computed separately.
+        if not ref or ref == previous.get(f"{kind}_confirmation"):
+            continue
+        source = db.get(ContentMasterRevision, ref["source_master_revision_id"])
+        if source is None or source.content_unit_id != unit.id or source.payload_schema != "video.master.v2":
+            raise HTTPException(422, {"code": "capture_confirmation_source_invalid"})
+        digest = capture_content_hash(document, kind)
+        if latest is None or source.id != latest.id or ref["content_hash"] != capture_content_hash(source.payload_json, kind) or ref["content_hash"] != digest:
+            raise HTTPException(409, {"code": "capture_confirmation_source_conflict"})
+        if plan.get("route") not in {"real", "ai", "mixed"}:
+            raise HTTPException(422, {"code": "capture_route_required"})
+        if not plan.get("script_structure", "").strip():
+            raise HTTPException(422, {"code": "capture_script_structure_required"})
+        if kind == "task":
+            script_ref = plan.get("script_confirmation")
+            if not script_ref or script_ref["content_hash"] != capture_content_hash(document, "script"):
+                raise HTTPException(409, {"code": "capture_script_confirmation_required"})
+            if not profile or profile["id"] != ref["production_profile_revision_id"]:
+                raise HTTPException(409, {"code": "capture_profile_confirmation_conflict"})
+            if not document.get("shots"):
+                raise HTTPException(422, {"code": "capture_shots_required"})
+            for shot in document["shots"]:
+                real = plan["route"] == "real" or (plan["route"] == "mixed" and (shot.get("production") or {}).get("source_mode", "existing") == "existing")
+                if not real:
+                    continue
+                filming = shot.get("filming") or {}
+                if not shot.get("purpose", "").strip() or any(not filming.get(key, "").strip() for key in ("subject", "action", "camera_position", "angle", "focus")) or not filming.get("raw_duration_ms"):
+                    raise HTTPException(422, {"code": "capture_shot_incomplete", "shot_id": shot["id"]})
+
+
+def _serialize(db: Session, row: ContentMasterRevision, *, require_current: bool = True) -> dict:
+    context = (_context(db, db.get(ContentProject, row.project_id), db.get(ContentUnit, row.content_unit_id), content_form=row.content_form, tolerate_unavailable_product=True)
+               if require_current else frozen_context(db, row))
     stale: list[str] = []
     if (context["identity"] or {}).get("id") != row.identity_snapshot_id:
         stale.append("stale_identity")
@@ -128,18 +274,20 @@ def _serialize(db: Session, row: ContentMasterRevision) -> dict:
         stale.append("stale_channel")
     if _hash(context) != row.context_hash:
         stale.append("stale_context")
-    missing = [reason for key, reason in (("identity", "identity_missing"), ("brief", "brief_missing"), ("boundary", "evidence_missing")) if context[key] is None]
+    prerequisites = (("product_context", "product_context_missing"),) if context.get("production_domain") == "product" else (("identity", "identity_missing"),)
+    missing = [reason for key, reason in (*prerequisites, ("brief", "brief_missing"), ("boundary", "evidence_missing")) if context.get(key) is None]
     return {
         "id": row.id, "project_id": row.project_id, "content_unit_id": row.content_unit_id,
         "revision_no": row.revision_no, "parent_revision_id": row.parent_revision_id,
         "modality": row.modality, "channel_id": row.channel_id, "content_form": row.content_form,
         "payload_schema": row.payload_schema, "payload": row.payload_json, "payload_hash": row.payload_hash,
+        "capture_status": capture_status(db, row),
         "creative_intent": row.creative_intent_json, "creative_intent_hash": row.creative_intent_hash,
         "context_hash": row.context_hash, "identity_snapshot_id": row.identity_snapshot_id,
         "creative_brief_revision_id": row.creative_brief_revision_id, "fact_boundary_revision_id": row.fact_boundary_revision_id,
         "source_kind": row.source_kind, "edit_summary": row.edit_summary_json,
         "origin_workflow_run_id": row.origin_workflow_run_id, "origin_project_output_id": row.origin_project_output_id,
-        "readiness": {"state": "stale" if stale else "incomplete_context" if missing else "current", "reasons": stale + missing},
+        "readiness": {"state": "blocked" if context.get("product_context_unavailable") else "stale" if stale else "incomplete_context" if missing else "current", "reasons": stale + missing + (["product_context_unavailable"] if context.get("product_context_unavailable") else [])},
         "assets": [{"id": ref.id, "material_revision_id": ref.material_revision_id, "role": ref.role, "slot_key": ref.slot_key, "sort_order": ref.sort_order, "placement": ref.placement_json, "rights_snapshot": ref.rights_snapshot_json, "content_hash": ref.content_hash_snapshot} for ref in db.scalars(select(ContentMasterAssetRef).where(ContentMasterAssetRef.master_revision_id == row.id).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id)).all()],
         "evidence": [{"id": ref.id, "fact_pack_item_id": ref.fact_pack_item_id, "role": ref.role, "locator": ref.content_locator_json, "sort_order": ref.sort_order, "snapshot_checksum": ref.snapshot_checksum} for ref in db.scalars(select(ContentMasterEvidenceRef).where(ContentMasterEvidenceRef.master_revision_id == row.id).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id)).all()],
         "created_by": row.created_by, "created_at": row.created_at.isoformat() if row.created_at else None,
@@ -169,14 +317,16 @@ def get_readiness(db: Session, project_id: int, unit_id: int, master_id: int, us
     latest = db.scalar(select(ContentMasterRevision.id).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     project = db.get(ContentProject, project_id)
     unit = db.get(ContentUnit, unit_id)
-    return {"master_revision_id": row.id, "payload_schema": adapter.payload_schema, "adapter_version": adapter.version, "render_input_hash": render_input_hash(db, row), "preview": adapter.build_preview(row), "render": adapter.build_render_snapshot(db, row), "adapter_availability": available, "context": projection["readiness"], "checks": checks, "candidate_freeze_available": project.status != "archived" and unit.status != "archived" and latest == row.id and projection["readiness"]["state"] == "current" and available["available"] and all(check["status"] in {"pass", "warning"} and check["is_current"] for check in checks)}
+    return {"master_revision_id": row.id, "payload_schema": adapter.payload_schema, "adapter_version": adapter.version, "render_input_hash": render_input_hash(db, row), "preview": adapter.build_preview(row), "render": adapter.build_render_snapshot(db, row), "adapter_availability": available, "context": projection["readiness"], "checks": checks, "candidate_freeze_available": project.status != "archived" and not unit.lifecycle_readonly and latest == row.id and projection["readiness"]["state"] == "current" and available["available"] and all(check["status"] in {"pass", "warning"} and check["is_current"] for check in checks)}
 
 
 def frozen_context(db: Session, row: ContentMasterRevision) -> dict:
     identity = db.get(IdentitySnapshot, row.identity_snapshot_id) if row.identity_snapshot_id else None
     brief = db.get(CreativeBriefRevision, row.creative_brief_revision_id) if row.creative_brief_revision_id else None
     boundary = db.get(ProjectFactBoundaryRevision, row.fact_boundary_revision_id) if row.fact_boundary_revision_id else None
+    product_context = (row.edit_summary_json or {}).get("product_context_snapshot")
     return {
+        **({"production_domain": "product", "product_context": product_context} if product_context is not None else {}),
         "identity": {"id": identity.id, "checksum": identity.checksum} if identity else None,
         "brief": {"id": brief.id, "checksum": brief.checksum} if brief else None,
         "boundary": {"id": boundary.id, "fact_pack_id": boundary.fact_pack_id, "checksum": boundary.fact_pack_checksum} if boundary else None,
@@ -186,7 +336,7 @@ def frozen_context(db: Session, row: ContentMasterRevision) -> dict:
 
 
 def check_input_hash(db: Session, row: ContentMasterRevision, *, require_current: bool = True) -> str:
-    inputs = _serialize(db, row)
+    inputs = _serialize(db, row, require_current=require_current)
     assets = []
     for ref in inputs["assets"]:
         material = db.get(MaterialRevision, ref["material_revision_id"])
@@ -198,11 +348,12 @@ def check_input_hash(db: Session, row: ContentMasterRevision, *, require_current
     project = db.get(ContentProject, row.project_id)
     unit = db.get(ContentUnit, row.content_unit_id)
     adapter = adapter_for(row.modality, row.payload_schema)
-    context = _context(db, project, unit, content_form=row.content_form) if require_current else frozen_context(db, row)
+    context = _context(db, project, unit, content_form=row.content_form, tolerate_unavailable_product=True) if require_current else frozen_context(db, row)
     return _hash({"payload_hash": row.payload_hash, "context_hash": row.context_hash, "current_context": context, "assets": assets, "evidence": evidence, "boundary_live": _boundary_live_state(db, row), "render": adapter.build_render_snapshot(db, row), "profile_key": adapter.payload_schema, "profile_version": adapter.version})
 
 
 TEXT_CHECK_VERSIONS = {kind: "1" for kind in ("master_schema", "evidence", "rights", "render", "text_structure", "text_fact", "text_identity", "text_platform", "text_discoverability")}
+TEXT_CHECK_VERSIONS["text_identity"] = "3"
 
 
 def check_requirements(db: Session, row: ContentMasterRevision, *, require_current: bool = True, frozen_checks: list[dict] | None = None) -> dict[str, dict]:
@@ -440,7 +591,7 @@ def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user:
     if row is None or row.project_id != project_id or row.content_unit_id != unit.id:
         raise HTTPException(404, "Master版本不存在")
     inputs = _serialize(db, row)
-    if inputs["readiness"]["state"] == "stale":
+    if inputs["readiness"]["state"] in {"stale", "blocked"}:
         raise HTTPException(409, {"code": "stale_master", "reasons": inputs["readiness"]["reasons"]})
     requirements = check_requirements(db, row)
     adapter = adapter_for(row.modality, row.payload_schema)
@@ -467,7 +618,7 @@ def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user:
     rows = []
     for kind, requirement in requirements.items():
         status, report = results.get(kind, ("incomplete", {"reasons": ["check_handler_unavailable"]}))
-        if inputs["readiness"]["state"] == "stale":
+        if inputs["readiness"]["state"] in {"stale", "blocked"}:
             status, report = "stale", {"reasons": inputs["readiness"]["reasons"]}
         if row.payload_schema in {"text.master.v2", "graphic.master.v2", "video.master.v2"}:
             report = {**report, "requirement": requirement["metadata"]}
@@ -622,6 +773,9 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     expected = payload.get("expected_revision", 0)
     if expected != head:
         raise HTTPException(409, {"code": "master_revision_conflict", "expected_revision": expected, "current_revision": head})
+    if payload_schema == "video.master.v2":
+        _validate_capture_confirmations(db, unit, latest, payload["payload"], context)
+        _validate_capture_takes(db, unit, latest, payload["payload"], context)
     if "creative_intent" not in payload:
         creative_intent = latest.creative_intent_json if latest else None
         creative_intent_hash = latest.creative_intent_hash if latest else None
@@ -684,7 +838,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
                 allowed_kinds = {
                     "shot_source": {"image", "video"}, "voice_audio": {"audio"}, "music_audio": {"audio"},
                     "cover_image": {"image"}, "render_output": {"video"},
-                    "shot_reference": {"image"}, "postproduction_parent": {"video"},
+                    "shot_reference": {"image"}, "postproduction_parent": {"video"}, "capture_take": {"video"},
                 }[role]
             local_render = role == "render_output" and material.public_use_allowed is not True and local_final_use_allowed(
                 db, project_id, unit_id, user.id, material, document=payload["payload"])
@@ -710,10 +864,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         modality=modality, channel_id=unit.channel_id, content_form=content_form, payload_schema=payload_schema,
         payload_json=payload["payload"], payload_hash=_hash(payload["payload"]), context_hash=_hash(context),
         creative_intent_json=creative_intent, creative_intent_hash=creative_intent_hash,
-        identity_snapshot_id=unit.identity_snapshot_id, creative_brief_revision_id=context["brief"]["id"] if context["brief"] else None,
+        identity_snapshot_id=None if context.get("production_domain") == "product" else unit.identity_snapshot_id, creative_brief_revision_id=context["brief"]["id"] if context["brief"] else None,
         fact_boundary_revision_id=context["boundary"]["id"] if context["boundary"] else None,
         origin_workflow_run_id=payload.get("origin_workflow_run_id"), origin_project_output_id=payload.get("origin_project_output_id"),
-        source_kind=payload.get("source_kind", "user_edit"), edit_summary_json=payload.get("edit_summary", {}), idempotency_key=key,
+        source_kind=payload.get("source_kind", "user_edit"), edit_summary_json={**payload.get("edit_summary", {}), **({"product_context_snapshot": context["product_context"]} if context.get("production_domain") == "product" else {})}, idempotency_key=key,
         request_fingerprint=fingerprint, created_by=user.email, created_at=utcnow(),
     )
     db.add(row)
@@ -755,7 +909,7 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         db.expire_all()
         project = db.get(ContentProject, project_id)
         unit = db.get(ContentUnit, unit_id)
-        if project.owner_user_id != user.id or project.status == "archived" or unit.project_id != project_id or unit.status == "archived" or unit.modality != modality or _hash(_context(db, project, unit, content_form=content_form)) != row.context_hash:
+        if project.owner_user_id != user.id or project.status == "archived" or unit.project_id != project_id or unit.lifecycle_readonly or unit.modality != modality or _hash(_context(db, project, unit, content_form=content_form)) != row.context_hash:
             db.rollback()
             raise HTTPException(409, {"code": "master_context_conflict"})
         if attestation is not None and adapter_for(modality, row.payload_schema).build_render_snapshot(db, row)["status"] != "ready":

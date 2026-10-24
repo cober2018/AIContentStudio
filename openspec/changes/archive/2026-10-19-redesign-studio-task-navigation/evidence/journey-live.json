@@ -1,0 +1,32 @@
+{
+  "checks": [
+    "Home opportunity keeps exact return",
+    "opportunity stages keep source",
+    "returns exact Home view",
+    "persona brief label correct",
+    "review exact unit",
+    "learning explicit sync view",
+    "review editing resumes delivery step",
+    "unsafe return fallback https://example.com",
+    "unsafe return fallback //example.com",
+    "unsafe return fallback /\\example.com",
+    "unsafe return fallback /unknown",
+    "layout 1440 /home",
+    "layout 1440 /opportunities?persona_id=2",
+    "layout 1440 /projects/3",
+    "layout 1440 /projects/3/units/7/production?workstep=delivery",
+    "layout 1440 /review?project=3&unit=7&step=delivery",
+    "layout 1440 /learning?tab=history&view=sync",
+    "layout 390 /home",
+    "layout 390 /opportunities?persona_id=2",
+    "layout 390 /projects/3",
+    "layout 390 /projects/3/units/7/production?workstep=delivery",
+    "layout 390 /review?project=3&unit=7&step=delivery",
+    "layout 390 /learning?tab=history&view=sync",
+    "no browser errors",
+    "no formal writes"
+  ],
+  "errors": [],
+  "writes": [],
+  "scope": "Live GET only; no generation, approval, sync or publication"
+}

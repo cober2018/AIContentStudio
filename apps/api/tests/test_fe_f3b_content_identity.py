@@ -622,3 +622,41 @@ def test_identity_refresh_after_run_forks_and_keeps_compatible_project_override(
     new_base = f"/api/v1/content-projects/{project_id}/units/{replacement['id']}"
     assert client.get(f"{new_base}/workflow-override", headers=alice).json()["workflow_id"] == override["workflow_id"]
     assert client.get(f"{base}/runs/{run.json()['id']}", headers=alice).json()["identity_snapshot_id"] == old_snapshot_id
+
+
+def test_channel_account_desk_accepts_public_handles_only(client, db_session):
+    from app.models import ContentAccount, User
+
+    headers, persona_id, existing_id = _publisher_account(client, db_session)
+    user = db_session.query(User).filter_by(email=headers["X-Studio-User"]).one()
+    path = f"/api/v1/content-personas/{persona_id}/channel-accounts"
+    user.role = "editor"
+    db_session.commit()
+    assert client.post(path, json={"name": "小红书", "platform_channel": "xiaohongshu", "platform_account_id": "zhishu_note"}, headers=headers).status_code == 403
+    user.role = "admin"
+    db_session.commit()
+    secret = "do-not-echo-secret"
+    for bad in (
+        {"name": "小红书", "platform_channel": "xiaohongshu", "platform_account_id": secret, "password": secret},
+        {"name": "小红书", "platform_channel": "xiaohongshu", "platform_account_id": "my-password"},
+        {"name": "小红书", "platform_channel": "xiaohongshu", "platform_account_id": "https://user:secret@example.com"},
+        {"name": "公众号", "platform_channel": "wechat", "platform_account_id": "zhishu_talk"},
+        {"name": "旧线程", "platform_channel": "x_thread", "platform_account_id": "old_thread"},
+        {"name": "没有", "platform_channel": "not-a-channel", "platform_account_id": "nobody"},
+    ):
+        response = client.post(path, json=bad, headers=headers)
+        assert response.status_code == 422, response.text
+        assert secret not in response.text
+        assert "https://user" not in response.text
+    created = client.post(path, json={"name": "小红书主号", "platform_channel": "xiaohongshu", "platform_account_id": "知数笔记"}, headers=headers)
+    assert created.status_code == 201, created.text
+    assert created.json()["platform_channel"] == "xiaohongshu"
+    assert created.json()["platform_binding_state"] == "bound_unverified"
+    assert created.json()["id"] != existing_id
+    assert client.post(path, json={"name": "重复", "platform_channel": "xiaohongshu", "platform_account_id": "知数笔记"}, headers=headers).status_code == 409
+    assert db_session.get(ContentAccount, existing_id).platform_account_id is None
+    assert client.put(
+        f"/api/v1/content-accounts/{existing_id}/platform-binding",
+        json={"platform_channel": "x", "platform_account_id": "wx0123456789abcdef"},
+        headers=headers,
+    ).status_code == 422

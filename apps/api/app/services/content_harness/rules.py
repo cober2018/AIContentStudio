@@ -232,7 +232,7 @@ def rules_for_draft(db: Session, draft: Draft, *, form_spec: dict | None = None)
 
 
 def media_requirements_for(db: Session, draft: Draft) -> dict:
-    """从 Channel Profile 读 media_requirements；legacy 渠道兜底：wechat 封面必需。"""
+    """从 Channel Profile 读 media_requirements；没有 profile 时用渠道方法插件的兜底。"""
     from .channel_registry import ChannelRegistryError, resolve_content_form
 
     job = draft.content_job
@@ -245,5 +245,7 @@ def media_requirements_for(db: Session, draft: Draft) -> dict:
             return {}
         if spec.source in {"profile", "legacy_template"}:
             return spec.media_requirements
-        break  # legacy_default：走兜底
-    return {"cover": "required"} if job.channel == "wechat" else {}
+        break  # legacy_default：走渠道方法插件的兜底
+    from .channel_methods import legacy_media_requirements
+
+    return legacy_media_requirements(job.channel)

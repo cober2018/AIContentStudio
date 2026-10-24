@@ -1,0 +1,149 @@
+/Users/mshengran/Project/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+F.........FF                                                             [100%]
+=================================== FAILURES ===================================
+______________ test_reference_pagination_and_saved_exact_version _______________
+
+client = <starlette.testclient.TestClient object at 0x11295d940>
+db_session = <sqlalchemy.orm.session.Session object at 0x110a55010>
+
+    def test_reference_pagination_and_saved_exact_version(client, db_session):
+        headers, persona = _identity(client)
+        material = Material(kind='screenshot',title='分页截图')
+        db_session.add(material); db_session.flush()
+        rows=[]
+        for i in range(31):
+            row=MaterialRevision(material_id=material.id,revision_no=i+1,content_hash=hashlib.sha256(str(i).encode()).hexdigest(),status='ready',model_use_allowed=True,mime_type='image/png')
+            db_session.add(row); rows.append(row)
+        for i in range(35):
+            db_session.add(SourceDocument(title='同名来源',source_type='obsidian',raw_text='摘录',sha256=digest(i),metadata_json={'schema':'obsidian.excerpt.v1'}))
+        valid=SourceDocument(title='同名来源',source_type='text',raw_text='真实原文唯一片段',sha256=hashlib.sha256('真实原文唯一片段'.encode()).hexdigest())
+        db_session.add(valid); db_session.commit()
+        base=f'/api/v1/capability-memory/persona-reference-styles/{persona}/resources'
+        first=client.get(base,headers=headers,params={'q':'分页截图'}).json()
+        assert len(first['items'])==30 and first['next_offset']==30
+        second=client.get(base,headers=headers,params={'q':'分页截图','offset':30}).json()
+        assert [item['reference']['id'] for item in second['items']]==[rows[0].id]
+        exact=client.get(base,headers=headers,params={'reference_id':rows[0].id}).json()
+        assert exact['items'][0]['modality']=='image'
+        sources=client.get(base,headers=headers,params={'kind':'source','q':'同名来源'}).json()
+        assert [item['reference']['id'] for item in sources['items']]==[valid.id]
+        content={'content_schema':'persona.reference-style.v2','text':'保持层次清楚','observations':[{
+            'modality':'image','certainty':'direct','statement':'明确层级','reference':exact['items'][0]['reference'],'locator':'上半区',
+            'polarity':'prefer','reason':'便于读者定位','inspection':'viewed','location':{'x':0,'y':0,'width':1,'height':0.5}}]}
+        res=client.post('/api/v1/capability-memory',headers=headers,json={'kind':'style_preset','name':'隔离风格候选','scope_type':'persona','scope':{'id':persona},'content':content})
+>       assert res.status_code==201,res.text
+E       AssertionError: {"detail":{"code":"capability_input_invalid"}}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:48: AssertionError
+_________ test_located_feedback_rerun_accept_then_no_stale_reinjection _________
+
+client = <starlette.testclient.TestClient object at 0x1149c5b80>
+db_session = <sqlalchemy.orm.session.Session object at 0x115579550>
+
+    def test_located_feedback_rerun_accept_then_no_stale_reinjection(client,db_session):
+        headers,project,unit,base,result,acceptance=_proposal(client)
+        first=_accept(client,base,headers,acceptance)
+        assert first.status_code==200,first.text
+        stage=f'{base}/creation-recipe/stages/draft'
+        targets=client.get(f'{stage}/feedback-targets',headers=headers,params={'run_id':result['run_id'],'attempt_id':result['attempt_id']})
+        assert targets.status_code==200,targets.text
+        item=targets.json()['items'][0]
+        location=next(loc['location'] for loc in item['locations'] if loc['location']['kind']=='text')
+        request={key:acceptance[key] for key in ('run_id','attempt_id','expected_output_hash','expected_resolution_hash')}
+        request.update(target=item['target'],location=location,note='把选中段落改得更清楚，保留其余事实',feedback_key='located-rerun',decision='rerun_requested')
+        feedback=client.post(f'{stage}/feedback',headers=headers,json=request)
+        assert feedback.status_code==200,feedback.text
+        preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':result['run_id']}).json()
+        assert preview['ready'],preview['blockers']
+        assert preview['context']['located_feedback']['target']==item['target']
+        next_result=client.post(f'{stage}/run',headers=headers,json={'run_id':result['run_id'],'expected_resolution_hash':preview['resolution_hash'],'invocation_key':'located-second'})
+        assert next_result.status_code==200,next_result.text
+        next_result=next_result.json(); choice=next_result['output']['candidates'][0]
+        adopted=client.post(f'{stage}/accept-master',headers=headers,json={'run_id':result['run_id'],'attempt_id':next_result['attempt_id'],
+          'expected_output_hash':next_result['receipt']['output_hash'],'expected_resolution_hash':next_result['receipt']['resolution_hash'],
+          'expected_context_hash':preview['context_hash'],'candidate_id':choice['candidate_id'],'candidate_hash':choice['candidate_hash'],
+          'expected_revision':1,'adoption_key':'located-adopt-second','payload':choice['payload'],'asset_refs':choice['asset_refs'],'evidence_refs':choice['evidence_refs'],'decision':'accepted'})
+>       assert adopted.status_code==200,adopted.text
+E       AssertionError: {"detail":{"code":"stage_adoption_context_changed"}}
+E       assert 409 == 200
+E        +  where 409 = <Response [409 Conflict]>.status_code
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:139: AssertionError
+______________ test_director_v2_declared_parameters_are_consumed _______________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x115579d30>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116ea47d0>
+
+    def test_director_v2_declared_parameters_are_consumed(db_session,monkeypatch):
+        import test_persona_creative_studio as existing
+>       existing.test_director_instruction_and_aspect_are_consumed_without_dispatch(db_session,monkeypatch,'9:16')
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db_session = <sqlalchemy.orm.session.Session object at 0x115579d30>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116ea47d0>
+ratio = '9:16'
+
+    @pytest.mark.parametrize("ratio", ["1:1", "4:3", "3:4", "16:9", "9:16"])
+    def test_director_instruction_and_aspect_are_consumed_without_dispatch(db_session, monkeypatch, ratio):
+        from types import SimpleNamespace
+    
+        from app.models import CreativeExecution, CreativeExecutionPackage
+        from app.services import (
+            creative_configuration,
+            creative_packages,
+            stage_domain_integrations,
+            stage_resolver,
+            starter_personas,
+        )
+        from app.services.content_harness.nodes import bootstrap_builtin_nodes
+        from app.services.content_harness.registry import registry
+    
+        bootstrap_builtin_nodes()
+        node = starter_personas._definition("video", "starter.ai-tech-engineer.v1")["nodes"][-1]
+        contract = registry.descriptor("node", node["plugin"], node["plugin_version"]).stage_contract
+        saved_config = deepcopy(node["config"])
+        override = {"instruction": "镜头停留便于读图", "aspect_ratio": ratio}
+        user, unit = SimpleNamespace(id=1), SimpleNamespace(id=1, project_id=1)
+        context = {"master": {"id": 1}, "identity": {"content": {
+            "video_creative_profile": deepcopy(catalog.BLUEPRINTS["starter.ai-tech-engineer.v1"]["video_creative_profile"]),
+        }}}
+        source = SimpleNamespace(payload_schema="video.master.v2", payload_json={"aspect_ratio": [int(part) for part in ratio.split(":")]},
+                                 payload_hash="a" * 64, context_hash="b" * 64)
+        # Source loading is outside this narrow adapter test; the real request/gate remains under test.
+        monkeypatch.setattr(creative_packages, "_source", lambda *_args, **_kwargs:
+                            (source, {"assets": [], "evidence": []}, source))
+        monkeypatch.setattr(creative_packages, "_check_evidence", lambda *_args: None)
+        effective_node, method, creative, blockers = creative_configuration.frozen_stage(
+            db_session, user, SimpleNamespace(id=1, project_id=1, modality="video"), node, contract, context, override)
+        assert not blockers, blockers
+        assert node["config"] == saved_config
+        config = contract.effective_config(effective_node["config"], override)[1]
+        resolved, model, blockers = stage_domain_integrations.prepare_domain(
+            db_session, user, unit, effective_node, config, context, creative=creative)
+        assert not blockers, blockers
+        request = resolved["domain"]["request"]
+        assert "镜头停留便于读图" in request["constraints"]
+        assert catalog.load_skill("studio.video.director-package@1")["instruction"] in request["constraints"]
+        node_v2 = deepcopy(node)
+        node_v2["config"] = {**node["config"], "method": {**node["config"]["method"], "skill_ref": "studio.video.director-package@2"}}
+        effective_v2, method_v2, creative_v2, blockers_v2 = creative_configuration.frozen_stage(
+            db_session, user, SimpleNamespace(id=1, project_id=1, modality="video"), node_v2, contract, context, override)
+        assert not blockers_v2, blockers_v2
+        resolved_v2, _, blockers_v2 = stage_domain_integrations.prepare_domain(
+            db_session, user, unit, effective_v2, config, context, creative=creative_v2)
+        assert not blockers_v2, blockers_v2
+        instruction_v2 = catalog.load_skill("studio.video.director-package@2")["instruction"]
+>       assert instruction_v2 in resolved_v2["domain"]["request"]["constraints"]
+E       AssertionError: assert '把接受的Video Master、镜头计划和精确素材整理为director.video.v1，使用现有stage.professional.prepare桥接外部执行。描述目标、约束、人工验收项与所需输出，不自动dispatch执行器...法回答“怎样组织”，角色预设回答“怎样表达”，不能修改模型、路由、voice_id、rate或其它生成参数。输出只用当前请求的严格合同；每项建议说明具体内容依据，未知资料留缺口。技术检查、内容质量和用户认可分别记录，模型自评不是已接受。' in ['把接受的Video Master、镜头计划和精确素材整理为director.video.v1，使用现有stage.professional.prepare桥接外部执行。描述目标、约束、人工验收项与所需输出，不自动dispatch执行...1/v2/render/Candidate历史保持兼容。外部结果先staging，人工接受才成为MaterialRevision，然后仍需显式绑定保存Master；本包的说明不授权发布、审批或任意文件系统操作。', '镜头停留便于读图']
+
+tests/test_persona_creative_studio.py:368: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_reference_pagination_and_saved_exact_version
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_located_feedback_rerun_accept_then_no_stale_reinjection
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_director_v2_declared_parameters_are_consumed
+3 failed, 9 passed in 2.18s

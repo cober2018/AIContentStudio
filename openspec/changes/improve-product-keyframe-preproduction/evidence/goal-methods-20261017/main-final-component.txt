@@ -1,0 +1,10 @@
+PASS latest other settings preserved {"order":["profile","methods","put","methods"],"errors":[],"revision":3}
+PASS conflict between {"order":["profile","methods","put"],"errors":["制作配置已有新版本，请重新保存方法选择。"],"revision":2}
+PASS conflict before-put {"order":["profile","methods","put"],"errors":["制作配置已有新版本，请重新保存方法选择。"],"revision":2}
+PASS unchanged A preserves remote change {"order":["profile","methods","put","methods"],"errors":[],"revision":3}
+PASS same binary switch both changed {"order":["profile","methods","put","methods"],"errors":[],"revision":3}
+PASS group off {"order":["profile","methods","put","methods"],"errors":[],"revision":2}
+PASS first enable {"order":["profile","methods","put","methods"],"errors":[],"revision":1}
+PASS inherited script preserved with partial work overrides {"order":["profile","methods","put","methods"],"errors":[],"revision":2}
+PASS no-op refresh no write {"order":["profile","methods","methods"],"errors":[],"revision":2}
+9 scenarios passed; actual TSX handlers + in-memory real API service; no browser or production writes

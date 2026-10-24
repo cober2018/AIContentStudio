@@ -1,0 +1,88 @@
+{
+  "checks": [
+    {
+      "url": "/projects",
+      "width": 1440
+    },
+    {
+      "url": "/projects?view=new",
+      "width": 1440
+    },
+    {
+      "url": "/production?workspace=persona",
+      "width": 1440
+    },
+    {
+      "url": "/production?workspace=persona&view=records",
+      "width": 1440
+    },
+    {
+      "url": "/projects/34?tab=overview",
+      "width": 1440
+    },
+    {
+      "url": "/projects/34?tab=matrix",
+      "width": 1440
+    },
+    {
+      "url": "/projects/34?tab=execution",
+      "width": 1440
+    },
+    {
+      "url": "/projects/34?tab=brief",
+      "width": 1440
+    },
+    {
+      "url": "/projects/34?tab=versions",
+      "width": 1440
+    },
+    {
+      "url": "/projects/34?tab=activity",
+      "width": 1440
+    },
+    {
+      "url": "/projects",
+      "width": 390
+    },
+    {
+      "url": "/projects?view=new",
+      "width": 390
+    },
+    {
+      "url": "/production?workspace=persona",
+      "width": 390
+    },
+    {
+      "url": "/production?workspace=persona&view=records",
+      "width": 390
+    },
+    {
+      "url": "/projects/34?tab=overview",
+      "width": 390
+    },
+    {
+      "url": "/projects/34?tab=matrix",
+      "width": 390
+    },
+    {
+      "url": "/projects/34?tab=execution",
+      "width": 390
+    },
+    {
+      "url": "/projects/34?tab=brief",
+      "width": 390
+    },
+    {
+      "url": "/projects/34?tab=versions",
+      "width": 390
+    },
+    {
+      "url": "/projects/34?tab=activity",
+      "width": 390
+    }
+  ],
+  "writes": [],
+  "errors": [],
+  "projectCount": 7,
+  "readbackIdentical": true
+}

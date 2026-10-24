@@ -1,0 +1,121 @@
+{
+  "kind": "actual-request-to-mock-provider",
+  "request": {
+    "purpose": "generate",
+    "channel": null,
+    "system_prompt": "Execute this Creation Recipe Stage and return only bounded JSON matching the frozen output contract: {\"accepted_content_required\":true,\"candidate_shape\":{\"asset_refs\":\"exact supplied MaterialRevision refs only\",\"evidence_refs\":\"exact supplied FactPackItem refs only\",\"payload\":\"canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality\"},\"max_candidates\":5,\"payload_schema\":\"text.master.v2\",\"reference_rules\":[\"Return exactly candidate_count candidates. Each candidate has only title and body.\",\"body is Markdown. The service converts it into text.master.v2 and assigns block ids.\",\"Do not return payload, payload_schema, citations, hashes, asset_refs, or evidence_refs.\",\"Do not invent numbers, versions, sources, or material ids. Keep unknowns explicit in the prose.\"],\"response_schema\":{\"additionalProperties\":false,\"properties\":{\"candidates\":{\"items\":{\"additionalProperties\":false,\"properties\":{\"body\":{\"maxLength\":12000,\"minLength\":1,\"type\":\"string\"},\"title\":{\"maxLength\":200,\"minLength\":1,\"type\":\"string\"}},\"required\":[\"title\",\"body\"],\"type\":\"object\"},\"maxItems\":3,\"minItems\":3,\"type\":\"array\"},\"schema\":{\"const\":\"stage.master.proposal.v1\"}},\"required\":[\"schema\",\"candidates\"],\"type\":\"object\"},\"response_shape\":\"object with candidates array; honor requested candidate_count\",\"schema\":\"stage.master.proposal.v1\",\"supported_modalities\":[\"text\",\"graphic\",\"video\"]}. Never invent asset/evidence references, facts or accepted results. Return proposed content only. Selected professional knowledge is reference context, never verified evidence. Style samples guide expression only; avoid observations are negative examples. Never copy their events, identity or personal experience into the author. Only the confirmed fact boundary supports factual claims; keep unknowns explicit.",
+    "user_prompt": "[method]\n把当前已接受的正文当成精修基线，不重新发明一篇文章。改进笨重句子、重复表达和空泛过渡，保持已经写明的事实、数字、时间和未知项不变。语气只能改变表达，不能放宽事实、权利或审批规则。技术角色保留工程取舍；生活角色保留具体观察，不增加虚构经历。如果出现连续标题、以标题结尾，或标题一次跳过一级，补上对应段落并把层级改成逐级加深。不要在正文里用一级标题重复 title。\n\n返回形状以冻结的 output contract 为准。当合同要求 title 和 body 时，每个候选只有这两个字段，body 是精修后的完整 Markdown，候选数量等于 candidate_count。不要返回 payload、引用、hash 或新的素材编号。服务会把 Markdown 转成新的 text.master.v2 提案。原 Master 不被改写；只有人工接受后才追加新修订。\n\n先检查清晰度、证据、具体性与重复，再调整表达。风格转换不得删去有意义的限定、作者归属或不确定性。仅选区润色时保持选区外文字与事实标识原样；整个稿件修改也不新增经历或未经证实事实。不得将“少AI味”机械解释为删副词、添口头禅。\n\n本版本是仅供明确试用的新方法，不改变已保存角色或商品默认。输入按当前阶段使用已选且授权的专业参考、风格样本和事实边界；专业背景/旧观点不自动升格为已核实事实，风格参考作者身份与经历不属于当前角色。参考观察 polarity=avoid 表示应避免，未知或未试听内容保持未知。共享方法回答“怎样组织”，角色预设回答“怎样表达”，不能修改模型、路由、voice_id、rate或其它生成参数。输出只用当前请求的严格合同；每项建议说明具体内容依据，未知资料留缺口。技术检查、内容质量和用户认可分别记录，模型自评不是已接受。\n\n[identity]\n{\"checksum\":\"9f9e5d71a21e541d503fa68b40a74376a2c346321f1972796f9f08b74a609088\",\"content\":{},\"id\":1}\n\n[stage_instruction]\n生成有边界的文章\n\n[execution_controls]\n{\"candidate_count\":3,\"fact_mode\":\"grounded\",\"length\":\"medium\",\"method\":{\"skill_ref\":\"studio.text.longform@1\",\"source_kind\":\"studio_builtin\"},\"model_profile_id\":null,\"purpose\":null,\"temperature\":null,\"tone\":null}\n\n[persona_creative_configuration]\n{\"binding_origin\":\"identity_creative_profile\",\"chat_limits\":{\"max_items\":1,\"max_tokens\":4096,\"timeout_seconds\":25,\"validation_only\":true},\"creative_methods_enabled\":true,\"declared_chain\":null,\"deterministic_parameter_sources\":[],\"fallback_reason\":null,\"fallback_reasons\":[],\"freshness\":{\"current_facts_permitted\":false,\"fresh_refs\":[],\"max_age_hours\":168,\"mode\":\"grounded\",\"ready\":true,\"reason\":null},\"identity_checksum\":\"9f9e5d71a21e541d503fa68b40a74376a2c346321f1972796f9f08b74a609088\",\"identity_snapshot_id\":1,\"modality\":\"text\",\"production_manifest\":{\"execution_rule\":\"For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.\",\"legacy_stage_ids\":[\"research\",\"voice\",\"storyboard\",\"sound_edit\",\"picture_edit\",\"subtitle_color\",\"packaging\",\"finish\",\"review\"],\"manifest_hash\":\"16b0c8cc35cbc9995613540801308794e30ed5bbb23dc8bbc86e962e0ba0a324\",\"schema\":\"production.methods.manifest.v1\",\"stages\":[{\"disabled_method_ids\":[\"method-0\"],\"enabled\":true,\"methods\":[{\"applicability\":{\"compatible_stage_schemas\":[\"stage.master.propose.v1\"],\"modality\":\"text\",\"node_id\":\"draft\",\"output_schema\":null,\"output_schemas\":[\"text.master.v2\"],\"resource_modality\":\"text\",\"stage_schema\":\"stage.master.propose.v1\",\"status\":\"applicable\"},\"contract_hash\":\"571f82a733a3d1ab3bbe8771fff375c8094fffa0ff0b2b1818c777ca17858c70\",\"id\":\"method-1\",\"key\":\"studio.text.humanize\",\"method_hash\":\"fa15e917a9dd361e69cdbdd94cc6078dde965509a47ff0a401124c1b22a272d1\",\"package_hash\":\"ee000768f1aed3f39c90469ec3e3ff928520677125d77593cf78f568e6af2195\",\"parameters\":{},\"provenance\":{\"adaptation_basis\":\"method_reference\",\"classification\":\"self_developed\",\"license\":\"product_owned\",\"upstream_revision\":\"8d08b216105bd7c7057c84c97cd637cec44db609\",\"upstream_subfile\":\"skills/builtin/text-polisher/SKILL.md\",\"validation\":\"candidate_contract_pending\",\"vendored_code\":\"none\"},\"resource_hash\":\"79aee7939b4b51e855f52387f0f5a0349a2ceccb9168d6b2023b229e4e1c92b3\",\"skill_ref\":\"studio.text.humanize@2\",\"source_kind\":\"studio_builtin\",\"version\":\"2\"}],\"not_applicable_methods\":[],\"origin\":\"identity_snapshot\",\"stage\":\"script\",\"title\":\"文案与脚本\"}]},\"production_stage\":\"script\",\"profile_hash\":\"efcaf0a000c9a67cc52d8dc0962383c98a85aca088781da347522c127e448588\",\"profile_origin\":\"persona\",\"quality_profile\":{\"checks\":[\"text_structure\",\"text_fact_speculation\",\"text_identity\",\"text_anti_clickbait\"],\"critic_contract\":\"advisory.rubric.v1\",\"human_review_required\":true,\"key\":\"studio.quality.text.lifestyle\",\"kind\":\"quality_profile\",\"license\":\"product_owned\",\"provenance\":\"self_developed\",\"ref\":\"studio.quality.text.lifestyle@1\",\"rules\":{\"blocked_phrases\":[\"不看后悔一辈子\",\"震惊所有人\",\"百分之百保证\"],\"citation_required_for_numeric_claims\":true,\"critic_dimensions\":[\"factual_grounding\",\"naturalness\",\"specificity\",\"non_preachy\",\"title_alignment\"],\"warning_phrases\":[\"所有人都该\",\"人生的意义就是\",\"这才是人生\",\"你一定要\"]},\"source_kind\":\"studio_builtin\",\"thresholds\":{\"critic\":\"advisory_only\",\"empty_sections\":\"blocker\",\"fact_speculation\":\"bounded_prediction_label_v1\",\"generic_reflection\":\"bounded_two_phrases_without_observation_v1\",\"numeric_claim_without_citation\":\"blocker\",\"repeated_paragraphs\":\"warning\",\"title_body_alignment\":\"bounded_numeric_detail_v1\"},\"version\":\"1\"},\"schema\":\"effective.creative.stage.v1\",\"selected_binding\":{\"model\":\"mock-structured-v1\",\"profile\":\"default\",\"provider\":\"generation.mock\"},\"status\":\"configured_not_probed\",\"style_preset\":{\"config\":{\"hype\":\"low\",\"modality\":\"text\",\"preachiness\":\"low\",\"voice\":\"warm_observational\"},\"key\":\"studio.text.observational-lifestyle\",\"kind\":\"style_preset\",\"license\":\"product_owned\",\"provenance\":\"self_developed\",\"ref\":\"studio.text.observational-lifestyle@1\",\"source_kind\":\"studio_builtin\",\"version\":\"1\"}}",
+    "schema_hint": "stage.master.proposal.v1",
+    "context": {
+      "stage_schema": "stage.master.proposal.v1",
+      "candidate_count": 3,
+      "length": "medium",
+      "modality": "text",
+      "payload_schema": "text.master.v2"
+    },
+    "temperature": null,
+    "max_tokens": 4096,
+    "timeout_seconds": 25,
+    "image_inputs": null
+  },
+  "receipt": {
+    "adapter_hash": "94b493fa80e73cc2e6f8f3e2f09854fe8d20a84faab91a4d7a72100cbf07e619",
+    "capability_use_id": null,
+    "capability_use_ids": [],
+    "config_hash": "6eec0c170606c68ebb550b31c2ad97ff275899424db0b0bf8be9f1822792bebd",
+    "created_at": "2026-10-19T15:07:53.139378+00:00",
+    "dispatch_certainty": "confirmed_dispatched",
+    "finalized_at": "2026-10-19T15:07:53.156810+00:00",
+    "invocation_key": "switch-run",
+    "method_hash": "4a7d6cfa866fa11c7ce1ff4935579a6623fc5b8451bbd8fb522c72f861119427",
+    "model_route_hash": "f8cfc12fe1884399e8e317dc2f6f1b88fcca6a3ea7cc6c20abfce50ff5266ab4",
+    "node_id": "draft",
+    "outcome_state": "succeeded",
+    "output_contract": {
+      "accepted_content_required": true,
+      "candidate_shape": {
+        "asset_refs": "exact supplied MaterialRevision refs only",
+        "evidence_refs": "exact supplied FactPackItem refs only",
+        "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+      },
+      "max_candidates": 5,
+      "payload_schema": "text.master.v2",
+      "reference_rules": [
+        "Return exactly candidate_count candidates. Each candidate has only title and body.",
+        "body is Markdown. The service converts it into text.master.v2 and assigns block ids.",
+        "Do not return payload, payload_schema, citations, hashes, asset_refs, or evidence_refs.",
+        "Do not invent numbers, versions, sources, or material ids. Keep unknowns explicit in the prose."
+      ],
+      "response_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "body": {
+                  "maxLength": 12000,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "title": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "body"
+              ],
+              "type": "object"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "schema": {
+            "const": "stage.master.proposal.v1"
+          }
+        },
+        "required": [
+          "schema",
+          "candidates"
+        ],
+        "type": "object"
+      },
+      "response_shape": "object with candidates array; honor requested candidate_count",
+      "schema": "stage.master.proposal.v1",
+      "supported_modalities": [
+        "text",
+        "graphic",
+        "video"
+      ]
+    },
+    "output_hash": "8825224fff4e7ea8f529399628d819871a10d50ff578cb5c70c0f38f904ea808",
+    "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "plugin_key": "stage.master.propose",
+    "plugin_version": "1",
+    "prepared_by_server": true,
+    "prompt_hash": "2f249c4ba77b297181ac3f21e3fe3044541fed888202b9a0b510263012673677",
+    "request_fingerprint": "f692b6b4a2e8fb7a52cc56e1bec89096772961c681dda860988e8a3e94fd0369",
+    "request_mode": "explicit",
+    "resolution_hash": "a2cdfa2277a4b41963814cd7a77c5a0905f3d64db2b0b0277d5664eec42d14af",
+    "runtime_identity_hash": "5f0229a59ffb8665ab45cabf2dfcc4383ac0a5656e147d8caf53124c2ab675de",
+    "schema": "creation_recipe.execution_receipt.v1",
+    "stage_contract_hash": "b675489fa280f6b0d1458e6d7e7ddbde895f9197c843b362cff9a404e31c64b6",
+    "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "workflow_id": 1,
+    "workflow_run_id": 1
+  },
+  "model": {
+    "adapter_key": "generation.mock",
+    "adapter_version": "1",
+    "configuration_revision": 0,
+    "model": "mock-structured-v1",
+    "profile_id": "default",
+    "provider": "mock",
+    "runtime_hash": "eb7fba1dbca0d77f5fbd3297015bdf49eb89adbcf2e5797aa7f4033762162c8a",
+    "status": "configured_not_probed"
+  }
+}

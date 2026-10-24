@@ -21,10 +21,16 @@ export interface AssessmentRevision {
   revision_no: number;
   assessment: Partial<Assessment>;
   checksum: string;
+  analysis_source?: string | null;
+  analysis_provider_key?: string | null;
+  analysis_provider_version?: string | null;
   created_by?: string;
   created_at?: string;
 }
 export interface Opportunity {
+  persona_id?: number | null;
+  research_run_id?: number | null;
+  business_date?: string | null;
   id: number;
   title: string;
   summary: string;

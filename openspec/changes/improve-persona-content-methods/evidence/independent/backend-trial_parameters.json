@@ -1,0 +1,16 @@
+{
+  "old_status": 200,
+  "trial_status": 200,
+  "old_parameters": {
+    "candidate_count": 4,
+    "length": "medium",
+    "model_profile_id": null
+  },
+  "trial_parameters": {
+    "candidate_count": 4,
+    "length": "medium",
+    "model_profile_id": null
+  },
+  "old_ready": true,
+  "trial_ready": true
+}

@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "reader matrix no create",
+    "reader project no edit",
+    "query preserved",
+    "old brief URL",
+    "continue link",
+    "history legacy URL",
+    "activity legacy URL",
+    "empty guidance",
+    "admin create preserved",
+    "no writes",
+    "no page errors"
+  ],
+  "errors": [],
+  "writes": []
+}

@@ -1,0 +1,116 @@
+{
+  "role": "admin",
+  "userError": false,
+  "error": true,
+  "conflict": false,
+  "calls": [
+    {
+      "path": "/settings/product",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/product-production-defaults",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/product-production-defaults",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/settings/model-registration",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/settings/model-registration",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/product-production-defaults",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/product-production-defaults",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/settings/product",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/settings/product",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/settings/product",
+      "query": "",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "errors": [],
+  "unexpected": [],
+  "checks": [
+    "six-purpose settings directory",
+    "directory no model fetch",
+    "directory no runtime probe",
+    "directory no writes",
+    "models category URL",
+    "native model three subviews",
+    "native routing remains",
+    "dirty category exit asks before discard",
+    "dialog autofocus stays inside",
+    "dialog reverse tab trapped",
+    "dialog forward tab trapped",
+    "cancel leaves draft intact",
+    "cancel leaves category intact",
+    "explicit discard returns directory",
+    "draft navigation did not save",
+    "discarded draft not resurrected",
+    "browser back canceled preserves URL and draft",
+    "category reload restores team",
+    "raw settings secondary",
+    "invalid category explicit error",
+    "read failure no model editor",
+    "read failure explained",
+    "zero writes",
+    "zero page errors",
+    "zero unexpected requests"
+  ],
+  "scope": "All API intercepted, no formal writes"
+}

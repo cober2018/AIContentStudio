@@ -1,0 +1,17 @@
+{
+  "checks": [
+    {
+      "path": "/projects/35/units/44/production?stage=master",
+      "width": 1440,
+      "pass": true
+    },
+    {
+      "path": "/projects/35/units/44/production?stage=master",
+      "width": 390,
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "writes": [],
+  "scope": "live read-only browser; all business mutations used CLI APIs"
+}

@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-19",
+  "proposal_only": true,
+  "delta_specs": 6,
+  "added_requirements": 14,
+  "modified_requirements": 3,
+  "implementation_tasks": 25,
+  "completed_implementation_tasks": 0,
+  "protected_files_unchanged": 21,
+  "broken_relative_links": [],
+  "trailing_whitespace": [],
+  "canonical_modified_titles_exist": true,
+  "database_checked": false,
+  "runtime_acceptance": false
+}

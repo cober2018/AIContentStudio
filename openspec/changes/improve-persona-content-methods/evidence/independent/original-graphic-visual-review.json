@@ -1,0 +1,69 @@
+{
+  "scope": "8 existing PNGs; no audio listening or video viewing; no new outputs accepted",
+  "items": [
+    {
+      "unit_id": 43,
+      "page_number": 1,
+      "file": "/tmp/media-43-0.png",
+      "sha256": "716bff6ea0957d09b503a8323353d2ca688e11f9f484c84ad8012d21802d0489",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "三项定义使用串联方框；需让结构服务解释。"
+    },
+    {
+      "unit_id": 43,
+      "page_number": 2,
+      "file": "/tmp/media-43-1.png",
+      "sha256": "4cf2670acc2cae9a3faf934e9551d4ea5db968517e32beef853f1d07dbbcc6c3",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "类别和转人工动作串联；关系语义容易误解。"
+    },
+    {
+      "unit_id": 43,
+      "page_number": 3,
+      "file": "/tmp/media-43-2.png",
+      "sha256": "901f102b361c3f77c7b88fe0e5b53a34fd1d3a285a44cb96cdca813fbc937c05",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "边界、冲突、转人工串联，缺少实际条件分支。"
+    },
+    {
+      "unit_id": 43,
+      "page_number": 4,
+      "file": "/tmp/media-43-3.png",
+      "sha256": "0faa1530742322263efc54e9767fe05751d190adf131557a99ffe0408bc18476",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "主要是声明；应核对是否需要单独占一页。"
+    },
+    {
+      "unit_id": 45,
+      "page_number": 1,
+      "file": "/tmp/media-45-0.png",
+      "sha256": "05762679a67ee58964257ecc9fbed211687edd55e37fa36dec7d815f568205c0",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "有情境插画及生活行动建议，作为结构基线。"
+    },
+    {
+      "unit_id": 45,
+      "page_number": 2,
+      "file": "/tmp/media-45-1.png",
+      "sha256": "c71494e8a640d80ef2f7cd9c2e9468fd0574ca4ada692ef03f4a4196fba37ef0",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "报道归属与免责内容占主要位置。"
+    },
+    {
+      "unit_id": 45,
+      "page_number": 3,
+      "file": "/tmp/media-45-2.png",
+      "sha256": "e3eb94bd0df29ac838b663cb7d26fec043b7776856a9616b22a56bb19854a125",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "无场景图，标题窗台而正文沙发/长椅，场景不够具体。"
+    },
+    {
+      "unit_id": 45,
+      "page_number": 4,
+      "file": "/tmp/media-45-3.png",
+      "sha256": "8540fa0fba7df5c00ad297b5acce3c9b3d05cf6e47b18767e0cc94c435def864",
+      "review": "independent AI visual inspection of actual raster",
+      "observation": "生活建议可理解，与前两页视觉模板一致，缺少视觉叙事。"
+    }
+  ]
+}

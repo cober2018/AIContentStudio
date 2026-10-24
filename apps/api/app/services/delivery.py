@@ -53,7 +53,9 @@ def safe_publisher_result(result: PublisherResult) -> PublisherResult:
         status = "unknown"
     raw_metadata = result.metadata if isinstance(result.metadata, dict) else {}
     metadata = {}
-    if raw_metadata.get("channel") in {"wechat", "x", "xiaohongshu", "douyin"}:
+    from .content_harness.channel_methods import echoes_metadata_channel
+
+    if echoes_metadata_channel(raw_metadata.get("channel")):
         metadata["channel"] = raw_metadata["channel"]
     if type(raw_metadata.get("draft_box")) is bool:
         metadata["draft_box"] = raw_metadata["draft_box"]
@@ -71,8 +73,12 @@ def resolve_publisher(channel: str, content_form: str, action: str):
     if action == DeliveryAction.manual_handoff.value:
         return None, "publisher.copy.legacy", "1"
     if action == DeliveryAction.auto_draft.value:
-        if channel == "wechat":
-            return registry.resolve("publisher", "publisher.wechat.wewrite", "1"), "publisher.wechat.wewrite", "1"
+        from .content_harness.channel_methods import get as channel_method
+
+        plugin = channel_method(channel)
+        if plugin and plugin.auto_draft_publisher:
+            key, version = plugin.auto_draft_publisher
+            return registry.resolve("publisher", key, version), key, version
         raise HTTPException(422, f"capability_unavailable: {channel} 尚无已注册的 auto_draft publisher")
     raise HTTPException(422, f"action {action} 尚无 publisher 实现")
 
@@ -169,7 +175,12 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
             raise HTTPException(409, {"code": "candidate_target_account_mismatch"})
         if content_account_id is not None:
             account = db.get(ContentAccount, content_account_id)
-            if account is None or account.status != "active" or account.persona_id != unit.persona_id:
+            from .content_identity import owned_entity, owned_product_account
+            if unit.production_domain == "product":
+                owned_product_account(db, user, content_account_id, mutable=True)
+            else:
+                owned_entity(db, user, "account", content_account_id, mutable=True)
+            if account is None or account.status != "active" or (unit.production_domain != "product" and account.persona_id != unit.persona_id):
                 raise HTTPException(404, "内容账号不存在")
             # v5 现代候选：origin 账号不再是目标锁；每个目标账号独立授权。
             # legacy（master）候选保持固定账号语义，不得静默松绑。
@@ -201,14 +212,17 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
     if payload.action not in ACTIONS:
         raise HTTPException(422, f"action 只允许 {sorted(ACTIONS)}")
     publisher, publisher_key, publisher_version = resolve_publisher(spec.channel, spec.content_form, payload.action)
+    from .content_harness.channel_methods import get as channel_method
+
+    plugin = channel_method(payload.channel)
+    account = db.get(ContentAccount, content_account_id) if content_account_id is not None else None
     official = (is_variant and payload.action == DeliveryAction.auto_draft.value
-                and payload.channel == "wechat" and content_account_id is not None
-                and db.get(ContentAccount, content_account_id).platform_channel == "wechat")
+                and plugin is not None and plugin.official_publisher is not None
+                and account is not None and account.platform_channel == payload.channel)
     if official:
-        from . import wechat_official
         from .wechat_official_delivery import validate_target
 
-        publisher_key, publisher_version = wechat_official.KEY, wechat_official.VERSION
+        publisher_key, publisher_version = plugin.official_publisher
         publisher = registry.resolve("publisher", publisher_key, publisher_version)
         scope_target = DeliveryTarget(content_asset_id=asset.id, content_account_id=content_account_id,
             channel=payload.channel, content_form=payload.content_form, action=payload.action,
@@ -237,8 +251,10 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
         if _short_draft_request is not None:
             capability.update(available=False, reason="bounded_experiment_only")
     elif is_variant and payload.action == DeliveryAction.auto_draft.value:
-        projected = project_v5_wewrite_payload(asset.candidate_manifest_json or {})
-        _v5_cover_bytes(db, projected)
+        prepare = plugin.prepare_variant_auto_draft if plugin is not None else None
+        if prepare is not None:
+            projected = prepare(asset.candidate_manifest_json or {})
+            _v5_cover_bytes(db, projected)
         scope_target = DeliveryTarget(content_account_id=content_account_id, channel=payload.channel,
                                       content_form=payload.content_form, action=payload.action,
                                       account_ref=payload.account_ref, publisher_key=publisher_key,
@@ -252,7 +268,6 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
         # 冻结精确目标账号身份：平台字符串不是账号，同平台 A/B 是不同目标。
         from ..models import ContentAccountRevision
 
-        account = db.get(ContentAccount, content_account_id)
         account_revision = db.scalar(select(ContentAccountRevision).where(ContentAccountRevision.account_id == account.id).order_by(ContentAccountRevision.revision_no.desc()).limit(1))
         capability = {**capability, "target_account": {
             "content_account_id": account.id, "platform_channel": account.platform_channel,

@@ -1,0 +1,13 @@
+{
+  "apps/api/app/services/content_masters.py": "6924209e0f4948b375f0ea187a94e0d5b1e1ed7e8bb2b31aea86e7b34e5e8015",
+  "apps/api/app/services/production_profiles.py": "f3707ad2d67f85e7b8c3304b1d58e09e8eb9ea5c33814360c5fb7f5008e9f9ba",
+  "apps/api/app/services/form_assistance.py": "6ed69fe9bf65542c48014588403e2998e181729afa646c3fdc34c5d85536dd4f",
+  "apps/api/app/services/capability_memory.py": "3589430c5edd5d28a723d55b6a4cc7666da2e8af2bfead369b743c164adfea0e",
+  "apps/api/app/routers/form_assistance.py": "57767fe9fcb4a78a19b1f2721c5edcdea184d9ed1410bd1893ccfbe39a0e3406",
+  "apps/web/src/product/VideoStudioShell.tsx": "2de9179777d17027d506cbad3ddc1d39c8669e61bb3172c05493ba73518d9439",
+  "apps/web/src/product/VideoShotMaterialPanel.tsx": "a752ec870cb95af99c22a22740117adac6bc28aff563f7974f7fd9038ba4c3a2",
+  "apps/web/src/product/FormAssistancePanel.tsx": "7d455814a5449bcd51c18cad2277a961558d5492e36049d8f02918d20d3ef176",
+  ".codex/skills/video-production-handoff/SKILL.md": "d1ac9a3b7df4c6f426e62b3e0f70bf3c60b0d92390d41a93729012c4a7345771",
+  ".codex/skills/product-video-material-director/SKILL.md": "add100ca1650a632e7b18311290474919fa7f4b87d2c3104d816d39e8392a6a7",
+  "apps/api/app/studio_skills/studio.video.product-filming/v1/SKILL.md": "423c3abe9c5c6cac470f48c3730f3b68f015cab5e48cb68b59512d215433245f"
+}

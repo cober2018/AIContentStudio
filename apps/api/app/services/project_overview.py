@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..models import ContentMasterRevision, ContentPersona, ContentUnit, IdentitySnapshot, WorkflowRun, WorkflowStep
 from .content_masters import master_risks
+from .product_context import is_product
 from .project_brief import current_brief
 from .project_evidence import current_boundary
 from .project_projection_context import ProjectProjectionContext
@@ -27,13 +28,14 @@ def project_overview(db: Session, project_id: int, *, context: ProjectProjection
     brief = context.briefs.get(project_id) if context is not None else current_brief(db, project_id)
     boundary = context.boundaries.get(project_id) if context is not None else current_boundary(db, project_id)
     units = context.units.get(project_id, []) if context is not None else db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id).order_by(ContentUnit.id)).all()
-    active = [unit for unit in units if unit.status != "archived"]
+    active = [unit for unit in units if not unit.lifecycle_readonly]
     review_units = [unit_projection(db, unit, context=context) for unit in active]
     modality_counts = {key: sum(unit.modality == key for unit in active) for key in ("text", "graphic", "video")}
     personas = []
-    for persona_id in sorted({unit.persona_id for unit in active}):
+    persona_units = [unit for unit in active if not is_product(unit) and unit.persona_id is not None]
+    for persona_id in sorted({unit.persona_id for unit in persona_units}):
         persona = context.personas.get(persona_id) if context is not None else db.get(ContentPersona, persona_id)
-        personas.append({"id": persona_id, "name": persona.name if persona else None, "unitCount": sum(unit.persona_id == persona_id for unit in active)})
+        personas.append({"id": persona_id, "name": persona.name if persona else None, "unitCount": sum(unit.persona_id == persona_id for unit in persona_units)})
     risks: list[dict] = []
     pending: list[dict] = []
     latest_runs: list[WorkflowRun] = []
@@ -45,10 +47,13 @@ def project_overview(db: Session, project_id: int, *, context: ProjectProjection
                     risks.append({"code": f"variant_{series['status']}", "unit_id": unit.id,
                                   "variant_key": series["variantKey"], "candidate_id": series["candidateId"]})
         master = context.masters.get(unit.id) if context is not None else db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
-        if master:
+        product_configuration_blocked = is_product(unit) and review_unit and (review_unit.get("dimensions", {}).get("identity") or {}).get("status") == "blocked"
+        if master and not product_configuration_blocked:
             risks.extend(master_risks(db, master))
         snapshot = context.snapshots.get(unit.identity_snapshot_id) if context is not None else db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
-        if snapshot is None or not snapshot.effective_profile_json:
+        if is_product(unit) and review_unit and (review_unit.get("dimensions", {}).get("identity") or {}).get("status") == "blocked":
+            risks.append({"code": "product_configuration_unavailable", "unit_id": unit.id})
+        if not is_product(unit) and (snapshot is None or not snapshot.effective_profile_json):
             risks.append({"code": "identity_unready", "unit_id": unit.id, "reason": "legacy_identity" if snapshot is None else "incomplete_profile"})
         if unit.status in {"blocked", "stale", "unknown", "failed"}:
             risks.append({"code": f"unit_{unit.status}", "unit_id": unit.id})

@@ -1,0 +1,572 @@
+{
+  "kind": "mock-isolated-not-quality",
+  "records": [
+    {
+      "node": "evidence",
+      "attempt_id": 1,
+      "receipt": {
+        "adapter_hash": "94b493fa80e73cc2e6f8f3e2f09854fe8d20a84faab91a4d7a72100cbf07e619",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "667668bb4d887aa729af96a2c7a090d8cdcd3985936d92f74d5beef3e2e9fec3",
+        "created_at": "2026-10-19T15:07:52.385203+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-19T15:07:52.397604+00:00",
+        "invocation_key": "probe-evidence",
+        "method_hash": "784696343a8db7611dfaf947c6ef73f9b3bc86f0c93354136e626b20636d46bf",
+        "model_route_hash": "f8cfc12fe1884399e8e317dc2f6f1b88fcca6a3ea7cc6c20abfce50ff5266ab4",
+        "node_id": "evidence",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids. For known items with kind=inference, omit fact_pack_item_id entirely. Only fact items may carry a fact_pack_item_id copied from the supplied evidence. Author opinions and practice suggestions must retain their attribution and must not be presented as verified external facts.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "known": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "as_of": {
+                      "maxLength": 80,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "fact_pack_item_id": {
+                      "maximum": 2147483647,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "kind": {
+                      "enum": [
+                        "fact",
+                        "inference"
+                      ],
+                      "maxLength": 9,
+                      "type": "string"
+                    },
+                    "statement": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "statement",
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 24,
+                "minItems": 0,
+                "type": "array"
+              },
+              "question": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "time_boundary": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "unknowns": {
+                "items": {
+                  "maxLength": 500,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 24,
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "question",
+              "known",
+              "unknowns",
+              "time_boundary"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "research.brief.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "research.brief.v1"
+        },
+        "output_hash": "982f0e94d567c4aafee162340632b2c2271102fde6fa0f3206d9be9113058067",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "2",
+        "prepared_by_server": true,
+        "prompt_hash": "33cd71ffe3474c04340341b159ca012b91b0bda92d8bceb0f7aa8559159e3ba1",
+        "request_fingerprint": "8753952253aaf0937a728d54c20da4027e0b3a53dc3e6a1ddc40f774e48a7449",
+        "request_mode": "explicit",
+        "resolution_hash": "73b65a7260fc049269c3144c6ea9ddab13176286af134dfda06dda50210e3aae",
+        "runtime_identity_hash": "5f0229a59ffb8665ab45cabf2dfcc4383ac0a5656e147d8caf53124c2ab675de",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "48d960e3f7bfddb15d9b806f22364a49c08e5a795c866ca33eeeaf485f5a1d48",
+        "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "workflow_id": 2,
+        "workflow_run_id": 2
+      },
+      "accepted": {
+        "schema": "stage.handoff.v1",
+        "run_id": 2,
+        "attempt_id": 1,
+        "attempt_no": 1,
+        "node_id": "evidence",
+        "plugin": "stage.creative.method",
+        "plugin_version": "2",
+        "output_kind": "creative_attempt",
+        "entity_id": 1,
+        "output_schema": "research.brief.v1",
+        "output_hash": "982f0e94d567c4aafee162340632b2c2271102fde6fa0f3206d9be9113058067",
+        "candidate_id": "method-01",
+        "accepted_hash": "d3d8d7c7334c3102f219e1900b0736c85951a5ec7118283fb9a21c749e830bbc",
+        "decision": "accepted",
+        "summary": "隔离 Mock research.brief.v1 候选 1",
+        "references": [],
+        "feedback_event_id": 5
+      },
+      "upstream": {}
+    },
+    {
+      "node": "angles",
+      "attempt_id": 3,
+      "receipt": {
+        "adapter_hash": "94b493fa80e73cc2e6f8f3e2f09854fe8d20a84faab91a4d7a72100cbf07e619",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "3a70814469eafc5d2654f15d0e10af214f0d08fa84984f202813f76bf82f88c0",
+        "created_at": "2026-10-19T15:07:52.541837+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-19T15:07:52.556352+00:00",
+        "invocation_key": "probe-angles",
+        "method_hash": "5252b17dfdd570a413eb1fabe9b7da72b3cc3209f1dbde3e4403edee89129911",
+        "model_route_hash": "f8cfc12fe1884399e8e317dc2f6f1b88fcca6a3ea7cc6c20abfce50ff5266ab4",
+        "node_id": "angles",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "angle": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "limits": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "question": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "reader_stake": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "support": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "angle",
+              "reader_stake",
+              "question",
+              "support",
+              "limits"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "creative.angles.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "creative.angles.v1"
+        },
+        "output_hash": "fdb699b241acb51144b54c62f2020d888f77c620febb1dccf599db3efd95eedb",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "2",
+        "prepared_by_server": true,
+        "prompt_hash": "2728a3bd1bc30ff32560cd79a7716ac1d86da2d478ce4309889f165a9d292ea4",
+        "request_fingerprint": "0ea78df4c285f72c27aaa58f417906ec123b2c9c2b57703861453ad24793f843",
+        "request_mode": "explicit",
+        "resolution_hash": "15227e13d845d4f136e99936ef0e625c387042f6a1994493b5d01e944ed73a95",
+        "runtime_identity_hash": "5f0229a59ffb8665ab45cabf2dfcc4383ac0a5656e147d8caf53124c2ab675de",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "48d960e3f7bfddb15d9b806f22364a49c08e5a795c866ca33eeeaf485f5a1d48",
+        "upstream_hash": "7a246565c19f8dcd92cee4cf01c6962f1cc45d2e9f01a11e4ea394b9c6d46427",
+        "workflow_id": 2,
+        "workflow_run_id": 2
+      },
+      "accepted": {
+        "schema": "stage.handoff.v1",
+        "run_id": 2,
+        "attempt_id": 3,
+        "attempt_no": 2,
+        "node_id": "angles",
+        "plugin": "stage.creative.method",
+        "plugin_version": "2",
+        "output_kind": "creative_attempt",
+        "entity_id": 3,
+        "output_schema": "creative.angles.v1",
+        "output_hash": "fdb699b241acb51144b54c62f2020d888f77c620febb1dccf599db3efd95eedb",
+        "candidate_id": "method-01",
+        "accepted_hash": "a9d447f15dbe65a862dff9bdeb27e76b0cd2aa849584da08583ac3e411946926",
+        "decision": "accepted",
+        "summary": "隔离 Mock creative.angles.v1 候选 1",
+        "references": [],
+        "feedback_event_id": 6
+      },
+      "upstream": {
+        "evidence": {
+          "accepted_hash": "d3d8d7c7334c3102f219e1900b0736c85951a5ec7118283fb9a21c749e830bbc",
+          "attempt_id": 1,
+          "attempt_no": 1,
+          "candidate_id": "method-01",
+          "decision": "accepted",
+          "entity_id": 1,
+          "feedback_event_id": 5,
+          "node_id": "evidence",
+          "output_hash": "982f0e94d567c4aafee162340632b2c2271102fde6fa0f3206d9be9113058067",
+          "output_kind": "creative_attempt",
+          "output_schema": "research.brief.v1",
+          "plugin": "stage.creative.method",
+          "plugin_version": "2",
+          "references": [],
+          "run_id": 2,
+          "schema": "stage.handoff.v1",
+          "selected_content": {
+            "known": [],
+            "question": "隔离 Mock research.brief.v1 候选 1",
+            "time_boundary": "没有可核验的时间边界",
+            "unknowns": [
+              "尚未提供可引用的来源"
+            ]
+          },
+          "summary": "隔离 Mock research.brief.v1 候选 1"
+        }
+      }
+    },
+    {
+      "node": "outline",
+      "attempt_id": 5,
+      "receipt": {
+        "adapter_hash": "94b493fa80e73cc2e6f8f3e2f09854fe8d20a84faab91a4d7a72100cbf07e619",
+        "capability_use_id": null,
+        "capability_use_ids": [],
+        "config_hash": "a4b5162491b4be559b067e33d953dc22300fb3cb14168ca4ef32214a9135bcc4",
+        "created_at": "2026-10-19T15:07:52.679749+00:00",
+        "dispatch_certainty": "confirmed_dispatched",
+        "finalized_at": "2026-10-19T15:07:52.693584+00:00",
+        "invocation_key": "probe-outline",
+        "method_hash": "c1cf6031efe8e6d99d42486c48335eed1d7e98d7ee519146b7006be5e2d73c60",
+        "model_route_hash": "f8cfc12fe1884399e8e317dc2f6f1b88fcca6a3ea7cc6c20abfce50ff5266ab4",
+        "node_id": "outline",
+        "outcome_state": "succeeded",
+        "output_contract": {
+          "accepted_content_required": true,
+          "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids.",
+          "content_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "sections": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "heading": {
+                      "maxLength": 200,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "id": {
+                      "maxLength": 60,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "open_questions": {
+                      "items": {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 6,
+                      "minItems": 0,
+                      "type": "array"
+                    },
+                    "order": {
+                      "maximum": 30,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "points": {
+                      "items": {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "maxItems": 8,
+                      "minItems": 1,
+                      "type": "array"
+                    },
+                    "purpose": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "order",
+                    "heading",
+                    "purpose",
+                    "points",
+                    "open_questions"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 12,
+                "minItems": 1,
+                "type": "array"
+              },
+              "title": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "sections"
+            ],
+            "type": "object"
+          },
+          "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+          "response_schema": {
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "content": {
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "references": {
+                      "maxItems": 100,
+                      "type": "array"
+                    },
+                    "summary": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "warnings": {
+                      "maxItems": 20,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "summary",
+                    "content"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1,
+                "minItems": 1,
+                "type": "array"
+              },
+              "schema": {
+                "enum": [
+                  "content.outline.v1"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "schema",
+              "candidates"
+            ],
+            "type": "object"
+          },
+          "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+          "schema": "content.outline.v1"
+        },
+        "output_hash": "b4356576feca01e020ef8f01df0491a27fe1c244792e2b8e84f318385983dfd3",
+        "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "plugin_key": "stage.creative.method",
+        "plugin_version": "2",
+        "prepared_by_server": true,
+        "prompt_hash": "6a8381145a334d9151c8987142f8b5c0738ff0b676ea5a0e140596e3fa9b2457",
+        "request_fingerprint": "8acf40fe2978254b7d90e51516a00b3390a742029eaada7088eb52bc9ec2d1d9",
+        "request_mode": "explicit",
+        "resolution_hash": "d0eb181b34d3d6d7e25fe9d93b3d18f3fe82a3ebb551216982969d15756d2ac9",
+        "runtime_identity_hash": "5f0229a59ffb8665ab45cabf2dfcc4383ac0a5656e147d8caf53124c2ab675de",
+        "schema": "creation_recipe.execution_receipt.v1",
+        "stage_contract_hash": "48d960e3f7bfddb15d9b806f22364a49c08e5a795c866ca33eeeaf485f5a1d48",
+        "upstream_hash": "af2e341c539e34258dd285631d2374f806a97b04a7c30c1ed7c999c0bf1457eb",
+        "workflow_id": 2,
+        "workflow_run_id": 2
+      },
+      "accepted": {
+        "schema": "stage.handoff.v1",
+        "run_id": 2,
+        "attempt_id": 5,
+        "attempt_no": 2,
+        "node_id": "outline",
+        "plugin": "stage.creative.method",
+        "plugin_version": "2",
+        "output_kind": "creative_attempt",
+        "entity_id": 5,
+        "output_schema": "content.outline.v1",
+        "output_hash": "b4356576feca01e020ef8f01df0491a27fe1c244792e2b8e84f318385983dfd3",
+        "candidate_id": "method-01",
+        "accepted_hash": "e6cd22a889ce0fdbbfed5667385eeb4345b04a627586f57755016a46e10cdb9f",
+        "decision": "accepted",
+        "summary": "隔离 Mock content.outline.v1 候选 1",
+        "references": [],
+        "feedback_event_id": 7
+      },
+      "upstream": {
+        "angles": {
+          "accepted_hash": "a9d447f15dbe65a862dff9bdeb27e76b0cd2aa849584da08583ac3e411946926",
+          "attempt_id": 3,
+          "attempt_no": 2,
+          "candidate_id": "method-01",
+          "decision": "accepted",
+          "entity_id": 3,
+          "feedback_event_id": 6,
+          "node_id": "angles",
+          "output_hash": "fdb699b241acb51144b54c62f2020d888f77c620febb1dccf599db3efd95eedb",
+          "output_kind": "creative_attempt",
+          "output_schema": "creative.angles.v1",
+          "plugin": "stage.creative.method",
+          "plugin_version": "2",
+          "references": [],
+          "run_id": 2,
+          "schema": "stage.handoff.v1",
+          "selected_content": {
+            "angle": "隔离 Mock creative.angles.v1 候选 1",
+            "limits": "不把缺失来源写成事实",
+            "question": "下一步如何选择",
+            "reader_stake": "需要看清限制",
+            "support": "只使用已提供的材料"
+          },
+          "summary": "隔离 Mock creative.angles.v1 候选 1"
+        }
+      }
+    }
+  ]
+}

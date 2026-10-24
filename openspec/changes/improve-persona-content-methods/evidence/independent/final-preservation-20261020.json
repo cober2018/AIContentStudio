@@ -1,0 +1,119 @@
+{
+ "content_persona": {
+  "original_rows": 4,
+  "new_rows": 0,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_persona_revision": {
+  "original_rows": 6,
+  "new_rows": 0,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_account": {
+  "original_rows": 2,
+  "new_rows": 0,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_account_revision": {
+  "original_rows": 0,
+  "new_rows": 0,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_series": {
+  "original_rows": 0,
+  "new_rows": 0,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_series_revision": {
+  "original_rows": 0,
+  "new_rows": 0,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "identity_snapshot": {
+  "original_rows": 19,
+  "new_rows": 24,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_project": {
+  "original_rows": 32,
+  "new_rows": 4,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_unit": {
+  "original_rows": 42,
+  "new_rows": 24,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "content_master_revision": {
+  "original_rows": 64,
+  "new_rows": 41,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "material_revision": {
+  "original_rows": 45,
+  "new_rows": 25,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "workflow": {
+  "original_rows": 31,
+  "new_rows": 24,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "workflow_run": {
+  "original_rows": 24,
+  "new_rows": 24,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "workflow_step_attempt": {
+  "original_rows": 135,
+  "new_rows": 154,
+  "missing_originals": [],
+  "changed_originals": [],
+  "schema_same": true
+ },
+ "system_settings": {
+  "original_rows": 13,
+  "new_rows": 0,
+  "missing_originals": [],
+  "changed_originals": [
+   [
+    "discovery.heartbeat"
+   ],
+   [
+    "discovery.catchup_clock"
+   ]
+  ],
+  "schema_same": true
+ },
+ "_static_settings": {
+  "note": "system_settings逐行对比：13条原有行中仅discovery.heartbeat/discovery.catchup_clock变化（后台自然更新），其余11条静态设置与样本前快照一致；snapshot以mode=ro&immutable=1只读打开"
+ },
+ "_at": "2026-10-20T04:05:35+0800",
+ "_scope": "15表原有行逐行比较；新增行均为本变更试验经正常API创建（试验项目P37-P40及其作品/运行/素材）"
+}

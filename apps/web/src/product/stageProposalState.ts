@@ -11,7 +11,7 @@ export type StageMaster = { id: number; revision_no: number; payload_hash: strin
 export type StageAcceptedEntity = { entity_id?: number; id?: number; output_kind?: string; kind?: string; revision_no?: number; accepted_hash?: string; payload_hash?: string; content_hash?: string; decision?: string; entity?: Record<string, unknown> };
 export type StageResult = {
   run_id: number; node_id: string; attempt_id: number; status: string; is_current: boolean;
-  receipt: { output_hash: string; resolution_hash: string; prompt_hash?: string; config_hash?: string; base_config_hash?: string; request_mode?: string; invocation_key?: string };
+  receipt: { output_hash: string; resolution_hash: string; prompt_hash?: string; config_hash?: string; base_config_hash?: string; request_mode?: string; invocation_key?: string; abandoned?: { by_user_id: number; at: string } };
   expected_context_hash: string; expected_revision: number;
   output: { schema?: string; candidates?: StageCandidate[]; [key: string]: unknown };
   resolved_stage?: { effective_prompt?: string; system_prompt?: string; override?: Record<string, unknown>; base_config?: Record<string, unknown>; effective_config?: Record<string, unknown>; context?: { identity?: { id: number } | null; boundary?: { id: number } | null; modality?: string } };
@@ -60,10 +60,12 @@ export function stageAdoption(result: StageResult, candidate: StageCandidate, dr
 
 export type StageAdoption = ReturnType<typeof stageAdoption>;
 
-export type StageFeedbackDecision = "rejected" | "rerun_requested" | "skipped_when_allowed";
-export function stageFeedback(result: StageResult, decision: StageFeedbackDecision, key: string, reasonTags: string[], note: string) {
+export type FeedbackTarget = { kind: "attempt" | "master" | "material"; revision_id: number; content_hash: string; candidate_id?: string };
+export type FeedbackLocation = { kind: "text"; block_id: string; list_item_id?: string; quote: string } | { kind: "graphic"; canvas_id: string; layer_id?: string } | { kind: "time"; start_ms: number; end_ms: number };
+export type StageFeedbackDecision = "rejected" | "rerun_requested" | "skipped_when_allowed" | "commented";
+export function stageFeedback(result: StageResult, decision: StageFeedbackDecision, key: string, reasonTags: string[], note: string, located?: { target: FeedbackTarget; location: FeedbackLocation }) {
   if (!result.receipt || ![result.receipt.output_hash, result.receipt.resolution_hash].every(hash => /^[a-f0-9]{64}$/.test(hash))) throw new Error("当前尝试缺少可核对的结果回执，请先回读。");
   return { run_id: result.run_id, attempt_id: result.attempt_id, decision, reason_tags: reasonTags, note,
-    feedback_key: key, expected_output_hash: result.receipt.output_hash, expected_resolution_hash: result.receipt.resolution_hash };
+    ...located, feedback_key: key, expected_output_hash: result.receipt.output_hash, expected_resolution_hash: result.receipt.resolution_hash };
 }
 export type StageFeedbackRequest = ReturnType<typeof stageFeedback>;

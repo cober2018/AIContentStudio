@@ -1,0 +1,26 @@
+{
+  "initial_accept_status": 200,
+  "targets_status": 200,
+  "feedback_status": 200,
+  "preview_status": 200,
+  "preview_ready": true,
+  "preview_located": true,
+  "rerun_status": 200,
+  "attempts": [
+    [
+      1,
+      "succeeded",
+      null
+    ],
+    [
+      2,
+      "succeeded",
+      null
+    ]
+  ],
+  "rework_accept_status": 200,
+  "rework_accept_error": null,
+  "final_preview_status": 200,
+  "final_preview_ready": true,
+  "final_preview_located": false
+}

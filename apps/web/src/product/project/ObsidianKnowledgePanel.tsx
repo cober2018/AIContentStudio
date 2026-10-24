@@ -3,15 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, currentUser } from "../../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../../components/ui";
 
+type KnowledgeModality = "text" | "graphic" | "video";
 type Purpose = "professional" | "style";
 type Limits = { max_notes: number; max_excerpt_chars: number; max_total_chars: number };
 type Connection = { configured: boolean; enabled: boolean; revision: number; vault_name: string; folders: string[]; root_path?: string; is_admin: boolean; limits: Limits };
 type Selection = {
   source_document_id?: number; source_checksum?: string; connection_id?: string; connection_revision?: number; note_sha256: string; path: string; title: string; excerpt: string;
-  purposes: Purpose[]; persona_id: number | null; unit_id: number | null; model_use_allowed: boolean;
+  modalities?: KnowledgeModality[]; purposes: Purpose[]; persona_id: number | null; unit_id: number | null; model_use_allowed: boolean;
 };
 type KnowledgeContext = { revision_no: number; checksum: string | null; items: Selection[]; limits: Limits };
-type Unit = { id: number; title: string; persona_id: number; modality: string; status: string };
+type Unit = { production_domain?: string; id: number; title: string; persona_id: number; modality: string; status: string };
 type SearchResult = { items: { path: string; title: string; snippet: string }[]; coverage: { scanned: number; skipped: number; truncated: boolean }; connection_revision: number };
 type Note = { connection_id: string; connection_revision: number; path: string; title: string; note_sha256: string; text: string; char_count: number; byte_size: number; mtime_ns: number };
 
@@ -42,7 +43,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
   const [results, setResults] = useState<SearchResult | null>(null);
   const [preview, setPreview] = useState<Note | null>(null);
   const [excerpt, setExcerpt] = useState("");
-  const [choice, setChoice] = useState({ purposes: ["professional"] as Purpose[], persona_id: null as number | null, unit_id: null as number | null, model_use_allowed: false });
+  const [choice, setChoice] = useState({ purposes: ["professional"] as Purpose[], modalities: ["text"] as KnowledgeModality[], persona_id: null as number | null, unit_id: null as number | null, model_use_allowed: false });
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -68,7 +69,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
     try {
       const note = await api.get<Note>(`${base}/note?${new URLSearchParams({ path })}`);
       setPreview(note); setExcerpt(Array.from(note.text).slice(0, limits.max_excerpt_chars).join(""));
-      setChoice({ purposes: ["professional"], persona_id: null, unit_id: null, model_use_allowed: false });
+      setChoice({ purposes: ["professional"], modalities: ["text"], persona_id: null, unit_id: null, model_use_allowed: false });
     } catch (cause) { setError(messageOf(cause, "读取笔记失败")); }
     finally { setBusy(""); }
   }
@@ -91,7 +92,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
         expected_revision: saved.data.revision_no,
         items: items.map(item => ({
           ...(item.source_document_id ? { source_document_id: item.source_document_id, source_checksum: item.source_checksum, note_sha256: item.note_sha256 } : { path: item.path, note_sha256: item.note_sha256, connection_id: item.connection_id, connection_revision: item.connection_revision, excerpt: item.excerpt }),
-          purposes: item.purposes, persona_id: item.persona_id, unit_id: item.unit_id, model_use_allowed: item.model_use_allowed,
+          purposes: item.purposes, modalities: item.modalities ?? ["text"], persona_id: item.persona_id, unit_id: item.unit_id, model_use_allowed: item.model_use_allowed,
         })),
       });
       queryClient.setQueryData(contextKey, next); setDraft(null); setNotice(`已保存第 ${next.revision_no} 版，仅供新启动的创作使用。`);
@@ -163,7 +164,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
         <Field label="明确选用的原文片段" hint={`当前 ${excerptChars}/${limits.max_excerpt_chars} 字。须为原文中的连续片段，不在此处改写。`}><textarea className={inputClass} rows={7} value={excerpt} disabled={!!busy} onChange={event => setExcerpt(event.target.value)} /></Field>
         {preview.char_count > limits.max_excerpt_chars && <p className="text-xs text-amber-800">原文超出单篇上限，默认仅选取前 {limits.max_excerpt_chars} 字；可从完整原文复制替换为所需片段。</p>}
         {excerptError && <p role="alert" className="text-xs text-rose-700">{excerptError}</p>}
-        <SelectionControls value={choice} units={units.data ?? []} disabled={!!busy} onChange={setChoice} />
+        <SelectionControls value={choice} units={units.data ?? []} disabled={!!busy} onChange={value => setChoice({ ...value, modalities: value.modalities ?? ["text"] })} />
         {!choice.purposes.length && <p className="text-xs text-rose-700">至少选择一种参考用途。</p>}
         <div className="flex flex-wrap gap-2"><Button disabled={!!busy || !!excerptError || !choice.purposes.length || items.length >= limits.max_notes || totalChars + excerptChars > limits.max_total_chars} onClick={selectNote}>明确选用笔记</Button><Button variant="secondary" disabled={!!busy} onClick={() => setPreview(null)}>关闭预览</Button></div>
       </div>}
@@ -171,22 +172,23 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
   </section>;
 }
 
-type Choice = Pick<Selection, "purposes" | "persona_id" | "unit_id" | "model_use_allowed">;
+type Choice = Pick<Selection, "purposes" | "modalities" | "persona_id" | "unit_id" | "model_use_allowed">;
 
 function scopeLabel(choice: Choice, units: Unit[]) {
   if (choice.unit_id !== null) return `内容单元：${units.find(unit => unit.id === choice.unit_id)?.title ?? `#${choice.unit_id}`}`;
   if (choice.persona_id !== null) return `仅身份 #${choice.persona_id}`;
-  return "项目内全部文字创作";
+  return "项目内所选形态的角色创作";
 }
 
 function SelectionControls({ value, units: allUnits, disabled, onChange }: { value: Choice; units: Unit[]; disabled: boolean; onChange: (value: Choice) => void }) {
-  const units = allUnits.filter(unit => unit.modality === "text" && unit.status !== "archived");
+  const units = allUnits.filter(unit => unit.production_domain !== "product" && (value.modalities ?? ["text"]).includes(unit.modality as KnowledgeModality) && unit.status !== "archived");
   const scope = value.unit_id !== null ? `unit:${value.unit_id}` : value.persona_id !== null ? `persona:${value.persona_id}` : "project";
   const personaIds = [...new Set(units.map(unit => unit.persona_id))];
   return <fieldset disabled={disabled} className="space-y-3">
     <legend className="text-xs font-medium text-slate-500">参考用途与使用范围</legend>
     <div className="flex flex-wrap gap-4 text-sm">{(["professional", "style"] as Purpose[]).map(purpose => <label key={purpose} className="flex items-center gap-2"><input type="checkbox" checked={value.purposes.includes(purpose)} onChange={event => onChange({ ...value, purposes: event.target.checked ? [...value.purposes, purpose] : value.purposes.filter(item => item !== purpose) })} />{purposeLabels[purpose]}</label>)}</div>
-    <Field label="用于哪些文字创作"><select className={inputClass} value={scope} onChange={event => { const [kind, id] = event.target.value.split(":"); onChange({ ...value, persona_id: kind === "persona" ? Number(id) : null, unit_id: kind === "unit" ? Number(id) : null }); }}><option value="project">项目内全部文字创作</option>{personaIds.map(id => <option key={`persona:${id}`} value={`persona:${id}`}>仅身份 #{id}</option>)}{value.persona_id !== null && value.unit_id === null && !personaIds.includes(value.persona_id) && <option value={scope}>仅身份 #{value.persona_id}（现有选择）</option>}{units.map(unit => <option key={`unit:${unit.id}`} value={`unit:${unit.id}`}>仅内容单元：{unit.title} · 身份 #{unit.persona_id}</option>)}{value.unit_id !== null && !units.some(unit => unit.id === value.unit_id) && <option value={scope}>仅内容单元 #{value.unit_id}（现有选择）</option>}</select></Field>
+    <div className="flex flex-wrap gap-4 text-sm">{([ ["text", "文字（含派生音频）"], ["graphic", "图文"], ["video", "视频"] ] as [KnowledgeModality, string][]).map(([modality, label]) => <label key={modality} className="flex items-center gap-2"><input type="checkbox" checked={(value.modalities ?? ["text"]).includes(modality)} onChange={event => { const current = value.modalities ?? ["text"]; const next = event.target.checked ? [...current, modality] : current.filter(item => item !== modality); if (next.length) onChange({ ...value, modalities: next }); }} />{label}</label>)}</div><p className="text-xs text-slate-500">旧选择仅供文字使用。额外形态需明确勾选并保存新版本；不向商品任务传递。</p>
+    <Field label="用于哪些角色创作"><select className={inputClass} value={scope} onChange={event => { const [kind, id] = event.target.value.split(":"); onChange({ ...value, persona_id: kind === "persona" ? Number(id) : null, unit_id: kind === "unit" ? Number(id) : null }); }}><option value="project">项目内所选形态的角色创作</option>{personaIds.map(id => <option key={`persona:${id}`} value={`persona:${id}`}>仅身份 #{id}</option>)}{value.persona_id !== null && value.unit_id === null && !personaIds.includes(value.persona_id) && <option value={scope}>仅身份 #{value.persona_id}（现有选择）</option>}{units.map(unit => <option key={`unit:${unit.id}`} value={`unit:${unit.id}`}>仅内容单元：{unit.title} · 身份 #{unit.persona_id}</option>)}{value.unit_id !== null && !units.some(unit => unit.id === value.unit_id) && <option value={scope}>仅内容单元 #{value.unit_id}（现有选择）</option>}</select></Field>
     <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={value.model_use_allowed} onChange={event => onChange({ ...value, model_use_allowed: event.target.checked })} /><span>允许将此片段用于生成模型<span className="block text-xs text-slate-500">请确认作者与使用权限；未勾选时仅保存参考，不发送给生成模型。</span></span></label>
   </fieldset>;
 }

@@ -1,0 +1,337 @@
+[
+  {
+    "method": "POST",
+    "path": "/product-skus",
+    "status": 201,
+    "response": {
+      "id": 1,
+      "code": "SKU-000001",
+      "revision": 1,
+      "revision_id": 1,
+      "external_code": "",
+      "product": {
+        "name": "Engineering fixture only, not a product",
+        "category": "Engineering fixture",
+        "style_ref": null,
+        "production_stages": null,
+        "variant": "",
+        "description": "",
+        "url": null,
+        "claims": [],
+        "selling_points": [],
+        "excluded_claims": [],
+        "source_refs": [],
+        "material_refs": [],
+        "offer": null,
+        "buyer_situation": "",
+        "purchase_reason_evidence": "",
+        "purchase_reason_source_ids": [],
+        "purchase_reason_material_revision_ids": [],
+        "main_objection": "",
+        "objection_answer": "",
+        "unsuitable_for": "",
+        "seller_advantage": "",
+        "target_duration_seconds": null,
+        "expression_test": null
+      },
+      "primary_image_revision_id": null,
+      "primary_image_kind": "primary",
+      "image_url": null,
+      "default_plan_id": null
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/product-skus/1/works",
+    "status": 201,
+    "response": {
+      "launch_id": 1,
+      "project_id": 1,
+      "unit_id": 1,
+      "run_id": null,
+      "status": "saved",
+      "reason": null,
+      "href": "/projects/1/units/1/production?workstep=goal",
+      "sku_id": 1
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/content-projects/1/units/1/master-revisions",
+    "status": 200,
+    "response": {
+      "id": 1,
+      "project_id": 1,
+      "content_unit_id": 1,
+      "revision_no": 1,
+      "parent_revision_id": null,
+      "modality": "video",
+      "channel_id": null,
+      "content_form": null,
+      "payload_schema": "video.master.v2",
+      "payload": {
+        "title": "Engineering fixture only",
+        "aspect_ratio": [
+          1,
+          1
+        ],
+        "script": {
+          "blocks": []
+        },
+        "capture_plan": {
+          "schema": "video.capture-plan.v1",
+          "route": "real",
+          "script_structure": "Engineering fixture only"
+        },
+        "shots": [
+          {
+            "id": "s",
+            "order": 0,
+            "label": "Engineering fixture",
+            "duration_ms": 1000,
+            "purpose": "Verify transport only",
+            "filming": {
+              "raw_duration_ms": 3000,
+              "action": "Static",
+              "angle": "Front",
+              "camera_position": "Fixed",
+              "focus": "Transport",
+              "subject": "Engineering blue fixture"
+            }
+          }
+        ],
+        "timeline": {
+          "duration_ms": 1000,
+          "tracks": []
+        },
+        "voice": {
+          "mode": "none"
+        },
+        "subtitles": {
+          "cues": []
+        },
+        "overlays": [],
+        "music": {},
+        "cover": {}
+      },
+      "payload_hash": "97ee03251b470ed65d7115064ed98af89ed40748ae3d5d4be9a855589a072e0b",
+      "capture_status": {
+        "production_profile_revision_id": 2,
+        "script": {
+          "state": "draft",
+          "content_hash": "d9715f59ad1202f82857b0546e2739bd86f27977dc6604e4c00eb6138764c34f"
+        },
+        "task": {
+          "state": "draft",
+          "content_hash": "c612b7a7dd33f87e085169b6cd57576229cbd1f8decc07f8fa1ec21cbf3f5f1b"
+        },
+        "ready_to_shoot": false,
+        "adoptions": {}
+      },
+      "creative_intent": null,
+      "creative_intent_hash": null,
+      "context_hash": "ab1ca85f45975fabdec80942730e06cf4d9499036da8ab3e111c3292d4edf92f",
+      "identity_snapshot_id": null,
+      "creative_brief_revision_id": 1,
+      "fact_boundary_revision_id": null,
+      "source_kind": "user_edit",
+      "edit_summary": {
+        "product_context_snapshot": {
+          "production_domain": "product",
+          "product_context": {
+            "name": "Engineering fixture only, not a product",
+            "category": "Engineering fixture",
+            "style_ref": null,
+            "production_stages": null,
+            "variant": "",
+            "description": "",
+            "url": null,
+            "claims": [],
+            "selling_points": [],
+            "excluded_claims": [],
+            "source_refs": [],
+            "material_refs": [],
+            "offer": null,
+            "buyer_situation": "",
+            "purchase_reason_evidence": "",
+            "purchase_reason_source_ids": [],
+            "purchase_reason_material_revision_ids": [],
+            "main_objection": "",
+            "objection_answer": "",
+            "unsuitable_for": "",
+            "seller_advantage": "",
+            "target_duration_seconds": null,
+            "expression_test": null
+          },
+          "production_profile": {
+            "id": 2,
+            "revision": 2,
+            "settings_hash": "201b00351373eeb37874d45ffeac54a0a8661e949ad18f9955d210c5a6236d89",
+            "settings": {
+              "video_creative_profile": {
+                "schema": "persona.creative.video.v1",
+                "mode": "auto",
+                "skill_ref": "studio.video.director-package@1",
+                "style_preset_ref": "studio.graphic.product-neutral@1",
+                "quality_profile_ref": "studio.quality.video.product@1",
+                "capability": "chat",
+                "model_binding": null,
+                "model_chain": [],
+                "capability_memory_revision_ids": [],
+                "installed_skill_refs": [],
+                "production_stages": {},
+                "parameters": {},
+                "stage_instruction": null,
+                "provenance": {
+                  "blueprint_key": null,
+                  "blueprint_version": null,
+                  "default_recipe_key": "product.video.v1"
+                }
+              },
+              "shared_references": [],
+              "work_type": "scene",
+              "creation_mode": "original",
+              "speech_mode": "voiceover",
+              "reference_notes": "",
+              "visual_style": "",
+              "continuity_notes": "",
+              "comparison_notes": "",
+              "dialogue": "",
+              "dialogue_language": "中文",
+              "music_direction": "不使用配乐",
+              "ae_packaging": false
+            }
+          },
+          "creative_profiles": {
+            "video_creative_profile": {
+              "schema": "persona.creative.video.v1",
+              "mode": "auto",
+              "skill_ref": "studio.video.director-package@1",
+              "style_preset_ref": "studio.graphic.product-neutral@1",
+              "quality_profile_ref": "studio.quality.video.product@1",
+              "capability": "chat",
+              "model_binding": null,
+              "model_chain": [],
+              "capability_memory_revision_ids": [],
+              "installed_skill_refs": [],
+              "production_stages": {},
+              "parameters": {},
+              "stage_instruction": null,
+              "provenance": {
+                "blueprint_key": null,
+                "blueprint_version": null,
+                "default_recipe_key": "product.video.v1"
+              }
+            },
+            "product_production_stages": {},
+            "product_production_methods": {
+              "video": {
+                "schema": "production.methods.manifest.v1",
+                "stages": [],
+                "legacy_stage_ids": [
+                  "research",
+                  "script",
+                  "voice",
+                  "storyboard",
+                  "sound_edit",
+                  "picture_edit",
+                  "subtitle_color",
+                  "packaging",
+                  "finish",
+                  "review"
+                ],
+                "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.",
+                "manifest_hash": "ab3aa33a02131ccdf1e6ced11c6d2a4b11a094686d7babe30c9296d723436d75"
+              }
+            }
+          },
+          "sku": {
+            "sku_id": 1,
+            "sku_revision_id": 1,
+            "plan_id": null
+          },
+          "checksum": "a0d64ba0c18c69b567bc92aab1b69863fab8268cd49dec697bf951b90e91301f"
+        }
+      },
+      "origin_workflow_run_id": null,
+      "origin_project_output_id": null,
+      "readiness": {
+        "state": "incomplete_context",
+        "reasons": [
+          "evidence_missing"
+        ]
+      },
+      "assets": [],
+      "evidence": [],
+      "created_by": "capture-engineering@studio.local",
+      "created_at": "2026-10-18T11:39:18.983734"
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/content-projects/1/units/1/creative-packages",
+    "status": 409,
+    "response": {
+      "detail": {
+        "code": "capture_edit_requires_current_review"
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/materials/upload?kind=video&inspect_video=true&model_use_allowed=true",
+    "status": 201,
+    "response": {
+      "id": 1,
+      "kind": "video",
+      "title": "audio-tail.mp4",
+      "tags": [],
+      "status": "active",
+      "created_at": "2026-10-18T11:39:19.095667+00:00",
+      "latest_revision": {
+        "id": 1,
+        "material_id": 1,
+        "revision_no": 1,
+        "parent_revision_id": null,
+        "status": "candidate",
+        "source_kind": "upload",
+        "source_url": null,
+        "content_hash": "5cb49f38d6d28c26642dd42f171d89002dd56cbb02b0a69aa0f719678744cb53",
+        "metadata": {},
+        "duration_ms": 1000,
+        "mime_type": "video/mp4",
+        "rights_status": "cleared",
+        "public_use_allowed": false,
+        "model_use_allowed": true,
+        "commercial_use_allowed": null,
+        "attribution_text": null,
+        "provider_key": null,
+        "prompt_text": null,
+        "created_at": "2026-10-18T11:39:19.098391+00:00"
+      },
+      "revisions": [
+        {
+          "id": 1,
+          "material_id": 1,
+          "revision_no": 1,
+          "parent_revision_id": null,
+          "status": "candidate",
+          "source_kind": "upload",
+          "source_url": null,
+          "content_hash": "5cb49f38d6d28c26642dd42f171d89002dd56cbb02b0a69aa0f719678744cb53",
+          "metadata": {},
+          "duration_ms": 1000,
+          "mime_type": "video/mp4",
+          "rights_status": "cleared",
+          "public_use_allowed": false,
+          "model_use_allowed": true,
+          "commercial_use_allowed": null,
+          "attribution_text": null,
+          "provider_key": null,
+          "prompt_text": null,
+          "created_at": "2026-10-18T11:39:19.098391+00:00"
+        }
+      ]
+    }
+  }
+]

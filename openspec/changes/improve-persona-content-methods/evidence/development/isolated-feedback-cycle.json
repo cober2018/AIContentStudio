@@ -1,0 +1,55 @@
+{
+  "kind": "mock-isolated-not-quality",
+  "feedback": {
+    "feedback_event_id": 6,
+    "feedback": {
+      "accepted_hash": null,
+      "attempt_id": 1,
+      "config_hash": "76e871efa9939a6a1195b47f2bde40c5c573f394675d6903272262619a6dcfe0",
+      "decision": "rerun_requested",
+      "feedback_fingerprint": "368fe977b50e2fb5fac4f4554ef1250605ca2653c7cd6390674ae7c0ce7409f0",
+      "feedback_key": "located-rerun",
+      "located_feedback": {
+        "location": {
+          "block_id": "legacy-b2",
+          "kind": "text",
+          "quote": "这是第 1 个隔离验收候选，仅用于验证阶段调节、人工编辑与采用链路，不代表真实模型生成质量。"
+        },
+        "rework_scope": "current_stage_full_output",
+        "schema": "creation_recipe.located_feedback.v1",
+        "scope": "current_work",
+        "scope_reason": "当前阶段生成工具需重做本阶段产物；定位意见保留，接受前核对其它部分。独立分支不会自动重跑。",
+        "target": {
+          "content_hash": "1e39f94909bcad2d320ba325732c28fb3e9cf3ffa4ffb0c40f0e866e664dfcf3",
+          "kind": "master",
+          "revision_id": 1
+        }
+      },
+      "node_id": "draft",
+      "note": "把选中段落改得更清楚，保留其余事实",
+      "output_hash": "9b7bb008f65c145acfe85a6149907ab4f9cd2a77ff1034e9f7a632139a994f0d",
+      "plugin_key": "stage.master.propose",
+      "plugin_version": "1",
+      "project_output_id": null,
+      "prompt_hash": "b764a31e87adcbd5d38130ba5816cf06ef271f16f84d6d6ad9758cf501055339",
+      "reason_tags": [],
+      "resolution_hash": "9b05050260834f202911a85e4119c7b135befccfa16ba25e319317ec6f0e4c48",
+      "result_id": null,
+      "result_kind": null,
+      "run_id": 1,
+      "schema": "creation_recipe.stage_feedback.v1",
+      "unit_id": 1,
+      "workflow_checksum": "c8d346f799f2ef71e59dcc145ae83991c7d79ea4a87da03637c5f81e5140c5cf",
+      "workflow_id": 1,
+      "workflow_version": 1,
+      "_telemetry": {
+        "operation": "http_request",
+        "trace_id": "a6ddda447b39"
+      }
+    }
+  },
+  "first_master": 1,
+  "second_master": 2,
+  "next_preview_ready": true,
+  "stale_status": 409
+}

@@ -1,0 +1,37 @@
+{
+  "inherit": {
+    "blockers": [],
+    "longform_body_count": 1,
+    "humanize_body_count": 0,
+    "legacy_guidance_count": 1,
+    "loaded_refs": [
+      "studio.text.longform@2"
+    ]
+  },
+  "all_off": {
+    "blockers": [],
+    "longform_body_count": 0,
+    "humanize_body_count": 0,
+    "legacy_guidance_count": 0,
+    "loaded_refs": []
+  },
+  "single_off": {
+    "blockers": [],
+    "longform_body_count": 1,
+    "humanize_body_count": 0,
+    "legacy_guidance_count": 0,
+    "loaded_refs": [
+      "studio.text.longform@2"
+    ]
+  },
+  "both_on": {
+    "blockers": [],
+    "longform_body_count": 1,
+    "humanize_body_count": 1,
+    "legacy_guidance_count": 0,
+    "loaded_refs": [
+      "studio.text.longform@2",
+      "studio.text.humanize@2"
+    ]
+  }
+}

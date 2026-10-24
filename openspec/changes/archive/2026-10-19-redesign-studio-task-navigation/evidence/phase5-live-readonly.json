@@ -1,0 +1,244 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "url": "/learning"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=history&view=coverage"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=history&view=sync"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=history&view=recovery"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=history&view=import"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=analysis"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=analysis&view=insights"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=analysis&view=create-insight"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=candidates"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=candidates&view=create"
+    },
+    {
+      "width": 1440,
+      "url": "/learning?tab=memory"
+    },
+    {
+      "width": 1440,
+      "url": "/settings"
+    },
+    {
+      "width": 1440,
+      "url": "/settings?section=models"
+    },
+    {
+      "width": 1440,
+      "url": "/settings?section=data_sources"
+    },
+    {
+      "width": 1440,
+      "url": "/settings?section=channels"
+    },
+    {
+      "width": 1440,
+      "url": "/settings?section=rules"
+    },
+    {
+      "width": 1440,
+      "url": "/settings?section=team"
+    },
+    {
+      "width": 1440,
+      "url": "/settings?section=advanced"
+    },
+    {
+      "width": 1440,
+      "url": "/home"
+    },
+    {
+      "width": 1440,
+      "url": "/opportunities?persona_id=2"
+    },
+    {
+      "width": 1440,
+      "url": "/production?workspace=product"
+    },
+    {
+      "width": 1440,
+      "url": "/production?workspace=persona"
+    },
+    {
+      "width": 1440,
+      "url": "/projects"
+    },
+    {
+      "width": 1440,
+      "url": "/review"
+    },
+    {
+      "width": 1440,
+      "url": "/identities"
+    },
+    {
+      "width": 1440,
+      "url": "/assets"
+    },
+    {
+      "width": 390,
+      "url": "/learning"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=history&view=coverage"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=history&view=sync"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=history&view=recovery"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=history&view=import"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=analysis"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=analysis&view=insights"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=analysis&view=create-insight"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=candidates"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=candidates&view=create"
+    },
+    {
+      "width": 390,
+      "url": "/learning?tab=memory"
+    },
+    {
+      "width": 390,
+      "url": "/settings"
+    },
+    {
+      "width": 390,
+      "url": "/settings?section=models"
+    },
+    {
+      "width": 390,
+      "url": "/settings?section=data_sources"
+    },
+    {
+      "width": 390,
+      "url": "/settings?section=channels"
+    },
+    {
+      "width": 390,
+      "url": "/settings?section=rules"
+    },
+    {
+      "width": 390,
+      "url": "/settings?section=team"
+    },
+    {
+      "width": 390,
+      "url": "/settings?section=advanced"
+    },
+    {
+      "width": 390,
+      "url": "/home"
+    },
+    {
+      "width": 390,
+      "url": "/opportunities?persona_id=2"
+    },
+    {
+      "width": 390,
+      "url": "/production?workspace=product"
+    },
+    {
+      "width": 390,
+      "url": "/production?workspace=persona"
+    },
+    {
+      "width": 390,
+      "url": "/projects"
+    },
+    {
+      "width": 390,
+      "url": "/review"
+    },
+    {
+      "width": 390,
+      "url": "/identities"
+    },
+    {
+      "width": 390,
+      "url": "/assets"
+    }
+  ],
+  "errors": [],
+  "writes": [],
+  "httpErrors": [],
+  "comparisons": {
+    "/users/me": true,
+    "/published-content?limit=20&offset=0": true,
+    "/learning/coverage": true,
+    "/learning/analysis": true,
+    "/learning-candidates?limit=20&offset=0": true,
+    "/content-memory?limit=20&offset=0": true,
+    "/settings/product": true,
+    "/settings/rules?limit=50&offset=0": true,
+    "/settings/data-sources?limit=50&offset=0": true
+  },
+  "protectedResults": {
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/PersistentProductionPage.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ProductionWorkspace.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/GuidedProductionGoal.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/GuidedProductionProfile.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/PersonaCreativeConfig.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/CapabilityMemoryPanel.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/StarterGallery.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ProviderMediaPanel.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ProviderSearchPanel.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/pages/Sources.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/pages/Materials.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/pages/FactPacks.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ModelRegistrationSettings.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ModelRoutingSettings.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/CapabilitySettings.tsx": true,
+    "model_function": true
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "live_pages": [
+    "/projects/34/units/40/production?workstep=plan",
+    "/projects/34/units/40/production?workstep=materials"
+  ],
+  "master_id": 55,
+  "script_and_task_confirmed": true,
+  "four_pending_shots": true,
+  "old_ai_hint_present": true,
+  "old_brief_reason_present": true,
+  "writes": [],
+  "page_errors": []
+}

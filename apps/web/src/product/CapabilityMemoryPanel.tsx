@@ -483,7 +483,30 @@ export default function CapabilityMemoryPanel(props: CapabilityMemoryPanelProps)
   return <CapabilityWorkspace key={`${currentUser()}:${props.projectId ?? "library"}:${props.unitId ?? ""}:${props.executionId ?? ""}:${props.learningCandidate?.id ?? ""}`} {...props} />;
 }
 
-type StyleObservation = { modality: "text" | "image" | "video"; certainty: "direct" | "inferred" | "unknown"; statement: string; locator: string; reference: { kind: "material_revision" | "source"; id: number; content_hash: string } };
+type StyleObservation = { modality: "text" | "image" | "audio" | "video"; polarity?: "prefer" | "avoid"; reason?: string; inspection?: "read" | "viewed" | "listened" | "transcribed" | "measured" | "unknown"; location?: Record<string, string | number>; certainty: "direct" | "inferred" | "unknown"; statement: string; locator: string; reference: { kind: "material_revision" | "source"; id: number; content_hash: string } };
+type ReferenceResource = { reference: StyleObservation["reference"]; title: string; modality: StyleObservation["modality"]; excerpt?: string; preview_path?: string; preview_session_path?: string; revision_no?: number; duration_ms?: number; model_use_allowed: boolean | null; public_use_allowed: boolean | null };
+function ReferencePreview({ resource }: { resource: ReferenceResource }) {
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let alive = true, objectUrl = "";
+    const controller = new AbortController();
+    setUrl(""); setError("");
+    if (resource.preview_session_path) void api.post<{ url: string }>(resource.preview_session_path, {}).then(value => { if (alive) setUrl(value.url); }).catch(cause => { if (alive) setError(errorText(cause)); });
+    else if (resource.preview_path) void fetch(`/api/v1${resource.preview_path}`, { headers: { "X-Studio-User": currentUser() }, signal: controller.signal })
+      .then(response => { if (!response.ok) throw new Error("参考预览暂不可读取，请核对素材库。 "); return response.blob(); })
+      .then(blob => { if (alive) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); } })
+      .catch(cause => { if (alive) setError(cause instanceof Error ? cause.message : "参考预览读取失败。"); });
+    return () => { alive = false; controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [resource]);
+  return <div className="space-y-2 rounded-lg bg-slate-50 p-3 text-sm">
+    <p>{resource.title}{resource.revision_no ? ` · v${resource.revision_no}` : ""}</p>
+    <p className="text-xs text-slate-500">模型参考：{resource.model_use_allowed ? "已允许" : "未授权"} · 公开使用：{resource.public_use_allowed === true ? "已允许" : resource.public_use_allowed === false ? "未允许" : "未知，需另行确认"}</p>
+    {resource.excerpt && <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words">{resource.excerpt}</pre>}
+    {url && (resource.modality === "image" ? <img alt={resource.title} src={url} className="max-h-80 max-w-full object-contain" /> : resource.modality === "audio" ? <audio controls src={url} className="w-full" /> : <video controls src={url} className="max-h-80 w-full" />)}
+    {error && <ErrorBanner message={error} />}
+  </div>;
+}
 const blankStyle = () => ({ name: "参考风格草案", text: "", observations: [] as StyleObservation[] });
 
 export function PersonaReferenceStylePanel({ personaId, readOnly, identityRevision, onIdentityRefresh, onDirtyChange }: {
@@ -491,6 +514,15 @@ export function PersonaReferenceStylePanel({ personaId, readOnly, identityRevisi
   onIdentityRefresh: () => Promise<unknown>; onDirtyChange: (dirty: boolean) => void;
 }) {
   const [selected, setSelected] = useState<CapabilityArtifact>();
+  const [search, setSearch] = useState("");
+  const [resourceKind, setResourceKind] = useState<"material_revision" | "source">("material_revision");
+  const [resources, setResources] = useState<ReferenceResource[]>([]);
+  const [resource, setResource] = useState<ReferenceResource>();
+  const [resourcesBusy, setResourcesBusy] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [resourceOffset, setResourceOffset] = useState(0);
+  const [searched, setSearched] = useState({ kind: resourceKind, q: "" });
+  const [inspectedObservation, setInspectedObservation] = useState<number | null>(null);
   const [draft, setDraft] = useState(blankStyle);
   const [baseline, setBaseline] = useState(() => JSON.stringify(blankStyle()));
   const [history, setHistory] = useState<CapabilityRevision[]>([]);
@@ -505,6 +537,25 @@ export function PersonaReferenceStylePanel({ personaId, readOnly, identityRevisi
   const disabled = readOnly || state.busy || application.busy || ["archived", "deprecated"].includes(selected?.status ?? "");
   const expression = identityRevision?.profile.expression_style as Record<string, unknown> | null | undefined;
   const applied = expression?.reference_style as { artifact_id: number; revision_id: number } | undefined;
+  async function readResources(more = false) {
+    setResourcesBusy(true); state.setError("");
+    const query = more ? searched : { kind: resourceKind, q: search };
+    try {
+      const page = await api.get<{ items: ReferenceResource[]; has_more: boolean; next_offset: number | null }>(`/capability-memory/persona-reference-styles/${personaId}/resources?kind=${query.kind}&q=${encodeURIComponent(query.q)}&offset=${more ? resourceOffset : 0}`);
+      setResources(previous => more ? [...previous, ...page.items.filter(item => !previous.some(old => old.reference.kind === item.reference.kind && old.reference.id === item.reference.id))] : page.items);
+      setSearched(query); setHasMore(page.has_more); setResourceOffset(page.next_offset ?? 0);
+      if (!more) setResource(undefined);
+    } catch (cause) { state.setError(errorText(cause)); } finally { setResourcesBusy(false); }
+  }
+  async function inspectReference(observation: StyleObservation, index: number) {
+    setResourcesBusy(true); state.setError("");
+    try {
+      const page = await api.get<{ items: ReferenceResource[] }>(`/capability-memory/persona-reference-styles/${personaId}/resources?kind=${observation.reference.kind}&reference_id=${observation.reference.id}`);
+      const exact = page.items.find(item => item.reference.content_hash === observation.reference.content_hash);
+      if (!exact) throw new Error("此精确参考版本已不可用或权限已变化；保留原观察，请核对来源。");
+      setResource(exact); setInspectedObservation(index);
+    } catch (cause) { state.setError(errorText(cause)); } finally { setResourcesBusy(false); }
+  }
   function load(record?: CapabilityArtifact) {
     historyRequest.current += 1;
     const next = record ? { name: record.name, text: String(record.current_revision.content.text ?? ""), observations: record.current_revision.content.observations as unknown as StyleObservation[] } : blankStyle();
@@ -529,8 +580,8 @@ export function PersonaReferenceStylePanel({ personaId, readOnly, identityRevisi
     setDraft(previous => ({ ...previous, observations: previous.observations.map((item, at) => at === index ? { ...item, ...patch } : item) }));
   }
   async function save() {
-    const content = { content_schema: "persona.reference-style.v1", text: draft.text,
-      tags: selected?.current_revision.content.tags ?? [], observations: draft.observations } as unknown as JsonObject;
+    const content = { content_schema: "persona.reference-style.v2", text: draft.text,
+      tags: selected?.current_revision.content.tags ?? [], observations: draft.observations.map(item => ({ ...item, polarity: item.polarity ?? "prefer", reason: item.reason ?? "", inspection: item.inspection ?? "unknown", location: item.location ?? {} })) } as unknown as JsonObject;
     await state.run(() => selected
       ? capabilityApi.revise(selected.id, { expected_revision: selected.current_revision.revision_no, content, args_schema: emptyArgsSchema })
       : capabilityApi.create({ kind: "creative_pattern", name: draft.name, content, args_schema: emptyArgsSchema, scope_type: "persona", scope: { id: personaId } }), load);
@@ -554,22 +605,36 @@ export function PersonaReferenceStylePanel({ personaId, readOnly, identityRevisi
       {isApplied ? "此精确版本已用于角色风格" : `将 v${revision.revision_no}（修订 #${revision.id}）用于角色风格`}</Button>;
   }
   return <section className={`${box} mt-4`} aria-label="参考风格草案"><h3 className="font-semibold">参考风格草案</h3>
-    <p className="text-sm text-slate-600">文字、图片、视频分别保留直接观察、推断与未知。保存并明确采纳后，可单独将精确版本用于角色风格，生成新的角色身份修订。阶段方法全部关闭时仍保留已应用的角色风格。参考作者身份、经历与旧事实不属于角色事实。</p>
-    <p className="text-xs text-slate-500">角色身份 v{identityRevision?.revision_no ?? 0} · {applied ? `已应用方法 #${applied.artifact_id} / 修订 #${applied.revision_id}` : "未应用参考风格版本"}；应用不改动旧身份快照。</p>
+    <p className="text-sm text-slate-600">文字、图片、音频、视频分别保留直接观察、推断与未知；避免的反例不会当作正面风格。保存并明确采纳后，可单独将精确版本用于角色风格，生成新的角色身份修订。阶段方法全部关闭时仍保留已应用的角色风格。参考作者身份、经历与旧事实不属于角色事实。</p>
+    <p className="text-xs text-slate-500">角色身份 v{identityRevision?.revision_no ?? 0} · {applied ? `已应用方法 #${applied.artifact_id} / 修订 #${applied.revision_id}` : "风格暂定：尚未明确采纳参考版本"}；应用不改动旧身份快照。</p>
     {records.error && <ErrorBanner message={errorText(records.error)} />}
     <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={state.busy || application.busy || readOnly} onClick={() => choose()}>新建草案</Button>{records.data?.items.map(item => <Button key={item.id} variant="secondary" disabled={state.busy || application.busy} onClick={() => choose(item)}>{item.name} · v{item.current_revision.revision_no} · {item.status === "candidate" ? "暂定" : statusLabels[item.status]}</Button>)}</div>
     <Field label="草案名称"><input className={inputClass} value={draft.name} disabled={disabled || !!selected} onChange={event => setDraft({ ...draft, name: event.target.value })} /></Field>
     <Field label="可编辑的风格规则"><textarea className={`${inputClass} min-h-32`} disabled={disabled} value={draft.text} onChange={event => setDraft({ ...draft, text: event.target.value })} /></Field>
+    <details className="space-y-3 rounded-lg border p-3"><summary className="cursor-pointer">选择参考作品 / 来源</summary>
+      <div className="grid gap-2 sm:grid-cols-2"><Field label="参考资源"><select className={inputClass} value={resourceKind} onChange={event => { setResourceKind(event.target.value as typeof resourceKind); setResources([]); setResource(undefined); setHasMore(false); setResourceOffset(0); }}><option value="material_revision">图片 / 音频 / 视频素材版本</option><option value="source">已导入文字来源</option></select></Field><Field label="搜索标题"><input className={inputClass} value={search} onChange={event => setSearch(event.target.value)} /></Field></div>
+      <Button variant="secondary" disabled={resourcesBusy} onClick={() => void readResources()}>{resourcesBusy ? "读取中…" : "查找可用参考"}</Button>
+      <Field label="选择精确版本"><select className={inputClass} value={resource ? `${resource.reference.kind}:${resource.reference.id}` : ""} onChange={event => setResource(resources.find(item => `${item.reference.kind}:${item.reference.id}` === event.target.value))}><option value="">请选择资源</option>{resources.map(item => <option key={`${item.reference.kind}:${item.reference.id}`} value={`${item.reference.kind}:${item.reference.id}`}>{item.title} · {item.modality}{item.revision_no ? ` · v${item.revision_no}` : ""}</option>)}</select></Field>
+      {hasMore && <Button variant="secondary" disabled={resourcesBusy} onClick={() => void readResources(true)}>加载更多精确版本</Button>}
+      {resource && <><ReferencePreview resource={resource} />{(resource.modality === "audio" || resource.modality === "video") && !(resource.duration_ms && resource.duration_ms > 0) ? <p className="text-xs text-amber-700">这条素材没有可用时长，不能作为时间定位参考。</p> : <Button disabled={disabled} onClick={() => {
+        setDraft(previous => ({ ...previous, observations: [...previous.observations, { modality: resource.modality, certainty: "unknown", statement: "", locator: "", polarity: "prefer", reason: "", inspection: "unknown", reference: resource.reference,
+          location: resource.modality === "text" ? { quote: "" } : resource.modality === "image" ? { x: 0, y: 0, width: 1, height: 1 } : { start_ms: 0, end_ms: Math.min(resource.duration_ms ?? 1000, 10000) } }] }));
+      }}>把此版本加入观察</Button>}</>}
+      <p className="text-xs text-slate-500">未找到资源可前往“素材与知识”导入。知识库摘录继续在作品“来源与证据”中选择，保留原授权范围。</p>
+    </details>
     {draft.observations.map((observation, index) => <fieldset key={index} className="space-y-2 rounded border p-3" disabled={disabled}><legend className="text-sm">观察 {index + 1}</legend>
-      <div className="grid gap-2 sm:grid-cols-2"><Field label="通道"><select className={inputClass} value={observation.modality} onChange={event => changeObservation(index, { modality: event.target.value as StyleObservation["modality"] })}><option value="text">文字</option><option value="image">图片</option><option value="video">视频</option></select></Field>
+      <div className="grid gap-2 sm:grid-cols-2"><Field label="通道"><select className={inputClass} value={observation.modality} disabled><option value="text">文字</option><option value="image">图片</option><option value="audio">音频</option><option value="video">视频</option></select></Field>
       <Field label="依据程度"><select className={inputClass} value={observation.certainty} onChange={event => changeObservation(index, { certainty: event.target.value as StyleObservation["certainty"] })}><option value="direct">直接观察</option><option value="inferred">推断</option><option value="unknown">未知 / 未检查</option></select></Field></div>
       <Field label="观察说明"><textarea className={inputClass} value={observation.statement} onChange={event => changeObservation(index, { statement: event.target.value })} /></Field>
       <Field label={observation.modality === "text" ? "原文段落 / 样本范围" : observation.modality === "image" ? "图像区域" : "视频时间码 / 区间"}><input className={inputClass} value={observation.locator} onChange={event => changeObservation(index, { locator: event.target.value })} /></Field>
-      <div className="grid gap-2 sm:grid-cols-2"><Field label="参考类型"><select className={inputClass} value={observation.reference.kind} onChange={event => changeObservation(index, { reference: { ...observation.reference, kind: event.target.value as StyleObservation["reference"]["kind"] } })}><option value="material_revision">素材版本</option><option value="source">来源快照</option></select></Field><Field label="素材版本 / 来源 ID"><input type="number" min="1" className={inputClass} value={observation.reference.id || ""} onChange={event => changeObservation(index, { reference: { ...observation.reference, id: Number(event.target.value) } })} /></Field></div>
-      <Field label="来源内容 SHA256"><input className={inputClass} maxLength={64} value={observation.reference.content_hash} onChange={event => changeObservation(index, { reference: { ...observation.reference, content_hash: event.target.value } })} /></Field>
+      <div className="grid gap-2 sm:grid-cols-2"><Field label="借鉴或避免"><select className={inputClass} value={observation.polarity ?? "prefer"} onChange={event => changeObservation(index, { polarity: event.target.value as StyleObservation["polarity"] })}><option value="prefer">希望借鉴</option><option value="avoid">希望避免的反例</option></select></Field><Field label="实际检查方式"><select className={inputClass} value={observation.inspection ?? "unknown"} onChange={event => changeObservation(index, { inspection: event.target.value as StyleObservation["inspection"] })}>{[["unknown", "未检查"], ["read", "阅读原文"], ["viewed", "查看图像 / 画面"], ["listened", "实际试听"], ["transcribed", "仅机器转写"], ["measured", "仅声学测量"]].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field></div>
+      <Field label="具体原因"><textarea className={inputClass} value={observation.reason ?? ""} onChange={event => changeObservation(index, { reason: event.target.value })} /></Field>
+      {observation.modality === "text" ? <Field label="精确原文片段（须在来源中唯一出现）"><textarea className={inputClass} value={String(observation.location?.quote ?? "")} onChange={event => changeObservation(index, { location: { quote: event.target.value } })} /></Field> : <div className="grid gap-2 sm:grid-cols-2">{(observation.modality === "image" ? ["x", "y", "width", "height"] : ["start_ms", "end_ms"]).map(key => <Field key={key} label={({ x: "左侧比例", y: "顶部比例", width: "区域宽度比例", height: "区域高度比例", start_ms: "开始毫秒", end_ms: "结束毫秒" } as Record<string, string>)[key]}><input type="number" min="0" max={observation.modality === "image" ? 1 : 28800000} step={observation.modality === "image" ? 0.01 : 1} className={inputClass} value={observation.location?.[key] ?? ""} onChange={event => changeObservation(index, { location: { ...observation.location, [key]: Number(event.target.value) } })} /></Field>)}</div>}
+      <RecordView value={observation.reference} label="精确来源版本与校验值" />
       <Button variant="secondary" onClick={() => setDraft({ ...draft, observations: draft.observations.filter((_, at) => at !== index) })}>移除此条</Button>
     </fieldset>)}
-    <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={disabled} onClick={() => setDraft({ ...draft, observations: [...draft.observations, { modality: "text", certainty: "unknown", statement: "", locator: "", reference: { kind: "material_revision", id: 0, content_hash: "" } }] })}>添加参考观察</Button>
+    {draft.observations.map((observation, index) => <div key={index} className="space-y-2"><Button variant="secondary" disabled={resourcesBusy} onClick={() => void inspectReference(observation, index)}>查看观察 {index + 1} 的原参考</Button>{inspectedObservation === index && resource?.reference.id === observation.reference.id && resource.reference.kind === observation.reference.kind && <ReferencePreview resource={resource} />}</div>)}
+    <div className="flex flex-wrap gap-2">
       <Button disabled={disabled || state.conflict || !draft.name.trim() || !draft.text.trim() || (!!selected && !dirty)} onClick={() => void save()}>保存暂定草案新版本</Button>
       {selected && <><Button disabled={disabled || dirty || state.conflict || selected.status !== "candidate"} onClick={() => {
         if (!window.confirm("确认采纳此草案为本角色的风格资产？采纳后仍需点击应用，才会写入角色身份。")) return;

@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "checks": [
+    "new pending take same material/hash current confirmed task",
+    "old take and adoption unchanged",
+    "no inherited trim/review",
+    "not-ready/dirty disabled",
+    "duplicate current task refused",
+    "new pending hides old usable choice",
+    "draft change during GET blocked",
+    "identity change during GET blocked",
+    "historical/rejected/cancelled web outputs excluded",
+    "current staged/accepted web outputs counted",
+    "restored H1 usable over H2 pending/rejected",
+    "same-current-hash usable preserved",
+    "no current hash match remains historical review only",
+    "zero page errors",
+    "zero writes"
+  ]
+}

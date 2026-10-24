@@ -1,0 +1,12 @@
+- [x] 1.1 Shot brief (search terms zh/en, prompt, route) — stored with the shot's match-run segment instead of the plan/draft schema (see design); planner writes `prompt` (material-match.v2).
+- [x] 1.2 Shots without a prompt: `POST …/shot-slots/briefs` runs the planner only (no search) and fills briefs; editable via `PATCH …/shot-slots/{id}/brief`.
+- [x] 1.3 Slot read endpoint per unit: draft shots + this unit's match-run picks/uploads by shot id, derived status.
+- [x] 1.4 Upload on a slot: reuse material upload + match attach, project reference with shot note.
+- [x] 1.5 Handoff/render missing-shot messages name the shots.
+- [x] 1.6 MCP `get_shot_slots` (read-only) + settings summary; forbidden-tool test list unchanged.
+- [x] 2.1 Video production page: per-shot brief (editable), status, candidate list, choose → bind via draft, upload button; web-video route pre-fills prompt.
+- [x] 3.1 Verified on U80 (15 briefs with prompts, candidates from runs 8–10 shown per shot, MCP read); upload-into-slot verified on a DB copy for U74 (draft ids). Picks from runs: U80 has none yet.
+- [x] 4.1 Two prompts per shot: planner writes `frame_prompt` (first-frame still) and `prompt` (image-to-video from that frame); brief call refills existing shots; UI shows both; API-image route shows the frame prompt to copy, web-video route pre-fills video prompt.
+- [x] 4.2 Generation mode per shot (直接生成视频 / 先生成首帧): planner writes `t2v_prompt`, `frame_prompt`, `prompt`, `gen_mode` (material-match.v5); toggle on the page saves `gen_mode` without marking the brief edited.
+- [x] 4.3 Upload windows ignore outside clicks (`Modal closeOnBackdrop={false}` on material-match upload, 素材库上传, 导入来源, 配图素材, 从商品开始创作).
+- [x] 4.4 ✕ on uploaded cards: `POST /material-match-runs/{id}/segments/{sid}/detach` removes the upload from the segment, keeps the file in the library, detaches the project reference unless still used elsewhere.

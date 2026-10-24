@@ -1,0 +1,68 @@
+{
+  "scope": "素材导演通用的声音/源片/剪入时长区分；不变成懒人沙发专有事实",
+  "skill_file": ".codex/skills/product-video-material-director/SKILL.md",
+  "skill_hash": "33122349c42ed4f4d2227d5c70a41e076b6c9a1dd391be1c880d3db259091a2e",
+  "dispatched_rule": "Keep narration duration, generated source duration and intended edit duration separate. Before assigning timing, read the narration aloud or use the selected voice's actual audio when available; a structurally valid shot plan can still be too short for its text. If audio is not yet available, label timing provisional and simplify the narration or allow room in the edit. Do not speed up speech just to fit a guessed duration, loop a clip silently or invent a website duration option. A confirmed image remains the same selection only for its exact bytes; importing a local model-authorized copy must retain that hash and the approval's limited scope, without granting public or commercial rights.\n\n",
+  "fixture": "isolated SQLite clone; independent attempt after original blank-start",
+  "run_id": 19,
+  "attempt_id": 89,
+  "output": {
+    "candidates": [
+      {
+        "candidate_hash": "9f85fff3297c30ea7c6bc23a3718cd36da9dfde4873d60920151ebea7033ce06",
+        "content": {
+          "beats": [
+            {
+              "asset_requirements": [],
+              "id": "beat-0",
+              "narration": "挑一个有阳光的午后，把休息搬到草地上。",
+              "order": 0,
+              "unknowns": [
+                "待实际角色音频定时",
+                "草地全景展示画面缺口待补充"
+              ],
+              "visual": "阳光照射下的开阔草坪，草地上摆放着彩色懒人沙发。"
+            },
+            {
+              "asset_requirements": [],
+              "id": "beat-1",
+              "narration": "蓝色、黄色，还是粉色？",
+              "order": 1,
+              "unknowns": [
+                "待实际角色音频定时",
+                "多款沙发颜色细节特写素材待补充"
+              ],
+              "visual": "镜头扫过草地上不同颜色的懒人沙发外观，呈现蓝色、黄色与粉色等色彩细节。"
+            },
+            {
+              "asset_requirements": [],
+              "id": "beat-2",
+              "narration": "选一个喜欢的颜色，给周末留一点放松的时间。",
+              "order": 2,
+              "unknowns": [
+                "待实际角色音频定时",
+                "人物在草地躺靠休息的实际画面待补充"
+              ],
+              "visual": "人物在草地懒人沙发上躺靠休息的场景展示，画面定格在轻松闲适的草地环境。"
+            }
+          ],
+          "title": "给周末留一个躺下的位置"
+        },
+        "id": "script-1",
+        "references": [],
+        "summary": "围绕草地休闲场景与可见颜色展开的懒人沙发周末休息脚本。",
+        "warnings": []
+      }
+    ],
+    "input_hash": "678bcd1341b60633ff69def135cb66eeefff97c77d4cb0686982034e4132df84",
+    "llm_run_id": 87,
+    "model": {
+      "model": "gemini-3.8-flash-high",
+      "provider": "openai_compatible"
+    },
+    "output_hash": "f08da4283d7a62d3500460aa2a9dcb06e1f66e47ee6547d70b9f5d71ba107625",
+    "prompt_hash": "60de440dfd989b42a1fb56b261c6655f1d69ec622e151e7b4a8f4bd3b4023a6d",
+    "schema": "video.script.v1"
+  },
+  "formal_business_writes": false
+}

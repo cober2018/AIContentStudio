@@ -13,7 +13,7 @@
     "stage.creative.method.v1"
   ],
   "output_schemas": [
-    "creative.angles.v1"
+    "creative.title-hook.v1"
   ],
   "input_schema": "stage.handoff.v1",
   "required_context": [

@@ -1,0 +1,139 @@
+{
+  "posts": [
+    {
+      "path": "/form-assistance",
+      "body": {
+        "request_key": "0",
+        "surface": "video",
+        "mode": "autofill",
+        "project_id": 11,
+        "unit_id": 12,
+        "context": {
+          "category": "鞋履",
+          "style_revision_id": 9,
+          "shots.s.filming.action": ""
+        },
+        "targets": [
+          "shots.s.filming.action"
+        ],
+        "skipped_keys": [],
+        "source_refs": [],
+        "method_refs": []
+      }
+    },
+    {
+      "path": "/form-assistance/1/feedback",
+      "body": {
+        "expected_revision": 1,
+        "request_key": "1",
+        "context": {
+          "category": "鞋履",
+          "style_revision_id": 9,
+          "shots.s.filming.action": ""
+        },
+        "keys": [
+          "shots.s.filming.action"
+        ],
+        "reason": "希望动作更明确",
+        "correction_target": "presentation_style",
+        "reuse": {
+          "rule": "只拍一个动作",
+          "name": "只拍一个动作",
+          "scope_type": "owner",
+          "sku_id": 42
+        }
+      }
+    },
+    {
+      "path": "/form-assistance/1/feedback",
+      "body": {
+        "expected_revision": 1,
+        "request_key": "2",
+        "context": {
+          "category": "鞋履",
+          "style_revision_id": 9,
+          "shots.s.filming.action": ""
+        },
+        "keys": [
+          "shots.s.filming.action"
+        ],
+        "reason": "希望动作更明确",
+        "correction_target": "presentation_style",
+        "reuse": {
+          "rule": "只拍一个动作",
+          "name": "只拍一个动作",
+          "scope_type": "owner",
+          "category": "鞋履"
+        }
+      }
+    },
+    {
+      "path": "/form-assistance/1/feedback",
+      "body": {
+        "expected_revision": 1,
+        "request_key": "3",
+        "context": {
+          "category": "鞋履",
+          "style_revision_id": 9,
+          "shots.s.filming.action": ""
+        },
+        "keys": [
+          "shots.s.filming.action"
+        ],
+        "reason": "希望动作更明确",
+        "correction_target": "presentation_style",
+        "reuse": {
+          "rule": "只拍一个动作",
+          "name": "只拍一个动作",
+          "scope_type": "owner",
+          "style_revision_id": 9
+        }
+      }
+    },
+    {
+      "path": "/form-assistance/1/feedback",
+      "body": {
+        "expected_revision": 1,
+        "request_key": "4",
+        "context": {
+          "category": "鞋履",
+          "style_revision_id": 9,
+          "shots.s.filming.action": ""
+        },
+        "keys": [
+          "shots.s.filming.action"
+        ],
+        "reason": "希望动作更明确",
+        "correction_target": "presentation_style",
+        "reuse": {
+          "rule": "只拍一个动作",
+          "name": "只拍一个动作",
+          "scope_type": "project"
+        }
+      }
+    },
+    {
+      "path": "/form-assistance/1/feedback",
+      "body": {
+        "expected_revision": 1,
+        "request_key": "5",
+        "context": {
+          "category": "鞋履",
+          "style_revision_id": 9,
+          "shots.s.filming.action": ""
+        },
+        "keys": [
+          "shots.s.filming.action"
+        ],
+        "reason": "希望动作更明确",
+        "correction_target": "presentation_style",
+        "reuse": {
+          "rule": "只拍一个动作",
+          "name": "只拍一个动作",
+          "scope_type": "owner"
+        }
+      }
+    }
+  ],
+  "boundary": "Actual TSX transpilation, isolated React hooks/API replacements; not browser"
+}

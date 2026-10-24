@@ -1,0 +1,70 @@
+{
+  "schema": "studio.skill.contract.v1",
+  "key": "studio.text.humanize",
+  "version": "2",
+  "ref": "studio.text.humanize@2",
+  "kind": "skill",
+  "modality": "text",
+  "purpose": "在不改变事实的前提下精修表达",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.master.propose.v1"
+  ],
+  "output_schemas": [
+    "text.master.v2"
+  ],
+  "input_schema": "stage.handoff.v1",
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [
+    "instruction",
+    "tone"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "instruction": {
+        "type": "string",
+        "maxLength": 4000
+      },
+      "tone": {
+        "type": "string",
+        "maxLength": 200
+      }
+    }
+  },
+  "checks": [
+    "text_identity"
+  ],
+  "tools": [],
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.text.deep-technical@1",
+    "studio.text.engineering-explainer@1",
+    "studio.text.observational-lifestyle@1",
+    "studio.text.reflective-lifestyle@1",
+    "studio.text.concise-social@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.text.technical@1",
+    "studio.quality.text.lifestyle@1"
+  ],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "references": []
+}

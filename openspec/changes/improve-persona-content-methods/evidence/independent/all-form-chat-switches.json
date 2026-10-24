@@ -1,0 +1,2247 @@
+{
+  "environment": "SQLite memory; actual request builders, no dispatch/model generation",
+  "count": 224,
+  "all_passed": true,
+  "cases": [
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.ai-tech-engineer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "evidence",
+      "method": "studio.research.evidence-brief@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "angles",
+      "method": "studio.research.angle-lab@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "outline",
+      "method": "studio.text.outline@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "draft",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "refine",
+      "method": "studio.text.humanize@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "title",
+      "method": "studio.text.title-hook@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "text",
+      "node": "final",
+      "method": "studio.text.longform@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "visual",
+      "method": "studio.graphic.visual-director@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "graphic",
+      "node": "cards",
+      "method": "studio.graphic.card-plan@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "script",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "shots",
+      "method": "studio.video.shot-director@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "video",
+      "node": "master",
+      "method": "studio.video.script@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "spoken",
+      "method": "studio.audio.spoken-adapt@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "identity",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "inherit",
+      "body_count": 1,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "method_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "stage_off",
+      "body_count": 0,
+      "passed": true
+    },
+    {
+      "role": "starter.lifestyle-observer.v1",
+      "form": "audio",
+      "node": "voice",
+      "method": "studio.audio.voice-director@2",
+      "scope": "work_override",
+      "case": "enabled",
+      "body_count": 1,
+      "passed": true
+    }
+  ]
+}

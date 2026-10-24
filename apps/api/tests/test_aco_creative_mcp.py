@@ -17,13 +17,24 @@ TOOL_NAMES = {
     "claim_execution", "start_execution", "materialize_inputs", "report_progress",
     "report_blocker", "report_checkpoint", "submit_output", "mark_unknown",
     "reconcile_unknown", "request_human_review",
+    "get_stages", "start_run", "preview_stage", "run_stage", "get_stage_result", "get_stage_decision",
+    "start_material_match", "get_material_match", "get_shot_slots",
+    "get_craft_skill", "list_ae_templates", "render_ae_template", "start_material_autofill",
+    # The video chain is led by the external model; it saves the 导演稿 and picks materials itself.
+    "get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
+    "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common",
 }
-READ_ONLY_TOOLS = {"get_context", "get_package", "get_execution", "find_capabilities"}
+READ_ONLY_TOOLS = {"get_context", "get_package", "get_execution", "find_capabilities",
+                   "get_stages", "preview_stage", "get_stage_result", "get_stage_decision", "get_material_match", "get_shot_slots",
+                   "get_craft_skill", "list_ae_templates", "get_video_brief", "get_video_decision"}
 FORBIDDEN_TOOLS = (
     "approve_candidate", "approve", "freeze_candidate", "publish", "publish_content",
     "wechat_draft", "deliver", "create_delivery_target", "execute_delivery",
     "save_master", "MasterSave", "accept_output", "bind_output", "read_file",
     "write_file", "execute_sql", "not_a_tool",
+    # The user decides on the platform; the agent can only read the decision.
+    "accept_stage", "accept_master", "accept_result", "reject_stage", "stage_feedback",
+    "accept_material_match", "reject_material_segment", "bind_shot",
 )
 
 
@@ -327,7 +338,7 @@ def test_tools_list_is_the_exact_restricted_whitelist(mcp_environment, mcp_clien
         _assert_response(response)
         tools = response.json()["result"]["tools"]
         names = [tool["name"] for tool in tools]
-        assert len(names) == 15 and set(names) == TOOL_NAMES
+        assert len(names) == len(TOOL_NAMES) and set(names) == TOOL_NAMES
         assert not set(names).intersection(FORBIDDEN_TOOLS)
         for tool in tools:
             readonly = tool["name"] in READ_ONLY_TOOLS

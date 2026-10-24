@@ -1,0 +1,11 @@
+{"check":"A7 existing text-only selection, exact unit scope, product exclusion, readonly","status":"pass","savedScope":{"unit_id":41,"persona_id":null}}
+{"check":"A8 failed reads render unknown; successful null renders empty","status":"pass"}
+{"check":"A9 actual backend projection -> summary effect -> rendered component uses frozen run","status":"pass","runRevision":1,"nextRunRevision":2}
+{"check":"A10 actual updateProfile filters incompatible parameters and preserves model chains; incompatible audio change rejected","status":"pass"}
+{"check":"409 actual save + actual refresh effect retains method draft and rebases latest model/voice, requires preview again","status":"pass"}
+{"check":"A10 actual save body validates with backend and retains unrelated latest configuration","status":"pass","expectedRevision":10}
+{"file":"apps/web/src/product/PersonaCreativeConfig.tsx","sha256":"2f2f2fa4cbb8f721fcb3a1621d38a8186541c502dbdfb5a23c89e2733d936c47"}
+{"file":"apps/web/src/product/CreationRecipePanel.tsx","sha256":"520f81f6ca8b7df96848625654d32ea4a4bc3ed3236d77e6d5a21b85f0f4c63f"}
+{"file":"apps/web/src/product/ProductionWorkspace.tsx","sha256":"d2d3dcb1150ef19e1afd3d2de95efba8c07892bd4ddb801fd4e6d9fff77d6ac9"}
+{"file":"apps/web/src/product/project/ObsidianKnowledgePanel.tsx","sha256":"8d58c9a1c82d32743299adef74880dd93956c913868d41347d0ad9b11bf2d30f"}
+{"file":"apps/api/app/services/creation_recipes.py","sha256":"7a7f5a1c19568216093b617a2d1db4f97c67b42f9007c9e2f121bd2aa7b452e3"}

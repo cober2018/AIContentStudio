@@ -1,0 +1,15 @@
+{
+  "head": "8539806eb3a1bebf5bf71ee08df3a286cdf9e00a",
+  "source_sha256": {
+    "apps/api/app/services/form_assistance.py": "41180c21723fb6662a3efa4bc723dadd4c6e932f75a24635e6f9bcadce5fc3ec",
+    "apps/web/src/product/GuidedProductionGoal.tsx": "8bf355eff454f14328b6ef049296c83b8dc0e6a4216aa403f8839dae622c413a"
+  },
+  "business_changes": [
+    "apps/api/app/services/form_assistance.py",
+    "apps/web/src/product/GuidedProductionGoal.tsx"
+  ],
+  "verification": "actual TSX handler plus real router functions using isolated in-memory SQLite; no browser writes; no new model calls",
+  "api_restarted": true,
+  "production_business_data_writes": false,
+  "commit_push_archive": false
+}

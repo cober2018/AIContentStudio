@@ -1,0 +1,21 @@
+{
+  "head": "productdomain0001",
+  "old_tables_checked": 106,
+  "old_column_fingerprints_changed": [],
+  "integrity": [
+    [
+      "ok"
+    ]
+  ],
+  "foreign_key_errors": [],
+  "domain_counts": [
+    [
+      "persona",
+      14
+    ],
+    [
+      "product",
+      1
+    ]
+  ]
+}

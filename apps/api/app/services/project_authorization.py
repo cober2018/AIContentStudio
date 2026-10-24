@@ -48,14 +48,16 @@ def lock_project_context(db: Session, project_id: int, user: User) -> ContentPro
 def authorize_project_asset(db: Session, asset: ContentAsset, user: User, *, mutate: bool = False) -> None:
     if asset.project_id is None:
         return
+    if mutate:
+        lock_project_context(db, asset.project_id, user)
     owner = db.execute(
-        select(ContentProject.owner_user_id, ContentProject.status, ContentUnit.status)
+        select(ContentProject.owner_user_id, ContentProject.status, ContentUnit.status, ContentUnit.lifecycle)
         .join(ContentUnit, ContentUnit.project_id == ContentProject.id)
         .where(ContentProject.id == asset.project_id, ContentUnit.id == asset.content_unit_id)
     ).first()
     if owner is None or owner[0] != user.id:
         raise HTTPException(404, "候选内容不存在")
-    if mutate and (owner[1] == "archived" or owner[2] == "archived"):
+    if mutate and (owner[1] == "archived" or owner[2] == "archived" or owner[3] in {"archived", "deleted"}):
         raise HTTPException(409, "已归档项目或单元只可查看历史")
 
 
@@ -69,20 +71,29 @@ def authorize_project_target(db: Session, target: DeliveryTarget, user: User, *,
 def authorize_project_run(db: Session, run: WorkflowRun, user: User, *, mutate: bool = False) -> None:
     if run.content_unit_id is None:
         return
+    if mutate:
+        unit = db.get(ContentUnit, run.content_unit_id)
+        if unit is None:
+            raise HTTPException(404, "运行不存在")
+        lock_project_context(db, unit.project_id, user)
+        db.refresh(unit)
     owner = db.execute(
-        select(ContentProject.owner_user_id, ContentUnit.status, ContentProject.status)
+        select(ContentProject.owner_user_id, ContentUnit.status, ContentProject.status, ContentUnit.lifecycle)
         .join(ContentUnit, ContentUnit.project_id == ContentProject.id)
         .where(ContentUnit.id == run.content_unit_id)
     ).first()
     if owner is None or owner[0] != user.id:
         raise HTTPException(404, "运行不存在")
-    if mutate and (owner[1] == "archived" or owner[2] == "archived"):
+    if mutate and (owner[1] == "archived" or owner[2] == "archived" or owner[3] in {"archived", "deleted"}):
         raise HTTPException(409, "已归档项目或单元的运行历史只可查看")
     if mutate:
         from .content_identity import hierarchy
 
         unit = db.get(ContentUnit, run.content_unit_id)
-        hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
+        if unit.production_domain == "product" and run.identity_snapshot_id is not None:
+            raise HTTPException(409, "旧运行保留只读，请按商品流程准备新运行")
+        if unit.production_domain != "product":
+            hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
 
 
 def authorize_project_job(db: Session, job: ContentJob, user: User, *, mutate: bool = False) -> None:
@@ -137,7 +148,7 @@ def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> b
         .where(SeriesWorkflowDefault.workflow_id == workflow.id, ContentSeries.scope == "persona_editorial")
     ).all())
     owners = project_owners | run_owners | persona_owners | account_owners | series_owners
-    if workflow.scope in {"project", "persona_default", "account_default", "series_default"}:
+    if workflow.scope in {"project", "persona_default", "account_default", "series_default", "product_default"}:
         if workflow.owner_user_id is None:
             raise HTTPException(404, "工作流不存在")
         owners.add(workflow.owner_user_id)

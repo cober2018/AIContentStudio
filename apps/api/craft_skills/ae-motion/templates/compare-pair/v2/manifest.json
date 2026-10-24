@@ -1,0 +1,83 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "compare-pair",
+  "version": "v2",
+  "name": "对比卡",
+  "use": "两样东西左右并排对比，各带标签，可各配一张图，下方一句说明区别。例：海底光缆 ≈ 浇花水管；光纤 ≈ 头发丝。 图片是生成图时，右上角标「AI 示意」（证明类标「AI 示意，非实拍」）。",
+  "fields": [
+    {
+      "name": "left_label",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "right_label",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "note",
+      "kind": "text",
+      "max": 24,
+      "required": false
+    },
+    {
+      "name": "tag",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "left",
+      "file": "left.png",
+      "required": false,
+      "source": "any"
+    },
+    {
+      "name": "right",
+      "file": "right.png",
+      "required": false,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 2000,
+    "max": 10000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "PingFangSC-Semibold",
+    "PingFangSC-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "fb3fbc75f3755ca97546d437696a7c536ecf18c4b6d967ad141690a3b1b6797b"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-23",
+      "content": "两张图 + 标签 + 说明 + 「AI 示意，非实拍」标签",
+      "frames": "入场 0.4s、中段 1.5s、定格 3.7s",
+      "result": "图片、标签、说明、右上角标签正确"
+    },
+    {
+      "date": "2026-10-23",
+      "content": "无图：两个标签，无说明，无标签",
+      "frames": "入场 0.4s、中段 1.5s、定格 3.7s",
+      "result": "文字面板正确，右上角不显示"
+    }
+  ]
+}

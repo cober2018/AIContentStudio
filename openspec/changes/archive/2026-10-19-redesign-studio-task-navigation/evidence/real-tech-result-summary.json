@@ -1,0 +1,53 @@
+{
+  "project_id": 35,
+  "unit_id": 41,
+  "opportunity_id": 3,
+  "run_id": 18,
+  "run_status": "succeeded",
+  "steps": [
+    {
+      "node_id": "evidence",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "angles",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "outline",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "draft",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "quality",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "refine",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "title",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "final",
+      "status": "succeeded"
+    },
+    {
+      "node_id": "final_quality",
+      "status": "succeeded"
+    }
+  ],
+  "master_id": 61,
+  "candidate_id": 3,
+  "candidate_hash": "4eb1843afe9bbc742a41c5aa799e657e3f28fb81553de87e447c59987d6d4ae1",
+  "candidate_status": "approved",
+  "target_id": 3,
+  "delivery_status": "awaiting_manual_receipt",
+  "public_publication": false,
+  "package_sha256": "ec624175fa8e5807f13209b3defa979662d27dc66ad43ffb24869f6a73da0543"
+}

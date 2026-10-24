@@ -1,0 +1,334 @@
+{
+  "checks": [
+    "persona excludes product",
+    "default refresh does not fetch records",
+    "queue URL page",
+    "records explicit route and fetch",
+    "records pagination remains available",
+    "project pagination",
+    "draft survives reload",
+    "single pending create and failure keeps draft",
+    "failed create returns to original list page",
+    "successful create clears stored draft",
+    "reader creation blocked",
+    "mobile no horizontal overflow",
+    "archive uses existing lifecycle contract",
+    "project read failure survives create navigation",
+    "records read failure never shown as empty",
+    "zero page errors"
+  ],
+  "calls": [
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/production-workspaces",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/production-workspaces",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/generation-tasks",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/5/units/5/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/4/units/4/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/3/units/3/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/2/units/2/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/1/units/1/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/25/units/25/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/24/units/24/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/23/units/23/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/22/units/22/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/21/units/21/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/20/units/20/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/19/units/19/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/18/units/18/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/17/units/17/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/16/units/16/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/15/units/15/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/14/units/14/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/13/units/13/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/12/units/12/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/11/units/11/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/10/units/10/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/9/units/9/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/8/units/8/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/7/units/7/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/6/units/6/creative-executions",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "POST",
+      "body": "{\"title\":\"草稿名称\",\"objective\":\"草稿目标\"}"
+    },
+    {
+      "path": "/content-projects",
+      "method": "POST",
+      "body": "{\"title\":\"草稿名称\",\"objective\":\"草稿目标\"}"
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/production-workspaces",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/25/units/25/lifecycle",
+      "method": "POST",
+      "body": "{\"action\":\"archive\"}"
+    },
+    {
+      "path": "/production-workspaces",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/production-workspaces",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/generation-tasks",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "errors": [],
+  "scope": "All API calls intercepted; no live mutations"
+}

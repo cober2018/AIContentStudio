@@ -149,6 +149,19 @@ def continue_after_acceptance(db, *, run_id, accepted_node_id, accepted_hash, us
         if result.get("status") == "succeeded" and not descriptor.stage_contract.to_dict()["requires_human_acceptance"]:
             db.refresh(step)
             continue
+        checks = ((result.get("output") or {}).get("result") or {}).get("checks") or []
+        if (node.get("plugin") == "stage.checks" and result.get("status") == "waiting_input" and checks
+                and all(item.get("status") == "pass" for item in checks)):
+            # A clean check has nothing for the user to decide; only warnings and failures wait for them.
+            from .stage_domain_adoptions import accept_result
+
+            receipt = result.get("receipt") or {}
+            accepted_checks = accept_result(db, project_id, unit.id, node_id, user, {
+                "run_id": run.id, "attempt_id": result["attempt_id"], "expected_output_hash": receipt.get("output_hash"),
+                "expected_resolution_hash": receipt.get("resolution_hash"), "expected_context_hash": resolved["context_hash"],
+                "domain": "checks", "expected_revision": 0, "adoption_key": f"auto-checks-{result['attempt_id']}",
+                "warning_dispositions": {}, "decision": "accepted"})
+            return accepted_checks.get("continuation") or {"status": "complete", "node_id": node_id, "request_mode": "automatic"}
         return {
             "status": result.get("status", "blocked"), "node_id": node_id,
             "attempt_id": result.get("attempt_id"), "resolution_hash": resolved["resolution_hash"],

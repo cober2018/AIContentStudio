@@ -286,7 +286,8 @@ def freeze_production_stages(db, user, unit, stages, *, origin, node=None, confi
                 revision = db.get(CapabilityArtifactRevision, selected["revision_id"])
                 targets = revision.content_json.get("execution_targets")
                 deterministic = node["plugin"] in {"stage.graphic.compose", "stage.professional.prepare", "stage.audio.qc"}
-                reason = ("prompt_guidance_not_deterministic_recipe" if deterministic and "deterministic_parameters" not in method else
+                reason = ("prompt_guidance_not_native_tts" if node["plugin"] == "media.generate" and str(node.get("plugin_version")) == "4" else
+                          "prompt_guidance_not_deterministic_recipe" if deterministic and "deterministic_parameters" not in method else
                           "execution_target_not_applicable" if not deterministic and targets is not None and "ai_planning" not in targets else None)
                 applicability = {"node_id": node["id"], "plugin": node["plugin"],
                     "execution_target": "deterministic_recipe" if deterministic else "ai_planning",
@@ -375,7 +376,8 @@ def project_frozen_production_stages(db, user, unit, stages, manifest, *, node=N
                 if recipe is not None:
                     method["deterministic_parameters"] = recipe["config_patch"]
                 targets = rendered.get("execution_targets")
-                reason = ("prompt_guidance_not_deterministic_recipe" if deterministic and recipe is None else
+                reason = ("prompt_guidance_not_native_tts" if node["plugin"] == "media.generate" and str(node.get("plugin_version")) == "4" else
+                          "prompt_guidance_not_deterministic_recipe" if deterministic and recipe is None else
                           "execution_target_not_applicable" if not deterministic and targets is not None and "ai_planning" not in targets else None)
             method["applicability"] = {**method.get("applicability", {}), "node_id": node["id"],
                 "plugin": node["plugin"], "status": "not_applicable" if reason else "applicable"}
@@ -407,13 +409,26 @@ def frozen_stage(db, user, unit, node, contract, context, override):
     graphic_planning = unit.modality == "graphic" and node["plugin"] in {"stage.creative.method", "stage.master.propose"}
     modality = "audio" if native_tts or audio_qc or audio_planning else unit.modality
     field = MODALITY_FIELDS[modality]
-    profile = copy.deepcopy((identity.get("content") or {}).get(field))
+    from .product_context import is_product, effective_profile
+    product_domain = is_product(unit)
+    profile_content = ((context.get("product_context") or {}).get("creative_profiles") or effective_profile(db, unit)) if product_domain else identity.get("content") or {}
+    profile = copy.deepcopy(profile_content.get(field))
+    work_settings = ((context.get("production_profile") or {}).get("settings") or {})
+    if not product_domain and field in {"video_creative_profile", "audio_creative_profile"} and work_settings.get(field) is not None:
+        profile = copy.deepcopy(work_settings[field])
+    if product_domain and native_tts and not work_settings.get("voice_id") and not (profile or {}).get("parameters", {}).get("voice"):
+        return node, None, None, ["product_voice_required"]
     director = node["plugin"] == "stage.professional.prepare" and str(node.get("plugin_version")) == "2"
     if profile is None or (not (director or native_tts or audio_qc) and node["plugin"] not in {"stage.master.propose", "stage.creative.method", "stage.graphic.compose"}):
         return node, None, None, []
     if profile["schema"] != f"persona.creative.{modality}.v1":
         raise StageContractError("creative_profile_modality_mismatch")
     source = node.get("config") or {}
+    if product_domain and work_settings.get("model_profile_ref") and not native_tts and not audio_qc:
+        source = {**source, "model_profile_id": work_settings["model_profile_ref"]}
+        node = {**node, "config": source}
+    if product_domain and native_tts and not work_settings.get("voice_id") and not (profile or {}).get("parameters", {}).get("voice"):
+        return node, None, None, ["product_voice_required"]
     saved_method = source.get("method") or {"source_kind": "studio_builtin", "skill_ref": profile["skill_ref"]}
     method_selection = (override or {}).get("method", saved_method)
     if type(method_selection) is not dict:
@@ -421,23 +436,50 @@ def frozen_stage(db, user, unit, node, contract, context, override):
     stage_key = production_stage_key(node, creative_input if node["plugin"] == "stage.creative.method" else
                                      contract.effective_config(source, override or {})[1])
     selection = profile.get("production_stages", {}).get(stage_key)
-    task_stages = (identity.get("content") or {}).get("product_production_stages", {})
-    task_manifest = (identity.get("content") or {}).get("product_production_methods", {}).get(unit.modality)
+    task_stages = profile_content.get("product_production_stages", {})
+    task_manifest = profile_content.get("product_production_methods", {}).get(unit.modality)
     product = ((context.get("brief") or {}).get("content") or {}).get("product_context") or {}
-    explicit_stages = product.get("production_stages")
+    explicit_stages = None if product_domain else product.get("production_stages")
     if explicit_stages is not None:
         task_stages = {**task_stages, **copy.deepcopy(explicit_stages)}
         task_manifest = freeze_production_stages(db, user, unit, task_stages, origin="product_brief")
+    work_stages = work_settings.get("production_stages")
+    if work_stages is None and work_settings.get(field) is not None:
+        work_stages = work_settings[field].get("production_stages")
+    if work_stages is not None:
+        task_stages = {**task_stages, **copy.deepcopy(work_stages)}
+        task_manifest = freeze_production_stages(db, user, unit, task_stages, origin="work_profile", frozen_manifest=task_manifest if product_domain and explicit_stages is None else None)
     if stage_key in task_stages:
         selection = task_stages[stage_key]
-    elif modality != unit.modality:
+    else:
         task_manifest = None
+    if not product_domain and selection is not None:
+        from .studio_creative_catalog import PERSONA_METHOD_TRIAL_KEYS
+
+        selected_ref = method_selection.get("skill_ref", "")
+        if selected_ref.endswith("@2") and selected_ref.rsplit("@", 1)[0] in PERSONA_METHOD_TRIAL_KEYS:
+            # Explicit trial recipes upgrade matching methods, keeping each inherited switch and ordering.
+            selection = copy.deepcopy(selection)
+            for item in selection["methods"]:
+                old_ref = item.get("skill_ref", "")
+                if old_ref.rsplit("@", 1)[0] in PERSONA_METHOD_TRIAL_KEYS and old_ref.endswith("@1"):
+                    item["skill_ref"] = old_ref.rsplit("@", 1)[0] + "@2"
+            task_manifest = None
+        if "method" in (override or {}):
+            selection = {"enabled": selection["enabled"], "methods": [{
+                **method_selection, "id": "run-method", "enabled": True,
+                "parameters": method_selection.get("arguments", {}),
+            }]}
+            selection["methods"][0].pop("arguments", None)
+            task_manifest = None
     if selection is None or task_manifest is None:
         try:
             validate_creative_profile(profile)
         except ValueError as exc:
             raise StageContractError(str(exc)) from None
-    defaults = profile.get("parameters", {}) if method_selection.get("skill_ref") == profile["skill_ref"] else {}
+    same_method = (method_selection.get("source_kind") == "studio_builtin"
+                   and method_selection.get("skill_ref", "").rsplit("@", 1)[0] == profile["skill_ref"].rsplit("@", 1)[0])
+    defaults = profile.get("parameters", {}) if same_method else {}
     if selection is not None:
         defaults = {key: value for key, value in defaults.items() if key != "instruction"}
     prepared = {**defaults, **source, "method": saved_method}
@@ -556,13 +598,18 @@ def frozen_stage(db, user, unit, node, contract, context, override):
         if route["selected_binding"]["profile"] == "default":
             prepared.pop("model_profile_id", None)
     method_base = (methods[0] if methods else {"source_kind": "studio_builtin"}) if selection is not None else base
+    if composition or native_tts:
+        # Optional guidance does not replace the compositor or native speech tool identity.
+        method_base, composition_errors = _method(db, user, unit, node, config)
+        blockers.extend(composition_errors)
     method = {**(method_base or {"source_kind": "studio_builtin"}), "stack": methods,
               "instruction": "\n\n".join(item["instruction"] for item in methods)}
     snapshot = db.get(IdentitySnapshot, identity["id"]) if identity.get("id") else None
     projection = {
         "schema": "effective.creative.stage.v1", "modality": modality,
         "identity_snapshot_id": identity.get("id"), "identity_checksum": identity.get("checksum"),
-        "profile_origin": (snapshot.field_origins_json or {}).get(field) if snapshot else None,
+        "profile_origin": "product_configuration" if product_domain else (snapshot.field_origins_json or {}).get(field) if snapshot else None,
+        **({"production_domain": "product", "product_context_checksum": (context.get("product_context") or {}).get("checksum")} if product_domain else {}),
         "profile": profile, "profile_hash": digest(profile), "method_stack": methods,
         "deterministic_parameter_sources": deterministic_parameter_sources,
         "style_preset": PRESETS[profile["style_preset_ref"]],

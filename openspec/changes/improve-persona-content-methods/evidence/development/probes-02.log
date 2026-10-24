@@ -1,0 +1,2252 @@
+/Users/mshengran/Project/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+FFFFFFFFFFFF                                                             [100%]
+=================================== FAILURES ===================================
+______________ test_reference_pagination_and_saved_exact_version _______________
+
+client = <starlette.testclient.TestClient object at 0x11585d940>
+db_session = <sqlalchemy.orm.session.Session object at 0x112655010>
+
+    def test_reference_pagination_and_saved_exact_version(client, db_session):
+        headers, persona = _identity(client)
+        material = Material(kind='screenshot',title='分页截图')
+        db_session.add(material); db_session.flush()
+        rows=[]
+        for i in range(31):
+            row=MaterialRevision(material_id=material.id,revision_no=i+1,content_hash=hashlib.sha256(str(i).encode()).hexdigest(),status='ready',model_use_allowed=True,mime_type='image/png')
+            db_session.add(row); rows.append(row)
+        for i in range(35):
+            db_session.add(SourceDocument(title='同名来源',source_type='obsidian',raw_text='摘录',sha256=digest(i),metadata_json={'schema':'obsidian.excerpt.v1'}))
+        valid=SourceDocument(title='同名来源',source_type='text',raw_text='真实原文唯一片段',sha256=hashlib.sha256('真实原文唯一片段'.encode()).hexdigest())
+        db_session.add(valid); db_session.commit()
+        base=f'/api/v1/capability-memory/persona-reference-styles/{persona}/resources'
+        first=client.get(base,headers=headers,params={'q':'分页截图'}).json()
+        assert len(first['items'])==30 and first['next_offset']==30
+        second=client.get(base,headers=headers,params={'q':'分页截图','offset':30}).json()
+        assert [item['reference']['id'] for item in second['items']]==[rows[0].id]
+        exact=client.get(base,headers=headers,params={'reference_id':rows[0].id}).json()
+        assert exact['items'][0]['modality']=='image'
+        sources=client.get(base,headers=headers,params={'kind':'source','q':'同名来源'}).json()
+        assert [item['reference']['id'] for item in sources['items']]==[valid.id]
+        content={'content_schema':'persona.reference-style.v2','text':'保持层次清楚','observations':[{
+            'modality':'image','certainty':'direct','statement':'明确层级','reference':exact['items'][0]['reference'],'locator':'上半区',
+            'polarity':'prefer','reason':'便于读者定位','inspection':'viewed','location':{'x':0,'y':0,'width':1,'height':0.5}}]}
+        res=client.post('/api/v1/capability-memory',headers=headers,json={'kind':'recipe','name':'隔离风格候选','scope_type':'persona','scope':{'id':persona},'content':content})
+>       assert res.status_code==201,res.text
+E       AssertionError: {"detail":{"code":"reference_style_kind_invalid"}}
+E       assert 422 == 201
+E        +  where 422 = <Response [422 Unprocessable Entity]>.status_code
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:48: AssertionError
+______________ test_trial_intermediate_acceptance_and_downstream _______________
+
+client = <starlette.testclient.TestClient object at 0x1165e1450>
+db_session = <sqlalchemy.orm.session.Session object at 0x111741fd0>
+
+    def test_trial_intermediate_acceptance_and_downstream(client, db_session):
+        headers, persona, base, _ = _creative_run(client)
+        definition=starter_personas.method_trial_definition('text','starter.ai-tech-engineer.v1')
+        definition['nodes']=definition['nodes'][:3]
+        definition['visual_order']=[n['id'] for n in definition['nodes']]
+        definition['edges']=[edge for edge in definition['edges'] if edge['from'] in definition['visual_order'] and edge['to'] in definition['visual_order']]
+        saved=client.post(f'{base}/workflow-override',headers=headers,json={'expected_revision':1,'definition':definition})
+        assert saved.status_code==201,saved.text
+        run=client.post(f'{base}/runs',headers=headers,json={'params':{}}).json()['id']
+        records=[]
+        for node in definition['nodes']:
+            node_id=node['id']; stage=f'{base}/creation-recipe/stages/{node_id}'
+>           preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:68: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x111741fd0>
+project = <app.models.ContentProject object at 0x1167f65f0>
+unit = <app.models.ContentUnit object at 0x116b00a70>
+run = <app.models.WorkflowRun object at 0x1165e2d50>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+__ test_full_provider_request_switches[switches0-starter.ai-tech-engineer.v1] __
+
+client = <starlette.testclient.TestClient object at 0x1165e1950>
+db_session = <sqlalchemy.orm.session.Session object at 0x115a90830>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1166609d0>
+blueprint = 'starter.ai-tech-engineer.v1', switches = (True, True, True)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x115a90830>
+project = <app.models.ContentProject object at 0x117045f90>
+unit = <app.models.ContentUnit object at 0x11703d450>
+run = <app.models.WorkflowRun object at 0x1166615b0>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+_ test_full_provider_request_switches[switches0-starter.lifestyle-observer.v1] _
+
+client = <starlette.testclient.TestClient object at 0x1166610f0>
+db_session = <sqlalchemy.orm.session.Session object at 0x115a927b0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116661a70>
+blueprint = 'starter.lifestyle-observer.v1', switches = (True, True, True)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x115a927b0>
+project = <app.models.ContentProject object at 0x116bf20f0>
+unit = <app.models.ContentUnit object at 0x1176a3070>
+run = <app.models.WorkflowRun object at 0x1162519d0>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+__ test_full_provider_request_switches[switches1-starter.ai-tech-engineer.v1] __
+
+client = <starlette.testclient.TestClient object at 0x116662780>
+db_session = <sqlalchemy.orm.session.Session object at 0x115a92f90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x117610ef0>
+blueprint = 'starter.ai-tech-engineer.v1', switches = (True, False, True)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x115a92f90>
+project = <app.models.ContentProject object at 0x1176c50a0>
+unit = <app.models.ContentUnit object at 0x11743d1d0>
+run = <app.models.WorkflowRun object at 0x117414f50>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+_ test_full_provider_request_switches[switches1-starter.lifestyle-observer.v1] _
+
+client = <starlette.testclient.TestClient object at 0x117465910>
+db_session = <sqlalchemy.orm.session.Session object at 0x115a92cf0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116bc39b0>
+blueprint = 'starter.lifestyle-observer.v1', switches = (True, False, True)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x115a92cf0>
+project = <app.models.ContentProject object at 0x1176c7920>
+unit = <app.models.ContentUnit object at 0x12071fcb0>
+run = <app.models.WorkflowRun object at 0x1207d9220>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+__ test_full_provider_request_switches[switches2-starter.ai-tech-engineer.v1] __
+
+client = <starlette.testclient.TestClient object at 0x1207f16a0>
+db_session = <sqlalchemy.orm.session.Session object at 0x115a90c20>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1207f1d00>
+blueprint = 'starter.ai-tech-engineer.v1', switches = (True, False, False)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x115a90c20>
+project = <app.models.ContentProject object at 0x1216ed9a0>
+unit = <app.models.ContentUnit object at 0x1216da970>
+run = <app.models.WorkflowRun object at 0x1216dbcb0>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+_ test_full_provider_request_switches[switches2-starter.lifestyle-observer.v1] _
+
+client = <starlette.testclient.TestClient object at 0x1173d87c0>
+db_session = <sqlalchemy.orm.session.Session object at 0x115a930e0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1216fdb50>
+blueprint = 'starter.lifestyle-observer.v1', switches = (True, False, False)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x115a930e0>
+project = <app.models.ContentProject object at 0x11734cb00>
+unit = <app.models.ContentUnit object at 0x1173ea0b0>
+run = <app.models.WorkflowRun object at 0x1173f57f0>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+__ test_full_provider_request_switches[switches3-starter.ai-tech-engineer.v1] __
+
+client = <starlette.testclient.TestClient object at 0x117415f50>
+db_session = <sqlalchemy.orm.session.Session object at 0x1126552b0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116be3e50>
+blueprint = 'starter.ai-tech-engineer.v1', switches = (False, True, True)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x1126552b0>
+project = <app.models.ContentProject object at 0x11734dd90>
+unit = <app.models.ContentUnit object at 0x116c67930>
+run = <app.models.WorkflowRun object at 0x116c917f0>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+_ test_full_provider_request_switches[switches3-starter.lifestyle-observer.v1] _
+
+client = <starlette.testclient.TestClient object at 0x116cbae50>
+db_session = <sqlalchemy.orm.session.Session object at 0x11585dfd0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116b7eb70>
+blueprint = 'starter.lifestyle-observer.v1', switches = (False, True, True)
+
+    @pytest.mark.parametrize('blueprint',list(catalog.BLUEPRINTS))
+    @pytest.mark.parametrize('switches',[(True,True,True),(True,False,True),(True,False,False),(False,True,True)])
+    def test_full_provider_request_switches(client, db_session, monkeypatch, blueprint, switches):
+        from app.services import stage_master_proposals
+        enabled,first,second=switches
+        profile=deepcopy(catalog.BLUEPRINTS[blueprint]['text_creative_profile'])
+        refs=['studio.text.longform@2','studio.text.humanize@2']
+        profile['production_stages']={'script':{'enabled':enabled,'methods':[
+            {'id':f'method-{i}','source_kind':'studio_builtin','enabled':on,'skill_ref':ref,'parameters':{}}
+            for i,(ref,on) in enumerate(zip(refs,[first,second]))]}}
+        profile['stage_instruction']='DISABLED_PROFILE_GUIDANCE_SENTINEL'
+        headers,persona,base,run=_creative_run(client,profile)
+        captured=[]; original=stage_master_proposals._run
+        def capture(provider,request):
+            captured.append(dataclasses.asdict(request)); return original(provider,request)
+        monkeypatch.setattr(stage_master_proposals,'_run',capture)
+        stage=f'{base}/creation-recipe/stages/draft'
+>       preview=client.post(f'{stage}/preview',headers=headers,json={'run_id':run}).json()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x11585dfd0>
+project = <app.models.ContentProject object at 0x116c68f80>
+unit = <app.models.ContentUnit object at 0x120543bd0>
+run = <app.models.WorkflowRun object at 0x120543d90>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+_________ test_located_feedback_rerun_accept_then_no_stale_reinjection _________
+
+client = <starlette.testclient.TestClient object at 0x1170e4aa0>
+db_session = <sqlalchemy.orm.session.Session object at 0x11585e120>
+
+    def test_located_feedback_rerun_accept_then_no_stale_reinjection(client,db_session):
+>       headers,project,unit,base,result,acceptance=_proposal(client)
+                                                    ^^^^^^^^^^^^^^^^^
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_stage_master_adoptions.py:21: in _proposal
+    headers, project_id, unit_id, base, resolved, request = _running_stage(client)
+                                                            ^^^^^^^^^^^^^^^^^^^^^^
+tests/test_stage_master_proposals.py:114: in _running_stage
+    resolved = client.post(f"{base}/creation-recipe/stages/draft/preview", headers=headers,
+.venv/lib/python3.13/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+.venv/lib/python3.13/site-packages/starlette/testclient.py:463: in request
+    return super().request(
+.venv/lib/python3.13/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.13/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.13/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/starlette/testclient.py:360: in handle_request
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/testclient.py:357: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Caskroom/miniconda/base/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.13/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/applications.py:1215: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+app/observability.py:210: in __call__
+    await self.app(scope, receive, send_with_trace)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:91: in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+.venv/lib/python3.13/site-packages/starlette/middleware/cors.py:149: in simple_response
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1828: in _handle_selected
+    await route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.13/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.13/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:91: in bounded
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.13/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.13/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py:240: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+app/routers/content_projects.py:187: in preview_creation_stage
+    return preview_stage(db, project_id, unit_id, node_id, user,
+app/services/creation_recipes.py:652: in preview_stage
+    context, blockers = _context(db, project, unit, run)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlalchemy.orm.session.Session object at 0x11585e120>
+project = <app.models.ContentProject object at 0x116c6b4a0>
+unit = <app.models.ContentUnit object at 0x116e134d0>
+run = <app.models.WorkflowRun object at 0x116e13a10>
+
+    def _context(db, project, unit, run):
+        from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    
+        blockers = []
+        from .product_context import is_product, context_snapshot
+        product_domain = is_product(unit)
+        snapshot_id = (run.identity_snapshot_id if run else unit.identity_snapshot_id) if not product_domain else None
+        identity = db.get(IdentitySnapshot, snapshot_id) if snapshot_id else None
+        if identity and identity.owner_user_id != project.owner_user_id:
+            raise HTTPException(409, {"code": "stage_identity_integrity"})
+        brief, boundary = current_brief(db, project.id), current_boundary(db, project.id)
+        if brief and brief.product_context_json:
+            from ..models import MaterialRevision, User
+            from .project_brief import validate_product_context
+    
+            try:
+                product = validate_product_context(db, brief.product_context_json, user=db.get(User, project.owner_user_id), project_id=project.id)
+                if any(not db.get(MaterialRevision, r["material_revision_id"]).model_use_allowed for r in product["material_refs"]):
+                    blockers.append("product_material_model_use_required")
+            except (HTTPException, ValueError):
+                blockers.append("product_evidence_unavailable")
+        master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
+            .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+        context = {
+            "project_id": project.id, "unit_id": unit.id, "modality": unit.modality, "channel": unit.channel_id,
+            "run_id": run.id if run else None,
+            "identity": {"id": identity.id, "checksum": identity.checksum,
+                         "content": identity.effective_profile_json} if identity else None,
+            "brief": {"id": brief.id, "checksum": brief.checksum, "content": {
+                key: value for key, value in serialize_brief(brief).items()
+                if key not in {"created_by", "created_at", "references"}}} if brief else None,
+            "master": {"id": master.id, "payload_schema": master.payload_schema,
+                       "revision_no": master.revision_no, "content_form": master.content_form,
+                       "payload_hash": master.payload_hash, "context_hash": master.context_hash} if master else None,
+            "intent": {"hash": master.creative_intent_hash, "content": master.creative_intent_json}
+                      if master and master.creative_intent_json else None,
+            "boundary": None,
+            "asset_refs": [{"material_revision_id": ref.material_revision_id,
+                "content_hash": ref.content_hash_snapshot, "role": ref.role, "slot_key": ref.slot_key,
+                "sort_order": ref.sort_order, "placement": ref.placement_json}
+                for ref in db.scalars(select(ContentMasterAssetRef).where(
+                    ContentMasterAssetRef.master_revision_id == master.id
+                ).order_by(ContentMasterAssetRef.sort_order, ContentMasterAssetRef.id).limit(101)).all()] if master else [],
+            "evidence_refs": [{"fact_pack_item_id": ref.fact_pack_item_id, "snapshot_checksum": ref.snapshot_checksum,
+                "role": ref.role, "sort_order": ref.sort_order, "content_locator_json": ref.content_locator_json}
+                for ref in db.scalars(select(ContentMasterEvidenceRef).where(
+                    ContentMasterEvidenceRef.master_revision_id == master.id
+                ).order_by(ContentMasterEvidenceRef.sort_order, ContentMasterEvidenceRef.id).limit(101)).all()] if master else [],
+        }
+        from .production_profiles import profile_snapshot
+        production_profile = profile_snapshot(db, unit.id)
+        if product_domain:
+            product_context = context_snapshot(db, unit)
+            frozen_product = (run.context_json or {}).get("product_context_snapshot") if run else None
+            if frozen_product is not None and frozen_product["checksum"] != product_context["checksum"]:
+                blockers.append("product_context_changed_new_run_required")
+            context["production_domain"] = "product"
+            context["product_context"] = frozen_product or product_context
+            production_profile = context["product_context"].get("production_profile")
+        if production_profile is not None:
+            context["production_profile"] = production_profile
+        if any(len(context[key]) > 100 for key in ("asset_refs", "evidence_refs")):
+            blockers.append("stage_master_refs_limit")
+        if not product_domain:
+            from .obsidian_knowledge import stage_context
+    
+>           knowledge_purposes = (set() if node["kind"] != "AI" else
+                                           ^^^^
+                                  {"professional"} if config.get("output_schema") == "research.brief.v1" else
+                                  {"style"} if config.get("output_schema") == "audio.voice-direction.v1" else
+                                  {"professional", "style"})
+E           NameError: name 'node' is not defined
+
+app/services/creation_recipes.py:544: NameError
+______________ test_director_v2_declared_parameters_are_consumed _______________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x11585da90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116ecdd60>
+
+    def test_director_v2_declared_parameters_are_consumed(db_session,monkeypatch):
+        import test_persona_creative_studio as existing
+        original=starter_personas._definition
+        def trial(modality,key):
+            monkeypatch.setattr(starter_personas,'_definition',original)
+            try: return starter_personas.method_trial_definition(modality,key)
+            finally: monkeypatch.setattr(starter_personas,'_definition',trial)
+        monkeypatch.setattr(starter_personas,'_definition',trial)
+        source=inspect.getsource(existing.test_director_instruction_and_aspect_are_consumed_without_dispatch).replace('@pytest.mark.parametrize("ratio", ["1:1", "4:3", "3:4", "16:9", "9:16"])\n','').replace('studio.video.director-package@1','studio.video.director-package@2')
+        context=dict(existing.__dict__); exec(source,context)
+>       context['test_director_instruction_and_aspect_are_consumed_without_dispatch'](db_session,monkeypatch,'9:16')
+
+/tmp/persona-methods-probes/test_persona_methods_probe.py:158: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db_session = <sqlalchemy.orm.session.Session object at 0x11585da90>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116ecdd60>
+ratio = '9:16'
+
+>   ???
+E   AssertionError
+
+<string>:51: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_reference_pagination_and_saved_exact_version
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_trial_intermediate_acceptance_and_downstream
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches0-starter.ai-tech-engineer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches0-starter.lifestyle-observer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches1-starter.ai-tech-engineer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches1-starter.lifestyle-observer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches2-starter.ai-tech-engineer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches2-starter.lifestyle-observer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches3-starter.ai-tech-engineer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_full_provider_request_switches[switches3-starter.lifestyle-observer.v1]
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_located_feedback_rerun_accept_then_no_stale_reinjection
+FAILED ../../../../../../tmp/persona-methods-probes/test_persona_methods_probe.py::test_director_v2_declared_parameters_are_consumed
+12 failed in 3.30s

@@ -1,0 +1,90 @@
+{
+  "source_file": "/tmp/codex-remote-attachments/01a1396b-5ff0-79b0-822f-9ffab6ab006e/84ADCF8E-66A1-4418-939A-0871974C81C9/1-Photo-1.jpg",
+  "source_sha256": "69a38f89530324d572f1cfd2847a3c06910bb77b9927c463221500bbb80a9067",
+  "material_id": 60,
+  "material_revision_id": 64,
+  "sku": {
+    "id": 3,
+    "code": "SKU-000003",
+    "revision": 1,
+    "revision_id": 3,
+    "external_code": "",
+    "product": {
+      "name": "儿童地板鞋｜棕灰两双装（尺码待确认）",
+      "category": "童鞋／室内地板鞋",
+      "style_ref": null,
+      "production_stages": null,
+      "variant": "棕色1双＋灰色1双，合为两双装售卖（用户确认）；具体尺码、内长待确认。",
+      "description": "用户已指定改做图片中的儿童拖鞋，并确认棕色与灰色组成两双装一起售卖。原图可见棕色与灰色两种鞋、圆头轮廓、绒状外观、鞋面搭带和卡通装饰。图中文字写有“8个月–4岁”“2双装 地板鞋”；其中两双装已由用户确认，月龄范围仍仅为图片标注，尚未核实，不能替代尺码/内长和适用性资料。真实品牌、型号、尺码/内长、具体材质、鞋底结构、洗护方法、价格和售后均待确认。图片外观不证明防滑、保暖、耐磨、安全认证或穿着效果。",
+      "url": null,
+      "claims": [],
+      "selling_points": [
+        "棕色与灰色各1双的两双组合（用户确认）",
+        "绒状外观与卡通装饰（图片可见）"
+      ],
+      "excluded_claims": [
+        "未经核实的8个月至4岁适用范围",
+        "防滑性能",
+        "保暖效果",
+        "具体纤维或鞋底材质",
+        "安全认证或足部发育功效",
+        "虚构价格与优惠",
+        "虚构亲测体验"
+      ],
+      "source_refs": [],
+      "material_refs": [
+        {
+          "material_revision_id": 64,
+          "content_hash": "69a38f89530324d572f1cfd2847a3c06910bb77b9927c463221500bbb80a9067",
+          "categories": []
+        }
+      ],
+      "offer": null,
+      "buyer_situation": "",
+      "purchase_reason_evidence": "用户确认棕色与灰色两双装售卖；图片支持外观和颜色参考，不支持性能实测结论。",
+      "purchase_reason_source_ids": [],
+      "purchase_reason_material_revision_ids": [],
+      "main_objection": "尺码与内长是否合适，尚待真实资料；此处为选购需核对项。",
+      "objection_answer": "补充对应尺码、鞋内长及量脚/选码规则后再回答，不从图片月龄自行推算。",
+      "unsuitable_for": "",
+      "seller_advantage": "",
+      "target_duration_seconds": null,
+      "expression_test": null
+    },
+    "primary_image_revision_id": 64,
+    "primary_image_kind": "reference",
+    "image_url": "/api/v1/product-skus/3/image?revision=1",
+    "default_plan_id": null
+  },
+  "work": {
+    "launch_id": 25,
+    "project_id": 34,
+    "unit_id": 40,
+    "run_id": null,
+    "status": "saved",
+    "reason": null,
+    "href": "/projects/34/units/40/production?workstep=goal",
+    "sku_id": 3
+  },
+  "unit": {
+    "id": 40,
+    "project_id": 34,
+    "production_domain": "product",
+    "persona_id": null,
+    "account_id": null,
+    "series_id": null,
+    "identity_snapshot_id": null,
+    "identity_state": "product_context",
+    "modality": "video",
+    "channel_id": null,
+    "title": "儿童拖鞋｜棕灰两双装｜旁白商品视频",
+    "status": "draft",
+    "pinned_workflow_id": 31
+  },
+  "brief_id": 35,
+  "image_bytes_match": true,
+  "sofa_sku_profile_master_unchanged": true,
+  "new_model_calls": 0,
+  "new_generated_images": 0,
+  "new_video_generation": 0
+}

@@ -1,0 +1,4 @@
+Command: apps/api/.venv/bin/python -m pytest tests/test_fe_f5a_opportunities.py tests/test_tech_rules.py -q (cwd apps/api)
+Result: 18 passed, 1 warning in 1.62s
+Fixture: in-memory SQLite + Mock Provider; no production mutation
+Warning: existing Starlette TestClient httpx deprecation

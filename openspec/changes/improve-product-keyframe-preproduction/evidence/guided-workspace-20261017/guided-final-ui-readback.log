@@ -1,0 +1,14 @@
+DEFAULT_CHANNEL [ '本条讲述角色与交付渠道：AI科技研发技术博主 / 先制作，交付时再选渠道' ]
+KEYBOARD_ONLY_STEP_NAVIGATION PASS http://127.0.0.1:5173/projects/9/units/15/production?workstep=style
+MATERIAL_READ_FAILURE [
+  '图片入库不等于选定。换图后需重新核对视频提示词。',
+  '图片入库不等于选定。换图后需重新核对视频提示词。',
+  '图片入库不等于选定。换图后需重新核对视频提示词。',
+  '图片入库不等于选定。换图后需重新核对视频提示词。'
+]
+Error: read failure hidden
+    at [stdin]:6:465
+FAILURE_RECHECK { injected: 2, errorMessage: true, state: true }
+RECOVERY { oldErrorGone: true, wrongChannelWarningGone: false, writes: [] }
+Error: recovery failure
+    at [stdin]:4:552

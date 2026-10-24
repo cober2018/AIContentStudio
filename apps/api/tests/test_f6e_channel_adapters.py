@@ -15,6 +15,18 @@ from app.services.channel_adapters import AdapterUnavailable, capability_for
         ("text.master.v2", "x", "single", "text", True),
         ("graphic.master.v2", "xiaohongshu", "image_note", "image", True),
         ("video.master.v2", "douyin", "spoken_script", "script", True),
+        ("text.master.v2", "toutiao", "article", "text", True),
+        ("text.master.v2", "baijia", "article", "text", True),
+        ("text.master.v2", "zhihu", "article", "text", True),
+        ("text.master.v2", "zhihu", "answer", "text", True),
+        ("text.master.v2", "bilibili", "article", "text", True),
+        ("text.master.v2", "sohu", "article", "text", True),
+        ("text.master.v2", "penguin", "article", "text", True),
+        ("text.master.v2", "netease", "article", "text", True),
+        ("text.master.v2", "weibo", "single", "text", True),
+        ("text.master.v2", "xueqiu", "quant_research", "text", True),
+        ("text.master.v2", "xueqiu", "market_recap", "text", True),
+        ("text.master.v2", "juejin", "tech_article", "text", True),
     ],
 )
 def test_first_batch_requires_exact_published_profile_and_only_implemented_adapter_executes(db_session, schema, channel, form, artifact_kind, executable):

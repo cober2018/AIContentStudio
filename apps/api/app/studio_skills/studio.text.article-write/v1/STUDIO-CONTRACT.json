@@ -1,0 +1,84 @@
+{
+  "schema": "studio.skill.contract.v1",
+  "key": "studio.text.article-write",
+  "version": "1",
+  "ref": "studio.text.article-write@1",
+  "kind": "skill",
+  "modality": "text",
+  "purpose": "按选定方案一次写成完整文章并给出备选标题",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.master.propose.v1"
+  ],
+  "output_schemas": [
+    "text.master.v2"
+  ],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [
+    "instruction",
+    "length",
+    "candidate_count"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "instruction": {
+        "type": "string",
+        "maxLength": 4000
+      },
+      "length": {
+        "type": "string",
+        "enum": [
+          "short",
+          "medium",
+          "long"
+        ],
+        "maxLength": 6
+      },
+      "candidate_count": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 5
+      }
+    }
+  },
+  "checks": [
+    "text_structure",
+    "text_fact",
+    "text_identity",
+    "text_platform"
+  ],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.text.deep-technical@1",
+    "studio.text.engineering-explainer@1",
+    "studio.text.observational-lifestyle@1",
+    "studio.text.reflective-lifestyle@1",
+    "studio.text.concise-social@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.text.technical@1",
+    "studio.quality.text.lifestyle@1"
+  ],
+  "references": []
+}

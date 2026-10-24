@@ -1,18 +1,24 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, currentUser, setCurrentUser } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
+import type { Settings as ProductionSettings } from "./GuidedProductionProfile";
 
 const RuntimeSettings = lazy(() => import("../pages/Settings"));
 const ConnectorOperations = lazy(() => import("../pages/Connectors"));
 const TemplateOperations = lazy(() => import("../pages/Templates"));
 const CapabilitySettings = lazy(() => import("./CapabilitySettings"));
+const ChannelPluginPanel = lazy(() => import("./ChannelPluginPanel"));
 const ProviderGuidancePanel = lazy(() => import("./ProviderGuidancePanel"));
 const ModelRoutingSettings = lazy(() => import("./ModelRoutingSettings"));
 const ModelRegistrationSettings = lazy(() => import("./ModelRegistrationSettings"));
 const CapabilityMemoryPanel = lazy(() => import("./CapabilityMemoryPanel"));
 const StudioCreativeInventory = lazy(() => import("./StudioCreativeInventory"));
+const McpSettings = lazy(() => import("./McpSettings"));
+const StorageSettings = lazy(() => import("./StorageSettings"));
+const EditAgentSettings = lazy(() => import("./EditAgentSettings"));
+const VoiceSettings = lazy(() => import("./VoiceSettings"));
 type Editability = "editable" | "read_only" | "unavailable";
 type Section = { key: string; label: string; editability: Editability; reason?: string | null; data?: unknown };
 type Inventory = { sections: Section[] };
@@ -20,7 +26,7 @@ type PageInfo = { total: number; limit: number; offset: number };
 const labels: Record<Editability, string> = { editable: "可配置", read_only: "只读", unavailable: "不可用" };
 const sections = [
   ["models", "模型与 AI"], ["data_sources", "数据源"], ["channels", "渠道"],
-  ["rules", "规则与模板"], ["team", "团队与权限"], ["advanced", "高级运行环境"],
+  ["rules", "规则与模板"], ["team", "团队与权限"], ["mcp", "MCP 接入"], ["storage", "存储位置"], ["edit_agent", "自动剪辑"], ["voice", "配音"], ["advanced", "高级运行环境"],
 ] as const;
 const compatibilityTools = [
   ["/topics", "旧选题", "原 Topic、生产输入与建议"],
@@ -32,7 +38,7 @@ const compatibilityTools = [
   ["/workflows", "独立工作流", "定义、Run、Attempt 与高级调试"],
   ["/sources", "来源兼容页", "原 Source / Fact 操作"],
   ["/fact-packs", "证据包兼容页", "原 ID、版本与冻结快照"],
-  ["/materials", "素材兼容页", "原素材版本与旧 Draft 挂载"],
+  ["/legacy/materials", "素材兼容页", "原素材版本与旧 Draft 挂载"],
   ["/connectors", "数据接入兼容页", "原端点配置与明确拉取"],
   ["/templates", "模板兼容页", "原模板、Brand Voice 与 Prompt"],
   ["/dashboard", "旧概览", "原概览读取"],
@@ -136,14 +142,43 @@ function OperationalStatus() {
   </section>;
 }
 
+function ProductProductionDefaults({ editable, onDirtyChange }: { editable: boolean; onDirtyChange: (dirty: boolean) => void }) {
+  const [saved, setSaved] = useState<{ settings: ProductionSettings; revision: number } | null>(null);
+  const [draft, setDraft] = useState<ProductionSettings>({});
+  const [dirty, setDirty] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [issue, setIssue] = useState("");
+  const [notice, setNotice] = useState("");
+  useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
+  async function load() {
+    setBusy(true); setIssue("");
+    try { const value = await api.get<{ settings: ProductionSettings; revision: number }>("/product-production-defaults"); setSaved(value); setDraft(value.settings); setDirty(false); }
+    catch (error) { setIssue(error instanceof Error ? error.message : "商品默认设置读取失败"); }
+    finally { setBusy(false); }
+  }
+  useEffect(() => { void load(); }, []);
+  async function save() {
+    if (!saved || !editable || busy) return;
+    setBusy(true); setIssue(""); setNotice("");
+    try { const value = await api.put<{ settings: ProductionSettings; revision: number }>("/product-production-defaults", { settings: draft, expected_revision: saved.revision }); setSaved(value); setDraft(value.settings); setDirty(false); setNotice("商品默认设置已保存；已有作品保持各自配置。"); }
+    catch (error) { setIssue(error instanceof Error ? error.message : "保存失败，草稿保留"); }
+    finally { setBusy(false); }
+  }
+  return <section className="mt-6 space-y-4 rounded-xl border border-slate-200 p-5"><h3 className="font-semibold">商品制作默认设置</h3><p className="text-sm text-slate-500">新商品作品从这里读取声音和策划模型默认值；SKU 方案、本作品设置可分别覆盖。模型登记与路由沿用上方公共工具。</p>{issue && <ErrorBanner message={issue} />}<div className="grid gap-4 sm:grid-cols-2">{([["voice_id", "默认音色 ID"], ["model_profile_ref", "策划模型配置 ID（选填）"]] as const).map(([key, label]) => <Field key={key} label={label}><input aria-label={label} className={inputClass} value={draft[key] || ""} disabled={!editable || busy || !saved} onChange={event => { setDraft(value => ({ ...value, [key]: event.target.value.trim() || null })); setDirty(true); setNotice(""); }} /></Field>)}</div><div className="flex flex-wrap items-center gap-3"><Button disabled={!editable || busy || !saved || !dirty} onClick={() => void save()}>保存商品默认设置</Button><Button variant="secondary" disabled={busy} onClick={() => { if (!dirty || window.confirm("放弃商品默认设置草稿并重新读取？")) void load(); }}>重新读取</Button><span className="text-xs text-slate-500">{dirty ? "有未保存设置" : saved ? `已保存 v${saved.revision}` : "尚未读取"}</span></div>{notice && <p role="status" className="text-sm text-emerald-700">{notice}</p>}</section>;
+}
+
 function SectionActions({ section, onDirtyChange }: { section: Section; onDirtyChange: (dirty: boolean) => void }) {
+  const [modelDirty, setModelDirty] = useState(false);
+  const [defaultsDirty, setDefaultsDirty] = useState(false);
+  useEffect(() => { if (section.key === "models") onDirtyChange(modelDirty || defaultsDirty); }, [section.key, modelDirty, defaultsDirty, onDirtyChange]);
   const [showRuntime, setShowRuntime] = useState(false);
   const [showOperations, setShowOperations] = useState(false);
   const [memoryOpened, setMemoryOpened] = useState(false);
   const [showMemory, setShowMemory] = useState(false);
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
-  const editable = section.editability === "editable";
-  if (section.key === "models") return <ModelSettingsWorkspace editable={editable} onDirtyChange={onDirtyChange} />;
+  const editable = section.editability === "editable" && me.isSuccess && me.data.role === "admin";
+  if (section.key === "models") return <><ModelSettingsWorkspace editable={editable} onDirtyChange={setModelDirty} /><ProductProductionDefaults editable={editable} onDirtyChange={setDefaultsDirty} /></>;
   if (section.key === "team") {
     const data = section.data && typeof section.data === "object" ? section.data as Record<string, unknown> : {};
     const production = data.auth_mode === "production/jwt_hs256";
@@ -151,7 +186,7 @@ function SectionActions({ section, onDirtyChange }: { section: Section; onDirtyC
   }
   return <div className="space-y-4">
     {section.key === "data_sources" && <div className="space-y-2"><p className="text-sm text-slate-600">Generic Connector 配置不代表 Data Source Plugin 已可执行。此清单读取不会自动拉取或测试连接；数据拉取是独立的有副作用动作。</p><Button variant="secondary" disabled={!me.isSuccess} onClick={() => setShowOperations(!showOperations)}>{showOperations ? "收起接入操作" : "管理数据接入与显式拉取"}</Button>{showOperations && me.isSuccess && <Suspense fallback={<Spinner label="加载数据接入操作…" />}><ConnectorOperations embedded readOnly={!editable || me.data.role !== "admin"} allowPull={["admin", "editor"].includes(me.data.role)} /></Suspense>}</div>}
-    {section.key === "channels" && <p className="text-sm text-slate-600">渠道注册信息为只读真源。配置了 workflow / publisher 引用不代表已经验证可执行或可发布，不提供虚假的保存按钮。</p>}
+    {section.key === "channels" && <div className="space-y-3"><Suspense fallback={<Spinner label="读取渠道方法…" />}><ChannelPluginPanel /></Suspense><p className="text-sm text-slate-600">渠道注册信息仍是只读真源。配置了 workflow / publisher 引用不代表已经验证可执行或可发布。插拔只停用或恢复已安装的渠道方法，不提供虚假的保存或发布按钮。</p></div>}
     {(section.key === "channels" || section.key === "data_sources") && <Suspense fallback={<Spinner label="加载能力验证…" />}><CapabilitySettings mode={section.key} /></Suspense>}
     {section.key === "rules" && <div className="space-y-2"><p className="text-sm text-slate-600">确定性 Rule 仍为只读。管理员可打开既有版本化模板工具；单项操作由对应 API 校验，不因当前清单没有可编辑项而隐藏入口。</p>{me.data?.role === "admin" && <Button variant="secondary" onClick={() => setShowOperations(!showOperations)}>{showOperations ? "收起版本化模板" : "管理版本化模板"}</Button>}{showOperations && me.data?.role === "admin" && <Suspense fallback={<Spinner label="加载模板操作…" />}><TemplateOperations /></Suspense>}</div>}
     {section.key === "rules" && <Suspense fallback={<Spinner label="读取内置创作资源…" />}><StudioCreativeInventory /></Suspense>}
@@ -174,8 +209,16 @@ function pageInfo(section: Section): PageInfo | undefined {
 
 export default function ProductSettingsPage() {
   const navigate = useNavigate();
-  const [active, setActive] = useState<string>("models");
-  const [offset, setOffset] = useState(0);
+  const [params, setParams] = useSearchParams();
+  const requested = params.get("section");
+  const active = sections.some(([key]) => key === requested) ? requested! : "";
+  const rawOffset = Number(params.get("offset") ?? 0);
+  const offset = Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+  const changeLocation = (section: string, nextOffset = 0) => {
+    const leave = () => { setDirty(false); setParams(old => { const next = new URLSearchParams(old); if (section) next.set("section", section); else next.delete("section"); next.delete("view"); if (nextOffset) next.set("offset", String(nextOffset)); else next.delete("offset"); return next; }); };
+    if (dirty) setLeaveAction(() => leave); else leave();
+  };
+  const setOffset = (value: number) => changeLocation(active, value);
   const [dirty, setDirty] = useState(false);
   const [leaveAction, setLeaveAction] = useState<(() => void) | null>(null);
   const leaveDialog = useRef<HTMLDivElement>(null);
@@ -260,18 +303,27 @@ export default function ProductSettingsPage() {
   const paginated = active === "rules" || active === "data_sources";
   const path = active === "rules" ? "rules" : "data-sources";
   const page = useQuery({ queryKey: ["product-settings-page", currentUser(), active, offset], queryFn: () => api.get<Section>(`/settings/${path}?limit=50&offset=${offset}`), enabled: paginated, retry: false });
-  const selected = paginated ? page.data : query.data?.sections.find((item) => item.key === active);
+  const selected = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice" ? undefined : paginated ? page.data : query.data?.sections.find((item) => item.key === active);
   const paging = selected ? pageInfo(selected) : undefined;
-  const pending = paginated ? page.isPending : query.isPending;
-  const error = paginated ? page.error : query.error;
+  // MCP has its own endpoint; the product inventory does not describe it.
+  const ownPage = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice";
+  const pending = ownPage ? false : paginated ? page.isPending : query.isPending;
+  const error = ownPage ? null : paginated ? page.error : query.error;
   const refresh = () => paginated ? page.refetch() : query.refetch();
-  return <div className="space-y-6 p-6 lg:p-9"><header><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">System configuration</p><h1 className="mt-2 text-2xl font-bold">设置</h1><p className="mt-2 text-sm text-slate-600">统一产品入口，读取既有 Registry 与安全配置投影；不建立第二套配置真源。</p></header>
-    <nav className="flex flex-wrap gap-2" aria-label="设置分区">{sections.map(([key, label]) => <Button key={key} variant={active === key ? "primary" : "secondary"} onClick={() => { if (key === active) return; const leave = () => { setActive(key); setOffset(0); }; if (dirty) setLeaveAction(() => leave); else leave(); }}>{label}</Button>)}</nav>
+  return <div className="mx-auto w-full max-w-[1240px] space-y-8 px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12"><header className="border-b border-ink-200/80 pb-7"><p className="eyebrow">工作空间</p><h1 className="mt-3 text-[34px] leading-[1.1] text-ink-900 sm:text-[40px]">设置</h1><p className="mt-3 text-[15px] text-ink-600">模型、数据源、渠道、模板与权限都在这里配置。</p></header>
+    {!active && !requested && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sections.map(([key, label]) => <button key={key} className="rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" onClick={() => changeLocation(key)}><h2 className="font-semibold text-slate-900">{label}</h2><p className="mt-2 text-sm text-slate-500">{{ models: "连接厂商、登记模型与选择功能用途", data_sources: "管理来源接入与明确拉取", channels: "查看渠道与配置渠道方法", rules: "查看创作资源与管理版本化模板", team: "核对当前身份与权限边界", mcp: "大模型如何连接平台、能做什么", storage: "素材库与本地工作文件夹放在哪里", edit_agent: "准备好剪辑后自动交给本机助手剪粗剪", voice: "MiniMax 配音的音色、情绪和音频参数", advanced: "运行状态、本机配置与兼容工具" }[key]}</p><span className="mt-4 inline-block text-sm text-indigo-700">进入配置 →</span></button>)}</div>}
+    {requested && !active && <div role="alert"><ErrorBanner message="未找到这个设置分区，请返回设置目录。" /><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button></div>}
+    {active && <><nav className="flex flex-wrap gap-2" aria-label="设置分区"><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button>{sections.map(([key, label]) => <Button key={key} variant={active === key ? "primary" : "secondary"} onClick={() => { if (key !== active) changeLocation(key); }}>{label}</Button>)}</nav>
     {pending && <Spinner label="读取安全产品设置…" />}
     {error && <div className="space-y-3" role="alert"><ErrorBanner message={error instanceof Error ? error.message : "设置读取失败"} /><Button onClick={() => void refresh()}>重试</Button></div>}
-    {!pending && !error && !selected && <ErrorBanner message="后端尚未返回这个分区，不能确认其能力。" />}
-    {selected && <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{selected.label}</h2><span className="rounded-full bg-slate-100 px-3 py-1 text-xs">{labels[selected.editability] ?? "能力未核对"}</span></div>{selected.reason && <p className="text-sm text-amber-800">{selected.reason}</p>}{selected.key !== "models" && <Metadata value={selected.data} />}{paging && <div className="flex items-center gap-3"><span className="text-xs text-slate-500">共 {paging.total} 条，当前起点 {paging.offset}</span><Button variant="secondary" disabled={paging.offset === 0} onClick={() => setOffset(Math.max(0, paging.offset - paging.limit))}>上一页</Button><Button variant="secondary" disabled={paging.offset + paging.limit >= paging.total} onClick={() => setOffset(paging.offset + paging.limit)}>下一页</Button></div>}<SectionActions key={`${currentUser()}:${selected.key}`} section={selected} onDirtyChange={setDirty} />{selected.key !== "models" && <Button variant="secondary" onClick={() => void refresh()}>刷新真实配置</Button>}</section>}
-    {leaveAction && <div ref={leaveDialog} role="dialog" aria-modal="true" aria-label="未保存的编辑" onKeyDown={event => {
+    {active === "mcp" && <Suspense fallback={<Spinner label="读取 MCP 接入…" />}><McpSettings onDirtyChange={setDirty} /></Suspense>}
+    {active === "voice" && <Suspense fallback={<Spinner label="读取配音设置…" />}><VoiceSettings /></Suspense>}
+    {active === "edit_agent" && <Suspense fallback={<Spinner label="读取自动剪辑…" />}><EditAgentSettings /></Suspense>}
+    {active === "storage" && <Suspense fallback={<Spinner label="读取存储位置…" />}><StorageSettings editable /></Suspense>}
+    {!ownPage && !pending && !error && !selected && <ErrorBanner message="后端尚未返回这个分区，不能确认其能力。" />}
+    {selected && <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{selected.label}</h2><span className="rounded-full bg-slate-100 px-3 py-1 text-xs">{labels[selected.editability] ?? "能力未核对"}</span></div>{selected.reason && <p className="text-sm text-amber-800">{selected.reason}</p>}{selected.key !== "models" && <details className="rounded-lg border border-slate-200 p-3"><summary className="cursor-pointer text-sm text-slate-600">查看原始配置与来源</summary><div className="mt-4"><Metadata value={selected.data} /></div></details>}{paging && <div className="flex items-center gap-3"><span className="text-xs text-slate-500">共 {paging.total} 条，当前起点 {paging.offset}</span><Button variant="secondary" disabled={paging.offset === 0} onClick={() => setOffset(Math.max(0, paging.offset - paging.limit))}>上一页</Button><Button variant="secondary" disabled={paging.offset + paging.limit >= paging.total} onClick={() => setOffset(paging.offset + paging.limit)}>下一页</Button></div>}<SectionActions key={`${currentUser()}:${selected.key}`} section={selected} onDirtyChange={setDirty} />{selected.key !== "models" && <Button variant="secondary" onClick={() => void refresh()}>刷新真实配置</Button>}</section>}
+    </>}
+    {leaveAction && <div ref={leaveDialog} className="fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label="未保存的编辑" onKeyDown={event => {
       if (event.key === "Escape") { event.preventDefault(); setLeaveAction(null); }
       if (event.key !== "Tab") return;
       const buttons = leaveDialog.current?.querySelectorAll<HTMLButtonElement>("button");

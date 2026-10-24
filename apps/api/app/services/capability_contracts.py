@@ -210,9 +210,11 @@ def reference_style(content):
     for observation in observations:
         if type(observation) is not dict:
             raise error("reference_style_observation_invalid")
-        fields(observation, {"modality", "certainty", "statement", "reference", "locator"})
+        version2 = content.get("content_schema") == "persona.reference-style.v2"
+        fields(observation, {"modality", "certainty", "statement", "reference", "locator"}
+               | ({"polarity", "reason", "inspection", "location"} if version2 else set()))
         modality = observation.get("modality")
-        if (type(modality) is not str or modality not in {"text", "image", "video"}
+        if (type(modality) is not str or modality not in ({"text", "image", "audio", "video"} if version2 else {"text", "image", "video"})
                 or type(observation.get("certainty")) is not str
                 or observation["certainty"] not in {"direct", "inferred", "unknown"}):
             raise error("reference_style_observation_invalid")
@@ -227,6 +229,34 @@ def reference_style(content):
         positive_id(reference.get("id"))
         if not re.fullmatch(r"[0-9a-f]{64}", text(reference.get("content_hash"), 64, required=True)):
             raise error("reference_style_reference_invalid")
+        if version2:
+            if type(observation.get("polarity")) is not str or observation["polarity"] not in {"prefer", "avoid"}:
+                raise error("reference_style_polarity_invalid")
+            text(observation.get("reason"), 2048, required=True)
+            inspection = observation.get("inspection")
+            if type(inspection) is not str or inspection not in {"read", "viewed", "listened", "transcribed", "measured", "unknown"}:
+                raise error("reference_style_inspection_invalid")
+            if modality == "audio" and observation["certainty"] == "direct" and inspection != "listened":
+                raise error("reference_style_listening_unverified")
+            location = observation.get("location")
+            if type(location) is not dict:
+                raise error("reference_style_location_required")
+            if modality == "text":
+                fields(location, {"quote"})
+                text(location.get("quote"), 4096, required=True)
+            elif modality == "image":
+                fields(location, {"x", "y", "width", "height"})
+                if (set(location) != {"x", "y", "width", "height"}
+                        or any(type(value) not in {int, float} or not 0 <= value <= 1 for value in location.values())
+                        or location["width"] <= 0 or location["height"] <= 0
+                        or location["x"] + location["width"] > 1 or location["y"] + location["height"] > 1):
+                    raise error("reference_style_region_invalid")
+            else:
+                fields(location, {"start_ms", "end_ms"})
+                if (set(location) != {"start_ms", "end_ms"}
+                        or any(type(value) is not int for value in location.values())
+                        or not 0 <= location["start_ms"] < location["end_ms"] <= 28800000):
+                    raise error("reference_style_time_invalid")
 
 
 def artifact(kind, content, schema):
@@ -254,7 +284,7 @@ def artifact(kind, content, schema):
             validate_production_stages(content.get("production_stages", {}))
         except ValueError:
             raise error("product_style_stages_invalid") from None
-    if content.get("content_schema") == "persona.reference-style.v1":
+    if content.get("content_schema") in {"persona.reference-style.v1", "persona.reference-style.v2"}:
         if kind != "creative_pattern":
             raise error("reference_style_kind_invalid")
         reference_style(content)

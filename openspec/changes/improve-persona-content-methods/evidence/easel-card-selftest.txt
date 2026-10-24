@@ -1,0 +1,6 @@
+[PASS] 检出底部死空白
+[PASS] 填满的卡片 PASS
+[PASS] 深底也能测跨度
+[PASS] 平滑渐变判为空(死空白)
+[PASS] 检出中段大空洞
+✅ selftest 通过

@@ -1,0 +1,65 @@
+{
+  "scope_files_equal": 58,
+  "old_row_changes_after_services_restart": [
+    {
+      "table": "system_settings",
+      "pk": [
+        "discovery.heartbeat"
+      ],
+      "fields": [
+        "value",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "system_settings",
+      "pk": [
+        "discovery.catchup_clock"
+      ],
+      "fields": [
+        "value",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "content_unit",
+      "pk": [
+        15
+      ],
+      "fields": [
+        "pinned_workflow_id",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "discovery_source",
+      "pk": [
+        54
+      ],
+      "fields": [
+        "cursor_json",
+        "last_success_at",
+        "next_due_at"
+      ]
+    },
+    {
+      "table": "discovery_source",
+      "pk": [
+        55
+      ],
+      "fields": [
+        "cursor_json",
+        "last_success_at",
+        "next_due_at"
+      ]
+    }
+  ],
+  "background_explanation": "Worker resumed existing discovery schedule: heartbeats and source cursors may advance. No rollback of background work. Migration itself preserved all 106 old tables before restart.",
+  "intentional_unit_update": "Unit15 product workflow pin and updated_at only",
+  "integrity": [
+    [
+      "ok"
+    ]
+  ],
+  "foreign_key_errors": []
+}

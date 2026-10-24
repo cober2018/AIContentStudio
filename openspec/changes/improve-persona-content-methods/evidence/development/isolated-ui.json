@@ -1,0 +1,84 @@
+{
+  "environment": "isolated /tmp SQLite + Mock, not content-quality",
+  "errors": [],
+  "checks": [
+    {
+      "name": "five steps and technical details collapsed",
+      "pass": true
+    },
+    {
+      "name": "normal located current-work feedback",
+      "pass": true,
+      "receipt": {
+        "feedback_event_id": 7,
+        "feedback": {
+          "accepted_hash": null,
+          "attempt_id": 1,
+          "config_hash": "76e871efa9939a6a1195b47f2bde40c5c573f394675d6903272262619a6dcfe0",
+          "decision": "commented",
+          "feedback_fingerprint": "fc49f1a9229586e4e25e9dcb095d0e9cc6034ec1c858fca27392d35a6d7c52c2",
+          "feedback_key": "feedback:5de5ca42-010c-49e3-9dab-ca60b5a54da2",
+          "located_feedback": {
+            "location": {
+              "block_id": "legacy-b2",
+              "kind": "text",
+              "quote": "这是第 1 个隔离验收候选，仅用于验证阶段调节、人工编辑与采用链路，不代表真实模型生成质量。"
+            },
+            "rework_scope": "current_stage_full_output",
+            "schema": "creation_recipe.located_feedback.v1",
+            "scope": "current_work",
+            "scope_reason": "当前阶段生成工具需重做本阶段产物；定位意见保留，接受前核对其它部分。独立分支不会自动重跑。",
+            "target": {
+              "content_hash": "1e39f94909bcad2d320ba325732c28fb3e9cf3ffa4ffb0c40f0e866e664dfcf3",
+              "kind": "master",
+              "revision_id": 1
+            }
+          },
+          "node_id": "draft",
+          "note": "隔离界面意见：此段更简洁，保留事实",
+          "output_hash": "9b7bb008f65c145acfe85a6149907ab4f9cd2a77ff1034e9f7a632139a994f0d",
+          "plugin_key": "stage.master.propose",
+          "plugin_version": "1",
+          "project_output_id": null,
+          "prompt_hash": "b764a31e87adcbd5d38130ba5816cf06ef271f16f84d6d6ad9758cf501055339",
+          "reason_tags": [],
+          "resolution_hash": "8af7fdf9dd6ae4c6ad5c5e75ac729e8c8afce95dbdb8eee36f4b823bd612773c",
+          "result_id": null,
+          "result_kind": null,
+          "run_id": 1,
+          "schema": "creation_recipe.stage_feedback.v1",
+          "unit_id": 1,
+          "workflow_checksum": "c8d346f799f2ef71e59dcc145ae83991c7d79ea4a87da03637c5f81e5140c5cf",
+          "workflow_id": 1,
+          "workflow_version": 1,
+          "_telemetry": {
+            "operation": "http_request",
+            "trace_id": "add81c3c4c01"
+          }
+        }
+      }
+    },
+    {
+      "name": "keyboard Enter navigates while preserving work",
+      "pass": true
+    },
+    {
+      "name": "375px production and feedback no horizontal overflow",
+      "pass": true
+    },
+    {
+      "name": "normal reference search, text preview, exact selection and candidate save",
+      "pass": true,
+      "artifact_id": 2,
+      "reference": {
+        "content_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "id": 1,
+        "kind": "source"
+      }
+    },
+    {
+      "name": "375px reference editor no horizontal overflow",
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "client_date": "2026-10-20 Asia/Taipei",
+  "api": {
+    "command": "pytest tests/test_persona_creative_studio.py tests/test_creation_recipe_stages.py tests/test_stage_invocations.py tests/test_stage_master_proposals.py tests/test_stage_master_adoptions.py tests/test_checks_v2.py tests/test_f6b_master_checks.py tests/test_creation_recipe_domain_adoptions.py tests/test_persona_audio_quality.py -q",
+    "exit_code": 0,
+    "result": "601 passed, 8 existing warnings in 23.41s",
+    "log": "handoff-api-checks.txt"
+  },
+  "web": {
+    "command": "npm run build (tsc -b, vite build, check:bundle)",
+    "exit_code": 0,
+    "log": "handoff-web-build.txt"
+  },
+  "ruff": "two changed Python files passed",
+  "fresh_model_calls_during_handoff": 0,
+  "latest_pointer_compaction_deployed": false,
+  "scope_note": "existing checks and local build, not complete real content-quality/default acceptance",
+  "handoff_documents": {
+    "task_count": "11/25",
+    "open_count": 14,
+    "missing_links": [],
+    "openspec_strict": "passed (2026-10-20 final handoff check)",
+    "takeover_prompt": "development-handoff.md section 10",
+    "original_scope_preserved": true
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "read_only": true,
+  "scope": "pre-real-sample snapshot; serialized sqlite raw columns all rows, json ensure_ascii=False sort_keys=True compact",
+  "tables": {
+    "content_persona": {
+      "count": 4,
+      "max_id": 4,
+      "sha256": "f9d99729a3132e79442d12af94a55f07107f341d43ae4b7bb068b70ab7f60ad4"
+    },
+    "content_persona_revision": {
+      "count": 6,
+      "max_id": 6,
+      "sha256": "4dcaafe07e8a4a02ede01e5bfc2a4b0a1db6fc1f67cb4d2b44e2c2f882552d07"
+    },
+    "content_account": {
+      "count": 2,
+      "max_id": 2,
+      "sha256": "fd2a81317899b74cfdaf680cccee178746b4ba1d5c1bf9537e797ced3d5980af"
+    },
+    "content_account_revision": {
+      "count": 0,
+      "max_id": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "content_series": {
+      "count": 0,
+      "max_id": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "content_series_revision": {
+      "count": 0,
+      "max_id": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "identity_snapshot": {
+      "count": 19,
+      "max_id": 22,
+      "sha256": "02b48d2f547cfae03564c2d3c7e4ebfdd7c124b6cd1d49b1d74cc2ee32e45a31"
+    },
+    "content_project": {
+      "count": 32,
+      "max_id": 36,
+      "sha256": "068f3e6f3db304bd450de89a690e157c3f5b1d46e9997700b7a5c485a35658ac"
+    },
+    "content_unit": {
+      "count": 42,
+      "max_id": 46,
+      "sha256": "bd4d2f9e6326b7620cc5fd4d219019fd5ca66a37b3272af522ae8d8633ab83e8"
+    },
+    "content_master_revision": {
+      "count": 64,
+      "max_id": 74,
+      "sha256": "64a112f15e2093237dda9ce316b4b75afdb992130df60e5006806b2958f8e6f9"
+    },
+    "material_revision": {
+      "count": 45,
+      "max_id": 80,
+      "sha256": "848e0d69ecb660f4d768a646d597418cf493a8718368e6a9e2104589e7e4b410"
+    },
+    "workflow": {
+      "count": 31,
+      "max_id": 34,
+      "sha256": "1c6c37f95975d329dc33c068446aa8d688bf0b98c4dda2bd50541bd91c6c7662"
+    },
+    "workflow_run": {
+      "count": 24,
+      "max_id": 24,
+      "sha256": "8653c53f75c30cf03b5894ef1a7f30427d35cf5e89109e3153bc0f3e1543d6b7"
+    },
+    "workflow_step_attempt": {
+      "count": 135,
+      "max_id": 135,
+      "sha256": "20906ddc51cc48117c40c895065381cd78e34b17e3f80f423f9e25e411d55b71"
+    },
+    "system_settings": {
+      "count": 13,
+      "max_id": 0,
+      "sha256": "39f900f6199f87bed841b409aec3a0bbd4a14ed03872a3739f7c155af09e310e"
+    }
+  },
+  "backup": {
+    "path": "/tmp/persona-independent-before-real-samples.sqlite",
+    "permissions": "0o600",
+    "database_unchanged_by_this_operation": true
+  }
+}

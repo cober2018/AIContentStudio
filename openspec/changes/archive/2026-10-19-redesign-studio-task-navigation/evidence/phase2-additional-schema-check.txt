@@ -1,0 +1,32 @@
+F..........                                                              [100%]
+=================================== FAILURES ===================================
+______________ test_local_approved_schema_default_is_enabled_crs _______________
+
+    def test_local_approved_schema_default_is_enabled_crs():
+        from app.db import LOCAL_APPROVED_SCHEMA_HEAD
+    
+>       assert LOCAL_APPROVED_SCHEMA_HEAD == "a3series00000001"
+E       AssertionError: assert 'unitlife000001' == 'a3series00000001'
+E         
+E         - a3series00000001
+E         + unitlife000001
+
+tests/test_aco_schema_lifecycle.py:21: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /Users/mshengran/Project/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_aco_schema_lifecycle.py::test_aco_upgrade_preserves_old_row_and_identity_is_null_inert
+tests/test_aco_schema_lifecycle.py::test_aco_migration_retains_exact_source_and_history_constraints
+tests/test_aco_schema_lifecycle.py::test_empty_aco_up_down_up_preserves_user_and_null_identity
+tests/test_aco_schema_lifecycle.py::test_aco_downgrade_refuses_retained_history_before_schema_mutation[capability]
+tests/test_aco_schema_lifecycle.py::test_aco_downgrade_refuses_retained_history_before_schema_mutation[package]
+tests/test_aco_schema_lifecycle.py::test_aco_downgrade_refuses_retained_history_before_schema_mutation[master_intent]
+  /opt/homebrew/Caskroom/miniconda/base/lib/python3.13/contextlib.py:148: SAWarning: WARNING: SQL-parsed foreign key constraint '('parent_id', 'workflow', 'id')' could not be located in PRAGMA foreign_keys for table workflow
+    next(self.gen)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_aco_schema_lifecycle.py::test_local_approved_schema_default_is_enabled_crs
+1 failed, 10 passed, 7 warnings in 3.15s

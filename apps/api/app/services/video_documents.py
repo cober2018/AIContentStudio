@@ -1,5 +1,7 @@
 """Canonical editor-independent Video Master v2 document contract."""
 
+import hashlib
+import json
 import math
 import re
 
@@ -89,7 +91,7 @@ def _time_bounds(row: dict, duration: int, code: str) -> None:
 
 
 def canonical_production(value: object) -> dict:
-    row = _object(value, {"schema", "source_mode", "web_provider", "prompt", "reference_material_revision_id", "prompt_reference", "requested_generation_duration_ms", "audio_intent"}, "video_production_invalid")
+    row = _object(value, {"schema", "source_mode", "web_provider", "prompt", "reference_material_revision_id", "prompt_reference", "requested_generation_duration_ms", "audio_intent", "continuity_reference"}, "video_production_invalid")
     if row.get("schema") not in ("video.shot-production.v1", "video.shot-production.v2"):
         _fail("video_production_schema_invalid")
     result = {"schema": row["schema"], "source_mode": _enum(row.get("source_mode"), {"existing", "api_image", "web_video", "ae"}, "video_production_mode_invalid")}
@@ -105,6 +107,17 @@ def canonical_production(value: object) -> dict:
         if not isinstance(content_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", content_hash):
             _fail("video_production_prompt_reference_invalid")
         result["prompt_reference"] = {"revision_id": _revision_id(reference.get("revision_id"), "video_production_prompt_reference_invalid"), "content_hash": content_hash}
+    if "continuity_reference" in row:
+        reference = _object(row["continuity_reference"], {"shot_id", "material_revision_id", "content_hash", "kind"}, "video_continuity_reference_invalid")
+        content_hash = reference.get("content_hash")
+        if not isinstance(content_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", content_hash):
+            _fail("video_continuity_reference_invalid")
+        result["continuity_reference"] = {
+            "shot_id": _id(reference.get("shot_id"), "video_continuity_reference_invalid"),
+            "material_revision_id": _revision_id(reference.get("material_revision_id"), "video_continuity_reference_invalid"),
+            "content_hash": content_hash,
+            "kind": _enum(reference.get("kind"), {"composition"}, "video_continuity_kind_unsupported"),
+        }
     if result["source_mode"] == "web_video":
         result["web_provider"] = _enum(row.get("web_provider"), {"grok", "gemini"}, "video_web_provider_invalid")
         if row["schema"] == "video.shot-production.v1" and not result.get("prompt", "").strip():
@@ -114,6 +127,31 @@ def canonical_production(value: object) -> dict:
     elif any(key in row for key in ("web_provider", "requested_generation_duration_ms", "audio_intent")):
         _fail("video_web_fields_require_web_mode")
     return result
+
+
+def validate_continuity_dependencies(shots: list[dict]) -> None:
+    by_id = {shot["id"]: shot for shot in shots}
+    edges = {}
+    for shot in shots:
+        reference = (shot.get("production") or {}).get("continuity_reference")
+        if not reference:
+            continue
+        target = reference["shot_id"]
+        if target == shot["id"]:
+            _fail("video_continuity_self_reference")
+        if target not in by_id:
+            _fail("video_continuity_shot_missing")
+        edges[shot["id"]] = target
+    completed = set()
+    for start in edges:
+        visiting = set()
+        current = start
+        while current in edges and current not in completed:
+            if current in visiting:
+                _fail("video_continuity_cycle")
+            visiting.add(current)
+            current = edges[current]
+        completed.update(visiting)
 
 
 def canonical_postproduction(value: object, shot_ids: set[str], duration: int) -> dict:
@@ -161,8 +199,101 @@ def canonical_postproduction(value: object, shot_ids: set[str], duration: int) -
     return result
 
 
+def canonical_capture_plan(value: object) -> dict:
+    row = _object(value, {"schema", "route", "script_structure", "script_confirmation", "task_confirmation"}, "video_capture_plan_invalid")
+    if row.get("schema") != "video.capture-plan.v1":
+        _fail("video_capture_plan_schema_invalid")
+    result = {"schema": row["schema"]}
+    if "route" in row:
+        result["route"] = _enum(row["route"], {"real", "ai", "mixed"}, "video_capture_route_invalid")
+    if "script_structure" in row:
+        result["script_structure"] = _text(row["script_structure"], 10_000, "video_capture_script_structure_invalid")
+    for field in ("script_confirmation", "task_confirmation"):
+        if field not in row:
+            continue
+        allowed = {"source_master_revision_id", "content_hash"}
+        if field == "task_confirmation":
+            allowed.add("production_profile_revision_id")
+        ref = _object(row[field], allowed, "video_capture_confirmation_invalid")
+        digest = ref.get("content_hash")
+        if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            _fail("video_capture_confirmation_invalid")
+        result[field] = {"source_master_revision_id": _revision_id(ref.get("source_master_revision_id"), "video_capture_confirmation_invalid"), "content_hash": digest}
+        if field == "task_confirmation":
+            result[field]["production_profile_revision_id"] = _revision_id(ref.get("production_profile_revision_id"), "video_capture_confirmation_invalid")
+    return result
+
+
+def capture_content_hash(document: dict, kind: str) -> str:
+    plan = document.get("capture_plan") or {}
+    projection = {"route": plan.get("route"), "script_structure": plan.get("script_structure", "")}
+    if kind == "task":
+        # Narration and adopted media evolve after filming without changing the shot instructions.
+        fields = {"id", "order", "label", "purpose", "duration_ms", "framing", "transition", "filming", "production"}
+        projection.update(aspect_ratio=document.get("aspect_ratio"), shots=[{key: value for key, value in shot.items() if key in fields} for shot in document.get("shots", [])])
+    return hashlib.sha256(json.dumps(projection, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+
+
+BOARD_CAMERA = {"fixed", "push_in", "pull_out", "follow", "orbit", "pan"}
+BOARD_SPEAKER = {"narration", "presenter", "dialogue", "none"}
+
+
+def canonical_board(value: object) -> dict:
+    """Storyboard columns of one shot; the spoken line stays in the script block it points to."""
+    board = _object(value, {"message", "visual", "camera", "speaker", "sound", "notes", "material_request"}, "video_shot_board_invalid")
+    result = {key: _text(board.get(key, ""), limit, "video_shot_board_invalid")
+              for key, limit in (("message", 500), ("visual", 1000), ("sound", 500), ("notes", 500))}
+    result["camera"] = _enum(board.get("camera", "fixed"), BOARD_CAMERA, "video_shot_board_invalid")
+    result["speaker"] = _enum(board.get("speaker", "narration"), BOARD_SPEAKER, "video_shot_board_invalid")
+    # Only present on 导演稿 written with a material request, so older masters keep their hashes.
+    if "material_request" in board:
+        result["material_request"] = _text(board["material_request"], 1000, "video_shot_board_invalid")
+    return result
+
+
+def canonical_capture_takes(value: object) -> list[dict]:
+    if not isinstance(value, list) or len(value) > 100:
+        _fail("video_capture_takes_invalid")
+    result = []
+    for raw in value:
+        row = _object(raw, {"id", "source_master_revision_id", "task_content_hash", "material_revision_id", "content_hash", "state", "review_note", "trim_start_ms", "trim_end_ms"}, "video_capture_take_invalid")
+        take = {"id": _id(row.get("id"), "video_capture_take_invalid"),
+                "state": _enum(row.get("state"), {"pending", "usable", "reshoot", "rejected"}, "video_capture_take_state_invalid")}
+        for field in ("source_master_revision_id", "material_revision_id"):
+            take[field] = _revision_id(row.get(field), "video_capture_take_reference_invalid")
+        for field in ("task_content_hash", "content_hash"):
+            if not isinstance(row.get(field), str) or not re.fullmatch(r"[0-9a-f]{64}", row[field]):
+                _fail("video_capture_take_hash_invalid")
+            take[field] = row[field]
+        if "review_note" in row:
+            take["review_note"] = _text(row["review_note"], 4000, "video_capture_take_note_invalid")
+        if "trim_start_ms" in row or "trim_end_ms" in row or take["state"] == "usable":
+            take["trim_start_ms"] = _int(row.get("trim_start_ms"), 0, _MAX_DURATION_MS, "video_capture_take_trim_invalid")
+            take["trim_end_ms"] = _int(row.get("trim_end_ms"), 1, _MAX_DURATION_MS, "video_capture_take_trim_invalid")
+            if take["trim_end_ms"] <= take["trim_start_ms"]:
+                _fail("video_capture_take_trim_invalid")
+        result.append(take)
+    return result
+
+
+def canonical_filming(value: object) -> dict:
+    text_fields = {"subject", "action", "camera_position", "angle", "focus", "evidence_requirement", "audio_note"}
+    row = _object(value, text_fields | {"scene_id", "filming_order", "raw_duration_ms"}, "video_filming_invalid")
+    result = {}
+    if "scene_id" in row:
+        result["scene_id"] = _text(row["scene_id"], 100, "video_filming_scene_invalid")
+    if "filming_order" in row:
+        result["filming_order"] = _int(row["filming_order"], 0, 299, "video_filming_order_invalid")
+    if "raw_duration_ms" in row:
+        result["raw_duration_ms"] = _int(row["raw_duration_ms"], 1, _MAX_DURATION_MS, "video_filming_duration_invalid")
+    for field in sorted(text_fields):
+        if field in row:
+            result[field] = _text(row[field], 2000, f"video_filming_{field}_invalid")
+    return result
+
+
 def canonical_payload(raw: object) -> dict:
-    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref", "postproduction"}, "video_payload_invalid")
+    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref", "postproduction", "capture_plan"}, "video_payload_invalid")
     result = {
         "title": _text(payload.get("title", ""), 500, "video_title_invalid"),
         "aspect_ratio": _ratio(payload.get("aspect_ratio")),
@@ -173,11 +304,13 @@ def canonical_payload(raw: object) -> dict:
         block = _object(raw_block, {"id", "order", "text"}, "video_script_block_invalid")
         blocks.append({"id": block["id"], "order": block["order"], "text": _text(block.get("text"), 10_000, "video_script_text_invalid")})
     result["script"] = {"blocks": blocks}
+    if "capture_plan" in payload:
+        result["capture_plan"] = canonical_capture_plan(payload["capture_plan"])
     block_ids = {block["id"] for block in blocks}
 
     shots = []
     for raw_shot in _ordered(payload.get("shots"), maximum=300, code="video_shots_invalid"):
-        shot = _object(raw_shot, {"id", "order", "label", "purpose", "duration_ms", "script_block_id", "source_material_revision_id", "framing", "transition", "production"}, "video_shot_invalid")
+        shot = _object(raw_shot, {"id", "order", "label", "purpose", "duration_ms", "script_block_id", "source_material_revision_id", "framing", "transition", "production", "filming", "capture_takes", "board"}, "video_shot_invalid")
         normalized = {
             "id": shot["id"], "order": shot["order"],
             "label": _text(shot.get("label", ""), 200, "video_shot_label_invalid"),
@@ -197,7 +330,17 @@ def canonical_payload(raw: object) -> dict:
             normalized["transition"] = _enum(shot["transition"], {"cut", "fade", "dissolve"}, "video_transition_invalid")
         if "production" in shot:
             normalized["production"] = canonical_production(shot["production"])
+        if "filming" in shot:
+            normalized["filming"] = canonical_filming(shot["filming"])
+        if "capture_takes" in shot:
+            normalized["capture_takes"] = canonical_capture_takes(shot["capture_takes"])
+        if "board" in shot:
+            normalized["board"] = canonical_board(shot["board"])
         shots.append(normalized)
+    take_ids = [take["id"] for shot in shots for take in shot.get("capture_takes", [])]
+    if len(take_ids) != len(set(take_ids)):
+        _fail("video_capture_take_id_duplicate")
+    validate_continuity_dependencies(shots)
     result["shots"] = shots
     shot_ids = {shot["id"] for shot in shots}
 
@@ -371,6 +514,8 @@ def _expected_media(document: dict) -> list[dict]:
     for shot in document["shots"]:
         if "source_material_revision_id" in shot:
             add("shot_source", shot["id"], shot["source_material_revision_id"], {"shot_id": shot["id"]})
+        for take in shot.get("capture_takes", []):
+            add("capture_take", take["id"], take["material_revision_id"], {"shot_id": shot["id"], "take_id": take["id"]})
         reference = (shot.get("production") or {}).get("reference_material_revision_id")
         if reference is not None:
             add("shot_reference", shot["id"], reference, {"shot_id": shot["id"]})

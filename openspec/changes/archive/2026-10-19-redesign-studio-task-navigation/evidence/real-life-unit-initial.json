@@ -1,0 +1,16 @@
+{
+  "id": 42,
+  "project_id": 36,
+  "production_domain": "persona",
+  "persona_id": 3,
+  "account_id": null,
+  "series_id": null,
+  "identity_snapshot_id": 18,
+  "identity_state": "frozen",
+  "modality": "text",
+  "channel_id": "baijia",
+  "title": "画两笔之前，能不能少准备一点",
+  "status": "draft",
+  "lifecycle": "active",
+  "pinned_workflow_id": 19
+}

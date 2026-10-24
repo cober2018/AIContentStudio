@@ -1,0 +1,1688 @@
+{
+  "138": {
+    "id": 138,
+    "run_id": 26,
+    "node_id": "cards",
+    "status": "failed",
+    "error": "stage_creative_output_invalid",
+    "execution_receipt_json": {
+      "adapter_hash": "b3fb5079fc2b54b4298f834a562e79ecc010bd61ec87f18075a4100bfeea48e7",
+      "capability_use_id": 16,
+      "capability_use_ids": [
+        16
+      ],
+      "config_hash": "c7fce1eb552bda621e49da34b447760377f8c86977d51518594f0cf989a375fe",
+      "created_at": "2026-10-19T16:15:28.700666+00:00",
+      "dispatch_certainty": "confirmed_dispatched",
+      "finalized_at": "2026-10-19T16:15:56.181123+00:00",
+      "invocation_key": "auto-accept:f03a9f78893a8514fd654885a8f03ed10a3f7e48b00b78f78408c2a066b1879f",
+      "method_hash": "5ff47ae8dbe7dee5837d12e7295dc05cca2649915ffc2873e5ea5f34ca3de478",
+      "model_route_hash": "4b81e931b39a3bfba65f010f7b35cabf7d9588da1fa046fdd3762f7a847597e1",
+      "node_id": "cards",
+      "outcome_state": "failed",
+      "output_contract": {
+        "accepted_content_required": true,
+        "content_rule": "Return only {schema, candidates}. schema is the requested name. Each candidate has only id, summary, content, references, and warnings. id matches [A-Za-z0-9][A-Za-z0-9_.:-]* and summary is one short sentence. content matches content_schema exactly: no extra keys; include required arrays and use [] when empty. Ordered item ids are ASCII, such as beat-0 or section-0. order starts at 0 and increases by 1. references is [] unless each item is copied from the supplied catalog. Do not invent fact or material ids. Each claims.target is a field locator: title, body, bullet-0, bullet-1, or diagram-0 etc., referencing an existing field in the same card; never descriptive prose. claims.quote must occur verbatim in that target field, with a supplied fact_pack_item_id that supports the claim. Do not attach evidence to unsupported suggestions.",
+        "content_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "aspect_ratio": {
+              "enum": [
+                "1:1",
+                "4:3",
+                "3:4",
+                "16:9",
+                "9:16"
+              ],
+              "maxLength": 5,
+              "type": "string"
+            },
+            "cards": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "asset_requirements": {
+                    "items": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "body": {
+                    "maxLength": 1200,
+                    "type": "string"
+                  },
+                  "bullets": {
+                    "items": {
+                      "maxLength": 240,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 6,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "claims": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "fact_pack_item_id": {
+                          "maximum": 2147483647,
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "quote": {
+                          "maxLength": 2000,
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "target": {
+                          "maxLength": 100,
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "target",
+                        "quote",
+                        "fact_pack_item_id"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "minItems": 0,
+                    "type": "array"
+                  },
+                  "content_basis": {
+                    "items": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "diagram_nodes": {
+                    "items": {
+                      "maxLength": 80,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "maxItems": 4,
+                    "minItems": 2,
+                    "type": "array"
+                  },
+                  "id": {
+                    "maxLength": 60,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "material_revision_id": {
+                    "maximum": 2147483647,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "order": {
+                    "maximum": 9,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "purpose": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "role": {
+                    "enum": [
+                      "cover",
+                      "body"
+                    ],
+                    "maxLength": 5,
+                    "type": "string"
+                  },
+                  "title": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "transition": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "visual_structure": {
+                    "enum": [
+                      "text",
+                      "sequence",
+                      "comparison",
+                      "groups",
+                      "image"
+                    ],
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "visual_type": {
+                    "enum": [
+                      "none",
+                      "image",
+                      "chart",
+                      "diagram"
+                    ],
+                    "maxLength": 7,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "order",
+                  "role",
+                  "title",
+                  "body",
+                  "visual_type",
+                  "purpose",
+                  "content_basis",
+                  "transition",
+                  "visual_structure",
+                  "asset_requirements"
+                ],
+                "type": "object"
+              },
+              "maxItems": 10,
+              "minItems": 1,
+              "type": "array"
+            },
+            "title": {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "aspect_ratio",
+            "cards"
+          ],
+          "type": "object"
+        },
+        "reference_shape": "{kind: fact_pack_item or material_revision, id: integer, checksum: exact supplied hash}",
+        "response_schema": {
+          "additionalProperties": false,
+          "properties": {
+            "candidates": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "content": {
+                    "type": "object"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "references": {
+                    "maxItems": 100,
+                    "type": "array"
+                  },
+                  "summary": {
+                    "maxLength": 1000,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "warnings": {
+                    "maxItems": 20,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "summary",
+                  "content"
+                ],
+                "type": "object"
+              },
+              "maxItems": 1,
+              "minItems": 1,
+              "type": "array"
+            },
+            "schema": {
+              "enum": [
+                "graphic.card-plan.v2"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "schema",
+            "candidates"
+          ],
+          "type": "object"
+        },
+        "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
+        "schema": "graphic.card-plan.v2",
+        "visual_requirements": {
+          "diagram_fallback_allowed": true,
+          "image_required_on_cover": false,
+          "image_required_per_card": false,
+          "photo_requirement": "none",
+          "rule": "When image_required_per_card is true, every planned card requires visual_type=image with an exact supplied image MaterialRevision reference; text-only/chart/diagram cards do not satisfy it. When only image_required_on_cover is true, the cover requires that exact image reference and body cards may use visual_type=none for text-only layouts. Diagram fallback is allowed only when diagram_fallback_allowed is true. Do not invent missing images, substitute another preset or claim an incomplete plan is composition-ready; report unavailable suitable images in candidate warnings. Final composition, rights and QC gates still apply.",
+          "style_preset_hash": "92cf99ab38a74de16c4b81cd7aab17d1bf0c4310a6ea2e859ad63dd2327ecc3f",
+          "style_preset_ref": "studio.graphic.architecture-diagram@1"
+        }
+      },
+      "output_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "2",
+      "prepared_by_server": true,
+      "prompt_hash": "fd36115667cb0622cb5d1d7e661a303dd418cccb22abf3d342be8d21c7a1f8f8",
+      "request_fingerprint": "e275759d2a8baae8ddf7b64010c4da6afa759e3839bf46f81ea1fd29b83d7092",
+      "request_mode": "automatic",
+      "resolution_hash": "f0ab6b16605df35104317f674f70a9e3431a8e189629a0af345e0ad82851c7fa",
+      "runtime_identity_hash": "8c5de27e91b95d66141d14d0a41cd6354b06bf2af43a56cdebecd5411d9e8de2",
+      "schema": "creation_recipe.execution_receipt.v1",
+      "stage_contract_hash": "48d960e3f7bfddb15d9b806f22364a49c08e5a795c866ca33eeeaf485f5a1d48",
+      "upstream_hash": "26e42cdc075628446360435be466f1b00c554f5a43daf91a40bf44ed6b2b055f",
+      "workflow_id": 37,
+      "workflow_run_id": 26
+    },
+    "output_json": {}
+  },
+  "148": {
+    "id": 148,
+    "run_id": 25,
+    "node_id": "quality",
+    "status": "failed",
+    "error": "stage_checks_blocked",
+    "execution_receipt_json": {
+      "adapter_hash": "68bd3b87e8f87d0b0a08856a8c8767482abb3df447658ab3f062e166da5661ec",
+      "capability_use_id": null,
+      "capability_use_ids": [],
+      "config_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "created_at": "2026-10-19T16:24:17.052727+00:00",
+      "dispatch_certainty": "confirmed_dispatched",
+      "finalized_at": "2026-10-19T16:24:36.199137+00:00",
+      "invocation_key": "auto-accept:2f276ac38e9b27ce58a012a3df00abb1705062e6771581979da1292c598bc30b",
+      "method_hash": "e4d6ba47ced86baefb573a6fc08c0650b2d4c5fb6092d98a15289e2b6aba8b4a",
+      "model_route_hash": "0bd4c0d91723158f5cc9fa88fda22d69df7f734c92e7635a79a8fdadc6c915ca",
+      "node_id": "quality",
+      "outcome_state": "failed",
+      "output_contract": {
+        "accepted_content_required": true,
+        "schema": "stage.checks.result.v1"
+      },
+      "output_hash": "f6636c69a5a0761f8699affbea07e2d32a6c9d8a566e7e9df0193acbdd70ea28",
+      "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "plugin_key": "stage.checks",
+      "plugin_version": "1",
+      "prepared_by_server": true,
+      "prompt_hash": "5ec3155c3591b5d81d56ce5a3e992510ef8534260d49773be14e4e56e1b2c30d",
+      "request_fingerprint": "81e70b6fe21801a2ce361e8b0b1aaa0557fd70b36f851b769a8cdeca9a103f9e",
+      "request_mode": "automatic",
+      "resolution_hash": "3fca072934f64ac4c2295b9428894ca2ea9a2e78afc8276ab08e11552c08d617",
+      "runtime_identity_hash": "938071a8f05aec1428b5e203fa195ad6bff7d701fe7763914cefde6394406d86",
+      "schema": "creation_recipe.execution_receipt.v1",
+      "stage_contract_hash": "e79e356889a1cd004fe1d0a0ae92607a54c982d9d0d949e1fab33d64fef58d69",
+      "upstream_hash": "59a298719ad3b1b4b61150644992eafe68a5ec9c4753811ebbb201465d48be42",
+      "workflow_id": 35,
+      "workflow_run_id": 25
+    },
+    "output_json": {
+      "domain": "checks",
+      "resolution_hash": "3fca072934f64ac4c2295b9428894ca2ea9a2e78afc8276ab08e11552c08d617",
+      "result": {
+        "blockers": [
+          "text_fact"
+        ],
+        "checks": [
+          {
+            "check_kind": "master_schema",
+            "id": 300,
+            "input_hash": "67f72f318ea09ad3f97340cf0ee568cf62c5ab3dc25ee757152fe734e4387f41",
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "master_schema",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "evidence",
+            "id": 301,
+            "input_hash": "72d316c3f0e4607aa3af14dbb575e7e6e0dc151707d14f91f1cd515e3bca0f01",
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "evidence",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "rights",
+            "id": 302,
+            "input_hash": "168373af4e4b1292d2fd82021a382cfcdc43156272c5aa1aa0edc7a0e341a69f",
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "rights",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "render",
+            "id": 303,
+            "input_hash": "ac9c0128915cb7217010f82f5d1c4fe30fd25c7c63d973088bfa6658e6c0225c",
+            "report": {
+              "body_markdown": "假设团队正在做一个内部知识问答工具：演示时，它能回答几道准备好的问题。下一步要交给同事使用，负责人却需要知道，资料没收录怎么办、两份规定互相矛盾怎么办，以及哪种问题应该交给谁确认。这些判断无法只靠一次漂亮的回答来代替。\n\n下面是一份供团队讨论的工程设计建议，场景均为假设，没有实际测试结果或效果保证。外部项目复盘的具体发生时间、完整参数及行业统计尚未核验，本文不把它们当作论据。先把一个问题写成可检查的约定，再决定哪些检查值得自动化，会更便于讨论。\n\n## 评测框架构建：从业务需求到结构化输入与分级判定标准\n\n建议从一条具体问题开始，记录输入、预期答案要点、依据和可接受的失败方式。人工判断同样可以进入评测流程：先请业务人员说明怎样算答对，再把其中能确定判断的部分交给规则；含义是否正确仍可能需要人工复核。\n\n可行的做法是将业务需求严格拆解为三个要素：输入载荷、预期输出和判断标准。评测集不应只记录输入问题，还要明确输入所携带的环境上下文与前置条件；预期输出则需定义清晰的格式与关键信息要求。对于系统返回的结果，团队应制定分级的判断标准，而非单一的通过与不通过：\n\n- 合规交付：回答准确，格式合规，引用的事实依据完整且与输入一致。\n- 降级处理：在置信度不足或外部知识受限时，系统能主动表明能力边界并合规拒答，避免强行推断。\n- 不可接受错误：包括捏造不存在的事实（幻觉）、违背业务规则、泄露敏感系统指令或在涉及高风险操作时给出确定性误导。\n\n格式、必填字段和引用是否存在，可以按明确规则重复检查；答案是否准确使用了资料，还需要对照预先确认的答案要点，必要时由人工复核。每次修改后重跑同一组问题，记录变好和变差的地方。一次通过率或模型自报置信度，都不能单独说明系统已适合上线。\n\n## 场景化边界设计：假设性知识问答的四类典型工程约束\n\n为了展示具体约束如何落地，我们以一个明确标注为假设的知识问答系统为例。在实际工程实践中，防御逻辑通常需要在以下四类典型边界场景中分别定义行为规则：\n\n1. 正常提问场景：用户问题在已确认的知识范围内，检索结果提供适用且一致的依据。核对答案要点和引用后，再按业务约定返回；格式正确不等于事实正确。\n2. 资料缺失场景：没有找到足以支持答案的资料时，按约定说明目前无法回答，并提供可以继续查找或人工确认的入口。检索匹配分数需要在业务样本上验证，不能当作真实性分数；拒答也不构成整个系统不会产生幻觉的保证。\n3. 资料冲突场景：两份规定内容相反时，先核对适用范围、生效状态及来源权威性，不能只凭日期较新就自动替换。无法确认时指出冲突点，交给预先指定的负责人核查。\n4. 转人工条件：由业务负责人约定哪些问题只能辅助、哪些必须人工确认；证据不足、规则不明或用户要求人工时，提供真实可接通的路径，并按权限传递必要上下文。模型自报低置信度不能单独作为这项判断的依据。\n\n上述针对假设性知识问答的场景设计，属于系统工程设计的思路建议，并非针对特定模型或业务效果的绝对保证。不同业务的风险承受度各异，具体的阈值设定必须结合具体业务环境进行校准。\n\n## 工程实现权衡与上线门禁决策\n\n增加校验、资料版本核对和人工接管，会带来额外的开发与维护工作，也可能改变响应时间和排队成本。具体代价与实现方式、触发比例及业务负荷有关，需要实际测量，不能笼统认定每加一条规则都会让所有请求变慢。\n\n因此，技术负责人不应追求绝对零风险的理论架构，而应根据业务场景的实际容忍度，制定务实的上线门禁检查清单：\n\n- 核心问题和边界问题是否有预先确认的答案要点、依据及负责判断的人。\n- 资料缺失与冲突时，系统是否按约定说明限制，实际结果是否经过核对。\n- 转人工路径能否实际接通，超时或无人承接时怎样向用户说明。\n- 可确定的检查是否支持重复运行，需要业务判断的部分是否保留人工复核；新修改有没有让已通过的问题退步。\n\n起步时可以先整理一小组经过脱敏的真实问题，逐条写下答案依据、允许的失败方式和负责确认的人。先让这些约定能够执行，再根据实际失败补充样本和工具。它是一种逐步核对的方法，具体上线决定仍要结合业务风险、资源和真实运行结果。",
+              "content_hash": "35798445997f667e17b2a49fe42d6cab9a22d3095d6d9122d8436cc0d1d61273",
+              "origin": "deterministic",
+              "reasons": [],
+              "render_input_hash": "a2efc2737728fee2be9636bdae92bb00a1c8b7a8e0dc75665073dfeb67526f56",
+              "renderer_key": "text.studio.document.v1",
+              "renderer_version": "2",
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "render",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "status": "ready",
+              "unused_asset_ids": [],
+              "warnings": []
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "text_structure",
+            "id": 304,
+            "input_hash": "837eea79eb038df8cf9485194816af3044fb80d6614c53b220a193e0ff5fd22e",
+            "report": {
+              "block_count": 16,
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "issues": [],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_structure",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "text_fact",
+            "id": 305,
+            "input_hash": "d987ae81a885afef266a4a6db1bc5ac1eb03acb496da400a818cd1a96b4c8ec2",
+            "report": {
+              "coverage": {
+                "deterministic": "complete",
+                "deterministic_issue_count": 2,
+                "fact_count": 1,
+                "model_use_excluded_item_ids": [],
+                "reason": null,
+                "semantic": "verified",
+                "semantic_fact_count": 1
+              },
+              "issues": [
+                {
+                  "category": "risk_word",
+                  "locator": {
+                    "block_id": "legacy-b15",
+                    "end": 17,
+                    "list_item_id": null,
+                    "start": 14
+                  },
+                  "reason": "出现风险词『零风险』，属于确定性投资承诺类表述",
+                  "severity": "blocker",
+                  "span": "零风险"
+                },
+                {
+                  "category": "risk_word",
+                  "locator": null,
+                  "reason": "出现确定性倾向词『绝对』",
+                  "severity": "warning",
+                  "span": "绝对"
+                }
+              ],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_fact",
+                "model_use": [
+                  {
+                    "allowed": true,
+                    "checksum": "3b975e41488c13458e1f2dec89d7f8121ee273ea4171db17ac8be517e06b32a6",
+                    "id": 4,
+                    "revoked": false
+                  }
+                ],
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "blocker"
+          },
+          {
+            "check_kind": "text_identity",
+            "id": 306,
+            "input_hash": "6e1e6015f6a0ff6f34c8132d2639b96a0a3258736d845ea76b3fdd7542c5bc3c",
+            "report": {
+              "coverage": {
+                "advisory_critic": {
+                  "can_override_deterministic": false,
+                  "reason": null,
+                  "rubric": [
+                    {
+                      "dimension": "factual_grounding",
+                      "reason": "严格遵守事实与推测分离的边界，开篇明确标注场景为假设且无实际效果保证，未捏造未经测试的数据或基准指标。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "engineering_fit",
+                      "reason": "内容紧扣AI工程化落地的评测、降级、冲突处理与转人工等机制，符合技术负责人与开发者的实践讨论需求。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "clarity",
+                      "reason": "结构严谨平实，从业务需求拆解到场景设计与门禁清单，行文逻辑清晰连贯。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "specificity",
+                      "reason": "提供了具体的判定分级（合规交付/降级处理/不可接受错误）、四类边界场景与门禁检查清单，颗粒度明确。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "tradeoffs",
+                      "reason": "深入讨论了引入规则核验、版本校验与人工介入带来的开发维护成本、响应延迟及排队代价，未做绝对化承诺。",
+                      "score": 4
+                    }
+                  ],
+                  "status": "verified"
+                },
+                "deterministic": "persona_rules_and_explicit_phrases",
+                "explicit_phrase_count": 0,
+                "reason": null,
+                "semantic": "verified"
+              },
+              "identity_checksum": "117d969b44bb042ba0b3d2d0d8c34d20c06e4803b45ee885b38578a3ed5225fb",
+              "identity_snapshot_id": 23,
+              "issues": [],
+              "persona_quality": {
+                "coverage": {
+                  "deterministic": "bounded_phrase_structure_citation_rules",
+                  "fact_speculation": "existing_text_fact_check",
+                  "factual_truth": "existing_text_fact_check",
+                  "semantic": "not_run",
+                  "title_body_alignment": "human_review_required"
+                },
+                "critic_dimensions": [
+                  "factual_grounding",
+                  "engineering_fit",
+                  "clarity",
+                  "specificity",
+                  "tradeoffs"
+                ],
+                "human_review_required": true,
+                "issues": [],
+                "payload_hash": "ebdc00fabc2226a870b997e5df4e3647f2f5259955cff38198fcbaf372d1e7fa",
+                "quality_profile_hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+                "quality_profile_ref": "studio.quality.text.technical@1",
+                "status": "pass"
+              },
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "3",
+                "kind": "text_identity",
+                "persona_quality": {
+                  "hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+                  "ref": "studio.quality.text.technical@1"
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "text_platform",
+            "id": 307,
+            "input_hash": "c6a8bfac881892edd0acc087653889bb52f1661960bc05e3e95bc3c12a97d54a",
+            "report": {
+              "channel": "baijia",
+              "content_form": "article",
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "profile_version_id": 19,
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_platform",
+                "profile": {
+                  "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                  "checksum_origin": "stored",
+                  "form": {
+                    "artifact_kind": "text",
+                    "channel": "baijia",
+                    "content_form": "article",
+                    "discoverability_profile": null,
+                    "graphic_requirements": {},
+                    "label": "文章",
+                    "media_requirements": {},
+                    "profile_version_id": 19,
+                    "publisher_candidates": [
+                      "publisher.copy"
+                    ],
+                    "renderer_key": "renderer.generic.markdown",
+                    "rule_sets": [],
+                    "source": "profile",
+                    "video_requirements": {},
+                    "workflow_key": "workflow.article.feed"
+                  },
+                  "id": 19,
+                  "version": 2
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "rule_sets": [],
+              "source": "profile"
+            },
+            "status": "pass"
+          }
+        ],
+        "checks_pass": false,
+        "checks_reviewable": false,
+        "current_checks": [
+          {
+            "check_kind": "master_schema",
+            "id": 300,
+            "input_hash": "67f72f318ea09ad3f97340cf0ee568cf62c5ab3dc25ee757152fe734e4387f41",
+            "is_current": true,
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "master_schema",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "evidence",
+            "id": 301,
+            "input_hash": "72d316c3f0e4607aa3af14dbb575e7e6e0dc151707d14f91f1cd515e3bca0f01",
+            "is_current": true,
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "evidence",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "rights",
+            "id": 302,
+            "input_hash": "168373af4e4b1292d2fd82021a382cfcdc43156272c5aa1aa0edc7a0e341a69f",
+            "is_current": true,
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "rights",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "render",
+            "id": 303,
+            "input_hash": "ac9c0128915cb7217010f82f5d1c4fe30fd25c7c63d973088bfa6658e6c0225c",
+            "is_current": true,
+            "report": {
+              "body_markdown": "假设团队正在做一个内部知识问答工具：演示时，它能回答几道准备好的问题。下一步要交给同事使用，负责人却需要知道，资料没收录怎么办、两份规定互相矛盾怎么办，以及哪种问题应该交给谁确认。这些判断无法只靠一次漂亮的回答来代替。\n\n下面是一份供团队讨论的工程设计建议，场景均为假设，没有实际测试结果或效果保证。外部项目复盘的具体发生时间、完整参数及行业统计尚未核验，本文不把它们当作论据。先把一个问题写成可检查的约定，再决定哪些检查值得自动化，会更便于讨论。\n\n## 评测框架构建：从业务需求到结构化输入与分级判定标准\n\n建议从一条具体问题开始，记录输入、预期答案要点、依据和可接受的失败方式。人工判断同样可以进入评测流程：先请业务人员说明怎样算答对，再把其中能确定判断的部分交给规则；含义是否正确仍可能需要人工复核。\n\n可行的做法是将业务需求严格拆解为三个要素：输入载荷、预期输出和判断标准。评测集不应只记录输入问题，还要明确输入所携带的环境上下文与前置条件；预期输出则需定义清晰的格式与关键信息要求。对于系统返回的结果，团队应制定分级的判断标准，而非单一的通过与不通过：\n\n- 合规交付：回答准确，格式合规，引用的事实依据完整且与输入一致。\n- 降级处理：在置信度不足或外部知识受限时，系统能主动表明能力边界并合规拒答，避免强行推断。\n- 不可接受错误：包括捏造不存在的事实（幻觉）、违背业务规则、泄露敏感系统指令或在涉及高风险操作时给出确定性误导。\n\n格式、必填字段和引用是否存在，可以按明确规则重复检查；答案是否准确使用了资料，还需要对照预先确认的答案要点，必要时由人工复核。每次修改后重跑同一组问题，记录变好和变差的地方。一次通过率或模型自报置信度，都不能单独说明系统已适合上线。\n\n## 场景化边界设计：假设性知识问答的四类典型工程约束\n\n为了展示具体约束如何落地，我们以一个明确标注为假设的知识问答系统为例。在实际工程实践中，防御逻辑通常需要在以下四类典型边界场景中分别定义行为规则：\n\n1. 正常提问场景：用户问题在已确认的知识范围内，检索结果提供适用且一致的依据。核对答案要点和引用后，再按业务约定返回；格式正确不等于事实正确。\n2. 资料缺失场景：没有找到足以支持答案的资料时，按约定说明目前无法回答，并提供可以继续查找或人工确认的入口。检索匹配分数需要在业务样本上验证，不能当作真实性分数；拒答也不构成整个系统不会产生幻觉的保证。\n3. 资料冲突场景：两份规定内容相反时，先核对适用范围、生效状态及来源权威性，不能只凭日期较新就自动替换。无法确认时指出冲突点，交给预先指定的负责人核查。\n4. 转人工条件：由业务负责人约定哪些问题只能辅助、哪些必须人工确认；证据不足、规则不明或用户要求人工时，提供真实可接通的路径，并按权限传递必要上下文。模型自报低置信度不能单独作为这项判断的依据。\n\n上述针对假设性知识问答的场景设计，属于系统工程设计的思路建议，并非针对特定模型或业务效果的绝对保证。不同业务的风险承受度各异，具体的阈值设定必须结合具体业务环境进行校准。\n\n## 工程实现权衡与上线门禁决策\n\n增加校验、资料版本核对和人工接管，会带来额外的开发与维护工作，也可能改变响应时间和排队成本。具体代价与实现方式、触发比例及业务负荷有关，需要实际测量，不能笼统认定每加一条规则都会让所有请求变慢。\n\n因此，技术负责人不应追求绝对零风险的理论架构，而应根据业务场景的实际容忍度，制定务实的上线门禁检查清单：\n\n- 核心问题和边界问题是否有预先确认的答案要点、依据及负责判断的人。\n- 资料缺失与冲突时，系统是否按约定说明限制，实际结果是否经过核对。\n- 转人工路径能否实际接通，超时或无人承接时怎样向用户说明。\n- 可确定的检查是否支持重复运行，需要业务判断的部分是否保留人工复核；新修改有没有让已通过的问题退步。\n\n起步时可以先整理一小组经过脱敏的真实问题，逐条写下答案依据、允许的失败方式和负责确认的人。先让这些约定能够执行，再根据实际失败补充样本和工具。它是一种逐步核对的方法，具体上线决定仍要结合业务风险、资源和真实运行结果。",
+              "content_hash": "35798445997f667e17b2a49fe42d6cab9a22d3095d6d9122d8436cc0d1d61273",
+              "origin": "deterministic",
+              "reasons": [],
+              "render_input_hash": "a2efc2737728fee2be9636bdae92bb00a1c8b7a8e0dc75665073dfeb67526f56",
+              "renderer_key": "text.studio.document.v1",
+              "renderer_version": "2",
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "render",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "status": "ready",
+              "unused_asset_ids": [],
+              "warnings": []
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "text_structure",
+            "id": 304,
+            "input_hash": "837eea79eb038df8cf9485194816af3044fb80d6614c53b220a193e0ff5fd22e",
+            "is_current": true,
+            "report": {
+              "block_count": 16,
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "issues": [],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_structure",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "text_fact",
+            "id": 305,
+            "input_hash": "d987ae81a885afef266a4a6db1bc5ac1eb03acb496da400a818cd1a96b4c8ec2",
+            "is_current": true,
+            "report": {
+              "coverage": {
+                "deterministic": "complete",
+                "deterministic_issue_count": 2,
+                "fact_count": 1,
+                "model_use_excluded_item_ids": [],
+                "reason": null,
+                "semantic": "verified",
+                "semantic_fact_count": 1
+              },
+              "issues": [
+                {
+                  "category": "risk_word",
+                  "locator": {
+                    "block_id": "legacy-b15",
+                    "end": 17,
+                    "list_item_id": null,
+                    "start": 14
+                  },
+                  "reason": "出现风险词『零风险』，属于确定性投资承诺类表述",
+                  "severity": "blocker",
+                  "span": "零风险"
+                },
+                {
+                  "category": "risk_word",
+                  "locator": null,
+                  "reason": "出现确定性倾向词『绝对』",
+                  "severity": "warning",
+                  "span": "绝对"
+                }
+              ],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_fact",
+                "model_use": [
+                  {
+                    "allowed": true,
+                    "checksum": "3b975e41488c13458e1f2dec89d7f8121ee273ea4171db17ac8be517e06b32a6",
+                    "id": 4,
+                    "revoked": false
+                  }
+                ],
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "blocker",
+            "stored_status": "blocker"
+          },
+          {
+            "check_kind": "text_identity",
+            "id": 306,
+            "input_hash": "6e1e6015f6a0ff6f34c8132d2639b96a0a3258736d845ea76b3fdd7542c5bc3c",
+            "is_current": true,
+            "report": {
+              "coverage": {
+                "advisory_critic": {
+                  "can_override_deterministic": false,
+                  "reason": null,
+                  "rubric": [
+                    {
+                      "dimension": "factual_grounding",
+                      "reason": "严格遵守事实与推测分离的边界，开篇明确标注场景为假设且无实际效果保证，未捏造未经测试的数据或基准指标。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "engineering_fit",
+                      "reason": "内容紧扣AI工程化落地的评测、降级、冲突处理与转人工等机制，符合技术负责人与开发者的实践讨论需求。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "clarity",
+                      "reason": "结构严谨平实，从业务需求拆解到场景设计与门禁清单，行文逻辑清晰连贯。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "specificity",
+                      "reason": "提供了具体的判定分级（合规交付/降级处理/不可接受错误）、四类边界场景与门禁检查清单，颗粒度明确。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "tradeoffs",
+                      "reason": "深入讨论了引入规则核验、版本校验与人工介入带来的开发维护成本、响应延迟及排队代价，未做绝对化承诺。",
+                      "score": 4
+                    }
+                  ],
+                  "status": "verified"
+                },
+                "deterministic": "persona_rules_and_explicit_phrases",
+                "explicit_phrase_count": 0,
+                "reason": null,
+                "semantic": "verified"
+              },
+              "identity_checksum": "117d969b44bb042ba0b3d2d0d8c34d20c06e4803b45ee885b38578a3ed5225fb",
+              "identity_snapshot_id": 23,
+              "issues": [],
+              "persona_quality": {
+                "coverage": {
+                  "deterministic": "bounded_phrase_structure_citation_rules",
+                  "fact_speculation": "existing_text_fact_check",
+                  "factual_truth": "existing_text_fact_check",
+                  "semantic": "not_run",
+                  "title_body_alignment": "human_review_required"
+                },
+                "critic_dimensions": [
+                  "factual_grounding",
+                  "engineering_fit",
+                  "clarity",
+                  "specificity",
+                  "tradeoffs"
+                ],
+                "human_review_required": true,
+                "issues": [],
+                "payload_hash": "ebdc00fabc2226a870b997e5df4e3647f2f5259955cff38198fcbaf372d1e7fa",
+                "quality_profile_hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+                "quality_profile_ref": "studio.quality.text.technical@1",
+                "status": "pass"
+              },
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "3",
+                "kind": "text_identity",
+                "persona_quality": {
+                  "hash": "719ff66ab9ac7b6313869f277a647a7bf21dbe9d7880f44bc426e2eb673ccd8f",
+                  "ref": "studio.quality.text.technical@1"
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "text_platform",
+            "id": 307,
+            "input_hash": "c6a8bfac881892edd0acc087653889bb52f1661960bc05e3e95bc3c12a97d54a",
+            "is_current": true,
+            "report": {
+              "channel": "baijia",
+              "content_form": "article",
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "profile_version_id": 19,
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_platform",
+                "profile": {
+                  "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                  "checksum_origin": "stored",
+                  "form": {
+                    "artifact_kind": "text",
+                    "channel": "baijia",
+                    "content_form": "article",
+                    "discoverability_profile": null,
+                    "graphic_requirements": {},
+                    "label": "文章",
+                    "media_requirements": {},
+                    "profile_version_id": 19,
+                    "publisher_candidates": [
+                      "publisher.copy"
+                    ],
+                    "renderer_key": "renderer.generic.markdown",
+                    "rule_sets": [],
+                    "source": "profile",
+                    "video_requirements": {},
+                    "workflow_key": "workflow.article.feed"
+                  },
+                  "id": 19,
+                  "version": 2
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "rule_sets": [],
+              "source": "profile"
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          }
+        ],
+        "expected_revision": 0,
+        "master_revision_id": 75
+      },
+      "result_hash": "36dd09838f16c5b2ce52bec8e9ba634cf48a3a8435be88878c77c8d332a0320d",
+      "schema": "stage.checks.result.v1"
+    }
+  },
+  "149": {
+    "id": 149,
+    "run_id": 27,
+    "node_id": "quality",
+    "status": "failed",
+    "error": "stage_checks_blocked",
+    "execution_receipt_json": {
+      "adapter_hash": "68bd3b87e8f87d0b0a08856a8c8767482abb3df447658ab3f062e166da5661ec",
+      "capability_use_id": null,
+      "capability_use_ids": [],
+      "config_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "created_at": "2026-10-19T16:25:20.181334+00:00",
+      "dispatch_certainty": "confirmed_dispatched",
+      "finalized_at": "2026-10-19T16:25:42.746632+00:00",
+      "invocation_key": "auto-accept:5c9da74c53156859dde4017bb3c8de08020f7d7820487d66efea43c2c2f5e309",
+      "method_hash": "e4d6ba47ced86baefb573a6fc08c0650b2d4c5fb6092d98a15289e2b6aba8b4a",
+      "model_route_hash": "0bd4c0d91723158f5cc9fa88fda22d69df7f734c92e7635a79a8fdadc6c915ca",
+      "node_id": "quality",
+      "outcome_state": "failed",
+      "output_contract": {
+        "accepted_content_required": true,
+        "schema": "stage.checks.result.v1"
+      },
+      "output_hash": "05f95e6b77f5920c99eda036ec24a3e798fc3f2b610a4b84fff2245ed0acf515",
+      "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "plugin_key": "stage.checks",
+      "plugin_version": "1",
+      "prepared_by_server": true,
+      "prompt_hash": "34ce92b009e74e9d3a6333c9490c2773a1e22cb735e85ea6d8cb689686487bce",
+      "request_fingerprint": "b3d715d4320233e03deef9086cd9242aa10fa6f66ee6a14bed099b9734fccad8",
+      "request_mode": "automatic",
+      "resolution_hash": "513756129a1334b1da8fbbc5a866069ac7f18b8ec7e5028193373de866f8f551",
+      "runtime_identity_hash": "938071a8f05aec1428b5e203fa195ad6bff7d701fe7763914cefde6394406d86",
+      "schema": "creation_recipe.execution_receipt.v1",
+      "stage_contract_hash": "e79e356889a1cd004fe1d0a0ae92607a54c982d9d0d949e1fab33d64fef58d69",
+      "upstream_hash": "307bd580575a3c05766c348ecbf63fe998531f392568261d1fa8535f5023d97c",
+      "workflow_id": 39,
+      "workflow_run_id": 27
+    },
+    "output_json": {
+      "domain": "checks",
+      "resolution_hash": "513756129a1334b1da8fbbc5a866069ac7f18b8ec7e5028193373de866f8f551",
+      "result": {
+        "blockers": [
+          "text_fact"
+        ],
+        "checks": [
+          {
+            "check_kind": "master_schema",
+            "id": 308,
+            "input_hash": "96b8dc4304e354029bd953d3c43ba4b4531423ebdba71f37248ef38c401e8646",
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "master_schema",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "evidence",
+            "id": 309,
+            "input_hash": "8736d68da7b41688d06e9544dddbc744b868cb8e0f9f51be1148e0aa75abb22c",
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "evidence",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "rights",
+            "id": 310,
+            "input_hash": "3bb4e67a7e29e930ed62fb0abe6bb43eeec1d17b29216ae7273dec87f5d6001c",
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "rights",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "render",
+            "id": 311,
+            "input_hash": "a4d3640e7a17d58fd128c1ba11180737ce0d9f9f6e4e4d397fdc20ac737a4455",
+            "report": {
+              "body_markdown": "很多关于记录的想法，往往不是在整齐的书桌前冒出来的。有时是在窗边看着天色变暗的几分钟，有时是在沙发上偶然翻开一页画册，或是散步途中忽然觉得某种树枝的交错很有意思。但在那一刻，如果要起身走向书桌、挪开堆放的杂物、调整台灯、铺开画纸和工具，整个过程里哪怕只有两三分钟的繁琐准备，最初那种想动笔的心情也常常在这个间隙里悄悄消散。\n\n人们常以为记录的搁置是因为专注力不够，或者灵感还不够强烈，但仔细观察生活里的这些细小停顿，很多时候其实只是念头冒出与真正进入状态之间，存在着一层微小的物理摩擦力。当动手的仪式感被拉得过长，哪怕只是想随手涂写几笔，也会变成一项需要下定决心才能启动的待办事项。\n\n## 膝上与桌角的一块板：从一件便携画架看到的巧思\n\nColossal在2026年10月13日的一篇带商店链接的介绍里，写到了Bill Groot制作的便携画架Lap Easel。它把目光落在了一件很小的事上：画纸不一定每次都要回到同一张书桌。\n\n据介绍，这是一件便携、可调的支撑装置，可放在膝上或桌面。现有资料属于器物推介，无法据此判断稳固、舒适或久用效果。这里吸引人的，是它把一块可以挪动的支撑面带到身边的想法。\n\n它没有重新发明笔和纸，而是提醒人留意纸面放在哪里。对某些想随手画两笔的时刻来说，先找到一块合适的小地方，也许比张罗一整张工作台更接近当时的心情。\n\n## 比如在公园长椅或地毯旁：轻巧支撑带来的场景想象\n\n可以想象这样的画面：秋天午后坐在长椅上，只想在小本子里描一片落叶；或者在家里坐在窗边，画下植物的一小块影子。纸面放在哪里、怎样摆才顺手，需要现场自己判断。这些都是场景设想，没有展示这款画架的实际使用效果。\n\n在这种想象里，记录行为的发生地不再被严格限定在“必须正襟危坐的书房”。当身体无论在哪个角落坐下，都能随时借助一个微小的角度把纸面立起来，动笔这件事就从一项郑重其事的“创作任务”，变成了类似于在路边翻开随身书本一样的自然动作。它不是为了把每个人都推向专业画家的标准，而是让那些零碎的、稍纵即逝的视觉感受，在消散之前能有一个刚好接得住它的倾斜平面。\n\n## 缩短从动念到落笔的距离：工具给日常记录的轻量启发\n\n这类便携小工具的存在，给日常生活带来的最大启发或许不在于工具本身多么巧妙，而在于它提醒我们去审视自己生活里的“启动阻力”。在日常习惯里，一件事情能否持续发生，很多时候并不取决于我们为它立下了多大的决心，而是取决于从“动念头”到“第一笔落下”，中间究竟隔着多少个不必要的动作。\n\n也不必为了这个念头立刻添一件工具。比如把常用的笔夹在本子里，或给小本子留一个容易拿到的位置，都是可以自行尝试的微调。试过觉得不适合，仍然可以按自己的习惯来；偶尔画半页、写一行，也不必给它订成每日任务。\n\n保持对身边事物的好奇与记录的冲动，或许本来就不需要太多的阵仗。只要能把开始的那一步变轻一点，让日常的表达随时随地有处落脚，生活里的很多趣味便自然能够被稳稳记下。",
+              "content_hash": "ad0bf417e729172958eedb20bbd9160d6e48cdf0b2ec4e0c91755741ae7e8010",
+              "origin": "deterministic",
+              "reasons": [],
+              "render_input_hash": "0e7cab86f0af1fedae5a26664f160a25c5e73c32197402bbfe1f81daa2edcb81",
+              "renderer_key": "text.studio.document.v1",
+              "renderer_version": "2",
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "render",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "status": "ready",
+              "unused_asset_ids": [],
+              "warnings": []
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "text_structure",
+            "id": 312,
+            "input_hash": "3587188ad96b914ed53a4e177ba07894f7ca4d28515a811ab1f920f2840d96a4",
+            "report": {
+              "block_count": 13,
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "issues": [],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_structure",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "text_fact",
+            "id": 313,
+            "input_hash": "2041a16ceadfc2778586743c36bbc348c1a731f3fed0501580f90f3580ad21d1",
+            "report": {
+              "coverage": {
+                "deterministic": "complete",
+                "deterministic_issue_count": 1,
+                "fact_count": 1,
+                "model_use_excluded_item_ids": [],
+                "reason": null,
+                "semantic": "verified",
+                "semantic_fact_count": 1
+              },
+              "issues": [
+                {
+                  "category": "date",
+                  "locator": {
+                    "block_id": "legacy-b5",
+                    "end": 20,
+                    "list_item_id": null,
+                    "start": 9
+                  },
+                  "reason": "日期 2026-10-13 不在 FactPack 任何事实的 as_of 范围内",
+                  "severity": "blocker",
+                  "span": "2026年10月13日"
+                }
+              ],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_fact",
+                "model_use": [
+                  {
+                    "allowed": true,
+                    "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                    "id": 6,
+                    "revoked": false
+                  }
+                ],
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "blocker"
+          },
+          {
+            "check_kind": "text_identity",
+            "id": 314,
+            "input_hash": "95ea006cbdbe5444b12624bbe21581c155185c7e2bca51827a9c80110bab23d8",
+            "report": {
+              "coverage": {
+                "advisory_critic": {
+                  "can_override_deterministic": false,
+                  "reason": null,
+                  "rubric": [
+                    {
+                      "dimension": "factual_grounding",
+                      "reason": "严格区分了器物介绍信息与场景设想，明确提示资料局限且未冒充亲测体验。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "naturalness",
+                      "reason": "语调温和舒缓，生活观察细腻自然，叙述流畅无生硬感。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "specificity",
+                      "reason": "对动念、杂物搬移、光线变化等日常细小停顿与物理摩擦力的描写具体可感。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "non_preachy",
+                      "reason": "毫无居高临下的指导或强制建议，明确强调不必定任务、按自己习惯微调即可。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "title_alignment",
+                      "reason": "各级小标题与正文探讨的工具观察、场景设想及日常阻力高度契合。",
+                      "score": 4
+                    }
+                  ],
+                  "status": "verified"
+                },
+                "deterministic": "persona_rules_and_explicit_phrases",
+                "explicit_phrase_count": 0,
+                "reason": null,
+                "semantic": "verified"
+              },
+              "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+              "identity_snapshot_id": 27,
+              "issues": [],
+              "persona_quality": {
+                "coverage": {
+                  "deterministic": "bounded_phrase_structure_citation_rules",
+                  "fact_speculation": "bounded_prediction_label_rule",
+                  "factual_truth": "existing_text_fact_check",
+                  "semantic": "not_run",
+                  "title_body_alignment": "bounded_numeric_detail_only"
+                },
+                "critic_dimensions": [
+                  "factual_grounding",
+                  "naturalness",
+                  "specificity",
+                  "non_preachy",
+                  "title_alignment"
+                ],
+                "human_review_required": true,
+                "issues": [],
+                "payload_hash": "1322301d39269bac3ad28aac4b122b13f4b99bd1d059d214f927b19043cf72e6",
+                "quality_profile_hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                "quality_profile_ref": "studio.quality.text.lifestyle@1",
+                "status": "pass"
+              },
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "3",
+                "kind": "text_identity",
+                "persona_quality": {
+                  "hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                  "ref": "studio.quality.text.lifestyle@1"
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check_kind": "text_platform",
+            "id": 315,
+            "input_hash": "a1bf5845c15d1b2b5b29dbc51ead675026ab9f5162c530f0d5791b12ff5af4b1",
+            "report": {
+              "channel": "baijia",
+              "content_form": "article",
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "profile_version_id": 19,
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_platform",
+                "profile": {
+                  "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                  "checksum_origin": "stored",
+                  "form": {
+                    "artifact_kind": "text",
+                    "channel": "baijia",
+                    "content_form": "article",
+                    "discoverability_profile": null,
+                    "graphic_requirements": {},
+                    "label": "文章",
+                    "media_requirements": {},
+                    "profile_version_id": 19,
+                    "publisher_candidates": [
+                      "publisher.copy"
+                    ],
+                    "renderer_key": "renderer.generic.markdown",
+                    "rule_sets": [],
+                    "source": "profile",
+                    "video_requirements": {},
+                    "workflow_key": "workflow.article.feed"
+                  },
+                  "id": 19,
+                  "version": 2
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "rule_sets": [],
+              "source": "profile"
+            },
+            "status": "pass"
+          }
+        ],
+        "checks_pass": false,
+        "checks_reviewable": false,
+        "current_checks": [
+          {
+            "check_kind": "master_schema",
+            "id": 308,
+            "input_hash": "96b8dc4304e354029bd953d3c43ba4b4531423ebdba71f37248ef38c401e8646",
+            "is_current": true,
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "master_schema",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "evidence",
+            "id": 309,
+            "input_hash": "8736d68da7b41688d06e9544dddbc744b868cb8e0f9f51be1148e0aa75abb22c",
+            "is_current": true,
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "evidence",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "rights",
+            "id": 310,
+            "input_hash": "3bb4e67a7e29e930ed62fb0abe6bb43eeec1d17b29216ae7273dec87f5d6001c",
+            "is_current": true,
+            "report": {
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "rights",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "render",
+            "id": 311,
+            "input_hash": "a4d3640e7a17d58fd128c1ba11180737ce0d9f9f6e4e4d397fdc20ac737a4455",
+            "is_current": true,
+            "report": {
+              "body_markdown": "很多关于记录的想法，往往不是在整齐的书桌前冒出来的。有时是在窗边看着天色变暗的几分钟，有时是在沙发上偶然翻开一页画册，或是散步途中忽然觉得某种树枝的交错很有意思。但在那一刻，如果要起身走向书桌、挪开堆放的杂物、调整台灯、铺开画纸和工具，整个过程里哪怕只有两三分钟的繁琐准备，最初那种想动笔的心情也常常在这个间隙里悄悄消散。\n\n人们常以为记录的搁置是因为专注力不够，或者灵感还不够强烈，但仔细观察生活里的这些细小停顿，很多时候其实只是念头冒出与真正进入状态之间，存在着一层微小的物理摩擦力。当动手的仪式感被拉得过长，哪怕只是想随手涂写几笔，也会变成一项需要下定决心才能启动的待办事项。\n\n## 膝上与桌角的一块板：从一件便携画架看到的巧思\n\nColossal在2026年10月13日的一篇带商店链接的介绍里，写到了Bill Groot制作的便携画架Lap Easel。它把目光落在了一件很小的事上：画纸不一定每次都要回到同一张书桌。\n\n据介绍，这是一件便携、可调的支撑装置，可放在膝上或桌面。现有资料属于器物推介，无法据此判断稳固、舒适或久用效果。这里吸引人的，是它把一块可以挪动的支撑面带到身边的想法。\n\n它没有重新发明笔和纸，而是提醒人留意纸面放在哪里。对某些想随手画两笔的时刻来说，先找到一块合适的小地方，也许比张罗一整张工作台更接近当时的心情。\n\n## 比如在公园长椅或地毯旁：轻巧支撑带来的场景想象\n\n可以想象这样的画面：秋天午后坐在长椅上，只想在小本子里描一片落叶；或者在家里坐在窗边，画下植物的一小块影子。纸面放在哪里、怎样摆才顺手，需要现场自己判断。这些都是场景设想，没有展示这款画架的实际使用效果。\n\n在这种想象里，记录行为的发生地不再被严格限定在“必须正襟危坐的书房”。当身体无论在哪个角落坐下，都能随时借助一个微小的角度把纸面立起来，动笔这件事就从一项郑重其事的“创作任务”，变成了类似于在路边翻开随身书本一样的自然动作。它不是为了把每个人都推向专业画家的标准，而是让那些零碎的、稍纵即逝的视觉感受，在消散之前能有一个刚好接得住它的倾斜平面。\n\n## 缩短从动念到落笔的距离：工具给日常记录的轻量启发\n\n这类便携小工具的存在，给日常生活带来的最大启发或许不在于工具本身多么巧妙，而在于它提醒我们去审视自己生活里的“启动阻力”。在日常习惯里，一件事情能否持续发生，很多时候并不取决于我们为它立下了多大的决心，而是取决于从“动念头”到“第一笔落下”，中间究竟隔着多少个不必要的动作。\n\n也不必为了这个念头立刻添一件工具。比如把常用的笔夹在本子里，或给小本子留一个容易拿到的位置，都是可以自行尝试的微调。试过觉得不适合，仍然可以按自己的习惯来；偶尔画半页、写一行，也不必给它订成每日任务。\n\n保持对身边事物的好奇与记录的冲动，或许本来就不需要太多的阵仗。只要能把开始的那一步变轻一点，让日常的表达随时随地有处落脚，生活里的很多趣味便自然能够被稳稳记下。",
+              "content_hash": "ad0bf417e729172958eedb20bbd9160d6e48cdf0b2ec4e0c91755741ae7e8010",
+              "origin": "deterministic",
+              "reasons": [],
+              "render_input_hash": "0e7cab86f0af1fedae5a26664f160a25c5e73c32197402bbfe1f81daa2edcb81",
+              "renderer_key": "text.studio.document.v1",
+              "renderer_version": "2",
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "render",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "status": "ready",
+              "unused_asset_ids": [],
+              "warnings": []
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "text_structure",
+            "id": 312,
+            "input_hash": "3587188ad96b914ed53a4e177ba07894f7ca4d28515a811ab1f920f2840d96a4",
+            "is_current": true,
+            "report": {
+              "block_count": 13,
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "issues": [],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_structure",
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "text_fact",
+            "id": 313,
+            "input_hash": "2041a16ceadfc2778586743c36bbc348c1a731f3fed0501580f90f3580ad21d1",
+            "is_current": true,
+            "report": {
+              "coverage": {
+                "deterministic": "complete",
+                "deterministic_issue_count": 1,
+                "fact_count": 1,
+                "model_use_excluded_item_ids": [],
+                "reason": null,
+                "semantic": "verified",
+                "semantic_fact_count": 1
+              },
+              "issues": [
+                {
+                  "category": "date",
+                  "locator": {
+                    "block_id": "legacy-b5",
+                    "end": 20,
+                    "list_item_id": null,
+                    "start": 9
+                  },
+                  "reason": "日期 2026-10-13 不在 FactPack 任何事实的 as_of 范围内",
+                  "severity": "blocker",
+                  "span": "2026年10月13日"
+                }
+              ],
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_fact",
+                "model_use": [
+                  {
+                    "allowed": true,
+                    "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                    "id": 6,
+                    "revoked": false
+                  }
+                ],
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "blocker",
+            "stored_status": "blocker"
+          },
+          {
+            "check_kind": "text_identity",
+            "id": 314,
+            "input_hash": "95ea006cbdbe5444b12624bbe21581c155185c7e2bca51827a9c80110bab23d8",
+            "is_current": true,
+            "report": {
+              "coverage": {
+                "advisory_critic": {
+                  "can_override_deterministic": false,
+                  "reason": null,
+                  "rubric": [
+                    {
+                      "dimension": "factual_grounding",
+                      "reason": "严格区分了器物介绍信息与场景设想，明确提示资料局限且未冒充亲测体验。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "naturalness",
+                      "reason": "语调温和舒缓，生活观察细腻自然，叙述流畅无生硬感。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "specificity",
+                      "reason": "对动念、杂物搬移、光线变化等日常细小停顿与物理摩擦力的描写具体可感。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "non_preachy",
+                      "reason": "毫无居高临下的指导或强制建议，明确强调不必定任务、按自己习惯微调即可。",
+                      "score": 4
+                    },
+                    {
+                      "dimension": "title_alignment",
+                      "reason": "各级小标题与正文探讨的工具观察、场景设想及日常阻力高度契合。",
+                      "score": 4
+                    }
+                  ],
+                  "status": "verified"
+                },
+                "deterministic": "persona_rules_and_explicit_phrases",
+                "explicit_phrase_count": 0,
+                "reason": null,
+                "semantic": "verified"
+              },
+              "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+              "identity_snapshot_id": 27,
+              "issues": [],
+              "persona_quality": {
+                "coverage": {
+                  "deterministic": "bounded_phrase_structure_citation_rules",
+                  "fact_speculation": "bounded_prediction_label_rule",
+                  "factual_truth": "existing_text_fact_check",
+                  "semantic": "not_run",
+                  "title_body_alignment": "bounded_numeric_detail_only"
+                },
+                "critic_dimensions": [
+                  "factual_grounding",
+                  "naturalness",
+                  "specificity",
+                  "non_preachy",
+                  "title_alignment"
+                ],
+                "human_review_required": true,
+                "issues": [],
+                "payload_hash": "1322301d39269bac3ad28aac4b122b13f4b99bd1d059d214f927b19043cf72e6",
+                "quality_profile_hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                "quality_profile_ref": "studio.quality.text.lifestyle@1",
+                "status": "pass"
+              },
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "3",
+                "kind": "text_identity",
+                "persona_quality": {
+                  "hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                  "ref": "studio.quality.text.lifestyle@1"
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2",
+                "semantic": {
+                  "configured": true,
+                  "model": "gemini-3.8-flash-high",
+                  "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                  "provider": "openai_compatible"
+                }
+              }
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          },
+          {
+            "check_kind": "text_platform",
+            "id": 315,
+            "input_hash": "a1bf5845c15d1b2b5b29dbc51ead675026ab9f5162c530f0d5791b12ff5af4b1",
+            "is_current": true,
+            "report": {
+              "channel": "baijia",
+              "content_form": "article",
+              "coverage": {
+                "deterministic": "complete"
+              },
+              "profile_version_id": 19,
+              "reasons": [],
+              "requirement": {
+                "adapter_version": "2",
+                "implementation": "1",
+                "kind": "text_platform",
+                "profile": {
+                  "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                  "checksum_origin": "stored",
+                  "form": {
+                    "artifact_kind": "text",
+                    "channel": "baijia",
+                    "content_form": "article",
+                    "discoverability_profile": null,
+                    "graphic_requirements": {},
+                    "label": "文章",
+                    "media_requirements": {},
+                    "profile_version_id": 19,
+                    "publisher_candidates": [
+                      "publisher.copy"
+                    ],
+                    "renderer_key": "renderer.generic.markdown",
+                    "rule_sets": [],
+                    "source": "profile",
+                    "video_requirements": {},
+                    "workflow_key": "workflow.article.feed"
+                  },
+                  "id": 19,
+                  "version": 2
+                },
+                "renderer": {
+                  "key": "text.studio.document.v1",
+                  "version": "2"
+                },
+                "schema": "text.master.v2"
+              },
+              "rule_sets": [],
+              "source": "profile"
+            },
+            "status": "pass",
+            "stored_status": "pass"
+          }
+        ],
+        "expected_revision": 0,
+        "master_revision_id": 76
+      },
+      "result_hash": "ea4a00226fe751cefc148fa34990e4dc4c59a751f56deeb6486f53866d5f12ed",
+      "schema": "stage.checks.result.v1"
+    }
+  }
+}

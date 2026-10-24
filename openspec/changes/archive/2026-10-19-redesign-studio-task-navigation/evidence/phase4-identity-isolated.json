@@ -1,0 +1,5019 @@
+{
+  "role": "admin",
+  "userError": false,
+  "listError": false,
+  "detailError": false,
+  "conflict": false,
+  "postDelay": 100,
+  "detailDelay": 0,
+  "collectionRevision": 2,
+  "memberRevision": 2,
+  "archivedCollection": false,
+  "calls": [
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=25",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-opportunities/discovery/status",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-opportunities/discovery/status",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "POST",
+      "body": "{\"expected_revision\":1,\"profile\":{\"positioning\":\"保留的编辑草稿\",\"target_audience\":[\"具体买家\"],\"content_domains\":[\"科技\"],\"expression_style\":{\"tone\":\"plain\"},\"visual_language\":{\"color\":\"blue\"}}}"
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "POST",
+      "body": "{\"expected_revision\":1,\"profile\":{\"positioning\":null,\"content_domains\":[\"科技\"],\"expression_style\":{\"tone\":\"plain\"},\"visual_language\":{\"color\":\"blue\"}}}"
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "POST",
+      "body": "{\"name\":\"试验栏目\"}"
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-opportunities/discovery/status",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/channel-accounts",
+      "query": "",
+      "method": "POST",
+      "body": "{\"name\":\"独立登记测试\",\"platform_channel\":\"wechat\",\"platform_account_id\":\"wxbbbbbbbbbbbbbbbb\"}"
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-opportunities/discovery/status",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-memory",
+      "query": "?scope_type=persona&scope_id=2&status=active&include_ancestors=true&limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-memory/81",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-memory/81/revisions",
+      "query": "?limit=20&offset=0",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/revisions",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/effective",
+      "query": "?persona_id=2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-brands",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-identities/brand-voices",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/channels",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/1/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/3/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/4/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/5/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/6/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/7/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/8/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/9/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/10/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/11/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/12/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/13/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/14/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/15/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/16/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/17/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/18/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/19/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/20/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/21/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/22/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/23/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/24/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/25/series",
+      "query": "",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "unexpected": [],
+  "errors": [],
+  "checks": [
+    "default role directory no edit forms",
+    "directory no revisions or starter invocation",
+    "directory page survives return",
+    "accounts compatibility opens owned independent account directory",
+    "independent account avoids null persona lookup",
+    "legacy persona link exact object",
+    "same object history preserves draft",
+    "409 history comparison keeps prior input",
+    "409 cannot resubmit automatically",
+    "explicit latest load replaces draft",
+    "profile save preserves clear versus inherit",
+    "profile payload revision contract",
+    "pending double click saved once",
+    "sibling registration blocked during series create",
+    "navigation blocked while child pending",
+    "child create did not also register account",
+    "independent account explicit own endpoint",
+    "viewer overview no edit primary",
+    "viewer edit fields and save readonly",
+    "readonly memory remains readable without mutations",
+    "archived ancestor disables profile writes",
+    "permission failure keeps directory readable",
+    "directory failure never says empty success",
+    "invalid object not replaced",
+    "no unexpected API calls",
+    "no page errors"
+  ],
+  "scope": "All API requests intercepted; no formal writes"
+}

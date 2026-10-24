@@ -1,0 +1,8 @@
+/Users/mshengran/.codex/worktrees/guided-product-workspace/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-17 13:59:04,835 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "3254f4f8a279", "method": "POST", "path": "/product-skus/{sku_id}/works", "status": 201, "duration_ms": 113.1}
+2026-10-17 13:59:04,836 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/works "HTTP/1.1 201 Created"
+2026-10-17 13:59:04,838 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "efd45ab9d5f7", "method": "POST", "path": "/product-skus/{sku_id}/works", "status": 409, "duration_ms": 2.1}
+2026-10-17 13:59:04,839 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/works "HTTP/1.1 409 Conflict"
+HISTORICAL_OMITTED_CHANNEL_RECOVERY PASS
+EXPLICIT_NULL_REMAINS_STRICT PASS

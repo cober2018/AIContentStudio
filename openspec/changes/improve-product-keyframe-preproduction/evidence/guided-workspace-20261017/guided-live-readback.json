@@ -1,0 +1,27 @@
+{
+  "sku_id": 1,
+  "code": "SKU-000001",
+  "image_bytes": 1853217,
+  "ready": {
+    "status": "ok",
+    "ready": true,
+    "db": true,
+    "schema": true,
+    "auth": true,
+    "storage": true,
+    "queue": true,
+    "worker": true,
+    "secrets": true,
+    "reasons": [],
+    "provider": "openai_compatible",
+    "optional_capabilities": {
+      "llm": {
+        "provider": "openai_compatible",
+        "required": false,
+        "status": "not_probed"
+      }
+    },
+    "queue_enabled": false,
+    "version": "0.1.0"
+  }
+}

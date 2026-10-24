@@ -3,16 +3,24 @@ import { api } from "../api";
 import { Button, Field, inputClass } from "../components/ui";
 import { stageValue, type StageContract, type StageFieldSchema, type StageMethod, type StageMethods, type StageMethodSelection } from "./creationRecipeState";
 
+// Stage contracts name parameters by machine key; readers need plain words.
+const FIELD_LABELS: Record<string, string> = {
+  instruction: "补充说明", length: "篇幅", candidate_count: "候选数量", tone: "语气", audience: "读者", angle: "角度", format: "格式",
+  voice: "音色", rate: "语速", style: "风格", count: "数量", max_items: "最多条数", language: "语言", aspect: "画幅", duration_seconds: "时长（秒）",
+  fact_mode: "事实模式", evidence_mode: "证据模式", shot_count: "镜头数", density: "信息密度", title: "标题", hook: "开头钩子",
+};
+export function fieldLabel(key: string) { return FIELD_LABELS[key] || key.replace(/_/g, " "); }
+
 export function TypedStageField({ label, schema, value, disabled, onChange }: {
   label: string; schema: StageFieldSchema; value: unknown; disabled: boolean; onChange: (value: unknown) => void;
 }) {
-  const enumLabels: Record<string, string> = { grounded: "既有证据内创作", current: "当前事实（须有新来源）", reflection: "个人观察与感悟", speculation: "明确标注的推测" };
+  const enumLabels: Record<string, string> = { grounded: "既有证据内创作", current: "当前事实（须有新来源）", reflection: "个人观察与感悟", speculation: "明确标注的推测", short: "短", medium: "中", long: "长" };
   if (schema.enum) return <Field label={label}><select className={inputClass} disabled={disabled} value={value == null ? "" : String(value)} onChange={event => onChange(schema.enum?.find(item => String(item) === event.target.value))}><option value="">请选择</option>{schema.enum.map(item => <option key={String(item)} value={item}>{enumLabels[String(item)] || item}</option>)}</select></Field>;
   if (schema.type === "boolean") return <Field label={label}><select className={inputClass} disabled={disabled} value={value === undefined ? "" : String(value)} onChange={event => onChange(event.target.value === "" ? undefined : event.target.value === "true")}><option value="">未设置</option><option value="true">开启</option><option value="false">关闭</option></select></Field>;
   if (schema.type === "integer" || schema.type === "number") return <Field label={label}><input className={inputClass} type="number" step={schema.type === "integer" ? 1 : "any"} min={schema.minimum} max={schema.maximum} disabled={disabled} value={value == null ? "" : String(value)} onChange={event => { const next = event.target.value === "" ? undefined : Number(event.target.value); if (next === undefined || Number.isFinite(next)) onChange(next); }} /></Field>;
   if (schema.type === "object") {
     const object = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
-    return <fieldset className="space-y-2 rounded-lg border p-3" disabled={disabled}><legend className="px-1 text-sm font-medium">{label}</legend>{Object.entries(schema.properties || {}).map(([key, child]) => <TypedStageField key={key} label={key} schema={child} value={object[key] ?? child.default} disabled={disabled} onChange={next => { const copy = { ...object }; if (next === undefined) delete copy[key]; else copy[key] = next; onChange(copy); }} />)}</fieldset>;
+    return <fieldset className="space-y-3 rounded-[14px] border border-ink-200 p-4" disabled={disabled}><legend className="px-1.5 text-[13px] font-medium text-ink-800">{label}</legend>{Object.entries(schema.properties || {}).map(([key, child]) => <TypedStageField key={key} label={(child as { title?: string }).title || fieldLabel(key)} schema={child} value={object[key] ?? child.default} disabled={disabled} onChange={next => { const copy = { ...object }; if (next === undefined) delete copy[key]; else copy[key] = next; onChange(copy); }} />)}</fieldset>;
   }
   if (schema.type === "array" && schema.items) {
     const rows = Array.isArray(value) ? value : [];

@@ -1,0 +1,340 @@
+{
+  "id": 51,
+  "project_id": 34,
+  "content_unit_id": 40,
+  "revision_no": 4,
+  "parent_revision_id": 50,
+  "modality": "video",
+  "channel_id": null,
+  "content_form": null,
+  "payload_schema": "video.master.v2",
+  "payload": {
+    "title": "儿童拖鞋｜棕灰两双装｜实拍任务书草稿（待审阅）",
+    "aspect_ratio": [
+      9,
+      16
+    ],
+    "script": {
+      "blocks": []
+    },
+    "capture_plan": {
+      "schema": "video.capture-plan.v1",
+      "route": "real",
+      "script_structure": "面向为孩子挑选居家地板鞋的家长，一条约28秒短片用四个真实动作帮助判断：按压看可见形变→自然走动看本次跟脚表现→翻底看实际结构→棕灰两双同框看组合与装饰。先拍原片再按实际表现决定旁白，不预设实测结论。耐磨、材质、尺码及优惠尚无核验资料；不能作为已证实卖点。购买入口待提供，不编造。",
+      "script_confirmation": {
+        "source_master_revision_id": 50,
+        "content_hash": "0c0dead833b7ddb4b17cc5f042a5c7d0e835a740ae6dae68c06ff0f916801502"
+      }
+    },
+    "shots": [
+      {
+        "id": "capture-1",
+        "order": 0,
+        "label": "按压鞋面，看清触感表现",
+        "duration_ms": 8000,
+        "purpose": "让买家看见当次按压的实际形变，不凭画面推断材质成分或长期舒适性。",
+        "framing": "close",
+        "production": {
+          "schema": "video.shot-production.v2",
+          "source_mode": "existing"
+        },
+        "filming": {
+          "scene_id": "同一居家自然光场景",
+          "filming_order": 0,
+          "raw_duration_ms": 12000,
+          "action": "把鞋放在桌上，用手指轻压鞋面一次，松手后停留；不夸张拉扯。",
+          "angle": "斜侧近景，手指与鞋面完整可见",
+          "audio_note": "不要求现场旁白；可保留自然声音，后期再配音。",
+          "camera_position": "手机离鞋约一臂距离，双手持稳，靠窗自然光",
+          "evidence_requirement": "只描述本次看见的变化；柔软舒适的程度待实际素材评审。",
+          "focus": "按压前、按压中、松手后的变化都看清",
+          "subject": "家长手和一只棕色鞋"
+        }
+      },
+      {
+        "id": "capture-2",
+        "order": 1,
+        "label": "走两三步，看跟脚表现",
+        "duration_ms": 7000,
+        "purpose": "展示同一双鞋在本次合适尺码下的真实穿着状态，不许承诺所有孩子都跟脚。",
+        "framing": "medium",
+        "production": {
+          "schema": "video.shot-production.v2",
+          "source_mode": "existing"
+        },
+        "filming": {
+          "scene_id": "同一居家自然光场景",
+          "filming_order": 1,
+          "raw_duration_ms": 12000,
+          "action": "日常干燥地面上自然走两三步后停下，保持鞋子和脚后跟在画面中。",
+          "angle": "侧后方中近景，不追拍、不快速转动",
+          "audio_note": "不要求现场旁白；可保留自然声音，后期再配音。",
+          "camera_position": "家长蹲低，手机固定，给走动留出画面空间",
+          "evidence_requirement": "尺码未确认；先核对适合孩子再拍，不为了镜头要求跑跳。",
+          "focus": "脚跟与鞋跟是否分离、走动是否自然",
+          "subject": "孩子小腿以下和棕色鞋"
+        }
+      },
+      {
+        "id": "capture-3",
+        "order": 2,
+        "label": "翻到鞋底，看清实际结构",
+        "duration_ms": 7000,
+        "purpose": "补齐目前缺失的鞋底信息；实拍纹理不等于耐磨测试。",
+        "framing": "close",
+        "production": {
+          "schema": "video.shot-production.v2",
+          "source_mode": "existing"
+        },
+        "filming": {
+          "scene_id": "同一居家自然光场景",
+          "filming_order": 2,
+          "raw_duration_ms": 12000,
+          "action": "家长拿起鞋，慢慢转到鞋底朝镜头，停稳两秒。",
+          "angle": "正对鞋底的近景",
+          "audio_note": "不要求现场旁白；可保留自然声音，后期再配音。",
+          "camera_position": "手机固定，鞋放画面中央，避免逆光",
+          "evidence_requirement": "耐磨尚无测试或参数，不写耐磨承诺，也不做夸张摩擦演示。",
+          "focus": "鞋底完整外形、纹路和边缘清晰",
+          "subject": "一只灰色鞋的真实鞋底"
+        }
+      },
+      {
+        "id": "capture-4",
+        "order": 3,
+        "label": "棕灰同框，看装饰与组合",
+        "duration_ms": 6000,
+        "purpose": "让买家清楚一套是棕色一双加灰色一双，展示可爱装饰，不编造孩子评价。",
+        "framing": "medium",
+        "production": {
+          "schema": "video.shot-production.v2",
+          "source_mode": "existing"
+        },
+        "filming": {
+          "scene_id": "同一居家自然光场景",
+          "filming_order": 3,
+          "raw_duration_ms": 12000,
+          "action": "两双并排摆好，家长先指棕色装饰再指灰色装饰，最后手移开留完整同框。",
+          "angle": "两双同框后轻微靠近装饰，动作一次完成",
+          "audio_note": "不要求现场旁白；可保留自然声音，后期再配音。",
+          "camera_position": "手机从前上方持稳，沿用同一背景和自然光",
+          "evidence_requirement": "只展示实际商品；不加价格优惠、适用年龄或未核对尺寸。",
+          "focus": "四只鞋、两色、真实装饰和轮廓一致",
+          "subject": "棕色和灰色完整两双"
+        }
+      }
+    ],
+    "timeline": {
+      "duration_ms": 28000,
+      "tracks": []
+    },
+    "voice": {
+      "mode": "none"
+    },
+    "subtitles": {
+      "cues": []
+    },
+    "overlays": [],
+    "music": {},
+    "cover": {}
+  },
+  "payload_hash": "f4546c3d9ccb5031c18b17a4f49dacb31f62fecc5d2de8360d9bdefbe173f4d6",
+  "capture_status": {
+    "production_profile_revision_id": 142,
+    "script": {
+      "state": "confirmed",
+      "content_hash": "0c0dead833b7ddb4b17cc5f042a5c7d0e835a740ae6dae68c06ff0f916801502"
+    },
+    "task": {
+      "state": "draft",
+      "content_hash": "97faf0bbf918c749f4587da29b1714cd2cef606a72c1c1baa4eb8d3f32a2c946"
+    },
+    "ready_to_shoot": false,
+    "adoptions": {}
+  },
+  "creative_intent": null,
+  "creative_intent_hash": null,
+  "context_hash": "2878474f8a914caa2f320786a538bf99b9bc958b94531935eb0119ddc40dc924",
+  "identity_snapshot_id": null,
+  "creative_brief_revision_id": 36,
+  "fact_boundary_revision_id": null,
+  "source_kind": "user_edit",
+  "edit_summary": {
+    "product_context_snapshot": {
+      "production_domain": "product",
+      "product_context": {
+        "name": "儿童地板鞋｜棕灰两双装（尺码待确认）",
+        "category": "童鞋／室内地板鞋",
+        "style_ref": null,
+        "production_stages": null,
+        "variant": "棕色1双＋灰色1双，合为两双装售卖（用户确认）；具体尺码、内长待确认。",
+        "description": "用户已指定改做图片中的儿童拖鞋，并确认棕色与灰色组成两双装一起售卖。原图可见棕色与灰色两种鞋、圆头轮廓、绒状外观、鞋面搭带和卡通装饰。图中文字写有“8个月–4岁”“2双装 地板鞋”；其中两双装已由用户确认，月龄范围仍仅为图片标注，尚未核实，不能替代尺码/内长和适用性资料。真实品牌、型号、尺码/内长、具体材质、鞋底结构、洗护方法、价格和售后均待确认。图片外观不证明防滑、保暖、耐磨、安全认证或穿着效果。",
+        "url": null,
+        "claims": [],
+        "selling_points": [
+          "棕色与灰色各1双的两双组合（用户确认）",
+          "绒状外观与卡通装饰（图片可见）"
+        ],
+        "excluded_claims": [
+          "未经核实的8个月至4岁适用范围",
+          "防滑性能",
+          "保暖效果",
+          "具体纤维或鞋底材质",
+          "安全认证或足部发育功效",
+          "虚构价格与优惠",
+          "虚构亲测体验"
+        ],
+        "source_refs": [
+          {
+            "source_id": 98,
+            "checksum": "eed44591ceb88eae4d18058117c179fb76118a9c196a0c1fb323517bf32e5c8e"
+          }
+        ],
+        "material_refs": [
+          {
+            "material_revision_id": 64,
+            "content_hash": "69a38f89530324d572f1cfd2847a3c06910bb77b9927c463221500bbb80a9067",
+            "categories": []
+          }
+        ],
+        "offer": null,
+        "buyer_situation": "居家地毯旁为孩子选择当天鞋子（创作场景草案，非真实使用证言）",
+        "purchase_reason_evidence": "用户确认棕色与灰色两双装售卖；图片支持外观和颜色参考，不支持性能实测结论。",
+        "purchase_reason_source_ids": [],
+        "purchase_reason_material_revision_ids": [],
+        "main_objection": "本轮关注两种颜色及外观是否喜欢，暂不安排尺码问答。",
+        "objection_answer": "同框呈现棕灰两色与各自卡通装饰，使用正面及斜前方可见角度。",
+        "unsuitable_for": "",
+        "seller_advantage": "",
+        "target_duration_seconds": 30,
+        "expression_test": null
+      },
+      "production_profile": {
+        "id": 142,
+        "revision": 3,
+        "settings_hash": "a202fe4c66991421df2bb47ba299108a1b2db3a4e9e95f89f0a4d6435c73c74d",
+        "settings": {
+          "shared_references": [],
+          "production_stages": null,
+          "video_creative_profile": {
+            "schema": "persona.creative.video.v1",
+            "mode": "auto",
+            "skill_ref": "studio.video.director-package@1",
+            "style_preset_ref": "studio.graphic.product-neutral@1",
+            "quality_profile_ref": "studio.quality.video.product@1",
+            "capability": "chat",
+            "model_binding": null,
+            "model_chain": [],
+            "capability_memory_revision_ids": [],
+            "installed_skill_refs": [],
+            "production_stages": {},
+            "parameters": {},
+            "stage_instruction": null,
+            "provenance": {
+              "blueprint_key": null,
+              "blueprint_version": null,
+              "default_recipe_key": "product.video.v1"
+            }
+          },
+          "audio_creative_profile": null,
+          "model_profile_ref": null,
+          "voice_id": null,
+          "work_type": "scene",
+          "creation_mode": "original",
+          "speech_mode": "voiceover",
+          "reference_notes": "首图候选Material61/Revision65，SHA256 5e8d3bacacc229231439e8e80d44fd8fdb8ec3715af86cd290cb7279e22c11d3；用户确认方向、配色。以用户原图Material60/Revision64为商品身份依据，首图仅作场景连续性参考。其余镜头尚待逐图审阅。",
+          "visual_style": "自然居家手机拍摄感，米白裤装、浅木地板、米白地毯；棕色与灰色沿用首张关键帧。用户已确认方向和配色。",
+          "continuity_notes": "同一孩子小腿与裤装、同一成年家长右手、同一地毯和光线。棕色一双一直穿在脚上；灰色一双在旁，拿起其中一只展示装饰再放回。不切换鞋色、不翻出未知鞋底结构。",
+          "comparison_notes": "",
+          "dialogue": "",
+          "dialogue_language": "中文",
+          "music_direction": "不使用配乐",
+          "ae_packaging": false,
+          "target_duration_seconds": null,
+          "estimated_voice_duration_seconds": null,
+          "product_production_methods": {
+            "video": {
+              "schema": "production.methods.manifest.v1",
+              "stages": [],
+              "legacy_stage_ids": [
+                "research",
+                "script",
+                "voice",
+                "storyboard",
+                "sound_edit",
+                "picture_edit",
+                "subtitle_color",
+                "packaging",
+                "finish",
+                "review"
+              ],
+              "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.",
+              "manifest_hash": "ab3aa33a02131ccdf1e6ced11c6d2a4b11a094686d7babe30c9296d723436d75"
+            }
+          }
+        }
+      },
+      "creative_profiles": {
+        "video_creative_profile": {
+          "schema": "persona.creative.video.v1",
+          "mode": "auto",
+          "skill_ref": "studio.video.director-package@1",
+          "style_preset_ref": "studio.graphic.product-neutral@1",
+          "quality_profile_ref": "studio.quality.video.product@1",
+          "capability": "chat",
+          "model_binding": null,
+          "model_chain": [],
+          "capability_memory_revision_ids": [],
+          "installed_skill_refs": [],
+          "production_stages": {},
+          "parameters": {},
+          "stage_instruction": null,
+          "provenance": {
+            "blueprint_key": null,
+            "blueprint_version": null,
+            "default_recipe_key": "product.video.v1"
+          }
+        },
+        "product_production_stages": {},
+        "product_production_methods": {
+          "video": {
+            "schema": "production.methods.manifest.v1",
+            "stages": [],
+            "legacy_stage_ids": [
+              "research",
+              "script",
+              "voice",
+              "storyboard",
+              "sound_edit",
+              "picture_edit",
+              "subtitle_color",
+              "packaging",
+              "finish",
+              "review"
+            ],
+            "execution_rule": "For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.",
+            "manifest_hash": "ab3aa33a02131ccdf1e6ced11c6d2a4b11a094686d7babe30c9296d723436d75"
+          }
+        }
+      },
+      "sku": {
+        "sku_id": 3,
+        "sku_revision_id": 3,
+        "plan_id": null
+      },
+      "checksum": "c0acac8bab48bf375e5d366d58ecd8ce510bee86a3607bbe356821ed16451a5d"
+    }
+  },
+  "origin_workflow_run_id": null,
+  "origin_project_output_id": null,
+  "readiness": {
+    "state": "incomplete_context",
+    "reasons": [
+      "evidence_missing"
+    ]
+  },
+  "assets": [],
+  "evidence": [],
+  "created_by": "admin@studio.local",
+  "created_at": "2026-10-18T11:58:18.210575"
+}

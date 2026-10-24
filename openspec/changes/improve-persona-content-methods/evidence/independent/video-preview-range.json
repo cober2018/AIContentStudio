@@ -1,0 +1,59 @@
+{
+  "environment": "in-memory SQLite; synthetic accepted transport fixture; actual 31MiB MP4 container; no formal data or model calls",
+  "checks": [
+    {
+      "check": "session exact material path and no-cookie rejected",
+      "status": "pass",
+      "without_cookie": 401,
+      "session_status": 200
+    },
+    {
+      "check": "bytes=0-1023",
+      "status": "pass",
+      "http": 206,
+      "content_range": "bytes 0-1023/32505856",
+      "bytes": 1024
+    },
+    {
+      "check": "bytes=1048576-1049599",
+      "status": "pass",
+      "http": 206,
+      "content_range": "bytes 1048576-1049599/32505856",
+      "bytes": 1024
+    },
+    {
+      "check": "bytes=-512",
+      "status": "pass",
+      "http": 206,
+      "content_range": "bytes 32505344-32505855/32505856",
+      "bytes": 512
+    },
+    {
+      "check": "full 31MiB stream hash / invalid Range",
+      "status": "pass",
+      "bytes": 32505856,
+      "sha256": "b31d2fb7bcc970fe14abcea798e00748894176b7fb96e850ba35b073aa940813",
+      "invalid_range_status": 416,
+      "ffprobe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_type": "video",
+            "width": 320,
+            "height": 240
+          }
+        ],
+        "format": {
+          "duration": "1.000000"
+        }
+      }
+    },
+    {
+      "check": "integrity mismatch and revoked asset blocked after session",
+      "status": "pass",
+      "mismatch": 409,
+      "revoked": 409
+    }
+  ]
+}

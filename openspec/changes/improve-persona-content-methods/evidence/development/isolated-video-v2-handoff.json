@@ -1,0 +1,42 @@
+{
+  "steps": [
+    {
+      "node": "script",
+      "run_status": 200,
+      "adopt_status": 200
+    },
+    {
+      "node": "shots",
+      "run_status": 200,
+      "adopt_status": 200
+    },
+    {
+      "node": "master",
+      "run_status": 200,
+      "adopt_status": 200
+    },
+    {
+      "node": "prepare",
+      "run_status": 200
+    }
+  ],
+  "master_request_has_v2_detail": true,
+  "prepare_request_has_v2_detail": true,
+  "package_has_v2_detail": true,
+  "director_keys": [
+    "accepted_shot_plans",
+    "aspect_ratio",
+    "candidate_ready",
+    "cover",
+    "final_render_required",
+    "music",
+    "overlays",
+    "script",
+    "shots",
+    "subtitles",
+    "timeline",
+    "title",
+    "voice"
+  ],
+  "director_music": {}
+}

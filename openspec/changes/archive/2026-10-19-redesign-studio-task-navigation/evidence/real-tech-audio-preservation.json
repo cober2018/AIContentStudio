@@ -1,0 +1,20 @@
+{
+  "voice_binding_unchanged": true,
+  "multimedia_config_hash_unchanged": true,
+  "components": {
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ModelRegistrationSettings.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ModelRoutingSettings.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/CapabilitySettings.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/GuidedProductionProfile.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/ProductionWorkspace.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/GuidedProductionGoal.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/PersonaCreativeConfig.tsx": true,
+    "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/CapabilityMemoryPanel.tsx": true
+  },
+  "published": {
+    "items": [],
+    "total": 0,
+    "limit": 20,
+    "offset": 0
+  }
+}

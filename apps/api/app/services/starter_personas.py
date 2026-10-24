@@ -38,29 +38,15 @@ def _node(node_id, kind, plugin, stage_schema, config, label):
 def _definition(modality: str, blueprint_key: str) -> dict:
     if modality == "text":
         nodes = [
-            _node("evidence", "AI", "stage.creative.method", "stage.creative.method.v1",
-                  {"output_schema": "research.brief.v1", "instruction": "整理可核验来源、事实、时间边界和未知项。", "method": _method("studio.research.evidence-brief@1")}, "证据简报"),
-            _node("angles", "AI", "stage.creative.method", "stage.creative.method.v1",
-                  {"output_schema": "creative.angles.v1", "instruction": "提出可解释、可比较的内容角度。", "method": _method("studio.research.angle-lab@1")}, "角度实验"),
-            _node("outline", "AI", "stage.creative.method", "stage.creative.method.v1",
-                  {"output_schema": "content.outline.v1", "instruction": "把已接受的角度组织成结构化大纲。", "method": _method("studio.text.outline@1")}, "内容大纲"),
-            _node("draft", "AI", "stage.master.propose", "stage.master.propose.v1",
-                  {"purpose": "生成第一版 Master 候选", "instruction": "基于已接受的证据、角度和大纲生成候选内容。", "candidate_count": 3, "length": "long", "method": _method("studio.text.longform@1")}, "初稿候选"),
+            {**_node("plan", "AI", "stage.creative.method", "stage.creative.method.v3",
+                  {"output_schema": "article.plan.v1", "instruction": "给出 3 个不同论点的完整写作方案：角度、读者为什么关心、用到的事实、仍未知的部分和大纲。", "candidate_count": 3,
+                   "method": _method("studio.text.article-plan@1")}, "写作方案"), "plugin_version": "3"},
+            _node("write", "AI", "stage.master.propose", "stage.master.propose.v1",
+                  {"purpose": "按选定方案一次写成全文", "instruction": "按已选写作方案写出完整文章：标题、开头和正文一次写完，另给两个备选标题。不要编造数字、版本或来源。",
+                   "candidate_count": 1, "length": "long", "method": _method("studio.text.article-write@1")}, "成稿"),
             _node("quality", "Rule", "stage.checks", "stage.checks.v1", {}, "质量检查"),
-            _node("refine", "AI", "stage.master.propose", "stage.master.propose.v1",
-                  {"purpose": "精修 Master 候选", "instruction": "保留已验证事实，改善结构、具体性和角色表达。", "candidate_count": 2, "length": "long", "method": _method("studio.text.humanize@1")}, "精修候选"),
-            _node("title", "AI", "stage.creative.method", "stage.creative.method.v1",
-                  {"output_schema": "creative.angles.v1", "instruction": "生成与正文一致、不过度夸张的标题和开头方向。", "method": _method("studio.text.title-hook@1")}, "标题与开头"),
-            _node("final", "AI", "stage.master.propose", "stage.master.propose.v1",
-                  {"purpose": "整合最终 Master", "instruction": "采用已接受的精修正文和标题/开头候选，保留全部精确引用与事实边界；不要增加新的事实。生成完整最终稿等待人工接受。",
-                   "candidate_count": 1, "length": "long", "method": _method("studio.text.longform@1")}, "最终稿确认"),
-            _node("final_quality", "Rule", "stage.checks", "stage.checks.v1", {}, "最终稿质量检查"),
         ]
-        edges = [{"from": "evidence", "to": "angles"}, {"from": "angles", "to": "outline"},
-                 {"from": "outline", "to": "draft"}, {"from": "draft", "to": "quality"},
-                 {"from": "quality", "to": "refine"}, {"from": "refine", "to": "title"},
-                 {"from": "refine", "to": "final"}, {"from": "title", "to": "final"},
-                 {"from": "final", "to": "final_quality"}]
+        edges = [{"from": "plan", "to": "write"}, {"from": "write", "to": "quality"}]
         for node in nodes:
             if node["kind"] == "AI":
                 node["config"]["fact_mode"] = "current" if blueprint_key == "starter.lifestyle-observer.v1" else "grounded"
@@ -78,19 +64,12 @@ def _definition(modality: str, blueprint_key: str) -> dict:
         edges = [{"from": "visual", "to": "cards"}, {"from": "cards", "to": "master"}, {"from": "master", "to": "quality"}]
     else:
         nodes = [
-            _node("script", "AI", "stage.creative.method", "stage.creative.method.v1",
-                  {"output_schema": "content.outline.v1", "instruction": "生成角色化视频脚本结构，明确事实、旁白和视觉意图。", "method": _method("studio.video.script@1")}, "视频脚本"),
-            _node("shots", "AI", "stage.creative.method", "stage.creative.method.v1",
-                  {"output_schema": "video.shot-plan.v1", "instruction": "把已接受脚本拆成镜头、旁白、字幕和素材计划。", "method": _method("studio.video.shot-director@1")}, "镜头计划"),
             _node("master", "AI", "stage.master.propose", "stage.master.propose.v1",
-                  {"purpose": "确认导演计划的Video Master", "instruction": "把接受的脚本和镜头计划转成完整video.master.v2提案，保留稳定镜头/脚本/时间线结构；只引用已经提供的精确素材，缺少素材明确保留待准备状态，不假装已有最终MP4。",
-                   "candidate_count": 1, "length": "medium", "method": _method("studio.video.script@1")}, "导演稿确认"),
-            {**_node("prepare", "Tool", "stage.professional.prepare", "stage.professional.prepare.v2",
-                  {"objective": "准备交给外部专业执行器的视频导演包", "method": _method("studio.video.director-package@1"),
-                   "package_schema": "director.video.v1", "prepare_execution": False, "constraints": [], "acceptance_criteria": [], "output_kind": "video", "output_mime": "video/mp4", "output_role": "final-render", "output_count": 1, "output_max_bytes": 31457280}, "专业执行准备"), "plugin_version": "2"},
+                  {"purpose": "生成分镜表导演稿", "instruction": "一次写完整张分镜表：一行一个镜头，按播放顺序。每行写信息点、画面（景别、主体、动作、场景、光线）、运镜、台词（实际念的原话，标明旁白/口播/对白，没有就写无台词）、声音、备注和估计时长。一个镜头只讲一件事；信息点写要点，台词写原话，两列不重复。不要返回编号、引用或素材 id，也不要声称已经生成 MP4。",
+                   "candidate_count": 1, "length": "medium", "method": _method("studio.video.script@1")}, "导演稿"),
         ]
-        edges = [{"from": "script", "to": "shots"}, {"from": "script", "to": "master"},
-                 {"from": "shots", "to": "master"}, {"from": "master", "to": "prepare"}]
+        # The edit task builds its own director package from the saved master, so no separate prepare stage.
+        edges = []
     return {"nodes": nodes, "edges": edges, "visual_order": [node["id"] for node in nodes]}
 
 
@@ -120,6 +99,25 @@ def audio_definition(blueprint_key: str, *, alignment: bool = False) -> dict:
         edges.extend([{"from": "tts", "to": "audio_asr"}, {"from": "audio_asr", "to": "audio_quality"}])
     return {"nodes": nodes, "edges": edges,
         "visual_order": [node["id"] for node in nodes]}
+
+
+
+def method_trial_definition(modality, blueprint_key, *, audio=False):
+    """Opt-in work recipe; saved Persona defaults and the v1 templates stay untouched."""
+    from .studio_creative_catalog import PERSONA_METHOD_TRIAL_KEYS
+
+    definition = deepcopy(audio_definition(blueprint_key, alignment=True) if audio else _definition(modality, blueprint_key))
+    for node in definition["nodes"]:
+        config = node["config"]
+        ref = (config.get("method") or {}).get("skill_ref", "")
+        key = ref.rsplit("@", 1)[0]
+        if key in PERSONA_METHOD_TRIAL_KEYS:
+            config["method"]["skill_ref"] = key + "@2"
+        if node["plugin"] == "stage.creative.method" and node["plugin_version"] == "1":
+            node.update(plugin_version="2", stage_schema="stage.creative.method.v2")
+            if config.get("output_schema") in {"graphic.card-plan.v1", "video.shot-plan.v1"}:
+                config["output_schema"] = config["output_schema"].replace(".v1", ".v2")
+    return definition
 
 
 def _profile_payload(item: dict, key: str) -> dict:

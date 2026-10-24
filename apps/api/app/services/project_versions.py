@@ -98,8 +98,8 @@ def project_versions(db: Session, project_id: int) -> dict:
     for snapshot_id, related_units in sorted(snapshot_units.items()):
         snapshot = db.get(IdentitySnapshot, snapshot_id)
         if snapshot:
-            identity_snapshots.extend(_item("identity_snapshot", snapshot.id, None, "frozen", snapshot.checksum, snapshot.created_at, any(unit.identity_snapshot_id == snapshot.id and unit.status != "archived" for unit in units), unit_id) for unit_id in sorted(related_units))
-    identity_states = [_item("identity_state", unit.id, None, "legacy_identity", None, unit.created_at, unit.status != "archived", unit.id) for unit in units if unit.identity_snapshot_id is None]
+            identity_snapshots.extend(_item("identity_snapshot", snapshot.id, None, "frozen", snapshot.checksum, snapshot.created_at, any(unit.identity_snapshot_id == snapshot.id and not unit.lifecycle_readonly for unit in units), unit_id) for unit_id in sorted(related_units))
+    identity_states = [_item("identity_state", unit.id, None, "legacy_identity", None, unit.created_at, not unit.lifecycle_readonly, unit.id) for unit in units if unit.identity_snapshot_id is None]
     materials = []
     for ref in refs:
         revision = db.get(MaterialRevision, ref.material_revision_id)

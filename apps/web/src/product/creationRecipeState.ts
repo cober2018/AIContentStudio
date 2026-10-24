@@ -83,6 +83,8 @@ export function prepareStageRequest<P extends { resolution_hash: string | null }
 
 export function restoreStageRequest(result: { run_id?: unknown; status?: unknown; receipt?: Record<string, unknown>; resolved_stage?: { override?: Record<string, unknown> } }): StageRequest | null {
   if (!["running", "unknown"].includes(String(result.status)) || typeof result.run_id !== "number") return null;
+  // An unknown attempt the user gave up is settled; keeping its request would hold the page in read-back mode.
+  if (result.receipt?.abandoned) return null;
   const key = result.receipt?.invocation_key;
   const hash = result.receipt?.resolution_hash;
   if (typeof key !== "string" || typeof hash !== "string" || !/^[a-f0-9]{64}$/.test(hash)) return null;

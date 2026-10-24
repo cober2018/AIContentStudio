@@ -1,0 +1,19 @@
+{"check":"A14 actual workflow role/archive/deleted readonly expression","status":"pass","cases":8}
+{"check":"A14 native TTS v4: rerun disabled and handler refuses new POST; comment remains allowed","status":"pass"}
+{"check":"A14 professional side effect: rerun disabled and handler refuses new POST; comment remains allowed","status":"pass"}
+{"check":"A14 missing permission projection: rerun disabled and handler refuses new POST; comment remains allowed","status":"pass"}
+{"check":"A14 allowed rerun posts exact current receipt once","status":"pass"}
+{"check":"A14 running: all feedback actions disabled; no new rerun POST","status":"pass"}
+{"check":"A14 unknown: all feedback actions disabled; no new rerun POST","status":"pass"}
+{"check":"A14 non-current attempt cannot expose writable feedback action","status":"pass"}
+{"check":"A14 read-only role: feedback buttons and handlers remain read-only","status":"pass"}
+{"check":"A14 archived project/unit: feedback buttons and handlers remain read-only","status":"pass"}
+{"check":"A14 historical proposal: exact GET only; child receives readOnly=true","status":"pass"}
+{"check":"A14 historical domain: exact GET only; child receives readOnly=true","status":"pass"}
+{"check":"A14 uncertain feedback retry preserves identical key, hashes and decision","status":"pass"}
+{"check":"A14 located comment remains bound to exact version while rerun is disallowed","status":"pass"}
+{"check":"A14 parent comment callback only rereads; rerun marker set only for explicit rerun decision","status":"pass"}
+{"file":"apps/web/src/product/StageHistoryPanel.tsx","sha256":"5b47c2cb61c1158da0b7549312edfa9a41955459f86f3e865c3b6e8f92629de4"}
+{"file":"apps/web/src/product/stageProposalState.ts","sha256":"bfc997ae1d4c60da8d4c0ea0250be105b0d2a061117f5ca42112f48abcd23691"}
+{"file":"apps/web/src/product/CreationRecipePanel.tsx","sha256":"520f81f6ca8b7df96848625654d32ea4a4bc3ed3236d77e6d5a21b85f0f4c63f"}
+{"file":"apps/web/src/product/useProductionWorkflow.ts","sha256":"662726d2600354fa3ff2585a925eb1326877bf32294b621a16042d0e27b61239"}

@@ -1,0 +1,8 @@
+- [x] 1.1 List API with filters, sorting, pagination (usage shown per material in the drawer, not as list counts).
+- [x] 1.2 Thumbnail / poster / 8-frame strip / waveform derivative endpoint with content-hash cache.
+- [x] 2.1 素材库 page: grid and list, filters, empty and loading states.
+- [x] 2.2 Detail drawer: preview (stream session, video/audio playback), versions, rights, usage, attach to project, collections.
+- [x] 2.3 Drive folders: register, browse, link with rights (live browse untested: drive unplugged on 2026-10-22).
+- [x] 2.4 Collections (`matlib0001`).
+- [x] 3.1 Navigation entry; legacy page moved to `/legacy/materials`.
+- [ ] 4.1 Full API test suite run; README.

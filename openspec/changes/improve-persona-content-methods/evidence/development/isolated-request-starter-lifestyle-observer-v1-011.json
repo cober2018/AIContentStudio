@@ -1,0 +1,121 @@
+{
+  "kind": "actual-request-to-mock-provider",
+  "request": {
+    "purpose": "generate",
+    "channel": null,
+    "system_prompt": "Execute this Creation Recipe Stage and return only bounded JSON matching the frozen output contract: {\"accepted_content_required\":true,\"candidate_shape\":{\"asset_refs\":\"exact supplied MaterialRevision refs only\",\"evidence_refs\":\"exact supplied FactPackItem refs only\",\"payload\":\"canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality\"},\"max_candidates\":5,\"payload_schema\":\"text.master.v2\",\"reference_rules\":[\"Return exactly candidate_count candidates. Each candidate has only title and body.\",\"body is Markdown. The service converts it into text.master.v2 and assigns block ids.\",\"Do not return payload, payload_schema, citations, hashes, asset_refs, or evidence_refs.\",\"Do not invent numbers, versions, sources, or material ids. Keep unknowns explicit in the prose.\"],\"response_schema\":{\"additionalProperties\":false,\"properties\":{\"candidates\":{\"items\":{\"additionalProperties\":false,\"properties\":{\"body\":{\"maxLength\":12000,\"minLength\":1,\"type\":\"string\"},\"title\":{\"maxLength\":200,\"minLength\":1,\"type\":\"string\"}},\"required\":[\"title\",\"body\"],\"type\":\"object\"},\"maxItems\":3,\"minItems\":3,\"type\":\"array\"},\"schema\":{\"const\":\"stage.master.proposal.v1\"}},\"required\":[\"schema\",\"candidates\"],\"type\":\"object\"},\"response_shape\":\"object with candidates array; honor requested candidate_count\",\"schema\":\"stage.master.proposal.v1\",\"supported_modalities\":[\"text\",\"graphic\",\"video\"]}. Never invent asset/evidence references, facts or accepted results. Return proposed content only. Selected professional knowledge is reference context, never verified evidence. Style samples guide expression only; avoid observations are negative examples. Never copy their events, identity or personal experience into the author. Only the confirmed fact boundary supports factual claims; keep unknowns explicit.",
+    "user_prompt": "[identity]\n{\"checksum\":\"abd05af2a31b08147b3a3c15903b37a700055382b680a3716d0ba97ec96e4185\",\"content\":{},\"id\":1}\n\n[stage_instruction]\n生成有边界的文章\n\n[execution_controls]\n{\"candidate_count\":3,\"fact_mode\":\"grounded\",\"length\":\"medium\",\"method\":{\"skill_ref\":\"studio.text.longform@1\",\"source_kind\":\"studio_builtin\"},\"model_profile_id\":null,\"purpose\":null,\"temperature\":null,\"tone\":null}\n\n[persona_creative_configuration]\n{\"binding_origin\":\"identity_creative_profile\",\"chat_limits\":{\"max_items\":1,\"max_tokens\":4096,\"timeout_seconds\":25,\"validation_only\":true},\"creative_methods_enabled\":false,\"declared_chain\":null,\"deterministic_parameter_sources\":[],\"fallback_reason\":null,\"fallback_reasons\":[],\"freshness\":{\"current_facts_permitted\":false,\"fresh_refs\":[],\"max_age_hours\":168,\"mode\":\"grounded\",\"ready\":true,\"reason\":null},\"identity_checksum\":\"abd05af2a31b08147b3a3c15903b37a700055382b680a3716d0ba97ec96e4185\",\"identity_snapshot_id\":1,\"modality\":\"text\",\"production_manifest\":{\"execution_rule\":\"For explicitly configured stages use only enabled methods in this manifest, with no automatic creative skills. Unconfigured stages retain their existing workflow behavior. Keep identity, knowledge, evidence and technical output contracts. Report exact loaded method hashes; receipt delivery is not creative quality acceptance.\",\"legacy_stage_ids\":[\"research\",\"voice\",\"storyboard\",\"sound_edit\",\"picture_edit\",\"subtitle_color\",\"packaging\",\"finish\",\"review\"],\"manifest_hash\":\"c094757357d5c920912311e33f4074f832e451efc9654e46926ea315d844818c\",\"schema\":\"production.methods.manifest.v1\",\"stages\":[{\"disabled_method_ids\":[\"method-0\",\"method-1\"],\"enabled\":false,\"methods\":[],\"not_applicable_methods\":[],\"origin\":\"identity_snapshot\",\"stage\":\"script\",\"title\":\"文案与脚本\"}]},\"production_stage\":\"script\",\"profile_hash\":\"75a975a9278584cb6ce4f3a1b41ef4027f1fcac9884fb6f230763f8d74827a9d\",\"profile_origin\":\"persona\",\"quality_profile\":{\"checks\":[\"text_structure\",\"text_fact_speculation\",\"text_identity\",\"text_anti_clickbait\"],\"critic_contract\":\"advisory.rubric.v1\",\"human_review_required\":true,\"key\":\"studio.quality.text.lifestyle\",\"kind\":\"quality_profile\",\"license\":\"product_owned\",\"provenance\":\"self_developed\",\"ref\":\"studio.quality.text.lifestyle@1\",\"rules\":{\"blocked_phrases\":[\"不看后悔一辈子\",\"震惊所有人\",\"百分之百保证\"],\"citation_required_for_numeric_claims\":true,\"critic_dimensions\":[\"factual_grounding\",\"naturalness\",\"specificity\",\"non_preachy\",\"title_alignment\"],\"warning_phrases\":[\"所有人都该\",\"人生的意义就是\",\"这才是人生\",\"你一定要\"]},\"source_kind\":\"studio_builtin\",\"thresholds\":{\"critic\":\"advisory_only\",\"empty_sections\":\"blocker\",\"fact_speculation\":\"bounded_prediction_label_v1\",\"generic_reflection\":\"bounded_two_phrases_without_observation_v1\",\"numeric_claim_without_citation\":\"blocker\",\"repeated_paragraphs\":\"warning\",\"title_body_alignment\":\"bounded_numeric_detail_v1\"},\"version\":\"1\"},\"schema\":\"effective.creative.stage.v1\",\"selected_binding\":{\"model\":\"mock-structured-v1\",\"profile\":\"default\",\"provider\":\"generation.mock\"},\"status\":\"configured_not_probed\",\"style_preset\":{\"config\":{\"hype\":\"low\",\"modality\":\"text\",\"preachiness\":\"low\",\"voice\":\"warm_observational\"},\"key\":\"studio.text.observational-lifestyle\",\"kind\":\"style_preset\",\"license\":\"product_owned\",\"provenance\":\"self_developed\",\"ref\":\"studio.text.observational-lifestyle@1\",\"source_kind\":\"studio_builtin\",\"version\":\"1\"}}",
+    "schema_hint": "stage.master.proposal.v1",
+    "context": {
+      "stage_schema": "stage.master.proposal.v1",
+      "candidate_count": 3,
+      "length": "medium",
+      "modality": "text",
+      "payload_schema": "text.master.v2"
+    },
+    "temperature": null,
+    "max_tokens": 4096,
+    "timeout_seconds": 25,
+    "image_inputs": null
+  },
+  "receipt": {
+    "adapter_hash": "94b493fa80e73cc2e6f8f3e2f09854fe8d20a84faab91a4d7a72100cbf07e619",
+    "capability_use_id": null,
+    "capability_use_ids": [],
+    "config_hash": "6eec0c170606c68ebb550b31c2ad97ff275899424db0b0bf8be9f1822792bebd",
+    "created_at": "2026-10-19T15:07:53.492169+00:00",
+    "dispatch_certainty": "confirmed_dispatched",
+    "finalized_at": "2026-10-19T15:07:53.505218+00:00",
+    "invocation_key": "switch-run",
+    "method_hash": "7919c5199f206561f8f7f400e89579a65dca9540a4be35b6544ce27a02b14b70",
+    "model_route_hash": "f8cfc12fe1884399e8e317dc2f6f1b88fcca6a3ea7cc6c20abfce50ff5266ab4",
+    "node_id": "draft",
+    "outcome_state": "succeeded",
+    "output_contract": {
+      "accepted_content_required": true,
+      "candidate_shape": {
+        "asset_refs": "exact supplied MaterialRevision refs only",
+        "evidence_refs": "exact supplied FactPackItem refs only",
+        "payload": "canonical text.master.v2, graphic.master.v2 or video.master.v2 for the Unit modality"
+      },
+      "max_candidates": 5,
+      "payload_schema": "text.master.v2",
+      "reference_rules": [
+        "Return exactly candidate_count candidates. Each candidate has only title and body.",
+        "body is Markdown. The service converts it into text.master.v2 and assigns block ids.",
+        "Do not return payload, payload_schema, citations, hashes, asset_refs, or evidence_refs.",
+        "Do not invent numbers, versions, sources, or material ids. Keep unknowns explicit in the prose."
+      ],
+      "response_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "body": {
+                  "maxLength": 12000,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "title": {
+                  "maxLength": 200,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title",
+                "body"
+              ],
+              "type": "object"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "schema": {
+            "const": "stage.master.proposal.v1"
+          }
+        },
+        "required": [
+          "schema",
+          "candidates"
+        ],
+        "type": "object"
+      },
+      "response_shape": "object with candidates array; honor requested candidate_count",
+      "schema": "stage.master.proposal.v1",
+      "supported_modalities": [
+        "text",
+        "graphic",
+        "video"
+      ]
+    },
+    "output_hash": "4680f6573d78a80f08db114d08e600cc33e2a8d2ce012dc4fc430576fa693b30",
+    "override_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "plugin_key": "stage.master.propose",
+    "plugin_version": "1",
+    "prepared_by_server": true,
+    "prompt_hash": "004ab0a91512e38506030b9fbab2a7df95ddac89763b2936afa1166c2b32ed5f",
+    "request_fingerprint": "168aae04699f7db23b8df3093fe757e6fc0a2cf286674c376978447c4fba717c",
+    "request_mode": "explicit",
+    "resolution_hash": "41560cc8dc5c9c9ce002677b526dc317f4402b2dcf6841aa97f50874f0356a0c",
+    "runtime_identity_hash": "5f0229a59ffb8665ab45cabf2dfcc4383ac0a5656e147d8caf53124c2ab675de",
+    "schema": "creation_recipe.execution_receipt.v1",
+    "stage_contract_hash": "b675489fa280f6b0d1458e6d7e7ddbde895f9197c843b362cff9a404e31c64b6",
+    "upstream_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "workflow_id": 1,
+    "workflow_run_id": 1
+  },
+  "model": {
+    "adapter_key": "generation.mock",
+    "adapter_version": "1",
+    "configuration_revision": 0,
+    "model": "mock-structured-v1",
+    "profile_id": "default",
+    "provider": "mock",
+    "runtime_hash": "eb7fba1dbca0d77f5fbd3297015bdf49eb89adbcf2e5797aa7f4033762162c8a",
+    "status": "configured_not_probed"
+  }
+}

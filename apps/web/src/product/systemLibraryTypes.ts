@@ -52,7 +52,7 @@ export interface FactPackDetail {
 }
 
 export const libraryLabels: Record<LibraryTab, string> = {
-  all: "全部", material: "素材", source: "文档与网页", fact_pack: "Evidence Packs", knowledge_collection: "知识集合",
+  all: "全部", material: "素材", source: "文档与网页", fact_pack: "证据包", knowledge_collection: "知识集合",
 };
 export const libraryTabs = Object.keys(libraryLabels) as LibraryTab[];
 export const materialKinds = ["image", "video", "audio", "chart", "screenshot", "brand", "other"];

@@ -4,7 +4,7 @@ import copy
 from functools import wraps
 
 from fastapi import HTTPException
-from sqlalchemy import func, inspect, select, update
+from sqlalchemy import func, inspect, or_, select, update
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
 from ..models import (
@@ -18,6 +18,7 @@ from ..models import (
     CreativeExecution,
     IdentitySnapshot,
     LearningCandidate,
+    Material,
     MaterialRevision,
     ProjectFactBoundaryRevision,
     SourceDocument,
@@ -42,6 +43,8 @@ from .capability_contracts import (
 )
 from .content_harness.channel_registry import resolve_channel
 from .content_masters import owned_unit
+
+REFERENCE_STYLE_SCHEMAS = frozenset({"persona.reference-style.v1", "persona.reference-style.v2"})
 
 TABLES = ("capability_artifact", "capability_artifact_revision", "capability_use")
 
@@ -170,7 +173,8 @@ def _context(db, user, data, *, mutable=False):
     context["project"] = {"id": project.id}
     if unit.channel_id:
         context["channel"] = _scope(db, user, "channel", {"channel_id": unit.channel_id})
-    snapshot = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
+    product_domain = unit.production_domain == "product"
+    snapshot = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id and not product_domain else None
     if snapshot is not None:
         if snapshot.owner_user_id != user.id or (snapshot.persona_id, snapshot.account_id, snapshot.series_id) != (
             unit.persona_id, unit.account_id, unit.series_id,
@@ -182,7 +186,7 @@ def _context(db, user, data, *, mutable=False):
             entity_id = getattr(snapshot, kind + "_id")
             if entity_id is not None:
                 context[kind] = _scope(db, user, kind, {"id": entity_id}, mutable=mutable)
-    elif unit.identity_snapshot_id is not None:
+    elif unit.identity_snapshot_id is not None and not product_domain:
         raise error("capability_identity_context_missing", 409)
     if execution:
         context["executor"] = _scope(db, user, "executor", {key: getattr(execution, key)
@@ -257,7 +261,7 @@ def _append(db, user, row, content, schema, content_hash, *, previous=None, prov
 
 
 def _style_references(db, content, scope_type):
-    if content.get("content_schema") != "persona.reference-style.v1":
+    if content.get("content_schema") not in REFERENCE_STYLE_SCHEMAS:
         return
     if scope_type != "persona":
         raise error("reference_style_persona_required")
@@ -268,6 +272,59 @@ def _style_references(db, content, scope_type):
         actual_hash = getattr(source, "content_hash", None) if model is MaterialRevision else getattr(source, "sha256", None)
         if source is None or actual_hash != reference["content_hash"]:
             raise error("reference_style_source_changed", 409)
+        if content["content_schema"] == "persona.reference-style.v2":
+            if model is MaterialRevision:
+                material = db.get(Material, source.material_id)
+                if material is None or material.status != "active" or source.model_use_allowed is not True:
+                    raise error("reference_style_model_use_required", 409)
+                if material.kind != observation["modality"] and not (material.kind in {"chart", "screenshot"} and observation["modality"] == "image"):
+                    raise error("reference_style_modality_mismatch")
+                if observation["modality"] in {"audio", "video"} and (
+                        source.duration_ms is None or observation["location"]["end_ms"] > source.duration_ms):
+                    raise error("reference_style_time_out_of_bounds")
+            else:
+                if source.is_archived or (source.metadata_json or {}).get("schema") == "obsidian.excerpt.v1":
+                    raise error("reference_style_source_unavailable", 409)
+                quote = observation["location"].get("quote", "")
+                if observation["modality"] != "text" or not quote or (source.raw_text or "").count(quote) != 1:
+                    raise error("reference_style_passage_invalid")
+
+
+def reference_resources(db, user, persona_id, *, q="", kind="material_revision", limit=30, offset=0, reference_id=None):
+    _ready(db)
+    _scope(db, user, "persona", {"id": persona_id})
+    if kind == "source":
+        query = select(SourceDocument).where(SourceDocument.is_archived.is_(False), SourceDocument.sha256.is_not(None),
+            or_(SourceDocument.metadata_json["schema"].as_string().is_(None),
+                SourceDocument.metadata_json["schema"].as_string() != "obsidian.excerpt.v1"))
+        if reference_id is not None:
+            query = query.where(SourceDocument.id == reference_id)
+        if q:
+            query = query.where(SourceDocument.title.contains(q, autoescape=True))
+        rows = db.scalars(query.order_by(SourceDocument.id.desc()).offset(offset).limit(limit + 1)).all()
+        items = [{"reference": {"kind": "source", "id": row.id, "content_hash": row.sha256},
+                  "title": row.title, "modality": "text", "excerpt": (row.raw_text or "")[:12000],
+                  "public_use_allowed": None, "model_use_allowed": True}
+                 for row in rows[:limit]]
+    else:
+        query = select(MaterialRevision, Material).join(Material, Material.id == MaterialRevision.material_id).where(
+            Material.status == "active", Material.kind.in_(("image", "chart", "screenshot", "audio", "video")),
+            MaterialRevision.model_use_allowed.is_(True))
+        if reference_id is not None:
+            query = query.where(MaterialRevision.id == reference_id)
+        if q:
+            query = query.where(Material.title.contains(q, autoescape=True))
+        rows = db.execute(query.order_by(MaterialRevision.id.desc()).offset(offset).limit(limit + 1)).all()
+        items = [{"reference": {"kind": "material_revision", "id": revision.id, "content_hash": revision.content_hash},
+                  "title": material.title, "modality": "image" if material.kind in {"chart", "screenshot"} else material.kind,
+                  "material_id": material.id, "revision_no": revision.revision_no,
+                  "duration_ms": revision.duration_ms, "mime_type": revision.mime_type,
+                  "model_use_allowed": revision.model_use_allowed, "public_use_allowed": revision.public_use_allowed,
+                  "preview_path": f"/materials/{material.id}/revisions/{revision.id}/raw",
+                  "preview_session_path": f"/materials/{material.id}/revisions/{revision.id}/preview-session"
+                    if revision.source_kind == "external_execution" and revision.mime_type == "video/mp4" else None}
+                 for revision, material in rows[:limit]]
+    return {"items": items, "has_more": len(rows) > limit, "next_offset": offset + len(items) if len(rows) > limit else None}
 
 
 def reference_styles(db, user, persona_id):
@@ -278,7 +335,7 @@ def reference_styles(db, user, persona_id):
         CapabilityArtifact.kind == "creative_pattern",
     ).order_by(CapabilityArtifact.id.desc())).all()
     return {"items": [_detail(db, row) for row in rows if row.scope_json == scope
-        and _revision(db, row).content_json.get("content_schema") == "persona.reference-style.v1"]}
+        and _revision(db, row).content_json.get("content_schema") in REFERENCE_STYLE_SCHEMAS]}
 
 
 def freeze_reference_style(db, user, persona_id, reference):
@@ -296,7 +353,7 @@ def freeze_reference_style(db, user, persona_id, reference):
             or row.status in {"archived", "deprecated"} or frozen.get("kind") != "creative_pattern"
             or frozen.get("scope_type") != "persona" or frozen.get("scope") != scope
             or frozen.get("status") not in {"saved", "pinned"}
-            or revision.content_json.get("content_schema") != "persona.reference-style.v1"):
+            or revision.content_json.get("content_schema") not in REFERENCE_STYLE_SCHEMAS):
         raise error("reference_style_revision_not_adopted", 409)
     if reference.get("content_hash") != revision.content_hash:
         raise error("reference_style_revision_changed", 409)
@@ -385,10 +442,10 @@ def update_revision(db, user, artifact_id, data):
         raise error("capability_archived_read_only", 409)
     _scope(db, user, row.scope_type, row.scope_json, mutable=True)
     content, schema, content_hash = artifact(row.kind, data.get("content"), data.get("args_schema", {}))
-    if previous.content_json.get("content_schema") == "persona.reference-style.v1" and content.get("content_schema") != "persona.reference-style.v1":
+    if previous.content_json.get("content_schema") in REFERENCE_STYLE_SCHEMAS and content.get("content_schema") not in REFERENCE_STYLE_SCHEMAS:
         raise error("reference_style_schema_required")
     _style_references(db, content, row.scope_type)
-    if content.get("content_schema") == "persona.reference-style.v1":
+    if content.get("content_schema") in REFERENCE_STYLE_SCHEMAS:
         row.status = "candidate"
     with db.no_autoflush:
         revision = _append(db, user, row, content, schema, content_hash, previous=previous)
@@ -412,7 +469,7 @@ def lifecycle(db, user, artifact_id, data):
         raise error("capability_scope_confirmation_required", 409)
     if "confirm_scope_broadening" in data and type(data["confirm_scope_broadening"]) is not bool:
         raise error("capability_scope_confirmation_invalid")
-    if previous.content_json.get("content_schema") == "persona.reference-style.v1":
+    if previous.content_json.get("content_schema") in REFERENCE_STYLE_SCHEMAS:
         if (kind, scope) != (row.scope_type, row.scope_json):
             raise error("reference_style_scope_immutable")
         if status in {"saved", "pinned"}:
@@ -512,6 +569,11 @@ def use_artifact(db, user, artifact_id, data):
     context = _context(db, user, data, mutable=True)
     if context.get(row.scope_type) != row.scope_json:
         raise error("capability_scope_not_applicable", 404)
+    if revision.content_json.get("content_schema") == "product.form-preference.v1":
+        from .form_assistance import validate_sku_applicability
+
+        unit_id = data.get("unit_id") or (execution.content_unit_id if data.get("execution_id") else None)
+        validate_sku_applicability(db, user, revision.content_json, context.get("project", {}).get("id"), unit_id)
     rendered, arguments_hash = render(revision.content_json, revision.args_schema_json, data.get("arguments", {}))
     use = CapabilityUse(artifact_revision_id=revision.id, owner_user_id=user.id,
         project_id=context.get("project", {}).get("id"), execution_id=data.get("execution_id"),

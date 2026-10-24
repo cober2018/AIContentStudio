@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from ..models import ContentProject, ContentUnit, Workflow, WorkflowRun, WorkflowStep, WorkflowStepAttempt
 from .content_harness.registry import RegistryError, registry
-from .stage_contracts import StageContractError, canonical, digest
+from .stage_contracts import RESOLVED_STAGE_MAX_BYTES, StageContractError, canonical, digest
 
 _KEY = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,149}\Z")
 _RECEIPT_COLUMNS = frozenset({"input_snapshot_json", "execution_receipt_json"})
@@ -26,10 +26,15 @@ _TERMINAL = frozenset({"succeeded", "failed", "unknown"})
 class StageInvocationError(ValueError):
     """A safe, typed failure before or during a Stage invocation."""
 
-    def __init__(self, code: str, *, status_code: int = 409):
+    def __init__(self, code: str, *, status_code: int = 409, detail: dict | None = None):
         self.code = code
         self.status_code = status_code
+        self.detail = detail or {}
         super().__init__(code)
+
+    @property
+    def body(self) -> dict:
+        return {**self.detail, "code": self.code}
 
 
 def receipt_schema_available(db: Session) -> bool:
@@ -71,7 +76,7 @@ def _assert_access(db: Session, run: WorkflowRun, user, *, mutate: bool = True) 
         project = db.get(ContentProject, unit.project_id) if unit else None
         if unit is None or project is None or project.owner_user_id != user.id:
             raise StageInvocationError("stage_run_not_found", status_code=404)
-        if unit.status == "archived" or project.status == "archived":
+        if unit.lifecycle_readonly or project.status == "archived":
             raise StageInvocationError("stage_run_archived", status_code=409)
     elif workflow.owner_user_id is not None and workflow.owner_user_id != user.id:
         raise StageInvocationError("stage_run_not_found", status_code=404)
@@ -91,7 +96,7 @@ def _validate_resolution(resolved: dict, expected_resolution_hash: str) -> dict:
     if resolved.get("ready") is not True:
         raise StageInvocationError("stage_blocked", status_code=409)
     try:
-        return canonical(resolved)
+        return canonical(resolved, max_bytes=RESOLVED_STAGE_MAX_BYTES)
     except StageContractError as exc:
         raise StageInvocationError("stage_resolution_invalid", status_code=422) from exc
 
@@ -131,8 +136,39 @@ def _same_key_result(db: Session, step: WorkflowStep, invocation_key: str, finge
 def _prior_unresolved(db: Session, step: WorkflowStep) -> bool:
     return any(
         (attempt.status == "unknown" or _receipt_for(attempt).get("dispatch_certainty") == "possibly_dispatched")
+        and not _receipt_for(attempt).get("abandoned")
         for attempt in _attempts(db, step.id)
     )
+
+
+def abandon_unknown_attempt(db: Session, *, project_id: int, unit_id: int, node_id: str, run_id: int, attempt_id: int, user) -> dict:
+    """The user settles an attempt whose outcome cannot be known, so the stage can run again.
+
+    The attempt stays unknown, since that is still the truth; the receipt records who gave it up and when.
+    """
+    from .content_masters import owned_unit
+
+    require_receipt_schema(db)
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    if not user.is_active or user.role not in {"admin", "editor"}:
+        raise StageInvocationError("stage_feedback_readonly", status_code=403)
+    run = db.get(WorkflowRun, run_id)
+    step = db.scalar(select(WorkflowStep).where(WorkflowStep.run_id == run_id, WorkflowStep.node_id == node_id))
+    attempt = db.get(WorkflowStepAttempt, attempt_id)
+    if run is None or run.content_unit_id != unit_id or step is None or attempt is None or attempt.step_id != step.id:
+        raise StageInvocationError("stage_attempt_not_found", status_code=404)
+    _assert_access(db, run, user)
+    if attempt.status != "unknown" or attempt.attempt_no != step.attempt_no:
+        raise StageInvocationError("stage_attempt_not_current", status_code=409)
+    receipt = _receipt_for(attempt)
+    if not receipt.get("abandoned"):
+        receipt["abandoned"] = {"by_user_id": user.id, "at": _safe_time()}
+        attempt.execution_receipt_json = canonical(receipt, max_bytes=128 * 1024)
+        step.status, step.error = "failed", "stage_dispatch_abandoned"
+        run.status, run.error = "failed", "stage_dispatch_abandoned"
+        db.commit()
+    db.refresh(run); db.refresh(step); db.refresh(attempt)
+    return _execution_result(run, step, attempt)
 
 
 def _request_fingerprint(expected_resolution_hash: str, override: dict, automatic: bool = False) -> str:
@@ -197,7 +233,7 @@ def _claim_invocation(
     except StageContractError as exc:
         raise StageInvocationError(str(exc), status_code=422) from exc
     try:
-        snapshot = canonical({"resolved_stage": resolved}, max_bytes=128 * 1024)
+        snapshot = canonical({"resolved_stage": resolved}, max_bytes=RESOLVED_STAGE_MAX_BYTES)
     except StageContractError as exc:
         raise StageInvocationError("stage_receipt_bounds", status_code=422) from exc
     fingerprint = _request_fingerprint(expected_resolution_hash, override, automatic)
@@ -327,6 +363,7 @@ def finalize_invocation(
     status: str,
     dispatch_certainty: str,
     error: str | None = None,
+    provider_failure: dict | None = None,
 ) -> WorkflowStepAttempt:
     """Finalize one claimed attempt exactly once, preserving its frozen input."""
 
@@ -343,7 +380,7 @@ def finalize_invocation(
     if attempt.status != "running":
         raise StageInvocationError("stage_attempt_not_claimed", status_code=409)
     safe_output = canonical(output or {}, max_bytes=128 * 1024)
-    safe_codes = {"stage_proposal_output_invalid", "stage_creative_output_invalid", "stage_provider_failed", "stage_executor_unavailable",
+    safe_codes = {"stage_proposal_output_invalid", "stage_creative_output_invalid", "stage_provider_failed", "stage_provider_rejected", "stage_executor_unavailable",
                   "stage_resolution_changed", "stage_model_runtime_changed", "stage_checks_blocked",
                   "stage_media_generation_failed", "stage_media_dispatch_unavailable",
                   "stage_media_original_task_unresolved", "stage_variant_context_changed"}
@@ -359,6 +396,8 @@ def finalize_invocation(
     receipt["outcome_state"] = "failed_before_dispatch" if dispatch_certainty == "not_dispatched" else status
     receipt["output_hash"] = digest(safe_output)
     receipt["finalized_at"] = _safe_time()
+    if provider_failure:
+        receipt["provider_failure"] = {key: provider_failure.get(key) for key in ("reason", "status", "answered")}
     sealed = db.execute(update(WorkflowStepAttempt).where(
         WorkflowStepAttempt.id == attempt.id, WorkflowStepAttempt.status == "running",
     ).values(output_json=safe_output, output_hash=digest(safe_output), status=status, error=safe_error,
@@ -499,10 +538,10 @@ def execute_stage(
     except Exception as exc:  # provider failures remain explicit and never auto-retry
         from .stage_domain_integrations import StageDomainError
 
-        code = str(exc) if str(exc) in {"stage_proposal_output_invalid", "stage_creative_output_invalid", "stage_provider_failed",
+        code = str(exc) if str(exc) in {"stage_proposal_output_invalid", "stage_creative_output_invalid", "stage_provider_failed", "stage_provider_rejected",
                                        "stage_model_runtime_changed", "stage_resolution_changed"} else "stage_execution_failed"
         certainty = ("not_dispatched" if code in {"stage_model_runtime_changed", "stage_resolution_changed"} else
-                     "confirmed_dispatched" if code in {"stage_proposal_output_invalid", "stage_creative_output_invalid"} else "possibly_dispatched")
+                     "confirmed_dispatched" if code in {"stage_proposal_output_invalid", "stage_creative_output_invalid", "stage_provider_rejected"} else "possibly_dispatched")
         if isinstance(exc, StageDomainError):
             code, certainty = exc.code, exc.dispatch_certainty
         elif step.plugin_key == "stage.graphic.compose":
@@ -510,6 +549,7 @@ def execute_stage(
         finalized = finalize_invocation(
             db, attempt_id=attempt.id, status="failed", dispatch_certainty=certainty,
             error=code, output=exc.output if isinstance(exc, StageDomainError) else None,
+            provider_failure=getattr(exc, "failure", None),
         )
         if certainty == "not_dispatched":
             raise StageInvocationError(code, status_code=409) from exc

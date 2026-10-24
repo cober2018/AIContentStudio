@@ -1,0 +1,277 @@
+{
+  "rows": [
+    {
+      "path": "/home",
+      "width": 1440,
+      "h1": [
+        "今日工作台"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home",
+      "width": 390,
+      "h1": [
+        "今日工作台"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=decisions",
+      "width": 1440,
+      "h1": [
+        "全部待处理"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=decisions",
+      "width": 390,
+      "h1": [
+        "全部待处理"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=projects",
+      "width": 1440,
+      "h1": [
+        "继续创作"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=projects",
+      "width": 390,
+      "h1": [
+        "继续创作"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=opportunities&persona_id=2",
+      "width": 1440,
+      "h1": [
+        "内容机会"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=opportunities&persona_id=2",
+      "width": 390,
+      "h1": [
+        "内容机会"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=activity",
+      "width": 1440,
+      "h1": [
+        "最近项目活动"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=activity",
+      "width": 390,
+      "h1": [
+        "最近项目活动"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=identities",
+      "width": 1440,
+      "h1": [
+        "内容身份提醒"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/home?view=identities",
+      "width": 390,
+      "h1": [
+        "内容身份提醒"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities?persona_id=2",
+      "width": 1440,
+      "h1": [
+        "内容机会"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities?persona_id=2",
+      "width": 390,
+      "h1": [
+        "内容机会"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities?persona_id=2&view=automation",
+      "width": 1440,
+      "h1": [
+        "自动选题运行"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities?persona_id=2&view=automation",
+      "width": 390,
+      "h1": [
+        "自动选题运行"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities/14",
+      "width": 1440,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities/14",
+      "width": 390,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities/14?view=direction",
+      "width": 1440,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities/14?view=direction",
+      "width": 390,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities/14?view=sources",
+      "width": 1440,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 1
+    },
+    {
+      "path": "/opportunities/14?view=sources",
+      "width": 390,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 1
+    },
+    {
+      "path": "/opportunities/14?view=history",
+      "width": 1440,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities/14?view=history",
+      "width": 390,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/opportunities/14?view=advanced",
+      "width": 1440,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 2
+    },
+    {
+      "path": "/opportunities/14?view=advanced",
+      "width": 390,
+      "h1": [
+        "Google Research 探索物理环境 AI Agent 闭环：湿实验中的状态追踪与真实世界反馈挑战"
+      ],
+      "overflow": false,
+      "forms": 2
+    },
+    {
+      "path": "/production?workspace=product",
+      "width": 1440,
+      "h1": [
+        "商品视频工作台"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/production?workspace=product",
+      "width": 390,
+      "h1": [
+        "商品视频工作台"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/production?workspace=persona",
+      "width": 1440,
+      "h1": [
+        "角色内容工作台"
+      ],
+      "overflow": false,
+      "forms": 0
+    },
+    {
+      "path": "/production?workspace=persona",
+      "width": 390,
+      "h1": [
+        "角色内容工作台"
+      ],
+      "overflow": false,
+      "forms": 0
+    }
+  ],
+  "errors": [],
+  "blockedWrites": [],
+  "httpErrors": []
+}

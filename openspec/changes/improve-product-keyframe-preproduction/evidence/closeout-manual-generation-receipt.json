@@ -1,0 +1,71 @@
+{
+  "master_id": 45,
+  "user_selection": "S01–S05全部保留，确认用于下一步图生视频",
+  "images": {
+    "S01": {
+      "material_revision_id": 59,
+      "content_hash": "3849c36fc2c18d156714fea81d3abaa43766fda6b356953c8c7ccfc7b7bf1dfb",
+      "public_use_allowed": false,
+      "model_use_allowed": true
+    },
+    "S02": {
+      "material_revision_id": 60,
+      "content_hash": "1adaea44a1934e95988cb1e8968886c38872bfae83a6e682f73c4117881e4820",
+      "public_use_allowed": false,
+      "model_use_allowed": true
+    },
+    "S03": {
+      "material_revision_id": 61,
+      "content_hash": "1003e068d2146bcc7a43edb4550e8c3c9c9d96c98877fdc0886ff5401bffe69c",
+      "public_use_allowed": false,
+      "model_use_allowed": true
+    },
+    "S04": {
+      "material_revision_id": 62,
+      "content_hash": "e3213733532d211967b9ed754afd0e74f7059e6529ce7e1c066514081c07d5ac",
+      "public_use_allowed": false,
+      "model_use_allowed": true
+    },
+    "S05": {
+      "material_revision_id": 63,
+      "content_hash": "e83e78b484de937be80f7449880964977b0b9194634381f7cb707a1016d59a7b",
+      "public_use_allowed": false,
+      "model_use_allowed": true
+    }
+  },
+  "tasks": [
+    {
+      "shot_id": "S01",
+      "execution_id": 3,
+      "package_id": 6,
+      "state": "prepared"
+    },
+    {
+      "shot_id": "S02",
+      "execution_id": 4,
+      "package_id": 7,
+      "state": "prepared"
+    },
+    {
+      "shot_id": "S03",
+      "execution_id": 5,
+      "package_id": 8,
+      "state": "prepared"
+    },
+    {
+      "shot_id": "S04",
+      "execution_id": 6,
+      "package_id": 9,
+      "state": "prepared"
+    },
+    {
+      "shot_id": "S05",
+      "execution_id": 7,
+      "package_id": 10,
+      "state": "prepared"
+    }
+  ],
+  "reference_downloads_sha256": "5/5 match",
+  "website_generation": "not_started",
+  "new_final": "not_claimed"
+}

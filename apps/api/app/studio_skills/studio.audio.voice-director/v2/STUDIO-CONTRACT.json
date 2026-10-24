@@ -1,0 +1,73 @@
+{
+  "schema": "studio.skill.contract.v1",
+  "key": "studio.audio.voice-director",
+  "version": "2",
+  "ref": "studio.audio.voice-director@2",
+  "kind": "skill",
+  "modality": "audio",
+  "purpose": "把 Persona 声音偏好转成 TTS 方向",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.creative.method.v1",
+    "stage.creative.method.v2"
+  ],
+  "output_schemas": [
+    "audio.voice-direction.v1"
+  ],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [
+    "instruction",
+    "energy",
+    "pause_policy"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "instruction": {
+        "type": "string",
+        "maxLength": 4000
+      },
+      "energy": {
+        "type": "string",
+        "maxLength": 100
+      },
+      "pause_policy": {
+        "type": "string",
+        "maxLength": 200
+      }
+    }
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.audio.calm-engineer@1",
+    "studio.audio.clear-explainer@1",
+    "studio.audio.warm-conversational@1",
+    "studio.audio.reflective-story@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.audio.explainer@1",
+    "studio.quality.audio.conversational@1"
+  ],
+  "references": []
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "path": "/learning",
+    "origin": "/home?view=decisions",
+    "label": "返回来源页面",
+    "pass": true
+  },
+  {
+    "path": "/learning",
+    "origin": "/review?project=3&unit=7",
+    "label": "返回审阅与交付",
+    "pass": true
+  },
+  {
+    "path": "/opportunities",
+    "origin": "/home?view=opportunities",
+    "label": "返回今日工作台",
+    "pass": true
+  },
+  {
+    "path": "/opportunities",
+    "origin": "/projects/3",
+    "label": "返回来源页面",
+    "pass": true
+  }
+]

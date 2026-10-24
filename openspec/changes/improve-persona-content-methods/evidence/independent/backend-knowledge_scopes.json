@@ -1,0 +1,41 @@
+{
+  "legacy_counts": {
+    "text": 1,
+    "graphic": 0,
+    "video": 0
+  },
+  "product_excluded": true,
+  "explicit_counts": {
+    "text": 0,
+    "graphic": 1,
+    "video": 1
+  },
+  "purposes": {
+    "research": {
+      "items": [
+        [
+          "professional"
+        ]
+      ],
+      "blockers": []
+    },
+    "voice": {
+      "items": [
+        [
+          "style"
+        ]
+      ],
+      "blockers": []
+    },
+    "deterministic": {
+      "items": [],
+      "blockers": []
+    }
+  },
+  "revoked_graphic": [
+    null,
+    [
+      "knowledge_model_use_revoked"
+    ]
+  ]
+}

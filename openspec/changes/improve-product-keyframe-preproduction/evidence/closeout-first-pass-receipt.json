@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-16",
+  "code_base": "8539806",
+  "code_status": "three scoped frontend files uncommitted; adjacent work preserved",
+  "brief": {
+    "id": 9,
+    "revision_no": 2
+  },
+  "masters": {
+    "historical": 41,
+    "manual_static_draft": 42,
+    "workflow_adoption": 43,
+    "current_sales_context": 44
+  },
+  "run_id": 18,
+  "attempts": {
+    "script": 84,
+    "shots": 85,
+    "master": 86,
+    "prepare": 87
+  },
+  "model": "gemini-3.8-flash-high",
+  "adoption": "accepted_with_edits",
+  "candidates": {
+    "S01": 54,
+    "S02": 55,
+    "S03": 56,
+    "S04": 57,
+    "S05": 58
+  },
+  "candidate_selection": "pending_user",
+  "model_rights": "not_changed",
+  "website_clips": 0,
+  "new_final_video": false,
+  "checks": {
+    "existing_pytest": "132 passed, 8 warnings",
+    "web_build": "passed",
+    "code_review": "three files approved",
+    "browser": "read-only; six anchors resolved, no duplicate ids, no desktop overflow, console 0 errors"
+  },
+  "limits": [
+    "Fresh empty-project actual model acceptance still needs isolated verification",
+    "New keyframes have not been selected; imported candidates retain upload default rights, not generation provenance certification",
+    "No new clip or final acceptance; narration timing awaits actual audio",
+    "Commercial dimensions and destination absent"
+  ],
+  "superseded_note": "历史首轮回执；后续用户已确认图片，master45/任务3–7及空白起步通过见closeout-manual-generation-receipt.json和closeout-empty-start-receipt.json。"
+}

@@ -1,0 +1,10 @@
+/Users/mshengran/.codex/worktrees/guided-product-workspace/AIContentStudio/apps/api/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+2026-10-17 13:07:16,225 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "c0b07dffee1b", "method": "POST", "path": "/product-skus/{sku_id}/references", "status": 201, "duration_ms": 118.5}
+2026-10-17 13:07:16,226 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/references "HTTP/1.1 201 Created"
+2026-10-17 13:07:16,228 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "272f0c6784c8", "method": "GET", "path": "/product-skus/{sku_id}/references", "status": 200, "duration_ms": 2.0}
+2026-10-17 13:07:16,229 INFO httpx HTTP Request: GET http://testserver/api/v1/product-skus/1/references "HTTP/1.1 200 OK"
+2026-10-17 13:07:16,230 INFO studio.request {"event": "http_request", "operation": "http_request", "trace_id": "920abfda1f8e", "method": "POST", "path": "/product-skus/{sku_id}/references", "status": 409, "duration_ms": 1.2}
+2026-10-17 13:07:16,230 INFO httpx HTTP Request: POST http://testserver/api/v1/product-skus/1/references "HTTP/1.1 409 Conflict"
+EXACT_SAVED_REFERENCE {'id': 1, 'master_id': 41, 'master_hash': '317adf8293856fb8e3fb0ebb5b9aeea1024f6d59a879c88075ae5cf840bc7ac9', 'profile_revision_id': None, 'href': '/projects/8/units/14/production?workstep=review&master=41'}
+BAD_HASH_REJECTED 409

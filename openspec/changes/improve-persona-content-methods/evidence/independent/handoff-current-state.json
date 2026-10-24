@@ -1,0 +1,232 @@
+{
+  "date_client": "2026-10-20 Asia/Taipei",
+  "git": {
+    "branch": "main",
+    "head": "8539806eb3a1bebf5bf71ee08df3a286cdf9e00a",
+    "dirty_entries": 225
+  },
+  "formal_writes": 0,
+  "comparison": {
+    "content_persona": {
+      "original_rows": 4,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_persona_revision": {
+      "original_rows": 6,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_account": {
+      "original_rows": 2,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_account_revision": {
+      "original_rows": 0,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_series": {
+      "original_rows": 0,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_series_revision": {
+      "original_rows": 0,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "identity_snapshot": {
+      "original_rows": 19,
+      "new_rows": 8,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_project": {
+      "original_rows": 32,
+      "new_rows": 2,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_unit": {
+      "original_rows": 42,
+      "new_rows": 8,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "content_master_revision": {
+      "original_rows": 64,
+      "new_rows": 2,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "material_revision": {
+      "original_rows": 45,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "workflow": {
+      "original_rows": 31,
+      "new_rows": 8,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "workflow_run": {
+      "original_rows": 24,
+      "new_rows": 4,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "workflow_step_attempt": {
+      "original_rows": 135,
+      "new_rows": 21,
+      "missing_originals": [],
+      "changed_originals": [],
+      "old_rows_unchanged": true
+    },
+    "system_settings": {
+      "original_rows": 13,
+      "new_rows": 0,
+      "missing_originals": [],
+      "changed_originals": [
+        [
+          "discovery.heartbeat"
+        ],
+        [
+          "discovery.catchup_clock"
+        ]
+      ],
+      "old_rows_unchanged": false
+    }
+  },
+  "static_settings": {
+    "count": 11,
+    "sha256": "3a32215efadf35c1cfa25945ec8a64b3869781e8fbfb2710773005e14ea9ac1c"
+  },
+  "trials": [
+    {
+      "id": 25,
+      "content_unit_id": 47,
+      "status": "waiting_input",
+      "error": null,
+      "project_id": 37
+    },
+    {
+      "id": 26,
+      "content_unit_id": 49,
+      "status": "waiting_input",
+      "error": null,
+      "project_id": 37
+    },
+    {
+      "id": 27,
+      "content_unit_id": 51,
+      "status": "unknown",
+      "error": "stage_dispatch_unknown",
+      "project_id": 38
+    },
+    {
+      "id": 28,
+      "content_unit_id": 53,
+      "status": "waiting_input",
+      "error": null,
+      "project_id": 38
+    }
+  ],
+  "active": {
+    "workflow_step_attempt": {},
+    "provider_generation_task": {},
+    "creative_execution": {}
+  },
+  "latest_business_files": {
+    "apps/api/app/services/factchecker.py": "42ff88f1a70389cfa213a4d047a2b9452d5f0a4ed8464bf8863617f5cdb90c54",
+    "apps/api/app/services/stage_resolver.py": "7c8f473969ba168ed5203b2f1a2382b0cbdc961de05d7beb0f4026fbb6bb9dd5",
+    "apps/web/src/product/CreationRecipePanel.tsx": "88e6357683da6d1298a4a8c66ce2573479d94acd57a19342aee731519b1a65f6"
+  },
+  "latest_attempts": [
+    {
+      "id": 148,
+      "run_id": 25,
+      "node_id": "quality",
+      "status": "failed",
+      "error": "stage_checks_blocked"
+    },
+    {
+      "id": 149,
+      "run_id": 27,
+      "node_id": "quality",
+      "status": "failed",
+      "error": "stage_checks_blocked"
+    },
+    {
+      "id": 150,
+      "run_id": 28,
+      "node_id": "visual",
+      "status": "succeeded",
+      "error": null
+    },
+    {
+      "id": 151,
+      "run_id": 26,
+      "node_id": "cards",
+      "status": "succeeded",
+      "error": null
+    },
+    {
+      "id": 152,
+      "run_id": 25,
+      "node_id": "quality",
+      "status": "succeeded",
+      "error": null
+    },
+    {
+      "id": 153,
+      "run_id": 27,
+      "node_id": "quality",
+      "status": "succeeded",
+      "error": null
+    },
+    {
+      "id": 154,
+      "run_id": 26,
+      "node_id": "cards",
+      "status": "succeeded",
+      "error": null
+    },
+    {
+      "id": 155,
+      "run_id": 27,
+      "node_id": "refine",
+      "status": "unknown",
+      "error": "stage_dispatch_unknown"
+    },
+    {
+      "id": 156,
+      "run_id": 25,
+      "node_id": "refine",
+      "status": "succeeded",
+      "error": null
+    }
+  ]
+}

@@ -6,6 +6,8 @@
 - POST   /api/v1/settings/llm/test 连通性验证（admin）
 - PUT    /api/v1/settings/models   多模型 Profiles + 场景路由（admin）
 - PUT    /api/v1/settings/plugins  技能启用集 + MCP 登记（admin）
+- GET    /api/v1/settings/mcp      平台 MCP 接入：状态、连接方式、能力清单（admin；不含令牌）
+- POST   /api/v1/settings/mcp/check 平台 MCP 自检（admin；不联网、不含令牌）
 """
 
 import asyncio
@@ -374,3 +376,56 @@ def put_dsh_settings(
     view = build_settings_view()["dsh"]
     view["last_apply"] = result
     return view
+
+
+@router.get("/api/v1/settings/mcp")
+def get_mcp_settings(db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import mcp_settings
+
+    return mcp_settings.view(db)
+
+
+@router.post("/api/v1/settings/mcp/check")
+def check_mcp_settings(db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import mcp_settings
+
+    return mcp_settings.check(db)
+
+
+class StorageLibraryUpdate(BaseModel):
+    path: str = Field(min_length=1, max_length=1000)
+    confirm: bool = False
+
+
+class StorageLocalMove(BaseModel):
+    path: str = Field(min_length=1, max_length=1000)
+
+
+@router.get("/api/v1/settings/storage")
+def get_storage_settings(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services import storage_locations
+
+    return storage_locations.view(db)
+
+
+@router.put("/api/v1/settings/storage/library")
+def put_storage_library(payload: StorageLibraryUpdate, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import storage_locations
+
+    result = storage_locations.set_library(db, payload.path, confirm=payload.confirm, user=user)
+    return {**result, "storage": storage_locations.view(db)}
+
+
+@router.put("/api/v1/settings/storage/common")
+def put_storage_common(payload: StorageLocalMove, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import storage_locations
+
+    result = storage_locations.set_common(db, payload.path, user)
+    return {**result, "storage": storage_locations.view(db)}
+
+
+@router.post("/api/v1/settings/storage/local/move")
+def move_storage_local(payload: StorageLocalMove, user=Depends(require_admin)):
+    from ..services import storage_locations
+
+    return storage_locations.start_local_move(payload.path)

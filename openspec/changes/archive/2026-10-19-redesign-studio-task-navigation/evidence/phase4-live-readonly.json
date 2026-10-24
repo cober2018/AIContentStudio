@@ -1,0 +1,400 @@
+{
+  "checks": [
+    {
+      "width": 1440,
+      "url": "/identities"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?directory=account"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?directory=series"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?directory=brand"
+    },
+    {
+      "width": 1440,
+      "url": "/accounts"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?persona=2"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=persona&id=2&view=edit"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=persona&id=2&view=history"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=persona&id=2&view=accounts"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=persona&id=2&view=workflow"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=persona&id=2&view=memory"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=persona&id=2&view=creative"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=account&id=1"
+    },
+    {
+      "width": 1440,
+      "url": "/identities?kind=account&id=1&view=publisher"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?tab=all"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?tab=material"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?tab=source"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?tab=fact_pack"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?tab=knowledge_collection"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?tab=material&offset=20"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=material&id=1&panel=summary"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=material&id=1&panel=versions"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=material&id=1&panel=usage"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=material&id=1&panel=reuse"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=material&id=1&panel=manage"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=source&id=1&panel=summary"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=source&id=1&panel=content"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=source&id=1&panel=reuse"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=source&id=1&panel=manage"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=fact_pack&id=1&panel=summary"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=fact_pack&id=1&panel=content"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=fact_pack&id=1&panel=reuse"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?resource=fact_pack&id=1&panel=manage"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?view=import"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?view=upload"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?view=new-pack"
+    },
+    {
+      "width": 1440,
+      "url": "/assets?view=new-collection"
+    },
+    {
+      "width": 390,
+      "url": "/identities"
+    },
+    {
+      "width": 390,
+      "url": "/identities?directory=account"
+    },
+    {
+      "width": 390,
+      "url": "/identities?directory=series"
+    },
+    {
+      "width": 390,
+      "url": "/identities?directory=brand"
+    },
+    {
+      "width": 390,
+      "url": "/accounts"
+    },
+    {
+      "width": 390,
+      "url": "/identities?persona=2"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=persona&id=2&view=edit"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=persona&id=2&view=history"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=persona&id=2&view=accounts"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=persona&id=2&view=workflow"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=persona&id=2&view=memory"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=persona&id=2&view=creative"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=account&id=1"
+    },
+    {
+      "width": 390,
+      "url": "/identities?kind=account&id=1&view=publisher"
+    },
+    {
+      "width": 390,
+      "url": "/assets?tab=all"
+    },
+    {
+      "width": 390,
+      "url": "/assets?tab=material"
+    },
+    {
+      "width": 390,
+      "url": "/assets?tab=source"
+    },
+    {
+      "width": 390,
+      "url": "/assets?tab=fact_pack"
+    },
+    {
+      "width": 390,
+      "url": "/assets?tab=knowledge_collection"
+    },
+    {
+      "width": 390,
+      "url": "/assets?tab=material&offset=20"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=material&id=1&panel=summary"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=material&id=1&panel=versions"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=material&id=1&panel=usage"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=material&id=1&panel=reuse"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=material&id=1&panel=manage"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=source&id=1&panel=summary"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=source&id=1&panel=content"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=source&id=1&panel=reuse"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=source&id=1&panel=manage"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=fact_pack&id=1&panel=summary"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=fact_pack&id=1&panel=content"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=fact_pack&id=1&panel=reuse"
+    },
+    {
+      "width": 390,
+      "url": "/assets?resource=fact_pack&id=1&panel=manage"
+    },
+    {
+      "width": 390,
+      "url": "/assets?view=import"
+    },
+    {
+      "width": 390,
+      "url": "/assets?view=upload"
+    },
+    {
+      "width": 390,
+      "url": "/assets?view=new-pack"
+    },
+    {
+      "width": 390,
+      "url": "/assets?view=new-collection"
+    }
+  ],
+  "writes": [],
+  "errors": [],
+  "httpErrors": [],
+  "comparisons": {
+    "/content-projects": {
+      "same": true,
+      "before": "5a3cb2853d5cb287b51fd161187a1f8958ee28474577e6e02bbcfe98d5e64168",
+      "after": "5a3cb2853d5cb287b51fd161187a1f8958ee28474577e6e02bbcfe98d5e64168"
+    },
+    "/content-brands": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-personas": {
+      "same": true,
+      "before": "ce7936a80e9b23662b51efd50476015be73172ba8cec07585859c8066aa3358a",
+      "after": "ce7936a80e9b23662b51efd50476015be73172ba8cec07585859c8066aa3358a"
+    },
+    "/content-accounts": {
+      "same": true,
+      "before": "366474e92d7c87dacf1aced86ca178dd53959ae0561950c061f2242ccc642a22",
+      "after": "366474e92d7c87dacf1aced86ca178dd53959ae0561950c061f2242ccc642a22"
+    },
+    "/content-personas/1/revisions": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-personas/2/revisions": {
+      "same": true,
+      "before": "57c461f976005aa87467932d1bf104509ffef9144e8a62ad4c7af1c866e2cd57",
+      "after": "57c461f976005aa87467932d1bf104509ffef9144e8a62ad4c7af1c866e2cd57"
+    },
+    "/content-personas/3/revisions": {
+      "same": true,
+      "before": "63ac77da89d485175194b2852e62bc5b03818b0037649e64ac2aeb9701ce091b",
+      "after": "63ac77da89d485175194b2852e62bc5b03818b0037649e64ac2aeb9701ce091b"
+    },
+    "/content-accounts/1/revisions": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-accounts/2/revisions": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-personas/1/series": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-personas/2/series": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-personas/3/series": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-accounts/1/series": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "/content-accounts/2/series": {
+      "same": true,
+      "before": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "library_all": {
+      "same": true,
+      "before": "a3df38c955f061ef1df7db648db5fb80307123c2d6124df9d751e8ec8d65ad9c",
+      "after": "a3df38c955f061ef1df7db648db5fb80307123c2d6124df9d751e8ec8d65ad9c"
+    }
+  },
+  "preserved": true,
+  "protectedFiles": [
+    "apps/web/src/product/PersistentProductionPage.tsx",
+    "apps/web/src/product/ProductionWorkspace.tsx",
+    "apps/web/src/product/GuidedProductionGoal.tsx",
+    "apps/web/src/product/GuidedProductionProfile.tsx",
+    "apps/web/src/product/PersonaCreativeConfig.tsx",
+    "apps/web/src/product/CapabilityMemoryPanel.tsx",
+    "apps/web/src/product/StarterGallery.tsx",
+    "apps/web/src/product/ProviderMediaPanel.tsx",
+    "apps/web/src/product/ProviderSearchPanel.tsx",
+    "apps/web/src/pages/Sources.tsx",
+    "apps/web/src/pages/Materials.tsx",
+    "apps/web/src/pages/FactPacks.tsx"
+  ],
+  "counts": {
+    "personas": 3,
+    "accounts": 2,
+    "library": 151
+  }
+}

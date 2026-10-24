@@ -1,0 +1,50 @@
+{
+  "project_id": 36,
+  "unit_id": 42,
+  "opportunity_id": 8,
+  "run_id": 19,
+  "master_id": 65,
+  "candidate_id": 5,
+  "candidate_hash": "c74a84fc4a16f9f64eca473d5c14f3dba2fea95960ca046b1029d1217406ea8e",
+  "candidate_status": "approved",
+  "target_id": 5,
+  "target": {
+    "id": 5,
+    "asset_id": 5,
+    "channel": "baijia",
+    "content_form": "article",
+    "account_ref": "生活角色本地审阅交付（未绑定平台账号）",
+    "content_account_id": null,
+    "action": "copy_package",
+    "authorization_version": "real-life-local-20261019",
+    "status": "awaiting_manual_receipt",
+    "approved_candidate_hash": "c74a84fc4a16f9f64eca473d5c14f3dba2fea95960ca046b1029d1217406ea8e",
+    "publisher_key": "publisher.copy",
+    "publisher_version": "1",
+    "capability": {
+      "publisher_key": "publisher.copy",
+      "action": "copy_package",
+      "available": true,
+      "reason": null,
+      "verified": true
+    },
+    "requested_at": "2026-10-19T05:29:10.501115",
+    "receipts": [],
+    "attempts": []
+  },
+  "package_path": "/Users/mshengran/Project/AIContentStudio/output/lifestyle-lap-easel-project36.zip",
+  "bytes": 14487,
+  "sha256": "08ce02136a631e6124190d1e5271136354029b2317ed17858b196dbe2d1a9250",
+  "entries": [
+    "manifest.json",
+    "content.md",
+    "publish-guide.md"
+  ],
+  "zip_crc_pass": true,
+  "published": {
+    "items": [],
+    "total": 0,
+    "limit": 20,
+    "offset": 0
+  }
+}

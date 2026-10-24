@@ -1,0 +1,48 @@
+== R2/R4 返修：修复前复现 ==
+-- R2 继承路径复现（省略 stages，targets=[objective]，真实 save_profile 先开启）
+saved profile revision 1 (两项开启) ✓
+objective: configured_methods = []
+MARK_A paths: ['root/project_snapshot/product_context/production_profile/settings/product_production_methods/video/stages/0/methods/0/instruction', 'root/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/0/instruction', 'root/project_snapshot/production_methods/stages/0/methods/0/instruction']
+MARK_P paths: ['root/project_snapshot/product_context/production_profile/settings/product_production_methods/video/stages/0/methods/1/instruction', 'root/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/1/instruction', 'root/project_snapshot/production_methods/stages/0/methods/1/instruction']
+FAIL R2A-objective：受众正文不进入完整请求  [countA=3]
+FAIL R2A-objective：购买理由正文经执行投影出现一次  [countP=3]
+FAIL R2A-objective：执行清单非空且只含适用方法  [refs=[]]
+FAIL R2A-primary_audience：只渲染受众正文一次  [countA=3 countP=3]
+FAIL R2A-primary_audience：执行清单只含受众方法  [refs=[]]
+FAIL R2A-混合目标：两正文各一次、清单为并集  [A=3 P=3 refs=[]]
+FAIL R2A-表达字段(core_message)：只渲染购买理由  [A=3 P=3 refs=[]]
+FAIL R2A-表达字段(cta)：只渲染购买理由  [A=3 P=3 refs=[]]
+FAIL R2B-反馈重写按本次目标重新匹配（继承会话）  [refs=[] A=3 P=3 status=ready]
+PASS R2C-保存全关后继承请求零正文  [A=0 P=0 refs=[]]
+FAIL R2C-保存单开后继承按保存状态渲染
+PASS R2C-阶段总关后继承零正文
+PASS R2D-配置未变时继承建议可采用  [decision=adopt]
+PASS R2D-继承配置变化阻止旧建议采用（409漂移）  [HTTPException: 409: 商品依据、意图或所选方法已变化，请重新生成]
+PASS R2E-显式全开仅购买理由渲染一次
+PASS R2E-显式单关不残留被关正文
+PASS R2E-显式全关零正文
+PASS R2E-显式阶段总关零正文
+
+===== R2 继承探针结果：8 passed, 10 failed =====
+
+-- R4 并发保存复现（S2 两GET间写入 / S4 远端A本地B）
+isolated work: project=24 unit=30
+
+===== R4 并发 E2E RESULTS =====
+PASS S1-同版本：review关闭与product-script保留
+PASS S1-同版本：两项按本页（受众开/购买理由关）  {'studio.product.audience-need@1': (True, True), 'studio.product.purchase-reason@1': (True, False)}
+PASS S1-PUT不含旧页面阶段快照
+FAIL S2-两GET间写入：不覆盖（review保持关、product-script保留）  {'revision': 8, 'review_enabled': True, 'script_method_in_review': False, 'methods': {'studio.product.audience-need@1': (True, True), 'studio.product.purchase-reason@1': (True, False)}}
+PASS S2-两项按本页
+PASS S3-PUT前并发写入得到409冲突提示  制作配置已有新版本，请重新保存方法选择。
+PASS S3-409后草稿保留（仍显示未保存修改、购买理由仍为关）
+PASS S3-重存成功且保留远端（review关＋product-script）  {'revision': 11, 'review_enabled': False, 'script_method_in_review': True, 'methods': {'studio.product.audience-need@1': (True, True), 'studio.product.purchase-reason@1': (True, False)}}
+PASS S3-重存后两项按本页
+FAIL S4-未修改的A保留远端关闭  {'studio.product.audience-need@1': (True, True), 'studio.product.purchase-reason@1': (True, False)}
+PASS S4-本地修改的B按本页关闭
+PASS S5-同一方法双方均改为一致结果（A关）  {'studio.product.audience-need@1': (True, False), 'studio.product.purchase-reason@1': (True, False)}
+PASS S5-B按本页关闭
+PASS S6-整组关闭后保存按钮可用
+PASS S6-保存后API两项selected+disabled  {'studio.product.audience-need@1': (True, False), 'studio.product.purchase-reason@1': (True, False)}
+PASS S6-重新载入显示已配置·全关  商品方法（已配置·全关）
+console errors: ["Failed to load resource: the server responded with a status of 409 (Conflict)"]

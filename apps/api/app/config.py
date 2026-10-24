@@ -31,6 +31,13 @@ class Settings(BaseSettings):
     url_fetch_max_bytes: int = 5 * 1024 * 1024
     # Exact hostnames/IPs only; empty keeps each capability's existing target policy.
     outbound_allowed_hosts: str = ""
+    # Open stock libraries for script-driven material matching; keys come from the ignored runtime env only.
+    pexels_api_key: str = ""
+    pixabay_api_key: str = ""
+    # Local After Effects template store (outside git) and the aerender binary that renders it headless.
+    ae_template_store: str = "~/AIContentStudio/ae-templates"
+    aerender_path: str = "/Applications/Adobe After Effects 2026/aerender"
+    openverse_api_token: str = ""
     # 仅限本机开发：代理 fake-ip 模式（如 Clash）下所有域名解析到 198.18.0.0/15，
     # 连接实际由代理转发；此时按解析 IP 判内网会误杀全部外网请求。生产必须保持 false。
     ssrf_allow_private: bool = False

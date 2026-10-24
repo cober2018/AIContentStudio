@@ -225,7 +225,7 @@ def write_file(owner_id: int, execution_id: int, key: str, content: bytes) -> No
             os.fsync(parent)
 
 
-def check_input_manifest(owner_id: int, execution_id: int, filenames: set[str]) -> None:
+def check_input_manifest(owner_id: int, execution_id: int, filenames: set[str], linked: dict[str, str] | None = None) -> None:
     with (root_fd(owner_id, execution_id) as root,
           _parent_fd(root, ["inputs", "manifest"]) as parent,
           _locked(parent),
@@ -234,6 +234,8 @@ def check_input_manifest(owner_id: int, execution_id: int, filenames: set[str]) 
             if index >= 100 or entry.name not in filenames:
                 raise _error("execution_input_not_recorded", 409)
             info = entry.stat(follow_symlinks=False)
+            if stat.S_ISLNK(info.st_mode) and (linked or {}).get(entry.name) == os.readlink(entry.name, dir_fd=parent):
+                continue
             if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
                 raise _error("execution_regular_file_required", 409)
 
@@ -278,10 +280,21 @@ def read_material(revision, *, maximum: int = MAX_FILE_BYTES) -> bytes:
     if not isinstance(storage, LocalMaterialStorage):
         raise _error("execution_local_storage_required", 409)
     key = revision.file_path
-    parts = _parts(key)
+    if key.startswith("external/"):
+        try:
+            content = storage.read(key)
+        except OSError:
+            raise _error("execution_input_unavailable", 409) from None
+        except ValueError:
+            raise _error("execution_input_hash_changed", 409) from None
+        if len(content) > maximum or hashlib.sha256(content).hexdigest() != revision.content_hash:
+            raise _error("execution_input_hash_changed", 409)
+        return content
+    _parts(key)
+    base, parts = storage.locate(key)
     descriptor = os.open("/", _DIRECTORY)
     try:
-        for component in storage.root.parts[1:]:
+        for component in base.parts[1:]:
             child = os.open(component, _DIRECTORY, dir_fd=descriptor)
             os.close(descriptor)
             descriptor = child

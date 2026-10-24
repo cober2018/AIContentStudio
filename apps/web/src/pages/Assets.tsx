@@ -64,7 +64,7 @@ function DeliveryPanel({ asset, onClose }: { asset: AssetRow; onClose: () => voi
   const create = useMutation({
     mutationFn: () => api.post<DeliveryTarget>(`/article-handoff/assets/${asset.id}/targets`, {
       channel: asset.channel,
-      content_form: asset.channel === "wechat" ? "wechat_article" : "x_thread",
+      content_form: "wechat_article",
       account_ref: accountRef,
       authorization_version: authorizationVersion,
     }),
@@ -93,10 +93,11 @@ function DeliveryPanel({ asset, onClose }: { asset: AssetRow; onClose: () => voi
     <div className="rounded-lg border border-slate-200 p-4">
       <div className="flex flex-wrap items-center gap-2 text-sm"><ChannelBadge channel={asset.channel} /><span>批准哈希 {asset.approved_candidate_hash?.slice(0, 16)}</span><span>素材 {asset.candidate_manifest_summary?.media_count || 0} 项</span></div>
       <div className="mt-3 grid gap-3 md:grid-cols-[1fr_160px_auto] md:items-end">
-        <label className="block text-xs font-medium text-slate-500">账号标识<input className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={accountRef} onChange={(event) => setAccountRef(event.target.value)} placeholder="公众号或 X 账号" /></label>
+        <label className="block text-xs font-medium text-slate-500">账号标识<input className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={accountRef} onChange={(event) => setAccountRef(event.target.value)} placeholder="公众号账号" /></label>
         <label className="block text-xs font-medium text-slate-500">授权版本<input className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm" value={authorizationVersion} onChange={(event) => setAuthorizationVersion(event.target.value)} /></label>
-        <Button disabled={!accountRef || create.isPending} onClick={() => create.mutate()}>{create.isPending ? "授权中…" : "创建人工目标"}</Button>
+        <Button disabled={asset.channel !== "wechat" || !accountRef || create.isPending} onClick={() => create.mutate()}>{create.isPending ? "授权中…" : "创建人工目标"}</Button>
       </div>
+      {asset.channel !== "wechat" && <p className="mt-2 text-xs text-rose-700">这个旧入口只授权公众号。X 请使用渠道 x，不再使用已下线的 x_thread。</p>}
     </div>
     {isLoading ? <Spinner /> : <div className="mt-4 space-y-3">{(targets || []).map((target) => <div className="rounded-lg border border-slate-200 p-4" key={target.id}>
       <div className="flex flex-wrap items-center gap-2"><span className="font-medium">{target.account_ref}</span><StatusBadge status={target.status} /><span className="text-xs text-slate-400">{target.content_form} · {target.authorization_version}</span></div>
@@ -127,7 +128,7 @@ function MediaPanel({ asset, onClose }: { asset: AssetRow; onClose: () => void }
   });
 
   return (
-    <Modal title={`配图素材 · ${asset.title.slice(0, 24)}`} onClose={onClose} wide>
+    <Modal title={`配图素材 · ${asset.title.slice(0, 24)}`} onClose={onClose} wide closeOnBackdrop={false}>
       {isLoading ? (
         <Spinner />
       ) : (
@@ -212,7 +213,6 @@ export default function Assets() {
             ["douyin", "抖音"],
             ["xiaohongshu", "小红书"],
             ["wechat", "公众号"],
-            ["x_thread", "X Thread"],
           ].map(([key, label]) => (
             <button
               key={key}

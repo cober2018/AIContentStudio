@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "conversion has expected revision and idempotency",
+    "project retains opportunity source",
+    "converted project work back chain reaches exact Home",
+    "only conversion simulated",
+    "zero page errors"
+  ],
+  "writes": [
+    {
+      "path": "/content-opportunities/1/convert-to-project",
+      "method": "POST",
+      "body": {
+        "expected_assessment_revision": 2,
+        "idempotency_key": "97ab0ac6-332b-4da0-856b-5b0aa066832f",
+        "title": "通用 Agent 与确定性编排：从开发者观点拆解工程投入",
+        "objective": "结合作者的两篇观点文章，讨论垂直场景的原子工具、确定性编排和 Harness 的工程投入边界；不把个人判断写成行业定论。",
+        "selected_signal_ids": []
+      }
+    }
+  ],
+  "errors": [],
+  "scope": "GET live; conversion intercepted and returns existing fixture project3. No formal writes."
+}

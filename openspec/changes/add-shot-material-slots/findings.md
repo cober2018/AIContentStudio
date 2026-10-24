@@ -1,0 +1,12 @@
+- The video draft already has per-shot slots (`source_material_revision_id`, `production` with existing / api_image / web_video prompt / ae). What's missing is the brief, the status and the link to 素材库 match runs.
+- The shot-plan output (attempt 328, U80) has script, visual, purpose and asset_requirements, but no search words or prompt.
+- U80 has match runs 6–10, none with picks. U79 (cards) is run 11, where all 7 cards have picks.
+- Only web-video handoff requires every shot bound (`web_video_handoff.py:131`); drafting does not.
+- Principle confirmed by the user: the platform fixes outcomes (sources, rights, the user's decision, a trail), not step order, tools or sources.
+- Draft shot ids are `shot-1…` and plan ids are `shot-0…`, so runs from before the draft are mapped by order.
+- The planner marks some shots `motion`, such as the dive and trawler shots, that could also be found or generated. The UI calls this "后期做" and still allows uploads, rather than "不用找".
+- Earlier runs had no `prompt`. The planner-only brief call fills it without a new search.
+- The native image generator (`ProviderMediaPanel`) is one panel per piece, so frame prompts can't be pre-filled per shot. The API-image route shows the shot's frame prompt with a copy button instead.
+- Generated stills for historical shots (12 = 1858 engraving, 13 = 1988 TAT-8) would look like archive material. Prefer the real archive images; anything generated must be uploaded as 「AI 生成（示意图）」.
+- The user's test (2026-10-22) found text-to-video beat image-to-video, because the motion-only i2v prompt carried no scene. Decision: keep both; each shot has a mode toggle, and the planner suggests `frame` only where the picture must be exact.
+- The platform's own 「网页生成视频」 route is image-to-video (it needs a confirmed reference image). Text-to-video clips are made outside and uploaded to the shot slot.

@@ -6,6 +6,9 @@ Phase 7 注册实现（多平台复用 Workflow，不复制代码），catalog �
 
 from typing import Any
 
+from .content_harness.channel_methods import get as channel_method
+from .content_harness.channel_methods import legacy_template_params, legacy_workflow_channels, workflow_meta
+
 # 共享 Workflow Bundle families（Phase 7 实现；key 与平台 profile 的 default_workflow_key 对应）
 CATALOG_FAMILIES: list[tuple[str, str]] = [
     ("workflow.article.editorial", "编辑部长文 Bundle"),
@@ -18,14 +21,6 @@ CATALOG_FAMILIES: list[tuple[str, str]] = [
     ("workflow.tech.article", "技术文章 Bundle"),
     ("workflow.script.spoken", "口播脚本 Bundle"),
 ]
-
-CHANNEL_META = {
-    "douyin": {"label": "抖音口播", "formats": ["txt", "srt"]},
-    "xiaohongshu": {"label": "小红书图文", "formats": ["md", "txt"]},
-    "wechat": {"label": "公众号文章", "formats": ["md", "html"]},
-    "x_thread": {"label": "X Thread", "formats": ["md", "json"]},
-}
-
 
 def _node(node_id: str, node_type: str, label: str, params: dict | None = None, x: float = 0, y: float = 0) -> dict:
     return {"id": node_id, "type": node_type, "label": label, "params": params or {}, "layout": {"x": x, "y": y}}
@@ -56,11 +51,11 @@ def build_daily_suggest(params: dict | None = None) -> dict:
 def build_gen_export(params: dict | None = None) -> dict:
     """生成 → 出库：默认只生成本地交付物；遗留远端草稿需显式开启。"""
     p = params or {}
-    channels = p.get("channels") or ["douyin", "xiaohongshu", "wechat"]
+    channels = p.get("channels") or legacy_workflow_channels()
     nodes: list[dict] = []
     edges: list[dict] = []
     for i, ch in enumerate(channels):
-        meta = CHANNEL_META.get(ch, {"label": ch, "formats": ["md"]})
+        meta = workflow_meta(ch)
         y = i * 170
         nodes.append(_node(f"gen_{ch}", "generate", f"生成 · {meta['label']}", {"channel": ch}, 0, y))
         nodes.append(_node(f"humanize_{ch}", "humanize_polish", f"去AI味 · {meta['label']}", {"channel": ch}, 230, y))
@@ -77,25 +72,12 @@ def build_gen_export(params: dict | None = None) -> dict:
             {"from": f"check_{ch}", "to": f"approve_{ch}"},
             {"from": f"approve_{ch}", "to": f"export_{ch}"},
         ]
-        if ch == "wechat" and p.get("publish_wechat", False):
-            nodes.append(_node("cover_wechat", "generate_cover", "AI 封面 · 公众号", {"channel": "wechat"}, 1380, y))
-            nodes.append(
-                _node(
-                    "publish_wechat",
-                    "publish_wechat",
-                    "公众号草稿箱（遗留能力，显式启用）",
-                    {"channel": "wechat", "legacy_remote_publish": True},
-                    1610,
-                    y,
-                )
-            )
-            edges += [
-                {"from": "approve_wechat", "to": "cover_wechat"},
-                {"from": "cover_wechat", "to": "publish_wechat"},
-                {"from": "publish_wechat", "to": "export_wechat"},
-            ]
-            # 发布后导出（封面已入链）
-            edges = [e for e in edges if not (e["from"] == "approve_wechat" and e["to"] == "export_wechat")]
+        plugin = channel_method(ch)
+        extension = plugin.legacy_publish_extension(p, y) if plugin and plugin.legacy_publish_extension else None
+        if extension:
+            nodes.extend(extension["nodes"])
+            edges += extension["edges"]
+            edges = [edge for edge in edges if edge != extension["drop_edge"]]
     return {"nodes": nodes, "edges": edges}
 
 
@@ -114,8 +96,8 @@ TEMPLATES = {
         "description": "共享一个选题，按渠道生成 → 事实校验 → 人工批准 → 本地导出；遗留公众号草稿能力需显式开启",
         "builder": build_gen_export,
         "params_schema": [
-            {"key": "channels", "label": "渠道线", "type": "channels", "default": ["douyin", "xiaohongshu", "wechat"]},
-            {"key": "publish_wechat", "label": "显式启用遗留公众号草稿能力", "type": "boolean", "default": False},
+            {"key": "channels", "label": "渠道线", "type": "channels", "default": legacy_workflow_channels()},
+            *legacy_template_params(),
         ],
     },
 }
@@ -292,3 +274,26 @@ def ensure_bundle_workflow(db, family_key: str | None):
     db.add(workflow)
     db.commit()
     return workflow
+
+def ensure_product_workflow(db, modality, user):
+    from sqlalchemy import select
+    from ..models import Workflow
+    from .starter_personas import _definition
+    from .project_workflows import new_workflow_version, validate_definition
+
+    key = f"product.{user.id}.{modality}"
+    row = db.scalar(select(Workflow).where(Workflow.workflow_key == key,
+        Workflow.owner_user_id == user.id, Workflow.scope == "product_default",
+        Workflow.status == "published", Workflow.enabled.is_(True)).order_by(Workflow.version.desc()).limit(1))
+    # Product defaults are system-owned, so older video recipes (script/shots or prepare stages) move to the storyboard stage.
+    if row and not any(node["id"] in {"shots", "prepare"} for node in row.definition_json.get("nodes", [])):
+        return row
+    definition = _definition(modality, "product")
+    for node in definition["nodes"]:
+        config = node["config"]
+        if node["id"] == "master":
+            config["method"] = {"source_kind": "studio_builtin", "skill_ref": "studio.video.product-script@1"}
+            config["instruction"] += (" 仅依据SKU资料和本条目标：针对具体买家场景讲一个购买理由，区分AI情境与真实证据，回答主要顾虑并给一个下一步；不得虚构性能、价格、体验或评价。"
+                                      " 商品外观一致；每镜一个动作，画面写清机位、景别、人与商品接触、首尾状态和接镜关系；区分实拍证据与AI示意。")
+    return new_workflow_version(db, key=key, name="商品视频制作", definition=validate_definition(definition),
+        owner_user_id=user.id, scope="product_default", created_by=user.email)

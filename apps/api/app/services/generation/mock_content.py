@@ -93,10 +93,24 @@ def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> di
             summary = f"隔离 Mock {schema} 候选 {index}"
             content = {
                 "title": summary,
-                "sections": [{"id": "section-1", "heading": "下一步", "points": ["保留事实边界", "等待人工确认"]}],
-                "stage_schema": schema,
+                "sections": [{"id": "section-1", "order": 0, "heading": "下一步", "purpose": "保留事实边界",
+                              "points": ["等待人工确认"], "open_questions": ["尚未提供可引用的来源"]}],
             }
-            if schema == "graphic.visual-direction.v1":
+            if schema == "research.brief.v1":
+                content = {"question": summary, "known": [], "unknowns": ["尚未提供可引用的来源"],
+                           "time_boundary": "没有可核验的时间边界"}
+            elif schema == "article.plan.v1":
+                content = {"title": summary, "angle": "先看清限制", "reader_stake": "需要知道能不能用",
+                           "known": [], "unknowns": ["尚未提供可引用的来源"], "sections": content["sections"]}
+            elif schema == "creative.angles.v1":
+                content = {"angle": summary, "reader_stake": "需要看清限制", "question": "下一步如何选择",
+                           "support": "只使用已提供的材料", "limits": "不把缺失来源写成事实"}
+            elif schema == "creative.title-hook.v1":
+                content = {"title": summary, "hook": "先看清限制，再决定要不要展开。", "reason": "标题不承诺正文没有的事实"}
+            elif schema == "video.script.v1":
+                content = {"title": summary, "beats": [{"id": "beat-1", "order": 0, "narration": "这是隔离口播，不代表成片。",
+                    "visual": "待准备画面", "asset_requirements": [], "unknowns": ["没有可引用的画面素材"]}]}
+            elif schema == "graphic.visual-direction.v1":
                 content = {"intent": summary, "hierarchy": ["标题", "具体观察"],
                     "visual_language": "隔离合同样例，不代表真实视觉质量", "image_requirements": []}
             elif schema == "graphic.card-plan.v1":
@@ -125,16 +139,19 @@ def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> di
     if request.purpose == "suggest_topics":
         return _build_topic_suggestions(facts, context.get("count", 3))
 
+    from ..content_harness.channel_methods import mock_shape, mock_unfact_kind
+
     builders = {
-        "douyin": _build_douyin,
-        "xiaohongshu": _build_xiaohongshu,
-        "wechat": _build_wechat,
+        "spoken_script": _build_douyin,
+        "image_note": _build_xiaohongshu,
+        "article": _build_wechat,
     }
-    builder = builders.get(channel, _build_wechat)  # V1 新平台：wechat 结构 fallback（与 built-in fallback writer 对齐）
-    output = builder(topic, facts, brand)
+    output = builders[mock_shape(channel)](topic, facts, brand)
 
     if inject_unfact and facts:
-        _inject_unfact(output, channel)
+        kind = mock_unfact_kind(channel)
+        if kind:
+            _inject_unfact(output, kind)
     return output
 
 
@@ -288,9 +305,9 @@ def _build_wechat(topic: dict, facts: list[dict], brand: dict) -> dict[str, Any]
     }
 
 
-def _inject_unfact(output: dict[str, Any], channel: str) -> None:
+def _inject_unfact(output: dict[str, Any], kind: str) -> None:
     statement = _injected_statement([])
-    if channel == "douyin" and output.get("scenes"):
+    if kind == "scenes" and output.get("scenes"):
         output["scenes"].append(
             {
                 "index": len(output["scenes"]) + 1,
@@ -301,7 +318,7 @@ def _inject_unfact(output: dict[str, Any], channel: str) -> None:
             }
         )
         output["spoken_script"] += " " + statement
-    elif channel == "xiaohongshu":
+    elif kind == "body":
         output["body"] += f"\n- {statement}"
-    elif channel == "wechat" and output.get("sections"):
+    elif kind == "sections" and output.get("sections"):
         output["sections"][0]["body"] += "\n\n" + statement

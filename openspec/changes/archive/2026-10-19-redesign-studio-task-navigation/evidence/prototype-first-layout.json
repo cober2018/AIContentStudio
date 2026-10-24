@@ -1,0 +1,823 @@
+{
+  "screens": 51,
+  "result": [
+    {
+      "route": "home",
+      "width": 1440,
+      "h1": 1,
+      "title": "今天，从一件值得做的事开始 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "home",
+      "width": 390,
+      "h1": 1,
+      "title": "今天，从一件值得做的事开始 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities",
+      "width": 1440,
+      "h1": 1,
+      "title": "发现下一件值得创作的事 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities",
+      "width": 390,
+      "h1": 1,
+      "title": "发现下一件值得创作的事 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "persona",
+      "width": 1440,
+      "h1": 1,
+      "title": "角色创作工作台 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "persona",
+      "width": 390,
+      "h1": 1,
+      "title": "角色创作工作台 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "product",
+      "width": 1440,
+      "h1": 1,
+      "title": "商品视频工作台 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "product",
+      "width": 390,
+      "h1": 1,
+      "title": "商品视频工作台 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "review",
+      "width": 1440,
+      "h1": 1,
+      "title": "把最后几个决定做清楚 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "review",
+      "width": 390,
+      "h1": 1,
+      "title": "把最后几个决定做清楚 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects",
+      "width": 1440,
+      "h1": 1,
+      "title": "让作品与依据留在同一个地方 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects",
+      "width": 390,
+      "h1": 1,
+      "title": "让作品与依据留在同一个地方 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities",
+      "width": 1440,
+      "h1": 1,
+      "title": "先决定谁在表达，再选择交付到哪里 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities",
+      "width": 390,
+      "h1": 1,
+      "title": "先决定谁在表达，再选择交付到哪里 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "library",
+      "width": 1440,
+      "h1": 1,
+      "title": "找到依据，也找到表达的参考 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "library",
+      "width": 390,
+      "h1": 1,
+      "title": "找到依据，也找到表达的参考 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "learning",
+      "width": 1440,
+      "h1": 1,
+      "title": "让下一次创作有可解释的改进 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "learning",
+      "width": 390,
+      "h1": 1,
+      "title": "让下一次创作有可解释的改进 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "settings",
+      "width": 1440,
+      "h1": 1,
+      "title": "把配置放在需要时才进入的地方 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "settings",
+      "width": 390,
+      "h1": 1,
+      "title": "把配置放在需要时才进入的地方 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o1",
+      "width": 1440,
+      "h1": 1,
+      "title": "AI 搜索进入日常工作，真正改变了哪一步？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o1",
+      "width": 390,
+      "h1": 1,
+      "title": "AI 搜索进入日常工作，真正改变了哪一步？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "review/r1",
+      "width": 1440,
+      "h1": 1,
+      "title": "先核对这件作品 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "review/r1",
+      "width": 390,
+      "h1": 1,
+      "title": "先核对这件作品 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "settings/sources",
+      "width": 1440,
+      "h1": 1,
+      "title": "信息来源 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "settings/sources",
+      "width": 390,
+      "h1": 1,
+      "title": "信息来源 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o2",
+      "width": 1440,
+      "h1": 1,
+      "title": "换季收纳：先减少找东西的成本 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o2",
+      "width": 390,
+      "h1": 1,
+      "title": "换季收纳：先减少找东西的成本 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o3",
+      "width": 1440,
+      "h1": 1,
+      "title": "手机端离线 AI，可以解决哪些小问题？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o3",
+      "width": 390,
+      "h1": 1,
+      "title": "手机端离线 AI，可以解决哪些小问题？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o4",
+      "width": 1440,
+      "h1": 1,
+      "title": "周末轻量出行：少做安排会更轻松吗？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o4",
+      "width": 390,
+      "h1": 1,
+      "title": "周末轻量出行：少做安排会更轻松吗？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p1",
+      "width": 1440,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "projects/p1",
+      "width": 390,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "projects/p2",
+      "width": 1440,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "projects/p2",
+      "width": 390,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "identities/roles",
+      "width": 1440,
+      "h1": 1,
+      "title": "创作角色 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/roles",
+      "width": 390,
+      "h1": 1,
+      "title": "创作角色 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/accounts",
+      "width": 1440,
+      "h1": 1,
+      "title": "交付账号 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/accounts",
+      "width": 390,
+      "h1": 1,
+      "title": "交付账号 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/columns",
+      "width": 1440,
+      "h1": 1,
+      "title": "内容栏目 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/columns",
+      "width": 390,
+      "h1": 1,
+      "title": "内容栏目 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "library/m1",
+      "width": 1440,
+      "h1": 1,
+      "title": "产品说明与使用场景摘录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "library/m1",
+      "width": 390,
+      "h1": 1,
+      "title": "产品说明与使用场景摘录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "library/m2",
+      "width": 1440,
+      "h1": 1,
+      "title": "安静的日常：叙述风格笔记 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "library/m2",
+      "width": 390,
+      "h1": 1,
+      "title": "安静的日常：叙述风格笔记 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "learning/l1",
+      "width": 1440,
+      "h1": 1,
+      "title": "这件作品表现如何？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "learning/l1",
+      "width": 390,
+      "h1": 1,
+      "title": "这件作品表现如何？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "settings/models",
+      "width": 1440,
+      "h1": 1,
+      "title": "模型与场景 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "settings/models",
+      "width": 390,
+      "h1": 1,
+      "title": "模型与场景 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "settings/skills",
+      "width": 1440,
+      "h1": 1,
+      "title": "方法与工具 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "settings/skills",
+      "width": 390,
+      "h1": 1,
+      "title": "方法与工具 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "settings/runtime",
+      "width": 1440,
+      "h1": 1,
+      "title": "运行与兼容入口 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "settings/runtime",
+      "width": 390,
+      "h1": 1,
+      "title": "运行与兼容入口 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o1/direction",
+      "width": 1440,
+      "h1": 1,
+      "title": "这次，想让读者带走什么？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o1/direction",
+      "width": 390,
+      "h1": 1,
+      "title": "这次，想让读者带走什么？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o1/history",
+      "width": 1440,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o1/history",
+      "width": 390,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "review/r1/issues",
+      "width": 1440,
+      "h1": 1,
+      "title": "把没有依据的承诺删去 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "review/r1/issues",
+      "width": 390,
+      "h1": 1,
+      "title": "把没有依据的承诺删去 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o5",
+      "width": 1440,
+      "h1": 1,
+      "title": "新一代办公助手的协作边界 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o5",
+      "width": 390,
+      "h1": 1,
+      "title": "新一代办公助手的协作边界 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o4/history",
+      "width": 1440,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o4/history",
+      "width": 390,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o2/direction",
+      "width": 1440,
+      "h1": 1,
+      "title": "这次，想让读者带走什么？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o2/direction",
+      "width": 390,
+      "h1": 1,
+      "title": "这次，想让读者带走什么？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o2/history",
+      "width": 1440,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o2/history",
+      "width": 390,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o3/history",
+      "width": 1440,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o3/history",
+      "width": 390,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p1/content",
+      "width": 1440,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p1/content",
+      "width": 390,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p1/sources",
+      "width": 1440,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p1/sources",
+      "width": 390,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p1/history",
+      "width": 1440,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p1/history",
+      "width": 390,
+      "h1": 1,
+      "title": "离线 AI · 一次小范围的使用实验 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p2/content",
+      "width": 1440,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p2/content",
+      "width": 390,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p2/sources",
+      "width": 1440,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p2/sources",
+      "width": 390,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p2/history",
+      "width": 1440,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "projects/p2/history",
+      "width": 390,
+      "h1": 1,
+      "title": "轻量家居 · 商品视频 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/role",
+      "width": 1440,
+      "h1": 1,
+      "title": "AI科技博主 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "identities/role",
+      "width": 390,
+      "h1": 1,
+      "title": "AI科技博主 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "identities/role?life",
+      "width": 1440,
+      "h1": 1,
+      "title": "生活方式博主 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/role?life",
+      "width": 390,
+      "h1": 1,
+      "title": "生活方式博主 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/account",
+      "width": 1440,
+      "h1": 1,
+      "title": "日常观察 · 公众号 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "identities/account",
+      "width": 390,
+      "h1": 1,
+      "title": "日常观察 · 公众号 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "library/m1/use",
+      "width": 1440,
+      "h1": 1,
+      "title": "把这份资料用于哪里？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "library/m1/use",
+      "width": 390,
+      "h1": 1,
+      "title": "把这份资料用于哪里？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "library/m2/use",
+      "width": 1440,
+      "h1": 1,
+      "title": "把这份资料用于哪里？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "library/m2/use",
+      "width": 390,
+      "h1": 1,
+      "title": "把这份资料用于哪里？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "learning/l1/suggestion",
+      "width": 1440,
+      "h1": 1,
+      "title": "一条可以尝试的改进 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "learning/l1/suggestion",
+      "width": 390,
+      "h1": 1,
+      "title": "一条可以尝试的改进 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "learning/l1/scope",
+      "width": 1440,
+      "h1": 1,
+      "title": "把建议用在什么范围？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "learning/l1/scope",
+      "width": 390,
+      "h1": 1,
+      "title": "把建议用在什么范围？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "opportunities/o5/history",
+      "width": 1440,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "opportunities/o5/history",
+      "width": 390,
+      "h1": 1,
+      "title": "分析记录 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 0
+    },
+    {
+      "route": "identities/role/edit",
+      "width": 1440,
+      "h1": 1,
+      "title": "编辑角色资料 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "identities/role/edit",
+      "width": 390,
+      "h1": 1,
+      "title": "编辑角色资料 · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "review/r1/authorization",
+      "width": 1440,
+      "h1": 1,
+      "title": "这次交付给哪个账号？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    },
+    {
+      "route": "review/r1/authorization",
+      "width": 390,
+      "h1": 1,
+      "title": "这次交付给哪个账号？ · 交互原型",
+      "overflow": false,
+      "mainPrimary": 1
+    }
+  ],
+  "errors": [],
+  "unexpected": []
+}

@@ -1,0 +1,2429 @@
+{
+  "id": 19,
+  "workflow_id": 19,
+  "workflow_name": "日常生活方式博主 × text",
+  "workflow_key": "persona.3.text",
+  "workflow_version": 3,
+  "definition_checksum": "3c59e3443b2070277d8b17138ea6842e12bbf6d5d3a8451e885a14fb2c86095b",
+  "identity_snapshot_id": 18,
+  "identity_state": "frozen",
+  "topic_id": null,
+  "channel": null,
+  "content_form": null,
+  "status": "succeeded",
+  "error": null,
+  "params": {},
+  "context": {},
+  "started_at": "2026-10-19T05:20:00.101525",
+  "finished_at": "2026-10-19T05:28:55.822121",
+  "definition": {
+    "nodes": [
+      {
+        "id": "evidence",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "证据简报",
+        "config": {
+          "output_schema": "research.brief.v1",
+          "instruction": "整理可核验来源、事实、时间边界和未知项。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.research.evidence-brief@1"
+          },
+          "fact_mode": "current"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "angles",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "角度实验",
+        "config": {
+          "output_schema": "creative.angles.v1",
+          "instruction": "提出可解释、可比较的内容角度。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.research.angle-lab@1"
+          },
+          "fact_mode": "current"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "outline",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "内容大纲",
+        "config": {
+          "output_schema": "content.outline.v1",
+          "instruction": "把已接受的角度组织成结构化大纲。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.outline@1"
+          },
+          "fact_mode": "current"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "draft",
+        "kind": "AI",
+        "plugin": "stage.master.propose",
+        "plugin_version": "1",
+        "stage_schema": "stage.master.propose.v1",
+        "label": "初稿候选",
+        "config": {
+          "purpose": "生成第一版 Master 候选",
+          "instruction": "基于已接受的证据、角度和大纲生成一篇完整候选。只返回标题和 Markdown 正文，不要编造数字、版本或来源。",
+          "candidate_count": 1,
+          "length": "long",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.longform@1"
+          },
+          "fact_mode": "current"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "quality",
+        "kind": "Rule",
+        "plugin": "stage.checks",
+        "plugin_version": "1",
+        "stage_schema": "stage.checks.v1",
+        "label": "质量检查",
+        "config": {},
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "refine",
+        "kind": "AI",
+        "plugin": "stage.master.propose",
+        "plugin_version": "1",
+        "stage_schema": "stage.master.propose.v1",
+        "label": "精修候选",
+        "config": {
+          "purpose": "精修 Master 候选",
+          "instruction": "保留已验证事实，改善结构、具体性和角色表达。只返回标题和完整 Markdown 正文。",
+          "candidate_count": 1,
+          "length": "long",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.humanize@1"
+          },
+          "fact_mode": "current"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "title",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "标题与开头",
+        "config": {
+          "output_schema": "creative.title-hook.v1",
+          "instruction": "生成与正文一致、不过度夸张的标题和开头方向。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.title-hook@1"
+          },
+          "fact_mode": "current"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "final",
+        "kind": "AI",
+        "plugin": "stage.master.propose",
+        "plugin_version": "1",
+        "stage_schema": "stage.master.propose.v1",
+        "label": "最终稿确认",
+        "config": {
+          "purpose": "整合最终 Master",
+          "instruction": "采用已接受的精修正文和标题/开头候选，保留全部精确引用与事实边界；不要增加新的事实。生成完整最终稿等待人工接受。",
+          "candidate_count": 1,
+          "length": "long",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.text.longform@1"
+          },
+          "fact_mode": "current"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "final_quality",
+        "kind": "Rule",
+        "plugin": "stage.checks",
+        "plugin_version": "1",
+        "stage_schema": "stage.checks.v1",
+        "label": "最终稿质量检查",
+        "config": {},
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "evidence",
+        "to": "angles"
+      },
+      {
+        "from": "angles",
+        "to": "outline"
+      },
+      {
+        "from": "outline",
+        "to": "draft"
+      },
+      {
+        "from": "draft",
+        "to": "quality"
+      },
+      {
+        "from": "quality",
+        "to": "refine"
+      },
+      {
+        "from": "refine",
+        "to": "title"
+      },
+      {
+        "from": "refine",
+        "to": "final"
+      },
+      {
+        "from": "title",
+        "to": "final"
+      },
+      {
+        "from": "final",
+        "to": "final_quality"
+      }
+    ],
+    "visual_order": [
+      "evidence",
+      "angles",
+      "outline",
+      "draft",
+      "quality",
+      "refine",
+      "title",
+      "final",
+      "final_quality"
+    ]
+  },
+  "steps": [
+    {
+      "id": 91,
+      "node_id": "evidence",
+      "node_type": "AI",
+      "label": "证据简报",
+      "params": {
+        "output_schema": "research.brief.v1",
+        "instruction": "整理可核验来源、事实、时间边界和未知项。",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.research.evidence-brief@1"
+        },
+        "fact_mode": "current"
+      },
+      "status": "succeeded",
+      "output": {
+        "candidates": [
+          {
+            "candidate_hash": "18b3d1e8d3e81693f3d7b7f352b76e78482c0ba44af71811b3ef56634403b0c7",
+            "content": {
+              "known": [
+                {
+                  "as_of": "2026-10-19",
+                  "fact_pack_item_id": 6,
+                  "kind": "fact",
+                  "statement": "Colossal于2026-10-13发布关于Bill Groot设计的Lap Easel介绍页，页面将其描述为一款可放在膝上或桌面的便携可调支撑装置，并附有Colossal Shop商店链接。"
+                },
+                {
+                  "kind": "inference",
+                  "statement": "Colossal介绍页属于带有电商商店链接的导购推介内容而非独立测评，其关于便携、可调与多场景支撑的说明属于设计功能归纳，不能视作已获独立核验的实际舒适度或效率提升结论。"
+                }
+              ],
+              "question": "如何在不宣称真实亲测体验或商业推销的前提下，基于Colossal对Lap Easel的介绍展开关于日常创作准备与轻量工具的生活观察？",
+              "time_boundary": "页面标注发布日期为2026-10-13，来源页面读取核验时间为2026-10-19，无其他时间线数据。",
+              "unknowns": [
+                "Lap Easel在真实日常使用中的实际稳定性、耐用度、长久使用舒适度及是否减轻疲劳缺乏独立测评依据。",
+                "除Colossal介绍页之外，没有提供其他可交叉验证的第三方评测、规格参数或用户反馈来源。",
+                "作者并未亲自使用过该画架，文中涉及的具体使用场景与感受均为设想，缺乏实测数据支持。"
+              ]
+            },
+            "id": "brief-0",
+            "references": [
+              {
+                "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                "id": 6,
+                "kind": "fact_pack_item"
+              }
+            ],
+            "summary": "归纳Lap Easel来源的事实要素、推论界限与未核验体验事项。",
+            "warnings": []
+          }
+        ],
+        "input_hash": "f4ee00774acee8f387aaa5c85b4796d057167c44aad73fe5f7808ee09fd6f9a5",
+        "llm_run_id": 145,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "output_hash": "ee6e6ded9ee1e6ba085d6def4fab0aba2c5eee6136d66558024251bcfc393248",
+        "prompt_hash": "fbef202e1cfea68bd34d27d72e31b2cea58bbc1fa45c6bbf4884407874fe1593",
+        "schema": "research.brief.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 92,
+      "node_id": "angles",
+      "node_type": "AI",
+      "label": "角度实验",
+      "params": {
+        "output_schema": "creative.angles.v1",
+        "instruction": "提出可解释、可比较的内容角度。",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.research.angle-lab@1"
+        },
+        "fact_mode": "current"
+      },
+      "status": "succeeded",
+      "output": {
+        "candidates": [
+          {
+            "candidate_hash": "08fb12d20f8343a683c9809186f18478d17c806e8d618c22ddc32e26dba75cdb",
+            "content": {
+              "angle": "日常创作的阻力往往不在于缺乏灵感，而在于“准备的繁琐”；类似Lap Easel这样把支撑结构轻量化的设计，启发我们通过降低物理展开门槛，把记录变成随时发生在膝上或桌角的日常小事。",
+              "limits": "信息仅来源于Colossal带有商店链接的单方设计推介，缺少独立评测与用户反馈；不得声称实际使用舒适度、减轻疲劳或提升效率，文中提及的绘画场景属于合理推想而非作者亲测经历，严禁出现价格与导购口号。",
+              "question": "一件能够兼顾膝上与桌面的便携可调支撑工具，如何从细节上降低普通人随手提笔创作的启动门槛？",
+              "reader_stake": "很多喜欢画画或记录的人常常被大费周章铺开画架和工具劝退，探讨如何简化准备过程，有助于读者找到更轻盈、无负担的随手记录方式。",
+              "support": "Colossal于2026-10-13对Bill Groot设计的Lap Easel的介绍显示，该装置具备便携、角度可调以及可在膝上或桌面提供支撑的特征，为观察“轻量化工具如何改变创作摆放习惯”提供了具体的设计实例。"
+            },
+            "id": "angle-0",
+            "references": [
+              {
+                "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                "id": 6,
+                "kind": "fact_pack_item"
+              }
+            ],
+            "summary": "从降低创作准备门槛的生活细节切入，探讨便携支撑工具对日常随手记录习惯的启发。",
+            "warnings": []
+          }
+        ],
+        "input_hash": "a6a824680c4747fe272100c9d2bf5606110382a80e76b5f765e2ad19e880a091",
+        "llm_run_id": 146,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "output_hash": "b83604af040f09e44b982efb7955d96595fda0131e6e99fc4ddde59988123742",
+        "prompt_hash": "55e3b6a46438ec51f2f0030e9f8b5bc5f2264dae0632ec6b84fd52c77a9b35cc",
+        "schema": "creative.angles.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 93,
+      "node_id": "outline",
+      "node_type": "AI",
+      "label": "内容大纲",
+      "params": {
+        "output_schema": "content.outline.v1",
+        "instruction": "把已接受的角度组织成结构化大纲。",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.text.outline@1"
+        },
+        "fact_mode": "current"
+      },
+      "status": "succeeded",
+      "output": {
+        "candidates": [
+          {
+            "candidate_hash": "12907ad454e288669f0f01e5bbf8bc86d87bfa2105f6b2de457969df38723a1b",
+            "content": {
+              "sections": [
+                {
+                  "heading": "提笔前的微小犹豫：日常记录里的“启动阻力”",
+                  "id": "section-0",
+                  "open_questions": [
+                    "日常涂鸦和随手笔记，是否一定要依赖一张整齐的大书桌？"
+                  ],
+                  "order": 0,
+                  "points": [
+                    "观察日常创作中普遍存在的微妙心理：有灵感时，往往因繁琐的铺陈准备而搁浅。",
+                    "探讨物理摆放与繁复装备如何无形中构成了心理门槛，让人误以为记录必须是一场严肃的仪式。"
+                  ],
+                  "purpose": "从生活中想画画或写随笔却常常卡在清空桌面、翻找工具等繁琐准备的真实感受切入，引出对创作启动门槛的思考。"
+                },
+                {
+                  "heading": "膝上与桌角：Lap Easel带来的支撑巧思",
+                  "id": "section-1",
+                  "open_questions": [
+                    "这种兼顾膝上与桌面的小巧结构，反映了怎样的便携设计逻辑？"
+                  ],
+                  "order": 1,
+                  "points": [
+                    "转述Colossal报道中提及的Lap Easel设计特征：轻量便携、角度可调，既能放在膝上也能置于桌面。",
+                    "明确信息边界：指出这是面向读者的设计报道与推介，不当作实际体验测评，不夸大舒适度与使用效果。"
+                  ],
+                  "purpose": "客观转述Colossal于2026-10-13刊登的设计报道，介绍Bill Groot设计的便携可调画架形态，明确其来自带商店链接的设计推介而非独立评测。"
+                },
+                {
+                  "heading": "打破仪式的束缚：想象中的随时落笔场景",
+                  "id": "section-2",
+                  "open_questions": [
+                    "当支撑平面变得随时随地可用，人们与纸笔的关系会发生怎样的变化？"
+                  ],
+                  "order": 2,
+                  "points": [
+                    "以推想视角描摹场景：比如午后坐在窗边长椅上将画板靠在膝头，或在狭窄咖啡馆一角支起小小画本。",
+                    "分析当工具不再需要“大动干戈”搭台子时，记录行为如何自然地融入闲散的日常生活间隙。"
+                  ],
+                  "purpose": "通过“比如”“可以想象”等假想生活切片，探讨将支撑面简化后，普通人随手勾勒的可能性，避免包装成亲测感受。"
+                },
+                {
+                  "heading": "轻盈的工具，是留给日常灵感的空隙",
+                  "id": "section-3",
+                  "open_questions": [
+                    "我们还能在日常生活里做哪些减法，让喜欢的兴趣变得随手可触？"
+                  ],
+                  "order": 3,
+                  "points": [
+                    "总结物理工具轻量化带来的启发：好的工具设计是在消除创作与日常生活的距离感。",
+                    "温和表达生活观察：随手记录不必追求完美装备，给生活留出随时能停下观察的轻盈空隙即可。"
+                  ],
+                  "purpose": "以温和、不宣教的生活视角收束全文，反思轻量化设计对生活节奏的启发，强调记录的初衷是亲近生活本身。"
+                }
+              ],
+              "title": "膝上的画架与随手的生活：当创作准备变得更轻巧"
+            },
+            "id": "outline-lap-easel-lifestyle-01",
+            "references": [
+              {
+                "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                "id": 6,
+                "kind": "fact_pack_item"
+              }
+            ],
+            "summary": "围绕降低创作准备门槛的生活观察，规划一篇探讨便携支撑巧思如何启发日常随手记录的文章大纲。",
+            "warnings": []
+          }
+        ],
+        "input_hash": "aa2262414289d8e352d59485c19ed93765e211952127a7efdc215c45c7800974",
+        "llm_run_id": 147,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "output_hash": "2bc4fc757c0ff083eb534b761452a3f9a95f23d150e2b4e6d65bab96324c5480",
+        "prompt_hash": "1bbd38a8530df1aa2ae238cfc6b4aaa1e3c07ea2d1f8aaed043c44c7350aa39d",
+        "schema": "content.outline.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 94,
+      "node_id": "draft",
+      "node_type": "AI",
+      "label": "初稿候选",
+      "params": {
+        "purpose": "生成第一版 Master 候选",
+        "instruction": "基于已接受的证据、角度和大纲生成一篇完整候选。只返回标题和 Markdown 正文，不要编造数字、版本或来源。",
+        "candidate_count": 1,
+        "length": "long",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.text.longform@1"
+        },
+        "fact_mode": "current"
+      },
+      "status": "succeeded",
+      "output": {
+        "candidate_count": 1,
+        "candidates": [
+          {
+            "asset_refs": [],
+            "candidate_hash": "b62d346c867b83a6b81d905ea84aca6693896c4171f4ad23be14afea4aa3ca75",
+            "candidate_id": "candidate-01-104448f70a550fc7",
+            "evidence_refs": [],
+            "payload": {
+              "document": {
+                "blocks": [
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "有时让人放弃记录一个画面的，并不是缺少灵感，而是那一套繁琐的准备过程。想要画两笔速写，或者摊开本子写一段随感，脑海里往往先跳出一长串前置条件：需要一张收拾干净的大桌子、合适的高度、摆放调色盘或笔具的平稳空位。当这一系列物理准备在心里列成清单时，原本偶发的心情很容易就在翻找工具的几分钟里被消磨殆尽。"
+                      }
+                    ],
+                    "id": "legacy-b2",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "这种微小的“启动阻力”，在日常爱好里格外常见。很多人下意识地把记录当成一场需要正襟危坐的仪式，仿佛必须有一套完整的台面与姿态，才能郑重其事地开始。可生活里的很多触动，恰恰发生在没有工作台的间隙里。"
+                      }
+                    ],
+                    "id": "legacy-b3",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "膝上与桌角：Lap Easel带来的支撑巧思"
+                      }
+                    ],
+                    "id": "legacy-b4",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "降低这种阻力的方式，有时藏在一些灵巧的结构设计里。2026年10月13日，设计媒体Colossal刊登了一篇关于Lap Easel的报道，介绍了一款由Bill Groot设计的便携支撑装置。根据报道页面的描述，这个物件兼顾了便携与可调结构，既可以稳稳放在膝上，也能搁置在现有的桌面上，为画板或纸本提供一个具有角度的托面。"
+                      }
+                    ],
+                    "id": "legacy-b5",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "需要明确的是，Colossal的这篇介绍带有商店链接，属于设计推介性质，并不是针对实际耐用度或人体工学的独立使用测评。关于它在长时间使用中的具体手感、承重极限或不同体型下的贴合度，目前并没有公开的中立测试数据支持。不过，即便不把它当成一件必须拥有的消费品来看待，它所传达的设计逻辑依然清晰：在没有专门画架或大书桌的地方，借助一个简单的物理构件，把人体自身的坐姿或有限的桌角转化成可用的工作面。"
+                      }
+                    ],
+                    "id": "legacy-b6",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "打破仪式的束缚：想象中的随时落笔场景"
+                      }
+                    ],
+                    "id": "legacy-b7",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "当支撑平面的要求被降到最低，记录与日常空间的配合方式就会变得更加自由。我们可以设想一些具体的日常切片："
+                      }
+                    ],
+                    "id": "legacy-b8",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "比如在某个光线适宜的午后，并不一定非要坐在书房那张收拾整齐的书桌前。如果膝头就能搭起一个倾角适中的托板，那么窗边的单人扶手椅、阳台的台阶，甚至户外长椅，都可以变成停留片刻的角落。又比如在空间局促的转角咖啡馆里，桌面常常放下一杯水就所剩无几，如果支撑架能够架在膝上，记录的动作便不会与桌上的杂物争夺空间。"
+                      }
+                    ],
+                    "id": "legacy-b9",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "这类设想并不是为了追求在各种极端环境下赶工，而是让纸笔与人之间的接触变得更平缓。它把“腾出整块时间布置工位”的沉重感，稀释成了“随手搭一下就能开始”的小动作。工具若能省去多余的摆设，人的注意力反而更容易停留在眼前想画的那朵云、想记下的那句话上。"
+                      }
+                    ],
+                    "id": "legacy-b10",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "轻盈的工具，是留给日常灵感的空隙"
+                      }
+                    ],
+                    "id": "legacy-b11",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "日常生活里并不总是需要严肃完备的装备。很多时候，过于沉重或讲求规整的工具，会在无形中给人施加一种“必须产出严肃成果”的心理压力。相反，那些轻便、低干预的小构件，其价值恰恰在于让过程脱离了仪式的绑架。"
+                      }
+                    ],
+                    "id": "legacy-b12",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "一个能随手搭在膝头或桌沿的支撑架，更像是一种提醒：捕捉日常并不依赖特定规格的画室或工位。无论最终是通过一件便携工具，还是仅仅随身带一本硬皮速写簿，核心都在于找到一种让自己不必深呼吸做心理建设就能开始的方式。把准备工作减到最少，给偶然泛起的创作念头留出随处落脚的余地，记录才可能真正变成生活里自然而然的一部分。"
+                      }
+                    ],
+                    "id": "legacy-b13",
+                    "type": "paragraph"
+                  }
+                ],
+                "citations": [],
+                "schema": "studio.text.document.v1"
+              },
+              "title": "膝上的画架与随手的生活：当创作准备变得更轻巧"
+            },
+            "payload_hash": "104448f70a550fc7cfc7c848018bc47c9ee48ead14a152751ac1ec5fd1be241e",
+            "payload_schema": "text.master.v2"
+          }
+        ],
+        "input_hash": "62636989e361dbdb225e1d6c2f2fcd09e77dc890109684dd884e8b83f3d7bc49",
+        "llm_run_id": 148,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "prompt_hash": "3724bd090ac6a6185ff286938f97fba8d66671f0639fd51e329a77f4a8cc79a4",
+        "proposal_hash": "3eb9b596bb5db5b81e9976e7f77022eaeb579e805a935c368e57c549b22bd705",
+        "schema": "stage.master.proposal.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.master.propose",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 95,
+      "node_id": "quality",
+      "node_type": "Rule",
+      "label": "质量检查",
+      "params": {},
+      "status": "succeeded",
+      "output": {
+        "domain": "checks",
+        "resolution_hash": "7064fdaa431af99befa974d5f6442854d2000586763fc422981bda465d76cc6b",
+        "result": {
+          "blockers": [],
+          "checks": [
+            {
+              "check_kind": "master_schema",
+              "id": 228,
+              "input_hash": "7ca0c9cc91d1a819c337db35246ca335c7e1f9719f7dab9f283ecc2d15a797ae",
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "master_schema",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "evidence",
+              "id": 229,
+              "input_hash": "4d9543fce925199803901d1d635581cc8de3f8eba64e4f1974db4ee5e4fc067e",
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "evidence",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "rights",
+              "id": 230,
+              "input_hash": "f608d2637e7903862fee123e3341c570882bfb26ac99c1d5118ebda601177b1b",
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "rights",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "render",
+              "id": 231,
+              "input_hash": "25b05883ad36e2ebede2e1e40ff01d03597e62bc6340810cbf800553c88d2fba",
+              "report": {
+                "body_markdown": "比如你刚想画下窗边那盆植物，低头看看桌子：杯子、充电线、几张快递单，把空位占得差不多了。笔不知道放在哪个抽屉，本子还在包里。画画还没开始，倒像是先领到了一件收拾房间的事。这里只是一个设想，却很适合用来问一句：想随手画两笔，准备能不能少一点？\n\n不一定要把整张桌子都腾出来。也许只需要容得下一本小册子的地方，外加一支找得到的笔。这个念头，比“给自己布置一个完美的创作角落”小得多，也具体得多。\n\n## 一个可以换地方的支撑面\n\n在Colossal的一篇介绍里，Bill Groot制作的Lap Easel被描述为一种便携、可调的支撑装置，可以放在膝上，也可以置于桌面。它让我感兴趣的地方，是“画本一定得待在书桌上吗”这个问题，而不是多添一件装备。\\[1\\]\n\n这篇介绍链接了Colossal的商店，带有导购性质。我没有用过这件产品，也没有在本次资料中找到独立使用测试，因此不判断它是否稳当、久用舒不舒服。这里只借它的摆放思路，聊聊纸笔和日常空间的关系。\n\n## 先想象一个小场景\n\n可以想象，一个人把小本子翻到空白页，准备画一只杯子的把手。桌面能用就放在桌面上；如果想换到窗边坐一会儿，就再看看那里有没有合适的支撑。不急着把整套画具搬过去，也不必非要画完一整页。\n\n比如只勾杯口的一段弧线，或者记下窗框影子落在桌上的样子。画得不像，也可以旁边补几个字，留着以后再看。这里设想的是一次很小的记录，不是对Lap Easel使用效果的演示；具体怎么摆，仍得看自己的空间和实际手感。\n\n当然，喜欢铺开颜料、整理桌面的人，也未必觉得准备是负担。那可能正是他们享受的一部分。想省下哪些动作，并没有统一答案：有人嫌笔总找不着，有人只是不想每次都把餐桌清空。先认出自己卡住的那个小地方，比照着别人的装备清单添东西更有意思。\n\n## 不买新工具，也有可以试的小改动\n\n若只是找笔麻烦，可以试着把常用的那支和本子放在一起；若桌面紧张，也许现有的小本子就够了。这些只是可选的小尝试，不保证让人更勤快，更不需要把爱好变成一项按时完成的任务。\n\n看过这件画架后，我更愿意留下的是一个小问题：下一次想记点什么，能不能少找一样东西，少挪一下位置？有兴致时画两笔，没有兴致就把本子合上。纸上留下一个没画完的杯把，也不妨碍这只是普通的一天。\n\n参考：Colossal《Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere》。这是带有商店链接的产品介绍；文中生活场景为设想，不是产品亲测。\\[2\\]",
+                "content_hash": "2fef06d8c590c294ca755c326eac20aa485a10ac1183ffe4210daf4a41256dff",
+                "origin": "deterministic",
+                "reasons": [],
+                "render_input_hash": "fbd6bef9812b4dbf1c6397fdb906e8fd34ea20bc9fa25a7c20bcb31d14a8c9c8",
+                "renderer_key": "text.studio.document.v1",
+                "renderer_version": "2",
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "render",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "status": "ready",
+                "unused_asset_ids": [],
+                "warnings": []
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_structure",
+              "id": 232,
+              "input_hash": "6ca36183f1ac3900fb62561e92961d1a3a2092e1f753e85489f88ffa041dc229",
+              "report": {
+                "block_count": 13,
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_structure",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_fact",
+              "id": 233,
+              "input_hash": "4049340ad2a01abbddb3c469ae034859437c798b46a8fab4a2e5d56e8104c58a",
+              "report": {
+                "coverage": {
+                  "deterministic": "complete",
+                  "deterministic_issue_count": 0,
+                  "fact_count": 1,
+                  "model_use_excluded_item_ids": [],
+                  "reason": null,
+                  "semantic": "verified",
+                  "semantic_fact_count": 1
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_fact",
+                  "model_use": [
+                    {
+                      "allowed": true,
+                      "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                      "id": 6,
+                      "revoked": false
+                    }
+                  ],
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_identity",
+              "id": 234,
+              "input_hash": "34fb625a5231dba20c48de6858566ee816ebd7cca0a1399f87596ed533c6448e",
+              "report": {
+                "coverage": {
+                  "advisory_critic": {
+                    "can_override_deterministic": false,
+                    "reason": null,
+                    "rubric": [
+                      {
+                        "dimension": "factual_grounding",
+                        "reason": "明确交代了来源背景与商业导购属性，清晰声明未亲自测试过产品，并将设想场景与事实严格区分。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "naturalness",
+                        "reason": "语言生活化、自然温和，观察视角细腻平实，符合角色的口吻设定。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "specificity",
+                        "reason": "场景描写如杯子把手、窗框影子、找笔等细节非常具体，避免了泛泛而谈。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "non_preachy",
+                        "reason": "毫无说教感，充分包容不同生活习惯，明确表达不要求把爱好当成任务，克制温和。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "title_alignment",
+                        "reason": "正文未提供独立主标题，但段落小标题与核心论述紧密扣合、层层递进。",
+                        "score": 3
+                      }
+                    ],
+                    "status": "verified"
+                  },
+                  "deterministic": "persona_rules_and_explicit_phrases",
+                  "explicit_phrase_count": 0,
+                  "reason": null,
+                  "semantic": "verified"
+                },
+                "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+                "identity_snapshot_id": 18,
+                "issues": [],
+                "persona_quality": {
+                  "coverage": {
+                    "deterministic": "bounded_phrase_structure_citation_rules",
+                    "fact_speculation": "bounded_prediction_label_rule",
+                    "factual_truth": "existing_text_fact_check",
+                    "semantic": "not_run",
+                    "title_body_alignment": "bounded_numeric_detail_only"
+                  },
+                  "critic_dimensions": [
+                    "factual_grounding",
+                    "naturalness",
+                    "specificity",
+                    "non_preachy",
+                    "title_alignment"
+                  ],
+                  "human_review_required": true,
+                  "issues": [],
+                  "payload_hash": "bea30ec1201d23bb03174906aff9c1b8907390a0135fda9b57f1d6c2213e8a34",
+                  "quality_profile_hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                  "quality_profile_ref": "studio.quality.text.lifestyle@1",
+                  "status": "pass"
+                },
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "3",
+                  "kind": "text_identity",
+                  "persona_quality": {
+                    "hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                    "ref": "studio.quality.text.lifestyle@1"
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_platform",
+              "id": 235,
+              "input_hash": "e0b58e44a1e3e74b871d208640cbbb2328b4e520036e6fb99abf40fe15378fa4",
+              "report": {
+                "channel": "baijia",
+                "content_form": "article",
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "profile_version_id": 19,
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_platform",
+                  "profile": {
+                    "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                    "checksum_origin": "stored",
+                    "form": {
+                      "artifact_kind": "text",
+                      "channel": "baijia",
+                      "content_form": "article",
+                      "discoverability_profile": null,
+                      "graphic_requirements": {},
+                      "label": "文章",
+                      "media_requirements": {},
+                      "profile_version_id": 19,
+                      "publisher_candidates": [
+                        "publisher.copy"
+                      ],
+                      "renderer_key": "renderer.generic.markdown",
+                      "rule_sets": [],
+                      "source": "profile",
+                      "video_requirements": {},
+                      "workflow_key": "workflow.article.feed"
+                    },
+                    "id": 19,
+                    "version": 2
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "rule_sets": [],
+                "source": "profile"
+              },
+              "status": "pass"
+            }
+          ],
+          "checks_pass": true,
+          "checks_reviewable": true,
+          "current_checks": [
+            {
+              "check_kind": "master_schema",
+              "id": 228,
+              "input_hash": "7ca0c9cc91d1a819c337db35246ca335c7e1f9719f7dab9f283ecc2d15a797ae",
+              "is_current": true,
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "master_schema",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "evidence",
+              "id": 229,
+              "input_hash": "4d9543fce925199803901d1d635581cc8de3f8eba64e4f1974db4ee5e4fc067e",
+              "is_current": true,
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "evidence",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "rights",
+              "id": 230,
+              "input_hash": "f608d2637e7903862fee123e3341c570882bfb26ac99c1d5118ebda601177b1b",
+              "is_current": true,
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "rights",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "render",
+              "id": 231,
+              "input_hash": "25b05883ad36e2ebede2e1e40ff01d03597e62bc6340810cbf800553c88d2fba",
+              "is_current": true,
+              "report": {
+                "body_markdown": "比如你刚想画下窗边那盆植物，低头看看桌子：杯子、充电线、几张快递单，把空位占得差不多了。笔不知道放在哪个抽屉，本子还在包里。画画还没开始，倒像是先领到了一件收拾房间的事。这里只是一个设想，却很适合用来问一句：想随手画两笔，准备能不能少一点？\n\n不一定要把整张桌子都腾出来。也许只需要容得下一本小册子的地方，外加一支找得到的笔。这个念头，比“给自己布置一个完美的创作角落”小得多，也具体得多。\n\n## 一个可以换地方的支撑面\n\n在Colossal的一篇介绍里，Bill Groot制作的Lap Easel被描述为一种便携、可调的支撑装置，可以放在膝上，也可以置于桌面。它让我感兴趣的地方，是“画本一定得待在书桌上吗”这个问题，而不是多添一件装备。\\[1\\]\n\n这篇介绍链接了Colossal的商店，带有导购性质。我没有用过这件产品，也没有在本次资料中找到独立使用测试，因此不判断它是否稳当、久用舒不舒服。这里只借它的摆放思路，聊聊纸笔和日常空间的关系。\n\n## 先想象一个小场景\n\n可以想象，一个人把小本子翻到空白页，准备画一只杯子的把手。桌面能用就放在桌面上；如果想换到窗边坐一会儿，就再看看那里有没有合适的支撑。不急着把整套画具搬过去，也不必非要画完一整页。\n\n比如只勾杯口的一段弧线，或者记下窗框影子落在桌上的样子。画得不像，也可以旁边补几个字，留着以后再看。这里设想的是一次很小的记录，不是对Lap Easel使用效果的演示；具体怎么摆，仍得看自己的空间和实际手感。\n\n当然，喜欢铺开颜料、整理桌面的人，也未必觉得准备是负担。那可能正是他们享受的一部分。想省下哪些动作，并没有统一答案：有人嫌笔总找不着，有人只是不想每次都把餐桌清空。先认出自己卡住的那个小地方，比照着别人的装备清单添东西更有意思。\n\n## 不买新工具，也有可以试的小改动\n\n若只是找笔麻烦，可以试着把常用的那支和本子放在一起；若桌面紧张，也许现有的小本子就够了。这些只是可选的小尝试，不保证让人更勤快，更不需要把爱好变成一项按时完成的任务。\n\n看过这件画架后，我更愿意留下的是一个小问题：下一次想记点什么，能不能少找一样东西，少挪一下位置？有兴致时画两笔，没有兴致就把本子合上。纸上留下一个没画完的杯把，也不妨碍这只是普通的一天。\n\n参考：Colossal《Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere》。这是带有商店链接的产品介绍；文中生活场景为设想，不是产品亲测。\\[2\\]",
+                "content_hash": "2fef06d8c590c294ca755c326eac20aa485a10ac1183ffe4210daf4a41256dff",
+                "origin": "deterministic",
+                "reasons": [],
+                "render_input_hash": "fbd6bef9812b4dbf1c6397fdb906e8fd34ea20bc9fa25a7c20bcb31d14a8c9c8",
+                "renderer_key": "text.studio.document.v1",
+                "renderer_version": "2",
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "render",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "status": "ready",
+                "unused_asset_ids": [],
+                "warnings": []
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_structure",
+              "id": 232,
+              "input_hash": "6ca36183f1ac3900fb62561e92961d1a3a2092e1f753e85489f88ffa041dc229",
+              "is_current": true,
+              "report": {
+                "block_count": 13,
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_structure",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_fact",
+              "id": 233,
+              "input_hash": "4049340ad2a01abbddb3c469ae034859437c798b46a8fab4a2e5d56e8104c58a",
+              "is_current": true,
+              "report": {
+                "coverage": {
+                  "deterministic": "complete",
+                  "deterministic_issue_count": 0,
+                  "fact_count": 1,
+                  "model_use_excluded_item_ids": [],
+                  "reason": null,
+                  "semantic": "verified",
+                  "semantic_fact_count": 1
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_fact",
+                  "model_use": [
+                    {
+                      "allowed": true,
+                      "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                      "id": 6,
+                      "revoked": false
+                    }
+                  ],
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_identity",
+              "id": 234,
+              "input_hash": "34fb625a5231dba20c48de6858566ee816ebd7cca0a1399f87596ed533c6448e",
+              "is_current": true,
+              "report": {
+                "coverage": {
+                  "advisory_critic": {
+                    "can_override_deterministic": false,
+                    "reason": null,
+                    "rubric": [
+                      {
+                        "dimension": "factual_grounding",
+                        "reason": "明确交代了来源背景与商业导购属性，清晰声明未亲自测试过产品，并将设想场景与事实严格区分。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "naturalness",
+                        "reason": "语言生活化、自然温和，观察视角细腻平实，符合角色的口吻设定。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "specificity",
+                        "reason": "场景描写如杯子把手、窗框影子、找笔等细节非常具体，避免了泛泛而谈。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "non_preachy",
+                        "reason": "毫无说教感，充分包容不同生活习惯，明确表达不要求把爱好当成任务，克制温和。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "title_alignment",
+                        "reason": "正文未提供独立主标题，但段落小标题与核心论述紧密扣合、层层递进。",
+                        "score": 3
+                      }
+                    ],
+                    "status": "verified"
+                  },
+                  "deterministic": "persona_rules_and_explicit_phrases",
+                  "explicit_phrase_count": 0,
+                  "reason": null,
+                  "semantic": "verified"
+                },
+                "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+                "identity_snapshot_id": 18,
+                "issues": [],
+                "persona_quality": {
+                  "coverage": {
+                    "deterministic": "bounded_phrase_structure_citation_rules",
+                    "fact_speculation": "bounded_prediction_label_rule",
+                    "factual_truth": "existing_text_fact_check",
+                    "semantic": "not_run",
+                    "title_body_alignment": "bounded_numeric_detail_only"
+                  },
+                  "critic_dimensions": [
+                    "factual_grounding",
+                    "naturalness",
+                    "specificity",
+                    "non_preachy",
+                    "title_alignment"
+                  ],
+                  "human_review_required": true,
+                  "issues": [],
+                  "payload_hash": "bea30ec1201d23bb03174906aff9c1b8907390a0135fda9b57f1d6c2213e8a34",
+                  "quality_profile_hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                  "quality_profile_ref": "studio.quality.text.lifestyle@1",
+                  "status": "pass"
+                },
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "3",
+                  "kind": "text_identity",
+                  "persona_quality": {
+                    "hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                    "ref": "studio.quality.text.lifestyle@1"
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_platform",
+              "id": 235,
+              "input_hash": "e0b58e44a1e3e74b871d208640cbbb2328b4e520036e6fb99abf40fe15378fa4",
+              "is_current": true,
+              "report": {
+                "channel": "baijia",
+                "content_form": "article",
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "profile_version_id": 19,
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_platform",
+                  "profile": {
+                    "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                    "checksum_origin": "stored",
+                    "form": {
+                      "artifact_kind": "text",
+                      "channel": "baijia",
+                      "content_form": "article",
+                      "discoverability_profile": null,
+                      "graphic_requirements": {},
+                      "label": "文章",
+                      "media_requirements": {},
+                      "profile_version_id": 19,
+                      "publisher_candidates": [
+                        "publisher.copy"
+                      ],
+                      "renderer_key": "renderer.generic.markdown",
+                      "rule_sets": [],
+                      "source": "profile",
+                      "video_requirements": {},
+                      "workflow_key": "workflow.article.feed"
+                    },
+                    "id": 19,
+                    "version": 2
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "rule_sets": [],
+                "source": "profile"
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            }
+          ],
+          "expected_revision": 0,
+          "master_revision_id": 63
+        },
+        "result_hash": "4b221ec130affb476b131fb1dcd9f523db5a6ce43f1577fddaabd6ac5cb0ab82",
+        "schema": "stage.checks.result.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.checks",
+      "plugin_version": "1",
+      "attempt_no": 2,
+      "stale_reason": null
+    },
+    {
+      "id": 96,
+      "node_id": "refine",
+      "node_type": "AI",
+      "label": "精修候选",
+      "params": {
+        "purpose": "精修 Master 候选",
+        "instruction": "保留已验证事实，改善结构、具体性和角色表达。只返回标题和完整 Markdown 正文。",
+        "candidate_count": 1,
+        "length": "long",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.text.humanize@1"
+        },
+        "fact_mode": "current"
+      },
+      "status": "succeeded",
+      "output": {
+        "candidate_count": 1,
+        "candidates": [
+          {
+            "asset_refs": [],
+            "candidate_hash": "5a6818cf55e9e78e1436693b42f007ca9b9fd7f1899bbe61100da032b5fae6d4",
+            "candidate_id": "candidate-01-65831ba1bda9366b",
+            "evidence_refs": [],
+            "payload": {
+              "document": {
+                "blocks": [
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "比如你刚想画下窗边那盆植物，低头看看桌子：水杯、充电线，还有几张随手搁着的快递单，几乎把平整的地方占满了。笔不知道收在哪个抽屉，本子还压在包底。画画的念头才冒出个头，倒像先领到了一份收拾屋子的差事。这只是日常里常见的一个设想场景，却很适合用来琢磨一个小问题：每次想随手画两笔，前置的准备能不能少一点？"
+                      }
+                    ],
+                    "id": "legacy-b2",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "其实并不一定要把整张桌子打扫得一尘不染。很多时候，我们需要的不过是一个能容下一本掌心大小册子的角落，外加一支随时能拿出来的笔。把注意力收束到这里，比“给自己张罗一个完美的创作角”要轻省得多，也具体得多。"
+                      }
+                    ],
+                    "id": "legacy-b3",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "一个可以换地方的支撑面"
+                      }
+                    ],
+                    "id": "legacy-b4",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "在Colossal的一篇介绍里，Bill Groot制作的Lap Easel被描述为一种便携、可调的支撑装置，既能放在膝上，也可以架在桌面使用。吸引我的倒不是多买一件新装备，而是它提示了一个日常细节：画画和记东西，真的必须固定在书桌前吗？"
+                      }
+                    ],
+                    "id": "legacy-b5",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "需要说明的是，这篇发布于2026年10月13日的介绍直接附带了Colossal Shop的商店链接，带有明确的导购性质。我并没有亲手使用过这款画架，在现有资料里也没有查到独立第三方的长期使用测评，因此无法判断它的稳固程度、材质手感，或者久用之后是否舒适。这里仅借用它所呈现的支撑思路，来聊聊纸笔、身体与日常物理空间之间的关系。"
+                      }
+                    ],
+                    "id": "legacy-b6",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "先想象一个小场景"
+                      }
+                    ],
+                    "id": "legacy-b7",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "可以想象这样一个情境：午后翻开随身小本子的空白页，只想勾一下手边水杯的把手。要是书桌刚好空着，就随手放在桌上；要是窗边的阳光正好，想挪过去坐一会儿，便看看窗台或膝盖上有没有可以依靠的平整支撑。不用专门搬来一整套工具，也不用下定决心非得画满整张纸。"
+                      }
+                    ],
+                    "id": "legacy-b8",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "比如只勾出杯口的一小段弧线，或是随手记下百叶窗影子落在木地板上的间距。画得不够周正也没关系，在旁边写几个字标注一下时间，留给以后的自己看。这里设想的只是一种随时停下、记录片刻的节奏，绝非对Lap Easel具体使用效果的展示；实际生活里怎么摆放、顺不顺手，终究取决于每个人自己的房间布局与个人习惯。"
+                      }
+                    ],
+                    "id": "legacy-b9",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "反过来想，那些喜欢把颜料排布得整整齐齐、享受完整仪式感的人，也未必觉得准备工作是一种累赘，那或许恰恰是他们专注与沉浸的开始。想省去哪些琐碎步骤，本就没有标准答案：有人觉得每次翻找笔最耗耐心，有人只是不想为了画两笔而把餐桌反复腾空。看清自己容易卡在哪一个微小的动作上，往往比直接照搬一份工具清单更有帮助。"
+                      }
+                    ],
+                    "id": "legacy-b10",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "不添置新物件，也可以尝试的微调"
+                      }
+                    ],
+                    "id": "legacy-b11",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "如果我们暂时不想添置任何新工具，生活里同样藏着很多可以尝试的微调。要是总在找笔上耗费兴致，不妨把最顺手的那支笔直接夹在常看的本子里；要是桌面长期被工作杂物填满，换一本开本更小的速写本，或许就能在键盘旁边找到落笔的空隙。这些都只是可选的生活尝试，既不能保证让人立刻变得勤快，也不必把随笔记录变成一项需要准时打卡的任务。"
+                      }
+                    ],
+                    "id": "legacy-b12",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "看过关于这件画架的报道后，真正留在脑海里的是一个轻巧的自问：下一次心里冒出记录的想法时，能不能少找一样东西，少挪换一次位置？想动笔的时候画上两笔，被琐事打断了就顺手合上。纸页间哪怕只留下一道没画完的线条，也完全不妨碍这只是平凡、自在的一天。"
+                      }
+                    ],
+                    "id": "legacy-b13",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "参考：Colossal《Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere》（2026-10-13）。该文为附带商店链接的产品介绍；文中所述生活场景均为设想观察，并非作者亲测体验。"
+                      }
+                    ],
+                    "id": "legacy-b14",
+                    "type": "paragraph"
+                  }
+                ],
+                "citations": [],
+                "schema": "studio.text.document.v1"
+              },
+              "title": "画两笔之前，能不能少准备一点？"
+            },
+            "payload_hash": "65831ba1bda9366b2a2a0a1d9dc09667868581bf0d7ea32c60b1a8e2f61d6b7f",
+            "payload_schema": "text.master.v2"
+          }
+        ],
+        "input_hash": "e741e5b359d4d9a35d7977913817a9577ed8af902b85efddaa32df3ca9985b0d",
+        "llm_run_id": 149,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "prompt_hash": "b1f88ed0546d700dbd04c8cf140a7a66486736904f9bc4a7835d887a67c168ff",
+        "proposal_hash": "528eb961b531d22efe3bc6df40f127ddfbc630a1a2b9533c3d8e1a22e699ddc4",
+        "schema": "stage.master.proposal.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.master.propose",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 97,
+      "node_id": "title",
+      "node_type": "AI",
+      "label": "标题与开头",
+      "params": {
+        "output_schema": "creative.title-hook.v1",
+        "instruction": "生成与正文一致、不过度夸张的标题和开头方向。",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.text.title-hook@1"
+        },
+        "fact_mode": "current"
+      },
+      "status": "succeeded",
+      "output": {
+        "candidates": [
+          {
+            "candidate_hash": "b0f7f64ab200cbbe7799ae37f619163d101e378753dc90cc89e6951c350c983e",
+            "content": {
+              "hook": "比如刚想画下窗边那盆植物，低头却发现桌面被杂物占满，动笔的念头倒像先领了一份收拾屋子的差事——很多时候，让人停下的往往只是那些繁复的前置准备。",
+              "reason": "标题与开头直接从日常桌面的真实阻碍切入，不承诺正文未涉及的使用神效，准确呼应正文关于便携支撑思路与轻量记录习惯的探讨。",
+              "title": "画两笔之前，能不能少准备一点？"
+            },
+            "id": "th-lap-easel-0",
+            "references": [],
+            "summary": "以桌面杂物带来的动笔阻力为切入点，探讨简化记录准备的温和观察。",
+            "warnings": []
+          }
+        ],
+        "input_hash": "78cd7ab80e06dddacf3cd9082c3aa3360fed0335438e33de846f2fa1ee6bf07e",
+        "llm_run_id": 150,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "output_hash": "0e98e6e374d2a468f17b49c4a41acd2cdc430c11faa5b3feed9b61d20998db25",
+        "prompt_hash": "553f5aea61ff38f893b96fbc123f2bb5f78bb2949b486cc8b63390ceebf823ba",
+        "schema": "creative.title-hook.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 98,
+      "node_id": "final",
+      "node_type": "AI",
+      "label": "最终稿确认",
+      "params": {
+        "purpose": "整合最终 Master",
+        "instruction": "采用已接受的精修正文和标题/开头候选，保留全部精确引用与事实边界；不要增加新的事实。生成完整最终稿等待人工接受。",
+        "candidate_count": 1,
+        "length": "long",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.text.longform@1"
+        },
+        "fact_mode": "current"
+      },
+      "status": "succeeded",
+      "output": {
+        "candidate_count": 1,
+        "candidates": [
+          {
+            "asset_refs": [],
+            "candidate_hash": "86ccddcf15715bfe8cb22d2a2043172403e1ef7b35d71c3b29cf5654bb9ffddb",
+            "candidate_id": "candidate-01-1e2a2e51eba594c1",
+            "evidence_refs": [],
+            "payload": {
+              "document": {
+                "blocks": [
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "比如你刚想画下窗边那盆植物，低头看看桌子：水杯、充电线，还有几张随手搁着的快递单，几乎把平整的地方占满了。笔不知道收在哪个抽屉，本子还压在包底。画画的念头才冒出个头，倒像先领到了一份收拾屋子的差事。这只是日常里常见的一个设想场景，却很适合用来琢磨一个小问题：每次想随手画两笔，前置的准备能不能少一点？"
+                      }
+                    ],
+                    "id": "legacy-b2",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "其实并不一定要把整张桌子打扫得一尘不染。很多时候，我们需要的不过是一个能容下一本掌心大小册子的角落，外加一支随时能拿出来的笔。把注意力收束到这里，比“给自己张罗一个完美的创作角”要轻省得多，也具体得多。"
+                      }
+                    ],
+                    "id": "legacy-b3",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "一个可以换地方的支撑面"
+                      }
+                    ],
+                    "id": "legacy-b4",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "在Colossal的一篇介绍里，Bill Groot制作的Lap Easel被描述为一种便携、可调的支撑装置，既能放在膝上，也可以架在桌面使用。吸引我的倒不是多买一件新装备，而是它提示了一个日常细节：画画和记东西，真的必须固定在书桌前吗？"
+                      }
+                    ],
+                    "id": "legacy-b5",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "需要说明的是，这篇介绍直接附带了Colossal Shop的商店链接，带有明确的导购性质。我并没有亲手使用过这款画架，在现有资料里也没有查到独立第三方的长期使用测评，因此无法判断它的稳固程度、材质手感，或者久用之后是否舒适。这里仅借用它所呈现的支撑思路，来聊聊纸笔、身体与日常物理空间之间的关系。"
+                      }
+                    ],
+                    "id": "legacy-b6",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "先想象一个小场景"
+                      }
+                    ],
+                    "id": "legacy-b7",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "可以想象这样一个情境：午后翻开随身小本子的空白页，只想勾一下手边水杯的把手。要是书桌刚好空着，就随手放在桌上；要是窗边的阳光正好，想挪过去坐一会儿，便看看窗台或膝盖上有没有可以依靠的平整支撑。不用专门搬来一整套工具，也不用下定决心非得画满整张纸。"
+                      }
+                    ],
+                    "id": "legacy-b8",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "比如只勾出杯口的一小段弧线，或是随手记下百叶窗影子落在木地板上的间距。画得不够周正也没关系，在旁边写几个字标注一下时间，留给以后的自己看。这里设想的只是一种随时停下、记录片刻的节奏，绝非对Lap Easel具体使用效果的展示；实际生活里怎么摆放、顺不顺手，终究取决于每个人自己的房间布局与个人习惯。"
+                      }
+                    ],
+                    "id": "legacy-b9",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "反过来想，那些喜欢把颜料排布得整整齐齐、享受完整仪式感的人，也未必觉得准备工作是一种累赘，那或许恰恰是他们专注与沉浸的开始。想省去哪些琐碎步骤，本就没有标准答案：有人觉得每次翻找笔最耗耐心，有人只是不想为了画两笔而把餐桌反复腾空。看清自己容易卡在哪一个微小的动作上，往往比直接照搬一份工具清单更有帮助。"
+                      }
+                    ],
+                    "id": "legacy-b10",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "不添置新物件，也可以尝试的微调"
+                      }
+                    ],
+                    "id": "legacy-b11",
+                    "level": 2,
+                    "type": "heading"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "如果我们暂时不想添置任何新工具，生活里同样藏着很多可以尝试的微调。要是总在找笔上耗费兴致，不妨把最顺手的那支笔直接夹在常看的本子里；要是桌面长期被工作杂物填满，换一本开本更小的速写本，或许就能在键盘旁边找到落笔的空隙。这些都只是可选的生活尝试，既不能保证让人立刻变得勤快，也不必把随笔记录变成一项需要准时打卡的任务。"
+                      }
+                    ],
+                    "id": "legacy-b12",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "看过关于这件画架的报道后，真正留在脑海里的是一个轻巧的自问：下一次心里冒出记录的想法时，能不能少找一样东西，少挪换一次位置？想动笔的时候画上两笔，被琐事打断了就顺手合上。纸页间哪怕只留下一道没画完的线条，也完全不妨碍这只是平凡、自在的一天。"
+                      }
+                    ],
+                    "id": "legacy-b13",
+                    "type": "paragraph"
+                  },
+                  {
+                    "content": [
+                      {
+                        "marks": [],
+                        "text": "参考：Colossal《Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere》。该文为附带商店链接的产品介绍；文中所述生活场景均为设想观察，并非作者亲测体验。"
+                      }
+                    ],
+                    "id": "legacy-b14",
+                    "type": "paragraph"
+                  }
+                ],
+                "citations": [],
+                "schema": "studio.text.document.v1"
+              },
+              "title": "画两笔之前，能不能少准备一点？"
+            },
+            "payload_hash": "1e2a2e51eba594c1551166fbcbb767f2e2c29a18727ab8d69c840f044f913bca",
+            "payload_schema": "text.master.v2"
+          }
+        ],
+        "input_hash": "226c9bfa2db31fc4f5bee7c8ef9ed2db1bd7b06058a68582ea1acdd7305834c5",
+        "llm_run_id": 151,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "prompt_hash": "b69433654e41668b4fe674b25805749279eedf99790647051433af27a0f9a1ba",
+        "proposal_hash": "1d9302660246f12b624e42d9cf788ef70a3a67d66468c548d7f91b3e2c76c809",
+        "schema": "stage.master.proposal.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.master.propose",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 99,
+      "node_id": "final_quality",
+      "node_type": "Rule",
+      "label": "最终稿质量检查",
+      "params": {},
+      "status": "succeeded",
+      "output": {
+        "domain": "checks",
+        "resolution_hash": "40e7d9d4c351bcf2230cec382fef9d51cb5ff1b7f7f8ca565f05d7c04a39c683",
+        "result": {
+          "blockers": [],
+          "checks": [
+            {
+              "check_kind": "master_schema",
+              "id": 236,
+              "input_hash": "ef179ab0e9d35e3bf16a9cec48bae2a0ce83d2a4f4dc6f346254a3735f756ba9",
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "master_schema",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "evidence",
+              "id": 237,
+              "input_hash": "f7d47191b3b8c864621956b3b0322e1ea3338e3837a0b50fbc6dd384c50af877",
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "evidence",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "rights",
+              "id": 238,
+              "input_hash": "3249e9b93b7625c006531b0abac5c4c1d2cca24f5979fb7deb6669a2100c8e9f",
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "rights",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "render",
+              "id": 239,
+              "input_hash": "ef1b4360682dc2ce1f0f6b0411a891d79b759de56f5f9b00dfc727e1399f1ac0",
+              "report": {
+                "body_markdown": "比如你刚想画下窗边那盆植物，低头看看桌子：水杯、充电线，还有几张随手搁着的快递单，几乎把平整的地方占满了。笔不知道收在哪个抽屉，本子还压在包底。画画的念头才冒出个头，倒像先领到了一份收拾屋子的差事。这只是日常里常见的一个设想场景，却很适合用来琢磨一个小问题：每次想随手画两笔，前置的准备能不能少一点？\n\n其实并不一定要把整张桌子打扫得一尘不染。很多时候，我们需要的不过是一个能容下一本掌心大小册子的角落，外加一支随时能拿出来的笔。把注意力收束到这里，比“给自己张罗一个完美的创作角”要轻省得多，也具体得多。\n\n## 一个可以换地方的支撑面\n\n在Colossal的一篇介绍里，Bill Groot制作的Lap Easel被描述为一种便携、可调的支撑装置，既能放在膝上，也可以架在桌面使用。吸引我的倒不是多买一件新装备，而是它提示了一个日常细节：画画和记东西，真的必须固定在书桌前吗？\\[1\\]\n\n需要说明的是，这篇介绍直接附带了Colossal Shop的商店链接，带有明确的导购性质。我并没有亲手使用过这款画架，在现有资料里也没有查到独立第三方的长期使用测评，因此无法判断它的稳固程度、材质手感，或者久用之后是否舒适。这里仅借用它所呈现的支撑思路，来聊聊纸笔、身体与日常物理空间之间的关系。\\[2\\]\n\n## 先想象一个小场景\n\n可以想象这样一个情境：午后翻开随身小本子的空白页，只想勾一下手边水杯的把手。要是书桌刚好空着，就随手放在桌上；要是窗边的阳光正好，想挪过去坐一会儿，便看看窗台或膝盖上有没有可以依靠的平整支撑。不用专门搬来一整套工具，也不用下定决心非得画满整张纸。\n\n比如只勾出杯口的一小段弧线，或是随手记下百叶窗影子落在木地板上的间距。画得不够周正也没关系，在旁边写几个字标注一下时间，留给以后的自己看。这里设想的只是一种随时停下、记录片刻的节奏，绝非对Lap Easel具体使用效果的展示；实际生活里怎么摆放、顺不顺手，终究取决于每个人自己的房间布局与个人习惯。\n\n反过来想，那些喜欢把颜料排布得整整齐齐、享受完整仪式感的人，也未必觉得准备工作是一种累赘，那或许恰恰是他们专注与沉浸的开始。想省去哪些琐碎步骤，本就没有标准答案：有人觉得每次翻找笔最耗耐心，有人只是不想为了画两笔而把餐桌反复腾空。看清自己容易卡在哪一个微小的动作上，往往比直接照搬一份工具清单更有帮助。\n\n## 不添置新物件，也可以尝试的微调\n\n如果我们暂时不想添置任何新工具，生活里同样藏着很多可以尝试的微调。要是总在找笔上耗费兴致，不妨把最顺手的那支笔直接夹在常看的本子里；要是桌面长期被工作杂物填满，换一本开本更小的速写本，或许就能在键盘旁边找到落笔的空隙。这些都只是可选的生活尝试，既不能保证让人立刻变得勤快，也不必把随笔记录变成一项需要准时打卡的任务。\n\n看过关于这件画架的报道后，真正留在脑海里的是一个轻巧的自问：下一次心里冒出记录的想法时，能不能少找一样东西，少挪换一次位置？想动笔的时候画上两笔，被琐事打断了就顺手合上。纸页间哪怕只留下一道没画完的线条，也完全不妨碍这只是平凡、自在的一天。\n\n参考：Colossal《Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere》。该文为附带商店链接的产品介绍；文中所述生活场景均为设想观察，并非作者亲测体验。\\[3\\]",
+                "content_hash": "84ebc8761b97930aaf323491f5d9777eb7b498c9f83ae12755f10c27c014ce04",
+                "origin": "deterministic",
+                "reasons": [],
+                "render_input_hash": "ed5aeabb27b83ffe1664f93e660f30f4277eb5d10d114b4a71ebdad64e51e100",
+                "renderer_key": "text.studio.document.v1",
+                "renderer_version": "2",
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "render",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "status": "ready",
+                "unused_asset_ids": [],
+                "warnings": []
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_structure",
+              "id": 240,
+              "input_hash": "b80878600ef7cbf88f1ed93e8c93ec47a07ec442dafcc5aa6d314fdc3a3bc1ec",
+              "report": {
+                "block_count": 13,
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_structure",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_fact",
+              "id": 241,
+              "input_hash": "662bbbb70495df1e7227407fed5c643fedb29e62ffc05ec10e4c05155b0acca7",
+              "report": {
+                "coverage": {
+                  "deterministic": "complete",
+                  "deterministic_issue_count": 0,
+                  "fact_count": 1,
+                  "model_use_excluded_item_ids": [],
+                  "reason": null,
+                  "semantic": "verified",
+                  "semantic_fact_count": 1
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_fact",
+                  "model_use": [
+                    {
+                      "allowed": true,
+                      "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                      "id": 6,
+                      "revoked": false
+                    }
+                  ],
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_identity",
+              "id": 242,
+              "input_hash": "ea98ce40fa41530b9a2a70f6afe392faf34c834b93bf4f635b67f3b1c8004d9b",
+              "report": {
+                "coverage": {
+                  "advisory_critic": {
+                    "can_override_deterministic": false,
+                    "reason": null,
+                    "rubric": [
+                      {
+                        "dimension": "factual_grounding",
+                        "reason": "准确说明了信息源自Colossal的报道，并主动厘清该报道带导购性质、自己未亲测实物，事实边界与个人推想区分得极为清晰。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "naturalness",
+                        "reason": "语调温和自然，生活场景的描摹与心理流转非常真实，符合观察者的角色定位。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "specificity",
+                        "reason": "包含大量具体细腻的动作与场景（如勾勒杯口弧线、百叶窗在木地板的投影间距、把笔夹在本子里等），细节充实生动。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "non_preachy",
+                        "reason": "完全没有居高临下的指导或制造焦虑，明确表达不同生活习惯各有所好，仅提供开放式的微调视角。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "title_alignment",
+                        "reason": "小标题层次分明，正文各部分紧扣段落主题及随手记录与物理支撑的核心讨论。",
+                        "score": 4
+                      }
+                    ],
+                    "status": "verified"
+                  },
+                  "deterministic": "persona_rules_and_explicit_phrases",
+                  "explicit_phrase_count": 0,
+                  "reason": null,
+                  "semantic": "verified"
+                },
+                "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+                "identity_snapshot_id": 18,
+                "issues": [],
+                "persona_quality": {
+                  "coverage": {
+                    "deterministic": "bounded_phrase_structure_citation_rules",
+                    "fact_speculation": "bounded_prediction_label_rule",
+                    "factual_truth": "existing_text_fact_check",
+                    "semantic": "not_run",
+                    "title_body_alignment": "bounded_numeric_detail_only"
+                  },
+                  "critic_dimensions": [
+                    "factual_grounding",
+                    "naturalness",
+                    "specificity",
+                    "non_preachy",
+                    "title_alignment"
+                  ],
+                  "human_review_required": true,
+                  "issues": [],
+                  "payload_hash": "a2fe83dcd29d3367eabebd77ff437e555e730186245f7b0042400514693f9491",
+                  "quality_profile_hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                  "quality_profile_ref": "studio.quality.text.lifestyle@1",
+                  "status": "pass"
+                },
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "3",
+                  "kind": "text_identity",
+                  "persona_quality": {
+                    "hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                    "ref": "studio.quality.text.lifestyle@1"
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass"
+            },
+            {
+              "check_kind": "text_platform",
+              "id": 243,
+              "input_hash": "c3c6aa6e10dc4e0cb9687488f451ed3bfdc1f4a4ad9fdfc29580dbb8f7d90c6b",
+              "report": {
+                "channel": "baijia",
+                "content_form": "article",
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "profile_version_id": 19,
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_platform",
+                  "profile": {
+                    "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                    "checksum_origin": "stored",
+                    "form": {
+                      "artifact_kind": "text",
+                      "channel": "baijia",
+                      "content_form": "article",
+                      "discoverability_profile": null,
+                      "graphic_requirements": {},
+                      "label": "文章",
+                      "media_requirements": {},
+                      "profile_version_id": 19,
+                      "publisher_candidates": [
+                        "publisher.copy"
+                      ],
+                      "renderer_key": "renderer.generic.markdown",
+                      "rule_sets": [],
+                      "source": "profile",
+                      "video_requirements": {},
+                      "workflow_key": "workflow.article.feed"
+                    },
+                    "id": 19,
+                    "version": 2
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "rule_sets": [],
+                "source": "profile"
+              },
+              "status": "pass"
+            }
+          ],
+          "checks_pass": true,
+          "checks_reviewable": true,
+          "current_checks": [
+            {
+              "check_kind": "master_schema",
+              "id": 236,
+              "input_hash": "ef179ab0e9d35e3bf16a9cec48bae2a0ce83d2a4f4dc6f346254a3735f756ba9",
+              "is_current": true,
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "master_schema",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "evidence",
+              "id": 237,
+              "input_hash": "f7d47191b3b8c864621956b3b0322e1ea3338e3837a0b50fbc6dd384c50af877",
+              "is_current": true,
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "evidence",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "rights",
+              "id": 238,
+              "input_hash": "3249e9b93b7625c006531b0abac5c4c1d2cca24f5979fb7deb6669a2100c8e9f",
+              "is_current": true,
+              "report": {
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "rights",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "render",
+              "id": 239,
+              "input_hash": "ef1b4360682dc2ce1f0f6b0411a891d79b759de56f5f9b00dfc727e1399f1ac0",
+              "is_current": true,
+              "report": {
+                "body_markdown": "比如你刚想画下窗边那盆植物，低头看看桌子：水杯、充电线，还有几张随手搁着的快递单，几乎把平整的地方占满了。笔不知道收在哪个抽屉，本子还压在包底。画画的念头才冒出个头，倒像先领到了一份收拾屋子的差事。这只是日常里常见的一个设想场景，却很适合用来琢磨一个小问题：每次想随手画两笔，前置的准备能不能少一点？\n\n其实并不一定要把整张桌子打扫得一尘不染。很多时候，我们需要的不过是一个能容下一本掌心大小册子的角落，外加一支随时能拿出来的笔。把注意力收束到这里，比“给自己张罗一个完美的创作角”要轻省得多，也具体得多。\n\n## 一个可以换地方的支撑面\n\n在Colossal的一篇介绍里，Bill Groot制作的Lap Easel被描述为一种便携、可调的支撑装置，既能放在膝上，也可以架在桌面使用。吸引我的倒不是多买一件新装备，而是它提示了一个日常细节：画画和记东西，真的必须固定在书桌前吗？\\[1\\]\n\n需要说明的是，这篇介绍直接附带了Colossal Shop的商店链接，带有明确的导购性质。我并没有亲手使用过这款画架，在现有资料里也没有查到独立第三方的长期使用测评，因此无法判断它的稳固程度、材质手感，或者久用之后是否舒适。这里仅借用它所呈现的支撑思路，来聊聊纸笔、身体与日常物理空间之间的关系。\\[2\\]\n\n## 先想象一个小场景\n\n可以想象这样一个情境：午后翻开随身小本子的空白页，只想勾一下手边水杯的把手。要是书桌刚好空着，就随手放在桌上；要是窗边的阳光正好，想挪过去坐一会儿，便看看窗台或膝盖上有没有可以依靠的平整支撑。不用专门搬来一整套工具，也不用下定决心非得画满整张纸。\n\n比如只勾出杯口的一小段弧线，或是随手记下百叶窗影子落在木地板上的间距。画得不够周正也没关系，在旁边写几个字标注一下时间，留给以后的自己看。这里设想的只是一种随时停下、记录片刻的节奏，绝非对Lap Easel具体使用效果的展示；实际生活里怎么摆放、顺不顺手，终究取决于每个人自己的房间布局与个人习惯。\n\n反过来想，那些喜欢把颜料排布得整整齐齐、享受完整仪式感的人，也未必觉得准备工作是一种累赘，那或许恰恰是他们专注与沉浸的开始。想省去哪些琐碎步骤，本就没有标准答案：有人觉得每次翻找笔最耗耐心，有人只是不想为了画两笔而把餐桌反复腾空。看清自己容易卡在哪一个微小的动作上，往往比直接照搬一份工具清单更有帮助。\n\n## 不添置新物件，也可以尝试的微调\n\n如果我们暂时不想添置任何新工具，生活里同样藏着很多可以尝试的微调。要是总在找笔上耗费兴致，不妨把最顺手的那支笔直接夹在常看的本子里；要是桌面长期被工作杂物填满，换一本开本更小的速写本，或许就能在键盘旁边找到落笔的空隙。这些都只是可选的生活尝试，既不能保证让人立刻变得勤快，也不必把随笔记录变成一项需要准时打卡的任务。\n\n看过关于这件画架的报道后，真正留在脑海里的是一个轻巧的自问：下一次心里冒出记录的想法时，能不能少找一样东西，少挪换一次位置？想动笔的时候画上两笔，被琐事打断了就顺手合上。纸页间哪怕只留下一道没画完的线条，也完全不妨碍这只是平凡、自在的一天。\n\n参考：Colossal《Meet the Lap Easel, a Portable Companion for Taking Creativity Anywhere》。该文为附带商店链接的产品介绍；文中所述生活场景均为设想观察，并非作者亲测体验。\\[3\\]",
+                "content_hash": "84ebc8761b97930aaf323491f5d9777eb7b498c9f83ae12755f10c27c014ce04",
+                "origin": "deterministic",
+                "reasons": [],
+                "render_input_hash": "ed5aeabb27b83ffe1664f93e660f30f4277eb5d10d114b4a71ebdad64e51e100",
+                "renderer_key": "text.studio.document.v1",
+                "renderer_version": "2",
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "render",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "status": "ready",
+                "unused_asset_ids": [],
+                "warnings": []
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_structure",
+              "id": 240,
+              "input_hash": "b80878600ef7cbf88f1ed93e8c93ec47a07ec442dafcc5aa6d314fdc3a3bc1ec",
+              "is_current": true,
+              "report": {
+                "block_count": 13,
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_structure",
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_fact",
+              "id": 241,
+              "input_hash": "662bbbb70495df1e7227407fed5c643fedb29e62ffc05ec10e4c05155b0acca7",
+              "is_current": true,
+              "report": {
+                "coverage": {
+                  "deterministic": "complete",
+                  "deterministic_issue_count": 0,
+                  "fact_count": 1,
+                  "model_use_excluded_item_ids": [],
+                  "reason": null,
+                  "semantic": "verified",
+                  "semantic_fact_count": 1
+                },
+                "issues": [],
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_fact",
+                  "model_use": [
+                    {
+                      "allowed": true,
+                      "checksum": "11b76f44d87ad2a340d8c44be2110831081408b0879e6f238e8ac9bf4c5c460d",
+                      "id": 6,
+                      "revoked": false
+                    }
+                  ],
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_identity",
+              "id": 242,
+              "input_hash": "ea98ce40fa41530b9a2a70f6afe392faf34c834b93bf4f635b67f3b1c8004d9b",
+              "is_current": true,
+              "report": {
+                "coverage": {
+                  "advisory_critic": {
+                    "can_override_deterministic": false,
+                    "reason": null,
+                    "rubric": [
+                      {
+                        "dimension": "factual_grounding",
+                        "reason": "准确说明了信息源自Colossal的报道，并主动厘清该报道带导购性质、自己未亲测实物，事实边界与个人推想区分得极为清晰。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "naturalness",
+                        "reason": "语调温和自然，生活场景的描摹与心理流转非常真实，符合观察者的角色定位。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "specificity",
+                        "reason": "包含大量具体细腻的动作与场景（如勾勒杯口弧线、百叶窗在木地板的投影间距、把笔夹在本子里等），细节充实生动。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "non_preachy",
+                        "reason": "完全没有居高临下的指导或制造焦虑，明确表达不同生活习惯各有所好，仅提供开放式的微调视角。",
+                        "score": 4
+                      },
+                      {
+                        "dimension": "title_alignment",
+                        "reason": "小标题层次分明，正文各部分紧扣段落主题及随手记录与物理支撑的核心讨论。",
+                        "score": 4
+                      }
+                    ],
+                    "status": "verified"
+                  },
+                  "deterministic": "persona_rules_and_explicit_phrases",
+                  "explicit_phrase_count": 0,
+                  "reason": null,
+                  "semantic": "verified"
+                },
+                "identity_checksum": "99fdc16b94058e5c6eb2cf270b8f2fbc5e141c912e14cc499dc461b9dd6e8031",
+                "identity_snapshot_id": 18,
+                "issues": [],
+                "persona_quality": {
+                  "coverage": {
+                    "deterministic": "bounded_phrase_structure_citation_rules",
+                    "fact_speculation": "bounded_prediction_label_rule",
+                    "factual_truth": "existing_text_fact_check",
+                    "semantic": "not_run",
+                    "title_body_alignment": "bounded_numeric_detail_only"
+                  },
+                  "critic_dimensions": [
+                    "factual_grounding",
+                    "naturalness",
+                    "specificity",
+                    "non_preachy",
+                    "title_alignment"
+                  ],
+                  "human_review_required": true,
+                  "issues": [],
+                  "payload_hash": "a2fe83dcd29d3367eabebd77ff437e555e730186245f7b0042400514693f9491",
+                  "quality_profile_hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                  "quality_profile_ref": "studio.quality.text.lifestyle@1",
+                  "status": "pass"
+                },
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "3",
+                  "kind": "text_identity",
+                  "persona_quality": {
+                    "hash": "bc7bef5e0c1ff5f943aeb16062a65d335ef4db1f779ea91c4cc0b8f673a2e0e9",
+                    "ref": "studio.quality.text.lifestyle@1"
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2",
+                  "semantic": {
+                    "configured": true,
+                    "model": "gemini-3.8-flash-high",
+                    "profile": "registered.ddd9b006056eae2bfb76b2ee",
+                    "provider": "openai_compatible"
+                  }
+                }
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            },
+            {
+              "check_kind": "text_platform",
+              "id": 243,
+              "input_hash": "c3c6aa6e10dc4e0cb9687488f451ed3bfdc1f4a4ad9fdfc29580dbb8f7d90c6b",
+              "is_current": true,
+              "report": {
+                "channel": "baijia",
+                "content_form": "article",
+                "coverage": {
+                  "deterministic": "complete"
+                },
+                "profile_version_id": 19,
+                "reasons": [],
+                "requirement": {
+                  "adapter_version": "2",
+                  "implementation": "1",
+                  "kind": "text_platform",
+                  "profile": {
+                    "checksum": "72ada4c496d279cba025b1349adadf324ef3e81e4adc9d55f284a2d661942e2c",
+                    "checksum_origin": "stored",
+                    "form": {
+                      "artifact_kind": "text",
+                      "channel": "baijia",
+                      "content_form": "article",
+                      "discoverability_profile": null,
+                      "graphic_requirements": {},
+                      "label": "文章",
+                      "media_requirements": {},
+                      "profile_version_id": 19,
+                      "publisher_candidates": [
+                        "publisher.copy"
+                      ],
+                      "renderer_key": "renderer.generic.markdown",
+                      "rule_sets": [],
+                      "source": "profile",
+                      "video_requirements": {},
+                      "workflow_key": "workflow.article.feed"
+                    },
+                    "id": 19,
+                    "version": 2
+                  },
+                  "renderer": {
+                    "key": "text.studio.document.v1",
+                    "version": "2"
+                  },
+                  "schema": "text.master.v2"
+                },
+                "rule_sets": [],
+                "source": "profile"
+              },
+              "status": "pass",
+              "stored_status": "pass"
+            }
+          ],
+          "expected_revision": 0,
+          "master_revision_id": 65
+        },
+        "result_hash": "d828208e98d11202b54410e1f3077d28b61c298ee01f82626c7910fc853a9143",
+        "schema": "stage.checks.result.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.checks",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    }
+  ]
+}

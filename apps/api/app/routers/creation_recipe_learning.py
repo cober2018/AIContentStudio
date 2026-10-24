@@ -21,7 +21,7 @@ def _call(fn, *args, **kwargs):
     try:
         return fn(*args, **kwargs)
     except StageInvocationError as exc:
-        raise HTTPException(exc.status_code, {"code": exc.code}) from None
+        raise HTTPException(exc.status_code, exc.body) from None
     except (StageContractError, ValueError):
         raise HTTPException(422, {"code": "recipe_input_invalid"}) from None
 
@@ -40,6 +40,13 @@ def options(project_id: int, unit_id: int, db: Session = Depends(get_db), user: 
 def history(project_id: int, unit_id: int, node_id: str, run_id: int,
             db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
     return _call(stage_feedback.history, db, project_id, unit_id, node_id, user, run_id=run_id)
+
+
+@read_router.get("/stages/{node_id}/feedback-targets")
+def feedback_targets(project_id: int, unit_id: int, node_id: str, run_id: int, attempt_id: int,
+                     db: Session = Depends(get_db), user: User = Depends(get_existing_user)):
+    return _call(stage_feedback.feedback_targets, db, project_id, unit_id, node_id, user,
+                 {"run_id": run_id, "attempt_id": attempt_id})
 
 
 @router.post("/adopt-recipe")

@@ -1,0 +1,7 @@
+# Progress
+
+- 2026-10-24: proposal written. Waiting for confirmation.
+- 2026-10-24: applied API (TTS params incl. emotion/volume/pitch/MP3/32k/128k/mono/subtitles, `voice_default`, `/voiceover` with voice-aligned shot lengths and reuse), web (设置 → 配音, 制作内容 ① 生成配音), AE builder `framing`/`camera`. 海底光缆: voice rev 154 (59.5 s, verify_clone_v2, happy), master 142 aligned (60.07 s), edit task #7 in_progress.
+- #7 done so far: 12 AE comps rendered with shot sizes / camera moves, no repeated ship footage (shot-10 is a graphic beat); Resolve project `AICS-exec7-haidiguanglan-voice` has 15 picture items (1802 frames), voice on A1, AE captions overlay (ProRes 4444 alpha, 23 cues) on V2; `outputs/subtitles.srt` written.
+- Open: voice is −31.7 LUFS / −10.6 dBTP; needs loudness mastering (platform `master_loudness`, WAV-only route) before the final mix (target −14 LUFS, ≤ −1 dBTP). Then render rough cut, export/reopen DRP and AE, manifest, submit 17 roles, request review. Also: orphan voice file from the first failed attempt in `/Volumes/T1000/自媒体素材/AIContentStudio/音频/e7/`.
+- 2026-10-24: finished #7. Voice copy loudness-mastered in the workspace (−15 LUFS / −1.5 dBTP via `master_loudness`), clip −2 dB in Resolve → rough cut −14.0 LUFS / −3.5 dBTP. Full-bleed credits moved above captions (shots 7, 8 re-rendered). Resolve DRP and AE project reopened, missing_media=0. Delivery container trimmed to the video length by stream copy (platform duration check ±35 ms). 17 outputs submitted; state result_ready (revision 27).

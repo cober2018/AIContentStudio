@@ -1,6 +1,9 @@
 import { FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { api, ApiError } from "../api";
-import { Button, EmptyState, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import { useSearchParams } from "react-router-dom";
+import { api, ApiError, currentUser } from "../api";
+import { Button, Chip, EmptyState, ErrorBanner, Field, Notice, Page, PageHeader, Section, Spinner, Tabs, inputClass } from "../components/ui";
+import { ProfileOverview } from "./IdentityProfileView";
+import { PersonaDiscoveryStatus } from "./DiscoveryPanel";
 import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
 import StarterPersonaGallery from "./StarterGallery";
@@ -9,7 +12,7 @@ const PersonaReferenceStylePanel = lazy(() => import("./CapabilityMemoryPanel").
 const PersonaCreativeConfig = lazy(() => import("./PersonaCreativeConfig"));
 
 type Kind = "brand" | "persona" | "account" | "series";
-type Entity = { kind: Kind; id: number; name: string; status: string; brand_id?: number | null; persona_id?: number; account_id?: number; scope?: string; platform_channel?: string | null; current_revision: number };
+type Entity = { kind: Kind; id: number; name: string; status: string; brand_id?: number | null; persona_id?: number | null; account_id?: number; scope?: string; platform_channel?: string | null; current_revision: number };
 type Channel = { channel: string; label: string; content_forms: { content_form: string; label: string }[] };
 type SeriesTarget = { id: number; series_id: number; account_id: number; account_name: string | null; platform_channel: string | null; content_form: string; enabled: boolean; version: number };
 type Revision = { id: number; revision_no: number; profile: Record<string, unknown>; checksum: string; created_at: string | null };
@@ -35,8 +38,9 @@ const FIELDS: { key: FieldKey; label: string; shape: "text" | "lines" | "json" |
   { key: "public_fact_policy", label: "公开事实规则 JSON", shape: "json", tab: "boundaries" },
 ];
 const TABS = [
-  ["identity", "身份"], ["expression", "表达与视觉"], ["boundaries", "观点与边界"],
-  ["creative", "创作配置"], ["accounts", "账号与栏目"], ["workflow", "工作流偏好"], ["memory", "内容记忆"],
+  ["summary", "概览"], ["edit", "编辑资料"], ["history", "修订历史"],
+  ["creative", "创作配置"], ["accounts", "关联与管理"], ["workflow", "工作流偏好"],
+  ["memory", "内容记忆"], ["publisher", "平台连接"],
 ] as const;
 const EMPTY_DEFINITION = { nodes: [], edges: [], visual_order: [] };
 
@@ -51,29 +55,54 @@ function draftFrom(profile: Record<string, unknown>): Record<FieldKey, DraftFiel
 }
 
 export default function IdentityWorkspace() {
+  const [user, setUser] = useState(currentUser);
+  useEffect(() => {
+    const sync = () => setUser(currentUser());
+    window.addEventListener("storage", sync); window.addEventListener("focus", sync);
+    return () => { window.removeEventListener("storage", sync); window.removeEventListener("focus", sync); };
+  }, []);
+  return <IdentityWorkspaceForUser key={user} user={user} />;
+}
+function IdentityWorkspaceForUser({ user }: { user: string }) {
+  const [params, setParams] = useSearchParams();
+  const directory = (Object.keys(ROOT).includes(params.get("directory") || "") ? params.get("directory") : "persona") as Kind;
+  const routeKind = params.get("kind") || (params.has("persona") ? "persona" : "");
+  const routeId = params.get("id") || params.get("persona") || "";
+  const routeSelection = Object.keys(ROOT).includes(routeKind) && /^[1-9]\d*$/.test(routeId) ? { kind: routeKind as Kind, id: Number(routeId) } : null;
+  const invalidSelection = (params.has("kind") || params.has("id") || params.has("persona")) && !routeSelection;
+  const routeView = params.get("view") || "summary";
+
   const [brands, setBrands] = useState<Entity[]>([]);
   const [personas, setPersonas] = useState<Entity[]>([]);
   const [accounts, setAccounts] = useState<Entity[]>([]);
   const [series, setSeries] = useState<Entity[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
-  const [selected, setSelected] = useState<{ kind: Kind; id: number } | null>(null);
+  const [selected, setSelected] = useState<{ kind: Kind; id: number } | null>(routeSelection);
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [effective, setEffective] = useState<Effective | null>(null);
   const [voices, setVoices] = useState<{ id: number; name: string; version: number }[]>([]);
   const [draft, setDraft] = useState<Record<FieldKey, DraftField>>(draftFrom({}));
   const draftRef = useRef(draft);
   draftRef.current = draft;
-  const [tab, setTab] = useState<string>("identity");
+  const tab = routeView;
   const [modality, setModality] = useState("text");
   const [binding, setBinding] = useState<Binding | null>(null);
   const [resolvedBinding, setResolvedBinding] = useState<Binding | null>(null);
   const [definitionText, setDefinitionText] = useState(JSON.stringify(EMPTY_DEFINITION, null, 2));
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [treeError, setTreeError] = useState("");
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [revisionConflict, setRevisionConflict] = useState(false);
+  const [workflowConflict, setWorkflowConflict] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
+  const baselineDraft = useRef(JSON.stringify(draftFrom({})));
+  const profileDirty = useRef(false);
+  profileDirty.current = JSON.stringify(draft) !== baselineDraft.current;
+  const workflowDirty = useRef(false);
   const [role, setRole] = useState<string | null>(null);
   const [loadedIdentityKey, setLoadedIdentityKey] = useState<string | null>(null);
   const [loadedBindingKey, setLoadedBindingKey] = useState<string | null>(null);
@@ -104,60 +133,128 @@ export default function IdentityWorkspace() {
   const selectedBinding = useRef(bindingKey);
   selectedBinding.current = bindingKey;
   const detailReady = loadedIdentityKey === identityKey;
-  const creativeReadOnly = !["editor", "admin"].includes(role ?? "") || !detailReady || detailLoading
+  const missingAncestor = Boolean(current && (
+    (current.kind === "persona" && current.brand_id != null && !brand)
+    || (current.kind === "account" && current.persona_id != null && !persona)
+    || (current.kind === "series" && (editorialSeries ? !persona : !account))
+    || (persona?.brand_id != null && !brand)
+  ));
+  const creativeReadOnly = missingAncestor || !["editor", "admin"].includes(role ?? "") || !detailReady || detailLoading
     || [current, brand, persona, account].some(row => row?.status === "archived");
 
-  function selectIdentity(next: { kind: Kind; id: number } | null) {
-    const nextKey = next ? `${next.kind}:${next.id}` : null;
-    if (nextKey !== selectedIdentity.current && (creativeDirty.current || referenceStyleDirty.current)
-        && !window.confirm("当前角色有未保存的创作配置。确认丢弃这些草稿并切换身份？")) return false;
+  const acceptedParams = useRef(params.toString());
+  const acceptedHistoryIndex = useRef<number | null>(window.history.state?.idx ?? null);
+  const restoringHistory = useRef(false);
+  const acceptedPop = useRef(false);
+  const canLeave = () => !pending.current && (!(profileDirty.current || creativeDirty.current || referenceStyleDirty.current || workflowDirty.current) || window.confirm("有未保存的修改，确认离开并丢弃草稿？"));
+  function navigate(next: URLSearchParams) {
+    const nextKind = next.get("kind") || (next.has("persona") ? "persona" : "");
+    const nextId = next.get("id") || next.get("persona");
+    const sameObject = selectedIdentity.current === (nextKind && nextId ? `${nextKind}:${nextId}` : null);
+    if (pending.current || (!sameObject && !canLeave())) return;
+    acceptedParams.current = next.toString();
+    setParams(next);
+  }
+  function changeView(view: string) {
+    const next = new URLSearchParams(params); next.set("view", view); navigate(next);
+  }
+  useEffect(() => {
+    const unload = (event: BeforeUnloadEvent) => {
+      if (pending.current || profileDirty.current || creativeDirty.current || referenceStyleDirty.current || workflowDirty.current) { event.preventDefault(); event.returnValue = ""; }
+    };
+    const click = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (link && link.href !== window.location.href && !canLeave()) { event.preventDefault(); event.stopPropagation(); }
+    };
+    const pop = (event: PopStateEvent) => {
+      if (restoringHistory.current) { restoringHistory.current = false; return; }
+      const nextParams = new URLSearchParams(window.location.search);
+      const nextKind = nextParams.get("kind") || (nextParams.has("persona") ? "persona" : "");
+      const nextId = nextParams.get("id") || nextParams.get("persona");
+      const sameObject = window.location.pathname === "/identities" && selectedIdentity.current === (nextKind && nextId ? `${nextKind}:${nextId}` : null);
+      if ((!pending.current && sameObject) || canLeave()) { acceptedPop.current = true; return; }
+      const nextIndex: unknown = event.state?.idx;
+      if (typeof nextIndex === "number" && acceptedHistoryIndex.current != null) {
+        event.stopImmediatePropagation();
+        restoringHistory.current = true;
+        window.history.go(acceptedHistoryIndex.current - nextIndex);
+      }
+    };
+    window.addEventListener("beforeunload", unload); document.addEventListener("click", click, true); window.addEventListener("popstate", pop, true);
+    return () => { window.removeEventListener("beforeunload", unload); document.removeEventListener("click", click, true); window.removeEventListener("popstate", pop, true); };
+  }, []);
+  useEffect(() => {
+    const nextKey = routeSelection ? `${routeSelection.kind}:${routeSelection.id}` : null;
+    if (nextKey === selectedIdentity.current) { acceptedParams.current = params.toString(); acceptedHistoryIndex.current = window.history.state?.idx ?? null; acceptedPop.current = false; return; }
+    if (nextKey !== selectedIdentity.current && !acceptedPop.current && acceptedParams.current !== params.toString() && !canLeave()) { setParams(new URLSearchParams(acceptedParams.current), { replace: true }); return; }
+    acceptedParams.current = params.toString(); acceptedHistoryIndex.current = window.history.state?.idx ?? null; acceptedPop.current = false;
     if (nextKey !== selectedIdentity.current) {
-      selectionGeneration.current++;
-      detailGeneration.current++;
-      bindingGeneration.current++;
-      selectedIdentity.current = nextKey;
-      creativeDirty.current = false;
-      referenceStyleDirty.current = false;
+      selectionGeneration.current++; detailGeneration.current++; bindingGeneration.current++;
+      selectedIdentity.current = nextKey; setSelected(routeSelection);
+      creativeDirty.current = false; referenceStyleDirty.current = false;
+      setLoadedBindingKey(null); setBinding(null); setResolvedBinding(null);
+      setDefinitionText(JSON.stringify(EMPTY_DEFINITION, null, 2)); setWorkflowConflict(false);
+      setCreativeVisitedKey(null); setName("");
     }
-    setSelected(next); setNotice("");
-    return true;
+    if (nextKey !== identityKey) {
+      setDraft(draftFrom({})); baselineDraft.current = JSON.stringify(draftFrom({})); workflowDirty.current = false;
+    }
+    setNotice("");
+  }, [params.toString()]);
+  function selectIdentity(next: { kind: Kind; id: number } | null) {
+    const nextParams = new URLSearchParams(params);
+    nextParams.delete("persona");
+    if (next) { nextParams.set("kind", next.kind); nextParams.set("id", String(next.id)); }
+    else { nextParams.delete("kind"); nextParams.delete("id"); }
+    nextParams.set("view", "summary");
+    const nextKey = next ? `${next.kind}:${next.id}` : null;
+    if (pending.current || (nextKey !== selectedIdentity.current && !canLeave())) return false;
+    acceptedParams.current = nextParams.toString(); setParams(nextParams); return true;
   }
 
   async function refreshIdentity(url: string, query: string | null, key: string, epoch: number, resetDraft = false) {
-    if (selectedIdentity.current !== key || selectionGeneration.current !== epoch) return;
+    if (selectedIdentity.current !== key || selectionGeneration.current !== epoch || currentUser() !== user) return;
     const generation = ++detailGeneration.current;
     const [nextRevisions, nextEffective] = await Promise.all([
       api.get<Revision[]>(`${url}/revisions`),
       query ? api.get<Effective>(`/content-identities/effective?${query}`) : Promise.resolve(null),
     ]);
-    if (selectedIdentity.current !== key || selectionGeneration.current !== epoch || detailGeneration.current !== generation) return;
+    if (selectedIdentity.current !== key || selectionGeneration.current !== epoch || detailGeneration.current !== generation || currentUser() !== user) return;
     setRevisions(nextRevisions); setEffective(nextEffective); setLoadedIdentityKey(key);
-    if (resetDraft) setDraft(draftFrom(nextRevisions[0]?.profile || {}));
+    if (resetDraft) { setDraft(draftFrom(nextRevisions[0]?.profile || {})); baselineDraft.current = JSON.stringify(draftFrom(nextRevisions[0]?.profile || {})); }
     return nextRevisions;
   }
 
-  async function loadTree(selectInitial = false) {
+  const treeGeneration = useRef(0);
+  async function loadTree() {
+    const generation = ++treeGeneration.current;
+    setRole(null); setTreeError("");
+    try {
     const [nextBrands, nextPersonas, nextVoices, me, nextChannels] = await Promise.all([
       api.get<Omit<Entity, "kind">[]>("/content-brands"), api.get<Omit<Entity, "kind">[]>("/content-personas"),
       api.get<{ id: number; name: string; version: number }[]>("/content-identities/brand-voices"),
-      api.get<{ role: string }>("/users/me"),
+      api.get<{ role: string }>("/users/me").catch(error => { if (generation === treeGeneration.current && currentUser() === user) setError(`权限读取失败，当前仅可查看。${errText(error)}`); return null; }),
       api.get<Channel[]>("/channels"),
     ]);
-    const nextAccounts = (await Promise.all(nextPersonas.map((row) => api.get<Omit<Entity, "kind">[]>(`/content-personas/${row.id}/accounts`)))).flat();
+    const nextAccounts = await api.get<Omit<Entity, "kind">[]>("/content-accounts");
     const [nextSeries, nextEditorial] = await Promise.all([
       Promise.all(nextAccounts.map((row) => api.get<Omit<Entity, "kind">[]>(`/content-accounts/${row.id}/series`))).then((rows) => rows.flat()),
       Promise.all(nextPersonas.map((row) => api.get<Omit<Entity, "kind">[]>(`/content-personas/${row.id}/series`))).then((rows) => rows.flat()),
     ]);
+    if (generation !== treeGeneration.current || currentUser() !== user) return;
     setBrands(nextBrands.map((row) => ({ ...row, kind: "brand" })));
     setPersonas(nextPersonas.map((row) => ({ ...row, kind: "persona" })));
     setAccounts(nextAccounts.map((row) => ({ ...row, kind: "account" })));
     setSeries([...nextSeries.map((row) => ({ ...row, kind: "series" as Kind, scope: "account_legacy" })), ...nextEditorial.map((row) => ({ ...row, kind: "series" as Kind, scope: "persona_editorial" }))]);
     setChannels(nextChannels);
     setVoices(nextVoices);
-    setRole(me.role);
-    if (selectInitial && selectedIdentity.current === null && selectionGeneration.current === 0 && (nextBrands[0] || nextPersonas[0])) selectIdentity(nextBrands[0] ? { kind: "brand", id: nextBrands[0].id } : { kind: "persona", id: nextPersonas[0].id });
+    setRole(me?.role ?? null);
+    } catch (error) {
+      if (generation === treeGeneration.current && currentUser() === user) { setRole(null); setTreeError(errText(error)); }
+      throw error;
+    }
   }
-  useEffect(() => { setLoading(true); loadTree(true).catch((error) => setError(errText(error))).finally(() => setLoading(false)); }, []);
+  useEffect(() => { setLoading(true); loadTree().catch((error) => setError(errText(error))).finally(() => setLoading(false)); }, []);
   useEffect(() => {
     if (!selectedUrl || !identityKey) return;
     const key = identityKey;
@@ -165,8 +262,8 @@ export default function IdentityWorkspace() {
     const epoch = selectionEpoch;
     let active = true;
     const ownsRequest = () => active && selectedIdentity.current === key
-      && selectionGeneration.current === epoch && detailGeneration.current === generation;
-    setLoadedIdentityKey(null);
+      && selectionGeneration.current === epoch && detailGeneration.current === generation && currentUser() === user;
+    setLoadedIdentityKey(null); setRevisions([]); setEffective(null);
     setDetailLoading(true); setError(""); setRevisionConflict(false);
     Promise.all([
       api.get<Revision[]>(`${selectedUrl}/revisions`),
@@ -174,6 +271,7 @@ export default function IdentityWorkspace() {
     ]).then(([nextRevisions, nextEffective]) => {
       if (!ownsRequest()) return;
       setRevisions(nextRevisions); setEffective(nextEffective); setDraft(draftFrom(nextRevisions[0]?.profile || {}));
+      baselineDraft.current = JSON.stringify(draftFrom(nextRevisions[0]?.profile || {}));
       setLoadedIdentityKey(key);
     }).catch((error) => { if (ownsRequest()) setError(errText(error)); })
       .finally(() => { if (ownsRequest()) setDetailLoading(false); });
@@ -185,8 +283,9 @@ export default function IdentityWorkspace() {
     const epoch = selectionEpoch;
     const generation = ++bindingGeneration.current;
     const ownsRequest = () => active && selectedBinding.current === key
-      && selectionGeneration.current === epoch && bindingGeneration.current === generation;
-    setLoadedBindingKey(null);
+      && selectionGeneration.current === epoch && bindingGeneration.current === generation && currentUser() === user;
+    if (tab !== "workflow" || loadedBindingKey === bindingKey) return;
+    setLoadedBindingKey(null); setBinding(null); setResolvedBinding(null); setWorkflowConflict(false);
     if (!current || current.kind === "brand" || !effectiveQuery) { setBinding(null); setResolvedBinding(null); return; }
     Promise.all([
       api.get<Binding>(`${selectedUrl}/default-workflows/${modality}`),
@@ -197,31 +296,49 @@ export default function IdentityWorkspace() {
       setLoadedBindingKey(key);
     }).catch((error) => { if (ownsRequest()) setError(errText(error)); });
     return () => { active = false; };
-  }, [selectedUrl, effectiveQuery, modality, selectionEpoch]);
+  }, [selectedUrl, effectiveQuery, modality, selectionEpoch, tab]);
   useEffect(() => { if (tab === "creative" && identityKey) setCreativeVisitedKey(identityKey); }, [tab, identityKey]);
 
+  function scopedError(message: string) { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch && currentUser() === user) setError(message); }
+  function scopedNotice(message: string) { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch && currentUser() === user) setNotice(message); }
+  function beginChildMutation() {
+    if (pending.current || currentUser() !== user) return false;
+    pending.current = true; setBusy(true); return true;
+  }
+  function childBusy(value: boolean) { pending.current = value; setBusy(value); }
+  async function seriesCreated(id: number) {
+    const key = identityKey; const epoch = selectionEpoch;
+    await loadTree();
+    if (selectedIdentity.current !== key || selectionGeneration.current !== epoch || currentUser() !== user) return;
+    childBusy(false); selectIdentity({ kind: "series", id });
+  }
   async function createEntity(event: FormEvent) {
     event.preventDefault();
     const path = !current ? "/content-brands" : current.kind === "brand" ? `${selectedUrl}/personas` : current.kind === "persona" ? `${selectedUrl}/accounts` : current.kind === "account" ? `${selectedUrl}/series` : "";
-    if (!path) return;
+    if (currentUser() !== user || !path || !name.trim() || pending.current || creativeReadOnly && current || !["editor", "admin"].includes(role ?? "")) return;
+    pending.current = true; setBusy(true);
     try {
       const created = await api.post<{ id: number }>(path, { name: name.trim() });
       const kind: Kind = !current ? "brand" : current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series";
       await loadTree();
-      if (selectionGeneration.current !== selectionEpoch) return;
-      selectIdentity({ kind, id: created.id }); setName(""); setNotice(`${KIND_NAME[kind]}已创建。`);
-    } catch (error) { if (selectionGeneration.current === selectionEpoch) setError(errText(error)); }
+      if (selectionGeneration.current !== selectionEpoch || currentUser() !== user) return;
+      pending.current = false; selectIdentity({ kind, id: created.id }); setName(""); setNotice(`${KIND_NAME[kind]}已创建。`);
+    } catch (error) { if (selectionGeneration.current === selectionEpoch && currentUser() === user) setError(errText(error)); }
+    finally { pending.current = false; setBusy(false); }
   }
   async function archive() {
-    if (!current || !selectedUrl || !window.confirm(`归档「${current.name}」？历史版本与生产快照仍可查看。`)) return;
-    try { await api.del(selectedUrl); await loadTree(); if (selectionGeneration.current === selectionEpoch) setNotice("已归档，历史记录仍可读取。"); }
-    catch (error) { if (selectionGeneration.current === selectionEpoch) setError(errText(error)); }
+    if (currentUser() !== user || pending.current || creativeReadOnly || !current || !selectedUrl || !window.confirm(`归档「${current.name}」？历史版本与生产快照仍可查看。`)) return;
+    pending.current = true; setBusy(true);
+    try { await api.del(selectedUrl); await loadTree(); if (selectionGeneration.current === selectionEpoch && currentUser() === user) setNotice("已归档，历史记录仍可读取。"); }
+    catch (error) { if (selectionGeneration.current === selectionEpoch && currentUser() === user) setError(errText(error)); }
+    finally { pending.current = false; setBusy(false); }
   }
   async function saveRevision() {
-    if (!current || !selectedUrl || !identityKey || !detailReady || detailLoading || revisionConflict
+    if (currentUser() !== user || pending.current || creativeReadOnly || !current || !selectedUrl || !identityKey || !detailReady || detailLoading || revisionConflict
         || (revisions[0]?.revision_no ?? 0) !== current.current_revision) return;
     const key = identityKey;
     const epoch = selectionEpoch;
+    pending.current = true; setBusy(true);
     try {
       const profile: Record<string, unknown> = { ...(revisions[0]?.profile || {}) };
       for (const { key, shape } of FIELDS) {
@@ -239,52 +356,134 @@ export default function IdentityWorkspace() {
       const next = await refreshIdentity(selectedUrl, effectiveQuery, key, epoch, true);
       if (next && selectedIdentity.current === key && selectionGeneration.current === epoch) setNotice(`修订 v${next[0]?.revision_no} 已保存，旧快照不会改变。`);
     } catch (error) {
-      if (selectedIdentity.current !== key || selectionGeneration.current !== epoch) return;
+      if (selectedIdentity.current !== key || selectionGeneration.current !== epoch || currentUser() !== user) return;
       setError(error instanceof SyntaxError ? "JSON 格式不正确，请检查后再保存。" : errText(error));
       if (error instanceof ApiError && error.status === 409) {
         setRevisionConflict(true);
-        await loadTree();
-        const next = await refreshIdentity(selectedUrl, effectiveQuery, key, epoch);
-        if (next && selectedIdentity.current === key && selectionGeneration.current === epoch) setNotice("版本已被其他人更新。当前表单仍是旧草稿；请核对最新修订后显式加载，才可再次保存。");
+        try {
+          await loadTree();
+          const next = await refreshIdentity(selectedUrl, effectiveQuery, key, epoch);
+          if (next && selectedIdentity.current === key && selectionGeneration.current === epoch) setNotice("版本已被其他人更新。当前表单仍是旧草稿；请核对最新修订后显式加载，才可再次保存。");
+        } catch (reloadError) { if (currentUser() === user) setError(`草稿已保留，最新版本读取失败。${errText(reloadError)}`); }
       }
-    }
+    } finally { pending.current = false; setBusy(false); }
   }
   async function saveDefault() {
-    if (!selectedUrl || !binding || !current || current.kind === "brand" || loadedBindingKey !== bindingKey) return;
+    if (currentUser() !== user || pending.current || creativeReadOnly || workflowConflict || !selectedUrl || !binding || !current || current.kind === "brand" || loadedBindingKey !== bindingKey) return;
     const key = bindingKey;
     const epoch = selectionEpoch;
     const generation = bindingGeneration.current;
+    pending.current = true; setBusy(true);
     try {
       const definition = JSON.parse(definitionText);
       const next = await api.post<Binding>(`${selectedUrl}/default-workflows/${modality}`, { expected_revision: binding.revision, definition });
-      if (selectedBinding.current !== key || selectionGeneration.current !== epoch || bindingGeneration.current !== generation) return;
-      setBinding(next); setResolvedBinding({ ...next, source: current.kind }); setNotice("默认工作流已保存为新版本；已有内容单元不会自动重绑。");
-    } catch (error) { if (selectedBinding.current === key && selectionGeneration.current === epoch && bindingGeneration.current === generation) setError(error instanceof SyntaxError ? "工作流定义 JSON 格式不正确。" : errText(error)); }
+      if (selectedBinding.current !== key || selectionGeneration.current !== epoch || bindingGeneration.current !== generation || currentUser() !== user) return;
+      workflowDirty.current = false; setBinding(next); setResolvedBinding({ ...next, source: current.kind }); setNotice("默认工作流已保存为新版本；已有内容单元不会自动重绑。");
+    } catch (error) {
+      if (selectedBinding.current === key && selectionGeneration.current === epoch && bindingGeneration.current === generation && currentUser() === user) {
+        setError(error instanceof SyntaxError ? "工作流定义 JSON 格式不正确。" : errText(error));
+        if (error instanceof ApiError && error.status === 409) setWorkflowConflict(true);
+      }
+    }
+    finally { pending.current = false; setBusy(false); }
   }
   function fieldEditor(key: FieldKey, label: string, shape: string) {
     const value = draft[key];
-    const displayedProfile = current?.kind === "brand" ? revisions[0]?.profile || {} : effective?.effective_profile || {};
-    const origin = current?.kind === "brand" ? key in displayedProfile ? "brand" : undefined : effective?.field_origins[key];
-    return <div key={key} className="rounded-xl border border-slate-200 bg-white p-4"><div className="flex flex-wrap items-center justify-between gap-2"><label className="text-sm font-medium">{label}</label><span className="text-xs text-slate-500">{origin ? `当前生效：${KIND_NAME[origin as Kind] || origin}（${displayedProfile[key] === null ? "显式清空" : origin === current?.kind ? "本级覆盖" : "从上级继承"}）` : "当前未设置"}</span></div>
-      <select disabled={current?.status === "archived"} aria-label={`${label}模式`} className={`${inputClass} mt-2`} value={value.mode} onChange={(event) => setDraft({ ...draft, [key]: { ...value, mode: event.target.value as Mode } })}><option value="inherit">继承上级 / 不设置</option><option value="override">本级覆盖</option><option value="clear">显式清空</option></select>
-      {value.mode === "override" && (shape === "voice" ? <select disabled={current?.status === "archived"} className={`${inputClass} mt-2`} value={value.text} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })}><option value="">请选择已发布版本</option>{voices.map((voice) => <option key={voice.id} value={voice.id}>{voice.name} · v{voice.version}</option>)}</select> : shape === "text" ? <input disabled={current?.status === "archived"} className={`${inputClass} mt-2`} value={value.text} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })} /> : <textarea disabled={current?.status === "archived"} className={`${inputClass} mt-2 min-h-24 font-mono text-xs`} value={value.text} placeholder={shape === "json" ? "{}" : "每行一项"} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })} />)}
-      {key in displayedProfile && <p className="mt-2 break-words text-xs text-slate-500">生效值：{JSON.stringify(displayedProfile[key])}</p>}
+    const displayedProfile = effective?.effective_profile || revisions[0]?.profile || {};
+    const origin = effective ? effective.field_origins[key] : key in displayedProfile ? current?.kind : undefined;
+    return <div key={key} className="min-w-0 rounded-[16px] border border-ink-200/90 bg-surface p-5"><div className="flex flex-wrap items-baseline justify-between gap-2"><label className="font-serif text-[16px] font-semibold text-ink-900">{label.replace(" JSON", "")}</label><span className="text-[12px] text-ink-500">{origin ? `${KIND_NAME[origin as Kind] || origin} · ${displayedProfile[key] === null ? "显式清空" : origin === current?.kind ? "本级设置" : "继承上级"}` : "当前未设置"}</span></div>
+      <select disabled={creativeReadOnly || busy} aria-label={`${label}模式`} className={`${inputClass} mt-3`} value={value.mode} onChange={(event) => setDraft({ ...draft, [key]: { ...value, mode: event.target.value as Mode } })}><option value="inherit">继承上级 / 不设置</option><option value="override">本级设置</option><option value="clear">显式清空</option></select>
+      {value.mode === "override" && (shape === "voice" ? <select aria-label={label} disabled={creativeReadOnly || busy} className={`${inputClass} mt-2`} value={value.text} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })}><option value="">请选择已发布版本</option>{voices.map((voice) => <option key={voice.id} value={voice.id}>{voice.name} · v{voice.version}</option>)}</select> : shape === "text" ? <input aria-label={label} disabled={creativeReadOnly || busy} className={`${inputClass} mt-2`} value={value.text} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })} /> : <textarea aria-label={label} disabled={creativeReadOnly || busy} className={`${inputClass} mt-2 min-h-28 ${shape === "json" ? "font-mono text-[12.5px]" : ""}`} value={value.text} placeholder={shape === "json" ? "{}" : "每行一项"} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })} />)}
+      {shape === "json" && <p className="mt-2 text-[12px] text-ink-500">结构化设置，按 JSON 填写。</p>}
     </div>;
   }
-  function entityButton(entity: Entity, depth: number) {
-    return <button key={`${entity.kind}-${entity.id}`} onClick={() => selectIdentity({ kind: entity.kind, id: entity.id })} className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${current?.kind === entity.kind && current.id === entity.id ? "bg-indigo-50 font-semibold text-indigo-700" : "hover:bg-slate-50"}`} style={{ paddingLeft: 12 + depth * 16 }}><span className="mr-2 text-xs text-slate-400">{KIND_NAME[entity.kind]}</span>{entity.name}{entity.status === "archived" && <span className="ml-1 text-xs text-slate-400">已归档</span>}</button>;
+  function entityButton(entity: Entity) {
+    return <button key={`${entity.kind}:${entity.id}`} disabled={busy} className="group flex w-full items-center justify-between gap-3 rounded-xl border border-ink-200/80 bg-surface px-4 py-3 text-left transition-colors hover:border-ink-400" onClick={() => selectIdentity({ kind: entity.kind, id: entity.id })}><span className="min-w-0"><span className="block text-[11.5px] text-ink-500">{KIND_NAME[entity.kind]}{entity.platform_channel ? ` · ${channels.find(channel => channel.channel === entity.platform_channel)?.label || entity.platform_channel}` : ""}</span><span className="block truncate text-[14.5px] font-medium text-ink-900">{entity.name}</span></span><span aria-hidden className="text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink-800">→</span></button>;
   }
-  const brandless = personas.filter((row) => row.brand_id == null);
+  function parentLabel(entity: Entity) {
+    if (entity.kind === "brand") return "根品牌";
+    if (entity.kind === "persona") return brands.find(row => row.id === entity.brand_id)?.name || "无品牌角色";
+    if (entity.kind === "account") return personas.find(row => row.id === entity.persona_id)?.name || "独立自有账号";
+    return entity.scope === "persona_editorial" ? `${personas.find(row => row.id === entity.persona_id)?.name || "角色"} · 跨平台栏目` : `${accounts.find(row => row.id === entity.account_id)?.name || "账号"} · 账号栏目`;
+  }
+  const search = params.get("q") || "";
+  const status = params.get("status") || "all";
+  const filtered = entities.filter(row => row.kind === directory && row.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) && (status === "all" || row.status === status));
+  const pages = Math.max(1, Math.ceil(filtered.length / 20));
+  const page = Math.min(pages, Math.max(1, Math.floor(Number(params.get("page"))) || 1));
+  function listParam(key: string, value: string) {
+    const next = new URLSearchParams(params); next.set(key, value); if (key !== "page") next.delete("page"); navigate(next);
+  }
+  const related = current ? entities.filter(row => current.kind === "brand" ? row.kind === "persona" && row.brand_id === current.id : current.kind === "persona" ? (row.kind === "account" || row.scope === "persona_editorial") && row.persona_id === current.id : current.kind === "account" ? row.kind === "series" && row.account_id === current.id : false) : [];
+  const displayedProfile = effective?.effective_profile || revisions[0]?.profile || {};
+  const editor = ["editor", "admin"].includes(role ?? "");
+  const profileTabs = [["identity", "身份"], ["expression", "表达与视觉"], ["boundaries", "观点与边界"]];
 
-  return <div className="mx-auto max-w-7xl px-6 py-9"><div className="mb-6"><p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">Identity Workspace</p><h1 className="mt-2 text-3xl font-semibold">内容身份</h1><p className="mt-2 text-sm text-slate-500">品牌 → 角色 → 账号 → 栏目；修订长期保存，生产时固定快照。</p></div>
-    {error && <div className="mb-4"><ErrorBanner message={error} /></div>}{notice && <p className="mb-4 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-700">{notice}</p>}
-    <StarterPersonaGallery personaId={persona?.id} accountId={account?.id} seriesId={seriesId} refreshRevision={current?.current_revision} readOnly={!["editor", "admin"].includes(role ?? "")} onInitialized={async personaId => { await loadTree(); if (selectionGeneration.current !== selectionEpoch || !selectIdentity({ kind: "persona", id: personaId })) return; setTab("creative"); setNotice("已保存独立角色与默认流程；配置状态见就绪卡片，不代表真实成品质量已验收。已有记录和人工修改未覆盖。"); }} />
-    {loading ? <Spinner label="读取身份树…" /> : <div className="grid gap-5 lg:grid-cols-[280px_1fr]"><aside className="rounded-2xl border border-slate-200 bg-white p-3"><h2 className="px-3 py-2 text-sm font-semibold">身份层级</h2>{brands.length + personas.length === 0 && <EmptyState title="还没有内容身份" hint="先创建品牌，或使用既有无品牌角色。" />}{brands.map((brand) => <div key={brand.id}>{entityButton(brand, 0)}{personas.filter((row) => row.brand_id === brand.id).map((p) => <div key={p.id}>{entityButton(p, 1)}{series.filter((row) => row.scope === "persona_editorial" && row.persona_id === p.id).map((s) => entityButton(s, 2))}{accounts.filter((row) => row.persona_id === p.id).map((a) => <div key={a.id}>{entityButton(a, 2)}{series.filter((row) => row.account_id === a.id).map((s) => entityButton(s, 3))}</div>)}</div>)}</div>)}{brandless.length > 0 && <div className="mt-3 border-t pt-3"><p className="px-3 text-xs text-slate-500">历史无品牌角色</p>{brandless.map((p) => <div key={p.id}>{entityButton(p, 1)}{series.filter((row) => row.scope === "persona_editorial" && row.persona_id === p.id).map((s) => entityButton(s, 2))}{accounts.filter((row) => row.persona_id === p.id).map((a) => <div key={a.id}>{entityButton(a, 2)}{series.filter((row) => row.account_id === a.id).map((s) => entityButton(s, 3))}</div>)}</div>)}</div>}
-      <form onSubmit={createEntity} className="mt-4 space-y-2 border-t px-2 pt-4"><label className="text-xs text-slate-600">{!current ? "新建品牌" : current.kind === "series" ? "请选择上级创建子项" : `在${KIND_NAME[current.kind]}下新增${KIND_NAME[current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series"]}`}</label><input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} placeholder="名称" required /><Button type="submit" disabled={current?.kind === "series" || current?.status === "archived"}>新增</Button><button type="button" className="ml-2 text-xs text-indigo-700" onClick={() => selectIdentity(null)}>新建根品牌</button></form></aside>
-      <main className="min-w-0">{!current ? <EmptyState title="选择左侧身份或创建品牌" /> : <><div className="rounded-2xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-slate-500">{KIND_NAME[current.kind]} · #{current.id}</p><h2 className="mt-1 text-xl font-semibold">{current.name}</h2><p className="mt-1 text-xs text-slate-500">{current.status === "archived" ? "已归档，只能查看历史" : `当前修订 v${current.current_revision}`}</p></div>{current.status !== "archived" && <Button variant="danger" onClick={archive}>归档</Button>}</div></div>
-      <div role="tablist" className="mt-5 flex gap-1 overflow-x-auto border-b">{TABS.map(([key, label]) => <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)} className={`whitespace-nowrap border-b-2 px-3 py-3 text-sm ${tab === key ? "border-indigo-600 text-indigo-700" : "border-transparent text-slate-500"}`}>{label}</button>)}</div>
-      {detailLoading || !detailReady ? <Spinner label="读取修订…" /> : <div className="mt-5 space-y-4">{["identity", "expression", "boundaries"].includes(tab) && <>{revisionConflict && <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}；当前表单来自旧版本，已停止保存。请先复制需要保留的改动，再加载最新修订。</p><Button variant="secondary" onClick={() => { setDraft(draftFrom(revisions[0]?.profile || {})); setRevisionConflict(false); setError(""); setNotice("已加载最新修订，请重新核对后保存。"); }}>加载最新修订（覆盖当前表单）</Button></div>}<div className="grid gap-3 xl:grid-cols-2">{FIELDS.filter((field) => field.tab === tab).map(({ key, label, shape }) => fieldEditor(key, label, shape))}</div><Button onClick={saveRevision} disabled={current.status === "archived" || revisionConflict}>保存新修订 v{current.current_revision + 1}</Button><section className="rounded-xl border bg-white p-4"><h3 className="font-medium">修订历史</h3>{revisions.length ? <ul className="mt-2 space-y-2 text-xs">{revisions.map((revision) => <li key={revision.id} className="rounded border p-2">v{revision.revision_no} · #{revision.id} · {revision.created_at || ""}<pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-slate-500">{JSON.stringify(revision.profile, null, 2)}</pre></li>)}</ul> : <p className="mt-2 text-xs text-slate-500">尚未提交身份画像修订。</p>}</section></>}
-      {persona && (tab === "creative" || creativeVisitedKey === identityKey) && <div hidden={tab !== "creative"}><Suspense fallback={<Spinner label="读取创作配置…" />}><PersonaCreativeConfig key={`${identityKey}:${selectionEpoch}`} current={current} persona={persona} readOnly={creativeReadOnly} accountId={account?.id || null} seriesId={seriesId} revisions={revisions} effective={effective} onSaved={async () => { const key = identityKey!; if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return; await loadTree(); return refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch); }} onNotice={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) setNotice(value); }} onDirtyChange={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) creativeDirty.current = value; }} /></Suspense>{current.kind === "persona" && <Suspense fallback={<Spinner label="读取参考风格…" />}><PersonaReferenceStylePanel key={`style:${identityKey}:${selectionEpoch}`} personaId={persona.id} readOnly={creativeReadOnly} identityRevision={revisions[0]} onIdentityRefresh={async () => {
+  const counts = Object.fromEntries((["persona", "account", "series", "brand"] as Kind[]).map(kind => [kind, entities.filter(row => row.kind === kind).length])) as Record<Kind, number>;
+  const channelLabel = (value?: string | null) => value ? channels.find(channel => channel.channel === value)?.label || value : null;
+  const visibleTabs = TABS.filter(([key]) => key !== "publisher" || account).filter(([key]) => key !== "creative" || persona);
+
+  return <Page>
+    {error && <ErrorBanner message={error} />}{notice && <Notice>{notice}</Notice>}
+    {loading ? <Spinner label="读取身份目录…" /> : treeError ? <div className="space-y-3"><ErrorBanner message={treeError} /><Button variant="secondary" onClick={() => { setLoading(true); loadTree().catch(error => setError(errText(error))).finally(() => setLoading(false)); }}>重试读取目录</Button></div> : invalidSelection ? <EmptyState title="身份链接无效" hint="请返回目录选择正确的对象。" /> : !selected ? <>
+      <PageHeader eyebrow="资料 · 身份" title="角色与账号" lead="角色决定说什么、怎么说；账号是角色在各平台的落脚点；栏目是长期连载。"
+        actions={tab === "summary" && editor ? <>{directory === "persona" && <Button variant="secondary" onClick={() => changeView("starter")}>从起步模板创建</Button>}<Button onClick={() => changeView("new")}>新建{KIND_NAME[directory]}</Button></> : undefined}>
+        <Tabs label="资料目录" value={directory} onChange={kind => listParam("directory", kind)} items={(["persona", "account", "series", "brand"] as Kind[]).map(kind => [kind, `${KIND_NAME[kind]} ${counts[kind]}`] as const)} />
+      </PageHeader>
+      {tab === "starter" ? <div className="space-y-5"><button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回角色目录</button><StarterPersonaGallery readOnly={!editor} onInitialized={async id => { await loadTree(); selectIdentity({ kind: "persona", id }); }} /></div>
+      : tab === "new" ? <Section eyebrow="新建" title={`新建${KIND_NAME[directory]}`} aside={<button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回目录</button>}>{directory === "account" ? <ChannelAccountRegister personaId={null} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={loadTree} onError={scopedError} /> : directory === "brand" ? <form className="max-w-md space-y-4" onSubmit={createEntity}><Field label="品牌名称"><input className={inputClass} value={name} onChange={event => setName(event.target.value)} required /></Field><Button type="submit" disabled={!editor || busy}>新建品牌</Button></form> : <p className="text-[14px] leading-relaxed text-ink-600">{directory === "persona" ? "角色属于某个品牌：先打开品牌，在“关联与管理”里创建；或者用“从起步模板创建”。" : "栏目属于角色或账号：先打开对应角色，在“关联与管理”里创建。"}</p>}</Section>
+      : <>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[220px] flex-1 sm:max-w-sm"><input aria-label="搜索名称" className={`${inputClass} pl-9`} value={search} placeholder={`搜索${KIND_NAME[directory]}名称`} onChange={event => listParam("q", event.target.value)} /><span aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400">⌕</span></div>
+          <select aria-label="状态" className={`${inputClass} !w-auto`} value={status} onChange={event => listParam("status", event.target.value)}><option value="all">全部状态</option><option value="active">使用中</option><option value="archived">已归档</option></select>
+          <span className="ml-auto text-[13px] text-ink-500">共 {filtered.length} 个{KIND_NAME[directory]}</span>
+        </div>
+        {filtered.length === 0 ? <EmptyState title={`没有匹配的${KIND_NAME[directory]}`} hint={search ? "换个关键词试试。" : undefined} /> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.slice((page - 1) * 20, page * 20).map((row, index) => <button key={`${row.kind}:${row.id}`} disabled={busy} onClick={() => selectIdentity({ kind: row.kind, id: row.id })} style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }} className="card group flex min-h-[188px] animate-rise flex-col p-6 text-left transition-[transform,box-shadow,border-color] duration-300 ease-studio hover:-translate-y-0.5 hover:border-ink-300 hover:shadow-lift">
+          <div className="flex items-start justify-between gap-3">
+            <span aria-hidden className={`grid h-11 w-11 shrink-0 place-items-center rounded-full font-serif text-[18px] ${row.status === "archived" ? "bg-ink-100 text-ink-400" : "bg-accent-50 text-accent-600"}`}>{row.name.trim().charAt(0) || "·"}</span>
+            {row.status === "archived" ? <Chip>已归档</Chip> : channelLabel(row.platform_channel) ? <Chip tone="info">{channelLabel(row.platform_channel)}</Chip> : null}
+          </div>
+          <h2 className="mt-5 line-clamp-2 break-words font-serif text-[21px] font-semibold leading-snug text-ink-900">{row.name}</h2>
+          <p className="mt-1.5 truncate text-[13px] text-ink-500">{parentLabel(row)}</p>
+          <div className="mt-auto flex items-center justify-between pt-5 text-[12.5px] text-ink-500"><span>修订 v{row.current_revision}</span><span aria-hidden className="text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-accent-500">打开 →</span></div>
+        </button>)}</div>}
+        {pages > 1 && <div className="flex items-center justify-center gap-3 pt-2"><Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => listParam("page", String(page - 1))}>上一页</Button><span className="text-[13px] text-ink-500">第 {page} / {pages} 页</span><Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => listParam("page", String(page + 1))}>下一页</Button></div>}
+      </>}
+    </> : !current ? <EmptyState title="找不到或无法读取这个身份" hint="不会自动切换到其他身份。请返回目录重选。" /> : <>
+      <div>
+        <button className="mb-6 text-[13px] text-ink-500 transition-colors hover:text-ink-900" onClick={() => selectIdentity(null)}>← {KIND_NAME[directory]}目录</button>
+        <PageHeader eyebrow={<>{KIND_NAME[current.kind]} · {parentLabel(current)}</>} title={current.name}
+          actions={tab === "summary" && !creativeReadOnly ? <Button onClick={() => changeView("edit")}>编辑资料</Button> : undefined}>
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            {current.status === "archived" ? <Chip tone="warn">已归档 · 只能查看</Chip> : <Chip tone="good">使用中</Chip>}
+            <Chip>修订 v{current.current_revision}</Chip>
+            {channelLabel(current.platform_channel) && <Chip tone="info">{channelLabel(current.platform_channel)}</Chip>}
+            {current.kind === "persona" && <Chip>{related.filter(row => row.kind === "account").length} 个账号</Chip>}
+            {creativeReadOnly && current.status !== "archived" && <span className="text-[12.5px] text-amber-700">只读：权限未确认、读取未完成或上级已归档</span>}
+          </div>
+          <Tabs label="身份页面" value={tab} disabled={busy} onChange={changeView} items={visibleTabs} />
+        </PageHeader>
+      </div>
+      {detailLoading ? <Spinner label="读取修订…" /> : !detailReady ? <div className="space-y-3"><p className="text-[14px] text-ink-700">身份资料读取失败，暂不可修改。</p><Button variant="secondary" onClick={() => refreshIdentity(selectedUrl!, effectiveQuery, identityKey!, selectionEpoch, true).catch(error => setError(errText(error)))}>重试读取</Button></div> : <div className="space-y-6">
+        {tab === "summary" && <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <Section>
+            {current.kind !== "persona" && effective && persona && <div className="mb-7"><Notice>{(() => { const own = Object.values(effective.field_origins || {}).filter(origin => origin === current.kind).length; return own ? `这里是实际生效的资料：本${KIND_NAME[current.kind]}单独设置了 ${own} 项，其余继承自角色「${persona.name}」。` : `这个${KIND_NAME[current.kind]}还没有单独设置，以下资料全部继承自角色「${persona.name}」。需要不同的定位或语气时，在“编辑资料”里单独设置。`; })()}</Notice></div>}
+            <ProfileOverview profile={displayedProfile} />
+          </Section>
+          <aside className="space-y-6 lg:sticky lg:top-8">
+            <Section eyebrow="归属与关联" title={parentLabel(current)}>
+              <div className="space-y-2">{[brand, persona, account].filter((row): row is Entity => Boolean(row) && row !== current).map(row => entityButton(row))}{related.map(row => entityButton(row))}</div>
+              {!related.length && ![brand, persona, account].some(row => row && row !== current) && <p className="text-[13.5px] text-ink-500">暂无直属关联资料。</p>}
+            </Section>
+            {current.kind === "persona" && <PersonaDiscoveryStatus personaId={current.id} revision={current.current_revision} />}
+          </aside>
+        </div>}
+        {tab === "edit" && <div className="space-y-8">{revisionConflict && <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-[14px] text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}。当前输入已保留，需先核对历史再显式加载，不能继续覆盖。</p><Button variant="secondary" onClick={() => { if (!window.confirm("加载最新修订将覆盖当前表单，确认继续？")) return; const next = draftFrom(revisions[0]?.profile || {}); setDraft(next); baselineDraft.current = JSON.stringify(next); setRevisionConflict(false); setError(""); }}>加载最新修订（覆盖当前表单）</Button></div>}
+          {profileTabs.map(([group, label]) => <section key={group} className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">{label}</h3><div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === group).map(({ key, label, shape }) => fieldEditor(key, label, shape))}</div></section>)}
+          <div className="sticky bottom-4 z-10 flex items-center justify-between gap-4 rounded-pill border border-ink-200 bg-surface/95 py-2 pl-6 pr-2 shadow-lift backdrop-blur"><span className="text-[13px] text-ink-600">保存后生成新修订，旧作品的快照不会改变。</span><Button onClick={saveRevision} disabled={creativeReadOnly || busy || revisionConflict}>保存为 v{current.current_revision + 1}</Button></div>
+        </div>}
+        {tab === "history" && <Section eyebrow="只读" title="修订历史">{revisions.length ? <ol className="relative space-y-3 border-l border-ink-200 pl-6">{revisions.map((revision, index) => <li key={revision.id} className="relative"><span aria-hidden className={`absolute -left-[29px] top-5 h-2.5 w-2.5 rounded-full ring-4 ring-surface ${index === 0 ? "bg-accent-500" : "bg-ink-300"}`} /><details className="group rounded-[14px] border border-ink-200/80 bg-surface"><summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1 px-5 py-4"><span className="font-serif text-[20px] font-semibold text-ink-900">v{revision.revision_no}</span>{index === 0 && <Chip tone="accent">当前</Chip>}<span className="text-[13px] text-ink-500">{revision.created_at ? new Date(revision.created_at).toLocaleString("zh-CN", { hour12: false }) : "时间未记录"}</span><span className="ml-auto text-[12.5px] text-ink-500 group-open:hidden">展开</span></summary><div className="border-t border-ink-200/80 p-5"><ProfileOverview profile={revision.profile} /><p className="mt-4 break-all font-mono text-[11.5px] text-ink-400">校验和 {revision.checksum}</p></div></details></li>)}</ol> : <p className="text-[14px] text-ink-500">尚无画像修订。</p>}</Section>}
+      {persona && (tab === "creative" || creativeVisitedKey === identityKey) && <div hidden={tab !== "creative"} className="space-y-6"><Suspense fallback={<Spinner label="读取创作配置…" />}><PersonaCreativeConfig key={`${identityKey}:${selectionEpoch}`} current={current} persona={persona} readOnly={creativeReadOnly} accountId={account?.id || null} seriesId={seriesId} revisions={revisions} effective={effective} onSaved={async () => { const key = identityKey!; if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return; await loadTree(); return refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch); }} onNotice={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) setNotice(value); }} onDirtyChange={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) creativeDirty.current = value; }} /></Suspense>{current.kind === "persona" && <Suspense fallback={<Spinner label="读取参考风格…" />}><PersonaReferenceStylePanel key={`style:${identityKey}:${selectionEpoch}`} personaId={persona.id} readOnly={creativeReadOnly} identityRevision={revisions[0]} onIdentityRefresh={async () => {
         const key = identityKey!;
         if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return;
         const baseline = JSON.stringify(draftFrom(revisions[0]?.profile || {}));
@@ -292,19 +491,26 @@ export default function IdentityWorkspace() {
         const next = await refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch);
         if (next) {
           if (JSON.stringify(draftRef.current) !== baseline) setRevisionConflict(true);
-          else setDraft(draftFrom(next[0]?.profile || {}));
+          else { setDraft(draftFrom(next[0]?.profile || {})); baselineDraft.current = JSON.stringify(draftFrom(next[0]?.profile || {})); }
         }
       }} onDirtyChange={value => { referenceStyleDirty.current = value; }} /></Suspense>}</div>}
-      {tab === "accounts" && <section className="rounded-xl border bg-white p-5"><h3 className="font-medium">持久化层级</h3><p className="mt-2 text-sm text-slate-500">选择品牌、角色或账号，可创建直属子级；归档不会删除历史快照。各平台的公开账号名在这里登记（不要填写密码或 AppSecret）；登记公开标识不等于平台已登录，也不等于可以自动发布。</p>{persona && <p className="mt-3 text-sm">角色：{persona.name} · 账号 {accounts.filter((row) => row.persona_id === persona.id).length} 个 · 跨平台栏目 {series.filter((row) => row.scope === "persona_editorial" && row.persona_id === persona.id).length} 档</p>}{account && <p className="mt-1 text-sm">账号：{account.name} · 栏目 {series.filter((row) => row.account_id === account.id).length} 个</p>}{current.kind !== "series" && <form onSubmit={createEntity} className="mt-4 flex flex-wrap gap-2"><input aria-label="新子级名称" className={inputClass} required value={name} onChange={(event) => setName(event.target.value)} placeholder={`新建${KIND_NAME[current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series"]}名称`} /><Button type="submit" disabled={current.status === "archived"}>创建子级</Button></form>}{current.status !== "archived" && <div className="mt-4"><Button variant="danger" onClick={archive}>归档当前{KIND_NAME[current.kind]}</Button></div>}</section>}
-      {tab === "accounts" && persona && current.status !== "archived" && <div className="grid gap-4 lg:grid-cols-2">
-        <EditorialSeriesCreate personaId={persona.id} onDone={async (created) => { await loadTree(); if (selectionGeneration.current === selectionEpoch) selectIdentity({ kind: "series", id: created }); }} onError={setError} />
-        <ChannelAccountRegister personaId={persona.id} channels={channels} role={role} onDone={loadTree} onError={setError} />
+
+        {tab === "accounts" && <div className="space-y-6"><Section eyebrow="关联与管理" title={parentLabel(current)} aside={!creativeReadOnly ? <Button variant="danger" size="sm" disabled={busy} onClick={archive}>归档{KIND_NAME[current.kind]}</Button> : undefined}>
+          {related.length > 0 ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{related.map(row => entityButton(row))}</div> : <p className="text-[14px] text-ink-500">还没有下级资料。</p>}
+          {!creativeReadOnly && current.kind !== "series" && <form className="mt-6 flex flex-wrap gap-3 border-t border-ink-200/80 pt-6" onSubmit={createEntity}><input aria-label="新子级名称" className={`${inputClass} max-w-sm`} value={name} onChange={event => setName(event.target.value)} required placeholder={`新建${current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}名称`} disabled={busy} /><Button type="submit" disabled={busy}>创建{current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}</Button></form>}
+          <p className="mt-4 text-[12.5px] leading-relaxed text-ink-500">公开账号登记只记录公开名称和标识；平台登录与发布授权在“平台连接”。归档会保留历史。</p>
+        </Section>{!creativeReadOnly && persona && <div className="grid gap-6 lg:grid-cols-2"><EditorialSeriesCreate key={`series:${identityKey}`} personaId={persona.id} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={seriesCreated} onError={scopedError} /><ChannelAccountRegister key={`register:${identityKey}`} personaId={persona.id} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={loadTree} onError={scopedError} /></div>}{current.kind === "series" && current.scope === "persona_editorial" && <SeriesTargetsPanel key={identityKey} seriesId={current.id} personaId={persona?.id ?? null} archived={creativeReadOnly} accounts={accounts.filter(row => row.persona_id === persona?.id)} channels={channels} readOnly={creativeReadOnly} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onChanged={loadTree} onNotice={scopedNotice} onError={scopedError} />}</div>}
+        {tab === "workflow" && <Section eyebrow="默认流程" title="工作流偏好">{!effectiveQuery || current.kind === "brand" ? <p className="text-[14px] text-ink-500">此身份没有角色继承链，可在关联角色内维护工作流。</p> : <div className="space-y-5"><Field label="内容形态"><select className={`${inputClass} max-w-xs`} disabled={busy} value={modality} onChange={event => { if (workflowDirty.current && !window.confirm("切换形态将丢弃工作流草稿，确认继续？")) return; workflowDirty.current = false; setModality(event.target.value); }}><option value="text">文字</option><option value="graphic">图文</option><option value="video">视频</option></select></Field><div className="grid gap-4 sm:grid-cols-2"><div className="rounded-xl border border-ink-200/80 bg-ink-50/60 p-4"><p className="eyebrow">本级设置</p><p className="mt-2 text-[14.5px] text-ink-900">{binding?.workflow_id ? `工作流 #${binding.workflow_id} · v${binding.workflow_version}` : "未设置"}</p></div><div className="rounded-xl border border-ink-200/80 bg-ink-50/60 p-4"><p className="eyebrow">实际生效来源</p><p className="mt-2 text-[14.5px] text-ink-900">{resolvedBinding?.source ? KIND_NAME[resolvedBinding.source as Kind] || resolvedBinding.source : "未绑定"}</p></div></div>{!creativeReadOnly && <><Field label="新默认工作流定义（JSON）" hint="保存为本级的新版本；已有作品的工作流快照不会改变。"><textarea className={`${inputClass} min-h-44 font-mono text-[12.5px]`} value={definitionText} disabled={busy || loadedBindingKey !== bindingKey} onChange={event => { workflowDirty.current = true; setDefinitionText(event.target.value); }} /></Field><Button disabled={busy || workflowConflict || loadedBindingKey !== bindingKey} onClick={saveDefault}>另存为本级默认新版本</Button></>}{workflowConflict && <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[14px] text-amber-900"><p>工作流版本已变化，当前输入保留。复制需要保留的内容后，再加载最新版本。</p><Button variant="secondary" disabled={busy} onClick={async () => {
+                  if (!window.confirm("加载最新工作流将覆盖当前输入，确认继续？")) return;
+                  const key = bindingKey; const epoch = selectionEpoch;
+                  try { const next = await api.get<Binding>(`${selectedUrl}/default-workflows/${modality}`); if (selectedBinding.current !== key || selectionGeneration.current !== epoch || currentUser() !== user) return; setBinding(next); setDefinitionText(JSON.stringify(next.workflow_id ? next.definition : EMPTY_DEFINITION, null, 2)); workflowDirty.current = false; setWorkflowConflict(false); setError(""); } catch (error) { if (selectedBinding.current === key && currentUser() === user) setError(errText(error)); }
+                }}>加载最新工作流（覆盖输入）</Button></div>}</div>}</Section>}
+        {tab === "publisher" && account && <AccountPublisherPanel key={account.id} accountId={account.id} archived={creativeReadOnly} />}
+        {tab === "memory" && <MemoryPanel key={identityKey} scopeType={current.kind} scopeId={current.id} readOnly={creativeReadOnly} />}
+        {!TABS.some(([key]) => key === tab) && <EmptyState title="页面不存在" hint="请使用上方入口。" />}
       </div>}
-      {tab === "accounts" && current.kind === "series" && current.scope === "persona_editorial" && <SeriesTargetsPanel key={current.id} seriesId={current.id} personaId={persona?.id ?? null} archived={current.status === "archived"} accounts={accounts.filter((row) => row.persona_id === persona?.id)} channels={channels} readOnly={!["editor", "admin"].includes(role ?? "")} onChanged={loadTree} onNotice={setNotice} onError={setError} />}
-      {tab === "workflow" && <section className="rounded-xl border bg-white p-5"><h3 className="font-medium">角色 / 账号 / 栏目 × 内容形态</h3>{current.kind === "brand" ? <p className="mt-2 text-sm text-slate-500">请选择角色、账号或栏目查看默认工作流。</p> : <><Field label="内容形态"><select className={inputClass} value={modality} onChange={(event) => setModality(event.target.value)}><option value="text">文字</option><option value="graphic">图文</option><option value="video">视频</option></select></Field><p className="mt-3 text-sm">本级：{binding?.workflow_id ? `v${binding.workflow_version} · Workflow #${binding.workflow_id}` : "未设置"}；当前生效：{resolvedBinding?.source || "未绑定"}{resolvedBinding?.workflow_id ? ` · Workflow #${resolvedBinding.workflow_id}` : ""}</p><p className="mt-2 text-xs text-slate-500">保存新版本不会自动修改已有内容单元。定义使用现有 Workflow schema；服务端检查可移植性和执行能力。</p><Field label="新默认工作流定义 JSON"><textarea className={`${inputClass} mt-2 min-h-44 font-mono text-xs`} value={definitionText} disabled={current.status === "archived"} onChange={(event) => setDefinitionText(event.target.value)} /></Field><Button onClick={saveDefault} disabled={current.status === "archived" || !binding}>另存为本级默认新版本</Button></>}</section>}
-      {tab === "accounts" && account && <AccountPublisherPanel key={account.id} accountId={account.id} archived={current.status === "archived"} />}
-      {tab === "memory" && <MemoryPanel key={`${current.kind}:${current.id}`} scopeType={current.kind} scopeId={current.id} />}</div>}</>}</main></div>}
-  </div>;
+    </>}
+  </Page>;
 }
 
 function registerFailure(error: unknown): string {
@@ -315,65 +521,71 @@ function registerFailure(error: unknown): string {
   return error.message || "登记失败，请重试。";
 }
 
-function EditorialSeriesCreate({ personaId, onDone, onError }: {
-  personaId: number; onDone: (seriesId: number) => Promise<void>; onError: (message: string) => void;
+function EditorialSeriesCreate({ personaId, onDone, onError, onBusyChange, beginMutation, parentBusy }: {
+  personaId: number; onBusyChange: (value: boolean) => void; beginMutation: () => boolean; parentBusy: boolean; onDone: (seriesId: number) => Promise<void>; onError: (message: string) => void;
 }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
+  const owner = currentUser();
   return <form onSubmit={async (event: FormEvent) => {
     event.preventDefault();
-    if (busy || !name.trim()) return;
-    setBusy(true);
+    if (submitting.current || currentUser() !== owner || !name.trim()) return;
+    if (!beginMutation()) return;
+    submitting.current = true; setBusy(true);
     try {
       const created = await api.post<{ id: number }>(`/content-personas/${personaId}/series`, { name: name.trim() });
       setName("");
-      await onDone(created.id);
+      if (currentUser() === owner) await onDone(created.id);
     } catch (error) { onError(error instanceof ApiError ? `${error.status} · ${error.message}` : "创建失败，请重试。"); }
-    finally { setBusy(false); }
+    finally { submitting.current = false; onBusyChange(false); setBusy(false); }
   }} className="rounded-xl border border-slate-200 bg-white p-4">
     <h4 className="text-sm font-medium">新建跨平台栏目</h4>
     <p className="mt-1 text-xs text-slate-500">属于角色的编辑栏目，可稍后绑定多个渠道账号。同名栏目不会自动合并。</p>
-    <div className="mt-2 flex gap-2"><input aria-label="栏目名称" className={inputClass} required maxLength={200} value={name} onChange={(event) => setName(event.target.value)} placeholder="例如「技术拆解」" /><Button type="submit" disabled={busy}>{busy ? "创建中…" : "创建栏目"}</Button></div>
+    <div className="mt-2 flex gap-2"><input aria-label="栏目名称" className={inputClass} required maxLength={200} value={name} onChange={(event) => setName(event.target.value)} placeholder="例如「技术拆解」" /><Button type="submit" disabled={busy || parentBusy}>{busy ? "创建中…" : "创建栏目"}</Button></div>
   </form>;
 }
 
-function ChannelAccountRegister({ personaId, channels, role, onDone, onError }: {
-  personaId: number; channels: Channel[]; role: string | null; onDone: () => Promise<void>; onError: (message: string) => void;
+function ChannelAccountRegister({ personaId, channels, role, onDone, onError, onBusyChange, beginMutation, parentBusy }: {
+  personaId: number | null; channels: Channel[]; role: string | null; onBusyChange: (value: boolean) => void; beginMutation: () => boolean; parentBusy: boolean; onDone: () => Promise<void>; onError: (message: string) => void;
 }) {
   const [channel, setChannel] = useState(channels[0]?.channel || "");
   const [name, setName] = useState("");
   const [handle, setHandle] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
+  const owner = currentUser();
   const [notice, setNotice] = useState("");
   const admin = role === "admin";
   const effectiveChannel = channels.some((row) => row.channel === channel) ? channel : channels[0]?.channel || "";
   return <form onSubmit={async (event: FormEvent) => {
     event.preventDefault();
-    if (!admin || busy || !effectiveChannel) return;
-    setBusy(true); setNotice("");
+    if (!admin || submitting.current || currentUser() !== owner || !effectiveChannel) return;
+    if (!beginMutation()) return;
+    submitting.current = true; setBusy(true); setNotice("");
     try {
-      await api.post(`/content-personas/${personaId}/channel-accounts`, { name: name.trim(), platform_channel: effectiveChannel, platform_account_id: handle.trim() });
+      await api.post(personaId == null ? "/content-accounts/channel-accounts" : `/content-personas/${personaId}/channel-accounts`, { name: name.trim(), platform_channel: effectiveChannel, platform_account_id: handle.trim() });
       setName(""); setHandle(""); setNotice("已登记公开账号。这还不是登录，也不是发布。");
-      await onDone();
+      if (currentUser() === owner) await onDone();
     } catch (error) { onError(registerFailure(error)); }
-    finally { setBusy(false); }
+    finally { submitting.current = false; onBusyChange(false); setBusy(false); }
   }} className="rounded-xl border border-slate-200 bg-white p-4">
     <h4 className="text-sm font-medium">登记平台公开身份</h4>
     <p className="mt-1 text-xs text-slate-500">{admin ? "只填公开名称与标识；不要填密码、AppSecret、token 或带登录信息的网址。" : "登记平台账号只限管理员。"}</p>
     <div className="mt-2 grid gap-2 sm:grid-cols-3">
-      <select aria-label="平台" className={inputClass} value={effectiveChannel} disabled={!admin || busy} onChange={(event) => setChannel(event.target.value)}>
+      <select aria-label="平台" className={inputClass} value={effectiveChannel} disabled={!admin || busy || parentBusy} onChange={(event) => setChannel(event.target.value)}>
         {channels.map((row) => <option key={row.channel} value={row.channel}>{row.label}</option>)}
       </select>
-      <input aria-label="显示名称" className={inputClass} required maxLength={200} disabled={!admin || busy} value={name} onChange={(event) => setName(event.target.value)} placeholder="显示名称" />
-      <input aria-label="公开标识" className={inputClass} name="public-handle" autoComplete="off" spellCheck={false} required maxLength={64} disabled={!admin || busy} value={handle} onChange={(event) => setHandle(event.target.value)} placeholder={effectiveChannel === "wechat" ? "wx 开头 AppID" : "账号名 / @handle"} />
+      <input aria-label="显示名称" className={inputClass} required maxLength={200} disabled={!admin || busy || parentBusy} value={name} onChange={(event) => setName(event.target.value)} placeholder="显示名称" />
+      <input aria-label="公开标识" className={inputClass} name="public-handle" autoComplete="off" spellCheck={false} required maxLength={64} disabled={!admin || busy || parentBusy} value={handle} onChange={(event) => setHandle(event.target.value)} placeholder={effectiveChannel === "wechat" ? "wx 开头 AppID" : "账号名 / @handle"} />
     </div>
-    <div className="mt-2 flex items-center gap-3"><Button type="submit" disabled={!admin || busy}>{busy ? "登记中…" : "登记账号"}</Button>{notice && <span className="text-xs text-indigo-700">{notice}</span>}</div>
+    <div className="mt-2 flex items-center gap-3"><Button type="submit" disabled={!admin || busy || parentBusy}>{busy ? "登记中…" : "登记账号"}</Button>{notice && <span className="text-xs text-indigo-700">{notice}</span>}</div>
   </form>;
 }
 
-function SeriesTargetsPanel({ seriesId, personaId, archived, accounts, channels, readOnly, onChanged, onNotice, onError }: {
+function SeriesTargetsPanel({ seriesId, personaId, archived, accounts, channels, readOnly, onChanged, onNotice, onError, onBusyChange, beginMutation, parentBusy }: {
   seriesId: number; personaId: number | null; archived: boolean;
-  accounts: Entity[]; channels: Channel[]; readOnly: boolean;
+  accounts: Entity[]; channels: Channel[]; readOnly: boolean; onBusyChange: (value: boolean) => void; beginMutation: () => boolean; parentBusy: boolean;
   onChanged: () => Promise<void>; onNotice: (message: string) => void; onError: (message: string) => void;
 }) {
   const [targets, setTargets] = useState<SeriesTarget[]>([]);
@@ -381,6 +593,8 @@ function SeriesTargetsPanel({ seriesId, personaId, archived, accounts, channels,
   const [accountId, setAccountId] = useState<number | null>(accounts[0]?.id ?? null);
   const [form, setForm] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
+  const owner = currentUser();
   const boundAccounts = new Set(targets.map((row) => row.account_id));
   const eligible = accounts.filter((row) => !boundAccounts.has(row.id) && row.platform_channel);
   const platformChannels = new Map(accounts.filter((row) => row.platform_channel).map((row) => [row.id, row.platform_channel as string]));
@@ -394,11 +608,12 @@ function SeriesTargetsPanel({ seriesId, personaId, archived, accounts, channels,
   useEffect(() => { setLoading(true); load(); }, [seriesId]);
 
   async function mutate(action: () => Promise<unknown>, notice: string) {
-    if (busy) return;
-    setBusy(true);
+    if (submitting.current || readOnly || archived || currentUser() !== owner) return;
+    if (!beginMutation()) return;
+    submitting.current = true; setBusy(true);
     try { await action(); await load(); await onChanged(); onNotice(notice); }
     catch (error) { onError(errText(error)); }
-    finally { setBusy(false); }
+    finally { submitting.current = false; onBusyChange(false); setBusy(false); }
   }
 
   return <section className="rounded-xl border bg-white p-5">
@@ -410,8 +625,8 @@ function SeriesTargetsPanel({ seriesId, personaId, archived, accounts, channels,
           <span>{row.account_name || `账号 #${row.account_id}`} · {channels.find((c) => c.channel === row.platform_channel)?.label || row.platform_channel} / {row.content_form}</span>
           <span className="flex items-center gap-2 text-xs">
             <span className={row.enabled ? "text-emerald-700" : "text-slate-500"}>{row.enabled ? "启用中" : "已停用"} · v{row.version}</span>
-            {!readOnly && !archived && <Button size="sm" variant="secondary" disabled={busy} onClick={() => mutate(() => api.patch(`/content-series/${seriesId}/targets/${row.id}`, { enabled: !row.enabled, expected_version: row.version }), row.enabled ? "绑定已停用；新的投放授权会被阻断。" : "绑定已重新启用。")}>{row.enabled ? "停用" : "启用"}</Button>}
-            {!readOnly && !archived && <Button size="sm" variant="danger" disabled={busy} onClick={() => { if (window.confirm("解除这条投放绑定？历史交付记录不受影响。")) mutate(() => api.del(`/content-series/${seriesId}/targets/${row.id}`), "绑定已解除。"); }}>解除</Button>}
+            {!readOnly && !archived && <Button size="sm" variant="secondary" disabled={busy || parentBusy} onClick={() => mutate(() => api.patch(`/content-series/${seriesId}/targets/${row.id}`, { enabled: !row.enabled, expected_version: row.version }), row.enabled ? "绑定已停用；新的投放授权会被阻断。" : "绑定已重新启用。")}>{row.enabled ? "停用" : "启用"}</Button>}
+            {!readOnly && !archived && <Button size="sm" variant="danger" disabled={busy || parentBusy} onClick={() => { if (window.confirm("解除这条投放绑定？历史交付记录不受影响。")) mutate(() => api.del(`/content-series/${seriesId}/targets/${row.id}`), "绑定已解除。"); }}>解除</Button>}
           </span>
         </li>)}
       </ul>}
@@ -432,7 +647,7 @@ function SeriesTargetsPanel({ seriesId, personaId, archived, accounts, channels,
             {forms.map((row) => <option key={row.content_form} value={row.content_form}>{row.label || row.content_form}</option>)}
           </select>
         </label>
-        <Button type="submit" disabled={busy || accountId == null || !form}>{busy ? "绑定中…" : "绑定投放目标"}</Button>
+        <Button type="submit" disabled={busy || parentBusy || accountId == null || !form}>{busy ? "绑定中…" : "绑定投放目标"}</Button>
         {personaId == null && <span className="text-xs text-slate-500">先选择所属角色。</span>}
       </form>}
       {!readOnly && !archived && eligible.length === 0 && <p className="mt-2 text-xs text-slate-500">没有可绑定的账号：先在本角色下登记带平台身份的账号。</p>}

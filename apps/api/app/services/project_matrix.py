@@ -57,7 +57,7 @@ def matrix_suggestions(db: Session, project_id: int, user: User, *, limit: int) 
     brief = current_brief(db, project_id)
     units = db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id)).all()
     existing = {(unit.persona_id, unit.account_id, unit.series_id, unit.modality, unit.channel_id)
-                for unit in units if unit.status != "archived"}
+                for unit in units if not unit.lifecycle_readonly}
     scoped = brief.identity_scope_json if brief else []
     identities = []
     if scoped:
@@ -72,9 +72,9 @@ def matrix_suggestions(db: Session, project_id: int, user: User, *, limit: int) 
                     or series is not None and not _series_matches(series, persona, account)):
                 continue
             identities.append((persona, account, series))
-    elif any(unit.status != "archived" for unit in units):
+    elif any(not unit.lifecycle_readonly for unit in units):
         selected = {(unit.persona_id, unit.account_id, unit.series_id)
-                    for unit in units if unit.status != "archived"}
+                    for unit in units if not unit.lifecycle_readonly}
         for persona_id, account_id, series_id in sorted(selected, key=lambda row: tuple(-1 if value is None else value for value in row))[:20]:
             persona = db.get(ContentPersona, persona_id)
             account = db.get(ContentAccount, account_id) if account_id is not None else None

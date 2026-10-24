@@ -1,0 +1,8 @@
+markers: 已知信息说明平台能否回应它；无法回应也如实说明， | 已知购买入口写明确下一步，入口、优惠、售后缺失时
+saved profile revision 1 (真实 PUT 冻结链) ✓
+TARGETS ['objective']
+CONFIGURED_METHODS []
+AUDIENCE_BODY_COUNT 3
+PURCHASE_BODY_COUNT 3
+AUDIENCE_PATHS ['/project_snapshot/product_context/production_profile/settings/product_production_methods/video/stages/0/methods/0/instruction', '/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/0/instruction', '/project_snapshot/production_methods/stages/0/methods/0/instruction']
+PURCHASE_PATHS ['/project_snapshot/product_context/production_profile/settings/product_production_methods/video/stages/0/methods/1/instruction', '/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/1/instruction', '/project_snapshot/production_methods/stages/0/methods/1/instruction']

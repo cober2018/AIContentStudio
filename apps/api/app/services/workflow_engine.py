@@ -219,6 +219,7 @@ def _h_generate(db: Session, run: WorkflowRun, step: WorkflowStep, user) -> dict
     if not channel:
         raise ValueError("生成节点缺少 channel（节点参数或 run 参数）")
     content_form = _form_of(run, step)
+    channel_registry.ensure_channel_in_service(channel)
     channel_registry.resolve_content_form(db, channel, content_form)  # 未知渠道在这里失败（ChannelRegistryError ⊂ ValueError）
     topic_id = run.params_json.get("topic_id") or run.context_json.get("topic_id")
     if not topic_id:
@@ -851,10 +852,18 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
         from .content_identity import hierarchy
 
         unit = db.get(ContentUnit, content_unit_id)
-        if unit is None or unit.status == "archived":
+        if unit is not None:
+            from .project_authorization import lock_project_context
+
+            lock_project_context(db, unit.project_id, user)
+            db.refresh(unit)
+        if unit is None or unit.lifecycle_readonly:
             raise ValueError("已归档或不存在的内容单元不可启动新运行")
-        hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
-        identity_snapshot_id = unit.identity_snapshot_id
+        if unit.production_domain != "product":
+            hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
+            identity_snapshot_id = unit.identity_snapshot_id
+
+    from .product_context import context_snapshot as product_context_snapshot
 
     p = params or {}
     topic_id = p.get("topic_id")
@@ -867,7 +876,8 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
         content_unit_id=content_unit_id,
         identity_snapshot_id=identity_snapshot_id,
         params_json=p,
-        context_json={},
+        context_json=({"product_context_snapshot": product_context_snapshot(db, unit, user)}
+                      if content_unit_id is not None and unit.production_domain == "product" else {}),
         # D5：启动时冻结 definition 身份与目标上下文
         topic_id=topic_id,
         channel=p.get("channel"),

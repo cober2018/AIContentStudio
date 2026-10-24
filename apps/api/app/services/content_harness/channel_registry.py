@@ -2,14 +2,17 @@
 
 数据源优先级：
 1. published `ChannelTemplateVersion.profile_json`（Channel Profile，新平台接入点）；
-2. published 旧模板（legacy 三渠道 + x_thread 无模板）；
+2. published 旧模板（legacy 三渠道）；
 3. 内置 legacy 兜底集合（保证既有数据可读、既有行为不变）。
+
+已下线渠道由渠道方法插件声明（selectable=False），不进入列表，也不能作为新目标。历史行仍按原值读取。
 
 业务代码禁止再使用 `channel in {c.value for c in Channel}`；`models.Channel` 仅兼容保留。
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
@@ -17,13 +20,36 @@ from sqlalchemy.orm import Session
 
 from ...models import ArtifactKind, ChannelTemplateVersion
 
-# 历史渠道兜底（含 x_thread：无模板行但一直合法）。新平台不进这里，走 profile。
+# 历史渠道兜底。新平台不进这里，走 profile。x_thread 已下线，不在此列。
 LEGACY_CHANNELS: dict[str, dict] = {
     "douyin": {"label": "抖音口播", "default_content_form": "spoken_script", "artifact_kind": ArtifactKind.script.value},
     "xiaohongshu": {"label": "小红书图文", "default_content_form": "image_note", "artifact_kind": ArtifactKind.text.value},
     "wechat": {"label": "公众号文章", "default_content_form": "article", "artifact_kind": ArtifactKind.text.value},
-    "x_thread": {"label": "X Thread", "default_content_form": "thread", "artifact_kind": ArtifactKind.text.value},
 }
+
+class _RetiredChannels(Mapping):
+    """已下线渠道来自渠道方法插件，主注册表不再写死渠道名。"""
+
+    def __getitem__(self, key: str) -> str:
+        from .channel_methods import retired_message
+
+        message = retired_message(key)
+        if message is None:
+            raise KeyError(key)
+        return message
+
+    def __iter__(self):
+        from .channel_methods import retired_map
+
+        return iter(retired_map())
+
+    def __len__(self) -> int:
+        from .channel_methods import retired_map
+
+        return len(retired_map())
+
+
+RETIRED_CHANNELS = _RetiredChannels()
 
 CHANNEL_LABELS: dict[str, str] = {
     **{k: v["label"] for k, v in LEGACY_CHANNELS.items()},
@@ -156,14 +182,25 @@ def _legacy_form(channel: str, source: str, template: ChannelTemplateVersion | N
     )
 
 
+def ensure_channel_selectable(channel_key: str | None) -> None:
+    """新写入不得再选择已下线渠道。空渠道仍允许。"""
+    if channel_key in RETIRED_CHANNELS:
+        raise ChannelRegistryError(RETIRED_CHANNELS[channel_key])
+
+
 def ensure_channel_in_service(channel_key: str | None) -> None:
-    """Keep historical x_thread out of new public-account and Series-target writes."""
-    if channel_key == "x_thread":
-        raise ChannelRegistryError("渠道 x_thread 已下线，请使用渠道 x 的 single 或 thread")
+    """新选择不得使用已拔出的渠道方法。已有稿件的读取不走这里。"""
+    ensure_channel_selectable(channel_key)
+    from .channel_methods import unplugged_message, unplugged_set
+
+    if channel_key and channel_key in unplugged_set():
+        raise ChannelRegistryError(unplugged_message(channel_key))
 
 
 def resolve_channel(db: Session, channel_key: str) -> ChannelSpec | None:
-    """解析渠道；未注册返回 None（调用方决定报错或忽略）。"""
+    """解析渠道；未注册或已下线返回 None（调用方决定报错或忽略）。"""
+    if channel_key in RETIRED_CHANNELS:
+        return None
     templates = _published_templates(db).get(channel_key, [])
     profile_row = next((t for t in templates if t.profile_json), None)
     forms: list[ContentFormSpec] = []
@@ -183,6 +220,7 @@ def resolve_channel(db: Session, channel_key: str) -> ChannelSpec | None:
 
 
 def resolve_content_form(db: Session, channel_key: str, content_form: str | None = None) -> ContentFormSpec:
+    ensure_channel_selectable(channel_key)
     spec = resolve_channel(db, channel_key)
     if spec is None:
         raise ChannelRegistryError(f"未知渠道: {channel_key}")
@@ -196,8 +234,12 @@ def resolve_content_form(db: Session, channel_key: str, content_form: str | None
 
 
 def list_channel_keys(db: Session) -> set[str]:
+    from .channel_methods import unplugged_set
+
     keys = set(LEGACY_CHANNELS)
     keys.update(_published_templates(db).keys())
+    keys.difference_update(RETIRED_CHANNELS)
+    keys.difference_update(unplugged_set())
     return keys
 
 
@@ -225,6 +267,7 @@ def normalize_targets(
     normalized: list[dict] = []
     seen: set[tuple[str, str]] = set()
     for channel, content_form in raw:
+        ensure_channel_in_service(channel)
         spec = resolve_content_form(db, channel, content_form)
         token = (spec.channel, spec.content_form)
         if token not in seen:

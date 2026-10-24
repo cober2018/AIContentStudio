@@ -42,6 +42,14 @@ def read_reference_image(db: Session, project_id: int, unit_id: int, revision_id
 def source_asset_refs(projection: dict, handoff: dict | None) -> list[dict]:
     if handoff is None:
         return projection["assets"]
+    # These are analysis references, separate from the one image sent to the website.
+    for dependency in handoff.get("continuity_references", []):
+        if not any(ref.get("role") == "shot_reference"
+                   and ref.get("slot_key") == dependency["shot_id"]
+                   and ref.get("material_revision_id") == dependency["material_revision_id"]
+                   and ref.get("content_hash") == dependency["content_hash"]
+                   for ref in projection["assets"]):
+            _fail("web_video_continuity_reference_stale", 409)
     revision = handoff.get("reference_material_revision_id")
     return [ref for ref in projection["assets"] if ref["role"] == "shot_reference"
             and ref.get("slot_key") == handoff["shot_id"] and ref["material_revision_id"] == revision]
@@ -71,6 +79,24 @@ def build_web_handoff(source: dict, shot_id: str, *, new_execution: bool = False
             "requested_generation_duration_ms": production["requested_generation_duration_ms"],
             "audio_intent": production["audio_intent"], "max_generation_submissions": 1,
             "runtime_verified": False}
+    if production.get("continuity_reference"):
+        from .video_documents import VideoDocumentError, validate_continuity_dependencies
+
+        try:
+            validate_continuity_dependencies(document["shots"])
+        except VideoDocumentError as exc:
+            _fail(str(exc))
+        by_id = {item["id"]: item for item in document["shots"]}
+        dependencies = []
+        current = shot
+        while reference := (current.get("production") or {}).get("continuity_reference"):
+            previous = by_id[reference["shot_id"]]
+            if new_execution and (previous.get("production") or {}).get("reference_material_revision_id") != reference["material_revision_id"]:
+                _fail("web_video_continuity_reference_stale", 409)
+            dependencies.append({"from_shot_id": current["id"], **reference})
+            current = previous
+        handoff["continuity_references"] = dependencies
+        handoff["continuity_model_input"] = False
     if production.get("schema") == "video.shot-production.v2":
         handoff["prompt_reference"] = production.get("prompt_reference")
     return handoff
@@ -102,8 +128,10 @@ def edit_contract(document: dict) -> dict:
     post = document.get("postproduction")
     if not post:
         _fail("video_saved_postproduction_required")
-    if not document["shots"] or any(not shot.get("source_material_revision_id") for shot in document["shots"]):
-        _fail("video_edit_shot_sources_missing")
+    missing = [f"镜头 {shot['order'] + 1}" for shot in sorted(document["shots"], key=lambda item: item["order"]) if not shot.get("source_material_revision_id")]
+    if not document["shots"] or missing:
+        # Naming the shots lets the user fill exactly those slots; everything else keeps working meanwhile.
+        raise HTTPException(422, {"code": "video_edit_shot_sources_missing", "missing_shots": missing})
     phase = post["phase"]
     roles = [role("rough_cut" if phase == "rough_cut" else "final", "video", "video/mp4"),
              role("resolve_project", "other", "application/x-resolve-project"),
@@ -161,6 +189,11 @@ def _prepare(db: Session, project_id: int, unit_id: int, payload: dict, user: Us
         if not edit and mode != "manual":
             _fail("web_video_manual_generation_required")
         if edit:
+            if source.payload_json.get("capture_plan"):
+                from .content_masters import capture_status
+                state = capture_status(db, source)
+                if not state or not state["ready_to_shoot"] or any(value != "current" for value in state.get("adoptions", {}).values()):
+                    _fail("capture_edit_requires_current_review", 409)
             validate_parent(db, project_id, unit_id, source.payload_json, user.id)
             contract = edit_contract(source.payload_json)
         else:
@@ -266,13 +299,17 @@ def validate_edit_manifest(package: dict, body: dict) -> None:
         path = asset.get("relative_path")
         if (type(revision) is not int or revision in seen or revision not in expected
                 or asset.get("content_hash") != expected[revision] or not isinstance(path, str)
-                or path != f"inputs/{revision}-{expected[revision]}.bin"):
+                or not re.fullmatch(rf"inputs/{revision}-{expected[revision]}\.[a-z0-9]{{1,5}}", path)):
             _fail("video_edit_manifest_assets_mismatch")
         seen.add(revision)
     timeline = body.get("timeline")
     shots = {shot["id"]: shot for shot in document["shots"]}
     if not isinstance(timeline, list) or not 1 <= len(timeline) <= 1000:
         _fail("video_edit_manifest_timeline_invalid")
+    spans = {item["shot_id"]: (item["start_ms"], item["end_ms"]) for track in document["timeline"]["tracks"]
+             for item in track["items"] if "shot_id" in item}
+    placements = [item for track in document["timeline"]["tracks"] if track["kind"] == "video"
+                  for item in track["items"] if "material_revision_id" in item]
     present = set()
     for item in timeline:
         if not isinstance(item, dict) or item.get("shot_id") not in shots:
@@ -280,12 +317,29 @@ def validate_edit_manifest(package: dict, body: dict) -> None:
         shot = shots[item["shot_id"]]
         start, end = item.get("start_ms"), item.get("end_ms")
         trim_start, trim_end = item.get("trim_start_ms"), item.get("trim_end_ms")
-        if (item.get("material_revision_id") != shot.get("source_material_revision_id")
+        revision = item.get("material_revision_id")
+        # A shot may be cut from several clips, each one placed inside the shot on the Master timeline.
+        span = spans.get(shot["id"])
+        placed = span is not None and type(trim_start) is int and type(trim_end) is int and any(
+            p["material_revision_id"] == revision and span[0] <= p["start_ms"] < span[1]
+            and p.get("trim_start_ms", trim_start) <= trim_start and trim_end <= p.get("trim_end_ms", trim_end)
+            for p in placements)
+        if (revision != shot.get("source_material_revision_id") and not placed
                 or any(type(n) is not int for n in (start, end, trim_start, trim_end))
                 or not 0 <= start < end <= document["timeline"]["duration_ms"]
                 or not 0 <= trim_start < trim_end or trim_end - trim_start < end - start
                 or item.get("audio_intent") != (shot.get("production") or {}).get("audio_intent", "mute")):
             _fail("video_edit_manifest_timeline_invalid")
+        if document.get("capture_plan"):
+            from .content_masters import _real_capture_shot
+            from .video_documents import capture_content_hash
+            if _real_capture_shot(document, shot) and not any(
+                take["state"] == "usable" and take["material_revision_id"] == item["material_revision_id"]
+                and take["task_content_hash"] == capture_content_hash(document, "task")
+                and take.get("trim_start_ms", -1) <= trim_start < trim_end <= take.get("trim_end_ms", -1)
+                for take in shot.get("capture_takes", [])
+            ):
+                _fail("capture_edit_manifest_outside_reviewed_range")
         composition = next((comp for comp in post["ae_compositions"] if comp["shot_id"] == shot["id"]), None)
         if composition and item.get("composition_role") != composition["role_id"]:
             _fail("video_edit_manifest_ae_missing")

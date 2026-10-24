@@ -1,0 +1,20 @@
+[
+  {
+    "id": 54,
+    "before_name": "卡哟哟科技AI聚合站",
+    "name": "卡哟哟 AI 热点",
+    "persona_ids": [
+      2
+    ],
+    "url": "https://aitech.kayoyo.top/"
+  },
+  {
+    "id": 55,
+    "before_name": "卡哟哟生活热点聚合站",
+    "name": "卡哟哟 生活热点",
+    "persona_ids": [
+      3
+    ],
+    "url": "https://wonderlife.kayoyo.top/"
+  }
+]

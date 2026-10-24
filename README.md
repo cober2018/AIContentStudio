@@ -1,8 +1,97 @@
-2026-10-16 **AI表单补齐、定点润色与商品素材导演已接入，17/17**：任意已填内容补空白、逐项确认、固定浮窗润色、反馈与明确偏好版本、品类/风格阶段配置和实际看图动态提示词已可用。纯候选286检查/Web构建及独立复核通过；备份后加法迁移、本机API/Worker和页面回读通过。旧商品关键帧仍待确认，未生成新视频、未push。[使用与验收](openspec/changes/archive/2026-10-16-add-contextual-ai-form-assistance/README.md)。
+2026-10-24 **视频流程去掉「专业执行准备」（已本地实施）**：新视频流程只有「导演稿」；角色 2、3 和商品视频默认流程已切换；进行中的作品隐藏这一步，「准备剪辑」直接建剪辑任务。[需求入口](openspec/changes/remove-professional-prepare-stage/README.md)。
+
+2026-10-23 **导演包好了自动开剪（已本地实施，待安装）**：点「准备剪辑」后平台建好粗剪任务排队；本机后台每分钟看一次，自动启动 Claude Code（可换 Codex）领任务、达芬奇剪辑调色、AE 做特效镜头、交回粗剪等你审片。安装一次：`apps/api/scripts/install_edit_dispatcher.sh`。[需求入口](openspec/changes/auto-start-edit-agent/README.md)。
+
+2026-10-23 **采用导演稿后自动准备剪辑（已本地实施）**：点「采用这版」后，平台自动补齐素材、把素材放进主稿、判断哪些镜头要 AE（达芬奇负责全部剪辑调色，AE 按镜头加特效并写原因）、保存并重做导演包；之前采用过的作品在导演稿处点「准备剪辑」。[需求入口](openspec/changes/auto-edit-handoff/README.md)。
+
+2026-10-23 **素材库唯一存放 + 浮窗拖拽 + 存储位置设置（已本地实施）**：新素材统一存进素材库里的 `AIContentStudio/视频|图片|音频`，U 盘没插时提示「素材库未连接」、不存别处；设置 → 存储位置可改素材库和本地工作位置；右下角「素材库」浮窗可把素材拖到分镜表的素材格，也可从访达批量拖入。[需求入口](openspec/changes/material-library-single-home/README.md)。
+
+2026-10-23 **视频页面简化（已本地实施）**：内容方案只有一张分镜表和一个按钮（生成导演稿 → 采用这版，采用后自动补齐素材）；制作内容只留分镜表、配音、导演包和保存，其余收进「更多」。一键生成配音还没做。[需求入口](openspec/changes/simplify-video-production-page/README.md)。
+
+2026-10-23 **补齐素材：新 AE 模板 + AI 示意图（已本地实施）**：新增对比卡、图片推镜两个模板；空着的行最后用平台生图做一张示意图，再用推镜模板做成镜头，画面里标「AI 示意」（证明类标「非实拍」），每次最多 8 张。[需求入口](openspec/changes/autofill-generated-shots/README.md)。
+2026-10-23 **分镜表 AI 补齐素材（已本地实施）**：一键给空行补素材：先搜素材库和可商用素材站（看图打分），合格就选；不合格或属于后期做的行用 AE 模板生成；都不行标缺口并写原因。每个自动选择都写来源，不覆盖你选过的，主稿由你保存。[需求入口](openspec/changes/storyboard-auto-material/README.md)。
+2026-10-23 **文章流程精简为两步（已本地实施）**：九步改为「写作方案（2–3 个完整方案选一个）→ 成稿（一次出全文，确认一次）→ 质量检查自动跑」；渠道版本只改格式。[需求入口](openspec/changes/article-two-stage-flow/README.md)。
+2026-10-23 **AE / 达芬奇两个技巧 skill 与 AE 模板库（已本地实施）**：ae-motion、resolve-edit 两个独立入口，各有目录，由平台 MCP 提供；AE 效果固化为带说明书的版本化模板，本机 aerender 渲染成候选素材。[需求入口](openspec/changes/craft-skills-ae-resolve/README.md)。
+2026-10-23 **视频导演稿改为一张分镜表（已本地实施）**：新视频流程去掉「视频脚本」「镜头计划」，导演稿一次生成一张表，一行一个镜头：镜头、时长、信息点、画面、运镜、台词、声音、备注、素材；镜头格子里选过的素材不再重复选。[需求入口](openspec/changes/video-storyboard-table/README.md)。
+2026-10-23 **导演稿沿用镜头计划（已本地实施，待生产验收）**：视频导演稿直接沿用已采用镜头计划的镜头（数量、顺序、编号、时长），AI 只润色每个镜头的口播和画面；去掉导演稿最多 8 段的上限对有镜头计划时的限制，镜头槽位素材按编号对上。[需求入口](openspec/changes/master-follows-shot-plan/README.md)。
+
+2026-10-22 **采用方案不再被补素材/重启打断 + 制作页「下一步」（已在本地完成，未提交/归档）**：补素材或 API 重启后，等你确认的方案仍可采用，脚本等真实输入变了才要重做；制作页左侧导航「内容方案」下列出各阶段，等你处理的那一项高亮；阶段报错改成大白话；模型调用结果不确定时，你可以确认放弃那次再重新生成。[需求入口](openspec/changes/fix-stage-adoption-and-next-step/README.md)。
+
+2026-10-22 **镜头素材槽位**（已在本地完成，未提交/归档）：视频制作中每个镜头带简报（旁白、画面、搜索词、生成提示词、建议途径），作为接受任意来源的槽位，显示 缺素材/有候选/已选定，素材库找素材的选择自动出现在对应镜头；缺素材不挡起草和剪辑；MCP 只读 `get_shot_slots`。[需求入口](openspec/changes/add-shot-material-slots/README.md)。
+
+2026-10-22 **设置新增「MCP 接入」**：平台 MCP 的状态与自检、Codex/Claude Code 连接方式、23 个工具的分组清单（只读/会改动、MCP 不能做的事）、外部 MCP 服务登记集中在 `/settings?section=mcp`；不返回令牌。Claude Code 已在本机接入。未提交/归档。[需求入口](openspec/changes/add-mcp-settings/README.md)。
+
+2026-10-22 **大模型出方案、你在平台决定（本地实现，待你走一遍验收）**：创作 MCP 新增 8 个工具（查看/预览/运行阶段、读结果、读你的决定、按文案找素材与回读），MCP 不能替你接受/拒绝/绑定/发布；图文排版候选在接受前即显示平台渲染的卡片图，素材每段新增「都不合适」。卡片排版改为字号自适应填满。未提交/归档/发布。[需求入口](openspec/changes/add-agent-review-loop/README.md)。
+
+2026-10-20 **角色内容方法改进接续交接，11/25**：参考/五步/方法与交接技术验收已补，科技/生活真实正文B正在质评，最新601项既有检查/Web通过；生活精修Unknown、新图/音视频/新题与用户默认决定仍待。最新A17最终修复尚未加载正式API，保留原配置/商品/历史，未提交推送或归档发布。[最新交接与原25项验收映射](openspec/changes/improve-persona-content-methods/development-handoff.md)。
+
+2026-10-19 **生活角色真实创作与本地交付完成**：机会8→项目36/作品42，9阶段完成、最终8项检查通过，候选5批准、本地ZIP已校验；修正文字角色审核职责，保留其他工作台与模型配置。未公开发布。[验收记录](openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/review.md)。
+
+2026-10-19 **Identity review warning fixed**: unchanged Master61 passes8/8 real checks; candidate4 and local delivery4 ready. Original candidate retained; no public publication. [Verification](openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/review.md).
+
+2026-10-19 **真实科技机会创作与本地交付已跑通**：机会3→项目35/作品41，9阶段完成、候选3按委托AI审阅批准、ZIP下载校验通过。修复推论引用合同和标题输入重复两处阻断；保留1条角色检查提醒。未公开发布/提交/push。[实际验收](openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/review.md)。
+
+2026-10-19 **完整使用链补充验收通过**：补齐制作→审阅→复盘入口，保留主页/机会/项目来源及筛选、步骤、候选返回；更正角色任务书文案。正式只读走链、隔离转换与交付、桌面/手机和独立复核通过，模型配置与制作内部保持。未正式写入/提交/push/发布。[验收记录](openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/review.md)。
+
+2026-10-19 **任务导航五批全部接入并归档，19/19**：机会/主页、作品/项目、审阅交付、角色/素材、效果复盘与设置均通过本机限定验收；商品/角色工作台与模型内部保留。本批128既有检查、71隔离断言、52桌面/手机布局及独立复核通过；9项API投影、15个保留文件与模型函数核对不变。7个正式规格新增21条要求。未提交/push/发布。[入口与验收](openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/README.md)。
+
+2026-10-19 **全站任务导航原型已按确认方案分批落地**：原34路由盘点和独立模拟原型保留在[归档成果](openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/README.md)，原型本身仍为模拟，正式接入与验收以五批回执为准。
+
+2026-10-19 **科技规则与Radar自动日报已启用，15/17**：科技按48小时动态/30天进展/持久价值参评，有效建议跨日可见，空态依据实际运行说明。免费Radar首轮15条项目线索已入库；现有08:00日批先自动生成日报、导入，再冻结科技评估。每天一次、失败/unknown不盲重发，生活来源与预算不变。81既有检查、隔离smoke、Web/预算及限定代码复核通过；自然日批与归档仍待，不把启用视为质量验收。无迁移/付费调用/提交推送。[范围、代码与使用入口](openspec/changes/improve-tech-opportunity-selection/README.md)。
+
+2026-10-18 **商品实拍前端一致性修正通过，58/66**：六步引导、商品摘要和拍摄/后期状态已统一；正式12页桌面/手机、下载任务书及7场景回归通过。当前Master57四镜可拍，旧数据保留，真实成片仍待。[入口与验收](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-18 **已确认测试项目7–10彻底清理完成**：物理删除528条专属记录、27媒体文件和7执行目录；其余记录与29保留媒体文件核对一致。项目34及其他任务/共用配置保留，首页待处理仅剩项目34的2项，API健康。混合备份及共用开发历史未改写。[运维回执](openspec/changes/archive/2026-10-18-purge-confirmed-test-projects/README.md)。
+
+2026-10-18 **商品前端一致性追加核对：56/66**。四段实拍任务已正式显示且确认可拍；发现旧AI引导与旧Brief表达仍需统一，重开两项展示验收。[当前记录](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-18 **商品实拍流程与Skills非素材工程验收完成，58/66**：脚本→拍摄任务书→逐镜原片审阅/选段→后期包与反馈版本已接通；模型辅助、SKU范围与手机页面通过隔离验收。儿童拖鞋Master55已确认可拍，只需四段原片；真实成片仍待，不归档提交。[任务书与验收](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-18 **角色创作清单归档、恢复与删除已启用并归档，8/8**：先备份再加法迁移，231项既有检查、Web构建及隔离页面/API操作、代码复核通过。正式API/Worker健康，40旧单元及内容历史保全；删除只移出清单，不清理共享素材。未对正式作品执行归档/删除，未push。[使用与验收](openspec/changes/archive/2026-10-18-add-persona-creation-list-lifecycle/README.md)。
+
+2026-10-18 **商品实拍任务书主链已接入，53/66**：脚本/任务书确认、逐镜原片与选段审阅、自编方法开关已接；360+18既有检查及隔离上传链/Web通过，本机ready。儿童拖鞋Master50为待审阅草稿，旧资料保全；真实拍摄/成片和完整反馈验收仍待，未归档提交。[入口与证据](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-18 **角色创作清单归档/删除方案待确认**：只读检查确认五步入口与已有科技样片可读；当前未选渠道阻止冻结交付，新 Recipe 尚未运行。新增归档恢复与逻辑删除 OpenSpec，业务实现0/8，未改正式数据。[方案与体检](openspec/changes/archive/2026-10-18-add-persona-creation-list-lifecycle/README.md)。
+
+2026-10-18 **自然日批科技0条/生活3条，转载日期语义修复后待再次自然验收**：科技候选按冻结日期门槛退出，无凑数；天气选题转载页日期误标原文，已备份修复生成/双评分提示并追加日期v2，另修正一处正文未明示的限定词。旧运行/评分/历史保留；40既有检查通过、1原有失败，API/页面与Worker核验通过。两change仍43/45、8/10，10月19日自然日批继续验收，未归档。[同一验收记录](openspec/changes/add-daily-persona-content-opportunities/review.md)。
+
+2026-10-18 **目标与受众第9节返修验收通过，50/58**：R2默认继承筛选/作品优先级/冻结版本、R4并发保存/继承方法保全已验证。442既有检查、Web及隔离联动验证通过，API已加载且ready=true。原8项素材与成片收尾仍待，未归档提交。[验收记录](openspec/changes/improve-product-keyframe-preproduction/review.md)。
+
+2026-10-18 **目标与受众方法二次独立验收未通过，46/58**：R1/R3及R5现有样本通过；R2默认继承筛选、R4并发保存仍需返修，模型归属按保存回执更正。442既有检查/Web/strict通过；未改业务代码/正式数据，未提交归档。[验收记录](openspec/changes/improve-product-keyframe-preproduction/review.md)。
+
+2026-10-17 **目标与受众方法独立验收未通过，45/58**：442既有检查、Web构建及strict通过；关闭指令残留、字段筛选、关闭保存、并发配置保全与选区润色质量需返修，已回写同一[验收记录](openspec/changes/improve-product-keyframe-preproduction/review.md)。未改业务代码/正式数据，未归档。
+
+2026-10-17 **商品目标与受众方法方案已确认、待实施，43/58**：同一OpenSpec第9节新增7项，拟接两项自有可开关方法至AI补齐/润色；商品空目标/受众可给待确认建议。仅方案修订，无代码/数据变化；既有商品解耦及旁白优先路线保持。[方案入口](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-17 **商品业务域解耦已在本机接入，工程验收通过，43/51**：商品入口、上下文、默认方法、音色/模型配置、SKU留存、质量与账号交付独立于Persona，AE/Resolve等底层共用。备份后迁移productdomain0001，106旧表旧字段一致；旧Master/Run/Identity/模型及媒体历史逐行保留。零角色mock链、真实API预览、Web构建及独立复核通过；原8项真实素材/新样片质量仍待，未归档/提交/push。[使用与验收](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-17 **双工作台与SKU已接入，35/43**：商品六步/角色五步、SKU与版本配置已启用；桌面/窄屏24页、键盘与读取异常、候选全拒绝/局部补交机制完成，相关138项复跑/Web及独立复核通过。修复默认图文渠道误用于视频；当前沙发Master47仅策划，缺事实与新媒体质量验收，未归档/提交/push。[入口、验收及一次性材料清单](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-17 **新入口自然日批科技2条/生活1条；正文边界修复后待再次自然验收**：一条VERID功能细节仅见上游摘要，未获冻结正文支撑，已备份修复模型输入并追加评估v2；原运行/评分/历史保留。40项既有检查通过、1项修复前同样失败；API/页面与Worker回读正常。两change仍43/45、8/10，下一次自然日批通过后才归档。[验收与证据](openspec/changes/add-daily-persona-content-opportunities/review.md)。
+
+2026-10-17 **双工作台与SKU商品资产方案待实施确认，16/43**：平台内商品视频独立、底层共用；角色5步、商品“目标→导演方案→视觉声音定样→逐镜素材→剪辑包装→成片反馈”。已整理24组来源的方法抽象与取舍、多类型作品/口型同步/参考二创、连续镜头和逐镜回传页面；不导入第三方实现。用户已确认先用可操作原型评审作品列表、导演方案与逐镜素材，Canva稿停止作为实施依据；SKU长期档案、多套方案与作品留存已补入同一方案和原型；最新原型接通选品后六步模拟路径、视觉/声音局部页签、剪辑交接回片及定位返工，语法/规范与静态复核完成，尚无新版浏览器验收；原16项完成保留，第7节23项正式实现待批准。[页面与方案](openspec/changes/improve-product-keyframe-preproduction/product-workspace-design.md)。
+
+2026-10-16 **AI表单补齐、定点润色与商品素材导演已接入，17/17**：任意已填内容补空白、逐项确认、固定浮窗润色、反馈与明确偏好版本、品类/风格阶段配置和实际看图动态提示词已接入；完整商品生产可用性仍待真实任务验收。纯候选286检查/Web构建及独立复核通过；备份后加法迁移、本机API/Worker和页面回读通过。旧商品关键帧仍待确认，未生成新视频、未push。[使用与验收](openspec/changes/archive/2026-10-16-add-contextual-ai-form-assistance/README.md)。
+
+2026-10-16 **科技/生活聚合站已验证后正式切换，8/10**：科技71/生活22条真实精选快照及增量、原文正文、正式后台补采/API/页面通过；41既有检查、Web及独立复核通过。双备份后源54/55分别关联角色2/3，原来源配置/订阅及12条机会历史保留；每日08:00选题沿用原质量门槛，08:20跟进新入口自然验收，通过后归档。[接入方案](openspec/changes/add-aihot-persona-source-integration/README.md)。
+
+2026-10-16 **商品销售资料与三列镜头台已接入，完整生产收口实施中，16/20**：版本化买家/场景/购买理由/证据/顾虑/CTA、可编辑素材分类与独立内部成本已实现；视频单元逐镜选图、提示词、人工回传、审阅采用和Resolve/AE交接可用。280项既有检查、Web构建及独立复核通过；本机服务与真实页面已只读回读。五张图片用户已确认，正式Brief9/Master45为新版六镜，任务3–7已准备待人工网页回传；真实Run18脚本/镜头/整稿修改后采用通过，新视频未生成。3文件导航/状态说明已改，132检查/Web及复核通过；隔离空白起步真实模型通过，图片按用户确认以有限模型用途导入，公开门禁保留。部分前置代码已随8539806提交，本change未归档。[同一成果与审图](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+2026-10-16 **自然日批已运行，日期语义修复后待再次自然验收，43/45**：科技/生活真实Beat→Worker各1条；科技发布时间误作事件日期，已备份后最小修复并追加近期报道评估v2，原始运行/评分/昨日10条保留。41既有检查、独立复核及正式API/页面通过，来源partial如实显示；下次08:00自然日批继续验收，尚未归档，无新增依赖/迁移或push。[同一成果](openspec/changes/add-daily-persona-content-opportunities/README.md)。
 
 2026-10-16 **商品视频Skills正式接入、样片已回收，20/20**：六项方法/首轮冻结/阶段开关及AE/Resolve适配完成；懒人沙发16秒有声样片、8项接受产物和Master41本地绑定通过委托AI质量评审。纯候选564项既有检查/1跳过、Web及独立复核通过；已归档同步10条规范并选择性本地提交。未直接试听，公开门禁保留、角色默认不变、未push。[使用入口与验收](openspec/changes/archive/2026-10-16-add-product-video-production-skills/README.md)。
 
 2026-10-16 **角色风格与阶段Skills已正式启用并归档，22/22**：科技角色v4、12项方法/十阶段开关/3首场景配乐已接入；47秒有声样片及8个产物正式接受，Master39本地绑定，32项API回读通过。纯候选521项既有检查、Web及独立复核通过；未直接试听、公开门禁保持，已选择性本地提交、未push。[使用入口与验收](openspec/changes/archive/2026-10-16-add-persona-production-skill-profiles/README.md)。
+
+2026-10-15 **停机补偿已正式接入并归档，19/19**：备份后加法迁移catchup000001；恢复先补采结案，再生成未开始的当天选题，断点/预算/历史缺口可见。41既有检查、Web/bundle/Ruff、独立复核、隔离真实模型与Beat/Worker停启、正式恢复及API/UI通过。原角色/今日10条/评估/创作记录保全，临时服务已关闭；代码未提交或push，原次日自然日批验收独立继续。[成果与回执](openspec/changes/archive/2026-10-15-add-discovery-offline-catchup/README.md)。
+
+2026-10-15 **手动来源管理已接入并归档，16/16**：「内容机会→信息源储备」可添加新闻/RSS/博主链接、选择多个角色并统一配置自动来源。人工设置保留、后台验证、失败原因可见；81既有检查、Web构建和独立复核通过，隔离真实Beat/Worker日批从手动来源生成1条。正式未加入验收数据，原5条建议/历史保全；原每日选题明日自然验收继续。[使用与回执](openspec/changes/archive/2026-10-15-add-manual-discovery-source-management/README.md)。
+
+2026-10-15 **每日选题质量修复已正式接入，43/45**：已备份；今日保留科技2条常青、生活3条建议，其余3备选/1合并/1缺正文暂缓，历史评估保留。正文、三类日期、同类合并、来源分散与每角色0至5条检查已接通；81既有检查、Web构建、独立复核和两个角色隔离真实模型链通过。明日08:20继续自然日批验收，通过后同步规范并归档。[同一成果](openspec/changes/add-daily-persona-content-opportunities/README.md)。
+
+2026-10-15 **每日角色机会与商品创作已正式启用，40/42**：先完成DB/75素材/config备份，再迁移discovery000001；91旧表858行与18素材引用保全。科技/生活角色已启用现有MiniMax MCP自动搜源和荐题，今天已各生成5条；商品入口共用原Recipe。正式5173/8000健康、160检查通过/1跳过；明日08:20复核自然日批；本次10条质量审查发现缺陷，关闭质量问题后才同步主规范并归档。[正式进度与回执](openspec/changes/add-daily-persona-content-opportunities/README.md)。
+
+2026-10-15 **今日工作台测试内容已重置**：经用户确认，6个测试项目已归档保留全部内容，172条测试活动及6条归档活动在完整SQLite备份后移除；首页7个列表API回读均为空且无投影错误。角色、账号、模板、模型配置及其他业务表逐表一致。内容机会原本为人工入口；现有定时任务未接每日机会生成，旧FactPack荐题也未写入该模块。本轮未改产品代码或启用调度。[重置与诊断记录](backups/workbench-reset-20261015/README.md)（本地私有备份，Git忽略）。
 
 2026-10-15 **网页视频与有声样片验收完成**：图片先确认、据图提示词、人工Grok/Gemini回传、平台CLI/MCP、达芬奇主剪与AE合成已跑通；60秒科技音色旁白/字幕/原生工程通过独立AI评审，Master46/执行8本地采用；公开门禁保持，未直接试听。29/29已归档，31路径选择性本地集成，正式发布未声明、未push。[同一成果](openspec/changes/archive/2026-10-15-verify-grok-gemini-media-capabilities/README.md)。
 
@@ -15,6 +104,10 @@
 2026-10-14 **Creation Recipe独立收尾完成，144/144**：66新增持久案例、非法反馈ID及合法Descriptor冻结深度两项最小修复通过独立复核；实际候选2670通过/28跳过/1既有wewrite环境豁免，Web/FE-P1/Ruff/strict通过。9capability32新增同步并归档，仅本轮7代码路径选择性本地提交，相邻plugin/Studio改动保全；Persona默认图卡质量修复独立进行中，未push/公开发布。[Recipe成果](openspec/changes/archive/2026-10-14-creation-recipe-stage-control-loop/README.md)。
 
 2026-10-14 **十二平台/十七形态交付已验收并归档，43/43**：事实边界、图文平台检查及用户委托的AI整模态评审通过。七capability同步23新增/2修改，选择性本地main提交保全相邻改动；2639后端通过/28跳过/1既有wewrite环境豁免，实际候选368通过/1跳过、Web/FE-P1/Node/Ruff与独立复核通过。未直接试听、push或公开发布；相邻Persona151/156、Stage141/144保持。[成果与精确边界](openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/README.md)。以下保留阶段历史。
+
+2026-10-14 **正式12平台/17形态Profile已启用，40/43**：全权授权后完成配套备份/dry-run/幂等启用、四账号独立真实ZIP、三项缺陷修复与独立复核。后端2626通过/28跳过/1已知环境失败豁免，Web/FE-P1/strict/Ruff/diff通过。两个角色新增2文章/6PNG/2WAV与QC回执；完整质量仍有事实边界、平台inline媒体和人工评审门槛，7.1/7.2及最终生命周期3.1未关闭，不冒称归档或发布。必要API已加载ready=true；无新迁移/产品依赖或运行配置改动，用户Vite/worker未动。[当前成果与下一步](openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/README.md)。下方均保留为历史。
+
+2026-10-14 **Batch B已实施，33/43，等待独立最终验收**：12平台/17形态合同、服务端Descriptor编辑、目标账号精确冻结与独立交付、安全本地ZIP均在本地落地。17 API/ZIP、17生产页＋17Review/页面下载通过；后端2624 passed/28 skipped/1既有wewrite断链失败如实豁免，Web/8项编辑模型/FE-P1、strict38/38与diff通过。正式Profile启用、真实模型质量/公开发布与生命周期仍待独立授权/验收；没有正式库/Profile/素材/配置/服务或Git生命周期操作。本批零迁移/新增产品依赖，沿用现有启动方式。[当前成果与下一步](openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/README.md)。下方早期状态均保留为历史。
 
 # AI Content Studio（AI 内容生产中心）
 
@@ -943,3 +1036,11 @@ docs/runbooks/              # backup-restore.md
 1. dsh 沙箱限制：skill 无法写 `~/.wewrite/runs/`，产出暂落 `.wewrite-scratch/`（待沙箱放行或路径迁移）
 2. DeepSeek API key 尚未配置（`~/.dsh/env.local` 留空，MiniMax 已可用）
 最新Commons续验（2026-10-01）：真实产品搜索200/7候选，下载stage 502、未导入；后续搜索502，API域名DNS再次为198.18.0.15。前次网络恢复不是持续验收，10.2不关闭，F7仍97/105、F8未apply。临时库/素材已回收，无业务代码/依赖/启动变化，微信未知上传不重试。详见progress.md。
+2026-10-18 **商品实拍任务书与阶段方法留痕方案待确认**：同一change补充第10节，产品承接脚本确认、逐镜拍摄任务/原片审阅/补拍和版本记录，Skills承接阶段判断；旁白可后置，旧AI路线保留。新增8项待批准，既有范围50/58，含提案50/66；仅文档与strict验证，无业务实现或正式数据变化。[方案入口](openspec/changes/improve-product-keyframe-preproduction/README.md)。
+
+
+2026-10-19双角色媒体实跑：科技/生活各4张图文与生活音频已本地交付；科技TTS未知回执尚未取得音频，不能宣称四条全通过。详见openspec/changes/archive/2026-10-19-redesign-studio-task-navigation/README.md追加验收。未公开发布，优化工作台和模型配置保留。
+
+科技音频当前阻断已于2026-10-19同参数复现为MiniMax Token Plan额度用尽；模型与原音色未改，待额度恢复后完成剩余验收。详见上述验收目录最新记录。
+
+科技音频最新状态（2026-10-19）：额度恢复后原音色/模型在run24完整生成、ASR、QC和本地交付通过，包为output/tech-audio-project35.zip；旧额度阻断记录保留为历史。保留未直接试听及ASR字幕待校对边界，未公开发布。

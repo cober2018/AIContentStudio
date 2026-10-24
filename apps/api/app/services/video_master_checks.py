@@ -36,6 +36,13 @@ def _platform(db: Session, master: ContentMasterRevision, document: dict) -> tup
 
 
 def _identity(db: Session, master: ContentMasterRevision, document: dict, requirement: dict) -> tuple[str, dict]:
+    product = (getattr(master, "edit_summary_json", None) or {}).get("product_context_snapshot")
+    if product is not None:
+        body = "\n".join([block["text"] for block in document["script"]["blocks"]] + [cue["text"] for cue in document["subtitles"]["cues"]] + [item["text"] for item in document["overlays"]])
+        dimensions = ("purchase_reason", "product_evidence", "product_consistency", "shot_continuity", "sound_clarity", "truthful_cta")
+        issues, coverage = _semantic_review("identity_review", text=body, context={"production_domain": "product", "product": product, "review_dimensions": dimensions, "rule": "仅依SKU资料评审购买理由与证据；AI情境不能证明性能，禁止虚构体验/优惠/实测"}, configured=requirement["metadata"]["semantic"]["configured"], critic_dimensions=dimensions)
+        coverage.update({"visual_semantics": "unavailable", "audio_semantics": "unavailable", "deterministic": "existing_structure_rights_evidence_checks"})
+        return ("blocker" if any(issue["severity"] == "blocker" for issue in issues) else "warning"), {"reasons": [], "production_domain": "product", "product_context_checksum": product["checksum"], "issues": issues, "coverage": coverage, "human_review_required": True}
     snapshot = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
     if snapshot is None:
         return "incomplete", {"reasons": ["identity_snapshot_missing"], "coverage": {"semantic": "unavailable", "visual_semantics": "unavailable", "audio_semantics": "unavailable"}}

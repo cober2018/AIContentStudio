@@ -1,0 +1,65 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "photo-push",
+  "version": "v1",
+  "name": "图片推镜",
+  "use": "把一张图片做成缓慢推近的镜头，下方一行说明，右上角可加小标签（生成图标「AI 示意」）。适合找不到实拍、但能用一张图表达的画面。",
+  "fields": [
+    {
+      "name": "caption",
+      "kind": "text",
+      "max": 24,
+      "required": false
+    },
+    {
+      "name": "tag",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "image",
+      "file": "image.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 2000,
+    "max": 10000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "PingFangSC-Semibold",
+    "PingFangSC-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "bcf6c918bd76dedf5e8c9b454b220139ba6306df191993caaf2e13ec9442cb85"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-23",
+      "content": "真实版画 + 说明，无标签",
+      "frames": "入场 0.4s、中段 1.5s、定格 3.7s",
+      "result": "图片铺满/裁切、推近、文字、标签显隐、无图时的文字面板均正确"
+    },
+    {
+      "date": "2026-10-23",
+      "content": "历史照片 + 说明 + 「AI 示意，非实拍」标签",
+      "frames": "入场 0.4s、中段 1.5s、定格 3.7s",
+      "result": "图片铺满/裁切、推近、文字、标签显隐、无图时的文字面板均正确"
+    }
+  ]
+}

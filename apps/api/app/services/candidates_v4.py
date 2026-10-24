@@ -25,9 +25,44 @@ from .production_modalities import adapter_for, validate_json_bounds
 SECTIONS = ("artifact_kind", "channel", "content_form", "project", "identity", "brief", "evidence", "content_master", "content", "assets", "evidence_refs", "checks", "render", "production", "citations", "declarations")
 
 
+def validate_product_identity(value: object) -> bool:
+    from .discovery_runtime import digest
+
+    if not isinstance(value, dict) or value.get("production_domain") != "product":
+        return False
+    frozen = value.get("product_context")
+    if (set(value) != {"id", "checksum", "production_domain", "product_context"}
+            or value["id"] is not None or not isinstance(frozen, dict)
+            or frozen.get("production_domain") != "product"
+            or not frozen.get("product_context")
+            or not isinstance(frozen.get("checksum"), str)
+            or value["checksum"] != frozen["checksum"]
+            or digest({key: item for key, item in frozen.items() if key != "checksum"}) != frozen["checksum"]):
+        raise ValueError("invalid frozen product context")
+    return True
+
+
+def frozen_product_identity(db: Session, master: ContentMasterRevision, unit: ContentUnit, *, require_current: bool) -> dict | None:
+    from .product_context import context_snapshot, is_product
+
+    frozen = (master.edit_summary_json or {}).get("product_context_snapshot")
+    if frozen is None and not require_current:
+        return None
+    if require_current and not is_product(unit):
+        if frozen is not None:
+            raise ValueError("product context on Persona Master")
+        return None
+    value = {"id": None, "checksum": frozen.get("checksum") if isinstance(frozen, dict) else None,
+             "production_domain": "product", "product_context": frozen}
+    validate_product_identity(value)
+    if master.identity_snapshot_id is not None or (require_current and context_snapshot(db, unit) != frozen):
+        raise ValueError("inconsistent frozen product context")
+    return value
+
+
 def build_manifest_v4(inputs: dict) -> dict:
     """Build only from explicit snapshots; authorization/live gates belong to callers."""
-    required = {"project": ("id", "unit_id", "modality", "channel", "content_form"), "identity": ("id", "checksum"), "brief": ("id", "revision_no", "checksum"), "evidence": ("boundary_id", "revision_no", "fact_pack"), "content_master": ("id", "revision_no", "payload_schema", "payload_hash", "context_hash"), "render": ("status",), "production": ("source_kind",)}
+    required = {"project": ("id", "unit_id", "modality", "channel", "content_form"), "identity": ("checksum",) if validate_product_identity(inputs.get("identity")) else ("id", "checksum"), "brief": ("id", "revision_no", "checksum"), "evidence": ("boundary_id", "revision_no", "fact_pack"), "content_master": ("id", "revision_no", "payload_schema", "payload_hash", "context_hash"), "render": ("status",), "production": ("source_kind",)}
     for section in SECTIONS:
         if section not in inputs or inputs[section] is None:
             raise ValueError(f"missing manifest section: {section}")
@@ -56,12 +91,13 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
     brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id) if master.creative_brief_revision_id else None
     boundary = db.get(ProjectFactBoundaryRevision, master.fact_boundary_revision_id) if master.fact_boundary_revision_id else None
     pack = db.get(FactPack, boundary.fact_pack_id) if boundary else None
-    if not all((project, unit, identity, brief, boundary, pack)):
+    product_identity = frozen_product_identity(db, master, unit, require_current=require_current) if unit else None
+    if not all((project, unit, brief, boundary, pack)) or (not product_identity and identity is None):
         raise ValueError("incomplete frozen Master context")
-    if unit.project_id != project.id or identity.owner_user_id != project.owner_user_id or brief.project_id != project.id or boundary.project_id != project.id or pack.checksum != boundary.fact_pack_checksum or pack.version != boundary.fact_pack_version:
+    if unit.project_id != project.id or (identity is not None and identity.owner_user_id != project.owner_user_id) or brief.project_id != project.id or boundary.project_id != project.id or pack.checksum != boundary.fact_pack_checksum or pack.version != boundary.fact_pack_version:
         raise ValueError("inconsistent frozen Master context")
     adapter = adapter_for(master.modality, master.payload_schema)
-    projection = _serialize(db, master)
+    projection = _serialize(db, master, require_current=require_current)
     requirements = check_requirements(db, master, require_current=require_current, frozen_checks=frozen_checks if not require_current else None)
     checks = []
     for kind, requirement in requirements.items():
@@ -91,7 +127,7 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
         "artifact_kind": resolve_content_form(db, master.channel_id, master.content_form).artifact_kind,
         "channel": master.channel_id, "content_form": master.content_form,
         "project": {"id": project.id, "title": project.title, "unit_id": unit.id, "unit_title": unit.title, "modality": master.modality, "channel": master.channel_id, "content_form": master.content_form},
-        "identity": {"id": identity.id, "checksum": identity.checksum, "brand_id": identity.brand_id, "brand_revision_id": identity.brand_revision_id, "persona_id": identity.persona_id, "persona_revision_id": identity.persona_revision_id, "account_id": identity.account_id, "account_revision_id": identity.account_revision_id, "series_id": identity.series_id, "series_revision_id": identity.series_revision_id, "brand_voice_version_id": identity.brand_voice_version_id, "effective_profile": identity.effective_profile_json, "field_origins": identity.field_origins_json},
+        "identity": product_identity or {"id": identity.id, "checksum": identity.checksum, "brand_id": identity.brand_id, "brand_revision_id": identity.brand_revision_id, "persona_id": identity.persona_id, "persona_revision_id": identity.persona_revision_id, "account_id": identity.account_id, "account_revision_id": identity.account_revision_id, "series_id": identity.series_id, "series_revision_id": identity.series_revision_id, "brand_voice_version_id": identity.brand_voice_version_id, "effective_profile": identity.effective_profile_json, "field_origins": identity.field_origins_json},
         "brief": {"id": brief.id, "revision_no": brief.revision_no, "checksum": brief.checksum, "snapshot": {"objective": brief.objective, "primary_audience": brief.primary_audience, "core_message": brief.core_message, "angle": brief.angle, "required_evidence": brief.required_evidence_json, "constraints": brief.content_constraints_json, "identity_scope": brief.identity_scope_json, "modality_scope": brief.modality_scope_json, "channel_scope": brief.channel_scope_json, "cta": brief.cta, "references": brief.references_json}},
         "evidence": {"boundary_id": boundary.id, "revision_no": boundary.revision_no, "fact_pack": {"id": boundary.fact_pack_id, "version": boundary.fact_pack_version, "checksum": boundary.fact_pack_checksum}},
         "content_master": {"id": master.id, "revision_no": master.revision_no, "parent_id": master.parent_revision_id, "modality": master.modality, "payload_schema": master.payload_schema, "payload_hash": master.payload_hash, "context_hash": master.context_hash},

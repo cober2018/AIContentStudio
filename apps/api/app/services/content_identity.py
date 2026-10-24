@@ -151,7 +151,14 @@ def owned_entity(db: Session, user: User, kind: str, entity_id: int, *, mutable:
     elif kind == "persona":
         hierarchy(db, user, persona_id=entity_id, mutable=mutable)
     elif kind == "account":
-        hierarchy(db, user, persona_id=entity.persona_id, account_id=entity_id, mutable=mutable)
+        if entity.persona_id is not None:
+            hierarchy(db, user, persona_id=entity.persona_id, account_id=entity_id, mutable=mutable)
+            if entity.owner_user_id is not None and entity.owner_user_id != user.id:
+                raise HTTPException(404, "身份不存在")
+        elif entity.owner_user_id != user.id:
+            raise HTTPException(404, "账号不存在")
+        if mutable and entity.status != "active":
+            raise HTTPException(409, "已归档账号只可查看历史")
     else:
         if entity.scope == "persona_editorial":
             hierarchy(db, user, persona_id=entity.persona_id, series_id=entity_id, mutable=mutable)
@@ -170,15 +177,15 @@ def current_revision(db: Session, kind: str, entity_id: int):
 
 def _lock_account(db: Session, user: User, account_id: int) -> ContentAccount:
     row = owned_entity(db, user, "account", account_id, mutable=True)
-    selected = hierarchy(db, user, persona_id=row.persona_id, account_id=row.id, mutable=True)
+    selected = hierarchy(db, user, persona_id=row.persona_id, account_id=row.id, mutable=True) if row.persona_id is not None else None
     try:
         # Serialize with normal archive UPDATEs, including ancestors, before re-reading authority.
         with db.no_autoflush:
-            for model, entity in ((ContentBrand, selected.brand), (ContentPersona, selected.persona), (ContentAccount, row)):
+            for model, entity in ((ContentBrand, selected.brand if selected else None), (ContentPersona, selected.persona if selected else None), (ContentAccount, row)):
                 if entity is not None:
                     db.execute(update(model).where(model.id == entity.id).values(status=model.status).execution_options(synchronize_session=False))
                     db.refresh(entity)
-        hierarchy(db, user, persona_id=row.persona_id, account_id=row.id, mutable=True)
+        owned_entity(db, user, "account", row.id, mutable=True)
     except OperationalError:
         db.rollback()
         raise HTTPException(409, "platform_binding_busy") from None
@@ -206,11 +213,12 @@ def public_platform_id(channel: str, value: str) -> str:
     return value
 
 
-def register_public_channel_account(db: Session, user: User, persona_id: int, *, name: str, channel: str, platform_account_id: str) -> ContentAccount:
+def register_public_channel_account(db: Session, user: User, persona_id: int | None, *, name: str, channel: str, platform_account_id: str) -> ContentAccount:
     """在角色下登记一个平台公开身份。不保存密码，也不改已经绑定的账号。"""
     if user.role != "admin":
         raise HTTPException(403, "platform_binding_admin_required")
-    owned_entity(db, user, "persona", persona_id, mutable=True)
+    if persona_id is not None:
+        owned_entity(db, user, "persona", persona_id, mutable=True)
     from .content_harness.channel_registry import ChannelRegistryError, ensure_channel_in_service, resolve_channel
 
     try:
@@ -220,7 +228,7 @@ def register_public_channel_account(db: Session, user: User, persona_id: int, *,
     if resolve_channel(db, channel) is None:
         raise HTTPException(422, "未知渠道")
     public_id = public_platform_id(channel, platform_account_id)
-    row = ContentAccount(persona_id=persona_id, name=name, platform_channel=channel, platform_account_id=public_id)
+    row = ContentAccount(owner_user_id=user.id, persona_id=persona_id, name=name, platform_channel=channel, platform_account_id=public_id)
     try:
         db.add(row)
         db.commit()
@@ -347,6 +355,11 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
     row = revision_model(**{foreign_key: entity_id}, revision_no=current_no + 1, profile_json=data, checksum=checksum(data), created_by=user.email)
     db.add(row)
     try:
+        db.flush()
+        if kind == "persona":
+            from .discovery_runtime import on_persona_revision
+
+            on_persona_revision(db, entity_id, row)
         db.commit()
     except IntegrityError as exc:
         db.rollback()
@@ -444,3 +457,18 @@ def snapshot_json(row: IdentitySnapshot) -> dict:
         "checksum": row.checksum,
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
+
+
+def owned_product_account(db: Session, user: User, account_id: int, *, mutable: bool = False):
+    row = db.get(ContentAccount, account_id)
+    if row is None:
+        raise HTTPException(404, "账号不存在")
+    owner_id = row.owner_user_id
+    if owner_id is None and row.persona_id is not None:
+        persona = db.get(ContentPersona, row.persona_id)
+        owner_id = persona.owner_user_id if persona else None
+    if owner_id != user.id:
+        raise HTTPException(404, "账号不存在")
+    if mutable and row.status != "active":
+        raise HTTPException(409, "已归档账号不可使用")
+    return row

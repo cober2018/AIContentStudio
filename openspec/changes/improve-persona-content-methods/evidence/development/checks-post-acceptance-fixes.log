@@ -1,0 +1,14 @@
+# post-acceptance fixes: persona/stage suites
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+593 passed, 8 warnings in 15.64s
+
+# factchecker-adjacent suites
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+42 passed, 1 warning in 1.29s
+
+# freshness local-day unit check (Taipei 01:00 == UTC 17:00 prev day)
+same local day eligible: True
+future day excluded: False
+stale still excluded: False

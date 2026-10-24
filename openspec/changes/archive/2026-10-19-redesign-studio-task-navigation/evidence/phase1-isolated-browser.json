@@ -1,0 +1,718 @@
+{
+  "checks": [
+    {
+      "name": "Home role handoff",
+      "pass": true
+    },
+    {
+      "name": "tech cross-day query",
+      "pass": true
+    },
+    {
+      "name": "back retains page and role",
+      "pass": true
+    },
+    {
+      "name": "default no manual or JSON",
+      "pass": true
+    },
+    {
+      "name": "sources unchecked",
+      "pass": true
+    },
+    {
+      "name": "raw body readable",
+      "pass": true
+    },
+    {
+      "name": "unsafe URL absent",
+      "pass": true
+    },
+    {
+      "name": "draft survives reload",
+      "pass": true
+    },
+    {
+      "name": "stale blocks conversion",
+      "pass": true
+    },
+    {
+      "name": "creation reaches project",
+      "pass": true
+    },
+    {
+      "name": "only explicit qualify and convert",
+      "pass": true
+    },
+    {
+      "name": "selected body and revision respected",
+      "pass": true
+    },
+    {
+      "name": "unassessed reader can read",
+      "pass": true
+    },
+    {
+      "name": "unassessed reader cannot create",
+      "pass": true
+    },
+    {
+      "name": "reader no write forms",
+      "pass": true
+    },
+    {
+      "name": "409 no auto retry",
+      "pass": true
+    },
+    {
+      "name": "409 draft retained",
+      "pass": true
+    },
+    {
+      "name": "existing project shown",
+      "pass": true
+    },
+    {
+      "name": "duplicate conversion disabled",
+      "pass": true
+    },
+    {
+      "name": "partial visible",
+      "pass": true
+    },
+    {
+      "name": "missing count unknown",
+      "pass": true
+    },
+    {
+      "name": "null today run not zero",
+      "pass": true
+    },
+    {
+      "name": "no false manual required",
+      "pass": true
+    },
+    {
+      "name": "unknown first",
+      "pass": true
+    },
+    {
+      "name": "system correction not new model",
+      "pass": true
+    },
+    {
+      "name": "source error preserved",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "unexpectedRequests": [],
+  "apiCalls": [
+    {
+      "scenario": "navigation",
+      "path": "/home",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/discovery/status",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities",
+      "method": "GET",
+      "query": {
+        "recommended_only": "true",
+        "actionable_only": "true",
+        "priority": "",
+        "offset": "0",
+        "limit": "30",
+        "persona_id": "2"
+      },
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities",
+      "method": "GET",
+      "query": {
+        "recommended_only": "true",
+        "actionable_only": "true",
+        "priority": "",
+        "offset": "30",
+        "limit": "30",
+        "persona_id": "2"
+      },
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/discovery/status",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities",
+      "method": "GET",
+      "query": {
+        "recommended_only": "true",
+        "actionable_only": "true",
+        "priority": "",
+        "offset": "30",
+        "limit": "30",
+        "persona_id": "2"
+      },
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "navigation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "PATCH",
+      "query": {},
+      "body": {
+        "status": "qualified"
+      }
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/convert-to-project",
+      "method": "POST",
+      "query": {},
+      "body": {
+        "expected_assessment_revision": 2,
+        "idempotency_key": "c80386d3-9968-4a6a-afaf-4dfdee6578c8",
+        "title": "我的修改标题",
+        "objective": "只解释一个具体问题。",
+        "selected_signal_ids": [
+          501
+        ]
+      }
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "creation",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "no-assessment-reader",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901",
+      "method": "PATCH",
+      "query": {},
+      "body": {
+        "status": "qualified"
+      }
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/convert-to-project",
+      "method": "POST",
+      "query": {},
+      "body": {
+        "expected_assessment_revision": 1,
+        "idempotency_key": "02d1ede7-bd41-44db-b833-a9a43dc65848",
+        "title": "冲突保留",
+        "objective": "用一个具体任务说明边界。",
+        "selected_signal_ids": []
+      }
+    },
+    {
+      "scenario": "conflict",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "conflict",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "existing-project",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "home-uncertainty",
+      "path": "/home",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "provenance",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/users/me",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-opportunities/901",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-opportunities/901/signals",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-opportunities/901/conversion",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/content-personas",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    },
+    {
+      "scenario": "source-error",
+      "path": "/sources/1001",
+      "method": "GET",
+      "query": {},
+      "body": null
+    }
+  ]
+}

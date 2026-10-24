@@ -255,3 +255,69 @@ def dispatch_pull(endpoint_id: int, actor_email: str) -> str:
     """异步模式入 ingestion 队列；同步模式不该走这里（路由直接调 pull_endpoint）。"""
     pull_connector_endpoint.delay(endpoint_id, actor_email)
     return "queued"
+
+
+@celery_app.task(name="app.tasks.worker_tasks.scan_persona_discovery")
+def scan_persona_discovery():
+    from ..models import DiscoverySource, SystemSetting, utcnow
+    from ..services.discovery_runtime import schedule_due
+
+    with SessionLocal() as db:
+        from ..models import PersonaResearchRun
+        from ..services.discovery_catchup import prerequisite, scan
+
+        jobs = scan(db)
+        ids = schedule_due(db)
+        for run_id in ids:
+            run = db.get(PersonaResearchRun, run_id)
+            if run.kind != "daily" or prerequisite(db, run):
+                process_persona_research.apply_async(args=[run_id], queue="llm")
+        validations = db.scalars(select(DiscoverySource.id).where(
+            DiscoverySource.evidence_json["management"]["validation"]["state"].as_string().in_(["pending", "running"]),
+            DiscoverySource.next_due_at <= utcnow(),
+            (DiscoverySource.lease_until.is_(None)) | (DiscoverySource.lease_until < utcnow())).limit(20)).all()
+        for source_id in validations:
+            validate_discovery_source.apply_async(args=[source_id], queue="ingestion")
+        for receipt_id in jobs:
+            collect_discovery_catchup.apply_async(args=[receipt_id], queue="ingestion")
+        row = db.get(SystemSetting, "discovery.heartbeat")
+        if row is None:
+            row = SystemSetting(key="discovery.heartbeat")
+            db.add(row)
+        row.value = {"last_scan_at": utcnow().isoformat(), "origin": "celery_beat", "queued_runs": len(ids)}
+        db.commit()
+        return {"runs": len(ids), "sources": len(jobs), "validations": len(validations)}
+
+
+@celery_app.task(name="app.tasks.worker_tasks.process_persona_research")
+def process_persona_research(run_id):
+    from .. import runtime_config
+    from ..services.daily_opportunities import execute_research
+
+    with SessionLocal() as db:
+        runtime_config.load_from_db(db)
+        return execute_research(db, run_id, execution_origin="celery_worker", task_id=process_persona_research.request.id)
+
+
+@celery_app.task(name="app.tasks.worker_tasks.collect_discovery_source")
+def collect_discovery_source(source_id):
+    from ..services.discovery_ingestion import collect_source
+
+    with SessionLocal() as db:
+        return collect_source(db, source_id)
+
+
+@celery_app.task(name="app.tasks.worker_tasks.validate_discovery_source")
+def validate_discovery_source(source_id):
+    from ..services.discovery_sources import validate_source
+
+    with SessionLocal() as db:
+        return validate_source(db, source_id)
+
+
+@celery_app.task(name="app.tasks.worker_tasks.collect_discovery_catchup")
+def collect_discovery_catchup(receipt_id):
+    from ..services.discovery_catchup import step
+
+    with SessionLocal() as db:
+        return step(db, receipt_id)

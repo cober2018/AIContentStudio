@@ -1,0 +1,170 @@
+{
+  "schema": "persona-refine-preview-bounds-review.v2",
+  "script_path": "/private/tmp/persona-refine-preview-bounds-review.py",
+  "source_sha256": "7c8f473969ba168ed5203b2f1a2382b0cbdc961de05d7beb0f4026fbb6bb9dd5",
+  "ui_source_sha256": "88e6357683da6d1298a4a8c66ce2573479d94acd57a19342aee731519b1a65f6",
+  "baseline": {
+    "kind": "pre_compaction_tail_reconstructed",
+    "ast_edits": {
+      "dict_assignment": 1,
+      "envelope_try": 1,
+      "result_canonical": 1
+    }
+  },
+  "database_mode": "read_only",
+  "formal_writes": 0,
+  "model_calls": 0,
+  "passed": 30,
+  "total": 30,
+  "checks": [
+    {
+      "name": "real_inherited_preview_ready",
+      "passed": true,
+      "blockers": []
+    },
+    {
+      "name": "real_explicit_preview_ready",
+      "passed": true,
+      "blockers": []
+    },
+    {
+      "name": "real_claim_envelope_fits",
+      "passed": true,
+      "resolved_bytes": 99568,
+      "envelope_bytes": 99587,
+      "limit": 131072
+    },
+    {
+      "name": "original_inherited_preview_reproduces_failure",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "current_feedback_object_exceeds_original_limit",
+      "passed": true,
+      "raw_bytes": 141799
+    },
+    {
+      "name": "current_located_feedback_is_present",
+      "passed": true,
+      "serialized_bytes": 2023,
+      "source_feedback_event_id": 332
+    },
+    {
+      "name": "previous_method_only_compaction_is_insufficient",
+      "passed": true,
+      "raw_bytes": 133547,
+      "limit": 131072
+    },
+    {
+      "name": "complete_generate_request_equal",
+      "passed": true,
+      "input_hash_before": "1fae1cacba40fb52a3836a8f1be659336a54b396ac046a7d1dd50b2aafc4ae26",
+      "input_hash_after": "1fae1cacba40fb52a3836a8f1be659336a54b396ac046a7d1dd50b2aafc4ae26"
+    },
+    {
+      "name": "actual_feedback_note_reaches_request",
+      "passed": true
+    },
+    {
+      "name": "complete_creative_stack_unchanged",
+      "passed": true
+    },
+    {
+      "name": "complete_manifest_unchanged",
+      "passed": true
+    },
+    {
+      "name": "manifest_hash_valid",
+      "passed": true
+    },
+    {
+      "name": "all_parameters_unchanged",
+      "passed": true
+    },
+    {
+      "name": "each_method_body_once",
+      "passed": true
+    },
+    {
+      "name": "normal_result_and_hash_unchanged",
+      "passed": true,
+      "resolution_hash_before": "957145094be5354f78f538dc74bec7d8cf3b9259597dc567900bf611ecb56034",
+      "resolution_hash_after": "957145094be5354f78f538dc74bec7d8cf3b9259597dc567900bf611ecb56034"
+    },
+    {
+      "name": "real_ui_restores_all_feedback_sections",
+      "passed": true,
+      "section_count": 12
+    },
+    {
+      "name": "real_ui_restores_utf16_emoji_and_empty_layers",
+      "passed": true,
+      "section_count": 5
+    },
+    {
+      "name": "section_hashes_and_order_unchanged",
+      "passed": true
+    },
+    {
+      "name": "ui_invalid_offset_is_explicitly_unreadable",
+      "passed": true
+    },
+    {
+      "name": "reject_product",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_at1",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_non_builtin",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_non_master_plugin",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_different_stack",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_different_aggregate",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_different_compiled_prompt",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_different_section_text",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "large_probe_individual_context_remains_bounded",
+      "passed": true,
+      "context_bytes": 65476,
+      "padding_bytes": 40000
+    },
+    {
+      "name": "reject_still_oversized",
+      "passed": true,
+      "error": "stage_value_too_large"
+    },
+    {
+      "name": "reject_post_compaction_claim_overflow",
+      "passed": true,
+      "error": "stage_value_too_large"
+    }
+  ]
+}

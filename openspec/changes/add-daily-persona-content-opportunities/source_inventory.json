@@ -1,0 +1,1000 @@
+{
+  "schema": "persona-source-inventory.v1",
+  "created_at": "2026-10-15T05:44:59.185745+00:00",
+  "status": "research_only_not_imported",
+  "note": "公开来源储备，未导入正式库、未启用。主页HTTP结果与feed_check分开记录；订阅解析成功不等于持续采集验收。",
+  "sources": [
+    {
+      "id": "openai-news",
+      "name": "OpenAI News",
+      "url": "https://openai.com/news/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "official",
+      "relevance": "模型与工具官方发布，回到一手说明核对能力",
+      "evidence_urls": [
+        "https://openai.com/news/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://openai.com/news/rss.xml"
+      ],
+      "http_status": 200,
+      "final_url": "https://openai.com/news/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "OpenAI News | OpenAI",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://openai.com/news/rss.xml",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 1293,
+        "sample_title": "Amp puts AI agents to work beyond code with OpenAI models",
+        "checked_on": "2026-10-15"
+      }
+    },
+    {
+      "id": "anthropic-engineering",
+      "name": "Anthropic Engineering",
+      "url": "https://www.anthropic.com/engineering",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "official",
+      "relevance": "Agent工程、上下文、工具与评估实践",
+      "evidence_urls": [
+        "https://www.anthropic.com/engineering"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.anthropic.com/engineering",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Engineering \\ Anthropic",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "huggingface-blog",
+      "name": "Hugging Face Blog",
+      "url": "https://huggingface.co/blog",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "official",
+      "relevance": "开放模型、推理与工具生态",
+      "evidence_urls": [
+        "https://huggingface.co/blog"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://huggingface.co/blog/feed.xml"
+      ],
+      "http_status": 200,
+      "final_url": "https://huggingface.co/blog",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Hugging Face – Blog",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://huggingface.co/blog/feed.xml",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 876,
+        "sample_title": "HiRO-ACEv2: Simulating extreme weather at 3 km resolution for a fraction of the cost",
+        "checked_on": "2026-10-15"
+      }
+    },
+    {
+      "id": "langchain-blog",
+      "name": "LangChain Blog",
+      "url": "https://blog.langchain.com/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "official",
+      "relevance": "Agent编排与工程案例；产品方观点需标明",
+      "evidence_urls": [
+        "https://blog.langchain.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.langchain.com/blog",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "LangChain Blog",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "github-blog",
+      "name": "GitHub Blog",
+      "url": "https://github.blog/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "official",
+      "relevance": "开发工作流、工程工具及发布",
+      "evidence_urls": [
+        "https://github.blog/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://github.blog/feed/",
+        "https://github.blog/comments/feed/"
+      ],
+      "http_status": 200,
+      "final_url": "https://github.blog/",
+      "content_type": "text/html; charset=UTF-8",
+      "page_title": "Home - The GitHub Blog",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://github.blog/feed/",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 10,
+        "checked_on": "2026-10-15",
+        "note": "首次研究读取在1.5MB截断导致XML解析失败；增大到4MB有界读取后通过。"
+      }
+    },
+    {
+      "id": "simon-willison",
+      "name": "Simon Willison",
+      "url": "https://simonwillison.net/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "LLM与编程工具的实测、限制与工程观察",
+      "evidence_urls": [
+        "https://simonwillison.net/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://simonwillison.net/atom/everything/"
+      ],
+      "http_status": 200,
+      "final_url": "https://simonwillison.net/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Simon Willison’s Weblog",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://simonwillison.net/atom/everything/",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 30,
+        "sample_title": "Tree Appreciator",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "hamel-husain",
+      "name": "Hamel Husain",
+      "url": "https://hamel.dev/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "LLM评估、调试与产品工程",
+      "evidence_urls": [
+        "https://hamel.dev/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://hamel.dev/index.xml"
+      ],
+      "http_status": 200,
+      "final_url": "https://hamel.dev/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Hamel Husain’s Blog – Hamel's Blog",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://hamel.dev/index.xml",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 20,
+        "sample_title": "Claude’s new auto eval tool",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "chip-huyen",
+      "name": "Chip Huyen",
+      "url": "https://huyenchip.com/blog/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "AI系统设计与工程实践",
+      "evidence_urls": [
+        "https://huyenchip.com/blog/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://huyenchip.com/feed.xml"
+      ],
+      "http_status": 200,
+      "final_url": "https://huyenchip.com/blog/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Blog",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://huyenchip.com/feed.xml",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 10,
+        "sample_title": "Common pitfalls when building generative AI applications",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "lilian-weng",
+      "name": "Lilian Weng",
+      "url": "https://lilianweng.github.io/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "深度技术综述；低频更新，作为背景来源",
+      "evidence_urls": [
+        "https://lilianweng.github.io/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://lilianweng.github.io/index.xml"
+      ],
+      "http_status": 200,
+      "final_url": "https://lilianweng.github.io/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Lil'Log",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://lilianweng.github.io/index.xml",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 53,
+        "sample_title": "Harness Engineering for Self-Improvement",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "andrej-karpathy",
+      "name": "Andrej Karpathy",
+      "url": "https://karpathy.ai/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "模型与开发范式；主页用于确认作者及官方账号",
+      "evidence_urls": [
+        "https://karpathy.ai/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://karpathy.ai/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Andrej Karpathy",
+      "verification": "http_accessible",
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "baoyu",
+      "name": "宝玉",
+      "url": "https://baoyu.io/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "AI工程、工具与译介，译文追溯原作者",
+      "evidence_urls": [
+        "https://baoyu.io/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://baoyu.io/feed.xml"
+      ],
+      "http_status": 200,
+      "final_url": "https://baoyu.io/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "宝玉的分享",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://baoyu.io/feed.xml",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 50,
+        "sample_title": "我用 GPT 6 Astra 做了一个 3D 版的《桃花源记》（文中含提示词）",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "guizang",
+      "name": "归藏",
+      "url": "https://guizang.ai/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "AI工具、设计与独立开发",
+      "evidence_urls": [
+        "https://guizang.ai/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.guizang.ai/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "歸藏的 AI 资讯",
+      "verification": "http_accessible",
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "ruanyifeng",
+      "name": "阮一峰",
+      "url": "https://www.ruanyifeng.com/blog/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "开发者周刊、开源工具和工程观察",
+      "evidence_urls": [
+        "https://www.ruanyifeng.com/blog/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://feeds.feedburner.com/ruanyifeng"
+      ],
+      "http_status": 200,
+      "final_url": "https://www.ruanyifeng.com/blog/index.html",
+      "content_type": "text/html",
+      "page_title": "阮一峰的网络日志",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://feeds.feedburner.com/ruanyifeng",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 6,
+        "sample_title": "科技爱好者周刊（第 414 期）：Jev 决策模型有什么用",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "addy-osmani",
+      "name": "Addy Osmani",
+      "url": "https://addyosmani.com/blog/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "软件工程、开发工具与AI辅助开发",
+      "evidence_urls": [
+        "https://addyosmani.com/blog/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://addyosmani.com/rss.xml"
+      ],
+      "http_status": 200,
+      "final_url": "https://addyosmani.com/blog/",
+      "content_type": "text/html; charset=UTF-8",
+      "page_title": "Addy Osmani's Blog — AI Engineering, Web Performance and Leadership",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://addyosmani.com/rss.xml",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 10,
+        "sample_title": "Brownfield Agentic Engineering",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "latent-space",
+      "name": "Latent Space",
+      "url": "https://www.latent.space/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "media",
+      "relevance": "AI工程访谈与领域趋势",
+      "evidence_urls": [
+        "https://www.latent.space/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://www.latent.space/feed"
+      ],
+      "http_status": 200,
+      "final_url": "https://www.latent.space/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Latent.Space | Substack",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://www.latent.space/feed",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 20,
+        "sample_title": "Crossing the Threshold: How OpenAI and Anthropic Approach Autonomy and Safety in Financial Agents",
+        "checked_on": "2026-10-15"
+      }
+    },
+    {
+      "id": "infoq-cn",
+      "name": "InfoQ中文",
+      "url": "https://www.infoq.cn/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1"
+      ],
+      "kind": "media",
+      "relevance": "软件架构与研发案例",
+      "evidence_urls": [
+        "https://www.infoq.cn/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.infoq.cn/",
+      "content_type": "text/html;charset=utf-8",
+      "page_title": "InfoQ - 促进软件开发及相关领域知识与创新的传播-极客邦",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "sspai",
+      "name": "少数派",
+      "url": "https://sspai.com/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1",
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "数字生活与工具使用；按角色区分工程和生活角度",
+      "evidence_urls": [
+        "https://sspai.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://sspai.com/feed"
+      ],
+      "http_status": 200,
+      "final_url": "https://sspai.com/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "少数派 - 高效工作，品质生活",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://sspai.com/feed",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 10,
+        "sample_title": "App+1｜Mangata：把每次散步当作一次探索旅行",
+        "checked_on": "2026-10-15"
+      }
+    },
+    {
+      "id": "ifanr",
+      "name": "爱范儿",
+      "url": "https://www.ifanr.com/",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1",
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "科技产品对日常生活的新影响",
+      "evidence_urls": [
+        "https://www.ifanr.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.ifanr.com/",
+      "content_type": "text/html; charset=UTF-8",
+      "page_title": "爱范儿",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "guokr",
+      "name": "果壳",
+      "url": "https://www.guokr.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "日常现象、自然与科学好奇心，健康结论回原始证据",
+      "evidence_urls": [
+        "https://www.guokr.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.guokr.com/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "果壳 科技有意思",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "neweekly",
+      "name": "新周刊",
+      "url": "https://www.neweekly.com.cn/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "城市、年轻人及生活方式观察",
+      "evidence_urls": [
+        "https://www.neweekly.com.cn/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.neweekly.com.cn/",
+      "content_type": "text/html;charset=utf-8",
+      "page_title": "广东新周刊杂志社有限公司",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "yit",
+      "name": "一条",
+      "url": "https://www.yit.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "生活方式与人物故事；官网需区分商城和编辑内容",
+      "evidence_urls": [
+        "https://www.yit.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "editorial_endpoint_required",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.yit.com/",
+      "content_type": "text/html",
+      "page_title": "一条生活馆",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "xiachufang",
+      "name": "下厨房",
+      "url": "https://www.xiachufang.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "community",
+      "relevance": "日常饮食与厨房生活趋势；社区体验不是普遍事实",
+      "evidence_urls": [
+        "https://www.xiachufang.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.xiachufang.com/",
+      "content_type": "text/html;charset=UTF-8",
+      "page_title": "下厨房",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "douban",
+      "name": "豆瓣生活社区",
+      "url": "https://www.douban.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "community",
+      "relevance": "兴趣小组与普通人的生活变化，只作为讨论信号",
+      "evidence_urls": [
+        "https://www.douban.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.douban.com/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "豆瓣",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "dezeen",
+      "name": "Dezeen",
+      "url": "https://www.dezeen.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "设计、居住空间与未来生活变化",
+      "evidence_urls": [
+        "https://www.dezeen.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://www.dezeen.com/",
+      "content_type": "text/html; charset=UTF-8",
+      "page_title": "Dezeen | architecture and design magazine",
+      "verification": "http_accessible"
+    },
+    {
+      "id": "colossal",
+      "name": "Colossal",
+      "url": "https://www.thisiscolossal.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "艺术、自然与有趣的视觉观察",
+      "evidence_urls": [
+        "https://www.thisiscolossal.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://www.thisiscolossal.com/feed/",
+        "https://www.thisiscolossal.com/comments/feed/"
+      ],
+      "http_status": 200,
+      "final_url": "https://www.thisiscolossal.com/",
+      "content_type": "text/html; charset=UTF-8",
+      "page_title": "Colossal: Explore contemporary art, craft, photography, and the natural world.",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://www.thisiscolossal.com/feed/",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 10,
+        "sample_title": "Welcome to the ‘Uncanny Valley,’ the Haas Brothers’ Fantastic and Cheeky Universe",
+        "checked_on": "2026-10-15"
+      }
+    },
+    {
+      "id": "atlas-obscura",
+      "name": "Atlas Obscura",
+      "url": "https://www.atlasobscura.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "media",
+      "relevance": "地方文化、日常奇趣与探索线索",
+      "evidence_urls": [
+        "https://www.atlasobscura.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://www.atlasobscura.com/feeds/latest"
+      ],
+      "http_status": 200,
+      "final_url": "https://www.atlasobscura.com/",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "Curious and Wondrous Travel Destinations - Atlas Obscura",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://www.atlasobscura.com/feeds/latest",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 27,
+        "sample_title": "Rhossili Down Radar Station in Hillend, Wales",
+        "checked_on": "2026-10-15"
+      }
+    },
+    {
+      "id": "austin-kleon",
+      "name": "Austin Kleon",
+      "url": "https://austinkleon.com/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "观察、创作习惯与具体日常",
+      "evidence_urls": [
+        "https://austinkleon.com/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://austinkleon.com/feed/",
+        "https://austinkleon.com/comments/feed/"
+      ],
+      "http_status": 200,
+      "final_url": "https://austinkleon.com/",
+      "content_type": "text/html; charset=UTF-8",
+      "page_title": "Dont Call it Art is out now! - Austin Kleon",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://austinkleon.com/feed/",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 10,
+        "sample_title": "Archival issues",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "maria-popova",
+      "name": "Maria Popova / The Marginalian",
+      "url": "https://www.themarginalian.org/",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "文化阅读、自然与生活观察",
+      "evidence_urls": [
+        "https://www.themarginalian.org/"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [
+        "https://feeds.feedburner.com/brainpickings/rss"
+      ],
+      "http_status": 200,
+      "final_url": "https://www.themarginalian.org/",
+      "content_type": "text/html; charset=UTF-8",
+      "page_title": "The Marginalian – Marginalia on our search for meaning.",
+      "verification": "http_accessible",
+      "feed_check": {
+        "url": "https://feeds.feedburner.com/brainpickings/rss",
+        "status": "feed_parsed",
+        "http_status": 200,
+        "item_count": 20,
+        "sample_title": "An Introvert’s Field Guide to Friendship: Thoreau on the Challenges and Rewards of Candid Connection",
+        "checked_on": "2026-10-15"
+      },
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "rishiji",
+      "name": "日食记",
+      "url": "https://space.bilibili.com/8960728",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "食物与日常叙事；元数据线索，不自动搬运视频",
+      "evidence_urls": [
+        "https://space.bilibili.com/8960728",
+        "https://www.bilibili.com/list/8960728?bvid=BV1U1Lv6pEBN&oid=116616851362920"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://space.bilibili.com/8960728",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "日食记的个人空间-日食记个人主页-哔哩哔哩视频",
+      "verification": "http_accessible",
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "daoyueshe",
+      "name": "盗月社食遇记",
+      "url": "https://space.bilibili.com/99157282",
+      "persona_keys": [
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "creator",
+      "relevance": "城市小店、饮食与普通人的生活故事",
+      "evidence_urls": [
+        "https://space.bilibili.com/99157282",
+        "https://www.bilibili.com/list/99157282?bvid=BV1LA4m157QY&oid=1100367595"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "http_status": 200,
+      "final_url": "https://space.bilibili.com/99157282",
+      "content_type": "text/html; charset=utf-8",
+      "page_title": "盗月社食遇记的个人空间-盗月社食遇记个人主页-哔哩哔哩视频",
+      "verification": "http_accessible",
+      "influence_evidence": "public_author_homepage_and_topic_fit; follower_count_not_verified"
+    },
+    {
+      "id": "60s-rednote",
+      "name": "60s 小红书热点聚合",
+      "url": "https://60s.viki.moe/v2/rednote",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1",
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "hotlist",
+      "relevance": "平台话题线索；第三方聚合，保留原帖链接",
+      "evidence_urls": [
+        "https://60s.viki.moe/v2/rednote",
+        "https://github.com/ZJU-REAL/Easel/blob/bb3c8ff0463f36c202454d74171682ba6e470cb1/skills/shared/hotlist-apis.md"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "verification": "fetch_failed",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "id": "60s-zhihu",
+      "name": "60s 知乎热榜聚合",
+      "url": "https://60s.viki.moe/v2/zhihu",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1",
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "hotlist",
+      "relevance": "讨论信号；不以热榜证明事实",
+      "evidence_urls": [
+        "https://60s.viki.moe/v2/zhihu",
+        "https://github.com/ZJU-REAL/Easel/blob/bb3c8ff0463f36c202454d74171682ba6e470cb1/skills/shared/hotlist-apis.md"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "verification": "fetch_failed",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "id": "60s-weibo",
+      "name": "60s 微博热搜聚合",
+      "url": "https://60s.viki.moe/v2/weibo",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1",
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "hotlist",
+      "relevance": "发现公共热点，必须按角色过滤",
+      "evidence_urls": [
+        "https://60s.viki.moe/v2/weibo",
+        "https://github.com/ZJU-REAL/Easel/blob/bb3c8ff0463f36c202454d74171682ba6e470cb1/skills/shared/hotlist-apis.md"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "verification": "fetch_failed",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "id": "60s-douyin",
+      "name": "60s 抖音热点聚合",
+      "url": "https://60s.viki.moe/v2/douyin",
+      "persona_keys": [
+        "starter.ai-tech-engineer.v1",
+        "starter.lifestyle-observer.v1"
+      ],
+      "kind": "hotlist",
+      "relevance": "发现生活与产品话题，非正文来源",
+      "evidence_urls": [
+        "https://60s.viki.moe/v2/douyin",
+        "https://github.com/ZJU-REAL/Easel/blob/bb3c8ff0463f36c202454d74171682ba6e470cb1/skills/shared/hotlist-apis.md"
+      ],
+      "discovered_on": "2026-10-15",
+      "enabled": false,
+      "model_use_policy": "pending_source_policy",
+      "public_reuse": "not_granted",
+      "collection_status": "not_configured",
+      "feed_candidates": [],
+      "verification": "fetch_failed",
+      "error": "HTTP Error 403: Forbidden"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "action": "launchctl kickstart -k existing com.aicontent.api",
+  "health_statuses": [
+    "URLError",
+    200
+  ],
+  "settings_before": {
+    "count": 13,
+    "sha256": "ca5e21a3648142c2b7a73ac45723993ac33cf6b1a7f3b4ad9d25a4718b2d983e"
+  },
+  "settings_after": {
+    "count": 13,
+    "sha256": "ca5e21a3648142c2b7a73ac45723993ac33cf6b1a7f3b4ad9d25a4718b2d983e"
+  },
+  "settings_unchanged": true,
+  "worker_restart": false,
+  "explicit_model_dispatch": false
+}

@@ -332,6 +332,51 @@ def resolve_proposal_citations(value: dict, selections: list, evidence_catalog: 
     return canonical_payload(payload), refs
 
 
+def _heading_text(block: dict) -> str:
+    return "".join(run["text"] for run in block.get("content") or [] if isinstance(run, dict) and isinstance(run.get("text"), str))
+
+
+def normalize_text_structure(blocks: list, title: str = "") -> list:
+    """Apply the editorial heading rule without rewriting prose or inventing blocks.
+
+    A leading heading that repeats the title is removed. A heading with no body
+    of its own (it is last, or the next block is also a heading) is removed.
+    Remaining headings start at level 2 and never skip a level.
+    """
+    title_text = title.strip() if isinstance(title, str) else ""
+    pending = list(blocks)
+    if (pending and isinstance(pending[0], dict) and pending[0].get("type") == "heading"
+            and title_text and _heading_text(pending[0]).strip() == title_text):
+        pending = pending[1:]
+    kept = []
+    for index, block in enumerate(pending):
+        if isinstance(block, dict) and block.get("type") == "heading":
+            nxt = pending[index + 1] if index + 1 < len(pending) else None
+            if nxt is None or (isinstance(nxt, dict) and nxt.get("type") == "heading"):
+                continue
+        kept.append(block)
+    levels = [block["level"] for block in kept if isinstance(block, dict) and block.get("type") == "heading" and type(block.get("level")) is int and 1 <= block["level"] <= 4]
+    if not levels:
+        return kept
+    delta = 2 - min(levels)
+    previous = 1
+    result = []
+    for block in kept:
+        if isinstance(block, dict) and block.get("type") == "heading" and type(block.get("level")) is int and 1 <= block["level"] <= 4:
+            level = block["level"] + delta
+            if level > previous + 1:
+                level = previous + 1
+            if level < 2:
+                level = 2
+            if level > 4:
+                level = 4
+            previous = level
+            if level != block["level"]:
+                block = {**block, "level": level}
+        result.append(block)
+    return result
+
+
 def convert_legacy_text(source: dict, *, asset_refs: list | None = None, evidence_refs: list | None = None) -> dict:
     """Convert proven legacy inputs without trusting layout JSON as editable truth."""
     _bounds(source)
@@ -496,6 +541,7 @@ def convert_legacy_text(source: dict, *, asset_refs: list | None = None, evidenc
         if layout:
             warn("legacy_document_not_equivalent")
         parse(body)
+    blocks = normalize_text_structure(blocks, source["title"] if isinstance(source.get("title"), str) else "")
     document = canonical_document({"schema": DOCUMENT_SCHEMA, "blocks": blocks, "citations": []})
     mapped = []
     for number, ref in enumerate(evidence):

@@ -1,0 +1,9 @@
+objective-only configured_refs= ['studio.product.audience-need@1', 'studio.product.purchase-reason@1']
+UNRELATED_AUDIENCE_METHOD_RENDERED= True
+EXPLICIT_OFF_CONFIGURED= []
+EXPLICIT_OFF_INSTRUCTION_PATHS studio.product.audience-need@1 ['/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/0/instruction']
+EXPLICIT_OFF_INSTRUCTION_PATHS studio.product.purchase-reason@1 ['/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/1/instruction']
+OMITTED_STAGES_CONFIGURED= []
+OMITTED_STAGES_INSTRUCTION_PATHS studio.product.audience-need@1 ['/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/0/instruction', '/project_snapshot/production_methods/stages/0/methods/0/instruction']
+OMITTED_STAGES_INSTRUCTION_PATHS studio.product.purchase-reason@1 ['/project_snapshot/product_context/creative_profiles/product_production_methods/video/stages/0/methods/1/instruction', '/project_snapshot/production_methods/stages/0/methods/1/instruction']
+DOCUMENTED_WHOLE_FIELD_PROVIDER_REPLAY= 办公室下午随手鲜榨，不用洗复杂零件，不用洗复杂零件

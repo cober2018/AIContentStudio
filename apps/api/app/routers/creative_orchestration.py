@@ -17,7 +17,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import MaterialRevision, User
-from ..services import capability_memory, creative_execution_files, creative_executions, creative_packages
+from ..services import (
+    capability_memory,
+    creative_execution_files,
+    creative_executions,
+    creative_packages,
+    project_folders,
+)
 from ..services.materials import read_bytes_checked
 from . import CapabilityInputRoute
 
@@ -236,7 +242,9 @@ def load_production_methods(project_id: int, unit_id: int, execution_id: int, bo
 
 @router.post("/creative-executions/{execution_id}/transition", dependencies=[Depends(require_editor)])
 def transition(project_id: int, unit_id: int, execution_id: int, body: TransitionInput, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return creative_executions.transition_execution(db, project_id, unit_id, execution_id, body.model_dump(exclude_none=True), user)
+    result = creative_executions.transition_execution(db, project_id, unit_id, execution_id, body.model_dump(exclude_none=True), user)
+    project_folders.after_execution(db, execution_id)
+    return result
 
 
 @router.post("/creative-executions/{execution_id}/materialize-inputs", dependencies=[Depends(require_editor)])
@@ -253,6 +261,7 @@ def submit_output(project_id: int, unit_id: int, execution_id: int, body: Output
 def decide_output(project_id: int, unit_id: int, execution_id: int, output_id: int, body: DecisionInput, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     payload = body.model_dump(exclude_none=True, exclude={"reusable_artifact"})
     result = creative_executions.decide_output(db, project_id, unit_id, execution_id, output_id, payload, user)
+    project_folders.after_execution(db, execution_id)
     if body.reusable_artifact is not None and body.decision == "accept":
         # Capture is a separate transaction so an unsafe method cannot undo accepted material.
         if result["state"] != "accepted":

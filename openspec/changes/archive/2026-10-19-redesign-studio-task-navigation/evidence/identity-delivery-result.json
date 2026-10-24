@@ -1,0 +1,44 @@
+{
+  "candidate_id": 4,
+  "target_id": 4,
+  "package": "/Users/mshengran/Project/AIContentStudio/output/ai-tech-eval-project35-checked.zip",
+  "sha256": "86d3d9644d89356de3c0a03e8c64bc53d2e05f87a2e75b8b25e961866b5ac10c",
+  "bytes": 25361,
+  "target": {
+    "id": 4,
+    "asset_id": 4,
+    "channel": "baijia",
+    "content_form": "article",
+    "account_ref": "百家号1号",
+    "content_account_id": 2,
+    "action": "copy_package",
+    "authorization_version": "identity-fix-local-20261019",
+    "status": "awaiting_manual_receipt",
+    "approved_candidate_hash": "1a80ddb683fe6d012f8a381be8e668eeae3abd8265c353294ba88ab25386329b",
+    "publisher_key": "publisher.copy",
+    "publisher_version": "1",
+    "capability": {
+      "publisher_key": "publisher.copy",
+      "action": "copy_package",
+      "available": true,
+      "reason": null,
+      "verified": true,
+      "target_account": {
+        "content_account_id": 2,
+        "platform_channel": "baijia",
+        "platform_account_id": "无话可说E7",
+        "account_revision_id": null,
+        "account_profile_checksum": null
+      }
+    },
+    "requested_at": "2026-10-19T05:15:50.823891",
+    "receipts": [],
+    "attempts": []
+  },
+  "published": {
+    "items": [],
+    "total": 0,
+    "limit": 20,
+    "offset": 0
+  }
+}

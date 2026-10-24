@@ -186,7 +186,7 @@ def stage_output(user: User, *, kind: str, key: str, version: str, runtime_hash:
                 or not _HEX.fullmatch(multimedia_candidate.get("content_hash", ""))):
         raise HTTPException(422, "generation_candidate_provenance_invalid")
     media_kind, mime = _decode(output.content, output.mime_type)
-    expected_kind = (renderer_origin or {}).get("modality") if kind == "renderer" else {"image_provider": "image", "search_provider": "image", "video_provider": "video", "tts_provider": "audio"}[kind]
+    expected_kind = (renderer_origin or {}).get("modality") if kind == "renderer" else (media_kind if media_kind in {"image", "video"} else None) if kind == "stock_provider" else {"image_provider": "image", "search_provider": "image", "video_provider": "video", "tts_provider": "audio"}[kind]
     if expected_kind == "graphic":
         expected_kind = "image"
     if media_kind != expected_kind:
@@ -262,7 +262,7 @@ def accept(db: Session, user: User, stage_id: str, decision: dict, *, commit: bo
         decision_hash = _hash(decision)
         if not decision.get("confirmed"):
             raise HTTPException(422, "provider_acceptance_required")
-        if decision.get("license_code") == "CC-BY-4.0" and not (decision.get("attribution_text") or "").strip():
+        if decision.get("license_code") in {"CC-BY-4.0", "CC-BY"} and not (decision.get("attribution_text") or "").strip():
             raise HTTPException(422, "provider_attribution_required")
         if preview.search_origin and any(decision.get(field) != preview.search_origin[field] for field in
                                          ("license_code", "license_evidence_hash", "attribution_text")):

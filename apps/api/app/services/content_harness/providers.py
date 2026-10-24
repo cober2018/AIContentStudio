@@ -156,6 +156,9 @@ def bootstrap_media_providers() -> None:
 
     if WikimediaSearchProvider.key not in {d.key for d in registry.list("search_provider")}:
         registry.register("search_provider", WikimediaSearchProvider.key, "1", WikimediaSearchProvider(), label="Wikimedia Commons public search (rights acceptance required)")
+    from ..open_media import register as register_open_media
+
+    register_open_media(registry)
     if "asset_provider.wewrite_image" not in {d.key for d in registry.list("asset_provider")}:
         registry.register(
             "asset_provider", "asset_provider.wewrite_image", "1", WewriteImageProvider(), label="wewrite AI 生图"

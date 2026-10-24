@@ -1,0 +1,14 @@
+{
+  "fixture": "isolated SQLite clone; new unit has zero Master/script/shot rows",
+  "unit_id": 15,
+  "run_id": 19,
+  "ready": true,
+  "status": "waiting_input",
+  "attempt_id": 88,
+  "model": {
+    "model": "gemini-3.8-flash-high",
+    "provider": "openai_compatible"
+  },
+  "beats": 3,
+  "formal_records_changed": false
+}

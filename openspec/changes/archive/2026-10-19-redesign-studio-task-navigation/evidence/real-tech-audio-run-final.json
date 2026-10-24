@@ -1,0 +1,1461 @@
+{
+  "id": 24,
+  "workflow_id": 33,
+  "workflow_name": "AI科技研发技术博主 · 音频＋本机ASR对稿／字幕（须明确执行）",
+  "workflow_key": "project.unit.44",
+  "workflow_version": 1,
+  "definition_checksum": "5d3937554338a7325449c7b36c6dbb4b0d26e7367c0904e911026875d4549dee",
+  "identity_snapshot_id": 20,
+  "identity_state": "frozen",
+  "topic_id": null,
+  "channel": null,
+  "content_form": null,
+  "status": "succeeded",
+  "error": null,
+  "params": {},
+  "context": {},
+  "started_at": "2026-10-19T07:06:45.496331",
+  "finished_at": "2026-10-19T07:10:23.864093",
+  "definition": {
+    "nodes": [
+      {
+        "id": "spoken",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "口语稿确认",
+        "config": {
+          "output_schema": "audio.spoken-adaptation.v1",
+          "instruction": "只把当前已接受的Text正文或Video脚本转成适合朗读的口语稿；不添加事实，不把来源当台词，保留术语并明确发音。",
+          "length": "long",
+          "pace": "medium",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.spoken-adapt@1"
+          }
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "voice",
+        "kind": "AI",
+        "plugin": "stage.creative.method",
+        "plugin_version": "1",
+        "stage_schema": "stage.creative.method.v1",
+        "label": "声音方案确认",
+        "config": {
+          "output_schema": "audio.voice-direction.v1",
+          "instruction": "为已接受口语稿制定声音方案：冷静清楚的工程师解说，保留技术名称和trade-off。描述停顿、节奏和语速；风格名称不是供应商voice ID，不得编造ID或声纹。",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.voice-director@1"
+          }
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "tts",
+        "kind": "Tool",
+        "plugin": "media.generate",
+        "plugin_version": "4",
+        "stage_schema": "media.generate.stage.v4",
+        "label": "生成并接受真实音频",
+        "config": {
+          "capability": "tts",
+          "tts_source": "accepted_spoken",
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.tts@1"
+          },
+          "items": 1,
+          "seconds": 360,
+          "timeout_seconds": 25
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "audio_asr",
+        "kind": "Tool",
+        "plugin": "stage.audio.asr",
+        "plugin_version": "1",
+        "stage_schema": "stage.audio.asr.v1",
+        "label": "本机 ASR 对稿（明确执行并接受）",
+        "config": {
+          "provider_key": "local.mlx_whisper",
+          "provider_version": "1",
+          "timeout_seconds": 120
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "audio_quality",
+        "kind": "Rule",
+        "plugin": "stage.audio.qc",
+        "plugin_version": "1",
+        "stage_schema": "stage.audio.qc.v1",
+        "label": "音频质量确认",
+        "config": {
+          "method": {
+            "source_kind": "studio_builtin",
+            "skill_ref": "studio.audio.qc@1"
+          },
+          "alignment_enabled": true,
+          "srt_mode": "asr"
+        },
+        "input_mapping": {},
+        "output_mapping": {},
+        "failure_policy": "stop",
+        "enabled": true,
+        "layout": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "spoken",
+        "to": "voice"
+      },
+      {
+        "from": "spoken",
+        "to": "tts"
+      },
+      {
+        "from": "voice",
+        "to": "tts"
+      },
+      {
+        "from": "tts",
+        "to": "audio_quality"
+      },
+      {
+        "from": "tts",
+        "to": "audio_asr"
+      },
+      {
+        "from": "audio_asr",
+        "to": "audio_quality"
+      }
+    ],
+    "visual_order": [
+      "spoken",
+      "voice",
+      "tts",
+      "audio_asr",
+      "audio_quality"
+    ]
+  },
+  "steps": [
+    {
+      "id": 118,
+      "node_id": "spoken",
+      "node_type": "AI",
+      "label": "口语稿确认",
+      "params": {
+        "output_schema": "audio.spoken-adaptation.v1",
+        "instruction": "只把当前已接受的Text正文或Video脚本转成适合朗读的口语稿；不添加事实，不把来源当台词，保留术语并明确发音。",
+        "length": "long",
+        "pace": "medium",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.audio.spoken-adapt@1"
+        }
+      },
+      "status": "succeeded",
+      "output": {
+        "candidates": [
+          {
+            "candidate_hash": "e761fc9d88b47079b34494e9a6a2aa691463b3cb415312ddcacc4e63b8e1863a",
+            "content": {
+              "pronunciation_notes": [],
+              "script": "一个知识问答演示能够答对预设题目，并不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评测跑分，而是一整套明确的工程契约。需要先说明的是，外部作者的个案复盘仅代表其特定背景，相关的行业统计如果未经独立核验，不能直接作为通用结论引用。本文提出的三类评估与设计建议，属于软件工程视角的实践建议，并非特定业务的效果保证。工程落地的首要任务，就是把对模型能力的模糊期待，转译为确定性的系统约束。\n\n首先是契约化拆解。第一，定义输入边界。系统必须对原始文本做严格前置校验，按照模型上限预留输出空间，明确超限时是拒绝、分块还是截断，并通过规则过滤低效噪声。第二，规范预期输出。尽量避免非结构化的散漫文本，优先采用强契约的格式化输出，对关键字段设定必填检查与响应耗时基线。第三，明确判定规则。能确定检查的格式交给规则，语义判断则对照预先标注的要点；模型自报的置信度或回答一致性，都不能直接当作事实正确率，最终请求要分流至放行、降级或转人工。\n\n为了展示工程约束的运作方式，我们以一个明确标注为假设的知识问答系统进行推演。在标准正常流程下，资料充足且一致，模型依据检索内容提炼并携带引用源，校验通过后直接返回。在资料缺失场景下，检索得分低于安全阈值时，系统严禁模型自由发挥产生幻觉，而是触发快速失败分支，直接返回预设提示，跳过深度推理以节省成本和耗时。在资料冲突场景下，检索命中相互矛盾的规定时，不能仅凭发布日期新旧自行裁决，必须核对适用范围与来源；在无法确认时保守提示冲突，并路由至人工核查。\n\n不能假设模型每次都会遵守规则，系统必须建立防御性降级与转人工兜底。在证据不足、涉及关键业务决定，或者用户多轮无法解决时，按约定边界切入人工，并完整传递会话快照与结构化摘要。人工介入必然会带来排队延迟与人力成本，参数阈值需要在真实样本中反复校准。\n\n技术负责人在上线前不必先造庞大的评测平台。先拿一组真实、可脱敏的问题，逐条写清依据、允许的失败方式与责任人，持续重跑并记录变好与变差的分布。用确定性的工程防线，守住不可预测的模型输出。",
+              "source_summary": "基于已接受文本主稿进行口语化转写，保留输入契约、输出规范、三类假设推演场景与防御性转人工设计，遵循中文自然句表达要求，字数控制在约九百字。",
+              "warnings": []
+            },
+            "id": "spoken-adaptation-0",
+            "references": [],
+            "summary": "将知识问答评估与工程契约主稿转化为适合三分钟朗读的口语稿，明确区分外部个案背景与本稿工程建议。",
+            "warnings": []
+          }
+        ],
+        "input_hash": "721b8e27033a4de5d1863ce8185c39c5c50d76f09038de9d86d293cb3906f3de",
+        "llm_run_id": 169,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "output_hash": "c1234f9ab2d94b3e9092cb7450bd5c5107cd8c7533ba88f07f237e2251c34074",
+        "prompt_hash": "be4392d74887c05ff4d66ade8cf6b3dd4bbfcd4bbc0058e5ae4c90def48e7ff0",
+        "schema": "audio.spoken-adaptation.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "attempt_no": 2,
+      "stale_reason": null
+    },
+    {
+      "id": 119,
+      "node_id": "voice",
+      "node_type": "AI",
+      "label": "声音方案确认",
+      "params": {
+        "output_schema": "audio.voice-direction.v1",
+        "instruction": "为已接受口语稿制定声音方案：冷静清楚的工程师解说，保留技术名称和trade-off。描述停顿、节奏和语速；风格名称不是供应商voice ID，不得编造ID或声纹。",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.audio.voice-director@1"
+        }
+      },
+      "status": "succeeded",
+      "output": {
+        "candidates": [
+          {
+            "candidate_hash": "d0ff7cb5e7efc4d9bb7035b65284b0e670fc4056a5dd71416674b6a5d237e879",
+            "content": {
+              "energy": "沉稳克制，声压均衡，重在逻辑清晰而非情绪起伏",
+              "pace": "medium",
+              "pause_policy": "逗号处微顿约300毫秒，句号与逻辑递进处停顿约500至700毫秒；段落切换及假设推演分支之间保留约800至1000毫秒明确气口，确保听众清晰区分输入契约与推演场景。",
+              "pronunciation_notes": [
+                "“阈值”标准读音为 yù zhí，请勿误读为 fá zhí",
+                "“分块”读作 fēn kuài，字音清晰，避免吞音",
+                "“快照”读作 kuài zhào，平稳吐字",
+                "“转译”读作 zhuǎn yì，重音落在“译”字上以突出动作含义"
+              ],
+              "rate": 1.0,
+              "voice_character": "冷静严谨的资深软件架构师与技术解说者，语调沉稳、克制且平实；不带营销腔调与夸张重音，以理性的工程讨论语气交代系统约束、边界与权衡取舍。"
+            },
+            "id": "voice-direction-0",
+            "references": [],
+            "summary": "为已审阅口语稿制定冷静克制、逻辑清晰的工程师解说音色指引与停顿策略。",
+            "warnings": []
+          }
+        ],
+        "input_hash": "df7b0ffbd30fea4e8008b62ee1a64f36f86461d6fe8db33efdc36ed1548b13aa",
+        "llm_run_id": 170,
+        "model": {
+          "model": "gemini-3.8-flash-high",
+          "provider": "openai_compatible"
+        },
+        "output_hash": "9fd37bdd4edbedbcd093b4f2f699d06c8d2562ff091b4726fe37326642214530",
+        "prompt_hash": "d74fd2124689277119de6d90465951dac4c30fad64763e8b82972d182f4a1225",
+        "schema": "audio.voice-direction.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.creative.method",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 120,
+      "node_id": "tts",
+      "node_type": "Tool",
+      "label": "生成并接受真实音频",
+      "params": {
+        "capability": "tts",
+        "tts_source": "accepted_spoken",
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.audio.tts@1"
+        },
+        "items": 1,
+        "seconds": 360,
+        "timeout_seconds": 25
+      },
+      "status": "succeeded",
+      "output": {
+        "domain": "media",
+        "resolution_hash": "9aec45a66e21fc8dba7ffc31da92b47c35a8865362949ec1a27c7ca3a8e416bd",
+        "result": {
+          "dispatch_state": "result_ready",
+          "material_bound_to_master": false,
+          "plan_hash": "2f2587f90866c88868ca68f112eef1eaecf1d1be319334ab947c2ea62233f39a",
+          "source_refs": [],
+          "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+          "task_input_hash": "6e6e4e29a04878b54c81e9ffc15d827641873ee2b89b11b7b940605bcaec5bd3",
+          "task_request_hash": "0e2ee11d3ec42e55be541dab12e90a0c57e3b5756c7c1f5ebaafbe8b66172044"
+        },
+        "result_hash": "7c431b5034577ecbaaf5cb374abb2ca40b729494b2d65a86ccfcb059e4d44e45",
+        "schema": "stage.media.result.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "media.generate",
+      "plugin_version": "4",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 121,
+      "node_id": "audio_asr",
+      "node_type": "Tool",
+      "label": "本机 ASR 对稿（明确执行并接受）",
+      "params": {
+        "provider_key": "local.mlx_whisper",
+        "provider_version": "1",
+        "timeout_seconds": 120
+      },
+      "status": "succeeded",
+      "output": {
+        "domain": "audio_asr",
+        "resolution_hash": "9006bdbebe16c53432ac2408bdce2db36fc4576c36451c62749b4ad7d44c4773",
+        "result": {
+          "asr_snapshot": {
+            "accepted_target": {
+              "accepted_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+              "attempt_id": 133,
+              "context_hash": null,
+              "decision": "accepted",
+              "domain": "media",
+              "entity_id": 80,
+              "feedback_event_id": 293,
+              "node_id": "tts",
+              "output_kind": "material_revision",
+              "payload_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+              "project_output_id": 44,
+              "revision_no": 1
+            },
+            "actor_id": 1,
+            "config": {
+              "provider_key": "local.mlx_whisper",
+              "provider_version": "1",
+              "timeout_seconds": 120
+            },
+            "config_hash": "3cd7fd0e3bb3459327fd2617ccfe804d80757a11a53f15f883c88e5bf20ae67e",
+            "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+            "duration_ms": 192839,
+            "input_hash": "57790c6cd8230812d1c15c6fad00bd380eaece535cc131d24ebbf8a70ef82249",
+            "kind": "audio_asr",
+            "material_revision_id": 80,
+            "mime_type": "audio/wav",
+            "node": {
+              "id": "audio_asr",
+              "plugin": "stage.audio.asr",
+              "plugin_version": "1"
+            },
+            "project_id": 35,
+            "provider": {
+              "key": "local.mlx_whisper",
+              "runtime_fingerprint": "d161b13f09c5257da252bb8f71f2e34d227f021dba68fb6410147bebd5d2198c",
+              "version": "1"
+            },
+            "run_id": 24,
+            "schema": "studio.audio.stage.asr.v1",
+            "script": "一个知识问答演示能够答对预设题目，并不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评测跑分，而是一整套明确的工程契约。需要先说明的是，外部作者的个案复盘仅代表其特定背景，相关的行业统计如果未经独立核验，不能直接作为通用结论引用。本文提出的三类评估与设计建议，属于软件工程视角的实践建议，并非特定业务的效果保证。工程落地的首要任务，就是把对模型能力的模糊期待，转译为确定性的系统约束。\n\n首先是契约化拆解。第一，定义输入边界。系统必须对原始文本做严格前置校验，按照模型上限预留输出空间，明确超限时是拒绝、分块还是截断，并通过规则过滤低效噪声。第二，规范预期输出。尽量避免非结构化的散漫文本，优先采用强契约的格式化输出，对关键字段设定必填检查与响应耗时基线。第三，明确判定规则。能确定检查的格式交给规则，语义判断则对照预先标注的要点；模型自报的置信度或回答一致性，都不能直接当作事实正确率，最终请求要分流至放行、降级或转人工。\n\n为了展示工程约束的运作方式，我们以一个明确标注为假设的知识问答系统进行推演。在标准正常流程下，资料充足且一致，模型依据检索内容提炼并携带引用源，校验通过后直接返回。在资料缺失场景下，检索得分低于安全阈值时，系统严禁模型自由发挥产生幻觉，而是触发快速失败分支，直接返回预设提示，跳过深度推理以节省成本和耗时。在资料冲突场景下，检索命中相互矛盾的规定时，不能仅凭发布日期新旧自行裁决，必须核对适用范围与来源；在无法确认时保守提示冲突，并路由至人工核查。\n\n不能假设模型每次都会遵守规则，系统必须建立防御性降级与转人工兜底。在证据不足、涉及关键业务决定，或者用户多轮无法解决时，按约定边界切入人工，并完整传递会话快照与结构化摘要。人工介入必然会带来排队延迟与人力成本，参数阈值需要在真实样本中反复校准。\n\n技术负责人在上线前不必先造庞大的评测平台。先拿一组真实、可脱敏的问题，逐条写清依据、允许的失败方式与责任人，持续重跑并记录变好与变差的分布。用确定性的工程防线，守住不可预测的模型输出。",
+            "script_hash": "e645b65b759bdaa60b2135b1f965939c250f36052d4c6224d29efb390904438e",
+            "source_size_bytes": 12342818,
+            "task_acceptance_hash": "f61f700abec2508659d2ab59a7dff5afb016e2e4410210647ca824b2b6990e07",
+            "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+            "task_input_hash": "6e6e4e29a04878b54c81e9ffc15d827641873ee2b89b11b7b940605bcaec5bd3",
+            "task_plan_hash": "2f2587f90866c88868ca68f112eef1eaecf1d1be319334ab947c2ea62233f39a",
+            "task_request_hash": "0e2ee11d3ec42e55be541dab12e90a0c57e3b5756c7c1f5ebaafbe8b66172044",
+            "task_result_signature_hash": "08df7af27179ba00d7aaba9218bf43fb27670defb059f8dd103891ff3646c5d1",
+            "tts_source_hash": "1847924c72f226969b76450ff2902ebf85864c4b8c3ef30b3b12ffc7cdd421d4",
+            "unit_id": 44,
+            "workflow": {
+              "checksum": "5d3937554338a7325449c7b36c6dbb4b0d26e7367c0904e911026875d4549dee",
+              "id": 33,
+              "version": 1
+            }
+          },
+          "audio_asr": true,
+          "cues": [
+            {
+              "end_ms": 3320,
+              "id": "asr-1",
+              "order": 0,
+              "start_ms": 0,
+              "text": "一个知识问答掩饰能够答对预设题目"
+            },
+            {
+              "end_ms": 7000,
+              "id": "asr-2",
+              "order": 1,
+              "start_ms": 3680,
+              "text": "并不等于它已经适合交付日常使用"
+            },
+            {
+              "end_ms": 9280,
+              "id": "asr-3",
+              "order": 2,
+              "start_ms": 7280,
+              "text": "在进入生产环境之前"
+            },
+            {
+              "end_ms": 14000,
+              "id": "asr-4",
+              "order": 3,
+              "start_ms": 9720,
+              "text": "系统真正需要补齐的不是更高的评测跑分"
+            },
+            {
+              "end_ms": 17440,
+              "id": "asr-5",
+              "order": 4,
+              "start_ms": 14560,
+              "text": "而是一整套明确的工程契约"
+            },
+            {
+              "end_ms": 19040,
+              "id": "asr-6",
+              "order": 5,
+              "start_ms": 17560,
+              "text": "需要先说明的是"
+            },
+            {
+              "end_ms": 22800,
+              "id": "asr-7",
+              "order": 6,
+              "start_ms": 19400,
+              "text": "外部作者的个案复盘仅代表其特定背景"
+            },
+            {
+              "end_ms": 26520,
+              "id": "asr-8",
+              "order": 7,
+              "start_ms": 23480,
+              "text": "相关的行业统计如果未经独立核验"
+            },
+            {
+              "end_ms": 28880,
+              "id": "asr-9",
+              "order": 8,
+              "start_ms": 26680,
+              "text": "不能直接作为通用结论引用"
+            },
+            {
+              "end_ms": 32000,
+              "id": "asr-10",
+              "order": 9,
+              "start_ms": 29120,
+              "text": "本文提出的三类评估与设计建议"
+            },
+            {
+              "end_ms": 35120,
+              "id": "asr-11",
+              "order": 10,
+              "start_ms": 32320,
+              "text": "属于软件工程视角的实践建议"
+            },
+            {
+              "end_ms": 37920,
+              "id": "asr-12",
+              "order": 11,
+              "start_ms": 35760,
+              "text": "并非特定业务的效果保证"
+            },
+            {
+              "end_ms": 40080,
+              "id": "asr-13",
+              "order": 12,
+              "start_ms": 38120,
+              "text": "工程落地的首要任务"
+            },
+            {
+              "end_ms": 42960,
+              "id": "asr-14",
+              "order": 13,
+              "start_ms": 40240,
+              "text": "就是把对模型能力的模糊期待"
+            },
+            {
+              "end_ms": 45680,
+              "id": "asr-15",
+              "order": 14,
+              "start_ms": 43000,
+              "text": "转移为确定性的系统约束"
+            },
+            {
+              "end_ms": 47800,
+              "id": "asr-16",
+              "order": 15,
+              "start_ms": 45960,
+              "text": "首先是契约化拆解"
+            },
+            {
+              "end_ms": 50920,
+              "id": "asr-17",
+              "order": 16,
+              "start_ms": 48720,
+              "text": "第一定义输入边界"
+            },
+            {
+              "end_ms": 54320,
+              "id": "asr-18",
+              "order": 17,
+              "start_ms": 51240,
+              "text": "系统必须对原始文本做严格前置教验"
+            },
+            {
+              "end_ms": 57200,
+              "id": "asr-19",
+              "order": 18,
+              "start_ms": 54760,
+              "text": "按照模型上限预留输出空间"
+            },
+            {
+              "end_ms": 61160,
+              "id": "asr-20",
+              "order": 19,
+              "start_ms": 57600,
+              "text": "明确超限时是拒绝、分块还是截断"
+            },
+            {
+              "end_ms": 64120,
+              "id": "asr-21",
+              "order": 20,
+              "start_ms": 61760,
+              "text": "并通过规则过滤低效噪声"
+            },
+            {
+              "end_ms": 66840,
+              "id": "asr-22",
+              "order": 21,
+              "start_ms": 64720,
+              "text": "第二规范预期输出"
+            },
+            {
+              "end_ms": 69920,
+              "id": "asr-23",
+              "order": 22,
+              "start_ms": 67120,
+              "text": "尽量避免非结构化的散漫文本"
+            },
+            {
+              "end_ms": 73320,
+              "id": "asr-24",
+              "order": 23,
+              "start_ms": 70520,
+              "text": "优先采用强契约的格式化输出"
+            },
+            {
+              "end_ms": 78080,
+              "id": "asr-25",
+              "order": 24,
+              "start_ms": 73800,
+              "text": "对关键字段设定避填检查与响应耗时基线"
+            },
+            {
+              "end_ms": 81400,
+              "id": "asr-26",
+              "order": 25,
+              "start_ms": 78880,
+              "text": "第三明确判定规则"
+            },
+            {
+              "end_ms": 84240,
+              "id": "asr-27",
+              "order": 26,
+              "start_ms": 81640,
+              "text": "能确定检查的格式交给规则"
+            },
+            {
+              "end_ms": 87680,
+              "id": "asr-28",
+              "order": 27,
+              "start_ms": 84640,
+              "text": "予以判断则对照预先标注的要点"
+            },
+            {
+              "end_ms": 91040,
+              "id": "asr-29",
+              "order": 28,
+              "start_ms": 88200,
+              "text": "模型自报的质性度或回答一致性"
+            },
+            {
+              "end_ms": 93640,
+              "id": "asr-30",
+              "order": 29,
+              "start_ms": 91480,
+              "text": "都不能直接当作事实正确率"
+            },
+            {
+              "end_ms": 98680,
+              "id": "asr-31",
+              "order": 30,
+              "start_ms": 94120,
+              "text": "最终请求要分流至放行、降级或转人工"
+            },
+            {
+              "end_ms": 101440,
+              "id": "asr-32",
+              "order": 31,
+              "start_ms": 99080,
+              "text": "为了展示工程约束的运作方式"
+            },
+            {
+              "end_ms": 105920,
+              "id": "asr-33",
+              "order": 32,
+              "start_ms": 101880,
+              "text": "我们以一个明确标注为假设的知识问答系统进行推演"
+            },
+            {
+              "end_ms": 108000,
+              "id": "asr-34",
+              "order": 33,
+              "start_ms": 106320,
+              "text": "在标准正常流程下"
+            },
+            {
+              "end_ms": 110040,
+              "id": "asr-35",
+              "order": 34,
+              "start_ms": 108640,
+              "text": "资料充足且一致"
+            },
+            {
+              "end_ms": 112640,
+              "id": "asr-36",
+              "order": 35,
+              "start_ms": 110600,
+              "text": "模型依据检索内容提炼"
+            },
+            {
+              "end_ms": 114040,
+              "id": "asr-37",
+              "order": 36,
+              "start_ms": 112800,
+              "text": "并携带引用员"
+            },
+            {
+              "end_ms": 116760,
+              "id": "asr-38",
+              "order": 37,
+              "start_ms": 114800,
+              "text": "教验通过后直接返回"
+            },
+            {
+              "end_ms": 118760,
+              "id": "asr-39",
+              "order": 38,
+              "start_ms": 117120,
+              "text": "在资料缺失场景下"
+            },
+            {
+              "end_ms": 121320,
+              "id": "asr-40",
+              "order": 39,
+              "start_ms": 119000,
+              "text": "检索得分低于安全预值时"
+            },
+            {
+              "end_ms": 124880,
+              "id": "asr-41",
+              "order": 40,
+              "start_ms": 121760,
+              "text": "系统严禁模型自由发挥产生幻觉"
+            },
+            {
+              "end_ms": 127560,
+              "id": "asr-42",
+              "order": 41,
+              "start_ms": 125520,
+              "text": "而是触发快速失败分支"
+            },
+            {
+              "end_ms": 129480,
+              "id": "asr-43",
+              "order": 42,
+              "start_ms": 127840,
+              "text": "直接返回预设提示"
+            },
+            {
+              "end_ms": 132920,
+              "id": "asr-44",
+              "order": 43,
+              "start_ms": 129760,
+              "text": "跳过深度推理以节省成本和耗时"
+            },
+            {
+              "end_ms": 134640,
+              "id": "asr-45",
+              "order": 44,
+              "start_ms": 133160,
+              "text": "在资料冲突场景下"
+            },
+            {
+              "end_ms": 137040,
+              "id": "asr-46",
+              "order": 45,
+              "start_ms": 134880,
+              "text": "检索命中相互矛盾的规定时"
+            },
+            {
+              "end_ms": 140080,
+              "id": "asr-47",
+              "order": 46,
+              "start_ms": 137320,
+              "text": "不能仅凭发布日期新旧自行裁决"
+            },
+            {
+              "end_ms": 142480,
+              "id": "asr-48",
+              "order": 47,
+              "start_ms": 140520,
+              "text": "必须核对试用范围与来源"
+            },
+            {
+              "end_ms": 145440,
+              "id": "asr-49",
+              "order": 48,
+              "start_ms": 142960,
+              "text": "在无法确认时保守提示冲突"
+            },
+            {
+              "end_ms": 147320,
+              "id": "asr-50",
+              "order": 49,
+              "start_ms": 145680,
+              "text": "并路由至人工核查"
+            },
+            {
+              "end_ms": 150360,
+              "id": "asr-51",
+              "order": 50,
+              "start_ms": 147640,
+              "text": "不能假设模型每次都会遵守规则"
+            },
+            {
+              "end_ms": 152760,
+              "id": "asr-52",
+              "order": 51,
+              "start_ms": 150600,
+              "text": "系统必须建立防御性降级"
+            },
+            {
+              "end_ms": 154000,
+              "id": "asr-53",
+              "order": 52,
+              "start_ms": 152880,
+              "text": "与转人工兜底"
+            },
+            {
+              "end_ms": 155560,
+              "id": "asr-54",
+              "order": 53,
+              "start_ms": 154440,
+              "text": "在证据不足"
+            },
+            {
+              "end_ms": 157360,
+              "id": "asr-55",
+              "order": 54,
+              "start_ms": 155800,
+              "text": "涉及关键业务决定"
+            },
+            {
+              "end_ms": 159840,
+              "id": "asr-56",
+              "order": 55,
+              "start_ms": 157720,
+              "text": "或者用户多轮无法解决时"
+            },
+            {
+              "end_ms": 162000,
+              "id": "asr-57",
+              "order": 56,
+              "start_ms": 160240,
+              "text": "按约定边界切入人工"
+            },
+            {
+              "end_ms": 164240,
+              "id": "asr-58",
+              "order": 57,
+              "start_ms": 162400,
+              "text": "并完整传递绘画快照"
+            },
+            {
+              "end_ms": 165480,
+              "id": "asr-59",
+              "order": 58,
+              "start_ms": 164360,
+              "text": "与结构画摘要"
+            },
+            {
+              "end_ms": 166760,
+              "id": "asr-60",
+              "order": 59,
+              "start_ms": 165840,
+              "text": "人工介入"
+            },
+            {
+              "end_ms": 169320,
+              "id": "asr-61",
+              "order": 60,
+              "start_ms": 166840,
+              "text": "必然会带来排队延迟与人力成本"
+            },
+            {
+              "end_ms": 170760,
+              "id": "asr-62",
+              "order": 61,
+              "start_ms": 169800,
+              "text": "参数预值"
+            },
+            {
+              "end_ms": 172760,
+              "id": "asr-63",
+              "order": 62,
+              "start_ms": 170760,
+              "text": "需要在真实样本中反复校准"
+            },
+            {
+              "end_ms": 174720,
+              "id": "asr-64",
+              "order": 63,
+              "start_ms": 173040,
+              "text": "技术负责人在上线前"
+            },
+            {
+              "end_ms": 176720,
+              "id": "asr-65",
+              "order": 64,
+              "start_ms": 174720,
+              "text": "不必先造庞大的评测平台"
+            },
+            {
+              "end_ms": 180040,
+              "id": "asr-66",
+              "order": 65,
+              "start_ms": 177480,
+              "text": "先拿一组真实可托敏的问题"
+            },
+            {
+              "end_ms": 181840,
+              "id": "asr-67",
+              "order": 66,
+              "start_ms": 180600,
+              "text": "逐条写清依据"
+            },
+            {
+              "end_ms": 184480,
+              "id": "asr-68",
+              "order": 67,
+              "start_ms": 182240,
+              "text": "允许的失败方式与责任人"
+            },
+            {
+              "end_ms": 185600,
+              "id": "asr-69",
+              "order": 68,
+              "start_ms": 184640,
+              "text": "持续重跑"
+            },
+            {
+              "end_ms": 188080,
+              "id": "asr-70",
+              "order": 69,
+              "start_ms": 185760,
+              "text": "并记录变好与变差的分布"
+            },
+            {
+              "end_ms": 190280,
+              "id": "asr-71",
+              "order": 70,
+              "start_ms": 188520,
+              "text": "用确定性的工程防线"
+            },
+            {
+              "end_ms": 192640,
+              "id": "asr-72",
+              "order": 71,
+              "start_ms": 190520,
+              "text": "守住不可预测的模型输出"
+            }
+          ],
+          "duration_ms": 192839,
+          "input_hash": "57790c6cd8230812d1c15c6fad00bd380eaece535cc131d24ebbf8a70ef82249",
+          "output_hash": "68785898cd10984d57d2b97c06bfc40e4957c9e137137b066b6190b2d62036cf",
+          "provider": {
+            "key": "local.mlx_whisper",
+            "runtime_fingerprint": "d161b13f09c5257da252bb8f71f2e34d227f021dba68fb6410147bebd5d2198c",
+            "version": "1"
+          },
+          "transcript": "一个知识问答掩饰能够答对预设题目\n并不等于它已经适合交付日常使用\n在进入生产环境之前\n系统真正需要补齐的不是更高的评测跑分\n而是一整套明确的工程契约\n需要先说明的是\n外部作者的个案复盘仅代表其特定背景\n相关的行业统计如果未经独立核验\n不能直接作为通用结论引用\n本文提出的三类评估与设计建议\n属于软件工程视角的实践建议\n并非特定业务的效果保证\n工程落地的首要任务\n就是把对模型能力的模糊期待\n转移为确定性的系统约束\n首先是契约化拆解\n第一定义输入边界\n系统必须对原始文本做严格前置教验\n按照模型上限预留输出空间\n明确超限时是拒绝、分块还是截断\n并通过规则过滤低效噪声\n第二规范预期输出\n尽量避免非结构化的散漫文本\n优先采用强契约的格式化输出\n对关键字段设定避填检查与响应耗时基线\n第三明确判定规则\n能确定检查的格式交给规则\n予以判断则对照预先标注的要点\n模型自报的质性度或回答一致性\n都不能直接当作事实正确率\n最终请求要分流至放行、降级或转人工\n为了展示工程约束的运作方式\n我们以一个明确标注为假设的知识问答系统进行推演\n在标准正常流程下\n资料充足且一致\n模型依据检索内容提炼\n并携带引用员\n教验通过后直接返回\n在资料缺失场景下\n检索得分低于安全预值时\n系统严禁模型自由发挥产生幻觉\n而是触发快速失败分支\n直接返回预设提示\n跳过深度推理以节省成本和耗时\n在资料冲突场景下\n检索命中相互矛盾的规定时\n不能仅凭发布日期新旧自行裁决\n必须核对试用范围与来源\n在无法确认时保守提示冲突\n并路由至人工核查\n不能假设模型每次都会遵守规则\n系统必须建立防御性降级\n与转人工兜底\n在证据不足\n涉及关键业务决定\n或者用户多轮无法解决时\n按约定边界切入人工\n并完整传递绘画快照\n与结构画摘要\n人工介入\n必然会带来排队延迟与人力成本\n参数预值\n需要在真实样本中反复校准\n技术负责人在上线前\n不必先造庞大的评测平台\n先拿一组真实可托敏的问题\n逐条写清依据\n允许的失败方式与责任人\n持续重跑\n并记录变好与变差的分布\n用确定性的工程防线\n守住不可预测的模型输出"
+        },
+        "result_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+        "schema": "stage.audio_asr.result.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.audio.asr",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    },
+    {
+      "id": 122,
+      "node_id": "audio_quality",
+      "node_type": "Rule",
+      "label": "音频质量确认",
+      "params": {
+        "method": {
+          "source_kind": "studio_builtin",
+          "skill_ref": "studio.audio.qc@1"
+        },
+        "alignment_enabled": true,
+        "srt_mode": "asr"
+      },
+      "status": "succeeded",
+      "output": {
+        "domain": "checks",
+        "resolution_hash": "56883b5c4ae41439cfc067cb6df050761a0250e14a5809234143ff920e5e1945",
+        "result": {
+          "audio_quality": true,
+          "audio_snapshot": {
+            "accepted_target": {
+              "accepted_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+              "attempt_id": 133,
+              "context_hash": null,
+              "decision": "accepted",
+              "domain": "media",
+              "entity_id": 80,
+              "feedback_event_id": 293,
+              "node_id": "tts",
+              "output_kind": "material_revision",
+              "payload_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+              "project_output_id": 44,
+              "revision_no": 1
+            },
+            "actor_id": 1,
+            "audio_quality": true,
+            "config": {
+              "alignment_enabled": true,
+              "method": {
+                "skill_ref": "studio.audio.qc@1",
+                "source_kind": "studio_builtin"
+              },
+              "quality_profile_ref": "studio.quality.audio.explainer@1",
+              "srt_mode": "asr"
+            },
+            "config_hash": "2586667cd3bb7437eeef3a54ee0715dfe95e868e6ddca80a33ced6c45de716c7",
+            "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+            "expected_revision": 0,
+            "input_hash": "268cd2178d8ed846de605a04b5e516a9b06024b3d3253c53b4ad85f07c4d66c6",
+            "kind": "checks",
+            "material_revision_id": 80,
+            "node": {
+              "id": "audio_quality",
+              "plugin": "stage.audio.qc",
+              "plugin_version": "1"
+            },
+            "preset": {
+              "hash": "28088c2ada823a3c171ee553343587ca291360e7fd2670c2fc1bfafea1867e16",
+              "ref": "studio.quality.audio.explainer@1"
+            },
+            "project_id": 35,
+            "qc_report": {
+              "alignment": {
+                "accepted_target": {
+                  "accepted_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                  "attempt_id": 134,
+                  "context_hash": null,
+                  "decision": "accepted",
+                  "domain": "audio_asr",
+                  "entity_id": 134,
+                  "feedback_event_id": 294,
+                  "node_id": "audio_asr",
+                  "output_kind": "workflow_step_attempt",
+                  "payload_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                  "project_output_id": 45,
+                  "revision_no": null
+                },
+                "actor_id": 1,
+                "asr_input_hash": "57790c6cd8230812d1c15c6fad00bd380eaece535cc131d24ebbf8a70ef82249",
+                "asr_output_hash": "68785898cd10984d57d2b97c06bfc40e4957c9e137137b066b6190b2d62036cf",
+                "asr_result_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                "comparison": "normalized_positional_characters",
+                "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                "difference_ratio": 0.022727,
+                "different_characters": 18,
+                "duration_ms": 192839,
+                "expected_characters": 792,
+                "material_revision_id": 80,
+                "observed_characters": 792,
+                "project_id": 35,
+                "provider": {
+                  "key": "local.mlx_whisper",
+                  "runtime_fingerprint": "d161b13f09c5257da252bb8f71f2e34d227f021dba68fb6410147bebd5d2198c",
+                  "version": "1"
+                },
+                "run_id": 24,
+                "schema": "studio.audio.asr-alignment.v1",
+                "script_hash": "de7d6a89238d8f671bee5ddd2b4c996ba53bcb8f0ffde7751aacd65262d51c02",
+                "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+                "timing_alignment": "verified_asr_segment_timing",
+                "timing_basis": "verified_asr_segment_timing",
+                "transcript_basis": "accepted_asr_cues",
+                "unit_id": 44,
+                "word_alignment": "not_run"
+              },
+              "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+              "coverage": {
+                "accepted_task": "verified",
+                "asr_alignment": "verified_accepted_receipt_comparison",
+                "bytes_hash": "verified_live_bytes",
+                "complete": true,
+                "current_binding": "verified",
+                "loudness": "rms_dbfs_only_lufs_not_measured",
+                "mime_duration": "verified_decoded_bytes",
+                "perceptual_quality": "human_review_required",
+                "provider_model": "verified_receipt",
+                "voice_rate": "verified_signed_result_and_material_receipt",
+                "waveform": "wave"
+              },
+              "human_review_required": true,
+              "issues": [
+                {
+                  "code": "audio_transcript_script_differs",
+                  "severity": "warning"
+                }
+              ],
+              "material_id": 76,
+              "material_revision_id": 80,
+              "measured": {
+                "byte_size": 12342818,
+                "channels": 1,
+                "clipping_ratio": 0.0,
+                "duration_ms": 192838.344,
+                "leading_silence_ms": 156.062,
+                "peak": 0.99453735,
+                "rms": 0.06873827,
+                "rms_dbfs": -23.256,
+                "sample_rate_hz": 32000,
+                "sample_width_bytes": 2,
+                "silence_ratio": 0.22819794,
+                "trailing_silence_ms": 171.562
+              },
+              "quality_profile_hash": "28088c2ada823a3c171ee553343587ca291360e7fd2670c2fc1bfafea1867e16",
+              "quality_profile_ref": "studio.quality.audio.explainer@1",
+              "rules_hash": "c85438151c293aa9f5030ba789d15acc5025a2904cdc556c29d22746cb7434e8",
+              "schema": "studio.audio.qc.v1",
+              "status": "warning",
+              "subtitles": {
+                "asr_attempt_id": 134,
+                "asr_output_hash": "68785898cd10984d57d2b97c06bfc40e4957c9e137137b066b6190b2d62036cf",
+                "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                "cue_count": 72,
+                "duration_ms": 192839,
+                "estimated": false,
+                "filename": "audio-asr.srt",
+                "label": "已保存 ASR 分段时轴 / 非逐词对齐",
+                "material_revision_id": 80,
+                "mode": "asr",
+                "rules_hash": "92d43cf38269f0b02a99f2a50da9e529f73e2b5aab23312772649688b5c526de",
+                "schema": "studio.audio.subtitles.v1",
+                "script_hash": "de7d6a89238d8f671bee5ddd2b4c996ba53bcb8f0ffde7751aacd65262d51c02",
+                "srt": "1\n00:00:00,000 --> 00:00:03,320\n一个知识问答掩饰能够答对预设题目\n\n2\n00:00:03,680 --> 00:00:07,000\n并不等于它已经适合交付日常使用\n\n3\n00:00:07,280 --> 00:00:09,280\n在进入生产环境之前\n\n4\n00:00:09,720 --> 00:00:14,000\n系统真正需要补齐的不是更高的评测跑分\n\n5\n00:00:14,560 --> 00:00:17,440\n而是一整套明确的工程契约\n\n6\n00:00:17,560 --> 00:00:19,040\n需要先说明的是\n\n7\n00:00:19,400 --> 00:00:22,800\n外部作者的个案复盘仅代表其特定背景\n\n8\n00:00:23,480 --> 00:00:26,520\n相关的行业统计如果未经独立核验\n\n9\n00:00:26,680 --> 00:00:28,880\n不能直接作为通用结论引用\n\n10\n00:00:29,120 --> 00:00:32,000\n本文提出的三类评估与设计建议\n\n11\n00:00:32,320 --> 00:00:35,120\n属于软件工程视角的实践建议\n\n12\n00:00:35,760 --> 00:00:37,920\n并非特定业务的效果保证\n\n13\n00:00:38,120 --> 00:00:40,080\n工程落地的首要任务\n\n14\n00:00:40,240 --> 00:00:42,960\n就是把对模型能力的模糊期待\n\n15\n00:00:43,000 --> 00:00:45,680\n转移为确定性的系统约束\n\n16\n00:00:45,960 --> 00:00:47,800\n首先是契约化拆解\n\n17\n00:00:48,720 --> 00:00:50,920\n第一定义输入边界\n\n18\n00:00:51,240 --> 00:00:54,320\n系统必须对原始文本做严格前置教验\n\n19\n00:00:54,760 --> 00:00:57,200\n按照模型上限预留输出空间\n\n20\n00:00:57,600 --> 00:01:01,160\n明确超限时是拒绝、分块还是截断\n\n21\n00:01:01,760 --> 00:01:04,120\n并通过规则过滤低效噪声\n\n22\n00:01:04,720 --> 00:01:06,840\n第二规范预期输出\n\n23\n00:01:07,120 --> 00:01:09,920\n尽量避免非结构化的散漫文本\n\n24\n00:01:10,520 --> 00:01:13,320\n优先采用强契约的格式化输出\n\n25\n00:01:13,800 --> 00:01:18,080\n对关键字段设定避填检查与响应耗时基线\n\n26\n00:01:18,880 --> 00:01:21,400\n第三明确判定规则\n\n27\n00:01:21,640 --> 00:01:24,240\n能确定检查的格式交给规则\n\n28\n00:01:24,640 --> 00:01:27,680\n予以判断则对照预先标注的要点\n\n29\n00:01:28,200 --> 00:01:31,040\n模型自报的质性度或回答一致性\n\n30\n00:01:31,480 --> 00:01:33,640\n都不能直接当作事实正确率\n\n31\n00:01:34,120 --> 00:01:38,680\n最终请求要分流至放行、降级或转人工\n\n32\n00:01:39,080 --> 00:01:41,440\n为了展示工程约束的运作方式\n\n33\n00:01:41,880 --> 00:01:45,920\n我们以一个明确标注为假设的知识问答系统进行推演\n\n34\n00:01:46,320 --> 00:01:48,000\n在标准正常流程下\n\n35\n00:01:48,640 --> 00:01:50,040\n资料充足且一致\n\n36\n00:01:50,600 --> 00:01:52,640\n模型依据检索内容提炼\n\n37\n00:01:52,800 --> 00:01:54,040\n并携带引用员\n\n38\n00:01:54,800 --> 00:01:56,760\n教验通过后直接返回\n\n39\n00:01:57,120 --> 00:01:58,760\n在资料缺失场景下\n\n40\n00:01:59,000 --> 00:02:01,320\n检索得分低于安全预值时\n\n41\n00:02:01,760 --> 00:02:04,880\n系统严禁模型自由发挥产生幻觉\n\n42\n00:02:05,520 --> 00:02:07,560\n而是触发快速失败分支\n\n43\n00:02:07,840 --> 00:02:09,480\n直接返回预设提示\n\n44\n00:02:09,760 --> 00:02:12,920\n跳过深度推理以节省成本和耗时\n\n45\n00:02:13,160 --> 00:02:14,640\n在资料冲突场景下\n\n46\n00:02:14,880 --> 00:02:17,040\n检索命中相互矛盾的规定时\n\n47\n00:02:17,320 --> 00:02:20,080\n不能仅凭发布日期新旧自行裁决\n\n48\n00:02:20,520 --> 00:02:22,480\n必须核对试用范围与来源\n\n49\n00:02:22,960 --> 00:02:25,440\n在无法确认时保守提示冲突\n\n50\n00:02:25,680 --> 00:02:27,320\n并路由至人工核查\n\n51\n00:02:27,640 --> 00:02:30,360\n不能假设模型每次都会遵守规则\n\n52\n00:02:30,600 --> 00:02:32,760\n系统必须建立防御性降级\n\n53\n00:02:32,880 --> 00:02:34,000\n与转人工兜底\n\n54\n00:02:34,440 --> 00:02:35,560\n在证据不足\n\n55\n00:02:35,800 --> 00:02:37,360\n涉及关键业务决定\n\n56\n00:02:37,720 --> 00:02:39,840\n或者用户多轮无法解决时\n\n57\n00:02:40,240 --> 00:02:42,000\n按约定边界切入人工\n\n58\n00:02:42,400 --> 00:02:44,240\n并完整传递绘画快照\n\n59\n00:02:44,360 --> 00:02:45,480\n与结构画摘要\n\n60\n00:02:45,840 --> 00:02:46,760\n人工介入\n\n61\n00:02:46,840 --> 00:02:49,320\n必然会带来排队延迟与人力成本\n\n62\n00:02:49,800 --> 00:02:50,760\n参数预值\n\n63\n00:02:50,760 --> 00:02:52,760\n需要在真实样本中反复校准\n\n64\n00:02:53,040 --> 00:02:54,720\n技术负责人在上线前\n\n65\n00:02:54,720 --> 00:02:56,720\n不必先造庞大的评测平台\n\n66\n00:02:57,480 --> 00:03:00,040\n先拿一组真实可托敏的问题\n\n67\n00:03:00,600 --> 00:03:01,840\n逐条写清依据\n\n68\n00:03:02,240 --> 00:03:04,480\n允许的失败方式与责任人\n\n69\n00:03:04,640 --> 00:03:05,600\n持续重跑\n\n70\n00:03:05,760 --> 00:03:08,080\n并记录变好与变差的分布\n\n71\n00:03:08,520 --> 00:03:10,280\n用确定性的工程防线\n\n72\n00:03:10,520 --> 00:03:12,640\n守住不可预测的模型输出\n\n",
+                "srt_hash": "7267ae9f02bbabc75307ebd558a79129918e512c5c29f64c42557d7ee9ded4a8",
+                "timing_basis": "accepted_asr_segments"
+              },
+              "task": {
+                "execution_profile": "minimax.speech",
+                "model_id": "speech-2.8-hd",
+                "plan_hash": "2f2587f90866c88868ca68f112eef1eaecf1d1be319334ab947c2ea62233f39a",
+                "provider_key": "minimax.cli",
+                "provider_version": "1",
+                "request_hash": "0e2ee11d3ec42e55be541dab12e90a0c57e3b5756c7c1f5ebaafbe8b66172044",
+                "selected_profile": "minimax.speech",
+                "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+                "tts_applied_parameters": {
+                  "rate": 1.0,
+                  "schema": "studio.audio.tts-applied.v1",
+                  "voice_id": "lengdan_xiongzhang"
+                }
+              },
+              "thresholds": {
+                "clipping_amplitude": 0.999,
+                "clipping_blocker_ratio": 0.01,
+                "clipping_warning_ratio": 0.001,
+                "edge_silence_warning_ms": 2000,
+                "max_bytes": 31457280,
+                "max_duration_ms": 600000,
+                "max_samples": 12000000,
+                "process_timeout_seconds": 10,
+                "rms_warning_max_dbfs": -6,
+                "rms_warning_min_dbfs": -35,
+                "silence_amplitude": 0.001,
+                "silence_warning_ratio": 0.9
+              }
+            },
+            "quality_profile_ref": "studio.quality.audio.explainer@1",
+            "run_id": 24,
+            "schema": "studio.audio.stage.qc.v1",
+            "script": "一个知识问答演示能够答对预设题目，并不等于它已经适合交付日常使用。在进入生产环境之前，系统真正需要补齐的不是更高的评测跑分，而是一整套明确的工程契约。需要先说明的是，外部作者的个案复盘仅代表其特定背景，相关的行业统计如果未经独立核验，不能直接作为通用结论引用。本文提出的三类评估与设计建议，属于软件工程视角的实践建议，并非特定业务的效果保证。工程落地的首要任务，就是把对模型能力的模糊期待，转译为确定性的系统约束。\n\n首先是契约化拆解。第一，定义输入边界。系统必须对原始文本做严格前置校验，按照模型上限预留输出空间，明确超限时是拒绝、分块还是截断，并通过规则过滤低效噪声。第二，规范预期输出。尽量避免非结构化的散漫文本，优先采用强契约的格式化输出，对关键字段设定必填检查与响应耗时基线。第三，明确判定规则。能确定检查的格式交给规则，语义判断则对照预先标注的要点；模型自报的置信度或回答一致性，都不能直接当作事实正确率，最终请求要分流至放行、降级或转人工。\n\n为了展示工程约束的运作方式，我们以一个明确标注为假设的知识问答系统进行推演。在标准正常流程下，资料充足且一致，模型依据检索内容提炼并携带引用源，校验通过后直接返回。在资料缺失场景下，检索得分低于安全阈值时，系统严禁模型自由发挥产生幻觉，而是触发快速失败分支，直接返回预设提示，跳过深度推理以节省成本和耗时。在资料冲突场景下，检索命中相互矛盾的规定时，不能仅凭发布日期新旧自行裁决，必须核对适用范围与来源；在无法确认时保守提示冲突，并路由至人工核查。\n\n不能假设模型每次都会遵守规则，系统必须建立防御性降级与转人工兜底。在证据不足、涉及关键业务决定，或者用户多轮无法解决时，按约定边界切入人工，并完整传递会话快照与结构化摘要。人工介入必然会带来排队延迟与人力成本，参数阈值需要在真实样本中反复校准。\n\n技术负责人在上线前不必先造庞大的评测平台。先拿一组真实、可脱敏的问题，逐条写清依据、允许的失败方式与责任人，持续重跑并记录变好与变差的分布。用确定性的工程防线，守住不可预测的模型输出。",
+            "script_hash": "e645b65b759bdaa60b2135b1f965939c250f36052d4c6224d29efb390904438e",
+            "task_acceptance_hash": "f61f700abec2508659d2ab59a7dff5afb016e2e4410210647ca824b2b6990e07",
+            "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+            "task_input_hash": "6e6e4e29a04878b54c81e9ffc15d827641873ee2b89b11b7b940605bcaec5bd3",
+            "task_plan_hash": "2f2587f90866c88868ca68f112eef1eaecf1d1be319334ab947c2ea62233f39a",
+            "task_request_hash": "0e2ee11d3ec42e55be541dab12e90a0c57e3b5756c7c1f5ebaafbe8b66172044",
+            "task_result_signature_hash": "08df7af27179ba00d7aaba9218bf43fb27670defb059f8dd103891ff3646c5d1",
+            "tts_source_hash": "1847924c72f226969b76450ff2902ebf85864c4b8c3ef30b3b12ffc7cdd421d4",
+            "unit_id": 44,
+            "workflow": {
+              "checksum": "5d3937554338a7325449c7b36c6dbb4b0d26e7367c0904e911026875d4549dee",
+              "id": 33,
+              "version": 1
+            }
+          },
+          "blockers": [],
+          "checks": [
+            {
+              "check_kind": "audio_quality",
+              "id": 80,
+              "input_hash": "268cd2178d8ed846de605a04b5e516a9b06024b3d3253c53b4ad85f07c4d66c6",
+              "report": {
+                "alignment": {
+                  "accepted_target": {
+                    "accepted_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                    "attempt_id": 134,
+                    "context_hash": null,
+                    "decision": "accepted",
+                    "domain": "audio_asr",
+                    "entity_id": 134,
+                    "feedback_event_id": 294,
+                    "node_id": "audio_asr",
+                    "output_kind": "workflow_step_attempt",
+                    "payload_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                    "project_output_id": 45,
+                    "revision_no": null
+                  },
+                  "actor_id": 1,
+                  "asr_input_hash": "57790c6cd8230812d1c15c6fad00bd380eaece535cc131d24ebbf8a70ef82249",
+                  "asr_output_hash": "68785898cd10984d57d2b97c06bfc40e4957c9e137137b066b6190b2d62036cf",
+                  "asr_result_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                  "comparison": "normalized_positional_characters",
+                  "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                  "difference_ratio": 0.022727,
+                  "different_characters": 18,
+                  "duration_ms": 192839,
+                  "expected_characters": 792,
+                  "material_revision_id": 80,
+                  "observed_characters": 792,
+                  "project_id": 35,
+                  "provider": {
+                    "key": "local.mlx_whisper",
+                    "runtime_fingerprint": "d161b13f09c5257da252bb8f71f2e34d227f021dba68fb6410147bebd5d2198c",
+                    "version": "1"
+                  },
+                  "run_id": 24,
+                  "schema": "studio.audio.asr-alignment.v1",
+                  "script_hash": "de7d6a89238d8f671bee5ddd2b4c996ba53bcb8f0ffde7751aacd65262d51c02",
+                  "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+                  "timing_alignment": "verified_asr_segment_timing",
+                  "timing_basis": "verified_asr_segment_timing",
+                  "transcript_basis": "accepted_asr_cues",
+                  "unit_id": 44,
+                  "word_alignment": "not_run"
+                },
+                "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                "coverage": {
+                  "accepted_task": "verified",
+                  "asr_alignment": "verified_accepted_receipt_comparison",
+                  "bytes_hash": "verified_live_bytes",
+                  "complete": true,
+                  "current_binding": "verified",
+                  "loudness": "rms_dbfs_only_lufs_not_measured",
+                  "mime_duration": "verified_decoded_bytes",
+                  "perceptual_quality": "human_review_required",
+                  "provider_model": "verified_receipt",
+                  "voice_rate": "verified_signed_result_and_material_receipt",
+                  "waveform": "wave"
+                },
+                "human_review_required": true,
+                "issues": [
+                  {
+                    "code": "audio_transcript_script_differs",
+                    "severity": "warning"
+                  }
+                ],
+                "material_id": 76,
+                "material_revision_id": 80,
+                "measured": {
+                  "byte_size": 12342818,
+                  "channels": 1,
+                  "clipping_ratio": 0.0,
+                  "duration_ms": 192838.344,
+                  "leading_silence_ms": 156.062,
+                  "peak": 0.99453735,
+                  "rms": 0.06873827,
+                  "rms_dbfs": -23.256,
+                  "sample_rate_hz": 32000,
+                  "sample_width_bytes": 2,
+                  "silence_ratio": 0.22819794,
+                  "trailing_silence_ms": 171.562
+                },
+                "quality_profile_hash": "28088c2ada823a3c171ee553343587ca291360e7fd2670c2fc1bfafea1867e16",
+                "quality_profile_ref": "studio.quality.audio.explainer@1",
+                "rules_hash": "c85438151c293aa9f5030ba789d15acc5025a2904cdc556c29d22746cb7434e8",
+                "schema": "studio.audio.qc.v1",
+                "status": "warning",
+                "subtitles": {
+                  "asr_attempt_id": 134,
+                  "asr_output_hash": "68785898cd10984d57d2b97c06bfc40e4957c9e137137b066b6190b2d62036cf",
+                  "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                  "cue_count": 72,
+                  "duration_ms": 192839,
+                  "estimated": false,
+                  "filename": "audio-asr.srt",
+                  "label": "已保存 ASR 分段时轴 / 非逐词对齐",
+                  "material_revision_id": 80,
+                  "mode": "asr",
+                  "rules_hash": "92d43cf38269f0b02a99f2a50da9e529f73e2b5aab23312772649688b5c526de",
+                  "schema": "studio.audio.subtitles.v1",
+                  "script_hash": "de7d6a89238d8f671bee5ddd2b4c996ba53bcb8f0ffde7751aacd65262d51c02",
+                  "srt": "1\n00:00:00,000 --> 00:00:03,320\n一个知识问答掩饰能够答对预设题目\n\n2\n00:00:03,680 --> 00:00:07,000\n并不等于它已经适合交付日常使用\n\n3\n00:00:07,280 --> 00:00:09,280\n在进入生产环境之前\n\n4\n00:00:09,720 --> 00:00:14,000\n系统真正需要补齐的不是更高的评测跑分\n\n5\n00:00:14,560 --> 00:00:17,440\n而是一整套明确的工程契约\n\n6\n00:00:17,560 --> 00:00:19,040\n需要先说明的是\n\n7\n00:00:19,400 --> 00:00:22,800\n外部作者的个案复盘仅代表其特定背景\n\n8\n00:00:23,480 --> 00:00:26,520\n相关的行业统计如果未经独立核验\n\n9\n00:00:26,680 --> 00:00:28,880\n不能直接作为通用结论引用\n\n10\n00:00:29,120 --> 00:00:32,000\n本文提出的三类评估与设计建议\n\n11\n00:00:32,320 --> 00:00:35,120\n属于软件工程视角的实践建议\n\n12\n00:00:35,760 --> 00:00:37,920\n并非特定业务的效果保证\n\n13\n00:00:38,120 --> 00:00:40,080\n工程落地的首要任务\n\n14\n00:00:40,240 --> 00:00:42,960\n就是把对模型能力的模糊期待\n\n15\n00:00:43,000 --> 00:00:45,680\n转移为确定性的系统约束\n\n16\n00:00:45,960 --> 00:00:47,800\n首先是契约化拆解\n\n17\n00:00:48,720 --> 00:00:50,920\n第一定义输入边界\n\n18\n00:00:51,240 --> 00:00:54,320\n系统必须对原始文本做严格前置教验\n\n19\n00:00:54,760 --> 00:00:57,200\n按照模型上限预留输出空间\n\n20\n00:00:57,600 --> 00:01:01,160\n明确超限时是拒绝、分块还是截断\n\n21\n00:01:01,760 --> 00:01:04,120\n并通过规则过滤低效噪声\n\n22\n00:01:04,720 --> 00:01:06,840\n第二规范预期输出\n\n23\n00:01:07,120 --> 00:01:09,920\n尽量避免非结构化的散漫文本\n\n24\n00:01:10,520 --> 00:01:13,320\n优先采用强契约的格式化输出\n\n25\n00:01:13,800 --> 00:01:18,080\n对关键字段设定避填检查与响应耗时基线\n\n26\n00:01:18,880 --> 00:01:21,400\n第三明确判定规则\n\n27\n00:01:21,640 --> 00:01:24,240\n能确定检查的格式交给规则\n\n28\n00:01:24,640 --> 00:01:27,680\n予以判断则对照预先标注的要点\n\n29\n00:01:28,200 --> 00:01:31,040\n模型自报的质性度或回答一致性\n\n30\n00:01:31,480 --> 00:01:33,640\n都不能直接当作事实正确率\n\n31\n00:01:34,120 --> 00:01:38,680\n最终请求要分流至放行、降级或转人工\n\n32\n00:01:39,080 --> 00:01:41,440\n为了展示工程约束的运作方式\n\n33\n00:01:41,880 --> 00:01:45,920\n我们以一个明确标注为假设的知识问答系统进行推演\n\n34\n00:01:46,320 --> 00:01:48,000\n在标准正常流程下\n\n35\n00:01:48,640 --> 00:01:50,040\n资料充足且一致\n\n36\n00:01:50,600 --> 00:01:52,640\n模型依据检索内容提炼\n\n37\n00:01:52,800 --> 00:01:54,040\n并携带引用员\n\n38\n00:01:54,800 --> 00:01:56,760\n教验通过后直接返回\n\n39\n00:01:57,120 --> 00:01:58,760\n在资料缺失场景下\n\n40\n00:01:59,000 --> 00:02:01,320\n检索得分低于安全预值时\n\n41\n00:02:01,760 --> 00:02:04,880\n系统严禁模型自由发挥产生幻觉\n\n42\n00:02:05,520 --> 00:02:07,560\n而是触发快速失败分支\n\n43\n00:02:07,840 --> 00:02:09,480\n直接返回预设提示\n\n44\n00:02:09,760 --> 00:02:12,920\n跳过深度推理以节省成本和耗时\n\n45\n00:02:13,160 --> 00:02:14,640\n在资料冲突场景下\n\n46\n00:02:14,880 --> 00:02:17,040\n检索命中相互矛盾的规定时\n\n47\n00:02:17,320 --> 00:02:20,080\n不能仅凭发布日期新旧自行裁决\n\n48\n00:02:20,520 --> 00:02:22,480\n必须核对试用范围与来源\n\n49\n00:02:22,960 --> 00:02:25,440\n在无法确认时保守提示冲突\n\n50\n00:02:25,680 --> 00:02:27,320\n并路由至人工核查\n\n51\n00:02:27,640 --> 00:02:30,360\n不能假设模型每次都会遵守规则\n\n52\n00:02:30,600 --> 00:02:32,760\n系统必须建立防御性降级\n\n53\n00:02:32,880 --> 00:02:34,000\n与转人工兜底\n\n54\n00:02:34,440 --> 00:02:35,560\n在证据不足\n\n55\n00:02:35,800 --> 00:02:37,360\n涉及关键业务决定\n\n56\n00:02:37,720 --> 00:02:39,840\n或者用户多轮无法解决时\n\n57\n00:02:40,240 --> 00:02:42,000\n按约定边界切入人工\n\n58\n00:02:42,400 --> 00:02:44,240\n并完整传递绘画快照\n\n59\n00:02:44,360 --> 00:02:45,480\n与结构画摘要\n\n60\n00:02:45,840 --> 00:02:46,760\n人工介入\n\n61\n00:02:46,840 --> 00:02:49,320\n必然会带来排队延迟与人力成本\n\n62\n00:02:49,800 --> 00:02:50,760\n参数预值\n\n63\n00:02:50,760 --> 00:02:52,760\n需要在真实样本中反复校准\n\n64\n00:02:53,040 --> 00:02:54,720\n技术负责人在上线前\n\n65\n00:02:54,720 --> 00:02:56,720\n不必先造庞大的评测平台\n\n66\n00:02:57,480 --> 00:03:00,040\n先拿一组真实可托敏的问题\n\n67\n00:03:00,600 --> 00:03:01,840\n逐条写清依据\n\n68\n00:03:02,240 --> 00:03:04,480\n允许的失败方式与责任人\n\n69\n00:03:04,640 --> 00:03:05,600\n持续重跑\n\n70\n00:03:05,760 --> 00:03:08,080\n并记录变好与变差的分布\n\n71\n00:03:08,520 --> 00:03:10,280\n用确定性的工程防线\n\n72\n00:03:10,520 --> 00:03:12,640\n守住不可预测的模型输出\n\n",
+                  "srt_hash": "7267ae9f02bbabc75307ebd558a79129918e512c5c29f64c42557d7ee9ded4a8",
+                  "timing_basis": "accepted_asr_segments"
+                },
+                "task": {
+                  "execution_profile": "minimax.speech",
+                  "model_id": "speech-2.8-hd",
+                  "plan_hash": "2f2587f90866c88868ca68f112eef1eaecf1d1be319334ab947c2ea62233f39a",
+                  "provider_key": "minimax.cli",
+                  "provider_version": "1",
+                  "request_hash": "0e2ee11d3ec42e55be541dab12e90a0c57e3b5756c7c1f5ebaafbe8b66172044",
+                  "selected_profile": "minimax.speech",
+                  "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+                  "tts_applied_parameters": {
+                    "rate": 1.0,
+                    "schema": "studio.audio.tts-applied.v1",
+                    "voice_id": "lengdan_xiongzhang"
+                  }
+                },
+                "thresholds": {
+                  "clipping_amplitude": 0.999,
+                  "clipping_blocker_ratio": 0.01,
+                  "clipping_warning_ratio": 0.001,
+                  "edge_silence_warning_ms": 2000,
+                  "max_bytes": 31457280,
+                  "max_duration_ms": 600000,
+                  "max_samples": 12000000,
+                  "process_timeout_seconds": 10,
+                  "rms_warning_max_dbfs": -6,
+                  "rms_warning_min_dbfs": -35,
+                  "silence_amplitude": 0.001,
+                  "silence_warning_ratio": 0.9
+                }
+              },
+              "status": "warning"
+            }
+          ],
+          "checks_pass": false,
+          "checks_reviewable": true,
+          "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+          "current_checks": [
+            {
+              "check_kind": "audio_quality",
+              "id": 80,
+              "input_hash": "268cd2178d8ed846de605a04b5e516a9b06024b3d3253c53b4ad85f07c4d66c6",
+              "is_current": true,
+              "report": {
+                "alignment": {
+                  "accepted_target": {
+                    "accepted_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                    "attempt_id": 134,
+                    "context_hash": null,
+                    "decision": "accepted",
+                    "domain": "audio_asr",
+                    "entity_id": 134,
+                    "feedback_event_id": 294,
+                    "node_id": "audio_asr",
+                    "output_kind": "workflow_step_attempt",
+                    "payload_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                    "project_output_id": 45,
+                    "revision_no": null
+                  },
+                  "actor_id": 1,
+                  "asr_input_hash": "57790c6cd8230812d1c15c6fad00bd380eaece535cc131d24ebbf8a70ef82249",
+                  "asr_output_hash": "68785898cd10984d57d2b97c06bfc40e4957c9e137137b066b6190b2d62036cf",
+                  "asr_result_hash": "01704dac722451e658d05321bf973fc8f6f343306693fc3a0512e4a9c18dc1f6",
+                  "comparison": "normalized_positional_characters",
+                  "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                  "difference_ratio": 0.022727,
+                  "different_characters": 18,
+                  "duration_ms": 192839,
+                  "expected_characters": 792,
+                  "material_revision_id": 80,
+                  "observed_characters": 792,
+                  "project_id": 35,
+                  "provider": {
+                    "key": "local.mlx_whisper",
+                    "runtime_fingerprint": "d161b13f09c5257da252bb8f71f2e34d227f021dba68fb6410147bebd5d2198c",
+                    "version": "1"
+                  },
+                  "run_id": 24,
+                  "schema": "studio.audio.asr-alignment.v1",
+                  "script_hash": "de7d6a89238d8f671bee5ddd2b4c996ba53bcb8f0ffde7751aacd65262d51c02",
+                  "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+                  "timing_alignment": "verified_asr_segment_timing",
+                  "timing_basis": "verified_asr_segment_timing",
+                  "transcript_basis": "accepted_asr_cues",
+                  "unit_id": 44,
+                  "word_alignment": "not_run"
+                },
+                "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                "coverage": {
+                  "accepted_task": "verified",
+                  "asr_alignment": "verified_accepted_receipt_comparison",
+                  "bytes_hash": "verified_live_bytes",
+                  "complete": true,
+                  "current_binding": "verified",
+                  "loudness": "rms_dbfs_only_lufs_not_measured",
+                  "mime_duration": "verified_decoded_bytes",
+                  "perceptual_quality": "human_review_required",
+                  "provider_model": "verified_receipt",
+                  "voice_rate": "verified_signed_result_and_material_receipt",
+                  "waveform": "wave"
+                },
+                "human_review_required": true,
+                "issues": [
+                  {
+                    "code": "audio_transcript_script_differs",
+                    "severity": "warning"
+                  }
+                ],
+                "material_id": 76,
+                "material_revision_id": 80,
+                "measured": {
+                  "byte_size": 12342818,
+                  "channels": 1,
+                  "clipping_ratio": 0.0,
+                  "duration_ms": 192838.344,
+                  "leading_silence_ms": 156.062,
+                  "peak": 0.99453735,
+                  "rms": 0.06873827,
+                  "rms_dbfs": -23.256,
+                  "sample_rate_hz": 32000,
+                  "sample_width_bytes": 2,
+                  "silence_ratio": 0.22819794,
+                  "trailing_silence_ms": 171.562
+                },
+                "quality_profile_hash": "28088c2ada823a3c171ee553343587ca291360e7fd2670c2fc1bfafea1867e16",
+                "quality_profile_ref": "studio.quality.audio.explainer@1",
+                "rules_hash": "c85438151c293aa9f5030ba789d15acc5025a2904cdc556c29d22746cb7434e8",
+                "schema": "studio.audio.qc.v1",
+                "status": "warning",
+                "subtitles": {
+                  "asr_attempt_id": 134,
+                  "asr_output_hash": "68785898cd10984d57d2b97c06bfc40e4957c9e137137b066b6190b2d62036cf",
+                  "content_hash": "52f593b32369294afac13615953dd1101b0c9c71364a63577805c287470f512b",
+                  "cue_count": 72,
+                  "duration_ms": 192839,
+                  "estimated": false,
+                  "filename": "audio-asr.srt",
+                  "label": "已保存 ASR 分段时轴 / 非逐词对齐",
+                  "material_revision_id": 80,
+                  "mode": "asr",
+                  "rules_hash": "92d43cf38269f0b02a99f2a50da9e529f73e2b5aab23312772649688b5c526de",
+                  "schema": "studio.audio.subtitles.v1",
+                  "script_hash": "de7d6a89238d8f671bee5ddd2b4c996ba53bcb8f0ffde7751aacd65262d51c02",
+                  "srt": "1\n00:00:00,000 --> 00:00:03,320\n一个知识问答掩饰能够答对预设题目\n\n2\n00:00:03,680 --> 00:00:07,000\n并不等于它已经适合交付日常使用\n\n3\n00:00:07,280 --> 00:00:09,280\n在进入生产环境之前\n\n4\n00:00:09,720 --> 00:00:14,000\n系统真正需要补齐的不是更高的评测跑分\n\n5\n00:00:14,560 --> 00:00:17,440\n而是一整套明确的工程契约\n\n6\n00:00:17,560 --> 00:00:19,040\n需要先说明的是\n\n7\n00:00:19,400 --> 00:00:22,800\n外部作者的个案复盘仅代表其特定背景\n\n8\n00:00:23,480 --> 00:00:26,520\n相关的行业统计如果未经独立核验\n\n9\n00:00:26,680 --> 00:00:28,880\n不能直接作为通用结论引用\n\n10\n00:00:29,120 --> 00:00:32,000\n本文提出的三类评估与设计建议\n\n11\n00:00:32,320 --> 00:00:35,120\n属于软件工程视角的实践建议\n\n12\n00:00:35,760 --> 00:00:37,920\n并非特定业务的效果保证\n\n13\n00:00:38,120 --> 00:00:40,080\n工程落地的首要任务\n\n14\n00:00:40,240 --> 00:00:42,960\n就是把对模型能力的模糊期待\n\n15\n00:00:43,000 --> 00:00:45,680\n转移为确定性的系统约束\n\n16\n00:00:45,960 --> 00:00:47,800\n首先是契约化拆解\n\n17\n00:00:48,720 --> 00:00:50,920\n第一定义输入边界\n\n18\n00:00:51,240 --> 00:00:54,320\n系统必须对原始文本做严格前置教验\n\n19\n00:00:54,760 --> 00:00:57,200\n按照模型上限预留输出空间\n\n20\n00:00:57,600 --> 00:01:01,160\n明确超限时是拒绝、分块还是截断\n\n21\n00:01:01,760 --> 00:01:04,120\n并通过规则过滤低效噪声\n\n22\n00:01:04,720 --> 00:01:06,840\n第二规范预期输出\n\n23\n00:01:07,120 --> 00:01:09,920\n尽量避免非结构化的散漫文本\n\n24\n00:01:10,520 --> 00:01:13,320\n优先采用强契约的格式化输出\n\n25\n00:01:13,800 --> 00:01:18,080\n对关键字段设定避填检查与响应耗时基线\n\n26\n00:01:18,880 --> 00:01:21,400\n第三明确判定规则\n\n27\n00:01:21,640 --> 00:01:24,240\n能确定检查的格式交给规则\n\n28\n00:01:24,640 --> 00:01:27,680\n予以判断则对照预先标注的要点\n\n29\n00:01:28,200 --> 00:01:31,040\n模型自报的质性度或回答一致性\n\n30\n00:01:31,480 --> 00:01:33,640\n都不能直接当作事实正确率\n\n31\n00:01:34,120 --> 00:01:38,680\n最终请求要分流至放行、降级或转人工\n\n32\n00:01:39,080 --> 00:01:41,440\n为了展示工程约束的运作方式\n\n33\n00:01:41,880 --> 00:01:45,920\n我们以一个明确标注为假设的知识问答系统进行推演\n\n34\n00:01:46,320 --> 00:01:48,000\n在标准正常流程下\n\n35\n00:01:48,640 --> 00:01:50,040\n资料充足且一致\n\n36\n00:01:50,600 --> 00:01:52,640\n模型依据检索内容提炼\n\n37\n00:01:52,800 --> 00:01:54,040\n并携带引用员\n\n38\n00:01:54,800 --> 00:01:56,760\n教验通过后直接返回\n\n39\n00:01:57,120 --> 00:01:58,760\n在资料缺失场景下\n\n40\n00:01:59,000 --> 00:02:01,320\n检索得分低于安全预值时\n\n41\n00:02:01,760 --> 00:02:04,880\n系统严禁模型自由发挥产生幻觉\n\n42\n00:02:05,520 --> 00:02:07,560\n而是触发快速失败分支\n\n43\n00:02:07,840 --> 00:02:09,480\n直接返回预设提示\n\n44\n00:02:09,760 --> 00:02:12,920\n跳过深度推理以节省成本和耗时\n\n45\n00:02:13,160 --> 00:02:14,640\n在资料冲突场景下\n\n46\n00:02:14,880 --> 00:02:17,040\n检索命中相互矛盾的规定时\n\n47\n00:02:17,320 --> 00:02:20,080\n不能仅凭发布日期新旧自行裁决\n\n48\n00:02:20,520 --> 00:02:22,480\n必须核对试用范围与来源\n\n49\n00:02:22,960 --> 00:02:25,440\n在无法确认时保守提示冲突\n\n50\n00:02:25,680 --> 00:02:27,320\n并路由至人工核查\n\n51\n00:02:27,640 --> 00:02:30,360\n不能假设模型每次都会遵守规则\n\n52\n00:02:30,600 --> 00:02:32,760\n系统必须建立防御性降级\n\n53\n00:02:32,880 --> 00:02:34,000\n与转人工兜底\n\n54\n00:02:34,440 --> 00:02:35,560\n在证据不足\n\n55\n00:02:35,800 --> 00:02:37,360\n涉及关键业务决定\n\n56\n00:02:37,720 --> 00:02:39,840\n或者用户多轮无法解决时\n\n57\n00:02:40,240 --> 00:02:42,000\n按约定边界切入人工\n\n58\n00:02:42,400 --> 00:02:44,240\n并完整传递绘画快照\n\n59\n00:02:44,360 --> 00:02:45,480\n与结构画摘要\n\n60\n00:02:45,840 --> 00:02:46,760\n人工介入\n\n61\n00:02:46,840 --> 00:02:49,320\n必然会带来排队延迟与人力成本\n\n62\n00:02:49,800 --> 00:02:50,760\n参数预值\n\n63\n00:02:50,760 --> 00:02:52,760\n需要在真实样本中反复校准\n\n64\n00:02:53,040 --> 00:02:54,720\n技术负责人在上线前\n\n65\n00:02:54,720 --> 00:02:56,720\n不必先造庞大的评测平台\n\n66\n00:02:57,480 --> 00:03:00,040\n先拿一组真实可托敏的问题\n\n67\n00:03:00,600 --> 00:03:01,840\n逐条写清依据\n\n68\n00:03:02,240 --> 00:03:04,480\n允许的失败方式与责任人\n\n69\n00:03:04,640 --> 00:03:05,600\n持续重跑\n\n70\n00:03:05,760 --> 00:03:08,080\n并记录变好与变差的分布\n\n71\n00:03:08,520 --> 00:03:10,280\n用确定性的工程防线\n\n72\n00:03:10,520 --> 00:03:12,640\n守住不可预测的模型输出\n\n",
+                  "srt_hash": "7267ae9f02bbabc75307ebd558a79129918e512c5c29f64c42557d7ee9ded4a8",
+                  "timing_basis": "accepted_asr_segments"
+                },
+                "task": {
+                  "execution_profile": "minimax.speech",
+                  "model_id": "speech-2.8-hd",
+                  "plan_hash": "2f2587f90866c88868ca68f112eef1eaecf1d1be319334ab947c2ea62233f39a",
+                  "provider_key": "minimax.cli",
+                  "provider_version": "1",
+                  "request_hash": "0e2ee11d3ec42e55be541dab12e90a0c57e3b5756c7c1f5ebaafbe8b66172044",
+                  "selected_profile": "minimax.speech",
+                  "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d",
+                  "tts_applied_parameters": {
+                    "rate": 1.0,
+                    "schema": "studio.audio.tts-applied.v1",
+                    "voice_id": "lengdan_xiongzhang"
+                  }
+                },
+                "thresholds": {
+                  "clipping_amplitude": 0.999,
+                  "clipping_blocker_ratio": 0.01,
+                  "clipping_warning_ratio": 0.001,
+                  "edge_silence_warning_ms": 2000,
+                  "max_bytes": 31457280,
+                  "max_duration_ms": 600000,
+                  "max_samples": 12000000,
+                  "process_timeout_seconds": 10,
+                  "rms_warning_max_dbfs": -6,
+                  "rms_warning_min_dbfs": -35,
+                  "silence_amplitude": 0.001,
+                  "silence_warning_ratio": 0.9
+                }
+              },
+              "status": "warning"
+            }
+          ],
+          "expected_revision": 0,
+          "input_hash": "268cd2178d8ed846de605a04b5e516a9b06024b3d3253c53b4ad85f07c4d66c6",
+          "material_revision_id": 80,
+          "quality_profile_ref": "studio.quality.audio.explainer@1",
+          "task_id": "f5fbbc786b1b4835a8ba471fd7378b8d"
+        },
+        "result_hash": "33cc9e3c3ac6191facf6965ba21b0ca897604e16b0c399a5d48a1578c714729c",
+        "schema": "stage.checks.result.v1"
+      },
+      "error": null,
+      "layout": {
+        "x": 0,
+        "y": 0
+      },
+      "channel": null,
+      "plugin_key": "stage.audio.qc",
+      "plugin_version": "1",
+      "attempt_no": 1,
+      "stale_reason": null
+    }
+  ]
+}

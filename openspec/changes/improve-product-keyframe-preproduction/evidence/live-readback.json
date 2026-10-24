@@ -1,0 +1,55 @@
+[
+  {
+    "path": "/api/v1/health/ready",
+    "status": 200,
+    "fields": [
+      "status",
+      "ready",
+      "db",
+      "schema",
+      "auth",
+      "storage",
+      "queue",
+      "worker",
+      "secrets",
+      "reasons",
+      "provider",
+      "optional_capabilities",
+      "queue_enabled",
+      "version"
+    ]
+  },
+  {
+    "path": "/api/v1/content-projects/8/brief",
+    "status": 200,
+    "fields": [
+      "id",
+      "project_id",
+      "revision_no",
+      "parent_revision_id",
+      "objective",
+      "primary_audience",
+      "core_message",
+      "angle",
+      "required_evidence",
+      "content_constraints",
+      "identity_scope",
+      "modality_scope",
+      "channel_scope",
+      "cta",
+      "references",
+      "product_context",
+      "checksum",
+      "created_by",
+      "created_at"
+    ]
+  },
+  {
+    "path": "/api/v1/content-projects/8/product-costs",
+    "status": 200,
+    "fields": [
+      "costs",
+      "estimated_contribution"
+    ]
+  }
+]

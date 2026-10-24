@@ -1,0 +1,1853 @@
+{
+  "role": "admin",
+  "userError": false,
+  "diffError": false,
+  "accountError": false,
+  "candidateError": false,
+  "targetsError": false,
+  "listError": false,
+  "failMutation": false,
+  "delayCandidate": 0,
+  "calls": [
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/21/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/21/candidates/21",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/21/candidates/21/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/21/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/21/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/21/candidates/21",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/21/candidates/21/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/21/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/3/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/3/candidates/3",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/3/candidates/3/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/3/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/3/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/3/candidates/3",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/3/candidates/3/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/3/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/candidates/1/approve",
+      "method": "POST",
+      "body": "{\"candidate_hash\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"comment\":\"核对完成，保留边界\",\"warning_dispositions\":{}}"
+    },
+    {
+      "path": "/content-projects/91/units/1/candidates/1/request-changes",
+      "method": "POST",
+      "body": "{\"candidate_hash\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"comment\":\"核对完成，保留边界\"}"
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/candidates/1/approve",
+      "method": "POST",
+      "body": "{\"candidate_hash\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"comment\":\"核对完成，保留边界\",\"warning_dispositions\":{}}"
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/10/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/10/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/10/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/10/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/10/candidates/10/approve",
+      "method": "POST",
+      "body": "{\"candidate_hash\":\"1010101010101010101010101010101010101010101010101010101010101010\",\"comment\":\"\",\"warning_dispositions\":{\"900:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\":\"已核对，仅描述给定事实\"}}"
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/10/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/10/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/10/candidates/10/delivery-authorizations",
+      "method": "POST",
+      "body": "{\"channel\":\"x\",\"content_form\":\"single\",\"account_ref\":\"测试目标账号\",\"content_account_id\":22,\"authorization_version\":\"v1\",\"action\":\"copy_package\"}"
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/10/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/10/candidates/10/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/10/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/108/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/108/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/1/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/1/candidates/1/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/1/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/4/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/4/candidates/4",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/4/candidates/4/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/4/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/4/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/4/candidates/4",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/4/candidates/4/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/4/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/7/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/7/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/7/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/7/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/6/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/6/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/6/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/6/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/delivery-targets/60/reconcile",
+      "method": "POST",
+      "body": "{\"resolution\":\"not_delivered\",\"evidence_ref\":\"sha256:e16b2754beb2bed3733c4fed26896e8e0238c88968af87cab40f87091013c51a\",\"expected_attempt_id\":null}"
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/6/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/6/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/7/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/7/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/7/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/7/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/delivery-targets/70/package.zip",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/7/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/7/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/delivery-targets/71/receipt",
+      "method": "POST",
+      "body": "{\"status\":\"human_confirmed\",\"evidence_ref\":\"https://example.com/receipt71\"}"
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/7/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/7/candidates/7/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/7/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/6/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/6/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/6/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/6/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/delivery-targets/60/official-readback",
+      "method": "POST",
+      "body": "{\"expected_attempt_id\":601}"
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/6/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/6/candidates/6/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/6/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/8/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/8/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/2/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/2/candidates/2/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/2/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/8/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/8/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/108/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/108/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/108/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/8/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/8/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects/91/units/8/candidates/8/diff",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/assets/8/delivery-targets",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/9/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-projects/91/units/9/outputs",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/content-personas/2/accounts",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/review-center/projects",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "path": "/users/me",
+      "method": "GET",
+      "body": null
+    }
+  ],
+  "errors": [],
+  "unexpected": [],
+  "checks": [
+    "queue does not auto-select or fetch candidate",
+    "return keeps list page",
+    "null persona product uses owned accounts",
+    "historical product persona does not control accounts",
+    "approval draft survives steps",
+    "approval draft survives refresh",
+    "mutation error keeps draft",
+    "request changes binds exact frozen hash",
+    "approval uses exact candidate hash",
+    "pending approval not duplicated",
+    "approval does not authorize or execute",
+    "v5 warning requires disposition",
+    "v5 warning bound to ID and hash",
+    "frozen v5 account locked",
+    "authorization preserves frozen target",
+    "historical candidate cannot approve",
+    "draft never crosses candidate",
+    "reader cannot approve",
+    "reader cannot authorize",
+    "reviewer may approve",
+    "reviewer cannot authorize delivery",
+    "archived work readonly",
+    "account error does not hide frozen preview",
+    "unverified accounts block authorization",
+    "delivery error never shown as empty",
+    "unknown has no package retry",
+    "reconcile uploads hash only",
+    "local package downloads exact target",
+    "receipt evidence belongs to target",
+    "official readback exact attempt",
+    "failed diff never claims first candidate",
+    "unverified permissions readonly",
+    "candidate read failure next step is retry",
+    "candidate failure not shown as no candidate",
+    "late previous candidate cannot replace current",
+    "missing candidate points back to production",
+    "invalid work not silently replaced",
+    "list error not empty success",
+    "no unexpected API requests",
+    "no page errors"
+  ],
+  "scope": "All API requests intercepted; no live mutations"
+}

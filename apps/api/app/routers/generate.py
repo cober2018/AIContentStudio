@@ -83,7 +83,7 @@ def generate_for_topic(
 
     - 有 profile 的渠道：解析 default_workflow_key → 共享 Bundle Workflow（不存在则构建并发布）
       → start_run 冻结定义身份，节点链内完成生成/校验，人工节点由审核中心/画布续跑；
-    - legacy 渠道（无 profile，如 x_thread 兜底）：保持直连生成（M1 兼容路径）。
+    - legacy 渠道（无 profile）：保持直连生成（M1 兼容路径）。已下线的 x_thread 不在此列。
     """
     from ..config import get_settings
     from ..services import workflow_engine
@@ -109,6 +109,7 @@ def generate_for_topic(
     for target in targets:
         t = {"channel": target} if isinstance(target, str) else {"channel": target["channel"], "content_form": target.get("content_form")}
         try:
+            channel_registry.ensure_channel_in_service(t["channel"])
             spec = channel_registry.resolve_content_form(db, t["channel"], t.get("content_form"))
         except channel_registry.ChannelRegistryError as exc:
             raise HTTPException(400, str(exc)) from exc

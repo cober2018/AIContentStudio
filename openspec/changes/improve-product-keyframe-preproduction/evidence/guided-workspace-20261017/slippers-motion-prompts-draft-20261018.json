@@ -1,0 +1,23 @@
+{
+  "project_id": 34,
+  "unit_id": 40,
+  "parent_master_id": 48,
+  "master_id": 49,
+  "revision_no": 2,
+  "payload_hash": "e596f27b0781224ec75e42c8b1506cb835283d652748ef4e1a96d3a20c12422b",
+  "prompt_count": 4,
+  "candidate_revisions": [
+    65,
+    66,
+    67,
+    68
+  ],
+  "exact_selection_pending": true,
+  "prompt_confirmation_pending": true,
+  "execution_prepared": false,
+  "videos_generated": 0,
+  "audio_generated": 0,
+  "readback_match": true,
+  "provider_default": "grok",
+  "runtime_settings_verified": false
+}

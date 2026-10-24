@@ -11,11 +11,102 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-white text-slate-900 antialiased;
-    /* 全站基础字体：拉丁走 Space Grotesk，中文回退系统字体（不 @apply 自定义类，避免 dev 缓存问题） */
-    font-family: "Space Grotesk", "PingFang SC", "Microsoft YaHei", sans-serif;
+  :root {
+    --paper: 246 243 237;
+    --surface: 255 254 251;
+    --ink-50: 250 247 242;
+    --ink-100: 243 238 230;
+    --ink-200: 231 224 212;
+    --ink-300: 213 204 189;
+    --ink-400: 170 160 145;
+    --ink-500: 128 119 106;
+    --ink-600: 98 91 81;
+    --ink-700: 70 65 58;
+    --ink-800: 44 41 37;
+    --ink-900: 28 26 23;
+    --ink-950: 18 17 15;
+    --accent-50: 252 241 236;
+    --accent-100: 249 224 213;
+    --accent-200: 242 191 172;
+    --accent-300: 232 148 118;
+    --accent-400: 217 105 72;
+    --accent-500: 194 70 40;
+    --accent-600: 168 55 30;
+    --accent-700: 139 44 25;
+    --accent-800: 111 37 23;
+    --accent-900: 88 31 21;
+    --accent-950: 50 17 11;
+    --moss-50: 241 245 236;
+    --moss-100: 225 234 216;
+    --moss-200: 196 214 180;
+    --moss-300: 157 187 135;
+    --moss-400: 117 156 95;
+    --moss-500: 86 126 66;
+    --moss-600: 67 103 52;
+    --moss-700: 53 82 43;
+    --moss-800: 43 65 36;
+    --moss-900: 35 53 30;
+    --moss-950: 20 31 17;
+    --ochre-50: 252 246 232;
+    --ochre-100: 248 234 200;
+    --ochre-200: 240 214 150;
+    --ochre-300: 228 186 98;
+    --ochre-400: 212 156 58;
+    --ochre-500: 186 128 38;
+    --ochre-600: 154 101 30;
+    --ochre-700: 122 78 26;
+    --ochre-800: 96 62 24;
+    --ochre-900: 78 51 22;
+    --ochre-950: 45 29 12;
+    --clay-50: 252 239 240;
+    --clay-100: 248 218 221;
+    --clay-200: 240 184 190;
+    --clay-300: 226 136 147;
+    --clay-400: 204 88 104;
+    --clay-500: 176 52 70;
+    --clay-600: 149 38 56;
+    --clay-700: 121 31 47;
+    --clay-800: 97 27 40;
+    --clay-900: 79 24 35;
+    --clay-950: 45 11 18;
+    --tide-50: 238 244 245;
+    --tide-100: 216 230 233;
+    --tide-200: 182 207 213;
+    --tide-300: 136 175 185;
+    --tide-400: 92 140 153;
+    --tide-500: 62 112 126;
+    --tide-600: 49 91 104;
+    --tide-700: 41 74 85;
+    --tide-800: 35 60 69;
+    --tide-900: 30 50 57;
+    --tide-950: 17 30 35;
+    color-scheme: light;
   }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-paper text-ink-900 antialiased;
+    font-family: -apple-system, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-feature-settings: "kern", "palt";
+    text-rendering: optimizeLegibility;
+  }
+  /* Headings read as an editorial voice; body text stays in the UI sans. */
+  h1, h2 { font-family: "Kudryashev Display", "Songti SC", "Noto Serif SC", "STSong", serif; font-weight: 600; letter-spacing: -0.01em; }
+  h3, h4 { letter-spacing: -0.005em; }
+  /* Underlined links stay readable without shouting: thin, offset, accent-tinted. */
+  .underline { text-decoration-thickness: 1px; text-underline-offset: 4px; text-decoration-color: rgb(var(--accent-500) / 0.45); }
+  .underline:hover { text-decoration-color: currentColor; }
+  ::selection { background: rgb(var(--accent-200)); color: rgb(var(--ink-900)); }
+  :focus-visible { outline: 2px solid rgb(var(--accent-500)); outline-offset: 2px; border-radius: 6px; }
+  input, select, textarea { background-color: rgb(var(--surface)); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  }
+}
+
+@layer components {
+  .eyebrow { @apply text-[11px] font-medium uppercase tracking-label text-ink-500; }
+  .card { @apply rounded-card border border-ink-200/80 bg-surface shadow-card; }
+  .hairline { @apply border-ink-200/80; }
 }
 
 /* TipTap 编辑区：Tailwind preflight 重置了标题/列表样式，这里按公众号排版习惯补回 */

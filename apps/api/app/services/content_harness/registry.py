@@ -19,6 +19,7 @@ RegistryKinds = (
     "tool_provider",
     "data_connector",
     "search_provider",
+    "stock_provider",
     "image_provider",
     "video_provider",
     "tts_provider",

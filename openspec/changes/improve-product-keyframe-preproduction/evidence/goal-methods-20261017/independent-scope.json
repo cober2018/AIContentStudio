@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-17",
+  "head": "8539806",
+  "mode": "independent review; no application or database writes",
+  "files": {
+    "apps/api/app/services/form_assistance.py": "9cb034d82a3011a1f58f58f0c6ce91ab619a56223baf0185a473bd1902c46297",
+    "apps/api/app/services/product_context.py": "0944026c493ae578318b25329058f9b586b66c626ddc28d85f90ee37dcb76d1d",
+    "apps/web/src/product/GuidedProductionGoal.tsx": "a1d23f2bf85cb0af0e976e7be4d31240f114dfa0ca73c5b8eb2fe3c57fea75cd",
+    "apps/web/src/product/FormAssistancePanel.tsx": "f991d8e595b6138943b3c455f8131f59654311eb937cb087ce7ffe89f17bfc70"
+  },
+  "commands": [
+    "apps/api/.venv/bin/python /tmp/goal-methods-independent-backend.py",
+    "node /tmp/goal-methods-independent-ui.cjs",
+    "apps/api/.venv/bin/pytest apps/api/tests/test_product_settings.py apps/api/tests/test_creation_recipe_stages.py apps/api/tests/test_persona_creative_studio.py apps/api/tests/test_persona_creative_identity.py -q",
+    "npm --prefix apps/web run build",
+    "openspec validate improve-product-keyframe-preproduction --strict"
+  ],
+  "probe_boundary": "Backend uses developer in-memory fixture plus independent assertions; component executes transpiled actual component with mocked React hooks and API. No new browser acceptance or remote model calls."
+}

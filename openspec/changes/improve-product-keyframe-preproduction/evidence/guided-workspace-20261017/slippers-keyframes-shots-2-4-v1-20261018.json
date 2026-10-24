@@ -1,0 +1,90 @@
+{
+  "project_id": 34,
+  "unit_id": 40,
+  "master_id": 48,
+  "tool": "Codex built-in image_gen",
+  "new_candidates": 3,
+  "candidate_count_total": 4,
+  "master_reference_selection_unchanged": true,
+  "first_image_confirmation_scope": "direction and palette only; unchanged exact bytes used for continuity",
+  "entries": [
+    {
+      "shot_id": "shot-2",
+      "label": "手部展示灰色款",
+      "path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-2-v1.png",
+      "prompt_path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-2-v1-prompt.txt",
+      "material_id": 62,
+      "material_revision_id": 66,
+      "hash": "421ab62c98d9610eb2cd3d09a70ca297b3d58d88879dea3f149d2b20cb648bee",
+      "source_material_revision_id": 64,
+      "continuity_reference_material_revision_id": 65,
+      "additional_pose_reference": null,
+      "selection": "pending_user_review",
+      "project_reference_id": 57,
+      "visual_review": {
+        "method": "main agent inspected actual returned pixels and source/continuity references",
+        "passed_as_candidate": [
+          "four-shoe count / visible crop consistent",
+          "brown on child, gray held or returned",
+          "same cream clothing / rug / warm floor",
+          "no visible extra finger or melted shoe",
+          "no text/age/price claim"
+        ],
+        "remaining": "Cartoon patch microdetails/pile are generative reconstructions; no full identity or performance certification. Exact user selection pending."
+      }
+    },
+    {
+      "shot_id": "shot-3",
+      "label": "装饰细节近景",
+      "path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-3-v1.png",
+      "prompt_path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-3-v1-prompt.txt",
+      "material_id": 63,
+      "material_revision_id": 67,
+      "hash": "21e8bebc7c6e182fa39072a92678e445851f1d7d7a78608507f0591e44547f54",
+      "source_material_revision_id": 64,
+      "continuity_reference_material_revision_id": 65,
+      "additional_pose_reference": "shot-2-v1",
+      "selection": "pending_user_review",
+      "project_reference_id": 58,
+      "visual_review": {
+        "method": "main agent inspected actual returned pixels and source/continuity references",
+        "passed_as_candidate": [
+          "four-shoe count / visible crop consistent",
+          "brown on child, gray held or returned",
+          "same cream clothing / rug / warm floor",
+          "no visible extra finger or melted shoe",
+          "no text/age/price claim"
+        ],
+        "remaining": "Cartoon patch microdetails/pile are generative reconstructions; no full identity or performance certification. Exact user selection pending."
+      }
+    },
+    {
+      "shot_id": "shot-4",
+      "label": "放回后两双同框",
+      "path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-4-v1.png",
+      "prompt_path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-4-v1-prompt.txt",
+      "material_id": 64,
+      "material_revision_id": 68,
+      "hash": "82925099989c21f0e04303d119d7fb636fe5257cee0bc39493d184d282febc8f",
+      "source_material_revision_id": 64,
+      "continuity_reference_material_revision_id": 65,
+      "additional_pose_reference": "shot-2-v1",
+      "selection": "pending_user_review",
+      "project_reference_id": 59,
+      "visual_review": {
+        "method": "main agent inspected actual returned pixels and source/continuity references",
+        "passed_as_candidate": [
+          "four-shoe count / visible crop consistent",
+          "brown on child, gray held or returned",
+          "same cream clothing / rug / warm floor",
+          "no visible extra finger or melted shoe",
+          "no text/age/price claim"
+        ],
+        "remaining": "Cartoon patch microdetails/pile are generative reconstructions; no full identity or performance certification. Exact user selection pending."
+      }
+    }
+  ],
+  "videos_generated": 0,
+  "audio_generated": 0,
+  "user_review_pending": true
+}

@@ -1,0 +1,5 @@
+READY True
+DRAFT_UNIT15_CHANNEL_CLEARED_VIA_EXISTING_PATCH xiaohongshu None
+COUNTS {'content_project': 9, 'content_unit': 15, 'content_master_revision': 46, 'llm_run': 101, 'provider_generation_task': 9}
+INTEGRITY ok FK []
+CHANNEL_NEUTRAL_MASTER 47 2 None {'state': 'incomplete_context', 'reasons': ['evidence_missing']}

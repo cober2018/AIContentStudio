@@ -5,6 +5,7 @@
 - 旧 DraftMedia（无 material_revision_id）保持可读。
 """
 
+import hashlib
 import json
 from http.cookies import SimpleCookie
 from typing import Literal
@@ -25,6 +26,7 @@ from ..models import (
     DraftStatus,
     Material,
     MaterialRevision,
+    MaterialSource,
     User,
     utcnow,
 )
@@ -53,7 +55,7 @@ class ProviderAcceptIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     confirmed: bool
     title: str = Field(min_length=1, max_length=200)
-    license_code: Literal["CC0", "CC-BY-4.0", "provider_terms", "owned"]
+    license_code: Literal["CC0", "PDM", "CC-BY-4.0", "CC-BY", "provider_terms", "owned"]
     license_evidence_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     public_use_allowed: bool
     model_use_allowed: bool
@@ -236,6 +238,15 @@ class DocumentIn(BaseModel):
     blocks: list[dict]
 
 
+def _drive_location(key: str | None) -> dict | None:
+    from ..services.material_external import is_external, parse_key
+
+    if not is_external(key):
+        return None
+    source_id, _hash, relative = parse_key(key)
+    return {"source_id": source_id, "relative_path": relative}
+
+
 def _revision_json(row: MaterialRevision) -> dict:
     return {
         "id": row.id,
@@ -248,6 +259,9 @@ def _revision_json(row: MaterialRevision) -> dict:
         "content_hash": row.content_hash,
         "metadata": {key: value for key, value in (row.metadata_json or {}).items() if key in {"music", "tags", "previous_tags"}},
         "duration_ms": row.duration_ms,
+        "width": row.width,
+        "height": row.height,
+        "drive": _drive_location(row.file_path),
         "mime_type": row.mime_type,
         "rights_status": row.rights_status,
         "public_use_allowed": row.public_use_allowed,
@@ -350,11 +364,12 @@ def material_storage_diagnostics(db: Session = Depends(get_db), user: User = Dep
 async def upload_material(
     file: UploadFile,
     kind: str = "image",
+    inspect_video: bool = False,
     title: str | None = None,
     source_kind: str = "upload",
     rights_status: str = "cleared",
-    public_use_allowed: bool = False,
-    model_use_allowed: bool = False,
+    public_use_allowed: bool = True,
+    model_use_allowed: bool = True,
     attribution_text: str | None = None,
     source_url: str | None = None,
     tags: str | None = None,
@@ -369,6 +384,30 @@ async def upload_material(
     def _persist() -> dict:
         suffix = (file.filename or "").rsplit(".", 1)[-1].lower()[:5]
         mime = materials_service.validate_upload(content, file.content_type)
+        media_info = {}
+        if inspect_video:
+            if kind != "video" or mime not in {"video/mp4", "video/quicktime"}:
+                raise HTTPException(422, "实拍原片必须为MP4或MOV视频")
+            import tempfile
+            from types import SimpleNamespace
+
+            from ..services.creative_media_stream import validate
+
+            with tempfile.TemporaryFile() as source:
+                source.write(content)
+                source.seek(0)
+                media_info = validate(source, mime, "video", SimpleNamespace(package_json={}))
+            if not media_info.get("video_duration_ms"):
+                raise HTTPException(422, "实拍原片缺少可验证的视频轨时长")
+        from ..services.material_dedupe import existing_revision
+
+        # The same bytes already in the library are reused, so a file is never listed twice.
+        existing = existing_revision(db, hashlib.sha256(content).hexdigest())
+        if existing is not None:
+            data = _material_json(existing.material, with_revisions=True)
+            data["revisions"] = [row for row in data["revisions"] if row["id"] != existing.id] + [_revision_json(existing)]
+            data["reused"] = True
+            return data
         material = materials_service.create_material(
             db, kind=kind, title=title or file.filename or f"material-{utcnow().timestamp():.0f}",
             tags=[t for t in (tags or "").split(",") if t], created_by=user.email,
@@ -379,7 +418,8 @@ async def upload_material(
             declared_mime=mime, source_kind=source_kind, source_url=source_url,
             rights_status=rights_status, public_use_allowed=public_use_allowed,
             model_use_allowed=model_use_allowed, attribution_text=attribution_text,
-            metadata={"filename": file.filename},
+            metadata={"filename": file.filename, **({"media_probe": media_info} if media_info else {})},
+            duration_ms=media_info.get("video_duration_ms"), width=media_info.get("width"), height=media_info.get("height"),
             created_by=user.email,
         )
         db.add(AuditLog(event="material.uploaded", actor=user.email, entity_type="material", entity_id=str(material.id), detail_json={"hash": revision.content_hash, "source_kind": source_kind}))
@@ -387,6 +427,117 @@ async def upload_material(
         return _material_json(material, with_revisions=True)
 
     return await run_in_threadpool(_persist)
+
+
+class MaterialSourceIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    label: str = Field(min_length=1, max_length=200)
+    root_path: str = Field(min_length=2, max_length=1000)
+
+
+class MaterialLinkIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    relative_path: str = Field(min_length=1, max_length=1000)
+    kind: Literal["image", "video", "audio"]
+    title: str | None = Field(default=None, max_length=500)
+    material_id: int | None = Field(default=None, ge=1)
+    source_kind: Literal["upload", "web_search", "screenshot"] = "upload"
+    source_url: str | None = Field(default=None, max_length=1000)
+    rights_status: str = Field(default="cleared", max_length=30)
+    public_use_allowed: bool = True
+    model_use_allowed: bool = True
+    commercial_use_allowed: bool | None = None
+    attribution_text: str | None = Field(default=None, max_length=4000)
+    tags: list[str] = Field(default_factory=list, max_length=30)
+
+
+def _source_json(row: MaterialSource) -> dict:
+    from ..services.material_external import source_status
+
+    return {"id": row.id, "label": row.label, "root_path": row.root_path, "volume_uuid": row.volume_uuid,
+            "status": source_status(row), "created_at": row.created_at.isoformat() if row.created_at else None}
+
+
+def _owned_source(db: Session, source_id: int, user: User) -> MaterialSource:
+    row = db.get(MaterialSource, source_id)
+    if row is None or row.owner_user_id != user.id:
+        raise HTTPException(404, {"code": "material_source_not_found"})
+    return row
+
+
+@router.post("/material-sources", status_code=201)
+def create_material_source(payload: MaterialSourceIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from pathlib import Path
+
+    from ..services.material_external import ExternalMaterialError, http_error, normalize_root, volume_uuid
+
+    try:
+        root = normalize_root(payload.root_path)
+    except ExternalMaterialError as exc:
+        raise http_error(exc) from None
+    if not Path(root).is_dir() or Path(root).is_symlink():
+        raise HTTPException(422, {"code": "material_source_folder_missing"})
+    if db.scalar(select(MaterialSource.id).where(MaterialSource.owner_user_id == user.id, MaterialSource.root_path == root)):
+        raise HTTPException(409, {"code": "material_source_exists"})
+    row = MaterialSource(owner_user_id=user.id, label=payload.label, root_path=root, volume_uuid=volume_uuid(root), created_by=user.email)
+    db.add(row)
+    db.flush()
+    db.add(AuditLog(event="material_source.created", actor=user.email, entity_type="material_source", entity_id=str(row.id),
+                    detail_json={"root_path": root, "volume_uuid": row.volume_uuid}))
+    db.commit()
+    return _source_json(row)
+
+
+@router.get("/material-folders")
+def material_folders(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import project_folders
+
+    return project_folders.tree(db)
+
+
+@router.post("/materials/{material_id}/to-common", dependencies=[Depends(require_editor)])
+def material_to_common(material_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import project_folders
+
+    revision = db.scalar(select(MaterialRevision).where(MaterialRevision.material_id == material_id)
+                         .order_by(MaterialRevision.revision_no.desc()).limit(1))
+    if revision is None:
+        raise HTTPException(404, {"code": "material_not_found"})
+    result = project_folders.to_common(db, revision)
+    if result["state"] == "pending":
+        raise HTTPException(409, {"code": "material_move_failed", "message": result["reason"]})
+    return result
+
+
+@router.get("/material-sources")
+def list_material_sources(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    rows = db.scalars(select(MaterialSource).where(MaterialSource.owner_user_id == user.id).order_by(MaterialSource.id)).all()
+    return {"items": [_source_json(row) for row in rows]}
+
+
+@router.get("/material-sources/{source_id}/files")
+def scan_material_source(source_id: int, subpath: str = "", db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services.material_external import ExternalMaterialError, http_error, scan
+
+    try:
+        return scan(db, _owned_source(db, source_id, user), subpath)
+    except ExternalMaterialError as exc:
+        raise http_error(exc) from None
+
+
+@router.post("/material-sources/{source_id}/links", status_code=201)
+def link_material(source_id: int, payload: MaterialLinkIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services.material_external import ExternalMaterialError, http_error, link
+
+    source = _owned_source(db, source_id, user)
+    try:
+        material, revision = link(db, source, user=user, **payload.model_dump())
+    except ExternalMaterialError as exc:
+        db.rollback()
+        raise http_error(exc) from None
+    db.commit()
+    db.refresh(material)
+    return {**_material_json(material, with_revisions=True), "linked_revision_id": revision.id}
 
 
 @router.get("/materials/{material_id}")
@@ -474,6 +625,43 @@ def revoke_material_public_use(
     return {**result, "revision": _revision_json(revision)}
 
 
+class LoudnessMasterIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    target_lufs: StrictFloat | StrictInt = Field(default=-16.0, ge=-30, le=-9)
+    true_peak_dbtp: StrictFloat | StrictInt = Field(default=-1.5, ge=-6, le=-0.5)
+
+
+@router.post("/materials/{material_id}/revisions/{revision_id}/loudness-master", status_code=201)
+def master_material_loudness(
+    material_id: int,
+    revision_id: int,
+    payload: LoudnessMasterIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_editor),
+):
+    from ..services.audio_quality import master_loudness
+
+    revision = _get_revision(db, material_id, revision_id)
+    if (revision.material.kind != "audio" or revision.material.status != "active" or revision.status in {"revoked", "archived"}
+            or revision.source_kind == "external_execution" or revision.mime_type not in {"audio/wav", "audio/x-wav", "audio/wave"}):
+        raise HTTPException(422, {"code": "audio_mastering_source_invalid"})
+    mastered, report = master_loudness(materials_service.read_bytes_checked(db, revision),
+                                       target_lufs=float(payload.target_lufs), true_peak_dbtp=float(payload.true_peak_dbtp))
+    # The parent's generation provenance stays on the parent; the derivative records only its lineage and processing.
+    row = materials_service.create_revision(
+        db, revision.material, content=mastered, suffix=".wav", declared_mime="audio/wav", source_kind=revision.source_kind,
+        source_url=revision.source_url, source_metadata={"loudness_master": report, "parent_revision_id": revision.id, "parent_content_hash": revision.content_hash},
+        rights_status=revision.rights_status, public_use_allowed=revision.public_use_allowed, model_use_allowed=revision.model_use_allowed,
+        commercial_use_allowed=revision.commercial_use_allowed, attribution_text=revision.attribution_text,
+        provider_key=revision.provider_key, provider_version=revision.provider_version, duration_ms=revision.duration_ms,
+        metadata={"loudness_master": report}, created_by=user.email)
+    row.parent_revision_id = revision.id
+    db.add(AuditLog(event="material.loudness_mastered", actor=user.email, entity_type="material_revision", entity_id=str(row.id),
+                    detail_json={"parent_revision_id": revision.id, "output": report["output"], "normalization_type": report["normalization_type"]}))
+    db.commit()
+    return {"revision": _revision_json(row), "report": report}
+
+
 def _external_video_target(db, material_id, revision_id, user=None):
     from ..services.content_masters import local_final_use_allowed
 
@@ -526,10 +714,45 @@ def material_preview(material_id: int, revision_id: int, request: Request, db: S
 def material_raw(material_id: int, revision_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """鉴权 raw 端点（§15.1）：不复用无 Header 的 <img> 模式，前端走 blob。"""
     revision = _get_revision(db, material_id, revision_id)
+    path = materials_service.local_file_checked(db, revision)
+    if path is not None:
+        from fastapi.responses import FileResponse
+
+        # Files live on this machine: stream with Range so large cuts play and seek without a size cap.
+        return FileResponse(path, media_type=revision.mime_type or "application/octet-stream")
     content = materials_service.read_bytes_checked(db, revision)
     from fastapi import Response
 
     return Response(content=content, media_type=revision.mime_type or "application/octet-stream")
+
+
+def _reveal(path) -> None:
+    import subprocess
+    import sys
+
+    if sys.platform != "darwin":
+        raise HTTPException(409, {"code": "reveal_unsupported", "message": "只能在 Mac 本机上打开访达"})
+    subprocess.run(["open", "-R", str(path)], check=False, timeout=10)
+
+
+def _located(db: Session, material_id: int, revision_id: int):
+    revision = _get_revision(db, material_id, revision_id)
+    path = materials_service.local_file_checked(db, revision)
+    if path is None:
+        raise HTTPException(409, {"code": "material_not_local", "message": "这个素材不在本机硬盘上"})
+    return path
+
+
+@router.get("/materials/{material_id}/revisions/{revision_id}/location")
+def material_location(material_id: int, revision_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return {"path": str(_located(db, material_id, revision_id))}
+
+
+@router.post("/materials/{material_id}/revisions/{revision_id}/reveal")
+def material_reveal(material_id: int, revision_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    path = _located(db, material_id, revision_id)
+    _reveal(path)
+    return {"path": str(path)}
 
 
 @router.post("/materials/search")

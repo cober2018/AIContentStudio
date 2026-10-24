@@ -11,6 +11,7 @@ import io
 import os
 import re
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Protocol
 
@@ -56,27 +57,75 @@ def _sync_directory(path: Path) -> None:
         os.close(descriptor)
 
 
+@contextmanager
+def _external(key: str, *, full_hash: bool = False):
+    # Linked drive files keep the storage error contract: missing is OSError, changed is ValueError.
+    from .material_external import ExternalMaterialError, open_key
+
+    try:
+        with open_key(key, full_hash=full_hash) as source:
+            yield source
+    except ExternalMaterialError as exc:
+        if exc.code == "material_external_unavailable":
+            raise FileNotFoundError(exc.code) from None
+        raise ValueError(exc.code) from None
+
+
 class LocalMaterialStorage:
     name = "local"
 
-    def __init__(self, root: Path, *, legacy_absolute_reads: bool = False):
+    def __init__(self, root: Path, *, legacy_absolute_reads: bool = False, library: bool = False):
         self.root = root.resolve()
         self.legacy_absolute_reads = legacy_absolute_reads
+        self.library = library
 
-    def _path(self, key: str) -> Path:
+    def _local(self, key: str) -> Path:
         path = (self.root / _safe_key(key)).resolve()
         if not path.is_relative_to(self.root):
             raise ValueError("storage_key_invalid")
         return path
 
+    def _path(self, key: str) -> Path:
+        # Material bytes made before the library existed stay where they are; new ones live in the library.
+        local = self._local(key)
+        if not self.library or not re.fullmatch(r"material/[0-9a-f]{2}/[^/]+", key):
+            return local
+        from .project_folders import placed_path
+        from .storage_locations import library_path, library_root
+
+        if local.exists():
+            return local
+        default = library_path(key) if library_root() is not None else local
+        if default.exists():
+            return default
+        # Files archived into a project folder keep their key; the revision records where they went.
+        return placed_path(key) or default
+
+    def locate(self, key: str) -> tuple[Path, list[str]]:
+        """Directory to walk from, and the components below it, for descriptor-safe opens."""
+        path = self._path(key)
+        if path.is_relative_to(self.root):
+            return self.root, list(Path(_safe_key(key)).parts)
+        return path.parent.parent, list(path.parts[-2:])
+
+    def _writable(self, path: Path) -> None:
+        from .storage_locations import library_reachable
+
+        # An unplugged drive must fail loudly, never fall back to a second home or create /Volumes/<drive>.
+        if not path.is_relative_to(self.root) and not library_reachable():
+            raise FileNotFoundError("material_library_unavailable")
+
     def put(self, key: str, content: bytes) -> None:
         if len(content) > MAX_BYTES:
             raise ValueError("storage_object_too_large")
+        if key.startswith("external/"):
+            raise ValueError("storage_key_invalid")
         if key.startswith("material/"):
             _validate_material_key(key, _content_hash(content))
         if key.startswith("legacy/") and not re.fullmatch(r"legacy/" + _content_hash(content) + r"\.[A-Za-z0-9]+", key):
             raise ValueError("storage_key_invalid")
         path = self._path(key)
+        self._writable(path)
         if key.startswith("generation/"):
             if (not re.fullmatch(r"generation/[0-9a-f]{32}/[0-9a-f]{64}\.bin", key)
                     or path != self.root / key
@@ -144,6 +193,7 @@ class LocalMaterialStorage:
         if digest != expected_hash:
             raise ValueError("storage_object_hash_mismatch")
         path = self._path(key)
+        self._writable(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         descriptor, temporary = tempfile.mkstemp(prefix=".pending-", dir=path.parent)
         try:
@@ -173,6 +223,12 @@ class LocalMaterialStorage:
             Path(temporary).unlink(missing_ok=True)
 
     def read(self, key: str) -> bytes:
+        if key.startswith("external/"):
+            with _external(key, full_hash=True) as source:
+                content = source.read(MAX_BYTES + 1)
+            if len(content) > MAX_BYTES:
+                raise ValueError("storage_object_too_large")
+            return content
         # Pre-F8 local revisions may reference an absolute fixture/import path.
         # Only authenticated DB revision reads in dev/test retain this bridge;
         # writes and production/object-storage paths remain root-constrained.
@@ -186,9 +242,18 @@ class LocalMaterialStorage:
         return content
 
     def exists(self, key: str) -> bool:
+        if key.startswith("external/"):
+            try:
+                with _external(key):
+                    return True
+            except (OSError, ValueError):
+                return False
         return self._path(key).is_file()
 
     def size(self, key: str) -> int:
+        if key.startswith("external/"):
+            with _external(key) as source:
+                return os.fstat(source.fileno()).st_size
         path = self._path(key)
         if not path.is_file() or path.is_symlink():
             raise FileNotFoundError("storage_object_missing")
@@ -297,7 +362,7 @@ def provider() -> MaterialStorage:
 
     settings = get_settings()
     if settings.material_storage_backend == "local":
-        return LocalMaterialStorage(MEDIA_ROOT, legacy_absolute_reads=settings.app_env in {"development", "test"})
+        return LocalMaterialStorage(MEDIA_ROOT, legacy_absolute_reads=settings.app_env in {"development", "test"}, library=True)
     if settings.material_storage_backend == "minio":
         return MinioMaterialStorage()
     raise ValueError("storage_backend_invalid")

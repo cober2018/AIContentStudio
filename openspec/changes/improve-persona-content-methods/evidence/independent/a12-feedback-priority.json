@@ -1,0 +1,13 @@
+{
+  "old_target_kind": "master",
+  "new_target_kind": "attempt",
+  "second_status": 200,
+  "third_status": 200,
+  "third_preview_note": "NEW_UNADOPTED_ISSUE",
+  "third_preview_feedback_event": 7,
+  "expected_new_feedback_event": 7,
+  "third_frozen_note": "NEW_UNADOPTED_ISSUE",
+  "adopt_third_status": 200,
+  "after_adopt_status": 200,
+  "after_adopt_located": null
+}

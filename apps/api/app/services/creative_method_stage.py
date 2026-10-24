@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 
 from .generation.providers import (
+    provider_failure,
     GenerateRequest,
     MockProvider,
     OpenAICompatibleProvider,
@@ -13,17 +14,22 @@ from .generation.providers import (
     record_run,
     record_validated_stage_run,
 )
-from .stage_contracts import canonical, digest
+from .stage_contracts import canonical, digest, remember_validation_code
 
 OUTPUT_SCHEMAS = {
     "research.brief.v1": "research",
     "creative.angles.v1": "research",
+    "creative.title-hook.v1": "text",
     "content.outline.v1": "text",
+    "article.plan.v1": "text",
+    "video.script.v1": "video",
     "graphic.visual-direction.v1": "graphic",
     "graphic.card-plan.v1": "graphic",
+    "graphic.card-plan.v2": "graphic",
     "audio.spoken-adaptation.v1": "audio",
     "audio.voice-direction.v1": "audio",
     "video.shot-plan.v1": "video",
+    "video.shot-plan.v2": "video",
 }
 
 
@@ -76,7 +82,34 @@ def _model_projection(model: dict) -> dict:
     }
 
 
+def _adopt_creative_envelope(data: object, schema: str) -> object:
+    """Accept the documented envelope, or one bare artifact the schema already names."""
+    if not isinstance(data, dict) or data.get("schema") != schema:
+        return data
+    if "candidates" not in data and isinstance(data.get("title") or data.get("question") or data.get("angle"), str):
+        content = {key: value for key, value in data.items() if key != "schema"}
+        summary = str(content.get("title") or content.get("question") or content.get("angle"))[:1000]
+        return {"schema": schema, "candidates": [{
+            "id": "candidate-1", "summary": summary, "content": content, "references": [], "warnings": [],
+        }]}
+    candidates = data.get("candidates")
+    if not isinstance(candidates, list):
+        return data
+    adopted = []
+    markers = {"title", "beats", "shots", "sections", "question", "angle", "intent", "script", "voice_character", "cards"}
+    for item in candidates:
+        if isinstance(item, dict) and "content" not in item and set(item) & markers:
+            kept = {key: item[key] for key in ("id", "summary", "references", "warnings") if key in item}
+            content = {key: value for key, value in item.items() if key not in kept}
+            if "summary" not in kept:
+                kept["summary"] = str(content.get("title") or content.get("question") or content.get("angle") or "candidate")[:1000]
+            item = {**kept, "content": content}
+        adopted.append(item)
+    return {**data, "candidates": adopted}
+
+
 def _validate_output(data: object, request: GenerateRequest) -> dict:
+    data = _adopt_creative_envelope(data, request.context["output_schema"])
     if not isinstance(data, dict) or set(data) != {"schema", "candidates"} or data.get("schema") != request.context["output_schema"]:
         raise CreativeMethodStageError("creative_method_output_invalid")
     candidates = data.get("candidates")
@@ -97,7 +130,9 @@ def _validate_output(data: object, request: GenerateRequest) -> dict:
             raise CreativeMethodStageError("creative_method_output_invalid")
         identifier = item.get("id", f"creative-{index}")
         from .stage_contracts import IDENTIFIER
-        if type(identifier) is not str or not IDENTIFIER.fullmatch(identifier) or identifier in identifiers:
+        if type(identifier) is not str or not IDENTIFIER.fullmatch(identifier):
+            identifier = f"creative-{index}"
+        if not IDENTIFIER.fullmatch(identifier) or identifier in identifiers:
             raise CreativeMethodStageError("creative_method_candidate_id_invalid")
         identifiers.add(identifier)
         from .creative_artifacts import required_references, validate_artifact
@@ -110,6 +145,84 @@ def _validate_output(data: object, request: GenerateRequest) -> dict:
         candidate["candidate_hash"] = digest(candidate)
         normalized.append(candidate)
     return canonical({"schema": data["schema"], "candidates": normalized}, max_bytes=128 * 1024)
+
+
+def project_creative_input(data, schema_name: str):
+    """Drop keys the artifact schema does not name before the depth bound.
+
+    References stay, minus any echoed sibling on a reference, so a catalog miss still fails.
+    """
+    from .creative_artifacts import ARTIFACT_SCHEMAS
+
+    schema = ARTIFACT_SCHEMAS.get(schema_name)
+    if not isinstance(data, dict) or schema is None:
+        return data
+    projected = {}
+    if "schema" in data:
+        projected["schema"] = data["schema"]
+    if isinstance(data.get("candidates"), list):
+        projected["candidates"] = [_project_creative_candidate(item, schema) for item in data["candidates"]]
+        return projected
+    projected.update(_project_object(data, schema))
+    return projected
+
+
+def _project_creative_candidate(item, schema):
+    if not isinstance(item, dict):
+        return item
+    projected = {key: item[key] for key in ("id", "summary", "warnings") if key in item}
+    if "references" in item:
+        projected["references"] = _project_references(item["references"])
+    if "content" in item:
+        content = item["content"]
+        projected["content"] = _project_object(content, schema) if isinstance(content, dict) else content
+        return projected
+    projected.update(_project_object(item, schema))
+    return projected
+
+
+def _project_references(value):
+    if not isinstance(value, list):
+        return value
+    projected = []
+    for ref in value:
+        if isinstance(ref, dict):
+            projected.append({key: ref[key] for key in ("kind", "id", "checksum") if key in ref})
+        else:
+            projected.append(ref)
+    return projected
+
+
+_OMIT = object()
+
+
+def _project_object(value, schema):
+    if schema.get("type") != "object" or not isinstance(value, dict):
+        return value
+    properties = schema["properties"]
+    projected = {}
+    for key in properties:
+        if key not in value:
+            continue
+        child = _project_value(value[key], properties[key])
+        if child is not _OMIT:
+            projected[key] = child
+    return projected
+
+
+def _project_value(value, schema):
+    if schema.get("type") == "object" and isinstance(value, dict):
+        projected = _project_object(value, schema)
+    elif schema.get("type") == "array" and isinstance(value, list):
+        projected = [child for child in (_project_value(item, schema["items"]) for item in value) if child is not _OMIT]
+    else:
+        projected = value
+    from .stage_contracts import MAX_DEPTH
+    from .stage_master_proposals import _max_depth
+
+    if _max_depth(projected, 4) > MAX_DEPTH:
+        return _OMIT
+    return projected
 
 
 def execute(db, ctx, resolved: dict, user) -> dict:
@@ -134,17 +247,21 @@ def execute(db, ctx, resolved: dict, user) -> dict:
     try:
         result = _run(provider, request)
     except Exception as exc:
-        record_run(db, request, None, error="stage_provider_failed", provider_name=provider.name,
+        failure = provider_failure(exc)
+        record_run(db, request, None, error=f"stage_provider_failed:{failure['reason']}:{failure['status'] or ''}", provider_name=provider.name,
                    model_name=getattr(provider, "model", None) or model.get("model"),
                    prompt_version="stage.creative.method.v1", route_provenance=route)
-        raise CreativeMethodStageError("stage_provider_failed") from exc
+        error = CreativeMethodStageError("stage_provider_rejected" if failure["answered"] else "stage_provider_failed")
+        error.failure = failure
+        raise error from exc
     try:
-        data = canonical(result.data)
+        data = canonical(project_creative_input(result.data, request.context["output_schema"]))
         output = _validate_output(data, request)
     except (ValueError, TypeError, KeyError) as exc:
-        record_validated_stage_run(db, request, result, error="stage_creative_output_invalid",
+        recorded = record_validated_stage_run(db, request, result, error="stage_creative_output_invalid",
             provider_name=provider.name, model_name=getattr(provider, "model", None) or model.get("model"),
             prompt_version="stage.creative.method.v1", route_provenance=route)
+        remember_validation_code(recorded, exc)
         raise CreativeMethodStageError("stage_creative_output_invalid") from exc
     llm_run = record_validated_stage_run(db, request, result, validated_data=data,
         provider_name=provider.name, model_name=getattr(provider, "model", None) or model.get("model"),
@@ -163,7 +280,7 @@ def _sealed_output(db, run, step, attempt):
 
     if (attempt is None or attempt.run_id != run.id or attempt.step_id != step.id
             or attempt.node_id != step.node_id or attempt.plugin_key != "stage.creative.method"
-            or attempt.plugin_version != "1" or attempt.status != "succeeded"):
+            or attempt.plugin_version not in {"1", "2", "3"} or attempt.status != "succeeded"):
         raise StageInvocationError("creative_method_attempt_integrity")
     receipt = attempt.execution_receipt_json or {}
     if _same_key_result(db, step, receipt.get("invocation_key"), receipt.get("request_fingerprint")) != attempt:
@@ -254,14 +371,16 @@ def accept(db, project_id, unit_id, node_id, user, request):
                 raise StageInvocationError("stage_already_accepted")
         _assert_access(db, run, user)
         if (step.attempt_no != attempt.attempt_no or step.status != "waiting_input"
-                or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != unit.identity_snapshot_id
-                or project.status == "archived" or unit.status == "archived"):
+                or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)
+                or project.status == "archived" or unit.lifecycle_readonly):
             raise StageInvocationError("stage_attempt_not_current")
         preview = creation_recipes.preview_stage(db, project_id, unit_id, node_id, user,
             run_id=run.id, stage_override=resolved.get("override"))
-        if (not preview["ready"] or preview["resolution_hash"] != attempt.input_hash
-                or request["expected_context_hash"] != resolved["context_hash"]):
+        if not preview["ready"] or request["expected_context_hash"] != resolved["context_hash"]:
             raise StageInvocationError("stage_adoption_context_changed")
+        if creation_recipes.adoption_basis(preview) != creation_recipes.adoption_basis(resolved):
+            raise StageInvocationError("stage_adoption_context_changed", detail={"changed": creation_recipes.changed_inputs(resolved, preview)})
+        selected_input(db, {"attempt_id": attempt.id, "candidate_id": candidate["id"]})
         event = record_feedback(db, project_id=project_id, unit_id=unit_id, run=run, step=step, attempt=attempt,
             user=user, decision="accepted", result_kind="creative_attempt", result_id=attempt.id,
             accepted_hash=candidate["candidate_hash"], feedback_key=request["acceptance_key"], note=request.get("note", ""),

@@ -1,0 +1,125 @@
+{
+  "database": "apps/api/content_studio.db",
+  "read_only": true,
+  "tables": {
+    "content_persona": {
+      "count": 4,
+      "baseline_count": 4,
+      "baseline_sha256": "21320d1f2cf65af73fbccd7ebce15e15900ed02c4d9004a9a7b47ab210b7bbbe",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "content_persona_revision": {
+      "count": 6,
+      "baseline_count": 6,
+      "baseline_sha256": "ba12f8f801d9e4ead3cae04675337f502347bda8ad9766ebca0b041224a32115",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "content_account": {
+      "count": 2,
+      "baseline_count": 2,
+      "baseline_sha256": "789bf019eca8bdab88a275428d95c568db1b870b5cbcd484f87b25d915a3fea5",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "content_account_revision": {
+      "count": 0,
+      "baseline_count": 0,
+      "baseline_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "matches_baseline": true,
+      "serialization": [
+        [
+          false,
+          false,
+          false,
+          false
+        ]
+      ]
+    },
+    "content_series": {
+      "count": 0,
+      "baseline_count": 0,
+      "baseline_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "matches_baseline": true,
+      "serialization": [
+        [
+          false,
+          false,
+          false,
+          false
+        ]
+      ]
+    },
+    "content_series_revision": {
+      "count": 0,
+      "baseline_count": 0,
+      "baseline_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "matches_baseline": true,
+      "serialization": [
+        [
+          false,
+          false,
+          false,
+          false
+        ]
+      ]
+    },
+    "identity_snapshot": {
+      "count": 19,
+      "baseline_count": 19,
+      "baseline_sha256": "012fb0865c17c440c069ddcb8ea92d41fc3c597e42435cdbde49f7220d5136ac",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "content_project": {
+      "count": 32,
+      "baseline_count": 32,
+      "baseline_sha256": "4393ac0ab42f4e97db70c99c223040cc48bc3b9253db0164010a9c1864680777",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "content_unit": {
+      "count": 42,
+      "baseline_count": 42,
+      "baseline_sha256": "29378964d9d89ae33c8104168b4a47521bfd3729fb3ca0dd6c9f7f583ecbc246",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "content_master_revision": {
+      "count": 64,
+      "baseline_count": 64,
+      "baseline_sha256": "5725b8de2a0b76e76e814b8e466f3d0ee0c27037fdb6a454fbb21b5fd663af80",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "material_revision": {
+      "count": 45,
+      "baseline_count": 45,
+      "baseline_sha256": "0f180f623c50023389b8c47dd77180428a8a3409301029548eb5e753582bce56",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "workflow": {
+      "count": 31,
+      "baseline_count": 31,
+      "baseline_sha256": "ede7c73e636fbb754dee7e690b09737d85519a3e9474544edb6bc0dc97b6edc1",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "workflow_run": {
+      "count": 24,
+      "baseline_count": 24,
+      "baseline_sha256": "38a458ffd28cd36d20e5a16aa6826ffc4a3561db8c5a56ffbd1bc6c5d10ba919",
+      "matches_baseline": false,
+      "serialization": []
+    },
+    "workflow_step_attempt": {
+      "count": 135,
+      "baseline_count": 135,
+      "baseline_sha256": "6e434339dcb30d115b674a8e94459d241783f050d02518ebde63b83b39b2b58b",
+      "matches_baseline": false,
+      "serialization": []
+    }
+  }
+}

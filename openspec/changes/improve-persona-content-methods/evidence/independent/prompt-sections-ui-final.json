@@ -1,0 +1,9 @@
+{
+  "result": "passed",
+  "target": "/Users/mshengran/Project/AIContentStudio/apps/web/src/product/CreationRecipePanel.tsx",
+  "source_sha256": "88e6357683da6d1298a4a8c66ce2573479d94acd57a19342aee731519b1a65f6",
+  "function_cases": 33,
+  "jsx_cases": 36,
+  "evidence": "/tmp/persona-prompt-sections-ui-review.json",
+  "probe": "/tmp/persona-prompt-sections-ui-review.cjs"
+}

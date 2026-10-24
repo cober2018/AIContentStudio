@@ -221,7 +221,7 @@ def verify_ai_edits(db: Session, *, project_id: int, unit_id: int, actor: str, b
 
 async def suggest_text_edit(db: Session, *, project_id: int, unit_id: int, master_id: int, user: User, payload: dict) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user)
-    if project.status == "archived" or unit.status == "archived":
+    if project.status == "archived" or unit.lifecycle_readonly:
         raise HTTPException(409, "已归档项目或单元仅可查看历史")
     master = db.get(ContentMasterRevision, master_id)
     if master is None or master.project_id != project_id or master.content_unit_id != unit_id:
@@ -275,7 +275,7 @@ async def suggest_text_edit(db: Session, *, project_id: int, unit_id: int, maste
     db.refresh(project)
     db.refresh(unit)
     latest_after_call = db.scalar(select(ContentMasterRevision.id).where(ContentMasterRevision.content_unit_id == unit_id).order_by(ContentMasterRevision.revision_no.desc()).limit(1))
-    if project.status == "archived" or unit.status == "archived" or latest_after_call != master.id or _hash(master.payload_json) != master.payload_hash or _hash(_context(db, project, unit, content_form=master.content_form)) != master.context_hash:
+    if project.status == "archived" or unit.lifecycle_readonly or latest_after_call != master.id or _hash(master.payload_json) != master.payload_hash or _hash(_context(db, project, unit, content_form=master.content_form)) != master.context_hash:
         run.status = "failed"
         run.error = "ai_base_drift"
         db.commit()

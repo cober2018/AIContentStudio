@@ -1,0 +1,3 @@
+LIVE_CATALOG_FIELDS 9
+AUTOFILL_HTTP 200
+RESULT_KEYS ['id', 'request_key', 'surface', 'mode', 'project_id', 'unit_id', 'context_hash', 'revision', 'status', 'llm_run_id', 'context', 'items', 'attempts', 'decisions', 'feedback', 'selection', 'skipped_keys', 'source_refs', 'method_refs', 'production_stages']

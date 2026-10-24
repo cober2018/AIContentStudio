@@ -1,0 +1,63 @@
+{
+  "tool": "Codex built-in image_gen",
+  "project_id": 34,
+  "unit_id": 40,
+  "master_id": 48,
+  "shot_id": "shot-1",
+  "candidate_path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-1-v1.png",
+  "prompt_path": "/Users/mshengran/Project/AIContentStudio/openspec/changes/improve-product-keyframe-preproduction/keyframes/children-slippers-shot-1-v1-prompt.txt",
+  "source_material_revision_id": 64,
+  "source_hash": "69a38f89530324d572f1cfd2847a3c06910bb77b9927c463221500bbb80a9067",
+  "material_id": 61,
+  "material_revision_id": 65,
+  "content_hash": "5e8d3bacacc229231439e8e80d44fd8fdb8ec3715af86cd290cb7279e22c11d3",
+  "project_reference": {
+    "key": "reference:56",
+    "id": 56,
+    "source_type": "system_reference",
+    "reference_id": 56,
+    "project_output_id": null,
+    "material_id": 61,
+    "material_revision_id": 65,
+    "revision_no": 1,
+    "kind": "image",
+    "title": "儿童拖鞋｜S01两色同框｜关键帧候选v1（待选图）",
+    "mime_type": "image/png",
+    "content_hash": "5e8d3bacacc229231439e8e80d44fd8fdb8ec3715af86cd290cb7279e22c11d3",
+    "rights_status": "restricted",
+    "public_use_allowed": false,
+    "model_use_allowed": true,
+    "commercial_use_allowed": null,
+    "attribution_text": "Codex内置image_gen以用户原图Material60/Revision64为参考生成；候选未获用户选图，不证明真实产品性能；完整提示词及人工可见画面复核见本change。",
+    "project_id": null,
+    "unit_id": null,
+    "run_id": null,
+    "node_id": null,
+    "attempt_id": null,
+    "provenance": {
+      "source_kind": "ai_generated",
+      "source_url": null,
+      "source_metadata": {},
+      "provider_key": null,
+      "provider_version": null,
+      "created_by": "admin@studio.local"
+    }
+  },
+  "selection": "direction_palette_confirmed",
+  "master_unchanged": true,
+  "review": {
+    "method": "actual generated pixels viewed by main agent, compared to visible source image",
+    "composition": "brown pair worn with cream trousers, gray pair next to feet, adult fingertip enters from right; four shoes, no face, no source UI/text",
+    "consistency": "colors, rounded silhouette and patch placement broadly match; generated patch microdetails and pile require user product-identity confirmation",
+    "limitations": "AI scene illustration; no size, material composition, warmth or slip performance established"
+  },
+  "count": 1,
+  "videos_generated": 0,
+  "audio_generated": 0,
+  "user_feedback": {
+    "quote": "方向是对的，配色也是对的。",
+    "direction_confirmed": true,
+    "palette_confirmed": true,
+    "scope": "沿用首图方向和配色继续其余关键帧；非对真实性能/微细节/所有后续图的确认"
+  }
+}

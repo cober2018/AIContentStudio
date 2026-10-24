@@ -47,7 +47,7 @@ def _mutable_unit(db: Session, project_id: int, unit_id: int, user: User) -> Con
 
     mutable_project(db, project_id, user)
     unit = owned_unit(db, project_id, unit_id, user)
-    if unit.status == "archived":
+    if unit.lifecycle_readonly:
         raise _blocked("archived_unit", "已归档单元只可查看历史")
     return unit
 
@@ -68,7 +68,7 @@ def _source(db: Session, unit: ContentUnit, project_output_id: int) -> tuple[Pro
     draft = db.get(Draft, output.entity_id)
     if run is None or run.content_unit_id != unit.id or draft is None or draft.content_job.workflow_run_id != run.id:
         raise _blocked("unsupported_source", "输出、运行与内容单元血缘不一致")
-    if run.identity_snapshot_id is None or run.identity_snapshot_id != unit.identity_snapshot_id:
+    if (unit.production_domain != "product" and run.identity_snapshot_id is None) or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id):
         raise _blocked("identity_mismatch", "运行身份快照与单元不一致")
     if unit.channel_id is not None and draft.content_job.channel != unit.channel_id:
         raise _blocked("source_mismatch", "稿件渠道与内容单元不一致")

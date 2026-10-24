@@ -117,7 +117,7 @@ class ProjectProjectionContext:
             ContentUnit.project_id.in_(self.project_ids)
         ).order_by(ContentUnit.id)).all()
         self.units = _group(units, "project_id")
-        active = [unit for unit in units if unit.status != "archived"]
+        active = [unit for unit in units if not unit.lifecycle_readonly]
         if not active:
             return
         unit_ids = [unit.id for unit in active]

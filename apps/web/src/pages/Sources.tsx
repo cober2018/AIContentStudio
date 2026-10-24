@@ -82,7 +82,7 @@ export function SourceImportModal({ onClose, onCreated }: { onClose: () => void;
   }
 
   return (
-    <Modal title="导入来源" onClose={onClose} wide>
+    <Modal title="导入来源" onClose={onClose} wide closeOnBackdrop={false}>
       <div className="mb-4 flex gap-1 rounded-md bg-slate-100 p-1">
         {(
           [

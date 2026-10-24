@@ -11,5 +11,5 @@ export type WorkflowNode = {
 };
 export type WorkflowBinding = { revision: number; workflow_id: number | null; workflow_version: number | null; definition_checksum: string | null; definition: Definition; source?: string };
 export type Persona = { id: number; name: string; brand_id?: number | null; status?: string };
-export type Unit = { id: number; project_id: number; persona_id: number; account_id: number | null; series_id: number | null; identity_snapshot_id: number | null; identity_state: string; modality: Modality; channel_id: string | null; title: string; status: string; pinned_workflow_id: number | null };
+export type Unit = { lifecycle?: "active" | "archived" | "deleted"; id: number; project_id: number; production_domain?: "product" | "persona"; persona_id: number | null; account_id: number | null; series_id: number | null; identity_snapshot_id: number | null; identity_state: string; modality: Modality; channel_id: string | null; title: string; status: string; pinned_workflow_id: number | null };
 export type Project = { id: number; title: string; objective: string; status: string; units: Unit[] };

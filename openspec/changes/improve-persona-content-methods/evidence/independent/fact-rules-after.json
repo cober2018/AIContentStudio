@@ -1,0 +1,257 @@
+{
+  "synthetic_boundary_checks": true,
+  "model_calls": 0,
+  "formal_writes": 0,
+  "passed": 19,
+  "total": 19,
+  "checks": [
+    {
+      "name": "publication_date_in_statement",
+      "passed": true,
+      "expected": [],
+      "actual": []
+    },
+    {
+      "name": "slash_date_in_statement",
+      "passed": true,
+      "expected": [],
+      "actual": []
+    },
+    {
+      "name": "unpadded_statement_date",
+      "passed": true,
+      "expected": [],
+      "actual": []
+    },
+    {
+      "name": "as_of_still_supported",
+      "passed": true,
+      "expected": [],
+      "actual": []
+    },
+    {
+      "name": "unsupported_date_blocked",
+      "passed": true,
+      "expected": [
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "2026-10-14",
+          "reason": "日期 2026-10-14 未见于 FactPack 事实正文或 as_of"
+        }
+      ]
+    },
+    {
+      "name": "publication_not_freshness",
+      "passed": true,
+      "expected": [
+        "warning"
+      ],
+      "actual": [
+        {
+          "severity": "warning",
+          "span": "今天/当前",
+          "reason": "稿件使用『今天/当前』表述，但 FactPack 事实日期为 ['2020-01-01']，非当日"
+        }
+      ]
+    },
+    {
+      "name": "no_facts_date_blocked",
+      "passed": true,
+      "expected": [
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "2026-10-13",
+          "reason": "日期 2026-10-13 未见于 FactPack 事实正文或 as_of"
+        }
+      ]
+    },
+    {
+      "name": "negative_goal",
+      "passed": true,
+      "expected": [],
+      "actual": []
+    },
+    {
+      "name": "negative_and_positive_same_sentence",
+      "passed": true,
+      "expected": [
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "保证收益",
+          "reason": "出现风险词『保证收益』，属于确定性投资承诺类表述"
+        }
+      ]
+    },
+    {
+      "name": "negative_then_positive_same_word",
+      "passed": true,
+      "expected": [
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "出现风险词『零风险』，属于确定性投资承诺类表述"
+        }
+      ]
+    },
+    {
+      "name": "positive_claim",
+      "passed": true,
+      "expected": [
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "出现风险词『零风险』，属于确定性投资承诺类表述"
+        }
+      ]
+    },
+    {
+      "name": "double_negative_not_masked",
+      "passed": true,
+      "expected": [
+        "blocker",
+        "warning"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "出现风险词『零风险』，属于确定性投资承诺类表述"
+        },
+        {
+          "severity": "warning",
+          "span": "绝对",
+          "reason": "出现确定性倾向词『绝对』"
+        }
+      ]
+    },
+    {
+      "name": "outer_negation_not_masked",
+      "passed": true,
+      "expected": [
+        "blocker",
+        "warning"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "出现风险词『零风险』，属于确定性投资承诺类表述"
+        },
+        {
+          "severity": "warning",
+          "span": "绝对",
+          "reason": "出现确定性倾向词『绝对』"
+        }
+      ]
+    },
+    {
+      "name": "outer_belief_not_masked",
+      "passed": true,
+      "expected": [
+        "blocker",
+        "warning"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "出现风险词『零风险』，属于确定性投资承诺类表述"
+        },
+        {
+          "severity": "warning",
+          "span": "绝对",
+          "reason": "出现确定性倾向词『绝对』"
+        }
+      ]
+    },
+    {
+      "name": "quoted_denial_not_masked",
+      "passed": true,
+      "expected": [
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "出现风险词『零风险』，属于确定性投资承诺类表述"
+        }
+      ]
+    },
+    {
+      "name": "question_not_masked",
+      "passed": true,
+      "expected": [
+        "blocker",
+        "warning"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "出现风险词『零风险』，属于确定性投资承诺类表述"
+        },
+        {
+          "severity": "warning",
+          "span": "绝对",
+          "reason": "出现确定性倾向词『绝对』"
+        }
+      ]
+    },
+    {
+      "name": "unrelated_negation",
+      "passed": true,
+      "expected": [
+        "blocker",
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "稳赚",
+          "reason": "出现风险词『稳赚』，属于确定性投资承诺类表述"
+        },
+        {
+          "severity": "blocker",
+          "span": "稳赚不赔",
+          "reason": "出现风险词『稳赚不赔』，属于确定性投资承诺类表述"
+        }
+      ]
+    },
+    {
+      "name": "negative_forbidden_still_blocked",
+      "passed": true,
+      "expected": [
+        "blocker"
+      ],
+      "actual": [
+        {
+          "severity": "blocker",
+          "span": "零风险",
+          "reason": "命中 Topic 禁止表述『零风险』"
+        }
+      ]
+    },
+    {
+      "name": "financial_term",
+      "passed": true,
+      "expected": [],
+      "actual": []
+    }
+  ]
+}

@@ -429,3 +429,19 @@ def get_snapshot(snapshot_id: int, db: Session = Depends(get_db), user: User = D
 @router.get("/content-identities/brand-voices")
 def published_voices(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return [{"id": row.id, "name": row.name, "version": row.version} for row in db.scalars(select(BrandVoiceVersion).where(BrandVoiceVersion.status == "published").order_by(BrandVoiceVersion.name, BrandVoiceVersion.version.desc())).all()]
+
+@router.get("/content-accounts")
+def owned_accounts(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from sqlalchemy import or_
+    from ..models import ContentPersona
+    rows = db.scalars(select(ContentAccount).where(or_(ContentAccount.owner_user_id == user.id,
+        (ContentAccount.owner_user_id.is_(None)) & ContentAccount.persona_id.in_(select(ContentPersona.id).where(ContentPersona.owner_user_id == user.id))))
+        .order_by(ContentAccount.id)).all()
+    return [_entity_json(db, "account", row) for row in rows]
+
+
+@router.post("/content-accounts/channel-accounts", status_code=201)
+def create_independent_channel_account(payload: ChannelAccountIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    row = identity.register_public_channel_account(db, user, None, name=payload.name,
+        channel=payload.platform_channel, platform_account_id=payload.platform_account_id)
+    return _entity_json(db, "account", row)

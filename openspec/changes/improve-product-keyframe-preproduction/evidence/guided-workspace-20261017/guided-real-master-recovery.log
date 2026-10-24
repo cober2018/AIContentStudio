@@ -1,0 +1,3 @@
+IDEMPOTENT_RECOVERY_HTTP 200
+MASTER 46 None
+CONTINUATION {'status': 'blocked', 'node_id': 'prepare', 'code': 'stage_blocked', 'blockers': ['creative_source_not_current']}

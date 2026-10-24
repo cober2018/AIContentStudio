@@ -1,0 +1,59 @@
+{
+  "kind": "mock-isolated-not-quality",
+  "records": [
+    {
+      "node": "evidence",
+      "attempt": 1,
+      "status": "succeeded",
+      "mode": "explicit",
+      "stack": [
+        "studio.research.evidence-brief@2"
+      ],
+      "config_method": "studio.research.evidence-brief@2",
+      "error": null
+    },
+    {
+      "node": "angles",
+      "attempt": 2,
+      "status": "succeeded",
+      "mode": "automatic",
+      "stack": [
+        "studio.research.angle-lab@2"
+      ],
+      "config_method": "studio.research.angle-lab@2",
+      "error": null
+    },
+    {
+      "node": "outline",
+      "attempt": 3,
+      "status": "succeeded",
+      "mode": "automatic",
+      "stack": [
+        "studio.text.outline@2"
+      ],
+      "config_method": "studio.text.outline@2",
+      "error": null
+    },
+    {
+      "node": "draft",
+      "attempt": 4,
+      "status": "succeeded",
+      "mode": "automatic",
+      "stack": [
+        "studio.text.longform@2"
+      ],
+      "config_method": "studio.text.longform@2",
+      "error": null
+    },
+    {
+      "node": "quality",
+      "attempt": 5,
+      "status": "failed",
+      "mode": "automatic",
+      "stack": [],
+      "config_method": null,
+      "error": "stage_checks_blocked",
+      "accept_error": "{\"detail\":{\"code\":\"stage_domain_adoption_integrity\"}}"
+    }
+  ]
+}

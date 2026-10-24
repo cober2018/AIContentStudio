@@ -34,6 +34,7 @@ class SelectionIn(BaseModel):
     purposes: list[Literal["professional", "style"]] = Field(min_length=1, max_length=2)
     persona_id: int | None = Field(default=None, ge=1)
     unit_id: int | None = Field(default=None, ge=1)
+    modalities: list[Literal["text", "graphic", "video"]] = Field(default_factory=lambda: ["text"], min_length=1, max_length=3)
     model_use_allowed: bool = False
     connection_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     connection_revision: int | None = Field(default=None, ge=1)

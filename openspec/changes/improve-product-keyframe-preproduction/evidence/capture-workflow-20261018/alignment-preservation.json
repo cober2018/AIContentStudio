@@ -1,0 +1,34 @@
+{
+  "content_master_revision": {
+    "old": 45,
+    "current": 47,
+    "preserved": true
+  },
+  "creative_brief_revision": {
+    "old": 31,
+    "current": 32,
+    "preserved": true
+  },
+  "production_profile_revision": {
+    "old": 137,
+    "current": 137,
+    "preserved": true
+  },
+  "material_revision": {
+    "old": 33,
+    "current": 33,
+    "preserved": true
+  },
+  "product_sku": {
+    "old": 2,
+    "current": 2,
+    "preserved": true
+  },
+  "product_sku_revision": {
+    "old": 2,
+    "current": 2,
+    "preserved": true
+  },
+  "integrity": "ok",
+  "foreign_key_errors": 0
+}

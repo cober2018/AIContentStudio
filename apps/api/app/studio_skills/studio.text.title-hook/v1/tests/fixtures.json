@@ -5,7 +5,7 @@
       "name": "bounded_exact_input",
       "input_schema": "stage.handoff.v1",
       "expected_output_schemas": [
-        "creative.angles.v1"
+        "creative.title-hook.v1"
       ]
     },
     {

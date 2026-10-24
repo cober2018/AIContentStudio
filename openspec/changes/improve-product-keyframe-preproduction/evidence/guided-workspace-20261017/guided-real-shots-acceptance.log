@@ -1,0 +1,2 @@
+SHOTS_ACCEPT 200
+CONTINUATION {"status": "waiting_input", "node_id": "master", "attempt_id": 92, "resolution_hash": "5efe1372515ae864a7337bd0f1397ef74e348eaa4e16d22957dbb477494ef136", "invocation_key": "auto-accept:903248a32f4f186c1ac7beec4f762a75e81556945af43b5bc11a4f49133569bc", "request_mode": "automatic"}

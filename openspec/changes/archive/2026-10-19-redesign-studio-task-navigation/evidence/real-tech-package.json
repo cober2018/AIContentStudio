@@ -1,0 +1,13 @@
+{
+  "path": "/Users/mshengran/Project/AIContentStudio/output/ai-tech-eval-project35.zip",
+  "bytes": 25436,
+  "sha256": "ec624175fa8e5807f13209b3defa979662d27dc66ad43ffb24869f6a73da0543",
+  "entries": [
+    "manifest.json",
+    "content.md",
+    "publish-guide.md"
+  ],
+  "zip_test": "passed",
+  "download": "GET /delivery-targets/3/package.zip",
+  "public_publication": false
+}

@@ -26,6 +26,7 @@ from .routers import (
     dashboard,
     delivery,
     discoverability,
+    edit_agent,
     external,
     fact_packs,
     facts,
@@ -34,6 +35,8 @@ from .routers import (
     health,
     home,
     learning,
+    material_library,
+    material_match,
     materials,
     obsidian_knowledge,
     opportunities,
@@ -87,6 +90,12 @@ async def lifespan(app: FastAPI):
         from . import runtime_config
 
         runtime_config.load_from_db(db)
+        from .services.storage_locations import ensure_default
+
+        ensure_default(db)
+        from .services.project_folders import ensure_library_dirs
+
+        ensure_library_dirs()
         # V1 PRD 2.0：媒体 provider（asset_provider 等）注册；不联网、不发布
         from .services.content_harness.providers import bootstrap_media_providers
 
@@ -131,6 +140,9 @@ for router in (
     assets,
     article_handoff,
     delivery,
+    material_library,
+    material_match,
+    edit_agent,
     materials,
     templates,
     channels,

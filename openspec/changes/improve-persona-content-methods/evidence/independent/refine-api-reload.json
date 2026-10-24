@@ -1,0 +1,24 @@
+{
+  "active_before": {
+    "workflow_step_attempt": {},
+    "provider_generation_task": {},
+    "creative_execution": {}
+  },
+  "health": [
+    "URLError",
+    "URLError",
+    200
+  ],
+  "settings_before": {
+    "rows": 11,
+    "sha256": "3a32215efadf35c1cfa25945ec8a64b3869781e8fbfb2710773005e14ea9ac1c"
+  },
+  "settings_after": {
+    "rows": 11,
+    "sha256": "3a32215efadf35c1cfa25945ec8a64b3869781e8fbfb2710773005e14ea9ac1c"
+  },
+  "model_and_static_settings_unchanged": true,
+  "worker_restart": false,
+  "model_dispatch": false,
+  "reason": "load reviewed A17 bounded audit compaction using existing launchd/runtime; unknown155 preserved and never resent"
+}
