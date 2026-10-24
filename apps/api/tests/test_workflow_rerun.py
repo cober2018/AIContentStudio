@@ -155,15 +155,3 @@ def test_rerun_from_here_rejected_when_downstream_has_side_effect(db_session, us
         rerun_from_here(db_session, run, "a", user)
 
 
-def test_rerun_api_endpoints(client, db_session, wf, user, plugins):
-    from app.services.workflow_engine import start_run as sr
-
-    run = sr(db_session, wf, {}, user)
-    r = client.post(f"/api/v1/workflow-runs/{run.id}/nodes/a/rerun", headers={"X-Studio-User": "editor@studio.local"})
-    assert r.status_code == 200, r.json()
-    steps = {s["node_id"]: s for s in r.json()["steps"]}
-    assert steps["b"]["status"] == "stale"
-    assert steps["a"]["attempt_no"] == 2  # R2-H7：初次=1，rerun=2（审计行同步）
-    # 列表过滤参数可用
-    listing = client.get("/api/v1/workflow-runs?topic_id=7&channel=wechat", headers={"X-Studio-User": "editor@studio.local"})
-    assert listing.status_code == 200

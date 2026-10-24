@@ -1,25 +1,9 @@
 import { Component, lazy, Suspense, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { api, currentUser } from "./api";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { CheckCircle2, Clapperboard, FolderOpen, Images, Library, LineChart, PenLine, Settings2, Sparkles, Sun, UserRound, type LucideIcon } from "lucide-react";
 
-const Assets = lazy(() => import("./pages/Assets"));
 const MaterialLibraryFloat = lazy(() => import("./product/MaterialLibraryFloat"));
-const Connectors = lazy(() => import("./pages/Connectors"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Landing = lazy(() => import("./pages/Landing"));
-const FactPacks = lazy(() => import("./pages/FactPacks"));
-const Handoff = lazy(() => import("./pages/Handoff"));
-const Materials = lazy(() => import("./pages/Materials"));
-const Review = lazy(() => import("./pages/Review"));
-const ReviewPublish = lazy(() => import("./pages/ReviewPublish"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Sources = lazy(() => import("./pages/Sources"));
-const Templates = lazy(() => import("./pages/Templates"));
-const Topics = lazy(() => import("./pages/Topics"));
-const Workflows = lazy(() => import("./pages/Workflows"));
-const Workspace = lazy(() => import("./pages/Workspace"));
 const ProductionQueuePage = lazy(() => import("./product/ProductionQueuePage"));
 const WorkbenchEntry = lazy(() => import("./product/WorkbenchEntry"));
 const IdentityWorkspace = lazy(() => import("./product/IdentityWorkspace"));
@@ -113,19 +97,6 @@ export default function App() {
 
 function Shell() {
   const location = useLocation();
-  const isLanding = location.pathname === "/legacy/landing";
-  if (isLanding) {
-    return (
-      <RouteFailureBoundary key={location.pathname}>
-        <Suspense fallback={<RouteLoading />}>
-          <Routes>
-            <Route path="/legacy/landing" element={<Landing />} />
-            <Route path="*" element={<Navigate to="/home" replace />} />
-          </Routes>
-        </Suspense>
-      </RouteFailureBoundary>
-    );
-  }
   return (
         <div className="flex min-h-screen flex-col bg-paper md:flex-row">
           <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-pill focus:bg-ink-900 focus:px-4 focus:py-2 focus:text-sm focus:text-paper">跳到正文</a>
@@ -171,25 +142,8 @@ function Shell() {
               <Route path="/accounts" element={<Navigate to="/identities?directory=account" replace />} />
               <Route path="/assets" element={<SystemAssetsKnowledgePage />} />
               <Route path="/learning" element={<LearningWorkspace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/sources" element={<Sources />} />
-              <Route path="/connectors" element={<Connectors />} />
-              <Route path="/fact-packs" element={<FactPacks />} />
-              <Route path="/fact-packs/:id" element={<FactPacks />} />
-              <Route path="/topics" element={<Topics />} />
-              <Route path="/workspace" element={<Workspace />} />
-              <Route path="/workspace/:topicId" element={<Workspace />} />
               <Route path="/materials" element={<MaterialLibraryPage />} />
-              <Route path="/legacy/materials" element={<Materials />} />
-              <Route path="/review-publish" element={<ReviewPublish />} />
-              <Route path="/review-publish/:topicId" element={<ReviewPublish />} />
-              <Route path="/legacy/review" element={<Review />} />
-              <Route path="/legacy/assets" element={<Assets />} />
-              <Route path="/handoff" element={<Handoff />} />
-              <Route path="/workflows" element={<Workflows />} />
-              <Route path="/templates" element={<Templates />} />
               <Route path="/settings" element={<ProductSettingsPage />} />
-              <Route path="/legacy/settings" element={<AdminSettingsRoute />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
                 </Routes>
               </Suspense>
@@ -203,13 +157,6 @@ function Shell() {
 function ProjectRoute() {
   const { projectId } = useParams();
   return projectId && /^\d+$/.test(projectId) ? <><ProjectOriginLink projectId={Number(projectId)} /><PersistentProjectPage /></> : <ProjectPage />;
-}
-
-function AdminSettingsRoute() {
-  const user = useQuery({ queryKey: ["settings-admin", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
-  if (user.isPending) return <RouteLoading />;
-  if (user.error || user.data?.role !== "admin") return <div className="p-9" role="alert">本机运行配置仅限管理员访问。<Link to="/settings" className="ml-2 text-indigo-700 underline">返回安全产品设置</Link></div>;
-  return <Settings />;
 }
 
 function ProductionRoute() {

@@ -15,7 +15,7 @@ def _definition():
     return {
         "nodes": [
             {"id": "a", "kind": "System", "plugin": "system.constant", "config": {"value": {"result": "ok"}}},
-            {"id": "b", "kind": "Human", "plugin": "builtin.approve", "config": {}, "input_mapping": {"source": {"node_id": "a", "output": "result"}}},
+            {"id": "b", "kind": "Human", "plugin": "builtin.confirm_facts", "config": {}, "input_mapping": {"source": {"node_id": "a", "output": "result"}}},
         ],
         "edges": [{"from": "a", "to": "b"}],
         "visual_order": ["a", "b"],
@@ -65,66 +65,6 @@ def test_invalid_graph_and_mapping_rejected_without_changing_binding(client):
     assert client.get(path, headers=headers).json()["revision"] == 0
 
 
-def test_ai_executor_selection_matches_effective_runtime(client):
-    headers, _, project_id, unit_id = _setup(client)
-    options = client.get("/api/v1/workflow-execution-options", headers=headers)
-    assert options.status_code == 200
-    choice = options.json()["ai"]["builtin.generate"]
-    assert set(choice) >= {"provider", "model", "available", "reason"}
-    assert "api_key" not in str(options.json())
-    path = f"/api/v1/content-projects/{project_id}/units/{unit_id}/workflow-override"
-    definition = {"nodes": [{"id": "generate", "kind": "AI", "plugin": "builtin.generate", "config": {"provider": choice["provider"], "model": choice["model"]}}], "edges": [], "visual_order": ["generate"]}
-    assert client.post(path, headers=headers, json={"expected_revision": 0, "definition": definition}).status_code == 201
-    definition["nodes"][0]["config"]["model"] = "unconfigured-model"
-    assert client.post(path, headers=headers, json={"expected_revision": 1, "definition": definition}).status_code == 422
-    assert client.get(path, headers=headers).json()["revision"] == 1
-
-
-def test_ai_runtime_change_blocks_old_selected_model_before_execution(client):
-    from app import runtime_config
-
-    headers, _, project_id, unit_id = _setup(client)
-    choice = client.get("/api/v1/workflow-execution-options", headers=headers).json()["ai"]["builtin.generate"]
-    definition = {"nodes": [{"id": "generate", "kind": "AI", "plugin": "builtin.generate", "config": {"provider": choice["provider"], "model": choice["model"]}}], "edges": [], "visual_order": ["generate"]}
-    base = f"/api/v1/content-projects/{project_id}/units/{unit_id}"
-    assert client.post(f"{base}/workflow-override", headers=headers, json={"expected_revision": 0, "definition": definition}).status_code == 201
-    before = runtime_config.get_runtime(runtime_config.KEY_LLM)
-    try:
-        runtime_config.set_runtime(runtime_config.KEY_LLM, {"provider": "openai_compatible", "model": "different-model", "base_url": "https://example.invalid", "api_key": "test"})
-        response = client.post(f"{base}/runs", headers=headers, json={"params": {}})
-        assert response.status_code == 409
-        assert "Provider/Model" in response.text
-        assert client.get(f"{base}/runs", headers=headers).json() == []
-    finally:
-        if before is None:
-            runtime_config.clear_runtime(runtime_config.KEY_LLM)
-        else:
-            runtime_config.set_runtime(runtime_config.KEY_LLM, before)
-
-
-def test_ai_runtime_change_also_blocks_node_rerun(client):
-    from app import runtime_config
-
-    headers, _, project_id, unit_id = _setup(client)
-    choice = client.get("/api/v1/workflow-execution-options", headers=headers).json()["ai"]["builtin.generate"]
-    definition = {"nodes": [{"id": "generate", "kind": "AI", "plugin": "builtin.generate", "config": {"provider": choice["provider"], "model": choice["model"]}}], "edges": [], "visual_order": ["generate"]}
-    base = f"/api/v1/content-projects/{project_id}/units/{unit_id}"
-    assert client.post(f"{base}/workflow-override", headers=headers, json={"expected_revision": 0, "definition": definition}).status_code == 201
-    first = client.post(f"{base}/runs", headers=headers, json={"params": {}}).json()
-    assert first["status"] == "failed"
-    before = runtime_config.get_runtime(runtime_config.KEY_LLM)
-    try:
-        runtime_config.set_runtime(runtime_config.KEY_LLM, {"provider": "openai_compatible", "model": "different-model", "base_url": "https://example.invalid", "api_key": "test"})
-        rerun = client.post(f"{base}/runs/{first['id']}/nodes/generate/rerun", headers=headers)
-        assert rerun.status_code == 200
-        assert "Provider/Model" in rerun.json()["steps"][0]["error"]
-    finally:
-        if before is None:
-            runtime_config.clear_runtime(runtime_config.KEY_LLM)
-        else:
-            runtime_config.set_runtime(runtime_config.KEY_LLM, before)
-
-
 def test_persona_default_portability_and_old_unit_pin(client, db_session):
     headers, persona_id, project_id, unit_id = _setup(client)
     path = f"/api/v1/content-personas/{persona_id}/default-workflows/text"
@@ -132,7 +72,7 @@ def test_persona_default_portability_and_old_unit_pin(client, db_session):
     bad["nodes"][0]["config"] = {"snapshot_id": 42}
     assert client.post(path, headers=headers, json={"expected_revision": 0, "definition": bad, "source_project_id": project_id, "source_unit_id": unit_id}).status_code == 422
     assert client.get(path, headers=headers).json()["revision"] == 0
-    portable = {"nodes": [{"id": "rule", "kind": "Rule", "plugin": "builtin.fact_check", "config": {"project_id": project_id}}], "edges": [], "visual_order": ["rule"]}
+    portable = {"nodes": [{"id": "rule", "kind": "Tool", "plugin": "builtin.extract_facts", "config": {"project_id": project_id}}], "edges": [], "visual_order": ["rule"]}
     good = client.post(path, headers=headers, json={"expected_revision": 0, "definition": portable, "source_project_id": project_id, "source_unit_id": unit_id})
     assert good.status_code == 201, good.text
     assert good.json()["definition"]["nodes"][0]["config"]["project_id"] == {"$context": "project.id"}
@@ -145,7 +85,7 @@ def test_persona_default_portability_and_old_unit_pin(client, db_session):
 def test_old_unit_effective_workflow_remains_pinned_after_default_advances(client):
     headers, persona_id, project_id, _ = _setup(client)
     default_path = f"/api/v1/content-personas/{persona_id}/default-workflows/text"
-    first_definition = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.approve", "config": {}}], "edges": [], "visual_order": ["gate"]}
+    first_definition = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.confirm_facts", "config": {}}], "edges": [], "visual_order": ["gate"]}
     first_response = client.post(default_path, headers=headers, json={"expected_revision": 0, "definition": first_definition})
     assert first_response.status_code == 201, first_response.text
     first = first_response.json()

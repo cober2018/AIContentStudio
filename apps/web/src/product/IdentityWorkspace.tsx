@@ -17,7 +17,6 @@ type Channel = { channel: string; label: string; content_forms: { content_form: 
 type SeriesTarget = { id: number; series_id: number; account_id: number; account_name: string | null; platform_channel: string | null; content_form: string; enabled: boolean; version: number };
 type Revision = { id: number; revision_no: number; profile: Record<string, unknown>; checksum: string; created_at: string | null };
 type Effective = { effective_profile: Record<string, unknown>; field_origins: Record<string, string>; revision_ids: Record<string, number | null> };
-type Binding = { revision: number; workflow_id: number | null; workflow_version: number | null; definition: Record<string, unknown>; source?: string };
 type FieldKey = "positioning" | "target_audience" | "content_domains" | "expression_style" | "visual_language" | "long_term_views" | "value_propositions" | "content_boundaries" | "risk_boundaries" | "public_fact_policy" | "brand_voice_version_id";
 type Mode = "inherit" | "override" | "clear";
 type DraftField = { mode: Mode; text: string };
@@ -39,10 +38,9 @@ const FIELDS: { key: FieldKey; label: string; shape: "text" | "lines" | "json" |
 ];
 const TABS = [
   ["summary", "概览"], ["edit", "编辑资料"], ["history", "修订历史"],
-  ["creative", "创作配置"], ["accounts", "关联与管理"], ["workflow", "工作流偏好"],
+  ["creative", "创作配置"], ["accounts", "关联与管理"],
   ["memory", "内容记忆"], ["publisher", "平台连接"],
 ] as const;
-const EMPTY_DEFINITION = { nodes: [], edges: [], visual_order: [] };
 
 function errText(error: unknown) { return error instanceof ApiError ? `${error.status} · ${error.message}` : "后端读取失败，请重试。"; }
 function fieldText(value: unknown, shape: string): string {
@@ -85,10 +83,6 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   const draftRef = useRef(draft);
   draftRef.current = draft;
   const tab = routeView;
-  const [modality, setModality] = useState("text");
-  const [binding, setBinding] = useState<Binding | null>(null);
-  const [resolvedBinding, setResolvedBinding] = useState<Binding | null>(null);
-  const [definitionText, setDefinitionText] = useState(JSON.stringify(EMPTY_DEFINITION, null, 2));
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [treeError, setTreeError] = useState("");
@@ -96,16 +90,13 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [revisionConflict, setRevisionConflict] = useState(false);
-  const [workflowConflict, setWorkflowConflict] = useState(false);
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const baselineDraft = useRef(JSON.stringify(draftFrom({})));
   const profileDirty = useRef(false);
   profileDirty.current = JSON.stringify(draft) !== baselineDraft.current;
-  const workflowDirty = useRef(false);
   const [role, setRole] = useState<string | null>(null);
   const [loadedIdentityKey, setLoadedIdentityKey] = useState<string | null>(null);
-  const [loadedBindingKey, setLoadedBindingKey] = useState<string | null>(null);
   const creativeDirty = useRef(false);
   const referenceStyleDirty = useRef(false);
   const [creativeVisitedKey, setCreativeVisitedKey] = useState<string | null>(null);
@@ -115,7 +106,6 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   const detailGeneration = useRef(0);
   const selectionGeneration = useRef(0);
   const selectionEpoch = selectionGeneration.current;
-  const bindingGeneration = useRef(0);
 
   const entities = useMemo(() => [...brands, ...personas, ...accounts, ...series], [brands, personas, accounts, series]);
   const current = selected ? entities.find((item) => item.kind === selected.kind && item.id === selected.id) : null;
@@ -129,9 +119,6 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   const seriesId = current?.kind === "series" ? current.id : null;
   const effectiveQuery = persona ? `persona_id=${persona.id}${account ? `&account_id=${account.id}` : ""}${seriesId ? `&series_id=${seriesId}` : ""}` : null;
   const selectedUrl = current ? `/${ROOT[current.kind]}/${current.id}` : null;
-  const bindingKey = `${identityKey}:${modality}`;
-  const selectedBinding = useRef(bindingKey);
-  selectedBinding.current = bindingKey;
   const detailReady = loadedIdentityKey === identityKey;
   const missingAncestor = Boolean(current && (
     (current.kind === "persona" && current.brand_id != null && !brand)
@@ -146,7 +133,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   const acceptedHistoryIndex = useRef<number | null>(window.history.state?.idx ?? null);
   const restoringHistory = useRef(false);
   const acceptedPop = useRef(false);
-  const canLeave = () => !pending.current && (!(profileDirty.current || creativeDirty.current || referenceStyleDirty.current || workflowDirty.current) || window.confirm("有未保存的修改，确认离开并丢弃草稿？"));
+  const canLeave = () => !pending.current && (!(profileDirty.current || creativeDirty.current || referenceStyleDirty.current) || window.confirm("有未保存的修改，确认离开并丢弃草稿？"));
   function navigate(next: URLSearchParams) {
     const nextKind = next.get("kind") || (next.has("persona") ? "persona" : "");
     const nextId = next.get("id") || next.get("persona");
@@ -160,7 +147,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   }
   useEffect(() => {
     const unload = (event: BeforeUnloadEvent) => {
-      if (pending.current || profileDirty.current || creativeDirty.current || referenceStyleDirty.current || workflowDirty.current) { event.preventDefault(); event.returnValue = ""; }
+      if (pending.current || profileDirty.current || creativeDirty.current || referenceStyleDirty.current) { event.preventDefault(); event.returnValue = ""; }
     };
     const click = (event: MouseEvent) => {
       const link = (event.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
@@ -189,15 +176,13 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
     if (nextKey !== selectedIdentity.current && !acceptedPop.current && acceptedParams.current !== params.toString() && !canLeave()) { setParams(new URLSearchParams(acceptedParams.current), { replace: true }); return; }
     acceptedParams.current = params.toString(); acceptedHistoryIndex.current = window.history.state?.idx ?? null; acceptedPop.current = false;
     if (nextKey !== selectedIdentity.current) {
-      selectionGeneration.current++; detailGeneration.current++; bindingGeneration.current++;
+      selectionGeneration.current++; detailGeneration.current++;
       selectedIdentity.current = nextKey; setSelected(routeSelection);
       creativeDirty.current = false; referenceStyleDirty.current = false;
-      setLoadedBindingKey(null); setBinding(null); setResolvedBinding(null);
-      setDefinitionText(JSON.stringify(EMPTY_DEFINITION, null, 2)); setWorkflowConflict(false);
       setCreativeVisitedKey(null); setName("");
     }
     if (nextKey !== identityKey) {
-      setDraft(draftFrom({})); baselineDraft.current = JSON.stringify(draftFrom({})); workflowDirty.current = false;
+      setDraft(draftFrom({})); baselineDraft.current = JSON.stringify(draftFrom({}));
     }
     setNotice("");
   }, [params.toString()]);
@@ -277,26 +262,6 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       .finally(() => { if (ownsRequest()) setDetailLoading(false); });
     return () => { active = false; };
   }, [selectedUrl, effectiveQuery, selectionEpoch]);
-  useEffect(() => {
-    let active = true;
-    const key = bindingKey;
-    const epoch = selectionEpoch;
-    const generation = ++bindingGeneration.current;
-    const ownsRequest = () => active && selectedBinding.current === key
-      && selectionGeneration.current === epoch && bindingGeneration.current === generation && currentUser() === user;
-    if (tab !== "workflow" || loadedBindingKey === bindingKey) return;
-    setLoadedBindingKey(null); setBinding(null); setResolvedBinding(null); setWorkflowConflict(false);
-    if (!current || current.kind === "brand" || !effectiveQuery) { setBinding(null); setResolvedBinding(null); return; }
-    Promise.all([
-      api.get<Binding>(`${selectedUrl}/default-workflows/${modality}`),
-      api.get<Binding>(`/content-identities/effective-workflow?${effectiveQuery}&modality=${modality}`),
-    ]).then(([direct, resolved]) => {
-      if (!ownsRequest()) return;
-      setBinding(direct); setResolvedBinding(resolved); setDefinitionText(JSON.stringify(direct.workflow_id ? direct.definition : EMPTY_DEFINITION, null, 2));
-      setLoadedBindingKey(key);
-    }).catch((error) => { if (ownsRequest()) setError(errText(error)); });
-    return () => { active = false; };
-  }, [selectedUrl, effectiveQuery, modality, selectionEpoch, tab]);
   useEffect(() => { if (tab === "creative" && identityKey) setCreativeVisitedKey(identityKey); }, [tab, identityKey]);
 
   function scopedError(message: string) { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch && currentUser() === user) setError(message); }
@@ -367,25 +332,6 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
         } catch (reloadError) { if (currentUser() === user) setError(`草稿已保留，最新版本读取失败。${errText(reloadError)}`); }
       }
     } finally { pending.current = false; setBusy(false); }
-  }
-  async function saveDefault() {
-    if (currentUser() !== user || pending.current || creativeReadOnly || workflowConflict || !selectedUrl || !binding || !current || current.kind === "brand" || loadedBindingKey !== bindingKey) return;
-    const key = bindingKey;
-    const epoch = selectionEpoch;
-    const generation = bindingGeneration.current;
-    pending.current = true; setBusy(true);
-    try {
-      const definition = JSON.parse(definitionText);
-      const next = await api.post<Binding>(`${selectedUrl}/default-workflows/${modality}`, { expected_revision: binding.revision, definition });
-      if (selectedBinding.current !== key || selectionGeneration.current !== epoch || bindingGeneration.current !== generation || currentUser() !== user) return;
-      workflowDirty.current = false; setBinding(next); setResolvedBinding({ ...next, source: current.kind }); setNotice("默认工作流已保存为新版本；已有内容单元不会自动重绑。");
-    } catch (error) {
-      if (selectedBinding.current === key && selectionGeneration.current === epoch && bindingGeneration.current === generation && currentUser() === user) {
-        setError(error instanceof SyntaxError ? "工作流定义 JSON 格式不正确。" : errText(error));
-        if (error instanceof ApiError && error.status === 409) setWorkflowConflict(true);
-      }
-    }
-    finally { pending.current = false; setBusy(false); }
   }
   function fieldEditor(key: FieldKey, label: string, shape: string) {
     const value = draft[key];
@@ -500,11 +446,6 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
           {!creativeReadOnly && current.kind !== "series" && <form className="mt-6 flex flex-wrap gap-3 border-t border-ink-200/80 pt-6" onSubmit={createEntity}><input aria-label="新子级名称" className={`${inputClass} max-w-sm`} value={name} onChange={event => setName(event.target.value)} required placeholder={`新建${current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}名称`} disabled={busy} /><Button type="submit" disabled={busy}>创建{current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}</Button></form>}
           <p className="mt-4 text-[12.5px] leading-relaxed text-ink-500">公开账号登记只记录公开名称和标识；平台登录与发布授权在“平台连接”。归档会保留历史。</p>
         </Section>{!creativeReadOnly && persona && <div className="grid gap-6 lg:grid-cols-2"><EditorialSeriesCreate key={`series:${identityKey}`} personaId={persona.id} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={seriesCreated} onError={scopedError} /><ChannelAccountRegister key={`register:${identityKey}`} personaId={persona.id} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={loadTree} onError={scopedError} /></div>}{current.kind === "series" && current.scope === "persona_editorial" && <SeriesTargetsPanel key={identityKey} seriesId={current.id} personaId={persona?.id ?? null} archived={creativeReadOnly} accounts={accounts.filter(row => row.persona_id === persona?.id)} channels={channels} readOnly={creativeReadOnly} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onChanged={loadTree} onNotice={scopedNotice} onError={scopedError} />}</div>}
-        {tab === "workflow" && <Section eyebrow="默认流程" title="工作流偏好">{!effectiveQuery || current.kind === "brand" ? <p className="text-[14px] text-ink-500">此身份没有角色继承链，可在关联角色内维护工作流。</p> : <div className="space-y-5"><Field label="内容形态"><select className={`${inputClass} max-w-xs`} disabled={busy} value={modality} onChange={event => { if (workflowDirty.current && !window.confirm("切换形态将丢弃工作流草稿，确认继续？")) return; workflowDirty.current = false; setModality(event.target.value); }}><option value="text">文字</option><option value="graphic">图文</option><option value="video">视频</option></select></Field><div className="grid gap-4 sm:grid-cols-2"><div className="rounded-xl border border-ink-200/80 bg-ink-50/60 p-4"><p className="eyebrow">本级设置</p><p className="mt-2 text-[14.5px] text-ink-900">{binding?.workflow_id ? `工作流 #${binding.workflow_id} · v${binding.workflow_version}` : "未设置"}</p></div><div className="rounded-xl border border-ink-200/80 bg-ink-50/60 p-4"><p className="eyebrow">实际生效来源</p><p className="mt-2 text-[14.5px] text-ink-900">{resolvedBinding?.source ? KIND_NAME[resolvedBinding.source as Kind] || resolvedBinding.source : "未绑定"}</p></div></div>{!creativeReadOnly && <><Field label="新默认工作流定义（JSON）" hint="保存为本级的新版本；已有作品的工作流快照不会改变。"><textarea className={`${inputClass} min-h-44 font-mono text-[12.5px]`} value={definitionText} disabled={busy || loadedBindingKey !== bindingKey} onChange={event => { workflowDirty.current = true; setDefinitionText(event.target.value); }} /></Field><Button disabled={busy || workflowConflict || loadedBindingKey !== bindingKey} onClick={saveDefault}>另存为本级默认新版本</Button></>}{workflowConflict && <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[14px] text-amber-900"><p>工作流版本已变化，当前输入保留。复制需要保留的内容后，再加载最新版本。</p><Button variant="secondary" disabled={busy} onClick={async () => {
-                  if (!window.confirm("加载最新工作流将覆盖当前输入，确认继续？")) return;
-                  const key = bindingKey; const epoch = selectionEpoch;
-                  try { const next = await api.get<Binding>(`${selectedUrl}/default-workflows/${modality}`); if (selectedBinding.current !== key || selectionGeneration.current !== epoch || currentUser() !== user) return; setBinding(next); setDefinitionText(JSON.stringify(next.workflow_id ? next.definition : EMPTY_DEFINITION, null, 2)); workflowDirty.current = false; setWorkflowConflict(false); setError(""); } catch (error) { if (selectedBinding.current === key && currentUser() === user) setError(errText(error)); }
-                }}>加载最新工作流（覆盖输入）</Button></div>}</div>}</Section>}
         {tab === "publisher" && account && <AccountPublisherPanel key={account.id} accountId={account.id} archived={creativeReadOnly} />}
         {tab === "memory" && <MemoryPanel key={identityKey} scopeType={current.kind} scopeId={current.id} readOnly={creativeReadOnly} />}
         {!TABS.some(([key]) => key === tab) && <EmptyState title="页面不存在" hint="请使用上方入口。" />}

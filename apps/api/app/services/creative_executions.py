@@ -959,6 +959,27 @@ def _reserve_inputs(db: Session, project_id: int, unit_id: int, execution_id: in
     return result
 
 
+def _earlier_copy(owner_id: int, execution_id: int, relative_path: str, size: int):
+    """The same input an earlier task of this user already copied to the Mac; cloning it leaves the drive alone.
+
+    The name carries revision and hash, and the clone is hashed again before use, so a stale file cannot slip in.
+    """
+    import os
+    import stat as stat_module
+
+    own = files.work_root(owner_id, execution_id)
+    for candidate in sorted(own.parent.glob(f"*/{relative_path}")):
+        if candidate.parent.parent == own:
+            continue
+        try:
+            info = os.lstat(candidate)
+            if stat_module.S_ISREG(info.st_mode) and info.st_size == size:
+                return open(candidate, "rb")
+        except OSError:
+            continue
+    return None
+
+
 def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User) -> dict:
     # A crash after exposing bytes must never erase their derived-rights boundary.
     result = _reserve_inputs(db, project_id, unit_id, execution_id, payload, user)
@@ -972,7 +993,10 @@ def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id:
     for target in result["files"]:
         revision_id = target["material_revision_id"]
         if streams.policy(package):
-            with streams.transfer(user.id, row.id), streams.material_file(revisions[revision_id], target["size_bytes"]) as source:
+            earlier = None if revisions[revision_id].file_path.startswith("external/") else _earlier_copy(user.id, row.id, target["relative_path"], target["size_bytes"])
+            with ExitStack() as stack:
+                stack.enter_context(streams.transfer(user.id, row.id))
+                source = stack.enter_context(earlier) if earlier else stack.enter_context(streams.material_file(revisions[revision_id], target["size_bytes"]))
                 size, _digest = streams.inspect(source, target["size_bytes"])
                 if _input_snapshot(revisions[revision_id], package, size=size) != snapshots[revision_id]:
                     raise _error("creative_execution_materialized_input_changed")

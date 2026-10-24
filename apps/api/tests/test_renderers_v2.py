@@ -51,14 +51,14 @@ def test_x_thread_renderer_ordered_posts():
 
 def test_xhs_renderer_orders_media_and_warns_without_media():
     media = [
-        {"draft_media_id": 2, "hash": "b", "sort_order": 1, "role": "inline"},
-        {"draft_media_id": 1, "hash": "a", "sort_order": 0, "role": "cover"},
+        {"material_revision_id": 2, "hash": "b", "sort_order": 1, "role": "inline"},
+        {"material_revision_id": 1, "hash": "a", "sort_order": 0, "role": "cover"},
     ]
     result = XhsCardsRenderer().render({
         "title": "T", "body_markdown": "正文", "structured": {"cards": [{"text": "卡1"}, {"text": "卡2"}], "tags": ["x"]},
         "media": media,
     })
-    assert [m["draft_media_id"] for m in result.payload["media"]] == [1, 2]  # sort_order 排序
+    assert [m["material_revision_id"] for m in result.payload["media"]] == [1, 2]  # sort_order 排序
     assert result.payload["cards"][0]["text"] == "卡1"
     assert result.warnings == []
     no_media = XhsCardsRenderer().render({"title": "T", "body_markdown": "", "structured": {}, "media": []})

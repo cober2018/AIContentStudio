@@ -66,17 +66,18 @@ def upgrade() -> None:
         )
 
     # ---- topic_brief：targets 真源 ----
-    tb_cols = _columns("topic_brief")
-    with op.batch_alter_table("topic_brief") as batch:
-        _add_columns(
-            batch,
-            [
-                sa.Column("targets_json", sa.JSON(), nullable=True),
-                sa.Column("product_ref", sa.String(length=100), nullable=True),
-                sa.Column("business_line", sa.String(length=100), nullable=True),
-            ],
-            tb_cols,
-        )
+    if _has_table(bind, "topic_brief"):  # fresh installs no longer create the old-version tables
+        tb_cols = _columns("topic_brief")
+        with op.batch_alter_table("topic_brief") as batch:
+            _add_columns(
+                batch,
+                [
+                    sa.Column("targets_json", sa.JSON(), nullable=True),
+                    sa.Column("product_ref", sa.String(length=100), nullable=True),
+                    sa.Column("business_line", sa.String(length=100), nullable=True),
+                ],
+                tb_cols,
+            )
 
     # ---- workflow：版本化 Definition ----
     wf_cols = _columns("workflow")
@@ -142,52 +143,54 @@ def upgrade() -> None:
         )
 
     # ---- content_job：content_form / artifact_kind / run 关联 ----
-    job_cols = _columns("content_job")
-    with op.batch_alter_table("content_job") as batch:
-        _add_columns(
-            batch,
-            [
-                sa.Column("content_form", sa.String(length=50), nullable=True),
-                sa.Column("artifact_kind", sa.String(length=20), nullable=True),
-                sa.Column("workflow_run_id", sa.Integer(), nullable=True),
-                sa.Column("channel_profile_version_id", sa.Integer(), nullable=True),
-            ],
-            job_cols,
+    if _has_table(bind, "content_job"):  # fresh installs no longer create the old-version tables
+        job_cols = _columns("content_job")
+        with op.batch_alter_table("content_job") as batch:
+            _add_columns(
+                batch,
+                [
+                    sa.Column("content_form", sa.String(length=50), nullable=True),
+                    sa.Column("artifact_kind", sa.String(length=20), nullable=True),
+                    sa.Column("workflow_run_id", sa.Integer(), nullable=True),
+                    sa.Column("channel_profile_version_id", sa.Integer(), nullable=True),
+                ],
+                job_cols,
+            )
+        bind.execute(sa.text(f"UPDATE content_job SET content_form = ({CONTENT_FORM_CASE}) WHERE content_form IS NULL"))
+        bind.execute(
+            sa.text("UPDATE content_job SET artifact_kind = 'script' WHERE channel = 'douyin' AND artifact_kind IS NULL")
         )
-    bind.execute(sa.text(f"UPDATE content_job SET content_form = ({CONTENT_FORM_CASE}) WHERE content_form IS NULL"))
-    bind.execute(
-        sa.text("UPDATE content_job SET artifact_kind = 'script' WHERE channel = 'douyin' AND artifact_kind IS NULL")
-    )
-    bind.execute(sa.text("UPDATE content_job SET artifact_kind = 'text' WHERE artifact_kind IS NULL"))
+        bind.execute(sa.text("UPDATE content_job SET artifact_kind = 'text' WHERE artifact_kind IS NULL"))
 
     # ---- draft：Artifact / Document（channel 经 content_job 映射 backfill）----
-    draft_cols = _columns("draft")
-    with op.batch_alter_table("draft") as batch:
-        _add_columns(
-            batch,
-            [
-                sa.Column("artifact_kind", sa.String(length=20), nullable=False, server_default="text"),
-                sa.Column("content_form", sa.String(length=50), nullable=True),
-                sa.Column("document_schema_version", sa.Integer(), nullable=False, server_default="1"),
-                sa.Column("document_json", sa.JSON(), nullable=True),
-            ],
-            draft_cols,
+    if _has_table(bind, "draft"):  # fresh installs no longer create the old-version tables
+        draft_cols = _columns("draft")
+        with op.batch_alter_table("draft") as batch:
+            _add_columns(
+                batch,
+                [
+                    sa.Column("artifact_kind", sa.String(length=20), nullable=False, server_default="text"),
+                    sa.Column("content_form", sa.String(length=50), nullable=True),
+                    sa.Column("document_schema_version", sa.Integer(), nullable=False, server_default="1"),
+                    sa.Column("document_json", sa.JSON(), nullable=True),
+                ],
+                draft_cols,
+            )
+        bind.execute(
+            sa.text(
+                "UPDATE draft SET artifact_kind = 'script' WHERE artifact_kind = 'text' AND content_job_id IN "
+                "(SELECT id FROM content_job WHERE channel = 'douyin')"
+            )
         )
-    bind.execute(
-        sa.text(
-            "UPDATE draft SET artifact_kind = 'script' WHERE artifact_kind = 'text' AND content_job_id IN "
-            "(SELECT id FROM content_job WHERE channel = 'douyin')"
+        bind.execute(
+            sa.text(
+                f"UPDATE draft SET content_form = {DRAFT_CONTENT_FORM_SUBQUERY} "
+                "WHERE content_form IS NULL AND EXISTS (SELECT 1 FROM content_job WHERE content_job.id = draft.content_job_id)"
+            )
         )
-    )
-    bind.execute(
-        sa.text(
-            f"UPDATE draft SET content_form = {DRAFT_CONTENT_FORM_SUBQUERY} "
-            "WHERE content_form IS NULL AND EXISTS (SELECT 1 FROM content_job WHERE content_job.id = draft.content_job_id)"
-        )
-    )
 
     # ---- draft_check_run：通用检查记录（Phase 3 起写入）----
-    if not _has_table(bind, "draft_check_run"):
+    if not _has_table(bind, "draft_check_run") and _has_table(bind, "draft"):
         op.create_table(
             "draft_check_run",
             sa.Column("id", sa.Integer(), primary_key=True),

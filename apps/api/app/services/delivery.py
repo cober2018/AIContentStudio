@@ -7,10 +7,8 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import json
 import re
-import zipfile
 
 from fastapi import HTTPException
 from sqlalchemy import select, update
@@ -26,7 +24,6 @@ from ..models import (
     DeliveryReceipt,
     DeliveryTarget,
     DeliveryTargetStatus,
-    DraftMedia,
     MaterialRevision,
     Review,
     utcnow,
@@ -162,9 +159,9 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
         if approved is None:
             raise HTTPException(409, "项目候选尚未经过独立内容审批")
         if not is_variant:
-            from .production_validation import latest_legacy_candidate_id
+            from .production_validation import latest_unit_candidate_id
 
-            current_candidate_id = latest_legacy_candidate_id(db, asset.content_unit_id)
+            current_candidate_id = latest_unit_candidate_id(db, asset.content_unit_id)
             if current_candidate_id != asset.id:
                 raise HTTPException(409, "历史候选只可查看，不能新增交付授权")
         unit = db.get(ContentUnit, asset.content_unit_id)
@@ -380,8 +377,6 @@ def validate_live_candidate_payload(db: Session, asset: ContentAsset) -> dict:
     - 每个批准媒体：实时权利未撤销 + 实际字节 SHA-256 与批准 manifest 的 hash 一致。
     任一失败 → 409，不发起远端调用、不产生 DeliveryAttempt。
     """
-    from .candidates import candidate_hash
-
     manifest = asset.candidate_manifest_json or {}
     if manifest.get("schema_version") == 5:
         from .production_validation import validate_live_v5_candidate
@@ -389,27 +384,7 @@ def validate_live_candidate_payload(db: Session, asset: ContentAsset) -> dict:
         return validate_live_v5_candidate(db, asset, require_approved=True, lock_live=True)
     if manifest.get("schema_version") == 4 or asset.content_master_revision_id is not None:
         raise HTTPException(422, "capability_unavailable: v4尚无已验证Publisher适配器，请使用本地成品包")
-    if asset.project_id is not None:
-        from .project_review import live_evidence_reasons
-
-        evidence_reasons = live_evidence_reasons(db, asset.project_id, manifest)
-        if evidence_reasons:
-            raise HTTPException(409, {"code": "evidence_unready", "reasons": evidence_reasons})
-    if candidate_hash(manifest) != asset.approved_candidate_hash:
-        raise HTTPException(409, "候选清单与批准哈希不一致（candidate integrity failed），拒绝远端交付")
-    render = manifest.get("render") or {}
-    if not render.get("payload") or not render.get("content_hash"):
-        raise HTTPException(409, "render payload 未冻结，拒绝远端交付")
-    for media in manifest.get("media", []):
-        mid = media.get("material_revision_id") or media.get("draft_media_id")
-        if _live_media_rights(db, media) is False:
-            raise HTTPException(409, f"素材公开使用权限已撤销，拒绝远端交付: {mid}")
-        data = _media_bytes(db, media)
-        if data is None:
-            raise HTTPException(409, f"批准素材无法定位实际文件，拒绝远端交付: {mid}")
-        if hashlib.sha256(data).hexdigest() != media.get("hash"):
-            raise HTTPException(409, f"批准素材字节与批准哈希不一致（文件已被替换/损坏），拒绝远端交付: {mid}")
-    return manifest
+    raise HTTPException(409, "不支持的候选清单版本")
 
 
 def prepare_attempt(db: Session, target: DeliveryTarget, manifest: dict) -> DeliveryAttempt:
@@ -628,16 +603,6 @@ def _cover_bytes(db: Session, asset: ContentAsset, manifest: dict) -> bytes:
 
                 return read_bytes_checked(db, revision, require_public=True)
             raise HTTPException(409, "批准素材版本不存在")
-        dm_id = media.get("draft_media_id")
-        if isinstance(dm_id, int):
-            row = db.get(DraftMedia, dm_id)
-            if row and row.file_path:
-                from .material_storage import read_legacy_bytes
-
-                try:
-                    return read_legacy_bytes(row.file_path, expected_hash=media.get("hash") or row.content_hash)
-                except (OSError, ValueError):
-                    return b""
     return b""
 
 
@@ -645,20 +610,7 @@ def _cover_bytes(db: Session, asset: ContentAsset, manifest: dict) -> bytes:
 
 
 def _live_media_rights(db: Session, media: dict) -> bool | None:
-    """实时权利检查（R4.1：与 rule/readiness 完全同语义，堵住 use 级撤权旁路）。
-
-    manifest 同时带 draft_media_id + material_revision_id 时**必须先查 use 行**——
-    早期实现先查 MaterialRevision 即 return，会漏掉「仅对本稿撤权」的 use（Rights Gate 旁路）。
-    有 use 行 → effective_media_rights(use)（use + revision 双层）；无 use 行才退化为 revision-only。
-    None=无法定位（跳过），False=已撤销/未授权，True=OK。
-    """
-    from .content_harness.rules import effective_media_rights
-
-    dm_id = media.get("draft_media_id")
-    if isinstance(dm_id, int):
-        row = db.get(DraftMedia, dm_id)
-        if row is not None:
-            return effective_media_rights(row) is None
+    """Live rights of an approved material: None = not locatable, False = revoked / not public, True = OK."""
     rid = media.get("material_revision_id")
     if isinstance(rid, int):
         revision = db.get(MaterialRevision, rid)
@@ -678,64 +630,13 @@ def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
         from .production_packages import build_v4_package
 
         return build_v4_package(db, target, asset)
-    if asset.project_id is not None:
-        if manifest.get("schema_version") != 3:
-            raise HTTPException(409, "项目候选缺少 v3 冻结清单")
-        validate_live_candidate_payload(db, asset)
-    render = (manifest.get("render") or {}).get("payload") or {}
-    title = manifest.get("content", {}).get("title") or asset.title
-    content: dict = {"markdown": render.get("markdown") or manifest.get("content", {}).get("body_markdown") or asset.final_body, "title": title}
-    if render.get("html"):
-        content["html"] = render["html"]
-    if manifest.get("content", {}).get("thread_posts"):
-        content["json"] = json.dumps({"title": title, "thread_posts": manifest["content"]["thread_posts"]}, ensure_ascii=False, sort_keys=True)
-    media_entries = []
-    for media in manifest.get("media", []):
-        if media.get("rights", {}).get("public_use_allowed") is not True:
-            raise HTTPException(409, f"候选清单包含未获公开权限的素材: {media.get('draft_media_id')}")
-        # 实时权利复核：批准快照之后撤权（revision/status 或 use 行 revoked）必须阻止
-        live = _live_media_rights(db, media)
-        if live is False or (asset.project_id is not None and live is not True):
-            raise HTTPException(409, f"素材公开使用权限已撤销: {media.get('material_revision_id') or media.get('draft_media_id')}")
-        media_entries.append({
-            "draft_media_id": media.get("draft_media_id"),
-            "material_revision_id": media.get("material_revision_id"),
-            "hash": media.get("hash"),
-            "role": media.get("role"),
-            "sort_order": media.get("sort_order"),
-            "placement": media.get("placement") or {},
-            "alt_text": media.get("alt_text"),
-            "caption": media.get("caption"),
-        })
-    package_manifest = {
-        "schema_version": 3 if asset.project_id is not None else 2,
-        "target_id": target.id,
-        "asset_id": asset.id,
-        "channel": target.channel,
-        "content_form": target.content_form,
-        "account_ref": target.account_ref,
-        "action": target.action,
-        "authorization_version": target.authorization_version,
-        "approved_candidate_hash": asset.approved_candidate_hash,
-        "renderer": (manifest.get("render") or {}).get("renderer_key"),
-        "media": media_entries,
-        "citations": manifest.get("citations", []),
-        "declarations": manifest.get("declarations", []),
-        "remote_call": False,
-    }
-    if asset.project_id is not None:
-        package_manifest["candidate"] = {"id": asset.id, "hash": asset.candidate_hash}
-        package_manifest["project"] = manifest["project"]
-        package_manifest["identity"] = manifest["identity"]
-        package_manifest["evidence"] = manifest["evidence"]
-        package_manifest["production"] = manifest["production"]
-    return {"manifest": package_manifest, "content": content}
+    raise HTTPException(409, "不支持的候选清单版本")
 
 
 def package_zip_bytes(db: Session, target: DeliveryTarget) -> tuple[bytes, str]:
-    """v2 通用成品包（保留 media order/placement 与交付说明）。v1 目标由 article_handoff 兼容路径处理。"""
+    """Local package of a frozen v4 / v5 candidate."""
     package = build_copy_package(db, target)
-    manifest, content = package["manifest"], package["content"]
+    manifest = package["manifest"]
     if manifest["schema_version"] == 5:
         from .production_packages import v5_zip_bytes
 
@@ -744,85 +645,4 @@ def package_zip_bytes(db: Session, target: DeliveryTarget) -> tuple[bytes, str]:
         from .production_packages import v4_zip_bytes
 
         return v4_zip_bytes(db, target, package)
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))
-        archive.writestr("content.md", content["markdown"])
-        if content.get("html"):
-            archive.writestr("content.html", content["html"])
-        if content.get("json"):
-            archive.writestr("thread.json", content["json"])
-        archive.writestr(
-            "publish-guide.md",
-            f"# 交付说明\n\n- 渠道：{target.channel} / {target.content_form}\n- 账号：{target.account_ref}\n"
-            f"- 候选哈希：{target.approved_candidate_hash}\n- 动作：{target.action}\n\n"
-            "媒体请按 manifest.media 的 sort_order 与 placement 顺序摆放；发布完成后回填回执。\n",
-        )
-        for media in manifest["media"]:
-            data = _media_bytes(db, media)
-            if data is None:
-                raise HTTPException(409, "批准素材文件缺失，不能导出成品包")
-            if hashlib.sha256(data).hexdigest() != media.get("hash"):
-                raise HTTPException(409, "批准素材文件校验失败，不能导出成品包")
-            suffix = _media_suffix(db, media)
-            media_id = media.get("draft_media_id") or media.get("material_revision_id")
-            archive.writestr(f"media/{(media.get('sort_order') or 0):02d}-{media_id}{suffix}", data)
-    filename = f"delivery-target-{target.id}.zip"
-    return buffer.getvalue(), filename
-
-
-def _media_suffix(db: Session, media: dict) -> str:
-    """R4-N1：按实际 mime 推导包内媒体扩展名（不再硬编码 .png）。"""
-    mimes: list[str] = []
-    rid = media.get("material_revision_id")
-    if isinstance(rid, int):
-        revision = db.get(MaterialRevision, rid)
-        if revision:
-            mimes.append(revision.mime_type or "")
-    dm_id = media.get("draft_media_id")
-    if isinstance(dm_id, int):
-        row = db.get(DraftMedia, dm_id)
-        if row:
-            mimes.append(row.mime_type or "")
-    mime = next((m for m in mimes if m), "")
-    table = {
-        "image/png": ".png",
-        "image/jpeg": ".jpg",
-        "image/webp": ".webp",
-        "image/gif": ".gif",
-        "application/pdf": ".pdf",
-        "video/mp4": ".mp4",
-        "audio/mpeg": ".mp3",
-    }
-    return table.get(mime.lower(), ".bin")
-
-
-def _media_bytes(db: Session, media: dict) -> bytes | None:
-    from .material_storage import read_legacy_bytes
-
-    rid = media.get("material_revision_id")
-    if isinstance(rid, int):
-        revision = db.get(MaterialRevision, rid)
-        if revision and revision.file_path:
-            from .materials import read_bytes_checked
-
-            return read_bytes_checked(db, revision)
-        raise HTTPException(409, "批准素材版本不存在")
-    dm_id = media.get("draft_media_id")
-    if isinstance(dm_id, int):
-        row = db.get(DraftMedia, dm_id)
-        if row and row.file_path and not row.material_revision_id:
-            try:
-                return read_legacy_bytes(row.file_path, expected_hash=media.get("hash") or row.content_hash)
-            except (OSError, ValueError):
-                return None
-        if row and row.material_revision_id:
-            revision = db.get(MaterialRevision, row.material_revision_id)
-            if revision and revision.file_path:
-                from .materials import read_bytes_checked
-
-                try:
-                    return read_bytes_checked(db, revision)
-                except HTTPException:
-                    return None
-    return None
+    raise HTTPException(409, "不支持的候选清单版本")

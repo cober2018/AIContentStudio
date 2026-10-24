@@ -17,11 +17,11 @@ const linkClass = "text-sm text-indigo-700 underline underline-offset-4";
 const PAGE_SIZE = 20;
 const ProviderMediaPanel = lazy(() => import("./ProviderMediaPanel"));
 const ProviderSearchPanel = lazy(() => import("./ProviderSearchPanel"));
-const SourceImportModal = lazy(() => import("../pages/Sources").then(module => ({ default: module.SourceImportModal })));
-const SourceDrawer = lazy(() => import("../pages/Sources").then(module => ({ default: module.SourceDrawer })));
-const MaterialUploadModal = lazy(() => import("../pages/Materials").then(module => ({ default: module.MaterialUploadModal })));
-const PackBuilder = lazy(() => import("../pages/FactPacks").then(module => ({ default: module.PackBuilder })));
-const NewPackForm = lazy(() => import("../pages/FactPacks").then(module => ({ default: module.NewPackForm })));
+const SourceImportModal = lazy(() => import("./SourceTools").then(module => ({ default: module.SourceImportModal })));
+const SourceDrawer = lazy(() => import("./SourceTools").then(module => ({ default: module.SourceDrawer })));
+const MaterialUploadModal = lazy(() => import("./MaterialUploadModal").then(module => ({ default: module.MaterialUploadModal })));
+const PackBuilder = lazy(() => import("./FactPackTools").then(module => ({ default: module.PackBuilder })));
+const NewPackForm = lazy(() => import("./FactPackTools").then(module => ({ default: module.NewPackForm })));
 
 function useLibraryRead<T>(path: string, enabled = true) {
   return useQuery({ queryKey: ["system-library", currentUser(), path], queryFn: () => api.get<T>(path), enabled, retry: false });
@@ -181,7 +181,7 @@ function ResourceDetail({ item, canWrite }: { item: LibraryItem; canWrite: boole
     {panel === "manage" && <><div className="flex flex-wrap gap-3"><Button variant="secondary" disabled={action.busy} onClick={() => void action.refresh()}>刷新详情与所选版本</Button>{item.type === "source" && <Button variant="secondary" disabled={!canWrite || item.status === "archived" || action.disabled} onClick={() => { if (canWrite && item.status !== "archived" && !action.disabled) setSourceOpen(true); }}>查看原文与管理事实</Button>}{item.type === "fact_pack" && <Button variant="secondary" disabled={!canWrite || item.status === "archived" || action.disabled} onClick={() => { if (canWrite && item.status !== "archived" && !action.disabled) setPackEditor(item.id); }}>打开证据包编辑器</Button>}{item.type === "source" && <Button variant="danger" disabled={!canWrite || item.status === "archived" || action.disabled} onClick={() => { if (window.confirm("确认归档此系统共享来源？历史证据与已有引用仍保留。")) void action.run(() => api.patch(`/sources/${item.id}`, { is_archived: true }), "后端已确认归档来源。"); }}>归档共享来源</Button>}</div>
     {item.type === "material" && revision && canWrite && revision.status !== "revoked" && item.status !== "archived" && <div className="space-y-2 rounded-lg border border-rose-200 p-3"><Field label="撤销此版本公开使用许可的原因"><input className={inputClass} value={revokeNote} maxLength={1000} onChange={event => setRevokeNote(event.target.value)} /></Field><Button variant="danger" disabled={action.disabled || !revokeNote.trim()} onClick={() => { if (window.confirm(`确认撤销 Revision #${revision.id} 的公开使用许可？历史引用不会被替换。`)) void action.run(() => api.post(`/materials/${item.id}/revisions/${revision.id}/revoke-public-use`, { note: revokeNote.trim() }), "此精确版本已撤销公开使用许可。"); }}>撤销此版本公开使用</Button></div>}
     {sourceOpen && canWrite && item.status !== "archived" && <Suspense fallback={<Spinner />}><SourceDrawer sourceId={item.id} readOnly={!canWrite || item.status === "archived"} onClose={() => { setSourceOpen(false); void action.refresh(); }} /></Suspense>}
-    {packEditor !== undefined && canWrite && item.status !== "archived" && <Modal title="项目证据包" onClose={() => setPackEditor(undefined)} wide><Suspense fallback={<Spinner />}><PackBuilder key={packEditor} packId={packEditor} embedded readOnly={!canWrite || item.status === "archived"} onClose={() => setPackEditor(undefined)} onCloned={setPackEditor} /></Suspense></Modal>}
+    {packEditor !== undefined && canWrite && item.status !== "archived" && <Modal title="项目证据包" onClose={() => setPackEditor(undefined)} wide><Suspense fallback={<Spinner />}><PackBuilder key={packEditor} packId={packEditor} readOnly={!canWrite || item.status === "archived"} onClose={() => setPackEditor(undefined)} onCloned={setPackEditor} /></Suspense></Modal>}
     </>}{panel === "reuse" && <ProjectReuse key={`${item.type}:${item.id}:${selectedRevisionId ?? "none"}`} item={item} revision={revision} canWrite={canWrite} />}<ActionState action={action} />
   </section>;
 }

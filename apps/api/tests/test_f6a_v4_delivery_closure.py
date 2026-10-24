@@ -67,7 +67,7 @@ def test_no_draft_master_approves_authorizes_and_builds_exact_zip(client, db_ses
         assert len(media_names) == 1
         assert archive.read(media_names[0]) == Path(material.file_path).read_bytes()
     asset = db_session.get(ContentAsset, candidate["id"])
-    assert asset.draft_id is None and asset.topic_brief_id is None and asset.mother_revision_id is None and asset.workflow_run_id is None
+    assert asset.workflow_run_id is None
     assert asset.candidate_hash == candidate["candidate_hash"] and asset.candidate_manifest_json == candidate["manifest"]
     review = db_session.query(Review).one()
     assert review.content_asset_id == asset.id and review.candidate_hash == asset.candidate_hash

@@ -8,9 +8,6 @@ from app.models import (
     ContentMasterCheckRun,
     ContentMasterRevision,
     DiscoverabilityProfileVersion,
-    DiscoverabilityReport,
-    DraftCheckRun,
-    DraftClaim,
     FactPackItem,
     IdentitySnapshot,
 )
@@ -105,7 +102,6 @@ def test_empty_pinned_identity_cannot_be_called_fully_verified(client, db_sessio
 
 def test_v2_checks_have_real_handlers_and_truthful_semantic_coverage(client, db_session):
     path, master = _saved_v2(client, db_session)
-    before = tuple(db_session.query(model).count() for model in (DraftCheckRun, DraftClaim, DiscoverabilityReport))
     response = client.post(f"{path}/{master.id}/checks", headers=HEADERS)
     assert response.status_code == 200, response.text
     checks = {item["check_kind"]: item for item in response.json()["items"]}
@@ -113,7 +109,6 @@ def test_v2_checks_have_real_handlers_and_truthful_semantic_coverage(client, db_
     assert checks["text_fact"]["report"]["coverage"]["semantic"] != "verified"
     assert checks["text_identity"]["report"]["coverage"]["semantic"] != "verified"
     assert checks["text_platform"]["report"]["channel"] == "wechat"
-    assert tuple(db_session.query(model).count() for model in (DraftCheckRun, DraftClaim, DiscoverabilityReport)) == before
 
 
 def test_authorized_v2_package_keeps_frozen_requirements_after_new_profile(client, db_session):

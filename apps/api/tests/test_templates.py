@@ -5,10 +5,7 @@ import pytest
 from app.models import (
     BrandVoiceVersion,
     ChannelTemplateVersion,
-    ContentJob,
-    FactPack,
     PromptVersion,
-    TopicBrief,
 )
 
 ADMIN = {"X-Studio-User": "admin@studio.local"}
@@ -49,45 +46,11 @@ def test_delete_brand_voice_without_reference(client, seed_users, bv):
     assert bv.id not in ids
 
 
-def test_delete_brand_voice_referenced_by_topic(client, seed_users, db_session, bv):
-    fp = FactPack(name="fp", version=1)
-    db_session.add(fp)
-    db_session.flush()
-    db_session.add(
-        TopicBrief(
-            title="选题",
-            fact_pack_id=fp.id,
-            fact_pack_version=1,
-            brand_voice_version_id=bv.id,
-        )
-    )
-    db_session.commit()
-    resp = client.delete(f"/api/v1/templates/brand-voices/{bv.id}", headers=ADMIN)
-    assert resp.status_code == 409
-    assert "引用" in resp.json()["detail"]
-
-
 def test_delete_channel_template_without_reference(client, seed_users, ct):
     resp = client.delete(f"/api/v1/templates/channel-templates/{ct.id}", headers=ADMIN)
     assert resp.status_code == 200
     ids = [x["id"] for x in client.get("/api/v1/templates/channel-templates", headers=ADMIN).json()]
     assert ct.id not in ids
-
-
-def test_delete_channel_template_referenced_by_job(client, seed_users, db_session, ct):
-    fp = FactPack(name="fp", version=1)
-    db_session.add(fp)
-    db_session.flush()
-    tb = TopicBrief(title="选题", fact_pack_id=fp.id, fact_pack_version=1)
-    db_session.add(tb)
-    db_session.flush()
-    db_session.add(
-        ContentJob(topic_brief_id=tb.id, channel="douyin", template_version_id=ct.id)
-    )
-    db_session.commit()
-    resp = client.delete(f"/api/v1/templates/channel-templates/{ct.id}", headers=ADMIN)
-    assert resp.status_code == 409
-    assert "引用" in resp.json()["detail"]
 
 
 def test_delete_prompt_published_blocked_draft_ok(client, seed_users, db_session):

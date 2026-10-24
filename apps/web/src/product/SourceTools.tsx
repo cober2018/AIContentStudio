@@ -1,0 +1,357 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { api } from "../api";
+import {
+  Button,
+  Drawer,
+  EmptyState,
+  ErrorBanner,
+  Field,
+  Modal,
+  Spinner,
+  StatusBadge,
+  inputClass,
+} from "../components/ui";
+
+interface SourceItem {
+  id: number;
+  title: string;
+  source_type: string;
+  as_of: string | null;
+  trust_level: number;
+  parse_status: string;
+  parse_error: string | null;
+  fact_count: number;
+  is_archived: boolean;
+  created_at: string | null;
+}
+
+interface FactItem {
+  id: number;
+  ref: string;
+  statement: string;
+  subject: string | null;
+  value: number | string | null;
+  unit: string | null;
+  as_of: string | null;
+  status: string;
+  confidence: number;
+}
+
+interface SourceDetail extends SourceItem {
+  raw_text: string | null;
+  facts: FactItem[];
+}
+
+export function SourceImportModal({ onClose, onCreated }: { onClose: () => void; onCreated?: (id: number) => void }) {
+  const queryClient = useQueryClient();
+  const [tab, setTab] = useState<"text" | "url" | "file">("text");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [asOf, setAsOf] = useState("");
+  const [url, setUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    setBusy(true);
+    setError("");
+    try {
+      let source: { id: number };
+      if (tab === "text") {
+        source = await api.post("/sources/text", { title, content, as_of: asOf || null });
+      } else if (tab === "url") {
+        source = await api.post("/sources/url", { url, as_of: asOf || null });
+      } else if (file) {
+        const form = new FormData();
+        form.append("file", file);
+        source = await api.upload(`/sources/upload${asOf ? `?as_of=${encodeURIComponent(asOf)}` : ""}`, form);
+      } else throw new Error("请选择文件。");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["sources"] }),
+        queryClient.invalidateQueries({ queryKey: ["system-library"] }),
+      ]);
+      onCreated?.(source.id);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "导入失败");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal title="导入来源" onClose={onClose} wide closeOnBackdrop={false}>
+      <div className="mb-4 flex gap-1 rounded-md bg-slate-100 p-1">
+        {(
+          [
+            ["text", "粘贴文本"],
+            ["url", "导入 URL"],
+            ["file", "上传文件"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`flex-1 rounded px-3 py-1.5 text-sm ${
+              tab === key ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {tab === "text" && (
+          <>
+            <Field label="标题">
+              <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} />
+            </Field>
+            <Field label="内容">
+              <textarea
+                className={`${inputClass} h-48 font-mono text-xs`}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="粘贴结构化数据、研究笔记…"
+              />
+            </Field>
+          </>
+        )}
+        {tab === "url" && (
+          <Field label="URL（仅 http/https，禁止内网地址）">
+            <input className={inputClass} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
+          </Field>
+        )}
+        {tab === "file" && (
+          <Field label="文件（.txt .md .csv .json .pdf）">
+            <input
+              type="file"
+              accept=".txt,.md,.markdown,.csv,.json,.pdf"
+              className="text-sm"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+          </Field>
+        )}
+        <Field label="数据日期 as_of（可选）">
+          <input type="date" className={inputClass} value={asOf} onChange={(e) => setAsOf(e.target.value)} />
+        </Field>
+        {error && <ErrorBanner message={error} />}
+      </div>
+
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>
+          取消
+        </Button>
+        <Button onClick={submit} disabled={busy || (tab === "text" ? !title.trim() || !content.trim() : tab === "url" ? !url.trim() : !file)}>
+          {busy ? "导入中…" : "导入"}
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+export function SourceDrawer({ sourceId, onClose, readOnly = false }: { sourceId: number; onClose: () => void; readOnly?: boolean }) {
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["source", sourceId],
+    queryFn: () => api.get<SourceDetail>(`/sources/${sourceId}`),
+  });
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [factOffset, setFactOffset] = useState(0);
+  const [editing, setEditing] = useState<FactItem | null>(null);
+  const [editStatement, setEditStatement] = useState("");
+  const [error, setError] = useState("");
+  const invalidate = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["source", sourceId] }),
+    queryClient.invalidateQueries({ queryKey: ["sources"] }),
+    queryClient.invalidateQueries({ queryKey: ["facts"] }),
+    queryClient.invalidateQueries({ queryKey: ["system-library"] }),
+  ]);
+
+  const extract = useMutation({
+    mutationFn: () => api.post(`/sources/${sourceId}/extract-facts`),
+    onSuccess: invalidate,
+    onError: (e) => setError(e instanceof Error ? e.message : "抽取失败"),
+  });
+
+  const bulkStatus = useMutation({
+    mutationFn: (action: "confirm" | "reject") =>
+      api.post("/facts/bulk-status", { fact_ids: [...selected], action }),
+    onSuccess: () => {
+      setSelected(new Set());
+      return invalidate();
+    },
+    onError: (e) => setError(e instanceof Error ? e.message : "操作失败"),
+  });
+
+  const saveFact = useMutation({
+    mutationFn: () => api.patch(`/facts/${editing!.id}`, { statement: editStatement }),
+    onSuccess: () => {
+      setEditing(null);
+      return invalidate();
+    },
+    onError: (e) => setError(e instanceof Error ? e.message : "保存失败"),
+  });
+  const decide = useMutation({
+    mutationFn: ({ action, id }: { action: "confirm" | "reject"; id: number }) => bulkOne(action, id),
+    onSuccess: invalidate,
+    onError: (e) => setError(e instanceof Error ? e.message : "事实操作失败"),
+  });
+  const busy = extract.isPending || bulkStatus.isPending || saveFact.isPending || decide.isPending;
+  const writable = !readOnly && !data?.is_archived;
+
+  function toggle(id: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  return (
+    <Drawer title={data ? data.title : "来源详情"} onClose={onClose}>
+      {error && <ErrorBanner message={error} />}
+      {!isLoading && !data ? <ErrorBanner message="来源读取失败，请关闭后重试。" /> : isLoading || !data ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <StatusBadge status={data.parse_status} />
+            <span>类型：{data.source_type}</span>
+            <span>as_of：{data.as_of || "-"}</span>
+            <span>可信度：{data.trust_level}</span>
+            {data.parse_error && <span className="text-rose-600">解析错误：{data.parse_error}</span>}
+          </div>
+
+          <section>
+            <h3 className="mb-2 text-sm font-medium">原始内容</h3>
+            <pre className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-md bg-slate-50 p-3 text-xs text-slate-600">
+              {data.raw_text || "（空）"}
+            </pre>
+          </section>
+
+          <section>
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-medium">
+                候选 Facts（{data.facts.length}）
+              </h3>
+              <div className="flex gap-2">
+                {writable && <Button size="sm" variant="secondary" disabled={busy} onClick={() => extract.mutate()}>
+                  抽取候选
+                </Button>}
+                {writable && selected.size > 0 && (
+                  <>
+                    <Button size="sm" disabled={busy} onClick={() => bulkStatus.mutate("confirm")}>
+                      确认选中（{selected.size}）
+                    </Button>
+                    <Button size="sm" variant="danger" disabled={busy} onClick={() => bulkStatus.mutate("reject")}>
+                      拒绝选中
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            {data.facts.length === 0 ? (
+              <EmptyState title="尚无候选事实" hint="点击「抽取候选」从解析结果中抽取" />
+            ) : (
+              <div className="space-y-2">
+                {data.facts.slice(factOffset, factOffset + 100).map((fact) => (
+                  <div key={fact.id} className="rounded-md border border-slate-200 p-3">
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        disabled={!writable || busy}
+                        checked={selected.has(fact.id)}
+                        onChange={() => toggle(fact.id)}
+                        className="mt-1"
+                      />
+                      <div className="min-w-0 flex-1">
+                        {editing?.id === fact.id ? (
+                          <div className="space-y-2">
+                            <textarea
+                              className={`${inputClass} h-20 text-xs`}
+                              value={editStatement}
+                              onChange={(e) => setEditStatement(e.target.value)}
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" disabled={!writable || busy || !editStatement.trim()} onClick={() => saveFact.mutate()}>
+                                保存
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                                取消
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="text-sm text-slate-800">{fact.statement}</div>
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                              <span className="font-mono">{fact.ref}</span>
+                              <StatusBadge status={fact.status} />
+                              {fact.value !== null && (
+                                <span>
+                                  {fact.value}
+                                  {fact.unit || ""}
+                                </span>
+                              )}
+                              <span>as_of {fact.as_of || "-"}</span>
+                              <span>可信 {fact.confidence}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {writable && editing?.id !== fact.id && (
+                        <div className="flex shrink-0 gap-1">
+                          {fact.status === "candidate" && (
+                            <Button
+                              size="sm"
+                              disabled={busy}
+                              onClick={() => decide.mutate({ action: "confirm", id: fact.id })}
+                            >
+                              确认
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            disabled={busy}
+                            variant="secondary"
+                            onClick={() => {
+                              setEditing(fact);
+                              setEditStatement(fact.statement);
+                            }}
+                          >
+                            编辑
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => decide.mutate({ action: "reject", id: fact.id })}
+                          >
+                            拒绝
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div className="flex items-center gap-3 text-xs text-slate-500">
+                  <span>每页最多 100 条，批量操作仅限当前页选择。</span>
+                  <Button size="sm" variant="secondary" disabled={busy || factOffset === 0} onClick={() => { setFactOffset(Math.max(0, factOffset - 100)); setSelected(new Set()); setEditing(null); }}>上一页</Button>
+                  <Button size="sm" variant="secondary" disabled={busy || factOffset + 100 >= data.facts.length} onClick={() => { setFactOffset(factOffset + 100); setSelected(new Set()); setEditing(null); }}>下一页</Button>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+    </Drawer>
+  );
+}
+
+async function bulkOne(action: "confirm" | "reject", factId: number) {
+  await api.post(`/facts/${factId}/${action}`);
+}

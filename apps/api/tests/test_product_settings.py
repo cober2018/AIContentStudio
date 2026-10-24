@@ -64,19 +64,10 @@ def read(client, path="product", role="admin", **params):
 @pytest.mark.parametrize("role", ["admin", "editor", "reviewer", "viewer"])
 def test_product_sections_and_caller_capabilities(settings_client, role):
     sections = {item["key"]: item for item in read(settings_client, role=role)["sections"]}
-    assert list(sections) == ["models", "data_sources", "channels", "rules", "team", "advanced"]
+    assert list(sections) == ["models", "data_sources", "channels", "rules", "team"]
     assert sections["models"]["editability"] == ("editable" if role == "admin" else "read_only")
     assert sections["channels"]["editability"] == "read_only"
     assert sections["team"]["editability"] == "read_only"
-    if role != "admin":
-        assert sections["advanced"]["editability"] == "unavailable"
-        assert sections["advanced"]["data"] == {}
-        assert sections["advanced"]["reason"]
-    else:
-        assert sections["advanced"]["editability"] == "editable"
-        assert sections["advanced"]["data"]["legacy_href"] == "/legacy/settings"
-        assert sections["advanced"]["data"]["runtime_editability"] == "read_only"
-        assert sections["advanced"]["data"]["can_manage"] is True
 
 
 @pytest.mark.parametrize("url,expected", [
@@ -129,17 +120,12 @@ def test_channels_whitelist_configured_not_verified_and_fallback(settings_client
     assert form["verified"] is False
     legacy = next(c for c in items if c["channel"] == "wechat")["content_forms"][0]
     assert legacy["rule_sets"] == []
-    assert "rule.fact.bound" in legacy["effective_rule_sets"]
-    assert legacy["rule_source"] == "legacy_fallback"
+    assert legacy["effective_rule_sets"] == []
+    assert legacy["rule_source"] == "none"
     assert "PRIVATE" not in json.dumps(items)
 
 
 def test_cold_rules_and_resource_specific_actions(settings_client, db_session, monkeypatch):
-    from app.services.content_harness import rules
-    from app.services.content_harness.registry import registry
-    monkeypatch.setattr(registry, "_items", {})
-    monkeypatch.setattr(registry, "_descriptors", {})
-    monkeypatch.setattr(rules, "_registered", False)
     db_session.add_all([
         PromptVersion(channel="wechat", name="Published", version=1, template_text="PRIVATE", status="published"),
         PromptVersion(channel="wechat", name="Draft", version=2, template_text="PRIVATE", status="draft"),
@@ -149,8 +135,7 @@ def test_cold_rules_and_resource_specific_actions(settings_client, db_session, m
     ])
     db_session.commit()
     data = read(settings_client, "rules")["data"]
-    keys = {r["key"] for r in data["rules"]}
-    assert {"rule.fact.bound", "rule.seo.required_fields", "rule.finance.as_of", "rule.tech.code_provenance"} <= keys
+    assert data["rules"] == []
     by_name = {t["name"]: t for t in data["templates"]["items"]}
     assert by_name["Published"]["actions"] == []
     assert "clone" not in by_name["Draft"]["actions"]

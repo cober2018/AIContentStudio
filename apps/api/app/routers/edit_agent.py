@@ -133,6 +133,12 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
         result["cut_output_id"] = db.scalar(select(CreativeExecutionOutput.id).where(
             CreativeExecutionOutput.execution_id == result["execution_id"], CreativeExecutionOutput.role_id.in_(("rough_cut", "final")))
             .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+        # The 小样 page stays watchable after the chain has moved on to the 成片.
+        sample = next((task for task in reversed(result["tasks"]) if task.get("phase") == "rough_cut"), None)
+        if sample and sample["execution_id"] != result["execution_id"]:
+            result["sample"] = {"execution_id": sample["execution_id"], "cut_output_id": db.scalar(select(CreativeExecutionOutput.id).where(
+                CreativeExecutionOutput.execution_id == sample["execution_id"], CreativeExecutionOutput.role_id == "rough_cut")
+                .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))}
     return result
 
 
@@ -141,6 +147,74 @@ def video_chain_decide(project_id: int, unit_id: int, payload: VideoDecisionIn, 
     from ..services import video_chain
 
     return video_chain.decide(db, user, project_id, unit_id, payload.stage, payload.decision, [item.model_dump() for item in payload.notes])
+
+
+class VideoMaterialsIn(BaseModel):
+    picks: dict[str, int] = Field(default_factory=dict, max_length=200)
+    music: int | None = None
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/materials")
+def video_chain_materials(project_id: int, unit_id: int, payload: VideoMaterialsIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import video_chain
+
+    # Same write the video model makes over MCP, so a shot or the music the user drops in counts the same way.
+    return video_chain.set_materials(db, user, project_id, unit_id, payload.picks, payload.music)
+
+
+class ArticleWriterIn(BaseModel):
+    writer: str = Field(pattern=r"^(platform|external)$")
+
+
+class ArticleNoteIn(BaseModel):
+    note: str = Field(min_length=1, max_length=2000)
+
+
+class ArticleDecisionIn(BaseModel):
+    decision: str = Field(pattern=r"^(approve|changes)$")
+    notes: list[ArticleNoteIn] = Field(default_factory=list, max_length=50)
+
+
+@router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain")
+def article_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import article_chain
+
+    return article_chain.state(db, user, project_id, unit_id)
+
+
+@router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain/writer")
+def article_chain_writer(project_id: int, unit_id: int, payload: ArticleWriterIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import article_chain
+
+    return article_chain.set_writer(db, user, project_id, unit_id, payload.writer)
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain/decision")
+def article_chain_decide(project_id: int, unit_id: int, payload: ArticleDecisionIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import article_chain
+
+    return article_chain.decide(db, user, project_id, unit_id, payload.decision, [item.model_dump() for item in payload.notes])
+
+
+@router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain/versions")
+def article_chain_versions(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import article_chain
+
+    return article_chain.versions(db, user, project_id, unit_id)
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain/versions/{master_id}/restore")
+def article_chain_restore(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import article_chain
+
+    return article_chain.restore(db, user, project_id, unit_id, master_id)
+
+
+@router.delete("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain/versions/{master_id}")
+def article_chain_delete(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import article_chain
+
+    return article_chain.delete_version(db, user, project_id, unit_id, master_id)
 
 
 @router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/cuts/{output_id}/location")

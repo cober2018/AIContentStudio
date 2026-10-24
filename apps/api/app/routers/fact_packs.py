@@ -9,9 +9,6 @@ from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import (
     AuditLog,
-    ContentAsset,
-    DeliveryTarget,
-    DeliveryTargetStatus,
     Fact,
     FactPack,
     FactPackItem,
@@ -249,18 +246,8 @@ def revoke_item_public_use(
     if not item.public_use_revoked_at:
         item.public_use_revoked_at = utcnow()
         item.public_use_revocation_note = payload.note
-        asset_ids = list(db.scalars(select(ContentAsset.id).where(
-            ContentAsset.fact_pack_id == pack_id,
-            ContentAsset.mother_revision_id.is_not(None),
-        )))
-        targets = db.scalars(select(DeliveryTarget).where(
-            DeliveryTarget.content_asset_id.in_(asset_ids),
-            DeliveryTarget.status.not_in({DeliveryTargetStatus.human_confirmed.value, DeliveryTargetStatus.canceled.value}),
-        )).all() if asset_ids else []
-        for target in targets:
-            target.status = DeliveryTargetStatus.blocked.value
-            db.add(AuditLog(event="delivery_target.blocked", actor=user.email, entity_type="delivery_target", entity_id=str(target.id), detail_json={"reason": "evidence_public_use_revoked", "fact_pack_item_id": item.id}))
-        db.add(AuditLog(event="fact_pack_item.public_use_revoked", actor=user.email, entity_type="fact_pack_item", entity_id=str(item.id), detail_json={"blocked_targets": len(targets), "note": payload.note}))
+        # Master / Variant candidates re-check evidence rights live before delivery, so nothing is blocked here.
+        db.add(AuditLog(event="fact_pack_item.public_use_revoked", actor=user.email, entity_type="fact_pack_item", entity_id=str(item.id), detail_json={"note": payload.note}))
         db.commit()
     return _serialize(pack, with_items=True)
 

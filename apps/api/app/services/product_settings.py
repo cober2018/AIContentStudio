@@ -17,23 +17,21 @@ from ..models import (
     Connector,
     ConnectorEndpoint,
     ContentAccount,
-    ContentJob,
     ContentPersona,
     DeliveryTarget,
     DiscoverabilityProfileVersion,
     PromptVersion,
-    TopicBrief,
     User,
 )
 from . import capability_integrations, data_source_plugins, system_settings
-from .content_harness import channel_registry, rules
+from .content_harness import channel_registry
 from .content_harness.publishers import bootstrap_publishers
 from .content_harness.registry import RegistryKinds, registry
 from .generation.providers import LLMError, effective_llm_config
 
 LABELS = {
     "models": "模型与 AI", "data_sources": "数据源", "channels": "渠道",
-    "rules": "规则与模板", "team": "团队与权限", "advanced": "高级运行环境",
+    "rules": "规则与模板", "team": "团队与权限",
 }
 
 
@@ -168,8 +166,8 @@ def channels_section(db: Session, user: User) -> dict:
                 "source": _ref(form["source"]), "profile_version_id": form["profile_version_id"],
                 "workflow_key": _ref(form["workflow_key"]), "renderer_key": _ref(form["renderer_key"]),
                 "rule_sets": configured_rules,
-                "effective_rule_sets": configured_rules or rules.rules_for_draft(db, None),
-                "rule_source": "configured" if configured_rules else "legacy_fallback",
+                "effective_rule_sets": configured_rules,
+                "rule_source": "configured" if configured_rules else "none",
                 "discoverability_profile": _ref(form["discoverability_profile"]),
                 "publisher_candidates": _refs(form["publisher_candidates"]),
                 "capability_state": "configured_not_verified", "verified": False,
@@ -184,17 +182,10 @@ def _template_query(model, kind, name, channel, can_delete):
 
 
 def rules_section(db: Session, user: User, limit=50, offset=0) -> dict:
-    rules.bootstrap_rules()
-    descriptors = [{
-        "type": "rule", "kind": "rule", "key": _ref(d.key), "version": _text(d.version),
-        "label": _text(d.label) or _ref(d.key), "human_gate": bool(d.human_gate),
-        "side_effect": bool(d.side_effect), "editability": "read_only", "actions": [],
-    } for d in registry.list("rule")]
-    voice_unused = ~select(TopicBrief.id).where(TopicBrief.brand_voice_version_id == BrandVoiceVersion.id).exists()
-    template_unused = ~select(ContentJob.id).where(ContentJob.template_version_id == ChannelTemplateVersion.id).exists()
+    descriptors: list[dict] = []
     inventory = union_all(
-        _template_query(BrandVoiceVersion, "brand_voice", BrandVoiceVersion.name, literal(None), voice_unused),
-        _template_query(ChannelTemplateVersion, "channel_template", ChannelTemplateVersion.name, ChannelTemplateVersion.channel, template_unused),
+        _template_query(BrandVoiceVersion, "brand_voice", BrandVoiceVersion.name, literal(None), literal(True)),
+        _template_query(ChannelTemplateVersion, "channel_template", ChannelTemplateVersion.name, ChannelTemplateVersion.channel, literal(True)),
         _template_query(PromptVersion, "prompt", PromptVersion.name, PromptVersion.channel, literal(True)),
         _template_query(DiscoverabilityProfileVersion, "discoverability_profile", DiscoverabilityProfileVersion.profile_key, DiscoverabilityProfileVersion.channel, literal(False)),
     ).subquery()
@@ -235,28 +226,10 @@ def team_section(db: Session, user: User) -> dict:
     })
 
 
-def advanced_section(user: User) -> dict:
-    if user.role != "admin":
-        return _section("advanced", {}, "unavailable", "Admin-only local runtime configuration")
-    settings = get_settings()
-    return _section("advanced", {
-        "legacy_href": "/legacy/settings", "status": "not_probed",
-        "environment": settings.app_env if settings.app_env in {"development", "test", "production"} else "unknown",
-        "can_manage": True, "runtime_editability": "read_only",
-        "management_actions": ["manage_plugins", "manage_dsh"],
-        "database": {"status": "not_probed"},
-        "queue": {"enabled": bool(settings.task_queue_enabled), "status": "not_probed"},
-        "storage": {"backend": settings.material_storage_backend if settings.material_storage_backend in {"local", "minio"} else "unknown", "enabled": settings.material_storage_backend == "local" or bool(settings.minio_enabled), "secure": bool(settings.minio_secure), "status": "not_probed"},
-        "security": {"ssrf_allow_private": bool(settings.ssrf_allow_private), "upload_limit_configured": settings.upload_max_bytes > 0},
-        "plugins": {"configured": bool(runtime_config.get_runtime(runtime_config.KEY_PLUGINS)), "status": "not_inspected"},
-        "dsh": {"configured": bool(runtime_config.get_runtime(runtime_config.KEY_DSH)), "status": "not_inspected"},
-    }, "editable")
-
-
 def product_view(db: Session, user: User) -> dict:
     return {"sections": [
         models_section(user), data_sources_section(db, user), channels_section(db, user),
-        rules_section(db, user), team_section(db, user), advanced_section(user),
+        rules_section(db, user), team_section(db, user),
     ]}
 
 

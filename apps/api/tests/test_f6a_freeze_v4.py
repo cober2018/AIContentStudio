@@ -22,7 +22,6 @@ def test_manual_text_freeze_uses_full_v4_and_repeats_one_candidate_event(client,
     response = _freeze(client, path, master)
     assert response.status_code == 201, response.text
     asset = db_session.get(ContentAsset, response.json()["id"])
-    assert asset.draft_id is None and asset.topic_brief_id is None and asset.mother_revision_id is None
     assert asset.workflow_run_id is None
     assert asset.candidate_manifest_json["identity"]["checksum"]
     assert asset.candidate_manifest_json["content_master"]["id"] == master["id"]

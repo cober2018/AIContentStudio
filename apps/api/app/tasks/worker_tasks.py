@@ -7,9 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
-from ..models import ConnectorEndpoint, ContentJob, User
+from ..models import ConnectorEndpoint, User
 from ..services import connector_service
-from ..services.generation import orchestrator
 from .celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -26,63 +25,6 @@ def retention_sweep() -> dict:
 
     with SessionLocal() as db:
         return run_retention(db)
-
-
-def _run_generation(db: Session, job_id: int, dispatch_id: str = "") -> None:
-    job = db.get(ContentJob, job_id)
-    if not job:
-        logger.error("生成任务取消：ContentJob %s 不存在", job_id)
-        return
-    from ..models import JobStatus
-
-    terminal = {JobStatus.succeeded.value, JobStatus.failed.value}
-    if (dispatch_id and job.status in terminal
-            and (job.usage_json or {}).get("_completed_dispatch_id") == dispatch_id):
-        # acks_late 重投护栏：本次派发已完成并落标记，重投同 id 不再执行
-        # （重复跑=重复计费/重复 Draft；regenerate 等显式新派发是新 id，不受影响）
-        logger.warning("生成任务跳过：ContentJob %s 本次派发 %s 已完成", job_id, dispatch_id)
-        return
-    from ..observability import correlation_scope, log_operation
-
-    telemetry = _telemetry_from(job.usage_json)
-    started = time.perf_counter()
-    error = None
-    with correlation_scope(
-        trace_id=telemetry.get("trace_id"), operation="generation", job_id=job.id, run_id=job.workflow_run_id,
-    ):
-        # worker 进程独立于 FastAPI 生命周期：跑 LLM 前刷新运行时配置覆盖
-        from .. import runtime_config
-
-        runtime_config.load_from_db(db)
-        from ..services.generation.providers import LLMError, effective_llm_config, model_selection
-
-        selected_profile = (job.usage_json or {}).get("selected_model_profile")
-        try:
-            with model_selection(selected_profile):
-                if selected_profile:
-                    config = effective_llm_config("generate")
-                    from ..services.generation.providers import provider_model_name
-
-                    expected_model = provider_model_name("generate")
-                    if config["provider"] != job.model_provider or expected_model != job.model_name:
-                        raise LLMError("queued_model_selection_changed")
-                orchestrator.run_generation_for_job(db, job)
-        except LLMError as exc:
-            from ..models import JobStatus, utcnow
-
-            error = exc
-            job.status = JobStatus.failed.value
-            job.error = "queued_model_selection_unavailable"
-            job.finished_at = utcnow()
-        except orchestrator.GenerationError as exc:
-            error = exc
-            # job.status/error 已由 orchestrator 落库
-        finally:
-            # 与终态同一次提交：重投看到的状态和令牌不会拆开
-            if dispatch_id and job.status in terminal:
-                job.usage_json = {**(job.usage_json or {}), "_completed_dispatch_id": dispatch_id}
-            db.commit()
-            log_operation("worker_generation", status=job.status, duration=time.perf_counter() - started, error=error)
 
 
 def _run_pull(db: Session, endpoint_id: int, actor_email: str) -> None:
@@ -111,15 +53,6 @@ def _run_pull(db: Session, endpoint_id: int, actor_email: str) -> None:
             connector_service.record_pull_failure(db, endpoint, str(exc))
         finally:
             log_operation("worker_connector_pull", status=endpoint.last_pull_status or "unknown", duration=time.perf_counter() - started, error=error)
-
-
-@celery_app.task(name="app.tasks.worker_tasks.run_generation_job")
-def run_generation_job(job_id: int, dispatch_id: str | None = None) -> dict:
-    """dispatch_id 缺省兼容已入队的旧消息；旧消息没有令牌，不做重投去重。"""
-    with SessionLocal() as db:
-        _run_generation(db, job_id, dispatch_id or "")
-        job = db.get(ContentJob, job_id)
-        return {"job_id": job_id, "status": job.status if job else "unknown"}
 
 
 def _advance_workflow_run(db: Session, run_id: int) -> str:
@@ -222,33 +155,6 @@ def scan_connector_schedules() -> dict:
 
 
 # ---------- 供 API 路由调用的分发封装（同步/异步双模式） ----------
-
-
-def dispatch_generation(db: Session, job_id: int) -> str:
-    """按开关决定同步执行或入队。返回最终/预期的 job 状态。
-
-    每次派发生成唯一 dispatch_id：任务完成后把该 id 记入 usage_json，
-    acks_late 下消息重投（同 id）会被终态护栏拦下，而 regenerate 这类
-    显式新派发（新 id）正常执行。
-    """
-    import uuid
-
-    from ..config import get_settings
-    from ..models import JobStatus
-
-    dispatch_id = uuid.uuid4().hex[:12]
-    if get_settings().task_queue_enabled:
-        from ..observability import persisted_telemetry
-
-        job = db.get(ContentJob, job_id)
-        if job is not None:
-            job.usage_json = persisted_telemetry(job.usage_json)
-            db.flush()
-        run_generation_job.delay(job_id, dispatch_id)
-        return JobStatus.queued.value
-    _run_generation(db, job_id, dispatch_id)
-    job = db.get(ContentJob, job_id)
-    return job.status if job else JobStatus.failed.value
 
 
 def dispatch_pull(endpoint_id: int, actor_email: str) -> str:

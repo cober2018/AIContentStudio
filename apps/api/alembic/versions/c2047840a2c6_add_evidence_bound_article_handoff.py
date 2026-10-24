@@ -19,7 +19,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def _add_column(table: str, column: sa.Column) -> None:
-    if column.name not in {item["name"] for item in sa.inspect(op.get_bind()).get_columns(table)}:
+    inspector = sa.inspect(op.get_bind())
+    # Fresh installs no longer create the old-version draft tables.
+    if not inspector.has_table(table):
+        return
+    if column.name not in {item["name"] for item in inspector.get_columns(table)}:
         op.add_column(table, column)
 
 
@@ -30,7 +34,8 @@ def upgrade() -> None:
     inspector = sa.inspect(bind)
     # The initial migration uses Base.metadata.create_all, so fresh databases
     # already receive these tables; existing databases need them added here.
-    if not inspector.has_table("mother_revision"):
+    # Fresh installs no longer have the old-version topic / draft tables, so their children are skipped too.
+    if not inspector.has_table("mother_revision") and inspector.has_table("topic_brief"):
         op.create_table(
             "mother_revision",
             sa.Column("id", sa.Integer(), primary_key=True),
@@ -48,7 +53,7 @@ def upgrade() -> None:
             sa.ForeignKeyConstraint(["parent_revision_id"], ["mother_revision.id"]),
             sa.UniqueConstraint("topic_brief_id", "revision_no", name="uq_mother_revision_topic_no"),
         )
-    if not inspector.has_table("draft_media"):
+    if not inspector.has_table("draft_media") and inspector.has_table("draft"):
         op.create_table(
             "draft_media",
             sa.Column("id", sa.Integer(), primary_key=True),

@@ -115,7 +115,7 @@ def _run(db: Session, user: User, project_id: int, unit_id: int) -> dict:
         ae, note = {}, None
         if not document.get("postproduction"):
             # Video decisions belong to the external model (video_chain.prepare_edit); the platform calls no model here.
-            raise HandoffError(step, "哪些镜头用 AE 由 Claude Code 决定，请在 Claude Code 里继续这条视频")
+            raise HandoffError(step, "哪些镜头用 AE 由第三方模型决定，请在第三方模型那边继续这条视频")
         if not placed:
             existing = master.edit_summary_json or {}
             ae = (existing.get("auto_handoff") or {}).get("ae") or {}

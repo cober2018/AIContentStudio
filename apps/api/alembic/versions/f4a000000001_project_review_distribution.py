@@ -42,7 +42,9 @@ def upgrade() -> None:
         sa.Column("candidate_hash", sa.String(64)),
     ):
         _add("content_asset", column)
-    asset_nullable = [name for name in ("draft_id", "topic_brief_id", "fact_pack_id", "fact_pack_version", "approved_revision") if not _columns("content_asset")[name]["nullable"]]
+    asset_columns = _columns("content_asset")
+    # Fresh installs no longer have the old-version draft / topic columns.
+    asset_nullable = [name for name in ("draft_id", "topic_brief_id", "fact_pack_id", "fact_pack_version", "approved_revision") if name in asset_columns and not asset_columns[name]["nullable"]]
     if asset_nullable:
         with op.batch_alter_table("content_asset") as batch:
             for name in asset_nullable:
@@ -54,7 +56,8 @@ def upgrade() -> None:
             batch.create_unique_constraint("uq_project_candidate_hash", ["project_id", "content_unit_id", "candidate_hash"])
 
     _add("review", sa.Column("content_asset_id", sa.Integer(), sa.ForeignKey("content_asset.id", name="fk_review_content_asset_id")))
-    review_nullable = [name for name in ("draft_id", "revision_no") if not _columns("review")[name]["nullable"]]
+    review_columns = _columns("review")
+    review_nullable = [name for name in ("draft_id", "revision_no") if name in review_columns and not review_columns[name]["nullable"]]
     if review_nullable:
         with op.batch_alter_table("review") as batch:
             for name in review_nullable:

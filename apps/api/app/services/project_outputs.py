@@ -6,12 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import (
-    ContentAsset,
-    ContentJob,
     ContentMasterRevision,
     ContentProject,
     ContentUnit,
-    Draft,
     MaterialRevision,
     ProjectWorkflowOutput,
     WorkflowRun,
@@ -22,15 +19,12 @@ from ..models import (
 from .project_events import record_project_event
 
 OUTPUTS = {
-    "builtin.generate": ("draft_id", "draft", Draft),
-    "builtin.generate_cover": ("material_revision_id", "material_revision", MaterialRevision),
     "media.generate": ("material_revision_id", "material_revision", MaterialRevision),
     "media.chart": ("material_revision_id", "material_revision", MaterialRevision),
     "media.screenshot": ("material_revision_id", "material_revision", MaterialRevision),
     "media.video_clip": ("material_revision_id", "material_revision", MaterialRevision),
-    "builtin.approve": ("asset_id", "candidate", ContentAsset),
 }
-MEDIA_KINDS = {"builtin.generate_cover": "image", "media.chart": "chart", "media.screenshot": "screenshot", "media.video_clip": "video"}
+MEDIA_KINDS = {"media.chart": "chart", "media.screenshot": "screenshot", "media.video_clip": "video"}
 
 
 def associate_step_output(db: Session, run: WorkflowRun, step: WorkflowStep, attempt_id: int) -> ProjectWorkflowOutput | None:
@@ -48,8 +42,6 @@ def associate_step_output(db: Session, run: WorkflowRun, step: WorkflowStep, att
         return None
     entity = db.get(entity_type, entity_id)
     if entity is None:
-        return None
-    if kind == "candidate" and not entity.approved_candidate_hash:
         return None
     if kind == "material_revision":
         expected_kind = step.output_json.get("media_kind") if step.plugin_key == "media.generate" else MEDIA_KINDS[step.plugin_key]
@@ -76,11 +68,6 @@ def associate_step_output(db: Session, run: WorkflowRun, step: WorkflowStep, att
         except Exception:  # noqa: BLE001 Output association must fail closed.
             return None
         if hashlib.sha256(content).hexdigest() != entity.content_hash:
-            return None
-    if kind in {"draft", "candidate"}:
-        draft = entity if kind == "draft" else db.get(Draft, entity.draft_id)
-        job = db.get(ContentJob, draft.content_job_id) if draft else None
-        if job is None or job.workflow_run_id != run.id:
             return None
     unit = db.get(ContentUnit, run.content_unit_id)
     if unit is None:
@@ -125,6 +112,6 @@ def associate_step_output(db: Session, run: WorkflowRun, step: WorkflowStep, att
     )
     db.add(output)
     db.flush()
-    event_type = "content_master.generated" if master_output else "asset.workflow_generated" if kind == "material_revision" else "draft.generated" if kind == "draft" else "candidate.associated"
+    event_type = "content_master.generated" if master_output else "asset.workflow_generated"
     record_project_event(db, project_id=project.id, event_type=event_type, actor=None, entity_type=kind, entity_id=entity_id, payload={"unit_id": unit.id, "run_id": run.id, "node_id": step.node_id, "attempt_id": attempt_id, "project_output_id": output.id})
     return output

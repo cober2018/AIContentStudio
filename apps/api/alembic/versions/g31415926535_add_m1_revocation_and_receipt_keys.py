@@ -21,6 +21,9 @@ def _checks(table: str) -> set[str]:
 
 def upgrade() -> None:
     for table in ("fact_pack_item", "draft_media"):
+        # Fresh installs no longer create the old-version draft_media table.
+        if not sa.inspect(op.get_bind()).has_table(table):
+            continue
         columns = _columns(table)
         with op.batch_alter_table(table) as batch:
             if "public_use_revoked_at" not in columns:

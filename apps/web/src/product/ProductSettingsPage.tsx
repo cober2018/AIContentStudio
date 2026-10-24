@@ -1,13 +1,13 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, currentUser, setCurrentUser } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
 import type { Settings as ProductionSettings } from "./GuidedProductionProfile";
 
-const RuntimeSettings = lazy(() => import("../pages/Settings"));
-const ConnectorOperations = lazy(() => import("../pages/Connectors"));
-const TemplateOperations = lazy(() => import("../pages/Templates"));
+const RuntimeModelSettings = lazy(() => import("./RuntimeModelSettings"));
+const ConnectorSettings = lazy(() => import("./ConnectorSettings"));
+const TemplateSettings = lazy(() => import("./TemplateSettings"));
 const CapabilitySettings = lazy(() => import("./CapabilitySettings"));
 const ChannelPluginPanel = lazy(() => import("./ChannelPluginPanel"));
 const ProviderGuidancePanel = lazy(() => import("./ProviderGuidancePanel"));
@@ -26,29 +26,14 @@ type PageInfo = { total: number; limit: number; offset: number };
 const labels: Record<Editability, string> = { editable: "可配置", read_only: "只读", unavailable: "不可用" };
 const sections = [
   ["models", "模型与 AI"], ["data_sources", "数据源"], ["channels", "渠道"],
-  ["rules", "规则与模板"], ["team", "团队与权限"], ["mcp", "MCP 接入"], ["storage", "存储位置"], ["edit_agent", "自动剪辑"], ["voice", "配音"], ["advanced", "高级运行环境"],
-] as const;
-const compatibilityTools = [
-  ["/topics", "旧选题", "原 Topic、生产输入与建议"],
-  ["/workspace", "旧稿件工作台", "原 Draft 编辑、检查与生成历史"],
-  ["/review-publish", "旧审核与发布", "原候选、检查与交付目标"],
-  ["/legacy/review", "旧审核", "原 Draft 审批记录"],
-  ["/handoff", "旧母稿交接", "原 MotherRevision 和适配稿"],
-  ["/legacy/assets", "旧内容资产", "原候选、交付包、回执与反馈"],
-  ["/workflows", "独立工作流", "定义、Run、Attempt 与高级调试"],
-  ["/sources", "来源兼容页", "原 Source / Fact 操作"],
-  ["/fact-packs", "证据包兼容页", "原 ID、版本与冻结快照"],
-  ["/legacy/materials", "素材兼容页", "原素材版本与旧 Draft 挂载"],
-  ["/connectors", "数据接入兼容页", "原端点配置与明确拉取"],
-  ["/templates", "模板兼容页", "原模板、Brand Voice 与 Prompt"],
-  ["/dashboard", "旧概览", "原概览读取"],
-  ["/legacy/landing", "旧首页", "原入口保留"],
+  ["rules", "规则与模板"], ["team", "团队与权限"], ["mcp", "MCP 接入"], ["storage", "存储位置"], ["edit_agent", "自动剪辑"], ["voice", "配音"], ["methods", "能力方法库"],
 ] as const;
 
 const modelViews = [
   { key: "providers", label: "厂商与模型", hint: "连接服务，登记可用模型", icon: "01" },
   { key: "routes", label: "用途路由", hint: "为各个功能选择模型", icon: "02" },
   { key: "capabilities", label: "生成能力与插件", hint: "配置媒体能力与回退", icon: "03" },
+  { key: "runtime", label: "兜底模型与生图", hint: "默认模型、AI 生图、dsh 与技能目录", icon: "04" },
 ] as const;
 type ModelView = typeof modelViews[number]["key"];
 
@@ -58,32 +43,32 @@ function ModelSettingsWorkspace({ editable, onDirtyChange }: { editable: boolean
   const [registrationDirty, setRegistrationDirty] = useState(false);
   const [capabilityDirty, setCapabilityDirty] = useState(false);
   const [showGuidance, setShowGuidance] = useState(false);
+  const [runtimeOpened, setRuntimeOpened] = useState(false);
   useEffect(() => { onDirtyChange(registrationDirty || capabilityDirty); }, [registrationDirty, capabilityDirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   return <div className="grid min-w-0 gap-6 lg:grid-cols-[11rem_minmax(0,1fr)]">
     <nav aria-label="模型配置分区" className="flex gap-1 overflow-x-auto rounded-lg bg-slate-50 p-1.5 lg:sticky lg:top-6 lg:block lg:self-start">
       {modelViews.map(item => <button key={item.key} type="button" aria-current={view === item.key ? "page" : undefined}
         className={`flex shrink-0 items-start gap-2.5 rounded-md px-3 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-700 lg:w-full ${view === item.key ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:bg-white/70 hover:text-slate-800"}`}
-        onClick={() => { setView(item.key); if (item.key === "capabilities") setCapabilitiesOpened(true); }}>
+        onClick={() => { setView(item.key); if (item.key === "capabilities") setCapabilitiesOpened(true); if (item.key === "runtime") setRuntimeOpened(true); }}>
         <span className="mt-0.5 text-[10px] font-semibold tabular-nums text-slate-400">{item.icon}</span>
         <span className="text-sm font-medium">{item.label}<span className="mt-1 hidden text-[11px] font-normal leading-relaxed text-slate-500 lg:block">{item.hint}</span></span>
       </button>)}
     </nav>
     <div className="min-w-0">
-      <div hidden={view === "capabilities"}>
+      <div hidden={view === "capabilities" || view === "runtime"}>
         <Suspense fallback={<Spinner label="读取厂商与模型…" />}><ModelRegistrationSettings view={view === "routes" ? "routes" : "providers"} editable={editable} onDirtyChange={setRegistrationDirty} /></Suspense>
       </div>
       {capabilitiesOpened && <div hidden={view !== "capabilities"} className="space-y-5">
         <Suspense fallback={<Spinner label="读取生成能力…" />}><ModelRoutingSettings editable={editable} onDirtyChange={setCapabilityDirty} /></Suspense>
         <details className="rounded-lg border border-slate-200 bg-slate-50/60" onToggle={event => setShowGuidance(event.currentTarget.open)}>
-          <summary className="cursor-pointer px-4 py-3 text-sm text-slate-600 focus-visible:outline focus-visible:outline-2">技术说明与旧版兼容工具</summary>
+          <summary className="cursor-pointer px-4 py-3 text-sm text-slate-600 focus-visible:outline focus-visible:outline-2">技术说明</summary>
           {showGuidance && <div className="space-y-4 border-t border-slate-200 p-4">
             <Suspense fallback={<Spinner label="读取协议说明…" />}><ProviderGuidancePanel /></Suspense>
-            <p className="text-xs leading-relaxed text-slate-500">旧版保留图片、技能和运行环境配置；新版模型配置使用此页的版本化保存。</p>
-            <Link className="inline-flex text-sm font-medium text-slate-700 underline underline-offset-4" to="/legacy/settings" target="_blank" rel="noopener noreferrer">打开原管理员配置工具 ↗</Link>
           </div>}
         </details>
       </div>}
+      {runtimeOpened && <div hidden={view !== "runtime"}><Suspense fallback={<Spinner label="读取兜底模型与生图…" />}><RuntimeModelSettings /></Suspense></div>}
     </div>
   </div>;
 }
@@ -105,41 +90,6 @@ function TeamIdentity() {
     if (!email.trim()) return;
     setCurrentUser(email.trim().toLowerCase()); client.clear(); window.location.reload();
   }}><p className="text-sm text-amber-900">当前是开发 Header 身份，可在本机切换；这不是生产登录、组织成员管理或 SSO。请勿据此对外部署。</p><Field label="开发身份邮箱"><input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} /></Field><Button type="submit" variant="secondary">切换本机开发身份</Button></form>;
-}
-
-const runtimeChecks = [
-  ["db", "数据库"], ["schema", "迁移版本"], ["auth", "身份配置"],
-  ["storage", "素材存储"], ["queue", "任务队列"], ["worker", "执行进程"], ["secrets", "密钥策略"],
-] as const;
-type RuntimeCheck = typeof runtimeChecks[number][0];
-type RuntimeStatus = { ready: boolean; checks: Record<RuntimeCheck, boolean> };
-
-function OperationalStatus() {
-  const query = useQuery<RuntimeStatus>({
-    queryKey: ["runtime-readiness", currentUser()], enabled: false, retry: false,
-    refetchOnWindowFocus: false, refetchOnReconnect: false,
-    queryFn: async ({ signal }) => {
-      const response = await fetch("/api/v1/health/ready", { signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]), cache: "no-store" });
-      if (![200, 503].includes(response.status)) throw new Error("暂时无法读取运行状态，请稍后重试。");
-      const result: unknown = await response.json();
-      if (!result || typeof result !== "object") throw new Error("运行状态响应不完整，请稍后重试。");
-      const data = result as Record<string, unknown>;
-      if (typeof data.ready !== "boolean" || (response.status === 200) !== data.ready
-        || runtimeChecks.some(([key]) => typeof data[key] !== "boolean")
-        || (data.ready && runtimeChecks.some(([key]) => data[key] !== true))) {
-        throw new Error("运行状态响应不完整，请稍后重试。");
-      }
-      return { ready: data.ready, checks: Object.fromEntries(runtimeChecks.map(([key]) => [key, data[key]])) as Record<RuntimeCheck, boolean> };
-    },
-  });
-  return <section aria-label="运行状态" className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-    <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-sm font-semibold text-slate-900">运行状态</h2><Button variant="secondary" disabled={query.isFetching} onClick={() => void query.refetch()}>{query.isFetching ? "检查中…" : "查询运行状态"}</Button></div>
-    <p className="text-xs leading-relaxed text-slate-500">仅在点击时检查基础设施；不调用模型、不发送内容，也不改变配置。队列关闭时，队列与执行进程检查不阻断本机同步运行。</p>
-    {query.isFetching ? <Spinner label="检查必要运行条件…" /> : query.isError ? <p role="alert" className="text-sm text-amber-800">暂时无法读取运行状态；这不代表检查通过。</p> : query.data ? <div aria-live="polite" className="space-y-3">
-      <p className={`text-sm font-medium ${query.data.ready ? "text-emerald-800" : "text-amber-800"}`}>{query.data.ready ? "基础运行条件已就绪（不代表外部能力已验收）" : "基础运行条件未就绪"}</p>
-      <dl className="grid gap-2 sm:grid-cols-2">{runtimeChecks.map(([key, label]) => <div key={key} className="flex justify-between gap-3 text-sm"><dt className="text-slate-600">{label}</dt><dd className={query.data!.checks[key] ? "text-emerald-700" : "text-amber-800"}>{query.data!.checks[key] ? "满足当前运行要求" : "未通过"}</dd></div>)}</dl>
-    </div> : <p className="text-sm text-slate-500">尚未检查。配置存在不代表服务可用。</p>}
-  </section>;
 }
 
 function ProductProductionDefaults({ editable, onDirtyChange }: { editable: boolean; onDirtyChange: (dirty: boolean) => void }) {
@@ -172,10 +122,7 @@ function SectionActions({ section, onDirtyChange }: { section: Section; onDirtyC
   const [modelDirty, setModelDirty] = useState(false);
   const [defaultsDirty, setDefaultsDirty] = useState(false);
   useEffect(() => { if (section.key === "models") onDirtyChange(modelDirty || defaultsDirty); }, [section.key, modelDirty, defaultsDirty, onDirtyChange]);
-  const [showRuntime, setShowRuntime] = useState(false);
   const [showOperations, setShowOperations] = useState(false);
-  const [memoryOpened, setMemoryOpened] = useState(false);
-  const [showMemory, setShowMemory] = useState(false);
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
   const editable = section.editability === "editable" && me.isSuccess && me.data.role === "admin";
   if (section.key === "models") return <><ModelSettingsWorkspace editable={editable} onDirtyChange={setModelDirty} /><ProductProductionDefaults editable={editable} onDirtyChange={setDefaultsDirty} /></>;
@@ -185,15 +132,11 @@ function SectionActions({ section, onDirtyChange }: { section: Section; onDirtyC
     return production ? <p className="text-sm text-emerald-800">生产身份由已验证的 issuer + subject 映射到现有用户；本页面不提供 Header 身份切换或组织/SSO 管理。</p> : <TeamIdentity />;
   }
   return <div className="space-y-4">
-    {section.key === "data_sources" && <div className="space-y-2"><p className="text-sm text-slate-600">Generic Connector 配置不代表 Data Source Plugin 已可执行。此清单读取不会自动拉取或测试连接；数据拉取是独立的有副作用动作。</p><Button variant="secondary" disabled={!me.isSuccess} onClick={() => setShowOperations(!showOperations)}>{showOperations ? "收起接入操作" : "管理数据接入与显式拉取"}</Button>{showOperations && me.isSuccess && <Suspense fallback={<Spinner label="加载数据接入操作…" />}><ConnectorOperations embedded readOnly={!editable || me.data.role !== "admin"} allowPull={["admin", "editor"].includes(me.data.role)} /></Suspense>}</div>}
+    {section.key === "data_sources" && <div className="space-y-2"><p className="text-sm text-slate-600">Generic Connector 配置不代表 Data Source Plugin 已可执行。此清单读取不会自动拉取或测试连接；数据拉取是独立的有副作用动作。</p><Button variant="secondary" disabled={!me.isSuccess} onClick={() => setShowOperations(!showOperations)}>{showOperations ? "收起接入操作" : "管理数据接入与显式拉取"}</Button>{showOperations && me.isSuccess && <Suspense fallback={<Spinner label="加载数据接入操作…" />}><ConnectorSettings readOnly={!editable || me.data.role !== "admin"} allowPull={["admin", "editor"].includes(me.data.role)} /></Suspense>}</div>}
     {section.key === "channels" && <div className="space-y-3"><Suspense fallback={<Spinner label="读取渠道方法…" />}><ChannelPluginPanel /></Suspense><p className="text-sm text-slate-600">渠道注册信息仍是只读真源。配置了 workflow / publisher 引用不代表已经验证可执行或可发布。插拔只停用或恢复已安装的渠道方法，不提供虚假的保存或发布按钮。</p></div>}
     {(section.key === "channels" || section.key === "data_sources") && <Suspense fallback={<Spinner label="加载能力验证…" />}><CapabilitySettings mode={section.key} /></Suspense>}
-    {section.key === "rules" && <div className="space-y-2"><p className="text-sm text-slate-600">确定性 Rule 仍为只读。管理员可打开既有版本化模板工具；单项操作由对应 API 校验，不因当前清单没有可编辑项而隐藏入口。</p>{me.data?.role === "admin" && <Button variant="secondary" onClick={() => setShowOperations(!showOperations)}>{showOperations ? "收起版本化模板" : "管理版本化模板"}</Button>}{showOperations && me.data?.role === "admin" && <Suspense fallback={<Spinner label="加载模板操作…" />}><TemplateOperations /></Suspense>}</div>}
+    {section.key === "rules" && <div className="space-y-2"><p className="text-sm text-slate-600">确定性 Rule 仍为只读。管理员可打开既有版本化模板工具；单项操作由对应 API 校验，不因当前清单没有可编辑项而隐藏入口。</p>{me.data?.role === "admin" && <Button variant="secondary" onClick={() => setShowOperations(!showOperations)}>{showOperations ? "收起版本化模板" : "管理版本化模板"}</Button>}{showOperations && me.data?.role === "admin" && <Suspense fallback={<Spinner label="加载模板操作…" />}><TemplateSettings /></Suspense>}</div>}
     {section.key === "rules" && <Suspense fallback={<Spinner label="读取内置创作资源…" />}><StudioCreativeInventory /></Suspense>}
-    {section.key === "advanced" && <div className="space-y-2"><p className="text-sm text-amber-800">高级工具包含本机路径、技能、MCP、dsh 与基础设施配置。不会在读取此清单时扫描目录、写文件或探测外部服务。</p>{editable && <OperationalStatus />}<Button disabled={!editable} onClick={() => setShowRuntime(!showRuntime)}>{showRuntime ? "收起高级工具" : "明确打开本机运行配置工具"}</Button></div>}
-    {section.key === "advanced" && <section aria-label="旧数据与兼容工具" className="space-y-3 rounded-lg border border-slate-200 p-4"><h2 className="font-semibold">旧数据与兼容工具</h2><p className="text-sm text-slate-600">保留原记录与操作，不自动转换为项目、Master 或外部执行。打开目录不执行生成、拉取、审批或发布；各工具仍按原权限校验，写入须在对应页面明确操作。</p><div className="grid gap-3 sm:grid-cols-2">{compatibilityTools.map(([path, label, detail]) => <div key={path}><Link to={path} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-700 underline underline-offset-4">{label} ↗</Link><p className="mt-1 text-xs text-slate-500">{detail}</p></div>)}</div>{me.data?.role === "admin" && <Link to="/legacy/settings" target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-indigo-700 underline underline-offset-4">原管理员运行配置 ↗</Link>}</section>}
-    {section.key === "advanced" && <section className="space-y-3 rounded-lg border border-slate-200 p-4"><h2 className="font-semibold">能力方法库</h2><p className="text-sm text-slate-600">独立管理可复用方法与偏好。编辑者和管理员可操作，查看者只读；入口与本机管理员配置权限分开。</p><Button variant="secondary" onClick={() => { setMemoryOpened(true); setShowMemory(previous => !previous); }}>{showMemory ? "收起能力方法库" : "明确打开能力方法库"}</Button>{memoryOpened && <div hidden={!showMemory}><Suspense fallback={<Spinner label="按需加载能力方法库…" />}><CapabilityMemoryPanel onDirtyChange={onDirtyChange} /></Suspense></div>}</section>}
-    {showRuntime && editable && <section className="rounded-xl border border-amber-200 bg-white"><p className="p-4 text-sm text-amber-800">下面是原有管理员配置工具；其保存、连接测试和本机写入操作均需单独确认操作。</p><Suspense fallback={<Spinner label="按需加载原有配置工具…" />}><RuntimeSettings /></Suspense></section>}
   </div>;
 }
 
@@ -303,15 +246,15 @@ export default function ProductSettingsPage() {
   const paginated = active === "rules" || active === "data_sources";
   const path = active === "rules" ? "rules" : "data-sources";
   const page = useQuery({ queryKey: ["product-settings-page", currentUser(), active, offset], queryFn: () => api.get<Section>(`/settings/${path}?limit=50&offset=${offset}`), enabled: paginated, retry: false });
-  const selected = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice" ? undefined : paginated ? page.data : query.data?.sections.find((item) => item.key === active);
+  const selected = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice" || active === "methods" ? undefined : paginated ? page.data : query.data?.sections.find((item) => item.key === active);
   const paging = selected ? pageInfo(selected) : undefined;
   // MCP has its own endpoint; the product inventory does not describe it.
-  const ownPage = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice";
+  const ownPage = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice" || active === "methods";
   const pending = ownPage ? false : paginated ? page.isPending : query.isPending;
   const error = ownPage ? null : paginated ? page.error : query.error;
   const refresh = () => paginated ? page.refetch() : query.refetch();
   return <div className="mx-auto w-full max-w-[1240px] space-y-8 px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12"><header className="border-b border-ink-200/80 pb-7"><p className="eyebrow">工作空间</p><h1 className="mt-3 text-[34px] leading-[1.1] text-ink-900 sm:text-[40px]">设置</h1><p className="mt-3 text-[15px] text-ink-600">模型、数据源、渠道、模板与权限都在这里配置。</p></header>
-    {!active && !requested && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sections.map(([key, label]) => <button key={key} className="rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" onClick={() => changeLocation(key)}><h2 className="font-semibold text-slate-900">{label}</h2><p className="mt-2 text-sm text-slate-500">{{ models: "连接厂商、登记模型与选择功能用途", data_sources: "管理来源接入与明确拉取", channels: "查看渠道与配置渠道方法", rules: "查看创作资源与管理版本化模板", team: "核对当前身份与权限边界", mcp: "大模型如何连接平台、能做什么", storage: "素材库与本地工作文件夹放在哪里", edit_agent: "准备好剪辑后自动交给本机助手剪粗剪", voice: "MiniMax 配音的音色、情绪和音频参数", advanced: "运行状态、本机配置与兼容工具" }[key]}</p><span className="mt-4 inline-block text-sm text-indigo-700">进入配置 →</span></button>)}</div>}
+    {!active && !requested && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sections.map(([key, label]) => <button key={key} className="rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" onClick={() => changeLocation(key)}><h2 className="font-semibold text-slate-900">{label}</h2><p className="mt-2 text-sm text-slate-500">{{ models: "连接厂商、登记模型与选择功能用途", data_sources: "管理来源接入与明确拉取", channels: "查看渠道与配置渠道方法", rules: "查看创作资源与管理版本化模板", team: "核对当前身份与权限边界", mcp: "大模型如何连接平台、能做什么", storage: "素材库与本地工作文件夹放在哪里", edit_agent: "准备好剪辑后自动交给本机助手剪粗剪", voice: "MiniMax 配音的音色、情绪和音频参数", methods: "可复用的创作方法与偏好，按项目和作品选用" }[key]}</p><span className="mt-4 inline-block text-sm text-indigo-700">进入配置 →</span></button>)}</div>}
     {requested && !active && <div role="alert"><ErrorBanner message="未找到这个设置分区，请返回设置目录。" /><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button></div>}
     {active && <><nav className="flex flex-wrap gap-2" aria-label="设置分区"><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button>{sections.map(([key, label]) => <Button key={key} variant={active === key ? "primary" : "secondary"} onClick={() => { if (key !== active) changeLocation(key); }}>{label}</Button>)}</nav>
     {pending && <Spinner label="读取安全产品设置…" />}
@@ -320,6 +263,7 @@ export default function ProductSettingsPage() {
     {active === "voice" && <Suspense fallback={<Spinner label="读取配音设置…" />}><VoiceSettings /></Suspense>}
     {active === "edit_agent" && <Suspense fallback={<Spinner label="读取自动剪辑…" />}><EditAgentSettings /></Suspense>}
     {active === "storage" && <Suspense fallback={<Spinner label="读取存储位置…" />}><StorageSettings editable /></Suspense>}
+    {active === "methods" && <Suspense fallback={<Spinner label="读取能力方法库…" />}><CapabilityMemoryPanel onDirtyChange={setDirty} /></Suspense>}
     {!ownPage && !pending && !error && !selected && <ErrorBanner message="后端尚未返回这个分区，不能确认其能力。" />}
     {selected && <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{selected.label}</h2><span className="rounded-full bg-slate-100 px-3 py-1 text-xs">{labels[selected.editability] ?? "能力未核对"}</span></div>{selected.reason && <p className="text-sm text-amber-800">{selected.reason}</p>}{selected.key !== "models" && <details className="rounded-lg border border-slate-200 p-3"><summary className="cursor-pointer text-sm text-slate-600">查看原始配置与来源</summary><div className="mt-4"><Metadata value={selected.data} /></div></details>}{paging && <div className="flex items-center gap-3"><span className="text-xs text-slate-500">共 {paging.total} 条，当前起点 {paging.offset}</span><Button variant="secondary" disabled={paging.offset === 0} onClick={() => setOffset(Math.max(0, paging.offset - paging.limit))}>上一页</Button><Button variant="secondary" disabled={paging.offset + paging.limit >= paging.total} onClick={() => setOffset(paging.offset + paging.limit)}>下一页</Button></div>}<SectionActions key={`${currentUser()}:${selected.key}`} section={selected} onDirtyChange={setDirty} />{selected.key !== "models" && <Button variant="secondary" onClick={() => void refresh()}>刷新真实配置</Button>}</section>}
     </>}

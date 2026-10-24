@@ -1,8 +1,7 @@
-"""Material Library API（§6.15）：全局素材复用、权利链路、Draft use/placement。
+"""Material Library API（§6.15）：全局素材复用与权利链路。
 
 - search/generate 无 provider 时返回 422 capability_unavailable，不返回假数据；
 - 已批准候选引用的素材不可删除/变更（替换=新 Revision）；
-- 旧 DraftMedia（无 material_revision_id）保持可读。
 """
 
 import hashlib
@@ -20,20 +19,14 @@ from ..db import get_db
 from ..deps import get_current_user, require_admin, require_editor
 from ..models import (
     AuditLog,
-    ContentAsset,
-    Draft,
-    DraftMedia,
-    DraftStatus,
     Material,
     MaterialRevision,
     MaterialSource,
     User,
     utcnow,
 )
-from ..services import document_composition
 from ..services import materials as materials_service
 from ..services.content_harness.providers import CapabilityUnavailable
-from ..services.project_authorization import authorize_project_draft
 from . import CapabilityInputRoute
 
 router = APIRouter(prefix="/api/v1", tags=["materials"], route_class=CapabilityInputRoute)
@@ -229,13 +222,8 @@ class SearchIn(BaseModel):
 class GenerateIn(BaseModel):
     prompt: str = Field(min_length=1, max_length=2000)
     title: str | None = None
-    draft_id: int | None = None
     role: str = "inline"
     candidate_count: int = Field(default=1, ge=1, le=4)
-
-
-class DocumentIn(BaseModel):
-    blocks: list[dict]
 
 
 def _drive_location(key: str | None) -> dict | None:
@@ -289,37 +277,11 @@ def _material_json(row: Material, *, with_revisions: bool = False) -> dict:
     return data
 
 
-def _media_json(row: DraftMedia) -> dict:
-    return {
-        "id": row.id,
-        "draft_id": row.draft_id,
-        "content_hash": row.content_hash,
-        "role": row.role,
-        "sort_order": row.sort_order,
-        "mime_type": row.mime_type,
-        "rights_status": row.rights_status,
-        "public_use_allowed": row.public_use_allowed,
-        "material_revision_id": row.material_revision_id,
-        "placement": row.placement_json or {},
-        "alt_text": row.alt_text,
-        "caption": row.caption,
-        "metadata": row.metadata_json or {},
-    }
-
-
 def _get_revision(db: Session, material_id: int, revision_id: int) -> MaterialRevision:
     row = db.get(MaterialRevision, revision_id)
     if not row or row.material_id != material_id:
         raise HTTPException(404, "素材版本不存在")
     return row
-
-
-def _own_media(db: Session, draft_id: int, media_id: int) -> tuple[Draft, DraftMedia]:
-    draft = db.get(Draft, draft_id)
-    row = db.get(DraftMedia, media_id)
-    if not draft or not row or row.draft_id != draft_id:
-        raise HTTPException(404, "素材 use 不存在")
-    return draft, row
 
 
 # ---------- Material ----------
@@ -620,7 +582,7 @@ def revoke_material_public_use(
 ):
     revision = _get_revision(db, material_id, revision_id)
     result = materials_service.revoke_public_use(db, revision, payload.note)
-    db.add(AuditLog(event="material.public_use_revoked", actor=user.email, entity_type="material_revision", entity_id=str(revision.id), detail_json={"note": payload.note, "affected_drafts": result["affected_drafts"]}))
+    db.add(AuditLog(event="material.public_use_revoked", actor=user.email, entity_type="material_revision", entity_id=str(revision.id), detail_json={"note": payload.note}))
     db.commit()
     return {**result, "revision": _revision_json(revision)}
 
@@ -776,12 +738,6 @@ def generate_material(
 ):
     """Generation now returns a private preview; acceptance is a separate action."""
 
-    draft = db.get(Draft, payload.draft_id) if payload.draft_id else None
-    if payload.draft_id and draft is None:
-        raise HTTPException(404, "Draft 不存在")
-    if draft is not None:
-        authorize_project_draft(db, draft, user, mutate=True)
-
     from .. import runtime_config
     from ..services.content_harness.providers import bootstrap_media_providers, resolve_asset_provider
 
@@ -809,175 +765,3 @@ def generate_material(
                "provider_version": provider.version, "prompt": payload.prompt,
                "project_id": None, "source_revision_ids": []}
     return provider_media.stage(db, user, request)
-
-
-# ---------- Draft × Material（Use/Placement）----------
-
-
-@router.get("/drafts/{draft_id}/materials")
-def list_draft_materials(draft_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    draft = db.get(Draft, draft_id)
-    if not draft:
-        raise HTTPException(404, "Draft 不存在")
-    authorize_project_draft(db, draft, user)
-    return [_media_json(m) for m in draft.media]
-
-
-@router.post("/drafts/{draft_id}/materials", status_code=201)
-def attach_material(
-    draft_id: int,
-    payload: MaterialAttachIn,
-    db: Session = Depends(get_db),
-    user: User = Depends(require_editor),
-):
-    """引用已有 MaterialRevision 挂到稿件（Use）。上传走 /materials/upload。"""
-    draft = db.get(Draft, draft_id)
-    if not draft:
-        raise HTTPException(404, "Draft 不存在")
-    authorize_project_draft(db, draft, user, mutate=True)
-    if payload.role not in ROLES:
-        raise HTTPException(422, "role 不受支持")
-    revision = db.get(MaterialRevision, payload.material_revision_id)
-    if not revision:
-        raise HTTPException(404, "素材版本不存在")
-    use = materials_service.attach_to_draft(
-        db, draft, revision,
-        role=payload.role,
-        sort_order=payload.sort_order,
-        alt_text=payload.alt_text,
-        caption=payload.caption,
-        placement=payload.placement,
-    )
-    document_composition.sync_document(db, draft)
-    db.add(AuditLog(event="material.attached", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"draft_media_id": use.id, "material_revision_id": revision.id}))
-    db.commit()
-    db.refresh(use)
-    return _media_json(use)
-
-
-@router.post("/drafts/{draft_id}/materials/upload", status_code=201)
-async def upload_draft_material(
-    draft_id: int,
-    file: UploadFile,
-    role: str = "inline",
-    rights_status: str = "cleared",
-    public_use_allowed: bool = False,
-    db: Session = Depends(get_db),
-    user: User = Depends(require_editor),
-):
-    """上传即入库：Material + MaterialRevision + DraftMedia(use)（D9 新流程）。"""
-    draft = db.get(Draft, draft_id)
-    if not draft:
-        raise HTTPException(404, "Draft 不存在")
-    authorize_project_draft(db, draft, user, mutate=True)
-    if role not in ROLES:
-        raise HTTPException(422, "role 不受支持")
-    content = await file.read()
-
-    def _persist() -> dict:
-        mime = materials_service.validate_upload(content, file.content_type)
-        material = materials_service.create_material(
-            db, kind="image", title=file.filename or "draft-upload", created_by=user.email
-        )
-        suffix = (file.filename or "").rsplit(".", 1)[-1].lower()[:5]
-        revision = materials_service.create_revision(
-            db, material, content=content, suffix=f".{suffix}" if suffix else "",
-            declared_mime=mime, rights_status=rights_status, public_use_allowed=public_use_allowed,
-            metadata={"filename": file.filename, "first_draft_id": draft_id}, created_by=user.email,
-        )
-        use = materials_service.attach_to_draft(db, draft, revision, role=role)
-        document_composition.sync_document(db, draft)
-        db.add(AuditLog(event="material.attached", actor=user.email, entity_type="draft", entity_id=str(draft.id), detail_json={"draft_media_id": use.id, "material_revision_id": revision.id, "via": "upload"}))
-        db.commit()
-        db.refresh(use)
-        return _media_json(use)
-
-    return await run_in_threadpool(_persist)
-
-
-@router.patch("/drafts/{draft_id}/materials/{media_id}")
-def patch_draft_material(
-    draft_id: int,
-    media_id: int,
-    payload: MaterialPatchIn,
-    db: Session = Depends(get_db),
-    user: User = Depends(require_editor),
-):
-    draft, row = _own_media(db, draft_id, media_id)
-    authorize_project_draft(db, draft, user, mutate=True)
-    if draft.status == DraftStatus.approved.value:
-        raise HTTPException(409, "已批准稿件的素材不可修改")
-    if payload.role is not None:
-        if payload.role not in ROLES:
-            raise HTTPException(422, "role 不受支持")
-        row.role = payload.role
-    if payload.sort_order is not None:
-        row.sort_order = payload.sort_order
-    if payload.alt_text is not None:
-        row.alt_text = payload.alt_text
-    if payload.caption is not None:
-        row.caption = payload.caption
-    if payload.placement is not None:
-        row.placement_json = payload.placement
-    document_composition.sync_document(db, draft)
-    materials_service.staleness.mark_media_changed(db, draft, reason="draft_material_patched")
-    db.commit()
-    return _media_json(row)
-
-
-@router.delete("/drafts/{draft_id}/materials/{media_id}")
-def delete_draft_material(draft_id: int, media_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    draft, row = _own_media(db, draft_id, media_id)
-    authorize_project_draft(db, draft, user, mutate=True)
-    referenced_v1 = db.scalars(
-        select(ContentAsset).where(ContentAsset.draft_id == draft.id, ContentAsset.approved_candidate_hash.is_not(None))
-    ).first()
-    approved_revision_ids = materials_service._approved_revision_ids(db)
-    if draft.status == DraftStatus.approved.value or referenced_v1 or row.material_revision_id in approved_revision_ids:
-        raise HTTPException(409, "素材已被批准候选引用，不能删除")
-    db.delete(row)
-    document_composition.sync_document(db, draft)
-    materials_service.staleness.mark_media_changed(db, draft, reason="draft_material_deleted")
-    db.commit()
-    return {"deleted": True, "id": media_id}
-
-
-# ---------- Document composition ----------
-
-
-@router.get("/drafts/{draft_id}/document")
-def get_document(draft_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    draft = db.get(Draft, draft_id)
-    if not draft:
-        raise HTTPException(404, "Draft 不存在")
-    authorize_project_draft(db, draft, user)
-    return {
-        "draft_id": draft.id,
-        "document_schema_version": draft.document_schema_version,
-        "document": draft.document_json or document_composition.build_document_from_body(draft.body, list(draft.media)),
-    }
-
-
-@router.put("/drafts/{draft_id}/document")
-def set_document(draft_id: int, payload: DocumentIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    draft = db.get(Draft, draft_id)
-    if not draft:
-        raise HTTPException(404, "Draft 不存在")
-    authorize_project_draft(db, draft, user, mutate=True)
-    try:
-        document = document_composition.set_document(db, draft, {"blocks": payload.blocks})
-    except (TypeError, ValueError) as exc:
-        raise HTTPException(422, str(exc)) from exc
-    db.commit()
-    return {"draft_id": draft.id, "document": document}
-
-
-@router.post("/drafts/{draft_id}/document/rebuild")
-def rebuild_document(draft_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    draft = db.get(Draft, draft_id)
-    if not draft:
-        raise HTTPException(404, "Draft 不存在")
-    authorize_project_draft(db, draft, user, mutate=True)
-    document_composition.sync_document(db, draft)
-    db.commit()
-    return {"draft_id": draft.id, "document": draft.document_json}

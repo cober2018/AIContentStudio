@@ -27,6 +27,7 @@ GROUPS = {
     "context": ("读取上下文与方法", {"get_context", "find_capabilities", "use_capability"}),
     "video": ("做视频（导演稿 → 小样 → 成片）", {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                                         "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common"}),
+    "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision"}),
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
 SUMMARIES = {
@@ -60,6 +61,9 @@ SUMMARIES = {
     "set_shot_materials": "导演稿采用后，给每个镜头定素材",
     "accept_material_candidate": "把搜到的一条图库素材收进素材库和本项目",
     "file_as_common": "把本项目里通用的素材（特效、转场、常用 BGM / 音效）移到 Mac 本地的通用素材库",
+    "get_article_brief": "写文章 / 图文前读资料：任务书、事实、来源原文、写作方式、当前版本（也是格式示例）",
+    "save_article_draft": "存一版文章 / 图文稿，然后停下等用户采用或写意见（页面开关须为「第三方模型」）",
+    "get_article_decision": "读用户对稿件的决定：采用即定稿，有意见就出下一版",
     "generate_video_image": "用平台生图工具生成一张画面，放进项目文件夹",
     "generate_video_voiceover": "按你的 MiniMax 设置生成配音，并按配音对齐镜头时长",
     "prepare_video_edit": "记下哪些镜头用 AE，开剪辑任务：先小样，小样通过后排版出成片",

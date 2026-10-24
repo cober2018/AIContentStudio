@@ -59,6 +59,12 @@ def _root() -> Path | None:
     return library_root() if library_reachable() else None
 
 
+def _writable_root() -> Path | None:
+    from .storage_locations import library_root, library_writable
+
+    return library_root() if library_writable() else None
+
+
 def _setting(db: Session, key: str) -> dict:
     row = db.get(SystemSetting, key)
     return dict(row.value or {}) if row else {}
@@ -98,7 +104,7 @@ def folder_name(db: Session, project_id: int) -> str:
 
 
 def ensure_library_dirs() -> None:
-    root = _root()
+    root = _writable_root()
     if root is not None:
         (root / EXTERNAL_DIR).mkdir(exist_ok=True)
     for sub in COMMON_STRUCTURE:
@@ -106,7 +112,7 @@ def ensure_library_dirs() -> None:
 
 
 def ensure_project_dir(db: Session, project_id: int) -> Path:
-    root = _root()
+    root = _writable_root()
     if root is None:
         raise FileNotFoundError("material_library_unavailable")
     folder = root / folder_name(db, project_id)
@@ -300,7 +306,7 @@ def move_into(db: Session, revision: MaterialRevision, folder: str, *, project_i
     from .material_external import is_external, parse_key
     from .storage_locations import library_source_id
 
-    root = _root()
+    root = _writable_root()
     if root is None and project_id is not None:
         return {"state": "pending", "reason": "素材库未连接"}
     names = folder_names(db)

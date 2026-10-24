@@ -12,8 +12,6 @@ const lightweightRoutes = ["src/product/HomePage.tsx", "src/product/OpportunityP
 const excludedRoutes = [
   "src/product/PersistentProjectPage.tsx",
   "src/product/PersistentProductionPage.tsx",
-  "src/pages/Workspace.tsx",
-  "src/pages/Workflows.tsx",
 ];
 const textStudioKey = "src/product/TextStudioShell.tsx";
 const matrixKey = "src/product/project/ProjectMatrixTab.tsx";
@@ -77,7 +75,7 @@ try {
     }
     if (sizes(closure).raw >= limit) throw new Error(`Route initial JS exceeds budget: ${route}`);
     const routeSize = sizes(closure);
-    console.log(`${route}: lazy route, no TipTap/XYFlow, ${(routeSize.raw / 1000).toFixed(2)} kB initial JS / ${(routeSize.gzip / 1000).toFixed(2)} kB gzip`);
+    console.log(`${route}: lazy route, no TipTap, ${(routeSize.raw / 1000).toFixed(2)} kB initial JS / ${(routeSize.gzip / 1000).toFixed(2)} kB gzip`);
   }
   for (const route of excludedRoutes) {
     if (initial.has(required(route).file)) throw new Error(`Unrelated route is in /projects initial graph: ${route}`);
@@ -98,7 +96,7 @@ try {
   const graphicModelFile = required(graphicModelKey).file;
   const videoModelFile = required(videoModelKey).file;
   const commonProduction = staticClosure([entryKey, "src/product/PersistentProductionPage.tsx"]);
-  for (const panel of ["src/product/CreativeExecutionPanel.tsx", "src/product/ProductionAutomationPanel.tsx", "src/product/CapabilityMemoryPanel.tsx"]) {
+  for (const panel of ["src/product/CreativeExecutionPanel.tsx", "src/product/CapabilityMemoryPanel.tsx"]) {
     if (!production.dynamicImports?.includes(panel)) throw new Error(`Production panel is not lazy-loaded: ${panel}`);
     const file = required(panel).file;
     if (initial.has(file) || commonProduction.has(file)) throw new Error(`Optional Production panel leaked into initial graph: ${panel}`);
@@ -132,12 +130,12 @@ try {
     if (sibling !== "src/product/VideoStudioShell.tsx" && closure.has(videoModelFile)) throw new Error(`Video editor model leaked into ${sibling}`);
   }
   console.log(`Text Studio: lazy TipTap closure ${(sizes(textClosure).raw / 1000).toFixed(2)} kB raw / ${(sizes(textClosure).gzip / 1000).toFixed(2)} kB gzip; Graphic/Video exclude TipTap`);
-  console.log(`Channel Variants: lazy closure ${(sizes(variantClosure).raw / 1000).toFixed(2)} kB raw / ${(sizes(variantClosure).gzip / 1000).toFixed(2)} kB gzip; no TipTap/XYFlow`);
+  console.log(`Channel Variants: lazy closure ${(sizes(variantClosure).raw / 1000).toFixed(2)} kB raw / ${(sizes(variantClosure).gzip / 1000).toFixed(2)} kB gzip; no TipTap`);
   for (const file of initial) {
     if (heavyByChunk[file]?.length) throw new Error(`Heavy dependency in /projects initial graph: ${file} (${heavyByChunk[file].join(", ")})`);
   }
   const observedHeavy = new Set(Object.values(heavyByChunk).flat());
-  for (const name of ["TipTap", "XYFlow"]) {
+  for (const name of ["TipTap"]) {
     if (!observedHeavy.has(name)) throw new Error(`Missing ${name} module mapping in emitted chunks`);
   }
   const initialSize = sizes(initial);
@@ -148,7 +146,7 @@ try {
   console.log(`/projects initial JS: ${format(initialSize.raw)} raw, ${format(initialSize.gzip)} gzip across ${initial.size} chunks`);
   console.log(`FE-F4 baseline single JS: ${format(baseline)} raw; reduction ${((1 - initialSize.raw / baseline) * 100).toFixed(1)}%`);
   console.log(`All emitted JS: ${format(totalSize.raw)} raw, ${format(totalSize.gzip)} gzip (not an initial-load gate)`);
-  console.log("Project detail, production, TipTap Workspace, and XYFlow Workflows chunks are outside /projects initial graph");
+  console.log("Project detail and production chunks are outside /projects initial graph");
   if (initialSize.raw >= limit) throw new Error(`/projects initial JS is at or above ${format(limit)} raw`);
 } catch (error) {
   console.error(`Bundle budget failed: ${error.message}`);

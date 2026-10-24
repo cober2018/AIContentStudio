@@ -281,6 +281,11 @@ class VideoCommonInput(Scope):
     material_revision_id: ID
 
 
+class ArticleDraftInput(Scope):
+    payload: dict
+    note: str | None = Field(default=None, max_length=2000)
+
+
 class VideoEditInput(Scope):
     phase: Literal["rough_cut", "final"]
     ae_shot_ids: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=15)
@@ -325,6 +330,9 @@ TOOLS = {
     "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines.", False),
     "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
     "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects.", False),
+    "get_article_brief": (Scope, "Text / graphic piece written by you (the page switch must be 第三方模型): project, brief, facts, source texts, the writer setting, chain state and the current version as the payload format example (text.master.v2 or graphic.master.v2).", True),
+    "save_article_draft": (ArticleDraftInput, "Save one full version of the piece (text.master.v2 for text, graphic.master.v2 for graphic; image layers name material_revision_id from the library or generate_video_image; no citations or claims). Refused when the page switch is 平台模型 or the piece is final. Then STOP: the user approves or writes notes on the page.", False),
+    "get_article_decision": (Scope, "Read the piece's state and the user's latest decision and notes. Approved means final: save nothing more. Notes mean a new version.", True),
     "get_shot_slots": (ShotSlotsInput, "Read every shot of a video as a material slot: narration, visual, brief (search words; gen_mode text|frame chosen on the platform; t2v_prompt for direct text-to-video; frame_prompt for the first-frame still and prompt for image-to-video from it; route), status missing/candidates/chosen, the user's picks and the review link. Add candidates with start_material_match; only the user binds a shot.", True),
 }
 _ACTIONS = {"claim_execution": "claim", "start_execution": "start", "report_progress": "progress",
@@ -451,6 +459,14 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return _review(db, name, args, user)
     if name in _VIDEO_TOOLS:
         return _video(db, name, args, user)
+    if name in _ARTICLE_TOOLS:
+        from . import article_chain
+
+        if name == "get_article_brief":
+            return article_chain.brief(db, user, args.project_id, args.unit_id)
+        if name == "save_article_draft":
+            return article_chain.save_draft(db, user, args.project_id, args.unit_id, args.payload, args.note)
+        return article_chain.state(db, user, args.project_id, args.unit_id)
     payload = args.model_dump(exclude_none=True, exclude={"project_id", "unit_id", "execution_id"})
     if name in _ACTIONS:
         payload["action"] = _ACTIONS[name]
@@ -473,6 +489,7 @@ _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_s
                  "start_material_match", "get_material_match", "get_shot_slots", "start_material_autofill"}
 
 
+_ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision"}
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                 "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common"}
 
@@ -556,11 +573,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|video|voiceover|edit_handoff)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
-    # Video chain messages are written for the model so it can correct its own 导演稿.
-    if known and code.startswith("video_chain_") and isinstance(exc.detail.get("message"), str):
+    # Video and article chain messages are written for the model so it can correct its own draft.
+    if known and code.startswith(("video_chain_", "article_chain_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

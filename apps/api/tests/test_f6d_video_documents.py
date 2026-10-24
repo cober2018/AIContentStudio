@@ -1015,7 +1015,6 @@ def test_video_v2_manual_master_freezes_approves_and_packages_exact_mp4_without_
         assert "content.md" not in archive.namelist()
         assert included["remote_call"] is False
     asset = db_session.get(ContentAsset, candidate["id"])
-    assert asset.draft_id is None and asset.topic_brief_id is None and asset.mother_revision_id is None
     revision.public_use_allowed = False
     db_session.commit()
     assert client.get(f"/api/v1/delivery-targets/{target.json()['id']}/package.zip", headers=headers).status_code == 409

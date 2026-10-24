@@ -30,7 +30,7 @@ ATTESTED = {
 }
 
 
-@pytest.fixture(params=["generic", "legacy"])
+@pytest.fixture(params=["generic"])
 def receipt_env(request, db_session):
     user = User(email=EDITOR["X-Studio-User"], name="Editor", role="editor")
     other = User(email="foreign@studio.local", name="Foreign", role="editor")
@@ -44,11 +44,10 @@ def receipt_env(request, db_session):
                             account_ref="owned-account", authorization_version="v1",
                             approved_candidate_hash="c" * 64, authorized_by=user.email,
                             status="awaiting_manual_receipt",
-                            action="copy_package" if request.param == "generic" else "manual_handoff")
+                            action="copy_package")
     db_session.add(target)
     db_session.commit()
-    path = (f"/api/v1/delivery-targets/{target.id}/receipt" if request.param == "generic"
-            else f"/api/v1/article-handoff/targets/{target.id}/receipt")
+    path = f"/api/v1/delivery-targets/{target.id}/receipt"
     return request.param, user, asset, target, path
 
 
@@ -76,25 +75,6 @@ def test_receipt_creates_one_history_without_fabricated_date(client, db_session,
     assert datetime.fromisoformat(row.content_snapshot_json["confirmation_time"]).replace(tzinfo=UTC) == receipt.delivered_at.replace(tzinfo=UTC)
 
 
-def test_old_idempotency_key_repairs_missing_history(client, db_session, receipt_env):
-    from app.routers.article_handoff import _hash
-
-    _, user, _, target, path = receipt_env
-    receipt = DeliveryReceipt(target_id=target.id, approved_candidate_hash=target.approved_candidate_hash,
-                              action=target.action, status="human_confirmed", operator=user.email,
-                              delivered_at=datetime(2026, 9, 28, tzinfo=UTC), evidence_ref=CONFIRM["evidence_ref"],
-                              idempotency_key=_hash(str(target.id), target.approved_candidate_hash,
-                                                    "human_confirmed", CONFIRM["evidence_ref"], "", ""))
-    target.status = "human_confirmed"
-    db_session.add(receipt)
-    db_session.commit()
-    for _ in range(2):
-        response = client.post(path, headers=EDITOR, json=CONFIRM)
-        assert response.status_code == 200, response.text
-    assert len(receipts(db_session)) == len(histories(db_session)) == 1
-    assert histories(db_session)[0].delivery_receipt_id == receipt.id
-
-
 @pytest.mark.parametrize("status", ["failed", "reconciliation_needed"])
 def test_unconfirmed_receipt_does_not_publish(client, db_session, receipt_env, status):
     *_, path = receipt_env
@@ -113,27 +93,6 @@ def test_unresolved_unknown_never_publishes(client, db_session, receipt_env):
         response = client.post(path, headers=EDITOR, json=CONFIRM)
         assert response.status_code == (409 if kind == "generic" else 200), response.text
     assert len(receipts(db_session)) == (0 if kind == "generic" else 1)
-    assert histories(db_session) == []
-
-
-def test_old_confirmed_receipt_with_unresolved_unknown_cannot_repair_history(client, db_session, receipt_env):
-    from app.routers.article_handoff import _hash
-
-    kind, user, _, target, path = receipt_env
-    target.status = "human_confirmed"
-    db_session.add_all([
-        DeliveryAttempt(target_id=target.id, attempt_no=1, idempotency_key="old-unknown-attempt",
-                        status="unknown", response_metadata_json={}),
-        DeliveryReceipt(target_id=target.id, approved_candidate_hash=target.approved_candidate_hash,
-                        action=target.action, status="human_confirmed", operator=user.email,
-                        delivered_at=datetime(2026, 9, 28, tzinfo=UTC), evidence_ref=CONFIRM["evidence_ref"],
-                        idempotency_key=_hash(str(target.id), target.approved_candidate_hash,
-                                              "human_confirmed", CONFIRM["evidence_ref"], "", "")),
-    ])
-    db_session.commit()
-    response = client.post(path, headers=EDITOR, json=CONFIRM)
-    assert response.status_code == (409 if kind == "generic" else 200), response.text
-    assert len(receipts(db_session)) == 1
     assert histories(db_session) == []
 
 
@@ -240,11 +199,6 @@ def test_project_mutation_boundary_precedes_receipt_repair(client, db_session, r
     db_session.flush()
     asset.project_id, asset.content_unit_id = project.id, unit.id
     db_session.commit()
-    if kind == "legacy":
-        response = client.post(path, headers=EDITOR, json=CONFIRM)
-        assert response.status_code == 409, response.text
-        assert receipts(db_session) == histories(db_session) == []
-        return
     assert client.post(path, headers=EDITOR, json=CONFIRM).status_code == 200
     db_session.delete(histories(db_session)[0])
     project.status = "archived"

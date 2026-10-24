@@ -19,7 +19,6 @@ from ..models import (
     ContentUnit,
     CreativeBriefRevision,
     DiscoverabilityProfileVersion,
-    Draft,
     EvidenceKind,
     FactPack,
     FactPackItem,
@@ -29,7 +28,6 @@ from ..models import (
     ProjectMaterialReference,
     ProjectWorkflowOutput,
     User,
-    Workflow,
     WorkflowRun,
     WorkflowStep,
     WorkflowStepAttempt,
@@ -669,6 +667,16 @@ def _verified_generated_asset(db: Session, output: ProjectWorkflowOutput, materi
 
 def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, payload: dict, workflow_seed: bool = False, upgrade_source: ContentMasterRevision | None = None, derived_source: ContentMasterRevision | None = None, stage_adoption: Callable[[ContentMasterRevision], None] | None = None) -> dict:
     project, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
+    if unit.modality == "video":
+        from .video_chain import locked
+
+        if locked(db, unit_id):
+            raise HTTPException(409, {"code": "video_chain_locked", "message": "成片已定稿，要调整请复制一份"})
+    elif unit.modality in {"text", "graphic"}:
+        from .article_chain import locked as article_locked
+
+        if article_locked(db, unit_id):
+            raise HTTPException(409, {"code": "article_chain_locked", "message": "已定稿，要调整请复制一份"})
     if "creative_intent" in payload:
         try:
             creative_intent, creative_intent_hash = canonical_intent(payload["creative_intent"])
@@ -1083,93 +1091,4 @@ def upgrade_video_master(db: Session, *, project_id: int, unit_id: int, master_i
             "upgrade_source": {"master_id": source.id, "revision_no": source.revision_no, "payload_schema": source.payload_schema, "payload_hash": source.payload_hash},
             "conversion_warnings": preview["warnings"],
         },
-    })
-
-
-def _draft_references(db: Session, draft: Draft, project_id: int) -> tuple[list, list, list, list]:
-    assets, evidence, unmapped_media, unmapped_claims = [], [], [], []
-    for media in draft.media:
-        material = db.get(MaterialRevision, media.material_revision_id) if media.material_revision_id else None
-        visible = db.scalar(select(ProjectMaterialReference.id).where(ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.material_revision_id == media.material_revision_id, ProjectMaterialReference.status == "active"))
-        generated = db.scalars(select(ProjectWorkflowOutput).where(ProjectWorkflowOutput.project_id == project_id, ProjectWorkflowOutput.output_kind == "material_revision", ProjectWorkflowOutput.entity_id == media.material_revision_id)).all()
-        proven = material is not None and material.content_hash == media.content_hash and media.public_use_allowed is True and media.public_use_revoked_at is None and (visible is not None or any(_verified_generated_asset(db, output, material) for output in generated))
-        if proven:
-            try:
-                verify_bytes_checked(db, material)
-            except (HTTPException, OSError):
-                proven = False
-        if not proven:
-            unmapped_media.append(media.material_revision_id or f"draft_media:{media.id}")
-            continue
-        assets.append({"material_revision_id": material.id, "content_hash": material.content_hash, "role": media.role, "sort_order": media.sort_order, "placement": media.placement_json or {}})
-    boundary = current_boundary(db, project_id)
-    snapshot = draft.content_job.fact_pack_snapshot or {}
-    pack = db.get(FactPack, boundary.fact_pack_id) if boundary else None
-    proven_pack = bool(pack and pack.status == "frozen" and snapshot.get("id") == pack.id and snapshot.get("version") == pack.version == boundary.fact_pack_version and snapshot.get("checksum") == pack.checksum == boundary.fact_pack_checksum and pack.checksum)
-    items = db.scalars(select(FactPackItem).where(FactPackItem.fact_pack_id == pack.id)).all() if proven_pack else []
-    claims = (draft.structured_json or {}).get("claim_fact_map", [])
-    claims = claims if isinstance(claims, list) else [claims]
-    claims = claims + [{"text": claim.text, "fact_ids": claim.fact_ids_json, "draft_claim_id": claim.id, "start_offset": claim.start_offset, "end_offset": claim.end_offset} for claim in draft.claims]
-    for index, claim in enumerate(claims):
-        fact_ids = claim.get("fact_ids") if isinstance(claim, dict) else None
-        matched = []
-        if isinstance(fact_ids, list) and fact_ids:
-            for fact_id in fact_ids:
-                candidates = [item for item in items if type(fact_id) in {int, str} and str(item.fact_id) == str(fact_id) and item.fact_id is not None and item.snapshot_checksum and item.evidence_kind != "legacy_untyped"]
-                if len(candidates) != 1:
-                    matched = []
-                    break
-                matched.append(candidates[0])
-        if not matched:
-            unmapped_claims.append(claim)
-            continue
-        for item in matched:
-            evidence.append({"fact_pack_item_id": item.id, "snapshot_checksum": item.snapshot_checksum, "role": "claim", "sort_order": index, "locator": {"source": "draft_claim", "claim_index": index, **claim}})
-    return assets, evidence, unmapped_media, unmapped_claims
-
-
-def seed_from_output(db: Session, *, project_id: int, unit_id: int, user: User, output_id: int, idempotency_key: str, expected_revision: int) -> dict:
-    _, unit = owned_unit(db, project_id, unit_id, user, mutate=True)
-    if unit.modality != "text":
-        raise HTTPException(409, "Draft兼容转换仅支持文字内容单元")
-    existing = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id, ContentMasterRevision.idempotency_key == idempotency_key))
-    if existing:
-        if existing.source_kind != "workflow_seed" or existing.origin_project_output_id != output_id or existing.revision_no - 1 != expected_revision:
-            raise HTTPException(409, "幂等键已用于不同的Master请求")
-        return _serialize(db, existing)
-    output = db.get(ProjectWorkflowOutput, output_id)
-    if output is None or output.project_id != project_id or output.unit_id != unit_id or output.output_kind != "draft":
-        raise HTTPException(409, "没有可验证的本单元稿件输出")
-    run = db.get(WorkflowRun, output.run_id)
-    draft = db.get(Draft, output.entity_id)
-    if run is None or run.content_unit_id != unit.id or run.status != "succeeded" or draft is None or draft.content_job.workflow_run_id != run.id or run.identity_snapshot_id is None or run.identity_snapshot_id != unit.identity_snapshot_id:
-        raise HTTPException(409, "工作流输出与内容单元身份血缘不一致")
-    workflow = db.get(Workflow, run.workflow_id)
-    if workflow is None or not run.definition_checksum or workflow.checksum != run.definition_checksum or workflow.version != run.workflow_version:
-        raise HTTPException(409, "工作流冻结定义无法验证")
-    step = db.scalar(select(WorkflowStep).where(WorkflowStep.run_id == run.id, WorkflowStep.node_id == output.node_id).order_by(WorkflowStep.id.desc()).limit(1))
-    attempt = db.get(WorkflowStepAttempt, output.attempt_id) if output.attempt_id else None
-    latest_attempt = db.scalar(select(WorkflowStepAttempt).where(WorkflowStepAttempt.step_id == step.id).order_by(WorkflowStepAttempt.attempt_no.desc(), WorkflowStepAttempt.id.desc()).limit(1)) if step else None
-    if step is None or attempt is None or latest_attempt is None or latest_attempt.id != attempt.id or attempt.step_id != step.id or attempt.run_id != run.id or attempt.node_id != output.node_id or attempt.attempt_no != step.attempt_no or step.status != "succeeded" or attempt.status != "succeeded" or not step.output_hash or step.output_hash != attempt.output_hash or step.output_json != attempt.output_json or (step.output_json or {}).get("draft_id") != draft.id:
-        raise HTTPException(409, "工作流输出已失败、过期或被新的节点尝试替换")
-    latest = db.scalar(select(Draft).where(Draft.content_job_id == draft.content_job_id).order_by(Draft.revision_no.desc()).limit(1))
-    if latest is None or latest.id != draft.id:
-        raise HTTPException(409, "工作流输出所指稿件已过期")
-    if unit.channel_id and draft.content_job.channel != unit.channel_id:
-        raise HTTPException(409, "工作流稿件渠道与当前单元不一致")
-    assets, evidence, unmapped_media, unmapped_claims = _draft_references(db, draft, project_id)
-    content = {"title": draft.title, "markdown": draft.body, "structured": draft.structured_json, "document": draft.document_json, "thread_posts": draft.thread_posts_json}
-    from .text_documents import TextDocumentError, convert_legacy_text
-
-    try:
-        converted = convert_legacy_text(content, asset_refs=assets, evidence_refs=evidence)
-    except TextDocumentError as exc:
-        raise HTTPException(422, {"code": "legacy_text_conversion_failed", "reason": str(exc)}) from exc
-    unmapped_claims += [warning for warning in converted["warnings"] if warning["code"] == "unmapped_evidence_locator"]
-    return save_revision(db, project_id=project_id, unit_id=unit_id, user=user, workflow_seed=True, payload={
-        "expected_revision": expected_revision, "idempotency_key": idempotency_key, "modality": unit.modality,
-        "payload_schema": "text.master.v2", "payload": converted["payload"], "asset_refs": converted["asset_refs"], "evidence_refs": converted["evidence_refs"],
-        "source_kind": "workflow_seed", "origin_workflow_run_id": run.id, "origin_project_output_id": output.id,
-        "content_form": draft.content_job.content_form if unit.channel_id else None,
-        "edit_summary": {"workflow_source": {"draft_id": draft.id, "draft_revision_no": draft.revision_no, "draft_input_hash": draft.input_hash, "draft_content_hash": _hash(content), "workflow_id": workflow.id, "workflow_version": run.workflow_version, "run_id": run.id, "definition_checksum": run.definition_checksum, "node_id": step.node_id, "attempt_id": attempt.id, "attempt_input_hash": attempt.input_hash, "attempt_output_hash": attempt.output_hash}, "unmapped_media_ids": unmapped_media, "unmapped_claims": unmapped_claims, "conversion_warnings": converted["warnings"], "source_schema": "legacy.draft", "document_hash": converted["document_hash"]},
     })

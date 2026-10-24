@@ -21,7 +21,7 @@ def upgrade() -> None:
                 "ck_fact_pack_item_evidence_kind",
                 "evidence_kind IN ('fact', 'event', 'third_party_quote', 'author_opinion', 'legacy_untyped')",
             )
-    if "ck_draft_media_role" not in _names("draft_media"):
+    if sa.inspect(op.get_bind()).has_table("draft_media") and "ck_draft_media_role" not in _names("draft_media"):
         with op.batch_alter_table("draft_media") as batch:
             batch.create_check_constraint("ck_draft_media_role", "role IN ('cover', 'inline', 'attachment')")
     target_checks = _names("delivery_target")

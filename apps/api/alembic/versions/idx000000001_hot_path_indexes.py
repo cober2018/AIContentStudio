@@ -42,6 +42,9 @@ def upgrade():
         return cache[table]
 
     for name, table, columns in INDEXES:
+        # Fresh installs no longer create the old-version draft tables and columns.
+        if not inspector.has_table(table) or not set(columns) <= {item["name"] for item in inspector.get_columns(table)}:
+            continue
         existing = _existing(table_indexes(table), name)
         if existing is None:
             op.create_index(name, table, list(columns))
@@ -60,5 +63,5 @@ def downgrade():
         return cache[table]
 
     for name, table, _columns in reversed(INDEXES):
-        if _existing(table_indexes(table), name) is not None:
+        if inspector.has_table(table) and _existing(table_indexes(table), name) is not None:
             op.drop_index(name, table_name=table)

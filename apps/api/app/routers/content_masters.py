@@ -58,12 +58,6 @@ class MasterRevisionIn(BaseModel):
             raise HTTPException(422, {"code": str(exc)}) from None
 
 
-class MasterSeedIn(BaseModel):
-    expected_revision: int = Field(default=0, ge=0)
-    idempotency_key: str = Field(min_length=1, max_length=150)
-    project_output_id: int
-
-
 class MasterUpgradeIn(BaseModel):
     expected_revision: int = Field(ge=1)
     expected_payload_hash: str = Field(pattern="^[0-9a-f]{64}$")
@@ -257,10 +251,3 @@ def execute_master_checks(project_id: int, unit_id: int, master_id: int, db: Ses
 @router.get("/content-projects/{project_id}/units/{unit_id}/master-revisions/{master_id}/checks/current")
 def get_current_master_checks(project_id: int, unit_id: int, master_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return {"items": current_checks(db, project_id, unit_id, master_id, user)}
-
-
-@router.post("/content-projects/{project_id}/units/{unit_id}/master-revisions/from-output")
-def seed_master_from_output(project_id: int, unit_id: int, body: MasterSeedIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    from ..services.content_masters import seed_from_output
-
-    return seed_from_output(db, project_id=project_id, unit_id=unit_id, user=user, output_id=body.project_output_id, idempotency_key=body.idempotency_key, expected_revision=body.expected_revision)

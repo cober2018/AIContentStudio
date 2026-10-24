@@ -37,8 +37,8 @@ from .content_masters import _evidence_check, _hash, _rights_check, _serialize, 
 from .production_modalities import adapter_for
 
 
-def latest_legacy_candidate_id(db: Session, unit_id: int) -> int | None:
-    # V5 has its own channel series and must not supersede the legacy Unit series.
+def latest_unit_candidate_id(db: Session, unit_id: int) -> int | None:
+    # V5 has its own channel series and must not supersede the Unit series.
     return db.scalar(select(ContentAsset.id).where(
         ContentAsset.content_unit_id == unit_id,
         ContentAsset.channel_variant_revision_id.is_(None),
@@ -145,7 +145,7 @@ def validate_live_v4_candidate(db: Session, asset: ContentAsset, *, require_curr
         if check != stored or any(check.get(key) != latest_checks[kind][key] for key in ("input_hash", "profile_key", "profile_version", "status")) or (check["status"] == "warning" and check != latest_checks[kind]):
             raise _blocked("checks_unready", "冻结检查已失效或被修改")
     if require_current:
-        latest = latest_legacy_candidate_id(db, asset.content_unit_id)
+        latest = latest_unit_candidate_id(db, asset.content_unit_id)
         if latest != asset.id:
             raise _blocked("historical_candidate", "历史候选不能新增审批或授权")
     if require_approved:
@@ -308,8 +308,7 @@ def validate_live_v5_candidate(db: Session, asset: ContentAsset, *, require_curr
         intact = False
     if not intact:
         raise _blocked("candidate_integrity", "v5冻结清单或哈希不一致")
-    legacy_sources = (asset.draft_id, asset.topic_brief_id, asset.mother_revision_id,
-                      asset.content_master_revision_id, asset.workflow_run_id)
+    legacy_sources = (asset.content_master_revision_id, asset.workflow_run_id)
     variant = db.get(ChannelVariantRevision, asset.channel_variant_revision_id) if asset.channel_variant_revision_id else None
     if (any(value is not None for value in legacy_sources) or variant is None
             or variant.project_id != asset.project_id or variant.content_unit_id != asset.content_unit_id

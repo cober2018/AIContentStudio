@@ -27,13 +27,13 @@ def _hash_payload(payload: dict) -> str:
 
 
 class WechatArticleRenderer:
-    """公众号文章：markdown + wechat html（复用 exports.render_wechat_html）。"""
+    """公众号文章：markdown + wechat html（复用 wechat_html.render_wechat_html）。"""
 
     key = "renderer.wechat.article"
     version = "1"
 
     def render(self, source: dict) -> RenderResult:
-        from ...services.exports import render_wechat_html
+        from ...services.wechat_html import render_wechat_html
 
         title = source.get("title") or ""
         body = source.get("body_markdown") or ""
@@ -94,7 +94,6 @@ class XhsCardsRenderer:
             "cards": cards,
             "media": [
                 {
-                    "draft_media_id": m.get("draft_media_id"),
                     "material_revision_id": m.get("material_revision_id"),
                     "hash": m.get("hash"),
                     "sort_order": m.get("sort_order"),
@@ -127,49 +126,3 @@ def resolve_renderer_key(channel: str, content_form: str | None) -> str:
     from .channel_methods import renderer_key_for
 
     return renderer_key_for(channel, content_form)
-
-
-def render_for(db, draft, *, media: list[dict] | None = None) -> RenderResult:
-    """对 draft 求渲染（批准前冻结）。media 为 manifest v2 media 结构（可空）。
-
-    R2-M9：renderer 由 Channel Profile 的 renderer_key 驱动（Profile→Renderer 插件架构）；
-    profile 未声明时才退回静态渠道映射。
-    """
-    bootstrap_renderers()
-    job = draft.content_job
-    content_form = getattr(draft, "content_form", None) or job.content_form
-    key = None
-    try:
-        from .channel_registry import resolve_content_form
-
-        spec = resolve_content_form(db, job.channel, content_form)
-        if spec.source == "profile" and spec.renderer_key:
-            key = spec.renderer_key
-    except Exception:  # noqa: BLE001 渠道解析失败：走静态兜底
-        key = None
-    if not key:
-        key = resolve_renderer_key(job.channel, content_form)
-    try:
-        plugin = registry.resolve("renderer", key, None)
-    except Exception:  # noqa: BLE001 profile 声明了未注册的 renderer：如实降级并记 warning
-        plugin = registry.resolve("renderer", "renderer.generic.markdown", "1")
-        source = {
-            "title": draft.title,
-            "body_markdown": draft.body,
-            "structured": draft.structured_json or {},
-            "thread_posts": draft.thread_posts_json or [],
-            "media": media or [],
-        }
-        result = plugin.render(source)
-        return RenderResult(
-            renderer_key=result.renderer_key, version=result.version, payload=result.payload,
-            content_hash=result.content_hash, warnings=[f"renderer_unregistered:{key}"],
-        )
-    source = {
-        "title": draft.title,
-        "body_markdown": draft.body,
-        "structured": draft.structured_json or {},
-        "thread_posts": draft.thread_posts_json or [],
-        "media": media or [],
-    }
-    return plugin.render(source)

@@ -78,7 +78,7 @@ def test_alembic_upgrade_head_on_fresh_db(fresh_sqlite_url):
             version = conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
         assert version in heads
         # 覆盖三个后续增量迁移的表 + 业务主干表
-        for table in ("user", "system_settings", "asset_media", "workflow", "workflow_step"):
+        for table in ("user", "system_settings", "workflow", "workflow_step"):
             assert inspector.has_table(table), f"缺表: {table}"
     finally:
         engine.dispose()

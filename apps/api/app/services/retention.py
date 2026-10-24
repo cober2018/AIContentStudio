@@ -14,13 +14,10 @@ from pathlib import Path
 from sqlalchemy import delete, select
 
 from ..models import (
-    AssetMedia,
     AuditLog,
     ContentAsset,
-    ContentJob,
     ContentMasterRevision,
     DataSnapshot,
-    DraftMedia,
     ExportRecord,
     LLMRun,
     MaterialRevision,
@@ -74,8 +71,6 @@ def _process_material_orphan_candidates(db, *, cutoff: datetime, batch: int) -> 
             path_value = str(relative)
             in_use = any((
                 db.scalar(select(MaterialRevision.id).where(MaterialRevision.file_path == path_value).limit(1)),
-                db.scalar(select(DraftMedia.id).where(DraftMedia.file_path == path_value).limit(1)),
-                db.scalar(select(AssetMedia.id).where(AssetMedia.file_path == path_value).limit(1)),
             ))
             if in_use:
                 referenced += 1
@@ -125,7 +120,6 @@ def run_retention(db, cfg: dict | None = None) -> dict:
         .where(WorkflowRun.content_unit_id.is_(None))
         .where(~select(WorkflowStepAttempt.id).where(WorkflowStepAttempt.run_id == WorkflowRun.id).exists())
         .where(~select(ContentAsset.id).where(ContentAsset.workflow_run_id == WorkflowRun.id).exists())
-        .where(~select(ContentJob.id).where(ContentJob.workflow_run_id == WorkflowRun.id).exists())
         .where(~select(ContentMasterRevision.id).where(ContentMasterRevision.origin_workflow_run_id == WorkflowRun.id).exists())
         .where(~select(DataSnapshot.id).where(DataSnapshot.run_id == WorkflowRun.id).exists())
         .where(~select(ProjectWorkflowOutput.id).where(ProjectWorkflowOutput.run_id == WorkflowRun.id).exists())

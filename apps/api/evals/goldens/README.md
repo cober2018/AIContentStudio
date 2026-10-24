@@ -11,17 +11,7 @@
 - `manifest.v1.json`：夹具版本、覆盖范围、审查记录和本机执行入口；
 - `identity.v1.json`：可复用的 Brand/Persona/Account/Series 方向样本和历史快照断言；
 - `content.v1.json`：三种 Master 形态、首批 ChannelVariant 目标及保持/禁止规则；
-- `../golden_topics.json`：既有 30 个受控事实场景，作为确定性内容评测输入，不复制事实正文。
-
-## 运行边界
-
-```bash
-cd apps/api
-APP_ENV=test LLM_PROVIDER=mock \
-  .venv/bin/python scripts/evaluate_content.py
-```
-
-该命令使用隔离 SQLite，**只消费既有 `golden_topics.json`**，不消费这两份新夹具；验证现有生成→FactCheck 管线，不调用供应商、写开发库或证明远端账号能力。30 topics / 64 jobs 的 generation success=1.0、fact coverage=1.0、unfact number=0、checks pass_rate=0.2969；生成成功不等于质量通过。
+- `../golden_cases.json`：30 个受控事实场景，Content 夹具从中取用例，不复制事实正文。
 
 ## 2026-10-03 新夹具实际执行
 

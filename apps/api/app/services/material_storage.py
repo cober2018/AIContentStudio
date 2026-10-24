@@ -109,10 +109,10 @@ class LocalMaterialStorage:
         return path.parent.parent, list(path.parts[-2:])
 
     def _writable(self, path: Path) -> None:
-        from .storage_locations import library_reachable
+        from .storage_locations import library_writable
 
         # An unplugged drive must fail loudly, never fall back to a second home or create /Volumes/<drive>.
-        if not path.is_relative_to(self.root) and not library_reachable():
+        if not path.is_relative_to(self.root) and not library_writable():
             raise FileNotFoundError("material_library_unavailable")
 
     def put(self, key: str, content: bytes) -> None:
@@ -366,18 +366,3 @@ def provider() -> MaterialStorage:
     if settings.material_storage_backend == "minio":
         return MinioMaterialStorage()
     raise ValueError("storage_backend_invalid")
-
-
-def read_legacy_bytes(key: str, *, expected_hash: str | None = None) -> bytes:
-    """Historical DB paths use the selected store, never a second local fallback."""
-    try:
-        content = provider().read(key)
-    except (OSError, ValueError):
-        raise
-    except Exception:  # noqa: BLE001 External stores must not leak credential-bearing diagnostics.
-        raise ValueError("storage_unavailable") from None
-    key_hash = Path(key).stem if key.startswith("legacy/") else None
-    digest = expected_hash or key_hash
-    if digest and _content_hash(content) != digest:
-        raise ValueError("storage_object_hash_mismatch")
-    return content

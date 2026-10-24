@@ -12,12 +12,11 @@ type CandidateRef = { id: number; hash: string; status: string; title: string };
 type ReviewUnit = { unit_id: number; project_id: number; title: string; modality: string; unit_status: string; persona_id: number | null; production_domain?: "product" | "persona"; account_id: number | null; channel_id: string | null; summary: Summary; dimensions: Record<string, { status: string; reasons: string[] }>; current_candidate: CandidateRef | null; legacy_current_candidate: CandidateRef | null; variantSeries?: { variantKey: string; candidateId: number; candidateHash: string; status: string; channel: string; contentForm: string; targetStatuses: string[] }[]; history: CandidateRef[]; reviews: { id: number; decision: string; comment: string | null }[]; targets: ReviewTarget[] };
 type ReviewProject = { project_id: number; title: string; status: string; units: ReviewUnit[] };
 type Candidate = { id: number; candidate_hash: string; status: string; manifest: Record<string, unknown>; preview: FrozenPreview };
-type Output = { id: number; output_kind: string; run_id: number; entity_id: number };
 type Diff = { from_candidate_id: number | null; changed_sections: Record<string, { changed: boolean }>; structured?: { id?: string; block_id?: string; kind?: string; changes?: string[] }[] | Record<string, unknown> | null; text: { before_chars: number; after_chars: number; similarity: number } | null };
 type Tab = "preview" | "issues" | "authorization" | "delivery" | "history";
 type Account = { id: number; name: string; status: string; platform_channel?: string | null };
-type Draft = { outputId: string; comment: string; warningDispositions: Record<string, string>; accountRef: string; accountId: string; action: string; authVersion: string; receipts: Record<string, string>; reconciliations: Record<string, string> };
-const EMPTY_DRAFT: Draft = { outputId: "", comment: "", warningDispositions: {}, accountRef: "", accountId: "", action: "copy_package", authVersion: "v1", receipts: {}, reconciliations: {} };
+type Draft = { comment: string; warningDispositions: Record<string, string>; accountRef: string; accountId: string; action: string; authVersion: string; receipts: Record<string, string>; reconciliations: Record<string, string> };
+const EMPTY_DRAFT: Draft = { comment: "", warningDispositions: {}, accountRef: "", accountId: "", action: "copy_package", authVersion: "v1", receipts: {}, reconciliations: {} };
 function readDraft(key: string): Draft { try { return { ...EMPTY_DRAFT, ...JSON.parse(sessionStorage.getItem(key) || "null") }; } catch { return { ...EMPTY_DRAFT }; } }
 
 const STATUS_NAMES: Record<Summary, string> = { blocked: "受阻", stale: "已过期", waiting_review: "待审核", ready: "就绪", approved: "已批准", delivery_ready: "待交付", unknown: "待核对", delivered: "已回填" };
@@ -118,7 +117,7 @@ export default function ProjectReviewCenter() {
         {pages > 1 && <div className="flex items-center justify-center gap-3"><Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => update({page: String(page - 1)})}>上一页</Button><span className="text-[13px] text-ink-500">第 {page} / {pages} 页</span><Button size="sm" variant="secondary" disabled={page >= pages} onClick={() => update({page: String(page + 1)})}>下一页</Button></div>}
       </>}
     </>}
-    <details className="text-sm text-slate-500"><summary className="cursor-pointer">兼容入口</summary><Link className="mt-2 inline-block text-indigo-700 underline" to="/review-publish">旧 Topic 审核与发布</Link></details>
+    
   </Page>;
 }
 
@@ -133,8 +132,7 @@ function ReviewDetail({ user, project, unit, role, busy, verified, query, update
   const draftKey = `studio-review:${selectionKey}`;
   const [draft, setDraft] = useState<Draft>(() => readDraft(draftKey));
   function patchDraft(values: Partial<Draft>) { setDraft(previous => { const next = { ...previous, ...values }; try { sessionStorage.setItem(draftKey, JSON.stringify(next)); } catch { /* Browser storage must not block explicit decisions. */ } return next; }); }
-  const { outputId, comment, warningDispositions, accountRef, accountId, action, authVersion } = draft;
-  const setOutputId = (value: string) => patchDraft({outputId: value});
+  const { comment, warningDispositions, accountRef, accountId, action, authVersion } = draft;
   const setComment = (value: string) => patchDraft({comment: value});
   const setWarningDispositions = (value: Record<string, string>) => patchDraft({warningDispositions: value});
   const setAccountRef = (value: string) => patchDraft({accountRef: value});
@@ -144,7 +142,6 @@ function ReviewDetail({ user, project, unit, role, busy, verified, query, update
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [candidateTargets, setCandidateTargets] = useState<ReviewTarget[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [outputs, setOutputs] = useState<Output[]>([]);
   const [diff, setDiff] = useState<Diff | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
@@ -163,12 +160,11 @@ function ReviewDetail({ user, project, unit, role, busy, verified, query, update
     let live = true;
     const version = ++readVersion.current;
     const valid = () => live && active.current && currentUser() === user && version === readVersion.current;
-    setCandidate(null); setCandidateTargets([]); setAccounts([]); setOutputs([]); setDiff(null); setLoaded({}); setErrors({});
+    setCandidate(null); setCandidateTargets([]); setAccounts([]); setDiff(null); setLoaded({}); setErrors({});
     async function read<T>(key: string, path: string, apply: (value: T) => void) {
       try { const next = await api.get<T>(path); if (valid()) { apply(next); setLoaded(state => ({...state, [key]: true})); } }
       catch (cause) { if (valid()) setErrors(state => ({...state, [key]: errorText(cause)})); }
     }
-    void read<Output[]>("outputs", `${base}/outputs`, setOutputs);
     if (domain === "product") void read<Account[]>("accounts", "/content-accounts", setAccounts);
     else if (unit.persona_id && unit.persona_id > 0) void read<Account[]>("accounts", `/content-personas/${unit.persona_id}/accounts`, setAccounts);
     else setErrors(state => ({...state, accounts: "角色标识无效，无法读取账号。"}));
@@ -256,8 +252,6 @@ function ReviewDetail({ user, project, unit, role, busy, verified, query, update
     </section>
     {taskReturn(query.get("return_to")) && <Link className="block text-sm text-indigo-700 underline" to={taskReturn(query.get("return_to"))}>返回来源页面</Link>}
     <Link className="inline-block text-sm text-indigo-700 underline" to={taskLink(`/projects/${unit.project_id}/units/${unit.unit_id}/production?workstep=${domain === "product" ? "review" : "delivery"}`)}>返回制作工作台修改内容</Link>
-    {tab === "preview" && <details className="rounded-xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm text-slate-600">旧 Draft 冻结兼容入口</summary>          <section className="rounded-xl border border-slate-200 bg-white p-5"><h3 className="font-semibold">冻结 Candidate</h3><p className="mt-1 text-xs text-slate-500">旧 Draft 输出保持 v3 冻结；Content Master v4 在生产工作台完成检查后显式冻结。</p><div className="mt-3 flex flex-wrap gap-2"><select className={inputClass} value={outputId} onChange={(event) => setOutputId(event.target.value)}><option value="">选择 Draft 输出</option>{outputs.filter((item) => item.output_kind === "draft").map((item) => <option key={item.id} value={item.id}>输出 #{item.id} · Run #{item.run_id} · Draft #{item.entity_id}</option>)}</select><Button disabled={busy || !canEdit || !loaded.outputs || !outputs.some(row => row.id === Number(outputId) && row.output_kind === "draft")} onClick={() => change(() => api.post(`${base}/candidates/freeze`, { project_output_id: Number(outputId) }), "候选已冻结；内容审批尚未发生。", canEdit && !!loaded.outputs)}>冻结 Candidate</Button></div></section>
-</details>}
     {tab === "history" && <>          <section className="rounded-xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-semibold">候选历史</h3>{unit.current_candidate && <span className="text-xs text-slate-500">最近候选 #{unit.current_candidate.id}；v5 按渠道系列独立判断当前性</span>}</div>{!!unit.variantSeries?.length && <div className="mt-3 flex flex-wrap gap-2">{unit.variantSeries.map((series) => <Button key={series.variantKey} size="sm" variant={candidate?.id === series.candidateId ? "primary" : "secondary"} onClick={() => selectCandidate(series.candidateId)}>{series.channel}/{series.contentForm} · #{series.candidateId} · {series.status}</Button>)}</div>}<div className="mt-3 flex flex-wrap gap-2">{[unit.current_candidate, ...unit.history].filter((item): item is CandidateRef => item !== null).map((item) => <Button key={item.id} size="sm" variant={candidate?.id === item.id ? "primary" : "secondary"} onClick={() => selectCandidate(item.id)}>#{item.id} · {item.title}</Button>)}</div>{!unit.current_candidate && <p className="mt-3 text-sm text-slate-500">还没有冻结候选。</p>}</section>
 {unit.current_candidate && unit.reviews.length > 0 && <section className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-semibold">最近候选 #{unit.current_candidate.id} 的审批记录</h3>{selectedCandidateId !== unit.current_candidate.id && <p className="mt-2 text-sm text-amber-800">这些记录属于最近候选，不代表当前选中候选的审批结果。</p>}{unit.reviews.map(row => <p key={row.id} className="mt-2 break-words text-sm text-slate-600">{row.decision}{row.comment ? ` · ${row.comment}` : ""}</p>)}</section>}</>}
     {!selectedCandidateId && <EmptyState title={rawId !== null ? "指定候选标识无效" : "还没有冻结候选"} hint={rawId !== null ? "请核对原链接或在历史页明确选择候选；不会替换为其他候选。" : "请先返回制作工作台完成检查并显式冻结，再来核对作品。"} />}

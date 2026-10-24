@@ -10,7 +10,7 @@ function failure(cause: unknown) {
   return detail?.message || (cause instanceof Error ? cause.message : "配音没生成好");
 }
 
-export default function VoiceoverPanel({ projectId, unitId, onSaved }: { projectId: number; unitId: number; onSaved?: () => void }) {
+export default function VoiceoverPanel({ projectId, unitId, readOnly, onSaved }: { projectId: number; unitId: number; readOnly?: boolean; onSaved?: () => void }) {
   const base = `/content-projects/${projectId}/units/${unitId}`;
   const status = useQuery({ queryKey: ["voiceover", currentUser(), projectId, unitId], retry: false, queryFn: () => api.get<Status>(`${base}/voiceover`) });
   const [busy, setBusy] = useState(false);
@@ -41,7 +41,7 @@ export default function VoiceoverPanel({ projectId, unitId, onSaved }: { project
   return <section aria-label="配音" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div><h3 className="font-semibold">① 配音</h3><p className="mt-1 text-xs text-slate-500">{settings ? `按台词列生成 · ${settings.voice_id} · ${status.data?.emotions[settings.emotion] || settings.emotion} · 语速 ${settings.rate} · ${settings.model_id}（设置 → 配音 可改）` : "读取配音设置…"}</p></div>
-      <Button size="sm" variant={revision ? "secondary" : "primary"} disabled={busy || status.isPending} onClick={() => void generate()}>{busy ? "生成中，约一分钟…" : revision ? "重新生成配音" : "生成配音"}</Button>
+      <Button size="sm" variant={revision ? "secondary" : "primary"} disabled={readOnly || busy || status.isPending} onClick={() => void generate()}>{busy ? "生成中，约一分钟…" : revision ? "重新生成配音" : "生成配音"}</Button>
     </div>
     {revision ? (url ? <audio className="mt-3 w-full" controls src={url} /> : <p className="mt-2 text-xs text-slate-500">配音已放进主稿（素材 #{revision}）。</p>) : <p className="mt-2 text-xs text-amber-700">还没有配音。剪辑要跟着配音走，先生成配音。</p>}
     {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}

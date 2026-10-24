@@ -407,7 +407,6 @@ def test_run_copies_exact_snapshot_and_archived_identity_blocks_new_run(client):
     assert client.get(f"{base}/runs/{first.json()['id']}", headers=alice).status_code == 200
     assert client.post(f"{base}/runs", json={"params": {}}, headers=alice).status_code == 409
     assert client.post(f"{base}/runs/{first.json()['id']}/nodes/a/rerun", headers=alice).status_code == 409
-    assert client.post(f"/api/v1/workflow-runs/{first.json()['id']}/nodes/a/rerun", headers=alice).status_code == 409
     assert client.post(f"{base}/workflow-override", json={"expected_revision": 1, "definition": _definition()}, headers=alice).status_code == 409
 
 
@@ -445,7 +444,7 @@ def test_explicit_rebind_updates_in_place_then_replaces_after_run(client):
 
 
 def test_hierarchical_defaults_pin_new_units_and_preserve_old_ones(client):
-    portable = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.approve", "config": {}}], "edges": [], "visual_order": ["gate"]}
+    portable = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.confirm_facts", "config": {}}], "edges": [], "visual_order": ["gate"]}
     alice = {"X-Studio-User": "alice@studio.local"}
     bob = {"X-Studio-User": "bob@studio.local"}
     persona_id = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=alice).json()["id"]
@@ -468,7 +467,6 @@ def test_hierarchical_defaults_pin_new_units_and_preserve_old_ones(client):
     assert client.get(f"/api/v1/content-projects/{project_id}/units/{old['id']}", headers=alice).json()["pinned_workflow_id"] == persona.json()["workflow_id"]
     effective = client.get(f"/api/v1/content-identities/effective-workflow?persona_id={persona_id}&account_id={account_id}&series_id={series_id}&modality=text", headers=alice)
     assert effective.status_code == 200 and effective.json()["source"] == "series"
-    assert client.get(f"/api/v1/workflows/{series.json()['workflow_id']}", headers=bob).status_code == 404
 
 
 def test_versions_overview_and_typed_brief_identity_scope(client, db_session):
@@ -567,10 +565,10 @@ def test_account_default_portability_gate_and_old_unit_pin(client):
     project_id = client.post("/api/v1/content-projects", json={"title": "默认"}, headers=alice).json()["id"]
     unit = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "旧单元", "persona_id": persona_id, "account_id": account_id, "modality": "text"}, headers=alice).json()
     url = f"/api/v1/content-accounts/{account_id}/default-workflows/text"
-    project_bound = {"nodes": [{"id": "gate", "kind": "Rule", "plugin": "builtin.fact_check", "config": {"project_id": project_id}}], "edges": [], "visual_order": ["gate"]}
+    project_bound = {"nodes": [{"id": "gate", "kind": "Tool", "plugin": "builtin.extract_facts", "config": {"project_id": project_id}}], "edges": [], "visual_order": ["gate"]}
     assert client.post(url, json={"expected_revision": 0, "definition": project_bound}, headers=alice).status_code == 422
     assert client.get(url, headers=alice).json()["workflow_id"] is None
-    portable = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.approve", "config": {}}], "edges": [], "visual_order": ["gate"]}
+    portable = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.confirm_facts", "config": {}}], "edges": [], "visual_order": ["gate"]}
     saved = client.post(url, json={"expected_revision": 0, "definition": portable}, headers=alice)
     assert saved.status_code == 201
     assert client.get(f"/api/v1/content-projects/{project_id}/units/{unit['id']}", headers=alice).json()["pinned_workflow_id"] is None

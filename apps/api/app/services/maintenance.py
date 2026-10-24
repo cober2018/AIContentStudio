@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..db import SessionLocal
-from ..models import AuditLog, ContentJob, WorkflowRun, WorkflowStep, utcnow
+from ..models import AuditLog, WorkflowRun, WorkflowStep, utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +30,9 @@ _thread: threading.Thread | None = None
 
 
 def reap_stale_running(db: Session, *, stale_seconds: int) -> dict:
-    """把超过阈值的 running WorkflowRun/WorkflowStep/ContentJob 置为 failed。
+    """把超过阈值的 running WorkflowRun/WorkflowStep 置为 failed。
 
-    阈值需大于任何合法执行时长（媒体 305s 上限、_h_generate 420s 轮询等），
+    阈值需大于任何合法执行时长（媒体 305s 上限等），
     默认 1800s；只做状态收口，不删除任何业务数据。
     """
     if stale_seconds <= 0:
@@ -67,20 +67,6 @@ def reap_stale_running(db: Session, *, stale_seconds: int) -> dict:
         run.error = run.error or f"reaped:stale_running_after_{stale_seconds}s"
     if runs:
         reaped["workflow_runs"] = [run.id for run in runs]
-
-    jobs = db.scalars(
-        select(ContentJob).where(
-            ContentJob.status == "running",
-            ContentJob.started_at.is_not(None),
-            ContentJob.started_at < cutoff,
-        )
-    ).all()
-    for job in jobs:
-        job.status = "failed"
-        job.finished_at = utcnow()
-        job.error = job.error or f"reaped:stale_running_after_{stale_seconds}s"
-    if jobs:
-        reaped["content_jobs"] = [job.id for job in jobs]
 
     if not reaped:
         return {}

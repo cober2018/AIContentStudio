@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, currentUser } from "../api";
 import type { HandoffStatus } from "./editHandoff";
+import { Button } from "../components/ui";
 import { stageErrorText } from "./stageErrors";
 import { useShotSlots, type Slot } from "./shotSlots";
 import { MATERIAL_DRAG, type DraggedMaterial } from "./MaterialLibraryFloat";
@@ -27,8 +28,8 @@ function clock(ms: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${(seconds % 60).toFixed(1).padStart(4, "0")}`;
 }
 
-export default function StoryboardTable({ projectId, unitId, draft, readOnly, onChange }: {
-  projectId: number; unitId?: number; draft: VideoDraft; readOnly: boolean; onChange: (draft: VideoDraft) => void;
+export default function StoryboardTable({ projectId, unitId, draft, readOnly, paged, onChange }: {
+  projectId: number; unitId?: number; draft: VideoDraft; readOnly: boolean; paged?: boolean; onChange: (draft: VideoDraft) => void;
 }) {
   const slots = useShotSlots(projectId, unitId || 0);
   const handoff = useQuery({ queryKey: ["edit-handoff", currentUser(), projectId, unitId], enabled: !!unitId && !readOnly, retry: false,
@@ -41,6 +42,7 @@ export default function StoryboardTable({ projectId, unitId, draft, readOnly, on
   };
   const [fillIssue, setFillIssue] = useState("");
   const [dropTarget, setDropTarget] = useState("");
+  const [index, setIndex] = useState(0);
   const shots = [...draft.payload.shots].sort((a, b) => a.order - b.order);
   if (!shots.some(shot => shot.board)) return null;
   const blocks = new Map(draft.payload.script.blocks.map(block => [block.id, block]));
@@ -57,11 +59,31 @@ export default function StoryboardTable({ projectId, unitId, draft, readOnly, on
     } catch (cause) { setFillIssue(stageErrorText(cause, "素材没能放进这个镜头，请刷新后重试。")); }
   }
   function edit(next: () => VideoDraft) { try { onChange(next()); } catch { /* The field keeps its last valid value. */ } }
+  if (paged) {
+    // Review mode: one shot per page, like flipping a storyboard, instead of a wide table to scroll through.
+    const at = Math.min(index, shots.length - 1);
+    const shot = shots[at];
+    const start = shots.slice(0, at).reduce((sum, item) => sum + item.duration_ms, 0);
+    const board = shot.board;
+    const block = shot.script_block_id ? blocks.get(shot.script_block_id) : undefined;
+    const rows: [string, string | undefined][] = [["信息点", board?.message], ["画面", board?.visual || shot.label], ["运镜", cameras.find(([value]) => value === board?.camera)?.[1]],
+      [speakers.find(([value]) => value === board?.speaker)?.[1] || "台词", block?.text], ["声音", board?.sound], ["备注", board?.notes], ["素材需求", board?.material_request]];
+    return <section aria-label="分镜表" className="rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-semibold">分镜 · 镜头 {at + 1} / {shots.length}</h3><p className="text-xs text-slate-500">估计总长 {clock(total)} · 时长是估计，最终以配音为准</p></div>
+      <div className="mt-3 flex flex-wrap gap-1">{shots.map((item, position) => <button key={item.id} type="button" aria-current={position === at ? "step" : undefined} onClick={() => setIndex(position)} className={`h-7 min-w-[2.25rem] rounded-md px-1.5 text-xs tabular-nums ${position === at ? "bg-ink-900 text-paper" : "border border-slate-200 text-slate-600 hover:bg-slate-50"}`}>L{String(item.order + 1).padStart(2, "0")}</button>)}</div>
+      <div className="mt-4 rounded-lg bg-slate-50 p-4">
+        <p className="text-xs text-slate-500">{clock(start)}–{clock(start + shot.duration_ms)}</p>
+        <dl className="mt-2 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[6rem_1fr]">{rows.filter(([, value]) => value).map(([label, value]) => <div key={label} className="contents"><dt className="text-xs text-slate-500 sm:pt-0.5">{label}</dt><dd className={`whitespace-pre-wrap ${label === "素材需求" ? "text-amber-800" : "text-slate-800"}`}>{value}</dd></div>)}</dl>
+        <p className="mt-3 text-xs">{materialText(slotById.get(shot.id), shot.source_material_revision_id)}</p>{route(shot.id)}
+      </div>
+      <div className="mt-3 flex justify-between"><Button size="sm" variant="secondary" disabled={at === 0} onClick={() => setIndex(at - 1)}>上一镜</Button><Button size="sm" variant="secondary" disabled={at === shots.length - 1} onClick={() => setIndex(at + 1)}>下一镜</Button></div>
+    </section>;
+  }
   let cursor = 0;
   return <section aria-label="分镜表" className="rounded-xl border border-slate-200 p-4">
     <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-semibold">分镜表</h3><div className="flex flex-wrap items-center gap-3"><p className="text-xs text-slate-500">{shots.length} 个镜头 · 估计总长 {clock(total)} · 时长是估计，最终以配音为准</p></div></div>
     {fillIssue && <p role="alert" className="mt-2 text-xs text-rose-700">{fillIssue}</p>}
-    <p className="mt-1 text-xs text-slate-500">「素材需求」写的是每个镜头要什么画面。你有的素材放进素材库或拖到素材格；剩下的由 Claude Code 去找或做，每个镜头最后用哪条也由它定。</p>
+    <p className="mt-1 text-xs text-slate-500">「素材需求」写的是每个镜头要什么画面。你有的素材放进素材库或拖到素材格；剩下的由第三方模型去找或做，每个镜头最后用哪条也由它定。</p>
     <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[1100px] border-collapse text-left align-top">
       <thead><tr className="border-b border-slate-200 text-xs text-slate-500">{["镜头", "时长", "信息点", "画面", "运镜", "台词", "声音", "备注", "素材需求 / 素材"].map(label => <th key={label} className="px-1 py-2 font-medium">{label}</th>)}</tr></thead>
       <tbody>{shots.map(shot => {

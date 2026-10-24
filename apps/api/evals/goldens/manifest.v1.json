@@ -4,27 +4,39 @@
   "scope": "SQLite + local material library + loopback-only",
   "identity_fixture": "identity.v1.json",
   "content_fixture": "content.v1.json",
-  "legacy_content_fixture": "../golden_topics.json",
-  "deterministic_runner": "../../scripts/evaluate_content.py",
-  "deterministic_runner_scope": "legacy golden_topics.json only; Identity/Content fixtures were separately consumed by isolated API diagnostics, not this runner",
-  "deterministic_acceptance": {
-    "provider": "mock",
-    "network": "disabled_by_scope",
-    "writes_to_development_db": false,
-    "required_metrics": ["generation_success_rate", "unfact_number_rate", "avg_fact_coverage", "pass_rate"]
-  },
   "quality_review": {
     "status": "not_exercised",
     "reason": "本轮正式基准只验收本机确定性管线；未把真实供应商输出或人工风格判断冒充已完成",
-    "required_when_enabled": ["provider", "model", "model_version", "input_hash", "output_hash", "reviewer", "decision", "reviewed_at"]
+    "required_when_enabled": [
+      "provider",
+      "model",
+      "model_version",
+      "input_hash",
+      "output_hash",
+      "reviewer",
+      "decision",
+      "reviewed_at"
+    ]
   },
   "review": {
     "change": "fe-f8-production-readiness-operations",
     "review_status": "versioned_for_local_acceptance",
-    "reviewed_scope": ["identity boundaries", "historical snapshot pinning", "fact/brief preservation", "three modalities", "channel adaptation"],
+    "reviewed_scope": [
+      "identity boundaries",
+      "historical snapshot pinning",
+      "fact/brief preservation",
+      "three modalities",
+      "channel adaptation"
+    ],
     "external_platform_status": "not_exercised"
   },
   "change_log": [
-    {"version": 1, "date": "2026-10-03", "change": "建立 F8 本机 Identity/Content Golden 基线", "reason": "把长期身份、事实、形态和渠道契约固定为可审查夹具"}
-  ]
+    {
+      "version": 1,
+      "date": "2026-10-03",
+      "change": "建立 F8 本机 Identity/Content Golden 基线",
+      "reason": "把长期身份、事实、形态和渠道契约固定为可审查夹具"
+    }
+  ],
+  "case_fixture": "../golden_cases.json"
 }

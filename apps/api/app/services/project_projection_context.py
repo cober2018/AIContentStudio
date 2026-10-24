@@ -4,7 +4,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session, aliased, joinedload, load_only
+from sqlalchemy.orm import Session, aliased, load_only
 
 from ..models import (
     ChannelVariantRevision,
@@ -16,8 +16,6 @@ from ..models import (
     DeliveryAttempt,
     DeliveryReceipt,
     DeliveryTarget,
-    Draft,
-    DraftMedia,
     FactPack,
     FactPackItem,
     IdentitySnapshot,
@@ -104,10 +102,8 @@ class ProjectProjectionContext:
         self.reviews = {}
         self.attempts = {}
         self.receipts = {}
-        self.drafts = {}
-        self.draft_revisions = {}
         self.pack_items = {}
-        self.live_rows = {model: {} for model in (FactPack, DraftMedia, MaterialRevision)}
+        self.live_rows = {model: {} for model in (FactPack, MaterialRevision)}
         if not self.project_ids:
             return
 
@@ -147,7 +143,7 @@ class ProjectProjectionContext:
             latest_candidate = select(func.max(candidate.id)).where(
                 candidate.content_unit_id == ContentAsset.content_unit_id
             ).correlate(ContentAsset).scalar_subquery()
-            latest_legacy = select(func.max(candidate.id)).where(
+            latest_unit = select(func.max(candidate.id)).where(
                 candidate.content_unit_id == ContentAsset.content_unit_id,
                 candidate.channel_variant_revision_id.is_(None),
             ).correlate(ContentAsset).scalar_subquery()
@@ -156,8 +152,8 @@ class ProjectProjectionContext:
             ).where(ContentAsset.content_unit_id.in_(unit_ids)).group_by(
                 ContentAsset.content_unit_id, ChannelVariantRevision.variant_key,
             ))
-            candidate_query = candidate_query.where(or_(ContentAsset.id == latest_candidate, ContentAsset.id == latest_legacy, ContentAsset.id.in_(series_heads))).options(load_only(
-                ContentAsset.id, ContentAsset.content_unit_id, ContentAsset.draft_id,
+            candidate_query = candidate_query.where(or_(ContentAsset.id == latest_candidate, ContentAsset.id == latest_unit, ContentAsset.id.in_(series_heads))).options(load_only(
+                ContentAsset.id, ContentAsset.content_unit_id,
                 ContentAsset.channel_variant_revision_id,
                 ContentAsset.channel, ContentAsset.content_form,
                 ContentAsset.candidate_manifest_json, ContentAsset.candidate_hash,
@@ -204,13 +200,6 @@ class ProjectProjectionContext:
                 self.receipts = _group(db.scalars(select(DeliveryReceipt).where(
                     DeliveryReceipt.target_id.in_(target_ids)
                 ).order_by(DeliveryReceipt.created_at)).all(), "target_id")
-        self.drafts = self._rows(db, Draft, {row.draft_id for row in current}, load_only(
-            Draft.id, Draft.content_job_id, Draft.revision_no,
-        ))
-        if self.drafts:
-            self.draft_revisions = dict(db.execute(select(Draft.content_job_id, func.max(Draft.revision_no)).where(
-                Draft.content_job_id.in_({row.content_job_id for row in self.drafts.values()})
-            ).group_by(Draft.content_job_id)).all())
         pack_ids = {self.boundaries[row.project_id].fact_pack_id for row in active
                     if row.id in self.candidates and row.project_id in self.boundaries}
         self.live_rows[FactPack] = self._rows(db, FactPack, pack_ids)
@@ -219,10 +208,8 @@ class ProjectProjectionContext:
                 FactPackItem.fact_pack_id.in_(pack_ids)
             )).all(), "fact_pack_id")
         media = [entry for row in current for entry in (row.candidate_manifest_json or {}).get("media", [])]
-        use_ids = {entry.get("draft_media_id") for entry in media if isinstance(entry.get("draft_media_id"), int)}
         revision_ids = {entry.get("material_revision_id") for entry in media
                         if isinstance(entry.get("material_revision_id"), int)}
-        self.live_rows[DraftMedia] = self._rows(db, DraftMedia, use_ids, joinedload(DraftMedia.material_revision))
         self.live_rows[MaterialRevision] = self._rows(db, MaterialRevision, revision_ids)
 
     @staticmethod

@@ -4,9 +4,9 @@ import { api, ApiError, currentUser } from "../../api";
 import { Button, EmptyState, ErrorBanner, Field, Modal, Spinner, inputClass } from "../../components/ui";
 import { readableValue } from "../systemLibraryTypes";
 
-const SourceDrawer = lazy(() => import("../../pages/Sources").then(module => ({ default: module.SourceDrawer })));
-const PackBuilder = lazy(() => import("../../pages/FactPacks").then(module => ({ default: module.PackBuilder })));
-const NewPackForm = lazy(() => import("../../pages/FactPacks").then(module => ({ default: module.NewPackForm })));
+const SourceDrawer = lazy(() => import("../SourceTools").then(module => ({ default: module.SourceDrawer })));
+const PackBuilder = lazy(() => import("../FactPackTools").then(module => ({ default: module.PackBuilder })));
+const NewPackForm = lazy(() => import("../FactPackTools").then(module => ({ default: module.NewPackForm })));
 const ObsidianKnowledgePanel = lazy(() => import("./ObsidianKnowledgePanel").then(module => ({ default: module.ObsidianKnowledgePanel })));
 
 type Source = { id: number; title: string; source_type: string; parse_status: string; is_archived?: boolean; facts?: { id: number; statement: string; status: string }[] };
@@ -78,7 +78,7 @@ export function ProjectEvidenceTab({ projectId, readOnly: archived = false }: { 
       <div><h3 className="text-sm font-medium">历史边界</h3><ul className="mt-2 space-y-1 text-sm text-slate-600">{history.map((item) => <li key={item.id}>第 {item.revision_no} 版 · FactPack #{item.fact_pack_id} v{item.fact_pack_version}</li>)}</ul></div>
     </div>
     {newPack && !readOnly && <Modal title="新建项目证据包" onClose={() => setNewPack(false)}><Suspense fallback={<Spinner />}><NewPackForm busy={busy} onCancel={() => setNewPack(false)} onSubmit={name => { void action(async () => { await ensureWritable(); const pack = await api.post<Pack>("/fact-packs", { name }); setNewPack(false); setEditingPack(pack.id); }); }} /></Suspense>{error && <ErrorBanner message={error} />}</Modal>}
-    {editingPack !== undefined && <Modal title="项目证据包" wide onClose={() => { setEditingPack(undefined); void reload().catch(err => setError(messageOf(err))); }}><Suspense fallback={<Spinner />}><PackBuilder key={editingPack} packId={editingPack} embedded readOnly={readOnly} onClose={() => { setEditingPack(undefined); void reload().catch(err => setError(messageOf(err))); }} onCloned={setEditingPack} /></Suspense></Modal>}
+    {editingPack !== undefined && <Modal title="项目证据包" wide onClose={() => { setEditingPack(undefined); void reload().catch(err => setError(messageOf(err))); }}><Suspense fallback={<Spinner />}><PackBuilder key={editingPack} packId={editingPack} readOnly={readOnly} onClose={() => { setEditingPack(undefined); void reload().catch(err => setError(messageOf(err))); }} onCloned={setEditingPack} /></Suspense></Modal>}
   </section>;
 }
 

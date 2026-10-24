@@ -16,10 +16,10 @@ NODE_KINDS = {"Data", "AI", "Tool", "Rule", "Human", "System"}
 FAILURE_POLICIES = {"stop", "skip", "wait_human"}
 KIND_PLUGINS = {
     "Data": {"data.source"},
-    "AI": {"builtin.generate", "builtin.humanize", "builtin.generate_cover", "node.skill", "media.generate"},
-    "Tool": {"builtin.connector_pull", "builtin.extract_facts", "builtin.factpack_freeze", "builtin.topic_suggest", "builtin.export"},
-    "Rule": {"builtin.fact_check", "builtin.content_censor", "builtin.discoverability_post"},
-    "Human": {"builtin.adopt_topic", "builtin.confirm_facts", "builtin.approve"},
+    "AI": {"node.skill", "media.generate"},
+    "Tool": {"builtin.connector_pull", "builtin.extract_facts", "builtin.factpack_freeze"},
+    "Rule": set(),
+    "Human": {"builtin.confirm_facts"},
     "System": {"system.constant"},
 }
 PORTABLE_ROOT_KEYS = {"nodes", "edges", "visual_order"}
@@ -30,7 +30,7 @@ PORTABLE_NODE_KEYS = {
 }
 BOUND_KEYS = {
     "project_id", "content_unit_id", "unit_id", "run_id", "snapshot_id", "data_snapshot_id",
-    "asset_revision_id", "draft_id", "candidate_id", "attempt_id", "output", "output_json",
+    "asset_revision_id", "candidate_id", "attempt_id", "output", "output_json",
     "actual_output", "entity_id",
 }
 PORTABLE_CONFIG_KEYS = {
@@ -40,7 +40,7 @@ PORTABLE_CONFIG_KEYS = {
     "timeout_sec", "auto_confirm", "name", "source_ref",
     "capability", "selected_profile", "explicit_plugin", "prompt", "parameters", "source_revision_ids",
 }
-BOUND_LITERAL = re.compile(r"\b(?:project_id|content_unit_id|unit_id|run_id|snapshot_id|asset_revision_id|draft_id|candidate_id|attempt_id)\s*[:=]\s*\d+\b", re.IGNORECASE)
+BOUND_LITERAL = re.compile(r"\b(?:project_id|content_unit_id|unit_id|run_id|snapshot_id|asset_revision_id|candidate_id|attempt_id)\s*[:=]\s*\d+\b", re.IGNORECASE)
 
 
 def _validate_mapping(mapping: object, ids: set[str], name: str) -> None:
@@ -57,32 +57,7 @@ def _validate_mapping(mapping: object, ids: set[str], name: str) -> None:
 
 
 def execution_options() -> dict:
-    from .. import runtime_config
-    from .generation.providers import LLMError, effective_llm_config, provider_model_name
-
-    ai = {}
-    for plugin, purpose in (("builtin.generate", "generate"), ("builtin.humanize", "rewrite")):
-        try:
-            config = effective_llm_config(purpose)
-            provider = config.get("provider") or ""
-            model = provider_model_name(purpose)
-            available = provider == "mock" or (provider == "openai_compatible" and bool(config.get("base_url") and config.get("api_key") and config.get("model")))
-            ai[plugin] = {"provider": provider, "model": model, "available": available, "reason": "模拟模型，仅供开发验收" if provider == "mock" else None if available else "当前模型路由未配置完整"}
-        except LLMError:
-            ai[plugin] = {"provider": "", "model": "", "available": False, "reason": "默认模型不可用，请选择已登记模型或修复配置"}
-        choices = []
-        for profile_id in (runtime_config.get_runtime("models") or {}).get("profiles", {}):
-            try:
-                actual = effective_llm_config(purpose, profile=profile_id)
-                choices.append({"profile_id": profile_id, "provider": actual["provider"], "model": actual["model"], "available": True})
-            except LLMError:
-                continue
-        ai[plugin]["profiles"] = choices
-    image = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
-    enabled = bool(image.get("enabled") and image.get("provider") and image.get("model"))
-    ai["builtin.generate_cover"] = {"provider": image.get("provider") or "", "model": image.get("model") or "", "available": enabled, "reason": None if enabled else "AI 生图未配置或未启用"}
-    ai["node.skill"] = {"provider": "", "model": "", "available": False, "reason": "由已注册 Skill Runtime 决定，不能选择模型"}
-    return {"ai": ai}
+    return {"ai": {"node.skill": {"provider": "", "model": "", "available": False, "reason": "由已注册 Skill Runtime 决定，不能选择模型"}}}
 
 
 def validate_ai_executor_selection(node: dict) -> None:

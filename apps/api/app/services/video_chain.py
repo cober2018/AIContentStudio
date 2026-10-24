@@ -77,8 +77,12 @@ def _keeps_draft(master: ContentMasterRevision) -> bool:
 
 def draft_root(db: Session, master: ContentMasterRevision | None) -> ContentMasterRevision | None:
     """The 导演稿 the current version stands on: walk back past saves that kept the picture content."""
-    while master is not None and _keeps_draft(master) and master.parent_revision_id:
-        master = db.get(ContentMasterRevision, master.parent_revision_id)
+    while master is not None and master.parent_revision_id:
+        parent = db.get(ContentMasterRevision, master.parent_revision_id)
+        # Re-saving identical content (e.g. clicking save without edits) is not a new 导演稿.
+        if parent is None or not (_keeps_draft(master) or master.payload_hash == parent.payload_hash):
+            break
+        master = parent
     return master
 
 
@@ -93,14 +97,27 @@ def _task(db: Session, record: dict) -> tuple[dict | None, CreativeExecution | N
     return task, db.get(CreativeExecution, task["execution_id"])
 
 
+def _finished(view: dict) -> dict:
+    return {**view, "state": "done", "label": "已定稿", "locked": True}
+
+
+def locked(db: Session, unit_id: int) -> bool:
+    """An approved 成片 is final for good; changes go into a copy of the unit instead."""
+    return bool(_state(db, unit_id).get("locked"))
+
+
 def state(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .content_masters import owned_unit
 
     owned_unit(db, project_id, unit_id, user)
+    return _state(db, unit_id)
+
+
+def _state(db: Session, unit_id: int) -> dict:
     record = _unit_record(db, unit_id)
     root = draft_root(db, _latest(db, unit_id))
     if root is None or (root.edit_summary_json or {}).get("video_chain") != "draft":
-        return {"state": "not_started", "label": "待开始", "detail": "在 Claude Code 里说「做这个视频」开始：先写导演稿和素材需求"}
+        return {"state": "not_started", "label": "待开始", "detail": "在接了 MCP 的第三方模型里说「做这个视频」开始：先写导演稿和素材需求"}
     view = {"draft_master_id": root.id, "draft_revision_no": root.revision_no}
     decided = _decision(record, "draft", root.id)
     if decided is None:
@@ -116,13 +133,13 @@ def state(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     if execution.state in {"prepared", "claimed", "in_progress"}:
         return {**view, "state": "making" if phase == "sample" else "finishing", "label": "剪小样中" if phase == "sample" else "排版中"}
     if execution.state == "result_ready" and notes and notes["decision"] == "approve":
-        return {**view, "state": "finishing" if phase == "sample" else "done", "label": "排版中" if phase == "sample" else "已完成"}
+        return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view)
     if execution.state == "result_ready":
         if notes and notes["decision"] == "changes":
             return {**view, "state": f"{phase}_changes", "label": "小样按你的意见修改中" if phase == "sample" else "成片按你的意见修改中", "notes": notes["notes"]}
         return {**view, "state": f"{phase}_review", "label": "小样待你看" if phase == "sample" else "成片待你看"}
     if execution.state == "accepted":
-        return {**view, "state": "finishing" if phase == "sample" else "done", "label": "排版中" if phase == "sample" else "已完成"}
+        return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view)
     return {**view, "state": "error", "label": "出错", "detail": execution.safe_reason or execution.state}
 
 
@@ -172,7 +189,9 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
     owned_unit(db, project_id, unit_id, user, mutate=True)
     current = state(db, user, project_id, unit_id)
     expected = {"draft": "draft_review", "sample": "sample_review", "final": "final_review"}[stage]
-    if current["state"] not in {expected, expected.replace("review", "changes")}:
+    # Until the 成片 is final the user may send the 导演稿 back from any later stop.
+    back_to_draft = stage == "draft" and decision == "changes" and "draft_master_id" in current and not current.get("locked")
+    if current["state"] not in {expected, expected.replace("review", "changes")} and not back_to_draft:
         _fail("video_chain_not_waiting", f"现在不在等你看{ {'draft': '导演稿', 'sample': '小样', 'final': '成片'}[stage] }")
     if decision == "changes" and not any(str(item.get("note") or "").strip() for item in notes):
         _fail("video_chain_notes_required", "写一下要改哪里", 422)

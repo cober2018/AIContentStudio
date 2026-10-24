@@ -13,7 +13,6 @@ from ..models import (
     ContentProject,
     ContentUnit,
     DeliveryTarget,
-    Draft,
     Review,
     WorkflowRun,
 )
@@ -117,17 +116,12 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
 
         for media in (current.candidate_manifest_json or {}).get("media", []):
             if _live_media_rights(live_db, media) is not True:
-                media_reasons.append(f"media_rights_unready:{media.get('material_revision_id') or media.get('draft_media_id')}")
+                media_reasons.append(f"media_rights_unready:{media.get('material_revision_id')}")
     dimension("media", "blocked" if media_reasons else "ready", media_reasons)
     checksum_ok = bool(current and current.candidate_hash and candidate_hash(current.candidate_manifest_json or {}) == current.candidate_hash)
     dimension("checks", "ready" if checksum_ok else "blocked", [] if checksum_ok else ["candidate_integrity_unready"])
     stale_revision = False
-    if current and current.draft_id:
-        draft = context.drafts.get(current.draft_id) if context is not None else db.get(Draft, current.draft_id)
-        if draft:
-            latest = context.draft_revisions.get(draft.content_job_id) if context is not None else db.scalar(select(Draft.revision_no).where(Draft.content_job_id == draft.content_job_id).order_by(Draft.revision_no.desc()).limit(1))
-            stale_revision = latest != draft.revision_no
-    dimension("candidate", "stale" if stale_revision else ("ready" if current else "blocked"), ["newer_draft_revision"] if stale_revision else ([] if current else ["freeze_required"]))
+    dimension("candidate", "ready" if current else "blocked", [] if current else ["freeze_required"])
     v4_error = None
     if current and (current.candidate_manifest_json or {}).get("schema_version") == 4:
         from .production_validation import validate_live_v4_candidate
@@ -347,8 +341,7 @@ def _verify_frozen_variant(asset: ContentAsset) -> dict:
     from .candidates_v5 import build_manifest_v5
 
     manifest = asset.candidate_manifest_json or {}
-    legacy_fields = (asset.draft_id, asset.topic_brief_id, asset.mother_revision_id,
-                     asset.content_master_revision_id, asset.workflow_run_id)
+    legacy_fields = (asset.content_master_revision_id, asset.workflow_run_id)
     try:
         intact = (manifest.get("schema_version") == 5 and candidate_hash(manifest) == asset.candidate_hash
                   and build_manifest_v5({key: value for key, value in manifest.items() if key != "schema_version"}) == manifest

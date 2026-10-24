@@ -3,7 +3,6 @@
 import pytest
 
 from app.models import Fact
-from app.services.exports import export_srt, export_txt
 from app.services.factchecker import run_deterministic_check
 from app.services.factpack_service import fact_checksum
 from app.services.parsers import CsvParser, JsonParser, MarkdownParser, TextParser, get_parser
@@ -183,18 +182,6 @@ class _Asset:
     model_name = "m"
     prompt_version = None
     template_version_id = None
-
-
-def test_srt_marks_estimated():
-    content = export_srt(_Asset())
-    assert content.startswith("NOTE")
-    assert "estimated" in content
-    assert "00:00:00,000 --> " in content
-
-
-def test_txt_strips_markdown():
-    assert "Hook：开场" in export_txt(_Asset())
-    assert "#" not in export_txt(_Asset())
 
 
 def test_llm_review_merges_issues_when_provider_ready(monkeypatch):

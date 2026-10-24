@@ -3,7 +3,6 @@
 import pytest
 
 from app.config import get_settings
-from app.models import ContentAsset
 
 ADMIN = {"X-Studio-User": "admin@studio.local"}
 EDITOR = {"X-Studio-User": "editor@studio.local"}
@@ -85,22 +84,6 @@ def test_local_git_allowlist_empty_disabled(client, seed_users, docs_repo, monke
     assert resp.status_code in (400, 500)
     assert "LOCAL_DOCS_ALLOWLIST" in str(resp.json())
 
-
-def test_asset_cover_svg(client, seed_users, db_session):
-    asset = ContentAsset(
-        draft_id=0, topic_brief_id=0, channel="douyin", title="9·17复盘：油价与加息下的A股",
-        final_body="正文", fact_pack_id=1, fact_pack_version=3, approved_revision=1,
-        reviewer="r@studio.local", model_name="MiniMax-M3",
-    )
-    db_session.add(asset)
-    db_session.commit()
-    # 封面端点无 Header 鉴权（<img> 直接引用），内容是 SVG
-    resp = client.get(f"/api/v1/assets/{asset.id}/cover.svg")
-    assert resp.status_code == 200
-    assert resp.headers["content-type"].startswith("image/svg+xml")
-    assert resp.text.startswith("<svg")
-    assert "9·17复盘" in resp.text
-    assert client.get("/api/v1/assets/99999/cover.svg").status_code == 404
 
 def test_pull_dedupe_same_content(client, seed_users, docs_repo):
     """同一端点内容未变化时二次拉取不新建 Source（来源库不再被刷屏）。"""

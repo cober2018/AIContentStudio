@@ -46,7 +46,6 @@ from ..services.project_brief import (
 )
 from ..services.project_events import record_project_event
 from ..services.project_workflows import (
-    execution_options,
     new_workflow_version,
     resolve_placeholders,
     validate_definition,
@@ -54,7 +53,12 @@ from ..services.project_workflows import (
     validate_reusable_profiles,
 )
 from .product_creation import router as product_creation_router
-from .workflows import NodeCompleteIn, _serialize_run, list_node_attempts
+from ..services.workflow_runs import list_node_attempts
+from ..services.workflow_runs import serialize_run as _serialize_run
+
+class NodeCompleteIn(BaseModel):
+    payload: dict = {}
+
 
 router = APIRouter(prefix="/api/v1", tags=["content-projects"])
 router.include_router(product_creation_router)
@@ -441,11 +445,6 @@ def list_data_source_plugins(user: User = Depends(get_current_user)):
     return data_source_descriptors()
 
 
-@router.get("/workflow-execution-options")
-def list_workflow_execution_options(user: User = Depends(get_current_user)):
-    return execution_options()
-
-
 @router.post("/content-personas", status_code=201)
 def create_persona(payload: PersonaIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     persona = ContentPersona(owner_user_id=user.id, name=payload.name)
@@ -616,6 +615,53 @@ def create_unit(payload: UnitIn, project_id: int, db: Session = Depends(get_db),
     db.add(unit)
     db.flush()
     record_project_event(db, project_id=project_id, event_type="unit.created", actor=user.email, entity_type="content_unit", entity_id=unit.id, payload={"identity_snapshot_id": snapshot.id})
+    db.commit()
+    db.refresh(unit)
+    return _unit_json(unit)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/copy", status_code=201)
+def copy_unit(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    """A finished piece is never edited again; adjustments start from a copy in the same project."""
+    import uuid
+
+    from ..services import content_masters, video_chain
+
+    mutable_project(db, project_id, user)
+    source = owned_unit(db, project_id, unit_id, user)
+    latest = video_chain._latest(db, unit_id)
+    # A video copy restarts from the 导演稿 the user approved; material, voice and cuts belong to the original.
+    master = video_chain.draft_root(db, latest) if source.modality == "video" else latest
+    taken = set(db.scalars(select(ContentUnit.title).where(ContentUnit.project_id == project_id)).all())
+    title = f"{source.title} · 副本"[:300]
+    number = 2
+    while title in taken:
+        title = f"{source.title} · 副本{number}"[:300]
+        number += 1
+    snapshot = content_identity.create_snapshot(db, user, persona_id=source.persona_id, account_id=source.account_id, series_id=source.series_id)
+    unit = ContentUnit(project_id=project_id, persona_id=source.persona_id, production_domain=source.production_domain, account_id=source.account_id,
+                       series_id=source.series_id, identity_snapshot_id=snapshot.id, modality=source.modality, channel_id=source.channel_id,
+                       title=title, pinned_workflow_id=source.pinned_workflow_id)
+    db.add(unit)
+    db.flush()
+    origin = {"unit_id": source.id, "master_id": master.id if master else None}
+    if master is not None:
+        view = content_masters._serialize(db, master, require_current=False)
+        summary = {"video_chain": "draft", "copied_from": origin} if source.modality == "video" else {"copied_from": origin}
+        payload = {"expected_revision": 0, "idempotency_key": f"copy:{uuid.uuid4().hex}", "payload_schema": master.payload_schema,
+                   "payload": master.payload_json, "content_form": master.content_form, "source_kind": "user_edit", "edit_summary": summary,
+                   "asset_refs": [{key: ref[key] for key in ("material_revision_id", "content_hash", "role", "slot_key", "sort_order", "placement")} for ref in view["assets"]],
+                   "evidence_refs": [{key: ref[key] for key in ("fact_pack_item_id", "snapshot_checksum", "role", "locator", "sort_order")} for ref in view["evidence"]]}
+        if master.creative_intent_json:
+            payload["creative_intent"] = master.creative_intent_json
+        content_masters.save_revision(db, project_id=project_id, unit_id=unit.id, user=user, payload=payload)
+    if source.modality != "video":
+        from ..services import article_chain
+
+        # The copy keeps who writes it, and starts with the original's current version waiting for review.
+        writer = article_chain._record(db, source.id)["writer"]
+        article_chain._put(db, unit.id, {"writer": writer, "decisions": [], "hidden": []})
+    record_project_event(db, project_id=project_id, event_type="unit.copied", actor=user.email, entity_type="content_unit", entity_id=unit.id, payload=origin)
     db.commit()
     db.refresh(unit)
     return _unit_json(unit)
@@ -807,13 +853,6 @@ def _binding_json(db: Session, binding: ProjectWorkflowBinding | PersonaWorkflow
     }
 
 
-@router.get("/content-projects/{project_id}/units/{unit_id}/workflow-override")
-def get_workflow_override(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    owned_unit(db, project_id, unit_id, user)
-    binding = db.scalar(select(ProjectWorkflowBinding).where(ProjectWorkflowBinding.unit_id == unit_id))
-    return _binding_json(db, binding)
-
-
 @router.get("/content-projects/{project_id}/units/{unit_id}/effective-workflow")
 def get_effective_workflow(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     unit = owned_unit(db, project_id, unit_id, user)
@@ -830,105 +869,6 @@ def get_effective_workflow(project_id: int, unit_id: int, db: Session = Depends(
         "definition": workflow.definition_json,
         "source": "project_override" if binding and binding.workflow_id == workflow.id else workflow.scope,
     }
-
-
-@router.post("/content-projects/{project_id}/units/{unit_id}/workflow-override", status_code=201)
-def save_workflow_override(payload: WorkflowSaveIn, project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    mutable_project(db, project_id, user)
-    unit = owned_unit(db, project_id, unit_id, user)
-    if unit.lifecycle_readonly:
-        raise HTTPException(409, "已归档单元不可修改工作流")
-    if unit.production_domain != "product":
-        content_identity.hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
-    binding = db.scalar(select(ProjectWorkflowBinding).where(ProjectWorkflowBinding.unit_id == unit_id))
-    current_revision = binding.revision if binding else 0
-    if payload.expected_revision != current_revision:
-        raise HTTPException(409, "项目工作流已被更新，请刷新后再保存")
-    try:
-        definition = validate_definition(payload.definition)
-    except ValueError as exc:
-        raise HTTPException(422, str(exc)) from exc
-    try:
-        workflow = new_workflow_version(db, key=f"project.unit.{unit.id}", name=f"{unit.title} 工作流", definition=definition, owner_user_id=user.id, scope="project", created_by=user.email)
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(409, "项目工作流版本冲突，请刷新后再保存") from exc
-    if binding:
-        result = db.execute(update(ProjectWorkflowBinding).where(ProjectWorkflowBinding.id == binding.id, ProjectWorkflowBinding.revision == payload.expected_revision).values(workflow_id=workflow.id, revision=payload.expected_revision + 1))
-        if result.rowcount != 1:
-            db.rollback()
-            raise HTTPException(409, "项目工作流已被更新，请刷新后再保存")
-        db.expire(binding)
-    else:
-        binding = ProjectWorkflowBinding(unit_id=unit.id, workflow_id=workflow.id, revision=1)
-        db.add(binding)
-    unit.pinned_workflow_id = workflow.id
-    record_project_event(db, project_id=project_id, event_type="workflow.override_saved", actor=user.email, entity_type="workflow", entity_id=workflow.id, payload={"unit_id": unit_id, "revision": current_revision + 1, "checksum": workflow.checksum})
-    try:
-        db.commit()
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(409, "项目工作流已被更新，请刷新后再保存") from exc
-    return _binding_json(db, binding)
-
-
-def _owned_persona(db: Session, persona_id: int, user: User) -> ContentPersona:
-    persona = db.get(ContentPersona, persona_id)
-    if persona is None or persona.owner_user_id != user.id:
-        raise HTTPException(404, "内容角色不存在")
-    return persona
-
-
-@router.get("/content-personas/{persona_id}/default-workflows/{modality}")
-def get_persona_default(persona_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    _owned_persona(db, persona_id, user)
-    binding = db.scalar(select(PersonaWorkflowDefault).where(PersonaWorkflowDefault.persona_id == persona_id, PersonaWorkflowDefault.modality == modality))
-    return _binding_json(db, binding)
-
-
-@router.post("/content-personas/{persona_id}/default-workflows/{modality}", status_code=201)
-def save_persona_default(payload: WorkflowSaveIn, persona_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    persona = content_identity.owned_entity(db, user, "persona", persona_id, mutable=True)
-    if modality not in {"text", "graphic", "video"}:
-        raise HTTPException(422, "不支持的内容形态")
-    if payload.source_project_id is not None or payload.source_unit_id is not None:
-        if payload.source_project_id is None or payload.source_unit_id is None:
-            raise HTTPException(422, "来源项目和单元必须同时提供")
-        source_unit = owned_unit(db, payload.source_project_id, payload.source_unit_id, user)
-        mutable_project(db, payload.source_project_id, user)
-        if source_unit.persona_id != persona_id or source_unit.modality != modality:
-            raise HTTPException(422, "来源单元的身份或形态与默认模板不一致")
-    binding = db.scalar(select(PersonaWorkflowDefault).where(PersonaWorkflowDefault.persona_id == persona_id, PersonaWorkflowDefault.modality == modality))
-    current_revision = binding.revision if binding else 0
-    if payload.expected_revision != current_revision:
-        raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存")
-    try:
-        definition = validate_portable(validate_definition(payload.definition), source_project_id=payload.source_project_id, source_unit_id=payload.source_unit_id)
-        validate_reusable_profiles(db, definition, user=user)
-    except ValueError as exc:
-        raise HTTPException(422, str(exc)) from exc
-    try:
-        workflow = new_workflow_version(db, key=f"persona.{persona.id}.{modality}", name=f"{persona.name} × {modality}", definition=definition, owner_user_id=user.id, scope="persona_default", created_by=user.email)
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(409, "角色默认工作流版本冲突，请刷新后再保存") from exc
-    if binding:
-        result = db.execute(update(PersonaWorkflowDefault).where(PersonaWorkflowDefault.id == binding.id, PersonaWorkflowDefault.revision == payload.expected_revision).values(workflow_id=workflow.id, revision=payload.expected_revision + 1))
-        if result.rowcount != 1:
-            db.rollback()
-            raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存")
-        db.expire(binding)
-    else:
-        binding = PersonaWorkflowDefault(persona_id=persona.id, modality=modality, workflow_id=workflow.id, revision=1)
-        db.add(binding)
-    if payload.source_project_id is not None:
-        record_project_event(db, project_id=payload.source_project_id, event_type="workflow.role_default_saved", actor=user.email, entity_type="workflow", entity_id=workflow.id, payload={"unit_id": payload.source_unit_id, "revision": current_revision + 1, "checksum": workflow.checksum})
-    try:
-        db.commit()
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存") from exc
-    return _binding_json(db, binding)
 
 
 @router.get("/content-identities/effective-workflow")
@@ -948,72 +888,6 @@ def _scoped_default_binding(db: Session, kind: str, entity_id: int, modality: st
     model = AccountWorkflowDefault if kind == "account" else SeriesWorkflowDefault
     owner_column = model.account_id if kind == "account" else model.series_id
     return db.scalar(select(model).where(owner_column == entity_id, model.modality == modality))
-
-
-def _save_scoped_default(db: Session, user: User, *, kind: str, entity_id: int, modality: str, payload: WorkflowSaveIn) -> dict:
-    entity = _scoped_default_owner(db, user, kind, entity_id, mutable=True)
-    if modality not in {"text", "graphic", "video"}:
-        raise HTTPException(422, "不支持的内容形态")
-    if payload.source_project_id is not None or payload.source_unit_id is not None:
-        if payload.source_project_id is None or payload.source_unit_id is None:
-            raise HTTPException(422, "来源项目和单元必须同时提供")
-        mutable_project(db, payload.source_project_id, user)
-        source_unit = owned_unit(db, payload.source_project_id, payload.source_unit_id, user)
-        if source_unit.modality != modality or (kind == "account" and source_unit.account_id != entity_id) or (kind == "series" and source_unit.series_id != entity_id):
-            raise HTTPException(422, "来源单元身份或形态与默认模板不一致")
-    binding = _scoped_default_binding(db, kind, entity_id, modality)
-    current_revision = binding.revision if binding else 0
-    if payload.expected_revision != current_revision:
-        raise HTTPException(409, "默认工作流已被更新，请刷新后再保存")
-    try:
-        definition = validate_portable(validate_definition(payload.definition), source_project_id=payload.source_project_id, source_unit_id=payload.source_unit_id)
-        validate_reusable_profiles(db, definition, user=user)
-        workflow = new_workflow_version(db, key=f"{kind}.{entity_id}.{modality}", name=f"{entity.name} × {modality}", definition=definition, owner_user_id=user.id, scope=f"{kind}_default", created_by=user.email)
-    except ValueError as exc:
-        raise HTTPException(422, str(exc)) from exc
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(409, "默认工作流版本冲突，请刷新后再保存") from exc
-    if binding:
-        result = db.execute(update(type(binding)).where(type(binding).id == binding.id, type(binding).revision == payload.expected_revision).values(workflow_id=workflow.id, revision=current_revision + 1))
-        if result.rowcount != 1:
-            db.rollback()
-            raise HTTPException(409, "默认工作流已被更新，请刷新后再保存")
-        db.expire(binding)
-    else:
-        model = AccountWorkflowDefault if kind == "account" else SeriesWorkflowDefault
-        binding = model(**{f"{kind}_id": entity_id}, modality=modality, workflow_id=workflow.id, revision=1)
-        db.add(binding)
-    if payload.source_project_id is not None:
-        record_project_event(db, project_id=payload.source_project_id, event_type="workflow.identity_default_saved", actor=user.email, entity_type="workflow", entity_id=workflow.id, payload={"unit_id": payload.source_unit_id, "scope": kind, "revision": current_revision + 1, "checksum": workflow.checksum})
-    try:
-        db.commit()
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(409, "默认工作流已被更新，请刷新后再保存") from exc
-    return _binding_json(db, binding)
-
-
-@router.get("/content-accounts/{account_id}/default-workflows/{modality}")
-def get_account_default(account_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    _scoped_default_owner(db, user, "account", account_id, mutable=False)
-    return _binding_json(db, _scoped_default_binding(db, "account", account_id, modality))
-
-
-@router.post("/content-accounts/{account_id}/default-workflows/{modality}", status_code=201)
-def save_account_default(payload: WorkflowSaveIn, account_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    return _save_scoped_default(db, user, kind="account", entity_id=account_id, modality=modality, payload=payload)
-
-
-@router.get("/content-series/{series_id}/default-workflows/{modality}")
-def get_series_default(series_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    _scoped_default_owner(db, user, "series", series_id, mutable=False)
-    return _binding_json(db, _scoped_default_binding(db, "series", series_id, modality))
-
-
-@router.post("/content-series/{series_id}/default-workflows/{modality}", status_code=201)
-def save_series_default(payload: WorkflowSaveIn, series_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    return _save_scoped_default(db, user, kind="series", entity_id=series_id, modality=modality, payload=payload)
 
 
 def _owned_run(db: Session, project_id: int, unit_id: int, run_id: int, user: User) -> WorkflowRun:
@@ -1197,3 +1071,178 @@ def continue_product_context(project_id: int, unit_id: int, db: Session = Depend
         entity_type="content_unit", entity_id=unit.id, payload={"workflow_id": workflow.id, "historical_identity_snapshot_id": unit.identity_snapshot_id})
     db.commit()
     return _unit_json(unit)
+
+
+# Binding a definition to a unit or identity default; no page edits these any more, the engine and pipelines use them.
+
+def _owned_persona(db: Session, persona_id: int, user: User) -> ContentPersona:
+    persona = db.get(ContentPersona, persona_id)
+    if persona is None or persona.owner_user_id != user.id:
+        raise HTTPException(404, "内容角色不存在")
+    return persona
+
+
+def _save_scoped_default(db: Session, user: User, *, kind: str, entity_id: int, modality: str, payload: WorkflowSaveIn) -> dict:
+    entity = _scoped_default_owner(db, user, kind, entity_id, mutable=True)
+    if modality not in {"text", "graphic", "video"}:
+        raise HTTPException(422, "不支持的内容形态")
+    if payload.source_project_id is not None or payload.source_unit_id is not None:
+        if payload.source_project_id is None or payload.source_unit_id is None:
+            raise HTTPException(422, "来源项目和单元必须同时提供")
+        mutable_project(db, payload.source_project_id, user)
+        source_unit = owned_unit(db, payload.source_project_id, payload.source_unit_id, user)
+        if source_unit.modality != modality or (kind == "account" and source_unit.account_id != entity_id) or (kind == "series" and source_unit.series_id != entity_id):
+            raise HTTPException(422, "来源单元身份或形态与默认模板不一致")
+    binding = _scoped_default_binding(db, kind, entity_id, modality)
+    current_revision = binding.revision if binding else 0
+    if payload.expected_revision != current_revision:
+        raise HTTPException(409, "默认工作流已被更新，请刷新后再保存")
+    try:
+        definition = validate_portable(validate_definition(payload.definition), source_project_id=payload.source_project_id, source_unit_id=payload.source_unit_id)
+        validate_reusable_profiles(db, definition, user=user)
+        workflow = new_workflow_version(db, key=f"{kind}.{entity_id}.{modality}", name=f"{entity.name} × {modality}", definition=definition, owner_user_id=user.id, scope=f"{kind}_default", created_by=user.email)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "默认工作流版本冲突，请刷新后再保存") from exc
+    if binding:
+        result = db.execute(update(type(binding)).where(type(binding).id == binding.id, type(binding).revision == payload.expected_revision).values(workflow_id=workflow.id, revision=current_revision + 1))
+        if result.rowcount != 1:
+            db.rollback()
+            raise HTTPException(409, "默认工作流已被更新，请刷新后再保存")
+        db.expire(binding)
+    else:
+        model = AccountWorkflowDefault if kind == "account" else SeriesWorkflowDefault
+        binding = model(**{f"{kind}_id": entity_id}, modality=modality, workflow_id=workflow.id, revision=1)
+        db.add(binding)
+    if payload.source_project_id is not None:
+        record_project_event(db, project_id=payload.source_project_id, event_type="workflow.identity_default_saved", actor=user.email, entity_type="workflow", entity_id=workflow.id, payload={"unit_id": payload.source_unit_id, "scope": kind, "revision": current_revision + 1, "checksum": workflow.checksum})
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "默认工作流已被更新，请刷新后再保存") from exc
+    return _binding_json(db, binding)
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/workflow-override")
+def get_workflow_override(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    owned_unit(db, project_id, unit_id, user)
+    binding = db.scalar(select(ProjectWorkflowBinding).where(ProjectWorkflowBinding.unit_id == unit_id))
+    return _binding_json(db, binding)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/workflow-override", status_code=201)
+def save_workflow_override(payload: WorkflowSaveIn, project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    mutable_project(db, project_id, user)
+    unit = owned_unit(db, project_id, unit_id, user)
+    if unit.lifecycle_readonly:
+        raise HTTPException(409, "已归档单元不可修改工作流")
+    if unit.production_domain != "product":
+        content_identity.hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
+    binding = db.scalar(select(ProjectWorkflowBinding).where(ProjectWorkflowBinding.unit_id == unit_id))
+    current_revision = binding.revision if binding else 0
+    if payload.expected_revision != current_revision:
+        raise HTTPException(409, "项目工作流已被更新，请刷新后再保存")
+    try:
+        definition = validate_definition(payload.definition)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    try:
+        workflow = new_workflow_version(db, key=f"project.unit.{unit.id}", name=f"{unit.title} 工作流", definition=definition, owner_user_id=user.id, scope="project", created_by=user.email)
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "项目工作流版本冲突，请刷新后再保存") from exc
+    if binding:
+        result = db.execute(update(ProjectWorkflowBinding).where(ProjectWorkflowBinding.id == binding.id, ProjectWorkflowBinding.revision == payload.expected_revision).values(workflow_id=workflow.id, revision=payload.expected_revision + 1))
+        if result.rowcount != 1:
+            db.rollback()
+            raise HTTPException(409, "项目工作流已被更新，请刷新后再保存")
+        db.expire(binding)
+    else:
+        binding = ProjectWorkflowBinding(unit_id=unit.id, workflow_id=workflow.id, revision=1)
+        db.add(binding)
+    unit.pinned_workflow_id = workflow.id
+    record_project_event(db, project_id=project_id, event_type="workflow.override_saved", actor=user.email, entity_type="workflow", entity_id=workflow.id, payload={"unit_id": unit_id, "revision": current_revision + 1, "checksum": workflow.checksum})
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "项目工作流已被更新，请刷新后再保存") from exc
+    return _binding_json(db, binding)
+
+
+@router.get("/content-personas/{persona_id}/default-workflows/{modality}")
+def get_persona_default(persona_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    _owned_persona(db, persona_id, user)
+    binding = db.scalar(select(PersonaWorkflowDefault).where(PersonaWorkflowDefault.persona_id == persona_id, PersonaWorkflowDefault.modality == modality))
+    return _binding_json(db, binding)
+
+
+@router.post("/content-personas/{persona_id}/default-workflows/{modality}", status_code=201)
+def save_persona_default(payload: WorkflowSaveIn, persona_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    persona = content_identity.owned_entity(db, user, "persona", persona_id, mutable=True)
+    if modality not in {"text", "graphic", "video"}:
+        raise HTTPException(422, "不支持的内容形态")
+    if payload.source_project_id is not None or payload.source_unit_id is not None:
+        if payload.source_project_id is None or payload.source_unit_id is None:
+            raise HTTPException(422, "来源项目和单元必须同时提供")
+        source_unit = owned_unit(db, payload.source_project_id, payload.source_unit_id, user)
+        mutable_project(db, payload.source_project_id, user)
+        if source_unit.persona_id != persona_id or source_unit.modality != modality:
+            raise HTTPException(422, "来源单元的身份或形态与默认模板不一致")
+    binding = db.scalar(select(PersonaWorkflowDefault).where(PersonaWorkflowDefault.persona_id == persona_id, PersonaWorkflowDefault.modality == modality))
+    current_revision = binding.revision if binding else 0
+    if payload.expected_revision != current_revision:
+        raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存")
+    try:
+        definition = validate_portable(validate_definition(payload.definition), source_project_id=payload.source_project_id, source_unit_id=payload.source_unit_id)
+        validate_reusable_profiles(db, definition, user=user)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    try:
+        workflow = new_workflow_version(db, key=f"persona.{persona.id}.{modality}", name=f"{persona.name} × {modality}", definition=definition, owner_user_id=user.id, scope="persona_default", created_by=user.email)
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "角色默认工作流版本冲突，请刷新后再保存") from exc
+    if binding:
+        result = db.execute(update(PersonaWorkflowDefault).where(PersonaWorkflowDefault.id == binding.id, PersonaWorkflowDefault.revision == payload.expected_revision).values(workflow_id=workflow.id, revision=payload.expected_revision + 1))
+        if result.rowcount != 1:
+            db.rollback()
+            raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存")
+        db.expire(binding)
+    else:
+        binding = PersonaWorkflowDefault(persona_id=persona.id, modality=modality, workflow_id=workflow.id, revision=1)
+        db.add(binding)
+    if payload.source_project_id is not None:
+        record_project_event(db, project_id=payload.source_project_id, event_type="workflow.role_default_saved", actor=user.email, entity_type="workflow", entity_id=workflow.id, payload={"unit_id": payload.source_unit_id, "revision": current_revision + 1, "checksum": workflow.checksum})
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存") from exc
+    return _binding_json(db, binding)
+
+
+@router.get("/content-accounts/{account_id}/default-workflows/{modality}")
+def get_account_default(account_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    _scoped_default_owner(db, user, "account", account_id, mutable=False)
+    return _binding_json(db, _scoped_default_binding(db, "account", account_id, modality))
+
+
+@router.post("/content-accounts/{account_id}/default-workflows/{modality}", status_code=201)
+def save_account_default(payload: WorkflowSaveIn, account_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    return _save_scoped_default(db, user, kind="account", entity_id=account_id, modality=modality, payload=payload)
+
+
+@router.get("/content-series/{series_id}/default-workflows/{modality}")
+def get_series_default(series_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    _scoped_default_owner(db, user, "series", series_id, mutable=False)
+    return _binding_json(db, _scoped_default_binding(db, "series", series_id, modality))
+
+
+@router.post("/content-series/{series_id}/default-workflows/{modality}", status_code=201)
+def save_series_default(payload: WorkflowSaveIn, series_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    return _save_scoped_default(db, user, kind="series", entity_id=series_id, modality=modality, payload=payload)
+

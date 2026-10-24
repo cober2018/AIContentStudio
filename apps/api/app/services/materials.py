@@ -8,25 +8,23 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 
 from fastapi import HTTPException
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from ..models import (
     AuditLog,
     ContentAsset,
-    Draft,
-    DraftMedia,
     Material,
     MaterialKind,
     MaterialRevision,
     MaterialRevisionStatus,
     MaterialSourceKind,
 )
-from .content_harness import staleness
 
 # 允许上传的图片/媒体魔数（双校验：MIME 由客户端声明，签名由字节证实）
 _SIGNATURES: list[tuple[bytes, str]] = [
@@ -325,7 +323,7 @@ def revise_music_metadata(db: Session, material_id: int, expected_revision_id: i
 
 
 def approved_revision_ids(db: Session) -> set[int]:
-    """被 schema v2 批准候选引用的 material_revision ids（v1 manifest 只引用 DraftMedia）。
+    """被批准候选引用的 material_revision ids。
 
     只取 manifest 列而不是整行 ORM：该表 final_body/structured_json 都是大字段，
     逐行反序列化整行只为读 manifest 的代价随候选数线性放大。
@@ -346,105 +344,16 @@ def approved_revision_ids(db: Session) -> set[int]:
 _approved_revision_ids = approved_revision_ids
 
 
-def attach_to_draft(
-    db: Session,
-    draft: Draft,
-    revision: MaterialRevision,
-    *,
-    role: str = "inline",
-    sort_order: int | None = None,
-    alt_text: str | None = None,
-    caption: str | None = None,
-    placement: dict | None = None,
-) -> DraftMedia:
-    """MaterialRevision → DraftMedia(use)。同稿同 hash 幂等返回已有 use。"""
-    if draft.status == "approved":
-        raise HTTPException(409, "已批准稿件的素材不可修改")
-    existing = db.scalars(
-        select(DraftMedia).where(DraftMedia.draft_id == draft.id, DraftMedia.content_hash == revision.content_hash)
-    ).first()
-    if existing:
-        return existing
-    row = DraftMedia(
-        draft_id=draft.id,
-        content_hash=revision.content_hash,
-        role=role,
-        sort_order=len(draft.media) if sort_order is None else sort_order,
-        material_revision_id=revision.id,
-        mime_type=revision.mime_type,
-        rights_status=revision.rights_status,
-        public_use_allowed=revision.public_use_allowed,
-        alt_text=alt_text,
-        caption=caption,
-        placement_json=placement,
-        metadata_json={"via": "material_library"},
-    )
-    draft.media.append(row)  # 走 relationship：同事务内 draft.media 立即可见（sync_document 依赖）
-    db.add(row)
-    db.flush()
-    staleness.mark_media_changed(db, draft, reason="material_attached")
-    return row
-
-
-def adopt_draft_media(db: Session, media: DraftMedia, *, created_by: str | None = None) -> MaterialRevision:
-    """显式 adoption：旧 DraftMedia（或独立上传）提升为 Material+Revision，不批量迁移。"""
-    if media.material_revision_id:
-        return db.get(MaterialRevision, media.material_revision_id)
-    material = create_material(
-        db,
-        kind=MaterialKind.image.value if (media.mime_type or "").startswith("image/") else MaterialKind.other.value,
-        title=(media.metadata_json or {}).get("filename") or f"material-{media.content_hash[:8]}",
-        created_by=created_by,
-    )
-    if media.file_path:
-        from .material_storage import provider
-
-        try:
-            legacy_bytes = provider().read(media.file_path)
-        except (FileNotFoundError, OSError, ValueError):
-            raise HTTPException(409, "原素材文件缺失，无法 adoption") from None
-        if hashlib.sha256(legacy_bytes).hexdigest() != media.content_hash:
-            raise HTTPException(409, "原素材校验失败，无法 adoption")
-    revision = MaterialRevision(
-        material_id=material.id,
-        revision_no=1,
-        source_kind=MaterialSourceKind.legacy.value,
-        content_hash=media.content_hash,
-        file_path=media.file_path,
-        mime_type=media.mime_type,
-        rights_status=media.rights_status,
-        public_use_allowed=media.public_use_allowed,
-        metadata_json={"adopted_from_draft_media": media.id},
-        created_by=created_by,
-    )
-    # legacy 字节不强制魔数校验：历史可读优先，provenance 标记 source_kind=legacy
-    db.add(revision)
-    db.flush()
-    media.material_revision_id = revision.id
-    return revision
-
-
 def revoke_public_use(db: Session, revision: MaterialRevision, note: str) -> dict:
     revision.public_use_allowed = False
     revision.status = MaterialRevisionStatus.revoked.value
     revision.metadata_json = {**(revision.metadata_json or {}), "revocation_note": note}
-    draft_ids = staleness.mark_material_rights_revoked(db, revision.id, note)
-    return {"material_id": revision.material_id, "revision_id": revision.id, "affected_drafts": draft_ids}
+    return {"material_id": revision.material_id, "revision_id": revision.id}
 
 
 def find_usage(db: Session, material_id: int) -> dict:
-    revision_ids = list(
-        db.scalars(select(MaterialRevision.id).where(MaterialRevision.material_id == material_id)).all()
-    )
-    uses = db.scalars(select(DraftMedia).where(DraftMedia.material_revision_id.in_(revision_ids or [0]))).all()
-    return {
-        "material_id": material_id,
-        "revisions": len(revision_ids),
-        "draft_media_uses": [
-            {"draft_media_id": u.id, "draft_id": u.draft_id, "role": u.role, "sort_order": u.sort_order}
-            for u in uses
-        ],
-    }
+    revisions = db.scalar(select(func.count(MaterialRevision.id)).where(MaterialRevision.material_id == material_id))
+    return {"material_id": material_id, "revisions": revisions or 0}
 
 
 _LIBRARY_DOWN = {"code": "material_library_unavailable", "message": "素材库未连接"}
@@ -468,6 +377,57 @@ def file_location(db: Session, revision: MaterialRevision) -> Path | None:
     if storage.legacy_absolute_reads and Path(key).is_absolute():
         return Path(key).resolve()
     return storage._path(key)
+
+
+def _stamp(path: Path) -> tuple[str, int, int]:
+    info = path.stat()
+    return str(path), info.st_size, info.st_mtime_ns
+
+
+def _verified_already(revision: MaterialRevision, stamp: tuple[str, int, int]) -> bool:
+    if _verified.get(stamp) == revision.content_hash:
+        return True
+    record = (revision.metadata_json or {}).get("verified") or {}
+    return record == {"path": stamp[0], "size": stamp[1], "mtime_ns": stamp[2], "hash": revision.content_hash}
+
+
+_pending: dict[int, dict] = {}
+_pending_lock = threading.Lock()
+_flusher: list[threading.Thread] = []
+
+
+def _remember(revision: MaterialRevision, stamp: tuple[str, int, int]) -> None:
+    # Kept on the revision so a restart does not re-read every file on the drive. Read-only requests never commit,
+    # so the record is saved by a background writer instead of inside the request's transaction.
+    _verified[stamp] = revision.content_hash
+    record = {"path": stamp[0], "size": stamp[1], "mtime_ns": stamp[2], "hash": revision.content_hash}
+    if (revision.metadata_json or {}).get("verified") == record or revision.id is None:
+        return
+    with _pending_lock:
+        _pending[revision.id] = record
+        if not _flusher or not _flusher[0].is_alive():
+            _flusher[:] = [threading.Thread(target=_flush_verified, name="material-verified", daemon=True)]
+            _flusher[0].start()
+
+
+def _flush_verified() -> None:
+    import time
+
+    from ..db import SessionLocal
+
+    time.sleep(2)
+    with _pending_lock:
+        batch = dict(_pending)
+        _pending.clear()
+    try:
+        with SessionLocal() as db:
+            for revision_id, record in batch.items():
+                row = db.get(MaterialRevision, revision_id)
+                if row is not None and row.content_hash == record["hash"]:
+                    row.metadata_json = {**(row.metadata_json or {}), "verified": record}
+            db.commit()
+    except Exception:  # noqa: BLE001 - a lost record only means one more full read later
+        pass
 
 
 def _library_down(db: Session, revision: MaterialRevision) -> bool:
@@ -498,14 +458,14 @@ def local_file_checked(db: Session, revision: MaterialRevision) -> Path | None:
             raise FileNotFoundError(str(path))
         # Hashing a 100 MB cut on every seek request is wasteful; the same file with the same size and time was already checked.
         stamp = (str(path), info.st_size, info.st_mtime_ns)
-        if _verified.get(stamp) != revision.content_hash:
+        if not _verified_already(revision, stamp):
             digest = hashlib.sha256()
             with path.open("rb") as source:
                 while chunk := source.read(1024 * 1024):
                     digest.update(chunk)
             if digest.hexdigest() != revision.content_hash:
                 raise HTTPException(409, "素材字节校验失败（content hash 不一致）")
-            _verified[stamp] = revision.content_hash
+            _remember(revision, stamp)
     except OSError:
         raise HTTPException(404, "素材文件缺失") from None
     return path
@@ -530,7 +490,31 @@ def read_bytes_checked(db: Session, revision: MaterialRevision, *, require_publi
         raise HTTPException(409, "素材存储不可用") from None
     if hashlib.sha256(content).hexdigest() != revision.content_hash:
         raise HTTPException(409, "素材字节校验失败（content hash 不一致）")
+    try:
+        path = file_location(db, revision)
+        if path is not None:
+            _remember(revision, _stamp(path))
+    except (OSError, ValueError):
+        pass
     return content
+
+
+def _verified_head(db: Session, revision: MaterialRevision) -> bytes | None:
+    """First bytes of a local file already fully verified at this size and time; None means read it in full."""
+    if not revision.file_path or _library_down(db, revision):
+        return None
+    try:
+        path = file_location(db, revision)
+        if path is None:
+            return None
+        stamp = _stamp(path)
+        if not _verified_already(revision, stamp):
+            return None
+        _verified[stamp] = revision.content_hash
+        with path.open("rb") as source:
+            return source.read(64)
+    except (OSError, ValueError):
+        return None
 
 
 def storage_diagnostics(db: Session, *, limit: int = 200) -> dict:
@@ -579,7 +563,11 @@ def storage_diagnostics(db: Session, *, limit: int = 200) -> dict:
 def verify_bytes_checked(db: Session, revision: MaterialRevision, *, require_public: bool = False) -> bytes:
     """Verify opted-in execution media incrementally; return only a MIME header."""
     if revision.source_kind != "external_execution":
-        return read_bytes_checked(db, revision, require_public=require_public)
+        if require_public and revision.public_use_allowed is not True:
+            raise HTTPException(403, "该素材未获公开使用授权")
+        # Saves and readiness checks only need the type header; a file verified at this size and time is not re-read.
+        head = _verified_head(db, revision)
+        return head if head is not None else read_bytes_checked(db, revision, require_public=require_public)
     if require_public and revision.public_use_allowed is not True:
         raise HTTPException(403, "该素材未获公开使用授权")
     from .creative_media_stream import material_file

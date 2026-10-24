@@ -36,15 +36,15 @@ def upgrade() -> None:
                     "evidence_kind IN ('fact', 'event', 'third_party_quote', 'author_opinion', 'legacy_untyped')",
                 )
 
-    draft_columns = _columns("draft")
-    if "evidence_checksum" not in draft_columns or not _has_foreign_key("draft", "mother_revision_id"):
+    draft_columns = _columns("draft") if sa.inspect(op.get_bind()).has_table("draft") else None
+    if draft_columns is not None and ("evidence_checksum" not in draft_columns or not _has_foreign_key("draft", "mother_revision_id")):
         with op.batch_alter_table("draft") as batch:
             if "evidence_checksum" not in draft_columns:
                 batch.add_column(sa.Column("evidence_checksum", sa.String(length=64), nullable=True))
             if not _has_foreign_key("draft", "mother_revision_id"):
                 batch.create_foreign_key("fk_draft_mother_revision", "mother_revision", ["mother_revision_id"], ["id"])
 
-    if not _has_foreign_key("content_asset", "mother_revision_id"):
+    if sa.inspect(op.get_bind()).has_table("mother_revision") and not _has_foreign_key("content_asset", "mother_revision_id"):
         with op.batch_alter_table("content_asset") as batch:
             batch.create_foreign_key("fk_content_asset_mother_revision", "mother_revision", ["mother_revision_id"], ["id"])
 

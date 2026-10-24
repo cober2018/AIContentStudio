@@ -19,7 +19,6 @@ celery_app = Celery(
 celery_app.conf.update(
     task_default_queue="default",
     task_routes={
-        "app.tasks.worker_tasks.run_generation_job": {"queue": "llm"},
         "app.tasks.worker_tasks.pull_connector_endpoint": {"queue": "ingestion"},
         "app.tasks.worker_tasks.scan_connector_schedules": {"queue": "default"},
     },

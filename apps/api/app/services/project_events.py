@@ -9,7 +9,7 @@ EVENT_TYPES = frozenset({
     "brief.revision_created", "source.attached", "source.detached",
     "fact_boundary.bound", "fact_boundary.draft_cloned", "fact_boundary.frozen_bound",
     "unit.lifecycle.archive", "unit.lifecycle.restore", "unit.lifecycle.delete",
-    "unit.created", "unit.updated", "unit.replaced", "unit.archived", "unit.deleted",
+    "unit.created", "unit.copied", "unit.updated", "unit.replaced", "unit.archived", "unit.deleted",
     "workflow.override_saved", "workflow.role_default_saved",
     "data.snapshot_created", "data.snapshot_changed",
     "asset.attached", "asset.detached", "asset.workflow_generated",

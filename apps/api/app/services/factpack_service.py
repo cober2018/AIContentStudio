@@ -157,31 +157,6 @@ def evidence_snapshot(item: FactPackItem) -> dict:
     return snapshot
 
 
-def legacy_fact_snapshot(fact: Fact, *, evidence_kind: str = "fact") -> dict:
-    """Compatibility helper for old callers; new freezes use evidence_snapshot(item)."""
-    source = fact.source_document
-    return {
-        "schema_version": 1,
-        "evidence_kind": evidence_kind,
-        "statement": fact.statement,
-        "subject": fact.subject,
-        "predicate": fact.predicate,
-        "value": (fact.value_json or {}).get("value") if fact.value_json else None,
-        "value_json": fact.value_json,
-        "unit": fact.unit,
-        "as_of": fact.as_of,
-        "valid_from": fact.valid_from,
-        "valid_to": fact.valid_to,
-        "confidence": fact.confidence,
-        "source_id": fact.source_document_id,
-        "source_title": source.title if source else None,
-        "source_url": source.source_url if source else None,
-        "source_locator": fact.source_locator_json,
-        "public_use_allowed": False,
-        "model_use_allowed": False,
-    }
-
-
 def snapshot_checksum(snapshot: dict) -> str:
     canonical = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

@@ -9,13 +9,11 @@ from ..models import (
     AccountWorkflowDefault,
     ContentAccount,
     ContentAsset,
-    ContentJob,
     ContentPersona,
     ContentProject,
     ContentSeries,
     ContentUnit,
     DeliveryTarget,
-    Draft,
     PersonaWorkflowDefault,
     ProjectWorkflowBinding,
     SeriesWorkflowDefault,
@@ -94,19 +92,6 @@ def authorize_project_run(db: Session, run: WorkflowRun, user: User, *, mutate: 
             raise HTTPException(409, "旧运行保留只读，请按商品流程准备新运行")
         if unit.production_domain != "product":
             hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
-
-
-def authorize_project_job(db: Session, job: ContentJob, user: User, *, mutate: bool = False) -> None:
-    if job.workflow_run_id is None:
-        return
-    run = db.get(WorkflowRun, job.workflow_run_id)
-    if run is None:
-        raise HTTPException(404, "内容任务不存在")
-    authorize_project_run(db, run, user, mutate=mutate)
-
-
-def authorize_project_draft(db: Session, draft: Draft, user: User, *, mutate: bool = False) -> None:
-    authorize_project_job(db, draft.content_job, user, mutate=mutate)
 
 
 def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> bool:

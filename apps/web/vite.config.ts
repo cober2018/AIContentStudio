@@ -11,7 +11,6 @@ export default defineConfig({
         const modules = Object.keys(asset.modules).map((id) => id.replaceAll("\\", "/"));
         const heavy = [
           modules.some((id) => id.includes("/node_modules/@tiptap/") || id.includes("/node_modules/tiptap-markdown/")) ? "TipTap" : null,
-          modules.some((id) => id.includes("/node_modules/@xyflow/")) ? "XYFlow" : null,
         ].filter((name): name is string => name !== null);
         if (heavy.length) heavyByChunk[asset.fileName] = heavy;
       }

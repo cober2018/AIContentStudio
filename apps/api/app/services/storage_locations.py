@@ -97,13 +97,31 @@ def library_path(key: str) -> Path:
 
 
 _probe: dict = {}
+_seen: dict = {}
 
 
 def library_reachable() -> bool:
+    """Read-only check used on every page and file read; it never writes to the drive."""
     root = library_root()
-    if root is None or not root.is_dir() or not os.access(root, os.R_OK | os.W_OK | os.X_OK):
+    if root is None:
         return False
-    # A half-dropped USB drive still lists its folders; only a real write tells. Cached so requests don't hammer the disk.
+    now = time.monotonic()
+    if _seen.get("root") == root and now - _seen.get("at", 0) < 5:
+        return _seen["ok"]
+    try:
+        # A half-dropped drive stays mounted but lists its folders as empty, so the platform folder must be listed.
+        ok = root.is_dir() and os.access(root, os.R_OK | os.X_OK) and LIBRARY_DIR in os.listdir(root)
+    except OSError:
+        ok = False
+    _seen.update(root=root, at=now, ok=ok)
+    return ok
+
+
+def library_writable() -> bool:
+    """Write probe, run only right before the platform writes to the drive."""
+    root = library_root()
+    if not library_reachable() or not os.access(root, os.W_OK):
+        return False
     now = time.monotonic()
     if _probe.get("root") == root and now - _probe.get("at", 0) < 5:
         return _probe["ok"]

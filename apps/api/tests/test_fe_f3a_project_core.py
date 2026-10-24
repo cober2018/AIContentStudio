@@ -338,7 +338,7 @@ def test_archived_project_keeps_historic_run_readable_and_blocks_legacy_mutation
     run = client.post(f"{base}/runs", json={"params": {}}, headers=headers)
     assert run.status_code == 201, run.text
     run_id = run.json()["id"]
-    before = client.get(f"/api/v1/workflow-runs/{run_id}", headers=headers).json()
+    before = client.get(f"{base}/runs/{run_id}", headers=headers).json()
     assert client.post(f"/api/v1/content-projects/{project_id}/brief/revisions", json={"expected_revision": 0, "objective": "运行后新任务书"}, headers=headers).status_code == 201
     source_id = client.post("/api/v1/sources/text", json={"title": "运行后来源", "content": "新来源"}, headers=headers).json()["id"]
     assert client.post(f"/api/v1/content-projects/{project_id}/sources", json={"source_document_id": source_id}, headers=headers).status_code == 201
@@ -351,12 +351,12 @@ def test_archived_project_keeps_historic_run_readable_and_blocks_legacy_mutation
     material = client.post("/api/v1/materials/upload", data={"kind": "image", "title": "历史后素材"}, files={"file": ("image.png", PNG, "image/png")}, headers=headers)
     assert material.status_code == 201
     assert client.post(f"/api/v1/content-projects/{project_id}/materials/references", json={"material_revision_id": material.json()["revisions"][0]["id"]}, headers=headers).status_code == 201
-    after = client.get(f"/api/v1/workflow-runs/{run_id}", headers=headers).json()
+    after = client.get(f"{base}/runs/{run_id}", headers=headers).json()
     assert after["definition_checksum"] == before["definition_checksum"]
     assert after["steps"] == before["steps"]
     assert client.delete(f"/api/v1/content-projects/{project_id}", headers=headers).status_code == 204
-    assert client.get(f"/api/v1/workflow-runs/{run_id}", headers=headers).status_code == 200
-    assert client.post(f"/api/v1/workflow-runs/{run_id}/nodes/a/rerun", headers=headers).status_code == 409
+    assert client.get(f"{base}/runs/{run_id}", headers=headers).status_code == 200
+    assert client.post(f"{base}/runs/{run_id}/nodes/a/rerun", headers=headers).status_code == 409
     assert client.post(f"{base}/runs", json={"params": {}}, headers=headers).status_code == 409
     assert client.patch(base, json={"title": "不可修改"}, headers=headers).status_code == 409
 

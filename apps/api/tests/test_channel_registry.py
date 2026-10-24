@@ -108,23 +108,6 @@ def test_legacy_channels_still_valid_with_default_forms(client, seed_users):
     assert kinds["wechat"] == "text"
 
 
-def test_retired_x_thread_is_not_selectable(client, seed_users, frozen_pack):
-    """旧键不能再被列出、查询或写成新选题。"""
-    listed = client.get("/api/v1/channels", headers=EDITOR)
-    assert listed.status_code == 200
-    assert "x_thread" not in {item["channel"] for item in listed.json()}
-    detail = client.get("/api/v1/channels/x_thread", headers=EDITOR)
-    assert detail.status_code == 404
-    assert "已下线" in detail.json()["detail"]
-    created = client.post(
-        "/api/v1/topics",
-        json={"title": "旧渠道", "fact_pack_id": frozen_pack.id, "channels": ["x_thread"]},
-        headers=EDITOR,
-    )
-    assert created.status_code == 400
-    assert "已下线" in created.json()["detail"]
-
-
 def test_exact_video_profile_projects_video_requirements(db_session):
     from app.services.content_harness.channel_registry import resolve_content_form
 
@@ -139,62 +122,3 @@ def test_exact_video_profile_projects_video_requirements(db_session):
     assert form.to_dict()["video_requirements"] == rules
 
 
-def test_unknown_channel_rejected_on_topic(client, seed_users, frozen_pack):
-    """未注册渠道建 Topic 被拒（400），且不进入 channels。"""
-    resp = client.post(
-        "/api/v1/topics",
-        json={"title": "t", "fact_pack_id": frozen_pack.id, "channels": ["toutiao"]},
-        headers=EDITOR,
-    )
-    assert resp.status_code == 400
-    assert "toutiao" in resp.json()["detail"]
-
-
-def test_topic_targets_truth_and_channels_compat(client, seed_users, db_session, frozen_pack):
-    """targets_json 为真源（zhihu article+answer 并存），channels 写去重兼容值。"""
-    row = ChannelTemplateVersion(
-        channel="zhihu", version=1, name="知乎 Profile", status="draft",
-        profile_json=ZHIHU_PROFILE,
-    )
-    db_session.add(row)
-    db_session.commit()
-    client.post(f"/api/v1/templates/channel-templates/{row.id}/status", json={"status": "published"}, headers=ADMIN)
-
-    resp = client.post(
-        "/api/v1/topics",
-        json={
-            "title": "知乎双形态",
-            "fact_pack_id": frozen_pack.id,
-            "targets": [{"channel": "zhihu", "content_form": "article"}, {"channel": "zhihu", "content_form": "answer"}],
-        },
-        headers=EDITOR,
-    )
-    assert resp.status_code == 201, resp.json()
-    body = resp.json()
-    assert {(t["channel"], t["content_form"]) for t in body["targets"]} == {("zhihu", "article"), ("zhihu", "answer")}
-    assert body["channels"] == ["zhihu"]
-
-    # 重复 target 去重
-    resp2 = client.post(
-        "/api/v1/topics",
-        json={
-            "title": "去重",
-            "fact_pack_id": frozen_pack.id,
-            "targets": [{"channel": "wechat"}, {"channel": "wechat"}],
-        },
-        headers=EDITOR,
-    )
-    assert resp2.status_code == 201
-    assert len(resp2.json()["targets"]) == 1
-
-
-def test_legacy_channels_payload_still_accepted(client, seed_users, frozen_pack):
-    """旧客户端只传 channels 仍可用（默认形态映射）。"""
-    resp = client.post(
-        "/api/v1/topics",
-        json={"title": "旧语义", "fact_pack_id": frozen_pack.id, "channels": ["wechat", "douyin"]},
-        headers=EDITOR,
-    )
-    assert resp.status_code == 201
-    targets = {(t["channel"], t["content_form"]) for t in resp.json()["targets"]}
-    assert targets == {("wechat", "article"), ("douyin", "spoken_script")}

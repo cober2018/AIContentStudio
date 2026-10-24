@@ -109,17 +109,19 @@ def upgrade() -> None:
         )
         op.create_index("ix_discoverability_report_stage", "discoverability_report", ["stage", "channel", "created_at"])
 
-    dm_cols = _columns("draft_media")
-    with op.batch_alter_table("draft_media") as batch:
-        if "material_revision_id" not in dm_cols:
-            batch.add_column(sa.Column("material_revision_id", sa.Integer(), nullable=True))
-        if "placement_json" not in dm_cols:
-            batch.add_column(sa.Column("placement_json", sa.JSON(), nullable=True))
-        if "alt_text" not in dm_cols:
-            batch.add_column(sa.Column("alt_text", sa.Text(), nullable=True))
-        if "caption" not in dm_cols:
-            batch.add_column(sa.Column("caption", sa.Text(), nullable=True))
-    if "material_revision_id" not in {fk["name"] for fk in sa.inspect(bind).get_foreign_keys("draft_media")}:
+    # Fresh installs no longer create the old-version draft_media table.
+    dm_cols = _columns("draft_media") if _has_table(bind, "draft_media") else None
+    if dm_cols is not None:
+        with op.batch_alter_table("draft_media") as batch:
+            if "material_revision_id" not in dm_cols:
+                batch.add_column(sa.Column("material_revision_id", sa.Integer(), nullable=True))
+            if "placement_json" not in dm_cols:
+                batch.add_column(sa.Column("placement_json", sa.JSON(), nullable=True))
+            if "alt_text" not in dm_cols:
+                batch.add_column(sa.Column("alt_text", sa.Text(), nullable=True))
+            if "caption" not in dm_cols:
+                batch.add_column(sa.Column("caption", sa.Text(), nullable=True))
+    if dm_cols is not None and "material_revision_id" not in {fk["name"] for fk in sa.inspect(bind).get_foreign_keys("draft_media")}:
         with op.batch_alter_table("draft_media") as batch:
             batch.create_foreign_key("fk_draft_media_material_revision", "material_revision", ["material_revision_id"], ["id"])
 

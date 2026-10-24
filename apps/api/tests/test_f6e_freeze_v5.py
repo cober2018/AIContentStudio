@@ -276,7 +276,7 @@ def test_v5_freeze_uses_only_exact_current_variant_and_is_idempotent(client, db_
     assert candidate.candidate_manifest_json["schema_version"] == 5
     assert candidate.candidate_manifest_json["target"]["content_form"] == "single"
     assert all(getattr(candidate, field) is None for field in (
-        "draft_id", "topic_brief_id", "mother_revision_id", "content_master_revision_id", "workflow_run_id"))
+        "content_master_revision_id", "workflow_run_id"))
     assert candidate.channel == "x" and candidate.content_form == "single" and candidate.artifact_kind == "text"
     assert candidate.status == "frozen" and candidate.approved_candidate_hash is None
     repeat = client.post(path, json=body, headers=HEADERS)
@@ -733,7 +733,7 @@ def test_v5_approval_rejects_candidate_after_its_series_advances(client, db_sess
 
 
 @pytest.mark.parametrize("legacy_field", [
-    "draft_id", "topic_brief_id", "mother_revision_id", "content_master_revision_id", "workflow_run_id",
+    "content_master_revision_id", "workflow_run_id",
 ])
 def test_v5_approval_rejects_each_legacy_pointer(client, db_session, legacy_field):
     project, unit, master = _ready_source(client, db_session)
@@ -1234,7 +1234,7 @@ def test_f7_v5_wechat_verified_projection_precedes_attempt_and_uses_frozen_bytes
 
 
 @pytest.mark.parametrize("legacy_field", [
-    "draft_id", "topic_brief_id", "mother_revision_id", "content_master_revision_id", "workflow_run_id",
+    "content_master_revision_id", "workflow_run_id",
 ])
 def test_v5_legacy_pointer_contamination_blocks_new_authorization_and_existing_package(client, db_session, legacy_field):
     project, unit, master = _ready_source(client, db_session)
@@ -1329,7 +1329,7 @@ def test_v5_review_diff_uses_same_variant_series_and_frozen_render(client, db_se
 
 
 @pytest.mark.parametrize("legacy_field", [
-    "draft_id", "topic_brief_id", "mother_revision_id", "content_master_revision_id", "workflow_run_id",
+    "content_master_revision_id", "workflow_run_id",
 ])
 def test_v5_review_diff_rejects_legacy_source_pointer_contamination(client, db_session, legacy_field):
     project, unit, master = _ready_source(client, db_session)

@@ -4,7 +4,6 @@ from copy import deepcopy
 
 import pytest
 from sqlalchemy import event, select
-from test_candidate_manifest_v2 import env as draft_env  # noqa: F401
 
 from app.models import (
     ContentAsset,
@@ -15,8 +14,7 @@ from app.models import (
     DeliveryAttempt,
     DeliveryReceipt,
     DeliveryTarget,
-    Draft,
-    DraftMedia,
+    FactPack,
     FactPackItem,
     IdentitySnapshot,
     Material,
@@ -33,8 +31,11 @@ from app.services.project_projection_context import ProjectProjectionContext
 
 
 @pytest.fixture
-def projection_env(draft_env):  # noqa: F811
-    db, topic, draft = draft_env
+def projection_env(db_session):
+    db = db_session
+    pack = FactPack(name="批量证据", version=1, status="frozen", checksum="7" * 64)
+    db.add(pack)
+    db.flush()
     project = ContentProject(owner_user_id=1, title="Batch")
     persona = ContentPersona(owner_user_id=1, name="Author")
     material = Material(title="Cover", kind="image")
@@ -46,23 +47,21 @@ def projection_env(draft_env):  # noqa: F811
     revision = MaterialRevision(material_id=material.id, content_hash="m" * 64,
                                 public_use_allowed=True, rights_status="cleared")
     boundary = ProjectFactBoundaryRevision(project_id=project.id, revision_no=2,
-                                           fact_pack_id=topic.fact_pack_id, fact_pack_version=1,
-                                           fact_pack_checksum=topic.fact_pack.checksum)
-    item = FactPackItem(fact_pack_id=topic.fact_pack_id, evidence_kind="author_opinion",
+                                           fact_pack_id=pack.id, fact_pack_version=1,
+                                           fact_pack_checksum=pack.checksum)
+    item = FactPackItem(fact_pack_id=pack.id, evidence_kind="author_opinion",
                         snapshot_checksum="e" * 64, public_use_allowed=True)
     db.add_all([snapshot, revision, boundary, item])
     db.flush()
-    use = DraftMedia(draft_id=draft.id, content_hash=revision.content_hash,
-                     material_revision_id=revision.id, public_use_allowed=True, rights_status="cleared")
     unit = ContentUnit(project_id=project.id, persona_id=persona.id, identity_snapshot_id=snapshot.id,
                        title="Current", modality="text", status="ready")
-    db.add_all([use, unit, CreativeBriefRevision(project_id=project.id, revision_no=2,
+    db.add_all([unit, CreativeBriefRevision(project_id=project.id, revision_no=2,
                                                 objective="Latest", checksum="b" * 64)])
     db.flush()
     db.add_all([
         CreativeBriefRevision(project_id=project.id, revision_no=1, objective="Old", checksum="a" * 64),
         ProjectFactBoundaryRevision(project_id=project.id, revision_no=1,
-                                    fact_pack_id=topic.fact_pack_id, fact_pack_version=1,
+                                    fact_pack_id=pack.id, fact_pack_version=1,
                                     fact_pack_checksum="old"),
         ContentUnit(project_id=project.id, persona_id=persona.id, title="Archived", modality="video",
                     status="archived"),
@@ -72,10 +71,10 @@ def projection_env(draft_env):  # noqa: F811
     db.add(old)
     db.flush()
     manifest = {"schema_version": 3, "evidence": {"boundary_id": boundary.id},
-                "media": [{"draft_media_id": use.id, "material_revision_id": revision.id}]}
+                "media": [{"material_revision_id": revision.id}]}
     checksum = candidate_hash(manifest)
     candidate = ContentAsset(project_id=project.id, content_unit_id=unit.id, channel="wechat",
-                             title="Current", final_body="Body", draft_id=draft.id,
+                             title="Current", final_body="Body",
                              candidate_manifest_json=manifest, candidate_hash=checksum,
                              approved_candidate_hash=checksum, status="approved")
     db.add(candidate)
@@ -112,9 +111,9 @@ def _summary(overview):
 
 @pytest.mark.parametrize("change,summary", [
     ("none", "delivered"), ("unknown", "unknown"), ("reconciliation", "unknown"),
-    ("use_revoked", "blocked"), ("revision_revoked", "blocked"),
+    ("revision_revoked", "blocked"),
     ("evidence_revoked", "blocked"), ("pack_changed", "blocked"),
-    ("boundary_changed", "stale"), ("new_draft", "stale"),
+    ("boundary_changed", "stale"),
     ("missing_media", "blocked"), ("integrity", "blocked"),
 ])
 def test_bulk_reuses_current_projection_and_live_gates(projection_env, change, summary):
@@ -124,23 +123,19 @@ def test_bulk_reuses_current_projection_and_live_gates(projection_env, change, s
         data["attempt"].response_metadata_json = {}
     elif change == "reconciliation":
         data["target"].status = "reconciliation_needed"
-    elif change == "use_revoked":
-        data["use"].public_use_allowed = False
     elif change == "revision_revoked":
         data["revision"].status = "revoked"
     elif change == "evidence_revoked":
         data["item"].public_use_allowed = False
     elif change == "pack_changed":
-        data["topic"].fact_pack.checksum = "changed"
+        data["pack"].checksum = "changed"
     elif change == "boundary_changed":
         db.add(ProjectFactBoundaryRevision(project_id=project.id, revision_no=3,
-                                           fact_pack_id=data["topic"].fact_pack_id, fact_pack_version=1,
-                                           fact_pack_checksum=data["topic"].fact_pack.checksum))
-    elif change == "new_draft":
-        db.add(Draft(content_job_id=data["draft"].content_job_id, revision_no=2, title="New", body="New"))
+                                           fact_pack_id=data["pack"].id, fact_pack_version=1,
+                                           fact_pack_checksum=data["pack"].checksum))
     elif change == "missing_media":
         candidate = data["candidate"]
-        candidate.candidate_manifest_json = {**candidate.candidate_manifest_json, "media": [{"draft_media_id": 9999}]}
+        candidate.candidate_manifest_json = {**candidate.candidate_manifest_json, "media": [{"material_revision_id": 9999}]}
         checksum = candidate_hash(candidate.candidate_manifest_json)
         candidate.candidate_hash = candidate.approved_candidate_hash = checksum
     elif change == "integrity":

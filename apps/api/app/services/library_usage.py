@@ -23,8 +23,6 @@ def usage(db, user, kind, resource_id, limit, offset):
         "workflow_outputs": "not_applicable",
         "opportunity_signals": "not_applicable",
         "candidate_manifests": "unsupported",
-        "draft_media": "unsupported",
-        "legacy_topic_briefs": "unsupported",
     }
     queries = []
 

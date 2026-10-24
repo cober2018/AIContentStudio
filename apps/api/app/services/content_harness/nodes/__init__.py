@@ -18,18 +18,7 @@ TYPE_TO_PLUGIN: dict[str, str] = {
     "connector_pull": "builtin.connector_pull",
     "extract_facts": "builtin.extract_facts",
     "factpack_freeze": "builtin.factpack_freeze",
-    "suggest_topics": "builtin.topic_suggest",
-    "generate": "builtin.generate",
-    "humanize_polish": "builtin.humanize",
-    "content_censor": "builtin.content_censor",
-    "generate_cover": "builtin.generate_cover",
-    "fact_check": "builtin.fact_check",
-    "discoverability_post": "builtin.discoverability_post",
-    "export": "builtin.export",
-    "publish_wechat": "builtin.publish_wechat",
-    "adopt_topic": "builtin.adopt_topic",
     "confirm_facts": "builtin.confirm_facts",
-    "approve": "builtin.approve",
 }
 
 
@@ -590,18 +579,7 @@ _BUILTIN_SPECS: list[tuple[str, str, str, str | None, bool]] = [
     ("builtin.connector_pull", "_h_connector_pull", "拉取监测数据", None, False),
     ("builtin.extract_facts", "_h_extract_facts", "抽取候选事实", None, False),
     ("builtin.factpack_freeze", "_h_factpack_freeze", "打包冻结 FactPack", None, False),
-    ("builtin.topic_suggest", "_h_suggest_topics", "AI 荐题", None, False),
-    ("builtin.generate", "_h_generate", "生成稿件", None, False),
-    ("builtin.humanize", "_h_humanize_polish", "去 AI 味精炼", None, False),
-    ("builtin.content_censor", "_h_content_censor", "合规审查", None, False),
-    ("builtin.generate_cover", "_h_generate_cover", "AI 封面", None, False),
-    ("builtin.fact_check", "_h_fact_check", "事实校验", None, False),
-    ("builtin.discoverability_post", "_h_discoverability_post", "SEO 审查（post）", None, False),
-    ("builtin.export", "_h_export", "本地导出", None, False),
-    ("builtin.publish_wechat", "_h_publish_wechat", "公众号草稿箱（遗留，显式启用）", None, True),
-    ("builtin.adopt_topic", "_h_adopt_topic_complete", "人工采纳选题", "_h_adopt_topic_complete", False),
     ("builtin.confirm_facts", "_h_confirm_facts_complete", "人工确认事实", "_h_confirm_facts_complete", False),
-    ("builtin.approve", "_h_approve", "人工批准", "_h_approve", False),
 ]
 
 # 直接注册的非 handler 插件（R2-H5：node.skill 可执行节点）

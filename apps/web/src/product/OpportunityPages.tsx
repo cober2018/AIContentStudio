@@ -204,7 +204,7 @@ function SignalList({ signals, path, saved }: { signals: OpportunitySignal[]; pa
       <p className="mt-1 text-xs text-slate-500">来源 ID：{signal.source_entity_id ?? "无外部实体血缘"} · 版本：{signal.source_version ?? "未知"} · checksum：{signal.source_checksum ?? "未知"} · 观察时间：{signal.observed_at ?? "未知"}</p>
       {signal.external_ref && <p className="break-all text-xs">外部引用：{signal.external_ref}</p>}
       <pre className="mt-2 whitespace-pre-wrap break-all text-xs">{JSON.stringify(signal.annotation, null, 2)}</pre>
-      {signal.signal_type === "source_document" && signal.source_entity_id && <Link className="text-teal-700" to="/sources">打开来源库 · 手动查找 Source #{signal.source_entity_id} →</Link>}
+      {signal.signal_type === "source_document" && signal.source_entity_id && <Link className="text-teal-700" to="/assets">打开素材与知识 · 手动查找 Source #{signal.source_entity_id} →</Link>}
       {path && signal.status !== "detached" && <Button className="mt-2" variant="secondary" size="sm" disabled={detach.isPending} onClick={() => { if (window.confirm(`解除信号 #${signal.id} 的当前引用？历史评估与原始来源将保留。`)) detach.mutate(signal.id); }}>解除信号引用</Button>}
     </li>)}</ul>}
   </div>;

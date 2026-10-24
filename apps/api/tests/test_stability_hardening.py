@@ -9,9 +9,6 @@ from sqlalchemy import select
 
 from app.models import (
     AuditLog,
-    ContentJob,
-    FactPack,
-    TopicBrief,
     Workflow,
     WorkflowRun,
     WorkflowStep,
@@ -84,12 +81,8 @@ def test_provider_worker_exception_propagates():
 
 
 def test_reap_stale_running_fails_only_stale_rows(db_session):
-    pack = FactPack(name="reap-facts", version=1)
-    db_session.add(pack)
-    db_session.flush()
-    brief = TopicBrief(title="reap-topic", fact_pack_id=pack.id, fact_pack_version=1)
     workflow = Workflow(name="reap-flow", definition_json={"nodes": [], "edges": []})
-    db_session.add_all([brief, workflow])
+    db_session.add(workflow)
     db_session.flush()
 
     stale_run = WorkflowRun(workflow_id=workflow.id, status="running", started_at=utcnow() - timedelta(hours=2))
@@ -101,18 +94,13 @@ def test_reap_stale_running_fails_only_stale_rows(db_session):
                               started_at=utcnow() - timedelta(hours=2))
     fresh_step = WorkflowStep(run_id=fresh_run.id, node_id="n2", node_type="generate", status="running",
                               started_at=utcnow())
-    stale_job = ContentJob(topic_brief_id=brief.id, channel="wechat", status="running",
-                           started_at=utcnow() - timedelta(hours=2))
-    queued_job = ContentJob(topic_brief_id=brief.id, channel="wechat", status="queued",
-                            started_at=utcnow() - timedelta(hours=2))
-    db_session.add_all([stale_step, fresh_step, stale_job, queued_job])
+    db_session.add_all([stale_step, fresh_step])
     db_session.commit()
 
     stats = reap_stale_running(db_session, stale_seconds=1800)
 
     assert stats["workflow_runs"] == [stale_run.id]
     assert stats["workflow_steps"] == [stale_step.id]
-    assert stats["content_jobs"] == [stale_job.id]
 
     reaped_run = db_session.get(WorkflowRun, stale_run.id)
     assert reaped_run.status == "failed" and reaped_run.finished_at is not None
@@ -121,9 +109,6 @@ def test_reap_stale_running_fails_only_stale_rows(db_session):
     assert db_session.get(WorkflowRun, done_run.id).status == "succeeded"
     assert db_session.get(WorkflowStep, stale_step.id).status == "failed"
     assert db_session.get(WorkflowStep, fresh_step.id).status == "running"
-    assert db_session.get(ContentJob, stale_job.id).status == "failed"
-    # queued 是合法排队积压，unknown 按既有口径永远不动，均不在回收范围
-    assert db_session.get(ContentJob, queued_job.id).status == "queued"
 
     audit = db_session.scalars(
         select(AuditLog).where(AuditLog.event == "maintenance.stale_running_reaped")

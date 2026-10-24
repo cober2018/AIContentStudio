@@ -3,7 +3,7 @@
   "fixture_version": 1,
   "scope": "local_acceptance",
   "as_of": "2026-10-03",
-  "source_fixture": "../golden_topics.json",
+  "source_fixture": "../golden_cases.json",
   "source_cases": ["G001", "G003", "G006", "G009"],
   "brief_assertions": {
     "must_preserve": ["title intent", "core thesis", "audience", "required disclaimer", "fact as_of"],

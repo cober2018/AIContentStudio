@@ -82,12 +82,6 @@ class CandidateReadiness(str, enum.Enum):
     stale = "stale"
 
 
-class DraftMediaRole(str, enum.Enum):
-    cover = "cover"
-    inline = "inline"
-    attachment = "attachment"
-
-
 class ArtifactKind(str, enum.Enum):
     """持久化内容产物形态；未实现的形态仍由服务层能力闸门控制。"""
 
@@ -210,18 +204,6 @@ class CapabilityUseOutcome(str, enum.Enum):
     unknown = "unknown"
 
 
-class DiscoverabilityStage(str, enum.Enum):
-    pre = "pre"
-    post = "post"
-
-
-class DiscoverabilityStatus(str, enum.Enum):
-    ready = "ready"
-    incomplete = "incomplete"
-    stale = "stale"
-    failed = "failed"
-
-
 class DeliveryTargetStatus(str, enum.Enum):
     approved = "approved"
     target_authorized = "target_authorized"
@@ -244,23 +226,6 @@ class FeedbackKind(str, enum.Enum):
     performance = "performance"
     correction = "correction"
     note = "note"
-
-
-class JobStatus(str, enum.Enum):
-    queued = "queued"
-    running = "running"
-    succeeded = "succeeded"
-    failed = "failed"
-
-
-class DraftStatus(str, enum.Enum):
-    draft = "draft"
-    fact_check_failed = "fact_check_failed"
-    ready_for_review = "ready_for_review"
-    changes_requested = "changes_requested"
-    approved = "approved"
-    exported = "exported"
-    archived = "archived"
 
 
 class ClaimCheckStatus(str, enum.Enum):
@@ -498,181 +463,7 @@ class PromptVersion(Base):
 # ---------- Topic ----------
 
 
-class TopicBrief(Base):
-    __tablename__ = "topic_brief"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column(String(500))
-    audience: Mapped[str | None] = mapped_column(String(300))
-    goal: Mapped[str | None] = mapped_column(Text)
-    angle: Mapped[str | None] = mapped_column(Text)
-    core_thesis: Mapped[str | None] = mapped_column(Text)
-    must_include_json: Mapped[list | None] = mapped_column(JSON)
-    forbidden_json: Mapped[list | None] = mapped_column(JSON)
-    cta: Mapped[str | None] = mapped_column(Text)
-    brand_voice_version_id: Mapped[int | None] = mapped_column(ForeignKey("brand_voice_version.id"))
-    fact_pack_id: Mapped[int] = mapped_column(ForeignKey("fact_pack.id"))
-    fact_pack_version: Mapped[int] = mapped_column(Integer)
-    channels: Mapped[list | None] = mapped_column(JSON)  # 兼容字段：targets_json 去重后的 channel 列表
-    # V1 PRD 2.0：交付目标真源 [{channel, content_form}]
-    targets_json: Mapped[list | None] = mapped_column(JSON)
-    product_ref: Mapped[str | None] = mapped_column(String(100))
-    business_line: Mapped[str | None] = mapped_column(String(100))
-    status: Mapped[str] = mapped_column(String(20), default="active")  # active/archived
-    tags: Mapped[list | None] = mapped_column(JSON)
-    created_by: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
-
-    fact_pack: Mapped["FactPack"] = relationship()
-    content_jobs: Mapped[list["ContentJob"]] = relationship(back_populates="topic_brief")
-    mother_revisions: Mapped[list["MotherRevision"]] = relationship(
-        back_populates="topic_brief", order_by="MotherRevision.revision_no", cascade="all, delete-orphan"
-    )
-
-
 # ---------- Generation ----------
-
-
-class ContentJob(Base):
-    __tablename__ = "content_job"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    topic_brief_id: Mapped[int] = mapped_column(ForeignKey("topic_brief.id"))
-    channel: Mapped[str] = mapped_column(String(30))
-    content_form: Mapped[str | None] = mapped_column(String(50))
-    artifact_kind: Mapped[str | None] = mapped_column(String(20))
-    workflow_run_id: Mapped[int | None] = mapped_column(Integer)
-    channel_profile_version_id: Mapped[int | None] = mapped_column(Integer)
-    template_version_id: Mapped[int | None] = mapped_column(ForeignKey("channel_template_version.id"))
-    model_provider: Mapped[str | None] = mapped_column(String(50))
-    model_name: Mapped[str | None] = mapped_column(String(100))
-    prompt_version: Mapped[int | None] = mapped_column(String(30))
-    fact_pack_snapshot: Mapped[dict | None] = mapped_column(JSON)  # id/version/checksum
-    status: Mapped[str] = mapped_column(String(20), default=JobStatus.queued.value, index=True)
-    error: Mapped[str | None] = mapped_column(Text)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    usage_json: Mapped[dict | None] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-    topic_brief: Mapped["TopicBrief"] = relationship(back_populates="content_jobs")
-    drafts: Mapped[list["Draft"]] = relationship(back_populates="content_job", order_by="Draft.revision_no")
-
-
-class Draft(Base):
-    __tablename__ = "draft"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    content_job_id: Mapped[int] = mapped_column(ForeignKey("content_job.id"))
-    revision_no: Mapped[int] = mapped_column(Integer, default=1)
-    title: Mapped[str] = mapped_column(String(500))
-    body: Mapped[str] = mapped_column(Text)  # 渲染后的 Markdown 正文
-    structured_json: Mapped[dict | None] = mapped_column(JSON)  # 模型结构化输出（含 fact_ids）
-    fact_check_json: Mapped[dict | None] = mapped_column(JSON)  # 最近一次 FactCheck 结果
-    mother_revision_id: Mapped[int | None] = mapped_column(ForeignKey("mother_revision.id"))
-    evidence_checksum: Mapped[str | None] = mapped_column(String(64))
-    input_hash: Mapped[str | None] = mapped_column(String(64))
-    thread_posts_json: Mapped[list | None] = mapped_column(JSON)
-    candidate_readiness: Mapped[str | None] = mapped_column(String(20))
-    # V1 PRD 2.0：平台 Artifact 形态与图文 composition（Markdown 仍是文本真源）
-    artifact_kind: Mapped[str] = mapped_column(String(20), default=ArtifactKind.text.value, server_default="text")
-    content_form: Mapped[str | None] = mapped_column(String(50))
-    document_schema_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
-    document_json: Mapped[dict | None] = mapped_column(JSON)
-    status: Mapped[str] = mapped_column(String(20), default=DraftStatus.draft.value, index=True)
-    created_by_type: Mapped[str] = mapped_column(String(10), default="ai")  # ai/user
-    created_by: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
-
-    content_job: Mapped["ContentJob"] = relationship(back_populates="drafts")
-    mother_revision: Mapped["MotherRevision | None"] = relationship(back_populates="drafts")
-    claims: Mapped[list["DraftClaim"]] = relationship(back_populates="draft", cascade="all, delete-orphan")
-    reviews: Mapped[list["Review"]] = relationship(back_populates="draft")
-    media: Mapped[list["DraftMedia"]] = relationship(
-        back_populates="draft", order_by="DraftMedia.sort_order", cascade="all, delete-orphan"
-    )
-    check_runs: Mapped[list["DraftCheckRun"]] = relationship(
-        back_populates="draft", order_by="DraftCheckRun.created_at", cascade="all, delete-orphan"
-    )
-
-
-class DraftCheckRun(Base):
-    """通用检查记录（V1 PRD 2.0 D12）：统一 fact/platform/safety/rights/seo/domain/media 检查语义。
-
-    兼容期：`Draft.fact_check_json` 继续写，同时镜像一条 check_kind='fact' 的记录；
-    新 Review Gate 只读本表。incomplete 不等于 pass，input_hash 变化后标 stale。
-    """
-
-    __tablename__ = "draft_check_run"
-    __table_args__ = (
-        Index("ix_draft_check_run_draft_kind_time", "draft_id", "check_kind", "created_at"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int] = mapped_column(ForeignKey("draft.id"))
-    check_kind: Mapped[str] = mapped_column(String(30))
-    profile_key: Mapped[str | None] = mapped_column(String(150))
-    profile_version: Mapped[str | None] = mapped_column(String(50))
-    input_hash: Mapped[str | None] = mapped_column(String(64))
-    status: Mapped[str] = mapped_column(String(20))  # pass/warning/blocker/incomplete/stale
-    report_json: Mapped[dict | None] = mapped_column(JSON)
-    provider_key: Mapped[str | None] = mapped_column(String(100))
-    provider_version: Mapped[str | None] = mapped_column(String(50))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-    draft: Mapped["Draft"] = relationship(back_populates="check_runs")
-
-
-class MotherRevision(Base):
-    __tablename__ = "mother_revision"
-    __table_args__ = (UniqueConstraint("topic_brief_id", "revision_no", name="uq_mother_revision_topic_no"),)
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    topic_brief_id: Mapped[int] = mapped_column(ForeignKey("topic_brief.id"))
-    revision_no: Mapped[int] = mapped_column(Integer, default=1)
-    title: Mapped[str | None] = mapped_column(String(500))
-    body_markdown: Mapped[str] = mapped_column(Text)
-    parent_revision_id: Mapped[int | None] = mapped_column(ForeignKey("mother_revision.id"))
-    evidence_checksum: Mapped[str | None] = mapped_column(String(64))
-    body_hash: Mapped[str] = mapped_column(String(64))
-    import_metadata_json: Mapped[dict | None] = mapped_column(JSON)
-    created_by: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-    topic_brief: Mapped["TopicBrief"] = relationship(back_populates="mother_revisions")
-    parent_revision: Mapped["MotherRevision | None"] = relationship(remote_side=[id])
-    drafts: Mapped[list["Draft"]] = relationship(back_populates="mother_revision")
-
-
-class DraftMedia(Base):
-    __tablename__ = "draft_media"
-    __table_args__ = (
-        UniqueConstraint("draft_id", "content_hash", name="uq_draft_media_hash"),
-        CheckConstraint("role IN ('cover', 'inline', 'attachment')", name="ck_draft_media_role"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int] = mapped_column(ForeignKey("draft.id"))
-    content_hash: Mapped[str] = mapped_column(String(64))
-    role: Mapped[str] = mapped_column(String(20), default=DraftMediaRole.inline.value)
-    sort_order: Mapped[int] = mapped_column(Integer, default=0)
-    file_path: Mapped[str | None] = mapped_column(String(500))
-    mime_type: Mapped[str | None] = mapped_column(String(100))
-    rights_status: Mapped[str | None] = mapped_column(String(30))
-    public_use_allowed: Mapped[bool | None] = mapped_column(Boolean)
-    public_use_revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    public_use_revocation_note: Mapped[str | None] = mapped_column(Text)
-    metadata_json: Mapped[dict | None] = mapped_column(JSON)
-    # V1 PRD 2.0（D9）：DraftMedia 降为 Use/Placement；旧行 material_revision_id 为空仍可读
-    material_revision_id: Mapped[int | None] = mapped_column(ForeignKey("material_revision.id"))
-    placement_json: Mapped[dict | None] = mapped_column(JSON)
-    alt_text: Mapped[str | None] = mapped_column(Text)
-    caption: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-    draft: Mapped["Draft"] = relationship(back_populates="media")
-    material_revision: Mapped["MaterialRevision | None"] = relationship(back_populates="draft_uses")
 
 
 # ---------- Material Library（D9）----------
@@ -736,7 +527,6 @@ class MaterialRevision(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     material: Mapped["Material"] = relationship(back_populates="revisions")
-    draft_uses: Mapped[list["DraftMedia"]] = relationship(back_populates="material_revision")
 
 
 class MaterialSource(Base):
@@ -830,45 +620,6 @@ class DiscoverabilityProfileVersion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
-class DiscoverabilityReport(Base):
-    """Pre/Post SEO 报告：不自动改稿；apply 建议走 Draft 新 revision。"""
-
-    __tablename__ = "discoverability_report"
-    __table_args__ = (
-        Index("ix_discoverability_report_stage", "stage", "channel", "created_at"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    topic_id: Mapped[int | None] = mapped_column(Integer)
-    mother_revision_id: Mapped[int | None] = mapped_column(Integer)
-    draft_id: Mapped[int | None] = mapped_column(Integer)
-    stage: Mapped[str] = mapped_column(String(10))  # pre / post
-    channel: Mapped[str] = mapped_column(String(30))
-    content_form: Mapped[str | None] = mapped_column(String(50))
-    profile_version_id: Mapped[int | None] = mapped_column(Integer)
-    input_hash: Mapped[str | None] = mapped_column(String(64))
-    status: Mapped[str] = mapped_column(String(20), default=DiscoverabilityStatus.incomplete.value)
-    report_json: Mapped[dict | None] = mapped_column(JSON)
-    model_provider: Mapped[str | None] = mapped_column(String(50))
-    model_name: Mapped[str | None] = mapped_column(String(100))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-
-class DraftClaim(Base):
-    __tablename__ = "draft_claim"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int] = mapped_column(ForeignKey("draft.id"))
-    text: Mapped[str] = mapped_column(Text)
-    claim_type: Mapped[str] = mapped_column(String(20), default="fact")  # fact/opinion/quote/transition
-    start_offset: Mapped[int | None] = mapped_column(Integer)
-    end_offset: Mapped[int | None] = mapped_column(Integer)
-    check_status: Mapped[str] = mapped_column(String(20), default=ClaimCheckStatus.unverified.value)
-    fact_ids_json: Mapped[list | None] = mapped_column(JSON)
-
-    draft: Mapped["Draft"] = relationship(back_populates="claims")
-
-
 # ---------- Review ----------
 
 
@@ -876,7 +627,6 @@ class Review(Base):
     __tablename__ = "review"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int | None] = mapped_column(ForeignKey("draft.id"))
     revision_no: Mapped[int | None] = mapped_column(Integer)  # 打开审核时的 revision，approve 时校验未被编辑
     content_asset_id: Mapped[int | None] = mapped_column(ForeignKey("content_asset.id"), index=True)
     reviewer_id: Mapped[int | None] = mapped_column(String(255))
@@ -889,8 +639,6 @@ class Review(Base):
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
-    draft: Mapped["Draft"] = relationship(back_populates="reviews")
-
 
 # ---------- Asset / Export ----------
 
@@ -900,8 +648,6 @@ class ContentAsset(Base):
     __table_args__ = (UniqueConstraint("project_id", "content_unit_id", "candidate_hash", name="uq_project_candidate_hash"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    draft_id: Mapped[int | None] = mapped_column(ForeignKey("draft.id"), index=True)
-    topic_brief_id: Mapped[int | None] = mapped_column(ForeignKey("topic_brief.id"))
     project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id"), index=True)
     content_unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"), index=True)
     identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"), index=True)
@@ -924,7 +670,6 @@ class ContentAsset(Base):
     status: Mapped[str] = mapped_column(String(20), default="approved")
     approved_candidate_hash: Mapped[str | None] = mapped_column(String(64))
     candidate_manifest_json: Mapped[dict | None] = mapped_column(JSON)
-    mother_revision_id: Mapped[int | None] = mapped_column(ForeignKey("mother_revision.id"))
     # V1 PRD 2.0（§6.23）：查询性能列（真源在 candidate_manifest_json）
     artifact_kind: Mapped[str | None] = mapped_column(String(20))
     content_form: Mapped[str | None] = mapped_column(String(50))
@@ -1243,28 +988,6 @@ class DeliveryFeedback(Base):
     target: Mapped["DeliveryTarget"] = relationship(back_populates="feedback")
 
 
-class AssetMedia(Base):
-    """资产配图素材：底层统一素材池（本表全量），前端按 asset 归属随文展示。
-
-    kind: cover（封面）/ inline（文章内配图位）；
-    source: generated（占位位，prompt=配图说明，来自 structured_json 的 image_prompts/
-    image_suggestions）/ upload（用户上传的实体图片，落本地 media 目录）。
-    PRD §6.7：V1 素材=说明/Prompt，不依赖具体生图平台。
-    """
-
-    __tablename__ = "asset_media"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    asset_id: Mapped[int] = mapped_column(ForeignKey("content_asset.id"))
-    kind: Mapped[str] = mapped_column(String(10), default="inline")  # cover / inline
-    source: Mapped[str] = mapped_column(String(10), default="generated")  # generated / upload
-    prompt: Mapped[str | None] = mapped_column(Text)  # 配图说明（生图 Prompt / 建议）
-    file_path: Mapped[str | None] = mapped_column(String(300))  # 上传文件相对 media 根的路径
-    mime_type: Mapped[str | None] = mapped_column(String(50))
-    sort_order: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-
-
 class ExternalContent(Base):
     """外部 agent（dsh/Antigravity skills）产出内容的入库载体。
 
@@ -1491,8 +1214,7 @@ class WorkflowRun(Base):
     identity_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("identity_snapshot.id"), index=True)
     status: Mapped[str] = mapped_column(String(20), default="running")
     context_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 节点间数据总线（实体 ID 等）
-    params_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 启动参数（topic_id 等）
-    topic_id: Mapped[int | None] = mapped_column(Integer)
+    params_json: Mapped[dict] = mapped_column(JSON, default=dict)  # 启动参数
     channel: Mapped[str | None] = mapped_column(String(30))
     content_form: Mapped[str | None] = mapped_column(String(50))
     workflow_key: Mapped[str | None] = mapped_column(String(120))

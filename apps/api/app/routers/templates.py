@@ -16,9 +16,7 @@ from ..deps import get_current_user, require_admin
 from ..models import (
     BrandVoiceVersion,
     ChannelTemplateVersion,
-    ContentJob,
     PromptVersion,
-    TopicBrief,
     User,
 )
 from ..services.generation import renderers
@@ -35,7 +33,6 @@ def _demote_other_published(db, model, scope: dict, keep_id: int) -> int:
     """发布新版本时自动下线同范围的其他生效版本（同渠道模板/Prompt、同名 Voice）。
 
     不变量：每个范围内至多一个 published（当前生效）；旧版本降级为 archived，
-    ContentJob / TopicBrief 按 id 引用不受影响。
     """
     query = db.query(model).filter(model.status == "published", model.id != keep_id)
     for field, value in scope.items():
@@ -192,15 +189,10 @@ def set_brand_voice_status(bv_id: int, payload: StatusIn, db: Session = Depends(
 
 @router.delete("/brand-voices/{bv_id}")
 def delete_brand_voice(bv_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    """删除 Brand Voice 版本。被任何选题引用时禁止（保护历史内容的口径可追溯）。"""
+    """删除 Brand Voice 版本。"""
     bv = db.get(BrandVoiceVersion, bv_id)
     if not bv:
         raise HTTPException(404, "Brand Voice 不存在")
-    referenced = db.scalars(
-        select(TopicBrief.id).where(TopicBrief.brand_voice_version_id == bv_id).limit(1)
-    ).first()
-    if referenced:
-        raise HTTPException(409, "该 Brand Voice 已被选题引用，不能删除（可归档）")
     db.delete(bv)
     db.commit()
     return {"deleted": True, "id": bv_id}
@@ -330,15 +322,10 @@ def set_template_status(ct_id: int, payload: StatusIn, db: Session = Depends(get
 
 @router.delete("/channel-templates/{ct_id}")
 def delete_channel_template(ct_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    """删除渠道模板版本。被任何内容任务引用时禁止（任务记录生成时所用模板）。"""
+    """删除渠道模板版本。"""
     ct = db.get(ChannelTemplateVersion, ct_id)
     if not ct:
         raise HTTPException(404, "模板不存在")
-    referenced = db.scalars(
-        select(ContentJob.id).where(ContentJob.template_version_id == ct_id).limit(1)
-    ).first()
-    if referenced:
-        raise HTTPException(409, "该模板已被内容任务引用，不能删除")
     db.delete(ct)
     db.commit()
     return {"deleted": True, "id": ct_id}

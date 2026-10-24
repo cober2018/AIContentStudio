@@ -209,12 +209,6 @@ def download_package(target_id: int, db: Session = Depends(get_db), user: User =
     target = _own_target(db, target_id, user, mutate=True)
     if target.status == DeliveryTargetStatus.blocked.value:
         raise HTTPException(409, "该目标的公开使用权限已撤销，不能再交付")
-    asset = db.get(ContentAsset, target.content_asset_id)
-    if target.action == DeliveryAction.manual_handoff.value and asset.project_id is None:
-        # v1 M1 目标：复用既有成品包路径（兼容 alias 反向：新路径委托旧实现）
-        from .article_handoff import download_package_archive
-
-        return download_package_archive(target_id, db, user)
     data, filename = delivery_service.package_zip_bytes(db, target)
     if target.status in {DeliveryTargetStatus.target_authorized.value, DeliveryTargetStatus.package_ready.value}:
         target.status = DeliveryTargetStatus.awaiting_manual_receipt.value
@@ -225,11 +219,6 @@ def download_package(target_id: int, db: Session = Depends(get_db), user: User =
 @router.post("/delivery-targets/{target_id}/package")
 def preview_package(target_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     target = _own_target(db, target_id, user, mutate=True)
-    asset = db.get(ContentAsset, target.content_asset_id)
-    if target.action == DeliveryAction.manual_handoff.value and asset.project_id is None:
-        from .article_handoff import get_package
-
-        return get_package(target_id, db, user)
     package = delivery_service.build_copy_package(db, target)
     # 与 M1 语义一致：成品包生成后等待人工发布回填
     if target.status in {DeliveryTargetStatus.target_authorized.value, DeliveryTargetStatus.package_ready.value}:
