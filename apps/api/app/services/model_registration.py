@@ -56,6 +56,10 @@ class UsesInput(StrictModel):
     cover_image: CoverImageUse = Field(default_factory=CoverImageUse)
     writing_cli: str = Field(default="", max_length=100)
     topic_search: str = Field(default="", max_length=20)
+    shot_video: str = Field(default="mmx:MiniMax-H3", max_length=120)
+    shot_video_resolution: str = Field(default="480p", pattern=r"^(480p|768p|1080p)$")
+    shot_video_final_resolution: str = Field(default="480p", pattern=r"^(480p|768p|1080p)$")
+    shot_image: str = Field(default="", max_length=120)
 
 
 class RegistrationInput(StrictModel):
@@ -202,6 +206,7 @@ def configuration_view(db):
             "default_profile": stored.get("default_profile", ""),
             "routes": {key: stored.get("routes", {}).get(key, "") for key in PURPOSES}, "purposes": list(PURPOSES),
             "uses": uses(stored), "search_vendors": list(SEARCH_VENDORS), "cover_sizes": list(COVER_SIZES),
+            "shot_video_models": shot_video_models(stored), "shot_image_models": shot_image_models(stored),
             "local_vendors": {"minimax": _minimax_view(stored)}}
 
 
@@ -210,7 +215,14 @@ def uses(stored=None) -> dict:
     value = stored.get("uses") or {}
     cover = value.get("cover_image") or {}
     return {"cover_image": {"profile": cover.get("profile", ""), "size": cover.get("size", COVER_SIZES[0])},
-            "writing_cli": value.get("writing_cli", ""), "topic_search": value.get("topic_search", "")}
+            "writing_cli": value.get("writing_cli", ""), "topic_search": value.get("topic_search", ""),
+            # Older saves named the MiniMax model alone; those were always the local CLI.
+            "shot_video": {"MiniMax-H3": "mmx:MiniMax-H3", "MiniMax-Hailuo-2.3": "mmx:MiniMax-Hailuo-2.3"}.get(
+                value.get("shot_video", "mmx:MiniMax-H3"), value.get("shot_video", "mmx:MiniMax-H3")),
+            # Test runs stay at 480P to keep each paid clip cheap; raise it for the final cut.
+            "shot_video_resolution": {"720p": "768p"}.get(value.get("shot_video_resolution", "480p"), value.get("shot_video_resolution", "480p")),
+            "shot_video_final_resolution": value.get("shot_video_final_resolution", "480p"),
+            "shot_image": value.get("shot_image") or _default_shot_image(stored)}
 
 
 def vendor_of(profile, stored) -> dict | None:
@@ -315,6 +327,10 @@ def save_configuration(db, raw, *, actor):
                 raise HTTPException(422, "topic_search_vendor_invalid")
             if search == "tavily" and not providers.get("tavily", {}).get("api_key"):
                 raise HTTPException(422, "topic_search_vendor_unavailable")
+            if value.uses.shot_image and value.uses.shot_image not in {item["id"] for item in shot_image_models(merged)}:
+                raise HTTPException(422, "shot_image_model_unavailable")
+            if value.uses.shot_video and value.uses.shot_video not in {item["id"] for item in shot_video_models(merged)}:
+                raise HTTPException(422, "shot_video_model_unavailable")
             merged["uses"] = value.uses.model_dump()
         merged["schema_version"] = max(2, merged.get("schema_version", 1))
         merged["revision"] = value.expected_revision + 1
@@ -338,6 +354,40 @@ def discover(db, provider_id):
     ids = {item["id"] for item in items if isinstance(item, dict) and isinstance(item.get("id"), str)
            and re.fullmatch(r"[A-Za-z0-9_./:-]{1,160}", item["id"])}
     return {"models": sorted(ids), "verified_capabilities": False}
+
+
+MMX_VIDEO = {"mmx:MiniMax-H3": "MiniMax 本机命令行 · MiniMax-H3（首帧 + 尾帧、可选画幅、4–15 秒）",
+             "mmx:MiniMax-Hailuo-2.3": "MiniMax 本机命令行 · MiniMax-Hailuo-2.3（只用首帧、固定 6 秒）"}
+
+
+def shot_image_models(stored) -> list[dict]:
+    """Shot-still choices: registered models bound to 生图 over the OpenAI-compatible protocol (v2 = Gemini native)."""
+    providers, items = stored.get("providers") or {}, []
+    for key, profile in (stored.get("profiles") or {}).items():
+        binding = (profile.get("capability_bindings") or {}).get("image_generation") or {}
+        vendor = providers.get(profile.get("provider_id")) or {}
+        if binding.get("adapter_key") == "openai.compatible" and profile.get("enabled", True) and vendor.get("enabled") and vendor.get("api_key"):
+            kind = "Gemini 原生" if binding.get("adapter_version") == "2" or "gemini" in str(binding.get("model_id") or "") else "改图接口"
+            items.append({"id": key, "label": f"{vendor.get('name') or profile.get('provider_id')} · {binding.get('model_id') or profile.get('model')}（{kind}，带商品参考图）"})
+    return items
+
+
+def _default_shot_image(stored) -> str:
+    # grok keeps the product closest to the reference in the 2026-10-29 test, so it is the default when registered.
+    items = shot_image_models(stored)
+    return next((item["id"] for item in items if "grok" in item["label"]), items[0]["id"] if items else "")
+
+
+def shot_video_models(stored) -> list[dict]:
+    """Image-to-video choices: the local MiniMax CLI plus every registered model bound to 生视频 over the OpenAI-compatible protocol."""
+    items = [{"id": key, "label": label} for key, label in MMX_VIDEO.items()]
+    providers = stored.get("providers") or {}
+    for key, profile in (stored.get("profiles") or {}).items():
+        binding = (profile.get("capability_bindings") or {}).get("video_generation") or {}
+        vendor = providers.get(profile.get("provider_id")) or {}
+        if binding.get("adapter_key") == "openai.compatible" and profile.get("enabled", True) and vendor.get("enabled") and vendor.get("api_key"):
+            items.append({"id": key, "label": f"{vendor.get('name') or profile.get('provider_id')} · {binding.get('model_id') or profile.get('model')}（视频接口，首帧 + 尾帧）"})
+    return items
 
 
 def topic_search_vendor() -> str:

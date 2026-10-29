@@ -1,0 +1,51 @@
+{
+  "key": "studio.product.style.reversal",
+  "version": "1",
+  "ref": "studio.product.style.reversal@1",
+  "kind": "skill",
+  "modality": "video",
+  "purpose": "脚本风格：反转剧场",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.creative.method.v1"
+  ],
+  "output_schemas": [
+    "video.script.v1"
+  ],
+  "required_context": [
+    "product_context"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "product_context",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "schema": "studio.skill.contract.v1",
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.graphic.product-neutral@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.video.product@1"
+  ],
+  "references": []
+}

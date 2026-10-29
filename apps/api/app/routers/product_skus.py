@@ -4,7 +4,7 @@ import json
 import uuid
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFile
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
@@ -62,6 +62,12 @@ class ProductionSettings(BaseModel):
     ae_packaging: bool = False
     target_duration_seconds: int | None = Field(default=None, gt=0, le=3600)
     estimated_voice_duration_seconds: float | None = Field(default=None, gt=0, le=3600, allow_inf_nan=False)
+    script_style: str | None = Field(default=None, pattern=r"^[a-z][a-z-]{1,30}$")
+    hook_pinned: str = Field(default="", max_length=40)
+    hook_versions: int = Field(default=1, ge=1, le=3)
+    reference_structure: str = Field(default="", max_length=4000)
+    material_mode: Literal["photo_only", "user_footage", "mixed"] = "mixed"
+    i2v_mode: Literal["default", "manual", "auto"] = "default"
     feedback: Feedback | None = None
 
     @model_validator(mode="before")
@@ -221,11 +227,34 @@ def list_skus(q: str = Query(default="", max_length=300), category: str = Query(
     return {"items": [sku_json(db, r) for r in db.scalars(stmt.order_by(ProductSku.id.desc()).offset(offset).limit(limit))]}
 
 
+def check_category(db, user, product: dict) -> None:
+    from ..services import product_categories
+
+    if product.get("category_key"):
+        product_categories.ensure_builtin(db, user)
+        found = product_categories.resolve(db, user.id, product["category_key"])
+        if found is None:
+            raise HTTPException(422, "选的品类不存在，请重新选择")
+
+
+def frozen_category(db, user, product: ProductContext, settings: dict) -> dict | None:
+    """The category revision is frozen into the work, so editing the category later does not change this work."""
+    from ..services import product_categories
+
+    product_categories.ensure_builtin(db, user)
+    category = product_categories.resolve(db, user.id, product.category_key or product_categories.guess_key(product.category))
+    style = settings.get("script_style")
+    if style and style not in product_categories.STYLES:
+        raise HTTPException(422, "脚本风格不在 10 种风格里")
+    return category
+
+
 @router.post("/product-skus", status_code=201)
 def create_sku(payload: SkuIn, db=Depends(get_db), user=Depends(require_editor)):
     product = validate_product_context(db, payload.product, user=user)
     if not product["name"].strip() or not product["category"].strip():
         raise HTTPException(422, "请填写商品名称和品类")
+    check_category(db, user, product)
     image_revision(db, payload)
     existing = db.scalar(select(ProductSku).where(ProductSku.owner_user_id == user.id, ProductSku.request_key == payload.request_key))
     if existing:
@@ -258,6 +287,7 @@ def update_sku(sku_id: int, payload: SkuUpdate, db=Depends(get_db), user=Depends
     product = validate_product_context(db, payload.product, user=user)
     if not product["name"].strip() or not product["category"].strip():
         raise HTTPException(422, "请填写商品名称和品类")
+    check_category(db, user, product)
     image_revision(db, payload)
     changed = db.execute(update(ProductSku).where(ProductSku.id == row.id, ProductSku.revision == payload.expected_revision)
         .values(revision=payload.expected_revision + 1))
@@ -381,7 +411,7 @@ def create_work(sku_id: int, payload: WorkIn, db=Depends(get_db), user=Depends(r
                 origin="system_reference", attached_by=user.email))
             attached.add(ref["material_revision_id"])
     db.add(ProductSkuWork(sku_id=sku.id, sku_revision_id=revision.id, project_id=launch.project_id,
-        unit_id=launch.unit_id, plan_id=plan.id if plan else None, settings_snapshot_json=settings))
+        unit_id=launch.unit_id, plan_id=plan.id if plan else None, settings_snapshot_json={**settings, "category": frozen_category(db, user, product, settings)}))
     current = latest_profile(db, launch.unit_id)
     if current:
         settings = {**current.settings_json, **{key: value for key, value in settings.items() if value is not None}}
@@ -543,3 +573,166 @@ def save_product_defaults(payload: ProductDefaultsIn, db=Depends(get_db), user=D
         db.add(SystemSetting(key=key, value=updated, updated_by=user.email))
     commit(db)
     return updated
+
+
+class CategoryIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    key: str = Field(max_length=60)
+    name: str = Field(max_length=100)
+    profile: dict
+
+
+class CategoryUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_revision: int = Field(ge=1)
+    name: str | None = Field(default=None, max_length=100)
+    status: Literal["active", "disabled"] | None = None
+    profile: dict | None = None
+
+
+@router.get("/product-categories")
+def list_categories(db=Depends(get_db), user=Depends(get_current_user)):
+    from ..services import product_categories, product_motion
+
+    return {**product_categories.list_categories(db, user), "motion": product_motion.catalog()}
+
+
+@router.post("/product-categories")
+def create_category(payload: CategoryIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_categories
+
+    return product_categories.create(db, user, payload.key, payload.name, payload.profile)
+
+
+@router.put("/product-categories/{category_id}")
+def update_category(category_id: int, payload: CategoryUpdate, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_categories
+
+    return product_categories.update(db, user, category_id, payload.expected_revision, payload.name, payload.status, payload.profile)
+
+
+class I2VModeIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    mode: Literal["manual", "auto"]
+
+
+class PublishCopyIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    channel: str = Field(default="", max_length=40)
+    title: str = Field(default="", max_length=15)
+    hashtags: list[str] = Field(default_factory=list, max_length=5)
+    cover_text: str = Field(default="", max_length=8)
+    interaction: str = Field(default="", max_length=60)
+    description: str = Field(default="", max_length=50)
+
+
+@router.get("/product-i2v-mode")
+def get_i2v_mode(db=Depends(get_db), user=Depends(get_current_user)):
+    from ..services import product_video
+
+    return {"mode": product_video.default_mode(db)}
+
+
+@router.put("/product-i2v-mode")
+def put_i2v_mode(payload: I2VModeIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.save_default_mode(db, user, payload.mode)
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/product-video")
+def get_product_video(project_id: int, unit_id: int, db=Depends(get_db), user=Depends(get_current_user)):
+    from ..services import product_motion, product_video
+
+    view = product_video.shot_videos(db, user, project_id, unit_id)
+    if view["product"]:
+        view.update(publish_copy=product_video.publish_copy(db, user, project_id, unit_id), motion=product_motion.catalog(),
+                    direction=product_video.direction(db, unit_id))
+    return view
+
+
+@router.put("/content-projects/{project_id}/units/{unit_id}/product-video/publish-copy")
+def put_publish_copy(project_id: int, unit_id: int, payload: PublishCopyIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.save_publish_copy(db, user, project_id, unit_id, payload.model_dump())
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/prompt")
+def get_shot_prompt(project_id: int, unit_id: int, shot_id: str, db=Depends(get_db), user=Depends(get_current_user)):
+    from ..services import product_video
+
+    return product_video.shot_prompt(db, user, project_id, unit_id, shot_id)
+
+
+@router.put("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/mode")
+def put_shot_mode(project_id: int, unit_id: int, shot_id: str, payload: I2VModeIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.set_shot_mode(db, user, project_id, unit_id, shot_id, payload.mode)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/generate")
+def post_shot_video(project_id: int, unit_id: int, shot_id: str, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.start_shot_video(db, user, project_id, unit_id, shot_id)
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/video")
+def get_shot_video_state(project_id: int, unit_id: int, shot_id: str, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.get_shot_video(db, user, project_id, unit_id, shot_id)
+
+
+class ShotMotionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    camera_presets: list[str] = Field(default_factory=list, max_length=2)
+    look: str | None = Field(default=None, max_length=60)
+    intensity: Literal["subtle", "normal", "strong"] | None = None
+    chain_from_previous: bool = False
+
+
+@router.put("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/motion")
+def put_shot_motion(project_id: int, unit_id: int, shot_id: str, payload: ShotMotionIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.set_shot_motion(db, user, project_id, unit_id, shot_id, payload.model_dump())
+
+
+class ShotFrameIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    material_revision_id: int | None = Field(default=None, gt=0)
+
+
+@router.put("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/first-frame")
+def put_shot_first_frame(project_id: int, unit_id: int, shot_id: str, payload: ShotFrameIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.set_shot_first_frame(db, user, project_id, unit_id, shot_id, payload.material_revision_id)
+
+
+class ShotImageIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    prompt: str = Field(min_length=1, max_length=2000)
+    extra_reference_revision_id: int | None = Field(default=None, gt=0)
+    as_first_frame: bool = True
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/image")
+def post_shot_image(project_id: int, unit_id: int, shot_id: str, payload: ShotImageIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    return product_video.generate_shot_image(db, user, project_id, unit_id, shot_id, payload.prompt,
+                                             payload.extra_reference_revision_id, payload.as_first_frame)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/upload")
+async def upload_shot_video(project_id: int, unit_id: int, shot_id: str, file: UploadFile, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import product_video
+
+    content = await file.read(512 * 1024 * 1024 + 1)
+    if len(content) > 512 * 1024 * 1024:
+        raise HTTPException(413, "视频文件超过 512 MB")
+    return product_video.upload_shot_video(db, user, project_id, unit_id, shot_id, content, file.filename or "clip.mp4")

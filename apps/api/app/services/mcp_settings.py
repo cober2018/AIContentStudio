@@ -26,7 +26,8 @@ GROUPS = {
                                   "reconcile_unknown", "request_human_review"}),
     "context": ("读取上下文与方法", {"get_context", "find_capabilities", "use_capability"}),
     "video": ("做视频（导演稿 → 小样 → 成片）", {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
-                                        "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common"}),
+                                        "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common",
+                                        "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}),
     "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision"}),
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
@@ -67,6 +68,13 @@ SUMMARIES = {
     "generate_video_image": "用平台生图工具生成一张画面，放进项目文件夹",
     "generate_video_voiceover": "按你的 MiniMax 设置生成配音，并按配音对齐镜头时长",
     "prepare_video_edit": "记下哪些镜头用 AE，开剪辑任务：先小样，小样通过后排版出成片",
+    "get_shot_video_prompt": "商品作品：取某一镜的图生视频提示词、首尾帧、画幅和时长",
+    "set_shot_video_mode": "商品作品：把某一镜的图生视频改成手动（网页生成）或自动（MiniMax）",
+    "generate_shot_image": "商品作品：带商品原图作参考生成某一镜的首帧，并对照原图检查主体一致，不过关重画",
+    "set_shot_first_frame": "商品作品：给某一镜指定图生视频的首帧（比如先生成的一张图）",
+    "generate_shot_video": "商品作品：自动镜头按「用途路由 → 图生视频」选的模型生成，按条计费",
+    "get_shot_video": "商品作品：取自动图生视频的结果",
+    "save_publish_copy": "商品作品：存发布文案（标题、话题、封面字、互动引导、简介）",
 }
 CANNOT = ["接受或带修改接受阶段结果", "拒绝或记录反馈", "采用素材、绑定到镜头", "批准候选、冻结 Master", "发布或交付到渠道"]
 LOOP = ["get_stages / preview_stage 查看要做哪一步", "run_stage 生成候选", "把 review_url 发给你，你在平台上看图并决定",

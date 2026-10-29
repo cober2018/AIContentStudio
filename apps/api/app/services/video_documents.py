@@ -240,7 +240,8 @@ BOARD_SPEAKER = {"narration", "presenter", "dialogue", "none"}
 
 def canonical_board(value: object) -> dict:
     """Storyboard columns of one shot; the spoken line stays in the script block it points to."""
-    board = _object(value, {"message", "visual", "camera", "speaker", "sound", "notes", "material_request"}, "video_shot_board_invalid")
+    board = _object(value, {"message", "visual", "camera", "speaker", "sound", "notes", "material_request",
+                            "camera_presets", "look", "intensity", "chain_from_previous", "character"}, "video_shot_board_invalid")
     result = {key: _text(board.get(key, ""), limit, "video_shot_board_invalid")
               for key, limit in (("message", 500), ("visual", 1000), ("sound", 500), ("notes", 500))}
     result["camera"] = _enum(board.get("camera", "fixed"), BOARD_CAMERA, "video_shot_board_invalid")
@@ -248,6 +249,18 @@ def canonical_board(value: object) -> dict:
     # Only present on 导演稿 written with a material request, so older masters keep their hashes.
     if "material_request" in board:
         result["material_request"] = _text(board["material_request"], 1000, "video_shot_board_invalid")
+    # Product motion fields are likewise only kept when written, from the platform's camera / look library.
+    if any(key in board for key in ("camera_presets", "look", "intensity", "chain_from_previous")):
+        from . import product_motion
+
+        problems = product_motion.shot_problems({"id": "镜头", "board": board})
+        if problems:
+            raise VideoDocumentError("video_shot_motion_invalid：" + "；".join(problems))
+        for key in ("camera_presets", "look", "intensity", "chain_from_previous"):
+            if key in board:
+                result[key] = list(board[key]) if key == "camera_presets" else board[key]
+    if "character" in board:
+        result["character"] = _text(board["character"], 40, "video_shot_board_invalid")
     return result
 
 

@@ -2389,6 +2389,30 @@ class ProductSkuRevision(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class ProductCategory(Base):
+    """A product category works like a persona: it carries its own skills, styles and look."""
+    __tablename__ = "product_category"
+    __table_args__ = (UniqueConstraint("owner_user_id", "key", name="uq_product_category_key"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    key: Mapped[str] = mapped_column(String(60))
+    name: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProductCategoryRevision(Base):
+    __tablename__ = "product_category_revision"
+    __table_args__ = (UniqueConstraint("category_id", "revision", name="uq_product_category_revision"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    category_id: Mapped[int] = mapped_column(ForeignKey("product_category.id"), index=True)
+    revision: Mapped[int] = mapped_column(Integer)
+    profile_json: Mapped[dict] = mapped_column(JSON)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ProductSkuPlan(Base):
     __tablename__ = "product_sku_plan"
     __table_args__ = (UniqueConstraint("sku_id", "plan_key", "revision", name="uq_product_sku_plan_revision"),)

@@ -1,4 +1,4 @@
-"""Fill a video's empty storyboard rows with material: licensed stock first, then a ready AE template, else a gap.
+"""Fill a video's empty storyboard rows with material: licensed stock first, then (product works) image-to-video, then a ready AE template, else a gap.
 
 The user starts it; it never replaces a pick the user made and never binds material into the master.
 """
@@ -51,6 +51,11 @@ def start(db: Session, user: User, project_id: int, unit_id: int) -> dict:
         raise HTTPException(409, {"code": "material_autofill_no_shots"})
     if not empty:
         raise HTTPException(409, {"code": "material_autofill_nothing_to_fill"})
+    from . import product_video
+
+    link = product_video.work(db, unit_id)
+    if link is not None and product_video._settings(db, link).get("material_mode") == "user_footage":
+        raise HTTPException(409, {"code": "material_autofill_user_footage", "message": "这条商品作品选的是「给素材剪」，不自动补素材"})
     shots = [{"id": slot["id"], "label": slot["label"], "text": _shot_text(slot) or slot["label"]} for slot in empty][:material_matching.MAX_SEGMENTS]
     return material_matching.start(db, user, {"scope": "shots", "shots": shots, "project_id": project_id, "unit_id": unit_id,
                                               "aspect": "9:16", "min_short_side": 720, "auto_fill": True,
@@ -147,6 +152,30 @@ class _Images:
         return saved["material_revision_id"]
 
 
+def _video_tier(db: Session, user: User, project_id: int, unit_id: int, segments: list[dict], rows: dict) -> list[dict]:
+    """Product works try image-to-video before AE templates; returns the rows still left for templates."""
+    from . import product_video
+
+    link = product_video.work(db, unit_id)
+    if link is None:
+        return segments
+    left = []
+    for segment in segments:
+        mode = product_video._mode(db, link, unit_id, segment["id"])
+        if mode == "manual":
+            rows[segment["id"]] = {"outcome": "i2v_manual", "source": "图生视频（手动）",
+                                   "reason": "这一镜要在网页生成：用 get_shot_video_prompt 取提示词和首帧，生成后回传"}
+            continue
+        try:
+            product_video.start_shot_video(db, user, project_id, unit_id, segment["id"])
+            rows[segment["id"]] = {"outcome": "i2v_auto", "source": "MiniMax 图生视频（生成中）", "reason": "用 get_shot_video 取结果，再选用"}
+        except HTTPException as exc:
+            db.rollback()
+            rows[segment["id"]]["reason"] += f"；图生视频没提交：{(exc.detail or {}).get('message') if isinstance(exc.detail, dict) else exc.detail}"
+            left.append(segment)
+    return left
+
+
 def finish(db: Session, run_id: int) -> None:
     """Runs inside the search worker after matching, while the run still shows as running."""
     from . import craft_skills
@@ -175,6 +204,8 @@ def finish(db: Session, run_id: int) -> None:
                 rows[segment["id"]] = {"outcome": "gap", "reason": f"下载素材失败：{_code(exc)}"}
         to_template.append(segment)
         rows.setdefault(segment["id"], {"outcome": "gap", "reason": "属于后期制作" if segment.get("status") == "motion" else "没有合格的实拍素材"})
+    _note(db, run_id, rows, "rendering")
+    to_template = _video_tier(db, user, project_id, unit_id, to_template, rows)
     _note(db, run_id, rows, "rendering")
     templates = _templates()
     if to_template and templates:

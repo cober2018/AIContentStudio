@@ -1,0 +1,408 @@
+{
+  "camera": [
+    {
+      "id": "push-in-fast",
+      "name": "急速推近",
+      "group": "推拉",
+      "motion": "镜头从中景快速冲向主体，一两秒内落到特写，制造突然被抓住的感觉",
+      "motion_en": "fast dolly push from medium shot straight into a close-up of the subject within about one second",
+      "good_for": [
+        "hook",
+        "product_reveal"
+      ],
+      "holds": false
+    },
+    {
+      "id": "push-in-slow",
+      "name": "缓慢推近",
+      "group": "推拉",
+      "motion": "镜头匀速、缓慢地向主体靠近，画面逐渐收紧，情绪慢慢升起来",
+      "motion_en": "slow steady dolly in toward the subject, framing gradually tightens",
+      "good_for": [
+        "pain_point",
+        "product_reveal",
+        "social_proof"
+      ],
+      "holds": false
+    },
+    {
+      "id": "pull-out-reveal",
+      "name": "拉远揭示",
+      "group": "推拉",
+      "motion": "从细节特写开始向后拉开，逐步露出主体所在的完整环境",
+      "motion_en": "starts on a tight detail and pulls back to reveal the full subject and its surroundings",
+      "good_for": [
+        "hook",
+        "pain_point",
+        "cta"
+      ],
+      "holds": false
+    },
+    {
+      "id": "dolly-zoom",
+      "name": "希区柯克变焦",
+      "group": "推拉",
+      "motion": "镜头前推同时变焦拉远（或反之），主体大小不变、背景纵深剧烈变化，制造心里一震的感觉",
+      "motion_en": "dolly zoom: camera moves in while zooming out, subject size stays constant while the background perspective stretches",
+      "good_for": [
+        "hook",
+        "pain_point"
+      ],
+      "holds": false
+    },
+    {
+      "id": "orbit-slow",
+      "name": "慢速环绕",
+      "group": "环绕",
+      "motion": "镜头围着静止的商品慢慢转半圈，展示正面到侧面的立体外形",
+      "motion_en": "slow half orbit around the stationary product, revealing its form from front to side",
+      "good_for": [
+        "product_reveal",
+        "demo"
+      ],
+      "holds": false
+    },
+    {
+      "id": "turntable-spin",
+      "name": "转台旋转",
+      "group": "环绕",
+      "motion": "机位不动，商品放在转台上匀速自转，干净地展示每一面",
+      "motion_en": "locked camera, the product rotates slowly on a turntable showing every side",
+      "good_for": [
+        "product_reveal",
+        "cta"
+      ],
+      "holds": false
+    },
+    {
+      "id": "arc-quarter",
+      "name": "四分之一弧线",
+      "group": "环绕",
+      "motion": "镜头沿小弧线绕主体移动约四分之一圈，换一个更有层次的观看角度",
+      "motion_en": "camera arcs about a quarter circle around the subject to a more dimensional angle",
+      "good_for": [
+        "demo",
+        "social_proof"
+      ],
+      "holds": false
+    },
+    {
+      "id": "truck-lateral",
+      "name": "横向平移",
+      "group": "平移跟随",
+      "motion": "镜头与主体平行地横向滑过，像扫过一排陈列或一个场景",
+      "motion_en": "smooth lateral tracking move parallel to the subject, sliding past the scene",
+      "good_for": [
+        "pain_point",
+        "demo",
+        "social_proof"
+      ],
+      "holds": false
+    },
+    {
+      "id": "follow-subject",
+      "name": "跟随拍摄",
+      "group": "平移跟随",
+      "motion": "镜头跟着移动中的人或手保持固定距离，一起往前走",
+      "motion_en": "camera follows the moving person or hand at a constant distance",
+      "good_for": [
+        "demo",
+        "pain_point"
+      ],
+      "holds": false
+    },
+    {
+      "id": "whip-pan",
+      "name": "甩镜转场",
+      "group": "平移跟随",
+      "motion": "镜头快速横甩带出动态模糊，落到下一个主体上，常用作前后对比的衔接",
+      "motion_en": "quick whip pan with motion blur, landing on the next subject",
+      "good_for": [
+        "hook",
+        "product_reveal"
+      ],
+      "holds": false
+    },
+    {
+      "id": "crane-up",
+      "name": "升镜揭示",
+      "group": "升降俯仰",
+      "motion": "镜头从低处缓缓升高，视野变开阔，交代整个空间或成套效果",
+      "motion_en": "camera rises from low to high, the view opens up to show the whole space",
+      "good_for": [
+        "social_proof",
+        "cta"
+      ],
+      "holds": false
+    },
+    {
+      "id": "crane-down-close",
+      "name": "降镜贴近",
+      "group": "升降俯仰",
+      "motion": "镜头从高处下降并靠近桌面或主体，把注意力收到商品上",
+      "motion_en": "camera descends from above and settles close to the product on the surface",
+      "good_for": [
+        "product_reveal",
+        "demo"
+      ],
+      "holds": false
+    },
+    {
+      "id": "top-down",
+      "name": "正俯拍",
+      "group": "升降俯仰",
+      "motion": "镜头在正上方垂直向下拍，带一点缓慢平移，适合平铺、摆盘和桌面操作",
+      "motion_en": "overhead top-down view looking straight down with a gentle drift",
+      "good_for": [
+        "demo",
+        "product_reveal"
+      ],
+      "holds": false
+    },
+    {
+      "id": "handheld-natural",
+      "name": "手持实感",
+      "group": "手持实感",
+      "motion": "手机手持拍摄的轻微晃动和呼吸感，像普通人随手记录",
+      "motion_en": "handheld phone footage with subtle natural shake and breathing movement",
+      "good_for": [
+        "hook",
+        "pain_point",
+        "demo",
+        "social_proof"
+      ],
+      "holds": false
+    },
+    {
+      "id": "pov-walk",
+      "name": "第一视角行走",
+      "group": "手持实感",
+      "motion": "以人的眼睛高度往前走，画面随步伐轻微起伏，像自己走进场景",
+      "motion_en": "first-person point of view walking forward at eye level with gentle step bob",
+      "good_for": [
+        "hook",
+        "pain_point"
+      ],
+      "holds": false
+    },
+    {
+      "id": "handheld-orbit-body",
+      "name": "人物环身手持",
+      "group": "手持实感",
+      "motion": "手持绕着出镜人物走小半圈，展示穿着或手持商品的上身效果",
+      "motion_en": "handheld move circling partway around a person to show the outfit or product on them",
+      "good_for": [
+        "demo",
+        "social_proof"
+      ],
+      "holds": false
+    },
+    {
+      "id": "macro-glide",
+      "name": "微距滑移",
+      "group": "特殊技法",
+      "motion": "极近距离缓慢滑过表面，看清质地、纹理、颗粒或做工",
+      "motion_en": "extreme macro close-up slowly gliding across the surface texture",
+      "good_for": [
+        "hook",
+        "demo"
+      ],
+      "holds": false
+    },
+    {
+      "id": "hero-rise",
+      "name": "英雄仰升",
+      "group": "特殊技法",
+      "motion": "低机位仰拍并缓缓上升，让商品显得挺拔有分量，适合定格亮相",
+      "motion_en": "low angle hero shot slowly rising, making the product look tall and important",
+      "good_for": [
+        "product_reveal",
+        "cta"
+      ],
+      "holds": false
+    },
+    {
+      "id": "push-in-hold",
+      "name": "推近定住",
+      "group": "特殊技法",
+      "motion": "镜头推到商品近景后完全停住，留出清楚的定格画面给字幕或购买信息",
+      "motion_en": "pushes in to a close shot of the product then comes to a complete stop and holds still",
+      "good_for": [
+        "product_reveal",
+        "cta"
+      ],
+      "holds": true
+    },
+    {
+      "id": "lock-on-follow",
+      "name": "锁定跟拍",
+      "group": "特殊技法",
+      "motion": "镜头跟着主体移动并始终把它锁在画面同一位置，结尾随主体停下而稳稳定住",
+      "motion_en": "tracks the subject keeping it locked in the same frame position, ending in a steady hold as it stops",
+      "good_for": [
+        "demo",
+        "cta"
+      ],
+      "holds": true
+    },
+    {
+      "id": "fpv-dive",
+      "name": "穿越俯冲",
+      "group": "特殊技法",
+      "motion": "像穿越机一样快速俯冲穿过空间，最后落到商品前，节奏感强",
+      "motion_en": "fast FPV drone-style dive flying through the space and arriving in front of the product",
+      "good_for": [
+        "hook",
+        "product_reveal"
+      ],
+      "holds": false
+    },
+    {
+      "id": "rack-focus",
+      "name": "焦点转移",
+      "group": "特殊技法",
+      "motion": "机位基本不动，焦点从前景虚化处转到商品上（或反过来），引导视线",
+      "motion_en": "near-static camera, focus racks from the foreground to the product, guiding attention",
+      "good_for": [
+        "pain_point",
+        "product_reveal",
+        "social_proof"
+      ],
+      "holds": false
+    }
+  ],
+  "looks": [
+    {
+      "id": "daylight-clean",
+      "name": "清透日光",
+      "group": "styled",
+      "image": "白天自然窗光，画面明亮干净，色彩通透，阴影柔和，白色偏中性",
+      "motion": "clean bright natural daylight"
+    },
+    {
+      "id": "warm-life",
+      "name": "暖调生活感",
+      "group": "styled",
+      "image": "午后暖黄色室内光，生活化的家居环境，色调偏暖，氛围放松亲切",
+      "motion": "warm cozy indoor afternoon light"
+    },
+    {
+      "id": "studio-product",
+      "name": "影棚质感",
+      "group": "styled",
+      "image": "影棚布光，纯色或渐变背景，主光清晰、轮廓光勾边，商品质感和边缘干净利落",
+      "motion": "controlled studio lighting with crisp rim light"
+    },
+    {
+      "id": "night-ambient",
+      "name": "夜景氛围",
+      "group": "styled",
+      "image": "夜晚环境，街灯或室内点光源，暗部较多，暖色与彩色灯光点缀，有氛围感但主体清楚",
+      "motion": "moody night ambience with practical lights"
+    },
+    {
+      "id": "premium-gray",
+      "name": "高级灰调",
+      "group": "styled",
+      "image": "低饱和灰调配色，光线柔和均匀，画面克制简洁，显得质感高级",
+      "motion": "muted desaturated soft gray tones"
+    },
+    {
+      "id": "forest-natural",
+      "name": "森系自然",
+      "group": "styled",
+      "image": "户外或靠窗的绿植环境，柔和散射光，色调偏绿偏清新，有自然材质点缀",
+      "motion": "soft diffused natural light with greenery"
+    },
+    {
+      "id": "food-warm",
+      "name": "食欲暖光",
+      "group": "styled",
+      "image": "偏暖的侧逆光，食物表面有光泽和热气，色彩饱满诱人，背景略虚",
+      "motion": "warm appetizing backlight with gentle steam glow"
+    },
+    {
+      "id": "tech-cool",
+      "name": "科技冷调",
+      "group": "styled",
+      "image": "偏冷的蓝白色调，深色桌面或背景，带屏幕或细线光反射，干净利落有科技感",
+      "motion": "cool blue-white tech lighting with subtle reflections"
+    },
+    {
+      "id": "phone-raw",
+      "name": "手机直出",
+      "group": "real",
+      "image": "普通手机后置摄像头直出画面，现场自然光，不调色，略有噪点，构图随意",
+      "motion": "unedited smartphone footage, natural available light"
+    },
+    {
+      "id": "selfie-front",
+      "name": "前置自拍",
+      "group": "real",
+      "image": "手机前置摄像头自拍视角，手臂伸出的距离，轻微广角变形，室内普通光线",
+      "motion": "front-facing phone selfie footage at arm's length"
+    },
+    {
+      "id": "propped-static",
+      "name": "搁置机位",
+      "group": "real",
+      "image": "手机靠在桌上或架子上固定拍摄，机位偏低略歪，画面不动，人物在画面里自然活动",
+      "motion": "phone propped on a surface, static slightly tilted framing"
+    },
+    {
+      "id": "dashcam",
+      "name": "行车记录仪",
+      "group": "real",
+      "image": "行车记录仪广角画面，车内或车前视角，画质偏硬，角落有时间水印的感觉但不出现可读文字",
+      "motion": "wide-angle dashcam footage from inside the car"
+    },
+    {
+      "id": "old-dv",
+      "name": "老DV录像",
+      "group": "real",
+      "image": "老式家用DV录像质感，色彩偏旧、分辨率低、有轻微噪点和偏色，怀旧感",
+      "motion": "vintage home camcorder footage, low resolution and faded color"
+    },
+    {
+      "id": "store-cctv",
+      "name": "店内监控",
+      "group": "real",
+      "image": "店铺天花板角落的监控俯视视角，广角、画质偏灰、机位固定",
+      "motion": "fixed high-angle store security camera footage"
+    }
+  ],
+  "intensity": {
+    "subtle": {
+      "name": "轻",
+      "motion_en": "gentle, minimal camera movement, slow pace"
+    },
+    "normal": {
+      "name": "中",
+      "motion_en": "moderate, smooth camera movement at a natural pace"
+    },
+    "strong": {
+      "name": "强",
+      "motion_en": "bold, energetic camera movement with a fast pace"
+    }
+  },
+  "realism": {
+    "zh": "有人出镜时写成真实的普通素人：自然皮肤纹理，能看到毛孔和细小瑕疵，不磨皮、不美颜，不是网红脸，也不刻意丑化，日常妆发和穿着，手机自然光下的真实质感",
+    "en": "ordinary real person, natural skin texture with visible pores, no skin smoothing or beauty filter, not an influencer face, not deliberately unattractive, everyday hair and clothing, natural phone-camera lighting"
+  },
+  "video_rules": {
+    "zh": [
+      "连续单镜头不切镜",
+      "无人声只保留环境声",
+      "商品外形、logo、文字不变形，商品不凭空出现或消失",
+      "画面稳定无闪烁",
+      "画面里不出现任何文字、字幕、标志和水印，商品上原有的字样保持原样不增不改（要加的字由 AE 后期叠加）"
+    ],
+    "en": [
+      "one continuous shot with no cuts",
+      "no human voice, ambient sound only",
+      "product shape, logo and text stay unchanged; the product never appears or disappears out of nowhere",
+      "stable image with no flicker",
+      "no on-screen text, captions, logos or watermarks; any lettering already on the product stays exactly as is, nothing added (titles are added later in post)"
+    ]
+  }
+}

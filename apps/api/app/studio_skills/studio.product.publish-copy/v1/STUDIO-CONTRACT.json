@@ -1,0 +1,51 @@
+{
+  "key": "studio.product.publish-copy",
+  "version": "1",
+  "ref": "studio.product.publish-copy@1",
+  "kind": "skill",
+  "modality": "video",
+  "purpose": "按渠道生成标题、话题标签、封面字、互动引导和简介",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.creative.method.v1"
+  ],
+  "output_schemas": [
+    "product.publish-copy.v1"
+  ],
+  "required_context": [
+    "product_context"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "product_context",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "schema": "studio.skill.contract.v1",
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.graphic.product-neutral@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.video.product@1"
+  ],
+  "references": []
+}

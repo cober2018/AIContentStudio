@@ -298,7 +298,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
-    from . import craft_skills, project_folders, voiceover
+    from . import craft_skills, product_video, project_folders, voiceover
     from .content_masters import owned_unit
     from .project_brief import current_brief
     from .project_evidence import current_boundary
@@ -330,7 +330,9 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "materials": materials, "state": state(db, user, project_id, unit_id),
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload": master.payload_json} if master else None,
             "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=plan", "rules": RULES,
-            "platform_skills": craft_skills.platform_skills(db, unit)}
+            "platform_skills": craft_skills.platform_skills(db, unit),
+            # Product works add their category, style, material mode and image-to-video route; persona works get null.
+            "product": product_video.direction(db, unit_id)}
 
 
 def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: dict, note: str | None) -> dict:

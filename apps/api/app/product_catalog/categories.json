@@ -1,0 +1,117 @@
+[
+  {
+    "key": "beauty",
+    "name": "美妆护肤",
+    "directive": {
+      "focus": "重点拍清楚质地、上脸或上手的过程和使用后的直观状态。镜头离脸和手要近，让人看清颜色、延展、吸收快慢和妆面细节；效果只展示画面里真实能看到的变化，不替画面下结论。",
+      "selling_points": "从成分有依据的作用、肤感、适合的肤质和场景、上妆是否方便、持妆和携带等方面挑一到两个最能被画面证明的卖点；成分作用只按资料原文转述，功效类说法必须有检测或备案依据，没有就不写。",
+      "banned_words": ["根治", "祛斑", "美白淡斑", "医学级", "药妆", "百分百有效", "立刻见效", "最好用", "全网最低", "无添加", "纯天然", "零刺激"],
+      "audience": "以在意日常护肤和妆容的年轻上班族、学生和宝妈为主，她们刷到时最关心适不适合自己的肤质、用起来麻不麻烦、值不值这个价，也担心过敏、闷痘和踩雷，讲解要先回应这些顾虑。",
+      "tone": "像身边懂一点护肤的朋友在分享，语气亲切、具体、不夸张，多讲用起来的感觉和适合谁，少讲空泛形容词；不用功效承诺和恐吓式开头，不贬低别人的肤况，也不刻意制造容貌焦虑。"
+    },
+    "styles": ["talking-head", "pain-point", "unboxing", "comparison", "drama", "reversal", "interview", "scene"],
+    "default_style": "talking-head",
+    "hooks": ["画面冲击", "前后对比", "痛点直击", "身份共鸣", "先认缺点", "回应质疑"],
+    "look": "daylight-clean",
+    "camera_plan": {
+      "hook": "macro-glide",
+      "pain_point": "handheld-natural",
+      "product_reveal": "push-in-hold",
+      "demo": "push-in-slow",
+      "social_proof": "rack-focus",
+      "cta": "turntable-spin"
+    }
+  },
+  {
+    "key": "food",
+    "name": "食品零食",
+    "directive": {
+      "focus": "重点拍出让人想吃的瞬间：拆开、掰开、倒出、咬下、冒热气、拉丝和咀嚼的声音。食物要在暖光下有光泽，镜头近、节奏快，口味只能通过画面和反应去传达，不替观众下好吃的结论。",
+      "selling_points": "从口味和口感、配料表里真实写着的原料、分量和规格、吃的场景（加班、追剧、早餐、分享）、做法是否简单、储存和携带是否方便里挑最能被画面证明的一两点；配料、产地、营养数字只按包装资料说。",
+      "banned_words": ["零添加", "无添加", "纯天然", "减肥", "降血糖", "治疗", "保健功效", "最好吃", "第一名", "全网最低", "吃了不胖", "有机"],
+      "audience": "以爱囤零食的年轻人、加班党、追剧党和给家里采购的宝妈为主，他们想知道是什么味道、一袋有多少、适合什么时候吃、贵不贵，以及配料是否放心，开头要马上让人看到吃的那一口。",
+      "tone": "轻松、有生活气，像朋友边吃边聊，语速可以稍快，形容口味用具体的感觉而不是堆砌夸张词；不说健康功效，不暗示能减肥或治病，不用虚假的限时抢购和销量来催促下单。"
+    },
+    "styles": ["scene", "drama", "interview", "talking-head", "pain-point", "product-pov", "story", "unboxing"],
+    "default_style": "scene",
+    "hooks": ["画面冲击", "声音开头", "痛点直击", "成本拆账", "跟风确认", "悬念提问"],
+    "look": "food-warm",
+    "camera_plan": {
+      "hook": "macro-glide",
+      "pain_point": "handheld-natural",
+      "product_reveal": "crane-down-close",
+      "demo": "top-down",
+      "social_proof": "arc-quarter",
+      "cta": "push-in-hold"
+    }
+  },
+  {
+    "key": "home",
+    "name": "家居日用",
+    "directive": {
+      "focus": "重点拍真实家里的问题现场和用了商品之后的样子：脏、乱、挤、费劲的瞬间先出现，再看商品怎么被拿起、怎么用、用完空间变成什么样。动作要完整可信，尺寸和收纳量用画面里的参照物说明。",
+      "selling_points": "从省时省力、收纳空间、清洁效果、材质做工、安装是否简单、尺寸是否合适、耐用和安全等方面挑最能现场演示的一两点；承重、防水、耐用等说法只用真实测试素材或资料，生成画面不能冒充测试。",
+      "banned_words": ["最强", "永不损坏", "百分百除菌", "杀菌消炎", "医用级", "绝对安全", "终身不坏", "全网最低", "第一品牌", "零甲醛"],
+      "audience": "以租房的年轻人、刚成家的小夫妻和操持家务的宝妈为主，他们常被小空间、家务多、东西乱困扰，最关心用起来是不是真的省事、放家里占不占地方、买回来会不会闲置。",
+      "tone": "实在、利落、带一点解压感，像朋友展示自己家刚解决的一个小麻烦；多用前后对比和过程说话，少用夸张形容；不说绝对化的效果，不编造家里用了多久、回购了几次的经历。"
+    },
+    "styles": ["pain-point", "scene", "drama", "reversal", "product-pov", "unboxing", "comparison", "story", "talking-head"],
+    "default_style": "pain-point",
+    "hooks": ["前后对比", "痛点直击", "画面冲击", "声音开头", "成本拆账", "数字利益"],
+    "look": "warm-life",
+    "camera_plan": {
+      "hook": "pull-out-reveal",
+      "pain_point": "handheld-natural",
+      "product_reveal": "hero-rise",
+      "demo": "follow-subject",
+      "social_proof": "crane-up",
+      "cta": "push-in-hold"
+    }
+  },
+  {
+    "key": "fashion",
+    "name": "服饰鞋包",
+    "directive": {
+      "focus": "重点拍上身或上脚后的整体效果和走动起来的样子，再补面料、版型、做工和五金等细节特写。正面、侧面、背面都要交代，搭配要贴近日常通勤、约会、出游等真实场合，光线下颜色尽量还原真实色差。",
+      "selling_points": "从版型修饰、面料手感、颜色好不好搭、一衣多穿、尺码是否标准、适合的身材和场合、细节做工里挑最能被上身画面证明的一两点；面料成分和尺码只按吊牌和详情资料说，显瘦显高用画面体现而不承诺。",
+      "banned_words": ["最显瘦", "穿上瘦十斤", "顶级面料", "100%真皮", "奢侈品同款", "大牌平替", "全网最低", "永不起球", "绝不掉色", "第一"],
+      "audience": "以在意穿搭但预算有限的年轻女性、上班族和学生为主，她们怕买回来和图片不一样、怕尺码不合适、怕只能穿一次，最想看到和自己身材相近的人穿上是什么样子、能怎么搭。",
+      "tone": "轻快、有画面感，像闺蜜试衣时的随口点评，多讲穿出去的场合和搭配思路，少堆砌形容词；不贬低身材，不制造外貌焦虑，不暗示是某个大牌的同款或平替。"
+    },
+    "styles": ["scene", "talking-head", "reversal", "drama", "interview", "story", "pain-point"],
+    "default_style": "scene",
+    "hooks": ["反差对比", "身份共鸣", "前后对比", "画面冲击", "悬念提问", "回应质疑"],
+    "look": "daylight-clean",
+    "camera_plan": {
+      "hook": "whip-pan",
+      "pain_point": "truck-lateral",
+      "product_reveal": "handheld-orbit-body",
+      "demo": "follow-subject",
+      "social_proof": "arc-quarter",
+      "cta": "lock-on-follow"
+    }
+  },
+  {
+    "key": "tech",
+    "name": "数码3C",
+    "directive": {
+      "focus": "重点拍真实使用场景里的关键功能：开箱和配件、外观和接口细节、核心功能在桌面或手上的实际表现。屏幕内容优先用真实录屏后期合成，不让生成画面去演示屏幕上的文字和界面变化。",
+      "selling_points": "从核心功能解决了什么具体不便、续航和充电、便携重量、兼容性、操作是否简单、做工材质、售后保障里挑最能被画面或参数证明的一两点；参数、跑分、续航时长只按官方资料说，并说明测试条件。",
+      "banned_words": ["最强", "秒杀一切", "永不卡顿", "零延迟", "军工级", "吊打", "第一", "全网最低", "百分百兼容", "无辐射"],
+      "audience": "以学生、上班族和喜欢研究小设备的年轻人为主，他们会对比参数和价格，关心兼容自己的手机或电脑吗、续航够不够、做工靠不靠谱、和旧设备比到底提升在哪。",
+      "tone": "清楚、直接、有信息量，像懂行的朋友用大白话讲参数，先讲解决了什么问题再讲参数；数据要有出处，不夸大性能，不点名贬低竞品，对比只用真实且公平的维度。"
+    },
+    "styles": ["unboxing", "comparison", "talking-head", "pain-point", "scene", "product-pov", "reversal"],
+    "default_style": "unboxing",
+    "hooks": ["数字利益", "质疑实测", "反常识", "悬念提问", "画面冲击", "先认缺点"],
+    "look": "tech-cool",
+    "camera_plan": {
+      "hook": "push-in-fast",
+      "pain_point": "handheld-natural",
+      "product_reveal": "orbit-slow",
+      "demo": "crane-down-close",
+      "social_proof": "rack-focus",
+      "cta": "push-in-hold"
+    }
+  }
+]

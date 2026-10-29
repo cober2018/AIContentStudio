@@ -125,7 +125,7 @@ def read_skill(db: Session, user: User, project_id: int, unit_id: int, skill: st
             return {"skill": skill, "index": skill_index(skill)}
         return {"skill": skill, "entry": entry, "text": skill_entry(skill, entry)}
     if not writing_skills_on(db, unit_id):
-        _fail("platform_skills_disabled", 403, message="这条作品的平台写作 skill 已被关闭，请自己写")
+        _fail("platform_skills_disabled", 403, message="这条作品的平台创作 skill 已被关闭，请自己来")
     if skill not in {item["skill"] for item in writing_skills(unit)} or entry is not None:
         _fail("craft_skill_not_found", 404)
     from .studio_creative_catalog import load_skill

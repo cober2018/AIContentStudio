@@ -36,6 +36,9 @@ PARAMETER_SCHEMAS = {
     "rate": {"type": "number", "minimum": 0.5, "maximum": 2},
     "shot_count": {"type": "integer", "minimum": 1, "maximum": 100},
 }
+# Script styles of the product system (product-category-skills); each is its own skill package.
+PRODUCT_STYLES = {'drama': '情景短剧', 'reversal': '反转剧场', 'interview': '街头采访', 'story': '剧情故事', 'unboxing': '开箱测评', 'product-pov': '物品拟人', 'comparison': '对比测评', 'talking-head': '达人口播', 'pain-point': '痛点种草', 'scene': '场景安利'}
+
 OUTPUT_SCHEMAS = {
     "studio.research.evidence-brief": ["research.brief.v1"],
     "studio.research.angle-lab": ["creative.angles.v1"],
@@ -52,6 +55,8 @@ OUTPUT_SCHEMAS = {
     "studio.video.product-shots": ["video.shot-plan.v1"],
     "studio.video.product-filming": ["video.shot-plan.v1"],
     "studio.video.shot-director": ["video.shot-plan.v1"],
+    "studio.product.publish-copy": ["product.publish-copy.v1"],
+    **{f"studio.product.style.{style}": ["video.script.v1"] for style in PRODUCT_STYLES},
 }
 
 
@@ -60,7 +65,8 @@ def _ref(key: str, version: int = 1) -> str:
 
 
 PRODUCT_CONTEXT_SKILLS = frozenset({"studio.video.product-script", "studio.video.product-shots", "studio.video.product-filming",
-                                    "studio.product.audience-need", "studio.product.purchase-reason", "studio.product.compliance-check"})
+                                    "studio.product.audience-need", "studio.product.purchase-reason", "studio.product.compliance-check",
+                                    "studio.product.publish-copy", *(f"studio.product.style.{style}" for style in PRODUCT_STYLES)})
 
 
 # Writing skills any work can use, kept in both systems.
@@ -146,6 +152,8 @@ SKILLS = {
         _resource("studio.product.purchase-reason", "skill", "video", purpose="围绕单一购买理由组织目标、核心表达与行动引导",
                   applicable_fields=("objective", "core_message", "cta")),
         _resource("studio.product.compliance-check", "skill", "video", purpose="定稿前逐句检查带货合规风险并给出改法"),
+        _resource("studio.product.publish-copy", "skill", "video", purpose="按渠道生成标题、话题标签、封面字、互动引导和简介"),
+        *(_resource(f"studio.product.style.{style}", "skill", "video", purpose=f"脚本风格：{name}") for style, name in PRODUCT_STYLES.items()),
         _resource("studio.video.script-review", "skill", "video", purpose="四评委逐句评审口播脚本并只改说法"),
         _resource("studio.video.stock-scout", "skill", "video", purpose="为缺素材的镜头找、挑免费素材并标版权"),
         _resource("studio.video.digital-human", "skill", "video", purpose="规划数字人出镜的人物设定、表演与限制（生成功能未上线）"),
@@ -176,6 +184,12 @@ for _trial_key in ("studio.video.script", "studio.video.shot-director"):
 for _trial_key in ("studio.video.product-script", "studio.video.product-shots"):
     _trial_resource = copy.deepcopy(SKILLS[_ref(_trial_key)])
     _trial_resource.update(version="2", ref=_ref(_trial_key, 2))
+    SKILLS[_trial_resource["ref"]] = _trial_resource
+
+# Category directive, chosen style skill, pinned hook and motion library (product-category-skills); @2 stays byte-identical.
+for _trial_key in ("studio.video.product-script", "studio.video.product-shots"):
+    _trial_resource = copy.deepcopy(SKILLS[_ref(_trial_key, 2)])
+    _trial_resource.update(version="3", ref=_ref(_trial_key, 3))
     SKILLS[_trial_resource["ref"]] = _trial_resource
 
 

@@ -610,10 +610,15 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
         # provider default of 6 seconds, so any other request would be discarded.
         duration_ok = (model == "MiniMax-H3" and type(seconds) is int and 4 <= seconds <= 15
                        or model == "MiniMax-Hailuo-2.3" and seconds == 6)
+        frames = list(request.get("source_bytes") or [])
+        ratio = parameters.get("aspect_ratio") if isinstance(parameters, dict) else None
         if (prompt is None or not duration_ok
                 or len(prompt.encode("utf-16-le")) // 2 > 7000
                 or type(timeout) not in {int, float} or not 0 < timeout <= 25
-                or request.get("source_bytes") or request.get("source_revision_ids")):
+                # H3 takes a first / last frame and a frame shape; Hailuo takes only a first frame.
+                or (ratio and model != "MiniMax-H3") or len(frames) > (2 if model == "MiniMax-H3" else 1)
+                or len(frames) != len(request.get("source_revision_ids") or [])
+                or (ratio is not None and ratio not in {"9:16", "16:9", "1:1", "3:4", "4:3", "21:9"})):
             return MediaOutput("unavailable")
         # The installed CLI only returns immediately for --no-wait. Its --async
         # flag submits, then polls until the process is killed.
@@ -621,7 +626,14 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
                 "--output", "json", "--non-interactive", "--no-color"]
         if model == "MiniMax-H3":
             args[5:5] = ["--duration", str(seconds)]
-        result = _run(args, timeout=timeout)
+        if ratio:
+            args += ["--ratio", ratio]
+        with tempfile.TemporaryDirectory(prefix="aics-mmx-") as folder:
+            for flag, content in zip(("--image", "--last-frame"), frames):
+                path = Path(folder) / f"{flag.strip('-')}.png"
+                path.write_bytes(content)
+                args += [flag, str(path)]
+            result = _run(args, timeout=timeout)
         if result is None:
             return MediaOutput("unknown")
         try:
@@ -636,7 +648,17 @@ class MiniMaxCLIVideoProvider(_MiniMaxCredentialIdentity):
             return MediaOutput("running", metadata={"job_id": job})
         # A finished rejection has no task receipt. Timeouts stay unknown above.
         if result.returncode != 0:
-            return MediaOutput("failed")
+            # The CLI prints its refusal (e.g. quota used up) as JSON on stdout or stderr; keep only the message.
+            reason = None
+            for text in (result.stdout, result.stderr):
+                try:
+                    error = json.loads(text).get("error") if text else None
+                except (TypeError, ValueError, AttributeError):
+                    error = None
+                if isinstance(error, dict) and isinstance(error.get("message"), str):
+                    reason = error["message"][:300]
+                    break
+            return MediaOutput("failed", metadata={"reason": reason} if reason else {})
         return MediaOutput("unknown")
 
     def query_task(self, request: dict) -> MediaOutput:

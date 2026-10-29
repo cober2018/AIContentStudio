@@ -272,6 +272,33 @@ class VideoImageInput(Scope):
     label: str = Field(min_length=1, max_length=120)
 
 
+class ShotInput(Scope):
+    shot_id: str = Field(min_length=1, max_length=100, pattern=IDENTIFIER)
+
+
+class ShotModeInput(ShotInput):
+    mode: Literal["manual", "auto"]
+
+
+class ShotFrameInput(ShotInput):
+    material_revision_id: ID | None = None
+
+
+class ShotImageInput(ShotInput):
+    prompt: str = Field(min_length=1, max_length=2000)
+    extra_reference_revision_id: ID | None = None
+    as_first_frame: bool = True
+
+
+class PublishCopyInput(Scope):
+    channel: str = Field(default="", max_length=40)
+    title: str = Field(default="", max_length=15)
+    hashtags: list[str] = Field(default_factory=list, max_length=5)
+    cover_text: str = Field(default="", max_length=8)
+    interaction: str = Field(default="", max_length=60)
+    description: str = Field(default="", max_length=50)
+
+
 class VideoCandidateInput(Scope):
     run_id: ID
     segment_id: str = Field(min_length=1, max_length=100)
@@ -323,11 +350,18 @@ TOOLS = {
     "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project, in the film's aspect (9:16 default, 16:9 when the template has a landscape variant; never stretched). Never binds it to a shot.", False),
     "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
     "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model.", True),
-    "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
+    "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request; product works may add camera_presets (≤2 motion-library ids), look, intensity, chain_from_previous, character} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
     "get_video_decision": (Scope, "Read the chain state and the user's latest decisions and notes (导演稿 / 小样 / 成片). Continue only after approval; notes mean a new version.", True),
     "set_shot_materials": (VideoMaterialsInput, "After the 导演稿 is approved: put material revisions on shots {shot_id: material_revision_id}, optionally the music bed (music: an audio material_revision_id) and the length of shots without a line (silent_durations, ms; e.g. a closing that must stay long enough to read its text). Picture content stays as approved.", False),
     "accept_material_candidate": (VideoCandidateInput, "Import one stock candidate from a start_material_match run into the library and this project; returns its material_revision_id.", False),
     "generate_video_image": (VideoImageInput, "Generate one still with the platform image tool into this project's folder; returns its material_revision_id.", False),
+    "get_shot_video_prompt": (ShotInput, "Product works: the image-to-video prompt (zh and en, built from the shot's camera presets, look, intensity and the product / realism rules), first / last frame revisions, ratio and seconds for one shot, plus whether the shot is manual or auto.", True),
+    "set_shot_video_mode": (ShotModeInput, "Product works: switch one shot's image-to-video to manual (web handoff) or auto (MiniMax). Use manual when an auto clip failed or the user did not like it.", False),
+    "generate_shot_image": (ShotImageInput, "Product works: generate one shot's still with the image model in 用途路由 → 镜头生图, the product photo sent as reference (plus an optional extra reference). Each still is checked against the product photo (shape, colour, material, logo, accessories) and redrawn with the problems up to 3 times; only a passing still becomes the first frame. Not for product reveal / CTA shots. Write the scene, light and framing in prompt; the keep-the-product rule is added for you.", False),
+    "set_shot_first_frame": (ShotFrameInput, "Product works: pick the picture one shot's image-to-video starts from, e.g. a still made with generate_video_image (material_revision_id); null goes back to the 导演稿 keyframe or the product photo. Product reveal and CTA shots keep the original product photo.", False),
+    "generate_shot_video": (ShotInput, "Product works, auto shots only: submit image-to-video on MiniMax H3 with the shot's first (and chained last) frame. Billed per clip; never resubmit an unclear call. Read the result with get_shot_video.", False),
+    "get_shot_video": (ShotInput, "Product works: poll the shot's automatic image-to-video; when done returns the material_revision_id (a candidate for set_shot_materials).", False),
+    "save_publish_copy": (PublishCopyInput, "Product works: save the publish copy written with studio.product.publish-copy (title ≤15, 3–5 hashtags, cover_text ≤8, interaction, description ≤50). The user can edit it on the page.", False),
     "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines.", False),
     "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
     "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects.", False),
@@ -491,6 +525,7 @@ _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_s
 
 _ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision"}
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
+                "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
                 "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common"}
 
 
@@ -512,6 +547,22 @@ def _video(db: Session, name: str, args: Input, user: User) -> dict:
         return chain.generate_image(db, user, p, args.prompt, args.label)
     if name == "generate_video_voiceover":
         return chain.voiceover(db, user, p, u)
+    if name in {"get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}:
+        from . import product_video
+
+        if name == "get_shot_video_prompt":
+            return product_video.shot_prompt(db, user, p, u, args.shot_id)
+        if name == "generate_shot_image":
+            return product_video.generate_shot_image(db, user, p, u, args.shot_id, args.prompt, args.extra_reference_revision_id, args.as_first_frame)
+        if name == "set_shot_first_frame":
+            return product_video.set_shot_first_frame(db, user, p, u, args.shot_id, args.material_revision_id)
+        if name == "set_shot_video_mode":
+            return product_video.set_shot_mode(db, user, p, u, args.shot_id, args.mode)
+        if name == "generate_shot_video":
+            return product_video.start_shot_video(db, user, p, u, args.shot_id)
+        if name == "get_shot_video":
+            return product_video.get_shot_video(db, user, p, u, args.shot_id)
+        return product_video.save_publish_copy(db, user, p, u, args.model_dump(exclude={"project_id", "unit_id"}))
     if name == "file_as_common":
         return chain.file_as_common(db, user, p, u, args.material_revision_id)
     return chain.prepare_edit(db, user, p, u, args.phase, args.ae_shot_ids, args.alpha_shot_ids, args.notes)

@@ -547,7 +547,7 @@ def plan(db, *, capability, selected_profile, parameters=None, explicit_plugin=N
     if "aspect_ratio" in params:
         from .media_dimensions import canonical_aspect_ratio
 
-        if capability != "image_generation":
+        if capability not in {"image_generation", "video_generation"}:
             raise HTTPException(422, "plan_aspect_ratio_unsupported")
         try:
             params["aspect_ratio"] = canonical_aspect_ratio(params["aspect_ratio"])
@@ -606,6 +606,13 @@ def plan(db, *, capability, selected_profile, parameters=None, explicit_plugin=N
         if (capability == "image_generation" and "aspect_ratio" in params
                 and "aspect_ratio" not in _multimedia_controls(binding, capability)["supported_fields"]):
             result["reason"] = "multimedia_parameters_unsupported"
+            return False
+        # Only MiniMax video takes a first / last frame and a frame shape; other video routes stay text-only.
+        if capability == "video_generation" and (refs or "aspect_ratio" in params) and binding["adapter_key"] != "minimax.cli":
+            result["reason"] = "multimedia_reference_images_unsupported"
+            return False
+        if capability == "video_generation" and len(refs) > 2:
+            result["reason"] = "multimedia_reference_images_unsupported"
             return False
         if capability == "image_generation" and binding["adapter_key"] == "minimax.cli" and refs:
             result["reason"] = "multimedia_reference_images_unsupported"

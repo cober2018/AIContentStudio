@@ -78,6 +78,88 @@ def _script(document: dict) -> str:
     return "\n".join(lines)
 
 
+def _role_lines(document: dict) -> list[tuple[str, str]]:
+    """Lines with the role that says them, only when a shot names a speaking role (drama-type product scripts)."""
+    blocks = {block["id"]: block.get("text", "") for block in document["script"]["blocks"]}
+    lines, seen, roles = [], set(), False
+    for shot in sorted(document["shots"], key=lambda item: item["order"]):
+        block = shot.get("script_block_id")
+        role = ((shot.get("board") or {}).get("character") or "narrator").strip()
+        roles = roles or role != "narrator"
+        if block and block not in seen and blocks.get(block, "").strip():
+            seen.add(block)
+            lines.append((role, blocks[block].strip()))
+    return lines if roles else []
+
+
+def _role_voices(db: Session, roles: list[str], narrator_voice: str) -> dict:
+    """Each role gets its own fixed voice: ids starting with female / male draw from that gender's voices in order."""
+    from .model_capability_routing import configuration_view
+
+    catalog = sorted(item["voice_id"] for item in configuration_view(db).get("voice_catalog") or []
+                     if item.get("provider_key") == "minimax.cli" and item.get("verified"))
+    pools = {gender: [voice for voice in catalog if voice.startswith(f"{gender}-") and voice != narrator_voice] for gender in ("female", "male")}
+    used: dict[str, int] = {"female": 0, "male": 0}
+    voices = {"narrator": narrator_voice}
+    for role in dict.fromkeys(roles):
+        if role in voices:
+            continue
+        gender = "female" if role.startswith("female") else "male" if role.startswith("male") else ("female" if len(voices) % 2 else "male")
+        pool = pools[gender] or pools["female"] + pools["male"]
+        if not pool:
+            raise HTTPException(409, {"code": "voiceover_role_voices_missing", "message": "音色库里没有可分给角色的声音，先在设置里刷新音色"})
+        voices[role] = pool[used[gender] % len(pool)]
+        used[gender] += 1
+    return voices
+
+
+def _stamp(ms: int) -> str:
+    return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+
+
+def _synthesize_roles(db: Session, user: User, project_id: int, unit, lines: list[tuple[str, str]], script_hash: str, config: dict, master_id: int):
+    from .content_harness.registry import RegistryError, registry
+    from .materials import create_material, create_revision
+
+    try:
+        provider = registry.resolve("tts_provider", "minimax.cli", "1")
+    except RegistryError:
+        raise HTTPException(503, {"code": "voiceover_provider_unavailable", "message": "MiniMax 配音没启用"}) from None
+    pieces, cues, offset = [], [], 0
+    with tempfile.TemporaryDirectory(prefix="aics-roles-") as folder:
+        for index, (role, line) in enumerate(lines):
+            result = provider.generate({"prompt": line, "model_id": config["model_id"], "timeout_seconds": 300,
+                                        "parameters": {**_parameters(config), "voice_id": config["roles"][role]}})
+            if result.status != "succeeded" or not result.content:
+                raise HTTPException(502, {"code": "voiceover_failed", "message": f"第 {index + 1} 句（{role}）没返回配音，请稍后再试"})
+            path = Path(folder) / f"{index:03d}.{'mp3' if result.mime_type == 'audio/mpeg' else 'wav'}"
+            path.write_bytes(result.content)
+            length = _duration_ms(result.content, path.suffix) or 0
+            pieces.append(path)
+            cues.append(f"{index + 1}\n{_stamp(offset)} --> {_stamp(offset + length)}\n{line}\n")
+            offset += length
+        listing = Path(folder) / "list.txt"
+        listing.write_text("".join(f"file '{piece}'\n" for piece in pieces), encoding="utf-8")
+        joined = Path(folder) / "voice.mp3"
+        done = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing),
+                               "-c:a", "libmp3lame", "-b:a", "128k", str(joined)], capture_output=True, timeout=300)
+        if done.returncode != 0:
+            raise HTTPException(502, {"code": "voiceover_join_failed", "message": "多角色配音拼接失败"})
+        content = joined.read_bytes()
+    material = create_material(db, kind="audio", title=f"配音（多角色）· {unit.title}"[:200], tags=["配音"], created_by=user.email)
+    revision = create_revision(
+        db, material, content=content, suffix=".mp3", declared_mime="audio/mpeg", source_kind="ai_generated",
+        provider_key="minimax.cli", provider_version=config["model_id"], prompt_text="\n".join(line for _, line in lines)[:4000],
+        rights_status="cleared", public_use_allowed=True, model_use_allowed=True, attribution_text="MiniMax 配音",
+        duration_ms=_duration_ms(content, ".mp3"),
+        metadata={"subtitles_srt": "\n".join(cues), "script_hash": script_hash, "voice_settings": config, "source_master_revision_id": master_id},
+        created_by=user.email)
+    db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="system_reference", status="active",
+                                    attached_by=user.email, note="一键配音（多角色）"))
+    db.commit()
+    return revision
+
+
 def _duration_ms(content: bytes, suffix: str) -> int | None:
     with tempfile.NamedTemporaryFile(suffix=suffix) as handle:
         handle.write(content)
@@ -103,10 +185,14 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     if not text:
         raise HTTPException(409, {"code": "voiceover_script_empty", "message": "分镜表的台词列是空的"})
     config = settings()
-    script_hash = hashlib.sha256(text.encode()).hexdigest()
+    lines = _role_lines(document)
+    if lines:
+        config = {**config, "roles": _role_voices(db, [role for role, _ in lines], config["voice_id"])}
+    script_hash = hashlib.sha256((text + repr(lines)).encode()).hexdigest()
     revision = _reuse(db, project_id, script_hash, config)
     if revision is None:
-        revision = _synthesize(db, user, project_id, unit, text, script_hash, config, master.id)
+        revision = (_synthesize_roles(db, user, project_id, unit, lines, script_hash, config, master.id) if lines
+                    else _synthesize(db, user, project_id, unit, text, script_hash, config, master.id))
     from .project_folders import store_new
 
     store_new(db, revision, project_id, "音频")

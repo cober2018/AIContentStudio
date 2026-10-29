@@ -127,6 +127,7 @@ class ProductContext(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=300)
     category: str = Field(default="", max_length=300)
+    category_key: str = Field(default="", max_length=60, pattern=r"^$|^[a-z0-9][a-z0-9-]{0,59}$")
     style_ref: ProductStyleRef | None = None
     production_stages: dict | None = None
     variant: str = Field(default="", max_length=1000)
