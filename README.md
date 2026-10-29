@@ -1,4 +1,4 @@
-2026-10-29 **产品文档只留本地**：根目录的产品战略、PRD、开发 OpenSpec、前端契约、原型和总过程记录（task_plan / progress / findings / HANDOVER）移到 `openspec/docs/`，与本地成果目录 `output/` 一样加入 .gitignore，不再上传；文件仍在本机。
+2026-10-29 **产品文档只留本地**：根目录的产品战略、PRD、开发 OpenSpec、前端契约、原型和总过程记录（task_plan / progress / findings / HANDOVER）移到 `openspec/docs/`；原 `docs/` 移到 `openspec/docs/项目文档/`，openspec 根目录的需求包移到 `openspec/docs/需求包/`；公开仓库历史中已一并清除，与本地成果目录 `output/` 一样加入 .gitignore，不再上传；文件仍在本机。
 
 2026-10-29 **商品工作台 AE 模板（已本地实施）**：新增 15 个商品模板（亮相、卖点、参数与对比、价格与优惠、材质与成分、使用方法、信任背书、下单引导），竖屏 9:16 和横屏 16:9 两版，播放安全区零越界，用户看审片视频验收后入库为 ready；另复用 `callout-label`（卖点标注）、`magnifier`（成分特写），共 17 项写进 craft-ae 模板库「商品」分组，商品分镜的 AE 包装指向这里。价格、评价、证书、参数只填真实资料，商品图不变形。设置页「AE 模板库」可按商品分类看预览视频。审片页 `output/_平台/模板审片/商品/index.html`。[需求入口](openspec/changes/archive/2026-10-29-product-ae-templates/README.md)。
 
@@ -149,55 +149,55 @@
 
 # AI Content Studio（AI 内容生产中心）
 
-2026-10-09网页可达性恢复：5173原无监听，现已沿用原npm/Vite入口启动，仅`127.0.0.1:5173`；主页/前端入口HTTP200，`/api`代理ready=true，API/Worker未重启。Web仍是前台运行方式，不是登录自启；日常命令和停止方式见[本机运行手册](docs/runbooks/production-readiness.md)。无业务代码、数据库/素材、运行配置、依赖或迁移变更；未调用模型或新增部署体系。浏览器可视化未由此次HTTP检查替代。
+2026-10-09网页可达性恢复：5173原无监听，现已沿用原npm/Vite入口启动，仅`127.0.0.1:5173`；主页/前端入口HTTP200，`/api`代理ready=true，API/Worker未重启。Web仍是前台运行方式，不是登录自启；日常命令和停止方式见[本机运行手册](openspec/docs/项目文档/runbooks/production-readiness.md)。无业务代码、数据库/素材、运行配置、依赖或迁移变更；未调用模型或新增部署体系。浏览器可视化未由此次HTTP检查替代。
 
 当前执行口径：WeWrite Skill安装/测试不纳入本轮，不阻塞使用；不再重复跑它或完整回归。`add-persona-creative-studio`功能实施项已完成，剩5项为人工质量/独立复核及另行授权生命周期；不把“暂缓验收”记成“已通过”。两角色文字、图文、音频与配置入口沿用当前版本，公众号适配器和运行配置不因此改动。
 
-集中验收入口：[两个角色的文字、六张图卡、两段完整音频与安全回执](/Users/mshengran/Project/AIContentStudio/backups/persona-review-20261009.O02VLb/README.md)。已保存原件精确副本；最新隔离后端2528 passed/12 skipped、Web/FE-P1与Ruff通过（旧插件测试的临时Skill元数据前提见[回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)）。不再调用模型；人工试听/全模态质量、独立复核与单独授权生命周期仍待，151/156不变。此目录被Git忽略，应纳入本机备份；依赖、正式数据与现有启动方式不变。
+集中验收入口：[两个角色的文字、六张图卡、两段完整音频与安全回执](/Users/mshengran/Project/AIContentStudio/backups/persona-review-20261009.O02VLb/README.md)。已保存原件精确副本；最新隔离后端2528 passed/12 skipped、Web/FE-P1与Ruff通过（旧插件测试的临时Skill元数据前提见[回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)）。不再调用模型；人工试听/全模态质量、独立复核与单独授权生命周期仍待，151/156不变。此目录被Git忽略，应纳入本机备份；依赖、正式数据与现有启动方式不变。
 
-2026-10-09 **当前151/156、5开放；两个角色完整真实音频均已走通**。用户恢复Gemini出口后，新隔离生活Run9完成口语/声音规划→MiniMax→246.535秒WAV→受限素材接受→QC pass/零问题；20.4关闭。CPA2/MiniMax1、串行/间隔≥10秒/应用零重试，旧Unknown不重发。正式5,170行/70素材/配置保持，服务继续启用；只剩人听/全模态rubric、独立质量及单独授权生命周期，不冒称整体关单。目录/依赖/启动不变。[真实产物与回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点。
+2026-10-09 **当前151/156、5开放；两个角色完整真实音频均已走通**。用户恢复Gemini出口后，新隔离生活Run9完成口语/声音规划→MiniMax→246.535秒WAV→受限素材接受→QC pass/零问题；20.4关闭。CPA2/MiniMax1、串行/间隔≥10秒/应用零重试，旧Unknown不重发。正式5,170行/70素材/配置保持，服务继续启用；只剩人听/全模态rubric、独立质量及单独授权生命周期，不冒称整体关单。目录/依赖/启动不变。[真实产物与回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点。
 
-2026-10-09 **完整Audio仍受外部出口阻断，自动试验停止**：第三轮live路由/CPA配置仍一致，两个旧Unknown与停止的验收服务保留；无活生成句柄、新模型调用或VPN修改。149/156、7开放及360秒配置保持，不冒称全部完成；新版API/Web/Worker继续启用、不回滚正式库。待CPA专用出站修复/新有界批次方向确认或外部状态变化后恢复。目录、依赖与启动不变，[完整证据](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+2026-10-09 **完整Audio仍受外部出口阻断，自动试验停止**：第三轮live路由/CPA配置仍一致，两个旧Unknown与停止的验收服务保留；无活生成句柄、新模型调用或VPN修改。149/156、7开放及360秒配置保持，不冒称全部完成；新版API/Web/Worker继续启用、不回滚正式库。待CPA专用出站修复/新有界批次方向确认或外部状态变化后恢复。目录、依赖与启动不变，[完整证据](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
 
-2026-10-09 **失败代理出口已只读确权**：live Clash选择HTTP-72.245.152.14，Google连接日志明确记录该peer reset；磁盘Google规则不等于live生效，日本节点只有旧health记录。未切换全局代理/改VPN、未调用模型，149/156及360秒设置保持；下一步是CPA专用出站路线修复的范围选择，不是再测同一Unknown。目录/依赖/启动不变，[当前证据](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+2026-10-09 **失败代理出口已只读确权**：live Clash选择HTTP-72.245.152.14，Google连接日志明确记录该peer reset；磁盘Google规则不等于live生效，日本节点只有旧health记录。未切换全局代理/改VPN、未调用模型，149/156及360秒设置保持；下一步是CPA专用出站路线修复的范围选择，不是再测同一Unknown。目录/依赖/启动不变，[当前证据](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
 
-2026-10-09 **音频阻断已定位到CPA→Google出口**：原两失败窗口的网关请求最终500/上游EOF，一次无认证、零重试连通性检查也在TLS握手失败；不是360秒音频上限或120秒等待错误，MiniMax未进入。仅安全日志诊断，旧Unknown/正式配置/服务/VPN不改，无新模型调用；149/156、7项仍开放。目录、依赖与启动方式不变，[证据及限制](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)已记录。
+2026-10-09 **音频阻断已定位到CPA→Google出口**：原两失败窗口的网关请求最终500/上游EOF，一次无认证、零重试连通性检查也在TLS握手失败；不是360秒音频上限或120秒等待错误，MiniMax未进入。仅安全日志诊断，旧Unknown/正式配置/服务/VPN不改，无新模型调用；149/156、7项仍开放。目录、依赖与启动方式不变，[证据及限制](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)已记录。
 
-2026-10-09 **生活图文真实成品链已补齐**：实物审计发现旧功能副本封面为测试色块；新独立副本复用已有MiniMax真实图，三个1080×1440 PNG→显式接受→Master15→渲染/结构/权利检查通过。原记录保留、零模型调用/正式写入，文字hash与既有批准一致；固定视觉自评及Mock语义警告如实记录，仍149/156，完整Audio/全模态人审与独立质量未关闭。目录、依赖和启动方式不变。[产物和回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+2026-10-09 **生活图文真实成品链已补齐**：实物审计发现旧功能副本封面为测试色块；新独立副本复用已有MiniMax真实图，三个1080×1440 PNG→显式接受→Master15→渲染/结构/权利检查通过。原记录保留、零模型调用/正式写入，文字hash与既有批准一致；固定视觉自评及Mock语义警告如实记录，仍149/156，完整Audio/全模态人审与独立质量未关闭。目录、依赖和启动方式不变。[产物和回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
 
-2026-10-09 **360秒音频配置再次只读确认**：运行中正式API返回routing revision9、TTS成品上限360秒、接口等待上限120秒、273音色；新内置Audio模板为360秒，历史Workflow/Run不回填。本次核验未调用模型、改配置或重发任务。目录、依赖和启动方式不变，整体仍149/156；音频成品/人工听感不由时长配置代替。[完整回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+2026-10-09 **360秒音频配置再次只读确认**：运行中正式API返回routing revision9、TTS成品上限360秒、接口等待上限120秒、273音色；新内置Audio模板为360秒，历史Workflow/Run不回填。本次核验未调用模型、改配置或重发任务。目录、依赖和启动方式不变，整体仍149/156；音频成品/人工听感不由时长配置代替。[完整回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
 
-2026-10-09 **多媒体持久覆盖已补齐，当前149/156、7开放**：只在两个既有测试文件新增33用例，覆盖图片1–4候选、精确选择入库/历史候选保全/不改Master、音色scope/目录刷新/CAS失效及签名/字节完整性。集中离线236passed/1既有warning（5.29秒），两项保护旁路验证按预期失败，Ruff/strict38/38/diff通过。正式360秒配置保留，未调用模型、重发Unknown、改正式数据/服务或做归档提交。完整Audio、人审和独立质量仍待。目录、依赖、启动方式不变；[完整回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点。
+2026-10-09 **多媒体持久覆盖已补齐，当前149/156、7开放**：只在两个既有测试文件新增33用例，覆盖图片1–4候选、精确选择入库/历史候选保全/不改Master、音色scope/目录刷新/CAS失效及签名/字节完整性。集中离线236passed/1既有warning（5.29秒），两项保护旁路验证按预期失败，Ruff/strict38/38/diff通过。正式360秒配置保留，未调用模型、重发Unknown、改正式数据/服务或做归档提交。完整Audio、人审和独立质量仍待。目录、依赖、启动方式不变；[完整回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点。
 
-2026-10-09 **音频上限已按用户要求设置360秒**：正式routing revision8→9，仅改TTS成品时长上限；120秒接口等待、273音色及其他完整模型配置保全。新内置Audio Recipe模板同步360秒，旧Workflow/Run不改；104项Audio回归、Ruff及正式两角色模板checksum回读通过，API已加载，Worker不变。新完整Audio批首个CPA口语改编无响应/Unknown，已停止，实际CPA1次、MiniMax0次；未重发，完整Audio和人听不冒称通过。当前148/156、8开放。目录、依赖与现有启动方式不变，备份和证据见[回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下文为历史检查点。
+2026-10-09 **音频上限已按用户要求设置360秒**：正式routing revision8→9，仅改TTS成品时长上限；120秒接口等待、273音色及其他完整模型配置保全。新内置Audio Recipe模板同步360秒，旧Workflow/Run不改；104项Audio回归、Ruff及正式两角色模板checksum回读通过，API已加载，Worker不变。新完整Audio批首个CPA口语改编无响应/Unknown，已停止，实际CPA1次、MiniMax0次；未重发，完整Audio和人听不冒称通过。当前148/156、8开放。目录、依赖与现有启动方式不变，备份和证据见[回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下文为历史检查点。
 
-2026-10-09 **已授权 MiniMax 真实音色样本，部分通过**：生活指定 `chunzhen_xuedi`/`speech-2.8-hd` 的 3.62 秒真实 WAV 已接受为正式 MaterialRevision 7，并通过字节/hash、签名 voice/rate、当前绑定及 Audio QC；科技样本首发 422、现为 Unknown，不重发。两条均仅实际合成一次，无 CPA/公开发布/自动改 Master。完整 Audio Recipe 和人听仍待验收，当前 **148/156，8 项开放**。本轮持久覆盖审计确认 Audio 回执用例已有，图片 batch/候选选择与音色目录回归仍缺，不用旧总数虚关 13.6；目录/依赖/启动不变。[真实回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)记录正确素材根、配套备份、旧行保全及覆盖缺口。下面是历史检查点。
+2026-10-09 **已授权 MiniMax 真实音色样本，部分通过**：生活指定 `chunzhen_xuedi`/`speech-2.8-hd` 的 3.62 秒真实 WAV 已接受为正式 MaterialRevision 7，并通过字节/hash、签名 voice/rate、当前绑定及 Audio QC；科技样本首发 422、现为 Unknown，不重发。两条均仅实际合成一次，无 CPA/公开发布/自动改 Master。完整 Audio Recipe 和人听仍待验收，当前 **148/156，8 项开放**。本轮持久覆盖审计确认 Audio 回执用例已有，图片 batch/候选选择与音色目录回归仍缺，不用旧总数虚关 13.6；目录/依赖/启动不变。[真实回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)记录正确素材根、配套备份、旧行保全及覆盖缺口。下面是历史检查点。
 
 2026-10-09 **MiniMax 多候选图片配置已补齐**：正式模型路由 revision 8 将 `image_generation.max_items` 从 1 调整为 4；image/TTS/ASR 的本地执行计划均可解析。这里只完成配置与只读能力核验，没有调用供应商、自动选音色或写入素材。当前 OpenSpec 记账 **148/156，8 项开放**；真实音频质量、人审、持久覆盖和生命周期仍按任务清单独立验收。
 
 集中离线冒烟已通过：Persona/Graphic/Audio/Stage/model routing 既有回归 **570 passed / 1 existing warning**；使用 Mock/隔离 SQLite，不代表真实 TTS 或人工质量验收。
 
-2026-10-09 **图文功能链已隔离收口，音频合同烟测通过**：科技 Persona 与生活 Persona 均完成精确素材引用、确定性排版、三张真实 PNG、产品接受、append-only Graphic Master、render attestation 和当前结构/平台/render 检查；Audio/Stage 回归本轮211项通过、8个既有warning，正常页面隔离链覆盖两种 Persona，但使用合成音调夹具。此处只代表功能链通过；真实 TTS、人审质量与生命周期仍未完成。当前 OpenSpec 记账 **148/156，8 项开放**；正式 SQLite/素材/配置未被隔离验收改动。详见[图文音频验收回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+2026-10-09 **图文功能链已隔离收口，音频合同烟测通过**：科技 Persona 与生活 Persona 均完成精确素材引用、确定性排版、三张真实 PNG、产品接受、append-only Graphic Master、render attestation 和当前结构/平台/render 检查；Audio/Stage 回归本轮211项通过、8个既有warning，正常页面隔离链覆盖两种 Persona，但使用合成音调夹具。此处只代表功能链通过；真实 TTS、人审质量与生命周期仍未完成。当前 OpenSpec 记账 **148/156，8 项开放**；正式 SQLite/素材/配置未被隔离验收改动。详见[图文音频验收回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
 
-2026-10-09 **使用配置已授权补齐并即时生效**：正式routing revision5→7；chat为8192输出tokens、最多3候选、120秒等待，MiniMax音色目录一次同步273项。两个角色文字配置均ready，实际页面音色搜索可用；未自动选声或生成内容。API/Key/默认Gemini、旧媒体限额、5,162条其他数据库行、67素材文件及runtime.env保持不变。配置回执本身不等于全部质量验收；当前总进度以顶部148/156为准。详见[启用与配置回执](docs/PERSONA_CREATIVE_FRAMEWORK_HANDOFF_2026-10-08.md)。以下均为历史检查点。
+2026-10-09 **使用配置已授权补齐并即时生效**：正式routing revision5→7；chat为8192输出tokens、最多3候选、120秒等待，MiniMax音色目录一次同步273项。两个角色文字配置均ready，实际页面音色搜索可用；未自动选声或生成内容。API/Key/默认Gemini、旧媒体限额、5,162条其他数据库行、67素材文件及runtime.env保持不变。配置回执本身不等于全部质量验收；当前总进度以顶部148/156为准。详见[启用与配置回执](openspec/docs/项目文档/PERSONA_CREATIVE_FRAMEWORK_HANDOFF_2026-10-08.md)。以下均为历史检查点。
 
-2026-10-09 **本机初始化已完成，146/156，10项开放**：配套SQLite/素材备份后刷新原API/Worker，正式新增科技Persona2、生活Persona3及各自3个默认Workflow，重复初始化无覆盖。5,147旧行、67素材文件/运行配置hash不变，schema仍crs000000001；[角色与配置页](http://127.0.0.1:5173/identities)和生产/媒体入口实际可见，API ready=true。**尚需补使用配置**：正式chat调用限额缺失、Audio未选voice ID；image1张/TTS10秒等原限额未扩，不能把页面可用当成全部生成已就绪。未调用模型、迁移、归档提交推送或追加全量/审美验收。目录/依赖/启动方式不变，详见[启用与备份回执](docs/PERSONA_CREATIVE_FRAMEWORK_HANDOFF_2026-10-08.md)及[进度](openspec/changes/add-persona-creative-studio/progress.md)。以下均为历史检查点。
+2026-10-09 **本机初始化已完成，146/156，10项开放**：配套SQLite/素材备份后刷新原API/Worker，正式新增科技Persona2、生活Persona3及各自3个默认Workflow，重复初始化无覆盖。5,147旧行、67素材文件/运行配置hash不变，schema仍crs000000001；[角色与配置页](http://127.0.0.1:5173/identities)和生产/媒体入口实际可见，API ready=true。**尚需补使用配置**：正式chat调用限额缺失、Audio未选voice ID；image1张/TTS10秒等原限额未扩，不能把页面可用当成全部生成已就绪。未调用模型、迁移、归档提交推送或追加全量/审美验收。目录/依赖/启动方式不变，详见[启用与备份回执](openspec/docs/项目文档/PERSONA_CREATIVE_FRAMEWORK_HANDOFF_2026-10-08.md)及[进度](openspec/changes/add-persona-creative-studio/progress.md)。以下均为历史检查点。
 
-当前 **144/156，剩12项**。生活混合卡片方向已明确并落地：暖杂志封面带精确图片、正文可纯文字；Preview、排版和结构QC统一。既有生活计划已生成三张真实1080×1440 PNG预览，未自动接受成品或修改正式库。离线校验及新鲜全量回归 **2495通过/12跳过/80既有警告，142.91秒、exit0**；Ruff/strict38/38/diff通过，Web未改/未重跑。未追加模型调用、依赖/迁移、永久测试或生命周期操作，目录/启动方式不变。[预览与完整验收边界](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点，未答复方向/blocked文案不再代表本项当前状态。
+当前 **144/156，剩12项**。生活混合卡片方向已明确并落地：暖杂志封面带精确图片、正文可纯文字；Preview、排版和结构QC统一。既有生活计划已生成三张真实1080×1440 PNG预览，未自动接受成品或修改正式库。离线校验及新鲜全量回归 **2495通过/12跳过/80既有警告，142.91秒、exit0**；Ruff/strict38/38/diff通过，Web未改/未重跑。未追加模型调用、依赖/迁移、永久测试或生命周期操作，目录/启动方式不变。[预览与完整验收边界](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点，未答复方向/blocked文案不再代表本项当前状态。
 
-当前 **144/156，剩12项**。已批准的新120秒图文批次实际CPA3/3、MiniMax2/2全部返回；两个JPEG和科技默认流程的三张1080×1440中文字卡已生成。科技链路已到隔离Master/真实renderer，但素材接受、context/evidence、完整GraphicQC与人工质量未完；生活规划因自动续行占用额度尚未完成，不追加调用或虚关19.3/20.3。本轮只改验收脚本/回执，无业务源文件、音频、正式SQLite/素材/配置/服务、依赖/迁移或生命周期变化；目录和启动方式不变。[真实产物与限制](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下均为前序检查点。
+当前 **144/156，剩12项**。已批准的新120秒图文批次实际CPA3/3、MiniMax2/2全部返回；两个JPEG和科技默认流程的三张1080×1440中文字卡已生成。科技链路已到隔离Master/真实renderer，但素材接受、context/evidence、完整GraphicQC与人工质量未完；生活规划因自动续行占用额度尚未完成，不追加调用或虚关19.3/20.3。本轮只改验收脚本/回执，无业务源文件、音频、正式SQLite/素材/配置/服务、依赖/迁移或生命周期变化；目录和启动方式不变。[真实产物与限制](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下均为前序检查点。
 
-当前 **144/156，剩12项**。图片/TTS已精确消费冻结等待参数；进一步修正普通Audio v4 Stage的独立25秒上限，使合同与服务统一为既有1–300秒，默认25秒不变，正式120秒策略仍优先阻断超限请求。最新21项临时离线冒烟、六组已有回归 **475 passed/8 warnings（15.20s、exit0）**、app Ruff、strict38/38、diff通过。前序全量2495passed与Web build保留为历史证据，本次未重跑。未调用模型、写正式库/配置、重启服务、新增永久测试或归档提交；真实图文/音频、13.6、正式初始化及生命周期仍待。目录/依赖/启动不变。[当前回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+当前 **144/156，剩12项**。图片/TTS已精确消费冻结等待参数；进一步修正普通Audio v4 Stage的独立25秒上限，使合同与服务统一为既有1–300秒，默认25秒不变，正式120秒策略仍优先阻断超限请求。最新21项临时离线冒烟、六组已有回归 **475 passed/8 warnings（15.20s、exit0）**、app Ruff、strict38/38、diff通过。前序全量2495passed与Web build保留为历史证据，本次未重跑。未调用模型、写正式库/配置、重启服务、新增永久测试或归档提交；真实图文/音频、13.6、正式初始化及生命周期仍待。目录/依赖/启动不变。[当前回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
 
 以下是前序批次记录；“仅验收脚本25秒”由上面的产品执行层诊断补充纠正。
 
-当前 **144/156，剩12项**。新授权图文批次实际调用CPA 1/4、MiniMax 2/2：科技视觉规划和一张1152×864 JPEG返回，生活图片在本批25秒等待上限后为Unknown，无原任务句柄；后续调用已停止，不重发。完整默认图文/人审未通过，剩余CPA额度不因存在而继续派发。正式SQLite/素材/模型配置/服务及依赖、启动方式不变；详见[本批回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下面等待授权及门禁记录均为前序历史。
+当前 **144/156，剩12项**。新授权图文批次实际调用CPA 1/4、MiniMax 2/2：科技视觉规划和一张1152×864 JPEG返回，生活图片在本批25秒等待上限后为Unknown，无原任务句柄；后续调用已停止，不重发。完整默认图文/人审未通过，剩余CPA额度不因存在而继续派发。正式SQLite/素材/模型配置/服务及依赖、启动方式不变；详见[本批回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下面等待授权及门禁记录均为前序历史。
 
 本轮最新集中门禁：**2495 passed /12 skipped /80 warnings**，134.01秒、exit0；显式已有本机renderer后原16项条件跳过实际运行，无新增测试。当前Web TypeScript/Vite/FE-P1、app Ruff、strict38/38和diff通过；手动生图面板仍在五个日常入口初始静态图之外。进度保持144/156，真实图文/音频验收、13.6、初始化及生命周期不因绿灯关闭；四次MiniMax预算不重置，不重复Provider请求或同一批门禁。正式目录、依赖、启动与服务不变，详见下面同一回执的最新集中门禁节。
 
-2026-10-08 **当前144/156，剩12项**。后续多平台规格已统一真实`stage.variant.adapt@1`及未来持久覆盖计划，仅关闭Persona前置0.3/0.4，不启动多平台业务、不解除当前新测试写入限制。现有composer＋本机headless renderer实际生成两张1080×1440中文PNG，视觉检查无明显溢出；已有图文/渲染/API回归223passed/1warning、strict38/38、diff通过。手工卡片计划不冒称默认Persona完整图文验收；四次MiniMax调用预算耗尽，无新模型调用、正式数据/配置/服务或依赖/迁移变化。真实图文/音频、人工rubric、持久覆盖13.6、正式初始化及生命周期仍待；目录和启动方式不变。[当前回执与产物](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下142/156等均为历史检查点。
+2026-10-08 **当前144/156，剩12项**。后续多平台规格已统一真实`stage.variant.adapt@1`及未来持久覆盖计划，仅关闭Persona前置0.3/0.4，不启动多平台业务、不解除当前新测试写入限制。现有composer＋本机headless renderer实际生成两张1080×1440中文PNG，视觉检查无明显溢出；已有图文/渲染/API回归223passed/1warning、strict38/38、diff通过。手工卡片计划不冒称默认Persona完整图文验收；四次MiniMax调用预算耗尽，无新模型调用、正式数据/配置/服务或依赖/迁移变化。真实图文/音频、人工rubric、持久覆盖13.6、正式初始化及生命周期仍待；目录和启动方式不变。[当前回执与产物](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下142/156等均为历史检查点。
 
-2026-10-08 **已登记MiniMax真实生成批结束，当前142/156、剩14项**。隔离环境四次调用，返回两张JPEG和一份3.70秒WAV；科技图有乱码未通过成品检查，原科技音频超限保持Unknown且不重发。修复本机CLI帮助输出stderr导致音色参数误阻断，已有165项回归与Ruff通过。只关闭本批真实调用授权21.2，不把原始媒体样本当完整Persona图文/音频或人工质量验收；正式数据、配置和服务未改，无新增依赖/表/迁移/永久测试。图文确定性排版/真实PNG、音频Stage/QC与人听验收、正式初始化和生命周期仍待，启动方式不变。详见[有界真实调用回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下面141/156等为历史检查点。
+2026-10-08 **已登记MiniMax真实生成批结束，当前142/156、剩14项**。隔离环境四次调用，返回两张JPEG和一份3.70秒WAV；科技图有乱码未通过成品检查，原科技音频超限保持Unknown且不重发。修复本机CLI帮助输出stderr导致音色参数误阻断，已有165项回归与Ruff通过。只关闭本批真实调用授权21.2，不把原始媒体样本当完整Persona图文/音频或人工质量验收；正式数据、配置和服务未改，无新增依赖/表/迁移/永久测试。图文确定性排版/真实PNG、音频Stage/QC与人听验收、正式初始化和生命周期仍待，启动方式不变。详见[有界真实调用回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。下面141/156等为历史检查点。
 
 2026-10-08 **CPA图片协议与ChatGPT手动生图已实施，当前141/156、剩15项**。CPA图片仅引用已登记的 `openai.compatible` provider/model/profile 与 image binding，使用 `cpa.images.b64.v1`、1–4个候选、严格字节校验和现有MaterialRevision接受链；未知网络结果不自动重试，不探测端点，不偷偷换Provider。ChatGPT仍是提示词复制→用户自行生成/下载→拖入或选择→明确接受入库，不读取Cookie、不调用ChatGPT或自动改Master。零新依赖/表/迁移、未改正式配置/素材库/服务；本轮为合成协议/一次性SQLite烟测，未宣称真实CPA图片质量。真实Graphic/Audio验收、初始化/持久覆盖/生命周期仍待完成，未提交归档推送。详细[实施回执](openspec/changes/add-persona-creative-studio/progress.md)。
 
@@ -213,13 +213,13 @@
 
 2026-10-08 **图片＋音频配置批已实施，Persona OpenSpec 139/154，剩15项**。图片支持 MiniMax 原生1–4候选、逐张校验预览、明确选一后入库；音色支持本地目录搜索/语言/收藏、克隆Voice ID登记、已有素材试听以及Persona/Account/Series精确绑定。普通/高级设置只发送适配器声明支持的参数，配置失效时停止、不换模型。新增共享组件 `apps/web/src/product/VoicePresetPicker.tsx`，没有新依赖/表/迁移，正式启动方式不变。后端2479通过/28跳过、Web/FE-P1、Ruff、strict38/38和六项隔离页面冒烟通过；真实Provider调用0，未改正式库/配置/服务。新增持久回归13.6、真实Graphic/Audio质量、初始化及归档仍待完成；Gemini/Grok/ChatGPT网页生图不冒称已接入。[当前完整回执](openspec/changes/add-persona-creative-studio/progress.md)。以下133/147等为历史检查点。
 
-2026-10-08 当前133/147：科技文字样稿与生活文字编辑稿已获用户人工接受；生活编辑候选仍只作为隔离验收证据，不覆盖原Master/Candidate/ZIP，也不冒充新的模型直出。两个角色文字流程框架已串通；图文、音频真实成品验收与正式Persona初始化仍分开，后续在程序内继续调整。原流水线/ZIP/SQLite/回执和正式配置保留，零新增模型调用；[文字回执](docs/PERSONA_TEXT_FINAL_REVIEW_2026-10-08.md)记录样本边界。功能目录、依赖/启动不变，不提交归档推送。
+2026-10-08 当前133/147：科技文字样稿与生活文字编辑稿已获用户人工接受；生活编辑候选仍只作为隔离验收证据，不覆盖原Master/Candidate/ZIP，也不冒充新的模型直出。两个角色文字流程框架已串通；图文、音频真实成品验收与正式Persona初始化仍分开，后续在程序内继续调整。原流水线/ZIP/SQLite/回执和正式配置保留，零新增模型调用；[文字回执](openspec/docs/项目文档/PERSONA_TEXT_FINAL_REVIEW_2026-10-08.md)记录样本边界。功能目录、依赖/启动不变，不提交归档推送。
 
-2026-10-08 **两个角色真实文字流程已串通，当前133/147、剩14**。科技稿Master5（真实流程祖先＋明确编辑）、生活稿新Run4九阶段/三版Master均经当前checks→Candidate v4→Approval→本地ZIP；精确引用、冻结正文/ZIP/hash和SQLite回读通过。本批17/30次Gemini请求，实际并发1、启动最短间隔10.0008075秒，零应用重试/fallback/旧Unknown重发，正式库/配置/服务不变，自有验收API18337已停。仅关闭19.2/20.2，**人工稿件质量与独立最终复核仍待完成**，Graphic/Audio没有启动；[完整回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。目录、依赖和正式启动方式不变，无提交/归档/推送。下方131/147及“新检查缺失”是之前的检查点。
+2026-10-08 **两个角色真实文字流程已串通，当前133/147、剩14**。科技稿Master5（真实流程祖先＋明确编辑）、生活稿新Run4九阶段/三版Master均经当前checks→Candidate v4→Approval→本地ZIP；精确引用、冻结正文/ZIP/hash和SQLite回读通过。本批17/30次Gemini请求，实际并发1、启动最短间隔10.0008075秒，零应用重试/fallback/旧Unknown重发，正式库/配置/服务不变，自有验收API18337已停。仅关闭19.2/20.2，**人工稿件质量与独立最终复核仍待完成**，Graphic/Audio没有启动；[完整回执](openspec/docs/项目文档/PERSONA_TEXT_REAL_ACCEPTANCE.md)。目录、依赖和正式启动方式不变，无提交/归档/推送。下方131/147及“新检查缺失”是之前的检查点。
 
-2026-10-08 **科技编辑稿已接回新隔离Master4，整体仍131/147**。复用现有保存服务追加user_edit/parent3，七条精确证据引用与渲染正文一致，幂等/刷新/历史行保全通过；缺少新检查时冻结正确409阻断。原停止批次/Master/Candidate/ZIP不覆盖，不冒称双角色Text或全模态验收通过。[稿件](docs/PERSONA_TECH_TEXT_EDITORIAL_2026-10-07.md)与[回执](docs/PERSONA_TECH_TEXT_EDITORIAL_REVIEW_2026-10-07.md)保留；限定独立APPROVE_ISOLATED_ADOPTION、strict38/38/diff通过。零CPA/正式写入，现有产品目录、依赖和启动方式不变。
+2026-10-08 **科技编辑稿已接回新隔离Master4，整体仍131/147**。复用现有保存服务追加user_edit/parent3，七条精确证据引用与渲染正文一致，幂等/刷新/历史行保全通过；缺少新检查时冻结正确409阻断。原停止批次/Master/Candidate/ZIP不覆盖，不冒称双角色Text或全模态验收通过。[稿件](openspec/docs/项目文档/PERSONA_TECH_TEXT_EDITORIAL_2026-10-07.md)与[回执](openspec/docs/项目文档/PERSONA_TECH_TEXT_EDITORIAL_REVIEW_2026-10-07.md)保留；限定独立APPROVE_ISOLATED_ADOPTION、strict38/38/diff通过。零CPA/正式写入，现有产品目录、依赖和启动方式不变。
 
-2026-10-07 **验收批次调度参数已确认并离线落实：最多3在途、请求启动间隔至少10秒**。仅私有验收调度器，7项离线检查/Ruff通过、默认真实调用预算0；不是产品/CPA全局限流，未启动模型调用或改正式配置/库/运行方式。当前131/147，真实Text→Graphic→Audio仍分别验收；旧Unknown保持，完整[回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
+2026-10-07 **验收批次调度参数已确认并离线落实：最多3在途、请求启动间隔至少10秒**。仅私有验收调度器，7项离线检查/Ruff通过、默认真实调用预算0；不是产品/CPA全局限流，未启动模型调用或改正式配置/库/运行方式。当前131/147，真实Text→Graphic→Audio仍分别验收；旧Unknown保持，完整[回执](openspec/docs/项目文档/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
 
 ## 2026-10-07 真实Text质量→精修交接修正
 
@@ -235,13 +235,13 @@
 
 2026-10-07 **集中已有合同回归199通过，仍122/147、25开放**。当前任务/计划摘要已纠正旧121/26和95/52数字；历史全量/浏览器结果未冒充本次证据。8项永久测试与后来的“不新增测试代码”要求存在冲突，已提一个明确例外问题，答复前不写新测试。真实文字→图文→音频仍分别验收，199Mock/隔离SQLite回归不证明成品质量。目录、依赖/启动不变，本轮不访问CPA、不改正式库/服务或旧Unknown、不提交归档；见[当前精确进度](openspec/changes/add-persona-creative-studio/progress.md)。
 
-2026-10-07 **CPA总尝试上限已落实并热加载**。首次计入用户最多5次的限制；当前采用保守配置：无额外重试轮次、单轮最多2个凭据，普通失败最多2次生成尝试，即使401刷新补发也最多4次，不为了凑满5次继续调用。禁用stream bootstrap重试和credits兜底；15:58:28运行日志确认加载，PID700未重启，原配置已0600备份。其他配置、VPN、URL/Key、正式库及旧Unknown未改，本轮零模型调用；固定频率间隔没有新增，网络/真实质量不冒称修复。122/147保持，目录、依赖、启动方式不变，完整[回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。下方未修改CPA配置的说法属于实施前历史。
+2026-10-07 **CPA总尝试上限已落实并热加载**。首次计入用户最多5次的限制；当前采用保守配置：无额外重试轮次、单轮最多2个凭据，普通失败最多2次生成尝试，即使401刷新补发也最多4次，不为了凑满5次继续调用。禁用stream bootstrap重试和credits兜底；15:58:28运行日志确认加载，PID700未重启，原配置已0600备份。其他配置、VPN、URL/Key、正式库及旧Unknown未改，本轮零模型调用；固定频率间隔没有新增，网络/真实质量不冒称修复。122/147保持，目录、依赖、启动方式不变，完整[回执](openspec/docs/项目文档/PERSONA_TEXT_REAL_ACCEPTANCE.md)。下方未修改CPA配置的说法属于实施前历史。
 
-2026-10-07 **CPA初稿出站故障进一步定位，仍122/147、8/30调用**：原失败窗口Clash记录147条当前HTTP出口主动reset；CPA v8代理端口本身正确，不应盲改。日本既有节点Google探针通过，香港节点超时；当前出口也曾恢复HEAD404，但不等于稳定生成或已修复。未改VPN选择/配置/服务或重发Unknown；只让CPA的Google流量使用专用路由需先确认策略，其他软件出口保持。依赖/启动方式不变，完整[回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)，真实质量仍PARTIAL。
+2026-10-07 **CPA初稿出站故障进一步定位，仍122/147、8/30调用**：原失败窗口Clash记录147条当前HTTP出口主动reset；CPA v8代理端口本身正确，不应盲改。日本既有节点Google探针通过，香港节点超时；当前出口也曾恢复HEAD404，但不等于稳定生成或已修复。未改VPN选择/配置/服务或重发Unknown；只让CPA的Google流量使用专用路由需先确认策略，其他软件出口保持。依赖/启动方式不变，完整[回执](openspec/docs/项目文档/PERSONA_TEXT_REAL_ACCEPTANCE.md)，真实质量仍PARTIAL。
 
-2026-10-07 **真实默认Text新验收批次PARTIAL，仍122/147、剩25**。用户新授权最多30次文字调用，本批使用8次：科技/生活两角色研究→角度→大纲六个真实结果已逐项接受；各自默认三候选初稿均未收到可用响应，Attempt7/8保留Unknown，不重发、不换模型。前后CPA认证发现均200/32模型，不能据此宣布生成或质量通过；本批零Master/Candidate/交付，正式模型配置hash不变，自有临时API已停。依赖/正式启动/目录不变，无业务代码、新永久测试、Graphic/Audio、正式数据或生命周期操作。完整[本轮真实文字回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)；下方页面合同PASS不替代真实质量。
+2026-10-07 **真实默认Text新验收批次PARTIAL，仍122/147、剩25**。用户新授权最多30次文字调用，本批使用8次：科技/生活两角色研究→角度→大纲六个真实结果已逐项接受；各自默认三候选初稿均未收到可用响应，Attempt7/8保留Unknown，不重发、不换模型。前后CPA认证发现均200/32模型，不能据此宣布生成或质量通过；本批零Master/Candidate/交付，正式模型配置hash不变，自有临时API已停。依赖/正式启动/目录不变，无业务代码、新永久测试、Graphic/Audio、正式数据或生命周期操作。完整[本轮真实文字回执](openspec/docs/项目文档/PERSONA_TEXT_REAL_ACCEPTANCE.md)；下方页面合同PASS不替代真实质量。
 
-2026-10-07 **当前122/147，剩25：Video普通页面交接验收完成**。两角色从内置初始化→默认四阶段→脚本/镜头明确接受→Video Master→导演包明确接受/刷新，21检查点通过、零页面脚本错误；隔离库验证2Master/2Package、零外部执行/素材/候选，关闭19.5。Mock不证明创作质量，独立窄review无新结论；下方121/147与“没有页面验收”为前批历史。本批只更新证据和任务，不新增业务代码/永久测试/真实调用，不改正式库/配置/服务或启动依赖，不提交归档。见[集中回执](docs/PERSONA_NORMAL_PAGE_CONTRACT_ACCEPTANCE.md)。
+2026-10-07 **当前122/147，剩25：Video普通页面交接验收完成**。两角色从内置初始化→默认四阶段→脚本/镜头明确接受→Video Master→导演包明确接受/刷新，21检查点通过、零页面脚本错误；隔离库验证2Master/2Package、零外部执行/素材/候选，关闭19.5。Mock不证明创作质量，独立窄review无新结论；下方121/147与“没有页面验收”为前批历史。本批只更新证据和任务，不新增业务代码/永久测试/真实调用，不改正式库/配置/服务或启动依赖，不提交归档。见[集中回执](openspec/docs/项目文档/PERSONA_NORMAL_PAGE_CONTRACT_ACCEPTANCE.md)。
 
 2026-10-07 **Video导演包合同补验，仍121/147、剩26**：两个角色默认脚本→镜头→Video Master→Director包隔离API37点通过；修正9:16与[9,16]匹配误阻断，不改Master或派发外部执行。新鲜相关233测试、Ruff、strict38/38及diff-check通过；下方1968/full和Web属于6.4前批。独立窄review额度耗尽未返回结论，19.5不提前关闭；Mock不是真实质量，也没有新的Video普通页面验收。正式数据/配置/服务、目录/依赖/启动方式均不变，无永久新测试、真实调用或生命周期动作。见[精确回执](openspec/changes/add-persona-creative-studio/progress.md)。
 
@@ -249,12 +249,12 @@
 
 ## 10月7日前序记录
 
-2026-10-07 **Persona120/147，剩27：整体安全与普通页面产品/UX均独立通过**。两个角色Graphic10点、Audio22点合同闭环（试听→明确Material接受→QC→估算SRT）已完成；Text沿用既有24点证据。整体复核新增的Master回执额外字段及中间素材实时权利缺口已最小修正，34项临时红绿检查通过，原reviewer完整22.4重审APPROVE；22.5亦APPROVE。上轮修后1968passed/28skipped（104.40s）、Web/FE-P1、Ruff/strict38/38及空白检查通过；本次只读剩余范围核验，没有重跑全量或新业务变化。不冒充真实质量、ASR或全规格完成；6.4仍待答，永久覆盖/真实成品/正式初始化/生命周期仍开放。正式库/角色/配置/服务未动，临时18331/15331已停止。完整[集中回执](docs/PERSONA_NORMAL_PAGE_CONTRACT_ACCEPTANCE.md)及[剩余范围核验](openspec/changes/add-persona-creative-studio/findings.md)，目录、依赖/启动方式不变；下方118/147为历史。
+2026-10-07 **Persona120/147，剩27：整体安全与普通页面产品/UX均独立通过**。两个角色Graphic10点、Audio22点合同闭环（试听→明确Material接受→QC→估算SRT）已完成；Text沿用既有24点证据。整体复核新增的Master回执额外字段及中间素材实时权利缺口已最小修正，34项临时红绿检查通过，原reviewer完整22.4重审APPROVE；22.5亦APPROVE。上轮修后1968passed/28skipped（104.40s）、Web/FE-P1、Ruff/strict38/38及空白检查通过；本次只读剩余范围核验，没有重跑全量或新业务变化。不冒充真实质量、ASR或全规格完成；6.4仍待答，永久覆盖/真实成品/正式初始化/生命周期仍开放。正式库/角色/配置/服务未动，临时18331/15331已停止。完整[集中回执](openspec/docs/项目文档/PERSONA_NORMAL_PAGE_CONTRACT_ACCEPTANCE.md)及[剩余范围核验](openspec/changes/add-persona-creative-studio/findings.md)，目录、依赖/启动方式不变；下方118/147为历史。
 
 2026-10-07 **整体复核补充4处修复，仍118/147**：Variant Stage安全回执、Quality模态匹配、创作配置权限/祖先归档、音频QC/素材指引已最小修正。69项后端临时检查、六组UI场景及原15项状态检查通过；最新全量1968passed/28skipped、Web/FE-P1、Ruff与strict38/38通过。限定backend复核APPROVE，但whole22.4/22.5和真实创作质量仍分开验收；完整证据见[最新回执](openspec/changes/add-persona-creative-studio/progress.md)。目录、依赖、启动方式不变，正式库/配置/服务及生命周期未动。
 2026-10-07 **五处复核缺陷已修正，限定安全/UX独立复核通过**：完整创作配置安全校验、现代Stage先校验后记安全回执、只读入口不自动建号、精确身份/请求代次保护、跨形态草稿与保存结果核对。41项隔离安全检查、15项隔离UI状态检查、两个角色24点Text→本地ZIP合同冒烟和最新Web/FE-P1通过；最终全量门禁见[本批回执](openspec/changes/add-persona-creative-studio/progress.md)。目录、依赖及启动方式不变，不改正式库/配置/服务、不做真实模型调用或提交归档。整体仍118/147，限定修复批准不替代whole22.4/22.5、真实成品质量或6.4待决边界。
 
-2026-10-07 **Persona自动浏览器验收入口已修正并复验**：用户手动Chrome正常；脚本优先复用本机已有headless browser，保留显式选择、不修改日常Chrome资料或安装新依赖。两个角色Text→Master→Candidate/Review→本地ZIP重新24检查点通过、零页面脚本错误；临时Mock库/服务已停止，正式服务与数据未动。整体仍118/147，不等于真实创作质量全部验收；范围、启动依赖和证据见[文字合同验收](docs/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。
+2026-10-07 **Persona自动浏览器验收入口已修正并复验**：用户手动Chrome正常；脚本优先复用本机已有headless browser，保留显式选择、不修改日常Chrome资料或安装新依赖。两个角色Text→Master→Candidate/Review→本地ZIP重新24检查点通过、零页面脚本错误；临时Mock库/服务已停止，正式服务与数据未动。整体仍118/147，不等于真实创作质量全部验收；范围、启动依赖和证据见[文字合同验收](openspec/docs/项目文档/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。
 
 2026-10-07 **Persona当前118/147，剩29项，尚未全部完成**：两个默认图文流程已通过隔离SQLite/Mock规划、确定性排版、真实1080×1440 PNG、显式素材接受/新Master保存、QC/可冻结；限定独立复核同意关闭10.1/10.2、17.3及6.6路由修正。已补组合路由与逐方法反馈，182项既有定向回归、Web/FE-P1、Ruff及strict38/38通过；全量结果见[当前进度](openspec/changes/add-persona-creative-studio/progress.md)。非AI组合消费边界待一次选择，真实文字/图文/音频质量仍单独验收。没有正式库/配置/服务变更、付费Provider调用、新依赖或迁移，也未提交归档；日常Chrome崩溃未宣称修复，图文使用现有headless renderer。
 
@@ -266,23 +266,23 @@
 
 2026-10-07 **Persona Creative Studio尚未全部完成，当前95/147、剩52**：本批关闭30项资源/typed中间产物/确定性Graphic排版与基础QC/Text质量/配置库存/导演与角色方法窄scope及轻量UI合同。音频显式模型覆盖和导演指令上限两处定向疑点已闭合，完整Audio复核仍PARTIAL。最终后端1968 passed/28 skipped（106.33s）、Web/FE-P1、Ruff、OpenSpec strict38/38及diff通过；20份资源/八份可移植Recipe纯冒烟通过。完整Renderer阶段承接、ASR/字幕入口、Starter fork/readiness及真实默认Text/Graphic/Audio质量尚待，不以代码/Mock替代成品验收。正式库、配置、运行服务不变，不新增测试/migration/真实调用、不提交推送归档。当前以[本change进度](openspec/changes/add-persona-creative-studio/progress.md)为准，以下65/147、Text-only和图文未开始记录为历史。
 
-2026-10-06 **两个角色真实文字到本地交付已验通，默认Recipe质量仍PARTIAL**：Gemini科技/生活原稿已分别保存，独立复核编辑并补7条精确引用后，隔离Master1/2→真实checks→Candidate v4→Review→copy_package ZIP实际通过，正文/独立标题/hash保持一致。稿件见[科技编辑稿](docs/PERSONA_GEMINI_TECH_EDITED_2026-10-06.md)与[生活编辑稿](docs/PERSONA_GEMINI_LIFESTYLE_EDITED_2026-10-06.md)。Agent复核不代替用户质量确认；默认Text文档grammar/服务端引用选文计算已补，345项既有回归/Ruff通过，但新合同真实call18无响应，Unknown不重发，18/30调用。完整九阶段真实验收与固定rubric仍待，65/147不虚增；图文/音频未开始，正式库/配置/Persona及运行拓扑不动、不发布/迁移/归档/提交。详细当前证据见[真实文字回执](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)；以下同日一篇/零Master记录为历史。
+2026-10-06 **两个角色真实文字到本地交付已验通，默认Recipe质量仍PARTIAL**：Gemini科技/生活原稿已分别保存，独立复核编辑并补7条精确引用后，隔离Master1/2→真实checks→Candidate v4→Review→copy_package ZIP实际通过，正文/独立标题/hash保持一致。稿件见[科技编辑稿](openspec/docs/项目文档/PERSONA_GEMINI_TECH_EDITED_2026-10-06.md)与[生活编辑稿](openspec/docs/项目文档/PERSONA_GEMINI_LIFESTYLE_EDITED_2026-10-06.md)。Agent复核不代替用户质量确认；默认Text文档grammar/服务端引用选文计算已补，345项既有回归/Ruff通过，但新合同真实call18无响应，Unknown不重发，18/30调用。完整九阶段真实验收与固定rubric仍待，65/147不虚增；图文/音频未开始，正式库/配置/Persona及运行拓扑不动、不发布/迁移/归档/提交。详细当前证据见[真实文字回执](openspec/docs/项目文档/PERSONA_TEXT_REAL_ACCEPTANCE.md)；以下同日一篇/零Master记录为历史。
 
-2026-10-06 **Gemini一次完整文章生成成功，Persona质量验收仍部分完成**：按用户新授权，在隔离库新单阶段Run7/Attempt11中使用exact Gemini，50.79秒返回并校验text.master.v2、导出1822字符[原稿](docs/PERSONA_GEMINI_ARTICLE_2026-10-06.md)。未换模型或重发旧Unknown，未接受Master/发布；两个角色完整默认Recipe/人工质量仍待验收，65/147不变。正式配置/库不动，图文/音频未开始；当前回执见[真实文字验收](docs/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
+2026-10-06 **Gemini一次完整文章生成成功，Persona质量验收仍部分完成**：按用户新授权，在隔离库新单阶段Run7/Attempt11中使用exact Gemini，50.79秒返回并校验text.master.v2、导出1822字符[原稿](openspec/docs/项目文档/PERSONA_GEMINI_ARTICLE_2026-10-06.md)。未换模型或重发旧Unknown，未接受Master/发布；两个角色完整默认Recipe/人工质量仍待验收，65/147不变。正式配置/库不动，图文/音频未开始；当前回执见[真实文字验收](openspec/docs/项目文档/PERSONA_TEXT_REAL_ACCEPTANCE.md)。
 
 2026-10-06 **CPA本机隧道已按用户授权直接生效**：`http://127.0.0.1:8317/v1`，正式配置revision5；Key/已登记模型/默认Gemini/各环节路由保持，应用认证发现200/32模型。仅明确登记的literal127.0.0.1开放，原API/Worker已安全刷新；无新生成、Unknown重试或迁移。详细当前结果/依赖见[模型登记](openspec/changes/add-provider-model-registration/README.md)，目录连通不等于真实创作质量验收。
 
-2026-10-06 **当前方向：Persona Creative Studio，两个角色文字先行**。[add-persona-creative-studio](openspec/changes/add-persona-creative-studio/README.md)已获SPEC APPROVE及apply授权，当前65/147项完成。两个Starter Persona的九阶段文字流程已在隔离SQLite/Mock中走通：证据→角度→大纲→初稿→检查→精修→标题→最终Master→最终检查，再经Candidate v4/审批/授权生成本地ZIP。浏览器24个检查点、后端1968 passed/28 skipped、Web/FE-P1通过；这证明合同与产品链路，不证明真实文章质量。真实模型文字质量单独待授权验收，图文之后、音频最后；部分高级配置/UX仍待补齐。十二平台提案继续暂缓，不初始化正式Persona，不改正式crs数据/运行拓扑，不新增migration，不提交推送归档。见[文字合同验收](docs/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。
+2026-10-06 **当前方向：Persona Creative Studio，两个角色文字先行**。[add-persona-creative-studio](openspec/changes/add-persona-creative-studio/README.md)已获SPEC APPROVE及apply授权，当前65/147项完成。两个Starter Persona的九阶段文字流程已在隔离SQLite/Mock中走通：证据→角度→大纲→初稿→检查→精修→标题→最终Master→最终检查，再经Candidate v4/审批/授权生成本地ZIP。浏览器24个检查点、后端1968 passed/28 skipped、Web/FE-P1通过；这证明合同与产品链路，不证明真实文章质量。真实模型文字质量单独待授权验收，图文之后、音频最后；部分高级配置/UX仍待补齐。十二平台提案继续暂缓，不初始化正式Persona，不改正式crs数据/运行拓扑，不新增migration，不提交推送归档。见[文字合同验收](openspec/docs/项目文档/PERSONA_TEXT_CONTRACT_ACCEPTANCE.md)。
 
 2026-10-06 **下一项范围已确认：十二平台专属稿件＋素材交付包**，公众号保留草稿箱、其他平台人工发布；知乎/B站/X各形态独立，共十七形态。标准提案与两批计划见[complete-multiplatform-content-handoff](openspec/changes/archive/2026-10-14-complete-multiplatform-content-handoff/README.md)。本轮仅规格，尚未business apply/正式profile写入或公开发送；原有Recipe/F8/ACO完成状态不因此改变。
 
-2026-10-06 **Creation Recipe已在本机正式启用，141/144**。正式SQLite、approved默认/readiness及私有配置均为`crs000000001`，API/原Worker已恢复，Web仅`127.0.0.1:5173`。配套备份/副本演练/正式升级后确认5,145行原数据、65个素材hash不变；健康/Recipe选择/MCP只读入口通过。旧Unit不自动绑定新流程。永久新回归、完整backend和规格生命周期仍待收尾；本轮未调用模型/公众号、未提交推送归档。见[本change](openspec/changes/creation-recipe-stage-control-loop/README.md)和[正式启用与备份](docs/CREATION_RECIPE_LOCAL_ENABLEMENT.md)。
+2026-10-06 **Creation Recipe已在本机正式启用，141/144**。正式SQLite、approved默认/readiness及私有配置均为`crs000000001`，API/原Worker已恢复，Web仅`127.0.0.1:5173`。配套备份/副本演练/正式升级后确认5,145行原数据、65个素材hash不变；健康/Recipe选择/MCP只读入口通过。旧Unit不自动绑定新流程。永久新回归、完整backend和规格生命周期仍待收尾；本轮未调用模型/公众号、未提交推送归档。见[本change](openspec/changes/creation-recipe-stage-control-loop/README.md)和[正式启用与备份](openspec/docs/项目文档/CREATION_RECIPE_LOCAL_ENABLEMENT.md)。
 
 ## 10月4–5日历史状态（当前以10月6日crs启用记录为准）
 
 2026-10-05 Creation Recipe批次五/六：新change为56/144（剩88）。已接入真实Prompt分层预览、按阶段临时调节、Text候选选择/结构化修改/显式接受、Master正文与版本回读，以及接受后自动执行下一阶段并停在人工审阅处。刷新只恢复原Attempt，不再次调用模型；回读延迟/失败禁止新调用，恢复固定原Run/key，独立Master未保存编辑保持不变。隔离Mock浏览器9项通过；完整后端1908 passed/28 skipped、Web/FE-P1/strict36/36通过。拒绝反馈、保存有效调整、跨形态和完整Candidate→Review→Package仍待后续批次，不冒称全部完成。现有API/Web/Worker、SQLite/素材及启动方式不变；无正式库升级、真实供应商调用或提交归档。范围、设计与进度见[本change说明](openspec/changes/creation-recipe-stage-control-loop/README.md)。
 
-2026-10-05当前正式schema校准：Creative Orchestration已另行获准在本机启用，SQLite为`aco000000001`（f7d→f8a→aco），API/Web/原Worker/MCP保持运行。local approved默认、readiness和恢复目标以aco为准；f8a两列nullable身份字段全空/inert，不启用JWT/服务器认证，也不回滚真实库。原F8 82/82和f7d验收记录保留为历史，不重写成新测试结果。新版见[正式启用](docs/ALIGN_CREATIVE_LOCAL_ENABLEMENT.md)；core implementation通过，R1/R2修正和108项永久回归已完成（完整后端1768 passed/28 skipped），153/154只剩最终closeout复核，尚未canonical归档/新功能提交/push；见[收尾回执](docs/ALIGN_CREATIVE_LEGACY_FINAL_PARTIAL_ACCEPTANCE.md)。
+2026-10-05当前正式schema校准：Creative Orchestration已另行获准在本机启用，SQLite为`aco000000001`（f7d→f8a→aco），API/Web/原Worker/MCP保持运行。local approved默认、readiness和恢复目标以aco为准；f8a两列nullable身份字段全空/inert，不启用JWT/服务器认证，也不回滚真实库。原F8 82/82和f7d验收记录保留为历史，不重写成新测试结果。新版见[正式启用](openspec/docs/项目文档/ALIGN_CREATIVE_LOCAL_ENABLEMENT.md)；core implementation通过，R1/R2修正和108项永久回归已完成（完整后端1768 passed/28 skipped），153/154只剩最终closeout复核，尚未canonical归档/新功能提交/push；见[收尾回执](openspec/docs/项目文档/ALIGN_CREATIVE_LEGACY_FINAL_PARTIAL_ACCEPTANCE.md)。
 
 2026-10-04正式部署决定（部署范围继续有效，以下动作记录为当时历史，当前schema以10月5日说明为准）：**这台电脑就是最终单机生产环境**，SQLite＋当前本地素材库＋仅本机API/Web，维护目标为易启动、易排查、可备份恢复，不是等待服务器升级的临时方案。F8批准范围82/82已验收，功能ade4ce0、收尾1aa0024；原18条是范围外扩展/未验证，不是当前生产缺口。缺少PostgreSQL、MinIO、JWT或独立Secret Provider不阻断正式使用。技术APP_ENV=production与使用称呼分开，不改配置/身份/凭据/Worker。当前main基线341ead8保持，此轮仅文档/规格校准，不重跑模型/公众号、不push/deploy/迁移/主规格同步归档。
 
@@ -290,11 +290,11 @@
 
 | 操作 | 现有入口 |
 |---|---|
-| 启动/停止/重启API和Worker | [单机生产运行手册](docs/runbooks/production-readiness.md)，现有launchd/startup脚本；API为127.0.0.1:8000，不新增部署体系 |
+| 启动/停止/重启API和Worker | [单机生产运行手册](openspec/docs/项目文档/runbooks/production-readiness.md)，现有launchd/startup脚本；API为127.0.0.1:8000，不新增部署体系 |
 | Web | `cd apps/web && npm run dev`，localhost:5173；不新增对外绑定 |
 | 排查 | 显式Settings运行状态/health readiness；`logs/api.log`、`logs/worker.log`按trace/reason定位，避免复制私密内容 |
-| 备份恢复 | [配套备份恢复手册](docs/runbooks/backup-restore.md)，SQLite＋素材同快照、隔离验integrity/head/hash/历史包；make backup仅数据库，make stop仅API |
-| 验收状态 | [正式验收](docs/FE_F8_LOCAL_FINAL_STATUS.md)、[能力矩阵](docs/FE_F8_LOCAL_CAPABILITY_MATRIX.md)；ZIP不等于公开发布，契约测试不等于生成质量 |
+| 备份恢复 | [配套备份恢复手册](openspec/docs/项目文档/runbooks/backup-restore.md)，SQLite＋素材同快照、隔离验integrity/head/hash/历史包；make backup仅数据库，make stop仅API |
+| 验收状态 | [正式验收](openspec/docs/项目文档/FE_F8_LOCAL_FINAL_STATUS.md)、[能力矩阵](openspec/docs/项目文档/FE_F8_LOCAL_CAPABILITY_MATRIX.md)；ZIP不等于公开发布，契约测试不等于生成质量 |
 
 仅本机访问限制入站，不禁止既有获准模型/公众号出站。不要为“生产”改APP_ENV、复制服务器模板、运行seed/迁移、切换素材目录或删除Worker。主规格同步/归档属于另行授权的文档生命周期，不是服务器设施阻断。
 
@@ -302,37 +302,37 @@
 
 以下等待提交、未生产就绪、82/83及17项是历史时点，当前以顶部正式范围和运行手册为准。
 
-2026-10-04 F8 本机实施验收通过，等待本地提交及主规格同步/归档授权。正式基准为个人本机 SQLite、本地素材库、仅 loopback 访问；本机 `82/83`，原清单 `82/100`，只剩本地最终提交/ROADMAP记录。17项生产身份/Secret Provider/新增真实远端发布义务已确认延期，保留未勾选/未验证。此前总体复核及最终定向复审闭合四项恢复/安全blocker，安全与架构均APPROVE；正确apps/api cwd全量1660 passed/28 skipped/8 warnings、186定向、Web/预算、strict34/34、Ruff/diff通过。三形态/五渠道本地闭环、20个新浏览器gate、恢复重新导出和确定性Golden证据保留，真实模型质量未验收。CLI内部HTTP/供应商后台grant不由本机helper证明。未commit/push/deploy/正式迁移/主规格同步归档；未批准身份draft不得混入提交。目录增加恢复脚本和Golden夹具，依赖与启动方式不变。见[本机验收](docs/FE_F8_LOCAL_FINAL_STATUS.md)、[出站审计](docs/FE_F8_EXTERNAL_CAPABILITY_SECURITY_AUDIT.md)、[本机闭环](docs/FE_F8_LOCAL_FULL_CHAIN_ACCEPTANCE.md)、[恢复验收](docs/FE_F8_RECOVERY_ACCEPTANCE.md)与[Golden夹具](apps/api/evals/goldens/README.md)；下方旧计数为历史。
+2026-10-04 F8 本机实施验收通过，等待本地提交及主规格同步/归档授权。正式基准为个人本机 SQLite、本地素材库、仅 loopback 访问；本机 `82/83`，原清单 `82/100`，只剩本地最终提交/ROADMAP记录。17项生产身份/Secret Provider/新增真实远端发布义务已确认延期，保留未勾选/未验证。此前总体复核及最终定向复审闭合四项恢复/安全blocker，安全与架构均APPROVE；正确apps/api cwd全量1660 passed/28 skipped/8 warnings、186定向、Web/预算、strict34/34、Ruff/diff通过。三形态/五渠道本地闭环、20个新浏览器gate、恢复重新导出和确定性Golden证据保留，真实模型质量未验收。CLI内部HTTP/供应商后台grant不由本机helper证明。未commit/push/deploy/正式迁移/主规格同步归档；未批准身份draft不得混入提交。目录增加恢复脚本和Golden夹具，依赖与启动方式不变。见[本机验收](openspec/docs/项目文档/FE_F8_LOCAL_FINAL_STATUS.md)、[出站审计](openspec/docs/项目文档/FE_F8_EXTERNAL_CAPABILITY_SECURITY_AUDIT.md)、[本机闭环](openspec/docs/项目文档/FE_F8_LOCAL_FULL_CHAIN_ACCEPTANCE.md)、[恢复验收](openspec/docs/项目文档/FE_F8_RECOVERY_ACCEPTANCE.md)与[Golden夹具](apps/api/evals/goldens/README.md)；下方旧计数为历史。
 
 2026-10-03 F7已按当前批准范围收口：主任务110/110（Commons为用户暂缓行政关闭，不是实测PASS），模型路由23/23；F7实施已本地main提交`3f28a51`。主F7与模型路由均已归档，八份delta完整同步七份canonical，原有54条要求/146个场景精确保留，strict34/34及diff通过。F7-only后端1660 passed/28 skipped、Web/FE-P1/state和Ruff通过；无push/deploy/正式迁移或新增微信/供应商调用。F8及原始资料仍保留工作区、不在本次提交。目录、依赖与启动方式沿用既有配置，后续Commons/F8需另定范围；见[F7归档](openspec/changes/archive/2026-10-03-fe-f7-capability-integrations-delivery/README.md)。以下旧计数与active状态为历史。
 
-2026-10-03 F7本地生命周期收尾：仅F7的81文件拟提交快照经后端1660 passed/28 skipped、Web/FE-P1/state、full app Ruff、strict34/34与diff验证通过，Projects224.89/72.97kB。共享文件按片段排除F8认证/MinIO/f8a，F8工作区完整保留。Commons按用户决定暂缓/未实测，不标真实PASS；公众号沿用已确认的当前草稿与精确系统记录，模型路由23/23。当前108/110，接下来只做本地提交和七份主规格同步归档，无push/deploy/正式迁移或新增外部调用。目录增加已实现的本地生成任务/ASR服务，依赖与启动命令不变；见[最终门禁](docs/FE_F7_FINAL_LOCAL_GATES.md)。下方计数与未提交描述为历史快照。
+2026-10-03 F7本地生命周期收尾：仅F7的81文件拟提交快照经后端1660 passed/28 skipped、Web/FE-P1/state、full app Ruff、strict34/34与diff验证通过，Projects224.89/72.97kB。共享文件按片段排除F8认证/MinIO/f8a，F8工作区完整保留。Commons按用户决定暂缓/未实测，不标真实PASS；公众号沿用已确认的当前草稿与精确系统记录，模型路由23/23。当前108/110，接下来只做本地提交和七份主规格同步归档，无push/deploy/正式迁移或新增外部调用。目录增加已实现的本地生成任务/ASR服务，依赖与启动命令不变；见[最终门禁](openspec/docs/项目文档/FE_F7_FINAL_LOCAL_GATES.md)。下方计数与未提交描述为历史快照。
 
-2026-10-03 公众号精确范围验收完成：原短稿/黄色封面经AIContentStudio Candidate7→审批→Target7/Attempt7一次上传/draft/add成功，用户确认最新草稿后真实Receipt1/CapabilityVerification1原子持久化于私有验收库，重复回填幂等；不同账号/形态/动作/版本/运行身份均不能复用。补齐历史Attempt指纹校验，120定向/1660全量、Ruff/strict34/diff和限定复核通过。F7现107/110，剩Commons用户暂缓、本地提交、主规格同步归档；模型路由23/23。无公开发布/回读/重发或正式库改变，F8、依赖和启动方式不变，未提交推送归档。见[本轮真实证据](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；下方105/110为历史。
+2026-10-03 公众号精确范围验收完成：原短稿/黄色封面经AIContentStudio Candidate7→审批→Target7/Attempt7一次上传/draft/add成功，用户确认最新草稿后真实Receipt1/CapabilityVerification1原子持久化于私有验收库，重复回填幂等；不同账号/形态/动作/版本/运行身份均不能复用。补齐历史Attempt指纹校验，120定向/1660全量、Ruff/strict34/diff和限定复核通过。F7现107/110，剩Commons用户暂缓、本地提交、主规格同步归档；模型路由23/23。无公开发布/回读/重发或正式库改变，F8、依赖和启动方式不变，未提交推送归档。见[本轮真实证据](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；下方105/110为历史。
 
-2026-10-03 F7主任务10.3已按真实模型证据收口：当前105/110、剩5条，模型路由23/23。真实image-01字节/hash、正式TTS accepted→MaterialRevision6→Text Master9、本机Video Master5的43字幕记录只读回读一致；MiniMax视频/H3排除、Commons暂缓、未证明权利仍false。公众号旧两稿均成功，但没有系统收据/验证、历史指纹与当前实现不匹配；内存副本receipt实际409回滚，8.3/10.5不提前关闭，还须补Attempt指纹绑定及当前版本一次获准草稿/同账号确认。119项既有回归通过，限定证据复核同意10.3关单；没有新业务代码/依赖/迁移、外发、正式库写入、提交、推送或归档。目录与启动方式不变，见[公众号核对](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)和[模型证据](docs/FE_F7_MODEL_VALIDATION.md)。下方旧计数为历史。
+2026-10-03 F7主任务10.3已按真实模型证据收口：当前105/110、剩5条，模型路由23/23。真实image-01字节/hash、正式TTS accepted→MaterialRevision6→Text Master9、本机Video Master5的43字幕记录只读回读一致；MiniMax视频/H3排除、Commons暂缓、未证明权利仍false。公众号旧两稿均成功，但没有系统收据/验证、历史指纹与当前实现不匹配；内存副本receipt实际409回滚，8.3/10.5不提前关闭，还须补Attempt指纹绑定及当前版本一次获准草稿/同账号确认。119项既有回归通过，限定证据复核同意10.3关单；没有新业务代码/依赖/迁移、外发、正式库写入、提交、推送或归档。目录与启动方式不变，见[公众号核对](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)和[模型证据](openspec/docs/项目文档/FE_F7_MODEL_VALIDATION.md)。下方旧计数为历史。
 
-2026-10-03 模型路由最后五项已完成：`add-model-capability-routing` 23/23，2.1/2.5/2.6/2.7/2.9全部关闭。五处预览/Workflow/ASR/音频契约缺口修复后，后端1660 passed/28 skipped、177定向、Web/FE-P1/state、strict34/34、Ruff/diff与两份限定独立复核通过。CPA聊天、真实MiniMax图像/语音及本机ASR沿用已记录验收；视频/H3为用户排除、CPA媒体未证实、未证明公开权利仍false。当前main工作区未提交，未新增供应商或微信调用/正式库写入，目录/依赖/启动方式不变。仅本change实施收口，canonical同步/归档与整个F7/F8关单仍按各自范围处理。见[最终门禁](docs/FE_F7_FINAL_LOCAL_GATES.md)和[任务](openspec/changes/add-model-capability-routing/tasks.md)；下方18/23等是历史。
+2026-10-03 模型路由最后五项已完成：`add-model-capability-routing` 23/23，2.1/2.5/2.6/2.7/2.9全部关闭。五处预览/Workflow/ASR/音频契约缺口修复后，后端1660 passed/28 skipped、177定向、Web/FE-P1/state、strict34/34、Ruff/diff与两份限定独立复核通过。CPA聊天、真实MiniMax图像/语音及本机ASR沿用已记录验收；视频/H3为用户排除、CPA媒体未证实、未证明公开权利仍false。当前main工作区未提交，未新增供应商或微信调用/正式库写入，目录/依赖/启动方式不变。仅本change实施收口，canonical同步/归档与整个F7/F8关单仍按各自范围处理。见[最终门禁](openspec/docs/项目文档/FE_F7_FINAL_LOCAL_GATES.md)和[任务](openspec/changes/add-model-capability-routing/tasks.md)；下方18/23等是历史。
 
 2026-10-03 当前模型路由18/23：可靠性3.2/3.4及完整页面2.8已收口，仍剩2.1/2.5/2.6/2.7/2.9，F7未整体完成。实际隔离页面验证chat-only→图片插件/原生TTS→预览→人工接受→刷新，Unknown不重发、缺video插件零发送、页面配置保存和旧任务发送前409均通过；fixture与既有真实TTS/本机ASR证据分开。两处Panel状态/中文提示修复通过新鲜Web/FE-P1/state、144定向和限定独立复核；不改正式库/配置、不调用供应商或微信。目录/启动/依赖未变，下方17/23是先前可靠性收口记录。
 
 2026-10-03 生成任务可靠性已整项收口：模型路由3.2/3.4完成，change为17/23（剩6个复合项），不是F7全部完成。修复原key身份、原job/file一致性和known-job Unknown后，最终后端1660 passed/28 skipped/8 warnings、Web/FE-P1/state、strict34/34、Ruff/diff通过，限定独立源码复核APPROVE。0新增真实供应商调用/正式库写入、无新依赖/迁移或提交推送；下方“收口前”状态为历史。下一项继续产品路由/浏览器链路验收，目录和启动方式不变。
 
-2026-10-03 最新 F7 接受/可靠性：正式 MiniMax TTS task 已经一次执行、接受为 MaterialRevision6，并经项目精确引用保存到可写 Unit3 的 Master9/v3；浏览器刷新回读通过，public/model/commercial 权利保持 false，不能冻结公开 Candidate。可靠性初验完成38个私有场景；定向复核后最小修正历史key派生、terminal原job/file核对和known-job unavailable→Unknown，补33组正负向验证通过。来源claim commit的授权边界已核清，接受仍实时检查撤权；这批0真实供应商调用/正式库写入，无新依赖或migration。整体F7独立终审及其余验收仍TODO。目录及启动方式未变；下方同日“正式TTS尚未执行”是历史记录。见 [可靠性证据](docs/FE_F7_FINAL_LOCAL_GATES.md) 与 [当前进度](openspec/docs/progress.md)。
+2026-10-03 最新 F7 接受/可靠性：正式 MiniMax TTS task 已经一次执行、接受为 MaterialRevision6，并经项目精确引用保存到可写 Unit3 的 Master9/v3；浏览器刷新回读通过，public/model/commercial 权利保持 false，不能冻结公开 Candidate。可靠性初验完成38个私有场景；定向复核后最小修正历史key派生、terminal原job/file核对和known-job unavailable→Unknown，补33组正负向验证通过。来源claim commit的授权边界已核清，接受仍实时检查撤权；这批0真实供应商调用/正式库写入，无新依赖或migration。整体F7独立终审及其余验收仍TODO。目录及启动方式未变；下方同日“正式TTS尚未执行”是历史记录。见 [可靠性证据](openspec/docs/项目文档/FE_F7_FINAL_LOCAL_GATES.md) 与 [当前进度](openspec/docs/progress.md)。
 
 2026-10-03 公众号草稿成功后的系统记录已接入：同一官方账号的 `succeeded` Attempt、非空 `media_id` 与 `human_confirmed` 收据会原子幂等地写入既有 `CapabilityVerification`，仅验证 `wechat/article/auto_draft` 精确范围，不代表公开发布，不调用 `draft/get`，不新增表或 migration。定向交付/能力回归 165 passed，Ruff PASS；本轮未重新发送公众号草稿。
 
 2026-10-03 本机ASR已完成真实产品验收：复用自有Radar/voice-pro最小MLX桥接，用户视频`废电池回收处理设备.mp4`进入正式MaterialRevision3和项目共享素材，页面默认本机MLX Whisper，实际生成43条字幕，人工接受后显式保存Video Master5/v3；刷新和API重启后仍回读同一字幕、来源、runtime及`verified_output_match` provenance。产品链路只使用`model_use_allowed=true`、`public_use_allowed=false`的本地素材，不公开发布、不冻结Candidate、不生成可发布包。普通素材仍兼容“公开可用或模型可用”，最终render继续要求公开权利。105项Video/ASR/材料定向回归、1660全量后端（28 skipped、8 warnings）、Web/FE-P1、OpenSpec strict34/34、Ruff与git diff-check均通过。新增canonical规格`openspec/specs/local-asr-subtitles/spec.md`，change已归档到`openspec/changes/archive/2026-10-03-add-local-mlx-asr/`。无新表/0migration、无云端请求；未提交、未推送。
 
-2026-10-03 当前本地接入：已备份并演练后准确升级个人本地SQLite到f7d（不含F8），启动配置加载稳定私有签名key并启用MiniMax image/TTS/ASR插件；CPA Gemini默认、七文本routes和密钥保持不变。页面TTS准备路由通过但未执行付费生成；已有真实WAV经页面导入正式Revision2、项目引用及Master2显式保存，刷新/API重启回读和新进程回执验签通过。来源如实为upload，公开/商业权利未确认；不冒称新任务生成接受或ASR字幕链路完成。118项既有回归、Web/FE-P1、strict33/33、diff及限定只读复核通过。无commit/push/公开发布/全F7归档；详见[当前接入证据](docs/FE_F7_MODEL_VALIDATION.md)。下方同日“未正式配置/迁移”是此前阶段记录。
+2026-10-03 当前本地接入：已备份并演练后准确升级个人本地SQLite到f7d（不含F8），启动配置加载稳定私有签名key并启用MiniMax image/TTS/ASR插件；CPA Gemini默认、七文本routes和密钥保持不变。页面TTS准备路由通过但未执行付费生成；已有真实WAV经页面导入正式Revision2、项目引用及Master2显式保存，刷新/API重启回读和新进程回执验签通过。来源如实为upload，公开/商业权利未确认；不冒称新任务生成接受或ASR字幕链路完成。118项既有回归、Web/FE-P1、strict33/33、diff及限定只读复核通过。无commit/push/公开发布/全F7归档；详见[当前接入证据](openspec/docs/项目文档/FE_F7_MODEL_VALIDATION.md)。下方同日“未正式配置/迁移”是此前阶段记录。
 
 本地启动仍沿用`apps/api/scripts/startup/start_api.sh`和`start_worker.sh`，两者加载被忽略的`runtime.env`；CLI需PATH含/opt/homebrew/bin，稳定key-ID及JSON key映射须显式加载、0600保管，不打印或提交。0700私有目录`backups/minimax-local-z98vx7ki/`保存升级前/后SQLite及配置/key备份；没有新的依赖或迁移版本。剩余TODO：新正式任务生成/显式接受、Production ASR接受和复合F7验收；既有97条FK异常另列历史债，不自动处理。
 
-2026-10-03 最新语音实测：获准的三次MiniMax调用全部成功——3.413秒TTS、音频ASR、视频音轨ASR；后两项准确返回原句。TTS经隔离产品持久任务API并通过新进程回执/字节验签；ASR验证现有固定适配器，不冒称Production入口/正式素材接受完成。视频为本地黑底测试容器，不调用视频生成。54项现有回归、strict33/33、diff-check通过，无业务源码/依赖/启动/正式配置改变；正式持久任务表、媒体binding和签名配置仍TODO，F7未整体关闭。目录与证据见 [模型验收](docs/FE_F7_MODEL_VALIDATION.md)。
+2026-10-03 最新语音实测：获准的三次MiniMax调用全部成功——3.413秒TTS、音频ASR、视频音轨ASR；后两项准确返回原句。TTS经隔离产品持久任务API并通过新进程回执/字节验签；ASR验证现有固定适配器，不冒称Production入口/正式素材接受完成。视频为本地黑底测试容器，不调用视频生成。54项现有回归、strict33/33、diff-check通过，无业务源码/依赖/启动/正式配置改变；正式持久任务表、媒体binding和签名配置仍TODO，F7未整体关闭。目录与证据见 [模型验收](openspec/docs/项目文档/FE_F7_MODEL_VALIDATION.md)。
 
 2026-10-03 用户范围：MiniMax 视频生成与原H3下载不再要求，停止其调用/查询并记为用户排除，不是已验收；下方DNS阻断保留为历史，不再卡F7。MiniMax聚焦文字转语音、语音转文字、已有视频提取音轨后转文字，不包含生成视频或画面理解；用户随后批准三次≤10秒语音实测，结果见上方。未变更正式配置、依赖或启动方式，无正式迁移/推送。
 
-2026-10-03 当前模型状态：模型登记/路由必要依赖及新版模型设置已本地提交 main@8c0e3b8，未推送。已保存 CPA 的 Gemini/Claude/Grok 三模型真实聊天、模型发现、七用途解析和 Gemini JSON 消费者调用通过，默认/revision3/路由未改。MiniMax 原 H3 已远端成功，但成品 OSS 下载仍被 VPN Fake-IP198.18.4.255 阻断；未重发、无视频素材接受，F7 媒体并未整体收口。无新增依赖或本次迁移，其他 F7/F8 保留；下方未提交/旧401均为历史步骤，当前证据见 [F7 模型验收](docs/FE_F7_MODEL_VALIDATION.md)。
+2026-10-03 当前模型状态：模型登记/路由必要依赖及新版模型设置已本地提交 main@8c0e3b8，未推送。已保存 CPA 的 Gemini/Claude/Grok 三模型真实聊天、模型发现、七用途解析和 Gemini JSON 消费者调用通过，默认/revision3/路由未改。MiniMax 原 H3 已远端成功，但成品 OSS 下载仍被 VPN Fake-IP198.18.4.255 阻断；未重发、无视频素材接受，F7 媒体并未整体收口。无新增依赖或本次迁移，其他 F7/F8 保留；下方未提交/旧401均为历史步骤，当前证据见 [F7 模型验收](openspec/docs/项目文档/FE_F7_MODEL_VALIDATION.md)。
 
 2026-10-03 模型设置布局已完成：仅“模型与 AI”改为厂商与模型、用途路由、生成能力与插件三视图，沿用紧凑管理员布局、默认折叠技术信息、保留草稿和独立保存范围。其他五分区、legacy、现有配置/密钥/默认模型未改；无后端/依赖/启动变化。Web/FE-P1、85 项既有安全回归和独立源码复核通过，桌面/390px/草稿离开确认/viewer 只读已验收；原生 Back/Forward 未实际验证。六条新增契约已同步主规格，原有 10 条要求/15 个场景完整保留；归档后 strict 33/33、diff-check PASS。见 [归档与验收](openspec/changes/archive/2026-10-02-organize-model-ai-settings/README.md)。仅本地 main 未提交，不推送/部署、不调用供应商。下方 CPA 鉴权记录为此前诊断，不作为当前状态。
 
@@ -344,7 +344,7 @@
 
 2026-10-02 H3 能力核验：本机 MiniMax CLI 一次 5 秒任务 `448101822222777` 已远端完成；AIContentStudio 下载受当前 VPN Fake-IP/安全 URL 校验阻断，未取得正式视频字节或素材。CPA 模型/默认已登记，但 `/models` 实际鉴权拒绝，不能作为可用视频 fallback。只更新验收记录，不改目录、依赖、启动/默认配置或业务代码；后续恢复同一任务，不重新生成。详见 [模型路由变更](openspec/changes/add-model-capability-routing/README.md)。
 
-2026-10-02 模型路由本批：仍以 `openspec/changes/add-model-capability-routing/` 为 active 规格，复用现有 SystemSetting/Registry/ProviderGenerationTask/MaterialRevision，不增加第二套真源。已核对本机 MiniMax 固定 CLI 命令及现有 83 项路由/持久化回归，并更新 [Provider 契约](docs/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md) 和 [F7 能力矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)。CPA 实际聊天合同、MiniMax 视频原任务/权利、完整浏览器与安全验收仍是 TODO；外部付费、生产身份/存储、发布均未启用。目录/依赖/启动方式不变，运行仍需显式 CLI opt-in、持久 receipt key、已授权的本地 schema，不能把配置当已验证能力。
+2026-10-02 模型路由本批：仍以 `openspec/changes/add-model-capability-routing/` 为 active 规格，复用现有 SystemSetting/Registry/ProviderGenerationTask/MaterialRevision，不增加第二套真源。已核对本机 MiniMax 固定 CLI 命令及现有 83 项路由/持久化回归，并更新 [Provider 契约](openspec/docs/项目文档/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md) 和 [F7 能力矩阵](openspec/docs/项目文档/FE_F7_CAPABILITY_MATRIX.md)。CPA 实际聊天合同、MiniMax 视频原任务/权利、完整浏览器与安全验收仍是 TODO；外部付费、生产身份/存储、发布均未启用。目录/依赖/启动方式不变，运行仍需显式 CLI opt-in、持久 receipt key、已授权的本地 schema，不能把配置当已验证能力。
 
 同批安全修正：MiniMax image/TTS CLI 一旦可能已接单，即使本地非零退出或输出文件异常也保持 Unknown/原 claim，不把它解释成“可重新生成”的确定失败。当前完整任务仍 15/23，剩余 8 项不能由离线探针或已有构建代替外部与浏览器验收。
 
@@ -356,7 +356,7 @@ MiniMax ASR 的 CLI 非零退出现保持 Unknown，不将该错误当作安全�
 
 2026-10-02 F8 schema readiness：生产启动与 `/api/v1/health/ready` 现在共用只读 Alembic 检查，要求代码、数据库与显式配置各只有同一个 head；多头、缺失或陈旧版本返回安全失败，不自动迁移。沿用现有 `apps/api/app/db.py`、`main.py`、`observability.py`；目录、依赖与启动命令不变。F8 身份绑定、真实存储连通及完整验收仍待后续任务，详见 [F8 OpenSpec](openspec/changes/fe-f8-production-readiness-operations/tasks.md)。
 
-2026-10-02 指定原HTML长文已通过AIContentStudio公众号适配器进入同一真实公众号草稿箱：新私有产品链 Candidate v5 → Approval → Target/Attempt 上传封面和八张正文图并调用一次 `draft/add`，有效 `media_id` 已落库，原正文在替换上传图URL后可精确还原，九个素材上传保留原文件名。旧失败Unknown库不变；未公开发布或回读；本次指定草稿验收通过，但一般Publisher验证及F7全阶段仍未完成。代码目录、依赖、启动方式未变；证据见 [F7公众号草稿验收](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
+2026-10-02 指定原HTML长文已通过AIContentStudio公众号适配器进入同一真实公众号草稿箱：新私有产品链 Candidate v5 → Approval → Target/Attempt 上传封面和八张正文图并调用一次 `draft/add`，有效 `media_id` 已落库，原正文在替换上传图URL后可精确还原，九个素材上传保留原文件名。旧失败Unknown库不变；未公开发布或回读；本次指定草稿验收通过，但一般Publisher验证及F7全阶段仍未完成。代码目录、依赖、启动方式未变；证据见 [F7公众号草稿验收](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
 
 2026-10-02 原HTML公众号产品链路已补齐：wechat.article.v1可携带与可见文本/精确图槽一致的安全HTML，审批前冻结official renderer v3，保留样式/原文件名，独立HTML一次授权不放宽旧短稿/一般验证。前端v3仅在禁止脚本及远端资源的opaque sandbox内显示内联样式。实际一次执行已完成token及封面上传，首张正文图响应被本地URL白名单拒绝，draft/add调用0次、无草稿media_id，旧Attempt保留Unknown。对照成功WeWrite记录已补from=appmsg兼容，八个真实历史URL离线通过；后续外发待新的单次授权，不自动重试。目录/依赖/启动/迁移不变，详见docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md；不是整个F7完成。
 
@@ -366,19 +366,19 @@ MiniMax ASR 的 CLI 非零退出现保持 Unknown，不将该错误当作安全�
 
 2026-10-02 公众号补充已提交本地main@931915d并完成主规格/归档。F8继续按原计划补齐存储、健康、安全和恢复验收，当前不是产品整体完成；不推送、部署或运行正式迁移，MiniMax/路由/F8工作区改动保持独立。当前计划与证据见task_plan.md、progress.md、findings.md。
 
-2026-10-02 公众号补充收尾：用户接受指定账号草稿/media_id+后台确认，额外成功回读为豁免不是已执行。原文件名已冻结于official render v2并逐步核对、原样上传，缺失/不安全名称拒绝；历史候选不回填。完整工作区后端1660/28 skipped，公众号-only拟提交快照1624/28 skipped、PG迁移22项、Web/FE-P1、41隔离UI、范围Ruff/diff及独立复核通过。仅同步account-bound-wechat-draft-publisher主规格并归档本补充，不将未提交MiniMax/F8混入；不再外发、推送、部署或生产迁移。一般runtime未解除安全门槛，其他F7/F8 TODO仍保留。目录增加四个wechat_official服务、AccountPublisherPanel/OfficialArticlePreview、f7c账号字段迁移；启动/依赖不变，正式f7c升级仍需独立目标授权。详见[公众号收尾证据](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
+2026-10-02 公众号补充收尾：用户接受指定账号草稿/media_id+后台确认，额外成功回读为豁免不是已执行。原文件名已冻结于official render v2并逐步核对、原样上传，缺失/不安全名称拒绝；历史候选不回填。完整工作区后端1660/28 skipped，公众号-only拟提交快照1624/28 skipped、PG迁移22项、Web/FE-P1、41隔离UI、范围Ruff/diff及独立复核通过。仅同步account-bound-wechat-draft-publisher主规格并归档本补充，不将未提交MiniMax/F8混入；不再外发、推送、部署或生产迁移。一般runtime未解除安全门槛，其他F7/F8 TODO仍保留。目录增加四个wechat_official服务、AccountPublisherPanel/OfficialArticlePreview、f7c账号字段迁移；启动/依赖不变，正式f7c升级仍需独立目标授权。详见[公众号收尾证据](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
 
-2026-10-02 用户确认公众号草稿创建实验到此结束：产品已保存有效media_id，且后台人工确认通过；不要求成功草稿额外回读，取消拟议的新入口和补测，不再上传/create或公开发表。只更新记录，不把未执行回读记为PASS；其他F7任务及Unknown对账边界保持不变。目录/依赖/启动不变，详见[验收结论](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
+2026-10-02 用户确认公众号草稿创建实验到此结束：产品已保存有效media_id，且后台人工确认通过；不要求成功草稿额外回读，取消拟议的新入口和补测，不再上传/create或公开发表。只更新记录，不把未执行回读记为PASS；其他F7任务及Unknown对账边界保持不变。目录/依赖/启动不变，详见[验收结论](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
 
-2026-10-02 产品草稿回读零网络预检：原Attempt6仍succeeded、Target6 awaiting_manual_receipt，精确media_id/hash保持一致，readback_hash为空。现有official-readback仅允许Unknown对账，且原实验授权已过期，不能直接用于成功草稿核验。未调用微信、重复创建或修改DB；成功草稿只读回读契约待单独规格/实施授权，F7不提前关单。仅文档记录，目录/依赖/启动不变；详见[公众号验收](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
+2026-10-02 产品草稿回读零网络预检：原Attempt6仍succeeded、Target6 awaiting_manual_receipt，精确media_id/hash保持一致，readback_hash为空。现有official-readback仅允许Unknown对账，且原实验授权已过期，不能直接用于成功草稿核验。未调用微信、重复创建或修改DB；成功草稿只读回读契约待单独规格/实施授权，F7不提前关单。仅文档记录，目录/依赖/启动不变；详见[公众号验收](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
 
 2026-10-02 MiniMax真实能力单次验收：在私有临时数据库中各调用一次 `image-01` 和 `speech-2.8-hd`，均真实进入 `result_ready`；图片JPEG33997 bytes/hash=`1e18a7be540f091ac7d71510a3aebe68a24ca57413f99b2e00667857c0db7298`，语音WAV180980 bytes/hash=`5e6c663fb225d07c8db2b0609294966b3a452e791160ef351443c05a39cbcb7b`。未接受到正式素材库、不重试旧Unknown、不调用视频/ASR。新进程完成数据库/字节hash回读，但临时receipt key未持久化，HMAC跨进程验签仍未完成；不冒充完整F7或生产就绪。
 
 2026-10-02 F8第一批：统一 `StorageProvider` 的 immutable put/read/exists/size/delete-if-unreferenced 边界，MaterialRevision 的 Delivery、package、Article Handoff 和 renderer 输入先走 provider/hash 校验；绑定 revision 的失败读取不再回退旧本地路径；新增管理员安全存储诊断；健康接口区分 live/ready，生产 metrics 需要管理员，DraftMedia 无 revision 的旧路径保留兼容桥。相关范围回归128 passed、Ruff、diff-check、OpenSpec strict33/33通过。生产 MinIO 切换、全量 legacy 路径迁移、备份恢复和F8终验仍未完成；无正式迁移、部署或推送。
 
-2026-10-02 指定HTML完整长文单次草稿测试成功：用户确认短标题、首图封面及8图副本压缩后，沿用原正文/内联排版，经独立WeWrite HTML API创建一个草稿并draft/get回读；标题/正文/216个style、8图资源顺序一致。微信URL规范化为HTTPS/640，不能称HTML/远端图片字节完全不变；后台视觉待人工核对。原HTML/PNG、正式库/配置/历史Unknown未改，不公开发布；不替代产品Candidate→Delivery验收或解除一般gate，F7仍131/152。仅临时验收和文档，无业务代码/依赖/迁移/启动方式变化，详见[本次完整HTML测试](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
+2026-10-02 指定HTML完整长文单次草稿测试成功：用户确认短标题、首图封面及8图副本压缩后，沿用原正文/内联排版，经独立WeWrite HTML API创建一个草稿并draft/get回读；标题/正文/216个style、8图资源顺序一致。微信URL规范化为HTTPS/640，不能称HTML/远端图片字节完全不变；后台视觉待人工核对。原HTML/PNG、正式库/配置/历史Unknown未改，不公开发布；不替代产品Candidate→Delivery验收或解除一般gate，F7仍131/152。仅临时验收和文档，无业务代码/依赖/迁移/启动方式变化，详见[本次完整HTML测试](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)。
 
-2026-10-02 当前统一验收：公众号产品短稿创建+用户后台可见性PASS；F7 8.5冻结内容不可改已独立复核并关闭。新鲜门禁129公众号定向/1660后端（28 skipped）、Web构建/FE-P1、strict33/33、范围Ruff及diff通过。主切片98/105、路由14/25、公众号19/22，复合131/152，剩21；一般长文/普通账号verified、整阶段终审提交/归档仍未完成。原文件名透传差异如实保留，不新增草稿或公开发布。MiniMax已只读核对原语音WAV/hash与图片Unknown；当前进程缺原receipt key，无接受/恢复/重发。证据见[公众号验收](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)与[当前矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)。无业务代码、依赖、正式配置/库、迁移或启动方式变化；后文旧计数/失败记录为历史。
+2026-10-02 当前统一验收：公众号产品短稿创建+用户后台可见性PASS；F7 8.5冻结内容不可改已独立复核并关闭。新鲜门禁129公众号定向/1660后端（28 skipped）、Web构建/FE-P1、strict33/33、范围Ruff及diff通过。主切片98/105、路由14/25、公众号19/22，复合131/152，剩21；一般长文/普通账号verified、整阶段终审提交/归档仍未完成。原文件名透传差异如实保留，不新增草稿或公开发布。MiniMax已只读核对原语音WAV/hash与图片Unknown；当前进程缺原receipt key，无接受/恢复/重发。证据见[公众号验收](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)与[当前矩阵](openspec/docs/项目文档/FE_F7_CAPABILITY_MATRIX.md)。无业务代码、依赖、正式配置/库、迁移或启动方式变化；后文旧计数/失败记录为历史。
 
 2026-10-02 用户后台截图已确认本次草稿：标题“响应兼容测试，请勿发布”、同一黄色测试封面，更新14:31；“创建并进入草稿箱”真实验收PASS。只补人工确认记录，不公开发布、调用接口或写入DB回执/能力验证，不将此确认扩大成整体F7或一般长文合同通过。公众号仍19/22，无代码/依赖/启动变化。
 
@@ -418,7 +418,7 @@ CPA 模型登记验收收口：前端模型路由状态脚本 PASS、相关后�
 
 2026-10-02 CLI配置前端续批：Settings补齐`minimax.cli`选项、本地地址和受控认证引用提示；已有CLI绑定不再误显OpenAI协议，未改配置/默认值。隔离产品浏览器成功验签预览原真实TTS（1.96秒），图片unknown原记录未重发。许可确认待定，未接受入库/开放使用权；F7仍125/150，F8未启用。前端build/性能预算、已有状态回归、strict33/33与diff-check通过；仅UI补丁，不以旧后端全量当本轮验证。依赖/目录/启动不变，详见task_plan/progress/findings。
 
-2026-10-02 F7真实MiniMax续批：image/TTS已接持久任务固定submit_task；图片显式预算尺寸/base64，TTS真实WAV在隔离任务成功（1.96秒），新进程验签回读通过，未入正式素材库。图片另一次25秒截止unknown并保留原任务不重发。Google/Grok/Commons暂缓，F7仍125/150、F8未启用；完整Workflow/媒体接受/浏览器及产品公众号回读仍TODO。独立WeWrite草稿成功不替代产品Publisher验收。目录/证据见[能力矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)；依赖和启动方式不变，正式运行仍需显式稳定receipt key与另获授权的f7d schema，不自动迁移/切默认。
+2026-10-02 F7真实MiniMax续批：image/TTS已接持久任务固定submit_task；图片显式预算尺寸/base64，TTS真实WAV在隔离任务成功（1.96秒），新进程验签回读通过，未入正式素材库。图片另一次25秒截止unknown并保留原任务不重发。Google/Grok/Commons暂缓，F7仍125/150、F8未启用；完整Workflow/媒体接受/浏览器及产品公众号回读仍TODO。独立WeWrite草稿成功不替代产品Publisher验收。目录/证据见[能力矩阵](openspec/docs/项目文档/FE_F7_CAPABILITY_MATRIX.md)；依赖和启动方式不变，正式运行仍需显式稳定receipt key与另获授权的f7d schema，不自动迁移/切默认。
 
 2026-10-01 Video ASR输入续批（仍11/25）：`apps/api/app/services/minimax_cli_provider.py`补精确MP4首音轨→16kHz/mono PCM WAV准备，实际时长≤500秒及请求限额、不裁剪补造，结果仍是需人工接受/显式Master保存的ASR建议。复用ffmpeg/ffprobe依赖，固定file-only命令、4096字节诊断及剩余deadline/进程组回收；无新依赖/表/迁移/默认变更。完整模型路由、认证连续性、Workflow和真实供应商/浏览器仍TODO，不把已注册称verified；沿用既有API启动，未运行用户生产迁移或真实转录。
 
@@ -434,11 +434,11 @@ CPA 模型登记验收收口：前端模型路由状态脚本 PASS、相关后�
 
 2026-10-01持久生成任务修订：用户同意先修订OpenSpec，方案已归入[模型能力路由](openspec/changes/add-model-capability-routing/design.md)5.2，拟仅新增一个ProviderGenerationTask表，分两批完成本地CLI一次提交/原job恢复/私有结果校验和人工接受入既有MaterialRevision。已确认的是修订范围，不是业务apply或本地生产迁移；旧“零新表”仅对配置/资产/Workflow真源继续成立。规格确认后实施，付费验收/默认媒体路由/生产库迁移另授权；无新代码、依赖或启动变化，F7/F8仍未完成。
 
-供应商协议核查批（2026-10-01）：已取得MiniMax全球H3 create/query，明确V2 URL与V1 file_id两条恢复链；Google Interactions REST steps与SDK便利字段、Omni/Veo两协议、xAI image/video状态已对齐[适配契约](docs/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md)。此前“H3创建读取失败”为历史；native实际dispatch/认证/持久任务/完整license与验收仍未完成。纯文档改动，不启用模型、改默认路由或消耗额度，无新依赖/表/迁移，启动方式不变。
+供应商协议核查批（2026-10-01）：已取得MiniMax全球H3 create/query，明确V2 URL与V1 file_id两条恢复链；Google Interactions REST steps与SDK便利字段、Omni/Veo两协议、xAI image/video状态已对齐[适配契约](openspec/docs/项目文档/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md)。此前“H3创建读取失败”为历史；native实际dispatch/认证/持久任务/完整license与验收仍未完成。纯文档改动，不启用模型、改默认路由或消耗额度，无新依赖/表/迁移，启动方式不变。
 
 视频恢复审计（2026-10-01）：CLI支持异步任务查询，但当前独立生成入口没有持久任务记录，只有线程池和成功预览内存缓存，重启不能恢复原job。Workflow Attempt不能直接替代独立素材任务；需要先确认持久任务规格修订，不能用假Run或配置表绕过零新表约束。本轮仅诊断/文档，无新代码、依赖、表、迁移或供应商调用；F7/F8仍未验收完成，启动方式不变。
 
-MiniMax官方协议差异收口（2026-10-01）：TTS改用官方完整hd/turbo型号，拒绝系列简称及10000字符以上输入；ASR声明和实际WAV帧时长均限制500秒且不得超过请求上限。官方image/TTS/ASR及旧视频查询/下载证据已记入[Provider契约](docs/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md)，H3创建/认证版本/原任务恢复/完整路由与真实验收仍未完成。未改默认路由，无新依赖、表、迁移或付费调用，启动方式沿用。
+MiniMax官方协议差异收口（2026-10-01）：TTS改用官方完整hd/turbo型号，拒绝系列简称及10000字符以上输入；ASR声明和实际WAV帧时长均限制500秒且不得超过请求上限。官方image/TTS/ASR及旧视频查询/下载证据已记入[Provider契约](openspec/docs/项目文档/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md)，H3创建/认证版本/原任务恢复/完整路由与真实验收仍未完成。未改默认路由，无新依赖、表、迁移或付费调用，启动方式沿用。
 
 MiniMax图片型号实测纠正（2026-10-01）：固定本地dry-run证明当前CLI实际request.model=image-01；binding、发送前与图片runtime hash现校验该实际型号。仅提取白名单model，不展示原始request/headers；不匹配或缺失证据不发送。下方“精确型号仍需解决”是本次修复前记录；任意型号选择、认证版本、实际生成与完整路由仍未完成，不支持的型号继续unavailable。无配置/凭据文件读取、无生成额度消耗或默认模型改动。
 
@@ -456,7 +456,7 @@ CPA 厂商/模型登记方案（2026-10-01）：[add-provider-model-registration
 
 模型能力/插件路由（2026-10-01）：[add-model-capability-routing](openspec/changes/add-model-capability-routing/README.md) 已获 apply 授权。配置切片与Registry-based共享resolver、带服务端签名的frozen plan/revalidate核心已实现；active User安全只读，编辑仅admin，Settings按需加载。Workflow/Production消费者、真实供应商适配和浏览器验收仍TODO，不能把配置或Registry fixture当真实 executable/verified。当前签名process-local，重启/跨worker需显式replan；生产key/rotation未完成。两大批20项，无新增依赖/表/迁移/启动变化；真实付费验收另授权，Commons暂缓、微信Unknown不重试。接口与验证见 change README，复用 SystemSetting，不复制 Registry 真源。
 
-原生模型适配器（2026-10-01）：`apps/api/app/services/native_model_adapters.py` 已加入 Google/xAI 的版本化协议描述和 MiniMax 的明确 unavailable 注册；默认不加载，需显式 `AICS_ENABLE_NATIVE_MODEL_ADAPTERS=1` 才进入 Registry。当前只做无网络 binding-state/request contract，尚未接入实际供应商 dispatch。精确模型 ID、凭据引用、base URL 和 capability 必须同时满足才可执行；CPA 当前仍按 OpenAI-compatible chat 处理，不能因模型名称自动获得生图/视频能力。协议边界见 [Provider Adapter Contracts](docs/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md)。
+原生模型适配器（2026-10-01）：`apps/api/app/services/native_model_adapters.py` 已加入 Google/xAI 的版本化协议描述和 MiniMax 的明确 unavailable 注册；默认不加载，需显式 `AICS_ENABLE_NATIVE_MODEL_ADAPTERS=1` 才进入 Registry。当前只做无网络 binding-state/request contract，尚未接入实际供应商 dispatch。精确模型 ID、凭据引用、base URL 和 capability 必须同时满足才可执行；CPA 当前仍按 OpenAI-compatible chat 处理，不能因模型名称自动获得生图/视频能力。协议边界见 [Provider Adapter Contracts](openspec/docs/项目文档/FE_F7_PROVIDER_ADAPTER_CONTRACTS.md)。
 
 MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider.py` 提供受控 `mmx` Registry Provider，覆盖 CLI 已确认的文字、图片、视频、语音合成和转录命令族；需显式设置 `AICS_ENABLE_MINIMAX_CLI=1` 才加载。应用只传固定参数数组，读取受控临时输出并复用预览→人工接受→MaterialRevision链路；经用户授权后仅受控读取官方配置并生成不可逆 credential epoch，不执行任意脚本，不把帮助信息当作账号/配额/真实生成验证。未执行真实生成或消耗配额。
 
@@ -472,15 +472,15 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 最新公共素材真实验收（2026-10-01）：正常产品search接口实际返回502，零素材/verification。系统DNS确认Commons API/media为198.18.0.214/215非公网地址，既有安全策略拒绝；10.2未完成、F7仍97/105、F8未apply。临时测试库/素材目录已回收，微信unknown对账库未动；未改VPN/代码/依赖/启动方式，不重试微信，不公开发布。后续需先恢复这两个素材域名的公网解析，再验证真实bytes导入，不能用夹具关闭真实门槛。
 
-最新本地门禁收尾（2026-10-01）：12项既有lint问题按兼容契约清理，六文件规范化AST相同、独立只读APPROVE；fresh后端1629/28 skipped/9 warnings、TS/Vite/FE-P1、全应用Ruff、strict31/diff、16原生PG及完整迁移往返通过，临时测试容器/卷已回收。F7 10.7关闭，97/105；真实微信仍token成功/封面未知，未重试，F8未启动。无新依赖/启动变化、未push/deploy/生产迁移。以下“全app Ruff12未通过”为历史结果，当前证据见[本地门禁](docs/FE_F7_FINAL_LOCAL_GATES.md)。
+最新本地门禁收尾（2026-10-01）：12项既有lint问题按兼容契约清理，六文件规范化AST相同、独立只读APPROVE；fresh后端1629/28 skipped/9 warnings、TS/Vite/FE-P1、全应用Ruff、strict31/diff、16原生PG及完整迁移往返通过，临时测试容器/卷已回收。F7 10.7关闭，97/105；真实微信仍token成功/封面未知，未重试，F8未启动。无新依赖/启动变化、未push/deploy/生产迁移。以下“全app Ruff12未通过”为历史结果，当前证据见[本地门禁](openspec/docs/项目文档/FE_F7_FINAL_LOCAL_GATES.md)。
 
 最新未知上传排障（2026-10-01）：修复官方Delivery及显式回读丢失固定transport诊断的问题，未来失败只保存白名单code和严格bool/null提示，不写原始异常或凭据，不改变unknown/claim/禁止重试。4项RED→GREEN、初批110相关回归及最终full1629/28 skipped/9 warnings通过，两次独立只读复核APPROVE；当前变更Ruff和strict31/31通过，全应用Ruff仍12项既有问题。上次上传仍未知，本批没有再次读取凭据或发送微信请求。沿用既有表/依赖/启动方式，F7/F8仍未完成。
 
-最新真实短稿尝试（2026-10-01）：已批准810字节“系统联调测试，请勿发布”稿件，经产品API冻结审批后只执行一次官方Delivery。token成功，封面上传asset_0未确认；Target/Attempt=1/1保留unknown/reconciliation_needed，未进入create/read、不公开发布、不自动重试。完整草稿箱验收未通过，F7 96/105、补充17/20、F8未apply。无业务代码/依赖/启动变化、未push/deploy/生产迁移。证据及对账TODO见[短稿验收](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；以下“真实请求0”为历史记录。
+最新真实短稿尝试（2026-10-01）：已批准810字节“系统联调测试，请勿发布”稿件，经产品API冻结审批后只执行一次官方Delivery。token成功，封面上传asset_0未确认；Target/Attempt=1/1保留unknown/reconciliation_needed，未进入create/read、不公开发布、不自动重试。完整草稿箱验收未通过，F7 96/105、补充17/20、F8未apply。无业务代码/依赖/启动变化、未push/deploy/生产迁移。证据及对账TODO见[短稿验收](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；以下“真实请求0”为历史记录。
 
-最新整阶段本地复核（2026-10-01）：修正后最终全后端1625/28 skipped、TS/Vite/FE-P1、17原生PG及完整F7迁移往返通过，临时容器/卷已回收。全应用Ruff仍有12项HEAD既有问题，36个改动Python文件通过；不混称全PASS。独立Delivery复核APPROVE，Security复核提出Connector执行代码身份与Commons interning指纹漂移，4 RED后最小修正、81相关通过，独立修正复核APPROVE，10.9关闭/F7现96/105。用户已批准明确“请勿发布”短稿/封面，真实请求仍0；F7/F8未完，依赖/启动不变。证据与TODO见[整阶段本地门禁](docs/FE_F7_FINAL_LOCAL_GATES.md)。以下等待测试稿确认的说明为历史。
+最新整阶段本地复核（2026-10-01）：修正后最终全后端1625/28 skipped、TS/Vite/FE-P1、17原生PG及完整F7迁移往返通过，临时容器/卷已回收。全应用Ruff仍有12项HEAD既有问题，36个改动Python文件通过；不混称全PASS。独立Delivery复核APPROVE，Security复核提出Connector执行代码身份与Commons interning指纹漂移，4 RED后最小修正、81相关通过，独立修正复核APPROVE，10.9关闭/F7现96/105。用户已批准明确“请勿发布”短稿/封面，真实请求仍0；F7/F8未完，依赖/启动不变。证据与TODO见[整阶段本地门禁](openspec/docs/项目文档/FE_F7_FINAL_LOCAL_GATES.md)。以下等待测试稿确认的说明为历史。
 
-最新短稿验收入口（2026-10-01）：`apps/api/scripts/accept_wechat_short_draft.py` 只接既有隔离产品库和精确已审批Candidate，默认预检rollback，显式execute才走官方prepare/Attempt/execute；不创建/迁移库、不启用一般合同、不用旧CLI。固定批准的两份账号配置只进当前进程，显式身份key必须提供。独立复核提出SQLite URI路径、参数回显、准备后异常三项缺口，4个RED后修复；修复后full1620/28 skipped/8既有warnings、其后追加Unknown后23入口回归/Ruff通过，独立窄复核APPROVE。strict31/31及diff通过。测试稿/封面确认待用户回复，无真实账号请求。依赖/产品启动方式不变，验收步骤和恢复边界见 [短稿验收](docs/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；F7/F8及全产品验收仍未完成。
+最新短稿验收入口（2026-10-01）：`apps/api/scripts/accept_wechat_short_draft.py` 只接既有隔离产品库和精确已审批Candidate，默认预检rollback，显式execute才走官方prepare/Attempt/execute；不创建/迁移库、不启用一般合同、不用旧CLI。固定批准的两份账号配置只进当前进程，显式身份key必须提供。独立复核提出SQLite URI路径、参数回显、准备后异常三项缺口，4个RED后修复；修复后full1620/28 skipped/8既有warnings、其后追加Unknown后23入口回归/Ruff通过，独立窄复核APPROVE。strict31/31及diff通过。测试稿/封面确认待用户回复，无真实账号请求。依赖/产品启动方式不变，验收步骤和恢复边界见 [短稿验收](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；F7/F8及全产品验收仍未完成。
 
 最新短稿实验接入（2026-10-01）：内部显式管理员授权原子准备精确Target/Attempt，短期签名绑定账号/Candidate/hash/actor/runtime；每步复用live锁和claim，DNS/TLS完成后再验有效期，worker启动持久防重。普通HTTP授权仍拒绝、一般合同gate保持false，不生成一般verified。103相关回归、1598后端/28 skipped、16原生PG/guard、OpenSpec strict31/31、Ruff/diff通过，独立本地窄复核APPROVE。真实账号请求仍为0，2.8未完成/17/20不变，inline保守上界会拒绝，不能冒充长文或真实平台验收。无新表/依赖/迁移，启动方式不变。
 
@@ -494,7 +494,7 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 2026-10-01用户已授权复用new_media/WeWrite现有账号进行真实公众号草稿箱测试，不公开发布。配置存在且账号一致，但官方域名实际解析到198.18.1.55，公网安全预检拒绝；另有正文限额合同待确认。尚无账号API/上传/草稿调用，不算真实验收通过。依赖与启动方式不变，详情见progress.md；不要将凭据写入仓库。
 
-最新能力矩阵已按2026-10-01实际descriptor刷新：官方账号隔离Publisher已加载，合同gate仍false；Video/TTS/ASR暂无loaded实现。纠正“官方实现不存在”的旧说明，明确实现/配置/真实验证三层。F7仍95/105、补充17/20、F8未apply；整阶段官方本地安全只读复核APPROVE，真实验收/提交/归档不代关。不改业务/依赖/启动方式，不探测账号或读取secret。详见[能力矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)。
+最新能力矩阵已按2026-10-01实际descriptor刷新：官方账号隔离Publisher已加载，合同gate仍false；Video/TTS/ASR暂无loaded实现。纠正“官方实现不存在”的旧说明，明确实现/配置/真实验证三层。F7仍95/105、补充17/20、F8未apply；整阶段官方本地安全只读复核APPROVE，真实验收/提交/归档不代关。不改业务/依赖/启动方式，不探测账号或读取secret。详见[能力矩阵](openspec/docs/项目文档/FE_F7_CAPABILITY_MATRIX.md)。
 
 最新2026-10-01本地验收：跨项目共享Profile真实PG竞争通过，相反锁序mutation能精确检出；准备后凭据轮换及跨角色/用户账号拒绝补齐。补充方案17/20，14PG/guard、1PG迁移、82相关、1564后端/26 skipped、41隔离UI、build/性能/strict/Ruff/diff通过，独立本地增量复核APPROVE。剩余真实平台/阶段提交/授权归档未关，F7/F8未完成；无业务/依赖/迁移或启动方式改变，本輪测试库/Vite已回收。以下14/20等为历史。
 
@@ -508,7 +508,7 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 事实驱动的内容生产系统：把结构化数据、研究笔记、文件、URL、人工观点整理成 **FactPack**，面向抖音 / 小红书 / 公众号生成内容，经事实校验与人工审核后导出；公众号可进一步自动写入官方草稿箱。
 
-长期产品目标以 [`03_ai_content_studio_PRD.md`](openspec/docs/03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
+长期产品目标以 [`03_ai_content_studio_PRD.md`](openspec/docs/03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](openspec/docs/项目文档/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
 
 ### FE-F7 能力集成与交付（本地实施中）
 
@@ -536,23 +536,23 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 最新安全收口：F7 typed入口及实际素材搜索/生图包装入口的非法输入只返回固定安全422，普通CRUD不改；ASR显式保存最终receipt/runtime与commit共用进程配置guard，漂移回滚Master/refs/event。61定向、最终全后端1485 passed/2 skipped与独立两项窄复核通过，构建/FE-P1/strict30/30/范围Ruff通过；无新依赖/业务表/迁移，启动不变。复跑：`cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py tests/test_f7_asr_suggestions.py`。F7仍95/105，真实Provider/账号、阶段终验和F8未完成，不以本地测试代替外部验收。
 
-最新迁移实测：独立PostgreSQL16.15实际验证到f7b000000001，四项往返/旧验证保留/两类历史拒降级通过，不使用旧f7a结果代替新迁移。临时容器已回收；真实Commons搜索被当前DNS非公网198.18.0.41拒绝，尚无下载/导入成功。详细证据与未覆盖范围见[最新迁移与公共来源验收](docs/FE_F7_MIGRATION_REVALIDATION.md)。没有新代码/依赖/迁移，启动方式不变，F7仍95/105、F8未apply。
+最新迁移实测：独立PostgreSQL16.15实际验证到f7b000000001，四项往返/旧验证保留/两类历史拒降级通过，不使用旧f7a结果代替新迁移。临时容器已回收；真实Commons搜索被当前DNS非公网198.18.0.41拒绝，尚无下载/导入成功。详细证据与未覆盖范围见[最新迁移与公共来源验收](openspec/docs/项目文档/FE_F7_MIGRATION_REVALIDATION.md)。没有新代码/依赖/迁移，启动方式不变，F7仍95/105、F8未apply。
 
-当前本地任务95/105：三项安全缺口整批修复并通过独立窄复核；旧workflow新发布一律要求Delivery Router、typed读取逐跳绑定验证IP/TLS原host、媒体accept最终runtime复检与当前进程配置串行。新增实际门禁150定向/1470全后端（2 skipped）、build/FE-P1、strict30/30通过，范围Ruff保留已存在workflow告警例外，详见[本批验收](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。无新依赖/业务表/迁移，原启动方式不变。七脚本52项本地浏览器历史证据未在本批重跑；实际渲染/本地ZIP与fixture区分见[浏览器再验收](docs/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、账号绑定公众号上传、整阶段终验和F8仍待完成，不能把窄复核当F7通过。
+当前本地任务95/105：三项安全缺口整批修复并通过独立窄复核；旧workflow新发布一律要求Delivery Router、typed读取逐跳绑定验证IP/TLS原host、媒体accept最终runtime复检与当前进程配置串行。新增实际门禁150定向/1470全后端（2 skipped）、build/FE-P1、strict30/30通过，范围Ruff保留已存在workflow告警例外，详见[本批验收](openspec/docs/项目文档/FE_F7_BATCH_B_ACCEPTANCE.md)。无新依赖/业务表/迁移，原启动方式不变。七脚本52项本地浏览器历史证据未在本批重跑；实际渲染/本地ZIP与fixture区分见[浏览器再验收](openspec/docs/项目文档/FE_F7_BROWSER_REVALIDATION.md)。真实供应商、账号绑定公众号上传、整阶段终验和F8仍待完成，不能把窄复核当F7通过。
 
-- 最新调用前权利修复：`provider_media.stage`持有project/source/parent权限锁至受控Provider调用结束，finally释放DB后再缓存；SQLite撤权先赢时零供应商调用。两个失败回归后修复，125定向/1448全后端（2 skipped）、构建预算/strict/Ruff/diff通过；不借本批关闭整阶段review或真实外部验收。复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py`；完整环境和限制见[共享媒体记录](docs/FE_F7_BATCH_B_ACCEPTANCE.md)。没有新增依赖/迁移/业务对象或本批浏览器结果。
+- 最新调用前权利修复：`provider_media.stage`持有project/source/parent权限锁至受控Provider调用结束，finally释放DB后再缓存；SQLite撤权先赢时零供应商调用。两个失败回归后修复，125定向/1448全后端（2 skipped）、构建预算/strict/Ruff/diff通过；不借本批关闭整阶段review或真实外部验收。复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_media_acceptance.py`；完整环境和限制见[共享媒体记录](openspec/docs/项目文档/FE_F7_BATCH_B_ACCEPTANCE.md)。没有新增依赖/迁移/业务对象或本批浏览器结果。
 
-- 受控读取与能力矩阵（F7 94/105）：现有typed Connector和Commons在读取前拒压缩；Connector总deadline跨redirect/body/空响应，不改legacy direct safe_fetch。11新回归、84定向、1446全后端/2 skipped、构建预算/strict/Ruff/diff及窄复核通过；无新依赖/迁移，复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_capability_persistence.py tests/test_f7_material_search.py tests/test_f7_openai_image_provider.py`。结构、真实实现/fixture/外部未验证、默认旧库抽查与长期TODO见 [能力矩阵](docs/FE_F7_CAPABILITY_MATRIX.md)。WeWrite真实账号绑定和不可改稿上传仍缺失，Video/TTS/ASR真实实现/平台验收不能由协议替代；F8未apply。默认旧库未迁移，不误称运行/生产已升级。
+- 受控读取与能力矩阵（F7 94/105）：现有typed Connector和Commons在读取前拒压缩；Connector总deadline跨redirect/body/空响应，不改legacy direct safe_fetch。11新回归、84定向、1446全后端/2 skipped、构建预算/strict/Ruff/diff及窄复核通过；无新依赖/迁移，复跑 `cd apps/api && .venv/bin/python -m pytest -q tests/test_f7_capability_persistence.py tests/test_f7_material_search.py tests/test_f7_openai_image_provider.py`。结构、真实实现/fixture/外部未验证、默认旧库抽查与长期TODO见 [能力矩阵](openspec/docs/项目文档/FE_F7_CAPABILITY_MATRIX.md)。WeWrite真实账号绑定和不可改稿上传仍缺失，Video/TTS/ASR真实实现/平台验收不能由协议替代；F8未apply。默认旧库未迁移，不误称运行/生产已升级。
 
-- 已配置图片原生路径（F7 92/105）：管理员现有 AI 生图设置明确选择 OpenAI 与支持的 exact model/size/HTTPS `/v1`/key；现有素材生成按钮进入私有 PNG 预览，人工权利确认后才写精确版本，不改 Master。实现位于 `services/openai_image_provider.py`，复用 Registry、stage/accept 与现有 UI；无新依赖/表/迁移，原生设置不写 WeWrite 全局配置。单次调用、无重试/回退、public-IP pin、响应/时间上限和轮换失效；全后端1435/2 skipped、52定向、构建预算/strict/Ruff/diff与窄复核通过。报告 [原生图片接入验收](docs/FE_F7_NATIVE_IMAGE_ACCEPTANCE.md) 含配置/复跑命令；真实付费厂商与账号验收仍TODO，未做新版浏览器验收，不把 Mock transport 称外部verified。
+- 已配置图片原生路径（F7 92/105）：管理员现有 AI 生图设置明确选择 OpenAI 与支持的 exact model/size/HTTPS `/v1`/key；现有素材生成按钮进入私有 PNG 预览，人工权利确认后才写精确版本，不改 Master。实现位于 `services/openai_image_provider.py`，复用 Registry、stage/accept 与现有 UI；无新依赖/表/迁移，原生设置不写 WeWrite 全局配置。单次调用、无重试/回退、public-IP pin、响应/时间上限和轮换失效；全后端1435/2 skipped、52定向、构建预算/strict/Ruff/diff与窄复核通过。报告 [原生图片接入验收](openspec/docs/项目文档/FE_F7_NATIVE_IMAGE_ACCEPTANCE.md) 含配置/复跑命令；真实付费厂商与账号验收仍TODO，未做新版浏览器验收，不把 Mock transport 称外部verified。
 
 - 人工对账闭环：Unknown 保留原 Attempt，核验说明只提交/保存 SHA-256 摘要；最新 Attempt 校验、目标锁、重复决策幂等，确认已交付原子新增精确人工 Receipt，不自动写已发布历史/verified 或重发。错误输入固定安全原因，不回显秘密；源码独立窄复核与五项 UI fixture browser gate 通过，非真实账号验收。接口沿用 `delivery.py`，UI 在 ProjectReviewCenter，复跑 `F7_ISOLATED_ACCEPTANCE=yes NODE_PATH=<Playwright依赖目录> node apps/web/scripts/fe-f7-reconciliation-ui-acceptance.mjs`（需隔离 Vite 15671）。本批无新增依赖/表/迁移；当前 F7 91/105，全后端1407/2 skipped、定向109、构建预算/strict/Ruff/diff通过；阶段外部验收继续待办。
 
-- 媒体 Renderer 范围闭环：管理员明确核对真实 stage 后记录 renderer/schema/channel/form/MIME 的 24h 验证；editor 可走独立输出入口，每次调用与接受重验 current Master/runtime/Profile/rights/expiry/revocation。撤销留史，不改素材/Master；per-stage lock 与 registration DB lock 关闭 cache/DB 反向等待和撤销提交窗口。库存保持 not_probed，只展示记录和请求权限。实际 Graphic 13 browser gate、1400 全后端/2 skipped、106 定向、预算/strict/窄复核通过；F7 90/105，真实 Video Renderer 和外部 Provider/Publisher 不冒充完成。接口、目录和复跑见 [`docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md`](docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md)。
+- 媒体 Renderer 范围闭环：管理员明确核对真实 stage 后记录 renderer/schema/channel/form/MIME 的 24h 验证；editor 可走独立输出入口，每次调用与接受重验 current Master/runtime/Profile/rights/expiry/revocation。撤销留史，不改素材/Master；per-stage lock 与 registration DB lock 关闭 cache/DB 反向等待和撤销提交窗口。库存保持 not_probed，只展示记录和请求权限。实际 Graphic 13 browser gate、1400 全后端/2 skipped、106 定向、预算/strict/窄复核通过；F7 90/105，真实 Video Renderer 和外部 Provider/Publisher 不冒充完成。接口、目录和复跑见 [`docs/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md`](openspec/docs/项目文档/FE_F7_MEDIA_RENDER_SCOPE_ACCEPTANCE.md)。
 
-- Graphic Studio 前批 UI 已接通：安全只读库存、实际 PNG 预览、明确权利接受、精确项目素材重读、本地 final binding、单独 Master save / 人工确认；接受后读失败不重复接受，dirty/历史/viewer 禁止渲染，迟到结果丢弃。前批十项 Chrome gate、全后端 1374/2 skipped，当前范围验证/editor 执行已由上方新批扩展。历史验收见 [`docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md`](docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md)。
+- Graphic Studio 前批 UI 已接通：安全只读库存、实际 PNG 预览、明确权利接受、精确项目素材重读、本地 final binding、单独 Master save / 人工确认；接受后读失败不重复接受，dirty/历史/viewer 禁止渲染，迟到结果丢弃。前批十项 Chrome gate、全后端 1374/2 skipped，当前范围验证/editor 执行已由上方新批扩展。历史验收见 [`docs/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md`](openspec/docs/项目文档/FE_F7_GRAPHIC_RENDER_UI_ACCEPTANCE.md)。
 
-- 本地图文 Renderer 实现：`graphic.chromium@1` 显式配置 Node/Playwright/Chromium/字体后按当前 Graphic v2 画布生成真实 PNG；不默认使用 Codex 私有 runtime，不自动 verified/attest，不修改旧 Text/Video 路径。当前单字体仅 normal/400，缺字或样式拒绝而非替换。配置/启动和限制见 [`docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md`](docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md)。精确范围验证现已由上方新批接通，真实 Video 仍 TODO。
+- 本地图文 Renderer 实现：`graphic.chromium@1` 显式配置 Node/Playwright/Chromium/字体后按当前 Graphic v2 画布生成真实 PNG；不默认使用 Codex 私有 runtime，不自动 verified/attest，不修改旧 Text/Video 路径。当前单字体仅 normal/400，缺字或样式拒绝而非替换。配置/启动和限制见 [`docs/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md`](openspec/docs/项目文档/FE_F7_LOCAL_GRAPHIC_RENDER_ACCEPTANCE.md)。精确范围验证现已由上方新批接通，真实 Video 仍 TODO。
 
 - 需求背景：让数据源、模型/素材能力与远端 Publisher 只有在精确版本、配置、账号及动作范围真实验证后才可执行；本地包不冒充远端发布。
 - 目录结构：标准变更在 `openspec/changes/fe-f7-capability-integrations-delivery/`；统一 Registry 为 `apps/api/app/services/content_harness/registry.py`，安全验证模型/服务在 `apps/api/app/models.py`、`apps/api/app/services/capability_integrations.py`，加法迁移为 `apps/api/alembic/versions/f7a000000001_capability_verification.py`。
@@ -638,7 +638,7 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 ### FE-F5A Home + Opportunity（已合入本地 main，六份主规格同步并归档）
 
-- PRD/需求背景：补全生产前的“为什么现在做”决策层和日常工作台。Opportunity 不是 Topic；Home 是现有业务事实的 Projection。长期契约见 [Opportunity 主规格](openspec/specs/content-opportunities/spec.md) 与 [Home 主规格](openspec/specs/content-home-workspace/spec.md)，另四份 FE-F0/F1、FE-F3A、FE-F3B、FE-F4 主规格已同步。实施记录见 [FE-F5A 归档](openspec/changes/archive/2026-09-28-fe-f5a-home-opportunity/proposal.md)，完整步骤见 [实施计划](docs/superpowers/plans/2026-09-28-fe-f5a-home-opportunity.md)。
+- PRD/需求背景：补全生产前的“为什么现在做”决策层和日常工作台。Opportunity 不是 Topic；Home 是现有业务事实的 Projection。长期契约见 [Opportunity 主规格](openspec/specs/content-opportunities/spec.md) 与 [Home 主规格](openspec/specs/content-home-workspace/spec.md)，另四份 FE-F0/F1、FE-F3A、FE-F3B、FE-F4 主规格已同步。实施记录见 [FE-F5A 归档](openspec/changes/archive/2026-09-28-fe-f5a-home-opportunity/proposal.md)，完整步骤见 [实施计划](openspec/docs/项目文档/superpowers/plans/2026-09-28-fe-f5a-home-opportunity.md)。
 - 目录结构：`apps/api/app/routers/{opportunities,home}.py`、`services/{opportunities,home_projection,project_projection_context}.py`；四资源复用既有 models，增量迁移 `f5a000000001`；`apps/web/src/product/{OpportunityPages,HomePage}.tsx` 是独立 lazy 工作区，ProjectBriefTab 保留层级身份引用。
 - 已完成：持久化 CRUD/triage/archive、引用式信号、append-only Assessment、版本冲突与 AuditLog、qualified 显式原子转换、项目来源回链；Home 全部自有项目批量扫描待决策、真实 ProjectEvent 活动与 identity readiness，不被最近20张卡片限制。信号解除引用不删除历史；unknown 不自动重发，分析不可用不会伪造结果。
 - 验收：隔离 SQLite upgrade→downgrade→upgrade、346 后端测试、前端 TypeScript/Vite/build budget、OpenSpec all strict 18 项、定向 Ruff 和 diff-check 全部通过；真实浏览器创建机会→信号→评估→转换→刷新，以及带身份对象 Brief v1→v2 编辑/刷新通过。前后端独立复核 APPROVE。`/projects` 初始 JS 215.09 kB raw / 70.12 kB gzip，Home 231.11 kB、Opportunity 247.32 kB raw，均不含 TipTap/XYFlow。
@@ -738,7 +738,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 已完成：规格界定非写入 Matrix 建议、追加式 Variant/精确引用/检查、Candidate v5、Review/Approval/本地包分派与旧 v3/v4 保留；已标记 superseded 的 V1 交付变更只作为七个历史场景和 PRD §15/§16 的保留验收来源，不重新激活、不冒充已验收。2026-09-29 独立 SPEC 反馈后补定五个边界：版本化 canonical Variant payload、首批 v2 Master→form/`artifact_kind` 兼容矩阵、v5 唯一 Variant source pointer 与缓存投影列校验、复用成功 `LLMRun` 的安全血缘，以及 superseded 状态。旧 `x_thread/thread` 保持 v3/v4 行为但不作为 v5 目标。v5 跨渠道授权比较冻结 Variant 目标而非来源 Unit 渠道，仍保留身份/账号约束。已完成 F6E 0.3/0.4 基线与旧 V1 验收义务映射（见 `findings.md`），未将其视为功能验收。首批计划内加法模型和迁移已落地，含四个 Variant 表、Candidate nullable 链接及精确 published Profile 版本 FK；SQLite/临时 PostgreSQL 迁移门禁已通过。公众号文章、X 推串与单条已有保守的 Text v2 确定性适配器；公众号文章可显式选择或继承项目可见的精确封面引用，X 仍限无素材子集；小红书图文仅对 F6C 已验证真实最终 render 开放；项目级 Variant 历史、适配预览、追加式保存及精确 Fact Boundary citation 已接通。
 - 第二轮 SPEC 反馈补充：v5 Candidate 当前性按稳定 `(unit_id, variant_key)` 系列判断，不由整个 Unit 最大 Candidate ID 决定；三渠道预先冻结后可任意顺序审批/授权，同系列新版本仅替代本系列，真实 Master/context/profile/rights/check 漂移仍阻断，v3/v4 保持原闸门。已写入 design/tasks 与三份相关 delta，独立 SPEC re-review 已通过。
 - 第三轮 SPEC 窄修：v5 `ContentAsset` 仅 `channel_variant_revision_id` 为来源 FK；既有 `draft_id`、`topic_brief_id`、`mother_revision_id`、`content_master_revision_id`、`workflow_run_id` 均须为空。工作流血缘从 Variant→精确 source Master→冻结 manifest 读取，不用 Candidate 运行 FK 参与分派/当前性；Review/Approval/Authorization/Package 遇污染字段须拒绝。独立 SPEC re-review 于 `main@6f5e022` 给出 APPROVE。
-- 验收结果：项目级 Variant 检查、五种受控形态的 byte-exact 本地包、v5 多系列审批/授权、v3/v4 独立当前性及 Project Overview/Versions 已落地。隔离浏览器通过 Matrix 选择、Text 三形态、Graphic 真渲染、Video 脚本、审批/授权/ZIP、未知对账、素材撤权、归档只读及异步候选切换竞态；详见 [`docs/FE_F6E_ISOLATED_ACCEPTANCE.md`](docs/FE_F6E_ISOLATED_ACCEPTANCE.md)。全量后端、TypeScript/Vite、FE-P1、OpenSpec strict、Ruff、SQLite/PostgreSQL 隔离迁移及三方独立复核均通过；本地包不等于平台发布。
+- 验收结果：项目级 Variant 检查、五种受控形态的 byte-exact 本地包、v5 多系列审批/授权、v3/v4 独立当前性及 Project Overview/Versions 已落地。隔离浏览器通过 Matrix 选择、Text 三形态、Graphic 真渲染、Video 脚本、审批/授权/ZIP、未知对账、素材撤权、归档只读及异步候选切换竞态；详见 [`docs/FE_F6E_ISOLATED_ACCEPTANCE.md`](openspec/docs/项目文档/FE_F6E_ISOLATED_ACCEPTANCE.md)。全量后端、TypeScript/Vite、FE-P1、OpenSpec strict、Ruff、SQLite/PostgreSQL 隔离迁移及三方独立复核均通过；本地包不等于平台发布。
 - 待完成/TODO：F6E 的 canonical 主规格同步与归档须单独授权；真实账号/Provider/远端发布留 F7，生产身份与部署留 F8。旧 V1 七场景及 PRD §15/§16 的真实 Topic/全渠道门槛未因此自动完成。无 push/deploy/生产迁移。
 - 关键设计决策：无渠道 Master 是显式 source-only 路径；Matrix 选择不会在 Candidate Approval 前创建 DeliveryTarget；渠道适配在 Candidate v5 冻结前完成，Publisher 不改已批准内容，未知交付仍须对账。ContentAccount 自由格式 profile 不证明目标平台所有权；本地包仍须校验账号活动/归属/单元绑定和冻结目标，但只能标为人工交付，远端动作须后续 F7 精确验证。
 - 依赖与启动：沿用当前 FastAPI、React、Alembic；F6E 加法迁移 `f6e000000001` 已在代码中，未执行生产迁移。无 push/deploy/canonical 同步或归档授权。
@@ -750,7 +750,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 已完成：规格审计、十类 Registry 扩展、两张能力/验证表及加法迁移、内部精确 Publisher 验证判定、旧自动草稿执行旁路关闭、Connector/WeWrite/PublisherResult 错误与结果安全投影；本地全量后端 1207 passed、OpenSpec strict 30/30，均只是 F7 第一批阶段门禁，不是 F7 终验。
 - 规格预校准：“保存来源 URL”仅允许经过正向验证的稳定公开引用地址；签名、带凭据或过期抓取/预览地址不能落入 `MaterialRevision.source_url`、元数据、审计或 API。无法证明安全时保留有界来源标识与单向哈希。这仍是尚待实现的 Provider 接受契约。
 - 待完成/TODO：F6D/F6E 已完成本地实施验收；F7 正在按两大批 apply。Provider 适配、完整隔离浏览器与真实账号验证仍未完成，缺凭据则保持 unverified。
-- 本地 ASR 批：Video-only lazy 面板已接上有界转录建议、拒绝/本地接受/显式 Master 保存和安全血缘；最多十分钟来源、15 分钟 actor receipt，重新核对当前项目可见性、精确哈希和 model-use 权利。单次 Provider 调用最多两个未结束任务、30 秒响应期限，超时保持 unknown、不重试、占用槽位直至任务终止；不声称能取消远端任务。全后端 1291 passed / 2 skipped，隔离浏览器四 gate 与独立窄复核通过，详见 [`docs/FE_F7_ASR_ACCEPTANCE.md`](docs/FE_F7_ASR_ACCEPTANCE.md)。F7 80/105；真实 ASR adapter/凭据尚未验证，无新表或迁移。
+- 本地 ASR 批：Video-only lazy 面板已接上有界转录建议、拒绝/本地接受/显式 Master 保存和安全血缘；最多十分钟来源、15 分钟 actor receipt，重新核对当前项目可见性、精确哈希和 model-use 权利。单次 Provider 调用最多两个未结束任务、30 秒响应期限，超时保持 unknown、不重试、占用槽位直至任务终止；不声称能取消远端任务。全后端 1291 passed / 2 skipped，隔离浏览器四 gate 与独立窄复核通过，详见 [`docs/FE_F7_ASR_ACCEPTANCE.md`](openspec/docs/项目文档/FE_F7_ASR_ACCEPTANCE.md)。F7 80/105；真实 ASR adapter/凭据尚未验证，无新表或迁移。
 - 关键设计决策：复用现有 DeliveryTarget/Attempt/Receipt 和 MaterialRevision；Provider 响应仅是不可信候选，用户显式接受并通过字节、来源、许可和权利检查后才可入库；Publisher 消费已批准冻结成品，不临发布时改内容；unknown 必须对账。关闭旧 `allow_unverified_auto_draft` 对新远端效果的绕过是明示的兼容性行为变化，历史可读。
 - 依赖与启动：沿用当前 API/Vite 启动方式。F7 加法迁移 `f7a000000001` 已在代码中并经隔离 SQLite 测试，未执行生产迁移；不 push/deploy，不同步 canonical 或归档。
 
@@ -761,11 +761,11 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 已完成：本地素材hash、脱敏、日志/审计关联、真实readiness、出站隔离/Unknown不重发、SQLite＋素材恢复、三形态五渠道本地闭环、确定性Golden和独立复核；既有1660 passed/28 skipped、Web/预算、strict34/34、Ruff/diff证据保留，不冒称本轮重跑。
 - 待完成/TODO：canonical同步/归档需另行授权；18条JWT/Secret Provider/MinIO/新增远端验收是范围外记录，不阻断正式使用，也不自动安排后续实施。
 - 关键设计决策：复用User/Role、MaterialRevision、Run/Attempt/Review/Receipt；保留当前技术APP_ENV、身份、凭据、Worker与真实数据；配套恢复hash一致；ZIP/公开发布与契约/模型质量按证据分别判断。
-- 依赖与启动：无新增依赖/迁移/配置体系，沿用顶部入口及[运行手册](docs/runbooks/production-readiness.md)；此轮不改运行环境、不推送部署/主规格归档。
+- 依赖与启动：无新增依赖/迁移/配置体系，沿用顶部入口及[运行手册](openspec/docs/项目文档/runbooks/production-readiness.md)；此轮不改运行环境、不推送部署/主规格归档。
 
 ### FE-F6C Graphic Production Studio（本地实施 74/74；待主规格同步与归档授权）
 
-- PRD/需求背景：North Star 的图文生产不是图片附件；F6A 仅有 `graphic.master.v1` JSON 壳。标准提案在 [`openspec/changes/fe-f6c-graphic-production-studio/proposal.md`](openspec/changes/fe-f6c-graphic-production-studio/proposal.md)，完整实施计划在 [`docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md`](docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md)。用户原始总包保持原样。
+- PRD/需求背景：North Star 的图文生产不是图片附件；F6A 仅有 `graphic.master.v1` JSON 壳。标准提案在 [`openspec/changes/fe-f6c-graphic-production-studio/proposal.md`](openspec/changes/fe-f6c-graphic-production-studio/proposal.md)，完整实施计划在 [`docs/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md`](openspec/docs/项目文档/superpowers/plans/2026-09-29-fe-f6c-graphic-production-studio.md)。用户原始总包保持原样。
 - 目录结构：标准 change 包含 proposal/design/tasks、Graphic 新规格以及 Production Core、Review、前端性能三份 delta；后端 `apps/api/app/services/graphic_documents.py`、`graphic_master_checks.py`、`graphic_master_diff.py` 复用现有 Master/Ref/Check/Candidate 链，前端 `apps/web/src/product/GraphicStudioModel.ts` 与 `GraphicStudioShell.tsx` 按 Graphic 路径加载，`apps/web/scripts/check-bundle.mjs` 核查静态依赖边界。
 - 已完成：按 `main@670dd49` 校准 F6C 的 77 项可验证任务和 Scenario。`graphic.master.v2` canonical 文档/adapter、精确图层素材与证据 locator、按画布顺序的真实手工 render、v1→v2 显式 fork 均已实现；旧无 schema Graphic 保留 v1。exact image profile 规则和四类专业检查已接入；语义/视觉不足仅 warning。Graphic-only UI 已有画布增删复制重排、可缩放/选择的阶段预览、图层几何/样式/裁剪/形状/锁定、exact 共享素材插入/替换、文字证据绑定、每画布最终图片绑定、published Profile preset、显式保存与历史升级/差异。前 12 个可见媒体层经鉴权和 SHA256 校验才预览。隔离 SQLite 与真实浏览器已完成两画布保存/刷新、Brief/事实边界变化使旧 Master stale、精确证据绑定、手工渲染确认、八项检查、Candidate v4、冻结双图预览、警告处置、审批与本地包授权；ZIP 双图顺序/哈希与冻结清单一致，未回填发布。归档单元的 Graphic 输入/保存/检查/冻结均只读；第二单元的并发写入后，旧页面保存显示 409 且本地编辑未冒充落库。重复素材兼任图层/最终渲染时的 ZIP 重名已按失败回归修复；新旧 Candidate 回读与结构化差异保留各自冻结文字和检查哈希，Review 检查名称不再丢失。全后端在排除本机无效 `NO_PROXY/no_proxy` 后为 951 passed/2 skipped；相关定向 97 passed，前端模型 20/20、TypeScript/Vite/FE-P1、OpenSpec strict 26/26、相关 Ruff 与 diff-check PASS。
 - 待完成/TODO：独立复核已在 ChatGPT 实际读取 `main@2891bac` 后给出 SPEC 与前端 APPROVE；后端前轮 APPROVE 继续有效（未改后端业务代码），任务 74/74。本轮全后端新跑 951 passed/2 skipped，前端构建/FE-P1、OpenSpec strict 30/30、F6C 相关 Ruff 通过；额外全库 Ruff 有 23 个既有问题，不属于本切片完成声明。原 F6C 真实 Provider 接收/许可/血缘要求明确移交 F7，执行/结果响应脱敏及负向测试已进入 F7 active 规格但业务能力尚未实现。项目接口和 Graphic 工作台仍诚实显示未验证自动渲染不可执行；人工图片确认不代表已验证 Renderer 或视觉语义。不能把 F6C 通过等同整个 North Star 完成。主规格同步/归档另需授权，不 push/deploy/生产迁移。
@@ -777,7 +777,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 - 需求背景：在现有 Workflow/Run、Candidate v3、Review 与 Delivery 链路上增加不可变 `ContentMasterRevision`，让文字、图文、视频共用明确的主版本和上下文血缘；不替换旧引擎，不新增远程发布能力。
 - 目录结构：后端 `services/content_masters.py`、`production_modalities.py`、`candidates_v4.py`、`production_validation.py`、`production_packages.py` 承接保存、适配、冻结、live gate 与本地包；既有 Review/Outputs/Overview/Versions 接入 Master。前端 `ProductionWorkspace` 拆分 Header/Canvas/Inspector/AssetDrawer/MasterPanel 和三个 lazy StudioShell；迁移为 `f6a000000001`。
 - 已完成：214/214。手工 Text（无 Draft/Topic/Mother/Run）→ checks → Candidate v4 → exact-hash Approval → Delivery Authorization → ZIP；Graphic/Video 经真实文件及精确输入的人工 render attestation 走同一闭环。上下文/CAS/幂等、live rights/evidence/checks、跨 Unit 项目素材、输出血缘、三形态 Review、Master Versions/Overview、历史只读和 Workflow debugger 均已验收。
-- 验收：后端 753 passed（206 项 F6A，6 项既有 warnings）；TypeScript/Vite、FE-P1、strict24/24、Ruff/diff 通过。隔离 SQLite 与真实 PostgreSQL16 up/down/up 通过；浏览器 20.1–20.14 和三项独立 review 全部通过。/projects 224.68 kB raw / 72.86 gzip，Production 254.44 / 82.27；无 TipTap/XYFlow 首包泄漏。完整证据与边界见 [FE_F6A_FINAL_ACCEPTANCE.md](docs/FE_F6A_FINAL_ACCEPTANCE.md)。
+- 验收：后端 753 passed（206 项 F6A，6 项既有 warnings）；TypeScript/Vite、FE-P1、strict24/24、Ruff/diff 通过。隔离 SQLite 与真实 PostgreSQL16 up/down/up 通过；浏览器 20.1–20.14 和三项独立 review 全部通过。/projects 224.68 kB raw / 72.86 gzip，Production 254.44 / 82.27；无 TipTap/XYFlow 首包泄漏。完整证据与边界见 [FE_F6A_FINAL_ACCEPTANCE.md](openspec/docs/项目文档/FE_F6A_FINAL_ACCEPTANCE.md)。
 - 关键设计决策：Workflow/Master dirty 与保存独立；冻结历史不自动跟随身份/Brief/Boundary；新审批/授权要求 current Master，已有授权只交付原冻结历史且仍受撤权/字节/检查 gate；v4 失败不回退。图文、视频不计算假文本相似度；最小壳不冒充专业编辑器。
 - 规格收尾：2026-09-29获单独授权后，新增 [Production Core主规格](openspec/specs/production-content-master/spec.md)，更新FE-F2/F3A/F3B/F4四份主规格；实施记录归档至 [F6A归档](openspec/changes/archive/2026-09-29-fe-f6a-production-core-content-master/proposal.md)。29个delta要求块准确同步，40条旧要求/149个旧场景保留，原始包及9份归档文件未改。
 - 待完成/TODO：F6A已完成规格生命周期收尾；F6B及以后不执行，须先有具体方案并确认。仅本地提交，未push/deploy/生产迁移；不把本地验收当作生产就绪。
@@ -800,7 +800,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
 
 ## 快速启动（历史开发/首次初始化参考）
 
-当前单机生产日常维护使用顶部入口与[运行手册](docs/runbooks/production-readiness.md)，不对真实库重复seed、迁移或重新配置。下方首次安装/开发命令仅适用于独立环境，不是正式启动前置。
+当前单机生产日常维护使用顶部入口与[运行手册](openspec/docs/项目文档/runbooks/production-readiness.md)，不对真实库重复seed、迁移或重新配置。下方首次安装/开发命令仅适用于独立环境，不是正式启动前置。
 
 ### Codex with ChatGPT 连接
 
@@ -863,7 +863,7 @@ curl -X POST http://localhost:8000/api/v1/endpoints/1/pull -H "X-Studio-User: ed
 
 ### 运维
 
-- 当前正式运维以[单机生产手册](docs/runbooks/production-readiness.md)为准，多副本/容器仅为非当前适用的扩展参考。
+- 当前正式运维以[单机生产手册](openspec/docs/项目文档/runbooks/production-readiness.md)为准，多副本/容器仅为非当前适用的扩展参考。
 - 监控：显式`GET /api/v1/health/ready`检查DB/schema/素材/必要队列与Worker，不自动探测模型；存活用`/api/v1/health/live`，旧health兼容；metrics使用有界安全标签，
   每个响应带 `x-trace-id` 并输出 JSON 结构化访问日志
 - 多副本指标聚合：Prometheus 按 replica 逐个抓 `/metrics`（service discovery 自动发现实例），
@@ -943,9 +943,9 @@ docs/runbooks/               # 单机生产、备份恢复
 
 ## Persona Creative Studio 当前验收状态（2026-10-08）
 
-- 2026-10-09最新：`add-persona-creative-studio`150/156。科技完整Audio Recipe在隔离副本完成实际5分24秒音频、受限素材接受和QC通过；生活新CPA请求Unknown后停批，人工试听/全模态与独立质量/生命周期仍分别开放。实际串接修正不改正式数据/配置/服务；继续沿用本机启动方式与依赖，[当前回执](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。本节下面为早期验收状态。
+- 2026-10-09最新：`add-persona-creative-studio`150/156。科技完整Audio Recipe在隔离副本完成实际5分24秒音频、受限素材接受和QC通过；生活新CPA请求Unknown后停批，人工试听/全模态与独立质量/生命周期仍分别开放。实际串接修正不改正式数据/配置/服务；继续沿用本机启动方式与依赖，[当前回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。本节下面为早期验收状态。
 - 两个 Starter Persona 的真实 Text 样本已分别通过用户人工确认。
-- 本次已在隔离 SQLite + 本地素材副本中完成 MiniMax `image-01` 与 `speech-2.8-hd` 的两角色真实 provider/material 回接；证据见 [PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md](docs/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
+- 本次已在隔离 SQLite + 本地素材副本中完成 MiniMax `image-01` 与 `speech-2.8-hd` 的两角色真实 provider/material 回接；证据见 [PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。
 - 真实图片/音频结果尚待用户做创意质量确认；完整 Graphic deterministic compose/render/QC 与 Audio QC/ASR Stage 仍是后续验收项，不以 provider 连通代替。
 - 当前不写正式 SQLite/正式素材库，不做正式 Persona 初始化、发布、push 或归档提交。
 
