@@ -158,36 +158,20 @@ def _sealed(db, run, step, attempt, request, actor_email):
             output = canonical({**output, "recovery_proof": {**proof, "proof_hash": digest(proof)}})
     if domain == "professional":
         _professional_entity(db, resolved, result)
-    if domain == "audio_asr":
-        from .stage_audio_asr import validate_asr_result
-
-        validate_asr_result(db, result)
     if domain == "checks":
-        if result.get("audio_quality") is True:
-            from .stage_audio import validate_qc_result
-
-            validate_qc_result(db, result)
-        else:
-            _check_rows(db, result)
+        _check_rows(db, result)
     return output, resolved, receipt
 
 
 def _media_task(db, attempt, resolved, result):
     from . import generation_tasks
 
-    if resolved.get("node", {}).get("plugin_version") == "4" and (
-            not isinstance(resolved.get("context"), dict) or not resolved["context"].get("audio_stage")):
-        _conflict("stage_audio_tts_context_unavailable")
     task = db.get(ProviderGenerationTask, result.get("task_id"))
     expected = {**media_request(resolved["effective_config"],
-        allow_aspect=resolved["node"].get("plugin_version") == "3",
-        **({"audio_context": resolved["context"]} if resolved["node"].get("plugin_version") == "4" else {})), "project_id": resolved["context"]["project_id"],
+        allow_aspect=resolved["node"].get("plugin_version") == "3"), "project_id": resolved["context"]["project_id"],
         "workflow_step_attempt_id": attempt.id, "stage_resolution_hash": resolved["resolution_hash"],
         "stage_config_hash": resolved["config_hash"], "stage_prompt_hash": resolved["prompt_hash"]}
     model = resolved["model"]
-    if resolved["node"].get("plugin_version") == "4" and (not isinstance(model, dict) or any(
-            key not in model for key in ("runtime_hash", "model", "provider", "adapter_version", "receipt_key_id", "credential_continuity_hash"))):
-        _conflict("stage_audio_tts_model_unavailable")
     project = db.get(ContentProject, expected["project_id"])
     if (task is None or task.workflow_step_attempt_id != attempt.id or task.project_id != expected["project_id"]
             or project is None or task.owner_user_id != project.owner_user_id
@@ -395,7 +379,7 @@ def accepted_entity_projection(db, target, user):
                       "revision_no": target.get("revision_no"), "entity": entity})
 
 
-def accepted_domain_input(db, target, *, require_model_use=False, local_audio_qc=False):
+def accepted_domain_input(db, target, *, require_model_use=False):
     from .materials import read_bytes_checked
 
     output = db.get(ProjectWorkflowOutput, target["project_output_id"])
@@ -407,11 +391,10 @@ def accepted_domain_input(db, target, *, require_model_use=False, local_audio_qc
         from .creative_packages import _check_derived_rights
 
         material = db.get(MaterialRevision, entity_id)
-        local_inspection = local_audio_qc and not require_model_use and material.material.kind == "audio"
         if (material.status not in {"candidate", "usable", "active"} or material.material.status != "active"
                 or require_model_use and material.model_use_allowed is not True
                 or material.rights_status == "revoked"
-                or not local_inspection and not (material.public_use_allowed is True or material.model_use_allowed is True)):
+                or not (material.public_use_allowed is True or material.model_use_allowed is True)):
             _conflict("stage_accepted_material_rights_changed")
         read_bytes_checked(db, material)
         _check_derived_rights(db, material)
@@ -447,10 +430,6 @@ def accepted_domain_input(db, target, *, require_model_use=False, local_audio_qc
                              "preparation_only": True, "professional_dispatch_required": True}
     else:
         attempt = db.get(WorkflowStepAttempt, entity_id)
-        if target["domain"] == "audio_asr":
-            from .stage_audio_asr import validate_asr_result
-
-            validate_asr_result(db, attempt.output_json["result"])
         if target["domain"] == "checks":
             from .content_masters import check_requirements
 
@@ -458,29 +437,24 @@ def accepted_domain_input(db, target, *, require_model_use=False, local_audio_qc
             if body.get("checks_pass") is not True and body.get("checks_reviewable") is not True:
                 _conflict("stage_checks_blocked")
             _check_dispositions(body["checks"], target.get("warning_dispositions"))
-            if body.get("audio_quality") is True:
-                from .stage_audio import validate_qc_result
-
-                validate_qc_result(db, body)
-            else:
-                _check_rows(db, body, requirements=check_requirements(db, db.get(
-                    ContentMasterRevision, body["master_revision_id"])))
-                # Full reports remain at the exact CheckRun; forwarding render bytes and
-                # duplicate current-check reports makes an otherwise bounded stage overflow.
-                result["payload"] = {
-                    "schema": "stage.checks.handoff.v1",
-                    "master_revision_id": body["master_revision_id"],
-                    "checks_pass": body["checks_pass"],
-                    "checks_reviewable": body.get("checks_reviewable", False),
-                    "blockers": body.get("blockers", []),
-                    "checks": [{
-                        "id": check["id"], "check_kind": check["check_kind"],
-                        "input_hash": check["input_hash"], "status": check["status"],
-                        "report_hash": digest(check["report"]),
-                        "report": {key: value for key, value in check["report"].items()
-                                   if key in {"reasons", "warnings", "issues", "coverage", "persona_quality"}},
-                    } for check in body["checks"]],
-                }
+            _check_rows(db, body, requirements=check_requirements(db, db.get(
+                ContentMasterRevision, body["master_revision_id"])))
+            # Full reports remain at the exact CheckRun; forwarding render bytes and
+            # duplicate current-check reports makes an otherwise bounded stage overflow.
+            result["payload"] = {
+                "schema": "stage.checks.handoff.v1",
+                "master_revision_id": body["master_revision_id"],
+                "checks_pass": body["checks_pass"],
+                "checks_reviewable": body.get("checks_reviewable", False),
+                "blockers": body.get("blockers", []),
+                "checks": [{
+                    "id": check["id"], "check_kind": check["check_kind"],
+                    "input_hash": check["input_hash"], "status": check["status"],
+                    "report_hash": digest(check["report"]),
+                    "report": {key: value for key, value in check["report"].items()
+                               if key in {"reasons", "warnings", "issues", "coverage", "persona_quality"}},
+                } for check in body["checks"]],
+            }
         if "payload" not in result:
             result["payload"] = attempt.output_json["result"]
     return canonical(result)
@@ -500,13 +474,6 @@ def _current(db, project_id, unit_id, node_id, user, run, step, attempt, resolve
     if db.scalar(select(ProjectWorkflowOutput.id).where(ProjectWorkflowOutput.attempt_id == attempt.id).limit(1)):
         _conflict("stage_already_accepted")
     current, blockers = creation_recipes._context(db, project, unit, run, node=resolved["node"], config=resolved["effective_config"])
-    if resolved.get("node", {}).get("plugin") == "media.generate" and resolved["node"].get("plugin_version") == "4":
-        from .stage_audio import prepare_tts, tts_request
-
-        current, effective, audio_blockers = prepare_tts(db, user, unit, resolved["node"], resolved["effective_config"], current)
-        blockers.extend(audio_blockers)
-        if not audio_blockers and tts_request(effective, current) != tts_request(resolved["effective_config"], resolved["context"]):
-            _conflict("stage_audio_tts_config_changed")
     frozen = {key: value for key, value in resolved["context"].items() if key != "domain"}
     if blockers or digest(resolved["context"]) != request["expected_context_hash"]:
         _conflict("stage_adoption_context_changed")
@@ -692,13 +659,8 @@ def accept_result(db, project_id, unit_id, node_id, user, request):
             if domain == "checks":
                 from .content_masters import check_requirements, current_checks
 
-                if result.get("audio_quality") is True:
-                    from .stage_audio import validate_qc_result
-
-                    checks = validate_qc_result(db, result)
-                else:
-                    _check_rows(db, result, requirements=check_requirements(db, db.get(ContentMasterRevision, result["master_revision_id"])))
-                    checks = current_checks(db, project_id, unit_id, result["master_revision_id"], user)
+                _check_rows(db, result, requirements=check_requirements(db, db.get(ContentMasterRevision, result["master_revision_id"])))
+                checks = current_checks(db, project_id, unit_id, result["master_revision_id"], user)
                 if not checks or any(not item["is_current"] for item in checks):
                     _conflict("stage_checks_blocked")
                 _check_dispositions(checks, request.get("warning_dispositions"))

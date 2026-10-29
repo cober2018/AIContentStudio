@@ -174,6 +174,20 @@ export function ErrorBanner({ message }: { message: string }) {
   return <div role="alert" className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13.5px] leading-relaxed text-rose-700"><span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />{message}</div>;
 }
 
+// Alerts float at the side instead of pushing the page down; success notes fade out on their own, warnings stay until closed.
+export function FloatingAlert({ message, tone = "error", onClose }: { message: string; tone?: "error" | "info"; onClose: () => void }) {
+  useEffect(() => {
+    if (tone !== "info") return;
+    const timer = window.setTimeout(onClose, 5000);
+    return () => window.clearTimeout(timer);
+  }, [message, tone, onClose]);
+  const colors = tone === "error" ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-800";
+  return <div role={tone === "error" ? "alert" : "status"} className={`fixed bottom-6 right-6 z-50 flex max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-[13.5px] leading-relaxed shadow-lg ${colors}`}>
+    <span className="min-w-0 flex-1">{message}</span>
+    <button type="button" aria-label="关闭" className="shrink-0 text-[16px] leading-none opacity-60 hover:opacity-100" onClick={onClose}>×</button>
+  </div>;
+}
+
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
     <label className="block">

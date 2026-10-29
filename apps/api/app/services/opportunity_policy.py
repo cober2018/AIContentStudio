@@ -13,7 +13,7 @@ def revision_policy(revision):
     data = revision.profile_json if revision else {}
     return TECH if any(
         ((data.get(field) or {}).get("provenance") or {}).get("blueprint_key") == BLUEPRINT
-        for field in ("text_creative_profile", "graphic_creative_profile", "audio_creative_profile", "video_creative_profile")
+        for field in ("text_creative_profile", "graphic_creative_profile", "video_creative_profile")
     ) else LEGACY
 
 

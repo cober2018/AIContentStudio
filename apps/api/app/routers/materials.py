@@ -601,7 +601,7 @@ def master_material_loudness(
     db: Session = Depends(get_db),
     user: User = Depends(require_editor),
 ):
-    from ..services.audio_quality import master_loudness
+    from ..services.audio_mastering import master_loudness
 
     revision = _get_revision(db, material_id, revision_id)
     if (revision.material.kind != "audio" or revision.material.status != "active" or revision.status in {"revoked", "archived"}

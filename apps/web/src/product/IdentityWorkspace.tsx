@@ -1,12 +1,14 @@
 import { FormEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import NewPersonaForm from "./NewPersonaForm";
 import { useSearchParams } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
-import { Button, Chip, EmptyState, ErrorBanner, Field, Notice, Page, PageHeader, Section, Spinner, Tabs, inputClass } from "../components/ui";
+import { Button, Chip, EmptyState, ErrorBanner, Field, Notice, Page, PageHeader, Section, Spinner, Tabs, inputClass, FloatingAlert } from "../components/ui";
 import { ProfileOverview } from "./IdentityProfileView";
 import { PersonaDiscoveryStatus } from "./DiscoveryPanel";
 import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
 import StarterPersonaGallery from "./StarterGallery";
+import PersonaVoicePreset from "./PersonaVoicePreset";
 
 const PersonaReferenceStylePanel = lazy(() => import("./CapabilityMemoryPanel").then(module => ({ default: module.PersonaReferenceStylePanel })));
 const PersonaCreativeConfig = lazy(() => import("./PersonaCreativeConfig"));
@@ -18,38 +20,45 @@ type SeriesTarget = { id: number; series_id: number; account_id: number; account
 type Revision = { id: number; revision_no: number; profile: Record<string, unknown>; checksum: string; created_at: string | null };
 type Effective = { effective_profile: Record<string, unknown>; field_origins: Record<string, string>; revision_ids: Record<string, number | null> };
 type FieldKey = "positioning" | "target_audience" | "content_domains" | "expression_style" | "visual_language" | "long_term_views" | "value_propositions" | "content_boundaries" | "risk_boundaries" | "public_fact_policy" | "brand_voice_version_id";
-type Mode = "inherit" | "override" | "clear";
-type DraftField = { mode: Mode; text: string };
+// A filled field belongs to this entity, an empty one is not set; extra keeps the parts of a stored object the form does not show.
+type DraftField = { text: string; extra: string };
 
 const ROOT: Record<Kind, string> = { brand: "content-brands", persona: "content-personas", account: "content-accounts", series: "content-series" };
 const KIND_NAME: Record<Kind, string> = { brand: "品牌", persona: "角色", account: "账号", series: "栏目" };
-const FIELDS: { key: FieldKey; label: string; shape: "text" | "lines" | "json" | "voice"; tab: string }[] = [
-  { key: "positioning", label: "定位", shape: "text", tab: "identity" },
-  { key: "target_audience", label: "目标受众", shape: "lines", tab: "identity" },
-  { key: "content_domains", label: "内容领域", shape: "lines", tab: "identity" },
-  { key: "brand_voice_version_id", label: "品牌语气版本", shape: "voice", tab: "expression" },
-  { key: "expression_style", label: "表达风格 JSON", shape: "json", tab: "expression" },
-  { key: "visual_language", label: "视觉语言 JSON", shape: "json", tab: "expression" },
-  { key: "long_term_views", label: "长期观点 JSON", shape: "json", tab: "boundaries" },
-  { key: "value_propositions", label: "价值主张", shape: "lines", tab: "boundaries" },
-  { key: "content_boundaries", label: "内容边界", shape: "lines", tab: "boundaries" },
-  { key: "risk_boundaries", label: "风险边界", shape: "lines", tab: "boundaries" },
-  { key: "public_fact_policy", label: "公开事实规则 JSON", shape: "json", tab: "boundaries" },
+type Shape = "text" | "lines" | "json" | "voice" | "style" | "prose";
+const FIELDS: { key: FieldKey; label: string; shape: Shape; tab: string; hint?: string }[] = [
+  { key: "positioning", label: "定位", shape: "text", tab: "identity", hint: "一句话：这个角色是谁、讲什么" },
+  { key: "target_audience", label: "目标受众", shape: "lines", tab: "identity", hint: "一行一类人" },
+  { key: "content_domains", label: "内容领域", shape: "lines", tab: "identity", hint: "一行一个领域" },
+  { key: "expression_style", label: "表达风格", shape: "style", tab: "expression", hint: "怎么说话：语气、节奏、口头习惯" },
+  { key: "visual_language", label: "视觉语言", shape: "prose", tab: "expression", hint: "画面的感觉：色调、构图、常用元素" },
+  { key: "content_boundaries", label: "内容边界", shape: "lines", tab: "boundaries", hint: "不碰的话题，一行一条" },
+  { key: "risk_boundaries", label: "风险边界", shape: "lines", tab: "boundaries", hint: "说法上要小心的地方，一行一条" },
+  { key: "public_fact_policy", label: "公开事实规则", shape: "json", tab: "advanced" },
+  { key: "long_term_views", label: "长期观点", shape: "json", tab: "advanced" },
+  { key: "value_propositions", label: "价值主张", shape: "lines", tab: "advanced" },
+  { key: "brand_voice_version_id", label: "品牌语气版本", shape: "voice", tab: "advanced" },
 ];
 const TABS = [
   ["summary", "概览"], ["edit", "编辑资料"], ["history", "修订历史"],
-  ["creative", "创作配置"], ["accounts", "关联与管理"],
-  ["memory", "内容记忆"], ["publisher", "平台连接"],
+  ["accounts", "关联与管理"], ["memory", "内容记忆"], ["publisher", "平台连接"],
+  ["creative", "高级：创作配置"],
 ] as const;
 
 function errText(error: unknown) { return error instanceof ApiError ? `${error.status} · ${error.message}` : "后端读取失败，请重试。"; }
 function fieldText(value: unknown, shape: string): string {
   if (value === undefined || value === null) return "";
+  if (shape === "style" || shape === "prose") return typeof value === "object" && !Array.isArray(value) ? String((value as Record<string, unknown>).text ?? "") : String(value);
   if (shape === "lines" && Array.isArray(value)) return value.map(String).join("\n");
   return shape === "json" ? JSON.stringify(value, null, 2) : String(value);
 }
 function draftFrom(profile: Record<string, unknown>): Record<FieldKey, DraftField> {
-  return Object.fromEntries(FIELDS.map(({ key, shape }) => [key, { mode: !(key in profile) ? "inherit" : profile[key] === null ? "clear" : "override", text: fieldText(profile[key], shape) }])) as Record<FieldKey, DraftField>;
+  return Object.fromEntries(FIELDS.map(({ key, shape }) => {
+    const value = profile[key];
+    const extra = shape === "style" && value && typeof value === "object" && Array.isArray((value as Record<string, unknown>).forbidden_phrases)
+      ? ((value as Record<string, unknown>).forbidden_phrases as unknown[]).map(String).join("\n") : "";
+    return [key, { text: fieldText(value, shape), extra }];
+  })) as Record<FieldKey, DraftField>;
 }
 
 export default function IdentityWorkspace() {
@@ -291,6 +300,17 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
     } catch (error) { if (selectionGeneration.current === selectionEpoch && currentUser() === user) setError(errText(error)); }
     finally { pending.current = false; setBusy(false); }
   }
+  // Only a brand with no personas under it can go; the server names the ones still there.
+  async function deleteBrand() {
+    if (currentUser() !== user || pending.current || !current || current.kind !== "brand" || !window.confirm(`删除品牌「${current.name}」？品牌下有角色时不能删。`)) return;
+    pending.current = true; setBusy(true); setError("");
+    try {
+      const result = await api.del<{ message: string }>(`/content-brands/${current.id}/permanent`);
+      await loadTree(); setNotice(result?.message || "品牌已删除。");
+      const next = new URLSearchParams(params); ["kind", "id", "view", "persona"].forEach(key => next.delete(key)); next.set("directory", "brand"); navigate(next);
+    } catch (error) { setError(errText(error)); }
+    finally { pending.current = false; setBusy(false); }
+  }
   async function archive() {
     if (currentUser() !== user || pending.current || creativeReadOnly || !current || !selectedUrl || !window.confirm(`归档「${current.name}」？历史版本与生产快照仍可查看。`)) return;
     pending.current = true; setBusy(true);
@@ -309,8 +329,19 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       for (const { key, shape } of FIELDS) {
         delete profile[key];
         const value = draft[key];
-        if (value.mode === "inherit") continue;
-        if (value.mode === "clear") { profile[key] = null; continue; }
+        const stored = revisions[0]?.profile?.[key];
+        const kept = stored && typeof stored === "object" && !Array.isArray(stored) ? stored as Record<string, unknown> : {};
+        if (shape === "style" || shape === "prose") {
+          // Structured keys a check or skill relies on (reference style, older presets) stay; only text and banned words change.
+          const words = value.extra.split("\n").map(line => line.trim()).filter(Boolean);
+          const next: Record<string, unknown> = { ...kept, text: value.text.trim() };
+          if (shape === "style") next.forbidden_phrases = words;
+          if (!value.text.trim() && !words.length && Object.keys(kept).every(item => item === "text" || item === "forbidden_phrases")) continue;
+          if (!value.text.trim()) delete next.text;
+          profile[key] = next;
+          continue;
+        }
+        if (!value.text.trim()) continue;
         if (shape === "lines") profile[key] = value.text.split("\n").map((line) => line.trim()).filter(Boolean);
         else if (shape === "json") profile[key] = JSON.parse(value.text || (key === "long_term_views" ? "[]" : "{}"));
         else if (shape === "voice") profile[key] = Number(value.text);
@@ -333,14 +364,19 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       }
     } finally { pending.current = false; setBusy(false); }
   }
-  function fieldEditor(key: FieldKey, label: string, shape: string) {
+  function fieldEditor(key: FieldKey, label: string, shape: string, hint?: string) {
     const value = draft[key];
     const displayedProfile = effective?.effective_profile || revisions[0]?.profile || {};
     const origin = effective ? effective.field_origins[key] : key in displayedProfile ? current?.kind : undefined;
-    return <div key={key} className="min-w-0 rounded-[16px] border border-ink-200/90 bg-surface p-5"><div className="flex flex-wrap items-baseline justify-between gap-2"><label className="font-serif text-[16px] font-semibold text-ink-900">{label.replace(" JSON", "")}</label><span className="text-[12px] text-ink-500">{origin ? `${KIND_NAME[origin as Kind] || origin} · ${displayedProfile[key] === null ? "显式清空" : origin === current?.kind ? "本级设置" : "继承上级"}` : "当前未设置"}</span></div>
-      <select disabled={creativeReadOnly || busy} aria-label={`${label}模式`} className={`${inputClass} mt-3`} value={value.mode} onChange={(event) => setDraft({ ...draft, [key]: { ...value, mode: event.target.value as Mode } })}><option value="inherit">继承上级 / 不设置</option><option value="override">本级设置</option><option value="clear">显式清空</option></select>
-      {value.mode === "override" && (shape === "voice" ? <select aria-label={label} disabled={creativeReadOnly || busy} className={`${inputClass} mt-2`} value={value.text} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })}><option value="">请选择已发布版本</option>{voices.map((voice) => <option key={voice.id} value={voice.id}>{voice.name} · v{voice.version}</option>)}</select> : shape === "text" ? <input aria-label={label} disabled={creativeReadOnly || busy} className={`${inputClass} mt-2`} value={value.text} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })} /> : <textarea aria-label={label} disabled={creativeReadOnly || busy} className={`${inputClass} mt-2 min-h-28 ${shape === "json" ? "font-mono text-[12.5px]" : ""}`} value={value.text} placeholder={shape === "json" ? "{}" : "每行一项"} onChange={(event) => setDraft({ ...draft, [key]: { ...value, text: event.target.value } })} />)}
-      {shape === "json" && <p className="mt-2 text-[12px] text-ink-500">结构化设置，按 JSON 填写。</p>}
+    const set = (patch: Partial<DraftField>) => setDraft({ ...draft, [key]: { ...value, ...patch } });
+    const box = `${inputClass} mt-3`;
+    return <div key={key} className="min-w-0 rounded-[16px] border border-ink-200/90 bg-surface p-5"><div className="flex flex-wrap items-baseline justify-between gap-2"><label className="font-serif text-[16px] font-semibold text-ink-900">{label}</label>{origin && origin !== current?.kind && <span className="text-[12px] text-ink-500">没填时沿用{KIND_NAME[origin as Kind] || origin}的</span>}</div>
+      {hint && <p className="mt-1 text-[12px] text-ink-500">{hint}</p>}
+      {shape === "voice" ? <select aria-label={label} disabled={creativeReadOnly || busy} className={box} value={value.text} onChange={(event) => set({ text: event.target.value })}><option value="">不设置</option>{voices.map((voice) => <option key={voice.id} value={voice.id}>{voice.name || `版本 ${voice.id}`}</option>)}</select>
+        : shape === "text" ? <input aria-label={label} disabled={creativeReadOnly || busy} className={box} value={value.text} onChange={(event) => set({ text: event.target.value })} />
+        : <textarea aria-label={label} disabled={creativeReadOnly || busy} className={`${box} min-h-[88px] font-${shape === "json" ? "mono" : "sans"}`} value={value.text} onChange={(event) => set({ text: event.target.value })} />}
+      {shape === "style" && <><p className="mt-3 text-[12px] text-ink-500">不能出现的词（一行一个，检查成片和文章时会拦）</p><textarea aria-label={`${label}不能出现的词`} disabled={creativeReadOnly || busy} className={`${inputClass} mt-1 min-h-[64px]`} value={value.extra} onChange={(event) => set({ extra: event.target.value })} /></>}
+      {shape === "json" && <p className="mt-2 text-[12px] text-ink-500">结构化设置，按 JSON 填写；不清楚就留空。</p>}
     </div>;
   }
   function entityButton(entity: Entity) {
@@ -358,26 +394,30 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   const pages = Math.max(1, Math.ceil(filtered.length / 20));
   const page = Math.min(pages, Math.max(1, Math.floor(Number(params.get("page"))) || 1));
   function listParam(key: string, value: string) {
-    const next = new URLSearchParams(params); next.set(key, value); if (key !== "page") next.delete("page"); navigate(next);
+    const next = new URLSearchParams(params); next.set(key, value); if (key !== "page") next.delete("page");
+    // Switching directory lands on that directory's list, not on a "新建" form left open for the previous one.
+    if (key === "directory") next.delete("view");
+    navigate(next);
   }
   const related = current ? entities.filter(row => current.kind === "brand" ? row.kind === "persona" && row.brand_id === current.id : current.kind === "persona" ? (row.kind === "account" || row.scope === "persona_editorial") && row.persona_id === current.id : current.kind === "account" ? row.kind === "series" && row.account_id === current.id : false) : [];
   const displayedProfile = effective?.effective_profile || revisions[0]?.profile || {};
   const editor = ["editor", "admin"].includes(role ?? "");
-  const profileTabs = [["identity", "身份"], ["expression", "表达与视觉"], ["boundaries", "观点与边界"]];
+  const profileTabs = [["identity", "身份"], ["expression", "表达与视觉"], ["boundaries", "边界"]];
 
   const counts = Object.fromEntries((["persona", "account", "series", "brand"] as Kind[]).map(kind => [kind, entities.filter(row => row.kind === kind).length])) as Record<Kind, number>;
   const channelLabel = (value?: string | null) => value ? channels.find(channel => channel.channel === value)?.label || value : null;
   const visibleTabs = TABS.filter(([key]) => key !== "publisher" || account).filter(([key]) => key !== "creative" || persona);
 
   return <Page>
-    {error && <ErrorBanner message={error} />}{notice && <Notice>{notice}</Notice>}
+    {error && <FloatingAlert message={error} onClose={() => setError("")} />}{notice && <FloatingAlert tone="info" message={notice} onClose={() => setNotice("")} />}
     {loading ? <Spinner label="读取身份目录…" /> : treeError ? <div className="space-y-3"><ErrorBanner message={treeError} /><Button variant="secondary" onClick={() => { setLoading(true); loadTree().catch(error => setError(errText(error))).finally(() => setLoading(false)); }}>重试读取目录</Button></div> : invalidSelection ? <EmptyState title="身份链接无效" hint="请返回目录选择正确的对象。" /> : !selected ? <>
       <PageHeader eyebrow="资料 · 身份" title="角色与账号" lead="角色决定说什么、怎么说；账号是角色在各平台的落脚点；栏目是长期连载。"
         actions={tab === "summary" && editor ? <>{directory === "persona" && <Button variant="secondary" onClick={() => changeView("starter")}>从起步模板创建</Button>}<Button onClick={() => changeView("new")}>新建{KIND_NAME[directory]}</Button></> : undefined}>
         <Tabs label="资料目录" value={directory} onChange={kind => listParam("directory", kind)} items={(["persona", "account", "series", "brand"] as Kind[]).map(kind => [kind, `${KIND_NAME[kind]} ${counts[kind]}`] as const)} />
       </PageHeader>
       {tab === "starter" ? <div className="space-y-5"><button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回角色目录</button><StarterPersonaGallery readOnly={!editor} onInitialized={async id => { await loadTree(); selectIdentity({ kind: "persona", id }); }} /></div>
-      : tab === "new" ? <Section eyebrow="新建" title={`新建${KIND_NAME[directory]}`} aside={<button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回目录</button>}>{directory === "account" ? <ChannelAccountRegister personaId={null} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={loadTree} onError={scopedError} /> : directory === "brand" ? <form className="max-w-md space-y-4" onSubmit={createEntity}><Field label="品牌名称"><input className={inputClass} value={name} onChange={event => setName(event.target.value)} required /></Field><Button type="submit" disabled={!editor || busy}>新建品牌</Button></form> : <p className="text-[14px] leading-relaxed text-ink-600">{directory === "persona" ? "角色属于某个品牌：先打开品牌，在“关联与管理”里创建；或者用“从起步模板创建”。" : "栏目属于角色或账号：先打开对应角色，在“关联与管理”里创建。"}</p>}</Section>
+      : tab === "new" ? <Section eyebrow="新建" title={`新建${KIND_NAME[directory]}`} aside={<button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回目录</button>}>{directory === "account" ? <ChannelAccountRegister personaId={null} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={loadTree} onError={scopedError} /> : directory === "brand" ? <form className="max-w-md space-y-4" onSubmit={createEntity}><Field label="品牌名称"><input className={inputClass} value={name} onChange={event => setName(event.target.value)} required /></Field><Button type="submit" disabled={!editor || busy}>新建品牌</Button></form> : directory === "persona" ? <NewPersonaForm brands={brands} disabled={!editor || busy} onCreated={id => { void loadTree().then(() => { selectIdentity({ kind: "persona", id }); setNotice("角色已创建，声音已锁定。"); }); }} />
+        : <p className="text-[14px] leading-relaxed text-ink-600">栏目属于角色或账号：先打开对应角色，在“关联与管理”里创建。</p>}</Section>
       : <>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-[220px] flex-1 sm:max-w-sm"><input aria-label="搜索名称" className={`${inputClass} pl-9`} value={search} placeholder={`搜索${KIND_NAME[directory]}名称`} onChange={event => listParam("q", event.target.value)} /><span aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400">⌕</span></div>
@@ -399,7 +439,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       <div>
         <button className="mb-6 text-[13px] text-ink-500 transition-colors hover:text-ink-900" onClick={() => selectIdentity(null)}>← {KIND_NAME[directory]}目录</button>
         <PageHeader eyebrow={<>{KIND_NAME[current.kind]} · {parentLabel(current)}</>} title={current.name}
-          actions={tab === "summary" && !creativeReadOnly ? <Button onClick={() => changeView("edit")}>编辑资料</Button> : undefined}>
+          actions={tab === "summary" && !creativeReadOnly ? <>{current.kind === "brand" && <Button variant="danger" disabled={busy} onClick={() => void deleteBrand()}>删除品牌</Button>}<Button onClick={() => changeView("edit")}>编辑资料</Button></> : undefined}>
           <div className="mb-6 flex flex-wrap items-center gap-2">
             {current.status === "archived" ? <Chip tone="warn">已归档 · 只能查看</Chip> : <Chip tone="good">使用中</Chip>}
             <Chip>修订 v{current.current_revision}</Chip>
@@ -425,7 +465,9 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
           </aside>
         </div>}
         {tab === "edit" && <div className="space-y-8">{revisionConflict && <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-[14px] text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}。当前输入已保留，需先核对历史再显式加载，不能继续覆盖。</p><Button variant="secondary" onClick={() => { if (!window.confirm("加载最新修订将覆盖当前表单，确认继续？")) return; const next = draftFrom(revisions[0]?.profile || {}); setDraft(next); baselineDraft.current = JSON.stringify(next); setRevisionConflict(false); setError(""); }}>加载最新修订（覆盖当前表单）</Button></div>}
-          {profileTabs.map(([group, label]) => <section key={group} className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">{label}</h3><div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === group).map(({ key, label, shape }) => fieldEditor(key, label, shape))}</div></section>)}
+          {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">声音</h3><div className="max-w-md"><PersonaVoicePreset personaId={current.id} disabled={creativeReadOnly} /></div></section>}
+          {profileTabs.map(([group, label]) => <section key={group} className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">{label}</h3><div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === group).map(({ key, label, shape, hint }) => fieldEditor(key, label, shape, hint))}</div></section>)}
+          <details className="min-w-0"><summary className="cursor-pointer font-serif text-[18px] font-semibold text-ink-700">高级（一般不用填）</summary><div className="mt-4 grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === "advanced").map(({ key, label, shape, hint }) => fieldEditor(key, label, shape, hint))}</div></details>
           <div className="sticky bottom-4 z-10 flex items-center justify-between gap-4 rounded-pill border border-ink-200 bg-surface/95 py-2 pl-6 pr-2 shadow-lift backdrop-blur"><span className="text-[13px] text-ink-600">保存后生成新修订，旧作品的快照不会改变。</span><Button onClick={saveRevision} disabled={creativeReadOnly || busy || revisionConflict}>保存为 v{current.current_revision + 1}</Button></div>
         </div>}
         {tab === "history" && <Section eyebrow="只读" title="修订历史">{revisions.length ? <ol className="relative space-y-3 border-l border-ink-200 pl-6">{revisions.map((revision, index) => <li key={revision.id} className="relative"><span aria-hidden className={`absolute -left-[29px] top-5 h-2.5 w-2.5 rounded-full ring-4 ring-surface ${index === 0 ? "bg-accent-500" : "bg-ink-300"}`} /><details className="group rounded-[14px] border border-ink-200/80 bg-surface"><summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1 px-5 py-4"><span className="font-serif text-[20px] font-semibold text-ink-900">v{revision.revision_no}</span>{index === 0 && <Chip tone="accent">当前</Chip>}<span className="text-[13px] text-ink-500">{revision.created_at ? new Date(revision.created_at).toLocaleString("zh-CN", { hour12: false }) : "时间未记录"}</span><span className="ml-auto text-[12.5px] text-ink-500 group-open:hidden">展开</span></summary><div className="border-t border-ink-200/80 p-5"><ProfileOverview profile={revision.profile} /><p className="mt-4 break-all font-mono text-[11.5px] text-ink-400">校验和 {revision.checksum}</p></div></details></li>)}</ol> : <p className="text-[14px] text-ink-500">尚无画像修订。</p>}</Section>}

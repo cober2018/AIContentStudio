@@ -35,28 +35,128 @@ def tts_model() -> str:
     return DEFAULT["model_id"]
 
 
-def settings() -> dict:
-    stored = {k: v for k, v in (runtime_config.get_runtime(KEY) or {}).items() if k != "model_id"}
-    return {**DEFAULT, **stored, "model_id": tts_model()}
+PRESETS = "voice_presets"
+_PRESET_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 
 
-def save_settings(db: Session, value: dict, user: User) -> dict:
+def presets() -> dict:
+    """Named voice setups; the single setting from before becomes the first one, 男声, and the default."""
+    stored = runtime_config.get_runtime(PRESETS) or {}
+    if not stored.get("items"):
+        before = {k: v for k, v in (runtime_config.get_runtime(KEY) or {}).items() if k != "model_id"}
+        stored = {"default": "male", "items": {"male": {"name": "男声", **DEFAULT, **before}}, "personas": {}}
+    model = tts_model()
+    return {"default": stored.get("default"), "personas": dict(stored.get("personas") or {}), "works": dict(stored.get("works") or {}),
+            "items": {key: {**DEFAULT, **value, "model_id": model} for key, value in stored["items"].items()}}
+
+
+def _write(db: Session, value: dict, user: User) -> dict:
     from ..models import SystemSetting
+
+    stored = {"default": value["default"], "personas": value["personas"], "works": value["works"],
+              "items": {key: {k: v for k, v in item.items() if k != "model_id"} for key, item in value["items"].items()}}
+    row = db.get(SystemSetting, PRESETS) or SystemSetting(key=PRESETS)
+    row.value, row.updated_by = stored, user.email
+    db.add(row)
+    db.commit()
+    runtime_config.set_runtime(PRESETS, stored)
+    return presets()
+
+
+def _fail(code: str, message: str, status: int = 422):
+    raise HTTPException(status, {"code": code, "message": message})
+
+
+def save_preset(db: Session, user: User, preset_id: str | None, name: str, value: dict) -> dict:
     from .model_capability_routing import tts_parameters
 
-    merged = {**settings(), **{k: v for k, v in value.items() if k in DEFAULT and k != "model_id"}}
+    current = presets()
+    if preset_id is None:
+        preset_id = "voice-" + hashlib.sha256(f"{name}{len(current['items'])}".encode()).hexdigest()[:8]
+    elif preset_id not in current["items"] and not _PRESET_ID.fullmatch(preset_id):
+        _fail("voice_preset_invalid", "声音配置标识不对")
+    name = (name or "").strip()
+    if not 0 < len(name) <= 40:
+        _fail("voice_preset_name_invalid", "名称不能为空，最多 40 个字")
+    if any(key != preset_id and item["name"] == name for key, item in current["items"].items()):
+        _fail("voice_preset_name_taken", "已经有同名的声音配置")
+    merged = {**DEFAULT, **current["items"].get(preset_id, {}), **{k: v for k, v in value.items() if k in DEFAULT and k != "model_id"}, "name": name}
     if merged["emotion"] not in EMOTIONS:
-        raise HTTPException(422, {"code": "voice_settings_invalid", "message": "情绪不支持"})
+        _fail("voice_settings_invalid", "情绪不支持")
     try:
         tts_parameters(_parameters(merged), capability="tts")
     except (TypeError, ValueError):
-        raise HTTPException(422, {"code": "voice_settings_invalid", "message": "配音参数超出范围"}) from None
-    row = db.get(SystemSetting, KEY) or SystemSetting(key=KEY)
-    row.value, row.updated_by = {k: v for k, v in merged.items() if k != "model_id"}, user.email
-    db.add(row)
-    db.commit()
-    runtime_config.set_runtime(KEY, merged)
-    return merged
+        _fail("voice_settings_invalid", "配音参数超出范围")
+    current["items"][preset_id] = merged
+    current["default"] = current["default"] or preset_id
+    return _write(db, current, user)
+
+
+def delete_preset(db: Session, user: User, preset_id: str) -> dict:
+    current = presets()
+    if preset_id not in current["items"]:
+        _fail("voice_preset_missing", "没有这套声音配置", 404)
+    if preset_id == current["default"]:
+        _fail("voice_preset_in_use", "默认的那套不能删，先把别的设为默认", 409)
+    if preset_id in current["personas"].values() or preset_id in current["works"].values():
+        _fail("voice_preset_in_use", "有角色或作品在用这套声音，不能删（角色的声音定了就不改）", 409)
+    del current["items"][preset_id]
+    return _write(db, current, user)
+
+
+def set_default(db: Session, user: User, preset_id: str) -> dict:
+    current = presets()
+    if preset_id not in current["items"]:
+        _fail("voice_preset_missing", "没有这套声音配置", 404)
+    current["default"] = preset_id
+    return _write(db, current, user)
+
+
+def set_persona_preset(db: Session, user: User, persona_id: int, preset_id: str | None) -> dict:
+    current = presets()
+    if preset_id is None or preset_id not in current["items"]:
+        _fail("voice_preset_missing", "请选一套声音配置", 404 if preset_id else 422)
+    # A persona's voice is part of who it is: set once, then fixed (the same preset may serve other personas).
+    already = current["personas"].get(str(persona_id))
+    if already and already != preset_id:
+        _fail("voice_preset_locked", f"这个角色的声音已定为「{current['items'].get(already, {}).get('name', already)}」，不能再改", 409)
+    current["personas"][str(persona_id)] = preset_id
+    return _write(db, current, user)
+
+
+def set_work_preset(db: Session, user: User, project_id: int, unit_id: int, preset_id: str | None) -> dict:
+    """A work's own pick lives beside the presets, not in its production settings, so changing it mid-way keeps the 导演稿 valid."""
+    from .content_masters import owned_unit
+
+    owned_unit(db, project_id, unit_id, user)
+    current = presets()
+    if preset_id is not None and preset_id not in current["items"]:
+        _fail("voice_preset_missing", "没有这套声音配置", 404)
+    if preset_id is None:
+        current["works"].pop(str(unit_id), None)
+    else:
+        current["works"][str(unit_id)] = preset_id
+    return _write(db, current, user)
+
+
+def settings() -> dict:
+    """The default voice setup."""
+    current = presets()
+    return {k: v for k, v in current["items"][current["default"]].items() if k != "name"}
+
+
+def settings_for(db: Session, unit) -> dict:
+    """The voice a work speaks with: its own pick, else its persona's, else the default."""
+    current = presets()
+    chosen, origin = None, "默认"
+    picked = current["works"].get(str(unit.id))
+    if picked in current["items"]:
+        chosen, origin = picked, "本作品"
+    elif unit.persona_id is not None and current["personas"].get(str(unit.persona_id)) in current["items"]:
+        chosen, origin = current["personas"][str(unit.persona_id)], "角色"
+    chosen = chosen or current["default"]
+    item = current["items"][chosen]
+    return {**{k: v for k, v in item.items() if k != "name"}, "preset_id": chosen, "preset_name": item["name"], "preset_origin": origin}
 
 
 def _parameters(config: dict) -> dict:
@@ -184,7 +284,7 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     text = _script(document)
     if not text:
         raise HTTPException(409, {"code": "voiceover_script_empty", "message": "分镜表的台词列是空的"})
-    config = settings()
+    config = settings_for(db, unit)
     lines = _role_lines(document)
     if lines:
         config = {**config, "roles": _role_voices(db, [role for role, _ in lines], config["voice_id"])}
@@ -204,7 +304,46 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
                     detail_json={"material_revision_id": revision.id, "master_id": master_id}))
     db.commit()
     return {"material_id": revision.material_id, "material_revision_id": revision.id, "master_id": master_id,
-            "duration_ms": revision.duration_ms, "aligned": aligned, "has_timing": bool((revision.metadata_json or {}).get("subtitles_srt")), "settings": config}
+            "duration_ms": revision.duration_ms, "aligned": aligned, "has_timing": bool((revision.metadata_json or {}).get("subtitles_srt")), "settings": config,
+            "quality": _quality_of(db, revision, db.get(ContentMasterRevision, master_id))}
+
+
+# Short-video narration is mixed around -16 LUFS; well below -23 sounds quiet on a phone, above -9 clips.
+LOUDNESS_RANGE = (-23.0, -9.0)
+CHARS_PER_SECOND = (2.5, 8.0)
+
+
+def _loudness(content: bytes, suffix: str) -> float | None:
+    with tempfile.NamedTemporaryFile(suffix=suffix) as handle:
+        handle.write(content)
+        handle.flush()
+        done = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", handle.name, "-af", "ebur128", "-f", "null", "-"],
+                              capture_output=True, text=True, timeout=60)
+    found = re.findall(r"I:\s+(-?[0-9.]+) LUFS", done.stderr)
+    return float(found[-1]) if found else None
+
+
+def check_audio(content: bytes, suffix: str, text: str, voice_name: str) -> dict:
+    """What the voice file itself shows: it plays, its length fits the lines, it is loud enough, and which voice it used."""
+    items = []
+    duration = _duration_ms(content, suffix)
+    items.append({"key": "file", "name": "文件", "pass": bool(duration), "detail": "能正常播放" if duration else "文件打不开或是空的"})
+    if duration:
+        chars = len(_plain(text))
+        speed = chars / (duration / 1000) if duration else 0
+        low, high = CHARS_PER_SECOND
+        fits = low <= speed <= high
+        items.append({"key": "duration", "name": "时长", "pass": fits,
+                      "detail": f"{duration / 1000:.1f} 秒，{chars} 字，每秒 {speed:.1f} 字" + ("" if fits else "，和台词对不上（可能漏读或拖长）")})
+        level = _loudness(content, suffix)
+        if level is None:
+            items.append({"key": "loudness", "name": "音量", "pass": False, "detail": "量不出响度"})
+        else:
+            quiet, loud = LOUDNESS_RANGE
+            items.append({"key": "loudness", "name": "音量", "pass": quiet <= level <= loud,
+                          "detail": f"{level:.1f} LUFS" + ("，偏小声，剪辑时要提响度" if level < quiet else "，偏大声，可能破音" if level > loud else "，正常")})
+    items.append({"key": "voice", "name": "声音", "pass": True, "detail": f"用的是「{voice_name}」"})
+    return {"status": "ok" if all(item["pass"] for item in items) else "warning", "items": items}
 
 
 def _cues(srt: str) -> list[tuple[int, int, str]]:
@@ -348,10 +487,31 @@ def _synthesize(db: Session, user: User, project_id: int, unit, text: str, scrip
     return revision
 
 
+def _quality_of(db: Session, revision, master) -> dict | None:
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from .material_storage import provider
+
+    meta = dict(revision.metadata_json or {})
+    if meta.get("quality"):
+        return meta["quality"]
+    try:
+        content = provider().read(revision.file_path)
+    except (OSError, ValueError):
+        return None
+    voice = meta.get("voice_settings") or {}
+    meta["quality"] = check_audio(content, Path(revision.file_path).suffix or ".mp3", _script(master.payload_json) if master else "",
+                                  voice.get("preset_name") or voice.get("voice_id") or "未知")
+    revision.metadata_json = meta
+    flag_modified(revision, "metadata_json")
+    db.commit()
+    return meta["quality"]
+
+
 def status(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .content_masters import owned_unit
 
-    owned_unit(db, project_id, unit_id, user)
+    _project, unit = owned_unit(db, project_id, unit_id, user)
     master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id)
                        .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     from ..models import MaterialRevision
@@ -360,4 +520,5 @@ def status(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     revision = db.get(MaterialRevision, voice["material_revision_id"]) if voice.get("material_revision_id") else None
     if revision is not None:
         voice["material_id"], voice["duration_ms"] = revision.material_id, revision.duration_ms
-    return {"voice": voice, "settings": settings(), "emotions": {k: v for k, v in EMOTIONS.items() if v}}
+        voice["quality"] = _quality_of(db, revision, master)
+    return {"voice": voice, "settings": settings_for(db, unit), "emotions": {k: v for k, v in EMOTIONS.items() if v}}

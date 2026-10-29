@@ -664,7 +664,6 @@ def _context(db, project, unit, run, *, node=None, config=None, rework_current=T
 
         knowledge_purposes = (set() if node is not None and node["kind"] != "AI" else
                               {"professional"} if (config or {}).get("output_schema") == "research.brief.v1" else
-                              {"style"} if (config or {}).get("output_schema") == "audio.voice-direction.v1" else
                               {"professional", "style"})
         knowledge, knowledge_blockers = stage_context(db, unit, run, purposes=knowledge_purposes)
         if knowledge is not None:
@@ -753,19 +752,15 @@ def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_
     method, method_blockers = (creative_method, []) if creative is not None else _method(db, user, unit, node, config)
     upstream = {}
     if "domain" in context:
-        # Audio QC executes the sealed domain snapshot; copying its ASR report into prompts exhausts receipt bounds.
+        # TTS executes the sealed domain snapshot; copying it into prompts again only inflates receipts.
         upstream["__domain_input__"] = ({"context_ref": "domain", "input_hash": digest(context["domain"])}
-            if node["plugin"] == "stage.audio.qc" or
-               node["plugin"] == "media.generate" and config.get("capability") == "tts"
+            if node["plugin"] == "media.generate" and config.get("capability") == "tts"
             else context["domain"])
     elif context.get("master"):
         master = db.get(ContentMasterRevision, context["master"]["id"])
         upstream["__current_master__"] = {"payload_schema": master.payload_schema,
             "payload_hash": master.payload_hash, "payload": canonical(master.payload_json),
             "asset_refs": context["asset_refs"], "evidence_refs": context["evidence_refs"]}
-        if node["plugin"] == "stage.creative.method" and config.get("output_schema") == "audio.voice-direction.v1":
-            # Voice direction reads the accepted spoken adaptation below, retaining the original Master identity only.
-            upstream["__current_master__"].pop("payload")
         if node["plugin"] == "stage.checks":
             # Rule checks re-read the master by revision id; the context payload stays the single frozen copy.
             upstream["__current_master__"] = {key: value for key, value in upstream["__current_master__"].items()
@@ -808,11 +803,7 @@ def preview_stage(db, project_id, unit_id, node_id, user, *, run_id=None, stage_
                 from .stage_invocations import StageInvocationError
                 try:
                     upstream[edge["from"]] = accepted_domain_input(db, accepted,
-                        require_model_use=node["kind"] == "AI",
-                        local_audio_qc=node["plugin"] == "stage.audio.qc" and str(node.get("plugin_version")) == "1")
-                    if node["plugin"] == "stage.audio.qc":
-                        # prepare_qc already verified and froze these inputs in the domain report.
-                        upstream[edge["from"]] = {**accepted, "payload_ref": "context.domain"}
+                        require_model_use=node["kind"] == "AI")
                 except (StageInvocationError, HTTPException) as exc:
                     blockers.append(exc.code if isinstance(exc, StageInvocationError) else "accepted_domain_input_unavailable")
                 continue

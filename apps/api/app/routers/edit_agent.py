@@ -81,14 +81,54 @@ class VoiceSettingsIn(BaseModel):
 def read_voice_settings(user: User = Depends(get_current_user)):
     from ..services import voiceover
 
-    return {"settings": voiceover.settings(), "emotions": {k: v for k, v in voiceover.EMOTIONS.items() if v} | {"auto": "自动"}}
+    return {**voiceover.presets(), "emotions": {k: v for k, v in voiceover.EMOTIONS.items() if v} | {"auto": "自动"}}
 
 
-@router.put("/api/v1/settings/voice")
-def write_voice_settings(payload: VoiceSettingsIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+class VoicePresetIn(VoiceSettingsIn):
+    name: str = Field(min_length=1, max_length=40)
+
+
+@router.post("/api/v1/settings/voice/presets")
+def create_voice_preset(payload: VoicePresetIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
     from ..services import voiceover
 
-    return voiceover.save_settings(db, payload.model_dump(exclude_none=True), user)
+    return voiceover.save_preset(db, user, None, payload.name, payload.model_dump(exclude_none=True, exclude={"name"}))
+
+
+@router.put("/api/v1/settings/voice/presets/{preset_id}")
+def update_voice_preset(preset_id: str, payload: VoicePresetIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services import voiceover
+
+    return voiceover.save_preset(db, user, preset_id, payload.name, payload.model_dump(exclude_none=True, exclude={"name"}))
+
+
+@router.delete("/api/v1/settings/voice/presets/{preset_id}")
+def delete_voice_preset(preset_id: str, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services import voiceover
+
+    return voiceover.delete_preset(db, user, preset_id)
+
+
+@router.put("/api/v1/settings/voice/default/{preset_id}")
+def default_voice_preset(preset_id: str, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    from ..services import voiceover
+
+    return voiceover.set_default(db, user, preset_id)
+
+
+class PersonaVoiceIn(BaseModel):
+    preset_id: str | None = Field(default=None, max_length=40)
+
+
+@router.put("/api/v1/personas/{persona_id}/voice-preset")
+def persona_voice_preset(persona_id: int, payload: PersonaVoiceIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..models import ContentPersona
+    from ..services import voiceover
+
+    persona = db.get(ContentPersona, persona_id)
+    if persona is None or persona.owner_user_id != user.id:
+        raise HTTPException(404, {"code": "persona_not_found", "message": "没有这个角色"})
+    return voiceover.set_persona_preset(db, user, persona_id, payload.preset_id)
 
 
 @router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/voiceover")
@@ -252,3 +292,10 @@ def video_chain_reveal(project_id: int, unit_id: int, output_id: int, db: Sessio
     path = video_chain.cut_location(db, user, project_id, unit_id, output_id)
     _reveal(path)
     return {"path": str(path)}
+
+
+@router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/voice-preset")
+def work_voice_preset(project_id: int, unit_id: int, payload: PersonaVoiceIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import voiceover
+
+    return voiceover.set_work_preset(db, user, project_id, unit_id, payload.preset_id)

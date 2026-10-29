@@ -15,7 +15,7 @@ const WORDS: Record<string, string> = {
 const STYLE_KEYS: Record<string, string> = { voice: "语气", hype: "夸张程度", tradeoffs: "取舍表达", evidence: "证据要求", specificity: "具体程度", tone: "语调", pace: "节奏" };
 const VISUAL_KEYS: Record<string, string> = { preset: "视觉预设", diagram_first: "图示优先", density: "信息密度", palette: "配色", typography: "字体" };
 const FACT_RULES: Record<string, string> = { fresh_source_required_for_current_claims: "涉及时效的说法必须有最新来源", label_speculation: "推测内容必须标明是推测" };
-const MODALITIES = [["text_creative_profile", "文字"], ["graphic_creative_profile", "图文"], ["audio_creative_profile", "音频"], ["video_creative_profile", "视频"]] as const;
+const MODALITIES = [["text_creative_profile", "文字"], ["graphic_creative_profile", "图文"], ["video_creative_profile", "视频"]] as const;
 const KNOWN = new Set(["positioning", "target_audience", "content_domains", "expression_style", "visual_language", "long_term_views", "value_propositions", "content_boundaries", "risk_boundaries", "public_fact_policy", "brand_voice_version_id", ...MODALITIES.map(([key]) => key)]);
 
 function word(value: unknown): string {
@@ -28,8 +28,7 @@ function list(value: unknown): string[] { return Array.isArray(value) ? value.ma
 const PRESETS: Record<string, string> = {
   "text.deep-technical": "深度技术", "text.engineering-explainer": "工程讲解", "text.observational-lifestyle": "观察式生活", "text.reflective-lifestyle": "反思式生活", "text.concise-social": "简洁社交",
   "graphic.technical-editorial": "技术编辑", "graphic.architecture-diagram": "架构图解", "graphic.clean-infographic": "清爽信息图", "graphic.warm-magazine": "温暖杂志", "graphic.documentary-photo": "纪实摄影", "graphic.lifestyle-cards": "生活卡片", "graphic.product-neutral": "商品中性",
-  "audio.calm-engineer": "沉稳工程师", "audio.clear-explainer": "清晰讲解", "audio.warm-conversational": "温暖对话", "audio.reflective-story": "反思叙事",
-  "quality.video.product": "商品视频", "quality.text.technical": "技术内容", "quality.text.lifestyle": "生活内容", "quality.graphic.editorial": "编辑图文", "quality.graphic.lifestyle": "生活图文", "quality.audio.explainer": "讲解音频", "quality.audio.conversational": "对话音频",
+  "quality.video.product": "商品视频", "quality.text.technical": "技术内容", "quality.text.lifestyle": "生活内容", "quality.graphic.editorial": "编辑图文", "quality.graphic.lifestyle": "生活图文",
 };
 export function refName(ref: unknown) {
   if (typeof ref !== "string" || !ref) return "";

@@ -5,7 +5,6 @@ import { api, ApiError } from "../api";
 import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
 
 export type Settings = {
-  voice_id?: string | null; audio_creative_profile?: Record<string, unknown> | null;
   shared_references?: { material_revision_id: number; content_hash: string; role: "product" | "person" | "scene" }[];
   work_type?: "showcase" | "scene" | "ugc"; creation_mode?: "original" | "reference";
   speech_mode?: "voiceover" | "lip_sync" | "none" | "mixed"; reference_notes?: string; comparison_notes?: string;
@@ -53,7 +52,7 @@ export default function GuidedProductionProfile({ projectId, unitId, view, readO
   async function save() {
     if (!profile || busy || readOnly) return;
     setBusy(true); setError("");
-    try { const value = await api.put<Profile>(base, { expected_revision: profile.revision, settings: draft }); setProfile(previous => ({ ...previous, ...value })); setDraft(value.settings); setDirty(false); onSavedSettings?.(value.settings); window.dispatchEvent(new CustomEvent("production-profile-saved", { detail: { projectId, unitId } })); setNotice("制作设置已保存为独立版本；不代表方案、素材或成片已接受。"); }
+    try { const value = await api.put<Profile>(base, { expected_revision: profile.revision, settings: draft }); setProfile(previous => ({ ...previous, ...value })); setDraft(value.settings); setDirty(false); onSavedSettings?.(value.settings); setNotice("制作设置已保存为独立版本；不代表方案、素材或成片已接受。"); }
     catch (cause) { setError(cause instanceof ApiError && cause.status === 409 ? "制作设置已有新版本，当前草稿保留。请核对后重新载入。" : cause instanceof Error ? cause.message : "保存失败，草稿保留"); }
     finally { setBusy(false); }
   }
@@ -76,7 +75,7 @@ export default function GuidedProductionProfile({ projectId, unitId, view, readO
     {(view === "goal" || view === "plan") && <SalesDirection draft={draft} disabled={disabled} update={update} />}
     {view === "plan" && <div>{text("comparison_notes", "本次对照只改变什么（可选）")}<p className="mt-1 text-xs text-slate-500">对照制作可从同一SKU、同一方案新建独立作品，只改一个因素，其余条件保持；这是可选记录，不限制正常编辑。</p></div>}
     {(view === "plan" || view === "style") && <><Field label="讲话方式"><select className={inputClass} value={draft.speech_mode || ""} disabled={disabled} onChange={event => update({ speech_mode: event.target.value as Settings["speech_mode"] })}><option value="" disabled>待选择</option><option value="voiceover">旁白</option><option value="lip_sync">人物对白 / 口型同步</option><option value="none">无讲话</option><option value="mixed">混合声音</option></select></Field>{(draft.speech_mode === "lip_sync" || draft.speech_mode === "mixed") && <p className="text-sm text-amber-800">人物同步能力待真实样本验证；请先确认网站支持所需台词或声音输入，回传后检查原声与口型。</p>}</>}
-    {(view === "plan" || view === "style") && <div className="grid gap-4 sm:grid-cols-2">{draft.speech_mode !== "none" && <Field label="本作品音色 ID"><input aria-label="本作品音色 ID" className={inputClass} value={draft.voice_id || ""} disabled={disabled} onChange={event => update({ voice_id: event.target.value.trim() || null })} /><p className="mt-1 text-xs text-slate-500">使用已验证可用的音色 ID；声音配置独立保存在本作品中。</p></Field>}</div>}
+    {(view === "plan" || view === "style") && <div className="grid gap-4 sm:grid-cols-2">{draft.speech_mode !== "none" && <WorkVoice projectId={projectId} unitId={unitId} disabled={readOnly} />}</div>}
     {view === "style" && <div className="grid gap-4 sm:grid-cols-2">{draft.creation_mode === "reference" && text("reference_notes", "参考出处、保留和改写范围")}{text("visual_style", "共同视觉定样：商品、人物、场景、光线")}{text("continuity_notes", "跨镜头参考与动作衔接")}{draft.speech_mode !== "none" && <>{text("dialogue", "本条台词 / 口语稿")}{text("dialogue_language", "台词语言")}<Field label="预计旁白时长（秒，可留空）"><input type="number" min={0.01} max={3600} step="any" className={inputClass} value={draft.estimated_voice_duration_seconds ?? ""} disabled={disabled} onChange={event => update({ estimated_voice_duration_seconds: event.target.value ? Number(event.target.value) : null })} /><p className="mt-1 text-xs text-slate-500">规划值，非已生成音频时长；实际时长以精确音频素材为准。</p></Field></>}{text("music_direction", "环境声与配乐方向（可明确不使用配乐）")}</div>}
     {view === "style" && <div className="space-y-3 rounded-xl border border-slate-200 p-4"><h4 className="font-medium">共同视觉参考 · 精确素材版本</h4><p className="text-xs text-slate-500">从已入项目且允许模型使用的真实图片选取；保存引用不代表已批准，也不代表网站已收到这些输入。</p>{assetIssue && <ErrorBanner message={assetIssue} />}{([ ["product", "商品参考"], ["person", "人物参考"], ["scene", "场景参考"] ] as const).map(([role, label]) => {
       const selected = draft.shared_references?.find(item => item.role === role);
@@ -106,4 +105,22 @@ function SalesDirection({ draft, disabled, update }: { draft: Settings; disabled
     </div>
     <Field label="参考爆款结构（可选，只学结构不抄原话）"><textarea aria-label="参考爆款结构" className={inputClass} rows={2} maxLength={4000} value={draft.reference_structure || ""} disabled={disabled} onChange={event => update({ reference_structure: event.target.value })} /></Field>
   </div>;
+}
+
+// A work speaks with its persona's voice unless it picks another setup here (设置 → 配音). The pick is saved on its own,
+// outside the production settings, so changing it mid-way does not invalidate the approved 导演稿.
+function WorkVoice({ projectId, unitId, disabled }: { projectId: number; unitId: number; disabled: boolean }) {
+  const [data, setData] = useState<{ items: Record<string, { name: string }>; works: Record<string, string> } | null>(null);
+  const [issue, setIssue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = () => api.get<{ items: Record<string, { name: string }>; works: Record<string, string> }>("/settings/voice").then(setData).catch(() => setIssue("声音配置读取失败"));
+  useEffect(() => { void load(); }, []);
+  async function pick(value: string) {
+    setBusy(true); setIssue("");
+    try { await api.put(`/content-projects/${projectId}/units/${unitId}/voice-preset`, { preset_id: value || null }); await load(); }
+    catch (cause) { setIssue(cause instanceof Error ? cause.message : "保存失败"); } finally { setBusy(false); }
+  }
+  return <Field label="本作品的声音"><select aria-label="本作品的声音" className={inputClass} value={data?.works[String(unitId)] || ""} disabled={disabled || busy || !data} onChange={event => void pick(event.target.value)}>
+    <option value="">跟随所属角色（没选角色就用默认）</option>{Object.entries(data?.items || {}).map(([key, item]) => <option key={key} value={key}>{item.name}</option>)}</select>
+    <p className="mt-1 text-xs text-slate-500">选完立即生效，只改这一条作品，不影响角色本身。</p>{issue && <p role="alert" className="text-xs text-rose-700">{issue}</p>}</Field>;
 }

@@ -124,7 +124,7 @@ def _creative_method_scope(db, unit):
 
     snapshot = db.get(IdentitySnapshot, unit.identity_snapshot_id) if unit.identity_snapshot_id else None
     if not snapshot or not any(snapshot.effective_profile_json.get(f"{modality}_creative_profile")
-                               for modality in ("text", "graphic", "audio", "video")):
+                               for modality in ("text", "graphic", "video")):
         return None
     if any(getattr(snapshot, key) != getattr(unit, key) for key in ("persona_id", "account_id", "series_id")):
         raise StageInvocationError("recipe_identity_scope_mismatch")
@@ -556,23 +556,6 @@ def recipe_options(db, project_id, unit_id, user):
             options.insert(0, {"key": f"{key}.{unit.modality}", "title": f"{BLUEPRINTS[key]['name']} · {unit.modality} 默认创作流程",
                 "definition": definition, "definition_hash": digest(definition), "modality": unit.modality,
                 "requires_explicit_save": True})
-        if unit.modality in {"text", "video"} and snapshot:
-            from ..models import ContentMasterRevision
-            from .starter_personas import audio_definition
-
-            audio_profile = (snapshot.effective_profile_json or {}).get("audio_creative_profile")
-            audio_key = ((audio_profile or {}).get("provenance") or {}).get("blueprint_key")
-            source = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit.id)
-                .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
-            if audio_key in BLUEPRINTS and source and source.payload_schema in {"text.master.v2", "video.master.v2"}:
-                definition = validate_definition(audio_definition(audio_key))
-                options.insert(1, {"key": f"{audio_key}.audio", "title": f"{BLUEPRINTS[audio_key]['name']} · 从当前已接受稿创作音频",
-                    "definition": definition, "definition_hash": digest(definition), "modality": unit.modality,
-                    "output_kind": "audio_material", "requires_explicit_save": True})
-                aligned = validate_definition(audio_definition(audio_key, alignment=True))
-                options.insert(2, {"key": f"{audio_key}.audio-asr", "title": f"{BLUEPRINTS[audio_key]['name']} · 音频＋本机ASR对稿／字幕（须明确执行）",
-                    "definition": aligned, "definition_hash": digest(aligned), "modality": unit.modality,
-                    "output_kind": "audio_material", "requires_explicit_save": True})
     if unit.production_domain != "product" and unit.identity_snapshot_id:
         from .starter_personas import method_trial_definition
 
@@ -581,11 +564,6 @@ def recipe_options(db, project_id, unit_id, user):
             options.append({"key": f"{key}.{unit.modality}.methods-v2-trial", "title": "新方法 v2 · 仅本作品试用（默认不变）",
                 "definition": candidate, "definition_hash": digest(candidate), "modality": unit.modality,
                 "requires_explicit_save": True})
-        if unit.modality in {"text", "video"} and snapshot and audio_key in BLUEPRINTS and source:
-            candidate = validate_definition(method_trial_definition(unit.modality, audio_key, audio=True))
-            options.append({"key": f"{audio_key}.audio.methods-v2-trial", "title": "新口播方法 v2 · 原音色与ASR（仅本作品）",
-                "definition": candidate, "definition_hash": digest(candidate), "modality": unit.modality,
-                "output_kind": "audio_material", "requires_explicit_save": True})
     return {"items": options, "expected_revision": binding.revision if binding else 0,
             "current_workflow_id": workflow.id if workflow else None,
             "current_checksum": workflow.checksum if workflow else None}

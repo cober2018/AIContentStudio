@@ -1,6 +1,6 @@
 """Channel Registry API（§6.3/§8.2）：前端渠道/内容形态唯一来源，取代本地常量。"""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -12,9 +12,9 @@ router = APIRouter(prefix="/api/v1/channels", tags=["channels"])
 
 
 @router.get("")
-def list_channels(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """列出全部可用渠道与 content forms（profile 来源 + legacy 兜底）。"""
-    return channel_registry.list_channels(db)
+def list_channels(catalog: bool = Query(False), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """列出全部可用渠道与 content forms（profile 来源 + legacy 兜底）；catalog=true 时连同待接入的目标渠道。"""
+    return channel_registry.list_channel_catalog(db) if catalog else channel_registry.list_channels(db)
 
 
 @router.get("/plugins")

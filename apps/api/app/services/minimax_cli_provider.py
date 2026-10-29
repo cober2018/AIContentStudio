@@ -54,6 +54,7 @@ _downloading = ContextVar("minimax_result_download", default=False)
 _CLI_CONFIG = Path(pwd.getpwuid(os.getuid()).pw_dir) / ".mmx" / "config.json"
 _MAX_CONFIG_BYTES = 64 * 1024
 _RECEIPT_ID = re.compile(r"[A-Za-z0-9_.-]{1,200}\Z")
+from .model_capability_routing import VOICE_ID  # noqa: E402
 
 
 class _PrivateDownloadLogs(logging.Filter):
@@ -767,7 +768,7 @@ class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
             if not isinstance(item, dict):
                 continue
             voice_id = item.get("voice_id", item.get("id", item.get("voice")))
-            if not isinstance(voice_id, str) or not _RECEIPT_ID.fullmatch(voice_id):
+            if not isinstance(voice_id, str) or not re.fullmatch(VOICE_ID, voice_id):
                 continue
             label = item.get("voice_name", item.get("name", item.get("label", voice_id)))
             if not isinstance(label, str) or not label.strip():

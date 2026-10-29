@@ -34,7 +34,7 @@ from .studio_creative_catalog import validate_creative_profile
 class CreativeProfile(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    schema_: Literal["persona.creative.text.v1", "persona.creative.graphic.v1", "persona.creative.audio.v1", "persona.creative.video.v1"] = Field(alias="schema")
+    schema_: Literal["persona.creative.text.v1", "persona.creative.graphic.v1", "persona.creative.video.v1"] = Field(alias="schema")
     mode: Literal["auto", "custom", "composed"]
     skill_ref: str = Field(min_length=3, max_length=150)
     style_preset_ref: str = Field(min_length=3, max_length=150)
@@ -80,12 +80,11 @@ class IdentityProfile(BaseModel):
     brand_voice_version_id: int | None = None
     text_creative_profile: CreativeProfile | None = None
     graphic_creative_profile: CreativeProfile | None = None
-    audio_creative_profile: CreativeProfile | None = None
     video_creative_profile: CreativeProfile | None = None
 
     @model_validator(mode="after")
     def validate_creative_modalities(self):
-        for modality in ("text", "graphic", "audio", "video"):
+        for modality in ("text", "graphic", "video"):
             profile = getattr(self, f"{modality}_creative_profile")
             if profile is not None and profile.schema_ != f"persona.creative.{modality}.v1":
                 raise ValueError("creative_profile_modality_mismatch")
@@ -341,7 +340,7 @@ def revisions(db: Session, kind: str, entity_id: int) -> list:
 def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expected_revision: int, profile: IdentityProfile):
     owned_entity(db, user, kind, entity_id, mutable=True)
     data = profile.model_dump(exclude_unset=True, by_alias=True)
-    creative_fields = {"text_creative_profile", "graphic_creative_profile", "audio_creative_profile", "video_creative_profile"}
+    creative_fields = {"text_creative_profile", "graphic_creative_profile", "video_creative_profile"}
     if kind == "brand" and creative_fields.intersection(data):
         raise HTTPException(422, "brand_creative_profile_forbidden")
     voice_id = data.get("brand_voice_version_id")
@@ -381,7 +380,7 @@ def effective(db: Session, user: User, *, persona_id: int, account_id: int | Non
     selected = hierarchy(db, user, persona_id=persona_id, account_id=account_id, series_id=series_id, mutable=mutable)
     profile: dict[str, Any] = {}
     origins: dict[str, str] = {}
-    creative_keys = {"text_creative_profile", "graphic_creative_profile", "audio_creative_profile", "video_creative_profile"}
+    creative_keys = {"text_creative_profile", "graphic_creative_profile", "video_creative_profile"}
     creative_profiles: dict[str, Any] = {}
     creative_origins: dict[str, str] = {}
     revision_ids: dict[str, int | None] = {}

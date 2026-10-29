@@ -51,9 +51,8 @@ def skill_entry(skill: str, entry: str) -> str:
 
 SWITCH_KEY = "unit_platform_skills"
 # Skill families a third-party model may write with, per kind of work; editing / effects skills are always on.
-_WRITING_FAMILIES = {"video": {"research", "text", "audio", "video"}, "audio": {"research", "text", "audio"},
-                     "text": {"research", "text"}, "graphic": {"research", "text", "graphic"}}
-_NOT_WRITING = {"studio.audio.tts"}  # runs a provider task, not guidance a model can follow
+_WRITING_FAMILIES = {"video": {"research", "text", "video"}, "text": {"research", "text"},
+                     "graphic": {"research", "text", "graphic"}}
 
 
 def writing_skills_on(db: Session, unit_id: int) -> bool:
@@ -97,7 +96,7 @@ def writing_skills(unit) -> list[dict]:
     system = "product" if unit.production_domain == "product" else "persona"
     latest: dict[str, dict] = {}
     for item in STUDIO.values():
-        if (item["kind"] == "skill" and item["modality"] in families and item["key"] not in _NOT_WRITING
+        if (item["kind"] == "skill" and item["modality"] in families
                 and skill_system(item["key"]) in {system, "shared"}
                 and (item["key"] not in latest or int(item["version"]) > int(latest[item["key"]]["version"]))):
             latest[item["key"]] = item
@@ -126,7 +125,9 @@ def read_skill(db: Session, user: User, project_id: int, unit_id: int, skill: st
         return {"skill": skill, "entry": entry, "text": skill_entry(skill, entry)}
     if not writing_skills_on(db, unit_id):
         _fail("platform_skills_disabled", 403, message="这条作品的平台创作 skill 已被关闭，请自己来")
-    if skill not in {item["skill"] for item in writing_skills(unit)} or entry is not None:
+    from .persona_brief import persona_skill_refs
+
+    if skill not in {item["skill"] for item in writing_skills(unit)} | persona_skill_refs(db, user, unit) or entry is not None:
         _fail("craft_skill_not_found", 404)
     from .studio_creative_catalog import load_skill
 

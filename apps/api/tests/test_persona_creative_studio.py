@@ -33,11 +33,11 @@ RESOURCE_CASES = [
 EXPECTED_RECIPE_KEYS = {
     "starter.ai-tech-engineer.v1": {
         "text": "persona.text.ai-tech.v1", "graphic": "persona.graphic.ai-tech.v1",
-        "audio": "persona.audio.ai-tech.v1", "video": "persona.video.ai-tech.v1",
+        "video": "persona.video.ai-tech.v1",
     },
     "starter.lifestyle-observer.v1": {
         "text": "persona.text.lifestyle.v1", "graphic": "persona.graphic.lifestyle.v1",
-        "audio": "persona.audio.lifestyle.v1", "video": "persona.video.lifestyle.v1",
+        "video": "persona.video.lifestyle.v1",
     },
 }
 
@@ -67,13 +67,13 @@ def test_every_shipped_resource_has_an_exact_version_and_safe_inventory(kind, re
         assert package["package_hash"] == catalog.digest({
             key: value for key, value in package.items() if key != "package_hash"})
     elif kind == "style_preset":
-        assert resource["config"]["modality"] in {"text", "graphic", "audio"}
+        assert resource["config"]["modality"] in {"text", "graphic"}
     else:
         assert resource["checks"] and resource["human_review_required"] is True
 
 
 @pytest.mark.parametrize("key", list(catalog.BLUEPRINTS))
-@pytest.mark.parametrize("modality", ["text", "graphic", "audio", "video"])
+@pytest.mark.parametrize("modality", ["text", "graphic", "video"])
 def test_blueprint_profiles_pin_exact_schema_resources_and_recipe_version(key, modality):
     item = catalog.blueprint(key)
     profile = item[f"{modality}_creative_profile"]
@@ -89,7 +89,7 @@ def test_blueprint_profiles_pin_exact_schema_resources_and_recipe_version(key, m
 
 
 @pytest.mark.parametrize("key", list(catalog.BLUEPRINTS))
-@pytest.mark.parametrize("modality", ["text", "graphic", "audio", "video"])
+@pytest.mark.parametrize("modality", ["text", "graphic", "video"])
 @pytest.mark.parametrize("fault,reason", [
     ("schema", "creative_profile_invalid"),
     ("skill", "creative_profile_modality_mismatch"),
@@ -103,13 +103,13 @@ def test_blueprint_profiles_reject_schema_drift_cross_modality_refs_and_forged_m
     if fault == "schema":
         profile["schema"] = f"persona.creative.{modality}.v999"
     elif fault == "skill":
-        profile["skill_ref"] = "studio.audio.tts@1" if modality != "audio" else "studio.text.longform@1"
+        profile["skill_ref"] = "studio.graphic.visual-director@1" if modality == "text" else "studio.text.longform@1"
     elif fault == "preset":
-        profile["style_preset_ref"] = ("studio.audio.calm-engineer@1" if modality != "audio"
+        profile["style_preset_ref"] = ("studio.graphic.warm-magazine@1" if modality == "text"
                                        else "studio.text.deep-technical@1")
     elif fault == "quality":
-        profile["quality_profile_ref"] = ("studio.quality.audio.explainer@1" if modality != "audio"
-                                          else "studio.quality.text.technical@1")
+        profile["quality_profile_ref"] = ("studio.quality.text.technical@1" if modality == "graphic"
+                                          else "studio.quality.graphic.editorial@1")
     else:
         profile["provenance"]["untrusted_method_source"] = "not-an-allowed-origin"
     with pytest.raises(ValueError, match=f"^{reason}$"):
@@ -117,15 +117,14 @@ def test_blueprint_profiles_reject_schema_drift_cross_modality_refs_and_forged_m
 
 
 @pytest.mark.parametrize("key", list(catalog.BLUEPRINTS))
-@pytest.mark.parametrize("recipe", ["text", "graphic", "video", "audio", "audio_asr"])
+@pytest.mark.parametrize("recipe", ["text", "graphic", "video"])
 def test_all_persona_recipes_are_portable_with_exact_registered_graph_and_methods(key, recipe):
     from app.services.content_harness.nodes import bootstrap_builtin_nodes
     from app.services.content_harness.registry import registry
     from app.services.project_workflows import validate_definition, validate_portable
 
     bootstrap_builtin_nodes()
-    definition = (starter_personas.audio_definition(key, alignment=recipe == "audio_asr")
-                  if recipe.startswith("audio") else starter_personas._definition(recipe, key))
+    definition = starter_personas._definition(recipe, key)
     original = deepcopy(definition)
     validated = validate_portable(validate_definition(definition), source_project_id=None, source_unit_id=None)
     assert definition == original
@@ -143,9 +142,6 @@ def test_all_persona_recipes_are_portable_with_exact_registered_graph_and_method
         if method := node["config"].get("method"):
             package = catalog.load_skill(method["skill_ref"])
             assert node["stage_schema"] in package["contract"]["compatible_stage_schemas"]
-    if recipe.startswith("audio"):
-        assert [node["plugin"] for node in validated["nodes"]].count("stage.audio.asr") == (recipe == "audio_asr")
-        assert not any(node["plugin"] == "stage.master.propose" for node in validated["nodes"])
 
 
 @pytest.mark.parametrize("kind,ref", RESOURCE_CASES)
@@ -246,9 +242,8 @@ def _resolve_builtin_tunable(db, ref, field, value):
     stage_schema = resource["compatible_stage_schemas"][0]
     descriptor = next(item for item in registry.list("node") if item.stage_contract is not None
                       and item.stage_contract.to_dict()["stage_schema"] == stage_schema)
-    modality = "text" if resource["modality"] in {"research", "audio"} else resource["modality"]
-    profile_modality = "audio" if resource["modality"] == "audio" else modality
-    profile = deepcopy(catalog.BLUEPRINTS["starter.ai-tech-engineer.v1"][f"{profile_modality}_creative_profile"])
+    modality = "text" if resource["modality"] == "research" else resource["modality"]
+    profile = deepcopy(catalog.BLUEPRINTS["starter.ai-tech-engineer.v1"][f"{modality}_creative_profile"])
     if resource["modality"] != "research":
         profile.update(skill_ref=ref, parameters={field: TUNABLE_VALUES[field][0]})
     config = {"instruction": "仅整理隔离测试输入", "method": {"source_kind": "studio_builtin", "skill_ref": ref}}
@@ -259,7 +254,7 @@ def _resolve_builtin_tunable(db, ref, field, value):
             "plugin": descriptor.key, "plugin_version": descriptor.version,
             "stage_schema": stage_schema, "config": config}
     context = {"modality": modality, "identity": {"checksum": "a" * 64,
-        "content": {f"{profile_modality}_creative_profile": profile}},
+        "content": {f"{modality}_creative_profile": profile}},
         "brief": {"id": 1, "checksum": "b" * 64, "content": {"objective": "隔离合同检查"}}}
     override = {field: value}
     effective_node, method, creative, blockers = creative_configuration.frozen_stage(
@@ -304,7 +299,6 @@ def test_each_exposed_chat_tunable_reaches_the_actual_executor_request(db_sessio
 def test_consumption_matrix_covers_every_shipped_tunable():
     tool_fields = {
         ("studio.graphic.layout-compose", "template"), ("studio.graphic.layout-compose", "density"),
-        ("studio.audio.tts", "voice"), ("studio.audio.tts", "rate"),
         ("studio.video.director-package", "instruction"), ("studio.video.director-package", "aspect_ratio"),
     }
     covered = set(CHAT_TUNABLE_CASES) | {
@@ -500,7 +494,7 @@ def test_numeric_claim_requires_exact_same_paragraph_or_list_item_range(markdown
 
 @pytest.mark.parametrize("key", list(catalog.BLUEPRINTS))
 def test_starter_profiles_validate_without_a_fallback_chain(key):
-    for field in ("text", "graphic", "audio", "video"):
+    for field in ("text", "graphic", "video"):
         value = catalog.BLUEPRINTS[key][f"{field}_creative_profile"]
         assert CreativeProfile.model_validate(value).model_dump(by_alias=True)["model_chain"] == []
 

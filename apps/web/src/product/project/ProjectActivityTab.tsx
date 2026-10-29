@@ -8,7 +8,7 @@ const LABELS: Record<string, string> = {
   "project.created": "创建项目", "project.updated": "更新项目", "project.archived": "归档项目",
   "brief.revision_created": "保存任务书版本", "source.attached": "引用来源", "source.detached": "解除来源引用",
   "fact_boundary.bound": "绑定事实边界", "fact_boundary.draft_cloned": "克隆事实草稿", "fact_boundary.frozen_bound": "冻结并更新事实边界",
-  "unit.created": "创建内容单元", "unit.updated": "更新内容单元", "unit.replaced": "替换内容单元", "unit.archived": "归档内容单元", "unit.deleted": "删除无历史内容单元",
+  "unit.created": "创建作品", "unit.updated": "更新作品", "unit.replaced": "替换作品", "unit.archived": "归档作品", "unit.deleted": "删除无历史作品",
   "workflow.override_saved": "保存项目工作流", "workflow.role_default_saved": "另存角色默认工作流",
   "data.snapshot_created": "创建数据快照", "data.snapshot_changed": "刷新数据快照",
   "asset.attached": "关联项目素材", "asset.detached": "解除项目素材引用", "asset.workflow_generated": "生成工作流素材",

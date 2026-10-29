@@ -26,8 +26,7 @@ OUTPUT_SCHEMAS = {
     "graphic.visual-direction.v1": "graphic",
     "graphic.card-plan.v1": "graphic",
     "graphic.card-plan.v2": "graphic",
-    "audio.spoken-adaptation.v1": "audio",
-    "audio.voice-direction.v1": "audio",
+    "text.spoken-adaptation.v1": "text",
     "video.shot-plan.v1": "video",
     "video.shot-plan.v2": "video",
 }

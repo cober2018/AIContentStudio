@@ -10,6 +10,7 @@ from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from ..models import (
+    ContentPersona,
     ContentProject,
     ContentUnit,
     CreativeBriefRevision,
@@ -76,7 +77,7 @@ def save_launch(db, user, payload, project=None):
     if existing:
         accepted_checksums = {checksum}
         legacy_defaults = {"core_message": None, "angle": None, "creative_profile": None,
-            "audio_creative_profile": None, "fetch_product_url": True, "private_costs": None}
+            "fetch_product_url": True, "private_costs": None}
         data = payload.model_dump(mode="json", exclude={"launch_key"})
         # Older launch hashes predate these optional fields; only their exact defaults may be omitted.
         if all(data.get(key) == value for key, value in legacy_defaults.items()):
@@ -87,6 +88,9 @@ def save_launch(db, user, payload, project=None):
     if payload.modality != "video":
         raise HTTPException(422, "商品工作台仅制作视频；文字与图文请使用角色内容工作台，旧商品记录仍可读取")
     ensure_channel_in_service(payload.channel)
+    persona = db.get(ContentPersona, payload.persona_id) if payload.persona_id else None
+    if payload.persona_id and (persona is None or persona.owner_user_id != user.id or persona.status == "archived"):
+        raise HTTPException(404, "角色不存在")
     product = ProductContext.model_validate(payload.product_context).model_dump(mode="json")
     sources = []
     for source_id in dict.fromkeys(payload.source_ids):
@@ -142,8 +146,6 @@ def save_launch(db, user, payload, project=None):
     settings = {}
     if payload.creative_profile is not None:
         settings[f"{payload.modality}_creative_profile"] = deepcopy(payload.creative_profile)
-    if payload.audio_creative_profile is not None:
-        settings["audio_creative_profile"] = deepcopy(payload.audio_creative_profile)
     if payload.production_stages is not None:
         settings["production_stages"] = deepcopy(payload.production_stages)
     workflow = db.get(Workflow, payload.workflow_id) if payload.workflow_id else ensure_product_workflow(db, payload.modality, user)
@@ -186,7 +188,7 @@ def save_launch(db, user, payload, project=None):
     db.add(brief)
     if payload.private_costs is not None:
         save_private_costs(db, user, project.id, payload.private_costs.model_dump(mode="json"))
-    unit = ContentUnit(project_id=project.id, persona_id=None, identity_snapshot_id=None, production_domain="product",
+    unit = ContentUnit(project_id=project.id, persona_id=payload.persona_id, identity_snapshot_id=None, production_domain="product",
                        modality=payload.modality, channel_id=payload.channel, title=payload.title or product["name"],
                        pinned_workflow_id=workflow_id)
     db.add(unit)

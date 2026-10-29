@@ -97,10 +97,6 @@ export default function ProviderMediaPanel({ initialPreview, initialTaskId, obse
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [voiceId, setVoiceId] = useState("");
   const [voiceRate, setVoiceRate] = useState(1);
-  const [savedVoice, setSavedVoice] = useState<{ voice: string; rate: number; profile: string } | null>(null);
-  const [savedVoiceIssue, setSavedVoiceIssue] = useState("");
-  const [voiceReload, setVoiceReload] = useState(0);
-  const inputEdits = useRef({ voice: false, rate: false, profile: false, task: false });
   const [advanced, setAdvanced] = useState(false);
   const [configurationMode, setConfigurationMode] = useState<"auto" | "custom">("auto");
   const [prepared, setPrepared] = useState<GenerationTask>();
@@ -116,39 +112,6 @@ export default function ProviderMediaPanel({ initialPreview, initialTaskId, obse
   const previewRead = useRef(0);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; previewRead.current += 1; if (objectUrl.current) URL.revokeObjectURL(objectUrl.current); candidateUrls.current.forEach(URL.revokeObjectURL); }; }, []);
-  useEffect(() => {
-    const reload = (event: Event) => {
-      const detail = (event as CustomEvent<{ projectId: number; unitId: number }>).detail;
-      if (detail?.projectId === projectId && detail.unitId === unitId) setVoiceReload(value => value + 1);
-    };
-    window.addEventListener("production-profile-saved", reload);
-    return () => window.removeEventListener("production-profile-saved", reload);
-  }, [projectId, unitId]);
-  useEffect(() => {
-    if (!projectId || !unitId || initialTaskId || initialPreview || observedLicense || mediaOrigin) return;
-    const controller = new AbortController();
-    setSavedVoiceIssue("");
-    void (async () => {
-      try {
-        const base = `/content-projects/${projectId}/units/${unitId}`;
-        const unit = await api.get<{ production_domain?: string }>(base, controller.signal);
-        if (unit.production_domain !== "product") return;
-        const result = await api.get<{ settings: { voice_id?: string | null; audio_creative_profile?: { parameters?: { voice?: string; rate?: number }; model_binding?: { profile?: string } } | null } }>(`${base}/production-profile`, controller.signal);
-        if (controller.signal.aborted) return;
-        const audio = result.settings.audio_creative_profile;
-        setSavedVoice({ voice: result.settings.voice_id || audio?.parameters?.voice || "", rate: audio?.parameters?.rate ?? 1, profile: audio?.model_binding?.profile || "" });
-      } catch (cause) {
-        if (!controller.signal.aborted) setSavedVoiceIssue(`本作品已保存的声音配置读取失败：${cause instanceof Error ? cause.message : "请重新进入后重试"}`);
-      }
-    })();
-    return () => controller.abort();
-  }, [projectId, unitId, initialTaskId, initialPreview, observedLicense, mediaOrigin, voiceReload]);
-  useEffect(() => {
-    if (!savedVoice || prepared || task || inputEdits.current.task) return;
-    if (!inputEdits.current.voice) setVoiceId(savedVoice.voice);
-    if (!inputEdits.current.rate) setVoiceRate(savedVoice.rate);
-    if (capability === "tts" && !inputEdits.current.profile && savedVoice.profile) setSelectedProfile(savedVoice.profile);
-  }, [savedVoice, capability, prepared, task]);
   useEffect(() => {
     if (initialTaskId) void openTask({ task_id: initialTaskId } as GenerationTask);
   }, [initialTaskId]);
@@ -280,7 +243,6 @@ export default function ProviderMediaPanel({ initialPreview, initialTaskId, obse
     finally { if (mounted.current) setBusy(false); }
   }
   async function openTask(selected: GenerationTask, recover = false) {
-    inputEdits.current.task = true;
     const actor = currentUser();
     const readId = ++previewRead.current;
     clearCandidates();
@@ -392,19 +354,18 @@ export default function ProviderMediaPanel({ initialPreview, initialTaskId, obse
   return <section aria-label={mediaOrigin === "renderer" ? "渲染预览与接受" : observedLicense ? "素材预览与接受" : "生成预览与接受"} className="space-y-4 rounded-xl border bg-white p-5">
     <p className="text-xs text-slate-500">这里使用已配置的API生成素材。Grok / Gemini网页视频请从视频主稿的“分镜素材制作与剪辑交接”准备，结果回传对应分镜。</p>
     <h2 className="font-semibold">{mediaOrigin === "renderer" ? "渲染图片：先预览，再接受" : observedLicense ? "搜索素材：核对许可后接受" : "AI 素材：先预览，再接受"}</h2>
-    {savedVoiceIssue && <ErrorBanner message={savedVoiceIssue} />}
     {canChooseMode && modeSelector}
     {!initialPreview && !initialTaskId && !observedLicense && !mediaOrigin && <div className="space-y-2">
       <Button variant="secondary" disabled={busy || unavailable} onClick={() => void readConfiguration()}>读取已登记模型与生成限额（不生成）</Button>
       {configuration && <div className="space-y-2 rounded border p-3">
-        <Field label="本次所选模型配置"><select className={inputClass} value={selectedProfile} disabled={busy || !!prepared} onChange={(event) => { inputEdits.current.profile = true; setSelectedProfile(event.target.value); setCandidateCount(1); if (!inputEdits.current.voice) setVoiceId(savedVoice?.voice || ""); setSendConfirmed(false); }}><option value="">请选择，不修改默认模型</option>{Object.entries(configuration.profiles).filter(([, profile]) => profile.enabled).map(([id, profile]) => <option key={id} value={id}>{profile.capability_bindings?.[capability]?.model_id || id} · {id}</option>)}</select></Field>
+        <Field label="本次所选模型配置"><select className={inputClass} value={selectedProfile} disabled={busy || !!prepared} onChange={(event) => { setSelectedProfile(event.target.value); setCandidateCount(1); setSendConfirmed(false); }}><option value="">请选择，不修改默认模型</option>{Object.entries(configuration.profiles).filter(([, profile]) => profile.enabled).map(([id, profile]) => <option key={id} value={id}>{profile.capability_bindings?.[capability]?.model_id || id} · {id}</option>)}</select></Field>
         {capability !== "tts" && <Field label="模型选择方式"><select className={inputClass} disabled={busy || !!prepared} value={configurationMode} onChange={e => { setConfigurationMode(e.target.value as "auto" | "custom"); setSendConfirmed(false); }}><option value="auto">自动（仅已授权路由）</option><option value="custom">指定模型（不可用就停止）</option></select></Field>}
         <Button size="sm" variant="secondary" onClick={() => setAdvanced(value => !value)}>{advanced ? "收起高级设置" : "高级设置"}</Button>
-        {advanced && <div className="space-y-2 rounded-lg bg-slate-50 p-3 text-xs"><p>精确绑定：{selectedBinding ? `${selectedBinding.adapter_key}@${selectedBinding.adapter_version} / ${selectedBinding.model_id} / ${selectedProfile}` : "此模型尚未登记当前生成能力"}</p><p>此适配器支持：{controls?.supported_fields.join("、") || "未声明，无法使用高级参数"}。未支持的参数不会显示或静默忽略。</p>{capability === "image_generation" && <p>参考图：{controls?.reference_images ? "支持精确素材引用" : "此适配器未接入，不发送参考图"}；具体像素受下方授权上限和画面比例共同约束。</p>}{capability === "tts" && controls?.supported_fields.includes("voice_id") && <Field label="精确 Voice ID（须与当前模型登记匹配）"><input className={inputClass} maxLength={150} disabled={busy || !!prepared} value={voiceId} onChange={e => { inputEdits.current.voice = true; setVoiceId(e.target.value); }} /></Field>}</div>}
+        {advanced && <div className="space-y-2 rounded-lg bg-slate-50 p-3 text-xs"><p>精确绑定：{selectedBinding ? `${selectedBinding.adapter_key}@${selectedBinding.adapter_version} / ${selectedBinding.model_id} / ${selectedProfile}` : "此模型尚未登记当前生成能力"}</p><p>此适配器支持：{controls?.supported_fields.join("、") || "未声明，无法使用高级参数"}。未支持的参数不会显示或静默忽略。</p>{capability === "image_generation" && <p>参考图：{controls?.reference_images ? "支持精确素材引用" : "此适配器未接入，不发送参考图"}；具体像素受下方授权上限和画面比例共同约束。</p>}{capability === "tts" && controls?.supported_fields.includes("voice_id") && <Field label="精确 Voice ID（须与当前模型登记匹配）"><input className={inputClass} maxLength={150} disabled={busy || !!prepared} value={voiceId} onChange={e => { setVoiceId(e.target.value); }} /></Field>}</div>}
         <Field label="所需生成能力"><select className={inputClass} value={capability} disabled={busy || !!prepared} onChange={(event) => { setCapability(event.target.value as GenerationCapability); setCandidateCount(1); setOutputLimit(""); setSendConfirmed(false); }}><option value="image_generation">生图</option><option value="video_generation">生视频</option><option value="tts">语音生成</option></select></Field>
         {(advanced || capability === "video_generation") && <Field label={capability === "image_generation" ? "本次图片像素上限" : "本次视频 / 语音秒数上限"}><input type="number" min={1} max={maximum} step={1} className={inputClass} value={outputLimit} disabled={busy || !!prepared} onChange={(event) => { setOutputLimit(event.target.value); setSendConfirmed(false); }} /></Field>}
         {capability === "image_generation" && controls?.supported_fields.includes("aspect_ratio") && <Field label="画面比例"><select className={inputClass} value={aspectRatio} disabled={busy || !!prepared} onChange={(event) => setAspectRatio(event.target.value)}><option value="1:1">1:1 方图</option><option value="4:3">4:3 横图</option><option value="16:9">16:9 横图</option><option value="3:4">3:4 竖图</option><option value="9:16">9:16 竖图</option></select></Field>}
-        {capability === "tts" && voiceControlsSupported && <div className="space-y-3"><VoicePresetPicker voices={compatibleVoices} selectedId={compatibleVoices.find(item => item.voice_id === voiceId)?.id || ""} disabled={busy || !!prepared} onSelect={item => { inputEdits.current.voice = true; inputEdits.current.rate = true; setVoiceId(item.voice_id); setVoiceRate(item.rate ?? 1); }} /><Field label={`语速 ${voiceRate.toFixed(2)}×`}><input type="range" min="0.5" max="2" step="0.05" className="w-full" value={voiceRate} disabled={busy || !!prepared} onChange={event => { inputEdits.current.rate = true; setVoiceRate(Number(event.target.value)); }} /></Field></div>}
+        {capability === "tts" && voiceControlsSupported && <div className="space-y-3"><VoicePresetPicker voices={compatibleVoices} selectedId={compatibleVoices.find(item => item.voice_id === voiceId)?.id || ""} disabled={busy || !!prepared} onSelect={item => { setVoiceId(item.voice_id); setVoiceRate(item.rate ?? 1); }} /><Field label={`语速 ${voiceRate.toFixed(2)}×`}><input type="range" min="0.5" max="2" step="0.05" className="w-full" value={voiceRate} disabled={busy || !!prepared} onChange={event => { setVoiceRate(Number(event.target.value)); }} /></Field></div>}
         {capability === "tts" && !voiceControlsSupported && <p className="text-xs text-amber-700">当前适配器未声明精确音色和语速配置，此处不能准备语音任务。</p>}
         {capability === "image_generation" && <Field label="候选图片数量（生成后只接受一张）"><select className={inputClass} value={candidateCount} disabled={busy || !!prepared} onChange={(event) => { setCandidateCount(Number(event.target.value)); setSendConfirmed(false); }}>{!candidateCounts.includes(candidateCount) && <option value={candidateCount} disabled>原选择 {candidateCount} 张已不支持，请重新选择</option>}{candidateCounts.map(count => <option key={count} value={count}>{count} 张</option>)}</select></Field>}
         {selectedProfile && !validControls && <p className="text-xs text-amber-700">当前配置不再支持原候选数量或精确音色；请重新选择，不会替换或提交旧配置。</p>}
@@ -424,7 +385,7 @@ export default function ProviderMediaPanel({ initialPreview, initialTaskId, obse
         {item.reason && <span>{reasons[item.reason] ?? item.reason}</span>}
         {item.material_revision_id && <span>已接受素材版本 #{item.material_revision_id}</span>}
         <Button variant="secondary" disabled={busy} onClick={() => void openTask(item)}>{item.state === "result_ready" ? "打开校验预览" : "刷新此任务"}</Button>
-        {item.state === "prepared" && <Button variant="secondary" disabled={busy || unavailable} onClick={() => { inputEdits.current.task = true; setPrepared(item); setSendConfirmed(false); void readConfiguration(); }}>选择原准备任务（仍不执行）</Button>}
+        {item.state === "prepared" && <Button variant="secondary" disabled={busy || unavailable} onClick={() => { setPrepared(item); setSendConfirmed(false); void readConfiguration(); }}>选择原准备任务（仍不执行）</Button>}
         {["running", "unknown", "submitting"].includes(item.state) && <Button variant="secondary" disabled={busy || unavailable} onClick={() => void openTask(item, true)}>{item.has_original_job ? "查询原任务" : "确认原任务状态（不重发）"}</Button>}
       </div>)}
     </div>}

@@ -32,6 +32,10 @@ TTS_FORMATS = {"mp3", "wav", "flac"}
 _TTS_OPTIONAL = {"volume", "pitch", "emotion", "format", "sample_rate", "bitrate", "channels", "text_normalization", "latex_read", "subtitles"}
 
 
+# MiniMax system voices include ids like "Chinese (Mandarin)_Gentle_Senior", so spaces and (full-width) brackets are allowed.
+VOICE_ID = r"[A-Za-z0-9][A-Za-z0-9_.() （）-]{0,149}"
+
+
 def tts_parameters(parameters, *, capability):
     """Normalize only an explicit voice/rate pair plus named optional fields; legacy requests never acquire implicit defaults."""
     if not isinstance(parameters, dict):
@@ -43,7 +47,7 @@ def tts_parameters(parameters, *, capability):
     if capability != "tts" or fields != {"voice_id", "rate"}:
         raise ValueError("tts_parameters_invalid")
     voice, rate = parameters["voice_id"], parameters["rate"]
-    if (not isinstance(voice, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,149}", voice)
+    if (not isinstance(voice, str) or not re.fullmatch(VOICE_ID, voice)
             or type(rate) not in {int, float} or not 0.5 <= rate <= 2 or not math.isfinite(rate)):
         raise ValueError("tts_parameters_invalid")
     result = {"voice_id": voice, "rate": float(rate)}
@@ -412,7 +416,7 @@ def refresh_voice_catalog(db, *, actor):
                 for item in seen[model_id]:
                     try:
                         discovered.append(voice_preset_projection({**item,
-                            "id": f"{profile_id}.{item['voice_id']}", "profile_id": profile_id}, trusted_verified=True))
+                            "id": f"{profile_id}." + re.sub(r"[^A-Za-z0-9_.:@-]", "-", item["voice_id"]), "profile_id": profile_id}, trusted_verified=True))
                     except (HTTPException, KeyError, TypeError):
                         continue
     except Exception:  # noqa: BLE001 Explicit refresh reports a bounded unavailable result.

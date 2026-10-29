@@ -73,40 +73,11 @@ def _definition(modality: str, blueprint_key: str) -> dict:
     return {"nodes": nodes, "edges": edges, "visual_order": [node["id"] for node in nodes]}
 
 
-def audio_definition(blueprint_key: str, *, alignment: bool = False) -> dict:
-    lifestyle = blueprint_key == "starter.lifestyle-observer.v1"
-    voice_style = "自然聊天、温暖而不说教" if lifestyle else "冷静清楚的工程师解说，保留技术名称和trade-off"
-    nodes = [
-        _node("spoken", "AI", "stage.creative.method", "stage.creative.method.v1", {
-            "output_schema": "audio.spoken-adaptation.v1", "instruction": "只把当前已接受的Text正文或Video脚本转成适合朗读的口语稿；不添加事实，不把来源当台词，保留术语并明确发音。",
-            "length": "long", "pace": "medium", "method": _method("studio.audio.spoken-adapt@1")}, "口语稿确认"),
-        _node("voice", "AI", "stage.creative.method", "stage.creative.method.v1", {
-            "output_schema": "audio.voice-direction.v1", "instruction": f"为已接受口语稿制定声音方案：{voice_style}。描述停顿、节奏和语速；风格名称不是供应商voice ID，不得编造ID或声纹。",
-            "method": _method("studio.audio.voice-director@1")}, "声音方案确认"),
-        {**_node("tts", "Tool", "media.generate", "media.generate.stage.v4", {
-            "capability": "tts", "tts_source": "accepted_spoken", "method": _method("studio.audio.tts@1"),
-            "items": 1, "seconds": 360, "timeout_seconds": 25}, "生成并接受真实音频"), "plugin_version": "4"},
-        _node("audio_quality", "Rule", "stage.audio.qc", "stage.audio.qc.v1", {
-            "method": _method("studio.audio.qc@1")}, "音频质量确认"),
-    ]
-    edges = [{"from": "spoken", "to": "voice"}, {"from": "spoken", "to": "tts"},
-             {"from": "voice", "to": "tts"}, {"from": "tts", "to": "audio_quality"}]
-    if alignment:
-        nodes.insert(-1, _node("audio_asr", "Tool", "stage.audio.asr", "stage.audio.asr.v1", {
-            "provider_key": "local.mlx_whisper", "provider_version": "1", "timeout_seconds": 120},
-            "本机 ASR 对稿（明确执行并接受）"))
-        nodes[-1]["config"].update(alignment_enabled=True, srt_mode="asr")
-        edges.extend([{"from": "tts", "to": "audio_asr"}, {"from": "audio_asr", "to": "audio_quality"}])
-    return {"nodes": nodes, "edges": edges,
-        "visual_order": [node["id"] for node in nodes]}
-
-
-
-def method_trial_definition(modality, blueprint_key, *, audio=False):
+def method_trial_definition(modality, blueprint_key):
     """Opt-in work recipe; saved Persona defaults and the v1 templates stay untouched."""
     from .studio_creative_catalog import PERSONA_METHOD_TRIAL_KEYS
 
-    definition = deepcopy(audio_definition(blueprint_key, alignment=True) if audio else _definition(modality, blueprint_key))
+    definition = deepcopy(_definition(modality, blueprint_key))
     for node in definition["nodes"]:
         config = node["config"]
         ref = (config.get("method") or {}).get("skill_ref", "")
@@ -123,7 +94,7 @@ def method_trial_definition(modality, blueprint_key, *, audio=False):
 def _profile_payload(item: dict, key: str) -> dict:
     result = {field: deepcopy(value) for field, value in item.items()
               if field not in {"key", "name", "version"} and not field.endswith("_creative_profile")}
-    for field in ("text_creative_profile", "graphic_creative_profile", "audio_creative_profile", "video_creative_profile"):
+    for field in ("text_creative_profile", "graphic_creative_profile", "video_creative_profile"):
         profile = deepcopy(item[field])
         profile["provenance"] = {**(profile.get("provenance") or {}), "blueprint_key": key, "blueprint_version": item["version"]}
         result[field] = profile
@@ -144,7 +115,7 @@ def _blueprint_persona(db, user, key: str):
             continue
         keys = {((row.profile_json.get(field) or {}).get("provenance") or {}).get("blueprint_key")
                 for row in history
-                for field in ("text_creative_profile", "graphic_creative_profile", "audio_creative_profile", "video_creative_profile")}
+                for field in ("text_creative_profile", "graphic_creative_profile", "video_creative_profile")}
         if key in keys:
             return persona, revision, item
     if any(persona.name == item["name"] for persona in rows):
@@ -269,15 +240,6 @@ def readiness(db, user, *, persona_id: int, account_id: int | None = None, serie
                 if profile["schema"] != f"persona.creative.{modality}.v1":
                     raise ValueError("creative_profile_modality_mismatch")
                 recipe = report["recipe"]
-                if modality == "audio" and recipe is None:
-                    key = profile.get("provenance", {}).get("blueprint_key")
-                    if key:
-                        blueprint(key)
-                        definition = validate_portable(validate_definition(audio_definition(key)),
-                            source_project_id=None, source_unit_id=None)
-                        recipe = report["recipe"] = {"source": "studio_builtin_audio", "blueprint": key,
-                            "checksum": digest(definition), "available": True, "definition": definition}
-                        incomplete.append("audio_recipe_requires_explicit_project_selection")
                 if not recipe or not recipe["available"]:
                     blockers.append("default_recipe_unavailable")
                 elif recipe.get("definition"):
@@ -306,7 +268,7 @@ def readiness(db, user, *, persona_id: int, account_id: int | None = None, serie
                     blockers.append("installed_skill_stage_execution_unavailable")
                 if profile.get("capability_memory_revision_ids"):
                     deterministic_nodes = [node for node in (recipe or {}).get("definition", {}).get("nodes", [])
-                        if node.get("plugin") in {"stage.graphic.compose", "stage.audio.qc"}
+                        if node.get("plugin") == "stage.graphic.compose"
                         or (node.get("plugin") == "stage.professional.prepare"
                             and str(node.get("plugin_version")) == "2")]
                     for node in deterministic_nodes:
@@ -325,7 +287,7 @@ def readiness(db, user, *, persona_id: int, account_id: int | None = None, serie
                 if route["status"] != "ready":
                     (incomplete if modality == "graphic" and profile["mode"] == "auto" else blockers).append(
                         route.get("reason") or "model_binding_unavailable")
-                if modality in {"graphic", "audio"}:
+                if modality == "graphic":
                     planning = creative_configuration.chat_binding({"mode": "auto", "model_binding": None}, db=db)
                     report["planning_binding"] = planning.get("selected_binding")
                     if planning["status"] != "ready":
@@ -335,14 +297,6 @@ def readiness(db, user, *, persona_id: int, account_id: int | None = None, serie
                     incomplete.append("mock_provider_contract_only")
                 if modality == "graphic":
                     incomplete.append("graphic_render_scope_requires_project_master")
-                elif modality == "audio":
-                    voice = profile.get("parameters", {}).get("voice")
-                    if not voice:
-                        blockers.append("tts_voice_id_not_configured")
-                    runtime_hash = (route.get("route") or {}).get("runtime_hash")
-                    if route["status"] == "ready" and not runtime_hash:
-                        blockers.append("tts_runtime_unverified")
-                    incomplete.append("tts_voice_and_output_require_execution_validation")
                 elif modality == "video":
                     incomplete.append("external_video_execution_required")
                 if (identity["effective_profile"].get("public_fact_policy") or {}).get("fresh_source_required_for_current_claims"):

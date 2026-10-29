@@ -138,6 +138,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
     from . import craft_skills
+    from .persona_brief import persona_brief
     from .project_brief import current_brief
     from .project_evidence import current_boundary
 
@@ -165,6 +166,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "brief": {key: getattr(row, key) for key in ("objective", "primary_audience", "core_message", "angle")} if row else None,
             "facts": facts, "source_texts": siblings, "payload_schema": schema,
             "platform_skills": craft_skills.platform_skills(db, unit),
+            # Who the piece speaks as; null when it belongs to no persona.
+            "persona": persona_brief(db, user, unit),
             "state": state(db, user, project_id, unit_id),
             # The current version doubles as the format example the model fills in.
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload_schema": master.payload_schema,

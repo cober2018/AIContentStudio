@@ -126,3 +126,28 @@ The package SHALL freeze source inventory, ID, version/revision/hash, order, ena
 #### Scenario: Global Agent defaults conflict with the task selection
 - **WHEN** the executor cannot prevent a disabled method from affecting the managed task
 - **THEN** it reports the limitation and does not claim the stage switch has been verified
+
+### Requirement: Persona in third-party briefs
+
+Video and article / graphic briefs for a third-party model SHALL include the work's persona: name, brand, voice and the merged profile (positioning, audience, domains, expression style with banned phrases, visual language, content and risk boundaries, public fact policy). When the persona's creative profile for that modality is fully set here, the brief SHALL also carry its main skill (readable with get_craft_skill even if not the newest version), style preset, quality checks, stage instruction, parameters and extra methods; the rules SHALL say to follow it. Product works SHALL get the profile and voice only. With platform creative skills switched off, only the profile is given.
+
+#### Scenario: Composed persona method
+- **WHEN** a persona's video creative profile is fully set with a main skill and style preset
+- **THEN** that persona's video brief names the skill, how to read it and the style preset settings
+
+#### Scenario: Product work under a persona
+- **WHEN** a product work belongs to a persona
+- **THEN** its brief carries the persona profile and voice but no persona writing method
+
+### Requirement: No stage-based audio production
+
+The platform SHALL make voice audio only through the one-click voiceover. Stage-based TTS, audio QC and audio-stage ASR, the voice-director / tts / qc skills, audio quality profiles and the audio creative profile SHALL not exist. Video master loudness, video subtitle ASR suggestions, the spoken-adaptation writing skill and audio materials SHALL remain. Historical runs of removed stages SHALL stay readable and show as retired.
+
+#### Scenario: Persona configuration
+- **WHEN** a user opens a persona's creative configuration
+- **THEN** only text, graphic and video are offered, and the persona's voice is chosen on its profile page
+
+#### Scenario: Old text work
+- **WHEN** a text work that once ran audio stages is opened
+- **THEN** it uses the default text recipe and its past audio runs show as retired stages without errors
+

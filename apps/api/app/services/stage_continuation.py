@@ -109,9 +109,6 @@ def continue_after_acceptance(db, *, run_id, accepted_node_id, accepted_hash, us
             return _blocked(db, run, step, node_id, "stage_plugin_unavailable")
         if descriptor.stage_contract is None:
             return _blocked(db, run, step, node_id, "legacy_stage_auto_continue_unsupported")
-        if node.get("plugin") == "stage.audio.asr":
-            return {"status": "pending", "node_id": node_id,
-                    "code": "stage_manual_execution_required", "request_mode": "explicit"}
         try:
             resolved = creation_recipes.preview_stage(
                 db, project_id, unit.id, node_id, user, run_id=run.id, stage_override={}

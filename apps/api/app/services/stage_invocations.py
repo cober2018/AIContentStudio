@@ -496,8 +496,6 @@ def execute_stage(
         expected_resolution_hash, override, automatic))
     if existing is not None:
         return _execution_result(run, step, existing)
-    if automatic and step.plugin_key == "stage.audio.asr":
-        raise StageInvocationError("stage_manual_execution_required", status_code=409)
     _assert_access(db, run, user)
     owned_unit(db, project_id, unit_id, user, mutate=True)
     resolved = preview_stage(

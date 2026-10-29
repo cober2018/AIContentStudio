@@ -4,7 +4,7 @@
   "version": "2",
   "ref": "studio.audio.spoken-adapt@2",
   "kind": "skill",
-  "modality": "audio",
+  "modality": "text",
   "purpose": "在不改变事实的前提下把文字改成口语稿",
   "source_kind": "studio_builtin",
   "provenance": "self_developed",
@@ -14,7 +14,7 @@
     "stage.creative.method.v2"
   ],
   "output_schemas": [
-    "audio.spoken-adaptation.v1"
+    "text.spoken-adaptation.v1"
   ],
   "required_context": [
     "identity"
@@ -60,14 +60,15 @@
   "input_schema": "stage.handoff.v1",
   "optional_tools": [],
   "style_compatibility": [
-    "studio.audio.calm-engineer@1",
-    "studio.audio.clear-explainer@1",
-    "studio.audio.warm-conversational@1",
-    "studio.audio.reflective-story@1"
+    "studio.text.deep-technical@1",
+    "studio.text.engineering-explainer@1",
+    "studio.text.observational-lifestyle@1",
+    "studio.text.reflective-lifestyle@1",
+    "studio.text.concise-social@1"
   ],
   "quality_compatibility": [
-    "studio.quality.audio.explainer@1",
-    "studio.quality.audio.conversational@1"
+    "studio.quality.text.technical@1",
+    "studio.quality.text.lifestyle@1"
   ],
   "references": []
 }

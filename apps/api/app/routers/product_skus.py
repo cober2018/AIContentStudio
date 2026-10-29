@@ -47,8 +47,6 @@ class ProductionSettings(BaseModel):
     shared_references: list[SharedReference] = Field(default_factory=list, max_length=30)
     production_stages: dict | None = None
     video_creative_profile: dict | None = None
-    audio_creative_profile: dict | None = None
-    voice_id: str | None = Field(default=None, max_length=200)
     work_type: Literal["showcase", "scene", "ugc"] = "scene"
     creation_mode: Literal["original", "reference"] = "original"
     speech_mode: Literal["voiceover", "lip_sync", "none", "mixed"] = "voiceover"
@@ -74,7 +72,8 @@ class ProductionSettings(BaseModel):
     @classmethod
     def _drop_model_choice(cls, value):
         # 商品不再单独选模型；旧记录里的 model_profile_ref 读回再保存时直接丢弃。
-        return {k: v for k, v in value.items() if k != "model_profile_ref"} if isinstance(value, dict) else value
+        # 作品声音只认声音配置（不进制作设置）；旧记录里的 voice_preset_id / voice_id / audio_creative_profile 读回时同样丢弃。
+        return {k: v for k, v in value.items() if k not in {"model_profile_ref", "voice_preset_id", "voice_id", "audio_creative_profile"}} if isinstance(value, dict) else value
 
 
 class SkuIn(BaseModel):
@@ -111,7 +110,6 @@ class WorkIn(BaseModel):
 class PlanIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     include_methods: bool = True
-    include_sound: bool = True
     name: str = Field(min_length=1, max_length=200)
     plan_key: str = Field(default_factory=lambda: uuid.uuid4().hex, max_length=100)
     expected_revision: int = Field(default=0, ge=0)
@@ -152,12 +150,11 @@ def validate_settings(db, user, settings, project_id=None):
         if settings.get("production_stages") is not None:
             validate_production_stages(settings["production_stages"])
         from ..services.content_identity import CreativeProfile
-        for field in ("video_creative_profile", "audio_creative_profile"):
-            if settings.get(field) is not None:
-                parsed = CreativeProfile.model_validate(settings[field]).model_dump(mode="json", by_alias=True)
-                if parsed["schema"] != f"persona.creative.{field.split('_')[0]}.v1":
-                    raise ValueError("creative_profile_modality_mismatch")
-                settings[field] = parsed
+        if settings.get("video_creative_profile") is not None:
+            parsed = CreativeProfile.model_validate(settings["video_creative_profile"]).model_dump(mode="json", by_alias=True)
+            if parsed["schema"] != "persona.creative.video.v1":
+                raise ValueError("creative_profile_modality_mismatch")
+            settings["video_creative_profile"] = parsed
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from None
     for ref in settings.get("shared_references", []):
@@ -392,8 +389,7 @@ def create_work(sku_id: int, payload: WorkIn, db=Depends(get_db), user=Depends(r
         owned_unit(db, user, source_link.project_id, source_link.unit_id)
     validate_settings(db, user, settings, source_project)
     body = ProductLaunchIn(launch_key=launch_key, persona_id=payload.persona_id, channel=payload.channel,
-        production_stages=settings.get("production_stages"), creative_profile=settings.get("video_creative_profile"),
-        audio_creative_profile=settings.get("audio_creative_profile"), fetch_product_url=False,
+        production_stages=settings.get("production_stages"), creative_profile=settings.get("video_creative_profile"), fetch_product_url=False,
         title=payload.title, objective=payload.objective, primary_audience="", product_context=product,
         source_ids=[s.source_id for s in product.source_refs], material_revision_ids=[r.material_revision_id for r in product.material_refs])
     target = None
@@ -469,11 +465,6 @@ def save_plan(sku_id: int, payload: PlanIn, db=Depends(get_db), user=Depends(req
             for key, value in inherited.items():
                 if settings.get(key) is None and value is not None:
                     settings[key] = value
-        if payload.include_sound:
-            for key in ("audio_creative_profile", "voice_id"):
-                inherited = source_settings.get(key)
-                if settings.get(key) is None and inherited is not None:
-                    settings[key] = inherited
     validate_settings(db, user, settings, link.project_id if payload.source_unit_id else None)
     row = ProductSkuPlan(sku_id=sku_id, plan_key=payload.plan_key, revision=payload.expected_revision + 1,
         name=payload.name, settings_json=settings, source_unit_id=payload.source_unit_id)

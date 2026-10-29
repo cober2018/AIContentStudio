@@ -238,7 +238,7 @@ class StageCreativeMethodNodePlugin:
             "output_schema": {"type": "string", "minLength": 1, "maxLength": 80, "enum": [
                 "research.brief.v1", "creative.angles.v1", "creative.title-hook.v1", "content.outline.v1",
                 "graphic.visual-direction.v1", "graphic.card-plan.v1",
-                "audio.spoken-adaptation.v1", "audio.voice-direction.v1", "video.script.v1", "video.shot-plan.v1",
+                "text.spoken-adaptation.v1", "video.script.v1", "video.shot-plan.v1",
             ]},
             "instruction": {"type": "string", "minLength": 1, "maxLength": 4000},
             "purpose": {"type": "string", "minLength": 1, "maxLength": 150, "default": "完成当前中间创作阶段"},
@@ -388,61 +388,6 @@ class StageMediaGenerationV3NodePlugin(StageMediaGenerationNodePlugin):
     stage_consumed_fields: ClassVar[frozenset[str]] = frozenset(stage_contract["config_schema"]["properties"])
 
 
-class StageMediaGenerationV4NodePlugin(StageMediaGenerationNodePlugin):
-    version = "4"
-    stage_contract: ClassVar[dict] = _stage_contract(
-        "media.generate.stage.v4", "生成已确认口语稿音频", "Tool", {
-            "capability": {"type": "string", "enum": ["tts"], "default": "tts", "maxLength": 3},
-            "tts_source": {"type": "string", "enum": ["accepted_spoken"], "default": "accepted_spoken", "maxLength": 15},
-            "method": _METHOD_SCHEMA,
-            "selected_profile": {"type": "string", "minLength": 1, "maxLength": 100},
-            "explicit_plugin": {"type": "string", "minLength": 1, "maxLength": 100},
-            "voice": {"type": "string", "minLength": 1, "maxLength": 150},
-            "rate": {"type": "number", "minimum": 0.5, "maximum": 2},
-            "items": {"type": "integer", "enum": [1], "minimum": 1, "maximum": 1, "default": 1},
-            "seconds": {"type": "integer", "minimum": 1, "maximum": 600, "default": 120},
-            "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 300, "default": 25},
-        }, [], "stage.media.result.v1", context=("identity", "master"), methods=("studio_builtin",),
-        ui={"voice": {"control": "text", "label": "供应商声音ID（必须真实配置）"},
-            "rate": {"control": "number", "label": "语速（未覆盖时采用已接受声音方案）"},
-            "seconds": {"control": "number", "label": "音频时长上限秒"},
-            "timeout_seconds": {"control": "number", "label": "请求时限秒"}})
-    stage_consumed_fields: ClassVar[frozenset[str]] = frozenset(stage_contract["config_schema"]["properties"])
-
-
-class StageAudioASRNodePlugin(ResolvedDomainStagePlugin):
-    key = "stage.audio.asr"
-    stage_contract: ClassVar[dict] = _stage_contract(
-        "stage.audio.asr.v1", "本机识别已接受音频（须明确执行）", "Tool", {
-            "provider_key": {"type": "string", "enum": ["local.mlx_whisper"], "default": "local.mlx_whisper", "maxLength": 100},
-            "provider_version": {"type": "string", "enum": ["1"], "default": "1", "maxLength": 20},
-            "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 120, "default": 120},
-        }, [], "stage.audio_asr.result.v1", context=("identity",),
-        ui={"timeout_seconds": {"control": "number", "label": "本机识别时限（秒）"}})
-    stage_consumed_fields: ClassVar[frozenset[str]] = frozenset(stage_contract["config_schema"]["properties"])
-
-
-class StageAudioQCNodePlugin(ResolvedDomainStagePlugin):
-    key = "stage.audio.qc"
-    stage_contract: ClassVar[dict] = _stage_contract(
-        "stage.audio.qc.v1", "检查已接受音频", "Rule", {
-            "method": _METHOD_SCHEMA,
-            "quality_profile_ref": {"type": "string", "enum": ["studio.quality.audio.explainer@1", "studio.quality.audio.conversational@1"], "maxLength": 100},
-            "alignment_enabled": {"type": "boolean", "default": False},
-            "asr_master_revision_id": {"type": "integer", "minimum": 1, "maximum": 2147483647},
-            "asr_receipt_id": {"type": "string", "minLength": 32, "maxLength": 32},
-            "asr_output_hash": {"type": "string", "minLength": 64, "maxLength": 64},
-            "srt_mode": {"type": "string", "enum": ["none", "asr", "estimated"], "default": "none", "maxLength": 9},
-        }, [], "stage.checks.result.v1", context=("identity",), methods=("studio_builtin",),
-        ui={"quality_profile_ref": {"control": "select", "label": "音频质量标准"},
-            "alignment_enabled": {"control": "toggle", "label": "对照已接受的 ASR 回执（不调用识别）"},
-            "asr_master_revision_id": {"control": "number", "label": "已保存 ASR 字幕的 Video Master 版本 ID"},
-            "asr_receipt_id": {"control": "text", "label": "该版本的精确 ASR 回执 ID"},
-            "asr_output_hash": {"control": "text", "label": "该 ASR 回执的输出 SHA-256"},
-            "srt_mode": {"control": "select", "label": "字幕导出（none 无 / asr 真实分段 / estimated 估计）"}})
-    stage_consumed_fields: ClassVar[frozenset[str]] = frozenset(stage_contract["config_schema"]["properties"])
-
-
 class StageVariantAdaptNodePlugin(ResolvedDomainStagePlugin):
     key = "stage.variant.adapt"
     stage_contract: ClassVar[dict] = _stage_contract(
@@ -584,7 +529,6 @@ _BUILTIN_SPECS: list[tuple[str, str, str, str | None, bool]] = [
 # 直接注册的非 handler 插件（R2-H5：node.skill 可执行节点）
 _DIRECT_PLUGINS = [SkillNodePlugin, SystemConstantNodePlugin, DataSourceNodePlugin, MediaGenerationNodePlugin,
                    StageMasterProposalNodePlugin, StageMediaGenerationNodePlugin, StageMediaGenerationV3NodePlugin,
-                   StageMediaGenerationV4NodePlugin, StageAudioASRNodePlugin, StageAudioQCNodePlugin,
                    StageCreativeMethodNodePlugin, StageCreativeMethodV2NodePlugin, StageCreativeMethodV3NodePlugin, StageGraphicCompositionNodePlugin, StageVariantAdaptNodePlugin,
                    StageProfessionalPrepareNodePlugin, StageProfessionalPrepareV2NodePlugin,
                    StageChecksNodePlugin, StageHumanReviewNodePlugin]
@@ -619,9 +563,6 @@ def bootstrap_builtin_nodes() -> None:
     from ...graphic_composition import bootstrap
 
     bootstrap()
-    from ...audio_quality import bootstrap as bootstrap_audio_quality
-
-    bootstrap_audio_quality()
     _bootstrapped = True
 
 

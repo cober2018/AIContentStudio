@@ -32,7 +32,6 @@ def default_creative_profile(modality):
         "text": ("studio.text.longform", "studio.text.concise-social", "studio.quality.text.technical", "chat"),
         "graphic": ("studio.graphic.visual-director", "studio.graphic.clean-infographic", "studio.quality.graphic.editorial", "image_generation"),
         "video": ("studio.video.director-package", "studio.graphic.product-neutral", "studio.quality.video.product", "chat"),
-        "audio": ("studio.audio.tts", "studio.audio.clear-explainer", "studio.quality.audio.explainer", "tts"),
     }
     skill, preset, quality, capability = refs[modality]
     value = _profile("auto", skill, preset, quality, capability=capability, recipe=f"product.{modality}.v1")
@@ -48,11 +47,6 @@ def effective_profile(db, unit):
     key = f"{unit.modality}_creative_profile"
     if key not in profile:
         profile[key] = default_creative_profile(unit.modality)
-    if settings.get("voice_id") and "audio_creative_profile" not in profile:
-        profile["audio_creative_profile"] = default_creative_profile("audio")
-    if settings.get("voice_id") and "audio_creative_profile" in profile:
-        audio = profile["audio_creative_profile"]
-        audio["parameters"] = {**audio.get("parameters", {}), "voice": settings["voice_id"]}
     brief = current_brief(db, unit.project_id)
     brief_stages = (brief.product_context_json or {}).get("production_stages") if brief else None
     work_stages = settings.get("production_stages")

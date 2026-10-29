@@ -23,9 +23,6 @@ from .stage_invocations import StageInvocationError
 DOMAIN_PLUGINS = {
     ("media.generate", "2"): "media",
     ("media.generate", "3"): "media",
-    ("media.generate", "4"): "media",
-    ("stage.audio.asr", "1"): "audio_asr",
-    ("stage.audio.qc", "1"): "checks",
     ("stage.variant.adapt", "1"): "variant",
     ("stage.professional.prepare", "1"): "professional",
     ("stage.professional.prepare", "2"): "professional",
@@ -61,13 +58,9 @@ def domain_for(node):
     return DOMAIN_PLUGINS.get((node.get("plugin"), str(node.get("plugin_version") or "1")))
 
 
-def media_request(config, *, allow_aspect=False, audio_context=None):
+def media_request(config, *, allow_aspect=False):
     from .generation_tasks import workflow_request
 
-    if audio_context is not None:
-        from .stage_audio import tts_request
-
-        return tts_request(config, audio_context)
     params = dict(config.get("parameters") or {})
     for name in MEDIA_PARAMETERS:
         if name in config:
@@ -84,15 +77,7 @@ def media_request(config, *, allow_aspect=False, audio_context=None):
 def native_media_resolution(resolved):
     if domain_for(resolved["node"]) != "media":
         return resolved
-    if resolved["node"].get("plugin_version") == "4" and not resolved["ready"]:
-        result = canonical({**resolved, "system_prompt": "", "effective_prompt": "", "prompt_sections": [],
-            "prompt_projection": {"kind": "native_media", "request_unavailable": True, "context_layers_sent": False},
-            "prompt_hash": digest({"system": "", "user": ""})}, max_bytes=RESOLVED_STAGE_MAX_BYTES)
-        result.pop("resolution_hash", None)
-        result["resolution_hash"] = digest(result)
-        return result
-    request = media_request(resolved["effective_config"], allow_aspect=resolved["node"].get("plugin_version") == "3",
-        audio_context=resolved["context"] if resolved["node"].get("plugin_version") == "4" else None)
+    request = media_request(resolved["effective_config"], allow_aspect=resolved["node"].get("plugin_version") == "3")
     prompt = request["prompt"]
     # Native media accepts one bounded prompt, not the chat system/context layers.
     result = canonical({**resolved, "system_prompt": "", "effective_prompt": prompt,
@@ -205,16 +190,7 @@ def prepare_domain(db, user, unit, node, config, context, *, creative=None):
         if domain == "media":
             from . import generation_tasks, model_capability_routing, provider_media
 
-            audio = str(node.get("plugin_version")) == "4"
-            if audio:
-                from .stage_audio import prepare_tts
-
-                context, config, reasons = prepare_tts(db, user, unit, node, config, context)
-                blockers.extend(reasons)
-                if blockers:
-                    return canonical(context), None, blockers
-            request = media_request(config, allow_aspect=str(node.get("plugin_version") or "1") == "3",
-                audio_context=context if audio else None)
+            request = media_request(config, allow_aspect=str(node.get("plugin_version") or "1") == "3")
             _visible_sources(db, unit.project_id, request["source_revision_ids"])
             refs, _ = provider_media._sources(db, request["source_revision_ids"])
             sources = [{"revision_id": rid, "content_hash": value} for rid, value in refs]
@@ -224,10 +200,6 @@ def prepare_domain(db, user, unit, node, config, context, *, creative=None):
             if plan.get("status") != "ready":
                 blockers.append("stage_media_route_unavailable")
             else:
-                expected = (creative or {}).get("selected_binding")
-                if audio and (not expected or expected != {"provider": plan["adapter_key"],
-                        "model": plan["model_id"], "profile": plan["execution_profile"]}):
-                    blockers.append("stage_audio_binding_mismatch")
                 generation_tasks._storage()
                 key_id, _ = generation_tasks._key()
                 provider_key = generation_tasks._KEYS.get(plan["adapter_key"])
@@ -318,23 +290,7 @@ def prepare_domain(db, user, unit, node, config, context, *, creative=None):
                 plans = creative_packages.accepted_director_plans(db, unit, master)
                 if plans:
                     snapshot["accepted_shot_plans"] = plans
-        elif domain == "audio_asr":
-            from .stage_audio_asr import prepare_asr
-
-            context, config, reasons = prepare_asr(db, user, unit, node, config, context)
-            snapshot = context.get("domain", {})
-            provider = snapshot.get("provider", {})
-            model = {"provider": provider.get("key"), "model": "local.mlx_whisper",
-                     "profile_id": "local.mlx_whisper", "adapter_key": provider.get("key"),
-                     "adapter_version": provider.get("version"), "runtime_hash": provider.get("runtime_fingerprint"),
-                     "execution_mode": "local", "manual_execution_required": True}
-            return canonical(context), model, reasons
         elif domain == "checks":
-            if node["plugin"] == "stage.audio.qc":
-                from .stage_audio import prepare_qc
-
-                context, config, reasons = prepare_qc(db, user, unit, node, config, context)
-                return canonical(context), None, reasons
             from . import content_masters
 
             master = db.get(ContentMasterRevision, (context.get("master") or {}).get("id"))
@@ -370,8 +326,8 @@ def _claim(db, ctx, resolved):
 
 def validate_media_claim(db, attempt, resolved, request):
     step = db.get(WorkflowStep, attempt.step_id)
-    if (step is None or attempt.plugin_key != "media.generate" or attempt.plugin_version not in {"2", "3", "4"}
-            or step.plugin_key != "media.generate" or step.plugin_version not in {"2", "3", "4"}
+    if (step is None or attempt.plugin_key != "media.generate" or attempt.plugin_version not in {"2", "3"}
+            or step.plugin_key != "media.generate" or step.plugin_version not in {"2", "3"}
             or step.status != "running" or step.attempt_no != attempt.attempt_no
             or attempt.status != "running" or attempt.input_hash != resolved.get("resolution_hash")
             or (attempt.input_snapshot_json or {}).get("resolved_stage") != resolved
@@ -380,8 +336,7 @@ def validate_media_claim(db, attempt, resolved, request):
             or resolved.get("system_prompt") != "" or resolved.get("effective_prompt") != request.get("prompt")
             or resolved.get("prompt_hash") != digest({"system": "", "user": request.get("prompt")})
             or {key: value for key, value in request.items() if key not in {"project_id", "idempotency_key"}}
-               != media_request(resolved["effective_config"], allow_aspect=resolved["node"].get("plugin_version") == "3",
-                   audio_context=resolved["context"] if resolved["node"].get("plugin_version") == "4" else None)):
+               != media_request(resolved["effective_config"], allow_aspect=resolved["node"].get("plugin_version") == "3")):
         raise StageInvocationError("stage_media_claim_invalid", status_code=409)
     _visible_sources(db, request["project_id"], request["source_revision_ids"])
 
@@ -486,8 +441,7 @@ def _execute_domain(db, ctx, resolved, user):
     if domain == "media":
         from . import generation_tasks
 
-        request = {**media_request(resolved["effective_config"], allow_aspect=resolved["node"].get("plugin_version") == "3",
-            audio_context=resolved["context"] if resolved["node"].get("plugin_version") == "4" else None), "project_id": project_id,
+        request = {**media_request(resolved["effective_config"], allow_aspect=resolved["node"].get("plugin_version") == "3"), "project_id": project_id,
                    "idempotency_key": f"stage-media.{ctx.run.id}.{attempt.id}"}
         prepared = generation_tasks.prepare(db, user, request, workflow_attempt=attempt, stage_resolution=resolved)
         task = generation_tasks._get(db, user, prepared["task_id"], mutate=True)
@@ -530,15 +484,7 @@ def _execute_domain(db, ctx, resolved, user):
             "package_schema": package["package_schema"], "execution_id": execution["id"] if execution else None,
             "expected_revision": execution["revision_no"] if execution else 0,
             "executor": snapshot["executor"], "dispatch_state": "not_dispatched"}
-    elif domain == "audio_asr":
-        from .stage_audio_asr import execute_asr
-
-        result = execute_asr(db, snapshot)
     elif domain == "checks":
-        if resolved["node"]["plugin"] == "stage.audio.qc":
-            from .stage_audio import qc_result
-
-            return domain_result(domain, resolved, qc_result(db, snapshot))
         from . import content_masters
 
         checks = content_masters.run_checks(db, project_id, unit_id, snapshot["master_revision_id"], user)

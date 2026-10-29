@@ -48,8 +48,7 @@ OUTPUT_SCHEMAS = {
     "studio.graphic.visual-director": ["graphic.visual-direction.v1"],
     "studio.graphic.card-plan": ["graphic.card-plan.v1"],
     "studio.graphic.image-brief": ["graphic.visual-direction.v1"],
-    "studio.audio.spoken-adapt": ["audio.spoken-adaptation.v1"],
-    "studio.audio.voice-director": ["audio.voice-direction.v1"],
+    "studio.audio.spoken-adapt": ["text.spoken-adaptation.v1"],
     "studio.video.script": ["video.script.v1"],
     "studio.video.product-script": ["video.script.v1"],
     "studio.video.product-shots": ["video.shot-plan.v1"],
@@ -96,13 +95,9 @@ def _resource(key: str, kind: str, modality: str, *, purpose: str, tunable_field
             ["stage.creative.method.v1"] if key in OUTPUT_SCHEMAS else
             ["stage.master.propose.v1"] if modality == "text" else
             ["stage.graphic.compose.v1"] if key == "studio.graphic.layout-compose" else
-            ["media.generate.stage.v4"] if key == "studio.audio.tts" else
-            ["stage.audio.qc.v1"] if key == "studio.audio.qc" else
             ["stage.professional.prepare.v2"] if key == "studio.video.director-package" else [],
         "output_schemas": ["video.script.v1", "video.master.v2"] if key in {"studio.video.script", "studio.video.product-script"} else OUTPUT_SCHEMAS.get(key, ["text.master.v2"] if modality == "text" else
             ["graphic.master.v2"] if key == "studio.graphic.layout-compose" else
-            ["stage.media.result.v1"] if key == "studio.audio.tts" else
-            ["stage.checks.result.v1"] if key == "studio.audio.qc" else
             ["director.video.v1"] if key == "studio.video.director-package" else []),
         "required_context": ["product_context"] if key in PRODUCT_CONTEXT_SKILLS else ["identity"],
         "requires_selected_upstream": kind == "skill" or key == "studio.graphic.layout-compose",
@@ -140,10 +135,7 @@ SKILLS = {
         _resource("studio.graphic.image-brief", "skill", "graphic", purpose="为需要的图像槽位生成有边界的素材简报", tunable_fields=("instruction", "aspect_ratio")),
         _resource("studio.graphic.layout-compose", "tool", "graphic", purpose="确定性地把语义卡片计划组合为 graphic.master.v2", tunable_fields=("template", "density"), tools=("studio.graphic.layout-compose@1",)),
         _resource("studio.graphic.qc", "tool", "graphic", purpose="检查真实渲染的尺寸、边界、可读性和素材权利", checks=("graphic_canvas", "graphic_bounds", "graphic_rights"), tools=("studio.graphic.qc@1",)),
-        _resource("studio.audio.spoken-adapt", "skill", "audio", purpose="在不改变事实的前提下把文字改成口语稿", tunable_fields=("instruction", "pace")),
-        _resource("studio.audio.voice-director", "skill", "audio", purpose="把 Persona 声音偏好转成 TTS 方向", tunable_fields=("instruction", "energy", "pause_policy")),
-        _resource("studio.audio.tts", "skill", "audio", purpose="复用 ProviderGenerationTask 执行 TTS", tunable_fields=("voice", "rate")),
-        _resource("studio.audio.qc", "tool", "audio", purpose="检查真实音频字节、MIME、时长和可听性", checks=("audio_bytes", "audio_duration", "audio_loudness"), tools=("studio.audio.qc@1",)),
+        _resource("studio.audio.spoken-adapt", "skill", "text", purpose="在不改变事实的前提下把文字改成口语稿", tunable_fields=("instruction", "pace")),
         _resource("studio.video.product-script", "skill", "video", purpose="依据SKU资料生成商品销售脚本", tunable_fields=("instruction", "length")),
         _resource("studio.video.product-shots", "skill", "video", purpose="规划商品连续镜头、关键帧与图生视频素材", tunable_fields=("instruction", "shot_count")),
         _resource("studio.video.product-filming", "skill", "video", purpose="将购买理由和脚本拆成手机可执行的实拍任务书", tunable_fields=("instruction", "shot_count")),
@@ -163,7 +155,7 @@ SKILLS = {
     )
 }
 
-PERSONA_METHOD_TRIAL_KEYS = ('studio.research.evidence-brief', 'studio.research.angle-lab', 'studio.text.outline', 'studio.text.title-hook', 'studio.text.longform', 'studio.text.humanize', 'studio.graphic.card-plan', 'studio.graphic.visual-director', 'studio.graphic.image-brief', 'studio.audio.spoken-adapt', 'studio.audio.voice-director', 'studio.video.script', 'studio.video.shot-director', 'studio.video.director-package')
+PERSONA_METHOD_TRIAL_KEYS = ('studio.research.evidence-brief', 'studio.research.angle-lab', 'studio.text.outline', 'studio.text.title-hook', 'studio.text.longform', 'studio.text.humanize', 'studio.graphic.card-plan', 'studio.graphic.visual-director', 'studio.graphic.image-brief', 'studio.audio.spoken-adapt', 'studio.video.script', 'studio.video.shot-director', 'studio.video.director-package')
 
 for _trial_key in PERSONA_METHOD_TRIAL_KEYS:
     _trial_resource = copy.deepcopy(SKILLS[_ref(_trial_key)])
@@ -208,10 +200,6 @@ PRESETS = {
         _ref("studio.graphic.documentary-photo"): {"modality": "graphic", "palette": "documentary", "density": "low", "image_fallback": "blocked"},
         _ref("studio.graphic.lifestyle-cards"): {"modality": "graphic", "palette": "lifestyle", "density": "low", "image_fallback": "shape_only"},
         _ref("studio.graphic.product-neutral"): {"modality": "graphic", "product_consistency": "original_references", "motion": "one_action_per_shot"},
-        _ref("studio.audio.calm-engineer"): {"modality": "audio", "voice": "calm_clear", "pace": "medium", "energy": "steady"},
-        _ref("studio.audio.clear-explainer"): {"modality": "audio", "voice": "clear_explainer", "pace": "medium", "energy": "clear"},
-        _ref("studio.audio.warm-conversational"): {"modality": "audio", "voice": "warm_conversational", "pace": "medium", "energy": "warm"},
-        _ref("studio.audio.reflective-story"): {"modality": "audio", "voice": "reflective_story", "pace": "slow_medium", "energy": "gentle"},
     }.items()
 }
 
@@ -223,8 +211,6 @@ QUALITY = {
         _ref("studio.quality.text.lifestyle"): ["text_structure", "text_fact_speculation", "text_identity", "text_anti_clickbait"],
         _ref("studio.quality.graphic.editorial"): ["graphic_canvas", "graphic_bounds", "graphic_readability", "graphic_rights"],
         _ref("studio.quality.graphic.lifestyle"): ["graphic_canvas", "graphic_bounds", "graphic_readability", "graphic_rights"],
-        _ref("studio.quality.audio.explainer"): ["audio_bytes", "audio_duration", "audio_loudness", "audio_voice_contract"],
-        _ref("studio.quality.audio.conversational"): ["audio_bytes", "audio_duration", "audio_loudness", "audio_voice_contract"],
     }.items()
 }
 
@@ -468,7 +454,6 @@ BLUEPRINTS = {
         "public_fact_policy": {"fresh_source_required_for_current_claims": True, "label_speculation": True},
         "text_creative_profile": _profile("auto", "studio.text.longform", "studio.text.deep-technical", "studio.quality.text.technical", capability="chat", recipe="persona.text.ai-tech.v1"),
         "graphic_creative_profile": _profile("auto", "studio.graphic.visual-director", "studio.graphic.architecture-diagram", "studio.quality.graphic.editorial", capability="image_generation", recipe="persona.graphic.ai-tech.v1"),
-        "audio_creative_profile": _profile("auto", "studio.audio.tts", "studio.audio.calm-engineer", "studio.quality.audio.explainer", capability="tts", recipe="persona.audio.ai-tech.v1"),
         "video_creative_profile": _profile("auto", "studio.video.director-package", "studio.graphic.technical-editorial", "studio.quality.text.technical", capability="chat", recipe="persona.video.ai-tech.v1"),
     },
     "starter.lifestyle-observer.v1": {
@@ -483,7 +468,6 @@ BLUEPRINTS = {
         "public_fact_policy": {"fresh_source_required_for_current_claims": True, "label_speculation": True},
         "text_creative_profile": _profile("auto", "studio.text.longform", "studio.text.observational-lifestyle", "studio.quality.text.lifestyle", capability="chat", recipe="persona.text.lifestyle.v1"),
         "graphic_creative_profile": _profile("auto", "studio.graphic.visual-director", "studio.graphic.warm-magazine", "studio.quality.graphic.lifestyle", capability="image_generation", recipe="persona.graphic.lifestyle.v1"),
-        "audio_creative_profile": _profile("auto", "studio.audio.tts", "studio.audio.warm-conversational", "studio.quality.audio.conversational", capability="tts", recipe="persona.audio.lifestyle.v1"),
         "video_creative_profile": _profile("auto", "studio.video.director-package", "studio.graphic.warm-magazine", "studio.quality.text.lifestyle", capability="chat", recipe="persona.video.lifestyle.v1"),
     },
 }
@@ -507,16 +491,16 @@ def validate_ref(value: Any, *, kind: str | None = None) -> str:
 PRODUCTION_STAGES = [
     {"id": key, "title": title, "order": index, "modalities": modalities}
     for index, (key, title, modalities) in enumerate([
-        ("research", "选题与证据", ["text", "graphic", "audio", "video"]),
-        ("script", "文案与脚本", ["text", "graphic", "audio", "video"]),
-        ("voice", "配音与声音准备", ["audio", "video"]),
+        ("research", "选题与证据", ["text", "graphic", "video"]),
+        ("script", "文案与脚本", ["text", "graphic", "video"]),
+        ("voice", "配音与声音准备", ["video"]),
         ("storyboard", "分镜与素材", ["graphic", "video"]),
-        ("sound_edit", "声音粗剪", ["audio", "video"]),
+        ("sound_edit", "声音粗剪", ["video"]),
         ("picture_edit", "画面粗剪与节奏", ["video"]),
         ("subtitle_color", "字幕与校色", ["video"]),
         ("packaging", "后期包装", ["video"]),
-        ("finish", "终混与导出", ["audio", "video"]),
-        ("review", "质量评审与回收", ["text", "graphic", "audio", "video"]),
+        ("finish", "终混与导出", ["video"]),
+        ("review", "质量评审与回收", ["text", "graphic", "video"]),
     ])
 ]
 
@@ -612,12 +596,12 @@ def validate_creative_profile(value: Any) -> dict:
         safe_strings(value)
     except HTTPException:
         raise ValueError("creative_profile_unsafe_content") from None
-    schemas = {f"persona.creative.{modality}.v1" for modality in ("text", "graphic", "audio", "video")}
+    schemas = {f"persona.creative.{modality}.v1" for modality in ("text", "graphic", "video")}
     if value.get("schema") not in schemas or value.get("mode") not in {"auto", "custom", "composed"}:
         raise ValueError("creative_profile_invalid")
+    modality = value["schema"].split(".")[2]
     for field, kind in (("skill_ref", "skill"), ("style_preset_ref", "style_preset"), ("quality_profile_ref", "quality_profile")):
         validate_ref(value.get(field), kind=kind)
-    modality = value["schema"].split(".")[2]
     if SKILLS[value["skill_ref"]]["modality"] != modality:
         raise ValueError("creative_profile_modality_mismatch")
     if PRESETS[value["style_preset_ref"]]["config"]["modality"] != ("graphic" if modality == "video" else modality):

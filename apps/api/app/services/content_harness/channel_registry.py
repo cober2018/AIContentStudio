@@ -66,6 +66,18 @@ CHANNEL_LABELS: dict[str, str] = {
     "juejin": "掘金",
 }
 
+# 平台要接入的渠道目标清单：只登记，不带任何生成、排版或发布能力。某渠道接入那次改动同时删掉这里的条目。
+PLANNED_CHANNELS: dict[str, dict] = {
+    "douyin": {"label": "抖音", "forms": {"video": ("视频", "video", "抖音视频"), "image_note": ("图文", "image", "抖音图文")}},
+    "wechat": {"label": "公众号", "forms": {"image_message": ("图片消息", "image", "公众号图片消息")}},
+    "weibo": {"label": "微博", "forms": {"image_note": ("图文", "image", "微博图文"), "video": ("视频", "video", "微博视频")}},
+    "wechat_channels": {"label": "视频号", "forms": {"video": ("视频", "video", "视频号")}},
+    "kuaishou": {"label": "快手", "forms": {"video": ("视频", "video", "快手")}},
+    "bilibili": {"label": "B站", "forms": {"video": ("视频", "video", "B站视频")}},
+    "xiaohongshu": {"label": "小红书", "forms": {"video": ("视频", "video", "小红书视频")}},
+    "youtube": {"label": "YouTube", "forms": {"video": ("视频", "video", "YouTube")}},
+}
+
 FORM_LABELS: dict[str, str] = {
     "article": "文章",
     "answer": "回答",
@@ -245,6 +257,27 @@ def list_channel_keys(db: Session) -> set[str]:
 
 def list_channels(db: Session) -> list[dict]:
     return [spec.to_dict() for spec in (resolve_channel(db, key) for key in sorted(list_channel_keys(db))) if spec]
+
+
+def list_channel_catalog(db: Session) -> list[dict]:
+    """完整渠道清单：已接入的形态标 ready，目标清单里还没接入的标 planned。"""
+    catalog: dict[str, dict] = {}
+    for channel in list_channels(db):
+        forms = [{"content_form": f["content_form"], "label": f["label"], "artifact_kind": f["artifact_kind"], "status": "ready"} for f in channel["content_forms"]]
+        catalog[channel["channel"]] = {"channel": channel["channel"], "label": channel["label"], "status": "ready", "content_forms": forms}
+    for key, planned in PLANNED_CHANNELS.items():
+        entry = catalog.setdefault(key, {"channel": key, "label": planned["label"], "status": "planned", "content_forms": []})
+        built = {form["content_form"] for form in entry["content_forms"]}
+        entry["content_forms"] += [{"content_form": form, "label": label, "artifact_kind": kind, "status": "planned", "display": display}
+                                   for form, (label, kind, display) in planned["forms"].items() if form not in built]
+    return list(catalog.values())
+
+
+def ensure_work_channel(db: Session, channel_key: str | None) -> None:
+    """作品的渠道必须是清单里已接入的；空渠道允许。"""
+    ensure_channel_in_service(channel_key)
+    if channel_key and channel_key not in list_channel_keys(db):
+        raise ChannelRegistryError(f"渠道 {channel_key} 不在平台清单里或还没接入")
 
 
 def normalize_targets(

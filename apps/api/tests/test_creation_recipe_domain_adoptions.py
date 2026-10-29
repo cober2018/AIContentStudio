@@ -54,12 +54,12 @@ def _flow(client, db, *, with_evidence=False):
     headers = {"X-Studio-User": "recipe-domain@studio.test"}
     persona = client.post("/api/v1/content-personas", headers=headers, json={"name": "阶段作者"}).json()["id"]
     project_id = client.post("/api/v1/content-projects", headers=headers, json={"title": "领域采用"}).json()["id"]
+    seed_v1_channel_profiles(db)
     unit = client.post(f"/api/v1/content-projects/{project_id}/units", headers=headers,
                       json={"title": "源文章", "persona_id": persona, "modality": "text", "channel_id": "x"})
     assert unit.status_code == 201, unit.text
     unit_id = unit.json()["id"]
     base = f"/api/v1/content-projects/{project_id}/units/{unit_id}"
-    seed_v1_channel_profiles(db)
     pack = FactPack(name="Isolated empty boundary", version=1, status="frozen",
                     checksum=pack_snapshot_checksum([]))
     db.add(pack)

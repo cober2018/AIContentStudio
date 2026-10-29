@@ -596,7 +596,7 @@ def create_unit(payload: UnitIn, project_id: int, db: Session = Depends(get_db),
     if payload.modality not in {"text", "graphic", "video"}:
         raise HTTPException(422, "不支持的内容形态")
     try:
-        channel_registry.ensure_channel_in_service(payload.channel_id)
+        channel_registry.ensure_work_channel(db, payload.channel_id)
     except channel_registry.ChannelRegistryError as exc:
         raise HTTPException(422, str(exc)) from exc
     snapshot = content_identity.create_snapshot(db, user, persona_id=persona.id, account_id=payload.account_id, series_id=payload.series_id)
@@ -690,7 +690,7 @@ def patch_unit(payload: UnitPatch, project_id: int, unit_id: int, db: Session = 
     fields = payload.model_fields_set
     if "channel_id" in fields:
         try:
-            channel_registry.ensure_channel_in_service(payload.channel_id)
+            channel_registry.ensure_work_channel(db, payload.channel_id)
         except channel_registry.ChannelRegistryError as exc:
             raise HTTPException(422, str(exc)) from exc
     if unit.production_domain == "product":

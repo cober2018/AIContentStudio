@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api, currentUser, setCurrentUser } from "../api";
 import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
-import type { Settings as ProductionSettings } from "./GuidedProductionProfile";
 
 const RuntimeModelSettings = lazy(() => import("./RuntimeModelSettings"));
 const ConnectorSettings = lazy(() => import("./ConnectorSettings"));
@@ -95,40 +94,13 @@ function TeamIdentity() {
   }}><p className="text-sm text-amber-900">当前是开发 Header 身份，可在本机切换；这不是生产登录、组织成员管理或 SSO。请勿据此对外部署。</p><Field label="开发身份邮箱"><input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} /></Field><Button type="submit" variant="secondary">切换本机开发身份</Button></form>;
 }
 
-function ProductProductionDefaults({ editable, onDirtyChange }: { editable: boolean; onDirtyChange: (dirty: boolean) => void }) {
-  const [saved, setSaved] = useState<{ settings: ProductionSettings; revision: number } | null>(null);
-  const [draft, setDraft] = useState<ProductionSettings>({});
-  const [dirty, setDirty] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [issue, setIssue] = useState("");
-  const [notice, setNotice] = useState("");
-  useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
-  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
-  async function load() {
-    setBusy(true); setIssue("");
-    try { const value = await api.get<{ settings: ProductionSettings; revision: number }>("/product-production-defaults"); setSaved(value); setDraft(value.settings); setDirty(false); }
-    catch (error) { setIssue(error instanceof Error ? error.message : "商品默认设置读取失败"); }
-    finally { setBusy(false); }
-  }
-  useEffect(() => { void load(); }, []);
-  async function save() {
-    if (!saved || !editable || busy) return;
-    setBusy(true); setIssue(""); setNotice("");
-    try { const value = await api.put<{ settings: ProductionSettings; revision: number }>("/product-production-defaults", { settings: draft, expected_revision: saved.revision }); setSaved(value); setDraft(value.settings); setDirty(false); setNotice("商品默认设置已保存；已有作品保持各自配置。"); }
-    catch (error) { setIssue(error instanceof Error ? error.message : "保存失败，草稿保留"); }
-    finally { setBusy(false); }
-  }
-  return <section className="mt-6 space-y-4 rounded-xl border border-slate-200 p-5"><h3 className="font-semibold">商品制作默认设置</h3><p className="text-sm text-slate-500">新商品作品从这里读取默认音色；SKU 方案、本作品设置可分别覆盖。模型只在上方 AI 与模型 里选。</p>{issue && <ErrorBanner message={issue} />}<div className="grid gap-4 sm:grid-cols-2">{([["voice_id", "默认音色 ID"]] as const).map(([key, label]) => <Field key={key} label={label}><input aria-label={label} className={inputClass} value={draft[key] || ""} disabled={!editable || busy || !saved} onChange={event => { setDraft(value => ({ ...value, [key]: event.target.value.trim() || null })); setDirty(true); setNotice(""); }} /></Field>)}</div><div className="flex flex-wrap items-center gap-3"><Button disabled={!editable || busy || !saved || !dirty} onClick={() => void save()}>保存商品默认设置</Button><Button variant="secondary" disabled={busy} onClick={() => { if (!dirty || window.confirm("放弃商品默认设置草稿并重新读取？")) void load(); }}>重新读取</Button><span className="text-xs text-slate-500">{dirty ? "有未保存设置" : saved ? `已保存 v${saved.revision}` : "尚未读取"}</span></div>{notice && <p role="status" className="text-sm text-emerald-700">{notice}</p>}</section>;
-}
-
 function SectionActions({ section, onDirtyChange }: { section: Section; onDirtyChange: (dirty: boolean) => void }) {
   const [modelDirty, setModelDirty] = useState(false);
-  const [defaultsDirty, setDefaultsDirty] = useState(false);
-  useEffect(() => { if (section.key === "models") onDirtyChange(modelDirty || defaultsDirty); }, [section.key, modelDirty, defaultsDirty, onDirtyChange]);
+  useEffect(() => { if (section.key === "models") onDirtyChange(modelDirty); }, [section.key, modelDirty, onDirtyChange]);
   const [showOperations, setShowOperations] = useState(false);
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
   const editable = section.editability === "editable" && me.isSuccess && me.data.role === "admin";
-  if (section.key === "models") return <><ModelSettingsWorkspace editable={editable} onDirtyChange={setModelDirty} /><ProductProductionDefaults editable={editable} onDirtyChange={setDefaultsDirty} /></>;
+  if (section.key === "models") return <><ModelSettingsWorkspace editable={editable} onDirtyChange={setModelDirty} /></>;
   if (section.key === "team") {
     const data = section.data && typeof section.data === "object" ? section.data as Record<string, unknown> : {};
     const production = data.auth_mode === "production/jwt_hs256";

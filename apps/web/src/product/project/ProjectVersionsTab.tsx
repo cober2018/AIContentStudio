@@ -5,7 +5,7 @@ import type { Versions } from "./types";
 
 const GROUPS: { key: keyof Versions; label: string }[] = [
   { key: "brief", label: "创作任务书" }, { key: "factBoundary", label: "事实边界" },
-  { key: "contentUnits", label: "内容单元" }, { key: "workflows", label: "工作流" },
+  { key: "contentUnits", label: "作品" }, { key: "workflows", label: "工作流" },
   { key: "contentMasters", label: "内容 Master 修订" },
   { key: "identitySnapshots", label: "身份快照" }, { key: "identityStates", label: "历史未冻结身份" },
   { key: "runs", label: "运行" }, { key: "materials", label: "素材版本" },

@@ -176,7 +176,7 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
         deterministic.extend({**issue, "source": "persona_quality", "locator": _issue_locator(document, issue.get("span", ""))} for issue in quality["issues"])
     # Text review needs shared identity rules, not other media production settings.
     text_profile = {key: value for key, value in profile.items()
-        if key not in {"graphic_creative_profile", "audio_creative_profile", "video_creative_profile"}}
+        if key not in {"graphic_creative_profile", "video_creative_profile"}}
     semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": text_profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"],
         critic_dimensions=quality["critic_dimensions"] if quality else (), text_identity_scope=True)
     issues = deterministic + semantic

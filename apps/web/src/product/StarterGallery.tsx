@@ -10,20 +10,16 @@ type Readiness = { persona_id: number; creative_root: { scope: string; id: numbe
     profile: CreativeProfile | null; profile_source: string | null; profile_revision_id: number | null;
     selected_binding: unknown; declared_chain: unknown; fallback_reason: string | null;
     recipe: { source: string; workflow_id?: number; workflow_version?: number; binding_revision?: number; checksum: string } | null }> };
-const MODALITIES = { text: "文字", graphic: "图文", audio: "音频", video: "视频" };
+const MODALITIES = { text: "文字", graphic: "图文", video: "视频" };
 const MODES = { auto: "Auto", custom: "Custom", composed: "Custom Composition" };
 const STATES = { ready: "配置可开始", partial: "部分就绪", blocked: "阻断" };
 const REASONS: Record<string, string> = {
   creative_profile_missing: "本级无有效创作配置（含显式清空）。",
   default_recipe_unavailable: "没有可用的精确默认流程。",
   identity_archived: "所选身份或祖先已归档，只能查看。",
-  tts_voice_id_not_configured: "尚未配置真实供应商 voice ID；风格名称不等于 voice ID。",
-  tts_runtime_unverified: "TTS runtime 尚未证实可用。",
-  tts_voice_and_output_require_execution_validation: "声音、实际音频和 QC 仍需显式执行后验证。",
-  audio_recipe_requires_explicit_project_selection: "音频方法尚需在项目中显式选择，不会自动绑定。",
   graphic_render_scope_requires_project_master: "真实图文渲染需项目 Master 和精确 renderer scope。",
   external_video_execution_required: "视频默认流程只准备导演包，最终成片需外部执行。",
-  planning_chat_unavailable: "口语稿/视觉规划的独立 Chat 配置不可用。",
+  planning_chat_unavailable: "视觉规划的独立 Chat 配置不可用。",
   mock_provider_contract_only: "Mock 只证明合同，不代表真实模型就绪。",
 };
 

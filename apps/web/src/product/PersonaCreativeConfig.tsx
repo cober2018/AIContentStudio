@@ -1,32 +1,46 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "../api";
-import { Button, Chip, ErrorBanner, Field, Notice, Section, Segmented, Stat, inputClass } from "../components/ui";
+import { Button, Chip, Field, Notice, Section, Segmented, Stat, inputClass, FloatingAlert } from "../components/ui";
 import { CreativeProfile, refName, useNames } from "./IdentityProfileView";
 import { capabilityApi, type CapabilityArtifact, type InstalledSkill } from "./capabilityMemoryTypes";
 import { TypedStageField } from "./StageContractControls";
 import ProductionStageControls from "./ProductionStageControls";
-import VoicePresetPicker, { type VoicePresetOption } from "./VoicePresetPicker";
 
 type Kind = "brand" | "persona" | "account" | "series";
 type Entity = { kind: Kind; id: number; name: string; status: string; current_revision: number };
 type Revision = { revision_no: number; profile: Record<string, any> };
 type Effective = { effective_profile: Record<string, any>; creative_profile_origins?: Record<string, string>; revision_ids?: Record<string, number | null> };
 type Catalog = { production_stages?: { id: string; title: string; order: number; modalities: string[] }[]; skills: any[]; style_presets: any[]; quality_profiles: any[]; starter_personas: any[] };
-type VoicePreset = VoicePresetOption;
-type Modality = "text" | "graphic" | "audio" | "video";
+type Modality = "text" | "graphic" | "video";
 type Mode = "inherit" | "override" | "clear";
 type SaveReceipt = { expectedRevision: number; profile: Record<string, any>; confirmed: boolean; modality: Modality; draft: any; editVersion: number };
 const MODALITIES: { key: Modality; label: string }[] = [
-  { key: "text", label: "文字" }, { key: "graphic", label: "图文" },
-  { key: "audio", label: "音频" }, { key: "video", label: "视频" },
+  { key: "text", label: "文字" }, { key: "graphic", label: "图文" }, { key: "video", label: "视频" },
 ];
 const FIELDS: Record<Modality, string> = {
-  text: "text_creative_profile", graphic: "graphic_creative_profile",
-  audio: "audio_creative_profile", video: "video_creative_profile",
+  text: "text_creative_profile", graphic: "graphic_creative_profile", video: "video_creative_profile",
 };
 
+// Plain names for the persona methods; the catalog purpose is shown underneath once one is picked.
+const METHOD_NAMES: Record<string, string> = {
+  "studio.research.evidence-brief": "整理选题证据", "studio.research.angle-lab": "找内容角度",
+  "studio.text.outline": "列文章大纲", "studio.text.longform": "写长文", "studio.text.answer": "直接回答型短文", "studio.text.social-short": "写短内容",
+  "studio.text.humanize": "润色成人话", "studio.text.article-plan": "一次出写作方案", "studio.text.article-write": "按方案写完整文章", "studio.text.title-hook": "标题和开头",
+  "studio.graphic.visual-director": "定视觉方向", "studio.graphic.card-plan": "规划图文卡片", "studio.graphic.image-brief": "写配图需求",
+  "studio.audio.spoken-adapt": "改成口语稿",
+  "studio.video.script": "写视频脚本", "studio.video.shot-director": "拆分镜头", "studio.video.director-package": "出导演包",
+  "studio.video.script-review": "评审脚本", "studio.video.stock-scout": "找免费素材", "studio.video.digital-human": "规划数字人出镜",
+};
+const FIELD_NAMES: Record<string, string> = { skill_ref: "主方法", style_preset_ref: "风格预设", quality_profile_ref: "质量标准", model_binding: "模型", parameters: "主方法参数" };
 function errorText(error: unknown) {
-  return error instanceof ApiError ? `${error.status} · ${error.message}` : "创作配置读取失败。";
+  if (!(error instanceof ApiError)) return "创作配置读取失败。";
+  const detail = error.detail as { message?: string } | { loc?: string[] }[] | string | undefined;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    const fields = [...new Set(detail.map(item => FIELD_NAMES[item.loc?.[item.loc.length - 1] || ""] || item.loc?.[item.loc.length - 1]).filter(Boolean))];
+    return `填写不完整或格式不对：${fields.join("、") || "请检查各项"}`;
+  }
+  return detail?.message || `${error.status} · ${error.message}`;
 }
 
 function stableJson(value: any): string {
@@ -59,7 +73,7 @@ function initialDraft(modality: Modality, direct: Record<string, any>, effective
   return { mode: direct[field] === null ? "clear" as Mode : direct[field] ? "override" as Mode : "inherit" as Mode,
     profile: value ? JSON.parse(JSON.stringify(value)) : {
       schema: `persona.creative.${modality}.v1`, mode: "auto", skill_ref: "", style_preset_ref: "", quality_profile_ref: "",
-      capability: modality === "graphic" ? "image_generation" : modality === "audio" ? "tts" : "chat",
+      capability: modality === "graphic" ? "image_generation" : "chat",
       model_binding: null, model_chain: [], capability_memory_revision_ids: [], installed_skill_refs: [], parameters: {}, stage_instruction: null, provenance: {},
     } };
 }
@@ -71,9 +85,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
   readOnly: boolean;
 }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [voiceCatalog, setVoiceCatalog] = useState<VoicePreset[]>([]);
   const names = useNames();
-  const [audioAdvanced, setAudioAdvanced] = useState(false);
   const [modality, setModality] = useState<Modality>("text");
   const [drafts, setDrafts] = useState<Record<Modality, any>>({} as Record<Modality, any>);
   const [preview, setPreview] = useState<any>(null);
@@ -88,8 +100,8 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
   const [saving, setSaving] = useState(false);
   const [pendingSave, setPendingSave] = useState<SaveReceipt | null>(null);
   const baselines = useRef<Record<Modality, any>>({} as Record<Modality, any>);
-  const editVersions = useRef<Record<Modality, number>>({ text: 0, graphic: 0, audio: 0, video: 0 });
-  const rebasedVersions = useRef<Record<Modality, number>>({ text: 0, graphic: 0, audio: 0, video: 0 });
+  const editVersions = useRef<Record<Modality, number>>({ text: 0, graphic: 0, video: 0 });
+  const rebasedVersions = useRef<Record<Modality, number>>({ text: 0, graphic: 0, video: 0 });
   const direct = revisions[0]?.profile || {};
   const effectiveProfile = effective?.effective_profile || {};
   const effectiveCreative = effectiveProfile[FIELDS[modality]];
@@ -99,7 +111,6 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
 
   useEffect(() => {
     api.get<Catalog>("/content-identities/creative-catalog").then(setCatalog).catch((e) => setError(errorText(e)));
-    api.get<{ voice_catalog?: VoicePreset[] }>("/settings/model-capabilities").then((value) => setVoiceCatalog(value.voice_catalog || [])).catch(() => setVoiceCatalog([]));
   }, []);
   useEffect(() => {
     if (!effective) return;
@@ -124,16 +135,24 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
   const shownPreview = previewFingerprint === fingerprint ? preview : null;
   useEffect(() => { setConfirmDiff(false); }, [fingerprint]);
   const resourceOptions = useMemo(() => ({
-    skills: (catalog?.skills || []).filter((item) => item.modality === modality),
+    // One entry per method, newest version only; checking tools and product-only skills are not persona methods.
+    skills: Object.values((catalog?.skills || []).filter((item) => item.modality === modality && item.kind === "skill" && item.system !== "product")
+      .reduce((latest: Record<string, any>, item) => {
+        const keep = item.ref === draft.profile.skill_ref || !latest[item.key] || Number(item.version) > Number(latest[item.key].version);
+        if (keep && !(latest[item.key]?.ref === draft.profile.skill_ref)) latest[item.key] = item;
+        return latest;
+      }, {})),
     presets: (catalog?.style_presets || []).filter((item) => item.config?.modality === (modality === "video" ? "graphic" : modality)),
-    quality: (catalog?.quality_profiles || []).filter((item) => item.ref?.includes(`quality.${modality === "graphic" ? "graphic" : modality === "audio" ? "audio" : "text"}.`)),
+    quality: (catalog?.quality_profiles || []).filter((item) => item.ref?.includes(`quality.${modality === "graphic" ? "graphic" : "text"}.`)),
   }), [catalog, modality]);
   const selectedSkill = resourceOptions.skills.find(item => item.ref === draft.profile.skill_ref);
+  const latestVersion: Record<string, number> = (catalog?.skills || []).reduce((top: Record<string, number>, item) => ({ ...top, [item.key]: Math.max(top[item.key] || 0, Number(item.version)) }), {} as Record<string, number>);
   const profileBefore = direct[FIELDS[modality]];
   const profileAfter = draft.mode === "inherit" ? undefined : draft.mode === "clear" ? null : draft.profile;
   const changedFields = draft.mode !== "override" ? [draft.mode === "clear" ? "显式清空" : "移除本级覆盖"]
     : Array.from(new Set([...Object.keys(profileBefore || {}), ...Object.keys(profileAfter || {})]))
-      .filter(key => JSON.stringify(profileBefore?.[key]) !== JSON.stringify(profileAfter?.[key]));
+      // Bookkeeping keys (schema, provenance, capability) change with any edit and mean nothing to the user.
+      .filter(key => !["schema", "provenance", "capability"].includes(key) && JSON.stringify(profileBefore?.[key]) !== JSON.stringify(profileAfter?.[key]));
   const matchingMethods = methods.filter(item => ["prompt_skill", "recipe"].includes(item.kind)
     && ["saved", "pinned"].includes(item.status)
     && (item.scope_type === "owner" || (item.scope_type === "persona" && item.scope.id === persona?.id)
@@ -148,10 +167,6 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
   }
   function updateProfile(key: string, value: any) {
     const parameterFields = key === "skill_ref" ? Object.keys(resourceOptions.skills.find(item => item.ref === value)?.parameter_schema?.properties || {}) : [];
-    if (key === "skill_ref" && ["voice", "rate"].some(field => field in (draft.profile.parameters || {}) && !parameterFields.includes(field))) {
-      setError("此方法不接收现有音色或语速参数。请在作品阶段试用口播/声音方向方法；原声音配置保留。");
-      return;
-    }
     if (!markEdited()) return;
     setPreview(null);
     const reset = key === "mode" && value !== "composed" ? { model_chain: [], capability_memory_revision_ids: [], installed_skill_refs: [] }
@@ -162,19 +177,13 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
         ...(key === "mode" && value === "auto" ? { model_binding: null } : {}), [key]: value } } };
     });
   }
-  function chooseVoice(preset: VoicePreset) {
-    if (!markEdited()) return;
-    setPreview(null);
-    setDrafts(previous => ({ ...previous, audio: { ...(previous.audio || draft), profile: {
-      ...(previous.audio || draft).profile, mode: "auto", skill_ref: "studio.audio.tts@1",
-      capability: "tts", model_chain: [], capability_memory_revision_ids: [], installed_skill_refs: [], model_binding: null,
-      parameters: { voice: preset.voice_id, rate: preset.rate ?? 1 },
-    } } }));
-  }
-  const chosenVoice = voiceCatalog.find(item => item.voice_id === draft.profile.parameters?.voice);
   async function loadPreview() {
     if (!persona) return;
     const requestedFingerprint = fingerprint;
+    // A full setup needs its three choices; say which are missing instead of letting the server answer 422.
+    const missing = draft.mode === "override" ? ([["skill_ref", "主方法"], ["style_preset_ref", "风格预设"], ["quality_profile_ref", "质量标准"]] as const)
+      .filter(([key]) => !draft.profile?.[key]).map(([, name]) => name) : [];
+    if (missing.length) { setError(`「在这里完整设置」需要先选：${missing.join("、")}。不想定制就把配置方式改回不设置。`); return; }
     try {
       setError("");
       const value = await api.post(`/content-identities/creative-preview`, {
@@ -260,27 +269,22 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
   if (current.kind === "brand") return <Section eyebrow="创作配置" title="品牌不设创作方式"><p className="text-[14px] leading-relaxed text-ink-600">品牌只提供约束与语气，不决定用哪种方法、风格或质量标准。请到角色、账号或栏目里配置。</p></Section>;
   const label = MODALITIES.find(item => item.key === modality)?.label || modality;
   return <div className="space-y-6">
-    {error && <ErrorBanner message={error} />}
+    {error && <FloatingAlert message={error} onClose={() => setError("")} />}
     {pendingSave && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-[14px] text-amber-900"><p>{pendingSave.confirmed ? "新修订已写入，等待回读核对。" : "这次保存的结果还没确认，已暂停再次保存。"}</p><Button variant="secondary" size="sm" disabled={saving} onClick={readBackSave}>回读核对</Button></div>}
     <Section eyebrow="创作配置" title={`${label}内容怎么做`} aside={<><Chip tone={readonly ? "neutral" : "accent"}>{readonly ? "只读" : current.kind === "persona" ? "角色默认" : `${current.kind === "account" ? "账号" : "栏目"}单独设置`}</Chip></>}>
       <p className="-mt-2 mb-5 max-w-2xl text-[13.5px] leading-relaxed text-ink-500">角色是默认来源；账号和栏目可以整套替换某种形态的配置，不会悄悄混合两边。</p>
       <Segmented label="内容形态" value={modality} onChange={(key) => { setModality(key as Modality); setPreview(null); }} items={MODALITIES.map(item => [item.key, item.label] as const)} />
-      {dirty && <div className="mt-4"><Notice tone="warn">有未保存的修改。保存当前形态不会丢掉其他形态的草稿；版本更新时保留你改过的字段，请重新预览差异。</Notice></div>}
+      {dirty && <div className="mt-4"><Notice tone="warn">有未保存的修改。保存在本页最下方：先点「预览生效结果」，勾选「我已核对改动」，再点「保存」。</Notice></div>}
       <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="space-y-5">
           <Field label="配置方式"><select disabled={readonly} className={inputClass} value={draft.mode} onChange={(e) => { if (!markEdited()) return; setDrafts({ ...drafts, [modality]: { ...draft, mode: e.target.value as Mode } }); }}><option value="inherit">{current.kind === "persona" ? "不设置（不继承品牌风格）" : "继承角色 / 上级"}</option><option value="override">在这里完整设置</option><option value="clear">明确清空</option></select></Field>
           {draft.mode === "override" && <>
-            <Field label="主方法"><select disabled={readonly} className={inputClass} value={draft.profile.skill_ref} onChange={(e) => updateProfile("skill_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.skills.map((item) => <option key={item.ref} value={item.ref}>{item.purpose}（{refName(item.ref)}）</option>)}</select></Field>
+            <Field label="主方法"><select disabled={readonly} className={inputClass} value={draft.profile.skill_ref} onChange={(e) => updateProfile("skill_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.skills.map((item) => <option key={item.ref} value={item.ref}>{METHOD_NAMES[item.key] || item.purpose}{latestVersion[item.key] && Number(item.version) < latestVersion[item.key] ? "（旧版本）" : ""}</option>)}</select>
+              {selectedSkill && <p className="mt-1 text-[12.5px] text-ink-500">{selectedSkill.purpose}</p>}</Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="风格预设"><select disabled={readonly} className={inputClass} value={draft.profile.style_preset_ref} onChange={(e) => updateProfile("style_preset_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.presets.map((item) => <option key={item.ref} value={item.ref}>{refName(item.ref)}</option>)}</select></Field>
               <Field label="质量标准"><select disabled={readonly} className={inputClass} value={draft.profile.quality_profile_ref} onChange={(e) => updateProfile("quality_profile_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.quality.map((item) => <option key={item.ref} value={item.ref}>{refName(item.ref)}</option>)}</select></Field>
             </div>
-            {modality === "audio" && selectedSkill?.ref === "studio.audio.tts@1" && <div className="space-y-4 rounded-[14px] border border-ink-200 bg-ink-50/60 p-4">
-              <div className="flex items-start justify-between gap-3"><div><p className="text-[14px] font-medium text-ink-900">声音</p><p className="mt-0.5 text-[12.5px] text-ink-500">选定音色；配音模型在 设置 → AI 与模型 里统一选。</p></div><Button variant="ghost" size="sm" onClick={() => setAudioAdvanced(value => !value)}>{audioAdvanced ? "收起高级" : "高级设置"}</Button></div>
-              <VoicePresetPicker voices={voiceCatalog} selectedId={chosenVoice?.id || ""} disabled={readonly} onSelect={chooseVoice} />
-              <Field label={`语速 ${Number(draft.profile.parameters?.rate ?? 1).toFixed(2)}×`}><input type="range" className="w-full accent-accent-500" min="0.5" max="2" step="0.05" disabled={readonly} value={Number(draft.profile.parameters?.rate ?? 1)} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), rate: Number(e.target.value) })} /></Field>
-              {audioAdvanced && <Field label="精确音色 ID（含本人克隆音色）" hint="模型在 设置 → AI 与模型 里统一选；这里只设音色与语速。"><input disabled={readonly} className={inputClass} maxLength={150} value={draft.profile.parameters?.voice || ""} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), voice: e.target.value })} /></Field>}
-            </div>}
             {selectedSkill?.parameter_schema && <TypedStageField label="主方法参数" schema={selectedSkill.parameter_schema} value={draft.profile.parameters || {}} disabled={readonly} onChange={value => updateProfile("parameters", value)} />}
             <Field label="方法组合" hint="模型在 设置 → AI 与模型 里统一选，这里不再单独指定。"><select disabled={readonly} className={inputClass} value={draft.profile.mode === "composed" ? "composed" : "auto"} onChange={(e) => updateProfile("mode", e.target.value)}><option value="auto">只用主方法</option><option value="composed">主方法 + 附加方法</option></select></Field>
             {draft.profile.mode === "composed" && <div className="space-y-3 rounded-[14px] border border-ink-200 p-4">
@@ -330,7 +334,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
       <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-ink-200/80 pt-5">
         <Button variant="secondary" onClick={loadPreview} disabled={!persona}>预览生效结果</Button>
         {shownPreview && <label className="flex items-center gap-2 text-[13px] text-ink-600"><input type="checkbox" className="accent-accent-500" disabled={readonly} checked={confirmDiff} onChange={event => setConfirmDiff(event.target.checked)} />我已核对改动；保存会生成新修订，不影响历史作品和其他角色</label>}
-        <Button className="ml-auto" onClick={save} disabled={readonly || saving || !!pendingSave || !shownPreview || !confirmDiff}>{saving ? "保存中…" : `保存${label}配置`}</Button>
+        {dirty && !shownPreview && <span className="text-[12.5px] text-ink-500">先预览，才能保存</span>}<Button className="ml-auto" onClick={save} disabled={readonly || saving || !!pendingSave || !shownPreview || !confirmDiff}>{saving ? "保存中…" : `保存${label}配置`}</Button>
       </div>
     </Section>
     <Section eyebrow="内置资源" title="平台自带的方法与标准" aside={<span>只读 · 不会自动调用模型</span>}>
@@ -345,8 +349,14 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
 
 const CHANGE_LABELS: Record<string, string> = { mode: "方法组合", skill_ref: "主方法", style_preset_ref: "风格预设", quality_profile_ref: "质量标准", model_binding: "指定模型", model_chain: "后备模型", capability_memory_revision_ids: "附加方法", installed_skill_refs: "外部 Skill", production_stages: "制作步骤", parameters: "参数", stage_instruction: "补充说明" };
 function summarize(value: unknown): string {
-  if (value === undefined) return "继承 / 未设置";
+  if (value === undefined) return "未设置";
   if (value === null) return "清空";
+  if (value === "auto") return "只用主方法";
+  if (value === "composed") return "主方法 + 附加方法";
+  if (typeof value === "string" && value.startsWith("studio.")) {
+    const [key] = value.split("@");
+    return METHOD_NAMES[key] || refName(value) || value;
+  }
   if (typeof value === "string") return refName(value) || value;
   if (Array.isArray(value)) return value.length ? `${value.length} 项` : "无";
   if (typeof value === "object") return `${Object.keys(value as object).length} 项设置`;

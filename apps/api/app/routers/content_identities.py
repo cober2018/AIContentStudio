@@ -179,6 +179,28 @@ def archive_brand(brand_id: int, db: Session = Depends(get_db), user: User = Dep
     _archive(db, user, "brand", brand_id)
 
 
+@router.delete("/content-brands/{brand_id}/permanent")
+def delete_brand(brand_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    """Delete a brand that has nothing under it; brands still holding personas are refused with their names."""
+    from ..models import ContentBrand, ContentBrandRevision, IdentitySnapshot, ContentMemoryEntry
+
+    brand = identity.owned_entity(db, user, "brand", brand_id)
+    personas = db.scalars(select(ContentPersona).where(ContentPersona.brand_id == brand_id, ContentPersona.owner_user_id == user.id)).all()
+    if personas:
+        names = "、".join(f"{row.name}{'（已归档）' if row.status == 'archived' else ''}" for row in personas[:20])
+        raise HTTPException(409, {"code": "brand_has_personas", "message": f"品牌下还有角色：{names}。先把它们移到别的品牌或删除，再删品牌。"})
+    # Production snapshots and brand memory point at the brand; keeping it archived keeps old works traceable.
+    if (db.scalar(select(IdentitySnapshot.id).where(IdentitySnapshot.brand_id == brand_id).limit(1)) is not None
+            or db.scalar(select(ContentMemoryEntry.id).where(ContentMemoryEntry.brand_id == brand_id).limit(1)) is not None):
+        _archive(db, user, "brand", brand_id)
+        return {"deleted": False, "archived": True, "message": "已从目录删除；有作品的历史记录引用它，保留只读记录。"}
+    for revision in db.scalars(select(ContentBrandRevision).where(ContentBrandRevision.brand_id == brand_id)).all():
+        db.delete(revision)
+    db.delete(db.get(ContentBrand, brand.id))
+    db.commit()
+    return {"deleted": True, "archived": False, "message": "品牌已删除。"}
+
+
 @router.get("/content-brands/{brand_id}/personas")
 def brand_personas(brand_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     identity.owned_entity(db, user, "brand", brand_id)

@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { api, ApiError, currentUser } from "../api";
 import { Button } from "../components/ui";
 
-type Status = { voice: { mode: string; material_revision_id?: number; material_id?: number; duration_ms?: number | null }; settings: { voice_id: string; emotion: string; rate: number; model_id: string }; emotions: Record<string, string> };
+type Check = { status: "ok" | "warning"; items: { key: string; name: string; pass: boolean; detail: string }[] };
+type Status = { voice: { mode: string; material_revision_id?: number; material_id?: number; duration_ms?: number | null; quality?: Check | null }; settings: { voice_id: string; emotion: string; rate: number; model_id: string }; emotions: Record<string, string> };
 
 function failure(cause: unknown) {
   const detail = cause instanceof ApiError ? cause.detail as { message?: string } | undefined : undefined;
@@ -44,6 +45,8 @@ export default function VoiceoverPanel({ projectId, unitId, readOnly, onSaved }:
       <Button size="sm" variant={revision ? "secondary" : "primary"} disabled={readOnly || busy || status.isPending} onClick={() => void generate()}>{busy ? "生成中，约一分钟…" : revision ? "重新生成配音" : "生成配音"}</Button>
     </div>
     {revision ? (url ? <audio className="mt-3 w-full" controls src={url} /> : <p className="mt-2 text-xs text-slate-500">配音已放进主稿（素材 #{revision}）。</p>) : <p className="mt-2 text-xs text-amber-700">还没有配音。剪辑要跟着配音走，先生成配音。</p>}
+    {status.data?.voice.quality && <ul className="mt-2 space-y-1 text-xs">{status.data.voice.quality.items.map(item =>
+      <li key={item.key} className={item.pass ? "text-slate-500" : "text-amber-800"}>{item.pass ? "✓" : "!"} {item.name}：{item.detail}</li>)}</ul>}
     {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
   </section>;
 }

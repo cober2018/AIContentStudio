@@ -42,9 +42,9 @@ function methodConfig(selection: StageMethodSelection) {
   return { ...reference, arguments_json: JSON.stringify(args || {}) };
 }
 
-export default function StageContractControls({ base, nodeId, contract, baseConfig, override, disabled, mode = "run", hiddenFields = [], onChange }: {
+export default function StageContractControls({ base, nodeId, contract, baseConfig, override, disabled, mode = "run", onChange }: {
   base: string; nodeId: string; contract: StageContract; baseConfig: Record<string, unknown>;
-  override: Record<string, unknown>; disabled: boolean; mode?: "run" | "authored"; hiddenFields?: string[]; onChange: (field: string, value: unknown) => void;
+  override: Record<string, unknown>; disabled: boolean; mode?: "run" | "authored"; onChange: (field: string, value: unknown) => void;
 }) {
   const variantStage = contract.stage_schema === "stage.variant.adapt.v1";
   const [variantInventory, setVariantInventory] = useState<{ targets: { channel: string; content_form: string }[]; channels: { channel: string; label: string; content_forms: { content_form: string; label: string }[] }[]; accounts: { id: number; name: string; status: string; persona_id: number; platform_channel?: string | null }[]; bindings: { account_id: number; content_form: string; enabled: boolean }[] } | null>(null);
@@ -53,8 +53,7 @@ export default function StageContractControls({ base, nodeId, contract, baseConf
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
   // 模型只在 设置 → AI 与模型 选，阶段里不再显示模型选择。
-  const fields = (contract.tunable_fields || []).filter(field => !["model_profile_id", "selected_profile"].includes(field)
-    && (!hiddenFields.includes(field) || baseConfig[field] !== undefined || override[field] !== undefined));
+  const fields = (contract.tunable_fields || []).filter(field => !["model_profile_id", "selected_profile"].includes(field));
   const needsInventory = fields.some(field => field === "profile_id" || contract.ui_schema?.[field]?.control === "method");
   useEffect(() => {
     let alive = true;

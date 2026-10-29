@@ -17,7 +17,9 @@ from fastapi import HTTPException
 MULTIMEDIA_SCHEMA = "studio.multimedia.request.v1"
 IMAGE_CANDIDATE_MIN = 1
 IMAGE_CANDIDATE_MAX = 4
-_VOICE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,149}\Z")
+from .model_capability_routing import VOICE_ID  # noqa: E402
+
+_VOICE_ID = re.compile(VOICE_ID + r"\Z")
 _VOICE_REF = re.compile(r"(?:material_revision|local):[A-Za-z0-9_.:-]{1,180}\Z")
 _IMAGE_FIELDS = {"items", "pixels", "aspect_ratio", "timeout_seconds"}
 _AUDIO_FIELDS = {"items", "seconds", "timeout_seconds", "voice_id", "rate"}

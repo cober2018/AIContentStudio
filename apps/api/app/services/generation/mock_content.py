@@ -117,12 +117,9 @@ def build_structured_output(request: GenerateRequest, inject_unfact: bool) -> di
                 content = {"title": summary, "aspect_ratio": "3:4", "cards": [{
                     "id": "cover", "order": 0, "role": "cover", "title": "隔离卡片计划",
                     "body": "只验证语义计划与确定性排版合同。", "visual_type": "none"}]}
-            elif schema == "audio.spoken-adaptation.v1":
+            elif schema == "text.spoken-adaptation.v1":
                 content = {"script": "这是隔离口语稿合同样例，不代表真实音频质量。", "pronunciation_notes": [],
                     "source_summary": summary, "warnings": ["mock_output_not_quality_evidence"]}
-            elif schema == "audio.voice-direction.v1":
-                content = {"voice_character": "平静讲解", "pace": "medium", "energy": "自然",
-                    "pause_policy": "段落间停顿", "pronunciation_notes": [], "rate": 1.0}
             elif schema == "video.shot-plan.v1":
                 content = {"title": summary, "shots": [{"id": "shot-1", "order": 0,
                     "script": "隔离脚本", "visual": "待准备画面", "asset_requirements": [], "duration_seconds": 5}]}

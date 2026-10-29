@@ -7,7 +7,7 @@ import { ProjectNextStageLink } from "../HomePage";
 import type { Unit } from "./projectTypes";
 import type { Overview } from "./types";
 
-const STAGES: Record<string, string> = { brief_needed: "待完成任务书", evidence_needed: "待建立事实边界", matrix_needed: "待添加内容单元", production: "生产中", attention_required: "需要处理风险", waiting_human: "等待人工", review_ready: "可进入审核" };
+const STAGES: Record<string, string> = { brief_needed: "待完成任务书", evidence_needed: "待建立事实边界", matrix_needed: "待添加作品", production: "生产中", attention_required: "需要处理风险", waiting_human: "等待人工", review_ready: "可进入审核" };
 const STATE_NAMES: Record<string, string> = { identity_unready: "身份未就绪，请完善画像或显式重绑", blocked: "受阻", stale: "已过期", unknown: "待核对", failed: "执行失败", waiting_human: "等待人工", waiting_review: "待审核", ready: "就绪", approved: "已批准", delivery_ready: "待交付", delivered: "已回填" };
 const MASTER_STATES: Record<string, string> = { master_incomplete: "原稿或必要检查尚未完成", master_stale: "原稿依据已变化，需要核对", master_check_blocked: "原稿检查发现问题", master_render_unready: "成品尚未完成渲染验证" };
 function stateLabel(code: string) { if (MASTER_STATES[code]) return MASTER_STATES[code]; const state = STATE_NAMES[code] ? code : Object.keys(STATE_NAMES).find((item) => code.endsWith(item)); return state ? STATE_NAMES[state] : code; }

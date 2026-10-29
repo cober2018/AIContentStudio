@@ -46,7 +46,6 @@ class ProductLaunchIn(BaseModel):
     product_context: ProductContext
     production_stages: dict | None = None
     creative_profile: dict | None = None
-    audio_creative_profile: dict | None = None
     fetch_product_url: bool = True
     source_ids: list[int] = Field(default_factory=list, max_length=30)
     material_revision_ids: list[int] = Field(default_factory=list, max_length=30)
@@ -60,12 +59,6 @@ class ProductLaunchIn(BaseModel):
             if profile["schema"] != f"persona.creative.{self.modality}.v1":
                 raise ValueError("creative_profile_modality_mismatch")
             self.creative_profile = profile
-        if self.audio_creative_profile is not None:
-            from ..services.content_identity import CreativeProfile
-            profile = CreativeProfile.model_validate(self.audio_creative_profile).model_dump(mode="json", by_alias=True)
-            if profile["schema"] != "persona.creative.audio.v1":
-                raise ValueError("creative_profile_modality_mismatch")
-            self.audio_creative_profile = profile
         if self.production_stages is not None:
             from ..services.studio_creative_catalog import validate_production_stages
 

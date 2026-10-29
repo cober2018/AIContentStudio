@@ -14,7 +14,7 @@ from app.services import content_identity as identity
 from app.services import studio_creative_catalog as catalog
 
 STARTERS = ("starter.ai-tech-engineer.v1", "starter.lifestyle-observer.v1")
-MODALITIES = ("text", "graphic", "audio", "video")
+MODALITIES = ("text", "graphic", "video")
 KINDS = ("persona", "account", "series")
 ROUTES = {
     "brand": "content-brands",
@@ -34,13 +34,11 @@ ARCHIVE_CASES = [
 PARAMETERS = {
     "text": {"length": "long", "candidate_count": 3},
     "graphic": {"density": "high", "instruction": "保留具体观察"},
-    "audio": {"voice": "contract-voice", "rate": 1.1},
     "video": {"aspect_ratio": "16:9", "instruction": "保留具体观察"},
 }
 REPLACEMENTS = {
     "text": {"length": "short"},
     "graphic": {"density": "low"},
-    "audio": {"rate": 0.9},
     "video": {"aspect_ratio": "9:16"},
 }
 

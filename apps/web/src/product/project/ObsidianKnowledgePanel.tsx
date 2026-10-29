@@ -155,7 +155,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
         <p className="text-sm text-slate-600">{connection.data.configured ? `知识库：${connection.data.vault_name} · ${connection.data.enabled ? "已启用" : "已停用"}` : "尚未连接本地知识库，请管理员配置。"}{connection.data.configured && <span className="block mt-1 text-xs text-slate-500">检索范围：{connection.data.folders.length ? connection.data.folders.join("、") : "知识库内全部可读取的 Markdown 笔记"}</span>}</p>
         {me.isSuccess && me.data.role === "admin" && connection.data.is_admin && <ConnectionSettings key={connection.data.revision} connection={connection.data} disabled={!!busy} onBusy={setBusy} onReload={reloadConnection} onSaved={next => { queryClient.setQueryData(connectionKey, next); setResults(null); setPreview(null); setNotice("本地知识库连接已保存。"); }} />}
       </>}
-      {units.isError && <ErrorBanner message="未能读取内容单元；目前可选择项目范围，已有角色或单元范围仍会保留。" />}
+      {units.isError && <ErrorBanner message="未能读取作品；目前可选择项目范围，已有角色或作品范围仍会保留。" />}
       <form onSubmit={search} className="flex flex-wrap items-end gap-2"><div className="min-w-0 flex-1"><Field label="搜索已保存的 Obsidian 笔记"><input className={inputClass} required value={query} disabled={!canBrowse || !!busy || !saved.data} onChange={event => setQuery(event.target.value)} placeholder="输入标题或正文关键词" /></Field></div><Button type="submit" disabled={!canBrowse || !!busy || !query.trim() || !saved.data}>检索笔记</Button></form>
       {results && <div className="space-y-3"><p className="text-xs text-slate-500">本次扫描 {results.coverage.scanned} 篇，跳过 {results.coverage.skipped} 项；返回 {results.items.length} 项（最多 20 项）。{results.coverage.truncated ? "已达到检索上限，结果未覆盖全部笔记，请缩小目录或关键词。" : "已完成本次可读取范围检索。"} · 连接版本 {results.connection_revision}</p>{results.items.length ? <ul className="space-y-2">{results.items.map(note => <li key={note.path} className="rounded-lg border p-3 space-y-2"><h3 className="font-medium text-sm">{note.title}</h3><p className="break-all text-xs text-slate-500">{note.path}</p><p className="whitespace-pre-wrap break-words text-sm text-slate-600">{note.snippet}</p><Button variant="secondary" size="sm" disabled={!!busy || !canBrowse} onClick={() => inspect(note.path)}>预览此笔记</Button></li>)}</ul> : <p className="text-sm text-slate-500">本次范围内未找到匹配笔记。</p>}</div>}
       {preview && canBrowse && <div className="rounded-lg border border-indigo-200 bg-indigo-50/40 p-4 space-y-3">
@@ -175,7 +175,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
 type Choice = Pick<Selection, "purposes" | "modalities" | "persona_id" | "unit_id" | "model_use_allowed">;
 
 function scopeLabel(choice: Choice, units: Unit[]) {
-  if (choice.unit_id !== null) return `内容单元：${units.find(unit => unit.id === choice.unit_id)?.title ?? `#${choice.unit_id}`}`;
+  if (choice.unit_id !== null) return `作品：${units.find(unit => unit.id === choice.unit_id)?.title ?? `#${choice.unit_id}`}`;
   if (choice.persona_id !== null) return `仅身份 #${choice.persona_id}`;
   return "项目内所选形态的角色创作";
 }

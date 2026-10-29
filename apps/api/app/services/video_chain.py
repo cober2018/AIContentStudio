@@ -299,6 +299,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
     from . import craft_skills, product_video, project_folders, voiceover
+    from .persona_brief import persona_brief
     from .content_masters import owned_unit
     from .project_brief import current_brief
     from .project_evidence import current_boundary
@@ -326,13 +327,15 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     return {"project": {"id": project.id, "title": project.title, "objective": project.objective},
             "unit": {"id": unit.id, "title": unit.title, "channel_id": unit.channel_id},
             "brief": {key: getattr(row, key) for key in ("objective", "primary_audience", "core_message", "angle")} if row else None,
-            "facts": facts, "source_texts": siblings, "voice_settings": voiceover.settings(),
+            "facts": facts, "source_texts": siblings, "voice_settings": voiceover.settings_for(db, unit),
             "materials": materials, "state": state(db, user, project_id, unit_id),
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload": master.payload_json} if master else None,
             "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=plan", "rules": RULES,
             "platform_skills": craft_skills.platform_skills(db, unit),
             # Product works add their category, style, material mode and image-to-video route; persona works get null.
-            "product": product_video.direction(db, unit_id)}
+            "product": product_video.direction(db, unit_id),
+            # Who the work speaks as; null when it belongs to no persona.
+            "persona": persona_brief(db, user, unit)}
 
 
 def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: dict, note: str | None) -> dict:

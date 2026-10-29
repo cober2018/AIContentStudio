@@ -34,7 +34,7 @@ class MediaRightsIn(BaseModel):
 
 class StageResultAcceptanceIn(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
-    domain: Literal["media", "audio_asr", "variant", "professional", "checks", "human"]
+    domain: Literal["media", "variant", "professional", "checks", "human"]
     run_id: int = Field(ge=1)
     attempt_id: int = Field(ge=1)
     expected_output_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -62,7 +62,7 @@ class StageResultAcceptanceIn(BaseModel):
             "media": {"task_id", "candidate_index", "expected_result_hash", "rights"},
             "variant": {"payload", "asset_refs", "evidence_refs"},
             "professional": {"package_id", "execution_id"},
-            "checks": {"warning_dispositions"}, "human": set(), "audio_asr": set(),
+            "checks": {"warning_dispositions"}, "human": set(),
         }
         supplied = {key for key in set().union(*choices.values()) if getattr(self, key) is not None}
         allowed = choices[self.domain]
@@ -73,7 +73,7 @@ class StageResultAcceptanceIn(BaseModel):
             raise ValueError("stage_domain_choice_invalid")
         if self.domain != "variant" and self.decision != "accepted":
             raise ValueError("stage_domain_edits_unavailable")
-        if self.domain in {"checks", "human", "audio_asr"} and self.expected_revision != 0:
+        if self.domain in {"checks", "human"} and self.expected_revision != 0:
             raise ValueError("stage_review_revision_invalid")
         if any(len(tag) > 80 for tag in self.reason_tags):
             raise ValueError("stage_feedback_bounds")
