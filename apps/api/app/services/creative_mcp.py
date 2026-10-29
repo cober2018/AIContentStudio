@@ -515,7 +515,10 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
     if name == "materialize_inputs":
         return creative_executions.materialize_inputs(db, args.project_id, args.unit_id, args.execution_id, payload, user)
     if name == "submit_output":
-        return creative_executions.submit_output(db, args.project_id, args.unit_id, args.execution_id, payload, user)
+        result = creative_executions.submit_output(db, args.project_id, args.unit_id, args.execution_id, payload, user)
+        # The last required output moves the task to result_ready by itself, so the 小样 copy runs here too.
+        project_folders.after_execution(db, args.execution_id)
+        return result
     raise MCPError("creative_mcp_unknown_tool", "invalid_arguments", rpc_code=-32602)
 
 
