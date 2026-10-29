@@ -23,7 +23,7 @@ export default function PersonaVoicePreset({ personaId, disabled }: { personaId:
     } catch (cause) { setIssue(cause instanceof ApiError ? (cause.detail as { message?: string } | undefined)?.message || cause.message : "保存失败"); }
     finally { setBusy(false); }
   }
-  if (chosen) return <Field label="这个角色的声音" hint="角色的声音建好就定下，不能再改；单条作品里还可以临时改选。">
+  if (chosen) return <Field label="这个角色的声音" hint="角色的声音建好就定下，不能再改；这个角色下的作品都用这个声音。">
     <p className="py-2 text-sm text-ink-800">{data.items[chosen]?.name || chosen}（已锁定）</p></Field>;
   return <div className="space-y-2">
     <Field label="这个角色的声音" hint="只能选一次，选定后锁定。在 设置 → 配音 里管理各套声音；同一套声音可以给多个角色用。">

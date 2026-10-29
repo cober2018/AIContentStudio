@@ -46,14 +46,14 @@ def presets() -> dict:
         before = {k: v for k, v in (runtime_config.get_runtime(KEY) or {}).items() if k != "model_id"}
         stored = {"default": "male", "items": {"male": {"name": "男声", **DEFAULT, **before}}, "personas": {}}
     model = tts_model()
-    return {"default": stored.get("default"), "personas": dict(stored.get("personas") or {}), "works": dict(stored.get("works") or {}),
+    return {"default": stored.get("default"), "personas": dict(stored.get("personas") or {}),
             "items": {key: {**DEFAULT, **value, "model_id": model} for key, value in stored["items"].items()}}
 
 
 def _write(db: Session, value: dict, user: User) -> dict:
     from ..models import SystemSetting
 
-    stored = {"default": value["default"], "personas": value["personas"], "works": value["works"],
+    stored = {"default": value["default"], "personas": value["personas"],
               "items": {key: {k: v for k, v in item.items() if k != "model_id"} for key, item in value["items"].items()}}
     row = db.get(SystemSetting, PRESETS) or SystemSetting(key=PRESETS)
     row.value, row.updated_by = stored, user.email
@@ -98,8 +98,8 @@ def delete_preset(db: Session, user: User, preset_id: str) -> dict:
         _fail("voice_preset_missing", "没有这套声音配置", 404)
     if preset_id == current["default"]:
         _fail("voice_preset_in_use", "默认的那套不能删，先把别的设为默认", 409)
-    if preset_id in current["personas"].values() or preset_id in current["works"].values():
-        _fail("voice_preset_in_use", "有角色或作品在用这套声音，不能删（角色的声音定了就不改）", 409)
+    if preset_id in current["personas"].values():
+        _fail("voice_preset_in_use", "有角色在用这套声音，不能删（角色的声音定了就不改）", 409)
     del current["items"][preset_id]
     return _write(db, current, user)
 
@@ -124,21 +124,6 @@ def set_persona_preset(db: Session, user: User, persona_id: int, preset_id: str 
     return _write(db, current, user)
 
 
-def set_work_preset(db: Session, user: User, project_id: int, unit_id: int, preset_id: str | None) -> dict:
-    """A work's own pick lives beside the presets, not in its production settings, so changing it mid-way keeps the 导演稿 valid."""
-    from .content_masters import owned_unit
-
-    owned_unit(db, project_id, unit_id, user)
-    current = presets()
-    if preset_id is not None and preset_id not in current["items"]:
-        _fail("voice_preset_missing", "没有这套声音配置", 404)
-    if preset_id is None:
-        current["works"].pop(str(unit_id), None)
-    else:
-        current["works"][str(unit_id)] = preset_id
-    return _write(db, current, user)
-
-
 def settings() -> dict:
     """The default voice setup."""
     current = presets()
@@ -146,13 +131,10 @@ def settings() -> dict:
 
 
 def settings_for(db: Session, unit) -> dict:
-    """The voice a work speaks with: its own pick, else its persona's, else the default."""
+    """A work speaks with its persona's voice, so every work of one persona sounds the same; without a persona, the default."""
     current = presets()
     chosen, origin = None, "默认"
-    picked = current["works"].get(str(unit.id))
-    if picked in current["items"]:
-        chosen, origin = picked, "本作品"
-    elif unit.persona_id is not None and current["personas"].get(str(unit.persona_id)) in current["items"]:
+    if unit.persona_id is not None and current["personas"].get(str(unit.persona_id)) in current["items"]:
         chosen, origin = current["personas"][str(unit.persona_id)], "角色"
     chosen = chosen or current["default"]
     item = current["items"][chosen]

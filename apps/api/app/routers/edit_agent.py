@@ -293,9 +293,3 @@ def video_chain_reveal(project_id: int, unit_id: int, output_id: int, db: Sessio
     _reveal(path)
     return {"path": str(path)}
 
-
-@router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/voice-preset")
-def work_voice_preset(project_id: int, unit_id: int, payload: PersonaVoiceIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    from ..services import voiceover
-
-    return voiceover.set_work_preset(db, user, project_id, unit_id, payload.preset_id)

@@ -10,7 +10,7 @@ function errorText(cause: unknown) {
   return cause instanceof ApiError ? (cause.detail as { message?: string } | undefined)?.message || cause.message : "保存失败";
 }
 
-// Several named voice setups (男声、女声…); a persona picks one, a work may pick its own, the default covers the rest.
+// Several named voice setups (男声、女声…); a persona picks one and its works use it, the default covers works without a persona.
 export default function VoiceSettings() {
   const query = useQuery({ queryKey: ["voice-settings", currentUser()], retry: false, queryFn: () => api.get<Presets>("/settings/voice") });
   const catalog = useQuery({ queryKey: ["voice-catalog", currentUser()], retry: false,
@@ -36,7 +36,7 @@ export default function VoiceSettings() {
   const num = (key: keyof Voice, step: string) => <input className={inputClass} type="number" step={step} value={value[key] as number} disabled={busy} onChange={event => set({ [key]: Number(event.target.value) } as Partial<Voice>)} />;
   return <section aria-label="配音" className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
     <h2 className="text-lg font-semibold">配音（MiniMax）</h2>
-    <p className="text-sm text-slate-600">可以存多套声音配置（比如男声、女声）。角色选一套；作品可以临时改选；都没选就用默认这套。</p>
+    <p className="text-sm text-slate-600">可以存多套声音配置（比如男声、女声）。每个角色定一套（一套可以给多个角色用），角色下的作品都用这套；没选角色的作品用默认这套。</p>
     {error && <ErrorBanner message={error} />}{notice && <p role="status" className="text-sm text-emerald-700">{notice}</p>}
     <div className="flex flex-wrap gap-2">{Object.entries(data.items).map(([key, item]) =>
       <Button key={key} size="sm" variant={id === key ? "primary" : "secondary"} disabled={busy} onClick={() => { setSelected(key); setDraft(null); setNotice(""); }}>{item.name}{key === data.default ? "（默认）" : ""}</Button>)}
