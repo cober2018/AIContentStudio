@@ -1,3 +1,5 @@
+2026-10-29 **产品文档只留本地**：根目录的产品战略、PRD、开发 OpenSpec、前端契约、原型和总过程记录（task_plan / progress / findings / HANDOVER）移到 `openspec/docs/`，与本地成果目录 `output/` 一样加入 .gitignore，不再上传；文件仍在本机。
+
 2026-10-29 **商品工作台 AE 模板（已本地实施）**：新增 15 个商品模板（亮相、卖点、参数与对比、价格与优惠、材质与成分、使用方法、信任背书、下单引导），竖屏 9:16 和横屏 16:9 两版，播放安全区零越界，用户看审片视频验收后入库为 ready；另复用 `callout-label`（卖点标注）、`magnifier`（成分特写），共 17 项写进 craft-ae 模板库「商品」分组，商品分镜的 AE 包装指向这里。价格、评价、证书、参数只填真实资料，商品图不变形。设置页「AE 模板库」可按商品分类看预览视频。审片页 `output/_平台/模板审片/商品/index.html`。[需求入口](openspec/changes/archive/2026-10-29-product-ae-templates/README.md)。
 
 2026-10-29 **项目文件夹带日期前缀、本地输出目录规范（已本地实施）**：内容项目的素材文件夹统一命名为 `YYYYMMDD_项目名称`（日期取项目创建日，北京时间；名称取标题第一个「｜」之前），定下后不随标题改动；素材盘上已有的两个项目已改为 `20261022_海底光缆`、`20261027_儿童麸质饼干`，素材位置同步更新、全部可找到。本地输出目录 `output/`：跟内容项目有关的成果放 `output/YYYYMMDD_项目名称/`，平台自身的放 `output/_平台/`（`模板审片/竖屏`、`模板审片/横屏`、`规格/播放安全区`、`吸收资料`、`剪辑技法`、`测试`），以后生成的东西照此放。[需求入口](openspec/changes/archive/2026-10-28-project-folder-date-and-output-layout/README.md)。
@@ -229,7 +231,7 @@
 
 后续自动续行只读确认旧真实Text的两项Unknown未变、零Master、原证据hash保持且临时验收API已停止；新批次调用授权连续三轮未获答复，自动目标转blocked等待人工回答，不再重复跑检查，也不自动访问CPA或重发。目录/依赖/正式启动方式保持，130/147不虚增，完整目标保留；见同一进度回执。
 
-2026-10-07 **Persona仍122/147，等待8项持久测试写入例外确认**。同一权限冲突连续三轮未获答复，现有测试/进程复核未提供可替代覆盖；停止重复自动检查，不把早前199项绿灯当新进展。允许例外后继续补齐并集中验证，随后分别验收真实文字、图文、音频；目标范围不缩小。目录、依赖/启动、正式库/服务及CPA不变，无新业务代码/测试/调用/提交归档，见[阻塞审计](progress.md)。
+2026-10-07 **Persona仍122/147，等待8项持久测试写入例外确认**。同一权限冲突连续三轮未获答复，现有测试/进程复核未提供可替代覆盖；停止重复自动检查，不把早前199项绿灯当新进展。允许例外后继续补齐并集中验证，随后分别验收真实文字、图文、音频；目标范围不缩小。目录、依赖/启动、正式库/服务及CPA不变，无新业务代码/测试/调用/提交归档，见[阻塞审计](openspec/docs/progress.md)。
 
 2026-10-07 **集中已有合同回归199通过，仍122/147、25开放**。当前任务/计划摘要已纠正旧121/26和95/52数字；历史全量/浏览器结果未冒充本次证据。8项永久测试与后来的“不新增测试代码”要求存在冲突，已提一个明确例外问题，答复前不写新测试。真实文字→图文→音频仍分别验收，199Mock/隔离SQLite回归不证明成品质量。目录、依赖/启动不变，本轮不访问CPA、不改正式库/服务或旧Unknown、不提交归档；见[当前精确进度](openspec/changes/add-persona-creative-studio/progress.md)。
 
@@ -316,7 +318,7 @@
 
 2026-10-03 生成任务可靠性已整项收口：模型路由3.2/3.4完成，change为17/23（剩6个复合项），不是F7全部完成。修复原key身份、原job/file一致性和known-job Unknown后，最终后端1660 passed/28 skipped/8 warnings、Web/FE-P1/state、strict34/34、Ruff/diff通过，限定独立源码复核APPROVE。0新增真实供应商调用/正式库写入、无新依赖/迁移或提交推送；下方“收口前”状态为历史。下一项继续产品路由/浏览器链路验收，目录和启动方式不变。
 
-2026-10-03 最新 F7 接受/可靠性：正式 MiniMax TTS task 已经一次执行、接受为 MaterialRevision6，并经项目精确引用保存到可写 Unit3 的 Master9/v3；浏览器刷新回读通过，public/model/commercial 权利保持 false，不能冻结公开 Candidate。可靠性初验完成38个私有场景；定向复核后最小修正历史key派生、terminal原job/file核对和known-job unavailable→Unknown，补33组正负向验证通过。来源claim commit的授权边界已核清，接受仍实时检查撤权；这批0真实供应商调用/正式库写入，无新依赖或migration。整体F7独立终审及其余验收仍TODO。目录及启动方式未变；下方同日“正式TTS尚未执行”是历史记录。见 [可靠性证据](docs/FE_F7_FINAL_LOCAL_GATES.md) 与 [当前进度](progress.md)。
+2026-10-03 最新 F7 接受/可靠性：正式 MiniMax TTS task 已经一次执行、接受为 MaterialRevision6，并经项目精确引用保存到可写 Unit3 的 Master9/v3；浏览器刷新回读通过，public/model/commercial 权利保持 false，不能冻结公开 Candidate。可靠性初验完成38个私有场景；定向复核后最小修正历史key派生、terminal原job/file核对和known-job unavailable→Unknown，补33组正负向验证通过。来源claim commit的授权边界已核清，接受仍实时检查撤权；这批0真实供应商调用/正式库写入，无新依赖或migration。整体F7独立终审及其余验收仍TODO。目录及启动方式未变；下方同日“正式TTS尚未执行”是历史记录。见 [可靠性证据](docs/FE_F7_FINAL_LOCAL_GATES.md) 与 [当前进度](openspec/docs/progress.md)。
 
 2026-10-03 公众号草稿成功后的系统记录已接入：同一官方账号的 `succeeded` Attempt、非空 `media_id` 与 `human_confirmed` 收据会原子幂等地写入既有 `CapabilityVerification`，仅验证 `wechat/article/auto_draft` 精确范围，不代表公开发布，不调用 `draft/get`，不新增表或 migration。定向交付/能力回归 165 passed，Ruff PASS；本轮未重新发送公众号草稿。
 
@@ -334,11 +336,11 @@
 
 2026-10-03 模型设置布局已完成：仅“模型与 AI”改为厂商与模型、用途路由、生成能力与插件三视图，沿用紧凑管理员布局、默认折叠技术信息、保留草稿和独立保存范围。其他五分区、legacy、现有配置/密钥/默认模型未改；无后端/依赖/启动变化。Web/FE-P1、85 项既有安全回归和独立源码复核通过，桌面/390px/草稿离开确认/viewer 只读已验收；原生 Back/Forward 未实际验证。六条新增契约已同步主规格，原有 10 条要求/15 个场景完整保留；归档后 strict 33/33、diff-check PASS。见 [归档与验收](openspec/changes/archive/2026-10-02-organize-model-ai-settings/README.md)。仅本地 main 未提交，不推送/部署、不调用供应商。下方 CPA 鉴权记录为此前诊断，不作为当前状态。
 
-2026-10-02 设置页恢复：用户同意后温和停止 9 月旧 API 进程，本机服务自动拉起新版；产品设置、厂商登记及模型能力接口经 8000 与 5173 代理均实际返回 200。前端保留，数据库/密钥/代码/迁移未人为改动，用户浏览器可能需刷新。CPA 网关 401 仍是独立待办，不能由本机页面恢复推定模型可用；详见 [进度](progress.md)。
+2026-10-02 设置页恢复：用户同意后温和停止 9 月旧 API 进程，本机服务自动拉起新版；产品设置、厂商登记及模型能力接口经 8000 与 5173 代理均实际返回 200。前端保留，数据库/密钥/代码/迁移未人为改动，用户浏览器可能需刷新。CPA 网关 401 仍是独立待办，不能由本机页面恢复推定模型可用；详见 [进度](openspec/docs/progress.md)。
 
-2026-10-02 设置页 Not Found 诊断：5173 新前端连接到 9 月 25 日启动且无热重载的 8000 旧后端；运行中 OpenAPI 缺 10 月 1 日加入的产品设置/模型登记路由，三条设置接口实际 404。未重启服务或改代码/配置/数据；需先更新本机后端进程并核对接口，再处理独立的 CPA 401。目录、依赖和启动方式未变，见 [进度](progress.md)。
+2026-10-02 设置页 Not Found 诊断：5173 新前端连接到 9 月 25 日启动且无热重载的 8000 旧后端；运行中 OpenAPI 缺 10 月 1 日加入的产品设置/模型登记路由，三条设置接口实际 404。未重启服务或改代码/配置/数据；需先更新本机后端进程并核对接口，再处理独立的 CPA 401。目录、依赖和启动方式未变，见 [进度](openspec/docs/progress.md)。
 
-2026-10-02 CPA 鉴权只读排查：运行中 API 与诊断读取同一 SQLite 配置；已保存 Bearer 请求 `/v1/models` 得 401 `invalid api key`，无密钥得 401 `missing api key`。网络/路径/头部已定位正常，需在 CPA 网关核对当前有效客户端密钥；不能把本地已登记/可选模型称为远端可用。本批仅更新任务证据，无业务代码、目录、依赖、启动、默认或配置变化；详见 [进度](progress.md)。
+2026-10-02 CPA 鉴权只读排查：运行中 API 与诊断读取同一 SQLite 配置；已保存 Bearer 请求 `/v1/models` 得 401 `invalid api key`，无密钥得 401 `missing api key`。网络/路径/头部已定位正常，需在 CPA 网关核对当前有效客户端密钥；不能把本地已登记/可选模型称为远端可用。本批仅更新任务证据，无业务代码、目录、依赖、启动、默认或配置变化；详见 [进度](openspec/docs/progress.md)。
 
 2026-10-02 H3 能力核验：本机 MiniMax CLI 一次 5 秒任务 `448101822222777` 已远端完成；AIContentStudio 下载受当前 VPN Fake-IP/安全 URL 校验阻断，未取得正式视频字节或素材。CPA 模型/默认已登记，但 `/models` 实际鉴权拒绝，不能作为可用视频 fallback。只更新验收记录，不改目录、依赖、启动/默认配置或业务代码；后续恢复同一任务，不重新生成。详见 [模型路由变更](openspec/changes/add-model-capability-routing/README.md)。
 
@@ -506,7 +508,7 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 事实驱动的内容生产系统：把结构化数据、研究笔记、文件、URL、人工观点整理成 **FactPack**，面向抖音 / 小红书 / 公众号生成内容，经事实校验与人工审核后导出；公众号可进一步自动写入官方草稿箱。
 
-长期产品目标以 [`03_ai_content_studio_PRD.md`](03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
+长期产品目标以 [`03_ai_content_studio_PRD.md`](openspec/docs/03_ai_content_studio_PRD.md) 为准；其中 §3 的三渠道是首选样本，§3.1 已补入原对话整理的 11 平台文章/图文 V1 目标，并保留抖音脚本。`04_ai_content_studio_execution_plan.md` 是旧版执行参考，边界澄清稿见 [`docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md`](docs/AI_CONTENT_STUDIO_REQUIREMENTS_REFINED.md)。
 
 ### FE-F7 能力集成与交付（本地实施中）
 
@@ -580,7 +582,7 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 ### FE-F0-F1 前端产品骨架（2026-09-27）
 
-- 需求背景：以 [`AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md`](AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md)、[`AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md`](AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md) 和 V5 原型为方向，本切片按 [`AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md`](AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md) 建立项目驱动的前端入口；不表示 PRD 全部完成。
+- 需求背景：以 [`AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md`](openspec/docs/AIContentStudio_产品战略与总体架构蓝图_NorthStar_V2_2026-09-26.md)、[`AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md`](openspec/docs/AIContentStudio_Frontend_Product_Contract_V1_2026-09-27.md) 和 V5 原型为方向，本切片按 [`AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md`](openspec/docs/AIContentStudio_WORK_HANDOFF_FE-F0-F1_2026-09-27.md) 建立项目驱动的前端入口；不表示 PRD 全部完成。
 - 目录结构：`apps/web/src/product/` 包含本地模拟项目数据、项目页面、共享素材抽屉和其余工作区的占位页；`apps/web/src/App.tsx` 负责九个一级工作区路由与旧功能入口。
 - 已完成：九个一级入口、项目列表与七标签、内容矩阵增删改、文字/图片/视频单元、共享素材来源筛选、单元生产入口、健康和异常项目样本及受阻/过期/待核对状态区分。旧功能仍可从“现有功能入口”访问。
 - FE-F0-F1 复核补丁：异常项目的总览和内容矩阵现直接说明受阻、已过期、待核对、等待人工、就绪五种状态的含义。

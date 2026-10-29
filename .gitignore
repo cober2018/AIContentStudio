@@ -13,6 +13,8 @@ apps/web/dist/
 # Local data
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
 data/
 .env
 backups/
@@ -20,6 +22,8 @@ evals/reports/
 apps/api/evals/reports/
 # 本地生成的审片视频、截图等成果，不入库
 output/
+# 产品战略、PRD、开发文档和总过程记录只留本地
+openspec/docs/
 
 # IDE
 .idea/
