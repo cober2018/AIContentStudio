@@ -24,6 +24,11 @@ apps/api/evals/reports/
 output/
 # 产品战略、PRD、开发文档和总过程记录只留本地
 openspec/docs/
+# 工具缓存、旧压缩包和样片素材只留本地
+.playwright-cli/
+.zcode/
+openspec/AIContentStudio_add_persona_creative_studio_OpenSpec.zip
+openspec/changes/improve-persona-content-methods/evidence/real-samples/
 
 # IDE
 .idea/
