@@ -34,6 +34,29 @@ export function Switch({ checked, disabled, onChange, left, right }: { checked: 
   </div>;
 }
 
+// Writing skills (scripts, copy) follow this switch; editing and effects skills stay on for the model regardless.
+export function PlatformSkillsSwitch({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
+  const client = useQueryClient();
+  const base = `/content-projects/${projectId}/units/${unitId}/platform-skills`;
+  const state = useQuery({ queryKey: ["platform-skills", currentUser(), projectId, unitId], retry: false,
+    queryFn: () => api.get<{ writing_skills: "on" | "off" }>(base) });
+  const [busy, setBusy] = useState(false);
+  const [issue, setIssue] = useState("");
+  const on = state.data?.writing_skills !== "off";
+  return <section aria-label="平台写作 skill" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h3 className="font-semibold">平台写作 skill</h3>
+      <Switch checked={on} disabled={readOnly || busy || !state.data} left="不用" right="可以用" onChange={value => {
+        setBusy(true); setIssue("");
+        api.put(base, { writing_skills: value }).then(() => client.invalidateQueries({ queryKey: ["platform-skills"] }))
+          .catch(error => setIssue(errorText(error))).finally(() => setBusy(false));
+      }} />
+    </div>
+    <p className="mt-2 text-xs text-slate-500">{on ? "第三方模型写文案、脚本、镜头规划时可以用平台沉淀的 skill。" : "第三方模型写文案、脚本时不用平台 skill，靠自己写。"}剪辑和特效 skill（达芬奇、AE）一直可用。</p>
+    {issue && <p className="mt-2 text-xs text-rose-700">{issue}</p>}
+  </section>;
+}
+
 function Versions({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
   const client = useQueryClient();
   const base = `/content-projects/${projectId}/units/${unitId}`;
@@ -114,6 +137,7 @@ export default function ArticleChainPanel({ projectId, unitId, readOnly }: { pro
   const reviewing = external && (data.state === "draft_review" || data.state === "draft_changes");
   const pending = text.trim() ? [...notes, text.trim()] : notes;
   return <div className="mb-5 space-y-4">
+    {external && <PlatformSkillsSwitch projectId={projectId} unitId={unitId} readOnly={readOnly || !!data.locked} />}
     <section aria-label="写作方式" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="font-semibold">写作方式</h3>

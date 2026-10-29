@@ -1,0 +1,91 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "name-plate",
+  "version": "v1",
+  "name": "人名条展示牌",
+  "category": "人物与图形",
+  "use": "白色底板 + 蓝色竖条，特粗姓名和灰色身份依次出现，结尾自动淡出。放在画面中部偏下、左侧，避开手机底部的文案、评论、弹幕区和右侧按钮列。叠在画面上用。",
+  "fields": [
+    {
+      "name": "name",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 2500,
+    "max": 8000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "83e19cf0621c15e055be1dc5b3a980a73cb8b0fb33be861e3352c75e05711f24"
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "林一 / 十年家居设计师（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "王小满（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "林一 / 十年家居设计师（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "王小满（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "686fca19e4db0c7db799d72e6e402726c9dee5047c2e2dd553c2ee2842cd8e9a"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

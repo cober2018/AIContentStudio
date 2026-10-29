@@ -1,0 +1,126 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "product-angles",
+  "version": "v1",
+  "name": "多角度轮换",
+  "category": "商品：亮相",
+  "use": "整屏：2–4 张商品原图（正面、侧面、细节）依次从右滑入切换，下方显示角度名和进度点。",
+  "fields": [
+    {
+      "name": "a1",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "a2",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "a3",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "a4",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "img1",
+      "file": "img1.png",
+      "required": true,
+      "source": "any"
+    },
+    {
+      "name": "img2",
+      "file": "img2.png",
+      "required": true,
+      "source": "any"
+    },
+    {
+      "name": "img3",
+      "file": "img3.png",
+      "required": false,
+      "source": "any"
+    },
+    {
+      "name": "img4",
+      "file": "img4.png",
+      "required": false,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 10000,
+    "default": 6000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "1ac0d892be8dbdd4614c9de438c0e4c31043688c5e01bd78d4859b8c3d4fe8cc"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "3b0f0c88884742c1e07e22a1119e222523e7476f0a2fe9f8f39a29614da39c89"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "正面 / 耳罩细节 / 头梁细节 / （图片：img1、img2、img3）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "整体 / 细节 /  / （图片：img1、img2）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "正面 / 耳罩细节 / 头梁细节 / （图片：img1、img2、img3）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "整体 / 细节 /  / （图片：img1、img2）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

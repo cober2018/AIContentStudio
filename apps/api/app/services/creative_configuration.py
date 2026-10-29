@@ -27,6 +27,9 @@ MODALITY_FIELDS = {
 }
 
 
+USER_MODEL_KEYS = frozenset({"model_profile_id", "selected_profile"})
+
+
 def _binding_view(value: dict[str, Any] | None) -> dict[str, Any] | None:
     if not value:
         return None
@@ -34,50 +37,9 @@ def _binding_view(value: dict[str, Any] | None) -> dict[str, Any] | None:
 
 
 def _configured_binding(db, profile: dict, capability: str, *, _for_execution=False) -> dict[str, Any]:
+    """Media and chat follow the routes in 设置 → AI 与模型; identity bindings are history only."""
     if capability == "chat":
         return chat_binding(profile, db=db)
-    view = model_capability_routing.configuration_view(db)
-    binding = profile.get("model_binding")
-    if profile.get("mode") == "composed" and not binding:
-        return {"status": "blocked", "reason": "composed_binding_missing", "declared_chain": []}
-    if profile.get("mode") == "custom":
-        if not binding:
-            return {"status": "blocked", "reason": "custom_binding_missing"}
-        profile_id = binding.get("profile")
-        registered = view["profiles"].get(profile_id)
-        if not registered:
-            return {"status": "blocked", "reason": "custom_profile_missing", "binding": _binding_view(binding)}
-        actual = registered.get("capability_bindings", {}).get(capability)
-        if not actual or actual.get("adapter_key") != binding.get("provider") or actual.get("model_id") != binding.get("model"):
-            return {"status": "blocked", "reason": "custom_binding_mismatch", "binding": _binding_view(binding)}
-        planned = model_capability_routing.plan(db, capability=capability, selected_profile=profile_id,
-            explicit_profile=profile_id, _for_execution=_for_execution)
-        if planned.get("status") != "ready":
-            return {"status": "blocked", "reason": planned.get("reason") or "custom_binding_unavailable", "binding": _binding_view(binding)}
-        if (planned.get("adapter_key") != binding["provider"] or planned.get("model_id") != binding["model"]
-                or planned.get("execution_profile") != profile_id):
-            return {"status": "blocked", "reason": "custom_binding_mismatch", "binding": _binding_view(binding)}
-        return {"status": "ready", "selected_binding": _binding_view(binding), "route": planned, "fallback_reason": None}
-
-    if profile.get("mode") == "composed" and binding:
-        chain = [binding, *(profile.get("model_chain") or [])]
-        reasons = []
-        for index, candidate in enumerate(chain):
-            profile_id = candidate.get("profile")
-            registered = view["profiles"].get(profile_id) or {}
-            actual = registered.get("capability_bindings", {}).get(capability)
-            if not actual or actual.get("adapter_key") != candidate.get("provider") or actual.get("model_id") != candidate.get("model"):
-                reasons.append("declared_binding_mismatch")
-                continue
-            planned = model_capability_routing.plan(db, capability=capability, selected_profile=profile_id,
-                explicit_profile=profile_id, _for_execution=_for_execution)
-            if (planned.get("status") == "ready" and planned.get("adapter_key") == candidate["provider"]
-                    and planned.get("model_id") == candidate["model"] and planned.get("execution_profile") == profile_id):
-                return {"status": "ready", "selected_binding": _binding_view(candidate), "route": planned,
-                        "fallback_reason": None if index == 0 else "declared_chain_previous_unavailable", "declared_chain": [_binding_view(item) for item in chain], "fallback_reasons": reasons}
-            reasons.append(planned.get("reason") or "declared_binding_unavailable")
-        return {"status": "blocked", "reason": "declared_model_chain_unavailable", "declared_chain": [_binding_view(item) for item in chain], "fallback_reasons": reasons}
-
     from .generation.providers import _models_override
 
     models = _models_override()
@@ -115,39 +77,7 @@ def chat_binding(profile: dict, stage_config: dict | None = None, *, db=None) ->
     from .creation_recipes import _model
     from .generation.providers import _models_override
 
-    config = stage_config or {}
-    binding = profile.get("model_binding")
-    mode = profile["mode"]
-    chain = [binding, *profile.get("model_chain", [])] if binding else []
-    reasons = []
-    if mode in {"custom", "composed"} and not binding:
-        return {"status": "blocked", "reason": f"{mode}_binding_missing", "declared_chain": []}
-    if chain:
-        for index, candidate in enumerate(chain):
-            if config.get("model_profile_id") not in {None, candidate["profile"]}:
-                reasons.append("stage_binding_not_declared")
-                continue
-            model, blockers = _model({"model_profile_id": candidate["profile"]})
-            if blockers or model is None:
-                reasons.append("declared_binding_unavailable")
-                continue
-            raw = (_models_override().get("profiles") or {}).get(candidate["profile"]) or {}
-            provider = raw.get("provider_id") or model["adapter_key"]
-            if (candidate["provider"] != provider or candidate["model"] != model["model"]
-                    or candidate["profile"] != model["profile_id"]):
-                reasons.append("declared_binding_mismatch")
-                continue
-            limits = _chat_limits(db, model)
-            if limits is None:
-                reasons.append("capability_limit_required")
-                continue
-            return {"status": "ready", "selected_binding": _binding_view(candidate), "model": model,
-                    "chat_limits": limits,
-                    "declared_chain": [_binding_view(item) for item in chain] if mode == "composed" else None,
-                    "fallback_reason": None if index == 0 else "declared_chain_previous_unavailable",
-                    "fallback_reasons": reasons}
-        return {"status": "blocked", "reason": "custom_binding_unavailable" if mode == "custom" else "declared_model_chain_unavailable",
-                "declared_chain": [_binding_view(item) for item in chain], "fallback_reasons": reasons}
+    config = {k: v for k, v in (stage_config or {}).items() if k not in USER_MODEL_KEYS}
     model, blockers = _model(config)
     if blockers or model is None:
         return {"status": "blocked", "reason": "model_profile_unavailable"}
@@ -161,22 +91,7 @@ def chat_binding(profile: dict, stage_config: dict | None = None, *, db=None) ->
 
 
 def _chat_stage_binding(profile, config, source, override, db):
-    from .creation_recipes import _model
-    from .generation.providers import _models_override
-
-    origin = ("run_override" if "model_profile_id" in override else
-              "project_stage" if "model_profile_id" in source else "identity_creative_profile")
-    if origin == "identity_creative_profile":
-        return chat_binding(profile, config, db=db), origin
-    selected = config["model_profile_id"]
-    registered = (_models_override().get("profiles") or {}).get(selected)
-    model, blockers = _model({"model_profile_id": selected})
-    if not registered or blockers or model is None or model["profile_id"] != selected:
-        return {"status": "blocked", "reason": "explicit_stage_binding_unavailable"}, origin
-    binding = {"provider": registered.get("provider_id") or model["adapter_key"],
-               "model": model["model"], "profile": selected}
-    # A higher-scope user selection is a new exact pin, never a fallback search.
-    return chat_binding({"mode": "custom", "model_binding": binding}, config, db=db), origin
+    return chat_binding(profile, config, db=db), "model_route"
 
 
 def production_stage_key(node, config):
@@ -423,10 +338,11 @@ def frozen_stage(db, user, unit, node, contract, context, override):
         return node, None, None, []
     if profile["schema"] != f"persona.creative.{modality}.v1":
         raise StageContractError("creative_profile_modality_mismatch")
-    source = node.get("config") or {}
-    if product_domain and work_settings.get("model_profile_ref") and not native_tts and not audio_qc:
-        source = {**source, "model_profile_id": work_settings["model_profile_ref"]}
-        node = {**node, "config": source}
+    # 模型只由 设置 → AI 与模型 的路由决定：角色、商品、阶段和单次运行里存过的模型选择一律不生效。
+    source = {k: v for k, v in (node.get("config") or {}).items() if k not in USER_MODEL_KEYS}
+    node = {**node, "config": source}
+    override = {k: v for k, v in (override or {}).items() if k not in USER_MODEL_KEYS} if override is not None else None
+    profile = {**profile, "mode": "auto", "model_binding": None, "model_chain": []}
     if product_domain and native_tts and not work_settings.get("voice_id") and not (profile or {}).get("parameters", {}).get("voice"):
         return node, None, None, ["product_voice_required"]
     saved_method = source.get("method") or {"source_kind": "studio_builtin", "skill_ref": profile["skill_ref"]}
@@ -566,14 +482,8 @@ def frozen_stage(db, user, unit, node, contract, context, override):
     if deterministic:
         route = {"status": "ready", "selected_binding": None, "declared_chain": []}
     elif native_tts:
-        route_profile = copy.deepcopy(profile)
-        if "selected_profile" in config:
-            registered = model_capability_routing.configuration_view(db)["profiles"].get(config["selected_profile"], {})
-            actual = registered.get("capability_bindings", {}).get("tts") or {}
-            route_profile.update(mode="custom", model_chain=[], model_binding={
-                "profile": config["selected_profile"], "provider": actual.get("adapter_key"), "model": actual.get("model_id")})
         # Stage preparation needs local continuity checks; ordinary profile inventory stays unprobed.
-        route = _configured_binding(db, route_profile, "tts", _for_execution=True)
+        route = _configured_binding(db, profile, "tts", _for_execution=True)
         if (selection is None and len(methods) != 1 or selection is not None
                 and any(item.get("source_kind") != "studio_builtin" for item in methods)):
             blockers.append("native_tts_method_stack_unsupported")
@@ -584,10 +494,7 @@ def frozen_stage(db, user, unit, node, contract, context, override):
                 prepared.setdefault("explicit_plugin", plugin)
     elif audio_planning or (graphic_planning and profile["capability"] != "chat"):
         # Native media pins cannot be sent to the independent planning Chat executor.
-        route, chat_origin = _chat_stage_binding({"mode": "auto", "model_binding": None},
-                                                config, source, override or {}, db)
-        if chat_origin == "identity_creative_profile":
-            chat_origin = "authorized_planning_chat_default"
+        route, chat_origin = _chat_stage_binding(profile, config, source, override or {}, db)
     else:
         route, chat_origin = _chat_stage_binding(profile, config, source, override or {}, db)
     if route["status"] != "ready":
@@ -628,24 +535,8 @@ def frozen_stage(db, user, unit, node, contract, context, override):
         projection["binding_purpose"] = "planning_chat_stage_not_native_tts" if audio_planning else "planning_chat_stage_not_image_generation"
         projection["native_tts_policy" if audio_planning else "image_policy"] = {
             "mode": profile["mode"], "binding": profile.get("model_binding"), "chain": profile.get("model_chain", [])}
-    if chat_origin is not None:
-        projection["binding_origin"] = chat_origin
-        if chat_origin in {"run_override", "project_stage"}:
-            projection["binding_override"] = {
-                "requested_profile": config["model_profile_id"], "origin": chat_origin,
-                "identity_mode": profile["mode"], "identity_binding": profile.get("model_binding"),
-                "identity_chain": profile.get("model_chain", []), "selected_binding": route.get("selected_binding"),
-                "reason": "explicit_stage_binding",
-            }
-    if native_tts:
-        projection["binding_origin"] = "run_override" if "selected_profile" in (override or {}) else "project_stage" if "selected_profile" in source else "identity_creative_profile"
-        if "selected_profile" in config:
-            projection["binding_override"] = {
-                "requested_profile": config["selected_profile"], "origin": projection["binding_origin"],
-                "identity_mode": profile["mode"], "identity_binding": profile.get("model_binding"),
-                "identity_chain": profile.get("model_chain", []), "selected_binding": route.get("selected_binding"),
-                "reason": "explicit_stage_binding",
-            }
+    if chat_origin is not None or native_tts:
+        projection["binding_origin"] = "model_route"
     if audio_qc:
         projection["quality_profile"] = QUALITY[config["quality_profile_ref"]]
         projection["quality_profile_origin"] = ("run_override" if "quality_profile_ref" in (override or {})

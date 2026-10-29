@@ -1,0 +1,124 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "host-to-chip",
+  "version": "v1",
+  "name": "讲者缩位让台",
+  "category": "人物与图形",
+  "use": "人物画面从全屏缩进左下角白边圆形头像，图形卡片从右侧滑入，头像旁可带一句特粗说明。圆框会自动把整张脸连脖子装进去并留出余量：face_x、face_y 填人物图里「头顶到脖子底」这一段的中心位置（0–1），face_size 填这一段占图片高度的比例（0–1），chip_size 是圆框直径（像素，默认 300）。人物用静帧图；叠真人视频请在达芬奇里合成。",
+  "fields": [
+    {
+      "name": "caption",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "face_x",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "face_y",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "face_size",
+      "kind": "number",
+      "min": 0.1,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "chip_size",
+      "kind": "number",
+      "min": 200,
+      "max": 420,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "host",
+      "file": "host.png",
+      "required": true,
+      "source": "any"
+    },
+    {
+      "name": "graphic",
+      "file": "graphic.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 10000,
+    "default": 5000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "5f6cc5bcf1058d30593d72c14f1c4a201bb963400ce9480870795052db551d1f"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "看这组数据 / 0.46 / 0.405 / 0.49 / 300（图片：host、graphic）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "0.46 / 0.405 / 0.49 / 360（图片：host、graphic）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "看这组数据 / 0.46 / 0.405 / 0.49 / 300（图片：host、graphic）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "0.46 / 0.405 / 0.49 / 360（图片：host、graphic）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "2205b14b0ec03a1a840b745c0fdb03b559bc5c645486c4cecadca367ed2a9af9"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

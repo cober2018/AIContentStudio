@@ -1,0 +1,109 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "line-carry",
+  "version": "v1",
+  "name": "线条接力",
+  "category": "开场、章节与转场",
+  "use": "白底整屏：A 段标题下的蓝线先画出停一拍，然后画面向左平移、线继续延伸围成 B 段的边框，框里放进图片，B 段标题出现。用在两段之间换段，全程不切。",
+  "fields": [
+    {
+      "name": "a_title",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "a_sub",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "b_title",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "b_sub",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "image",
+      "file": "image.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 4000,
+    "max": 8000,
+    "default": 4500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "46da3b395562596e2ffceb2e996bb6961fc5e3f5f71412d60c9b1df354a51cde"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "第一部分 · 为什么慢 / 三个拖慢流程的地方 / 第二部分 · 怎么快 / 把三处改成自动（图片：image）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "先看问题 / 再看解法（图片：image）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "第一部分 · 为什么慢 / 三个拖慢流程的地方 / 第二部分 · 怎么快 / 把三处改成自动（图片：image）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "先看问题 / 再看解法（图片：image）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "28dfd029300f1869b79963cd681a066b460610288fe61fc0c77ab50be28a541b"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

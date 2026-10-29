@@ -1,0 +1,91 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "layer-stack",
+  "version": "v1",
+  "name": "材质分层",
+  "category": "商品：材质与成分",
+  "use": "整屏：3–4 层材质片先叠在一起再依次展开，右侧写每层名称和作用。layers 写「名称|作用;…」。材质只用真实资料，不编造。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "layers",
+      "kind": "text",
+      "max": 160,
+      "required": true
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 3000,
+    "max": 10000,
+    "default": 5000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "35490c2e8e5e9c51ab8f1b31f4c6bd5ab786d9dd7a8a8f8cc3eae3a725079ac8"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "629414df3539f692293230c34bbfd389441be58341e90194fe84e16ddc7f7e63"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "四层结构 / 外层|防泼水面料;保暖层|蓬松棉;贴肤层|亲肤针织;衬里|防静电（图片：无图片）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "三层锅底 / 不粘层|少油不粘;铝芯|导热快;复合底|电磁炉可用（图片：无图片）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "四层结构 / 外层|防泼水面料;保暖层|蓬松棉;贴肤层|亲肤针织;衬里|防静电（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "三层锅底 / 不粘层|少油不粘;铝芯|导热快;复合底|电磁炉可用（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

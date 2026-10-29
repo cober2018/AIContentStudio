@@ -1,0 +1,102 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "before-after-scrub",
+  "version": "v1",
+  "name": "前后拉杆快扫",
+  "category": "步骤、流程与对比",
+  "use": "浅灰底整屏：分割线快速来回扫几次停在中间，左边是改后、右边是改前；顶部胶囊开关跟着分割线切换高亮。只给 after 图时，改前自动用同一张图去色变灰。",
+  "fields": [
+    {
+      "name": "after_label",
+      "kind": "text",
+      "max": 6,
+      "required": true
+    },
+    {
+      "name": "before_label",
+      "kind": "text",
+      "max": 6,
+      "required": true
+    }
+  ],
+  "images": [
+    {
+      "name": "after",
+      "file": "after.png",
+      "required": true,
+      "source": "any"
+    },
+    {
+      "name": "before",
+      "file": "before.png",
+      "required": false,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "85a1c6d9b04564edd916378f1107b36b715e9d95e24f8e14f16327e894060ac9"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "改版后 / 改版前（图片：after）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "现在 / 以前（图片：after）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "改版后 / 改版前（图片：after）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "现在 / 以前（图片：after）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "2e3aaf136d79cfc6639eb3fd5539beda7baf554b18cddd37440ce6b5c56b8df2"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
 import FileLocationActions from "./FileLocationActions";
+import { PlatformSkillsSwitch } from "./ArticleChainPanel";
 import type { VideoDraft, VideoPayload } from "./VideoStudioModel";
 
 const StoryboardTable = lazy(() => import("./StoryboardTable"));
@@ -81,6 +82,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const status = live ? data.label : step === "draft" ? `导演稿${data.draft_revision_no ? ` v${data.draft_revision_no}` : ""} 已采用` : "小样已通过";
   const draft: VideoDraft | null = data.master ? { payloadSchema: "video.master.v2", payload: data.master.payload, assetRefs: [], evidenceRefs: [] } : null;
   return <div className="space-y-4">
+    {step === "draft" && <PlatformSkillsSwitch projectId={projectId} unitId={unitId} readOnly={!!data.locked} />}
     <section aria-label="视频进度" className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-4 text-sm">
       <div className="flex flex-wrap items-center gap-2 text-xs">{STEPS.map(([label], index) => <span key={label} className={`rounded-pill px-2.5 py-0.5 ${data.state === "done" || index < current ? "bg-emerald-100 text-emerald-800" : index === current ? "bg-indigo-600 text-white" : "bg-white text-slate-500"}`}>{index + 1} {label}</span>)}</div>
       <p className="mt-2"><span className="font-semibold">{status}</span>{live && data.draft_revision_no && step === "draft" ? ` · 导演稿 v${data.draft_revision_no}` : ""}{live && data.detail ? ` · ${data.detail}` : ""}</p>

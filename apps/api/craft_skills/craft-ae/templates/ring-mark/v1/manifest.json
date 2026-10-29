@@ -1,0 +1,124 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "ring-mark",
+  "version": "v1",
+  "name": "手绘圈重点",
+  "category": "标注与聚焦",
+  "use": "浅灰底上图片做成卡片，用橙色椭圆圈出一处，下方一句特粗说明，可指定一个词变橙色。x、y 是圈中心在图片里的相对位置（0–1），w、h 是相对宽高。",
+  "fields": [
+    {
+      "name": "x",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "y",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "w",
+      "kind": "number",
+      "min": 0.02,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "h",
+      "kind": "number",
+      "min": 0.02,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "label",
+      "kind": "text",
+      "max": 14,
+      "required": false
+    },
+    {
+      "name": "accent",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "image",
+      "file": "image.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 10000,
+    "default": 5000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "f3a94dfcb39f2b880d5833fd657a247ea4dda9f6d0460caea91a5967e4b5032b"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "0.5 / 0.42 / 0.45 / 0.25 / 注意这个旋钮 / 旋钮（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "0.35 / 0.75 / 0.3 / 0.12（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "0.5 / 0.42 / 0.45 / 0.25 / 注意这个旋钮 / 旋钮（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "0.35 / 0.75 / 0.3 / 0.12（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "57c11df99bc1e486043c7239500b3958a728feaa5a1b7d761a73d83adf92d954"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

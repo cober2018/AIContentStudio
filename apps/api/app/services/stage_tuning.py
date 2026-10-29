@@ -51,8 +51,7 @@ def _input(db, project_id, unit_id, node_id, user, request):
             "config_hash": payload["config_hash"], "prompt_hash": payload["prompt_hash"],
             "output_hash": payload["output_hash"], "accepted_hash": payload.get("accepted_hash"),
             "base_config": resolved["base_config"], "effective_config": resolved["effective_config"]})
-    config = {"model_profile_id": request["model_profile_id"]} if request.get("model_profile_id") else {}
-    model, blockers = creation_recipes._model(config)
+    model, blockers = creation_recipes._model({})
     if blockers:
         raise StageInvocationError("recipe_tuning_model_unavailable")
     metadata = descriptor.stage_contract.to_dict()

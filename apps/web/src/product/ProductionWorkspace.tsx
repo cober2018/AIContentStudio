@@ -1,4 +1,4 @@
-import { useTaskLink, taskReturn } from "./taskNavigation";
+import { useTaskLink, setProductionWorkbench } from "./taskNavigation";
 import SkuWorkRetention from "./SkuWorkRetention";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -77,7 +77,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   const workflow = useProductionWorkflow(projectId, unitId);
   const { readOnly, project, unit, dirty, loading, error, notice, workflowRevision, refreshWorkflowFromRecipe } = workflow;
   const product = unit?.production_domain === "product";
-  const simpleVideo = !product && unit?.modality === "video";
+  const simpleVideo = unit?.modality === "video";
   // Shares the panel's cache key so the step pages and the panel always agree on where the video is.
   const chain = useQuery({ queryKey: ["video-chain", currentUser(), projectId, unitId], enabled: simpleVideo, retry: false,
     queryFn: () => api.get<{ state: string; label: string; locked?: boolean }>(`/content-projects/${projectId}/units/${unitId}/video-chain`) });
@@ -86,6 +86,13 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   const chainHome = ["plan", "plan", "plan", "materials", "sample", "final", "final"][chainReach];
   const chainLocked = simpleVideo && !!chain.data?.locked;
   const articleUnit = !product && (unit?.modality === "text" || unit?.modality === "graphic");
+  useEffect(() => {
+    if (!unit) return;
+    setProductionWorkbench(product ? "product" : "persona");
+    return () => setProductionWorkbench(null);
+  }, [unit, product]);
+  const skuId = useQuery({ queryKey: ["production-sku", currentUser(), projectId, unitId], enabled: product,
+    queryFn: async () => (await api.get<{ sku_id: number | null }>(`/content-projects/${projectId}/units/${unitId}/production-profile`)).sku_id }).data;
   const article = useQuery({ queryKey: ["article-chain", currentUser(), projectId, unitId], enabled: articleUnit, retry: false,
     queryFn: () => api.get<{ writer: string; locked?: boolean }>(`/content-projects/${projectId}/units/${unitId}/article-chain`) });
   // With a third-party writer the platform stages stay out of the way; the piece is written over MCP and reviewed here.
@@ -102,21 +109,21 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   }, [projectId, unitId, unit?.persona_id, product, briefReload]);
   const captureRoute = productionSummary?.route;
   const captureEnabled = captureRoute === "real" || captureRoute === "mixed";
-  const steps: { id: VideoStudioView | "delivery" | "make" | "sample" | "final" | "voice" | "advanced"; label: string; hint: string }[] = product ? [
-    { id: "goal", label: "商品与本条目标", hint: "复用商品事实，填写这一条作品要表达的购买理由。" },
-    { id: "plan", label: "导演方案", hint: "选择真实创作流程，起草并审阅脚本、动作链与粗分镜。" },
-    { id: "style", label: "视觉与声音定样", hint: captureEnabled ? "核对场地、出镜范围、光线与手机拍摄条件；旁白可在后期制作。" : "先确定共同视觉参考、讲话方式与配乐方向，再制作镜头。" },
-    { id: "materials", label: "逐镜素材", hint: captureRoute === "real" ? "按已确认任务书拍摄原片，逐镜上传、审阅选段，再明确采用。旁白可后期补充。" : captureRoute === "mixed" ? "实拍镜头按任务书拍摄回传；AI镜头确认图片与提示词后生成。逐镜审阅并采用。" : "选定精确图片，准备据图提示词，人工网页生成并回传审阅。" },
-    { id: "edit", label: "剪辑包装", hint: captureEnabled ? "保存已审阅采用的原片与选段，后期补充旁白和配乐，交接达芬奇主剪与按需AE包装。" : "保存已采用素材与声音，交接达芬奇主剪和按需AE包装。" },
-    { id: "review", label: "成片与反馈", hint: "核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。" },
-  ] : simpleVideo ? [
-    { id: "goal", label: "选题与资料", hint: "核对选题、受众、事实与来源，填写本条创作目标。" },
+  const steps: { id: VideoStudioView | "delivery" | "make" | "sample" | "final" | "voice" | "advanced"; label: string; hint: string }[] = simpleVideo ? [
+    product ? { id: "goal", label: "商品与本条目标", hint: "复用商品事实，填写这一条作品要表达的购买理由。" } : { id: "goal", label: "选题与资料", hint: "核对选题、受众、事实与来源，填写本条创作目标。" },
     { id: "plan", label: "导演稿", hint: "逐镜看分镜和素材需求；采用或写修改意见。" },
     { id: "materials", label: "素材", hint: "逐镜看每个镜头用的素材；缺的可以从素材库拖进来。" },
     { id: "voice", label: "配音与音乐", hint: "生成并试听配音；看背景音乐，要换就拖一首进来。" },
     { id: "sample", label: "小样", hint: "看小样、按秒写意见；通过后开始排版。" },
     { id: "final", label: "成片", hint: "看成片、写意见或通过；通过即定稿，不能再改。" },
     { id: "delivery", label: "交付", hint: "基于已保存主稿进行渠道适配，进入既有审核与交付。" },
+  ] : product ? [
+    { id: "goal", label: "商品与本条目标", hint: "复用商品事实，填写这一条作品要表达的购买理由。" },
+    { id: "plan", label: "导演方案", hint: "选择真实创作流程，起草并审阅脚本、动作链与粗分镜。" },
+    { id: "style", label: "视觉与声音定样", hint: captureEnabled ? "核对场地、出镜范围、光线与手机拍摄条件；旁白可在后期制作。" : "先确定共同视觉参考、讲话方式与配乐方向，再制作镜头。" },
+    { id: "materials", label: "逐镜素材", hint: captureRoute === "real" ? "按已确认任务书拍摄原片，逐镜上传、审阅选段，再明确采用。旁白可后期补充。" : captureRoute === "mixed" ? "实拍镜头按任务书拍摄回传；AI镜头确认图片与提示词后生成。逐镜审阅并采用。" : "选定精确图片，准备据图提示词，人工网页生成并回传审阅。" },
+    { id: "edit", label: "剪辑包装", hint: captureEnabled ? "保存已审阅采用的原片与选段，后期补充旁白和配乐，交接达芬奇主剪与按需AE包装。" : "保存已采用素材与声音，交接达芬奇主剪和按需AE包装。" },
+    { id: "review", label: "成片与反馈", hint: "核对真实成片与主稿版本，保存定位反馈并进入既有审核交付。" },
   ] : [
     { id: "goal", label: "选题与资料", hint: "核对选题、受众、事实与来源，填写本条创作目标。" },
     { id: "plan", label: "内容方案", hint: "选择创作流程，起草并审阅内容方案。" },
@@ -126,15 +133,15 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   ];
   const legacy = params.get("stage") ? "plan" : params.get("execution") || params.get("panel") === "execution" ? product ? "edit" : "make" : params.get("panel") === "variants" ? product ? "review" : "delivery" : "goal";
   const asked = params.get("workstep");
-  // Old links used 制作内容 / 审阅修改; a video opened without a step lands where the chain is.
-  const requestedStep = simpleVideo ? asked === "make" ? "materials" : asked === "review" ? "final" : asked || (params.get("execution") ? "advanced" : chainHome) : asked || legacy;
+  // Old links (制作内容 / 审阅修改, the former product steps) and a video opened without a step land where the chain is.
+  const requestedStep = simpleVideo ? asked === "make" ? "materials" : asked === "review" ? "final" : asked && (asked === "advanced" || steps.some(item => item.id === asked)) ? asked : params.get("execution") ? "advanced" : chainHome : asked || legacy;
   // 高级 holds what belongs to no step; it sits outside the numbered flow.
   const advanced = simpleVideo && requestedStep === "advanced";
   const step = advanced ? { id: "advanced" as const, label: "高级", hint: "主稿编辑器、版本与检查、创作流程、创意执行、方法与自动化。日常制作不用进来。" } : steps.find(item => item.id === requestedStep) || steps[0];
   const stepIndex = steps.indexOf(step);
   const assistantOwner = assistantFocus.step === step.id ? assistantFocus.owner : product && (step.id === "style" || step.id === "review") ? "profile" : "master";
   function stepStatus(id: string) {
-    if (id === "plan" && product && captureEnabled) return productionSummary?.captureStatus === "ready" ? "脚本与任务书已确认 · 可拍摄" : productionSummary?.captureStatus === "loading" ? "正在读取拍摄确认状态" : productionSummary?.captureStatus === "error" ? "拍摄确认状态读取失败" : "脚本 / 任务书待确认或复核";
+    if (id === "plan" && product && captureEnabled && !simpleVideo) return productionSummary?.captureStatus === "ready" ? "脚本与任务书已确认 · 可拍摄" : productionSummary?.captureStatus === "loading" ? "正在读取拍摄确认状态" : productionSummary?.captureStatus === "error" ? "拍摄确认状态读取失败" : "脚本 / 任务书待确认或复核";
     if (simpleVideo && id !== "goal") {
       const at = VIDEO_ORDER.indexOf(id);
       if (!chainReach) return "读取中";
@@ -180,15 +187,15 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   if (loading || briefPending) return <div className="p-9"><Spinner label="加载生产工作台…" /></div>;
   if (!project || !unit) return <div className="p-9"><ErrorBanner message={error || "内容单元不存在或无权访问。"} /></div>;
   return <div className="mx-auto w-full max-w-[1240px] px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12">
-    <Link to={taskReturn(params.get("return_to"), `/projects/${project.id}?tab=matrix`)} className="text-sm text-slate-500">← 返回来源 / {project.title}</Link>
+    <Link to={product ? `/production?workspace=product${skuId ? `&sku=${skuId}` : ""}` : "/production?workspace=persona"} className="text-sm text-slate-500">← {product ? "商品视频工作台" : "角色内容工作台"} / {product ? unit.title : project.title}</Link>
     <ProductionContextHeader workflow={workflow} productContext={brief?.product_context} slim={simpleVideo && !advanced} />
     {workflow.needsProductContext && <div className="mb-4 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-4"><p className="text-sm">此旧作品仍保留历史角色快照。新制作前，明确切换为商品配置；历史运行保持原样。</p><Button disabled={readOnly || workflow.busy || dirty || profileDirty || masterState.dirty || goalDirty} onClick={() => void workflow.continueProduct()}>按商品流程继续</Button></div>}
     {readOnly && <p className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">当前工作台为只读：项目或内容单元已归档，或当前账号无编辑权限；不能保存或重新执行。</p>}
-    {product && masterState.hasMaster && ["incomplete_context", "stale"].includes(masterState.readiness) && <p role="status" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{captureEnabled ? "商品资料或事实边界仍需核对。拍摄以当前脚本与任务书的确认状态为准；后期与公开交付仍须通过资料、事实和素材检查。" : masterState.readiness === "stale" ? "资料已变化，请核对并保存新的主稿版本，再准备素材或后期任务。" : "主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。"} <Link className="underline" to={taskLink(`/projects/${projectId}?tab=evidence`)}>来源与事实边界</Link></p>}
+    {product && !simpleVideo && masterState.hasMaster && ["incomplete_context", "stale"].includes(masterState.readiness) && <p role="status" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{captureEnabled ? "商品资料或事实边界仍需核对。拍摄以当前脚本与任务书的确认状态为准；后期与公开交付仍须通过资料、事实和素材检查。" : masterState.readiness === "stale" ? "资料已变化，请核对并保存新的主稿版本，再准备素材或后期任务。" : "主稿的资料或事实边界尚未齐全，可以继续整理方案；准备素材或后期任务前请先补齐。"} <Link className="underline" to={taskLink(`/projects/${projectId}?tab=evidence`)}>来源与事实边界</Link></p>}
     {error && <div className="mb-4"><ErrorBanner message={error} /></div>}{notice && <p className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</p>}
     {briefIssue && <div className="mb-5"><ErrorBanner message={briefIssue} /><div className="mt-2 flex gap-2"><Button variant="secondary" onClick={() => setBriefReload(value => value + 1)}>重新读取任务书</Button></div></div>}
     <div className="mb-5 grid items-start gap-5 lg:grid-cols-[210px_minmax(0,1fr)]">
-      <nav aria-label={product ? "商品六步制作" : simpleVideo ? "角色视频七步" : "角色五步制作"} className="card relative p-2 lg:sticky lg:top-4"><ol className="relative">{steps.map((item, index) => { const active = step.id === item.id; return <li key={item.id} className="relative">{index < steps.length - 1 && <span aria-hidden className="absolute left-[27px] top-[42px] h-[calc(100%-26px)] w-px bg-ink-200" />}<button type="button" aria-current={active ? "step" : undefined} onClick={() => goStep(item.id)} className={`relative flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-colors ${active ? "bg-ink-50" : "hover:bg-ink-50/70"}`}><span className={`relative z-10 mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full font-serif text-[13px] tabular-nums ${active ? "bg-ink-900 text-paper" : "border border-ink-300 bg-surface text-ink-600"}`}>{index + 1}</span><span className="min-w-0"><span className={`block text-[14px] ${active ? "font-semibold text-ink-900" : "font-medium text-ink-800"}`}>{item.label}</span><span className="mt-0.5 block text-[12px] leading-snug text-ink-500">{stepStatus(item.id)}</span></span></button>{item.id === "plan" && recipeSummary && !simpleVideo && <StageSubSteps summary={recipeSummary} />}</li>; })}</ol>{simpleVideo && <button type="button" aria-current={advanced ? "step" : undefined} onClick={() => goStep("advanced")} className={`mt-1 w-full rounded-xl border-t border-ink-200/70 px-3 py-2.5 text-left text-[13px] ${advanced ? "bg-ink-50 font-semibold text-ink-900" : "text-ink-500 hover:bg-ink-50/70"}`}>高级</button>}</nav>
+      <nav aria-label={simpleVideo ? product ? "商品视频七步" : "角色视频七步" : product ? "商品六步制作" : "角色五步制作"} className="card relative p-2 lg:sticky lg:top-4"><ol className="relative">{steps.map((item, index) => { const active = step.id === item.id; return <li key={item.id} className="relative">{index < steps.length - 1 && <span aria-hidden className="absolute left-[27px] top-[42px] h-[calc(100%-26px)] w-px bg-ink-200" />}<button type="button" aria-current={active ? "step" : undefined} onClick={() => goStep(item.id)} className={`relative flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-colors ${active ? "bg-ink-50" : "hover:bg-ink-50/70"}`}><span className={`relative z-10 mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full font-serif text-[13px] tabular-nums ${active ? "bg-ink-900 text-paper" : "border border-ink-300 bg-surface text-ink-600"}`}>{index + 1}</span><span className="min-w-0"><span className={`block text-[14px] ${active ? "font-semibold text-ink-900" : "font-medium text-ink-800"}`}>{item.label}</span><span className="mt-0.5 block text-[12px] leading-snug text-ink-500">{stepStatus(item.id)}</span></span></button>{item.id === "plan" && recipeSummary && !simpleVideo && <StageSubSteps summary={recipeSummary} />}</li>; })}</ol>{simpleVideo && <button type="button" aria-current={advanced ? "step" : undefined} onClick={() => goStep("advanced")} className={`mt-1 w-full rounded-xl border-t border-ink-200/70 px-3 py-2.5 text-left text-[13px] ${advanced ? "bg-ink-50 font-semibold text-ink-900" : "text-ink-500 hover:bg-ink-50/70"}`}>高级</button>}</nav>
       <main className="min-w-0" aria-label="当前制作步骤">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-ink-200/80 pb-5"><div className="min-w-0"><p className="eyebrow">{product ? "商品视频" : "角色创作"} · {advanced ? "不在流程里" : `第 ${stepIndex + 1} / ${steps.length} 步`}</p><h2 className="mt-2 text-[28px] leading-tight text-ink-900">{step.label}</h2><p className="mt-2 text-[14px] text-ink-600">{step.hint}</p></div><p role="status" className={`text-[12.5px] ${masterState.dirty || profileDirty || goalDirty || dirty ? "text-amber-700" : "text-ink-500"}`}>{masterState.dirty || profileDirty || goalDirty || dirty ? "● 有未保存草稿，切换步骤会保留" : "没有未保存草稿"}</p></header>
         {(step.id === "delivery" || step.id === "review") && <p className="mb-5"><Link className="text-sm text-indigo-700 underline" to={taskLink(`/review?project=${projectId}&unit=${unitId}`)}>下一步：审阅与交付当前作品 →</Link></p>}
@@ -197,7 +204,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
         {!product && (step.id === "goal" || step.id === "plan" && !simpleVideo) && <section className="mb-5 rounded-xl border border-slate-200 bg-white p-4" aria-label="本条资料与风格用途"><h3 className="text-sm font-semibold">资料选择与本次运行依据</h3><p className="mt-2 text-xs text-slate-500">已核实事实沿用来源与事实边界；专业参考帮助理解，风格样本只影响表达。旧资料不自动成为本条事实。</p>{knowledgeIssue && <ErrorBanner message={knowledgeIssue} />}<p className="mt-2 text-xs text-slate-600">{factBoundaryIssue || (factBoundary === undefined ? "正在读取已核实事实边界…" : factBoundary ? `已核实事实：事实边界修订 ${factBoundary.revision_no} · FactPack #${factBoundary.fact_pack_id} v${factBoundary.fact_pack_version}。条目只在来源页查看，风格样本里的数字不会升格。` : "尚未绑定已核实事实边界。")}</p>{factBoundaryIssue && <Button variant="secondary" size="sm" onClick={() => setBriefReload(value => value + 1)}>重新读取资料状态</Button>}{recipeSummary?.runId && <div className="mt-3 rounded-lg bg-indigo-50 p-3 text-xs"><p>当前运行 #{recipeSummary.runId} 固定的知识：{recipeSummary.knowledge ? `修订 ${recipeSummary.knowledge.revision_no}` : "未选择"}</p>{recipeSummary.knowledge?.items.map((item, index) => <p key={index} className="mt-1">{item.title} · {item.purposes.map(purpose => purpose === "professional" ? "专业参考" : "风格样本").join("、")}</p>)}<p className="mt-1">实际阶段按用途与当前授权裁剪；展开“预览实际请求”核对最终输入。新选择不会替换本次冻结版本。</p></div>}{selectedKnowledge && <p className="mt-3 text-xs text-slate-500">下次新运行的选择 · 项目知识修订 {selectedKnowledge.revision_no}</p>}{selectedKnowledge && <div className="mt-3 grid gap-3 sm:grid-cols-2">{[["professional", "专业参考"], ["style", "个人风格样本"]].map(([purpose, label]) => { const selected = selectedKnowledge.items.filter(item => item.purposes.includes(purpose) && (!item.persona_id || item.persona_id === unit.persona_id) && (!item.unit_id || item.unit_id === unitId)); return <div key={purpose}><h4 className="text-xs font-medium">{label}</h4>{selected.length ? selected.map((item, index) => <p key={index} className="mt-1 text-xs text-slate-600">{item.title} · {item.model_use_allowed && (item.modalities ?? ["text"]).includes(unit.modality) ? "已授权当前形态，按阶段用途裁剪" : "不进入当前模型输入"}</p>) : <p className="mt-1 text-xs text-slate-500">尚未选择</p>}</div>; })}</div>}<p className="mt-3 text-xs"><Link className="text-indigo-700 underline" to={taskLink(`/projects/${projectId}?tab=evidence`)}>核对所选片段、授权和已核实事实</Link> · <Link className="text-indigo-700 underline" to={`/identities?persona=${unit.persona_id}`}>查看角色分形态参考与方法</Link></p></section>}
         {articleUnit && step.id === "plan" && <Suspense fallback={<Spinner />}><ArticleChainPanel projectId={projectId} unitId={unitId} readOnly={readOnly} /></Suspense>}
         {(!simpleVideo || advanced) && !externalWriter && <div id="production-planning" tabIndex={-1}><Suspense fallback={<Spinner label="加载创作流程…" />}><CreationRecipePanel persona={!product} onDone={() => goStep("make")} onSummary={setRecipeSummary} active={advanced || step.id === "plan" || !product && (step.id === "make" || step.id === "review")} key={`${projectId}:${unitId}`} projectId={projectId} unitId={unitId} readOnly={readOnly || workflow.needsProductContext} modality={unit.modality} onOpenMaster={openMaster} workflowRevision={workflowRevision} onRecipeChanged={() => refreshWorkflowFromRecipe()} /></Suspense></div>}
-        {product && <GuidedProductionProfile key={`${projectId}:${unitId}`} projectId={projectId} unitId={unitId} view={step.id} readOnly={readOnly} onDirty={setProfileDirty} onSavedSettings={setSavedSettings} assistantVisible={assistantOwner === "profile"} onAssistanceFocus={() => setAssistantFocus({ step: step.id, owner: "profile" })} />}
+        {product && (!simpleVideo || step.id === "goal") && <GuidedProductionProfile key={`${projectId}:${unitId}`} projectId={projectId} unitId={unitId} view={step.id} readOnly={readOnly} onDirty={setProfileDirty} onSavedSettings={setSavedSettings} assistantVisible={assistantOwner === "profile"} onAssistanceFocus={() => setAssistantFocus({ step: step.id, owner: "profile" })} />}
         <div ref={masterRegion} hidden={simpleVideo ? !advanced : step.id === "goal" || step.id === "delivery"} tabIndex={-1} aria-label="作品主稿编辑"><ContentMasterPanel key={`${projectId}:${unitId}`} projectId={projectId} unit={unit} readOnly={readOnly || chainLocked || articleLocked} reloadRequest={masterReloadRequest} active={simpleVideo ? advanced : step.id !== "goal" && step.id !== "delivery"} view={product ? step.id as VideoStudioView : simpleVideo || step.id === "make" ? undefined : step.id as VideoStudioView} assistantVisible={!product || assistantOwner === "master"} onAssistanceFocus={() => setAssistantFocus({ step: step.id, owner: "master" })} speechMode={savedSettings.speech_mode} productionSettingsDirty={profileDirty} onStateChange={setMasterState} onProductionSummary={setProductionSummary} onOpenExecution={() => { setOpened(previous => ({ ...previous, execution: true })); setExecutionOpen(true); }} /></div>
         {simpleVideo && !advanced && step.id !== "goal" && <Suspense fallback={<Spinner />}>{chainReach && VIDEO_ORDER.indexOf(step.id) > chainReach
           ? <p className="mb-5 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">还没到这一步。视频现在：{chain.data?.label}。<button type="button" className="ml-2 text-indigo-700 underline" onClick={() => goStep(chainHome)}>去当前步骤</button></p>
@@ -208,7 +215,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
             {(step.id === "sample" || step.id === "final") && <VideoChainPanel projectId={projectId} unitId={unitId} step={step.id} />}
             {step.id === "delivery" && <ChannelVariantsPanel projectId={projectId} unit={unit} readOnly={readOnly} workflowDirty={dirty} />}
           </div>}</Suspense>}
-        {product && <div hidden={step.id !== "review"}><SkuWorkRetention projectId={projectId} unitId={unitId} readOnly={readOnly} /></div>}
+        {product && <div hidden={step.id !== (simpleVideo ? "final" : "review")}><SkuWorkRetention projectId={projectId} unitId={unitId} readOnly={readOnly} /></div>}
         {!advanced && <footer className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4"><Button variant="secondary" disabled={stepIndex === 0} onClick={() => goStep(steps[stepIndex - 1].id)}>上一步</Button><Button variant="secondary" disabled={stepIndex === steps.length - 1} onClick={() => goStep(steps[stepIndex + 1].id)}>前往{steps[stepIndex + 1]?.label || "下一步"}</Button></footer>}
       </main>
     </div>

@@ -7,7 +7,6 @@ from urllib.parse import urlsplit
 from sqlalchemy import func, literal, select, union_all
 from sqlalchemy.orm import Session
 
-from .. import runtime_config
 from ..config import get_settings
 from ..models import (
     BrandVoiceVersion,
@@ -23,7 +22,7 @@ from ..models import (
     PromptVersion,
     User,
 )
-from . import capability_integrations, data_source_plugins, system_settings
+from . import capability_integrations, data_source_plugins
 from .content_harness import channel_registry
 from .content_harness.publishers import bootstrap_publishers
 from .content_harness.registry import RegistryKinds, registry
@@ -91,26 +90,8 @@ def models_section(user: User) -> dict:
     try:
         llm = _profile(effective_llm_config())
     except LLMError:
-        models = system_settings.models_view()
-        model_config = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
-        default_name = model_config.get("default_profile")
-        llm = _profile((models.get("profiles") or {}).get(default_name) or {})
-        llm.update({"available": False, "reason": "默认模型不可用，请修复模型登记或选择其他默认模型"})
-    llm["overridden"] = bool(runtime_config.get_runtime(runtime_config.KEY_LLM))
-    models = system_settings.models_view()
-    profiles = {
-        name: {**_profile(profile), "enabled": bool(profile.get("enabled"))}
-        for name, profile in models["profiles"].items() if _text(name) == name
-    }
-    image_raw = system_settings.image_view()
-    image = {
-        **_profile(image_raw), "enabled": bool(image_raw["enabled"]),
-        "size": _text(image_raw["size"]), "providers_available": _refs(image_raw["providers_available"]),
-    }
-    return _section("models", {
-        "llm": llm, "models": {"profiles": profiles, "routes": {k: _text(v) for k, v in models["routes"].items()}},
-        "image": image,
-    }, "editable" if user.role == "admin" else "read_only")
+        llm = {"available": False, "reason": "默认模型不可用，请在 用途路由 里选一个可用的默认模型"}
+    return _section("models", {"llm": llm}, "editable" if user.role == "admin" else "read_only")
 
 
 def data_sources_section(db: Session, user: User, limit=50, offset=0) -> dict:

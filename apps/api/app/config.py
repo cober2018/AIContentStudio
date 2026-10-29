@@ -20,9 +20,6 @@ class Settings(BaseSettings):
     material_storage_backend: str = "local"
 
     llm_provider: str = "mock"  # mock | openai_compatible
-    llm_base_url: str = ""
-    llm_api_key: str = ""
-    llm_model: str = ""
 
     # Mock provider 用：注入 FactPack 外数字，验证 FactCheck blocker 链路（执行计划 §22 用例 11）
     mock_inject_unfact_number: bool = False

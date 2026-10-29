@@ -49,6 +49,15 @@ class CreativeProfile(BaseModel):
     stage_instruction: str | None = Field(default=None, max_length=4000)
     provenance: dict[str, Any] = Field(default_factory=dict, max_length=8)
 
+    @model_validator(mode="before")
+    @classmethod
+    def drop_model_choice(cls, value):
+        # 模型只在 设置 → AI 与模型 选；角色里的模型绑定不再保存。
+        if isinstance(value, dict) and (value.get("model_binding") or value.get("model_chain") or value.get("mode") == "custom"):
+            value = {**value, "model_binding": None, "model_chain": [],
+                     "mode": "auto" if value.get("mode") == "custom" else value.get("mode")}
+        return value
+
     @model_validator(mode="after")
     def validate_contract(self):
         validate_creative_profile(self.model_dump(mode="json", by_alias=True))

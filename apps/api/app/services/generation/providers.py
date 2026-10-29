@@ -252,8 +252,6 @@ def model_selection(profile):
     finally:
         _explicit_profile.reset(token)
 
-# 场景路由键：内容生成 / 选区改写 / 事实校验与审核复核 / 选题发现（基于 FactPack 荐题）
-ROUTE_KEYS = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit", "form_autofill", "field_polish")
 
 
 def _models_override() -> dict:
@@ -267,70 +265,46 @@ def selected_model_profile() -> str | None:
     return _explicit_profile.get()
 
 
-def _profile_config(name: str, profiles: dict) -> dict | None:
-    profile = profiles.get(name)
-    if not isinstance(profile, dict):
-        return None
-    return {
-        "provider": profile.get("provider", "mock"),
-        "base_url": profile.get("base_url", ""),
-        "api_key": profile.get("api_key", ""),
-        "model": profile.get("model", ""),
-        "mock_inject_unfact_number": profile.get("mock_inject_unfact_number", False),
-    }
-
-
 def effective_llm_config(purpose: str | None = None, *, profile: str | None = None) -> dict:
-    """按场景解析生效 LLM 配置。
+    """按场景解析生效 LLM 配置：explicit → routes[purpose] → default_profile。
 
-    优先级：models.routes[purpose] 指向的启用 profile → 旧 llm 覆盖 → .env 环境变量。
-    purpose=None 时取默认（旧 llm 覆盖 / env），与既有行为兼容。
+    厂商地址和密钥只来自 设置 → AI 与模型 → 厂商与模型；环境变量只能切到离线 mock。
     """
-    from ... import runtime_config
+    from .. import minimax_cli_provider as minimax
 
-    override = runtime_config.get_runtime(runtime_config.KEY_LLM) or {}
-    fallback = {
-        "provider": override.get("provider", get_settings().llm_provider),
-        "base_url": override.get("base_url", get_settings().llm_base_url),
-        "api_key": override.get("api_key", get_settings().llm_api_key),
-        "model": override.get("model", get_settings().llm_model),
-        "mock_inject_unfact_number": override.get(
-            "mock_inject_unfact_number", get_settings().mock_inject_unfact_number
-        ),
-    }
     models = _models_override()
+    routes = models.get("routes") or {}
     explicit = profile or _explicit_profile.get()
-    if purpose or models.get("default_profile") or explicit:
-        routes = models.get("routes") or {}
-        route_name = explicit or ((routes.get(purpose) or routes.get("rewrite")) if purpose == "text_master_edit" else routes.get(purpose)) or models.get("default_profile")
-        if route_name:
-            raw_profile = (models.get("profiles") or {}).get(route_name) or {}
-            if raw_profile.get("enabled", True) and "declared_capabilities" in raw_profile and "chat" not in raw_profile["declared_capabilities"]:
-                raise LLMError("chat_capability_unavailable")
-            if raw_profile and not raw_profile.get("provider_id") and "provider" not in raw_profile:
-                raise LLMError("model_selection_unavailable")
-            registered = raw_profile.get("provider_id")
-            if registered:
-                provider = models.get("providers", {}).get(registered)
-                if (not raw_profile.get("enabled", True) or "chat" not in raw_profile.get("declared_capabilities", ["chat"])
-                        or not provider or not provider.get("enabled") or not provider.get("api_key")):
-                    raise LLMError("registered_model_unavailable")
-                return {"provider": "openai_compatible", "base_url": provider["base_url"], "api_key": provider["api_key"],
-                        "model": raw_profile["model"], "profile": route_name, "configuration_revision": models.get("revision", 0),
-                        "registered_provider": dict(provider)}
-            if (explicit or models.get("default_profile") or routes.get(purpose)) and (not raw_profile or not raw_profile.get("enabled", True)):
-                raise LLMError("model_selection_unavailable")
-            if raw_profile and raw_profile.get("enabled", True):
-                if "declared_capabilities" in raw_profile and "chat" not in raw_profile["declared_capabilities"]:
-                    raise LLMError("chat_capability_unavailable")
-                profile = _profile_config(route_name, models.get("profiles") or {})
-                if profile and profile["provider"]:
-                    profile["profile"] = route_name
-                    profile["configuration_revision"] = models.get("revision", 0)
-                    return profile
-    fallback["profile"] = "default"
-    fallback["configuration_revision"] = models.get("revision", 0)
-    return fallback
+    route_name = explicit or ((routes.get(purpose) or routes.get("rewrite")) if purpose == "text_master_edit" else routes.get(purpose)) or models.get("default_profile")
+    revision = models.get("revision", 0)
+    if not route_name:
+        if get_settings().llm_provider != "mock":
+            raise LLMError("model_selection_unavailable")
+        return {"provider": "mock", "base_url": "", "api_key": "", "model": "",
+                "mock_inject_unfact_number": get_settings().mock_inject_unfact_number,
+                "profile": "default", "configuration_revision": revision}
+    raw_profile = (models.get("profiles") or {}).get(route_name) or {}
+    if not raw_profile or not raw_profile.get("enabled", True):
+        raise LLMError("model_selection_unavailable")
+    if "chat" not in raw_profile.get("declared_capabilities", ["chat"]):
+        raise LLMError("chat_capability_unavailable")
+    if raw_profile.get("provider") == "mock" and not raw_profile.get("provider_id"):
+        return {"provider": "mock", "base_url": "", "api_key": "", "model": raw_profile.get("model", ""),
+                "mock_inject_unfact_number": raw_profile.get("mock_inject_unfact_number", False),
+                "profile": route_name, "configuration_revision": revision}
+    registered = raw_profile.get("provider_id")
+    if registered == minimax.VENDOR_ID:
+        key = minimax.shared_key()
+        if not key or not raw_profile.get("model"):
+            raise LLMError("registered_model_unavailable")
+        return {"provider": "openai_compatible", "base_url": minimax.chat_base_url(), "api_key": key,
+                "model": raw_profile["model"], "profile": route_name, "configuration_revision": revision}
+    provider = models.get("providers", {}).get(registered) if registered else None
+    if not provider or not provider.get("enabled") or not provider.get("api_key"):
+        raise LLMError("registered_model_unavailable")
+    return {"provider": "openai_compatible", "base_url": provider["base_url"], "api_key": provider["api_key"],
+            "model": raw_profile["model"], "profile": route_name, "configuration_revision": revision,
+            "registered_provider": dict(provider)}
 
 
 def reset_provider_cache() -> None:

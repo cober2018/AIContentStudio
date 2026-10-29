@@ -190,6 +190,7 @@ function ScopedCreativeExecutionPanel({ projectId, unitId, readOnly, executionId
   const [criteria, setCriteria] = useState("");
   const [roles, setRoles] = useState<RoleDraft[]>([roleDraft()]);
   const [reviewed, setReviewed] = useState("");
+  const [productWork, setProductWork] = useState(false);
   const [productionConfig, setProductionConfig] = useState<{ production_stages?: ProductionStages; origin: string; catalog: ProductionCatalog; methods: CapabilityArtifact[]; methods_total: number } | null>(null);
   const [productionOverride, setProductionOverride] = useState<ProductionStages | null>(null);
   const [productionError, setProductionError] = useState("");
@@ -246,7 +247,7 @@ function ScopedCreativeExecutionPanel({ projectId, unitId, readOnly, executionId
     try {
       const [user, project, masters, nextVariants, nextPackages, executionLists] = await Promise.all([
         request<{ role: string }>(actor, "/users/me", controller.signal),
-        request<{ status: string; units: { id: number; status: string }[] }>(actor, `/content-projects/${projectId}`, controller.signal),
+        request<{ status: string; units: { id: number; status: string; production_domain?: string }[] }>(actor, `/content-projects/${projectId}`, controller.signal),
         request<Page<Source>>(actor, `${base}/master-revisions?limit=1`, controller.signal),
         request<Page<Source>>(actor, `${base}/channel-variants?limit=100`, controller.signal),
         request<Page<Package>>(actor, `${base}/creative-packages?limit=${PAGE_SIZE}&offset=${offset}`, controller.signal),
@@ -255,6 +256,7 @@ function ScopedCreativeExecutionPanel({ projectId, unitId, readOnly, executionId
       if (!alive() || controller.signal.aborted || sequence !== refreshSequence.current) return;
       const unit = project.units.find(item => item.id === unitId);
       setEditable(["admin", "editor"].includes(user.role) && project.status !== "archived" && !!unit && unit.status !== "archived");
+      setProductWork(unit?.production_domain === "product");
       setMaster(masters.items[0] || null); setVariants(nextVariants.items); setPackages(nextPackages.items);
       const rows = executionLists.flatMap(page => page.items);
       setExecutions(rows); setMoreExecutions(executionLists[pages - 1].items.length === PAGE_SIZE); setMorePackages(nextPackages.items.length === PAGE_SIZE);
@@ -415,7 +417,7 @@ function ScopedCreativeExecutionPanel({ projectId, unitId, readOnly, executionId
       <details className="rounded-lg border p-3"><summary className="cursor-pointer text-sm font-medium">阶段方法：继承与本次覆盖</summary>
         {productionError && <p role="alert" className="mt-2 text-xs text-amber-700">{productionError}</p>}
         {productionConfig && <div className="mt-3 space-y-3"><label className="flex gap-2 text-sm"><input type="checkbox" checked={productionOverride !== null} onChange={event => setProductionOverride(event.target.checked ? structuredClone(productionConfig.production_stages || {}) : null)} />仅覆盖这次项目执行包，不写回角色</label>
-          <ProductionStageControls catalog={productionConfig.catalog} methods={productionConfig.methods} value={productionOverride ?? productionConfig.production_stages} disabled={productionOverride === null || !canEdit} origin={productionOverride !== null ? "本次项目覆盖" : productionConfig.origin} onChange={setProductionOverride} />
+          <ProductionStageControls system={productWork ? "product" : "persona"} catalog={productionConfig.catalog} methods={productionConfig.methods} value={productionOverride ?? productionConfig.production_stages} disabled={productionOverride === null || !canEdit} origin={productionOverride !== null ? "本次项目覆盖" : productionConfig.origin} onChange={setProductionOverride} />
           {productionConfig.methods_total > productionConfig.methods.length && <p className="text-xs text-amber-700">当前显示部分适用方法，可在方法库查看其余项。</p>}
         </div>}
       </details>

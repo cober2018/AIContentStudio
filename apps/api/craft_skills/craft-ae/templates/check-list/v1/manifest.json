@@ -1,0 +1,121 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "check-list",
+  "version": "v1",
+  "name": "卖点打勾清单",
+  "category": "商品：卖点",
+  "use": "白色底板：标题 + 2–5 条，每条出现时青绿圆标里画出对勾；beats 填每条出现的秒数。叠在画面上用。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 14,
+      "required": true
+    },
+    {
+      "name": "i1",
+      "kind": "text",
+      "max": 16,
+      "required": true
+    },
+    {
+      "name": "i2",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "i3",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "i4",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "i5",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "beats",
+      "kind": "text",
+      "max": 30,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 3000,
+    "max": 10000,
+    "default": 4500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "e854a493a3c705a8fd78c4826b67b2b816dc364997b8688de312f5c0da06bf17"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "98e3c6fe2d2273bc8ce5587dc2bfc135c897c586b8c6fe3ed75ff5a4e461cf07"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "这几点都有 / 主动降噪 / 40 小时续航 / Type-C 快充 / 双设备连接 /  / （图片：无图片）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "适合你，如果 / 每天通勤一小时 / 常在开放办公区 /  /  /  / 0.6,1.6（图片：无图片）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "这几点都有 / 主动降噪 / 40 小时续航 / Type-C 快充 / 双设备连接 /  / （图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "适合你，如果 / 每天通勤一小时 / 常在开放办公区 /  /  /  / 0.6,1.6（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

@@ -5,7 +5,7 @@ import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../compo
 
 type CatchupReceipt = { id: number; source_id: number; name: string | null; persona_ids: number[]; start_at: string | null; end_at: string; status: string; reason: string | null; counts: { scanned?: number; new_versions?: number; requests?: number }; coverage: { complete?: boolean; unconfirmed_interval?: { start_at: string | null; end_at: string; missing_count: number | null } | null }; finished_at: string | null; earlier_gap?: CatchupReceipt | null };
 type CollectionSnapshot = { status: string; frozen_at: string; target_at?: string; notice?: string; sources: CatchupReceipt[] };
-export type DiscoveryStatus = { catchup?: CatchupReceipt[]; settings: { enabled: boolean; paused_persona_ids: number[]; search_provider: string; credential_source: string; public_processing_allowed: boolean; search_configured: boolean; worker_enabled: boolean; daily_hour: number; daily_limit: number }; personas: { persona_id: number; business_date?: string; opportunity_policy?: "technology.v1" | "discovery.v2"; collection_mode?: string; name: string; status: string; reason: string | null; next_due_at: string | null; today_run?: Run | null; last_run: Run | null; radar?: Radar | null }[] };
+export type DiscoveryStatus = { catchup?: CatchupReceipt[]; settings: { enabled: boolean; paused_persona_ids: number[]; search_provider: string; public_processing_allowed: boolean; search_configured: boolean; worker_enabled: boolean; daily_hour: number; daily_limit: number }; personas: { persona_id: number; business_date?: string; opportunity_policy?: "technology.v1" | "discovery.v2"; collection_mode?: string; name: string; status: string; reason: string | null; next_due_at: string | null; today_run?: Run | null; last_run: Run | null; radar?: Radar | null }[] };
 type Source = { aggregate_mode_paused_for?: number[]; aggregate_sync?: { phase?: string; synced_at?: string; has_more?: boolean } | null; id: number; name: string; url: string; input_url: string; collector_url: string | null; kind: string; origin: string; status: string; reason: string | null; manually_paused: boolean; processing_allowed: boolean; last_success_at: string | null; persona_ids: number[]; personas: { id: number; name: string; state: string }[]; validation: { state?: string }; merged_into?: number | null; alias_notice?: { message: string } | null; catchup?: { latest: CatchupReceipt | null; last_gap: CatchupReceipt | null } };
 type SourceDraft = { name?: string; kind?: string; persona_ids: number[]; manually_paused: boolean; processing_allowed: boolean; url?: string };
 type Persona = { id: number; name: string; status: string };
@@ -257,20 +257,15 @@ export function DiscoveryPanel({ personaId = "" }: { personaId?: string }) {
       else setNotice("无法确认该 Radar 来源对应的科技角色，请刷新运行状态后重试。");
     } else setEditing(source);
   }
-  const configure = useMutation({ mutationFn: (provider: string) => api.put("/content-opportunities/discovery/settings", {
+  const configure = useMutation({ mutationFn: () => api.put("/content-opportunities/discovery/settings", {
     enabled: !status.data?.settings.enabled, public_processing_allowed: true,
-    search_provider: provider, credential_source: status.data?.settings.credential_source === "codex_mcp" ? "codex_mcp" : "environment",
     daily_hour: status.data?.settings.daily_hour ?? 8, daily_limit: status.data?.settings.daily_limit ?? 5,
-  }), onSuccess: refresh });
-  const connectLocal = useMutation({ mutationFn: () => api.put("/content-opportunities/discovery/settings", {
-    enabled: true, public_processing_allowed: true, search_provider: "minimax", credential_source: "codex_mcp", daily_hour: 8, daily_limit: 5,
   }), onSuccess: refresh });
   const pausePersona = useMutation({ mutationFn: (id: number) => {
     const settings = status.data!.settings;
     const paused = settings.paused_persona_ids || [];
     return api.put("/content-opportunities/discovery/settings", {
       enabled: settings.enabled, public_processing_allowed: settings.public_processing_allowed,
-      search_provider: settings.search_provider, credential_source: settings.credential_source,
       daily_hour: settings.daily_hour, daily_limit: settings.daily_limit,
       paused_persona_ids: paused.includes(id) ? paused.filter(value => value !== id) : [...paused, id],
     });
@@ -288,14 +283,14 @@ export function DiscoveryPanel({ personaId = "" }: { personaId?: string }) {
   } });
   const validate = useMutation({ mutationFn: (id: number) => api.post(`${sourceBase}/${id}/validate`), onSuccess: refresh });
   const retry = useMutation({ mutationFn: (id: number) => api.post(`/content-opportunities/discovery/runs/${id}/retry`), onSuccess: refresh });
-  const error = status.error || sources.error || runs.error || configure.error || connectLocal.error || changeSource.error || pausePersona.error || retry.error || validate.error || personas.error || merges.error || openMerged.error;
+  const error = status.error || sources.error || runs.error || configure.error || changeSource.error || pausePersona.error || retry.error || validate.error || personas.error || merges.error || openMerged.error;
   if (status.isPending) return <Spinner label="读取角色研究状态…" />;
   return <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
     <div className="flex flex-wrap justify-between gap-3"><h2 className="font-semibold">角色自动研究与每日选题</h2><div className="flex flex-wrap gap-2">{[ ["status", "运行状态"], ["sources", "信息源储备"], ["runs", "研究记录"] ].map(([key, label]) => <Button key={key} variant={tab === key ? "primary" : "secondary"} onClick={() => setTab(key)}>{label}</Button>)}<Button variant="secondary" disabled={status.isFetching} onClick={() => void refresh()}>刷新状态</Button></div></div>
     {error && <ErrorBanner message={error instanceof Error ? error.message : "读取研究状态失败"} />}
     {tab === "status" && status.data && !status.isError && <div className="space-y-3" aria-live="polite">
       <p className="text-sm text-slate-600">每日 {String(status.data.settings.daily_hour).padStart(2, "0")}:00（台北时间），每角色最多 {status.data.settings.daily_limit} 条；来源发现和选题由后台执行。</p>
-      <p className="text-xs text-slate-500">搜索：{status.data.settings.search_provider} · {status.data.settings.search_configured ? "凭据已配置" : "尚未配置"} · {status.data.settings.worker_enabled ? "后台队列已启用" : "后台队列尚未启用"}</p>
+      <p className="text-xs text-slate-500">搜索：{status.data.settings.search_provider || "未选择"}（在 设置 → AI 与模型 → 用途路由 里选）· {status.data.settings.search_configured ? "可用" : "不可用"} · {status.data.settings.worker_enabled ? "后台队列已启用" : "后台队列尚未启用"}</p>
       {!!status.data.catchup?.length && <details className="rounded-lg border p-3 text-sm"><summary>来源补采进度与缺口（公开入口覆盖，不保证全网历史完整）</summary><div className="mt-3 space-y-3">{status.data.catchup.filter(r => !personaId || r.persona_ids.includes(Number(personaId))).map(r => <CatchupReceiptView key={r.id} receipt={r} />)}</div></details>}
       {status.data.personas.filter(p => !personaId || String(p.persona_id) === personaId).map(p => <div key={p.persona_id} className="space-y-3 rounded-lg bg-slate-50 p-3 text-sm">
         <div><strong>{p.name}</strong> · {p.collection_mode === "aggregate" ? "聚合站同步选题" : "自动研究"} {p.status !== "positioning_incomplete" && <Button size="sm" variant="secondary" disabled={!editable || pausePersona.isPending} onClick={() => pausePersona.mutate(p.persona_id)}>{status.data.settings.paused_persona_ids?.includes(p.persona_id) ? "恢复此角色" : "暂停此角色"}</Button>}</div>
@@ -306,7 +301,7 @@ export function DiscoveryPanel({ personaId = "" }: { personaId?: string }) {
         <p className="text-xs text-slate-600">下次计划：{localTime(p.next_due_at)}（台北时间）</p>
         {p.opportunity_policy === "technology.v1" && <><RadarView radar={p.radar ?? p.today_run?.radar} /><RadarConfiguration key={`${user}-${p.persona_id}`} personaId={p.persona_id} editable={editable} /></>}
       </div>)}
-      <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={!editable || configure.isPending} onClick={() => configure.mutate(status.data.settings.search_provider)}>{status.data.settings.enabled ? "暂停自动研究" : "启用自动研究"}</Button>{status.data.settings.credential_source !== "codex_mcp" && <Button variant="secondary" disabled={!editable || connectLocal.isPending} onClick={() => connectLocal.mutate()}>使用本机 MiniMax MCP 并启用</Button>}</div>
+      <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={!editable || configure.isPending} onClick={() => configure.mutate()}>{status.data.settings.enabled ? "暂停自动研究" : "启用自动研究"}</Button></div>
       <p className="text-xs text-slate-500">启用即允许系统分析所跟踪公开资料的必要片段；不会授予全文转载权限。正常运行无需手动生成或打开此页。刷新只读取状态，不触发采集、生成或重试。</p>
     </div>}
     {tab === "sources" && <div className="space-y-3">

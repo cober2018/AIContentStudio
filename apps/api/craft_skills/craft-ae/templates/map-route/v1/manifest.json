@@ -1,0 +1,103 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "map-route",
+  "version": "v1",
+  "name": "地图路线",
+  "category": "素材与地图",
+  "use": "在地图上从起点到终点画一条弧线，标出两端地名。起终点位置用图片上的相对坐标（0–1）。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 16,
+      "required": true
+    },
+    {
+      "name": "from",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "to",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "from_x",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "from_y",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "to_x",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "to_y",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    }
+  ],
+  "images": [
+    {
+      "name": "map",
+      "file": "map.png",
+      "required": false,
+      "source": "real_only"
+    }
+  ],
+  "duration_ms": {
+    "min": 2000,
+    "max": 10000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "PingFangSC-Semibold",
+    "PingFangSC-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "cc2804b8ef0200460a7dfb62e2ec828c4e5e6e5f7cf1828adb88262480f123b2"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-23",
+      "content": "上海→洛杉矶，自东向西",
+      "frames": "入场 0.3s、中段 1.2s、定格 3.5s",
+      "result": "文字替换、空字段隐藏、超宽缩放、动画时序正确；地图为占位网格，实际使用要传入地图图片"
+    },
+    {
+      "date": "2026-10-23",
+      "content": "马赛→孟买，自西北向东南",
+      "frames": "入场 0.3s、中段 1.2s、定格 3.5s",
+      "result": "文字替换、空字段隐藏、超宽缩放、动画时序正确"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4"
+  }
+}

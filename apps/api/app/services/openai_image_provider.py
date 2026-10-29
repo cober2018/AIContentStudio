@@ -14,7 +14,6 @@ from urllib.parse import urlsplit
 import httpx
 from httpcore._backends.sync import SyncBackend
 
-from app import runtime_config
 from app.services.content_harness.providers import MediaOutput
 from app.services.url_fetch import (
     OUTBOUND_HTTP_POLICIES,
@@ -47,8 +46,11 @@ class _PinnedBackend(SyncBackend):
 
 
 def _config():
-    value = runtime_config.get_runtime("image") or {}
-    if value.get("enabled") is not True or value.get("provider") != "openai":
+    from .model_registration import cover_image_config
+
+    value = cover_image_config()
+    # An OpenAI image model chosen for 封面生图 goes to the native images API; others go through wewrite.
+    if value is None or not (value["model"] in _MODELS or value["model"].startswith("dall-e-")):
         return None
     config = {key: value.get(key) for key in ("model", "size", "base_url", "api_key")}
     if any(not isinstance(item, str) or not item or any(ord(c) < 32 for c in item) for item in config.values()):

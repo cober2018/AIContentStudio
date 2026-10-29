@@ -313,7 +313,7 @@ def _open_candidates(segment: dict, settings: dict, provider_state: dict) -> lis
         for key in settings["providers"]:
             provider = open_media.PROVIDERS.get(key)
             state = provider_state.setdefault(key, {"status": "ok", "calls": 0})
-            if provider is None or not provider.configured():
+            if provider is None or not provider.configured() or not provider.enabled():
                 state["status"] = "off"
                 continue
             if state["status"] == "failed" or media_type not in provider.media_types:

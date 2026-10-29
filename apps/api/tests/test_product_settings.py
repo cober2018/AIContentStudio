@@ -18,7 +18,6 @@ from app.models import (
     User,
 )
 from app.routers.product_settings import router
-from app.services.system_settings import build_settings_view as build_legacy_settings_view
 
 BASE = "/api/v1/settings"
 
@@ -36,7 +35,6 @@ def settings_client(db_session, monkeypatch):
     monkeypatch.setattr(system_settings, "build_settings_view", forbidden)
     monkeypatch.setattr(settings, "build_settings_view", forbidden)
     monkeypatch.setattr(system_settings, "plugins_view", forbidden)
-    monkeypatch.setattr(system_settings, "dsh_view", forbidden)
     monkeypatch.setattr(plugin_registry, "scan_skills", forbidden)
     monkeypatch.setattr(plugin_registry, "dsh_status", forbidden)
     for role in ("admin", "editor", "reviewer", "viewer"):
@@ -78,15 +76,15 @@ def test_product_sections_and_caller_capabilities(settings_client, role):
     ("https://api.example.com/#secret", ""),
 ])
 def test_models_allowlist_and_origin_only_urls(settings_client, url, expected):
-    runtime_config.set_runtime("llm", {"provider": "openai_compatible", "base_url": url, "model": "real", "api_key": "unique-full-secret", "diagnostic": "PRIVATE"})
-    runtime_config.set_runtime("models", {"profiles": {"primary": {"provider": "mock", "base_url": url, "model": "m", "api_key": "tiny", "enabled": True, "headers": {"secret": "PRIVATE"}}}, "routes": {"generate": "primary", "unsafe": "PRIVATE"}})
-    runtime_config.set_runtime("image", {"provider": "openai", "base_url": url, "api_key": "unique-image-secret", "enabled": True, "path": "/private/file"})
+    runtime_config.set_runtime("models", {
+        "providers": {"vendor": {"base_url": url, "api_key": "unique-full-secret", "enabled": True, "diagnostic": "PRIVATE"}},
+        "profiles": {"primary": {"provider_id": "vendor", "model": "real", "enabled": True, "declared_capabilities": ["chat"], "headers": {"secret": "PRIVATE"}}},
+        "default_profile": "primary", "routes": {"unsafe": "PRIVATE"}})
     data = read(settings_client)["sections"][0]["data"]
-    for profile in (data["llm"], data["models"]["profiles"]["primary"], data["image"]):
-        assert profile["base_url"] == expected
-        assert profile["api_key"] == {"configured": True, "masked": "••••"}
+    assert data["llm"]["base_url"] == expected
+    assert data["llm"]["api_key"] == {"configured": True, "masked": "••••"}
     serialized = json.dumps(data)
-    for secret in ("unique-full-secret", "unique-image-secret", "tiny", "PRIVATE", "/private", "/v1", "token="):
+    for secret in ("unique-full-secret", "PRIVATE", "/private", "/v1", "token="):
         assert secret not in serialized
 
 
@@ -177,9 +175,9 @@ def test_product_inventory_has_no_write_wrappers(settings_client, path):
 @pytest.mark.parametrize("role", ["editor", "reviewer", "viewer"])
 def test_existing_admin_mutators_still_deny_nonadmins(settings_client, role):
     headers = {"X-Studio-User": f"{role}@studio.local"}
-    for path, body in [("llm", {"provider": "mock"}), ("models", {"profiles": [], "routes": {}}), ("image", {})]:
+    for path, body in [("model-registration", {"expected_revision": 0, "configuration": {}}), ("model-registration/minimax", {})]:
         assert settings_client.put(f"{BASE}/{path}", headers=headers, json=body).status_code == 403
-    assert settings_client.post(f"{BASE}/llm/test", headers=headers, json={}).status_code == 403
+    assert settings_client.post(f"{BASE}/model-registration/minimax/test", headers=headers, json={}).status_code == 403
     assert settings_client.post("/api/v1/connectors", headers=headers, json={"name": "Test", "base_url": "https://example.com"}).status_code == 403
 
 
@@ -239,57 +237,8 @@ def test_inventory_selects_no_connector_secrets_or_template_bodies(settings_clie
 def test_model_inventory_does_not_mutate_runtime_snapshot(settings_client):
     snapshot = {"profiles": {"a": {"provider": "mock", "model": "one", "api_key": "secret-a"}, "b": {"provider": "mock", "model": "two", "api_key": "secret-b"}}, "routes": {"generate": "a", "rewrite": "b"}}
     runtime_config.set_runtime("models", snapshot)
-    data = read(settings_client)["sections"][0]["data"]["models"]
-    assert set(data["profiles"]) == {"a", "b"}
-    assert data["routes"]["generate"] == "a" and data["routes"]["rewrite"] == "b"
+    read(settings_client)
     assert runtime_config.get_runtime("models") == snapshot
-
-
-@pytest.mark.parametrize("url,expected,redacted", [
-    ("https://api.example.com/compatible/v1", "https://api.example.com/compatible/v1", False),
-    ("https://api.example.com/v1?version=2026", "https://api.example.com/v1?version=2026", False),
-    ("https://api.example.com/v1?api-version=2026-09-28", "https://api.example.com/v1?api-version=2026-09-28", False),
-    ("https://api.example.com/v1?subscription-key=REVIEW_SENTINEL", "", True),
-    ("https://api.example.com/v1?opaque=REVIEW_SENTINEL", "", True),
-    ("https://api.example.com/v1?version=2026&opaque=REVIEW_SENTINEL", "", True),
-    ("https://user:PRIVATE@api.example.com/v1", "", True),
-    ("https://api.example.com/v1?api_key=PRIVATE", "", True),
-    ("https://api.example.com/v1?ACCESS_TOKEN=PRIVATE", "", True),
-    ("https://api.example.com/v1?%61pi%5Fkey=PRIVATE", "", True),
-    ("https://api.example.com/token/PRIVATE/v1", "", True),
-    ("https://api.example.com/v1/sk-PRIVATE", "", True),
-    ("https://api.example.com/v1#PRIVATE", "", True),
-    ("file:///private/runtime", "", True),
-    ("", "", False),
-])
-def test_legacy_provider_views_preserve_clean_urls_and_flag_redaction(settings_client, url, expected, redacted):
-    from app.services import system_settings
-    runtime_config.set_runtime("llm", {"provider": "mock", "base_url": url})
-    runtime_config.set_runtime("models", {"profiles": {"primary": {"provider": "mock", "base_url": url}}})
-    runtime_config.set_runtime("image", {"provider": "openai", "base_url": url})
-    for view in (system_settings.llm_view(), system_settings.models_view()["profiles"]["primary"], system_settings.image_view()):
-        assert view["base_url"] == expected
-        assert view["base_url_redacted"] is redacted
-        assert "PRIVATE" not in json.dumps(view)
-        assert "REVIEW_SENTINEL" not in json.dumps(view)
-    assert runtime_config.get_runtime("llm")["base_url"] == url
-
-
-def test_legacy_settings_get_redacts_urls_without_inventory_side_effects(settings_client, monkeypatch):
-    from app.routers import settings
-    from app.services import system_settings
-    monkeypatch.setattr(settings, "build_settings_view", build_legacy_settings_view)
-    monkeypatch.setattr(system_settings, "plugins_view", dict)
-    monkeypatch.setattr(system_settings, "dsh_view", dict)
-    runtime_config.set_runtime("llm", {"base_url": "https://user:PRIVATE@api.example.com/v1"})
-    runtime_config.set_runtime("models", {"profiles": {"primary": {"base_url": "https://api.example.com/v1?token=PRIVATE"}}})
-    runtime_config.set_runtime("image", {"base_url": "https://api.example.com/v1?key=PRIVATE"})
-    response = settings_client.get(BASE, headers={"X-Studio-User": "admin@studio.local"})
-    assert response.status_code == 200
-    body = response.json()
-    for view in (body["llm"], body["models"]["profiles"]["primary"], body["image"]):
-        assert view["base_url"] == "" and view["base_url_redacted"] is True
-    assert "PRIVATE" not in response.text
 
 
 @pytest.mark.parametrize("role", ["editor", "reviewer", "viewer"])

@@ -40,7 +40,7 @@ export type Overview = {
 };
 
 export type SharedAsset = {
-  key: string; id: number; source_type: "project_upload" | "system_reference" | "workflow";
+  key: string; id: number; source_type: "project_upload" | "system_reference" | "workflow" | "project_folder_import";
   reference_id: number | null; material_id: number; material_revision_id: number;
   revision_no: number; kind: string | null; title: string | null; mime_type: string | null;
   content_hash: string; rights_status: string | null; public_use_allowed: boolean | null;

@@ -17,6 +17,8 @@ const CapabilityMemoryPanel = lazy(() => import("./CapabilityMemoryPanel"));
 const StudioCreativeInventory = lazy(() => import("./StudioCreativeInventory"));
 const McpSettings = lazy(() => import("./McpSettings"));
 const StorageSettings = lazy(() => import("./StorageSettings"));
+const StockSourceSettings = lazy(() => import("./StockSourceSettings"));
+const AeTemplateLibrary = lazy(() => import("./AeTemplateLibrary"));
 const EditAgentSettings = lazy(() => import("./EditAgentSettings"));
 const VoiceSettings = lazy(() => import("./VoiceSettings"));
 type Editability = "editable" | "read_only" | "unavailable";
@@ -26,14 +28,14 @@ type PageInfo = { total: number; limit: number; offset: number };
 const labels: Record<Editability, string> = { editable: "可配置", read_only: "只读", unavailable: "不可用" };
 const sections = [
   ["models", "模型与 AI"], ["data_sources", "数据源"], ["channels", "渠道"],
-  ["rules", "规则与模板"], ["team", "团队与权限"], ["mcp", "MCP 接入"], ["storage", "存储位置"], ["edit_agent", "自动剪辑"], ["voice", "配音"], ["methods", "能力方法库"],
+  ["rules", "规则与模板"], ["team", "团队与权限"], ["mcp", "MCP 接入"], ["storage", "存储位置"], ["stock_sources", "素材数据源"], ["ae_templates", "AE 模板库"], ["edit_agent", "自动剪辑"], ["voice", "配音"], ["methods", "能力方法库"],
 ] as const;
 
 const modelViews = [
   { key: "providers", label: "厂商与模型", hint: "连接服务，登记可用模型", icon: "01" },
   { key: "routes", label: "用途路由", hint: "为各个功能选择模型", icon: "02" },
   { key: "capabilities", label: "生成能力与插件", hint: "配置媒体能力与回退", icon: "03" },
-  { key: "runtime", label: "兜底模型与生图", hint: "默认模型、AI 生图、dsh 与技能目录", icon: "04" },
+  { key: "runtime", label: "技能与 MCP", hint: "本机技能目录与 MCP 登记", icon: "04" },
 ] as const;
 type ModelView = typeof modelViews[number]["key"];
 
@@ -68,7 +70,7 @@ function ModelSettingsWorkspace({ editable, onDirtyChange }: { editable: boolean
           </div>}
         </details>
       </div>}
-      {runtimeOpened && <div hidden={view !== "runtime"}><Suspense fallback={<Spinner label="读取兜底模型与生图…" />}><RuntimeModelSettings /></Suspense></div>}
+      {runtimeOpened && <div hidden={view !== "runtime"}><Suspense fallback={<Spinner label="读取技能与 MCP…" />}><RuntimeModelSettings /></Suspense></div>}
     </div>
   </div>;
 }
@@ -115,7 +117,7 @@ function ProductProductionDefaults({ editable, onDirtyChange }: { editable: bool
     catch (error) { setIssue(error instanceof Error ? error.message : "保存失败，草稿保留"); }
     finally { setBusy(false); }
   }
-  return <section className="mt-6 space-y-4 rounded-xl border border-slate-200 p-5"><h3 className="font-semibold">商品制作默认设置</h3><p className="text-sm text-slate-500">新商品作品从这里读取声音和策划模型默认值；SKU 方案、本作品设置可分别覆盖。模型登记与路由沿用上方公共工具。</p>{issue && <ErrorBanner message={issue} />}<div className="grid gap-4 sm:grid-cols-2">{([["voice_id", "默认音色 ID"], ["model_profile_ref", "策划模型配置 ID（选填）"]] as const).map(([key, label]) => <Field key={key} label={label}><input aria-label={label} className={inputClass} value={draft[key] || ""} disabled={!editable || busy || !saved} onChange={event => { setDraft(value => ({ ...value, [key]: event.target.value.trim() || null })); setDirty(true); setNotice(""); }} /></Field>)}</div><div className="flex flex-wrap items-center gap-3"><Button disabled={!editable || busy || !saved || !dirty} onClick={() => void save()}>保存商品默认设置</Button><Button variant="secondary" disabled={busy} onClick={() => { if (!dirty || window.confirm("放弃商品默认设置草稿并重新读取？")) void load(); }}>重新读取</Button><span className="text-xs text-slate-500">{dirty ? "有未保存设置" : saved ? `已保存 v${saved.revision}` : "尚未读取"}</span></div>{notice && <p role="status" className="text-sm text-emerald-700">{notice}</p>}</section>;
+  return <section className="mt-6 space-y-4 rounded-xl border border-slate-200 p-5"><h3 className="font-semibold">商品制作默认设置</h3><p className="text-sm text-slate-500">新商品作品从这里读取默认音色；SKU 方案、本作品设置可分别覆盖。模型只在上方 AI 与模型 里选。</p>{issue && <ErrorBanner message={issue} />}<div className="grid gap-4 sm:grid-cols-2">{([["voice_id", "默认音色 ID"]] as const).map(([key, label]) => <Field key={key} label={label}><input aria-label={label} className={inputClass} value={draft[key] || ""} disabled={!editable || busy || !saved} onChange={event => { setDraft(value => ({ ...value, [key]: event.target.value.trim() || null })); setDirty(true); setNotice(""); }} /></Field>)}</div><div className="flex flex-wrap items-center gap-3"><Button disabled={!editable || busy || !saved || !dirty} onClick={() => void save()}>保存商品默认设置</Button><Button variant="secondary" disabled={busy} onClick={() => { if (!dirty || window.confirm("放弃商品默认设置草稿并重新读取？")) void load(); }}>重新读取</Button><span className="text-xs text-slate-500">{dirty ? "有未保存设置" : saved ? `已保存 v${saved.revision}` : "尚未读取"}</span></div>{notice && <p role="status" className="text-sm text-emerald-700">{notice}</p>}</section>;
 }
 
 function SectionActions({ section, onDirtyChange }: { section: Section; onDirtyChange: (dirty: boolean) => void }) {
@@ -246,15 +248,15 @@ export default function ProductSettingsPage() {
   const paginated = active === "rules" || active === "data_sources";
   const path = active === "rules" ? "rules" : "data-sources";
   const page = useQuery({ queryKey: ["product-settings-page", currentUser(), active, offset], queryFn: () => api.get<Section>(`/settings/${path}?limit=50&offset=${offset}`), enabled: paginated, retry: false });
-  const selected = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice" || active === "methods" ? undefined : paginated ? page.data : query.data?.sections.find((item) => item.key === active);
+  const selected = active === "mcp" || active === "storage" || active === "stock_sources" || active === "ae_templates" || active === "edit_agent" || active === "voice" || active === "methods" ? undefined : paginated ? page.data : query.data?.sections.find((item) => item.key === active);
   const paging = selected ? pageInfo(selected) : undefined;
   // MCP has its own endpoint; the product inventory does not describe it.
-  const ownPage = active === "mcp" || active === "storage" || active === "edit_agent" || active === "voice" || active === "methods";
+  const ownPage = active === "mcp" || active === "storage" || active === "stock_sources" || active === "ae_templates" || active === "edit_agent" || active === "voice" || active === "methods";
   const pending = ownPage ? false : paginated ? page.isPending : query.isPending;
   const error = ownPage ? null : paginated ? page.error : query.error;
   const refresh = () => paginated ? page.refetch() : query.refetch();
   return <div className="mx-auto w-full max-w-[1240px] space-y-8 px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12"><header className="border-b border-ink-200/80 pb-7"><p className="eyebrow">工作空间</p><h1 className="mt-3 text-[34px] leading-[1.1] text-ink-900 sm:text-[40px]">设置</h1><p className="mt-3 text-[15px] text-ink-600">模型、数据源、渠道、模板与权限都在这里配置。</p></header>
-    {!active && !requested && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sections.map(([key, label]) => <button key={key} className="rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" onClick={() => changeLocation(key)}><h2 className="font-semibold text-slate-900">{label}</h2><p className="mt-2 text-sm text-slate-500">{{ models: "连接厂商、登记模型与选择功能用途", data_sources: "管理来源接入与明确拉取", channels: "查看渠道与配置渠道方法", rules: "查看创作资源与管理版本化模板", team: "核对当前身份与权限边界", mcp: "大模型如何连接平台、能做什么", storage: "素材库与本地工作文件夹放在哪里", edit_agent: "准备好剪辑后自动交给本机助手剪粗剪", voice: "MiniMax 配音的音色、情绪和音频参数", methods: "可复用的创作方法与偏好，按项目和作品选用" }[key]}</p><span className="mt-4 inline-block text-sm text-indigo-700">进入配置 →</span></button>)}</div>}
+    {!active && !requested && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sections.map(([key, label]) => <button key={key} className="rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" onClick={() => changeLocation(key)}><h2 className="font-semibold text-slate-900">{label}</h2><p className="mt-2 text-sm text-slate-500">{{ models: "连接厂商、登记模型与选择功能用途", data_sources: "管理来源接入与明确拉取", channels: "查看渠道与配置渠道方法", rules: "查看创作资源与管理版本化模板", team: "核对当前身份与权限边界", mcp: "大模型如何连接平台、能做什么", storage: "素材库与本地工作文件夹放在哪里", stock_sources: "免费素材库的 Key、启用与测试", ae_templates: "看看有哪些 AE 效果、动画预览和要填的内容", edit_agent: "准备好剪辑后自动交给本机助手剪粗剪", voice: "MiniMax 配音的音色、情绪和音频参数", methods: "可复用的创作方法与偏好，按项目和作品选用" }[key]}</p><span className="mt-4 inline-block text-sm text-indigo-700">进入配置 →</span></button>)}</div>}
     {requested && !active && <div role="alert"><ErrorBanner message="未找到这个设置分区，请返回设置目录。" /><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button></div>}
     {active && <><nav className="flex flex-wrap gap-2" aria-label="设置分区"><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button>{sections.map(([key, label]) => <Button key={key} variant={active === key ? "primary" : "secondary"} onClick={() => { if (key !== active) changeLocation(key); }}>{label}</Button>)}</nav>
     {pending && <Spinner label="读取安全产品设置…" />}
@@ -263,6 +265,8 @@ export default function ProductSettingsPage() {
     {active === "voice" && <Suspense fallback={<Spinner label="读取配音设置…" />}><VoiceSettings /></Suspense>}
     {active === "edit_agent" && <Suspense fallback={<Spinner label="读取自动剪辑…" />}><EditAgentSettings /></Suspense>}
     {active === "storage" && <Suspense fallback={<Spinner label="读取存储位置…" />}><StorageSettings editable /></Suspense>}
+    {active === "stock_sources" && <Suspense fallback={<Spinner label="读取素材数据源…" />}><StockSourceSettings editable /></Suspense>}
+    {active === "ae_templates" && <Suspense fallback={<Spinner label="读取模板库…" />}><AeTemplateLibrary /></Suspense>}
     {active === "methods" && <Suspense fallback={<Spinner label="读取能力方法库…" />}><CapabilityMemoryPanel onDirtyChange={setDirty} /></Suspense>}
     {!ownPage && !pending && !error && !selected && <ErrorBanner message="后端尚未返回这个分区，不能确认其能力。" />}
     {selected && <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-5"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">{selected.label}</h2><span className="rounded-full bg-slate-100 px-3 py-1 text-xs">{labels[selected.editability] ?? "能力未核对"}</span></div>{selected.reason && <p className="text-sm text-amber-800">{selected.reason}</p>}{selected.key !== "models" && <details className="rounded-lg border border-slate-200 p-3"><summary className="cursor-pointer text-sm text-slate-600">查看原始配置与来源</summary><div className="mt-4"><Metadata value={selected.data} /></div></details>}{paging && <div className="flex items-center gap-3"><span className="text-xs text-slate-500">共 {paging.total} 条，当前起点 {paging.offset}</span><Button variant="secondary" disabled={paging.offset === 0} onClick={() => setOffset(Math.max(0, paging.offset - paging.limit))}>上一页</Button><Button variant="secondary" disabled={paging.offset + paging.limit >= paging.total} onClick={() => setOffset(paging.offset + paging.limit)}>下一页</Button></div>}<SectionActions key={`${currentUser()}:${selected.key}`} section={selected} onDirtyChange={setDirty} />{selected.key !== "models" && <Button variant="secondary" onClick={() => void refresh()}>刷新真实配置</Button>}</section>}

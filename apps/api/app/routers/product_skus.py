@@ -5,7 +5,7 @@ import uuid
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
 
@@ -48,7 +48,6 @@ class ProductionSettings(BaseModel):
     production_stages: dict | None = None
     video_creative_profile: dict | None = None
     audio_creative_profile: dict | None = None
-    model_profile_ref: str | None = Field(default=None, max_length=100)
     voice_id: str | None = Field(default=None, max_length=200)
     work_type: Literal["showcase", "scene", "ugc"] = "scene"
     creation_mode: Literal["original", "reference"] = "original"
@@ -64,6 +63,12 @@ class ProductionSettings(BaseModel):
     target_duration_seconds: int | None = Field(default=None, gt=0, le=3600)
     estimated_voice_duration_seconds: float | None = Field(default=None, gt=0, le=3600, allow_inf_nan=False)
     feedback: Feedback | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_model_choice(cls, value):
+        # 商品不再单独选模型；旧记录里的 model_profile_ref 读回再保存时直接丢弃。
+        return {k: v for k, v in value.items() if k != "model_profile_ref"} if isinstance(value, dict) else value
 
 
 class SkuIn(BaseModel):
@@ -94,6 +99,7 @@ class WorkIn(BaseModel):
     title: str | None = Field(default=None, max_length=300)
     objective: str = Field(default="基于已提供商品资料规划视频，未知事实待补。", min_length=1, max_length=3000)
     plan_id: int | None = Field(default=None, gt=0)
+    project_id: int | None = Field(default=None, gt=0)
 
 
 class PlanIn(BaseModel):
@@ -324,7 +330,8 @@ def create_work(sku_id: int, payload: WorkIn, db=Depends(get_db), user=Depends(r
             old_revision = db.get(ProductSkuRevision, existing_link.sku_revision_id)
             old_project, old_unit = db.get(ContentProject, previous.project_id), db.get(ContentUnit, previous.unit_id)
             if (old_revision.revision != payload.expected_revision or ("persona_id" in payload.model_fields_set and old_unit.persona_id is not None and old_unit.persona_id != payload.persona_id)
-                    or ("channel" in payload.model_fields_set and old_unit.channel_id != payload.channel) or old_project.objective != payload.objective
+                    or ("channel" in payload.model_fields_set and old_unit.channel_id != payload.channel) or (old_project.objective != payload.objective and payload.project_id is None)
+                    or (payload.project_id is not None and old_project.id != payload.project_id)
                     or (payload.title is not None and old_unit.title != payload.title)
                     or (payload.plan_id is not None and existing_link.plan_id != payload.plan_id)):
                 raise HTTPException(409, "原发起标识已用于不同作品设置，请继续原作品或重新创建")
@@ -359,9 +366,15 @@ def create_work(sku_id: int, payload: WorkIn, db=Depends(get_db), user=Depends(r
         audio_creative_profile=settings.get("audio_creative_profile"), fetch_product_url=False,
         title=payload.title, objective=payload.objective, primary_audience="", product_context=product,
         source_ids=[s.source_id for s in product.source_refs], material_revision_ids=[r.material_revision_id for r in product.material_refs])
-    launch = save_launch(db, user, body)
+    target = None
+    if payload.project_id is not None:
+        from .content_projects import mutable_project
+        target = mutable_project(db, payload.project_id, user)
+    launch = save_launch(db, user, body, project=target)
     from ..models import ProjectMaterialReference
     attached = {ref.material_revision_id for ref in product.material_refs}
+    if target is not None:
+        attached |= set(db.scalars(select(ProjectMaterialReference.material_revision_id).where(ProjectMaterialReference.project_id == target.id)))
     for ref in settings.get("shared_references", []):
         if ref["material_revision_id"] not in attached:
             db.add(ProjectMaterialReference(project_id=launch.project_id, material_revision_id=ref["material_revision_id"],
@@ -422,7 +435,6 @@ def save_plan(sku_id: int, payload: PlanIn, db=Depends(get_db), user=Depends(req
             inherited = {
                 "video_creative_profile": creative,
                 "production_stages": source_settings.get("production_stages") or (creative or {}).get("production_stages"),
-                "model_profile_ref": source_settings.get("model_profile_ref") or ((creative or {}).get("model_binding") or {}).get("profile"),
             }
             for key, value in inherited.items():
                 if settings.get(key) is None and value is not None:

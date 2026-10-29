@@ -1,20 +1,16 @@
-"""Background search using the same provider endpoints as the configured MCPs."""
+"""Background search; the vendor is the 选题搜索 use in 设置 → AI 与模型."""
 
 from __future__ import annotations
 
 import json
 import os
-import pwd
 import re
 import selectors
 import shutil
 import subprocess
 import time
-import tomllib
-from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from ..config import get_settings
 from .url_fetch import safe_fetch
 
 
@@ -37,41 +33,28 @@ def canonical_url(value: str) -> str:
                        urlencode(sorted(query)), ""))
 
 
-def credentials(provider: str, source: str = "environment") -> tuple[str, str]:
-    if provider not in {"minimax", "tavily"}:
+def credentials(provider: str) -> tuple[str, str]:
+    """Search keys come only from 设置 → AI 与模型: MiniMax from its card, Tavily from its registered vendor."""
+    from .. import runtime_config
+    from . import minimax_cli_provider as minimax
+
+    if provider == "minimax":
+        host = "https://api.minimax.io" if minimax.chat_base_url().startswith("https://api.minimax.io") else "https://api.minimaxi.com"
+        key = minimax.shared_key()
+    elif provider == "tavily":
+        vendor = ((runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}).get("providers") or {}).get("tavily") or {}
+        host, key = "https://api.tavily.com", vendor.get("api_key") if vendor.get("enabled", True) else ""
+    else:
         raise SearchUnavailable("search_provider_unavailable")
-    name = "MINIMAX_API_KEY" if provider == "minimax" else "TAVILY_API_KEY"
-    key = os.getenv(name, "")
-    host = os.getenv("MINIMAX_API_HOST", "https://api.minimaxi.com") if provider == "minimax" else "https://api.tavily.com"
-    if source == "codex_mcp":
-        if get_settings().app_env == "production":
-            raise SearchUnavailable("local_mcp_credentials_not_allowed_in_production")
-        path = Path(pwd.getpwuid(os.getuid()).pw_dir) / ".codex" / "config.toml"
-        try:
-            if path.stat().st_size > 1024 * 1024:
-                raise ValueError("config_size")
-            servers = tomllib.loads(path.read_text()).get("mcp_servers", {})
-            server = servers.get("MiniMax" if provider == "minimax" else "tavily", {})
-            if not server.get("enabled", True):
-                raise ValueError("disabled")
-            env = server.get("env", {})
-            key = env.get(name) or key
-            if provider == "minimax":
-                host = env.get("MINIMAX_API_HOST") or host
-        except (OSError, ValueError, TypeError):
-            raise SearchUnavailable("search_credentials_unavailable") from None
-    elif source != "environment":
-        raise SearchUnavailable("search_credentials_unavailable")
-    allowed = {"https://api.minimax.io", "https://api.minimaxi.com"} if provider == "minimax" else {"https://api.tavily.com"}
-    if host.rstrip("/") not in allowed or not isinstance(key, str) or not key:
+    if not isinstance(key, str) or not key:
         raise SearchUnavailable("search_unavailable")
-    return host.rstrip("/"), key
+    return host, key
 
 
-def available(provider: str, source: str) -> bool:
+def available(provider: str) -> bool:
     try:
-        credentials(provider, source)
-        return not (provider == "minimax" and source == "codex_mcp" and not shutil.which("uvx"))
+        credentials(provider)
+        return True
     except SearchUnavailable:
         return False
 
@@ -157,10 +140,10 @@ def _minimax_mcp(query: str, host: str, key: str) -> dict:
             stream.close()
 
 
-def search(query: str, *, provider: str, credential_source: str, limit: int = 5) -> list[dict]:
+def search(query: str, *, provider: str, limit: int = 5) -> list[dict]:
     if not isinstance(query, str) or not 2 <= len(query.strip()) <= 500:
         raise ValueError("search_query_invalid")
-    host, key = credentials(provider, credential_source)
+    host, key = credentials(provider)
     if provider == "minimax":
         path, payload = "/v1/coding_plan/search", {"q": query}
         headers = {"Authorization": f"Bearer {key}", "MM-API-Source": "Minimax-MCP"}
@@ -168,7 +151,8 @@ def search(query: str, *, provider: str, credential_source: str, limit: int = 5)
         path, payload = "/search", {"query": query, "max_results": min(10, max(1, limit)), "search_depth": "basic"}
         headers = {"Authorization": f"Bearer {key}"}
     try:
-        if provider == "minimax" and credential_source == "codex_mcp":
+        if provider == "minimax" and shutil.which("uvx"):
+            # The local MiniMax MCP reaches the endpoint where pinned fetch rejects proxy-resolved addresses.
             data = _minimax_mcp(query, host, key)
         else:
             body, _ = safe_fetch(host + path, headers=headers, method="POST", json_body=payload)

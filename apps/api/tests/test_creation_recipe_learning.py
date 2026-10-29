@@ -483,7 +483,8 @@ def test_tuning_model_drift_after_persistent_claim_stops_before_provider(client,
     def change_model_after_commit(_session):
         if not changed:
             changed.append(True)
-            runtime_config.set_runtime(runtime_config.KEY_LLM, {"provider": "mock", "model": "changed-after-claim"})
+            runtime_config.set_runtime(runtime_config.KEY_MODELS, {
+                "profiles": {"changed": {"provider": "mock", "model": "changed-after-claim"}}, "default_profile": "changed"})
 
     event.listen(db_session, "after_commit", change_model_after_commit)
     request = _tuning_request(evidence)

@@ -225,13 +225,17 @@ def test_model_route_identity_hides_credentials_and_detects_rotation(monkeypatch
     from app.services.creation_recipes import _model
 
     monkeypatch.setattr(runtime_config, "_OVERRIDES", {})
-    config = {"provider": "openai_compatible", "base_url": "https://model.invalid/v1",
-              "api_key": "sk-first-private-value", "model": "registered-model"}
-    runtime_config.set_runtime(runtime_config.KEY_LLM, config)
+    def configure(key):
+        runtime_config.set_runtime(runtime_config.KEY_MODELS, {
+            "providers": {"vendor": {"base_url": "https://model.invalid/v1", "api_key": key, "enabled": True}},
+            "profiles": {"writer": {"provider_id": "vendor", "model": "registered-model", "enabled": True, "declared_capabilities": ["chat"]}},
+            "default_profile": "writer"})
+
+    configure("sk-first-private-value")
     first, blockers = _model({})
     assert not blockers
     assert "sk-first" not in str(first) and "model.invalid" not in str(first)
-    runtime_config.set_runtime(runtime_config.KEY_LLM, {**config, "api_key": "sk-next-private-value"})
+    configure("sk-next-private-value")
     second, _ = _model({})
     assert first["model"] == second["model"]
     assert first["runtime_hash"] != second["runtime_hash"]
@@ -478,7 +482,6 @@ def test_stage_model_never_falls_back_from_unavailable_generate_route(monkeypatc
     from app.services.creation_recipes import _model
 
     monkeypatch.setattr(runtime_config, "_OVERRIDES", {})
-    runtime_config.set_runtime(runtime_config.KEY_LLM, {"provider": "mock"})
     runtime_config.set_runtime(runtime_config.KEY_MODELS, {
         "profiles": {"selected": profile} if profile else {}, "routes": {"generate": "selected"},
     })

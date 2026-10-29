@@ -1,0 +1,74 @@
+{
+  "key": "studio.video.product-script",
+  "version": "2",
+  "ref": "studio.video.product-script@2",
+  "kind": "skill",
+  "modality": "video",
+  "purpose": "依据SKU资料生成商品销售脚本",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.creative.method.v1",
+    "stage.master.propose.v1"
+  ],
+  "output_schemas": [
+    "video.script.v1",
+    "video.master.v2"
+  ],
+  "required_context": [
+    "product_context"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "product_context",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [
+    "instruction",
+    "length"
+  ],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "instruction": {
+        "type": "string",
+        "maxLength": 4000
+      },
+      "length": {
+        "type": "string",
+        "enum": [
+          "short",
+          "medium",
+          "long"
+        ],
+        "maxLength": 6
+      }
+    }
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "schema": "studio.skill.contract.v1",
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.graphic.product-neutral@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.video.product@1"
+  ],
+  "references": [
+    "references/forms.md",
+    "references/hooks.md",
+    "references/channels.md"
+  ]
+}

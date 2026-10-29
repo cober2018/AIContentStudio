@@ -80,6 +80,10 @@ async def lifespan(app: FastAPI):
         from . import runtime_config
 
         runtime_config.load_from_db(db)
+        from .services import model_registration
+
+        model_registration.migrate_to_single_source(db)
+        model_registration.sync_cli_files()
         from .services.storage_locations import ensure_default
 
         ensure_default(db)
@@ -90,6 +94,9 @@ async def lifespan(app: FastAPI):
         from .services.content_harness.providers import bootstrap_media_providers
 
         bootstrap_media_providers()
+        from .services.minimax_cli_provider import register_if_enabled
+
+        register_if_enabled()
         # V1 PRD 2.0：基础 discoverability profiles（幂等）
         from .services import discoverability as disco
 

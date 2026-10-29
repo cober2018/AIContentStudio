@@ -1,0 +1,115 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "bar-grow",
+  "version": "v1",
+  "name": "图表生长",
+  "category": "数字与图表",
+  "use": "白底整屏：从 0 起的柱状图，3–8 根柱子依次长出、数值同步计数，重点柱（highlight 序号，默认最后一根）为红色；可加一句红色结论和来源。labels、values 逗号分隔、一一对应。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 16,
+      "required": true
+    },
+    {
+      "name": "labels",
+      "kind": "text",
+      "max": 80,
+      "required": true
+    },
+    {
+      "name": "values",
+      "kind": "text",
+      "max": 80,
+      "required": true
+    },
+    {
+      "name": "highlight",
+      "kind": "number",
+      "min": 1,
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "conclusion",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "source",
+      "kind": "text",
+      "max": 24,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 4000,
+    "max": 10000,
+    "default": 5000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "ac1654733215e1b2bf1db568173be1c6b830e6cdc711b019618ed1ed2514f1ed"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "年营收（亿元） / 2020,2021,2022,2023,2024 / 12,18,27,45,86 / 5 / 来源：公司年报（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "各渠道销量（万件） / 抖音,天猫,京东,拼多多,线下,其他 / 42,35,28,19,11,5 / 1 / 抖音占了三成（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "年营收（亿元） / 2020,2021,2022,2023,2024 / 12,18,27,45,86 / 5 / 来源：公司年报（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "各渠道销量（万件） / 抖音,天猫,京东,拼多多,线下,其他 / 42,35,28,19,11,5 / 1 / 抖音占了三成（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "aa6fbff808118fcf19dd8e256b59f2bcc9081c5dc4c89d2eeb4c7c4c2310a56e"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

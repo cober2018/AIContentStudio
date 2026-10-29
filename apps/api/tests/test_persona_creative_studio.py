@@ -620,18 +620,6 @@ def test_default_workflow_pins_executable_stage_contracts(key, modality):
             catalog.validate_ref(method["skill_ref"], kind="skill")
 
 
-def test_composed_binding_mismatch_is_not_substituted(monkeypatch):
-    binding = {"provider": "openai.compatible", "model": "declared-model", "profile": "p"}
-    view = {"profiles": {"p": {"capability_bindings": {"chat": {
-        "adapter_key": "openai.compatible", "model_id": "different-model"}}}}}
-    monkeypatch.setattr(creative_configuration.model_capability_routing, "configuration_view", lambda _: view)
-    monkeypatch.setattr(creative_configuration.model_capability_routing, "plan", lambda *_args, **_kwargs:
-                        {"status": "ready", "adapter_key": "openai.compatible", "model_id": "different-model", "execution_profile": "p"})
-    result = creative_configuration._configured_binding(None, _profile(mode="composed", model_binding=binding), "chat")
-    assert result["status"] == "blocked"
-    assert result.get("selected_binding") is None
-
-
 def test_studio_method_preview_and_run_never_creates_a_master(client, db_session):
     from test_creation_recipe_stages import _setup
     headers, _, _, base = _setup(client)
@@ -883,34 +871,6 @@ def test_unsaved_profile_preview_does_not_save_persona(client, db_session):
     assert response.json()["profile"] == profile
     assert response.json()["layers"][0]["scope"] == "unsaved_preview"
     assert db_session.query(ContentPersonaRevision).count() == 0
-
-
-def test_custom_chat_never_substitutes_a_different_model(monkeypatch):
-    from app.services import creation_recipes
-    binding = {"provider": "generation.mock", "model": "not-mock", "profile": "default"}
-    monkeypatch.setattr(creation_recipes, "_model", lambda _: ({"profile_id": "default", "adapter_key": "generation.mock",
-        "provider": "mock", "model": "mock-structured-v1"}, []))
-    result = creative_configuration.chat_binding(_profile(mode="custom", model_binding=binding))
-    assert result["status"] == "blocked" and result.get("selected_binding") is None
-
-
-def test_composed_chat_uses_only_the_declared_ordered_chain(monkeypatch):
-    from app.services import creation_recipes
-    primary = {"provider": "generation.mock", "model": "mock-structured-v1", "profile": "offline"}
-    fallback = {**primary, "profile": "available"}
-    visited = []
-    def model(config):
-        name = config["model_profile_id"]
-        visited.append(name)
-        if name == "offline":
-            return None, ["model_profile_unavailable"]
-        return {"profile_id": name, "adapter_key": "generation.mock", "provider": "mock", "model": "mock-structured-v1"}, []
-    monkeypatch.setattr(creation_recipes, "_model", model)
-    result = creative_configuration.chat_binding(_profile(mode="composed", model_binding=primary, model_chain=[fallback]))
-    assert visited == ["offline", "available"]
-    assert result["selected_binding"] == fallback
-    assert result["declared_chain"] == [primary, fallback]
-    assert result["fallback_reason"] == "declared_chain_previous_unavailable"
 
 
 def test_removed_blueprint_provenance_does_not_create_duplicate(client, db_session):

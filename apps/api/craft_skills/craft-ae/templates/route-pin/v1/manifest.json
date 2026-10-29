@@ -1,0 +1,144 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "route-pin",
+  "version": "v1",
+  "name": "地图落钉",
+  "category": "素材与地图",
+  "use": "地图铺满：起点黑钉 + 标签，红色虚线依次画到第二、第三个点，到达时红钉从上方落下压扁回弹，地名标签出现。坐标是点在地图图片里的相对位置（0–1），第三个点可不填。地图图片要用有授权的。横屏片要给横屏地图；地名点尽量放在画面安全区内（离上下边缘留出余量）。",
+  "fields": [
+    {
+      "name": "p1_x",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "p1_y",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "p1_name",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "p2_x",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "p2_y",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": true
+    },
+    {
+      "name": "p2_name",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "p3_x",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "p3_y",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "p3_name",
+      "kind": "text",
+      "max": 10,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "map",
+      "file": "map.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 4000,
+    "max": 8000,
+    "default": 5000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "a50b2811fdac09d824852487f3138095728d472e6919bc5ef222bd52cde994f9"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "0.3 / 0.2 / 北京 · 总部 / 0.6 / 0.45 / 上海 · 中转仓 / 0.42 / 0.72 / 深圳 · 工厂（图片：map）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "0.25 / 0.35 / 发货地 / 0.55 / 0.6 / 你家（图片：map）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "0.3 / 0.2 / 北京 · 总部 / 0.6 / 0.45 / 上海 · 中转仓 / 0.42 / 0.72 / 深圳 · 工厂（图片：map）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "0.25 / 0.35 / 发货地 / 0.55 / 0.6 / 你家（图片：map）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "b5583fc0a589dc203f625cb37445d3214a62f741d2fe273a3750823cf9511438"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

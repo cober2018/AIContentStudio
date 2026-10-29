@@ -1,0 +1,68 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "title-card",
+  "version": "v1",
+  "name": "标题卡",
+  "category": "开场、章节与转场",
+  "use": "开场或章节标题：一行小标签、一行大标题、一行副标题。",
+  "fields": [
+    {
+      "name": "kicker",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 16,
+      "required": true
+    },
+    {
+      "name": "subtitle",
+      "kind": "text",
+      "max": 28,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 2000,
+    "max": 10000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "PingFangSC-Semibold",
+    "PingFangSC-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "f835af9ee01c124f799550905c755b948d91a626ede465a06157e611b4d7687d"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-23",
+      "content": "只有标题，无小标签和副标题",
+      "frames": "入场 0.3s、中段 1.2s、定格 3.5s",
+      "result": "文字替换、空字段隐藏、超宽缩放、动画时序正确"
+    },
+    {
+      "date": "2026-10-23",
+      "content": "小标签+标题+副标题",
+      "frames": "入场 0.3s、中段 1.2s、定格 3.5s",
+      "result": "文字替换、空字段隐藏、超宽缩放、动画时序正确"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4"
+  }
+}

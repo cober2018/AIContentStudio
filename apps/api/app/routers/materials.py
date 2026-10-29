@@ -738,15 +738,16 @@ def generate_material(
 ):
     """Generation now returns a private preview; acceptance is a separate action."""
 
-    from .. import runtime_config
     from ..services.content_harness.providers import bootstrap_media_providers, resolve_asset_provider
 
     bootstrap_media_providers()
-    image_cfg = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
-    if not image_cfg.get("enabled"):
-        raise HTTPException(422, "capability_unavailable: AI 生图未启用（设置 → 模型服务 → AI 生图）")
+    from ..services.model_registration import cover_image_config
+    from ..services.openai_image_provider import _config as openai_cover_config
+
+    if cover_image_config() is None:
+        raise HTTPException(422, "capability_unavailable: 封面生图未选择模型（设置 → AI 与模型 → 用途路由）")
     try:
-        if image_cfg.get("provider") == "openai":
+        if openai_cover_config() is not None:
             from ..services.content_harness.providers import registry
             provider = registry.resolve("image_provider", "image.openai", "1")
         else:

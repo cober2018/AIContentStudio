@@ -20,15 +20,15 @@ EDITOR = {"X-Studio-User": "native-image@studio.local"}
 
 @pytest.fixture
 def configured(monkeypatch):
+    from app.services import model_registration
+
     config = {
-        "enabled": True,
-        "provider": "openai",
         "model": "gpt-image-1",
         "size": "1024x1024",
         "base_url": "https://images.example/v1",
         "api_key": "PRIVATE_KEY",
     }
-    monkeypatch.setattr(runtime_config, "get_runtime", lambda key: dict(config) if key == "image" else None)
+    monkeypatch.setattr(model_registration, "cover_image_config", lambda: dict(config))
     return config
 
 
@@ -115,14 +115,6 @@ def test_config_change_during_call_discards_output(configured, monkeypatch):
     assert adapter().generate({"prompt": "hello"}).status == "unknown"
 
 
-def test_native_settings_never_write_wewrite(configured, db_session, monkeypatch, tmp_path):
-    from app.services import system_settings
-
-    monkeypatch.setattr(system_settings, "WEWRITE_HOME", tmp_path)
-    system_settings.save_image(db_session, configured, "native-image@studio.local")
-    assert not (tmp_path / "config.yaml").exists()
-
-
 def test_loaded_native_provider_is_registered_without_probe(monkeypatch):
     from app.services.content_harness.registry import PluginRegistry
 
@@ -190,10 +182,9 @@ def test_configured_image_one_post_exact_payload_and_private_bytes(configured, m
 @pytest.mark.parametrize(
     "changes",
     [
-        {"enabled": False},
         {"api_key": ""},
         {"model": ""},
-        {"provider": "gemini"},
+        {"model": "image-01"},
         {"size": "unsupported"},
         {"base_url": "http://images.example/v1"},
         {"base_url": "https://user:secret@images.example/v1"},

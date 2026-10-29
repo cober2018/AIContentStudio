@@ -1,0 +1,110 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "term-card",
+  "version": "v1",
+  "name": "名词解释卡",
+  "category": "数字与图表",
+  "use": "白色卡片：左侧蓝色圆形图标（icon 不填取词条第一个字），特粗词条、可选英文缩写小标签，下面两行灰色释义。叠在画面上用，讲到专业名词时出现。",
+  "fields": [
+    {
+      "name": "term",
+      "kind": "text",
+      "max": 8,
+      "required": true
+    },
+    {
+      "name": "tag",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "icon",
+      "kind": "text",
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "line1",
+      "kind": "text",
+      "max": 18,
+      "required": true
+    },
+    {
+      "name": "line2",
+      "kind": "text",
+      "max": 18,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "0082800776ba491ca7eca8dd1daf5c240853e89bb91cb87b0dc2f32bf68683fc"
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "量化宽松 / QE / ¥ / 央行印钱买入国债等资产 / 把流动性压进市场、刺激经济（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "热水壶除垢 / 用柠檬酸泡半小时（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "量化宽松 / QE / ¥ / 央行印钱买入国债等资产 / 把流动性压进市场、刺激经济（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "热水壶除垢 / 用柠檬酸泡半小时（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "83a0ae5bb7da5c964238b36ca9a371438862c7c4cacea1251b7a72f0163425ae"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

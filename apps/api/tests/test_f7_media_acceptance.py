@@ -406,9 +406,10 @@ def test_real_small_mp4_is_fully_decoded_before_stage(client, media_provider, tm
 
 
 def test_legacy_generate_is_preview_only_not_automatic_public_asset(client, db_session, media_provider, monkeypatch):
-    from app import runtime_config
+    from app.services import model_registration
 
-    monkeypatch.setattr(runtime_config, "get_runtime", lambda *args: {"enabled": True})
+    monkeypatch.setattr(model_registration, "cover_image_config", lambda: {
+        "vendor_id": "minimax", "model": "image-01", "size": "1344x768", "base_url": "https://images.example/v1", "api_key": "PRIVATE"})
     monkeypatch.setattr(providers, "resolve_asset_provider", lambda: media_provider)
     monkeypatch.setattr(providers, "bootstrap_media_providers", lambda: None)
     response = client.post("/api/v1/materials/generate", headers=EDITOR, json={"prompt": "private prompt"})

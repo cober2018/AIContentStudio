@@ -247,8 +247,13 @@ def _check_derived_rights(db: Session, material: MaterialRevision) -> None:
 
 
 def _check_evidence(db: Session, master: ContentMasterRevision, refs: list[dict]) -> None:
+    from ..models import ContentUnit
     from .factpack_service import pack_snapshot_checksum, snapshot_checksum
+    from .product_context import is_product
 
+    # Product pieces carry the product brief instead of a persona fact pack.
+    if not refs and not master.fact_boundary_revision_id and is_product(db.get(ContentUnit, master.content_unit_id)):
+        return
     boundary = db.get(ProjectFactBoundaryRevision, master.fact_boundary_revision_id) if master.fact_boundary_revision_id else None
     pack = db.get(FactPack, boundary.fact_pack_id) if boundary else None
     if pack is None or pack.status != "frozen" or pack.checksum != boundary.fact_pack_checksum or pack.version != boundary.fact_pack_version or pack.checksum != pack_snapshot_checksum(pack.items):

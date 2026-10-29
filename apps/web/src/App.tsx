@@ -2,6 +2,7 @@ import { Component, lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { CheckCircle2, Clapperboard, FolderOpen, Images, Library, LineChart, PenLine, Settings2, Sparkles, Sun, UserRound, type LucideIcon } from "lucide-react";
+import { useProductionWorkbench } from "./product/taskNavigation";
 
 const MaterialLibraryFloat = lazy(() => import("./product/MaterialLibraryFloat"));
 const ProductionQueuePage = lazy(() => import("./product/ProductionQueuePage"));
@@ -50,16 +51,19 @@ const NAV_GROUPS: { label: string; items: { to: string; label: string; icon: Luc
 
 function NavItem({ to, label, icon: Icon }: { to: string; label: string; icon: LucideIcon }) {
   const location = useLocation();
+  const workbench = useProductionWorkbench();
+  const production = /^\/projects\/\d+\/units\/\d+\/production$/.test(location.pathname);
+  // Two workbenches share /production; only the query tells them apart. A production page counts as its workbench.
+  const activeFor = (isActive: boolean) => production ? !!workbench && to === `/production?workspace=${workbench}` : to.includes("?") ? location.pathname === "/production" && location.search.includes(to.split("?")[1]) : isActive;
   return <NavLink
     to={to}
     className={({ isActive }) => {
-      // Two workbenches share /production; only the query tells them apart.
-      const active = to.includes("?") ? location.pathname === "/production" && location.search.includes(to.split("?")[1]) : isActive;
+      const active = activeFor(isActive);
       return `group relative flex shrink-0 items-center gap-3 whitespace-nowrap rounded-[10px] px-3 py-2 text-[14px] transition-colors duration-200 ${active ? "bg-surface font-medium text-ink-900 shadow-card" : "text-ink-600 hover:bg-ink-100/70 hover:text-ink-900"}`;
     }}
   >
     {({ isActive }) => {
-      const active = to.includes("?") ? location.pathname === "/production" && location.search.includes(to.split("?")[1]) : isActive;
+      const active = activeFor(isActive);
       return <>
         <Icon aria-hidden size={17} strokeWidth={1.6} className={active ? "text-accent-500" : "text-ink-400 transition-colors group-hover:text-ink-700"} />
         {label}

@@ -26,7 +26,7 @@ export default function VoiceSettings() {
     <p className="text-sm text-slate-600">制作内容页「生成配音」按这里的参数调用 MiniMax，每一项都原样传过去。</p>
     {error && <ErrorBanner message={error} />}{notice && <p role="status" className="text-sm text-emerald-700">{notice}</p>}
     <div className="grid gap-3 sm:grid-cols-2">
-      <Field label="模型"><select className={inputClass} value={value.model_id} disabled={busy} onChange={event => set({ model_id: event.target.value })}>{["speech-2.8-hd", "speech-2.8-turbo", "speech-2.6-hd", "speech-2.6-turbo"].map(item => <option key={item}>{item}</option>)}</select></Field>
+      <Field label="模型" hint="在 设置 → AI 与模型 → 生成能力与插件 的语音生成里选"><p className="py-2 text-sm text-slate-700">{value.model_id}</p></Field>
       <Field label="音色（voice_id）"><input className={inputClass} value={value.voice_id} disabled={busy} onChange={event => set({ voice_id: event.target.value.trim() })} /></Field>
       <Field label="情绪"><select className={inputClass} value={value.emotion} disabled={busy} onChange={event => set({ emotion: event.target.value })}>{Object.entries(query.data!.emotions).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field>
       <Field label="语速（0.5–2）">{num("rate", "0.1")}</Field>

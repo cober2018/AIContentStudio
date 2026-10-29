@@ -1,0 +1,109 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "split-6040",
+  "version": "v1",
+  "name": "60/40 主从分屏",
+  "category": "步骤、流程与对比",
+  "use": "白底整屏：上方约六成放主图（从上往下展开、缓慢推近），下方四成写标题和 1–3 个彩色要点标签，要点按节奏逐个出现。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "p1",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "p2",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    },
+    {
+      "name": "p3",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "image",
+      "file": "image.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 4000,
+    "max": 8000,
+    "default": 5000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "ec7808f08614e2d6c155d4e9e8c1dd9a96c4e7b4b1bda06a689bcb55426f268b"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "它一晚上干了三件事 / 读完 40 份资料 / 写好三版初稿 / 跑测试、修 bug（图片：image）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "适合这三类人 / 租房党 / 上班族（图片：image）",
+      "frames": "完整动画视频 + 0.35s、1.6s、4.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "它一晚上干了三件事 / 读完 40 份资料 / 写好三版初稿 / 跑测试、修 bug（图片：image）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "适合这三类人 / 租房党 / 上班族（图片：image）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "3a6ab435076a3970c8f78a88a67b2e4430b125d600b308756e12cdd8625bfa8c"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

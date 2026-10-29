@@ -1,0 +1,104 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "price-drop",
+  "version": "v1",
+  "name": "到手价",
+  "category": "商品：价格与优惠",
+  "use": "白色底板：标签（如券后到手价）、原价被红线划掉、到手价红色特粗弹出、立减标签。叠在画面上用。价格和优惠必须是真实活动。",
+  "fields": [
+    {
+      "name": "label",
+      "kind": "text",
+      "max": 10,
+      "required": false
+    },
+    {
+      "name": "original",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    },
+    {
+      "name": "price",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "saving",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "849c4488b85f832045e6c03df608354552b1f5c788a45d2a520c534db51061f8"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "8fed3af338e90cbadf366640fc36db6ee2ced590f321b4fedf02a3e88f73a61d"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "券后到手价 / ¥399 / ¥259 / 立减 ¥140（图片：无图片）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": " / 原价 ¥89 / ¥59 / （图片：无图片）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "券后到手价 / ¥399 / ¥259 / 立减 ¥140（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": " / 原价 ¥89 / ¥59 / （图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

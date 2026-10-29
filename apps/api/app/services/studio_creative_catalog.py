@@ -60,7 +60,18 @@ def _ref(key: str, version: int = 1) -> str:
 
 
 PRODUCT_CONTEXT_SKILLS = frozenset({"studio.video.product-script", "studio.video.product-shots", "studio.video.product-filming",
-                                    "studio.product.audience-need", "studio.product.purchase-reason"})
+                                    "studio.product.audience-need", "studio.product.purchase-reason", "studio.product.compliance-check"})
+
+
+# Writing skills any work can use, kept in both systems.
+SHARED_SKILLS = frozenset({"studio.research.evidence-brief", "studio.research.angle-lab", "studio.text.title-hook",
+                           "studio.text.humanize", "studio.audio.spoken-adapt", "studio.video.script-review",
+                           "studio.video.stock-scout", "studio.video.digital-human"})
+
+
+def skill_system(key: str) -> str:
+    """Persona and product works use separate skill systems; shared ones (and the craft skills) serve both."""
+    return "product" if key in PRODUCT_CONTEXT_SKILLS else "shared" if key in SHARED_SKILLS else "persona"
 
 
 def _resource(key: str, kind: str, modality: str, *, purpose: str, tunable_fields=(), checks=(), tools=(), applicable_fields=()):
@@ -134,6 +145,10 @@ SKILLS = {
                   applicable_fields=("primary_audience", "buyer_situation", "main_objection")),
         _resource("studio.product.purchase-reason", "skill", "video", purpose="围绕单一购买理由组织目标、核心表达与行动引导",
                   applicable_fields=("objective", "core_message", "cta")),
+        _resource("studio.product.compliance-check", "skill", "video", purpose="定稿前逐句检查带货合规风险并给出改法"),
+        _resource("studio.video.script-review", "skill", "video", purpose="四评委逐句评审口播脚本并只改说法"),
+        _resource("studio.video.stock-scout", "skill", "video", purpose="为缺素材的镜头找、挑免费素材并标版权"),
+        _resource("studio.video.digital-human", "skill", "video", purpose="规划数字人出镜的人物设定、表演与限制（生成功能未上线）"),
         _resource("studio.video.script", "skill", "video", purpose="生成角色化视频脚本", tunable_fields=("instruction", "length")),
         _resource("studio.video.shot-director", "skill", "video", purpose="把脚本拆为镜头和素材计划", tunable_fields=("instruction", "shot_count")),
         _resource("studio.video.director-package", "skill", "video", purpose="生成交给外部专业执行的导演包", tunable_fields=("instruction", "aspect_ratio")),
@@ -155,6 +170,12 @@ for _trial_key in PERSONA_METHOD_TRIAL_KEYS:
 for _trial_key in ("studio.video.script", "studio.video.shot-director"):
     _trial_resource = copy.deepcopy(SKILLS[_ref(_trial_key, 2)])
     _trial_resource.update(version="3", ref=_ref(_trial_key, 3))
+    SKILLS[_trial_resource["ref"]] = _trial_resource
+
+# Commerce methods absorbed from clipforge (forms, hooks, channels, category shots); @1 stays byte-identical.
+for _trial_key in ("studio.video.product-script", "studio.video.product-shots"):
+    _trial_resource = copy.deepcopy(SKILLS[_ref(_trial_key)])
+    _trial_resource.update(version="2", ref=_ref(_trial_key, 2))
     SKILLS[_trial_resource["ref"]] = _trial_resource
 
 
@@ -644,6 +665,7 @@ def validate_creative_profile(value: Any) -> dict:
 def inventory() -> dict:
     skills = copy.deepcopy(list(SKILLS.values()))
     for item in skills:
+        item["system"] = skill_system(item["key"])
         connected = bool(item["compatible_stage_schemas"] or item["kind"] == "tool" and item["tools"])
         item["execution_support"] = {"status": "connected_not_probed" if connected else "partial",
             "reason": None if connected else "stage_execution_not_connected"}

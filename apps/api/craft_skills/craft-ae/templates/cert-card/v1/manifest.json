@@ -1,0 +1,109 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "cert-card",
+  "version": "v1",
+  "name": "认证与检测卡",
+  "category": "商品：信任背书",
+  "use": "整屏：证书或检测报告截图微斜着滑入，下方 1–3 条要点逐条打勾，底部标来源。证书和报告必须真实可查。",
+  "fields": [
+    {
+      "name": "k1",
+      "kind": "text",
+      "max": 16,
+      "required": true
+    },
+    {
+      "name": "k2",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "k3",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "source",
+      "kind": "text",
+      "max": 24,
+      "required": true
+    }
+  ],
+  "images": [
+    {
+      "name": "cert",
+      "file": "cert.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Bold",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "07a62e726685fb980a321d0ae89747fe4201a718bcc4dbcae303808ede4c1961"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "3eb2f93bf5c86bfbd961073c16ab022a3cc6d80fa6c3167dbd42c521a24f57ab"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "第三方机构检测 / 电池安全测试通过 / 报告编号可查 / 来源：示例检测报告（图片：cert）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "检测结果合格 /  /  / 来源：示例检测报告（图片：cert）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "第三方机构检测 / 电池安全测试通过 / 报告编号可查 / 来源：示例检测报告（图片：cert）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "检测结果合格 /  /  / 来源：示例检测报告（图片：cert）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

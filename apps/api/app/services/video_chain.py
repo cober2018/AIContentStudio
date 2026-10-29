@@ -214,6 +214,13 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
                                 "by": user.email, "at": datetime.now(UTC).isoformat()})
     _put(db, unit_id, record)
     db.commit()
+    if stage == "final" and decision == "approve":
+        from . import project_folders
+
+        try:
+            project_folders.archive_raw(db, project_id)
+        except Exception:  # noqa: BLE001 Filing the raw folder must never undo the approval; failures stay 待归档.
+            db.rollback()
     return state(db, user, project_id, unit_id)
 
 
@@ -291,7 +298,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
-    from . import project_folders, voiceover
+    from . import craft_skills, project_folders, voiceover
     from .content_masters import owned_unit
     from .project_brief import current_brief
     from .project_evidence import current_boundary
@@ -322,7 +329,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "facts": facts, "source_texts": siblings, "voice_settings": voiceover.settings(),
             "materials": materials, "state": state(db, user, project_id, unit_id),
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload": master.payload_json} if master else None,
-            "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=plan", "rules": RULES}
+            "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=plan", "rules": RULES,
+            "platform_skills": craft_skills.platform_skills(db, unit)}
 
 
 def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: dict, note: str | None) -> dict:

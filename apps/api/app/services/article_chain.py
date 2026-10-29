@@ -137,6 +137,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
+    from . import craft_skills
     from .project_brief import current_brief
     from .project_evidence import current_boundary
 
@@ -163,6 +164,7 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "unit": {"id": unit.id, "title": unit.title, "modality": unit.modality, "channel_id": unit.channel_id},
             "brief": {key: getattr(row, key) for key in ("objective", "primary_audience", "core_message", "angle")} if row else None,
             "facts": facts, "source_texts": siblings, "payload_schema": schema,
+            "platform_skills": craft_skills.platform_skills(db, unit),
             "state": state(db, user, project_id, unit_id),
             # The current version doubles as the format example the model fills in.
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload_schema": master.payload_schema,

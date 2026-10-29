@@ -33,9 +33,12 @@ DOWNLOAD_BYTES = 30 * 1024 * 1024
 THUMB_BYTES = 3 * 1024 * 1024
 # Accept codes the platform's acceptance path understands; each library license maps onto one of them.
 ACCEPT_CODES = {"cc0": "CC0", "pdm": "PDM", "by-4.0": "CC-BY-4.0", "by": "CC-BY", "pexels": "provider_terms",
-                "pixabay": "provider_terms", "nasa": "provider_terms", "commons-cc0": "CC0", "commons-by-4.0": "CC-BY-4.0"}
+                "pixabay": "provider_terms", "nasa": "provider_terms", "coverr": "provider_terms",
+                "commons-cc0": "CC0", "commons-by-4.0": "CC-BY-4.0"}
 LICENSE_NAMES = {"cc0": "CC0 公共领域", "pdm": "公有领域标记", "by": "CC BY", "by-4.0": "CC BY 4.0", "pexels": "Pexels 许可",
-                 "pixabay": "Pixabay 内容许可", "nasa": "NASA 媒体使用准则"}
+                 "pixabay": "Pixabay 内容许可", "nasa": "NASA 媒体使用准则", "coverr": "Coverr 许可"}
+# Keys saved on the settings page win; a source never saved there keeps the key from runtime.env.
+SETTINGS_KEY = "open_media_sources"
 
 
 def open_get(url: str, *, hosts: set[str] | None, policy: str, max_bytes: int, headers: dict | None = None) -> tuple[bytes, str]:
@@ -105,9 +108,26 @@ class OpenMediaProvider:
     hidden_unless_configured = False
     media_types: frozenset = frozenset()
     download_hosts: set[str] | None = None
+    needs_key = "none"  # none | optional | required
+    env_field = ""
+    about = {}
+
+    def _stored(self) -> dict:
+        from .. import runtime_config
+
+        return (runtime_config.get_runtime(SETTINGS_KEY) or {}).get(self.key) or {}
+
+    def api_key(self) -> str:
+        stored = self._stored()
+        if "api_key" in stored:
+            return stored["api_key"] or ""
+        return getattr(get_settings(), self.env_field, "") if self.env_field else ""
+
+    def enabled(self) -> bool:
+        return self._stored().get("enabled", True) is not False
 
     def configured(self) -> bool:
-        return True
+        return self.needs_key != "required" or bool(self.api_key())
 
     def runtime_fingerprint(self) -> str:
         code = b"".join(marshal.dumps(getattr(type(self), name).__code__, 2) for name in ("find", "fetch") if hasattr(type(self), name))
@@ -134,13 +154,13 @@ class PexelsProvider(OpenMediaProvider):
     hidden_unless_configured = True
     media_types = frozenset({"image", "video"})
     download_hosts = {"images.pexels.com", "videos.pexels.com", "player.vimeo.com", "vod-progressive.akamaized.net"}
-
-    def configured(self):
-        return bool(get_settings().pexels_api_key)
+    needs_key, env_field = "required", "pexels_api_key"
+    about = {"blurb": "生活方式、人物、城市、自然的高清视频和图片，竖拍较多", "license": "Pexels 许可：可商用，不强制署名",
+             "signup": "https://www.pexels.com/api/"}
 
     def find(self, query, media_type, orientation, limit):
         params = {"query": query, "per_page": min(limit, 30), **({"orientation": orientation} if orientation else {})}
-        headers = {"Authorization": get_settings().pexels_api_key}
+        headers = {"Authorization": self.api_key()}
         terms = {"code": "pexels", "url": "https://www.pexels.com/license/"}
         if media_type == "image":
             data = _json("https://api.pexels.com/v1/search?" + urlencode(params), {"api.pexels.com"}, headers)
@@ -169,12 +189,11 @@ class PixabayProvider(OpenMediaProvider):
     key, label = "stock.pixabay", "Pixabay"
     media_types = frozenset({"image", "video"})
     download_hosts = {"pixabay.com", "cdn.pixabay.com"}
-
-    def configured(self):
-        return bool(get_settings().pixabay_api_key)
+    needs_key, env_field = "required", "pixabay_api_key"
+    about = {"blurb": "视频、图片、插画，题材广", "license": "Pixabay 内容许可：可商用", "signup": "https://pixabay.com/api/docs/"}
 
     def find(self, query, media_type, orientation, limit):
-        params = {"key": get_settings().pixabay_api_key, "q": query[:100], "per_page": max(3, min(limit, 50)), "safesearch": "true",
+        params = {"key": self.api_key(), "q": query[:100], "per_page": max(3, min(limit, 50)), "safesearch": "true",
                   **({"lang": "zh"} if re.search(r"[一-鿿]", query) else {})}
         terms = {"code": "pixabay", "url": "https://pixabay.com/service/license-summary/"}
         if media_type == "image":
@@ -211,11 +230,14 @@ class OpenverseProvider(OpenMediaProvider):
     key, label = "stock.openverse", "Openverse"
     media_types = frozenset({"image"})
     download_hosts = None
+    needs_key, env_field = "optional", "openverse_api_token"
+    about = {"blurb": "聚合多个开放库的图片；不填令牌也能用，填了限额更高", "license": "只取 CC0、公有领域、CC BY，逐条登记",
+             "signup": "https://api.openverse.org/v1/#tag/auth"}
 
     def find(self, query, media_type, orientation, limit):
         params = {"q": query[:200], "page_size": min(limit, 20), "license": "cc0,pdm,by", "mature": "false",
                   **({"aspect_ratio": {"portrait": "tall", "landscape": "wide", "square": "square"}[orientation]} if orientation else {})}
-        token = get_settings().openverse_api_token
+        token = self.api_key()
         data = _json("https://api.openverse.org/v1/images/?" + urlencode(params), {"api.openverse.org"},
                      {"Authorization": f"Bearer {token}"} if token else None)
         hits = []
@@ -239,6 +261,7 @@ class NasaProvider(OpenMediaProvider):
     key, label = "stock.nasa", "NASA Images"
     media_types = frozenset({"image", "video"})
     download_hosts = {"images-assets.nasa.gov", "images-api.nasa.gov"}
+    about = {"blurb": "太空、地球、航天器、科学影像", "license": "NASA 媒体使用准则：一般可用，不能暗示 NASA 背书", "signup": ""}
 
     def find(self, query, media_type, orientation, limit):
         params = {"q": query[:200], "media_type": media_type, "page_size": min(limit, 20)}
@@ -277,6 +300,7 @@ class InternetArchiveProvider(OpenMediaProvider):
     key, label = "stock.archive", "Internet Archive"
     media_types = frozenset({"image", "video"})
     download_hosts = None
+    about = {"blurb": "老影片、历史资料、公有领域影像", "license": "只取 CC0、公有领域、CC BY，逐条登记", "signup": ""}
 
     def find(self, query, media_type, orientation, limit):
         # Whole items above this size are long recordings whose files cannot fit the acceptance bound anyway.
@@ -341,6 +365,7 @@ class CommonsAdapter(OpenMediaProvider):
     key, label = "stock.commons", "Wikimedia Commons"
     media_types = frozenset({"image"})
     download_hosts = {"upload.wikimedia.org"}
+    about = {"blurb": "地点、历史、科普、实物的图片", "license": "只取 CC0、CC BY 4.0，逐条登记", "signup": ""}
 
     def find(self, query, media_type, orientation, limit):
         params = {"action": "query", "format": "json", "formatversion": "2", "generator": "search", "gsrnamespace": "6",
@@ -381,8 +406,39 @@ def _plain(value: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", value or "")).strip()
 
 
+class CoverrProvider(OpenMediaProvider):
+    key, label = "stock.coverr", "Coverr"
+    hidden_unless_configured = True
+    media_types = frozenset({"video"})
+    download_hosts = None
+    needs_key = "required"
+    about = {"blurb": "竖屏和横屏的短视频空镜：生活、科技、办公", "license": "Coverr 许可：可商用，不强制署名",
+             "signup": "mailto:team@coverr.co"}
+
+    def find(self, query, media_type, orientation, limit):
+        if media_type != "video":
+            return []
+        params = {"query": query[:100], "page_size": min(limit, 20), "urls": "true"}
+        data = _json("https://api.coverr.co/videos?" + urlencode(params), {"api.coverr.co"}, {"Authorization": f"Bearer {self.api_key()}"})
+        hits = []
+        for item in data.get("hits", []):
+            urls = item.get("urls") or {}
+            # mp4_download saves the file directly, which Coverr counts itself; the preview mp4 would need a stats ping.
+            if not isinstance(item, dict) or not item.get("id") or not urls.get("mp4_download"):
+                continue
+            hits.append(self.hit(source_id=f"coverr.{item['id']}", title=_text(item.get("title")) or f"Coverr 视频 {item['id']}",
+                                 tags=[_text(tag, 60) for tag in item.get("tags") or [] if isinstance(tag, str)][:12],
+                                 media_type="video", width=item.get("max_width"), height=item.get("max_height"),
+                                 duration_ms=int(float(item.get("duration") or 0) * 1000) or None,
+                                 page_url=f"https://coverr.co/videos/{item['id']}", thumb_url=item.get("thumbnail") or item.get("poster"),
+                                 download_url=urls["mp4_download"], mime_type="video/mp4", creator="Coverr",
+                                 license={"code": "coverr", "url": "https://coverr.co/license"}, attribution_text="Video from Coverr"))
+        return hits
+
+
 PROVIDERS: dict[str, OpenMediaProvider] = {provider.key: provider for provider in
-                                           (PixabayProvider(), InternetArchiveProvider(), CommonsAdapter(), OpenverseProvider(), NasaProvider(), PexelsProvider())}
+                                           (PixabayProvider(), InternetArchiveProvider(), CommonsAdapter(), OpenverseProvider(), NasaProvider(),
+                                            PexelsProvider(), CoverrProvider())}
 
 
 def register(registry) -> None:
@@ -397,7 +453,74 @@ def status() -> list[dict]:
 
 
 def visible() -> list[OpenMediaProvider]:
-    return [provider for provider in PROVIDERS.values() if provider.configured() or not provider.hidden_unless_configured]
+    return [provider for provider in PROVIDERS.values()
+            if provider.enabled() and (provider.configured() or not provider.hidden_unless_configured)]
+
+
+def settings_view() -> list[dict]:
+    from .system_settings import mask_secret
+
+    rows = []
+    for provider in PROVIDERS.values():
+        stored = provider._stored()
+        rows.append({"key": provider.key, "label": provider.label, "media_types": sorted(provider.media_types), **provider.about,
+                     "needs_key": provider.needs_key, "api_key": mask_secret(provider.api_key()) if provider.needs_key != "none" else None,
+                     "key_from": "page" if "api_key" in stored else "env" if provider.api_key() else None,
+                     "enabled": provider.enabled(), "configured": provider.configured()})
+    return rows
+
+
+def save_settings(db, changes: dict, updated_by: str) -> None:
+    """Only listed fields change: an omitted api_key keeps the current one, an empty string clears it."""
+    from fastapi import HTTPException
+
+    from .. import runtime_config
+    from ..models import SystemSetting
+
+    if set(changes) - set(PROVIDERS):
+        raise HTTPException(422, {"code": "open_media_source_unknown"})
+    row = db.get(SystemSetting, SETTINGS_KEY)
+    value = {key: dict(item) for key, item in ((row.value or {}) if row else {}).items()}
+    for key, change in changes.items():
+        entry = value.setdefault(key, {})
+        if "enabled" in change:
+            entry["enabled"] = bool(change["enabled"])
+        if "api_key" in change and PROVIDERS[key].needs_key != "none":
+            entry["api_key"] = change["api_key"].strip()
+    runtime_config.validate_persisted_configuration(value)
+    if row is None:
+        row = SystemSetting(key=SETTINGS_KEY)
+        db.add(row)
+    row.value, row.updated_by = value, updated_by
+    db.flush()
+    runtime_config.set_runtime(SETTINGS_KEY, value)
+
+
+def test_source(key: str) -> dict:
+    """One small search, no download, so a key can be checked without importing anything."""
+    provider = PROVIDERS.get(key)
+    if provider is None:
+        return {"ok": False, "reason": "open_media_source_unknown"}
+    if not provider.configured():
+        return {"ok": False, "reason": "未配置 Key"}
+    media_type = "video" if "video" in provider.media_types else "image"
+    started = time.monotonic()
+    try:
+        hits = provider.find("ocean", media_type, None, 3)
+    except Exception as exc:  # noqa: BLE001 - the page shows why, never the key
+        return {"ok": False, "reason": _test_reason(exc), "elapsed_ms": int((time.monotonic() - started) * 1000)}
+    return {"ok": True, "hits": len(hits), "elapsed_ms": int((time.monotonic() - started) * 1000)}
+
+
+def _test_reason(exc: Exception) -> str:
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    if status in {401, 403}:
+        return "Key 无效或没有权限"
+    if status == 429:
+        return "请求太频繁，稍后再试"
+    if isinstance(exc, httpx.TimeoutException):
+        return "连接超时"
+    return type(exc).__name__
 
 
 def choose_file(hit: dict, min_short_side: int) -> dict | None:

@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { useLocation } from "react-router-dom";
 
 const taskPath = /^(?:\/|\/home|\/opportunities(?:\/\d+)?|\/projects(?:\/\d+(?:\/units\/\d+\/production)?)?|\/production|\/review|\/learning)$/;
@@ -33,4 +34,18 @@ export function useTaskLink() {
     if (current) destination.searchParams.set("return_to", current);
     return `${destination.pathname}${destination.search}${destination.hash}`;
   };
+}
+
+// The production page lives under /projects, but it belongs to a workbench; the page tells the side menu which one.
+type Workbench = "product" | "persona" | null;
+let workbench: Workbench = null;
+const listeners = new Set<() => void>();
+
+export function setProductionWorkbench(value: Workbench) {
+  workbench = value;
+  listeners.forEach(listener => listener());
+}
+
+export function useProductionWorkbench(): Workbench {
+  return useSyncExternalStore(listener => { listeners.add(listener); return () => { listeners.delete(listener); }; }, () => workbench);
 }

@@ -1,3 +1,39 @@
+2026-10-29 **商品工作台 AE 模板（已本地实施）**：新增 15 个商品模板（亮相、卖点、参数与对比、价格与优惠、材质与成分、使用方法、信任背书、下单引导），竖屏 9:16 和横屏 16:9 两版，播放安全区零越界，用户看审片视频验收后入库为 ready；另复用 `callout-label`（卖点标注）、`magnifier`（成分特写），共 17 项写进 craft-ae 模板库「商品」分组，商品分镜的 AE 包装指向这里。价格、评价、证书、参数只填真实资料，商品图不变形。设置页「AE 模板库」可按商品分类看预览视频。审片页 `output/_平台/模板审片/商品/index.html`。[需求入口](openspec/changes/archive/2026-10-29-product-ae-templates/README.md)。
+
+2026-10-29 **项目文件夹带日期前缀、本地输出目录规范（已本地实施）**：内容项目的素材文件夹统一命名为 `YYYYMMDD_项目名称`（日期取项目创建日，北京时间；名称取标题第一个「｜」之前），定下后不随标题改动；素材盘上已有的两个项目已改为 `20261022_海底光缆`、`20261027_儿童麸质饼干`，素材位置同步更新、全部可找到。本地输出目录 `output/`：跟内容项目有关的成果放 `output/YYYYMMDD_项目名称/`，平台自身的放 `output/_平台/`（`模板审片/竖屏`、`模板审片/横屏`、`规格/播放安全区`、`吸收资料`、`剪辑技法`、`测试`），以后生成的东西照此放。[需求入口](openspec/changes/archive/2026-10-28-project-folder-date-and-output-layout/README.md)。
+
+2026-10-29 **AE 模板横屏版、模板库预览、默认由大模型选模板（已本地实施）**：46 个模板加 16:9 版本（横屏单独排版、过 16:9 安全区检查），出片按画幅自动选、没有横屏版时明确报错不拉伸；每个模板竖横各一段动画预览，设置 → AE 模板库可按类别查看和播放；默认由大模型按内容自选模板，用户微调时点名的效果必须用，按口播出现的效果（如并列图片展开）按配音逐句时间对齐。[需求入口](openspec/changes/archive/2026-10-28-ae-templates-landscape-and-library/README.md)。
+
+2026-10-28 **AE 模板库第二批：46 个竖屏模板入库（已本地实施）**：口播、AI 科技短片、生活短片用，分九类（关键词标题、金句对句、标注聚焦、人物图形、数字图表、步骤流程对比、开场章节转场、素材地图、结尾引导），叠加类带透明通道；按用户给的播放安全区排版，剪辑 skill 收进安全区规格、每个工程带安全区参考层、新增自动检查（零越界）；动态效果用完整动画视频和参考卡片并排验收。[需求入口](openspec/changes/archive/2026-10-28-ae-template-library-batch/README.md)。
+
+2026-10-29 **模型配置全局唯一（已本地实施，未提交）**：所有大模型配置只在 设置 → AI 与模型：厂商与密钥在「厂商与模型」登记一次（MiniMax 卡片即 MiniMax 厂商）；对话、封面生图、写作工具（dsh）、选题搜索在「用途路由」选；生图/视频/配音/语音转文字在「生成能力与插件」选厂商+模型，地址密钥不再单独填。删除兜底模型、AI 生图、dsh 执行层表单与旧数据，环境变量只能切离线 mock；角色、商品、SKU、阶段和调优不再单独选模型（旧记录只作历史，不生效）。本机 mmx / dsh / wewrite 配置文件由这里自动写入。[需求入口](openspec/changes/archive/2026-10-28-unify-model-config/README.md)。
+
+2026-10-29 **MiniMax 只认一把密钥（已本地实施，未提交）**：设置 → 厂商与模型的 MiniMax 卡片是唯一填 MiniMax 密钥的地方；写作（MiniMax 地址的主模型/配置档）、AI 生图（MiniMax）、配音、选题搜索都用它；主模型和生图选 MiniMax 时不再显示密钥框，旧密钥已清除；保存卡片同步写入本机 `~/.mmx/config.json`、`~/.dsh/env.local`、`~/.wewrite/config.yaml` 的密钥项。[需求入口](openspec/changes/archive/2026-10-28-single-minimax-key/README.md)。
+
+2026-10-28 **MiniMax 厂商改成设置页可配置（已本地实施）**：设置 → 厂商与模型里 MiniMax 卡片可编辑：API Key（保存/清除，只显掩码，标注「本页保存」还是「本机 mmx 登录」）、访问地址（https 或本机/局域网）、区域、启用开关（即时生效）、测试按钮；页面保存的值在调用本机 mmx 时优先生效，没保存就回退 mmx 自己的登录和启动开关。[需求入口](openspec/changes/archive/2026-10-28-minimax-vendor-settings/README.md)。
+
+2026-10-28 **设置里配置素材数据源（已本地实施）**：设置 → 素材数据源，7 个免费素材库（Pexels、Pixabay、Openverse、Wikimedia、NASA、Internet Archive，新接 Coverr 视频）各一张卡：说明、许可、Key（只显示掩码）、启用开关、测试、申请链接；启动配置文件里已有的 Key 继续有效；关掉的来源不参与镜头素材搜索。[需求入口](openspec/changes/archive/2026-10-28-stock-source-settings/README.md)。
+
+2026-10-28 **吸收三个视频仓库的方法（已本地实施）**：skill 分商品 / 角色 / 通用三类，作品只看到自己那类加通用；clipforge 的带货方法写成商品脚本 v2、商品镜头 v2、带货合规检查，以及通用的脚本评审、免费素材找挑、数字人出镜（数字人生成功能未上线，只用于规划）；shotcraft、talkcraft 232 张配方梳理后换算成 AE / 达芬奇做法进剪辑武器库（新增文字包装、标注、素材呈现、数据、转场等），全部「试用」。[需求入口](openspec/changes/archive/2026-10-28-absorb-shotcraft-talkcraft-clipforge/README.md)。
+
+2026-10-28 **厂商与模型显示 MiniMax（已本地实施）**：设置 → 厂商与模型里只读显示 MiniMax（本机 mmx 命令行）的版本、启用状态、区域、密钥掩码和用途（一键配音、AI 生图），账号仍在终端用 mmx 管理。[需求入口](openspec/changes/archive/2026-10-27-show-minimax-vendor/README.md)。
+
+2026-10-28 **商品视频改用第三方模型视频流程（已本地实施）**：商品视频制作页改为「商品与本条目标 → 导演稿 → 素材 → 配音与音乐 → 小样 → 成片 → 交付」，和角色视频共用同一套页面与后台，导演稿一步有「平台写作 skill」开关；旧的导演方案 / 定样 / 剪辑包装页去掉。[需求入口](openspec/changes/archive/2026-10-27-product-video-uses-chain/README.md)。
+
+2026-10-28 **第三方模型用不用平台写作 skill 由人控制（已本地实施）**：每条作品一个「平台写作 skill」开关（默认可以用），关掉后第三方模型读不到平台的文案、脚本、镜头规划等 skill；剪辑和特效 skill（craft-resolve、craft-ae）一直可用。模型读需求时能看到开关状态。[需求入口](openspec/changes/archive/2026-10-27-stage-switches-for-third-party-model/README.md)。
+
+2026-10-28 **作品的制作归各自工作台（已本地实施）**：商品视频工作台点商品改为「进入商品」，看到已有作品继续做，只有「为此商品新建视频」才新建；制作页左侧菜单亮所属工作台，返回链接回到工作台（商品 → 该商品作品页）。内容项目只管项目本身。网址不变。[需求入口](openspec/changes/archive/2026-10-27-product-work-stays-in-workbench/README.md)。
+
+2026-10-28 **内容项目默认只显示进行中（已本地实施）**：内容项目列表默认隐藏已归档项目，可切到「全部状态」或「已归档」。[需求入口](openspec/changes/archive/2026-10-27-projects-default-active/README.md)。
+
+2026-10-28 **从项目新建商品自动带入信息（已本地实施）**：从项目点「商品视频」进入工作台后新建 SKU，商品名称和介绍自动填成项目标题和目标，可改后再保存。[需求入口](openspec/changes/archive/2026-10-27-prefill-sku-from-project/README.md)。
+
+2026-10-28 **从内容项目直接开始作品（已本地实施）**：项目里还没有作品时，项目页提示「这个项目要做什么？」——选角色内容打开添加作品窗口；选商品视频进入商品视频工作台选或新建商品，视频加在这个项目里，不再新建项目，已有素材和资料都保留。「作品」页也可「加商品视频」。[需求入口](openspec/changes/archive/2026-10-27-start-work-from-project/README.md)。
+
+2026-10-28 **项目引入原始素材文件夹（已本地实施）**：项目「资料」页可填素材库盘上的一个文件夹路径，里面的视频、图片、音频原地登记到项目；成片通过后，没被用到的原始素材按类型搬进项目标准目录（视频/其他素材、图片/图片素材、音频/音效），文件名不改，搬不动的可在资料页「重新归档」。[需求入口](openspec/changes/archive/2026-10-27-import-raw-material-folder/README.md)。
+
+2026-10-27 **剪辑武器库与选用表（已本地实施）**：把一套剪辑课提炼的 100 张技巧卡梳理成 DaVinci / AE 做法，写进 craft-resolve（7 类 + 选用表 choose.md）和 craft-ae（4 类）；按问题挑招、克制使用，导演稿镜头备注写手法和理由；每招带「试用 / 常用 / 退役」状态，由本地技能 craft-arsenal 负责加新招和复盘。技能改名为 craft-resolve、craft-ae。[需求入口](openspec/changes/archive/2026-10-27-distill-editing-course-into-craft-skills/README.md)。
+
 2026-10-24 **视频流程去掉「专业执行准备」（已本地实施）**：新视频流程只有「导演稿」；角色 2、3 和商品视频默认流程已切换；进行中的作品隐藏这一步，「准备剪辑」直接建剪辑任务。[需求入口](openspec/changes/remove-professional-prepare-stage/README.md)。
 
 2026-10-23 **导演包好了自动开剪（已本地实施，待安装）**：点「准备剪辑」后平台建好粗剪任务排队；本机后台每分钟看一次，自动启动 Claude Code（可换 Codex）领任务、达芬奇剪辑调色、AE 做特效镜头、交回粗剪等你审片。安装一次：`apps/api/scripts/install_edit_dispatcher.sh`。[需求入口](openspec/changes/auto-start-edit-agent/README.md)。
@@ -11,7 +47,7 @@
 2026-10-23 **补齐素材：新 AE 模板 + AI 示意图（已本地实施）**：新增对比卡、图片推镜两个模板；空着的行最后用平台生图做一张示意图，再用推镜模板做成镜头，画面里标「AI 示意」（证明类标「非实拍」），每次最多 8 张。[需求入口](openspec/changes/autofill-generated-shots/README.md)。
 2026-10-23 **分镜表 AI 补齐素材（已本地实施）**：一键给空行补素材：先搜素材库和可商用素材站（看图打分），合格就选；不合格或属于后期做的行用 AE 模板生成；都不行标缺口并写原因。每个自动选择都写来源，不覆盖你选过的，主稿由你保存。[需求入口](openspec/changes/storyboard-auto-material/README.md)。
 2026-10-23 **文章流程精简为两步（已本地实施）**：九步改为「写作方案（2–3 个完整方案选一个）→ 成稿（一次出全文，确认一次）→ 质量检查自动跑」；渠道版本只改格式。[需求入口](openspec/changes/article-two-stage-flow/README.md)。
-2026-10-23 **AE / 达芬奇两个技巧 skill 与 AE 模板库（已本地实施）**：ae-motion、resolve-edit 两个独立入口，各有目录，由平台 MCP 提供；AE 效果固化为带说明书的版本化模板，本机 aerender 渲染成候选素材。[需求入口](openspec/changes/craft-skills-ae-resolve/README.md)。
+2026-10-23 **AE / 达芬奇两个技巧 skill 与 AE 模板库（已本地实施）**：craft-ae、craft-resolve 两个独立入口，各有目录，由平台 MCP 提供；AE 效果固化为带说明书的版本化模板，本机 aerender 渲染成候选素材。[需求入口](openspec/changes/craft-skills-ae-resolve/README.md)。
 2026-10-23 **视频导演稿改为一张分镜表（已本地实施）**：新视频流程去掉「视频脚本」「镜头计划」，导演稿一次生成一张表，一行一个镜头：镜头、时长、信息点、画面、运镜、台词、声音、备注、素材；镜头格子里选过的素材不再重复选。[需求入口](openspec/changes/video-storyboard-table/README.md)。
 2026-10-23 **导演稿沿用镜头计划（已本地实施，待生产验收）**：视频导演稿直接沿用已采用镜头计划的镜头（数量、顺序、编号、时长），AI 只润色每个镜头的口播和画面；去掉导演稿最多 8 段的上限对有镜头计划时的限制，镜头槽位素材按编号对上。[需求入口](openspec/changes/master-follows-shot-plan/README.md)。
 
@@ -923,4 +959,4 @@ docs/runbooks/               # 单机生产、备份恢复
 
 科技音频当前阻断已于2026-10-19同参数复现为MiniMax Token Plan额度用尽；模型与原音色未改，待额度恢复后完成剩余验收。详见上述验收目录最新记录。
 
-科技音频最新状态（2026-10-19）：额度恢复后原音色/模型在run24完整生成、ASR、QC和本地交付通过，包为output/tech-audio-project35.zip；旧额度阻断记录保留为历史。保留未直接试听及ASR字幕待校对边界，未公开发布。
+科技音频最新状态（2026-10-19）：额度恢复后原音色/模型在run24完整生成、ASR、QC和本地交付通过，包为output/20261019_AI科技实作/tech-audio-project35.zip；旧额度阻断记录保留为历史。保留未直接试听及ASR字幕待校对边界，未公开发布。

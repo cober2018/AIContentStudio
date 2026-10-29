@@ -15,9 +15,9 @@ export type ProductionCatalog = { production_stages?: { id: string; title: strin
 
 const ORIGINS: Record<string, string> = { persona: "角色", account: "账号", series: "栏目", brand: "品牌" };
 
-export default function ProductionStageControls({ value, catalog, methods = [], disabled, origin, onChange }: {
+export default function ProductionStageControls({ value, catalog, methods = [], disabled, origin, system, onChange }: {
   value?: ProductionStages; catalog: ProductionCatalog | null; methods?: CapabilityArtifact[];
-  disabled: boolean; origin: string; onChange: (value: ProductionStages) => void;
+  disabled: boolean; origin: string; system?: "product" | "persona"; onChange: (value: ProductionStages) => void;
 }) {
   const owner = currentUser();
   const [exactRevisions, setExactRevisions] = useState<Record<string, CapabilityRevision>>({});
@@ -96,7 +96,7 @@ export default function ProductionStageControls({ value, catalog, methods = [], 
             const saved = ref.startsWith("memory:") ? methods.find(item => item.id === Number(ref.slice(7))) : null;
             const method: ProductionMethod = { id: `method-${crypto.randomUUID()}`, enabled: true, parameters: {}, ...(saved ? { source_kind: "capability_memory", artifact_id: saved.id, revision_id: saved.current_revision.id } : { source_kind: "studio_builtin", skill_ref: ref }) };
             updateStage(stage.id, { methods: [...items, method] });
-          }}><option value="">选择要加入的方法</option><optgroup label="内置方法">{catalog?.skills.filter(item => item.kind === "skill").map(item => <option key={item.ref} value={item.ref}>{item.purpose}（{refName(item.ref)}）</option>)}</optgroup><optgroup label="我的方法库">{methods.filter(item => ["saved", "pinned"].includes(item.status) && ["prompt_skill", "recipe"].includes(item.kind)).map(item => <option key={item.id} value={`memory:${item.id}`}>{item.name} · 修订 #{item.current_revision.id}</option>)}</optgroup></select></Field>
+          }}><option value="">选择要加入的方法</option><optgroup label="内置方法">{catalog?.skills.filter(item => item.kind === "skill" && (!system || item.system === system || item.system === "shared")).map(item => <option key={item.ref} value={item.ref}>{item.purpose}（{refName(item.ref)}）</option>)}</optgroup><optgroup label="我的方法库">{methods.filter(item => ["saved", "pinned"].includes(item.status) && ["prompt_skill", "recipe"].includes(item.kind)).map(item => <option key={item.id} value={`memory:${item.id}`}>{item.name} · 修订 #{item.current_revision.id}</option>)}</optgroup></select></Field>
         </div>
       </details></li>;
     })}

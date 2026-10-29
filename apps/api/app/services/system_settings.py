@@ -9,12 +9,10 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 
 from sqlalchemy.engine import make_url
 
-from .. import runtime_config
 from ..config import get_settings
 from ..models import SystemSetting
 from .plugin_registry import SKILL_DIRS as DEFAULT_SKILL_DIRS
 from .plugin_registry import scan_skills as discover_local_skills
-from .writing_pipeline import WEWRITE_HOME
 
 
 def discover_default_skill_dirs() -> tuple:
@@ -62,31 +60,10 @@ def display_provider_url(value: str | None) -> tuple[str, bool]:
         return "", True
 
 
-def llm_view() -> dict:
-    from ..services.generation.providers import effective_llm_config
-
-    config = effective_llm_config()
-    override = runtime_config.get_runtime(runtime_config.KEY_LLM) or {}
-    base_url, redacted = display_provider_url(config["base_url"])
-    return {
-        "provider": config["provider"],
-        "base_url": base_url,
-        "base_url_redacted": redacted,
-        "model": config["model"],
-        "api_key": mask_secret(config["api_key"]),
-        "mock_inject_unfact_number": bool(config.get("mock_inject_unfact_number", False)),
-        "overridden": bool(override),
-    }
-
-
 def build_settings_view() -> dict:
     settings = get_settings()
     return {
-        "llm": llm_view(),
-        "models": models_view(),
         "plugins": plugins_view(),
-        "dsh": dsh_view(),
-        "image": image_view(),
         "database": {
             "url": mask_url(settings.database_url),
             "driver": make_url(settings.database_url).drivername,
@@ -112,83 +89,6 @@ def build_settings_view() -> dict:
         },
         "app": {"version": "0.1.0"},
     }
-
-
-def save_llm_override(db, value: dict, updated_by: str | None) -> None:
-    """写入覆盖行 + 刷新进程缓存 + 失效 provider 缓存。"""
-    from ..services.generation.providers import reset_provider_cache
-
-    runtime_config.validate_persisted_configuration(value)
-    row = db.get(SystemSetting, runtime_config.KEY_LLM)
-    if row is None:
-        row = SystemSetting(key=runtime_config.KEY_LLM)
-        db.add(row)
-    row.value = value
-    row.updated_by = updated_by
-    db.flush()
-    runtime_config.set_runtime(runtime_config.KEY_LLM, value)
-    reset_provider_cache()
-
-
-def models_view() -> dict:
-    """多模型配置档 + 场景路由视图（Secret 一律脱敏）。"""
-    from .. import runtime_config
-    from ..services.generation.providers import ROUTE_KEYS
-
-    models = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
-    profiles_out = {}
-    for name, p in (models.get("profiles") or {}).items():
-        supplier = (models.get("providers") or {}).get(p.get("provider_id"), {})
-        base_url, redacted = display_provider_url(supplier.get("base_url", p.get("base_url", "")))
-        profiles_out[name] = {
-            "provider": p.get("provider", "mock"),
-            "base_url": base_url,
-            "base_url_redacted": redacted,
-            "model": p.get("model", ""),
-            "api_key": mask_secret(supplier.get("api_key", p.get("api_key"))),
-            "enabled": bool(p.get("enabled", True)),
-        }
-    routes = {k: (models.get("routes") or {}).get(k, "") for k in ROUTE_KEYS}
-    return {"profiles": profiles_out, "routes": routes}
-
-
-def save_models(db, value: dict, updated_by: str | None) -> None:
-    """写入 models 覆盖（profiles + routes）并失效 provider 缓存。"""
-    from fastapi import HTTPException
-    from sqlalchemy import func, select, update
-    from sqlalchemy.exc import IntegrityError
-
-    from .. import runtime_config
-    from ..services.generation.providers import reset_provider_cache
-
-    runtime_config.validate_persisted_configuration(value)
-    row = db.scalar(select(SystemSetting).where(SystemSetting.key == runtime_config.KEY_MODELS)
-                    .with_for_update().execution_options(populate_existing=True))
-    if row is not None and (row.value or {}).get("schema_version", 1) >= 2:
-        # The old whole-document editor must not erase capability bindings or CAS heads.
-        raise HTTPException(409, "capability_configuration_requires_versioned_editor")
-    observed_revision = (row.value or {}).get("revision", 0) if row is not None else 0
-    value = {**value, "schema_version": 1, "revision": observed_revision + 1}
-    if row is None:
-        db.add(SystemSetting(key=runtime_config.KEY_MODELS, value=value, updated_by=updated_by))
-        try:
-            db.flush()
-        except IntegrityError as exc:
-            db.rollback()
-            raise HTTPException(409, "capability_configuration_requires_versioned_editor") from exc
-    else:
-        # SQLite ignores FOR UPDATE, so the write itself must reject a racing upgrade.
-        changed = db.execute(update(SystemSetting).where(
-            SystemSetting.key == runtime_config.KEY_MODELS,
-            func.coalesce(SystemSetting.value["schema_version"].as_integer(), 1) < 2,
-            func.coalesce(SystemSetting.value["revision"].as_integer(), 0) == observed_revision,
-        ).values(value=value, updated_by=updated_by).execution_options(synchronize_session=False))
-        if changed.rowcount != 1:
-            db.rollback()
-            raise HTTPException(409, "capability_configuration_requires_versioned_editor")
-        db.expire(row)
-    runtime_config.set_runtime(runtime_config.KEY_MODELS, value)
-    reset_provider_cache()
 
 
 def plugins_view() -> dict:
@@ -220,92 +120,3 @@ def save_plugins(db, value: dict, updated_by: str | None) -> None:
     runtime_config.set_runtime(runtime_config.KEY_PLUGINS, value)
 
 
-IMAGE_PROVIDERS = ("minimax", "gemini", "openai", "doubao", "dashscope", "replicate", "openrouter", "jimeng")
-
-
-def image_view() -> dict:
-    from .. import runtime_config
-
-    stored = runtime_config.get_runtime(runtime_config.KEY_IMAGE) or {}
-    base_url, redacted = display_provider_url(stored.get("base_url", ""))
-    return {
-        "enabled": bool(stored.get("enabled", False)),
-        "provider": stored.get("provider", "minimax"),
-        "model": stored.get("model", ""),
-        "base_url": base_url,
-        "base_url_redacted": redacted,
-        "size": stored.get("size", "1344x768"),
-        "api_key": mask_secret(stored.get("api_key")),
-        "providers_available": list(IMAGE_PROVIDERS),
-    }
-
-
-def save_image(db, value: dict, updated_by: str | None) -> None:
-    """保存生图开关并把 provider 同步进 ~/.wewrite/config.yaml（wewrite image-gen CLI 消费）。"""
-    import yaml
-
-    from .. import runtime_config
-
-    runtime_config.validate_persisted_configuration(value)
-    row = db.get(SystemSetting, runtime_config.KEY_IMAGE)
-    if row is None:
-        row = SystemSetting(key=runtime_config.KEY_IMAGE)
-        db.add(row)
-    row.value = value
-    row.updated_by = updated_by
-    db.flush()
-    runtime_config.set_runtime(runtime_config.KEY_IMAGE, value)
-
-    # Native requests freeze KEY_IMAGE directly, not mutable CLI configuration.
-    if value.get("provider") == "openai":
-        return
-
-    cfg_path = WEWRITE_HOME / "config.yaml"
-    try:
-        cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
-    except (OSError, yaml.YAMLError):
-        cfg = {}
-    if value.get("enabled") and value.get("api_key"):
-        entry = {
-            "provider": value["provider"],
-            "api_key": value["api_key"],
-            "model": value.get("model") or None,
-        }
-        if value.get("base_url"):
-            entry["base_url"] = value["base_url"]
-        cfg["image"] = {"providers": [entry]}
-        cfg_path.parent.mkdir(parents=True, exist_ok=True)
-        cfg_path.write_text(yaml.safe_dump(cfg, allow_unicode=True, sort_keys=False), encoding="utf-8")
-
-
-def dsh_view() -> dict:
-    from .. import runtime_config
-    from .dsh_integration import studio_view
-
-    stored = runtime_config.get_runtime(runtime_config.KEY_DSH)
-    return studio_view(stored)
-
-
-def save_dsh(db, value: dict, updated_by: str | None) -> None:
-    from .. import runtime_config
-
-    runtime_config.validate_persisted_configuration(value)
-    row = db.get(SystemSetting, runtime_config.KEY_DSH)
-    if row is None:
-        row = SystemSetting(key=runtime_config.KEY_DSH)
-        db.add(row)
-    row.value = value
-    row.updated_by = updated_by
-    db.flush()
-    runtime_config.set_runtime(runtime_config.KEY_DSH, value)
-
-
-def clear_llm_override(db) -> None:
-    from ..services.generation.providers import reset_provider_cache
-
-    row = db.get(SystemSetting, runtime_config.KEY_LLM)
-    if row is not None:
-        db.delete(row)
-        db.flush()
-    runtime_config.clear_runtime(runtime_config.KEY_LLM)
-    reset_provider_cache()

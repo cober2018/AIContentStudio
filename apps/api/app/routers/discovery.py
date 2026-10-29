@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
-from ..config import get_settings
 from ..db import get_db
 from ..deps import get_current_user, require_editor
 from ..models import (
@@ -66,8 +65,6 @@ class SettingsIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     enabled: bool
     public_processing_allowed: bool
-    search_provider: Literal["minimax", "tavily"] = "minimax"
-    credential_source: Literal["environment", "codex_mcp"] = "environment"
     daily_hour: int = Field(default=8, ge=0, le=23)
     daily_limit: int = Field(default=5, ge=1, le=5)
     paused_persona_ids: list[int] | None = Field(default=None, max_length=100)
@@ -75,7 +72,7 @@ class SettingsIn(BaseModel):
 
 def configuration_json(db, user):
     config = runtime.settings(db, user.id)
-    ready = available(config["search_provider"], config["credential_source"])
+    ready = available(config["search_provider"])
     heartbeat = db.get(SystemSetting, "discovery.heartbeat")
     last = (heartbeat.value or {}).get("last_scan_at") if heartbeat else None
     try:
@@ -92,8 +89,6 @@ def read_settings(db=Depends(get_db), user=Depends(get_current_user)):
 
 @router.put("/settings")
 def save_settings(payload: SettingsIn, db=Depends(get_db), user=Depends(require_editor)):
-    if payload.credential_source == "codex_mcp" and get_settings().app_env == "production":
-        raise HTTPException(422, "生产环境请通过环境变量提供搜索凭据")
     if payload.paused_persona_ids is not None:
         owned = set(db.scalars(select(ContentPersona.id).where(ContentPersona.owner_user_id == user.id)).all())
         if set(payload.paused_persona_ids) - owned:
@@ -103,7 +98,8 @@ def save_settings(payload: SettingsIn, db=Depends(get_db), user=Depends(require_
     if row is None:
         row = SystemSetting(key=key)
         db.add(row)
-    row.value = {**runtime.settings(db, user.id), **payload.model_dump(exclude_none=True)}
+    current = {k: v for k, v in runtime.settings(db, user.id).items() if k != "search_provider"}
+    row.value = {**current, **payload.model_dump(exclude_none=True)}
     row.updated_by = user.email
     db.flush()
     if payload.enabled:

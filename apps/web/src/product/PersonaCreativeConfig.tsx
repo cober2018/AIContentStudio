@@ -162,22 +162,16 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
         ...(key === "mode" && value === "auto" ? { model_binding: null } : {}), [key]: value } } };
     });
   }
-  function updateBinding(key: string, value: string) {
-    updateProfile("model_binding", { ...(draft.profile.model_binding || { provider: "", model: "", profile: "" }), [key]: value });
-  }
   function chooseVoice(preset: VoicePreset) {
     if (!markEdited()) return;
     setPreview(null);
     setDrafts(previous => ({ ...previous, audio: { ...(previous.audio || draft), profile: {
-      ...(previous.audio || draft).profile, mode: "custom", skill_ref: "studio.audio.tts@1",
-      capability: "tts", model_chain: [], capability_memory_revision_ids: [], installed_skill_refs: [],
-      model_binding: { provider: preset.provider_key, model: preset.model_id, profile: preset.profile_id },
+      ...(previous.audio || draft).profile, mode: "auto", skill_ref: "studio.audio.tts@1",
+      capability: "tts", model_chain: [], capability_memory_revision_ids: [], installed_skill_refs: [], model_binding: null,
       parameters: { voice: preset.voice_id, rate: preset.rate ?? 1 },
     } } }));
   }
-  const chosenVoice = voiceCatalog.find(item => item.provider_key === draft.profile.model_binding?.provider
-    && item.model_id === draft.profile.model_binding?.model && item.profile_id === draft.profile.model_binding?.profile
-    && item.voice_id === draft.profile.parameters?.voice);
+  const chosenVoice = voiceCatalog.find(item => item.voice_id === draft.profile.parameters?.voice);
   async function loadPreview() {
     if (!persona) return;
     const requestedFingerprint = fingerprint;
@@ -282,21 +276,14 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
               <Field label="质量标准"><select disabled={readonly} className={inputClass} value={draft.profile.quality_profile_ref} onChange={(e) => updateProfile("quality_profile_ref", e.target.value)}><option value="">请选择</option>{resourceOptions.quality.map((item) => <option key={item.ref} value={item.ref}>{refName(item.ref)}</option>)}</select></Field>
             </div>
             {modality === "audio" && selectedSkill?.ref === "studio.audio.tts@1" && <div className="space-y-4 rounded-[14px] border border-ink-200 bg-ink-50/60 p-4">
-              <div className="flex items-start justify-between gap-3"><div><p className="text-[14px] font-medium text-ink-900">声音</p><p className="mt-0.5 text-[12.5px] text-ink-500">选定音色会固定对应的模型和声音；不可用时停下，不会自动换。</p></div><Button variant="ghost" size="sm" onClick={() => setAudioAdvanced(value => !value)}>{audioAdvanced ? "收起高级" : "高级设置"}</Button></div>
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[14px] font-medium text-ink-900">声音</p><p className="mt-0.5 text-[12.5px] text-ink-500">选定音色；配音模型在 设置 → AI 与模型 里统一选。</p></div><Button variant="ghost" size="sm" onClick={() => setAudioAdvanced(value => !value)}>{audioAdvanced ? "收起高级" : "高级设置"}</Button></div>
               <VoicePresetPicker voices={voiceCatalog} selectedId={chosenVoice?.id || ""} disabled={readonly} onSelect={chooseVoice} />
               <Field label={`语速 ${Number(draft.profile.parameters?.rate ?? 1).toFixed(2)}×`}><input type="range" className="w-full accent-accent-500" min="0.5" max="2" step="0.05" disabled={readonly} value={Number(draft.profile.parameters?.rate ?? 1)} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), rate: Number(e.target.value) })} /></Field>
-              {audioAdvanced && <Field label="精确音色 ID（含本人克隆音色）" hint="服务商、模型在下方“指定模型”里设置；只支持音色与语速。"><input disabled={readonly} className={inputClass} maxLength={150} value={draft.profile.parameters?.voice || ""} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), voice: e.target.value })} /></Field>}
+              {audioAdvanced && <Field label="精确音色 ID（含本人克隆音色）" hint="模型在 设置 → AI 与模型 里统一选；这里只设音色与语速。"><input disabled={readonly} className={inputClass} maxLength={150} value={draft.profile.parameters?.voice || ""} onChange={e => updateProfile("parameters", { ...(draft.profile.parameters || {}), voice: e.target.value })} /></Field>}
             </div>}
             {selectedSkill?.parameter_schema && <TypedStageField label="主方法参数" schema={selectedSkill.parameter_schema} value={draft.profile.parameters || {}} disabled={readonly} onChange={value => updateProfile("parameters", value)} />}
-            <Field label="模型选择"><select disabled={readonly} className={inputClass} value={draft.profile.mode} onChange={(e) => updateProfile("mode", e.target.value)}><option value="auto">自动选择</option><option value="custom">指定模型</option><option value="composed">指定模型 + 后备</option></select></Field>
-            {draft.profile.mode !== "auto" && <div className="rounded-[14px] border border-ink-200 p-4"><p className="text-[13px] font-medium text-ink-800">指定模型</p><div className="mt-3 grid gap-2 sm:grid-cols-3">{[["provider", "服务商"], ["model", "模型"], ["profile", "配置名"]].map(([key, text]) => <input key={key} aria-label={text} disabled={readonly} className={inputClass} placeholder={text} value={draft.profile.model_binding?.[key] || ""} onChange={(e) => updateBinding(key, e.target.value)} />)}</div></div>}
+            <Field label="方法组合" hint="模型在 设置 → AI 与模型 里统一选，这里不再单独指定。"><select disabled={readonly} className={inputClass} value={draft.profile.mode === "composed" ? "composed" : "auto"} onChange={(e) => updateProfile("mode", e.target.value)}><option value="auto">只用主方法</option><option value="composed">主方法 + 附加方法</option></select></Field>
             {draft.profile.mode === "composed" && <div className="space-y-3 rounded-[14px] border border-ink-200 p-4">
-              <p className="text-[13px] font-medium text-ink-800">后备模型（按顺序尝试）</p>
-              {(draft.profile.model_chain || []).map((binding: Record<string, string>, index: number) => <div key={index} className="space-y-2 rounded-xl bg-ink-50 p-3">
-                <div className="flex items-center justify-between"><p className="text-[12.5px] text-ink-500">后备 {index + 1}</p><Button variant="ghost" size="sm" disabled={readonly} onClick={() => updateProfile("model_chain", draft.profile.model_chain.filter((_: unknown, position: number) => position !== index))}>移除</Button></div>
-                <div className="grid gap-2 sm:grid-cols-3">{[["provider", "服务商"], ["model", "模型"], ["profile", "配置名"]].map(([key, text]) => <input key={key} aria-label={text} className={inputClass} disabled={readonly} placeholder={text} value={binding[key] || ""} onChange={event => updateProfile("model_chain", draft.profile.model_chain.map((item: Record<string, string>, position: number) => position === index ? { ...item, [key]: event.target.value } : item))} />)}</div>
-              </div>)}
-              <Button variant="secondary" size="sm" disabled={readonly || (draft.profile.model_chain || []).length >= 8} onClick={() => updateProfile("model_chain", [...(draft.profile.model_chain || []), { provider: "", model: "", profile: "" }])}>添加后备模型</Button>
               <div className="border-t border-ink-200/80 pt-3">
                 <p className="text-[13px] font-medium text-ink-800">附加方法</p><p className="mt-0.5 text-[12px] text-ink-500">顺序：主方法 → 下列方法 → 本级说明</p>
                 <div className="mt-2 space-y-2">{(draft.profile.capability_memory_revision_ids || []).map((id: number, index: number) => {
@@ -316,7 +303,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
             </div>}
             <div>
               <div className="mb-3 flex items-center justify-between gap-3"><h4 className="text-[14px] font-medium text-ink-900">制作步骤与方法</h4><Button variant="ghost" size="sm" disabled={methodsBusy} onClick={loadMethods}>{methodsBusy ? "读取中…" : "读取方法库"}</Button></div>
-              <ProductionStageControls catalog={catalog} methods={matchingMethods} value={draft.profile.production_stages} disabled={readonly} origin={current.kind} onChange={value => updateProfile("production_stages", value)} />
+              <ProductionStageControls system="persona" catalog={catalog} methods={matchingMethods} value={draft.profile.production_stages} disabled={readonly} origin={current.kind} onChange={value => updateProfile("production_stages", value)} />
             </div>
             <Field label="本级补充说明" hint="只影响这里的创作配置。"><textarea disabled={readonly} className={`${inputClass} min-h-24`} value={draft.profile.stage_instruction || ""} onChange={(e) => updateProfile("stage_instruction", e.target.value || null)} placeholder="例如：每期结尾留一个开放问题" /></Field>
           </>}
@@ -356,7 +343,7 @@ export default function PersonaCreativeConfig({ current, persona, readOnly, acco
   </div>;
 }
 
-const CHANGE_LABELS: Record<string, string> = { mode: "模型选择", skill_ref: "主方法", style_preset_ref: "风格预设", quality_profile_ref: "质量标准", model_binding: "指定模型", model_chain: "后备模型", capability_memory_revision_ids: "附加方法", installed_skill_refs: "外部 Skill", production_stages: "制作步骤", parameters: "参数", stage_instruction: "补充说明" };
+const CHANGE_LABELS: Record<string, string> = { mode: "方法组合", skill_ref: "主方法", style_preset_ref: "风格预设", quality_profile_ref: "质量标准", model_binding: "指定模型", model_chain: "后备模型", capability_memory_revision_ids: "附加方法", installed_skill_refs: "外部 Skill", production_stages: "制作步骤", parameters: "参数", stage_instruction: "补充说明" };
 function summarize(value: unknown): string {
   if (value === undefined) return "继承 / 未设置";
   if (value === null) return "清空";

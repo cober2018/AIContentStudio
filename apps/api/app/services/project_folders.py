@@ -13,6 +13,7 @@ import mimetypes
 import os
 import re
 import shutil
+from datetime import UTC
 from pathlib import Path
 
 from sqlalchemy import select
@@ -89,18 +90,82 @@ def folder_names(db: Session) -> dict[str, str]:
     return _setting(db, FOLDERS)
 
 
+_DATED = re.compile(r"^\d{8}_")
+
+
+def _dated_name(project: ContentProject, taken: set[str]) -> str:
+    # Folders sort by when the project started: YYYYMMDD (local date of creation) + the short title.
+    created = project.created_at if project.created_at.tzinfo else project.created_at.replace(tzinfo=UTC)
+    base = f"{created.astimezone():%Y%m%d}_{_clean(re.split(r'[｜|]', project.title or '')[0]) or f'项目{project.id}'}"
+    return base if base not in taken else f"{base} (#{project.id})"
+
+
 def folder_name(db: Session, project_id: int) -> str:
-    """Short project name (title before the first ｜), saved once so a later rename moves nothing."""
+    """Dated short project name, saved once so a later title change moves nothing."""
     names = folder_names(db)
     if str(project_id) in names:
         return names[str(project_id)]
-    project = db.get(ContentProject, project_id)
-    base = _clean(re.split(r"[｜|]", project.title or "")[0]) or f"项目{project_id}"
-    taken = set(names.values()) | RESERVED
-    name = base if base not in taken else f"{base} (#{project_id})"
+    name = _dated_name(db.get(ContentProject, project_id), set(names.values()) | RESERVED)
     names[str(project_id)] = name
     _put_setting(db, FOLDERS, names)
     return name
+
+
+def _swap_prefix(value: str, old: str, new: str) -> str:
+    return new + value[len(old):] if value == old or value.startswith(old + "/") else value
+
+
+def date_existing_folders(db: Session, *, apply: bool = False) -> list[dict]:
+    """One-time move of undated project folders to YYYYMMDD_ names, with placements, shortcut records and links kept pointing at the files."""
+    names = folder_names(db)
+    root = _writable_root()
+    plan = []
+    for pid, old in sorted(names.items(), key=lambda item: int(item[0])):
+        project = db.get(ContentProject, int(pid))
+        if project is None or _DATED.match(old):
+            continue
+        new = _dated_name(project, (set(names.values()) - {old}) | RESERVED)
+        rows = [row for row in db.scalars(select(MaterialRevision)).all() if str(row.metadata_json or {}).find(old) >= 0]
+        plan.append({"project_id": int(pid), "old": old, "new": new, "revisions": len(rows), "state": "planned"})
+        if not apply:
+            continue
+        if root is None:
+            plan[-1]["state"] = "skipped: 素材库未连接"
+            continue
+        source, target = root / old, root / new
+        if target.exists():
+            plan[-1]["state"] = "skipped: 目标已存在"
+            continue
+        moved = source.is_dir()
+        if moved:
+            os.rename(source, target)
+        try:
+            for row in rows:
+                meta = dict(row.metadata_json or {})
+                where = dict(meta.get("placement") or {})
+                if where.get("root") != "common" and where.get("path"):
+                    where["path"] = _swap_prefix(where["path"], old, new)
+                    meta["placement"] = where
+                if meta.get("links"):
+                    meta["links"] = {key: _swap_prefix(value, old, new) for key, value in meta["links"].items()}
+                row.metadata_json = meta
+                flag_modified(row, "metadata_json")
+            names[pid] = new
+            _put_setting(db, FOLDERS, names)
+            db.commit()
+        except Exception:
+            db.rollback()
+            if moved:
+                os.rename(target, source)
+            raise
+        # Shortcuts in other projects store absolute targets; point any that went through the old folder at the new one.
+        for link in root.rglob("*"):
+            if link.is_symlink() and str(os.readlink(link)).startswith(str(source) + "/"):
+                destination = str(os.readlink(link)).replace(str(source), str(target), 1)
+                link.unlink()
+                link.symlink_to(destination)
+        plan[-1]["state"] = "renamed" if moved else "recorded (folder not on drive yet)"
+    return plan
 
 
 def ensure_library_dirs() -> None:
@@ -388,6 +453,112 @@ def archive_master(db: Session, project_id: int, document: dict, slots: dict | N
     _put_setting(db, PENDING, pending)
     db.commit()
     return result
+
+
+RAW_ORIGIN = "project_folder_import"
+RAW_PENDING = "project_raw_pending"
+_RAW_DIRS = {"video": "视频/其他素材", "image": "图片/图片素材", "audio": "音频/音效"}
+
+
+def import_folder(db: Session, user, project_id: int, path: str) -> dict:
+    """Link every media file of the user's raw folder in place and attach it to the project."""
+    from fastapi import HTTPException
+
+    from ..models import MaterialSource, ProjectMaterialReference
+    from .material_external import EXTENSIONS, ExternalMaterialError, link, normalize_root, scan
+    from .project_events import record_project_event
+    from .storage_locations import library_source_id
+
+    root = _root()
+    source = db.get(MaterialSource, library_source_id()) if root is not None and library_source_id() else None
+    if source is None:
+        raise HTTPException(409, {"code": "material_library_unavailable", "message": "素材库盘没连接"})
+    try:
+        folder = Path(normalize_root(path.strip()))
+    except ExternalMaterialError:
+        raise HTTPException(422, {"code": "raw_folder_invalid", "message": "请填文件夹的完整路径"}) from None
+    # Only files on the library drive can later move into the project folder and still be found.
+    if folder == root or not folder.is_relative_to(root):
+        raise HTTPException(422, {"code": "raw_folder_off_library", "message": f"原始素材文件夹要放在素材库盘 {root} 里，例如 {EXTERNAL_DIR}/ 下"})
+    if folder.relative_to(root).parts[0] in set(folder_names(db).values()) | RESERVED - {EXTERNAL_DIR}:
+        raise HTTPException(422, {"code": "raw_folder_filed", "message": "这个文件夹是项目或通用素材，不能当原始素材引入"})
+    if not folder.is_dir() or folder.is_symlink():
+        raise HTTPException(422, {"code": "raw_folder_missing", "message": "找不到这个文件夹"})
+    try:
+        listing = scan(db, source, folder.relative_to(root).as_posix())
+    except ExternalMaterialError as exc:
+        raise HTTPException(409, {"code": exc.code, "message": "素材库盘读不了"}) from None
+    unsupported = sum(1 for directory, _dirs, files in os.walk(folder) for name in files
+                      if not name.startswith(".") and Path(name).suffix.lower().lstrip(".") not in EXTENSIONS)
+    result = {"added": 0, "existing": 0, "skipped": [], "unsupported": unsupported, "truncated": listing["truncated"]}
+    for item in listing["files"]:
+        try:
+            if item["linked"]:
+                revision = db.get(MaterialRevision, item["linked"][0]["material_revision_id"])
+            else:
+                _material, revision = link(db, source, relative_path=item["relative_path"], kind=item["kind"], title=None,
+                                           material_id=None, source_kind="upload", source_url=None, rights_status="cleared",
+                                           public_use_allowed=True, model_use_allowed=True, commercial_use_allowed=None,
+                                           attribution_text=None, tags=[], user=user)
+            row = db.scalar(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id,
+                                                                   ProjectMaterialReference.material_revision_id == revision.id))
+            if row is not None and row.status == "active":
+                result["existing"] += 1
+                db.commit()
+                continue
+            if row is None:
+                row = ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin=RAW_ORIGIN,
+                                               status="active", attached_by=user.email, note="原始素材文件夹")
+                db.add(row)
+            else:
+                row.status, row.detached_by, row.detached_at, row.attached_by = "active", None, None, user.email
+            db.flush()
+            record_project_event(db, project_id=project_id, event_type="asset.attached", actor=user.email, entity_type="material_revision",
+                                 entity_id=revision.id, payload={"reference_id": row.id, "origin": RAW_ORIGIN, "content_hash": revision.content_hash})
+            db.commit()
+            result["added"] += 1
+        except ExternalMaterialError as exc:
+            db.rollback()
+            result["skipped"].append({"file": item["relative_path"], "reason": exc.code})
+    return result
+
+
+def _raw_waiting(db: Session, project_id: int) -> list[MaterialRevision]:
+    from ..models import ProjectMaterialReference
+    from .material_external import is_external, parse_key
+    from .storage_locations import library_source_id
+
+    rows = db.scalars(select(MaterialRevision).join(ProjectMaterialReference, ProjectMaterialReference.material_revision_id == MaterialRevision.id)
+                      .where(ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.origin == RAW_ORIGIN,
+                             ProjectMaterialReference.status == "active")).all()
+    return [row for row in rows if not placement(row) and is_external(row.file_path) and parse_key(row.file_path)[0] == library_source_id()]
+
+
+def archive_raw(db: Session, project_id: int) -> dict:
+    """成片 approved: raw-folder files still in place move into the project folder by type; failures wait for a retry."""
+    result = {"moved": [], "referenced": [], "pending": []}
+    waiting_files = _raw_waiting(db, project_id)
+    if waiting_files:
+        try:
+            ensure_project_dir(db, project_id)
+            db.commit()
+        except FileNotFoundError:
+            pass  # move_into reports each file as 待归档 below.
+    for revision in waiting_files:
+        outcome = move_into(db, revision, _RAW_DIRS.get(revision.material.kind, "视频/其他素材"), project_id=project_id)
+        result.get(outcome["state"], result["pending"]).append({"material_revision_id": revision.id, **outcome})
+    waiting = _setting(db, RAW_PENDING)
+    if result["pending"]:
+        waiting[str(project_id)] = [row["material_revision_id"] for row in result["pending"]]
+    else:
+        waiting.pop(str(project_id), None)
+    _put_setting(db, RAW_PENDING, waiting)
+    db.commit()
+    return result
+
+
+def raw_pending(db: Session, project_id: int) -> int:
+    return len(_setting(db, RAW_PENDING).get(str(project_id)) or [])
 
 
 def store_new(db: Session, revision: MaterialRevision, project_id: int, folder: str) -> dict:

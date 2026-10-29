@@ -94,6 +94,37 @@ def attach_material_reference(payload: MaterialReferenceIn, project_id: int, db:
     return reference_json(db, row)
 
 
+class RawFolderIn(BaseModel):
+    path: str
+
+
+@router.post("/{project_id}/materials/folder-import")
+def import_raw_folder(payload: RawFolderIn, project_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import project_folders
+
+    mutable_project(db, project_id, user)
+    return project_folders.import_folder(db, user, project_id, payload.path)
+
+
+@router.get("/{project_id}/materials/folder-archive")
+def raw_folder_archive_state(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import project_folders
+
+    owned_project(db, project_id, user)
+    return {"pending": project_folders.raw_pending(db, project_id)}
+
+
+@router.post("/{project_id}/materials/folder-archive")
+def retry_raw_folder_archive(project_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import project_folders
+
+    mutable_project(db, project_id, user)
+    # Only a project whose 成片 already filed its raw folder retries; before that the files stay where the user put them.
+    if not project_folders.raw_pending(db, project_id):
+        return {"moved": [], "referenced": [], "pending": []}
+    return project_folders.archive_raw(db, project_id)
+
+
 @router.delete("/{project_id}/materials/references/{reference_id}", status_code=204)
 def detach_material_reference(project_id: int, reference_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     mutable_project(db, project_id, user)

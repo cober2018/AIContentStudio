@@ -1,0 +1,141 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "follow-card-dy",
+  "version": "v1",
+  "name": "主页卡关注（短视频款）",
+  "category": "结尾引导",
+  "use": "浅色主页卡从下方升起：浅蓝顶区、圆形头像、昵称、账号，一行获赞 / 关注 / 粉丝（不写或只写真实值），两行简介，底部整宽红色「+ 关注」按钮被点击后变成灰色「已关注」。中性样式，不用任何平台的界面、图标和商标。叠在画面上用。",
+  "fields": [
+    {
+      "name": "name",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "account",
+      "kind": "text",
+      "max": 20,
+      "required": false
+    },
+    {
+      "name": "likes",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "following",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "fans",
+      "kind": "text",
+      "max": 8,
+      "required": false
+    },
+    {
+      "name": "bio",
+      "kind": "text",
+      "max": 20,
+      "required": false
+    },
+    {
+      "name": "bio2",
+      "kind": "text",
+      "max": 20,
+      "required": false
+    },
+    {
+      "name": "button",
+      "kind": "text",
+      "max": 6,
+      "required": false
+    },
+    {
+      "name": "done",
+      "kind": "text",
+      "max": 6,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "avatar",
+      "file": "avatar.png",
+      "required": false,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "85670bf435941534e26aad2396e534163f23a23a6fa7883848672a0d66c4601a"
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "林一 / 账号：linyi2026 / 3.2万 / 238 / 6455 / 持续分享家居收纳和好物测评 / 每周三、周六更新 / + 关注 / 已关注（图片：avatar）",
+      "frames": "完整动画视频 + 1s、1.5s、3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "王小满 / 账号：xiaoman / 测评博主 / + 关注 / 已关注（图片：无图片）",
+      "frames": "完整动画视频 + 1s、1.5s、3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "林一 / 账号：linyi2026 / 3.2万 / 238 / 6455 / 持续分享家居收纳和好物测评 / 每周三、周六更新 / + 关注 / 已关注（图片：avatar）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "王小满 / 账号：xiaoman / 测评博主 / + 关注 / 已关注（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "c66460913b8d03f5b361ce32e19a10e7f9e385cc3f83002fc3a1d0603c7e46fa"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

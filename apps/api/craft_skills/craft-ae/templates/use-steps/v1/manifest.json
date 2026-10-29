@@ -1,0 +1,145 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "use-steps",
+  "version": "v1",
+  "name": "三步上手",
+  "category": "商品：使用方法",
+  "use": "整屏：2–3 个编号步骤依次从右滑入，每步可配一张图（不配图时文字左移），beats 填每步出现的秒数（对齐口播）。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "s1",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "d1",
+      "kind": "text",
+      "max": 18,
+      "required": false
+    },
+    {
+      "name": "s2",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "d2",
+      "kind": "text",
+      "max": 18,
+      "required": false
+    },
+    {
+      "name": "s3",
+      "kind": "text",
+      "max": 10,
+      "required": false
+    },
+    {
+      "name": "d3",
+      "kind": "text",
+      "max": 18,
+      "required": false
+    },
+    {
+      "name": "beats",
+      "kind": "text",
+      "max": 30,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "img1",
+      "file": "img1.png",
+      "required": false,
+      "source": "any"
+    },
+    {
+      "name": "img2",
+      "file": "img2.png",
+      "required": false,
+      "source": "any"
+    },
+    {
+      "name": "img3",
+      "file": "img3.png",
+      "required": false,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 10000,
+    "default": 5500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "87762991e7e4b447b52dee4f03567ad2b2d0ccdc6cfb945d4cc361d861cc91f3"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "d409e9a8af7da2b9aaa97b9cfe78d31095d0b9aab2354ce19e7d78eeb4122e1d"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "三步上手 / 长按开机 / 自动进入配对 / 戴上耳机 / 听到提示音即连接 / 双击切换模式 / 降噪 / 通透一键切换 / （图片：img1、img2、img3）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "怎么用 / 加水到刻度线 /  / 按下开关 /  / 等指示灯熄灭 /  / 0.5,1.6,2.8（图片：无图片）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "三步上手 / 长按开机 / 自动进入配对 / 戴上耳机 / 听到提示音即连接 / 双击切换模式 / 降噪 / 通透一键切换 / （图片：img1、img2、img3）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "怎么用 / 加水到刻度线 /  / 按下开关 /  / 等指示灯熄灭 /  / 0.5,1.6,2.8（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

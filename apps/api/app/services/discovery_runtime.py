@@ -15,8 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from ..models import ContentPersona, ContentPersonaRevision, PersonaResearchRun, SystemSetting, utcnow
 from . import discovery_search
 
-DEFAULTS = {"enabled": False, "public_processing_allowed": False, "search_provider": "minimax",
-            "credential_source": "environment", "timezone": "Asia/Taipei", "daily_hour": 8,
+DEFAULTS = {"enabled": False, "public_processing_allowed": False, "timezone": "Asia/Taipei", "daily_hour": 8,
             "daily_limit": 5, "bootstrap_searches": 8, "weekly_searches": 4, "daily_searches": 4,
             "source_validations": 40, "active_sources": 24, "model_requests": 12,
             "input_tokens": 120000, "output_tokens": 24000, "paused_persona_ids": []}
@@ -37,7 +36,10 @@ def aware(value):
 
 def settings(db, owner_id: int) -> dict:
     row = db.scalar(select(SystemSetting).where(SystemSetting.key == f"discovery.{owner_id}").execution_options(populate_existing=True))
-    return {**DEFAULTS, **(row.value if row else {})}
+    from .model_registration import topic_search_vendor
+
+    # 搜索厂商只在 设置 → AI 与模型 → 用途路由 选择。
+    return {**DEFAULTS, **(row.value if row else {}), "search_provider": topic_search_vendor()}
 
 
 def profile(db, persona_id: int):
@@ -239,8 +241,8 @@ def model_json(db, run, key: str, instruction: str, data: dict, *, max_tokens=18
 
 def search(db, run, key: str, query: str, *, limit=5):
     config = check_current(db, run, provider=True)
-    discovery_search.credentials(config["search_provider"], config["credential_source"])
-    if not discovery_search.available(config["search_provider"], config["credential_source"]):
+    discovery_search.credentials(config["search_provider"])
+    if not discovery_search.available(config["search_provider"]):
         raise DiscoveryBlocked("search_unavailable")
     old = (run.output_json or {}).get(key)
     if old:
@@ -260,8 +262,7 @@ def search(db, run, key: str, query: str, *, limit=5):
     run.output_json = {**(run.output_json or {}), key: {"state": "pending", "query": query}}
     db.commit()
     try:
-        result = discovery_search.search(query, provider=config["search_provider"],
-                                         credential_source=config["credential_source"], limit=limit)
+        result = discovery_search.search(query, provider=config["search_provider"], limit=limit)
     except discovery_search.SearchUnavailable as exc:
         checkpoint(db, run, key, {"state": "unknown" if exc.dispatched else "failed", "reason": str(exc)})
         raise DiscoveryBlocked(str(exc)) from None

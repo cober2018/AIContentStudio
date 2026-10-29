@@ -1,0 +1,97 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "echo-bed",
+  "version": "v1",
+  "name": "同源模糊底",
+  "category": "素材与地图",
+  "use": "同一张素材放大、虚化、压暗铺满背景，前景原图带白边卡片落位并缓慢推近，下方写标题和来源。横图、竖图都能用。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 14,
+      "required": true
+    },
+    {
+      "name": "source",
+      "kind": "text",
+      "max": 24,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "image",
+      "file": "image.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "f1c0cad8b6d478d68d8e7676f19a8128228d3f24b023be52f05c5c306d3aaf19"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "网友发来的现场画面 / 手机拍摄 · 原比例 9:16（图片：image）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "航拍视角（图片：image）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "网友发来的现场画面 / 手机拍摄 · 原比例 9:16（图片：image）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "航拍视角（图片：image）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "6618a8ec24b3d699c3e2f31e194cd59981bef8f03ba23a4e0b928f8eb4bd304f"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

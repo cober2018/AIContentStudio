@@ -1,0 +1,105 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "buy-cta",
+  "version": "v1",
+  "name": "下单引导卡",
+  "category": "商品：下单引导",
+  "use": "底部白卡从下方升起：商品小图、名称、红色价格、一句中性引导语，下方小箭头跳动指向下方。不仿任何平台的购物车、按钮和界面。叠在画面上用。价格必须真实。",
+  "fields": [
+    {
+      "name": "name",
+      "kind": "text",
+      "max": 14,
+      "required": true
+    },
+    {
+      "name": "price",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "cta",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "product",
+      "file": "product.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "c54ab46d2b20c65ab2b0e7fe5fe637c9423fa0f533dd96e4580f2e6b58e2ecdb"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "c1d53ca2447eb46b66bcb4ecc80f10bb91d19434762b63c7daf3de56e7ae8d51"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "头戴降噪耳机 / ¥259 / 点下方链接看看（图片：product）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "保温杯 500 ml / ¥59 / （图片：product）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "头戴降噪耳机 / ¥259 / 点下方链接看看（图片：product）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "保温杯 500 ml / ¥59 / （图片：product）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

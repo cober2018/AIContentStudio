@@ -26,7 +26,10 @@ from .url_fetch import (
     resolve_addresses,
 )
 
-PURPOSES = ("generate", "rewrite", "fact_check", "topic_discovery", "discoverability", "platform_adaptation", "text_master_edit", "form_autofill", "field_polish", "material_match")
+PURPOSES = ("generate", "rewrite", "fact_check", "fact_review", "identity_review", "topic_discovery", "discoverability",
+            "platform_adaptation", "text_master_edit", "form_autofill", "field_polish", "material_match")
+SEARCH_VENDORS = ("minimax", "tavily")
+COVER_SIZES = ("1344x768", "1024x1024", "768x1344")
 PROVIDER_REQUEST_MAX_TIMEOUT_SECONDS = OUTBOUND_HTTP_POLICIES["model_generation"].timeout_seconds
 
 
@@ -44,12 +47,24 @@ class RegisteredModelInput(StrictModel):
     model_id: str = Field(pattern=r"^[A-Za-z0-9_./:-]{1,160}$")
 
 
+class CoverImageUse(StrictModel):
+    profile: str = Field(default="", max_length=100)
+    size: str = Field(default="1344x768", max_length=20)
+
+
+class UsesInput(StrictModel):
+    cover_image: CoverImageUse = Field(default_factory=CoverImageUse)
+    writing_cli: str = Field(default="", max_length=100)
+    topic_search: str = Field(default="", max_length=20)
+
+
 class RegistrationInput(StrictModel):
     expected_revision: int = Field(strict=True, ge=0)
     providers: dict[Identifier, ProviderInput] = Field(default_factory=dict, max_length=100)
     models: list[RegisteredModelInput] = Field(default_factory=list, max_length=100)
     default_profile: str = Field(default="", max_length=100)
-    routes: dict[str, str] = Field(default_factory=dict, max_length=9)
+    routes: dict[str, str] = Field(default_factory=dict, max_length=len(PURPOSES))
+    uses: UsesInput | None = None
 
 
 def endpoint(value):
@@ -181,22 +196,69 @@ def configuration_view(db):
                           "enabled": value.get("enabled", False), "protocol": "openai_compatible",
                           "trusted_private_endpoint": value.get("trusted_private_endpoint", ""), "api_key": mask_secret(value.get("api_key"))}
     profiles = {key: {"provider_id": p.get("provider_id"), "model_id": p.get("model", ""),
-                      "enabled": p.get("enabled", True), "chat": selectable(p, stored)}
+                      "enabled": p.get("enabled", True), "chat": selectable(p, stored), "image": image_selectable(p, stored)}
                 for key, p in stored.get("profiles", {}).items()}
     return {"revision": stored.get("revision", 0), "providers": providers, "profiles": profiles,
             "default_profile": stored.get("default_profile", ""),
-            "routes": {key: stored.get("routes", {}).get(key, "") for key in PURPOSES}, "purposes": list(PURPOSES)}
+            "routes": {key: stored.get("routes", {}).get(key, "") for key in PURPOSES}, "purposes": list(PURPOSES),
+            "uses": uses(stored), "search_vendors": list(SEARCH_VENDORS), "cover_sizes": list(COVER_SIZES),
+            "local_vendors": {"minimax": _minimax_view(stored)}}
+
+
+def uses(stored=None) -> dict:
+    stored = stored if stored is not None else (runtime_config.get_runtime(runtime_config.KEY_MODELS) or {})
+    value = stored.get("uses") or {}
+    cover = value.get("cover_image") or {}
+    return {"cover_image": {"profile": cover.get("profile", ""), "size": cover.get("size", COVER_SIZES[0])},
+            "writing_cli": value.get("writing_cli", ""), "topic_search": value.get("topic_search", "")}
+
+
+def vendor_of(profile, stored) -> dict | None:
+    """Address + key for a profile's vendor; MiniMax comes from its card, the rest from 厂商与模型."""
+    from . import minimax_cli_provider as minimax
+
+    vendor = profile.get("provider_id") if isinstance(profile, dict) else None
+    if vendor == minimax.VENDOR_ID:
+        key = minimax.shared_key()
+        return {"id": vendor, "base_url": minimax.chat_base_url(), "api_key": key, "enabled": bool(key)}
+    provider = stored.get("providers", {}).get(vendor) if vendor else None
+    return {"id": vendor, **provider} if provider else None
+
+
+def _minimax_view(stored=None) -> dict:
+    from .minimax_cli_provider import VENDOR_ID, vendor_status
+
+    stored = stored if stored is not None else (runtime_config.get_runtime(runtime_config.KEY_MODELS) or {})
+    profiles = stored.get("profiles", {})
+    on_minimax = {key for key, p in profiles.items() if p.get("provider_id") == VENDOR_ID and p.get("enabled", True)}
+    chosen = uses(stored)
+    labels = []
+    if stored.get("default_profile") in on_minimax or set(stored.get("routes", {}).values()) & on_minimax:
+        labels.append("写作与对话")
+    if chosen["cover_image"]["profile"] in on_minimax:
+        labels.append("封面生图")
+    if chosen["writing_cli"] in on_minimax:
+        labels.append("写作工具")
+    if chosen["topic_search"] == VENDOR_ID:
+        labels.append("选题搜索")
+    labels += ["配音", "语音转文字", "视频与素材生图"]
+    return {**vendor_status(), "uses": labels}
 
 
 def selectable(profile, stored):
     if not profile.get("enabled", True) or "chat" not in profile.get("declared_capabilities", ["chat"]):
         return False
-    if profile.get("provider_id"):
-        provider = stored.get("providers", {}).get(profile["provider_id"], {})
-        return bool(profile.get("model") and provider.get("enabled") and provider.get("api_key"))
-    if profile.get("provider") == "mock":
+    if profile.get("provider") == "mock" and not profile.get("provider_id"):
         return True
-    return bool(profile.get("provider") == "openai_compatible" and profile.get("model") and profile.get("base_url") and profile.get("api_key"))
+    vendor = vendor_of(profile, stored)
+    return bool(profile.get("model") and vendor and vendor.get("enabled") and vendor.get("api_key"))
+
+
+def image_selectable(profile, stored):
+    if not profile.get("enabled", True) or "image_generation" not in profile.get("declared_capabilities", []):
+        return False
+    vendor = vendor_of(profile, stored)
+    return bool(profile.get("model") and vendor and vendor.get("enabled") and vendor.get("api_key"))
 
 
 def save_configuration(db, raw, *, actor):
@@ -225,8 +287,10 @@ def save_configuration(db, raw, *, actor):
             providers[key] = {"name": config.name, "protocol": "openai_compatible", "base_url": base,
                               "api_key": credential, "enabled": config.enabled, "trusted_private_endpoint": private}
         profiles = merged.setdefault("profiles", {})
+        from .minimax_cli_provider import VENDOR_ID
+
         for model in value.models:
-            if model.provider_id not in providers:
+            if model.provider_id not in providers and model.provider_id != VENDOR_ID:
                 raise HTTPException(422, "provider_missing")
             key = profile_id(model.provider_id, model.model_id)
             profiles[key] = {**profiles.get(key, {}), "provider_id": model.provider_id, "model": model.model_id,
@@ -239,13 +303,31 @@ def save_configuration(db, raw, *, actor):
                 raise HTTPException(422, "model_selection_unavailable")
         merged["routes"] = {**merged.get("routes", {}), **value.routes}
         merged["default_profile"] = value.default_profile
+        if value.uses is not None:
+            cover, writing, search = value.uses.cover_image, value.uses.writing_cli, value.uses.topic_search
+            if cover.profile and (cover.profile not in profiles or not image_selectable(profiles[cover.profile], merged)):
+                raise HTTPException(422, "model_selection_unavailable")
+            if cover.size not in COVER_SIZES:
+                raise HTTPException(422, "cover_image_size_invalid")
+            if writing and (writing not in profiles or not selectable(profiles[writing], merged)):
+                raise HTTPException(422, "model_selection_unavailable")
+            if search and search not in SEARCH_VENDORS:
+                raise HTTPException(422, "topic_search_vendor_invalid")
+            if search == "tavily" and not providers.get("tavily", {}).get("api_key"):
+                raise HTTPException(422, "topic_search_vendor_unavailable")
+            merged["uses"] = value.uses.model_dump()
         merged["schema_version"] = max(2, merged.get("schema_version", 1))
         merged["revision"] = value.expected_revision + 1
         commit_configuration(db, merged, expected_revision=value.expected_revision, actor=actor)
+        sync_cli_files()
         return configuration_view(db)
 
 
 def discover(db, provider_id):
+    from .minimax_cli_provider import CHAT_MODELS, VENDOR_ID
+
+    if provider_id == VENDOR_ID:
+        return {"models": list(CHAT_MODELS), "verified_capabilities": False}
     provider = _stored(db).get("providers", {}).get(provider_id)
     if provider is None:
         raise HTTPException(404, "provider_missing")
@@ -256,3 +338,148 @@ def discover(db, provider_id):
     ids = {item["id"] for item in items if isinstance(item, dict) and isinstance(item.get("id"), str)
            and re.fullmatch(r"[A-Za-z0-9_./:-]{1,160}", item["id"])}
     return {"models": sorted(ids), "verified_capabilities": False}
+
+
+def topic_search_vendor() -> str:
+    return uses()["topic_search"]
+
+
+def sync_cli_files() -> None:
+    """Local CLIs (mmx, wewrite, dsh) read their own files; they are written from 厂商与模型 + 用途, never edited by hand."""
+    import logging
+    import os
+    from pathlib import Path
+
+    import yaml
+
+    from . import minimax_cli_provider as minimax
+    from .writing_pipeline import WEWRITE_HOME
+
+    minimax.sync_cli_login()
+    stored = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
+    profiles, chosen = stored.get("profiles", {}), uses(stored)
+    try:
+        cover = profiles.get(chosen["cover_image"]["profile"])
+        vendor = vendor_of(cover, stored) if cover else None
+        path = WEWRITE_HOME / "config.yaml"
+        data = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {}
+        before = copy.deepcopy(data)
+        if vendor and vendor.get("api_key"):
+            data["image"] = {"providers": [{"provider": "minimax" if vendor["id"] == minimax.VENDOR_ID else "openai",
+                                            "api_key": vendor["api_key"], "model": cover["model"], "base_url": vendor["base_url"]}]}
+        else:
+            data.pop("image", None)
+        if data != before:
+            minimax.write_private(path, yaml.safe_dump(data, allow_unicode=True, sort_keys=False))
+
+        writing = profiles.get(chosen["writing_cli"])
+        vendor = vendor_of(writing, stored) if writing else None
+        if vendor and vendor.get("api_key"):
+            home = Path.home() / ".dsh"
+            env_name = "MINIMAX_API_KEY" if vendor["id"] == minimax.VENDOR_ID else f"AICS_{re.sub(r'[^A-Z0-9]', '_', vendor['id'].upper())}_API_KEY"
+            settings_path = home / "settings.yaml"
+            data = (yaml.safe_load(settings_path.read_text(encoding="utf-8")) or {}) if settings_path.exists() else {}
+            before = copy.deepcopy(data)
+            providers = data.setdefault("llm-pi-ai", {}).setdefault("providers", {})
+            entry = providers.get(vendor["id"]) or {}
+            models = [m for m in entry.get("models") or [] if isinstance(m, dict)]
+            if writing["model"] not in {m.get("id") for m in models}:
+                models.insert(0, {"id": writing["model"]})
+            providers[vendor["id"]] = {**entry, "apiKeyEnv": env_name, "api": "openai-completions",
+                                       "baseURL": vendor["base_url"], "models": models}
+            data["agent-default-model"] = {"provider": vendor["id"], "model": writing["model"]}
+            if data != before:
+                minimax.write_private(settings_path, yaml.safe_dump(data, allow_unicode=True, sort_keys=False))
+            env_path = home / "env.local"
+            text = env_path.read_text(encoding="utf-8") if env_path.exists() else ""
+            line = f'export {env_name}="{vendor["api_key"]}"'
+            pattern = rf"^export {env_name}=.*$"
+            updated = (re.sub(pattern, lambda _: line, text, flags=re.MULTILINE) if re.search(pattern, text, flags=re.MULTILINE)
+                       else text.rstrip("\n") + ("\n" if text else "") + line + "\n")
+            if updated != text:
+                minimax.write_private(env_path, updated)
+                os.chmod(env_path, 0o600)
+    except (OSError, ValueError, yaml.YAMLError):
+        logging.getLogger(__name__).warning("model_cli_sync_failed")
+
+
+def migrate_to_single_source(db) -> None:
+    """One-time: old per-section model rows become vendor-linked profiles and 用途, then are deleted."""
+    from sqlalchemy import select
+
+    from ..models import SystemSetting
+    from .minimax_cli_provider import VENDOR_ID
+
+    stored = _stored(db)
+    if stored.get("schema_version", 1) >= 3:
+        return
+    merged = copy.deepcopy(stored)
+    profiles = merged.setdefault("profiles", {})
+    chosen = uses(merged)
+
+    def chat_profile(model):
+        key = profile_id(VENDOR_ID, model)
+        profiles.setdefault(key, {"provider_id": VENDOR_ID, "model": model, "provider": "openai_compatible",
+                                  "enabled": True, "declared_capabilities": ["chat"]})
+        return key
+
+    for key, profile in profiles.items():
+        bindings = profile.get("capability_bindings") or {}
+        if not profile.get("provider_id") and any((b or {}).get("base_url") == "local://mmx" for b in bindings.values()):
+            profile["provider_id"] = VENDOR_ID
+            profile["model"] = next(b["model_id"] for b in bindings.values() if b and b.get("model_id"))
+    legacy = [key for key, p in profiles.items() if not p.get("provider_id") and p.get("provider") != "mock"]
+    for key in legacy:
+        profiles.pop(key)
+    merged["routes"] = {k: v for k, v in (merged.get("routes") or {}).items() if v not in legacy}
+    if merged.get("default_profile") in legacy:
+        merged["default_profile"] = ""
+
+    rows = {row.key: row for row in db.scalars(select(SystemSetting).where(
+        SystemSetting.key.in_(["llm", "image", "dsh"]) | SystemSetting.key.like("discovery.%")))}
+    llm = rows.get("llm")
+    llm_host = urlsplit(str((llm.value or {}).get("base_url") or "")).hostname if llm else None
+    if llm_host and "minimax" in llm_host and llm.value.get("model"):
+        chat_profile(llm.value["model"])
+    image = rows.get("image")
+    if image and (image.value or {}).get("enabled") and image.value.get("provider") == "minimax" and not chosen["cover_image"]["profile"]:
+        cover = next((k for k, p in profiles.items() if p.get("provider_id") == VENDOR_ID
+                      and "image_generation" in p.get("declared_capabilities", [])), "")
+        size = image.value.get("size")
+        chosen["cover_image"] = {"profile": cover, "size": size if size in COVER_SIZES else COVER_SIZES[0]}
+    dsh = rows.get("dsh")
+    if dsh and (dsh.value or {}).get("default_provider") == "minimax" and dsh.value.get("default_model") and not chosen["writing_cli"]:
+        chosen["writing_cli"] = chat_profile(dsh.value["default_model"])
+    for key, row in rows.items():
+        if re.fullmatch(r"discovery\.\d+", key):
+            value = dict(row.value or {})
+            if not chosen["topic_search"] and value.get("search_provider") in SEARCH_VENDORS:
+                chosen["topic_search"] = value["search_provider"]
+            value.pop("search_provider", None)
+            value.pop("credential_source", None)
+            row.value = value
+    voice = db.get(SystemSetting, "voice_default")
+    if voice is not None and "model_id" in (voice.value or {}):
+        voice.value = {k: v for k, v in voice.value.items() if k != "model_id"}
+        runtime_config.set_runtime("voice_default", voice.value)
+    for key in ("llm", "image", "dsh"):
+        if key in rows:
+            db.delete(rows[key])
+            runtime_config.clear_runtime(key)
+    db.flush()
+    merged["uses"] = chosen
+    merged["schema_version"] = 3
+    merged["revision"] = stored.get("revision", 0) + 1
+    commit_configuration(db, merged, expected_revision=stored.get("revision", 0), actor="system:unify-model-config")
+
+
+def cover_image_config() -> dict | None:
+    """The 封面生图 use resolved to its vendor; None when not chosen or the vendor has no key."""
+    stored = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
+    chosen = uses(stored)["cover_image"]
+    profile = stored.get("profiles", {}).get(chosen["profile"])
+    vendor = vendor_of(profile, stored) if profile else None
+    if not vendor or not vendor.get("api_key") or not profile.get("model"):
+        return None
+    return {"vendor_id": vendor["id"], "model": profile["model"], "size": chosen["size"],
+            "base_url": vendor["base_url"], "api_key": vendor["api_key"]}

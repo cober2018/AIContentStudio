@@ -113,6 +113,3 @@ def test_dsh_apply_rejects_unexpected_structure(tmp_path):
     assert result["ok"] is False
 
 
-def test_dsh_put_requires_admin(client, seed_users):
-    resp = client.put("/api/v1/settings/dsh", headers={"X-Studio-User": "editor@studio.local"}, json={})
-    assert resp.status_code == 403

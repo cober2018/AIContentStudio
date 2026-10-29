@@ -147,3 +147,6 @@ Run20科技technology.v1来源54+56生成#19常青；Run21生活仅55生成#20�
 Run24/25各0条；生活item799本地日期经UTC跨日后与原引文不匹配被误拒，质量未通过。详见../improve-tech-opportunity-selection/review.md末节。业务只读，未重跑/改数据/归档，既有未完成项保留。
 
 2026-10-21只读跟进：Run28/29科技1条#21、生活0条；既有缺陷未修复，验收状态不变，不关闭清单或归档。证据见../improve-tech-opportunity-selection/review.md同日记录。
+
+## 2026-10-25 自然批出现生活阻断
+只读正式SQLite：Run44科技partial，生成#27；Run45生活blocked/aggregate_evidence_withdrawn，于00:03:41.352405 UTC结束，task7cc89365-fdf8-4ab8-a1cb-d96263f03e19，origin=celery_beat/execution_origin=celery_worker。生活快照00:03:40.524262、来源55/catchup4768，冻结item1087/1089/1088/1083/1082；没有候选/双评分/summary，不能报作合格零结果。回执表示聚合证据撤选阻断，具体撤选item及原因尚未完成追溯，不推定所有条目撤回。生活历史catchup4497网络缺口保留。正式日期API科技200/[27]、生活200/[]。本次无重跑、Provider调用或业务修改；未做新UI验收，未归档或关闭任务。旧引用/日期缺陷未有修复回执；本次新阻断通知用户。

@@ -52,9 +52,10 @@ export default function StageContractControls({ base, nodeId, contract, baseConf
   const [inventory, setInventory] = useState<StageMethods | null>(null);
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
-  const fields = (contract.tunable_fields || []).filter(field => !hiddenFields.includes(field)
-    || baseConfig[field] !== undefined || override[field] !== undefined);
-  const needsInventory = fields.some(field => field === "model_profile_id" || field === "profile_id" || field === "selected_profile" || contract.ui_schema?.[field]?.control === "method");
+  // 模型只在 设置 → AI 与模型 选，阶段里不再显示模型选择。
+  const fields = (contract.tunable_fields || []).filter(field => !["model_profile_id", "selected_profile"].includes(field)
+    && (!hiddenFields.includes(field) || baseConfig[field] !== undefined || override[field] !== undefined));
+  const needsInventory = fields.some(field => field === "profile_id" || contract.ui_schema?.[field]?.control === "method");
   useEffect(() => {
     let alive = true;
     setInventory(null); setError("");
@@ -119,11 +120,7 @@ export default function StageContractControls({ base, nodeId, contract, baseConf
         onChange(field, next);
         if (selectedChannel && selectedForm) onChange("variant_key", variantKey(selectedChannel, selectedForm, next));
       }}><option value="">仅渠道适配 · 未选目标账号</option>{chosen && !accounts.some(account => String(account.id) === chosen) && <option value={chosen} disabled>当前账号不属于此角色/平台（保留原值）</option>}{accounts.map(account => <option key={account.id} value={account.id} disabled={variantInventory?.bindings.some(binding => binding.account_id === account.id && binding.content_form === selectedForm && !binding.enabled)}>{account.name} · #{account.id}</option>)}</select><p className="mt-1 text-xs text-slate-500">按服务端角色与平台筛选。选择“仅渠道适配”会明确清除已保存的目标账号。选择账号后使用独立版本标识；接受与审核仍须明确确认。</p></Field>;
-    } else if (field === "selected_profile") {
-      const capability = String(override.capability ?? baseConfig.capability ?? "");
-      const profiles = inventory?.media_profiles?.filter(profile => profile.capabilities?.[capability]?.declared) || [];
-      control = <Field label={label} hint={`${hint} · 能力：${capability}`}><select className={inputClass} disabled={disabled || !inventory} value={current === undefined ? "" : String(current)} onChange={event => onChange(field, event.target.value || undefined)}><option value="">使用已保存的媒体配置</option>{current !== undefined && !profiles.some(profile => profile.id === current) && <option value={String(current)} disabled>当前媒体配置不支持所选能力</option>}{profiles.map(profile => { const state = profile.capabilities?.[capability]; return <option key={profile.id} value={profile.id} disabled={!profile.available || state?.configured !== true || state.executable !== true}>{profile.label} · {state?.provider || profile.provider || "未配置"} / {state?.model || profile.model || "未配置"} · {state?.state}{state?.reason ? ` · ${state.reason}` : ""}</option>; })}</select><p className="mt-1 text-xs text-slate-500">配置声明和可用性供选择参考，不代表真实生成已验收；实际执行路由以阶段预览为准。</p></Field>;
-    } else if (field === "model_profile_id" || field === "profile_id") {
+    } else if (field === "profile_id") {
       control = <Field label={label} hint={hint}><select className={inputClass} disabled={disabled || !inventory} value={current === undefined ? "" : String(current)} onChange={event => onChange(field, event.target.value || undefined)}><option value="">使用已保存的模型配置</option>{inventory?.model_profiles.map(profile => { const id = profile.profile_id || profile.id; return id ? <option key={id} value={id} disabled={profile.available === false || profile.executable === false}>{profile.label || id}{profile.provider || profile.model ? ` · ${profile.provider || ""} / ${profile.model || ""}` : ""}{profile.reason ? ` · ${profile.reason}` : ""}</option> : null; })}</select></Field>;
     } else if (contract.ui_schema?.[field]?.control === "method") {
       const chosen = effective as (StageMethodSelection & { arguments_json?: string }) | undefined;

@@ -24,23 +24,35 @@ EMOTIONS = {"auto": None, "happy": "开心", "sad": "悲伤", "angry": "愤怒",
             "calm": "中性", "fluent": "流畅", "whisper": "低语"}
 
 
+def tts_model() -> str:
+    """The voiceover model is the first MiniMax TTS route in 设置 → AI 与模型 → 生成能力与插件."""
+    models = runtime_config.get_runtime(runtime_config.KEY_MODELS) or {}
+    for plugin_id in (models.get("capability_routes") or {}).get("tts", []):
+        plugin = (models.get("media_plugins") or {}).get(plugin_id) or {}
+        binding = (((models.get("profiles") or {}).get(plugin.get("model_profile_id")) or {}).get("capability_bindings") or {}).get("tts") or {}
+        if plugin.get("enabled") and binding.get("adapter_key") == "minimax.cli" and binding.get("model_id"):
+            return binding["model_id"]
+    return DEFAULT["model_id"]
+
+
 def settings() -> dict:
-    return {**DEFAULT, **(runtime_config.get_runtime(KEY) or {})}
+    stored = {k: v for k, v in (runtime_config.get_runtime(KEY) or {}).items() if k != "model_id"}
+    return {**DEFAULT, **stored, "model_id": tts_model()}
 
 
 def save_settings(db: Session, value: dict, user: User) -> dict:
     from ..models import SystemSetting
     from .model_capability_routing import tts_parameters
 
-    merged = {**settings(), **{k: v for k, v in value.items() if k in DEFAULT}}
-    if merged["model_id"] not in {"speech-2.8-hd", "speech-2.8-turbo", "speech-2.6-hd", "speech-2.6-turbo"} or merged["emotion"] not in EMOTIONS:
-        raise HTTPException(422, {"code": "voice_settings_invalid", "message": "模型或情绪不支持"})
+    merged = {**settings(), **{k: v for k, v in value.items() if k in DEFAULT and k != "model_id"}}
+    if merged["emotion"] not in EMOTIONS:
+        raise HTTPException(422, {"code": "voice_settings_invalid", "message": "情绪不支持"})
     try:
         tts_parameters(_parameters(merged), capability="tts")
     except (TypeError, ValueError):
         raise HTTPException(422, {"code": "voice_settings_invalid", "message": "配音参数超出范围"}) from None
     row = db.get(SystemSetting, KEY) or SystemSetting(key=KEY)
-    row.value, row.updated_by = merged, user.email
+    row.value, row.updated_by = {k: v for k, v in merged.items() if k != "model_id"}, user.email
     db.add(row)
     db.commit()
     runtime_config.set_runtime(KEY, merged)

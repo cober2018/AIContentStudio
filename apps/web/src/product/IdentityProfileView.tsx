@@ -105,7 +105,7 @@ export function CreativeProfile({ label, value, names }: { label: string; value:
   const skill = catalog?.skills.find(item => item.ref === value.skill_ref);
   const stages = Object.entries((value.production_stages || {}) as Record<string, { enabled?: boolean; methods?: Json[] }>)
     .sort(([a], [b]) => (catalog?.production_stages?.find(item => item.id === a)?.order ?? 99) - (catalog?.production_stages?.find(item => item.id === b)?.order ?? 99));
-  const model = value.model_binding ? `${value.model_binding.model || ""}${value.model_binding.provider ? ` · ${value.model_binding.provider}` : ""}` : "按平台默认路由";
+  const model = "按 设置 → AI 与模型 的路由";
   const methodName = (method: Json) => method.source_kind === "studio_builtin"
     ? catalog?.skills.find(item => item.ref === method.skill_ref)?.purpose || refName(method.skill_ref)
     : names.methods[method.artifact_id] ? `${names.methods[method.artifact_id]}` : `能力记忆 #${method.artifact_id}`;

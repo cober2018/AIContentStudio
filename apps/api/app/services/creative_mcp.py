@@ -233,8 +233,8 @@ class ShotSlotsInput(Scope):
     pass
 
 
-class CraftSkillInput(Input):
-    skill: Literal["ae-motion", "resolve-edit"]
+class CraftSkillInput(Scope):
+    skill: str = Field(min_length=1, max_length=150, pattern=r"^(craft-ae|craft-resolve|studio\.[a-z0-9_.-]+@[1-9][0-9]{0,5})$")
     entry: str | None = Field(default=None, min_length=1, max_length=200)
 
 
@@ -248,6 +248,7 @@ class TemplateRenderInput(Scope):
     content: dict[str, str | int | float]
     images: dict[str, ID] | None = None
     duration_ms: int | None = Field(default=None, ge=1, le=600000)
+    aspect: Literal["9:16", "16:9"] = "9:16"
 
 
 class MatchReadInput(Input):
@@ -317,9 +318,9 @@ TOOLS = {
     "get_stage_decision": (StageDecisionInput, "Read the user's decision on an attempt (waiting_for_you/accepted/accepted_with_edits/rejected/rerun_requested/commented) with note; wait_seconds waits up to 25s.", True),
     "start_material_match": (MatchStartInput, "Search own and open libraries for a script or shots; the user picks or rejects on the platform.", False),
     "get_material_match": (MatchReadInput, "Read a material search with the user's picks and rejections per segment; wait_seconds returns early on any change.", True),
-    "get_craft_skill": (CraftSkillInput, "Read a craft skill's index (ae-motion: After Effects templates and components; resolve-edit: DaVinci Resolve edit and finishing), or one entry it lists. Read the index first, then only the entry you need.", True),
-    "list_ae_templates": (TemplateListInput, "List AE template manifests: use, fields, images, duration range, fonts and status (ready after two checked renders, else draft; do not auto-use drafts).", True),
-    "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project. Never binds it to a shot.", False),
+    "get_craft_skill": (CraftSkillInput, "Read a platform skill for this work. craft-resolve (DaVinci Resolve edit and finishing) and craft-ae (After Effects templates and components) are always readable: read the index first, then only the entry you need. A studio.* writing skill (scripts, copy, shot plans) is readable only when the brief's platform_skills lists it; when the user switched writing skills off the platform refuses with platform_skills_disabled and you write on your own.", True),
+    "list_ae_templates": (TemplateListInput, "List AE template manifests: category, use, fields, images, duration range, aspects (9:16 project, landscape in variants), preview_files, fonts and status (ready after two checked renders, else draft; do not auto-use drafts). Choose templates yourself by shot content; when the user explicitly names an effect while fine-tuning, use that template, and tell the user first if it lacks the film's aspect or is not ready.", True),
+    "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project, in the film's aspect (9:16 default, 16:9 when the template has a landscape variant; never stretched). Never binds it to a shot.", False),
     "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
     "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model.", True),
     "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
@@ -342,7 +343,7 @@ _META_FIELDS = ("id", "project_id", "content_unit_id", "revision_no", "payload_s
                 "context_hash", "creative_intent", "creative_intent_hash", "modality", "channel_id",
                 "content_form", "variant_key", "source_master_revision_id", "readiness")
 _SAFE_CODES = {
-    "creative_execution_revision_conflict", "creative_execution_executor_mismatch", "creative_execution_terminal",
+    "platform_skills_disabled", "creative_execution_revision_conflict", "creative_execution_executor_mismatch", "creative_execution_terminal",
     "creative_execution_reconciliation_required", "creative_execution_transition_denied",
     "creative_execution_idempotency_conflict", "creative_execution_not_found", "creative_package_not_found",
     "creative_source_not_current", "creative_package_stale", "creative_input_model_use_denied",
@@ -448,13 +449,12 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         from . import craft_skills
 
         if name == "get_craft_skill":
-            if args.entry is None:
-                return {"skill": args.skill, "index": craft_skills.skill_index(args.skill)}
-            return {"skill": args.skill, "entry": args.entry, "text": craft_skills.skill_entry(args.skill, args.entry)}
+            return craft_skills.read_skill(db, user, args.project_id, args.unit_id, args.skill, args.entry)
         if name == "list_ae_templates":
             return craft_skills.list_templates()
         return craft_skills.render(db, user, project_id=args.project_id, unit_id=args.unit_id, template_id=args.template,
-                                   version=args.version, content=args.content, images=args.images, duration_ms=args.duration_ms)
+                                   version=args.version, content=args.content, images=args.images, duration_ms=args.duration_ms,
+                                   aspect=args.aspect)
     if name in _REVIEW_TOOLS:
         return _review(db, name, args, user)
     if name in _VIDEO_TOOLS:

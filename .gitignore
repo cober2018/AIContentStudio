@@ -18,6 +18,8 @@ data/
 backups/
 evals/reports/
 apps/api/evals/reports/
+# 本地生成的审片视频、截图等成果，不入库
+output/
 
 # IDE
 .idea/

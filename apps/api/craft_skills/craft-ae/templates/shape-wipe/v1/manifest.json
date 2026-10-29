@@ -1,0 +1,88 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "shape-wipe",
+  "version": "v1",
+  "name": "色块扫屏",
+  "category": "开场、章节与转场",
+  "use": "三层斜边色块（浅→中→深）快速错开从同一方向扫进，约 0.5 秒时最上层深色块盖满全屏，此时底下两层隐藏，随后只有深色块继续划走、露出下一段。在全屏盖住那一刻切换镜头。direction 填 left（从左扫来）、right、up（从下往上）、down。color 填 ink（深灰）、blue、red、violet、teal、orange 之一，不填用默认。默认 ink（中性灰阶）。透明中间件，放在两个镜头的切点上。",
+  "fields": [
+    {
+      "name": "direction",
+      "kind": "text",
+      "max": 5,
+      "required": false
+    },
+    {
+      "name": "color",
+      "kind": "text",
+      "max": 6,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 800,
+    "max": 3000,
+    "default": 1000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "1660aa419ed7e3afd72749a885d7657551592fee5eae226e7cc823fd89692fc9"
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "left / ink（图片：无图片）",
+      "frames": "完整动画视频 + 0.25s、0.42s、0.68s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "up / blue（图片：无图片）",
+      "frames": "完整动画视频 + 0.25s、0.42s、0.68s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "left / ink（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "up / blue（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "e7ebcfcbd59ebcde34619049a5b2ac309250c423941d1e152c3dee35476ee1b1"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

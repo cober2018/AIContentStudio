@@ -25,7 +25,7 @@ from ..config import get_settings
 from ..models import AuditLog, MaterialRevision, ProjectMaterialReference, User
 
 ROOT = Path(__file__).resolve().parents[2] / "craft_skills"
-SKILLS = {"ae-motion", "resolve-edit"}
+SKILLS = {"craft-ae", "craft-resolve"}
 _DATA = re.compile(r"/\*AICS_DATA\*/.*?/\*AICS_END\*/", re.S)
 _ENTRY = re.compile(r"^[a-z0-9][a-z0-9_-]{0,60}(/[a-z0-9][a-z0-9_.-]{0,80})*\.(md|json)$")
 
@@ -49,18 +49,111 @@ def skill_entry(skill: str, entry: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+SWITCH_KEY = "unit_platform_skills"
+# Skill families a third-party model may write with, per kind of work; editing / effects skills are always on.
+_WRITING_FAMILIES = {"video": {"research", "text", "audio", "video"}, "audio": {"research", "text", "audio"},
+                     "text": {"research", "text"}, "graphic": {"research", "text", "graphic"}}
+_NOT_WRITING = {"studio.audio.tts"}  # runs a provider task, not guidance a model can follow
+
+
+def writing_skills_on(db: Session, unit_id: int) -> bool:
+    from ..models import SystemSetting
+
+    row = db.get(SystemSetting, SWITCH_KEY)
+    return str(unit_id) not in ((row.value or {}) if row else {})
+
+
+def set_writing_skills(db: Session, user: User, project_id: int, unit_id: int, on: bool) -> dict:
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from ..models import SystemSetting
+    from .content_masters import owned_unit
+    from .project_events import record_project_event
+
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    row = db.get(SystemSetting, SWITCH_KEY)
+    if row is None:
+        row = SystemSetting(key=SWITCH_KEY, value={})
+        db.add(row)
+    # Only closed works are recorded, so a work nobody touched stays on.
+    value = dict(row.value or {})
+    if on:
+        value.pop(str(unit_id), None)
+    else:
+        value[str(unit_id)] = {"by": user.email}
+    row.value, row.updated_by = value, user.email
+    flag_modified(row, "value")
+    record_project_event(db, project_id=project_id, event_type="unit.updated", actor=user.email, entity_type="content_unit",
+                         entity_id=unit_id, payload={"platform_writing_skills": "on" if on else "off"})
+    db.commit()
+    return {"writing_skills": "on" if on else "off"}
+
+
+def writing_skills(unit) -> list[dict]:
+    from .studio_creative_catalog import SKILLS as STUDIO
+    from .studio_creative_catalog import skill_system
+
+    families = _WRITING_FAMILIES.get(unit.modality, {"research", "text"})
+    system = "product" if unit.production_domain == "product" else "persona"
+    latest: dict[str, dict] = {}
+    for item in STUDIO.values():
+        if (item["kind"] == "skill" and item["modality"] in families and item["key"] not in _NOT_WRITING
+                and skill_system(item["key"]) in {system, "shared"}
+                and (item["key"] not in latest or int(item["version"]) > int(latest[item["key"]]["version"]))):
+            latest[item["key"]] = item
+    return [{"skill": item["ref"], "purpose": item["purpose"]} for item in latest.values()]
+
+
+def platform_skills(db: Session, unit) -> dict:
+    """What the brief tells a third-party model it may read."""
+    on = writing_skills_on(db, unit.id)
+    readable = [{"skill": "craft-resolve", "purpose": "DaVinci Resolve 剪辑与收尾，含选用表 choose.md"},
+                {"skill": "craft-ae", "purpose": "After Effects 包装、组件与模板说明"}] if unit.modality == "video" else []
+    if on:
+        readable += writing_skills(unit)
+    return {"writing_skills": "on" if on else "off", "always_on": ["craft-resolve", "craft-ae"],
+            "readable": [{**item, "read": f"get_craft_skill(skill=\"{item['skill']}\")"} for item in readable],
+            "rule": "只用 readable 里列出的平台 skill；writing_skills 为 off 时写文案、脚本不用平台 skill，靠自己写。剪辑、特效 skill 一直可用。"}
+
+
+def read_skill(db: Session, user: User, project_id: int, unit_id: int, skill: str, entry: str | None) -> dict:
+    from .content_masters import owned_unit
+
+    _project, unit = owned_unit(db, project_id, unit_id, user)
+    if skill in SKILLS:
+        if entry is None:
+            return {"skill": skill, "index": skill_index(skill)}
+        return {"skill": skill, "entry": entry, "text": skill_entry(skill, entry)}
+    if not writing_skills_on(db, unit_id):
+        _fail("platform_skills_disabled", 403, message="这条作品的平台写作 skill 已被关闭，请自己写")
+    if skill not in {item["skill"] for item in writing_skills(unit)} or entry is not None:
+        _fail("craft_skill_not_found", 404)
+    from .studio_creative_catalog import load_skill
+
+    try:
+        package = load_skill(skill)
+    except ValueError:
+        _fail("craft_skill_unavailable", 409)
+    return {"skill": skill, "text": package["instruction"],
+            "references": [{"name": ref["name"], "content": ref["content"]} for ref in package.get("references", [])]}
+
+
 def _store() -> Path:
     return Path(get_settings().ae_template_store).expanduser()
 
 
 def _manifests() -> list[dict]:
     items = []
-    for path in sorted((ROOT / "ae-motion" / "templates").glob("*/*/manifest.json")):
+    for path in sorted((ROOT / "craft-ae" / "templates").glob("*/*/manifest.json")):
         manifest = json.loads(path.read_text(encoding="utf-8"))
         project = _store() / manifest["id"] / manifest["version"] / manifest["project"]["file"]
         # Two checked renders with different content are what makes a template safe to pick automatically.
         manifest["status"] = "ready" if len(manifest.get("checks") or []) >= 2 else "draft"
         manifest["installed"] = project.is_file()
+        folder = project.parent
+        # Previews let people and models see the motion before choosing; only files that exist are offered.
+        manifest["preview_files"] = {aspect: str(folder / name) for aspect, name in (manifest.get("previews") or {}).items()
+                                     if (folder / name).is_file()}
         items.append(manifest)
     return items
 
@@ -74,6 +167,24 @@ def _manifest(template_id: str, version: str) -> dict:
     if found is None:
         _fail("ae_template_not_found", 404)
     return found
+
+
+def _variant(manifest: dict, aspect: str) -> tuple[dict, list[int]]:
+    """The 9:16 project is the manifest's own; other aspects live in variants and are never stretched from it."""
+    if aspect == "9:16":
+        return manifest["project"], manifest["size"]
+    variant = (manifest.get("variants") or {}).get(aspect)
+    if variant is None:
+        _fail("ae_template_aspect_unavailable", 409, aspect=aspect)
+    return variant["project"], variant["size"]
+
+
+def preview_file(template_id: str, version: str, aspect: str) -> Path:
+    manifest = _manifest(template_id, version)
+    path = manifest["preview_files"].get(aspect)
+    if path is None:
+        _fail("ae_template_preview_missing", 404)
+    return Path(path)
 
 
 def _content(manifest: dict, content: dict) -> dict:
@@ -128,13 +239,14 @@ def _image_bytes(db: Session, project_id: int, revision_id: int) -> tuple[bytes,
 
 
 def render(db: Session, user: User, *, project_id: int, unit_id: int, template_id: str, version: str,
-           content: dict, images: dict | None = None, duration_ms: int | None = None) -> dict:
+           content: dict, images: dict | None = None, duration_ms: int | None = None, aspect: str = "9:16") -> dict:
     from .content_masters import owned_unit
     from .materials import create_material, create_revision
     from .project_events import record_project_event
 
     owned_unit(db, project_id, unit_id, user, mutate=True)
     manifest = _manifest(template_id, version)
+    project_info, size = _variant(manifest, aspect)
     data = _content(manifest, content)
     bounds = manifest["duration_ms"]
     duration = bounds["default"] if duration_ms is None else duration_ms
@@ -148,9 +260,11 @@ def render(db: Session, user: User, *, project_id: int, unit_id: int, template_i
         _fail("ae_template_image_required")
     # Templates show an image panel only for the slots actually supplied.
     data["_images"] = sorted(images)
+    # Exit animations are timed from the end, and the render length is chosen per call.
+    data["_duration_ms"] = duration
     folder = _store() / template_id / version
-    project = folder / manifest["project"]["file"]
-    if not project.is_file() or hashlib.sha256(project.read_bytes()).hexdigest() != manifest["project"]["sha256"]:
+    project = folder / project_info["file"]
+    if not project.is_file() or hashlib.sha256(project.read_bytes()).hexdigest() != project_info["sha256"]:
         _fail("ae_template_project_changed", 409)
     missing = [name for name in manifest["fonts"] if not _font_installed(name)]
     if missing:
@@ -173,13 +287,20 @@ def render(db: Session, user: User, *, project_id: int, unit_id: int, template_i
                 inputs.append(revision)
             else:
                 shutil.copyfile(folder / slot["file"], target)
+        # The safe-area guide layer never renders, but aerender still expects its footage beside the project.
+        for extra in folder.glob("guide-*.png"):
+            shutil.copyfile(extra, job / extra.name)
         literal = html.escape(json.dumps(data, ensure_ascii=False), quote=False)
         xml = project.read_text(encoding="utf-8").replace(str(folder), str(job))
         xml = _DATA.sub(lambda _: "/*AICS_DATA*/" + literal + "/*AICS_END*/", xml)
         (job / "job.aepx").write_text(xml, encoding="utf-8")
-        output = job / "out.mp4"
+        # Overlay templates carry their own render-queue item with an alpha output module, since aerender
+        # only accepts output template names in After Effects' interface language.
+        alpha = manifest.get("alpha") is True
+        output = job / ("out.mov" if alpha else "out.mp4")
         frames = round(duration * manifest["fps"] / 1000)
-        done = subprocess.run([str(aerender), "-project", str(job / "job.aepx"), "-comp", manifest["comp"], "-s", "0",
+        target = ["-rqindex", "1"] if alpha else ["-comp", manifest["comp"]]
+        done = subprocess.run([str(aerender), "-project", str(job / "job.aepx"), *target, "-s", "0",
                                "-e", str(frames - 1), "-output", str(output)], capture_output=True, timeout=600)
         if done.returncode != 0 or not output.is_file():
             _fail("ae_render_failed", 502)
@@ -187,12 +308,12 @@ def render(db: Session, user: User, *, project_id: int, unit_id: int, template_i
         content_hash = hashlib.sha256(json.dumps(data, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         material = create_material(db, kind="video", title=f"{manifest['name']} · {str(data.get(manifest['fields'][0]['name']))[:40]}", created_by=user.email)
         revision = create_revision(
-            db, material, content=body, suffix=".mp4", declared_mime="video/mp4", source_kind="chart",
-            source_metadata={"ae_template": template_id, "version": version, "project_sha256": manifest["project"]["sha256"],
+            db, material, content=body, suffix=output.suffix, declared_mime="video/quicktime" if alpha else "video/mp4", source_kind="chart",
+            source_metadata={"ae_template": template_id, "version": version, "aspect": aspect, "project_sha256": project_info["sha256"],
                              "content_hash": content_hash, "image_revision_ids": [item.id for item in inputs]},
             rights_status="cleared", public_use_allowed=all(item.public_use_allowed for item in inputs),
             model_use_allowed=all(item.model_use_allowed for item in inputs), commercial_use_allowed=all(item.commercial_use_allowed is not False for item in inputs),
-            width=manifest["size"][0], height=manifest["size"][1], duration_ms=duration, created_by=user.email)
+            width=size[0], height=size[1], duration_ms=duration, created_by=user.email)
         reference = ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="ae_template", status="active",
                                              attached_by=user.email, note=f"AE 模板 {template_id} {version}；候选，未绑定镜头")
         db.add(reference)

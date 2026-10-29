@@ -96,12 +96,15 @@ class Binding(StrictModel):
     adapter_key: Literal["openai.compatible", "google.native", "xai.native", "minimax.native", "minimax.cli"]
     adapter_version: Literal["1", "2"] = "1"
     model_id: str = Field(pattern=r"^[A-Za-z0-9_./:-]{1,160}$")
-    base_url: str = Field(max_length=500)
-    credential_ref: str = Field(pattern=r"^[A-Z][A-Z0-9_]{0,127}$")
+    # Address and credential reference are filled from the profile's vendor on save, never typed per binding.
+    base_url: str = Field(default="", max_length=500)
+    credential_ref: str = Field(default="", pattern=r"^([A-Z][A-Z0-9_]{0,127})?$")
 
     @field_validator("base_url")
     @classmethod
     def safe_base_url(cls, value):
+        if value == "":
+            return value
         try:
             parsed = urlsplit(value)
             path = parsed.path
@@ -132,6 +135,7 @@ class Binding(StrictModel):
 
 
 class Profile(StrictModel):
+    provider_id: Identifier | None = None
     enabled: StrictBool | None = None
     declared_capabilities: list[Capability] = Field(default_factory=list, max_length=5)
     capability_bindings: dict[Capability, Binding] = Field(default_factory=dict, max_length=5)
@@ -260,6 +264,7 @@ def configuration_view(db):
             except ValidationError:
                 continue
         profiles[key] = {
+            "provider_id": profile.get("provider_id"),
             "enabled": profile.get("enabled", True) is True,
             "declared_capabilities": declarations,
             "capability_bindings": copy.deepcopy(bindings),
@@ -320,10 +325,41 @@ def save_configuration(db, value, *, expected_revision, actor):
         for key, profile in config["profiles"].items():
             if profile["enabled"] is None:
                 profile.pop("enabled")
+            if profile["provider_id"] is None:
+                profile.pop("provider_id")
             profiles[key] = {**profiles.get(key, {}), **profile}
-        merged = {**stored, **config, "profiles": profiles, "schema_version": 2, "revision": expected_revision + 1}
+            _bind_to_vendor(profiles[key], stored)
+        merged = {**stored, **config, "profiles": profiles, "schema_version": max(stored.get("schema_version", 1), 2),
+                  "revision": expected_revision + 1}
         commit_configuration(db, merged, expected_revision=expected_revision, actor=actor)
         return configuration_view(db)
+
+
+def _bind_to_vendor(profile, stored):
+    """Executable bindings take their address from a vendor in 厂商与模型; nothing is typed per binding."""
+    from .minimax_cli_provider import VENDOR_ID
+
+    providers = stored.get("providers", {})
+    for binding in (profile.get("capability_bindings") or {}).values():
+        vendor = profile.get("provider_id")
+        if binding["adapter_key"] == "minimax.cli":
+            if vendor not in {None, VENDOR_ID}:
+                raise HTTPException(422, "capability_vendor_mismatch")
+            profile["provider_id"] = VENDOR_ID
+            binding["base_url"], binding["credential_ref"] = "local://mmx", binding.get("credential_ref") or "MINIMAX_CLI_AUTH"
+        elif binding["adapter_key"] == "openai.compatible":
+            if vendor is None:
+                vendor = next((key for key, p in providers.items() if p.get("base_url") == binding.get("base_url")), None)
+            if vendor not in providers:
+                raise HTTPException(422, "capability_vendor_required")
+            profile["provider_id"] = vendor
+            binding["base_url"] = providers[vendor]["base_url"]
+            binding["credential_ref"] = binding.get("credential_ref") or "VENDOR_" + re.sub(r"[^A-Z0-9_]", "_", vendor.upper())
+        elif vendor in providers:
+            binding["base_url"] = providers[vendor]["base_url"]
+    bindings = profile.get("capability_bindings") or {}
+    if bindings:
+        profile.setdefault("model", next(iter(bindings.values()))["model_id"])
 
 
 def save_voice_catalog(db, value, *, expected_revision, actor):
@@ -338,7 +374,7 @@ def save_voice_catalog(db, value, *, expected_revision, actor):
         if stored.get("revision", 0) != expected_revision:
             raise HTTPException(409, "configuration_revision_conflict")
         _preserve_voice_evidence(catalog, stored.get("voice_catalog", []))
-        merged = {**stored, "voice_catalog": catalog, "schema_version": 2, "revision": expected_revision + 1}
+        merged = {**stored, "voice_catalog": catalog, "schema_version": max(stored.get("schema_version", 1), 2), "revision": expected_revision + 1}
         commit_configuration(db, merged, expected_revision=expected_revision, actor=actor)
         return configuration_view(db)
 
@@ -392,7 +428,7 @@ def refresh_voice_catalog(db, *, actor):
     if discovered:
         if len(by_key) > 2000:
             raise HTTPException(422, "voice_catalog_invalid")
-        merged = {**stored, "voice_catalog": list(by_key.values()), "schema_version": 2, "revision": revision + 1}
+        merged = {**stored, "voice_catalog": list(by_key.values()), "schema_version": max(stored.get("schema_version", 1), 2), "revision": revision + 1}
         commit_configuration(db, merged, expected_revision=revision, actor=actor)
         result = configuration_view(db)
         result["voice_catalog_refresh"] = {"status": "updated", "count": len(discovered)}

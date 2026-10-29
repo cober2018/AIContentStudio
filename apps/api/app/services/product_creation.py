@@ -66,7 +66,8 @@ def product_costs_view(db, owner_id, project_id):
     return {"costs": costs, "estimated_contribution": contribution}
 
 
-def save_launch(db, user, payload):
+def save_launch(db, user, payload, project=None):
+    """``project``: add the product work to this existing project instead of creating one."""
     from .content_harness.channel_registry import ensure_channel_in_service
 
     checksum = digest(payload.model_dump(mode="json", exclude={"launch_key"}))
@@ -152,9 +153,11 @@ def save_launch(db, user, payload):
     if workflow.scope != "product_default" or workflow.workflow_key != f"product.{user.id}.{payload.modality}":
         raise HTTPException(409, "所选流程与商品生产领域或内容形态不匹配")
     workflow_id = workflow.id
-    project = ContentProject(owner_user_id=user.id, title=payload.title or product["name"], objective=payload.objective)
-    db.add(project)
-    db.flush()
+    existing_project = project is not None
+    if not existing_project:
+        project = ContentProject(owner_user_id=user.id, title=payload.title or product["name"], objective=payload.objective)
+        db.add(project)
+        db.flush()
     brief_data = {"objective": payload.objective,
         "primary_audience": payload.primary_audience or "",
         "core_message": payload.core_message or "；".join(product["selling_points"]), "angle": payload.angle,
@@ -163,7 +166,20 @@ def save_launch(db, user, payload):
         "identity_scope": [], "modality_scope": [payload.modality],
         "channel_scope": [payload.channel] if payload.channel else [], "cta": payload.cta,
         "references": [{"kind": "source_document", "id": s.id} for s in sources], "product_context": product}
-    brief = CreativeBriefRevision(project_id=project.id, revision_no=1, created_by=user.email,
+    previous = current_brief(db, project.id) if existing_project else None
+    if existing_project and previous is None and (project.objective or "").strip():
+        brief_data["objective"] = project.objective
+    if previous is not None:
+        # What the user already wrote for the project wins; product facts only fill the gaps.
+        for key in ("objective", "primary_audience", "core_message", "angle", "cta"):
+            if (getattr(previous, key) or "").strip():
+                brief_data[key] = getattr(previous, key)
+        for key in ("required_evidence", "content_constraints", "identity_scope", "modality_scope", "channel_scope", "references"):
+            merged = list(getattr(previous, key + "_json") or [])
+            merged += [item for item in brief_data[key] if item not in merged]
+            brief_data[key] = merged
+    brief = CreativeBriefRevision(project_id=project.id, revision_no=(previous.revision_no + 1) if previous else 1,
+        parent_revision_id=previous.id if previous else None, created_by=user.email,
         **{k: brief_data[k] for k in ("objective", "primary_audience", "core_message", "angle", "cta")},
         **{k + "_json": brief_data[k] for k in ("required_evidence", "content_constraints", "identity_scope",
             "modality_scope", "channel_scope", "references", "product_context")}, checksum=checksum_brief(brief_data))
@@ -184,19 +200,27 @@ def save_launch(db, user, payload):
         settings["product_production_methods"] = {payload.modality: manifest}
     db.add(ProductionProfileRevision(unit_id=unit.id, revision=1, settings_json=settings,
         settings_hash=digest(settings), created_by=user.email))
+    bound = set(db.scalars(select(ProjectSourceBinding.source_document_id).where(ProjectSourceBinding.project_id == project.id)))
     for source in sources:
-        db.add(ProjectSourceBinding(project_id=project.id, source_document_id=source.id, attached_by=user.email))
+        if source.id not in bound:
+            db.add(ProjectSourceBinding(project_id=project.id, source_document_id=source.id, attached_by=user.email))
+    attached = set(db.scalars(select(ProjectMaterialReference.material_revision_id).where(ProjectMaterialReference.project_id == project.id)))
     for revision in materials:
-        db.add(ProjectMaterialReference(project_id=project.id, material_revision_id=revision.id,
-                                        origin="system_reference", attached_by=user.email))
+        if revision.id not in attached:
+            db.add(ProjectMaterialReference(project_id=project.id, material_revision_id=revision.id,
+                                            origin="system_reference", attached_by=user.email))
     launch = ProductCreationLaunch(owner_user_id=user.id, launch_key=payload.launch_key, input_checksum=checksum,
         project_id=project.id, unit_id=unit.id, invocation_key=f"product.{uuid.uuid4().hex}")
     db.add(launch)
-    record_project_event(db, project_id=project.id, event_type="project.created", actor=user.email,
-                         entity_type="content_project", entity_id=project.id, payload={"entry": "product"})
+    if existing_project:
+        record_project_event(db, project_id=project.id, event_type="unit.created", actor=user.email,
+                             entity_type="content_unit", entity_id=unit.id, payload={"entry": "product"})
+    else:
+        record_project_event(db, project_id=project.id, event_type="project.created", actor=user.email,
+                             entity_type="content_project", entity_id=project.id, payload={"entry": "product"})
     record_project_event(db, project_id=project.id, event_type="brief.revision_created", actor=user.email,
                          entity_type="creative_brief_revision", entity_id=brief.id,
-                         payload={"revision_no": 1, "checksum": brief.checksum})
+                         payload={"revision_no": brief.revision_no, "checksum": brief.checksum})
     try:
         db.commit()
     except IntegrityError:

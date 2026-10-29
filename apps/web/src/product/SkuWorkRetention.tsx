@@ -14,7 +14,7 @@ export default function SkuWorkRetention({projectId,unitId,readOnly}:{projectId:
       await api.post(`/product-skus/${skuId}/references`,{master_id:master.id,master_hash:master.payload_hash});setNotice("已留存精确作品版本；缺少成片或工程的部分仍保持待补。");
     }else{
       if(!name.trim())throw new Error("填写方案名称。");if(!Object.values(groups).some(Boolean))throw new Error("至少选择一组可复用设置。");
-      const p=await api.get<{settings:Record<string,unknown>}>(`${base}/production-profile`);const fields=[...(groups.visual?['work_type','creation_mode','reference_notes','visual_style','continuity_notes','shared_references']:[]),...(groups.sound?['speech_mode','dialogue_language','music_direction','voice_id','audio_creative_profile']:[]),...(groups.methods?['production_stages','model_profile_ref','video_creative_profile']:[])];
+      const p=await api.get<{settings:Record<string,unknown>}>(`${base}/production-profile`);const fields=[...(groups.visual?['work_type','creation_mode','reference_notes','visual_style','continuity_notes','shared_references']:[]),...(groups.sound?['speech_mode','dialogue_language','music_direction','voice_id','audio_creative_profile']:[]),...(groups.methods?['production_stages','video_creative_profile']:[])];
       const settings=Object.fromEntries(fields.filter(k=>p.settings[k]!==undefined).map(k=>[k,p.settings[k]]));
       await api.post(`/product-skus/${skuId}/plans`,{name:name.trim(),source_unit_id:unitId,include_methods:groups.methods,include_sound:groups.sound,settings});setNotice("已另存此SKU创作方案；默认方案与已有作品不变。单次台词、事实、价格和通过状态未复制。");
     }

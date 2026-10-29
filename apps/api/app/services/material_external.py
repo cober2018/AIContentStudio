@@ -258,9 +258,11 @@ def _media_type(handle, relative: str, kind: str) -> tuple[str, dict]:
     handle.seek(0)
     sniffed = sniff_mime(head, None)
     mime = expected[1]
-    compatible = sniffed == mime or (mime == "audio/mp4" and sniffed == "video/mp4") or (mime == "video/mp4" and sniffed == "video/quicktime" and relative.lower().endswith(".m4v"))
+    compatible = sniffed == mime or (mime == "audio/mp4" and sniffed == "video/mp4") or (mime == "video/mp4" and sniffed == "video/quicktime")
     if not compatible:
         raise ExternalMaterialError("material_external_type_mismatch")
+    # Phones save QuickTime files as .MP4; the bytes decide the type.
+    mime = sniffed if kind == "video" else mime
     if kind != "video":
         return mime, {}
     from .creative_media_stream import validate

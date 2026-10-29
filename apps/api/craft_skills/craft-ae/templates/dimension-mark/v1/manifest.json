@@ -1,0 +1,131 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "dimension-mark",
+  "version": "v1",
+  "name": "尺寸标注",
+  "category": "商品：参数与对比",
+  "use": "整屏：商品图上画宽（下方）和高（右侧）尺寸线及数值，可选厚度标签。bx0、by0、bx1、by1 是商品主体在图片里的相对边界（0–1，不填为整张图）。尺寸只用真实资料，不编造。",
+  "fields": [
+    {
+      "name": "w_label",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "h_label",
+      "kind": "text",
+      "max": 10,
+      "required": false
+    },
+    {
+      "name": "d_label",
+      "kind": "text",
+      "max": 10,
+      "required": false
+    },
+    {
+      "name": "bx0",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "by0",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "bx1",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    },
+    {
+      "name": "by1",
+      "kind": "number",
+      "min": 0,
+      "max": 1,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "product",
+      "file": "product.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "f33a02ae71ee4f2a93072d7e78c80840ead38fada426d4994d7ad5f29c36d638"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "2c22f4d04be11ec02f7cb34a799484ed73955bcef7a48db568d724c358c42abe"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "宽 18 cm / 高 20 cm / 厚 8 cm / 0.28 / 0.32 / 0.7 / 0.72（图片：product）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "宽 18 cm /  /  / 0.28 / 0.32 / 0.7 / 0.72（图片：product）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "宽 18 cm / 高 20 cm / 厚 8 cm / 0.28 / 0.32 / 0.7 / 0.72（图片：product）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "宽 18 cm /  /  / 0.28 / 0.32 / 0.7 / 0.72（图片：product）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

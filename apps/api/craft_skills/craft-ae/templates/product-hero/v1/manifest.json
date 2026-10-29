@@ -1,0 +1,104 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "product-hero",
+  "version": "v1",
+  "name": "商品原图亮相",
+  "category": "商品：亮相",
+  "use": "整屏：商品原图等比放进卡片从下方滑入，一道光泽扫过，可选红色小标签、特粗商品名和一行型号 / 卖点。商品图只用原图或实拍，不改外观、包装和文字。",
+  "fields": [
+    {
+      "name": "name",
+      "kind": "text",
+      "max": 12,
+      "required": true
+    },
+    {
+      "name": "sub",
+      "kind": "text",
+      "max": 20,
+      "required": false
+    },
+    {
+      "name": "tag",
+      "kind": "text",
+      "max": 6,
+      "required": false
+    }
+  ],
+  "images": [
+    {
+      "name": "product",
+      "file": "product.png",
+      "required": true,
+      "source": "any"
+    }
+  ],
+  "duration_ms": {
+    "min": 3000,
+    "max": 8000,
+    "default": 4000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "9d3f39d46a0f03f83aa88d12eda778ea367664daa048244785a313c7105a1fd2"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "30400d056cf572e573a09572e112dae110f0d124613528e751debd6a7ab55d77"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-29",
+      "content": "头戴降噪耳机 / H2 · 40 小时续航 / 新品（图片：product）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "content": "保温杯 /  / （图片：product）",
+      "frames": "完整动画视频，竖横两版并排对照",
+      "result": "用户看商品审片视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；9:16 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "头戴降噪耳机 / H2 · 40 小时续航 / 新品（图片：product）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "保温杯 /  / （图片：product）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏审片视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

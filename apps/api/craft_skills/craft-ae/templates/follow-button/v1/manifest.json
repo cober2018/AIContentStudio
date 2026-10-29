@@ -1,0 +1,97 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "follow-button",
+  "version": "v1",
+  "name": "关注按钮",
+  "category": "结尾引导",
+  "use": "画面下方一个红色「关注」按钮弹出，光标移过来点击，按钮变成灰色「已关注」并弹出一个对勾；上方可带一句提示。中性样式，不用任何平台的界面和图标。叠在画面上用。",
+  "fields": [
+    {
+      "name": "hint",
+      "kind": "text",
+      "max": 16,
+      "required": false
+    },
+    {
+      "name": "label",
+      "kind": "text",
+      "max": 6,
+      "required": false
+    },
+    {
+      "name": "done",
+      "kind": "text",
+      "max": 6,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 2500,
+    "max": 6000,
+    "default": 3500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "aaedaf5600a6f70e34eba15a98282be6c24ca437e291259f198df43f94e2cd4c"
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "点个关注，下期讲选购 / 关注 / 已关注（图片：无图片）",
+      "frames": "完整动画视频 + 0.9s、1.3s、2.6s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "关注我 / 已关注（图片：无图片）",
+      "frames": "完整动画视频 + 0.9s、1.3s、2.6s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "点个关注，下期讲选购 / 关注 / 已关注（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "关注我 / 已关注（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "5ccd38dbeaacd71b6bb8574e4e2c13bf86910c6ae68cf62a0530864fcfaa30e4"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

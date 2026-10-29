@@ -116,6 +116,26 @@ class VideoDecisionIn(BaseModel):
     notes: list[VideoNoteIn] = Field(default_factory=list, max_length=50)
 
 
+class PlatformSkillsIn(BaseModel):
+    writing_skills: bool
+
+
+@router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/platform-skills")
+def platform_skills_state(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import craft_skills
+    from ..services.content_masters import owned_unit
+
+    _project, unit = owned_unit(db, project_id, unit_id, user)
+    return craft_skills.platform_skills(db, unit)
+
+
+@router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/platform-skills")
+def platform_skills_save(project_id: int, unit_id: int, payload: PlatformSkillsIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import craft_skills
+
+    return craft_skills.set_writing_skills(db, user, project_id, unit_id, payload.writing_skills)
+
+
 @router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain")
 def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     from ..services import video_chain

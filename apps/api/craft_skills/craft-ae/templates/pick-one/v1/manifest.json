@@ -1,0 +1,109 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "pick-one",
+  "version": "v1",
+  "name": "选项揭晓",
+  "category": "数字与图表",
+  "use": "白底整屏：问题 + 2–6 个选项胶囊（options 逗号分隔）依次出现，停约 2 秒让观众猜；揭晓时所有选项仍留在画面上，答案反色轻弹，其余变暗、略缩小，停约 1.8 秒；填了结论（result）才让其余选项退场、答案上移到问题下方、结论出现（accent 里的词变蓝，可逗号分隔两个），不填结论就停在揭晓画面。answer 是答案序号（从 1 开始）。",
+  "fields": [
+    {
+      "name": "question",
+      "kind": "text",
+      "max": 16,
+      "required": true
+    },
+    {
+      "name": "options",
+      "kind": "text",
+      "max": 80,
+      "required": true
+    },
+    {
+      "name": "answer",
+      "kind": "number",
+      "min": 1,
+      "max": 6,
+      "required": true
+    },
+    {
+      "name": "result",
+      "kind": "text",
+      "max": 20,
+      "required": false
+    },
+    {
+      "name": "accent",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 5000,
+    "max": 10000,
+    "default": 6000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Bold"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "084359b7d025bf7ad21454cefd791b9cd3fb45406541a3e7f8a6b7eea91ec26f"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "五个方案，我选哪个？ / 方案A·全手动,方案B·半自动,方案C·全自动,方案D·外包,方案E·先不做 / 3 / 每月省下 72 小时 / 72 小时（图片：无图片）",
+      "frames": "完整动画视频 + 1.6s、3.4s、5.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "预算两千，买哪台？ / 入门款,性价比款,旗舰款 / 2（图片：无图片）",
+      "frames": "完整动画视频 + 1.6s、3.4s、5.3s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "五个方案，我选哪个？ / 方案A·全手动,方案B·半自动,方案C·全自动,方案D·外包,方案E·先不做 / 3 / 每月省下 72 小时 / 72 小时（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "预算两千，买哪台？ / 入门款,性价比款,旗舰款 / 2（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "365f847608abc84610a3f57297b41c8d6035bc06cae94d3b5d0885766d428b69"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

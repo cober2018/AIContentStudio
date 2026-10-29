@@ -1,0 +1,116 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "metric-trend",
+  "version": "v1",
+  "name": "数字带趋势线",
+  "category": "数字与图表",
+  "use": "白底整屏：标签、大数字从第一个点数到当前值，单位和涨跌箭头（看首尾点自动判断）；下方折线按 points 画出，节点逐个亮起，x 轴标签和来源。points、xlabels 用逗号分隔，2–8 个。",
+  "fields": [
+    {
+      "name": "label",
+      "kind": "text",
+      "max": 14,
+      "required": true
+    },
+    {
+      "name": "value",
+      "kind": "number",
+      "min": -1000000000000.0,
+      "max": 1000000000000.0,
+      "required": true
+    },
+    {
+      "name": "unit",
+      "kind": "text",
+      "max": 4,
+      "required": false
+    },
+    {
+      "name": "points",
+      "kind": "text",
+      "max": 80,
+      "required": true
+    },
+    {
+      "name": "xlabels",
+      "kind": "text",
+      "max": 80,
+      "required": false
+    },
+    {
+      "name": "source",
+      "kind": "text",
+      "max": 24,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 3500,
+    "max": 8000,
+    "default": 4500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Medium",
+    "SourceHanSansSC-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "8792c557c779ed427b424529e0a9fe33375fb374ff1338ed58256e3005a2ec63"
+  },
+  "comp": "MAIN",
+  "checks": [
+    {
+      "date": "2026-10-28",
+      "content": "本周剪辑效率 / 67 / % / 39,48,55,67 / 周一,周二,周三,周四 / 数据：本账号后台（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-28",
+      "content": "退货率 / 3.2 / % / 8.5,6.1,4.8,3.9,3.2 / 1月,2月,3月,4月,5月（图片：无图片）",
+      "frames": "完整动画视频 + 0.35s、1.6s、3.8s",
+      "result": "用户看对比视频验收；文字替换、空字段隐藏、超宽缩放、动画时序正确；播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "本周剪辑效率 / 67 / % / 39,48,55,67 / 周一,周二,周三,周四 / 数据：本账号后台（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    },
+    {
+      "date": "2026-10-29",
+      "aspect": "16:9",
+      "content": "退货率 / 3.2 / % / 8.5,6.1,4.8,3.9,3.2 / 1月,2月,3月,4月,5月（图片：无图片）",
+      "frames": "完整动画视频，与竖屏版并排对照",
+      "result": "用户看横屏对比视频验收；横屏单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "8c7bd985087eda1d893abe9cdb97f94e7bfb8811573c4715f155a1604d835bcd"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  }
+}

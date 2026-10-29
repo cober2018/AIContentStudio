@@ -182,9 +182,8 @@ class StageMasterProposalNodePlugin:
                       "fact_mode": {"control": "select", "label": "事实时效模式"},
                       "tone": {"control": "text", "label": "表达语气"},
                       "candidate_count": {"control": "number", "label": "候选数量"},
-                      "length": {"control": "select", "label": "内容长度"},
-                      "model_profile_id": {"control": "text", "label": "模型配置"}},
-        "tunable_fields": ["purpose", "instruction", "candidate_count", "length", "temperature", "model_profile_id", "method", "tone", "fact_mode"],
+                      "length": {"control": "select", "label": "内容长度"}},
+        "tunable_fields": ["purpose", "instruction", "candidate_count", "length", "temperature", "method", "tone", "fact_mode"],
         "input_contract": {"required_context": [], "upstream": "accepted"},
         "output_contract": {"schema": "stage.master.proposal.v1", "max_candidates": 5,
                              "supported_modalities": ["text", "graphic", "video"],
@@ -207,13 +206,17 @@ class StageMasterProposalNodePlugin:
         return NodeResult(output=execute_text_proposal(db, ctx, resolved, user))
 
 
+# The model is pinned from 设置 → AI 与模型 routes when a stage is prepared; users never tune it per stage.
+SYSTEM_MODEL_FIELDS = frozenset({"model_profile_id", "selected_profile"})
+
+
 def _stage_contract(schema, title, category, properties, required, output_schema, *, context=(), ui=None,
                     methods=("builtin",), tunable=None):
     return {
         "stage_schema": schema, "title": title, "category": category,
         "config_schema": {"type": "object", "additionalProperties": False,
                           "properties": properties, "required": required},
-        "ui_schema": ui or {}, "tunable_fields": list(properties) if tunable is None else tunable,
+        "ui_schema": ui or {}, "tunable_fields": [f for f in (list(properties) if tunable is None else tunable) if f not in SYSTEM_MODEL_FIELDS],
         "input_contract": {"required_context": list(context), "upstream": "accepted"},
         "output_contract": {"schema": output_schema, "accepted_content_required": True},
         "method_sources": list(methods), "supports_preview": True, "supports_run_override": True,
@@ -262,8 +265,7 @@ class StageCreativeMethodNodePlugin:
             "candidate_count": {"control": "number", "label": "候选数量"},
             "length": {"control": "select", "label": "内容长度"},
             "temperature": {"control": "number", "label": "创意程度"},
-            "method": {"control": "method", "label": "使用方法"},
-            "model_profile_id": {"control": "text", "label": "模型配置"}},
+            "method": {"control": "method", "label": "使用方法"}},
     )
     stage_contract["output_contract"].update({
         "response_shape": "object {schema: requested output_schema, candidates: [{id: stable identifier, summary: concise text, content: bounded structured artifact, references: exact supplied refs, warnings: bounded strings}]}",
@@ -358,7 +360,6 @@ class StageMediaGenerationNodePlugin(ResolvedDomainStagePlugin):
                                       "tokens": 1000000, "timeout_seconds": 600}.items()}},
         }, ["capability", "selected_profile", "prompt"], "stage.media.result.v1",
         ui={"capability": {"control": "select", "label": "生成能力"},
-            "selected_profile": {"control": "text", "label": "模型配置"},
             "explicit_plugin": {"control": "text", "label": "指定插件"},
             "prompt": {"control": "textarea", "label": "媒体要求"},
             **{name: {"control": "number", "label": label} for name, label in {
@@ -374,7 +375,7 @@ def _media_v3_contract() -> dict:
               "enum": ["1:1", "4:3", "3:4", "16:9", "9:16"]}
     contract["config_schema"]["properties"]["aspect_ratio"] = aspect
     contract["config_schema"]["properties"]["parameters"]["properties"]["aspect_ratio"] = aspect
-    contract["tunable_fields"] = list(contract["config_schema"]["properties"])
+    contract["tunable_fields"] = [f for f in contract["config_schema"]["properties"] if f not in SYSTEM_MODEL_FIELDS]
     contract["ui_schema"]["aspect_ratio"] = {"control": "select", "label": "画面比例"}
     return contract
 
@@ -404,7 +405,6 @@ class StageMediaGenerationV4NodePlugin(StageMediaGenerationNodePlugin):
         }, [], "stage.media.result.v1", context=("identity", "master"), methods=("studio_builtin",),
         ui={"voice": {"control": "text", "label": "供应商声音ID（必须真实配置）"},
             "rate": {"control": "number", "label": "语速（未覆盖时采用已接受声音方案）"},
-            "selected_profile": {"control": "text", "label": "明确指定TTS模型配置"},
             "seconds": {"control": "number", "label": "音频时长上限秒"},
             "timeout_seconds": {"control": "number", "label": "请求时限秒"}})
     stage_consumed_fields: ClassVar[frozenset[str]] = frozenset(stage_contract["config_schema"]["properties"])
@@ -471,7 +471,6 @@ class StageVariantAdaptNodePlugin(ResolvedDomainStagePlugin):
             "question_confirmed": {"control": "toggle", "label": "我确认这个问题"},
             "mode": {"control": "select", "label": "适配方式"},
             "instruction": {"control": "textarea", "label": "适配要求"},
-            "model_profile_id": {"control": "text", "label": "模型配置"},
             "method": {"control": "method", "label": "使用方法"}})
     stage_consumed_fields = frozenset(stage_contract["config_schema"]["properties"])
 
@@ -530,7 +529,7 @@ def _professional_v2_contract() -> dict:
         "instruction": {"type": "string", "maxLength": 2000, "default": ""},
         "aspect_ratio": {"type": "string", "enum": ["1:1", "4:3", "3:4", "16:9", "9:16"], "maxLength": 5},
     })
-    contract["tunable_fields"] = list(contract["config_schema"]["properties"])
+    contract["tunable_fields"] = [f for f in contract["config_schema"]["properties"] if f not in SYSTEM_MODEL_FIELDS]
     contract["method_sources"] = ["studio_builtin"]
     contract["ui_schema"].update({"method": {"control": "method", "label": "导演交接方法"},
         "instruction": {"control": "textarea", "label": "额外交接要求"},

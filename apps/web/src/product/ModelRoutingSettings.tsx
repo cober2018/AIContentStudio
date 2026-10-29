@@ -11,7 +11,7 @@ const labels: Record<Capability, string> = { chat: "聊天", image_generation: "
 type Binding = { adapter_key: string; adapter_version: string; model_id: string; base_url: string; credential_ref: string };
 type VoicePreset = { id: string; label: string; provider_key: string; provider_version: string; model_id: string; profile_id: string; voice_id: string; language?: string; tags?: string[]; favorite?: boolean; verified?: boolean; rate?: number; preview_ref?: string | null };
 type State = { declared: boolean; configured: boolean; executable: boolean; verified: boolean; reason: string };
-type Profile = { enabled?: boolean; declared_capabilities: Capability[]; capability_bindings: Partial<Record<Capability, Binding>>; capabilities: Record<Capability, State> };
+type Profile = { provider_id?: string | null; enabled?: boolean; declared_capabilities: Capability[]; capability_bindings: Partial<Record<Capability, Binding>>; capabilities: Record<Capability, State> };
 type Limit = { max_items: number; max_pixels?: number | null; max_seconds?: number | null; max_tokens?: number | null; timeout_seconds: number; max_cost?: number | null; currency?: "USD" | "CNY" | null };
 type Configuration = { revision: number; profiles: Record<string, Profile>; voice_catalog?: VoicePreset[]; media_plugins: Record<string, { enabled: boolean; capability: Capability; model_profile_id: string }>; capability_routes: Partial<Record<Capability, string[]>>; policies: { allow_automatic_fallback: boolean; limits: Partial<Record<Capability, Limit>> } };
 type Catalog = { revision: number; providers: Record<string, { name: string }>; profiles: Record<string, { provider_id: string | null; model_id: string; chat: boolean }> };
@@ -76,7 +76,7 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
     setBusy(true); setError("");
     setSaved(false); setPreview(null); previewRequest.current += 1; setPreviewBusy(null);
     try {
-      const profiles = Object.fromEntries(Object.entries(value.profiles).map(([key, profile]) => [key, { enabled: profile.enabled ?? true, declared_capabilities: profile.declared_capabilities, capability_bindings: profile.capability_bindings }]));
+      const profiles = Object.fromEntries(Object.entries(value.profiles).map(([key, profile]) => [key, { provider_id: profile.provider_id ?? null, enabled: profile.enabled ?? true, declared_capabilities: profile.declared_capabilities, capability_bindings: profile.capability_bindings }]));
       const routes = Object.fromEntries(Object.entries(value.capability_routes).map(([cap, ids]) => [cap, ids.filter(Boolean)]));
       const result = await api.put<Configuration>("/settings/model-capabilities", { expected_revision: value.revision, configuration: { profiles, media_plugins: value.media_plugins, capability_routes: routes, policies: value.policies } });
       if (!isCurrent()) return;
@@ -197,6 +197,7 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
           <h4 className="break-words text-sm font-semibold text-slate-900">{modelTitle(id)}</h4>
           {catalog.data?.profiles[id]?.chat && <p className="mt-1 text-xs text-slate-500">聊天已登记；生图、视频和语音以各自接口状态为准。</p>}
         </div>
+        <label className="flex items-center gap-2 text-xs">厂商<select aria-label="所属厂商" className={`${inputClass} w-auto py-1`} value={profile.provider_id ?? ""} onChange={(event) => update({ ...value, profiles: { ...value.profiles, [id]: { ...profile, provider_id: event.target.value || null } } })}><option value="">未选择</option><option value="minimax">MiniMax</option>{Object.entries(catalog.data?.providers ?? {}).map(([vendor, p]) => <option key={vendor} value={vendor}>{p.name || vendor}</option>)}</select></label>
         <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={profile.enabled ?? true} onChange={(event) => update({ ...value, profiles: { ...value.profiles, [id]: { ...profile, enabled: event.target.checked } } })} /> 启用此配置</label>
       </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{capabilities.map((cap) => {
@@ -218,14 +219,12 @@ function ModelRoutingEditor({ editable = false, onDirtyChange, identity }: Props
           <summary className={disclosureClass}>{labels[cap]}接口绑定 <span className="font-normal text-slate-500">· {binding ? "已填写" : "未填写"}</span></summary>
           <div className="mt-3 space-y-3">
           <p className="break-words text-xs text-slate-500">{draft ? "本地草稿，执行与验证状态需保存后重新读取。" : profile.capabilities[cap]?.reason || "该能力暂无状态说明。"} {!binding && cap !== "chat" && "缺少此媒体绑定不代表厂商聊天连接失败。"}</p>
-          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setBinding(binding ? undefined : { adapter_key: "google.native", adapter_version: "1", model_id: "", base_url: "https://generativelanguage.googleapis.com", credential_ref: "" })}>{binding ? "移除该能力接口绑定" : "配置该能力接口"}</Button>
+          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setBinding(binding ? undefined : { adapter_key: profile.provider_id === "minimax" ? "minimax.cli" : "openai.compatible", adapter_version: "1", model_id: "", base_url: "", credential_ref: "" })}>{binding ? "移除该能力接口绑定" : "配置该能力接口"}</Button>
           {binding && <div className="grid gap-2 sm:grid-cols-2">
             <Field label="协议适配器"><select className={inputClass} value={binding.adapter_key} onChange={(event) => setBinding({ ...binding, adapter_key: event.target.value, adapter_version: "1" })}>{["openai.compatible", "google.native", "xai.native", "minimax.native", "minimax.cli"].map((adapter) => <option key={adapter}>{adapter}</option>)}</select></Field>
             <Field label="实际 API 模型标识"><input className={inputClass} value={binding.model_id} onChange={(event) => setBinding({ ...binding, model_id: event.target.value })} /></Field>
-            <Field label={binding.adapter_key === "minimax.cli" ? "本地 CLI 地址（local://mmx）" : binding.adapter_key === "openai.compatible" ? "HTTPS 或本机 CPA 地址" : "HTTPS 接口根地址"}><input className={inputClass} value={binding.base_url} onChange={(event) => setBinding({ ...binding, base_url: event.target.value })} /></Field>
-            <Field label={binding.adapter_key === "minimax.cli" ? "受控认证引用标识（不是密钥值或文件路径）" : "密钥环境变量名（不是密钥值）"}><input className={inputClass} autoComplete="off" value={binding.credential_ref} onChange={(event) => setBinding({ ...binding, credential_ref: event.target.value })} /></Field>
             {binding.adapter_key === "openai.compatible" && cap === "image_generation" && <Field label="CPA图片协议"><select className={inputClass} value={binding.adapter_version} onChange={event => setBinding({ ...binding, adapter_version: event.target.value })}><option value="1">OpenAI图片接口（Grok等已登记型号）</option><option value="2">Gemini原生图片接口（generateContent）</option></select></Field>}
-            <p className="text-xs text-slate-500 sm:col-span-2">协议版本：{binding.adapter_version}。仅填写引用，不输入密钥明文。</p>
+            <p className="text-xs text-slate-500 sm:col-span-2">协议版本：{binding.adapter_version}。地址和密钥来自所选厂商（厂商与模型），这里不单独填写。</p>
           </div>}
           </div>
         </details>;

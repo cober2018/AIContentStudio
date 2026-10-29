@@ -155,7 +155,7 @@ def research_product(project_id: int, db=Depends(get_db), user=Depends(require_e
     # Private descriptions, source bodies and media never become search queries.
     query = f"{product['name']} {product.get('variant', '')} 官方说明 使用场景"[:500]
     try:
-        results = search(query, provider=config["search_provider"], credential_source=config["credential_source"], limit=5)
+        results = search(query, provider=config["search_provider"], limit=5)
     except SearchUnavailable as exc:
         raise HTTPException(503, str(exc)) from None
     record_project_event(db, project_id=project_id, event_type="product.research_completed", actor=user.email,

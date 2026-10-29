@@ -48,6 +48,8 @@ _TTS_MODELS = {
 }
 _ASR_MODELS = {"asr-1.0"}
 _JOB_ID = re.compile(r"[A-Za-z0-9_.-]{1,100}")
+SETTINGS_KEY = "minimax_vendor"
+_REGIONS = {"global", "cn"}
 _downloading = ContextVar("minimax_result_download", default=False)
 _CLI_CONFIG = Path(pwd.getpwuid(os.getuid()).pw_dir) / ".mmx" / "config.json"
 _MAX_CONFIG_BYTES = 64 * 1024
@@ -168,7 +170,85 @@ def _executable() -> str | None:
     return shutil.which("mmx")
 
 
-def _run(args: list[str], *, timeout: int) -> subprocess.CompletedProcess[str] | None:
+def _page_config() -> dict:
+    # The page-saved vendor settings override the CLI login; empty until first save.
+    from .. import runtime_config
+
+    value = runtime_config.get_runtime(SETTINGS_KEY)
+    return value if isinstance(value, dict) else {}
+
+
+VENDOR_ID = "minimax"
+CHAT_MODELS = ("MiniMax-M3", "MiniMax-M2", "MiniMax-Text-01")
+
+
+def shared_key() -> str:
+    # 用户规则：MiniMax 只认卡片这一把密钥；卡片没填才回退本机 mmx 登录。
+    page = _page_config().get("api_key")
+    if isinstance(page, str) and page:
+        return page
+    cli = (_read_cli_config() or {}).get("api_key")
+    return cli if isinstance(cli, str) else ""
+
+
+def chat_base_url() -> str:
+    """OpenAI-compatible address for the card: explicit address first, else the card or mmx region."""
+    page = _page_config()
+    base = page.get("base_url")
+    if isinstance(base, str) and base:
+        base = base.rstrip("/")
+        return base if base.endswith("/v1") else base + "/v1"
+    region = page.get("region") or (_read_cli_config() or {}).get("region")
+    return "https://api.minimax.io/v1" if region == "global" else "https://api.minimaxi.com/v1"
+
+
+def write_private(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_name(f".{path.name}.aics-tmp")
+    fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as target:
+        target.write(text)
+    os.replace(temp, path)
+
+
+def sync_cli_login() -> None:
+    """mmx reads its own file, so the card key is copied into it; other fields stay."""
+    key = _page_config().get("api_key")
+    if not isinstance(key, str) or not key:
+        return
+    try:
+        config = _read_cli_config() or {}
+        if config.get("api_key") != key:
+            write_private(_CLI_CONFIG, json.dumps({**config, "api_key": key}, ensure_ascii=False, indent=2) + "\n")
+    except OSError:
+        logging.getLogger(__name__).warning("minimax_local_key_sync_failed")
+
+
+def _enabled() -> bool:
+    config = _page_config()
+    return bool(config["enabled"]) if isinstance(config.get("enabled"), bool) else os.getenv("AICS_ENABLE_MINIMAX_CLI") == "1"
+
+
+def _cli_overrides() -> list[str]:
+    config = _page_config()
+    args: list[str] = []
+    key = config.get("api_key")
+    if isinstance(key, str) and key:
+        args += ["--api-key", key]
+    base = config.get("base_url")
+    if isinstance(base, str) and base:
+        # mmx 语义：--base-url 覆盖区域，两者同给时只传 base-url。
+        args += ["--base-url", base]
+    elif config.get("region") in _REGIONS:
+        args += ["--region", config["region"]]
+    return args
+
+
+def _run(args: list[str], *, timeout: int, auth: bool = True) -> subprocess.CompletedProcess[str] | None:
+    if auth:
+        if not _enabled():
+            return None
+        args = [*_cli_overrides(), *args]
     return _run_bounded(_executable(), args, timeout=timeout, output_limit=_MAX_STDOUT)
 
 
@@ -363,7 +443,7 @@ class _MiniMaxCredentialIdentity:
 
 def _image_model() -> str | None:
     result = _run(["image", "generate", "--prompt", "capability-contract-probe", "--dry-run",
-        "--output", "json", "--quiet", "--non-interactive", "--no-color"], timeout=5)
+        "--output", "json", "--quiet", "--non-interactive", "--no-color"], timeout=5, auth=False)
     if result is None or result.returncode != 0:
         return None
     try:
@@ -685,7 +765,7 @@ class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
             return False
         if not probe:
             return True
-        result = _run(["speech", "synthesize", "--help"], timeout=5)
+        result = _run(["speech", "synthesize", "--help"], timeout=5, auth=False)
         help_text = f"{result.stdout}\n{result.stderr}" if result is not None else ""
         return (result is not None and result.returncode == 0
                 and all(re.search(r"(?m)^\s*" + flag + r"\s+<", help_text)
@@ -881,10 +961,43 @@ def _srt_output(text: str, duration_ms: int) -> dict:
     return {"status": "succeeded", "transcript": transcript, "cues": cues}
 
 
+def vendor_status() -> dict:
+    """Read-only view for 厂商与模型: the account belongs to mmx, so only region and a masked key leave here."""
+    from .system_settings import mask_secret
+
+    executable = _executable()
+    version = None
+    if executable is not None:
+        result = _run(["--version", "--no-color"], timeout=5, auth=False)
+        if result is not None and result.returncode == 0 and result.stdout and len(result.stdout) < 200:
+            version = result.stdout.strip()
+    page = _page_config()
+    page_key = page.get("api_key") if isinstance(page.get("api_key"), str) else ""
+    page_region = page.get("region") if page.get("region") in _REGIONS else None
+    config = _read_cli_config() or {}
+    region, key = page_region or config.get("region"), page_key or config.get("api_key")
+    return {"name": "MiniMax", "kind": "local_cli", "installed": executable is not None, "version": version,
+            "enabled": _enabled(),
+            "region": region if isinstance(region, str) else None,
+            "api_key": mask_secret(key if isinstance(key, str) and key else None),
+            "key_from": "page" if page_key else "cli" if isinstance(config.get("api_key"), str) and config["api_key"] else None,
+            "base_url_configured": bool(isinstance(page.get("base_url"), str) and page["base_url"])}
+
+
 def bootstrap() -> None:
-    """Opt-in local registration; absence of mmx keeps the provider unavailable."""
+    """Opt-in local registration from the startup flag; inventory never reads page settings."""
     if os.getenv("AICS_ENABLE_MINIMAX_CLI") != "1" or _executable() is None:
         return
+    _register()
+
+
+def register_if_enabled() -> None:
+    """The page switch can enable MiniMax without the startup flag; called after settings load and on save."""
+    if _executable() is not None and _enabled():
+        _register()
+
+
+def _register() -> None:
     from .content_harness.registry import registry
 
     entries = (
@@ -897,3 +1010,104 @@ def bootstrap() -> None:
     for kind, provider, label in entries:
         if provider.key not in {item.key for item in registry.list(kind)}:
             registry.register(kind, provider.key, provider.version, provider, label=label, human_gate=kind != "model_provider")
+
+
+def save_settings(db, changes: dict, updated_by: str) -> None:
+    """Omitted fields keep current values; an empty api_key/base_url clears it."""
+    from fastapi import HTTPException
+
+    from .. import runtime_config
+    from ..models import SystemSetting
+    from .model_registration import endpoint, trusted_literal_address
+
+    if set(changes) - {"enabled", "api_key", "base_url", "region"}:
+        raise HTTPException(422, {"code": "minimax_vendor_field_unknown"})
+    row = db.get(SystemSetting, SETTINGS_KEY)
+    value = dict(row.value) if row is not None and isinstance(row.value, dict) else {}
+    if "enabled" in changes:
+        value["enabled"] = bool(changes["enabled"])
+    if "api_key" in changes:
+        key = changes["api_key"].strip()
+        if key and any(ord(c) < 33 or ord(c) > 126 for c in key):
+            raise HTTPException(422, "provider_credential_invalid")
+        value["api_key"] = key
+    if "base_url" in changes:
+        raw = changes["base_url"].strip()
+        if raw:
+            # 与注册厂商同一条规矩：http 只放行本机/局域网字面地址，其余必须 https。
+            from urllib.parse import urlsplit
+
+            value["base_url"] = endpoint(raw)
+            if urlsplit(value["base_url"]).scheme == "http" and trusted_literal_address(urlsplit(value["base_url"]).hostname) is None:
+                raise HTTPException(422, "trusted_private_endpoint_required")
+        else:
+            value["base_url"] = ""
+    if "region" in changes:
+        region = changes["region"].strip()
+        if region and region not in _REGIONS:
+            raise HTTPException(422, "minimax_vendor_region_invalid")
+        value["region"] = region
+    runtime_config.validate_persisted_configuration(value)
+    if row is None:
+        row = SystemSetting(key=SETTINGS_KEY)
+        db.add(row)
+    row.value, row.updated_by = value, updated_by
+    db.flush()
+    runtime_config.set_runtime(SETTINGS_KEY, value)
+    from .generation.providers import reset_provider_cache
+    from .model_registration import sync_cli_files
+
+    sync_cli_files()
+    reset_provider_cache()
+
+
+def _scrub(text: str, secret: str | None) -> str:
+    return text.replace(secret, "***") if secret else text
+
+
+def _test_reason(message: str, secret: str | None) -> str:
+    lowered = message.lower()
+    if any(mark in lowered for mark in ("invalid api key", "invalid_api_key", "unauthorized", "401", "403",
+                                        "authentication", "login fail", "api secret", "authorization")):
+        return "Key 无效或没有权限"
+    if any(mark in lowered for mark in ("timeout", "timed out", "deadline")):
+        return "连接超时"
+    if "could not determine" in lowered and "region" in lowered:
+        return "无法识别 Key 所属区域，请选择区域后重试"
+    return _scrub(message[:120].strip() or "调用失败", secret)
+
+
+def _error_message(text: str) -> str:
+    # rc!=0 时 mmx 常把错误装在 JSON 里再打到 stdout/stderr，先剥壳再映射。
+    match = re.search(r'"message"\s*:\s*"((?:[^"\\]|\\.)*)"', text)
+    return match.group(1).replace('\\"', '"') if match else text.strip()
+
+
+def test_vendor() -> dict:
+    """One authenticated quota call so a saved key can be checked without generating anything."""
+    if _executable() is None:
+        return {"ok": False, "reason": "未安装 mmx"}
+    if not _enabled():
+        return {"ok": False, "reason": "未启用"}
+    config = _page_config()
+    page_key = config.get("api_key") if isinstance(config.get("api_key"), str) else ""
+    cli_config = _read_cli_config() or {}
+    has_cli_login = any(isinstance(cli_config.get(field), str) and cli_config[field]
+                        for field in ("api_key", "access_token", "refresh_token")) or isinstance(cli_config.get("oauth"), dict)
+    if not page_key and not has_cli_login:
+        return {"ok": False, "reason": "未配置 Key"}
+    started = time.monotonic()
+    result = _run(["quota", "show", "--output", "json", "--quiet", "--no-color"], timeout=15)
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    if result is None:
+        return {"ok": False, "reason": "连接超时", "elapsed_ms": elapsed_ms}
+    if result.returncode != 0:
+        return {"ok": False, "reason": _test_reason(_error_message((result.stderr or result.stdout or "").strip()), page_key), "elapsed_ms": elapsed_ms}
+    try:
+        body = json.loads(result.stdout)
+    except (TypeError, ValueError):
+        return {"ok": False, "reason": "返回格式异常", "elapsed_ms": elapsed_ms}
+    # mmx 在 API 报错时也返回 0，错误藏在 JSON error 字段里。
+    if isinstance(body, dict) and isinstance(body.get("error"), dict):
+        return {"ok": False, "reason": _test_reason(str(body["error"].get("message") or ""), page_key), "elapsed_ms": elapsed_ms}
+    return {"ok": True, "elapsed_ms": elapsed_ms}

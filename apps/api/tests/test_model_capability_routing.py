@@ -131,19 +131,6 @@ def test_existing_empty_setting_is_upgradable(db_session):
     assert routing.save_configuration(db_session, config(), expected_revision=0, actor="admin")["revision"] == 1
 
 
-def test_old_models_writer_cannot_remove_capability_configuration(client, db_session):
-    from app.models import User
-    from app.services import model_capability_routing as routing
-
-    db_session.add(User(email="admin@studio.local", name="Admin", role="admin"))
-    db_session.commit()
-    routing.save_configuration(db_session, config(), expected_revision=0, actor="admin")
-    response = client.put("/api/v1/settings/models", json={"profiles": [{"name": "writer", "provider": "mock"}], "routes": {}})
-    assert response.status_code == 409
-    assert db_session.get(SystemSetting, "models").value["revision"] == 1
-    assert db_session.get(SystemSetting, "models").value["media_plugins"]["cover"]["enabled"] is True
-
-
 def test_limit_exceeded_or_unpriced_money_blocks_planning(db_session):
     from app.services import model_capability_routing as routing
 
@@ -199,41 +186,6 @@ def test_stored_metadata_uses_only_safe_schema_fields(db_session):
     db_session.add(SystemSetting(key="models", value=value))
     db_session.commit()
     assert "private-metadata" not in str(routing.configuration_view(db_session))
-
-
-def test_legacy_writer_atomically_rechecks_upgrade_after_read(db_session, monkeypatch):
-    from sqlalchemy import update
-
-    from app.services.system_settings import save_models
-
-    db_session.add(SystemSetting(key="models", value={"profiles": {}}))
-    db_session.commit()
-    original = db_session.scalar
-
-    def upgrade_after_read(statement, *args, **kwargs):
-        row = original(statement, *args, **kwargs)
-        db_session.connection().execute(update(SystemSetting).where(SystemSetting.key == "models").values(value={"schema_version": 2, "revision": 1}))
-        return row
-
-    monkeypatch.setattr(db_session, "scalar", upgrade_after_read)
-    with pytest.raises(Exception) as error:
-        save_models(db_session, {"profiles": {}}, "admin")
-    assert error.value.status_code == 409
-
-
-def test_legacy_save_advances_head_so_pending_upgrade_conflicts(db_session):
-    from app.services import model_capability_routing as routing
-    from app.services.system_settings import save_models
-
-    db_session.add(SystemSetting(key="models", value={"profiles": {"writer": {"model": "before"}}}))
-    db_session.commit()
-    observed_revision = routing.configuration_view(db_session)["revision"]
-    save_models(db_session, {"profiles": {"writer": {"model": "new-legacy-value"}}}, "admin")
-    db_session.commit()
-    with pytest.raises(Exception) as error:
-        routing.save_configuration(db_session, config(), expected_revision=observed_revision, actor="admin")
-    assert error.value.status_code == 409
-    assert db_session.get(SystemSetting, "models").value["profiles"]["writer"]["model"] == "new-legacy-value"
 
 
 def test_empty_route_can_remove_its_limits(db_session):

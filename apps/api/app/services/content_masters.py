@@ -272,8 +272,9 @@ def _serialize(db: Session, row: ContentMasterRevision, *, require_current: bool
         stale.append("stale_channel")
     if _hash(context) != row.context_hash:
         stale.append("stale_context")
-    prerequisites = (("product_context", "product_context_missing"),) if context.get("production_domain") == "product" else (("identity", "identity_missing"),)
-    missing = [reason for key, reason in (*prerequisites, ("brief", "brief_missing"), ("boundary", "evidence_missing")) if context.get(key) is None]
+    # A product piece is grounded in the product brief, not a persona fact pack.
+    prerequisites = (("product_context", "product_context_missing"),) if context.get("production_domain") == "product" else (("identity", "identity_missing"), ("boundary", "evidence_missing"))
+    missing = [reason for key, reason in (*prerequisites, ("brief", "brief_missing")) if context.get(key) is None]
     return {
         "id": row.id, "project_id": row.project_id, "content_unit_id": row.content_unit_id,
         "revision_no": row.revision_no, "parent_revision_id": row.parent_revision_id,
