@@ -23,7 +23,8 @@ function errorText(error: unknown) {
 }
 
 // Product works only: per-shot camera / look / strength, how each shot's image-to-video is made, and the publish copy.
-export default function ProductShotPanel({ projectId, unitId, payload, locked }: { projectId: number; unitId: number; payload: VideoPayload | null; locked: boolean }) {
+// view "draft": camera / look / strength are 导演稿 content; view "materials": generation, only for shots the user's materials do not cover.
+export default function ProductShotPanel({ projectId, unitId, payload, locked, view }: { projectId: number; unitId: number; payload: VideoPayload | null; locked: boolean; view: "draft" | "materials" }) {
   const client = useQueryClient();
   const base = `/content-projects/${projectId}/units/${unitId}/product-video`;
   const query = useQuery({ queryKey: ["product-video", currentUser(), projectId, unitId], queryFn: () => api.get<View>(base), retry: false,
@@ -50,24 +51,28 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked }:
   }
   const draftCopy = copy || data.publish_copy || EMPTY;
   const shots = [...payload.shots].sort((a, b) => a.order - b.order);
+  const covered = (id: string) => { const used = data.used?.[id]; return !!used && !used.i2v; };
+  const missing = shots.filter(shot => !covered(shot.id)).length;
   const options = (items: Item[]) => [...new Set(items.map(item => item.group))].map(group =>
     <optgroup key={group} label={group}>{items.filter(item => item.group === group).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>);
   return <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
     <div><h3 className="font-semibold">商品镜头</h3><p className="text-sm text-slate-500">{data.direction?.category?.name || "未选品类"} · {data.direction?.style?.name || "按品类推荐风格"} · {MODES[data.direction?.material_mode || "mixed"]} · 图生视频默认{data.default_mode === "auto" ? "自动" : "手动"}{data.resolution && `，现在按${data.resolution.phase === "final" ? "成片" : "小样"}档 ${data.resolution.current.toUpperCase()} 生成（小样 ${data.resolution.sample.toUpperCase()} / 成片 ${data.resolution.final.toUpperCase()}）`}。改运镜会存成新一版导演稿。</p></div>
+    {view === "materials" && <p className="rounded-lg bg-slate-50 p-2 text-sm">共 {shots.length} 镜：{shots.length - missing} 镜已用你的素材 · <span className={missing ? "font-medium text-rose-700" : ""}>{missing} 镜缺画面</span>{missing ? "，下面只列缺画面的镜头，选手动或自动生成。" : "，不用生成。"}</p>}
     {issue && <ErrorBanner message={issue} />}
     <div className="space-y-3">{shots.map((shot, index) => {
+      if (view === "materials" && covered(shot.id)) return null;
       const board = (shot.board || {}) as Motion;
       const presets = board.camera_presets || [];
       const mode = data.modes?.[shot.id] || data.default_mode || "manual";
       const job = data.jobs?.[shot.id];
       const used = data.used?.[shot.id];
       // Shots built from the original product picture or AE are finished footage; only image-to-video shots get the generate controls.
-      const generated = !used || used.i2v;
+      const generated = view === "materials" && (!used || used.i2v);
       const frame = data.frames?.[shot.id];
       const save = (value: Motion) => void run(() => api.put(`${base}/shots/${shot.id}/motion`, { camera_presets: presets, look: board.look ?? null, intensity: board.intensity ?? null, chain_from_previous: !!board.chain_from_previous, ...value }));
       return <article key={shot.id} className="rounded-lg border border-slate-100 p-3">
         <p className="text-sm font-medium">镜头 {index + 1}<span className="ml-2 font-normal text-slate-500">{shot.board?.visual || shot.label}</span></p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-5">
+        {view === "draft" && <div className="mt-2 grid gap-2 sm:grid-cols-5">
           {[0, 1].map(slot => <select key={slot} aria-label={`镜头 ${index + 1} 运镜 ${slot + 1}`} className={inputClass} value={presets[slot] || ""} disabled={busy || locked || !shot.board || (slot === 1 && !presets[0])}
             onChange={event => { const next = [...presets]; if (event.target.value) next[slot] = event.target.value; else next.splice(slot); save({ camera_presets: next.filter(Boolean) }); }}>
             <option value="">{slot === 0 ? "运镜：按品类" : "叠加第二个（可选）"}</option>{options(data.motion?.camera || [])}</select>)}
@@ -76,8 +81,8 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked }:
           <select aria-label={`镜头 ${index + 1} 强度`} className={inputClass} value={board.intensity || ""} disabled={busy || locked || !shot.board} onChange={event => save({ intensity: (event.target.value || undefined) as Motion["intensity"] })}>
             <option value="">强度：中</option><option value="subtle">轻</option><option value="normal">中</option><option value="strong">强</option></select>
           <label className="flex items-center gap-1 text-sm"><input type="checkbox" checked={!!board.chain_from_previous} disabled={busy || locked || !shot.board || index === 0} onChange={event => save({ chain_from_previous: event.target.checked })} />接上一镜</label>
-        </div>
-        {used && <p className="mt-2 text-sm text-slate-600">已用：素材 #{used.material_revision_id} · {used.source}{used.i2v && job?.resolution ? ` ${job.resolution.toUpperCase()}` : ""}{!used.i2v && "（用商品原图或现成素材做的，不走图生视频）"}</p>}
+        </div>}
+        {view === "materials" && used && <p className="mt-2 text-sm text-slate-600">已用：素材 #{used.material_revision_id} · {used.source}{used.i2v && job?.resolution ? ` ${job.resolution.toUpperCase()}` : ""}{!used.i2v && "（用商品原图或现成素材做的，不走图生视频）"}</p>}
         {generated && <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-slate-500">图生视频：</span>
           <Button size="sm" variant={mode === "manual" ? "primary" : "secondary"} disabled={busy || locked} onClick={() => void run(() => api.put(`${base}/shots/${shot.id}/mode`, { mode: "manual" }))}>手动</Button>
@@ -103,7 +108,7 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked }:
           <p className="mt-1">首帧：素材 #{prompt[shot.id].first_frame_revision_id ?? "无"}{prompt[shot.id].last_frame_revision_id ? `；尾帧：素材 #${prompt[shot.id].last_frame_revision_id}` : ""}；{prompt[shot.id].aspect_ratio}；{prompt[shot.id].seconds} 秒。{prompt[shot.id].manual_note}</p></div>}
       </article>;
     })}</div>
-    <div className="space-y-2 rounded-lg border border-slate-100 p-3"><h4 className="font-medium">发布文案</h4>
+    {view === "draft" && <div className="space-y-2 rounded-lg border border-slate-100 p-3"><h4 className="font-medium">发布文案</h4>
       <div className="grid gap-2 sm:grid-cols-2">
         <Field label="标题（≤15 字）"><input className={inputClass} maxLength={15} value={draftCopy.title} onChange={event => setCopy({ ...draftCopy, title: event.target.value })} /></Field>
         <Field label="封面字（≤8 字）"><input className={inputClass} maxLength={8} value={draftCopy.cover_text} onChange={event => setCopy({ ...draftCopy, cover_text: event.target.value })} /></Field>
@@ -113,6 +118,6 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked }:
       </div>
       {!data.publish_copy && !copy && <p className="text-xs text-slate-500">模型定稿前会写一版，你也可以先自己填。</p>}
       <Button size="sm" disabled={busy || !copy} onClick={() => void run(async () => { await api.put(`${base}/publish-copy`, draftCopy); setCopy(null); })}>保存发布文案</Button>
-    </div>
+    </div>}
   </section>;
 }

@@ -74,7 +74,7 @@ export default function StoryboardTable({ projectId, unitId, draft, readOnly, pa
       <div className="mt-4 rounded-lg bg-slate-50 p-4">
         <p className="text-xs text-slate-500">{clock(start)}–{clock(start + shot.duration_ms)}</p>
         <dl className="mt-2 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[6rem_1fr]">{rows.filter(([, value]) => value).map(([label, value]) => <div key={label} className="contents"><dt className="text-xs text-slate-500 sm:pt-0.5">{label}</dt><dd className={`whitespace-pre-wrap ${label === "素材需求" ? "text-amber-800" : "text-slate-800"}`}>{value}</dd></div>)}</dl>
-        <p className="mt-3 text-xs">{materialText(slotById.get(shot.id), shot.source_material_revision_id)}</p>{route(shot.id)}
+        {route(shot.id)}
       </div>
       <div className="mt-3 flex justify-between"><Button size="sm" variant="secondary" disabled={at === 0} onClick={() => setIndex(at - 1)}>上一镜</Button><Button size="sm" variant="secondary" disabled={at === shots.length - 1} onClick={() => setIndex(at + 1)}>下一镜</Button></div>
     </section>;

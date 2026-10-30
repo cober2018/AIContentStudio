@@ -131,6 +131,6 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
       {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
     </section>
     {showDraft && draft && draft.payload.shots.some(shot => shot.board) && <Suspense fallback={null}><StoryboardTable projectId={projectId} unitId={unitId} draft={draft} readOnly paged onChange={() => {}} /></Suspense>}
-    {showDraft && <Suspense fallback={null}><ProductShotPanel projectId={projectId} unitId={unitId} payload={data.master?.payload || null} locked={!!data.locked} /></Suspense>}
+    {showDraft && <Suspense fallback={null}><ProductShotPanel projectId={projectId} unitId={unitId} payload={data.master?.payload || null} locked={!!data.locked} view="draft" /></Suspense>}
   </div>;
 }

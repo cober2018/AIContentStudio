@@ -1,9 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner } from "../components/ui";
 import { MATERIAL_DRAG, type DraggedMaterial } from "./MaterialLibraryFloat";
 import type { VideoPayload } from "./VideoStudioModel";
+
+const ProductShotPanel = lazy(() => import("./ProductShotPanel"));
 
 type Asset = { material_id: number; material_revision_id: number; kind: string; title: string | null; mime_type: string | null };
 type Chain = { state: string; locked?: boolean; master: { payload: VideoPayload } | null };
@@ -144,4 +146,12 @@ export function MusicPanel({ projectId, unitId, readOnly }: { projectId: number;
       {drop.issue && <p role="alert" className="mt-1 text-xs text-rose-700">{drop.issue}</p>}
     </div>
   </section>;
+}
+
+// Product works: after the 导演稿 is approved and materials are mapped, generation is offered only for shots still without a picture.
+export function ProductShotGeneration({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
+  const chain = useVideoChain(projectId, unitId);
+  const data = chain.data;
+  if (!data?.master || ["not_started", "draft_review", "draft_changes"].includes(data.state)) return null;
+  return <Suspense fallback={null}><ProductShotPanel projectId={projectId} unitId={unitId} payload={data.master.payload} locked={readOnly || !!data.locked} view="materials" /></Suspense>;
 }

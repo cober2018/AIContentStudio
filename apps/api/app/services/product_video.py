@@ -255,6 +255,7 @@ def _frames(db: Session, link: ProductSkuWork, document: dict, shot: dict, follo
 def set_shot_first_frame(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, revision_id: int | None) -> dict:
     """Pick the picture one shot's image-to-video starts from; None goes back to the 导演稿 keyframe or the product photo."""
     _context(db, user, project_id, unit_id, shot_id)
+    _after_approval(db, user, project_id, unit_id)
     if revision_id is not None:
         revision = db.get(MaterialRevision, revision_id)
         attached = db.scalar(select(ProjectMaterialReference.id).where(ProjectMaterialReference.project_id == project_id,
@@ -311,8 +312,17 @@ def shot_prompt(db: Session, user: User, project_id: int, unit_id: int, shot_id:
             "manual_note": "网页不支持尾帧时只传首帧；生成后下载原始 MP4 回传。" if last else "生成后下载原始 MP4 回传。"}
 
 
+def _after_approval(db: Session, user: User, project_id: int, unit_id: int) -> None:
+    # Which shots need a generated picture is only known once the user's materials are mapped, i.e. after approval.
+    from . import video_chain
+
+    if video_chain.state(db, user, project_id, unit_id)["state"] in {"not_started", "draft_review", "draft_changes"}:
+        _fail(409, "video_chain_draft_not_approved", "先采用导演稿，对应完素材再生成：已有素材的镜头不用生成")
+
+
 def set_shot_mode(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, mode: str) -> dict:
     _context(db, user, project_id, unit_id, shot_id)
+    _after_approval(db, user, project_id, unit_id)
     if mode not in {"manual", "auto"}:
         _fail(422, "product_i2v_mode_invalid", "图生视频方式只能是手动或自动")
     jobs = _setting(db, JOBS_KEY)
@@ -335,6 +345,7 @@ def _provider():
 def start_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_id: str) -> dict:
     from .materials import read_bytes_checked
 
+    _after_approval(db, user, project_id, unit_id)
     plan = shot_prompt(db, user, project_id, unit_id, shot_id)
     if plan["mode"] != "auto":
         _fail(409, "product_i2v_manual", "这一镜是手动生成；要自动请先切换")
@@ -588,6 +599,8 @@ def generate_shot_image(db: Session, user: User, project_id: int, unit_id: int, 
                         extra_reference_id: int | None = None, as_first_frame: bool = True) -> dict:
     """Still for one shot with the product photo as reference; it is used only after it passes the subject check."""
     from . import shot_image
+
+    _after_approval(db, user, project_id, unit_id)
     from .materials import create_material, create_revision
     from .model_registration import uses
     from .project_folders import store_new
