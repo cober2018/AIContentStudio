@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import uuid
 from datetime import UTC, datetime
+from pathlib import Path
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -34,10 +35,18 @@ RULES = [
     "导演稿：完整 video.master.v2；每个镜头 board 含 message/visual/camera/speaker/sound/notes/material_request。material_request 写清画面必须有什么、景别、时长、实拍还是图形、横竖屏。一镜一个意思，景别和运镜要有变化，同一画面不重复用。",
     "导演稿采用后：先用用户新放进库的素材，其余按 素材库 → 图库搜索 → 生图 → AE 模板 补齐；每个镜头用哪条由你定；回执写明哪些是用户给的、哪些是你找的或做的。",
     "小样、排版、成片都在达芬奇（剪辑、调色、声音、导出）和 AE（标题、字幕、包装、特效）里做；ffmpeg 只用于检查和转格式。",
+    "配乐只看主稿 music：有 material_revision_id 就铺这首；none 为 true 是用户明确不要配乐；空着就是还没定：按导演稿和用户意见找一首放进来（set_shot_materials 的 music），拿不准就问用户；不能自己当成不用。只有用户能选「不用配乐」。",
+    "封面（可选）：竖版 1080×1920 的 jpg / png，实拍画面当背景，上面大字商品名和卖点；导出到开剪结果给的 cover_dir（导出/封面），用 role cover 交付；成片通过后它就是作品封面。同一张可以剪进视频开头当 0.5 秒第一帧。",
     "剪辑照导演稿：画面内容要变就先存新导演稿；导演稿没写的细节和网络素材署名写进回执。",
+    "文件都在项目文件夹里：准备素材（materialize_inputs）给每条素材的原始路径，直接导入达芬奇 / AE，只读，不复制；"
+    "临时渲染、AE 单镜头、达芬奇 / AE 工程和剪辑清单放 work_dir（<项目>/工作/<作品>/任务N/），小样导出到 导出/小样、成片导出到 导出/成片；"
+    "交付结果（submit_output）给文件的绝对路径 path，平台原地检查登记，交付后别再改或移动这个文件。",
+    "复刻参考视频：brief.reference 有值或用户给了参考视频，先 analyze_reference_video / get_reference_video 拿本机拆解，按 studio.video.reference-breakdown 写整体分析、时间线和拍摄清单（save_reference_breakdown），再写导演稿："
+    "结构和节奏照参考，口播换成本作品的说法，每镜写 board.source_kind；参考里的证书、医院、成分只记成需要品牌真实资料，不照抄、不生成；参考视频的原画面和水印不进成片。",
+    "写人物镜头的提示词按 studio.video.prompt-direction：board.attitude 先写人物态度和对谁说，再写一两个关键反应；首帧按 拍摄方式 / 人物 / 动作与镜头 / 场景 四段写；商品图管外观、人物图管长相，提示词不重复描述包装。",
 ]
 EXECUTOR = "codex-video-production"
-_KEEPS_DRAFT = {"material", "edit_prep"}
+_KEEPS_DRAFT = {"material", "edit_prep", "cover"}
 
 
 def _fail(code: str, message: str, status: int = 409):
@@ -144,9 +153,8 @@ def _state(db: Session, unit_id: int) -> dict:
 
 
 def cut_location(db: Session, user: User, project_id: int, unit_id: int, output_id: int):
-    """The file behind the 小样 / 成片 the page plays: its library place once accepted, else the 导出/小样 copy."""
-    from . import materials, project_folders
-    from .creative_execution_files import work_root
+    """The file behind the 小样 / 成片 the page plays: the library record once accepted, else where the model exported it."""
+    from . import creative_executions, materials
 
     current = state(db, user, project_id, unit_id)
     output = db.get(CreativeExecutionOutput, output_id)
@@ -157,13 +165,16 @@ def cut_location(db: Session, user: User, project_id: int, unit_id: int, output_
         path = materials.local_file_checked(db, revision) if revision is not None else None
         if path is not None:
             return path
+    if not output.staging_key.startswith("/"):
+        _fail("video_chain_cut_not_found", "片子不在项目文件夹里", 404)
     execution = db.get(CreativeExecution, output.execution_id)
-    path = project_folders.sample_copy(db, execution, output)
-    if path is None and output.staging_key:
-        path = work_root(execution.owner_user_id, execution.id) / output.staging_key
-    if path is None or not path.is_file():
+    try:
+        creative_executions.check_output(execution.owner_user_id, execution.id, output.staging_key, output.size_bytes, output.content_hash)
+    except HTTPException as exc:
+        if (exc.detail or {}).get("code") == "video_chain_output_changed":
+            raise
         _fail("video_chain_cut_not_found", "片子文件不在了", 404)
-    return path
+    return Path(output.staging_key)
 
 
 def file_as_common(db: Session, user: User, project_id: int, unit_id: int, revision_id: int) -> dict:
@@ -208,6 +219,8 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
                 raise
             db.rollback()
             accepted = False
+    if stage == "final" and accepted:
+        _adopt_cover(db, user, project_id, unit_id, target)
     record = _unit_record(db, unit_id)
     record["decisions"].append({"stage": stage, "target_id": target, "decision": decision, "outputs_accepted": accepted,
                                 "notes": [{"time_ms": item.get("time_ms"), "note": str(item.get("note") or "")[:2000]} for item in notes][:50],
@@ -222,6 +235,21 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
         except Exception:  # noqa: BLE001 Filing the raw folder must never undo the approval; failures stay 待归档.
             db.rollback()
     return state(db, user, project_id, unit_id)
+
+
+def _adopt_cover(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
+    """The 成片's cover becomes the work's cover; no cover leaves the old one."""
+    cover = db.scalar(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == execution_id,
+                                                            CreativeExecutionOutput.role_id == "cover", CreativeExecutionOutput.state == "accepted")
+                      .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+    master = _latest(db, unit_id)
+    if cover is None or cover.material_revision_id is None or master is None:
+        return
+    document = copy.deepcopy(master.payload_json)
+    if document.get("cover") == {"material_revision_id": cover.material_revision_id}:
+        return
+    document["cover"] = {"material_revision_id": cover.material_revision_id}
+    _save(db, user, project_id, unit_id, document, {"video_chain": "cover", "output_id": cover.id})
 
 
 def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
@@ -242,7 +270,7 @@ def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, exec
         shareable = output.kind in {"video", "image", "audio"}
         rights = {"rights_status": "cleared", "public_use_allowed": shareable, "model_use_allowed": shareable}
         payload = {"expected_revision": execution.revision_no, "decision": "accept", "rights": rights,
-                   "title": f"{unit.title} · {output.role_id}"[:255], "attach_to_project": output.role_id in {"rough_cut", "final"}}
+                   "title": f"{unit.title} · {output.role_id}"[:255], "attach_to_project": output.role_id in {"rough_cut", "final", "cover"}}
         try:
             creative_executions.decide_output(db, project_id, unit_id, execution_id, output.id, payload, user)
         except HTTPException as exc:
@@ -298,7 +326,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
-    from . import craft_skills, product_video, project_folders, voiceover
+    from . import craft_skills, product_video, project_folders, reference_video, voiceover
     from .persona_brief import persona_brief
     from .content_masters import owned_unit
     from .project_brief import current_brief
@@ -335,7 +363,9 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             # Product works add their category, style, material mode and image-to-video route; persona works get null.
             "product": product_video.direction(db, unit_id),
             # Who the work speaks as; null when it belongs to no persona.
-            "persona": persona_brief(db, user, unit)}
+            "persona": persona_brief(db, user, unit),
+            # The reference video being cloned, when the user attached one; null otherwise.
+            "reference": reference_video.brief_view(db, unit_id)}
 
 
 def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: dict, note: str | None) -> dict:
@@ -363,7 +393,7 @@ def _approved_master(db: Session, user: User, project_id: int, unit_id: int) -> 
 
 
 def set_materials(db: Session, user: User, project_id: int, unit_id: int, picks: dict[str, int], music: int | None = None,
-                  silent_durations: dict[str, int] | None = None) -> dict:
+                  silent_durations: dict[str, int] | None = None, no_music: bool = False) -> dict:
     master, _current = _approved_master(db, user, project_id, unit_id)
     document = copy.deepcopy(master.payload_json)
     shots = {shot["id"]: shot for shot in document["shots"]}
@@ -385,7 +415,9 @@ def set_materials(db: Session, user: User, project_id: int, unit_id: int, picks:
         if revision is None or revision.material.status != "active" or revision.material.kind != "audio":
             _fail("video_chain_material_unknown", f"音乐素材版本 {music} 不可用", 422)
         document["music"] = {"material_revision_id": music}
-    master_id = _save(db, user, project_id, unit_id, document, {"video_chain": "material", "picks": picks, "music": music, "silent_durations": silent_durations})
+    elif no_music:
+        document["music"] = {"none": True}
+    master_id = _save(db, user, project_id, unit_id, document, {"video_chain": "material", "picks": picks, "music": music, "no_music": no_music, "silent_durations": silent_durations})
     db.commit()
     missing = [shot["id"] for shot in document["shots"] if not shot.get("source_material_revision_id")]
     return {"master_id": master_id, "missing_shots": missing}
@@ -429,6 +461,8 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     if phase == "final" and current["state"] != "finishing":
         _fail("video_chain_sample_not_approved", "小样还没通过，等用户在页面上通过小样")
     document = copy.deepcopy(master.payload_json)
+    if not document.get("music"):
+        _fail("video_chain_music_undecided", "配乐还没定：先选一首放进主稿（set_shot_materials 的 music），或请用户在「配音与音乐」里点「不用配乐」，再开剪")
     shots = {shot["id"] for shot in document["shots"]}
     if set(ae_shot_ids) - shots or set(alpha_shot_ids) - set(ae_shot_ids):
         _fail("video_chain_shot_unknown", "AE 镜头必须是导演稿里的镜头", 422)
@@ -454,8 +488,17 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
         _put(db, unit_id, record)
     db.commit()
     archive = project_folders.archive_master(db, project_id, master.payload_json) if phase == "rough_cut" else None
+    work = project_folders.work_dir(db, project_id, unit_id, execution_id)
+    export = project_folders.export_dir(db, project_id, phase)
+    cover = project_folders.export_dir(db, project_id, "cover")
+    cover.mkdir(parents=True, exist_ok=True)
+    db.commit()
     return {"execution_id": execution_id, "master_id": master.id, "phase": phase,
-            "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None}
+            "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
+            "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
+            "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
+                     f"可选的封面图（role cover，jpg / png）导出到 {cover}/；"
+                     f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
 
 
 def _accepted_cut(db: Session, execution_id: int) -> CreativeExecutionOutput | None:

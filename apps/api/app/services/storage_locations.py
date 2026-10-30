@@ -79,6 +79,17 @@ def set_common(db, path: str, user) -> dict:
     return {"path": str(target)}
 
 
+def edit_proxy_enabled() -> bool:
+    # Off by default, like 剪映: proxies cost disk and a transcode, and only large footage needs them.
+    return (runtime_config.get_runtime(KEY) or {}).get("edit_proxy_enabled") is True
+
+
+def set_edit_proxy(db, enabled: bool, user) -> dict:
+    _save(db, {"edit_proxy_enabled": enabled}, user.email)
+    db.commit()
+    return {"enabled": edit_proxy_enabled()}
+
+
 def library_source_id() -> int | None:
     return (runtime_config.get_runtime(KEY) or {}).get("library_source_id")
 
@@ -186,6 +197,7 @@ def view(db) -> dict:
         "local": {"path": str(MEDIA_ROOT), "reachable": _reachable(MEDIA_ROOT), "env_locked": env_locked,
                   "next_path": pending if pending and pending != str(MEDIA_ROOT) else None},
         "move": dict(_move),
+        "edit_proxy": {"enabled": edit_proxy_enabled()},
     }
 
 

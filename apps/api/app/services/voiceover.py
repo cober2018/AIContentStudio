@@ -19,7 +19,8 @@ from ..models import AuditLog, ContentMasterRevision, ContentUnit, ProjectMateri
 KEY = "voice_default"
 # The user's MiniMax setup (2026-10-24); every field is sent as given.
 DEFAULT = {"model_id": "speech-2.8-hd", "voice_id": "verify_clone_v2", "emotion": "happy", "rate": 1.0, "volume": 1.0, "pitch": 0,
-           "format": "mp3", "sample_rate": 32000, "bitrate": 128000, "channels": 1, "latex_read": False, "text_normalization": False}
+           "format": "mp3", "sample_rate": 32000, "bitrate": 128000, "channels": 1, "latex_read": False, "text_normalization": False,
+           "language_boost": None, "voice_modify": {"pitch": 0, "intensity": 0, "timbre": 0}}
 EMOTIONS = {"auto": None, "happy": "开心", "sad": "悲伤", "angry": "愤怒", "fearful": "恐惧", "disgusted": "厌恶", "surprised": "惊讶",
             "calm": "中性", "fluent": "流畅", "whisper": "低语"}
 
@@ -146,6 +147,11 @@ def _parameters(config: dict) -> dict:
                                               "latex_read", "text_normalization")}
     if config["emotion"] != "auto":
         parameters["emotion"] = config["emotion"]
+    if config.get("language_boost"):
+        parameters["language_boost"] = config["language_boost"]
+    # All-zero means "no adjustment", so the request stays the plain voice.
+    if any((config.get("voice_modify") or {}).values()):
+        parameters["voice_modify"] = config["voice_modify"]
     return {**parameters, "subtitles": True}
 
 
@@ -450,7 +456,7 @@ def _synthesize(db: Session, user: User, project_id: int, unit, text: str, scrip
     result = provider.generate({"prompt": text, "model_id": config["model_id"], "parameters": _parameters(config), "timeout_seconds": 300})
     if result.status != "succeeded" or not result.content:
         # A failed or unclear call is not repeated automatically; the supplier may have charged it.
-        raise HTTPException(502, {"code": "voiceover_failed", "message": "MiniMax 没返回配音，请稍后再试"})
+        raise HTTPException(502, {"code": "voiceover_failed", "message": (result.metadata or {}).get("reason") or "MiniMax 没返回配音，请稍后再试"})
     suffix = {"audio/mpeg": ".mp3", "audio/flac": ".flac"}.get(result.mime_type, ".wav")
     meta = result.metadata or {}
     material = create_material(db, kind="audio", title=f"配音 · {unit.title}"[:200], tags=["配音"], created_by=user.email)

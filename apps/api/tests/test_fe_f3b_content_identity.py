@@ -658,3 +658,39 @@ def test_channel_account_desk_accepts_public_handles_only(client, db_session):
         json={"platform_channel": "x", "platform_account_id": "wx0123456789abcdef"},
         headers=headers,
     ).status_code == 422
+
+
+def test_persona_portraits_are_own_model_usable_images_and_personas_only(client):
+    import io
+
+    from PIL import Image
+
+    alice = {"X-Studio-User": "alice@studio.local"}
+    bob = {"X-Studio-User": "bob@studio.local"}
+
+    def upload(headers, color, model_use="true"):
+        image = io.BytesIO()
+        Image.new("RGB", (8, 8), color).save(image, format="PNG")
+        result = client.post(f"/api/v1/materials/upload?kind=image&rights_status=cleared&model_use_allowed={model_use}",
+                             headers=headers, files={"file": ("face.png", image.getvalue(), "image/png")})
+        assert result.status_code == 201, result.text
+        return result.json()["revisions"][-1]["id"]
+
+    brand_id = client.post("/api/v1/content-brands", json={"name": "Studio"}, headers=alice).json()["id"]
+    persona_id = client.post(f"/api/v1/content-brands/{brand_id}/personas", json={"name": "宝妈"}, headers=alice).json()["id"]
+    account_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "主号"}, headers=alice).json()["id"]
+    # A persona revision written before the field existed still loads.
+    assert client.post(f"/api/v1/content-personas/{persona_id}/revisions", json={"expected_revision": 0, "profile": {"positioning": "宝妈"}}, headers=alice).status_code == 201
+    assert "portrait_material_revision_ids" not in client.get(f"/api/v1/content-identities/effective?persona_id={persona_id}", headers=alice).json()["effective_profile"]
+    own, other, closed = upload(alice, "red"), upload(bob, "blue"), upload(alice, "green", model_use="false")
+    path = f"/api/v1/content-personas/{persona_id}/revisions"
+    for ids in ([other], [closed], [own, own + 999], [own] * 2 + [other, closed]):
+        assert client.post(path, json={"expected_revision": 1, "profile": {"portrait_material_revision_ids": ids}}, headers=alice).status_code == 422
+    assert client.post(f"/api/v1/content-accounts/{account_id}/revisions", json={"expected_revision": 0, "profile": {"portrait_material_revision_ids": [own]}}, headers=alice).json()["detail"] == "portrait_persona_only"
+    saved = client.post(path, json={"expected_revision": 1, "profile": {"positioning": "宝妈", "portrait_material_revision_ids": [own, own]}}, headers=alice)
+    assert saved.status_code == 201, saved.text
+    assert saved.json()["profile"]["portrait_material_revision_ids"] == [own]
+    assert client.get(f"/api/v1/content-identities/effective?persona_id={persona_id}", headers=alice).json()["effective_profile"]["portrait_material_revision_ids"] == [own]
+    portraits = client.get(f"/api/v1/content-personas/{persona_id}/portraits", headers=alice).json()["items"]
+    assert [(item["material_revision_id"], item["usable"]) for item in portraits] == [(own, True)] and portraits[0]["material_id"]
+    assert client.get(f"/api/v1/content-personas/{persona_id}/portraits", headers=bob).status_code == 404

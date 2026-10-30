@@ -25,6 +25,7 @@ from ..models import (
     ContentSeries,
     ContentSeriesRevision,
     IdentitySnapshot,
+    MaterialRevision,
     SystemSetting,
     User,
 )
@@ -78,6 +79,10 @@ class IdentityProfile(BaseModel):
     risk_boundaries: list[str] | None = None
     public_fact_policy: dict[str, Any] | None = None
     brand_voice_version_id: int | None = None
+    # Real photos of the persona; only revision ids are kept, the files live in the common library.
+    portrait_material_revision_ids: list[int] | None = Field(default=None, max_length=3)
+    # A folder in the Obsidian vault with this persona's real spoken transcripts; read fresh for each video brief.
+    speech_sample_folder: str | None = Field(default=None, max_length=500)
     text_creative_profile: CreativeProfile | None = None
     graphic_creative_profile: CreativeProfile | None = None
     video_creative_profile: CreativeProfile | None = None
@@ -348,6 +353,23 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
         voice = db.get(BrandVoiceVersion, voice_id)
         if voice is None or voice.status != "published":
             raise HTTPException(422, "品牌语气版本不可用于新身份")
+    if data.get("portrait_material_revision_ids") is not None:
+        if kind != "persona":
+            raise HTTPException(422, "portrait_persona_only")
+        data["portrait_material_revision_ids"] = _portraits(db, user, data["portrait_material_revision_ids"])
+    if data.get("speech_sample_folder") is not None:
+        if kind != "persona":
+            raise HTTPException(422, "speech_samples_persona_only")
+        before = current_revision(db, kind, entity_id)
+        # Other edits carry the folder along; only a changed folder is checked, so an offline vault never blocks them.
+        if data["speech_sample_folder"] == ((before.profile_json or {}) if before else {}).get("speech_sample_folder"):
+            pass
+        elif data["speech_sample_folder"].strip():
+            from .obsidian_knowledge import check_speech_folder
+
+            data["speech_sample_folder"] = check_speech_folder(db, data["speech_sample_folder"])
+        else:
+            data.pop("speech_sample_folder")
     previous = current_revision(db, kind, entity_id)
     current_no = previous.revision_no if previous else 0
     if expected_revision != current_no:
@@ -374,6 +396,20 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
         raise HTTPException(409, "身份版本已更新，请刷新后重试") from exc
     db.refresh(row)
     return row
+
+
+def usable_portrait(db: Session, revision_id: object, email: str | None = None) -> bool:
+    revision = db.get(MaterialRevision, revision_id) if isinstance(revision_id, int) else None
+    return bool(revision is not None and revision.material is not None and revision.material.kind == "image"
+                and revision.material.status == "active" and revision.status not in {"revoked", "archived"}
+                and revision.model_use_allowed and (email is None or revision.created_by == email))
+
+
+def _portraits(db: Session, user: User, ids: list[int]) -> list[int]:
+    ids = list(dict.fromkeys(ids))
+    if any(not usable_portrait(db, revision_id, user.email) for revision_id in ids):
+        raise HTTPException(422, {"code": "portrait_invalid", "message": "形象照必须是你自己上传、允许模型使用的图片"})
+    return ids
 
 
 def effective(db: Session, user: User, *, persona_id: int, account_id: int | None = None, series_id: int | None = None, mutable: bool = False) -> dict:

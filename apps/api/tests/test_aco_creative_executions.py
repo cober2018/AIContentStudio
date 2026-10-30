@@ -491,3 +491,42 @@ def test_late_input_revocation_rolls_back_material_reference_decision_and_events
         assert reader.get(MaterialRevision, source_input.id).model_use_allowed is True
         persisted = reader.get(CreativeExecutionOutput, output["id"])
         assert persisted.state == "staged" and persisted.material_revision_id is None
+
+
+def test_video_chain_output_path_stays_in_the_project_folder(tmp_path, monkeypatch):
+    from app.services import project_folders
+
+    export = tmp_path / "项目" / "导出" / "小样"
+    work = tmp_path / "项目" / "工作" / "作品-1" / "任务7"
+    export.mkdir(parents=True)
+    work.mkdir(parents=True)
+    monkeypatch.setattr(project_folders, "export_dir", lambda _db, _project, _phase: export)
+    monkeypatch.setattr(project_folders, "work_dir", lambda _db, _project, _unit, _execution: work)
+    row = SimpleNamespace(project_id=1, content_unit_id=1, id=7)
+    package = SimpleNamespace(package_json={"director": {"postproduction": {"phase": "rough_cut"}}})
+    cut, project_file, outside = export / "小样.mp4", work / "工程.drp", tmp_path / "别处.mp4"
+    for path in (cut, project_file, outside, tmp_path / "别处.drp"):
+        path.write_bytes(b"x")
+    assert executions._project_output(None, row, package, "rough_cut", str(cut)) == cut
+    assert executions._project_output(None, row, package, "resolve_project", str(project_file)) == project_file
+    (export / "快捷方式.mp4").symlink_to(outside)
+    (work / "链接目录").symlink_to(tmp_path)
+    refused = [(outside, "rough_cut"), (project_file, "rough_cut"), (cut, "resolve_project"),
+               (export / ".." / ".." / ".." / "别处.mp4", "rough_cut"), (export / "快捷方式.mp4", "rough_cut"),
+               (work / "链接目录" / "别处.drp", "resolve_project"), ("小样.mp4", "rough_cut")]
+    for path, role in refused:
+        with pytest.raises(HTTPException) as error:
+            executions._project_output(None, row, package, role, str(path))
+        assert error.value.detail["code"] == "video_chain_output_path_outside"
+        assert str(export if role == "rough_cut" else work) in error.value.detail["message"]
+
+
+def test_video_chain_output_changed_after_submission_is_refused(tmp_path):
+    cut = tmp_path / "小样.mp4"
+    cut.write_bytes(b"first")
+    digest = hashlib.sha256(b"first").hexdigest()
+    executions.check_output(1, 7, str(cut), 5, digest)
+    cut.write_bytes(b"other")
+    with pytest.raises(HTTPException) as error:
+        executions.check_output(1, 7, str(cut), 5, digest)
+    assert error.value.detail == {"code": "video_chain_output_changed", "message": "文件已变化，请重新交付"}

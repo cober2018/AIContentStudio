@@ -145,8 +145,15 @@ def direction(db: Session, unit_id: int) -> dict | None:
             "camera": [{key: item[key] for key in ("id", "name", "group", "good_for", "holds")} for item in motion["camera"]],
             "looks": [{key: item[key] for key in ("id", "name", "group")} for item in motion["looks"]],
             "intensity": list(motion["intensity"]), "max_stack": product_motion.MAX_STACK},
-        "rules": _rules(settings.get("material_mode", "mixed"), mode, style),
+        "rules": _rules(settings.get("material_mode", "mixed"), mode, style) + [_people_rule(references(db, None, unit_id))],
     }
+
+
+def _people_rule(refs: dict) -> str:
+    if refs["person"]:
+        return "人物：角色有形象照，生成画面（九宫格、首帧）自动带上，人物长相照形象照来。"
+    return ("人物：角色没有形象照，生成画面里不出现人物，只拍商品和场景，拿商品只出现手部。"
+            "导演稿里要人物出镜的镜头写成实拍（source_kind=shoot），或改成商品 / 场景镜头，或请用户先给角色补形象照。")
 
 
 def _rules(material_mode: str, mode: str, style: str | None) -> list[str]:
@@ -161,7 +168,7 @@ def _rules(material_mode: str, mode: str, style: str | None) -> list[str]:
         "user_footage": "出片方式：给素材剪。只用用户放进库的素材，不自动补；缺素材的镜头在回执里列出。",
         "mixed": "出片方式：混合补齐。先用用户素材，缺的依次用免费公开素材 → 图生视频 → AE 模板，每镜回执写明素材来源。",
     }[material_mode])
-    rules.append("首帧：商品主图之外需要新场景时，用 generate_shot_image 生成这一镜的首帧（自动带商品原图作参考并检查主体一致，不过关会重画，最多 3 次）；通过的图自动设为首帧。亮相和下单引导镜头只用商品原图。手动镜头把首帧和 get_shot_video_prompt 的提示词交给用户，用户在页面上传做好的视频；自动镜头生成完会直接放进这一镜。")
+    rules.append("首帧：商品主图之外需要新场景时，用 generate_shot_image 生成这一镜的首帧（自动带商品主图和角色形象照作参考并检查商品一致，不过关会重画，最多 3 次；作品「共同视觉参考」里手动选的优先）；通过的图自动设为首帧。亮相和下单引导镜头只用商品原图。手动镜头把首帧和 get_shot_video_prompt 的提示词交给用户，用户在页面上传做好的视频；自动镜头生成完会直接放进这一镜。")
     rules.append("清晰度：小样阶段按小样档生成；小样通过后，成片档如果比生成时的档位高，先对每个自动生成的镜头重新 generate_shot_video（会按成片档出），再 set_shot_materials 换上新片，然后开成片剪辑；两档相同就沿用小样的片子，不重新生成。")
     rules.append("图生视频：" + ("自动。对要动起来的镜头调用 generate_shot_video，再用 get_shot_video 取结果；失败或用户不满意就把这一镜改成手动（set_shot_video_mode）。"
                                if mode == "auto" else "手动。用 get_shot_video_prompt 取这一镜的提示词和首帧，按网页交接流程让用户在 Grok / Gemini 生成后回传。"))
@@ -179,9 +186,55 @@ def _shot(document: dict, shot_id: str) -> tuple[dict, dict | None]:
 
 
 def _people(board: dict) -> bool:
-    # A speaking presenter, a named role or a person in the picture all mean a real face may appear.
-    return board.get("speaker") in {"presenter", "dialogue"} or bool(board.get("character")) or any(
-        word in (board.get("visual") or "") for word in ("人", "手", "女生", "男生", "模特", "主播"))
+    # A speaking presenter, a named role or a person in the picture all mean a real face may appear;
+    # hands alone do not, since hands holding the product are allowed without a portrait.
+    return board.get("speaker") in {"presenter", "dialogue"} or bool(board.get("character") or board.get("attitude")) or any(
+        word in (board.get("visual") or "") for word in ("人", "女生", "男生", "模特", "主播", "博主", "妈妈", "爸爸", "孩子", "宝宝", "小朋友", "女孩", "男孩"))
+
+
+NO_PORTRAIT = "这个角色没有形象照，这一镜不会出现人物"
+WITH_PORTRAIT = "人物长相照参考照片（角色形象照）来，同一个人，不换脸。"
+WITHOUT_PERSON = "画面里不出现人物（不露脸、不出现身体），只出现商品与场景；需要拿取商品时只出现手部。"
+WITHOUT_PERSON_EN = "No person in the frame (no face, no body), only the product and the setting; when the product is handled, show only hands."
+
+
+def references(db: Session, user: User | None, unit_id: int) -> dict:
+    """Pictures a generated shot is drawn against: the work's own shared references first, else the SKU primary image and the persona portrait."""
+    from ..models import ContentUnit
+    from .content_identity import current_revision, usable_portrait
+
+    link = work(db, unit_id)
+    chosen = {"product": [], "person": [], "scene": []}
+    for ref in (_settings(db, link).get("shared_references") or []) if link else []:
+        if ref.get("role") in chosen and ref.get("material_revision_id") not in chosen[ref["role"]]:
+            chosen[ref["role"]].append(ref["material_revision_id"])
+    origin = {role: "manual" for role, ids in chosen.items() if ids}
+    if not chosen["product"] and link is not None:
+        primary = db.get(ProductSkuRevision, link.sku_revision_id).primary_image_revision_id
+        # A main image added to the product after this work started still serves it: the picture, not the facts, is what changes.
+        primary = primary or db.scalar(select(ProductSkuRevision.primary_image_revision_id).where(
+            ProductSkuRevision.sku_id == link.sku_id, ProductSkuRevision.primary_image_revision_id.is_not(None))
+            .order_by(ProductSkuRevision.revision.desc()).limit(1))
+        if primary:
+            chosen["product"], origin["product"] = [primary], "sku_primary_image"
+    unit = db.get(ContentUnit, unit_id)
+    if not chosen["person"] and unit is not None and unit.persona_id is not None:
+        revision = current_revision(db, "persona", unit.persona_id)
+        portraits = [item for item in ((revision.profile_json or {}).get("portrait_material_revision_ids") or []) if usable_portrait(db, item)] if revision else []
+        if portraits:
+            chosen["person"], origin["person"] = portraits[:3], "persona_portrait"
+    return {**chosen, "origin": origin}
+
+
+def person_notices(document: dict, refs: dict) -> dict:
+    """People shots that will come out without a person because nobody gave a face to draw."""
+    if refs["person"]:
+        return {}
+    return {shot["id"]: NO_PORTRAIT for shot in document.get("shots", []) if _people(shot.get("board") or {})}
+
+
+def person_rule(refs: dict) -> str:
+    return WITH_PORTRAIT if refs["person"] else WITHOUT_PERSON
 
 
 def _keyframe(db: Session, link: ProductSkuWork, shot: dict | None) -> int | None:
@@ -192,8 +245,8 @@ def _keyframe(db: Session, link: ProductSkuWork, shot: dict | None) -> int | Non
     return picked or (shot.get("production") or {}).get("reference_material_revision_id")
 
 
-def _frames(db: Session, link: ProductSkuWork, document: dict, shot: dict, following: dict | None) -> tuple[int | None, int | None]:
-    first = _keyframe(db, link, shot) or db.get(ProductSkuRevision, link.sku_revision_id).primary_image_revision_id
+def _frames(db: Session, link: ProductSkuWork, document: dict, shot: dict, following: dict | None, product: list[int]) -> tuple[int | None, int | None]:
+    first = _keyframe(db, link, shot) or (product[0] if product else None)
     # Chaining pins this clip's last frame to the next shot's keyframe, so the cut between them does not jump.
     last = _keyframe(db, link, following) if following and (following.get("board") or {}).get("chain_from_previous") else None
     return first, last
@@ -239,11 +292,19 @@ def shot_prompt(db: Session, user: User, project_id: int, unit_id: int, shot_id:
     board = copy.deepcopy(shot.get("board") or {})
     profile = ((link.settings_snapshot_json or {}).get("category") or {}).get("profile") or {}
     board.setdefault("look", profile.get("look"))
-    first, last = _frames(db, link, master.payload_json, shot, following)
-    people = _people(board)
+    refs = references(db, user, unit_id)
+    first, last = _frames(db, link, master.payload_json, shot, following, refs["product"])
+    people = _people(board) and bool(refs["person"])
+    if not refs["person"]:
+        # Without a portrait nobody is drawn, so a person's attitude has nothing to act on.
+        board.pop("attitude", None)
+    notice = person_notices({"shots": [shot]}, refs).get(shot_id)
     return {"shot_id": shot_id, "mode": _mode(db, link, unit_id, shot_id),
-            "prompt": product_motion.motion_prompt(board, people=people, english=False),
-            "prompt_en": product_motion.motion_prompt(board, people=people, english=True),
+            "prompt": product_motion.motion_prompt(board, people=people, english=False) + ("" if refs["person"] else "。" + WITHOUT_PERSON),
+            "prompt_en": product_motion.motion_prompt(board, people=people, english=True) + ("" if refs["person"] else ". " + WITHOUT_PERSON_EN),
+            # Four-part wording for a new first-frame still of this shot (generate_shot_image or a web image tool).
+            "still_prompt": product_motion.still_prompt(board, people=people) + "\n" + person_rule(refs),
+            "references": refs, **({"notice": notice} if notice else {}),
             "first_frame_revision_id": first, "last_frame_revision_id": last,
             "aspect_ratio": "{}:{}".format(*master.payload_json["aspect_ratio"]),
             "seconds": min(15, max(4, math.ceil(shot["duration_ms"] / 1000))),
@@ -430,9 +491,23 @@ def _first_frames(db: Session, record: dict) -> dict:
         if revision is not None:
             check = (revision.metadata_json or {}).get("consistency")
             frames[shot_id] = {"material_revision_id": revision.id, "material_id": revision.material_id,
-                               "consistency": None if check is None else ("通过" if check.get("pass") else "不通过"),
+                               "consistency": _verdict(check),
                                "tries": len((check or {}).get("tries") or [])}
     return frames
+
+
+def _verdict(check: dict | None) -> str | None:
+    return None if check is None else ("通过" if check.get("pass") else "不通过")
+
+
+def _grid_candidates(db: Session, record: dict) -> dict:
+    """Storyboard-grid first-frame candidates per shot, newest first; none is in use until the user picks it."""
+    view = {}
+    for shot_id, entry in (record.get("grid") or {}).items():
+        rows = [db.get(MaterialRevision, revision_id) for revision_id in reversed(entry.get("candidates") or [])]
+        view[shot_id] = [{"material_revision_id": row.id, "material_id": row.material_id,
+                          "consistency": _verdict((row.metadata_json or {}).get("consistency"))} for row in rows if row is not None]
+    return view
 
 
 def _used(db: Session, unit_id: int) -> dict:
@@ -455,8 +530,11 @@ def shot_videos(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     if link is None:
         return {"product": False}
     record = _setting(db, JOBS_KEY).get(str(unit_id)) or {}
+    refs, master = references(db, user, unit_id), _latest(db, unit_id)
     return {"product": True, "default_mode": _mode(db, link, unit_id), "modes": record.get("modes") or {},
             "resolution": resolution(db, user, project_id, unit_id), "used": _used(db, unit_id), "frames": _first_frames(db, record),
+            "grid": _grid_candidates(db, record), "grid_run": record.get("grid_run"), "references": refs,
+            "person_notices": person_notices(master.payload_json if master else {}, refs),
             "jobs": {shot: {key: job.get(key) for key in ("state", "material_revision_id", "reason", "resolution")} for shot, job in (record.get("jobs") or {}).items()}}
 
 
@@ -517,38 +595,42 @@ def generate_shot_image(db: Session, user: User, project_id: int, unit_id: int, 
     link, master, shot, _following = _context(db, user, project_id, unit_id, shot_id)
     if as_first_frame and _original_only(shot):
         _fail(409, "shot_image_original_only", "商品亮相和下单引导镜头只用商品原图，不用生成图作首帧")
-    product_id = db.get(ProductSkuRevision, link.sku_revision_id).primary_image_revision_id
-    if product_id is None:
+    refs = references(db, user, unit_id)
+    if not refs["product"]:
         _fail(409, "shot_image_product_photo_missing", "商品还没有主图，没法对照保持主体一致")
+    product_id = refs["product"][0]
     choice = uses()["shot_image"]
     if not choice:
         _fail(409, "shot_image_model_unset", "「用途路由 → 镜头生图」还没选模型")
     target = shot_image.route(choice)
     product = shot_image.to_png(_image_bytes(db, product_id))
     aspect = "{}:{}".format(*master.payload_json["aspect_ratio"])
-    references = [shot_image.fit(product, aspect)] + ([shot_image.fit(shot_image.to_png(_image_bytes(db, extra_reference_id)), aspect)] if extra_reference_id else [])
-    tries, request = [], prompt.strip()
+    used_ids = [product_id, *refs["person"], *refs["scene"], *([extra_reference_id] if extra_reference_id else [])]
+    references_png = [shot_image.fit(product, aspect)] + [shot_image.fit(shot_image.to_png(_image_bytes(db, item)), aspect) for item in used_ids[1:]]
+    base = prompt.strip() + "\n" + person_rule(refs)
+    tries, request = [], base
     for attempt in range(1, MAX_STILL_TRIES + 1):
-        still = shot_image.generate(target, request, references, aspect)
+        still = shot_image.generate(target, request, references_png, aspect)
         verdict = shot_image.check(product, still)
         tries.append({"attempt": attempt, **verdict})
         if verdict["pass"]:
             break
         # The next try is told exactly what drifted, so it fixes the product instead of redrawing at random.
-        request = prompt.strip() + "\n上一张的问题（这次必须改正）：" + "；".join(verdict["problems"] or ["商品和参考照片不一致"])
+        request = base + "\n上一张的问题（这次必须改正）：" + "；".join(verdict["problems"] or ["商品和参考照片不一致"])
     passed = tries[-1]["pass"]
     material = create_material(db, kind="image", title=f"AI 示意 · {shot_id} 首帧"[:200], tags=["AI 示意", "镜头生图"], created_by=user.email)
     revision = create_revision(
         db, material, content=still, suffix=".png", declared_mime="image/png", source_kind="ai_generated",
         provider_key="openai.compatible", provider_version=target["model"], prompt_text=request[:4000], rights_status="cleared",
         public_use_allowed=True, model_use_allowed=True, attribution_text=f"{target['label']} 生图（AI 示意）",
-        metadata={"shot_id": shot_id, "reference_revision_ids": [product_id] + ([extra_reference_id] if extra_reference_id else []),
+        metadata={"shot_id": shot_id, "reference_revision_ids": used_ids,
                   "consistency": {"pass": passed, "tries": tries}, "material_source": "shot_still"}, created_by=user.email)
     db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="system_reference", status="active",
                                     attached_by=user.email, note=f"镜头生图 · {shot_id}"))
     store_new(db, revision, project_id, "图片/图片素材")
     db.commit()
-    result = {"shot_id": shot_id, "material_revision_id": revision.id, "consistency": shot_image.summary(tries[-1]), "tries": len(tries)}
+    result = {"shot_id": shot_id, "material_revision_id": revision.id, "consistency": shot_image.summary(tries[-1]), "tries": len(tries),
+              **({"notice": NO_PORTRAIT} if not refs["person"] and _people(shot.get("board") or {}) else {})}
     if not passed:
         return {**result, "used": False, "next": f"试了 {len(tries)} 次商品都和原图不一致，这张不用；可以改提示词再试，或用商品原图作首帧"}
     if as_first_frame:

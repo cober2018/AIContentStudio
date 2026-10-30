@@ -71,7 +71,8 @@ PRODUCT_CONTEXT_SKILLS = frozenset({"studio.video.product-script", "studio.video
 # Writing skills any work can use, kept in both systems.
 SHARED_SKILLS = frozenset({"studio.research.evidence-brief", "studio.research.angle-lab", "studio.text.title-hook",
                            "studio.text.humanize", "studio.audio.spoken-adapt", "studio.video.script-review",
-                           "studio.video.stock-scout", "studio.video.digital-human"})
+                           "studio.video.stock-scout", "studio.video.digital-human",
+                           "studio.video.reference-breakdown", "studio.video.prompt-direction"})
 
 
 def skill_system(key: str) -> str:
@@ -149,6 +150,8 @@ SKILLS = {
         _resource("studio.video.script-review", "skill", "video", purpose="四评委逐句评审口播脚本并只改说法"),
         _resource("studio.video.stock-scout", "skill", "video", purpose="为缺素材的镜头找、挑免费素材并标版权"),
         _resource("studio.video.digital-human", "skill", "video", purpose="规划数字人出镜的人物设定、表演与限制（生成功能未上线）"),
+        _resource("studio.video.reference-breakdown", "skill", "video", purpose="把参考视频拆成整体分析、时间线、导演稿初稿和拍摄清单"),
+        _resource("studio.video.prompt-direction", "skill", "video", purpose="写人物镜头的视频和首帧提示词：先写态度，每种输入只管一件事"),
         _resource("studio.video.script", "skill", "video", purpose="生成角色化视频脚本", tunable_fields=("instruction", "length")),
         _resource("studio.video.shot-director", "skill", "video", purpose="把脚本拆为镜头和素材计划", tunable_fields=("instruction", "shot_count")),
         _resource("studio.video.director-package", "skill", "video", purpose="生成交给外部专业执行的导演包", tunable_fields=("instruction", "aspect_ratio")),

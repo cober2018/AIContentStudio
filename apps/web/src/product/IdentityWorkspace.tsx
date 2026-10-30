@@ -9,6 +9,8 @@ import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
 import StarterPersonaGallery from "./StarterGallery";
 import PersonaVoicePreset from "./PersonaVoicePreset";
+import { PersonaPortraitEditor } from "./PersonaPortraits";
+import { SpeechSampleFolderEditor } from "./PersonaSpeechSamples";
 
 const PersonaReferenceStylePanel = lazy(() => import("./CapabilityMemoryPanel").then(module => ({ default: module.PersonaReferenceStylePanel })));
 const PersonaCreativeConfig = lazy(() => import("./PersonaCreativeConfig"));
@@ -364,6 +366,18 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       }
     } finally { pending.current = false; setBusy(false); }
   }
+  // Panels that save a revision of their own (reference style, portraits) refresh the form, or flag a conflict when it has unsaved edits.
+  async function sideRevisionSaved() {
+    const key = identityKey!;
+    if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return;
+    const baseline = JSON.stringify(draftFrom(revisions[0]?.profile || {}));
+    await loadTree();
+    const next = await refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch);
+    if (next) {
+      if (JSON.stringify(draftRef.current) !== baseline) setRevisionConflict(true);
+      else { setDraft(draftFrom(next[0]?.profile || {})); baselineDraft.current = JSON.stringify(draftFrom(next[0]?.profile || {})); }
+    }
+  }
   function fieldEditor(key: FieldKey, label: string, shape: string, hint?: string) {
     const value = draft[key];
     const displayedProfile = effective?.effective_profile || revisions[0]?.profile || {};
@@ -466,22 +480,14 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
         </div>}
         {tab === "edit" && <div className="space-y-8">{revisionConflict && <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-[14px] text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}。当前输入已保留，需先核对历史再显式加载，不能继续覆盖。</p><Button variant="secondary" onClick={() => { if (!window.confirm("加载最新修订将覆盖当前表单，确认继续？")) return; const next = draftFrom(revisions[0]?.profile || {}); setDraft(next); baselineDraft.current = JSON.stringify(next); setRevisionConflict(false); setError(""); }}>加载最新修订（覆盖当前表单）</Button></div>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">声音</h3><div className="max-w-md"><PersonaVoicePreset personaId={current.id} disabled={creativeReadOnly} /></div></section>}
+          {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">形象照</h3><PersonaPortraitEditor key={identityKey} personaId={current.id} personaName={current.name} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
+          {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">逐字稿样本</h3><SpeechSampleFolderEditor key={identityKey} personaId={current.id} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
           {profileTabs.map(([group, label]) => <section key={group} className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">{label}</h3><div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === group).map(({ key, label, shape, hint }) => fieldEditor(key, label, shape, hint))}</div></section>)}
           <details className="min-w-0"><summary className="cursor-pointer font-serif text-[18px] font-semibold text-ink-700">高级（一般不用填）</summary><div className="mt-4 grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === "advanced").map(({ key, label, shape, hint }) => fieldEditor(key, label, shape, hint))}</div></details>
           <div className="sticky bottom-4 z-10 flex items-center justify-between gap-4 rounded-pill border border-ink-200 bg-surface/95 py-2 pl-6 pr-2 shadow-lift backdrop-blur"><span className="text-[13px] text-ink-600">保存后生成新修订，旧作品的快照不会改变。</span><Button onClick={saveRevision} disabled={creativeReadOnly || busy || revisionConflict}>保存为 v{current.current_revision + 1}</Button></div>
         </div>}
         {tab === "history" && <Section eyebrow="只读" title="修订历史">{revisions.length ? <ol className="relative space-y-3 border-l border-ink-200 pl-6">{revisions.map((revision, index) => <li key={revision.id} className="relative"><span aria-hidden className={`absolute -left-[29px] top-5 h-2.5 w-2.5 rounded-full ring-4 ring-surface ${index === 0 ? "bg-accent-500" : "bg-ink-300"}`} /><details className="group rounded-[14px] border border-ink-200/80 bg-surface"><summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1 px-5 py-4"><span className="font-serif text-[20px] font-semibold text-ink-900">v{revision.revision_no}</span>{index === 0 && <Chip tone="accent">当前</Chip>}<span className="text-[13px] text-ink-500">{revision.created_at ? new Date(revision.created_at).toLocaleString("zh-CN", { hour12: false }) : "时间未记录"}</span><span className="ml-auto text-[12.5px] text-ink-500 group-open:hidden">展开</span></summary><div className="border-t border-ink-200/80 p-5"><ProfileOverview profile={revision.profile} /><p className="mt-4 break-all font-mono text-[11.5px] text-ink-400">校验和 {revision.checksum}</p></div></details></li>)}</ol> : <p className="text-[14px] text-ink-500">尚无画像修订。</p>}</Section>}
-      {persona && (tab === "creative" || creativeVisitedKey === identityKey) && <div hidden={tab !== "creative"} className="space-y-6"><Suspense fallback={<Spinner label="读取创作配置…" />}><PersonaCreativeConfig key={`${identityKey}:${selectionEpoch}`} current={current} persona={persona} readOnly={creativeReadOnly} accountId={account?.id || null} seriesId={seriesId} revisions={revisions} effective={effective} onSaved={async () => { const key = identityKey!; if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return; await loadTree(); return refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch); }} onNotice={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) setNotice(value); }} onDirtyChange={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) creativeDirty.current = value; }} /></Suspense>{current.kind === "persona" && <Suspense fallback={<Spinner label="读取参考风格…" />}><PersonaReferenceStylePanel key={`style:${identityKey}:${selectionEpoch}`} personaId={persona.id} readOnly={creativeReadOnly} identityRevision={revisions[0]} onIdentityRefresh={async () => {
-        const key = identityKey!;
-        if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return;
-        const baseline = JSON.stringify(draftFrom(revisions[0]?.profile || {}));
-        await loadTree();
-        const next = await refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch);
-        if (next) {
-          if (JSON.stringify(draftRef.current) !== baseline) setRevisionConflict(true);
-          else { setDraft(draftFrom(next[0]?.profile || {})); baselineDraft.current = JSON.stringify(draftFrom(next[0]?.profile || {})); }
-        }
-      }} onDirtyChange={value => { referenceStyleDirty.current = value; }} /></Suspense>}</div>}
+      {persona && (tab === "creative" || creativeVisitedKey === identityKey) && <div hidden={tab !== "creative"} className="space-y-6"><Suspense fallback={<Spinner label="读取创作配置…" />}><PersonaCreativeConfig key={`${identityKey}:${selectionEpoch}`} current={current} persona={persona} readOnly={creativeReadOnly} accountId={account?.id || null} seriesId={seriesId} revisions={revisions} effective={effective} onSaved={async () => { const key = identityKey!; if (selectedIdentity.current !== key || selectionGeneration.current !== selectionEpoch) return; await loadTree(); return refreshIdentity(selectedUrl!, effectiveQuery, key, selectionEpoch); }} onNotice={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) setNotice(value); }} onDirtyChange={value => { if (selectedIdentity.current === identityKey && selectionGeneration.current === selectionEpoch) creativeDirty.current = value; }} /></Suspense>{current.kind === "persona" && <Suspense fallback={<Spinner label="读取参考风格…" />}><PersonaReferenceStylePanel key={`style:${identityKey}:${selectionEpoch}`} personaId={persona.id} readOnly={creativeReadOnly} identityRevision={revisions[0]} onIdentityRefresh={sideRevisionSaved} onDirtyChange={value => { referenceStyleDirty.current = value; }} /></Suspense>}</div>}
 
         {tab === "accounts" && <div className="space-y-6"><Section eyebrow="关联与管理" title={parentLabel(current)} aside={!creativeReadOnly ? <Button variant="danger" size="sm" disabled={busy} onClick={archive}>归档{KIND_NAME[current.kind]}</Button> : undefined}>
           {related.length > 0 ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{related.map(row => entityButton(row))}</div> : <p className="text-[14px] text-ink-500">还没有下级资料。</p>}

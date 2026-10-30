@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import logging
 import os
 import re
 import threading
@@ -32,6 +33,7 @@ from .creative_contracts import bounded_json
 from .project_brief import current_brief
 from .project_evidence import current_boundary
 
+log = logging.getLogger(__name__)
 PROTOCOL_VERSION = "2025-11-25"
 MAX_REQUEST_BYTES = 256 * 1024
 MAX_ARGUMENT_BYTES = 64 * 1024
@@ -168,8 +170,9 @@ class OutputInput(MutationInput):
     role_id: str = Field(min_length=1, max_length=100, pattern=IDENTIFIER)
     output_index: int = Field(ge=1, le=20)
     attempt_no: int | None = Field(default=None, ge=1, le=20)
-    relative_path: str = Field(min_length=1, max_length=500,
-                               pattern=r"^outputs/[A-Za-z0-9][A-Za-z0-9_.-]{0,149}$")
+    relative_path: str | None = Field(default=None, min_length=1, max_length=500,
+                                      pattern=r"^outputs/[A-Za-z0-9][A-Za-z0-9_.-]{0,149}$")
+    path: str | None = Field(default=None, min_length=2, max_length=500, pattern=r"^/")
     mime_type: str = Field(min_length=3, max_length=100, pattern=r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")
     content_hash: str | None = Field(default=None, pattern=HASH)
     metadata: dict = Field(default_factory=dict, max_length=20)
@@ -314,6 +317,43 @@ class ArticleDraftInput(Scope):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class ReferenceVideoInput(Scope):
+    material_revision_id: ID
+
+
+class TimelineItem(Input):
+    start_ms: int = Field(ge=0, le=600_000)
+    end_ms: int = Field(ge=1, le=600_000)
+    speech: str = Field(default="", max_length=600)
+    picture: str = Field(default="", max_length=600)
+    overlays: str = Field(default="", max_length=600)
+    purpose: str = Field(default="", max_length=600)
+
+
+class ShootItem(Input):
+    shot_id: str = Field(default="", max_length=100)
+    what: str = Field(min_length=1, max_length=400)
+    who: str = Field(default="", max_length=400)
+    framing: str = Field(default="", max_length=400)
+    camera: str = Field(default="", max_length=400)
+    seconds: float = Field(default=0, ge=0, le=600)
+    notes: str = Field(default="", max_length=400)
+
+
+class ReferenceBreakdownInput(Scope):
+    analysis: str = Field(min_length=1, max_length=6000)
+    timeline: list[TimelineItem] = Field(min_length=1, max_length=80)
+    shot_list: list[ShootItem] = Field(default_factory=list, max_length=40)
+    brand_material: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(default_factory=list, max_length=20)
+
+
+class StoryboardGridInput(Scope):
+    shot_ids: list[Annotated[str, Field(min_length=1, max_length=100, pattern=IDENTIFIER)]] = Field(default_factory=list, max_length=60)
+    person: str = Field(default="", max_length=500)
+    setting: str = Field(default="", max_length=500)
+    reference_revision_id: ID | None = None
+
+
 class VideoEditInput(Scope):
     phase: Literal["rough_cut", "final"]
     ae_shot_ids: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=15)
@@ -329,11 +369,11 @@ TOOLS = {
     "use_capability": (CapabilityUseInput, "Render an exact applicable capability, or supply stage plus execution_id, exact executor and expected_revision to load only that frozen production stage and record delivery. No automatic skills or quality acceptance.", False),
     "claim_execution": (ClaimInput, "Claim an already prepared current execution with its exact executor and CAS.", False),
     "start_execution": (ClaimInput, "Start a claimed current execution; possible dispatch cannot be auto-retried.", False),
-    "materialize_inputs": (MaterializeInput, "Materialize only authorized exact package inputs into the private work root.", False),
+    "materialize_inputs": (MaterializeInput, "Reserve only authorized exact package inputs. Video-chain edit tasks get each input's original absolute path on the drive (use it read-only, never copy it; proxy_path too when the 代理素材 switch is on: edit with the proxy, export from the original), plus work_dir (<项目>/工作/<作品>/任务<N>/ for renders, AE shots, Resolve / AE projects, manifest) and export_dir (导出/小样 or 导出/成片). Other executors get inputs/<name> in their private work root.", False),
     "report_progress": (ReportInput, "Record safe progress metadata through the existing transition/CAS service.", False),
     "report_blocker": (ReportInput, "Record a proven blocker; possible side effects require Unknown reconciliation.", False),
     "report_checkpoint": (CheckpointInput, "Record a bounded checkpoint through the shared execution transition.", False),
-    "submit_output": (OutputInput, "Stage one output from outputs/<filename>; never accept or bind it to content.", False),
+    "submit_output": (OutputInput, "Stage one output; never accept or bind it to content. Video-chain edit tasks give path: the absolute path of the file where you exported it (rough_cut / final in export_dir, every other role in work_dir; no shortcuts); the platform checks and registers it in place without copying, so do not move or change it afterwards. Other executors give relative_path outputs/<filename>.", False),
     "mark_unknown": (ReportInput, "Record dispatch uncertainty without resending or starting another execution.", False),
     "reconcile_unknown": (ReconcileInput, "Reconcile Unknown using an observation hash/summary and explicit certainty.", False),
     "request_human_review": (MutationInput, "Record a human-review request for result_ready; cannot accept outputs.", False),
@@ -350,21 +390,25 @@ TOOLS = {
     "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project, in the film's aspect (9:16 default, 16:9 when the template has a landscape variant; never stretched). Never binds it to a shot.", False),
     "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
     "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model.", True),
-    "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request; product works may add camera_presets (≤2 motion-library ids), look, intensity, chain_from_previous, character} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
+    "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request; product works may add camera_presets (≤2 motion-library ids), look, intensity, chain_from_previous, character; any work may add source_kind (shoot | product_image | generated | ae_template | library: where the picture comes from, shoot shots make the shooting list) and attitude (the person's attitude and who they speak to, written with studio.video.prompt-direction; it leads the video prompt)} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
     "get_video_decision": (Scope, "Read the chain state and the user's latest decisions and notes (导演稿 / 小样 / 成片). Continue only after approval; notes mean a new version.", True),
     "set_shot_materials": (VideoMaterialsInput, "After the 导演稿 is approved: put material revisions on shots {shot_id: material_revision_id}, optionally the music bed (music: an audio material_revision_id) and the length of shots without a line (silent_durations, ms; e.g. a closing that must stay long enough to read its text). Picture content stays as approved.", False),
     "accept_material_candidate": (VideoCandidateInput, "Import one stock candidate from a start_material_match run into the library and this project; returns its material_revision_id.", False),
     "generate_video_image": (VideoImageInput, "Generate one still with the platform image tool into this project's folder; returns its material_revision_id.", False),
     "get_shot_video_prompt": (ShotInput, "Product works: the image-to-video prompt (zh and en, built from the shot's camera presets, look, intensity and the product / realism rules), first / last frame revisions, ratio and seconds for one shot, plus whether the shot is manual or auto.", True),
     "set_shot_video_mode": (ShotModeInput, "Product works: switch one shot's image-to-video to manual (web handoff) or auto (MiniMax). Use manual when an auto clip failed or the user did not like it.", False),
-    "generate_shot_image": (ShotImageInput, "Product works: generate one shot's still with the image model in 用途路由 → 镜头生图, the product photo sent as reference (plus an optional extra reference). Each still is checked against the product photo (shape, colour, material, logo, accessories) and redrawn with the problems up to 3 times; only a passing still becomes the first frame. Not for product reveal / CTA shots. Write the scene, light and framing in prompt; the keep-the-product rule is added for you.", False),
+    "generate_shot_image": (ShotImageInput, "Product works: generate one shot's still with the image model in 用途路由 → 镜头生图, the product photo sent as reference with the persona's portrait (or the work's own shared references, which win; plus an optional extra reference). Without a portrait no person is drawn (hands only) and people shots return a notice. Each still is checked against the product photo (shape, colour, material, logo, accessories) and redrawn with the problems up to 3 times; only a passing still becomes the first frame. Not for product reveal / CTA shots. Write the scene, light and framing in prompt; the keep-the-product rule is added for you.", False),
     "set_shot_first_frame": (ShotFrameInput, "Product works: pick the picture one shot's image-to-video starts from, e.g. a still made with generate_video_image (material_revision_id); null goes back to the 导演稿 keyframe or the product photo. Product reveal and CTA shots keep the original product photo.", False),
     "generate_shot_video": (ShotInput, "Product works, auto shots only: submit image-to-video on MiniMax H3 with the shot's first (and chained last) frame. Billed per clip; never resubmit an unclear call. Read the result with get_shot_video.", False),
     "get_shot_video": (ShotInput, "Product works: poll the shot's automatic image-to-video; when done returns the material_revision_id (a candidate for set_shot_materials).", False),
     "save_publish_copy": (PublishCopyInput, "Product works: save the publish copy written with studio.product.publish-copy (title ≤15, 3–5 hashtags, cover_text ≤8, interaction, description ≤50). The user can edit it on the page.", False),
     "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines.", False),
     "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
-    "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects.", False),
+    "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects. The result names work_dir and export_dir: export the 小样 / 成片 straight into export_dir and keep everything else in work_dir; materials stay where they are.", False),
+    "analyze_reference_video": (ReferenceVideoInput, "Start the free local breakdown of a reference video (a video material_revision_id from the library; the user can also upload one on the 导演稿 page): timed transcript, scene cuts, time-labelled frame grids per segment and loudness, written to <项目>/工作/<作品>/参考拆解/. Runs in the background; read it with get_reference_video. The reference never becomes project material and never enters the cut.", False),
+    "get_reference_video": (Scope, "Read the work's reference breakdown: status (running / done / failed), the local summary with transcript, cuts, loudness and the absolute paths of transcript.json, cuts.json and the grid images to look at, the saved breakdown and the shooting list.", True),
+    "save_reference_breakdown": (ReferenceBreakdownInput, "After reading the local breakdown with studio.video.reference-breakdown: save the whole-piece analysis, the timeline (per segment: speech, picture, overlays, purpose, source ms), the shooting list of 需要实拍 shots and brand_material (certificates, hospitals, ingredients seen in the reference: they need the brand's real material, never generated). Then write the 导演稿 with save_director_draft.", False),
+    "generate_storyboard_grid": (StoryboardGridInput, "Product works, after the 导演稿 is approved: draw up to nine shots (default: every shot except reveal / CTA, AE template, library and pure product close-ups) in one 3×3 image so the product, people, room and light stay consistent; the product's primary image and the persona's portrait go along as references (the work's own shared references win). The platform cuts it, upscales each cell, checks each against the product photo and redraws a failing cell alone (up to 3 tries), then registers it as that shot's first-frame candidate (not adopted; the user or set_shot_first_frame picks). Without a portrait no person is drawn (hands only); person_notices lists the people shots affected. Product close-ups are allowed when named but come back with a hint to generate them alone. Reveal / CTA / template / library shots are refused. More than nine shots make more sheets, each later one referencing the first. Billed like generate_shot_image.", False),
     "get_article_brief": (Scope, "Text / graphic piece written by you (the page switch must be 第三方模型): project, brief, facts, source texts, the writer setting, chain state and the current version as the payload format example (text.master.v2 or graphic.master.v2).", True),
     "save_article_draft": (ArticleDraftInput, "Save one full version of the piece (text.master.v2 for text, graphic.master.v2 for graphic; image layers name material_revision_id from the library or generate_video_image; no citations or claims). Refused when the page switch is 平台模型 or the piece is final. Then STOP: the user approves or writes notes on the page.", False),
     "get_article_decision": (Scope, "Read the piece's state and the user's latest decision and notes. Approved means final: save nothing more. Notes mean a new version.", True),
@@ -380,7 +424,7 @@ _SAFE_CODES = {
     "platform_skills_disabled", "creative_execution_revision_conflict", "creative_execution_executor_mismatch", "creative_execution_terminal",
     "creative_execution_reconciliation_required", "creative_execution_transition_denied",
     "creative_execution_idempotency_conflict", "creative_execution_not_found", "creative_package_not_found",
-    "creative_source_not_current", "creative_package_stale", "creative_input_model_use_denied",
+    "creative_source_not_current", "creative_package_stale", "master_context_conflict", "creative_input_model_use_denied",
     "creative_input_rights_changed", "creative_execution_required_outputs_missing",
     "creative_execution_output_replacement_required", "creative_execution_output_hash_mismatch",
     "creative_execution_output_replacement_denied", "creative_execution_checkpoint_observation_required",
@@ -516,7 +560,7 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return creative_executions.materialize_inputs(db, args.project_id, args.unit_id, args.execution_id, payload, user)
     if name == "submit_output":
         result = creative_executions.submit_output(db, args.project_id, args.unit_id, args.execution_id, payload, user)
-        # The last required output moves the task to result_ready by itself, so the 小样 copy runs here too.
+        # The last required output moves the task to result_ready by itself, so tidying older tasks' work folders runs here too.
         project_folders.after_execution(db, args.execution_id)
         return result
     raise MCPError("creative_mcp_unknown_tool", "invalid_arguments", rpc_code=-32602)
@@ -529,7 +573,8 @@ _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_s
 _ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision"}
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                 "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
-                "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common"}
+                "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common",
+                "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid"}
 
 
 def _video(db: Session, name: str, args: Input, user: User) -> dict:
@@ -568,6 +613,18 @@ def _video(db: Session, name: str, args: Input, user: User) -> dict:
         return product_video.save_publish_copy(db, user, p, u, args.model_dump(exclude={"project_id", "unit_id"}))
     if name == "file_as_common":
         return chain.file_as_common(db, user, p, u, args.material_revision_id)
+    if name in {"analyze_reference_video", "get_reference_video", "save_reference_breakdown"}:
+        from . import reference_video
+
+        if name == "analyze_reference_video":
+            return reference_video.start(db, user, p, u, material_revision_id=args.material_revision_id)
+        if name == "get_reference_video":
+            return reference_video.result(db, user, p, u)
+        return reference_video.save_breakdown(db, user, p, u, args.model_dump(exclude={"project_id", "unit_id"}))
+    if name == "generate_storyboard_grid":
+        from . import shot_image
+
+        return shot_image.grid(db, user, p, u, args.shot_ids, args.person, args.setting, args.reference_revision_id)
     return chain.prepare_edit(db, user, p, u, args.phase, args.ae_shot_ids, args.alpha_shot_ids, args.notes)
 
 
@@ -627,11 +684,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("video_chain_", "article_chain_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 
@@ -647,6 +704,7 @@ def call_tool(db: Session, user: User, binding: Binding, params: dict, trace_id:
     if name not in TOOLS:
         raise MCPError("creative_mcp_unknown_tool", "invalid_arguments", rpc_code=-32602)
     mutated = False
+    cause = None
     try:
         raw = safe_value(params.get("arguments", {}), binding, maximum=MAX_ARGUMENT_BYTES)
         args = TOOLS[name][0].model_validate(raw)
@@ -662,6 +720,7 @@ def call_tool(db: Session, user: User, binding: Binding, params: dict, trace_id:
         data = error_data("creative_mcp_arguments_invalid", "invalid_arguments", trace_id, status=422)
     except HTTPException as exc:
         data = domain_error(exc, trace_id)
+        cause = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     except MCPError as exc:
         data = error_data(exc.code, exc.category, trace_id, status=exc.status)
         if exc.code == "creative_capability_unavailable":
@@ -669,6 +728,11 @@ def call_tool(db: Session, user: User, binding: Binding, params: dict, trace_id:
     except Exception:  # noqa: BLE001 MCP must never serialize an internal exception or its inputs.
         data = error_data("creative_mcp_internal_error", "internal", trace_id, status=500)
     db.rollback()
+    # A failed tool still answers 200, so the log is the only place a lost hand-back can be traced; never the arguments.
+    execution_id = (params.get("arguments") or {}).get("execution_id") if isinstance(params.get("arguments"), dict) else None
+    log.warning("creative mcp tool failed: tool=%s execution_id=%s code=%s cause=%s status=%s trace=%s", name,
+                execution_id if type(execution_id) is int else None, data.get("code"),
+                cause if isinstance(cause, str) and re.fullmatch(r"[a-z0-9_]{1,100}", cause) else None, data.get("status"), trace_id)
     if mutated:
         data["read_capability_use_before_retry" if name == "use_capability" else "read_execution_before_retry"] = True
     return tool_result(data, failed=True)

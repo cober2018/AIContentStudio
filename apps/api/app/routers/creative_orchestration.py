@@ -135,7 +135,9 @@ class OutputInput(ExecutorInput):
     role_id: str = Field(min_length=1, max_length=100)
     output_index: int = Field(ge=1, le=20)
     attempt_no: int | None = Field(default=None, ge=1)
-    relative_path: str = Field(min_length=1, max_length=500)
+    # relative_path for private-transport executors; path (absolute, in the project folder) for the video-chain edit.
+    relative_path: str | None = Field(default=None, min_length=1, max_length=500)
+    path: str | None = Field(default=None, min_length=1, max_length=500)
     mime_type: str = Field(min_length=1, max_length=100)
     content_hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     metadata: dict = Field(default_factory=dict)
@@ -300,10 +302,13 @@ def read_output(project_id: int, unit_id: int, execution_id: int, output_id: int
                 or any(provenance.get(key) != value for key, value in expected.items())):
             raise HTTPException(409, {"code": "creative_output_material_integrity"})
         content = read_bytes_checked(db, revision)
+    elif output["staging_key"].startswith("/"):
+        with creative_executions.open_output(user.id, execution_id, output["staging_key"], output["size_bytes"]) as source:
+            content = source.read(output["size_bytes"] + 1)
     else:
         content = creative_execution_files.read_file(user.id, execution_id, output["staging_key"])
     if hashlib.sha256(content).hexdigest() != output["content_hash"] or len(content) != output["size_bytes"]:
-        raise HTTPException(409, {"code": "creative_output_hash_mismatch"})
+        raise HTTPException(409, {"code": "creative_output_hash_mismatch", "message": "文件已变化，请重新交付"})
     return Response(content, media_type=output["mime_type"], headers={"X-Content-Type-Options": "nosniff", "Content-Disposition": f'attachment; filename="output-{output_id}.bin"'})
 
 
@@ -421,9 +426,9 @@ def preview_output(project_id: int, unit_id: int, execution_id: int, output_id: 
                 raise HTTPException(409, {"code": "creative_output_material_integrity"})
             source = stack.enter_context(streams.material_file(revision, output["size_bytes"]))
         else:
-            source = stack.enter_context(streams.execution_file(user.id, execution_id, output["staging_key"], output["size_bytes"]))
+            source = stack.enter_context(creative_executions.open_output(user.id, execution_id, output["staging_key"], output["size_bytes"]))
         if streams.inspect(source, output["size_bytes"]) != (output["size_bytes"], digest):
-            raise HTTPException(409, {"code": "creative_output_hash_mismatch"})
+            raise HTTPException(409, {"code": "creative_output_hash_mismatch", "message": "文件已变化，请重新交付"})
         size, start, end = output["size_bytes"], 0, output["size_bytes"] - 1
         requested = request.headers.get("range")
         if requested:

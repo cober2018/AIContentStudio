@@ -236,12 +236,14 @@ def capture_content_hash(document: dict, kind: str) -> str:
 
 BOARD_CAMERA = {"fixed", "push_in", "pull_out", "follow", "orbit", "pan"}
 BOARD_SPEAKER = {"narration", "presenter", "dialogue", "none"}
+BOARD_SOURCE = {"shoot", "product_image", "generated", "ae_template", "library"}
 
 
 def canonical_board(value: object) -> dict:
     """Storyboard columns of one shot; the spoken line stays in the script block it points to."""
     board = _object(value, {"message", "visual", "camera", "speaker", "sound", "notes", "material_request",
-                            "camera_presets", "look", "intensity", "chain_from_previous", "character"}, "video_shot_board_invalid")
+                            "camera_presets", "look", "intensity", "chain_from_previous", "character",
+                            "source_kind", "attitude"}, "video_shot_board_invalid")
     result = {key: _text(board.get(key, ""), limit, "video_shot_board_invalid")
               for key, limit in (("message", 500), ("visual", 1000), ("sound", 500), ("notes", 500))}
     result["camera"] = _enum(board.get("camera", "fixed"), BOARD_CAMERA, "video_shot_board_invalid")
@@ -261,6 +263,11 @@ def canonical_board(value: object) -> dict:
                 result[key] = list(board[key]) if key == "camera_presets" else board[key]
     if "character" in board:
         result["character"] = _text(board["character"], 40, "video_shot_board_invalid")
+    # Where the shot's picture comes from (需要实拍 shots make the shooting list) and the person's attitude; kept only when written.
+    if "source_kind" in board:
+        result["source_kind"] = _enum(board["source_kind"], BOARD_SOURCE, "video_shot_board_invalid")
+    if "attitude" in board:
+        result["attitude"] = _text(board["attitude"], 300, "video_shot_board_invalid")
     return result
 
 
@@ -437,9 +444,14 @@ def canonical_payload(raw: object) -> dict:
         overlays.append(normalized)
     result["overlays"] = overlays
 
-    for field in ("music", "cover"):
-        value = _object(payload.get(field), {"material_revision_id"}, f"video_{field}_invalid")
-        result[field] = {"material_revision_id": _revision_id(value["material_revision_id"], f"video_{field}_invalid")} if "material_revision_id" in value else {}
+    # music: a chosen revision, {"none": true} when the user chose no music, {} while undecided.
+    music = _object(payload.get("music"), {"material_revision_id", "none"}, "video_music_invalid")
+    if "none" in music and (music["none"] is not True or "material_revision_id" in music):
+        _fail("video_music_invalid")
+    result["music"] = ({"material_revision_id": _revision_id(music["material_revision_id"], "video_music_invalid")}
+                       if "material_revision_id" in music else {"none": True} if music else {})
+    cover = _object(payload.get("cover"), {"material_revision_id"}, "video_cover_invalid")
+    result["cover"] = {"material_revision_id": _revision_id(cover["material_revision_id"], "video_cover_invalid")} if "material_revision_id" in cover else {}
     if "render_asset_ref" in payload:
         ref = _object(payload["render_asset_ref"], {"material_revision_id"}, "video_render_ref_invalid")
         result["render_asset_ref"] = {"material_revision_id": _revision_id(ref.get("material_revision_id"), "video_render_ref_invalid")}

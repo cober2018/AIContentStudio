@@ -145,6 +145,8 @@ def edit_contract(document: dict) -> dict:
             if not comp["alpha_required"]:
                 intermediate["allowed_mime"] = ["video/mp4", "video/quicktime"]
             roles.append(intermediate)
+    # Optional: a separate publish cover, exported to 导出/封面.
+    roles.append({**role("cover", "image", "image/jpeg"), "required": False, "min_count": 0, "allowed_mime": ["image/jpeg", "image/png"]})
     return {"roles": roles, "media_transfer_policy": dict(TRANSFER_POLICY)}
 
 
@@ -212,7 +214,7 @@ def _prepare(db: Session, project_id: int, unit_id: int, payload: dict, user: Us
         package = packages.owned_package(db, project_id, unit_id, package_result["id"], user, current=True)
     package_view = packages.package_projection(db, package, user)
     return {"execution": execution, "package": package_view,
-            "instructions": (f"使用 video-production-handoff Skill，通过MCP领取 project={project_id} unit={unit_id} execution={execution['id']} package_hash={package.package_hash}；达芬奇主剪、AE按需制作；平台只用MCP或命令行REST。"
+            "instructions": (f"使用 video-production-handoff Skill，通过MCP领取 project={project_id} unit={unit_id} execution={execution['id']} package_hash={package.package_hash}；达芬奇主剪、AE按需制作；素材用原始路径（只读），小样 / 成片导出到项目的 导出/小样 或 导出/成片，其他文件放 工作/<作品>/任务{execution['id']}/，交付时给绝对路径；平台只用MCP或命令行REST。"
                              if edit else manual_instructions(package.package_json, execution["id"])),
             "website": (package.package_json.get("web_video") or {}).get("website")}
 
@@ -296,10 +298,11 @@ def validate_edit_manifest(package: dict, body: dict) -> None:
         if not isinstance(asset, dict):
             _fail("video_edit_manifest_assets_mismatch")
         revision = asset.get("material_revision_id")
-        path = asset.get("relative_path")
+        # The original file on the drive materialize_inputs named; the revision and hash are what bind it.
+        path = asset.get("path")
         if (type(revision) is not int or revision in seen or revision not in expected
                 or asset.get("content_hash") != expected[revision] or not isinstance(path, str)
-                or not re.fullmatch(rf"inputs/{revision}-{expected[revision]}\.[a-z0-9]{{1,5}}", path)):
+                or not path.startswith("/") or len(path) > 1000):
             _fail("video_edit_manifest_assets_mismatch")
         seen.add(revision)
     timeline = body.get("timeline")

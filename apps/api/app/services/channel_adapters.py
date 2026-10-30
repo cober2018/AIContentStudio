@@ -407,7 +407,7 @@ class VideoSpokenScriptAdapter:
             source = canonical_video_payload(source_payload)
         except VideoDocumentError as exc:
             raise AdapterUnavailable("invalid_video_source") from exc
-        if source["voice"]["mode"] != "none" or source["subtitles"]["cues"] or source["overlays"] or source["music"] or source["cover"] or source.get("render_asset_ref"):
+        if source["voice"]["mode"] != "none" or source["subtitles"]["cues"] or source["overlays"] or "material_revision_id" in source["music"] or source["cover"] or source.get("render_asset_ref"):
             raise AdapterUnavailable("video_media_or_timing_requires_explicit_mapping")
         blocks = {block["id"]: block["text"] for block in source["script"]["blocks"]}
         if not source["shots"] or any("script_block_id" not in shot or not blocks[shot["script_block_id"]].strip() for shot in source["shots"]):

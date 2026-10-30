@@ -1,0 +1,4 @@
+- [x] 1 删 music_direction（ProductionSettings、form_assistance、GuidedProductionProfile、SkuWorkRetention），旧记录读回丢弃；只在任务包里过滤（主稿上下文快照不动）
+- [x] 2 主稿 music 支持 {none: true}；页面接口 no_music；第三方模型仍可经 set_shot_materials 选曲，不能设「不用」
+- [x] 3 「配音与音乐」页加「不用配乐」；剪辑规则写明三种状态；配乐未定时不能开剪（小样和成片都拦）
+- [ ] 4 用户实测后归档

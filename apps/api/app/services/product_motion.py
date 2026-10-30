@@ -55,15 +55,30 @@ def shot_problems(shot: dict) -> list[str]:
     return problems
 
 
+def _picture(board: dict) -> str:
+    # Lines about overlaid text are post-production work (AE); sent to an image or video model they get painted into the frame.
+    visual = str(board.get("visual") or board.get("message") or "")
+    kept = [part for part in re.split(r"(?<=[；。;])", visual) if not ("叠" in part and "字" in part)]
+    return "".join(kept).strip("；;。 ")
+
+
+def still_prompt(board: dict, *, people: bool, person: str = "", setting: str = "") -> str:
+    """A first-frame still in four parts: capture, person, action and camera, setting (studio.video.prompt-direction)."""
+    looks = _looks()
+    # Without a look, people shots default to the fixed phone-footage wording so they read as real filming.
+    capture = looks[board["look"]]["image"] if board.get("look") in looks else looks["phone-raw"]["image"] if people else ""
+    who = "；".join(filter(None, [person.strip(), str(board.get("attitude") or "").strip(), catalog()["realism"]["zh"] if people else ""]))
+    parts = [("拍摄方式", capture), ("人物", who), ("动作与镜头", _picture(board)), ("场景", setting.strip())]
+    return "\n".join(f"{name}：{text}" for name, text in parts if text) + "\n画面里不出现任何文字、字幕、标志和水印。"
+
+
 def motion_prompt(board: dict, *, people: bool, english: bool) -> str:
     """One video prompt: what moves, how the camera moves, light, strength and the fixed product / stability rules."""
     data = catalog()
     cameras, looks = _cameras(), _looks()
     lang = "en" if english else "zh"
-    # Lines about overlaid text are post-production work (AE); sent to the video model they get painted into the frame.
-    visual = str(board.get("visual") or board.get("message") or "")
-    kept = [part for part in re.split(r"(?<=[；。;])", visual) if not ("叠" in part and "字" in part)]
-    parts = ["".join(kept).strip("；;。 ")]
+    # The person's attitude leads (studio.video.prompt-direction): it directs face, body and rhythm together.
+    parts = [str(board.get("attitude") or "").strip(), _picture(board)]
     moves = [cameras[item]["motion_en" if english else "motion"] for item in board.get("camera_presets") or [] if item in cameras]
     if moves:
         parts.append(("Camera: " if english else "运镜：") + ("; at the same time, " if english else "，同时").join(moves))

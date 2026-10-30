@@ -13,6 +13,20 @@ def profile_snapshot(db, unit_id):
             "settings": {k: v for k, v in row.settings_json.items() if k != "feedback"}}
 
 
+def for_task(snapshot):
+    """The snapshot as an edit task sees it. Masters keep the full snapshot so their context hash stays stable;
+    old revisions still hold music_direction's 「不使用配乐」 default, which must not reach an executor."""
+    if not snapshot:
+        return snapshot
+    return {**snapshot, "settings": {k: v for k, v in snapshot["settings"].items() if k != "music_direction"}}
+
+
+def context_for_task(product_context):
+    if not isinstance(product_context, dict) or not product_context.get("production_profile"):
+        return product_context
+    return {**product_context, "production_profile": for_task(product_context["production_profile"])}
+
+
 def capture_profile_projection(settings):
     # Post-production sound changes do not require shooting the same images again.
     fields = ("shared_references", "work_type", "creation_mode", "reference_notes",

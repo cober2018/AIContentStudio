@@ -1,6 +1,6 @@
 """Auto-start of rough-cut edits: dispatcher endpoints (MCP token) and page/settings endpoints."""
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -75,6 +75,8 @@ class VoiceSettingsIn(BaseModel):
     channels: int | None = None
     latex_read: bool | None = None
     text_normalization: bool | None = None
+    language_boost: str | None = None
+    voice_modify: dict[str, int] | None = None
 
 
 @router.get("/api/v1/settings/voice")
@@ -92,14 +94,14 @@ class VoicePresetIn(VoiceSettingsIn):
 def create_voice_preset(payload: VoicePresetIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
     from ..services import voiceover
 
-    return voiceover.save_preset(db, user, None, payload.name, payload.model_dump(exclude_none=True, exclude={"name"}))
+    return voiceover.save_preset(db, user, None, payload.name, payload.model_dump(exclude_unset=True, exclude={"name"}))
 
 
 @router.put("/api/v1/settings/voice/presets/{preset_id}")
 def update_voice_preset(preset_id: str, payload: VoicePresetIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
     from ..services import voiceover
 
-    return voiceover.save_preset(db, user, preset_id, payload.name, payload.model_dump(exclude_none=True, exclude={"name"}))
+    return voiceover.save_preset(db, user, preset_id, payload.name, payload.model_dump(exclude_unset=True, exclude={"name"}))
 
 
 @router.delete("/api/v1/settings/voice/presets/{preset_id}")
@@ -193,12 +195,16 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
         result["cut_output_id"] = db.scalar(select(CreativeExecutionOutput.id).where(
             CreativeExecutionOutput.execution_id == result["execution_id"], CreativeExecutionOutput.role_id.in_(("rough_cut", "final")))
             .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+        cover = lambda execution_id: db.scalar(select(CreativeExecutionOutput.id).where(  # noqa: E731
+            CreativeExecutionOutput.execution_id == execution_id, CreativeExecutionOutput.role_id == "cover",
+            CreativeExecutionOutput.state.in_(("staged", "accepted"))).order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+        result["cover_output_id"] = cover(result["execution_id"])
         # The 小样 page stays watchable after the chain has moved on to the 成片.
         sample = next((task for task in reversed(result["tasks"]) if task.get("phase") == "rough_cut"), None)
         if sample and sample["execution_id"] != result["execution_id"]:
             result["sample"] = {"execution_id": sample["execution_id"], "cut_output_id": db.scalar(select(CreativeExecutionOutput.id).where(
                 CreativeExecutionOutput.execution_id == sample["execution_id"], CreativeExecutionOutput.role_id == "rough_cut")
-                .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))}
+                .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1)), "cover_output_id": cover(sample["execution_id"])}
     return result
 
 
@@ -212,6 +218,7 @@ def video_chain_decide(project_id: int, unit_id: int, payload: VideoDecisionIn, 
 class VideoMaterialsIn(BaseModel):
     picks: dict[str, int] = Field(default_factory=dict, max_length=200)
     music: int | None = None
+    no_music: bool = False
 
 
 @router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/materials")
@@ -219,7 +226,54 @@ def video_chain_materials(project_id: int, unit_id: int, payload: VideoMaterials
     from ..services import video_chain
 
     # Same write the video model makes over MCP, so a shot or the music the user drops in counts the same way.
-    return video_chain.set_materials(db, user, project_id, unit_id, payload.picks, payload.music)
+    return video_chain.set_materials(db, user, project_id, unit_id, payload.picks, payload.music, no_music=payload.no_music)
+
+
+class ReferenceVideoIn(BaseModel):
+    material_revision_id: int = Field(gt=0)
+
+
+@router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/reference")
+def reference_video_state(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import reference_video
+
+    return reference_video.result(db, user, project_id, unit_id)
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/reference")
+def reference_video_from_library(project_id: int, unit_id: int, payload: ReferenceVideoIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import reference_video
+
+    return reference_video.start(db, user, project_id, unit_id, material_revision_id=payload.material_revision_id)
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/reference/upload")
+async def reference_video_upload(project_id: int, unit_id: int, file: UploadFile, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import reference_video
+
+    content = await file.read(reference_video.MAX_UPLOAD + 1)
+    return reference_video.start(db, user, project_id, unit_id, upload=(content, file.filename or "reference.mp4"))
+
+
+@router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/reference/grids/{name}")
+def reference_video_grid(project_id: int, unit_id: int, name: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from fastapi.responses import FileResponse
+
+    from ..services import reference_video
+
+    record = reference_video.result(db, user, project_id, unit_id)
+    grids = ((record.get("summary") or {}).get("files") or {}).get("grids") or []
+    path = next((item for item in grids if item.rsplit("/", 1)[-1] == name), None)
+    if path is None:
+        raise HTTPException(404, {"code": "reference_video_grid_missing", "message": "找不到这张拼图"})
+    return FileResponse(path, media_type="image/jpeg")
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/reference/shot-list/export")
+def reference_video_export(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import reference_video
+
+    return reference_video.export_shot_list(db, user, project_id, unit_id)
 
 
 class ArticleWriterIn(BaseModel):

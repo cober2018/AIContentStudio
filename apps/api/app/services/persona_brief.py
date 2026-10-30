@@ -1,4 +1,4 @@
-"""The persona part of a third-party model's brief: who the work speaks as, and the persona's own method when it set one."""
+"""The persona part of a third-party model's brief: who the work speaks as, whether it has a portrait, and the persona's own method when it set one."""
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ EXTRA_TEXT = 4000
 
 RULES = [
     "角色资料是这条作品的出发点：选角度、取舍内容、说话方式都按 persona.profile；表达风格里的「不能出现的词」一个都不能出现；内容边界和风险边界内的不写。",
+    "persona.portrait 为 true：角色有形象照，生成画面里的人物照它来；为 false：生成画面里不出现人物（只拍商品和场景，拿东西只出现手部），要人物出镜的镜头写成实拍，或请用户先给角色补形象照。",
+    "persona.speech_samples 有样本：口播 / 旁白照这些真人逐字稿的说话方式写（句子长短、口头语、怎么称呼观众、怎么转话题），不照搬里面的内容、事实和经历；unavailable 有值说明这次没读到。",
     "persona.method 有值：按它的主方法 skill 写（用 get_craft_skill 读 method.skill.read），并照它的风格预设、质量标准、额外要求和附加方法；没有值就按 platform_skills 的默认选法。",
 ]
 
@@ -51,6 +53,15 @@ def _method(db: Session, profile: dict | None) -> dict | None:
     }
 
 
+def _speech_samples(db: Session, unit, folder) -> dict | None:
+    # Product works borrow only the persona's voice and identity, not how the persona talks.
+    if not folder or unit.production_domain == "product":
+        return None
+    from .obsidian_knowledge import speech_samples
+
+    return speech_samples(db, folder)
+
+
 def persona_brief(db: Session, user: User, unit) -> dict | None:
     from . import content_identity, craft_skills, voiceover
 
@@ -69,8 +80,10 @@ def persona_brief(db: Session, user: User, unit) -> dict | None:
     return {
         "name": persona.name if persona else None, "brand": brand.name if brand else None,
         "voice": voiceover.settings_for(db, unit)["preset_name"],
+        "portrait": any(content_identity.usable_portrait(db, item) for item in merged.get("portrait_material_revision_ids") or []),
         "profile": {label: merged[key] for key, label in PROFILE_FIELDS.items() if merged.get(key) not in (None, "", [], {})},
         "method": _method(db, merged.get(CREATIVE_FIELD.get(unit.modality, ""))) if with_method else None,
+        "speech_samples": _speech_samples(db, unit, merged.get("speech_sample_folder")),
         "rules": RULES,
     }
 

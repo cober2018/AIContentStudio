@@ -3,7 +3,10 @@ import { useState } from "react";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
 
-type Voice = { name: string; model_id: string; voice_id: string; emotion: string; rate: number; volume: number; pitch: number; format: string; sample_rate: number; bitrate: number; channels: number; latex_read: boolean; text_normalization: boolean };
+type Voice = { name: string; model_id: string; voice_id: string; emotion: string; rate: number; volume: number; pitch: number; format: string; sample_rate: number; bitrate: number; channels: number; latex_read: boolean; text_normalization: boolean;
+  language_boost: string | null; voice_modify: { pitch: number; intensity: number; timbre: number } };
+const LANGUAGES: [string, string][] = [["", "不设置"], ["auto", "自动识别"], ["Chinese", "中文"], ["Chinese,Yue", "粤语"], ["English", "英语"], ["Japanese", "日语"], ["Korean", "韩语"]];
+const MODIFY: [keyof Voice["voice_modify"], string][] = [["pitch", "音调"], ["intensity", "强度"], ["timbre", "音色"]];
 type Presets = { default: string; items: Record<string, Voice>; personas: Record<string, string>; emotions: Record<string, string> };
 
 function errorText(cause: unknown) {
@@ -54,7 +57,11 @@ export default function VoiceSettings() {
       <Field label="采样率"><select className={inputClass} value={value.sample_rate} disabled={busy} onChange={event => set({ sample_rate: Number(event.target.value) })}>{[16000, 24000, 32000, 44100].map(item => <option key={item} value={item}>{item} Hz</option>)}</select></Field>
       <Field label="比特率"><select className={inputClass} value={value.bitrate} disabled={busy} onChange={event => set({ bitrate: Number(event.target.value) })}>{[64000, 128000, 256000].map(item => <option key={item} value={item}>{item / 1000} kbps</option>)}</select></Field>
       <Field label="声道"><select className={inputClass} value={value.channels} disabled={busy} onChange={event => set({ channels: Number(event.target.value) })}><option value={1}>单声道</option><option value={2}>双声道</option></select></Field>
+      <Field label="语言增强" hint="让模型按这种语言读，中文稿选「中文」"><select className={inputClass} value={value.language_boost || ""} disabled={busy} onChange={event => set({ language_boost: event.target.value || null })}>{LANGUAGES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field>
     </div>
+    <div className="grid gap-3 sm:grid-cols-3">{MODIFY.map(([key, label]) => <Field key={key} label={`声音调整 · ${label}（−100–100）`} hint={key === "pitch" ? "0 是不调整" : undefined}>
+      <input className={inputClass} type="number" min={-100} max={100} step={1} value={value.voice_modify?.[key] ?? 0} disabled={busy}
+        onChange={event => set({ voice_modify: { ...(value.voice_modify ?? { pitch: 0, intensity: 0, timbre: 0 }), [key]: Math.round(Number(event.target.value)) } })} /></Field>)}</div>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={value.latex_read} disabled={busy} onChange={event => set({ latex_read: event.target.checked })} />LaTeX 公式朗读</label>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={value.text_normalization} disabled={busy} onChange={event => set({ text_normalization: event.target.checked })} />中英文本规范化</label>
     <div className="flex flex-wrap items-center gap-2">

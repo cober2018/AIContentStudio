@@ -29,6 +29,7 @@ from .content_masters import frozen_context, get_revision, owned_unit
 from .creative_contracts import bounded_json, canonical_hash, canonical_output_contract
 from .materials import music_metadata_ancestor, verify_bytes_checked
 from .production_modalities import adapter_for
+from .production_profiles import context_for_task
 from .project_events import record_project_event
 
 _EXTERNAL_FIELDS = {"material_revision_id", "content_hash", "project_id", "unit_id", "package_id", "package_hash",
@@ -407,8 +408,8 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
     package_json = build_package(schema=schema, source=source, context=context, assets=assets, evidence=evidence,
         intent=row.creative_intent_json, objective=payload["objective"], constraints=payload.get("constraints", []),
         output_contract=payload["output_contract"], acceptance_criteria=payload.get("acceptance_criteria", []), director=director)
-    from .production_profiles import profile_snapshot
-    work_profile = profile_snapshot(db, unit_id)
+    from .production_profiles import for_task, profile_snapshot
+    work_profile = for_task(profile_snapshot(db, unit_id))
     if work_profile is not None:
         package_json["production_profile"] = work_profile
         if web_video is not None and work_profile["settings"].get("speech_mode") in {"lip_sync", "mixed"} and web_video.get("audio_intent") != "keep":
@@ -452,7 +453,7 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
         brief = db.get(CreativeBriefRevision, master.creative_brief_revision_id)
         if brief and brief.product_context_json:
             package_json["commercial_context"] = {"brief_revision_id": brief.id,
-                "brief_checksum": brief.checksum, "product_context": brief.product_context_json}
+                "brief_checksum": brief.checksum, "product_context": context_for_task(brief.product_context_json)}
             package_json = bounded_json(package_json)
     if web_video is not None:
         package_json["web_video"] = {**web_video, "reference_assets": assets}
@@ -460,7 +461,7 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
         validate_new_web_package(package_json)
         package_json = bounded_json(package_json)
     if product_domain:
-        package_json["product_context"] = context_snapshot(db, unit, user)
+        package_json["product_context"] = context_for_task(context_snapshot(db, unit, user))
         package_json.pop("identity_content", None)
     if manual_image is not None:
         identity = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id and not product_domain else None
@@ -572,8 +573,8 @@ def owned_package(db: Session, project_id: int, unit_id: int, package_id: int, u
         raise HTTPException(409, {"code": "creative_package_projection_mismatch"})
     if current:
         if package.package_json.get("production_profile") is not None:
-            from .production_profiles import profile_snapshot
-            if package.package_json["production_profile"] != profile_snapshot(db, unit_id):
+            from .production_profiles import for_task, profile_snapshot
+            if package.package_json["production_profile"] != for_task(profile_snapshot(db, unit_id)):
                 raise HTTPException(409, {"code": "production_profile_changed_prepare_new_package"})
         source, projection, master = _source(db, project_id, unit_id, user, master_id=package.source_master_revision_id, variant_id=package.source_variant_revision_id, current=True)
         if (source.payload_hash, source.context_hash, source.creative_intent_hash) != (package.source_payload_hash, package.source_context_hash, package.creative_intent_hash):

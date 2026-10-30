@@ -66,6 +66,39 @@ def execution_file(owner, execution, key, maximum):
 
 
 @contextmanager
+def project_file(path, maximum):
+    """A result the model exported into the project folder, opened in place without following a link."""
+    try:
+        descriptor = os.open(str(path), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+    except OSError:
+        fail("execution_file_missing", 404)
+    with os.fdopen(descriptor, "rb") as source:
+        before = os.fstat(source.fileno())
+        if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or not 0 < before.st_size <= maximum:
+            fail("execution_file_size_invalid", 413)
+        yield source
+        after = os.fstat(source.fileno())
+        if (before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+            fail("execution_file_changed")
+
+
+def make_proxy(source, target):
+    """720p H.264 stand-in for editing a large clip; written beside its final name so a cut-off run is never reused."""
+    temporary = target.with_name(f".{target.name}.{os.getpid()}.part")
+    try:
+        subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(source), "-vf",
+                        "scale='if(gt(iw,ih),-2,720)':'if(gt(iw,ih),720,-2)'", "-c:v", "libx264", "-preset", "veryfast",
+                        "-crf", "23", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart",
+                        "-f", "mp4", str(temporary)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       timeout=MEDIA_DECODE_TIMEOUT_SECONDS * 4, check=True)
+        os.replace(temporary, target)
+    except (OSError, subprocess.SubprocessError):
+        temporary.unlink(missing_ok=True)
+        fail("creative_proxy_failed")
+    return target
+
+
+@contextmanager
 def _external_file(revision, maximum):
     from .material_external import ExternalMaterialError, _lookup, open_verified
 
@@ -388,7 +421,7 @@ def loudness(source):
             "window_lufs": list(LOUDNESS_WINDOW_LUFS), "true_peak_ceiling_dbtp": TRUE_PEAK_CEILING_DBTP, "warnings": warnings}
 
 
-def budget(db, row, package, incoming):
+def budget(db, row, package, incoming, *, private=True):
     from sqlalchemy import select
 
     from ..models import CreativeExecutionOutput, MaterialRevision
@@ -407,6 +440,10 @@ def budget(db, row, package, incoming):
     total = max(authorized_bytes, sum(item["size_bytes"] for item in row.materialized_inputs_json or []))
     # Every attempt consumes its frozen allowance, even after rejection/cleanup.
     total += sum(db.scalars(select(CreativeExecutionOutput.size_bytes).where(CreativeExecutionOutput.execution_id == row.id)))
+    if not private:
+        if total + incoming > policy(package)["max_total_bytes"]:
+            fail("creative_execution_total_bytes_exceeded", 413)
+        return
     recorded = {item.staging_key for item in db.scalars(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == row.id))}
     with files.root_fd(row.owner_user_id, row.id, create=True) as root, files._parent_fd(root, ["staging", "manifest"]) as parent, os.scandir(parent) as entries:
         for index, entry in enumerate(entries):

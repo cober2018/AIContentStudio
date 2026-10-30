@@ -786,13 +786,7 @@ class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
     def supports_tts_parameters(self, model_id: str, *, probe: bool = False) -> bool:
         if not isinstance(model_id, str) or model_id not in _TTS_MODELS:
             return False
-        if not probe:
-            return True
-        result = _run(["speech", "synthesize", "--help"], timeout=5, auth=False)
-        help_text = f"{result.stdout}\n{result.stderr}" if result is not None else ""
-        return (result is not None and result.returncode == 0
-                and all(re.search(r"(?m)^\s*" + flag + r"\s+<", help_text)
-                        for flag in ("--voice", "--speed")))
+        return True
 
     def runtime_fingerprint(self) -> str | None:
         return _runtime_identity()
@@ -819,35 +813,83 @@ class MiniMaxCLITTSProvider(_MiniMaxCredentialIdentity):
             applied = tts_parameters(request.get("parameters", {}), capability="tts")
         except (TypeError, ValueError):
             return MediaOutput("unavailable")
-        if applied is not None and not self.supports_tts_parameters(model, probe=True):
-            return MediaOutput("unavailable")
-        fmt = (applied or {}).get("format", "wav")
-        with tempfile.TemporaryDirectory(prefix="aics-mmx-") as directory:
-            output = Path(directory) / f"speech.{fmt}"
-            args = ["speech", "synthesize", "--text", text, "--format", fmt, "--out", str(output), "--quiet", "--non-interactive", "--no-color"]
-            args[2:2] = ["--model", model]
-            if applied is not None:
-                flags = ["--voice", applied["voice_id"], "--speed", str(applied["rate"])]
-                for key, flag in (("volume", "--volume"), ("pitch", "--pitch"), ("emotion", "--emotion"),
-                                  ("sample_rate", "--sample-rate"), ("bitrate", "--bitrate"), ("channels", "--channels")):
-                    if key in applied:
-                        flags += [flag, str(applied[key])]
-                for key, flag in (("text_normalization", "--text-normalization"), ("latex_read", "--latex-read"), ("subtitles", "--subtitles")):
-                    if applied.get(key):
-                        flags.append(flag)
-                args[4:4] = flags
-            command = _run(args, timeout=request.get("timeout_seconds", 25))
-            result = _read_output(output, mime={"mp3": "audio/mpeg", "flac": "audio/flac"}.get(fmt, "audio/wav"), command=command)
-            if applied is not None and result.status == "succeeded":
-                extra = {}
-                sidecar = output.with_suffix(".srt")
-                if applied.get("subtitles") and sidecar.is_file() and sidecar.stat().st_size <= 512 * 1024:
-                    # Line timings come from the supplier, so the edit and captions follow the real voice.
-                    extra["subtitles_srt"] = sidecar.read_text(encoding="utf-8", errors="replace")
-                # This records the exact flags consumed by this successful dispatcher, not a voice default.
-                return MediaOutput(result.status, result.content, result.mime_type,
-                                   {**result.metadata, **extra, "tts_applied_parameters": {"schema": TTS_APPLIED_SCHEMA, **applied}})
-            return result
+        return _synthesize(text, model, applied, request.get("timeout_seconds", 25))
+
+
+# The CLI cannot send voice_modify, so speech goes straight to MiniMax's t2a_v2 with the same key and address.
+_SPEECH_ERRORS = {1004: "MiniMax 密钥无效，请在设置里检查", 1008: "MiniMax 余额不足", 2013: "配音参数不对（比如音色不存在或数值越界）",
+                  1002: "MiniMax 请求太频繁，稍后再试", 1026: "这段文字没通过 MiniMax 的内容检查"}
+
+
+def _srt(items: list) -> str | None:
+    def stamp(ms: int) -> str:
+        return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+
+    lines = []
+    for item in items:
+        if not isinstance(item, dict) or not isinstance(item.get("text"), str):
+            continue
+        begin, end = item.get("time_begin"), item.get("time_end")
+        if type(begin) not in {int, float} or type(end) not in {int, float} or end < begin:
+            continue
+        lines.append(f"{len(lines) + 1}\n{stamp(int(begin))} --> {stamp(int(end))}\n{item['text'].strip()}\n")
+    return "\n".join(lines) if lines else None
+
+
+def _synthesize(text: str, model: str, applied: dict | None, timeout) -> MediaOutput:
+    from .model_capability_routing import TTS_APPLIED_SCHEMA
+
+    key = shared_key()
+    if not _enabled() or not key or type(timeout) not in {int, float} or not 0 < timeout <= 300:
+        return MediaOutput("unavailable")
+    applied = applied or {"voice_id": "English_expressive_narrator", "rate": 1.0}
+    fmt = applied.get("format", "wav")
+    voice = {"voice_id": applied["voice_id"], "speed": applied["rate"]}
+    for key_name, field in (("volume", "vol"), ("pitch", "pitch"), ("emotion", "emotion"),
+                            ("text_normalization", "text_normalization"), ("latex_read", "latex_read")):
+        if key_name in applied:
+            voice[field] = applied[key_name]
+    audio = {"format": fmt, **{field: applied[key_name] for key_name, field in
+                               (("sample_rate", "sample_rate"), ("bitrate", "bitrate"), ("channels", "channel")) if key_name in applied}}
+    body = {"model": model, "text": text, "stream": False, "output_format": "hex", "voice_setting": voice, "audio_setting": audio,
+            "subtitle_enable": bool(applied.get("subtitles"))}
+    if applied.get("language_boost"):
+        body["language_boost"] = applied["language_boost"]
+    if applied.get("voice_modify"):
+        body["voice_modify"] = applied["voice_modify"]
+    deadline = time.monotonic() + timeout
+    try:
+        response = httpx.post(chat_base_url() + "/t2a_v2", json=body, timeout=timeout, trust_env=False,
+                              headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+        payload = response.json()
+    except (httpx.HTTPError, ValueError):
+        # The supplier may have accepted and charged the request; the caller must not retry on its own.
+        return MediaOutput("unknown")
+    status = (payload.get("base_resp") or {}).get("status_code") if isinstance(payload, dict) else None
+    if status != 0:
+        reason = _SPEECH_ERRORS.get(status) or f"MiniMax 配音失败（{(payload.get('base_resp') or {}).get('status_msg') or status}）" \
+            if isinstance(payload, dict) else "MiniMax 配音失败"
+        return MediaOutput("failed", metadata={"reason": reason})
+    data = payload.get("data") or {}
+    try:
+        content = bytes.fromhex(data.get("audio") or "")
+    except (TypeError, ValueError):
+        return MediaOutput("unknown")
+    if not content or len(content) > _MAX_OUTPUT:
+        return MediaOutput("unknown")
+    extra = {}
+    if applied.get("subtitles") and isinstance(data.get("subtitle_file"), str):
+        try:
+            items = json.loads(_download_video_bytes(data["subtitle_file"], deadline))
+            srt = _srt(items if isinstance(items, list) else [])
+            if srt and len(srt) <= 512 * 1024:
+                # Line timings come from the supplier, so the edit and captions follow the real voice.
+                extra["subtitles_srt"] = srt
+        except (ValueError, OSError, httpx.HTTPError):
+            pass
+    mime = {"mp3": "audio/mpeg", "flac": "audio/flac"}.get(fmt, "audio/wav")
+    return MediaOutput("succeeded", content, mime, {"executor": CLI_KEY, **extra,
+                                                   "tts_applied_parameters": {"schema": TTS_APPLIED_SCHEMA, **applied}})
 
 
 def _media_command(program: str, args: list[str], deadline: float):

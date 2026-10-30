@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
@@ -11,9 +11,9 @@ const StoryboardTable = lazy(() => import("./StoryboardTable"));
 const ProductShotPanel = lazy(() => import("./ProductShotPanel"));
 
 type Note = { time_ms: number | null; note: string };
-type Cut = { execution_id: number; cut_output_id: number | null };
+type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null };
 type Chain = {
-  state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; draft_revision_no?: number;
+  state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; draft_revision_no?: number;
   phase?: string; locked?: boolean; sample?: Cut;
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
@@ -24,6 +24,23 @@ const ORDER: Step[] = ["draft", "sample", "final"];
 function errorText(error: unknown) {
   const detail = error instanceof ApiError ? error.detail as { message?: string } | undefined : undefined;
   return detail?.message || (error instanceof Error ? error.message : "操作失败");
+}
+
+// The cover is an image output of the same task, shown through the same signed preview as the cut.
+function CoverPreview({ projectId, unitId, executionId, outputId }: { projectId: number; unitId: number; executionId: number; outputId: number }) {
+  const [url, setUrl] = useState("");
+  const [issue, setIssue] = useState("");
+  useEffect(() => {
+    let alive = true;
+    setUrl(""); setIssue("");
+    api.post<{ url: string }>(`/content-projects/${projectId}/units/${unitId}/creative-executions/${executionId}/outputs/${outputId}/preview-session`, {})
+      .then(session => { if (alive) setUrl(`${session.url}?t=${Date.now()}`); }).catch(cause => { if (alive) setIssue(errorText(cause)); });
+    return () => { alive = false; };
+  }, [projectId, unitId, executionId, outputId]);
+  return <div className="mt-3">
+    <p className="mb-1 text-xs text-slate-600">封面</p>
+    {url ? <img src={url} alt="封面" className="max-h-[50vh] w-auto rounded-lg border border-slate-200" /> : issue ? <p className="text-xs text-rose-700">{issue}</p> : <p className="text-xs text-slate-400">加载中…</p>}
+  </div>;
 }
 
 // The video is made by the external model over MCP; this page only shows where it is and takes the user's answer.
@@ -51,8 +68,8 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const reviewing = live && (data.state.endsWith("_review") || data.state.endsWith("_changes")) || backToDraft;
   const timed = step !== "draft";
   // Once the 成片 task exists, the 小样 lives on as its own earlier task.
-  const cut: Cut | null = step === "sample" ? data.sample || (data.phase === "rough_cut" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null } : null)
-    : step === "final" && data.phase === "final" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null } : null;
+  const cut: Cut | null = step === "sample" ? data.sample || (data.phase === "rough_cut" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id } : null)
+    : step === "final" && data.phase === "final" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id } : null;
   async function send(decision: "approve" | "changes") {
     const pending = text.trim() ? [...notes, { time_ms: timed && time ? Math.round(Number(time) * 1000) : null, note: text.trim() }] : notes;
     setBusy(true); setIssue("");
@@ -96,6 +113,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
           <FileLocationActions base={`/content-projects/${projectId}/units/${unitId}/video-chain/cuts/${player.output}`} />
         </div>}
       </div>}
+      {cut?.cover_output_id && <CoverPreview projectId={projectId} unitId={unitId} executionId={cut.execution_id} outputId={cut.cover_output_id} />}
       {reviewing && <div className="mt-3 space-y-2">
         <div className="flex flex-wrap items-end gap-2">
           {timed && <input aria-label="时间（秒）" className={`${inputClass} !w-24`} inputMode="decimal" placeholder="秒" value={time} onChange={event => setTime(event.target.value)} />}

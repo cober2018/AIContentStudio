@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { FormEvent, useState } from "react";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
+import { PortraitPicker, uploadPortrait } from "./PersonaPortraits";
+import { SPEECH_HINT } from "./PersonaSpeechSamples";
 
 type Brand = { id: number; name: string; status?: string };
 
@@ -16,7 +18,8 @@ const lines = (text: string) => text.split("\n").map(line => line.trim()).filter
 export default function NewPersonaForm({ brands, disabled, onCreated }: { brands: Brand[]; disabled: boolean; onCreated: (id: number) => void }) {
   const voices = useQuery({ queryKey: ["voice-settings", currentUser()], retry: false, queryFn: () => api.get<{ items: Record<string, { name: string }> }>("/settings/voice") });
   const active = brands.filter(brand => brand.status !== "archived");
-  const [form, setForm] = useState({ name: "", brand: active[0] ? String(active[0].id) : "new", brandName: "", voice: "", positioning: "", audience: "", domains: "", boundaries: "" });
+  const [form, setForm] = useState({ name: "", brand: active[0] ? String(active[0].id) : "new", brandName: "", voice: "", positioning: "", audience: "", domains: "", boundaries: "", speechFolder: "" });
+  const [portraits, setPortraits] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [issue, setIssue] = useState("");
   const set = (patch: Partial<typeof form>) => setForm(current => ({ ...current, ...patch }));
@@ -26,6 +29,9 @@ export default function NewPersonaForm({ brands, disabled, onCreated }: { brands
     if (!ready || busy) return;
     setBusy(true); setIssue("");
     try {
+      // Photos go up first, so a failed upload leaves no half-made persona behind.
+      const portraitIds: number[] = [];
+      for (const file of portraits) portraitIds.push(await uploadPortrait(file, form.name.trim()));
       const brandId = form.brand === "new" ? (await api.post<{ id: number }>("/content-brands", { name: form.brandName.trim() })).id : Number(form.brand);
       const persona = await api.post<{ id: number }>(`/content-brands/${brandId}/personas`, { name: form.name.trim() });
       const profile: Record<string, unknown> = {};
@@ -33,6 +39,8 @@ export default function NewPersonaForm({ brands, disabled, onCreated }: { brands
       if (lines(form.audience).length) profile.target_audience = lines(form.audience);
       if (lines(form.domains).length) profile.content_domains = lines(form.domains);
       if (lines(form.boundaries).length) profile.content_boundaries = lines(form.boundaries);
+      if (portraitIds.length) profile.portrait_material_revision_ids = portraitIds;
+      if (form.speechFolder.trim()) profile.speech_sample_folder = form.speechFolder.trim();
       if (Object.keys(profile).length) await api.post(`/content-personas/${persona.id}/revisions`, { expected_revision: 0, profile });
       await api.put(`/personas/${persona.id}/voice-preset`, { preset_id: form.voice });
       onCreated(persona.id);
@@ -54,6 +62,8 @@ export default function NewPersonaForm({ brands, disabled, onCreated }: { brands
       <Field label="内容领域（选填）" hint="一行一个"><textarea className={inputClass} rows={3} value={form.domains} disabled={off} onChange={event => set({ domains: event.target.value })} /></Field>
       <Field label="内容边界（选填）" hint="不碰的话题，一行一条"><textarea className={inputClass} rows={3} value={form.boundaries} disabled={off} onChange={event => set({ boundaries: event.target.value })} /></Field>
     </div>
+    <Field label="逐字稿样本文件夹（选填）" hint={SPEECH_HINT}><input className={inputClass} placeholder="逐字稿/角色名" value={form.speechFolder} disabled={off} onChange={event => set({ speechFolder: event.target.value })} /></Field>
+    <PortraitPicker files={portraits} disabled={off} onChange={setPortraits} />
     {issue && <ErrorBanner message={issue} />}
     <Button type="submit" disabled={off || !ready}>{busy ? "创建中…" : "创建角色"}</Button>
     <p className="text-[12px] text-ink-500">其他资料（表达风格、视觉语言、风险边界等）建好后在「编辑资料」里补，不填也能用。</p>

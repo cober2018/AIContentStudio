@@ -220,6 +220,21 @@ def get_persona(persona_id: int, db: Session = Depends(get_db), user: User = Dep
     return _entity_json(db, "persona", identity.owned_entity(db, user, "persona", persona_id))
 
 
+@router.get("/content-personas/{persona_id}/portraits")
+def persona_portraits(persona_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """The portraits of the current revision with their material ids, so the page can show them."""
+    from ..models import MaterialRevision
+
+    identity.owned_entity(db, user, "persona", persona_id)
+    current = identity.current_revision(db, "persona", persona_id)
+    items = []
+    for revision_id in ((current.profile_json if current else None) or {}).get("portrait_material_revision_ids") or []:
+        row = db.get(MaterialRevision, revision_id)
+        items.append({"material_revision_id": revision_id, "material_id": row.material_id if row else None,
+                      "usable": identity.usable_portrait(db, revision_id)})
+    return {"items": items}
+
+
 @router.patch("/content-personas/{persona_id}")
 def rename_persona(payload: NameIn, persona_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     return _rename(db, user, "persona", persona_id, payload.name)

@@ -8,6 +8,7 @@ type Storage = {
   common: { path: string; reachable: boolean };
   local: { path: string; reachable: boolean; env_locked: boolean; next_path: string | null };
   move: { state: string; total?: number; done?: number; target?: string; error?: string | null };
+  edit_proxy: { enabled: boolean };
 };
 
 function errorText(error: unknown) {
@@ -45,6 +46,11 @@ export default function StorageSettings({ editable }: { editable: boolean }) {
     try { await api.put("/settings/storage/common", { path: commonPath.trim() }); setCommonPath(""); setNotice("通用素材库位置已更换。"); await storage.refetch(); }
     catch (cause) { setError(errorText(cause)); } finally { setBusy(false); }
   }
+  async function changeProxy(enabled: boolean) {
+    setBusy(true); setError(""); setNotice("");
+    try { await api.put("/settings/storage/edit-proxy", { enabled }); await storage.refetch(); }
+    catch (cause) { setError(errorText(cause)); } finally { setBusy(false); }
+  }
   async function moveLocal() {
     if (!window.confirm("把本地工作位置的文件复制到新文件夹，逐个核对后切换。旧文件夹会保留。复制期间不要生成或上传素材，复制完成后需要重启 API 才生效。继续？")) return;
     setBusy(true); setError(""); setNotice("");
@@ -73,9 +79,14 @@ export default function StorageSettings({ editable }: { editable: boolean }) {
       {editable && <div className="flex flex-wrap items-end gap-2"><Field label="换成这个文件夹（Mac 本地完整路径，通用素材库为空时才能换）"><input className={inputClass} value={commonPath} disabled={busy} onChange={event => setCommonPath(event.target.value)} /></Field><Button variant="secondary" disabled={busy || !commonPath.trim()} onClick={() => void changeCommon()}>更换</Button></div>}
     </div>
     <div className="space-y-3 rounded-lg border border-slate-200 p-4">
+      <h3 className="font-semibold">剪辑代理素材</h3>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={data.edit_proxy.enabled} disabled={busy || !editable} onChange={event => void changeProxy(event.target.checked)} />第三方模型剪辑时用低清代理</label>
+      <p className="text-xs text-slate-500">默认关。打开后，大视频素材（长边超过 1920 或码率很高）准备素材时先做一份 720p 代理，放在项目文件夹的 工作/代理/，同一素材只做一次；剪辑用代理，导出仍用原片。剪辑时的临时文件放在项目文件夹的 工作/ 里，小样、成片导出到 导出/。</p>
+    </div>
+    <div className="space-y-3 rounded-lg border border-slate-200 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">本地工作位置</h3><Status ok={data.local.reachable} /></div>
       <p className="break-all text-sm">{data.local.path}</p>
-      <p className="text-xs text-slate-500">放预览图、临时文件、交给剪辑的执行文件，以及这次改动之前存的旧素材。</p>
+      <p className="text-xs text-slate-500">放预览图、临时文件、人工网页视频等执行文件，以及这次改动之前存的旧素材。第三方模型剪辑的文件不放这里，放在项目文件夹里。</p>
       {data.local.env_locked && <p className="text-xs text-amber-800">当前位置由启动参数 AI_STUDIO_MEDIA_ROOT 指定，要在这里修改请先去掉它。</p>}
       {data.local.next_path && <p className="text-sm text-amber-800">已复制并核对到 {data.local.next_path}，重启 API 后生效。旧文件夹保留，什么时候清理由你决定。</p>}
       {move.state === "copying" && <p role="status" className="text-sm">正在复制并核对 {move.done ?? 0}/{move.total ?? 0}…</p>}

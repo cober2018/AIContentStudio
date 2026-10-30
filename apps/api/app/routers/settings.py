@@ -218,6 +218,18 @@ def put_storage_common(payload: StorageLocalMove, db: Session = Depends(get_db),
     return {**result, "storage": storage_locations.view(db)}
 
 
+class EditProxyUpdate(BaseModel):
+    enabled: bool
+
+
+@router.put("/api/v1/settings/storage/edit-proxy")
+def put_edit_proxy(payload: EditProxyUpdate, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import storage_locations
+
+    storage_locations.set_edit_proxy(db, payload.enabled, user)
+    return storage_locations.view(db)
+
+
 @router.post("/api/v1/settings/storage/local/move")
 def move_storage_local(payload: StorageLocalMove, user=Depends(require_admin)):
     from ..services import storage_locations

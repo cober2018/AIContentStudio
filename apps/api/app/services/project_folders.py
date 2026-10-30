@@ -16,6 +16,7 @@ import shutil
 from datetime import UTC
 from pathlib import Path
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
@@ -24,14 +25,15 @@ from ..models import ContentProject, Material, MaterialRevision, SystemSetting
 
 EXTERNAL_DIR, COMMON_DIR, PLATFORM_DIR = "外部素材库", "通用素材库", "AIContentStudio"
 STRUCTURE = ("导演稿", "视频/Aroll", "视频/Broll", "视频/其他素材", "图片/图片素材", "图片/包装设计素材",
-             "音频/BGM", "音频/音效", "导出/小样", "导出/成片")
+             "音频/BGM", "音频/音效", "导出/小样", "导出/成片", "工作")
+WORK_DIR = "工作"
 FOLDERS = "project_folders"
 PENDING = "project_folders_pending"
 # Folders already on the drive that are not projects; a project never takes these names.
 RESERVED = {EXTERNAL_DIR, COMMON_DIR, PLATFORM_DIR, "项目1"}
 _PACKAGING = re.compile(r"logo|标志|卡片|包装|封面|字幕条|角标|片头|片尾|title|card", re.IGNORECASE)
 _TYPE_DIRS = {"video": "视频", "image": "图片", "audio": "音频"}
-COMMON_STRUCTURE = tuple(name for name in STRUCTURE if not name.startswith(("导演稿", "导出")))
+COMMON_STRUCTURE = tuple(name for name in STRUCTURE if not name.startswith(("导演稿", "导出", WORK_DIR)))
 OUTPUT_ROLES = {"rough_cut", "final", "subtitles", "resolve_project", "ae_project", "edit_manifest"}
 
 
@@ -566,19 +568,6 @@ def store_new(db: Session, revision: MaterialRevision, project_id: int, folder: 
     return move_into(db, revision, folder, project_id=project_id)
 
 
-def export_copy(db: Session, project_id: int, source: Path, kind: str, name: str, suffix: str) -> Path | None:
-    """Rough cut → 导出/小样, accepted cut → 导出/成片. A copy: the execution keeps its own file."""
-    try:
-        folder = ensure_project_dir(db, project_id) / "导出" / kind
-        db.commit()
-    except FileNotFoundError:
-        return None
-    target = folder / f"{_clean(name)}{suffix}"
-    if not target.exists():
-        shutil.copy2(source, target)
-    return target
-
-
 def write_director_draft(db: Session, project_id: int, revision_no: int, document: dict) -> Path | None:
     try:
         folder = ensure_project_dir(db, project_id) / "导演稿"
@@ -619,52 +608,104 @@ def listing(db: Session, material_ids: list[int]) -> dict[int, dict]:
     return {material_id: location(row, names, root, current_path(db, row)) for material_id, row in latest.items()}
 
 
-def sample_name(db: Session, row, output) -> tuple[str, str]:
+_TASK = re.compile(r"任务(\d+)\Z")
+
+
+def _drive_down() -> HTTPException:
+    return HTTPException(409, {"code": "video_chain_drive_unavailable", "message": "素材硬盘没连上：接上硬盘后再开剪辑任务或准备素材"})
+
+
+def _work_folder(db: Session, project_id: int, unit_id: int) -> Path:
     from ..models import ContentUnit
 
-    unit = db.get(ContentUnit, row.content_unit_id)
-    name = f"{re.split(r'[｜|]', unit.title if unit else '')[0] or '粗剪'}-粗剪-任务{row.id}"
-    # Staged files are named <hash>.bin; the extension comes from the declared type.
-    return name, mimetypes.guess_extension(output.mime_type) or ".mp4"
+    root = _writable_root()
+    if root is None:
+        raise _drive_down()
+    unit = db.get(ContentUnit, unit_id)
+    title = _clean(re.split(r"[｜|]", unit.title if unit else "")[0]) or "作品"
+    return ensure_project_dir(db, project_id) / WORK_DIR / f"{title}-{unit_id}"
 
 
-def sample_copy(db: Session, row, output) -> Path | None:
-    """The 导出/小样 copy of a returned rough cut, when it was made."""
-    root, names = _root(), folder_names(db)
-    if root is None or str(row.project_id) not in names:
-        return None
-    name, suffix = sample_name(db, row, output)
-    target = root / names[str(row.project_id)] / "导出" / "小样" / f"{_clean(name)}{suffix}"
-    return target if target.is_file() else None
+def work_dir(db: Session, project_id: int, unit_id: int, execution_id: int) -> Path:
+    """One edit task's own folder for renders, AE shots and Resolve / AE projects: <项目>/工作/<作品>-<作品号>/任务<N>/."""
+    folder = _work_folder(db, project_id, unit_id) / f"任务{execution_id}"
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
+
+
+def export_dir(db: Session, project_id: int, phase: str) -> Path:
+    root = _writable_root()
+    if root is None:
+        raise _drive_down()
+    return ensure_project_dir(db, project_id) / "导出" / {"rough_cut": "小样", "cover": "封面"}.get(phase, "成片")
+
+
+def proxy_dir(db: Session, project_id: int) -> Path:
+    root = _writable_root()
+    if root is None:
+        raise _drive_down()
+    folder = ensure_project_dir(db, project_id) / WORK_DIR / "代理"
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
+
+
+def _remove_inside(folder: Path, keep: set[str]) -> int:
+    """Delete files below one platform task folder except the kept paths; links are removed, never followed."""
+    removed = 0
+    for directory, folders, names in os.walk(folder, topdown=False, followlinks=False):
+        for name in names + [item for item in folders if (Path(directory) / item).is_symlink()]:
+            path = Path(directory) / name
+            if str(path) in keep:
+                continue
+            path.unlink(missing_ok=True)
+            removed += 1
+        try:
+            Path(directory).rmdir()
+        except OSError:
+            pass  # still holds a kept file
+    return removed
+
+
+def _clean_work(db: Session, row, *, final: bool) -> None:
+    """Newer 小样 back: earlier tasks of this work lose their unregistered files. 成片 approved: every other task of it does too.
+    Registered files always stay, or their library records would point at nothing."""
+    from ..models import CreativeExecutionOutput
+
+    try:
+        work = _work_folder(db, row.project_id, row.content_unit_id)
+    except HTTPException:
+        return
+    if not work.is_dir() or work.is_symlink():
+        return
+    kept = {key for (key,) in db.execute(select(CreativeExecutionOutput.staging_key).where(CreativeExecutionOutput.state == "accepted"))
+            if key.startswith("/")}
+    for entry in os.listdir(work):
+        match = _TASK.fullmatch(entry)
+        folder = work / entry
+        # Only folders the platform made for its own tasks; anything else the user put here stays.
+        if match is None or folder.is_symlink() or not folder.is_dir() or int(match.group(1)) == row.id:
+            continue
+        if not final and int(match.group(1)) > row.id:
+            continue
+        _remove_inside(folder, kept)
 
 
 def after_execution(db: Session, execution_id: int) -> None:
-    """Rough cut returned → copy to 导出/小样; accepted → its files move into the project folder (cut → 导出/成片)."""
-    from ..models import ContentUnit, CreativeExecution, CreativeExecutionOutput
-    from .creative_execution_files import work_root
+    """Results stay where the model exported them; this only tidies the work folders of the same work."""
+    from ..models import CreativeExecution, CreativeExecutionOutput, CreativeExecutionPackage
 
     try:
         row = db.get(CreativeExecution, execution_id)
         if row is None or row.executor_key != "codex-video-production" or row.state not in {"result_ready", "accepted"}:
             return
-        outputs = db.scalars(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == row.id)
-                             .order_by(CreativeExecutionOutput.attempt_no)).all()
-        if row.state == "result_ready":
-            cut = [output for output in outputs if output.role_id == "rough_cut"]
-            if cut:
-                name, suffix = sample_name(db, row, cut[-1])
-                export_copy(db, row.project_id, work_root(row.owner_user_id, row.id) / cut[-1].staging_key, "小样", name, suffix)
-            return
-        for output in outputs:
-            revision = db.get(MaterialRevision, output.material_revision_id) if output.material_revision_id else None
-            if revision is not None and output.state == "accepted":
-                # The cut, its subtitles and the projects that rebuild it belong together under 导出/成片.
-                if output.role_id in {"rough_cut", "final", "subtitles", "resolve_project", "ae_project", "edit_manifest"}:
-                    folder = "导出/成片"
-                else:
-                    folder = subfolder(revision, "", None, "ae_template")
-                move_into(db, revision, folder, project_id=row.project_id, refile=True)
-    except Exception:  # noqa: BLE001 Archiving must never undo or fail the edit task itself.
+        package = db.get(CreativeExecutionPackage, row.package_id)
+        phase = (((package.package_json if package else {}) or {}).get("director") or {}).get("postproduction", {}).get("phase")
+        if row.state == "accepted" and phase == "final":
+            _clean_work(db, row, final=True)
+        elif row.state == "result_ready" and phase == "rough_cut" and db.scalar(select(CreativeExecutionOutput.id).where(
+                CreativeExecutionOutput.execution_id == row.id, CreativeExecutionOutput.role_id == "rough_cut").limit(1)):
+            _clean_work(db, row, final=False)
+    except Exception:  # noqa: BLE001 Tidying must never undo or fail the edit task itself.
         db.rollback()
 
 

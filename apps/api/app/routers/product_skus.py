@@ -56,7 +56,6 @@ class ProductionSettings(BaseModel):
     comparison_notes: str = Field(default="", max_length=4000)
     dialogue: str = Field(default="", max_length=12000)
     dialogue_language: str = Field(default="中文", max_length=100)
-    music_direction: str = Field(default="不使用配乐", max_length=2000)
     ae_packaging: bool = False
     target_duration_seconds: int | None = Field(default=None, gt=0, le=3600)
     estimated_voice_duration_seconds: float | None = Field(default=None, gt=0, le=3600, allow_inf_nan=False)
@@ -73,7 +72,8 @@ class ProductionSettings(BaseModel):
     def _drop_model_choice(cls, value):
         # 商品不再单独选模型；旧记录里的 model_profile_ref 读回再保存时直接丢弃。
         # 作品声音只认声音配置（不进制作设置）；旧记录里的 voice_preset_id / voice_id / audio_creative_profile 读回时同样丢弃。
-        return {k: v for k, v in value.items() if k not in {"model_profile_ref", "voice_preset_id", "voice_id", "audio_creative_profile"}} if isinstance(value, dict) else value
+        # 配乐只认「配音与音乐」里的主稿 music；旧默认「不使用配乐」曾被剪辑方当成用户要求，读回时丢弃。
+        return {k: v for k, v in value.items() if k not in {"model_profile_ref", "voice_preset_id", "voice_id", "audio_creative_profile", "music_direction"}} if isinstance(value, dict) else value
 
 
 class SkuIn(BaseModel):
@@ -717,6 +717,38 @@ def post_shot_image(project_id: int, unit_id: int, shot_id: str, payload: ShotIm
 
     return product_video.generate_shot_image(db, user, project_id, unit_id, shot_id, payload.prompt,
                                              payload.extra_reference_revision_id, payload.as_first_frame)
+
+
+class StoryboardGridIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    shot_ids: list[str] = Field(default_factory=list, max_length=60)
+    person: str = Field(default="", max_length=500)
+    setting: str = Field(default="", max_length=500)
+    reference_revision_id: int | None = Field(default=None, gt=0)
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/product-video/storyboard-grid")
+def post_storyboard_grid(project_id: int, unit_id: int, payload: StoryboardGridIn, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import shot_image
+
+    return shot_image.start_grid(db, user, project_id, unit_id, payload.shot_ids, payload.person, payload.setting, payload.reference_revision_id)
+
+
+@router.get("/content-projects/{project_id}/units/{unit_id}/product-video/storyboard-grid/sheets/{name}")
+def get_storyboard_sheet(project_id: int, unit_id: int, name: str, db=Depends(get_db), user=Depends(get_current_user)):
+    from fastapi.responses import FileResponse
+
+    from ..services import content_masters, shot_image
+
+    content_masters.owned_unit(db, project_id, unit_id, user)
+    return FileResponse(shot_image.sheet_file(db, project_id, unit_id, name), media_type="image/png")
+
+
+@router.post("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/grid-redraw")
+def post_grid_redraw(project_id: int, unit_id: int, shot_id: str, db=Depends(get_db), user=Depends(require_editor)):
+    from ..services import shot_image
+
+    return shot_image.redraw_cell(db, user, project_id, unit_id, shot_id)
 
 
 @router.post("/content-projects/{project_id}/units/{unit_id}/product-video/shots/{shot_id}/upload")

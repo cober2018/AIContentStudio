@@ -78,7 +78,15 @@ function useDropTo(projectId: number, unitId: number, readOnly: boolean) {
       },
     };
   }
-  return { over, busy, issue, zone };
+  async function noMusic() {
+    setBusy(true); setIssue("");
+    try {
+      await api.post(`/content-projects/${projectId}/units/${unitId}/video-chain/materials`, { picks: {}, no_music: true });
+      await client.invalidateQueries({ queryKey: ["video-chain"] });
+    } catch (cause) { setIssue(errorText(cause)); }
+    finally { setBusy(false); }
+  }
+  return { over, busy, issue, zone, noMusic };
 }
 
 export function ShotMaterialPages({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
@@ -124,13 +132,15 @@ export function MusicPanel({ projectId, unitId, readOnly }: { projectId: number;
   const assets = useAssets(projectId);
   const locked = readOnly || !!chain.data?.locked;
   const drop = useDropTo(projectId, unitId, locked);
-  const music = (chain.data?.master?.payload as { music?: { material_revision_id?: number } } | undefined)?.music?.material_revision_id;
+  const chosen = (chain.data?.master?.payload as { music?: { material_revision_id?: number; none?: boolean } } | undefined)?.music;
+  const music = chosen?.material_revision_id;
   const asset = music ? (assets.data || []).find(item => item.material_revision_id === music) : undefined;
   return <section aria-label="背景音乐" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
     <h3 className="font-semibold">② 背景音乐</h3>
     <div {...drop.zone(revision => ({ music: revision }))} className={`mt-3 rounded-lg border-2 border-dashed p-4 ${drop.over ? "border-sky-400 bg-sky-50" : "border-slate-200"}`}>
-      {asset ? <><p className="mb-2 text-xs text-slate-600">现在用的：{asset.title || `#${asset.material_revision_id}`}</p><Preview asset={asset} /></> : music ? <p className="text-xs text-slate-600">现在用的音乐 #{music}</p> : <p className="text-xs text-slate-600">还没选背景音乐。</p>}
-      <p className="mt-2 text-xs text-slate-400">{locked ? "已定稿，只能看。" : drop.busy ? "放入中…" : "要换就从「素材库」拖一首音频到这里；不拖的话由第三方模型来选。"}</p>
+      {asset ? <><p className="mb-2 text-xs text-slate-600">现在用的：{asset.title || `#${asset.material_revision_id}`}</p><Preview asset={asset} /></> : music ? <p className="text-xs text-slate-600">现在用的音乐 #{music}</p> : chosen?.none ? <p className="text-xs text-slate-600">这条不用配乐。</p> : <p className="text-xs text-slate-600">还没定配乐。没定之前不能开剪小样。</p>}
+      <p className="mt-2 text-xs text-slate-400">{locked ? "已定稿，只能看。" : drop.busy ? "保存中…" : "要换就从「素材库」拖一首音频到这里；不拖的话由第三方模型来选；不要配乐就点下面的按钮。"}</p>
+      {!locked && !chosen?.none && <button type="button" className="mt-2 rounded-md border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:border-slate-400 disabled:opacity-50" disabled={drop.busy} onClick={() => void drop.noMusic()}>不用配乐</button>}
       {drop.issue && <p role="alert" className="mt-1 text-xs text-rose-700">{drop.issue}</p>}
     </div>
   </section>;

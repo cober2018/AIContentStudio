@@ -5,9 +5,11 @@ from __future__ import annotations
 import hashlib
 import inspect
 import io
+import os
 import re
 from contextlib import ExitStack
 from functools import wraps
+from pathlib import Path
 
 from fastapi import HTTPException
 from PIL import Image, UnidentifiedImageError
@@ -196,6 +198,28 @@ def _error(code: str, status: int = 409) -> HTTPException:
     return HTTPException(status, {"code": code})
 
 
+def in_project(row: CreativeExecution, package: CreativeExecutionPackage) -> bool:
+    """The video-chain edit works in the project folder on the drive: originals in place, results registered where exported."""
+    return row.executor_key == "codex-video-production" and package.package_schema == "director.video.v1"
+
+
+def _changed() -> HTTPException:
+    return HTTPException(409, {"code": "video_chain_output_changed", "message": "文件已变化，请重新交付"})
+
+
+def open_output(owner_id: int, execution_id: int, staging_key: str, maximum: int):
+    """The bytes behind a staged result: the project-folder file it was registered at, else the private transport copy."""
+    if staging_key.startswith("/"):
+        return streams.project_file(staging_key, maximum)
+    return streams.execution_file(owner_id, execution_id, staging_key, maximum)
+
+
+def check_output(owner_id: int, execution_id: int, staging_key: str, size: int, content_hash: str) -> None:
+    with open_output(owner_id, execution_id, staging_key, size) as source:
+        if streams.inspect(source, size) != (size, content_hash):
+            raise _changed() if staging_key.startswith("/") else _error("creative_execution_staged_output_changed")
+
+
 def _atomic(function):
     signature = inspect.signature(function)
 
@@ -213,7 +237,8 @@ def _atomic(function):
                 ))
             if execution_id is not None and function.__name__ in {"submit_output", "_reserve_inputs"}:
                 transfer_row = _owned(db, arguments["project_id"], arguments["unit_id"], execution_id, user, mutate=True)
-                if streams.policy(_package(db, transfer_row, user)):
+                transfer_package = _package(db, transfer_row, user)
+                if streams.policy(transfer_package) and not in_project(transfer_row, transfer_package):
                     transport_scope.enter_context(streams.transfer(user.id, execution_id))
             before = db.scalar(select(CreativeExecution.revision_no).where(
                 CreativeExecution.id == execution_id, CreativeExecution.owner_user_id == user.id,
@@ -602,8 +627,13 @@ def prepare_execution(db: Session, project_id: int, unit_id: int, payload: dict,
         materialized_inputs_json=[], retry_of_id=retry_of_id, created_by=user.email)
     db.add(row)
     db.flush()
-    with files.root_fd(user.id, row.id, create=True):
-        pass
+    if in_project(row, package):
+        from .project_folders import work_dir
+
+        work_dir(db, project_id, unit_id, row.id)
+    else:
+        with files.root_fd(user.id, row.id, create=True):
+            pass
     return _projection(db, row, user)
 
 
@@ -913,7 +943,7 @@ def _reserve_inputs(db: Session, project_id: int, unit_id: int, execution_id: in
     package = _package(db, row, user, current=True)
     revisions = {revision.id: revision for revision in check_inputs(db, package)}
     if streams.policy(package):
-        streams.budget(db, row, package, 0)
+        streams.budget(db, row, package, 0, private=not in_project(row, package))
     requested = payload.get("material_revision_ids", list(revisions))
     if not isinstance(requested, list) or len(requested) > MAX_INPUTS or len(revisions) > MAX_INPUTS:
         raise _error("creative_execution_input_count_invalid", 422)
@@ -980,6 +1010,62 @@ def _earlier_copy(owner_id: int, execution_id: int, relative_path: str, size: in
     return None
 
 
+_PROXY_LONG_SIDE = 1920
+_PROXY_BITRATE = 20_000_000
+
+
+def _proxy(db: Session, row: CreativeExecution, revision: MaterialRevision, path, size: int):
+    """Opt-in low-resolution stand-in for a large video, made once per content hash under 工作/代理."""
+    from . import project_folders
+    from .storage_locations import edit_proxy_enabled
+
+    if not edit_proxy_enabled() or revision.material.kind != "video":
+        return None
+    long_side = max(revision.width or 0, revision.height or 0)
+    bitrate = size * 8000 / revision.duration_ms if revision.duration_ms else 0
+    if long_side <= _PROXY_LONG_SIDE and bitrate <= _PROXY_BITRATE:
+        return None
+    target = project_folders.proxy_dir(db, row.project_id) / f"{revision.content_hash}.mp4"
+    if target.is_file() and not target.is_symlink():
+        return target
+    return streams.make_proxy(path, target)
+
+
+def _originals(db: Session, row: CreativeExecution, package: CreativeExecutionPackage, revisions: dict, result: dict, user: User) -> dict:
+    """Hand out each authorized input's own file on disk; the snapshot reserved above is what acceptance checks against."""
+    from . import project_folders
+    from .materials import local_file_checked
+
+    snapshots = {item["material_revision_id"]: item for item in result["materialized_inputs"]}
+    phase = ((package.package_json.get("director") or {}).get("postproduction") or {}).get("phase", "rough_cut")
+    listed = []
+    for target in result["files"]:
+        revision_id = target["material_revision_id"]
+        revision = revisions[revision_id]
+        path = local_file_checked(db, revision)
+        if path is None:
+            raise _error("execution_local_storage_required")
+        if _input_snapshot(revision, package, size=path.stat().st_size) != snapshots[revision_id]:
+            raise _error("creative_execution_materialized_input_changed")
+        item = {"material_revision_id": revision_id, "path": str(path),
+                "content_hash": target["content_hash"], "size_bytes": target["size_bytes"]}
+        proxy = _proxy(db, row, revision, path, target["size_bytes"])
+        if proxy is not None:
+            item["proxy_path"] = str(proxy)
+        listed.append(item)
+        db.add(AuditLog(event="creative_execution.input_materialized", actor=user.email, entity_type="creative_execution",
+                        entity_id=str(row.id), detail_json={"material_revision_id": revision_id, "mode": "original",
+                                                            "proxy": proxy is not None}))
+    result["files"] = listed
+    result["work_dir"] = str(project_folders.work_dir(db, row.project_id, row.content_unit_id, row.id))
+    result["export_dir"] = str(project_folders.export_dir(db, row.project_id, phase))
+    cover = project_folders.export_dir(db, row.project_id, "cover")
+    cover.mkdir(parents=True, exist_ok=True)
+    result["cover_dir"] = str(cover)
+    db.commit()
+    return result
+
+
 def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User) -> dict:
     # A crash after exposing bytes must never erase their derived-rights boundary.
     result = _reserve_inputs(db, project_id, unit_id, execution_id, payload, user)
@@ -989,6 +1075,8 @@ def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id:
     _writable(db, row)
     package = _package(db, row, user, current=True)
     revisions = {revision.id: revision for revision in check_inputs(db, package)}
+    if in_project(row, package):
+        return _originals(db, row, package, revisions, result, user)
     snapshots = {item["material_revision_id"]: item for item in result["materialized_inputs"]}
     for target in result["files"]:
         revision_id = target["material_revision_id"]
@@ -1023,10 +1111,38 @@ def materialize_inputs(db: Session, project_id: int, unit_id: int, execution_id:
     return result
 
 
+def _project_output(db: Session, row: CreativeExecution, package: CreativeExecutionPackage, role_id: str, path) -> Path:
+    """Main cut under 导出/小样 or 导出/成片, the cover under 导出/封面, everything else under this task's 工作 folder; no links, nothing outside."""
+    from . import project_folders
+
+    phase = ((package.package_json.get("director") or {}).get("postproduction") or {}).get("phase", "rough_cut")
+    main = role_id in {"rough_cut", "final", "cover"}
+    allowed = (project_folders.export_dir(db, row.project_id, "cover" if role_id == "cover" else phase) if main
+               else project_folders.work_dir(db, row.project_id, row.content_unit_id, row.id))
+    label = "封面" if role_id == "cover" else "小样 / 成片" if main else "这个交付文件"
+    refused = HTTPException(422, {"code": "video_chain_output_path_outside",
+                                  "message": f"{label}要导出到 {allowed}/ 里（不能是快捷方式），平台原地检查登记，不复制"})
+    if not isinstance(path, str) or not os.path.isabs(path) or len(path) > 500 or "\x00" in path:
+        raise refused
+    given = Path(os.path.normpath(path))
+    if ".." in Path(path).parts:
+        raise refused
+    real_allowed = Path(os.path.realpath(allowed))
+    base = allowed if given.is_relative_to(allowed) else real_allowed if given.is_relative_to(real_allowed) else None
+    if base is None or given == base:
+        raise refused
+    # Any link on the way (a file or a folder below the allowed one) would point outside what was checked.
+    if Path(os.path.realpath(given)) != real_allowed / given.relative_to(base) or given.is_symlink():
+        raise refused
+    if not given.is_file():
+        raise HTTPException(422, {"code": "video_chain_output_missing", "message": f"找不到 {given}，先导出再交付"})
+    return given
+
+
 @_atomic
 def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User, *, uploaded_content: bytes | None = None, uploaded_stream=None) -> dict:
     _payload(payload, {"expected_revision", "executor_kind", "executor_key", "executor_version", "role_id", "kind",
-        "output_index", "attempt_no", "relative_path", "mime_type", "content_hash", "metadata"})
+        "output_index", "attempt_no", "relative_path", "path", "mime_type", "content_hash", "metadata"})
     row = _owned(db, project_id, unit_id, execution_id, user, mutate=True)
     expected = _expected(row, payload)
     _writable(db, row, output=True)
@@ -1060,11 +1176,19 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
         if metadata.get("web_provider", web["provider"]) != web["provider"]:
             raise _error("creative_web_provider_mismatch", 422)
         metadata = {**metadata, "web_provider": web["provider"]}
+    project = in_project(row, package)
+    if project != ("path" in payload) or (project and "relative_path" in payload):
+        raise _error("video_chain_output_path_required" if project else "execution_path_invalid", 422)
     if streams.policy(package):
-        with streams.transfer(user.id, row.id), ExitStack() as stack:
-            source = uploaded_stream if uploaded_stream is not None else stack.enter_context(streams.execution_file(user.id, row.id, payload.get("relative_path"), role["max_bytes"]))
+        with ExitStack() as stack:
+            if project:
+                given = _project_output(db, row, package, role_id, payload["path"])
+                source = stack.enter_context(streams.project_file(given, role["max_bytes"]))
+            else:
+                stack.enter_context(streams.transfer(user.id, row.id))
+                source = uploaded_stream if uploaded_stream is not None else stack.enter_context(streams.execution_file(user.id, row.id, payload.get("relative_path"), role["max_bytes"]))
             size, digest = streams.inspect(source, role["max_bytes"])
-            streams.budget(db, row, package, size)
+            streams.budget(db, row, package, size, private=not project)
             inspected = streams.validate(source, mime, role["kind"], package, role_id=role_id)
             # Loudness is the platform's own reading; an executor-supplied value is never kept.
             metadata = {key: value for key, value in metadata.items() if key != "loudness"}
@@ -1082,8 +1206,12 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
                 source.seek(0)
             if "content_hash" in payload and payload["content_hash"] != digest:
                 raise _error("creative_execution_output_hash_mismatch")
-            key = f"staging/{digest}.bin"
-            streams.copy_private(user.id, row.id, key, source, role["max_bytes"], expected_hash=digest)
+            if project:
+                # Registered where the model exported it; the path itself is the record, no second copy.
+                key = str(given)
+            else:
+                key = f"staging/{digest}.bin"
+                streams.copy_private(user.id, row.id, key, source, role["max_bytes"], expected_hash=digest)
     else:
         content = uploaded_content if uploaded_content is not None else files.read_file(user.id, row.id, payload.get("relative_path"), maximum=role["max_bytes"], output=True)
         if not 0 < len(content) <= role["max_bytes"]:
@@ -1108,9 +1236,9 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
         manifest = _latest(outputs).get(("edit_manifest", 1))
         if manifest is None:
             raise _error("creative_execution_required_outputs_missing")
-        with streams.execution_file(user.id, row.id, manifest.staging_key, 2_000_000) as source:
+        with open_output(user.id, row.id, manifest.staging_key, 2_000_000) as source:
             if streams.inspect(source, 2_000_000) != (manifest.size_bytes, manifest.content_hash):
-                raise _error("creative_execution_staged_output_changed")
+                raise _changed() if manifest.staging_key.startswith("/") else _error("creative_execution_staged_output_changed")
             validate_edit_output_hashes(package.package_json, outputs, json.loads(source.read(2_000_001)))
     replacement_missing = _needs_replacement(package, outputs)
     target = "blocked" if replacement_missing else "accepted" if accepted else "result_ready" if ready else "in_progress"
@@ -1135,10 +1263,12 @@ def _live_materialized(db: Session, row: CreativeExecution, package: CreativeExe
            or snapshot["material_revision_id"] < 1 or not isinstance(snapshot.get("content_hash"), str)
            or not _HASH.fullmatch(snapshot["content_hash"]) for snapshot in snapshots):
         raise _error("creative_execution_materialized_input_invalid")
-    linked = {_input_names(snapshot)[0]: str(streams.external_target(revisions[snapshot["material_revision_id"]]))
-              for snapshot in snapshots if isinstance(snapshot, dict) and snapshot.get("material_revision_id") in revisions
-              and revisions[snapshot["material_revision_id"]].file_path.startswith("external/")}
-    files.check_input_manifest(row.owner_user_id, row.id, {name for snapshot in snapshots for name in _input_names(snapshot)}, linked)
+    project = in_project(row, package)
+    if not project:
+        linked = {_input_names(snapshot)[0]: str(streams.external_target(revisions[snapshot["material_revision_id"]]))
+                  for snapshot in snapshots if isinstance(snapshot, dict) and snapshot.get("material_revision_id") in revisions
+                  and revisions[snapshot["material_revision_id"]].file_path.startswith("external/")}
+        files.check_input_manifest(row.owner_user_id, row.id, {name for snapshot in snapshots for name in _input_names(snapshot)}, linked)
     seen = set()
     for snapshot in snapshots:
         revision_id = snapshot.get("material_revision_id")
@@ -1151,8 +1281,8 @@ def _live_materialized(db: Session, row: CreativeExecution, package: CreativeExe
                 size, digest = streams.inspect(source, maximum)
             if snapshot != _input_snapshot(revisions[revision_id], package, size=size):
                 raise _error("creative_execution_materialized_input_changed")
-            if revisions[revision_id].file_path.startswith("external/"):
-                # The link points at the drive file just verified above; there is no second copy to compare.
+            if project or revisions[revision_id].file_path.startswith("external/"):
+                # The model used the original just verified above; there is no second copy to compare.
                 continue
             with streams.execution_file(row.owner_user_id, row.id, f"inputs/{_present_input(row, snapshot)}", maximum) as source:
                 if streams.inspect(source, maximum) != (size, digest):
@@ -1213,6 +1343,67 @@ def _rights(payload: dict, snapshots: list[dict], output: CreativeExecutionOutpu
             for snapshot in snapshots if snapshot["rights"].get("license")]}
 
 
+def _store_accepted(db: Session, row: CreativeExecution, material, output: CreativeExecutionOutput, provenance: dict, rights: dict,
+                    media_info: dict, content: bytes, limit: dict | None, user: User) -> MaterialRevision:
+    try:
+        with ExitStack() as stack:
+            source = stack.enter_context(streams.execution_file(user.id, row.id, output.staging_key, limit["max_file_bytes"])) if limit else None
+            if source is not None and streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
+                raise _error("creative_execution_staged_output_changed")
+            revision = create_revision(db, material, content=content, suffix=".bin", declared_mime=output.mime_type,
+                source_kind="external_execution", source_metadata=provenance,
+                _execution_acceptance=_EXTERNAL_EXECUTION_ACCEPTANCE,
+                rights_status=rights["rights_status"], public_use_allowed=rights["public_use_allowed"],
+                model_use_allowed=rights["model_use_allowed"], commercial_use_allowed=rights["commercial_use_allowed"],
+                attribution_text=rights["attribution_text"], metadata={"external_execution": provenance}, created_by=user.email,
+                _execution_stream=source, _stream_maximum=limit["max_file_bytes"] if limit else MAX_FILE_BYTES,
+                **{key: media_info[key] for key in ("width", "height", "duration_ms") if key in media_info})
+    except (OSError, ValueError, RuntimeError):
+        raise _error("creative_execution_material_storage_unavailable") from None
+    if revision.content_hash != output.content_hash or revision.mime_type != output.mime_type:
+        raise _error("creative_execution_accepted_output_mismatch")
+    if limit:
+        with streams.material_file(revision, limit["max_file_bytes"]) as source:
+            if streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
+                raise _error("creative_execution_accepted_output_mismatch")
+    elif files.read_material(revision) != content:
+        raise _error("creative_execution_accepted_output_mismatch")
+    return revision
+
+
+def _register_in_place(db: Session, material, output: CreativeExecutionOutput, provenance: dict, rights: dict,
+                       media_info: dict, user: User) -> MaterialRevision:
+    """Library record of a result that stays where it was exported, the way files living on the library drive are linked."""
+    from ..models import MaterialSource
+    from .material_external import key_for
+    from .storage_locations import library_source_id
+
+    source = db.get(MaterialSource, library_source_id()) if library_source_id() else None
+    path = Path(output.staging_key)
+    if source is None or not path.is_relative_to(source.root_path):
+        raise HTTPException(409, {"code": "video_chain_drive_unavailable", "message": "素材硬盘没连上：接上硬盘后再通过"})
+    relative = path.relative_to(source.root_path).as_posix()
+    with streams.project_file(path, output.size_bytes) as handle:
+        if streams.inspect(handle, output.size_bytes) != (output.size_bytes, output.content_hash):
+            raise _changed()
+        info = os.fstat(handle.fileno())
+    key = key_for(source.id, output.content_hash, relative)
+    if len(key) > 500 or db.scalar(select(MaterialRevision.id).where(MaterialRevision.file_path == key).limit(1)):
+        raise _error("creative_execution_accepted_output_mismatch")
+    revision = MaterialRevision(material_id=material.id, revision_no=1, source_kind="external_execution",
+        source_metadata_json=provenance, content_hash=output.content_hash, file_path=key, mime_type=output.mime_type,
+        rights_status=rights["rights_status"], public_use_allowed=rights["public_use_allowed"],
+        model_use_allowed=rights["model_use_allowed"], commercial_use_allowed=rights["commercial_use_allowed"],
+        attribution_text=rights["attribution_text"], created_by=user.email,
+        metadata_json={"external_execution": provenance, "filename": path.name,
+                       "external": {"material_source_id": source.id, "relative_path": relative,
+                                    "size_bytes": info.st_size, "mtime_ns": info.st_mtime_ns}},
+        **{key: media_info[key] for key in ("width", "height", "duration_ms") if key in media_info})
+    db.add(revision)
+    db.flush()
+    return revision
+
+
 @_atomic
 def decide_output(db: Session, project_id: int, unit_id: int, execution_id: int, output_id: int, payload: dict, user: User) -> dict:
     _payload(payload, {"expected_revision", "decision", "rights", "title", "attach_to_project"})
@@ -1249,10 +1440,11 @@ def decide_output(db: Session, project_id: int, unit_id: int, execution_id: int,
         _metadata({"summary": title})
         limit = streams.policy(package)
         media_info = {}
+        project = in_project(row, package)
         if limit:
-            with streams.execution_file(user.id, row.id, output.staging_key, limit["max_file_bytes"]) as source:
+            with open_output(user.id, row.id, output.staging_key, limit["max_file_bytes"]) as source:
                 if streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
-                    raise _error("creative_execution_staged_output_changed")
+                    raise _changed() if project else _error("creative_execution_staged_output_changed")
                 media_info = streams.validate(source, output.mime_type, output.kind, package, role_id=output.role_id)
             content = b""
         else:
@@ -1282,29 +1474,10 @@ def decide_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             provenance["manual_image"] = {key: handoff[key] for key in ("schema", "origin", "runtime_verified", "configuration_hash", "prompt_hash")}
             provenance["manual_acceptance_hash"] = canonical_hash({key: value for key, value in payload.items() if key != "expected_revision"})
         material = create_material(db, kind=output.kind, title=title.strip(), created_by=user.email)
-        try:
-            with ExitStack() as stack:
-                source = stack.enter_context(streams.execution_file(user.id, row.id, output.staging_key, limit["max_file_bytes"])) if limit else None
-                if source is not None and streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
-                    raise _error("creative_execution_staged_output_changed")
-                revision = create_revision(db, material, content=content, suffix=".bin", declared_mime=output.mime_type,
-                    source_kind="external_execution", source_metadata=provenance,
-                    _execution_acceptance=_EXTERNAL_EXECUTION_ACCEPTANCE,
-                    rights_status=rights["rights_status"], public_use_allowed=rights["public_use_allowed"],
-                    model_use_allowed=rights["model_use_allowed"], commercial_use_allowed=rights["commercial_use_allowed"],
-                    attribution_text=rights["attribution_text"], metadata={"external_execution": provenance}, created_by=user.email,
-                    _execution_stream=source, _stream_maximum=limit["max_file_bytes"] if limit else MAX_FILE_BYTES,
-                    **{key: media_info[key] for key in ("width", "height", "duration_ms") if key in media_info})
-        except (OSError, ValueError, RuntimeError):
-            raise _error("creative_execution_material_storage_unavailable") from None
-        if revision.content_hash != output.content_hash or revision.mime_type != output.mime_type:
-            raise _error("creative_execution_accepted_output_mismatch")
-        if limit:
-            with streams.material_file(revision, limit["max_file_bytes"]) as source:
-                if streams.inspect(source, limit["max_file_bytes"]) != (output.size_bytes, output.content_hash):
-                    raise _error("creative_execution_accepted_output_mismatch")
-        elif files.read_material(revision) != content:
-            raise _error("creative_execution_accepted_output_mismatch")
+        if project:
+            revision = _register_in_place(db, material, output, provenance, rights, media_info, user)
+        else:
+            revision = _store_accepted(db, row, material, output, provenance, rights, media_info, content, limit, user)
         if attach:
             db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id,
                 origin="external_execution", status="active", attached_by=user.email))

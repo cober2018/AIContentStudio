@@ -1,0 +1,4 @@
+- [x] 1 edit_contract 加可选 cover（image/jpeg、image/png，一张）
+- [x] 2 export 目录加「导出/封面」；交付路径检查；开剪结果和准备素材结果都返回 cover_dir（并建好目录）
+- [x] 3 审片页显示封面（小样、成片）；成片通过后写进主稿 cover
+- [ ] 4 剪辑规则（已做）；相关测试 170 passed（已做）；用户实测后归档

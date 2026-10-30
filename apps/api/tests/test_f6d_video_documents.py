@@ -1112,3 +1112,200 @@ def test_video_v2_derived_operations_require_concrete_results_and_server_provena
     assert client.post(f"{path}/{shot_response.json()['id']}/derive", json=stale_context, headers=headers).status_code == 409
     assert db_session.query(ContentMasterRevision).filter_by(content_unit_id=unit).count() == 4
     assert client.get(f"{path}/{source['id']}", headers=headers).json()["payload_hash"] == source["payload_hash"]
+
+
+def test_board_source_kind_and_attitude_are_optional_and_checked():
+    from app.services.video_documents import VideoDocumentError
+
+    plain = _document()
+    plain["shots"][0]["board"] = {"visual": "孩子吃饼干"}
+    before = _canonical(plain)["shots"][0]["board"]
+    assert "source_kind" not in before and "attitude" not in before
+    marked = deepcopy(plain)
+    marked["shots"][0]["board"].update(source_kind="shoot", attitude="第一次吃到自己能吃的零食，又惊又喜")
+    board = _canonical(marked)["shots"][0]["board"]
+    assert board["source_kind"] == "shoot" and board["attitude"].startswith("第一次")
+    marked["shots"][0]["board"]["source_kind"] = "reference"
+    with pytest.raises(VideoDocumentError):
+        _canonical(marked)
+
+
+def test_attitude_leads_the_video_prompt_and_still_has_four_parts():
+    from app.services import product_motion
+
+    board = {"visual": "孩子咬下第一口饼干", "attitude": "第一次吃到自己能吃的零食，又惊又喜", "camera_presets": [], "look": "warm-life"}
+    for english in (False, True):
+        assert product_motion.motion_prompt(board, people=True, english=english).startswith("第一次吃到自己能吃的零食")
+    still = product_motion.still_prompt({"visual": "孩子坐在沙发上吃饼干"}, people=True, setting="客厅布沙发")
+    assert [line.split("：", 1)[0] for line in still.splitlines()[:4]] == ["拍摄方式", "人物", "动作与镜头", "场景"]
+    assert still.startswith("拍摄方式：普通手机后置摄像头直出画面")
+
+
+def _sheet(gutter: int):
+    from PIL import Image, ImageDraw
+
+    width, height, colors = 360, 640, ["#c33", "#3c3", "#33c", "#cc3", "#3cc", "#c3c", "#963", "#369", "#693"]
+    sheet = Image.new("RGB", (width, height), "white")
+    draw = ImageDraw.Draw(sheet)
+    cell_w, cell_h = (width - 2 * gutter) / 3, (height - 2 * gutter) / 3
+    for index, color in enumerate(colors):
+        row, column = divmod(index, 3)
+        left, top = column * (cell_w + gutter), row * (cell_h + gutter)
+        draw.rectangle((left, top, left + cell_w - 1, top + cell_h - 1), fill=color)
+        draw.ellipse((left + 20, top + 30, left + 60, top + 70), fill="white")
+    out = io.BytesIO()
+    sheet.save(out, format="PNG")
+    return out.getvalue(), colors
+
+
+@pytest.mark.parametrize("gutter", [0, 8])
+def test_storyboard_grid_cuts_nine_cells_in_reading_order(gutter):
+    from PIL import Image
+
+    from app.services import shot_image
+
+    content, colors = _sheet(gutter)
+    cells = shot_image.cut_grid(content, "9:16")
+    assert len(cells) == 9
+    for cell, color in zip(cells, colors):
+        image = Image.open(io.BytesIO(cell)).convert("RGB")
+        expected = tuple(int(color[i] * 2, 16) for i in (1, 2, 3))
+        assert image.getpixel((image.width - 3, image.height - 3)) == expected
+    big = Image.open(io.BytesIO(shot_image.upscale(cells[0], "9:16")))
+    assert big.size == (1080, 1920)
+
+
+def test_storyboard_grid_without_lines_or_shape_falls_back_to_thirds():
+    from PIL import Image
+
+    from app.services import shot_image
+
+    flat = io.BytesIO()
+    Image.new("RGB", (360, 639), "#888").save(flat, format="PNG")
+    wide = io.BytesIO()
+    Image.new("RGB", (639, 360), "#888").save(wide, format="PNG")
+    for content, tall in ((flat.getvalue(), True), (wide.getvalue(), False)):
+        cells = shot_image.cut_grid(content, "9:16")
+        sizes = {Image.open(io.BytesIO(cell)).size for cell in cells}
+        assert len(cells) == 9 and len(sizes) == 1
+        width, height = sizes.pop()
+        assert (height > width) is tall
+
+
+def test_storyboard_grid_takes_product_shots_but_not_reveal_or_cta():
+    from app.services import shot_image
+
+    assert shot_image.grid_shot({"purpose": "场景", "board": {"visual": "孩子吃饼干", "source_kind": "shoot"}})
+    assert not shot_image.grid_shot({"purpose": "cta：下单", "board": {"visual": "主播拿着商品"}})
+    assert not shot_image.grid_shot({"purpose": "模板", "board": {"visual": "卖点卡", "source_kind": "ae_template"}})
+    close = {"purpose": "特写", "board": {"visual": "包装正面", "source_kind": "product_image"}}
+    assert shot_image.grid_shot(close) and shot_image.close_up(close)
+    prompt = shot_image.grid_prompt(["孩子咬饼干", "妈妈递饼干"], "9:16")
+    assert "第 1 格：孩子咬饼干" in prompt and "第 9 格：同一房间的环境空镜" in prompt
+    assert "不出现人物（不露脸、不出现身体）" in prompt and "同一批人物" not in prompt
+    with_face = shot_image.grid_prompt(["孩子咬饼干"], "9:16", "小女孩", product=True, portrait=True)
+    assert "同一批人物" in with_face and "参考照片" in with_face and "商品真实照片" in with_face and "不露脸" not in with_face
+
+
+def _grid_doubles(monkeypatch, tmp_path, shots, refs, verdicts=None):
+    from app.services import model_registration, product_video, shot_image, video_chain
+
+    master = SimpleNamespace(payload_json={"aspect_ratio": [9, 16], "shots": shots})
+    calls = {"store": {}, "sent": [], "registered": [], "checks": [], "metadata": []}
+    monkeypatch.setattr(video_chain, "_approved_master", lambda *args: (master, {}))
+    monkeypatch.setattr(product_video, "work", lambda *args: object())
+    monkeypatch.setattr(product_video, "references", lambda db, user, unit_id: refs)
+    monkeypatch.setattr(product_video, "_image_bytes", lambda db, revision_id: b"img")
+    monkeypatch.setattr(model_registration, "uses", lambda: {"shot_image": "image-model"})
+    monkeypatch.setattr(shot_image, "route", lambda choice: {"model": "m", "label": "测试"})
+    monkeypatch.setattr(shot_image, "fit", lambda content, aspect: b"ref")
+    monkeypatch.setattr(shot_image, "to_png", lambda content: content)
+    monkeypatch.setattr(shot_image, "generate", lambda target, prompt, refs, aspect, keep: calls["sent"].append(len(refs)) or _sheet(4)[0])
+    answers = iter(verdicts or [])
+    monkeypatch.setattr(shot_image, "check", lambda product, still, absent_ok=False: calls["checks"].append(absent_ok) or next(answers, {"pass": True, "problems": []}))
+
+    def register(db, user, p, u, shot_id, still, model, label, metadata):
+        calls["registered"].append(shot_id)
+        calls["metadata"].append(metadata)
+        return len(calls["registered"])
+
+    monkeypatch.setattr(shot_image, "_register", register)
+    monkeypatch.setattr(shot_image, "_sheet_folder", lambda *args: tmp_path)
+    monkeypatch.setattr(product_video, "_setting", lambda db, key: calls["store"])
+    monkeypatch.setattr(product_video, "_put", lambda db, key, value, actor: calls["store"].update(value))
+    return calls
+
+
+def test_storyboard_grid_registers_candidates_without_adopting(monkeypatch, tmp_path):
+    from app.services import shot_image
+
+    shots = [{"id": f"s{index}", "order": index, "purpose": "场景", "board": {"visual": f"孩子动作{index}", "source_kind": "shoot"}} for index in range(11)]
+    shots.append({"id": "cta", "order": 11, "purpose": "cta：下单", "board": {"visual": "包装", "source_kind": "product_image"}})
+    calls = _grid_doubles(monkeypatch, tmp_path, shots, {"product": [], "person": [], "scene": [], "origin": {}})
+    db = SimpleNamespace(commit=lambda: None)
+    result = shot_image.grid(db, SimpleNamespace(email="a@b"), 1, 2, [])
+    assert result["sheets"] == 2 and calls["sent"] == [0, 1] and calls["checks"] == []
+    assert calls["registered"] == [f"s{index}" for index in range(11)] and result["skipped"] == ["cta"]
+    assert calls["store"]["2"]["grid"]["s9"]["cell"] == 1 and "frames" not in calls["store"]["2"]
+    with pytest.raises(HTTPException) as error:
+        shot_image.grid(db, SimpleNamespace(email="a@b"), 1, 2, ["cta"])
+    assert error.value.detail["code"] == "shot_grid_original_only"
+
+
+def test_storyboard_grid_checks_every_cell_against_the_product_and_redraws_alone(monkeypatch, tmp_path):
+    from app.services import product_video, shot_image
+
+    shots = [{"id": "people", "order": 0, "purpose": "场景", "board": {"visual": "妈妈递饼干给孩子", "attitude": "开心"}},
+             {"id": "close", "order": 1, "purpose": "特写", "board": {"visual": "包装正面", "source_kind": "product_image"}}]
+    refs = {"product": [7], "person": [], "scene": [], "origin": {"product": "sku_primary_image"}}
+    failing = {"pass": False, "problems": ["logo 变了"]}
+    calls = _grid_doubles(monkeypatch, tmp_path, shots, refs, verdicts=[{"pass": True, "problems": []}, failing, failing, failing])
+    result = shot_image.grid(SimpleNamespace(commit=lambda: None), SimpleNamespace(email="a@b"), 1, 2, ["people", "close"])
+    # One sheet, then the close-up redrawn alone twice: three checks for it, within the shot-still try limit.
+    assert calls["sent"] == [1, 2, 2] and calls["checks"] == [True] * (1 + product_video.MAX_STILL_TRIES)
+    assert result["consistency_failed"] == ["close"] and result["hints"] == {"close": "商品纯特写，单独用 generate_shot_image 生成会更准"}
+    assert result["person_notices"] == {"people": product_video.NO_PORTRAIT}
+    assert calls["metadata"][0]["consistency"]["pass"] and len(calls["metadata"][1]["consistency"]["tries"]) == product_video.MAX_STILL_TRIES
+    assert "开心" not in calls["metadata"][0]["prompt"] and "不露脸" in calls["metadata"][0]["prompt"]
+
+
+def test_shot_references_prefer_manual_then_primary_image_and_portrait(monkeypatch):
+    from app.models import ContentUnit, ProductSkuRevision
+    from app.services import content_identity, product_video
+
+    link = SimpleNamespace(unit_id=2, sku_revision_id=5)
+    settings = {"shared_references": []}
+    portraits = {"ids": []}
+    rows = {ProductSkuRevision: SimpleNamespace(primary_image_revision_id=7), ContentUnit: SimpleNamespace(persona_id=3)}
+    db = SimpleNamespace(get=lambda model, key: rows[model])
+    monkeypatch.setattr(product_video, "work", lambda db, unit_id: link)
+    monkeypatch.setattr(product_video, "_settings", lambda db, row: settings)
+    monkeypatch.setattr(content_identity, "current_revision", lambda db, kind, entity_id: SimpleNamespace(profile_json={"portrait_material_revision_ids": portraits["ids"]}))
+    monkeypatch.setattr(content_identity, "usable_portrait", lambda db, revision_id, email=None: revision_id != 99)
+    refs = product_video.references(db, None, 2)
+    assert refs == {"product": [7], "person": [], "scene": [], "origin": {"product": "sku_primary_image"}}
+    assert product_video.person_notices({"shots": [{"id": "a", "board": {"visual": "女生拿着饼干"}}, {"id": "b", "board": {"visual": "饼干特写"}}]}, refs) == {"a": product_video.NO_PORTRAIT}
+    assert product_video.person_rule(refs) == product_video.WITHOUT_PERSON
+    portraits["ids"] = [11, 99]
+    assert product_video.references(db, None, 2)["person"] == [11]
+    settings["shared_references"] = [{"role": "product", "material_revision_id": 21, "content_hash": "0" * 64},
+                                     {"role": "person", "material_revision_id": 22, "content_hash": "0" * 64}]
+    manual = product_video.references(db, None, 2)
+    assert manual["product"] == [21] and manual["person"] == [22] and manual["origin"] == {"product": "manual", "person": "manual"}
+    assert product_video.person_notices({"shots": [{"id": "a", "board": {"visual": "女生拿着饼干"}}]}, manual) == {}
+
+
+def test_reference_breakdown_runs_locally_on_a_silent_clip(tmp_path):
+    import subprocess
+
+    from app.services import reference_video
+
+    source = tmp_path / "ref.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=c=red:s=180x320:d=1.5", "-f", "lavfi", "-i",
+                    "color=c=blue:s=180x320:d=1.5", "-filter_complex", "[0][1]concat=n=2:v=1", "-pix_fmt", "yuv420p", str(source)], check=True)
+    summary = reference_video.local_breakdown(source, tmp_path / "out")
+    assert 2900 <= summary["duration_ms"] <= 3100 and summary["cuts"] == 1 and summary["loudness"] is None
+    assert summary["transcript_reason"] == "没有声音"
+    cuts = json.loads((tmp_path / "out" / "cuts.json").read_text("utf-8"))
+    assert cuts["segments"][0]["start_ms"] == 0 and 1400 <= cuts["segments"][1]["start_ms"] <= 1600
+    assert (tmp_path / "out" / "grid-01.jpg").is_file()

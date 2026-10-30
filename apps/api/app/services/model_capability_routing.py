@@ -29,7 +29,16 @@ TTS_APPLIED_SCHEMA = "studio.audio.tts-applied.v1"
 TTS_EMOTIONS = {"happy", "sad", "angry", "fearful", "disgusted", "surprised", "calm", "fluent", "whisper"}
 TTS_FORMATS = {"mp3", "wav", "flac"}
 # Optional MiniMax fields; a request names them explicitly, nothing is filled in.
-_TTS_OPTIONAL = {"volume", "pitch", "emotion", "format", "sample_rate", "bitrate", "channels", "text_normalization", "latex_read", "subtitles"}
+_TTS_OPTIONAL = {"volume", "pitch", "emotion", "format", "sample_rate", "bitrate", "channels", "text_normalization", "latex_read", "subtitles",
+                 "language_boost", "voice_modify"}
+TTS_LANGUAGES = {"auto", "Chinese", "Chinese,Yue", "English", "Arabic", "Russian", "Spanish", "French", "Portuguese", "German", "Turkish",
+                 "Dutch", "Ukrainian", "Vietnamese", "Indonesian", "Japanese", "Italian", "Korean", "Thai", "Polish", "Romanian", "Greek",
+                 "Czech", "Finnish", "Hindi"}
+
+
+def _voice_modify(value) -> bool:
+    return (isinstance(value, dict) and set(value) == {"pitch", "intensity", "timbre"}
+            and all(type(item) is int and -100 <= item <= 100 for item in value.values()))
 
 
 # MiniMax system voices include ids like "Chinese (Mandarin)_Gentle_Senior", so spaces and (full-width) brackets are allowed.
@@ -62,11 +71,13 @@ def tts_parameters(parameters, *, capability):
         "text_normalization": lambda v: type(v) is bool,
         "latex_read": lambda v: type(v) is bool,
         "subtitles": lambda v: type(v) is bool,
+        "language_boost": lambda v: v in TTS_LANGUAGES,
+        "voice_modify": _voice_modify,
     }
     for key in sorted(extra):
         if not checks[key](parameters[key]):
             raise ValueError("tts_parameters_invalid")
-        result[key] = float(parameters[key]) if key == "volume" else parameters[key]
+        result[key] = float(parameters[key]) if key == "volume" else dict(parameters[key]) if key == "voice_modify" else parameters[key]
     return result
 
 

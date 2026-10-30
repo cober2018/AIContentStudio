@@ -1,0 +1,58 @@
+{
+  "key": "studio.video.reference-breakdown",
+  "version": "1",
+  "ref": "studio.video.reference-breakdown@1",
+  "kind": "skill",
+  "modality": "video",
+  "purpose": "把参考视频拆成整体分析、时间线、导演稿初稿和拍摄清单",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [],
+  "output_schemas": [],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "schema": "studio.skill.contract.v1",
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.graphic.product-neutral@1",
+    "studio.graphic.technical-editorial@1",
+    "studio.graphic.architecture-diagram@1",
+    "studio.graphic.clean-infographic@1",
+    "studio.graphic.warm-magazine@1",
+    "studio.graphic.documentary-photo@1",
+    "studio.graphic.lifestyle-cards@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.video.product@1",
+    "studio.quality.graphic.editorial@1",
+    "studio.quality.graphic.lifestyle@1"
+  ],
+  "references": [
+    "references/fields.md",
+    "references/examples.md"
+  ]
+}

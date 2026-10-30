@@ -31,7 +31,7 @@ TEXT_FIELDS = {
 }
 PROFILE_TEXT_FIELDS = {
     "comparison_notes": 4000, "reference_notes": 4000, "visual_style": 4000, "continuity_notes": 4000,
-    "dialogue": 12000, "dialogue_language": 100, "music_direction": 2000,
+    "dialogue": 12000, "dialogue_language": 100,
     "feedback.location": 200, "feedback.note": 4000,
 }
 PROFILE_CONTEXT_FIELDS = {
