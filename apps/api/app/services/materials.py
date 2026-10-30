@@ -567,7 +567,17 @@ def verify_bytes_checked(db: Session, revision: MaterialRevision, *, require_pub
             raise HTTPException(403, "该素材未获公开使用授权")
         # Saves and readiness checks only need the type header; a file verified at this size and time is not re-read.
         head = _verified_head(db, revision)
-        return head if head is not None else read_bytes_checked(db, revision, require_public=require_public)
+        if head is not None:
+            return head
+        # Local files are hashed in chunks, so phone clips and WAVs over the 30 MB in-memory read limit still verify.
+        path = local_file_checked(db, revision)
+        if path is None:
+            return read_bytes_checked(db, revision, require_public=require_public)
+        try:
+            with path.open("rb") as source:
+                return source.read(64)
+        except OSError:
+            raise HTTPException(404, "素材文件缺失") from None
     if require_public and revision.public_use_allowed is not True:
         raise HTTPException(403, "该素材未获公开使用授权")
     from .creative_media_stream import material_file
