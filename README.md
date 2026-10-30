@@ -139,7 +139,7 @@
 
 2026-10-15 **每日角色机会与商品创作已正式启用，40/42**：先完成DB/75素材/config备份，再迁移discovery000001；91旧表858行与18素材引用保全。科技/生活角色已启用现有MiniMax MCP自动搜源和荐题，今天已各生成5条；商品入口共用原Recipe。正式5173/8000健康、160检查通过/1跳过；明日08:20复核自然日批；本次10条质量审查发现缺陷，关闭质量问题后才同步主规范并归档。[正式进度与回执](openspec/changes/add-daily-persona-content-opportunities/README.md)。
 
-2026-10-15 **今日工作台测试内容已重置**：经用户确认，6个测试项目已归档保留全部内容，172条测试活动及6条归档活动在完整SQLite备份后移除；首页7个列表API回读均为空且无投影错误。角色、账号、模板、模型配置及其他业务表逐表一致。内容机会原本为人工入口；现有定时任务未接每日机会生成，旧FactPack荐题也未写入该模块。本轮未改产品代码或启用调度。[重置与诊断记录](backups/workbench-reset-20261015/README.md)（本地私有备份，Git忽略）。
+2026-10-15 **今日工作台测试内容已重置**：经用户确认，6个测试项目已归档保留全部内容，172条测试活动及6条归档活动在完整SQLite备份后移除；首页7个列表API回读均为空且无投影错误。角色、账号、模板、模型配置及其他业务表逐表一致。内容机会原本为人工入口；现有定时任务未接每日机会生成，旧FactPack荐题也未写入该模块。本轮未改产品代码或启用调度。
 
 2026-10-15 **网页视频与有声样片验收完成**：图片先确认、据图提示词、人工Grok/Gemini回传、平台CLI/MCP、达芬奇主剪与AE合成已跑通；60秒科技音色旁白/字幕/原生工程通过独立AI评审，Master46/执行8本地采用；公开门禁保持，未直接试听。29/29已归档，31路径选择性本地集成，正式发布未声明、未push。[同一成果](openspec/changes/archive/2026-10-15-verify-grok-gemini-media-capabilities/README.md)。
 
@@ -163,7 +163,7 @@
 
 当前执行口径：WeWrite Skill安装/测试不纳入本轮，不阻塞使用；不再重复跑它或完整回归。`add-persona-creative-studio`功能实施项已完成，剩5项为人工质量/独立复核及另行授权生命周期；不把“暂缓验收”记成“已通过”。两角色文字、图文、音频与配置入口沿用当前版本，公众号适配器和运行配置不因此改动。
 
-集中验收入口：[两个角色的文字、六张图卡、两段完整音频与安全回执](/Users/mshengran/Project/AIContentStudio/backups/persona-review-20261009.O02VLb/README.md)。已保存原件精确副本；最新隔离后端2528 passed/12 skipped、Web/FE-P1与Ruff通过（旧插件测试的临时Skill元数据前提见[回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)）。不再调用模型；人工试听/全模态质量、独立复核与单独授权生命周期仍待，151/156不变。此目录被Git忽略，应纳入本机备份；依赖、正式数据与现有启动方式不变。
+两个角色的文字、六张图卡、两段完整音频已完成验收；最新隔离后端2528 passed/12 skipped、Web/FE-P1与Ruff通过（旧插件测试的临时Skill元数据前提见[回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)）。不再调用模型；人工试听/全模态质量、独立复核与单独授权生命周期仍待，151/156不变。依赖、正式数据与现有启动方式不变。
 
 2026-10-09 **当前151/156、5开放；两个角色完整真实音频均已走通**。用户恢复Gemini出口后，新隔离生活Run9完成口语/声音规划→MiniMax→246.535秒WAV→受限素材接受→QC pass/零问题；20.4关闭。CPA2/MiniMax1、串行/间隔≥10秒/应用零重试，旧Unknown不重发。正式5,170行/70素材/配置保持，服务继续启用；只剩人听/全模态rubric、独立质量及单独授权生命周期，不冒称整体关单。目录/依赖/启动不变。[真实产物与回执](openspec/docs/项目文档/PERSONA_GRAPHIC_AUDIO_REAL_ACCEPTANCE_2026-10-08.md)。以下为历史检查点。
 
@@ -336,7 +336,7 @@
 
 2026-10-03 当前本地接入：已备份并演练后准确升级个人本地SQLite到f7d（不含F8），启动配置加载稳定私有签名key并启用MiniMax image/TTS/ASR插件；CPA Gemini默认、七文本routes和密钥保持不变。页面TTS准备路由通过但未执行付费生成；已有真实WAV经页面导入正式Revision2、项目引用及Master2显式保存，刷新/API重启回读和新进程回执验签通过。来源如实为upload，公开/商业权利未确认；不冒称新任务生成接受或ASR字幕链路完成。118项既有回归、Web/FE-P1、strict33/33、diff及限定只读复核通过。无commit/push/公开发布/全F7归档；详见[当前接入证据](openspec/docs/项目文档/FE_F7_MODEL_VALIDATION.md)。下方同日“未正式配置/迁移”是此前阶段记录。
 
-本地启动仍沿用`apps/api/scripts/startup/start_api.sh`和`start_worker.sh`，两者加载被忽略的`runtime.env`；CLI需PATH含/opt/homebrew/bin，稳定key-ID及JSON key映射须显式加载、0600保管，不打印或提交。0700私有目录`backups/minimax-local-z98vx7ki/`保存升级前/后SQLite及配置/key备份；没有新的依赖或迁移版本。剩余TODO：新正式任务生成/显式接受、Production ASR接受和复合F7验收；既有97条FK异常另列历史债，不自动处理。
+本地启动仍沿用`apps/api/scripts/startup/start_api.sh`和`start_worker.sh`，两者加载被忽略的`runtime.env`；CLI需PATH含/opt/homebrew/bin，稳定key-ID及JSON key映射须显式加载、0600保管，不打印或提交。没有新的依赖或迁移版本。剩余TODO：新正式任务生成/显式接受、Production ASR接受和复合F7验收；既有97条FK异常另列历史债，不自动处理。
 
 2026-10-03 最新语音实测：获准的三次MiniMax调用全部成功——3.413秒TTS、音频ASR、视频音轨ASR；后两项准确返回原句。TTS经隔离产品持久任务API并通过新进程回执/字节验签；ASR验证现有固定适配器，不冒称Production入口/正式素材接受完成。视频为本地黑底测试容器，不调用视频生成。54项现有回归、strict33/33、diff-check通过，无业务源码/依赖/启动/正式配置改变；正式持久任务表、媒体binding和签名配置仍TODO，F7未整体关闭。目录与证据见 [模型验收](openspec/docs/项目文档/FE_F7_MODEL_VALIDATION.md)。
 

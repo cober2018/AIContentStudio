@@ -7,6 +7,7 @@ duplicate merges) keep the 导演稿 the user approved; any other save is a new 
 
 from __future__ import annotations
 
+import contextvars
 import copy
 import uuid
 from datetime import UTC, datetime
@@ -111,9 +112,13 @@ def _finished(view: dict) -> dict:
     return {**view, "state": "done", "label": "已定稿", "locked": True}
 
 
+# Accepting the 成片 files already locks the work; the cover written in that same approval must still get through.
+_finalizing: contextvars.ContextVar[int | None] = contextvars.ContextVar("video_chain_finalizing", default=None)
+
+
 def locked(db: Session, unit_id: int) -> bool:
     """An approved 成片 is final for good; changes go into a copy of the unit instead."""
-    return bool(_state(db, unit_id).get("locked"))
+    return _finalizing.get() != unit_id and bool(_state(db, unit_id).get("locked"))
 
 
 def state(db: Session, user: User, project_id: int, unit_id: int) -> dict:
@@ -221,7 +226,14 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
             db.rollback()
             accepted = False
     if stage == "final" and accepted:
-        _adopt_cover(db, user, project_id, unit_id, target)
+        token = _finalizing.set(unit_id)
+        try:
+            _adopt_cover(db, user, project_id, unit_id, target)
+        except HTTPException:
+            # The cut is approved either way; a cover that cannot be written must not undo that.
+            db.rollback()
+        finally:
+            _finalizing.reset(token)
     record = _unit_record(db, unit_id)
     record["decisions"].append({"stage": stage, "target_id": target, "decision": decision, "outputs_accepted": accepted,
                                 "notes": [{"time_ms": item.get("time_ms"), "note": str(item.get("note") or "")[:2000]} for item in notes][:50],
@@ -459,7 +471,8 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     from .web_video_handoff import prepare_edit as open_task
 
     master, current = _approved_master(db, user, project_id, unit_id)
-    if phase == "final" and current["state"] != "finishing":
+    # A 成片 sent back (final_changes) is redone as a new task on top of the same approved 小样.
+    if phase == "final" and current["state"] not in {"finishing", "final_changes"}:
         _fail("video_chain_sample_not_approved", "小样还没通过，等用户在页面上通过小样")
     document = copy.deepcopy(master.payload_json)
     if not document.get("music"):
@@ -472,7 +485,9 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
         comp["alpha_required"] = comp["shot_id"] in alpha_shot_ids
     if phase == "final":
         post["phase"] = "final"
-        sample = _accepted_cut(db, current["execution_id"])
+        record = _unit_record(db, unit_id)
+        sample = next((cut for task in reversed(record["tasks"]) if task["phase"] == "rough_cut"
+                       for cut in [_accepted_cut(db, task["execution_id"])] if cut is not None), None)
         if sample is not None:
             post.update(parent_output_id=sample.id, parent_output_hash=sample.content_hash, parent_material_revision_id=sample.material_revision_id)
     if document.get("postproduction") != post:
@@ -480,8 +495,12 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
         _save(db, user, project_id, unit_id, document, {"video_chain": "edit_prep", "phase": phase, "notes": (notes or "")[:2000]})
     master = _latest(db, unit_id)
     record = _unit_record(db, unit_id)
-    result = open_task(db, project_id, unit_id, {"source_master_revision_id": master.id,
-                                                 "idempotency_key": f"chain-{master.id}-{phase}"}, user)
+    # After the user sends a 小样 / 成片 back, an unchanged master would hand back that same task; the latest
+    # send-back of this phase makes the key new, and stays the same on retries so a retry reuses the new task.
+    stage = "sample" if phase == "rough_cut" else "final"
+    sent_back = next((item["target_id"] for item in reversed(record["decisions"]) if item["stage"] == stage and item["decision"] == "changes"), None)
+    key = f"chain-{master.id}-{phase}" + (f"-after-{sent_back}" if sent_back else "")
+    result = open_task(db, project_id, unit_id, {"source_master_revision_id": master.id, "idempotency_key": key}, user)
     execution_id = result["execution"]["id"]
     if not record["tasks"] or record["tasks"][-1]["execution_id"] != execution_id:
         record["tasks"].append({"phase": phase, "execution_id": execution_id, "draft_master_id": current["draft_master_id"],

@@ -6,6 +6,7 @@ changes where bytes live; production mode must choose one provider explicitly.
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import io
 import os
@@ -47,6 +48,24 @@ def _safe_key(key: str) -> str:
     if not key or path.is_absolute() or ".." in path.parts or "\\" in key or any(ord(char) < 32 or ord(char) == 127 for char in key):
         raise ValueError("storage_key_invalid")
     return path.as_posix()
+
+
+def _place(temporary: str, path: Path) -> None:
+    """Put the finished temporary file at path without ever overwriting one already there."""
+    try:
+        os.link(temporary, path, follow_symlinks=False)
+    except FileExistsError:
+        raise
+    except OSError as exc:
+        # exFAT material drives have no hard links: claim the name exclusively, then rename over the empty claim.
+        if exc.errno not in {errno.ENOTSUP, errno.EOPNOTSUPP, errno.EPERM, errno.EMLINK}:
+            raise
+        os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600))
+        try:
+            os.replace(temporary, path)
+        except OSError:
+            Path(path).unlink(missing_ok=True)
+            raise
 
 
 def _sync_directory(path: Path) -> None:
@@ -156,7 +175,7 @@ class LocalMaterialStorage:
                     target.flush()
                     os.fsync(target.fileno())
                 try:
-                    os.link(temporary, path, follow_symlinks=False)
+                    _place(temporary, path)
                 except FileExistsError:
                     if path.is_symlink() or not path.is_file() or self.read(key) != content:
                         raise ValueError("storage_object_conflict") from None
@@ -178,7 +197,7 @@ class LocalMaterialStorage:
                 target.flush()
                 os.fsync(target.fileno())
             try:
-                os.link(temporary, path, follow_symlinks=False)
+                _place(temporary, path)
             except FileExistsError:
                 if path.is_symlink() or not path.is_file() or self.read(key) != content:
                     raise ValueError("storage_object_conflict") from None
@@ -211,7 +230,7 @@ class LocalMaterialStorage:
             if (copied, actual.hexdigest()) != (size, digest):
                 raise ValueError("storage_object_hash_mismatch")
             try:
-                os.link(temporary, path, follow_symlinks=False)
+                _place(temporary, path)
             except FileExistsError:
                 fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
                 with os.fdopen(fd, "rb") as existing:
