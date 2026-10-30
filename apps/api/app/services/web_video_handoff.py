@@ -350,8 +350,10 @@ def validate_edit_manifest(package: dict, body: dict) -> None:
     if present != shots.keys():
         _fail("video_edit_manifest_shot_missing")
     hashes = body.get("output_hashes")
-    required = {role["role_id"] for role in package["output_contract"]["roles"] if role["required"] and role["role_id"] != "edit_manifest"}
-    if (not isinstance(hashes, dict) or set(hashes) != required
+    roles = [role for role in package["output_contract"]["roles"] if role["role_id"] != "edit_manifest"]
+    required = {role["role_id"] for role in roles if role["required"]}
+    # Optional roles (the cover) may be listed when handed in; required ones must always be.
+    if (not isinstance(hashes, dict) or not required <= set(hashes) <= {role["role_id"] for role in roles}
             or any(not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value) for value in hashes.values())):
         _fail("video_edit_manifest_output_hashes_invalid")
     readbacks = body.get("project_reopen")

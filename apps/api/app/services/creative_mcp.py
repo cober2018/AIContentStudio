@@ -693,6 +693,27 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     return data
 
 
+def _argument_problems(exc: ValidationError) -> list[dict]:
+    """Which field broke which limit and by how much, so the model can fix its call; the submitted value itself is never echoed."""
+    problems = []
+    for error in exc.errors(include_url=False)[:20]:
+        item = {"field": ".".join(str(part) for part in error["loc"]) or "(arguments)", "rule": error["type"]}
+        for key in ("max_length", "min_length", "ge", "gt", "le", "lt", "expected"):
+            if key in (error.get("ctx") or {}):
+                item[key] = str(error["ctx"][key])[:200]
+        value = error.get("input")
+        if isinstance(value, (str, list, dict)):
+            item["actual_length"] = len(value)
+        if error["type"] in {"string_too_long", "too_long"} and "max_length" in item and "actual_length" in item:
+            item["message"] = f"{item['field']} 最多 {item['max_length']}，这次 {item['actual_length']}，超了 {item['actual_length'] - int(item['max_length'])}"
+        elif error["type"] == "extra_forbidden":
+            item["message"] = f"{item['field']} 不是这个工具的参数"
+        elif error["type"] == "missing":
+            item["message"] = f"缺少 {item['field']}"
+        problems.append(item)
+    return problems
+
+
 def tool_result(data: dict, *, failed: bool = False) -> dict:
     return {"content": [{"type": "text", "text": dumps(data)}], "structuredContent": data, "isError": failed}
 
@@ -716,8 +737,8 @@ def call_tool(db: Session, user: User, binding: Binding, params: dict, trace_id:
             raise MCPError("creative_mcp_response_too_large", "bounds")
         result["_meta"] = {"aics/trace_id": trace_id}
         return result
-    except ValidationError:
-        data = error_data("creative_mcp_arguments_invalid", "invalid_arguments", trace_id, status=422)
+    except ValidationError as exc:
+        data = error_data("creative_mcp_arguments_invalid", "invalid_arguments", trace_id, status=422, problems=_argument_problems(exc))
     except HTTPException as exc:
         data = domain_error(exc, trace_id)
         cause = exc.detail.get("code") if isinstance(exc.detail, dict) else None
