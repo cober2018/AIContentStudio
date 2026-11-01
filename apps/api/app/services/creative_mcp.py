@@ -361,7 +361,36 @@ class VideoEditInput(Scope):
     notes: str | None = Field(default=None, max_length=2000)
 
 
+class EmptyInput(Input):
+    pass
+
+
+class TopicLink(Input):
+    url: str = Field(min_length=1, max_length=1000, pattern=r"^https?://")
+    title: str | None = Field(default=None, max_length=300)
+
+
+class ProjectCreateInput(Input):
+    title: str = Field(min_length=1, max_length=300)
+    objective: str = Field(min_length=1, max_length=2000)
+    rationale: str = Field(min_length=1, max_length=2000)
+    core_message: str | None = Field(default=None, max_length=1000)
+    angle: str | None = Field(default=None, max_length=1000)
+    links: list[TopicLink] = Field(default_factory=list, max_length=10)
+
+
+class UnitCreateInput(Input):
+    project_id: ID
+    persona_id: ID
+    modality: Literal["video", "graphic", "text"]
+    title: str = Field(min_length=1, max_length=300)
+    channel_id: str | None = Field(default=None, min_length=1, max_length=100, pattern=IDENTIFIER)
+
+
 TOOLS = {
+    "list_personas": (EmptyInput, "Start of a self-sourced topic: read the owner's active personas (id, name, positioning) and the channels a work can target. A project takes no persona; each work picks one.", True),
+    "create_project": (ProjectCreateInput, "Create a content project from a topic you researched yourself, with revision 1 of its brief. rationale (why this topic, now) is required; links are optional because a topic drawn from many sources may have no single source. Then call create_unit. Not for product works.", False),
+    "create_unit": (UnitCreateInput, "Create a work in a project for one persona (video, graphic or text; channel optional, from list_personas). Returns unit_id; continue with the normal flow, e.g. get_video_brief, where the 导演稿, 小样 and 成片 stops wait for the user.", False),
     "get_context": (ContextInput, "Read current owned unit context and content metadata.", True),
     "get_package": (PackageInput, "Read an exact frozen package, including its authorized input manifest.", True),
     "get_execution": (ExecutionInput, "Read exact execution state, contract, counts and staged output metadata.", True),
@@ -533,6 +562,8 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return craft_skills.render(db, user, project_id=args.project_id, unit_id=args.unit_id, template_id=args.template,
                                    version=args.version, content=args.content, images=args.images, duration_ms=args.duration_ms,
                                    aspect=args.aspect)
+    if name in {"list_personas", "create_project", "create_unit"}:
+        return _self_sourced(db, name, args, user)
     if name in _REVIEW_TOOLS:
         return _review(db, name, args, user)
     if name in _VIDEO_TOOLS:
@@ -564,6 +595,36 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         project_folders.after_execution(db, args.execution_id)
         return result
     raise MCPError("creative_mcp_unknown_tool", "invalid_arguments", rpc_code=-32602)
+
+
+# Marks a brief whose topic the third-party model chose itself, so the project page can say so.
+MODEL_TOPIC = "third_party_model_topic"
+
+
+def _self_sourced(db: Session, name: str, args: Input, user: User) -> dict:
+    from ..models import ContentPersona
+    from ..routers import content_projects as projects
+    from .content_harness import channel_registry
+    from .content_identity import current_revision
+
+    if name == "list_personas":
+        personas = []
+        for persona in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id,
+                                                               ContentPersona.status != "archived").order_by(ContentPersona.id)):
+            revision = current_revision(db, "persona", persona.id)
+            personas.append({"id": persona.id, "name": persona.name,
+                             "positioning": ((revision.profile_json or {}).get("positioning") if revision else None)})
+        return {"personas": personas, "channels": [{"channel": c["channel"], "label": c["label"]}
+                                                   for c in channel_registry.list_channels(db)]}
+    if name == "create_project":
+        project = projects.create_project(projects.ProjectIn(title=args.title, objective=args.objective), db=db, user=user)
+        reference = {"kind": MODEL_TOPIC, "rationale": args.rationale, "links": [link.model_dump(exclude_none=True) for link in args.links]}
+        brief = projects.save_project_brief(projects.BriefRevisionIn(expected_revision=0, objective=args.objective,
+            core_message=args.core_message, angle=args.angle, references=[reference]), project["id"], db=db, user=user)
+        return {"project_id": project["id"], "brief_revision": brief["revision_no"]}
+    unit = projects.create_unit(projects.UnitIn(title=args.title, persona_id=args.persona_id, modality=args.modality,
+                                                channel_id=args.channel_id), args.project_id, db=db, user=user)
+    return {"project_id": unit["project_id"], "unit_id": unit["id"], "persona_id": unit["persona_id"], "modality": unit["modality"]}
 
 
 _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_stage_result", "get_stage_decision",

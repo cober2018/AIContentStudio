@@ -19,13 +19,15 @@ export type ProductCosts = {
 };
 export type ProductCostsView = { costs: ProductCosts | null; estimated_contribution: string | null };
 
+// Written by the MCP create_project tool when the third-party model picked the topic itself.
+export type ModelTopic = { kind: "third_party_model_topic"; rationale: string; links: { url: string; title?: string }[] };
 export type Brief = {
   id: number; revision_no: number; checksum: string; objective: string;
   primary_audience: string | null; core_message: string | null; angle: string | null;
   required_evidence: string[]; content_constraints: string[]; identity_scope: (number | Record<string, number | null>)[];
   modality_scope: string[]; channel_scope: string[]; cta: string | null;
   product_context?: ProductContext | null;
-  references: { kind: string; id: number }[]; created_at: string | null;
+  references: ({ kind: string; id: number } | ModelTopic)[]; created_at: string | null;
 };
 
 export type Overview = {
