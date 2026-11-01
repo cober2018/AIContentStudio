@@ -105,6 +105,7 @@ def check_current(db, run, *, provider=False):
         from ..models import DiscoverySource, PersonaSourceSubscription
         evidence = (run.input_json or {}).get("evidence", [])
         paths = [path for ref in evidence for path in ref.get("discovery_paths", [])]
+        withdrawn = set()
         for ref in [*evidence, *paths]:
             source = db.get(DiscoverySource, ref["source_id"], populate_existing=True)
             subscription = db.scalar(select(PersonaSourceSubscription).where(
@@ -127,7 +128,18 @@ def check_current(db, run, *, provider=False):
                 frozen = db.get(DiscoveryItem, ref["item_id"])
                 latest = latest_items(db, source.id).get(frozen.item_key) if frozen else None
                 if not latest or not latest.provenance_json.get("selected"):
-                    raise DiscoveryBlocked("aggregate_evidence_withdrawn")
+                    withdrawn.add(ref["item_id"])
+        if withdrawn:
+            # An aggregate taking one item back drops only that evidence; the day stops only when nothing is left.
+            def kept(refs):
+                return [ref for ref in refs if ref.get("item_id") not in withdrawn
+                        and not {path.get("item_id") for path in ref.get("discovery_paths", [])} & withdrawn]
+            remaining = kept(evidence)
+            if not remaining:
+                raise DiscoveryBlocked("aggregate_evidence_withdrawn")
+            run.input_json = {**run.input_json, "evidence": remaining,
+                              **({"base_evidence": kept(run.input_json["base_evidence"])} if "base_evidence" in run.input_json else {}),
+                              "withdrawn_evidence": sorted(set(run.input_json.get("withdrawn_evidence", [])) | withdrawn)}
     return config
 
 

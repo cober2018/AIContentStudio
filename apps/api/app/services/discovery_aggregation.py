@@ -39,7 +39,15 @@ def allowed_source_ids(db, owner_id, persona_id):
     if selected is None:
         return None
     radar = radar_source_id_for(db, owner_id, persona_id)
-    return {selected, radar} if radar is not None else {selected}
+    from ..models import PersonaSourceSubscription
+
+    # The aggregate adds to the persona's own sources rather than replacing them, so a stalled aggregate site
+    # does not dry up topics; other aggregates and radars stay out.
+    own = set(db.scalars(select(DiscoverySource.id).join(PersonaSourceSubscription, PersonaSourceSubscription.source_id == DiscoverySource.id)
+                         .where(PersonaSourceSubscription.persona_id == persona_id, PersonaSourceSubscription.enabled.is_(True),
+                                DiscoverySource.owner_user_id == owner_id,
+                                DiscoverySource.adapter_json["kind"].as_string().not_in(["aihot", "radar"]))).all())
+    return own | {selected} | ({radar} if radar is not None else set())
 
 
 def accepts_source(db, owner_id, persona_id, source_id):
