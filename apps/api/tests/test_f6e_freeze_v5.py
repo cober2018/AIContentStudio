@@ -808,11 +808,17 @@ def test_v5_approved_series_can_authorize_separate_local_targets_in_any_order(cl
 def test_v5_local_targets_keep_account_identity_and_unknown_reconciliation_separate(client, db_session):
     project, unit, master = _ready_source(client, db_session)
     persona = db_session.get(ContentUnit, unit).persona_id
-    accounts = []
-    for name in ("甲号", "乙号"):
-        created = client.post(f"/api/v1/content-personas/{persona}/accounts", json={"name": name}, headers=HEADERS)
-        assert created.status_code == 201, created.text
-        accounts.append(created.json()["id"])
+    owner = db_session.query(User).filter_by(email=HEADERS["X-Studio-User"]).one()
+    owner.role = "admin"
+    db_session.commit()
+    created = client.post(f"/api/v1/content-personas/{persona}/channel-accounts", json={
+        "name": "甲号", "platform_channel": "x", "platform_account_id": "jia_x"}, headers=HEADERS)
+    assert created.status_code == 201, created.text
+    # A persona holds one x account; the second target is a pre-rule row without a platform.
+    legacy = ContentAccount(owner_user_id=owner.id, persona_id=persona, name="乙号")
+    db_session.add(legacy)
+    db_session.commit()
+    accounts = [created.json()["id"], legacy.id]
     variant = _ready_variant(client, project, unit, master)
     candidates = f"/api/v1/content-projects/{project}/units/{unit}/candidates"
     frozen = client.post(f"{candidates}/freeze", json={"channel_variant_revision_id": variant["id"],

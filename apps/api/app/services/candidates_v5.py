@@ -77,8 +77,6 @@ def build_manifest_v5(inputs: dict) -> dict:
     if "account" in target:
         account = target["account"]
         if (not isinstance(account, dict) or not _id(account.get("content_account_id"))
-                or (account.get("account_revision_id") is not None and not _id(account["account_revision_id"]))
-                or not _hex(account.get("account_profile_checksum"))
                 or account.get("platform_channel") != target["channel"]
                 or account != inputs["production"].get("edit_summary", {}).get("target_account")):
             raise ValueError("variant target account mismatch")

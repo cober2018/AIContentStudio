@@ -17,7 +17,7 @@ const PersonaReferenceStylePanel = lazy(() => import("./CapabilityMemoryPanel").
 const PersonaCreativeConfig = lazy(() => import("./PersonaCreativeConfig"));
 
 type Kind = "brand" | "persona" | "account" | "series";
-type Entity = { kind: Kind; id: number; name: string; status: string; brand_id?: number | null; persona_id?: number | null; account_id?: number; scope?: string; platform_channel?: string | null; current_revision: number };
+type Entity = { kind: Kind; id: number; name: string; status: string; brand_id?: number | null; persona_id?: number | null; account_id?: number; scope?: string; platform_channel?: string | null; platform_account_id?: string | null; home_url?: string | null; creator_links?: { label: string; url: string }[]; current_revision: number };
 type Channel = { channel: string; label: string; content_forms: { content_form: string; label: string }[] };
 type SeriesTarget = { id: number; series_id: number; account_id: number; account_name: string | null; platform_channel: string | null; content_form: string; enabled: boolean; version: number };
 type Revision = { id: number; revision_no: number; profile: Record<string, unknown>; checksum: string; created_at: string | null };
@@ -44,7 +44,7 @@ const FIELDS: { key: FieldKey; label: string; shape: Shape; tab: string; hint?: 
 ];
 const TABS = [
   ["summary", "概览"], ["edit", "编辑资料"], ["history", "修订历史"],
-  ["accounts", "关联与管理"], ["memory", "内容记忆"], ["publisher", "平台连接"],
+  ["accounts", "关联与管理"], ["memory", "内容记忆"],
   ["creative", "高级：创作配置"],
 ] as const;
 
@@ -121,21 +121,20 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
 
   const entities = useMemo(() => [...brands, ...personas, ...accounts, ...series], [brands, personas, accounts, series]);
   const current = selected ? entities.find((item) => item.kind === selected.kind && item.id === selected.id) : null;
-  const editorialSeries = current?.kind === "series" && current.scope === "persona_editorial";
   const persona = current?.kind === "persona" ? current
-    : current?.kind === "account" ? personas.find((row) => row.id === current.persona_id)
-    : current?.kind === "series" ? (editorialSeries ? personas.find((row) => row.id === current.persona_id) : personas.find((row) => row.id === accounts.find((account) => account.id === current.account_id)?.persona_id))
+    : current?.kind === "account" || current?.kind === "series" ? personas.find((row) => row.id === current.persona_id)
     : null;
-  const account = current?.kind === "account" ? current : current?.kind === "series" && !editorialSeries ? accounts.find((row) => row.id === current.account_id) : null;
+  // An account carries no profile of its own, so the persona's profile is what applies.
+  const account = current?.kind === "account" ? current : null;
   const brand = current?.kind === "brand" ? current : brands.find(row => row.id === persona?.brand_id);
   const seriesId = current?.kind === "series" ? current.id : null;
-  const effectiveQuery = persona ? `persona_id=${persona.id}${account ? `&account_id=${account.id}` : ""}${seriesId ? `&series_id=${seriesId}` : ""}` : null;
+  const effectiveQuery = persona && !account ? `persona_id=${persona.id}${seriesId ? `&series_id=${seriesId}` : ""}` : null;
   const selectedUrl = current ? `/${ROOT[current.kind]}/${current.id}` : null;
   const detailReady = loadedIdentityKey === identityKey;
   const missingAncestor = Boolean(current && (
     (current.kind === "persona" && current.brand_id != null && !brand)
     || (current.kind === "account" && current.persona_id != null && !persona)
-    || (current.kind === "series" && (editorialSeries ? !persona : !account))
+    || (current.kind === "series" && !persona)
     || (persona?.brand_id != null && !brand)
   ));
   const creativeReadOnly = missingAncestor || !["editor", "admin"].includes(role ?? "") || !detailReady || detailLoading
@@ -233,16 +232,16 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       api.get<{ role: string }>("/users/me").catch(error => { if (generation === treeGeneration.current && currentUser() === user) setError(`权限读取失败，当前仅可查看。${errText(error)}`); return null; }),
       api.get<Channel[]>("/channels"),
     ]);
-    const nextAccounts = await api.get<Omit<Entity, "kind">[]>("/content-accounts");
-    const [nextSeries, nextEditorial] = await Promise.all([
-      Promise.all(nextAccounts.map((row) => api.get<Omit<Entity, "kind">[]>(`/content-accounts/${row.id}/series`))).then((rows) => rows.flat()),
+    const [nextAccounts, nextEditorial] = await Promise.all([
+      api.get<Omit<Entity, "kind" | "current_revision">[]>("/content-accounts"),
       Promise.all(nextPersonas.map((row) => api.get<Omit<Entity, "kind">[]>(`/content-personas/${row.id}/series`))).then((rows) => rows.flat()),
     ]);
     if (generation !== treeGeneration.current || currentUser() !== user) return;
     setBrands(nextBrands.map((row) => ({ ...row, kind: "brand" })));
     setPersonas(nextPersonas.map((row) => ({ ...row, kind: "persona" })));
-    setAccounts(nextAccounts.map((row) => ({ ...row, kind: "account" })));
-    setSeries([...nextSeries.map((row) => ({ ...row, kind: "series" as Kind, scope: "account_legacy" })), ...nextEditorial.map((row) => ({ ...row, kind: "series" as Kind, scope: "persona_editorial" }))]);
+    // Accounts have no profile revisions; 0 keeps them out of revision checks shared with the other kinds.
+    setAccounts(nextAccounts.map((row) => ({ ...row, kind: "account", current_revision: 0 })));
+    setSeries(nextEditorial.map((row) => ({ ...row, kind: "series" as Kind, scope: "persona_editorial" })));
     setChannels(nextChannels);
     setVoices(nextVoices);
     setRole(me?.role ?? null);
@@ -261,7 +260,9 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
     const ownsRequest = () => active && selectedIdentity.current === key
       && selectionGeneration.current === epoch && detailGeneration.current === generation && currentUser() === user;
     setLoadedIdentityKey(null); setRevisions([]); setEffective(null);
-    setDetailLoading(true); setError(""); setRevisionConflict(false);
+    setError(""); setRevisionConflict(false);
+    if (key.startsWith("account:")) { setLoadedIdentityKey(key); setDetailLoading(false); return () => { active = false; }; }
+    setDetailLoading(true);
     Promise.all([
       api.get<Revision[]>(`${selectedUrl}/revisions`),
       effectiveQuery ? api.get<Effective>(`/content-identities/effective?${effectiveQuery}`) : Promise.resolve(null),
@@ -291,12 +292,12 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   }
   async function createEntity(event: FormEvent) {
     event.preventDefault();
-    const path = !current ? "/content-brands" : current.kind === "brand" ? `${selectedUrl}/personas` : current.kind === "persona" ? `${selectedUrl}/accounts` : current.kind === "account" ? `${selectedUrl}/series` : "";
+    const path = !current ? "/content-brands" : current.kind === "brand" ? `${selectedUrl}/personas` : "";
     if (currentUser() !== user || !path || !name.trim() || pending.current || creativeReadOnly && current || !["editor", "admin"].includes(role ?? "")) return;
     pending.current = true; setBusy(true);
     try {
       const created = await api.post<{ id: number }>(path, { name: name.trim() });
-      const kind: Kind = !current ? "brand" : current.kind === "brand" ? "persona" : current.kind === "persona" ? "account" : "series";
+      const kind: Kind = !current ? "brand" : "persona";
       await loadTree();
       if (selectionGeneration.current !== selectionEpoch || currentUser() !== user) return;
       pending.current = false; selectIdentity({ kind, id: created.id }); setName(""); setNotice(`${KIND_NAME[kind]}已创建。`);
@@ -401,11 +402,14 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
     if (entity.kind === "brand") return "根品牌";
     if (entity.kind === "persona") return brands.find(row => row.id === entity.brand_id)?.name || "无品牌角色";
     if (entity.kind === "account") return personas.find(row => row.id === entity.persona_id)?.name || "独立自有账号";
-    return entity.scope === "persona_editorial" ? `${personas.find(row => row.id === entity.persona_id)?.name || "角色"} · 跨平台栏目` : `${accounts.find(row => row.id === entity.account_id)?.name || "账号"} · 账号栏目`;
+    return `${personas.find(row => row.id === entity.persona_id)?.name || "角色"} · 跨平台栏目`;
   }
   const search = params.get("q") || "";
   const status = params.get("status") || "all";
-  const filtered = entities.filter(row => row.kind === directory && row.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) && (status === "all" || row.status === status));
+  // "persona" in the URL already means "open this persona", so the account filter uses its own key.
+  const ownerFilter = directory === "account" ? params.get("owner") || "all" : "all";
+  const filtered = entities.filter(row => row.kind === directory && row.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) && (status === "all" || row.status === status)
+    && (ownerFilter === "all" || (ownerFilter === "none" ? row.persona_id == null : String(row.persona_id) === ownerFilter)));
   const pages = Math.max(1, Math.ceil(filtered.length / 20));
   const page = Math.min(pages, Math.max(1, Math.floor(Number(params.get("page"))) || 1));
   function listParam(key: string, value: string) {
@@ -414,28 +418,29 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
     if (key === "directory") next.delete("view");
     navigate(next);
   }
-  const related = current ? entities.filter(row => current.kind === "brand" ? row.kind === "persona" && row.brand_id === current.id : current.kind === "persona" ? (row.kind === "account" || row.scope === "persona_editorial") && row.persona_id === current.id : current.kind === "account" ? row.kind === "series" && row.account_id === current.id : false) : [];
+  const related = current ? entities.filter(row => current.kind === "brand" ? row.kind === "persona" && row.brand_id === current.id : current.kind === "persona" ? (row.kind === "account" || row.kind === "series") && row.persona_id === current.id : false) : [];
   const displayedProfile = effective?.effective_profile || revisions[0]?.profile || {};
   const editor = ["editor", "admin"].includes(role ?? "");
   const profileTabs = [["identity", "身份"], ["expression", "表达与视觉"], ["boundaries", "边界"]];
 
   const counts = Object.fromEntries((["persona", "account", "series", "brand"] as Kind[]).map(kind => [kind, entities.filter(row => row.kind === kind).length])) as Record<Kind, number>;
   const channelLabel = (value?: string | null) => value ? channels.find(channel => channel.channel === value)?.label || value : null;
-  const visibleTabs = TABS.filter(([key]) => key !== "publisher" || account).filter(([key]) => key !== "creative" || persona);
+  const visibleTabs = TABS.filter(([key]) => key !== "creative" || persona);
 
   return <Page>
     {error && <FloatingAlert message={error} onClose={() => setError("")} />}{notice && <FloatingAlert tone="info" message={notice} onClose={() => setNotice("")} />}
     {loading ? <Spinner label="读取身份目录…" /> : treeError ? <div className="space-y-3"><ErrorBanner message={treeError} /><Button variant="secondary" onClick={() => { setLoading(true); loadTree().catch(error => setError(errText(error))).finally(() => setLoading(false)); }}>重试读取目录</Button></div> : invalidSelection ? <EmptyState title="身份链接无效" hint="请返回目录选择正确的对象。" /> : !selected ? <>
       <PageHeader eyebrow="资料 · 身份" title="角色与账号" lead="角色决定说什么、怎么说；账号是角色在各平台的落脚点；栏目是长期连载。"
         actions={tab === "summary" && editor ? <>{directory === "persona" && <Button variant="secondary" onClick={() => changeView("starter")}>从起步模板创建</Button>}<Button onClick={() => changeView("new")}>新建{KIND_NAME[directory]}</Button></> : undefined}>
-        <Tabs label="资料目录" value={directory} onChange={kind => listParam("directory", kind)} items={(["persona", "account", "series", "brand"] as Kind[]).map(kind => [kind, `${KIND_NAME[kind]} ${counts[kind]}`] as const)} />
+        <Tabs label="资料目录" value={directory} onChange={kind => listParam("directory", kind)} items={(["brand", "persona", "account", "series"] as Kind[]).map(kind => [kind, `${KIND_NAME[kind]} ${counts[kind]}`] as const)} />
       </PageHeader>
       {tab === "starter" ? <div className="space-y-5"><button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回角色目录</button><StarterPersonaGallery readOnly={!editor} onInitialized={async id => { await loadTree(); selectIdentity({ kind: "persona", id }); }} /></div>
-      : tab === "new" ? <Section eyebrow="新建" title={`新建${KIND_NAME[directory]}`} aside={<button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回目录</button>}>{directory === "account" ? <ChannelAccountRegister personaId={null} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={loadTree} onError={scopedError} /> : directory === "brand" ? <form className="max-w-md space-y-4" onSubmit={createEntity}><Field label="品牌名称"><input className={inputClass} value={name} onChange={event => setName(event.target.value)} required /></Field><Button type="submit" disabled={!editor || busy}>新建品牌</Button></form> : directory === "persona" ? <NewPersonaForm brands={brands} disabled={!editor || busy} onCreated={id => { void loadTree().then(() => { selectIdentity({ kind: "persona", id }); setNotice("角色已创建，声音已锁定。"); }); }} />
-        : <p className="text-[14px] leading-relaxed text-ink-600">栏目属于角色或账号：先打开对应角色，在“关联与管理”里创建。</p>}</Section>
+      : tab === "new" ? <Section eyebrow="新建" title={`新建${KIND_NAME[directory]}`} aside={<button className="text-[13px] text-ink-500 hover:text-ink-900" onClick={() => changeView("summary")}>← 返回目录</button>}>{directory === "account" ? <ChannelAccountRegister personaId={null} personas={personas.filter(row => row.status === "active")} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={async id => { await loadTree(); childBusy(false); if (selectIdentity({ kind: "account", id })) setNotice("账号登记成功。"); }} onError={scopedError} /> : directory === "brand" ? <form className="max-w-md space-y-4" onSubmit={createEntity}><Field label="品牌名称"><input className={inputClass} value={name} onChange={event => setName(event.target.value)} required /></Field><Button type="submit" disabled={!editor || busy}>新建品牌</Button></form> : directory === "persona" ? <NewPersonaForm brands={brands} disabled={!editor || busy} onCreated={id => { void loadTree().then(() => { selectIdentity({ kind: "persona", id }); setNotice("角色已创建，声音已锁定。"); }); }} />
+        : <p className="text-[14px] leading-relaxed text-ink-600">栏目属于角色：先打开对应角色，在“关联与管理”里创建。</p>}</Section>
       : <>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-[220px] flex-1 sm:max-w-sm"><input aria-label="搜索名称" className={`${inputClass} pl-9`} value={search} placeholder={`搜索${KIND_NAME[directory]}名称`} onChange={event => listParam("q", event.target.value)} /><span aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400">⌕</span></div>
+          {directory === "account" && <select aria-label="归属角色" className={`${inputClass} !w-auto`} value={ownerFilter} onChange={event => listParam("owner", event.target.value)}><option value="all">全部角色</option>{personas.map(row => <option key={row.id} value={row.id}>{row.name}</option>)}<option value="none">不挂角色</option></select>}
           <select aria-label="状态" className={`${inputClass} !w-auto`} value={status} onChange={event => listParam("status", event.target.value)}><option value="all">全部状态</option><option value="active">使用中</option><option value="archived">已归档</option></select>
           <span className="ml-auto text-[13px] text-ink-500">共 {filtered.length} 个{KIND_NAME[directory]}</span>
         </div>
@@ -447,7 +452,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
           <h2 className="mt-5 line-clamp-2 break-words font-serif text-[21px] font-semibold leading-snug text-ink-900">{row.name}</h2>
           <p className="mt-1.5 truncate text-[13px] text-ink-500">{parentLabel(row)}</p>
           {row.kind === "persona" && row.brand_id != null && <span className="mt-2 block"><BrandLogoMark brandId={row.brand_id} brandName={parentLabel(row)} /></span>}
-          <div className="mt-auto flex items-center justify-between pt-5 text-[12.5px] text-ink-500"><span>修订 v{row.current_revision}</span><span aria-hidden className="text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-accent-500">打开 →</span></div>
+          <div className="mt-auto flex items-center justify-between pt-5 text-[12.5px] text-ink-500"><span>{row.kind === "account" ? row.platform_account_id : `修订 v${row.current_revision}`}</span><span aria-hidden className="text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-accent-500">打开 →</span></div>
         </button>)}</div>}
         {pages > 1 && <div className="flex items-center justify-center gap-3 pt-2"><Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => listParam("page", String(page - 1))}>上一页</Button><span className="text-[13px] text-ink-500">第 {page} / {pages} 页</span><Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => listParam("page", String(page + 1))}>下一页</Button></div>}
       </>}
@@ -455,18 +460,18 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       <div>
         <button className="mb-6 text-[13px] text-ink-500 transition-colors hover:text-ink-900" onClick={() => selectIdentity(null)}>← {KIND_NAME[directory]}目录</button>
         <PageHeader eyebrow={<>{KIND_NAME[current.kind]} · {parentLabel(current)}</>} title={current.name}
-          actions={tab === "summary" && !creativeReadOnly ? <>{current.kind === "brand" && <Button variant="danger" disabled={busy} onClick={() => void deleteBrand()}>删除品牌</Button>}<Button onClick={() => changeView("edit")}>编辑资料</Button></> : undefined}>
+          actions={tab === "summary" && !creativeReadOnly && current.kind !== "account" ? <>{current.kind === "brand" && <Button variant="danger" disabled={busy} onClick={() => void deleteBrand()}>删除品牌</Button>}<Button onClick={() => changeView("edit")}>编辑资料</Button></> : undefined}>
           <div className="mb-6 flex flex-wrap items-center gap-2">
             {current.status === "archived" ? <Chip tone="warn">已归档 · 只能查看</Chip> : <Chip tone="good">使用中</Chip>}
-            <Chip>修订 v{current.current_revision}</Chip>
+            {current.kind !== "account" && <Chip>修订 v{current.current_revision}</Chip>}
             {channelLabel(current.platform_channel) && <Chip tone="info">{channelLabel(current.platform_channel)}</Chip>}
             {current.kind === "persona" && <Chip>{related.filter(row => row.kind === "account").length} 个账号</Chip>}
             {creativeReadOnly && current.status !== "archived" && <span className="text-[12.5px] text-amber-700">只读：权限未确认、读取未完成或上级已归档</span>}
           </div>
-          <Tabs label="身份页面" value={tab} disabled={busy} onChange={changeView} items={visibleTabs} />
+          {current.kind !== "account" && <Tabs label="身份页面" value={tab} disabled={busy} onChange={changeView} items={visibleTabs} />}
         </PageHeader>
       </div>
-      {detailLoading ? <Spinner label="读取修订…" /> : !detailReady ? <div className="space-y-3"><p className="text-[14px] text-ink-700">身份资料读取失败，暂不可修改。</p><Button variant="secondary" onClick={() => refreshIdentity(selectedUrl!, effectiveQuery, identityKey!, selectionEpoch, true).catch(error => setError(errText(error)))}>重试读取</Button></div> : <div className="space-y-6">
+      {current.kind === "account" ? <AccountInfo key={identityKey} account={current} persona={persona} personas={personas.filter(row => row.status === "active" || row.id === current.persona_id)} channelLabel={channelLabel(current.platform_channel)} readOnly={creativeReadOnly} busy={busy} onOpenPersona={() => persona && selectIdentity({ kind: "persona", id: persona.id })} onArchive={archive} onSaved={async () => { await loadTree(); setNotice("账号信息已保存。"); }} onError={setError} /> : detailLoading ? <Spinner label="读取修订…" /> : !detailReady ? <div className="space-y-3"><p className="text-[14px] text-ink-700">身份资料读取失败，暂不可修改。</p><Button variant="secondary" onClick={() => refreshIdentity(selectedUrl!, effectiveQuery, identityKey!, selectionEpoch, true).catch(error => setError(errText(error)))}>重试读取</Button></div> : <div className="space-y-6">
         {tab === "summary" && <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <Section>
             {current.kind !== "persona" && effective && persona && <div className="mb-7"><Notice>{(() => { const own = Object.values(effective.field_origins || {}).filter(origin => origin === current.kind).length; return own ? `这里是实际生效的资料：本${KIND_NAME[current.kind]}单独设置了 ${own} 项，其余继承自角色「${persona.name}」。` : `这个${KIND_NAME[current.kind]}还没有单独设置，以下资料全部继承自角色「${persona.name}」。需要不同的定位或语气时，在“编辑资料”里单独设置。`; })()}</Notice></div>}
@@ -494,10 +499,9 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
 
         {tab === "accounts" && <div className="space-y-6"><Section eyebrow="关联与管理" title={parentLabel(current)} aside={!creativeReadOnly ? <Button variant="danger" size="sm" disabled={busy} onClick={archive}>归档{KIND_NAME[current.kind]}</Button> : undefined}>
           {related.length > 0 ? <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{related.map(row => entityButton(row))}</div> : <p className="text-[14px] text-ink-500">还没有下级资料。</p>}
-          {!creativeReadOnly && current.kind !== "series" && <form className="mt-6 flex flex-wrap gap-3 border-t border-ink-200/80 pt-6" onSubmit={createEntity}><input aria-label="新子级名称" className={`${inputClass} max-w-sm`} value={name} onChange={event => setName(event.target.value)} required placeholder={`新建${current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}名称`} disabled={busy} /><Button type="submit" disabled={busy}>创建{current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}</Button></form>}
+          {!creativeReadOnly && current.kind === "brand" && <form className="mt-6 flex flex-wrap gap-3 border-t border-ink-200/80 pt-6" onSubmit={createEntity}><input aria-label="新子级名称" className={`${inputClass} max-w-sm`} value={name} onChange={event => setName(event.target.value)} required placeholder={`新建${current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}名称`} disabled={busy} /><Button type="submit" disabled={busy}>创建{current.kind === "brand" ? "角色" : current.kind === "persona" ? "账号" : "栏目"}</Button></form>}
           <p className="mt-4 text-[12.5px] leading-relaxed text-ink-500">公开账号登记只记录公开名称和标识；平台登录与发布授权在“平台连接”。归档会保留历史。</p>
         </Section>{!creativeReadOnly && persona && <div className="grid gap-6 lg:grid-cols-2"><EditorialSeriesCreate key={`series:${identityKey}`} personaId={persona.id} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={seriesCreated} onError={scopedError} /><ChannelAccountRegister key={`register:${identityKey}`} personaId={persona.id} channels={channels} role={role} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onDone={loadTree} onError={scopedError} /></div>}{current.kind === "series" && current.scope === "persona_editorial" && <SeriesTargetsPanel key={identityKey} seriesId={current.id} personaId={persona?.id ?? null} archived={creativeReadOnly} accounts={accounts.filter(row => row.persona_id === persona?.id)} channels={channels} readOnly={creativeReadOnly} onBusyChange={childBusy} beginMutation={beginChildMutation} parentBusy={busy} onChanged={loadTree} onNotice={scopedNotice} onError={scopedError} />}</div>}
-        {tab === "publisher" && account && <AccountPublisherPanel key={account.id} accountId={account.id} archived={creativeReadOnly} />}
         {tab === "memory" && <MemoryPanel key={identityKey} scopeType={current.kind} scopeId={current.id} readOnly={creativeReadOnly} />}
         {!TABS.some(([key]) => key === tab) && <EmptyState title="页面不存在" hint="请使用上方入口。" />}
       </div>}
@@ -505,9 +509,56 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
   </Page>;
 }
 
+// An account records only the platform account itself; everything about how it speaks lives on its persona.
+function AccountInfo({ account, persona, personas, channelLabel, readOnly, busy, onOpenPersona, onArchive, onSaved, onError }: {
+  account: Entity; persona: Entity | null | undefined; personas: Entity[]; channelLabel: string | null; readOnly: boolean; busy: boolean;
+  onOpenPersona: () => void; onArchive: () => void; onSaved: () => Promise<void>; onError: (message: string) => void;
+}) {
+  const [name, setName] = useState(account.name);
+  const [homeUrl, setHomeUrl] = useState(account.home_url || "");
+  const [ownerPersona, setOwnerPersona] = useState(account.persona_id != null ? String(account.persona_id) : "");
+  const personaChanged = ownerPersona !== (account.persona_id != null ? String(account.persona_id) : "");
+  const [saving, setSaving] = useState(false);
+  const dirty = name.trim() !== account.name || homeUrl.trim() !== (account.home_url || "") || personaChanged;
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (readOnly || saving || !dirty || !name.trim()) return;
+    setSaving(true);
+    try { await api.patch(`/content-accounts/${account.id}`, { name: name.trim(), home_url: homeUrl.trim() || null, ...(personaChanged ? { persona_id: ownerPersona ? Number(ownerPersona) : null } : {}) }); await onSaved(); }
+    catch (error) { onError(error instanceof ApiError && error.message === "persona_platform_taken" ? "目标角色在该平台已经有账号了，同一平台只能有一个。" : error instanceof ApiError && error.status === 403 ? "只有管理员可以更换归属角色。" : error instanceof ApiError ? (error.detail as { message?: string } | undefined)?.message || error.message : "保存失败，请重试。"); }
+    finally { setSaving(false); }
+  }
+  const links = account.creator_links || [];
+  return <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <Section eyebrow="账号信息" title={channelLabel || "未登记平台"}>
+      <div className="flex flex-wrap gap-2">
+        {links.map(link => <a key={link.url} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-pill bg-ink-900 px-4 py-2 text-[13.5px] font-medium text-white hover:bg-ink-700">{link.label} ↗</a>)}
+        {account.home_url && <a href={account.home_url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-pill border border-ink-200 px-4 py-2 text-[13.5px] text-ink-800 hover:border-ink-400">账号主页 ↗</a>}
+      </div>
+      <p className="mt-2 text-[12.5px] text-ink-500">在你自己的浏览器里打开。先在浏览器登录一次平台，之后点这里直接进入；平台不保存密码。</p>
+      <dl className="mt-6 grid gap-4 text-[14px] sm:grid-cols-2">
+        <div><dt className="text-[12.5px] text-ink-500">公开标识</dt><dd className="mt-1 break-all text-ink-900">{account.platform_account_id || "未登记"}</dd></div>
+        <div><dt className="text-[12.5px] text-ink-500">归属角色</dt><dd className="mt-1">{persona ? <button className="text-accent-600 hover:underline" onClick={onOpenPersona}>{persona.name}</button> : "独立自有账号"}</dd></div>
+      </dl>
+      <form onSubmit={save} className="mt-6 space-y-4 border-t border-ink-200/80 pt-6">
+        <Field label="账号名"><input className={inputClass} required maxLength={200} value={name} disabled={readOnly || saving} onChange={event => setName(event.target.value)} /></Field>
+        <Field label="归属角色" hint="只有管理员能改；账号被作品、投放或记忆用过后不能再换"><select className={inputClass} value={ownerPersona} disabled={readOnly || saving} onChange={event => setOwnerPersona(event.target.value)}>
+          {personas.map(row => <option key={row.id} value={row.id}>{row.name}</option>)}
+          <option value="">不挂角色（商品视频用）</option>
+        </select></Field>
+        <Field label="账号主页链接" hint="可空；以 https:// 开头"><input className={inputClass} maxLength={500} value={homeUrl} disabled={readOnly || saving} onChange={event => setHomeUrl(event.target.value)} placeholder="https://" /></Field>
+        {!readOnly && <div className="flex flex-wrap items-center gap-2"><Button type="submit" disabled={saving || busy || !dirty}>{saving ? "保存中…" : "保存"}</Button><Button type="button" variant="danger" disabled={saving || busy} onClick={onArchive}>归档账号</Button></div>}
+      </form>
+      {account.platform_channel === "wechat" && <AccountPublisherPanel accountId={account.id} archived={readOnly} />}
+    </Section>
+    <aside><Section eyebrow="说明" title="账号只记账号本身"><p className="text-[13.5px] leading-relaxed text-ink-600">说话方式、形象和声音都在角色里设置。同一个角色在同一个平台只能有一个账号。</p></Section></aside>
+  </div>;
+}
+
 function registerFailure(error: unknown): string {
   if (!(error instanceof ApiError)) return "登记失败，请重试。";
   if (error.status === 403) return "只有管理员可以登记平台账号。";
+  if (error.status === 409 && error.message === "persona_platform_taken") return "这个角色在该平台已经有账号了，同一平台只能有一个。";
   if (error.status === 409 && error.message === "platform_identity_conflict") return "这个平台标识已经登记过。归档也不会把同一个真实账号让给别的角色。";
   if (error.message === "platform_account_public_id_invalid") return "公开标识不合格。不要填写密码、AppSecret 或 token。公众号请填 wx 开头的 AppID，其他平台填账号名或 @handle。";
   return error.message || "登记失败，请重试。";
@@ -538,10 +589,13 @@ function EditorialSeriesCreate({ personaId, onDone, onError, onBusyChange, begin
   </form>;
 }
 
-function ChannelAccountRegister({ personaId, channels, role, onDone, onError, onBusyChange, beginMutation, parentBusy }: {
-  personaId: number | null; channels: Channel[]; role: string | null; onBusyChange: (value: boolean) => void; beginMutation: () => boolean; parentBusy: boolean; onDone: () => Promise<void>; onError: (message: string) => void;
+function ChannelAccountRegister({ personaId, personas = [], channels, role, onDone, onError, onBusyChange, beginMutation, parentBusy }: {
+  personaId: number | null; personas?: Entity[]; channels: Channel[]; role: string | null; onBusyChange: (value: boolean) => void; beginMutation: () => boolean; parentBusy: boolean; onDone: (accountId: number) => Promise<void>; onError: (message: string) => void;
 }) {
   const [channel, setChannel] = useState(channels[0]?.channel || "");
+  // Opened from the account directory there is no persona yet; empty means an independent account for product videos.
+  const [ownerPersona, setOwnerPersona] = useState(personas[0] ? String(personas[0].id) : "");
+  const targetPersona = personaId ?? (ownerPersona ? Number(ownerPersona) : null);
   const [name, setName] = useState("");
   const [handle, setHandle] = useState("");
   const [busy, setBusy] = useState(false);
@@ -556,14 +610,19 @@ function ChannelAccountRegister({ personaId, channels, role, onDone, onError, on
     if (!beginMutation()) return;
     submitting.current = true; setBusy(true); setNotice("");
     try {
-      await api.post(personaId == null ? "/content-accounts/channel-accounts" : `/content-personas/${personaId}/channel-accounts`, { name: name.trim(), platform_channel: effectiveChannel, platform_account_id: handle.trim() });
-      setName(""); setHandle(""); setNotice("已登记公开账号。这还不是登录，也不是发布。");
-      if (currentUser() === owner) await onDone();
+      const created = await api.post<{ id: number }>(targetPersona == null ? "/content-accounts/channel-accounts" : `/content-personas/${targetPersona}/channel-accounts`, { name: name.trim(), platform_channel: effectiveChannel, platform_account_id: handle.trim() });
+      setName(""); setHandle(""); setNotice("账号登记成功。");
+      if (currentUser() === owner) await onDone(created.id);
     } catch (error) { onError(registerFailure(error)); }
     finally { submitting.current = false; onBusyChange(false); setBusy(false); }
   }} className="rounded-xl border border-slate-200 bg-white p-4">
     <h4 className="text-sm font-medium">登记平台公开身份</h4>
     <p className="mt-1 text-xs text-slate-500">{admin ? "只填公开名称与标识；不要填密码、AppSecret、token 或带登录信息的网址。" : "登记平台账号只限管理员。"}</p>
+    {personaId == null && <label className="mt-2 block text-xs text-slate-600">归属角色
+      <select aria-label="归属角色" className={`${inputClass} mt-1`} value={ownerPersona} disabled={!admin || busy || parentBusy} onChange={(event) => setOwnerPersona(event.target.value)}>
+        {personas.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}
+        <option value="">不挂角色（商品视频用）</option>
+      </select></label>}
     <div className="mt-2 grid gap-2 sm:grid-cols-3">
       <select aria-label="平台" className={inputClass} value={effectiveChannel} disabled={!admin || busy || parentBusy} onChange={(event) => setChannel(event.target.value)}>
         {channels.map((row) => <option key={row.channel} value={row.channel}>{row.label}</option>)}

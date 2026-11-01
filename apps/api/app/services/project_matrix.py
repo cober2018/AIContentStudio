@@ -48,9 +48,7 @@ def _history_coverage(db: Session, owner_id: int) -> dict[tuple[str, str | None]
 def _series_matches(series: ContentSeries, persona: ContentPersona, account: ContentAccount | None) -> bool:
     if series.status != "active":
         return False
-    if getattr(series, "scope", "account_legacy") == "persona_editorial":
-        return series.persona_id == persona.id and series.account_id is None and account is None
-    return account is not None and series.account_id == account.id
+    return series.scope == "persona_editorial" and series.persona_id == persona.id and series.account_id is None and account is None
 
 
 def matrix_suggestions(db: Session, project_id: int, user: User, *, limit: int) -> dict:

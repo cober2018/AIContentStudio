@@ -17,7 +17,6 @@ from sqlalchemy.orm import Session
 from ..models import (
     BrandVoiceVersion,
     ContentAccount,
-    ContentAccountRevision,
     ContentBrand,
     ContentBrandRevision,
     ContentPersona,
@@ -120,10 +119,11 @@ def brand_terms(profile: dict) -> list[str]:
     return [term for key in ("forbidden_words", "red_lines") for term in brand.get(key) or [] if isinstance(term, str) and term]
 
 
+ENTITY_MODELS = {"brand": ContentBrand, "persona": ContentPersona, "account": ContentAccount, "series": ContentSeries}
+# An account records only the platform account itself; how it speaks comes from its persona.
 REVISION_MODELS = {
     "brand": (ContentBrand, ContentBrandRevision, "brand_id"),
     "persona": (ContentPersona, ContentPersonaRevision, "persona_id"),
-    "account": (ContentAccount, ContentAccountRevision, "account_id"),
     "series": (ContentSeries, ContentSeriesRevision, "series_id"),
 }
 
@@ -159,16 +159,8 @@ def hierarchy(db: Session, user: User, *, persona_id: int, account_id: int | Non
     series = db.get(ContentSeries, series_id) if series_id is not None else None
     if series_id is not None and series is None:
         raise HTTPException(404, "栏目不存在")
-    if series is not None:
-        if series.scope == "persona_editorial":
-            # 角色级跨平台栏目：归属按 persona 校验，不要求账号。
-            if series.persona_id != persona.id or series.account_id is not None:
-                raise HTTPException(404, "栏目不存在")
-        else:
-            if account is None:
-                raise HTTPException(422, "选择栏目时必须选择所属账号")
-            if series.account_id != account.id:
-                raise HTTPException(404, "栏目不存在")
+    if series is not None and (series.scope != "persona_editorial" or series.persona_id != persona.id or series.account_id is not None):
+        raise HTTPException(404, "栏目不存在")
     result = Hierarchy(brand, persona, account, series)
     if mutable and any(value.status == "archived" for _, value in result.members()):
         raise HTTPException(409, "已归档身份只可查看历史")
@@ -176,7 +168,7 @@ def hierarchy(db: Session, user: User, *, persona_id: int, account_id: int | Non
 
 
 def owned_entity(db: Session, user: User, kind: str, entity_id: int, *, mutable: bool = False):
-    model = REVISION_MODELS[kind][0]
+    model = ENTITY_MODELS[kind]
     entity = db.get(model, entity_id)
     if entity is None:
         raise HTTPException(404, "身份不存在")
@@ -197,13 +189,9 @@ def owned_entity(db: Session, user: User, kind: str, entity_id: int, *, mutable:
         if mutable and entity.status != "active":
             raise HTTPException(409, "已归档账号只可查看历史")
     else:
-        if entity.scope == "persona_editorial":
-            hierarchy(db, user, persona_id=entity.persona_id, series_id=entity_id, mutable=mutable)
-        else:
-            account = db.get(ContentAccount, entity.account_id)
-            if account is None:
-                raise HTTPException(404, "身份不存在")
-            hierarchy(db, user, persona_id=account.persona_id, account_id=account.id, series_id=entity_id, mutable=mutable)
+        if entity.scope != "persona_editorial":
+            raise HTTPException(404, "身份不存在")
+        hierarchy(db, user, persona_id=entity.persona_id, series_id=entity_id, mutable=mutable)
     return entity
 
 
@@ -250,6 +238,76 @@ def public_platform_id(channel: str, value: str) -> str:
     return value
 
 
+# Opening these in the user's own browser reuses its login; the studio never stores platform passwords.
+CREATOR_LINKS = {
+    "wechat": (("去后台", "https://mp.weixin.qq.com/"),),
+    "baijia": (("去写作", "https://baijiahao.baidu.com/builder/rc/edit?type=news"), ("去发布视频", "https://baijiahao.baidu.com/builder/rc/edit?type=videoV2")),
+    "toutiao": (("去写作", "https://mp.toutiao.com/profile_v4/graphic/publish"), ("去发布视频", "https://mp.toutiao.com/profile_v4/xigua/upload-video")),
+    "zhihu": (("去写作", "https://zhuanlan.zhihu.com/write"),),
+    "bilibili": (("去写专栏", "https://member.bilibili.com/platform/upload/text/edit"), ("去发布视频", "https://member.bilibili.com/platform/upload/video/frame")),
+    "xiaohongshu": (("去发布", "https://creator.xiaohongshu.com/publish/publish"),),
+    "douyin": (("去发布", "https://creator.douyin.com/creator-micro/content/upload"),),
+    "wechat_channels": (("去发布", "https://channels.weixin.qq.com/platform/post/create"),),
+    "kuaishou": (("去发布", "https://cp.kuaishou.com/article/publish/video"),),
+    "weibo": (("去发微博", "https://weibo.com/"),),
+    "sohu": (("去写作", "https://mp.sohu.com/mpfe/v4/contentManagement/news/addarticle"),),
+    "netease": (("去后台", "https://mp.163.com/"),),
+    "penguin": (("去后台", "https://om.qq.com/"),),
+    "x": (("去发帖", "https://x.com/compose/post"),),
+    "juejin": (("去写作", "https://juejin.cn/editor/drafts/new"),),
+    "xueqiu": (("去发帖", "https://xueqiu.com/"),),
+    "youtube": (("去发布", "https://studio.youtube.com/"),),
+}
+
+
+def creator_links(channel: str | None) -> list[dict]:
+    return [{"label": label, "url": url} for label, url in CREATOR_LINKS.get(channel or "", ())]
+
+
+def _persona_platform_taken(db: Session, persona_id: int | None, channel: str, *, excluding: int | None = None) -> bool:
+    if persona_id is None:
+        return False
+    query = select(ContentAccount.id).where(ContentAccount.persona_id == persona_id, ContentAccount.platform_channel == channel,
+                                            ContentAccount.status == "active")
+    if excluding is not None:
+        query = query.where(ContentAccount.id != excluding)
+    return db.scalar(query.limit(1)) is not None
+
+
+def _account_in_use(db: Session, account_id: int) -> bool:
+    from ..models import ContentMemoryEntry, ContentUnit, DeliveryTarget, SeriesAccountTarget
+
+    return any(db.scalar(select(column).where(column == account_id).limit(1)) is not None for column in (
+        ContentUnit.account_id, IdentitySnapshot.account_id, DeliveryTarget.content_account_id,
+        SeriesAccountTarget.account_id, ContentMemoryEntry.account_id))
+
+
+def update_account(db: Session, user: User, account_id: int, *, name: str | None, home_url: str | None, fields: set[str],
+                   persona_id: int | None = None) -> ContentAccount:
+    row = owned_entity(db, user, "account", account_id, mutable=True)
+    if "persona_id" in fields and persona_id != row.persona_id:
+        if user.role != "admin":
+            raise HTTPException(403, "platform_binding_admin_required")
+        if persona_id is not None:
+            owned_entity(db, user, "persona", persona_id, mutable=True)
+        # Works, snapshots and deliveries froze this account under its old persona; moving it would split their history.
+        if _account_in_use(db, row.id):
+            raise HTTPException(409, {"code": "account_in_use", "message": "这个账号已经被作品、投放或记忆用过，不能再换角色"})
+        if _persona_platform_taken(db, persona_id, row.platform_channel, excluding=row.id):
+            raise HTTPException(409, "persona_platform_taken")
+        row.persona_id = persona_id
+        row.owner_user_id = user.id
+    if "name" in fields and name is not None:
+        row.name = name
+    if "home_url" in fields:
+        url = (home_url or "").strip()
+        if url and not url.startswith(("https://", "http://")):
+            raise HTTPException(422, {"code": "account_home_url_invalid", "message": "主页链接要以 http:// 或 https:// 开头"})
+        row.home_url = url or None
+    db.commit()
+    return row
+
+
 def register_public_channel_account(db: Session, user: User, persona_id: int | None, *, name: str, channel: str, platform_account_id: str) -> ContentAccount:
     """在角色下登记一个平台公开身份。不保存密码，也不改已经绑定的账号。"""
     if user.role != "admin":
@@ -265,6 +323,8 @@ def register_public_channel_account(db: Session, user: User, persona_id: int | N
     if resolve_channel(db, channel) is None:
         raise HTTPException(422, "未知渠道")
     public_id = public_platform_id(channel, platform_account_id)
+    if _persona_platform_taken(db, persona_id, channel):
+        raise HTTPException(409, "persona_platform_taken")
     row = ContentAccount(owner_user_id=user.id, persona_id=persona_id, name=name, platform_channel=channel, platform_account_id=public_id)
     try:
         db.add(row)
@@ -282,31 +342,6 @@ def create_editorial_series(db: Session, user: User, persona_id: int, *, name: s
     row = ContentSeries(persona_id=persona_id, account_id=None, scope="persona_editorial", name=name)
     db.add(row)
     db.commit()
-    db.refresh(row)
-    return row
-
-
-def bind_platform_account(db: Session, user: User, account_id: int, *, channel: str, platform_account_id: str) -> ContentAccount:
-    if user.role != "admin":
-        raise HTTPException(403, "platform_binding_admin_required")
-    row = _lock_account(db, user, account_id)
-    try:
-        if row.platform_channel is not None or row.platform_account_id is not None:
-            if (row.platform_channel, row.platform_account_id) != (channel, platform_account_id):
-                raise HTTPException(409, "platform_identity_immutable")
-        else:
-            row.platform_channel = channel
-            row.platform_account_id = platform_account_id
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(409, "platform_identity_conflict") from None
-    except OperationalError:
-        db.rollback()
-        raise HTTPException(409, "platform_binding_busy") from None
-    except HTTPException:
-        db.rollback()
-        raise
     db.refresh(row)
     return row
 
@@ -450,6 +485,8 @@ def effective(db: Session, user: User, *, persona_id: int, account_id: int | Non
     creative_origins: dict[str, str] = {}
     revision_ids: dict[str, int | None] = {}
     for kind, entity in selected.members():
+        if kind not in REVISION_MODELS:
+            continue
         revision = current_revision(db, kind, entity.id)
         revision_ids[kind] = revision.id if revision else None
         if kind == "brand":
@@ -510,7 +547,7 @@ def create_snapshot(db: Session, user: User, *, persona_id: int, account_id: int
         owner_user_id=user.id,
         brand_id=resolved["brand_id"], brand_revision_id=revisions.get("brand"),
         persona_id=persona_id, persona_revision_id=revisions.get("persona"),
-        account_id=account_id, account_revision_id=revisions.get("account"),
+        account_id=account_id,
         series_id=series_id, series_revision_id=revisions.get("series"),
         brand_voice_version_id=resolved["brand_voice_version_id"],
         effective_profile_json=resolved["effective_profile"],
@@ -526,7 +563,7 @@ def snapshot_json(row: IdentitySnapshot) -> dict:
         "id": row.id, "owner_user_id": row.owner_user_id,
         "brand_id": row.brand_id, "brand_revision_id": row.brand_revision_id,
         "persona_id": row.persona_id, "persona_revision_id": row.persona_revision_id,
-        "account_id": row.account_id, "account_revision_id": row.account_revision_id,
+        "account_id": row.account_id,
         "series_id": row.series_id, "series_revision_id": row.series_revision_id,
         "brand_voice_version_id": row.brand_voice_version_id,
         "effective_profile": row.effective_profile_json,

@@ -15,7 +15,7 @@ type CheckProjection = { ready: boolean; drift_reasons: string[]; source_gate: {
 type VariantDiff = { from_revision_id: number | null; changed_sections: Record<string, { changed: boolean }>; structured: { id: string; changes: string[] }[] | null };
 type Capability = { channel: string; content_form: string; source_schema: string; payload_schema: string; form_descriptor?: ChannelFormDescriptor; capability: { configured: boolean; executable: boolean; verified: boolean; reason?: string; profile_version_id?: number; profile_hash?: string; adapter_key?: string; adapter_version?: string; artifact_kind?: string; form_descriptor?: ChannelFormDescriptor; effective_instructions?: string } };
 type Target = { channel: string; form: string; label: string; source: string };
-type TargetAccount = { content_account_id: number; platform_channel: string; platform_account_id?: string; account_revision_id?: number | null; account_profile_checksum?: string; series_binding?: { id: number; version: number } | null };
+type TargetAccount = { content_account_id: number; platform_channel: string; platform_account_id?: string; series_binding?: { id: number; version: number } | null };
 type Account = { id: number; name: string; persona_id: number | null; status: string; platform_channel?: string | null; platform_account_id?: string | null };
 type SeriesTarget = { account_id: number; content_form: string; enabled: boolean; version: number };
 type Channel = { channel: string; label: string; content_forms: { content_form: string; label: string }[] };
@@ -285,5 +285,5 @@ export default function ChannelVariantsPanel({ projectId, unit, readOnly: worksp
 }
 
 function TargetContext({ account, hash, instructions }: { account?: TargetAccount | null; hash?: string | null; instructions?: string }) {
-  return <details className="mt-2 rounded bg-slate-50 p-3 text-xs text-slate-600" open><summary>目标投放上下文 · {account ? `账号 #${account.content_account_id} / ${account.platform_channel}` : "渠道适配，未绑定目标账号"}</summary>{account && <p className="mt-2 break-all">账号修订 #{account.account_revision_id ?? "未有画像修订"} · 栏目绑定 {account.series_binding ? `#${account.series_binding.id} / v${account.series_binding.version}` : "一次性明确目标"} · 上下文 hash {hash || "未返回，不能写入账号专属修订"}</p>}{instructions && <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap">本次有效平台/账号指令：{instructions}</pre>}</details>;
+  return <details className="mt-2 rounded bg-slate-50 p-3 text-xs text-slate-600" open><summary>目标投放上下文 · {account ? `账号 #${account.content_account_id} / ${account.platform_channel}` : "渠道适配，未绑定目标账号"}</summary>{account && <p className="mt-2 break-all">栏目绑定 {account.series_binding ? `#${account.series_binding.id} / v${account.series_binding.version}` : "一次性明确目标"} · 上下文 hash {hash || "未返回，不能写入账号专属修订"}</p>}{instructions && <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap">本次有效平台/账号指令：{instructions}</pre>}</details>;
 }

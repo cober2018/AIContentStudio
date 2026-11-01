@@ -15,7 +15,8 @@ from app.services import studio_creative_catalog as catalog
 
 STARTERS = ("starter.ai-tech-engineer.v1", "starter.lifestyle-observer.v1")
 MODALITIES = ("text", "graphic", "video")
-KINDS = ("persona", "account", "series")
+# Accounts record only the platform account, so only these scopes carry profile revisions.
+KINDS = ("persona", "series")
 ROUTES = {
     "brand": "content-brands",
     "persona": "content-personas",
@@ -26,8 +27,7 @@ ARCHIVE_CASES = [
     (kind, ancestor)
     for kind, ancestors in (
         ("persona", ("brand", "persona")),
-        ("account", ("brand", "persona", "account")),
-        ("series", ("brand", "persona", "account", "series")),
+        ("series", ("brand", "persona", "series")),
     )
     for ancestor in ancestors
 ]
@@ -70,19 +70,22 @@ def _json(response, status=200):
     return response.json()
 
 
-def _hierarchy(client):
+def _hierarchy(client, db_session):
     headers = {"X-Studio-User": "creative-identity@studio.test"}
     brand = _json(client.post("/api/v1/content-brands", headers=headers, json={"name": "共享品牌"}), 201)
     persona = _json(client.post(
         f"/api/v1/content-brands/{brand['id']}/personas", headers=headers, json={"name": "创作角色"},
     ), 201)
+    db_session.scalar(select(User).where(User.email == headers["X-Studio-User"])).role = "admin"
+    db_session.commit()
     account = _json(client.post(
-        f"/api/v1/content-personas/{persona['id']}/accounts", headers=headers, json={"name": "发布账号"},
+        f"/api/v1/content-personas/{persona['id']}/channel-accounts", headers=headers,
+        json={"name": "发布账号", "platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"},
     ), 201)
     series = _json(client.post(
-        f"/api/v1/content-accounts/{account['id']}/series", headers=headers, json={"name": "观察栏目"},
+        f"/api/v1/content-personas/{persona['id']}/series", headers=headers, json={"name": "观察栏目"},
     ), 201)
-    ids = {kind: row["id"] for kind, row in zip(("brand", *KINDS), (brand, persona, account, series))}
+    ids = {"brand": brand["id"], "persona": persona["id"], "account": account["id"], "series": series["id"]}
     return headers, ids
 
 
@@ -167,7 +170,7 @@ def _database_state(db_session):
 @pytest.mark.parametrize("modality", MODALITIES)
 @pytest.mark.parametrize("kind", KINDS)
 def test_creative_revisions_fresh_cas_stale_atomicity_and_frozen_history(client, db_session, key, modality, kind):
-    headers, ids = _hierarchy(client)
+    headers, ids = _hierarchy(client, db_session)
     field = f"{modality}_creative_profile"
     _save(client, headers, ids, "persona", 0, _profiles(key))
     initial_no = 1 if kind == "persona" else 0
@@ -215,7 +218,7 @@ def test_creative_revisions_fresh_cas_stale_atomicity_and_frozen_history(client,
 @pytest.mark.parametrize("key", STARTERS)
 @pytest.mark.parametrize("modality", MODALITIES)
 def test_missing_inherits_whole_object_replaces_and_null_clears_each_scope(client, db_session, key, modality):
-    headers, ids = _hierarchy(client)
+    headers, ids = _hierarchy(client, db_session)
     field = f"{modality}_creative_profile"
 
     def assert_effective(value, origin):
@@ -232,20 +235,14 @@ def test_missing_inherits_whole_object_replaces_and_null_clears_each_scope(clien
     assert_effective(None, None)
     persona_profile = _profile(key, modality)
     persona_revision = _save(client, headers, ids, "persona", 0, {field: persona_profile})
-    _save(client, headers, ids, "account", 0, {"positioning": "账号继承"})
     _save(client, headers, ids, "series", 0, {"positioning": "栏目继承"})
     assert_effective(persona_profile, "persona")
     persona_snapshot = _freeze(client, db_session, headers, ids)
 
-    account_profile = _replacement(key, modality)
-    account_revision = _save(client, headers, ids, "account", 1, {field: account_profile})
-    assert_effective(account_profile, "account")
-    assert "stage_instruction" not in account_profile and "provenance" not in account_profile
-    account_snapshot = _freeze(client, db_session, headers, ids)
-
-    series_profile = {**deepcopy(account_profile), "parameters": {}, "stage_instruction": "栏目独立观察"}
+    series_profile = {**_replacement(key, modality), "parameters": {}, "stage_instruction": "栏目独立观察"}
     series_revision = _save(client, headers, ids, "series", 1, {field: series_profile})
     assert_effective(series_profile, "series")
+    assert "provenance" not in series_profile
     series_snapshot = _freeze(client, db_session, headers, ids)
     changed_persona = {**deepcopy(persona_profile), "stage_instruction": "新的角色观察"}
     _save(client, headers, ids, "persona", 1, {field: changed_persona})
@@ -255,22 +252,16 @@ def test_missing_inherits_whole_object_replaces_and_null_clears_each_scope(clien
     assert_effective(None, "series")
     cleared_snapshot = _freeze(client, db_session, headers, ids)
     _save(client, headers, ids, "series", 3, {"positioning": "栏目恢复继承"})
-    assert_effective(account_profile, "account")
-    _save(client, headers, ids, "account", 2, {field: None})
-    assert_effective(None, "account")
-    _save(client, headers, ids, "account", 3, {"positioning": "账号恢复继承"})
     assert_effective(changed_persona, "persona")
     _save(client, headers, ids, "persona", 2, {field: None})
     assert_effective(None, "persona")
     _save(client, headers, ids, "persona", 3, {"positioning": "无创作默认"})
     assert_effective(None, None)
 
-    for kind, revision in zip(KINDS, (persona_revision, account_revision, series_revision)):
+    for kind, revision in zip(KINDS, (persona_revision, series_revision)):
         assert _json(client.get(f"{_path(ids, kind)}/revisions/{revision['id']}", headers=headers)) == revision
-    _assert_frozen(client, db_session, headers, persona_snapshot, account_snapshot, series_snapshot, cleared_snapshot)
-    assert len({snapshot["checksum"] for snapshot in (
-        persona_snapshot, account_snapshot, series_snapshot, cleared_snapshot,
-    )}) == 4
+    _assert_frozen(client, db_session, headers, persona_snapshot, series_snapshot, cleared_snapshot)
+    assert len({snapshot["checksum"] for snapshot in (persona_snapshot, series_snapshot, cleared_snapshot)}) == 3
 
 
 @pytest.mark.parametrize("key", STARTERS)
@@ -278,7 +269,7 @@ def test_missing_inherits_whole_object_replaces_and_null_clears_each_scope(clien
 def test_archived_self_or_ancestor_blocks_writes_but_preserves_creative_history(
     client, db_session, key, kind, archived_kind,
 ):
-    headers, ids = _hierarchy(client)
+    headers, ids = _hierarchy(client, db_session)
     _save(client, headers, ids, "brand", 0, {"compliance": ["共享品牌约束"]})
     for scope in KINDS:
         _save(client, headers, ids, scope, 0, _profiles(key, scope))
@@ -304,7 +295,7 @@ def test_archived_self_or_ancestor_blocks_writes_but_preserves_creative_history(
     response = client.patch(_path(ids, kind), headers=headers, json={"name": "不得重命名"})
     assert response.status_code == 409, response.text
     assert _database_state(db_session) == before
-    child_path = {"persona": "accounts", "account": "series"}.get(kind)
+    child_path = {"persona": "series"}.get(kind)
     if child_path:
         response = client.post(f"{_path(ids, kind)}/{child_path}", headers=headers, json={"name": "不得新建"})
         assert response.status_code == 409, response.text
@@ -332,7 +323,7 @@ def test_archived_self_or_ancestor_blocks_writes_but_preserves_creative_history(
 @pytest.mark.parametrize("modality", MODALITIES)
 @pytest.mark.parametrize("clear", (False, True), ids=("object", "null"))
 def test_brand_rejects_every_creative_field_on_revision_even_when_null(client, db_session, key, modality, clear):
-    headers, ids = _hierarchy(client)
+    headers, ids = _hierarchy(client, db_session)
     original = _save(client, headers, ids, "brand", 0, {"compliance": ["原有品牌约束"]})
     _save(client, headers, ids, "persona", 0, _profiles(key))
     snapshot = _freeze(client, db_session, headers, ids)

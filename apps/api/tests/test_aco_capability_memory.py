@@ -71,7 +71,7 @@ def scope_context(capability_db):
     account = ContentAccount(persona_id=persona.id, name="R2 account")
     db.add(account)
     db.flush()
-    series = ContentSeries(account_id=account.id, name="R2 series")
+    series = ContentSeries(persona_id=persona.id, scope="persona_editorial", name="R2 series")
     project = ContentProject(owner_user_id=user.id, title="R2 project")
     db.add_all([series, project])
     db.flush()

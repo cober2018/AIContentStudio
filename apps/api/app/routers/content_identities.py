@@ -28,16 +28,16 @@ class NameIn(BaseModel):
     name: str = Field(min_length=1, max_length=200)
 
 
+class AccountPatchIn(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    home_url: str | None = Field(default=None, max_length=500)
+    persona_id: int | None = Field(default=None, gt=0)
+
+
 class RevisionIn(BaseModel):
     expected_revision: int = Field(ge=0)
     # Validated per kind in save_revision: brands and personas keep different fields.
     profile: dict
-
-
-class PlatformBindingIn(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-    platform_channel: str = Field(pattern=r"^wechat$")
-    platform_account_id: str = Field(pattern=r"^wx[0-9a-f]{16}$")
 
 
 class ChannelAccountIn(BaseModel):
@@ -93,6 +93,8 @@ def _current_revision_nos(db: Session, kind: str, entity_ids: list[int]) -> dict
 
 
 def _entity_json(db: Session, kind: str, row, *, current_revision_no: int | None = None) -> dict:
+    if kind == "account":
+        return _account_json(row)
     if current_revision_no is None:
         current = identity.current_revision(db, kind, row.id)
         current_revision_no = current.revision_no if current else 0
@@ -101,12 +103,16 @@ def _entity_json(db: Session, kind: str, row, *, current_revision_no: int | None
         data["owner_user_id"] = row.owner_user_id
     else:
         data[{"persona": "brand_id", "account": "persona_id", "series": "account_id"}[kind]] = getattr(row, {"persona": "brand_id", "account": "persona_id", "series": "account_id"}[kind])
-    if kind == "account":
-        data.update(platform_channel=row.platform_channel, platform_account_id=row.platform_account_id,
-                    platform_binding_state="bound_unverified" if row.platform_account_id else "unbound")
     if kind == "series":
         data.update(scope=getattr(row, "scope", "account_legacy"), persona_id=getattr(row, "persona_id", None))
     return data
+
+
+def _account_json(row) -> dict:
+    return {"id": row.id, "name": row.name, "status": row.status, "persona_id": row.persona_id,
+            "platform_channel": row.platform_channel, "platform_account_id": row.platform_account_id,
+            "platform_binding_state": "bound_unverified" if row.platform_account_id else "unbound",
+            "home_url": row.home_url, "creator_links": identity.creator_links(row.platform_channel)}
 
 
 def _revision_json(row) -> dict:
@@ -259,14 +265,7 @@ def archive_persona(persona_id: int, db: Session = Depends(get_db), user: User =
 def persona_accounts(persona_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     identity.owned_entity(db, user, "persona", persona_id)
     rows = db.scalars(select(ContentAccount).where(ContentAccount.persona_id == persona_id).order_by(ContentAccount.id)).all()
-    revision_nos = _current_revision_nos(db, "account", [row.id for row in rows])
-    return [_entity_json(db, "account", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
-
-
-@router.post("/content-personas/{persona_id}/accounts", status_code=201)
-def create_account(payload: NameIn, persona_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    identity.owned_entity(db, user, "persona", persona_id, mutable=True)
-    return _create(db, "account", ContentAccount(persona_id=persona_id, name=payload.name))
+    return [_account_json(row) for row in rows]
 
 
 @router.post("/content-personas/{persona_id}/channel-accounts", status_code=201)
@@ -287,18 +286,10 @@ def get_account(account_id: int, db: Session = Depends(get_db), user: User = Dep
 
 
 @router.patch("/content-accounts/{account_id}")
-def rename_account(payload: NameIn, account_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    return _rename(db, user, "account", account_id, payload.name)
-
-
-@router.put("/content-accounts/{account_id}/platform-binding")
-def bind_account(account_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    try:
-        binding = PlatformBindingIn.model_validate(payload)
-    except ValidationError:
-        raise HTTPException(422, "platform_binding_invalid") from None
-    row = identity.bind_platform_account(db, user, account_id, channel=binding.platform_channel, platform_account_id=binding.platform_account_id)
-    return _entity_json(db, "account", row)
+def update_account(payload: AccountPatchIn, account_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    row = identity.update_account(db, user, account_id, name=payload.name, home_url=payload.home_url, fields=payload.model_fields_set,
+                                 persona_id=payload.persona_id)
+    return _account_json(row)
 
 
 @router.get("/content-accounts/{account_id}/publisher-connection")
@@ -318,20 +309,6 @@ def save_publisher_connection(account_id: int, payload: dict, db: Session = Depe
 @router.delete("/content-accounts/{account_id}", status_code=204)
 def archive_account(account_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     _archive(db, user, "account", account_id)
-
-
-@router.get("/content-accounts/{account_id}/series")
-def account_series(account_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    identity.owned_entity(db, user, "account", account_id)
-    rows = db.scalars(select(ContentSeries).where(ContentSeries.account_id == account_id).order_by(ContentSeries.id)).all()
-    revision_nos = _current_revision_nos(db, "series", [row.id for row in rows])
-    return [_entity_json(db, "series", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
-
-
-@router.post("/content-accounts/{account_id}/series", status_code=201)
-def create_series(payload: NameIn, account_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    identity.owned_entity(db, user, "account", account_id, mutable=True)
-    return _create(db, "series", ContentSeries(account_id=account_id, name=payload.name))
 
 
 @router.get("/content-personas/{persona_id}/series")
@@ -414,7 +391,6 @@ def _register_revisions(kind: str, path: str) -> None:
 for _kind, _path in (
     ("brand", "/content-brands/{entity_id}"),
     ("persona", "/content-personas/{entity_id}"),
-    ("account", "/content-accounts/{entity_id}"),
     ("series", "/content-series/{entity_id}"),
 ):
     _register_revisions(_kind, _path)

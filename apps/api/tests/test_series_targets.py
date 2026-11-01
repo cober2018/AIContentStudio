@@ -3,6 +3,7 @@
 
 
 from app.models import (
+    ContentAccount,
     ContentUnit,
     DeliveryTarget,
     FactPack,
@@ -57,34 +58,20 @@ def test_editorial_series_needs_no_account_and_units_can_use_it(client, db_sessi
     assert second["id"] != series["id"]
 
 
-def test_legacy_series_keeps_account_scoped_rules(client):
-    persona = client.post("/api/v1/content-personas", json={"name": "旧作者"}, headers=HEADERS).json()
-    account = client.post(f"/api/v1/content-personas/{persona['id']}/accounts", json={"name": "旧账号"}, headers=HEADERS).json()
-    legacy = client.post(f"/api/v1/content-accounts/{account['id']}/series", json={"name": "旧栏目"}, headers=HEADERS)
-    assert legacy.status_code == 201, legacy.text
-    assert legacy.json()["scope"] == "account_legacy" and legacy.json()["account_id"] == account["id"]
-    no_account = client.get(
-        f"/api/v1/content-identities/effective?persona_id={persona['id']}&series_id={legacy.json()['id']}", headers=HEADERS)
-    assert no_account.status_code == 422
-    # editorial 投放绑定不适用于 legacy 栏目。
-    blocked = client.post(f"/api/v1/content-series/{legacy.json()['id']}/targets",
-                          json={"account_id": account["id"], "content_form": "article"}, headers=HEADERS)
-    assert blocked.status_code == 422 and "series_scope_unsupported" in blocked.text
-
-
 def test_series_targets_binding_contracts(client, db_session):
+    seed_v1_channel_profiles(db_session)
+    db_session.commit()
     persona = client.post("/api/v1/content-personas", json={"name": "绑定作者"}, headers=HEADERS).json()
     series = _editorial_series(client, persona["id"])
     red_a = _platform_account(client, db_session, persona["id"], "小红书A", "xiaohongshu", "handleA")
-    red_b = _platform_account(client, db_session, persona["id"], "小红书B", "xiaohongshu", "handleB")
+    weibo = _platform_account(client, db_session, persona["id"], "微博", "weibo", "handleB")
 
     first = client.post(f"/api/v1/content-series/{series['id']}/targets",
                         json={"account_id": red_a["id"], "content_form": "image_note"}, headers=HEADERS)
     assert first.status_code == 201, first.text
     assert first.json()["enabled"] is True and first.json()["version"] == 1
-    # 同平台第二个账号是独立绑定行，不会被 platform_channel 折叠。
     second = client.post(f"/api/v1/content-series/{series['id']}/targets",
-                         json={"account_id": red_b["id"], "content_form": "image_note"}, headers=HEADERS)
+                         json={"account_id": weibo["id"], "content_form": "single"}, headers=HEADERS)
     assert second.status_code == 201, second.text
     assert first.json()["id"] != second.json()["id"]
     duplicate = client.post(f"/api/v1/content-series/{series['id']}/targets",
@@ -92,14 +79,18 @@ def test_series_targets_binding_contracts(client, db_session):
     assert duplicate.status_code == 409
 
     other_persona = client.post("/api/v1/content-personas", json={"name": "别人"}, headers=HEADERS).json()
-    foreign = client.post(f"/api/v1/content-personas/{other_persona['id']}/accounts", json={"name": "外号"}, headers=HEADERS).json()
+    foreign = _platform_account(client, db_session, other_persona["id"], "外号", "xiaohongshu", "handleF")
     cross = client.post(f"/api/v1/content-series/{series['id']}/targets",
                         json={"account_id": foreign["id"], "content_form": "image_note"}, headers=HEADERS)
     assert cross.status_code == 422 and "series_target_persona_mismatch" in cross.text
 
-    unbound = client.post(f"/api/v1/content-personas/{persona['id']}/accounts", json={"name": "无平台"}, headers=HEADERS).json()
+    # Accounts can no longer be created without a platform, but rows from before that rule still exist.
+    owner = db_session.query(User).filter_by(email=HEADERS["X-Studio-User"]).one()
+    unbound = ContentAccount(owner_user_id=owner.id, persona_id=persona["id"], name="无平台")
+    db_session.add(unbound)
+    db_session.commit()
     missing = client.post(f"/api/v1/content-series/{series['id']}/targets",
-                          json={"account_id": unbound["id"], "content_form": "image_note"}, headers=HEADERS)
+                          json={"account_id": unbound.id, "content_form": "image_note"}, headers=HEADERS)
     assert missing.status_code == 422 and "series_target_account_unbound" in missing.text
 
     bad_form = client.post(f"/api/v1/content-series/{series['id']}/targets",
@@ -107,7 +98,7 @@ def test_series_targets_binding_contracts(client, db_session):
     assert bad_form.status_code == 422
 
     listing = client.get(f"/api/v1/content-series/{series['id']}/targets", headers=HEADERS)
-    assert {row["account_id"] for row in listing.json()} == {red_a["id"], red_b["id"]}
+    assert {row["account_id"] for row in listing.json()} == {red_a["id"], weibo["id"]}
 
     stale = client.patch(f"/api/v1/content-series/{series['id']}/targets/{first.json()['id']}",
                          json={"enabled": False, "expected_version": 99}, headers=HEADERS)
@@ -189,27 +180,19 @@ def _authorize(client, project, unit, candidate, **extra):
               "authorization_version": "v1", "action": "copy_package", **extra}, headers=HEADERS)
 
 
-def test_v5_delivery_unlocks_cross_platform_and_same_platform_targets(client, db_session):
+def test_v5_delivery_freezes_exact_target_account(client, db_session):
     seed_v1_channel_profiles(db_session)
     db_session.commit()
     persona = client.post("/api/v1/content-personas", json={"name": "解锁作者"}, headers=HEADERS).json()
     account_a = _platform_account(client, db_session, persona["id"], "X主号", "x", "mainx")
-    account_b = _platform_account(client, db_session, persona["id"], "X小号", "x", "altx")
     project, unit, master = _ready_source(client, db_session, persona_id=persona["id"], account_id=account_a["id"])
     candidate = _ready_variant_candidate(client, project, unit, master)
 
-    # 同平台 B 账号：origin 账号 A 不再是目标锁，B 拿到独立授权。
-    target_b = _authorize(client, project, unit, candidate, content_account_id=account_b["id"])
-    assert target_b.status_code == 201, target_b.text
-    # origin 账号 A 本身也仍然可以授权。
     target_a = _authorize(client, project, unit, candidate, content_account_id=account_a["id"])
     assert target_a.status_code == 201, target_a.text
-    assert target_a.json()["id"] != target_b.json()["id"]
-    row_b = db_session.get(DeliveryTarget, target_b.json()["id"])
-    frozen_account = row_b.capability_snapshot_json["target_account"]
-    assert frozen_account["content_account_id"] == account_b["id"]
-    assert frozen_account["platform_channel"] == "x"
-    assert frozen_account["account_revision_id"] is None  # 无 profile 修订时显式为空，不伪造
+    row_a = db_session.get(DeliveryTarget, target_a.json()["id"])
+    assert row_a.capability_snapshot_json["target_account"] == {
+        "content_account_id": account_a["id"], "platform_channel": "x", "platform_account_id": account_a["platform_account_id"]}
 
     # 跨 Persona 的账号 fail-closed，即使同平台。
     other = client.post("/api/v1/content-personas", json={"name": "别人号"}, headers=HEADERS).json()

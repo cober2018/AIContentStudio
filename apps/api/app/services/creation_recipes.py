@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from sqlalchemy import select
 
 from ..models import (
-    AccountWorkflowDefault,
     ContentMasterAssetRef,
     ContentMasterEvidenceRef,
     ContentMasterRevision,
@@ -62,7 +61,6 @@ def _default(db, unit):
         return (SimpleNamespace(workflow_id=workflow.id, revision=workflow.version), "product") if workflow and workflow.scope == "product_default" else (None, None)
     for model, column, entity_id, source in (
         (SeriesWorkflowDefault, SeriesWorkflowDefault.series_id, unit.series_id, "series"),
-        (AccountWorkflowDefault, AccountWorkflowDefault.account_id, unit.account_id, "account"),
         (PersonaWorkflowDefault, PersonaWorkflowDefault.persona_id, unit.persona_id, "persona"),
     ):
         if entity_id:

@@ -6,7 +6,6 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
 from ..models import (
-    AccountWorkflowDefault,
     CapabilityUse,
     ContentUnit,
     PersonaWorkflowDefault,
@@ -24,8 +23,7 @@ from .stage_contracts import IDENTIFIER, canonical, digest
 from .stage_feedback import attempt_context, feedback_events
 from .stage_invocations import StageInvocationError
 
-DEFAULTS = {"persona": (PersonaWorkflowDefault, "persona_id"),
-            "account": (AccountWorkflowDefault, "account_id"), "series": (SeriesWorkflowDefault, "series_id")}
+DEFAULTS = {"persona": (PersonaWorkflowDefault, "persona_id"), "series": (SeriesWorkflowDefault, "series_id")}
 
 
 def _binding(db, unit, destination):

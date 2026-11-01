@@ -19,7 +19,7 @@ class CapabilityInputRoute(APIRoute):
                 "/api/v1/settings/media-renderer-verifications/{verification_id}/revoke",
                 "/api/v1/settings/publisher-verifications",
             }
-            or self.path.endswith(("/asr-suggestions", "/media-render-previews", "/media-render-outputs", "/platform-binding", "/publisher-connection"))
+            or self.path.endswith(("/asr-suggestions", "/media-render-previews", "/media-render-outputs", "/publisher-connection"))
         )
 
         async def safe_handler(request):

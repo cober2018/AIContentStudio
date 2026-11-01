@@ -10,7 +10,6 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from ..models import (
-    AccountWorkflowDefault,
     CapabilityArtifactRevision,
     ContentPersona,
     ContentPersonaRevision,
@@ -189,8 +188,7 @@ def fork(db, user, key: str, *, name: str, expected_profile_checksum: str) -> di
 
 
 def _recipe(db, identity: dict, user, modality: str) -> dict | None:
-    for scope, model, field in (("series", SeriesWorkflowDefault, "series_id"),
-            ("account", AccountWorkflowDefault, "account_id"), ("persona", PersonaWorkflowDefault, "persona_id")):
+    for scope, model, field in (("series", SeriesWorkflowDefault, "series_id"), ("persona", PersonaWorkflowDefault, "persona_id")):
         entity_id = identity.get(field)
         if entity_id is None:
             continue

@@ -15,7 +15,6 @@ from starlette.responses import JSONResponse, Response
 from ..db import get_db
 from ..deps import get_current_user, get_existing_user, require_editor, require_editor_or_reviewer
 from ..models import (
-    AccountWorkflowDefault,
     ContentAsset,
     ContentMasterRevision,
     ContentPersona,
@@ -399,10 +398,9 @@ def _unit_json(unit: ContentUnit) -> dict:
     }
 
 
-def _effective_default(db: Session, *, persona_id: int, account_id: int | None, series_id: int | None, modality: str) -> tuple[str, PersonaWorkflowDefault | AccountWorkflowDefault | SeriesWorkflowDefault | None]:
+def _effective_default(db: Session, *, persona_id: int, account_id: int | None, series_id: int | None, modality: str) -> tuple[str, PersonaWorkflowDefault | SeriesWorkflowDefault | None]:
     for source, model, column, entity_id in (
         ("series", SeriesWorkflowDefault, SeriesWorkflowDefault.series_id, series_id),
-        ("account", AccountWorkflowDefault, AccountWorkflowDefault.account_id, account_id),
         ("persona", PersonaWorkflowDefault, PersonaWorkflowDefault.persona_id, persona_id),
     ):
         if entity_id is not None:
@@ -415,7 +413,6 @@ def _effective_default(db: Session, *, persona_id: int, account_id: int | None, 
 def _default_version_matches(workflow: Workflow, *, persona_id: int, account_id: int | None, series_id: int | None, modality: str) -> bool:
     return workflow.status == "published" and (
         (workflow.scope == "persona_default" and workflow.workflow_key == f"persona.{persona_id}.{modality}")
-        or (account_id is not None and workflow.scope == "account_default" and workflow.workflow_key == f"account.{account_id}.{modality}")
         or (series_id is not None and workflow.scope == "series_default" and workflow.workflow_key == f"series.{series_id}.{modality}")
     )
 
@@ -885,9 +882,7 @@ def _scoped_default_owner(db: Session, user: User, kind: str, entity_id: int, *,
 
 
 def _scoped_default_binding(db: Session, kind: str, entity_id: int, modality: str):
-    model = AccountWorkflowDefault if kind == "account" else SeriesWorkflowDefault
-    owner_column = model.account_id if kind == "account" else model.series_id
-    return db.scalar(select(model).where(owner_column == entity_id, model.modality == modality))
+    return db.scalar(select(SeriesWorkflowDefault).where(SeriesWorkflowDefault.series_id == entity_id, SeriesWorkflowDefault.modality == modality))
 
 
 def _owned_run(db: Session, project_id: int, unit_id: int, run_id: int, user: User) -> WorkflowRun:
@@ -1091,7 +1086,7 @@ def _save_scoped_default(db: Session, user: User, *, kind: str, entity_id: int, 
             raise HTTPException(422, "来源项目和单元必须同时提供")
         mutable_project(db, payload.source_project_id, user)
         source_unit = owned_unit(db, payload.source_project_id, payload.source_unit_id, user)
-        if source_unit.modality != modality or (kind == "account" and source_unit.account_id != entity_id) or (kind == "series" and source_unit.series_id != entity_id):
+        if source_unit.modality != modality or source_unit.series_id != entity_id:
             raise HTTPException(422, "来源单元身份或形态与默认模板不一致")
     binding = _scoped_default_binding(db, kind, entity_id, modality)
     current_revision = binding.revision if binding else 0
@@ -1113,8 +1108,7 @@ def _save_scoped_default(db: Session, user: User, *, kind: str, entity_id: int, 
             raise HTTPException(409, "默认工作流已被更新，请刷新后再保存")
         db.expire(binding)
     else:
-        model = AccountWorkflowDefault if kind == "account" else SeriesWorkflowDefault
-        binding = model(**{f"{kind}_id": entity_id}, modality=modality, workflow_id=workflow.id, revision=1)
+        binding = SeriesWorkflowDefault(series_id=entity_id, modality=modality, workflow_id=workflow.id, revision=1)
         db.add(binding)
     if payload.source_project_id is not None:
         record_project_event(db, project_id=payload.source_project_id, event_type="workflow.identity_default_saved", actor=user.email, entity_type="workflow", entity_id=workflow.id, payload={"unit_id": payload.source_unit_id, "scope": kind, "revision": current_revision + 1, "checksum": workflow.checksum})
@@ -1223,17 +1217,6 @@ def save_persona_default(payload: WorkflowSaveIn, persona_id: int, modality: str
         db.rollback()
         raise HTTPException(409, "角色默认工作流已被更新，请刷新后再保存") from exc
     return _binding_json(db, binding)
-
-
-@router.get("/content-accounts/{account_id}/default-workflows/{modality}")
-def get_account_default(account_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    _scoped_default_owner(db, user, "account", account_id, mutable=False)
-    return _binding_json(db, _scoped_default_binding(db, "account", account_id, modality))
-
-
-@router.post("/content-accounts/{account_id}/default-workflows/{modality}", status_code=201)
-def save_account_default(payload: WorkflowSaveIn, account_id: int, modality: str, db: Session = Depends(get_db), user: User = Depends(require_editor)):
-    return _save_scoped_default(db, user, kind="account", entity_id=account_id, modality=modality, payload=payload)
 
 
 @router.get("/content-series/{series_id}/default-workflows/{modality}")

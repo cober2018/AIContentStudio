@@ -526,23 +526,22 @@ def test_creative_identity_whole_replacement_clear_cas_and_frozen_snapshot(clien
     body = {"expected_revision": 0, "profile": {"text_creative_profile": _profile()}}
     saved = client.post(f"/api/v1/content-personas/{persona}/revisions", headers=headers, json=body)
     assert saved.status_code == 201, saved.text
-    account = client.post(f"/api/v1/content-personas/{persona}/accounts", headers=headers, json={"name": "账号"}).json()["id"]
-    series = client.post(f"/api/v1/content-accounts/{account}/series", headers=headers, json={"name": "栏目"}).json()["id"]
-    path = f"/api/v1/content-identities/effective?persona_id={persona}&account_id={account}&series_id={series}"
+    series = client.post(f"/api/v1/content-personas/{persona}/series", headers=headers, json={"name": "栏目"}).json()["id"]
+    path = f"/api/v1/content-identities/effective?persona_id={persona}&series_id={series}"
     assert client.get(path, headers=headers).json()["creative_profile_origins"]["text_creative_profile"] == "persona"
     replacement = _profile(style_preset_ref="studio.text.engineering-explainer@1", parameters={"length": "short"})
-    assert client.post(f"/api/v1/content-accounts/{account}/revisions", headers=headers,
+    assert client.post(f"/api/v1/content-series/{series}/revisions", headers=headers,
                        json={"expected_revision": 0, "profile": {"text_creative_profile": replacement}}).status_code == 201
     result = client.get(path, headers=headers).json()
-    assert result["creative_profile_origins"]["text_creative_profile"] == "account"
+    assert result["creative_profile_origins"]["text_creative_profile"] == "series"
     assert result["effective_profile"]["text_creative_profile"]["parameters"] == {"length": "short"}
     from app.services.content_identity import create_snapshot
     user = db_session.scalar(select(User).where(User.email == headers["X-Studio-User"]))
-    snapshot = create_snapshot(db_session, user, persona_id=persona, account_id=account, series_id=series)
+    snapshot = create_snapshot(db_session, user, persona_id=persona, series_id=series)
     db_session.commit()
     frozen_hash = snapshot.checksum
     assert client.post(f"/api/v1/content-series/{series}/revisions", headers=headers,
-                       json={"expected_revision": 0, "profile": {"text_creative_profile": None}}).status_code == 201
+                       json={"expected_revision": 1, "profile": {"text_creative_profile": None}}).status_code == 201
     assert client.get(path, headers=headers).json()["effective_profile"]["text_creative_profile"] is None
     historical = client.get(f"/api/v1/identity-snapshots/{snapshot.id}", headers=headers).json()
     assert historical["checksum"] == frozen_hash

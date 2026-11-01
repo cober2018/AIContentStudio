@@ -6,10 +6,12 @@ from sqlalchemy.exc import IntegrityError
 PNG = b"\x89PNG\r\n\x1a\n" + b"m2" * 8
 
 from app.models import (
+    ContentAccount,
     ContentAsset,
     DeliveryAttempt,
     DeliveryTarget,
     Review,
+    User,
 )
 
 
@@ -67,8 +69,16 @@ def test_project_account_identity_is_distinct_from_account_ref(client, db_sessio
 
     alice = {"X-Studio-User": "account-owner@studio.local"}
     persona_id = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=alice).json()["id"]
-    first_account = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "甲号"}, headers=alice).json()["id"]
-    second_account = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "乙号"}, headers=alice).json()["id"]
+    owner = db_session.query(User).filter_by(email=alice["X-Studio-User"]).one()
+    owner.role = "admin"
+    db_session.commit()
+    first_account = client.post(f"/api/v1/content-personas/{persona_id}/channel-accounts", json={
+        "name": "甲号", "platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}, headers=alice).json()["id"]
+    # A persona holds one account per platform; the second wechat-capable target is a pre-rule row without a platform.
+    second = ContentAccount(owner_user_id=owner.id, persona_id=persona_id, name="乙号")
+    db_session.add(second)
+    db_session.commit()
+    second_account = second.id
     project_id = client.post("/api/v1/content-projects", json={"title": "账号授权"}, headers=alice).json()["id"]
     unit_id = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "稿件", "persona_id": persona_id, "modality": "text", "channel_id": "wechat"}, headers=alice).json()["id"]
     manifest = {"schema_version": 3}

@@ -16,7 +16,6 @@ from ..models import (
     ChannelVariantEvidenceRef,
     ChannelVariantRevision,
     ContentAccount,
-    ContentAccountRevision,
     ContentMasterAssetRef,
     ContentMasterEvidenceRef,
     ContentMasterRevision,
@@ -263,14 +262,11 @@ def resolve_target_account(db: Session, unit: ContentUnit, account_id: int | Non
     from .series_targets import guard_enabled_binding
 
     guard_enabled_binding(db, series_id=unit.series_id, account_id=account.id, content_form=form)
-    revision = db.scalar(select(ContentAccountRevision).where(ContentAccountRevision.account_id == account.id)
-                         .order_by(ContentAccountRevision.revision_no.desc()).limit(1))
     binding = db.scalar(select(SeriesAccountTarget).where(
         SeriesAccountTarget.series_id == unit.series_id, SeriesAccountTarget.account_id == account.id,
         SeriesAccountTarget.content_form == form)) if unit.series_id else None
     return {"content_account_id": account.id, "platform_channel": account.platform_channel,
-            "platform_account_id": account.platform_account_id, "account_revision_id": revision.id if revision else None,
-            "account_profile_checksum": revision.checksum if revision else _hash({}), "profile": revision.profile_json if revision else {},
+            "platform_account_id": account.platform_account_id,
             "series_binding": {"id": binding.id, "version": binding.version} if binding else None}
 
 

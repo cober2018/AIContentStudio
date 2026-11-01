@@ -362,8 +362,15 @@ def test_validation_summary_cannot_impersonate_human_review(client, db_session):
 def test_memory_scope_ancestors_exact_siblings_and_frozen_labels(client, db_session):
     brand = client.post(BASE + "/content-brands", json={"name": "原始品牌"}).json()["id"]
     persona = client.post(f"{BASE}/content-brands/{brand}/personas", json={"name": "角色"}).json()["id"]
-    account = client.post(f"{BASE}/content-personas/{persona}/accounts", json={"name": "账号"}).json()["id"]
-    sibling = client.post(f"{BASE}/content-personas/{persona}/accounts", json={"name": "同级账号"}).json()["id"]
+    from app.seed import seed_v1_channel_profiles
+
+    seed_v1_channel_profiles(db_session)
+    db_session.query(User).filter_by(email="admin@studio.local").one().role = "admin"
+    db_session.commit()
+    account = client.post(f"{BASE}/content-personas/{persona}/channel-accounts", json={
+        "name": "账号", "platform_channel": "x", "platform_account_id": "acct"}).json()["id"]
+    sibling = client.post(f"{BASE}/content-personas/{persona}/channel-accounts", json={
+        "name": "同级账号", "platform_channel": "weibo", "platform_account_id": "sibling"}).json()["id"]
     ids = []
     for kind, entity_id in [("owner", None), ("brand", brand), ("account", account), ("account", sibling)]:
         row = accepted(client, db_session)

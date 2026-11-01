@@ -210,7 +210,7 @@ def build_v5_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -
                                       "estimated_subtitles": bool(manifest["render"].get("estimated_srt"))}
     if target_form.get("account") is not None:
         package_manifest["target"]["account"] = {key: target_form["account"][key] for key in
-            ("content_account_id", "platform_channel", "platform_account_id", "account_revision_id", "account_profile_checksum")}
+            ("content_account_id", "platform_channel", "platform_account_id")}
     render = manifest["render"]
     files = []
     if target_form["artifact_kind"] == "text":

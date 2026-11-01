@@ -190,13 +190,6 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
                 from .series_targets import guard_enabled_binding
 
                 guard_enabled_binding(db, series_id=unit.series_id, account_id=account.id, content_form=payload.content_form)
-                if frozen_account is None:
-                    from ..models import ContentAccountRevision
-
-                    target_revision = db.scalar(select(ContentAccountRevision).where(ContentAccountRevision.account_id == account.id)
-                        .order_by(ContentAccountRevision.revision_no.desc()).limit(1))
-                    if target_revision is not None and target_revision.profile_json:
-                        raise HTTPException(409, {"code": "target_specific_adaptation_required"})
         if payload.action in {DeliveryAction.auto_draft.value, DeliveryAction.assisted_draft.value} and not is_variant:
             raise HTTPException(422, "capability_unavailable: 内容账号尚无已验证的渠道/远端发布映射")
     elif content_account_id is not None:
@@ -263,14 +256,9 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
         capability = {**capability, "manual": True, "remote_verified": False}
     if content_account_id is not None:
         # 冻结精确目标账号身份：平台字符串不是账号，同平台 A/B 是不同目标。
-        from ..models import ContentAccountRevision
-
-        account_revision = db.scalar(select(ContentAccountRevision).where(ContentAccountRevision.account_id == account.id).order_by(ContentAccountRevision.revision_no.desc()).limit(1))
         capability = {**capability, "target_account": {
             "content_account_id": account.id, "platform_channel": account.platform_channel,
             "platform_account_id": account.platform_account_id,
-            "account_revision_id": account_revision.id if account_revision else None,
-            "account_profile_checksum": account_revision.checksum if account_revision else None,
         }}
     # 渠道一致性：v1 资产仍要求与批准渠道一致；v2 同样
     if asset.channel != payload.channel:

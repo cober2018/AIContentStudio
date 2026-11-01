@@ -26,7 +26,7 @@ def test_publisher_connection_readonly_includes_full_ancestry(client, db_session
     assert client.put(path, headers=headers, json={"expected_revision": 0, "enabled": True, "credential_version": "v1"}).status_code == 409
 
 
-def _publisher_account(client, db_session, email="publisher@studio.local"):
+def _publisher_account(client, db_session, email="publisher@studio.local", appid="wx0123456789abcdef"):
     from app.models import User
 
     headers = {"X-Studio-User": email}
@@ -34,57 +34,35 @@ def _publisher_account(client, db_session, email="publisher@studio.local"):
     user = db_session.query(User).filter_by(email=email).one()
     user.role = "admin"
     db_session.commit()
-    account = client.post(f"/api/v1/content-personas/{persona['id']}/accounts", json={"name": "公众号"}, headers=headers).json()
+    account = _channel_account(client, headers, persona["id"], "wechat", appid, name="公众号")
     return headers, persona["id"], account["id"]
 
 
-def test_official_account_binding_is_owned_idempotent_and_not_verification(client, db_session):
-    headers, persona_id, account_id = _publisher_account(client, db_session)
-    path = f"/api/v1/content-accounts/{account_id}/platform-binding"
-    payload = {"platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}
-    first = client.put(path, json=payload, headers=headers)
-    assert first.status_code == 200, first.text
-    assert first.json()["platform_account_id"] == payload["platform_account_id"]
-    assert first.json()["persona_id"] == persona_id
-    assert first.json()["platform_binding_state"] == "bound_unverified"
-    assert client.put(path, json=payload, headers=headers).json() == first.json()
-    assert client.get(f"/api/v1/content-personas/{persona_id}/accounts", headers=headers).json()[0]["platform_binding_state"] == "bound_unverified"
-    assert client.put(path, json={**payload, "platform_account_id": "wx1123456789abcdef"}, headers=headers).status_code == 409
-    assert client.get(f"/api/v1/content-accounts/{account_id}", headers=headers).json()["platform_account_id"] == payload["platform_account_id"]
+def _channel_account(client, headers, persona_id, channel, handle, name="账号"):
+    created = client.post(f"/api/v1/content-personas/{persona_id}/channel-accounts", json={
+        "name": name, "platform_channel": channel, "platform_account_id": handle}, headers=headers)
+    assert created.status_code == 201, created.text
+    return created.json()
+
+
+def _admin(db_session, headers):
+    from app.models import User
+
+    db_session.query(User).filter_by(email=headers["X-Studio-User"]).one().role = "admin"
+    db_session.commit()
 
 
 def test_real_account_exclusivity_survives_archive_and_cross_owner(client, db_session):
     first_headers, _, first_id = _publisher_account(client, db_session)
-    other_headers, _, other_id = _publisher_account(client, db_session, "other@studio.local")
-    payload = {"platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}
-    assert client.put(f"/api/v1/content-accounts/{first_id}/platform-binding", json=payload, headers=first_headers).status_code == 200
-    conflict = client.put(f"/api/v1/content-accounts/{other_id}/platform-binding", json=payload, headers=other_headers)
+    other_headers, _, _ = _publisher_account(client, db_session, "other@studio.local", "wx1123456789abcdef")
+    # Independent accounts skip the one-per-platform persona rule, so only platform identity uniqueness applies.
+    path = "/api/v1/content-accounts/channel-accounts"
+    payload = {"name": "抢注", "platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}
+    conflict = client.post(path, json=payload, headers=other_headers)
     assert conflict.status_code == 409 and conflict.json()["detail"] == "platform_identity_conflict"
     assert client.delete(f"/api/v1/content-accounts/{first_id}", headers=first_headers).status_code == 204
-    assert client.put(f"/api/v1/content-accounts/{other_id}/platform-binding", json=payload, headers=other_headers).status_code == 409
-    assert client.get(f"/api/v1/content-accounts/{other_id}", headers=other_headers).json()["platform_account_id"] is None
-    assert client.put(f"/api/v1/content-accounts/{first_id}/platform-binding", json=payload, headers=other_headers).status_code == 404
-
-
-def test_binding_rejects_editor_viewer_archived_parent_and_sensitive_input(client, db_session):
-    from app.models import User
-
-    headers, persona_id, account_id = _publisher_account(client, db_session)
-    user = db_session.query(User).filter_by(email=headers["X-Studio-User"]).one()
-    path = f"/api/v1/content-accounts/{account_id}/platform-binding"
-    payload = {"platform_channel": "wechat", "platform_account_id": "wx0123456789abcdef"}
-    for role in ("editor", "viewer"):
-        user.role = role
-        db_session.commit()
-        assert client.put(path, json=payload, headers=headers).status_code == 403
-    user.role = "admin"
-    db_session.commit()
-    for bad in ({**payload, "secret": "do-not-echo-secret"}, {**payload, "platform_account_id": "do-not-echo-secret"}, {**payload, "platform_channel": "x"}):
-        response = client.put(path, json=bad, headers=headers)
-        assert response.status_code == 422
-        assert "do-not-echo-secret" not in response.text
-    assert client.delete(f"/api/v1/content-personas/{persona_id}", headers=headers).status_code == 204
-    assert client.put(path, json=payload, headers=headers).status_code == 409
+    assert client.post(path, json=payload, headers=other_headers).status_code == 409
+    assert client.get(f"/api/v1/content-accounts/{first_id}", headers=other_headers).status_code == 404
 
 
 def test_platform_binding_database_constraints_and_two_accounts(db_session):
@@ -123,22 +101,13 @@ def test_platform_binding_database_constraints_and_two_accounts(db_session):
     assert db_session.query(ContentAccount).count() == 2
 
 
-def test_platform_binding_malformed_json_never_echoes_credentials(client, db_session):
-    headers, _, account_id = _publisher_account(client, db_session)
-    path = f"/api/v1/content-accounts/{account_id}/platform-binding"
-    for raw in ('["sensitive-secret"]', '"sensitive-secret"', '{"secret":"sensitive-secret"'):
-        response = client.put(path, content=raw, headers={**headers, "Content-Type": "application/json"})
-        assert response.status_code == 422
-        assert "sensitive-secret" not in response.text
-
-
 def test_account_connection_is_safe_cas_and_account_isolated(client, db_session, monkeypatch):
     from app.models import SystemSetting
 
-    headers, persona_id, first_id = _publisher_account(client, db_session)
-    second_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "第二账号"}, headers=headers).json()["id"]
-    for account_id, appid in ((first_id, "wx0123456789abcdef"), (second_id, "wx1123456789abcdef")):
-        assert client.put(f"/api/v1/content-accounts/{account_id}/platform-binding", json={"platform_channel": "wechat", "platform_account_id": appid}, headers=headers).status_code == 200
+    headers, _, first_id = _publisher_account(client, db_session)
+    # A persona holds one wechat account, so the second account lives under another persona of the same owner.
+    second_persona = client.post("/api/v1/content-personas", json={"name": "第二作者"}, headers=headers).json()["id"]
+    second_id = _channel_account(client, headers, second_persona, "wechat", "wx1123456789abcdef", name="第二账号")["id"]
     body = {"expected_revision": 0, "enabled": True, "credential_version": "credential-v1"}
     path = f"/api/v1/content-accounts/{first_id}/publisher-connection"
     first = client.put(path, json=body, headers=headers)
@@ -161,9 +130,16 @@ def test_account_connection_is_safe_cas_and_account_isolated(client, db_session,
 def test_connection_rejects_unbound_foreign_viewer_and_secret_input(client, db_session):
     from app.models import User
 
-    headers, _, account_id = _publisher_account(client, db_session)
-    foreign, _, _ = _publisher_account(client, db_session, "foreign-publisher@studio.local")
-    path = f"/api/v1/content-accounts/{account_id}/publisher-connection"
+    from app.models import ContentAccount
+
+    headers, persona_id, _ = _publisher_account(client, db_session)
+    foreign, _, _ = _publisher_account(client, db_session, "foreign-publisher@studio.local", "wx1123456789abcdef")
+    owner = db_session.query(User).filter_by(email=headers["X-Studio-User"]).one()
+    # New accounts always carry a platform; an unbound one can only be a row from before that rule.
+    unbound = ContentAccount(owner_user_id=owner.id, persona_id=persona_id, name="未绑定")
+    db_session.add(unbound)
+    db_session.commit()
+    path = f"/api/v1/content-accounts/{unbound.id}/publisher-connection"
     payload = {"expected_revision": 0, "enabled": True, "credential_version": "v1"}
     assert client.put(path, json=payload, headers=headers).status_code == 409
     assert client.put(path, json=payload, headers=foreign).status_code == 404
@@ -189,7 +165,7 @@ def _concurrent_platform_binding(url):
     from sqlalchemy.orm import Session
 
     from app.models import ContentAccount, ContentPersona, User
-    from app.services.content_identity import bind_platform_account
+    from app.services.content_identity import register_public_channel_account
 
     engine = create_engine(url)
     with Session(engine) as db:
@@ -198,20 +174,17 @@ def _concurrent_platform_binding(url):
         db.flush()
         personas = [ContentPersona(owner_user_id=user.id, name=f"Persona {i}") for i in range(2)]
         db.add_all(personas)
-        db.flush()
-        accounts = [ContentAccount(persona_id=persona.id, name="独立账号") for persona in personas]
-        db.add_all(accounts)
         db.commit()
         user_id = user.id
-        ids = [account.id for account in accounts]
+        ids = [persona.id for persona in personas]
     barrier = Barrier(2)
 
-    def bind(account_id):
+    def bind(persona_id):
         with Session(engine) as db:
             user = db.get(User, user_id)
             barrier.wait(timeout=10)
             try:
-                bind_platform_account(db, user, account_id, channel="wechat", platform_account_id="wx0123456789abcdef")
+                register_public_channel_account(db, user, persona_id, name="独立账号", channel="wechat", platform_account_id="wx0123456789abcdef")
                 return 200
             except HTTPException as exc:
                 return exc.status_code
@@ -313,10 +286,10 @@ def test_identity_tables_exist_without_backfilling_legacy_rows(db_session):
     tables = set(inspect(db_session.bind).get_table_names())
     assert {
         "content_brand", "content_brand_revision", "content_persona_revision",
-        "content_account", "content_account_revision", "content_series",
-        "content_series_revision", "identity_snapshot",
-        "account_workflow_default", "series_workflow_default",
+        "content_account", "content_series",
+        "content_series_revision", "identity_snapshot", "series_workflow_default",
     } <= tables
+    assert not {"content_account_revision", "account_workflow_default"} & tables
 
 
 def test_legacy_persona_unit_run_identity_columns_are_nullable(db_session):
@@ -330,7 +303,7 @@ def test_legacy_persona_unit_run_identity_columns_are_nullable(db_session):
     assert run["identity_snapshot_id"]["nullable"]
 
 
-def test_identity_hierarchy_revisions_and_effective_profile(client):
+def test_identity_hierarchy_revisions_and_effective_profile(client, db_session):
     alice = {"X-Studio-User": "alice@studio.local"}
     bob = {"X-Studio-User": "bob@studio.local"}
     brand_response = client.post("/api/v1/content-brands", json={"name": "Studio"}, headers=alice)
@@ -348,17 +321,14 @@ def test_identity_hierarchy_revisions_and_effective_profile(client):
     persona_response = client.post(f"/api/v1/content-brands/{brand_id}/personas", json={"name": "创始人"}, headers=alice)
     assert persona_response.status_code == 201, persona_response.text
     persona_id = persona_response.json()["id"]
-    account_response = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "主号"}, headers=alice)
-    assert account_response.status_code == 201, account_response.text
-    account_id = account_response.json()["id"]
-    assert client.post(f"/api/v1/content-accounts/{account_id}/revisions", json={"expected_revision": 0, "profile": {"target_audience": None}}, headers=alice).status_code == 201
-    series_response = client.post(f"/api/v1/content-accounts/{account_id}/series", json={"name": "周刊"}, headers=alice)
+    _admin(db_session, alice)
+    account_id = _channel_account(client, alice, persona_id, "wechat", "wx0123456789abcdef", name="主号")["id"]
+    series_response = client.post(f"/api/v1/content-personas/{persona_id}/series", json={"name": "周刊"}, headers=alice)
     assert series_response.status_code == 201, series_response.text
     series_id = series_response.json()["id"]
     effective = client.get(f"/api/v1/content-identities/effective?persona_id={persona_id}&account_id={account_id}&series_id={series_id}", headers=alice)
     assert effective.status_code == 200, effective.text
-    assert effective.json()["effective_profile"]["target_audience"] is None
-    assert effective.json()["field_origins"]["target_audience"] == "account"
+    assert "target_audience" not in effective.json()["effective_profile"]
     assert "expression_style" not in effective.json()["effective_profile"]
     assert effective.json()["effective_profile"]["brand"] == {"name": "Studio", "introduction": "工作室", "forbidden_words": ["最强"]}
     assert effective.json()["field_origins"]["brand"] == "brand"
@@ -412,13 +382,14 @@ def test_run_copies_exact_snapshot_and_archived_identity_blocks_new_run(client):
     assert client.post(f"{base}/workflow-override", json={"expected_revision": 1, "definition": _definition()}, headers=alice).status_code == 409
 
 
-def test_explicit_rebind_updates_in_place_then_replaces_after_run(client):
+def test_explicit_rebind_updates_in_place_then_replaces_after_run(client, db_session):
     from test_fe_f2_workflows import _definition
 
     alice = {"X-Studio-User": "alice@studio.local"}
     persona_id = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=alice).json()["id"]
-    account_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "主号"}, headers=alice).json()["id"]
-    series_id = client.post(f"/api/v1/content-accounts/{account_id}/series", json={"name": "专栏"}, headers=alice).json()["id"]
+    _admin(db_session, alice)
+    account_id = _channel_account(client, alice, persona_id, "wechat", "wx0123456789abcdef", name="主号")["id"]
+    series_id = client.post(f"/api/v1/content-personas/{persona_id}/series", json={"name": "专栏"}, headers=alice).json()["id"]
     project_id = client.post("/api/v1/content-projects", json={"title": "重绑"}, headers=alice).json()["id"]
     unit = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "稿件", "persona_id": persona_id, "modality": "text"}, headers=alice).json()
     base = f"/api/v1/content-projects/{project_id}/units/{unit['id']}"
@@ -445,27 +416,24 @@ def test_explicit_rebind_updates_in_place_then_replaces_after_run(client):
     assert replacement_event["payload"]["new_identity_snapshot_id"] == replacement.json()["identity_snapshot_id"]
 
 
-def test_hierarchical_defaults_pin_new_units_and_preserve_old_ones(client):
+def test_hierarchical_defaults_pin_new_units_and_preserve_old_ones(client, db_session):
     portable = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.confirm_facts", "config": {}}], "edges": [], "visual_order": ["gate"]}
     alice = {"X-Studio-User": "alice@studio.local"}
     bob = {"X-Studio-User": "bob@studio.local"}
     persona_id = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=alice).json()["id"]
-    account_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "主号"}, headers=alice).json()["id"]
-    series_id = client.post(f"/api/v1/content-accounts/{account_id}/series", json={"name": "周刊"}, headers=alice).json()["id"]
+    _admin(db_session, alice)
+    account_id = _channel_account(client, alice, persona_id, "wechat", "wx0123456789abcdef", name="主号")["id"]
+    series_id = client.post(f"/api/v1/content-personas/{persona_id}/series", json={"name": "周刊"}, headers=alice).json()["id"]
     project_id = client.post("/api/v1/content-projects", json={"title": "工作流"}, headers=alice).json()["id"]
     persona = client.post(f"/api/v1/content-personas/{persona_id}/default-workflows/text", json={"expected_revision": 0, "definition": portable}, headers=alice)
     assert persona.status_code == 201, persona.text
     old = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "早期", "persona_id": persona_id, "modality": "text", "account_id": account_id, "series_id": series_id}, headers=alice).json()
     assert old["pinned_workflow_id"] == persona.json()["workflow_id"]
-    account = client.post(f"/api/v1/content-accounts/{account_id}/default-workflows/text", json={"expected_revision": 0, "definition": portable}, headers=alice)
-    assert account.status_code == 201, account.text
-    assert client.post(f"/api/v1/content-accounts/{account_id}/default-workflows/text", json={"expected_revision": 0, "definition": portable}, headers=alice).status_code == 409
-    middle = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "中期", "persona_id": persona_id, "modality": "text", "account_id": account_id, "series_id": series_id}, headers=alice).json()
-    assert middle["pinned_workflow_id"] == account.json()["workflow_id"]
     series = client.post(f"/api/v1/content-series/{series_id}/default-workflows/text", json={"expected_revision": 0, "definition": portable}, headers=alice)
     assert series.status_code == 201, series.text
     newest = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "近期", "persona_id": persona_id, "modality": "text", "account_id": account_id, "series_id": series_id}, headers=alice).json()
     assert newest["pinned_workflow_id"] == series.json()["workflow_id"]
+    assert client.post(f"/api/v1/content-series/{series_id}/default-workflows/text", json={"expected_revision": 0, "definition": portable}, headers=alice).status_code == 409
     assert client.get(f"/api/v1/content-projects/{project_id}/units/{old['id']}", headers=alice).json()["pinned_workflow_id"] == persona.json()["workflow_id"]
     effective = client.get(f"/api/v1/content-identities/effective-workflow?persona_id={persona_id}&account_id={account_id}&series_id={series_id}&modality=text", headers=alice)
     assert effective.status_code == 200 and effective.json()["source"] == "series"
@@ -518,24 +486,17 @@ def test_snapshot_remains_immutable_after_profile_and_voice_revision(client, db_
     assert refreshed.json()["identity_snapshot_id"] != first["id"]
     second = client.get(f"/api/v1/identity-snapshots/{refreshed.json()['identity_snapshot_id']}", headers=alice).json()
     assert second["checksum"] != first["checksum"] and second["effective_profile"]["brand"]["introduction"] == "新定位"
-    account_voice = BrandVoiceVersion(name="账号语气", version=1, status="published")
-    db_session.add(account_voice); db_session.commit()
-    account_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "主号"}, headers=alice).json()["id"]
-    assert client.post(f"/api/v1/content-accounts/{account_id}/revisions", json={"expected_revision": 0, "profile": {"brand_voice_version_id": account_voice.id}}, headers=alice).status_code == 201
-    account_unit = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "账号稿", "persona_id": persona_id, "account_id": account_id, "modality": "text"}, headers=alice).json()
-    account_snapshot = client.get(f"/api/v1/identity-snapshots/{account_unit['identity_snapshot_id']}", headers=alice).json()
-    assert account_snapshot["brand_voice_version_id"] == account_voice.id
-    assert account_snapshot["field_origins"]["brand_voice_version_id"] == "account"
 
 
-def test_hierarchy_rejects_mismatched_children_and_archived_parent(client):
+def test_hierarchy_rejects_mismatched_children_and_archived_parent(client, db_session):
     alice = {"X-Studio-User": "alice@studio.local"}
     bob = {"X-Studio-User": "bob@studio.local"}
     brand_id = client.post("/api/v1/content-brands", json={"name": "品牌"}, headers=alice).json()["id"]
     first = client.post(f"/api/v1/content-brands/{brand_id}/personas", json={"name": "甲"}, headers=alice).json()["id"]
     second = client.post(f"/api/v1/content-brands/{brand_id}/personas", json={"name": "乙"}, headers=alice).json()["id"]
-    account_id = client.post(f"/api/v1/content-personas/{first}/accounts", json={"name": "账号"}, headers=alice).json()["id"]
-    series_id = client.post(f"/api/v1/content-accounts/{account_id}/series", json={"name": "栏目"}, headers=alice).json()["id"]
+    _admin(db_session, alice)
+    account_id = _channel_account(client, alice, first, "wechat", "wx0123456789abcdef")["id"]
+    series_id = client.post(f"/api/v1/content-personas/{first}/series", json={"name": "栏目"}, headers=alice).json()["id"]
     project_id = client.post("/api/v1/content-projects", json={"title": "项目"}, headers=alice).json()["id"]
     units = f"/api/v1/content-projects/{project_id}/units"
     assert client.post(units, json={"title": "错层级", "persona_id": second, "account_id": account_id, "series_id": series_id, "modality": "text"}, headers=alice).status_code == 404
@@ -544,7 +505,8 @@ def test_hierarchy_rejects_mismatched_children_and_archived_parent(client):
     assert client.delete(f"/api/v1/content-brands/{brand_id}", headers=alice).status_code == 204
     assert client.get(f"/api/v1/content-identities/effective?persona_id={first}", headers=alice).status_code == 200
     assert client.post(units, json={"title": "已归档", "persona_id": first, "modality": "text"}, headers=alice).status_code == 409
-    assert client.post(f"/api/v1/content-personas/{first}/accounts", json={"name": "新号"}, headers=alice).status_code == 409
+    assert client.post(f"/api/v1/content-personas/{first}/channel-accounts", json={
+        "name": "新号", "platform_channel": "xiaohongshu", "platform_account_id": "new_note"}, headers=alice).status_code == 409
 
 
 def test_revision_unique_race_returns_409_without_partial_revision(client, monkeypatch):
@@ -560,22 +522,6 @@ def test_revision_unique_race_returns_409_without_partial_revision(client, monke
     monkeypatch.setattr(content_identity, "current_revision", original)
     revisions = client.get(url, headers=alice).json()
     assert len(revisions) == 1 and revisions[0]["profile"]["introduction"] == "第一版"
-
-
-def test_account_default_portability_gate_and_old_unit_pin(client):
-    alice = {"X-Studio-User": "alice@studio.local"}
-    persona_id = client.post("/api/v1/content-personas", json={"name": "作者"}, headers=alice).json()["id"]
-    account_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "号"}, headers=alice).json()["id"]
-    project_id = client.post("/api/v1/content-projects", json={"title": "默认"}, headers=alice).json()["id"]
-    unit = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "旧单元", "persona_id": persona_id, "account_id": account_id, "modality": "text"}, headers=alice).json()
-    url = f"/api/v1/content-accounts/{account_id}/default-workflows/text"
-    project_bound = {"nodes": [{"id": "gate", "kind": "Tool", "plugin": "builtin.extract_facts", "config": {"project_id": project_id}}], "edges": [], "visual_order": ["gate"]}
-    assert client.post(url, json={"expected_revision": 0, "definition": project_bound}, headers=alice).status_code == 422
-    assert client.get(url, headers=alice).json()["workflow_id"] is None
-    portable = {"nodes": [{"id": "gate", "kind": "Human", "plugin": "builtin.confirm_facts", "config": {}}], "edges": [], "visual_order": ["gate"]}
-    saved = client.post(url, json={"expected_revision": 0, "definition": portable}, headers=alice)
-    assert saved.status_code == 201
-    assert client.get(f"/api/v1/content-projects/{project_id}/units/{unit['id']}", headers=alice).json()["pinned_workflow_id"] is None
 
 
 def test_identity_refresh_keeps_compatible_project_override_and_workflow_rebind_refreshes_snapshot(client):
@@ -656,12 +602,11 @@ def test_channel_account_desk_accepts_public_handles_only(client, db_session):
     assert created.json()["platform_binding_state"] == "bound_unverified"
     assert created.json()["id"] != existing_id
     assert client.post(path, json={"name": "重复", "platform_channel": "xiaohongshu", "platform_account_id": "知数笔记"}, headers=headers).status_code == 409
-    assert db_session.get(ContentAccount, existing_id).platform_account_id is None
-    assert client.put(
-        f"/api/v1/content-accounts/{existing_id}/platform-binding",
-        json={"platform_channel": "x", "platform_account_id": "wx0123456789abcdef"},
-        headers=headers,
-    ).status_code == 422
+    second = client.post(path, json={"name": "小红书二号", "platform_channel": "xiaohongshu", "platform_account_id": "second_note"}, headers=headers)
+    assert second.status_code == 409 and second.json()["detail"] == "persona_platform_taken"
+    assert client.delete(f"/api/v1/content-accounts/{created.json()['id']}", headers=headers).status_code == 204
+    assert client.post(path, json={"name": "小红书二号", "platform_channel": "xiaohongshu", "platform_account_id": "second_note"}, headers=headers).status_code == 201
+    assert db_session.get(ContentAccount, existing_id).platform_channel == "wechat"
 
 
 def test_persona_portraits_are_own_model_usable_images_and_personas_only(client):
@@ -682,7 +627,6 @@ def test_persona_portraits_are_own_model_usable_images_and_personas_only(client)
 
     brand_id = client.post("/api/v1/content-brands", json={"name": "Studio"}, headers=alice).json()["id"]
     persona_id = client.post(f"/api/v1/content-brands/{brand_id}/personas", json={"name": "宝妈"}, headers=alice).json()["id"]
-    account_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "主号"}, headers=alice).json()["id"]
     # A persona revision written before the field existed still loads.
     assert client.post(f"/api/v1/content-personas/{persona_id}/revisions", json={"expected_revision": 0, "profile": {"positioning": "宝妈"}}, headers=alice).status_code == 201
     assert "portrait_material_revision_ids" not in client.get(f"/api/v1/content-identities/effective?persona_id={persona_id}", headers=alice).json()["effective_profile"]
@@ -690,7 +634,6 @@ def test_persona_portraits_are_own_model_usable_images_and_personas_only(client)
     path = f"/api/v1/content-personas/{persona_id}/revisions"
     for ids in ([other], [closed], [own, own + 999], [own] * 2 + [other, closed]):
         assert client.post(path, json={"expected_revision": 1, "profile": {"portrait_material_revision_ids": ids}}, headers=alice).status_code == 422
-    assert client.post(f"/api/v1/content-accounts/{account_id}/revisions", json={"expected_revision": 0, "profile": {"portrait_material_revision_ids": [own]}}, headers=alice).json()["detail"] == "portrait_persona_only"
     saved = client.post(path, json={"expected_revision": 1, "profile": {"positioning": "宝妈", "portrait_material_revision_ids": [own, own]}}, headers=alice)
     assert saved.status_code == 201, saved.text
     assert saved.json()["profile"]["portrait_material_revision_ids"] == [own]

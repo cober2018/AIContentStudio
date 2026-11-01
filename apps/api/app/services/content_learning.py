@@ -93,7 +93,7 @@ def owned(db, model, entity_id, user):
 
 
 def resolve_scope(db, user, scope_type="owner", scope_id=None, *, mutable=False):
-    if not isinstance(scope_type, str) or scope_type not in {"owner", *content_identity.REVISION_MODELS}:
+    if not isinstance(scope_type, str) or scope_type not in {"owner", *content_identity.ENTITY_MODELS}:
         raise HTTPException(422, "身份范围类型无效")
     if scope_id is not None:
         positive_id(scope_id)
@@ -101,15 +101,13 @@ def resolve_scope(db, user, scope_type="owner", scope_id=None, *, mutable=False)
         if scope_id is not None and scope_id != user.id:
             raise HTTPException(404, "范围不存在")
         return {"scope_type": "owner", "scope_id": user.id, "label": user.email, "ancestors": []}
-    if scope_type not in content_identity.REVISION_MODELS or scope_id is None:
+    if scope_type not in content_identity.ENTITY_MODELS or scope_id is None:
         raise HTTPException(422, "身份范围无效")
     entity = content_identity.owned_entity(db, user, scope_type, scope_id, mutable=mutable)
     members = [(scope_type, entity)]
     if scope_type != "brand":
         account = entity if scope_type == "account" else None
-        if scope_type == "series":
-            account = content_identity.owned_entity(db, user, "account", entity.account_id, mutable=mutable)
-        persona_id = entity.id if scope_type == "persona" else account.persona_id
+        persona_id = entity.id if scope_type == "persona" else entity.persona_id
         resolved = content_identity.hierarchy(
             db,
             user,
@@ -121,7 +119,7 @@ def resolve_scope(db, user, scope_type="owner", scope_id=None, *, mutable=False)
         members = list(resolved.members())
     if mutable:
         for kind, row in members:
-            model = content_identity.REVISION_MODELS[kind][0]
+            model = content_identity.ENTITY_MODELS[kind]
             # PostgreSQL locks destination rows; SQLite already holds the candidate write lock.
             db.scalar(
                 select(model).where(model.id == row.id).with_for_update().execution_options(populate_existing=True)
@@ -142,7 +140,7 @@ def scope_origins(db, user, context):
     if isinstance(context, dict):
         if "scope_type" in context:
             result.append(resolve_scope(db, user, context["scope_type"], context.get("scope_id")))
-        for kind in content_identity.REVISION_MODELS:
+        for kind in content_identity.ENTITY_MODELS:
             if context.get(kind + "_id"):
                 result.append(resolve_scope(db, user, kind, context[kind + "_id"]))
         for child in context.values():
@@ -167,14 +165,14 @@ def validate_context(db, user, value):
         resolved = []
         if "scope_type" in value or "scope_id" in value:
             resolved.append(resolve_scope(db, user, value.get("scope_type", "owner"), value.get("scope_id")))
-        for kind in content_identity.REVISION_MODELS:
+        for kind in content_identity.ENTITY_MODELS:
             entity_id = value.get(kind + "_id")
             if entity_id is not None:
                 if not isinstance(entity_id, int) or isinstance(entity_id, bool) or entity_id <= 0:
                     raise HTTPException(422, "身份引用无效")
                 resolved.append(resolve_scope(db, user, kind, entity_id))
         for scope in resolved:
-            for kind in content_identity.REVISION_MODELS:
+            for kind in content_identity.ENTITY_MODELS:
                 if kind + "_id" in value and kind + "_id" in scope and value[kind + "_id"] != scope[kind + "_id"]:
                     raise HTTPException(422, "身份层级不匹配")
         if "evidence_type" in value and "entity_id" in value:
@@ -197,7 +195,7 @@ def validate_context(db, user, value):
                     raise HTTPException(422, "引用必须是 ID 列表")
                 for entity_id in value[key]:
                     reference(db, user, kind, entity_id)
-        for kind in content_identity.REVISION_MODELS:
+        for kind in content_identity.ENTITY_MODELS:
             key = kind + "_ids"
             if key in value:
                 if not isinstance(value[key], list):
@@ -623,7 +621,7 @@ def normalized_claim(statement):
 
 def promotable_claim(frozen):
     identity_keys = {"scope_type", "scope_id", "origins", "owner_user_id"} | {
-        kind + "_id" for kind in content_identity.REVISION_MODELS
+        kind + "_id" for kind in content_identity.ENTITY_MODELS
     }
     required_applicability = {key: value for key, value in frozen["scope"].items() if key not in identity_keys}
     validated_applicability = frozen["summary"].get("applicability", {})

@@ -6,8 +6,6 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from ..models import (
-    AccountWorkflowDefault,
-    ContentAccount,
     ContentAsset,
     ContentPersona,
     ContentProject,
@@ -113,27 +111,14 @@ def authorize_project_workflow(db: Session, workflow: Workflow, user: User) -> b
         .join(PersonaWorkflowDefault, PersonaWorkflowDefault.persona_id == ContentPersona.id)
         .where(PersonaWorkflowDefault.workflow_id == workflow.id)
     ).all())
-    account_owners = set(db.scalars(
-        select(ContentPersona.owner_user_id)
-        .join(ContentAccount, ContentAccount.persona_id == ContentPersona.id)
-        .join(AccountWorkflowDefault, AccountWorkflowDefault.account_id == ContentAccount.id)
-        .where(AccountWorkflowDefault.workflow_id == workflow.id)
-    ).all())
     series_owners = set(db.scalars(
-        select(ContentPersona.owner_user_id)
-        .join(ContentAccount, ContentAccount.persona_id == ContentPersona.id)
-        .join(ContentSeries, ContentSeries.account_id == ContentAccount.id)
-        .join(SeriesWorkflowDefault, SeriesWorkflowDefault.series_id == ContentSeries.id)
-        .where(SeriesWorkflowDefault.workflow_id == workflow.id)
-    ).all()) | set(db.scalars(
-        # persona_editorial 栏目不经过账号，按 persona 归属解析。
         select(ContentPersona.owner_user_id)
         .join(ContentSeries, ContentSeries.persona_id == ContentPersona.id)
         .join(SeriesWorkflowDefault, SeriesWorkflowDefault.series_id == ContentSeries.id)
         .where(SeriesWorkflowDefault.workflow_id == workflow.id, ContentSeries.scope == "persona_editorial")
     ).all())
-    owners = project_owners | run_owners | persona_owners | account_owners | series_owners
-    if workflow.scope in {"project", "persona_default", "account_default", "series_default", "product_default"}:
+    owners = project_owners | run_owners | persona_owners | series_owners
+    if workflow.scope in {"project", "persona_default", "series_default", "product_default"}:
         if workflow.owner_user_id is None:
             raise HTTPException(404, "工作流不存在")
         owners.add(workflow.owner_user_id)
