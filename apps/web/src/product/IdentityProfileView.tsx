@@ -1,5 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
-import { api } from "../api";
+import { useQuery } from "@tanstack/react-query";
+import { api, currentUser } from "../api";
+import { type Portrait, StoredThumb } from "./PersonaPortraits";
 import { Chip } from "../components/ui";
 
 type Json = Record<string, any>;
@@ -16,7 +18,7 @@ const STYLE_KEYS: Record<string, string> = { voice: "语气", hype: "夸张程�
 const VISUAL_KEYS: Record<string, string> = { preset: "视觉预设", diagram_first: "图示优先", density: "信息密度", palette: "配色", typography: "字体" };
 const FACT_RULES: Record<string, string> = { fresh_source_required_for_current_claims: "涉及时效的说法必须有最新来源", label_speculation: "推测内容必须标明是推测" };
 const MODALITIES = [["text_creative_profile", "文字"], ["graphic_creative_profile", "图文"], ["video_creative_profile", "视频"]] as const;
-const KNOWN = new Set(["positioning", "target_audience", "content_domains", "expression_style", "visual_language", "long_term_views", "value_propositions", "content_boundaries", "risk_boundaries", "public_fact_policy", "brand_voice_version_id", ...MODALITIES.map(([key]) => key)]);
+const KNOWN = new Set(["positioning", "target_audience", "content_domains", "expression_style", "visual_language", "long_term_views", "value_propositions", "content_boundaries", "risk_boundaries", "public_fact_policy", "brand_voice_version_id", "brand", "portrait_material_revision_ids", "speech_sample_folder", ...MODALITIES.map(([key]) => key)]);
 
 function word(value: unknown): string {
   if (value === true) return "是";
@@ -134,7 +136,19 @@ export function CreativeProfile({ label, value, names }: { label: string; value:
   </article>;
 }
 
-export function ProfileOverview({ profile, showCreative = true }: { profile: Json; showCreative?: boolean }) {
+// Same order as the persona edit page: voice, portraits, speech samples.
+function PersonaMedia({ personaId, folder }: { personaId: number; folder: unknown }) {
+  const voices = useQuery({ queryKey: ["voice-settings", currentUser()], retry: false, queryFn: () => api.get<{ items: Record<string, { name: string }>; personas: Record<string, string> }>("/settings/voice") });
+  const portraits = useQuery({ queryKey: ["persona-portraits", personaId, currentUser()], retry: false, queryFn: () => api.get<{ items: Portrait[] }>(`/content-personas/${personaId}/portraits`) });
+  const chosen = voices.data?.personas[String(personaId)];
+  return <>
+    <Block title="声音" note="这个角色下的作品都用这个声音">{chosen ? <p className="text-[14px] text-ink-800">{voices.data?.items[chosen]?.name || chosen}</p> : <Empty />}</Block>
+    <Block title="形象照" note="生成画面时人物长相照它来">{portraits.data?.items.length ? <div className="flex flex-wrap gap-3">{portraits.data.items.map(item => <div key={item.material_revision_id} className="space-y-1"><StoredThumb item={item} />{!item.usable && <p className="text-[12px] text-amber-700">这张不能再用</p>}</div>)}</div> : <Empty />}</Block>
+    <Block title="逐字稿样本" note="Obsidian 知识库里的文件夹，写视频逐字稿时学说话方式">{typeof folder === "string" && folder ? <p className="break-all text-[14px] text-ink-800">{folder}</p> : <Empty />}</Block>
+  </>;
+}
+
+export function ProfileOverview({ profile, showCreative = true, personaId }: { profile: Json; showCreative?: boolean; personaId?: number }) {
   const names = useNames();
   const style: Json = profile.expression_style && typeof profile.expression_style === "object" ? profile.expression_style : {};
   const visual: Json = profile.visual_language && typeof profile.visual_language === "object" ? profile.visual_language : {};
@@ -144,6 +158,7 @@ export function ProfileOverview({ profile, showCreative = true }: { profile: Jso
   const styleRows = Object.entries(style).filter(([key]) => key !== "reference_style").map(([key, value]) => [STYLE_KEYS[key] || key, typeof value === "object" ? JSON.stringify(value) : word(value)] as [string, ReactNode]);
   const visualRows = Object.entries(visual).map(([key, value]) => [VISUAL_KEYS[key] || key, typeof value === "object" ? JSON.stringify(value) : word(value)] as [string, ReactNode]);
   return <div>
+    {personaId != null && <PersonaMedia personaId={personaId} folder={profile.speech_sample_folder} />}
     <Block title="身份" note="这个角色是谁、对谁说话">
       {profile.positioning ? <p className="font-serif text-[21px] leading-[1.55] text-ink-900">{String(profile.positioning)}</p> : <Empty text="还没有写定位" />}
       <div className="mt-6 grid gap-6 sm:grid-cols-2">

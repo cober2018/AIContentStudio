@@ -1,0 +1,3 @@
+- [x] 1 `IdentityProfileView.tsx`：已知字段加入 brand、portrait_material_revision_ids、speech_sample_folder，不进「其他资料」
+- [x] 2 角色概览顶部加 声音 / 形象照 / 逐字稿样本 三块（只读，复用现有组件和接口）
+- [x] 3 tsc；`openspec validate persona-overview-matches-edit`

@@ -470,7 +470,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
         {tab === "summary" && <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <Section>
             {current.kind !== "persona" && effective && persona && <div className="mb-7"><Notice>{(() => { const own = Object.values(effective.field_origins || {}).filter(origin => origin === current.kind).length; return own ? `这里是实际生效的资料：本${KIND_NAME[current.kind]}单独设置了 ${own} 项，其余继承自角色「${persona.name}」。` : `这个${KIND_NAME[current.kind]}还没有单独设置，以下资料全部继承自角色「${persona.name}」。需要不同的定位或语气时，在“编辑资料”里单独设置。`; })()}</Notice></div>}
-            {current.kind === "brand" ? <BrandOverview brandId={current.id} revision={revisions[0]} personas={related.length ? <div className="grid gap-2 sm:grid-cols-2">{related.map(row => entityButton(row))}</div> : <p className="text-[14px] text-ink-400">还没有角色</p>} /> : <ProfileOverview profile={displayedProfile} />}
+            {current.kind === "brand" ? <BrandOverview brandId={current.id} revision={revisions[0]} personas={related.length ? <div className="grid gap-2 sm:grid-cols-2">{related.map(row => entityButton(row))}</div> : <p className="text-[14px] text-ink-400">还没有角色</p>} /> : <ProfileOverview profile={displayedProfile} personaId={current.kind === "persona" ? current.id : undefined} />}
           </Section>
           <aside className="space-y-6 lg:sticky lg:top-8">
             <Section eyebrow="归属与关联" title={parentLabel(current)}>
