@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..models import ContentMasterRevision, IdentitySnapshot
 from .content_harness.channel_registry import ChannelRegistryError, resolve_content_form
+from .content_identity import brand_terms
 from .text_master_checks import _semantic_review
 from .video_documents import VideoDocumentError, canonical_payload, profile_reasons, validate_references
 
@@ -58,6 +59,7 @@ def _identity(db: Session, master: ContentMasterRevision, document: dict, requir
     text_parts.extend(overlay["text"] for overlay in document["overlays"])
     body = "\n".join(text_parts)
     issues = [{"severity": "blocker", "span": term[:120], "reason": "explicit_identity_forbidden_phrase", "source": "deterministic"} for term in forbidden if term and term in body]
+    issues += [{"severity": "blocker", "span": term[:120], "reason": "brand_forbidden_phrase", "source": "deterministic"} for term in brand_terms(profile) if term in body]
     if body.strip():
         semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"])
     else:

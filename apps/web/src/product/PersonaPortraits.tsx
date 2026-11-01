@@ -3,19 +3,19 @@ import { api, ApiError, currentUser } from "../api";
 import { ErrorBanner } from "../components/ui";
 
 export const MAX_PORTRAITS = 3;
-type Portrait = { material_revision_id: number; material_id: number | null; usable: boolean };
+export type Portrait = { material_revision_id: number; material_id: number | null; usable: boolean };
 type Uploaded = { id: number; revisions: { id: number }[] };
 
-function errorText(cause: unknown) {
+export function errorText(cause: unknown) {
   const detail = cause instanceof ApiError ? cause.detail as { message?: string } | string | undefined : undefined;
   return typeof detail === "object" && detail?.message ? detail.message : typeof detail === "string" ? detail : cause instanceof Error ? cause.message : "上传失败";
 }
 
 // A portrait is an ordinary image in the common library; the persona keeps only its revision id.
-export async function uploadPortrait(file: File, personaName: string): Promise<number> {
+export async function uploadPortrait(file: File, personaName: string, title = `${personaName} 形象照`, tag = "形象照"): Promise<number> {
   const body = new FormData();
   body.append("file", file);
-  const parameters = new URLSearchParams({ kind: "image", title: `${personaName} 形象照`, tags: "形象照", rights_status: "cleared", public_use_allowed: "false", model_use_allowed: "true" });
+  const parameters = new URLSearchParams({ kind: "image", title, tags: tag, rights_status: "cleared", public_use_allowed: "false", model_use_allowed: "true" });
   const material = await api.upload<Uploaded>(`/materials/upload?${parameters}`, body);
   await api.post(`/materials/${material.id}/to-common`);
   return material.revisions[material.revisions.length - 1].id;
@@ -41,7 +41,7 @@ function LocalThumb({ file }: { file: File }) {
   return <Thumb src={url} label={file.name} />;
 }
 
-function StoredThumb({ item }: { item: Portrait }) {
+export function StoredThumb({ item }: { item: Portrait }) {
   const url = useObjectUrl(item.material_id ? async () => {
     const response = await fetch(`/api/v1/materials/${item.material_id}/revisions/${item.material_revision_id}/raw`, { headers: { "X-Studio-User": currentUser() } });
     return response.ok ? response.blob() : null;
@@ -51,9 +51,9 @@ function StoredThumb({ item }: { item: Portrait }) {
 
 const HINT = "选填，1–3 张真人照片。生成画面时人物长相照它来；没有形象照，生成画面里不出现人物，只拍商品和场景。";
 
-function FileButton({ disabled, room, onPick }: { disabled: boolean; room: number; onPick: (files: File[]) => void }) {
+export function FileButton({ disabled, room, onPick, label = "＋ 照片" }: { disabled: boolean; room: number; onPick: (files: File[]) => void; label?: string }) {
   return <label className={`inline-flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border border-dashed border-ink-300 text-[13px] text-ink-500 ${disabled ? "pointer-events-none opacity-50" : "hover:border-accent-500"}`}>
-    ＋ 照片<input type="file" accept="image/*" multiple className="hidden" disabled={disabled} onChange={event => { onPick(Array.from(event.target.files || []).slice(0, room)); event.target.value = ""; }} />
+    {label}<input type="file" accept="image/*" multiple className="hidden" disabled={disabled} onChange={event => { onPick(Array.from(event.target.files || []).slice(0, room)); event.target.value = ""; }} />
   </label>;
 }
 

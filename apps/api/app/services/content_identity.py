@@ -6,10 +6,10 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
@@ -94,6 +94,30 @@ class IdentityProfile(BaseModel):
             if profile is not None and profile.schema_ != f"persona.creative.{modality}.v1":
                 raise ValueError("creative_profile_modality_mismatch")
         return self
+
+
+class BrandProfile(BaseModel):
+    """A brand speaks for every persona under it; it is not a persona, so it has none of the persona fields."""
+    model_config = ConfigDict(extra="forbid")
+
+    introduction: str | None = Field(default=None, max_length=1000)
+    proposition: str | None = Field(default=None, max_length=500)
+    offerings: list[Annotated[str, Field(max_length=200)]] | None = Field(default=None, max_length=30)
+    tone_rules: list[Annotated[str, Field(max_length=300)]] | None = Field(default=None, max_length=30)
+    preferred_words: list[Annotated[str, Field(max_length=50)]] | None = Field(default=None, max_length=100)
+    forbidden_words: list[Annotated[str, Field(max_length=50)]] | None = Field(default=None, max_length=200)
+    logo_material_revision_ids: list[int] | None = Field(default=None, max_length=3)
+    # People write a colour with its name and usage, not just the hex code.
+    colors: list[Annotated[str, Field(max_length=200)]] | None = Field(default=None, max_length=20)
+    fonts: list[Annotated[str, Field(max_length=100)]] | None = Field(default=None, max_length=10)
+    compliance: list[Annotated[str, Field(max_length=300)]] | None = Field(default=None, max_length=30)
+    red_lines: list[Annotated[str, Field(max_length=100)]] | None = Field(default=None, max_length=100)
+
+
+def brand_terms(profile: dict) -> list[str]:
+    """Brand words and red lines a draft must not contain, checked literally like the persona's forbidden phrases."""
+    brand = profile.get("brand") if isinstance(profile.get("brand"), dict) else {}
+    return [term for key in ("forbidden_words", "red_lines") for term in brand.get(key) or [] if isinstance(term, str) and term]
 
 
 REVISION_MODELS = {
@@ -342,12 +366,17 @@ def revisions(db: Session, kind: str, entity_id: int) -> list:
     return db.scalars(select(revision_model).where(getattr(revision_model, foreign_key) == entity_id).order_by(revision_model.revision_no.desc()).limit(100)).all()
 
 
-def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expected_revision: int, profile: IdentityProfile):
+def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expected_revision: int, profile: dict):
     owned_entity(db, user, kind, entity_id, mutable=True)
-    data = profile.model_dump(exclude_unset=True, by_alias=True)
-    creative_fields = {"text_creative_profile", "graphic_creative_profile", "video_creative_profile"}
-    if kind == "brand" and creative_fields.intersection(data):
-        raise HTTPException(422, "brand_creative_profile_forbidden")
+    try:
+        parsed = (BrandProfile if kind == "brand" else IdentityProfile).model_validate(profile)
+    except ValidationError as exc:
+        raise HTTPException(422, {"code": "identity_profile_invalid", "fields": [".".join(map(str, error["loc"])) for error in exc.errors()]}) from None
+    data = parsed.model_dump(exclude_unset=True, by_alias=True)
+    if data.get("logo_material_revision_ids") is not None:
+        if any(not usable_portrait(db, item, user.email) for item in data["logo_material_revision_ids"]):
+            raise HTTPException(422, {"code": "logo_invalid", "message": "Logo 必须是你自己上传、允许模型使用的图片"})
+        data["logo_material_revision_ids"] = list(dict.fromkeys(data["logo_material_revision_ids"]))
     voice_id = data.get("brand_voice_version_id")
     if voice_id is not None:
         voice = db.get(BrandVoiceVersion, voice_id)
@@ -423,6 +452,12 @@ def effective(db: Session, user: User, *, persona_id: int, account_id: int | Non
     for kind, entity in selected.members():
         revision = current_revision(db, kind, entity.id)
         revision_ids[kind] = revision.id if revision else None
+        if kind == "brand":
+            # The brand travels as its own block instead of filling in persona fields.
+            if revision and revision.profile_json:
+                profile["brand"] = {"name": entity.name, **revision.profile_json}
+                origins["brand"] = "brand"
+            continue
         if revision:
             for key, value in (revision.profile_json or {}).items():
                 if key in creative_keys:

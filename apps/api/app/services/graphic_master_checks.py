@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..models import ContentMasterRevision, FactPackItem, IdentitySnapshot, ProjectFactBoundaryRevision
 from .content_harness.channel_registry import ChannelRegistryError, ContentFormSpec, resolve_content_form
+from .content_identity import brand_terms
 from .graphic_documents import GraphicDocumentError, canonical_payload, validate_references
 from .text_master_checks import _semantic_review
 
@@ -139,6 +140,7 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
     if not isinstance(forbidden, list) or any(not isinstance(term, str) for term in forbidden):
         return "incomplete", {"reasons": ["identity_rule_invalid"], "coverage": {"semantic": "unavailable"}}
     issues = [{"severity": "blocker", "span": term[:120], "reason": "explicit_identity_forbidden_phrase", "source": "deterministic"} for term in forbidden if term and term in body]
+    issues += [{"severity": "blocker", "span": term[:120], "reason": "brand_forbidden_phrase", "source": "deterministic"} for term in brand_terms(profile) if term in body]
     if not body.strip() or not profile:
         semantic, coverage = [], {"semantic": "unavailable", "reason": "visible_text_missing" if not body.strip() else "identity_scope_missing"}
     else:

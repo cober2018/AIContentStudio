@@ -279,7 +279,7 @@ def test_archived_self_or_ancestor_blocks_writes_but_preserves_creative_history(
     client, db_session, key, kind, archived_kind,
 ):
     headers, ids = _hierarchy(client)
-    _save(client, headers, ids, "brand", 0, {"content_boundaries": ["共享品牌约束"]})
+    _save(client, headers, ids, "brand", 0, {"compliance": ["共享品牌约束"]})
     for scope in KINDS:
         _save(client, headers, ids, scope, 0, _profiles(key, scope))
     current = _save(client, headers, ids, kind, 1, _profiles(key, "最新编辑"))
@@ -333,17 +333,17 @@ def test_archived_self_or_ancestor_blocks_writes_but_preserves_creative_history(
 @pytest.mark.parametrize("clear", (False, True), ids=("object", "null"))
 def test_brand_rejects_every_creative_field_on_revision_even_when_null(client, db_session, key, modality, clear):
     headers, ids = _hierarchy(client)
-    original = _save(client, headers, ids, "brand", 0, {"content_boundaries": ["原有品牌约束"]})
+    original = _save(client, headers, ids, "brand", 0, {"compliance": ["原有品牌约束"]})
     _save(client, headers, ids, "persona", 0, _profiles(key))
     snapshot = _freeze(client, db_session, headers, ids)
     before = _database_state(db_session)
     field = f"{modality}_creative_profile"
     value = None if clear else deepcopy(catalog.BLUEPRINTS[key][field])
     response = client.post(f"{_path(ids, 'brand')}/revisions", headers=headers, json={
-        "expected_revision": 1, "profile": {"content_boundaries": ["不得部分保存"], field: value},
+        "expected_revision": 1, "profile": {"compliance": ["不得部分保存"], field: value},
     })
     assert response.status_code == 422, response.text
-    assert response.json()["detail"] == "brand_creative_profile_forbidden"
+    assert response.json()["detail"] == {"code": "identity_profile_invalid", "fields": [field]}
     assert _database_state(db_session) == before
     assert _json(client.get(_path(ids, "brand"), headers=headers))["current_revision"] == 1
     assert _json(client.get(f"{_path(ids, 'brand')}/revisions", headers=headers)) == [original]

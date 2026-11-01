@@ -338,10 +338,11 @@ def test_identity_hierarchy_revisions_and_effective_profile(client):
     brand_id = brand_response.json()["id"]
     brand_revision = client.post(
         f"/api/v1/content-brands/{brand_id}/revisions",
-        json={"expected_revision": 0, "profile": {"target_audience": ["开发者"], "expression_style": {"tone": "calm"}}},
+        json={"expected_revision": 0, "profile": {"introduction": "工作室", "forbidden_words": ["最强"]}},
         headers=alice,
     )
     assert brand_revision.status_code == 201, brand_revision.text
+    assert client.post(f"/api/v1/content-brands/{brand_id}/revisions", json={"expected_revision": 1, "profile": {"target_audience": ["开发者"]}}, headers=alice).status_code == 422
     assert client.post(f"/api/v1/content-brands/{brand_id}/revisions", json={"expected_revision": 0, "profile": {}}, headers=alice).status_code == 409
     assert client.post(f"/api/v1/content-brands/{brand_id}/revisions", json={"expected_revision": 1, "profile": {"unknown_field": "x"}}, headers=alice).status_code == 422
     persona_response = client.post(f"/api/v1/content-brands/{brand_id}/personas", json={"name": "创始人"}, headers=alice)
@@ -358,8 +359,9 @@ def test_identity_hierarchy_revisions_and_effective_profile(client):
     assert effective.status_code == 200, effective.text
     assert effective.json()["effective_profile"]["target_audience"] is None
     assert effective.json()["field_origins"]["target_audience"] == "account"
-    assert effective.json()["effective_profile"]["expression_style"] == {"tone": "calm"}
-    assert effective.json()["field_origins"]["expression_style"] == "brand"
+    assert "expression_style" not in effective.json()["effective_profile"]
+    assert effective.json()["effective_profile"]["brand"] == {"name": "Studio", "introduction": "工作室", "forbidden_words": ["最强"]}
+    assert effective.json()["field_origins"]["brand"] == "brand"
     assert client.post(f"/api/v1/content-series/{series_id}/revisions", json={"expected_revision": 0, "profile": {"expression_style": {"format": "weekly"}, "target_audience": ["读者"]}}, headers=alice).status_code == 201
     replaced = client.get(f"/api/v1/content-identities/effective?persona_id={persona_id}&account_id={account_id}&series_id={series_id}", headers=alice).json()
     assert replaced["effective_profile"]["expression_style"] == {"format": "weekly"}
@@ -499,21 +501,23 @@ def test_snapshot_remains_immutable_after_profile_and_voice_revision(client, db_
     db_session.add_all([voice, draft_voice]); db_session.commit()
     brand_id = client.post("/api/v1/content-brands", json={"name": "Studio"}, headers=alice).json()["id"]
     brand_revisions = f"/api/v1/content-brands/{brand_id}/revisions"
-    assert client.post(brand_revisions, json={"expected_revision": 0, "profile": {"positioning": "可靠写作", "brand_voice_version_id": voice.id}}, headers=alice).status_code == 201
-    assert client.post(brand_revisions, json={"expected_revision": 1, "profile": {"brand_voice_version_id": draft_voice.id}}, headers=alice).status_code == 422
+    assert client.post(brand_revisions, json={"expected_revision": 0, "profile": {"introduction": "可靠写作"}}, headers=alice).status_code == 201
     persona_id = client.post(f"/api/v1/content-brands/{brand_id}/personas", json={"name": "主编"}, headers=alice).json()["id"]
+    persona_revisions = f"/api/v1/content-personas/{persona_id}/revisions"
+    assert client.post(persona_revisions, json={"expected_revision": 0, "profile": {"brand_voice_version_id": voice.id}}, headers=alice).status_code == 201
+    assert client.post(persona_revisions, json={"expected_revision": 1, "profile": {"brand_voice_version_id": draft_voice.id}}, headers=alice).status_code == 422
     project_id = client.post("/api/v1/content-projects", json={"title": "快照"}, headers=alice).json()["id"]
     unit = client.post(f"/api/v1/content-projects/{project_id}/units", json={"title": "第一版", "persona_id": persona_id, "modality": "text"}, headers=alice).json()
     first = client.get(f"/api/v1/identity-snapshots/{unit['identity_snapshot_id']}", headers=alice).json()
-    assert first["brand_voice_version_id"] == voice.id and first["effective_profile"]["positioning"] == "可靠写作"
-    assert client.post(brand_revisions, json={"expected_revision": 1, "profile": {"positioning": "新定位", "brand_voice_version_id": voice.id}}, headers=alice).status_code == 201
+    assert first["brand_voice_version_id"] == voice.id and first["effective_profile"]["brand"]["introduction"] == "可靠写作"
+    assert client.post(brand_revisions, json={"expected_revision": 1, "profile": {"introduction": "新定位"}}, headers=alice).status_code == 201
     assert client.get(f"/api/v1/identity-snapshots/{unit['identity_snapshot_id']}", headers=alice).json() == first
-    assert client.get(f"/api/v1/content-identities/effective?persona_id={persona_id}", headers=alice).json()["effective_profile"]["positioning"] == "新定位"
+    assert client.get(f"/api/v1/content-identities/effective?persona_id={persona_id}", headers=alice).json()["effective_profile"]["brand"]["introduction"] == "新定位"
     refreshed = client.patch(f"/api/v1/content-projects/{project_id}/units/{unit['id']}", json={"rebind_identity": True}, headers=alice)
     assert refreshed.status_code == 200
     assert refreshed.json()["identity_snapshot_id"] != first["id"]
     second = client.get(f"/api/v1/identity-snapshots/{refreshed.json()['identity_snapshot_id']}", headers=alice).json()
-    assert second["checksum"] != first["checksum"] and second["effective_profile"]["positioning"] == "新定位"
+    assert second["checksum"] != first["checksum"] and second["effective_profile"]["brand"]["introduction"] == "新定位"
     account_voice = BrandVoiceVersion(name="账号语气", version=1, status="published")
     db_session.add(account_voice); db_session.commit()
     account_id = client.post(f"/api/v1/content-personas/{persona_id}/accounts", json={"name": "主号"}, headers=alice).json()["id"]
@@ -549,13 +553,13 @@ def test_revision_unique_race_returns_409_without_partial_revision(client, monke
     alice = {"X-Studio-User": "alice@studio.local"}
     brand_id = client.post("/api/v1/content-brands", json={"name": "竞态"}, headers=alice).json()["id"]
     url = f"/api/v1/content-brands/{brand_id}/revisions"
-    assert client.post(url, json={"expected_revision": 0, "profile": {"positioning": "第一版"}}, headers=alice).status_code == 201
+    assert client.post(url, json={"expected_revision": 0, "profile": {"introduction": "第一版"}}, headers=alice).status_code == 201
     original = content_identity.current_revision
     monkeypatch.setattr(content_identity, "current_revision", lambda *_args: None)
-    assert client.post(url, json={"expected_revision": 0, "profile": {"positioning": "冲突版"}}, headers=alice).status_code == 409
+    assert client.post(url, json={"expected_revision": 0, "profile": {"introduction": "冲突版"}}, headers=alice).status_code == 409
     monkeypatch.setattr(content_identity, "current_revision", original)
     revisions = client.get(url, headers=alice).json()
-    assert len(revisions) == 1 and revisions[0]["profile"]["positioning"] == "第一版"
+    assert len(revisions) == 1 and revisions[0]["profile"]["introduction"] == "第一版"
 
 
 def test_account_default_portability_gate_and_old_unit_pin(client):

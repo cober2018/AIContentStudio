@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, Chip, EmptyState, ErrorBanner, Field, Notice, Page, PageHeader, Section, Spinner, Tabs, inputClass, FloatingAlert } from "../components/ui";
 import { ProfileOverview } from "./IdentityProfileView";
+import { BrandOverview, BrandProfileEditor } from "./BrandProfile";
 import { PersonaDiscoveryStatus } from "./DiscoveryPanel";
 import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
@@ -468,7 +469,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
         {tab === "summary" && <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <Section>
             {current.kind !== "persona" && effective && persona && <div className="mb-7"><Notice>{(() => { const own = Object.values(effective.field_origins || {}).filter(origin => origin === current.kind).length; return own ? `这里是实际生效的资料：本${KIND_NAME[current.kind]}单独设置了 ${own} 项，其余继承自角色「${persona.name}」。` : `这个${KIND_NAME[current.kind]}还没有单独设置，以下资料全部继承自角色「${persona.name}」。需要不同的定位或语气时，在“编辑资料”里单独设置。`; })()}</Notice></div>}
-            <ProfileOverview profile={displayedProfile} />
+            {current.kind === "brand" ? <BrandOverview brandId={current.id} revision={revisions[0]} personas={related.length ? <div className="grid gap-2 sm:grid-cols-2">{related.map(row => entityButton(row))}</div> : <p className="text-[14px] text-ink-400">还没有角色</p>} /> : <ProfileOverview profile={displayedProfile} />}
           </Section>
           <aside className="space-y-6 lg:sticky lg:top-8">
             <Section eyebrow="归属与关联" title={parentLabel(current)}>
@@ -478,7 +479,8 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
             {current.kind === "persona" && <PersonaDiscoveryStatus personaId={current.id} revision={current.current_revision} />}
           </aside>
         </div>}
-        {tab === "edit" && <div className="space-y-8">{revisionConflict && <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-[14px] text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}。当前输入已保留，需先核对历史再显式加载，不能继续覆盖。</p><Button variant="secondary" onClick={() => { if (!window.confirm("加载最新修订将覆盖当前表单，确认继续？")) return; const next = draftFrom(revisions[0]?.profile || {}); setDraft(next); baselineDraft.current = JSON.stringify(next); setRevisionConflict(false); setError(""); }}>加载最新修订（覆盖当前表单）</Button></div>}
+        {tab === "edit" && current.kind === "brand" && <BrandProfileEditor key={identityKey} brandId={current.id} brandName={current.name} revision={revisions[0]} readOnly={creativeReadOnly} onSaved={sideRevisionSaved} />}
+        {tab === "edit" && current.kind !== "brand" && <div className="space-y-8">{revisionConflict && <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-[14px] text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}。当前输入已保留，需先核对历史再显式加载，不能继续覆盖。</p><Button variant="secondary" onClick={() => { if (!window.confirm("加载最新修订将覆盖当前表单，确认继续？")) return; const next = draftFrom(revisions[0]?.profile || {}); setDraft(next); baselineDraft.current = JSON.stringify(next); setRevisionConflict(false); setError(""); }}>加载最新修订（覆盖当前表单）</Button></div>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">声音</h3><div className="max-w-md"><PersonaVoicePreset personaId={current.id} disabled={creativeReadOnly} /></div></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">形象照</h3><PersonaPortraitEditor key={identityKey} personaId={current.id} personaName={current.name} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">逐字稿样本</h3><SpeechSampleFolderEditor key={identityKey} personaId={current.id} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}

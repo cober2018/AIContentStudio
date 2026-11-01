@@ -502,7 +502,7 @@ def test_learning_and_promotion_never_write_stable_domains(client, db_session):
     brand = client.post(BASE + "/content-brands", json={"name": "稳定品牌"}).json()["id"]
     saved = client.post(
         f"{BASE}/content-brands/{brand}/revisions",
-        json={"expected_revision": 0, "profile": {"positioning": "人工设定"}},
+        json={"expected_revision": 0, "profile": {"introduction": "人工设定"}},
     )
     assert saved.status_code == 201, saved.text
     stable_tables = {
@@ -537,7 +537,7 @@ def test_learning_and_promotion_never_write_stable_domains(client, db_session):
         )
         assert result.status_code == 201, result.text
         assert writes == []
-        assert db_session.get(ContentBrandRevision, saved.json()["id"]).profile_json == {"positioning": "人工设定"}
+        assert db_session.get(ContentBrandRevision, saved.json()["id"]).profile_json == {"introduction": "人工设定"}
     finally:
         event.remove(db_session.bind, "before_cursor_execute", capture)
 

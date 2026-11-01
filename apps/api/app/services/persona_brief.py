@@ -10,6 +10,9 @@ from ..models import CapabilityArtifact, CapabilityArtifactRevision, ContentBran
 PROFILE_FIELDS = {"positioning": "定位", "target_audience": "目标受众", "content_domains": "内容领域", "expression_style": "表达风格",
                   "visual_language": "视觉语言", "content_boundaries": "内容边界", "risk_boundaries": "风险边界",
                   "public_fact_policy": "公开事实规则"}
+BRAND_FIELDS = {"introduction": "品牌介绍", "proposition": "品牌主张", "offerings": "主营产品或服务", "tone_rules": "语气要求",
+                "preferred_words": "常用词", "forbidden_words": "禁用词", "colors": "主色", "fonts": "字体",
+                "compliance": "合规要求", "red_lines": "不能说的话", "logo_material_revision_ids": "Logo 素材"}
 CREATIVE_FIELD = {"text": "text_creative_profile", "graphic": "graphic_creative_profile", "video": "video_creative_profile"}
 EXTRA_TEXT = 4000
 
@@ -17,6 +20,7 @@ RULES = [
     "角色资料是这条作品的出发点：选角度、取舍内容、说话方式都按 persona.profile；表达风格里的「不能出现的词」一个都不能出现；内容边界和风险边界内的不写。",
     "persona.portrait 为 true：角色有形象照，生成画面里的人物照它来；为 false：生成画面里不出现人物（只拍商品和场景，拿东西只出现手部），要人物出镜的镜头写成实拍，或请用户先给角色补形象照。",
     "persona.speech_samples 有样本：口播 / 旁白照这些真人逐字稿的说话方式写（句子长短、口头语、怎么称呼观众、怎么转话题），不照搬里面的内容、事实和经历；unavailable 有值说明这次没读到。",
+    "persona.brand 有值：角色属于这个品牌。品牌的语气要求、禁用词、合规要求和不能说的话，旗下所有角色都要遵守；角色自己的表达优先，与品牌红线冲突时以品牌为准。用到品牌视觉时按它的主色、字体和 Logo 素材（素材库编号）。",
     "persona.method 有值：按它的主方法 skill 写（用 get_craft_skill 读 method.skill.read），并照它的风格预设、质量标准、额外要求和附加方法；没有值就按 platform_skills 的默认选法。",
 ]
 
@@ -78,7 +82,9 @@ def persona_brief(db: Session, user: User, unit) -> dict | None:
     # Product works borrow only the persona's identity and voice; their script follows the product system's own skills.
     with_method = unit.production_domain != "product" and craft_skills.writing_skills_on(db, unit.id)
     return {
-        "name": persona.name if persona else None, "brand": brand.name if brand else None,
+        "name": persona.name if persona else None,
+        "brand": {"name": brand.name, **{label: merged["brand"][key] for key, label in BRAND_FIELDS.items()
+                                       if merged.get("brand", {}).get(key) not in (None, "", [])}} if brand else None,
         "voice": voiceover.settings_for(db, unit)["preset_name"],
         "portrait": any(content_identity.usable_portrait(db, item) for item in merged.get("portrait_material_revision_ids") or []),
         "profile": {label: merged[key] for key, label in PROFILE_FIELDS.items() if merged.get(key) not in (None, "", [], {})},

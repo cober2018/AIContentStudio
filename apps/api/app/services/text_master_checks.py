@@ -14,6 +14,7 @@ from ..models import (
     ProjectFactBoundaryRevision,
 )
 from .content_harness.channel_registry import ChannelRegistryError, resolve_content_form
+from .content_identity import brand_terms
 from .factchecker import run_deterministic_check
 from .generation.providers import GenerateRequest, get_provider
 from .text_documents import TextDocumentError, canonical_payload, plain_text, text_map, validate_references
@@ -162,6 +163,7 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
     if not isinstance(forbidden, list) or any(not isinstance(term, str) for term in forbidden):
         return "incomplete", {"identity_snapshot_id": snapshot.id, "reasons": ["identity_rule_invalid"], "coverage": {"semantic": "unavailable"}}
     deterministic = [{"severity": "blocker", "span": term[:120], "reason": "explicit_identity_forbidden_phrase", "source": "deterministic", "locator": _issue_locator(document, term)} for term in forbidden if term and term in body]
+    deterministic += [{"severity": "blocker", "span": term[:120], "reason": "brand_forbidden_phrase", "source": "deterministic", "locator": _issue_locator(document, term)} for term in brand_terms(profile) if term in body]
     creative = profile.get("text_creative_profile")
     quality = None
     if creative:
