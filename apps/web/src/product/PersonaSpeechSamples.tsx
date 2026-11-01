@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
 
-export const SPEECH_HINT = "选填。Obsidian 库里放这个角色真人口播逐字稿的文件夹，例如 逐字稿/角色名。写视频逐字稿时照它学说话方式，最近改过的优先，最多读 6000 字。";
+export const SPEECH_HINT = "选填。Obsidian 知识库里放这个角色真人口播逐字稿的文件夹，库里任意文件夹都行，例如 逐字稿/角色名。写视频逐字稿时照它学说话方式，最近改过的优先，最多读 6000 字。";
 
 function errorText(cause: unknown) {
   const detail = cause instanceof ApiError ? cause.detail as { message?: string } | string | undefined : undefined;

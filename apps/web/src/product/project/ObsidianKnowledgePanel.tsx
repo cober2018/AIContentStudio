@@ -112,18 +112,6 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
     finally { setBusy(""); }
   }
 
-  async function reloadConnection(): Promise<Connection | null> {
-    if (!writable || busy) return null;
-    setBusy("正在重新读取连接设置…"); setError(""); setNotice("");
-    try {
-      const next = await api.get<Connection>("/obsidian/connection");
-      queryClient.setQueryData(connectionKey, next);
-      setResults(null); setPreview(null);
-      return next;
-    } catch (cause) { setError(messageOf(cause, "重新读取连接设置失败")); return null; }
-    finally { setBusy(""); }
-  }
-
   return <section className="rounded-xl border border-slate-200 bg-white p-6 space-y-4" aria-label="Obsidian 知识参考">
     <div className="space-y-2">
       <h2 className="font-semibold">Obsidian 专业资料与个人风格</h2>
@@ -152,8 +140,7 @@ function KnowledgePanel({ projectId, readOnly, onSaved }: PanelProps) {
       {connection.isLoading && <p className="text-sm text-slate-500">读取知识库连接…</p>}
       {connection.isError && <><ErrorBanner message={messageOf(connection.error, "无法读取知识库连接")} /><Button variant="secondary" disabled={!!busy} onClick={() => { void connection.refetch(); }}>重试读取连接</Button></>}
       {connection.data && <>
-        <p className="text-sm text-slate-600">{connection.data.configured ? `知识库：${connection.data.vault_name} · ${connection.data.enabled ? "已启用" : "已停用"}` : "尚未连接本地知识库，请管理员配置。"}{connection.data.configured && <span className="block mt-1 text-xs text-slate-500">检索范围：{connection.data.folders.length ? connection.data.folders.join("、") : "知识库内全部可读取的 Markdown 笔记"}</span>}</p>
-        {me.isSuccess && me.data.role === "admin" && connection.data.is_admin && <ConnectionSettings key={connection.data.revision} connection={connection.data} disabled={!!busy} onBusy={setBusy} onReload={reloadConnection} onSaved={next => { queryClient.setQueryData(connectionKey, next); setResults(null); setPreview(null); setNotice("本地知识库连接已保存。"); }} />}
+        <p className="text-sm text-slate-600">{connection.data.configured ? `知识库：${connection.data.vault_name} · ${connection.data.enabled ? "已启用" : "已停用"}` : "尚未连接本地知识库，请管理员在 设置 → 知识库 里配置。"}{connection.data.configured && <span className="block mt-1 text-xs text-slate-500">检索范围：{connection.data.folders.length ? connection.data.folders.join("、") : "知识库内全部可读取的 Markdown 笔记"}。在 设置 → 知识库 修改。</span>}</p>
       </>}
       {units.isError && <ErrorBanner message="未能读取作品；目前可选择项目范围，已有角色或作品范围仍会保留。" />}
       <form onSubmit={search} className="flex flex-wrap items-end gap-2"><div className="min-w-0 flex-1"><Field label="搜索已保存的 Obsidian 笔记"><input className={inputClass} required value={query} disabled={!canBrowse || !!busy || !saved.data} onChange={event => setQuery(event.target.value)} placeholder="输入标题或正文关键词" /></Field></div><Button type="submit" disabled={!canBrowse || !!busy || !query.trim() || !saved.data}>检索笔记</Button></form>
@@ -193,22 +180,3 @@ function SelectionControls({ value, units: allUnits, disabled, onChange }: { val
   </fieldset>;
 }
 
-function ConnectionSettings({ connection, disabled, onBusy, onReload, onSaved }: { connection: Connection; disabled: boolean; onBusy: (value: string) => void; onReload: () => Promise<Connection | null>; onSaved: (value: Connection) => void }) {
-  const [rootPath, setRootPath] = useState(connection.root_path ?? "");
-  const [folders, setFolders] = useState(connection.folders.join("\n"));
-  const [enabled, setEnabled] = useState(connection.enabled);
-  const [error, setError] = useState("");
-  async function save(event: FormEvent) {
-    event.preventDefault();
-    if (disabled) return;
-    onBusy("正在保存本地知识库连接…"); setError("");
-    try { onSaved(await api.put<Connection>("/obsidian/connection", { root_path: rootPath.trim(), folders: folders.split("\n").map(folder => folder.trim()).filter(Boolean), enabled, expected_revision: connection.revision })); }
-    catch (cause) { setError(cause instanceof ApiError && cause.status === 409 ? "连接设置已被其他操作更新，请重新读取连接设置后再修改。" : messageOf(cause, "保存连接失败")); }
-    finally { onBusy(""); }
-  }
-  async function reload() {
-    const next = await onReload();
-    if (next) { setRootPath(next.root_path ?? ""); setFolders(next.folders.join("\n")); setEnabled(next.enabled); setError(""); }
-  }
-  return <details className="rounded-lg border border-slate-200 p-3"><summary className="cursor-pointer text-sm font-medium">管理员：本地知识库连接设置</summary><form onSubmit={save} className="mt-3 space-y-3"><p className="text-xs text-slate-500">仅连接本机目录，以已保存的 Markdown 为准。保存配置不会自动检索、导入笔记或修改 Vault。</p>{error && <div role="alert"><ErrorBanner message={error} /></div>}<Field label="知识库根目录（绝对路径）"><input className={inputClass} required value={rootPath} disabled={disabled} onChange={event => setRootPath(event.target.value)} /></Field><Field label="允许检索的子目录（每行一个）" hint="填写相对根目录的路径；留空表示知识库内全部可读取的 Markdown 笔记。"><textarea className={inputClass} rows={3} value={folders} disabled={disabled} onChange={event => setFolders(event.target.value)} /></Field><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={enabled} disabled={disabled} onChange={event => setEnabled(event.target.checked)} />启用本地知识库连接</label><div className="flex flex-wrap gap-2"><Button type="submit" disabled={disabled}>保存连接设置</Button><Button variant="secondary" disabled={disabled} onClick={reload}>重新读取连接设置</Button></div></form></details>;
-}
