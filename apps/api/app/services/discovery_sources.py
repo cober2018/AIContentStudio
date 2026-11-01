@@ -310,3 +310,36 @@ def validate_source(db, source_id):
         if source.lease_token == token:
             source.lease_token, source.lease_until = None, None
         db.commit()
+
+
+def health(db, owner_id):
+    from zoneinfo import ZoneInfo
+
+    from ..models import DiscoveryItem
+    from .discovery_aggregation import is_aggregate
+    from .discovery_catchup import eligibility
+
+    zone = ZoneInfo("Asia/Taipei")
+    today = utcnow().astimezone(zone).date()
+    days = [(today - timedelta(days=n)).isoformat() for n in range(6, -1, -1)]
+    rows = []
+    for source in db.scalars(select(DiscoverySource).where(DiscoverySource.owner_user_id == owner_id,
+                                                          DiscoverySource.status != "merged").order_by(DiscoverySource.id)).all():
+        # Unsubscribed candidates are a reserve pool, not part of what feeds topics.
+        if not selected_role_ids(db, source):
+            continue
+        roles, reason = eligibility(db, source)
+        latest = db.scalar(select(func.max(DiscoveryItem.collected_at)).where(DiscoveryItem.source_id == source.id))
+        counts = dict.fromkeys(days, 0)
+        for collected in db.scalars(select(DiscoveryItem.collected_at).where(DiscoveryItem.source_id == source.id,
+                                    DiscoveryItem.collected_at >= utcnow().replace(tzinfo=None) - timedelta(days=8))).all():
+            day = collected.replace(tzinfo=collected.tzinfo or ZoneInfo("UTC")).astimezone(zone).date().isoformat()
+            if day in counts:
+                counts[day] += 1
+        state = "paused" if source.manually_paused else "error" if source.status != "active" or source.last_error else "ok"
+        rows.append({"id": source.id, "name": source.name, "aggregate": is_aggregate(source),
+                     "radar": (source.adapter_json or {}).get("kind") == "radar", "state": state, "reason": source.last_error,
+                     "last_success_at": source.last_success_at, "next_due_at": source.next_due_at if roles else None,
+                     "unscheduled_reason": None if roles else reason, "daily_new": [counts[d] for d in days],
+                     "latest_item_at": latest})
+    return {"days": days, "sources": rows}

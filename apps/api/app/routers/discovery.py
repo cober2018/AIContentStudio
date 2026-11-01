@@ -136,6 +136,11 @@ def sources(persona_id: int | None = None, origin: Literal["manual", "automatic"
     return [{**registry.source_json(db, s), "catchup": catchup.source_projection(db, s)} for s in rows[offset:offset + limit]]
 
 
+@router.get("/source-health")
+def source_health(db=Depends(get_db), user=Depends(get_current_user)):
+    return registry.health(db, user.id)
+
+
 @router.get("/sources/{source_id}")
 def get_source(source_id: int, db=Depends(get_db), user=Depends(get_current_user)):
     source = db.get(DiscoverySource, source_id)
