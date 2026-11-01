@@ -1,0 +1,3 @@
+- [x] 1 `BrandProfile.tsx` 新增 `BrandLogoMark`：读品牌 Logo，挑最接近正方形的一张，同一品牌共用一次缓存
+- [x] 2 `IdentityWorkspace.tsx` 角色卡片品牌名下方放 Logo 小图
+- [x] 3 tsc；`openspec validate persona-card-brand-logo`

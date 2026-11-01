@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
-import { api, ApiError } from "../api";
+import { useQuery } from "@tanstack/react-query";
+import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
 import { errorText, FileButton, type Portrait, StoredThumb, uploadPortrait } from "./PersonaPortraits";
 
@@ -62,6 +63,26 @@ function useLogos(brandId: number, revisionNo: number) {
 
 function Logos({ items }: { items: Portrait[] }) {
   return items.length ? <div className="flex flex-wrap gap-3">{items.map(item => <div key={item.material_revision_id} className="space-y-1"><StoredThumb item={item} />{!item.usable && <p className="text-[12px] text-amber-700">这张不能再用</p>}</div>)}</div> : <p className="text-[14px] text-ink-400">未设置</p>;
+}
+
+async function squarestLogo(items: Portrait[]) {
+  const loaded = await Promise.all(items.filter(item => item.usable && item.material_id).map(async item => {
+    const response = await fetch(`/api/v1/materials/${item.material_id}/revisions/${item.material_revision_id}/raw`, { headers: { "X-Studio-User": currentUser() } });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    const bitmap = await createImageBitmap(blob);
+    const ratio = Math.max(bitmap.width, bitmap.height) / Math.max(1, Math.min(bitmap.width, bitmap.height));
+    bitmap.close();
+    return { blob, ratio };
+  }));
+  const best = loaded.filter(row => row !== null).sort((one, two) => one.ratio - two.ratio)[0];
+  return best ? URL.createObjectURL(best.blob) : null;
+}
+
+// A brand keeps wide and square logos; the card has room only for the square one. Cards of one brand share the cached pick.
+export function BrandLogoMark({ brandId, brandName }: { brandId: number; brandName: string }) {
+  const logo = useQuery({ queryKey: ["brand-square-logo", brandId, currentUser()], queryFn: async () => squarestLogo((await api.get<{ items: Portrait[] }>(`/content-brands/${brandId}/logos`)).items), retry: false, staleTime: 60_000 });
+  return logo.data ? <img src={logo.data} alt={`${brandName} Logo`} className="h-7 w-7 rounded-md border border-ink-200 bg-white object-contain" /> : null;
 }
 
 export function BrandOverview({ brandId, revision, personas }: { brandId: number; revision: Revision; personas: ReactNode }) {

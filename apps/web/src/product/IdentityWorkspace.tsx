@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, Chip, EmptyState, ErrorBanner, Field, Notice, Page, PageHeader, Section, Spinner, Tabs, inputClass, FloatingAlert } from "../components/ui";
 import { ProfileOverview } from "./IdentityProfileView";
-import { BrandOverview, BrandProfileEditor } from "./BrandProfile";
+import { BrandLogoMark, BrandOverview, BrandProfileEditor } from "./BrandProfile";
 import { PersonaDiscoveryStatus } from "./DiscoveryPanel";
 import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
@@ -446,6 +446,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
           </div>
           <h2 className="mt-5 line-clamp-2 break-words font-serif text-[21px] font-semibold leading-snug text-ink-900">{row.name}</h2>
           <p className="mt-1.5 truncate text-[13px] text-ink-500">{parentLabel(row)}</p>
+          {row.kind === "persona" && row.brand_id != null && <span className="mt-2 block"><BrandLogoMark brandId={row.brand_id} brandName={parentLabel(row)} /></span>}
           <div className="mt-auto flex items-center justify-between pt-5 text-[12.5px] text-ink-500"><span>修订 v{row.current_revision}</span><span aria-hidden className="text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-accent-500">打开 →</span></div>
         </button>)}</div>}
         {pages > 1 && <div className="flex items-center justify-center gap-3 pt-2"><Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => listParam("page", String(page - 1))}>上一页</Button><span className="text-[13px] text-ink-500">第 {page} / {pages} 页</span><Button variant="secondary" size="sm" disabled={page >= pages} onClick={() => listParam("page", String(page + 1))}>下一页</Button></div>}
