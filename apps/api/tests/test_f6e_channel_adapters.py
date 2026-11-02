@@ -20,7 +20,6 @@ from app.services.channel_adapters import AdapterUnavailable, capability_for
         ("text.master.v2", "zhihu", "article", "text", True),
         ("text.master.v2", "zhihu", "answer", "text", True),
         ("text.master.v2", "bilibili", "article", "text", True),
-        ("text.master.v2", "sohu", "article", "text", True),
         ("text.master.v2", "penguin", "article", "text", True),
         ("text.master.v2", "netease", "article", "text", True),
         ("text.master.v2", "weibo", "single", "text", True),

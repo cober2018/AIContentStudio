@@ -4,7 +4,7 @@ from copy import deepcopy
 
 MODERN_ARTICLE_SCHEMAS = frozenset({
     "toutiao.article.v1", "baijia.article.v1", "zhihu.article.v1", "zhihu.answer.v1",
-    "bilibili.article.v1", "sohu.article.v1", "penguin.article.v1", "netease.article.v1", "x.articles.v1",
+    "bilibili.article.v1", "penguin.article.v1", "netease.article.v1", "x.articles.v1",
 })
 ARTICLE_BLOCK_FIELDS = {
     "heading": {"id", "order", "kind", "text", "level"},

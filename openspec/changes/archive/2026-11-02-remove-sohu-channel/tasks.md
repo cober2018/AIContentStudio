@@ -1,0 +1,3 @@
+- [x] 1 删 seed.py、channel_registry、multiplatform_profiles、channel_adapters、channel_form_descriptors、channel_variant_documents、content_identity 跳转入口里的 sohu
+- [x] 2 正式库删 channel_template_version 里 sohu 的 2 行
+- [x] 3 更新列出渠道的既有测试；相关测试与全量测试（只允许 5 个已知失败）；`openspec validate`

@@ -207,3 +207,12 @@ For image_note forms, published cover/inline media requirements SHALL be checked
 #### Scenario: Photo-specific presets and unknown requirements stay strict
 - **WHEN** the selected preset explicitly requires an input photo or the profile declares an unsupported required media role
 - **THEN** its existing photo/reference/rights check or unsupported-rule rejection remains effective
+
+### Requirement: Sohu is not a channel
+
+The studio SHALL NOT offer 搜狐号 (`sohu`) as a channel anywhere: channel lists, account registration, channel variants, article forms, seed data and creator links.
+
+#### Scenario: Registering an account
+- **WHEN** the user opens the platform list to register an account
+- **THEN** 搜狐号 is not among the options
+

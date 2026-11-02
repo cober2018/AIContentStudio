@@ -250,7 +250,6 @@ CREATOR_LINKS = {
     "wechat_channels": (("去发布", "https://channels.weixin.qq.com/platform/post/create"),),
     "kuaishou": (("去发布", "https://cp.kuaishou.com/article/publish/video"),),
     "weibo": (("去发微博", "https://weibo.com/"),),
-    "sohu": (("去写作", "https://mp.sohu.com/mpfe/v4/contentManagement/news/addarticle"),),
     "netease": (("去后台", "https://mp.163.com/"),),
     "penguin": (("去后台", "https://om.qq.com/"),),
     "x": (("去发帖", "https://x.com/compose/post"),),

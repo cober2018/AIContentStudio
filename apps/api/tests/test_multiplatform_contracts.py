@@ -9,7 +9,7 @@ from app.services.channel_variant_documents import VariantDocumentError, canonic
 
 ARTICLE_TARGETS = [
     "toutiao.article.v1", "baijia.article.v1", "zhihu.article.v1", "bilibili.article.v1",
-    "sohu.article.v1", "penguin.article.v1", "netease.article.v1", "x.articles.v1",
+    "penguin.article.v1", "netease.article.v1", "x.articles.v1",
 ]
 ASSETS = [{"slot_key": "image1", "material_revision_id": 1, "content_hash_snapshot": "a" * 64}]
 

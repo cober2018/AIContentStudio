@@ -60,7 +60,6 @@ FIRST_BATCH: dict[tuple[str, str], AdapterContract] = {
     ("zhihu", "article"): AdapterContract("zhihu.article", "1", frozenset({"text.master.v2"}), "zhihu", "article", "text", "zhihu.article.v1"),
     ("zhihu", "answer"): AdapterContract("zhihu.answer", "1", frozenset({"text.master.v2"}), "zhihu", "answer", "text", "zhihu.answer.v1"),
     ("bilibili", "article"): AdapterContract("bilibili.article", "1", frozenset({"text.master.v2"}), "bilibili", "article", "text", "bilibili.article.v1"),
-    ("sohu", "article"): AdapterContract("sohu.article", "1", frozenset({"text.master.v2"}), "sohu", "article", "text", "sohu.article.v1"),
     ("penguin", "article"): AdapterContract("penguin.article", "1", frozenset({"text.master.v2"}), "penguin", "article", "text", "penguin.article.v1"),
     ("netease", "article"): AdapterContract("netease.article", "1", frozenset({"text.master.v2"}), "netease", "article", "text", "netease.article.v1"),
     ("weibo", "single"): AdapterContract("weibo.single", "1", frozenset({"text.master.v2"}), "weibo", "single", "text", "weibo.single.v1"),

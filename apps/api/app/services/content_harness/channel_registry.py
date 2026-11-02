@@ -57,7 +57,6 @@ CHANNEL_LABELS: dict[str, str] = {
     "baijia": "百家号",
     "zhihu": "知乎",
     "bilibili": "B站专栏",
-    "sohu": "搜狐号",
     "penguin": "企鹅号",
     "netease": "网易号",
     "x": "X（Twitter）",

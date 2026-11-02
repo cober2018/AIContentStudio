@@ -25,7 +25,6 @@ ARTICLE_SCHEMAS = frozenset({
     "zhihu.article.v1",
     "zhihu.answer.v1",
     "bilibili.article.v1",
-    "sohu.article.v1",
     "penguin.article.v1",
     "netease.article.v1",
     "xueqiu.quant_research.v1",

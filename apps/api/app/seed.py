@@ -42,7 +42,6 @@ def v1_channel_profile_definitions() -> list[tuple[str, str, dict]]:
             "answer": _form("text", "workflow.qa.answer", renderer="renderer.generic.markdown", label="回答"),
         }}),
         ("bilibili", "B站专栏", {"content_forms": {"article": _article("专栏", "workflow.article.editorial")}}),
-        ("sohu", "搜狐号", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
         ("penguin", "企鹅号", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
         ("netease", "网易号", {"content_forms": {"article": _article("文章", "workflow.article.feed")}}),
         ("xiaohongshu", "小红书", {"content_forms": {"image_note": _form(
