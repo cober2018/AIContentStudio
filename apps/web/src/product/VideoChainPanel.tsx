@@ -24,7 +24,7 @@ type Chain = {
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
 type Step = "draft" | "sample" | "final";
-const STEPS = [["导演稿", ["draft_review", "draft_changes"]], ["小样", ["making", "sample_review", "sample_changes"]], ["成片", ["finishing", "final_review", "final_changes", "done"]]] as const;
+const STEPS = [["导演稿", ["not_started", "draft_review", "draft_changes"]], ["小样", ["making", "sample_review", "sample_changes"]], ["成片", ["finishing", "final_review", "final_changes", "done"]]] as const;
 const ORDER: Step[] = ["draft", "sample", "final"];
 
 function errorText(error: unknown) {

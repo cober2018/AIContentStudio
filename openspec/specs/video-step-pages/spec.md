@@ -31,3 +31,11 @@ Persona video production SHALL have the steps 选题与资料, 导演稿, 小样
 - **WHEN** the user opens 海底光缆's video
 - **THEN** the 成片 page shows with the player, and the 导演稿 page is view-only
 
+### Requirement: A video that has not started shows 待开始 on the 导演稿 step
+
+When a video work's chain has not started, the 导演稿 step's chain panel SHALL show 「待开始」 with how to start, and SHALL NOT claim the 导演稿 was approved.
+
+#### Scenario: Freshly created product video
+- **WHEN** the user opens the 导演稿 step of a product video created a moment ago
+- **THEN** the panel shows 「待开始」, not 「导演稿 已采用」
+

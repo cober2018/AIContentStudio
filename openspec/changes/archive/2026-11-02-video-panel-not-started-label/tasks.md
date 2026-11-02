@@ -1,0 +1,2 @@
+- [x] 1 VideoChainPanel：not_started 归入导演稿段
+- [x] 2 tsc；`openspec validate`
