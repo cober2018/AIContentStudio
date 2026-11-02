@@ -54,11 +54,14 @@ RULES = [
     "结构和节奏照参考，口播换成本作品的说法，每镜写 board.source_kind；参考里的证书、医院、成分只记成需要品牌真实资料，不照抄、不生成；参考视频的原画面和水印不进成片。",
     "写人物镜头的提示词按 studio.video.prompt-direction：board.attitude 先写人物态度和对谁说，再写一两个关键反应；首帧按 拍摄方式 / 人物 / 动作与镜头 / 场景 四段写；商品图管外观、人物图管长相，提示词不重复描述包装。",
     "HLG 还原（必做）：每段实拍先用 ffprobe 看 color_transfer；是 arib-std-b67（iPhone HLG）的，项目色彩科学用 davinciYRGB（不做色彩管理），只给这些片段 SetLUT(1, \"MCP/iphone-hlg-apple-sdr-render.cube\")；"
-    "SDR 网络素材、AI 画面、AE 叠层一律不套。验收拿渲染出来的文件抽帧，和手机自己的显示帧（AVAssetImageGenerator）比亮度，不看达芬奇静帧。"
-    "达芬奇里没有这份 LUT 就先从仓库 craft_skills/craft-resolve/luts/ 拷到达芬奇 LUT 文件夹的 MCP/ 下（做法见 craft-resolve techniques/color.md「iPhone HLG 还原」）。",
+    "这份 render 版 LUT 已经补了渲染变暗，HLG 片段不再叠别的。验收拿渲染出来的文件抽帧，和手机自己的显示帧（AVAssetImageGenerator）比亮度，不看达芬奇静帧。",
+    "渲染补偿（必做）：davinciYRGB 项目渲染出来比原片暗约 20/255（渲染 ≈ 0.993×静帧 − 0.078）。普通 SDR 实拍（不是 HLG）要补：给这些片段 SetLUT(1, \"MCP/sdr-render-comp.cube\")，"
+    "或者查出是哪项项目 / 渲染设置造成的、改设置让全片统一（改了设置就不再套补偿 LUT），回执写明用的哪种。"
+    "AI 画面、AE 叠层：渲染一次后抽帧和原图比，暗了同样补。达芬奇里缺这些 LUT 就先从仓库 craft_skills/craft-resolve/luts/ 拷到达芬奇 LUT 文件夹的 MCP/ 下"
+    "（做法见 craft-resolve techniques/color.md「iPhone HLG 还原」「普通实拍渲染补偿」）。平台交付时会逐镜头拿成片和原片同一时刻比亮度。",
     "素材统一（必做，粗剪后、导出小样前）：颜色只做校正和匹配——曝光、白平衡拉正，同一场景的镜头用色彩组对齐到一个参考镜头；不做风格化调色，素材正常且彼此一致就不动。"
     "声音：实拍对白逐段拉到约 −16 LUFS，只有明显底噪才轻度降噪，只有一边声道有声的修成两边；之后再按现有混音标准（整片约 −14 LUFS、真峰值 ≤ −1 dBTP）。",
-    "小样、成片的回执逐镜头写明：哪些套了 HLG 还原、哪些做了颜色校正（改了什么）、哪些对白段调了音量（调了多少）；没动的写没动。平台交付时会逐镜头查过曝、亮度跳变和对白音量，提示在审阅页。",
+    "小样、成片的回执逐镜头写明：哪些套了 HLG 还原、哪些做了渲染补偿（补偿 LUT 还是改设置）、哪些做了颜色校正（改了什么）、哪些对白段调了音量（调了多少）；没动的写没动。平台交付时会逐镜头查过曝、亮度跳变和对白音量，提示在审阅页。",
 ]
 EXECUTOR = "codex-video-production"
 _KEEPS_DRAFT = {"material", "edit_prep", "cover"}

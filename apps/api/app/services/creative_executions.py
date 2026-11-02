@@ -1222,6 +1222,7 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
 
                 checks = delivery_checks.inspect(source, package.package_json["director"], inspected["duration_ms"], inspected.get("has_audio", False),
                                                  delivery_checks.thresholds(db))
+                delivery_checks.source_brightness(db, package.package_json["director"], checks)
                 tags = delivery_checks.color_tags(source) if role_id == "final" else None
                 if tags:
                     checks["warnings"].insert(0, tags)

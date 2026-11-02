@@ -31,16 +31,30 @@
 ### iPhone HLG 还原（必做）
 - 思路：iPhone 默认拍 HLG，达芬奇默认色彩管理会把它整体提亮（平均亮度约 190，手机上同一帧约 147），看起来就是过曝。用平台拟合的专用 LUT 把它还原成手机上看到的样子，这是还原，不算调色。
 - 用在：每段实拍素材都先查：`ffprobe -v error -select_streams v:0 -show_entries stream=color_transfer -of csv=p=0 <文件>`，结果是 `arib-std-b67` 的就是 HLG。
-- 不用在：SDR 的网络素材、AI 生成画面、AE 叠层与包装（它们不是 HLG，套了会变暗变灰）。
+- 不用在：SDR 素材（普通实拍、网络素材）、AI 生成画面、AE 叠层与包装（它们不是 HLG，套了会变暗变灰）；普通 SDR 实拍改走「普通实拍渲染补偿」。
 - 做法：
   - 项目色彩科学用 `davinciYRGB`（不做色彩管理），时间线 Rec.709 Gamma 2.4。
   - 只给 HLG 片段套 `MCP/iphone-hlg-apple-sdr-render.cube`：`TimelineItem.SetLUT(1, "MCP/iphone-hlg-apple-sdr-render.cube")`。交付用 `-render` 版：YRGB 下带 LUT 的渲染亮度约等于 0.993×静帧 − 0.078，`-render` 已补上这一差；`iphone-hlg-apple-sdr.cube` 只在对着静帧比时用。
   - 达芬奇 LUT 列表里没有 `MCP/` 这两份时，先从仓库 `craft_skills/craft-resolve/luts/` 拷到达芬奇 LUT 文件夹下的 `MCP/`（macOS：`/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/MCP/`），再在 Color 页刷新 LUT 列表（或重启达芬奇）。
 - 脚本：能。项目设置和 `SetLUT` 都能脚本做；HLG 判断用 ffprobe。
 - 检查：拿**渲染出来的文件**抽帧，和手机自己的显示帧（`AVAssetImageGenerator` 从原片取同一时刻）比平均亮度，相差几个点以内；不拿达芬奇静帧或 Viewer 比。高光没有大片贴顶。
-- 常见错误：开着色彩管理再套 LUT（提亮两次）；给 SDR 网络素材、AI 画面、AE 叠层也套了；达芬奇里看着正常就交，没比渲染文件；按第一个镜头手调亮度套到全片。
+- 常见错误：开着色彩管理再套 LUT（提亮两次）；给 SDR 素材、AI 画面、AE 叠层也套了；在 HLG 片段上再叠 `sdr-render-comp.cube`（`-render` 版已含补偿，叠了就亮 20 级）；达芬奇里看着正常就交，没比渲染文件；按第一个镜头手调亮度套到全片。
 - 状态：在用
 - 来源：2026-11-02 P46 实测（套 LUT 后 146.8，手机 147）
+
+### 普通实拍渲染补偿（必做）
+- 思路：`davinciYRGB`、不做色彩管理时，渲染出来的文件比达芬奇静帧暗：渲染 ≈ 0.993×静帧 − 0.078，约暗 20/255，从暗部到高光都是这个固定差。HLG 的 `-render` LUT 已经补了；没套 LUT 的普通 SDR 实拍就整片吃这 20 级。
+- 用在：`davinciYRGB` 项目里每段 SDR 实拍（ffprobe 的 `color_transfer` 是 `bt709` / 未标注，不是 `arib-std-b67` / `smpte2084`），例如抖音自拍。
+- 不用在：HLG 片段（已套 `-render` LUT）。AI 画面、AE 叠层是否同样变暗没验证过：渲染一次后抽帧和原图比，暗了同样补，没暗就不动。
+- 做法（二选一，回执写明用的哪种）：
+  - 套补偿 LUT：`TimelineItem.SetLUT(1, "MCP/sdr-render-comp.cube")`，整体 +0.078（+20/255）。
+  - 从根上解决：查出是哪项项目 / 渲染设置（数据电平、渲染范围等）造成的，改设置让全片渲染和原片一致；改了设置就全片统一，**不再**套补偿 LUT（HLG 片段的 LUT 也要重新对一遍）。
+  - 达芬奇 LUT 列表里没有 `MCP/sdr-render-comp.cube` 时，先从仓库 `craft_skills/craft-resolve/luts/` 拷到达芬奇 LUT 文件夹的 `MCP/` 下，刷新 LUT 列表。
+- 脚本：能。`SetLUT`、ffprobe 判断、ffmpeg 抽帧都能脚本做。
+- 检查：拿**渲染出来的文件**和原片在同一时刻各抽一帧比平均亮度（`signalstats` 的 YAVG，或缩小转灰度求平均），相差几个点以内。平台交付时也会逐镜头比，差超过提示线就在审阅页提示「成片比原片暗 X 级」。
+- 常见错误：叠在 HLG 的 `-render` LUT 上（补两次）；改了设置又套补偿 LUT；只看达芬奇 Viewer / 静帧就交；AI 画面、AE 叠层没比就默认不补。
+- 状态：在用
+- 来源：2026-11-03 项目 48 / 作品 93 任务 41（未补偿的抖音自拍镜头渲染后暗约 20 级）
 
 ### 亮部暗部分开救
 - 思路：整体亮度一拉，亮的过曝、暗的死黑；要只救其中一端。

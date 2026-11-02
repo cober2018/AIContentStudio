@@ -56,6 +56,7 @@
 | 撞击、机械动作没声音 | `sound.md` 自录音效降调 | 没有现成音效 |
 | 曝光、偏色拿不准 | `color.md` 先看示波器 | — |
 | iPhone 实拍偏亮、像过曝 | `color.md` iPhone HLG 还原 | ffprobe 显示 arib-std-b67 |
+| 普通 SDR 实拍渲染后变暗 | `color.md` 普通实拍渲染补偿 | 不是 HLG；davinciYRGB 项目 |
 | Log 素材发灰 | `color.md` Log 素材先还原 | 知道拍摄曲线 |
 | 亮部过曝或暗部死黑 | `color.md` 亮部暗部分开救 | — |
 | 画面发灰、没层次 | `color.md` S 曲线 | 已还原、已校正 |

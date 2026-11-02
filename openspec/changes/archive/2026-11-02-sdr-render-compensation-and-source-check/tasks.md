@@ -1,0 +1,3 @@
+- [x] 1 规则：video_chain RULES、craft-resolve color.md/finishing.md 改「SDR 实拍也补偿（或从设置解决）」；sdr-render-comp.cube 入仓库
+- [x] 2 delivery_checks：SDR 实拍镜头成片与原片同一时刻比平均亮度；阈值 source_brightness_diff（默认 8）进设置；审阅页文案
+- [x] 3 用任务 41 成片验证；全量测试；tsc；`openspec validate`

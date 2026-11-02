@@ -1,4 +1,5 @@
-"""Per-shot review hints on a delivered 小样 / 成片: exposure, brightness jumps between shots, uneven dialogue; on the 成片 also its color tags and whether the cover matches its opening.
+"""Per-shot review hints on a delivered 小样 / 成片: exposure, brightness jumps between shots, uneven dialogue, live shots rendered brighter or darker than
+their source; on the 成片 also its color tags and whether the cover matches its opening.
 
 Readings follow the 导演稿 timeline so a hint can name the shot. They are warnings for the reviewer, never a rejection.
 """
@@ -8,13 +9,15 @@ import re
 import statistics
 import subprocess
 import time
+from contextlib import contextmanager
 
 from sqlalchemy.orm.attributes import flag_modified
 
 KEY = "delivery_checks"
-DEFAULTS = {"overexposed_mean_luma": 180, "overexposed_clipped_percent": 5.0, "brightness_jump_luma": 40, "dialogue_spread_lu": 6.0, "cover_mismatch_mean": 6}
+DEFAULTS = {"overexposed_mean_luma": 180, "overexposed_clipped_percent": 5.0, "brightness_jump_luma": 40, "dialogue_spread_lu": 6.0, "cover_mismatch_mean": 6,
+            "source_brightness_diff": 8}
 LIMITS = {"overexposed_mean_luma": (100, 255), "overexposed_clipped_percent": (0.1, 100), "brightness_jump_luma": (5, 255), "dialogue_spread_lu": (1, 30),
-          "cover_mismatch_mean": (1, 100)}
+          "cover_mismatch_mean": (1, 100), "source_brightness_diff": (1, 100)}
 CLIPPED_LUMA = 250
 FIXED_SPAN_MS = 3000
 MAX_SPANS = 60
@@ -26,6 +29,9 @@ SRGB_TAGS = {"color_primaries": "bt709", "color_transfer": "iec61966-2-1", "colo
 # The cover is the 成片's opening frame, so it is looked for only within the first half second.
 COVER_FRAMES_MS = (0, 100, 200, 300, 400, 500)
 _COVER_WIDTH = 64
+# Decoded HLG / PQ frames do not look like what the phone shows, so comparing them says nothing; the exposure check covers those.
+UNCOMPARABLE_TRANSFERS = {"arib-std-b67", "smpte2084"}
+SOURCE_DEADLINE_SECONDS = 60
 _INTEGRATED = re.compile(r"Integrated loudness:\s*I:\s*(-?[0-9.]+|-inf) LUFS")
 
 
@@ -161,6 +167,85 @@ def inspect(source, director: dict, duration_ms: int, has_audio: bool, limits: d
             "shots": [{key: shot[key] for key in ("shot_id", "order", "start_ms", "end_ms", "luma", "clipped", "lufs") if key in shot} for shot in shots]}
 
 
+@contextmanager
+def _material(revision):
+    from .material_external import is_external, open_key
+    from .material_storage import LocalMaterialStorage, provider
+
+    if is_external(revision.file_path):
+        with open_key(revision.file_path) as handle:
+            yield handle
+        return
+    storage = provider()
+    if not isinstance(storage, LocalMaterialStorage):
+        raise OSError("material_storage_not_local")
+    with open(storage._path(revision.file_path), "rb") as handle:
+        yield handle
+
+
+def _transfer(fd: int) -> str:
+    done = subprocess.run(["ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe", "-select_streams", "v:0", "-show_entries", "stream=color_transfer",
+                           "-of", "json", f"/dev/fd/{fd}"], pass_fds=(fd,), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=20, check=True)
+    # JSON, not csv: phone clips carry side data that csv appends to the value.
+    streams = json.loads(done.stdout[:64000]).get("streams") or [{}]
+    return str(streams[0].get("color_transfer") or "")
+
+
+def _source_ms(director: dict, shot: dict, revision_id: int) -> int:
+    mid = (shot["start_ms"] + shot["end_ms"]) // 2
+    for track in (director.get("timeline") or {}).get("tracks") or []:
+        if track.get("kind") != "video":
+            continue
+        for item in track.get("items") or []:
+            if item.get("shot_id") == shot["shot_id"] and item.get("material_revision_id") == revision_id and isinstance(item.get("start_ms"), int):
+                trim = item.get("trim_start_ms") if isinstance(item.get("trim_start_ms"), int) else 0
+                return max(0, trim + mid - item["start_ms"])
+    return max(0, mid - shot["start_ms"])
+
+
+def source_brightness(db, director: dict, checks: dict) -> None:
+    """Adds, for each shot cut from an SDR video material, the source's luma at the same moment and a warning when the delivered frame differs.
+
+    The delivered reading is the one inspect already took at the shot's middle. Unreadable or HLG / PQ sources are left out.
+    """
+    from ..models import MaterialRevision
+    from .material_external import ExternalMaterialError
+
+    sources = {shot.get("id"): shot.get("source_material_revision_id") for shot in director.get("shots") or [] if isinstance(shot, dict)}
+    wanted: dict[int, list[dict]] = {}
+    for shot in checks["shots"]:
+        revision_id = sources.get(shot.get("shot_id"))
+        if "luma" in shot and isinstance(revision_id, int):
+            wanted.setdefault(revision_id, []).append(shot)
+    deadline = time.monotonic() + SOURCE_DEADLINE_SECONDS
+    for revision_id, shots in wanted.items():
+        if time.monotonic() > deadline:
+            checks["status"] = "partial"
+            break
+        revision = db.get(MaterialRevision, revision_id)
+        if revision is None or not (revision.mime_type or "").startswith("video/") or not revision.file_path:
+            continue
+        try:
+            with _material(revision) as handle:
+                fd = handle.fileno()
+                if _transfer(fd) in UNCOMPARABLE_TRANSFERS:
+                    continue
+                for shot in shots:
+                    if time.monotonic() > deadline:
+                        checks["status"] = "partial"
+                        break
+                    frame = _frame(fd, _source_ms(director, shot, revision_id))
+                    if frame:
+                        shot["source_luma"] = round(frame[0], 1)
+        except (OSError, ValueError, subprocess.SubprocessError, ExternalMaterialError):
+            continue
+    limit = checks["thresholds"]["source_brightness_diff"]
+    for shot in checks["shots"]:
+        if "source_luma" in shot and abs(shot["luma"] - shot["source_luma"]) > limit:
+            checks["warnings"].append({"code": "source_brightness_diff", "shot_id": shot["shot_id"], "order": shot["order"], "luma": shot["luma"],
+                                       "source_luma": shot["source_luma"], "diff": round(shot["luma"] - shot["source_luma"], 1)})
+
+
 def color_tags(source) -> dict | None:
     """The video stream's color tags when they are not sRGB (untagged included); None when they are or the file can't be read."""
     fd = source.fileno()
@@ -225,7 +310,7 @@ def compact(result: dict, limit: int = 2000) -> str:
     text = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(text) <= limit:
         return text
-    slim = {**result, "shots": [[shot.get("shot_id"), shot.get("luma"), shot.get("lufs")] for shot in result["shots"]]}
+    slim = {**result, "shots": [[shot.get("shot_id"), shot.get("luma"), shot.get("lufs"), shot.get("source_luma")] for shot in result["shots"]]}
     text = json.dumps(slim, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(text) <= limit:
         return text

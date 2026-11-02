@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
 
-type Name = "overexposed_mean_luma" | "overexposed_clipped_percent" | "brightness_jump_luma" | "dialogue_spread_lu" | "cover_mismatch_mean";
+type Name = "overexposed_mean_luma" | "overexposed_clipped_percent" | "brightness_jump_luma" | "dialogue_spread_lu" | "cover_mismatch_mean" | "source_brightness_diff";
 type Thresholds = Record<Name, number>;
 type View = { thresholds: Thresholds; defaults: Thresholds; limits: Record<Name, [number, number]> };
 
@@ -13,6 +13,7 @@ const fields: [Name, string, string, string][] = [
   ["brightness_jump_luma", "亮度跳变提示线", "相邻两个镜头平均亮度相差超过它就提示。", ""],
   ["dialogue_spread_lu", "对白音量不齐提示线", "有台词的镜头，响度和各段中间值相差超过它就提示。", " LU"],
   ["cover_mismatch_mean", "封面与成片平均色差（0–255）", "封面和成片开头 0.5 秒里最像的那一帧比，红绿蓝平均每个通道相差超过它就提示颜色不一致。", ""],
+  ["source_brightness_diff", "成片与原片亮度差（0–255）", "画面来自视频素材的镜头（HLG 原片除外），成片和原片同一时刻各取一帧比平均亮度，相差超过它就提示成片比原片暗或亮。", ""],
 ];
 
 const messageOf = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
@@ -22,7 +23,7 @@ export default function DeliveryCheckSettings() {
   const key = ["delivery-checks", currentUser()];
   const view = useQuery({ queryKey: key, queryFn: () => api.get<View>("/settings/delivery-checks"), retry: false });
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
-  const [values, setValues] = useState<Record<Name, string>>({ overexposed_mean_luma: "", overexposed_clipped_percent: "", brightness_jump_luma: "", dialogue_spread_lu: "", cover_mismatch_mean: "" });
+  const [values, setValues] = useState<Record<Name, string>>({ overexposed_mean_luma: "", overexposed_clipped_percent: "", brightness_jump_luma: "", dialogue_spread_lu: "", cover_mismatch_mean: "", source_brightness_diff: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -49,7 +50,7 @@ export default function DeliveryCheckSettings() {
   return <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-6" aria-label="交付检查">
     <div className="space-y-1">
       <h2 className="font-semibold">交付检查</h2>
-      <p className="text-sm text-slate-600">小样、成片交付时，平台按导演稿逐镜头抽一帧看亮度、逐段测对白音量，成片还会查颜色标记是不是 sRGB、封面和成片开头颜色是否一致；超过下面的提示线就在审阅页提醒，写明是哪个镜头、差多少。只提醒，不拦交付。</p>
+      <p className="text-sm text-slate-600">小样、成片交付时，平台按导演稿逐镜头抽一帧看亮度、逐段测对白音量，成片还会查颜色标记是不是 sRGB、封面和成片开头颜色是否一致；实拍镜头还会和原片同一时刻比亮度；超过下面的提示线就在审阅页提醒，写明是哪个镜头、差多少。只提醒，不拦交付。</p>
     </div>
     {error && <div role="alert"><ErrorBanner message={error} /></div>}
     {notice && <p role="status" className="text-sm text-emerald-700">{notice}</p>}
