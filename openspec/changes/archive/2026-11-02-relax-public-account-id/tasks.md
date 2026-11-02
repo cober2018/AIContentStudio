@@ -1,0 +1,3 @@
+- [x] 1 `content_identity.public_platform_id`：按新规则放宽（公众号不变）
+- [x] 2 前端登记表单提示与报错文案同步
+- [x] 3 更新受影响的既有测试期望；相关测试与全量测试（只允许已知失败）；`openspec validate`

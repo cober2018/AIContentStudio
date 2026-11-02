@@ -571,7 +571,7 @@ function registerFailure(error: unknown): string {
   if (error.status === 403) return "只有管理员可以登记平台账号。";
   if (error.status === 409 && error.message === "persona_platform_taken") return "这个角色在该平台已经有账号了，同一平台只能有一个。";
   if (error.status === 409 && error.message === "platform_identity_conflict") return "这个平台标识已经登记过。归档也不会把同一个真实账号让给别的角色。";
-  if (error.message === "platform_account_public_id_invalid") return "公开标识不合格。不要填写密码、AppSecret 或 token。公众号请填 wx 开头的 AppID，其他平台填账号名或 @handle。";
+  if (error.message === "platform_account_public_id_invalid") return "公开标识不合格。公众号请填 wx 开头的 AppID；其他平台填账号名、@handle 或昵称，不要填密码、密钥或网址。";
   return error.message || "登记失败，请重试。";
 }
 
@@ -639,7 +639,7 @@ function ChannelAccountRegister({ personaId, personas = [], channels, role, onDo
         {channels.map((row) => <option key={row.channel} value={row.channel}>{row.label}</option>)}
       </select>
       <input aria-label="显示名称" className={inputClass} required maxLength={200} disabled={!admin || busy || parentBusy} value={name} onChange={(event) => setName(event.target.value)} placeholder="显示名称" />
-      <input aria-label="公开标识" className={inputClass} name="public-handle" autoComplete="off" spellCheck={false} required maxLength={64} disabled={!admin || busy || parentBusy} value={handle} onChange={(event) => setHandle(event.target.value)} placeholder={effectiveChannel === "wechat" ? "wx 开头 AppID" : "账号名 / @handle"} />
+      <input aria-label="公开标识" className={inputClass} name="public-handle" autoComplete="off" spellCheck={false} required maxLength={64} disabled={!admin || busy || parentBusy} value={handle} onChange={(event) => setHandle(event.target.value)} placeholder={effectiveChannel === "wechat" ? "wx 开头 AppID" : "账号名、@handle 或昵称"} />
     </div>
     <div className="mt-2 flex items-center gap-3"><Button type="submit" disabled={!admin || busy || parentBusy}>{busy ? "登记中…" : "登记账号"}</Button>{notice && <span className="text-xs text-indigo-700">{notice}</span>}</div>
   </form>;

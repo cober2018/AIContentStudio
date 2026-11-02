@@ -221,9 +221,9 @@ def _lock_account(db: Session, user: User, account_id: int) -> ContentAccount:
 
 
 _WECHAT_APP_ID = re.compile(r"^wx[0-9a-f]{16}$")
-_PUBLIC_HANDLE = re.compile(r"^[\w.@-]{1,64}$")
+_CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 _TOKEN_LIKE = re.compile(r"^[A-Za-z0-9+/=_-]{32,}$")
-_SECRET_MARKERS = ("password", "secret", "token", "appsecret", "bearer", "api_key", "apikey", "credential", "sk-")
+_SECRET_MARKERS = ("password", "secret", "token", "appsecret", "bearer", "api_key", "apikey", "credential")
 
 
 def public_platform_id(channel: str, value: str) -> str:
@@ -232,8 +232,11 @@ def public_platform_id(channel: str, value: str) -> str:
         if _WECHAT_APP_ID.fullmatch(value) is None:
             raise HTTPException(422, "platform_account_public_id_invalid")
         return value
+    # Many platforms only show a nickname, which may hold spaces, full-width marks or emoji; only secret-shaped values are refused.
+    value = value.strip()
     lowered = value.lower()
-    if any(marker in lowered for marker in _SECRET_MARKERS) or "://" in value or _PUBLIC_HANDLE.fullmatch(value) is None or _TOKEN_LIKE.fullmatch(value) is not None:
+    if (not 0 < len(value) <= 64 or _CONTROL.search(value) or "://" in value or lowered.startswith("www.")
+            or lowered.startswith("sk-") or any(marker in lowered for marker in _SECRET_MARKERS) or _TOKEN_LIKE.fullmatch(value)):
         raise HTTPException(422, "platform_account_public_id_invalid")
     return value
 

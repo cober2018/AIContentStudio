@@ -20,7 +20,7 @@ function failureText(error: unknown): string {
   if (!(error instanceof ApiError)) return "登记失败，请重试。";
   if (error.status === 403) return "只有管理员可以登记平台账号。";
   if (error.status === 409 && error.message === "platform_identity_conflict") return "这个平台标识已经登记过。归档也不会把同一个真实账号让给别的角色。";
-  if (error.message === "platform_account_public_id_invalid") return "公开标识不合格。不要填写密码、AppSecret 或 token。公众号请填 wx 开头的 AppID，其他平台填账号名或 @handle。";
+  if (error.message === "platform_account_public_id_invalid") return "公开标识不合格。公众号请填 wx 开头的 AppID；其他平台填账号名、@handle 或昵称，不要填密码、密钥或网址。";
   return error.message || "登记失败，请重试。";
 }
 
@@ -107,7 +107,7 @@ export default function AccountDesk() {
           <Field label="显示名称" hint="给你自己看的名字，例如「小红书主号」。">
             <input aria-label="显示名称" className={inputClass} value={name} required maxLength={200} disabled={!admin || busy} onChange={event => setName(event.target.value)} />
           </Field>
-          <Field label="公开标识" hint={channel === "wechat" ? "公众号填 wx 开头的 AppID。不要填 AppSecret。已有公众号不用重复登记。" : "填平台上的账号名或 @handle，不要填密码。"}>
+          <Field label="公开标识" hint={channel === "wechat" ? "公众号填 wx 开头的 AppID。不要填 AppSecret。已有公众号不用重复登记。" : "其他平台填账号名、@handle 或昵称；不要填密码、密钥或网址。"}>
             <input aria-label="公开标识" className={inputClass} name="public-handle" autoComplete="off" spellCheck={false} value={handle} required maxLength={64} disabled={!admin || busy} onChange={event => setHandle(event.target.value)} />
           </Field>
         </div>
