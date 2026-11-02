@@ -14,7 +14,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..models import ContentMasterRevision, MaterialRevision, SystemSetting, User
+from ..models import ContentMasterRevision, ContentProject, ContentUnit, MaterialRevision, SystemSetting, User
 from . import shot_slots
 
 STEPS = {"place": "把素材放进主稿", "decide": "判断哪些镜头要 AE", "save": "保存主稿", "edit": "建剪辑任务"}
@@ -62,10 +62,12 @@ def _postproduction(document: dict, ae: dict[str, str]) -> dict:
 
 def _save(db: Session, user: User, project_id: int, unit_id: int, master: ContentMasterRevision, document: dict, summary: dict,
           edit_summary: dict | None = None) -> int:
-    from .content_masters import get_revision, save_revision
+    from .content_masters import _context, _hash, get_revision, save_revision
     from .video_documents import _expected_media
 
     current = get_revision(db, project_id, unit_id, master.id, user)
+    # The new version is checked against today's settings; the previous version's stored context goes stale whenever a setting changes.
+    live_context = _hash(_context(db, db.get(ContentProject, project_id), db.get(ContentUnit, unit_id), content_form=master.content_form))
     hashes = {row["material_revision_id"]: row["content_hash"] for row in current["assets"]}
     refs = []
     for ref in _expected_media(document):
@@ -76,7 +78,7 @@ def _save(db: Session, user: User, project_id: int, unit_id: int, master: Conten
     evidence = [{key: row[key] for key in ("fact_pack_item_id", "snapshot_checksum", "role", "locator", "sort_order")}
                 for row in current["evidence"]]
     saved = save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload={
-        "expected_revision": master.revision_no, "expected_context_hash": current["context_hash"],
+        "expected_revision": master.revision_no, "expected_context_hash": live_context,
         "idempotency_key": f"handoff:{uuid.uuid4().hex}", "payload_schema": "video.master.v2", "payload": document,
         "content_form": current.get("content_form"), "parent_revision_id": master.id, "source_kind": "user_edit",
         "edit_summary": edit_summary if edit_summary is not None else {"auto_handoff": summary}, "asset_refs": refs, "evidence_refs": evidence})

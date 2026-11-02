@@ -1,0 +1,2 @@
+- [x] 1 `edit_handoff._save` 期望上下文改为按当前设置现算
+- [x] 2 正式库副本上用作品 90 经 MCP 保存一次验证；全量测试（只允许已知失败）；`openspec validate`
