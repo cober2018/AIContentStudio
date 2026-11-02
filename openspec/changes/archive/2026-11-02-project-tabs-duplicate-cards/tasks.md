@@ -1,0 +1,2 @@
+- [x] 1 PersistentProjectPage：各子页组件 key 加子页名
+- [x] 2 tsc；`openspec validate`
