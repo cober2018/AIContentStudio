@@ -22,7 +22,7 @@ TOOL_NAMES = {
     "get_craft_skill", "list_ae_templates", "render_ae_template", "start_material_autofill",
     # The video chain is led by the external model; it saves the 导演稿 and picks materials itself.
     "get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
-    "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common",
+    "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",
     "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
     "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid",
     "get_article_brief", "save_article_draft", "get_article_decision",

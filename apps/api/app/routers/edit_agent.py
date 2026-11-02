@@ -205,7 +205,21 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
             result["sample"] = {"execution_id": sample["execution_id"], "cut_output_id": db.scalar(select(CreativeExecutionOutput.id).where(
                 CreativeExecutionOutput.execution_id == sample["execution_id"], CreativeExecutionOutput.role_id == "rough_cut")
                 .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1)), "cover_output_id": cover(sample["execution_id"])}
+            result["sample"]["shot_checks"] = _shot_checks(db, result["sample"]["cut_output_id"])
+        result["shot_checks"] = _shot_checks(db, result["cut_output_id"])
     return result
+
+
+def _shot_checks(db: Session, output_id: int | None) -> dict | None:
+    import json
+
+    from ..models import CreativeExecutionOutput
+
+    output = db.get(CreativeExecutionOutput, output_id) if output_id else None
+    try:
+        return json.loads((output.metadata_json or {})["shot_checks"]) if output else None
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 @router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/decision")

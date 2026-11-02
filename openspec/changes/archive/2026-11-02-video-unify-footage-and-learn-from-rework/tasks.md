@@ -1,0 +1,8 @@
+- [x] 1 剪辑规则：video_chain.RULES 加 HLG 还原、素材统一、回执要求；craft-resolve color.md / sound.md / finishing.md 补对应做法
+- [x] 2 LUT 两份存进 craft_skills/craft-resolve/luts/，写安装说明
+- [x] 3 平台交付检查：逐镜头亮度/高光、相邻跳变、对白分段响度；阈值进设置；审阅页显示提示
+- [x] 4 返修记录：小样/成片退回意见落库（新表），可查
+- [x] 5 经验库：新表、MCP propose_lesson（同类合并计数）、设置页「经验库」（同意/改后同意/不同意/停用、次数、来源、2 次以上标红）
+- [x] 6 已生效经验随 get_video_brief 下发；回执写明用到的经验
+- [x] 7 首条经验：HLG 过曝录入并生效
+- [x] 8 迁移（新表）、全量测试（只允许已知失败）、tsc、用 P46 的小样文件试跑交付检查、`openspec validate`

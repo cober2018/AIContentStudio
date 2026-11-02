@@ -312,6 +312,14 @@ class VideoCommonInput(Scope):
     material_revision_id: ID
 
 
+class LessonInput(Scope):
+    title: str = Field(min_length=1, max_length=200)
+    rule: str = Field(min_length=1, max_length=2000)
+    scope: str = Field(min_length=1, max_length=200)
+    record_ids: list[ID] = Field(default_factory=list, max_length=50)
+    same_as_lesson_id: ID | None = None
+
+
 class ArticleDraftInput(Scope):
     payload: dict
     note: str | None = Field(default=None, max_length=2000)
@@ -463,6 +471,7 @@ TOOLS = {
     "save_publish_copy": (PublishCopyInput, "Product works: save the publish copy written with studio.product.publish-copy (title ≤15, 3–5 hashtags, cover_text ≤8, interaction, description ≤50). The user can edit it on the page.", False),
     "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines.", False),
     "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
+    "propose_lesson": (LessonInput, "Call after delivering a revision that addressed sent-back notes (brief lessons.open_rework_records): generalize the cause into a reusable rule (title = short cause, rule = what to do from now on, scope = which videos it fits, e.g. iPhone HLG 实拍 / 商品视频 / 全部视频) and name the record_ids it came from. When an active or pending lesson in the brief has the same cause, pass same_as_lesson_id: it counts one more occurrence instead of a duplicate. The user approves in Settings before a lesson reaches briefs.", False),
     "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects. The result names work_dir and export_dir: export the 小样 / 成片 straight into export_dir and keep everything else in work_dir; materials stay where they are.", False),
     "analyze_reference_video": (ReferenceVideoInput, "Start the free local breakdown of a reference video (a video material_revision_id from the library; the user can also upload one on the 导演稿 page): timed transcript, scene cuts, time-labelled frame grids per segment and loudness, written to <项目>/工作/<作品>/参考拆解/. Runs in the background; read it with get_reference_video. The reference never becomes project material and never enters the cut.", False),
     "get_reference_video": (Scope, "Read the work's reference breakdown: status (running / done / failed), the local summary with transcript, cuts, loudness and the absolute paths of transcript.json, cuts.json and the grid images to look at, the saved breakdown and the shooting list.", True),
@@ -671,7 +680,7 @@ _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_s
 _ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision"}
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                 "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
-                "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common",
+                "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",
                 "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid"}
 
 
@@ -711,6 +720,10 @@ def _video(db: Session, name: str, args: Input, user: User) -> dict:
         return product_video.save_publish_copy(db, user, p, u, args.model_dump(exclude={"project_id", "unit_id"}))
     if name == "file_as_common":
         return chain.file_as_common(db, user, p, u, args.material_revision_id)
+    if name == "propose_lesson":
+        from . import video_lessons
+
+        return video_lessons.propose(db, user, p, u, args.title, args.rule, args.scope, args.record_ids, args.same_as_lesson_id)
     if name in {"analyze_reference_video", "get_reference_video", "save_reference_breakdown"}:
         from . import reference_video
 

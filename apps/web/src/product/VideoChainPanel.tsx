@@ -11,9 +11,13 @@ const StoryboardTable = lazy(() => import("./StoryboardTable"));
 const ProductShotPanel = lazy(() => import("./ProductShotPanel"));
 
 type Note = { time_ms: number | null; note: string };
-type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null };
+type ShotWarning = { code: "shot_overexposed" | "shot_brightness_jump" | "dialogue_level_uneven"; shot_id: string | null; order: number; luma?: number; clipped?: number;
+  from_shot_id?: string | null; from_order?: number; from_luma?: number; lufs?: number; median_lufs?: number; diff_lu?: number };
+type ShotChecks = { status: string; basis: string; truncated?: boolean; warnings: ShotWarning[];
+  thresholds: { overexposed_mean_luma: number; overexposed_clipped_percent: number; brightness_jump_luma: number; dialogue_spread_lu: number } };
+type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null };
 type Chain = {
-  state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; draft_revision_no?: number;
+  state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
   phase?: string; locked?: boolean; sample?: Cut;
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
@@ -24,6 +28,28 @@ const ORDER: Step[] = ["draft", "sample", "final"];
 function errorText(error: unknown) {
   const detail = error instanceof ApiError ? error.detail as { message?: string } | undefined : undefined;
   return detail?.message || (error instanceof Error ? error.message : "操作失败");
+}
+
+function shotName(id: string | null | undefined, order: number, basis: string) {
+  return basis === "fixed" || !id ? `第 ${order * 3}–${order * 3 + 3} 秒` : `第 ${order + 1} 镜（${id}）`;
+}
+
+function warningText(item: ShotWarning, checks: ShotChecks) {
+  const limits = checks.thresholds;
+  const name = shotName(item.shot_id, item.order, checks.basis);
+  if (item.code === "shot_overexposed") return `${name}偏亮：平均亮度 ${item.luma}（提示线 ${limits.overexposed_mean_luma}），贴顶高光占 ${item.clipped}%（提示线 ${limits.overexposed_clipped_percent}%）`;
+  if (item.code === "shot_brightness_jump") return `${shotName(item.from_shot_id, item.from_order ?? item.order - 1, checks.basis)} → ${name}亮度跳变：${item.from_luma} → ${item.luma}，差 ${Math.abs((item.luma ?? 0) - (item.from_luma ?? 0)).toFixed(1)}（提示线 ${limits.brightness_jump_luma}）`;
+  return `${name}对白${(item.diff_lu ?? 0) > 0 ? "偏响" : "偏轻"}：${item.lufs} LUFS，和各段中间值 ${item.median_lufs} 差 ${Math.abs(item.diff_lu ?? 0)} LU（提示线 ${limits.dialogue_spread_lu} LU）`;
+}
+
+// Platform readings per 导演稿 shot; hints for the reviewer, the delivery is never held back by them.
+function ShotCheckList({ checks }: { checks: ShotChecks }) {
+  if (!checks.warnings.length) return <p className="mt-2 text-xs text-slate-500">交付检查：逐镜头亮度和对白音量没发现问题{checks.status === "partial" ? "（镜头太多，只查了前面一部分）" : ""}。</p>;
+  return <div className="mt-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-900" role="note" aria-label="交付检查">
+    <p className="font-medium">交付检查提示（只是提醒，不影响交付）</p>
+    <ul className="mt-1 list-disc space-y-0.5 pl-5">{checks.warnings.map((item, index) => <li key={index}>{warningText(item, checks)}</li>)}</ul>
+    {(checks.status === "partial" || checks.truncated) && <p className="mt-1 text-amber-700">镜头太多，只列出了一部分。</p>}
+  </div>;
 }
 
 // The cover is an image output of the same task, shown through the same signed preview as the cut.
@@ -68,8 +94,8 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const reviewing = live && (data.state.endsWith("_review") || data.state.endsWith("_changes")) || backToDraft;
   const timed = step !== "draft";
   // Once the 成片 task exists, the 小样 lives on as its own earlier task.
-  const cut: Cut | null = step === "sample" ? data.sample || (data.phase === "rough_cut" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id } : null)
-    : step === "final" && data.phase === "final" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id } : null;
+  const cut: Cut | null = step === "sample" ? data.sample || (data.phase === "rough_cut" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id, shot_checks: data.shot_checks } : null)
+    : step === "final" && data.phase === "final" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id, shot_checks: data.shot_checks } : null;
   async function send(decision: "approve" | "changes") {
     const pending = text.trim() ? [...notes, { time_ms: timed && time ? Math.round(Number(time) * 1000) : null, note: text.trim() }] : notes;
     setBusy(true); setIssue("");
@@ -113,6 +139,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
           <FileLocationActions base={`/content-projects/${projectId}/units/${unitId}/video-chain/cuts/${player.output}`} />
         </div>}
       </div>}
+      {cut?.shot_checks && <ShotCheckList checks={cut.shot_checks} />}
       {cut?.cover_output_id && <CoverPreview projectId={projectId} unitId={unitId} executionId={cut.execution_id} outputId={cut.cover_output_id} />}
       {reviewing && <div className="mt-3 space-y-2">
         <div className="flex flex-wrap items-end gap-2">

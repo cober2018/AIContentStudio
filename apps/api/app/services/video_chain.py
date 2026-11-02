@@ -46,6 +46,12 @@ RULES = [
     "复刻参考视频：brief.reference 有值或用户给了参考视频，先 analyze_reference_video / get_reference_video 拿本机拆解，按 studio.video.reference-breakdown 写整体分析、时间线和拍摄清单（save_reference_breakdown），再写导演稿："
     "结构和节奏照参考，口播换成本作品的说法，每镜写 board.source_kind；参考里的证书、医院、成分只记成需要品牌真实资料，不照抄、不生成；参考视频的原画面和水印不进成片。",
     "写人物镜头的提示词按 studio.video.prompt-direction：board.attitude 先写人物态度和对谁说，再写一两个关键反应；首帧按 拍摄方式 / 人物 / 动作与镜头 / 场景 四段写；商品图管外观、人物图管长相，提示词不重复描述包装。",
+    "HLG 还原（必做）：每段实拍先用 ffprobe 看 color_transfer；是 arib-std-b67（iPhone HLG）的，项目色彩科学用 davinciYRGB（不做色彩管理），只给这些片段 SetLUT(1, \"MCP/iphone-hlg-apple-sdr-render.cube\")；"
+    "SDR 网络素材、AI 画面、AE 叠层一律不套。验收拿渲染出来的文件抽帧，和手机自己的显示帧（AVAssetImageGenerator）比亮度，不看达芬奇静帧。"
+    "达芬奇里没有这份 LUT 就先从仓库 craft_skills/craft-resolve/luts/ 拷到达芬奇 LUT 文件夹的 MCP/ 下（做法见 craft-resolve techniques/color.md「iPhone HLG 还原」）。",
+    "素材统一（必做，粗剪后、导出小样前）：颜色只做校正和匹配——曝光、白平衡拉正，同一场景的镜头用色彩组对齐到一个参考镜头；不做风格化调色，素材正常且彼此一致就不动。"
+    "声音：实拍对白逐段拉到约 −16 LUFS，只有明显底噪才轻度降噪，只有一边声道有声的修成两边；之后再按现有混音标准（整片约 −14 LUFS、真峰值 ≤ −1 dBTP）。",
+    "小样、成片的回执逐镜头写明：哪些套了 HLG 还原、哪些做了颜色校正（改了什么）、哪些对白段调了音量（调了多少）；没动的写没动。平台交付时会逐镜头查过曝、亮度跳变和对白音量，提示在审阅页。",
 ]
 EXECUTOR = "codex-video-production"
 _KEEPS_DRAFT = {"material", "edit_prep", "cover"}
@@ -239,6 +245,10 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
                                 "notes": [{"time_ms": item.get("time_ms"), "note": str(item.get("note") or "")[:2000]} for item in notes][:50],
                                 "by": user.email, "at": datetime.now(UTC).isoformat()})
     _put(db, unit_id, record)
+    if stage != "draft" and decision == "changes":
+        from . import video_lessons
+
+        video_lessons.record_notes(db, user, project_id, unit_id, stage, target, notes[:50])
     db.commit()
     if stage == "final" and decision == "approve":
         from . import project_folders
@@ -339,7 +349,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
-    from . import craft_skills, product_video, project_folders, reference_video, voiceover
+    from . import craft_skills, product_video, project_folders, reference_video, video_lessons, voiceover
     from .persona_brief import persona_brief
     from .content_masters import owned_unit
     from .project_brief import current_brief
@@ -378,7 +388,12 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             # Who the work speaks as; null when it belongs to no persona.
             "persona": persona_brief(db, user, unit),
             # The reference video being cloned, when the user attached one; null otherwise.
-            "reference": reference_video.brief_view(db, unit_id)}
+            "reference": reference_video.brief_view(db, unit_id),
+            # Approved lessons from earlier rework, plus this work's sent-back notes not yet turned into a lesson.
+            "lessons": video_lessons.brief_view(db, user, unit_id),
+            "lessons_rule": "先读 lessons.active，适用范围（scope）对得上的照做；交付回执写明这次用了哪几条经验（id）。"
+                            "按退回意见（lessons.open_rework_records）改好交付后，调用 propose_lesson 把原因归纳成以后通用的做法；"
+                            "和已有经验是同一个原因就用 same_as_lesson_id 挂上去，不要新建。经验要用户同意后才生效。"}
 
 
 def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: dict, note: str | None) -> dict:

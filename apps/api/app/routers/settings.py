@@ -9,12 +9,12 @@
 import asyncio
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..deps import get_current_user, require_admin
+from ..deps import get_current_user, require_admin, require_editor
 from ..services.system_settings import (
     build_settings_view,
     save_plugins,
@@ -267,6 +267,29 @@ def run_storage_cleanup_now(db: Session = Depends(get_db), user=Depends(require_
     return {"result": result, "overview": retention.storage_overview(db)}
 
 
+class DeliveryCheckThresholds(BaseModel):
+    model_config = {"extra": "forbid"}
+    overexposed_mean_luma: float | None = Field(default=None, ge=100, le=255)
+    overexposed_clipped_percent: float | None = Field(default=None, ge=0.1, le=100)
+    brightness_jump_luma: float | None = Field(default=None, ge=5, le=255)
+    dialogue_spread_lu: float | None = Field(default=None, ge=1, le=30)
+
+
+@router.get("/api/v1/settings/delivery-checks")
+def get_delivery_checks(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services import delivery_checks
+
+    return delivery_checks.view(db)
+
+
+@router.put("/api/v1/settings/delivery-checks")
+def put_delivery_checks(payload: DeliveryCheckThresholds, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import delivery_checks
+
+    delivery_checks.set_thresholds(db, payload.model_dump(exclude_none=True), user.email)
+    return delivery_checks.view(db)
+
+
 @router.get("/api/v1/settings/ae-templates")
 def get_ae_templates(user=Depends(get_current_user)):
     from ..services import craft_skills
@@ -315,3 +338,34 @@ async def test_open_media_source(source: str, user=Depends(require_admin)):
     from ..services import open_media
 
     return await asyncio.to_thread(open_media.test_source, source)
+
+
+class VideoLessonChange(BaseModel):
+    model_config = {"extra": "forbid"}
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    rule: str | None = Field(default=None, min_length=1, max_length=2000)
+    scope: str | None = Field(default=None, min_length=1, max_length=200)
+    action: Literal["approve", "reject", "retire"] | None = None
+
+
+@router.get("/api/v1/settings/video-lessons")
+def get_video_lessons(status: Literal["proposed", "active", "rejected", "retired"] | None = None,
+                      db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services import video_lessons
+
+    return video_lessons.list_lessons(db, user, status)
+
+
+@router.get("/api/v1/settings/video-lessons/records")
+def get_video_rework_records(unit_id: int | None = None, unlinked: bool = False, limit: int = Query(default=50, ge=1, le=200),
+                             db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services import video_lessons
+
+    return video_lessons.list_records(db, user, unit_id, unlinked, limit)
+
+
+@router.patch("/api/v1/settings/video-lessons/{lesson_id}")
+def patch_video_lesson(lesson_id: int, payload: VideoLessonChange, db: Session = Depends(get_db), user=Depends(require_editor)):
+    from ..services import video_lessons
+
+    return video_lessons.update_lesson(db, user, lesson_id, payload.model_dump(exclude={"action"}), payload.action)

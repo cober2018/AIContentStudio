@@ -1191,12 +1191,18 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             streams.budget(db, row, package, size, private=not project)
             inspected = streams.validate(source, mime, role["kind"], package, role_id=role_id)
             # Loudness is the platform's own reading; an executor-supplied value is never kept.
-            metadata = {key: value for key, value in metadata.items() if key != "loudness"}
+            metadata = {key: value for key, value in metadata.items() if key not in {"loudness", "shot_checks"}}
             if inspected.get("loudness"):
                 # Output metadata holds only flat strings, so the reading is kept as compact JSON.
                 import json
 
                 metadata = {**metadata, "loudness": json.dumps(inspected["loudness"], sort_keys=True, separators=(",", ":"))}
+            if role_id in {"rough_cut", "final"} and inspected.get("duration_ms") and package.package_json.get("director", {}).get("postproduction"):
+                from . import delivery_checks
+
+                checks = delivery_checks.inspect(source, package.package_json["director"], inspected["duration_ms"], inspected.get("has_audio", False),
+                                                 delivery_checks.thresholds(db))
+                metadata = {**metadata, "shot_checks": delivery_checks.compact(checks)}
             if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
                 import json
 

@@ -26,7 +26,7 @@ GROUPS = {
                                   "reconcile_unknown", "request_human_review"}),
     "context": ("读取上下文与方法", {"get_context", "find_capabilities", "use_capability"}),
     "video": ("做视频（导演稿 → 小样 → 成片）", {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
-                                        "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common",
+                                        "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",
                                         "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}),
     "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision"}),
 }
@@ -62,6 +62,7 @@ SUMMARIES = {
     "set_shot_materials": "导演稿采用后，给每个镜头定素材",
     "accept_material_candidate": "把搜到的一条图库素材收进素材库和本项目",
     "file_as_common": "把本项目里通用的素材（特效、转场、常用 BGM / 音效）移到 Mac 本地的通用素材库",
+    "propose_lesson": "按退回意见改好后，把原因归纳成以后通用的做法交给你确认（同一原因累计次数）",
     "get_article_brief": "写文章 / 图文前读资料：任务书、事实、来源原文、写作方式、当前版本（也是格式示例）",
     "save_article_draft": "存一版文章 / 图文稿，然后停下等用户采用或写意见（页面开关须为「第三方模型」）",
     "get_article_decision": "读用户对稿件的决定：采用即定稿，有意见就出下一版",

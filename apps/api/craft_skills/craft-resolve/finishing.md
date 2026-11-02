@@ -8,6 +8,19 @@
 - Resolve scripting can enable the Dialogue Leveler but not a limiter. Do not raise gain past the peak ceiling to chase loudness; master the narration instead.
 - The platform measures loudness and true peak on rough/final submit and shows warnings at review; fix the cause rather than resubmitting the same mix.
 
+## Footage unification before the 小样 (required)
+
+- HLG restore first: check each live clip's `color_transfer` with ffprobe; `arib-std-b67` (iPhone HLG) clips get `MCP/iphone-hlg-apple-sdr-render.cube` via `SetLUT(1, …)` in a `davinciYRGB` (non-colour-managed) project. Never on SDR stock, generated images or AE overlays. See `techniques/color.md` «iPhone HLG 还原».
+- LUT install: if `MCP/iphone-hlg-apple-sdr*.cube` is missing from Resolve's LUT list, copy both files from the repo's `craft_skills/craft-resolve/luts/` into Resolve's LUT folder under `MCP/` (macOS: `/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/MCP/`) and refresh the LUT list.
+- Then correct exposure / white balance and match shots of one scene to a reference shot (colour groups). No stylised grading; leave footage alone when it is already normal and consistent. See `techniques/color.md` «统一全片色调».
+- Level each live dialogue segment to about −16 LUFS, denoise lightly only for obvious noise, fix one-sided mono; then mix to the Sound targets above. See `techniques/sound.md` «对白逐段拉齐».
+- Verify brightness on the rendered file against the phone's own display frame (AVAssetImageGenerator), not on Resolve stills.
+- The platform samples one frame per 导演稿 shot and measures speech per shot on rough/final submit, and warns at review about over-exposed shots, brightness jumps between adjacent shots and uneven dialogue; fix the cause rather than resubmitting.
+
+## Delivery receipt
+
+Every 小样 / 成片 receipt lists per shot: which clips got the HLG restore, which got colour correction and what changed, and which dialogue segments had their level changed (by how much) or were denoised. Shots left as shot say so.
+
 ## Captions
 
 - Text comes from the accepted spoken script; times come from ASR-aligned cues. Break only at punctuation; split a long clause at a natural phrase boundary, never inside a word, number or name.

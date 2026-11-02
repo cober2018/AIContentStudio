@@ -17,11 +17,13 @@ const StudioCreativeInventory = lazy(() => import("./StudioCreativeInventory"));
 const McpSettings = lazy(() => import("./McpSettings"));
 const StorageSettings = lazy(() => import("./StorageSettings"));
 const StorageCleanupSettings = lazy(() => import("./StorageCleanupSettings"));
+const VideoLessonSettings = lazy(() => import("./VideoLessonSettings"));
 const KnowledgeSettings = lazy(() => import("./KnowledgeSettings"));
 const StockSourceSettings = lazy(() => import("./StockSourceSettings"));
 const AeTemplateLibrary = lazy(() => import("./AeTemplateLibrary"));
 const ProductCategories = lazy(() => import("./ProductCategories"));
 const EditAgentSettings = lazy(() => import("./EditAgentSettings"));
+const DeliveryCheckSettings = lazy(() => import("./DeliveryCheckSettings"));
 const VoiceSettings = lazy(() => import("./VoiceSettings"));
 type Editability = "editable" | "read_only" | "unavailable";
 type Section = { key: string; label: string; editability: Editability; reason?: string | null; data?: unknown };
@@ -30,7 +32,7 @@ type PageInfo = { total: number; limit: number; offset: number };
 const labels: Record<Editability, string> = { editable: "可配置", read_only: "只读", unavailable: "不可用" };
 const sections = [
   ["models", "模型与 AI"], ["data_sources", "数据源"], ["channels", "渠道"],
-  ["rules", "规则与模板"], ["team", "团队与权限"], ["mcp", "MCP 接入"], ["storage", "存储位置"], ["storage_cleanup", "存储与清理"], ["knowledge", "知识库"], ["stock_sources", "素材数据源"], ["ae_templates", "AE 模板库"], ["product_categories", "商品品类"], ["edit_agent", "自动剪辑"], ["voice", "配音"], ["methods", "能力方法库"],
+  ["rules", "规则与模板"], ["team", "团队与权限"], ["mcp", "MCP 接入"], ["storage", "存储位置"], ["storage_cleanup", "存储与清理"], ["knowledge", "知识库"], ["stock_sources", "素材数据源"], ["ae_templates", "AE 模板库"], ["product_categories", "商品品类"], ["edit_agent", "自动剪辑"], ["delivery_checks", "交付检查"], ["voice", "配音"], ["video_lessons", "经验库"], ["methods", "能力方法库"],
 ] as const;
 
 const modelViews = [
@@ -223,22 +225,24 @@ export default function ProductSettingsPage() {
   const paginated = active === "rules" || active === "data_sources";
   const path = active === "rules" ? "rules" : "data-sources";
   const page = useQuery({ queryKey: ["product-settings-page", currentUser(), active, offset], queryFn: () => api.get<Section>(`/settings/${path}?limit=50&offset=${offset}`), enabled: paginated, retry: false });
-  const selected = active === "mcp" || active === "storage" || active === "storage_cleanup" || active === "knowledge" || active === "stock_sources" || active === "ae_templates" || active === "product_categories" || active === "edit_agent" || active === "voice" || active === "methods" ? undefined : paginated ? page.data : query.data?.sections.find((item) => item.key === active);
+  const selected = active === "mcp" || active === "storage" || active === "storage_cleanup" || active === "knowledge" || active === "stock_sources" || active === "ae_templates" || active === "product_categories" || active === "edit_agent" || active === "delivery_checks" || active === "voice" || active === "video_lessons" || active === "methods" ? undefined : paginated ? page.data : query.data?.sections.find((item) => item.key === active);
   const paging = selected ? pageInfo(selected) : undefined;
   // MCP has its own endpoint; the product inventory does not describe it.
-  const ownPage = active === "mcp" || active === "storage" || active === "storage_cleanup" || active === "knowledge" || active === "stock_sources" || active === "ae_templates" || active === "product_categories" || active === "edit_agent" || active === "voice" || active === "methods";
+  const ownPage = active === "mcp" || active === "storage" || active === "storage_cleanup" || active === "knowledge" || active === "stock_sources" || active === "ae_templates" || active === "product_categories" || active === "edit_agent" || active === "delivery_checks" || active === "voice" || active === "video_lessons" || active === "methods";
   const pending = ownPage ? false : paginated ? page.isPending : query.isPending;
   const error = ownPage ? null : paginated ? page.error : query.error;
   const refresh = () => paginated ? page.refetch() : query.refetch();
   return <div className="mx-auto w-full max-w-[1240px] space-y-8 px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12"><header className="border-b border-ink-200/80 pb-7"><p className="eyebrow">工作空间</p><h1 className="mt-3 text-[34px] leading-[1.1] text-ink-900 sm:text-[40px]">设置</h1><p className="mt-3 text-[15px] text-ink-600">模型、数据源、渠道、模板与权限都在这里配置。</p></header>
-    {!active && !requested && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sections.map(([key, label]) => <button key={key} className="rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" onClick={() => changeLocation(key)}><h2 className="font-semibold text-slate-900">{label}</h2><p className="mt-2 text-sm text-slate-500">{{ models: "连接厂商、登记模型与选择功能用途", data_sources: "管理来源接入与明确拉取", channels: "查看渠道与配置渠道方法", rules: "查看创作资源与管理版本化模板", team: "核对当前身份与权限边界", mcp: "大模型如何连接平台、能做什么", storage: "素材库与本地工作文件夹放在哪里", storage_cleanup: "各部分占多大、上次清理结果、保留天数与立即清理", knowledge: "Obsidian 知识库位置与项目可检索的子目录", stock_sources: "免费素材库的 Key、启用与测试", ae_templates: "看看有哪些 AE 效果、动画预览和要填的内容", product_categories: "每个品类的脚本风格、开头、光线和运镜；图生视频默认方式", edit_agent: "准备好剪辑后自动交给本机助手剪粗剪", voice: "MiniMax 配音的音色、情绪和音频参数", methods: "可复用的创作方法与偏好，按项目和作品选用" }[key]}</p><span className="mt-4 inline-block text-sm text-indigo-700">进入配置 →</span></button>)}</div>}
+    {!active && !requested && <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{sections.map(([key, label]) => <button key={key} className="rounded-xl border border-slate-200 bg-white p-5 text-left hover:border-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600" onClick={() => changeLocation(key)}><h2 className="font-semibold text-slate-900">{label}</h2><p className="mt-2 text-sm text-slate-500">{{ models: "连接厂商、登记模型与选择功能用途", data_sources: "管理来源接入与明确拉取", channels: "查看渠道与配置渠道方法", rules: "查看创作资源与管理版本化模板", team: "核对当前身份与权限边界", mcp: "大模型如何连接平台、能做什么", storage: "素材库与本地工作文件夹放在哪里", storage_cleanup: "各部分占多大、上次清理结果、保留天数与立即清理", knowledge: "Obsidian 知识库位置与项目可检索的子目录", stock_sources: "免费素材库的 Key、启用与测试", ae_templates: "看看有哪些 AE 效果、动画预览和要填的内容", product_categories: "每个品类的脚本风格、开头、光线和运镜；图生视频默认方式", edit_agent: "准备好剪辑后自动交给本机助手剪粗剪", delivery_checks: "小样、成片交付时逐镜头查过曝、亮度跳变和对白音量的提示线", voice: "MiniMax 配音的音色、情绪和音频参数", video_lessons: "视频被退回后总结的经验：确认、停用，反复出现的标红", methods: "可复用的创作方法与偏好，按项目和作品选用" }[key]}</p><span className="mt-4 inline-block text-sm text-indigo-700">进入配置 →</span></button>)}</div>}
     {requested && !active && <div role="alert"><ErrorBanner message="未找到这个设置分区，请返回设置目录。" /><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button></div>}
     {active && <><nav className="flex flex-wrap gap-2" aria-label="设置分区"><Button variant="secondary" onClick={() => changeLocation("")}>返回设置目录</Button>{sections.map(([key, label]) => <Button key={key} variant={active === key ? "primary" : "secondary"} onClick={() => { if (key !== active) changeLocation(key); }}>{label}</Button>)}</nav>
     {pending && <Spinner label="读取安全产品设置…" />}
     {error && <div className="space-y-3" role="alert"><ErrorBanner message={error instanceof Error ? error.message : "设置读取失败"} /><Button onClick={() => void refresh()}>重试</Button></div>}
     {active === "mcp" && <Suspense fallback={<Spinner label="读取 MCP 接入…" />}><McpSettings onDirtyChange={setDirty} /></Suspense>}
+    {active === "video_lessons" && <Suspense fallback={<Spinner label="读取经验库…" />}><VideoLessonSettings /></Suspense>}
     {active === "voice" && <Suspense fallback={<Spinner label="读取配音设置…" />}><VoiceSettings /></Suspense>}
     {active === "edit_agent" && <Suspense fallback={<Spinner label="读取自动剪辑…" />}><EditAgentSettings /></Suspense>}
+    {active === "delivery_checks" && <Suspense fallback={<Spinner label="读取交付检查…" />}><DeliveryCheckSettings /></Suspense>}
     {active === "knowledge" && <Suspense fallback={<Spinner label="读取知识库…" />}><KnowledgeSettings /></Suspense>}
     {active === "storage" && <Suspense fallback={<Spinner label="读取存储位置…" />}><StorageSettings editable /></Suspense>}
     {active === "storage_cleanup" && <Suspense fallback={<Spinner label="读取存储情况…" />}><StorageCleanupSettings /></Suspense>}

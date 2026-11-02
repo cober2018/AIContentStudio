@@ -1970,6 +1970,47 @@ class AccountMetricImport(Base):
     undone_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class VideoReworkRecord(Base):
+    """One note the user wrote when sending a 小样 / 成片 back; kept so causes can be compared across videos."""
+
+    __tablename__ = "video_rework_record"
+    __table_args__ = (CheckConstraint("stage IN ('sample','final')", name='ck_video_rework_record_stage'),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), index=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey('content_project.id'), index=True)
+    unit_id: Mapped[int] = mapped_column(ForeignKey('content_unit.id'), index=True)
+    stage: Mapped[str] = mapped_column(String(20))
+    target_id: Mapped[int] = mapped_column(Integer)
+    time_ms: Mapped[int | None] = mapped_column(Integer)
+    note: Mapped[str] = mapped_column(Text)
+    lesson_id: Mapped[int | None] = mapped_column(ForeignKey('video_lesson.id'), index=True)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class VideoLesson(Base):
+    """A rule the editing model drew from rework; it reaches new briefs only after the user approves it."""
+
+    __tablename__ = "video_lesson"
+    __table_args__ = (CheckConstraint("status IN ('proposed','active','rejected','retired')", name='ck_video_lesson_status'),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    rule: Mapped[str] = mapped_column(Text)
+    scope: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(20), default='proposed')
+    occurrences: Mapped[int] = mapped_column(Integer, default=1)
+    source_record_ids: Mapped[list] = mapped_column(JSON, default=list)
+    source_unit_ids: Mapped[list] = mapped_column(JSON, default=list)
+    proposed_by: Mapped[str | None] = mapped_column(String(255))
+    decided_by: Mapped[str | None] = mapped_column(String(255))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 class ContentInsight(Base):
     __tablename__ = "content_insight"
 
