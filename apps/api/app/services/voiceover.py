@@ -261,6 +261,7 @@ def _duration_ms(content: bytes, suffix: str) -> int | None:
 
 
 MAX_FIT_SPEEDUP = 1.25
+DUB_END_MARGIN_MS = 100
 
 
 def _shot_starts(document: dict) -> dict[str, int]:
@@ -282,9 +283,11 @@ def _dubbed_shots(db: Session, user: User, document: dict) -> list[dict]:
     """Shots marked with a persona; each is voiced by that persona's own fixed voice."""
     from ..models import ContentPersona
 
-    marked = [shot for shot in sorted(document["shots"], key=lambda item: item["order"]) if (shot.get("board") or {}).get("dub_persona")]
+    ordered = sorted(document["shots"], key=lambda item: item["order"])
+    marked = [shot for shot in ordered if (shot.get("board") or {}).get("dub_persona")]
     if not marked:
         return []
+    cues = (document.get("subtitles") or {}).get("cues") or []
     blocks = {block["id"]: block.get("text", "") for block in document["script"]["blocks"]}
     current, starts = presets(), _shot_starts(document)
     personas = db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id, ContentPersona.status == "active")).all()
@@ -303,8 +306,17 @@ def _dubbed_shots(db: Session, user: User, document: dict) -> list[dict]:
             _fail("voiceover_dub_line_missing", f"{label}标了配音，但台词是空的")
         item = current["items"][preset]
         config = {**{k: v for k, v in item.items() if k != "name"}, "preset_id": preset, "preset_name": item["name"], "preset_origin": "角色"}
+        start = starts[shot["id"]]
+        index = ordered.index(shot)
+        previous = ordered[index - 1] if index else None
+        tail_start = start
+        # The previous shot's silent tail (after its last spoken cue) may carry the start of this line: sound leads, picture cuts later.
+        if previous is not None and not (previous.get("board") or {}).get("dub_persona"):
+            previous_start = starts[previous["id"]]
+            spoken = [cue["end_ms"] for cue in cues if cue["start_ms"] < start and cue["end_ms"] > previous_start]
+            tail_start = min(start, max(spoken)) if spoken else previous_start
         result.append({"shot_id": shot["id"], "label": label, "line": line, "persona": persona.name, "config": config,
-                       "start_ms": starts[shot["id"]], "duration_ms": shot.get("duration_ms") or 0})
+                       "start_ms": start, "duration_ms": shot.get("duration_ms") or 0, "tail_start_ms": tail_start})
     return result
 
 
@@ -320,6 +332,8 @@ def _synthesize_shots(db: Session, user: User, project_id: int, unit, shots: lis
         placed, cues = [], []
         for index, shot in enumerate(shots):
             config = shot["config"]
+            shot_end = shot["start_ms"] + shot["duration_ms"]
+            room = shot_end - DUB_END_MARGIN_MS - shot["tail_start_ms"]
             for attempt in range(2):
                 result = provider.generate({"prompt": shot["line"], "model_id": config["model_id"], "timeout_seconds": 300,
                                             "parameters": _parameters(config)})
@@ -328,17 +342,24 @@ def _synthesize_shots(db: Session, user: User, project_id: int, unit, shots: lis
                 path = Path(folder) / f"{index:03d}-{attempt}.{'mp3' if result.mime_type == 'audio/mpeg' else 'wav'}"
                 path.write_bytes(result.content)
                 length = _duration_ms(result.content, path.suffix) or 0
-                if length <= shot["duration_ms"] or attempt == 1:
+                if length <= shot["duration_ms"] or length <= room or attempt == 1:
                     break
-                # One faster take so the line fits its shot; the shot's own length is never changed for it.
-                config = {**config, "rate": round(min(shot["config"]["rate"] * MAX_FIT_SPEEDUP, config["rate"] * length / shot["duration_ms"] * 1.03), 2)}
-            if length > shot["duration_ms"]:
+                # The persona's own pace comes first; only a line that overflows tail plus shot gets one faster take.
+                config = {**config, "rate": round(min(shot["config"]["rate"] * MAX_FIT_SPEEDUP, config["rate"] * length / max(room, 1) * 1.03), 2)}
+            if length <= shot["duration_ms"]:
+                voice_start = shot["start_ms"]
+            elif length <= room:
+                voice_start = max(shot["tail_start_ms"], shot_end - DUB_END_MARGIN_MS - length)
+            else:
+                tail = shot["start_ms"] - shot["tail_start_ms"]
                 _fail("voiceover_dub_too_long", f"{shot['label']}的配音加快到 {config['rate']} 倍后要 {length / 1000:.1f} 秒，这一镜只有 "
-                                                f"{shot['duration_ms'] / 1000:.1f} 秒，还差 {(length - shot['duration_ms']) / 1000:.1f} 秒；"
+                                                f"{shot['duration_ms'] / 1000:.1f} 秒（加上上一镜结尾空白 {tail / 1000:.1f} 秒共 "
+                                                f"{(shot['duration_ms'] + tail) / 1000:.1f} 秒），还差 {(length - room) / 1000:.1f} 秒；"
                                                 "请把这一镜改长或缩短台词", 409)
-            placed.append((path, shot["start_ms"]))
-            cues.append(f"{index + 1}\n{_stamp(shot['start_ms'])} --> {_stamp(shot['start_ms'] + length)}\n{shot['line']}\n")
+            placed.append((path, voice_start))
+            cues.append(f"{index + 1}\n{_stamp(voice_start)} --> {_stamp(voice_start + length)}\n{shot['line']}\n")
             shot["fitted_rate"], shot["voice_ms"] = config["rate"], length
+            shot["voice_start_ms"], shot["lead_ms"] = voice_start, shot["start_ms"] - voice_start
         joined = Path(folder) / "voice.mp3"
         inputs = [arg for path, _ in placed for arg in ("-i", str(path))]
         delays = "".join(f"[{index}:a]adelay={start}|{start}[d{index}];" for index, (_, start) in enumerate(placed))
@@ -357,7 +378,8 @@ def _synthesize_shots(db: Session, user: User, project_id: int, unit, shots: lis
         rights_status="cleared", public_use_allowed=True, model_use_allowed=True, attribution_text="MiniMax 配音",
         duration_ms=_duration_ms(content, ".mp3"),
         metadata={"subtitles_srt": "\n".join(cues), "script_hash": script_hash, "voice_settings": settings, "source_master_revision_id": master_id,
-                  "dubbed_shots": [{key: shot[key] for key in ("shot_id", "persona", "start_ms", "duration_ms", "voice_ms", "fitted_rate")} for shot in shots]},
+                  "dubbed_shots": [{key: shot[key] for key in ("shot_id", "persona", "start_ms", "duration_ms", "voice_ms", "fitted_rate",
+                                                                    "voice_start_ms", "lead_ms", "tail_start_ms")} for shot in shots]},
         created_by=user.email)
     db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="system_reference", status="active",
                                     attached_by=user.email, note="指定镜头配音"))
@@ -371,7 +393,8 @@ def _generate_dubbed(db: Session, user: User, project_id: int, unit, master, doc
 
     total = document["timeline"]["duration_ms"]
     settings = {"mode": "selected_shots", "shots": [{"shot_id": shot["shot_id"], "persona": shot["persona"], "preset_id": shot["config"]["preset_id"],
-                                                     "start_ms": shot["start_ms"], "duration_ms": shot["duration_ms"]} for shot in shots]}
+                                                     "start_ms": shot["start_ms"], "duration_ms": shot["duration_ms"],
+                                                     "tail_start_ms": shot["tail_start_ms"]} for shot in shots]}
     script_hash = hashlib.sha256(repr([(shot["shot_id"], shot["line"]) for shot in shots]).encode()).hexdigest()
     revision = _reuse(db, project_id, script_hash, settings) or _synthesize_shots(
         db, user, project_id, unit, shots, total, script_hash, settings, master.id)
@@ -383,9 +406,12 @@ def _generate_dubbed(db: Session, user: User, project_id: int, unit, master, doc
     db.add(AuditLog(event="voiceover.generated", actor=user.email, entity_type="material", entity_id=str(revision.material_id),
                     detail_json={"material_revision_id": revision.id, "master_id": master_id, "mode": "selected_shots"}))
     db.commit()
+    dubbed_info = (revision.metadata_json or {}).get("dubbed_shots") or []
     return {"material_id": revision.material_id, "material_revision_id": revision.id, "master_id": master_id,
             "duration_ms": revision.duration_ms, "aligned": False, "has_timing": True, "settings": settings,
-            "dubbed_shots": (revision.metadata_json or {}).get("dubbed_shots")}
+            "dubbed_shots": dubbed_info,
+            "edit_notes": [f"{item['shot_id']} 的配音提前 {item['lead_ms'] / 1000:.2f} 秒进：剪辑时声音先进，画面在本镜开头再切"
+                           for item in dubbed_info if item.get("lead_ms")]}
 
 
 def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
