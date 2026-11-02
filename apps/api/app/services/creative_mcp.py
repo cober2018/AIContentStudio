@@ -457,7 +457,7 @@ TOOLS = {
     "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project, in the film's aspect (9:16 default, 16:9 when the template has a landscape variant; never stretched). Never binds it to a shot.", False),
     "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
     "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model.", True),
-    "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request; product works may add camera_presets (≤2 motion-library ids), look, intensity, chain_from_previous, character; any work may add source_kind (shoot | product_image | generated | ae_template | library: where the picture comes from, shoot shots make the shooting list) and attitude (the person's attitude and who they speak to, written with studio.video.prompt-direction; it leads the video prompt)} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
+    "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request; product works may add camera_presets (≤2 motion-library ids), look, intensity, chain_from_previous, character; any work may add source_kind (shoot | product_image | generated | ae_template | library: where the picture comes from, shoot shots make the shooting list) and attitude (the person's attitude and who they speak to, written with studio.video.prompt-direction; it leads the video prompt); dub_persona (a persona name or id: only that shot's line is voiced, in that persona's own voice, for live-sound videos with a few voice-over shots)} and script.blocks. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
     "get_video_decision": (Scope, "Read the chain state and the user's latest decisions and notes (导演稿 / 小样 / 成片). Continue only after approval; notes mean a new version.", True),
     "set_shot_materials": (VideoMaterialsInput, "After the 导演稿 is approved: put material revisions on shots {shot_id: material_revision_id}, optionally the music bed (music: an audio material_revision_id) and the length of shots without a line (silent_durations, ms; e.g. a closing that must stay long enough to read its text). Picture content stays as approved.", False),
     "accept_material_candidate": (VideoCandidateInput, "Import one stock candidate from a start_material_match run into the library and this project; returns its material_revision_id.", False),
@@ -469,7 +469,7 @@ TOOLS = {
     "generate_shot_video": (ShotInput, "Product works, after the 导演稿 is approved and the user's materials are mapped, only for shots without one, auto shots only: submit image-to-video on MiniMax H3 with the shot's first (and chained last) frame. Billed per clip; never resubmit an unclear call. Read the result with get_shot_video.", False),
     "get_shot_video": (ShotInput, "Product works: poll the shot's automatic image-to-video; when done returns the material_revision_id (a candidate for set_shot_materials).", False),
     "save_publish_copy": (PublishCopyInput, "Product works: save the publish copy written with studio.product.publish-copy (title ≤15, 3–5 hashtags, cover_text ≤8, interaction, description ≤50). The user can edit it on the page.", False),
-    "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines.", False),
+    "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines. If any shot has board.dub_persona, only those shots' lines are voiced in their personas' voices, placed at their shots on one full-length track (silence elsewhere), and no shot timing changes.", False),
     "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
     "propose_lesson": (LessonInput, "Call after delivering a revision that addressed sent-back notes (brief lessons.open_rework_records): generalize the cause into a reusable rule (title = short cause, rule = what to do from now on, scope = which videos it fits, e.g. iPhone HLG 实拍 / 商品视频 / 全部视频) and name the record_ids it came from. When an active or pending lesson in the brief has the same cause, pass same_as_lesson_id: it counts one more occurrence instead of a duplicate. The user approves in Settings before a lesson reaches briefs.", False),
     "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects. The result names work_dir and export_dir: export the 小样 / 成片 straight into export_dir and keep everything else in work_dir; materials stay where they are.", False),
@@ -799,7 +799,7 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 
@@ -862,9 +862,11 @@ def call_tool(db: Session, user: User, binding: Binding, params: dict, trace_id:
     db.rollback()
     # A failed tool still answers 200, so the log is the only place a lost hand-back can be traced; never the arguments.
     execution_id = (params.get("arguments") or {}).get("execution_id") if isinstance(params.get("arguments"), dict) else None
-    log.warning("creative mcp tool failed: tool=%s execution_id=%s code=%s cause=%s status=%s trace=%s", name,
+    # The platform-written message (never the arguments) is logged too, so a lost explanation can be read back.
+    log.warning("creative mcp tool failed: tool=%s execution_id=%s code=%s cause=%s status=%s trace=%s message=%s", name,
                 execution_id if type(execution_id) is int else None, data.get("code"),
-                cause if isinstance(cause, str) and re.fullmatch(r"[a-z0-9_]{1,100}", cause) else None, data.get("status"), trace_id)
+                cause if isinstance(cause, str) and re.fullmatch(r"[a-z0-9_]{1,100}", cause) else None, data.get("status"), trace_id,
+                data.get("message"))
     if mutated:
         data["read_capability_use_before_retry" if name == "use_capability" else "read_execution_before_retry"] = True
     return tool_result(data, failed=True)

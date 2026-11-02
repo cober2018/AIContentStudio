@@ -260,6 +260,134 @@ def _duration_ms(content: bytes, suffix: str) -> int | None:
         return None
 
 
+MAX_FIT_SPEEDUP = 1.25
+
+
+def _shot_starts(document: dict) -> dict[str, int]:
+    """Where each shot begins on the cut: the picture track when the 导演稿 has one, else shot durations in order."""
+    starts: dict[str, int] = {}
+    for track in sorted((document.get("timeline") or {}).get("tracks") or [], key=lambda item: item.get("order", 0)):
+        if track.get("kind") == "video":
+            for item in track.get("items") or []:
+                if item.get("shot_id") and item["shot_id"] not in starts:
+                    starts[item["shot_id"]] = item["start_ms"]
+    offset = 0
+    for shot in sorted(document["shots"], key=lambda item: item["order"]):
+        starts.setdefault(shot["id"], offset)
+        offset += shot.get("duration_ms") or 0
+    return starts
+
+
+def _dubbed_shots(db: Session, user: User, document: dict) -> list[dict]:
+    """Shots marked with a persona; each is voiced by that persona's own fixed voice."""
+    from ..models import ContentPersona
+
+    marked = [shot for shot in sorted(document["shots"], key=lambda item: item["order"]) if (shot.get("board") or {}).get("dub_persona")]
+    if not marked:
+        return []
+    blocks = {block["id"]: block.get("text", "") for block in document["script"]["blocks"]}
+    current, starts = presets(), _shot_starts(document)
+    personas = db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id, ContentPersona.status == "active")).all()
+    result = []
+    for shot in marked:
+        label = f"第 {shot['order'] + 1} 镜（{shot['id']}）"
+        ref = shot["board"]["dub_persona"].strip()
+        persona = next((row for row in personas if str(row.id) == ref or row.name == ref), None)
+        if persona is None:
+            _fail("voiceover_dub_persona_missing", f"{label}标的配音角色「{ref}」不存在")
+        preset = current["personas"].get(str(persona.id))
+        if preset not in current["items"]:
+            _fail("voiceover_dub_persona_voice_missing", f"角色「{persona.name}」还没定声音，先去角色页选好声音", 409)
+        line = blocks.get(shot.get("script_block_id") or "", "").strip()
+        if not line:
+            _fail("voiceover_dub_line_missing", f"{label}标了配音，但台词是空的")
+        item = current["items"][preset]
+        config = {**{k: v for k, v in item.items() if k != "name"}, "preset_id": preset, "preset_name": item["name"], "preset_origin": "角色"}
+        result.append({"shot_id": shot["id"], "label": label, "line": line, "persona": persona.name, "config": config,
+                       "start_ms": starts[shot["id"]], "duration_ms": shot.get("duration_ms") or 0})
+    return result
+
+
+def _synthesize_shots(db: Session, user: User, project_id: int, unit, shots: list[dict], total_ms: int, script_hash: str, settings: dict, master_id: int):
+    from .content_harness.registry import RegistryError, registry
+    from .materials import create_material, create_revision
+
+    try:
+        provider = registry.resolve("tts_provider", "minimax.cli", "1")
+    except RegistryError:
+        raise HTTPException(503, {"code": "voiceover_provider_unavailable", "message": "MiniMax 配音没启用"}) from None
+    with tempfile.TemporaryDirectory(prefix="aics-shots-") as folder:
+        placed, cues = [], []
+        for index, shot in enumerate(shots):
+            config = shot["config"]
+            for attempt in range(2):
+                result = provider.generate({"prompt": shot["line"], "model_id": config["model_id"], "timeout_seconds": 300,
+                                            "parameters": _parameters(config)})
+                if result.status != "succeeded" or not result.content:
+                    raise HTTPException(502, {"code": "voiceover_failed", "message": f"{shot['label']}（{shot['persona']}）没返回配音，请稍后再试"})
+                path = Path(folder) / f"{index:03d}-{attempt}.{'mp3' if result.mime_type == 'audio/mpeg' else 'wav'}"
+                path.write_bytes(result.content)
+                length = _duration_ms(result.content, path.suffix) or 0
+                if length <= shot["duration_ms"] or attempt == 1:
+                    break
+                # One faster take so the line fits its shot; the shot's own length is never changed for it.
+                config = {**config, "rate": round(min(shot["config"]["rate"] * MAX_FIT_SPEEDUP, config["rate"] * length / shot["duration_ms"] * 1.03), 2)}
+            if length > shot["duration_ms"]:
+                _fail("voiceover_dub_too_long", f"{shot['label']}的配音加快到 {config['rate']} 倍后要 {length / 1000:.1f} 秒，这一镜只有 "
+                                                f"{shot['duration_ms'] / 1000:.1f} 秒，还差 {(length - shot['duration_ms']) / 1000:.1f} 秒；"
+                                                "请把这一镜改长或缩短台词", 409)
+            placed.append((path, shot["start_ms"]))
+            cues.append(f"{index + 1}\n{_stamp(shot['start_ms'])} --> {_stamp(shot['start_ms'] + length)}\n{shot['line']}\n")
+            shot["fitted_rate"], shot["voice_ms"] = config["rate"], length
+        joined = Path(folder) / "voice.mp3"
+        inputs = [arg for path, _ in placed for arg in ("-i", str(path))]
+        delays = "".join(f"[{index}:a]adelay={start}|{start}[d{index}];" for index, (_, start) in enumerate(placed))
+        mix = "".join(f"[d{index}]" for index in range(len(placed)))
+        done = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", *inputs, "-filter_complex",
+                               f"{delays}{mix}amix=inputs={len(placed)}:normalize=0,apad=whole_dur={total_ms / 1000:.3f}[out]",
+                               "-map", "[out]", "-t", f"{total_ms / 1000:.3f}", "-c:a", "libmp3lame", "-b:a", "128k", str(joined)],
+                              capture_output=True, timeout=300)
+        if done.returncode != 0:
+            raise HTTPException(502, {"code": "voiceover_join_failed", "message": "指定镜头配音拼接失败"})
+        content = joined.read_bytes()
+    material = create_material(db, kind="audio", title=f"配音（指定镜头）· {unit.title}"[:200], tags=["配音"], created_by=user.email)
+    revision = create_revision(
+        db, material, content=content, suffix=".mp3", declared_mime="audio/mpeg", source_kind="ai_generated",
+        provider_key="minimax.cli", provider_version=shots[0]["config"]["model_id"], prompt_text="\n".join(shot["line"] for shot in shots)[:4000],
+        rights_status="cleared", public_use_allowed=True, model_use_allowed=True, attribution_text="MiniMax 配音",
+        duration_ms=_duration_ms(content, ".mp3"),
+        metadata={"subtitles_srt": "\n".join(cues), "script_hash": script_hash, "voice_settings": settings, "source_master_revision_id": master_id,
+                  "dubbed_shots": [{key: shot[key] for key in ("shot_id", "persona", "start_ms", "duration_ms", "voice_ms", "fitted_rate")} for shot in shots]},
+        created_by=user.email)
+    db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="system_reference", status="active",
+                                    attached_by=user.email, note="指定镜头配音"))
+    db.commit()
+    return revision
+
+
+def _generate_dubbed(db: Session, user: User, project_id: int, unit, master, document: dict, shots: list[dict]) -> dict:
+    from .edit_handoff import _save
+    from .project_folders import store_new
+
+    total = document["timeline"]["duration_ms"]
+    settings = {"mode": "selected_shots", "shots": [{"shot_id": shot["shot_id"], "persona": shot["persona"], "preset_id": shot["config"]["preset_id"],
+                                                     "start_ms": shot["start_ms"], "duration_ms": shot["duration_ms"]} for shot in shots]}
+    script_hash = hashlib.sha256(repr([(shot["shot_id"], shot["line"]) for shot in shots]).encode()).hexdigest()
+    revision = _reuse(db, project_id, script_hash, settings) or _synthesize_shots(
+        db, user, project_id, unit, shots, total, script_hash, settings, master.id)
+    store_new(db, revision, project_id, "音频")
+    # Only the marked shots speak through this track; durations stay as the 导演稿 set them.
+    document["voice"] = {"mode": "tts", "material_revision_id": revision.id}
+    master_id = _save(db, user, project_id, unit.id, master, document, {},
+                      edit_summary={"voiceover": {"material_revision_id": revision.id, "settings": settings, "aligned": False}})
+    db.add(AuditLog(event="voiceover.generated", actor=user.email, entity_type="material", entity_id=str(revision.material_id),
+                    detail_json={"material_revision_id": revision.id, "master_id": master_id, "mode": "selected_shots"}))
+    db.commit()
+    return {"material_id": revision.material_id, "material_revision_id": revision.id, "master_id": master_id,
+            "duration_ms": revision.duration_ms, "aligned": False, "has_timing": True, "settings": settings,
+            "dubbed_shots": (revision.metadata_json or {}).get("dubbed_shots")}
+
+
 def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .edit_handoff import _save
 
@@ -269,6 +397,9 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     if unit is None or unit.project_id != project_id or master is None or master.payload_schema != "video.master.v2":
         raise HTTPException(409, {"code": "voiceover_master_required", "message": "先采用导演稿，再生成配音"})
     document = copy.deepcopy(master.payload_json)
+    dubbed = _dubbed_shots(db, user, document)
+    if dubbed:
+        return _generate_dubbed(db, user, project_id, unit, master, document, dubbed)
     text = _script(document)
     if not text:
         raise HTTPException(409, {"code": "voiceover_script_empty", "message": "分镜表的台词列是空的"})

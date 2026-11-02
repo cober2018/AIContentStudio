@@ -243,7 +243,7 @@ def canonical_board(value: object) -> dict:
     """Storyboard columns of one shot; the spoken line stays in the script block it points to."""
     board = _object(value, {"message", "visual", "camera", "speaker", "sound", "notes", "material_request",
                             "camera_presets", "look", "intensity", "chain_from_previous", "character",
-                            "source_kind", "attitude"}, "video_shot_board_invalid")
+                            "source_kind", "attitude", "dub_persona"}, "video_shot_board_invalid")
     result = {key: _text(board.get(key, ""), limit, "video_shot_board_invalid")
               for key, limit in (("message", 500), ("visual", 1000), ("sound", 500), ("notes", 500))}
     result["camera"] = _enum(board.get("camera", "fixed"), BOARD_CAMERA, "video_shot_board_invalid")
@@ -268,6 +268,9 @@ def canonical_board(value: object) -> dict:
         result["source_kind"] = _enum(board["source_kind"], BOARD_SOURCE, "video_shot_board_invalid")
     if "attitude" in board:
         result["attitude"] = _text(board["attitude"], 300, "video_shot_board_invalid")
+    # A persona named here voices only this shot's line; every other shot keeps its live sound.
+    if "dub_persona" in board:
+        result["dub_persona"] = _text(board["dub_persona"], 100, "video_shot_board_invalid")
     return result
 
 
