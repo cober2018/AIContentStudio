@@ -387,10 +387,40 @@ class UnitCreateInput(Input):
     channel_id: str | None = Field(default=None, min_length=1, max_length=100, pattern=IDENTIFIER)
 
 
+
+class AccountImportSource(Input):
+    kind: Literal["screenshot", "copied_text", "export_file"]
+    name: str = Field(min_length=1, max_length=300)
+    checksum: str = Field(min_length=8, max_length=128, pattern=r"^[A-Za-z0-9:_-]+$")
+
+
+class AccountMetricRow(Input):
+    title: str = Field(min_length=1, max_length=500)
+    published_at: str = Field(min_length=10, max_length=40)
+    content_form: str | None = Field(default=None, min_length=1, max_length=50)
+    url: str | None = Field(default=None, max_length=2000, pattern=r"^https?://")
+    metrics: dict[Annotated[str, Field(min_length=1, max_length=60)], Annotated[float, Field(allow_inf_nan=False)]] = Field(min_length=1, max_length=20)
+    uncertain: list[Annotated[str, Field(min_length=1, max_length=60)]] = Field(default_factory=list, max_length=20)
+
+
+class AccountMetricsInput(Input):
+    account_id: ID
+    source: AccountImportSource
+    rows: list[AccountMetricRow] = Field(min_length=1, max_length=200)
+
+
+def _metric_key_text() -> str:
+    from .account_metrics_import import PLATFORM_METRICS
+
+    return "; ".join(f"{channel}: " + ", ".join(f"{key}({label})" for key, (label, _unit) in metrics.items())
+                     for channel, metrics in PLATFORM_METRICS.items())
+
 TOOLS = {
     "list_personas": (EmptyInput, "Start of a self-sourced topic: read the owner's active personas (id, name, positioning) and the channels a work can target. A project takes no persona; each work picks one.", True),
     "create_project": (ProjectCreateInput, "Create a content project from a topic you researched yourself, with revision 1 of its brief. rationale (why this topic, now) is required; links are optional because a topic drawn from many sources may have no single source. Then call create_unit. Not for product works.", False),
     "create_unit": (UnitCreateInput, "Create a work in a project for one persona (video, graphic or text; channel optional, from list_personas). Returns unit_id; continue with the normal flow, e.g. get_video_brief, where the 导演稿, 小样 and 成片 stops wait for the user.", False),
+    "list_accounts": (EmptyInput, "Before importing account data: list the owner's active platform accounts (id, name, platform channel and label, persona id and name, whether the platform accepts imports) and the metric keys each platform accepts.", True),
+    "import_account_metrics": (AccountMetricsInput, "Import one account's works data that you read yourself from the user's screenshots, copied text or platform export (the files are never uploaded). FIRST show the extracted table to the user in chat and get their OK; only then call this. Never guess a number you cannot read clearly: leave it out or keep your best reading and list its key in uncertain. Rates are 0–1 fractions (23.18% -> 0.2318), durations in seconds, counts as plain numbers (1.2万 -> 12000). published_at as shown on the platform, YYYY-MM-DD HH:MM[:SS], China time unless it carries an offset. source.checksum is the file's sha256 (or of the copied text); the same source for the same account is skipped. At most 200 rows per call: split a bigger table and suffix the checksum with :part2, :part3. Metric keys per platform, anything else rejects the whole import: " + _metric_key_text() + ". Works match by account + title + publish time, otherwise new external works are created; a metric imported again the same day replaces that day's value. Returns created / updated / skipped counts and the 效果复盘 batch link, where the user can undo the whole batch.", False),
     "get_context": (ContextInput, "Read current owned unit context and content metadata.", True),
     "get_package": (PackageInput, "Read an exact frozen package, including its authorized input manifest.", True),
     "get_execution": (ExecutionInput, "Read exact execution state, contract, counts and staged output metadata.", True),
@@ -564,6 +594,13 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
                                    aspect=args.aspect)
     if name in {"list_personas", "create_project", "create_unit"}:
         return _self_sourced(db, name, args, user)
+    if name in {"list_accounts", "import_account_metrics"}:
+        from . import account_metrics_import
+
+        if name == "list_accounts":
+            return account_metrics_import.list_accounts(db, user)
+        return account_metrics_import.import_metrics(db, user, args.account_id, args.source.model_dump(),
+                                                     [row.model_dump() for row in args.rows])
     if name in _REVIEW_TOOLS:
         return _review(db, name, args, user)
     if name in _VIDEO_TOOLS:
@@ -745,11 +782,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

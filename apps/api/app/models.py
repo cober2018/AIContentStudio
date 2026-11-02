@@ -1948,6 +1948,28 @@ class PerformanceObservation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class AccountMetricImport(Base):
+    """One batch of account data a third-party model read from screenshots or exports; the files themselves are never kept."""
+
+    __tablename__ = "account_metric_import"
+    __table_args__ = (
+        CheckConstraint("source_kind IN ('screenshot','copied_text','export_file')", name='ck_account_metric_import_source'),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), index=True)
+    content_account_id: Mapped[int] = mapped_column(ForeignKey('content_account.id'), index=True)
+    channel: Mapped[str] = mapped_column(String(30))
+    source_kind: Mapped[str] = mapped_column(String(20))
+    source_name: Mapped[str] = mapped_column(String(300))
+    source_checksum: Mapped[str] = mapped_column(String(128))
+    created_record_ids: Mapped[list] = mapped_column(JSON, default=list)
+    counts_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_by: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    undone_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class ContentInsight(Base):
     __tablename__ = "content_insight"
 

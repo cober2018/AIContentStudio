@@ -151,12 +151,12 @@ function History({ selected, choose }: { selected: string | null; choose: (id: n
   const [params, setParams] = useSearchParams();
   const requestedView = params.get("view");
   const defaultView = selected ? "detail" : "list";
-  const view = requestedView && ["list", "detail", "observations", "add-observation", "coverage", "sync", "recovery", "import"].includes(requestedView) ? requestedView : defaultView;
+  const view = requestedView && ["list", "detail", "observations", "add-observation", "coverage", "sync", "recovery", "import", "imports"].includes(requestedView) ? requestedView : defaultView;
   const recoveryTarget = params.get("target");
   const readOnly = useContext(LearningReadOnly);
   const suffix = queryString(filters);
   return <div className="space-y-5"><p className="text-sm text-slate-600">发布确认时间不等于实际发布时间。没有日期、指标或反馈的记录显示为缺失，不当作零。</p>
-    <LearningNavigation items={[["list", "已发布作品"], ["coverage", "查看覆盖与缺失"], ...(!readOnly ? [["sync", "同步发布记录"], ["recovery", "补充发布声明"], ["import", "导入外部作品"]] as [string, string][] : [])]} />
+    <LearningNavigation items={[["list", "已发布作品"], ["coverage", "查看覆盖与缺失"], ["imports", "导入批次"], ...(!readOnly ? [["sync", "同步发布记录"], ["recovery", "补充发布声明"], ["import", "导入外部作品"]] as [string, string][] : [])]} />
     {selected && ["detail", "observations", "add-observation"].includes(view) ? <Read<PublishedContent> key={selected} path={`/published-content/${selected}`} children={() => <PublishedDetail id={selected} view={view} />} /> : <>
     {["list", "coverage"].includes(view) && <Filters fields={cohortFields} onChange={setFilters} />}
     {view === "coverage" &&
@@ -165,9 +165,30 @@ function History({ selected, choose }: { selected: string | null; choose: (id: n
     {view === "recovery" && !readOnly && <div id="publication-recovery"><ActionForm key={`recovery:${recoveryTarget ?? "manual"}`} title="补充已核对目标的真实发布声明" submit="确认实际发布并恢复历史" confirm="确认该目标实际已在平台发布？核对完成或草稿成功本身不代表已发布。" fields={[{ ...number("target_id", "交付目标 ID", true), value: recoveryTarget?.toString() }, { ...text("publication_attestation", "实际发布声明", true), type: "textarea" }, date("published_at", "经核实的发布时间（可留空）"), text("evidence_ref", "发布证据引用")]} action={(values, key) => api.post("/published-content/confirm-reconciled", { ...values, idempotency_key: key })} /></div>}
     {view === "import" && !readOnly && <><ActionForm title="导入外部已发布内容" submit="导入外部记录" fields={[text("external_key", "外部唯一编号", true), text("channel", "渠道代码", true), text("title", "标题"), text("content_form", "内容形态"), { ...text("canonical_url", "原文地址"), type: "url" }, date("published_at", "实际发布时间（未知则留空）"), number("content_account_id", "内容账号 ID"), { ...text("body", "正文"), type: "textarea" }, { ...text("subtitles", "字幕"), type: "textarea" }, json("media", "媒体引用列表", "[]")]} prepare={(values) => { const { body, subtitles, media, ...record } = values; return { records: [{ ...record, content_snapshot: { body, subtitles, media } }] }; }} action={(values) => api.post("/published-content/import", values)} />
     <details className={box}><summary>批量导入（高级）</summary><ActionForm title="规范化记录批量导入" fields={[json("records", "记录列表", "[]")]} action={(values) => api.post("/published-content/import", values)} /></details></>}
+    {view === "imports" && <ImportBatches highlight={params.get("batch")} />}
     {view === "list" && <section className={box}><h2 className="font-semibold">已发布作品</h2><Paged<PublishedContent> key={suffix} path={`/published-content?${suffix}`} render={(row) => <button key={row.id} className="block w-full rounded-lg border p-3 text-left text-sm" onClick={() => choose(row.id)}><span className="font-medium">{row.title ?? "标题缺失"}</span><p className="mt-1 text-slate-500"><ChannelIcon channel={row.channel} className="mr-1" />{row.channel} · {row.origin} · {row.published_at ?? "发布时间缺失"}</p></button>} /></section>}
     </>}
   </div>;
+}
+
+type ImportBatch = { id: number; content_account_id: number; account_name: string | null; channel: string; channel_label: string | null; source_kind: string; source_name: string; counts: Record<string, number>; created_at: string; undone_at: string | null };
+const sourceKinds: Record<string, string> = { screenshot: "截图", copied_text: "复制文字", export_file: "导出表" };
+
+function ImportBatches({ highlight }: { highlight: string | null }) {
+  const client = useQueryClient();
+  const readOnly = useContext(LearningReadOnly);
+  const [busy, setBusy] = useState<number>();
+  const [error, setError] = useState("");
+  async function undo(row: ImportBatch) {
+    if (busy || !window.confirm(`撤销整批「${row.source_name}」？会删掉这批写入的数据，以及这批新建、且没有别的数据的作品。`)) return;
+    setError(""); setBusy(row.id);
+    try { await api.post(`/account-metric-imports/${row.id}/undo`, {}); await client.invalidateQueries({ queryKey: ["learning"] }); }
+    catch (cause) { setError(errorText(cause)); }
+    finally { setBusy(undefined); }
+  }
+  return <section className={box}><h2 className="font-semibold">导入批次</h2><p className="text-sm text-slate-600">第三方模型读截图或导出表后导入的数据，一次一批。截图和文件本身不保存。</p>{error && <div role="alert"><ErrorBanner message={error} /></div>}
+    <Paged<ImportBatch> path="/account-metric-imports" render={(row) => <article key={row.id} className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 text-sm ${String(row.id) === highlight ? "border-indigo-400 bg-indigo-50/40" : ""}`}><div className="space-y-1"><p className="font-medium"><ChannelIcon channel={row.channel} className="mr-1" />{row.account_name ?? `账号 #${row.content_account_id}`} · {sourceKinds[row.source_kind] ?? row.source_kind} · {row.source_name}</p><p className="text-slate-500">{new Date(/Z$|[+-]\d{2}:\d{2}$/.test(row.created_at) ? row.created_at : `${row.created_at}Z`).toLocaleString()} · 新建 {row.counts.records_created ?? 0} 篇 · 更新 {row.counts.records_updated ?? 0} 篇 · 数据 {row.counts.observations ?? 0} 项{row.counts.uncertain ? ` · 待确认 ${row.counts.uncertain} 项` : ""}{row.counts.skipped ? ` · 跳过 ${row.counts.skipped} 项` : ""}</p></div>{row.undone_at ? <StatusBadge status="revoked" /> : !readOnly && <Button size="sm" variant="secondary" disabled={busy === row.id} onClick={() => void undo(row)}>{busy === row.id ? "撤销中…" : "撤销整批"}</Button>}</article>} />
+  </section>;
 }
 
 function PublishedDetail({ id, view }: { id: string; view: string }) {

@@ -25,6 +25,7 @@ from ..models import (
     User,
     utcnow,
 )
+from ..services import account_metrics_import
 from ..services import published_history as service
 from ..services.content_identity import owned_entity
 from ..services.project_events import record_project_event
@@ -751,3 +752,19 @@ def analyze(
         "incomplete": len(observations) > 10000 or metrics_coverage["incomplete"],
         "computed": len(observations) <= 10000,
     }
+
+
+@router.get("/account-metric-imports")
+def list_metric_imports(
+    content_account_id: int | None = None,
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return account_metrics_import.list_batches(db, user, content_account_id, limit, offset)
+
+
+@router.post("/account-metric-imports/{batch_id}/undo")
+def undo_metric_import(batch_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    return account_metrics_import.undo_batch(db, user, batch_id)

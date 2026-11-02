@@ -21,10 +21,12 @@ def _telemetry_from(payload: dict | None) -> dict:
 
 @celery_app.task(name="app.tasks.worker_tasks.retention_sweep")
 def retention_sweep() -> dict:
-    from ..services.retention import run_retention
+    from ..services.retention import run_retention, run_storage_cleanup
 
     with SessionLocal() as db:
-        return run_retention(db)
+        stats = run_retention(db)
+        run_storage_cleanup(db)
+        return stats
 
 
 def _run_pull(db: Session, endpoint_id: int, actor_email: str) -> None:

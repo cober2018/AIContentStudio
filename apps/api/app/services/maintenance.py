@@ -108,6 +108,11 @@ def run_maintenance_cycle() -> dict:
         except Exception:
             db.rollback()
             logger.exception("retention sweep failed")
+        try:
+            stats["storage_cleanup"] = retention.run_storage_cleanup(db)
+        except Exception:
+            db.rollback()
+            logger.exception("storage cleanup failed")
     try:
         stats["wal_checkpoint"] = _wal_checkpoint()
     except Exception:

@@ -30,7 +30,7 @@ celery_app.conf.update(
             "task": "app.tasks.worker_tasks.scan_connector_schedules",
             "schedule": 300.0,
         },
-        # 每日 03:30 数据保留清理：llm_run 大字段 30d / 审计与导出记录 90d / 工作流运行 30d
+        # 每日 03:30 数据保留清理：llm_run 大字段 30d / 审计与导出记录 90d / 工作流运行 30d；存储清理与每周 VACUUM 同任务
         "retention-sweep": {
             "task": "app.tasks.worker_tasks.retention_sweep",
             "schedule": crontab(hour=3, minute=30),

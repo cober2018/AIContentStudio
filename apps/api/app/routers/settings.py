@@ -237,6 +237,36 @@ def move_storage_local(payload: StorageLocalMove, user=Depends(require_admin)):
     return storage_locations.start_local_move(payload.path)
 
 
+class StorageCleanupDays(BaseModel):
+    model_config = {"extra": "forbid"}
+    source_document_text_days: int | None = Field(default=None, strict=True, ge=1, le=3650)
+    generation_result_days: int | None = Field(default=None, strict=True, ge=1, le=3650)
+    candidate_material_days: int | None = Field(default=None, strict=True, ge=1, le=3650)
+
+
+@router.get("/api/v1/settings/storage/cleanup")
+def get_storage_cleanup(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    from ..services import retention
+
+    return retention.storage_overview(db)
+
+
+@router.put("/api/v1/settings/storage/cleanup/days")
+def put_storage_cleanup_days(payload: StorageCleanupDays, db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import retention
+
+    retention.set_storage_days(db, payload.model_dump(exclude_none=True), user.email)
+    return retention.storage_overview(db)
+
+
+@router.post("/api/v1/settings/storage/cleanup/run")
+def run_storage_cleanup_now(db: Session = Depends(get_db), user=Depends(require_admin)):
+    from ..services import retention
+
+    result = retention.run_storage_cleanup(db, force=True, actor=user.email)
+    return {"result": result, "overview": retention.storage_overview(db)}
+
+
 @router.get("/api/v1/settings/ae-templates")
 def get_ae_templates(user=Depends(get_current_user)):
     from ..services import craft_skills
