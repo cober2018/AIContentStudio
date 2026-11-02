@@ -1,0 +1,2 @@
+- [x] 1 delivery_checks：新增 _spoken（有台词且 speaker≠none），时间线与镜头时长两处使用
+- [x] 2 用任务 40 小样复检；全量测试

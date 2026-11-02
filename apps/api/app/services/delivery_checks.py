@@ -63,6 +63,11 @@ def view(db) -> dict:
     return {"thresholds": thresholds(db), "defaults": DEFAULTS, "limits": {key: list(value) for key, value in LIMITS.items()}}
 
 
+def _spoken(shot: dict) -> bool:
+    # A line on a shot whose speaker is none is on-screen text, not speech; measuring it would read the music bed.
+    return bool(shot.get("script_block_id")) and (shot.get("board") or {}).get("speaker") != "none"
+
+
 def spans(director: dict, duration_ms: int) -> tuple[str, list[dict]]:
     """Shot spans from the timeline's picture track; shot lengths in order; or fixed slices when neither is usable."""
     shots = {shot.get("id"): shot for shot in director.get("shots") or [] if isinstance(shot, dict)}
@@ -72,7 +77,7 @@ def spans(director: dict, duration_ms: int) -> tuple[str, list[dict]]:
         if track.get("kind") == "video" and items:
             items.sort(key=lambda item: item["start_ms"])
             return "timeline", [{"shot_id": item["shot_id"], "order": shots[item["shot_id"]].get("order", index), "start_ms": item["start_ms"],
-                                 "end_ms": min(item["end_ms"], duration_ms), "spoken": bool(shots[item["shot_id"]].get("script_block_id"))}
+                                 "end_ms": min(item["end_ms"], duration_ms), "spoken": _spoken(shots[item["shot_id"]])}
                                 for index, item in enumerate(items[:MAX_SPANS]) if item["start_ms"] < duration_ms]
     ordered = sorted(shots.values(), key=lambda shot: shot.get("order", 0))
     if ordered and all(isinstance(shot.get("duration_ms"), int) and shot["duration_ms"] > 0 for shot in ordered):
@@ -81,7 +86,7 @@ def spans(director: dict, duration_ms: int) -> tuple[str, list[dict]]:
             if start >= duration_ms:
                 break
             result.append({"shot_id": shot["id"], "order": shot.get("order", index), "start_ms": start,
-                           "end_ms": min(start + shot["duration_ms"], duration_ms), "spoken": bool(shot.get("script_block_id"))})
+                           "end_ms": min(start + shot["duration_ms"], duration_ms), "spoken": _spoken(shot)})
             start += shot["duration_ms"]
         return "shots", result
     return "fixed", [{"shot_id": None, "order": index, "start_ms": start, "end_ms": min(start + FIXED_SPAN_MS, duration_ms), "spoken": True}
