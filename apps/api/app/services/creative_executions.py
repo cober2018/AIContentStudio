@@ -1139,6 +1139,26 @@ def _project_output(db: Session, row: CreativeExecution, package: CreativeExecut
     return given
 
 
+def _cover_check(db: Session, user: User, row: CreativeExecution, outputs: list, role_id: str, source) -> dict:
+    """Cover against the 成片's opening, run by whichever of the two arrives second; the earlier file is only read, and an unreadable one skips the check."""
+    import json
+
+    from . import delivery_checks
+
+    partner = next((output for (role, _), output in sorted(_latest(outputs).items())
+                    if role == ("final" if role_id == "cover" else "cover") and output.state != "rejected"), None)
+    if partner is None:
+        return {}
+    try:
+        with open_output(user.id, row.id, partner.staging_key, partner.size_bytes) as other:
+            cover, final = (source, other) if role_id == "cover" else (other, source)
+            check = delivery_checks.cover_match(cover, final, delivery_checks.thresholds(db))
+    except (OSError, HTTPException):
+        return {}
+    # Tied to the partner's id so the review page only shows it while that pair is the current one.
+    return {"cover_check": json.dumps({"against": partner.id, **check}, sort_keys=True, separators=(",", ":"))} if check else {}
+
+
 @_atomic
 def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User, *, uploaded_content: bytes | None = None, uploaded_stream=None) -> dict:
     _payload(payload, {"expected_revision", "executor_kind", "executor_key", "executor_version", "role_id", "kind",
@@ -1191,7 +1211,7 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             streams.budget(db, row, package, size, private=not project)
             inspected = streams.validate(source, mime, role["kind"], package, role_id=role_id)
             # Loudness is the platform's own reading; an executor-supplied value is never kept.
-            metadata = {key: value for key, value in metadata.items() if key not in {"loudness", "shot_checks"}}
+            metadata = {key: value for key, value in metadata.items() if key not in {"loudness", "shot_checks", "cover_check"}}
             if inspected.get("loudness"):
                 # Output metadata holds only flat strings, so the reading is kept as compact JSON.
                 import json
@@ -1202,7 +1222,12 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
 
                 checks = delivery_checks.inspect(source, package.package_json["director"], inspected["duration_ms"], inspected.get("has_audio", False),
                                                  delivery_checks.thresholds(db))
+                tags = delivery_checks.color_tags(source) if role_id == "final" else None
+                if tags:
+                    checks["warnings"].insert(0, tags)
                 metadata = {**metadata, "shot_checks": delivery_checks.compact(checks)}
+            if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction"):
+                metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source)}
             if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
                 import json
 

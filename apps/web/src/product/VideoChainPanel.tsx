@@ -12,7 +12,9 @@ const ProductShotPanel = lazy(() => import("./ProductShotPanel"));
 
 type Note = { time_ms: number | null; note: string };
 type ShotWarning = { code: "shot_overexposed" | "shot_brightness_jump" | "dialogue_level_uneven"; shot_id: string | null; order: number; luma?: number; clipped?: number;
-  from_shot_id?: string | null; from_order?: number; from_luma?: number; lufs?: number; median_lufs?: number; diff_lu?: number };
+  from_shot_id?: string | null; from_order?: number; from_luma?: number; lufs?: number; median_lufs?: number; diff_lu?: number }
+  | { code: "color_tags_not_srgb"; color_primaries: string; color_transfer: string; color_space: string }
+  | { code: "cover_color_mismatch"; at_ms: number; mean: number; rgb: [number, number, number]; threshold: number };
 type ShotChecks = { status: string; basis: string; truncated?: boolean; warnings: ShotWarning[];
   thresholds: { overexposed_mean_luma: number; overexposed_clipped_percent: number; brightness_jump_luma: number; dialogue_spread_lu: number } };
 type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null };
@@ -35,6 +37,8 @@ function shotName(id: string | null | undefined, order: number, basis: string) {
 }
 
 function warningText(item: ShotWarning, checks: ShotChecks) {
+  if (item.code === "color_tags_not_srgb") return `成片颜色标记不是 sRGB（现在是 原色 ${item.color_primaries}、传输 ${item.color_transfer}、矩阵 ${item.color_space}；应为 bt709 / iec61966-2-1 / bt709）`;
+  if (item.code === "cover_color_mismatch") return `封面与成片颜色不一致：平均差 ${item.mean}（R/G/B ${item.rgb.join(" / ")}，提示线 ${item.threshold}），最接近的是第 ${(item.at_ms / 1000).toFixed(1)} 秒那一帧`;
   const limits = checks.thresholds;
   const name = shotName(item.shot_id, item.order, checks.basis);
   if (item.code === "shot_overexposed") return `${name}偏亮：平均亮度 ${item.luma}（提示线 ${limits.overexposed_mean_luma}），贴顶高光占 ${item.clipped}%（提示线 ${limits.overexposed_clipped_percent}%）`;

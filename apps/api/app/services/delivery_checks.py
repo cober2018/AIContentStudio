@@ -1,4 +1,4 @@
-"""Per-shot review hints on a delivered 小样 / 成片: exposure, brightness jumps between shots, uneven dialogue.
+"""Per-shot review hints on a delivered 小样 / 成片: exposure, brightness jumps between shots, uneven dialogue; on the 成片 also its color tags and whether the cover matches its opening.
 
 Readings follow the 导演稿 timeline so a hint can name the shot. They are warnings for the reviewer, never a rejection.
 """
@@ -12,8 +12,9 @@ import time
 from sqlalchemy.orm.attributes import flag_modified
 
 KEY = "delivery_checks"
-DEFAULTS = {"overexposed_mean_luma": 180, "overexposed_clipped_percent": 5.0, "brightness_jump_luma": 40, "dialogue_spread_lu": 6.0}
-LIMITS = {"overexposed_mean_luma": (100, 255), "overexposed_clipped_percent": (0.1, 100), "brightness_jump_luma": (5, 255), "dialogue_spread_lu": (1, 30)}
+DEFAULTS = {"overexposed_mean_luma": 180, "overexposed_clipped_percent": 5.0, "brightness_jump_luma": 40, "dialogue_spread_lu": 6.0, "cover_mismatch_mean": 6}
+LIMITS = {"overexposed_mean_luma": (100, 255), "overexposed_clipped_percent": (0.1, 100), "brightness_jump_luma": (5, 255), "dialogue_spread_lu": (1, 30),
+          "cover_mismatch_mean": (1, 100)}
 CLIPPED_LUMA = 250
 FIXED_SPAN_MS = 3000
 MAX_SPANS = 60
@@ -21,6 +22,10 @@ DEADLINE_SECONDS = 90
 # ebur128 gates out anything quieter; a span below this is music bed or silence, not speech.
 SILENT_LUFS = -45.0
 _FRAME_WIDTH = 160
+SRGB_TAGS = {"color_primaries": "bt709", "color_transfer": "iec61966-2-1", "color_space": "bt709"}
+# The cover is the 成片's opening frame, so it is looked for only within the first half second.
+COVER_FRAMES_MS = (0, 100, 200, 300, 400, 500)
+_COVER_WIDTH = 64
 _INTEGRATED = re.compile(r"Integrated loudness:\s*I:\s*(-?[0-9.]+|-inf) LUFS")
 
 
@@ -149,6 +154,65 @@ def inspect(source, director: dict, duration_ms: int, has_audio: bool, limits: d
                                  "median_lufs": round(median, 1), "diff_lu": round(shot["lufs"] - median, 1)})
     return {"status": "partial" if partial else "measured", "basis": basis, "thresholds": limits, "warnings": warnings,
             "shots": [{key: shot[key] for key in ("shot_id", "order", "start_ms", "end_ms", "luma", "clipped", "lufs") if key in shot} for shot in shots]}
+
+
+def color_tags(source) -> dict | None:
+    """The video stream's color tags when they are not sRGB (untagged included); None when they are or the file can't be read."""
+    fd = source.fileno()
+    try:
+        done = subprocess.run(["ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe", "-select_streams", "v:0",
+                               "-show_entries", "stream=" + ",".join(SRGB_TAGS), "-of", "json", f"/dev/fd/{fd}"],
+                              pass_fds=(fd,), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=20, check=True)
+        stream = json.loads(done.stdout[:64000])["streams"][0]
+    except (OSError, ValueError, KeyError, IndexError, subprocess.SubprocessError):
+        return None
+    finally:
+        source.seek(0)
+    found = {key: str(stream.get(key) or "unknown") for key in SRGB_TAGS}
+    return None if found == SRGB_TAGS else {"code": "color_tags_not_srgb", **found}
+
+
+def _rgb(fd: int, size: str, at_ms: int | None) -> bytes:
+    # To RGB at full size first, then shrink: shrinking the YUV frame first would blur chroma differently from the RGB cover and read as a color difference.
+    seek = ["-ss", f"{at_ms / 1000:.3f}"] if at_ms is not None else []
+    done = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-threads", "1", *seek, "-i", f"/dev/fd/{fd}",
+                           "-frames:v", "1", "-vf", f"format=rgb24,scale={size}:flags=area", "-f", "rawvideo", "-"],
+                          pass_fds=(fd,), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=20, check=True)
+    return done.stdout
+
+
+def cover_match(cover, final, limits: dict) -> dict | None:
+    """The 成片 frame in the first half second closest to the cover, with the per-channel mean difference; None when either can't be read."""
+    try:
+        cover_fd, final_fd = cover.fileno(), final.fileno()
+        width = _COVER_WIDTH
+        probe = subprocess.run(["ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                                "-of", "csv=p=0", f"/dev/fd/{final_fd}"], pass_fds=(final_fd,), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=20, check=True)
+        final_width, final_height = (int(value) for value in probe.stdout.decode().strip().split(",")[:2])
+        size = f"{width}:{max(2, round(width * final_height / final_width / 2) * 2)}"
+        picture = _rgb(cover_fd, size, None)
+        best = None
+        for at_ms in COVER_FRAMES_MS:
+            frame = _rgb(final_fd, size, at_ms)
+            if not picture or len(frame) != len(picture):
+                continue
+            channels = [sum(abs(a - b) for a, b in zip(picture[c::3], frame[c::3])) / (len(picture) // 3) for c in range(3)]
+            if best is None or sum(channels) < sum(best[1]):
+                best = (at_ms, channels)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    finally:
+        cover.seek(0)
+        final.seek(0)
+    if best is None:
+        return None
+    at_ms, channels = best
+    mean = round(sum(channels) / 3, 1)
+    return {"at_ms": at_ms, "mean": mean, "rgb": [round(value, 1) for value in channels], "threshold": limits["cover_mismatch_mean"]}
+
+
+def cover_warning(check: dict | None) -> dict | None:
+    return {"code": "cover_color_mismatch", **check} if check and check["mean"] > check["threshold"] else None
 
 
 def compact(result: dict, limit: int = 2000) -> str:

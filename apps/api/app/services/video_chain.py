@@ -40,7 +40,10 @@ RULES = [
     "实拍原声为主、只有个别镜头要画外配音时：在那几个镜头的 board 写 dub_persona（角色名称或编号，声音就是这个角色固定的声音），只给这些镜头配音，镜头时长不动；"
     "剪辑时配音轨从 0 秒铺上（其余位置是静音），原声镜头保留素材声音；配音结果的 edit_notes 写了哪句提前进上一镜结尾，就做成声音先进、画面在本镜开头再切。",
     "配乐只看主稿 music：有 material_revision_id 就铺这首；none 为 true 是用户明确不要配乐；空着就是还没定：按导演稿和用户意见找一首放进来（set_shot_materials 的 music），拿不准就问用户；不能自己当成不用。只有用户能选「不用配乐」。",
-    "封面（可选）：竖版 1080×1920 的 jpg / png，实拍画面当背景，上面大字商品名和卖点；导出到开剪结果给的 cover_dir（导出/封面），用 role cover 交付，并且要在剪辑清单之前交（清单的 output_hashes 可以列上 cover）；成片通过后它就是作品封面。同一张可以剪进视频开头当 0.5 秒第一帧。",
+    "封面（可选）：封面设计（大字商品名和卖点）在达芬奇 / AE 里做进成片开头那一段，随成片一起渲染；封面图只能从渲染好的成片里截取开头 0.5 秒内的一帧（ffmpeg 抽帧），竖版 1080×1920 的 jpg / png，"
+    "不许用 AE 或其他工具从原片另外合成。成片颜色标记统一为 sRGB（原色 bt709、传输 iec61966-2-1、矩阵 bt709）：达芬奇渲染后用 ffmpeg 只改标记不重新编码，"
+    "如 -c copy -bsf:v h264_metadata=colour_primaries=1:transfer_characteristics=13:matrix_coefficients=1（H.265 用 hevc_metadata），同时设好容器的 -color_primaries bt709 -color_trc iec61966-2-1 -colorspace bt709；封面图按 sRGB 存。"
+    "封面导出到开剪结果给的 cover_dir（导出/封面），用 role cover 交付，并且要在剪辑清单之前交（清单的 output_hashes 可以列上 cover）；成片通过后它就是作品封面。平台会查成片颜色标记，并把封面和成片开头 0.5 秒逐帧比色，不一致会在审阅页提示。",
     "剪辑照导演稿：画面内容要变就先存新导演稿；导演稿没写的细节和网络素材署名写进回执。",
     "文件都在项目文件夹里：准备素材（materialize_inputs）给每条素材的原始路径，直接导入达芬奇 / AE，只读，不复制；"
     "临时渲染、AE 单镜头、达芬奇 / AE 工程和剪辑清单放 work_dir（<项目>/工作/<作品>/任务N/），小样导出到 导出/小样、成片导出到 导出/成片；"
@@ -535,7 +538,7 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
             "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
-                     f"可选的封面图（role cover，jpg / png）导出到 {cover}/；"
+                     f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；"
                      f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
 
 

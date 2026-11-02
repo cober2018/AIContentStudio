@@ -20,7 +20,7 @@
 | 镜头运动接力、藏切点、色块扫屏与节拍卡、线条接力、过曝闪白 | `techniques/transitions.md` |
 | 对白逐段拉齐（小样前必做）、气口微叠、声道、上升音效、混响尾音、自录音效、音乐收尾 | `techniques/sound.md` |
 | iPhone HLG 还原（必做）、示波器、Log 还原、亮暗分区、色轮、S 曲线、单色调整、统一色调（小样前必做） | `techniques/color.md` |
-| 分辨率、帧率、编码码率、音频参数、AI 放大、封面候选帧 | `techniques/delivery.md` |
+| 分辨率、帧率、编码码率、音频参数、AI 放大、封面取自成片 | `techniques/delivery.md` |
 | 代理、挑 B-roll、拆参考片、中间件 | `techniques/workflow.md` |
 
 原则：配音决定节奏；素材按镜头的使用区间裁剪；生成素材默认静音；AE 中间件回到 Resolve 主时间线混音导出。

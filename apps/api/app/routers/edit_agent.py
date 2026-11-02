@@ -206,8 +206,32 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
                 CreativeExecutionOutput.execution_id == sample["execution_id"], CreativeExecutionOutput.role_id == "rough_cut")
                 .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1)), "cover_output_id": cover(sample["execution_id"])}
             result["sample"]["shot_checks"] = _shot_checks(db, result["sample"]["cut_output_id"])
-        result["shot_checks"] = _shot_checks(db, result["cut_output_id"])
+        result["shot_checks"] = _with_cover_check(db, _shot_checks(db, result["cut_output_id"]), result["cut_output_id"], result["cover_output_id"])
     return result
+
+
+def _with_cover_check(db: Session, checks: dict | None, cut_id: int | None, cover_id: int | None) -> dict | None:
+    """The cover comparison lives on whichever of the pair was delivered second; it counts only for the pair shown now."""
+    import json
+
+    from ..models import CreativeExecutionOutput
+    from ..services import delivery_checks
+
+    if not cut_id or not cover_id:
+        return checks
+    for output_id, against in ((cover_id, cut_id), (cut_id, cover_id)):
+        try:
+            check = json.loads((db.get(CreativeExecutionOutput, output_id).metadata_json or {})["cover_check"])
+            if check["against"] != against:
+                continue
+            warning = delivery_checks.cover_warning({key: check[key] for key in ("at_ms", "mean", "rgb", "threshold")})
+        except (AttributeError, KeyError, TypeError, ValueError):
+            continue
+        if warning is None:
+            return checks
+        base = checks or {"status": "measured", "basis": "fixed", "warnings": [], "thresholds": delivery_checks.thresholds(db)}
+        return {**base, "warnings": [warning, *base.get("warnings", [])]}
+    return checks
 
 
 def _shot_checks(db: Session, output_id: int | None) -> dict | None:

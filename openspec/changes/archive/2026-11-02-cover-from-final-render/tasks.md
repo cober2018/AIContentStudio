@@ -1,0 +1,3 @@
+- [x] 1 剪辑规则（video_chain.RULES 封面条）与 craft-resolve/craft-ae 说明改成「封面取自成片、成片标 sRGB」
+- [x] 2 交付检查：成片颜色标记检查；封面与成片开头比色（封面、成片任一后交时触发）；阈值进设置；审阅页显示
+- [x] 3 用 P46 已交付的成片与封面试跑；全量测试；tsc；`openspec validate`
