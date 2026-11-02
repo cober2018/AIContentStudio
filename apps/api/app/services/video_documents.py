@@ -90,6 +90,58 @@ def _time_bounds(row: dict, duration: int, code: str) -> None:
         _fail(code)
 
 
+def _dialogue_fail(code: str, item_id: str, reason: str) -> None:
+    # The model fixes its own 导演稿 from this text, so it names the segment and what is wrong.
+    raise VideoDocumentError(f"{code}：声音段 {item_id}：{reason}")
+
+
+def _seconds(ms: int) -> str:
+    return f"{ms / 1000:.2f} 秒"
+
+
+def _dialogue_item(item: dict, duration: int, block_ids: set[str]) -> dict:
+    """One spoken segment: which part of which clip plays where on the cut, optionally for which line."""
+    item_id = item["id"]
+    if "shot_id" in item:
+        _dialogue_fail("video_dialogue_shot_invalid", item_id, "声音段不挂镜头，去掉 shot_id（声音段可以跨镜头）")
+    if "material_revision_id" not in item:
+        _dialogue_fail("video_dialogue_material_required", item_id, "缺少 material_revision_id（声音来自哪条素材）")
+    material = _revision_id(item["material_revision_id"], "video_dialogue_material_required")
+    for key in ("start_ms", "end_ms", "trim_start_ms", "trim_end_ms"):
+        if type(item.get(key)) is not int or item[key] < 0:
+            _dialogue_fail("video_dialogue_time_invalid", item_id, f"缺少 {key} 或不是非负整数毫秒")
+    start, end, trim_start, trim_end = item["start_ms"], item["end_ms"], item["trim_start_ms"], item["trim_end_ms"]
+    if start >= end or end > duration:
+        _dialogue_fail("video_dialogue_placement_invalid", item_id,
+                       f"成片位置 {_seconds(start)}–{_seconds(end)} 不在成片 0–{_seconds(duration)} 之内或起止颠倒")
+    if trim_start >= trim_end or trim_end > _MAX_DURATION_MS:
+        _dialogue_fail("video_dialogue_trim_invalid", item_id, f"素材截取 {_seconds(trim_start)}–{_seconds(trim_end)} 起止颠倒")
+    if trim_end - trim_start != end - start:
+        _dialogue_fail("video_dialogue_length_mismatch", item_id,
+                       f"截取长度 {trim_end - trim_start} 毫秒与成片放置长度 {end - start} 毫秒不相等（声音不变速）")
+    normalized = {"id": item_id, "order": item["order"], "start_ms": start, "end_ms": end,
+                  "material_revision_id": material, "trim_start_ms": trim_start, "trim_end_ms": trim_end}
+    if "script_block_id" in item:
+        if not isinstance(item["script_block_id"], str) or item["script_block_id"] not in block_ids:
+            _dialogue_fail("video_dialogue_script_ref_missing", item_id, f"台词 {item['script_block_id']!r} 不在 script.blocks 里")
+        normalized["script_block_id"] = item["script_block_id"]
+    if "volume" in item:
+        volume = item["volume"]
+        if type(volume) not in (int, float) or not math.isfinite(volume) or not 0 <= volume <= 2:
+            _fail("video_volume_invalid")
+        normalized["volume"] = volume
+    return normalized
+
+
+def _dialogue_overlaps(items: list[dict]) -> None:
+    ordered = sorted(items, key=lambda row: (row["start_ms"], row["end_ms"]))
+    for previous, current in zip(ordered, ordered[1:]):
+        if current["start_ms"] < previous["end_ms"]:
+            raise VideoDocumentError(
+                f"video_dialogue_overlap：声音段 {previous['id']}（成片 {_seconds(previous['start_ms'])}–{_seconds(previous['end_ms'])}）"
+                f"与 {current['id']}（成片 {_seconds(current['start_ms'])}–{_seconds(current['end_ms'])}）时间重叠")
+
+
 def canonical_production(value: object) -> dict:
     row = _object(value, {"schema", "source_mode", "web_provider", "prompt", "reference_material_revision_id", "prompt_reference", "requested_generation_duration_ms", "audio_intent", "continuity_reference"}, "video_production_invalid")
     if row.get("schema") not in ("video.shot-production.v1", "video.shot-production.v2"):
@@ -374,10 +426,17 @@ def canonical_payload(raw: object) -> dict:
     tracks = []
     for raw_track in _ordered(timeline.get("tracks"), maximum=16, code="video_tracks_invalid"):
         track = _object(raw_track, {"id", "order", "kind", "items"}, "video_track_invalid")
-        _enum(track.get("kind"), {"video", "audio", "subtitle", "overlay", "music"}, "video_track_kind_invalid")
+        _enum(track.get("kind"), {"video", "audio", "subtitle", "overlay", "music", "dialogue"}, "video_track_kind_invalid")
+        if track["kind"] == "dialogue" and any(row["kind"] == "dialogue" for row in tracks):
+            raise VideoDocumentError("video_dialogue_track_duplicate：导演稿最多一条 dialogue 声音轨，把声音段并到同一条轨里")
         items = []
         for raw_item in _ordered(track.get("items"), maximum=300, code="video_timeline_items_invalid"):
-            item = _object(raw_item, {"id", "order", "shot_id", "material_revision_id", "start_ms", "end_ms", "trim_start_ms", "trim_end_ms", "volume"}, "video_timeline_item_invalid")
+            item = _object(raw_item, {"id", "order", "shot_id", "material_revision_id", "start_ms", "end_ms", "trim_start_ms", "trim_end_ms", "volume", "script_block_id"}, "video_timeline_item_invalid")
+            if track["kind"] == "dialogue":
+                items.append(_dialogue_item(item, duration, block_ids))
+                continue
+            if "script_block_id" in item:
+                _fail("video_timeline_item_invalid")
             _time_bounds(item, duration, "video_timeline_item_time_invalid")
             normalized = {"id": item["id"], "order": item["order"], "start_ms": item["start_ms"], "end_ms": item["end_ms"]}
             if "shot_id" in item:
@@ -400,6 +459,8 @@ def canonical_payload(raw: object) -> dict:
                     _fail("video_volume_invalid")
                 normalized["volume"] = volume
             items.append(normalized)
+        if track["kind"] == "dialogue":
+            _dialogue_overlaps(items)
         tracks.append({"id": track["id"], "order": track["order"], "kind": track["kind"], "items": items})
     if any(shot["duration_ms"] > duration for shot in shots):
         _fail("video_shot_timeline_duration_invalid")

@@ -6,7 +6,7 @@ import { Button } from "../components/ui";
 import { stageErrorText } from "./stageErrors";
 import { useShotSlots, type Slot } from "./shotSlots";
 import { MATERIAL_DRAG, type DraggedMaterial } from "./MaterialLibraryFloat";
-import { updateScriptBlock, updateShotBoard, type VideoBoard, type VideoDraft } from "./VideoStudioModel";
+import { updateScriptBlock, updateShotBoard, type VideoBoard, type VideoDraft, type VideoTimelineItem } from "./VideoStudioModel";
 
 const cameras: [VideoBoard["camera"], string][] = [["fixed", "固定"], ["push_in", "推近"], ["pull_out", "拉远"], ["follow", "跟拍"], ["orbit", "环绕"], ["pan", "横移"]];
 const speakers: [VideoBoard["speaker"], string][] = [["narration", "旁白"], ["presenter", "口播"], ["dialogue", "对白"], ["none", "无台词"]];
@@ -26,6 +26,25 @@ const cell = "w-full resize-y rounded border border-transparent bg-transparent p
 function clock(ms: number) {
   const seconds = Math.round(ms / 100) / 10;
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${(seconds % 60).toFixed(1).padStart(4, "0")}`;
+}
+
+function seconds(ms: number) {
+  return (ms / 1000).toFixed(2);
+}
+
+function segmentText(item: VideoTimelineItem) {
+  return `素材 #${item.material_revision_id} ${seconds(item.trim_start_ms ?? 0)}–${seconds(item.trim_end_ms ?? 0)} 秒 → 成片 ${seconds(item.start_ms)}–${seconds(item.end_ms)} 秒`;
+}
+
+// Where each line's voice comes from, so the reviewer can hear what was cut out of the dialogue track.
+function SoundSource({ segments }: { segments: VideoTimelineItem[] }) {
+  if (!segments.length) return <span className="mt-1 block text-[11px] text-slate-500">声音：镜头原声</span>;
+  return <>{segments.map(item => <span key={item.id} className="mt-1 block text-[11px] text-indigo-700">声音：{segmentText(item)}</span>)}</>;
+}
+
+function UnlinkedSegments({ segments }: { segments: VideoTimelineItem[] }) {
+  if (!segments.length) return null;
+  return <div className="mt-3 text-xs"><p className="text-slate-500">未对应台词的声音段</p><ul className="mt-1 space-y-0.5 text-indigo-700">{segments.map(item => <li key={item.id}>{segmentText(item)}</li>)}</ul></div>;
 }
 
 export default function StoryboardTable({ projectId, unitId, draft, readOnly, paged, onChange }: {
@@ -48,6 +67,9 @@ export default function StoryboardTable({ projectId, unitId, draft, readOnly, pa
   const blocks = new Map(draft.payload.script.blocks.map(block => [block.id, block]));
   const slotById = new Map((unitId ? slots.data?.shots || [] : []).map(slot => [slot.id, slot]));
   const total = shots.reduce((sum, shot) => sum + shot.duration_ms, 0);
+  const segments = [...(draft.payload.timeline.tracks.find(track => track.kind === "dialogue")?.items || [])].sort((a, b) => a.start_ms - b.start_ms);
+  const segmentsOf = (blockId: string) => segments.filter(item => item.script_block_id === blockId);
+  const unlinked = segments.filter(item => !item.script_block_id);
   // A material dropped from the floating library becomes this shot's pick, same as choosing it in the slot.
   async function dropMaterial(shotId: string, raw: string) {
     setDropTarget(""); setFillIssue("");
@@ -74,8 +96,10 @@ export default function StoryboardTable({ projectId, unitId, draft, readOnly, pa
       <div className="mt-4 rounded-lg bg-slate-50 p-4">
         <p className="text-xs text-slate-500">{clock(start)}–{clock(start + shot.duration_ms)}</p>
         <dl className="mt-2 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[6rem_1fr]">{rows.filter(([, value]) => value).map(([label, value]) => <div key={label} className="contents"><dt className="text-xs text-slate-500 sm:pt-0.5">{label}</dt><dd className={`whitespace-pre-wrap ${label === "素材需求" ? "text-amber-800" : "text-slate-800"}`}>{value}</dd></div>)}</dl>
+        {block && <SoundSource segments={segmentsOf(block.id)} />}
         {route(shot.id)}
       </div>
+      <UnlinkedSegments segments={unlinked} />
       <div className="mt-3 flex justify-between"><Button size="sm" variant="secondary" disabled={at === 0} onClick={() => setIndex(at - 1)}>上一镜</Button><Button size="sm" variant="secondary" disabled={at === shots.length - 1} onClick={() => setIndex(at + 1)}>下一镜</Button></div>
     </section>;
   }
@@ -99,7 +123,7 @@ export default function StoryboardTable({ projectId, unitId, draft, readOnly, pa
           <td className="w-[13%] px-1 py-1">{text("message")}</td>
           <td className="w-[20%] px-1 py-1">{text("visual", 3)}</td>
           <td className="px-1 py-1"><select aria-label={`L${shot.order + 1} 运镜`} className={cell} disabled={locked} value={board.camera} onChange={event => edit(() => updateShotBoard(draft, shot.id, { camera: event.target.value as VideoBoard["camera"] }))}>{cameras.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td>
-          <td className="w-[20%] px-1 py-1"><span className="text-[11px] text-slate-500">{speakers.find(([value]) => value === board.speaker)?.[1]}</span>{block && <textarea aria-label={`L${shot.order + 1} 台词`} rows={3} className={cell} disabled={readOnly} value={block.text} onChange={event => edit(() => updateScriptBlock(draft, block.id, event.target.value))} />}</td>
+          <td className="w-[20%] px-1 py-1"><span className="text-[11px] text-slate-500">{speakers.find(([value]) => value === board.speaker)?.[1]}</span>{block && <textarea aria-label={`L${shot.order + 1} 台词`} rows={3} className={cell} disabled={readOnly} value={block.text} onChange={event => edit(() => updateScriptBlock(draft, block.id, event.target.value))} />}{block && <SoundSource segments={segmentsOf(block.id)} />}</td>
           <td className="w-[12%] px-1 py-1">{text("sound")}</td>
           <td className="w-[12%] px-1 py-1">{text("notes")}</td>
           <td className={`max-w-[10rem] px-1 py-2 text-xs ${dropTarget === shot.id ? "rounded bg-sky-50 outline outline-2 outline-sky-400" : ""}`}
@@ -109,5 +133,6 @@ export default function StoryboardTable({ projectId, unitId, draft, readOnly, pa
         </tr>;
       })}</tbody>
     </table></div>
+    <UnlinkedSegments segments={unlinked} />
   </section>;
 }

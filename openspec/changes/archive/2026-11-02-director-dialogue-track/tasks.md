@@ -1,0 +1,6 @@
+- [x] 1 video_documents：timeline 允许 kind=dialogue（至多 1 条）；段字段与 script_block_id；同轨不重叠；截取与放置等长
+- [x] 2 保存检查（需查库）：素材存在可用、截取不超素材时长（导演稿保存路径与 MCP 保存路径都覆盖）
+- [x] 3 开剪素材包与剪辑清单核对：确认声音轨素材进入且被核对（必要时补）
+- [x] 4 前端导演稿页：每句台词旁显示声音来源段或「镜头原声」
+- [x] 5 video_chain 规则、MCP 导演稿工具说明、craft-resolve 衔接做法
+- [x] 6 用作品 93 在副本上存一版带声音轨的导演稿走通；全量测试；tsc；`openspec validate`

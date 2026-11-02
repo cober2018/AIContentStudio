@@ -39,6 +39,8 @@ RULES = [
     "小样、排版、成片都在达芬奇（剪辑、调色、声音、导出）和 AE（标题、字幕、包装、特效）里做；ffmpeg 只用于检查和转格式。",
     "实拍原声为主、只有个别镜头要画外配音时：在那几个镜头的 board 写 dub_persona（角色名称或编号，声音就是这个角色固定的声音），只给这些镜头配音，镜头时长不动；"
     "剪辑时配音轨从 0 秒铺上（其余位置是静音），原声镜头保留素材声音；配音结果的 edit_notes 写了哪句提前进上一镜结尾，就做成声音先进、画面在本镜开头再切。",
+    "口播声音：导演稿有 dialogue 声音轨就按它铺口播——每段从 material_revision_id 的 trim_start_ms–trim_end_ms 截取，放到成片 start_ms–end_ms，声音段可以跨镜头，画面仍按镜头切；"
+    "接法按 craft-resolve 的「声音轨口播衔接」。没有声音轨就用各镜头素材自己的原声。导演稿里口播要从别的素材借声音，就写进声音轨，不要只写在 board.sound 文字里。",
     "配乐只看主稿 music：有 material_revision_id 就铺这首；none 为 true 是用户明确不要配乐；空着就是还没定：按导演稿和用户意见找一首放进来（set_shot_materials 的 music），拿不准就问用户；不能自己当成不用。只有用户能选「不用配乐」。",
     "封面（可选）：封面设计（大字商品名和卖点）在达芬奇 / AE 里做进成片开头那一段，随成片一起渲染；封面图只能从渲染好的成片里截取开头 0.5 秒内的一帧（ffmpeg 抽帧），竖版 1080×1920 的 jpg / png，"
     "不许用 AE 或其他工具从原片另外合成。成片颜色标记统一为 sRGB（原色 bt709、传输 iec61966-2-1、矩阵 bt709）：达芬奇渲染后用 ffmpeg 只改标记不重新编码，"
@@ -359,10 +361,13 @@ def _ensure_references(db: Session, user: User, project_id: int, revision_ids: s
 
 
 def _save(db: Session, user: User, project_id: int, unit_id: int, document: dict, summary: dict) -> int:
-    from .content_masters import save_revision
+    from .content_masters import dialogue_material_problems, save_revision
     from .edit_handoff import _save as save_on
     from .video_documents import _expected_media
 
+    dialogue_problems = dialogue_material_problems(db, document)
+    if dialogue_problems:
+        _fail("video_chain_dialogue_material_invalid", "声音轨不对：" + "；".join(dialogue_problems), 422)
     revisions = {ref["material_revision_id"] for ref in _expected_media(document)}
     for revision_id in revisions:
         if db.get(MaterialRevision, revision_id) is None:

@@ -83,6 +83,32 @@ def local_final_use_allowed(db: Session, project_id: int, unit_id: int, owner_id
     return True
 
 
+def dialogue_material_problems(db: Session, document: dict) -> list[str]:
+    """Checks on a 导演稿's dialogue segments that need the library: the clip exists, may be used, and is long enough."""
+    from .voiceover import _clip_ms
+
+    problems = []
+    for track in document["timeline"]["tracks"]:
+        if track["kind"] != "dialogue":
+            continue
+        for item in track["items"]:
+            revision_id = item["material_revision_id"]
+            material = db.get(MaterialRevision, revision_id)
+            if material is None:
+                problems.append(f"声音段 {item['id']}：素材版本 {revision_id} 不存在")
+                continue
+            if (material.material.kind not in {"audio", "video"} or material.material.status != "active"
+                    or material.status in {"revoked", "archived"}
+                    or (material.model_use_allowed is not True and material.public_use_allowed is not True)):
+                problems.append(f"声音段 {item['id']}：素材 #{revision_id} 不可用（要求是有声音的音频或视频、未停用、允许使用）")
+                continue
+            length = _clip_ms(material)
+            # An unknown length cannot be checked here; the edit sees the real clip.
+            if length is not None and item["trim_end_ms"] > length:
+                problems.append(f"声音段 {item['id']}：截取到 {item['trim_end_ms'] / 1000:.2f} 秒，超出素材 #{revision_id} 时长 {length / 1000:.2f} 秒")
+    return problems
+
+
 def owned_unit(db: Session, project_id: int, unit_id: int, user: User, *, mutate: bool = False) -> tuple[ContentProject, ContentUnit]:
     project = db.get(ContentProject, project_id)
     unit = db.get(ContentUnit, unit_id)
@@ -783,6 +809,9 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     if expected != head:
         raise HTTPException(409, {"code": "master_revision_conflict", "expected_revision": expected, "current_revision": head})
     if payload_schema == "video.master.v2":
+        dialogue_problems = dialogue_material_problems(db, payload["payload"])
+        if dialogue_problems:
+            raise HTTPException(422, {"code": "video_dialogue_material_invalid", "message": "；".join(dialogue_problems)})
         _validate_capture_confirmations(db, unit, latest, payload["payload"], context)
         _validate_capture_takes(db, unit, latest, payload["payload"], context)
     if "creative_intent" not in payload:
@@ -842,7 +871,8 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
             role = item["role"]
             if role == "timeline_media":
                 track_kind = video_track_kinds[item["placement"]["track_id"]]
-                allowed_kinds = {"image", "video"} if track_kind == "video" else {"audio"} if track_kind in {"audio", "music"} else set()
+                allowed_kinds = ({"image", "video"} if track_kind == "video" else {"audio"} if track_kind in {"audio", "music"}
+                                 else {"audio", "video"} if track_kind == "dialogue" else set())
             else:
                 allowed_kinds = {
                     "shot_source": {"image", "video"}, "voice_audio": {"audio"}, "music_audio": {"audio"},
