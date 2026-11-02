@@ -255,7 +255,7 @@ def subfolder(revision: MaterialRevision, role: str, shot: dict | None, auto_sou
     kind = revision.material.kind
     if role == "voice_audio":
         return "音频"
-    if role == "music_audio":
+    if role == "music_audio" or (kind == "audio" and (revision.metadata_json or {}).get("music")):
         return "音频/BGM"
     if kind == "audio":
         return "音频/音效"
