@@ -1,0 +1,2 @@
+- [x] 1 ProductWorkbench：去掉顶部角色下拉；三个新建入口先弹选角色小窗再建作品
+- [x] 2 tsc；`openspec validate`

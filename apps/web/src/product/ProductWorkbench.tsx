@@ -2,7 +2,7 @@ import { FormEvent, Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api, ApiError, currentUser } from "../api";
-import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import { Button, ErrorBanner, Field, Modal, Spinner, inputClass } from "../components/ui";
 import ChannelIcon from "./ChannelIcon";
 const ProductionQueuePage = lazy(()=>import("./ProductionQueuePage"));
 
@@ -31,7 +31,7 @@ export default function ProductWorkbench(){
   const target=useQuery({queryKey:["sku-target-project",owner,targetProject],queryFn:()=>api.get<{id:number;title:string;objective:string}>(`/content-projects/${targetProject}`),enabled:!!targetProject,retry:false});
   const [view,setView]=useState<"catalog"|"new"|"detail"|"tasks">("catalog");const [tab,setTab]=useState("facts");
   const [q,setQ]=useState("");const [search,setSearch]=useState("");const [category,setCategory]=useState("");
-  const [sku,setSku]=useState<Sku|null>(null);const [channel,setChannel]=useState("");const [persona,setPersona]=useState("");
+  const [sku,setSku]=useState<Sku|null>(null);const [channel,setChannel]=useState("");const [persona,setPersona]=useState("");const [asking,setAsking]=useState<{sku:Sku;planId?:number}|null>(null);
   const personas=useQuery({queryKey:["content-personas",owner],queryFn:()=>api.get<{id:number;name:string}[]>("/content-personas"),retry:false});
   const [form,setForm]=useState({name:"",category:"",category_key:"",variant:"",description:"",external_code:""});
   const categories=useQuery({queryKey:["product-categories",owner],queryFn:()=>api.get<{items:{key:string;name:string;status:string}[]}>("/product-categories"),retry:false});
@@ -54,7 +54,9 @@ export default function ProductWorkbench(){
   useEffect(()=>{if(!openSku)return;let live=true;api.get<Sku>(`/product-skus/${openSku}`).then(item=>{if(live){openDetail(item);setTab('works');}}).catch(()=>undefined);return()=>{live=false;};},[openSku]);
   useEffect(()=>{if(!editing)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue="";};window.addEventListener("beforeunload",warn);return()=>window.removeEventListener("beforeunload",warn);},[editing]);
   function leave(next:typeof view){if(editing&&!window.confirm("商品资料还未保存，放弃本次编辑？"))return;setEditing(false);setView(next);setError("");setNotice("");}
-  async function start(selected:Sku,planId?:number){setBusy(true);setError("");try{
+  // The persona belongs to each work, not to the product, so it is asked for at the moment a work is created.
+  function start(selected:Sku,planId?:number){setError("");if(pending){setError("先核对上次未确定的保存请求，避免重复创建。");return;}setAsking({sku:selected,planId});}
+  async function launch(selected:Sku,planId?:number){setBusy(true);setError("");try{
     if(pending)throw new Error("先核对上次未确定的保存请求，避免重复创建。");
     if(!persona)throw new Error("先选角色：商品视频的声音、形象照和说话方式都按角色来。");
     const launch_key=launchKeys.current[selected.id]||(launchKeys.current[selected.id]=key());
@@ -87,7 +89,7 @@ export default function ProductWorkbench(){
     {pending&&<div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4"><p className="text-sm">上次保存或创建结果待核对；重新读取同一请求，避免重复建商品或作品。</p><Button disabled={busy} variant="secondary" onClick={()=>void recover()}>继续核对上次请求</Button></div>}
     {error&&<ErrorBanner message={error}/>} {notice&&<p role="status" className="text-sm text-emerald-700">{notice}</p>}
     {channels.error&&<ErrorBanner message="渠道列表读取失败，请刷新后重试。"/>}
-    <Field label="角色（必选：声音、形象照、说话方式都按角色来）"><select aria-label="属于哪个账号角色" required className={inputClass} value={persona} onChange={e=>setPersona(e.target.value)}><option value="" disabled>选择角色</option>{(personas.data||[]).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
+    {asking&&<Modal title="这条视频用哪个角色" onClose={()=>setAsking(null)}><div className="space-y-4"><p className="text-sm text-slate-600">声音、形象照、用词口吻和发布文案都按这个角色来；建好后也可以在第 1 步换。</p><Field label="角色（必选）"><select aria-label="作品角色" required className={inputClass} value={persona} onChange={e=>setPersona(e.target.value)}><option value="" disabled>选择角色</option>{(personas.data||[]).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></Field><div className="flex justify-end gap-2"><Button variant="secondary" onClick={()=>setAsking(null)}>取消</Button><Button disabled={busy||!persona} onClick={()=>{const next=asking;setAsking(null);void launch(next.sku,next.planId);}}>开始制作</Button></div></div></Modal>}
     <details className="rounded-xl border bg-white p-4"><summary className="text-sm">交付渠道：<ChannelIcon channel={channel} className="mr-1"/>{channels.data?.find(x=>x.channel===channel)?.label||'先制作，交付时再选渠道'}</summary><Field label="目标渠道"><select className={inputClass} value={channel} onChange={e=>setChannel(e.target.value)}><option value="">先制作，交付时再选渠道</option>{channels.data?.filter(x=>x.content_forms.some(f=>f.artifact_kind==='video')).map(x=><option key={x.channel} value={x.channel}>{x.label}</option>)}</select></Field></details>
     {view==='catalog'&&<><div className="flex flex-wrap items-end justify-between gap-3"><Field label="搜索 SKU、商品名称或商家编码"><input className={inputClass} value={q} onChange={e=>setQ(e.target.value)} placeholder="输入编码或名称"/></Field><Field label="品类"><input className={inputClass} value={category} onChange={e=>setCategory(e.target.value)} placeholder="全部品类"/></Field><Button onClick={create}>新建 SKU</Button></div>{products.isPending?<Spinner label="读取商品库…"/>:products.error?<div><ErrorBanner message="商品库读取失败，不能当作没有商品。"/><Button variant="secondary" onClick={()=>void products.refetch()}>重新读取</Button></div>:<div className="space-y-4">{products.data?.items.map(x=><article key={x.id} className="rounded-2xl border bg-white p-5"><div className="flex justify-between gap-4"><div className="min-w-0 break-words"><p className="text-xs text-slate-500">{x.product.category}</p><h2 className="mt-2 font-semibold">{x.product.name}</h2><p className="mt-2">{x.code}</p><p className="mt-1 text-sm text-slate-500">{x.product.variant||"规格待补充"}</p>{x.external_code&&<p className="text-xs text-slate-500">商家编码：{x.external_code}</p>}<Button size="sm" variant="secondary" onClick={()=>openDetail(x)}>资料与已有作品</Button></div><SkuImage sku={x}/></div><Button className="mt-5 w-full" disabled={busy||!!channels.error} onClick={()=>{openDetail(x);setTab('works');}}>进入商品</Button></article>)}{!products.data?.items.length&&<p className="rounded-xl border bg-white p-6 text-sm text-slate-500">{search||category?'没有匹配商品，请调整搜索或新建 SKU。':'还没有 SKU。先新建商品、填写基本信息。'}</p>}<p className="text-xs text-slate-500">显示前40条匹配商品，更多商品请用编码或名称查找。</p></div>}</>}
     {view==='new'&&<form onSubmit={save} className="space-y-5 rounded-2xl border bg-white p-6"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">新建 SKU</h2>{targetProject&&<Button type="button" size="sm" variant="secondary" onClick={()=>leave('catalog')}>改选已有商品</Button>}</div><p className="text-sm text-slate-500">保存时自动分配 SKU-000001 形式的永久流水号；不同可售规格分别建 SKU，改名不改号。</p>{itemFields}<Button type="submit" disabled={busy}>保存商品并开始制作</Button></form>}
