@@ -1,0 +1,4 @@
+- [x] 1 下载各平台官网图标，转 32×32 PNG 放到 apps/web/public/channel-icons/<渠道键>.png；视频号另找官网声明的图标
+- [x] 2 新增 ChannelIcon 组件（16px，缺图不显示）
+- [x] 3 在角色与账号、账号台、渠道版本、作品渠道选择、审阅交付、候选预览的渠道名前加图标
+- [x] 4 tsc、`openspec validate`；页面目视检查

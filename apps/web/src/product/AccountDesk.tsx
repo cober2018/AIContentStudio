@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ApiError } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
+import ChannelIcon from "./ChannelIcon";
 
 type Persona = { id: number; name: string; status: string };
 type Channel = { channel: string; label: string };
@@ -121,7 +122,7 @@ export default function AccountDesk() {
             const bound = accounts.filter(account => account.platform_channel === row.channel);
             return <li key={row.channel} className="flex flex-wrap items-center justify-between gap-3 py-3">
               <div>
-                <p className="text-sm font-medium">{row.label}</p>
+                <p className="text-sm font-medium"><ChannelIcon channel={row.channel} className="mr-1" />{row.label}</p>
                 <p className="mt-1 text-xs text-slate-500">{bound.length === 0 ? "还没有登记" : bound.map(account => `${account.name}${account.status === "archived" ? "（已归档，标识仍被占用）" : ""}`).join("、")}</p>
               </div>
               <Button variant="secondary" size="sm" disabled={!admin} onClick={() => { setChannel(row.channel); setNotice(""); }}>填写</Button>
@@ -134,7 +135,7 @@ export default function AccountDesk() {
         {accounts.length === 0 ? <p className="mt-3 text-sm text-slate-500">还没有账号。</p> : <ul className="mt-3 space-y-2">
           {accounts.map(account => <li key={account.id} className="rounded-lg border border-slate-100 px-3 py-3 text-sm">
             <p className="font-medium">{account.name}<span className="ml-2 text-xs font-normal text-slate-500">{account.persona_id == null ? "独立账号" : personaName[account.persona_id] || `角色 #${account.persona_id}`} · {account.status === "archived" ? "已归档" : "使用中"}</span></p>
-            <p className="mt-1 break-all text-xs text-slate-600">{account.platform_channel ? `${channelLabel[account.platform_channel] || account.platform_channel} · ${account.platform_account_id}` : "尚未绑定平台"} · {account.platform_binding_state === "bound_unverified" ? "已登记，未验证" : "未绑定"}</p>
+            <p className="mt-1 break-all text-xs text-slate-600">{account.platform_channel ? <><ChannelIcon channel={account.platform_channel} className="mr-1" />{`${channelLabel[account.platform_channel] || account.platform_channel} · ${account.platform_account_id}`}</> : "尚未绑定平台"} · {account.platform_binding_state === "bound_unverified" ? "已登记，未验证" : "未绑定"}</p>
           </li>)}
         </ul>}
       </section>

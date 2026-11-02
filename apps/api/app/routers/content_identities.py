@@ -468,3 +468,32 @@ def create_independent_channel_account(payload: ChannelAccountIn, db: Session = 
     row = identity.register_public_channel_account(db, user, None, name=payload.name,
         channel=payload.platform_channel, platform_account_id=payload.platform_account_id)
     return _entity_json(db, "account", row)
+
+
+class ChromeProfileIn(BaseModel):
+    profile_dir: str | None = Field(default=None, max_length=100)
+
+
+class AccountOpenIn(BaseModel):
+    url: str = Field(min_length=1, max_length=500)
+
+
+@router.get("/settings/chrome-profiles")
+def chrome_profiles_view(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import chrome_profiles
+
+    return chrome_profiles.view(db)
+
+
+@router.put("/content-personas/{persona_id}/chrome-profile")
+def set_persona_chrome_profile(persona_id: int, payload: ChromeProfileIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import chrome_profiles
+
+    return chrome_profiles.set_persona(db, user, persona_id, payload.profile_dir)
+
+
+@router.post("/content-accounts/{account_id}/open-link")
+def open_account_link(account_id: int, payload: AccountOpenIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import chrome_profiles
+
+    return chrome_profiles.open_account_link(db, user, account_id, payload.url)

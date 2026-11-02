@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, currentUser } from "../api";
 import { type Portrait, StoredThumb } from "./PersonaPortraits";
+import PersonaChromeProfile from "./PersonaChromeProfile";
 import { Chip } from "../components/ui";
 
 type Json = Record<string, any>;
@@ -143,6 +144,7 @@ function PersonaMedia({ personaId, folder }: { personaId: number; folder: unknow
   const chosen = voices.data?.personas[String(personaId)];
   return <>
     <Block title="声音" note="这个角色下的作品都用这个声音">{chosen ? <p className="text-[14px] text-ink-800">{voices.data?.items[chosen]?.name || chosen}</p> : <Empty />}</Block>
+    <Block title="浏览器" note="账号页按钮用这个 Chrome 个人资料打开平台"><div className="max-w-md"><PersonaChromeProfile personaId={personaId} disabled={false} /></div></Block>
     <Block title="形象照" note="生成画面时人物长相照它来">{portraits.data?.items.length ? <div className="flex flex-wrap gap-3">{portraits.data.items.map(item => <div key={item.material_revision_id} className="space-y-1"><StoredThumb item={item} />{!item.usable && <p className="text-[12px] text-amber-700">这张不能再用</p>}</div>)}</div> : <Empty />}</Block>
     <Block title="逐字稿样本" note="Obsidian 知识库里的文件夹，写视频逐字稿时学说话方式">{typeof folder === "string" && folder ? <p className="break-all text-[14px] text-ink-800">{folder}</p> : <Empty />}</Block>
   </>;

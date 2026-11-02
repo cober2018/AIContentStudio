@@ -8,8 +8,10 @@ import { BrandLogoMark, BrandOverview, BrandProfileEditor } from "./BrandProfile
 import { PersonaDiscoveryStatus } from "./DiscoveryPanel";
 import { MemoryPanel } from "./LearningWorkspace";
 import AccountPublisherPanel from "./AccountPublisherPanel";
+import ChannelIcon from "./ChannelIcon";
 import StarterPersonaGallery from "./StarterGallery";
 import PersonaVoicePreset from "./PersonaVoicePreset";
+import PersonaChromeProfile, { useChromeProfiles } from "./PersonaChromeProfile";
 import { PersonaPortraitEditor } from "./PersonaPortraits";
 import { SpeechSampleFolderEditor } from "./PersonaSpeechSamples";
 
@@ -396,7 +398,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
     </div>;
   }
   function entityButton(entity: Entity) {
-    return <button key={`${entity.kind}:${entity.id}`} disabled={busy} className="group flex w-full items-center justify-between gap-3 rounded-xl border border-ink-200/80 bg-surface px-4 py-3 text-left transition-colors hover:border-ink-400" onClick={() => selectIdentity({ kind: entity.kind, id: entity.id })}><span className="min-w-0"><span className="block text-[11.5px] text-ink-500">{KIND_NAME[entity.kind]}{entity.platform_channel ? ` · ${channels.find(channel => channel.channel === entity.platform_channel)?.label || entity.platform_channel}` : ""}</span><span className="block truncate text-[14.5px] font-medium text-ink-900">{entity.name}</span></span><span aria-hidden className="text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink-800">→</span></button>;
+    return <button key={`${entity.kind}:${entity.id}`} disabled={busy} className="group flex w-full items-center justify-between gap-3 rounded-xl border border-ink-200/80 bg-surface px-4 py-3 text-left transition-colors hover:border-ink-400" onClick={() => selectIdentity({ kind: entity.kind, id: entity.id })}><span className="min-w-0"><span className="block text-[11.5px] text-ink-500">{KIND_NAME[entity.kind]}{entity.platform_channel ? <> · <ChannelIcon channel={entity.platform_channel} className="mr-1" />{channels.find(channel => channel.channel === entity.platform_channel)?.label || entity.platform_channel}</> : ""}</span><span className="block truncate text-[14.5px] font-medium text-ink-900">{entity.name}</span></span><span aria-hidden className="text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink-800">→</span></button>;
   }
   function parentLabel(entity: Entity) {
     if (entity.kind === "brand") return "根品牌";
@@ -447,7 +449,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
         {filtered.length === 0 ? <EmptyState title={`没有匹配的${KIND_NAME[directory]}`} hint={search ? "换个关键词试试。" : undefined} /> : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{filtered.slice((page - 1) * 20, page * 20).map((row, index) => <button key={`${row.kind}:${row.id}`} disabled={busy} onClick={() => selectIdentity({ kind: row.kind, id: row.id })} style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }} className="card group flex min-h-[188px] animate-rise flex-col p-6 text-left transition-[transform,box-shadow,border-color] duration-300 ease-studio hover:-translate-y-0.5 hover:border-ink-300 hover:shadow-lift">
           <div className="flex items-start justify-between gap-3">
             <span aria-hidden className={`grid h-11 w-11 shrink-0 place-items-center rounded-full font-serif text-[18px] ${row.status === "archived" ? "bg-ink-100 text-ink-400" : "bg-accent-50 text-accent-600"}`}>{row.name.trim().charAt(0) || "·"}</span>
-            {row.status === "archived" ? <Chip>已归档</Chip> : channelLabel(row.platform_channel) ? <Chip tone="info">{channelLabel(row.platform_channel)}</Chip> : null}
+            {row.status === "archived" ? <Chip>已归档</Chip> : channelLabel(row.platform_channel) ? <Chip tone="info"><ChannelIcon channel={row.platform_channel} className="mr-1" />{channelLabel(row.platform_channel)}</Chip> : null}
           </div>
           <h2 className="mt-5 line-clamp-2 break-words font-serif text-[21px] font-semibold leading-snug text-ink-900">{row.name}</h2>
           <p className="mt-1.5 truncate text-[13px] text-ink-500">{parentLabel(row)}</p>
@@ -464,7 +466,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
           <div className="mb-6 flex flex-wrap items-center gap-2">
             {current.status === "archived" ? <Chip tone="warn">已归档 · 只能查看</Chip> : <Chip tone="good">使用中</Chip>}
             {current.kind !== "account" && <Chip>修订 v{current.current_revision}</Chip>}
-            {channelLabel(current.platform_channel) && <Chip tone="info">{channelLabel(current.platform_channel)}</Chip>}
+            {channelLabel(current.platform_channel) && <Chip tone="info"><ChannelIcon channel={current.platform_channel} className="mr-1" />{channelLabel(current.platform_channel)}</Chip>}
             {current.kind === "persona" && <Chip>{related.filter(row => row.kind === "account").length} 个账号</Chip>}
             {creativeReadOnly && current.status !== "archived" && <span className="text-[12.5px] text-amber-700">只读：权限未确认、读取未完成或上级已归档</span>}
           </div>
@@ -488,6 +490,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
         {tab === "edit" && current.kind === "brand" && <BrandProfileEditor key={identityKey} brandId={current.id} brandName={current.name} revision={revisions[0]} readOnly={creativeReadOnly} onSaved={sideRevisionSaved} />}
         {tab === "edit" && current.kind !== "brand" && <div className="space-y-8">{revisionConflict && <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-5 text-[14px] text-amber-900"><p>最新修订为 v{revisions[0]?.revision_no ?? "未知"}。当前输入已保留，需先核对历史再显式加载，不能继续覆盖。</p><Button variant="secondary" onClick={() => { if (!window.confirm("加载最新修订将覆盖当前表单，确认继续？")) return; const next = draftFrom(revisions[0]?.profile || {}); setDraft(next); baselineDraft.current = JSON.stringify(next); setRevisionConflict(false); setError(""); }}>加载最新修订（覆盖当前表单）</Button></div>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">声音</h3><div className="max-w-md"><PersonaVoicePreset personaId={current.id} disabled={creativeReadOnly} /></div></section>}
+          {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">浏览器</h3><div className="max-w-md"><PersonaChromeProfile personaId={current.id} disabled={creativeReadOnly} /></div></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">形象照</h3><PersonaPortraitEditor key={identityKey} personaId={current.id} personaName={current.name} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">逐字稿样本</h3><SpeechSampleFolderEditor key={identityKey} personaId={current.id} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
           {profileTabs.map(([group, label]) => <section key={group} className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">{label}</h3><div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === group).map(({ key, label, shape, hint }) => fieldEditor(key, label, shape, hint))}</div></section>)}
@@ -528,14 +531,22 @@ function AccountInfo({ account, persona, personas, channelLabel, readOnly, busy,
     catch (error) { onError(error instanceof ApiError && error.message === "persona_platform_taken" ? "目标角色在该平台已经有账号了，同一平台只能有一个。" : error instanceof ApiError && error.status === 403 ? "只有管理员可以更换归属角色。" : error instanceof ApiError ? (error.detail as { message?: string } | undefined)?.message || error.message : "保存失败，请重试。"); }
     finally { setSaving(false); }
   }
-  const links = account.creator_links || [];
+  const links = [...(account.creator_links || []), ...(account.home_url ? [{ label: "账号主页", url: account.home_url }] : [])];
+  const chrome = useChromeProfiles();
+  const profileDir = account.persona_id != null ? chrome.data?.personas[String(account.persona_id)] : undefined;
+  const profileName = profileDir ? chrome.data?.profiles.find(item => item.dir === profileDir)?.name || profileDir : null;
+  async function openInProfile(url: string) {
+    try { await api.post(`/content-accounts/${account.id}/open-link`, { url }); }
+    catch (error) { onError(error instanceof ApiError ? (error.detail as { message?: string } | undefined)?.message || error.message : "打开失败，请重试。"); }
+  }
   return <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-    <Section eyebrow="账号信息" title={channelLabel || "未登记平台"}>
+    <Section eyebrow="账号信息" title={<><ChannelIcon channel={account.platform_channel} className="mr-1.5" />{channelLabel || "未登记平台"}</>}>
       <div className="flex flex-wrap gap-2">
-        {links.map(link => <a key={link.url} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-pill bg-ink-900 px-4 py-2 text-[13.5px] font-medium text-white hover:bg-ink-700">{link.label} ↗</a>)}
-        {account.home_url && <a href={account.home_url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-pill border border-ink-200 px-4 py-2 text-[13.5px] text-ink-800 hover:border-ink-400">账号主页 ↗</a>}
+        {links.map(link => profileDir
+          ? <button key={link.url} type="button" onClick={() => void openInProfile(link.url)} className="inline-flex items-center rounded-pill bg-ink-900 px-4 py-2 text-[13.5px] font-medium text-white hover:bg-ink-700">{link.label} ↗</button>
+          : <a key={link.url} href={link.url} target="_blank" rel="noreferrer" className="inline-flex items-center rounded-pill bg-ink-900 px-4 py-2 text-[13.5px] font-medium text-white hover:bg-ink-700">{link.label} ↗</a>)}
       </div>
-      <p className="mt-2 text-[12.5px] text-ink-500">在你自己的浏览器里打开。先在浏览器登录一次平台，之后点这里直接进入；平台不保存密码。</p>
+      <p className="mt-2 text-[12.5px] text-ink-500">{profileName ? `用 Chrome 个人资料「${profileName}」打开；在这个个人资料里登录一次平台即可。` : "在当前浏览器打开。给归属角色选一个 Chrome 个人资料后，各角色的登录就互不干扰。"}平台不保存密码。</p>
       <dl className="mt-6 grid gap-4 text-[14px] sm:grid-cols-2">
         <div><dt className="text-[12.5px] text-ink-500">公开标识</dt><dd className="mt-1 break-all text-ink-900">{account.platform_account_id || "未登记"}</dd></div>
         <div><dt className="text-[12.5px] text-ink-500">归属角色</dt><dd className="mt-1">{persona ? <button className="text-accent-600 hover:underline" onClick={onOpenPersona}>{persona.name}</button> : "独立自有账号"}</dd></div>
@@ -673,7 +684,7 @@ function SeriesTargetsPanel({ seriesId, personaId, archived, accounts, channels,
     {loading ? <Spinner label="读取投放绑定…" /> : <>
       {targets.length === 0 ? <p className="mt-3 text-sm text-slate-500">还没有投放绑定。</p> : <ul className="mt-3 space-y-2">
         {targets.map((row) => <li key={row.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 px-3 py-2 text-sm">
-          <span>{row.account_name || `账号 #${row.account_id}`} · {channels.find((c) => c.channel === row.platform_channel)?.label || row.platform_channel} / {row.content_form}</span>
+          <span>{row.account_name || `账号 #${row.account_id}`} · <ChannelIcon channel={row.platform_channel} className="mr-1" />{channels.find((c) => c.channel === row.platform_channel)?.label || row.platform_channel} / {row.content_form}</span>
           <span className="flex items-center gap-2 text-xs">
             <span className={row.enabled ? "text-emerald-700" : "text-slate-500"}>{row.enabled ? "启用中" : "已停用"} · v{row.version}</span>
             {!readOnly && !archived && <Button size="sm" variant="secondary" disabled={busy || parentBusy} onClick={() => mutate(() => api.patch(`/content-series/${seriesId}/targets/${row.id}`, { enabled: !row.enabled, expected_version: row.version }), row.enabled ? "绑定已停用；新的投放授权会被阻断。" : "绑定已重新启用。")}>{row.enabled ? "停用" : "启用"}</Button>}
