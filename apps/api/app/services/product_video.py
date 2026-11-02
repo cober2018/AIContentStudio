@@ -113,6 +113,14 @@ def _mode(db: Session, link: ProductSkuWork, unit_id: int, shot_id: str | None =
     return default_mode(db) if chosen == "default" else chosen
 
 
+def latest_main_image(db: Session, link: ProductSkuWork) -> tuple[int | None, int | None]:
+    """The product's newest main image and the revision it came from; facts stay frozen, but a replaced photo should reach existing works."""
+    row = db.execute(select(ProductSkuRevision.primary_image_revision_id, ProductSkuRevision.revision).where(
+        ProductSkuRevision.sku_id == link.sku_id, ProductSkuRevision.primary_image_revision_id.is_not(None))
+        .order_by(ProductSkuRevision.revision.desc()).limit(1)).first()
+    return (row[0], row[1]) if row else (None, None)
+
+
 def direction(db: Session, unit_id: int) -> dict | None:
     """What a product work adds to the video brief; None for persona works."""
     link = work(db, unit_id)
@@ -129,7 +137,7 @@ def direction(db: Session, unit_id: int) -> dict | None:
     mode = _mode(db, link, unit_id)
     return {
         "product": {"name": product.get("name"), "category_text": product.get("category"), "variant": product.get("variant"),
-                    "selling_points": product.get("selling_points") or [], "primary_image_revision_id": sku.primary_image_revision_id},
+                    "selling_points": product.get("selling_points") or [], "primary_image_revision_id": latest_main_image(db, link)[0]},
         "category": None if category is None else {
             "name": category["name"], "revision": category["revision"], "directive": profile.get("directive"),
             "styles": [{"id": item, "name": product_categories.STYLES[item], "skill": product_categories.style_ref(item)} for item in styles],
@@ -209,21 +217,20 @@ def references(db: Session, user: User | None, unit_id: int) -> dict:
         if ref.get("role") in chosen and ref.get("material_revision_id") not in chosen[ref["role"]]:
             chosen[ref["role"]].append(ref["material_revision_id"])
     origin = {role: "manual" for role, ids in chosen.items() if ids}
+    main_image = None
     if not chosen["product"] and link is not None:
-        primary = db.get(ProductSkuRevision, link.sku_revision_id).primary_image_revision_id
-        # A main image added to the product after this work started still serves it: the picture, not the facts, is what changes.
-        primary = primary or db.scalar(select(ProductSkuRevision.primary_image_revision_id).where(
-            ProductSkuRevision.sku_id == link.sku_id, ProductSkuRevision.primary_image_revision_id.is_not(None))
-            .order_by(ProductSkuRevision.revision.desc()).limit(1))
+        primary, revision_no = latest_main_image(db, link)
         if primary:
             chosen["product"], origin["product"] = [primary], "sku_primary_image"
+            frozen = db.get(ProductSkuRevision, link.sku_revision_id)
+            main_image = {"revision": revision_no, "followed_latest": frozen is None or frozen.revision != revision_no}
     unit = db.get(ContentUnit, unit_id)
     if not chosen["person"] and unit is not None and unit.persona_id is not None:
         revision = current_revision(db, "persona", unit.persona_id)
         portraits = [item for item in ((revision.profile_json or {}).get("portrait_material_revision_ids") or []) if usable_portrait(db, item)] if revision else []
         if portraits:
             chosen["person"], origin["person"] = portraits[:3], "persona_portrait"
-    return {**chosen, "origin": origin}
+    return {**chosen, "origin": origin, "main_image": main_image}
 
 
 def person_notices(document: dict, refs: dict) -> dict:

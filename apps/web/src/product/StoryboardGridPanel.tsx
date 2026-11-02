@@ -5,7 +5,7 @@ import { Button, FloatingAlert } from "../components/ui";
 import type { VideoPayload } from "./VideoStudioModel";
 
 type Candidate = { material_revision_id: number; material_id: number; consistency?: string | null };
-type References = { product: number[]; person: number[]; scene: number[]; origin: Record<string, string> };
+type References = { product: number[]; person: number[]; scene: number[]; origin: Record<string, string>; main_image?: { revision: number; followed_latest: boolean } | null };
 type Run = { status: "running" | "done" | "failed"; started_at?: number; finished_at?: number; sheets?: string[]; error?: string | null;
   skipped?: string[]; consistency_failed?: string[] };
 type View = { product: boolean; grid?: Record<string, Candidate[]>; grid_run?: Run | null; frames?: Record<string, { material_revision_id: number }>;
@@ -79,7 +79,7 @@ export default function StoryboardGridPanel({ projectId, unitId, readOnly }: { p
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div><h3 className="font-semibold">九宫格分镜</h3>
         <p className="text-xs text-slate-500">一次把最多 9 个镜头画在一张图里，商品、人物、房间、光线一致，再裁成每镜的首帧候选；每格对照商品主图检查，不过关只重画那一格。商品纯特写单独生成更准。按次计费。</p>
-        {refs && <p className="mt-1 text-xs text-slate-600">参考：商品 {refs.product.length ? ORIGIN[refs.origin.product] || "已选" : "没有（不检查商品）"}；人物 {refs.person.length ? `${ORIGIN[refs.origin.person] || "已选"} ${refs.person.length} 张` : "没有形象照，生成画面里不出现人物"}{refs.scene.length ? `；场景 ${refs.scene.length} 张` : ""}</p>}</div>
+        {refs && <p className="mt-1 text-xs text-slate-600">参考：商品 {refs.product.length ? `${ORIGIN[refs.origin.product] || "已选"}${refs.main_image ? `（第 ${refs.main_image.revision} 版${refs.main_image.followed_latest ? "，已跟随商品最新主图" : ""}）` : ""}` : "没有（不检查商品）"}；人物 {refs.person.length ? `${ORIGIN[refs.origin.person] || "已选"} ${refs.person.length} 张` : "没有形象照，生成画面里不出现人物"}{refs.scene.length ? `；场景 ${refs.scene.length} 张` : ""}</p>}</div>
       <Button size="sm" disabled={locked || !!busy || running} onClick={() => { if (window.confirm("生成九宫格分镜会调用生图模型，按次计费。继续？")) void run("grid", () => api.post(`${base}/storyboard-grid`, {}), "开始生成了，约 2–4 分钟，可以先做别的，好了这里会自动更新"); }}>{running ? "生成中…" : "九宫格分镜"}</Button>
     </div>
     {locked && !chain.data.locked && <p className="mt-2 text-xs text-slate-500">导演稿采用后才能生成。</p>}

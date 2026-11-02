@@ -1276,14 +1276,16 @@ def test_shot_references_prefer_manual_then_primary_image_and_portrait(monkeypat
     link = SimpleNamespace(unit_id=2, sku_revision_id=5)
     settings = {"shared_references": []}
     portraits = {"ids": []}
-    rows = {ProductSkuRevision: SimpleNamespace(primary_image_revision_id=7), ContentUnit: SimpleNamespace(persona_id=3)}
+    rows = {ProductSkuRevision: SimpleNamespace(primary_image_revision_id=7, revision=1), ContentUnit: SimpleNamespace(persona_id=3)}
     db = SimpleNamespace(get=lambda model, key: rows[model])
     monkeypatch.setattr(product_video, "work", lambda db, unit_id: link)
     monkeypatch.setattr(product_video, "_settings", lambda db, row: settings)
+    monkeypatch.setattr(product_video, "latest_main_image", lambda db, row: (7, 1))
     monkeypatch.setattr(content_identity, "current_revision", lambda db, kind, entity_id: SimpleNamespace(profile_json={"portrait_material_revision_ids": portraits["ids"]}))
     monkeypatch.setattr(content_identity, "usable_portrait", lambda db, revision_id, email=None: revision_id != 99)
     refs = product_video.references(db, None, 2)
-    assert refs == {"product": [7], "person": [], "scene": [], "origin": {"product": "sku_primary_image"}}
+    assert refs == {"product": [7], "person": [], "scene": [], "origin": {"product": "sku_primary_image"},
+                    "main_image": {"revision": 1, "followed_latest": False}}
     assert product_video.person_notices({"shots": [{"id": "a", "board": {"visual": "女生拿着饼干"}}, {"id": "b", "board": {"visual": "饼干特写"}}]}, refs) == {"a": product_video.NO_PORTRAIT}
     assert product_video.person_rule(refs) == product_video.WITHOUT_PERSON
     portraits["ids"] = [11, 99]

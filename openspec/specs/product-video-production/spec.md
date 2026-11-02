@@ -158,3 +158,23 @@ Every generated still SHALL be checked against the product photo by an image-cap
 - **WHEN** a shot is manual and the user uploads a finished video
 - **THEN** the video goes into the project folder and is used for that shot
 
+### Requirement: Product works use the product's latest main image
+
+For product video works, shot still generation, the product consistency check, image-to-video reference images and the brief SHALL use the main image of the product's latest revision that has one, while product facts stay frozen at the revision the work started with. A product reference image chosen on the work itself SHALL take precedence. Already generated stills and videos SHALL NOT change.
+
+#### Scenario: Main image replaced after the work started
+- **WHEN** work 90 started on product 8 revision 1 (main image 315) and the product is now at revision 3 (main image 319)
+- **THEN** the next shot still, consistency check and image-to-video request for work 90 use image 319
+
+#### Scenario: Manually chosen product reference
+- **WHEN** a work has its own product reference image set
+- **THEN** that image is used, not the product's latest main image
+
+### Requirement: Video saves check against the current settings
+
+When a 导演稿 or shot material choice is saved for a video work that already has a 导演稿, the save SHALL be checked against the context computed from the work's current settings, not against the context stored with the previous 导演稿 version. A settings change made by someone else while the save is in progress SHALL still be refused.
+
+#### Scenario: Main image changed after approval
+- **WHEN** work 90's product main image or footage mode changed after its 导演稿 was approved and the MCP saves a new 导演稿
+- **THEN** the save succeeds and the new version records the current context
+
