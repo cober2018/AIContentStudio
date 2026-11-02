@@ -462,7 +462,30 @@ def list_projects(db: Session = Depends(get_db), user: User = Depends(get_curren
     briefs: dict[int, CreativeBriefRevision] = {}
     for brief in db.scalars(select(CreativeBriefRevision).where(CreativeBriefRevision.project_id.in_(project_ids)).order_by(CreativeBriefRevision.revision_no)).all():
         briefs[brief.project_id] = brief  # 后写覆盖＝保留最高 revision_no，与 current_brief 一致
-    return [_project_payload(row, units_by_project[row.id], briefs.get(row.id)) for row in rows]
+    return [{**_project_payload(row, units_by_project[row.id], briefs.get(row.id)), "progress": _progress(db, units_by_project[row.id])}
+            for row in rows]
+
+
+def _progress(db: Session, units: list[ContentUnit]) -> dict:
+    """Where the project's live works stand, from each work's own chain; the project's status field never moves, so it cannot say this."""
+    from collections import Counter
+
+    from ..services import article_chain, video_chain
+
+    counts, labels = Counter(), Counter()
+    for unit in units:
+        if unit.lifecycle in {"deleted", "archived"} or unit.status == "archived":
+            continue
+        try:
+            current = (video_chain if unit.modality == "video" else article_chain)._state(db, unit.id)
+        except Exception:  # noqa: BLE001 One unreadable work must not hide the whole list.
+            current = {"state": "making", "label": "制作中"}
+        state = current.get("state", "")
+        bucket = "done" if state == "done" else "waiting" if state.endswith("_review") else "not_started" if state == "not_started" else "in_progress"
+        counts[bucket] += 1
+        labels[current.get("label") or state] += 1
+    return {"total": sum(counts.values()), **{key: counts[key] for key in ("done", "waiting", "in_progress", "not_started")},
+            "labels": [{"label": label, "count": count} for label, count in labels.most_common()]}
 
 
 @router.post("/content-projects", status_code=201)
