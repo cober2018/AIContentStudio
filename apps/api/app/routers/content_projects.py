@@ -617,6 +617,24 @@ def create_unit(payload: UnitIn, project_id: int, db: Session = Depends(get_db),
     return _unit_json(unit)
 
 
+def _copy_product_link(db: Session, user: User, source: ContentUnit, unit: ContentUnit) -> None:
+    """Without its product link and production settings a copy would stop being a product video."""
+    from ..models import ProductionProfileRevision, ProductSkuWork
+    from .product_skus import digest
+
+    link = db.scalar(select(ProductSkuWork).where(ProductSkuWork.unit_id == source.id))
+    if link is None:
+        return
+    db.add(ProductSkuWork(sku_id=link.sku_id, sku_revision_id=link.sku_revision_id, project_id=unit.project_id, unit_id=unit.id,
+                          plan_id=link.plan_id, settings_snapshot_json=link.settings_snapshot_json))
+    current = db.scalar(select(ProductionProfileRevision).where(ProductionProfileRevision.unit_id == source.id)
+                        .order_by(ProductionProfileRevision.revision.desc()).limit(1))
+    if current is not None:
+        db.add(ProductionProfileRevision(unit_id=unit.id, revision=1, settings_json=current.settings_json,
+                                         settings_hash=digest(current.settings_json), created_by=user.email))
+    db.flush()
+
+
 @router.post("/content-projects/{project_id}/units/{unit_id}/copy", status_code=201)
 def copy_unit(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     """A finished piece is never edited again; adjustments start from a copy in the same project."""
@@ -635,12 +653,15 @@ def copy_unit(project_id: int, unit_id: int, db: Session = Depends(get_db), user
     while title in taken:
         title = f"{source.title} · 副本{number}"[:300]
         number += 1
-    snapshot = content_identity.create_snapshot(db, user, persona_id=source.persona_id, account_id=source.account_id, series_id=source.series_id)
+    # Product videos have no persona, so there is no identity to snapshot, as with the original.
+    snapshot = content_identity.create_snapshot(db, user, persona_id=source.persona_id, account_id=source.account_id,
+                                                series_id=source.series_id) if source.persona_id is not None else None
     unit = ContentUnit(project_id=project_id, persona_id=source.persona_id, production_domain=source.production_domain, account_id=source.account_id,
-                       series_id=source.series_id, identity_snapshot_id=snapshot.id, modality=source.modality, channel_id=source.channel_id,
-                       title=title, pinned_workflow_id=source.pinned_workflow_id)
+                       series_id=source.series_id, identity_snapshot_id=snapshot.id if snapshot else None, modality=source.modality,
+                       channel_id=source.channel_id, title=title, pinned_workflow_id=source.pinned_workflow_id)
     db.add(unit)
     db.flush()
+    _copy_product_link(db, user, source, unit)
     origin = {"unit_id": source.id, "master_id": master.id if master else None}
     if master is not None:
         view = content_masters._serialize(db, master, require_current=False)
