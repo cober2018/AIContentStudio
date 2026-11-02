@@ -156,6 +156,9 @@ def _state(db: Session, unit_id: int) -> dict:
     phase = "sample" if task["phase"] == "rough_cut" else "final"
     view.update(execution_id=execution.id, execution_state=execution.state, phase=task["phase"])
     notes = _decision(record, phase, execution.id)
+    if (notes is None or notes["decision"] != "approve") and _approving(record, execution.id):
+        return {**view, "state": "approving", "label": "正在通过…",
+                "detail": "用户已点通过，平台正在采纳成果文件，稍后再查；这不是「待你看」，不要当成还没通过"}
     if execution.state in {"prepared", "claimed", "in_progress"}:
         return {**view, "state": "making" if phase == "sample" else "finishing", "label": "剪小样中" if phase == "sample" else "排版中"}
     if execution.state == "result_ready" and notes and notes["decision"] == "approve":
@@ -210,6 +213,28 @@ def file_as_common(db: Session, user: User, project_id: int, unit_id: int, revis
     return project_folders.to_common(db, revision)
 
 
+APPROVING_STALE_SECONDS = 300
+
+
+def _clear_approving(db: Session, unit_id: int) -> None:
+    record = _unit_record(db, unit_id)
+    if record.pop("approving", None) is not None:
+        _put(db, unit_id, record)
+        db.commit()
+
+
+def _approving(record: dict, target_id: int) -> bool:
+    marker = record.get("approving") or {}
+    if marker.get("target_id") != target_id:
+        return False
+    try:
+        started = datetime.fromisoformat(marker["at"])
+    except (KeyError, ValueError):
+        return False
+    # A marker left behind by a restart must not hold the work in 处理中 forever.
+    return (datetime.now(UTC) - started).total_seconds() < APPROVING_STALE_SECONDS
+
+
 def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, decision: str, notes: list[dict]) -> dict:
     """The user's answer at one of the three stops. 通过 on 小样 / 成片 accepts that task's outputs."""
     from .content_masters import owned_unit
@@ -226,16 +251,26 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
     target = current["draft_master_id"] if stage == "draft" else current["execution_id"]
     accepted = None
     if decision == "approve" and stage != "draft":
+        # Accepting the output files takes a while; saying so first keeps the page and the model from reading 「待你看」 meanwhile.
+        record = _unit_record(db, unit_id)
+        record["approving"] = {"stage": stage, "target_id": target, "by": user.email, "at": datetime.now(UTC).isoformat()}
+        _put(db, unit_id, record)
+        db.commit()
         try:
             _accept_outputs(db, user, project_id, unit_id, target)
             accepted = True
         except HTTPException as exc:
             # Voice or timing saved after the 小样 (prep for the 成片) makes its source older than the master;
             # the approval still stands, the 小样 file is already in 导出/小样, and the 成片 is cut from the newest master.
-            if stage != "sample" or (exc.detail or {}).get("code") != "creative_source_not_current":
-                raise
             db.rollback()
+            if stage != "sample" or (exc.detail or {}).get("code") != "creative_source_not_current":
+                _clear_approving(db, unit_id)
+                raise
             accepted = False
+        except Exception:
+            db.rollback()
+            _clear_approving(db, unit_id)
+            raise
     if stage == "final" and accepted:
         token = _finalizing.set(unit_id)
         try:
@@ -246,6 +281,7 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
         finally:
             _finalizing.reset(token)
     record = _unit_record(db, unit_id)
+    record.pop("approving", None)
     record["decisions"].append({"stage": stage, "target_id": target, "decision": decision, "outputs_accepted": accepted,
                                 "notes": [{"time_ms": item.get("time_ms"), "note": str(item.get("note") or "")[:2000]} for item in notes][:50],
                                 "by": user.email, "at": datetime.now(UTC).isoformat()})

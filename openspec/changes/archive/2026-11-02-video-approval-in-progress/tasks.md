@@ -1,0 +1,4 @@
+- [x] 1 紧急修复：_METADATA_KEYS 加 cover_check；全量测试；已重启 API
+- [x] 2 decide()：通过小样/成片先记「正在通过」并提交，结束或失败清除；state() 返回 approving（超 5 分钟忽略）
+- [x] 3 页面「正在通过…」与刷新；get_video_decision 返回 approving 与说明
+- [x] 4 测试；tsc；`openspec validate`

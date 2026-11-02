@@ -80,7 +80,8 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const navigate = useNavigate();
   const chain = useQuery({ queryKey: ["video-chain", currentUser(), projectId, unitId], retry: false,
     queryFn: () => api.get<Chain>(`/content-projects/${projectId}/units/${unitId}/video-chain`),
-    refetchInterval: query => ["making", "finishing", "draft_changes", "sample_changes", "final_changes", "not_started"].includes(query.state.data?.state || "") ? 15000 : false });
+    refetchInterval: query => query.state.data?.state === "approving" ? 3000
+      : ["making", "finishing", "draft_changes", "sample_changes", "final_changes", "not_started"].includes(query.state.data?.state || "") ? 15000 : false });
   const [notes, setNotes] = useState<Note[]>([]);
   const [time, setTime] = useState("");
   const [text, setText] = useState("");
@@ -90,7 +91,8 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const data = chain.data;
   if (chain.isPending) return null;
   if (chain.error || !data) return <ErrorBanner message={errorText(chain.error)} />;
-  const current = STEPS.findIndex(([, states]) => (states as readonly string[]).includes(data.state));
+  // An approval being written belongs to the stop it was given at: the 小样 for a rough cut, else the 成片.
+  const current = data.state === "approving" ? (data.phase === "rough_cut" ? 1 : 2) : STEPS.findIndex(([, states]) => (states as readonly string[]).includes(data.state));
   const here = ORDER.indexOf(step);
   const live = current === here;
   // Before the 成片 is final, the 导演稿 can be sent back from any later stop.
@@ -153,7 +155,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
         </div>
         {notes.length > 0 && <ul className="list-disc pl-5 text-xs text-slate-600">{notes.map((item, index) => <li key={index}>{item.time_ms != null ? `${item.time_ms / 1000}s：` : ""}{item.note}</li>)}</ul>}
         <div className="flex flex-wrap gap-2">
-          {!backToDraft && <Button disabled={busy} onClick={() => void send("approve")}>{step === "draft" ? "采用导演稿" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
+          {!backToDraft && <Button disabled={busy} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
           <Button variant="secondary" disabled={busy || (!notes.length && !text.trim())} onClick={() => void send("changes")}>{backToDraft ? "退回导演稿" : "按意见修改"}</Button>
         </div>
         <p className="text-xs text-slate-500">{backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "有素材的话，先放进素材库（外部素材库或本项目）再采用。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
