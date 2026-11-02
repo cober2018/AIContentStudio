@@ -210,3 +210,27 @@ Copying a product video unit SHALL NOT require a persona. The copy SHALL keep th
 - **WHEN** the user copies the finished product video 90
 - **THEN** a new product video unit is created in project 46 with the same product link and settings, starting at the approved 导演稿
 
+### Requirement: Voiceover can cover only marked shots
+
+A 导演稿 shot MAY carry `dub_persona` naming a persona; its line SHALL be voiced with that persona's fixed voice, and a persona without a voice SHALL be refused with a prompt to set it first. When any shot is marked, voiceover generation SHALL synthesize only the marked shots' lines in their personas' voices, fit each line within its shot (speeding up to 1.25× once, otherwise failing with the needed and available length), place them at their shots' start times on one full-length track with silence elsewhere and matching subtitle times, and SHALL NOT change any shot's duration. Without marked shots, generation SHALL behave as before.
+
+#### Scenario: One mother line in a live-sound video
+- **WHEN** work 92's shot 10 has a line and `dub_persona` naming the mother persona and voiceover is generated
+- **THEN** only that line is synthesized, it starts at shot 10 and fits within it, and every other shot keeps its duration and live sound
+
+### Requirement: Every product video has a persona
+
+Creating a product video SHALL require a persona, and the persona SHALL be changeable later from the work's first step. A product video without a persona SHALL show a prompt to choose one, and its brief, voiceover and image generation SHALL be refused with a message that no persona is chosen. Changing the persona SHALL NOT alter already generated 导演稿, images or voice, and the page SHALL say the 导演稿 needs rewriting to speak as the new persona.
+
+#### Scenario: Old product video without a persona
+- **WHEN** the user opens product video 92, which has no persona
+- **THEN** step 1 asks to choose a persona, and the editor's brief request is refused until one is chosen
+
+### Requirement: Product video content follows the persona
+
+A product video's brief SHALL carry the persona's profile, speech samples, brand rules, voice and portrait. Structure SHALL follow the product script style and hook, while wording, tone, catchphrases and how viewers are addressed — including the publish copy — SHALL follow the persona's profile and speech samples. The persona's own writing-method skill SHALL NOT be applied to product videos.
+
+#### Scenario: Persona with speech samples
+- **WHEN** a product video belongs to a persona with a speech-sample folder
+- **THEN** the brief includes those samples and the rule to write the lines in the persona's way of speaking
+

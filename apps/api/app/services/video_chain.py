@@ -358,6 +358,7 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .project_evidence import current_boundary
 
     project, unit = owned_unit(db, project_id, unit_id, user)
+    product_video.require_persona(db, unit_id)
     row = current_brief(db, project_id)
     boundary = current_boundary(db, project_id)
     facts = []

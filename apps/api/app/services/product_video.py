@@ -113,6 +113,15 @@ def _mode(db: Session, link: ProductSkuWork, unit_id: int, shot_id: str | None =
     return default_mode(db) if chosen == "default" else chosen
 
 
+def require_persona(db: Session, unit_id: int) -> None:
+    """A product video speaks as its persona; without one nothing is generated rather than falling back to a default voice."""
+    from ..models import ContentUnit
+
+    unit = db.get(ContentUnit, unit_id)
+    if unit is not None and unit.production_domain == "product" and unit.persona_id is None:
+        raise HTTPException(409, {"code": "product_persona_required", "message": "这条商品视频还没选角色，先在第 1 步选好角色"})
+
+
 def latest_main_image(db: Session, link: ProductSkuWork) -> tuple[int | None, int | None]:
     """The product's newest main image and the revision it came from; facts stay frozen, but a replaced photo should reach existing works."""
     row = db.execute(select(ProductSkuRevision.primary_image_revision_id, ProductSkuRevision.revision).where(
@@ -350,6 +359,7 @@ def _provider():
 
 
 def start_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_id: str) -> dict:
+    require_persona(db, unit_id)
     from .materials import read_bytes_checked
 
     _after_approval(db, user, project_id, unit_id)
@@ -605,6 +615,7 @@ def _image_bytes(db: Session, revision_id: int) -> bytes:
 def generate_shot_image(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, prompt: str,
                         extra_reference_id: int | None = None, as_first_frame: bool = True) -> dict:
     """Still for one shot with the product photo as reference; it is used only after it passes the subject check."""
+    require_persona(db, unit_id)
     from . import shot_image
 
     _after_approval(db, user, project_id, unit_id)

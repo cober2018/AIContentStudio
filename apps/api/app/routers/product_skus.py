@@ -99,7 +99,7 @@ class WorkIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     launch_key: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.:-]+$")
     expected_revision: int = Field(ge=1)
-    persona_id: int | None = Field(default=None, gt=0)
+    persona_id: int = Field(gt=0)
     channel: str | None = Field(default=None, min_length=1, max_length=100)
     title: str | None = Field(default=None, max_length=300)
     objective: str = Field(default="基于已提供商品资料规划视频，未知事实待补。", min_length=1, max_length=3000)

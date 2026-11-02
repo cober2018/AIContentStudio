@@ -712,8 +712,14 @@ def patch_unit(payload: UnitPatch, project_id: int, unit_id: int, db: Session = 
         except channel_registry.ChannelRegistryError as exc:
             raise HTTPException(422, str(exc)) from exc
     if unit.production_domain == "product":
-        if fields.intersection({"persona_id", "account_id", "series_id", "modality", "pinned_workflow_id"}) or payload.rebind_identity or payload.rebind_default:
-            raise HTTPException(422, "商品作品请使用商品配置与工作流入口，不绑定内容角色")
+        if fields.intersection({"account_id", "series_id", "modality", "pinned_workflow_id"}) or payload.rebind_identity or payload.rebind_default:
+            raise HTTPException(422, "商品作品请使用商品配置与工作流入口")
+        if "persona_id" in fields:
+            persona = db.get(ContentPersona, payload.persona_id) if payload.persona_id else None
+            if persona is None or persona.owner_user_id != user.id or persona.status == "archived":
+                raise HTTPException(422, {"code": "product_persona_required", "message": "商品视频必须选一个可用的角色"})
+            # Already generated drafts, images and voice keep the old persona; new generation follows the new one.
+            unit.persona_id = persona.id
         for name in ("title", "channel_id", "status"):
             if name in fields:
                 setattr(unit, name, getattr(payload, name))

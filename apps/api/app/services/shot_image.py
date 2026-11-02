@@ -433,6 +433,8 @@ def grid(db, user, project_id: int, unit_id: int, shot_ids: list[str], person: s
 
 def redraw_cell(db, user, project_id: int, unit_id: int, shot_id: str) -> dict:
     """Redraw one shot's candidate alone, with its storyboard sheet as the reference for people and room."""
+    from .product_video import require_persona
+    require_persona(db, unit_id)
     from pathlib import Path
 
     from . import product_video, video_chain
@@ -477,6 +479,8 @@ _grid_executor = None
 def start_grid(db, user, project_id: int, unit_id: int, shot_ids: list[str], person: str = "", setting: str = "",
                reference_revision_id: int | None = None) -> dict:
     """A sheet takes minutes (drawing plus a product check per cell), so it runs in the background and the page polls."""
+    from .product_video import require_persona
+    require_persona(db, unit_id)
     import time
     from concurrent.futures import ThreadPoolExecutor
 

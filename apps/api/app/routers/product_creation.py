@@ -35,7 +35,7 @@ class ProductLaunchIn(BaseModel):
     launch_key: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_.:-]+$")
     title: str | None = Field(default=None, max_length=300)
     objective: str = Field(min_length=1, max_length=3000)
-    persona_id: int | None = Field(default=None, gt=0)
+    persona_id: int = Field(gt=0)
     primary_audience: str | None = Field(default=None, max_length=2000)
     core_message: str | None = Field(default=None, max_length=2000)
     angle: str | None = Field(default=None, max_length=2000)

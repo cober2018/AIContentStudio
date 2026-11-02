@@ -795,11 +795,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

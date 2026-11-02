@@ -1,0 +1,5 @@
+- [ ] 1 后端：允许商品作品改 persona_id（只限本人在用角色、成片定稿后拒绝、可设为空），不建身份快照，记项目事件；去掉/收窄 content_projects.py 约 715 行对商品作品的拒绝
+- [ ] 2 前端：作品页第 1 步「商品与本条目标」显示并可改角色（含「不指定」）；角色没定声音时提示；定稿后只读
+- [ ] 3 核对依赖角色的地方行为正确：voiceover.settings_for、product_video.references / direction 的人物规则、copy_unit（复制带角色）
+- [ ] 4 更新受影响的既有测试期望；全量测试（只允许已知 5 个失败）；tsc；按 proposal「验收」在正式库副本上走一遍
+- [ ] 5 更新本目录 progress.md / findings.md / README.md，等用户验收后提交、归档

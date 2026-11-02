@@ -21,6 +21,7 @@ RULES = [
     "persona.portrait 为 true：角色有形象照，生成画面里的人物照它来；为 false：生成画面里不出现人物（只拍商品和场景，拿东西只出现手部），要人物出镜的镜头写成实拍，或请用户先给角色补形象照。",
     "persona.speech_samples 有样本：口播 / 旁白照这些真人逐字稿的说话方式写（句子长短、口头语、怎么称呼观众、怎么转话题），不照搬里面的内容、事实和经历；unavailable 有值说明这次没读到。",
     "persona.brand 有值：角色属于这个品牌。品牌的语气要求、禁用词、合规要求和不能说的话，旗下所有角色都要遵守；角色自己的表达优先，与品牌红线冲突时以品牌为准。用到品牌视觉时按它的主色、字体和 Logo 素材（素材库编号）。",
+    "商品视频：结构按商品脚本风格（product.style）和开头机制（product.hook）；用词、口吻、口头语、怎么称呼观众都按 persona.profile 和 persona.speech_samples；发布文案也用角色的口吻。",
     "persona.method 有值：按它的主方法 skill 写（用 get_craft_skill 读 method.skill.read），并照它的风格预设、质量标准、额外要求和附加方法；没有值就按 platform_skills 的默认选法。",
 ]
 
@@ -58,8 +59,7 @@ def _method(db: Session, profile: dict | None) -> dict | None:
 
 
 def _speech_samples(db: Session, unit, folder) -> dict | None:
-    # Product works borrow only the persona's voice and identity, not how the persona talks.
-    if not folder or unit.production_domain == "product":
+    if not folder:
         return None
     from .obsidian_knowledge import speech_samples
 
@@ -79,7 +79,7 @@ def persona_brief(db: Session, user: User, unit) -> dict | None:
     merged = identity.get("effective_profile") or {}
     persona = db.get(ContentPersona, unit.persona_id)
     brand = db.get(ContentBrand, persona.brand_id) if persona and persona.brand_id else None
-    # Product works borrow only the persona's identity and voice; their script follows the product system's own skills.
+    # Product works speak entirely as the persona, but their structure comes from the product script styles, so the persona's own writing method is left out.
     with_method = unit.production_domain != "product" and craft_skills.writing_skills_on(db, unit.id)
     return {
         "name": persona.name if persona else None,

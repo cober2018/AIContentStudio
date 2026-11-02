@@ -96,6 +96,6 @@ export function useProductionWorkflow(projectId: number, unitId: number) {
       setNotice("已切换为独立商品配置；历史运行与身份快照保留。");
     } catch (err) { setError(problem(err)); } finally { setBusy(false); }
   }
-  return { readOnly, base, project, unit, persona, brandName, accountName, seriesName, snapshot, run, assets, outputs, assetsOpen, setAssetsOpen,
+  return { readOnly, base, project, unit, setUnit, persona, brandName, accountName, seriesName, snapshot, run, assets, outputs, assetsOpen, setAssetsOpen,
     loading, busy, error, setError, notice, dirty: false, design: false, workflowRevision, refreshWorkflowFromRecipe, continueProduct, needsProductContext };
 }
