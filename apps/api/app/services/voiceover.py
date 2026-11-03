@@ -656,6 +656,85 @@ def _quality_of(db: Session, revision, master) -> dict | None:
     return meta["quality"]
 
 
+def _speech(document: dict) -> dict | None:
+    track = next((track for track in document["timeline"]["tracks"] if track["kind"] == "dialogue"), None)
+    if track is None or not track["items"]:
+        return None
+    speeds = {item.get("speed_percent", 100) for item in track["items"]}
+    return {"speed_percent": speeds.pop() if len(speeds) == 1 else None, "duration_ms": document["timeline"]["duration_ms"]}
+
+
+def _rescale(document: dict, old: int, new: int) -> None:
+    """The whole cut follows the spoken pace: every time point moves by one ratio, so cuts that lined up still line up."""
+    def at(ms: int) -> int:
+        return round(ms * old / new)
+
+    duration = at(document["timeline"]["duration_ms"])
+    document["timeline"]["duration_ms"] = duration
+    shots = sorted(document["shots"], key=lambda shot: shot["order"])
+    cursor, lengths = 0, {}
+    for shot in shots:
+        end = cursor + shot["duration_ms"]
+        shot["duration_ms"] = lengths[shot["id"]] = max(1, at(end) - at(cursor))
+        cursor = end
+    for track in document["timeline"]["tracks"]:
+        items = sorted(track["items"], key=lambda item: item["start_ms"])
+        starts = [at(item["start_ms"]) for item in items]
+        for position, item in enumerate(items):
+            start = starts[position]
+            if track["kind"] == "dialogue":
+                # The voice length comes from the clip and the speed; rounding must not push it into the next segment.
+                end = start + round((item["trim_end_ms"] - item["trim_start_ms"]) * 100 / new)
+                limit = starts[position + 1] if position + 1 < len(items) else duration
+                item["end_ms"] = min(end, limit)
+                if new == 100:
+                    item.pop("speed_percent", None)
+                else:
+                    item["speed_percent"] = new
+            else:
+                end = at(item["end_ms"])
+                if "shot_id" in item:
+                    end = min(end, start + lengths[item["shot_id"]])
+                item["end_ms"] = end
+            item["start_ms"] = start
+    for row in [*document["subtitles"]["cues"], *document["overlays"]]:
+        row["start_ms"], row["end_ms"] = at(row["start_ms"]), at(row["end_ms"])
+    post = document.get("postproduction")
+    if post:
+        for comp in post.get("ae_compositions", []):
+            comp["duration_ms"] = lengths[comp["shot_id"]]
+        for note in post.get("feedback", []):
+            note["time_ms"] = min(at(note["time_ms"]), duration)
+
+
+def set_speed(db: Session, user: User, project_id: int, unit_id: int, speed_percent: int) -> dict:
+    """Whole-video speech speed for live dialogue; music keeps its speed and is cut to the new length in the edit."""
+    from .content_masters import owned_unit
+    from .edit_handoff import _save
+
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id)
+                       .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
+    if master is None or master.payload_schema != "video.master.v2":
+        raise HTTPException(409, {"code": "speech_speed_master_required", "message": "先采用导演稿，再调语速"})
+    document = copy.deepcopy(master.payload_json)
+    speech = _speech(document)
+    if speech is None:
+        raise HTTPException(409, {"code": "speech_speed_no_dialogue", "message": "这个作品没有口播声音轨，不用调语速"})
+    old = speech["speed_percent"]
+    if old is None:
+        raise HTTPException(409, {"code": "speech_speed_mixed", "message": "各段口播的语速不一样，先让第三方模型把导演稿统一成一个语速"})
+    if old == speed_percent:
+        return status(db, user, project_id, unit_id)
+    _rescale(document, old, speed_percent)
+    master_id = _save(db, user, project_id, unit_id, master, document, {},
+                      edit_summary={"speech_speed": {"from": old, "to": speed_percent}})
+    db.add(AuditLog(event="voiceover.speed_set", actor=user.email, entity_type="content_unit", entity_id=str(unit_id),
+                    detail_json={"master_id": master_id, "from": old, "to": speed_percent}))
+    db.commit()
+    return status(db, user, project_id, unit_id)
+
+
 def status(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .content_masters import owned_unit
 
@@ -669,4 +748,5 @@ def status(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     if revision is not None:
         voice["material_id"], voice["duration_ms"] = revision.material_id, revision.duration_ms
         voice["quality"] = _quality_of(db, revision, master)
-    return {"voice": voice, "settings": settings_for(db, unit), "emotions": {k: v for k, v in EMOTIONS.items() if v}}
+    speech = _speech(master.payload_json) if master and master.payload_schema == "video.master.v2" else None
+    return {"voice": voice, "settings": settings_for(db, unit), "emotions": {k: v for k, v in EMOTIONS.items() if v}, "speech": speech}

@@ -50,6 +50,7 @@ RULES = [
     "实拍原声为主、只有个别镜头要画外配音时：在那几个镜头的 board 写 dub_persona（角色名称或编号，声音就是这个角色固定的声音），只给这些镜头配音，镜头时长不动；"
     "剪辑时配音轨从 0 秒铺上（其余位置是静音），原声镜头保留素材声音；配音结果的 edit_notes 写了哪句提前进上一镜结尾，就做成声音先进、画面在本镜开头再切。",
     "口播声音：导演稿有 dialogue 声音轨就按它铺口播——每段从 material_revision_id 的 trim_start_ms–trim_end_ms 截取，放到成片 start_ms–end_ms，声音段可以跨镜头，画面仍按镜头切；"
+    "声音段写了 speed_percent（用户在「配音与音乐」调的语速）就按这个倍速变速并开音调校正，和这段口播同步的实拍画面同速，保住口型；"
     "接法按 craft-resolve 的「声音轨口播衔接」。没有声音轨就用各镜头素材自己的原声。导演稿里口播要从别的素材借声音，就写进声音轨，不要只写在 board.sound 文字里。",
     "配乐只看主稿 music：有 material_revision_id 就铺这首；none 为 true 是用户明确不要配乐；空着就是还没定：按导演稿和用户意见找一首放进来（set_shot_materials 的 music），拿不准就问用户；不能自己当成不用。只有用户能选「不用配乐」。",
     "封面（可选）：封面设计（大字商品名和卖点）在达芬奇 / AE 里做进成片开头那一段，随成片一起渲染；封面图只能从渲染好的成片里截取开头 0.5 秒内的一帧（ffmpeg 抽帧要用准确换算：-vf \"scale=flags=accurate_rnd+full_chroma_int,format=rgb24\"，不加的话标 bt709 的成片截出来暗约 2 级），竖版 1080×1920 的 jpg / png，"
@@ -112,7 +113,7 @@ def _latest(db: Session, unit_id: int) -> ContentMasterRevision | None:
 
 def _keeps_draft(master: ContentMasterRevision) -> bool:
     summary = master.edit_summary_json or {}
-    return summary.get("video_chain") in _KEEPS_DRAFT or bool({"voiceover", "dedupe", "auto_handoff"} & summary.keys())
+    return summary.get("video_chain") in _KEEPS_DRAFT or bool({"voiceover", "dedupe", "auto_handoff", "speech_speed"} & summary.keys())
 
 
 def draft_root(db: Session, master: ContentMasterRevision | None) -> ContentMasterRevision | None:

@@ -147,6 +147,17 @@ def read_voiceover(project_id: int, unit_id: int, db: Session = Depends(get_db),
     return voiceover.status(db, user, project_id, unit_id)
 
 
+class SpeechSpeedIn(BaseModel):
+    speed_percent: int = Field(ge=80, le=150)
+
+
+@router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/voiceover/speed")
+def set_speech_speed(project_id: int, unit_id: int, payload: SpeechSpeedIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import voiceover
+
+    return voiceover.set_speed(db, user, project_id, unit_id, payload.speed_percent)
+
+
 class VideoNoteIn(BaseModel):
     time_ms: int | None = Field(default=None, ge=0, le=24 * 3600 * 1000)
     note: str = Field(min_length=1, max_length=2000)

@@ -11,7 +11,7 @@ export type VideoBoard = { message: string; visual: string; camera: "fixed" | "p
   camera_presets?: string[]; look?: string; intensity?: "subtle" | "normal" | "strong"; chain_from_previous?: boolean; character?: string;
   source_kind?: "shoot" | "product_image" | "generated" | "ae_template" | "library"; attitude?: string };
 export type VideoShot = { board?: VideoBoard; id: string; order: number; label: string; duration_ms: number; purpose?: string; script_block_id?: string; source_material_revision_id?: number; framing?: "wide" | "medium" | "close" | "custom"; transition?: "cut" | "fade" | "dissolve"; production?: VideoShotProduction; filming?: VideoFilming; capture_takes?: VideoCaptureTake[] };
-export type VideoTimelineItem = { id: string; order: number; start_ms: number; end_ms: number; shot_id?: string; material_revision_id?: number; trim_start_ms?: number; trim_end_ms?: number; volume?: number; script_block_id?: string };
+export type VideoTimelineItem = { id: string; order: number; start_ms: number; end_ms: number; shot_id?: string; material_revision_id?: number; trim_start_ms?: number; trim_end_ms?: number; volume?: number; script_block_id?: string; speed_percent?: number };
 export type VideoTrack = { id: string; order: number; kind: "video" | "audio" | "subtitle" | "overlay" | "music" | "dialogue"; items: VideoTimelineItem[] };
 export type VideoCue = { id: string; order: number; text: string; start_ms: number; end_ms: number };
 export type VideoOverlay = { id: string; order: number; text: string; start_ms: number; end_ms: number; x: number; y: number };

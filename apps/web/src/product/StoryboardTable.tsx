@@ -33,7 +33,7 @@ function seconds(ms: number) {
 }
 
 function segmentText(item: VideoTimelineItem) {
-  return `素材 #${item.material_revision_id} ${seconds(item.trim_start_ms ?? 0)}–${seconds(item.trim_end_ms ?? 0)} 秒 → 成片 ${seconds(item.start_ms)}–${seconds(item.end_ms)} 秒`;
+  return `素材 #${item.material_revision_id} ${seconds(item.trim_start_ms ?? 0)}–${seconds(item.trim_end_ms ?? 0)} 秒 → 成片 ${seconds(item.start_ms)}–${seconds(item.end_ms)} 秒${item.speed_percent && item.speed_percent !== 100 ? ` · ${item.speed_percent / 100} 倍速` : ""}`;
 }
 
 // Where each line's voice comes from, so the reviewer can hear what was cut out of the dialogue track.

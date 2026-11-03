@@ -4,7 +4,7 @@ import { api, ApiError, currentUser } from "../api";
 import { Button } from "../components/ui";
 
 type Check = { status: "ok" | "warning"; items: { key: string; name: string; pass: boolean; detail: string }[] };
-type Status = { voice: { mode: string; material_revision_id?: number; material_id?: number; duration_ms?: number | null; quality?: Check | null }; settings: { voice_id: string; emotion: string; rate: number; model_id: string; preset_name: string; preset_origin: string }; emotions: Record<string, string> };
+type Status = { voice: { mode: string; material_revision_id?: number; material_id?: number; duration_ms?: number | null; quality?: Check | null }; settings: { voice_id: string; emotion: string; rate: number; model_id: string; preset_name: string; preset_origin: string }; emotions: Record<string, string>; speech: { speed_percent: number | null; duration_ms: number } | null };
 
 function failure(cause: unknown) {
   const detail = cause instanceof ApiError ? cause.detail as { message?: string } | undefined : undefined;
@@ -39,7 +39,9 @@ export default function VoiceoverPanel({ projectId, unitId, readOnly, onSaved }:
     catch (cause) { setIssue(failure(cause)); } finally { setBusy(false); }
   }
   const settings = status.data?.settings;
-  return <section aria-label="配音" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+  // Live dialogue is cut from real takes, so its pace is a whole-video speed, not a TTS rate.
+  const speed = status.data?.speech ? <SpeechSpeed base={base} speech={status.data.speech} readOnly={readOnly} onSaved={async () => { await status.refetch(); onSaved?.(); }} /> : null;
+  return <>{speed}<section aria-label="配音" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div><h3 className="font-semibold">① 配音</h3><p className="mt-1 text-xs text-slate-500">{settings ? `按台词列生成 · 声音「${settings.preset_name}」（${settings.preset_origin === "角色" ? "来自所属角色" : "没选角色，用默认"}）· ${status.data?.emotions[settings.emotion] || settings.emotion} · 语速 ${settings.rate} · ${settings.model_id}（设置 → 配音 可改）` : "读取配音设置…"}</p></div>
       <Button size="sm" variant={revision ? "secondary" : "primary"} disabled={readOnly || busy || status.isPending} onClick={() => void generate()}>{busy ? "生成中，约一分钟…" : revision ? "重新生成配音" : "生成配音"}</Button>
@@ -47,6 +49,32 @@ export default function VoiceoverPanel({ projectId, unitId, readOnly, onSaved }:
     {revision ? (url ? <audio className="mt-3 w-full" controls src={url} /> : <p className="mt-2 text-xs text-slate-500">配音已放进主稿（素材 #{revision}）。</p>) : <p className="mt-2 text-xs text-amber-700">还没有配音。剪辑要跟着配音走，先生成配音。</p>}
     {status.data?.voice.quality && <ul className="mt-2 space-y-1 text-xs">{status.data.voice.quality.items.map(item =>
       <li key={item.key} className={item.pass ? "text-slate-500" : "text-amber-800"}>{item.pass ? "✓" : "!"} {item.name}：{item.detail}</li>)}</ul>}
+    {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
+  </section></>;
+}
+
+function SpeechSpeed({ base, speech, readOnly, onSaved }: { base: string; speech: NonNullable<Status["speech"]>; readOnly?: boolean; onSaved: () => Promise<void> }) {
+  const [value, setValue] = useState(speech.speed_percent ?? 100);
+  const [busy, setBusy] = useState(false);
+  const [issue, setIssue] = useState("");
+  useEffect(() => setValue(speech.speed_percent ?? 100), [speech.speed_percent]);
+  const original = speech.duration_ms * (speech.speed_percent ?? 100) / 100;
+  async function save(next: number) {
+    if (next === speech.speed_percent) return;
+    setBusy(true); setIssue("");
+    try { await api.put(`${base}/voiceover/speed`, { speed_percent: next }); await onSaved(); }
+    catch (cause) { setIssue(failure(cause)); setValue(speech.speed_percent ?? 100); } finally { setBusy(false); }
+  }
+  return <section aria-label="口播语速" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+    <h3 className="font-semibold">口播语速</h3>
+    <p className="mt-1 text-xs text-slate-500">整片口播统一变速，音调不变，同步的实拍画面跟着同速；配乐不变速。松手就存一版新主稿，下次剪辑按新时长。</p>
+    {speech.speed_percent === null ? <p className="mt-2 text-xs text-amber-800">各段口播的语速不一样，先让第三方模型把导演稿统一成一个语速。</p> : <>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <input type="range" aria-label="语速" min={80} max={150} step={5} value={value} disabled={readOnly || busy} className="w-64"
+          onChange={event => setValue(Number(event.target.value))} onPointerUp={event => void save(Number(event.currentTarget.value))} onKeyUp={event => void save(Number(event.currentTarget.value))} />
+        <span className="tabular-nums">{(value / 100).toFixed(2)} 倍 · 全片约 {Math.round(original / value * 100 / 1000)} 秒{busy ? " · 保存中…" : ""}</span>
+      </div>
+    </>}
     {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
   </section>;
 }

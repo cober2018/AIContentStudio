@@ -116,11 +116,19 @@ def _dialogue_item(item: dict, duration: int, block_ids: set[str]) -> dict:
                        f"成片位置 {_seconds(start)}–{_seconds(end)} 不在成片 0–{_seconds(duration)} 之内或起止颠倒")
     if trim_start >= trim_end or trim_end > _MAX_DURATION_MS:
         _dialogue_fail("video_dialogue_trim_invalid", item_id, f"素材截取 {_seconds(trim_start)}–{_seconds(trim_end)} 起止颠倒")
-    if trim_end - trim_start != end - start:
+    speed = item.get("speed_percent", 100)
+    if type(speed) is not int or not 50 <= speed <= 200:
+        _dialogue_fail("video_dialogue_speed_invalid", item_id, "speed_percent 要是 50–200 的整数（100 为原速）")
+    # One frame of slack: a sped-up placement rarely lands on a whole millisecond.
+    if abs((trim_end - trim_start) - (end - start) * speed / 100) > 34:
+        rule = "声音不变速" if speed == 100 else f"按 speed_percent {speed} 应为放置长度 × {speed / 100:g}"
         _dialogue_fail("video_dialogue_length_mismatch", item_id,
-                       f"截取长度 {trim_end - trim_start} 毫秒与成片放置长度 {end - start} 毫秒不相等（声音不变速）")
+                       f"截取长度 {trim_end - trim_start} 毫秒与成片放置长度 {end - start} 毫秒对不上（{rule}）")
     normalized = {"id": item_id, "order": item["order"], "start_ms": start, "end_ms": end,
                   "material_revision_id": material, "trim_start_ms": trim_start, "trim_end_ms": trim_end}
+    # Written only when changed, so drafts at normal speed keep their hashes.
+    if "speed_percent" in item:
+        normalized["speed_percent"] = speed
     if "script_block_id" in item:
         if not isinstance(item["script_block_id"], str) or item["script_block_id"] not in block_ids:
             _dialogue_fail("video_dialogue_script_ref_missing", item_id, f"台词 {item['script_block_id']!r} 不在 script.blocks 里")
@@ -437,11 +445,11 @@ def canonical_payload(raw: object) -> dict:
             raise VideoDocumentError("video_dialogue_track_duplicate：导演稿最多一条 dialogue 声音轨，把声音段并到同一条轨里")
         items = []
         for raw_item in _ordered(track.get("items"), maximum=300, code="video_timeline_items_invalid"):
-            item = _object(raw_item, {"id", "order", "shot_id", "material_revision_id", "start_ms", "end_ms", "trim_start_ms", "trim_end_ms", "volume", "script_block_id"}, "video_timeline_item_invalid")
+            item = _object(raw_item, {"id", "order", "shot_id", "material_revision_id", "start_ms", "end_ms", "trim_start_ms", "trim_end_ms", "volume", "script_block_id", "speed_percent"}, "video_timeline_item_invalid")
             if track["kind"] == "dialogue":
                 items.append(_dialogue_item(item, duration, block_ids))
                 continue
-            if "script_block_id" in item:
+            if "script_block_id" in item or "speed_percent" in item:
                 _fail("video_timeline_item_invalid")
             _time_bounds(item, duration, "video_timeline_item_time_invalid")
             normalized = {"id": item["id"], "order": item["order"], "start_ms": item["start_ms"], "end_ms": item["end_ms"]}
