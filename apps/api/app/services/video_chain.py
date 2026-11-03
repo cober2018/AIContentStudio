@@ -54,15 +54,15 @@ RULES = [
     "复刻参考视频：brief.reference 有值或用户给了参考视频，先 analyze_reference_video / get_reference_video 拿本机拆解，按 studio.video.reference-breakdown 写整体分析、时间线和拍摄清单（save_reference_breakdown），再写导演稿："
     "结构和节奏照参考，口播换成本作品的说法，每镜写 board.source_kind；参考里的证书、医院、成分只记成需要品牌真实资料，不照抄、不生成；参考视频的原画面和水印不进成片。",
     "写人物镜头的提示词按 studio.video.prompt-direction：board.attitude 先写人物态度和对谁说，再写一两个关键反应；首帧按 拍摄方式 / 人物 / 动作与镜头 / 场景 四段写；商品图管外观、人物图管长相，提示词不重复描述包装。",
-    "HLG 还原（必做）：每段实拍先用 ffprobe 看 color_transfer；是 arib-std-b67（iPhone HLG）的，项目色彩科学用 davinciYRGB（不做色彩管理），只给这些片段 SetLUT(1, \"MCP/iphone-hlg-apple-sdr-render.cube\")；"
-    "这份 render 版 LUT 已经补了渲染变暗，HLG 片段不再叠别的。验收拿渲染出来的文件抽帧，和手机自己的显示帧（AVAssetImageGenerator）比亮度，不看达芬奇静帧。",
-    "渲染补偿（必做）：davinciYRGB 项目渲染出来比原片暗约 20/255（渲染 ≈ 0.993×静帧 − 0.078）。普通 SDR 实拍（不是 HLG）要补：给这些片段 SetLUT(1, \"MCP/sdr-render-comp.cube\")，"
-    "或者查出是哪项项目 / 渲染设置造成的、改设置让全片统一（改了设置就不再套补偿 LUT），回执写明用的哪种。"
-    "AI 画面、AE 叠层：渲染一次后抽帧和原图比，暗了同样补。达芬奇里缺这些 LUT 就先从仓库 craft_skills/craft-resolve/luts/ 拷到达芬奇 LUT 文件夹的 MCP/ 下"
-    "（做法见 craft-resolve techniques/color.md「iPhone HLG 还原」「普通实拍渲染补偿」）。平台交付时会逐镜头拿成片和原片同一时刻比亮度。",
+    "HLG 还原（必做）：每段实拍先用 ffprobe 看 color_transfer；是 arib-std-b67（iPhone HLG）的，项目色彩科学用 davinciYRGB（不做色彩管理），只给这些片段 SetLUT(1, \"MCP/iphone-hlg-apple-sdr.cube\")，"
+    "不要再用 iphone-hlg-apple-sdr-render.cube 或 sdr-render-comp.cube（达芬奇 MCP/ 下有就删掉）。验收拿渲染出来的文件抽帧，和手机自己的显示帧（AVAssetImageGenerator）比亮度，不看达芬奇静帧。",
+    "AE 数据电平（必做）：AE 导出的每个 RGB 素材（叠层、包装、字幕、整屏片尾卡、封面卡，有没有透明都算）导入后先 SetClipProperty(\"Data Level\", \"Full\")，"
+    "再用 GetClipProperty(\"Data Level\") 确认是 Full，然后上时间线；留 Auto 会被当 Video 电平读：透明叠层把下面整片拉暗约 19 级，不透明的卡对比度被拉大、黑白两头削掉。普通 SDR 实拍不套补偿 LUT。AI 画面：渲染一次后抽帧和原图比，暗了才补。"
+    "达芬奇里缺 HLG LUT 就先从仓库 craft_skills/craft-resolve/luts/ 拷到达芬奇 LUT 文件夹的 MCP/ 下"
+    "（做法见 craft-resolve techniques/color.md「iPhone HLG 还原」「AE 叠层数据电平设 Full」）。平台交付时会逐镜头拿成片和原片同一时刻比平均亮度和亮部。",
     "素材统一（必做，粗剪后、导出小样前）：颜色只做校正和匹配——曝光、白平衡拉正，同一场景的镜头用色彩组对齐到一个参考镜头；不做风格化调色，素材正常且彼此一致就不动。"
     "声音：实拍对白逐段拉到约 −16 LUFS，只有明显底噪才轻度降噪，只有一边声道有声的修成两边；之后再按现有混音标准（整片约 −14 LUFS、真峰值 ≤ −1 dBTP）。",
-    "小样、成片的回执逐镜头写明：哪些套了 HLG 还原、哪些做了渲染补偿（补偿 LUT 还是改设置）、哪些做了颜色校正（改了什么）、哪些对白段调了音量（调了多少）；没动的写没动。平台交付时会逐镜头查过曝、亮度跳变和对白音量，提示在审阅页。",
+    "小样、成片的回执逐镜头写明：哪些套了 HLG 还原、哪些 AE 素材设了数据电平 Full、哪些做了颜色校正（改了什么）、哪些对白段调了音量（调了多少）；没动的写没动。平台交付时会逐镜头查过曝、亮度跳变和对白音量，提示在审阅页。",
     "交小样、成片时 metadata 带 shot_sources（JSON 字符串）：每个用实拍画面的镜头一条 {\"shot_id\",\"material_revision_id\",\"source_in_ms\"}，"
     "source_in_ms 是该镜头在达芬奇时间线上那个片段的源入点（脚本读时间线片段的 GetLeftOffset / GetSourceStartFrame 换成毫秒）；平台按它在原片里取和成片同一时刻的帧比亮度，"
     "不报就只能按镜头内位置估计、可能误报。剪辑清单交上来后平台会再按清单的 trim_start_ms（和 speed_percent）重算一次。",

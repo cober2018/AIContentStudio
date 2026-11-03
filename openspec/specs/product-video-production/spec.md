@@ -288,11 +288,11 @@ The dialogue loudness check SHALL treat a shot as spoken only when it has a scri
 
 ### Requirement: SDR live footage is compensated for the render offset
 
-Edit rules SHALL require compensating ordinary SDR live footage for the davinciYRGB render darkening (about 20/255), by applying the stored `sdr-render-comp.cube` or by fixing the cause in project settings for the whole cut, stating which in the receipt; HLG clips SHALL keep only their render LUT. The LUT SHALL be kept in the repository with install instructions.
+Edit rules SHALL remove the davinciYRGB render darkening at its cause: every RGB file exported from AE, with or without alpha, is set to Data Level Full before it goes on the timeline, ordinary SDR live footage gets no compensation LUT, and HLG clips get only `iphone-hlg-apple-sdr.cube`. The rules SHALL tell the editor not to use, and to delete from Resolve's MCP folder, the old `sdr-render-comp.cube` and `iphone-hlg-apple-sdr-render.cube`, and the receipt SHALL say which AE files were set to Full.
 
-#### Scenario: Selfie SDR clip in a product video
-- **WHEN** a product video uses a bt709 HEVC selfie clip without a LUT
-- **THEN** the rules require the compensation so the render matches the source brightness
+#### Scenario: Selfie SDR clip under an AE overlay
+- **WHEN** a product video puts an AE overlay over a bt709 HEVC selfie clip
+- **THEN** the rules require the overlay at Data Level Full and no LUT on the selfie clip, so the render matches the source brightness
 
 ### Requirement: Delivery compares final and source brightness for live shots
 
@@ -341,4 +341,16 @@ A product work's video brief SHALL list the info images of the product's newest 
 #### Scenario: Image added after the work started
 - **WHEN** the user adds a certificate image to a product that already has a work
 - **THEN** that work's next video brief lists the certificate image
+
+### Requirement: Shot checks keep every brightness warning when many shots are flagged
+
+The stored shot checks of a 小样 or 成片 SHALL allow up to 8000 characters, with the same allowance wherever output metadata is validated or re-read, so that 20 shots each carrying an average and a highlight warning keep every warning and their per-shot readings and can be recomputed from the edit manifest. When even that does not fit, the brightness comparison warnings SHALL be kept before any other warning is dropped. Records stored in the full, 4-item slim and 6-item slim forms SHALL still display and recompute.
+
+#### Scenario: Twenty darkened shots
+- **WHEN** a final has 20 shots each with an average and a highlight warning
+- **THEN** all 40 warnings and the per-shot readings are stored, and the edit manifest recompute runs
+
+#### Scenario: Sixty shots that do not fit
+- **WHEN** the checks of 60 shots exceed the allowance
+- **THEN** the brightness comparison warnings are kept first and only other warnings are dropped before them
 

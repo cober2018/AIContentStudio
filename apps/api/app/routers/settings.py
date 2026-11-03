@@ -273,6 +273,9 @@ class DeliveryCheckThresholds(BaseModel):
     overexposed_clipped_percent: float | None = Field(default=None, ge=0.1, le=100)
     brightness_jump_luma: float | None = Field(default=None, ge=5, le=255)
     dialogue_spread_lu: float | None = Field(default=None, ge=1, le=30)
+    cover_mismatch_mean: float | None = Field(default=None, ge=1, le=100)
+    source_brightness_diff: float | None = Field(default=None, ge=1, le=100)
+    source_highlight_diff: float | None = Field(default=None, ge=1, le=100)
 
 
 @router.get("/api/v1/settings/delivery-checks")

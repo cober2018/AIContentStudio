@@ -40,6 +40,7 @@ from .creative_contracts import (
     canonical_hash,
     canonical_output_contract,
     executor_descriptor,
+    long_value_chars,
     safe_metadata,
 )
 from .creative_packages import (
@@ -307,8 +308,7 @@ def _metadata(value) -> dict:
             raise _error("creative_execution_capability_invalid", 422)
     if "observation_hash" in metadata and not _HASH.fullmatch(str(metadata["observation_hash"])):
         raise _error("creative_execution_observation_invalid", 422)
-    # shot_sources is JSON inside a string, so its quotes are escaped once more here.
-    return bounded_json(metadata, max_bytes=4000 + 2 * len(metadata.get("shot_sources", "")))
+    return bounded_json(metadata, max_bytes=4000 + 2 * long_value_chars(metadata))
 
 
 def _checkpoint(value) -> dict:

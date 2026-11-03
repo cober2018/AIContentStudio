@@ -1,0 +1,7 @@
+- [x] 1 sound.md：两处接缝淡变写法统一（停顿里、近字 1 帧、整条重听写核对首尾字）
+- [x] 2 渲染变暗：查出根因（AE 叠层数据电平 Auto 被按 Video 读），改成叠层设 Full、不用补偿 LUT；HLG 改用普通版 LUT；删两个旧 LUT；color.md / finishing.md / SKILL.md / choose.md / video_chain 规则同步
+- [x] 3 color.md：AE 叠层本身不变暗、不补；AI 画面照旧渲染一次后比
+- [x] 4 delivery_checks：P90 亮部读数、亮部提示线（默认 5、可调）、提示带依据、精简形式带亮部、清单补算；VideoChainPanel 提示文字；DeliveryCheckSettings 提示线（顺带修好设置页保存被拒）
+- [x] 5 验证：只读副本 + 硬盘文件跑任务 41 / 42 检查；临时达芬奇项目重新渲染任务 42 四个自拍镜头逐段比；全量测试；tsc；openspec validate
+- [x] 6 提示截断：shot_checks 放宽到 8000（compact、safe_metadata、_metadata 总量）；截断时亮度对比提示优先保留；构造 20 镜 / 60 镜检查结果验收；任务 41、42 复跑一致；旧记录三种形式能显示、能补算
+- [x] 7 AE 不透明 RGB 也设 Full：color.md、video_chain 规则、finishing.md；临时达芬奇项目 Auto 和 Full 对比渲染，写进「来源」，验证后删除临时项目

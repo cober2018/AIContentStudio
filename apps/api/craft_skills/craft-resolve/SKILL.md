@@ -19,7 +19,7 @@
 | 景别递进、匹配剪辑、并置、J-cut、后期推镜（急推）、口播精剪、放大遮跳切、多机位、转场 | `techniques/cutting.md` |
 | 镜头运动接力、藏切点、色块扫屏与节拍卡、线条接力、过曝闪白 | `techniques/transitions.md` |
 | 对白逐段拉齐（小样前必做）、声音轨口播衔接、气口微叠、声道、上升音效、混响尾音、自录音效、音乐收尾 | `techniques/sound.md` |
-| iPhone HLG 还原（必做）、普通实拍渲染补偿（必做）、示波器、Log 还原、亮暗分区、色轮、S 曲线、单色调整、统一色调（小样前必做） | `techniques/color.md` |
+| iPhone HLG 还原（必做）、AE 叠层数据电平设 Full（必做）、示波器、Log 还原、亮暗分区、色轮、S 曲线、单色调整、统一色调（小样前必做） | `techniques/color.md` |
 | 分辨率、帧率、编码码率、音频参数、AI 放大、封面取自成片 | `techniques/delivery.md` |
 | 代理、挑 B-roll、拆参考片、中间件 | `techniques/workflow.md` |
 

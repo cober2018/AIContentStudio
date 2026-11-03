@@ -13,11 +13,14 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm.attributes import flag_modified
 
+from .creative_contracts import SHOT_CHECKS_CHARS
+
 KEY = "delivery_checks"
 DEFAULTS = {"overexposed_mean_luma": 180, "overexposed_clipped_percent": 5.0, "brightness_jump_luma": 40, "dialogue_spread_lu": 6.0, "cover_mismatch_mean": 6,
-            "source_brightness_diff": 8}
+            "source_brightness_diff": 8, "source_highlight_diff": 5}
 LIMITS = {"overexposed_mean_luma": (100, 255), "overexposed_clipped_percent": (0.1, 100), "brightness_jump_luma": (5, 255), "dialogue_spread_lu": (1, 30),
-          "cover_mismatch_mean": (1, 100), "source_brightness_diff": (1, 100)}
+          "cover_mismatch_mean": (1, 100), "source_brightness_diff": (1, 100),
+          "source_highlight_diff": (1, 100)}
 CLIPPED_LUMA = 250
 FIXED_SPAN_MS = 3000
 MAX_SPANS = 60
@@ -99,7 +102,7 @@ def spans(director: dict, duration_ms: int) -> tuple[str, list[dict]]:
                      for index, start in enumerate(range(0, duration_ms, FIXED_SPAN_MS)) if index < MAX_SPANS]
 
 
-def _frame(fd: int, at_ms: int) -> tuple[float, float] | None:
+def _frame(fd: int, at_ms: int) -> tuple[float, float, int] | None:
     # Full range so the numbers read on the familiar 0–255 scale whatever range the file was exported in.
     done = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-threads", "1", "-ss", f"{at_ms / 1000:.3f}",
                            "-i", f"/dev/fd/{fd}", "-frames:v", "1", "-vf", f"scale={_FRAME_WIDTH}:-2:out_range=full,format=gray",
@@ -107,7 +110,17 @@ def _frame(fd: int, at_ms: int) -> tuple[float, float] | None:
     pixels = done.stdout
     if not pixels:
         return None
-    return sum(pixels) / len(pixels), 100 * sum(1 for value in pixels if value >= CLIPPED_LUMA) / len(pixels)
+    counts = [0] * 256
+    for value in pixels:
+        counts[value] += 1
+    # The 90th percentile tracks walls, white packaging and skin highlights, which an average can hide when only they get darker.
+    seen, rank, p90 = 0, 0.9 * len(pixels), 255
+    for level, count in enumerate(counts):
+        seen += count
+        if seen >= rank:
+            p90 = level
+            break
+    return sum(pixels) / len(pixels), 100 * sum(counts[CLIPPED_LUMA:]) / len(pixels), p90
 
 
 def _speech(fd: int, start_ms: int, end_ms: int) -> float | None:
@@ -137,7 +150,7 @@ def inspect(source, director: dict, duration_ms: int, has_audio: bool, limits: d
             try:
                 frame = _frame(fd, (part["start_ms"] + part["end_ms"]) // 2)
                 if frame:
-                    reading["luma"], reading["clipped"] = round(frame[0], 1), round(frame[1], 1)
+                    reading["luma"], reading["clipped"], reading["luma_p90"] = round(frame[0], 1), round(frame[1], 1), frame[2]
                 if has_audio and part["spoken"]:
                     level = _speech(fd, part["start_ms"], part["end_ms"])
                     if level is not None:
@@ -164,7 +177,7 @@ def inspect(source, director: dict, duration_ms: int, has_audio: bool, limits: d
                 warnings.append({"code": "dialogue_level_uneven", "shot_id": shot["shot_id"], "order": shot["order"], "lufs": shot["lufs"],
                                  "median_lufs": round(median, 1), "diff_lu": round(shot["lufs"] - median, 1)})
     return {"status": "partial" if partial else "measured", "basis": basis, "thresholds": limits, "warnings": warnings,
-            "shots": [{key: shot[key] for key in ("shot_id", "order", "start_ms", "end_ms", "luma", "clipped", "lufs") if key in shot} for shot in shots]}
+            "shots": [{key: shot[key] for key in ("shot_id", "order", "start_ms", "end_ms", "luma", "clipped", "luma_p90", "lufs") if key in shot} for shot in shots]}
 
 
 @contextmanager
@@ -271,15 +284,20 @@ def source_brightness(db, director: dict, checks: dict, points: dict | None = No
                         break
                     frame = _frame(fd, at_ms)
                     if frame:
-                        shot["source_luma"], shot["source_basis"] = round(frame[0], 1), basis
+                        shot["source_luma"], shot["source_p90"], shot["source_basis"] = round(frame[0], 1), frame[2], basis
         except (OSError, ValueError, subprocess.SubprocessError, ExternalMaterialError):
             continue
     limit = checks["thresholds"]["source_brightness_diff"]
+    highlight = checks["thresholds"].get("source_highlight_diff", DEFAULTS["source_highlight_diff"])
     for shot in checks["shots"]:
         if "source_luma" in shot and abs(shot["luma"] - shot["source_luma"]) > limit:
             checks["warnings"].append({"code": "source_brightness_diff", "shot_id": shot["shot_id"], "order": shot["order"], "luma": shot["luma"],
                                        "source_luma": shot["source_luma"], "diff": round(shot["luma"] - shot["source_luma"], 1),
                                        "source_basis": shot["source_basis"]})
+        # A large white or bright overlay lifts the delivered highlights, so that reading can come out brighter than the source.
+        if "source_p90" in shot and "luma_p90" in shot and abs(shot["luma_p90"] - shot["source_p90"]) > highlight:
+            checks["warnings"].append({"code": "source_highlight_diff", "shot_id": shot["shot_id"], "order": shot["order"], "luma_p90": shot["luma_p90"],
+                                       "source_p90": shot["source_p90"], "diff": shot["luma_p90"] - shot["source_p90"], "source_basis": shot["source_basis"]})
 
 
 def recheck_sources(db, director: dict, stored: str, points: dict, clips: dict) -> str | None:
@@ -293,15 +311,17 @@ def recheck_sources(db, director: dict, stored: str, points: dict, clips: dict) 
         if not isinstance(rows, list) or not rows or checks.get("truncated"):
             return None
         if isinstance(rows[0], list):
-            # The slimmed form keeps only [shot_id, luma, lufs, source_luma]; positions come back from the timeline.
+            # The slimmed form keeps only [shot_id, luma, lufs, source_luma, luma_p90, source_p90]; positions come back from the timeline.
+            # Readings stored before highlights were measured have four entries and get the average comparison only.
             spans_by_id = {span["shot_id"]: span for span in spans(director, 10**9)[1]}
             rows = [{**{key: spans_by_id[row[0]][key] for key in ("shot_id", "order", "start_ms", "end_ms")},
-                     **({"luma": row[1]} if row[1] is not None else {}), **({"lufs": row[2]} if row[2] is not None else {})} for row in rows]
-        shots = [{key: value for key, value in row.items() if key not in {"source_luma", "source_basis"}} for row in rows]
+                     **({"luma": row[1]} if row[1] is not None else {}), **({"lufs": row[2]} if row[2] is not None else {}),
+                     **({"luma_p90": row[4]} if len(row) > 4 and row[4] is not None else {})} for row in rows]
+        shots = [{key: value for key, value in row.items() if key not in {"source_luma", "source_p90", "source_basis"}} for row in rows]
     except (TypeError, ValueError, KeyError, IndexError):
         return None
     checks = {**checks, "shots": shots, "thresholds": {**thresholds(db), **checks.get("thresholds", {})},
-              "warnings": [warning for warning in checks.get("warnings") or [] if warning.get("code") != "source_brightness_diff"]}
+              "warnings": [warning for warning in checks.get("warnings") or [] if warning.get("code") not in {"source_brightness_diff", "source_highlight_diff"}]}
     source_brightness(db, director, checks, points, clips)
     return compact(checks)
 
@@ -365,17 +385,20 @@ def cover_warning(check: dict | None) -> dict | None:
     return {"code": "cover_color_mismatch", **check} if check and check["mean"] > check["threshold"] else None
 
 
-def compact(result: dict, limit: int = 2000) -> str:
-    """Output metadata holds flat strings of at most 2000 characters; per-shot readings give way before the warnings do."""
+def compact(result: dict, limit: int = SHOT_CHECKS_CHARS) -> str:
+    """Output metadata holds flat strings of bounded length; per-shot readings give way before the warnings do."""
     text = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(text) <= limit:
         return text
-    slim = {**result, "shots": [[shot.get("shot_id"), shot.get("luma"), shot.get("lufs"), shot.get("source_luma")] for shot in result["shots"]]}
+    slim = {**result, "shots": [[shot.get("shot_id"), shot.get("luma"), shot.get("lufs"), shot.get("source_luma"), shot.get("luma_p90"), shot.get("source_p90")]
+                                for shot in result["shots"]]}
     text = json.dumps(slim, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     if len(text) <= limit:
         return text
     slim = {**result, "shots": [], "warnings": []}
-    for warning in result["warnings"]:
+    # The source comparison is what a forgotten overlay setting shows up in, so it is the last thing to lose.
+    ranked = sorted(result["warnings"], key=lambda warning: warning.get("code") not in {"source_brightness_diff", "source_highlight_diff"})
+    for warning in ranked:
         trial = {**slim, "warnings": [*slim["warnings"], warning]}
         if len(json.dumps(trial, ensure_ascii=False, sort_keys=True, separators=(",", ":"))) > limit - 40:
             slim["truncated"] = True

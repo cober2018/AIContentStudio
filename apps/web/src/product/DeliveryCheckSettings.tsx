@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Field, Spinner, inputClass } from "../components/ui";
 
-type Name = "overexposed_mean_luma" | "overexposed_clipped_percent" | "brightness_jump_luma" | "dialogue_spread_lu" | "cover_mismatch_mean" | "source_brightness_diff";
+type Name = "overexposed_mean_luma" | "overexposed_clipped_percent" | "brightness_jump_luma" | "dialogue_spread_lu" | "cover_mismatch_mean" | "source_brightness_diff" | "source_highlight_diff";
 type Thresholds = Record<Name, number>;
 type View = { thresholds: Thresholds; defaults: Thresholds; limits: Record<Name, [number, number]> };
 
@@ -14,6 +14,7 @@ const fields: [Name, string, string, string][] = [
   ["dialogue_spread_lu", "对白音量不齐提示线", "有台词的镜头，响度和各段中间值相差超过它就提示。", " LU"],
   ["cover_mismatch_mean", "封面与成片平均色差（0–255）", "封面和成片开头 0.5 秒里最像的那一帧比，红绿蓝平均每个通道相差超过它就提示颜色不一致。", ""],
   ["source_brightness_diff", "成片与原片亮度差（0–255）", "画面来自视频素材的镜头（HLG 原片除外），成片和原片同一时刻各取一帧比平均亮度，相差超过它就提示成片比原片暗或亮。", ""],
+  ["source_highlight_diff", "成片与原片亮部差（0–255）", "同样的两帧再比亮部（亮度排在九成位置的那个值，代表白墙、白色包装、高光），相差超过它就提示亮部变暗或变亮。大块白色或亮色叠层盖住的镜头，成片亮部可能偏亮。", ""],
 ];
 
 const messageOf = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
@@ -23,7 +24,7 @@ export default function DeliveryCheckSettings() {
   const key = ["delivery-checks", currentUser()];
   const view = useQuery({ queryKey: key, queryFn: () => api.get<View>("/settings/delivery-checks"), retry: false });
   const me = useQuery({ queryKey: ["product-settings-user", currentUser()], queryFn: () => api.get<{ role: string }>("/users/me"), retry: false });
-  const [values, setValues] = useState<Record<Name, string>>({ overexposed_mean_luma: "", overexposed_clipped_percent: "", brightness_jump_luma: "", dialogue_spread_lu: "", cover_mismatch_mean: "", source_brightness_diff: "" });
+  const [values, setValues] = useState<Record<Name, string>>({ overexposed_mean_luma: "", overexposed_clipped_percent: "", brightness_jump_luma: "", dialogue_spread_lu: "", cover_mismatch_mean: "", source_brightness_diff: "", source_highlight_diff: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");

@@ -15,9 +15,10 @@ type ShotWarning = { code: "shot_overexposed" | "shot_brightness_jump" | "dialog
   from_shot_id?: string | null; from_order?: number; from_luma?: number; lufs?: number; median_lufs?: number; diff_lu?: number }
   | { code: "color_tags_not_srgb"; color_primaries: string; color_transfer: string; color_space: string }
   | { code: "cover_color_mismatch"; at_ms: number; mean: number; rgb: [number, number, number]; threshold: number }
-  | { code: "source_brightness_diff"; shot_id: string | null; order: number; luma: number; source_luma: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" };
+  | { code: "source_brightness_diff"; shot_id: string | null; order: number; luma: number; source_luma: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" }
+  | { code: "source_highlight_diff"; shot_id: string | null; order: number; luma_p90: number; source_p90: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" };
 type ShotChecks = { status: string; basis: string; truncated?: boolean; warnings: ShotWarning[];
-  thresholds: { overexposed_mean_luma: number; overexposed_clipped_percent: number; brightness_jump_luma: number; dialogue_spread_lu: number; source_brightness_diff?: number } };
+  thresholds: { overexposed_mean_luma: number; overexposed_clipped_percent: number; brightness_jump_luma: number; dialogue_spread_lu: number; source_brightness_diff?: number; source_highlight_diff?: number } };
 type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null };
 type Chain = {
   state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
@@ -42,6 +43,7 @@ function warningText(item: ShotWarning, checks: ShotChecks) {
   if (item.code === "cover_color_mismatch") return `封面与成片颜色不一致：平均差 ${item.mean}（R/G/B ${item.rgb.join(" / ")}，提示线 ${item.threshold}），最接近的是第 ${(item.at_ms / 1000).toFixed(1)} 秒那一帧`;
   const limits = checks.thresholds;
   const name = shotName(item.shot_id, item.order, checks.basis);
+  if (item.code === "source_highlight_diff") return `第 ${item.order + 1} 镜亮部比原片${item.diff < 0 ? "暗" : "亮"} ${Math.abs(item.diff)} 级（成片 ${item.luma_p90}，原片 ${item.source_p90}，提示线 ${limits.source_highlight_diff ?? 5}；${{ manifest: "按剪辑清单的截取点", reported: "按交付时报的截取点", estimated: "按估计位置比，可能不准" }[item.source_basis || "estimated"]}）`;
   if (item.code === "source_brightness_diff") return `第 ${item.order + 1} 镜成片比原片${item.diff < 0 ? "暗" : "亮"} ${Math.abs(item.diff)} 级（成片 ${item.luma}，原片 ${item.source_luma}，提示线 ${limits.source_brightness_diff ?? 8}）${item.source_basis === "estimated" ? "（按估计位置比，可能不准）" : ""}`;
   if (item.code === "shot_overexposed") return `${name}偏亮：平均亮度 ${item.luma}（提示线 ${limits.overexposed_mean_luma}），贴顶高光占 ${item.clipped}%（提示线 ${limits.overexposed_clipped_percent}%）`;
   if (item.code === "shot_brightness_jump") return `${shotName(item.from_shot_id, item.from_order ?? item.order - 1, checks.basis)} → ${name}亮度跳变：${item.from_luma} → ${item.luma}，差 ${Math.abs((item.luma ?? 0) - (item.from_luma ?? 0)).toFixed(1)}（提示线 ${limits.brightness_jump_luma}）`;

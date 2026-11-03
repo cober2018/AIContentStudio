@@ -31,30 +31,31 @@
 ### iPhone HLG 还原（必做）
 - 思路：iPhone 默认拍 HLG，达芬奇默认色彩管理会把它整体提亮（平均亮度约 190，手机上同一帧约 147），看起来就是过曝。用平台拟合的专用 LUT 把它还原成手机上看到的样子，这是还原，不算调色。
 - 用在：每段实拍素材都先查：`ffprobe -v error -select_streams v:0 -show_entries stream=color_transfer -of csv=p=0 <文件>`，结果是 `arib-std-b67` 的就是 HLG。
-- 不用在：SDR 素材（普通实拍、网络素材）、AI 生成画面、AE 叠层与包装（它们不是 HLG，套了会变暗变灰）；普通 SDR 实拍改走「普通实拍渲染补偿」。
+- 不用在：SDR 素材（普通实拍、网络素材）、AI 生成画面、AE 叠层与包装（它们不是 HLG，套了会变暗变灰）；普通 SDR 实拍什么 LUT 都不套，只要 AE 叠层按「AE 叠层数据电平设 Full」处理。
 - 做法：
   - 项目色彩科学用 `davinciYRGB`（不做色彩管理），时间线 Rec.709 Gamma 2.4。
-  - 只给 HLG 片段套 `MCP/iphone-hlg-apple-sdr-render.cube`：`TimelineItem.SetLUT(1, "MCP/iphone-hlg-apple-sdr-render.cube")`。交付用 `-render` 版：YRGB 下带 LUT 的渲染亮度约等于 0.993×静帧 − 0.078，`-render` 已补上这一差；`iphone-hlg-apple-sdr.cube` 只在对着静帧比时用。
-  - 达芬奇 LUT 列表里没有 `MCP/` 这两份时，先从仓库 `craft_skills/craft-resolve/luts/` 拷到达芬奇 LUT 文件夹下的 `MCP/`（macOS：`/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/MCP/`），再在 Color 页刷新 LUT 列表（或重启达芬奇）。
+  - 只给 HLG 片段套 `MCP/iphone-hlg-apple-sdr.cube`：`TimelineItem.SetLUT(1, "MCP/iphone-hlg-apple-sdr.cube")`。前提是 AE 叠层的数据电平已设 Full（见下一节），这时渲染和达芬奇静帧一致，不用再补。
+  - 达芬奇 LUT 列表里没有 `MCP/iphone-hlg-apple-sdr.cube` 时，先从仓库 `craft_skills/craft-resolve/luts/` 拷到达芬奇 LUT 文件夹下的 `MCP/`（macOS：`/Library/Application Support/Blackmagic Design/DaVinci Resolve/LUT/MCP/`），再在 Color 页刷新 LUT 列表（或重启达芬奇）。
+  - `MCP/` 下如果还有 `iphone-hlg-apple-sdr-render.cube`、`sdr-render-comp.cube`，删掉：它们是旧做法，为抵消叠层读错电平多补了 +20，叠层设 Full 后再套就亮约 20 级。
 - 脚本：能。项目设置和 `SetLUT` 都能脚本做；HLG 判断用 ffprobe。
 - 检查：拿**渲染出来的文件**抽帧，和手机自己的显示帧（`AVAssetImageGenerator` 从原片取同一时刻）比平均亮度，相差几个点以内；不拿达芬奇静帧或 Viewer 比。高光没有大片贴顶。
-- 常见错误：开着色彩管理再套 LUT（提亮两次）；给 SDR 素材、AI 画面、AE 叠层也套了；在 HLG 片段上再叠 `sdr-render-comp.cube`（`-render` 版已含补偿，叠了就亮 20 级）；达芬奇里看着正常就交，没比渲染文件；按第一个镜头手调亮度套到全片。
+- 常见错误：开着色彩管理再套 LUT（提亮两次）；给 SDR 素材、AI 画面、AE 叠层也套了；还在用 `-render` 版或叠 `sdr-render-comp.cube`（叠层设 Full 后会亮约 20 级）；AE 叠层数据电平留 Auto（整片暗约 19 级）；达芬奇里看着正常就交，没比渲染文件；按第一个镜头手调亮度套到全片。
 - 状态：在用
-- 来源：2026-11-02 P46 实测（套 LUT 后 146.8，手机 147）
+- 来源：2026-11-02 P46 实测（套 LUT 后 146.8，手机 147）；2026-11-03 作品 93 复核：叠层设 Full、套本 LUT 渲染的 HLG 镜头，和手机显示帧平均只差 0.1–0.3，各亮度段差 ≤1.4（旧 `-render` 做法亮 2 级）
 
-### 普通实拍渲染补偿（必做）
-- 思路：`davinciYRGB`、不做色彩管理时，渲染出来的文件比达芬奇静帧暗：渲染 ≈ 0.993×静帧 − 0.078，约暗 20/255，从暗部到高光都是这个固定差。HLG 的 `-render` LUT 已经补了；没套 LUT 的普通 SDR 实拍就整片吃这 20 级。
-- 用在：`davinciYRGB` 项目里每段 SDR 实拍（ffprobe 的 `color_transfer` 是 `bt709` / 未标注，不是 `arib-std-b67` / `smpte2084`），例如抖音自拍。
-- 不用在：HLG 片段（已套 `-render` LUT）。AI 画面、AE 叠层是否同样变暗没验证过：渲染一次后抽帧和原图比，暗了同样补，没暗就不动。
-- 做法（二选一，回执写明用的哪种）：
-  - 套补偿 LUT：`TimelineItem.SetLUT(1, "MCP/sdr-render-comp.cube")`，整体 +0.078（+20/255）。
-  - 从根上解决：查出是哪项项目 / 渲染设置（数据电平、渲染范围等）造成的，改设置让全片渲染和原片一致；改了设置就全片统一，**不再**套补偿 LUT（HLG 片段的 LUT 也要重新对一遍）。
-  - 达芬奇 LUT 列表里没有 `MCP/sdr-render-comp.cube` 时，先从仓库 `craft_skills/craft-resolve/luts/` 拷到达芬奇 LUT 文件夹的 `MCP/` 下，刷新 LUT 列表。
-- 脚本：能。`SetLUT`、ffprobe 判断、ffmpeg 抽帧都能脚本做。
-- 检查：拿**渲染出来的文件**和原片在同一时刻各抽一帧比平均亮度（`signalstats` 的 YAVG，或缩小转灰度求平均），相差几个点以内。平台交付时也会逐镜头比，差超过提示线就在审阅页提示「成片比原片暗 X 级」。
-- 常见错误：叠在 HLG 的 `-render` LUT 上（补两次）；改了设置又套补偿 LUT；只看达芬奇 Viewer / 静帧就交；AI 画面、AE 叠层没比就默认不补。
+### AE 叠层数据电平设 Full（必做）
+- 思路：成片比原片整片暗约 19 级，不是渲染本身造成的。AE 导出的透明叠层（Animation / qtrle、ProRes 4444 等 RGB 编码）导入后「数据电平」默认 Auto，达芬奇按 Video 电平读它，透明处的 RGB 0 被读成比黑还黑（−16/219，约 −18.6/255），按预乘透明叠到下面的画面上，整片从暗部到最亮都被减掉约 19 级。叠层设成 Full 后，透明处不再影响下面的画面；叠层自己的颜色也不变（白字 250 以上照旧），叠层本身不用补。
+- 用在：AE 导出的每一个 RGB 素材，不管有没有透明通道：叠层、包装、字幕、贴片、整屏片尾卡、封面卡（qtrle、ProRes 4444、PNG 序列等）。不透明的也要设：留 Auto 同样按 Video 电平读，对比度被拉大，黑白两头被削掉。
+- 不用在：实拍和 AI 画面本身（YUV 编码，Auto 读得对）。AI 画面没验证过：渲染一次后抽帧和原图比，暗了才补，先查电平。
+- 做法：
+  - AE 导出的 RGB 素材（有没有透明都算）导入素材池后、上时间线前，逐个设 `MediaPoolItem.SetClipProperty("Data Level", "Full")`，再用 `GetClipProperty("Data Level")` 确认是 `Full`。
+  - 普通 SDR 实拍（ffprobe 的 `color_transfer` 是 `bt709` / 未标注）不套任何补偿 LUT；HLG 片段只套 `iphone-hlg-apple-sdr.cube`（见上一节）。
+  - 旧的 `sdr-render-comp.cube`（整片 +20，0.8 以上再柔和压缩）不再用：它把平均亮度补回来了，但亮部被压了两次，原片 210–224 段暗 5 级、225–239 段暗 10 级（白墙、商品包装盒）。达芬奇 `MCP/` 下还有就删掉。
+- 脚本：能。`SetClipProperty`、ffprobe 判断、ffmpeg 抽帧都能脚本做。
+- 检查：拿**渲染出来的文件**和原片在同一时刻各抽一帧，先比平均亮度，**再分段比亮部**：按原片亮度分段（例如每 15 级一段），在叠层透明的像素上逐像素比，至少看原片 200 以上的区域（墙、白色包装、高光），每段差 ≤2 级。平台交付时逐镜头比平均亮度和亮部（亮度排在九成位置的值），超过提示线就在审阅页提示。
+- 常见错误：数据电平留 Auto；用补偿 LUT 把整片 +20 来抵消（亮部被压暗）；只比平均亮度不比亮部；HLG 还用 `-render` 版 LUT。
 - 状态：在用
-- 来源：2026-11-03 项目 48 / 作品 93 任务 41（未补偿的抖音自拍镜头渲染后暗约 20 级）
+- 来源：2026-11-03 作品 93 复核：同样的项目设置，自拍原片不加叠层渲染各段差 ≤0.5；加任务 42 的叠层（Auto）整片 −18.6；叠层改 Full 后，任务 42 四个自拍镜头 0–254 各段差 ≤0.4、亮部 P90 差 ≤1。同日不透明卡实测（作品 85 任务 24 的 AE 封面卡 cover.mov，qtrle rgb24、无透明，按原文件亮度分段比）：Auto 下暗部 −10.7、亮部 +14.1（对比度被拉大）；Full 下各段 −1.4 到 +0.2；同格式纯灰阶在 Full 下各级 −1.2 到 +0.3，只是 8 位 tv 范围的取整。比 RGB 原图时，成片要按 (Y−16)×255/219 换算：ffmpeg 的 `scale=out_range=full,format=gray` 会把 Y=235 换成 252，拿它去比 RGB 原图会凭空多出 2–3 级的偏暗
 
 ### 亮部暗部分开救
 - 思路：整体亮度一拉，亮的过曝、暗的死黑；要只救其中一端。

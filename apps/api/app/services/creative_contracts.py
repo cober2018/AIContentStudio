@@ -12,6 +12,9 @@ MAX_FILE_BYTES = 30 * 1024 * 1024
 MAX_INPUTS = 100
 MAX_OUTPUT_ROWS = 500
 SHOT_SOURCES_CHARS = 8000
+# Every darkened shot carries an average and a highlight warning, so a long cut's checks need the same room as its shot_sources.
+SHOT_CHECKS_CHARS = 8000
+_LONG_VALUES = {"shot_sources": SHOT_SOURCES_CHARS, "shot_checks": SHOT_CHECKS_CHARS}
 SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,99}$")
 _UNSAFE_KEYS = {"api_key", "access_token", "secret", "password", "raw_output", "raw_error", "raw_response", "authorization", "file_path", "absolute_path", "local_path"}
 EXECUTOR_DECLARATION_FIELDS = {"supports_checkpoint", "supports_revert", "supports_recover", "output_kinds"}
@@ -68,12 +71,18 @@ def safe_metadata(value: dict | None) -> dict:
                     or len(set(item)) != len(item)):
                 raise HTTPException(422, {"code": "creative_execution_output_kinds_invalid"})
             continue
-        # A cut's shot_sources holds one entry per shot, so it gets room for a long cut.
-        if type(item) not in {str, bool} or isinstance(item, str) and len(item) > (SHOT_SOURCES_CHARS if key == "shot_sources" else 2000):
+        # A cut's shot_sources and shot_checks hold one entry per shot, so they get room for a long cut.
+        if type(item) not in {str, bool} or isinstance(item, str) and len(item) > _LONG_VALUES.get(key, 2000):
             raise HTTPException(422, {"code": "creative_metadata_value_invalid"})
         if key.endswith("_ref") and not SAFE_ID.fullmatch(item if isinstance(item, str) else ""):
             raise HTTPException(422, {"code": "creative_reference_invalid"})
-    return bounded_json({**value, **({"output_kinds": sorted(value["output_kinds"])} if "output_kinds" in value else {})}, max_bytes=16_000)
+    return bounded_json({**value, **({"output_kinds": sorted(value["output_kinds"])} if "output_kinds" in value else {})},
+                        max_bytes=16_000 + 2 * long_value_chars(value))
+
+
+def long_value_chars(value: dict) -> int:
+    # These values are JSON inside a string, so their quotes are escaped once more when the metadata is serialized.
+    return sum(len(value[key]) for key in _LONG_VALUES if isinstance(value.get(key), str))
 
 
 def executor_descriptor(identity: dict, metadata: dict, *, require_complete: bool = False) -> dict:
