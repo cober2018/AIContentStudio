@@ -588,6 +588,28 @@ class MaterialMatchRun(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class WebMaterialSearch(Base):
+    """Pictures found on readable web pages for a product or a project; only the ones the user picks become materials."""
+    __tablename__ = "web_material_search"
+    __table_args__ = (
+        CheckConstraint("status IN ('queued','running','completed','failed','interrupted')", name="ck_web_material_search_status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    sku_id: Mapped[int | None] = mapped_column(ForeignKey("product_sku.id"), index=True)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id"), index=True)
+    unit_id: Mapped[int | None] = mapped_column(ForeignKey("content_unit.id"), index=True)
+    query: Mapped[str] = mapped_column(String(300))
+    status: Mapped[str] = mapped_column(String(20), default="queued")
+    progress_json: Mapped[dict | None] = mapped_column(JSON)
+    result_json: Mapped[dict | None] = mapped_column(JSON)
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class MaterialCollectionItem(Base):
     __tablename__ = "material_collection_item"
     __table_args__ = (UniqueConstraint("collection_id", "material_id", name="uq_material_collection_item"),)

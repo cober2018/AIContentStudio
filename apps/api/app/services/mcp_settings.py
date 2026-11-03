@@ -20,7 +20,7 @@ BRIDGE = API_ROOT / "scripts" / "creative_mcp_stdio.py"
 RUNTIME_ENV = API_ROOT / "scripts" / "startup" / "runtime.env"
 GROUPS = {
     "stages": ("生产阶段与决定", {"get_stages", "start_run", "preview_stage", "run_stage", "get_stage_result", "get_stage_decision"}),
-    "materials": ("找素材", {"start_material_match", "get_material_match", "get_shot_slots"}),
+    "materials": ("找素材", {"start_material_match", "get_material_match", "get_shot_slots", "search_web_materials", "get_web_materials"}),
     "executions": ("执行包与回传", {"get_package", "get_execution", "claim_execution", "start_execution", "materialize_inputs",
                                   "report_progress", "report_blocker", "report_checkpoint", "submit_output", "mark_unknown",
                                   "reconcile_unknown", "request_human_review"}),
@@ -61,6 +61,8 @@ SUMMARIES = {
     "get_video_decision": "读你对导演稿 / 小样 / 成片的决定和修改意见",
     "set_shot_materials": "导演稿采用后，给每个镜头定素材",
     "accept_material_candidate": "把搜到的一条图库素材收进素材库和本项目",
+    "search_web_materials": "去品牌官网、经销商、小电商站点和测评站点找图，把挑选页面发给你；它不能替你选",
+    "get_web_materials": "读网上找图的进度、各网页找到几张图、你已经存了哪些",
     "file_as_common": "把本项目里通用的素材（特效、转场、常用 BGM / 音效）移到 Mac 本地的通用素材库",
     "propose_lesson": "按退回意见改好后，把原因归纳成以后通用的做法交给你确认（同一原因累计次数）",
     "get_article_brief": "写文章 / 图文前读资料：任务书、事实、来源原文、写作方式、当前版本（也是格式示例）",

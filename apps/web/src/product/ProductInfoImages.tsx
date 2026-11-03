@@ -3,7 +3,7 @@ import { api, currentUser } from "../api";
 import { inputClass } from "../components/ui";
 import { productMaterialCategories } from "./project/ProductSetupFields";
 
-export type InfoImage = { id: number; hash: string; category: string; preview?: string };
+export type InfoImage = { id: number; hash: string; category: string; preview?: string; url?: string };
 
 const TYPES = ["image/png", "image/jpeg", "image/webp"];
 
@@ -60,7 +60,7 @@ export default function ProductInfoImages({ value, urls, disabled, onChange, onE
     <input type="file" multiple aria-label="选择商品资料图" accept={TYPES.join(",")} disabled={disabled || busy} onChange={e => { void add(Array.from(e.target.files || [])); e.target.value = ""; }} />
     <div tabIndex={0} role="textbox" aria-label="粘贴商品资料图" onPaste={paste} onClick={e => { e.preventDefault(); e.currentTarget.focus(); }} className="mt-2 cursor-text rounded-lg border border-dashed border-slate-300 p-3 text-center text-xs text-slate-500 outline-none focus:border-indigo-500 focus:bg-indigo-50">{busy ? "上传中…" : "点这里，按 ⌘V 粘贴图片；可以连续粘贴多张"}</div>
     {value.length > 0 && <ul className="mt-3 flex flex-wrap gap-3">{value.map(item => <li key={item.id} className="w-28 space-y-1">
-      <Thumb image={item} url={urls[String(item.id)]} />
+      <Thumb image={item} url={item.url || urls[String(item.id)]} />
       <select aria-label={`资料图 #${item.id} 类别`} className={`${inputClass} !px-1 !py-1 text-xs`} value={item.category} disabled={disabled} onChange={e => onChange(value.map(row => row.id === item.id ? { ...row, category: e.target.value } : row))}>
         {productMaterialCategories.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
       </select>

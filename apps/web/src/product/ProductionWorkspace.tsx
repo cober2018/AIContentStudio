@@ -29,6 +29,7 @@ const ProductShotGeneration = lazy(() => import("./VideoMaterialSteps").then(mod
 const ReferenceVideoPanel = lazy(() => import("./ReferenceVideoPanel"));
 const StoryboardGridPanel = lazy(() => import("./StoryboardGridPanel"));
 const ProductPersonaPicker = lazy(() => import("./ProductPersonaPicker"));
+const WebMaterialSearch = lazy(() => import("./WebMaterialSearch"));
 // Persona video steps in order; the chain decides how far the user may go.
 const VIDEO_ORDER = ["goal", "plan", "materials", "voice", "sample", "final", "delivery"];
 
@@ -215,7 +216,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
           ? <p className="mb-5 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">还没到这一步。视频现在：{chain.data?.label}。<button type="button" className="ml-2 text-indigo-700 underline" onClick={() => goStep(chainHome)}>去当前步骤</button></p>
           : <div className="mb-5 space-y-4">
             {step.id === "plan" && <><ReferenceVideoPanel projectId={projectId} unitId={unitId} readOnly={readOnly || chainLocked} /><VideoChainPanel projectId={projectId} unitId={unitId} step="draft" showDraft /></>}
-            {step.id === "materials" && <><ShotMaterialPages projectId={projectId} unitId={unitId} readOnly={readOnly} />{product && <ProductShotGeneration projectId={projectId} unitId={unitId} readOnly={readOnly} />}<StoryboardGridPanel projectId={projectId} unitId={unitId} readOnly={readOnly} /></>}
+            {step.id === "materials" && <><ShotMaterialPages projectId={projectId} unitId={unitId} readOnly={readOnly} />{!product && <div className="mt-5"><WebMaterialSearch projectId={projectId} unitId={unitId} defaultQuery="" pickLabel="保存到项目素材" readOnly={readOnly} /></div>}{product && <ProductShotGeneration projectId={projectId} unitId={unitId} readOnly={readOnly} />}<StoryboardGridPanel projectId={projectId} unitId={unitId} readOnly={readOnly} /></>}
             {step.id === "voice" && <><VoiceoverPanel projectId={projectId} unitId={unitId} readOnly={readOnly || chainLocked} onSaved={() => setMasterReloadRequest(value => value + 1)} /><MusicPanel projectId={projectId} unitId={unitId} readOnly={readOnly} /></>}
             {(step.id === "sample" || step.id === "final") && <VideoChainPanel projectId={projectId} unitId={unitId} step={step.id} />}
             {step.id === "delivery" && <ChannelVariantsPanel projectId={projectId} unit={unit} readOnly={readOnly} workflowDirty={dirty} />}

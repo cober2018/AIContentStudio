@@ -412,6 +412,12 @@ def _vacuum(db) -> dict:
     return {"status": "done", "bytes_before": before, "bytes_after": _db_bytes(db)}
 
 
+def _clean_web_material_searches(db, *, cutoff: datetime, batch: int) -> dict:
+    from .web_material_search import clean
+
+    return clean(db, cutoff=cutoff, batch=batch)
+
+
 def run_storage_cleanup(db, *, force: bool = False, actor: str | None = None) -> dict | None:
     """每日一次存储清理 + 每周一次 VACUUM；force=设置页「立即清理」。未到时间返回 None。"""
     last = _setting(db, STORAGE_LAST_KEY)
@@ -433,6 +439,7 @@ def run_storage_cleanup(db, *, force: bool = False, actor: str | None = None) ->
         ("source_documents", _clear_source_texts, "source_document_text_days"),
         ("generation_results", _clean_generation_results, "generation_result_days"),
         ("candidate_materials", _clean_candidate_materials, "candidate_material_days"),
+        ("web_material_searches", _clean_web_material_searches, "candidate_material_days"),
     ):
         try:
             stats.update(step(db, cutoff=_cutoff(days[field]), batch=batch))

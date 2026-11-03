@@ -11,6 +11,7 @@ from .db import SessionLocal, init_db, schema_head_matches
 from .observability import TraceMiddleware
 from .routers import (
     capability_memory,
+    web_material_search,
     channel_variants,
     channels,
     connectors,
@@ -126,6 +127,7 @@ app.add_middleware(
 for router in (
     sources,
     capability_memory,
+    web_material_search,
     facts,
     fact_packs,
     form_assistance,

@@ -312,6 +312,14 @@ class VideoCommonInput(Scope):
     material_revision_id: ID
 
 
+class WebSearchInput(Scope):
+    query: str | None = Field(default=None, min_length=2, max_length=120)
+
+
+class WebSearchReadInput(Scope):
+    search_id: ID
+
+
 class LessonInput(Scope):
     title: str = Field(min_length=1, max_length=200)
     rule: str = Field(min_length=1, max_length=2000)
@@ -471,6 +479,8 @@ TOOLS = {
     "save_publish_copy": (PublishCopyInput, "Product works: save the publish copy written with studio.product.publish-copy (title ≤15, 3–5 hashtags, cover_text ≤8, interaction, description ≤50). The user can edit it on the page.", False),
     "generate_video_voiceover": (Scope, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines. If any shot has board.dub_persona, only those shots' lines are voiced in their personas' voices, placed at their shots on one full-length track (silence elsewhere), and no shot timing changes.", False),
     "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
+    "search_web_materials": (WebSearchInput, "Search readable web pages (brand sites, dealers, small shops, official news and review sites; Taobao, Tmall, JD and Pinduoduo are skipped) for pictures of this work's subject. Product works search the product's name and variant by default and the user's picks join the product's info images; other works need query (the product or subject name) and picks join the project's materials. Send the user review_url to pick; you cannot pick or save pictures.", False),
+    "get_web_materials": (WebSearchReadInput, "Read a web material search started with search_web_materials: status, each page's site, title and picture count, and which pictures the user has saved (material_revision_id).", True),
     "propose_lesson": (LessonInput, "Call after delivering a revision that addressed sent-back notes (brief lessons.open_rework_records): generalize the cause into a reusable rule (title = short cause, rule = what to do from now on, scope = which videos it fits, e.g. iPhone HLG 实拍 / 商品视频 / 全部视频) and name the record_ids it came from. When an active or pending lesson in the brief has the same cause, pass same_as_lesson_id: it counts one more occurrence instead of a duplicate. The user approves in Settings before a lesson reaches briefs.", False),
     "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects. The result names work_dir and export_dir: export the 小样 / 成片 straight into export_dir and keep everything else in work_dir; materials stay where they are.", False),
     "analyze_reference_video": (ReferenceVideoInput, "Start the free local breakdown of a reference video (a video material_revision_id from the library; the user can also upload one on the 导演稿 page): timed transcript, scene cuts, time-labelled frame grids per segment and loudness, written to <项目>/工作/<作品>/参考拆解/. Runs in the background; read it with get_reference_video. The reference never becomes project material and never enters the cut.", False),
@@ -610,6 +620,8 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
             return account_metrics_import.list_accounts(db, user)
         return account_metrics_import.import_metrics(db, user, args.account_id, args.source.model_dump(),
                                                      [row.model_dump() for row in args.rows])
+    if name in {"search_web_materials", "get_web_materials"}:
+        return _web_materials(db, name, args, user)
     if name in _REVIEW_TOOLS:
         return _review(db, name, args, user)
     if name in _VIDEO_TOOLS:
@@ -671,6 +683,40 @@ def _self_sourced(db: Session, name: str, args: Input, user: User) -> dict:
     unit = projects.create_unit(projects.UnitIn(title=args.title, persona_id=args.persona_id, modality=args.modality,
                                                 channel_id=args.channel_id), args.project_id, db=db, user=user)
     return {"project_id": unit["project_id"], "unit_id": unit["id"], "persona_id": unit["persona_id"], "modality": unit["modality"]}
+
+
+def _web_materials(db: Session, name: str, args: Input, user: User) -> dict:
+    from ..models import ContentUnit, ProductSku, ProductSkuRevision
+    from . import product_video, web_material_search
+    from .project_authorization import lock_project_context
+
+    lock_project_context(db, args.project_id, user)
+    unit = db.get(ContentUnit, args.unit_id)
+    if unit is None or unit.project_id != args.project_id:
+        raise HTTPException(404, {"code": "content_unit_not_found", "message": "作品不存在"})
+    link = product_video.work(db, args.unit_id)
+    if name == "get_web_materials":
+        data = web_material_search.read(db, user, args.search_id)
+        if data["project_id"] != args.project_id and not (link and data["sku_id"] == link.sku_id):
+            raise HTTPException(404, {"code": "web_material_search_not_found", "message": "搜索记录不存在"})
+        return {"search_id": data["id"], "status": data["status"], "progress": data["progress"], "error_code": data["error_code"],
+                "pages": [{"site": page["site"], "title": page["title"], "url": page["url"], "readable": page["readable"],
+                           "images": len(page["images"]), "variant_found": page["variant_found"],
+                           "saved": [image["accepted"]["material_revision_id"] for image in page["images"] if image.get("accepted")]}
+                          for page in data["pages"]], "skipped": len(data["skipped"])}
+    if link is not None:
+        sku = db.get(ProductSku, link.sku_id)
+        revision = db.scalar(select(ProductSkuRevision).where(ProductSkuRevision.sku_id == sku.id, ProductSkuRevision.revision == sku.revision))
+        product = (revision.product_json or {}) if revision else {}
+        query = args.query or " ".join(filter(None, [product.get("name"), product.get("variant")]))[:120]
+        data = web_material_search.start(db, user, query=query, sku_id=sku.id)
+        review = f"/production?workspace=product&sku={sku.id}&tab=facts"
+    else:
+        if not args.query:
+            raise HTTPException(422, {"code": "web_material_search_query_invalid", "message": "非商品作品要给 query（产品或主题名）"})
+        data = web_material_search.start(db, user, query=args.query, project_id=args.project_id, unit_id=args.unit_id)
+        review = f"/projects/{args.project_id}/units/{args.unit_id}/production?workstep=materials"
+    return {"search_id": data["id"], "status": data["status"], "query": data["query"], "review_url": review}
 
 
 _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_stage_result", "get_stage_decision",
@@ -795,11 +841,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 
