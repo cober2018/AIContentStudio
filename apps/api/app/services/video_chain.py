@@ -33,6 +33,8 @@ KEY = "video_chain"
 # Returned with the brief so any external model (not only one with the repo's skills) follows the same chain.
 RULES = [
     "你主导整条视频；平台不调用自己的模型。三处停下等用户：导演稿、小样、成片。有意见就出下一版再停。",
+    "事实：口播和画面里当事实说的话（数字、症状、研究结论、政策、参数等）只用 get_video_brief 的 facts（已冻结的事实边界）里有的；角色作品写导演稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存导演稿。"
+    "fact_templates 里每个模板的 red_lines 必须守，opinion_only 列的内容只能当个人经历或观点说。",
     "导演稿：完整 video.master.v2；每个镜头 board 含 message/visual/camera/speaker/sound/notes/material_request。material_request 写清画面必须有什么、景别、时长、实拍还是图形、横竖屏。一镜一个意思，景别和运镜要有变化，同一画面不重复用。",
     "商品作品和角色作品：导演稿采用前不生成任何画面（首帧、九宫格、图生视频、切换手动 / 自动都会被拒绝）；采用后先把用户素材对应到镜头（set_shot_materials），再只给没有用户素材的镜头生成。",
     "九宫格分组：写导演稿时，要生成画面的镜头里需要同一个人物或同一个场景的，归成一组写进 consistency_groups（每组 id、shot_ids 至少 2 个、person 共用人物、setting 共用场景；一个镜头只在一组）；"
@@ -409,7 +411,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
-    from . import craft_skills, product_video, project_folders, reference_video, video_lessons, voiceover
+    from . import craft_skills, fact_templates, product_video, project_folders, reference_video, video_lessons, voiceover
     from .persona_brief import persona_brief
     from .content_masters import owned_unit
     from .project_brief import current_brief
@@ -421,9 +423,12 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     boundary = current_boundary(db, project_id)
     facts = []
     if boundary is not None:
-        facts = [statement for (statement,) in db.execute(select(Fact.statement).join(FactPackItem, FactPackItem.fact_id == Fact.id)
-                                                          .where(FactPackItem.fact_pack_id == boundary.fact_pack_id)
-                                                          .order_by(FactPackItem.sort_order).limit(80))]
+        # Quotes and expert opinions have no Fact row; they carry who said it in the frozen snapshot.
+        facts = [statement or f"{(snapshot or {}).get('attribution')}：{(snapshot or {}).get('statement')}"
+                 for statement, snapshot in db.execute(select(Fact.statement, FactPackItem.snapshot_json).select_from(FactPackItem)
+                                                       .outerjoin(Fact, FactPackItem.fact_id == Fact.id)
+                                                       .where(FactPackItem.fact_pack_id == boundary.fact_pack_id)
+                                                       .order_by(FactPackItem.sort_order).limit(80))]
     siblings = []
     for other in db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id, ContentUnit.id != unit_id)):
         master = _latest(db, other.id)
@@ -439,7 +444,7 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     return {"project": {"id": project.id, "title": project.title, "objective": project.objective},
             "unit": {"id": unit.id, "title": unit.title, "channel_id": unit.channel_id},
             "brief": {key: getattr(row, key) for key in ("objective", "primary_audience", "core_message", "angle")} if row else None,
-            "facts": facts, "source_texts": siblings, "voice_settings": voiceover.settings_for(db, unit),
+            "facts": facts, "fact_templates": fact_templates.brief_rules(db, project_id), "source_texts": siblings, "voice_settings": voiceover.settings_for(db, unit),
             "materials": materials, "state": state(db, user, project_id, unit_id),
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload": master.payload_json} if master else None,
             "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=plan", "rules": RULES,

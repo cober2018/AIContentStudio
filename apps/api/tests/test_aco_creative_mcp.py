@@ -26,12 +26,14 @@ TOOL_NAMES = {
     "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
     "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid",
     "get_article_brief", "save_article_draft", "get_article_decision",
+    "get_fact_template", "submit_facts",
     "list_accounts", "import_account_metrics",
 }
 READ_ONLY_TOOLS = {"list_personas", "list_accounts", "get_context", "get_package", "get_execution", "find_capabilities",
                    "get_stages", "preview_stage", "get_stage_result", "get_stage_decision", "get_material_match", "get_shot_slots",
                    "get_craft_skill", "list_ae_templates", "get_video_brief", "get_video_decision",
-                   "get_article_brief", "get_article_decision", "get_shot_video_prompt", "get_reference_video", "get_web_materials"}
+                   "get_article_brief", "get_article_decision", "get_shot_video_prompt", "get_reference_video", "get_web_materials",
+                   "get_fact_template"}
 FORBIDDEN_TOOLS = (
     "approve_candidate", "approve", "freeze_candidate", "publish", "publish_content",
     "wechat_draft", "deliver", "create_delivery_target", "execute_delivery",

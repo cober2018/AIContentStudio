@@ -1,0 +1,95 @@
+{
+  "templates": [
+    {
+      "id": "health",
+      "name": "健康科普",
+      "need_source": ["症状和判断标准", "比例或发病率", "适用年龄", "处理办法", "用药和剂量", "什么情况要就医", "过敏原和食物禁忌"],
+      "sources": ["国家卫健委", "中华医学会各分会指南和专家共识", "国家药监局药品说明书", "WHO", "美国儿科学会", "三甲医院官方科普", "医学期刊综述"],
+      "not_sources": ["自媒体", "电商详情页", "论坛"],
+      "domains": ["gov.cn", "cma.org.cn", "yiigle.com", "medjournals.cn", "chinacdc.cn", "who.int", "aap.org", "healthychildren.org", "ncbi.nlm.nih.gov", "cochranelibrary.com"],
+      "freshness": "用最新版指南并写年份；超过 5 年的查有没有新版",
+      "max_age_days": 1825,
+      "red_lines": ["不诊断", "不承诺疗效", "不说「根治」「100%」", "不给处方药剂量", "保健品不说治病", "结尾提示「症状重或持续请就医」", "银发内容不建议自行停药换药"],
+      "opinion_only": ["自家孩子或自己的经历"],
+      "keywords": ["健康", "过敏", "症状", "疾病", "医", "药", "湿疹", "发烧", "体质", "营养", "养生", "慢病", "血压", "血糖", "睡眠"]
+    },
+    {
+      "id": "parenting",
+      "name": "育儿与家庭教育",
+      "need_source": ["「研究表明」类结论", "发育里程碑的年龄", "统计数据", "教育政策", "书里的观点（写明书名和作者）"],
+      "sources": ["同行评审论文", "教育部", "联合国儿童基金会", "哈佛儿童发展中心等机构", "原书"],
+      "not_sources": ["营销号", "未注明出处的转述"],
+      "domains": ["moe.gov.cn", "gov.cn", "unicef.org", "developingchild.harvard.edu", "who.int", "ncbi.nlm.nih.gov", "nichd.nih.gov", "cnki.net"],
+      "freshness": "政策按现行版本；研究写发表年份",
+      "max_age_days": null,
+      "red_lines": ["不把一项研究说成定论", "不贩卖焦虑", "不给孩子贴标签", "孩子出镜注意隐私"],
+      "opinion_only": ["自家育儿经历", "教育理念"],
+      "keywords": ["育儿", "教育", "亲子", "孩子", "成长", "学习", "绘本", "习惯"]
+    },
+    {
+      "id": "products",
+      "name": "好物与产品体验",
+      "need_source": ["参数", "材质", "成分", "认证和标准（如玩具国标 GB 6675、婴幼儿纺织品国标 GB 31701）", "价格"],
+      "sources": ["品牌官网和说明书", "国家标准原文", "市场监管总局抽检和召回公告", "自己的实测（留视频或照片）"],
+      "not_sources": ["别家店铺的价格、销量和评价"],
+      "domains": ["samr.gov.cn", "openstd.samr.gov.cn", "std.samr.gov.cn", "gov.cn"],
+      "freshness": "价格按当天；型号版本要对得上",
+      "max_age_days": null,
+      "red_lines": ["不用「最」「第一」等绝对化用语", "不拉踩别家", "商单要标广告", "婴幼儿食品不说功效"],
+      "opinion_only": ["使用感受", "个人喜好"],
+      "keywords": ["好物", "用品", "产品", "测评", "体验", "推荐", "开箱", "适老"]
+    },
+    {
+      "id": "tech",
+      "name": "科技与 AI",
+      "need_source": ["版本号", "发布日期", "参数", "跑分", "价格", "API 能力和限制", "开源协议"],
+      "sources": ["官方文档、博客和更新日志", "GitHub 仓库和发布页", "论文（arXiv 写版本号）", "发布会", "自己的测试（留命令和环境）"],
+      "not_sources": ["未注明出处的转载", "传闻"],
+      "domains": ["github.com", "arxiv.org", "huggingface.co", "openreview.net"],
+      "freshness": "半年内，写明版本",
+      "max_age_days": 183,
+      "red_lines": ["不编跑分", "不把模型的输出当事实", "传闻要标明", "不夸大能力"],
+      "opinion_only": ["使用体验", "技术判断"],
+      "keywords": ["AI", "Agent", "科技", "软件", "架构", "开发", "模型", "代码", "编程", "芯片"]
+    },
+    {
+      "id": "quant",
+      "name": "量化与投资",
+      "need_source": ["收益率", "回测结果（区间、手续费、滑点假设）", "行情数据", "交易规则和税费", "监管规定"],
+      "sources": ["上交所、深交所、北交所官网", "证监会", "数据商（写明是哪家）", "自己的回测（留代码和参数）", "论文"],
+      "not_sources": ["荐股群", "未注明区间的收益截图"],
+      "domains": ["sse.com.cn", "szse.cn", "bse.cn", "csrc.gov.cn", "chinatax.gov.cn", "gov.cn", "cffex.com.cn", "arxiv.org", "ssrn.com"],
+      "freshness": "规则和税费按最新公告；行情写明截止日期",
+      "max_age_days": null,
+      "red_lines": ["不荐股", "不承诺收益", "写明「回测不等于实盘」", "不带单", "不做投资建议", "结尾加风险提示"],
+      "opinion_only": ["个人搭系统的心得"],
+      "keywords": ["量化", "回测", "实盘", "因子", "策略", "交易", "股票", "投资"]
+    },
+    {
+      "id": "news",
+      "name": "生活观察与新鲜事",
+      "need_source": ["正在发生的事", "日期", "数据", "谁说的原话", "对近未来的预测从哪来"],
+      "sources": ["主流媒体原报道", "官方发布", "当事方原帖"],
+      "not_sources": ["二手转述", "营销号"],
+      "domains": ["news.cn", "xinhuanet.com", "people.com.cn", "cctv.com", "gov.cn", "thepaper.cn", "caixin.com", "reuters.com", "apnews.com", "bbc.com"],
+      "freshness": "当前的事用近一个月内的来源",
+      "max_age_days": 30,
+      "red_lines": ["推测要标「推测」", "转述不当原话", "不说教", "不制造焦虑"],
+      "opinion_only": ["个人感受", "个人观察"],
+      "keywords": ["新鲜", "变化", "观察", "趣事", "新闻", "近未来", "热点", "生活"]
+    },
+    {
+      "id": "policy",
+      "name": "政策与民生",
+      "need_source": ["金额", "比例", "适用人群", "生效日期", "办理流程"],
+      "sources": ["中国政府网", "人社部", "国家医保局", "地方政府官网原文"],
+      "not_sources": ["非官方解读", "办理代理"],
+      "domains": ["gov.cn"],
+      "freshness": "以正在生效的最新文件为准，写文号和生效日期；地方政策写明地区",
+      "max_age_days": null,
+      "red_lines": ["不把地方政策说成全国", "不夸大补贴", "办理只认官方渠道（给银发观众加防诈骗提醒）"],
+      "opinion_only": ["个人办理经历"],
+      "keywords": ["政策", "养老金", "医保", "社保", "补贴", "退休", "办理"]
+    }
+  ]
+}

@@ -18,7 +18,7 @@ from ..models import (
     User,
     utcnow,
 )
-from ..services import factpack_service
+from ..services import fact_templates, factpack_service
 from ..services.project_events import record_project_event
 from ..services.project_evidence import boundary_json, current_boundary, source_binding_json
 from .content_projects import mutable_project, owned_project
@@ -173,3 +173,19 @@ def freeze_and_bind_project_boundary(project_id: int, fact_pack_id: int, payload
         db.rollback()
         raise HTTPException(409, "事实边界已更新，请刷新后重试") from exc
     return boundary_json(row)
+
+
+class FactTemplatesIn(BaseModel):
+    templates: list[str] = Field(max_length=7)
+
+
+@router.get("/{project_id}/fact-templates")
+def get_fact_templates(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    owned_project(db, project_id, user)
+    return {**fact_templates.view(db, project_id), "current": fact_templates.current(db, project_id), "stale_works": fact_templates.stale_works(db, project_id)}
+
+
+@router.put("/{project_id}/fact-templates")
+def put_fact_templates(payload: FactTemplatesIn, project_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    mutable_project(db, project_id, user)
+    return fact_templates.set_chosen(db, user, project_id, payload.templates)

@@ -40,7 +40,6 @@ export interface LibraryUsage extends LibraryPage<UsageReference> {
   counts: Record<string, number>; coverage: Record<string, string>;
 }
 export interface ProjectSummary { id: number; title: string; status: string }
-export interface FactBoundary { revision_no: number; fact_pack_id: number; fact_pack_version: number; fact_pack_checksum: string }
 export interface SourceDetail {
   id: number; title: string; source_type: string; parse_status: string; is_archived: boolean;
   raw_text?: string | null; as_of?: string | null; trust_level?: number; sha256?: string | null;

@@ -293,6 +293,22 @@ class ShotImageInput(ShotInput):
     as_first_frame: bool = True
 
 
+class FactDraftItem(Input):
+    statement: str = Field(min_length=1, max_length=500)
+    kind: Literal["fact", "event", "quote", "opinion"]
+    template: str = Field(min_length=1, max_length=30, pattern=IDENTIFIER)
+    source_url: str = Field(min_length=8, max_length=2000, pattern=r"^https?://")
+    source_title: str | None = Field(default=None, max_length=300)
+    excerpt: str = Field(min_length=1, max_length=1000)
+    source_date: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    attribution: str | None = Field(default=None, max_length=200)
+
+
+class FactsInput(Scope):
+    templates: list[Annotated[str, Field(min_length=1, max_length=30, pattern=IDENTIFIER)]] | None = Field(default=None, max_length=7)
+    items: list[FactDraftItem] = Field(min_length=1, max_length=60)
+
+
 class PublishCopyInput(Scope):
     channel: str = Field(default="", max_length=40)
     title: str = Field(default="", max_length=15)
@@ -487,6 +503,8 @@ TOOLS = {
     "generate_storyboard_grid": (StoryboardGridInput, "Product and persona works, after the 导演稿 is approved: draw one consistency group (group_id from the 导演稿's consistency_groups — shots that must keep the same person or setting) in 3×3 storyboard sheets so people, place and light stay consistent; the group's person and setting go into the prompt, and the persona's portrait (product works: plus the product's primary image; the work's own shared references win) goes along as reference. Unrelated shots are not grouped and are made one by one instead. The platform cuts each sheet, upscales each cell and registers it as that shot's first-frame candidate (not adopted; the user or set_shot_first_frame picks). Product works check each cell against the product photo and redraw a failing cell alone (up to 3 tries); persona works have no product check. Without a portrait no person is drawn (hands only); in persona works only cells whose board names other_people may show those people, never their face; person_notices lists the people shots affected. More than nine shots make more sheets, each later one referencing the first. Billed like generate_shot_image.", False),
     "get_article_brief": (Scope, "Text / graphic piece written by you (the page switch must be 第三方模型): project, brief, facts, source texts, the writer setting, chain state and the current version as the payload format example (text.master.v2 or graphic.master.v2).", True),
     "save_article_draft": (ArticleDraftInput, "Save one full version of the piece (text.master.v2 for text, graphic.master.v2 for graphic; image layers name material_revision_id from the library or generate_video_image; no citations or claims). Refused when the page switch is 平台模型 or the piece is final. Then STOP: the user approves or writes notes on the page.", False),
+    "get_fact_template": (Scope, "Persona works, before the 导演稿 or article: the project's topic templates for its fact boundary (which claims need a source, accepted sources and domains, freshness, red lines, opinion-only content), suggested templates when none is chosen, the brief and the current boundary. Product works use the product brief instead.", True),
+    "submit_facts": (FactsInput, "Persona works, before saving the 导演稿 or article: submit every claim the piece states as fact, found by the project's topic templates. Each item is the statement, kind (fact / event / quote / opinion), template id, source_url, the excerpt copied word for word from that page, source_date, and attribution for quotes and opinions; templates records your topic choice when the project has none. The platform opens every source: unreachable sources and excerpts not on the page come back with reasons and are not kept; the rest (labelled when outside the template's usual sites or possibly out of date) are frozen automatically as the project's new fact boundary, replacing the previous one. Save the draft after this; the user only reviews the draft.", False),
     "get_article_decision": (Scope, "Read the piece's state and the user's latest decision and notes. Approved means final: save nothing more. Notes mean a new version.", True),
     "get_shot_slots": (ShotSlotsInput, "Read every shot of a video as a material slot: narration, visual, brief (search words; gen_mode text|frame chosen on the platform; t2v_prompt for direct text-to-video; frame_prompt for the first-frame still and prompt for image-to-video from it; route), status missing/candidates/chosen, the user's picks and the review link. Add candidates with start_material_match; only the user binds a shot.", True),
 }
@@ -624,6 +642,12 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return _review(db, name, args, user)
     if name in _VIDEO_TOOLS:
         return _video(db, name, args, user)
+    if name in {"get_fact_template", "submit_facts"}:
+        from . import fact_templates
+
+        if name == "get_fact_template":
+            return fact_templates.for_model(db, user, args.project_id, args.unit_id)
+        return fact_templates.submit(db, user, args.project_id, args.unit_id, [item.model_dump() for item in args.items], args.templates)
     if name in _ARTICLE_TOOLS:
         from . import article_chain
 

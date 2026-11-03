@@ -32,6 +32,8 @@ WRITERS = {"platform", "external"}
 RULES = [
     "页面开关是「第三方模型」时才由你写；是「平台模型」时由平台阶段写，你不要存稿。",
     "读 get_article_brief：任务书、事实、来源原文、当前稿和格式示例。数字只用事实里有的，并写清来源；不夸大。",
+    "当事实说的话（数字、症状、研究结论、政策、参数等）只用 facts（已冻结的事实边界）里有的；角色作品写稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存稿子。"
+    "fact_templates 里每个模板的 red_lines 必须守，opinion_only 列的内容只能当个人经历或观点说。",
     "写完整一版用 save_article_draft 存，然后停下等用户在页面上采用或写意见；有意见就出下一版再停。采用即定稿，不能再存。",
     "文字用 text.master.v2（title + document.blocks：heading / paragraph 等），不写 citations；图文用 graphic.master.v2（canvases → layers），图片层的 material_revision_id 用素材库素材或 generate_video_image 生成的图。",
     "图文文字层的 claims 可以把一段文字（start/end 字符位置）挂到 facts 里的一条事实（fact_pack_item_id + snapshot_checksum），平台据此登记出处。",
@@ -137,7 +139,7 @@ def _text_of(master: ContentMasterRevision) -> str:
 
 def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from ..models import Fact, FactPackItem
-    from . import craft_skills
+    from . import craft_skills, fact_templates
     from .persona_brief import persona_brief
     from .project_brief import current_brief
     from .project_evidence import current_boundary
@@ -150,9 +152,11 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     boundary = current_boundary(db, project_id)
     facts = []
     if boundary is not None:
-        facts = [{"fact_pack_item_id": item_id, "snapshot_checksum": checksum, "statement": statement}
-                 for item_id, checksum, statement in db.execute(
-                     select(FactPackItem.id, FactPackItem.snapshot_checksum, Fact.statement).join(Fact, FactPackItem.fact_id == Fact.id)
+        # Quotes and expert opinions have no Fact row; they carry who said it in the frozen snapshot.
+        facts = [{"fact_pack_item_id": item_id, "snapshot_checksum": checksum,
+                  "statement": statement or f"{(snapshot or {}).get('attribution')}：{(snapshot or {}).get('statement')}"}
+                 for item_id, checksum, statement, snapshot in db.execute(
+                     select(FactPackItem.id, FactPackItem.snapshot_checksum, Fact.statement, FactPackItem.snapshot_json).outerjoin(Fact, FactPackItem.fact_id == Fact.id)
                      .where(FactPackItem.fact_pack_id == boundary.fact_pack_id).order_by(FactPackItem.sort_order).limit(80))]
     siblings = []
     for other in db.scalars(select(ContentUnit).where(ContentUnit.project_id == project_id, ContentUnit.id != unit_id)):
@@ -164,7 +168,7 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     return {"project": {"id": project.id, "title": project.title, "objective": project.objective},
             "unit": {"id": unit.id, "title": unit.title, "modality": unit.modality, "channel_id": unit.channel_id},
             "brief": {key: getattr(row, key) for key in ("objective", "primary_audience", "core_message", "angle")} if row else None,
-            "facts": facts, "source_texts": siblings, "payload_schema": schema,
+            "facts": facts, "fact_templates": fact_templates.brief_rules(db, project_id), "source_texts": siblings, "payload_schema": schema,
             "platform_skills": craft_skills.platform_skills(db, unit),
             # Who the piece speaks as; null when it belongs to no persona.
             "persona": persona_brief(db, user, unit),

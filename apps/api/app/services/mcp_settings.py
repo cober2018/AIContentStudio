@@ -29,6 +29,7 @@ GROUPS = {
                                         "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",
                                         "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}),
     "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision"}),
+    "facts": ("事实边界（按题材模板自动核对）", {"get_fact_template", "submit_facts"}),
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
 SUMMARIES = {
@@ -65,6 +66,8 @@ SUMMARIES = {
     "get_web_materials": "读网上找图的进度、各网页找到几张图、你已经存了哪些",
     "file_as_common": "把本项目里通用的素材（特效、转场、常用 BGM / 音效）移到 Mac 本地的通用素材库",
     "propose_lesson": "按退回意见改好后，把原因归纳成以后通用的做法交给你确认（同一原因累计次数）",
+    "get_fact_template": "角色作品：读这个项目的题材模板（哪些话要有出处、认哪些来源、时效、红线），没选时给建议",
+    "submit_facts": "角色作品：交按模板找到的事实和出处；平台打开来源核对，打不开、原文对不上的退回，其余自动冻结成事实边界",
     "get_article_brief": "写文章 / 图文前读资料：任务书、事实、来源原文、写作方式、当前版本（也是格式示例）",
     "save_article_draft": "存一版文章 / 图文稿，然后停下等用户采用或写意见（页面开关须为「第三方模型」）",
     "get_article_decision": "读用户对稿件的决定：采用即定稿，有意见就出下一版",
