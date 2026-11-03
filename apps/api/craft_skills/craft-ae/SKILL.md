@@ -42,6 +42,7 @@
 |  | `focus-dim` v1 | 聚焦压暗（整屏） |
 | 人物与图形 | `host-to-chip` v1 | 讲者缩位让台（整屏） |
 |  | `host-parallel` v1 | 并列图片展开（B-roll）（叠加） |
+|  | `host-parallel` v2 | 并列图片展开（B-roll）（叠加）：2–4 张、最长 60 秒，可盖住整段「四点」讲解；v1 只有 2–3 张、最长 15 秒 |
 |  | `name-plate` v1 | 人名条展示牌（叠加） |
 |  | `name-chevron` v1 | 折角人名条（叠加） |
 |  | `glass-board` v1 | 人物竖卡玻璃台（整屏） |

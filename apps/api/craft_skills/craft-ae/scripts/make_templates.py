@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 # A changed template gets a new version folder; earlier versions stay as they were.
-VERSIONS = {"compare-pair": "v2"}
+VERSIONS = {"compare-pair": "v2", "host-parallel": "v2"}
 SAMPLES = {
     "number-card": {"number": "99%", "label": "跨洋数据走海底光缆", "source": "来源：TeleGeography"},
     "title-card": {"kicker": "海底光缆", "title": "消息怎么跨过大洋", "subtitle": "一条微信背后的物理旅程"},
@@ -35,7 +35,7 @@ SAMPLES = {
     "magnifier": {"x": 0.5, "y": 0.35, "r": 0.12},
     "focus-dim": {"regions": "0.5,0.25,0.8,0.1;0.5,0.5,0.8,0.1;0.5,0.75,0.8,0.1"},
     "host-to-chip": {"caption": "看这组数据", "face_x": 0.46, "face_y": 0.405, "face_size": 0.49, "chip_size": 300, "_images": ["host", "graphic"]},
-    "host-parallel": {"item1": "看细节", "item2": "看场景", "item3": "看上手", "beats": "1.0-2.6,3.4-5.0,5.8-6.9", "_images": ["img1", "img2", "img3"]},
+    "host-parallel": {"item1": "看细节", "item2": "看场景", "item3": "看上手", "item4": "看口碑", "beats": "0.8-2.0,2.3-3.5,3.8-5.0,5.3-6.4", "_images": ["img1", "img2", "img3", "img4"]},
     "name-plate": {"name": "林一", "title": "十年家居设计师"},
     "name-chevron": {"name": "林一", "title": "十年家居设计师"},
     "value-swap": {"sentence": "上下文窗口从", "old": "128K", "new": "1M", "note": "一年翻了八倍"},
@@ -87,7 +87,7 @@ SAMPLES = {
 IMAGES = {"map-route": ["map.png"], "photo-push": ["image.png"], "compare-pair": ["left.png", "right.png"],
           "ring-mark": ["image.png"], "callout-label": ["image.png"], "magnifier": ["image.png"], "focus-dim": ["image.png"],
           "host-to-chip": ["host.png", "graphic.png"], "glass-board": ["host.png"], "line-carry": ["image.png"],
-          "slider-compare": ["before.png", "after.png"], "split-6040": ["image.png"], "before-after-scrub": ["before.png", "after.png"], "host-parallel": ["img1.png", "img2.png", "img3.png"],
+          "slider-compare": ["before.png", "after.png"], "split-6040": ["image.png"], "before-after-scrub": ["before.png", "after.png"], "host-parallel": ["img1.png", "img2.png", "img3.png", "img4.png"],
           "news-desk": ["image1.png", "image2.png"], "layout-relay": ["image1.png", "image2.png", "image3.png"], "grid-hero": ["image1.png", "image2.png", "image3.png", "image4.png"],
           "echo-bed": ["image.png"], "route-pin": ["map.png"], "color-slam": ["image.png"], "follow-card-x": ["avatar.png"], "follow-card-dy": ["avatar.png"],
           "product-hero": ["product.png"], "product-angles": ["img1.png", "img2.png", "img3.png", "img4.png"], "selling-points": ["product.png"], "spec-table": ["product.png"],
@@ -96,6 +96,8 @@ IMAGES = {"map-route": ["map.png"], "photo-push": ["image.png"], "compare-pair":
 JSX = r'''
 var STORE=__STORE__; var IDS=__IDS__; var SAMPLES=__SAMPLES__; var DATA=""; var VERSIONS=__VERSIONS__; var LOG=__LOG__; var ASPECT=__ASPECT__; var FNL=__FNL__;
 var W=1080,H=1920,FPS=30,LEN=10;
+// Templates meant to run under a whole stretch of narration need a longer comp; a render only outputs its own duration.
+var LENS={"host-parallel":60};
 var BG=[0.035,0.047,0.067],ACCENT=[0.31,0.89,0.69],WHITE=[1,1,1],GREY=[0.62,0.66,0.72],CHIP=[0.06,0.12,0.2];
 var D='var d=/*AICS_DATA*/'+DATA+'/*AICS_END*/;';
 var CENTER='var r=sourceRectAtTime(time,false);[r.left+r.width/2,r.top+r.height/2]';
@@ -347,10 +349,11 @@ function hostToChip(comp,folder){
 function hostParallel(comp,folder){
  // Still thumbnails wait in a row; each one grows out of its slot when its part of the narration starts and is fully back before the next one opens,
  // so the panel follows the spoken order. beats are "open-close" seconds per image; without a close it returns 0.7 s before the next opens.
- var G=D+'var I=d._images||[],H=["img1","img2","img3"],n=0;for(var q=0;q<3;q++)if(I.indexOf(H[q])>=0)n=q+1;n=Math.max(n,1);var e=(d._duration_ms||7000)/1000;var bt=String(d.beats||"").split(/[,，]/),B=[],K=[];for(var q=0;q<n;q++){var z=String(bt[q]||"").split("-"),v=parseFloat(z[0]),w=parseFloat(z[1]);B.push(isNaN(v)?1.2+q*2.2:v);K.push(isNaN(w)?null:w);}'+
-  'function CL(i){if(K[i]!==null)return K[i];return i<n-1?B[i+1]-0.7:e-0.9;}function A(i){if(i>=n)return 0;var c=Math.max(CL(i),B[i]+0.45);return ease(time,B[i],B[i]+0.45,0,1)-ease(time,c,c+0.4,0,1);}function SL(i){return [540+(i-(n-1)/2)*300,380,272,190];}var BIG=[540,880,920,1180];'+
+ var G=D+'var I=d._images||[],H=["img1","img2","img3","img4"],n=0;for(var q=0;q<4;q++)if(I.indexOf(H[q])>=0)n=q+1;n=Math.max(n,1);var e=(d._duration_ms||7000)/1000;var bt=String(d.beats||"").split(/[,，]/),B=[],K=[];for(var q=0;q<n;q++){var z=String(bt[q]||"").split("-"),v=parseFloat(z[0]),w=parseFloat(z[1]);B.push(isNaN(v)?1.2+q*2.2:v);K.push(isNaN(w)?null:w);}'+
+  'function CL(i){if(K[i]!==null)return K[i];return i<n-1?B[i+1]-0.7:e-0.9;}function A(i){if(i>=n)return 0;var c=Math.max(CL(i),B[i]+0.45);return ease(time,B[i],B[i]+0.45,0,1)-ease(time,c,c+0.4,0,1);}function SL(i){return n<4?[540+(i-(n-1)/2)*300,380,272,190]:[538+(i-1.5)*236,380,224,156];}var BIG=[540,880,920,1180];'+
   'function GEO(i){var a=SL(i),b=BIG,t=A(i);return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t,a[3]+(b[3]-a[3])*t];}function OTH(i){var m=0;for(var j=0;j<n;j++)if(j!=i)m=Math.max(m,A(j));return 1-m;}';
- for(var i=0;i<3;i++){var t0=0.3+i*0.12,VIS=G+'var v=(I.indexOf("img'+(i+1)+'")>=0)?linear(time,'+t0+','+(t0+0.25)+',0,100):0;v*(A('+i+')>0.01?1:OTH('+i+'))';
+ // Four thumbnails only fit the portrait safe area when smaller, so labels shrink to their thumbnail and regain size as it opens.
+ for(var i=0;i<4;i++){var t0=0.3+i*0.12,VIS=G+'var v=(I.indexOf("img'+(i+1)+'")>=0)?linear(time,'+t0+','+(t0+0.25)+',0,100):0;v*(A('+i+')>0.01?1:OTH('+i+'))';
   var bd=rect(comp,"img"+(i+1)+" border",10,10,PAPER,22,null);bd[0].property("Position").setValue([0,0]);softShadow(bd[0],55,50,14);
   bd[1].property("Size").expression=G+'var g=GEO('+i+');[g[2]+14,g[3]+14]';bd[1].property("Position").expression=G+'var g=GEO('+i+');[g[0],g[1]]';bd[0].property("Opacity").expression=VIS;
   var ph=photo(comp,folder,"img"+(i+1)+".png","@img"+(i+1),272,190,540,330,16);
@@ -358,7 +361,7 @@ function hostParallel(comp,folder){
   ph[0].property("Position").expression=G+'var g=GEO('+i+');[g[0],g[1]]';ph[0].property("Opacity").expression=VIS;
   ph[0].property("Scale").expression=G+'var g=GEO('+i+');var push=1+0.1*clamp((time-B['+i+'])/3,0,1)*A('+i+');var k=Math.max(g[2]/width,g[3]/height)*100*push;[k,k]';
   var lb=tx(comp,"item"+(i+1),34,PAPER,HV,0,0,900,"left");lb.property("Position").expression=G+'var g=GEO('+i+'),t=A('+i+');[g[0]-g[2]/2+18+22*t,g[1]+g[3]/2-26-40*t]';
-  lb.property("Scale").expression=G+'var t=A('+i+');var s=100*(1+1.1*t);[s,s]';lb.property("Opacity").expression=VIS;
+  lb.property("Scale").expression=G+'var g=GEO('+i+'),t=A('+i+'),r=sourceRectAtTime(time,false);var s=100*Math.min(1+1.1*t,r.width>0?(g[2]-36-22*t)/r.width:9);[s,s]';lb.property("Opacity").expression=VIS;
   var lc=block(comp,"item"+(i+1)+" chip",["@item"+(i+1)],[14,8],INK,null,8);under(lc,lb);follow(lc,lb,0.6);}
  exitAll(comp);}
 function namePlate(comp){
@@ -932,7 +935,7 @@ for(var i=0;i<IDS.length;i++){var id=IDS[i];try{
  if(app.project)app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);app.newProject();var folder=new Folder(STORE+"/"+id+"/"+(VERSIONS[id]||"v1"));DATA=SAMPLES[id];D='var d=/*AICS_DATA*/'+DATA+'/*AICS_END*/;';
  // Landscape builds reuse the shared helpers with the frame size and margin swapped, then call the derived <fn>L builder.
  var LAND=ASPECT=="16:9";W=LAND?1920:1080;H=LAND?1080:1920;H_=H;MX=LAND?150:84;
- var comp=app.project.items.addComp("MAIN",W,H,1,LEN,FPS);comp.bgColor=BG;if(!ALPHA[id])base(comp);
+ var comp=app.project.items.addComp("MAIN",W,H,1,LENS[id]||LEN,FPS);comp.bgColor=BG;if(!ALPHA[id])base(comp);
  var build=LAND?(FNL[id]?eval(FNL[id]):null):FN[id];if(LAND&&!build)throw new Error("no landscape layout");if(build)build(comp,folder);guide(comp,folder);if(ALPHA[id])alphaQueue(comp);
  if(id=="number-card")numberCard(comp);if(id=="title-card")titleCard(comp);if(id=="diagram-flow")diagramFlow(comp);if(id=="map-route")mapRoute(comp,folder);if(id=="photo-push")photoPush(comp,folder);if(id=="compare-pair")comparePair(comp,folder);
  app.project.save(new File(folder.fsName+(LAND?"/template-16x9.aepx":"/template.aepx")));log.push(id+": ok layers="+comp.numLayers);

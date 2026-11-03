@@ -1,6 +1,6 @@
 """Report text and key shapes that leave the 9:16 playback safe area.
 
-Usage: python3 check_safe_area.py <store> [template-id ...] [--aspect 9:16|16:9]
+Usage: python3 check_safe_area.py <store> [template-id ...] [--aspect 9:16|16:9] [--until seconds]
 Opens each built template in After Effects with its sample content, samples several moments,
 and lists every visible text or shape layer whose box crosses the safe area in ../safe-zones/.
 Full-bleed layers (backgrounds, wipes, mattes, the exit adjustment) are not key content and are skipped.
@@ -13,6 +13,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from make_templates import VERSIONS  # noqa: E402
+
 # 16:9 has no button column, so its button band starts below the safe area.
 SAFES = {"9:16": {"left": 59, "top": 268, "right": 1016, "bottom": 1482, "button_right": 886, "button_top": 769},
          "16:9": {"left": 91, "top": 190, "right": 1828, "bottom": 959, "button_right": 1828, "button_top": 9999}}
@@ -21,16 +24,16 @@ SKIP = ("canvas", "bg ", "glow", "grey out", "dim", "wipe ", "matte", "exit", "s
         "card rig", "host rig", "rig", "handle", "flourish", "corner ", "axis", "ticks", "grid ", "baseline", "rail", "route ", "carry", "cursor")
 
 JSX = r'''
-var STORE=__STORE__,IDS=__IDS__,SKIP=__SKIP__,LOG=__LOG__,S=__SAFE__,FILE=__FILE__;var out=[];app.beginSuppressDialogs();
+var STORE=__STORE__,IDS=__IDS__,SKIP=__SKIP__,LOG=__LOG__,S=__SAFE__,FILE=__FILE__,VER=__VERSIONS__,UNTIL=__UNTIL__;var out=[];app.beginSuppressDialogs();
 function skip(n){for(var i=0;i<SKIP.length;i++)if(n.indexOf(SKIP[i])==0)return true;return false;}
 function v(p,t){return p.valueAtTime(t,false);}
 function toComp(l,pt,t){var c=pt;var L=l;while(L){var a=v(L.transform.anchorPoint,t),p=v(L.transform.position,t),s=v(L.transform.scale,t),r=v(L.transform.rotation,t)*Math.PI/180;
  var x=(c[0]-a[0])*s[0]/100,y=(c[1]-a[1])*s[1]/100;c=[p[0]+x*Math.cos(r)-y*Math.sin(r),p[1]+x*Math.sin(r)+y*Math.cos(r)];L=L.parent;}return c;}
 function visible(l,t){var L=l;while(L){if(v(L.transform.opacity,t)<5)return false;L=L.parent;}return l.enabled&&!l.guideLayer&&l.activeAtTime(t);}
 for(var i=0;i<IDS.length;i++){var id=IDS[i];try{
- if(app.project)app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);var f=new File(STORE+"/"+id+"/v1/"+FILE);if(!f.exists){out.push(id+"\tmissing");continue;}
+ if(app.project)app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);var f=new File(STORE+"/"+id+"/"+(VER[id]||"v1")+"/"+FILE);if(!f.exists){out.push(id+"\tmissing");continue;}
  app.open(f);var comp=null;for(var k=1;k<=app.project.numItems;k++){var it=app.project.item(k);if(it instanceof CompItem&&it.name=="MAIN")comp=it;}
- var seen={};for(var tt=0.4;tt<=6.01;tt+=0.4){for(var j=1;j<=comp.numLayers;j++){var l=comp.layer(j);if(skip(l.name)||l.isTrackMatte)continue;
+ var seen={};for(var tt=0.4;tt<=UNTIL+0.01;tt+=0.4){for(var j=1;j<=comp.numLayers;j++){var l=comp.layer(j);if(skip(l.name)||l.isTrackMatte)continue;
   if(!(l instanceof TextLayer)&&!(l instanceof ShapeLayer))continue;if(!visible(l,tt))continue;
   var r=l.sourceRectAtTime(tt,false);if(r.width<1||r.height<1)continue;
   var P=[toComp(l,[r.left,r.top],tt),toComp(l,[r.left+r.width,r.top],tt),toComp(l,[r.left,r.top+r.height],tt),toComp(l,[r.left+r.width,r.top+r.height],tt)];
@@ -45,12 +48,13 @@ if(app.project)app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);app.endSuppre
 '''
 
 
-def check(store: str, ids: list[str], aspect: str = "9:16") -> str:
+def check(store: str, ids: list[str], aspect: str = "9:16", until: float = 6.0) -> str:
     root = Path(store).expanduser()
-    ids = ids or sorted(p.name for p in root.iterdir() if (p / "v1" / FILES[aspect]).exists())
+    ids = ids or sorted(p.name for p in root.iterdir() if (p / VERSIONS.get(p.name, "v1") / FILES[aspect]).exists())
     log = root / "check_safe_area.log"
     jsx = (JSX.replace("__STORE__", json.dumps(str(root))).replace("__IDS__", json.dumps(ids)).replace("__SKIP__", json.dumps(SKIP))
-           .replace("__LOG__", json.dumps(str(log))).replace("__SAFE__", json.dumps(SAFES[aspect])).replace("__FILE__", json.dumps(FILES[aspect])))
+           .replace("__LOG__", json.dumps(str(log))).replace("__SAFE__", json.dumps(SAFES[aspect])).replace("__FILE__", json.dumps(FILES[aspect]))
+           .replace("__VERSIONS__", json.dumps(VERSIONS)).replace("__UNTIL__", json.dumps(until)))
     script = root / "check_safe_area.jsx"
     script.write_text("﻿" + jsx, encoding="utf-8")
     subprocess.run(["osascript", "-e", "with timeout of 1800 seconds", "-e", f'tell application "Adobe After Effects 2026" to DoScriptFile "{script}"',
@@ -65,4 +69,10 @@ if __name__ == "__main__":
         i = args.index("--aspect")
         aspect = args[i + 1]
         del args[i:i + 2]
-    print(check(args[0], args[1:], aspect))
+    until = 6.0
+    # Templates that run under a long stretch of narration open their last pictures well after six seconds.
+    if "--until" in args:
+        i = args.index("--until")
+        until = float(args[i + 1])
+        del args[i:i + 2]
+    print(check(args[0], args[1:], aspect, until))

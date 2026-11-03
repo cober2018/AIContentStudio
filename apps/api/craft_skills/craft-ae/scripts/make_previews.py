@@ -29,7 +29,7 @@ PICTURES = {
     "layout-relay": {"image1.png": "camera-a.jpg", "image2.png": "camera-b.jpg", "image3.png": "typing.jpg"},
     "grid-hero": {"image1.png": "land-after.jpg", "image2.png": "desk-flat.jpg", "image3.png": "camera-a.jpg", "image4.png": "waves.jpg"},
     "echo-bed": {"image.png": "waves.jpg"}, "color-slam": {"image.png": "dash.png"},
-    "host-parallel": {"img1.png": "camera-a.jpg", "img2.png": "land-after.jpg", "img3.png": "typing.jpg"},
+    "host-parallel": {"img1.png": "camera-a.jpg", "img2.png": "land-after.jpg", "img3.png": "typing.jpg", "img4.png": "desk-flat.jpg"},
     "product-hero": {"product.png": "prod-product.jpg"}, "selling-points": {"product.png": "prod-product.jpg"}, "spec-table": {"product.png": "prod-product.jpg"},
     "dimension-mark": {"product.png": "prod-product.jpg"}, "buy-cta": {"product.png": "prod-product.jpg"}, "cert-card": {"cert.png": "prod-cert.png"},
     "product-angles": {"img1.png": "prod-product.jpg", "img2.png": "prod-angle2.jpg", "img3.png": "prod-angle3.jpg"},
