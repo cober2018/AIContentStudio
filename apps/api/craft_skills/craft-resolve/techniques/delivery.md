@@ -64,10 +64,10 @@
 - 做法：
   1. 封面设计（大字商品名、卖点）做进成片开头那一段（0–0.5 秒），画面挑主体清楚、表情自然、缩成小图仍看得清的那一镜，不用黑场或过渡帧；字在达芬奇 / AE 里做，随成片一起渲染。
   2. 渲染后给成片改颜色标记为 sRGB，只改标记不重新编码：`ffmpeg -i 成片.mp4 -map 0 -c copy -bsf:v h264_metadata=colour_primaries=1:transfer_characteristics=13:matrix_coefficients=1 -color_primaries bt709 -color_trc iec61966-2-1 -colorspace bt709 成片_srgb.mp4`（H.265 用 `hevc_metadata`），再用 ffprobe 看 color_primaries / color_transfer / color_space 是 bt709 / iec61966-2-1 / bt709。
-  3. 从改好标记的成片里截开头 0.5 秒内的一帧当封面：`ffmpeg -ss 0.2 -i 成片.mp4 -frames:v 1 封面.png`，竖版 1080×1920，按 sRGB 存，导出到 导出/封面。
+  3. 从改好标记的成片里截开头 0.5 秒内的一帧当封面，要用准确换算：`ffmpeg -ss 0.2 -i 成片.mp4 -frames:v 1 -vf "scale=flags=accurate_rnd+full_chroma_int,format=rgb24" 封面.png`，竖版 1080×1920，按 sRGB 存，导出到 导出/封面。不加 `accurate_rnd+full_chroma_int` 时 ffmpeg 走快速换算，标 bt709 的成片截出来整张暗约 2 级，网页上看封面比视频暗。
   4. 不用 AE 或其他工具从原片另外合成封面。
 - 脚本：能。
 - 检查：成片标记是 sRGB；封面和成片开头那一帧放在一起颜色一样（平台交付时也会比，色差大会在审阅页提示）。
-- 常见错误：封面在 AE 里用原片单独合成；只改了容器标记、码流里还是旧标记；改标记时重新编码了画面。
+- 常见错误：封面在 AE 里用原片单独合成；只改了容器标记、码流里还是旧标记；改标记时重新编码了画面；截封面没加准确换算参数（整张暗约 2 级）。
 - 状态：试用
 - 来源：P46 封面与成片颜色不一致（2026-11-02）

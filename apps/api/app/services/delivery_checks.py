@@ -35,6 +35,11 @@ _COVER_WIDTH = 64
 # Decoded HLG / PQ frames do not look like what the phone shows, so comparing them says nothing; the exposure check covers those.
 UNCOMPARABLE_TRANSFERS = {"arib-std-b67", "smpte2084"}
 SOURCE_DEADLINE_SECONDS = 60
+# ffmpeg's default fast YUV→RGB / gray path reads full-size bt709 frames about 2 levels dark; these flags take the exact path.
+ACCURATE = "accurate_rnd+full_chroma_int"
+# Readings stored before READER came from the fast path; a recompute reads sources the same way so the two sides stay comparable.
+READER = 2
+SOURCE_CODES = {"source_brightness", "source_brightness_diff", "source_highlight_diff"}
 _INTEGRATED = re.compile(r"Integrated loudness:\s*I:\s*(-?[0-9.]+|-inf) LUFS")
 
 
@@ -102,10 +107,11 @@ def spans(director: dict, duration_ms: int) -> tuple[str, list[dict]]:
                      for index, start in enumerate(range(0, duration_ms, FIXED_SPAN_MS)) if index < MAX_SPANS]
 
 
-def _frame(fd: int, at_ms: int) -> tuple[float, float, int] | None:
+def _frame(fd: int, at_ms: int, accurate: bool = True) -> tuple[float, float, int] | None:
     # Full range so the numbers read on the familiar 0–255 scale whatever range the file was exported in.
+    flags = f":flags={ACCURATE}" if accurate else ""
     done = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-threads", "1", "-ss", f"{at_ms / 1000:.3f}",
-                           "-i", f"/dev/fd/{fd}", "-frames:v", "1", "-vf", f"scale={_FRAME_WIDTH}:-2:out_range=full,format=gray",
+                           "-i", f"/dev/fd/{fd}", "-frames:v", "1", "-vf", f"scale={_FRAME_WIDTH}:-2:out_range=full{flags},format=gray",
                            "-f", "rawvideo", "-"], pass_fds=(fd,), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=20, check=True)
     pixels = done.stdout
     if not pixels:
@@ -176,7 +182,7 @@ def inspect(source, director: dict, duration_ms: int, has_audio: bool, limits: d
             if abs(shot["lufs"] - median) > limits["dialogue_spread_lu"]:
                 warnings.append({"code": "dialogue_level_uneven", "shot_id": shot["shot_id"], "order": shot["order"], "lufs": shot["lufs"],
                                  "median_lufs": round(median, 1), "diff_lu": round(shot["lufs"] - median, 1)})
-    return {"status": "partial" if partial else "measured", "basis": basis, "thresholds": limits, "warnings": warnings,
+    return {"status": "partial" if partial else "measured", "basis": basis, "reader": READER, "thresholds": limits, "warnings": warnings,
             "shots": [{key: shot[key] for key in ("shot_id", "order", "start_ms", "end_ms", "luma", "clipped", "luma_p90", "lufs") if key in shot} for shot in shots]}
 
 
@@ -282,7 +288,7 @@ def source_brightness(db, director: dict, checks: dict, points: dict | None = No
                     if time.monotonic() > deadline:
                         checks["status"] = "partial"
                         break
-                    frame = _frame(fd, at_ms)
+                    frame = _frame(fd, at_ms, checks.get("reader") == READER)
                     if frame:
                         shot["source_luma"], shot["source_p90"], shot["source_basis"] = round(frame[0], 1), frame[2], basis
         except (OSError, ValueError, subprocess.SubprocessError, ExternalMaterialError):
@@ -290,14 +296,18 @@ def source_brightness(db, director: dict, checks: dict, points: dict | None = No
     limit = checks["thresholds"]["source_brightness_diff"]
     highlight = checks["thresholds"].get("source_highlight_diff", DEFAULTS["source_highlight_diff"])
     for shot in checks["shots"]:
-        if "source_luma" in shot and abs(shot["luma"] - shot["source_luma"]) > limit:
-            checks["warnings"].append({"code": "source_brightness_diff", "shot_id": shot["shot_id"], "order": shot["order"], "luma": shot["luma"],
-                                       "source_luma": shot["source_luma"], "diff": round(shot["luma"] - shot["source_luma"], 1),
-                                       "source_basis": shot["source_basis"]})
+        average = "source_luma" in shot and abs(shot["luma"] - shot["source_luma"]) > limit
         # A large white or bright overlay lifts the delivered highlights, so that reading can come out brighter than the source.
-        if "source_p90" in shot and "luma_p90" in shot and abs(shot["luma_p90"] - shot["source_p90"]) > highlight:
-            checks["warnings"].append({"code": "source_highlight_diff", "shot_id": shot["shot_id"], "order": shot["order"], "luma_p90": shot["luma_p90"],
-                                       "source_p90": shot["source_p90"], "diff": shot["luma_p90"] - shot["source_p90"], "source_basis": shot["source_basis"]})
+        bright = "source_p90" in shot and "luma_p90" in shot and abs(shot["luma_p90"] - shot["source_p90"]) > highlight
+        if not (average or bright):
+            continue
+        # One warning per shot carrying only the readings that crossed their line, so a long cut's checks still fit.
+        warning = {"code": "source_brightness", "shot_id": shot["shot_id"], "order": shot["order"], "source_basis": shot["source_basis"]}
+        if average:
+            warning.update(luma=shot["luma"], source_luma=shot["source_luma"], diff=round(shot["luma"] - shot["source_luma"], 1))
+        if bright:
+            warning.update(luma_p90=shot["luma_p90"], source_p90=shot["source_p90"], diff_p90=shot["luma_p90"] - shot["source_p90"])
+        checks["warnings"].append(warning)
 
 
 def recheck_sources(db, director: dict, stored: str, points: dict, clips: dict) -> str | None:
@@ -321,7 +331,7 @@ def recheck_sources(db, director: dict, stored: str, points: dict, clips: dict) 
     except (TypeError, ValueError, KeyError, IndexError):
         return None
     checks = {**checks, "shots": shots, "thresholds": {**thresholds(db), **checks.get("thresholds", {})},
-              "warnings": [warning for warning in checks.get("warnings") or [] if warning.get("code") not in {"source_brightness_diff", "source_highlight_diff"}]}
+              "warnings": [warning for warning in checks.get("warnings") or [] if warning.get("code") not in SOURCE_CODES]}
     source_brightness(db, director, checks, points, clips)
     return compact(checks)
 
@@ -346,7 +356,7 @@ def _rgb(fd: int, size: str, at_ms: int | None) -> bytes:
     # To RGB at full size first, then shrink: shrinking the YUV frame first would blur chroma differently from the RGB cover and read as a color difference.
     seek = ["-ss", f"{at_ms / 1000:.3f}"] if at_ms is not None else []
     done = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe", "-threads", "1", *seek, "-i", f"/dev/fd/{fd}",
-                           "-frames:v", "1", "-vf", f"format=rgb24,scale={size}:flags=area", "-f", "rawvideo", "-"],
+                           "-frames:v", "1", "-vf", f"scale=flags={ACCURATE},format=rgb24,scale={size}:flags=area", "-f", "rawvideo", "-"],
                           pass_fds=(fd,), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=20, check=True)
     return done.stdout
 
@@ -396,8 +406,8 @@ def compact(result: dict, limit: int = SHOT_CHECKS_CHARS) -> str:
     if len(text) <= limit:
         return text
     slim = {**result, "shots": [], "warnings": []}
-    # The source comparison is what a forgotten overlay setting shows up in, so it is the last thing to lose.
-    ranked = sorted(result["warnings"], key=lambda warning: warning.get("code") not in {"source_brightness_diff", "source_highlight_diff"})
+    # The source comparison and the color tags are what a forgotten setting shows up in, so they are the last things to lose.
+    ranked = sorted(result["warnings"], key=lambda warning: warning.get("code") not in SOURCE_CODES | {"color_tags_not_srgb"})
     for warning in ranked:
         trial = {**slim, "warnings": [*slim["warnings"], warning]}
         if len(json.dumps(trial, ensure_ascii=False, sort_keys=True, separators=(",", ":"))) > limit - 40:

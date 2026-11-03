@@ -43,7 +43,7 @@ RULES = [
     "口播声音：导演稿有 dialogue 声音轨就按它铺口播——每段从 material_revision_id 的 trim_start_ms–trim_end_ms 截取，放到成片 start_ms–end_ms，声音段可以跨镜头，画面仍按镜头切；"
     "接法按 craft-resolve 的「声音轨口播衔接」。没有声音轨就用各镜头素材自己的原声。导演稿里口播要从别的素材借声音，就写进声音轨，不要只写在 board.sound 文字里。",
     "配乐只看主稿 music：有 material_revision_id 就铺这首；none 为 true 是用户明确不要配乐；空着就是还没定：按导演稿和用户意见找一首放进来（set_shot_materials 的 music），拿不准就问用户；不能自己当成不用。只有用户能选「不用配乐」。",
-    "封面（可选）：封面设计（大字商品名和卖点）在达芬奇 / AE 里做进成片开头那一段，随成片一起渲染；封面图只能从渲染好的成片里截取开头 0.5 秒内的一帧（ffmpeg 抽帧），竖版 1080×1920 的 jpg / png，"
+    "封面（可选）：封面设计（大字商品名和卖点）在达芬奇 / AE 里做进成片开头那一段，随成片一起渲染；封面图只能从渲染好的成片里截取开头 0.5 秒内的一帧（ffmpeg 抽帧要用准确换算：-vf \"scale=flags=accurate_rnd+full_chroma_int,format=rgb24\"，不加的话标 bt709 的成片截出来暗约 2 级），竖版 1080×1920 的 jpg / png，"
     "不许用 AE 或其他工具从原片另外合成。成片颜色标记统一为 sRGB（原色 bt709、传输 iec61966-2-1、矩阵 bt709）：达芬奇渲染后用 ffmpeg 只改标记不重新编码，"
     "如 -c copy -bsf:v h264_metadata=colour_primaries=1:transfer_characteristics=13:matrix_coefficients=1（H.265 用 hevc_metadata），同时设好容器的 -color_primaries bt709 -color_trc iec61966-2-1 -colorspace bt709；封面图按 sRGB 存。"
     "封面导出到开剪结果给的 cover_dir（导出/封面），用 role cover 交付，并且要在剪辑清单之前交（清单的 output_hashes 可以列上 cover）；成片通过后它就是作品封面。平台会查成片颜色标记，并把封面和成片开头 0.5 秒逐帧比色，不一致会在审阅页提示。",

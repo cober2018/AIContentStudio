@@ -1,0 +1,4 @@
+- [x] 1 delivery_checks：_frame、_rgb 加准确换算；检查结果记读法；补算按存下的读法读原片
+- [x] 2 delivery.md 截封面命令、video_chain 封面规则、color.md「来源」更正，核对 craft-resolve 其他 ffmpeg 抽帧验色处
+- [x] 3 合成提示 source_brightness：生成、补算、截断优先级（亮度对比 + 颜色标记）；页面文字；旧提示和旧读数形式兼容
+- [x] 4 验证：三种标记纯色视频；无头 Chrome canvas 对比封面；构造 30 / 60 镜；任务 41、42 复跑和封面比色；全量测试；tsc；openspec validate
