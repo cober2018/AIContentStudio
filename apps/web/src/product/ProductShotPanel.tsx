@@ -13,7 +13,7 @@ const EMPTY: Copy = { channel: "", title: "", hashtags: [], cover_text: "", inte
 
 // Product works: per-shot camera / look / strength (view "draft") and the publish copy.
 // Product and persona works (view "materials"): how each shot without the user's footage gets its clip; a consistency group of the 导演稿 is drawn in the storyboard-grid dialog.
-export default function ProductShotPanel({ projectId, unitId, payload, locked, view }: { projectId: number; unitId: number; payload: VideoPayload | null; locked: boolean; view: "draft" | "materials" }) {
+export default function ProductShotPanel({ projectId, unitId, payload, locked, view, shotId }: { projectId: number; unitId: number; payload: VideoPayload | null; locked: boolean; view: "draft" | "materials"; shotId?: string }) {
   const client = useQueryClient();
   const base = `/content-projects/${projectId}/units/${unitId}/product-video`;
   const query = useQuery({ queryKey: ["product-video", currentUser(), projectId, unitId], queryFn: () => api.get<View>(base), retry: false,
@@ -33,7 +33,8 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked, v
   const draftCopy = copy || data.publish_copy || EMPTY;
   const shots = [...payload.shots].sort((a, b) => a.order - b.order);
   const covered = (id: string) => { const used = data.used?.[id]; return !!used && !used.i2v; };
-  const missing = shots.filter(shot => !covered(shot.id)).length;
+  const missing = shots.filter(shot => !data.used?.[shot.id]).length;
+  const filled = shots.filter(shot => data.used?.[shot.id]?.i2v).length;
   const options = (items: Item[]) => [...new Set(items.map(item => item.group))].map(group =>
     <optgroup key={group} label={group}>{items.filter(item => item.group === group).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>);
   const groups = data.groups || [];
@@ -43,11 +44,12 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked, v
   return <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
     {persona ? <div><h3 className="font-semibold">补充镜头</h3><p className="text-sm text-slate-500">没有你素材的镜头：自动生成，或手动——拿文生视频提示词，或拿首帧和图生视频提示词，到网页工具生成后上传。默认{data.default_mode === "auto" ? "自动" : "手动"}{timing}。</p></div>
       : <div><h3 className="font-semibold">商品镜头</h3><p className="text-sm text-slate-500">{data.direction?.category?.name || "未选品类"} · {data.direction?.style?.name || "按品类推荐风格"} · {MODES[data.direction?.material_mode || "mixed"]} · 图生视频默认{data.default_mode === "auto" ? "自动" : "手动"}{timing}。改运镜会存成新一版导演稿。</p></div>}
-    {view === "materials" && <p className="rounded-lg bg-slate-50 p-2 text-sm">共 {shots.length} 镜：{shots.length - missing} 镜已用你的素材 · <span className={missing ? "font-medium text-rose-700" : ""}>{missing} 镜缺画面</span>{missing ? "，下面只列缺画面的镜头，选手动或自动生成。" : "，不用生成。"}</p>}
+    {view === "materials" && <p className="rounded-lg bg-slate-50 p-2 text-sm">共 {shots.length} 镜：{shots.length - missing - filled} 镜用你的素材{filled ? ` · ${filled} 镜已补` : ""} · <span className={missing ? "font-medium text-rose-700" : ""}>{missing} 镜缺画面</span>{missing ? (shotId ? "，下面是上面选中的这一镜。" : "，下面只列缺画面的镜头，选手动或自动生成。") : "，不用生成。"}</p>}
     {view === "materials" && persona && missing > 0 && data.references && !data.references.person.length && <p className="rounded-lg bg-amber-50 p-2 text-sm text-amber-800">{NO_PORTRAIT_NOTE}</p>}
     {issue && <ErrorBanner message={issue} />}
     <div className="space-y-3">{shots.map((shot, index) => {
-      if (view === "materials" && covered(shot.id)) return null;
+      if (view === "materials" && shotId && shot.id !== shotId) return null;
+      if (view === "materials" && covered(shot.id)) return shotId ? <p key={shot.id} className="text-sm text-slate-600">镜头 {index + 1} 已有素材，不用补。</p> : null;
       if (view === "materials") {
         const group = groupOf(shot.id);
         // Shots that must share a person or place are made together from one storyboard sheet, in the dialog.

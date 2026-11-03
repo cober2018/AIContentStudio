@@ -108,7 +108,7 @@ export function ShotMaterialPages({ projectId, unitId, readOnly }: { projectId: 
   const byRevision = new Map((assets.data || []).map(item => [item.material_revision_id, item]));
   const bound = shot.source_material_revision_id ? byRevision.get(shot.source_material_revision_id) : undefined;
   const missing = shots.filter(item => !item.source_material_revision_id).length;
-  return <section aria-label="逐镜素材" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+  return <><section aria-label="逐镜素材" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
     <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-semibold">素材 · 镜头 {at + 1} / {shots.length}</h3><p className="text-xs text-slate-500">{missing ? `还缺 ${missing} 个镜头的素材` : "每个镜头都有素材了"}</p></div>
     <div className="mt-3 flex flex-wrap gap-1">{shots.map((item, position) => <button key={item.id} type="button" aria-current={position === at ? "step" : undefined} onClick={() => setIndex(position)} title={item.source_material_revision_id ? "有素材" : "缺素材"} className={`h-7 min-w-[2.25rem] rounded-md px-1.5 text-xs tabular-nums ${position === at ? "bg-ink-900 text-paper" : item.source_material_revision_id ? "border border-slate-200 text-slate-600 hover:bg-slate-50" : "border border-rose-200 bg-rose-50 text-rose-700"}`}>L{String(item.order + 1).padStart(2, "0")}</button>)}</div>
     <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -126,7 +126,9 @@ export function ShotMaterialPages({ projectId, unitId, readOnly }: { projectId: 
       </div>
     </div>
     <div className="mt-3 flex justify-between"><Button size="sm" variant="secondary" disabled={at === 0} onClick={() => setIndex(at - 1)}>上一镜</Button><Button size="sm" variant="secondary" disabled={at === shots.length - 1} onClick={() => setIndex(at + 1)}>下一镜</Button></div>
-  </section>;
+  </section>
+  {/* The supplement entries are for the shot picked above, not a list of every shot still missing a picture. */}
+  <div className="mt-4"><ProductShotGeneration projectId={projectId} unitId={unitId} readOnly={readOnly} shotId={shot.id} /></div></>;
 }
 
 export function MusicPanel({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
@@ -149,9 +151,9 @@ export function MusicPanel({ projectId, unitId, readOnly }: { projectId: number;
 }
 
 // Product and persona works: after the 导演稿 is approved and materials are mapped, generation is offered only for shots still without a picture.
-export function ProductShotGeneration({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
+export function ProductShotGeneration({ projectId, unitId, readOnly, shotId }: { projectId: number; unitId: number; readOnly: boolean; shotId?: string }) {
   const chain = useVideoChain(projectId, unitId);
   const data = chain.data;
   if (!data?.master || ["not_started", "draft_review", "draft_changes"].includes(data.state)) return null;
-  return <Suspense fallback={null}><ProductShotPanel projectId={projectId} unitId={unitId} payload={data.master.payload} locked={readOnly || !!data.locked} view="materials" /></Suspense>;
+  return <Suspense fallback={null}><ProductShotPanel projectId={projectId} unitId={unitId} payload={data.master.payload} locked={readOnly || !!data.locked} view="materials" shotId={shotId} /></Suspense>;
 }

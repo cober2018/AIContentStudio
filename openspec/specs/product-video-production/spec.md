@@ -434,3 +434,44 @@ A 导演稿 shot board SHALL accept an optional other_people text (1–60 charac
 - **WHEN** work 93's prompts are read
 - **THEN** they are identical to before
 
+### Requirement: The supplement panel follows the selected shot
+
+In the 素材 step the supplement panel SHALL sit under the per-shot material pages and show only the shot selected there: the shot's generation entries when it lacks the user's footage and is ungrouped, the open-grid entry when it belongs to a consistency group, and a short note when it already has footage. Paging through shots above SHALL change the panel below. The panel's counts and portrait notice stay.
+
+#### Scenario: Selecting a shot
+- **WHEN** the user selects L06 of work 94 in the material pages
+- **THEN** the supplement panel shows only shot 6's entries
+
+#### Scenario: Shot with footage
+- **WHEN** the user selects a shot that has footage
+- **THEN** the panel says the shot already has material and needs nothing
+
+### Requirement: A manually uploaded shot video is filed at 准备剪辑
+
+A video the user uploads onto a shot from the supplement panel SHALL be stored and placed on the shot without moving any file on the library drive; it SHALL be moved into the project folder on 准备剪辑 like every other material the adopted draft uses, keeping the user's file name when a byte-identical user file exists. Platform-made files (automatic clips, AI pictures, voiceover) keep going straight into the project folder.
+
+#### Scenario: Upload of a file that sits in 外部素材库
+- **WHEN** the user uploads a video whose bytes match a file in 外部素材库
+- **THEN** that file stays where it is and the shot uses the upload
+- **AND** on 准备剪辑 the file is moved into the project folder under its own name
+
+### Requirement: The supplement panel shows a placed clip clearly
+
+When a shot's clip is an uploaded or generated video placed on the shot, the supplement panel SHALL say so plainly (uploaded / generated and placed on this shot, with the material number) while still allowing a new upload or generation. The panel's missing count SHALL count only shots with no clip at all.
+
+#### Scenario: After an upload
+- **WHEN** the user uploads a video onto shot 6 of work 94
+- **THEN** the panel says the video is uploaded and placed on this shot, and shot 6 is not counted as missing
+
+### Requirement: Shot videos can be dropped onto the upload area
+
+The upload entry of a shot in the supplement panel and in the storyboard-grid dialog SHALL accept a video dragged from the computer as well as a click to choose a file. Dropping one MP4 / MOV SHALL upload it onto that shot through the existing upload. The area SHALL highlight while a file is dragged over it. Dropping a non-video SHALL show a message and upload nothing; dropping several files SHALL upload only the first and say that a shot takes one video.
+
+#### Scenario: Drop a video
+- **WHEN** the user drags an MP4 onto shot 6's upload area and lets go
+- **THEN** the video is uploaded onto shot 6, as with a click upload
+
+#### Scenario: Drop a picture
+- **WHEN** the user drops a PNG onto the upload area
+- **THEN** the page says to drop an MP4 / MOV video and nothing is uploaded
+

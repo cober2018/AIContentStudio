@@ -761,7 +761,6 @@ def place_shot_video(db: Session, user: User, project_id: int, unit_id: int, sho
 def upload_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, content: bytes, filename: str) -> dict:
     """Manual route: the user made the clip on a website from the given still and prompt; it goes straight onto that shot."""
     from .materials import create_material, create_revision
-    from .project_folders import store_new
     from .voiceover import _duration_ms
 
     _context(db, user, project_id, unit_id, shot_id)
@@ -775,7 +774,7 @@ def upload_shot_video(db: Session, user: User, project_id: int, unit_id: int, sh
         duration_ms=_duration_ms(content, suffix), metadata={"shot_id": shot_id, "material_source": "i2v_manual"}, created_by=user.email)
     db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="user_upload", status="active",
                                     attached_by=user.email, note=f"手动图生视频 · {shot_id}"))
-    store_new(db, revision, project_id, "视频/Broll")
+    # The user's own copy may sit on the library drive; like other footage it is filed into the project on 准备剪辑, not now.
     db.commit()
     placed = place_shot_video(db, user, project_id, unit_id, shot_id, revision.id)
     return {"shot_id": shot_id, "material_revision_id": revision.id, "master_id": placed["master_id"]}

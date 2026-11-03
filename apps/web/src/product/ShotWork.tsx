@@ -57,6 +57,8 @@ export default function ShotWork({ shot, label, data, base, busy, locked, run, o
 }) {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [stillPrompt, setStillPrompt] = useState("");
+  const [over, setOver] = useState(false);
+  const [note, setNote] = useState("");
   const persona = !data.product;
   const mode = data.modes?.[shot.id] || data.default_mode || "manual";
   const job = data.jobs?.[shot.id];
@@ -78,12 +80,30 @@ export default function ShotWork({ shot, label, data, base, busy, locked, run, o
     // Persona shots start from the shot's own board, so the still box is filled with that wording to edit.
     if (persona && !stillPrompt.trim()) setStillPrompt(value.still_prompt);
   });
-  const upload = <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm">上传做好的视频<input type="file" accept="video/mp4,video/quicktime" className="hidden" disabled={busy || locked} onChange={event => { const file = event.target.files?.[0]; if (!file) return; const form = new FormData(); form.append("file", file); run(() => api.upload(`${base}/shots/${shot.id}/upload`, form)); event.target.value = ""; }} /></label>;
+  const send = (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    if (!/\.(mp4|mov)$/i.test(file.name) && !["video/mp4", "video/quicktime"].includes(file.type)) { setNote("请拖 MP4 / MOV 视频"); return; }
+    // The panel clears its error line when an upload starts, so this note lives next to the drop area.
+    setNote(files.length > 1 ? "一镜只能放一条视频，只传了第一个" : "");
+    const form = new FormData(); form.append("file", file);
+    run(() => api.upload(`${base}/shots/${shot.id}/upload`, form));
+  };
+  const off = busy || locked;
+  // Drag events are always taken here so a dropped file never makes the browser open it in place of the page.
+  const upload = <label className={`flex flex-col items-center rounded-lg border border-dashed px-3 py-3 text-sm ${over ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-300 bg-white"} ${off ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+    onDragOver={event => { event.preventDefault(); if (!off) { setOver(true); setNote(""); } }} onDragLeave={() => setOver(false)}
+    onDrop={event => { event.preventDefault(); setOver(false); if (!off) send(event.dataTransfer.files); }}>
+    {over ? "松手上传到这一镜" : "上传做好的视频：把视频拖到这里，或点击选择"}
+    <input type="file" accept="video/mp4,video/quicktime" className="hidden" disabled={off} onChange={event => { send(event.target.files); event.target.value = ""; }} />
+    {note && <span className="mt-1 text-xs text-amber-800">{note}</span>}
+  </label>;
   const frameInfo = prompt && <p className="mt-1">首帧：素材 #{prompt.first_frame_revision_id ?? "无"}{prompt.last_frame_revision_id ? `；尾帧：素材 #${prompt.last_frame_revision_id}` : ""}；{prompt.aspect_ratio}；{prompt.seconds} 秒。{prompt.manual_note}</p>;
   return <article className="rounded-lg border border-slate-100 p-3">
     <p className="text-sm font-medium">{label}<span className="ml-2 font-normal text-slate-500">{shot.board?.visual || shot.label}</span></p>
     {persona && data.other_people?.[shot.id] && <p className="mt-1 text-xs text-amber-800">这一镜可以出现{data.other_people[shot.id]}（不露脸），不出现角色本人。</p>}
-    {used && <p className="mt-2 text-sm text-slate-600">已用：素材 #{used.material_revision_id} · {used.source}{used.i2v && job?.resolution ? ` ${job.resolution.toUpperCase()}` : ""}{!used.i2v && "（用商品原图或现成素材做的，不走图生视频）"}</p>}
+    {used && (used.i2v ? <p className="mt-2 rounded bg-emerald-50 p-2 text-sm font-medium text-emerald-800">{used.source === "手动图生视频" ? "已上传" : "已生成"}，已放进这一镜：素材 #{used.material_revision_id}{job?.resolution ? ` ${job.resolution.toUpperCase()}` : ""}。要换可以重新上传或生成。</p>
+      : <p className="mt-2 text-sm text-slate-600">已用：素材 #{used.material_revision_id} · {used.source}（用商品原图或现成素材做的，不走图生视频）</p>)}
     {generated && <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
       <span className="text-slate-500">{persona ? "出视频：" : "图生视频："}</span>
       <Button size="sm" variant={mode === "manual" ? "primary" : "secondary"} disabled={busy || locked} onClick={() => run(() => api.put(`${base}/shots/${shot.id}/mode`, { mode: "manual" }))}>手动</Button>
