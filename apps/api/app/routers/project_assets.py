@@ -106,6 +106,14 @@ def import_raw_folder(payload: RawFolderIn, project_id: int, db: Session = Depen
     return project_folders.import_folder(db, user, project_id, payload.path)
 
 
+@router.get("/{project_id}/materials/folder-imports")
+def raw_folder_imports(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import project_folders
+
+    owned_project(db, project_id, user)
+    return project_folders.imported_folders(db, project_id)
+
+
 @router.get("/{project_id}/materials/folder-archive")
 def raw_folder_archive_state(project_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     from ..services import project_folders

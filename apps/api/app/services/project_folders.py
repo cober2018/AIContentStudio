@@ -525,6 +525,40 @@ def import_folder(db: Session, user, project_id: int, path: str) -> dict:
     return result
 
 
+def imported_folders(db: Session, project_id: int) -> dict:
+    """Which raw folders this project took files from, worked out from the files themselves so no path is stored twice."""
+    from ..models import ProjectMaterialReference
+    from .material_external import is_external, parse_key
+    from .storage_locations import library_source_id
+
+    rows = db.scalars(select(MaterialRevision).join(ProjectMaterialReference, ProjectMaterialReference.material_revision_id == MaterialRevision.id)
+                      .where(ProjectMaterialReference.project_id == project_id, ProjectMaterialReference.origin == RAW_ORIGIN,
+                             ProjectMaterialReference.status == "active")).all()
+    counts: dict[str, list[int]] = {}
+    for row in rows:
+        # The link key keeps the path the file was imported from, even after 成片 moved it into the project folder.
+        if not is_external(row.file_path) or parse_key(row.file_path)[0] != library_source_id():
+            continue
+        folder = Path(parse_key(row.file_path)[2]).parent.as_posix()
+        entry = counts.setdefault(folder, [0, 0])
+        entry[0] += 1
+        entry[1] += bool(placement(row))
+    # A subfolder's files belong to the folder above it when that folder was imported too; never widen past what was picked.
+    folders: dict[str, list[int]] = {}
+    for folder in sorted(counts, key=len):
+        key = next((kept for kept in folders if folder.startswith(kept + "/")), folder)
+        total = folders.setdefault(key, [0, 0])
+        total[0] += counts[folder][0]
+        total[1] += counts[folder][1]
+    root = _root()
+    # Same rule as import_folder: project and common folders cannot be raw folders, so they get no update.
+    filed = set(folder_names(db).values()) | RESERVED - {EXTERNAL_DIR}
+    return {"library_online": root is not None, "folders": [
+        {"folder": folder, "path": str(root / folder) if root else None, "files": files, "moved": moved,
+         "refreshable": bool(root and folder.split("/")[0] not in filed and (root / folder).is_dir())}
+        for folder, (files, moved) in sorted(folders.items())]}
+
+
 def _raw_waiting(db: Session, project_id: int) -> list[MaterialRevision]:
     from ..models import ProjectMaterialReference
     from .material_external import is_external, parse_key
