@@ -1,0 +1,5 @@
+- [x] 1 交付：rough_cut/final 成果信息允许 shot_sources（白名单、格式与内容校验、拒收说明）
+- [x] 2 delivery_checks.source_brightness 用 shot_sources；无则按估计位置并标注
+- [x] 3 剪辑规则、MCP submit_output 说明、审阅页「按估计位置」标注
+- [x] 4 用任务 42 剪辑清单里的真实截取点模拟验证；全量测试；tsc；`openspec validate`
+- [x] 5 剪辑清单通过后按清单 trim_start_ms（含 speed_percent）补算比亮度并替换审阅页提示；任务 42 验收

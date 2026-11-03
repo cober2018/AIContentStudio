@@ -11,11 +11,12 @@ from .creative_intents import contains_secret_text
 MAX_FILE_BYTES = 30 * 1024 * 1024
 MAX_INPUTS = 100
 MAX_OUTPUT_ROWS = 500
+SHOT_SOURCES_CHARS = 8000
 SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,99}$")
 _UNSAFE_KEYS = {"api_key", "access_token", "secret", "password", "raw_output", "raw_error", "raw_response", "authorization", "file_path", "absolute_path", "local_path"}
 EXECUTOR_DECLARATION_FIELDS = {"supports_checkpoint", "supports_revert", "supports_recover", "output_kinds"}
 _OUTPUT_KINDS = {"image", "video", "audio", "other"}
-_METADATA_KEYS = {"web_provider", "visible_model", "generated_at", "origin", "summary", "checkpoint_ref", "observation_ref", "observation_hash", "recovery_action", "readback_status", "license", "license_id", "license_url", "attribution", "correlation_id", "loudness", "shot_checks", "cover_check"} | EXECUTOR_DECLARATION_FIELDS
+_METADATA_KEYS = {"web_provider", "visible_model", "generated_at", "origin", "summary", "checkpoint_ref", "observation_ref", "observation_hash", "recovery_action", "readback_status", "license", "license_id", "license_url", "attribution", "correlation_id", "loudness", "shot_checks", "cover_check", "shot_sources"} | EXECUTOR_DECLARATION_FIELDS
 
 
 def canonical_hash(value: object) -> str:
@@ -67,7 +68,8 @@ def safe_metadata(value: dict | None) -> dict:
                     or len(set(item)) != len(item)):
                 raise HTTPException(422, {"code": "creative_execution_output_kinds_invalid"})
             continue
-        if type(item) not in {str, bool} or isinstance(item, str) and len(item) > 2000:
+        # A cut's shot_sources holds one entry per shot, so it gets room for a long cut.
+        if type(item) not in {str, bool} or isinstance(item, str) and len(item) > (SHOT_SOURCES_CHARS if key == "shot_sources" else 2000):
             raise HTTPException(422, {"code": "creative_metadata_value_invalid"})
         if key.endswith("_ref") and not SAFE_ID.fullmatch(item if isinstance(item, str) else ""):
             raise HTTPException(422, {"code": "creative_reference_invalid"})

@@ -62,6 +62,9 @@ RULES = [
     "素材统一（必做，粗剪后、导出小样前）：颜色只做校正和匹配——曝光、白平衡拉正，同一场景的镜头用色彩组对齐到一个参考镜头；不做风格化调色，素材正常且彼此一致就不动。"
     "声音：实拍对白逐段拉到约 −16 LUFS，只有明显底噪才轻度降噪，只有一边声道有声的修成两边；之后再按现有混音标准（整片约 −14 LUFS、真峰值 ≤ −1 dBTP）。",
     "小样、成片的回执逐镜头写明：哪些套了 HLG 还原、哪些做了渲染补偿（补偿 LUT 还是改设置）、哪些做了颜色校正（改了什么）、哪些对白段调了音量（调了多少）；没动的写没动。平台交付时会逐镜头查过曝、亮度跳变和对白音量，提示在审阅页。",
+    "交小样、成片时 metadata 带 shot_sources（JSON 字符串）：每个用实拍画面的镜头一条 {\"shot_id\",\"material_revision_id\",\"source_in_ms\"}，"
+    "source_in_ms 是该镜头在达芬奇时间线上那个片段的源入点（脚本读时间线片段的 GetLeftOffset / GetSourceStartFrame 换成毫秒）；平台按它在原片里取和成片同一时刻的帧比亮度，"
+    "不报就只能按镜头内位置估计、可能误报。剪辑清单交上来后平台会再按清单的 trim_start_ms（和 speed_percent）重算一次。",
 ]
 EXECUTOR = "codex-video-production"
 _KEEPS_DRAFT = {"material", "edit_prep", "cover"}

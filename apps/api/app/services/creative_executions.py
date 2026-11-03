@@ -307,7 +307,8 @@ def _metadata(value) -> dict:
             raise _error("creative_execution_capability_invalid", 422)
     if "observation_hash" in metadata and not _HASH.fullmatch(str(metadata["observation_hash"])):
         raise _error("creative_execution_observation_invalid", 422)
-    return bounded_json(metadata, max_bytes=4000)
+    # shot_sources is JSON inside a string, so its quotes are escaped once more here.
+    return bounded_json(metadata, max_bytes=4000 + 2 * len(metadata.get("shot_sources", "")))
 
 
 def _checkpoint(value) -> dict:
@@ -1139,6 +1140,21 @@ def _project_output(db: Session, row: CreativeExecution, package: CreativeExecut
     return given
 
 
+def _recheck_sources(db: Session, package: CreativeExecutionPackage, outputs: list, manifest: dict) -> None:
+    """Redoes the cut's source-brightness comparison at the manifest's real in-points, which only exist once the cut is in."""
+    from . import delivery_checks
+
+    clips = delivery_checks.manifest_clips(manifest)
+    for (role, _), output in _latest(outputs).items():
+        metadata = output.metadata_json or {}
+        if role not in {"rough_cut", "final"} or output.state == "rejected" or not isinstance(metadata.get("shot_checks"), str):
+            continue
+        redone = delivery_checks.recheck_sources(db, package.package_json["director"], metadata["shot_checks"],
+                                                 delivery_checks.reported(metadata.get("shot_sources")), clips)
+        if redone:
+            output.metadata_json = {**metadata, "shot_checks": redone}
+
+
 def _cover_check(db: Session, user: User, row: CreativeExecution, outputs: list, role_id: str, source) -> dict:
     """Cover against the 成片's opening, run by whichever of the two arrives second; the earlier file is only read, and an unreadable one skips the check."""
     import json
@@ -1157,6 +1173,47 @@ def _cover_check(db: Session, user: User, row: CreativeExecution, outputs: list,
         return {}
     # Tied to the partner's id so the review page only shows it while that pair is the current one.
     return {"cover_check": json.dumps({"against": partner.id, **check}, sort_keys=True, separators=(",", ":"))} if check else {}
+
+
+MAX_SHOT_SOURCES = 100
+
+
+def validate_shot_sources(db: Session, package_json: dict, text) -> str:
+    """The cut's per-shot source in-points, checked against the package and normalized; refused naming the bad entry so the editor can fix it."""
+    import json
+
+    def refuse(message: str):
+        return HTTPException(422, {"code": "video_chain_shot_sources_invalid", "message": f"shot_sources {message}"})
+
+    try:
+        entries = json.loads(text) if isinstance(text, str) else None
+    except ValueError:
+        entries = None
+    if not isinstance(entries, list):
+        raise refuse('要是 JSON 数组字符串，每条 {"shot_id","material_revision_id","source_in_ms"}')
+    if len(entries) > MAX_SHOT_SOURCES:
+        raise refuse(f"最多 {MAX_SHOT_SOURCES} 条，这次 {len(entries)} 条")
+    shots = {shot.get("id") for shot in (package_json.get("director") or {}).get("shots") or [] if isinstance(shot, dict)}
+    assets = {asset["material_revision_id"] for asset in package_json.get("assets") or []}
+    normalized, seen = [], set()
+    for number, entry in enumerate(entries, 1):
+        if not isinstance(entry, dict) or set(entry) != {"shot_id", "material_revision_id", "source_in_ms"}:
+            raise refuse(f'第 {number} 条要正好有 shot_id、material_revision_id、source_in_ms 三项')
+        shot_id, revision_id, source_in = entry["shot_id"], entry["material_revision_id"], entry["source_in_ms"]
+        if not isinstance(shot_id, str) or shot_id not in shots:
+            raise refuse(f"第 {number} 条的镜头 {str(shot_id)[:100]} 不在导演稿里")
+        if shot_id in seen:
+            raise refuse(f"第 {number} 条的镜头 {shot_id} 重复了")
+        if type(revision_id) is not int or revision_id not in assets:
+            raise refuse(f"第 {number} 条（{shot_id}）的素材 {str(revision_id)[:40]} 不在开剪素材包里")
+        if type(source_in) is not int or source_in < 0:
+            raise refuse(f"第 {number} 条（{shot_id}）的截取起点要是不小于 0 的整数毫秒")
+        revision = db.get(MaterialRevision, revision_id)
+        if revision is not None and revision.duration_ms and source_in > revision.duration_ms:
+            raise refuse(f"第 {number} 条（{shot_id}）的截取起点 {source_in} 毫秒超过素材 {revision_id} 的时长 {revision.duration_ms} 毫秒")
+        seen.add(shot_id)
+        normalized.append({"shot_id": shot_id, "material_revision_id": revision_id, "source_in_ms": source_in})
+    return json.dumps(normalized, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 @_atomic
@@ -1191,6 +1248,10 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
     if mime not in role["allowed_mime"]:
         raise _error("creative_execution_output_mime_invalid", 422)
     metadata = _metadata(payload.get("metadata"))
+    if "shot_sources" in metadata:
+        if role_id not in {"rough_cut", "final"}:
+            raise HTTPException(422, {"code": "video_chain_shot_sources_invalid", "message": "shot_sources 只随小样（rough_cut）或成片（final）交"})
+        metadata = {**metadata, "shot_sources": validate_shot_sources(db, package.package_json, metadata["shot_sources"])}
     web = package.package_json.get("web_video")
     if web:
         if metadata.get("web_provider", web["provider"]) != web["provider"]:
@@ -1222,7 +1283,7 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
 
                 checks = delivery_checks.inspect(source, package.package_json["director"], inspected["duration_ms"], inspected.get("has_audio", False),
                                                  delivery_checks.thresholds(db))
-                delivery_checks.source_brightness(db, package.package_json["director"], checks)
+                delivery_checks.source_brightness(db, package.package_json["director"], checks, delivery_checks.reported(metadata.get("shot_sources")))
                 tags = delivery_checks.color_tags(source) if role_id == "final" else None
                 if tags:
                     checks["warnings"].insert(0, tags)
@@ -1234,8 +1295,10 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
 
                 from .web_video_handoff import validate_edit_manifest
                 source.seek(0)
-                validate_edit_manifest(package.package_json, json.loads(source.read(2_000_001)))
+                body = json.loads(source.read(2_000_001))
+                validate_edit_manifest(package.package_json, body)
                 source.seek(0)
+                _recheck_sources(db, package, outputs, body)
             if "content_hash" in payload and payload["content_hash"] != digest:
                 raise _error("creative_execution_output_hash_mismatch")
             if project:

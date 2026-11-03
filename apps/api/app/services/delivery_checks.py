@@ -203,20 +203,55 @@ def _source_ms(director: dict, shot: dict, revision_id: int) -> int:
     return max(0, mid - shot["start_ms"])
 
 
-def source_brightness(db, director: dict, checks: dict) -> None:
+def reported(text: str | None) -> dict[str, tuple[int, int]]:
+    """The 小样 / 成片's own shot_sources (already validated on submit) as shot id → (material revision, source in-point)."""
+    try:
+        entries = json.loads(text) if text else []
+        return {entry["shot_id"]: (entry["material_revision_id"], entry["source_in_ms"]) for entry in entries}
+    except (TypeError, ValueError, KeyError):
+        return {}
+
+
+def manifest_clips(manifest: dict) -> dict[str, list[dict]]:
+    """The edit manifest's clips per shot: where each sits in the cut, where it starts in its source and at what speed."""
+    clips: dict[str, list[dict]] = {}
+    for item in manifest.get("timeline") or []:
+        if not isinstance(item, dict) or not all(type(item.get(key)) is int for key in ("material_revision_id", "start_ms", "end_ms", "trim_start_ms")):
+            continue
+        speed = item.get("speed_percent")
+        clips.setdefault(item.get("shot_id"), []).append({**{key: item[key] for key in ("material_revision_id", "start_ms", "end_ms", "trim_start_ms")},
+                                                          "speed": speed if type(speed) in {int, float} and 0 < speed <= 1000 else 100})
+    return clips
+
+
+def _located(director: dict, sources: dict, shot: dict, clips: dict, points: dict) -> tuple[int, int, str] | None:
+    # The manifest is what was actually cut; the in-point reported with the cut comes next; the in-shot offset is only a guess.
+    mid = (shot["start_ms"] + shot["end_ms"]) // 2
+    for clip in clips.get(shot.get("shot_id")) or []:
+        if clip["start_ms"] <= mid < clip["end_ms"]:
+            return clip["material_revision_id"], max(0, clip["trim_start_ms"] + round((mid - clip["start_ms"]) * clip["speed"] / 100)), "manifest"
+    if shot.get("shot_id") in points:
+        revision_id, source_in = points[shot["shot_id"]]
+        return revision_id, source_in + mid - shot["start_ms"], "reported"
+    revision_id = sources.get(shot.get("shot_id"))
+    return (revision_id, _source_ms(director, shot, revision_id), "estimated") if isinstance(revision_id, int) else None
+
+
+def source_brightness(db, director: dict, checks: dict, points: dict | None = None, clips: dict | None = None) -> None:
     """Adds, for each shot cut from an SDR video material, the source's luma at the same moment and a warning when the delivered frame differs.
 
-    The delivered reading is the one inspect already took at the shot's middle. Unreadable or HLG / PQ sources are left out.
+    The delivered reading is the one inspect already took at the shot's middle. Unreadable or HLG / PQ sources are left out. Each source reading
+    says where its moment came from (manifest / reported / estimated), so the reviewer knows how far to trust it.
     """
     from ..models import MaterialRevision
     from .material_external import ExternalMaterialError
 
     sources = {shot.get("id"): shot.get("source_material_revision_id") for shot in director.get("shots") or [] if isinstance(shot, dict)}
-    wanted: dict[int, list[dict]] = {}
+    wanted: dict[int, list[tuple[dict, int, str]]] = {}
     for shot in checks["shots"]:
-        revision_id = sources.get(shot.get("shot_id"))
-        if "luma" in shot and isinstance(revision_id, int):
-            wanted.setdefault(revision_id, []).append(shot)
+        located = _located(director, sources, shot, clips or {}, points or {}) if "luma" in shot else None
+        if located:
+            wanted.setdefault(located[0], []).append((shot, located[1], located[2]))
     deadline = time.monotonic() + SOURCE_DEADLINE_SECONDS
     for revision_id, shots in wanted.items():
         if time.monotonic() > deadline:
@@ -230,20 +265,45 @@ def source_brightness(db, director: dict, checks: dict) -> None:
                 fd = handle.fileno()
                 if _transfer(fd) in UNCOMPARABLE_TRANSFERS:
                     continue
-                for shot in shots:
+                for shot, at_ms, basis in shots:
                     if time.monotonic() > deadline:
                         checks["status"] = "partial"
                         break
-                    frame = _frame(fd, _source_ms(director, shot, revision_id))
+                    frame = _frame(fd, at_ms)
                     if frame:
-                        shot["source_luma"] = round(frame[0], 1)
+                        shot["source_luma"], shot["source_basis"] = round(frame[0], 1), basis
         except (OSError, ValueError, subprocess.SubprocessError, ExternalMaterialError):
             continue
     limit = checks["thresholds"]["source_brightness_diff"]
     for shot in checks["shots"]:
         if "source_luma" in shot and abs(shot["luma"] - shot["source_luma"]) > limit:
             checks["warnings"].append({"code": "source_brightness_diff", "shot_id": shot["shot_id"], "order": shot["order"], "luma": shot["luma"],
-                                       "source_luma": shot["source_luma"], "diff": round(shot["luma"] - shot["source_luma"], 1)})
+                                       "source_luma": shot["source_luma"], "diff": round(shot["luma"] - shot["source_luma"], 1),
+                                       "source_basis": shot["source_basis"]})
+
+
+def recheck_sources(db, director: dict, stored: str, points: dict, clips: dict) -> str | None:
+    """The stored 小样 / 成片 readings with the source comparison redone from the edit manifest; None when they can't be rebuilt.
+
+    The manifest comes after the cut, so the delivered frames already read are reused and only the sources are sampled again.
+    """
+    try:
+        checks = json.loads(stored)
+        rows = checks["shots"]
+        if not isinstance(rows, list) or not rows or checks.get("truncated"):
+            return None
+        if isinstance(rows[0], list):
+            # The slimmed form keeps only [shot_id, luma, lufs, source_luma]; positions come back from the timeline.
+            spans_by_id = {span["shot_id"]: span for span in spans(director, 10**9)[1]}
+            rows = [{**{key: spans_by_id[row[0]][key] for key in ("shot_id", "order", "start_ms", "end_ms")},
+                     **({"luma": row[1]} if row[1] is not None else {}), **({"lufs": row[2]} if row[2] is not None else {})} for row in rows]
+        shots = [{key: value for key, value in row.items() if key not in {"source_luma", "source_basis"}} for row in rows]
+    except (TypeError, ValueError, KeyError, IndexError):
+        return None
+    checks = {**checks, "shots": shots, "thresholds": {**thresholds(db), **checks.get("thresholds", {})},
+              "warnings": [warning for warning in checks.get("warnings") or [] if warning.get("code") != "source_brightness_diff"]}
+    source_brightness(db, director, checks, points, clips)
+    return compact(checks)
 
 
 def color_tags(source) -> dict | None:
