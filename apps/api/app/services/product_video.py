@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import math
 import re
+from pathlib import Path
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -105,12 +106,27 @@ def _settings(db: Session, link: ProductSkuWork) -> dict:
                                                        if key != "category"}}
 
 
-def _mode(db: Session, link: ProductSkuWork, unit_id: int, shot_id: str | None = None) -> str:
+def _mode(db: Session, link: ProductSkuWork | None, unit_id: int, shot_id: str | None = None) -> str:
     shots = (_setting(db, JOBS_KEY).get(str(unit_id)) or {}).get("modes") or {}
     if shot_id and shots.get(shot_id) in {"manual", "auto"}:
         return shots[shot_id]
-    chosen = _settings(db, link).get("i2v_mode", "default")
+    chosen = _settings(db, link).get("i2v_mode", "default") if link else "default"
     return default_mode(db) if chosen == "default" else chosen
+
+
+def persona_work(db: Session, unit_id: int) -> bool:
+    from ..models import ContentUnit
+
+    unit = db.get(ContentUnit, unit_id)
+    return unit is not None and unit.production_domain == "persona"
+
+
+def groups(document: dict) -> list[dict]:
+    return list(document.get("consistency_groups") or [])
+
+
+def group_of(document: dict, shot_id: str) -> dict | None:
+    return next((group for group in groups(document) if shot_id in group["shot_ids"]), None)
 
 
 def require_persona(db: Session, unit_id: int) -> None:
@@ -225,6 +241,12 @@ NO_PORTRAIT = "这个角色没有形象照，这一镜不会出现人物"
 WITH_PORTRAIT = "人物长相照参考照片（角色形象照）来，同一个人，不换脸。"
 WITHOUT_PERSON = "画面里不出现人物（不露脸、不出现身体），只出现商品与场景；需要拿取商品时只出现手部。"
 WITHOUT_PERSON_EN = "No person in the frame (no face, no body), only the product and the setting; when the product is handled, show only hands."
+SCENE_WITHOUT_PERSON = "画面里不出现人物（不露脸、不出现身体），只拍场景；需要拿东西时只出现手部。"
+SCENE_WITHOUT_PERSON_EN = "No person in the frame (no face, no body), only the setting; when something is handled, show only hands."
+SCENE_WITH_OTHERS = "画面里不出现角色本人。{who}可以出现手、脚、身体局部或背影，不露脸，不出现正脸和侧脸；除了{who}，不出现别的人。"
+SCENE_WITH_OTHERS_EN = ('The presenter never appears. "{who}" may appear only as hands, feet, part of the body or from behind, never the face: '
+                        'no front or side view of the face. Nobody else appears besides "{who}".')
+OTHERS_NOTICE = "这一镜可以出现{who}（不露脸）"
 
 
 def references(db: Session, user: User | None, unit_id: int) -> dict:
@@ -254,29 +276,48 @@ def references(db: Session, user: User | None, unit_id: int) -> dict:
     return {**chosen, "origin": origin, "main_image": main_image}
 
 
-def person_notices(document: dict, refs: dict) -> dict:
-    """People shots that will come out without a person because nobody gave a face to draw."""
+def others(board: dict, refs: dict, product: bool) -> str:
+    """Who besides the persona the 导演稿 lets into this shot; only a persona work without a portrait needs the exception."""
+    return "" if product or refs["person"] else (board.get("other_people") or "")
+
+
+def person_notices(document: dict, refs: dict, product: bool = True) -> dict:
+    """People shots that will come out without a person because nobody gave a face to draw, or only with the faceless people the 导演稿 names."""
     if refs["person"]:
         return {}
-    return {shot["id"]: NO_PORTRAIT for shot in document.get("shots", []) if _people(shot.get("board") or {})}
+    notices = {}
+    for shot in document.get("shots", []):
+        board = shot.get("board") or {}
+        who = others(board, refs, product)
+        if who:
+            notices[shot["id"]] = OTHERS_NOTICE.format(who=who)
+        elif _people(board):
+            notices[shot["id"]] = NO_PORTRAIT
+    return notices
 
 
-def person_rule(refs: dict) -> str:
-    return WITH_PORTRAIT if refs["person"] else WITHOUT_PERSON
+def person_rule(refs: dict, product: bool = True, who: str = "", english: bool = False) -> str:
+    if refs["person"]:
+        return WITH_PORTRAIT
+    if product:
+        return WITHOUT_PERSON_EN if english else WITHOUT_PERSON
+    if who:
+        return (SCENE_WITH_OTHERS_EN if english else SCENE_WITH_OTHERS).format(who=who)
+    return SCENE_WITHOUT_PERSON_EN if english else SCENE_WITHOUT_PERSON
 
 
-def _keyframe(db: Session, link: ProductSkuWork, shot: dict | None) -> int | None:
+def _keyframe(db: Session, unit_id: int, shot: dict | None) -> int | None:
     """A shot's own first frame: the one picked for it here (e.g. a generated still), else the 导演稿 keyframe."""
     if shot is None:
         return None
-    picked = ((_setting(db, JOBS_KEY).get(str(link.unit_id)) or {}).get("frames") or {}).get(shot["id"])
+    picked = ((_setting(db, JOBS_KEY).get(str(unit_id)) or {}).get("frames") or {}).get(shot["id"])
     return picked or (shot.get("production") or {}).get("reference_material_revision_id")
 
 
-def _frames(db: Session, link: ProductSkuWork, document: dict, shot: dict, following: dict | None, product: list[int]) -> tuple[int | None, int | None]:
-    first = _keyframe(db, link, shot) or (product[0] if product else None)
+def _frames(db: Session, unit_id: int, document: dict, shot: dict, following: dict | None, product: list[int]) -> tuple[int | None, int | None]:
+    first = _keyframe(db, unit_id, shot) or (product[0] if product else None)
     # Chaining pins this clip's last frame to the next shot's keyframe, so the cut between them does not jump.
-    last = _keyframe(db, link, following) if following and (following.get("board") or {}).get("chain_from_previous") else None
+    last = _keyframe(db, unit_id, following) if following and (following.get("board") or {}).get("chain_from_previous") else None
     return first, last
 
 
@@ -306,8 +347,8 @@ def _context(db: Session, user: User, project_id: int, unit_id: int, shot_id: st
 
     owned_unit(db, project_id, unit_id, user)
     link = work(db, unit_id)
-    if link is None:
-        _fail(409, "product_work_required", "只有商品作品能用图生视频补镜头")
+    if link is None and not persona_work(db, unit_id):
+        _fail(409, "product_work_required", "只有商品作品和角色作品能生成镜头画面")
     master = _latest(db, unit_id)
     if master is None or master.payload_schema != "video.master.v2":
         _fail(409, "product_master_required", "先存导演稿")
@@ -318,25 +359,38 @@ def _context(db: Session, user: User, project_id: int, unit_id: int, shot_id: st
 def shot_prompt(db: Session, user: User, project_id: int, unit_id: int, shot_id: str) -> dict:
     """The same prompt and frames for either route, so switching a shot to manual keeps its direction."""
     link, master, shot, following = _context(db, user, project_id, unit_id, shot_id)
+    product = link is not None
     board = copy.deepcopy(shot.get("board") or {})
-    profile = ((link.settings_snapshot_json or {}).get("category") or {}).get("profile") or {}
-    board.setdefault("look", profile.get("look"))
+    if product:
+        profile = ((link.settings_snapshot_json or {}).get("category") or {}).get("profile") or {}
+        board.setdefault("look", profile.get("look"))
     refs = references(db, user, unit_id)
-    first, last = _frames(db, link, master.payload_json, shot, following, refs["product"])
+    first, last = _frames(db, unit_id, master.payload_json, shot, following, refs["product"])
     people = _people(board) and bool(refs["person"])
     if not refs["person"]:
         # Without a portrait nobody is drawn, so a person's attitude has nothing to act on.
         board.pop("attitude", None)
-    notice = person_notices({"shots": [shot]}, refs).get(shot_id)
+    notice = person_notices({"shots": [shot]}, refs, product).get(shot_id)
+    who = others(board, refs, product)
+    # Shots of one group share the person and setting written in the 导演稿, so their pictures and clips match.
+    group = group_of(master.payload_json, shot_id) or {}
+    person, setting = (group.get("person") or "") if refs["person"] else "", group.get("setting") or ""
+    zh = product_motion.motion_prompt(board, people=people, english=False, setting=setting, product=product) + (
+        "" if refs["person"] else "。" + person_rule(refs, product, who))
+    en = product_motion.motion_prompt(board, people=people, english=True, setting=setting, product=product) + (
+        "" if refs["person"] else ". " + person_rule(refs, product, who, english=True))
+    aspect, seconds = "{}:{}".format(*master.payload_json["aspect_ratio"]), min(15, max(4, math.ceil(shot["duration_ms"] / 1000)))
     return {"shot_id": shot_id, "mode": _mode(db, link, unit_id, shot_id),
-            "prompt": product_motion.motion_prompt(board, people=people, english=False) + ("" if refs["person"] else "。" + WITHOUT_PERSON),
-            "prompt_en": product_motion.motion_prompt(board, people=people, english=True) + ("" if refs["person"] else ". " + WITHOUT_PERSON_EN),
+            "prompt": zh, "prompt_en": en,
             # Four-part wording for a new first-frame still of this shot (generate_shot_image or a web image tool).
-            "still_prompt": product_motion.still_prompt(board, people=people) + "\n" + person_rule(refs),
+            "still_prompt": product_motion.still_prompt(board, people=people, person=person, setting=setting) + "\n" + person_rule(refs, product, who),
+            # Persona shots can also be made with no picture at all, so the text must carry the frame and length itself.
+            **({} if product else {"t2v_prompt": f"画幅 {aspect}，时长约 {seconds} 秒。{zh}",
+                                   "t2v_prompt_en": f"Aspect ratio {aspect}, about {seconds} seconds. {en}"}),
+            "group": group.get("id"),
             "references": refs, **({"notice": notice} if notice else {}),
             "first_frame_revision_id": first, "last_frame_revision_id": last,
-            "aspect_ratio": "{}:{}".format(*master.payload_json["aspect_ratio"]),
-            "seconds": min(15, max(4, math.ceil(shot["duration_ms"] / 1000))),
+            "aspect_ratio": aspect, "seconds": seconds,
             "manual_note": "网页不支持尾帧时只传首帧；生成后下载原始 MP4 回传。" if last else "生成后下载原始 MP4 回传。"}
 
 
@@ -386,7 +440,8 @@ def start_shot_video(db: Session, user: User, project_id: int, unit_id: int, sho
     last = plan["last_frame_revision_id"] if not (route["kind"] == "mmx" and model == HAILUO) else None
     frames = [revision_id for revision_id in (plan["first_frame_revision_id"], last) if revision_id]
     if not frames:
-        _fail(409, "product_i2v_first_frame_required", "这一镜没有关键帧，商品也没有主图，先补一张首帧")
+        _fail(409, "product_i2v_first_frame_required", "这一镜没有关键帧，商品也没有主图，先补一张首帧" if work(db, unit_id)
+              else "这一镜还没有首帧，先生成首帧，或切到手动")
     images = []
     for revision_id in frames:
         revision = db.get(MaterialRevision, revision_id)
@@ -567,14 +622,18 @@ def shot_videos(db: Session, user: User, project_id: int, unit_id: int) -> dict:
 
     owned_unit(db, project_id, unit_id, user)
     link = work(db, unit_id)
-    if link is None:
+    if link is None and not persona_work(db, unit_id):
         return {"product": False}
     record = _setting(db, JOBS_KEY).get(str(unit_id)) or {}
     refs, master = references(db, user, unit_id), _latest(db, unit_id)
-    return {"product": True, "default_mode": _mode(db, link, unit_id), "modes": record.get("modes") or {},
+    return {"product": link is not None, **({} if link else {"persona": True}), "groups": groups(master.payload_json if master else {}),
+            "default_mode": _mode(db, link, unit_id), "modes": record.get("modes") or {},
             "resolution": resolution(db, user, project_id, unit_id), "used": _used(db, unit_id), "frames": _first_frames(db, record),
             "grid": _grid_candidates(db, record), "grid_run": record.get("grid_run"), "references": refs,
-            "person_notices": person_notices(master.payload_json if master else {}, refs),
+            "grid_sheets": {shot: Path(entry["sheet"]).name for shot, entry in (record.get("grid") or {}).items() if entry.get("sheet")},
+            "person_notices": person_notices(master.payload_json if master else {}, refs, link is not None),
+            "other_people": {shot["id"]: who for shot in (master.payload_json if master else {}).get("shots", [])
+                             if (who := others(shot.get("board") or {}, refs, link is not None))},
             "jobs": {shot: {key: job.get(key) for key in ("state", "material_revision_id", "reason", "resolution")} for shot, job in (record.get("jobs") or {}).items()}}
 
 
@@ -583,7 +642,9 @@ def set_shot_motion(db: Session, user: User, project_id: int, unit_id: int, shot
     from . import video_chain
     from .video_documents import VideoDocumentError, canonical_payload
 
-    _link, master, _shot_row, _following = _context(db, user, project_id, unit_id, shot_id)
+    link, master, _shot_row, _following = _context(db, user, project_id, unit_id, shot_id)
+    if link is None:
+        _fail(409, "product_work_required", "运镜、光线、强度只给商品作品")
     if video_chain.locked(db, unit_id):
         _fail(409, "product_motion_locked", "成片已定稿，不能再改镜头")
     document = copy.deepcopy(master.payload_json)
@@ -636,44 +697,53 @@ def generate_shot_image(db: Session, user: User, project_id: int, unit_id: int, 
     from .project_folders import store_new
 
     link, master, shot, _following = _context(db, user, project_id, unit_id, shot_id)
-    if as_first_frame and _original_only(shot):
+    product_work = link is not None
+    if product_work and as_first_frame and _original_only(shot):
         _fail(409, "shot_image_original_only", "商品亮相和下单引导镜头只用商品原图，不用生成图作首帧")
     refs = references(db, user, unit_id)
-    if not refs["product"]:
+    if product_work and not refs["product"]:
         _fail(409, "shot_image_product_photo_missing", "商品还没有主图，没法对照保持主体一致")
-    product_id = refs["product"][0]
     choice = uses()["shot_image"]
     if not choice:
         _fail(409, "shot_image_model_unset", "「用途路由 → 镜头生图」还没选模型")
     target = shot_image.route(choice)
-    product = shot_image.to_png(_image_bytes(db, product_id))
     aspect = "{}:{}".format(*master.payload_json["aspect_ratio"])
-    used_ids = [product_id, *refs["person"], *refs["scene"], *([extra_reference_id] if extra_reference_id else [])]
-    references_png = [shot_image.fit(product, aspect)] + [shot_image.fit(shot_image.to_png(_image_bytes(db, item)), aspect) for item in used_ids[1:]]
-    base = prompt.strip() + "\n" + person_rule(refs)
+    rule = person_rule(refs, product_work, others(shot.get("board") or {}, refs, product_work))
+    # The page pre-fills the shot's still prompt, which already ends with the person rule.
+    base = prompt.strip() if rule in prompt else prompt.strip() + "\n" + rule
     tries, request = [], base
-    for attempt in range(1, MAX_STILL_TRIES + 1):
-        still = shot_image.generate(target, request, references_png, aspect)
-        verdict = shot_image.check(product, still)
-        tries.append({"attempt": attempt, **verdict})
-        if verdict["pass"]:
-            break
-        # The next try is told exactly what drifted, so it fixes the product instead of redrawing at random.
-        request = base + "\n上一张的问题（这次必须改正）：" + "；".join(verdict["problems"] or ["商品和参考照片不一致"])
-    passed = tries[-1]["pass"]
+    if product_work:
+        product_id = refs["product"][0]
+        product = shot_image.to_png(_image_bytes(db, product_id))
+        used_ids = [product_id, *refs["person"], *refs["scene"], *([extra_reference_id] if extra_reference_id else [])]
+        references_png = [shot_image.fit(product, aspect)] + [shot_image.fit(shot_image.to_png(_image_bytes(db, item)), aspect) for item in used_ids[1:]]
+        for attempt in range(1, MAX_STILL_TRIES + 1):
+            still = shot_image.generate(target, request, references_png, aspect)
+            verdict = shot_image.check(product, still)
+            tries.append({"attempt": attempt, **verdict})
+            if verdict["pass"]:
+                break
+            # The next try is told exactly what drifted, so it fixes the product instead of redrawing at random.
+            request = base + "\n上一张的问题（这次必须改正）：" + "；".join(verdict["problems"] or ["商品和参考照片不一致"])
+        passed = tries[-1]["pass"]
+    else:
+        # A persona work has no product to hold the still against, so one drawing is used as it comes.
+        used_ids = [*refs["person"], *refs["scene"], *([extra_reference_id] if extra_reference_id else [])]
+        references_png = [shot_image.fit(shot_image.to_png(_image_bytes(db, item)), aspect) for item in used_ids]
+        still, passed = shot_image.generate(target, request, references_png, aspect, keep=shot_image.PERSON_KEEP), True
     material = create_material(db, kind="image", title=f"AI 示意 · {shot_id} 首帧"[:200], tags=["AI 示意", "镜头生图"], created_by=user.email)
     revision = create_revision(
         db, material, content=still, suffix=".png", declared_mime="image/png", source_kind="ai_generated",
         provider_key="openai.compatible", provider_version=target["model"], prompt_text=request[:4000], rights_status="cleared",
         public_use_allowed=True, model_use_allowed=True, attribution_text=f"{target['label']} 生图（AI 示意）",
-        metadata={"shot_id": shot_id, "reference_revision_ids": used_ids,
-                  "consistency": {"pass": passed, "tries": tries}, "material_source": "shot_still"}, created_by=user.email)
+        metadata={"shot_id": shot_id, "reference_revision_ids": used_ids, "material_source": "shot_still",
+                  **({"consistency": {"pass": passed, "tries": tries}} if product_work else {})}, created_by=user.email)
     db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=revision.id, origin="system_reference", status="active",
                                     attached_by=user.email, note=f"镜头生图 · {shot_id}"))
     store_new(db, revision, project_id, "图片/图片素材")
     db.commit()
-    result = {"shot_id": shot_id, "material_revision_id": revision.id, "consistency": shot_image.summary(tries[-1]), "tries": len(tries),
-              **({"notice": NO_PORTRAIT} if not refs["person"] and _people(shot.get("board") or {}) else {})}
+    result = {"shot_id": shot_id, "material_revision_id": revision.id, "consistency": shot_image.summary(tries[-1]) if tries else None, "tries": len(tries) or 1,
+              **({"notice": notice} if (notice := person_notices({"shots": [shot]}, refs, product_work).get(shot_id)) else {})}
     if not passed:
         return {**result, "used": False, "next": f"试了 {len(tries)} 次商品都和原图不一致，这张不用；可以改提示词再试，或用商品原图作首帧"}
     if as_first_frame:

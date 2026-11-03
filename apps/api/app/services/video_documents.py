@@ -295,7 +295,7 @@ def canonical_board(value: object) -> dict:
     """Storyboard columns of one shot; the spoken line stays in the script block it points to."""
     board = _object(value, {"message", "visual", "camera", "speaker", "sound", "notes", "material_request",
                             "camera_presets", "look", "intensity", "chain_from_previous", "character",
-                            "source_kind", "attitude", "dub_persona"}, "video_shot_board_invalid")
+                            "source_kind", "attitude", "dub_persona", "other_people"}, "video_shot_board_invalid")
     result = {key: _text(board.get(key, ""), limit, "video_shot_board_invalid")
               for key, limit in (("message", 500), ("visual", 1000), ("sound", 500), ("notes", 500))}
     result["camera"] = _enum(board.get("camera", "fixed"), BOARD_CAMERA, "video_shot_board_invalid")
@@ -323,6 +323,12 @@ def canonical_board(value: object) -> dict:
     # A persona named here voices only this shot's line; every other shot keeps its live sound.
     if "dub_persona" in board:
         result["dub_persona"] = _text(board["dub_persona"], 100, "video_shot_board_invalid")
+    # People in the picture who are not the persona (e.g. a baby): a persona without a portrait may show them, never their face.
+    if "other_people" in board:
+        value = board["other_people"]
+        if not isinstance(value, str) or not value.strip() or len(value) > 60 or "\x00" in value:
+            raise VideoDocumentError("video_shot_board_invalid：board.other_people 写画面里出现的别的人物（不是角色本人），比如「宝宝」，要 1–60 字的文字")
+        result["other_people"] = value
     return result
 
 
@@ -368,7 +374,7 @@ def canonical_filming(value: object) -> dict:
 
 
 def canonical_payload(raw: object) -> dict:
-    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref", "postproduction", "capture_plan"}, "video_payload_invalid")
+    payload = _object(raw, {"title", "aspect_ratio", "script", "shots", "timeline", "voice", "subtitles", "overlays", "music", "cover", "render_asset_ref", "postproduction", "capture_plan", "consistency_groups"}, "video_payload_invalid")
     result = {
         "title": _text(payload.get("title", ""), 500, "video_title_invalid"),
         "aspect_ratio": _ratio(payload.get("aspect_ratio")),
@@ -524,7 +530,38 @@ def canonical_payload(raw: object) -> dict:
         width, height = result["postproduction"]["resolution"]
         if width * result["aspect_ratio"][1] != height * result["aspect_ratio"][0]:
             _fail("video_postproduction_aspect_mismatch")
+    if "consistency_groups" in payload:
+        result["consistency_groups"] = canonical_consistency_groups(payload["consistency_groups"], shots)
     return result
+
+
+def canonical_consistency_groups(value: object, shots: list[dict]) -> list[dict]:
+    """Shots drawn together on one storyboard grid because they share a person or a setting."""
+    if not isinstance(value, list) or len(value) > 30:
+        _fail("video_consistency_groups_invalid")
+    by_id = {shot["id"]: shot for shot in shots}
+    seen, groups = set(), []
+    for raw in value:
+        group = _object(raw, {"id", "shot_ids", "person", "setting"}, "video_consistency_group_invalid")
+        normalized = {"id": _id(group.get("id"), "video_consistency_group_invalid")}
+        ids = group.get("shot_ids")
+        if not isinstance(ids, list) or len(ids) < 2 or len(ids) > 60:
+            raise VideoDocumentError(f"video_consistency_group_invalid：分组 {normalized['id']} 至少要 2 个镜头；只有一个镜头就不用分组")
+        for shot_id in ids:
+            if shot_id not in by_id:
+                raise VideoDocumentError(f"video_consistency_group_invalid：分组 {normalized['id']} 里的镜头 {shot_id} 不存在")
+            if shot_id in seen:
+                raise VideoDocumentError(f"video_consistency_group_invalid：镜头 {shot_id} 在两个分组里，一个镜头只能在一组")
+            if (by_id[shot_id].get("board") or {}).get("source_kind") in {"ae_template", "library"}:
+                raise VideoDocumentError(f"video_consistency_group_invalid：镜头 {shot_id} 是模板或素材库镜头，不用生成，不进分组")
+            seen.add(shot_id)
+        normalized["shot_ids"] = list(ids)
+        normalized["person"] = _text(group.get("person", ""), 500, "video_consistency_group_invalid")
+        normalized["setting"] = _text(group.get("setting", ""), 500, "video_consistency_group_invalid")
+        if normalized["id"] in {item["id"] for item in groups}:
+            raise VideoDocumentError(f"video_consistency_group_invalid：分组 id {normalized['id']} 重复")
+        groups.append(normalized)
+    return groups
 
 
 def legacy_upgrade_preview(payload: dict, asset_refs: list[dict], evidence_refs: list[dict]) -> dict:

@@ -404,5 +404,21 @@
       "stable image with no flicker",
       "no on-screen text, captions, logos or watermarks; any lettering already on the product stays exactly as is, nothing added (titles are added later in post)"
     ]
+  },
+  "scene_video_rules": {
+    "zh": [
+      "连续单镜头不切镜",
+      "无人声只保留环境声",
+      "画面里的东西不变形，不凭空出现或消失",
+      "画面稳定无闪烁",
+      "画面里不出现任何文字、字幕、标志和水印（要加的字由 AE 后期叠加）"
+    ],
+    "en": [
+      "one continuous shot with no cuts",
+      "no human voice, ambient sound only",
+      "objects in the frame keep their shape and never appear or disappear out of nowhere",
+      "stable image with no flicker",
+      "no on-screen text, captions, logos or watermarks (titles are added later in post)"
+    ]
   }
 }

@@ -18,6 +18,7 @@ from .. import runtime_config
 
 KEEP = ("Keep the product in the reference photo exactly as it is: same shape, proportions, colours, materials, "
         "logo and lettering, buttons and accessories. Do not add, remove or redesign any part of it. No added text or watermark.")
+PERSON_KEEP = "Keep the person in the reference photos the same person: same face, hair and build. No added text or watermark."
 CHECK_SYSTEM = (
     "你是商品视频的质检。第一张图是商品真实照片，第二张是生成的画面。只看商品本身是否和真实照片是同一件："
     "外形、比例、颜色、材质、logo / 字样、按键与配件。场景、光线、拍摄角度变化不算问题；商品被改、被加东西、少了部件、字样变了才算。"
@@ -144,13 +145,20 @@ GRID = 3
 MAX_GRID = GRID * GRID
 GRID_KEEP = ("The reference images are the product, the people and the place this storyboard must keep. "
              "Keep the product exactly as photographed, and every person, outfit, place and lighting consistent with them. No added text or watermark.")
+GRID_KEEP_SCENE = ("The reference images are the people this storyboard must keep. "
+                   "Keep every person, outfit, place and lighting consistent across the cells. No added text or watermark.")
 # Reveal / CTA shots show the real product photo; template and library shots already have their picture.
 _NOT_GRID = {"ae_template", "library"}
 
 
-def grid_prompt(cells: list[str], aspect_ratio: str, person: str = "", setting: str = "", *, product: bool = False, portrait: bool = False) -> str:
+GRID_WITH_OTHERS = ("画面里不出现角色本人；只有格子描述里写明的人物可以出现，只出现手、脚、身体局部或背影，不露脸，不出现正脸和侧脸；"
+                    "其余格子不出现人物，也不多出别的人。")
+
+
+def grid_prompt(cells: list[str], aspect_ratio: str, person: str = "", setting: str = "", *, product: bool = False, portrait: bool = False,
+                persona: bool = False, others: bool = False) -> str:
     """One storyboard sheet: up to nine shots of the same people and place in a 3×3 grid split by thin white lines."""
-    from .product_video import WITH_PORTRAIT, WITHOUT_PERSON
+    from .product_video import SCENE_WITHOUT_PERSON, WITH_PORTRAIT, WITHOUT_PERSON
 
     same = "所有格子里是同一批人物，长相、发型、服装一致，" if portrait else "所有格子"
     lines = [(f"一张 {aspect_ratio} 的分镜图，画面等分成 3 行 3 列共 9 格，格与格之间用一条细白线隔开，没有编号和文字，每格的比例也是 {aspect_ratio}，"
@@ -164,7 +172,7 @@ def grid_prompt(cells: list[str], aspect_ratio: str, person: str = "", setting: 
         lines.append(WITH_PORTRAIT + (f"人物：{person}" if person else ""))
     else:
         # A description alone makes the model invent a face; with no portrait there is no person to draw.
-        lines.append(WITHOUT_PERSON)
+        lines.append((GRID_WITH_OTHERS if others else SCENE_WITHOUT_PERSON) if persona else WITHOUT_PERSON)
     if setting:
         lines.append(f"场景：{setting}")
     lines.append("画面里不出现任何文字、字幕、标志和水印。")
@@ -265,11 +273,11 @@ def upscale(content: bytes, aspect_ratio: str, short_side: int = 1080) -> bytes:
     return out.getvalue()
 
 
-def grid_shot(shot: dict) -> bool:
-    """Any shot whose picture may be generated can go into the grid; reveal / CTA, AE template and library shots cannot."""
+def grid_shot(shot: dict, product: bool = True) -> bool:
+    """Any shot whose picture may be generated can go into the grid; reveal / CTA (product works), AE template and library shots cannot."""
     from .product_video import _original_only
 
-    return not _original_only(shot) and (shot.get("board") or {}).get("source_kind") not in _NOT_GRID
+    return not (product and _original_only(shot)) and (shot.get("board") or {}).get("source_kind") not in _NOT_GRID
 
 
 def close_up(shot: dict) -> bool:
@@ -296,24 +304,29 @@ def _draw_checked(target: dict, prompt: str, references: list[bytes], aspect: st
     return still, {"pass": tries[-1]["pass"], "tries": tries}
 
 
-def _alone_prompt(board: dict, refs: dict, cell: int | None) -> str:
+def _alone_prompt(board: dict, refs: dict, cell: int | None, group: dict, product: bool) -> str:
     from .product_motion import still_prompt
-    from .product_video import _people, person_rule
+    from .product_video import _people, others, person_rule
 
     if not refs["person"]:
         board = {key: value for key, value in board.items() if key != "attitude"}
-    prompt = still_prompt(board, people=_people(board) and bool(refs["person"])) + "\n" + person_rule(refs)
+    prompt = still_prompt(board, people=_people(board) and bool(refs["person"]), person=group.get("person") or "" if refs["person"] else "",
+                          setting=group.get("setting") or "") + "\n" + person_rule(refs, product, others(board, refs, product))
     if cell:
         prompt += f"\n最后一张参考图是这条视频的分镜图，第 {cell} 格就是这一镜；人物、服装、房间、光线和它一致，只画这一镜一张完整画面。"
     return prompt
 
 
-def _cell_text(shot: dict, refs: dict) -> str:
+def _cell_text(shot: dict, refs: dict, product: bool = True) -> str:
     from .product_motion import _picture
+    from .product_video import others
 
     board = shot.get("board") or {}
     attitude = str(board.get("attitude") or "").strip() if refs["person"] else ""
-    return "；".join(filter(None, [attitude, _picture(board), shot.get("framing") or ""]))[:300]
+    who = others(board, refs, product)
+    # The permission goes after the cut so a long picture description cannot drop it.
+    return "；".join(filter(None, [attitude, _picture(board), shot.get("framing") or ""]))[:300] + (
+        f"（可以出现{who}的手、脚、身体局部或背影，不露脸）" if who else "")
 
 
 def _register(db, user, project_id: int, unit_id: int, shot_id: str, still: bytes, model: str, label: str, metadata: dict) -> int:
@@ -356,28 +369,33 @@ def _reference_pictures(db, refs: dict, aspect: str, extra: int | None = None) -
     return product, [fit(item, aspect) for item in pictures], ids
 
 
-def grid(db, user, project_id: int, unit_id: int, shot_ids: list[str], person: str = "", setting: str = "",
-         reference_revision_id: int | None = None, sheets: list | None = None) -> dict:
-    """Storyboard sheets for the shots of an approved 导演稿; each cell becomes that shot's first-frame candidate."""
-    import time
-
+def _group(db, user, project_id: int, unit_id: int, group_id: str) -> tuple[object, dict, list[dict], bool]:
+    """The approved 导演稿, the consistency group the sheet is drawn for, its shots in order, and whether this is a product work."""
     from . import product_video, video_chain
-    from .model_registration import uses
 
     master, _current = video_chain._approved_master(db, user, project_id, unit_id)
-    if product_video.work(db, unit_id) is None:
-        _fail(409, "product_work_required", "九宫格分镜只给商品作品")
-    shots = sorted(master.payload_json["shots"], key=lambda item: item["order"])
-    by_id = {shot["id"]: shot for shot in shots}
-    unknown = [item for item in shot_ids if item not in by_id]
-    if unknown:
-        _fail(422, "shot_grid_shot_unknown", f"没有这些镜头：{', '.join(unknown)}")
-    refused = [item for item in shot_ids if not grid_shot(by_id[item])]
+    product = product_video.work(db, unit_id) is not None
+    if not product and not product_video.persona_work(db, unit_id):
+        _fail(409, "product_work_required", "九宫格分镜只给商品作品和角色作品")
+    group = next((item for item in product_video.groups(master.payload_json) if item["id"] == group_id), None)
+    if group is None:
+        _fail(404, "shot_grid_group_unknown", f"导演稿里没有分组 {group_id}；九宫格只给 consistency_groups 里要保持人物或场景一致的一组镜头")
+    shots = [shot for shot in sorted(master.payload_json["shots"], key=lambda item: item["order"]) if shot["id"] in group["shot_ids"]]
+    return master, group, shots, product
+
+
+def grid(db, user, project_id: int, unit_id: int, group_id: str, reference_revision_id: int | None = None, sheets: list | None = None) -> dict:
+    """Storyboard sheets for one consistency group of an approved 导演稿; each cell becomes that shot's first-frame candidate."""
+    import time
+
+    from . import product_video
+    from .model_registration import uses
+
+    master, group, chosen, product_work = _group(db, user, project_id, unit_id, group_id)
+    refused = [shot["id"] for shot in chosen if not grid_shot(shot, product_work)]
     if refused:
         _fail(422, "shot_grid_original_only", f"{', '.join(refused)} 是商品亮相 / 下单引导或模板 / 素材库镜头，用商品原图或已有素材，不进九宫格")
-    chosen = [by_id[item] for item in shot_ids] if shot_ids else [shot for shot in shots if grid_shot(shot) and not close_up(shot)]
-    if not chosen:
-        _fail(409, "shot_grid_no_shots", "导演稿里没有可以画九宫格的镜头")
+    person, setting = group.get("person") or "", group.get("setting") or ""
     choice = uses()["shot_image"]
     if not choice:
         _fail(409, "shot_image_model_unset", "「用途路由 → 镜头生图」还没选模型")
@@ -385,13 +403,14 @@ def grid(db, user, project_id: int, unit_id: int, shot_ids: list[str], person: s
     aspect = "{}:{}".format(*master.payload_json["aspect_ratio"])
     refs = product_video.references(db, user, unit_id)
     product, references, reference_ids = _reference_pictures(db, refs, aspect, reference_revision_id)
-    keep = GRID_KEEP if product is None else f"{GRID_KEEP} {KEEP}"
+    keep = (GRID_KEEP if product_work else GRID_KEEP_SCENE) if product is None else f"{GRID_KEEP} {KEEP}"
     folder = _sheet_folder(db, project_id, unit_id)
     placed, candidates, failed, previous = {}, {}, [], None
     for number, offset in enumerate(range(0, len(chosen), MAX_GRID), 1):
         chunk = chosen[offset:offset + MAX_GRID]
-        prompt = grid_prompt([_cell_text(shot, refs) for shot in chunk], aspect, person, setting,
-                             product=product is not None, portrait=bool(refs["person"]))
+        prompt = grid_prompt([_cell_text(shot, refs, product_work) for shot in chunk], aspect, person, setting,
+                             product=product is not None, portrait=bool(refs["person"]), persona=not product_work,
+                             others=any(product_video.others(shot.get("board") or {}, refs, product_work) for shot in chunk))
         # Later sheets see the first one so people and room stay the same across sheets.
         sheet = generate(target, prompt, references + ([fit(previous, aspect)] if previous else []), aspect, keep=keep)
         sheet_path = None
@@ -405,7 +424,7 @@ def grid(db, user, project_id: int, unit_id: int, shot_ids: list[str], person: s
         previous = previous or sheet
         for index, shot in enumerate(chunk):
             # A cell that drifts from the product photo is redrawn alone, against the same references plus its sheet.
-            still, consistency = _draw_checked(target, _alone_prompt(shot.get("board") or {}, refs, index + 1), references + [fit(sheet, aspect)],
+            still, consistency = _draw_checked(target, _alone_prompt(shot.get("board") or {}, refs, index + 1, group, product_work), references + [fit(sheet, aspect)],
                                                aspect, keep, product, first=upscale(cells[index], aspect))
             if consistency is not None and not consistency["pass"]:
                 failed.append(shot["id"])
@@ -424,9 +443,8 @@ def grid(db, user, project_id: int, unit_id: int, shot_ids: list[str], person: s
     product_video._put(db, product_video.JOBS_KEY, jobs, user.email)
     db.commit()
     hints = {shot["id"]: "商品纯特写，单独用 generate_shot_image 生成会更准" for shot in chosen if close_up(shot)}
-    return {"sheets": (len(chosen) + MAX_GRID - 1) // MAX_GRID, "candidates": candidates,
-            "skipped": [shot["id"] for shot in shots if shot["id"] not in candidates],
-            "references": refs, "person_notices": product_video.person_notices({"shots": chosen}, refs), "hints": hints, "consistency_failed": failed,
+    return {"group_id": group_id, "sheets": (len(chosen) + MAX_GRID - 1) // MAX_GRID, "candidates": candidates,
+            "references": refs, "person_notices": product_video.person_notices({"shots": chosen}, refs, product_work), "hints": hints, "consistency_failed": failed,
             "next": "每格是这一镜的首帧候选，没有自动采用：用户在页面上选，或用 set_shot_first_frame 设；不满意的镜头只重画那一镜"
                     + ("；consistency_failed 里的镜头试了 3 次商品仍和主图不一致，换提示词重画或改用商品原图" if failed else "")}
 
@@ -441,6 +459,7 @@ def redraw_cell(db, user, project_id: int, unit_id: int, shot_id: str) -> dict:
     from .model_registration import uses
 
     master, _current = video_chain._approved_master(db, user, project_id, unit_id)
+    product_work = product_video.work(db, unit_id) is not None
     jobs = product_video._setting(db, product_video.JOBS_KEY)
     entry = ((jobs.get(str(unit_id)) or {}).get("grid") or {}).get(shot_id)
     sheet = Path(entry["sheet"]) if entry and entry.get("sheet") else None
@@ -456,8 +475,8 @@ def redraw_cell(db, user, project_id: int, unit_id: int, shot_id: str) -> dict:
     aspect = "{}:{}".format(*master.payload_json["aspect_ratio"])
     refs = product_video.references(db, user, unit_id)
     product, references, reference_ids = _reference_pictures(db, refs, aspect)
-    keep = GRID_KEEP if product is None else f"{GRID_KEEP} {KEEP}"
-    prompt = _alone_prompt(shot.get("board") or {}, refs, entry.get("cell"))
+    keep = (GRID_KEEP if product_work else GRID_KEEP_SCENE) if product is None else f"{GRID_KEEP} {KEEP}"
+    prompt = _alone_prompt(shot.get("board") or {}, refs, entry.get("cell"), product_video.group_of(master.payload_json, shot_id) or {}, product_work)
     still, consistency = _draw_checked(target, prompt, references + [fit(to_png(sheet.read_bytes()), aspect)], aspect, keep, product)
     revision_id = _register(db, user, project_id, unit_id, shot_id, still, target["model"], target["label"],
                             {"prompt": prompt, "reference_revision_ids": reference_ids, "consistency": consistency,
@@ -465,7 +484,7 @@ def redraw_cell(db, user, project_id: int, unit_id: int, shot_id: str) -> dict:
     entry["candidates"].append(revision_id)
     product_video._put(db, product_video.JOBS_KEY, jobs, user.email)
     db.commit()
-    notice = product_video.person_notices({"shots": [shot]}, refs).get(shot_id)
+    notice = product_video.person_notices({"shots": [shot]}, refs, product_work).get(shot_id)
     return {"shot_id": shot_id, "material_revision_id": revision_id, "used": False,
             "consistency": None if consistency is None else summary(consistency["tries"][-1]),
             **({"notice": notice} if notice else {})}
@@ -476,35 +495,31 @@ _GRID_STALE_SECONDS = 15 * 60
 _grid_executor = None
 
 
-def start_grid(db, user, project_id: int, unit_id: int, shot_ids: list[str], person: str = "", setting: str = "",
-               reference_revision_id: int | None = None) -> dict:
+def start_grid(db, user, project_id: int, unit_id: int, group_id: str, reference_revision_id: int | None = None) -> dict:
     """A sheet takes minutes (drawing plus a product check per cell), so it runs in the background and the page polls."""
     from .product_video import require_persona
     require_persona(db, unit_id)
     import time
     from concurrent.futures import ThreadPoolExecutor
 
-    from . import product_video, video_chain
+    from . import product_video
 
     global _grid_executor
-    video_chain._approved_master(db, user, project_id, unit_id)
-    if product_video.work(db, unit_id) is None:
-        _fail(409, "product_work_required", "九宫格分镜只给商品作品")
+    _group(db, user, project_id, unit_id, group_id)
     jobs = product_video._setting(db, product_video.JOBS_KEY)
     run = (jobs.get(str(unit_id)) or {}).get(_GRID_RUN) or {}
     if run.get("status") == "running" and time.time() - run.get("started_at", 0) < _GRID_STALE_SECONDS:
         _fail(409, "shot_grid_running", "九宫格分镜还在生成，等这次好了再点")
-    jobs.setdefault(str(unit_id), {})[_GRID_RUN] = {"status": "running", "started_at": time.time(), "sheets": []}
+    jobs.setdefault(str(unit_id), {})[_GRID_RUN] = {"status": "running", "started_at": time.time(), "sheets": [], "group_id": group_id}
     product_video._put(db, product_video.JOBS_KEY, jobs, user.email)
     db.commit()
     if _grid_executor is None:
         _grid_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="storyboard-grid")
-    _grid_executor.submit(_run_grid, user.id, project_id, unit_id, shot_ids, person, setting, reference_revision_id)
+    _grid_executor.submit(_run_grid, user.id, project_id, unit_id, group_id, reference_revision_id)
     return {"status": "running", "next": "在后台生成，约 2–4 分钟；用 get_shot_video 或页面看 grid_run 的结果"}
 
 
-def _run_grid(user_id: int, project_id: int, unit_id: int, shot_ids: list[str], person: str, setting: str,
-              reference_revision_id: int | None) -> None:
+def _run_grid(user_id: int, project_id: int, unit_id: int, group_id: str, reference_revision_id: int | None) -> None:
     import time
 
     from fastapi import HTTPException as _HTTP
@@ -517,7 +532,7 @@ def _run_grid(user_id: int, project_id: int, unit_id: int, shot_ids: list[str], 
     result, error = None, None
     with SessionLocal() as db:
         try:
-            result = grid(db, db.get(User, user_id), project_id, unit_id, shot_ids, person, setting, reference_revision_id, sheets=sheets)
+            result = grid(db, db.get(User, user_id), project_id, unit_id, group_id, reference_revision_id, sheets=sheets)
         except _HTTP as exc:
             db.rollback()
             detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
@@ -527,8 +542,8 @@ def _run_grid(user_id: int, project_id: int, unit_id: int, shot_ids: list[str], 
             error = f"九宫格分镜出错：{type(exc).__name__}"
         jobs = product_video._setting(db, product_video.JOBS_KEY)
         jobs.setdefault(str(unit_id), {})[_GRID_RUN] = {
-            "status": "failed" if error else "done", "finished_at": time.time(), "sheets": sheets, "error": error,
-            **({key: result[key] for key in ("skipped", "consistency_failed", "hints")} if result else {})}
+            "status": "failed" if error else "done", "finished_at": time.time(), "sheets": sheets, "error": error, "group_id": group_id,
+            **({key: result[key] for key in ("consistency_failed", "hints")} if result else {})}
         product_video._put(db, product_video.JOBS_KEY, jobs, "system")
         db.commit()
 

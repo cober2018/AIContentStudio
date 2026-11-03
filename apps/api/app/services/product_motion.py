@@ -72,13 +72,15 @@ def still_prompt(board: dict, *, people: bool, person: str = "", setting: str = 
     return "\n".join(f"{name}：{text}" for name, text in parts if text) + "\n画面里不出现任何文字、字幕、标志和水印。"
 
 
-def motion_prompt(board: dict, *, people: bool, english: bool) -> str:
+def motion_prompt(board: dict, *, people: bool, english: bool, setting: str = "", product: bool = True) -> str:
     """One video prompt: what moves, how the camera moves, light, strength and the fixed product / stability rules."""
     data = catalog()
     cameras, looks = _cameras(), _looks()
     lang = "en" if english else "zh"
     # The person's attitude leads (studio.video.prompt-direction): it directs face, body and rhythm together.
     parts = [str(board.get("attitude") or "").strip(), _picture(board)]
+    if setting.strip():
+        parts.append(("Setting: " if english else "场景：") + setting.strip())
     moves = [cameras[item]["motion_en" if english else "motion"] for item in board.get("camera_presets") or [] if item in cameras]
     if moves:
         parts.append(("Camera: " if english else "运镜：") + ("; at the same time, " if english else "，同时").join(moves))
@@ -89,5 +91,5 @@ def motion_prompt(board: dict, *, people: bool, english: bool) -> str:
         parts.append(strength["motion_en"] if english else f"运镜强度：{strength['name']}")
     if people:
         parts.append(data["realism"][lang])
-    parts += data["video_rules"][lang]
+    parts += data["video_rules" if product else "scene_video_rules"][lang]
     return ("。" if not english else ". ").join(part.rstrip("。. ") for part in parts if part)

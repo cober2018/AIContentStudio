@@ -148,7 +148,7 @@ export function MusicPanel({ projectId, unitId, readOnly }: { projectId: number;
   </section>;
 }
 
-// Product works: after the 导演稿 is approved and materials are mapped, generation is offered only for shots still without a picture.
+// Product and persona works: after the 导演稿 is approved and materials are mapped, generation is offered only for shots still without a picture.
 export function ProductShotGeneration({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
   const chain = useVideoChain(projectId, unitId);
   const data = chain.data;

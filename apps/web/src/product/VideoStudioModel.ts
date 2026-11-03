@@ -20,7 +20,10 @@ export type VideoPayload = {
   timeline: { duration_ms: number; tracks: VideoTrack[] }; voice: { mode: "none" | "recorded" | "tts"; material_revision_id?: number };
   subtitles: { cues: VideoCue[] }; overlays: VideoOverlay[]; music: { material_revision_id?: number }; cover: { material_revision_id?: number };
   render_asset_ref?: { material_revision_id: number };
+  consistency_groups?: ConsistencyGroup[];
 };
+// Shots drawn together on one storyboard grid because they share a person or a setting; written by the model in the 导演稿.
+export type ConsistencyGroup = { id: string; shot_ids: string[]; person?: string; setting?: string };
 export type VideoAssetRef = { material_revision_id: number; content_hash: string; role: string; slot_key?: string; sort_order?: number; placement?: Record<string, unknown> };
 export type VideoEvidenceRef = { fact_pack_item_id: number; snapshot_checksum: string; role?: string; sort_order?: number; locator: Record<string, unknown> };
 export type VideoDraft = { payloadSchema: "video.master.v2"; payload: VideoPayload; assetRefs: VideoAssetRef[]; evidenceRefs: VideoEvidenceRef[]; asrReceiptId?: string };
@@ -170,7 +173,8 @@ export function removeShot(draft: VideoDraft, id: string): VideoDraft {
   if (draft.payload.shots.some(shot => shot.production?.continuity_reference?.shot_id === id)) throw new Error("请先移除引用此镜头的连续性依赖，再删除镜头");
   if (draft.payload.timeline.tracks.some((track) => track.items.some((item) => item.shot_id === id))) throw new Error("Remove timeline placement before deleting shot");
   const shots = reordered(draft.payload.shots.filter((shot) => shot.id !== id));
-  const payload = { ...draft.payload, shots, ...(draft.payload.postproduction ? { postproduction: { ...draft.payload.postproduction, ae_shot_ids: draft.payload.postproduction.ae_shot_ids.filter(shotId => shotId !== id), ae_compositions: draft.payload.postproduction.ae_compositions?.filter(comp => comp.shot_id !== id).map((comp, index, remaining) => ({ ...comp, role_id: remaining.length === 1 ? "ae_intermediate" : `ae_intermediate_${index + 1}` })) } } : {}) };
+  const payload = { ...draft.payload, shots, ...(draft.payload.postproduction ? { postproduction: { ...draft.payload.postproduction, ae_shot_ids: draft.payload.postproduction.ae_shot_ids.filter(shotId => shotId !== id), ae_compositions: draft.payload.postproduction.ae_compositions?.filter(comp => comp.shot_id !== id).map((comp, index, remaining) => ({ ...comp, role_id: remaining.length === 1 ? "ae_intermediate" : `ae_intermediate_${index + 1}` })) } } : {}),
+    ...(draft.payload.consistency_groups ? { consistency_groups: draft.payload.consistency_groups.map(group => ({ ...group, shot_ids: group.shot_ids.filter(shotId => shotId !== id) })).filter(group => group.shot_ids.length >= 2) } : {}) };
   return changed(draft, payload, orderedAssetRefs(payload, draft.assetRefs));
 }
 

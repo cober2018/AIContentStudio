@@ -176,6 +176,11 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
       {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
     </section>
     {showDraft && draft && draft.payload.shots.some(shot => shot.board) && <Suspense fallback={null}><StoryboardTable projectId={projectId} unitId={unitId} draft={draft} readOnly paged onChange={() => {}} /></Suspense>}
+    {showDraft && !!draft?.payload.consistency_groups?.length && <section aria-label="九宫格分组" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
+      <h3 className="font-semibold">九宫格分组</h3>
+      <p className="text-xs text-slate-500">这些镜头要保持同一个人物或同一个场景，导演稿采用后每组一起出一张九宫格；没分组的镜头各自单独生成。</p>
+      <ul className="mt-2 space-y-1">{draft.payload.consistency_groups.map(group => <li key={group.id}>{group.id}：{group.shot_ids.map(id => `镜头 ${(draft.payload.shots.find(shot => shot.id === id)?.order ?? 0) + 1}`).join("、")}{group.setting ? ` · 场景：${group.setting}` : ""}{group.person ? ` · 人物：${group.person}` : ""}</li>)}</ul>
+    </section>}
     {showDraft && <Suspense fallback={null}><ProductShotPanel projectId={projectId} unitId={unitId} payload={data.master?.payload || null} locked={!!data.locked} view="draft" /></Suspense>}
   </div>;
 }

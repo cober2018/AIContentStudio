@@ -1207,10 +1207,10 @@ def test_storyboard_grid_takes_product_shots_but_not_reveal_or_cta():
     assert "同一批人物" in with_face and "参考照片" in with_face and "商品真实照片" in with_face and "不露脸" not in with_face
 
 
-def _grid_doubles(monkeypatch, tmp_path, shots, refs, verdicts=None):
+def _grid_doubles(monkeypatch, tmp_path, shots, refs, verdicts=None, groups=None):
     from app.services import model_registration, product_video, shot_image, video_chain
 
-    master = SimpleNamespace(payload_json={"aspect_ratio": [9, 16], "shots": shots})
+    master = SimpleNamespace(payload_json={"aspect_ratio": [9, 16], "shots": shots, "consistency_groups": groups or []})
     calls = {"store": {}, "sent": [], "registered": [], "checks": [], "metadata": []}
     monkeypatch.setattr(video_chain, "_approved_master", lambda *args: (master, {}))
     monkeypatch.setattr(product_video, "work", lambda *args: object())
@@ -1241,15 +1241,21 @@ def test_storyboard_grid_registers_candidates_without_adopting(monkeypatch, tmp_
 
     shots = [{"id": f"s{index}", "order": index, "purpose": "场景", "board": {"visual": f"孩子动作{index}", "source_kind": "shoot"}} for index in range(11)]
     shots.append({"id": "cta", "order": 11, "purpose": "cta：下单", "board": {"visual": "包装", "source_kind": "product_image"}})
-    calls = _grid_doubles(monkeypatch, tmp_path, shots, {"product": [], "person": [], "scene": [], "origin": {}})
+    groups = [{"id": "g1", "shot_ids": [f"s{index}" for index in range(11)], "person": "", "setting": "客厅"},
+              {"id": "g2", "shot_ids": ["cta", "s0"], "person": "", "setting": ""}]
+    calls = _grid_doubles(monkeypatch, tmp_path, shots, {"product": [], "person": [], "scene": [], "origin": {}}, groups=groups)
     db = SimpleNamespace(commit=lambda: None)
-    result = shot_image.grid(db, SimpleNamespace(email="a@b"), 1, 2, [])
+    result = shot_image.grid(db, SimpleNamespace(email="a@b"), 1, 2, "g1")
     assert result["sheets"] == 2 and calls["sent"] == [0, 1] and calls["checks"] == []
-    assert calls["registered"] == [f"s{index}" for index in range(11)] and result["skipped"] == ["cta"]
+    assert calls["registered"] == [f"s{index}" for index in range(11)] and result["group_id"] == "g1"
     assert calls["store"]["2"]["grid"]["s9"]["cell"] == 1 and "frames" not in calls["store"]["2"]
+    assert "场景：客厅" in calls["metadata"][0]["prompt"]
     with pytest.raises(HTTPException) as error:
-        shot_image.grid(db, SimpleNamespace(email="a@b"), 1, 2, ["cta"])
+        shot_image.grid(db, SimpleNamespace(email="a@b"), 1, 2, "g2")
     assert error.value.detail["code"] == "shot_grid_original_only"
+    with pytest.raises(HTTPException) as error:
+        shot_image.grid(db, SimpleNamespace(email="a@b"), 1, 2, "g9")
+    assert error.value.detail["code"] == "shot_grid_group_unknown"
 
 
 def test_storyboard_grid_checks_every_cell_against_the_product_and_redraws_alone(monkeypatch, tmp_path):
@@ -1259,8 +1265,9 @@ def test_storyboard_grid_checks_every_cell_against_the_product_and_redraws_alone
              {"id": "close", "order": 1, "purpose": "特写", "board": {"visual": "包装正面", "source_kind": "product_image"}}]
     refs = {"product": [7], "person": [], "scene": [], "origin": {"product": "sku_primary_image"}}
     failing = {"pass": False, "problems": ["logo 变了"]}
-    calls = _grid_doubles(monkeypatch, tmp_path, shots, refs, verdicts=[{"pass": True, "problems": []}, failing, failing, failing])
-    result = shot_image.grid(SimpleNamespace(commit=lambda: None), SimpleNamespace(email="a@b"), 1, 2, ["people", "close"])
+    calls = _grid_doubles(monkeypatch, tmp_path, shots, refs, verdicts=[{"pass": True, "problems": []}, failing, failing, failing],
+                          groups=[{"id": "g1", "shot_ids": ["people", "close"], "person": "", "setting": ""}])
+    result = shot_image.grid(SimpleNamespace(commit=lambda: None), SimpleNamespace(email="a@b"), 1, 2, "g1")
     # One sheet, then the close-up redrawn alone twice: three checks for it, within the shot-still try limit.
     assert calls["sent"] == [1, 2, 2] and calls["checks"] == [True] * (1 + product_video.MAX_STILL_TRIES)
     assert result["consistency_failed"] == ["close"] and result["hints"] == {"close": "商品纯特写，单独用 generate_shot_image 生成会更准"}

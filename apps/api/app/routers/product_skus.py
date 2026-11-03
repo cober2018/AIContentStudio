@@ -730,9 +730,7 @@ def post_shot_image(project_id: int, unit_id: int, shot_id: str, payload: ShotIm
 
 class StoryboardGridIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    shot_ids: list[str] = Field(default_factory=list, max_length=60)
-    person: str = Field(default="", max_length=500)
-    setting: str = Field(default="", max_length=500)
+    group_id: str = Field(min_length=1, max_length=100)
     reference_revision_id: int | None = Field(default=None, gt=0)
 
 
@@ -740,7 +738,7 @@ class StoryboardGridIn(BaseModel):
 def post_storyboard_grid(project_id: int, unit_id: int, payload: StoryboardGridIn, db=Depends(get_db), user=Depends(require_editor)):
     from ..services import shot_image
 
-    return shot_image.start_grid(db, user, project_id, unit_id, payload.shot_ids, payload.person, payload.setting, payload.reference_revision_id)
+    return shot_image.start_grid(db, user, project_id, unit_id, payload.group_id, payload.reference_revision_id)
 
 
 @router.get("/content-projects/{project_id}/units/{unit_id}/product-video/storyboard-grid/sheets/{name}")
