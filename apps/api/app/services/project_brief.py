@@ -30,7 +30,7 @@ class ProductMaterialRef(BaseModel):
     model_config = ConfigDict(extra="forbid")
     material_revision_id: int = Field(gt=0)
     content_hash: str = Field(min_length=64, max_length=64)
-    categories: list[Literal["front", "side", "back", "detail", "dimensions", "real_product", "real_demo", "measurement", "comparison", "specification", "authorized_feedback", "ai_scene"]] = Field(default_factory=list, max_length=12)
+    categories: list[Literal["front", "side", "back", "detail", "dimensions", "real_product", "real_demo", "measurement", "comparison", "specification", "certificate", "authorized_feedback", "ai_scene"]] = Field(default_factory=list, max_length=12)
 
 
 class ProductClaim(BaseModel):

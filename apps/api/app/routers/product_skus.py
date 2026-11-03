@@ -191,13 +191,22 @@ def image_revision(db, data):
     return revision
 
 
+def _image_urls(db, rev):
+    out = {}
+    for ref in (rev.product_json or {}).get("material_refs") or []:
+        revision = db.get(MaterialRevision, ref["material_revision_id"])
+        if revision is not None:
+            out[str(revision.id)] = f"/api/v1/materials/{revision.material_id}/revisions/{revision.id}/raw"
+    return out
+
+
 def sku_json(db, row):
     rev = sku_revision(db, row)
     return {"id": row.id, "code": row.code, "revision": row.revision, "revision_id": rev.id,
         "external_code": rev.external_code, "product": rev.product_json,
         "primary_image_revision_id": rev.primary_image_revision_id, "primary_image_kind": rev.primary_image_kind,
         "image_url": f"/api/v1/product-skus/{row.id}/image?revision={rev.revision}" if rev.primary_image_revision_id else None,
-        "default_plan_id": row.default_plan_id}
+        "image_urls": _image_urls(db, rev), "default_plan_id": row.default_plan_id}
 
 
 def commit(db):

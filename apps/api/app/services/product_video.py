@@ -130,6 +130,17 @@ def latest_main_image(db: Session, link: ProductSkuWork) -> tuple[int | None, in
     return (row[0], row[1]) if row else (None, None)
 
 
+def latest_info_images(db: Session, link: ProductSkuWork) -> list[dict]:
+    """The pictures besides the main image on the product's newest revision; like the main image, pictures added later reach existing works."""
+    newest = db.scalar(select(ProductSkuRevision).where(ProductSkuRevision.sku_id == link.sku_id)
+                       .order_by(ProductSkuRevision.revision.desc()).limit(1))
+    if newest is None:
+        return []
+    return [{"material_revision_id": ref["material_revision_id"], "categories": ref.get("categories") or []}
+            for ref in (newest.product_json or {}).get("material_refs") or []
+            if ref.get("material_revision_id") != newest.primary_image_revision_id]
+
+
 def direction(db: Session, unit_id: int) -> dict | None:
     """What a product work adds to the video brief; None for persona works."""
     link = work(db, unit_id)
@@ -146,7 +157,8 @@ def direction(db: Session, unit_id: int) -> dict | None:
     mode = _mode(db, link, unit_id)
     return {
         "product": {"name": product.get("name"), "category_text": product.get("category"), "variant": product.get("variant"),
-                    "selling_points": product.get("selling_points") or [], "primary_image_revision_id": latest_main_image(db, link)[0]},
+                    "selling_points": product.get("selling_points") or [], "primary_image_revision_id": latest_main_image(db, link)[0],
+                    "info_images": latest_info_images(db, link)},
         "category": None if category is None else {
             "name": category["name"], "revision": category["revision"], "directive": profile.get("directive"),
             "styles": [{"id": item, "name": product_categories.STYLES[item], "skill": product_categories.style_ref(item)} for item in styles],
