@@ -172,7 +172,7 @@ def current(db: Session, project_id: int) -> dict | None:
         return None
     labels = (_record(db, project_id).get("labels") or {})
     items = [_item_view(item, labels.get(str(item.id)) or []) for item in sorted(pack.items, key=lambda row: (row.sort_order, row.id))]
-    return {"revision_no": boundary.revision_no, "fact_pack_id": pack.id, "frozen_at": pack.frozen_at, "items": items,
+    return {"revision_no": boundary.revision_no, "fact_pack_id": pack.id, "frozen_at": pack.frozen_at.isoformat() if pack.frozen_at else None, "items": items,
             "labelled": sum(1 for item in items if item["labels"])}
 
 
