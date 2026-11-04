@@ -83,6 +83,8 @@ SAMPLES = {
     "cert-card": {"k1": "第三方机构检测", "k2": "电池安全测试通过", "k3": "报告编号可查", "source": "来源：示例检测报告", "_images": ["cert"]},
     "buy-cta": {"name": "头戴降噪耳机", "price": "¥259", "cta": "点下方链接看看", "_images": ["product"]},
     "color-swatch": {"c1": "云白", "c2": "雾蓝", "c3": "曜黑", "c4": "", "_images": ["img1", "img2", "img3"]},
+    "tech-points": {"heading": "判断过敏体质的四点", "point1": "吃饱没吃饱都哭闹", "point2": "特别容易受惊吓", "point3": "黄疸一直退不下去", "point4": "身上反复长湿疹", "point5": "", "label": "", "beats": ""},
+    "tech-summary": {"title": "专业诊断最可靠", "body": "四点帮你留意，具体要找医生诊断\n点关注，下期讲护理和饮食", "label": ""},
 }
 IMAGES = {"map-route": ["map.png"], "photo-push": ["image.png"], "compare-pair": ["left.png", "right.png"],
           "ring-mark": ["image.png"], "callout-label": ["image.png"], "magnifier": ["image.png"], "focus-dim": ["image.png"],
@@ -97,7 +99,9 @@ JSX = r'''
 var STORE=__STORE__; var IDS=__IDS__; var SAMPLES=__SAMPLES__; var DATA=""; var VERSIONS=__VERSIONS__; var LOG=__LOG__; var ASPECT=__ASPECT__; var FNL=__FNL__;
 var W=1080,H=1920,FPS=30,LEN=10;
 // Templates meant to run under a whole stretch of narration need a longer comp; a render only outputs its own duration.
-var LENS={"host-parallel":60};
+var LENS={"host-parallel":60,"tech-points":30,"tech-summary":15};
+// Only templates whose motion needs it run at 60 fps; the rest stay at 30 so their renders and renders already in films are unchanged.
+var FPSS={"tech-points":60,"tech-summary":60};
 var BG=[0.035,0.047,0.067],ACCENT=[0.31,0.89,0.69],WHITE=[1,1,1],GREY=[0.62,0.66,0.72],CHIP=[0.06,0.12,0.2];
 var D='var d=/*AICS_DATA*/'+DATA+'/*AICS_END*/;';
 var CENTER='var r=sourceRectAtTime(time,false);[r.left+r.width/2,r.top+r.height/2]';
@@ -917,9 +921,62 @@ function colorSwatch(comp,folder){_COMP=comp;
   var cn=tx(comp,"c"+(i+1),44,INK,HV,W/2,1410,692);cn.property("Opacity").expression=SEQ+'('+i+'<n)?100*ON('+i+'):0';}
  var rgn=ring(comp,"swatch ring",BLUE,5);rgn[1].property("Size").setValue([112,112]);rgn[0].property("Position").expression=SEQ+'var x=0;for(var q=0;q<n;q++)x+=ON(q)*(540+(q-(n-1)/2)*140);[x,1290]';fade(rgn[0],0.4,0.6);}
 
+// ---- tech style (change ae-tech-templates): dark full frame, metal type, per-character blurred fly-in, 60 fps ----
+var NAVY=[0.02,0.025,0.035],SILVER=[0.62,0.66,0.74],TBLUE=[0.45,0.66,1],AMBER=[1,0.72,0.26],DIN="DINCondensed-Bold",MONO="Menlo-Regular";
+// An expression selector staggers by textIndex, so the reveal follows whatever text the data supplies.
+function flyIn(l,pre,start,stagger,dur,dy,blur,sc){var an=l.property("ADBE Text Properties").property("ADBE Text Animators").addProperty("ADBE Text Animator");
+ an.property("ADBE Text Animator Properties").addProperty("ADBE Text Position 3D").setValue([0,dy,0]);an.property("ADBE Text Animator Properties").addProperty("ADBE Text Scale 3D").setValue([sc,sc,100]);
+ an.property("ADBE Text Animator Properties").addProperty("ADBE Text Opacity").setValue(0);an.property("ADBE Text Animator Properties").addProperty("ADBE Text Blur").setValue([blur,blur]);
+ var sel=an.property("ADBE Text Selectors").addProperty("ADBE Text Expressible Selector");
+ sel.property("ADBE Text Expressible Amount").expression=pre+'var s=('+start+')+(textIndex-1)*'+stagger+';var v=100*(1-easeOut(time,s,s+'+dur+',0,1));[v,v,v]';}
+// Text fills cannot be gradients, so a ramp solid shows through the text used as its alpha matte.
+function metal(comp,l){var m=comp.layers.addSolid([1,1,1],"metal "+l.name,W,H_,1);var fx=m.property("ADBE Effect Parade").addProperty("ADBE Ramp");
+ var R='var L=thisComp.layer("'+l.name+'");var r=L.sourceRectAtTime(time,false);';
+ fx.property("ADBE Ramp-0001").expression=R+'L.toComp([r.left,r.top])';fx.property("ADBE Ramp-0002").setValue([0.98,0.99,1]);
+ fx.property("ADBE Ramp-0003").expression=R+'L.toComp([r.left,r.top+r.height])';fx.property("ADBE Ramp-0004").setValue([0.5,0.55,0.63]);
+ m.moveAfter(l);m.setTrackMatte(l,TrackMatteType.ALPHA);return m;}
+function techBg(comp,G,key){comp.layers.addSolid(NAVY,"bg base",W,H_,1);
+ var g=comp.layers.addSolid(NAVY,"bg glow",W,H_,1);var fx=g.property("ADBE Effect Parade").addProperty("ADBE Ramp");fx.property("ADBE Ramp-0005").setValue(2);fx.property("ADBE Ramp-0006").setValue(12);
+ fx.property("ADBE Ramp-0001").expression='[thisComp.width*0.5+60*Math.sin(time*0.35),thisComp.height*0.47+40*Math.cos(time*0.27)]';fx.property("ADBE Ramp-0002").setValue([0.085,0.13,0.21]);
+ fx.property("ADBE Ramp-0003").expression='[thisComp.width*0.5+Math.max(thisComp.width,thisComp.height)*0.62,thisComp.height*0.47]';fx.property("ADBE Ramp-0004").setValue([0.012,0.015,0.022]);
+ var n=comp.layers.addSolid([1,1,1],"bg grain",W,H_,1);n.adjustmentLayer=true;var nf=n.property("ADBE Effect Parade").addProperty("ADBE Noise");nf.property("ADBE Noise-0001").setValue(G.grain);nf.property("ADBE Noise-0002").setValue(0);
+ var M=G.corner,A=36,C=[[M,M,1,1],[W-M,M,-1,1],[M,H_-M,1,-1],[W-M,H_-M,-1,-1]];
+ for(var i=0;i<4;i++){var c=C[i],s=lineShape(comp,"corner "+i,[0.85,0.88,0.94],2),sh=new Shape();sh.vertices=[[c[0],c[1]+c[3]*A],[c[0],c[1]],[c[0]+c[2]*A,c[1]]];sh.closed=false;s[1].setValue(sh);s[0].property("Opacity").setValue(70);}
+ var lb=tx(comp,"label",G.small,SILVER,REG,G.lx,G.ty,G.lw,"left",120);lb.property("Source Text").expression=D+'String(d.label||d.'+key+'||"")';fade(lb,0.1,0.4);
+ var tc=tx(comp,"timecode",G.small,SILVER,MONO,G.rx,G.ty,400,"left",60);tc.name="timecode";fade(tc,0.1,0.4);
+ tc.property("Source Text").expression='var f=Math.floor(time*60+0.001);function p(n){return (n<10?"0":"")+n;}p(Math.floor(f/216000))+":"+p(Math.floor(f/3600)%60)+":"+p(Math.floor(f/60)%60)+":"+p(f%60)';
+ tc.property("Anchor Point").expression='var r=sourceRectAtTime(time,false);[r.left+r.width,r.top+r.height/2]';
+ for(var k=0;k<2;k++){var t=comp.layers.addShape();t.name=k?"ticks lit":"ticks base";var tg=t.property("Contents").addProperty("ADBE Vector Group").property("Contents");tg.addProperty("ADBE Vector Shape - Rect").property("Size").setValue([3,G.tick]);
+  tg.addProperty("ADBE Vector Graphic - Fill").property("Color").setValue(k?[0.92,0.94,1]:[0.3,0.34,0.42]);
+  var rp=t.property("Contents").addProperty("ADBE Vector Filter - Repeater");rp.property("ADBE Vector Repeater Transform").property("ADBE Vector Repeater Position").setValue([10,0]);
+  if(k)rp.property("ADBE Vector Repeater Copies").expression=D+'Math.max(1,Math.ceil(28*time/((d._duration_ms||8000)/1000)))';else rp.property("ADBE Vector Repeater Copies").setValue(28);
+  t.property("Position").setValue([G.kx,G.ky]);fade(t,0.1,0.4);}}
+function techPoints(comp){var G={x:110,hy:-128,y0:760,rh:136,cw:860,ch:112,hs:92,hw:776,ps:42,pw:660,ns:50,small:26,lx:90,rx:990,ty:300,lw:560,kx:600,ky:1440,tick:16,corner:40,grain:3};
+ techBg(comp,G,"heading");comp.motionBlur=true;
+ var N=D+'var P=[d.point1,d.point2,d.point3,d.point4,d.point5];var n=0;for(var q=0;q<5;q++)if(P[q])n++;var top='+G.y0+'+(5-n)*'+(G.rh/2)+';'+BEATS(0.9,0.35);
+ var h=tx(comp,"heading",G.hs,PAPER,HV,G.x,0,G.hw,"left");h.property("Position").expression=N+'['+G.x+',top+'+G.hy+']';flyIn(h,N,'0.15',0.045,0.55,40,60,135);metal(comp,h);
+ for(var i=0;i<5;i++){var f="point"+(i+1),A=N+'var t0=BT('+i+');var p=easeOut(time,t0,t0+0.5,0,1);';
+  var c=comp.layers.addShape();c.name="card "+i;var g1=c.property("Contents").addProperty("ADBE Vector Group").property("Contents");var r1=g1.addProperty("ADBE Vector Shape - Rect");r1.property("Size").setValue([G.cw,G.ch]);r1.property("Position").setValue([G.cw/2,0]);r1.property("Roundness").setValue(6);
+  var cf=g1.addProperty("ADBE Vector Graphic - Fill");cf.property("Color").setValue([0.075,0.09,0.12]);cf.property("Opacity").setValue(88);var cs=g1.addProperty("ADBE Vector Graphic - Stroke");cs.property("Color").setValue([0.2,0.25,0.33]);cs.property("Stroke Width").setValue(1.5);
+  var g2=c.property("Contents").addProperty("ADBE Vector Group").property("Contents");var r2=g2.addProperty("ADBE Vector Shape - Rect");r2.property("Size").setValue([4,G.ch]);r2.property("Position").setValue([2,0]);g2.addProperty("ADBE Vector Graphic - Fill").property("Color").setValue(i%2?AMBER:TBLUE);
+  c.property("Anchor Point").setValue([0,0]);c.property("Position").expression=A+'['+G.x+'-40*(1-p),top+'+i+'*'+G.rh+']';c.property("Opacity").expression=A+'d["'+f+'"]?linear(time,t0,t0+0.3,0,100):0';c.motionBlur=true;
+  var bl=c.property("ADBE Effect Parade").addProperty("ADBE Gaussian Blur 2");bl.property("ADBE Gaussian Blur 2-0001").expression=A+'28*(1-p)';bl.property("ADBE Gaussian Blur 2-0002").setValue(2);
+  var nb=tx(comp,"num"+i,G.ns,i%2?AMBER:TBLUE,DIN,0,0,200,"left");nb.name="num "+i;nb.property("Source Text").expression='"0'+(i+1)+'"';nb.parent=c;nb.property("Position").setValue([28,3]);
+  nb.property("Opacity").expression=A+'d["'+f+'"]?linear(time,t0+0.08,t0+0.3,0,100):0';
+  var pt=tx(comp,f,G.ps,PAPER,MED,0,0,G.pw,"left");pt.parent=c;pt.property("Position").setValue([96,0]);flyIn(pt,A,'t0+0.12',0.022,0.4,18,28,120);}
+ exitAll(comp);}
+function techSummary(comp){var G={x:110,ty0:700,dy:100,by:880,ts:120,tw:860,bs:44,bw:770,dw:860,small:26,lx:90,rx:990,ty:300,lw:560,kx:600,ky:1440,tick:16,corner:40,grain:3};
+ techBg(comp,G,"title");comp.motionBlur=true;
+ var t=tx(comp,"title",G.ts,PAPER,HV,G.x,G.ty0,G.tw,"left");flyIn(t,D,'0.2',0.06,0.6,50,80,140);metal(comp,t);
+ var dv=comp.layers.addSolid([1,1,1],"divider",G.dw,4,1);var fx=dv.property("ADBE Effect Parade").addProperty("ADBE Ramp");fx.property("ADBE Ramp-0001").setValue([0,2]);fx.property("ADBE Ramp-0002").setValue(AMBER);
+ fx.property("ADBE Ramp-0003").setValue([G.dw,2]);fx.property("ADBE Ramp-0004").setValue(TBLUE);
+ dv.property("Anchor Point").setValue([0,2]);dv.property("Position").setValue([G.x,G.ty0+G.dy]);var sc=dv.property("Scale");sc.setValueAtTime(0.75,[0,100]);sc.setValueAtTime(1.35,[100,100]);bez(sc,85,40);
+ var b=tx(comp,"body",G.bs,PAPER,MED,G.x,G.by,G.bw,"left");b.property("Source Text").expression=D+'String(d.body||"").replace(/\\n/g,"\\r")';lift(b,1.15,18,0.55);
+ exitAll(comp);}
+
 // The playback safe area sits on top as a guide layer: visible while editing in AE, never rendered.
 function guide(comp,folder){var f=new File(folder.fsName+(ASPECT=="16:9"?"/guide-16x9.png":"/guide-9x16.png"));if(!f.exists)return;var g=comp.layers.add(app.project.importFile(new ImportOptions(f)));g.name="safe area guide";g.guideLayer=true;g.property("Opacity").setValue(45);g.moveToBeginning();}
-var FN={"keyword-contrast":keywordContrast,"keyword-slab":keywordSlab,"impact-line":impactLine,"outline-box-title":outlineBoxTitle,"split-rise-title":splitRiseTitle,
+var FN={"tech-points":techPoints,"tech-summary":techSummary,"keyword-contrast":keywordContrast,"keyword-slab":keywordSlab,"impact-line":impactLine,"outline-box-title":outlineBoxTitle,"split-rise-title":splitRiseTitle,
  "quote-card":quoteCard,"quote-hold":quoteHold,"pair-blocks":pairBlocks,"ring-mark":ringMark,"callout-label":calloutLabel,"magnifier":magnifier,"focus-dim":focusDim,
  "host-to-chip":hostToChip,"host-parallel":hostParallel,"name-plate":namePlate,"name-chevron":nameChevron,
  "value-swap":valueSwap,"count-title":countTitle,"metric-trend":metricTrend,"number-roll":numberRoll,"term-card":termCard,"pick-one":pickOne,"line-story":lineStory,"bar-grow":barGrow,
@@ -935,7 +992,7 @@ for(var i=0;i<IDS.length;i++){var id=IDS[i];try{
  if(app.project)app.project.close(CloseOptions.DO_NOT_SAVE_CHANGES);app.newProject();var folder=new Folder(STORE+"/"+id+"/"+(VERSIONS[id]||"v1"));DATA=SAMPLES[id];D='var d=/*AICS_DATA*/'+DATA+'/*AICS_END*/;';
  // Landscape builds reuse the shared helpers with the frame size and margin swapped, then call the derived <fn>L builder.
  var LAND=ASPECT=="16:9";W=LAND?1920:1080;H=LAND?1080:1920;H_=H;MX=LAND?150:84;
- var comp=app.project.items.addComp("MAIN",W,H,1,LENS[id]||LEN,FPS);comp.bgColor=BG;if(!ALPHA[id])base(comp);
+ var comp=app.project.items.addComp("MAIN",W,H,1,LENS[id]||LEN,FPSS[id]||FPS);comp.bgColor=BG;if(!ALPHA[id])base(comp);
  var build=LAND?(FNL[id]?eval(FNL[id]):null):FN[id];if(LAND&&!build)throw new Error("no landscape layout");if(build)build(comp,folder);guide(comp,folder);if(ALPHA[id])alphaQueue(comp);
  if(id=="number-card")numberCard(comp);if(id=="title-card")titleCard(comp);if(id=="diagram-flow")diagramFlow(comp);if(id=="map-route")mapRoute(comp,folder);if(id=="photo-push")photoPush(comp,folder);if(id=="compare-pair")comparePair(comp,folder);
  app.project.save(new File(folder.fsName+(LAND?"/template-16x9.aepx":"/template.aepx")));log.push(id+": ok layers="+comp.numLayers);

@@ -1,0 +1,99 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "tech-summary",
+  "version": "v1",
+  "name": "科技风总结大字",
+  "category": "金句与对句",
+  "use": "深色科技风整屏：一行金属质感大字逐字带模糊飞入，琥珀到蓝的渐变分隔线画出，下面 1–2 行说明（body 里用换行分两行）上浮淡入；四角取景框、左上小标题（label，空时用大字）、右上时间码、底部进度刻度。适合结尾总结或一句结论。每秒 60 帧，整段当一个镜头插在成片里。",
+  "fields": [
+    {
+      "name": "title",
+      "kind": "text",
+      "max": 10,
+      "required": true
+    },
+    {
+      "name": "body",
+      "kind": "text",
+      "max": 40,
+      "required": true
+    },
+    {
+      "name": "label",
+      "kind": "text",
+      "max": 14,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 3000,
+    "max": 15000,
+    "default": 8000
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 60,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Medium",
+    "SourceHanSansSC-Regular",
+    "Menlo-Regular"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "fd7aa72f7a3cdea4d53e55587ad2066a37e0c7f2e00ad1df1f46ac273dbfca35"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "99d98b842f0f9923d781a94215c7a4c68b5e1179d45d24afcde62545f8858949"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "alpha": false,
+  "checks": [
+    {
+      "date": "2026-11-04",
+      "content": "专业诊断最可靠 / 四点帮你留意，具体要找医生诊断↵点关注，下期讲护理和饮食 / （图片：无图片）",
+      "frames": "完整动画视频，与 MotionGit 试片上下对照",
+      "result": "用户看 MotionGit 对比视频认可；文字替换、空要点不占位、超宽缩放、逐字模糊飞入和要点依次滑入时序正确，60 帧；9:16 播放安全区检查零越界（金属大字为遮罩层，另按最长字数渲染人工核对未出画面）"
+    },
+    {
+      "date": "2026-11-04",
+      "content": "专业诊断才是最可靠办法 / 两行共 40 字 / 总结一下今天讲的四个方法吧（图片：无图片）",
+      "frames": "完整动画视频，与 MotionGit 试片上下对照",
+      "result": "用户看 MotionGit 对比视频认可；文字替换、空要点不占位、超宽缩放、逐字模糊飞入和要点依次滑入时序正确，60 帧；9:16 播放安全区检查零越界（金属大字为遮罩层，另按最长字数渲染人工核对未出画面）"
+    },
+    {
+      "date": "2026-11-04",
+      "aspect": "16:9",
+      "content": "专业诊断最可靠 / 四点帮你留意，具体要找医生诊断↵点关注，下期讲护理和饮食 / （图片：无图片）",
+      "frames": "完整动画视频，与 MotionGit 试片上下对照",
+      "result": "用户看 MotionGit 对比视频认可；横屏单独排版，60 帧；16:9 播放安全区检查零越界（金属大字另按最长字数渲染人工核对未出画面）"
+    },
+    {
+      "date": "2026-11-04",
+      "aspect": "16:9",
+      "content": "专业诊断才是最可靠办法 / 两行共 40 字 / 总结一下今天讲的四个方法吧（图片：无图片）",
+      "frames": "完整动画视频，与 MotionGit 试片上下对照",
+      "result": "用户看 MotionGit 对比视频认可；横屏单独排版，60 帧；16:9 播放安全区检查零越界（金属大字另按最长字数渲染人工核对未出画面）"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

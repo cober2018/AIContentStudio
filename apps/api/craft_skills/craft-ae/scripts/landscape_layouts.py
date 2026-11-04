@@ -6,6 +6,10 @@ Landscape safe area: x 91–1828, y 190–959; overlays keep text in the lower o
 """
 
 LAYOUTS = {
+    "techPoints": [('var G={x:110,hy:-128,y0:760,rh:136,cw:860,ch:112,hs:92,hw:776,ps:42,pw:660,ns:50,small:26,lx:90,rx:990,ty:300,lw:560,kx:600,ky:1440,tick:16,corner:40,grain:3};',
+                    'var G={x:480,hy:-118,y0:380,rh:116,cw:960,ch:96,hs:84,hw:1100,ps:38,pw:780,ns:44,small:24,lx:120,rx:1800,ty:215,lw:330,kx:1520,ky:930,tick:14,corner:36,grain:3};')],
+    "techSummary": [('var G={x:110,ty0:700,dy:100,by:880,ts:120,tw:860,bs:44,bw:770,dw:860,small:26,lx:90,rx:990,ty:300,lw:560,kx:600,ky:1440,tick:16,corner:40,grain:3};',
+                     'var G={x:490,ty0:400,dy:100,by:580,ts:120,tw:1000,bs:44,bw:1100,dw:860,small:24,lx:120,rx:1800,ty:215,lw:330,kx:1520,ky:930,tick:14,corner:36,grain:3};')],
     "keywordContrast": [('W/2,1130,692)', 'W/2,640,1400)'), ('W/2,1300,692)', 'W/2,790,1400)'), ('r.width>692?692/r.width', 'r.width>1400?1400/r.width')],
     "keywordSlab": [('MX+44,1110,740,"left")', 'MX+44,700,1100,"left")'), ('MX+44,1278,740,"left")', 'MX+44,840,1100,"left")')],
     "impactLine": [('W/2,1160,692)', 'W/2,720,1400)'), ('W/2,1280,692)', 'W/2,830,1400)')],

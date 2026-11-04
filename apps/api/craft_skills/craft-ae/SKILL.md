@@ -36,6 +36,7 @@
 | 金句与对句 | `quote-card` v1 | 金句大字卡（整屏） |
 |  | `quote-hold` v1 | 金句停留升级（叠加） |
 |  | `pair-blocks` v1 | 双色块对句（叠加） |
+|  | `tech-summary` v1 | 科技风总结大字（整屏，60 帧）：金属大字 + 渐变分隔线 + 1–2 行说明，适合结尾总结 |
 | 标注与聚焦 | `ring-mark` v1 | 手绘圈重点（整屏） |
 |  | `callout-label` v1 | 标注引出线（整屏） |
 |  | `magnifier` v1 | 局部放大镜（整屏） |
@@ -59,6 +60,7 @@
 |  | `slider-compare` v1 | 滑杆对比（整屏） |
 |  | `split-6040` v1 | 60/40 主从分屏（整屏） |
 |  | `before-after-scrub` v1 | 前后拉杆快扫（整屏） |
+|  | `tech-points` v1 | 科技风要点列表（整屏，60 帧）：金属标题 + 1–5 条编号要点卡依次滑入，可按 beats 对口播 |
 | 开场、章节与转场 | `chapter-card` v1 | 章节标题卡（叠加） |
 |  | `chapter-list` v1 | 章节进度（整屏） |
 |  | `title-to-label` v1 | 标题降格成标签（整屏） |
