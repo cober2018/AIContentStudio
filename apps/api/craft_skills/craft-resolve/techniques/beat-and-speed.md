@@ -73,7 +73,7 @@
 - 思路：慢放需要更多帧。原生高帧率最好；不够时再用算法补，补的永远比不上拍的。
 - 用在：慢于 50% 的慢放。
 - 不用在：需要证明真实动作的镜头（补帧会生成原本没有的画面）。
-- 做法：素材 ≥ 时间线帧率 × 2（如 60/120 fps 用于 30 fps 时间线）时，直接按比例慢放即可。不够时设 `RetimeProcess` 为 Optical Flow（`RETIME_OPTICAL_FLOW`），`MotionEstimation` 选 Speed Warp（Better）；运动复杂的画面不用 Frame Blend（会重影）。
+- 做法：素材 ≥ 时间线帧率 × 2（如 120 fps 素材用于 60 fps 时间线；60 fps 素材在 60 fps 时间线慢放就要补帧）时，直接按比例慢放即可。不够时设 `RetimeProcess` 为 Optical Flow（`RETIME_OPTICAL_FLOW`），`MotionEstimation` 选 Speed Warp（Better）；运动复杂的画面不用 Frame Blend（会重影）。
 - 脚本：能。`TimelineItem.SetProperty("RetimeProcess", ...)` 与 `MotionEstimation`。
 - 检查：逐帧看主体边缘没有重影、撕裂、糊团。
 - 常见错误：在飞溅、毛发等复杂运动上用帧融合；把补帧当万能慢放。

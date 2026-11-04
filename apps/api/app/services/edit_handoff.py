@@ -53,10 +53,12 @@ def _postproduction(document: dict, ae: dict[str, str]) -> dict:
     resolution = [1080, 1920] if height >= width else [1920, 1080]
     order = [shot["id"] for shot in sorted(document["shots"], key=lambda item: item["order"]) if shot["id"] in ae]
     durations = {shot["id"]: shot["duration_ms"] for shot in document["shots"]}
-    return {"schema": "video.postproduction.v1", "phase": "rough_cut", "fps": 30, "resolution": resolution,
+    # A work already cut at a frame rate keeps it, so its 小样 and AE renders still match; new works default to 60.
+    fps = (document.get("postproduction") or {}).get("fps", 60)
+    return {"schema": "video.postproduction.v1", "phase": "rough_cut", "fps": fps, "resolution": resolution,
             "ae_shot_ids": order, "feedback": [],
             "ae_compositions": [{"shot_id": shot_id, "role_id": "ae_intermediate" if len(order) == 1 else f"ae_intermediate_{index + 1}",
-                                 "duration_ms": durations[shot_id], "resolution": resolution, "fps": 30, "alpha_required": False}
+                                 "duration_ms": durations[shot_id], "resolution": resolution, "fps": fps, "alpha_required": False}
                                 for index, shot_id in enumerate(order)]}
 
 

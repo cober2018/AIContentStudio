@@ -129,7 +129,7 @@ var f=new File(LOG);f.encoding="UTF-8";f.open("w");f.writeln(log.join("\n"));f.c
 '''
 
 DEFAULT_TOKENS = {
-    "width": 1080, "height": 1920, "fps": 30, "bg": [0.035, 0.047, 0.067], "accent": [0.31, 0.89, 0.69],
+    "width": 1080, "height": 1920, "fps": 60, "bg": [0.035, 0.047, 0.067], "accent": [0.31, 0.89, 0.69],
     "chip": [0.06, 0.12, 0.2], "ink": [0.05, 0.09, 0.16], "white": [1, 1, 1], "grey": [0.62, 0.66, 0.72], "alert": [1, 0.38, 0.38],
     "font_bold": "PingFangSC-Semibold", "font_medium": "PingFangSC-Medium", "font_regular": "PingFangSC-Regular",
     "card_cy": 900, "card_max_w": 980, "card_max_h": 1060, "card_radius": 34, "push": 1.04, "bg_blur": 70,

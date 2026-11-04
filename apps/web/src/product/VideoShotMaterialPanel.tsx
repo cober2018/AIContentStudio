@@ -121,7 +121,7 @@ export default function VideoShotMaterialPanel({ captureStatus, captureTaskHash,
   const disabled = readOnly || busy || !safe();
   const ready = !disabled && !dirty && !!masterId;
   const continuityAffected = continuityAffectedShots(draft);
-  const post: VideoPostproduction = draft.payload.postproduction || { schema: "video.postproduction.v1", phase: "rough_cut", fps: 30, resolution: draft.payload.aspect_ratio[0] >= draft.payload.aspect_ratio[1] ? [1920, 1080] : [1080, 1920], ae_shot_ids: [], feedback: [] };
+  const post: VideoPostproduction = draft.payload.postproduction || { schema: "video.postproduction.v1", phase: "rough_cut", fps: 60, resolution: draft.payload.aspect_ratio[0] >= draft.payload.aspect_ratio[1] ? [1920, 1080] : [1080, 1920], ae_shot_ids: [], feedback: [] };
   useEffect(() => { if (!dirty && masterId) setSavedImages(Object.fromEntries(draft.assetRefs.filter(ref => ref.role === "shot_reference").map(ref => [ref.slot_key, `${ref.material_revision_id}:${ref.content_hash}`]))); }, [dirty, masterId, draft]);
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const preserveSpeech = speechMode === "lip_sync" || speechMode === "mixed";
