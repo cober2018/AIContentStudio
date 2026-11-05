@@ -17,6 +17,7 @@ import { StageSubSteps } from "./StageSubSteps";
 import type { RecipeSummary } from "./CreationRecipePanel";
 
 const ChannelVariantsPanel = lazy(() => import("./ChannelVariantsPanel"));
+const ProductPublishCopy = lazy(() => import("./ProductPublishCopy"));
 const CreativeExecutionPanel = lazy(() => import("./CreativeExecutionPanel"));
 const CapabilityMemoryPanel = lazy(() => import("./CapabilityMemoryPanel"));
 const CreationRecipePanel = lazy(() => import("./CreationRecipePanel"));
@@ -220,7 +221,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
             {step.id === "materials" && <><ShotMaterialPages projectId={projectId} unitId={unitId} readOnly={readOnly} />{!product && <div className="mt-5"><WebMaterialSearch projectId={projectId} unitId={unitId} defaultQuery="" pickLabel="保存到项目素材" readOnly={readOnly} /></div>}</>}
             {step.id === "voice" && <><VoiceoverPanel projectId={projectId} unitId={unitId} readOnly={readOnly || chainLocked} onSaved={() => setMasterReloadRequest(value => value + 1)} /><MusicPanel projectId={projectId} unitId={unitId} readOnly={readOnly} /></>}
             {(step.id === "sample" || step.id === "final") && <VideoChainPanel projectId={projectId} unitId={unitId} step={step.id} />}
-            {step.id === "delivery" && <ChannelVariantsPanel projectId={projectId} unit={unit} readOnly={readOnly} workflowDirty={dirty} />}
+            {step.id === "delivery" && <>{product && <ProductPublishCopy projectId={projectId} unitId={unitId} readOnly={readOnly} />}<ChannelVariantsPanel projectId={projectId} unit={unit} readOnly={readOnly} workflowDirty={dirty} /></>}
           </div>}</Suspense>}
         {product && <div hidden={step.id !== (simpleVideo ? "final" : "review")}><SkuWorkRetention projectId={projectId} unitId={unitId} readOnly={readOnly} /></div>}
         {!advanced && <footer className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4"><Button variant="secondary" disabled={stepIndex === 0} onClick={() => goStep(steps[stepIndex - 1].id)}>上一步</Button><Button variant="secondary" disabled={stepIndex === steps.length - 1} onClick={() => goStep(steps[stepIndex + 1].id)}>前往{steps[stepIndex + 1]?.label || "下一步"}</Button></footer>}

@@ -1,17 +1,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useState } from "react";
 import { api, currentUser } from "../api";
-import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
-import ShotWork, { errorText, NO_PORTRAIT_NOTE, type Copy, type Item, type View } from "./ShotWork";
+import { Button, ErrorBanner, inputClass } from "../components/ui";
+import ShotWork, { errorText, NO_PORTRAIT_NOTE, type Item, type View } from "./ShotWork";
 import type { VideoPayload } from "./VideoStudioModel";
 
 const StoryboardGridDialog = lazy(() => import("./StoryboardGridDialog"));
 type Motion = { camera_presets?: string[]; look?: string; intensity?: "subtle" | "normal" | "strong"; chain_from_previous?: boolean };
 
 const MODES: Record<string, string> = { photo_only: "一张图出整片", user_footage: "给素材剪", mixed: "混合补齐" };
-const EMPTY: Copy = { channel: "", title: "", hashtags: [], cover_text: "", interaction: "", description: "" };
 
-// Product works: per-shot camera / look / strength (view "draft") and the publish copy.
+// Product works: per-shot camera / look / strength (view "draft"); the publish copy lives on the 交付 step.
 // Product and persona works (view "materials"): how each shot without the user's footage gets its clip; a consistency group of the 导演稿 is drawn in the storyboard-grid dialog.
 export default function ProductShotPanel({ projectId, unitId, payload, locked, view, shotId }: { projectId: number; unitId: number; payload: VideoPayload | null; locked: boolean; view: "draft" | "materials"; shotId?: string }) {
   const client = useQueryClient();
@@ -20,7 +19,6 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked, v
     refetchInterval: value => value.state.data?.grid_run?.status === "running" ? 4000 : Object.values(value.state.data?.jobs || {}).some(job => job.state === "running") ? 20000 : false });
   const [busy, setBusy] = useState(false);
   const [issue, setIssue] = useState("");
-  const [copy, setCopy] = useState<Copy | null>(null);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const data = query.data;
   if (!data || !payload || !(data.product || data.persona && view === "materials")) return null;
@@ -30,7 +28,6 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked, v
     setBusy(true); setIssue("");
     try { await action(); await refresh(); } catch (error) { setIssue(errorText(error)); } finally { setBusy(false); }
   }
-  const draftCopy = copy || data.publish_copy || EMPTY;
   const shots = [...payload.shots].sort((a, b) => a.order - b.order);
   const covered = (id: string) => { const used = data.used?.[id]; return !!used && !used.i2v; };
   const missing = shots.filter(shot => !data.used?.[shot.id]).length;
@@ -76,17 +73,6 @@ export default function ProductShotPanel({ projectId, unitId, payload, locked, v
         </div>
       </article>;
     })}</div>
-    {view === "draft" && <div className="space-y-2 rounded-lg border border-slate-100 p-3"><h4 className="font-medium">发布文案</h4>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Field label="标题（≤15 字）"><input className={inputClass} maxLength={15} value={draftCopy.title} onChange={event => setCopy({ ...draftCopy, title: event.target.value })} /></Field>
-        <Field label="封面字（≤8 字）"><input className={inputClass} maxLength={8} value={draftCopy.cover_text} onChange={event => setCopy({ ...draftCopy, cover_text: event.target.value })} /></Field>
-        <Field label="话题（3–5 个，用空格分开）"><input className={inputClass} value={draftCopy.hashtags.join(" ")} onChange={event => setCopy({ ...draftCopy, hashtags: event.target.value.split(/\s+/).filter(Boolean).slice(0, 5) })} /></Field>
-        <Field label="互动引导"><input className={inputClass} maxLength={60} value={draftCopy.interaction} onChange={event => setCopy({ ...draftCopy, interaction: event.target.value })} /></Field>
-        <Field label="简介（≤50 字）"><input className={inputClass} maxLength={50} value={draftCopy.description} onChange={event => setCopy({ ...draftCopy, description: event.target.value })} /></Field>
-      </div>
-      {!data.publish_copy && !copy && <p className="text-xs text-slate-500">模型定稿前会写一版，你也可以先自己填。</p>}
-      <Button size="sm" disabled={busy || !copy} onClick={() => void run(async () => { await api.put(`${base}/publish-copy`, draftCopy); setCopy(null); })}>保存发布文案</Button>
-    </div>}
     {opened && <Suspense fallback={null}><StoryboardGridDialog projectId={projectId} unitId={unitId} group={opened} shots={shots} data={data} locked={locked} onClose={() => setOpenGroup(null)} /></Suspense>}
   </section>;
 }

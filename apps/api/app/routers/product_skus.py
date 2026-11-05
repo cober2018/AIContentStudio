@@ -647,8 +647,19 @@ def get_product_video(project_id: int, unit_id: int, db=Depends(get_db), user=De
     view = product_video.shot_videos(db, user, project_id, unit_id)
     if view["product"]:
         view.update(publish_copy=product_video.publish_copy(db, user, project_id, unit_id), motion=product_motion.catalog(),
-                    direction=product_video.direction(db, unit_id))
+                    direction=product_video.direction(db, unit_id), cover=_work_cover(db, unit_id))
     return view
+
+
+def _work_cover(db, unit_id: int) -> dict | None:
+    """The work's current cover, so the 交付 page can show it beside the cover text; images are fetched by material id."""
+    from ..models import MaterialRevision
+    from ..services import video_chain
+
+    master = video_chain._latest(db, unit_id)
+    revision_id = (((master.payload_json or {}).get("cover") or {}) if master else {}).get("material_revision_id")
+    revision = db.get(MaterialRevision, revision_id) if type(revision_id) is int else None
+    return {"material_id": revision.material_id, "material_revision_id": revision.id} if revision else None
 
 
 @router.put("/content-projects/{project_id}/units/{unit_id}/product-video/publish-copy")
