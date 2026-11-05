@@ -153,6 +153,18 @@ def locked(db: Session, unit_id: int) -> bool:
     return _finalizing.get() != unit_id and bool(_state(db, unit_id).get("locked"))
 
 
+def edit_progress(db: Session) -> tuple[set[int], dict[int, int]]:
+    """Works whose 成片 is approved, and each other work's current edit task; earlier tasks were replaced and stay unanswered for good."""
+    finished, current = set(), {}
+    for key, record in _records(db).items():
+        unit_id = int(key)
+        if _state(db, unit_id).get("locked"):
+            finished.add(unit_id)
+        elif record.get("tasks"):
+            current[unit_id] = record["tasks"][-1]["execution_id"]
+    return finished, current
+
+
 def state(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .content_masters import owned_unit
 

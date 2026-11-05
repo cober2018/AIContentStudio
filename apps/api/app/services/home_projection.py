@@ -20,6 +20,7 @@ from ..models import (
     WorkflowRun,
     WorkflowStep,
 )
+from . import video_chain
 from .content_harness.registry import RegistryError, registry
 from .opportunities import opportunity_list_json
 from .project_overview import project_overviews
@@ -120,7 +121,7 @@ def recipe_stage_actions(db: Session, project_ids: list[int]) -> list[dict]:
     return actions
 
 
-def creative_decisions(db: Session, user: User) -> tuple[list[dict], bool]:
+def creative_decisions(db: Session, user: User, current_edits: dict[int, int]) -> tuple[list[dict], bool]:
     # An unupgraded local database is unavailable, not a successful empty queue.
     if not inspect(db.get_bind()).has_table(CreativeExecution.__tablename__):
         return [], False
@@ -134,6 +135,8 @@ def creative_decisions(db: Session, user: User) -> tuple[list[dict], bool]:
                CreativeExecution.id).limit(100)).all()
     decisions = []
     for row in rows:
+        if row.executor_key == "codex-video-production" and current_edits.get(row.content_unit_id, row.id) != row.id:
+            continue
         uncertain = row.state == "unknown" or row.dispatch_certainty == "possibly_dispatched"
         code = "unknown" if uncertain else "blocked" if row.state == "blocked" else "waiting_human"
         label = "核对创意执行未知结果（禁止自动重试）" if uncertain else (
@@ -326,8 +329,11 @@ def home_projection(db: Session, user: User, limit: int = 20) -> dict:
         }
         for candidate in candidates
     )
-    execution_decisions, execution_available = creative_decisions(db, user)
+    finished_units, current_edits = video_chain.edit_progress(db)
+    execution_decisions, execution_available = creative_decisions(db, user, current_edits)
     decisions.extend(execution_decisions)
+    # An approved 成片 locks the work, so old checks and tasks still attached to it are nothing left to do.
+    decisions = [item for item in decisions if item.get("unit_id") not in finished_units]
     decisions.sort(
         key=lambda item: (
             DECISION_ORDER[item["code"]],
