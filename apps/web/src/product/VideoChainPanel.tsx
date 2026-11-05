@@ -15,6 +15,7 @@ type ShotWarning = { code: "shot_overexposed" | "shot_brightness_jump" | "dialog
   from_shot_id?: string | null; from_order?: number; from_luma?: number; lufs?: number; median_lufs?: number; diff_lu?: number }
   | { code: "color_tags_not_srgb"; color_primaries: string; color_transfer: string; color_space: string }
   | { code: "cover_color_mismatch"; at_ms: number; mean: number; rgb: [number, number, number]; threshold: number }
+  | { code: "cover_template_missing" } | { code: "cover_template_mismatch" }
   | { code: "source_brightness_diff"; shot_id: string | null; order: number; luma: number; source_luma: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" }
   | { code: "source_highlight_diff"; shot_id: string | null; order: number; luma_p90: number; source_p90: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" }
   | { code: "source_brightness"; shot_id: string | null; order: number; luma?: number; source_luma?: number; diff?: number; luma_p90?: number; source_p90?: number; diff_p90?: number; source_basis?: "manifest" | "reported" | "estimated" };
@@ -23,7 +24,7 @@ type ShotChecks = { status: string; basis: string; truncated?: boolean; warnings
 type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null };
 type Chain = {
   state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
-  phase?: string; locked?: boolean; sample?: Cut;
+  phase?: string; locked?: boolean; sample?: Cut; cover_redo?: { note: string; at: string };
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
 type Step = "draft" | "sample" | "final";
@@ -41,6 +42,8 @@ function shotName(id: string | null | undefined, order: number, basis: string) {
 
 function warningText(item: ShotWarning, checks: ShotChecks) {
   if (item.code === "color_tags_not_srgb") return `成片颜色标记不是 sRGB（现在是 原色 ${item.color_primaries}、传输 ${item.color_transfer}、矩阵 ${item.color_space}；应为 bt709 / iec61966-2-1 / bt709）`;
+  if (item.code === "cover_template_missing") return "封面没用角色的封面模板（交封面时没附模板渲染回执）";
+  if (item.code === "cover_template_mismatch") return "封面用错了模板：附的渲染不是这个角色的封面模板";
   if (item.code === "cover_color_mismatch") return `封面与成片颜色不一致：平均差 ${item.mean}（R/G/B ${item.rgb.join(" / ")}，提示线 ${item.threshold}），最接近的是第 ${(item.at_ms / 1000).toFixed(1)} 秒那一帧`;
   const limits = checks.thresholds;
   const name = shotName(item.shot_id, item.order, checks.basis);
@@ -82,6 +85,33 @@ function CoverPreview({ projectId, unitId, executionId, outputId }: { projectId:
   return <div className="mt-3">
     <p className="mb-1 text-xs text-slate-600">封面</p>
     {url ? <img src={url} alt="封面" className="max-h-[50vh] w-auto rounded-lg border border-slate-200" /> : issue ? <p className="text-xs text-rose-700">{issue}</p> : <p className="text-xs text-slate-400">加载中…</p>}
+  </div>;
+}
+
+// Only the cover goes back to the model; the cut itself keeps waiting for the user's answer.
+function CoverRedo({ projectId, unitId, pending }: { projectId: number; unitId: number; pending?: { note: string } }) {
+  const client = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [issue, setIssue] = useState("");
+  if (pending) return <p className="mt-2 text-xs text-amber-800">封面重做中{pending.note ? `：${pending.note}` : ""}。新封面交上来前，成片不能通过。</p>;
+  async function send() {
+    setBusy(true); setIssue("");
+    try {
+      await api.post(`/content-projects/${projectId}/units/${unitId}/video-chain/cover-redo`, { note: note.trim() });
+      setOpen(false); setNote("");
+      await client.invalidateQueries({ queryKey: ["video-chain"] });
+    } catch (cause) { setIssue(errorText(cause)); } finally { setBusy(false); }
+  }
+  return <div className="mt-2 space-y-2">
+    {!open ? <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>重做封面</Button>
+      : <div className="flex flex-wrap items-end gap-2">
+        <input aria-label="封面备注" className={`${inputClass} min-w-[14rem] flex-1`} maxLength={2000} placeholder="要怎么改（可不写），例如：卖点字再大一点" value={note} onChange={event => setNote(event.target.value)} />
+        <Button size="sm" disabled={busy} onClick={() => void send()}>{busy ? "提交中…" : "只重做封面"}</Button>
+        <Button size="sm" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>取消</Button>
+      </div>}
+    {issue && <p role="alert" className="text-xs text-rose-700">{issue}</p>}
   </div>;
 }
 
@@ -159,6 +189,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
       </div>}
       {cut?.shot_checks && <ShotCheckList checks={cut.shot_checks} />}
       {cut?.cover_output_id && <CoverPreview projectId={projectId} unitId={unitId} executionId={cut.execution_id} outputId={cut.cover_output_id} />}
+      {cut?.cover_output_id && live && data.state.endsWith("_review") && cut.execution_id === data.execution_id && <CoverRedo projectId={projectId} unitId={unitId} pending={data.cover_redo} />}
       {reviewing && <div className="mt-3 space-y-2">
         <div className="flex flex-wrap items-end gap-2">
           {timed && <input aria-label="时间（秒）" className={`${inputClass} !w-24`} inputMode="decimal" placeholder="秒" value={time} onChange={event => setTime(event.target.value)} />}
@@ -167,7 +198,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
         </div>
         {notes.length > 0 && <ul className="list-disc pl-5 text-xs text-slate-600">{notes.map((item, index) => <li key={index}>{item.time_ms != null ? `${item.time_ms / 1000}s：` : ""}{item.note}</li>)}</ul>}
         <div className="flex flex-wrap gap-2">
-          {!backToDraft && <Button disabled={busy} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
+          {!backToDraft && <Button disabled={busy || (step === "final" && !!data.cover_redo)} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
           <Button variant="secondary" disabled={busy || (!notes.length && !text.trim())} onClick={() => void send("changes")}>{backToDraft ? "退回导演稿" : "按意见修改"}</Button>
         </div>
         <p className="text-xs text-slate-500">{backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "有素材的话，先放进素材库（外部素材库或本项目）再采用。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>

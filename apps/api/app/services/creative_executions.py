@@ -1186,6 +1186,23 @@ def _recheck_sources(db: Session, package: CreativeExecutionPackage, outputs: li
             output.metadata_json = {**metadata, "shot_checks": redone}
 
 
+def _cover_template_check(db: Session, row: CreativeExecution, director: dict, metadata: dict) -> dict:
+    """Whether the cover text came from the persona's 封面 template, judged from the render the model names."""
+    expected = director.get("cover_template")
+    if not expected:
+        return {}
+    receipt = str(metadata.get("cover_template_render") or "").strip()
+    revision = db.get(MaterialRevision, int(receipt)) if receipt.isdigit() else None
+    if revision is None:
+        return {"cover_template_check": "cover_template_missing"}
+    source = revision.source_metadata_json or {}
+    attached = db.scalar(select(ProjectMaterialReference.id).where(ProjectMaterialReference.project_id == row.project_id,
+                         ProjectMaterialReference.material_revision_id == revision.id, ProjectMaterialReference.status == "active").limit(1))
+    if attached is None or (source.get("ae_template"), source.get("version")) != (expected["id"], expected["version"]):
+        return {"cover_template_check": "cover_template_mismatch"}
+    return {"cover_template_check": "ok"}
+
+
 def _cover_check(db: Session, user: User, row: CreativeExecution, outputs: list, role_id: str, source) -> dict:
     """Cover against the 成片's opening, run by whichever of the two arrives second; the earlier file is only read, and an unreadable one skips the check."""
     import json
@@ -1270,7 +1287,8 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
     if len(outputs) >= MAX_OUTPUT_ROWS:
         raise _error("creative_execution_output_history_limit")
     previous = _latest(outputs).get((role["role_id"], index))
-    if previous and previous.state != "rejected":
+    # Until it is accepted the cover may be handed in again; the earlier one stays in history.
+    if previous and previous.state != "rejected" and not (role_id == "cover" and previous.state == "staged"):
         raise _error("creative_execution_output_replacement_denied")
     attempt = previous.attempt_no + 1 if previous else 1
     if attempt > MAX_ATTEMPTS or ("attempt_no" in payload and (type(payload["attempt_no"]) is not int or payload["attempt_no"] != attempt)):
@@ -1303,7 +1321,7 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             streams.budget(db, row, package, size, private=not project)
             inspected = streams.validate(source, mime, role["kind"], package, role_id=role_id)
             # Loudness is the platform's own reading; an executor-supplied value is never kept.
-            metadata = {key: value for key, value in metadata.items() if key not in {"loudness", "shot_checks", "cover_check"}}
+            metadata = {key: value for key, value in metadata.items() if key not in {"loudness", "shot_checks", "cover_check", "cover_template_check"}}
             if inspected.get("loudness"):
                 # Output metadata holds only flat strings, so the reading is kept as compact JSON.
                 import json
@@ -1321,6 +1339,8 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
                 metadata = {**metadata, "shot_checks": delivery_checks.compact(checks)}
             if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction"):
                 metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source)}
+            if role_id == "cover":
+                metadata = {**metadata, **_cover_template_check(db, row, package.package_json.get("director") or {}, metadata)}
             if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
                 import json
 

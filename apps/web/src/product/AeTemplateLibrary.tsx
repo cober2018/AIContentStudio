@@ -4,12 +4,12 @@ import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, Spinner } from "../components/ui";
 
 type Field = { name: string; kind: string; required?: boolean; max?: number };
-type Template = {
+export type Template = {
   id: string; version: string; name: string; category: string | null; use: string; fields: Field[];
   images: { name: string; required?: boolean }[]; duration_ms: { default: number }; alpha?: boolean;
   status: string; installed: boolean; aspects: string[]; previews: string[];
 };
-const ORDER = ["关键词与标题", "金句与对句", "标注与聚焦", "人物与图形", "数字与图表", "步骤、流程与对比", "开场、章节与转场", "素材与地图", "结尾引导", "商品：亮相", "商品：卖点", "商品：参数与对比", "商品：价格与优惠", "商品：材质与成分", "商品：使用方法", "商品：信任背书", "商品：下单引导"];
+const ORDER = ["封面", "关键词与标题", "金句与对句", "标注与聚焦", "人物与图形", "数字与图表", "步骤、流程与对比", "开场、章节与转场", "素材与地图", "结尾引导", "商品：亮相", "商品：卖点", "商品：参数与对比", "商品：价格与优惠", "商品：材质与成分", "商品：使用方法", "商品：信任背书", "商品：下单引导"];
 
 function errorText(error: unknown) {
   const detail = error instanceof ApiError ? error.detail as { code?: string } | string | undefined : undefined;
@@ -18,7 +18,7 @@ function errorText(error: unknown) {
 }
 
 // Identity travels in a request header, so the clip is fetched with it and played from a local object URL.
-function Preview({ template, aspect }: { template: Template; aspect: string }) {
+export function Preview({ template, aspect }: { template: Template; aspect: string }) {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

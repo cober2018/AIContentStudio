@@ -23,6 +23,7 @@ from ..models import (
     ContentUnit,
     CreativeExecution,
     CreativeExecutionOutput,
+    CreativeExecutionPackage,
     MaterialRevision,
     ProjectMaterialReference,
     SystemSetting,
@@ -57,6 +58,11 @@ RULES = [
     "不许用 AE 或其他工具从原片另外合成。成片颜色标记统一为 sRGB（原色 bt709、传输 iec61966-2-1、矩阵 bt709）：达芬奇渲染后用 ffmpeg 只改标记不重新编码，"
     "如 -c copy -bsf:v h264_metadata=colour_primaries=1:transfer_characteristics=13:matrix_coefficients=1（H.265 用 hevc_metadata），同时设好容器的 -color_primaries bt709 -color_trc iec61966-2-1 -colorspace bt709；封面图按 sRGB 存。"
     "封面导出到开剪结果给的 cover_dir（导出/封面），用 role cover 交付，并且要在剪辑清单之前交（清单的 output_hashes 可以列上 cover）；成片通过后它就是作品封面。平台会查成片颜色标记，并把封面和成片开头 0.5 秒逐帧比色，不一致会在审阅页提示。",
+    "角色封面样式：开剪结果的 cover_template（执行包 director.cover_template）有值时，封面字层必须用这个 AE 模板做：render_ae_template 的 template / version 照它，"
+    "只填它列出的字段（大标题、副标题、卖点 1–3），渲染出的透明字层叠在成片开头，封面仍从渲染好的成片里截；交封面（role cover）时 metadata 带 cover_template_render（这次渲染返回的 material_revision_id）。"
+    "没带或用错模板，审片页会提示。没有 cover_template 就照上面的封面做法。",
+    "封面在任务通过前可以再交（同一个 role cover 再 submit_output 一次），新的一张显示在审片页，旧的留在历史里；其他交付文件交了就不能换。"
+    "get_video_decision 返回 cover_redo 时，是用户只要你重做封面：按 cover_redo.note 改，重新出字层、从成片截图、再交一次 cover，不要重交小样 / 成片；新封面交上来，这条就算完成。",
     "剪辑照导演稿：画面内容要变就先存新导演稿；导演稿没写的细节和网络素材署名写进回执。",
     "文件都在项目文件夹里：准备素材（materialize_inputs）给每条素材的原始路径，直接导入达芬奇 / AE，只读，不复制；"
     "临时渲染、AE 单镜头、达芬奇 / AE 工程和剪辑清单放 work_dir（<项目>/工作/<作品>/任务N/），小样导出到 导出/小样、成片导出到 导出/成片；"
@@ -140,6 +146,17 @@ def _task(db: Session, record: dict) -> tuple[dict | None, CreativeExecution | N
     return task, db.get(CreativeExecution, task["execution_id"])
 
 
+def _cover_redo(db: Session, record: dict, execution: CreativeExecution) -> dict | None:
+    """The user's open request to redo only the cover of this task, settled by any cover handed in after it."""
+    asked = record.get("cover_redo")
+    if not asked or asked.get("execution_id") != execution.id or execution.state not in {"claimed", "in_progress", "blocked", "result_ready"}:
+        return None
+    at = datetime.fromisoformat(asked["at"]).replace(tzinfo=None)
+    newer = db.scalar(select(CreativeExecutionOutput.id).where(CreativeExecutionOutput.execution_id == execution.id,
+                                                               CreativeExecutionOutput.role_id == "cover", CreativeExecutionOutput.created_at > at).limit(1))
+    return None if newer else {"note": asked.get("note") or "", "at": asked["at"], "by": asked.get("by")}
+
+
 def _finished(view: dict) -> dict:
     return {**view, "state": "done", "label": "已定稿", "locked": True}
 
@@ -199,6 +216,9 @@ def _state(db: Session, unit_id: int) -> dict:
     if execution.state == "result_ready":
         if notes and notes["decision"] == "changes":
             return {**view, "state": f"{phase}_changes", "label": "小样按你的意见修改中" if phase == "sample" else "成片按你的意见修改中", "notes": notes["notes"]}
+        redo = _cover_redo(db, record, execution)
+        if redo:
+            view["cover_redo"] = redo
         return {**view, "state": f"{phase}_review", "label": "小样待你看" if phase == "sample" else "成片待你看"}
     if execution.state == "accepted":
         return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view)
@@ -282,6 +302,8 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
     if decision == "changes" and not any(str(item.get("note") or "").strip() for item in notes):
         _fail("video_chain_notes_required", "写一下要改哪里", 422)
     target = current["draft_master_id"] if stage == "draft" else current["execution_id"]
+    if stage == "final" and decision == "approve" and current.get("cover_redo"):
+        _fail("video_chain_cover_redo_pending", "封面重做中，等新封面交上来再通过")
     accepted = None
     if decision == "approve" and stage != "draft":
         # Accepting the output files takes a while; saying so first keeps the page and the model from reading 「待你看」 meanwhile.
@@ -331,6 +353,22 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
             project_folders.archive_raw(db, project_id)
         except Exception:  # noqa: BLE001 Filing the raw folder must never undo the approval; failures stay 待归档.
             db.rollback()
+    return state(db, user, project_id, unit_id)
+
+
+def redo_cover(db: Session, user: User, project_id: int, unit_id: int, note: str) -> dict:
+    """Sends only the cover of the 小样 / 成片 under review back; the cut itself stays waiting for the user."""
+    from .content_masters import owned_unit
+
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    current = state(db, user, project_id, unit_id)
+    if current["state"] not in {"sample_review", "final_review"}:
+        _fail("video_chain_not_waiting", "现在不在等你看小样或成片")
+    record = _unit_record(db, unit_id)
+    record["cover_redo"] = {"execution_id": current["execution_id"], "note": note.strip()[:2000], "by": user.email,
+                            "at": datetime.now(UTC).isoformat()}
+    _put(db, unit_id, record)
+    db.commit()
     return state(db, user, project_id, unit_id)
 
 
@@ -609,7 +647,9 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     cover = project_folders.export_dir(db, project_id, "cover")
     cover.mkdir(parents=True, exist_ok=True)
     db.commit()
+    package = db.get(CreativeExecutionPackage, db.get(CreativeExecution, execution_id).package_id)
     return {"execution_id": execution_id, "master_id": master.id, "phase": phase,
+            "cover_template": ((package.package_json if package else {}).get("director") or {}).get("cover_template"),
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
             "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"

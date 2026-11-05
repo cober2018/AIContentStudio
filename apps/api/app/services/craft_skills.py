@@ -191,6 +191,27 @@ def _manifest(template_id: str, version: str) -> dict:
     return found
 
 
+COVER_CATEGORY = "封面"
+
+
+def cover_template(template_id: str, version: str) -> dict | None:
+    """A 封面 template as an edit task carries it: what to render and which fields to fill."""
+    found = next((item for item in _manifests() if item["id"] == template_id and item["version"] == version), None)
+    if found is None or found.get("category") != COVER_CATEGORY:
+        return None
+    return {"id": found["id"], "version": found["version"], "name": found["name"], "alpha": found.get("alpha") is True,
+            "aspects": ["9:16", *sorted(found.get("variants") or {})], "status": found["status"],
+            "fields": [{key: field[key] for key in ("name", "label", "max", "required") if key in field} for field in found["fields"]]}
+
+
+def persona_cover_template(db: Session, persona_id: int | None) -> dict | None:
+    from .content_identity import current_revision
+
+    revision = current_revision(db, "persona", persona_id) if persona_id else None
+    chosen = ((revision.profile_json or {}) if revision else {}).get("cover_template")
+    return cover_template(chosen["id"], chosen["version"]) if isinstance(chosen, dict) else None
+
+
 def _variant(manifest: dict, aspect: str) -> tuple[dict, list[int]]:
     """The 9:16 project is the manifest's own; other aspects live in variants and are never stretched from it."""
     if aspect == "9:16":

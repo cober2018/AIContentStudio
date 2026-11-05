@@ -1,0 +1,26 @@
+# progress
+
+- 2026-11-05 核对现状：角色资料无封面字段；AE 模板库 70 个模板无封面类；封面一格登记后不能替换（replacement_denied）；审片页只显示封面。写好方案，待确认。
+- 2026-11-05 用户确认后实现平台部分：
+  - 角色资料 `cover_template`（只能选封面类模板，`cover_template_invalid`）；角色页「封面样式」选择 + 9:16 预览（`PersonaCoverTemplate.tsx`）。
+  - 新开剪辑任务的执行包 `director.cover_template`；`prepare_video_edit` 结果带 `cover_template`；规则文字、MCP 说明、craft-resolve 封面做法第 5 步。
+  - 交封面查 `cover_template_render`：没带 → `cover_template_missing`，不是本项目里这个模板这个版本的渲染 → `cover_template_mismatch`；审片页交付检查显示。
+  - 封面在任务通过前可重交（旧版留 staged 在历史）；剪辑清单 output_hashes 不再比封面。
+  - 审片页「重做封面」+ 备注（`POST …/video-chain/cover-redo`）；`get_video_decision` 带 `cover_redo`；新封面交上来自动完成；重做中成片「通过」被拒 `video_chain_cover_redo_pending`。
+- 库副本验证（真实任务 52，作品 96，小样待看）：重交 v3 封面成功（attempt 2，attempt 1 留着），审片页显示 attempt 2；重交小样被拒 replacement_denied；重做封面 → 状态带备注 → 再交封面后自动消失；成片有重做时通过被拒；回执三种情况 missing / mismatch（别的模板、别的项目、错版本）/ ok；角色绑错模板被拒、绑对后执行包能带出模板。
+- 全量测试 2441 通过，5 个原有失败；前端 tsc、build 通过。
+- 封面模板构建代码已写（`coverTitlePoints`，9:16 + 16:9），但 AE 里开着别的会话未保存的封面工程（scratchpad/cover/cover-text.aep），构建会不存盘关掉它，所以还没跑。
+- 2026-11-05 AE 里原来的封面工程（另一会话，未保存）先另存备份到 `~/AIContentStudio/ae-backups/cover-text-backup.aep` 再动 AE；AE 重开后卡在启动弹窗，用户手动关掉后继续。
+- 生成封面模板 `cover-title-points` v1：9:16、16:9 两个工程在模板仓库，manifest 在 `craft_skills/craft-ae/templates/cover-title-points/v1/`（category 封面，未写检查，状态 draft），两版预览已生成。
+  - ExtendScript 不认短变量名那一行（报「应为 ;」），颜色变量改成 cvYellow 等长名后通过。
+  - 第一版白色描边是尖角，和参考不像；改圆角（`LineJoinType.LINE_JOIN_ROUND`），副标题 72→82，对勾加大加粗。
+- 安全区：9:16 和参考一样，大标题在上沿外 151 像素，卖点在下沿外 77–319 像素，对勾左边出 10 像素；16:9 已挪进安全区，零越界。
+- 两版内容（A：敏宝专属小点心 / 三条卖点；B：过敏宝宝放心吃 / 敏贝贝薯乐酥 / 卖点 3 留空）叠在任务 52 小样的真实画面上，审片图在 `output/_平台/模板审片/角色封面/`。
+- 2026-11-05 用户「封面模板可以」：竖版超出安全区不要紧（封面主要在主页看）；manifest 写入检查记录，模板变 ready。
+- 2026-11-05 重启 API 和 worker，健康检查正常；设置接口列出 cover-title-points（封面，ready）。
+- 2026-11-05「上线」：先备份库（db-backups/content_studio-before-persona5-cover-20261105.db），经平台接口给懒羊羊小王（角色 5）存资料 v2，cover_template = cover-title-points v1，原有定位、受众、领域照旧；读回确认能取到模板。
+- 2026-11-05 缺陷修复（第三方模型报）：任务 54（P48/U96）交 cover 带 `cover_template_render` 被 `creative_metadata_field_invalid` 拒，MCP 只显示成 creative_domain_invalid_arguments。
+  - `creative_contracts._METADATA_KEYS` 加 `cover_template_render` 和平台自己写的 `cover_template_check`（读回交付记录时也会再校验一遍，缺它会在模板检查跑过后读不出来）。
+  - `creative_mcp._SAFE_CODES` 加 `creative_metadata_field_invalid`。
+  - 库副本重放任务 54：带回执 598 → 登记成功、检查 ok、审片页无模板提示；不带回执重交 → 第 2 版、审片页提示 cover_template_missing；任务读回正常。
+- 2026-11-05 重启 API 和 worker，健康检查正常，回执白名单修复生效。

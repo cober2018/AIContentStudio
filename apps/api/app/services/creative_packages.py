@@ -399,6 +399,11 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
             director["accepted_shot_plans"] = plans
         if document.get("capture_plan"):
             director["capture_plan"] = document["capture_plan"]
+        from .craft_skills import persona_cover_template
+
+        cover_template = persona_cover_template(db, unit.persona_id)
+        if cover_template is not None:
+            director["cover_template"] = cover_template
         director["final_render_required"] = render["status"] != "ready"
         director["candidate_ready"] = False
         if document.get("postproduction"):

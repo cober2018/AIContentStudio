@@ -169,6 +169,10 @@ class VideoDecisionIn(BaseModel):
     notes: list[VideoNoteIn] = Field(default_factory=list, max_length=50)
 
 
+class CoverRedoIn(BaseModel):
+    note: str = Field(default="", max_length=2000)
+
+
 class PlatformSkillsIn(BaseModel):
     writing_skills: bool
 
@@ -216,9 +220,23 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
             result["sample"] = {"execution_id": sample["execution_id"], "cut_output_id": db.scalar(select(CreativeExecutionOutput.id).where(
                 CreativeExecutionOutput.execution_id == sample["execution_id"], CreativeExecutionOutput.role_id == "rough_cut")
                 .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1)), "cover_output_id": cover(sample["execution_id"])}
-            result["sample"]["shot_checks"] = _shot_checks(db, result["sample"]["cut_output_id"])
-        result["shot_checks"] = _with_cover_check(db, _shot_checks(db, result["cut_output_id"]), result["cut_output_id"], result["cover_output_id"])
+            result["sample"]["shot_checks"] = _with_template_check(db, _shot_checks(db, result["sample"]["cut_output_id"]), result["sample"]["cover_output_id"])
+        result["shot_checks"] = _with_template_check(db, _with_cover_check(db, _shot_checks(db, result["cut_output_id"]), result["cut_output_id"], result["cover_output_id"]),
+                                                     result["cover_output_id"])
     return result
+
+
+def _with_template_check(db: Session, checks: dict | None, cover_id: int | None) -> dict | None:
+    """Warns when the shown cover was not made with the persona's 封面 template."""
+    from ..models import CreativeExecutionOutput
+    from ..services import delivery_checks
+
+    output = db.get(CreativeExecutionOutput, cover_id) if cover_id else None
+    code = (output.metadata_json or {}).get("cover_template_check") if output else None
+    if code not in {"cover_template_missing", "cover_template_mismatch"}:
+        return checks
+    base = checks or {"status": "measured", "basis": "fixed", "warnings": [], "thresholds": delivery_checks.thresholds(db)}
+    return {**base, "warnings": [{"code": code}, *base.get("warnings", [])]}
 
 
 def _with_cover_check(db: Session, checks: dict | None, cut_id: int | None, cover_id: int | None) -> dict | None:
@@ -262,6 +280,13 @@ def video_chain_decide(project_id: int, unit_id: int, payload: VideoDecisionIn, 
     from ..services import video_chain
 
     return video_chain.decide(db, user, project_id, unit_id, payload.stage, payload.decision, [item.model_dump() for item in payload.notes])
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/cover-redo")
+def video_chain_cover_redo(project_id: int, unit_id: int, payload: CoverRedoIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import video_chain
+
+    return video_chain.redo_cover(db, user, project_id, unit_id, payload.note)
 
 
 class VideoMaterialsIn(BaseModel):

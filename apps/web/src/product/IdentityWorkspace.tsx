@@ -14,6 +14,7 @@ import PersonaVoicePreset from "./PersonaVoicePreset";
 import PersonaChromeProfile, { useChromeProfiles } from "./PersonaChromeProfile";
 import { PersonaPortraitEditor } from "./PersonaPortraits";
 import { SpeechSampleFolderEditor } from "./PersonaSpeechSamples";
+import { PersonaCoverTemplateEditor } from "./PersonaCoverTemplate";
 
 const PersonaReferenceStylePanel = lazy(() => import("./CapabilityMemoryPanel").then(module => ({ default: module.PersonaReferenceStylePanel })));
 const PersonaCreativeConfig = lazy(() => import("./PersonaCreativeConfig"));
@@ -493,6 +494,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">浏览器</h3><div className="max-w-md"><PersonaChromeProfile personaId={current.id} disabled={creativeReadOnly} /></div></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">形象照</h3><PersonaPortraitEditor key={identityKey} personaId={current.id} personaName={current.name} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
           {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">逐字稿样本</h3><SpeechSampleFolderEditor key={identityKey} personaId={current.id} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
+          {current.kind === "persona" && <section className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">封面样式</h3><PersonaCoverTemplateEditor key={identityKey} personaId={current.id} revision={revisions[0]} readOnly={creativeReadOnly || revisionConflict} onSaved={sideRevisionSaved} /></section>}
           {profileTabs.map(([group, label]) => <section key={group} className="min-w-0"><h3 className="mb-4 font-serif text-[20px] font-semibold text-ink-900">{label}</h3><div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === group).map(({ key, label, shape, hint }) => fieldEditor(key, label, shape, hint))}</div></section>)}
           <details className="min-w-0"><summary className="cursor-pointer font-serif text-[18px] font-semibold text-ink-700">高级（一般不用填）</summary><div className="mt-4 grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{FIELDS.filter(field => field.tab === "advanced").map(({ key, label, shape, hint }) => fieldEditor(key, label, shape, hint))}</div></details>
           <div className="sticky bottom-4 z-10 flex items-center justify-between gap-4 rounded-pill border border-ink-200 bg-surface/95 py-2 pl-6 pr-2 shadow-lift backdrop-blur"><span className="text-[13px] text-ink-600">保存后生成新修订，旧作品的快照不会改变。</span><Button onClick={saveRevision} disabled={creativeReadOnly || busy || revisionConflict}>保存为 v{current.current_revision + 1}</Button></div>

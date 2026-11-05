@@ -72,6 +72,7 @@ SAMPLES = {
     "product-angles": {"a1": "正面", "a2": "侧面", "a3": "收纳盒", "a4": "", "_images": ["img1", "img2", "img3"]},
     "selling-points": {"t1": "主动降噪", "d1": "通勤路上安静下来", "t2": "40 小时续航", "d2": "一周只充一次电", "t3": "230 克轻量", "d3": "戴一天头不累", "beats": "", "_images": ["product"]},
     "check-list": {"title": "这几点都有", "i1": "主动降噪", "i2": "40 小时续航", "i3": "IPX4 防水", "i4": "双设备连接", "i5": "", "beats": ""},
+    "cover-title-points": {"title": "敏宝专属小点心", "sub": "敏贝贝动物小饼干", "p1": "配料表无小麦·蛋·奶", "p2": "非油炸工艺", "p3": "独立小包装"},
     "spec-table": {"title": "参数一览", "rows": "重量|230 g;续航|40 小时;充电|Type-C 快充;降噪|主动降噪;蓝牙|5.3", "highlight": 2, "_images": ["product"]},
     "compare-table": {"title": "和上一代比", "ours": "新款", "other": "旧款", "rows": "主动降噪|✓|✗;续航|40 小时|24 小时;防水|✓|✓;双设备连接|✓|✗"},
     "dimension-mark": {"w_label": "宽 18 cm", "h_label": "高 20 cm", "d_label": "厚 8 cm", "bx0": 0.28, "by0": 0.32, "bx1": 0.7, "by1": 0.72, "_images": ["product"]},
@@ -829,6 +830,26 @@ function checkList(comp){_COMP=comp;
   var tp=c[1].property("Contents").addProperty("ADBE Vector Filter - Trim");tp.property("End").expression=A+'linear(time,t0+0.08,t0+0.3,0,100)';c[1].property("Opacity").expression=A+'d["'+f+'"]?100:0';
   var it=tx(comp,f,42,INK,BOLD,214,y,660,"left");it.property("Opacity").expression=A+'d["'+f+'"]?linear(time,t0+0.05,t0+0.25,0,100):0';}
  var N=["@title","@i1","@i2","@i3","@i4","@i5","check 0"];var b=block(comp,"panel",N,[44,40],PAPER,null,24);b.moveToEnd();softShadow(b,45,60,16);originAt(b,N,[44,40],"left");grow(b,0.1,0.4,[96,96]);fade(b,0.1,0.3);exitAll(comp);}
+function coverTitlePoints(comp){_COMP=comp;
+ // A cover is cut from the film's first frames, so everything is fully on screen from frame 0 and nothing animates.
+ var G={tx:W/2,ty:212,ts:124,tw:940,sx:0,sy:344,ss:82,sw:820,px:150,py:1528,pd:106,ps:88,pw:840,cx:88};
+ var cvYellow=[0.99,0.8,0],cvPoint=[0.99,0.82,0],cvCheck=[0.99,0.49,0],cvRed=[0.91,0.16,0.18],cvCyan=[0.12,0.8,0.86];
+ function outline(l,color,width){var p=l.property("Source Text");var t=p.value;t.applyStroke=true;t.strokeColor=color;t.strokeWidth=width;t.strokeOverFill=false;t.lineJoinType=LineJoinType.LINE_JOIN_ROUND;p.setValue(t);return l;}
+ outline(tx(comp,"title",G.ts,PAPER,HV,G.tx,G.ty,G.tw),cvYellow,34);
+ // The subtitle hangs off the title's right edge, wherever the title's length puts it.
+ var su=outline(tx(comp,"sub",G.ss,PAPER,MED,0,G.sy,G.sw,"left"),cvYellow,12);
+ su.property("Anchor Point").expression='var r=sourceRectAtTime(time,false);[r.left+r.width,r.top+r.height/2]';
+ su.property("Position").expression='var L=thisComp.layer("@title");var r=L.sourceRectAtTime(time,false);[L.toComp([r.left+r.width,0])[0]'+(G.sx?'+'+G.sx:'')+',value[1]]';
+ var bar=comp.layers.addShape();bar.name="sub bar";var bg=bar.property("Contents").addProperty("ADBE Vector Group").property("Contents");bg.addProperty("ADBE Vector Shape - Rect").property("Size").setValue([12,Math.round(G.ss*0.92)]);
+ bg.addProperty("ADBE Vector Graphic - Fill").property("Color").setValue(cvYellow);
+ bar.property("Position").expression='var L=thisComp.layer("@sub");var r=L.sourceRectAtTime(time,false);var k=L.scale[0]/100;[L.toComp([r.left,0])[0]-34*k,L.position[1]]';bar.property("Opacity").expression=D+'d.sub?100:0';
+ // Each selling point: white outline at the back, then cyan and red copies offset either way, then the yellow face.
+ for(var i=0;i<3;i++){var f="p"+(i+1),y=G.py+i*G.pd;
+  var back=outline(tx(comp,f,G.ps,PAPER,HV,G.px,y,G.pw,"left"),PAPER,18);back.name=f+" outline";
+  var cyan=tx(comp,f,G.ps,cvCyan,HV,G.px-4,y-4,G.pw,"left");cyan.name=f+" cyan";
+  var rd=tx(comp,f,G.ps,cvRed,HV,G.px+5,y+5,G.pw,"left");rd.name=f+" red";
+  tx(comp,f,G.ps,cvPoint,HV,G.px,y,G.pw,"left");
+  var c=lineShape(comp,f+" check",cvCheck,26);var k=G.ps/68;staticPath(c[1],[[G.cx-30*k,y-2*k],[G.cx-8*k,y+24*k],[G.cx+32*k,y-30*k]]);c[0].property("Opacity").expression=D+'d["'+f+'"]?100:0';}}
 function specTable(comp,folder){_COMP=comp;
  canvas(comp,PAPER);var ti=tx(comp,"title",60,INK,HV,MX+40,380,880,"left");lift(ti,0.15,12,0.4);
  var m=card(comp,folder,"product.png","@product",820,470,W/2,705);cardFollow("@product");m.property("Opacity").expression=D+'('+HAS("product")+')?linear(time,0.2,0.5,0,100):0';
@@ -983,9 +1004,9 @@ var FN={"tech-points":techPoints,"tech-summary":techSummary,"keyword-contrast":k
  "glass-board":glassBoard,"step-line":stepLine,"converge":converge,"line-carry":lineCarry,"timeline-travel":timelineTravel,"slider-compare":sliderCompare,"split-6040":split6040,"before-after-scrub":beforeAfterScrub,
  "chapter-card":chapterCard,"chapter-list":chapterList,"title-to-label":titleToLabel,"lead-word":leadWord,"news-desk":newsDesk,"layout-relay":layoutRelay,"grid-hero":gridHero,
  "echo-bed":echoBed,"route-pin":routePin,"shape-wipe":shapeWipe,"color-slam":colorSlam,"follow-button":followButton,"follow-card-x":followCardX,"follow-card-dy":followCardDy,
- "product-hero":productHero,"product-angles":productAngles,"selling-points":sellingPoints,"check-list":checkList,"spec-table":specTable,"compare-table":compareTable,"dimension-mark":dimensionMark,
+ "product-hero":productHero,"product-angles":productAngles,"selling-points":sellingPoints,"check-list":checkList,"cover-title-points":coverTitlePoints,"spec-table":specTable,"compare-table":compareTable,"dimension-mark":dimensionMark,
  "price-drop":priceDrop,"deal-timer":dealTimer,"layer-stack":layerStack,"use-steps":useSteps,"review-cards":reviewCards,"cert-card":certCard,"buy-cta":buyCta,"color-swatch":colorSwatch};
-var ALPHA={"keyword-contrast":1,"keyword-slab":1,"impact-line":1,"outline-box-title":1,"split-rise-title":1,"quote-hold":1,"pair-blocks":1,"host-parallel":1,"name-plate":1,"name-chevron":1,"chapter-card":1,"value-swap":1,"count-title":1,"term-card":1,"lead-word":1,"shape-wipe":1,"follow-button":1,"follow-card-x":1,"follow-card-dy":1,"check-list":1,"price-drop":1,"deal-timer":1,"buy-cta":1};
+var ALPHA={"keyword-contrast":1,"keyword-slab":1,"impact-line":1,"outline-box-title":1,"split-rise-title":1,"quote-hold":1,"pair-blocks":1,"host-parallel":1,"name-plate":1,"name-chevron":1,"chapter-card":1,"value-swap":1,"count-title":1,"term-card":1,"lead-word":1,"shape-wipe":1,"follow-button":1,"follow-card-x":1,"follow-card-dy":1,"check-list":1,"cover-title-points":1,"price-drop":1,"deal-timer":1,"buy-cta":1};
 
 var log=[];app.beginSuppressDialogs();
 for(var i=0;i<IDS.length;i++){var id=IDS[i];try{

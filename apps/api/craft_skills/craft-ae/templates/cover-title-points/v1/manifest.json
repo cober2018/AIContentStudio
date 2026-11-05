@@ -1,0 +1,107 @@
+{
+  "schema": "aics.ae-template.v1",
+  "id": "cover-title-points",
+  "version": "v1",
+  "name": "角色封面 · 大字三卖点",
+  "category": "封面",
+  "use": "角色固定封面字层（透明）：顶部白字黄粗描边大标题，右下挂一行细字黄描边副标题（前面一道黄竖条），底部三行黄字卖点（红青错位 + 白色粗描边，前面橙色对勾）。从第 0 帧就完整显示、没有动画；叠在成片开头那段商品实拍上，封面从渲染好的成片里截。",
+  "fields": [
+    {
+      "name": "title",
+      "label": "大标题",
+      "kind": "text",
+      "max": 9,
+      "required": true
+    },
+    {
+      "name": "sub",
+      "label": "副标题",
+      "kind": "text",
+      "max": 12,
+      "required": false
+    },
+    {
+      "name": "p1",
+      "label": "卖点 1",
+      "kind": "text",
+      "max": 11,
+      "required": true
+    },
+    {
+      "name": "p2",
+      "label": "卖点 2",
+      "kind": "text",
+      "max": 11,
+      "required": false
+    },
+    {
+      "name": "p3",
+      "label": "卖点 3",
+      "kind": "text",
+      "max": 11,
+      "required": false
+    }
+  ],
+  "images": [],
+  "duration_ms": {
+    "min": 500,
+    "max": 10000,
+    "default": 1500
+  },
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ],
+  "size": [
+    1080,
+    1920
+  ],
+  "fps": 30,
+  "fonts": [
+    "SourceHanSansSC-Heavy",
+    "SourceHanSansSC-Medium"
+  ],
+  "project": {
+    "file": "template.aepx",
+    "sha256": "a47d252a19db6560e6cbc946d6c1ed4898ede29786391b96020630851b4379e3"
+  },
+  "variants": {
+    "16:9": {
+      "project": {
+        "file": "template-16x9.aepx",
+        "sha256": "d5b5356b0cae4b77c8e3b49135effea06ca6352c7e18b119b9bcc58588230cb5"
+      },
+      "size": [
+        1920,
+        1080
+      ]
+    }
+  },
+  "comp": "MAIN",
+  "alpha": true,
+  "checks": [
+    {
+      "date": "2026-11-05",
+      "content": "敏宝专属小点心 / 敏贝贝动物小饼干 / 配料表无小麦·蛋·奶 / 非油炸工艺 / 独立小包装（叠在任务 52 小样商品画面上）",
+      "frames": "第 0 帧静帧，与参考封面并排",
+      "result": "用户看审片图验收（2026-11-05「封面模板可以」）；文字替换、空字段隐藏（卖点 3 留空时对勾一起隐藏）、圆角白描边、红青错位与参考图一致；9:16 按参考版式超出播放安全区，用户确认封面主要在主页看，不要紧"
+    },
+    {
+      "date": "2026-11-05",
+      "content": "过敏宝宝放心吃 / 敏贝贝薯乐酥 / 添加益生元 / 无麸质配方 / （空）（叠在任务 52 小样人物画面上）",
+      "frames": "第 0 帧静帧，与参考封面并排",
+      "result": "用户看审片图验收（2026-11-05「封面模板可以」）；文字替换、空字段隐藏（卖点 3 留空时对勾一起隐藏）、圆角白描边、红青错位与参考图一致；9:16 按参考版式超出播放安全区，用户确认不要紧"
+    },
+    {
+      "date": "2026-11-05",
+      "aspect": "16:9",
+      "content": "同上两组内容",
+      "frames": "第 0 帧静帧，横版并排",
+      "result": "用户看横版审片图验收；横版单独排版，16:9 播放安全区检查零越界"
+    }
+  ],
+  "previews": {
+    "9:16": "preview-9x16.mp4",
+    "16:9": "preview-16x9.mp4"
+  }
+}

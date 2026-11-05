@@ -377,5 +377,8 @@ def validate_edit_output_hashes(package: dict, outputs: list, manifest: dict) ->
         if value(output, "state") in {"staged", "accepted"} and (role_id not in latest or value(output, "attempt_no") > value(latest[role_id], "attempt_no")):
             latest[role_id] = output
     for role_id, expected_hash in manifest["output_hashes"].items():
+        # The cover may be redone after the manifest is in, so the manifest's record of it can be older.
+        if role_id == "cover":
+            continue
         if role_id not in latest or value(latest[role_id], "content_hash") != expected_hash:
             _fail("video_edit_manifest_output_mismatch")

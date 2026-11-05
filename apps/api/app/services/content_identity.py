@@ -64,6 +64,13 @@ class CreativeProfile(BaseModel):
         return self
 
 
+class CoverTemplateRef(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(pattern=r"^[a-z0-9-]{1,60}$")
+    version: str = Field(pattern=r"^v[0-9]{1,3}$")
+
+
 class IdentityProfile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -82,6 +89,8 @@ class IdentityProfile(BaseModel):
     portrait_material_revision_ids: list[int] | None = Field(default=None, max_length=3)
     # A folder in the Obsidian vault with this persona's real spoken transcripts; read fresh for each video brief.
     speech_sample_folder: str | None = Field(default=None, max_length=500)
+    # The AE 封面 template every edit task of this persona renders its cover text with.
+    cover_template: CoverTemplateRef | None = None
     text_creative_profile: CreativeProfile | None = None
     graphic_creative_profile: CreativeProfile | None = None
     video_creative_profile: CreativeProfile | None = None
@@ -423,6 +432,13 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
         if kind != "persona":
             raise HTTPException(422, "portrait_persona_only")
         data["portrait_material_revision_ids"] = _portraits(db, user, data["portrait_material_revision_ids"])
+    if data.get("cover_template") is not None:
+        from .craft_skills import cover_template
+
+        if kind != "persona":
+            raise HTTPException(422, "cover_template_persona_only")
+        if cover_template(data["cover_template"]["id"], data["cover_template"]["version"]) is None:
+            raise HTTPException(422, {"code": "cover_template_invalid", "message": "封面样式只能选 AE 模板库里的封面类模板"})
     if data.get("speech_sample_folder") is not None:
         if kind != "persona":
             raise HTTPException(422, "speech_samples_persona_only")
