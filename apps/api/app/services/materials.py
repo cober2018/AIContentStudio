@@ -351,6 +351,18 @@ def revoke_public_use(db: Session, revision: MaterialRevision, note: str) -> dic
     return {"material_id": revision.material_id, "revision_id": revision.id}
 
 
+def allow_public_use(revision: MaterialRevision, email: str) -> dict:
+    """Only the person who uploaded a file can vouch that it may be published; renders and other people's files keep what they were given."""
+    if revision.source_kind != "upload" or revision.created_by != email:
+        raise HTTPException(403, {"code": "material_public_use_not_owner", "message": "只有自己上传的素材能改成可公开使用"})
+    if revision.status in {MaterialRevisionStatus.revoked.value, "archived"}:
+        raise HTTPException(409, {"code": "material_public_use_revoked", "message": "这个版本已撤销或归档，不能改成可公开使用"})
+    if revision.rights_status != "cleared":
+        raise HTTPException(409, {"code": "material_public_use_rights_unclear", "message": "先把权利状态确认为「已确认」，再改成可公开使用"})
+    revision.public_use_allowed = True
+    return {"material_id": revision.material_id, "revision_id": revision.id}
+
+
 def find_usage(db: Session, material_id: int) -> dict:
     revisions = db.scalar(select(func.count(MaterialRevision.id)).where(MaterialRevision.material_id == material_id))
     return {"material_id": material_id, "revisions": revisions or 0}

@@ -63,6 +63,7 @@ RULES = [
     "没带或用错模板，审片页会提示。没有 cover_template 就照上面的封面做法。",
     "封面在任务通过前可以再交（同一个 role cover 再 submit_output 一次），新的一张显示在审片页，旧的留在历史里；其他交付文件交了就不能换。"
     "get_video_decision 返回 cover_redo 时，是用户只要你重做封面：按 cover_redo.note 改，重新出字层、从成片截图、再交一次 cover，不要重交小样 / 成片；新封面交上来，这条就算完成。",
+    "素材能不能公开、能不能给模型用，只有用户能在素材详情里改；不能用 REST 或别的办法代改。开剪报 video_asset_kind_or_rights_invalid 时，把报错里说的是哪条素材、该怎么处理原样告诉用户，等用户改好再重做用到它的素材。",
     "剪辑照导演稿：画面内容要变就先存新导演稿；导演稿没写的细节和网络素材署名写进回执。",
     "文件都在项目文件夹里：准备素材（materialize_inputs）给每条素材的原始路径，直接导入达芬奇 / AE，只读，不复制；"
     "临时渲染、AE 单镜头、达芬奇 / AE 工程和剪辑清单放 work_dir（<项目>/工作/<作品>/任务N/），小样导出到 导出/小样、成片导出到 导出/成片；"
@@ -406,14 +407,19 @@ def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, exec
         rights = {"rights_status": "cleared", "public_use_allowed": shareable, "model_use_allowed": shareable}
         payload = {"expected_revision": execution.revision_no, "decision": "accept", "rights": rights,
                    "title": f"{unit.title} · {output.role_id}"[:255], "attach_to_project": output.role_id in {"rough_cut", "final", "cover"}}
-        try:
-            creative_executions.decide_output(db, project_id, unit_id, execution_id, output.id, payload, user)
-        except HTTPException as exc:
-            if (exc.detail or {}).get("code") != "creative_execution_rights_escalation":
-                raise
-            db.rollback()
-            payload["rights"] = {"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": False}
-            creative_executions.decide_output(db, project_id, unit_id, execution_id, output.id, payload, user)
+        # One input that cannot be published must not also take away model use, or the next phase cannot build on this cut.
+        fallbacks = [{"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": shareable},
+                     {"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": False}]
+        while True:
+            try:
+                creative_executions.decide_output(db, project_id, unit_id, execution_id, output.id, payload, user)
+                break
+            except HTTPException as exc:
+                if (exc.detail or {}).get("code") != "creative_execution_rights_escalation" or not fallbacks:
+                    raise
+                db.rollback()
+                db.refresh(execution)
+                payload = {**payload, "expected_revision": execution.revision_no, "rights": fallbacks.pop(0)}
 
 
 def _ensure_references(db: Session, user: User, project_id: int, revision_ids: set[int]) -> None:

@@ -663,6 +663,44 @@ def list_checks(db: Session, project_id: int, unit_id: int, master_id: int, user
     return [{"id": item.id, "check_kind": item.check_kind, "input_hash": item.input_hash, "status": item.status, "report": item.report_json, "created_at": item.created_at.isoformat() if item.created_at else None} for item in db.scalars(select(ContentMasterCheckRun).where(ContentMasterCheckRun.master_revision_id == master_id).order_by(ContentMasterCheckRun.id)).all()]
 
 
+def _rights_reason(db: Session, revision: MaterialRevision, item: dict, document: dict) -> str:
+    """Which material holds the task back and which upstream file made it so, so the model knows what to fix."""
+    from ..models import CreativeExecutionPackage
+
+    orders = {shot.get("id"): shot.get("order") for shot in document.get("shots") or [] if isinstance(shot, dict)}
+
+    def name(row: MaterialRevision) -> str:
+        return f"素材 {row.id}「{row.material.title}」"
+
+    def at(shot_id: str | None) -> str:
+        return f"第 {orders[shot_id] + 1} 镜的" if isinstance(orders.get(shot_id), int) else ""
+
+    def sources(row: MaterialRevision) -> list[tuple[MaterialRevision, str | None]]:
+        # AE renders record their pictures; accepted cuts record every input of their task and where each sat.
+        meta = row.source_metadata_json or {}
+        package = db.get(CreativeExecutionPackage, meta["package_id"]) if type(meta.get("package_id")) is int else None
+        places = {asset.get("material_revision_id"): (asset.get("placement") or {}).get("shot_id")
+                  for asset in ((package.package_json or {}).get("assets") or [] if package else [])}
+        ids = list(meta.get("image_revision_ids") or []) + [entry.get("material_revision_id") for entry in meta.get("inherited_inputs") or [] if isinstance(entry, dict)]
+        found = [(db.get(MaterialRevision, value), places.get(value)) for value in dict.fromkeys(ids) if type(value) is int]
+        return [(row, shot) for row, shot in found if row is not None]
+
+    role = {"postproduction_parent": "成片要接着用的小样", "render_output": "成片", "shot_source": f"{at((item.get('placement') or {}).get('shot_id'))}画面"}.get(item.get("role"), "")
+    what = "不能公开" if revision.model_use_allowed is True else "不能给模型用也不能公开"
+    chain, current, seen = [], revision, {revision.id}
+    while len(chain) < 4:
+        blocked = [(row, shot) for row, shot in sources(current) if row.public_use_allowed is not True and row.id not in seen]
+        if not blocked:
+            break
+        current, shot = blocked[0]
+        seen.add(current.id)
+        chain.append(f"{at(shot)}{name(current)}")
+    if not chain:
+        return f"{role}{name(revision)}{what}：到素材库核对它的权利，或换一条素材。"
+    return (f"{role}{name(revision)}{what}：用了{'，它又用了'.join(chain)}，后者不能公开。"
+            f"请用户在素材详情里把素材 {current.id} 改成可公开使用（只有上传者本人能改），再重新做用到它的素材（如重新渲染那一镜的 AE 模板、重出小样）。")
+
+
 def _verified_generated_asset(db: Session, output: ProjectWorkflowOutput, material: MaterialRevision) -> bool:
     from .project_outputs import MEDIA_KINDS
 
@@ -883,10 +921,12 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
                 db, project_id, unit_id, user.id, material, document=payload["payload"])
             # Accepted local renders preserve restricted rights; Candidate still requires public rights.
             if (material.material.kind not in allowed_kinds or material.material.status != "active"
-                    or material.status in {"revoked", "archived"}
-                    or (not local_render and material.model_use_allowed is not True and material.public_use_allowed is not True)
-                    or (role == "render_output" and material.public_use_allowed is not True and not local_render)):
+                    or material.status in {"revoked", "archived"}):
                 raise HTTPException(422, {"code": "video_asset_kind_or_rights_invalid"})
+            if ((not local_render and material.model_use_allowed is not True and material.public_use_allowed is not True)
+                    or (role == "render_output" and material.public_use_allowed is not True and not local_render)):
+                raise HTTPException(422, {"code": "video_asset_kind_or_rights_invalid",
+                                          "message": _rights_reason(db, material, item, payload["payload"])})
             try:
                 content = verify_bytes_checked(db, material, require_public=role == "render_output" and not local_render)
             except (HTTPException, OSError) as exc:

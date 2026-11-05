@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLink, HardDrive } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, currentUser } from "../api";
+import { api, ApiError, currentUser } from "../api";
 import { Button, Chip, Drawer, ErrorBanner, Field, Notice, Spinner, inputClass } from "../components/ui";
 import FileLocationActions from "./FileLocationActions";
 import { readableTime } from "./HomePage";
@@ -20,7 +20,10 @@ type Detail = { id: number; title: string; kind: string; tags: string[]; revisio
 type Usage = { items: { category: string; id: number; title: string; href: string }[]; total: number };
 type Project = { id: number; title: string; status: string };
 
-function errorText(error: unknown) { return error instanceof Error ? error.message : "操作失败"; }
+function errorText(error: unknown) {
+  const detail = error instanceof ApiError ? error.detail as { message?: string } | undefined : undefined;
+  return detail?.message || (error instanceof Error ? error.message : "操作失败");
+}
 const RIGHTS_STATUS: Record<string, string> = { restricted: "仅限本地审阅", cleared: "自有，权利清楚", licensed: "已获授权", unknown: "未确认" };
 const allowed = (value: boolean | null) => value === true ? "允许" : value === false ? "不允许" : "未确认";
 
@@ -146,6 +149,14 @@ export default function MaterialDetailDrawer({ materialId, collections, onClose 
             ["商业使用", allowed(revision.commercial_use_allowed)],
             ["权利状态", RIGHTS_STATUS[revision.rights_status ?? ""] ?? revision.rights_status],
           ]} />
+          {revision.public_use_allowed !== true && revision.source_kind === "upload" && revision.status !== "revoked" && revision.rights_status === "cleared"
+            && <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button size="sm" variant="secondary" disabled={busy} onClick={() => {
+                if (window.confirm("确认这条素材是你自己的、可以公开发布？改了之后，用到它的新成片也能公开。已经做好的素材不会跟着变，要重新做。"))
+                  void run(() => api.post(`/materials/${materialId}/revisions/${revision.id}/allow-public-use`, {}), "已改成可公开使用");
+              }}>改成可公开使用</Button>
+              <span className="text-[12px] text-ink-500">只有上传者本人能改</span>
+            </div>}
           {revision.attribution_text && <div className="mt-4 rounded-xl bg-paper px-4 py-3 text-[13px] leading-relaxed text-ink-700"><p className="eyebrow mb-1">署名</p>{revision.attribution_text}</div>}
         </Block>
 

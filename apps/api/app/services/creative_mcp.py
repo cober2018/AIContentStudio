@@ -894,7 +894,7 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_asset_", "video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

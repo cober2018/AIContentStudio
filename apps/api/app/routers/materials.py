@@ -587,6 +587,15 @@ def revoke_material_public_use(
     return {**result, "revision": _revision_json(revision)}
 
 
+@router.post("/materials/{material_id}/revisions/{revision_id}/allow-public-use")
+def allow_material_public_use(material_id: int, revision_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    revision = _get_revision(db, material_id, revision_id)
+    result = materials_service.allow_public_use(revision, user.email)
+    db.add(AuditLog(event="material.public_use_allowed", actor=user.email, entity_type="material_revision", entity_id=str(revision.id), detail_json={}))
+    db.commit()
+    return {**result, "revision": _revision_json(revision)}
+
+
 class LoudnessMasterIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     target_lufs: StrictFloat | StrictInt = Field(default=-16.0, ge=-30, le=-9)
