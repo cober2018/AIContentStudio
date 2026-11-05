@@ -498,7 +498,7 @@ def import_folder(db: Session, user, project_id: int, path: str) -> dict:
         raise HTTPException(409, {"code": exc.code, "message": "素材库盘读不了"}) from None
     unsupported = sum(1 for directory, _dirs, files in os.walk(folder) for name in files
                       if not name.startswith(".") and Path(name).suffix.lower().lstrip(".") not in EXTENSIONS)
-    result = {"added": 0, "existing": 0, "skipped": [], "unsupported": unsupported, "truncated": listing["truncated"]}
+    result = {"added": 0, "existing": 0, "skipped": [], "unsupported": unsupported, "truncated": listing["truncated"], "files": []}
     for item in listing["files"]:
         try:
             if item["linked"]:
@@ -510,6 +510,8 @@ def import_folder(db: Session, user, project_id: int, path: str) -> dict:
                                            attribution_text=None, tags=[], user=user)
             row = db.scalar(select(ProjectMaterialReference).where(ProjectMaterialReference.project_id == project_id,
                                                                    ProjectMaterialReference.material_revision_id == revision.id))
+            # The model renders AE templates with these ids, so files already in the project are listed too.
+            result["files"].append({"relative_path": item["relative_path"], "material_revision_id": revision.id})
             if row is not None and row.status == "active":
                 result["existing"] += 1
                 db.commit()

@@ -274,6 +274,10 @@ class VideoImageInput(Scope):
     label: str = Field(min_length=1, max_length=120)
 
 
+class MaterialFolderInput(Scope):
+    path: str = Field(min_length=1, max_length=1000)
+
+
 class ShotInput(Scope):
     shot_id: str = Field(min_length=1, max_length=100, pattern=IDENTIFIER)
 
@@ -483,6 +487,7 @@ TOOLS = {
     "set_shot_materials": (VideoMaterialsInput, "After the 导演稿 is approved: put material revisions on shots {shot_id: material_revision_id}, optionally the music bed (music: an audio material_revision_id) and the length of shots without a line (silent_durations, ms; e.g. a closing that must stay long enough to read its text). Picture content stays as approved.", False),
     "accept_material_candidate": (VideoCandidateInput, "Import one stock candidate from a start_material_match run into the library and this project; returns its material_revision_id.", False),
     "generate_video_image": (VideoImageInput, "Generate one still with the platform image tool into this project's folder; returns its material_revision_id.", False),
+    "import_material_folder": (MaterialFolderInput, "Register every media file of one folder on the material drive into this project, the same as 引入原始素材文件夹 on the project's 素材 page: path is the folder's full path on the drive (e.g. under 外部素材库/), never a project folder or 通用素材. Files are linked in place, attached to this project only and never bound to a shot. Returns counts plus files [{relative_path, material_revision_id}] for new and already attached files; use those ids for render_ae_template image slots. Calling again with the same folder registers nothing twice.", False),
     "get_shot_video_prompt": (ShotInput, "Product and persona works: one shot's prompts (zh and en, built from the shot's board — picture, camera, the person's attitude — plus the group's shared person and setting when the shot is in a consistency group), the first-frame still prompt, first / last frame revisions, ratio and seconds, and whether the shot is manual or auto. Persona works also get t2v_prompt / t2v_prompt_en for making the clip from text alone; their prompts never mention a product. Without a persona portrait every prompt says no person appears (setting only, hands when something is handled), except that a shot whose board names other_people (people who are not the persona, e.g. 宝宝) may show them as hands, feet, part of the body or from behind, never the face.", True),
     "set_shot_video_mode": (ShotModeInput, "Product and persona works, after the 导演稿 is approved and the user's materials are mapped, only for shots without one: switch one shot to manual (the user makes the clip on a website from the prompt — text-to-video, or image-to-video with the platform's still — and uploads it) or auto (the image-to-video model in 用途路由). Use manual when an auto clip failed or the user did not like it.", False),
     "generate_shot_image": (ShotImageInput, "Product and persona works, after the 导演稿 is approved and the user's materials are mapped, only for shots without one and not in a consistency group (grouped shots use generate_storyboard_grid): generate one shot's still with the image model in 用途路由 → 镜头生图. Product works: the product photo goes as reference with the persona's portrait (or the work's own shared references, which win; plus an optional extra reference), each still is checked against the product photo (shape, colour, material, logo, accessories) and redrawn with the problems up to 3 times, only a passing still becomes the first frame, and reveal / CTA shots are refused. Persona works: no product reference and no check; the portrait goes along when there is one, and the still becomes the first frame as drawn. Without a portrait no person is drawn (hands only) and people shots return a notice; a persona shot whose board names other_people may show those people without a face. Write the scene, light and framing in prompt; the person rule is added for you.", False),
@@ -743,7 +748,7 @@ _ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decisi
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                 "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
                 "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",
-                "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid"}
+                "import_material_folder", "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid"}
 
 
 def _video(db: Session, name: str, args: Input, user: User) -> dict:
@@ -764,6 +769,13 @@ def _video(db: Session, name: str, args: Input, user: User) -> dict:
         return chain.generate_image(db, user, p, args.prompt, args.label)
     if name == "generate_video_voiceover":
         return chain.voiceover(db, user, p, u)
+    if name == "import_material_folder":
+        from ..routers.content_projects import mutable_project
+        from . import content_masters, project_folders
+
+        content_masters.owned_unit(db, p, u, user)
+        mutable_project(db, p, user)
+        return project_folders.import_folder(db, user, p, args.path)
     if name in {"get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}:
         from . import product_video
 
