@@ -1,7 +1,7 @@
 import { Component, lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { CheckCircle2, Clapperboard, FolderOpen, Images, Library, LineChart, PenLine, Settings2, Sparkles, Sun, UserRound, type LucideIcon } from "lucide-react";
+import { CheckCircle2, Clapperboard, FolderOpen, Images, Library, LineChart, PenLine, Settings2, Sparkles, Sun, UserRound, Wrench, type LucideIcon } from "lucide-react";
 import { useProductionWorkbench } from "./product/taskNavigation";
 
 const MaterialLibraryFloat = lazy(() => import("./product/MaterialLibraryFloat"));
@@ -11,6 +11,7 @@ const IdentityWorkspace = lazy(() => import("./product/IdentityWorkspace"));
 const LearningWorkspace = lazy(() => import("./product/LearningWorkspace"));
 const SystemAssetsKnowledgePage = lazy(() => import("./product/SystemAssetsKnowledgePage"));
 const MaterialLibraryPage = lazy(() => import("./product/MaterialLibraryPage"));
+const SmallToolsPage = lazy(() => import("./product/SmallToolsPage"));
 const ProductSettingsPage = lazy(() => import("./product/ProductSettingsPage"));
 const ProjectReviewCenter = lazy(() => import("./product/ProjectReviewCenter"));
 const HomePage = lazy(() => import("./product/HomePage"));
@@ -46,6 +47,9 @@ const NAV_GROUPS: { label: string; items: { to: string; label: string; icon: Luc
     { to: "/identities", label: "角色与账号", icon: UserRound },
     { to: "/materials", label: "素材库", icon: Images },
     { to: "/assets", label: "素材与知识", icon: Library },
+  ] },
+  { label: "工具", items: [
+    { to: "/tools", label: "小工具", icon: Wrench },
   ] },
 ];
 
@@ -147,6 +151,7 @@ function Shell() {
               <Route path="/assets" element={<SystemAssetsKnowledgePage />} />
               <Route path="/learning" element={<LearningWorkspace />} />
               <Route path="/materials" element={<MaterialLibraryPage />} />
+              <Route path="/tools" element={<SmallToolsPage />} />
               <Route path="/settings" element={<ProductSettingsPage />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
                 </Routes>

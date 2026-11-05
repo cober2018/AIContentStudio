@@ -22,7 +22,7 @@ TOOL_NAMES = {
     "get_craft_skill", "list_ae_templates", "render_ae_template", "start_material_autofill",
     # The video chain is led by the external model; it saves the 导演稿 and picks materials itself.
     "get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
-    "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "import_material_folder", "prepare_video_edit", "file_as_common", "propose_lesson", "search_web_materials", "get_web_materials",
+    "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "import_material_folder", "start_media_transcription", "get_media_transcription", "prepare_video_edit", "file_as_common", "propose_lesson", "search_web_materials", "get_web_materials",
     "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
     "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid",
     "get_article_brief", "save_article_draft", "get_article_decision",
@@ -33,7 +33,7 @@ READ_ONLY_TOOLS = {"list_personas", "list_accounts", "get_context", "get_package
                    "get_stages", "preview_stage", "get_stage_result", "get_stage_decision", "get_material_match", "get_shot_slots",
                    "get_craft_skill", "list_ae_templates", "get_video_brief", "get_video_decision",
                    "get_article_brief", "get_article_decision", "get_shot_video_prompt", "get_reference_video", "get_web_materials",
-                   "get_fact_template"}
+                   "get_fact_template", "get_media_transcription"}
 FORBIDDEN_TOOLS = (
     "approve_candidate", "approve", "freeze_candidate", "publish", "publish_content",
     "wechat_draft", "deliver", "create_delivery_target", "execute_delivery",

@@ -42,6 +42,7 @@ from .routers import (
     project_read_models,
     project_review,
     settings,
+    small_tools,
     sources,
     stage_integrations,
     system_library,
@@ -160,6 +161,7 @@ for router in (
     project_read_models,
     project_review,
     obsidian_knowledge,
+    small_tools,
     health,
     external,
 ):

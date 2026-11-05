@@ -77,10 +77,10 @@ def probe(path: Path) -> dict:
             "has_audio": any(item.get("codec_type") == "audio" for item in data.get("streams", []))}
 
 
-def scene_cuts(path: Path, duration_ms: int, threshold: float = SCENE) -> list[int]:
+def scene_cuts(path: Path, duration_ms: int, threshold: float = SCENE, timeout: int = 600) -> list[int]:
     """Times (ms) where the picture changes abruptly; flashes shorter than MIN_SEGMENT_MS merge into their neighbour."""
     err = _run(["ffmpeg", "-nostdin", "-hide_banner", "-i", str(path), "-an", "-vf", f"select='gt(scene,{threshold})',showinfo",
-                "-f", "null", "-"], 600).stderr.decode("utf-8", "replace")
+                "-f", "null", "-"], timeout).stderr.decode("utf-8", "replace")
     cuts = []
     for found in re.finditer(r"pts_time:([0-9.]+)", err):
         at = round(float(found.group(1)) * 1000)

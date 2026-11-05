@@ -398,6 +398,15 @@ class EmptyInput(Input):
     pass
 
 
+class MediaTranscriptionInput(Input):
+    path: str = Field(min_length=1, max_length=2000)
+    output_dir: str | None = Field(default=None, min_length=1, max_length=2000)
+
+
+class MediaTranscriptionReadInput(Input):
+    job_id: str = Field(pattern=r"^[0-9a-f]{12}$")
+
+
 class TopicLink(Input):
     url: str = Field(min_length=1, max_length=1000, pattern=r"^https?://")
     title: str | None = Field(default=None, max_length=300)
@@ -449,6 +458,8 @@ def _metric_key_text() -> str:
                      for channel, metrics in PLATFORM_METRICS.items())
 
 TOOLS = {
+    "start_media_transcription": (MediaTranscriptionInput, "Small tool, not tied to any project: transcribe one local audio or video file (full path on this Mac or the material drive) with the platform's local speech recognition (no network, no cost). Writes one folder with <name>.txt (plain text), <name>.srt (subtitles) and <name>.md (notes split at scene changes, each part with its screenshot in images/ by relative path; audio gets text only). Default folder: 自媒体素材/AIContentStudio/转写/<name>/ on the material drive; output_dir (full path) writes elsewhere; earlier results are never overwritten. Runs in the background one job at a time and returns job_id at once; read it with get_media_transcription.", False),
+    "get_media_transcription": (MediaTranscriptionReadInput, "Read a job started with start_media_transcription: status (queued / running / done / failed with reason), output folder, files (txt, srt, md, images), duration, cue and screenshot counts and the opening text. While queued or running, call again after a while.", True),
     "list_personas": (EmptyInput, "Start of a self-sourced topic: read the owner's active personas (id, name, positioning) and the channels a work can target. A project takes no persona; each work picks one.", True),
     "create_project": (ProjectCreateInput, "Create a content project from a topic you researched yourself, with revision 1 of its brief. rationale (why this topic, now) is required; links are optional because a topic drawn from many sources may have no single source. Then call create_unit. Not for product works.", False),
     "create_unit": (UnitCreateInput, "Create a work in a project for one persona (video, graphic or text; channel optional, from list_personas). Returns unit_id; continue with the normal flow, e.g. get_video_brief, where the 导演稿, 小样 and 成片 stops wait for the user.", False),
@@ -631,6 +642,12 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return craft_skills.render(db, user, project_id=args.project_id, unit_id=args.unit_id, template_id=args.template,
                                    version=args.version, content=args.content, images=args.images, duration_ms=args.duration_ms,
                                    aspect=args.aspect)
+    if name in {"start_media_transcription", "get_media_transcription"}:
+        from . import media_transcription
+
+        if name == "start_media_transcription":
+            return media_transcription.start(db, user, args.path, args.output_dir)
+        return media_transcription.result(db, args.job_id)
     if name in {"list_personas", "create_project", "create_unit"}:
         return _self_sourced(db, name, args, user)
     if name in {"list_accounts", "import_account_metrics"}:
@@ -869,11 +886,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material|media_transcription)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("material_library_unavailable", "video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

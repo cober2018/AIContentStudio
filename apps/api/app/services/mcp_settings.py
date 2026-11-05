@@ -30,6 +30,7 @@ GROUPS = {
                                         "import_material_folder", "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}),
     "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision"}),
     "facts": ("事实边界（按题材模板自动核对）", {"get_fact_template", "submit_facts"}),
+    "tools": ("小工具", {"start_media_transcription", "get_media_transcription"}),
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
 SUMMARIES = {
@@ -72,6 +73,8 @@ SUMMARIES = {
     "save_article_draft": "存一版文章 / 图文稿，然后停下等用户采用或写意见（页面开关须为「第三方模型」）",
     "get_article_decision": "读用户对稿件的决定：采用即定稿，有意见就出下一版",
     "generate_video_image": "用平台生图工具生成一张画面，放进项目文件夹",
+    "start_media_transcription": "小工具：把本机或素材盘上的一个音视频文件转成文字、字幕和配截图的 md 笔记，本机转写不花钱，后台排队执行",
+    "get_media_transcription": "小工具：查转写任务的进度和结果（输出文件夹、生成的文件、开头一段文字）",
     "import_material_folder": "把素材盘上的一个文件夹（如外部素材库下的截图、配图）登记进本项目，和素材页「引入原始素材文件夹」一样；只进项目，不绑镜头",
     "generate_video_voiceover": "按你的 MiniMax 设置生成配音，并按配音对齐镜头时长",
     "prepare_video_edit": "记下哪些镜头用 AE，开剪辑任务：先小样，小样通过后排版出成片",
