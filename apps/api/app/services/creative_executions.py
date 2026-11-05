@@ -1203,7 +1203,24 @@ def _cover_template_check(db: Session, row: CreativeExecution, director: dict, m
     return {"cover_template_check": "ok"}
 
 
-def _cover_check(db: Session, user: User, row: CreativeExecution, outputs: list, role_id: str, source) -> dict:
+def _brand_files(db: Session, package: CreativeExecutionPackage) -> list[dict]:
+    from .materials import local_file_checked
+
+    files = []
+    for clip in package.package_json["director"]["brand_clips"]:
+        path = local_file_checked(db, db.get(MaterialRevision, clip["material_revision_id"]))
+        if path is not None:
+            files.append({**clip, "path": str(path)})
+    return files
+
+
+def _sample_ms(db: Session, package: CreativeExecutionPackage) -> int | None:
+    """The approved 小样 the 成片 was cut from; its length plus the brand clips is the 成片's expected length."""
+    parent = db.get(MaterialRevision, package.package_json["director"]["postproduction"].get("parent_material_revision_id") or 0)
+    return parent.duration_ms if parent else None
+
+
+def _cover_check(db: Session, user: User, row: CreativeExecution, outputs: list, role_id: str, source, intro_ms: int = 0) -> dict:
     """Cover against the 成片's opening, run by whichever of the two arrives second; the earlier file is only read, and an unreadable one skips the check."""
     import json
 
@@ -1216,7 +1233,7 @@ def _cover_check(db: Session, user: User, row: CreativeExecution, outputs: list,
     try:
         with open_output(user.id, row.id, partner.staging_key, partner.size_bytes) as other:
             cover, final = (source, other) if role_id == "cover" else (other, source)
-            check = delivery_checks.cover_match(cover, final, delivery_checks.thresholds(db))
+            check = delivery_checks.cover_match(cover, final, delivery_checks.thresholds(db), intro_ms)
     except (OSError, HTTPException):
         return {}
     # Tied to the partner's id so the review page only shows it while that pair is the current one.
@@ -1336,9 +1353,13 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
                 tags = delivery_checks.color_tags(source) if role_id == "final" else None
                 if tags:
                     checks["warnings"].insert(0, tags)
+                if role_id == "final" and package.package_json["director"].get("brand_clips"):
+                    checks["warnings"][:0] = delivery_checks.brand_warnings(source, _brand_files(db, package), inspected["duration_ms"],
+                                                                           _sample_ms(db, package), package.package_json["director"]["postproduction"]["fps"])
                 metadata = {**metadata, "shot_checks": delivery_checks.compact(checks)}
             if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction"):
-                metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source)}
+                intro_ms = sum(clip["duration_ms"] for clip in package.package_json["director"].get("brand_clips") or [] if clip["slot"] == "intro")
+                metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source, intro_ms)}
             if role_id == "cover":
                 metadata = {**metadata, **_cover_template_check(db, row, package.package_json.get("director") or {}, metadata)}
             if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):

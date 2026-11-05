@@ -361,8 +361,8 @@ def _rgb(fd: int, size: str, at_ms: int | None) -> bytes:
     return done.stdout
 
 
-def cover_match(cover, final, limits: dict) -> dict | None:
-    """The 成片 frame in the first half second closest to the cover, with the per-channel mean difference; None when either can't be read."""
+def cover_match(cover, final, limits: dict, offset_ms: int = 0) -> dict | None:
+    """The 成片 frame in the half second after offset_ms (a brand intro's end) closest to the cover, with the per-channel mean difference; None when either can't be read."""
     try:
         cover_fd, final_fd = cover.fileno(), final.fileno()
         width = _COVER_WIDTH
@@ -372,7 +372,7 @@ def cover_match(cover, final, limits: dict) -> dict | None:
         size = f"{width}:{max(2, round(width * final_height / final_width / 2) * 2)}"
         picture = _rgb(cover_fd, size, None)
         best = None
-        for at_ms in COVER_FRAMES_MS:
+        for at_ms in (offset_ms + value for value in COVER_FRAMES_MS):
             frame = _rgb(final_fd, size, at_ms)
             if not picture or len(frame) != len(picture):
                 continue
@@ -389,6 +389,38 @@ def cover_match(cover, final, limits: dict) -> dict | None:
     at_ms, channels = best
     mean = round(sum(channels) / 3, 1)
     return {"at_ms": at_ms, "mean": mean, "rgb": [round(value, 1) for value in channels], "threshold": limits["cover_mismatch_mean"]}
+
+
+# A clip passes through the edit's encode, so its frames match the original less tightly than a cover cut from the same file.
+BRAND_CLIP_MISMATCH_MEAN = 12
+
+
+def brand_warnings(final, clips: list[dict], final_ms: int, sample_ms: int | None, fps: int) -> list[dict]:
+    """Whether the 成片 is the approved 小样 plus the brand clips, and whether its ends show those clips; each clip is {slot, path, duration_ms, title}."""
+    warnings = []
+    added = sum(clip["duration_ms"] for clip in clips)
+    if sample_ms and abs(final_ms - (sample_ms + added)) > 1000 / fps:
+        warnings.append({"code": "brand_duration_mismatch", "actual_ms": final_ms, "expected_ms": sample_ms + added, "sample_ms": sample_ms, "clips_ms": added})
+    try:
+        final_fd = final.fileno()
+        size = f"{_COVER_WIDTH}:{max(2, round(_COVER_WIDTH * 16 / 9 / 2) * 2)}"
+        for clip in clips:
+            start = 0 if clip["slot"] == "intro" else final_ms - clip["duration_ms"]
+            with open(clip["path"], "rb") as handle:
+                means = []
+                for share in (0.25, 0.5, 0.75):
+                    at = round(clip["duration_ms"] * share)
+                    picture, frame = _rgb(handle.fileno(), size, at), _rgb(final_fd, size, start + at)
+                    if picture and len(picture) == len(frame):
+                        means.append(sum(abs(a - b) for a, b in zip(picture, frame)) / len(picture))
+            if means and min(means) > BRAND_CLIP_MISMATCH_MEAN:
+                warnings.append({"code": "brand_clip_mismatch", "slot": clip["slot"], "title": clip["title"], "mean": round(min(means), 1),
+                                 "threshold": BRAND_CLIP_MISMATCH_MEAN})
+    except (OSError, ValueError, subprocess.SubprocessError):
+        pass
+    finally:
+        final.seek(0)
+    return warnings
 
 
 def cover_warning(check: dict | None) -> dict | None:

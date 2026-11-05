@@ -214,6 +214,12 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
             CreativeExecutionOutput.execution_id == execution_id, CreativeExecutionOutput.role_id == "cover",
             CreativeExecutionOutput.state.in_(("staged", "accepted"))).order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
         result["cover_output_id"] = cover(result["execution_id"])
+        from ..models import CreativeExecution, CreativeExecutionPackage
+
+        # The 成片 page says which brand clips this task added.
+        execution = db.get(CreativeExecution, result["execution_id"])
+        package = db.get(CreativeExecutionPackage, execution.package_id) if execution else None
+        result["brand_clips"] = ((package.package_json if package else {}).get("director") or {}).get("brand_clips") or []
         # The 小样 page stays watchable after the chain has moved on to the 成片.
         sample = next((task for task in reversed(result["tasks"]) if task.get("phase") == "rough_cut"), None)
         if sample and sample["execution_id"] != result["execution_id"]:

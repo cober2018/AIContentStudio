@@ -207,6 +207,8 @@ def _prepare(db: Session, project_id: int, unit_id: int, payload: dict, user: Us
                 "acceptance_criteria": ["真实文件经检查和明确接受；不自动更改主稿或发布", "保留精确来源和全部素材/工程依赖"]}
         if not edit:
             body["web_video_shot_id"] = payload["shot_id"]
+        if edit and payload.get("brand_clips"):
+            body["brand_clips"] = payload["brand_clips"]
         package_result = packages.create_package(db, project_id=project_id, unit_id=unit_id, user=user, payload=body)
         execution = executions.prepare_execution(db, project_id, unit_id,
             {**executor, "package_id": package_result["id"], "idempotency_key": key,
@@ -272,6 +274,27 @@ def list_tasks(db: Session, project_id: int, unit_id: int, user: User, limit: in
     return {"items": items, "limit": limit, "offset": offset}
 
 
+def _check_brand_clips(package: dict, listed: object, fps: int) -> None:
+    """Brand clips sit on the 成片 outside the 导演稿 shots; each must be the package's clip, whole, intro first and outro last."""
+    expected = {clip["slot"]: clip for clip in (package.get("director") or {}).get("brand_clips") or []}
+    if not expected and listed in (None, []):
+        return
+    frame = 1000 / fps
+    if not isinstance(listed, list) or len(listed) != len(expected):
+        _fail("video_edit_manifest_brand_clips_mismatch")
+    found = {}
+    for item in listed:
+        if not isinstance(item, dict) or item.get("slot") not in expected or item["slot"] in found:
+            _fail("video_edit_manifest_brand_clips_mismatch")
+        clip, start, end = expected[item["slot"]], item.get("start_ms"), item.get("end_ms")
+        if (item.get("material_revision_id") != clip["material_revision_id"] or type(start) is not int or type(end) is not int
+                or not 0 <= start < end or abs((end - start) - clip["duration_ms"]) > frame):
+            _fail("video_edit_manifest_brand_clips_mismatch")
+        found[item["slot"]] = (start, end)
+    if "intro" in found and found["intro"][0] != 0 or "outro" in found and found["outro"][0] < found.get("intro", (0, 0))[1]:
+        _fail("video_edit_manifest_brand_clips_mismatch")
+
+
 def validate_edit_manifest(package: dict, body: dict) -> None:
     import re
 
@@ -305,6 +328,7 @@ def validate_edit_manifest(package: dict, body: dict) -> None:
                 or not path.startswith("/") or len(path) > 1000):
             _fail("video_edit_manifest_assets_mismatch")
         seen.add(revision)
+    _check_brand_clips(package, body.get("brand_clips"), post["fps"])
     timeline = body.get("timeline")
     shots = {shot["id"]: shot for shot in document["shots"]}
     if not isinstance(timeline, list) or not 1 <= len(timeline) <= 1000:

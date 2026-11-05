@@ -64,6 +64,10 @@ RULES = [
     "封面在任务通过前可以再交（同一个 role cover 再 submit_output 一次），新的一张显示在审片页，旧的留在历史里；其他交付文件交了就不能换。"
     "get_video_decision 返回 cover_redo 时，是用户只要你重做封面：按 cover_redo.note 改，重新出字层、从成片截图、再交一次 cover，不要重交小样 / 成片；新封面交上来，这条就算完成。",
     "素材能不能公开、能不能给模型用，只有用户能在素材详情里改；不能用 REST 或别的办法代改。开剪报 video_asset_kind_or_rights_invalid 时，把报错里说的是哪条素材、该怎么处理原样告诉用户，等用户改好再重做用到它的素材。",
+    "品牌片段（只在成片）：开剪结果的 brand_clips（执行包 director.brand_clips，素材 role brand_clip）有值时，收尾片段（slot outro）原样接在成片最后，"
+    "进门片段（slot intro）原样放在最前面：不裁、不变速、不缩放变形；这段用片段自带的声音，配音和配乐在片段开始前收完（配乐淡出），不压在片段上；整片响度照旧。"
+    "设了进门片段，封面改成从进门片段结束后 0.5 秒内截。剪辑清单写 brand_clips：[{slot, material_revision_id, start_ms, end_ms}]（成片上的起止毫秒），这几段不写进 timeline。"
+    "成片时长应等于通过的小样时长加这几段。brand_note 写「本作品没有品牌收尾」就什么都不加。",
     "剪辑照导演稿：画面内容要变就先存新导演稿；导演稿没写的细节和网络素材署名写进回执。",
     "文件都在项目文件夹里：准备素材（materialize_inputs）给每条素材的原始路径，直接导入达芬奇 / AE，只读，不复制；"
     "临时渲染、AE 单镜头、达芬奇 / AE 工程和剪辑清单放 work_dir（<项目>/工作/<作品>/任务N/），小样导出到 导出/小样、成片导出到 导出/成片；"
@@ -640,7 +644,8 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     stage = "sample" if phase == "rough_cut" else "final"
     sent_back = next((item["target_id"] for item in reversed(record["decisions"]) if item["stage"] == stage and item["decision"] == "changes"), None)
     key = f"chain-{master.id}-{phase}" + (f"-after-{sent_back}" if sent_back else "")
-    result = open_task(db, project_id, unit_id, {"source_master_revision_id": master.id, "idempotency_key": key}, user)
+    clips = brand_clips(db, user, project_id, unit_id, master.payload_json) if phase == "final" else []
+    result = open_task(db, project_id, unit_id, {"source_master_revision_id": master.id, "idempotency_key": key, "brand_clips": clips}, user)
     execution_id = result["execution"]["id"]
     if not record["tasks"] or record["tasks"][-1]["execution_id"] != execution_id:
         record["tasks"].append({"phase": phase, "execution_id": execution_id, "draft_master_id": current["draft_master_id"],
@@ -656,11 +661,48 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     package = db.get(CreativeExecutionPackage, db.get(CreativeExecution, execution_id).package_id)
     return {"execution_id": execution_id, "master_id": master.id, "phase": phase,
             "cover_template": ((package.package_json if package else {}).get("director") or {}).get("cover_template"),
+            **({"brand_clips": ((package.package_json if package else {}).get("director") or {}).get("brand_clips") or [],
+                "brand_note": _brand_note(((package.package_json if package else {}).get("director") or {}).get("brand_clips") or [])} if phase == "final" else {}),
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
             "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
                      f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；"
                      f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
+
+
+BRAND_SLOTS = (("intro", "intro_clip", "进门"), ("outro", "outro_clip", "收尾"))
+
+
+def brand_clips(db: Session, user: User, project_id: int, unit_id: int, document: dict) -> list[dict]:
+    """The work's brand clips in the work's aspect, attached to the project so the 成片 task may hand them to the model."""
+    from ..models import ContentPersona
+    from .content_identity import current_revision
+
+    unit = db.get(ContentUnit, unit_id)
+    persona = db.get(ContentPersona, unit.persona_id) if unit and unit.persona_id else None
+    revision = current_revision(db, "brand", persona.brand_id) if persona and persona.brand_id else None
+    profile = (revision.profile_json or {}) if revision else {}
+    aspect = ":".join(str(value) for value in document.get("aspect_ratio") or [9, 16])
+    clips = []
+    for slot, key, label in BRAND_SLOTS:
+        clip = db.get(MaterialRevision, ((profile.get(key) or {}).get(aspect)) or 0)
+        if clip is None:
+            continue
+        if db.scalar(select(ProjectMaterialReference.id).where(ProjectMaterialReference.project_id == project_id,
+                     ProjectMaterialReference.material_revision_id == clip.id, ProjectMaterialReference.status == "active").limit(1)) is None:
+            db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=clip.id, origin="system_reference", status="active",
+                                            attached_by=user.email, note=f"品牌{label}片段"))
+            db.flush()
+        clips.append({"slot": slot, "material_revision_id": clip.id, "content_hash": clip.content_hash, "duration_ms": clip.duration_ms,
+                      "title": clip.material.title})
+    return clips
+
+
+def _brand_note(clips: list[dict]) -> str:
+    if not clips:
+        return "本作品没有品牌收尾"
+    names = dict((slot, label) for slot, _key, label in BRAND_SLOTS)
+    return "；".join(f"加品牌{names[clip['slot']]} {clip['duration_ms'] / 1000:.1f} 秒（{clip['title']}，素材 {clip['material_revision_id']}）" for clip in clips)
 
 
 def _accepted_cut(db: Session, execution_id: int) -> CreativeExecutionOutput | None:

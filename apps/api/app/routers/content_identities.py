@@ -251,6 +251,24 @@ def brand_logos(brand_id: int, db: Session = Depends(get_db), user: User = Depen
     return _images(db, user, "brand", brand_id, "logo_material_revision_ids")
 
 
+@router.get("/content-brands/{brand_id}/clips")
+def brand_clips(brand_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """The brand's intro / outro clips per aspect, with what the page needs to show and play them."""
+    from ..models import MaterialRevision
+
+    identity.owned_entity(db, user, "brand", brand_id)
+    current = identity.current_revision(db, "brand", brand_id)
+    profile = (current.profile_json if current else None) or {}
+    result = {}
+    for slot in ("intro_clip", "outro_clip"):
+        result[slot] = {}
+        for aspect, revision_id in (profile.get(slot) or {}).items():
+            row = db.get(MaterialRevision, revision_id)
+            result[slot][aspect] = {"material_revision_id": revision_id, "material_id": row.material_id if row else None,
+                                    "title": row.material.title if row else "", "duration_ms": row.duration_ms if row else None}
+    return result
+
+
 @router.patch("/content-personas/{persona_id}")
 def rename_persona(payload: NameIn, persona_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     return _rename(db, user, "persona", persona_id, payload.name)
