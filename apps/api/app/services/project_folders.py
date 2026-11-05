@@ -642,9 +642,6 @@ def listing(db: Session, material_ids: list[int]) -> dict[int, dict]:
     return {material_id: location(row, names, root, current_path(db, row)) for material_id, row in latest.items()}
 
 
-_TASK = re.compile(r"任务(\d+)\Z")
-
-
 def _drive_down() -> HTTPException:
     return HTTPException(409, {"code": "video_chain_drive_unavailable", "message": "素材硬盘没连上：接上硬盘后再开剪辑任务或准备素材"})
 
@@ -681,66 +678,6 @@ def proxy_dir(db: Session, project_id: int) -> Path:
     folder = ensure_project_dir(db, project_id) / WORK_DIR / "代理"
     folder.mkdir(parents=True, exist_ok=True)
     return folder
-
-
-def _remove_inside(folder: Path, keep: set[str]) -> int:
-    """Delete files below one platform task folder except the kept paths; links are removed, never followed."""
-    removed = 0
-    for directory, folders, names in os.walk(folder, topdown=False, followlinks=False):
-        for name in names + [item for item in folders if (Path(directory) / item).is_symlink()]:
-            path = Path(directory) / name
-            if str(path) in keep:
-                continue
-            path.unlink(missing_ok=True)
-            removed += 1
-        try:
-            Path(directory).rmdir()
-        except OSError:
-            pass  # still holds a kept file
-    return removed
-
-
-def _clean_work(db: Session, row, *, final: bool) -> None:
-    """Newer 小样 back: earlier tasks of this work lose their unregistered files. 成片 approved: every other task of it does too.
-    Registered files always stay, or their library records would point at nothing."""
-    from ..models import CreativeExecutionOutput
-
-    try:
-        work = _work_folder(db, row.project_id, row.content_unit_id)
-    except HTTPException:
-        return
-    if not work.is_dir() or work.is_symlink():
-        return
-    kept = {key for (key,) in db.execute(select(CreativeExecutionOutput.staging_key).where(CreativeExecutionOutput.state == "accepted"))
-            if key.startswith("/")}
-    for entry in os.listdir(work):
-        match = _TASK.fullmatch(entry)
-        folder = work / entry
-        # Only folders the platform made for its own tasks; anything else the user put here stays.
-        if match is None or folder.is_symlink() or not folder.is_dir() or int(match.group(1)) == row.id:
-            continue
-        if not final and int(match.group(1)) > row.id:
-            continue
-        _remove_inside(folder, kept)
-
-
-def after_execution(db: Session, execution_id: int) -> None:
-    """Results stay where the model exported them; this only tidies the work folders of the same work."""
-    from ..models import CreativeExecution, CreativeExecutionOutput, CreativeExecutionPackage
-
-    try:
-        row = db.get(CreativeExecution, execution_id)
-        if row is None or row.executor_key != "codex-video-production" or row.state not in {"result_ready", "accepted"}:
-            return
-        package = db.get(CreativeExecutionPackage, row.package_id)
-        phase = (((package.package_json if package else {}) or {}).get("director") or {}).get("postproduction", {}).get("phase")
-        if row.state == "accepted" and phase == "final":
-            _clean_work(db, row, final=True)
-        elif row.state == "result_ready" and phase == "rough_cut" and db.scalar(select(CreativeExecutionOutput.id).where(
-                CreativeExecutionOutput.execution_id == row.id, CreativeExecutionOutput.role_id == "rough_cut").limit(1)):
-            _clean_work(db, row, final=False)
-    except Exception:  # noqa: BLE001 Tidying must never undo or fail the edit task itself.
-        db.rollback()
 
 
 def output_material_ids(db: Session) -> list[int]:

@@ -8,6 +8,7 @@ import io
 import os
 import re
 from contextlib import ExitStack
+from datetime import timedelta
 from functools import wraps
 from pathlib import Path
 
@@ -758,6 +759,32 @@ def list_executions(db: Session, project_id: int, unit_id: int, user: User, *, l
     return {"items": [_projection(db, row, user, include_outputs=False) for row in rows], "limit": limit, "offset": offset}
 
 
+_EDIT_EXECUTOR = "codex-video-production"
+_EDIT_IDLE = timedelta(minutes=30)
+
+
+def _edit_slot(db: Session, row: CreativeExecution) -> None:
+    """DaVinci scripts act on its one open project, so only one edit is worked at a time.
+    A task silent for 30 minutes counts as an abandoned session and stops holding the slot; its state is left alone."""
+    from ..models import ContentUnit
+
+    since = utcnow() - _EDIT_IDLE
+    recent_output = select(CreativeExecutionOutput.id).where(CreativeExecutionOutput.execution_id == CreativeExecution.id,
+                                                             CreativeExecutionOutput.created_at >= since).exists()
+    busy = db.scalar(select(CreativeExecution).where(
+        CreativeExecution.executor_key == _EDIT_EXECUTOR, CreativeExecution.id != row.id,
+        CreativeExecution.state.in_(("claimed", "in_progress", "blocked")),
+        (CreativeExecution.updated_at >= since) | recent_output).limit(1))
+    if busy is None:
+        return
+    waiting = db.scalar(select(func.count(CreativeExecution.id)).where(
+        CreativeExecution.executor_key == _EDIT_EXECUTOR, CreativeExecution.id != row.id, CreativeExecution.state == "prepared")) or 0
+    unit = db.get(ContentUnit, busy.content_unit_id)
+    raise HTTPException(409, {"code": "video_edit_queue_busy", "editing_unit_id": busy.content_unit_id,
+                              "editing_title": unit.title if unit else None, "waiting": waiting,
+                              "message": f"达芬奇正在剪「{unit.title if unit else busy.content_unit_id}」，另有 {waiting} 部在等；过几分钟再领这个任务"})
+
+
 @_atomic
 def transition_execution(db: Session, project_id: int, unit_id: int, execution_id: int, payload: dict, user: User) -> dict:
     _payload(payload, {"expected_revision", "action", "state", "executor_kind", "executor_key", "executor_version",
@@ -861,6 +888,8 @@ def transition_execution(db: Session, project_id: int, unit_id: int, execution_i
         if action in {"claimed", "in_progress"}:
             package = _package(db, row, user, current=True)
             _guard_unknown(db, package)
+            if action == "claimed" and row.executor_key == _EDIT_EXECUTOR:
+                _edit_slot(db, row)
             if action == "in_progress" and _needs_replacement(_package(db, row, user), _outputs(db, row)):
                 raise _error("creative_execution_output_replacement_required")
         if target == "in_progress" and certainty == "not_dispatched":

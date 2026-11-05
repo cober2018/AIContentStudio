@@ -60,7 +60,9 @@ RULES = [
     "剪辑照导演稿：画面内容要变就先存新导演稿；导演稿没写的细节和网络素材署名写进回执。",
     "文件都在项目文件夹里：准备素材（materialize_inputs）给每条素材的原始路径，直接导入达芬奇 / AE，只读，不复制；"
     "临时渲染、AE 单镜头、达芬奇 / AE 工程和剪辑清单放 work_dir（<项目>/工作/<作品>/任务N/），小样导出到 导出/小样、成片导出到 导出/成片；"
-    "交付结果（submit_output）给文件的绝对路径 path，平台原地检查登记，交付后别再改或移动这个文件。",
+    "交付结果（submit_output）给文件的绝对路径 path，平台原地检查登记，交付后别再改或移动这个文件。work_dir 里的文件都留着，平台和你都不删。",
+    "达芬奇一次只剪一部：领任务（claim_execution）回 video_edit_queue_busy 就是别的作品正在剪，过几分钟再领；剪辑中每 20 分钟内至少 report_progress 一次，30 分钟没动静会被当成中断、让给别的作品。"
+    "达芬奇项目列表每个作品只留一个：开剪先删掉本作品更早任务的达芬奇项目（<作品>-<作品号>-任务N，它们的 .drp 在硬盘上），重开检查完马上删掉 -reopen 那份。",
     "复刻参考视频：brief.reference 有值或用户给了参考视频，先 analyze_reference_video / get_reference_video 拿本机拆解，按 studio.video.reference-breakdown 写整体分析、时间线和拍摄清单（save_reference_breakdown），再写导演稿："
     "结构和节奏照参考，口播换成本作品的说法，每镜写 board.source_kind；参考里的证书、医院、成分只记成需要品牌真实资料，不照抄、不生成；参考视频的原画面和水印不进成片。",
     "写人物镜头的提示词按 studio.video.prompt-direction：board.attitude 先写人物态度和对谁说，再写一两个关键反应；首帧按 拍摄方式 / 人物 / 动作与镜头 / 场景 四段写；商品图管外观、人物图管长相，提示词不重复描述包装。",
@@ -336,7 +338,7 @@ def _adopt_cover(db: Session, user: User, project_id: int, unit_id: int, executi
 
 
 def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
-    from . import creative_executions, project_folders
+    from . import creative_executions
 
     unit = db.get(ContentUnit, unit_id)
     outputs = db.scalars(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == execution_id)
@@ -362,7 +364,6 @@ def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, exec
             db.rollback()
             payload["rights"] = {"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": False}
             creative_executions.decide_output(db, project_id, unit_id, execution_id, output.id, payload, user)
-    project_folders.after_execution(db, execution_id)
 
 
 def _ensure_references(db: Session, user: User, project_id: int, revision_ids: set[int]) -> None:

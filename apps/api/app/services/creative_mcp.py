@@ -27,7 +27,6 @@ from . import (
     content_masters,
     creative_executions,
     creative_packages,
-    project_folders,
 )
 from .creative_contracts import bounded_json
 from .project_brief import current_brief
@@ -664,16 +663,11 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
             if current["state"] != "result_ready":
                 raise MCPError("creative_mcp_result_not_ready", "conflict", status=409)
             payload["metadata"] = {"summary": "Human review requested"}
-        result = creative_executions.transition_execution(db, args.project_id, args.unit_id, args.execution_id, payload, user)
-        project_folders.after_execution(db, args.execution_id)
-        return result
+        return creative_executions.transition_execution(db, args.project_id, args.unit_id, args.execution_id, payload, user)
     if name == "materialize_inputs":
         return creative_executions.materialize_inputs(db, args.project_id, args.unit_id, args.execution_id, payload, user)
     if name == "submit_output":
-        result = creative_executions.submit_output(db, args.project_id, args.unit_id, args.execution_id, payload, user)
-        # The last required output moves the task to result_ready by itself, so tidying older tasks' work folders runs here too.
-        project_folders.after_execution(db, args.execution_id)
-        return result
+        return creative_executions.submit_output(db, args.project_id, args.unit_id, args.execution_id, payload, user)
     raise MCPError("creative_mcp_unknown_tool", "invalid_arguments", rpc_code=-32602)
 
 
@@ -867,7 +861,7 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("video_chain_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

@@ -15,7 +15,9 @@ import json
 import re
 import shutil
 import subprocess
+import threading
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 from fastapi import HTTPException
@@ -28,6 +30,25 @@ ROOT = Path(__file__).resolve().parents[2] / "craft_skills"
 SKILLS = {"craft-ae", "craft-resolve"}
 _DATA = re.compile(r"/\*AICS_DATA\*/.*?/\*AICS_END\*/", re.S)
 _ENTRY = re.compile(r"^[a-z0-9][a-z0-9_-]{0,60}(/[a-z0-9][a-z0-9_.-]{0,80})*\.(md|json)$")
+
+
+# aerender runs one at a time across works; tickets keep arrival order, which a bare lock does not.
+_render_turn = threading.Condition()
+_render_tickets = [0, 0]
+
+
+@contextmanager
+def _one_render():
+    with _render_turn:
+        ticket = _render_tickets[0]
+        _render_tickets[0] += 1
+        _render_turn.wait_for(lambda: _render_tickets[1] == ticket)
+    try:
+        yield
+    finally:
+        with _render_turn:
+            _render_tickets[1] += 1
+            _render_turn.notify_all()
 
 
 def _fail(code: str, status: int = 422, **detail):
@@ -301,8 +322,9 @@ def render(db: Session, user: User, *, project_id: int, unit_id: int, template_i
         output = job / ("out.mov" if alpha else "out.mp4")
         frames = round(duration * manifest["fps"] / 1000)
         target = ["-rqindex", "1"] if alpha else ["-comp", manifest["comp"]]
-        done = subprocess.run([str(aerender), "-project", str(job / "job.aepx"), *target, "-s", "0",
-                               "-e", str(frames - 1), "-output", str(output)], capture_output=True, timeout=600)
+        with _one_render():
+            done = subprocess.run([str(aerender), "-project", str(job / "job.aepx"), *target, "-s", "0",
+                                   "-e", str(frames - 1), "-output", str(output)], capture_output=True, timeout=600)
         if done.returncode != 0 or not output.is_file():
             _fail("ae_render_failed", 502)
         body = output.read_bytes()
