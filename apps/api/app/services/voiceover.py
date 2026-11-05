@@ -855,7 +855,7 @@ def _group_cues(cues: list[tuple[int, int, str]], lines: list[dict]) -> list[tup
     return spans
 
 
-def _line_spans(revision, path: Path, duration_ms: int, lines: list[dict], document: dict) -> list[tuple[int, int]]:
+def _line_spans(revision, path: Path, duration_ms: int, lines: list[dict], document: dict, chosen: list[int]) -> list[tuple[int, int]]:
     srt = (revision.metadata_json or {}).get("subtitles_srt")
     if srt:
         spans = _group_cues(_cues(srt), lines)
@@ -863,6 +863,10 @@ def _line_spans(revision, path: Path, duration_ms: int, lines: list[dict], docum
             _fail("voiceover_line_split_unclear", "配音自带的逐句时间和台词对不上，没法定位每句", 409)
         return spans
     runs = _speech_runs(path, duration_ms)
+    cues = [(cue["start_ms"], cue["end_ms"], cue["text"]) for cue in (document.get("subtitles") or {}).get("cues") or []]
+    grouped = _group_cues(cues, lines) if cues else None
+    if grouped:
+        return _snapped(grouped, runs, lines, chosen)
     chars = [len(_plain(line["text"])) for line in lines]
     count, total_chars = len(runs), sum(chars)
     if count < len(lines) or not total_chars:
@@ -896,13 +900,37 @@ def _line_spans(revision, path: Path, duration_ms: int, lines: list[dict], docum
         rate = chars[i] / max((prefix[edges[i + 1]] - prefix[edges[i]]) / 1000, 0.001)
         if not RATE_RANGE[0] <= rate / overall <= RATE_RANGE[1]:
             _fail("voiceover_line_split_unclear", f"按停顿分句后，第 {i + 1} 句「{line['text'][:12]}」的语速不正常（每秒 {rate:.1f} 字，整条平均 {overall:.1f} 字），分组不可靠", 409)
-    cues = [(cue["start_ms"], cue["end_ms"], cue["text"]) for cue in (document.get("subtitles") or {}).get("cues") or []]
-    grouped = _group_cues(cues, lines) if cues else None
-    if grouped:
-        for i, line in enumerate(lines):
-            if abs(spans[i][0] - grouped[i][0]) > CUE_TOLERANCE_MS:
-                _fail("voiceover_line_split_unclear", f"第 {i + 1} 句「{line['text'][:12]}」按停顿找到的起点是 {spans[i][0] / 1000:.2f} 秒，"
-                      f"字幕写的是 {grouped[i][0] / 1000:.2f} 秒，对不上", 409)
+    return spans
+
+
+def _snapped(grouped: list[tuple[int, int]], runs: list[tuple[int, int]], lines: list[dict], chosen: list[int]) -> list[tuple[int, int]]:
+    """Subtitle times moved onto the speech edges they mark.
+
+    Only the edges this redub cuts at must find one: other lines keep their audio untouched, and a pair of
+    them read without a pause between must not block redubbing elsewhere."""
+    def edge(i: int, side: int) -> int:
+        at = grouped[i][side]
+        nearest = min((run[side] for run in runs), key=lambda value: abs(value - at), default=None)
+        if nearest is None or abs(nearest - at) > CUE_TOLERANCE_MS:
+            gap = "" if nearest is None else f"，离最近的停顿差 {abs(nearest - at) / 1000:.2f} 秒"
+            _fail("voiceover_line_split_unclear", f"第 {i + 1} 句「{lines[i]['text'][:12]}」字幕{'起点' if side == 0 else '终点'} {at / 1000:.2f} 秒附近"
+                  f"找不到停顿{gap}，没法定位这句", 409)
+        return nearest
+
+    spans = list(grouped)
+    for i in chosen:
+        if i:
+            spans[i - 1] = (spans[i - 1][0], edge(i - 1, 1))
+        if i + 1 < len(spans):
+            spans[i + 1] = (edge(i + 1, 0), spans[i + 1][1])
+    for i in chosen:
+        spans[i] = (edge(i, 0), edge(i, 1))
+    for i in chosen:
+        before = spans[i - 1][1] if i else 0
+        after = spans[i + 1][0] if i + 1 < len(spans) else spans[i][1]
+        if not before <= spans[i][0] < spans[i][1] <= after:
+            _fail("voiceover_line_split_unclear", f"第 {i + 1} 句「{lines[i]['text'][:12]}」按字幕吸到停顿后是 {spans[i][0] / 1000:.2f}–{spans[i][1] / 1000:.2f} 秒，"
+                  "和前后句重叠，字幕时间不可靠", 409)
     return spans
 
 
@@ -962,7 +990,7 @@ def _redub(db: Session, user: User, project_id: int, unit, master, document: dic
         rate, channels = _audio_format(source)
         original = _pcm(source, rate, channels)
         total_ms = len(original) // channels * 1000 // rate
-        spans = _line_spans(revision, source, total_ms, lines, document)
+        spans = _line_spans(revision, source, total_ms, lines, document, [positions[item] for item in wanted])
         per_ms = rate * channels / 1000
         fps = (document.get("postproduction") or {}).get("fps") or 60
         fade = round(rate / fps) * channels
