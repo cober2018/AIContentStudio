@@ -390,7 +390,9 @@ def grid(db, user, project_id: int, unit_id: int, group_id: str, reference_revis
 
     from . import product_video
     from .model_registration import uses
+    from .project_folders import require_library
 
+    require_library()
     master, group, chosen, product_work = _group(db, user, project_id, unit_id, group_id)
     refused = [shot["id"] for shot in chosen if not grid_shot(shot, product_work)]
     if refused:

@@ -132,7 +132,9 @@ class _Images:
         import uuid
 
         from . import generation_tasks
+        from .project_folders import require_library
 
+        require_library()
         if self.route is None:
             raise HTTPException(409, {"code": "material_autofill_no_image_model"})
         if self.used >= MAX_IMAGES:

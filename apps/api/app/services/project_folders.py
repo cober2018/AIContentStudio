@@ -68,6 +68,12 @@ def _writable_root() -> Path | None:
     return library_root() if library_writable() else None
 
 
+def require_library() -> None:
+    """Paid generations call this before the provider: results are stored on the drive, and a missing drive would discard a billed result."""
+    if _writable_root() is None:
+        raise HTTPException(409, {"code": "material_library_unavailable", "message": "素材库盘没连接"})
+
+
 def _setting(db: Session, key: str) -> dict:
     row = db.get(SystemSetting, key)
     return dict(row.value or {}) if row else {}

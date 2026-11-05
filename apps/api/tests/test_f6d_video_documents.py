@@ -1208,9 +1208,10 @@ def test_storyboard_grid_takes_product_shots_but_not_reveal_or_cta():
 
 
 def _grid_doubles(monkeypatch, tmp_path, shots, refs, verdicts=None, groups=None):
-    from app.services import model_registration, product_video, shot_image, video_chain
+    from app.services import model_registration, product_video, project_folders, shot_image, video_chain
 
     master = SimpleNamespace(payload_json={"aspect_ratio": [9, 16], "shots": shots, "consistency_groups": groups or []})
+    monkeypatch.setattr(project_folders, "require_library", lambda: None)
     calls = {"store": {}, "sent": [], "registered": [], "checks": [], "metadata": []}
     monkeypatch.setattr(video_chain, "_approved_master", lambda *args: (master, {}))
     monkeypatch.setattr(product_video, "work", lambda *args: object())

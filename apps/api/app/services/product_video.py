@@ -426,6 +426,9 @@ def _provider():
 
 def start_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_id: str) -> dict:
     require_persona(db, unit_id)
+    from .project_folders import require_library
+
+    require_library()
     from .materials import read_bytes_checked
 
     _after_approval(db, user, project_id, unit_id)
@@ -690,6 +693,9 @@ def generate_shot_image(db: Session, user: User, project_id: int, unit_id: int, 
     """Still for one shot with the product photo as reference; it is used only after it passes the subject check."""
     require_persona(db, unit_id)
     from . import shot_image
+    from .project_folders import require_library
+
+    require_library()
 
     _after_approval(db, user, project_id, unit_id)
     from .materials import create_material, create_revision

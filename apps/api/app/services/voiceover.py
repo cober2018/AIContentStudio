@@ -418,8 +418,10 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .edit_handoff import _save
 
     from .product_video import require_persona
+    from .project_folders import require_library
 
     require_persona(db, unit_id)
+    require_library()
     unit = db.get(ContentUnit, unit_id)
     master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id)
                        .order_by(ContentMasterRevision.revision_no.desc()).limit(1))

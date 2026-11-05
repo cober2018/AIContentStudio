@@ -514,7 +514,7 @@ _META_FIELDS = ("id", "project_id", "content_unit_id", "revision_no", "payload_s
                 "context_hash", "creative_intent", "creative_intent_hash", "modality", "channel_id",
                 "content_form", "variant_key", "source_master_revision_id", "readiness")
 _SAFE_CODES = {
-    "platform_skills_disabled", "creative_execution_revision_conflict", "creative_execution_executor_mismatch", "creative_execution_terminal",
+    "material_library_unavailable", "platform_skills_disabled", "creative_execution_revision_conflict", "creative_execution_executor_mismatch", "creative_execution_terminal",
     "creative_execution_reconciliation_required", "creative_execution_transition_denied",
     "creative_execution_idempotency_conflict", "creative_execution_not_found", "creative_package_not_found",
     "creative_source_not_current", "creative_package_stale", "master_context_conflict", "creative_input_model_use_denied",
@@ -861,7 +861,7 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("material_library_unavailable", "video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 
