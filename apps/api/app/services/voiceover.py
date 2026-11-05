@@ -152,7 +152,24 @@ def _parameters(config: dict) -> dict:
     # All-zero means "no adjustment", so the request stays the plain voice.
     if any((config.get("voice_modify") or {}).values()):
         parameters["voice_modify"] = config["voice_modify"]
+    if config.get("pronunciation"):
+        parameters["pronunciation"] = config["pronunciation"]
     return {**parameters, "subtitles": True}
+
+
+PRONUNCIATION_HELP = ("多音字读音写在导演稿 voice.pronunciation（可选，字符串列表，最多 50 条、每条 ≤ 40 字）："
+                      "每条「原文/(拼音声调数字)…」，一个字一个括号，例如 \"去重/(qu4)(chong2)\"、\"行情/(hang2)(qing2)\"。"
+                      "台词照常写原文，配音时 MiniMax 按这里读；随导演稿一起给用户通过。")
+
+
+def _tones(document: dict) -> list[str]:
+    return list((document.get("voice") or {}).get("pronunciation") or [])
+
+
+def _voice(document: dict, revision_id: int) -> dict:
+    # The 导演稿's pronunciation list belongs to the voice and must survive a new voiceover.
+    tones = _tones(document)
+    return {"mode": "tts", "material_revision_id": revision_id, **({"pronunciation": tones} if tones else {})}
 
 
 def _script(document: dict) -> str:
@@ -392,7 +409,11 @@ def _generate_dubbed(db: Session, user: User, project_id: int, unit, master, doc
     from .project_folders import store_new
 
     total = document["timeline"]["duration_ms"]
-    settings = {"mode": "selected_shots", "shots": [{"shot_id": shot["shot_id"], "persona": shot["persona"], "preset_id": shot["config"]["preset_id"],
+    tones = _tones(document)
+    if tones:
+        for shot in shots:
+            shot["config"] = {**shot["config"], "pronunciation": tones}
+    settings = {"mode": "selected_shots", **({"pronunciation": tones} if tones else {}), "shots": [{"shot_id": shot["shot_id"], "persona": shot["persona"], "preset_id": shot["config"]["preset_id"],
                                                      "start_ms": shot["start_ms"], "duration_ms": shot["duration_ms"],
                                                      "tail_start_ms": shot["tail_start_ms"]} for shot in shots]}
     script_hash = hashlib.sha256(repr([(shot["shot_id"], shot["line"]) for shot in shots]).encode()).hexdigest()
@@ -400,7 +421,7 @@ def _generate_dubbed(db: Session, user: User, project_id: int, unit, master, doc
         db, user, project_id, unit, shots, total, script_hash, settings, master.id)
     store_new(db, revision, project_id, "音频")
     # Only the marked shots speak through this track; durations stay as the 导演稿 set them.
-    document["voice"] = {"mode": "tts", "material_revision_id": revision.id}
+    document["voice"] = _voice(document, revision.id)
     master_id = _save(db, user, project_id, unit.id, master, document, {},
                       edit_summary={"voiceover": {"material_revision_id": revision.id, "settings": settings, "aligned": False}})
     db.add(AuditLog(event="voiceover.generated", actor=user.email, entity_type="material", entity_id=str(revision.material_id),
@@ -414,7 +435,7 @@ def _generate_dubbed(db: Session, user: User, project_id: int, unit, master, doc
                            for item in dubbed_info if item.get("lead_ms")]}
 
 
-def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
+def generate(db: Session, user: User, project_id: int, unit_id: int, lines: list[str] | None = None) -> dict:
     from .edit_handoff import _save
 
     from .product_video import require_persona
@@ -428,6 +449,8 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     if unit is None or unit.project_id != project_id or master is None or master.payload_schema != "video.master.v2":
         raise HTTPException(409, {"code": "voiceover_master_required", "message": "先采用导演稿，再生成配音"})
     document = copy.deepcopy(master.payload_json)
+    if lines is not None:
+        return _redub(db, user, project_id, unit, master, document, lines)
     dubbed = _dubbed_shots(db, user, document)
     if dubbed:
         return _generate_dubbed(db, user, project_id, unit, master, document, dubbed)
@@ -435,6 +458,8 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     if not text:
         raise HTTPException(409, {"code": "voiceover_script_empty", "message": "分镜表的台词列是空的"})
     config = settings_for(db, unit)
+    if _tones(document):
+        config = {**config, "pronunciation": _tones(document)}
     lines = _role_lines(document)
     if lines:
         config = {**config, "roles": _role_voices(db, [role for role, _ in lines], config["voice_id"])}
@@ -446,7 +471,7 @@ def generate(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     from .project_folders import store_new
 
     store_new(db, revision, project_id, "音频")
-    document["voice"] = {"mode": "tts", "material_revision_id": revision.id}
+    document["voice"] = _voice(document, revision.id)
     aligned = align_to_voice(db, document, (revision.metadata_json or {}).get("subtitles_srt"), revision.duration_ms)
     master_id = _save(db, user, project_id, unit_id, master, document, {},
                       edit_summary={"voiceover": {"material_revision_id": revision.id, "settings": config, "aligned": aligned}})
@@ -752,3 +777,280 @@ def status(db: Session, user: User, project_id: int, unit_id: int) -> dict:
         voice["quality"] = _quality_of(db, revision, master)
     speech = _speech(master.payload_json) if master and master.payload_schema == "video.master.v2" else None
     return {"voice": voice, "settings": settings_for(db, unit), "emotions": {k: v for k, v in EMOTIONS.items() if v}, "speech": speech}
+
+
+# Redubbing chosen lines in place: only those lines are voiced again and spliced into the current voice at their own start,
+# so every other line, the shot lengths and the cut stay exactly as they were.
+REDUB_GAP_MS = 250
+REDUB_MAX_LINES = 20
+SILENCE_NOISE, SILENCE_SECONDS = "-40dB", 0.15
+SEAM_PAD_MS = 40
+TRIM_PAD_MS = 30
+RATE_RANGE = (0.6, 1.6)
+CUE_TOLERANCE_MS = 300
+
+
+def _ordered_lines(document: dict) -> list[dict]:
+    """Spoken lines in the order the whole voiceover reads them (as _script builds it), each with its role."""
+    blocks = {block["id"]: block.get("text", "") for block in document["script"]["blocks"]}
+    lines, seen = [], set()
+    for shot in sorted(document["shots"], key=lambda item: item["order"]):
+        block = shot.get("script_block_id")
+        if block and block not in seen and blocks.get(block, "").strip():
+            seen.add(block)
+            lines.append({"id": block, "text": blocks[block].strip(), "role": ((shot.get("board") or {}).get("character") or "narrator").strip()})
+    return lines
+
+
+def _audio_format(path: Path) -> tuple[int, int]:
+    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=sample_rate,channels",
+                          "-of", "csv=p=0", str(path)], capture_output=True, text=True, check=False, timeout=30).stdout.strip().split(",")
+    try:
+        return int(out[0]), int(out[1])
+    except (IndexError, ValueError):
+        _fail("voiceover_audio_unreadable", "当前配音读不出来", 409)
+
+
+def _pcm(path: Path, rate: int, channels: int):
+    from array import array
+
+    done = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", str(path), "-f", "s16le", "-acodec", "pcm_s16le",
+                           "-ar", str(rate), "-ac", str(channels), "-"], capture_output=True, check=False, timeout=300)
+    if done.returncode != 0:
+        _fail("voiceover_audio_unreadable", "配音解码失败", 409)
+    samples = array("h")
+    samples.frombytes(done.stdout)
+    return samples
+
+
+def _speech_runs(path: Path, duration_ms: int) -> list[tuple[int, int]]:
+    err = subprocess.run(["ffmpeg", "-nostdin", "-hide_banner", "-i", str(path), "-af",
+                          f"silencedetect=noise={SILENCE_NOISE}:d={SILENCE_SECONDS}", "-f", "null", "-"],
+                         capture_output=True, text=True, check=False, timeout=300).stderr
+    starts = [round(float(value) * 1000) for value in re.findall(r"silence_start: (-?[0-9.]+)", err)]
+    ends = [round(float(value) * 1000) for value in re.findall(r"silence_end: ([0-9.]+)", err)]
+    runs, position = [], 0
+    for index, start in enumerate(starts):
+        if start - position > 0:
+            runs.append((max(0, position), start))
+        position = ends[index] if index < len(ends) else duration_ms
+    if duration_ms - position > 0:
+        runs.append((position, duration_ms))
+    return [run for run in runs if run[1] - run[0] >= 30]
+
+
+def _group_cues(cues: list[tuple[int, int, str]], lines: list[dict]) -> list[tuple[int, int]] | None:
+    spans, index = [], 0
+    for line in lines:
+        target, buffer = _plain(line["text"]), ""
+        if index >= len(cues):
+            return None
+        start = cues[index][0]
+        while index < len(cues) and len(buffer) < len(target):
+            buffer += _plain(cues[index][2])
+            index += 1
+        if buffer != target:
+            return None
+        spans.append((start, cues[index - 1][1]))
+    return spans
+
+
+def _line_spans(revision, path: Path, duration_ms: int, lines: list[dict], document: dict) -> list[tuple[int, int]]:
+    srt = (revision.metadata_json or {}).get("subtitles_srt")
+    if srt:
+        spans = _group_cues(_cues(srt), lines)
+        if spans is None:
+            _fail("voiceover_line_split_unclear", "配音自带的逐句时间和台词对不上，没法定位每句", 409)
+        return spans
+    runs = _speech_runs(path, duration_ms)
+    chars = [len(_plain(line["text"])) for line in lines]
+    count, total_chars = len(runs), sum(chars)
+    if count < len(lines) or not total_chars:
+        _fail("voiceover_line_split_unclear", f"配音里只听出 {count} 段有声，比台词的 {len(lines)} 句还少，没法定位每句", 409)
+    prefix = [0]
+    for start, end in runs:
+        prefix.append(prefix[-1] + end - start)
+    speech = prefix[-1]
+    # Consecutive speech runs go to the lines whose share of the characters they best match.
+    inf = float("inf")
+    best = [[inf] * (count + 1) for _ in range(len(lines) + 1)]
+    back = [[0] * (count + 1) for _ in range(len(lines) + 1)]
+    best[0][0] = 0.0
+    for i in range(1, len(lines) + 1):
+        expected = chars[i - 1] / total_chars * speech
+        for k in range(i, count - (len(lines) - i) + 1):
+            for j in range(i - 1, k):
+                if best[i - 1][j] == inf:
+                    continue
+                cost = best[i - 1][j] + ((prefix[k] - prefix[j]) - expected) ** 2
+                if cost < best[i][k]:
+                    best[i][k], back[i][k] = cost, j
+    edges, k = [count], count
+    for i in range(len(lines), 0, -1):
+        k = back[i][k]
+        edges.append(k)
+    edges.reverse()
+    spans = [(runs[edges[i]][0], runs[edges[i + 1] - 1][1]) for i in range(len(lines))]
+    overall = total_chars / (speech / 1000)
+    for i, line in enumerate(lines):
+        rate = chars[i] / max((prefix[edges[i + 1]] - prefix[edges[i]]) / 1000, 0.001)
+        if not RATE_RANGE[0] <= rate / overall <= RATE_RANGE[1]:
+            _fail("voiceover_line_split_unclear", f"按停顿分句后，第 {i + 1} 句「{line['text'][:12]}」的语速不正常（每秒 {rate:.1f} 字，整条平均 {overall:.1f} 字），分组不可靠", 409)
+    cues = [(cue["start_ms"], cue["end_ms"], cue["text"]) for cue in (document.get("subtitles") or {}).get("cues") or []]
+    grouped = _group_cues(cues, lines) if cues else None
+    if grouped:
+        for i, line in enumerate(lines):
+            if abs(spans[i][0] - grouped[i][0]) > CUE_TOLERANCE_MS:
+                _fail("voiceover_line_split_unclear", f"第 {i + 1} 句「{line['text'][:12]}」按停顿找到的起点是 {spans[i][0] / 1000:.2f} 秒，"
+                      f"字幕写的是 {grouped[i][0] / 1000:.2f} 秒，对不上", 409)
+    return spans
+
+
+def _trimmed(samples, rate: int, channels: int):
+    """The new line without its leading and trailing silence, keeping a few ms so no consonant is clipped."""
+    threshold = 328  # -40 dBFS on 16-bit samples
+    frames = len(samples) // channels
+    first = next((i for i in range(frames) if any(abs(samples[i * channels + c]) > threshold for c in range(channels))), None)
+    if first is None:
+        return samples[:0]
+    last = next(i for i in range(frames - 1, -1, -1) if any(abs(samples[i * channels + c]) > threshold for c in range(channels)))
+    pad = rate * TRIM_PAD_MS // 1000
+    return samples[max(0, first - pad) * channels:min(frames, last + 1 + pad) * channels]
+
+
+def _redub(db: Session, user: User, project_id: int, unit, master, document: dict, line_ids: list[str]) -> dict:
+    import wave
+
+    from ..models import MaterialRevision
+    from .edit_handoff import _save
+    from .materials import create_material, create_revision, local_file_checked, read_bytes_checked
+    from .project_folders import store_new
+
+    wanted = list(dict.fromkeys(line_ids))
+    if not 0 < len(wanted) <= REDUB_MAX_LINES:
+        _fail("voiceover_lines_invalid", f"一次重配 1 到 {REDUB_MAX_LINES} 句")
+    voice = document.get("voice") or {}
+    if voice.get("mode") != "tts" or not voice.get("material_revision_id"):
+        _fail("voiceover_redub_needs_voice", "还没有整条配音，先整条生成一次", 409)
+    if _dubbed_shots(db, user, document):
+        _fail("voiceover_redub_dubbed", "这个作品按镜头指定角色配音，不能只重配几句；改了台词请整体重新生成", 409)
+    if any(track.get("kind") == "dialogue" for track in document["timeline"]["tracks"]):
+        _fail("voiceover_redub_dialogue_track", "时间线上有口播声音轨，成片的声音由它决定；换整条配音不会生效。先去掉口播声音轨再重配", 409)
+    lines = _ordered_lines(document)
+    positions = {line["id"]: index for index, line in enumerate(lines)}
+    missing = [item for item in wanted if item not in positions]
+    if missing:
+        _fail("voiceover_lines_invalid", f"这些句子不在配音台词里：{', '.join(missing)}")
+    revision = db.get(MaterialRevision, voice["material_revision_id"])
+    if revision is None:
+        _fail("voiceover_redub_needs_voice", "当前配音素材不在了", 409)
+    config = settings_for(db, unit)
+    if _tones(document):
+        config = {**config, "pronunciation": _tones(document)}
+    roles = _role_voices(db, [line["role"] for line in lines], config["voice_id"]) if any(line["role"] != "narrator" for line in lines) else None
+    try:
+        from .content_harness.registry import RegistryError, registry
+
+        provider = registry.resolve("tts_provider", "minimax.cli", "1")
+    except RegistryError:
+        raise HTTPException(503, {"code": "voiceover_provider_unavailable", "message": "MiniMax 配音没启用"}) from None
+    with tempfile.TemporaryDirectory(prefix="aics-redub-") as folder:
+        source = local_file_checked(db, revision)
+        if source is None:
+            source = Path(folder) / f"voice{Path(revision.file_path or '').suffix or '.mp3'}"
+            source.write_bytes(read_bytes_checked(db, revision))
+        rate, channels = _audio_format(source)
+        original = _pcm(source, rate, channels)
+        total_ms = len(original) // channels * 1000 // rate
+        spans = _line_spans(revision, source, total_ms, lines, document)
+        per_ms = rate * channels / 1000
+        fps = (document.get("postproduction") or {}).get("fps") or 60
+        fade = round(rate / fps) * channels
+        patched = original[:]
+        placed = []
+        for line_id in sorted(wanted, key=positions.get):
+            index = positions[line_id]
+            line = lines[index]
+            start, end = spans[index]
+            following = spans[index + 1][0] if index + 1 < len(spans) else total_ms
+            previous_end = spans[index - 1][1] if index else 0
+            parameters = _parameters(config) if roles is None else {**_parameters(config), "voice_id": roles[line["role"]]}
+            result = provider.generate({"prompt": line["text"], "model_id": config["model_id"], "parameters": parameters, "timeout_seconds": 300})
+            if result.status != "succeeded" or not result.content:
+                raise HTTPException(502, {"code": "voiceover_failed", "message": (result.metadata or {}).get("reason") or f"第 {index + 1} 句没返回配音，请稍后再试"})
+            clip = Path(folder) / f"line-{index:03d}{'.mp3' if result.mime_type == 'audio/mpeg' else '.wav'}"
+            clip.write_bytes(result.content)
+            new = _trimmed(_pcm(clip, rate, channels), rate, channels)
+            length = len(new) // channels * 1000 // rate
+            limit = following - REDUB_GAP_MS if index + 1 < len(spans) else total_ms
+            if start + length > max(end, limit):
+                short = (start + length - max(end, limit)) / 1000
+                _fail("voiceover_line_too_long", f"第 {index + 1} 句「{line['text'][:12]}」新配音 {length / 1000:.2f} 秒，用掉后面的停顿还差 {short:.2f} 秒放不下；"
+                      "可以缩短这句台词，或整条重新生成", 409)
+            covered = max(end, start + length)
+            # Seams sit inside the pauses around the line, so no word of a neighbouring line is touched.
+            seam_a = start - min(SEAM_PAD_MS, max(0, start - previous_end) // 2)
+            seam_b = min(total_ms, covered + min(SEAM_PAD_MS, max(0, following - covered) // 2))
+            a, b = round(seam_a * per_ms) // channels * channels, round(seam_b * per_ms) // channels * channels
+            at = round(start * per_ms) // channels * channels
+            for position in range(a, b):
+                patched[position] = 0
+            # Rounding at the very end must never lengthen the voice.
+            new = new[:len(patched) - at]
+            patched[at:at + len(new)] = new
+            for offset in range(fade):
+                # One frame of fade on the original side of each seam: out before it, in after it.
+                frame = offset // channels
+                weight = frame / (fade // channels)
+                if a - fade + offset >= 0:
+                    patched[a - fade + offset] = int(original[a - fade + offset] * (1 - weight))
+                if b + offset < len(patched):
+                    patched[b + offset] = int(original[b + offset] * weight)
+            placed.append({"line_id": line_id, "order": index + 1, "old_start_ms": start, "old_end_ms": end,
+                           "new_start_ms": start, "new_end_ms": start + length, "seams_ms": [seam_a, seam_b]})
+        output = Path(folder) / "voice.wav"
+        with wave.open(str(output), "wb") as handle:
+            handle.setnchannels(channels)
+            handle.setsampwidth(2)
+            handle.setframerate(rate)
+            handle.writeframes(patched.tobytes())
+        content = output.read_bytes()
+    srt = (revision.metadata_json or {}).get("subtitles_srt")
+    if srt:
+        kept = [cue for cue in _cues(srt) if not any(item["old_start_ms"] <= (cue[0] + cue[1]) // 2 <= item["old_end_ms"] for item in placed)]
+        kept += [(item["new_start_ms"], item["new_end_ms"], lines[item["order"] - 1]["text"]) for item in placed]
+        kept.sort()
+        srt = "\n".join(f"{n}\n{_stamp(cue[0])} --> {_stamp(cue[1])}\n{cue[2]}\n" for n, cue in enumerate(kept, 1))
+    material = create_material(db, kind="audio", title=f"配音（重配 {len(placed)} 句）· {unit.title}"[:200], tags=["配音"], created_by=user.email)
+    new_revision = create_revision(
+        db, material, content=content, suffix=".wav", declared_mime="audio/wav", source_kind="ai_generated",
+        provider_key="minimax.cli", provider_version=config["model_id"], prompt_text="\n".join(lines[item["order"] - 1]["text"] for item in placed)[:4000],
+        rights_status="cleared", public_use_allowed=True, model_use_allowed=True, attribution_text="MiniMax 配音",
+        duration_ms=_duration_ms(content, ".wav"),
+        metadata={"subtitles_srt": srt, "voice_settings": config, "redub": {"from_revision_id": revision.id, "lines": placed},
+                  "source_master_revision_id": master.id},
+        created_by=user.email)
+    db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=new_revision.id, origin="system_reference", status="active",
+                                    attached_by=user.email, note=f"重配 {len(placed)} 句"))
+    db.commit()
+    store_new(db, new_revision, project_id, "音频")
+    for item in placed:
+        cues = [cue for cue in document["subtitles"]["cues"] if item["old_start_ms"] <= (cue["start_ms"] + cue["end_ms"]) // 2 <= item["old_end_ms"]]
+        weights = [max(len(_plain(cue["text"])), 1) for cue in cues]
+        span, position = item["new_end_ms"] - item["new_start_ms"], item["new_start_ms"]
+        for cue, weight in zip(cues, weights):
+            # Without the new clip's own phrase times, each cue keeps its share of the line by characters.
+            cue["start_ms"] = position
+            position = item["new_start_ms"] + round(span * sum(weights[:cues.index(cue) + 1]) / sum(weights))
+            cue["end_ms"] = position
+    document["voice"] = _voice(document, new_revision.id)
+    master_id = _save(db, user, project_id, unit.id, master, document, {},
+                      edit_summary={"voiceover": {"material_revision_id": new_revision.id, "settings": config, "aligned": False,
+                                                  "redub": {"from_revision_id": revision.id, "lines": [item["line_id"] for item in placed]}}})
+    db.add(AuditLog(event="voiceover.redubbed", actor=user.email, entity_type="material", entity_id=str(new_revision.material_id),
+                    detail_json={"material_revision_id": new_revision.id, "master_id": master_id, "from_revision_id": revision.id,
+                                 "lines": [item["line_id"] for item in placed]}))
+    db.commit()
+    return {"material_id": new_revision.material_id, "material_revision_id": new_revision.id, "master_id": master_id,
+            "duration_ms": new_revision.duration_ms, "aligned": False, "has_timing": bool(srt), "settings": config,
+            "redub": {"from_revision_id": revision.id, "billed_lines": len(placed), "lines": placed}}

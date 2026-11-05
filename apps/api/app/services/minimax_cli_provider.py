@@ -857,6 +857,9 @@ def _synthesize(text: str, model: str, applied: dict | None, timeout) -> MediaOu
         body["language_boost"] = applied["language_boost"]
     if applied.get("voice_modify"):
         body["voice_modify"] = applied["voice_modify"]
+    # An object with a tone list; MiniMax ignores or rejects the bare list form.
+    if applied.get("pronunciation"):
+        body["pronunciation_dict"] = {"tone": applied["pronunciation"]}
     deadline = time.monotonic() + timeout
     try:
         response = httpx.post(chat_base_url() + "/t2a_v2", json=body, timeout=timeout, trust_env=False,

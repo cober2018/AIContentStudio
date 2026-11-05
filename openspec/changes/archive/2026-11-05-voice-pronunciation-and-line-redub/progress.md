@@ -1,0 +1,37 @@
+# progress
+
+- 2026-11-05 写好方案，待用户确认并定「只换声音的保存要不要再通过导演稿」。
+- 2026-11-05 用户「确认」，没有另选，按建议执行：只换声音的保存不需要再通过导演稿。保存带 edit_summary.voiceover，现有 `_keeps_draft` 规则就不把它算作新导演稿。
+- 实施：
+  - `video_documents._pronunciation` 校验
+  - `model_capability_routing` 放行 pronunciation
+  - `minimax_cli_provider._synthesize` 带 `pronunciation_dict: {"tone": [...]}`
+  - `voiceover`：
+    - `_parameters` 带读音
+    - `_voice` 保留读音
+    - 整条、多角色、dub_persona 都传；复用判断随 config 带上读音
+    - `PRONUNCIATION_HELP` 进 brief
+    - 新增 `_redub` 一组函数，`generate(..., lines)`
+  - `video_chain.voiceover` 透传 lines 和 redub 结果
+  - `creative_mcp`：`VoiceoverInput.lines` 和工具说明；写导演稿的工具说明加读音
+- 验证（数据库副本 + 临时素材库根目录 + 假 MiniMax，不联网、不花钱）：
+  - 读音校验：`去重/(qu4)(chong2)`、`重/(chong2)` 通过；括号数不对、大写拼音、少斜杠、超 40 字、不是列表都拒绝
+  - 截获发往 /t2a_v2 的请求体：`pronunciation_dict` 为 `{"tone": ["去重/(qu4)(chong2)"]}`
+  - 只重配（合成配音，39 句，按停顿定位）：
+    - 新句短 0.4 秒：总长不变，接缝外逐样本 0 差异；新句从原起点 165.08 秒开始；字幕跟着改；导演稿保留读音；只调用 1 次
+    - 新句长 0.15 秒：用掉后面停顿，接缝外 0 差异
+    - 长 0.2 秒：差 0.01 秒报 voiceover_line_too_long（扣掉 0.25 秒间隔）
+    - 长 0.9 秒：报差 0.71 秒
+    - 两句之间没停顿：报 voiceover_line_split_unclear「只听出 38 段有声，比台词的 39 句还少」
+    - 作品 95 现状（有口播声音轨）：拒绝 voiceover_redub_dialogue_track
+  - 测试只在临时目录留文件；一个忽略提交的锁文件已删
+- 全量测试 2441 通过，5 个失败与改动前相同。
+- 待：用户同意后付费实配「去重」核对 chóng（3.5）。
+- 2026-11-05 用户同意后付费实配一次：
+  - 内容：「在同一个读取函数里对齐、去重」，作品 95 的音色设置 + `去重/(qu4)(chong2)`，直接调供应商，没存进作品
+  - MiniMax 返回成功，mp3 4.18 秒
+  - 读音核对：
+    - 「重」开头约 90 ms 是高频气流噪声（3 kHz 以上能量占 57%，过零率 2379 次/秒），然后才是浊音。和前面送气的「去」（q）一样，符合送气的 ch；不送气的 zh 只有极短的爆破。
+    - 音高：这条声音加了音色调整，用 YIN 求基频置信度低，有倍频跳动，判断不了第二声上扬，这项没核成。
+  - 试听文件：`output/_平台/配音试听/去重-chong2-读音试配.mp3`，待用户试听确认
+- 2026-11-05 已重启 API 和后台，健康检查正常。

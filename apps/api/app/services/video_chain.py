@@ -458,7 +458,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
     return {"project": {"id": project.id, "title": project.title, "objective": project.objective},
             "unit": {"id": unit.id, "title": unit.title, "channel_id": unit.channel_id},
             "brief": {key: getattr(row, key) for key in ("objective", "primary_audience", "core_message", "angle")} if row else None,
-            "facts": facts, "fact_templates": fact_templates.brief_rules(db, project_id), "source_texts": siblings, "voice_settings": voiceover.settings_for(db, unit),
+            "facts": facts, "fact_templates": fact_templates.brief_rules(db, project_id), "source_texts": siblings,
+            "voice_settings": {**voiceover.settings_for(db, unit), "pronunciation_help": voiceover.PRONUNCIATION_HELP},
             "materials": materials, "state": state(db, user, project_id, unit_id),
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload": master.payload_json} if master else None,
             "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=plan", "rules": RULES,
@@ -548,14 +549,14 @@ def accept_candidate(db: Session, user: User, project_id: int, run_id: int, segm
                                                        "public_use_allowed": True, "model_use_allowed": True, "commercial_use_allowed": True})
 
 
-def voiceover(db: Session, user: User, project_id: int, unit_id: int) -> dict:
+def voiceover(db: Session, user: User, project_id: int, unit_id: int, lines: list[str] | None = None) -> dict:
     from . import voiceover as voice
 
     _approved_master(db, user, project_id, unit_id)
-    result = voice.generate(db, user, project_id, unit_id)
+    result = voice.generate(db, user, project_id, unit_id, lines)
     revision = db.get(MaterialRevision, result["material_revision_id"])
     return {**{key: result[key] for key in ("material_revision_id", "master_id", "duration_ms", "has_timing")},
-            "lines": (revision.metadata_json or {}).get("subtitles_srt")}
+            "lines": (revision.metadata_json or {}).get("subtitles_srt"), **({"redub": result["redub"]} if "redub" in result else {})}
 
 
 def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: str, ae_shot_ids: list[str],

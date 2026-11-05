@@ -44,6 +44,20 @@ def _text(value: object, maximum: int, code: str) -> str:
     return value
 
 
+_TONE = re.compile(r"([^/()\s]{1,39})/((?:\([a-z]{1,6}[1-5]\))+)")
+
+
+def _pronunciation(value: object) -> list[str]:
+    """MiniMax tone entries, one bracket per character, e.g. 去重/(qu4)(chong2); a wrong count would mis-read the line."""
+    if not isinstance(value, list) or len(value) > 50:
+        _fail("video_voice_pronunciation_invalid")
+    for item in value:
+        found = _TONE.fullmatch(item) if isinstance(item, str) and len(item) <= 40 else None
+        if found is None or found.group(2).count("(") != len(found.group(1)):
+            _fail("video_voice_pronunciation_invalid")
+    return list(value)
+
+
 def _enum(value: object, allowed: set[str], code: str) -> str:
     if not isinstance(value, str) or value not in allowed:
         _fail(code)
@@ -483,13 +497,15 @@ def canonical_payload(raw: object) -> dict:
         _fail("video_shot_timeline_duration_invalid")
     result["timeline"] = {"duration_ms": duration, "tracks": tracks}
 
-    voice = _object(payload.get("voice"), {"mode", "material_revision_id"}, "video_voice_invalid")
+    voice = _object(payload.get("voice"), {"mode", "material_revision_id", "pronunciation"}, "video_voice_invalid")
     _enum(voice.get("mode"), {"none", "recorded", "tts"}, "video_voice_invalid")
     if (voice["mode"] == "none") == ("material_revision_id" in voice):
         _fail("video_voice_revision_invalid")
     result["voice"] = {"mode": voice["mode"]}
     if "material_revision_id" in voice:
         result["voice"]["material_revision_id"] = _revision_id(voice["material_revision_id"], "video_voice_revision_invalid")
+    if "pronunciation" in voice:
+        result["voice"]["pronunciation"] = _pronunciation(voice["pronunciation"])
 
     subtitles = _object(payload.get("subtitles"), {"cues"}, "video_subtitles_invalid")
     cues = []

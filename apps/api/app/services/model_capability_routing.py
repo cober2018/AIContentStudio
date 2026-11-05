@@ -30,7 +30,7 @@ TTS_EMOTIONS = {"happy", "sad", "angry", "fearful", "disgusted", "surprised", "c
 TTS_FORMATS = {"mp3", "wav", "flac"}
 # Optional MiniMax fields; a request names them explicitly, nothing is filled in.
 _TTS_OPTIONAL = {"volume", "pitch", "emotion", "format", "sample_rate", "bitrate", "channels", "text_normalization", "latex_read", "subtitles",
-                 "language_boost", "voice_modify"}
+                 "language_boost", "voice_modify", "pronunciation"}
 TTS_LANGUAGES = {"auto", "Chinese", "Chinese,Yue", "English", "Arabic", "Russian", "Spanish", "French", "Portuguese", "German", "Turkish",
                  "Dutch", "Ukrainian", "Vietnamese", "Indonesian", "Japanese", "Italian", "Korean", "Thai", "Polish", "Romanian", "Greek",
                  "Czech", "Finnish", "Hindi"}
@@ -73,11 +73,13 @@ def tts_parameters(parameters, *, capability):
         "subtitles": lambda v: type(v) is bool,
         "language_boost": lambda v: v in TTS_LANGUAGES,
         "voice_modify": _voice_modify,
+        "pronunciation": lambda v: isinstance(v, list) and 0 < len(v) <= 50 and all(isinstance(item, str) and 0 < len(item) <= 40 for item in v),
     }
     for key in sorted(extra):
         if not checks[key](parameters[key]):
             raise ValueError("tts_parameters_invalid")
-        result[key] = float(parameters[key]) if key == "volume" else dict(parameters[key]) if key == "voice_modify" else parameters[key]
+        result[key] = (float(parameters[key]) if key == "volume" else dict(parameters[key]) if key == "voice_modify"
+                       else list(parameters[key]) if key == "pronunciation" else parameters[key])
     return result
 
 
