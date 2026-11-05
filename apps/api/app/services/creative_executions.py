@@ -771,14 +771,16 @@ def _edit_slot(db: Session, row: CreativeExecution) -> None:
     since = utcnow() - _EDIT_IDLE
     recent_output = select(CreativeExecutionOutput.id).where(CreativeExecutionOutput.execution_id == CreativeExecution.id,
                                                              CreativeExecutionOutput.created_at >= since).exists()
+    # A work's new task replaces its older ones, which are never edited again, so only other works hold the slot.
     busy = db.scalar(select(CreativeExecution).where(
-        CreativeExecution.executor_key == _EDIT_EXECUTOR, CreativeExecution.id != row.id,
+        CreativeExecution.executor_key == _EDIT_EXECUTOR, CreativeExecution.content_unit_id != row.content_unit_id,
         CreativeExecution.state.in_(("claimed", "in_progress", "blocked")),
         (CreativeExecution.updated_at >= since) | recent_output).limit(1))
     if busy is None:
         return
     waiting = db.scalar(select(func.count(CreativeExecution.id)).where(
-        CreativeExecution.executor_key == _EDIT_EXECUTOR, CreativeExecution.id != row.id, CreativeExecution.state == "prepared")) or 0
+        CreativeExecution.executor_key == _EDIT_EXECUTOR, CreativeExecution.content_unit_id != row.content_unit_id,
+        CreativeExecution.state == "prepared")) or 0
     unit = db.get(ContentUnit, busy.content_unit_id)
     raise HTTPException(409, {"code": "video_edit_queue_busy", "editing_unit_id": busy.content_unit_id,
                               "editing_title": unit.title if unit else None, "waiting": waiting,
