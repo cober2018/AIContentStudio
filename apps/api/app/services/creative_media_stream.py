@@ -373,6 +373,9 @@ def validate(source, mime, kind, package, *, role_id=None):
             expected_rate = Fraction(str(contract["fps"]))
             tolerance_ms = math.ceil(1000 / expected_rate) + 1
             target_duration = director["timeline"]["duration_ms"] if is_render else contract["duration_ms"]
+            if role_id == "final":
+                # Persona intro / outro clips sit on the 成片 outside the 导演稿 timeline.
+                target_duration += sum(clip["duration_ms"] for clip in director.get("persona_clips") or [])
             if abs(duration - target_duration) > tolerance_ms or abs(video_duration_ms - target_duration) > tolerance_ms:
                 fail("creative_video_duration_mismatch", 422)
             if [width, height] != contract["resolution"]:
