@@ -16,8 +16,8 @@ type ShotWarning = { code: "shot_overexposed" | "shot_brightness_jump" | "dialog
   | { code: "color_tags_not_srgb"; color_primaries: string; color_transfer: string; color_space: string }
   | { code: "cover_color_mismatch"; at_ms: number; mean: number; rgb: [number, number, number]; threshold: number }
   | { code: "cover_template_missing" } | { code: "cover_template_mismatch" }
-  | { code: "brand_duration_mismatch"; actual_ms: number; expected_ms: number; sample_ms: number; clips_ms: number }
-  | { code: "brand_clip_mismatch"; slot: "intro" | "outro"; title: string; mean: number; threshold: number }
+  | { code: "persona_duration_mismatch"; actual_ms: number; expected_ms: number; sample_ms: number; clips_ms: number }
+  | { code: "persona_clip_mismatch"; slot: "intro" | "outro"; title: string; mean: number; threshold: number }
   | { code: "source_brightness_diff"; shot_id: string | null; order: number; luma: number; source_luma: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" }
   | { code: "source_highlight_diff"; shot_id: string | null; order: number; luma_p90: number; source_p90: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" }
   | { code: "source_brightness"; shot_id: string | null; order: number; luma?: number; source_luma?: number; diff?: number; luma_p90?: number; source_p90?: number; diff_p90?: number; source_basis?: "manifest" | "reported" | "estimated" };
@@ -27,7 +27,7 @@ type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id
 type Chain = {
   state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
   phase?: string; locked?: boolean; sample?: Cut; cover_redo?: { note: string; at: string };
-  brand_clips?: { slot: "intro" | "outro"; material_revision_id: number; duration_ms: number; title: string }[];
+  persona_clips?: { slot: "intro" | "outro"; material_revision_id: number; duration_ms: number; title: string }[];
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
 type Step = "draft" | "sample" | "final";
@@ -45,8 +45,8 @@ function shotName(id: string | null | undefined, order: number, basis: string) {
 
 function warningText(item: ShotWarning, checks: ShotChecks) {
   if (item.code === "color_tags_not_srgb") return `成片颜色标记不是 sRGB（现在是 原色 ${item.color_primaries}、传输 ${item.color_transfer}、矩阵 ${item.color_space}；应为 bt709 / iec61966-2-1 / bt709）`;
-  if (item.code === "brand_duration_mismatch") return `成片时长 ${(item.actual_ms / 1000).toFixed(2)} 秒，应为小样 ${(item.sample_ms / 1000).toFixed(2)} 秒 + 品牌片段 ${(item.clips_ms / 1000).toFixed(2)} 秒 = ${(item.expected_ms / 1000).toFixed(2)} 秒`;
-  if (item.code === "brand_clip_mismatch") return `成片${item.slot === "intro" ? "开头" : "最后"}和品牌${item.slot === "intro" ? "进门" : "收尾"}片段「${item.title}」画面对不上（平均差 ${item.mean}，提示线 ${item.threshold}）`;
+  if (item.code === "persona_duration_mismatch") return `成片时长 ${(item.actual_ms / 1000).toFixed(2)} 秒，应为小样 ${(item.sample_ms / 1000).toFixed(2)} 秒 + 角色片段 ${(item.clips_ms / 1000).toFixed(2)} 秒 = ${(item.expected_ms / 1000).toFixed(2)} 秒`;
+  if (item.code === "persona_clip_mismatch") return `成片${item.slot === "intro" ? "开头" : "最后"}和角色${item.slot === "intro" ? "进门" : "收尾"}片段「${item.title}」画面对不上（平均差 ${item.mean}，提示线 ${item.threshold}）`;
   if (item.code === "cover_template_missing") return "封面没用角色的封面模板（交封面时没附模板渲染回执）";
   if (item.code === "cover_template_mismatch") return "封面用错了模板：附的渲染不是这个角色的封面模板";
   if (item.code === "cover_color_mismatch") return `封面与成片颜色不一致：平均差 ${item.mean}（R/G/B ${item.rgb.join(" / ")}，提示线 ${item.threshold}），最接近的是第 ${(item.at_ms / 1000).toFixed(1)} 秒那一帧`;
@@ -192,9 +192,9 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
           <FileLocationActions base={`/content-projects/${projectId}/units/${unitId}/video-chain/cuts/${player.output}`} />
         </div>}
       </div>}
-      {step === "final" && data.phase === "final" && data.brand_clips && <p className="mt-2 text-xs text-slate-600">{data.brand_clips.length
-        ? data.brand_clips.map(clip => `已加品牌${clip.slot === "intro" ? "进门" : "收尾"} ${(clip.duration_ms / 1000).toFixed(1)} 秒（${clip.title}）`).join("；")
-        : "本作品没有品牌收尾"}</p>}
+      {step === "final" && data.phase === "final" && data.persona_clips && <p className="mt-2 text-xs text-slate-600">{data.persona_clips.length
+        ? data.persona_clips.map(clip => `已加角色${clip.slot === "intro" ? "进门" : "收尾"} ${(clip.duration_ms / 1000).toFixed(1)} 秒（${clip.title}）`).join("；")
+        : "本作品没有角色收尾"}</p>}
       {cut?.shot_checks && <ShotCheckList checks={cut.shot_checks} />}
       {cut?.cover_output_id && <CoverPreview projectId={projectId} unitId={unitId} executionId={cut.execution_id} outputId={cut.cover_output_id} />}
       {cut?.cover_output_id && live && data.state.endsWith("_review") && cut.execution_id === data.execution_id && <CoverRedo projectId={projectId} unitId={unitId} pending={data.cover_redo} />}

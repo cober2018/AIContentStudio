@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
 import { errorText, FileButton, type Portrait, StoredThumb, uploadPortrait } from "./PersonaPortraits";
-import { BrandClipsEditor, type Clips, clipsForProfile, useBrandClips } from "./BrandClips";
 
 type Profile = Record<string, unknown>;
 type Revision = { revision_no: number; profile: Profile } | undefined;
@@ -112,13 +111,10 @@ export function BrandProfileEditor({ brandId, brandName, revision, readOnly, onS
   const [draft, setDraft] = useState<Record<string, string>>(initial);
   const { items } = useLogos(brandId, revisionNo);
   const [logos, setLogos] = useState<number[] | null>(null);
-  const saved = useBrandClips(brandId, revisionNo);
-  const [clips, setClips] = useState<Clips | null>(null);
   const [previews, setPreviews] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
   const [issue, setIssue] = useState("");
-  useEffect(() => { setDraft(initial()); setLogos(null); setClips(null); }, [brandId, revisionNo]);
-  const clipValue = clips ?? saved.data ?? { intro_clip: {}, outro_clip: {} };
+  useEffect(() => { setDraft(initial()); setLogos(null); }, [brandId, revisionNo]);
   const logoIds = logos ?? items.map(item => item.material_revision_id);
   const off = readOnly || busy;
   async function save(nextLogos = logoIds) {
@@ -131,7 +127,6 @@ export function BrandProfileEditor({ brandId, brandName, revision, readOnly, onS
         profile[field.key] = field.shape === "lines" ? text.split("\n").map(line => line.trim()).filter(Boolean) : text;
       }
       if (nextLogos.length) profile.logo_material_revision_ids = nextLogos;
-      Object.assign(profile, clipsForProfile(clipValue));
       await api.post(`/content-brands/${brandId}/revisions`, { expected_revision: revisionNo, profile });
       await onSaved();
     } catch (cause) { setIssue(saveError(cause)); } finally { setBusy(false); }
@@ -162,9 +157,7 @@ export function BrandProfileEditor({ brandId, brandName, revision, readOnly, onS
         </div>}
       </div>
     </section>)}
-    <section className="min-w-0"><h3 className="mb-1 font-serif text-[20px] font-semibold text-ink-900">品牌片段</h3><p className="mb-4 text-[12.5px] text-ink-500">在别处做好的 Logo 动画视频；旗下角色的成片按画幅自动加上，随资料一起保存。</p>
-      <BrandClipsEditor value={clipValue} onChange={setClips} disabled={off || saved.isPending || saved.isError} /></section>
     {issue && <ErrorBanner message={issue} />}
-    <div className="sticky bottom-4 z-10 flex items-center justify-between gap-4 rounded-pill border border-ink-200 bg-surface/95 py-2 pl-6 pr-2 shadow-lift backdrop-blur"><span className="text-[13px] text-ink-600">保存后生成新修订，旧作品的快照不会改变。</span><Button onClick={() => void save()} disabled={off || saved.isPending || saved.isError}>{busy ? "保存中…" : `保存为 v${revisionNo + 1}`}</Button></div>
+    <div className="sticky bottom-4 z-10 flex items-center justify-between gap-4 rounded-pill border border-ink-200 bg-surface/95 py-2 pl-6 pr-2 shadow-lift backdrop-blur"><span className="text-[13px] text-ink-600">保存后生成新修订，旧作品的快照不会改变。</span><Button onClick={() => void save()} disabled={off}>{busy ? "保存中…" : `保存为 v${revisionNo + 1}`}</Button></div>
   </div>;
 }

@@ -91,6 +91,9 @@ class IdentityProfile(BaseModel):
     speech_sample_folder: str | None = Field(default=None, max_length=500)
     # The AE 封面 template every edit task of this persona renders its cover text with.
     cover_template: CoverTemplateRef | None = None
+    # Logo animations the 成片 gets at its start / end, one per aspect; a work in the other aspect gets none.
+    intro_clip: dict[Literal["16:9", "9:16"], int | None] | None = None
+    outro_clip: dict[Literal["16:9", "9:16"], int | None] | None = None
     text_creative_profile: CreativeProfile | None = None
     graphic_creative_profile: CreativeProfile | None = None
     video_creative_profile: CreativeProfile | None = None
@@ -120,9 +123,6 @@ class BrandProfile(BaseModel):
     fonts: list[Annotated[str, Field(max_length=100)]] | None = Field(default=None, max_length=10)
     compliance: list[Annotated[str, Field(max_length=300)]] | None = Field(default=None, max_length=30)
     red_lines: list[Annotated[str, Field(max_length=100)]] | None = Field(default=None, max_length=100)
-    # Logo animations the 成片 gets at its start / end, one per aspect; a work in the other aspect gets none.
-    intro_clip: dict[Literal["16:9", "9:16"], int | None] | None = None
-    outro_clip: dict[Literal["16:9", "9:16"], int | None] | None = None
 
 
 def brand_terms(profile: dict) -> list[str]:
@@ -417,6 +417,9 @@ def revisions(db: Session, kind: str, entity_id: int) -> list:
 
 def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expected_revision: int, profile: dict):
     owned_entity(db, user, kind, entity_id, mutable=True)
+    if kind == "brand":
+        # Clips moved to the persona; a page re-saving an older brand revision may still send them.
+        profile = {key: value for key, value in profile.items() if key not in ("intro_clip", "outro_clip")}
     try:
         parsed = (BrandProfile if kind == "brand" else IdentityProfile).model_validate(profile)
     except ValidationError as exc:
@@ -433,9 +436,11 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
             raise HTTPException(422, "品牌语气版本不可用于新身份")
     for slot in ("intro_clip", "outro_clip"):
         if data.get(slot) is not None:
+            if kind != "persona":
+                raise HTTPException(422, "persona_clip_persona_only")
             data[slot] = {aspect: revision_id for aspect, revision_id in data[slot].items() if revision_id is not None}
             for aspect, revision_id in data[slot].items():
-                _brand_clip(db, user, revision_id, f"{'进门' if slot == 'intro_clip' else '收尾'}片段（{aspect}）")
+                _persona_clip(db, user, revision_id, f"{'进门' if slot == 'intro_clip' else '收尾'}片段（{aspect}）")
             if not data[slot]:
                 data.pop(slot)
     if data.get("portrait_material_revision_ids") is not None:
@@ -490,21 +495,21 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
     return row
 
 
-BRAND_CLIP_MAX_MS = 5000
+PERSONA_CLIP_MAX_MS = 5000
 
 
-def _brand_clip(db: Session, user: User, revision_id: int, label: str) -> None:
-    """A clip every 成片 of the brand will carry must be publishable and usable by the model, or the 成片 task cannot open."""
+def _persona_clip(db: Session, user: User, revision_id: int, label: str) -> None:
+    """A clip every 成片 of the persona will carry must be publishable and usable by the model, or the 成片 task cannot open."""
     revision = db.get(MaterialRevision, revision_id)
     def refuse(reason: str):
-        raise HTTPException(422, {"code": "brand_clip_invalid", "message": f"{label}：{reason}"})
+        raise HTTPException(422, {"code": "persona_clip_invalid", "message": f"{label}：{reason}"})
     if revision is None or revision.created_by != user.email:
         refuse("只能选自己素材库里的视频")
     if revision.material.kind != "video" or revision.status in {"revoked", "archived"}:
         refuse("要选一条可用的视频")
     if revision.public_use_allowed is not True or revision.model_use_allowed is not True:
         refuse("这条视频要允许公开使用、也允许给模型用（素材详情里改）")
-    if not revision.duration_ms or revision.duration_ms > BRAND_CLIP_MAX_MS:
+    if not revision.duration_ms or revision.duration_ms > PERSONA_CLIP_MAX_MS:
         refuse(f"最长 5 秒，这条是 {(revision.duration_ms or 0) / 1000:.1f} 秒")
 
 

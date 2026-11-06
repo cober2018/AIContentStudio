@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
 import { errorText } from "./PersonaPortraits";
@@ -16,12 +16,13 @@ const SLOTS = [
 const ASPECTS: [Aspect, string][] = [["9:16", "竖版 9:16"], ["16:9", "横版 16:9"]];
 const seconds = (ms: number | null) => ms == null ? "时长未知" : `${(ms / 1000).toFixed(1)} 秒`;
 
-export function useBrandClips(brandId: number, revisionNo: number) {
-  return useQuery({ queryKey: ["brand-clips", brandId, revisionNo, currentUser()], queryFn: () => api.get<Clips>(`/content-brands/${brandId}/clips`), retry: false });
+// version: anything that changes when the stored clips change, so a new revision refetches.
+function usePersonaClips(personaId: number, version: unknown) {
+  return useQuery({ queryKey: ["persona-clips", personaId, version, currentUser()], queryFn: () => api.get<Clips>(`/content-personas/${personaId}/clips`), retry: false });
 }
 
 // What the profile stores: only revision ids, per aspect; empty slots are left out.
-export function clipsForProfile(clips: Clips) {
+function clipsForProfile(clips: Clips) {
   const out: Record<string, Record<string, number>> = {};
   for (const { key } of SLOTS) {
     const ids = Object.fromEntries(Object.entries(clips[key]).filter(([, clip]) => clip).map(([aspect, clip]) => [aspect, clip!.material_revision_id]));
@@ -66,8 +67,38 @@ function Picker({ onPick, onCancel }: { onPick: (clip: Clip) => void; onCancel: 
   </div>;
 }
 
-// Brand logo animations a 成片 of this brand gets automatically; saved with the rest of the brand profile.
-export function BrandClipsEditor({ value, onChange, disabled }: { value: Clips; onChange: (next: Clips) => void; disabled: boolean }) {
+// Logo animations every 成片 of this persona gets automatically; saved as a new revision of the persona profile, like the cover template.
+export function PersonaClipsEditor({ personaId, revision, readOnly, onSaved }: {
+  personaId: number; revision: { revision_no: number; profile: Record<string, unknown> } | undefined; readOnly: boolean; onSaved: () => Promise<void>;
+}) {
+  const revisionNo = revision?.revision_no ?? 0;
+  const saved = usePersonaClips(personaId, revisionNo);
+  const [clips, setClips] = useState<Clips | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [issue, setIssue] = useState("");
+  useEffect(() => { setClips(null); }, [personaId, revisionNo]);
+  async function save() {
+    if (!clips) return;
+    setBusy(true); setIssue("");
+    try {
+      const profile = { ...(revision?.profile || {}) };
+      delete profile.intro_clip; delete profile.outro_clip;
+      await api.post(`/content-personas/${personaId}/revisions`, { expected_revision: revisionNo, profile: { ...profile, ...clipsForProfile(clips) } });
+      await onSaved();
+      setClips(null);
+    } catch (cause) { setIssue(errorText(cause)); } finally { setBusy(false); }
+  }
+  const off = readOnly || busy || saved.isPending || saved.isError;
+  return <div className="space-y-3">
+    <ClipSlots value={clips ?? saved.data ?? { intro_clip: {}, outro_clip: {} }} onChange={setClips} disabled={off} />
+    <div className="flex items-center gap-3"><Button type="button" disabled={off || !clips} onClick={() => void save()}>{busy ? "保存中…" : "保存片段"}</Button>
+      <span className="text-[12px] text-ink-500">只影响之后新开的成片任务。</span></div>
+    {saved.isError && <ErrorBanner message={errorText(saved.error)} />}
+    {issue && <ErrorBanner message={issue} />}
+  </div>;
+}
+
+function ClipSlots({ value, onChange, disabled }: { value: Clips; onChange: (next: Clips) => void; disabled: boolean }) {
   const [picking, setPicking] = useState<string | null>(null);
   return <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2">{SLOTS.map(slot => <div key={slot.key} className="min-w-0 rounded-[16px] border border-ink-200/90 bg-surface p-5">
     <p className="font-serif text-[16px] font-semibold text-ink-900">{slot.label}</p>
@@ -85,4 +116,13 @@ export function BrandClipsEditor({ value, onChange, disabled }: { value: Clips; 
       </div>;
     })}
   </div>)}</div>;
+}
+
+// Read-only profile page: each set clip as name and length.
+export function PersonaClipsSummary({ personaId, profile }: { personaId: number; profile: Record<string, unknown> }) {
+  const clips = usePersonaClips(personaId, JSON.stringify([profile.intro_clip, profile.outro_clip]));
+  return <>{SLOTS.map(slot => {
+    const set = ASPECTS.flatMap(([aspect, label]) => { const clip = clips.data?.[slot.key][aspect]; return clip ? [`${label}：${clip.title}（${seconds(clip.duration_ms)}）`] : []; });
+    return <div key={slot.key} className="text-[14px]"><span className="text-ink-500">{slot.label}　</span>{set.length ? <span className="text-ink-800">{set.join("；")}</span> : <span className="text-ink-400">未设置</span>}</div>;
+  })}</>;
 }

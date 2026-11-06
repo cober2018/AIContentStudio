@@ -251,13 +251,13 @@ def brand_logos(brand_id: int, db: Session = Depends(get_db), user: User = Depen
     return _images(db, user, "brand", brand_id, "logo_material_revision_ids")
 
 
-@router.get("/content-brands/{brand_id}/clips")
-def brand_clips(brand_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """The brand's intro / outro clips per aspect, with what the page needs to show and play them."""
+@router.get("/content-personas/{persona_id}/clips")
+def persona_clips(persona_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """The persona's intro / outro clips per aspect, with what the page needs to show and play them."""
     from ..models import MaterialRevision
 
-    identity.owned_entity(db, user, "brand", brand_id)
-    current = identity.current_revision(db, "brand", brand_id)
+    identity.owned_entity(db, user, "persona", persona_id)
+    current = identity.current_revision(db, "persona", persona_id)
     profile = (current.profile_json if current else None) or {}
     result = {}
     for slot in ("intro_clip", "outro_clip"):

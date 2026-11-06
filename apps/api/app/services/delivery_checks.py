@@ -362,7 +362,7 @@ def _rgb(fd: int, size: str, at_ms: int | None) -> bytes:
 
 
 def cover_match(cover, final, limits: dict, offset_ms: int = 0) -> dict | None:
-    """The 成片 frame in the half second after offset_ms (a brand intro's end) closest to the cover, with the per-channel mean difference; None when either can't be read."""
+    """The 成片 frame in the half second after offset_ms (a persona intro's end) closest to the cover, with the per-channel mean difference; None when either can't be read."""
     try:
         cover_fd, final_fd = cover.fileno(), final.fileno()
         width = _COVER_WIDTH
@@ -392,15 +392,15 @@ def cover_match(cover, final, limits: dict, offset_ms: int = 0) -> dict | None:
 
 
 # A clip passes through the edit's encode, so its frames match the original less tightly than a cover cut from the same file.
-BRAND_CLIP_MISMATCH_MEAN = 12
+PERSONA_CLIP_MISMATCH_MEAN = 12
 
 
-def brand_warnings(final, clips: list[dict], final_ms: int, sample_ms: int | None, fps: int) -> list[dict]:
-    """Whether the 成片 is the approved 小样 plus the brand clips, and whether its ends show those clips; each clip is {slot, path, duration_ms, title}."""
+def persona_warnings(final, clips: list[dict], final_ms: int, sample_ms: int | None, fps: int) -> list[dict]:
+    """Whether the 成片 is the approved 小样 plus the persona clips, and whether its ends show those clips; each clip is {slot, path, duration_ms, title}."""
     warnings = []
     added = sum(clip["duration_ms"] for clip in clips)
     if sample_ms and abs(final_ms - (sample_ms + added)) > 1000 / fps:
-        warnings.append({"code": "brand_duration_mismatch", "actual_ms": final_ms, "expected_ms": sample_ms + added, "sample_ms": sample_ms, "clips_ms": added})
+        warnings.append({"code": "persona_duration_mismatch", "actual_ms": final_ms, "expected_ms": sample_ms + added, "sample_ms": sample_ms, "clips_ms": added})
     try:
         final_fd = final.fileno()
         size = f"{_COVER_WIDTH}:{max(2, round(_COVER_WIDTH * 16 / 9 / 2) * 2)}"
@@ -413,9 +413,9 @@ def brand_warnings(final, clips: list[dict], final_ms: int, sample_ms: int | Non
                     picture, frame = _rgb(handle.fileno(), size, at), _rgb(final_fd, size, start + at)
                     if picture and len(picture) == len(frame):
                         means.append(sum(abs(a - b) for a, b in zip(picture, frame)) / len(picture))
-            if means and min(means) > BRAND_CLIP_MISMATCH_MEAN:
-                warnings.append({"code": "brand_clip_mismatch", "slot": clip["slot"], "title": clip["title"], "mean": round(min(means), 1),
-                                 "threshold": BRAND_CLIP_MISMATCH_MEAN})
+            if means and min(means) > PERSONA_CLIP_MISMATCH_MEAN:
+                warnings.append({"code": "persona_clip_mismatch", "slot": clip["slot"], "title": clip["title"], "mean": round(min(means), 1),
+                                 "threshold": PERSONA_CLIP_MISMATCH_MEAN})
     except (OSError, ValueError, subprocess.SubprocessError):
         pass
     finally:

@@ -1203,11 +1203,11 @@ def _cover_template_check(db: Session, row: CreativeExecution, director: dict, m
     return {"cover_template_check": "ok"}
 
 
-def _brand_files(db: Session, package: CreativeExecutionPackage) -> list[dict]:
+def _persona_files(db: Session, package: CreativeExecutionPackage) -> list[dict]:
     from .materials import local_file_checked
 
     files = []
-    for clip in package.package_json["director"]["brand_clips"]:
+    for clip in package.package_json["director"]["persona_clips"]:
         path = local_file_checked(db, db.get(MaterialRevision, clip["material_revision_id"]))
         if path is not None:
             files.append({**clip, "path": str(path)})
@@ -1215,7 +1215,7 @@ def _brand_files(db: Session, package: CreativeExecutionPackage) -> list[dict]:
 
 
 def _sample_ms(db: Session, package: CreativeExecutionPackage) -> int | None:
-    """The approved 小样 the 成片 was cut from; its length plus the brand clips is the 成片's expected length."""
+    """The approved 小样 the 成片 was cut from; its length plus the persona clips is the 成片's expected length."""
     parent = db.get(MaterialRevision, package.package_json["director"]["postproduction"].get("parent_material_revision_id") or 0)
     return parent.duration_ms if parent else None
 
@@ -1353,12 +1353,12 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
                 tags = delivery_checks.color_tags(source) if role_id == "final" else None
                 if tags:
                     checks["warnings"].insert(0, tags)
-                if role_id == "final" and package.package_json["director"].get("brand_clips"):
-                    checks["warnings"][:0] = delivery_checks.brand_warnings(source, _brand_files(db, package), inspected["duration_ms"],
+                if role_id == "final" and package.package_json["director"].get("persona_clips"):
+                    checks["warnings"][:0] = delivery_checks.persona_warnings(source, _persona_files(db, package), inspected["duration_ms"],
                                                                            _sample_ms(db, package), package.package_json["director"]["postproduction"]["fps"])
                 metadata = {**metadata, "shot_checks": delivery_checks.compact(checks)}
             if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction"):
-                intro_ms = sum(clip["duration_ms"] for clip in package.package_json["director"].get("brand_clips") or [] if clip["slot"] == "intro")
+                intro_ms = sum(clip["duration_ms"] for clip in package.package_json["director"].get("persona_clips") or [] if clip["slot"] == "intro")
                 metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source, intro_ms)}
             if role_id == "cover":
                 metadata = {**metadata, **_cover_template_check(db, row, package.package_json.get("director") or {}, metadata)}
