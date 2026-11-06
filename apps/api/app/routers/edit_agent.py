@@ -235,7 +235,8 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
                 .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1)), "cover_output_id": cover(sample["execution_id"])}
             result["sample"]["shot_checks"] = _with_template_check(db, _shot_checks(db, result["sample"]["cut_output_id"]), result["sample"]["cover_output_id"])
         if separate and result["cut_output_id"]:
-            checks = _with_cover_sizes(db, _shot_checks(db, result["cut_output_id"]), result["cover_output_id"], result["cover_vertical_output_id"])
+            checks = _with_cover_check(db, _shot_checks(db, result["cut_output_id"]), result["cut_output_id"], result["cover_output_id"])
+            checks = _with_cover_sizes(db, checks, result["cover_output_id"], result["cover_vertical_output_id"])
             for output_id in (result["cover_vertical_output_id"], result["cover_output_id"]):
                 checks = _with_template_check(db, checks, output_id)
             result["shot_checks"] = checks

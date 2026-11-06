@@ -1376,7 +1376,8 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             from .web_video_handoff import separate_covers
 
             separate = separate_covers(package.package_json)
-            if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction") and not separate:
+            # A landscape task's 3:4 cover is made apart from the 成片; its 16:9 cover is still cut from the opening.
+            if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction"):
                 intro_ms = sum(clip["duration_ms"] for clip in package.package_json["director"].get("persona_clips") or [] if clip["slot"] == "intro")
                 metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source, intro_ms)}
             if role_id in {"cover", "cover_vertical"}:

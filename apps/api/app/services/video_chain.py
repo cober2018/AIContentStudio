@@ -64,10 +64,11 @@ RULES = [
     "没带或用错模板，审片页会提示。没有 cover_template 就照上面的封面做法。",
     "封面在任务通过前可以再交（同一个 role cover 再 submit_output 一次），新的一张显示在审片页，旧的留在历史里；其他交付文件交了就不能换。"
     "get_video_decision 返回 cover_redo 时，是用户只要你重做封面：按 cover_redo.note 改，重新出字层、从成片截图、再交一次 cover，不要重交小样 / 成片；新封面交上来，这条就算完成。",
-    "横版封面（16:9 作品的成片任务，开剪结果写着要交 cover_vertical）：封面单独做，不放进成片，成片开头直接是正文；交两张：横封面 role cover 1920×1080（16:9），"
-    "竖封面 role cover_vertical 1080×1440（3:4，抖音主页列表按 3:4 裁，大标题要整个落在竖封面里），jpg / png 按 sRGB 存，都导出到 cover_dir，都在剪辑清单之前交，清单 output_hashes 两张都列；成片通过后两张都是作品封面。"
-    "有 cover_template 时两张的字都用这个模板渲染（交每张都带 cover_template_render），叠在单独的封面底图上；没有就自己做：底图用文生图或素材，大标题用 AE 字层叠。"
-    "两张在任务通过前都能再交；cover_redo 要两张都重交才算完成。平台不和成片开头比色，只查两张都交了、尺寸对不对，不对会在审片页提示。",
+    "横版封面（16:9 作品的成片任务，开剪结果写着要交 cover_vertical）：交两张。横封面：封面设计（底图 + 大标题等）盖在成片开头 0–0.5 秒，随成片一起渲染，成片时长不变，配音和字幕照常；"
+    "横封面图只能从渲染好的成片开头 0.5 秒内截一帧（抽帧照上面的准确换算），1920×1080，role cover。竖封面：同一套设计改成竖版排版，1080×1440（3:4，抖音主页列表按 3:4 裁，大标题要整个落在竖封面里），"
+    "role cover_vertical，单独做，不放进成片。两张都按 sRGB 存，都导出到 cover_dir，都在剪辑清单之前交，清单 output_hashes 两张都列；成片通过后两张都是作品封面。"
+    "有 cover_template 时两张的字都用这个模板渲染（交每张都带 cover_template_render）：横封面的字层叠在成片开头，竖封面的叠在竖版底图上。"
+    "两张在任务通过前都能再交；cover_redo 要两张都重交才算完成。平台把横封面和成片开头 0.5 秒逐帧比色，竖封面只查尺寸；缺哪张、尺寸不对、颜色不一致都会在审片页提示。",
     "素材能不能公开、能不能给模型用，只有用户能在素材详情里改；不能用 REST 或别的办法代改。开剪报 video_asset_kind_or_rights_invalid 时，把报错里说的是哪条素材、该怎么处理原样告诉用户，等用户改好再重做用到它的素材。",
     "角色片段（只在成片）：开剪结果的 persona_clips（执行包 director.persona_clips，素材 role persona_clip）有值时，收尾片段（slot outro）原样接在成片最后，"
     "进门片段（slot intro）原样放在最前面：不裁、不变速、不缩放变形；这段用片段自带的声音，配音和配乐在片段开始前收完（配乐淡出），不压在片段上；整片响度照旧。"
@@ -695,7 +696,8 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
             "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
-                     + (f"横版封面单独做、不放进成片：横封面 role cover 1920×1080、竖封面 role cover_vertical 1080×1440（3:4），jpg / png 按 sRGB 存，"
+                     + (f"横版封面交两张：横封面设计盖在成片开头 0–0.5 秒随成片渲染，横封面图 role cover 1920×1080 从渲染好的成片开头 0.5 秒内截一帧；"
+                        f"竖封面 role cover_vertical 1080×1440（3:4）用同一套设计单独做、不放进成片；jpg / png 按 sRGB 存，"
                         f"两张都导出到 {cover}/，都在剪辑清单之前交，清单 output_hashes 两张都列；"
                         if separate else f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；")
                      + f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
