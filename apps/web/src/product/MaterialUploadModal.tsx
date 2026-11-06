@@ -84,7 +84,13 @@ export function MaterialUploadModal({ onClose }: { onClose: () => void }) {
     <Modal title="上传素材" onClose={onClose} closeOnBackdrop={false}>
       <div className="space-y-3">
         <Field label="文件 *（PNG/JPEG/GIF/WebP/PDF/MP4/MP3/WAV，≤30MB）">
-          <input ref={fileRef} type="file" className={inputClass} onChange={(event) => setHasFile(!!event.target.files?.length)} />
+          <input ref={fileRef} type="file" className={inputClass} onChange={(event) => {
+            const type = event.target.files?.[0]?.type || "";
+            setHasFile(!!event.target.files?.length);
+            // 类型 decides where the file can be picked later (e.g. brand clips list only videos), so follow the file.
+            const kind = type.startsWith("video/") ? "video" : type.startsWith("audio/") ? "audio" : type.startsWith("image/") ? "image" : "";
+            if (kind) set("kind", kind);
+          }} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="类型">

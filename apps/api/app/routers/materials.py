@@ -347,9 +347,9 @@ async def upload_material(
         suffix = (file.filename or "").rsplit(".", 1)[-1].lower()[:5]
         mime = materials_service.validate_upload(content, file.content_type)
         media_info = {}
-        if inspect_video:
-            if kind != "video" or mime not in {"video/mp4", "video/quicktime"}:
-                raise HTTPException(422, "实拍原片必须为MP4或MOV视频")
+        if inspect_video and (kind != "video" or mime not in {"video/mp4", "video/quicktime"}):
+            raise HTTPException(422, "实拍原片必须为MP4或MOV视频")
+        if kind == "video" and mime in {"video/mp4", "video/quicktime"}:
             import tempfile
             from types import SimpleNamespace
 
@@ -358,8 +358,13 @@ async def upload_material(
             with tempfile.TemporaryFile() as source:
                 source.write(content)
                 source.seek(0)
-                media_info = validate(source, mime, "video", SimpleNamespace(package_json={}))
-            if not media_info.get("video_duration_ms"):
+                try:
+                    media_info = validate(source, mime, "video", SimpleNamespace(package_json={}))
+                except HTTPException:
+                    # Only raw footage must prove its length; other videos are kept, just without it.
+                    if inspect_video:
+                        raise
+            if inspect_video and not media_info.get("video_duration_ms"):
                 raise HTTPException(422, "实拍原片缺少可验证的视频轨时长")
         from ..services.material_dedupe import existing_revision
 
