@@ -272,6 +272,7 @@ class VideoMaterialsInput(Scope):
 class VideoImageInput(Scope):
     prompt: str = Field(min_length=1, max_length=2000)
     label: str = Field(min_length=1, max_length=120)
+    aspect_ratio: Literal["1:1", "4:3", "3:4", "16:9", "9:16"] | None = None
 
 
 class VoiceoverInput(Scope):
@@ -501,7 +502,7 @@ TOOLS = {
     "get_video_decision": (Scope, "Read the chain state and the user's latest decisions and notes (导演稿 / 小样 / 成片). Continue only after approval; notes mean a new version. cover_redo {note} on a 小样 / 成片 under review means the user wants only the cover redone: redo it per the note and submit role cover again on the same task (a landscape 成片 task: both cover and cover_vertical), without resubmitting the cut.", True),
     "set_shot_materials": (VideoMaterialsInput, "After the 导演稿 is approved: put material revisions on shots {shot_id: material_revision_id}, optionally the music bed (music: an audio material_revision_id) and the length of shots without a line (silent_durations, ms; e.g. a closing that must stay long enough to read its text). Picture content stays as approved.", False),
     "accept_material_candidate": (VideoCandidateInput, "Import one stock candidate from a start_material_match run into the library and this project; returns its material_revision_id.", False),
-    "generate_video_image": (VideoImageInput, "Generate one still with the platform image tool into this project's folder; returns its material_revision_id.", False),
+    "generate_video_image": (VideoImageInput, "Generate one still with the model chosen as 封面生图 in settings into this project's folder. aspect_ratio 1:1 / 4:3 / 3:4 / 16:9 / 9:16, default the work's 导演稿 aspect (9:16 without one); made at the size a cover uses (16:9 1920×1080, 3:4 1080×1440, 9:16 1080×1920, 4:3 1440×1080, 1:1 1440×1440), smaller only when the model cannot. Returns material_revision_id, width, height, provider, model_id, and model_note when it fell back.", False),
     "import_material_folder": (MaterialFolderInput, "Register every media file of one folder on the material drive into this project, the same as 引入原始素材文件夹 on the project's 素材 page: path is the folder's full path on the drive (e.g. under 外部素材库/), never a project folder or 通用素材. Files are linked in place, attached to this project only and never bound to a shot. Returns counts plus files [{relative_path, material_revision_id}] for new and already attached files; use those ids for render_ae_template image slots. Calling again with the same folder registers nothing twice.", False),
     "get_shot_video_prompt": (ShotInput, "Product and persona works: one shot's prompts (zh and en, built from the shot's board — picture, camera, the person's attitude — plus the group's shared person and setting when the shot is in a consistency group), the first-frame still prompt, first / last frame revisions, ratio and seconds, and whether the shot is manual or auto. Persona works also get t2v_prompt / t2v_prompt_en for making the clip from text alone; their prompts never mention a product. Without a persona portrait every prompt says no person appears (setting only, hands when something is handled), except that a shot whose board names other_people (people who are not the persona, e.g. 宝宝) may show them as hands, feet, part of the body or from behind, never the face.", True),
     "set_shot_video_mode": (ShotModeInput, "Product and persona works, after the 导演稿 is approved and the user's materials are mapped, only for shots without one: switch one shot to manual (the user makes the clip on a website from the prompt — text-to-video, or image-to-video with the platform's still — and uploads it) or auto (the image-to-video model in 用途路由). Use manual when an auto clip failed or the user did not like it.", False),
@@ -787,7 +788,7 @@ def _video(db: Session, name: str, args: Input, user: User) -> dict:
     if name == "accept_material_candidate":
         return chain.accept_candidate(db, user, p, args.run_id, args.segment_id, args.candidate_id)
     if name == "generate_video_image":
-        return chain.generate_image(db, user, p, args.prompt, args.label)
+        return chain.generate_image(db, user, p, u, args.prompt, args.label, args.aspect_ratio)
     if name == "generate_video_voiceover":
         return chain.voiceover(db, user, p, u, args.lines)
     if name == "import_material_folder":

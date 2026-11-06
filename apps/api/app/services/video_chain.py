@@ -607,14 +607,70 @@ def set_materials(db: Session, user: User, project_id: int, unit_id: int, picks:
     return {"master_id": master_id, "missing_shots": missing}
 
 
-def generate_image(db: Session, user: User, project_id: int, prompt: str, label: str) -> dict:
-    from . import project_folders
-    from .material_autofill import _Images
+# Asked at the size the cover is used at: Grok returned 2048-side requests at another size, which the platform refuses.
+STILL_SIZES = {"16:9": (1920, 1080), "9:16": (1080, 1920), "3:4": (1080, 1440), "4:3": (1440, 1080), "1:1": (1440, 1440)}
+FALLBACK_PIXELS = 1024 * 1024
+# Models measured to return only about one megapixel; asking them more just pays for a refused image first.
+MODEL_MAX_PIXELS = {"grok-imagine-image": FALLBACK_PIXELS}
 
-    revision_id = _Images(db, user, project_id).make(prompt, label)
+
+def generate_image(db: Session, user: User, project_id: int, unit_id: int, prompt: str, label: str, aspect_ratio: str | None = None) -> dict:
+    """One still with the 封面生图 model, in the work's aspect unless told otherwise, at the size a cover is used at."""
+    from . import model_capability_routing, model_registration, project_folders
+    from .material_autofill import _Images
+    from .media_dimensions import canonical_aspect_ratio
+
+    if aspect_ratio is None:
+        master = _latest(db, unit_id)
+        ratio = (master.payload_json or {}).get("aspect_ratio") if master and master.payload_schema == "video.master.v2" else None
+        aspect_ratio = ":".join(str(value) for value in ratio) if isinstance(ratio, list) and len(ratio) == 2 else "9:16"
+    aspect_ratio = canonical_aspect_ratio(aspect_ratio)
+    images = _Images(db, user, project_id, aspect_ratio=aspect_ratio)
+    view = model_capability_routing.configuration_view(db)
+    chosen = model_registration.uses()["cover_image"]["profile"]
+    profile = view["profiles"].get(chosen) if chosen else None
+    note = None
+    if profile and profile["enabled"] and profile["capabilities"]["image_generation"]["declared"] and profile["capabilities"]["image_generation"]["configured"]:
+        images.route = {"selected_profile": chosen, "configuration_mode": "custom",
+                        "parameters": {**((images.route or {}).get("parameters") or {"items": 1, "aspect_ratio": aspect_ratio}),
+                                       "items": 1, "aspect_ratio": aspect_ratio}}
+    else:
+        note = "封面生图没设置或不可用，沿用上一次的生图模型"
+    if images.route is None:
+        raise HTTPException(409, {"code": "material_autofill_no_image_model"})
+    width, height = STILL_SIZES[aspect_ratio]
+    ceiling = (view["policies"]["limits"].get("image_generation") or {}).get("max_pixels") or FALLBACK_PIXELS
+    binding = (view["profiles"].get(images.route["selected_profile"]) or {}).get("capability_bindings", {}).get("image_generation") or {}
+    model_limit = MODEL_MAX_PIXELS.get(binding.get("model_id"))
+    images.route["parameters"]["pixels"] = min(width * height, ceiling, model_limit or ceiling)
+    if model_limit is not None and model_limit < width * height:
+        note = "；".join(filter(None, [note, f"这个模型最多出约 100 万像素，没按 {width}×{height} 出"]))
+    try:
+        revision_id = images.make(prompt, label)
+    except HTTPException as exc:
+        # A definite refusal, or an image returned at another size, is retried once smaller; an uncertain send never is.
+        refused = images.task is not None and images.task["state"] in {"failed", "unavailable"}
+        wrong_size = exc.detail in {"generation_output_aspect_mismatch", "generation_output_limit_exceeded"}
+        if not ((refused or wrong_size) and images.route["parameters"]["pixels"] > FALLBACK_PIXELS):
+            raise
+        images.route["parameters"]["pixels"] = FALLBACK_PIXELS
+        revision_id = images.make(prompt, label)
+        note = "；".join(filter(None, [note, f"模型出不了 {width}×{height}，按 100 万像素出了"]))
     revision = db.get(MaterialRevision, revision_id)
     project_folders.store_new(db, revision, project_id, "图片/图片素材")
-    return {"material_id": revision.material_id, "material_revision_id": revision_id, "width": revision.width, "height": revision.height}
+    from PIL import Image
+
+    from .materials import local_file_checked
+
+    width, height = revision.width, revision.height
+    if width is None:
+        path = local_file_checked(db, revision)
+        if path is not None:
+            with Image.open(path) as image:
+                width, height = image.size
+    return {"material_id": revision.material_id, "material_revision_id": revision_id, "width": width, "height": height,
+            "aspect_ratio": aspect_ratio, "provider": images.task["provider_key"], "model_id": images.task["model_id"],
+            **({"model_note": note} if note else {})}
 
 
 def accept_candidate(db: Session, user: User, project_id: int, run_id: int, segment_id: str, candidate_id: str) -> dict:

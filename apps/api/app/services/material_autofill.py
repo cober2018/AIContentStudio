@@ -111,12 +111,12 @@ def _choose_templates(db: Session, rows: list[dict], templates: list[dict]) -> d
 class _Images:
     """Generates first-frame pictures through the platform's own image tasks, with the user's last image route."""
 
-    def __init__(self, db: Session, user: User, project_id: int):
+    def __init__(self, db: Session, user: User, project_id: int, *, aspect_ratio: str = "9:16"):
         from sqlalchemy import select
 
         from ..models import ProviderGenerationTask
 
-        self.db, self.user, self.project_id, self.used = db, user, project_id, 0
+        self.db, self.user, self.project_id, self.used, self.task = db, user, project_id, 0, None
         last = db.scalar(select(ProviderGenerationTask).where(
             ProviderGenerationTask.owner_user_id == user.id,
             ProviderGenerationTask.request_json["capability"].as_string() == "image_generation",
@@ -125,7 +125,7 @@ class _Images:
             "selected_profile": last.request_json["selected_profile"],
             "configuration_mode": last.request_json.get("configuration_mode", "auto"),
             "parameters": {**{key: value for key, value in (last.request_json.get("parameters") or {}).items()
-                              if key in {"pixels", "timeout_seconds"}}, "items": 1, "aspect_ratio": "9:16"}}
+                              if key in {"pixels", "timeout_seconds"}}, "items": 1, "aspect_ratio": aspect_ratio}}
 
     def make(self, prompt: str, title: str) -> int:
         import hashlib
@@ -144,6 +144,7 @@ class _Images:
             "idempotency_key": f"autofill-{uuid.uuid4().hex}", "capability": "image_generation", "prompt": prompt[:2000],
             "project_id": self.project_id, "source_revision_ids": [], "explicit_plugin": None, **self.route})
         task = generation_tasks.execute(self.db, self.user, task["task_id"], task["revision"])
+        self.task = task
         if task["state"] != "result_ready":
             # An uncertain send is never repeated; the row stays a gap.
             raise HTTPException(409, {"code": f"material_autofill_image_{task['state']}"})

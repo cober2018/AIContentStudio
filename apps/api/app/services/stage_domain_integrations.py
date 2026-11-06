@@ -69,6 +69,9 @@ def media_request(config, *, allow_aspect=False):
             params[name] = config[name]
     if "aspect_ratio" in params and not allow_aspect:
         raise StageInvocationError("stage_media_aspect_requires_v3", status_code=422)
+    if config.get("capability") == "image_generation":
+        # Stage 配图 keeps its old 1024×1024-class size; an unset size would follow the platform ceiling, raised for covers.
+        params.setdefault("pixels", 1024 * 1024)
     return workflow_request({**{key: config[key] for key in (
         "capability", "selected_profile", "explicit_plugin", "prompt", "source_revision_ids"
     ) if key in config}, "parameters": params})
