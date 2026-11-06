@@ -19,8 +19,8 @@ from .candidates import candidate_hash
 SCHEMA = 6
 CONTENT_FORM = "short_video"
 # Video platforms a finished cut can be delivered to by hand; the channel registry has no video forms yet.
-VIDEO_CHANNELS = {"douyin": "抖音", "wechat_channels": "视频号", "kuaishou": "快手", "bilibili": "B站",
-                  "xiaohongshu": "小红书", "youtube": "YouTube"}
+VIDEO_CHANNELS = {"douyin": "抖音", "xiaohongshu": "小红书", "wechat_channels": "视频号", "wechat": "公众号", "kuaishou": "快手",
+                  "bilibili": "B站", "baijia": "百家号", "toutiao": "今日头条", "youtube": "YouTube"}
 ROLES = ("final", "cover", "cover_vertical")
 SUFFIX = {"video/mp4": ".mp4", "video/quicktime": ".mov", "image/png": ".png", "image/jpeg": ".jpg"}
 
@@ -131,16 +131,22 @@ def validate_live(db: Session, asset: ContentAsset, *, require_current: bool = T
 
 
 def check_target(asset: ContentAsset, payload) -> SimpleNamespace:
-    """Channel is chosen at authorization; the first authorized channel is kept on the candidate."""
+    """Channels are chosen at authorization, one delivery target each; the candidate itself is not tied to one."""
     if payload.channel not in VIDEO_CHANNELS:
         raise HTTPException(422, f"成片只能交付到视频平台：{'、'.join(VIDEO_CHANNELS.values())}")
     if payload.content_form != CONTENT_FORM:
         raise HTTPException(409, "成片的内容形态固定为 short_video")
     if payload.action not in {"copy_package", "manual_handoff"}:
         raise HTTPException(422, "capability_unavailable: 成片当前只支持本地成品包 / 人工交付")
-    if asset.channel == "unassigned":
-        asset.channel = payload.channel
     return SimpleNamespace(channel=payload.channel, content_form=CONTENT_FORM)
+
+
+def publish_url(channel: str) -> str | None:
+    """The platform page a video is uploaded on: its video entry first, else its general one."""
+    from .content_identity import creator_links
+
+    links = [link for link in creator_links(channel) if link["label"] != "去数据页"]
+    return next((link["url"] for link in links if "视频" in link["label"]), links[0]["url"] if links else None)
 
 
 def preview(db: Session, asset: ContentAsset) -> dict:
@@ -149,7 +155,7 @@ def preview(db: Session, asset: ContentAsset) -> dict:
     files = [{**item, "material_id": getattr(db.get(MaterialRevision, item["material_revision_id"]), "material_id", None)} for item in manifest["files"]]
     return {"modality": "video", "finished_video": True, "title": asset.title,
             "target": {"channel": None if asset.channel == "unassigned" else asset.channel, "content_form": CONTENT_FORM, "artifact_kind": "video"},
-            "channels": VIDEO_CHANNELS, "aspect_ratio": manifest.get("aspect_ratio"), "files": files,
+            "channels": VIDEO_CHANNELS, "publish_urls": {key: publish_url(key) for key in VIDEO_CHANNELS}, "aspect_ratio": manifest.get("aspect_ratio"), "files": files,
             "publish_copy": manifest.get("publish_copy"), "checks": [],
             "delivery_notice": "本地包供人工发布；下载和回填凭证都不会替你发到平台。"}
 
@@ -158,7 +164,7 @@ def zip_bytes(db: Session, target, asset: ContentAsset) -> tuple[bytes, str]:
     from .materials import local_file_checked, read_bytes_checked
 
     manifest = validate_live(db, asset, require_current=False, require_approved=True)
-    if (target.action not in {"copy_package", "manual_handoff"} or target.content_form != CONTENT_FORM or target.channel != asset.channel
+    if (target.action not in {"copy_package", "manual_handoff"} or target.content_form != CONTENT_FORM or target.channel not in VIDEO_CHANNELS
             or target.approved_candidate_hash != asset.candidate_hash):
         raise HTTPException(409, "成片交付授权与准确候选 / 渠道不一致")
     names = {"final": "成片", "cover": "封面" if len(manifest["files"]) < 3 else "横封面-16x9", "cover_vertical": "竖封面-3x4"}

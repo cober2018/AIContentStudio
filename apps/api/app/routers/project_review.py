@@ -24,7 +24,8 @@ def review_projects(db: Session = Depends(get_db), user: User = Depends(get_curr
     projects = db.scalars(select(ContentProject).where(ContentProject.owner_user_id == user.id).order_by(ContentProject.id.desc())).all()
     # 一个批量 context 预取全部单元的候选/评审/投递数据，替代逐单元 N+1
     context = ProjectProjectionContext(db, [project.id for project in projects])
-    return [projection.project_projection(db, project, context=context) for project in projects]
+    listed = (projection.project_projection(db, project, context=context) for project in projects if project.status != "archived")
+    return [row for row in listed if row["units"]]
 
 
 @router.get("/review-center/projects/{project_id}")

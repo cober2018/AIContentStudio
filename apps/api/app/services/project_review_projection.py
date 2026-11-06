@@ -193,6 +193,8 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
 def project_projection(db: Session, project: ContentProject, *, context: ProjectProjectionContext | None = None) -> dict:
     units = (context.units.get(project.id, []) if context is not None
              else db.scalars(select(ContentUnit).where(ContentUnit.project_id == project.id).order_by(ContentUnit.id)).all())
+    # Review is for works still in play; deleted or archived works stay out of the list.
+    units = [unit for unit in units if unit.lifecycle == "active"]
     return {"project_id": project.id, "title": project.title, "status": project.status, "units": [unit_projection(db, unit, context=context) for unit in units]}
 
 

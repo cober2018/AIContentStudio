@@ -175,7 +175,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
             if current_candidate_id != asset.id:
                 raise HTTPException(409, "历史候选只可查看，不能新增交付授权")
         unit = db.get(ContentUnit, asset.content_unit_id)
-        if unit is None or (not is_variant and unit.channel_id and unit.channel_id != payload.channel):
+        if unit is None or (not is_variant and not is_finished and unit.channel_id and unit.channel_id != payload.channel):
             raise HTTPException(409, "目标渠道与内容单元不一致")
         frozen_account = (asset.candidate_manifest_json or {}).get("target", {}).get("account") if is_variant else None
         if frozen_account is not None and frozen_account["content_account_id"] != content_account_id:
@@ -191,7 +191,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
                 raise HTTPException(404, "内容账号不存在")
             # v5 现代候选：origin 账号不再是目标锁；每个目标账号独立授权。
             # legacy（master）候选保持固定账号语义，不得静默松绑。
-            if not is_variant and unit.account_id is not None and unit.account_id != account.id:
+            if not is_variant and not is_finished and unit.account_id is not None and unit.account_id != account.id:
                 raise HTTPException(404, "内容账号不存在")
             # 已登记平台的账号必须与目标渠道一致；老式未绑平台账号保持原行为。
             if account.platform_channel and account.platform_channel != payload.channel:
@@ -271,7 +271,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
             "platform_account_id": account.platform_account_id,
         }}
     # 渠道一致性：v1 资产仍要求与批准渠道一致；v2 同样
-    if asset.channel != payload.channel:
+    if asset.channel != payload.channel and not is_finished:
         raise HTTPException(409, "目标渠道必须与批准资产渠道一致")
 
     existing = db.scalars(

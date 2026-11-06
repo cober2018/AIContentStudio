@@ -30,3 +30,30 @@ export function FinishedVideoPreview({ preview }: { preview: FinishedPreview }) 
     {preview.delivery_notice && <p className="text-xs text-slate-500">{preview.delivery_notice}</p>}
   </div>;
 }
+
+type Account = { id: number; name: string; status: string; platform_channel?: string | null };
+export type Platform = { channel: string; account: Account | null };
+
+// One tick per platform; the persona's account bound to that platform goes with it.
+export function FinishedPlatforms({ channels, accounts, disabled, onAuthorize }: { channels: Record<string, string>; accounts: Account[]; disabled: boolean; onAuthorize: (picked: Platform[]) => void }) {
+  const [picked, setPicked] = useState<string[]>([]);
+  const accountOf = (channel: string) => accounts.find(row => row.status === "active" && row.platform_channel === channel) || null;
+  return <div className="mt-3 space-y-3">
+    <p className="text-sm font-medium">发布平台（可多选，每个平台各生成一个交付目标）</p>
+    <div className="grid gap-2 sm:grid-cols-3">{Object.entries(channels).map(([key, name]) => { const account = accountOf(key); return <label key={key} className="flex items-center gap-2 rounded border border-slate-200 px-3 py-2 text-sm">
+      <input type="checkbox" checked={picked.includes(key)} disabled={disabled} onChange={event => setPicked(event.target.checked ? [...picked, key] : picked.filter(item => item !== key))} />
+      <span>{name}</span><span className="text-xs text-slate-500">{account ? `账号：${account.name}` : "未绑账号"}</span></label>; })}</div>
+    <button type="button" className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-40" disabled={disabled || !picked.length} onClick={() => onAuthorize(picked.map(channel => ({ channel, account: accountOf(channel) })))}>授权所选平台（{picked.length}）</button>
+  </div>;
+}
+
+// Opens the platform's upload page in the persona's Chrome profile; without one it opens here.
+export function GoPublish({ name, url, accountId }: { name: string; url: string | null | undefined; accountId: number | null }) {
+  const [issue, setIssue] = useState("");
+  if (!url) return null;
+  return <span className="inline-flex items-center gap-2"><button type="button" className="rounded border border-indigo-300 px-3 py-1 text-sm text-indigo-700" onClick={() => {
+    setIssue("");
+    if (accountId == null) { window.open(url, "_blank", "noopener"); return; }
+    api.post(`/content-accounts/${accountId}/open-link`, { url }).catch(() => { window.open(url, "_blank", "noopener"); setIssue("没用角色的 Chrome 打开，已在当前浏览器打开"); });
+  }}>去{name}发布</button>{issue && <span className="text-xs text-slate-500">{issue}</span>}</span>;
+}
