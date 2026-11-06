@@ -14,7 +14,7 @@ export type View = { product: boolean; persona?: boolean; groups?: ConsistencyGr
   used?: Record<string, { material_revision_id: number; source: string; i2v: boolean; title: string }>;
   frames?: Record<string, { material_revision_id: number; material_id: number; consistency: string | null; tries: number }>;
   grid?: Record<string, Candidate[]>; grid_run?: GridRun | null; grid_sheets?: Record<string, string>; references?: References; person_notices?: Record<string, string>; other_people?: Record<string, string>;
-  publish_copy?: Copy | null; cover?: { material_id: number; material_revision_id: number } | null; motion?: { camera: Item[]; looks: Item[] }; direction?: { material_mode: string; style: { name: string } | null; category: { name: string } | null } };
+  publish_copy?: Copy | null; cover?: { material_id: number; material_revision_id: number } | null; cover_vertical?: { material_id: number; material_revision_id: number } | null; motion?: { camera: Item[]; looks: Item[] }; direction?: { material_mode: string; style: { name: string } | null; category: { name: string } | null } };
 type Prompt = { prompt: string; prompt_en: string; still_prompt: string; t2v_prompt?: string; t2v_prompt_en?: string;
   first_frame_revision_id: number | null; last_frame_revision_id: number | null; aspect_ratio: string; seconds: number; manual_note: string };
 

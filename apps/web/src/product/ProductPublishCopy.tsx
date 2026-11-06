@@ -1,23 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api, currentUser } from "../api";
 import { Button, ErrorBanner, Field, inputClass } from "../components/ui";
 import { errorText, type Copy, type View } from "./ShotWork";
+import { CoverImage, LandscapeCovers } from "./WorkCovers";
 
 const EMPTY: Copy = { channel: "", title: "", hashtags: [], cover_text: "", interaction: "", description: "" };
-
-// The cover is read as a blob because identity travels in a request header.
-function CoverImage({ cover }: { cover: { material_id: number; material_revision_id: number } }) {
-  const [url, setUrl] = useState("");
-  useEffect(() => {
-    let alive = true, made = "";
-    fetch(`/api/v1/materials/${cover.material_id}/revisions/${cover.material_revision_id}/raw`, { headers: { "X-Studio-User": currentUser() } })
-      .then(response => response.ok ? response.blob() : null)
-      .then(blob => { if (alive && blob) { made = URL.createObjectURL(blob); setUrl(made); } });
-    return () => { alive = false; if (made) URL.revokeObjectURL(made); };
-  }, [cover.material_id, cover.material_revision_id]);
-  return url ? <img src={url} alt="封面" className="max-h-[40vh] w-auto rounded-lg border border-slate-200" /> : <p className="text-xs text-slate-400">加载中…</p>;
-}
 
 // Product works: the publish copy is finished on the 交付 step, beside the cover it has to match.
 export default function ProductPublishCopy({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
@@ -50,7 +38,8 @@ export default function ProductPublishCopy({ projectId, unitId, readOnly }: { pr
         <Button size="sm" disabled={readOnly || busy || !copy} onClick={() => void save()}>{busy ? "保存中…" : "保存发布文案"}</Button>
         {issue && <ErrorBanner message={issue} />}
       </div>
-      <div className="w-48 shrink-0"><p className="mb-1 text-xs text-slate-600">封面</p>{data.cover ? <CoverImage cover={data.cover} /> : <p className="text-xs text-slate-400">还没有封面</p>}</div>
+      {data.cover_vertical ? <LandscapeCovers cover={data.cover} vertical={data.cover_vertical} />
+        : <div className="w-48 shrink-0"><p className="mb-1 text-xs text-slate-600">封面</p>{data.cover ? <CoverImage cover={data.cover} /> : <p className="text-xs text-slate-400">还没有封面</p>}</div>}
     </div>
   </section>;
 }

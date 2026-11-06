@@ -118,6 +118,16 @@ def validate_new_web_package(package: dict) -> None:
         _fail("web_video_prompt_reference_stale")
 
 
+COVER_ROLES = ("cover", "cover_vertical")
+# Sizes of a landscape work's two separate covers.
+LANDSCAPE_COVER_SIZES = {"cover": (1920, 1080), "cover_vertical": (1080, 1440)}
+
+
+def separate_covers(package: dict) -> bool:
+    """Tasks opened with a vertical cover role make their covers apart from the 成片; older tasks keep cutting it from the 成片."""
+    return any(item["role_id"] == "cover_vertical" for item in (package.get("output_contract") or {}).get("roles") or [])
+
+
 def role(role_id: str, kind: str, mime: str, *, maximum: int | None = None) -> dict:
     return {"role_id": role_id, "kind": kind, "required": True, "allowed_mime": [mime],
             "min_count": 1, "max_count": 1,
@@ -147,6 +157,9 @@ def edit_contract(document: dict) -> dict:
             roles.append(intermediate)
     # Optional: a separate publish cover, exported to 导出/封面.
     roles.append({**role("cover", "image", "image/jpeg"), "required": False, "min_count": 0, "allowed_mime": ["image/jpeg", "image/png"]})
+    if phase == "final" and document.get("aspect_ratio") == [16, 9]:
+        # Landscape covers are uploaded on their own, and 抖音's list crops them to 3:4, so a vertical one goes with it.
+        roles.append({**role("cover_vertical", "image", "image/jpeg"), "required": False, "min_count": 0, "allowed_mime": ["image/jpeg", "image/png"]})
     return {"roles": roles, "media_transfer_policy": dict(TRANSFER_POLICY)}
 
 
@@ -402,7 +415,7 @@ def validate_edit_output_hashes(package: dict, outputs: list, manifest: dict) ->
             latest[role_id] = output
     for role_id, expected_hash in manifest["output_hashes"].items():
         # The cover may be redone after the manifest is in, so the manifest's record of it can be older.
-        if role_id == "cover":
+        if role_id in COVER_ROLES:
             continue
         if role_id not in latest or value(latest[role_id], "content_hash") != expected_hash:
             _fail("video_edit_manifest_output_mismatch")

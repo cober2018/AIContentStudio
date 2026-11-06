@@ -54,6 +54,7 @@ RULES = [
     "声音段写了 speed_percent（用户在「配音与音乐」调的语速）就按这个倍速变速并开音调校正，和这段口播同步的实拍画面同速，保住口型；"
     "接法按 craft-resolve 的「声音轨口播衔接」。没有声音轨就用各镜头素材自己的原声。导演稿里口播要从别的素材借声音，就写进声音轨，不要只写在 board.sound 文字里。",
     "配乐只看主稿 music：有 material_revision_id 就铺这首；none 为 true 是用户明确不要配乐；空着就是还没定：按导演稿和用户意见找一首放进来（set_shot_materials 的 music），拿不准就问用户；不能自己当成不用。只有用户能选「不用配乐」。",
+    "封面分两种，看开剪结果：files 写着要交 cover_vertical 的是横版封面，照后面「横版封面」那条做；没写的照这条和下面几条做。"
     "封面（可选）：封面设计（大字商品名和卖点）在达芬奇 / AE 里做进成片开头那一段，随成片一起渲染；封面图只能从渲染好的成片里截取开头 0.5 秒内的一帧（ffmpeg 抽帧要用准确换算：-vf \"scale=flags=accurate_rnd+full_chroma_int,format=rgb24\"，不加的话标 bt709 的成片截出来暗约 2 级），竖版 1080×1920 的 jpg / png，"
     "不许用 AE 或其他工具从原片另外合成。成片颜色标记统一为 sRGB（原色 bt709、传输 iec61966-2-1、矩阵 bt709）：达芬奇渲染后用 ffmpeg 只改标记不重新编码，"
     "如 -c copy -bsf:v h264_metadata=colour_primaries=1:transfer_characteristics=13:matrix_coefficients=1（H.265 用 hevc_metadata），同时设好容器的 -color_primaries bt709 -color_trc iec61966-2-1 -colorspace bt709；封面图按 sRGB 存。"
@@ -63,6 +64,10 @@ RULES = [
     "没带或用错模板，审片页会提示。没有 cover_template 就照上面的封面做法。",
     "封面在任务通过前可以再交（同一个 role cover 再 submit_output 一次），新的一张显示在审片页，旧的留在历史里；其他交付文件交了就不能换。"
     "get_video_decision 返回 cover_redo 时，是用户只要你重做封面：按 cover_redo.note 改，重新出字层、从成片截图、再交一次 cover，不要重交小样 / 成片；新封面交上来，这条就算完成。",
+    "横版封面（16:9 作品的成片任务，开剪结果写着要交 cover_vertical）：封面单独做，不放进成片，成片开头直接是正文；交两张：横封面 role cover 1920×1080（16:9），"
+    "竖封面 role cover_vertical 1080×1440（3:4，抖音主页列表按 3:4 裁，大标题要整个落在竖封面里），jpg / png 按 sRGB 存，都导出到 cover_dir，都在剪辑清单之前交，清单 output_hashes 两张都列；成片通过后两张都是作品封面。"
+    "有 cover_template 时两张的字都用这个模板渲染（交每张都带 cover_template_render），叠在单独的封面底图上；没有就自己做：底图用文生图或素材，大标题用 AE 字层叠。"
+    "两张在任务通过前都能再交；cover_redo 要两张都重交才算完成。平台不和成片开头比色，只查两张都交了、尺寸对不对，不对会在审片页提示。",
     "素材能不能公开、能不能给模型用，只有用户能在素材详情里改；不能用 REST 或别的办法代改。开剪报 video_asset_kind_or_rights_invalid 时，把报错里说的是哪条素材、该怎么处理原样告诉用户，等用户改好再重做用到它的素材。",
     "角色片段（只在成片）：开剪结果的 persona_clips（执行包 director.persona_clips，素材 role persona_clip）有值时，收尾片段（slot outro）原样接在成片最后，"
     "进门片段（slot intro）原样放在最前面：不裁、不变速、不缩放变形；这段用片段自带的声音，配音和配乐在片段开始前收完（配乐淡出），不压在片段上；整片响度照旧。"
@@ -152,14 +157,18 @@ def _task(db: Session, record: dict) -> tuple[dict | None, CreativeExecution | N
 
 
 def _cover_redo(db: Session, record: dict, execution: CreativeExecution) -> dict | None:
-    """The user's open request to redo only the cover of this task, settled by any cover handed in after it."""
+    """The user's open request to redo only the cover of this task, settled once every cover of the task is handed in after it."""
+    from .web_video_handoff import COVER_ROLES, separate_covers
+
     asked = record.get("cover_redo")
     if not asked or asked.get("execution_id") != execution.id or execution.state not in {"claimed", "in_progress", "blocked", "result_ready"}:
         return None
     at = datetime.fromisoformat(asked["at"]).replace(tzinfo=None)
-    newer = db.scalar(select(CreativeExecutionOutput.id).where(CreativeExecutionOutput.execution_id == execution.id,
-                                                               CreativeExecutionOutput.role_id == "cover", CreativeExecutionOutput.created_at > at).limit(1))
-    return None if newer else {"note": asked.get("note") or "", "at": asked["at"], "by": asked.get("by")}
+    package = db.get(CreativeExecutionPackage, execution.package_id)
+    roles = set(COVER_ROLES) if package and separate_covers(package.package_json) else {"cover"}
+    newer = set(db.scalars(select(CreativeExecutionOutput.role_id).where(CreativeExecutionOutput.execution_id == execution.id,
+                                                                         CreativeExecutionOutput.role_id.in_(roles), CreativeExecutionOutput.created_at > at)))
+    return None if newer == roles else {"note": asked.get("note") or "", "at": asked["at"], "by": asked.get("by")}
 
 
 def _finished(view: dict) -> dict:
@@ -378,18 +387,35 @@ def redo_cover(db: Session, user: User, project_id: int, unit_id: int, note: str
 
 
 def _adopt_cover(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
-    """The 成片's cover becomes the work's cover; no cover leaves the old one."""
-    cover = db.scalar(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == execution_id,
-                                                            CreativeExecutionOutput.role_id == "cover", CreativeExecutionOutput.state == "accepted")
-                      .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+    """The 成片's covers become the work's covers (a landscape work also has a vertical one); no cover leaves the old one."""
+    def accepted(role_id: str):
+        return db.scalar(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == execution_id,
+                                                               CreativeExecutionOutput.role_id == role_id, CreativeExecutionOutput.state == "accepted")
+                         .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+    cover, vertical = accepted("cover"), accepted("cover_vertical")
     master = _latest(db, unit_id)
     if cover is None or cover.material_revision_id is None or master is None:
         return
     document = copy.deepcopy(master.payload_json)
-    if document.get("cover") == {"material_revision_id": cover.material_revision_id}:
+    wanted = {"material_revision_id": cover.material_revision_id,
+              **({"vertical_material_revision_id": vertical.material_revision_id} if vertical and vertical.material_revision_id else {})}
+    if document.get("cover") == wanted:
         return
-    document["cover"] = {"material_revision_id": cover.material_revision_id}
+    document["cover"] = wanted
     _save(db, user, project_id, unit_id, document, {"video_chain": "cover", "output_id": cover.id})
+
+
+def work_covers(db: Session, unit_id: int) -> dict:
+    """The work's current covers for the 交付 page (a landscape work also has a 3:4 one); images are fetched by material id."""
+    master = _latest(db, unit_id)
+    document = (master.payload_json or {}) if master else {}
+
+    def ref(revision_id):
+        revision = db.get(MaterialRevision, revision_id) if type(revision_id) is int else None
+        return {"material_id": revision.material_id, "material_revision_id": revision.id} if revision else None
+    cover = document.get("cover") or {}
+    return {"aspect": ":".join(str(value) for value in document.get("aspect_ratio") or [9, 16]),
+            "cover": ref(cover.get("material_revision_id")), "cover_vertical": ref(cover.get("vertical_material_revision_id"))}
 
 
 def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
@@ -410,7 +436,7 @@ def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, exec
         shareable = output.kind in {"video", "image", "audio"}
         rights = {"rights_status": "cleared", "public_use_allowed": shareable, "model_use_allowed": shareable}
         payload = {"expected_revision": execution.revision_no, "decision": "accept", "rights": rights,
-                   "title": f"{unit.title} · {output.role_id}"[:255], "attach_to_project": output.role_id in {"rough_cut", "final", "cover"}}
+                   "title": f"{unit.title} · {output.role_id}"[:255], "attach_to_project": output.role_id in {"rough_cut", "final", "cover", "cover_vertical"}}
         # One input that cannot be published must not also take away model use, or the next phase cannot build on this cut.
         fallbacks = [{"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": shareable},
                      {"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": False}]
@@ -659,6 +685,9 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     cover.mkdir(parents=True, exist_ok=True)
     db.commit()
     package = db.get(CreativeExecutionPackage, db.get(CreativeExecution, execution_id).package_id)
+    from .web_video_handoff import separate_covers
+
+    separate = bool(package and separate_covers(package.package_json))
     return {"execution_id": execution_id, "master_id": master.id, "phase": phase,
             "cover_template": ((package.package_json if package else {}).get("director") or {}).get("cover_template"),
             **({"persona_clips": ((package.package_json if package else {}).get("director") or {}).get("persona_clips") or [],
@@ -666,8 +695,10 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
             "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
-                     f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；"
-                     f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
+                     + (f"横版封面单独做、不放进成片：横封面 role cover 1920×1080、竖封面 role cover_vertical 1080×1440（3:4），jpg / png 按 sRGB 存，"
+                        f"两张都导出到 {cover}/，都在剪辑清单之前交，清单 output_hashes 两张都列；"
+                        if separate else f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；")
+                     + f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
 
 
 PERSONA_SLOTS = (("intro", "intro_clip", "进门"), ("outro", "outro_clip", "收尾"))

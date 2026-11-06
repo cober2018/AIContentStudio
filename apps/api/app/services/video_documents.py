@@ -544,8 +544,13 @@ def canonical_payload(raw: object) -> dict:
         _fail("video_music_invalid")
     result["music"] = ({"material_revision_id": _revision_id(music["material_revision_id"], "video_music_invalid")}
                        if "material_revision_id" in music else {"none": True} if music else {})
-    cover = _object(payload.get("cover"), {"material_revision_id"}, "video_cover_invalid")
-    result["cover"] = {"material_revision_id": _revision_id(cover["material_revision_id"], "video_cover_invalid")} if "material_revision_id" in cover else {}
+    # A landscape work also keeps a 3:4 vertical cover beside its 16:9 one.
+    cover = _object(payload.get("cover"), {"material_revision_id", "vertical_material_revision_id"}, "video_cover_invalid")
+    if "vertical_material_revision_id" in cover and "material_revision_id" not in cover:
+        _fail("video_cover_invalid")
+    result["cover"] = {"material_revision_id": _revision_id(cover["material_revision_id"], "video_cover_invalid"),
+                       **({"vertical_material_revision_id": _revision_id(cover["vertical_material_revision_id"], "video_cover_invalid")}
+                          if "vertical_material_revision_id" in cover else {})} if "material_revision_id" in cover else {}
     if "render_asset_ref" in payload:
         ref = _object(payload["render_asset_ref"], {"material_revision_id"}, "video_render_ref_invalid")
         result["render_asset_ref"] = {"material_revision_id": _revision_id(ref.get("material_revision_id"), "video_render_ref_invalid")}
@@ -680,6 +685,8 @@ def _expected_media(document: dict) -> list[dict]:
     for field, role in (("voice", "voice_audio"), ("music", "music_audio"), ("cover", "cover_image")):
         if "material_revision_id" in document[field]:
             add(role, field, document[field]["material_revision_id"], {field: "main"})
+    if "vertical_material_revision_id" in document["cover"]:
+        add("cover_image", "cover_vertical", document["cover"]["vertical_material_revision_id"], {"cover": "vertical"})
     parent = (document.get("postproduction") or {}).get("parent_material_revision_id")
     if parent is not None:
         add("postproduction_parent", "rough_cut", parent, {"postproduction": "parent"})

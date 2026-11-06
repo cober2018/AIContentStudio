@@ -1148,10 +1148,11 @@ def _project_output(db: Session, row: CreativeExecution, package: CreativeExecut
     from . import project_folders
 
     phase = ((package.package_json.get("director") or {}).get("postproduction") or {}).get("phase", "rough_cut")
-    main = role_id in {"rough_cut", "final", "cover"}
-    allowed = (project_folders.export_dir(db, row.project_id, "cover" if role_id == "cover" else phase) if main
+    main = role_id in {"rough_cut", "final", "cover", "cover_vertical"}
+    cover = role_id in {"cover", "cover_vertical"}
+    allowed = (project_folders.export_dir(db, row.project_id, "cover" if cover else phase) if main
                else project_folders.work_dir(db, row.project_id, row.content_unit_id, row.id))
-    label = "封面" if role_id == "cover" else "小样 / 成片" if main else "这个交付文件"
+    label = "封面" if cover else "小样 / 成片" if main else "这个交付文件"
     refused = HTTPException(422, {"code": "video_chain_output_path_outside",
                                   "message": f"{label}要导出到 {allowed}/ 里（不能是快捷方式），平台原地检查登记，不复制"})
     if not isinstance(path, str) or not os.path.isabs(path) or len(path) > 500 or "\x00" in path:
@@ -1201,6 +1202,21 @@ def _cover_template_check(db: Session, row: CreativeExecution, director: dict, m
     if attached is None or (source.get("ae_template"), source.get("version")) != (expected["id"], expected["version"]):
         return {"cover_template_check": "cover_template_mismatch"}
     return {"cover_template_check": "ok"}
+
+
+def _cover_size(source) -> dict:
+    """Read here so the review page can say when a separate cover is the wrong size; an unreadable image records nothing."""
+    from PIL import Image
+
+    try:
+        source.seek(0)
+        with Image.open(source) as image:
+            width, height = image.size
+    except (OSError, ValueError):
+        return {}
+    finally:
+        source.seek(0)
+    return {"cover_size": f"{width}x{height}"}
 
 
 def _persona_files(db: Session, package: CreativeExecutionPackage) -> list[dict]:
@@ -1305,7 +1321,7 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
         raise _error("creative_execution_output_history_limit")
     previous = _latest(outputs).get((role["role_id"], index))
     # Until it is accepted the cover may be handed in again; the earlier one stays in history.
-    if previous and previous.state != "rejected" and not (role_id == "cover" and previous.state == "staged"):
+    if previous and previous.state != "rejected" and not (role_id in {"cover", "cover_vertical"} and previous.state == "staged"):
         raise _error("creative_execution_output_replacement_denied")
     attempt = previous.attempt_no + 1 if previous else 1
     if attempt > MAX_ATTEMPTS or ("attempt_no" in payload and (type(payload["attempt_no"]) is not int or payload["attempt_no"] != attempt)):
@@ -1338,7 +1354,7 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             streams.budget(db, row, package, size, private=not project)
             inspected = streams.validate(source, mime, role["kind"], package, role_id=role_id)
             # Loudness is the platform's own reading; an executor-supplied value is never kept.
-            metadata = {key: value for key, value in metadata.items() if key not in {"loudness", "shot_checks", "cover_check", "cover_template_check"}}
+            metadata = {key: value for key, value in metadata.items() if key not in {"loudness", "shot_checks", "cover_check", "cover_template_check", "cover_size"}}
             if inspected.get("loudness"):
                 # Output metadata holds only flat strings, so the reading is kept as compact JSON.
                 import json
@@ -1357,11 +1373,16 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
                     checks["warnings"][:0] = delivery_checks.persona_warnings(source, _persona_files(db, package), inspected["duration_ms"],
                                                                            _sample_ms(db, package), package.package_json["director"]["postproduction"]["fps"])
                 metadata = {**metadata, "shot_checks": delivery_checks.compact(checks)}
-            if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction"):
+            from .web_video_handoff import separate_covers
+
+            separate = separate_covers(package.package_json)
+            if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction") and not separate:
                 intro_ms = sum(clip["duration_ms"] for clip in package.package_json["director"].get("persona_clips") or [] if clip["slot"] == "intro")
                 metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source, intro_ms)}
-            if role_id == "cover":
+            if role_id in {"cover", "cover_vertical"}:
                 metadata = {**metadata, **_cover_template_check(db, row, package.package_json.get("director") or {}, metadata)}
+            if separate and role_id in {"cover", "cover_vertical"}:
+                metadata = {**metadata, **_cover_size(source)}
             if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
                 import json
 
