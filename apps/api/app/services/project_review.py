@@ -178,7 +178,11 @@ def _validate_approval(db: Session, asset: ContentAsset, warning_dispositions: d
     )
 
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
-    if schema == 5:
+    if schema == 6:
+        from .finished_video import validate_live
+
+        validate_live(db, asset)
+    elif schema == 5:
         manifest = validate_live_v5_candidate(db, asset, lock_live=True)
         validate_warning_dispositions(manifest, warning_dispositions)
     elif schema == 4 or asset.content_master_revision_id is not None:

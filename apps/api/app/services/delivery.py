@@ -117,8 +117,18 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
     """通用交付目标授权：channel/form/action 经 Registry 验证（D21），幂等。"""
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
     is_variant = schema == 5
-    is_master = not is_variant and (asset.content_master_revision_id is not None or schema == 4)
-    if is_variant:
+    is_finished = schema == 6
+    is_master = not is_variant and not is_finished and (asset.content_master_revision_id is not None or schema == 4)
+    finished_spec = None
+    if is_finished:
+        from .content_masters import owned_unit
+        from .finished_video import check_target, validate_live
+
+        owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
+        db.refresh(asset)
+        validate_live(db, asset, require_approved=True)
+        finished_spec = check_target(asset, payload)
+    elif is_variant:
         from .content_masters import owned_unit
         from .production_validation import validate_live_v5_candidate
 
@@ -196,7 +206,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
         raise HTTPException(422, "旧候选不能推断新的内容账号归属")
     account_key = f"content-account:{content_account_id}" if content_account_id is not None else f"legacy-ref:{payload.account_ref}"
     try:
-        spec = resolve_content_form(db, payload.channel, payload.content_form)
+        spec = finished_spec or resolve_content_form(db, payload.channel, payload.content_form)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     if payload.action not in ACTIONS:
@@ -309,11 +319,13 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
             record_project_event(db, project_id=asset.project_id, event_type="delivery.authorized", actor=user.email,
                                  entity_type="delivery_target", entity_id=target.id,
                                  payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "candidate_hash": asset.candidate_hash, "action": target.action})
-        if is_master or is_variant:
+        if is_master or is_variant or is_finished:
             db.flush()
             db.expire_all()
             owned_unit(db, asset.project_id, asset.content_unit_id, user, mutate=True)
-            if is_variant:
+            if is_finished:
+                validate_live(db, asset, require_approved=True)
+            elif is_variant:
                 validate_live_v5_candidate(db, asset, require_approved=True, lock_live=True)
             else:
                 validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
@@ -610,6 +622,8 @@ def _live_media_rights(db: Session, media: dict) -> bool | None:
 def build_copy_package(db: Session, target: DeliveryTarget) -> dict:
     asset = _asset_of(db, target)
     manifest = asset.candidate_manifest_json or {}
+    if manifest.get("schema_version") == 6:
+        return {"manifest": manifest}
     if manifest.get("schema_version") == 5:
         from .production_packages import build_v5_package
 
@@ -625,6 +639,10 @@ def package_zip_bytes(db: Session, target: DeliveryTarget) -> tuple[bytes, str]:
     """Local package of a frozen v4 / v5 candidate."""
     package = build_copy_package(db, target)
     manifest = package["manifest"]
+    if manifest["schema_version"] == 6:
+        from .finished_video import zip_bytes
+
+        return zip_bytes(db, target, _asset_of(db, target))
     if manifest["schema_version"] == 5:
         from .production_packages import v5_zip_bytes
 

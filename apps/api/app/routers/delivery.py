@@ -19,6 +19,7 @@ from ..deps import get_current_user, require_editor
 from ..models import (
     AuditLog,
     ContentAsset,
+    ContentUnit,
     DeliveryAction,
     DeliveryAttempt,
     DeliveryFeedback,
@@ -302,6 +303,12 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
                                  entity_type="delivery_receipt", entity_id=receipt.id,
                                  payload={"unit_id": asset.content_unit_id, "candidate_id": asset.id, "target_id": target.id, "status": receipt.status})
         capability_integrations.promote_confirmed_official_draft(db, target, receipt, user.email)
+        from ..services.finished_video import is_finished
+
+        if receipt.status == "human_confirmed" and is_finished(asset):
+            unit = db.get(ContentUnit, asset.content_unit_id)
+            if unit is not None and unit.status != "archived":
+                unit.status = "published"
         db.commit()
     except ValueError as exc:
         db.rollback()

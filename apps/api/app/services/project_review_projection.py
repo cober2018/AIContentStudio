@@ -105,10 +105,14 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
     dimension("identity", "ready" if identity_ready else "blocked", [] if identity_ready else [identity_reason])
     boundary = context.boundaries.get(unit.project_id) if context is not None else current_boundary(db, unit.project_id)
     evidence = (current.candidate_manifest_json or {}).get("evidence", {}) if current else {}
+    from .finished_video import is_finished
+
+    # A finished 成片 carries no evidence boundary; its own files are checked below instead.
+    finished = is_finished(current)
     evidence_stale = bool(current and evidence.get("boundary_id") and boundary and evidence["boundary_id"] != boundary.id)
     from .project_review import live_evidence_reasons
 
-    evidence_reasons = live_evidence_reasons(live_db, unit.project_id, current.candidate_manifest_json or {}) if current else ([] if boundary else ["evidence_unready"])
+    evidence_reasons = ([] if finished else live_evidence_reasons(live_db, unit.project_id, current.candidate_manifest_json or {})) if current else ([] if boundary else ["evidence_unready"])
     dimension("evidence", "stale" if evidence_stale else ("blocked" if evidence_reasons else "ready"), evidence_reasons)
     media_reasons: list[str] = []
     if current:
@@ -123,11 +127,12 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
     stale_revision = False
     dimension("candidate", "ready" if current else "blocked", [] if current else ["freeze_required"])
     v4_error = None
-    if current and (current.candidate_manifest_json or {}).get("schema_version") == 4:
+    if current and (current.candidate_manifest_json or {}).get("schema_version") in {4, 6}:
+        from .finished_video import validate_live
         from .production_validation import validate_live_v4_candidate
 
         try:
-            validate_live_v4_candidate(db, current)
+            (validate_live if finished else validate_live_v4_candidate)(db, current)
         except HTTPException as exc:
             v4_error = exc.detail if isinstance(exc.detail, dict) else {"code": "readiness_blocked", "reasons": [str(exc.detail)]}
             stale_revision = v4_error["code"] in {"stale_master", "historical_candidate"}
@@ -216,6 +221,10 @@ def candidate_diff(previous: ContentAsset | None, current: ContentAsset) -> dict
     if previous is not None:
         _verify_frozen_production(previous)
     latest = current.candidate_manifest_json or {}
+    if latest.get("schema_version") == 6:
+        prior = (previous.candidate_manifest_json or {}) if previous is not None else {}
+        return {"previous_candidate_id": previous.id if previous is not None else None, "finished_video": True,
+                "changed": {name: {"changed": prior.get(name) != latest.get(name)} for name in ("files", "publish_copy", "title")}}
     if latest.get("schema_version") == 5:
         _verify_frozen_variant(current)
         if previous is not None:
@@ -362,6 +371,14 @@ def _verify_frozen_variant(asset: ContentAsset) -> dict:
 
 def candidate_preview(asset: ContentAsset) -> dict:
     """Preview the frozen snapshot, never the mutable current Master payload."""
+    from .finished_video import is_finished
+
+    if is_finished(asset):
+        from sqlalchemy.orm import object_session
+
+        from .finished_video import preview
+
+        return preview(object_session(asset), asset)
     _verify_frozen_production(asset)
     manifest = asset.candidate_manifest_json or {}
     if manifest.get("schema_version") == 5:

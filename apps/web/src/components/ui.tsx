@@ -44,6 +44,7 @@ export function Button({
 const STATUS_STYLES: Record<string, string> = {
   // 通用状态
   draft: "bg-slate-100 text-slate-600",
+  finalized: "bg-emerald-100 text-emerald-700",
   pending: "bg-slate-100 text-slate-600",
   queued: "bg-slate-100 text-slate-600",
   parsing: "bg-amber-100 text-amber-700",
@@ -85,7 +86,7 @@ const STATUS_STYLES: Record<string, string> = {
 export function StatusBadge({ status }: { status: string }) {
   const style = STATUS_STYLES[status] || "bg-slate-100 text-slate-600";
   const labels: Record<string, string> = {
-    blocked: "受阻", stale: "已过期", unknown: "待核对", ready: "就绪", waiting_review: "待审核", delivery_ready: "待交付", delivered: "已回填", waiting_human: "等待人工", running: "进行中", draft: "草稿", approved: "已批准",
+    blocked: "受阻", stale: "已过期", unknown: "待核对", ready: "就绪", waiting_review: "待审核", delivery_ready: "待交付", delivered: "已回填", waiting_human: "等待人工", running: "进行中", draft: "草稿", finalized: "已成稿", approved: "已批准",
     active: "使用中", frozen: "已冻结", candidate: "候选", usable: "可用", revoked: "已撤销", archived: "已归档", pending: "等待中", queued: "排队中", parsing: "解析中",
     done: "完成", succeeded: "成功", failed: "失败", confirmed: "已确认", pass: "通过", published: "已发布", ready_for_review: "待审阅", changes_requested: "需修改",
     rejected: "已退回", exported: "已导出", incomplete: "不完整", conflict: "冲突", warning: "注意", blocker: "阻断", fact_check_failed: "事实核查未过",

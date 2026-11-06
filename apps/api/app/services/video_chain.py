@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextvars
 import copy
+import logging
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -361,6 +362,14 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
 
         video_lessons.record_notes(db, user, project_id, unit_id, stage, target, notes[:50])
     db.commit()
+    if stage == "final" and accepted:
+        from . import finished_video
+
+        try:
+            finished_video.send_to_review(db, user, project_id, unit_id, target)
+        except Exception:  # noqa: BLE001 The approval stands; a candidate that cannot be frozen shows as missing in 审阅与交付.
+            db.rollback()
+            logging.getLogger(__name__).warning("finished video candidate not frozen: unit=%s execution=%s", unit_id, target, exc_info=True)
     if stage == "final" and decision == "approve":
         from . import project_folders
 
