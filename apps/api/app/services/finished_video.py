@@ -21,7 +21,10 @@ CONTENT_FORM = "short_video"
 # Video platforms a finished cut can be delivered to by hand; the channel registry has no video forms yet.
 VIDEO_CHANNELS = {"douyin": "抖音", "xiaohongshu": "小红书", "wechat_channels": "视频号", "wechat": "公众号", "kuaishou": "快手",
                   "bilibili": "B站", "baijia": "百家号", "toutiao": "今日头条", "youtube": "YouTube"}
-ROLES = ("final", "cover", "cover_vertical")
+ROLES = ("final", "cover", "cover_43", "cover_vertical")
+# 抖音 takes a 4:3 and a 3:4 cover for a landscape video; other platforms take the 16:9 one.
+PLATFORM_COVERS = {"douyin": ("cover_43", "cover_vertical")}
+DEFAULT_COVERS = ("cover", "cover_vertical")
 SUFFIX = {"video/mp4": ".mp4", "video/quicktime": ".mov", "image/png": ".png", "image/jpeg": ".jpg"}
 
 
@@ -48,7 +51,8 @@ def _file(db: Session, role: str, revision_id: int) -> dict:
 
 
 def build_manifest(db: Session, user: User, unit: ContentUnit, execution_id: int) -> dict:
-    from . import product_video, video_chain
+    from . import video_chain
+    from .publish_copy import stored
 
     final = _accepted(db, execution_id, "final")
     if final is None or final.material_revision_id is None:
@@ -57,11 +61,11 @@ def build_manifest(db: Session, user: User, unit: ContentUnit, execution_id: int
     cover = ((master.payload_json or {}).get("cover") or {}) if master else {}
     files = [_file(db, "final", final.material_revision_id)]
     # The work's covers are the ones the same approval just wrote onto it.
-    for role, key in (("cover", "material_revision_id"), ("cover_vertical", "vertical_material_revision_id")):
+    for role, key in (("cover", "material_revision_id"), ("cover_43", "four_three_material_revision_id"), ("cover_vertical", "vertical_material_revision_id")):
         if type(cover.get(key)) is int:
             files.append(_file(db, role, cover[key]))
     project = db.get(ContentProject, unit.project_id)
-    copy = product_video.publish_copy(db, user, unit.project_id, unit.id) if product_video.work(db, unit.id) else None
+    copy = stored(db, unit.id)
     payload = (master.payload_json or {}) if master else {}
     return {
         "schema_version": SCHEMA, "kind": "finished_video", "artifact_kind": "video", "content_form": CONTENT_FORM,
@@ -162,19 +166,28 @@ def preview(db: Session, asset: ContentAsset) -> dict:
 
 def zip_bytes(db: Session, target, asset: ContentAsset) -> tuple[bytes, str]:
     from .materials import local_file_checked, read_bytes_checked
+    from .publish_copy import text
 
     manifest = validate_live(db, asset, require_current=False, require_approved=True)
     if (target.action not in {"copy_package", "manual_handoff"} or target.content_form != CONTENT_FORM or target.channel not in VIDEO_CHANNELS
             or target.approved_candidate_hash != asset.candidate_hash):
         raise HTTPException(409, "成片交付授权与准确候选 / 渠道不一致")
-    names = {"final": "成片", "cover": "封面" if len(manifest["files"]) < 3 else "横封面-16x9", "cover_vertical": "竖封面-3x4"}
+    covers = [item for item in manifest["files"] if item["role"] != "final"]
+    roles = list(PLATFORM_COVERS.get(target.channel, DEFAULT_COVERS))
+    have = {item["role"] for item in covers}
+    # Works made before the 4:3 cover existed give 抖音 their 16:9 cover instead.
+    if "cover_43" in roles and "cover_43" not in have:
+        roles[roles.index("cover_43")] = "cover"
+    wanted = [item for item in covers if item["role"] in roles]
+    chosen = [item for item in manifest["files"] if item["role"] == "final"] + (wanted or covers)
+    names = {"final": "成片", "cover": "封面" if len(covers) < 2 else "横封面-16x9", "cover_43": "横封面-4x3", "cover_vertical": "竖封面-3x4"}
     package = {"export_schema": "studio.finished-video.v1", "schema_version": SCHEMA, "target_id": target.id, "asset_id": asset.id,
                "candidate": {"id": asset.id, "hash": asset.candidate_hash}, "channel": target.channel, "content_form": CONTENT_FORM,
                "account_ref": target.account_ref, "action": target.action, "authorization_version": target.authorization_version,
                "title": manifest["title"], "files": [], "publish_copy": manifest.get("publish_copy"), "remote_call": False}
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-        for item in manifest["files"]:
+        for item in chosen:
             revision = db.get(MaterialRevision, item["material_revision_id"])
             if revision.public_use_allowed is not True or revision.content_hash != item["content_hash"]:
                 raise HTTPException(409, "冻结媒体字节校验失败")
@@ -194,11 +207,9 @@ def zip_bytes(db: Session, target, asset: ContentAsset) -> tuple[bytes, str]:
                     while chunk := source.read(1024 * 1024):
                         sink.write(chunk)
             package["files"].append({**item, "name": name})
-        copy = manifest.get("publish_copy")
+        copy = text(manifest.get("publish_copy"))
         if copy:
-            lines = [f"标题：{copy.get('title', '')}", f"话题：{' '.join(copy.get('hashtags') or [])}", f"封面字：{copy.get('cover_text', '')}",
-                     f"互动引导：{copy.get('interaction', '')}", "", copy.get("description", "")]
-            archive.writestr(zipfile.ZipInfo("发布文案.txt", date_time=(2020, 1, 1, 0, 0, 0)), "\n".join(lines))
+            archive.writestr(zipfile.ZipInfo("发布文案.txt", date_time=(2020, 1, 1, 0, 0, 0)), copy)
         archive.writestr(zipfile.ZipInfo("manifest.json", date_time=(2020, 1, 1, 0, 0, 0)),
                          json.dumps(package, ensure_ascii=False, indent=2, sort_keys=True))
         archive.writestr(zipfile.ZipInfo("发布说明.md", date_time=(2020, 1, 1, 0, 0, 0)),

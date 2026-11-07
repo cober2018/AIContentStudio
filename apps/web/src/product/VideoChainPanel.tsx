@@ -23,14 +23,14 @@ type ShotWarning = { code: "shot_overexposed" | "shot_brightness_jump" | "dialog
   | { code: "source_brightness_diff"; shot_id: string | null; order: number; luma: number; source_luma: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" }
   | { code: "source_highlight_diff"; shot_id: string | null; order: number; luma_p90: number; source_p90: number; diff: number; source_basis?: "manifest" | "reported" | "estimated" }
   | { code: "source_brightness"; shot_id: string | null; order: number; luma?: number; source_luma?: number; diff?: number; luma_p90?: number; source_p90?: number; diff_p90?: number; source_basis?: "manifest" | "reported" | "estimated" };
-type CoverRole = "cover" | "cover_vertical";
-const COVER_NAME: Record<CoverRole, string> = { cover: "横封面", cover_vertical: "竖封面" };
+type CoverRole = "cover" | "cover_43" | "cover_vertical";
+const COVER_NAME: Record<CoverRole, string> = { cover: "横封面", cover_43: "4:3 横封面", cover_vertical: "竖封面" };
 type ShotChecks = { status: string; basis: string; truncated?: boolean; warnings: ShotWarning[];
   thresholds: { overexposed_mean_luma: number; overexposed_clipped_percent: number; brightness_jump_luma: number; dialogue_spread_lu: number; source_brightness_diff?: number; source_highlight_diff?: number } };
-type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; separate_covers?: boolean; cover_vertical_output_id?: number | null };
+type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null };
 type Chain = {
   state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
-  phase?: string; locked?: boolean; sample?: Cut; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_redo?: { note: string; at: string };
+  phase?: string; locked?: boolean; sample?: Cut; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null; cover_redo?: { note: string; at: string };
   persona_clips?: { slot: "intro" | "outro"; material_revision_id: number; duration_ms: number; title: string }[];
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
@@ -51,7 +51,7 @@ function warningText(item: ShotWarning, checks: ShotChecks) {
   if (item.code === "color_tags_not_srgb") return `成片颜色标记不是 sRGB（现在是 原色 ${item.color_primaries}、传输 ${item.color_transfer}、矩阵 ${item.color_space}；应为 bt709 / iec61966-2-1 / bt709）`;
   if (item.code === "persona_duration_mismatch") return `成片时长 ${(item.actual_ms / 1000).toFixed(2)} 秒，应为小样 ${(item.sample_ms / 1000).toFixed(2)} 秒 + 角色片段 ${(item.clips_ms / 1000).toFixed(2)} 秒 = ${(item.expected_ms / 1000).toFixed(2)} 秒`;
   if (item.code === "persona_clip_mismatch") return `成片${item.slot === "intro" ? "开头" : "最后"}和角色${item.slot === "intro" ? "进门" : "收尾"}片段「${item.title}」画面对不上（平均差 ${item.mean}，提示线 ${item.threshold}）`;
-  const coverName = "role" in item && item.role === "cover_vertical" ? "竖封面" : "封面";
+  const coverName = "role" in item && item.role === "cover_vertical" ? "竖封面" : "role" in item && item.role === "cover_43" ? "4:3 横封面" : "封面";
   if (item.code === "cover_template_missing") return `${coverName}没用角色的封面模板（交封面时没附模板渲染回执）`;
   if (item.code === "cover_template_mismatch") return `${coverName}用错了模板：附的渲染不是这个角色的封面模板`;
   if (item.code === "cover_missing") return `${COVER_NAME[item.role]}还没交`;
@@ -156,7 +156,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   // Once the 成片 task exists, the 小样 lives on as its own earlier task.
   const cut: Cut | null = step === "sample" ? data.sample || (data.phase === "rough_cut" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id, shot_checks: data.shot_checks } : null)
     : step === "final" && data.phase === "final" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id, shot_checks: data.shot_checks,
-      separate_covers: data.separate_covers, cover_vertical_output_id: data.cover_vertical_output_id } : null;
+      separate_covers: data.separate_covers, cover_vertical_output_id: data.cover_vertical_output_id, cover_43_output_id: data.cover_43_output_id } : null;
   async function send(decision: "approve" | "changes") {
     const pending = text.trim() ? [...notes, { time_ms: timed && time ? Math.round(Number(time) * 1000) : null, note: text.trim() }] : notes;
     setBusy(true); setIssue("");
@@ -205,7 +205,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
         : "本作品没有角色收尾"}</p>}
       {cut?.shot_checks && <ShotCheckList checks={cut.shot_checks} />}
       {cut && !cut.separate_covers && cut.cover_output_id && <CoverPreview projectId={projectId} unitId={unitId} executionId={cut.execution_id} outputId={cut.cover_output_id} />}
-      {cut?.separate_covers && <div className="flex flex-wrap items-start gap-4">{([["cover", cut.cover_output_id, "横封面 16:9"], ["cover_vertical", cut.cover_vertical_output_id, "竖封面 3:4"]] as const).map(([role, outputId, label]) => outputId
+      {cut?.separate_covers && <div className="flex flex-wrap items-start gap-4">{([["cover", cut.cover_output_id, "横封面 16:9"], ...(cut.cover_43_output_id !== undefined ? [["cover_43", cut.cover_43_output_id, "横封面 4:3"] as const] : []), ["cover_vertical", cut.cover_vertical_output_id, "竖封面 3:4"]] as const).map(([role, outputId, label]) => outputId
         ? <CoverPreview key={role} projectId={projectId} unitId={unitId} executionId={cut.execution_id} outputId={outputId} label={label} />
         : <div key={role} className="mt-3"><p className="mb-1 text-xs text-slate-600">{label}</p><p className="text-xs text-slate-400">还没交</p></div>)}</div>}
       {(cut?.cover_output_id || cut?.cover_vertical_output_id) && live && data.state.endsWith("_review") && cut.execution_id === data.execution_id && <CoverRedo projectId={projectId} unitId={unitId} pending={data.cover_redo} />}

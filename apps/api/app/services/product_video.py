@@ -16,7 +16,6 @@ from . import product_categories, product_motion
 
 MODE_KEY = "product_i2v_mode"
 JOBS_KEY = "product_i2v_jobs"
-COPY_KEY = "product_publish_copy"
 HAILUO = "MiniMax-Hailuo-2.3"
 
 
@@ -41,7 +40,6 @@ def _route() -> dict | None:
         _fail(409, "product_i2v_model_unavailable", "用途路由里选的图生视频模型现在用不了，请检查厂商密钥和「生成能力与插件」里的生视频绑定")
     return {"kind": "openai", "model": binding.get("model_id") or profile.get("model"), "profile": choice,
             "base_url": vendor["base_url"], "api_key": vendor["api_key"], "label": vendor.get("name") or profile.get("provider_id")}
-COPY_LIMITS = {"title": 15, "cover_text": 8, "interaction": 60, "description": 50}
 
 
 def _fail(status: int, code: str, message: str):
@@ -543,31 +541,17 @@ def get_shot_video(db: Session, user: User, project_id: int, unit_id: int, shot_
 
 
 def save_publish_copy(db: Session, user: User, project_id: int, unit_id: int, value: dict) -> dict:
-    from .content_masters import owned_unit
+    from . import publish_copy as copy
 
-    owned_unit(db, project_id, unit_id, user)
-    if work(db, unit_id) is None:
-        _fail(409, "product_work_required", "发布文案只给商品作品")
-    if type(value) is not dict or set(value) - {"channel", "title", "hashtags", "cover_text", "interaction", "description"}:
-        _fail(422, "publish_copy_invalid", "发布文案格式不对")
-    for key, limit in COPY_LIMITS.items():
-        if type(value.get(key, "")) is not str or len(value.get(key, "")) > limit:
-            _fail(422, "publish_copy_too_long", f"{key} 不能超过 {limit} 个字")
-    tags = value.get("hashtags", [])
-    if type(tags) is not list or len(tags) > 5 or any(type(tag) is not str or not 0 < len(tag) <= 30 for tag in tags):
-        _fail(422, "publish_copy_hashtags_invalid", "话题最多 5 个，每个不超过 30 个字")
-    stored = _setting(db, COPY_KEY)
-    stored[str(unit_id)] = {key: value.get(key, [] if key == "hashtags" else "") for key in ("channel", "title", "hashtags", "cover_text", "interaction", "description")}
-    _put(db, COPY_KEY, stored, user.email)
-    db.commit()
-    return stored[str(unit_id)]
+    return copy.save(db, user, project_id, unit_id, value)
 
 
 def publish_copy(db: Session, user: User, project_id: int, unit_id: int) -> dict | None:
     from .content_masters import owned_unit
+    from .publish_copy import stored
 
     owned_unit(db, project_id, unit_id, user)
-    return _setting(db, COPY_KEY).get(str(unit_id))
+    return stored(db, unit_id)
 
 
 def _source_label(revision: MaterialRevision) -> tuple[str, bool]:

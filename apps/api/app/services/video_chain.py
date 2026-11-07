@@ -69,7 +69,11 @@ RULES = [
     "横封面图只能从渲染好的成片开头 0.5 秒内截一帧（抽帧照上面的准确换算），1920×1080，role cover。竖封面：同一套设计改成竖版排版，1080×1440（3:4，抖音主页列表按 3:4 裁，大标题要整个落在竖封面里），"
     "role cover_vertical，单独做，不放进成片。两张都按 sRGB 存，都导出到 cover_dir，都在剪辑清单之前交，清单 output_hashes 两张都列；成片通过后两张都是作品封面。"
     "有 cover_template 时两张的字都用这个模板渲染（交每张都带 cover_template_render）：横封面的字层叠在成片开头，竖封面的叠在竖版底图上。"
-    "两张在任务通过前都能再交；cover_redo 要两张都重交才算完成。平台把横封面和成片开头 0.5 秒逐帧比色，竖封面只查尺寸；缺哪张、尺寸不对、颜色不一致都会在审片页提示。",
+    "两张在任务通过前都能再交；cover_redo 要两张都重交才算完成。平台把横封面和成片开头 0.5 秒逐帧比色，竖封面只查尺寸；缺哪张、尺寸不对、颜色不一致都会在审片页提示。"
+    "开剪结果的 files 还写着要交 cover_43 时（抖音横封面 4:3），再交第三张：把 1920×1080 横封面图居中裁成 1440×1080（左右各裁 240 像素），role cover_43，不另外设计；"
+    "所以这时横封面设计要把大标题和卖点都放在画面中间 1440 宽的范围里，裁完不切字。它和另外两张一样导出、交、列进 output_hashes、可重交，cover_redo 要三张都重交，平台只查它的尺寸。",
+    "发布文案：成片任务里、交成片之前，用 save_publish_copy 给作品存一份通用发布文案（不按平台分，不填 channel）：角色作品按 studio.persona.publish-copy 写，商品作品按 studio.product.publish-copy 写；"
+    "已经存过的，内容有变再改。用户会在交付页看和改，成品包里每个平台都带这份。",
     "素材能不能公开、能不能给模型用，只有用户能在素材详情里改；不能用 REST 或别的办法代改。开剪报 video_asset_kind_or_rights_invalid 时，把报错里说的是哪条素材、该怎么处理原样告诉用户，等用户改好再重做用到它的素材。",
     "角色片段（只在成片）：开剪结果的 persona_clips（执行包 director.persona_clips，素材 role persona_clip）有值时，收尾片段（slot outro）原样接在成片最后，"
     "进门片段（slot intro）原样放在最前面：不裁、不变速、不缩放变形；这段用片段自带的声音，配音和配乐在片段开始前收完（配乐淡出），不压在片段上；整片响度照旧。"
@@ -160,14 +164,14 @@ def _task(db: Session, record: dict) -> tuple[dict | None, CreativeExecution | N
 
 def _cover_redo(db: Session, record: dict, execution: CreativeExecution) -> dict | None:
     """The user's open request to redo only the cover of this task, settled once every cover of the task is handed in after it."""
-    from .web_video_handoff import COVER_ROLES, separate_covers
+    from .web_video_handoff import cover_roles
 
     asked = record.get("cover_redo")
     if not asked or asked.get("execution_id") != execution.id or execution.state not in {"claimed", "in_progress", "blocked", "result_ready"}:
         return None
     at = datetime.fromisoformat(asked["at"]).replace(tzinfo=None)
     package = db.get(CreativeExecutionPackage, execution.package_id)
-    roles = set(COVER_ROLES) if package and separate_covers(package.package_json) else {"cover"}
+    roles = set(cover_roles(package.package_json) if package else ()) or {"cover"}
     newer = set(db.scalars(select(CreativeExecutionOutput.role_id).where(CreativeExecutionOutput.execution_id == execution.id,
                                                                          CreativeExecutionOutput.role_id.in_(roles), CreativeExecutionOutput.created_at > at)))
     return None if newer == roles else {"note": asked.get("note") or "", "at": asked["at"], "by": asked.get("by")}
@@ -402,13 +406,14 @@ def _adopt_cover(db: Session, user: User, project_id: int, unit_id: int, executi
         return db.scalar(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == execution_id,
                                                                CreativeExecutionOutput.role_id == role_id, CreativeExecutionOutput.state == "accepted")
                          .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
-    cover, vertical = accepted("cover"), accepted("cover_vertical")
+    cover, vertical, four_three = accepted("cover"), accepted("cover_vertical"), accepted("cover_43")
     master = _latest(db, unit_id)
     if cover is None or cover.material_revision_id is None or master is None:
         return
     document = copy.deepcopy(master.payload_json)
     wanted = {"material_revision_id": cover.material_revision_id,
-              **({"vertical_material_revision_id": vertical.material_revision_id} if vertical and vertical.material_revision_id else {})}
+              **({"vertical_material_revision_id": vertical.material_revision_id} if vertical and vertical.material_revision_id else {}),
+              **({"four_three_material_revision_id": four_three.material_revision_id} if four_three and four_three.material_revision_id else {})}
     if document.get("cover") == wanted:
         return
     document["cover"] = wanted
@@ -425,7 +430,8 @@ def work_covers(db: Session, unit_id: int) -> dict:
         return {"material_id": revision.material_id, "material_revision_id": revision.id} if revision else None
     cover = document.get("cover") or {}
     return {"aspect": ":".join(str(value) for value in document.get("aspect_ratio") or [9, 16]),
-            "cover": ref(cover.get("material_revision_id")), "cover_vertical": ref(cover.get("vertical_material_revision_id"))}
+            "cover": ref(cover.get("material_revision_id")), "cover_43": ref(cover.get("four_three_material_revision_id")),
+            "cover_vertical": ref(cover.get("vertical_material_revision_id"))}
 
 
 def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
@@ -446,7 +452,7 @@ def _accept_outputs(db: Session, user: User, project_id: int, unit_id: int, exec
         shareable = output.kind in {"video", "image", "audio"}
         rights = {"rights_status": "cleared", "public_use_allowed": shareable, "model_use_allowed": shareable}
         payload = {"expected_revision": execution.revision_no, "decision": "accept", "rights": rights,
-                   "title": f"{unit.title} · {output.role_id}"[:255], "attach_to_project": output.role_id in {"rough_cut", "final", "cover", "cover_vertical"}}
+                   "title": f"{unit.title} · {output.role_id}"[:255], "attach_to_project": output.role_id in {"rough_cut", "final", "cover", "cover_43", "cover_vertical"}}
         # One input that cannot be published must not also take away model use, or the next phase cannot build on this cut.
         fallbacks = [{"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": shareable},
                      {"rights_status": "cleared", "public_use_allowed": False, "model_use_allowed": False}]
@@ -754,6 +760,9 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     from .web_video_handoff import separate_covers
 
     separate = bool(package and separate_covers(package.package_json))
+    from .web_video_handoff import cover_roles
+
+    four_three = bool(package and "cover_43" in cover_roles(package.package_json))
     return {"execution_id": execution_id, "master_id": master.id, "phase": phase,
             "cover_template": ((package.package_json if package else {}).get("director") or {}).get("cover_template"),
             **({"persona_clips": ((package.package_json if package else {}).get("director") or {}).get("persona_clips") or [],
@@ -761,9 +770,10 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
             "work_dir": str(work), "export_dir": str(export), "cover_dir": str(cover),
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
-                     + (f"横版封面交两张：横封面设计盖在成片开头 0–0.5 秒随成片渲染，横封面图 role cover 1920×1080 从渲染好的成片开头 0.5 秒内截一帧；"
-                        f"竖封面 role cover_vertical 1080×1440（3:4）用同一套设计单独做、不放进成片；jpg / png 按 sRGB 存，"
-                        f"两张都导出到 {cover}/，都在剪辑清单之前交，清单 output_hashes 两张都列；"
+                     + ("横版封面：横封面设计盖在成片开头 0–0.5 秒随成片渲染，横封面图 role cover 1920×1080 从渲染好的成片开头 0.5 秒内截一帧；"
+                        "竖封面 role cover_vertical 1080×1440（3:4）用同一套设计单独做、不放进成片；jpg / png 按 sRGB 存，"
+                        + ("再交抖音横封面 role cover_43 1440×1080：把横封面图居中裁出（左右各裁 240 像素），所以横封面的大标题和卖点放在中间 1440 宽里；" if four_three else "")
+                        + f"封面都导出到 {cover}/，都在剪辑清单之前交，清单 output_hashes 都列；"
                         if separate else f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；")
                      + f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
 

@@ -118,9 +118,15 @@ def validate_new_web_package(package: dict) -> None:
         _fail("web_video_prompt_reference_stale")
 
 
-COVER_ROLES = ("cover", "cover_vertical")
-# Sizes of a landscape work's two separate covers.
-LANDSCAPE_COVER_SIZES = {"cover": (1920, 1080), "cover_vertical": (1080, 1440)}
+COVER_ROLES = ("cover", "cover_43", "cover_vertical")
+# Sizes of a landscape work's covers: 16:9 from the 成片, 4:3 cut from its centre for 抖音, 3:4 made apart.
+LANDSCAPE_COVER_SIZES = {"cover": (1920, 1080), "cover_43": (1440, 1080), "cover_vertical": (1080, 1440)}
+
+
+def cover_roles(package: dict) -> tuple[str, ...]:
+    """The cover roles this task was opened with; older tasks have fewer."""
+    listed = {item["role_id"] for item in (package.get("output_contract") or {}).get("roles") or []}
+    return tuple(role for role in COVER_ROLES if role in listed)
 
 
 def separate_covers(package: dict) -> bool:
@@ -160,6 +166,7 @@ def edit_contract(document: dict) -> dict:
     if phase == "final" and document.get("aspect_ratio") == [16, 9]:
         # Landscape covers are uploaded on their own, and 抖音's list crops them to 3:4, so a vertical one goes with it.
         roles.append({**role("cover_vertical", "image", "image/jpeg"), "required": False, "min_count": 0, "allowed_mime": ["image/jpeg", "image/png"]})
+        roles.append({**role("cover_43", "image", "image/jpeg"), "required": False, "min_count": 0, "allowed_mime": ["image/jpeg", "image/png"]})
     return {"roles": roles, "media_transfer_policy": dict(TRANSFER_POLICY)}
 
 

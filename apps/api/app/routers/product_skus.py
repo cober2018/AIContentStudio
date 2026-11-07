@@ -656,7 +656,7 @@ def _work_covers(db, unit_id: int) -> dict:
     from ..services import video_chain
 
     covers = video_chain.work_covers(db, unit_id)
-    return {"cover": covers["cover"], "cover_vertical": covers["cover_vertical"]}
+    return {"cover": covers["cover"], "cover_43": covers["cover_43"], "cover_vertical": covers["cover_vertical"]}
 
 
 @router.put("/content-projects/{project_id}/units/{unit_id}/product-video/publish-copy")

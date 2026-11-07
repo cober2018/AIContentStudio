@@ -119,6 +119,15 @@ def _article_html(content: dict, media: list[dict]) -> str:
     return "\n".join(parts)
 
 
+def _graphic_copy(db: Session, asset: ContentAsset) -> str | None:
+    """A graphic work's publish copy as it stands when packaged; it is edited apart from the frozen piece."""
+    from ..models import ContentUnit
+    from .publish_copy import stored, text
+
+    unit = db.get(ContentUnit, asset.content_unit_id) if asset.content_unit_id else None
+    return text(stored(db, unit.id)) if unit is not None and unit.modality == "graphic" else None
+
+
 def build_v4_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -> dict:
     manifest = validate_live_v4_candidate(db, asset, require_current=False, require_approved=True, lock_live=True)
     if target.action not in {"copy_package", "manual_handoff"} or target.channel != manifest["channel"] or target.content_form != manifest["content_form"] or target.approved_candidate_hash != asset.candidate_hash:
@@ -159,6 +168,9 @@ def v4_zip_bytes(db: Session, target: DeliveryTarget, package: dict) -> tuple[by
             if data is None or hashlib.sha256(data).hexdigest() != output["content_hash"]:
                 raise HTTPException(409, "最终渲染与冻结媒体不一致")
             _write_stable_entry(archive, output["name"], data)
+        copy = _graphic_copy(db, db.get(ContentAsset, target.content_asset_id))
+        if copy:
+            _write_stable_entry(archive, "发布文案.txt", copy)
         _write_stable_entry(archive, "publish-guide.md", f"# 交付说明\n\n- 渠道：{target.channel} / {target.content_form}\n- 账号：{target.account_ref}\n- 候选哈希：{target.approved_candidate_hash}\n- 动作：{target.action}\n\n按 manifest.media 中的 role、sort_order 和 placement 使用精确媒体版本；人工发布后回填回执。本包没有调用远端发布。\n")
     # Recheck live DB state before returning bytes; frozen content is never retargeted.
     db.expire_all()
@@ -242,6 +254,9 @@ def build_v5_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -
         {"name": "declarations.json", "content": json.dumps(manifest["declarations"], ensure_ascii=False, sort_keys=True)},
         {"name": "publish-guide.md", "content": f"# 人工交付说明\n\n- 渠道：{target.channel} / {target.content_form}\n- 候选哈希：{target.approved_candidate_hash}\n- 动作：{target.action}\n\n本地包就绪不等于公开发布；公众号草稿也不等于公开发布。按 manifest.media 的顺序和位置使用精确素材，并保留 sources.json 和 declarations.json 的来源、署名与声明。HTML 为本产品的安全排版，平台编辑器可能改变样式。X 长帖/Articles 账号资格未验证，不影响本地交付。抖音内容为脚本，字幕为估算，不是成片或音频对齐字幕。本包没有调用远端；发布后人工回填真实回执。\n"},
     ])
+    copy = _graphic_copy(db, asset)
+    if copy:
+        files.append({"name": "发布文案.txt", "content": copy})
     package_manifest["files"] = [{"name": file["name"], "sha256": hashlib.sha256(file["content"].encode()).hexdigest()} for file in files]
     package_manifest["files"].extend({"name": ref["name"], "sha256": ref["content_hash_snapshot"]} for ref in media)
     package_manifest["export_hash"] = hashlib.sha256(json.dumps(package_manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()

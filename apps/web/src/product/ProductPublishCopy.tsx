@@ -38,7 +38,7 @@ export default function ProductPublishCopy({ projectId, unitId, readOnly }: { pr
         <Button size="sm" disabled={readOnly || busy || !copy} onClick={() => void save()}>{busy ? "保存中…" : "保存发布文案"}</Button>
         {issue && <ErrorBanner message={issue} />}
       </div>
-      {data.cover_vertical ? <LandscapeCovers cover={data.cover} vertical={data.cover_vertical} />
+      {data.cover_vertical ? <LandscapeCovers cover={data.cover} fourThree={data.cover_43 ?? undefined} vertical={data.cover_vertical} />
         : <div className="w-48 shrink-0"><p className="mb-1 text-xs text-slate-600">封面</p>{data.cover ? <CoverImage cover={data.cover} /> : <p className="text-xs text-slate-400">还没有封面</p>}</div>}
     </div>
   </section>;

@@ -220,13 +220,16 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
         execution = db.get(CreativeExecution, result["execution_id"])
         package = db.get(CreativeExecutionPackage, execution.package_id) if execution else None
         result["persona_clips"] = ((package.package_json if package else {}).get("director") or {}).get("persona_clips") or []
-        from ..services.web_video_handoff import separate_covers
+        from ..services.web_video_handoff import cover_roles, separate_covers
 
-        # Landscape tasks deliver a 16:9 and a 3:4 cover of their own instead of one cut from the 成片.
+        # Landscape tasks also deliver a 3:4 cover, and newer ones a 4:3 cut of the 16:9 one.
         separate = bool(package and separate_covers(package.package_json))
+        roles = cover_roles(package.package_json) if package else ()
         result["separate_covers"] = separate
         if separate:
             result["cover_vertical_output_id"] = cover(result["execution_id"], "cover_vertical")
+            if "cover_43" in roles:
+                result["cover_43_output_id"] = cover(result["execution_id"], "cover_43")
         # The 小样 page stays watchable after the chain has moved on to the 成片.
         sample = next((task for task in reversed(result["tasks"]) if task.get("phase") == "rough_cut"), None)
         if sample and sample["execution_id"] != result["execution_id"]:
@@ -236,8 +239,9 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
             result["sample"]["shot_checks"] = _with_template_check(db, _shot_checks(db, result["sample"]["cut_output_id"]), result["sample"]["cover_output_id"])
         if separate and result["cut_output_id"]:
             checks = _with_cover_check(db, _shot_checks(db, result["cut_output_id"]), result["cut_output_id"], result["cover_output_id"])
-            checks = _with_cover_sizes(db, checks, result["cover_output_id"], result["cover_vertical_output_id"])
-            for output_id in (result["cover_vertical_output_id"], result["cover_output_id"]):
+            outputs = {role: result.get(f"{role}_output_id") for role in roles}
+            checks = _with_cover_sizes(db, checks, outputs)
+            for output_id in reversed(list(outputs.values())):
                 checks = _with_template_check(db, checks, output_id)
             result["shot_checks"] = checks
         elif separate:
@@ -248,14 +252,14 @@ def video_chain_state(project_id: int, unit_id: int, db: Session = Depends(get_d
     return result
 
 
-def _with_cover_sizes(db: Session, checks: dict | None, cover_id: int | None, vertical_id: int | None) -> dict | None:
-    """Warns when one of a landscape task's two covers is missing or not its required size."""
+def _with_cover_sizes(db: Session, checks: dict | None, outputs: dict[str, int | None]) -> dict | None:
+    """Warns when one of a landscape task's covers is missing or not its required size."""
     from ..models import CreativeExecutionOutput
     from ..services import delivery_checks
     from ..services.web_video_handoff import LANDSCAPE_COVER_SIZES
 
     warnings = []
-    for role_id, output_id in (("cover", cover_id), ("cover_vertical", vertical_id)):
+    for role_id, output_id in outputs.items():
         width, height = LANDSCAPE_COVER_SIZES[role_id]
         if not output_id:
             warnings.append({"code": "cover_missing", "role": role_id})
@@ -327,6 +331,20 @@ def video_chain_covers(project_id: int, unit_id: int, db: Session = Depends(get_
 
     owned_unit(db, project_id, unit_id, user)
     return video_chain.work_covers(db, unit_id)
+
+
+@router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/publish-copy")
+def get_publish_copy(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    from ..services import publish_copy
+
+    return publish_copy.get(db, user, project_id, unit_id)
+
+
+@router.put("/api/v1/content-projects/{project_id}/units/{unit_id}/publish-copy")
+def put_publish_copy(project_id: int, unit_id: int, payload: dict, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import publish_copy
+
+    return publish_copy.save(db, user, project_id, unit_id, payload)
 
 
 @router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/decision")

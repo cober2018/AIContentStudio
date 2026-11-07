@@ -22,16 +22,18 @@ export function CoverImage({ cover, label = "封面", download }: { cover: Cover
 }
 
 // A landscape work has a 16:9 cover and a 3:4 one for list pages that crop to 3:4.
-export function LandscapeCovers({ cover, vertical }: { cover: CoverRef | null | undefined; vertical: CoverRef | null | undefined }) {
-  return <div className="flex flex-wrap items-start gap-4">{([["横封面 16:9", cover, "横封面-16x9"], ["竖封面 3:4", vertical, "竖封面-3x4"]] as const).map(([label, ref, file]) =>
+export function LandscapeCovers({ cover, fourThree, vertical }: { cover: CoverRef | null | undefined; fourThree?: CoverRef | null; vertical: CoverRef | null | undefined }) {
+  // Works made before the 4:3 cover existed show only the two they have.
+  const rows = [["横封面 16:9", cover, "横封面-16x9"], ...(fourThree !== undefined ? [["横封面 4:3", fourThree, "横封面-4x3"] as const] : []), ["竖封面 3:4", vertical, "竖封面-3x4"]] as const;
+  return <div className="flex flex-wrap items-start gap-4">{rows.map(([label, ref, file]) =>
     <div key={label} className="w-56 shrink-0"><p className="mb-1 text-xs text-slate-600">{label}</p>{ref ? <CoverImage cover={ref} label={label} download={file} /> : <p className="text-xs text-slate-400">还没交</p>}</div>)}</div>;
 }
 
 // 交付 step of a work that is not a product video: only landscape works get their covers shown here.
 export default function WorkCovers({ projectId, unitId }: { projectId: number; unitId: number }) {
   const covers = useQuery({ queryKey: ["work-covers", projectId, unitId, currentUser()], retry: false,
-    queryFn: () => api.get<{ aspect: string; cover: CoverRef | null; cover_vertical: CoverRef | null }>(`/content-projects/${projectId}/units/${unitId}/video-chain/covers`) });
+    queryFn: () => api.get<{ aspect: string; cover: CoverRef | null; cover_43: CoverRef | null; cover_vertical: CoverRef | null }>(`/content-projects/${projectId}/units/${unitId}/video-chain/covers`) });
   if (covers.data?.aspect !== "16:9") return null;
   return <section className="mb-6 rounded-lg border border-slate-200 p-4"><h3 className="mb-3 font-semibold">作品封面</h3>
-    <LandscapeCovers cover={covers.data.cover} vertical={covers.data.cover_vertical} /></section>;
+    <LandscapeCovers cover={covers.data.cover} fourThree={covers.data.cover_43 ?? undefined} vertical={covers.data.cover_vertical} /></section>;
 }

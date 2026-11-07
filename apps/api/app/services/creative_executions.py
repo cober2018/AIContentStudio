@@ -1148,8 +1148,8 @@ def _project_output(db: Session, row: CreativeExecution, package: CreativeExecut
     from . import project_folders
 
     phase = ((package.package_json.get("director") or {}).get("postproduction") or {}).get("phase", "rough_cut")
-    main = role_id in {"rough_cut", "final", "cover", "cover_vertical"}
-    cover = role_id in {"cover", "cover_vertical"}
+    main = role_id in {"rough_cut", "final", "cover", "cover_43", "cover_vertical"}
+    cover = role_id in {"cover", "cover_43", "cover_vertical"}
     allowed = (project_folders.export_dir(db, row.project_id, "cover" if cover else phase) if main
                else project_folders.work_dir(db, row.project_id, row.content_unit_id, row.id))
     label = "封面" if cover else "小样 / 成片" if main else "这个交付文件"
@@ -1321,7 +1321,7 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
         raise _error("creative_execution_output_history_limit")
     previous = _latest(outputs).get((role["role_id"], index))
     # Until it is accepted the cover may be handed in again; the earlier one stays in history.
-    if previous and previous.state != "rejected" and not (role_id in {"cover", "cover_vertical"} and previous.state == "staged"):
+    if previous and previous.state != "rejected" and not (role_id in {"cover", "cover_43", "cover_vertical"} and previous.state == "staged"):
         raise _error("creative_execution_output_replacement_denied")
     attempt = previous.attempt_no + 1 if previous else 1
     if attempt > MAX_ATTEMPTS or ("attempt_no" in payload and (type(payload["attempt_no"]) is not int or payload["attempt_no"] != attempt)):
@@ -1380,9 +1380,9 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
             if role_id in {"cover", "final"} and package.package_json.get("director", {}).get("postproduction"):
                 intro_ms = sum(clip["duration_ms"] for clip in package.package_json["director"].get("persona_clips") or [] if clip["slot"] == "intro")
                 metadata = {**metadata, **_cover_check(db, user, row, outputs, role_id, source, intro_ms)}
-            if role_id in {"cover", "cover_vertical"}:
+            if role_id in {"cover", "cover_43", "cover_vertical"}:
                 metadata = {**metadata, **_cover_template_check(db, row, package.package_json.get("director") or {}, metadata)}
-            if separate and role_id in {"cover", "cover_vertical"}:
+            if separate and role_id in {"cover", "cover_43", "cover_vertical"}:
                 metadata = {**metadata, **_cover_size(source)}
             if role_id == "edit_manifest" and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
                 import json

@@ -14,3 +14,5 @@ Research/Text/Graphic/Video v1 packages are shipped. Every package is bounded an
 
 Skills belong to one system — product, persona or shared (`studio_creative_catalog.skill_system`); a work only sees its own system plus shared ones. 
 Workflow remains Recipe truth. Skills propose results; domain services own explicit acceptance. Contracts and provenance hashes are frozen in Attempt receipts. Existing API startup is unchanged; packages ship as application data with no new dependency or migration.
+
+Change landscape-cover-four-three (2026-11-07) adds `studio.persona.publish-copy@1` (persona video publish copy: title ≤30, cover text ≤12, description ≤300) and `studio.persona.graphic-copy@1` (graphic publish copy: title ≤30, lead ≤120, no cover text); each work keeps one general copy, saved with `save_publish_copy`; no stage, read through `get_craft_skill`.

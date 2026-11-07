@@ -55,6 +55,8 @@ OUTPUT_SCHEMAS = {
     "studio.video.product-filming": ["video.shot-plan.v1"],
     "studio.video.shot-director": ["video.shot-plan.v1"],
     "studio.product.publish-copy": ["product.publish-copy.v1"],
+    "studio.persona.publish-copy": ["persona.publish-copy.v1"],
+    "studio.persona.graphic-copy": ["persona.graphic-copy.v1"],
     **{f"studio.product.style.{style}": ["video.script.v1"] for style in PRODUCT_STYLES},
 }
 
@@ -146,6 +148,8 @@ SKILLS = {
                   applicable_fields=("objective", "core_message", "cta")),
         _resource("studio.product.compliance-check", "skill", "video", purpose="定稿前逐句检查带货合规风险并给出改法"),
         _resource("studio.product.publish-copy", "skill", "video", purpose="按渠道生成标题、话题标签、封面字、互动引导和简介"),
+        _resource("studio.persona.publish-copy", "skill", "video", purpose="用角色口吻写视频的通用发布文案：标题、话题、封面字、互动引导和简介"),
+        _resource("studio.persona.graphic-copy", "skill", "graphic", purpose="用角色口吻写图文的通用发布文案：标题、导语、话题和互动引导"),
         *(_resource(f"studio.product.style.{style}", "skill", "video", purpose=f"脚本风格：{name}") for style, name in PRODUCT_STYLES.items()),
         _resource("studio.video.script-review", "skill", "video", purpose="四评委逐句评审口播脚本并只改说法"),
         _resource("studio.video.stock-scout", "skill", "video", purpose="为缺素材的镜头找、挑免费素材并标版权"),
