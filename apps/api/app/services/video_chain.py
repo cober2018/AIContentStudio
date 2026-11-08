@@ -70,7 +70,7 @@ RULES = [
     "role cover_vertical，单独做，不放进成片。两张都按 sRGB 存，都导出到 cover_dir，都在剪辑清单之前交，清单 output_hashes 两张都列；成片通过后两张都是作品封面。"
     "有 cover_template 时两张的字都用这个模板渲染（交每张都带 cover_template_render）：横封面的字层叠在成片开头，竖封面的叠在竖版底图上。"
     "两张在任务通过前都能再交；cover_redo 要两张都重交才算完成。平台把横封面和成片开头 0.5 秒逐帧比色，竖封面只查尺寸；缺哪张、尺寸不对、颜色不一致都会在审片页提示。"
-    "开剪结果的 files 还写着要交 cover_43 时（抖音横封面 4:3），再交第三张：把 1920×1080 横封面图居中裁成 1440×1080（左右各裁 240 像素），role cover_43，不另外设计；"
+    "开剪结果的 files 还写着要交 cover_43 时（抖音横封面 4:3），必须再交第三张（没交用户通过不了成片）：把 1920×1080 横封面图居中裁成 1440×1080（左右各裁 240 像素），role cover_43，不另外设计；"
     "所以这时横封面设计要把大标题和卖点都放在画面中间 1440 宽的范围里，裁完不切字。它和另外两张一样导出、交、列进 output_hashes、可重交，cover_redo 要三张都重交，平台只查它的尺寸。",
     "发布文案：成片任务里、交成片之前，用 save_publish_copy 给作品存一份通用发布文案（不按平台分，不填 channel）：角色作品按 studio.persona.publish-copy 写，商品作品按 studio.product.publish-copy 写；"
     "已经存过的，内容有变再改。用户会在交付页看和改，成品包里每个平台都带这份。",
@@ -308,6 +308,20 @@ def _approving(record: dict, target_id: int) -> bool:
     return (datetime.now(UTC) - started).total_seconds() < APPROVING_STALE_SECONDS
 
 
+def _require_four_three(db: Session, execution_id: int) -> None:
+    """抖音 needs the 4:3 cover, so a task that lists it is not approved without it; tasks opened before it keep two covers."""
+    from .web_video_handoff import cover_roles
+
+    execution = db.get(CreativeExecution, execution_id)
+    package = db.get(CreativeExecutionPackage, execution.package_id) if execution else None
+    if not package or "cover_43" not in cover_roles(package.package_json):
+        return
+    handed = db.scalar(select(CreativeExecutionOutput.id).where(CreativeExecutionOutput.execution_id == execution_id,
+                                                                CreativeExecutionOutput.role_id == "cover_43").limit(1))
+    if handed is None:
+        _fail("video_chain_cover_43_missing", "抖音 4:3 横封面还没交，交了才能通过")
+
+
 def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, decision: str, notes: list[dict]) -> dict:
     """The user's answer at one of the three stops. 通过 on 小样 / 成片 accepts that task's outputs."""
     from .content_masters import owned_unit
@@ -324,6 +338,8 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
     target = current["draft_master_id"] if stage == "draft" else current["execution_id"]
     if stage == "final" and decision == "approve" and current.get("cover_redo"):
         _fail("video_chain_cover_redo_pending", "封面重做中，等新封面交上来再通过")
+    if stage == "final" and decision == "approve":
+        _require_four_three(db, target)
     accepted = None
     if decision == "approve" and stage != "draft":
         # Accepting the output files takes a while; saying so first keeps the page and the model from reading 「待你看」 meanwhile.
@@ -772,7 +788,7 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
                      + ("横版封面：横封面设计盖在成片开头 0–0.5 秒随成片渲染，横封面图 role cover 1920×1080 从渲染好的成片开头 0.5 秒内截一帧；"
                         "竖封面 role cover_vertical 1080×1440（3:4）用同一套设计单独做、不放进成片；jpg / png 按 sRGB 存，"
-                        + ("再交抖音横封面 role cover_43 1440×1080：把横封面图居中裁出（左右各裁 240 像素），所以横封面的大标题和卖点放在中间 1440 宽里；" if four_three else "")
+                        + ("必须再交抖音横封面 role cover_43 1440×1080（没交用户通过不了成片）：把横封面图居中裁出（左右各裁 240 像素），所以横封面的大标题和卖点放在中间 1440 宽里；" if four_three else "")
                         + f"封面都导出到 {cover}/，都在剪辑清单之前交，清单 output_hashes 都列；"
                         if separate else f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；")
                      + f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
