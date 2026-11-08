@@ -22,6 +22,7 @@ export default function ProductionQueuePage({ projectId, workspace }: { projectI
   const prefix = projectId ? "queue_" : "";
   const q = params.get(`${prefix}q`) ?? "";
   const modality = params.get(`${prefix}modality`) ?? "";
+  const persona = workspace === "persona" ? params.get(`${prefix}persona`) ?? "" : "";
   const recordsOpen = params.get(`${prefix}view`) === "records";
   const showArchived = params.get(`${prefix}archived`) === "1";
   const requestedPage = Number(params.get(`${prefix}page`) ?? "1");
@@ -52,6 +53,7 @@ export default function ProductionQueuePage({ projectId, workspace }: { projectI
     finally { setLifecycleBusy(false); }
   }
   const projects = useQuery({ queryKey: ["production-queue", currentUser(), projectId ?? "all", workspace], queryFn: async () => projectId ? [await api.get<Project>(`/content-projects/${projectId}`)] : workspace ? (await api.get<{items: Project[]}>(`/production-workspaces?workspace=${workspace}`)).items : api.get<Project[]>("/content-projects"), retry: false });
+  const personas = useQuery({ queryKey: ["content-personas", currentUser()], queryFn: () => api.get<{ id: number; name: string }[]>("/content-personas"), enabled: workspace === "persona", retry: false });
   const tasks = useQuery({ queryKey: ["generation-tasks", currentUser()], queryFn: () => api.get<NativeTask[]>("/generation-tasks"), enabled: recordsOpen, retry: false });
   // 搜索词防抖：避免每敲一个字符就重算可见单元并触发外部执行重拉
   const [debouncedQ, setDebouncedQ] = useState("");
@@ -60,7 +62,7 @@ export default function ProductionQueuePage({ projectId, workspace }: { projectI
     return () => clearTimeout(timer);
   }, [q]);
   const rows = (projects.data ?? []).flatMap(project => project.units.map(unit => ({ project, unit })))
-    .filter(({ project, unit }) => (!workspace || (unit.production_domain ?? "persona") === workspace) && unit.lifecycle !== "deleted" && (showArchived || (project.status !== "archived" && unit.status !== "archived" && unit.lifecycle !== "archived")) && (!modality || unit.modality === modality) && `${project.title} ${unit.title}`.toLowerCase().includes(debouncedQ.toLowerCase()))
+    .filter(({ project, unit }) => (!workspace || (unit.production_domain ?? "persona") === workspace) && unit.lifecycle !== "deleted" && (showArchived || (project.status !== "archived" && unit.status !== "archived" && unit.lifecycle !== "archived")) && (!modality || unit.modality === modality) && (!persona || String(unit.persona_id) === persona) && `${project.title} ${unit.title}`.toLowerCase().includes(debouncedQ.toLowerCase()))
     .sort((a, b) => (priority[a.unit.status] ?? 4) - (priority[b.unit.status] ?? 4) || b.project.id - a.project.id || a.unit.id - b.unit.id);
   const nativeTasks = (tasks.data ?? []).filter(task => !projectId || task.project_id === projectId)
     .sort((a, b) => (priority[a.state] ?? 4) - (priority[b.state] ?? 4));
@@ -88,7 +90,7 @@ export default function ProductionQueuePage({ projectId, workspace }: { projectI
   };
   return <section className={projectId ? "space-y-6" : "mx-auto max-w-7xl space-y-6 px-6 py-9"}>
     <header><p className="eyebrow">创作与执行</p><h1 className="mt-3 text-[34px] leading-[1.1] text-ink-900 sm:text-[40px]">{workspace === "persona" ? "角色内容工作台" : workspace === "product" ? "商品视频作品" : "创作与执行"}</h1><p className="mt-2 text-sm text-slate-500">从内容单元进入创作；生成任务读取既有记录。查看队列不会生成、重发或接受结果。</p></header>
-    <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-white p-4"><Field label="查找项目或内容"><input className={inputClass} value={q} onChange={event => { update({ q: event.target.value }); }} /></Field><Field label="内容形态"><select className={inputClass} value={modality} onChange={event => { update({ modality: event.target.value }); }}><option value="">全部</option>{Object.entries(modalityNames).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field><label className="text-sm"><input type="checkbox" checked={showArchived} onChange={event => { update({ archived: event.target.checked ? "1" : "" }); }} /> 包含归档历史</label><Button variant="secondary" onClick={() => { void projects.refetch(); if (recordsOpen) { void tasks.refetch(); external.refetch(); } }}>刷新</Button><Link to="/projects" className="text-sm text-indigo-700 underline">管理项目资料</Link></div>
+    <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-white p-4"><Field label="查找项目或内容"><input className={inputClass} value={q} onChange={event => { update({ q: event.target.value }); }} /></Field><Field label="内容形态"><select className={inputClass} value={modality} onChange={event => { update({ modality: event.target.value }); }}><option value="">全部</option>{Object.entries(modalityNames).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></Field>{workspace === "persona" && <Field label="角色"><select className={inputClass} value={persona} onChange={event => { update({ persona: event.target.value }); }}><option value="">全部</option>{(personas.data ?? []).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field>}<label className="text-sm"><input type="checkbox" checked={showArchived} onChange={event => { update({ archived: event.target.checked ? "1" : "" }); }} /> 包含归档历史</label><Button variant="secondary" onClick={() => { void projects.refetch(); if (recordsOpen) { void tasks.refetch(); external.refetch(); } }}>刷新</Button><Link to="/projects" className="text-sm text-indigo-700 underline">管理项目资料</Link></div>
     {lifecycleError && <ErrorBanner message={lifecycleError} />}
     {lifecycleNotice && <p role="status" className="rounded-lg bg-indigo-50 p-3 text-sm">{lifecycleNotice}</p>}
     <nav aria-label="作品视图" className="flex gap-3"><Button variant={recordsOpen ? "secondary" : undefined} onClick={() => update({ view: "" }, false)}>作品清单</Button><Button variant={recordsOpen ? undefined : "secondary"} onClick={() => update({ view: "records" }, false)}>任务与执行记录</Button></nav>
