@@ -36,9 +36,9 @@ type Chain = {
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
 type CoverTask = { execution_id: number; state: "making" | "review" | "changes" | "done"; notes?: Note[]; cover_vertical_output_id: number | null; cover_43_output_id: number | null };
-type Step = "draft" | "sample" | "final";
-const STEPS = [["导演稿", ["not_started", "draft_review", "draft_changes"]], ["小样", ["making", "sample_review", "sample_changes"]], ["成片", ["finishing", "final_review", "final_changes", "done"]]] as const;
-const ORDER: Step[] = ["draft", "sample", "final"];
+type Step = "draft" | "materials" | "sample" | "final";
+const STEPS = [["导演稿", ["not_started", "draft_review", "draft_changes"]], ["素材", ["materials_making", "materials_review", "materials_changes"]], ["小样", ["making", "sample_review", "sample_changes"]], ["成片", ["finishing", "final_review", "final_changes", "done"]]] as const;
+const ORDER: Step[] = ["draft", "materials", "sample", "final"];
 
 function errorText(error: unknown) {
   const detail = error instanceof ApiError ? error.detail as { message?: string } | undefined : undefined;
@@ -168,7 +168,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const chain = useQuery({ queryKey: ["video-chain", currentUser(), projectId, unitId], retry: false,
     queryFn: () => api.get<Chain>(`/content-projects/${projectId}/units/${unitId}/video-chain`),
     refetchInterval: query => query.state.data?.state === "approving" ? 3000
-      : ["making", "finishing", "draft_changes", "sample_changes", "final_changes", "not_started"].includes(query.state.data?.state || "")
+      : ["making", "finishing", "draft_changes", "materials_making", "materials_changes", "sample_changes", "final_changes", "not_started"].includes(query.state.data?.state || "")
         || ["making", "changes"].includes(query.state.data?.cover_task?.state || "") ? 15000 : false });
   const [notes, setNotes] = useState<Note[]>([]);
   const [time, setTime] = useState("");
@@ -180,7 +180,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   if (chain.isPending) return null;
   if (chain.error || !data) return <ErrorBanner message={errorText(chain.error)} />;
   // An approval being written belongs to the stop it was given at: the 小样 for a rough cut, else the 成片.
-  const current = data.state === "approving" ? (data.phase === "rough_cut" ? 1 : 2) : STEPS.findIndex(([, states]) => (states as readonly string[]).includes(data.state));
+  const current = data.state === "approving" ? (data.phase === "rough_cut" ? 2 : 3) : STEPS.findIndex(([, states]) => (states as readonly string[]).includes(data.state));
   const here = ORDER.indexOf(step);
   const live = current === here;
   // Before the 成片 is final, the 导演稿 can be sent back from any later stop.
@@ -188,7 +188,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   // A cut sent back with changes stays approvable while its replacement is being made; approving it keeps that cut and drops the replacement.
   const cutOffer = !!data.previous_cut && (step === "sample" ? data.previous_cut.phase === "rough_cut" : step === "final" && data.previous_cut.phase === "final");
   const reviewing = live && (data.state.endsWith("_review") || data.state.endsWith("_changes")) || backToDraft || cutOffer;
-  const timed = step !== "draft";
+  const timed = step === "sample" || step === "final";
   // Once the 成片 task exists, the 小样 lives on as its own earlier task.
   const cut: Cut | null = step === "sample" ? data.sample || (data.phase === "rough_cut" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id, shot_checks: data.shot_checks } : null)
     : step === "final" && data.phase === "final" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id, shot_checks: data.shot_checks,
@@ -220,7 +220,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
       setPlayer({ url: session.url, key: `${cut.execution_id}:${Date.now()}`, output: cut.cut_output_id });
     } catch (cause) { setIssue(errorText(cause)); }
   }
-  const status = live ? data.label : step === "draft" ? `导演稿${data.draft_revision_no ? ` v${data.draft_revision_no}` : ""} 已采用` : "小样已通过";
+  const status = live ? data.label : step === "draft" ? `导演稿${data.draft_revision_no ? ` v${data.draft_revision_no}` : ""} 已采用` : step === "materials" ? (current > here ? "素材已确认" : "还没到素材这一步") : "小样已通过";
   const draft: VideoDraft | null = data.master ? { payloadSchema: "video.master.v2", payload: data.master.payload, assetRefs: [], evidenceRefs: [] } : null;
   return <div className="space-y-4">
     {step === "draft" && <PlatformSkillsSwitch projectId={projectId} unitId={unitId} readOnly={!!data.locked} />}
@@ -253,10 +253,10 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
         </div>}
         {notes.length > 0 && <ul className="list-disc pl-5 text-xs text-slate-600">{notes.map((item, index) => <li key={index}>{item.time_ms != null ? `${item.time_ms / 1000}s：` : ""}{item.note}</li>)}</ul>}
         <div className="flex flex-wrap gap-2">
-          {!backToDraft && <Button disabled={busy || (step === "final" && !!data.cover_redo)} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
+          {!backToDraft && <Button disabled={busy || (step === "final" && !!data.cover_redo)} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "materials" ? "确认素材" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
           {!cutOffer && <Button variant="secondary" disabled={busy || (!notes.length && !text.trim())} onClick={() => void send("changes")}>{backToDraft ? "退回导演稿" : "按意见修改"}</Button>}
         </div>
-        <p className="text-xs text-slate-500">{cutOffer ? "新版本还在做。现在通过，就用这一版，你的修改意见作废，新版本停止。" : backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "有素材的话，先放进素材库（外部素材库或本项目）再采用。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
+        <p className="text-xs text-slate-500">{cutOffer ? "新版本还在做。现在通过，就用这一版，你的修改意见作废，新版本停止。" : backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "撤回退回意见、按当前导演稿继续。" : step === "materials" ? "不动就是全自动；要自己做的镜头在下面「补充镜头」切成手动，上传后再确认。写意见会让第三方模型重配素材。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
       </div>}
       {step === "final" && data.locked && data.cover_task && <CoverTaskReview projectId={projectId} unitId={unitId} task={data.cover_task} />}
       {step === "final" && data.locked && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-white/70 p-3 text-xs text-slate-600"><span>成片已定稿，这一条不能再改。要调整就复制一份，在副本里从导演稿开始。</span><Button size="sm" variant="secondary" disabled={busy} onClick={() => void copy()}>复制一份</Button></div>}

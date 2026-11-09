@@ -91,7 +91,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   const chain = useQuery({ queryKey: ["video-chain", currentUser(), projectId, unitId], enabled: simpleVideo, retry: false,
     queryFn: () => api.get<{ state: string; label: string; locked?: boolean }>(`/content-projects/${projectId}/units/${unitId}/video-chain`) });
   const chainState = chain.data?.state || "";
-  const chainReach = chainState.startsWith("draft") || chainState === "not_started" ? 1 : chainState === "making" ? 3 : chainState.startsWith("sample") ? 4 : chainState === "done" ? 6 : chainState ? 5 : 0;
+  const chainReach = chainState.startsWith("draft") || chainState === "not_started" ? 1 : chainState === "making" || chainState.startsWith("materials") ? 3 : chainState.startsWith("sample") ? 4 : chainState === "done" ? 6 : chainState ? 5 : 0;
   const chainHome = ["plan", "plan", "plan", "materials", "sample", "final", "final"][chainReach];
   const chainLocked = simpleVideo && !!chain.data?.locked;
   const articleUnit = !product && (unit?.modality === "text" || unit?.modality === "graphic");
@@ -123,8 +123,8 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   const captureEnabled = captureRoute === "real" || captureRoute === "mixed";
   const steps: { id: VideoStudioView | "delivery" | "make" | "sample" | "final" | "voice" | "advanced" | "images"; label: string; hint: string }[] = simpleVideo ? [
     product ? { id: "goal", label: "商品与本条目标", hint: "复用商品事实，填写这一条作品要表达的购买理由。" } : { id: "goal", label: "选题与资料", hint: "核对选题、受众、事实与来源，填写本条创作目标。" },
-    { id: "plan", label: "导演稿", hint: "逐镜看分镜和素材需求；采用或写修改意见。" },
-    { id: "materials", label: "素材", hint: "逐镜看每个镜头用的素材；缺的可以从素材库拖进来。" },
+    { id: "plan", label: "导演稿", hint: "导演稿存好即自动采用；可以看分镜，要改就写意见退回。" },
+    { id: "materials", label: "素材", hint: "逐镜看素材：不动就全自动；个别镜头可换素材或切成手动自己生成，然后确认素材。" },
     { id: "voice", label: "配音与音乐", hint: "生成并试听配音；看背景音乐，要换就拖一首进来。" },
     { id: "sample", label: "小样", hint: "看小样、按秒写意见；通过后开始排版。" },
     { id: "final", label: "成片", hint: "看成片、写意见或通过；通过即定稿，不能再改。" },
@@ -229,7 +229,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
           ? <p className="mb-5 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">还没到这一步。视频现在：{chain.data?.label}。<button type="button" className="ml-2 text-indigo-700 underline" onClick={() => goStep(chainHome)}>去当前步骤</button></p>
           : <div className="mb-5 space-y-4">
             {step.id === "plan" && <><ReferenceVideoPanel projectId={projectId} unitId={unitId} readOnly={readOnly || chainLocked} />{!product && <div className="mb-4"><FactSummary projectId={projectId} /></div>}<VideoChainPanel projectId={projectId} unitId={unitId} step="draft" showDraft /></>}
-            {step.id === "materials" && <><ShotMaterialPages projectId={projectId} unitId={unitId} readOnly={readOnly} />{!product && <div className="mt-5"><WebMaterialSearch projectId={projectId} unitId={unitId} defaultQuery="" pickLabel="保存到项目素材" readOnly={readOnly} /></div>}</>}
+            {step.id === "materials" && <><VideoChainPanel projectId={projectId} unitId={unitId} step="materials" /><ShotMaterialPages projectId={projectId} unitId={unitId} readOnly={readOnly} />{!product && <div className="mt-5"><WebMaterialSearch projectId={projectId} unitId={unitId} defaultQuery="" pickLabel="保存到项目素材" readOnly={readOnly} /></div>}</>}
             {step.id === "voice" && <><VoiceoverPanel projectId={projectId} unitId={unitId} readOnly={readOnly || chainLocked} onSaved={() => setMasterReloadRequest(value => value + 1)} /><MusicPanel projectId={projectId} unitId={unitId} readOnly={readOnly} /></>}
             {(step.id === "sample" || step.id === "final") && <VideoChainPanel projectId={projectId} unitId={unitId} step={step.id} />}
             {step.id === "delivery" && (product ? <ProductPublishCopy projectId={projectId} unitId={unitId} readOnly={readOnly} /> : <>{unit.modality === "video" && <WorkCovers projectId={projectId} unitId={unitId} />}{(unit.modality === "video" || unit.modality === "graphic") && <PublishCopy projectId={projectId} unitId={unitId} readOnly={readOnly} />}<ChannelVariantsPanel projectId={projectId} unit={unit} readOnly={readOnly} workflowDirty={dirty} /></>)}

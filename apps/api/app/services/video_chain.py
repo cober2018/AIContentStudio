@@ -1,8 +1,8 @@
 """Video made end to end by the external model over MCP; the platform keeps records and asks the user.
 
-导演稿 (with a material request per shot) → user → materials, voiceover, DaVinci / AE → 小样 → user → 排版 → 成片 → user.
+导演稿 (adopted on save) → materials → user, once before the first 小样 → voiceover, DaVinci / AE → 小样 → user → 排版 → 成片 → user.
 The platform calls no model here. Saves that do not change picture content (materials, voiceover, edit preparation,
-duplicate merges) keep the 导演稿 the user approved; any other save is a new 导演稿 that needs approval again.
+duplicate merges) keep the current 导演稿; any other save is a new 导演稿. The user can still send a 导演稿 back until the 成片 is final.
 """
 
 from __future__ import annotations
@@ -34,20 +34,21 @@ from ..models import (
 KEY = "video_chain"
 # Returned with the brief so any external model (not only one with the repo's skills) follows the same chain.
 RULES = [
-    "你主导整条视频；平台不调用自己的模型。三处停下等用户：导演稿、小样、成片。有意见就出下一版再停。",
+    "你主导整条视频；平台不调用自己的模型。导演稿存好即自动采用，不用等；三处停下等用户：素材（只在第一次剪小样前）、小样、成片。有意见就出下一版再停。",
     "事实：口播和画面里当事实说的话（数字、症状、研究结论、政策、参数等）只用 get_video_brief 的 facts（已冻结的事实边界）里有的；角色作品写导演稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存导演稿。"
     "fact_templates 里每个模板的 red_lines 必须守，opinion_only 列的内容只能当个人经历或观点说。",
     "导演稿：完整 video.master.v2；每个镜头 board 含 message/visual/camera/speaker/sound/notes/material_request。material_request 写清画面必须有什么、景别、时长、实拍还是图形、横竖屏。一镜一个意思，景别和运镜要有变化，同一画面不重复用。",
-    "商品作品和角色作品：导演稿采用前不生成任何画面（首帧、九宫格、图生视频、切换手动 / 自动都会被拒绝）；采用后先把用户素材对应到镜头（set_shot_materials），再只给没有用户素材的镜头生成。",
+    "商品作品和角色作品：存导演稿后先把用户素材对应到镜头（set_shot_materials），再只给没有用户素材的镜头准备画面：首帧、九宫格，并用 set_shot_video_mode 设好手动或自动、给手动镜头备好提示词；"
+    "备齐后用 submit_video_materials 交给用户看素材，停下等「确认素材」；确认前不生成图生视频（generate_shot_video 会被拒绝），确认后再给「自动」镜头生成视频、配音、剪小样。用户写了意见就按意见重配后再交。",
     "九宫格分组：写导演稿时，要生成画面的镜头里需要同一个人物或同一个场景的，归成一组写进 consistency_groups（每组 id、shot_ids 至少 2 个、person 共用人物、setting 共用场景；一个镜头只在一组）；"
-    "零散、互不相关的镜头不归组。采用后归了组的用 generate_storyboard_grid(group_id) 一组出一张九宫格，每格是该镜的首帧候选；没归组的用 generate_shot_image 单张出图，或给用户文生视频提示词。改分组就是改导演稿，要重新采用。",
+    "零散、互不相关的镜头不归组。采用后归了组的用 generate_storyboard_grid(group_id) 一组出一张九宫格，每格是该镜的首帧候选；没归组的用 generate_shot_image 单张出图，或给用户文生视频提示词。改分组就是改导演稿，重新存一版。",
     "角色作品补镜头：没有商品图，生首帧、九宫格都不带商品参考、不做商品检查，提示词按这一镜 board 的画面、运镜、人物态度写，不提商品；"
     "角色有形象照就带上，人物照形象照来；没有形象照，生成画面里不出现人物，只拍场景，拿东西只出现手部。"
     "例外：没有形象照、画面又需要出现别的人（不是角色本人）时，在那一镜 board.other_people 写是谁（如「宝宝」「医护人员的手」，1–60 字），"
     "这一镜就可以出现这个人的手、脚、身体局部或背影，不露脸、不出现正脸和侧脸，不能是角色本人，也不多出别的人；没写的镜头照旧不出现人物。自动图生视频没有商品图兜底，要先有首帧；自动生成由用户在页面上点或明确要求时才调。"
     "手动镜头把 get_shot_video_prompt 的文生视频提示词（t2v_prompt）或首帧 + 图生视频提示词交给用户，用户在网页工具生成后上传。",
     "商品作品的 product.product.info_images 是用户给的商品资料图（类别 certificate 证书、specification 参数图、dimensions 尺寸图、detail 细节图等）：证书、参数、尺寸镜头直接用对应资料图原图（set_shot_materials），不生成、不修改、不重画。",
-    "导演稿采用后：先用用户新放进库的素材，其余按 素材库 → 图库搜索 → 生图 → AE 模板 补齐；每个镜头用哪条由你定；回执写明哪些是用户给的、哪些是你找的或做的。",
+    "存导演稿后：先用用户新放进库的素材，其余按 素材库 → 图库搜索 → 生图 → AE 模板 补齐；每个镜头用哪条由你定；回执写明哪些是用户给的、哪些是你找的或做的。",
     "小样、排版、成片都在达芬奇（剪辑、调色、声音、导出）和 AE（标题、字幕、包装、特效）里做；ffmpeg 只用于检查和转格式。",
     "实拍原声为主、只有个别镜头要画外配音时：在那几个镜头的 board 写 dub_persona（角色名称或编号，声音就是这个角色固定的声音），只给这些镜头配音，镜头时长不动；"
     "剪辑时配音轨从 0 秒铺上（其余位置是静音），原声镜头保留素材声音；配音结果的 edit_notes 写了哪句提前进上一镜结尾，就做成声音先进、画面在本镜开头再切。",
@@ -161,6 +162,48 @@ def _decision(record: dict, stage: str, target_id: int) -> dict | None:
     return next((item for item in reversed(record["decisions"]) if item["stage"] == stage and item["target_id"] == target_id), None)
 
 
+def _materials(record: dict) -> dict:
+    """The one materials stop, before the work's first 小样; once approved, or once a cut exists, it never stops again."""
+    last = next((item for item in reversed(record["decisions"]) if item["stage"] == "materials"), None)
+    if record["tasks"] or (last is not None and last["decision"] == "approve"):
+        return {"state": "approved"}
+    submitted = record.get("materials_submitted")
+    if submitted and (last is None or datetime.fromisoformat(last["at"]) < datetime.fromisoformat(submitted["at"])):
+        return {"state": "review"}
+    if last is not None:
+        return {"state": "changes", "notes": last["notes"]}
+    return {"state": "pending"}
+
+
+def require_materials_approved(db: Session, unit_id: int) -> None:
+    if _materials(_unit_record(db, unit_id))["state"] != "approved":
+        _fail("video_chain_materials_not_approved", "素材还没确认：备齐后用 submit_video_materials 交给用户，等用户确认素材")
+
+
+def submit_materials(db: Session, user: User, project_id: int, unit_id: int) -> dict:
+    """The model hands the mapped materials to the user; it stops here until 确认素材 or notes."""
+    current = state(db, user, project_id, unit_id)
+    if current["state"] not in {"materials_making", "materials_changes", "materials_review"}:
+        _fail("video_chain_materials_not_open", f"现在是「{current['label']}」，不能交素材")
+    record = _unit_record(db, unit_id)
+    if _materials(record)["state"] == "approved":
+        _fail("video_chain_materials_already_approved", "素材已经确认过，直接配音、剪小样")
+    record["materials_submitted"] = {"draft_master_id": current["draft_master_id"], "by": user.email, "at": datetime.now(UTC).isoformat()}
+    _put(db, unit_id, record)
+    db.commit()
+    return {**state(db, user, project_id, unit_id),
+            "review_url": f"/projects/{project_id}/units/{unit_id}/production?workstep=materials"}
+
+
+def _manual_without_clip(db: Session, unit_id: int, master: ContentMasterRevision) -> list[str]:
+    from .product_video import JOBS_KEY, _setting
+
+    modes = (_setting(db, JOBS_KEY).get(str(unit_id)) or {}).get("modes") or {}
+    shots = sorted(master.payload_json.get("shots") or [], key=lambda shot: shot.get("order", 0))
+    return [f"镜头 {index + 1}" for index, shot in enumerate(shots)
+            if modes.get(shot["id"]) == "manual" and not shot.get("source_material_revision_id")]
+
+
 def _task(db: Session, record: dict) -> tuple[dict | None, CreativeExecution | None]:
     # A task the user superseded by approving the cut it replaced is no longer the current one.
     for task in reversed(record["tasks"]):
@@ -239,14 +282,21 @@ def _state(db: Session, unit_id: int) -> dict:
     if root is None or (root.edit_summary_json or {}).get("video_chain") != "draft":
         return {"state": "not_started", "label": "待开始", "detail": "在接了 MCP 的第三方模型里说「做这个视频」开始：先写导演稿和素材需求"}
     view = {"draft_master_id": root.id, "draft_revision_no": root.revision_no}
+    # A saved 导演稿 counts as adopted; the user judges it from the cut and may still send it back.
     decided = _decision(record, "draft", root.id)
-    if decided is None:
-        return {**view, "state": "draft_review", "label": "导演稿待你看", "detail": "看分镜和素材需求；有素材就放进素材库，然后采用或写修改意见"}
-    if decided["decision"] == "changes":
+    if decided is not None and decided["decision"] == "changes":
         return {**view, "state": "draft_changes", "label": "导演稿按你的意见修改中", "notes": decided["notes"]}
     task, execution = _task(db, record)
     if task is None or task["draft_master_id"] != root.id:
-        return {**view, "state": "making", "label": "制作中", "detail": "选素材、配音，准备剪小样"}
+        materials = _materials(record)
+        if materials["state"] == "review":
+            return {**view, "state": "materials_review", "label": "素材待你看",
+                    "detail": "逐镜看素材；不动就全自动，个别镜头可换素材或切成手动自己生成后上传，然后确认素材或写修改意见"}
+        if materials["state"] == "changes":
+            return {**view, "state": "materials_changes", "label": "素材按你的意见修改中", "notes": materials["notes"]}
+        if materials["state"] == "pending":
+            return {**view, "state": "materials_making", "label": "备素材中", "detail": "给每个镜头配素材，备好后交给你看"}
+        return {**view, "state": "making", "label": "制作中", "detail": "生成自动镜头、配音，准备剪小样"}
     phase = "sample" if task["phase"] == "rough_cut" else "final"
     view.update(execution_id=execution.id, execution_state=execution.state, phase=task["phase"])
     notes = _decision(record, phase, execution.id)
@@ -368,7 +418,7 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
 
     owned_unit(db, project_id, unit_id, user, mutate=True)
     current = state(db, user, project_id, unit_id)
-    expected = {"draft": "draft_review", "sample": "sample_review", "final": "final_review"}[stage]
+    expected = {"draft": "draft_review", "materials": "materials_review", "sample": "sample_review", "final": "final_review"}[stage]
     # Until the 成片 is final the user may send the 导演稿 back from any later stop.
     back_to_draft = stage == "draft" and decision == "changes" and "draft_master_id" in current and not current.get("locked")
     # A cut sent back with changes stays approvable while its replacement is being made; approving it supersedes that replacement.
@@ -376,16 +426,20 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
     if replacing:
         _check_supersedable(db, current["execution_id"])
     elif current["state"] not in {expected, expected.replace("review", "changes")} and not back_to_draft:
-        _fail("video_chain_not_waiting", f"现在不在等你看{ {'draft': '导演稿', 'sample': '小样', 'final': '成片'}[stage] }")
+        _fail("video_chain_not_waiting", f"现在不在等你看{ {'draft': '导演稿', 'materials': '素材', 'sample': '小样', 'final': '成片'}[stage] }")
     if decision == "changes" and not any(str(item.get("note") or "").strip() for item in notes):
         _fail("video_chain_notes_required", "写一下要改哪里", 422)
-    target = current["draft_master_id"] if stage == "draft" else current["previous_cut"]["execution_id"] if replacing else current["execution_id"]
+    target = current["draft_master_id"] if stage in {"draft", "materials"} else current["previous_cut"]["execution_id"] if replacing else current["execution_id"]
+    if stage == "materials" and decision == "approve":
+        missing = _manual_without_clip(db, unit_id, _latest(db, unit_id))
+        if missing:
+            _fail("video_chain_manual_clip_missing", f"{'、'.join(missing)} 选了手动，还没上传视频", 422)
     if stage == "final" and decision == "approve" and current.get("cover_redo"):
         _fail("video_chain_cover_redo_pending", "封面重做中，等新封面交上来再通过")
     if stage == "final" and decision == "approve":
         _require_four_three(db, target)
     accepted = None
-    if decision == "approve" and stage != "draft":
+    if decision == "approve" and stage not in {"draft", "materials"}:
         # Accepting the output files takes a while; saying so first keeps the page and the model from reading 「待你看」 meanwhile.
         record = _unit_record(db, unit_id)
         record["approving"] = {"stage": stage, "target_id": target, "by": user.email, "at": datetime.now(UTC).isoformat()}
@@ -424,7 +478,7 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
                                 "by": user.email, "at": datetime.now(UTC).isoformat(),
                                 **({"superseded_execution_id": current["execution_id"]} if replacing else {})})
     _put(db, unit_id, record)
-    if stage != "draft" and decision == "changes":
+    if stage in {"sample", "final"} and decision == "changes":
         from . import video_lessons
 
         video_lessons.record_notes(db, user, project_id, unit_id, stage, target, notes[:50])
@@ -660,7 +714,7 @@ def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: 
 def _approved_master(db: Session, user: User, project_id: int, unit_id: int) -> tuple[ContentMasterRevision, dict]:
     current = state(db, user, project_id, unit_id)
     if current["state"] in {"not_started", "draft_review", "draft_changes"}:
-        _fail("video_chain_draft_not_approved", "导演稿还没被采用，先等用户在页面上采用")
+        _fail("video_chain_draft_not_approved", "导演稿被用户打回了，按意见存新一版导演稿" if current["state"] == "draft_changes" else "还没有导演稿，先存导演稿")
     return _latest(db, unit_id), current
 
 
@@ -789,6 +843,8 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     # A 成片 sent back (final_changes) is redone as a new task on top of the same approved 小样.
     if phase == "final" and current["state"] not in {"finishing", "final_changes"}:
         _fail("video_chain_sample_not_approved", "小样还没通过，等用户在页面上通过小样")
+    if phase == "rough_cut":
+        require_materials_approved(db, unit_id)
     document = copy.deepcopy(master.payload_json)
     if not document.get("music"):
         _fail("video_chain_music_undecided", "配乐还没定：先选一首放进主稿（set_shot_materials 的 music），或请用户在「配音与音乐」里点「不用配乐」，再开剪")

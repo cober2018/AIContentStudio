@@ -447,7 +447,7 @@ def generate(db: Session, user: User, project_id: int, unit_id: int, lines: list
     master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id)
                        .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     if unit is None or unit.project_id != project_id or master is None or master.payload_schema != "video.master.v2":
-        raise HTTPException(409, {"code": "voiceover_master_required", "message": "先采用导演稿，再生成配音"})
+        raise HTTPException(409, {"code": "voiceover_master_required", "message": "先存导演稿，再生成配音"})
     document = copy.deepcopy(master.payload_json)
     if lines is not None:
         return _redub(db, user, project_id, unit, master, document, lines)
@@ -743,7 +743,7 @@ def set_speed(db: Session, user: User, project_id: int, unit_id: int, speed_perc
     master = db.scalar(select(ContentMasterRevision).where(ContentMasterRevision.content_unit_id == unit_id)
                        .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
     if master is None or master.payload_schema != "video.master.v2":
-        raise HTTPException(409, {"code": "speech_speed_master_required", "message": "先采用导演稿，再调语速"})
+        raise HTTPException(409, {"code": "speech_speed_master_required", "message": "先存导演稿，再调语速"})
     document = copy.deepcopy(master.payload_json)
     speech = _speech(document)
     if speech is None:

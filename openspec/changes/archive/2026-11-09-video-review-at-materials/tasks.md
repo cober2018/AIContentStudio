@@ -1,0 +1,4 @@
+- [x] 1.1 video_chain：导演稿无决定即视为采用；新增 materials_making / materials_review / materials_changes；首个小样前要求素材已确认；手动镜头没上传不能确认；确认前不生成自动镜头视频
+- [x] 1.2 decide 支持 stage=materials；MCP 新增 submit_video_materials；工具说明、规则、MCP 设置文字改为「素材、小样、成片」三站
+- [x] 1.3 页面：进度条四段（导演稿 / 素材 / 小样 / 成片）；素材步骤顶部显示素材状态与「确认素材」「写意见」；导演稿、素材步骤提示
+- [x] 1.4 全量后端测试（2353 通过，5 个旧失败）、视频相关 170 通过、tsc / build、库副本走通；api 已重启

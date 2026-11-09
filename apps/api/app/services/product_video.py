@@ -397,7 +397,7 @@ def _after_approval(db: Session, user: User, project_id: int, unit_id: int) -> N
     from . import video_chain
 
     if video_chain.state(db, user, project_id, unit_id)["state"] in {"not_started", "draft_review", "draft_changes"}:
-        _fail(409, "video_chain_draft_not_approved", "先采用导演稿，对应完素材再生成：已有素材的镜头不用生成")
+        _fail(409, "video_chain_draft_not_approved", "先存导演稿，对应完素材再生成：已有素材的镜头不用生成")
 
 
 def set_shot_mode(db: Session, user: User, project_id: int, unit_id: int, shot_id: str, mode: str) -> dict:
@@ -430,6 +430,10 @@ def start_shot_video(db: Session, user: User, project_id: int, unit_id: int, sho
     from .materials import read_bytes_checked
 
     _after_approval(db, user, project_id, unit_id)
+    from . import video_chain
+
+    # Billed clips wait for 确认素材, so shots the user switches to manual cost nothing.
+    video_chain.require_materials_approved(db, unit_id)
     plan = shot_prompt(db, user, project_id, unit_id, shot_id)
     if plan["mode"] != "auto":
         _fail(409, "product_i2v_manual", "这一镜是手动生成；要自动请先切换")
