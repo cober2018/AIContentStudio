@@ -26,8 +26,17 @@ SECTIONS = ("artifact_kind", "channel", "content_form", "project", "identity", "
 
 
 def validate_product_identity(value: object) -> bool:
+    """Persona-free identity: a product's frozen context, or a search work's frozen plan and subject."""
     from .discovery_runtime import digest
 
+    if isinstance(value, dict) and value.get("production_domain") == "search":
+        frozen = value.get("search_context")
+        if (set(value) != {"id", "checksum", "production_domain", "search_context"} or value["id"] is not None
+                or not isinstance(frozen, dict) or frozen.get("production_domain") != "search"
+                or value["checksum"] != frozen.get("checksum")
+                or digest({key: item for key, item in frozen.items() if key != "checksum"}) != frozen["checksum"]):
+            raise ValueError("invalid frozen search context")
+        return True
     if not isinstance(value, dict) or value.get("production_domain") != "product":
         return False
     frozen = value.get("product_context")
@@ -44,7 +53,15 @@ def validate_product_identity(value: object) -> bool:
 
 def frozen_product_identity(db: Session, master: ContentMasterRevision, unit: ContentUnit, *, require_current: bool) -> dict | None:
     from .product_context import context_snapshot, is_product
+    from . import search_promotion
 
+    search = (master.edit_summary_json or {}).get("search_context_snapshot")
+    if search is not None or (require_current and search_promotion.is_search(unit)):
+        value = {"id": None, "checksum": search.get("checksum") if isinstance(search, dict) else None, "production_domain": "search", "search_context": search}
+        validate_product_identity(value)
+        if master.identity_snapshot_id is not None or (require_current and search_promotion.context_snapshot(db, unit) != search):
+            raise ValueError("inconsistent frozen search context")
+        return value
     frozen = (master.edit_summary_json or {}).get("product_context_snapshot")
     if frozen is None and not require_current:
         return None
@@ -62,9 +79,10 @@ def frozen_product_identity(db: Session, master: ContentMasterRevision, unit: Co
 
 def build_manifest_v4(inputs: dict) -> dict:
     """Build only from explicit snapshots; authorization/live gates belong to callers."""
-    required = {"project": ("id", "unit_id", "modality", "channel", "content_form"), "identity": ("checksum",) if validate_product_identity(inputs.get("identity")) else ("id", "checksum"), "brief": ("id", "revision_no", "checksum"), "evidence": ("boundary_id", "revision_no", "fact_pack"), "content_master": ("id", "revision_no", "payload_schema", "payload_hash", "context_hash"), "render": ("status",), "production": ("source_kind",)}
+    search_neutral = isinstance(inputs.get("identity"), dict) and inputs["identity"].get("production_domain") == "search" and inputs.get("channel") is None
+    required = {"project": ("id", "unit_id", "modality") if search_neutral else ("id", "unit_id", "modality", "channel", "content_form"), "identity": ("checksum",) if validate_product_identity(inputs.get("identity")) else ("id", "checksum"), "brief": ("id", "revision_no", "checksum"), "evidence": ("boundary_id", "revision_no", "fact_pack"), "content_master": ("id", "revision_no", "payload_schema", "payload_hash", "context_hash"), "render": ("status",), "production": ("source_kind",)}
     for section in SECTIONS:
-        if section not in inputs or inputs[section] is None:
+        if section not in inputs or (inputs[section] is None and not (search_neutral and section in {"channel", "content_form"})):
             raise ValueError(f"missing manifest section: {section}")
     for section, fields in required.items():
         if not isinstance(inputs[section], dict) or any(inputs[section].get(field) is None for field in fields):
@@ -124,7 +142,8 @@ def load_manifest_v4_inputs(db: Session, master: ContentMasterRevision, *, requi
 
     external = external_material_sources(db, master.project_id, projection["assets"])
     return {
-        "artifact_kind": resolve_content_form(db, master.channel_id, master.content_form).artifact_kind,
+        # A channel-neutral search piece has no channel form yet; its kind follows the modality.
+        "artifact_kind": adapter.allowed_artifact_kinds[0] if master.channel_id is None and product_identity and product_identity.get("production_domain") == "search" else resolve_content_form(db, master.channel_id, master.content_form).artifact_kind,
         "channel": master.channel_id, "content_form": master.content_form,
         "project": {"id": project.id, "title": project.title, "unit_id": unit.id, "unit_title": unit.title, "modality": master.modality, "channel": master.channel_id, "content_form": master.content_form},
         "identity": product_identity or {"id": identity.id, "checksum": identity.checksum, "brand_id": identity.brand_id, "brand_revision_id": identity.brand_revision_id, "persona_id": identity.persona_id, "persona_revision_id": identity.persona_revision_id, "account_id": identity.account_id, "series_id": identity.series_id, "series_revision_id": identity.series_revision_id, "brand_voice_version_id": identity.brand_voice_version_id, "effective_profile": identity.effective_profile_json, "field_origins": identity.field_origins_json},

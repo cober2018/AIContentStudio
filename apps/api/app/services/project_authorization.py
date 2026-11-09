@@ -88,7 +88,7 @@ def authorize_project_run(db: Session, run: WorkflowRun, user: User, *, mutate: 
         unit = db.get(ContentUnit, run.content_unit_id)
         if unit.production_domain == "product" and run.identity_snapshot_id is not None:
             raise HTTPException(409, "旧运行保留只读，请按商品流程准备新运行")
-        if unit.production_domain != "product":
+        if unit.production_domain not in ("product", "search"):
             hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
 
 

@@ -3,9 +3,7 @@
 ## Purpose
 
 Provide persona-owned, account-isolated WeChat draft delivery from immutable approved Candidates, preserving exact HTML, original asset filenames/MIME/bytes, explicit authorization, safe credentials and ambiguous-result reconciliation without public publication or false platform verification.
-
 ## Requirements
-
 ### Requirement: A real account belongs to exactly one content persona
 The system SHALL preserve one Persona to many ContentAccounts and SHALL prohibit a real platform account from being bound to multiple Personas through either shared references or duplicate local account records. Stable platform identity SHALL be distinct from names, content profiles and operator authorization.
 
@@ -191,3 +189,15 @@ The system SHALL persist only allowlisted safe references, reason codes and serv
 #### Scenario: No readback is inferred
 - **WHEN** a valid draft/create response and same-account human confirmation are recorded without calling `draft/get`
 - **THEN** the capability record remains valid for the bounded draft-create scope and all readback fields remain absent or explicitly unperformed
+
+### Requirement: Draft push is offered again after explicit not-delivered reconciliation
+用户对结果未确认的草稿推送明确核对为「未交付」后，交付页 SHALL 重新提供「推到草稿箱」；结果仍需核对时 SHALL NOT 提供。是否允许新尝试仍以后端判断为准。
+
+#### Scenario: Re-push after not delivered
+- **WHEN** 目标已核对为未交付并回到「已授权」
+- **THEN** 页面显示「推到草稿箱」，点击后产生新编号的尝试
+
+#### Scenario: Unreconciled result hides push
+- **WHEN** 目标处于「需核对」
+- **THEN** 页面只显示核对操作，不显示推送
+

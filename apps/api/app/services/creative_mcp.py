@@ -422,6 +422,38 @@ class VideoEditInput(Scope):
     notes: str | None = Field(default=None, max_length=2000)
 
 
+class SubjectDraftInput(Input):
+    subject_id: ID | None = None
+    subject: dict
+
+
+class SubjectRefInput(Input):
+    subject_id: ID
+
+
+class LibraryInput(Input):
+    subject_id: ID
+    library: dict
+
+
+class OpenProjectsInput(Input):
+    subject_id: ID
+    items: list[dict] = Field(min_length=1, max_length=5)
+
+
+class SearchProjectInput(Input):
+    project_id: ID
+
+
+class VersionTemplateInput(Scope):
+    channel_id: str = Field(min_length=1, max_length=100, pattern=IDENTIFIER)
+    content_form: str = Field(min_length=1, max_length=100, pattern=IDENTIFIER)
+
+
+class VersionInput(VersionTemplateInput):
+    payload: dict
+
+
 class EmptyInput(Input):
     pass
 
@@ -493,6 +525,17 @@ TOOLS = {
     "create_unit": (UnitCreateInput, "Create a work in a project for one persona (video, graphic or text; channel optional, from list_personas). Returns unit_id; continue with the normal flow, e.g. get_video_brief, where the 导演稿, 小样 and 成片 stops wait for the user.", False),
     "list_accounts": (EmptyInput, "Before importing account data: list the owner's active platform accounts (id, name, platform channel and label, persona id and name, whether the platform accepts imports) and the metric keys each platform accepts.", True),
     "import_account_metrics": (AccountMetricsInput, "Import one account's works data that you read yourself from the user's screenshots, copied text or platform export (the files are never uploaded). FIRST show the extracted table to the user in chat and get their OK; only then call this. Never guess a number you cannot read clearly: leave it out or keep your best reading and list its key in uncertain. Rates are 0–1 fractions (23.18% -> 0.2318), durations in seconds, counts as plain numbers (1.2万 -> 12000). published_at as shown on the platform, YYYY-MM-DD HH:MM[:SS], China time unless it carries an offset. source.checksum is the file's sha256 (or of the copied text); the same source for the same account is skipped. At most 200 rows per call: split a bigger table and suffix the checksum with :part2, :part3. Metric keys per platform, anything else rejects the whole import: " + _metric_key_text() + ". Works match by account + title + publish time, otherwise new external works are created; a metric imported again the same day replaces that day's value. Returns created / updated / skipped counts and the 效果复盘 batch link, where the user can undo the whole batch.", False),
+    "list_promotion_subjects": (EmptyInput, "搜索推广 start: list promotion subjects (推广对象) with their confirmed version and whether a draft waits for the person to confirm. Only a confirmed version can be used.", True),
+    "save_promotion_subject_draft": (SubjectDraftInput, "Draft or redraft a promotion subject from the material the user gave (name, links, files) and your own research. subject = {name, category_id or proposed_category {top_key: physical|digital|service|org, name}, audiences [individual|business|government], brand, url, description, facts [{text, url, excerpt, source}], brand_statement, banned_words}. Every fact needs the page url and an exact excerpt from it: the platform opens the link, drops facts whose excerpt is not there (returned in rejected_facts) and marks unreachable pages for a manual check. Saves a DRAFT; then STOP and tell the user to confirm it on the page — you cannot confirm it.", False),
+    "get_search_subject": (SubjectRefInput, "Read one promotion subject: confirmed and draft versions, the question library with each question's coverage (none / in_progress / done), its projects, category hints and the genre list.", True),
+    "save_question_library": (LibraryInput, "Save a new version of the subject's question library (needs a confirmed subject). library = {questions [{id (keep existing ids), text, intent, priority 1-3, source_url (a search result page; leave empty only when inferred)}], keywords {primary, long_tail, brand}}. No confirmation needed.", False),
+    "open_search_projects": (OpenProjectsInput, "Open up to 5 promotion projects, one per question: items [{question_id, forms [text|graphic|video], tone, reader_level, genre (definition|buying-guide|comparison|shortlist|how-to|price-spec|case-study|faq), writer (external|platform), title}]. Questions already in progress or done are skipped. Each project gets a core text work plus derived graphic / video works; facts are frozen at this moment.", False),
+    "get_search_project": (SearchProjectInput, "Read a promotion project: question, settings, each work's role / modality / chain state, its platform versions and the person's review decisions.", True),
+    "adopt_search_draft": (Scope, "搜索推广 only: after your saved draft passes its checks (and you judged any warnings), adopt it yourself; for a graphic piece call it again once its images are rendered and you checked them. Videos follow the video chain, where the person reviews.", False),
+    "get_search_version_template": (VersionTemplateInput, "The platform's mechanical adaptation of an adopted 搜索推广 work for one platform (e.g. zhihu/article, toutiao/article, wechat/article), as the payload format to rewrite, plus titles already used in the project.", True),
+    "save_search_version": (VersionInput, "Save your rewritten platform version (new angle and title for that platform's readers, same facts and brand wording); a title used by another version is refused. Runs its checks and returns them.", False),
+    "submit_search_batch": (SearchProjectInput, "Send every new platform version of the project to the person's batch review page; versions whose checks fail are listed in blocked. Then STOP until the person decides; read the result with get_search_review.", False),
+    "get_search_review": (SearchProjectInput, "Read the person's decision on each platform version: approved ones are handed off; changes_requested ones carry a comment to revise, then save_search_version and submit_search_batch again.", True),
     "get_context": (ContextInput, "Read current owned unit context and content metadata.", True),
     "get_package": (PackageInput, "Read an exact frozen package, including its authorized input manifest.", True),
     "get_execution": (ExecutionInput, "Read exact execution state, contract, counts and staged output metadata.", True),
@@ -520,7 +563,7 @@ TOOLS = {
     "list_ae_templates": (TemplateListInput, "List AE template manifests: category, use, fields, images, duration range, aspects (9:16 project, landscape in variants), preview_files, fonts and status (ready after two checked renders, else draft; do not auto-use drafts). Choose templates yourself by shot content; when the user explicitly names an effect while fine-tuning, use that template, and tell the user first if it lacks the film's aspect or is not ready.", True),
     "render_ae_template": (TemplateRenderInput, "Render one AE template version with content (and optional project image revisions) through local aerender into a new candidate video material of the project, in the film's aspect (9:16 default, 16:9 when the template has a landscape variant; never stretched). Never binds it to a shot.", False),
     "start_material_autofill": (ShotSlotsInput, "Fill every empty storyboard row: licensed stock picked when eligible, else a ready AE template rendered from the row, else a gap with the reason. Never replaces the user's picks or saves the master; read progress with get_material_match and the result with get_shot_slots.", False),
-    "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model.", True),
+    "get_video_brief": (Scope, "Video chain step 0: project, brief, facts, source article text, voice settings, library materials (外部 / 通用 / this project, with folder and duration), the current video master payload and the chain state. You lead the whole video; the platform calls no model. When `search` is present this is a 搜索推广 work: the script answers search.question and cites only search.facts.", True),
     "save_director_draft": (VideoDraftInput, "Save a full video.master.v2 payload as the new 导演稿: shots with board {message, visual, camera, speaker, sound, notes, material_request; product works may add camera_presets (≤2 motion-library ids), look, intensity, chain_from_previous, character; any work may add source_kind (shoot | product_image | generated | ae_template | library: where the picture comes from, shoot shots make the shooting list) and attitude (the person's attitude and who they speak to, written with studio.video.prompt-direction; it leads the video prompt); dub_persona (a persona name or id: only that shot's line is voiced, in that persona's own voice, for live-sound videos with a few voice-over shots)} and script.blocks. Optional voice.pronunciation: up to 50 strings like \"去重/(qu4)(chong2)\" (the words as written, then one bracket of pinyin with tone number per character) for polyphonic words MiniMax misreads; the line text stays as written. Optional spoken-audio track: at most one timeline track with kind dialogue, items {id, order, material_revision_id, trim_start_ms, trim_end_ms, start_ms, end_ms, script_block_id?, speed_percent?} = play that span of the clip at that time on the cut, for that line; speed_percent (50–200, default 100) plays it faster or slower, so trim length = placement length × speed_percent / 100 — keep it when re-saving, the user set it; segments may cross shot boundaries, must not overlap, and trimmed length must equal placed length × speed_percent / 100 (no shot_id); the edit lays the voice from it while pictures still cut per shot, without it each shot keeps its own sound. material_request says what footage the shot needs (must show, shot size, length, real footage or graphic, orientation). Then STOP: the user reviews on the page.", False),
     "get_video_decision": (Scope, "Read the chain state and the user's latest decisions and notes (导演稿 / 小样 / 成片). Continue only after approval; notes mean a new version. cover_redo {note} on a 小样 / 成片 under review means the user wants only the cover redone: redo it per the note and submit role cover again on the same task (a landscape 成片 task: every cover role it lists), without resubmitting the cut.", True),
     "set_shot_materials": (VideoMaterialsInput, "After the 导演稿 is approved: put material revisions on shots {shot_id: material_revision_id}, optionally the music bed (music: an audio material_revision_id) and the length of shots without a line (silent_durations, ms; e.g. a closing that must stay long enough to read its text). Picture content stays as approved.", False),
@@ -545,7 +588,7 @@ TOOLS = {
     "get_reference_video": (Scope, "Read the work's reference breakdown: status (running / done / failed), the local summary with transcript, cuts, loudness and the absolute paths of transcript.json, cuts.json and the grid images to look at, the saved breakdown and the shooting list.", True),
     "save_reference_breakdown": (ReferenceBreakdownInput, "After reading the local breakdown with studio.video.reference-breakdown: save the whole-piece analysis, the timeline (per segment: speech, picture, overlays, purpose, source ms), the shooting list of 需要实拍 shots and brand_material (certificates, hospitals, ingredients seen in the reference: they need the brand's real material, never generated). Then write the 导演稿 with save_director_draft.", False),
     "generate_storyboard_grid": (StoryboardGridInput, "Product and persona works, after the 导演稿 is approved: draw one consistency group (group_id from the 导演稿's consistency_groups — shots that must keep the same person or setting) in 3×3 storyboard sheets so people, place and light stay consistent; the group's person and setting go into the prompt, and the persona's portrait (product works: plus the product's primary image; the work's own shared references win) goes along as reference. Unrelated shots are not grouped and are made one by one instead. The platform cuts each sheet, upscales each cell and registers it as that shot's first-frame candidate (not adopted; the user or set_shot_first_frame picks). Product works check each cell against the product photo and redraw a failing cell alone (up to 3 tries); persona works have no product check. Without a portrait no person is drawn (hands only); in persona works only cells whose board names other_people may show those people, never their face; person_notices lists the people shots affected. More than nine shots make more sheets, each later one referencing the first. Billed like generate_shot_image.", False),
-    "get_article_brief": (Scope, "Text / graphic piece written by you (the page switch must be 第三方模型): project, brief, facts, source texts, the writer setting, chain state and the current version as the payload format example (text.master.v2 or graphic.master.v2).", True),
+    "get_article_brief": (Scope, "Text / graphic piece written by you (the page switch must be 第三方模型): project, brief, facts, source texts, the writer setting, chain state and the current version as the payload format example (text.master.v2 or graphic.master.v2). When `search` is present this is a 搜索推广 work: answer search.question, cite only search.facts with their sources, and follow search.rules.", True),
     "save_article_draft": (ArticleDraftInput, "Save one full version of the piece (text.master.v2 for text, graphic.master.v2 for graphic; image layers name material_revision_id from the library or generate_video_image; no citations or claims). Refused when the page switch is 平台模型 or the piece is final. Graphic pieces also need their publish copy (save_publish_copy, graphic format) before they are final. Then STOP: the user approves or writes notes on the page.", False),
     "get_fact_template": (Scope, "Persona works, before the 导演稿 or article: the project's topic templates for its fact boundary (which claims need a source, accepted sources and domains, freshness, red lines, opinion-only content), suggested templates when none is chosen, the brief and the current boundary. Product works use the product brief instead.", True),
     "submit_facts": (FactsInput, "Persona works, before saving the 导演稿 or article: submit every claim the piece states as fact, found by the project's topic templates. Each item is the statement, kind (fact / event / quote / opinion), template id, source_url, the excerpt copied word for word from that page, source_date, and attribution for quotes and opinions; templates records your topic choice when the project has none. The platform opens every source: unreachable sources and excerpts not on the page come back with reasons and are not kept; the rest (labelled when outside the template's usual sites or possibly out of date) are frozen automatically as the project's new fact boundary, replacing the previous one. Save the draft after this; the user only reviews the draft.", False),
@@ -682,6 +725,8 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
         return media_transcription.result(db, args.job_id)
     if name in {"list_personas", "create_project", "create_unit"}:
         return _self_sourced(db, name, args, user)
+    if name in _SEARCH_TOOLS:
+        return _search(db, name, args, user)
     if name in {"list_accounts", "import_account_metrics"}:
         from . import account_metrics_import
 
@@ -804,6 +849,41 @@ def _web_materials(db: Session, name: str, args: Input, user: User) -> dict:
 
 _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_stage_result", "get_stage_decision",
                  "start_material_match", "get_material_match", "get_shot_slots", "start_material_autofill"}
+
+
+_SEARCH_TOOLS = {"list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject", "save_question_library", "open_search_projects",
+                 "get_search_project", "adopt_search_draft", "get_search_version_template", "save_search_version", "submit_search_batch", "get_search_review"}
+
+
+def _search(db: Session, name: str, args: Input, user: User) -> dict:
+    from pydantic import ValidationError as PydanticError
+
+    from . import search_promotion as sp
+
+    try:
+        if name == "list_promotion_subjects":
+            return {"subjects": sp.list_subjects(db, user)}
+        if name == "save_promotion_subject_draft":
+            return sp.save_subject(db, user, args.subject_id, sp.SubjectIn.model_validate(args.subject), origin="ai")
+        if name == "get_search_subject":
+            return sp.get_subject(db, user, args.subject_id)
+        if name == "save_question_library":
+            return sp.save_library(db, user, args.subject_id, sp.LibraryIn.model_validate(args.library), origin="ai")
+        if name == "open_search_projects":
+            return sp.open_projects(db, user, args.subject_id, [sp.ProjectItem.model_validate(item) for item in args.items])
+    except PydanticError as exc:
+        raise HTTPException(422, {"code": "search_input_invalid", "message": "；".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors()[:10])}) from None
+    if name == "get_search_project":
+        return sp.get_project(db, user, args.project_id)
+    if name == "adopt_search_draft":
+        return sp.adopt_draft(db, user, args.project_id, args.unit_id)
+    if name == "get_search_version_template":
+        return sp.version_template(db, user, args.project_id, args.unit_id, args.channel_id, args.content_form)
+    if name == "save_search_version":
+        return sp.save_version(db, user, args.project_id, args.unit_id, args.channel_id, args.content_form, args.payload)
+    if name == "submit_search_batch":
+        return sp.submit_batch(db, user, args.project_id)
+    return sp.review_feedback(db, user, args.project_id)
 
 
 _ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}
@@ -936,11 +1016,11 @@ def domain_error(exc: HTTPException, trace_id: str) -> dict:
     category = _CATEGORIES.get(exc.status_code, "unavailable")
     code = exc.detail.get("code") if isinstance(exc.detail, dict) else None
     # Stage and material codes are fixed identifiers the agent needs to recover; other domain codes stay masked.
-    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material|media_transcription)_[a-z0-9_]{1,80}", code))
+    known = code in _SAFE_CODES or bool(code and re.fullmatch(r"(stage|material_match|material_autofill|graphic|shot_slot|ae_template|ae_render|craft|video_chain|article_chain|video|voiceover|edit_handoff|reference_video|shot_grid|account_import|product_persona|web_material|media_transcription|search|promotion|fact_boundary|variant)_[a-z0-9_]{1,80}", code))
     data = error_data(code if known else f"creative_domain_{category}", category, trace_id,
                       status=exc.status_code if exc.status_code in _CATEGORIES else 503)
     # Video and article chain messages are written for the model so it can correct its own draft.
-    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_asset_", "video_chain_", "video_edit_queue_", "article_chain_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
+    if known and code.startswith(("material_library_unavailable", "media_transcription_", "video_asset_", "video_chain_", "video_edit_queue_", "article_chain_", "search_", "promotion_", "reference_video_", "shot_grid_", "account_import_", "voiceover_", "product_persona_", "web_material_")) and isinstance(exc.detail.get("message"), str):
         data["message"] = exc.detail["message"][:1000]
     return data
 

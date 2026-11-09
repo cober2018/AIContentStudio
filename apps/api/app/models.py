@@ -1752,8 +1752,8 @@ class OpportunityProjectConversion(Base):
 class ContentUnit(Base):
     __tablename__ = "content_unit"
     __table_args__ = (
-        CheckConstraint("production_domain IN ('persona', 'product')", name="ck_content_unit_production_domain"),
-        CheckConstraint("production_domain = 'product' OR persona_id IS NOT NULL", name="ck_content_unit_persona_required"),
+        CheckConstraint("production_domain IN ('persona', 'product', 'search')", name="ck_content_unit_production_domain"),
+        CheckConstraint("production_domain IN ('product', 'search') OR persona_id IS NOT NULL", name="ck_content_unit_persona_required"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -2555,3 +2555,112 @@ class ProductSkuReference(Base):
     master_hash: Mapped[str] = mapped_column(String(64))
     profile_revision_id: Mapped[int | None] = mapped_column(ForeignKey("production_profile_revision.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# ---------- 搜索推广 ----------
+class PromotionCategory(Base):
+    """推广对象小类；大类固定四个，小类按用户维护。"""
+    __tablename__ = "promotion_category"
+    __table_args__ = (
+        CheckConstraint("top_key IN ('physical', 'digital', 'service', 'org')", name="ck_promotion_category_top"),
+        UniqueConstraint("owner_user_id", "top_key", "name", name="uq_promotion_category_name"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    top_key: Mapped[str] = mapped_column(String(20))
+    name: Mapped[str] = mapped_column(String(60))
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PromotionSubject(Base):
+    __tablename__ = "promotion_subject"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    status: Mapped[str] = mapped_column(String(20), default="active", server_default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PromotionSubjectRevision(Base):
+    __tablename__ = "promotion_subject_revision"
+    __table_args__ = (
+        UniqueConstraint("subject_id", "revision_no", name="uq_promotion_subject_revision"),
+        CheckConstraint("status IN ('draft', 'confirmed')", name="ck_promotion_subject_revision_status"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("promotion_subject.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    payload_json: Mapped[dict] = mapped_column(JSON)
+    checksum: Mapped[str] = mapped_column(String(64))
+    # Only a person confirms; drafts come from a person or from AI.
+    status: Mapped[str] = mapped_column(String(20), default="draft", server_default="draft")
+    origin: Mapped[str] = mapped_column(String(20), default="human", server_default="human")
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    confirmed_by: Mapped[str | None] = mapped_column(String(255))
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class QuestionLibrary(Base):
+    """一个推广对象一个问题库。"""
+    __tablename__ = "question_library"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("promotion_subject.id"), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class QuestionLibraryRevision(Base):
+    __tablename__ = "question_library_revision"
+    __table_args__ = (UniqueConstraint("library_id", "revision_no", name="uq_question_library_revision"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    library_id: Mapped[int] = mapped_column(ForeignKey("question_library.id"), index=True)
+    revision_no: Mapped[int] = mapped_column(Integer)
+    subject_revision_id: Mapped[int] = mapped_column(ForeignKey("promotion_subject_revision.id"))
+    payload_json: Mapped[dict] = mapped_column(JSON)
+    checksum: Mapped[str] = mapped_column(String(64))
+    origin: Mapped[str] = mapped_column(String(20), default="ai")
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SearchProject(Base):
+    """一个推广项目：一个问题、一篇核心稿及其衍生作品，锁定开项目时的资料与问题库版本。"""
+    __tablename__ = "search_project"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), unique=True)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("promotion_subject.id"), index=True)
+    subject_revision_id: Mapped[int] = mapped_column(ForeignKey("promotion_subject_revision.id"))
+    library_revision_id: Mapped[int] = mapped_column(ForeignKey("question_library_revision.id"))
+    question_id: Mapped[str] = mapped_column(String(40))
+    settings_json: Mapped[dict] = mapped_column(JSON)
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SearchWork(Base):
+    """推广项目里的作品：核心稿（文字）或由它衍生的图文、视频。"""
+    __tablename__ = "search_work"
+    __table_args__ = (CheckConstraint("role IN ('core', 'derived')", name="ck_search_work_role"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    unit_id: Mapped[int] = mapped_column(ForeignKey("content_unit.id"), unique=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("content_project.id"), index=True)
+    role: Mapped[str] = mapped_column(String(20))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SearchRun(Base):
+    """平台模型的一次后台执行：起草资料、开工或续做一个项目；每一步记下用的模型、结果和失败原因。"""
+    __tablename__ = "search_run"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    subject_id: Mapped[int | None] = mapped_column(ForeignKey("promotion_subject.id"), index=True)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("content_project.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(20), default="queued")
+    options_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    steps_json: Mapped[list] = mapped_column(JSON, default=list)
+    error: Mapped[str | None] = mapped_column(String(1000))
+    created_by: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

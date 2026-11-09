@@ -236,6 +236,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "platform_skills": craft_skills.platform_skills(db, unit),
             # Who the piece speaks as; null when it belongs to no persona.
             "persona": persona_brief(db, user, unit),
+            # Search works: the question this piece answers, its keywords, the sourced facts it may cite and the search writing rules.
+            "search": __import__("app.services.search_promotion", fromlist=["writing_brief"]).writing_brief(db, unit),
             "state": state(db, user, project_id, unit_id),
             # The current version doubles as the format example the model fills in.
             "current_master": {"id": master.id, "revision_no": master.revision_no, "payload_schema": master.payload_schema,
@@ -267,6 +269,17 @@ def _asset_refs(db: Session, modality: str, payload: dict) -> list[dict]:
                 seen.add(revision_id)
                 declare(revision_id, role="document_media")
     return refs
+
+
+def _with_cover(db: Session, user: User, unit, refs: list[dict]) -> list[dict]:
+    """Search pieces published to 公众号 carry their generated cover first; other works are unchanged."""
+    from .search_promotion import cover_refs
+
+    cover = cover_refs(db, user, unit)
+    if not cover:
+        return refs
+    rest = [ref for ref in refs if ref["material_revision_id"] != cover[0]["material_revision_id"]]
+    return cover + [{**ref, "sort_order": index + 1} for index, ref in enumerate(rest)]
 
 
 def _evidence_refs(modality: str, payload: dict) -> list[dict]:
@@ -301,7 +314,7 @@ def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: 
         "idempotency_key": f"article-chain:{uuid.uuid4().hex}",
         "payload_schema": "text.master.v2" if unit.modality == "text" else "graphic.master.v2", "payload": payload,
         "source_kind": "user_edit", "edit_summary": {"article_chain": "draft", "note": (note or "")[:500]},
-        "asset_refs": _asset_refs(db, unit.modality, payload), "evidence_refs": _evidence_refs(unit.modality, payload)})
+        "asset_refs": _with_cover(db, user, unit, _asset_refs(db, unit.modality, payload)), "evidence_refs": _evidence_refs(unit.modality, payload)})
     db.commit()
     return {"master_id": saved["id"], "revision_no": saved["revision_no"], "state": _state(db, unit_id)}
 

@@ -85,6 +85,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   const workflow = useProductionWorkflow(projectId, unitId);
   const { readOnly, project, unit, dirty, loading, error, notice, workflowRevision, refreshWorkflowFromRecipe } = workflow;
   const product = unit?.production_domain === "product";
+  const search = unit?.production_domain === "search";
   const simpleVideo = unit?.modality === "video";
   // Shares the panel's cache key so the step pages and the panel always agree on where the video is.
   const chain = useQuery({ queryKey: ["video-chain", currentUser(), projectId, unitId], enabled: simpleVideo, retry: false,
@@ -96,7 +97,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   const articleUnit = !product && (unit?.modality === "text" || unit?.modality === "graphic");
   useEffect(() => {
     if (!unit) return;
-    setProductionWorkbench(product ? "product" : "persona");
+    setProductionWorkbench(product ? "product" : unit.production_domain === "search" ? "search" : "persona");
     return () => setProductionWorkbench(null);
   }, [unit, product]);
   const skuId = useQuery({ queryKey: ["production-sku", currentUser(), projectId, unitId], enabled: product,
@@ -200,7 +201,7 @@ export function ProductionWorkspace({ projectId, unitId }: { projectId: number; 
   if (loading || briefPending) return <div className="p-9"><Spinner label="加载生产工作台…" /></div>;
   if (!project || !unit) return <div className="p-9"><ErrorBanner message={error || "内容单元不存在或无权访问。"} /></div>;
   return <div className="mx-auto w-full max-w-[1240px] px-5 pb-20 pt-8 sm:px-8 md:pt-12 lg:px-12">
-    <Link to={product ? `/production?workspace=product${skuId ? `&sku=${skuId}` : ""}` : "/production?workspace=persona"} className="text-sm text-slate-500">← {product ? "商品视频工作台" : "角色内容工作台"} / {product ? unit.title : project.title}</Link>
+    <Link to={product ? `/production?workspace=product${skuId ? `&sku=${skuId}` : ""}` : search ? `/search-promotion/projects/${project.id}` : "/production?workspace=persona"} className="text-sm text-slate-500">← {product ? "商品视频工作台" : search ? "搜索推广工作台" : "角色内容工作台"} / {product ? unit.title : project.title}</Link>
     <ProductionContextHeader workflow={workflow} productContext={brief?.product_context} slim={simpleVideo && !advanced} />
     {workflow.needsProductContext && <div className="mb-4 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-4"><p className="text-sm">此旧作品仍保留历史角色快照。新制作前，明确切换为商品配置；历史运行保持原样。</p><Button disabled={readOnly || workflow.busy || dirty || profileDirty || masterState.dirty || goalDirty} onClick={() => void workflow.continueProduct()}>按商品流程继续</Button></div>}
     {readOnly && <p className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">当前工作台为只读：项目或内容单元已归档，或当前账号无编辑权限；不能保存或重新执行。</p>}

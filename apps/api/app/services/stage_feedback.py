@@ -51,7 +51,7 @@ def allowed_decisions(db, unit, run, step, attempt, user):
     from .creation_recipes import accepted_stage_target
 
     if (not user.is_active or user.role not in {"admin", "editor"} or unit.lifecycle_readonly
-            or unit.pinned_workflow_id != run.workflow_id or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)
+            or unit.pinned_workflow_id != run.workflow_id or run.identity_snapshot_id != (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id)
             or run.status in {"canceled", "cancelled", "archived"}
             or attempt.attempt_no != step.attempt_no or attempt.status in {"running", "unknown"}):
         return []
@@ -324,7 +324,7 @@ def submit_feedback(db, project_id, unit_id, node_id, user, request):
         if attempt.status in {"running", "unknown"}:
             raise StageInvocationError("stage_reconciliation_required")
         if (unit.pinned_workflow_id != run.workflow_id or attempt.attempt_no != step.attempt_no
-                or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)
+                or run.identity_snapshot_id != (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id)
                 or run.status in {"canceled", "cancelled", "archived"}):
             raise StageInvocationError("stage_feedback_not_current")
         if decision != "commented" and decision not in allowed_decisions(db, unit, run, step, attempt, user):

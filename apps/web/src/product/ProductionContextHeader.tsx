@@ -32,11 +32,26 @@ function ShotSlotsSection({ projectId, unitId }: { projectId: number; unitId: nu
   </section>;
 }
 
+type SearchWork = { project_title: string; role: "core" | "derived"; subject: string; category: string; question: string; genre: string; tone: string; keywords: { primary?: string[] }; href: string };
+
+// A search piece answers one question of its plan for one promotion subject; that is its context instead of a persona.
+function SearchWorkHeader({ unitId, title, modality }: { unitId: number; title: string; modality: string }) {
+  const work = useQuery({ queryKey: ["search-work", currentUser(), unitId], retry: false, queryFn: () => api.get<SearchWork>(`/search-promotion/works/${unitId}`) });
+  return <div className="mb-6 mt-5"><p className="eyebrow">搜索推广 · {MODALITY_NAMES[modality] || "作品"}</p>
+    <h1 className="mt-3 break-words text-[30px] leading-[1.15] text-ink-900">{title}</h1>
+    {work.data && <div className="mt-3 space-y-1 text-[13.5px] text-ink-600">
+      <p>推广对象：{work.data.subject}（{work.data.category}）· <Link className="underline" to={work.data.href}>{work.data.project_title}</Link> · {work.data.role === "core" ? "核心稿" : "由核心稿衍生"} · {work.data.genre} · {work.data.tone}</p>
+      <p>回答的问题：{work.data.question}{work.data.keywords.primary?.length ? ` · 主词：${work.data.keywords.primary.join("、")}` : ""}</p>
+    </div>}
+  </div>;
+}
+
 // `slim` keeps step pages to their one job; the shot board and snapshot details live on the 高级 page then.
 export function ProductionContextHeader({ workflow, productContext, slim }: { workflow: ReturnType<typeof useProductionWorkflow>; productContext?: Record<string, unknown> | null; slim?: boolean }) {
   const { unit, persona, brandName, accountName, seriesName, snapshot, design, run, assets, assetsOpen, setAssetsOpen } = workflow;
   if (!workflow.project || !workflow.unit) return null;
   if (!unit) return null;
+  if (unit.production_domain === "search") return <SearchWorkHeader unitId={unit.id} title={unit.title} modality={unit.modality} />;
   if (unit.production_domain === "product") return <div className="my-5 flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-semibold text-indigo-600">商品视频 · 独立制作配置</p><h1 className="mt-3 text-[34px] leading-[1.1] text-ink-900 sm:text-[40px]">{unit.title}</h1><p className="mt-2 text-sm text-slate-500">{typeof productContext?.name === "string" ? productContext.name : "商品资料待补充"}{typeof productContext?.variant === "string" && productContext.variant ? ` · ${productContext.variant}` : ""} · <ChannelIcon channel={unit.channel_id} className="mr-1" />{unit.channel_id || "交付时再选渠道"}</p><p className="mt-1 text-xs text-slate-500">{!design && run ? `历史 Run #${run.id} · 工作流 #${run.workflow_id}` : `当前商品工作流 #${unit.pinned_workflow_id || "未设置"}`}{!design && run?.identity_snapshot_id ? " · 此历史运行保留原身份快照" : ""}</p></div><div className="flex flex-wrap items-center gap-2"><MaterialSearchEntry projectId={unit.project_id} unitId={unit.id} /><Button variant="secondary" onClick={() => setAssetsOpen(!assetsOpen)}>项目共享素材 · {assets.length}</Button></div></div>;
   const chain = [brandName, persona?.name || `角色 #${unit.persona_id}`, accountName, seriesName].filter(Boolean);
   return <><div className="mb-6 mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4"><div className="min-w-0"><p className="eyebrow">{MODALITY_NAMES[unit.modality] || "生产工作台"}</p><h1 className="mt-3 break-words text-[30px] leading-[1.15] text-ink-900 sm:text-[36px]">{unit.title}</h1><div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13.5px] text-ink-600">{chain.map((name, index) => <span key={`${name}-${index}`} className="flex items-center gap-2">{index > 0 && <span aria-hidden className="text-ink-300">/</span>}{name}</span>)}<span aria-hidden className="text-ink-300">·</span><span><ChannelIcon channel={unit.channel_id} className="mr-1" />{unit.channel_id || "未选渠道"}</span></div></div><div className="flex flex-wrap items-center gap-2"><MaterialSearchEntry projectId={unit.project_id} unitId={unit.id} /><Button variant="secondary" size="sm" onClick={() => setAssetsOpen(!assetsOpen)}>项目共享素材 · {assets.length}</Button></div></div>

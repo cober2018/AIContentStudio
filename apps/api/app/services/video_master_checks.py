@@ -23,6 +23,11 @@ def _document(master: ContentMasterRevision, projection: dict) -> tuple[dict | N
 
 
 def _platform(db: Session, master: ContentMasterRevision, document: dict) -> tuple[str, dict]:
+    from .search_promotion import master_context
+
+    if master_context(master) is not None and not master.channel_id:
+        # A search piece is channel-neutral; each platform version is checked against its own platform rules.
+        return "pass", {"reasons": [], "production_domain": "search", "coverage": {"deterministic": "not_applicable", "reason": "checked_per_platform_version"}}
     try:
         form = resolve_content_form(db, master.channel_id, master.content_form)
     except (ChannelRegistryError, TypeError, ValueError):
@@ -37,6 +42,10 @@ def _platform(db: Session, master: ContentMasterRevision, document: dict) -> tup
 
 
 def _identity(db: Session, master: ContentMasterRevision, document: dict, requirement: dict) -> tuple[str, dict]:
+    from .search_promotion import master_context, no_persona_report
+
+    if master_context(master) is not None:
+        return no_persona_report()
     product = (getattr(master, "edit_summary_json", None) or {}).get("product_context_snapshot")
     if product is not None:
         body = "\n".join([block["text"] for block in document["script"]["blocks"]] + [cue["text"] for cue in document["subtitles"]["cues"]] + [item["text"] for item in document["overlays"]])

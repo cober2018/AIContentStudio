@@ -141,8 +141,11 @@ def _context(db: Session, project: ContentProject, unit: ContentUnit, *, content
             if not tolerate_unavailable_product or isinstance(exc, HTTPException) and not 400 <= exc.status_code < 500:
                 raise
             unavailable = True
+    from .search_promotion import context_snapshot as search_snapshot
+    search_context = search_snapshot(db, unit)
     return {
         **({"production_domain": "product", "product_context": product_context} if product_domain else {}),
+        **({"production_domain": "search", "search_context": search_context} if unit.production_domain == "search" else {}),
         **({"product_context_unavailable": True} if unavailable else {}),
         "identity": {"id": snapshot.id, "checksum": snapshot.checksum} if snapshot and not product_domain else None,
         "brief": {"id": brief.id, "checksum": brief.checksum} if brief else None,
@@ -299,7 +302,8 @@ def _serialize(db: Session, row: ContentMasterRevision, *, require_current: bool
     if _hash(context) != row.context_hash:
         stale.append("stale_context")
     # A product piece is grounded in the product brief, not a persona fact pack.
-    prerequisites = (("product_context", "product_context_missing"),) if context.get("production_domain") == "product" else (("identity", "identity_missing"), ("boundary", "evidence_missing"))
+    # A search piece is grounded in its promotion subject and confirmed search plan.
+    prerequisites = (("product_context", "product_context_missing"),) if context.get("production_domain") == "product" else (("search_context", "search_context_missing"), ("boundary", "evidence_missing")) if context.get("production_domain") == "search" else (("identity", "identity_missing"), ("boundary", "evidence_missing"))
     missing = [reason for key, reason in (*prerequisites, ("brief", "brief_missing")) if context.get(key) is None]
     return {
         "id": row.id, "project_id": row.project_id, "content_unit_id": row.content_unit_id,
@@ -350,8 +354,10 @@ def frozen_context(db: Session, row: ContentMasterRevision) -> dict:
     brief = db.get(CreativeBriefRevision, row.creative_brief_revision_id) if row.creative_brief_revision_id else None
     boundary = db.get(ProjectFactBoundaryRevision, row.fact_boundary_revision_id) if row.fact_boundary_revision_id else None
     product_context = (row.edit_summary_json or {}).get("product_context_snapshot")
+    search_context = (row.edit_summary_json or {}).get("search_context_snapshot")
     return {
         **({"production_domain": "product", "product_context": product_context} if product_context is not None else {}),
+        **({"production_domain": "search", "search_context": search_context} if search_context is not None else {}),
         "identity": {"id": identity.id, "checksum": identity.checksum} if identity else None,
         "brief": {"id": brief.id, "checksum": brief.checksum} if brief else None,
         "boundary": {"id": boundary.id, "fact_pack_id": boundary.fact_pack_id, "checksum": boundary.fact_pack_checksum} if boundary else None,
@@ -472,7 +478,15 @@ def check_requirements(db: Session, row: ContentMasterRevision, *, require_curre
         return {kind: {"kind": kind, "profile_key": adapter.payload_schema, "profile_version": adapter.version, "input_hash": base_hash, "profile": None} for kind in adapter.required_check_kinds}
     profile = None
     if frozen_checks is None:
-        if row.channel_id and row.content_form:
+        if (row.edit_summary_json or {}).get("search_context_snapshot"):
+            from .discoverability import seed_default_profiles
+
+            search_profile = lambda: db.scalar(select(DiscoverabilityProfileVersion).where(DiscoverabilityProfileVersion.profile_key == "seo.search_promotion", DiscoverabilityProfileVersion.status == "published").order_by(DiscoverabilityProfileVersion.version.desc()).limit(1))
+            profile = search_profile()
+            if profile is None:
+                seed_default_profiles(db)
+                profile = search_profile()
+        elif row.channel_id and row.content_form:
             profile = db.scalar(select(DiscoverabilityProfileVersion).where(DiscoverabilityProfileVersion.channel == row.channel_id, DiscoverabilityProfileVersion.content_form == row.content_form, DiscoverabilityProfileVersion.status == "published").order_by(DiscoverabilityProfileVersion.version.desc(), DiscoverabilityProfileVersion.id.desc()).limit(1))
         kinds = (*adapter.required_check_kinds, *(("text_discoverability",) if profile else ()))
         frozen = {}
@@ -956,10 +970,10 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         modality=modality, channel_id=unit.channel_id, content_form=content_form, payload_schema=payload_schema,
         payload_json=payload["payload"], payload_hash=_hash(payload["payload"]), context_hash=_hash(context),
         creative_intent_json=creative_intent, creative_intent_hash=creative_intent_hash,
-        identity_snapshot_id=None if context.get("production_domain") == "product" else unit.identity_snapshot_id, creative_brief_revision_id=context["brief"]["id"] if context["brief"] else None,
+        identity_snapshot_id=None if context.get("production_domain") in ("product", "search") else unit.identity_snapshot_id, creative_brief_revision_id=context["brief"]["id"] if context["brief"] else None,
         fact_boundary_revision_id=context["boundary"]["id"] if context["boundary"] else None,
         origin_workflow_run_id=payload.get("origin_workflow_run_id"), origin_project_output_id=payload.get("origin_project_output_id"),
-        source_kind=payload.get("source_kind", "user_edit"), edit_summary_json={**payload.get("edit_summary", {}), **({"product_context_snapshot": context["product_context"]} if context.get("production_domain") == "product" else {})}, idempotency_key=key,
+        source_kind=payload.get("source_kind", "user_edit"), edit_summary_json={**payload.get("edit_summary", {}), **({"product_context_snapshot": context["product_context"]} if context.get("production_domain") == "product" else {}), **({"search_context_snapshot": context["search_context"]} if context.get("production_domain") == "search" else {})}, idempotency_key=key,
         request_fingerprint=fingerprint, created_by=user.email, created_at=utcnow(),
     )
     db.add(row)

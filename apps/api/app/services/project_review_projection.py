@@ -92,7 +92,12 @@ def unit_projection(db: Session, unit: ContentUnit, *, context: ProjectProjectio
 
     identity_ready = bool(unit.identity_snapshot_id)
     identity_reason = "identity_unready"
-    if is_product(unit):
+    if unit.production_domain == "search":
+        from .search_promotion import context_snapshot as search_snapshot
+
+        # A search piece has no persona; its frozen plan and subject stand in for the identity.
+        identity_ready, identity_reason = search_snapshot(db, unit) is not None, "search_context_missing"
+    elif is_product(unit):
         identity_reason = "product_context_missing"
         try:
             identity_ready = bool((context_snapshot(db, unit) or {}).get("product_context"))

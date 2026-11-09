@@ -70,6 +70,12 @@ PRODUCT_CONTEXT_SKILLS = frozenset({"studio.video.product-script", "studio.video
                                     "studio.product.publish-copy", *(f"studio.product.style.{style}" for style in PRODUCT_STYLES)})
 
 
+# Search promotion genres: one writing skill per genre, only for search works.
+SEARCH_GENRE_SKILLS = {"definition": "定义科普", "buying-guide": "选购指南", "comparison": "对比评测", "shortlist": "推荐清单",
+                       "how-to": "操作教程", "price-spec": "价格与参数说明", "case-study": "案例解读", "faq": "问答合集"}
+SEARCH_SKILLS = frozenset(f"studio.search.genre.{key}" for key in SEARCH_GENRE_SKILLS)
+
+
 # Writing skills any work can use, kept in both systems.
 SHARED_SKILLS = frozenset({"studio.research.evidence-brief", "studio.research.angle-lab", "studio.text.title-hook",
                            "studio.text.humanize", "studio.audio.spoken-adapt", "studio.video.script-review",
@@ -79,7 +85,7 @@ SHARED_SKILLS = frozenset({"studio.research.evidence-brief", "studio.research.an
 
 def skill_system(key: str) -> str:
     """Persona and product works use separate skill systems; shared ones (and the craft skills) serve both."""
-    return "product" if key in PRODUCT_CONTEXT_SKILLS else "shared" if key in SHARED_SKILLS else "persona"
+    return "product" if key in PRODUCT_CONTEXT_SKILLS else "search" if key in SEARCH_SKILLS else "shared" if key in SHARED_SKILLS else "persona"
 
 
 def _resource(key: str, kind: str, modality: str, *, purpose: str, tunable_fields=(), checks=(), tools=(), applicable_fields=()):
@@ -159,6 +165,7 @@ SKILLS = {
         _resource("studio.video.script", "skill", "video", purpose="生成角色化视频脚本", tunable_fields=("instruction", "length")),
         _resource("studio.video.shot-director", "skill", "video", purpose="把脚本拆为镜头和素材计划", tunable_fields=("instruction", "shot_count")),
         _resource("studio.video.director-package", "skill", "video", purpose="生成交给外部专业执行的导演包", tunable_fields=("instruction", "aspect_ratio")),
+        *(_resource(f"studio.search.genre.{genre}", "skill", "text", purpose=f"搜索推广体裁：{name}") for genre, name in SEARCH_GENRE_SKILLS.items()),
     )
 }
 

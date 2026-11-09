@@ -130,7 +130,9 @@ def _graphic_copy(db: Session, asset: ContentAsset) -> str | None:
 
 def build_v4_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -> dict:
     manifest = validate_live_v4_candidate(db, asset, require_current=False, require_approved=True, lock_live=True)
-    if target.action not in {"copy_package", "manual_handoff"} or target.channel != manifest["channel"] or target.content_form != manifest["content_form"] or target.approved_candidate_hash != asset.candidate_hash:
+    # A channel-neutral search piece is packaged for whichever platform the copy target names.
+    neutral_search = manifest["channel"] is None and (manifest.get("identity") or {}).get("production_domain") == "search"
+    if target.action not in {"copy_package", "manual_handoff"} or (not neutral_search and (target.channel != manifest["channel"] or target.content_form != manifest["content_form"])) or target.approved_candidate_hash != asset.candidate_hash:
         raise HTTPException(409, "v4交付授权与准确候选/渠道/形态不一致")
     master = db.get(ContentMasterRevision, asset.content_master_revision_id)
     projection = adapter_for(master.modality, master.payload_schema).build_package_projection(db, master)
@@ -269,6 +271,17 @@ def build_v5_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -
                                                         "markdown": files[0]["content"]}, "files": files}
 
 
+def _search_notice(db: Session, archive, target: DeliveryTarget) -> None:
+    """A search piece may be posted by someone else, so its package carries the ad-label reminder."""
+    from ..models import ContentUnit
+    from .search_promotion import PACKAGE_NOTICE
+
+    asset = db.get(ContentAsset, target.content_asset_id)
+    unit = db.get(ContentUnit, asset.content_unit_id) if asset and asset.content_unit_id else None
+    if unit is not None and unit.production_domain == "search":
+        _write_stable_entry(archive, "发布提醒.txt", PACKAGE_NOTICE + "\n")
+
+
 def v5_zip_bytes(db: Session, target: DeliveryTarget, package: dict) -> tuple[bytes, str]:
     manifest = package["manifest"]
     buffer = io.BytesIO()
@@ -276,6 +289,7 @@ def v5_zip_bytes(db: Session, target: DeliveryTarget, package: dict) -> tuple[by
         _write_stable_entry(archive, "manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))
         for file in package["files"]:
             _write_stable_entry(archive, file["name"], file["content"])
+        _search_notice(db, archive, target)
         for media in manifest["media"]:
             revision = db.get(MaterialRevision, media["material_revision_id"])
             data = read_bytes_checked(db, revision, require_public=True)

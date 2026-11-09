@@ -134,7 +134,11 @@ class ProductionModalityAdapter:
 
     def freeze_availability(self, db: Session, master: ContentMasterRevision) -> dict:
         reasons = self.validate_payload(master.payload_json)
-        if master.channel_id is None or master.content_form is None:
+        search_neutral = (master.edit_summary_json or {}).get("search_context_snapshot") is not None and master.channel_id is None
+        # A search piece is approved channel-neutral; platform versions are made from it afterwards.
+        if search_neutral:
+            pass
+        elif master.channel_id is None or master.content_form is None:
             reasons.append("channel_form_missing")
         else:
             try:

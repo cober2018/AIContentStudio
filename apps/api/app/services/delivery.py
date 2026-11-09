@@ -148,7 +148,9 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
         validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
         if payload.action not in {DeliveryAction.copy_package.value, DeliveryAction.manual_handoff.value}:
             raise HTTPException(422, "capability_unavailable: v4当前仅支持本地成品包/人工交付")
-        if payload.content_form != asset.content_form:
+        # A channel-neutral search piece is handed off to whichever platform the user picks.
+        neutral_search = asset.content_form is None and getattr(db.get(ContentUnit, asset.content_unit_id), "production_domain", None) == "search"
+        if payload.content_form != asset.content_form and not neutral_search:
             raise HTTPException(409, "目标内容形态必须与冻结候选一致")
     if asset.project_id is not None:
         from .project_authorization import authorize_project_asset
@@ -177,6 +179,9 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
         unit = db.get(ContentUnit, asset.content_unit_id)
         if unit is None or (not is_variant and not is_finished and unit.channel_id and unit.channel_id != payload.channel):
             raise HTTPException(409, "目标渠道与内容单元不一致")
+        # Search works are handed off as copy or a package and may be posted by anyone, so nothing is pushed or tracked.
+        if unit.production_domain == "search" and (content_account_id is not None or payload.action != DeliveryAction.copy_package.value):
+            raise HTTPException(422, {"code": "search_work_copy_only", "message": "搜索推广作品只提供复制文案和下载稿件包"})
         frozen_account = (asset.candidate_manifest_json or {}).get("target", {}).get("account") if is_variant else None
         if frozen_account is not None and frozen_account["content_account_id"] != content_account_id:
             raise HTTPException(409, {"code": "candidate_target_account_mismatch"})
@@ -268,7 +273,8 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user) -> Deliver
             "platform_account_id": account.platform_account_id,
         }}
     # 渠道一致性：v1 资产仍要求与批准渠道一致；v2 同样
-    if asset.channel != payload.channel and not is_finished:
+    if asset.channel != payload.channel and not is_finished and not (asset.channel == "unassigned" and asset.content_form is None
+                                                                     and getattr(db.get(ContentUnit, asset.content_unit_id), "production_domain", None) == "search"):
         raise HTTPException(409, "目标渠道必须与批准资产渠道一致")
 
     existing = db.scalars(

@@ -537,7 +537,7 @@ def start_run(db: Session, workflow: Workflow, params: dict | None, user, *, adv
             db.refresh(unit)
         if unit is None or unit.lifecycle_readonly:
             raise ValueError("已归档或不存在的内容单元不可启动新运行")
-        if unit.production_domain != "product":
+        if unit.production_domain not in ("product", "search"):
             hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
             identity_snapshot_id = unit.identity_snapshot_id
 

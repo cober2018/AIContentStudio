@@ -30,6 +30,9 @@ GROUPS = {
                                         "import_material_folder", "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy"}),
     "article": ("写文章 / 图文（第三方模型写作）", {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review", "submit_warning_judgment"}),
     "facts": ("事实边界（按题材模板自动核对）", {"get_fact_template", "submit_facts"}),
+    "search": ("搜索推广（资料起草 → 问题库 → 开项目 → 平台版本 → 整批送审）", {"list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject",
+                                                     "save_question_library", "open_search_projects", "get_search_project", "adopt_search_draft",
+                                                     "get_search_version_template", "save_search_version", "submit_search_batch", "get_search_review"}),
     "tools": ("小工具", {"start_media_transcription", "get_media_transcription"}),
 }
 # Registry descriptions are written for models; these are the same facts for the person maintaining the setup.
@@ -89,6 +92,17 @@ SUMMARIES = {
     "generate_shot_video": "商品作品和角色作品：自动镜头按「用途路由 → 图生视频」选的模型生成，按条计费",
     "get_shot_video": "商品作品和角色作品：取自动图生视频的结果",
     "save_publish_copy": "商品作品：存发布文案（标题、话题、封面字、互动引导、简介）",
+    "list_promotion_subjects": "搜索推广：列出推广对象，看哪些资料已确认、哪些草稿等你确认",
+    "save_promotion_subject_draft": "搜索推广：按你给的名称和资料起草推广对象；每条事实附原文链接和摘录，平台核对，对不上的退回；只存草稿，等你确认",
+    "get_search_subject": "搜索推广：读推广对象的资料、问题库（含覆盖状态）和已开项目",
+    "save_question_library": "搜索推广：存问题库新版本（问题、来源、优先级、关键词），不需要你确认",
+    "open_search_projects": "搜索推广：一次最多开 5 个项目，每个项目一个问题；已在做或已有成稿的问题会跳过",
+    "get_search_project": "搜索推广：读项目进度、各作品状态、平台版本和你的审核意见",
+    "adopt_search_draft": "搜索推广：写作模型自查通过后自己采用稿子（图文出图后再验收一次）；视频仍在页面上由你看",
+    "get_search_version_template": "搜索推广：取某个平台的机械改写结果作格式模板，以及项目里已用过的标题",
+    "save_search_version": "搜索推广：存改写好的平台版本并跑检查；标题和其他版本重复会被退回",
+    "submit_search_batch": "搜索推广：把项目里新的平台版本整批送到你的成稿审核页",
+    "get_search_review": "搜索推广：读你对每个平台版本的决定和意见",
 }
 CANNOT = ["接受或带修改接受阶段结果", "拒绝或记录反馈", "采用素材、绑定到镜头", "批准候选、冻结 Master", "发布或交付到渠道"]
 LOOP = ["get_stages / preview_stage 查看要做哪一步", "run_stage 生成候选", "把 review_url 发给你，你在平台上看图并决定",

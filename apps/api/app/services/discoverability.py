@@ -20,6 +20,8 @@ def seed_default_profiles(db: Session) -> int:
     defaults = [
         ("seo.default", None, None, {"pre_fields": PRE_FIELDS, "post_fields": POST_FIELDS}),
         ("seo.wechat.article", "wechat", "article", {"title_length": [8, 64], "description_length": [40, 120], "pre_fields": PRE_FIELDS, "post_fields": POST_FIELDS}),
+        # Search promotion works are checked against their own search plan, whatever channel they end up on.
+        ("seo.search_promotion", None, "search", {"search_promotion": True, "title_keyword_window": 15, "max_keyword_per_1000": 8}),
     ]
     for key, channel, form, config in defaults:
         exists = db.scalar(select(DiscoverabilityProfileVersion.id).where(DiscoverabilityProfileVersion.profile_key == key).limit(1))

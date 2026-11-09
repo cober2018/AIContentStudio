@@ -388,7 +388,7 @@ def _unit_json(unit: ContentUnit) -> dict:
         "account_id": unit.account_id,
         "series_id": unit.series_id,
         "identity_snapshot_id": unit.identity_snapshot_id,
-        "identity_state": "product_context" if unit.production_domain == "product" else "frozen" if unit.identity_snapshot_id else "legacy_identity",
+        "identity_state": "product_context" if unit.production_domain == "product" else "search_context" if unit.production_domain == "search" else "frozen" if unit.identity_snapshot_id else "legacy_identity",
         "modality": unit.modality,
         "channel_id": unit.channel_id,
         "title": unit.title,
@@ -833,7 +833,7 @@ def change_unit_lifecycle(payload: UnitLifecycleIn, project_id: int, unit_id: in
     mutable_project(db, project_id, user)
     unit = owned_unit(db, project_id, unit_id, user)
     db.refresh(unit)
-    if unit.production_domain != "persona":
+    if unit.production_domain not in ("persona", "search"):
         raise HTTPException(409, "此入口仅管理角色作品")
     if unit.status == "archived":
         raise HTTPException(409, "旧归档或身份替换版本仅供查看历史，不能通过此入口修改")
@@ -1183,7 +1183,7 @@ def save_workflow_override(payload: WorkflowSaveIn, project_id: int, unit_id: in
     unit = owned_unit(db, project_id, unit_id, user)
     if unit.lifecycle_readonly:
         raise HTTPException(409, "已归档单元不可修改工作流")
-    if unit.production_domain != "product":
+    if unit.production_domain not in ("product", "search"):
         content_identity.hierarchy(db, user, persona_id=unit.persona_id, account_id=unit.account_id, series_id=unit.series_id, mutable=True)
     binding = db.scalar(select(ProjectWorkflowBinding).where(ProjectWorkflowBinding.unit_id == unit_id))
     current_revision = binding.revision if binding else 0

@@ -1,0 +1,53 @@
+{
+  "key": "studio.search.genre.shortlist",
+  "version": "1",
+  "ref": "studio.search.genre.shortlist@1",
+  "kind": "skill",
+  "modality": "text",
+  "purpose": "搜索推广体裁：推荐清单",
+  "source_kind": "studio_builtin",
+  "provenance": "self_developed",
+  "license": "product_owned",
+  "compatible_stage_schemas": [
+    "stage.master.propose.v1"
+  ],
+  "output_schemas": [
+    "text.master.v2"
+  ],
+  "required_context": [
+    "identity"
+  ],
+  "requires_selected_upstream": true,
+  "prompt_sections": [
+    "method",
+    "identity",
+    "stage_instruction",
+    "evidence",
+    "upstream"
+  ],
+  "tunable_fields": [],
+  "parameter_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  },
+  "checks": [],
+  "tools": [],
+  "bounds": {
+    "max_instruction_chars": 4000,
+    "max_context_bytes": 131072,
+    "max_output_bytes": 131072
+  },
+  "schema": "studio.skill.contract.v1",
+  "input_schema": "stage.handoff.v1",
+  "optional_tools": [],
+  "style_compatibility": [
+    "studio.text.deep-technical@1",
+    "studio.text.engineering-explainer@1",
+    "studio.text.concise-social@1"
+  ],
+  "quality_compatibility": [
+    "studio.quality.text.technical@1"
+  ],
+  "references": []
+}

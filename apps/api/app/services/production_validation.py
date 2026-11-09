@@ -126,7 +126,8 @@ def validate_live_v4_candidate(db: Session, asset: ContentAsset, *, require_curr
     frozen_project = manifest.get("project") or {}
     if any(frozen_project.get(key) != current["project"][key] for key in ("id", "unit_id", "modality", "channel", "content_form")):
         raise _blocked("candidate_provenance", "冻结项目/单元/形态不一致")
-    if asset.identity_snapshot_id != master.identity_snapshot_id or asset.channel != master.channel_id or asset.content_form != master.content_form or asset.artifact_kind != current["artifact_kind"]:
+    # A channel-neutral candidate is stored as "unassigned" because the column cannot be empty.
+    if asset.identity_snapshot_id != master.identity_snapshot_id or asset.channel != (master.channel_id or "unassigned") or asset.content_form != master.content_form or asset.artifact_kind != current["artifact_kind"]:
         raise _blocked("candidate_provenance", "候选字段与冻结血缘不一致")
     frozen_checks = manifest.get("checks")
     if not isinstance(frozen_checks, list) or len(frozen_checks) != len(current["checks"]):
@@ -195,11 +196,13 @@ def _validate_frozen_v5_history(db: Session, variant: ChannelVariantRevision, ma
     from .content_masters import projected_checks
 
     exclusions = source_check_exclusions(master, variant.payload_schema)
-    live_checks = [check for check in projected_checks(db, master) if check["check_kind"] not in exclusions]
+    projected = projected_checks(db, master)
+    live_checks = [check for check in projected if check["check_kind"] not in exclusions]
     frozen_warning_keys = {(check["id"], check["kind"], check["input_hash"])
                            for check in source.get("warning_checks", [])}
+    # Freezing records every current source warning, excluded target-only kinds included, so compare against the same set.
     live_warning_keys = {(check["id"], check["check_kind"], check["input_hash"])
-                         for check in live_checks if check["status"] == "warning"}
+                         for check in projected if check["status"] == "warning" and check.get("is_current", True)}
     for check in source.get("warning_checks", []):
         stored = db.get(ContentMasterCheckRun, check["id"])
         if (stored is None or stored.master_revision_id != master.id

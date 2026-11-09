@@ -370,7 +370,7 @@ def accept(db, project_id, unit_id, node_id, user, request):
                 raise StageInvocationError("stage_already_accepted")
         _assert_access(db, run, user)
         if (step.attempt_no != attempt.attempt_no or step.status != "waiting_input"
-                or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)
+                or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id)
                 or project.status == "archived" or unit.lifecycle_readonly):
             raise StageInvocationError("stage_attempt_not_current")
         preview = creation_recipes.preview_stage(db, project_id, unit_id, node_id, user,

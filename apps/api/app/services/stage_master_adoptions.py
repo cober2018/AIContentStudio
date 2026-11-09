@@ -291,7 +291,7 @@ def accept_master(db, project_id, unit_id, node_id, user, request):
             )
             return result
         _assert_access(db, run, user)
-        if unit.modality != modality or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id):
+        if unit.modality != modality or run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id):
             _conflict("stage_adoption_context_changed")
         if (step.attempt_no != attempt.attempt_no or step.status != "waiting_input"
                 or step.output_hash != attempt.output_hash or step.output_json != attempt.output_json):
@@ -338,7 +338,7 @@ def accept_master(db, project_id, unit_id, node_id, user, request):
             db.refresh(run)
             _assert_access(db, run, user)
             if (unit.modality != modality or run.workflow_id != unit.pinned_workflow_id
-                    or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)):
+                    or run.identity_snapshot_id != (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id)):
                 _conflict("stage_adoption_context_changed")
             if (step.attempt_no != attempt.attempt_no or step.status != "waiting_input"
                     or step.output_hash != attempt.output_hash or step.output_json != attempt.output_json):

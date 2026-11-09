@@ -149,6 +149,10 @@ def _rendered_images(db: Session, master: ContentMasterRevision) -> list[dict]:
 
 
 def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> tuple[str, dict]:
+    from .search_promotion import master_context, no_persona_report
+
+    if master_context(master) is not None:
+        return no_persona_report()
     snapshot = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
     if snapshot is None:
         return "incomplete", {"reasons": ["identity_snapshot_missing"], "coverage": {"semantic": "unavailable"}}
@@ -181,6 +185,11 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
 
 
 def _platform(db: Session, master: ContentMasterRevision) -> tuple[str, dict]:
+    from .search_promotion import master_context
+
+    if master_context(master) is not None and not master.channel_id:
+        # A search piece is channel-neutral; each platform version is checked against its own platform rules.
+        return "pass", {"reasons": [], "production_domain": "search", "coverage": {"deterministic": "not_applicable", "reason": "checked_per_platform_version"}}
     try:
         form = resolve_content_form(db, master.channel_id, master.content_form)
     except (ChannelRegistryError, TypeError, ValueError):

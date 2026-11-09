@@ -35,8 +35,11 @@ def _structure(db: Session, master: ContentMasterRevision, projection: dict) -> 
     if not body.strip():
         return "incomplete", {"reasons": ["text_content_missing"], "coverage": {"deterministic": "complete"}}
     warnings = []
+    # A cover is declared for the platform version, not placed in the body.
+    covers = {ref["material_revision_id"] for ref in projection["assets"] if ref.get("role") == "cover"}
     for revision_id in reference_report["unused_asset_ids"]:
-        warnings.append({"code": "declared_asset_unused", "material_revision_id": revision_id})
+        if revision_id not in covers:
+            warnings.append({"code": "declared_asset_unused", "material_revision_id": revision_id})
     last_level = 0
     for block in document["blocks"]:
         if block["type"] == "heading":
@@ -158,6 +161,10 @@ def _fact(db: Session, master: ContentMasterRevision, requirement: dict) -> tupl
 
 
 def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> tuple[str, dict]:
+    from .search_promotion import master_context, no_persona_report
+
+    if master_context(master) is not None:
+        return no_persona_report()
     snapshot = db.get(IdentitySnapshot, master.identity_snapshot_id) if master.identity_snapshot_id else None
     if snapshot is None:
         return "incomplete", {"reasons": ["identity_snapshot_missing"], "coverage": {"semantic": "unavailable"}}
@@ -196,6 +203,11 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
 
 
 def _platform(db: Session, master: ContentMasterRevision, projection: dict) -> tuple[str, dict]:
+    from .search_promotion import master_context
+
+    if master_context(master) is not None and not master.channel_id:
+        # A search piece is channel-neutral; each platform version is checked against its own platform rules.
+        return "pass", {"reasons": [], "production_domain": "search", "coverage": {"deterministic": "not_applicable", "reason": "checked_per_platform_version"}}
     try:
         form = resolve_content_form(db, master.channel_id, master.content_form)
     except (ChannelRegistryError, TypeError, ValueError):
@@ -232,6 +244,15 @@ def _discoverability(master: ContentMasterRevision, requirement: dict) -> tuple[
     config = requirement.get("profile_config")
     if not profile.get("checksum") or not isinstance(config, dict):
         return "incomplete", {"reasons": ["profile_invalid_or_checksum_missing"], "profile_id": profile.get("id")}
+    if config.get("search_promotion") is True:
+        from .search_promotion import discoverability, master_context
+
+        search = master_context(master)
+        if search is None:
+            return "incomplete", {"reasons": ["search_context_missing"], "profile_id": profile.get("id")}
+        document, body = _document(master)
+        status, report = discoverability(str(master.payload_json.get("title") or ""), text_map(document)["segments"], body, search, config)
+        return status, {**report, "profile_id": profile.get("id"), "profile_version": profile.get("version"), "profile_checksum": profile.get("checksum")}
     supported = {"title_length", "description_length", "pre_fields", "post_fields"}
     if not config:
         return "incomplete", {"reasons": ["profile_rules_missing"], "profile_id": profile.get("id")}

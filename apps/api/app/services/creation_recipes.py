@@ -55,6 +55,8 @@ def _workflow(db, project_id, unit_id, user, run_id=None):
 
 
 def _default(db, unit):
+    if unit.production_domain == "search":
+        return None, None
     if unit.production_domain == "product":
         workflow = db.get(Workflow, unit.pinned_workflow_id) if unit.pinned_workflow_id else None
         from types import SimpleNamespace
@@ -193,7 +195,7 @@ def recipe_view(db, project_id, unit_id, user, *, run_id=None):
         run = db.scalar(select(WorkflowRun).where(WorkflowRun.content_unit_id == unit.id,
             WorkflowRun.workflow_id == workflow.id).order_by(WorkflowRun.id.desc()).limit(1))
     readonly = readonly or bool(run and (run.workflow_id != unit.pinned_workflow_id
-                                        or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)))
+                                        or run.identity_snapshot_id != (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id)))
     steps = {row.node_id: row for row in db.scalars(select(WorkflowStep).where(
         WorkflowStep.run_id == run.id)).all()} if run else {}
     nodes = {node["id"]: node for node in workflow.definition_json.get("nodes", [])}
@@ -302,7 +304,7 @@ def stage_result(db, project_id, unit_id, node_id, user, *, run_id, attempt_id=N
             "expected_revision": domain.get("expected_revision",
                 (resolved.get("context", {}).get("master") or {}).get("revision_no", 0)),
             "is_current": project.status != "archived" and not unit.lifecycle_readonly
-                and run.workflow_id == unit.pinned_workflow_id and run.identity_snapshot_id == (None if unit.production_domain == "product" else unit.identity_snapshot_id)
+                and run.workflow_id == unit.pinned_workflow_id and run.identity_snapshot_id == (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id)
                 and step.attempt_no == attempt.attempt_no and (step.status in {"waiting_input", "succeeded"} or recovered_media),
             "accepted_target": accepted, "accepted_master": accepted_master,
             "domain_output": projected, "accepted_entity": accepted_entity,

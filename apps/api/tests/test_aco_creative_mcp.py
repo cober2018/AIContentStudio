@@ -13,6 +13,8 @@ ENDPOINT = "/api/v1/creative-mcp"
 PROTOCOL = "2025-11-25"
 TOKEN = "synthetic-r2-mcp-token-with-no-real-credential-0001"
 TOOL_NAMES = {
+    "list_promotion_subjects", "save_promotion_subject_draft", "get_search_subject", "save_question_library", "open_search_projects",
+    "get_search_project", "adopt_search_draft", "get_search_version_template", "save_search_version", "submit_search_batch", "get_search_review",
     "list_personas", "create_project", "create_unit", "get_context", "get_package", "get_execution", "find_capabilities", "use_capability",
     "claim_execution", "start_execution", "materialize_inputs", "report_progress",
     "report_blocker", "report_checkpoint", "submit_output", "mark_unknown",
@@ -29,7 +31,7 @@ TOOL_NAMES = {
     "get_fact_template", "submit_facts",
     "list_accounts", "import_account_metrics",
 }
-READ_ONLY_TOOLS = {"list_personas", "list_accounts", "get_context", "get_package", "get_execution", "find_capabilities",
+READ_ONLY_TOOLS = {"list_promotion_subjects", "get_search_subject", "get_search_project", "get_search_version_template", "get_search_review", "list_personas", "list_accounts", "get_context", "get_package", "get_execution", "find_capabilities",
                    "get_stages", "preview_stage", "get_stage_result", "get_stage_decision", "get_material_match", "get_shot_slots",
                    "get_craft_skill", "list_ae_templates", "get_video_brief", "get_video_decision",
                    "get_article_brief", "get_article_decision", "get_review_tasks", "get_shot_video_prompt", "get_reference_video", "get_web_materials",

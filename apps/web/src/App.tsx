@@ -1,7 +1,7 @@
 import { Component, lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { CheckCircle2, Clapperboard, FolderOpen, Images, Library, LineChart, PenLine, Settings2, Sparkles, Sun, UserRound, Wrench, type LucideIcon } from "lucide-react";
+import { CheckCircle2, Clapperboard, FolderOpen, Search, Images, Library, LineChart, PenLine, Settings2, Sparkles, Sun, UserRound, Wrench, type LucideIcon } from "lucide-react";
 import { useProductionWorkbench } from "./product/taskNavigation";
 
 const MaterialLibraryFloat = lazy(() => import("./product/MaterialLibraryFloat"));
@@ -23,6 +23,7 @@ const ProjectPage = lazy(() => import("./product/ProjectPages").then((module) =>
 const ProductionShellPage = lazy(() => import("./product/ProjectPages").then((module) => ({ default: module.ProductionShellPage })));
 const PersistentProjectsPage = lazy(() => import("./product/PersistentProjectsPage").then((module) => ({ default: module.PersistentProjectsPage })));
 const PersistentProjectPage = lazy(() => import("./product/PersistentProjectPage").then((module) => ({ default: module.PersistentProjectPage })));
+const SearchPromotionWorkbench = lazy(() => import("./product/SearchPromotionWorkbench"));
 const PersistentProductionPage = lazy(() => import("./product/PersistentProductionPage").then((module) => ({ default: module.PersistentProductionPage })));
 
 const queryClient = new QueryClient({
@@ -38,6 +39,7 @@ const NAV_GROUPS: { label: string; items: { to: string; label: string; icon: Luc
     { to: "/projects", label: "内容项目", icon: FolderOpen },
     { to: "/production?workspace=persona", label: "角色内容工作台", icon: PenLine },
     { to: "/production?workspace=product", label: "商品视频工作台", icon: Clapperboard },
+    { to: "/search-promotion", label: "搜索推广工作台", icon: Search },
   ] },
   { label: "发布与增长", items: [
     { to: "/review", label: "审阅与交付", icon: CheckCircle2 },
@@ -58,7 +60,7 @@ function NavItem({ to, label, icon: Icon }: { to: string; label: string; icon: L
   const workbench = useProductionWorkbench();
   const production = /^\/projects\/\d+\/units\/\d+\/production$/.test(location.pathname);
   // Two workbenches share /production; only the query tells them apart. A production page counts as its workbench.
-  const activeFor = (isActive: boolean) => production ? !!workbench && to === `/production?workspace=${workbench}` : to.includes("?") ? location.pathname === "/production" && location.search.includes(to.split("?")[1]) : isActive;
+  const activeFor = (isActive: boolean) => production ? !!workbench && to === (workbench === "search" ? "/search-promotion" : `/production?workspace=${workbench}`) : to.includes("?") ? location.pathname === "/production" && location.search.includes(to.split("?")[1]) : isActive;
   return <NavLink
     to={to}
     className={({ isActive }) => {
@@ -145,6 +147,9 @@ function Shell() {
               <Route path="/projects/:projectId" element={<ProjectRoute />} />
               <Route path="/projects/:projectId/units/:unitId/production" element={<ProductionRoute />} />
               <Route path="/production" element={<WorkbenchEntry queue={ProductionQueuePage} />} />
+              <Route path="/search-promotion" element={<SearchPromotionWorkbench />} />
+              <Route path="/search-promotion/projects/:projectId" element={<SearchPromotionWorkbench />} />
+              <Route path="/search-promotion/subjects/:subjectId" element={<SearchPromotionWorkbench />} />
               <Route path="/review" element={<ProjectReviewCenter />} />
               <Route path="/identities" element={<IdentityWorkspace />} />
               <Route path="/accounts" element={<Navigate to="/identities?directory=account" replace />} />

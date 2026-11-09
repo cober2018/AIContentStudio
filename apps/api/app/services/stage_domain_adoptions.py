@@ -467,7 +467,7 @@ def _current(db, project_id, unit_id, node_id, user, run, step, attempt, resolve
     _assert_access(db, run, user)
     recovered_media = (request["domain"] == "media" and step.status == "unknown"
                        and attempt.status == "unknown")
-    if (run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain == "product" else unit.identity_snapshot_id)
+    if (run.workflow_id != unit.pinned_workflow_id or run.identity_snapshot_id != (None if unit.production_domain in ("product", "search") else unit.identity_snapshot_id)
             or step.attempt_no != attempt.attempt_no or not (step.status == "waiting_input" or recovered_media)
             or step.output_hash != attempt.output_hash or step.output_json != attempt.output_json):
         _conflict("stage_attempt_not_current")

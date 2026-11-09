@@ -37,7 +37,7 @@ export function useTaskLink() {
 }
 
 // The production page lives under /projects, but it belongs to a workbench; the page tells the side menu which one.
-type Workbench = "product" | "persona" | null;
+type Workbench = "product" | "persona" | "search" | null;
 let workbench: Workbench = null;
 const listeners = new Set<() => void>();
 

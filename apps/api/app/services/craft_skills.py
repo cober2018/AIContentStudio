@@ -114,7 +114,7 @@ def writing_skills(unit) -> list[dict]:
     from .studio_creative_catalog import skill_system
 
     families = _WRITING_FAMILIES.get(unit.modality, {"research", "text"})
-    system = "product" if unit.production_domain == "product" else "persona"
+    system = "product" if unit.production_domain == "product" else "search" if unit.production_domain == "search" else "persona"
     latest: dict[str, dict] = {}
     for item in STUDIO.values():
         if (item["kind"] == "skill" and item["modality"] in families
