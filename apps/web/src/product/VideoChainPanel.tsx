@@ -30,7 +30,7 @@ type ShotChecks = { status: string; basis: string; truncated?: boolean; warnings
 type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null };
 type Chain = {
   state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
-  phase?: string; locked?: boolean; sample?: Cut; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null; cover_redo?: { note: string; at: string };
+  phase?: string; locked?: boolean; sample?: Cut; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null; cover_redo?: { note: string; at: string }; previous_cut?: { execution_id: number; phase: string } | null;
   cover_task?: CoverTask;
   persona_clips?: { slot: "intro" | "outro"; material_revision_id: number; duration_ms: number; title: string }[];
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
@@ -185,7 +185,9 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const live = current === here;
   // Before the 成片 is final, the 导演稿 can be sent back from any later stop.
   const backToDraft = step === "draft" && current > 0 && !data.locked;
-  const reviewing = live && (data.state.endsWith("_review") || data.state.endsWith("_changes")) || backToDraft;
+  // A cut sent back with changes stays approvable while its replacement is being made; approving it keeps that cut and drops the replacement.
+  const cutOffer = !!data.previous_cut && (step === "sample" ? data.previous_cut.phase === "rough_cut" : step === "final" && data.previous_cut.phase === "final");
+  const reviewing = live && (data.state.endsWith("_review") || data.state.endsWith("_changes")) || backToDraft || cutOffer;
   const timed = step !== "draft";
   // Once the 成片 task exists, the 小样 lives on as its own earlier task.
   const cut: Cut | null = step === "sample" ? data.sample || (data.phase === "rough_cut" && data.execution_id ? { execution_id: data.execution_id, cut_output_id: data.cut_output_id ?? null, cover_output_id: data.cover_output_id, shot_checks: data.shot_checks } : null)
@@ -244,17 +246,17 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
         : <div key={role} className="mt-3"><p className="mb-1 text-xs text-slate-600">{label}</p><p className="text-xs text-slate-400">还没交</p></div>)}</div>}
       {(cut?.cover_output_id || cut?.cover_vertical_output_id) && live && data.state.endsWith("_review") && cut.execution_id === data.execution_id && <CoverRedo projectId={projectId} unitId={unitId} pending={data.cover_redo} />}
       {reviewing && <div className="mt-3 space-y-2">
-        <div className="flex flex-wrap items-end gap-2">
+        {!cutOffer && <div className="flex flex-wrap items-end gap-2">
           {timed && <input aria-label="时间（秒）" className={`${inputClass} !w-24`} inputMode="decimal" placeholder="秒" value={time} onChange={event => setTime(event.target.value)} />}
           <input aria-label="修改意见" className={`${inputClass} min-w-[14rem] flex-1`} maxLength={2000} placeholder={timed ? "这一秒要改什么" : "要改的地方，例如：第 3 镜换成实拍"} value={text} onChange={event => setText(event.target.value)} />
           <Button size="sm" variant="secondary" disabled={!text.trim()} onClick={() => { setNotes(current => [...current, { time_ms: timed && time ? Math.round(Number(time) * 1000) : null, note: text.trim() }]); setText(""); setTime(""); }}>再加一条</Button>
-        </div>
+        </div>}
         {notes.length > 0 && <ul className="list-disc pl-5 text-xs text-slate-600">{notes.map((item, index) => <li key={index}>{item.time_ms != null ? `${item.time_ms / 1000}s：` : ""}{item.note}</li>)}</ul>}
         <div className="flex flex-wrap gap-2">
           {!backToDraft && <Button disabled={busy || (step === "final" && !!data.cover_redo)} onClick={() => void send("approve")}>{busy && step !== "draft" ? "正在通过…" : step === "draft" ? "采用导演稿" : step === "sample" ? "小样通过，开始排版" : "成片通过"}</Button>}
-          <Button variant="secondary" disabled={busy || (!notes.length && !text.trim())} onClick={() => void send("changes")}>{backToDraft ? "退回导演稿" : "按意见修改"}</Button>
+          {!cutOffer && <Button variant="secondary" disabled={busy || (!notes.length && !text.trim())} onClick={() => void send("changes")}>{backToDraft ? "退回导演稿" : "按意见修改"}</Button>}
         </div>
-        <p className="text-xs text-slate-500">{backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "有素材的话，先放进素材库（外部素材库或本项目）再采用。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
+        <p className="text-xs text-slate-500">{cutOffer ? "新版本还在做。现在通过，就用这一版，你的修改意见作废，新版本停止。" : backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "有素材的话，先放进素材库（外部素材库或本项目）再采用。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
       </div>}
       {step === "final" && data.locked && data.cover_task && <CoverTaskReview projectId={projectId} unitId={unitId} task={data.cover_task} />}
       {step === "final" && data.locked && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-white/70 p-3 text-xs text-slate-600"><span>成片已定稿，这一条不能再改。要调整就复制一份，在副本里从导演稿开始。</span><Button size="sm" variant="secondary" disabled={busy} onClick={() => void copy()}>复制一份</Button></div>}

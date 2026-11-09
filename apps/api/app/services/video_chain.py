@@ -162,10 +162,26 @@ def _decision(record: dict, stage: str, target_id: int) -> dict | None:
 
 
 def _task(db: Session, record: dict) -> tuple[dict | None, CreativeExecution | None]:
-    if not record["tasks"]:
-        return None, None
-    task = record["tasks"][-1]
-    return task, db.get(CreativeExecution, task["execution_id"])
+    # A task the user superseded by approving the cut it replaced is no longer the current one.
+    for task in reversed(record["tasks"]):
+        execution = db.get(CreativeExecution, task["execution_id"])
+        if execution is None or execution.state != "superseded":
+            return task, execution
+    return None, None
+
+
+def _previous_cut(db: Session, record: dict, task: dict) -> dict | None:
+    """The 小样 / 成片 the user sent back and has not approved, still offered while a new task of the same phase is made."""
+    stage = "sample" if task["phase"] == "rough_cut" else "final"
+    for earlier in reversed([item for item in record["tasks"] if item["phase"] == task["phase"] and item["execution_id"] != task["execution_id"]]):
+        execution = db.get(CreativeExecution, earlier["execution_id"])
+        if execution is None or execution.state == "superseded":
+            continue
+        decided = _decision(record, stage, execution.id)
+        if execution.state != "result_ready" or decided is None or decided["decision"] != "changes":
+            return None
+        return {"execution_id": execution.id, "phase": task["phase"]}
+    return None
 
 
 def _cover_redo(db: Session, record: dict, execution: CreativeExecution) -> dict | None:
@@ -204,7 +220,9 @@ def edit_progress(db: Session) -> tuple[set[int], dict[int, int]]:
         if _state(db, unit_id).get("locked"):
             finished.add(unit_id)
         elif record.get("tasks"):
-            current[unit_id] = record["tasks"][-1]["execution_id"]
+            task, _ = _task(db, record)
+            if task is not None:
+                current[unit_id] = task["execution_id"]
     return finished, current
 
 
@@ -236,7 +254,9 @@ def _state(db: Session, unit_id: int) -> dict:
         return {**view, "state": "approving", "label": "正在通过…",
                 "detail": "用户已点通过，平台正在采纳成果文件，稍后再查；这不是「待你看」，不要当成还没通过"}
     if execution.state in {"prepared", "claimed", "in_progress"}:
-        return {**view, "state": "making" if phase == "sample" else "finishing", "label": "剪小样中" if phase == "sample" else "排版中"}
+        previous = _previous_cut(db, record, task)
+        return {**view, "state": "making" if phase == "sample" else "finishing", "label": "剪小样中" if phase == "sample" else "排版中",
+                **({"previous_cut": previous} if previous else {})}
     if execution.state == "result_ready" and notes and notes["decision"] == "approve":
         return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view, _cover_task(db, record))
     if execution.state == "result_ready":
@@ -328,6 +348,20 @@ def _require_four_three(db: Session, execution_id: int) -> None:
         _fail("video_chain_cover_43_missing", "抖音 4:3 横封面还没交，交了才能通过")
 
 
+def _check_supersedable(db: Session, execution_id: int) -> None:
+    execution = db.get(CreativeExecution, execution_id)
+    if execution is None or execution.dispatch_certainty == "possibly_dispatched":
+        _fail("video_chain_new_task_running", "新版本已经在做，暂时没法作废它；等它交回成果，或先在新版本里看一下")
+
+
+def _supersede(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
+    from . import creative_executions
+
+    execution = db.get(CreativeExecution, execution_id)
+    creative_executions.transition_execution(db, project_id, unit_id, execution_id,
+                                             {"action": "supersede", "expected_revision": execution.revision_no}, user)
+
+
 def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, decision: str, notes: list[dict]) -> dict:
     """The user's answer at one of the three stops. 通过 on 小样 / 成片 accepts that task's outputs."""
     from .content_masters import owned_unit
@@ -337,11 +371,15 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
     expected = {"draft": "draft_review", "sample": "sample_review", "final": "final_review"}[stage]
     # Until the 成片 is final the user may send the 导演稿 back from any later stop.
     back_to_draft = stage == "draft" and decision == "changes" and "draft_master_id" in current and not current.get("locked")
-    if current["state"] not in {expected, expected.replace("review", "changes")} and not back_to_draft:
+    # A cut sent back with changes stays approvable while its replacement is being made; approving it supersedes that replacement.
+    replacing = stage != "draft" and decision == "approve" and bool(current.get("previous_cut")) and current["previous_cut"]["phase"] == ("rough_cut" if stage == "sample" else "final")
+    if replacing:
+        _check_supersedable(db, current["execution_id"])
+    elif current["state"] not in {expected, expected.replace("review", "changes")} and not back_to_draft:
         _fail("video_chain_not_waiting", f"现在不在等你看{ {'draft': '导演稿', 'sample': '小样', 'final': '成片'}[stage] }")
     if decision == "changes" and not any(str(item.get("note") or "").strip() for item in notes):
         _fail("video_chain_notes_required", "写一下要改哪里", 422)
-    target = current["draft_master_id"] if stage == "draft" else current["execution_id"]
+    target = current["draft_master_id"] if stage == "draft" else current["previous_cut"]["execution_id"] if replacing else current["execution_id"]
     if stage == "final" and decision == "approve" and current.get("cover_redo"):
         _fail("video_chain_cover_redo_pending", "封面重做中，等新封面交上来再通过")
     if stage == "final" and decision == "approve":
@@ -355,6 +393,8 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
         db.commit()
         try:
             _accept_outputs(db, user, project_id, unit_id, target)
+            if replacing:
+                _supersede(db, user, project_id, unit_id, current["execution_id"])
             accepted = True
         except HTTPException as exc:
             # Voice or timing saved after the 小样 (prep for the 成片) makes its source older than the master;
@@ -381,7 +421,8 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
     record.pop("approving", None)
     record["decisions"].append({"stage": stage, "target_id": target, "decision": decision, "outputs_accepted": accepted,
                                 "notes": [{"time_ms": item.get("time_ms"), "note": str(item.get("note") or "")[:2000]} for item in notes][:50],
-                                "by": user.email, "at": datetime.now(UTC).isoformat()})
+                                "by": user.email, "at": datetime.now(UTC).isoformat(),
+                                **({"superseded_execution_id": current["execution_id"]} if replacing else {})})
     _put(db, unit_id, record)
     if stage != "draft" and decision == "changes":
         from . import video_lessons
@@ -922,7 +963,8 @@ def decide_covers(db: Session, user: User, project_id: int, unit_id: int, decisi
     if decision == "approve":
         from . import finished_video
 
-        final = next(item["execution_id"] for item in reversed(record["tasks"]) if item["phase"] == "final")
+        final = next(item["execution_id"] for item in reversed(record["tasks"]) if item["phase"] == "final"
+                     and db.get(CreativeExecution, item["execution_id"]).state != "superseded")
         finished_video.send_to_review(db, user, project_id, unit_id, final)
     return state(db, user, project_id, unit_id)
 
