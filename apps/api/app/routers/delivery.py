@@ -244,6 +244,8 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
         for attempt in target.attempts
     ):
         raise HTTPException(409, "交付结果待核对，必须先完成对账")
+    if target.action == "copy_package" and payload.status == "human_confirmed" and not (payload.evidence_ref or "").strip():
+        raise HTTPException(422, "请填写发布链接后再回填")
     key_parts = [
         str(target.id), target.approved_candidate_hash, payload.status,
         payload.evidence_ref or "", payload.verification_method or "", payload.note or "",
@@ -320,6 +322,32 @@ def add_receipt(target_id: int, payload: ReceiptIn, db: Session = Depends(get_db
     except Exception:
         db.rollback()
         raise
+    return _target_json(target, with_attempts=False)
+
+
+class ReceiptLinkIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    evidence_ref: str = Field(min_length=1, max_length=1000)
+
+
+@router.patch("/delivery-targets/{target_id}/receipts/{receipt_id}")
+def update_receipt_link(target_id: int, receipt_id: int, payload: ReceiptLinkIn,
+                        db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    target = _own_target(db, target_id, user, mutate=True)
+    receipt = db.get(DeliveryReceipt, receipt_id)
+    link = payload.evidence_ref.strip()
+    if not link:
+        raise HTTPException(422, "请填写发布链接")
+    latest = max(target.receipts, key=lambda row: row.id, default=None)
+    if (target.action != "copy_package" or receipt is None or receipt.target_id != target.id
+            or latest is None or latest.id != receipt.id or receipt.status != "human_confirmed"):
+        raise HTTPException(409, "只能修改自己发布的目标最新一条已确认回执")
+    # 改原回执而不是新增：每条已确认回执对应一条发布记录，新增会重复记一次发布。
+    old = receipt.evidence_ref
+    receipt.evidence_ref = link
+    db.add(AuditLog(event="delivery_receipt.link_updated", actor=user.email, entity_type="delivery_receipt",
+                    entity_id=str(receipt.id), detail_json={"target_id": target.id, "from": old, "to": link}))
+    db.commit()
     return _target_json(target, with_attempts=False)
 
 

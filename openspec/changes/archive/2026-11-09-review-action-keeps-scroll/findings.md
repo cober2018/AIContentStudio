@@ -1,0 +1,1 @@
+- 跳顶原因：setRevision 触发的 effect 先清空 candidate/targets/loaded，交付区换成加载圈，页面变短。父级 reload 不会卸载详情（unit 保持）。

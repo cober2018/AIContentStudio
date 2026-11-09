@@ -61,3 +61,21 @@ After a video work's 成片 is approved and its candidate frozen, the system SHA
 - **WHEN** 公众号自动推草稿的目标还没推过
 - **THEN** 不能回填，仍需先推到草稿箱
 
+### Requirement: Actions in the review detail keep the scroll position
+审阅与交付详情页里，操作成功后的刷新 SHALL 保留已显示内容并原地更新，页面 SHALL NOT 跳回顶端；切换作品或版本时才清空重读。
+
+#### Scenario: Backfilling a receipt
+- **WHEN** 用户在交付与回填里点「回填人工回执」并成功
+- **THEN** 页面停在原位置，该目标显示新的回执和状态
+
+### Requirement: Manual receipts need a link and can be corrected
+复制包类目标回填人工回执时 SHALL 要求非空链接；已回填的复制包目标 SHALL 可以修改回执链接，修改原地更新该回执并写修改记录，SHALL NOT 新增回执或发布记录。
+
+#### Scenario: Empty receipt is not accepted
+- **WHEN** 输入框为空
+- **THEN** 「回填人工回执」不可点，直接调用接口也被拒绝
+
+#### Scenario: Filling an earlier empty receipt
+- **WHEN** 百家号目标 #7 的回执没有链接，用户点「修改」填入链接保存
+- **THEN** 回执显示新链接，目标仍是人工已确认，发布记录仍只有一条
+
