@@ -503,3 +503,37 @@ def video_chain_reveal(project_id: int, unit_id: int, output_id: int, db: Sessio
     _reveal(path)
     return {"path": str(path)}
 
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/outputs-folder/reveal")
+def outputs_folder_reveal(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """审阅与交付「打开成果文件夹」: the approved 成片 selected in Finder, else the project's 导出 folder."""
+    import subprocess
+    import sys
+
+    from sqlalchemy import select
+
+    from ..models import CreativeExecutionOutput
+    from ..services import project_folders, version_prune, video_chain
+    from ..services.content_masters import owned_unit
+    from .materials import _reveal
+
+    owned_unit(db, project_id, unit_id, user)
+    final = version_prune._approved(video_chain._unit_record(db, unit_id), "final")
+    output = db.scalar(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == final,
+        CreativeExecutionOutput.role_id == "final", CreativeExecutionOutput.state == "accepted")
+        .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1)) if final else None
+    if output is not None:
+        try:
+            path = video_chain.cut_location(db, user, project_id, unit_id, output.id)
+            _reveal(path)
+            return {"path": str(path)}
+        except HTTPException as exc:
+            if (exc.detail or {}).get("code") == "reveal_unsupported":
+                raise
+    folder = project_folders.ensure_project_dir(db, project_id) / "导出"
+    folder.mkdir(parents=True, exist_ok=True)
+    if sys.platform != "darwin":
+        raise HTTPException(409, {"code": "reveal_unsupported", "message": "只能在 Mac 本机上打开访达"})
+    subprocess.run(["open", str(folder)], check=False, timeout=10)
+    return {"path": str(folder)}

@@ -34,11 +34,13 @@ def get_matrix_suggestions(project_id: int, limit: int = Query(default=20, ge=1,
 
 
 @router.get("/{project_id}/activity")
-def get_project_activity(project_id: int, before_id: int | None = None, limit: int = Query(default=30, ge=1, le=100), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def get_project_activity(project_id: int, before_id: int | None = None, event_type: str | None = None, limit: int = Query(default=30, ge=1, le=100), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     owned_project(db, project_id, user)
     stmt = select(ProjectEvent).where(ProjectEvent.project_id == project_id)
     if before_id is not None:
         stmt = stmt.where(ProjectEvent.id < before_id)
+    if event_type:
+        stmt = stmt.where(ProjectEvent.event_type == event_type)
     rows = db.scalars(stmt.order_by(ProjectEvent.id.desc()).limit(limit + 1)).all()
     page = rows[:limit]
     return {"items": [{"id": row.id, "event_type": row.event_type, "entity_type": row.entity_type, "entity_id": row.entity_id, "actor": row.actor, "payload": row.payload_json, "schema_version": row.schema_version, "created_at": row.created_at.isoformat() if row.created_at else None} for row in page], "next_before_id": page[-1].id if len(rows) > limit and page else None}

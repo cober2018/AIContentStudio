@@ -56,13 +56,30 @@ def _mount_point(path: str) -> str:
     return str(current)
 
 
+_VOLUME_SECONDS = 30
+_volumes: dict[str, tuple[float, str | None]] = {}
+
+
 def volume_uuid(path: str) -> str | None:
-    # diskutil only answers for a mount point, not for a folder inside it.
+    # diskutil only answers for a mount point, not for a folder inside it. One page can check dozens of files on the
+    # same drive; asking once per mount point every 30 s still notices a swapped drive within that time.
+    import time
+
     try:
-        output = subprocess.run(["diskutil", "info", "-plist", _mount_point(path)], capture_output=True, timeout=10, check=True).stdout
-        return plistlib.loads(output).get("VolumeUUID")
-    except (OSError, subprocess.SubprocessError, plistlib.InvalidFileException):
+        mount = _mount_point(path)
+    except OSError:
         return None
+    cached = _volumes.get(mount)
+    if cached and time.monotonic() - cached[0] < _VOLUME_SECONDS:
+        return cached[1]
+    try:
+        output = subprocess.run(["diskutil", "info", "-plist", mount], capture_output=True, timeout=10, check=True).stdout
+        value = plistlib.loads(output).get("VolumeUUID")
+    except (OSError, subprocess.SubprocessError, plistlib.InvalidFileException):
+        value = None
+    if value is not None:
+        _volumes[mount] = (time.monotonic(), value)
+    return value
 
 
 def _components(path: str, *, absolute: bool) -> list[str]:

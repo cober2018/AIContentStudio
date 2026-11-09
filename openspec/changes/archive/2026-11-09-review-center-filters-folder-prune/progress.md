@@ -1,0 +1,14 @@
+# 进度
+- 2026-11-09 写完 propose，等用户确认。
+- 2026-11-09 用户确认后实现：
+  - 后端：services/version_prune.py；video_chain.decide（成片通过）和封面重做通过后调用；edit_agent 路由加 outputs-folder/reveal；activity 接口加 event_type 筛选；事件 versions.pruned。
+  - 前端：ProjectReviewCenter 加「内容分类」筛选、「打开成果文件夹」按钮、历史与变更「已删除的旧版本」。
+  - 脚本：apps/api/scripts/prune_old_versions.py（默认只列清单，--apply 真删）。
+  - 验证：库副本上空跑列出 11 个作品、约 33.5 GB；库副本 --apply（文件删除已屏蔽）后外键检查无孤儿，成片页状态、成片路径、审阅候选都正常；相关测试 128 passed，tsc 通过。
+  - test_aco_schema_lifecycle 的迁移头断言失败是原有问题（期望值没跟上新迁移），与本次无关。
+  - 未做：真实库清理（等用户看清单后执行）；后端重启生效。
+- 2026-11-09 用户同意后：重启后端（launchctl kickstart api/worker），新接口已上线；真实库备份到 apps/api/backups/content_studio-before-prune-20261109.db 后跑 --apply：11 个作品删旧版本约 33.5 GB，外键检查无孤儿，清单里的旧文件全部不在了，11 个作品的成片状态都是已定稿、成片文件都在。
+- 2026-11-09 内容分类筛选加「搜索推广」（production_domain=search），tsc 通过。
+- 2026-11-09 列表加「角色」筛选（persona_id，名字取 /content-personas），tsc 通过。
+- 2026-11-09 列表提速：volume_uuid 30 秒缓存、成片校验复用已校验记录。列表接口 5.5 s → 首次 1.4 s、之后 0.06 s；相关测试 166+38 passed；后端已重启。聚焦索引用户要求保留。
+- 2026-11-09 用户确认，归档并提交。

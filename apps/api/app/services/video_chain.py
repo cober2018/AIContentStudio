@@ -437,6 +437,14 @@ def decide(db: Session, user: User, project_id: int, unit_id: int, stage: str, d
         except Exception:  # noqa: BLE001 The approval stands; a candidate that cannot be frozen shows as missing in 审阅与交付.
             db.rollback()
             logging.getLogger(__name__).warning("finished video candidate not frozen: unit=%s execution=%s", unit_id, target, exc_info=True)
+        else:
+            from . import version_prune
+
+            try:
+                version_prune.prune(db, project_id, unit_id, user.email)
+            except Exception:  # noqa: BLE001 Clearing old versions must never undo the approval; the old ones simply stay.
+                db.rollback()
+                logging.getLogger(__name__).warning("old versions not pruned: unit=%s", unit_id, exc_info=True)
     if stage == "final" and decision == "approve":
         from . import project_folders
 
@@ -621,6 +629,8 @@ def brief(db: Session, user: User, project_id: int, unit_id: int) -> dict:
             "product": product_video.direction(db, unit_id),
             # Who the work speaks as; null when it belongs to no persona.
             "persona": persona_brief(db, user, unit),
+            # Search works: the question this piece answers, its keywords, the sourced facts it may cite and the search writing rules.
+            "search": __import__("app.services.search_promotion", fromlist=["writing_brief"]).writing_brief(db, unit),
             # The reference video being cloned, when the user attached one; null otherwise.
             "reference": reference_video.brief_view(db, unit_id),
             # Approved lessons from earlier rework, plus this work's sent-back notes not yet turned into a lesson.
@@ -966,6 +976,13 @@ def decide_covers(db: Session, user: User, project_id: int, unit_id: int, decisi
         final = next(item["execution_id"] for item in reversed(record["tasks"]) if item["phase"] == "final"
                      and db.get(CreativeExecution, item["execution_id"]).state != "superseded")
         finished_video.send_to_review(db, user, project_id, unit_id, final)
+        from . import version_prune
+
+        try:
+            version_prune.prune(db, project_id, unit_id, user.email)
+        except Exception:  # noqa: BLE001 The new covers stand either way.
+            db.rollback()
+            logging.getLogger(__name__).warning("old versions not pruned: unit=%s", unit_id, exc_info=True)
     return state(db, user, project_id, unit_id)
 
 

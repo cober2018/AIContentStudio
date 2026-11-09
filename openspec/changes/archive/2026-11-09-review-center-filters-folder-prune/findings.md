@@ -1,0 +1,12 @@
+# 发现与决策
+- 用户确认（2026-11-09）：旧版本真删，历史与变更只留日志；删除时机是最终成稿通过后。
+- 一个视频版本 = 一个 CreativeExecution；文件记录在 CreativeExecutionOutput；状态在 SystemSetting "video_chain"。
+- 定稿入口 video_chain.decide(stage="final", approve)，送审冻结在 finished_video.send_to_review。
+- SQLite 没开外键检查，删除时必须手动按引用顺序删，不能靠报错兜底。
+- 历史与变更页现在只显示候选/审批/对比，不显示 ProjectEvent，要补读出。
+- 文字/图文的 delete_version 只是隐藏，这次不在范围内。
+- 保留规则：通过的成片任务 + 最后一次通过的小样任务 + 最新候选 + 有交付/发布记录的候选（及其任务）；封面重做任务（cover_tasks）不动。
+- 素材记录只在没有导演稿、渠道稿、商品图、生成任务等引用时才删；硬盘文件只删项目文件夹里的。
+- 学到的技能和使用统计不随旧任务删，只把指向旧任务的字段置空。
+- 先提交数据库再删文件，数据库失败不会留下指向已删文件的记录。
+- 列表慢的根因：finished_video.validate_live 对外接执行成片走 full_hash，每次整份读；diskutil 每文件一次。用户要求不关聚焦索引。

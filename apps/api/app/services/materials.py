@@ -593,9 +593,20 @@ def verify_bytes_checked(db: Session, revision: MaterialRevision, *, require_pub
             raise HTTPException(404, "素材文件缺失") from None
     if require_public and revision.public_use_allowed is not True:
         raise HTTPException(403, "该素材未获公开使用授权")
+    # The review list checks every finished cut on each load; an unchanged file was already hashed in full.
+    head = _verified_head(db, revision)
+    if head is not None:
+        return head
     from .creative_media_stream import material_file
     try:
         with material_file(revision, 512 * 1024 * 1024) as source:
-            return source.read(64)
+            head = source.read(64)
+        try:
+            path = file_location(db, revision)
+            if path is not None:
+                _remember(revision, _stamp(path))
+        except (OSError, ValueError):
+            pass
+        return head
     except OSError:
         raise HTTPException(409, {"code": "execution_input_unavailable"}) from None
