@@ -90,7 +90,7 @@ def save_launch(db, user, payload, project=None):
     ensure_channel_in_service(payload.channel)
     # Every product video speaks as a persona: its voice, portrait and way of talking drive the content.
     persona = db.get(ContentPersona, payload.persona_id) if payload.persona_id else None
-    if persona is None or persona.owner_user_id != user.id or persona.status == "archived":
+    if persona is None or persona.owner_user_id != user.id or persona.status != "active":
         raise HTTPException(404, "角色不存在")
     product = ProductContext.model_validate(payload.product_context).model_dump(mode="json")
     sources = []

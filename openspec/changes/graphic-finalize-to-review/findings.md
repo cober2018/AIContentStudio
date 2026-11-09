@@ -1,0 +1,16 @@
+# findings
+- 定稿锁只看最新一版 Master 有没有 approve 决定；另存带成图的新版会解锁，所以平台自动版要被当成同一份定稿。
+- 现有成图检查要求 render_attestation（origin=manual、confirmed、attested_by、render_input_hash、outputs 绑定）和每张画布一个 render_output。
+- 现有逐画布出图入口（media-render-previews / outputs）是管理员手动工作台，要逐张接受、绑定。
+- 视频链在成片通过后调用 finished_video.send_to_review 冻结候选，这是要对齐的样子。
+- 作品 100 的配图 875–881 都已允许公开使用（平台生成）。
+- 草稿保存时图片层就必须可公开使用；「不可公开」只会出现在定稿后素材权限被改的情况。
+- 成图引用的 sort_order 必须等于画布序号，否则出图确认报 render_canvas_binding_mismatch。
+- 保存成图版需要绕过定稿锁：用 article_chain.finalizing（同视频链 _finalizing 的做法），只在平台存成图版那一刻生效。
+- 渲染器注册表要先 bootstrap_media_providers()，否则测试和脚本里 resolve 不到 graphic.chromium。
+- 重试时候选哈希会因检查记录变化而变，所以按「渠道版本来源 = 当前成图版」找已有候选，找到就不再冻结。
+- 角色图文没冻结事实边界时，稿件检查报 evidence_missing / fact_boundary_missing，送审过不去；写稿前必须 submit_facts。
+- 事实模板只认项目已选的模板（54 只选了「生活观察」），交事实时 template 必须写已选的。
+- nhc.gov.cn 和部分区县 gov.cn 页面平台核对时打不开，会被退回。
+- 自动定稿的问题：采用的是稿子，最终成图用户没看过就锁了；改成成图验收后才定稿（同视频成片那一站）。
+- AI 标识：图上不放后，按《人工智能生成合成内容标识办法》需要别处显式声明；放在图片消息正文末尾，判断依据是成图的来源素材是否 ai_generated。

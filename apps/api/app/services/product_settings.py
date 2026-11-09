@@ -215,7 +215,7 @@ def product_view(db: Session, user: User) -> dict:
 
 
 def capability_inventory(db: Session, user: User) -> dict:
-    from . import media_renderers, renderer_capabilities
+    from . import renderer_capabilities
     from .content_harness import providers
 
     renderer_capabilities.bootstrap()
@@ -268,14 +268,15 @@ def capability_inventory(db: Session, user: User) -> dict:
                 verified = capability_integrations.publisher_target_verified(db, target, registry)
             publishers.append({"registration_id": registration.id, "scope": scope,
                                "configured": registration.status == "configured", "verified": verified,
-                               "executable": verified, "reason": None if verified else "official_contract_unresolved" if official else "publisher_scope_unverified",
+                               # An official draft push needs only the user's explicit request; verified means a draft was confirmed.
+                               "executable": registration.status == "configured" if official else verified,
+                               "reason": None if verified else "official_draft_unconfirmed" if official else "publisher_scope_unverified",
                                "last_verification": {"id": event.id, "result": event.result,
                                                      "verified_at": event.verified_at.isoformat(),
                                                      "expires_at": event.expires_at.isoformat() if event.expires_at else None}})
     from .capability_integrations import publisher_runtime_fingerprint
 
     return {"descriptors": descriptors, "publishers": publishers, "renderers": renderer_capabilities.inventory(db),
-            "media_renderer_previews": media_renderers.preview_inventory(user, db),
             "provider_guidance": provider_guidance(registrations), "can_verify": user.role == "admin",
             "publisher_verification_available": publisher_runtime_fingerprint("publisher.wechat.wewrite", "1") is not None}
 

@@ -102,7 +102,7 @@ def _profile_payload(item: dict, key: str) -> dict:
 
 def _blueprint_persona(db, user, key: str):
     item = blueprint(key)
-    rows = db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id).order_by(ContentPersona.id)).all()
+    rows = db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id, ContentPersona.status != "deleted").order_by(ContentPersona.id)).all()
     for persona in rows:
         revision = content_identity.current_revision(db, "persona", persona.id)
         history = db.scalars(select(ContentPersonaRevision).where(

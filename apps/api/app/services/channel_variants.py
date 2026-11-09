@@ -35,6 +35,7 @@ from ..models import (
 from .channel_adapters import FIRST_BATCH, AdapterUnavailable, capability_for, executable_adapter_for
 from .channel_form_descriptors import MODERN_ARTICLE_SCHEMAS
 from .channel_variant_documents import (
+    IMAGE_NOTE_SCHEMAS,
     SINGLE_TEXT_SCHEMAS,
     VariantDocumentError,
     canonical_payload,
@@ -666,7 +667,7 @@ def projected_variant_checks(db: Session, row: ChannelVariantRevision) -> dict:
     input_hash, _, _ = _check_inputs(db, row, memo=memo)
     drift_reasons = _drift_reasons(db, row, memo=memo)
     required = ("variant_schema", "variant_evidence", "variant_rights", "variant_profile")
-    if row.payload_schema in {"xiaohongshu.image_note.v1", "bilibili.image_note.v1"}:
+    if row.payload_schema in IMAGE_NOTE_SCHEMAS:
         required = (*required, "variant_render")
     required = (*required, "variant_package")
     adapter_hash = _hash({"key": row.adapter_key, "version": row.adapter_version})
@@ -752,7 +753,7 @@ def _profile_check(db: Session, row: ChannelVariantRevision, assets: list[dict])
         return "incomplete", {"reasons": ["media_policy_unavailable"], "coverage": {"profile": "verified", "media": "unknown", "rules": "unknown", "remote_publisher": "unverified"}}
     if media.get("cover") == "required" and not (
         any(ref["role"] == "cover" for ref in assets)
-        or row.payload_schema in {"xiaohongshu.image_note.v1", "bilibili.image_note.v1"} and any(ref["role"] == "card_image" for ref in assets)
+        or row.payload_schema in IMAGE_NOTE_SCHEMAS and any(ref["role"] == "card_image" for ref in assets)
     ):
         reasons.append("cover_required")
     if media.get("inline") == "required" and not assets:
@@ -826,7 +827,7 @@ def _evidence_check(db: Session, row: ChannelVariantRevision, assets: list[dict]
 def _rights_check(db: Session, row: ChannelVariantRevision, assets: list[dict]) -> tuple[str, dict]:
     master = db.get(ContentMasterRevision, row.source_master_revision_id)
     try:
-        if row.payload_schema in {"xiaohongshu.image_note.v1", "bilibili.image_note.v1"}:
+        if row.payload_schema in IMAGE_NOTE_SCHEMAS:
             _validate_graphic_assets(db, row.project_id, master, assets)
         elif row.payload_schema == "douyin.spoken_script.v1":
             _validate_video_assets(db, row.project_id, master, assets)
@@ -889,7 +890,7 @@ def run_variant_checks(db: Session, project_id: int, unit_id: int, variant_id: i
     results["variant_profile"] = _profile_check(db, row, assets)
     results["variant_evidence"] = _evidence_check(db, row, assets, evidence)
     results["variant_rights"] = _rights_check(db, row, assets)
-    if row.payload_schema in {"xiaohongshu.image_note.v1", "bilibili.image_note.v1"}:
+    if row.payload_schema in IMAGE_NOTE_SCHEMAS:
         results["variant_render"] = _render_check(db, row, assets)
     results["variant_package"] = _package_check(db, row, assets, evidence, results)
     adapter_hash = _hash({"key": row.adapter_key, "version": row.adapter_version})

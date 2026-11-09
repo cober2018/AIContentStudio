@@ -82,11 +82,12 @@ export function PersonaPortraitEditor({ personaId, personaName, revision, readOn
     api.get<{ items: Portrait[] }>(`/content-personas/${personaId}/portraits`).then(data => { if (alive) setItems(data.items); }).catch(cause => { if (alive) setIssue(errorText(cause)); });
     return () => { alive = false; };
   }, [personaId, revisionNo]);
-  async function save(change: () => Promise<number[]>) {
+  const coverId = revision?.profile?.cover_portrait_material_revision_id ?? null;
+  async function save(change: () => Promise<number[]>, cover: unknown = coverId) {
     setBusy(true); setIssue("");
     try {
       const next = await change();
-      await api.post(`/content-personas/${personaId}/revisions`, { expected_revision: revisionNo, profile: { ...(revision?.profile || {}), portrait_material_revision_ids: next } });
+      await api.post(`/content-personas/${personaId}/revisions`, { expected_revision: revisionNo, profile: { ...(revision?.profile || {}), portrait_material_revision_ids: next, cover_portrait_material_revision_id: cover } });
       await onSaved();
     } catch (cause) { setIssue(errorText(cause)); } finally { setBusy(false); }
   }
@@ -96,6 +97,8 @@ export function PersonaPortraitEditor({ personaId, personaName, revision, readOn
     <div className="flex flex-wrap gap-3">
       {items.map(item => <div key={item.material_revision_id} className="space-y-1"><StoredThumb item={item} />
         {!item.usable && <p className="text-[12px] text-amber-700">这张不能再用</p>}
+        <label className="flex items-center gap-1 text-[12px] text-ink-600"><input type="checkbox" checked={coverId === item.material_revision_id} disabled={off}
+          onChange={event => void save(async () => ids, event.target.checked ? item.material_revision_id : null)} />用在封面上</label>
         <button type="button" className="text-[12px] text-ink-500 hover:text-red-600" disabled={off} onClick={() => void save(async () => ids.filter(id => id !== item.material_revision_id))}>移除</button></div>)}
       {items.length < MAX_PORTRAITS && <FileButton disabled={off} room={MAX_PORTRAITS - items.length} onPick={picked => void save(async () => [...ids, ...await Promise.all(picked.map(file => uploadPortrait(file, personaName)))])} />}
     </div>

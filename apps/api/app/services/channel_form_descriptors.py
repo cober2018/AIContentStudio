@@ -169,6 +169,13 @@ def form_descriptor_for(schema: str, channel_id: str | None = None, content_form
         fields.append(_list("cards", items, limit, minimum=1, label="图卡"))
         roles.append({"role": "card_image", "required": True, "exact_render": True, "exact_slot": True,
                       "dimension_source": "published_profile_and_render_attestation"})
+    elif schema == "wechat.image_message.v1":
+        items = _ordered_fields("cards[]", 20)
+        items.update(image_ref_key=_field("cards[].image_ref_key", "media_ref", "成品图片", required=True,
+                                          role="card_image", exact_slot=True))
+        fields = [_text("title", 32, "标题", required=True), _list("cards", items, 20, minimum=1, label="图片（第一张是封面）")]
+        roles.append({"role": "card_image", "required": True, "exact_render": True, "exact_slot": True,
+                      "dimension_source": "published_profile_and_render_attestation"})
     elif schema == "douyin.spoken_script.v1":
         items = _ordered_fields("scenes[]", 120)
         items.update(script=_text("scenes[].script", 10000, "脚本", required=True),

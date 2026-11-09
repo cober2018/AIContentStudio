@@ -763,19 +763,28 @@ _EDIT_EXECUTOR = "codex-video-production"
 _EDIT_IDLE = timedelta(minutes=30)
 
 
+def _covers_only(db: Session, row: CreativeExecution) -> bool:
+    package = db.get(CreativeExecutionPackage, row.package_id)
+    roles = {item["role_id"] for item in ((package.package_json if package else {}).get("output_contract") or {}).get("roles") or []}
+    return bool(roles) and roles <= {"cover_vertical", "cover_43"}
+
+
 def _edit_slot(db: Session, row: CreativeExecution) -> None:
     """DaVinci scripts act on its one open project, so only one edit is worked at a time.
     A task silent for 30 minutes counts as an abandoned session and stops holding the slot; its state is left alone."""
     from ..models import ContentUnit
 
+    # Redoing a finished work's covers never opens DaVinci, so it neither waits for nor holds the slot.
+    if _covers_only(db, row):
+        return
     since = utcnow() - _EDIT_IDLE
     recent_output = select(CreativeExecutionOutput.id).where(CreativeExecutionOutput.execution_id == CreativeExecution.id,
                                                              CreativeExecutionOutput.created_at >= since).exists()
     # A work's new task replaces its older ones, which are never edited again, so only other works hold the slot.
-    busy = db.scalar(select(CreativeExecution).where(
+    busy = next((item for item in db.scalars(select(CreativeExecution).where(
         CreativeExecution.executor_key == _EDIT_EXECUTOR, CreativeExecution.content_unit_id != row.content_unit_id,
         CreativeExecution.state.in_(("claimed", "in_progress", "blocked")),
-        (CreativeExecution.updated_at >= since) | recent_output).limit(1))
+        (CreativeExecution.updated_at >= since) | recent_output)) if not _covers_only(db, item)), None)
     if busy is None:
         return
     waiting = db.scalar(select(func.count(CreativeExecution.id)).where(
@@ -947,7 +956,7 @@ def _writable(db: Session, row: CreativeExecution, *, output: bool = False) -> N
 
 
 _INPUT_EXTENSIONS = {"video/mp4": "mp4", "video/quicktime": "mov", "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp",
-                     "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav", "audio/mpeg": "mp3", "audio/mp4": "m4a"}
+                     "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav", "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/flac": "flac"}
 
 
 def _input_names(snapshot: dict) -> tuple[str, str]:
@@ -1418,7 +1427,8 @@ def submit_output(db: Session, project_id: int, unit_id: int, execution_id: int,
     db.flush()
     outputs.append(output)
     ready, accepted = _completion(package, outputs)
-    if ready and streams.policy(package) and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction"):
+    if (ready and streams.policy(package) and package.package_schema == "director.video.v1" and package.package_json.get("director", {}).get("postproduction")
+            and "edit_manifest" in roles):
         import json
 
         from .web_video_handoff import validate_edit_output_hashes

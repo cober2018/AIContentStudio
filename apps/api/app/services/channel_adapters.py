@@ -67,6 +67,7 @@ FIRST_BATCH: dict[tuple[str, str], AdapterContract] = {
     ("xueqiu", "market_recap"): AdapterContract("xueqiu.market_recap", "1", frozenset({"text.master.v2"}), "xueqiu", "market_recap", "text", "xueqiu.market_recap.v1"),
     ("juejin", "tech_article"): AdapterContract("juejin.tech_article", "1", frozenset({"text.master.v2"}), "juejin", "tech_article", "text", "juejin.tech_article.v1"),
     ("bilibili", "image_note"): AdapterContract("bilibili.image_note", "1", frozenset({"graphic.master.v2"}), "bilibili", "image_note", "image", "bilibili.image_note.v1"),
+    ("wechat", "image_message"): AdapterContract("wechat.image_message", "1", frozenset({"graphic.master.v2"}), "wechat", "image_message", "image", "wechat.image_message.v1"),
     ("x", "long_post"): AdapterContract("x.long_post", "1", frozenset({"text.master.v2"}), "x", "long_post", "text", "x.long_post.v1"),
     ("x", "articles"): AdapterContract("x.articles", "1", frozenset({"text.master.v2"}), "x", "articles", "text", "x.articles.v1"),
 }
@@ -316,8 +317,8 @@ class GraphicImageNoteAdapter:
 
     contract = FIRST_BATCH[("xiaohongshu", "image_note")]
 
-    def __init__(self, channel: str = "xiaohongshu"):
-        self.contract = FIRST_BATCH[(channel, "image_note")]
+    def __init__(self, channel: str = "xiaohongshu", content_form: str = "image_note"):
+        self.contract = FIRST_BATCH[(channel, content_form)]
 
     def capabilities(self) -> dict:
         return {"deterministic_subset": True, "model_assisted": False, "remote_verified": False,
@@ -349,12 +350,19 @@ class GraphicImageNoteAdapter:
         refs = {item.get("slot_key"): item for item in asset_refs if isinstance(item, dict)}
         if len(refs) != len(canvases) or set(refs) != {canvas["id"] for canvas in canvases}:
             raise AdapterUnavailable("render_canvas_coverage_missing")
-        cards = []
-        for index, canvas in enumerate(canvases):
-            caption = "\n".join(run["text"] for layer in canvas["layers"] if layer["type"] == "text" for run in layer["runs"])
-            cards.append({"id": canvas["id"], "order": index, "image_ref_key": canvas["id"], "caption": caption})
+        if self.contract.payload_schema == "wechat.image_message.v1":
+            if len(title) > 32:
+                raise AdapterUnavailable("image_message_title_over_32_chars")
+            cards = [{"id": canvas["id"], "order": index, "image_ref_key": canvas["id"]} for index, canvas in enumerate(canvases)]
+            payload = {"title": title, "cards": cards}
+        else:
+            cards = []
+            for index, canvas in enumerate(canvases):
+                caption = "\n".join(run["text"] for layer in canvas["layers"] if layer["type"] == "text" for run in layer["runs"])
+                cards.append({"id": canvas["id"], "order": index, "image_ref_key": canvas["id"], "caption": caption})
+            payload = {"title": title, "cards": cards}
         try:
-            return self.canonicalize({"title": title, "cards": cards}, asset_refs=asset_refs)
+            return self.canonicalize(payload, asset_refs=asset_refs)
         except VariantDocumentError as exc:
             raise AdapterUnavailable("adapted_payload_invalid") from exc
 
@@ -461,6 +469,7 @@ for _text_target, _text_contract in FIRST_BATCH.items():
         _EXECUTABLE_ADAPTERS[_text_target] = TextChannelAdapter(*_text_target)
 _EXECUTABLE_ADAPTERS[("xiaohongshu", "image_note")] = GraphicImageNoteAdapter()
 _EXECUTABLE_ADAPTERS[("bilibili", "image_note")] = GraphicImageNoteAdapter("bilibili")
+_EXECUTABLE_ADAPTERS[("wechat", "image_message")] = GraphicImageNoteAdapter("wechat", "image_message")
 _EXECUTABLE_ADAPTERS[("douyin", "spoken_script")] = VideoSpokenScriptAdapter()
 
 

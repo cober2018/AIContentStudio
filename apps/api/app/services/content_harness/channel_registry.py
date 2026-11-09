@@ -24,7 +24,7 @@ from ...models import ArtifactKind, ChannelTemplateVersion
 LEGACY_CHANNELS: dict[str, dict] = {
     "douyin": {"label": "抖音口播", "default_content_form": "spoken_script", "artifact_kind": ArtifactKind.script.value},
     "xiaohongshu": {"label": "小红书图文", "default_content_form": "image_note", "artifact_kind": ArtifactKind.text.value},
-    "wechat": {"label": "公众号文章", "default_content_form": "article", "artifact_kind": ArtifactKind.text.value},
+    "wechat": {"label": "公众号", "default_content_form": "article", "artifact_kind": ArtifactKind.text.value},
 }
 
 class _RetiredChannels(Mapping):
@@ -68,7 +68,6 @@ CHANNEL_LABELS: dict[str, str] = {
 # 平台要接入的渠道目标清单：只登记，不带任何生成、排版或发布能力。某渠道接入那次改动同时删掉这里的条目。
 PLANNED_CHANNELS: dict[str, dict] = {
     "douyin": {"label": "抖音", "forms": {"video": ("视频", "video", "抖音视频"), "image_note": ("图文", "image", "抖音图文")}},
-    "wechat": {"label": "公众号", "forms": {"image_message": ("图片消息", "image", "公众号图片消息")}},
     "weibo": {"label": "微博", "forms": {"image_note": ("图文", "image", "微博图文"), "video": ("视频", "video", "微博视频")}},
     "wechat_channels": {"label": "视频号", "forms": {"video": ("视频", "video", "视频号")}},
     "kuaishou": {"label": "快手", "forms": {"video": ("视频", "video", "快手")}},
@@ -83,6 +82,7 @@ FORM_LABELS: dict[str, str] = {
     "thread": "推串",
     "single": "单推",
     "image_note": "图文笔记",
+    "image_message": "图片消息",
     "spoken_script": "口播脚本",
     "quant_research": "量化研究",
     "market_recap": "行情复盘",

@@ -106,7 +106,7 @@ def save_settings(payload: SettingsIn, db=Depends(get_db), user=Depends(require_
         from ..services.source_discovery import import_seed_inventory
 
         import_seed_inventory(db, user.id)
-        for persona in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id)).all():
+        for persona in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id, ContentPersona.status != "deleted")).all():
             current = runtime.profile(db, persona.id)
             if current:
                 runtime.on_persona_revision(db, persona.id, current[1])
@@ -261,7 +261,7 @@ def status_projection(db, user):
     config = configuration_json(db, user)
     heartbeat = db.get(SystemSetting, "discovery.heartbeat")
     result = []
-    for persona in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id)).all():
+    for persona in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id, ContentPersona.status != "deleted")).all():
         current = runtime.profile(db, persona.id)
         from ..services.discovery_aggregation import source_id_for
 

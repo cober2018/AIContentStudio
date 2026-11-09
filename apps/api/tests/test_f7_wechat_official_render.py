@@ -5,35 +5,6 @@ from copy import deepcopy
 import pytest
 
 
-@pytest.mark.parametrize("content,allowed", [("a" * 2047, True), ("a" * 2048, False),
-                                            ("中" * 682, True), ("中" * 683, False), ("", False)],
-                         ids=["2047-ascii", "2048-ascii", "2046-utf8", "2049-utf8", "empty"])
-def test_short_draft_actual_body_uses_strict_utf8_bytes(content, allowed):
-    from app.services import wechat_official_render as render
-
-    original = content
-    if allowed:
-        assert render.validate_short_draft_body(content) == len(content.encode("utf-8"))
-    else:
-        with pytest.raises(ValueError, match="official_experiment_body_limit"):
-            render.validate_short_draft_body(content)
-    assert content == original
-
-
-def test_short_draft_preupload_bound_accounts_for_escaped_remote_url():
-    from app.services import wechat_official_render as render
-
-    content, assets = _article()
-    frozen = render.build_article_render(content, assets, [])
-    before = deepcopy(frozen)
-    assert render.validate_short_draft_render_bound(frozen) < 2048
-    assert frozen == before
-    content, assets = _inline_article()
-    frozen = render.build_article_render(content, assets, [])
-    with pytest.raises(ValueError, match="official_experiment_body_limit"):
-        render.validate_short_draft_render_bound(frozen)
-
-
 def _article():
     content = {"title": "已批准标题", "blocks": [
         {"id": "b1", "order": 0, "kind": "heading", "text": "标题 <script>"},

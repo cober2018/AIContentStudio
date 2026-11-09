@@ -16,6 +16,8 @@ class VariantDocumentError(ValueError):
 
 
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$")
+# Ordered finished-image targets fed by a graphic master's canvas renders.
+IMAGE_NOTE_SCHEMAS = frozenset({"xiaohongshu.image_note.v1", "bilibili.image_note.v1", "wechat.image_message.v1"})
 _HASH = re.compile(r"^[0-9a-f]{64}$")
 
 # Long-form text targets. They share one document shape and do not inherit WeChat's cover or official HTML.
@@ -391,6 +393,22 @@ def canonical_payload(schema: str, value: object, *, asset_refs: object = None, 
         result = {"title": _text(item.get("title"), TEXT_LIMITS["title"], required=True),
                   "description": _text(item.get("description", ""), TEXT_LIMITS["description"]),
                   "tags": _tags(item.get("tags", [])), "cards": cards}
+    elif schema == "wechat.image_message.v1":
+        # The body is not written here: the work's publish copy becomes the plain-text body when the candidate is frozen.
+        item = _object(value, {"title", "cards"} | common)
+        cards = []
+        keys = set()
+        # 公众号图片消息 holds at most 20 images; the first is the cover.
+        for raw in _ordered(item.get("cards"), 20):
+            raw = _object(raw, {"id", "order", "image_ref_key"})
+            key = _id(raw.get("image_ref_key"))
+            if key not in asset_keys:
+                _fail("asset_ref_missing", f"cards[{raw['order']}].image_ref_key")
+            if key in keys:
+                _fail("duplicate_image_ref", "cards")
+            keys.add(key)
+            cards.append({"id": raw["id"], "order": raw["order"], "image_ref_key": key})
+        result = {"title": _text(item.get("title"), 32, required=True), "cards": cards}
     elif schema == "douyin.spoken_script.v1":
         item = _object(value, {"scenes", "estimated_srt"} | common)
         scenes = []
@@ -428,7 +446,7 @@ def collection_key(schema: str) -> str | None:
         return "blocks"
     if schema == "x.thread.v1":
         return "posts"
-    if schema in {"xiaohongshu.image_note.v1", "bilibili.image_note.v1"}:
+    if schema in IMAGE_NOTE_SCHEMAS:
         return "cards"
     if schema == "douyin.spoken_script.v1":
         return "scenes"

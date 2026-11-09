@@ -11,21 +11,28 @@ from urllib.parse import parse_qsl, urlsplit
 from .channel_variant_documents import canonical_payload
 
 
-def validate_html_draft_body(content: object) -> int:
-    if not isinstance(content, str) or not content:
-        raise ValueError("official_experiment_body_limit")
+DRAFT_BODY_CHARS = 20_000
+DRAFT_BODY_BYTES = 1_000_000
+
+
+def validate_draft_body(content: object, *, allow_empty: bool = False) -> int:
+    """Official draft/add content limit (2025-12-19 text): fewer than 20,000 characters and under 1 MB."""
+    if not isinstance(content, str) or (not content and not allow_empty):
+        raise ValueError("official_body_limit")
     try:
         size = len(content.encode("utf-8"))
     except UnicodeEncodeError:
-        raise ValueError("official_experiment_body_limit") from None
-    if size > 1_000_000:
-        raise ValueError("official_experiment_body_limit")
+        raise ValueError("official_body_limit") from None
+    if len(content) >= DRAFT_BODY_CHARS or size >= DRAFT_BODY_BYTES:
+        raise ValueError("official_body_limit")
     return size
 
 
 def original_html_blocks(content: str) -> list[dict]:
     """Derive content, not formatting, so imported HTML cannot bypass source equivalence."""
-    validate_html_draft_body(content)
+    # Saving keeps the old 1 MB bound; the 20,000-character push limit is checked only when pushing.
+    if not isinstance(content, str) or not content or len(content.encode("utf-8", "surrogatepass")) > DRAFT_BODY_BYTES:
+        raise ValueError("official_body_limit")
     allowed = {"section", "div", "span", "p", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote",
                "strong", "b", "em", "i", "u", "s", "ul", "ol", "li", "pre", "code", "br", "hr",
                "img", "figure", "figcaption", "table", "thead", "tbody", "tr", "td", "th"}
@@ -124,44 +131,11 @@ def original_html_blocks(content: str) -> list[dict]:
     return parser.blocks
 
 
-def validate_html_draft_render_bound(render: dict) -> int:
-    if (not isinstance(render, dict) or render.get("renderer_version") != "3"
-            or render.get("status") != "local_ready"):
-        raise ValueError("official_html_render_required")
-    content = render["html_template"]
-    original_html_blocks(content)
-    for slot in render["asset_slots"]:
-        if slot["usage"] == "inline":
-            content = content.replace(f'src="aics-resource:{slot["slot_key"]}"', 'src="' + "x" * (2048 * 6) + '"', 1)
-    return validate_html_draft_body(content)
-
-
-def validate_short_draft_body(content: object) -> int:
-    if not isinstance(content, str) or not content:
-        raise ValueError("official_experiment_body_limit")
-    try:
-        size = len(content.encode("utf-8"))
-    except UnicodeEncodeError:
-        raise ValueError("official_experiment_body_limit") from None
-    if size >= 2048:
-        raise ValueError("official_experiment_body_limit")
-    return size
-
-
-def validate_short_draft_render_bound(render: dict) -> int:
-    if (not isinstance(render, dict) or render.get("status") != "local_ready"
-            or not isinstance(render.get("html_template"), str)
-            or not isinstance(render.get("asset_slots"), list)):
-        raise ValueError("official_experiment_body_limit")
-    content = render["html_template"]
-    for slot in render["asset_slots"]:
-        if slot.get("usage") == "inline":
-            placeholder = f'src="aics-resource:{slot["slot_key"]}"'
-            if content.count(placeholder) != 1:
-                raise ValueError("official_resource_mapping_invalid")
-            # Existing URL validation permits 2048 characters; HTML escaping expands at most sixfold.
-            content = content.replace(placeholder, 'src="' + "x" * (2048 * 6) + '"', 1)
-    return validate_short_draft_body(content)
+def validate_draft_render_bound(render: dict) -> int:
+    """Checked before any request; image placeholders are shorter than real URLs, so create checks the final body again."""
+    if not isinstance(render, dict) or render.get("status") != "local_ready" or not isinstance(render.get("html_template"), str):
+        raise ValueError("official_body_limit")
+    return validate_draft_body(render["html_template"])
 
 
 def _hash(value: object) -> str:
@@ -313,3 +287,89 @@ def match_readback(article: dict, returned: dict) -> str:
     if returned != article:
         raise ValueError("official_readback_mismatch")
     return _hash(article)
+
+
+IMAGE_MESSAGE_SCHEMA = "wechat.official.image_message.v1"
+
+
+def build_material_image_message_render(db, content: dict, assets: list[dict], evidence_refs: list[dict], *, unit_id: int) -> dict:
+    from ..models import MaterialRevision
+    from .publish_copy import stored
+
+    metadata = {}
+    for ref in assets:
+        revision = db.get(MaterialRevision, ref["material_revision_id"], populate_existing=True)
+        metadata[ref["material_revision_id"]] = upload_asset_metadata(revision) if revision else {}
+    copy = stored(db, unit_id)
+    copy = {key: copy.get(key, [] if key == "hashtags" else "") for key in ("title", "lead", "hashtags", "interaction")} if copy else None
+    return build_image_message_render(content, assets, evidence_refs, asset_metadata=metadata, publish_copy=copy)
+
+
+def build_image_message_render(content: dict, assets: list[dict], evidence_refs: list[dict], *, asset_metadata: dict,
+                               publish_copy: dict | None) -> dict:
+    """Frozen before Approval: title and plain-text body from the work's publish copy, images in card order (first is the cover)."""
+    canonical = canonical_payload("wechat.image_message.v1", content, asset_refs=assets, evidence_refs=evidence_refs)
+    reasons, slots = [], []
+    for card in canonical["cards"]:
+        ref = next(item for item in assets if item["slot_key"] == card["image_ref_key"])
+        info = asset_metadata.get(ref["material_revision_id"], {})
+        mime = info.get("mime_type") if info.get("mime_type") in {"image/png", "image/jpeg"} else None
+        if mime is None and "asset_mime_unsupported" not in reasons:
+            reasons.append("asset_mime_unsupported")
+        try:
+            filename = validate_upload_filename(info.get("filename"))
+        except ValueError:
+            # Rendered cards carry no upload name; a stable per-card name keeps the request deterministic.
+            filename = f"{card['id']}.{'jpg' if mime == 'image/jpeg' else 'png'}"
+        slots.append({"slot_key": ref["slot_key"], "usage": "image", "card_id": card["id"],
+                      "material_revision_id": ref["material_revision_id"], "content_hash": ref["content_hash_snapshot"],
+                      "filename": filename, "mime_type": mime})
+    copy = publish_copy or {}
+    tags = " ".join(f"#{tag}" for tag in copy.get("hashtags") or [])
+    body = "\n\n".join(part for part in [copy.get("lead", ""), copy.get("interaction", ""), tags,
+                                          *(item["text"] for item in canonical["declarations"])] if part)
+    try:
+        validate_draft_body(body, allow_empty=True)
+    except ValueError:
+        reasons.append("body_limit")
+    result = {"schema": IMAGE_MESSAGE_SCHEMA, "renderer": "wechat.official.newspic", "renderer_version": "1",
+              "status": "unavailable" if reasons else "local_ready", "reasons": reasons,
+              "title": copy.get("title") or canonical["title"], "content": body, "asset_slots": slots, "publish_copy": publish_copy,
+              "content_hash": _hash(canonical), "citations": canonical["citations"], "declarations": canonical["declarations"]}
+    return {**result, "render_hash": _hash(result)}
+
+
+def validate_image_message_render(render: dict, content: dict, assets: list[dict], evidence_refs: list[dict]) -> None:
+    slots = render.get("asset_slots") if isinstance(render, dict) else None
+    if not isinstance(slots, list) or any(not isinstance(slot, dict) for slot in slots):
+        raise ValueError("official_render_mismatch")
+    metadata = {slot.get("material_revision_id"): {"filename": slot.get("filename"), "mime_type": slot.get("mime_type")} for slot in slots}
+    if render != build_image_message_render(content, assets, evidence_refs, asset_metadata=metadata, publish_copy=render.get("publish_copy")):
+        raise ValueError("official_render_mismatch")
+
+
+def validate_official_render(render: dict, content: dict, assets: list[dict], evidence_refs: list[dict]) -> None:
+    if isinstance(render, dict) and render.get("schema") == IMAGE_MESSAGE_SCHEMA:
+        validate_image_message_render(render, content, assets, evidence_refs)
+    else:
+        validate_article_render(render, content, assets, evidence_refs)
+
+
+def prepare_image_message(manifest: dict, runtime, mapping: list[dict]) -> dict:
+    if (not isinstance(manifest, dict) or manifest.get("schema_version") != 5
+            or not isinstance(manifest.get("official_render"), dict)):
+        raise ValueError("official_render_required")
+    render = manifest["official_render"]
+    validate_image_message_render(render, manifest["content"], manifest["assets"], manifest["evidence_refs"])
+    if render["status"] != "local_ready" or not isinstance(mapping, list) or len(mapping) != len(render["asset_slots"]):
+        raise ValueError("official_resource_mapping_invalid")
+    ids = []
+    for slot, resolved in zip(render["asset_slots"], mapping, strict=True):
+        if (not isinstance(resolved, dict) or set(resolved) != set(slot) | {"account_id", "appid", "runtime_fingerprint", "remote_ref"}
+                or any(resolved.get(key) != value for key, value in slot.items())
+                or resolved["account_id"] != runtime.account_id or resolved["appid"] != runtime.appid
+                or resolved["runtime_fingerprint"] != runtime.fingerprint
+                or not isinstance(resolved["remote_ref"], str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", resolved["remote_ref"])):
+            raise ValueError("official_resource_mapping_invalid")
+        ids.append(resolved["remote_ref"])
+    return {"title": render["title"], "content": render["content"], "image_media_ids": ids}

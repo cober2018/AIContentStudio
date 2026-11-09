@@ -9,171 +9,6 @@ from copy import deepcopy
 import pytest
 
 
-def _experiment_scope():
-    return {"account_id": 10, "appid": "wx0123456789abcdef", "candidate_id": 20,
-            "candidate_hash": "b" * 64, "target_id": 30, "attempt_id": 40,
-            "runtime_fingerprint": "a" * 64, "actor": "owner@example.com",
-            "action": "auto_draft", "channel": "wechat", "content_form": "article"}
-
-
-def test_short_experiment_authority_is_exact_signed_expiring_not_general(monkeypatch):
-    from app.services import wechat_official as official
-
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    scope = _experiment_scope()
-    now = int(time.time())
-    authority = official.sign_short_draft_authority(scope, expires_at=now + 120, now=now)
-    assert official.check_short_draft_authority(authority, scope, now=now)
-    assert official.remote_contract_ready() is False
-    assert not official.check_short_draft_authority(authority, scope, now=now + 120)
-    for key, value in {"account_id": 11, "appid": "wx" + "f" * 16, "candidate_id": 21,
-                       "candidate_hash": "c" * 64, "target_id": 31, "attempt_id": 41,
-                       "runtime_fingerprint": "d" * 64, "actor": "foreign@example.com",
-                       "action": "manual_handoff", "channel": "x", "content_form": "single"}.items():
-        assert not official.check_short_draft_authority(authority, {**scope, key: value}, now=now)
-        forged = deepcopy(authority)
-        forged["scope"][key] = value
-        assert not official.check_short_draft_authority(forged, {**scope, key: value}, now=now)
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "r" * 32)
-    assert not official.check_short_draft_authority(authority, scope, now=now)
-
-
-@pytest.mark.parametrize("mutation", [{"account_id": True}, {"attempt_id": 0}, {"action": "publish"},
-                                      {"channel": "x"}, {"candidate_hash": "bad"}, {"extra": "untrusted"}])
-def test_short_experiment_invalid_scope_cannot_be_signed(monkeypatch, mutation):
-    from app.services import wechat_official as official
-
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    now = int(time.time())
-    with pytest.raises(ValueError, match="official_experiment_authority_invalid"):
-        official.sign_short_draft_authority({**_experiment_scope(), **mutation}, expires_at=now + 120, now=now)
-
-
-def test_short_experiment_authority_requires_key_and_bounded_expiry(monkeypatch):
-    from app.services import wechat_official as official
-
-    now = int(time.time())
-    monkeypatch.delenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", raising=False)
-    with pytest.raises(ValueError, match="official_experiment_authority_invalid"):
-        official.sign_short_draft_authority(_experiment_scope(), expires_at=now + 120, now=now)
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    for expiry in [now, now - 1, now + 901, True]:
-        with pytest.raises(ValueError, match="official_experiment_authority_invalid"):
-            official.sign_short_draft_authority(_experiment_scope(), expires_at=expiry, now=now)
-
-
-def test_short_experiment_transport_exact_runtime_token_body_and_single_create(module, runtime, wire, monkeypatch):
-    from app.services import wechat_official as official
-
-    calls, replies, Response = wire
-    monkeypatch.setattr(official, "remote_contract_ready", lambda: False)
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    scope = _experiment_scope()
-    authority = official.sign_short_draft_authority(scope, expires_at=int(time.time()) + 120)
-    client = module.OfficialTransport(experiment_authority=authority, experiment_scope=scope)
-    replies.extend([Response({"access_token": "token-a", "expires_in": 7200}), Response({"media_id": "draft-id"})])
-    assert client.token(runtime) == "token-a"
-    with pytest.raises(module.OfficialTransportError, match="official_experiment_scope_invalid"):
-        client.upload_cover("foreign-token", b"\x89PNG\r\n\x1a\nbytes", "image/png")
-    with pytest.raises(module.OfficialTransportError, match="official_experiment_body_limit"):
-        client.create_draft("token-a", {"title": "标题", "author": "", "digest": "", "content": "中" * 683, "thumb_media_id": "cover-id"})
-    assert len(calls) == 1
-    article = {"title": "标题", "author": "", "digest": "", "content": "<p>测试</p>", "thumb_media_id": "cover-id"}
-    assert client.create_draft("token-a", article) == "draft-id"
-    with pytest.raises(module.OfficialTransportError, match="official_experiment_create_claimed"):
-        client.create_draft("token-a", article)
-    assert len(calls) == 2
-    assert official.remote_contract_ready() is False
-
-
-def test_short_experiment_transport_rejects_wrong_runtime_before_dns(module, runtime, monkeypatch):
-    from app.services import wechat_official as official
-
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    monkeypatch.setattr(module.socket, "getaddrinfo", lambda *a, **kw: pytest.fail("foreign runtime reached DNS"))
-    scope = _experiment_scope()
-    authority = official.sign_short_draft_authority(scope, expires_at=int(time.time()) + 120)
-    client = module.OfficialTransport(experiment_authority=authority, experiment_scope=scope)
-    foreign = official.AccountRuntime(11, runtime.appid, runtime.fingerprint, runtime.secret)
-    with pytest.raises(module.OfficialTransportError, match="official_experiment_scope_invalid"):
-        client.token(foreign)
-
-
-def test_short_experiment_expiry_blocks_cached_token(module, runtime, wire, monkeypatch):
-    from app.services import wechat_official as official
-
-    calls, replies, Response = wire
-    monkeypatch.setattr(official, "remote_contract_ready", lambda: False)
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    now = int(time.time())
-    authority = official.sign_short_draft_authority(_experiment_scope(), expires_at=now + 120, now=now)
-    client = module.OfficialTransport(experiment_authority=authority, experiment_scope=_experiment_scope())
-    replies.append(Response({"access_token": "token-a", "expires_in": 7200}))
-    assert client.token(runtime) == "token-a"
-    monkeypatch.setattr(official.time, "time", lambda: now + 120)
-    with pytest.raises(module.OfficialTransportError, match="official_experiment_scope_invalid"):
-        client.token(runtime)
-    assert len(calls) == 1
-
-
-def test_short_experiment_unconfirmed_create_cannot_repeat(module, runtime, wire, monkeypatch):
-    from app.services import wechat_official as official
-
-    calls, replies, Response = wire
-    monkeypatch.setattr(official, "remote_contract_ready", lambda: False)
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    authority = official.sign_short_draft_authority(_experiment_scope(), expires_at=int(time.time()) + 120)
-    client = module.OfficialTransport(experiment_authority=authority, experiment_scope=_experiment_scope())
-    replies.extend([Response({"access_token": "token-a", "expires_in": 7200}), Response({})])
-    client.token(runtime)
-    article = {"title": "标题", "author": "", "digest": "", "content": "<p>测试</p>", "thumb_media_id": "cover-id"}
-    with pytest.raises(module.OfficialTransportError, match="official_response_unconfirmed"):
-        client.create_draft("token-a", article)
-    with pytest.raises(module.OfficialTransportError, match="official_experiment_create_claimed"):
-        client.create_draft("token-a", article)
-    assert len(calls) == 2
-
-
-@pytest.mark.parametrize("delay_phase", ["dns", "tls"])
-def test_short_experiment_expiry_during_connection_prevents_http(module, runtime, wire, monkeypatch, delay_phase):
-    from app.services import wechat_official as official
-
-    calls, replies, Response = wire
-    replies.append(Response({"access_token": "token-a", "expires_in": 7200}))
-    monkeypatch.setattr(official, "remote_contract_ready", lambda: False)
-    monkeypatch.setenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "k" * 32)
-    now = int(time.time())
-    clock = [now]
-    authority = official.sign_short_draft_authority(_experiment_scope(), expires_at=now + 120, now=now)
-    client = module.OfficialTransport(experiment_authority=authority, experiment_scope=_experiment_scope())
-    monkeypatch.setattr(official.time, "time", lambda: clock[0])
-    base_address = module._address
-    base_connection = module._connection
-
-    def address(deadline):
-        result = base_address(deadline)
-        if delay_phase == "dns":
-            clock[0] = now + 120
-        return result
-
-    def connection(addr, deadline):
-        result = base_connection(addr, deadline)
-
-        def connect():
-            if delay_phase == "tls":
-                clock[0] = now + 120
-
-        result.connect = connect
-        return result
-
-    monkeypatch.setattr(module, "_address", address)
-    monkeypatch.setattr(module, "_connection", connection)
-    with pytest.raises(module.OfficialTransportError, match="official_experiment_scope_invalid") as caught:
-        client.token(runtime)
-    assert caught.value.dispatched is False
-    assert calls == []
-
-
 @pytest.fixture
 def module():
     from app.services import wechat_official_transport
@@ -192,7 +27,6 @@ def runtime():
 def wire(module, monkeypatch):
     from app.services import wechat_official
 
-    monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: True)
     monkeypatch.setattr(module.socket, "getaddrinfo", lambda *a, **kw: [(2, 1, 6, "", ("8.8.8.8", 443))])
     calls, replies = [], []
 
@@ -234,15 +68,6 @@ def wire(module, monkeypatch):
 
     monkeypatch.setattr(module, "_connection", connection)
     return calls, replies, Response
-
-
-def test_transport_remote_gate_blocks_before_dns_and_cached_token(module, runtime, monkeypatch):
-    monkeypatch.setattr(module.socket, "getaddrinfo", lambda *a, **k: pytest.fail("closed gate reached DNS"))
-    client = module.OfficialTransport()
-    client.cache.put(runtime, "cached-token", expires_in=7200)
-    with pytest.raises(module.OfficialTransportError, match="official_contract_unresolved") as caught:
-        client.token(runtime)
-    assert caught.value.dispatched is False
 
 
 def test_official_endpoints_exact_bytes_and_safe_readback(module, runtime, wire):

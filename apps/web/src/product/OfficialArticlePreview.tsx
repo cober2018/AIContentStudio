@@ -73,7 +73,7 @@ export function OfficialArticlePreview({ render, path }: { render: OfficialArtic
   return <section aria-label="冻结公众号适配表示" className="space-y-3 rounded-lg border border-indigo-200 p-4">
     <h5 className="font-semibold">公众号审批时冻结的 HTML</h5>
     <p className="text-sm">{render.title} · 作者：{render.author || "未指定"} · 摘要：{render.digest || "未指定"}</p>
-    <p className="text-sm text-amber-700">{render.remote_contract === "unresolved_body_limits" ? "远端不可执行：官方正文限制尚未核实" : "本地预览不代表草稿箱写入或发布成功"}</p>
+    <p className="text-sm text-amber-700">本地预览不代表草稿箱写入或发布成功</p>
     {render.status !== "local_ready" && <p className="text-sm text-amber-700">适配不可用：{render.reasons.join("、") || "未就绪"}</p>}
     {current?.error && <p role="alert" className="text-sm text-amber-700">{current.error}</p>}
     <iframe title="冻结公众号 HTML 预览" sandbox="" referrerPolicy="no-referrer" srcDoc={source} className="h-80 w-full rounded border bg-white" />

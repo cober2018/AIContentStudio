@@ -72,6 +72,12 @@ RULES = [
     "两张在任务通过前都能再交；cover_redo 要两张都重交才算完成。平台把横封面和成片开头 0.5 秒逐帧比色，竖封面只查尺寸；缺哪张、尺寸不对、颜色不一致都会在审片页提示。"
     "开剪结果的 files 还写着要交 cover_43 时（抖音横封面 4:3），必须再交第三张（没交用户通过不了成片）：把 1920×1080 横封面图居中裁成 1440×1080（左右各裁 240 像素），role cover_43，不另外设计；"
     "所以这时横封面设计要把大标题和卖点都放在画面中间 1440 宽的范围里，裁完不切字。它和另外两张一样导出、交、列进 output_hashes、可重交，cover_redo 要三张都重交，平台只查它的尺寸。",
+    "角色封面形象：开剪结果的 cover_portrait（执行包 director.cover_portrait，素材 role cover_portrait）有值时，竖封面 cover_vertical 和 4:3 横封面 cover_43 都要放这张角色形象："
+    "把人物从原图背景里抠出来（只留人物，不带原图背景），放在不压大标题的位置；这时 cover_43 不再从横封面居中裁，而是用同一套设计单独排成 1440×1080。"
+    "16:9 横封面（盖在成片开头的那张）不放形象，照旧。没有 cover_portrait 就照上面的做法。",
+    "定稿作品重做单独封面：用户要给已定稿的横版作品换竖封面和 4:3 横封面时，用 redo_work_covers 开一个只交封面的任务（成片和 16:9 横封面不动），"
+    "照返回的 files 和 cover_portrait 做，交 cover_vertical 和 cover_43 两张（都必交）；然后让用户在成片页看新封面。get_video_decision 的 cover_task 是这个任务的状态："
+    "review 等用户看，changes 是用户退回了（按 notes 改完两张都重交），done 是用户已通过、作品封面已换。",
     "发布文案：成片任务里、交成片之前，用 save_publish_copy 给作品存一份通用发布文案（不按平台分，不填 channel）：角色作品按 studio.persona.publish-copy 写，商品作品按 studio.product.publish-copy 写；"
     "已经存过的，内容有变再改。用户会在交付页看和改，成品包里每个平台都带这份。",
     "素材能不能公开、能不能给模型用，只有用户能在素材详情里改；不能用 REST 或别的办法代改。开剪报 video_asset_kind_or_rights_invalid 时，把报错里说的是哪条素材、该怎么处理原样告诉用户，等用户改好再重做用到它的素材。",
@@ -177,8 +183,8 @@ def _cover_redo(db: Session, record: dict, execution: CreativeExecution) -> dict
     return None if newer == roles else {"note": asked.get("note") or "", "at": asked["at"], "by": asked.get("by")}
 
 
-def _finished(view: dict) -> dict:
-    return {**view, "state": "done", "label": "已定稿", "locked": True}
+def _finished(view: dict, cover_task: dict | None = None) -> dict:
+    return {**view, "state": "done", "label": "已定稿", "locked": True, **({"cover_task": cover_task} if cover_task else {})}
 
 
 # Accepting the 成片 files already locks the work; the cover written in that same approval must still get through.
@@ -232,7 +238,7 @@ def _state(db: Session, unit_id: int) -> dict:
     if execution.state in {"prepared", "claimed", "in_progress"}:
         return {**view, "state": "making" if phase == "sample" else "finishing", "label": "剪小样中" if phase == "sample" else "排版中"}
     if execution.state == "result_ready" and notes and notes["decision"] == "approve":
-        return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view)
+        return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view, _cover_task(db, record))
     if execution.state == "result_ready":
         if notes and notes["decision"] == "changes":
             return {**view, "state": f"{phase}_changes", "label": "小样按你的意见修改中" if phase == "sample" else "成片按你的意见修改中", "notes": notes["notes"]}
@@ -241,7 +247,7 @@ def _state(db: Session, unit_id: int) -> dict:
             view["cover_redo"] = redo
         return {**view, "state": f"{phase}_review", "label": "小样待你看" if phase == "sample" else "成片待你看"}
     if execution.state == "accepted":
-        return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view)
+        return {**view, "state": "finishing", "label": "排版中"} if phase == "sample" else _finished(view, _cover_task(db, record))
     return {**view, "state": "error", "label": "出错", "detail": execution.safe_reason or execution.state}
 
 
@@ -759,7 +765,9 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     sent_back = next((item["target_id"] for item in reversed(record["decisions"]) if item["stage"] == stage and item["decision"] == "changes"), None)
     key = f"chain-{master.id}-{phase}" + (f"-after-{sent_back}" if sent_back else "")
     clips = persona_clips(db, user, project_id, unit_id, master.payload_json) if phase == "final" else []
-    result = open_task(db, project_id, unit_id, {"source_master_revision_id": master.id, "idempotency_key": key, "persona_clips": clips}, user)
+    portrait = cover_portrait(db, user, project_id, unit_id, master.payload_json) if phase == "final" else None
+    result = open_task(db, project_id, unit_id, {"source_master_revision_id": master.id, "idempotency_key": key, "persona_clips": clips,
+                                                 **({"cover_portrait": portrait} if portrait else {})}, user)
     execution_id = result["execution"]["id"]
     if not record["tasks"] or record["tasks"][-1]["execution_id"] != execution_id:
         record["tasks"].append({"phase": phase, "execution_id": execution_id, "draft_master_id": current["draft_master_id"],
@@ -779,8 +787,11 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
     from .web_video_handoff import cover_roles
 
     four_three = bool(package and "cover_43" in cover_roles(package.package_json))
+    director = (package.package_json if package else {}).get("director") or {}
+    portrait = director.get("cover_portrait")
     return {"execution_id": execution_id, "master_id": master.id, "phase": phase,
-            "cover_template": ((package.package_json if package else {}).get("director") or {}).get("cover_template"),
+            "cover_template": director.get("cover_template"),
+            **({"cover_portrait": portrait} if portrait else {}),
             **({"persona_clips": ((package.package_json if package else {}).get("director") or {}).get("persona_clips") or [],
                 "persona_note": _persona_note(((package.package_json if package else {}).get("director") or {}).get("persona_clips") or [])} if phase == "final" else {}),
             "archive": {"moved": len(archive["moved"]), "pending": archive["pending"]} if archive else None,
@@ -788,10 +799,145 @@ def prepare_edit(db: Session, user: User, project_id: int, unit_id: int, phase: 
             "files": f"素材用 materialize_inputs 给的原始路径（只读）；{'小样' if phase == 'rough_cut' else '成片'}导出到 {export}/，"
                      + ("横版封面：横封面设计盖在成片开头 0–0.5 秒随成片渲染，横封面图 role cover 1920×1080 从渲染好的成片开头 0.5 秒内截一帧；"
                         "竖封面 role cover_vertical 1080×1440（3:4）用同一套设计单独做、不放进成片；jpg / png 按 sRGB 存，"
-                        + ("必须再交抖音横封面 role cover_43 1440×1080（没交用户通过不了成片）：把横封面图居中裁出（左右各裁 240 像素），所以横封面的大标题和卖点放在中间 1440 宽里；" if four_three else "")
+                        + (_portrait_files(portrait) if four_three and portrait else
+                           "必须再交抖音横封面 role cover_43 1440×1080（没交用户通过不了成片）：把横封面图居中裁出（左右各裁 240 像素），所以横封面的大标题和卖点放在中间 1440 宽里；" if four_three else "")
                         + f"封面都导出到 {cover}/，都在剪辑清单之前交，清单 output_hashes 都列；"
                         if separate else f"可选的封面图（role cover，jpg / png，从渲染好的成片开头 0.5 秒内截一帧，不另外合成）导出到 {cover}/；")
                      + f"其他交付文件和临时渲染放 {work}/；submit_output 传文件的绝对路径 path。"}
+
+
+def _portrait_files(portrait: dict) -> str:
+    return (f"竖封面和抖音横封面 role cover_43 1440×1080（必交）都放角色形象（cover_portrait 素材 {portrait['material_revision_id']}，抠掉原图背景只留人物），"
+            "cover_43 用同一套设计单独排、不从横封面裁；横封面不放形象；")
+
+
+def cover_portrait(db: Session, user: User, project_id: int, unit_id: int, document: dict) -> dict | None:
+    """The persona's cover portrait for a landscape work's separate covers, attached to the project so the task may hand it over."""
+    from .content_identity import current_revision, usable_portrait
+
+    if document.get("aspect_ratio") != [16, 9]:
+        return None
+    unit = db.get(ContentUnit, unit_id)
+    revision = current_revision(db, "persona", unit.persona_id) if unit and unit.persona_id else None
+    chosen = ((revision.profile_json or {}) if revision else {}).get("cover_portrait_material_revision_id")
+    portrait = db.get(MaterialRevision, chosen) if usable_portrait(db, chosen) else None
+    if portrait is None:
+        return None
+    if not portrait.public_use_allowed:
+        _fail("video_chain_cover_portrait_not_public", "角色的封面形象没允许公开发布：请用户到素材库把它改成允许公开，或在角色资料里取消「用在封面上」")
+    if db.scalar(select(ProjectMaterialReference.id).where(ProjectMaterialReference.project_id == project_id,
+                 ProjectMaterialReference.material_revision_id == portrait.id, ProjectMaterialReference.status == "active").limit(1)) is None:
+        db.add(ProjectMaterialReference(project_id=project_id, material_revision_id=portrait.id, origin="system_reference", status="active",
+                                        attached_by=user.email, note="角色封面形象"))
+        db.flush()
+    return {"material_revision_id": portrait.id, "content_hash": portrait.content_hash, "title": portrait.material.title}
+
+
+def _cover_task(db: Session, record: dict) -> dict | None:
+    """Where the latest separate-cover redo of a finished work stands, with its covers for the page."""
+    tasks = record.get("cover_tasks") or []
+    if not tasks:
+        return None
+    execution = db.get(CreativeExecution, tasks[-1]["execution_id"])
+    if execution is None:
+        return None
+    outputs = {}
+    for role_id in ("cover_vertical", "cover_43"):
+        outputs[role_id] = db.scalar(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == execution.id,
+                                     CreativeExecutionOutput.role_id == role_id, CreativeExecutionOutput.state.in_(("staged", "accepted")))
+                                     .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+    view = {"execution_id": execution.id, **{f"{role_id}_output_id": output.id if output else None for role_id, output in outputs.items()}}
+    if execution.state == "accepted":
+        return {**view, "state": "done"}
+    sent = _decision(record, "covers", execution.id)
+    if sent and sent["decision"] == "changes":
+        at = datetime.fromisoformat(sent["at"]).replace(tzinfo=None)
+        if not all(output and output.created_at > at for output in outputs.values()):
+            return {**view, "state": "changes", "notes": sent["notes"]}
+    return {**view, "state": "review" if execution.state == "result_ready" else "making"}
+
+
+def redo_covers(db: Session, user: User, project_id: int, unit_id: int) -> dict:
+    """A finished landscape work redoes only its 3:4 and 4:3 covers; the 成片 and the 16:9 cover stay."""
+    from . import project_folders
+    from .web_video_handoff import prepare_edit as open_task
+
+    current = state(db, user, project_id, unit_id)
+    if current["state"] != "done":
+        _fail("video_chain_not_finished", "只有已定稿的作品能单独重做封面；还在制作中的，在审片页用「重做封面」")
+    master = _latest(db, unit_id)
+    if master is None or (master.payload_json or {}).get("aspect_ratio") != [16, 9]:
+        _fail("video_chain_covers_landscape_only", "只有横版作品有竖封面和 4:3 横封面")
+    record = _unit_record(db, unit_id)
+    tasks = record.setdefault("cover_tasks", [])
+    open_one = _cover_task(db, record)
+    count = len(tasks) if open_one is None or open_one["state"] == "done" else len(tasks) - 1
+    portrait = cover_portrait(db, user, project_id, unit_id, master.payload_json)
+    result = open_task(db, project_id, unit_id, {"source_master_revision_id": master.id, "idempotency_key": f"chain-covers-{unit_id}-{count + 1}",
+                                                 "covers_only": True, **({"cover_portrait": portrait} if portrait else {})}, user)
+    execution_id = result["execution"]["id"]
+    if not tasks or tasks[-1]["execution_id"] != execution_id:
+        tasks.append({"execution_id": execution_id, "master_id": master.id, "at": datetime.now(UTC).isoformat()})
+        _put(db, unit_id, record)
+    db.commit()
+    cover = project_folders.export_dir(db, project_id, "cover")
+    cover.mkdir(parents=True, exist_ok=True)
+    work = project_folders.work_dir(db, project_id, unit_id, execution_id)
+    package = db.get(CreativeExecutionPackage, db.get(CreativeExecution, execution_id).package_id)
+    director = package.package_json.get("director") or {}
+    return {"execution_id": execution_id, "master_id": master.id, "cover_template": director.get("cover_template"),
+            **({"cover_portrait": director["cover_portrait"]} if director.get("cover_portrait") else {}),
+            "work_dir": str(work), "cover_dir": str(cover), "cover_task": _cover_task(db, _unit_record(db, unit_id)),
+            "files": "只交两张封面，成片和 16:9 横封面不动：竖封面 role cover_vertical 1080×1440（3:4），抖音横封面 role cover_43 1440×1080，两张都必交，"
+                     "用作品现在的封面设计（大标题等）分别排版，jpg / png 按 sRGB 存，"
+                     + ("两张都放角色形象（cover_portrait，抠掉原图背景只留人物）；" if director.get("cover_portrait") else "")
+                     + f"导出到 {cover}/，submit_output 传绝对路径 path；工程和临时文件放 {work}/。两张都交上后等用户在成片页看。"}
+
+
+def decide_covers(db: Session, user: User, project_id: int, unit_id: int, decision: str, notes: list[dict]) -> dict:
+    """The user's answer on a finished work's redone covers: approval swaps in the 3:4 and 4:3 and refreezes the delivery candidate."""
+    from .content_masters import owned_unit
+
+    owned_unit(db, project_id, unit_id, user, mutate=True)
+    record = _unit_record(db, unit_id)
+    task = _cover_task(db, record)
+    if task is None or task["state"] != "review":
+        _fail("video_chain_not_waiting", "现在没有等你看的新封面")
+    if decision == "changes" and not any(str(item.get("note") or "").strip() for item in notes):
+        _fail("video_chain_notes_required", "写一下要改哪里", 422)
+    target = task["execution_id"]
+    if decision == "approve":
+        _accept_outputs(db, user, project_id, unit_id, target)
+        token = _finalizing.set(unit_id)
+        try:
+            _adopt_separate_covers(db, user, project_id, unit_id, target)
+        finally:
+            _finalizing.reset(token)
+    record = _unit_record(db, unit_id)
+    record["decisions"].append({"stage": "covers", "target_id": target, "decision": decision,
+                                "notes": [{"time_ms": None, "note": str(item.get("note") or "")[:2000]} for item in notes][:50],
+                                "by": user.email, "at": datetime.now(UTC).isoformat()})
+    _put(db, unit_id, record)
+    db.commit()
+    if decision == "approve":
+        from . import finished_video
+
+        final = next(item["execution_id"] for item in reversed(record["tasks"]) if item["phase"] == "final")
+        finished_video.send_to_review(db, user, project_id, unit_id, final)
+    return state(db, user, project_id, unit_id)
+
+
+def _adopt_separate_covers(db: Session, user: User, project_id: int, unit_id: int, execution_id: int) -> None:
+    master = _latest(db, unit_id)
+    document = copy.deepcopy(master.payload_json)
+    cover = dict(document.get("cover") or {})
+    for role_id, key in (("cover_vertical", "vertical_material_revision_id"), ("cover_43", "four_three_material_revision_id")):
+        output = db.scalar(select(CreativeExecutionOutput).where(CreativeExecutionOutput.execution_id == execution_id,
+                           CreativeExecutionOutput.role_id == role_id, CreativeExecutionOutput.state == "accepted")
+                           .order_by(CreativeExecutionOutput.attempt_no.desc()).limit(1))
+        cover[key] = output.material_revision_id
+    document["cover"] = cover
+    _save(db, user, project_id, unit_id, document, {"video_chain": "cover", "output_id": execution_id})
 
 
 PERSONA_SLOTS = (("intro", "intro_clip", "进门"), ("outro", "outro_clip", "收尾"))

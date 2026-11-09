@@ -24,7 +24,7 @@ class LocalGraphicRenderer:
     modality = "graphic"
     schema = "graphic.master.v2"
     output_mimes = ("image/png",)
-    supported_forms = (("xiaohongshu", "image_note"),)
+    supported_forms = (("xiaohongshu", "image_note"), ("wechat", "image_message"))
     script = Path(__file__).with_name("local_graphic_renderer.cjs")
 
     def _runtime(self):

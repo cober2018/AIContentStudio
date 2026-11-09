@@ -645,6 +645,8 @@ def run_checks(db: Session, project_id: int, unit_id: int, master_id: int, user:
         status, report = results.get(kind, ("incomplete", {"reasons": ["check_handler_unavailable"]}))
         if inputs["readiness"]["state"] in {"stale", "blocked"}:
             status, report = "stale", {"reasons": inputs["readiness"]["reasons"]}
+        if (report.get("coverage") or {}).get("reason") == "third_party_review_pending":
+            status = "incomplete"
         if row.payload_schema in {"text.master.v2", "graphic.master.v2", "video.master.v2"}:
             report = {**report, "requirement": requirement["metadata"]}
         semantic = requirement.get("metadata", {}).get("semantic", {}) if (report.get("coverage") or {}).get("semantic") in {"verified", "partial"} else {}
@@ -738,10 +740,11 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
         if locked(db, unit_id):
             raise HTTPException(409, {"code": "video_chain_locked", "message": "成片已定稿，要调整请复制一份"})
     elif unit.modality in {"text", "graphic"}:
-        from .article_chain import locked as article_locked
+        from .article_chain import save_blocked
 
-        if article_locked(db, unit_id):
-            raise HTTPException(409, {"code": "article_chain_locked", "message": "已定稿，要调整请复制一份"})
+        blocked = save_blocked(db, unit_id)
+        if blocked:
+            raise HTTPException(409, {"code": "article_chain_locked", "message": blocked})
     if "creative_intent" in payload:
         try:
             creative_intent, creative_intent_hash = canonical_intent(payload["creative_intent"])
@@ -824,6 +827,13 @@ def save_revision(db: Session, *, project_id: int, unit_id: int, user: User, pay
     content_form = payload.get("content_form")
     if unit.channel_id:
         try:
+            if content_form is None:
+                from .content_harness.channel_registry import resolve_channel
+
+                # A channel with several forms (公众号: 文章 and 图片消息) defaults to the first one this kind of work can fill.
+                kinds = adapter_for(unit.modality, payload_schema).allowed_artifact_kinds
+                spec = resolve_channel(db, unit.channel_id)
+                content_form = next((form.content_form for form in (spec.content_forms if spec else []) if form.artifact_kind in kinds), None)
             content_form = resolve_content_form(db, unit.channel_id, content_form).content_form
         except ChannelRegistryError as exc:
             raise HTTPException(422, {"code": "invalid_channel_form", "reason": str(exc)}) from exc

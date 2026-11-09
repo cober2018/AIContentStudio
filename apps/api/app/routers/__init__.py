@@ -15,11 +15,10 @@ class CapabilityInputRoute(APIRoute):
             self.path.startswith(("/api/v1/provider-search", "/api/v1/provider-media/", "/api/v1/data-source-capabilities"))
             or self.path in {
                 "/api/v1/materials/search", "/api/v1/materials/generate",
-                "/api/v1/settings/renderer-probes", "/api/v1/settings/media-renderer-verifications",
-                "/api/v1/settings/media-renderer-verifications/{verification_id}/revoke",
+                "/api/v1/settings/renderer-probes",
                 "/api/v1/settings/publisher-verifications",
             }
-            or self.path.endswith(("/asr-suggestions", "/media-render-previews", "/media-render-outputs", "/publisher-connection"))
+            or self.path.endswith(("/asr-suggestions", "/publisher-connection"))
         )
 
         async def safe_handler(request):

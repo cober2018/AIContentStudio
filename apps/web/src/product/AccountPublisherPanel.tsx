@@ -92,9 +92,8 @@ export default function AccountPublisherPanel({ accountId, archived }: { account
         <label className="flex gap-2 text-sm"><input type="checkbox" checked={enabled} disabled={disabled || !account.platform_account_id} onChange={event => setEnabled(event.target.checked)} />启用本地连接配置（不是远端授权）</label>
         <Button type="submit" disabled={disabled || !account.platform_account_id}>保存账号连接</Button>
         <Button type="button" disabled={busy} onClick={reloadConnection}>重读服务端版本（保留输入）</Button>
-        <p className="text-xs text-slate-500">配置版本 {connection.revision} · {connection.configured ? "已配置" : "未配置"} · 未验证</p>
+        <p className="text-xs text-slate-500">配置版本 {connection.revision} · {connection.configured ? "已配置" : "未配置"} · {connection.executable ? "可以推草稿箱" : "还不能推"}</p>
       </form>
-      <p className="text-sm text-amber-700">远端不可执行：官方正文限制尚未核实</p>
       {!admin && <p className="text-xs text-slate-500">当前身份只读；连接配置仅限管理员。</p>}
       {admin && connection.read_only && <p className="text-xs text-slate-500">账号或上级身份不可修改，仅供查看历史配置。</p>}
     </>}

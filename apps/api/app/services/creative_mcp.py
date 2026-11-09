@@ -358,6 +358,20 @@ class ArticleDraftInput(Scope):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class ReviewIssue(Input):
+    severity: Annotated[str, Field(pattern=r"^(warning|blocker)$")]
+    span: str = Field(default="", max_length=120)
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class ReviewSubmitInput(Scope):
+    master_id: ID
+    purpose: Annotated[str, Field(min_length=1, max_length=40, pattern=IDENTIFIER)]
+    input_hash: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+    model: str = Field(min_length=1, max_length=120)
+    issues: list[ReviewIssue] = Field(default_factory=list, max_length=50)
+
+
 class ReferenceVideoInput(Scope):
     material_revision_id: ID
 
@@ -512,12 +526,13 @@ TOOLS = {
     "generate_shot_video": (ShotInput, "Product and persona works, after the 导演稿 is approved and the user's materials are mapped, only for shots without one, auto shots only, started when the user asks: submit image-to-video with the shot's first (and chained last) frame. Persona works have no product photo to fall back on, so generate the first frame first. Billed per clip; never resubmit an unclear call. Read the result with get_shot_video.", False),
     "get_shot_video": (ShotInput, "Product and persona works: poll the shot's automatic image-to-video; when done returns the material_revision_id (a candidate for set_shot_materials).", False),
     "save_publish_copy": (PublishCopyInput, "Save the work's one publish copy (no per-platform copies). Video works: title, hashtags, cover_text, interaction, description — product videos with studio.product.publish-copy (title ≤15, 3–5 hashtags, cover_text ≤8, description ≤50), persona videos with studio.persona.publish-copy (title ≤30, cover_text ≤12, description ≤300); save it before submitting the 成片. Graphic works: title, lead, hashtags, interaction with studio.persona.graphic-copy (title ≤30, lead ≤120), before the piece is final. A copy in the wrong format is refused. The user can edit it on the 交付 (delivery) page.", False),
-    "generate_video_voiceover": (VoiceoverInput, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines. voice.pronunciation in the 导演稿 is applied. Optional lines (script block ids, 1–20): voice only those lines again and splice each into the current whole voiceover at its own start, keeping every other line, the total length, shot lengths and other subtitles; only those lines are billed. It fails rather than guesses: voiceover_line_split_unclear (cannot place the lines in the current voice), voiceover_line_too_long (says how many seconds are missing; shorten the line or regenerate the whole voice); works with dub_persona shots or a dialogue track are refused. Returns redub with each line's old and new start/end and seam positions. If any shot has board.dub_persona, only those shots' lines are voiced in their personas' voices, placed at their shots on one full-length track (silence elsewhere), and no shot timing changes.", False),
+    "generate_video_voiceover": (VoiceoverInput, "Generate the voiceover with the saved MiniMax settings, align shot timing to it; returns duration and SRT lines. voice.pronunciation in the 导演稿 is applied. Optional lines (script block ids, 1–20): voice only those lines again and splice each into the current whole voiceover at its own start, keeping every other line, the total length, shot lengths and other subtitles; only those lines are billed. It fails rather than guesses: voiceover_line_split_unclear (cannot place the lines in the current voice), voiceover_line_too_long (says how many seconds are missing; shorten the line or regenerate the whole voice), voiceover_redub_too_large (checked before any MiniMax call, nothing billed: the spliced voice would exceed the 30 MB material limit; states length and expected size); works with dub_persona shots or a dialogue track are refused. The spliced voice is saved as lossless stereo-preserving FLAC (same sample rate, channels and length; untouched lines sample-identical), fitting voices up to about 10 minutes. Returns redub with each line's old and new start/end and seam positions. If any shot has board.dub_persona, only those shots' lines are voiced in their personas' voices, placed at their shots on one full-length track (silence elsewhere), and no shot timing changes.", False),
     "file_as_common": (VideoCommonInput, "Move a material this project uses into 通用素材库 on the Mac, only when it is generic (effects, transitions, textures, BGM / sound effects nearly every video could use). Project-specific material stays in the project folder.", False),
     "search_web_materials": (WebSearchInput, "Search readable web pages (brand sites, dealers, small shops, official news and review sites; Taobao, Tmall, JD and Pinduoduo are skipped) for pictures of this work's subject. Product works search the product's name and variant by default and the user's picks join the product's info images; other works need query (the product or subject name) and picks join the project's materials. Send the user review_url to pick; you cannot pick or save pictures.", False),
     "get_web_materials": (WebSearchReadInput, "Read a web material search started with search_web_materials: status, each page's site, title and picture count, and which pictures the user has saved (material_revision_id).", True),
     "propose_lesson": (LessonInput, "Call after delivering a revision that addressed sent-back notes (brief lessons.open_rework_records): generalize the cause into a reusable rule (title = short cause, rule = what to do from now on, scope = which videos it fits, e.g. iPhone HLG 实拍 / 商品视频 / 全部视频) and name the record_ids it came from. When an active or pending lesson in the brief has the same cause, pass same_as_lesson_id: it counts one more occurrence instead of a duplicate. The user approves in Settings before a lesson reaches briefs.", False),
     "prepare_video_edit": (VideoEditInput, "Record which shots use AE (alpha_shot_ids need alpha) and open the edit task: phase rough_cut = 小样 (after 导演稿 approval), final = 排版 + 成片 (after 小样 approval). Then claim and work it with the execution tools in DaVinci Resolve and After Effects. The result names work_dir and export_dir: export the 小样 / 成片 straight into export_dir and keep everything else in work_dir; materials stay where they are. When files asks for cover_vertical (16:9 成片), deliver two covers: cover 1920×1080 is laid over the first 0.5 s of the 成片 and cut from the rendered 成片; cover_vertical 1080×1440 is the same design laid out vertically, made separately and not placed in the 成片; when files also asks for cover_43 (required: the 成片 cannot be approved without it), cut it 1440×1080 from the centre of cover (240 px off each side), keeping the title inside that centre. cover_template, when set, is the persona's AE 封面 template: render the cover text layer with it (render_ae_template, only its fields) and submit the cover with metadata.cover_template_render = that render's material_revision_id.", False),
+    "redo_work_covers": (Scope, "Only when the user asks to redo the covers of a finished (已定稿) landscape work: open a cover-only task that takes cover_vertical 1080×1440 and cover_43 1440×1080 (both required); the 成片 and the 16:9 cover stay. cover_portrait, when set, is the persona's cover portrait: cut the figure out of its background and put it on both covers. Claim and work it like an edit task, export to cover_dir, then ask the user to look at them on the 成片 page; get_video_decision's cover_task says review / changes (redo both with its notes) / done. Never approve them yourself.", False),
     "analyze_reference_video": (ReferenceVideoInput, "Start the free local breakdown of a reference video (a video material_revision_id from the library; the user can also upload one on the 导演稿 page): timed transcript, scene cuts, time-labelled frame grids per segment and loudness, written to <项目>/工作/<作品>/参考拆解/. Runs in the background; read it with get_reference_video. The reference never becomes project material and never enters the cut.", False),
     "get_reference_video": (Scope, "Read the work's reference breakdown: status (running / done / failed), the local summary with transcript, cuts, loudness and the absolute paths of transcript.json, cuts.json and the grid images to look at, the saved breakdown and the shooting list.", True),
     "save_reference_breakdown": (ReferenceBreakdownInput, "After reading the local breakdown with studio.video.reference-breakdown: save the whole-piece analysis, the timeline (per segment: speech, picture, overlays, purpose, source ms), the shooting list of 需要实拍 shots and brand_material (certificates, hospitals, ingredients seen in the reference: they need the brand's real material, never generated). Then write the 导演稿 with save_director_draft.", False),
@@ -526,6 +541,8 @@ TOOLS = {
     "save_article_draft": (ArticleDraftInput, "Save one full version of the piece (text.master.v2 for text, graphic.master.v2 for graphic; image layers name material_revision_id from the library or generate_video_image; no citations or claims). Refused when the page switch is 平台模型 or the piece is final. Graphic pieces also need their publish copy (save_publish_copy, graphic format) before they are final. Then STOP: the user approves or writes notes on the page.", False),
     "get_fact_template": (Scope, "Persona works, before the 导演稿 or article: the project's topic templates for its fact boundary (which claims need a source, accepted sources and domains, freshness, red lines, opinion-only content), suggested templates when none is chosen, the brief and the current boundary. Product works use the product brief instead.", True),
     "submit_facts": (FactsInput, "Persona works, before saving the 导演稿 or article: submit every claim the piece states as fact, found by the project's topic templates. Each item is the statement, kind (fact / event / quote / opinion), template id, source_url, the excerpt copied word for word from that page, source_date, and attribution for quotes and opinions; templates records your topic choice when the project has none. The platform opens every source: unreachable sources and excerpts not on the page come back with reasons and are not kept; the rest (labelled when outside the template's usual sites or possibly out of date) are frozen automatically as the project's new fact boundary, replacing the previous one. Save the draft after this; the user only reviews the draft.", False),
+    "get_review_tasks": (Scope, "Third-party writer only: the fact and identity reviews the platform is waiting for on the current version. Read each item's request.text and request.context, judge it against the sources and identity rules given, then call submit_review with the item's master_id, purpose and input_hash.", True),
+    "submit_review": (ReviewSubmitInput, "Third-party writer only: submit your judgement for one waiting review. issues lists each problem you found (severity warning or blocker, the exact span, the reason); an empty list means no problem. The platform reruns the checks and records your model name. It does not accept or approve the piece.", False),
     "get_article_decision": (Scope, "Read the piece's state and the user's latest decision and notes. Approved means final: save nothing more. Notes mean a new version.", True),
     "get_shot_slots": (ShotSlotsInput, "Read every shot of a video as a material slot: narration, visual, brief (search words; gen_mode text|frame chosen on the platform; t2v_prompt for direct text-to-video; frame_prompt for the first-frame still and prompt for image-to-video from it; route), status missing/candidates/chosen, the user's picks and the review link. Add candidates with start_material_match; only the user binds a shot.", True),
 }
@@ -682,6 +699,15 @@ def _execute(db: Session, name: str, args: Input, user: User) -> dict:
             return article_chain.brief(db, user, args.project_id, args.unit_id)
         if name == "save_article_draft":
             return article_chain.save_draft(db, user, args.project_id, args.unit_id, args.payload, args.note)
+        if name == "get_review_tasks":
+            from . import third_party_review
+
+            return third_party_review.pending_tasks(db, user, args.project_id, args.unit_id)
+        if name == "submit_review":
+            from . import third_party_review
+
+            return third_party_review.submit(db, user, args.project_id, args.unit_id, args.master_id, args.purpose, args.input_hash, args.model,
+                                             [issue.model_dump() for issue in args.issues])
         return article_chain.state(db, user, args.project_id, args.unit_id)
     payload = args.model_dump(exclude_none=True, exclude={"project_id", "unit_id", "execution_id"})
     if name in _ACTIONS:
@@ -712,7 +738,7 @@ def _self_sourced(db: Session, name: str, args: Input, user: User) -> dict:
     if name == "list_personas":
         personas = []
         for persona in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id,
-                                                               ContentPersona.status != "archived").order_by(ContentPersona.id)):
+                                                               ContentPersona.status == "active").order_by(ContentPersona.id)):
             revision = current_revision(db, "persona", persona.id)
             personas.append({"id": persona.id, "name": persona.name,
                              "positioning": ((revision.profile_json or {}).get("positioning") if revision else None)})
@@ -767,11 +793,11 @@ _REVIEW_TOOLS = {"get_stages", "start_run", "preview_stage", "run_stage", "get_s
                  "start_material_match", "get_material_match", "get_shot_slots", "start_material_autofill"}
 
 
-_ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision"}
+_ARTICLE_TOOLS = {"get_article_brief", "save_article_draft", "get_article_decision", "get_review_tasks", "submit_review"}
 _VIDEO_TOOLS = {"get_video_brief", "save_director_draft", "get_video_decision", "set_shot_materials",
                 "get_shot_video_prompt", "set_shot_video_mode", "set_shot_first_frame", "generate_shot_image", "generate_shot_video", "get_shot_video", "save_publish_copy",
                 "accept_material_candidate", "generate_video_image", "generate_video_voiceover", "prepare_video_edit", "file_as_common", "propose_lesson",
-                "import_material_folder", "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid"}
+                "redo_work_covers", "import_material_folder", "analyze_reference_video", "get_reference_video", "save_reference_breakdown", "generate_storyboard_grid"}
 
 
 def _video(db: Session, name: str, args: Input, user: User) -> dict:
@@ -820,6 +846,8 @@ def _video(db: Session, name: str, args: Input, user: User) -> dict:
         return publish_copy.save(db, user, p, u, args.model_dump(exclude={"project_id", "unit_id"}))
     if name == "file_as_common":
         return chain.file_as_common(db, user, p, u, args.material_revision_id)
+    if name == "redo_work_covers":
+        return chain.redo_covers(db, user, p, u)
     if name == "propose_lesson":
         from . import video_lessons
 

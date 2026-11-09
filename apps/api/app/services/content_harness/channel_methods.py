@@ -215,7 +215,7 @@ def _wechat_official_scope(scope: dict) -> bool:
         scope.get("publisher_key") == "publisher.wechat.official"
         and scope.get("publisher_version") == "1"
         and scope.get("channel") == "wechat"
-        and scope.get("content_form") == "article"
+        and scope.get("content_form") in {"article", "image_message"}
         and scope.get("action") == "auto_draft"
     )
 

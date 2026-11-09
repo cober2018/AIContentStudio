@@ -1,4 +1,4 @@
-"""Account-bound official Publisher identity; remote effects remain contract gated."""
+"""Account-bound official Publisher identity for WeChat draft-box delivery."""
 
 from __future__ import annotations
 
@@ -20,78 +20,9 @@ from .content_harness.contracts import PublisherCapability, PublisherResult
 
 KEY = "publisher.wechat.official"
 VERSION = "1"
-CONTRACT_VERSION = "wechat.official.article.v1-unresolved-body-limits"
-
-
-def remote_contract_ready() -> bool:
-    return False
-
-
-def _short_draft_scope(scope: object) -> dict:
-    fields = {"account_id", "appid", "candidate_id", "candidate_hash", "target_id", "attempt_id",
-              "runtime_fingerprint", "actor", "action", "channel", "content_form"}
-    if (not isinstance(scope, dict) or set(scope) != fields
-            or any(type(scope[key]) is not int or scope[key] <= 0
-                   for key in ("account_id", "candidate_id", "target_id", "attempt_id"))
-            or (scope["channel"], scope["content_form"], scope["action"]) != ("wechat", "article", "auto_draft")
-            or not isinstance(scope["appid"], str) or not re.fullmatch(r"wx[0-9a-f]{16}", scope["appid"])
-            or any(not isinstance(scope[key], str) or not re.fullmatch(r"[0-9a-f]{64}", scope[key])
-                   for key in ("candidate_hash", "runtime_fingerprint"))
-            or not isinstance(scope["actor"], str) or not 1 <= len(scope["actor"]) <= 255
-            or any(ord(char) < 32 for char in scope["actor"])):
-        raise ValueError("official_experiment_authority_invalid")
-    return dict(scope)
-
-
-def _short_draft_signature(payload: dict) -> str:
-    key = os.getenv("AICS_WECHAT_RUNTIME_IDENTITY_KEY", "")
-    if not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", key):
-        raise ValueError("official_experiment_authority_invalid")
-    # Purpose separation prevents an experiment receipt from being treated as credential identity.
-    purpose = b"aics.wechat.html-draft.authority.v1\0" if payload.get("schema") == "wechat.html-draft.authority.v1" else b"aics.wechat.short-draft.authority.v1\0"
-    message = purpose + json.dumps(
-        payload, sort_keys=True, ensure_ascii=True, separators=(",", ":"), allow_nan=False).encode()
-    return hmac.new(key.encode(), message, hashlib.sha256).hexdigest()
-
-
-def sign_short_draft_authority(scope: dict, *, expires_at: int, now: int | None = None) -> dict:
-    """Internal signing primitive; callers must establish owned approval and explicit experiment authority."""
-    issued = int(time.time()) if now is None else now
-    if type(issued) is not int or type(expires_at) is not int or not issued < expires_at <= issued + 900:
-        raise ValueError("official_experiment_authority_invalid")
-    payload = {"schema": "wechat.short-draft.authority.v1", "scope": _short_draft_scope(scope),
-               "issued_at": issued, "expires_at": expires_at}
-    return {**payload, "signature": _short_draft_signature(payload)}
-
-
-def check_short_draft_authority(authority: object, scope: dict, *, now: int | None = None) -> bool:
-    return check_draft_authority(authority, scope, now=now, schema="wechat.short-draft.authority.v1")
-
-
-def sign_html_draft_authority(scope: dict, *, expires_at: int, now: int | None = None) -> dict:
-    signed = sign_short_draft_authority(scope, expires_at=expires_at, now=now)
-    payload = {key: value for key, value in signed.items() if key != "signature"}
-    payload["schema"] = "wechat.html-draft.authority.v1"
-    return {**payload, "signature": _short_draft_signature(payload)}
-
-
-def check_draft_authority(authority: object, scope: dict, *, now: int | None = None, schema: str | None = None) -> bool:
-    current = int(time.time()) if now is None else now
-    try:
-        if (not isinstance(authority, dict)
-                or set(authority) != {"schema", "scope", "issued_at", "expires_at", "signature"}
-                or authority["schema"] not in ({schema} if schema else {"wechat.short-draft.authority.v1", "wechat.html-draft.authority.v1"})
-                or type(current) is not int or type(authority["issued_at"]) is not int
-                or type(authority["expires_at"]) is not int
-                or not authority["issued_at"] <= current < authority["expires_at"] <= authority["issued_at"] + 900
-                or _short_draft_scope(authority["scope"]) != _short_draft_scope(scope)
-                or not isinstance(authority["signature"], str)
-                or not re.fullmatch(r"[0-9a-f]{64}", authority["signature"])):
-            return False
-        payload = {key: value for key, value in authority.items() if key != "signature"}
-        return hmac.compare_digest(authority["signature"], _short_draft_signature(payload))
-    except (ValueError, TypeError, KeyError, RecursionError):
-        return False
+CONTRACT_VERSION = "wechat.official.draft.v2"
+# draft/add takes these two forms; publication and mass sending are never offered.
+DRAFT_FORMS = frozenset({"article", "image_message"})
 
 
 def implementation_fingerprint() -> str:
@@ -146,7 +77,8 @@ def resolve_runtime(db: Session, account_id: int) -> AccountRuntime:
 
 
 def scope_fingerprint(db: Session, scope: dict) -> str | None:
-    if (scope.get("publisher_key"), scope.get("publisher_version"), scope.get("channel"), scope.get("content_form"), scope.get("action")) != (KEY, VERSION, "wechat", "article", "auto_draft"):
+    if ((scope.get("publisher_key"), scope.get("publisher_version"), scope.get("channel"), scope.get("action")) != (KEY, VERSION, "wechat", "auto_draft")
+            or scope.get("content_form") not in DRAFT_FORMS):
         return None
     if type(scope.get("content_account_id")) is not int:
         return None
@@ -194,11 +126,13 @@ class OfficialWechatPublisher:
     version = VERSION
 
     def capability(self, channel: str, content_form: str, account_ref: str) -> PublisherCapability:
+        available = channel == "wechat" and content_form in DRAFT_FORMS
         return PublisherCapability(publisher_key=self.key, channel=channel, content_form=content_form,
-                                   action="auto_draft", available=False, reason="official_contract_unresolved")
+                                   action="auto_draft", available=available, reason=None if available else "official_form_unsupported")
 
     def verified(self) -> bool:
         return False
 
     def deliver(self, manifest: dict, target, attempt) -> PublisherResult:
-        return PublisherResult(status="failed", error="official_contract_unresolved")
+        # Official drafts run through wechat_official_delivery's claimed steps, never this generic hook.
+        return PublisherResult(status="failed", error="official_delivery_path_required")

@@ -214,8 +214,8 @@ def append_verification(
             and is_bounded_official_draft_scope(safe_scope)
             and safe_evidence.get("reason_code") == _BOUNDED_WECHAT_DRAFT_REASON
         )
-        if result == "verified" and not wechat_official.remote_contract_ready() and not bounded_experiment:
-            raise ValueError("official_contract_unresolved")
+        if result == "verified" and not bounded_experiment:
+            raise ValueError("official_verification_requires_confirmed_draft")
         if result == "verified":
             account_fingerprint = wechat_official.scope_fingerprint(db, safe_scope)
             if account_fingerprint is None:
@@ -291,9 +291,7 @@ def is_verified_for_scope(
             CapabilityVerification.scope_kind == scope_kind,
         ).order_by(CapabilityVerification.id.desc())).all()
         latest = next((event for event in events if event.scope_json == wanted_scope), None)
-        if not wechat_official.remote_contract_ready() and not (
-            latest is not None and latest.evidence_json.get("reason_code") == _BOUNDED_WECHAT_DRAFT_REASON
-        ):
+        if latest is None or latest.evidence_json.get("reason_code") != _BOUNDED_WECHAT_DRAFT_REASON:
             return False
     if scope_kind == "data_source_endpoint" and (
         wanted_scope["registration_key"] != registration.key
@@ -400,7 +398,7 @@ def promote_confirmed_official_draft(
         and target.action == "auto_draft"
     ):
         return None
-    if target.channel != "wechat" or target.content_form != "article" or target.content_account_id is None:
+    if target.channel != "wechat" or target.content_form not in {"article", "image_message"} or target.content_account_id is None:
         raise ValueError("official_draft_capability_scope_invalid")
     attempt = db.scalars(
         select(DeliveryAttempt)

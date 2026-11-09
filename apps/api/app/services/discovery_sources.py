@@ -211,7 +211,7 @@ def source_json(db, source):
     m = management(source)
     ids = selected_role_ids(db, source)
     personas = db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == source.owner_user_id,
-                                                     ContentPersona.id.in_(ids))).all()
+                                                     ContentPersona.id.in_(ids), ContentPersona.status != "deleted")).all()
     return {"id": source.id, "name": source.name, "url": source.canonical_url, "kind": source.kind,
         "input_url": m.get("input_url") or (source.evidence_json or {}).get("search_url") or source.canonical_url,
         "collector_url": (source.adapter_json or {}).get("url"), "origin": origin(source), "status": source.status,

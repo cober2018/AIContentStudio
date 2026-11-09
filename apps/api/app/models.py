@@ -789,6 +789,23 @@ class ContentMasterCheckRun(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class ThirdPartyReviewTask(Base):
+    """A fact or identity review the platform left for the third-party writer to run and submit over MCP."""
+
+    __tablename__ = "third_party_review_task"
+    __table_args__ = (UniqueConstraint("master_revision_id", "purpose", "input_hash", name="uq_third_party_review_task"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    master_revision_id: Mapped[int] = mapped_column(ForeignKey("content_master_revision.id"), index=True)
+    purpose: Mapped[str] = mapped_column(String(40))
+    input_hash: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20))
+    request_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    issues_json: Mapped[list | None] = mapped_column(JSON)
+    model_label: Mapped[str | None] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
 class ChannelVariantRevision(Base):
     __tablename__ = "channel_variant_revision"
     __table_args__ = (

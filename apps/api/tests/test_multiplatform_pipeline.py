@@ -80,7 +80,7 @@ def test_seventeen_form_local_chain(client, db_session, tmp_path, monkeypatch, c
 
     monkeypatch.setattr(channel_variants, 'get_provider', lambda *a: pytest.fail('local chain dispatched a provider'))
     monkeypatch.setattr(WechatWewritePublisher, 'deliver', lambda *a, **kw: pytest.fail('local chain dispatched WeChat'))
-    if form == 'image_note':
+    if form in ('image_note', 'image_message'):
         if os.environ.get('AICS_SMOKE_SOURCE_DB'):
             project, unit, master, headers = _real_graphic_source(client, db_session, tmp_path)
         else:
@@ -104,7 +104,7 @@ def test_seventeen_form_local_chain(client, db_session, tmp_path, monkeypatch, c
     assert preview.status_code == 200, preview.text
     proposed = preview.json()
     assets = proposed['asset_refs']
-    if channel == 'wechat':
+    if channel == 'wechat' and form == 'article':
         file = tmp_path / 'cover.png'
         data = Path(os.environ['AICS_SMOKE_COVER']).read_bytes() if os.environ.get('AICS_SMOKE_COVER') else b'\x89PNG\r\n\x1a\ncontract fixture'
         file.write_bytes(data)

@@ -36,6 +36,7 @@ _SIGNATURES: list[tuple[bytes, str]] = [
     (b"RIFF", "audio/wav"),
     (b"%PDF", "application/pdf"),
     (b"ID3", "audio/mpeg"),
+    (b"fLaC", "audio/flac"),
     (b"\x00\x00\x00", "video/mp4"),  # ftyp box 前缀
 ]
 FALLBACK_MIME = "application/octet-stream"

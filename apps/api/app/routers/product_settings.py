@@ -58,28 +58,6 @@ def capabilities(db: Session = Depends(get_db), user: User = Depends(get_current
     return product_settings.capability_inventory(db, user)
 
 
-class MediaRendererVerificationIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    stage_id: str = Field(pattern=r"^[a-f0-9]{32}$")
-    confirmed: bool
-    expected_input_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
-    expected_output_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
-
-
-@router.post("/media-renderer-verifications", status_code=201)
-def verify_media_renderer(payload: MediaRendererVerificationIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    from ..services.media_renderers import verify_stage
-
-    return verify_stage(db, user, payload.model_dump())
-
-
-@router.post("/media-renderer-verifications/{verification_id}/revoke", status_code=201)
-def revoke_media_renderer(verification_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    from ..services.media_renderers import revoke
-
-    return revoke(db, user, verification_id)
-
-
 @router.post("/publisher-verifications", status_code=201)
 def verify_publisher(payload: PublisherVerificationIn, db: Session = Depends(get_db), user: User = Depends(require_admin)):
     account = content_identity.owned_entity(db, user, "account", payload.content_account_id, mutable=True)
@@ -100,8 +78,9 @@ def verify_publisher(payload: PublisherVerificationIn, db: Session = Depends(get
 
         if account.platform_channel != "wechat" or account.platform_account_id != payload.account_ref:
             raise HTTPException(409, "official_account_scope_mismatch")
-        if payload.result == "verified" and not wechat_official.remote_contract_ready():
-            raise HTTPException(409, "official_contract_unresolved")
+        # Official verification comes only from a confirmed real draft, never from a settings click.
+        if payload.result == "verified":
+            raise HTTPException(409, "official_verification_requires_confirmed_draft")
         fingerprint = wechat_official.scope_fingerprint(db, scope) if payload.result == "verified" else None
         registration_fingerprint = wechat_official.implementation_fingerprint()
     else:

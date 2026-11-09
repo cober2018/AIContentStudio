@@ -31,9 +31,11 @@ type Cut = { execution_id: number; cut_output_id: number | null; cover_output_id
 type Chain = {
   state: string; label: string; detail?: string; notes?: Note[]; execution_id?: number; cut_output_id?: number | null; cover_output_id?: number | null; shot_checks?: ShotChecks | null; draft_revision_no?: number;
   phase?: string; locked?: boolean; sample?: Cut; separate_covers?: boolean; cover_vertical_output_id?: number | null; cover_43_output_id?: number | null; cover_redo?: { note: string; at: string };
+  cover_task?: CoverTask;
   persona_clips?: { slot: "intro" | "outro"; material_revision_id: number; duration_ms: number; title: string }[];
   master: { id: number; revision_no: number; payload: VideoPayload } | null;
 };
+type CoverTask = { execution_id: number; state: "making" | "review" | "changes" | "done"; notes?: Note[]; cover_vertical_output_id: number | null; cover_43_output_id: number | null };
 type Step = "draft" | "sample" | "final";
 const STEPS = [["导演稿", ["not_started", "draft_review", "draft_changes"]], ["小样", ["making", "sample_review", "sample_changes"]], ["成片", ["finishing", "final_review", "final_changes", "done"]]] as const;
 const ORDER: Step[] = ["draft", "sample", "final"];
@@ -127,6 +129,37 @@ function CoverRedo({ projectId, unitId, pending }: { projectId: number; unitId: 
   </div>;
 }
 
+// A finished landscape work redoing only its 3:4 and 4:3 covers; approval swaps them in, the 成片 stays.
+function CoverTaskReview({ projectId, unitId, task }: { projectId: number; unitId: number; task: CoverTask }) {
+  const client = useQueryClient();
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [issue, setIssue] = useState("");
+  async function send(decision: "approve" | "changes") {
+    setBusy(true); setIssue("");
+    try {
+      await api.post(`/content-projects/${projectId}/units/${unitId}/video-chain/decision`, { stage: "covers", decision, notes: decision === "changes" ? [{ time_ms: null, note: note.trim() }] : [] });
+      setNote("");
+      await client.invalidateQueries({ queryKey: ["video-chain"] });
+    } catch (cause) { setIssue(errorText(cause)); } finally { setBusy(false); }
+  }
+  const label = { making: "新封面制作中", review: "新封面待你看", changes: "新封面按你的意见修改中", done: "新封面已换上" }[task.state];
+  return <div className="mt-3 rounded-lg bg-white/70 p-3 text-xs text-slate-700" aria-label="重做封面">
+    <p className="font-semibold">重做竖封面和 4:3 横封面 · {label}</p>
+    {task.state === "changes" && task.notes?.length ? <ul className="mt-1 list-disc pl-5 text-slate-600">{task.notes.map((item, index) => <li key={index}>{item.note}</li>)}</ul> : null}
+    {task.state !== "done" && <div className="flex flex-wrap items-start gap-4">{([["cover_43", task.cover_43_output_id, "横封面 4:3（新）"], ["cover_vertical", task.cover_vertical_output_id, "竖封面 3:4（新）"]] as const).map(([role, outputId, text]) => outputId
+      ? <CoverPreview key={role} projectId={projectId} unitId={unitId} executionId={task.execution_id} outputId={outputId} label={text} />
+      : <div key={role} className="mt-3"><p className="mb-1 text-slate-600">{text}</p><p className="text-slate-400">还没交</p></div>)}</div>}
+    {task.state === "review" && <div className="mt-3 flex flex-wrap items-end gap-2">
+      <Button size="sm" disabled={busy} onClick={() => void send("approve")}>{busy ? "处理中…" : "换上新封面"}</Button>
+      <input aria-label="封面修改意见" className={`${inputClass} min-w-[14rem] flex-1`} maxLength={2000} placeholder="要怎么改" value={note} onChange={event => setNote(event.target.value)} />
+      <Button size="sm" variant="secondary" disabled={busy || !note.trim()} onClick={() => void send("changes")}>按意见再改</Button>
+    </div>}
+    {task.state === "review" && <p className="mt-1 text-slate-500">换上后，作品的竖封面和 4:3 横封面改成这两张，成片和 16:9 横封面不变；「审阅与交付」里会出现带新封面的一版，要重新确认。</p>}
+    {issue && <p role="alert" className="mt-2 text-rose-700">{issue}</p>}
+  </div>;
+}
+
 // The video is made by the external model over MCP; this page only shows where it is and takes the user's answer.
 // Each step page passes `step` and sees only its own stop; earlier stops are view-only.
 export default function VideoChainPanel({ projectId, unitId, step, showDraft }: { projectId: number; unitId: number; step: Step; showDraft?: boolean }) {
@@ -135,7 +168,8 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
   const chain = useQuery({ queryKey: ["video-chain", currentUser(), projectId, unitId], retry: false,
     queryFn: () => api.get<Chain>(`/content-projects/${projectId}/units/${unitId}/video-chain`),
     refetchInterval: query => query.state.data?.state === "approving" ? 3000
-      : ["making", "finishing", "draft_changes", "sample_changes", "final_changes", "not_started"].includes(query.state.data?.state || "") ? 15000 : false });
+      : ["making", "finishing", "draft_changes", "sample_changes", "final_changes", "not_started"].includes(query.state.data?.state || "")
+        || ["making", "changes"].includes(query.state.data?.cover_task?.state || "") ? 15000 : false });
   const [notes, setNotes] = useState<Note[]>([]);
   const [time, setTime] = useState("");
   const [text, setText] = useState("");
@@ -222,6 +256,7 @@ export default function VideoChainPanel({ projectId, unitId, step, showDraft }: 
         </div>
         <p className="text-xs text-slate-500">{backToDraft ? "画面内容要改就写在这里，流程会回到导演稿，后面的素材、小样按新导演稿重做。" : step === "draft" ? "有素材的话，先放进素材库（外部素材库或本项目）再采用。" : step === "final" ? "通过后前面的步骤会锁定。" : "意见会交给第三方模型改出下一版。"}回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
       </div>}
+      {step === "final" && data.locked && data.cover_task && <CoverTaskReview projectId={projectId} unitId={unitId} task={data.cover_task} />}
       {step === "final" && data.locked && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-white/70 p-3 text-xs text-slate-600"><span>成片已定稿，这一条不能再改。要调整就复制一份，在副本里从导演稿开始。</span><Button size="sm" variant="secondary" disabled={busy} onClick={() => void copy()}>复制一份</Button></div>}
       {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
     </section>

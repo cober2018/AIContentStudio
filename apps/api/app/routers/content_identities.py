@@ -192,7 +192,7 @@ def delete_brand(brand_id: int, db: Session = Depends(get_db), user: User = Depe
     from ..models import ContentBrand, ContentBrandRevision, IdentitySnapshot, ContentMemoryEntry
 
     brand = identity.owned_entity(db, user, "brand", brand_id)
-    personas = db.scalars(select(ContentPersona).where(ContentPersona.brand_id == brand_id, ContentPersona.owner_user_id == user.id)).all()
+    personas = db.scalars(select(ContentPersona).where(ContentPersona.brand_id == brand_id, ContentPersona.owner_user_id == user.id, ContentPersona.status != "deleted")).all()
     if personas:
         names = "、".join(f"{row.name}{'（已归档）' if row.status == 'archived' else ''}" for row in personas[:20])
         raise HTTPException(409, {"code": "brand_has_personas", "message": f"品牌下还有角色：{names}。先把它们移到别的品牌或删除，再删品牌。"})
@@ -211,7 +211,7 @@ def delete_brand(brand_id: int, db: Session = Depends(get_db), user: User = Depe
 @router.get("/content-brands/{brand_id}/personas")
 def brand_personas(brand_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     identity.owned_entity(db, user, "brand", brand_id)
-    rows = db.scalars(select(ContentPersona).where(ContentPersona.brand_id == brand_id, ContentPersona.owner_user_id == user.id).order_by(ContentPersona.id)).all()
+    rows = db.scalars(select(ContentPersona).where(ContentPersona.brand_id == brand_id, ContentPersona.owner_user_id == user.id, ContentPersona.status != "deleted").order_by(ContentPersona.id)).all()
     revision_nos = _current_revision_nos(db, "persona", [row.id for row in rows])
     return [_entity_json(db, "persona", row, current_revision_no=revision_nos.get(row.id, 0)) for row in rows]
 
@@ -277,6 +277,27 @@ def rename_persona(payload: NameIn, persona_id: int, db: Session = Depends(get_d
 @router.delete("/content-personas/{persona_id}", status_code=204)
 def archive_persona(persona_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     _archive(db, user, "persona", persona_id)
+
+
+@router.delete("/content-personas/{persona_id}/permanent")
+def delete_persona(persona_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    """A persona with no live works is deleted; one still holding works can only be archived."""
+    from ..models import ContentUnit
+
+    persona = identity.owned_entity(db, user, "persona", persona_id)
+    if persona.status == "deleted":
+        raise HTTPException(404, "内容角色不存在")
+    works = db.scalars(select(ContentUnit.title).where(ContentUnit.persona_id == persona_id,
+                                                      func.coalesce(ContentUnit.lifecycle, "active") != "deleted")).all()
+    if works:
+        names = "、".join(works[:10]) + ("等" if len(works) > 10 else "")
+        raise HTTPException(409, {"code": "persona_has_works", "message": f"角色下还有 {len(works)} 个作品：{names}。只能归档。"})
+    # Kept as a deleted row: snapshots of deleted works and the account identities still point at it.
+    persona.status = "deleted"
+    for account in db.scalars(select(ContentAccount).where(ContentAccount.persona_id == persona_id, ContentAccount.status == "active")).all():
+        account.status = "archived"
+    db.commit()
+    return {"deleted": True, "message": "角色已删除。"}
 
 
 @router.get("/content-personas/{persona_id}/accounts")
@@ -477,6 +498,7 @@ def owned_accounts(db: Session = Depends(get_db), user: User = Depends(get_curre
     from ..models import ContentPersona
     rows = db.scalars(select(ContentAccount).where(or_(ContentAccount.owner_user_id == user.id,
         (ContentAccount.owner_user_id.is_(None)) & ContentAccount.persona_id.in_(select(ContentPersona.id).where(ContentPersona.owner_user_id == user.id))))
+        .where(ContentAccount.persona_id.is_(None) | ContentAccount.persona_id.not_in(select(ContentPersona.id).where(ContentPersona.status == "deleted")))
         .order_by(ContentAccount.id)).all()
     return [_entity_json(db, "account", row) for row in rows]
 

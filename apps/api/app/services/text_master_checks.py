@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -46,7 +47,14 @@ def _structure(db: Session, master: ContentMasterRevision, projection: dict) -> 
     return ("warning" if warnings else "pass"), {"reasons": [], "issues": warnings, "coverage": {"deterministic": "complete"}, "block_count": len(document["blocks"])}
 
 
-def _semantic_review(purpose: str, *, text: str, context: dict, configured: bool, critic_dimensions=(), text_identity_scope: bool = False) -> tuple[list[dict], dict]:
+def _semantic_review(purpose: str, *, text: str, context: dict, configured: bool, critic_dimensions=(), text_identity_scope: bool = False, review=None) -> tuple[list[dict], dict]:
+    # Third-party writing: the external model runs this review over MCP; the platform model is never called.
+    if review is not None:
+        from . import third_party_review
+
+        db, master = review
+        if third_party_review.is_third_party(db, master.content_unit_id):
+            return third_party_review.resolve(db, master, purpose, text, context)
     if not configured:
         return [], {"semantic": "unavailable", "reason": "provider_not_configured"}
     context_json = json.dumps(context, ensure_ascii=False)
@@ -98,6 +106,7 @@ def _semantic_review(purpose: str, *, text: str, context: dict, configured: bool
                 "rubric": rubric if valid else [], "can_override_deterministic": False}
         return issues, coverage
     except Exception:  # noqa: BLE001 provider transport and JSON failures are optional semantic coverage
+        logging.getLogger(__name__).warning("semantic review provider failed: purpose=%s", purpose, exc_info=True)
         return [], {"semantic": "unavailable", "reason": "provider_failed"}
 
 
@@ -135,7 +144,7 @@ def _fact(db: Session, master: ContentMasterRevision, requirement: dict) -> tupl
         # The draft may quote an excluded item; never send that body to a model.
         semantic, coverage = [], {"semantic": "unavailable", "reason": "model_use_excluded"}
     else:
-        semantic, coverage = _semantic_review("fact_review", text=body, context={"facts": [{"id": item.id, "statement": str((item.snapshot_json if isinstance(item.snapshot_json, dict) else {}).get("statement") or "")[:400]} for item in allowed[:50]]}, configured=requirement["metadata"]["semantic"]["configured"])
+        semantic, coverage = _semantic_review("fact_review", text=body, context={"facts": [{"id": item.id, "statement": str((item.snapshot_json if isinstance(item.snapshot_json, dict) else {}).get("statement") or "")[:400]} for item in allowed[:50]]}, configured=requirement["metadata"]["semantic"]["configured"], review=(db, master))
     issues.extend({**issue, "locator": _issue_locator(document, issue["span"])} for issue in semantic)
     coverage.update({"deterministic": "complete", "model_use_excluded_item_ids": excluded, "fact_count": len(items), "semantic_fact_count": min(len(allowed), 50), "deterministic_issue_count": len(deterministic.issues)})
     if truncated_items or len(deterministic.issues) > 100:
@@ -180,7 +189,7 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
     text_profile = {key: value for key, value in profile.items()
         if key not in {"graphic_creative_profile", "video_creative_profile"}}
     semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": text_profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"],
-        critic_dimensions=quality["critic_dimensions"] if quality else (), text_identity_scope=True)
+        critic_dimensions=quality["critic_dimensions"] if quality else (), text_identity_scope=True, review=(db, master))
     issues = deterministic + semantic
     status = "blocker" if any(issue["severity"] == "blocker" for issue in issues) else "warning" if issues or coverage["semantic"] != "verified" else "pass"
     return status, {"identity_snapshot_id": snapshot.id, "identity_checksum": snapshot.checksum, "issues": issues, "coverage": {"deterministic": "persona_rules_and_explicit_phrases" if quality else "explicit_phrases_only", "explicit_phrase_count": len(forbidden), **coverage}, "reasons": [], **({"persona_quality": quality} if quality else {})}

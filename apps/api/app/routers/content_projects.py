@@ -434,7 +434,7 @@ def _project_json(project: ContentProject, db: Session) -> dict:
 
 @router.get("/content-personas")
 def list_personas(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return [_persona_json(db, row) for row in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id).order_by(ContentPersona.id))]
+    return [_persona_json(db, row) for row in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == user.id, ContentPersona.status != "deleted").order_by(ContentPersona.id))]
 
 
 @router.get("/data-source-plugins")
@@ -739,7 +739,7 @@ def patch_unit(payload: UnitPatch, project_id: int, unit_id: int, db: Session = 
             raise HTTPException(422, "商品作品请使用商品配置与工作流入口")
         if "persona_id" in fields:
             persona = db.get(ContentPersona, payload.persona_id) if payload.persona_id else None
-            if persona is None or persona.owner_user_id != user.id or persona.status == "archived":
+            if persona is None or persona.owner_user_id != user.id or persona.status != "active":
                 raise HTTPException(422, {"code": "product_persona_required", "message": "商品视频必须选一个可用的角色"})
             # Already generated drafts, images and voice keep the old persona; new generation follows the new one.
             unit.persona_id = persona.id

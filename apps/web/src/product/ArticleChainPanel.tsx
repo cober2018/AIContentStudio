@@ -1,10 +1,30 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError, currentUser } from "../api";
 import { Button, ErrorBanner, inputClass } from "../components/ui";
 
-type Chain = { writer: "platform" | "external"; state: string; label: string; detail?: string; locked?: boolean; notes?: { note: string }[]; master_id: number | null };
+type Chain = { writer: "platform" | "external"; state: string; label: string; detail?: string; locked?: boolean; notes?: { note: string }[]; master_id: number | null;
+  review?: { state: "not_sent" | "rendered" | "sent" | "failed"; message?: string; candidate_id?: number };
+  renders?: { canvas_id: string; material_id: number | null; material_revision_id: number }[] };
+
+function RenderImage({ item, index }: { item: { material_id: number | null; material_revision_id: number }; index: number }) {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    let objectUrl = "";
+    let alive = true;
+    if (item.material_id) fetch(`/api/v1/materials/${item.material_id}/revisions/${item.material_revision_id}/raw`, { headers: { "X-Studio-User": currentUser() } }).then(async response => {
+      if (!response.ok) return;
+      objectUrl = URL.createObjectURL(await response.blob());
+      if (alive) setUrl(objectUrl);
+    }).catch(() => {});
+    return () => { alive = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [item.material_id, item.material_revision_id]);
+  return <figure className="space-y-1">
+    {url ? <a href={url} target="_blank" rel="noreferrer"><img src={url} alt={`第 ${index + 1} 张成图`} className="w-full rounded border border-slate-200" /></a> : <div className="aspect-[3/4] w-full rounded bg-slate-100" />}
+    <figcaption className="text-center text-[11px] text-slate-500">第 {index + 1} 张{index === 0 ? "（封面）" : ""}</figcaption>
+  </figure>;
+}
 type Version = { id: number; revision_no: number; source: string; note: string; created_at: string | null; current: boolean; final: boolean; referenced: boolean; deletable: boolean };
 
 function errorText(error: unknown) {
@@ -104,14 +124,16 @@ function Versions({ projectId, unitId, readOnly }: { projectId: number; unitId: 
   </section>;
 }
 
-// Who writes this piece: the platform's own stages, or a third-party model over MCP that the user reviews here.
-export default function ArticleChainPanel({ projectId, unitId, readOnly }: { projectId: number; unitId: number; readOnly: boolean }) {
+export type ArticlePart = "draft" | "images" | "delivery";
+
+// One writing chain shown across the work's steps: 稿子 (who writes, draft review, versions), 成图 (check the rendered images), 交付 (sending status).
+export default function ArticleChainPanel({ projectId, unitId, readOnly, isGraphic = false, part }: { projectId: number; unitId: number; readOnly: boolean; isGraphic?: boolean; part: ArticlePart }) {
   const client = useQueryClient();
   const navigate = useNavigate();
   const base = `/content-projects/${projectId}/units/${unitId}`;
   const chain = useQuery({ queryKey: ["article-chain", currentUser(), projectId, unitId], retry: false,
     queryFn: () => api.get<Chain>(`${base}/article-chain`),
-    refetchInterval: query => ["not_started", "draft_changes"].includes(query.state.data?.state || "") ? 15000 : false });
+    refetchInterval: query => ["not_started", "draft_changes", "platform"].includes(query.state.data?.state || "") ? 15000 : false });
   const [notes, setNotes] = useState<string[]>([]);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -134,8 +156,51 @@ export default function ArticleChainPanel({ projectId, unitId, readOnly }: { pro
   if (chain.isPending) return null;
   if (chain.error || !data) return <ErrorBanner message={errorText(chain.error)} />;
   const external = data.writer === "external";
-  const reviewing = external && (data.state === "draft_review" || data.state === "draft_changes");
+  const reviewing = part === "draft" && (data.state === "draft_review" || data.state === "draft_changes");
+  const checking = part === "images" && data.state === "final_review";
   const pending = text.trim() ? [...notes, text.trim()] : notes;
+  const decisionControls = (reviewing || checking) && !readOnly && <div className="mt-3 space-y-2">
+    <div className="flex flex-wrap items-end gap-2">
+      <input aria-label="修改意见" className={`${inputClass} min-w-[14rem] flex-1`} maxLength={2000} placeholder={checking ? "成图要改的地方，例如：第2张背景换一张" : "要改的地方，例如：开头再短一点"} value={text} onChange={event => setText(event.target.value)} />
+      <Button size="sm" variant="secondary" disabled={!text.trim()} onClick={() => { setNotes(current => [...current, text.trim()]); setText(""); }}>再加一条</Button>
+    </div>
+    {notes.length > 0 && <ul className="list-disc pl-5 text-xs text-slate-600">{notes.map((note, index) => <li key={index}>{note}</li>)}</ul>}
+    <div className="flex flex-wrap gap-2">
+      {checking
+        ? <Button disabled={busy} onClick={() => { if (window.confirm("成图验收通过并定稿？定稿后不能再改，要调整只能复制一份。")) void act(() => api.post(`${base}/article-chain/decision`, { decision: "accept", notes: [] })); }}>{busy ? "送审中…" : "验收通过"}</Button>
+        : <Button disabled={busy} onClick={() => { if (window.confirm(isGraphic ? "采用这版稿子？平台会接着出图，出好后到「成图」一步验收。" : "采用当前版本并定稿？定稿后不能再改，要调整只能复制一份。")) void act(() => api.post(`${base}/article-chain/decision`, { decision: "approve", notes: [] })); }}>{busy ? "出图中…" : isGraphic ? "采用" : "采用并定稿"}</Button>}
+      <Button variant="secondary" disabled={busy || !pending.length} onClick={() => void act(async () => { await api.post(`${base}/article-chain/decision`, { decision: "changes", notes: pending.map(note => ({ note })) }); setNotes([]); setText(""); })}>按意见修改</Button>
+    </div>
+    <p className="text-xs text-slate-500">{external ? "回到第三方模型那边说一声「继续」，它会读到你的决定。" : "写了意见后，在下面的创作流程里重跑，采用的新稿会回到这里。"}</p>
+  </div>;
+  const status = <div className="rounded-lg bg-indigo-50/60 p-3 text-sm">
+    <p><span className="font-semibold">{data.label}</span>{data.detail ? ` · ${data.detail}` : ""}</p>
+    {data.notes?.length ? <ul className="mt-1 list-disc pl-5 text-xs text-slate-600">{data.notes.map((item, index) => <li key={index}>{item.note}</li>)}</ul> : null}
+  </div>;
+  const failure = issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>;
+  if (part === "images") return <section aria-label="成图" className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+    {status}
+    {checking && <>
+      <p className="text-xs text-slate-600">平台按采用的稿子出好了成图。满意就验收通过（这时才定稿，并送进「审阅与交付」）；不满意写意见退回，出下一版。点图可看大图。</p>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">{(data.renders || []).map((item, index) => <RenderImage key={item.material_revision_id} item={item} index={index} />)}</div>
+    </>}
+    {data.state === "rendering" && data.review?.state === "failed" && <div className="flex flex-wrap items-center gap-3 text-xs">
+      <span className="text-rose-700">出图没成功：{data.review.message || ""}</span>
+      {!readOnly && <Button size="sm" disabled={busy} onClick={() => void act(() => api.post(`${base}/article-chain/send-to-review`, {}))}>{busy ? "出图中…" : "重新出图"}</Button>}
+    </div>}
+    {decisionControls}
+    {failure}
+  </section>;
+  if (part === "delivery") return <section aria-label="送审" className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+    {data.review && <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+      {data.review.state === "sent"
+        ? <><span>已送进「审阅与交付」等你审批。</span><Button size="sm" variant="secondary" onClick={() => navigate("/review")}>去审阅与交付</Button></>
+        : <><span className={data.review.state === "failed" ? "text-rose-700" : ""}>{data.review.state === "failed" ? `送审没成功：${data.review.message || ""}` : "还没送审。"}</span>
+          {!readOnly && <Button size="sm" disabled={busy} onClick={() => void act(() => api.post(`${base}/article-chain/send-to-review`, {}))}>{busy ? "处理中…" : "重新送审"}</Button>}</>}
+    </div>}
+    {data.locked && <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600"><span>已定稿，这一条不能再改。要调整就复制一份。</span><Button size="sm" variant="secondary" disabled={busy} onClick={() => void copy()}>复制一份</Button></div>}
+    {failure}
+  </section>;
   return <div className="mb-5 space-y-4">
     {external && <PlatformSkillsSwitch projectId={projectId} unitId={unitId} readOnly={readOnly || !!data.locked} />}
     <section aria-label="写作方式" className="rounded-xl border border-slate-200 bg-white p-4 text-sm">
@@ -144,25 +209,10 @@ export default function ArticleChainPanel({ projectId, unitId, readOnly }: { pro
         <Switch checked={external} disabled={readOnly || busy || !!data.locked} left="平台模型" right="第三方模型"
           onChange={value => void act(() => api.put(`${base}/article-chain/writer`, { writer: value ? "external" : "platform" }))} />
       </div>
-      <p className="mt-2 text-xs text-slate-500">{external ? "由接了 MCP 的第三方模型写稿：在那边说「写这篇」，写好的每一版都会出现在下面，你在这里采用或写意见。" : "由平台里配置的模型按下面的创作流程逐步写。"}</p>
-      {external && <div className="mt-3 rounded-lg bg-indigo-50/60 p-3">
-        <p><span className="font-semibold">{data.label}</span>{data.detail ? ` · ${data.detail}` : ""}</p>
-        {data.notes?.length ? <ul className="mt-1 list-disc pl-5 text-xs text-slate-600">{data.notes.map((item, index) => <li key={index}>{item.note}</li>)}</ul> : null}
-      </div>}
-      {reviewing && !readOnly && <div className="mt-3 space-y-2">
-        <div className="flex flex-wrap items-end gap-2">
-          <input aria-label="修改意见" className={`${inputClass} min-w-[14rem] flex-1`} maxLength={2000} placeholder="要改的地方，例如：开头再短一点" value={text} onChange={event => setText(event.target.value)} />
-          <Button size="sm" variant="secondary" disabled={!text.trim()} onClick={() => { setNotes(current => [...current, text.trim()]); setText(""); }}>再加一条</Button>
-        </div>
-        {notes.length > 0 && <ul className="list-disc pl-5 text-xs text-slate-600">{notes.map((note, index) => <li key={index}>{note}</li>)}</ul>}
-        <div className="flex flex-wrap gap-2">
-          <Button disabled={busy} onClick={() => { if (window.confirm("采用当前版本并定稿？定稿后不能再改，要调整只能复制一份。")) void act(() => api.post(`${base}/article-chain/decision`, { decision: "approve", notes: [] })); }}>采用并定稿</Button>
-          <Button variant="secondary" disabled={busy || !pending.length} onClick={() => void act(async () => { await api.post(`${base}/article-chain/decision`, { decision: "changes", notes: pending.map(note => ({ note })) }); setNotes([]); setText(""); })}>按意见修改</Button>
-        </div>
-        <p className="text-xs text-slate-500">回到第三方模型那边说一声「继续」，它会读到你的决定。</p>
-      </div>}
-      {data.locked && <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600"><span>已定稿，这一条不能再改。要调整就复制一份。</span><Button size="sm" variant="secondary" disabled={busy} onClick={() => void copy()}>复制一份</Button></div>}
-      {issue && <p role="alert" className="mt-2 text-xs text-rose-700">{issue}</p>}
+      <p className="mt-2 text-xs text-slate-500">{external ? "由接了 MCP 的第三方模型写稿：在那边说「写这篇」，写好的每一版都会出现在下面，你在这里采用或写意见。" : "由平台里配置的模型按下面的创作流程逐步写；采用的稿子会回到这里等你看。"}</p>
+      <div className="mt-3">{status}</div>
+      {decisionControls}
+      {failure}
     </section>
     <Versions projectId={projectId} unitId={unitId} readOnly={readOnly} />
   </div>;

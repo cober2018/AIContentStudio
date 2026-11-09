@@ -27,7 +27,7 @@ def persona_policy(db, owner_id, persona_id):
 
 
 def tech_persona_ids(db, owner_id):
-    return [p.id for p in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == owner_id)).all()
+    return [p.id for p in db.scalars(select(ContentPersona).where(ContentPersona.owner_user_id == owner_id, ContentPersona.status != "deleted")).all()
             if persona_policy(db, owner_id, p.id) == TECH]
 
 

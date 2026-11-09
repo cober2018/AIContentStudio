@@ -113,7 +113,7 @@ def _v5_cover_bytes(db: Session, manifest: dict) -> bytes:
     return data
 
 
-def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_draft_request=None) -> DeliveryTarget:
+def authorize_target(db: Session, asset: ContentAsset, payload, user) -> DeliveryTarget:
     """通用交付目标授权：channel/form/action 经 Registry 验证（D21），幂等。"""
     schema = (asset.candidate_manifest_json or {}).get("schema_version")
     is_variant = schema == 5
@@ -228,9 +228,7 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
             channel=payload.channel, content_form=payload.content_form, action=payload.action,
             account_ref=payload.account_ref, publisher_key=publisher_key, publisher_version=publisher_version,
             approved_candidate_hash=asset.approved_candidate_hash, authorized_by=user.email)
-        validate_target(db, scope_target, user, _short_draft_request=_short_draft_request)
-    elif _short_draft_request is not None:
-        raise HTTPException(422, "official_experiment_scope_invalid")
+        validate_target(db, scope_target, user)
     capability = None
     if publisher is not None:
         capability = publisher.capability(spec.channel, spec.content_form, payload.account_ref)
@@ -245,11 +243,10 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
     else:
         capability = {"publisher_key": publisher_key, "action": payload.action, "available": True, "verified": False, "legacy": True}
     if official:
+        # Pushing needs only the user's explicit request; verified records whether this account and form have a confirmed draft.
+        confirmed = publisher_target_verified(db, scope_target, registry)
         capability = {"publisher_key": publisher_key, "action": payload.action,
-                      "available": True, "verified": _short_draft_request is None,
-                      "remote_verified": _short_draft_request is None}
-        if _short_draft_request is not None:
-            capability.update(available=False, reason="bounded_experiment_only")
+                      "available": True, "verified": confirmed, "remote_verified": confirmed}
     elif is_variant and payload.action == DeliveryAction.auto_draft.value:
         prepare = plugin.prepare_variant_auto_draft if plugin is not None else None
         if prepare is not None:
@@ -331,15 +328,12 @@ def authorize_target(db: Session, asset: ContentAsset, payload, user, *, _short_
                 validate_live_v4_candidate(db, asset, require_approved=True, lock_live=True)
             if target.approved_candidate_hash != asset.candidate_hash:
                 raise HTTPException(409, "授权提交前候选发生变化")
-        if _short_draft_request is None:
-            db.commit()
+        db.commit()
     except HTTPException:
         db.rollback()
         raise
     except Exception:  # noqa: BLE001 并发幂等
         db.rollback()
-        if _short_draft_request is not None:
-            raise HTTPException(409, "official_experiment_prepare_conflict") from None
         concurrent = db.scalars(
             select(DeliveryTarget).where(
                 DeliveryTarget.content_asset_id == asset.id,

@@ -226,26 +226,6 @@ export function insertShapeLayer(draft: GraphicDraft, canvasId: string, shape: G
   return updateCanvas(draft, { ...canvas, layers: [...canvas.layers, layer] });
 }
 
-export function bindFinalRender(draft: GraphicDraft, canvasId: string, asset: { material_revision_id: number; content_hash: string; kind: string; public_use_allowed: boolean } | null): GraphicDraft {
-  if (!draft.payload.canvases.some((canvas) => canvas.id === canvasId)) throw new Error("Canvas not found");
-  if (asset && (!asset.public_use_allowed || asset.kind !== "image" || !Number.isInteger(asset.material_revision_id) || asset.material_revision_id <= 0 || !/^[a-f0-9]{64}$/i.test(asset.content_hash))) throw new Error(asset.public_use_allowed === false ? "Final render rights do not allow public use" : "Final render must be an exact image revision");
-  const existing = draft.assetRefs.filter((ref) => ref.role === "render_output" && ref.placement?.canvas_id !== canvasId);
-  if (asset && existing.some((ref) => ref.material_revision_id === asset.material_revision_id)) throw new Error("Final render revisions must be distinct per canvas");
-  const current = draft.assetRefs.find((ref) => ref.role === "render_output" && ref.placement?.canvas_id === canvasId);
-  if (asset && current?.material_revision_id === asset.material_revision_id && current.content_hash === asset.content_hash) return draft;
-  if (!asset && !current) return draft;
-  const byCanvas = new Map(existing.map((ref) => [ref.placement!.canvas_id, ref]));
-  if (asset) byCanvas.set(canvasId, { material_revision_id: asset.material_revision_id, content_hash: asset.content_hash, role: "render_output", slot_key: canvasId, placement: { canvas_id: canvasId } });
-  const ordered = draft.payload.canvases.flatMap((canvas) => {
-    const ref = byCanvas.get(canvas.id);
-    return ref ? [{ ...ref, sort_order: canvas.order, slot_key: canvas.id, placement: { canvas_id: canvas.id } }] : [];
-  });
-  const payload = { ...draft.payload };
-  if (ordered.length) payload.render_asset_ref = ordered.map((ref) => ({ canvas_id: ref.placement!.canvas_id, material_revision_id: ref.material_revision_id }));
-  else delete payload.render_asset_ref;
-  return { ...draft, payload, assetRefs: [...draft.assetRefs.filter((ref) => ref.role !== "render_output"), ...ordered] };
-}
-
 export function bindGraphicClaim(draft: GraphicDraft, canvasId: string, layerId: string, start: number, end: number, item: { item_id: number; snapshot_checksum: string; public_use_allowed: boolean; public_use_revoked_at: string | null }): GraphicDraft {
   if (!item.public_use_allowed || item.public_use_revoked_at) throw new Error("Evidence rights do not allow public use");
   if (!Number.isInteger(item.item_id) || item.item_id <= 0 || !/^[a-f0-9]{64}$/i.test(item.snapshot_checksum)) throw new Error("Exact evidence invalid");

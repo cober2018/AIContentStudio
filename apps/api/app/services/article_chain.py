@@ -1,12 +1,13 @@
 """Who writes a text or graphic piece: the platform's own model (its stages) or a third-party model over MCP.
 
-With the third-party model the platform only keeps versions and asks the user, like the video chain:
-the model saves a draft and stops; the user approves (the piece is then final) or sends notes for the next version.
+Either way the user decides on the page, like the video chain: a draft (saved by the third-party model, or adopted from the
+platform's creation flow) waits for 采用 or notes; a graphic piece is then rendered and final only once its images are accepted.
 Every saved master revision is a version; deleting one hides it, because history and audits still point at it.
 """
 
 from __future__ import annotations
 
+import contextvars
 import copy
 import uuid
 from datetime import UTC, datetime
@@ -34,8 +35,9 @@ RULES = [
     "读 get_article_brief：任务书、事实、来源原文、当前稿和格式示例。数字只用事实里有的，并写清来源；不夸大。",
     "当事实说的话（数字、症状、研究结论、政策、参数等）只用 facts（已冻结的事实边界）里有的；角色作品写稿前先用 get_fact_template 看题材模板，把要当事实说的话连出处用 submit_facts 交上去，平台核对后自动冻结；被退回的换来源或不说。事实改了要重存稿子。"
     "fact_templates 里每个模板的 red_lines 必须守，opinion_only 列的内容只能当个人经历或观点说。",
-    "写完整一版用 save_article_draft 存，然后停下等用户在页面上采用或写意见；有意见就出下一版再停。采用即定稿，不能再存。",
-    "文字用 text.master.v2（title + document.blocks：heading / paragraph 等），不写 citations；图文用 graphic.master.v2（canvases → layers），图片层的 material_revision_id 用素材库素材或 generate_video_image 生成的图。",
+    "事实、身份复核由平台挂起：用 get_review_tasks 领取，逐条对照来源和身份规则判断，再用 submit_review 交回（没有问题就交空 issues）。复核未交回前作品不能定稿。",
+    "写完整一版用 save_article_draft 存，然后停下等用户在页面上采用或写意见；有意见就出下一版再停。文字采用即定稿；图文采用后平台出图，用户验收成图才定稿，验收时写了意见就再出下一版。定稿后不能再存。",
+    "文字用 text.master.v2（title + document.blocks：heading / paragraph 等），不写 citations；图文用 graphic.master.v2（canvases → layers），图片层的 material_revision_id 用素材库素材或 generate_video_image 生成的图；图上和发布文案里都不要放「配图为AI生成」之类的标记，用户发布时在平台上自己标。",
     "图文文字层的 claims 可以把一段文字（start/end 字符位置）挂到 facts 里的一条事实（fact_pack_item_id + snapshot_checksum），平台据此登记出处。",
 ]
 
@@ -76,25 +78,66 @@ def _latest(db: Session, unit_id: int) -> ContentMasterRevision | None:
                      .order_by(ContentMasterRevision.revision_no.desc()).limit(1))
 
 
+def _renders(db: Session, master: ContentMasterRevision) -> list[dict]:
+    rows = []
+    for item in (master.payload_json or {}).get("render_asset_ref") or []:
+        revision = db.get(MaterialRevision, item["material_revision_id"])
+        rows.append({"canvas_id": item["canvas_id"], "material_revision_id": item["material_revision_id"],
+                     "material_id": revision.material_id if revision else None})
+    return rows
+
+
 def _state(db: Session, unit_id: int) -> dict:
     record = _record(db, unit_id)
     master = _latest(db, unit_id)
     view = {"writer": record["writer"], "master_id": master.id if master else None, "revision_no": master.revision_no if master else None}
     decided = next((item for item in reversed(record["decisions"]) if master and item["target_id"] == master.id), None)
-    if decided and decided["decision"] == "approve":
-        return {**view, "state": "done", "label": "已定稿", "locked": True}
-    if record["writer"] == "platform":
-        return {**view, "state": "platform", "label": "平台模型写作"}
+    kind = decided["decision"] if decided else None
+    graphic = bool(master and master.modality == "graphic")
+    if kind == "approve" and decided.get("rendered_from"):
+        # Older rendered revisions were approved automatically; their images still wait for the user's check.
+        kind = "rendered"
+    if kind == "accept" or (kind == "approve" and not graphic):
+        done = {**view, "state": "done", "label": "已定稿", "locked": True}
+        if graphic:
+            done["review"] = record.get("review") or {"state": "not_sent"}
+        return done
+    if kind == "rendered":
+        return {**view, "state": "final_review", "label": "成图待你验收", "renders": _renders(db, master)}
+    if kind == "approve":
+        # The draft is approved and the platform renders it; a failed render shows its reason and a retry.
+        return {**view, "state": "rendering", "label": "稿子已采用，出图中", "review": record.get("review") or {"state": "not_sent"}}
+    platform = record["writer"] == "platform"
     if master is None:
+        if platform:
+            return {**view, "state": "platform", "label": "平台模型写作中", "detail": "在下面的创作流程里逐步写稿，采用的稿子会回到这里等你看"}
         return {**view, "state": "not_started", "label": "等第三方模型写稿", "detail": "在接了 MCP 的第三方模型里说「写这篇」"}
     if decided:
-        return {**view, "state": "draft_changes", "label": "第三方模型按你的意见修改中", "notes": decided["notes"]}
+        # Platform-written pieces are revised by running the creation flow again; its adopted master comes back here.
+        return {**view, "state": "draft_changes", "label": "按你的意见在创作流程里重写" if platform else "第三方模型按你的意见修改中",
+                "notes": decided["notes"]}
     return {**view, "state": "draft_review", "label": "稿件待你看"}
+
+
+# Set only while the platform saves a finalized graphic piece's rendered revision.
+finalizing: contextvars.ContextVar[int | None] = contextvars.ContextVar("article_chain_finalizing", default=None)
 
 
 def locked(db: Session, unit_id: int) -> bool:
     """An approved piece is final; adjustments go into a copy."""
-    return bool(_state(db, unit_id).get("locked"))
+    return finalizing.get() != unit_id and bool(_state(db, unit_id).get("locked"))
+
+
+def save_blocked(db: Session, unit_id: int) -> str | None:
+    """Why a new master cannot be saved now: final, or approved and waiting for its images to be rendered or checked."""
+    if finalizing.get() == unit_id:
+        return None
+    current = _state(db, unit_id)
+    if current.get("locked"):
+        return "已定稿，要调整请复制一份"
+    if current["state"] in {"rendering", "final_review"}:
+        return "稿子已采用，成图等你验收；验收时写了意见再出下一版"
+    return None
 
 
 def state(db: Session, user: User, project_id: int, unit_id: int) -> dict:
@@ -116,18 +159,39 @@ def set_writer(db: Session, user: User, project_id: int, unit_id: int, writer: s
 
 
 def decide(db: Session, user: User, project_id: int, unit_id: int, decision: str, notes: list[dict]) -> dict:
-    _unit(db, user, project_id, unit_id, mutate=True)
+    """采用 / 按意见修改 on a draft; 验收通过 (accept) / 按意见修改 on a graphic piece's rendered images."""
+    unit = _unit(db, user, project_id, unit_id, mutate=True)
     current = _state(db, unit_id)
-    if current["state"] not in {"draft_review", "draft_changes"}:
+    allowed = {"draft_review": {"approve", "changes"}, "draft_changes": {"approve", "changes"}, "final_review": {"accept", "changes"}}
+    if current["state"] not in allowed:
         _fail("article_chain_not_waiting", "现在没有等你看的稿")
+    if decision not in allowed[current["state"]]:
+        _fail("article_chain_decision_invalid", "成图请验收或写意见" if current["state"] == "final_review" else "稿子请采用或写意见", 422)
     if decision == "changes" and not any(str(item.get("note") or "").strip() for item in notes):
         _fail("article_chain_notes_required", "写一下要改哪里", 422)
     record = _record(db, unit_id)
     record["decisions"].append({"target_id": current["master_id"], "decision": decision,
                                 "notes": [{"note": str(item.get("note") or "")[:2000]} for item in notes][:50],
                                 "by": user.email, "at": datetime.now(UTC).isoformat()})
+    if decision == "changes":
+        record.pop("review", None)
     _put(db, unit_id, record)
     db.commit()
+    if decision in {"approve", "accept"} and unit.modality == "graphic":
+        from . import graphic_review
+
+        graphic_review.run(db, user, project_id, unit_id)
+    return state(db, user, project_id, unit_id)
+
+
+def send_to_review(db: Session, user: User, project_id: int, unit_id: int) -> dict:
+    """Retry: render an approved draft again, or freeze an accepted piece whose sending failed."""
+    from . import graphic_review
+
+    unit = _unit(db, user, project_id, unit_id, mutate=True)
+    if unit.modality != "graphic" or _state(db, unit_id)["state"] not in {"rendering", "done"}:
+        _fail("article_chain_not_final", "只有已采用的图文作品可以重新出图或送审")
+    graphic_review.run(db, user, project_id, unit_id)
     return state(db, user, project_id, unit_id)
 
 
@@ -229,6 +293,8 @@ def save_draft(db: Session, user: User, project_id: int, unit_id: int, payload: 
         _fail("article_chain_platform_writer", "页面上的写作方式是「平台模型」，先在内容方案页切到「第三方模型」")
     if current.get("locked"):
         _fail("article_chain_locked", "已定稿，要调整请复制一份")
+    if current["state"] in {"rendering", "final_review"}:
+        _fail("article_chain_waiting_render_check", "稿子已采用，成图等用户验收；用户写了意见再出下一版")
     master = _latest(db, unit_id)
     saved = save_revision(db, project_id=project_id, unit_id=unit_id, user=user, payload={
         "expected_revision": master.revision_no if master else 0, "parent_revision_id": master.id if master else None,

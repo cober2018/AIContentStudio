@@ -114,8 +114,8 @@ def test_account_connection_is_safe_cas_and_account_isolated(client, db_session,
     assert first.status_code == 200, first.text
     assert first.json()["revision"] == 1
     assert first.json()["credential_ref"] == f"AICS_WECHAT_ACCOUNT_{first_id}_APPSECRET"
-    assert first.json()["verified"] is False and first.json()["executable"] is False
-    assert first.json()["unavailable_reason"] == "official_contract_unresolved"
+    assert first.json()["verified"] is False and first.json()["executable"] is True
+    assert first.json()["unavailable_reason"] is None
     monkeypatch.setenv(first.json()["credential_ref"], "private-account-secret")
     assert "private-account-secret" not in client.get(path, headers=headers).text
     assert client.put(path, json=body, headers=headers).status_code == 409

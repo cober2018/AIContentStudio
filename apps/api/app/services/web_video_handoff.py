@@ -170,6 +170,12 @@ def edit_contract(document: dict) -> dict:
     return {"roles": roles, "media_transfer_policy": dict(TRANSFER_POLICY)}
 
 
+def covers_contract() -> dict:
+    """A finished landscape work redoing only its separate covers: the 3:4 and the 4:3, both required."""
+    roles = [{**role(role_id, "image", "image/jpeg"), "allowed_mime": ["image/jpeg", "image/png"]} for role_id in ("cover_vertical", "cover_43")]
+    return {"roles": roles, "media_transfer_policy": dict(TRANSFER_POLICY)}
+
+
 def validate_parent(db: Session, project_id: int, unit_id: int, document: dict, owner_id: int) -> None:
     post = document.get("postproduction") or {}
     if "parent_output_id" not in post:
@@ -217,18 +223,20 @@ def _prepare(db: Session, project_id: int, unit_id: int, payload: dict, user: Us
                 if not state or not state["ready_to_shoot"] or any(value != "current" for value in state.get("adoptions", {}).values()):
                     _fail("capture_edit_requires_current_review", 409)
             validate_parent(db, project_id, unit_id, source.payload_json, user.id)
-            contract = edit_contract(source.payload_json)
+            contract = covers_contract() if payload.get("covers_only") else edit_contract(source.payload_json)
         else:
             contract = {"roles": [role("clip", "video", "video/mp4")], "media_transfer_policy": dict(TRANSFER_POLICY)}
         body = {"source_master_revision_id": master_id,
                 "package_schema": "director.video.v1" if edit else "creative.execution.v1",
-                "objective": "达芬奇主剪、AE按需制作" if edit else f"网页生成分镜 {payload['shot_id']}",
+                "objective": ("重做定稿作品的竖封面和 4:3 横封面，成片不动" if payload.get("covers_only") else "达芬奇主剪、AE按需制作") if edit else f"网页生成分镜 {payload['shot_id']}",
                 "output_contract": contract,
                 "acceptance_criteria": ["真实文件经检查和明确接受；不自动更改主稿或发布", "保留精确来源和全部素材/工程依赖"]}
         if not edit:
             body["web_video_shot_id"] = payload["shot_id"]
         if edit and payload.get("persona_clips"):
             body["persona_clips"] = payload["persona_clips"]
+        if edit and payload.get("cover_portrait"):
+            body["cover_portrait"] = payload["cover_portrait"]
         package_result = packages.create_package(db, project_id=project_id, unit_id=unit_id, user=user, payload=body)
         execution = executions.prepare_execution(db, project_id, unit_id,
             {**executor, "package_id": package_result["id"], "idempotency_key": key,

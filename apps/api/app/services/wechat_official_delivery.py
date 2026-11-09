@@ -5,16 +5,14 @@ from __future__ import annotations
 import hashlib
 import json
 import secrets
-import time
 
 from fastapi import HTTPException
 from sqlalchemy import select, update
-from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.exc import OperationalError
 
 from ..models import (
     AuditLog,
     CapabilityRegistration,
-    CapabilityVerification,
     ContentAsset,
     ContentUnit,
     DeliveryAttempt,
@@ -24,15 +22,14 @@ from ..models import (
     utcnow,
 )
 from . import wechat_official, wechat_official_transport
-from .capability_integrations import publisher_target_verified
 from .content_harness.publishers import bootstrap_publishers
-from .content_harness.registry import registry
 from .wechat_official_render import (
+    IMAGE_MESSAGE_SCHEMA,
     match_readback,
     prepare_article,
-    validate_article_render,
-    validate_html_draft_render_bound,
-    validate_short_draft_render_bound,
+    prepare_image_message,
+    validate_draft_render_bound,
+    validate_official_render,
 )
 
 
@@ -52,36 +49,14 @@ def _event(db, target, attempt, event_type):
                     entity_id=str(attempt.id), detail_json=payload))
 
 
-def _experiment_scope(target, attempt_id, runtime):
-    return {"account_id": target.content_account_id, "appid": runtime.appid,
-            "candidate_id": target.content_asset_id, "candidate_hash": target.approved_candidate_hash,
-            "target_id": target.id, "attempt_id": attempt_id, "runtime_fingerprint": runtime.fingerprint,
-            "actor": target.authorized_by, "action": target.action, "channel": target.channel,
-            "content_form": target.content_form}
-
-
-def _validate_experiment_request(authority, target, runtime, user):
-    fields = {"account_id", "appid", "candidate_id", "candidate_hash", "actor", "expires_at"}
-    if (not isinstance(authority, dict) or set(authority) not in (fields, fields | {"mode"}) or target.id is not None
-            or authority.get("mode", "short") not in {"short", "html"}
-            or user.role != "admin" or authority["actor"] != user.email
-            or type(authority["account_id"]) is not int or type(authority["candidate_id"]) is not int
-            or authority["account_id"] != runtime.account_id or authority["appid"] != runtime.appid
-            or authority["candidate_id"] != target.content_asset_id
-            or authority["candidate_hash"] != target.approved_candidate_hash
-            or type(authority["expires_at"]) is not int
-            or not int(time.time()) < authority["expires_at"] <= int(time.time()) + 900):
-        raise HTTPException(403, "official_experiment_scope_invalid")
-
-
-def validate_target(db, target, user, *, _short_draft_request=None):
+def validate_target(db, target, user):
     from .content_identity import _lock_account
     from .content_masters import owned_unit
     from .production_validation import validate_live_v5_candidate
 
     if (target.publisher_key != wechat_official.KEY or target.publisher_version != "1"
-            or target.channel != "wechat" or target.content_form != "article" or target.action != "auto_draft"
-            or type(target.content_account_id) is not int):
+            or target.channel != "wechat" or target.content_form not in wechat_official.DRAFT_FORMS
+            or target.action != "auto_draft" or type(target.content_account_id) is not int):
         raise HTTPException(422, "official_target_invalid")
     asset = db.get(ContentAsset, target.content_asset_id, populate_existing=True)
     if asset is None or asset.project_id is None:
@@ -101,109 +76,38 @@ def validate_target(db, target, user, *, _short_draft_request=None):
     registration = db.scalar(select(CapabilityRegistration).where(
         CapabilityRegistration.kind == "publisher", CapabilityRegistration.key == wechat_official.KEY,
         CapabilityRegistration.version == "1").with_for_update().execution_options(populate_existing=True))
-    if registration is None:
+    if registration is None or registration.status != "configured":
         raise HTTPException(409, "official_publisher_unverified")
     if target.approved_candidate_hash != asset.candidate_hash:
         raise HTTPException(409, "official_candidate_changed")
-    if not isinstance(manifest.get("official_render"), dict):
+    render = manifest.get("official_render")
+    image_message = target.content_form == "image_message"
+    if not isinstance(render, dict) or (render.get("schema") == IMAGE_MESSAGE_SCHEMA) != image_message:
         raise HTTPException(409, "official_render_required")
-    render = manifest["official_render"]
-    if render.get("renderer_version") not in {"2", "3"} or render.get("status") != "local_ready":
+    if not image_message and render.get("renderer_version") not in {"2", "3"}:
         raise HTTPException(409, "official_asset_filename_required")
+    if render.get("status") != "local_ready":
+        raise HTTPException(409, "official_render_unavailable")
     from .wechat_official_render import upload_asset_metadata
 
     for slot in render["asset_slots"]:
         revision = db.get(MaterialRevision, slot["material_revision_id"], populate_existing=True)
-        if revision is None or upload_asset_metadata(revision) != {"filename": slot["filename"], "mime_type": slot["mime_type"]}:
+        if revision is None or (not image_message and upload_asset_metadata(revision) != {"filename": slot["filename"], "mime_type": slot["mime_type"]}):
+            raise HTTPException(409, "official_asset_metadata_changed")
+        if image_message and revision.mime_type != slot["mime_type"]:
             raise HTTPException(409, "official_asset_metadata_changed")
     try:
-        validate_article_render(manifest["official_render"], manifest["content"], manifest["assets"], manifest["evidence_refs"])
+        validate_official_render(render, manifest["content"], manifest["assets"], manifest["evidence_refs"])
     except ValueError:
         raise HTTPException(409, "official_render_invalid") from None
-    if manifest["official_render"]["status"] != "local_ready":
-        raise HTTPException(409, "official_render_unavailable")
-    runtime = wechat_official.resolve_runtime(db, account.id)
-    snapshot = target.capability_snapshot_json or {}
-    proofs = [snapshot[key] for key in ("short_draft_authority", "html_draft_authority") if key in snapshot]
-    if len(proofs) > 1:
-        raise HTTPException(403, "official_experiment_scope_invalid")
-    experimental = _short_draft_request is not None or bool(proofs)
-    if experimental:
-        actor = db.get(User, user.id, populate_existing=True)
-        if actor is None or actor.is_active is not True or actor.role != "admin":
-            raise HTTPException(403, "official_experiment_scope_invalid")
-        if (registration.status != "configured"
-                or registration.config_fingerprint != wechat_official.implementation_fingerprint()
-                or not isinstance(registry.resolve("publisher", wechat_official.KEY, "1"), wechat_official.OfficialWechatPublisher)):
-            raise HTTPException(409, "official_publisher_unverified")
-        scope = {"channel": target.channel, "content_form": target.content_form, "action": target.action,
-                 "content_account_id": target.content_account_id, "account_ref": target.account_ref,
-                 "publisher_key": target.publisher_key, "publisher_version": target.publisher_version}
-        events = db.scalars(select(CapabilityVerification).where(
-            CapabilityVerification.registration_id == registration.id,
-            CapabilityVerification.scope_kind == "publisher_action").order_by(CapabilityVerification.id.desc())).all()
-        latest = next((event for event in events if event.scope_json == scope), None)
-        if latest is not None and latest.result != "verified":
-            raise HTTPException(409, "official_publisher_unverified")
-        if _short_draft_request is not None:
-            _validate_experiment_request(_short_draft_request, target, runtime, user)
-        else:
-            attempt = db.scalar(select(DeliveryAttempt).where(DeliveryAttempt.target_id == target.id)
-                                .order_by(DeliveryAttempt.attempt_no.desc()).limit(1))
-            if (attempt is None or not wechat_official.check_draft_authority(
-                    proofs[0], _experiment_scope(target, attempt.id, runtime))):
-                raise HTTPException(403, "official_experiment_scope_invalid")
+    if not image_message:
         try:
-            mode = _short_draft_request.get("mode", "short") if _short_draft_request is not None else (
-                "html" if proofs[0]["schema"] == "wechat.html-draft.authority.v1" else "short")
-            validator = validate_html_draft_render_bound if mode == "html" else validate_short_draft_render_bound
-            validator(manifest["official_render"])
+            validate_draft_render_bound(render)
         except ValueError:
-            raise HTTPException(422, "official_experiment_body_limit") from None
-    elif not wechat_official.remote_contract_ready() or not publisher_target_verified(db, target, registry):
-        raise HTTPException(409, "official_publisher_unverified")
+            raise HTTPException(422, {"code": "official_body_limit",
+                                      "message": "正文超过公众号草稿箱上限（少于 2 万字符、小于 1M），没有推送"}) from None
+    runtime = wechat_official.resolve_runtime(db, account.id)
     return manifest, runtime
-
-
-def prepare_short_draft_experiment(db, asset, payload, user, *, authority):
-    """Internal explicit operator authority; never inferred from a normal HTTP request."""
-    from .delivery import authorize_target
-
-    bootstrap_publishers()
-    try:
-        target = authorize_target(db, asset, payload, user, _short_draft_request=authority)
-        last = db.scalar(select(DeliveryAttempt.id).where(DeliveryAttempt.target_id == target.id).limit(1))
-        if last is not None or target.status != "target_authorized":
-            raise HTTPException(409, "official_execution_claimed")
-        runtime = wechat_official.resolve_runtime(db, target.content_account_id)
-        claim = secrets.token_hex(32)
-        render = asset.candidate_manifest_json["official_render"]
-        metadata = {"schema": "wechat.official.execution.v1", "claim_hash": _hash(claim),
-                    "runtime_fingerprint": runtime.fingerprint, "candidate_hash": target.approved_candidate_hash,
-                    "render_hash": render["render_hash"], "resource_mapping": [], "completed_steps": [], "in_flight": None}
-        attempt = DeliveryAttempt(target_id=target.id, attempt_no=1,
-            idempotency_key=_hash([target.id, target.approved_candidate_hash, 1]),
-            publisher_key=target.publisher_key, publisher_version=target.publisher_version,
-            request_hash=_hash([target.approved_candidate_hash, metadata["render_hash"], runtime.fingerprint]),
-            status="prepared", started_at=utcnow(), response_metadata_json=metadata)
-        db.add(attempt)
-        db.flush()
-        html_mode = authority.get("mode", "short") == "html"
-        signer = wechat_official.sign_html_draft_authority if html_mode else wechat_official.sign_short_draft_authority
-        proof = signer(_experiment_scope(target, attempt.id, runtime),
-                                                          expires_at=authority["expires_at"])
-        target.capability_snapshot_json = {**target.capability_snapshot_json, "html_draft_authority" if html_mode else "short_draft_authority": proof}
-        db.flush()
-        validate_target(db, target, user)
-        _event(db, target, attempt, "delivery.prepared")
-        ids = target.id, attempt.id
-        db.commit()
-        return *ids, claim
-    except (HTTPException, ValueError, IntegrityError, OperationalError) as exc:
-        db.rollback()
-        if isinstance(exc, HTTPException):
-            raise
-        raise HTTPException(409, "official_experiment_prepare_conflict") from None
 
 
 def prepare(db, target_id, user):
@@ -217,8 +121,6 @@ def prepare(db, target_id, user):
             raise HTTPException(409, "official_execution_claimed")
         last = db.scalar(select(DeliveryAttempt).where(DeliveryAttempt.target_id == target_id)
                          .order_by(DeliveryAttempt.attempt_no.desc()).limit(1))
-        if any(key in (target.capability_snapshot_json or {}) for key in ("short_draft_authority", "html_draft_authority")):
-            raise HTTPException(409, "official_execution_claimed")
         if last is not None and not (last.status == "unknown"
                                     and (last.response_metadata_json or {}).get("reconciled") == "not_delivered"):
             raise HTTPException(409, "official_execution_claimed")
@@ -236,6 +138,11 @@ def prepare(db, target_id, user):
         db.add(attempt)
         db.flush()
         attempt_id = attempt.id
+        registration = db.scalar(select(CapabilityRegistration).where(
+            CapabilityRegistration.kind == "publisher", CapabilityRegistration.key == wechat_official.KEY,
+            CapabilityRegistration.version == "1"))
+        # The user pushes with the code that is running now; a confirmed draft is checked against it.
+        registration.config_fingerprint = wechat_official.implementation_fingerprint()
         _event(db, target, attempt, "delivery.prepared")
         db.commit()
         return attempt_id, claim
@@ -326,10 +233,8 @@ def execute_prepared(db, target_id, attempt_id, claim, user):
     # Persist the worker start under the target lock before any second worker can reuse the claim.
     _attempt.response_metadata_json = {**_metadata, "execution_started": True}
     db.commit()
-    proof = (target.capability_snapshot_json or {}).get("html_draft_authority") or (target.capability_snapshot_json or {}).get("short_draft_authority")
-    client = (wechat_official_transport.OfficialTransport(experiment_authority=proof,
-              experiment_scope=_experiment_scope(target, attempt_id, runtime)) if proof is not None
-              else wechat_official_transport.OfficialTransport())
+    client = wechat_official_transport.OfficialTransport()
+    image_message = target.content_form == "image_message"
     db.rollback()
     try:
         token = _step(db, target_id, attempt_id, claim, user, "token",
@@ -347,15 +252,20 @@ def execute_prepared(db, target_id, attempt_id, claim, user):
                 data = read_bytes_checked(db, revision, require_public=True)
                 if hashlib.sha256(data).hexdigest() != slot["content_hash"] or sniff_mime(data, None) != revision.mime_type:
                     raise HTTPException(409, "official_asset_changed")
-                method = client.upload_cover if slot["usage"] == "cover" else client.upload_inline
+                # Covers and image-message pictures are permanent materials; article body pictures use uploadimg.
+                method = client.upload_cover if slot["usage"] in {"cover", "image"} else client.upload_inline
                 return {**slot, "account_id": current_runtime.account_id, "appid": current_runtime.appid,
                         "runtime_fingerprint": current_runtime.fingerprint,
                         "remote_ref": method(token, data, slot["mime_type"], slot["filename"])}
 
             _step(db, target_id, attempt_id, claim, user, f"asset_{index}", upload,
                   lambda attempt, metadata, value: metadata["resource_mapping"].append(value))
-        _step(db, target_id, attempt_id, claim, user, "create",
-              lambda manifest, runtime, metadata: client.create_draft(token, prepare_article(manifest, runtime, metadata["resource_mapping"])),
+        def create(manifest, runtime, metadata):
+            if image_message:
+                return client.create_image_message(token, prepare_image_message(manifest, runtime, metadata["resource_mapping"]))
+            return client.create_draft(token, prepare_article(manifest, runtime, metadata["resource_mapping"]))
+
+        _step(db, target_id, attempt_id, claim, user, "create", create,
               lambda attempt, metadata, value: (setattr(attempt, "remote_id", value),
                                                 metadata.update(create_confirmed=True)))
         return _finish(db, target_id, attempt_id, claim)
@@ -370,6 +280,9 @@ def readback(db, target_id, expected_attempt_id, user):
         if target is None:
             raise HTTPException(404, "official_target_missing")
         _manifest, runtime = validate_target(db, target, user)
+        if target.content_form != "article":
+            # draft/get readback is only implemented for articles; image messages are confirmed in the 公众号 backend.
+            raise HTTPException(409, "official_readback_unavailable")
         attempt = db.scalar(select(DeliveryAttempt).where(DeliveryAttempt.target_id == target_id)
                             .order_by(DeliveryAttempt.attempt_no.desc()).limit(1))
         metadata = dict(attempt.response_metadata_json or {}) if attempt else {}
@@ -389,10 +302,7 @@ def readback(db, target_id, expected_attempt_id, user):
         if isinstance(exc, HTTPException):
             raise
         raise HTTPException(409, "official_readback_busy") from None
-    proof = (target.capability_snapshot_json or {}).get("html_draft_authority") or (target.capability_snapshot_json or {}).get("short_draft_authority")
-    client = (wechat_official_transport.OfficialTransport(experiment_authority=proof,
-              experiment_scope=_experiment_scope(target, attempt_id, runtime)) if proof is not None
-              else wechat_official_transport.OfficialTransport())
+    client = wechat_official_transport.OfficialTransport()
     try:
         token = _step(db, target_id, attempt_id, claim, user, "readback_token",
             lambda manifest, runtime, metadata: client.token(runtime), lambda *args: None, readback=True)

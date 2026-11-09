@@ -164,7 +164,7 @@ class VideoNoteIn(BaseModel):
 
 
 class VideoDecisionIn(BaseModel):
-    stage: str = Field(pattern=r"^(draft|sample|final)$")
+    stage: str = Field(pattern=r"^(draft|sample|final|covers)$")
     decision: str = Field(pattern=r"^(approve|changes)$")
     notes: list[VideoNoteIn] = Field(default_factory=list, max_length=50)
 
@@ -351,7 +351,10 @@ def put_publish_copy(project_id: int, unit_id: int, payload: dict, db: Session =
 def video_chain_decide(project_id: int, unit_id: int, payload: VideoDecisionIn, db: Session = Depends(get_db), user: User = Depends(require_editor)):
     from ..services import video_chain
 
-    return video_chain.decide(db, user, project_id, unit_id, payload.stage, payload.decision, [item.model_dump() for item in payload.notes])
+    notes = [item.model_dump() for item in payload.notes]
+    if payload.stage == "covers":
+        return video_chain.decide_covers(db, user, project_id, unit_id, payload.decision, notes)
+    return video_chain.decide(db, user, project_id, unit_id, payload.stage, payload.decision, notes)
 
 
 @router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/video-chain/cover-redo")
@@ -431,7 +434,7 @@ class ArticleNoteIn(BaseModel):
 
 
 class ArticleDecisionIn(BaseModel):
-    decision: str = Field(pattern=r"^(approve|changes)$")
+    decision: str = Field(pattern=r"^(approve|accept|changes)$")
     notes: list[ArticleNoteIn] = Field(default_factory=list, max_length=50)
 
 
@@ -454,6 +457,13 @@ def article_chain_decide(project_id: int, unit_id: int, payload: ArticleDecision
     from ..services import article_chain
 
     return article_chain.decide(db, user, project_id, unit_id, payload.decision, [item.model_dump() for item in payload.notes])
+
+
+@router.post("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain/send-to-review")
+def article_chain_send_to_review(project_id: int, unit_id: int, db: Session = Depends(get_db), user: User = Depends(require_editor)):
+    from ..services import article_chain
+
+    return article_chain.send_to_review(db, user, project_id, unit_id)
 
 
 @router.get("/api/v1/content-projects/{project_id}/units/{unit_id}/article-chain/versions")

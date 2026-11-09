@@ -23,12 +23,10 @@ OTHER = {"X-Studio-User": "media-other@studio.local"}
     "/api/v1/provider-media/stage",
     "/api/v1/provider-media/opaque/accept",
     "/api/v1/settings/renderer-probes",
-    "/api/v1/settings/media-renderer-verifications",
     "/api/v1/settings/publisher-verifications",
     "/api/v1/data-source-capabilities",
     "/api/v1/data-source-capabilities/private-request-secret/probe",
     "/api/v1/content-projects/private-request-secret/units/1/master-revisions/1/asr-suggestions",
-    "/api/v1/content-projects/1/units/1/master-revisions/1/media-render-previews",
 ])
 def test_capability_validation_never_echoes_raw_input(client, db_session, path):
     db_session.add(User(email=EDITOR["X-Studio-User"], name="Validation", role="admin"))

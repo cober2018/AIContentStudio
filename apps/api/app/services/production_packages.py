@@ -239,7 +239,12 @@ def build_v5_package(db: Session, target: DeliveryTarget, asset: ContentAsset) -
         else:
             files.append({"name": "post.json", "content": json.dumps(manifest["content"], ensure_ascii=False, sort_keys=True)})
     elif target_form["artifact_kind"] == "image":
-        files.append({"name": "content.md", "content": render["title"] + "\n\n" + (render.get("description", "") + "\n\n" if render.get("description") else "") + "\n\n".join(card["caption"] for card in render["cards"]) + ("\n\n" + " ".join("#" + tag for tag in render["tags"]) if render.get("tags") else "")})
+        official = manifest.get("official_render") or {}
+        if official.get("schema") == "wechat.official.image_message.v1":
+            # 公众号图片消息 cards have no captions; the frozen title and plain-text body are what gets posted.
+            files.append({"name": "content.md", "content": official["title"] + ("\n\n" + official["content"] if official["content"] else "")})
+        else:
+            files.append({"name": "content.md", "content": render["title"] + "\n\n" + (render.get("description", "") + "\n\n" if render.get("description") else "") + "\n\n".join(card["caption"] for card in render["cards"]) + ("\n\n" + " ".join("#" + tag for tag in render["tags"]) if render.get("tags") else "")})
         files.append({"name": "cards.json", "content": json.dumps(render["cards"], ensure_ascii=False, sort_keys=True)})
         files.append({"name": "image-note.json", "content": json.dumps(manifest["content"], ensure_ascii=False, sort_keys=True)})
     elif target_form["artifact_kind"] == "script":

@@ -1,3 +1,7 @@
+2026-11-09 **文字 / 图文作品一步一页（已本地实施，未提交）**：角色的文字作品改为「选题与资料 → 稿子 → 交付」，图文作品为「选题与资料 → 稿子 → 成图 → 交付」；没到的步骤提示去当前步骤。第三方模型和平台模型写的稿都在「稿子」采用或写意见，图文采用后平台出图，在「成图」验收通过才定稿送审。删掉了旧的制作内容、审阅修改、主稿编辑器、底部高级块和手动出图工作台（含 4 个接口）。[需求入口](openspec/changes/text-graphic-step-pages/README.md)。
+
+2026-11-09 **图文定稿后自动出图并送审（已本地实施，未提交）**：第三方模型写的图文点「采用」后，平台用本地出图工具把每张画布出成 PNG 成图（画布用到的图都可公开使用才出，不行就说是哪张），存成同一份定稿的成图版（作品保持「已定稿」），再按作品的渠道和形式生成渠道版本、跑检查、冻结候选，送进「审阅与交付」等你审批；失败不撤销定稿，作品页显示原因和「重新出图并送审」按钮。不自动推送。[需求入口](openspec/changes/graphic-finalize-to-review/README.md)。
+
 2026-10-29 **角色形象照与生成画面自动参考（已本地实施，未提交）**：新建角色表单和「编辑资料」可放 1–3 张真人形象照（选填），照片进通用素材库，角色资料只记素材版本号；商品作品的九宫格分镜、每镜首帧和图生视频提示词在没手动选「共同视觉参考」时，自动带商品主图和角色形象照；每张带商品的画面 / 每格对照主图检查，不过关只重画那一张（最多 3 次）；没形象照就不生成人物（只拍商品和场景，拿东西只露手），导演稿里要人物的镜头在页面和 MCP 返回里提示「这个角色没有形象照，这一镜不会出现人物」；九宫格不再整体排除商品镜头（商品纯特写给「单独生成更准」的提示，亮相 / 下单引导仍只用原图）；第三方模型简报带上「有没有形象照」。[需求入口](openspec/changes/persona-portrait-and-shot-references/README.md)。
 
 2026-10-29 **复刻参考视频（已本地实施，未提交）**：视频作品「导演稿」一步可上传或从素材库拖入参考视频，平台在本机免费拆：转写、切点、每段关键帧拼图、响度，结果放 `<项目>/工作/<作品>-<号>/参考拆解/`，参考视频不当素材、不进成片；第三方模型经 MCP（`analyze_reference_video` / `get_reference_video` / `save_reference_breakdown`）按新 skill `studio.video.reference-breakdown` 写整体分析、时间线和拍摄清单，页面可看、可导出拍摄清单到 `<项目>/导演稿/`；证书、医院、成分只记「需要品牌真实资料」。导演稿每镜可写 `source_kind`（实拍 / 商品图 / 生图 / AE 模板 / 素材库）和 `attitude`（人物态度，排在视频提示词最前）；新 skill `studio.video.prompt-direction`。商品作品「素材」一步加「九宫格分镜」：一次画最多 9 个人物 / 场景镜头，裁成每镜首帧候选，不自动采用，可只重画一镜（MCP `generate_storyboard_grid`）。[需求入口](openspec/changes/clone-reference-video/README.md)。
@@ -490,7 +494,6 @@ MiniMax 本地 CLI（2026-10-01）：`apps/api/app/services/minimax_cli_provider
 
 最新整阶段本地复核（2026-10-01）：修正后最终全后端1625/28 skipped、TS/Vite/FE-P1、17原生PG及完整F7迁移往返通过，临时容器/卷已回收。全应用Ruff仍有12项HEAD既有问题，36个改动Python文件通过；不混称全PASS。独立Delivery复核APPROVE，Security复核提出Connector执行代码身份与Commons interning指纹漂移，4 RED后最小修正、81相关通过，独立修正复核APPROVE，10.9关闭/F7现96/105。用户已批准明确“请勿发布”短稿/封面，真实请求仍0；F7/F8未完，依赖/启动不变。证据与TODO见[整阶段本地门禁](openspec/docs/项目文档/FE_F7_FINAL_LOCAL_GATES.md)。以下等待测试稿确认的说明为历史。
 
-最新短稿验收入口（2026-10-01）：`apps/api/scripts/accept_wechat_short_draft.py` 只接既有隔离产品库和精确已审批Candidate，默认预检rollback，显式execute才走官方prepare/Attempt/execute；不创建/迁移库、不启用一般合同、不用旧CLI。固定批准的两份账号配置只进当前进程，显式身份key必须提供。独立复核提出SQLite URI路径、参数回显、准备后异常三项缺口，4个RED后修复；修复后full1620/28 skipped/8既有warnings、其后追加Unknown后23入口回归/Ruff通过，独立窄复核APPROVE。strict31/31及diff通过。测试稿/封面确认待用户回复，无真实账号请求。依赖/产品启动方式不变，验收步骤和恢复边界见 [短稿验收](openspec/docs/项目文档/FE_F7_SHORT_DRAFT_ACCEPTANCE.md)；F7/F8及全产品验收仍未完成。
 
 最新短稿实验接入（2026-10-01）：内部显式管理员授权原子准备精确Target/Attempt，短期签名绑定账号/Candidate/hash/actor/runtime；每步复用live锁和claim，DNS/TLS完成后再验有效期，worker启动持久防重。普通HTTP授权仍拒绝、一般合同gate保持false，不生成一般verified。103相关回归、1598后端/28 skipped、16原生PG/guard、OpenSpec strict31/31、Ruff/diff通过，独立本地窄复核APPROVE。真实账号请求仍为0，2.8未完成/17/20不变，inline保守上界会拒绝，不能冒充长文或真实平台验收。无新表/依赖/迁移，启动方式不变。
 
@@ -801,6 +804,7 @@ Home ← Opportunity + Project Overview + Review decisions + ProjectEvent
   → 作品（文字 / 图文 / 视频）
       文字、图文：内容方案页「写作方式」开关 —— 平台模型（内置创作流程）或第三方模型（经 MCP 写稿）
                   每次生成留一个版本，采用即定稿，要调整就复制一份
+                  图文采用后平台自动出图 → 成图版 → 渠道版本 → 冻结候选 → 审阅与交付
       视频：第三方模型经 MCP 主导，七步一页（选题与资料 → 导演稿 → 素材 → 配音与音乐 → 小样 → 成片 → 交付），成片通过即定稿
   → 主稿版本（Content Master）→ 审阅中心（候选 v4 / 渠道变体 v5、审批、交付授权、回执）
 ```

@@ -418,6 +418,14 @@ def create_package(db: Session, *, project_id: int, unit_id: int, user: User, pa
             assets.append({**ref, "mime_type": material.mime_type, "rights": _rights(material)})
         if payload.get("persona_clips"):
             director["persona_clips"] = [{key: clip[key] for key in ("slot", "material_revision_id", "duration_ms", "title")} for clip in payload["persona_clips"]]
+        # The persona's cover portrait rides as an input of the landscape 成片 / cover task; the separate covers carry it.
+        portrait = payload.get("cover_portrait")
+        if portrait:
+            ref = {"material_revision_id": portrait["material_revision_id"], "role": "cover_portrait", "slot_key": "cover_portrait", "sort_order": 20000,
+                   "placement": {"slot": "cover_portrait"}, "content_hash": portrait["content_hash"]}
+            material = _check_asset(db, project_id, ref)
+            assets.append({**ref, "mime_type": material.mime_type, "rights": _rights(material)})
+            director["cover_portrait"] = {key: portrait[key] for key in ("material_revision_id", "title")}
     package_json = build_package(schema=schema, source=source, context=context, assets=assets, evidence=evidence,
         intent=row.creative_intent_json, objective=payload["objective"], constraints=payload.get("constraints", []),
         output_contract=payload["output_contract"], acceptance_criteria=payload.get("acceptance_criteria", []), director=director)
@@ -604,7 +612,7 @@ def owned_package(db: Session, project_id: int, unit_id: int, package_id: int, u
         if (frozen_source.get("content") != source.payload_json
                 or frozen_source.get("profile") != _profile(db, source)
                 or package.package_json.get("context") != {**frozen_context(db, master), "workflow": {"run_id": master.origin_workflow_run_id, "project_output_id": master.origin_project_output_id}}
-                or [{key: ref[key] for key in asset_fields} for ref in package.package_json["assets"] if ref["role"] != "persona_clip"] != [{key: ref[key] for key in asset_fields} for ref in source_asset_refs(projection, handoff)]
+                or [{key: ref[key] for key in asset_fields} for ref in package.package_json["assets"] if ref["role"] not in {"persona_clip", "cover_portrait"}] != [{key: ref[key] for key in asset_fields} for ref in source_asset_refs(projection, handoff)]
                 or package.package_json["evidence"] != [{key: ref[key] for key in evidence_fields} for ref in projection["evidence"]]):
             raise HTTPException(409, {"code": "creative_package_source_mismatch"})
         _check_evidence(db, master, projection["evidence"])

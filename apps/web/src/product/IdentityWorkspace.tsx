@@ -319,6 +319,17 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
     } catch (error) { setError(errText(error)); }
     finally { pending.current = false; setBusy(false); }
   }
+  // Only a persona whose works are all deleted can go; the server names the works still there.
+  async function deletePersona() {
+    if (currentUser() !== user || pending.current || !current || current.kind !== "persona" || !window.confirm(`删除角色「${current.name}」？角色下还有作品（含已归档）时不能删，只能归档。`)) return;
+    pending.current = true; setBusy(true); setError("");
+    try {
+      const result = await api.del<{ message: string }>(`/content-personas/${current.id}/permanent`);
+      await loadTree(); setNotice(result?.message || "角色已删除。");
+      const next = new URLSearchParams(params); ["kind", "id", "view", "persona"].forEach(key => next.delete(key)); next.set("directory", "persona"); navigate(next);
+    } catch (error) { setError(error instanceof ApiError ? (error.detail as { message?: string } | undefined)?.message || errText(error) : errText(error)); }
+    finally { pending.current = false; setBusy(false); }
+  }
   async function archive() {
     if (currentUser() !== user || pending.current || creativeReadOnly || !current || !selectedUrl || !window.confirm(`归档「${current.name}」？历史版本与生产快照仍可查看。`)) return;
     pending.current = true; setBusy(true);
@@ -464,7 +475,7 @@ function IdentityWorkspaceForUser({ user }: { user: string }) {
       <div>
         <button className="mb-6 text-[13px] text-ink-500 transition-colors hover:text-ink-900" onClick={() => selectIdentity(null)}>← {KIND_NAME[directory]}目录</button>
         <PageHeader eyebrow={<>{KIND_NAME[current.kind]} · {parentLabel(current)}</>} title={current.name}
-          actions={tab === "summary" && !creativeReadOnly && current.kind !== "account" ? <>{current.kind === "brand" && <Button variant="danger" disabled={busy} onClick={() => void deleteBrand()}>删除品牌</Button>}<Button onClick={() => changeView("edit")}>编辑资料</Button></> : undefined}>
+          actions={tab === "summary" && current.kind !== "account" && (!creativeReadOnly || (current.kind === "persona" && editor && current.status === "archived")) ? <>{current.kind === "brand" && <Button variant="danger" disabled={busy} onClick={() => void deleteBrand()}>删除品牌</Button>}{current.kind === "persona" && <Button variant="danger" disabled={busy} onClick={() => void deletePersona()}>删除角色</Button>}{!creativeReadOnly && <Button onClick={() => changeView("edit")}>编辑资料</Button>}</> : undefined}>
           <div className="mb-6 flex flex-wrap items-center gap-2">
             {current.status === "archived" ? <Chip tone="warn">已归档 · 只能查看</Chip> : <Chip tone="good">使用中</Chip>}
             {current.kind !== "account" && <Chip>修订 v{current.current_revision}</Chip>}

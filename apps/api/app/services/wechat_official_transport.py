@@ -13,7 +13,6 @@ import ssl
 import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
-from copy import deepcopy
 from threading import BoundedSemaphore
 from urllib.parse import urlencode
 
@@ -32,10 +31,9 @@ _REMOTE_ID = re.compile(r"[A-Za-z0-9_-]{1,128}")
 _PATHS = {"token": "/cgi-bin/token", "cover": "/cgi-bin/material/add_material",
           "inline": "/cgi-bin/media/uploadimg", "create": "/cgi-bin/draft/add", "read": "/cgi-bin/draft/get"}
 _ARTICLE_FIELDS = {"title": 32, "author": 16, "digest": 120, "content": MAX_RESPONSE_BYTES, "thumb_media_id": 128}
-_ERROR_CODES = {"official_contract_unresolved", "official_request_invalid", "official_response_unconfirmed",
+_ERROR_CODES = {"official_request_invalid", "official_response_unconfirmed",
                 "official_network_unavailable", "official_api_rejected", "official_asset_unsupported",
-                "official_experiment_scope_invalid", "official_experiment_body_limit",
-                "official_experiment_create_claimed"}
+                "official_body_limit", "official_create_claimed"}
 _DIAGNOSTIC_VALUES = {
     "phase": {"dns", "connect", "send", "response_headers", "response_body", "response_json", "response_contract"},
     "reason": {"io_failure", "deadline", "tls", "protocol", "http_status", "header_limit", "content_type",
@@ -177,11 +175,6 @@ def _json(body):
     return encoded
 
 
-def _enabled():
-    if not wechat_official.remote_contract_ready():
-        raise OfficialTransportError("official_contract_unresolved")
-
-
 def _token(value):
     if not isinstance(value, str) or _TOKEN.fullmatch(value) is None:
         raise OfficialTransportError("official_request_invalid")
@@ -208,28 +201,17 @@ def _article(value, *, dispatched=False):
 
 
 class OfficialTransport:
-    def __init__(self, *, experiment_authority=None, experiment_scope=None):
+    def __init__(self):
         self.cache = wechat_official.TokenCache()
-        self._experiment = experiment_authority is not None or experiment_scope is not None
-        self._authority = deepcopy(experiment_authority)
-        self._scope = deepcopy(experiment_scope)
         self._bound_token = None
         self._create_claimed = False
 
-    def _enabled(self):
-        if self._experiment:
-            if not wechat_official.check_draft_authority(self._authority, self._scope):
-                raise OfficialTransportError("official_experiment_scope_invalid")
-        else:
-            _enabled()
-
     def _check_token(self, token):
-        self._enabled()
-        if self._experiment and (self._bound_token is None or token != self._bound_token):
-            raise OfficialTransportError("official_experiment_scope_invalid")
+        # Every call after token() must use the token this transport obtained for the claimed account.
+        if self._bound_token is None or token != self._bound_token:
+            raise OfficialTransportError("official_request_invalid")
 
     def _request(self, operation, body, content_type="application/json", token=None, *, method="POST", query=None):
-        self._enabled()
         if operation != "token":
             self._check_token(token)
         if (operation not in _PATHS or (body is not None and not isinstance(body, bytes))
@@ -245,13 +227,10 @@ class OfficialTransport:
         phase, reason, status, response_type = "dns", "io_failure", None, None
         try:
             address = _address(deadline)
-            self._enabled()
             phase = "connect"
             connection = _connection(address, deadline)
             connection.connect()
             _remaining(deadline)
-            # DNS/TLS may consume the remaining authority lifetime without sending any HTTP bytes.
-            self._enabled()
             dispatched = True
             headers = {"Host": HOST, "Accept-Encoding": "identity", "Connection": "close"}
             if body is not None:
@@ -322,13 +301,6 @@ class OfficialTransport:
                     pass
 
     def token(self, runtime):
-        self._enabled()
-        if self._experiment and (
-            runtime.account_id != self._scope["account_id"]
-            or runtime.appid != self._scope["appid"]
-            or runtime.fingerprint != self._scope["runtime_fingerprint"]
-        ):
-            raise OfficialTransportError("official_experiment_scope_invalid")
         if (type(runtime.account_id) is not int or runtime.account_id <= 0
                 or not re.fullmatch(r"wx[0-9a-f]{16}", runtime.appid)
                 or not re.fullmatch(r"[A-Za-z0-9_-]{32,128}", runtime.secret)):
@@ -381,25 +353,41 @@ class OfficialTransport:
             raise OfficialTransportError("official_response_unconfirmed", dispatched=True,
                                          phase="response_contract", reason="invalid_response") from None
 
-    def create_draft(self, token, article):
-        self._check_token(token)
-        article = _article(article)
-        if self._experiment:
-            from .wechat_official_render import validate_html_draft_body, validate_short_draft_body
-
-            try:
-                validator = validate_html_draft_body if self._authority["schema"] == "wechat.html-draft.authority.v1" else validate_short_draft_body
-                validator(article["content"])
-            except ValueError:
-                raise OfficialTransportError("official_experiment_body_limit") from None
-            if self._create_claimed:
-                raise OfficialTransportError("official_experiment_create_claimed")
-        body = {"articles": [{"article_type": "news", **article, "show_cover_pic": 0}]}
-        encoded = _json(body)
+    def _create(self, token, entry):
+        if self._create_claimed:
+            raise OfficialTransportError("official_create_claimed")
+        encoded = _json({"articles": [entry]})
         # A lost response must never become permission to create a second draft.
         self._create_claimed = True
         return _remote_id(self._request("create", encoded, "application/json; charset=utf-8", token=token)
                            .get("media_id"), dispatched=True)
+
+    def create_draft(self, token, article):
+        from .wechat_official_render import validate_draft_body
+
+        self._check_token(token)
+        article = _article(article)
+        try:
+            validate_draft_body(article["content"])
+        except ValueError:
+            raise OfficialTransportError("official_body_limit") from None
+        return self._create(token, {"article_type": "news", **article, "show_cover_pic": 0})
+
+    def create_image_message(self, token, message):
+        from .wechat_official_render import validate_draft_body
+
+        self._check_token(token)
+        if (not isinstance(message, dict) or set(message) != {"title", "content", "image_media_ids"}
+                or not isinstance(message["title"], str) or not 1 <= len(message["title"]) <= 32
+                or not isinstance(message["image_media_ids"], list) or not 1 <= len(message["image_media_ids"]) <= 20):
+            raise OfficialTransportError("official_request_invalid")
+        try:
+            validate_draft_body(message["content"], allow_empty=True)
+        except ValueError:
+            raise OfficialTransportError("official_body_limit") from None
+        images = [{"image_media_id": _remote_id(value)} for value in message["image_media_ids"]]
+        return self._create(token, {"article_type": "newspic", "title": message["title"], "content": message["content"],
+                                    "image_info": {"image_list": images}})
 
     def read_draft(self, token, draft_id):
         self._check_token(token)

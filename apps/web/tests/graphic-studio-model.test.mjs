@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createGraphicDraft, graphicDraftFromMaster, addCanvas, duplicateCanvas, removeCanvas, reorderCanvases, appendTextLayer, updateTextLayer, insertMediaLayer, removeLayer, updateLayerGeometry, updateTextStyle, reorderLayers, setLayerFlags, updateMediaPlacement, replaceMediaLayer, insertShapeLayer, bindFinalRender, bindGraphicClaim, unbindGraphicClaim, updateGraphicTitle } from "../src/product/GraphicStudioModel.ts";
+import { createGraphicDraft, graphicDraftFromMaster, addCanvas, duplicateCanvas, removeCanvas, reorderCanvases, appendTextLayer, updateTextLayer, insertMediaLayer, removeLayer, updateLayerGeometry, updateTextStyle, reorderLayers, setLayerFlags, updateMediaPlacement, replaceMediaLayer, insertShapeLayer, bindGraphicClaim, unbindGraphicClaim } from "../src/product/GraphicStudioModel.ts";
 
 test("new Graphic Studio state is v2 with one editable canvas and no fabricated render", () => {
   const draft = createGraphicDraft();
@@ -135,26 +135,6 @@ test("media replacement, crop and shape insertion keep exact placements and vali
   const shaped = insertShapeLayer(chart, canvasId, "ellipse");
   assert.equal(shaped.payload.canvases[0].layers[1].shape, "ellipse");
   assert.equal(shaped.assetRefs.length, 1);
-});
-
-test("final render binds exact project image revisions in canonical canvas order without fabricating attestation", () => {
-  const start = addCanvas(createGraphicDraft());
-  const [first, second] = start.payload.canvases;
-  const assetA = { material_revision_id: 21, content_hash: "a".repeat(64), kind: "image", public_use_allowed: true };
-  const assetB = { material_revision_id: 22, content_hash: "b".repeat(64), kind: "image", public_use_allowed: true };
-  const secondBound = bindFinalRender(start, second.id, assetB);
-  assert.deepEqual(secondBound.payload.render_asset_ref, [{ canvas_id: second.id, material_revision_id: 22 }]);
-  const both = bindFinalRender(secondBound, first.id, assetA);
-  assert.deepEqual(both.payload.render_asset_ref, [{ canvas_id: first.id, material_revision_id: 21 }, { canvas_id: second.id, material_revision_id: 22 }]);
-  assert.deepEqual(both.assetRefs.map((ref) => [ref.role, ref.slot_key, ref.sort_order]), [["render_output", first.id, 0], ["render_output", second.id, 1]]);
-  assert.equal(bindFinalRender(both, first.id, assetA), both);
-  assert.throws(() => bindFinalRender(both, first.id, assetB), /distinct/i);
-  assert.throws(() => bindFinalRender(start, first.id, { ...assetA, kind: "chart" }), /image/i);
-  assert.throws(() => bindFinalRender(start, first.id, { ...assetA, public_use_allowed: false }), /rights/i);
-  const cleared = bindFinalRender(both, first.id, null);
-  assert.deepEqual(cleared.payload.render_asset_ref, [{ canvas_id: second.id, material_revision_id: 22 }]);
-  assert.equal("render_attestation" in cleared.payload, false);
-  assert.equal(updateGraphicTitle(both, "new").payload.render_asset_ref, undefined);
 });
 
 test("text claim binding and unbinding change payload and exact evidence ref atomically", () => {

@@ -116,11 +116,6 @@ def ready(client, db_session, tmp_path, monkeypatch, request):
     assert frozen.status_code == 201, frozen.text
     candidate = frozen.json()
     assert client.post(f"{candidates}/{candidate['id']}/approve", json=_approval_payload(candidate), headers=HEADERS).status_code == 200
-    short_experiment = getattr(request, "param", None) == "short"
-    if short_experiment:
-        owner.role = "admin"
-    if not short_experiment:
-        monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: True)
     registration = db_session.scalar(select(CapabilityRegistration).where(
         CapabilityRegistration.kind == "publisher", CapabilityRegistration.key == wechat_official.KEY,
         CapabilityRegistration.version == "1"))
@@ -131,16 +126,13 @@ def ready(client, db_session, tmp_path, monkeypatch, request):
     db_session.flush()
     scope = {"channel": "wechat", "content_form": "article", "action": "auto_draft", "content_account_id": account.id,
         "account_ref": account.platform_account_id, "publisher_key": wechat_official.KEY, "publisher_version": "1"}
-    if not short_experiment:
-        capability_integrations.append_verification(db_session, registration, scope_kind="publisher_action", scope=scope,
-            result="verified", actor=owner.email, evidence={"kind": "human_readback", "reference_hash": "e" * 64})
     db_session.commit()
     auth_url = f"{candidates}/{candidate['id']}/delivery-authorizations"
     auth = {"channel": "wechat", "content_form": "article", "action": "auto_draft", "content_account_id": account.id,
             "account_ref": account.platform_account_id, "authorization_version": "v1"}
     return {"auth_url": auth_url, "auth": auth, "account": account, "owner": owner, "revision": revision,
             "candidate": candidate, "data": data, "inline": inline, "inline_data": inline_data,
-            "registration": registration, "scope": scope, "short_experiment": short_experiment}
+            "registration": registration, "scope": scope}
 
 
 @pytest.fixture
@@ -151,10 +143,6 @@ def wire(monkeypatch, db_session, ready):
     article = {}
 
     class Transport:
-        def __init__(self, **kwargs):
-            if ready["short_experiment"]:
-                assert wechat_official.check_short_draft_authority(kwargs["experiment_authority"], kwargs["experiment_scope"])
-
         def token(self, runtime):
             attempts = db_session.scalars(select(DeliveryAttempt)).all()
             assert len(attempts) == 1 and attempts[0].status == "running"
@@ -189,21 +177,6 @@ def _authorize(client, ready):
     return response.json()["id"]
 
 
-def _experiment_request(ready):
-    return {"account_id": ready["account"].id, "appid": ready["account"].platform_account_id,
-            "candidate_id": ready["candidate"]["id"], "candidate_hash": ready["candidate"]["candidate_hash"],
-            "actor": ready["owner"].email, "expires_at": int(time.time()) + 120}
-
-
-def _prepare_experiment(db, ready, authority=None):
-    from app.routers.delivery import GenericTargetIn
-    from app.services import wechat_official_delivery
-
-    return wechat_official_delivery.prepare_short_draft_experiment(db,
-        db.get(ContentAsset, ready["candidate"]["id"]), GenericTargetIn(**ready["auth"]), ready["owner"],
-        authority=authority or _experiment_request(ready))
-
-
 def _move_to_explicit_readback(db, target_id, attempt_id):
     target = db.get(DeliveryTarget, target_id)
     attempt = db.get(DeliveryAttempt, attempt_id)
@@ -213,7 +186,6 @@ def _move_to_explicit_readback(db, target_id, attempt_id):
     db.commit()
 
 
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
 @pytest.mark.parametrize("code,expected", [
     ("official_network_unavailable", "official_network_unavailable"),
     ("official_api_rejected", "official_api_rejected"),
@@ -227,7 +199,8 @@ def test_upload_unknown_preserves_only_bounded_diagnostics(client, db_session, r
         raise wechat_official_transport.OfficialTransportError(code, dispatched=True)
 
     monkeypatch.setattr(wire[1], "upload_cover", fail_upload)
-    target_id, attempt_id, claim = _prepare_experiment(db_session, ready)
+    target_id = _authorize(client, ready)
+    attempt_id, claim = wechat_official_delivery.prepare(db_session, target_id, ready["owner"])
     result = wechat_official_delivery.execute_prepared(db_session, target_id, attempt_id, claim, ready["owner"])
     assert result["status"] == "unknown" and result["target_status"] == "reconciliation_needed"
     attempt = db_session.get(DeliveryAttempt, attempt_id, populate_existing=True)
@@ -239,150 +212,6 @@ def test_upload_unknown_preserves_only_bounded_diagnostics(client, db_session, r
     with pytest.raises(HTTPException):
         wechat_official_delivery.execute_prepared(db_session, target_id, attempt_id, claim, ready["owner"])
     assert wire[0] == ["token", "cover"]
-
-
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
-def test_short_experiment_product_claim_without_general_verification(client, db_session, ready, wire):
-    from app.services import wechat_official_delivery
-
-    denied = client.post(ready["auth_url"], json=ready["auth"], headers=HEADERS)
-    assert denied.status_code == 409
-    target_id, attempt_id, claim = _prepare_experiment(db_session, ready)
-    target = db_session.get(DeliveryTarget, target_id)
-    attempt = db_session.get(DeliveryAttempt, attempt_id)
-    assert target.capability_snapshot_json["verified"] is False
-    assert target.capability_snapshot_json["remote_verified"] is False
-    assert attempt.status == "prepared" and wire[0] == []
-    assert wechat_official.remote_contract_ready() is False
-    result = wechat_official_delivery.execute_prepared(db_session, target_id, attempt_id, claim, ready["owner"])
-    assert result["status"] == "succeeded" and wire[0] == ["token", "cover", "create"]
-    assert db_session.scalars(select(PublishedContentRecord)).all() == []
-    assert db_session.scalars(select(DeliveryReceipt)).all() == []
-    denied = client.post(ready["auth_url"], json={**ready["auth"], "authorization_version": "ordinary-2"}, headers=HEADERS)
-    assert denied.status_code == 409
-
-
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
-@pytest.mark.parametrize("mutation", ["expired", "tampered", "disabled", "revoked", "rotated", "actor", "other_attempt"])
-def test_short_experiment_claim_live_mismatch_zero_dispatch(client, db_session, ready, wire, monkeypatch, mutation):
-    from app.services import wechat_official_delivery
-
-    target_id, attempt_id, claim = _prepare_experiment(db_session, ready)
-    target = db_session.get(DeliveryTarget, target_id)
-    if mutation == "expired":
-        fixed_now = target.capability_snapshot_json["short_draft_authority"]["expires_at"]
-        monkeypatch.setattr(wechat_official.time, "time", lambda: fixed_now)
-    elif mutation in {"tampered", "other_attempt"}:
-        import copy
-
-        snapshot = copy.deepcopy(target.capability_snapshot_json)
-        proof = snapshot["short_draft_authority"]
-        if mutation == "tampered":
-            proof["signature"] = "0" * 64
-        else:
-            proof["scope"]["attempt_id"] += 1
-        target.capability_snapshot_json = snapshot
-    elif mutation == "disabled":
-        ready["registration"].status = "disabled"
-    elif mutation == "revoked":
-        capability_integrations.append_verification(db_session, ready["registration"],
-            scope_kind="publisher_action", scope=ready["scope"], result="revoked", actor=ready["owner"].email,
-            evidence={"kind": "revocation", "reason_code": "operator_revoked"})
-    elif mutation == "rotated":
-        monkeypatch.setenv(f"AICS_WECHAT_ACCOUNT_{ready['account'].id}_APPSECRET_VERSION", "v2")
-    else:
-        target.authorized_by = "other@studio.local"
-    db_session.commit()
-    with pytest.raises(HTTPException):
-        wechat_official_delivery.execute_prepared(db_session, target_id, attempt_id, claim, ready["owner"])
-    db_session.rollback()
-    assert wire[0] == []
-    assert db_session.get(DeliveryAttempt, attempt_id).status == "prepared"
-
-
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
-def test_short_experiment_unknown_has_no_second_attempt(client, db_session, ready, wire, monkeypatch):
-    from app.services import wechat_official_delivery
-    from app.services.wechat_official_transport import OfficialTransportError
-
-    target_id, attempt_id, claim = _prepare_experiment(db_session, ready)
-    monkeypatch.setattr(wire[1], "create_draft", lambda *args: (_ for _ in ()).throw(
-        OfficialTransportError("official_response_unconfirmed", dispatched=True)))
-    result = wechat_official_delivery.execute_prepared(db_session, target_id, attempt_id, claim, ready["owner"])
-    assert result["status"] == "unknown" and result["remote_id"] is None
-    before = list(wire[0])
-    with pytest.raises(HTTPException):
-        wechat_official_delivery.prepare(db_session, target_id, ready["owner"])
-    db_session.rollback()
-    with pytest.raises(HTTPException):
-        _prepare_experiment(db_session, ready)
-    db_session.rollback()
-    assert wire[0] == before
-    assert len(db_session.scalars(select(DeliveryAttempt)).all()) == 1
-
-
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
-def test_short_experiment_invalid_authority_rolls_back_target_and_attempt(client, db_session, ready, wire):
-    authority = {**_experiment_request(ready), "actor": "foreign@studio.local"}
-    with pytest.raises(HTTPException):
-        _prepare_experiment(db_session, ready, authority)
-    db_session.rollback()
-    assert db_session.scalars(select(DeliveryTarget)).all() == []
-    assert db_session.scalars(select(DeliveryAttempt)).all() == []
-    assert wire[0] == []
-
-
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
-def test_short_experiment_explicit_known_id_readback_never_creates(client, db_session, ready, wire, monkeypatch):
-    from app.services import wechat_official_delivery
-
-    target_id, attempt_id, claim = _prepare_experiment(db_session, ready)
-    assert wechat_official_delivery.execute_prepared(db_session, target_id, attempt_id, claim, ready["owner"])["status"] == "succeeded"
-    _move_to_explicit_readback(db_session, target_id, attempt_id)
-    result = wechat_official_delivery.readback(db_session, target_id, attempt_id, ready["owner"])
-    assert result["status"] == "succeeded"
-    assert wire[0] == ["token", "cover", "create", "token", "read"]
-
-
-@pytest.mark.parametrize("ready", ["inline"], indirect=True)
-def test_short_experiment_preupload_bound_refuses_before_target_or_token(client, db_session, ready, wire, monkeypatch):
-    monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: False)
-    ready["owner"].role = "admin"
-    db_session.commit()
-    with pytest.raises(HTTPException) as raised:
-        _prepare_experiment(db_session, ready)
-    assert raised.value.detail == "official_experiment_body_limit"
-    db_session.rollback()
-    assert wire[0] == []
-    assert db_session.scalars(select(DeliveryTarget)).all() == []
-    assert db_session.scalars(select(DeliveryAttempt)).all() == []
-
-
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
-def test_short_experiment_signing_failure_is_atomic(client, db_session, ready, wire, monkeypatch):
-    monkeypatch.setattr(wechat_official, "sign_short_draft_authority",
-        lambda *args, **kwargs: (_ for _ in ()).throw(ValueError("signing_failed")))
-    with pytest.raises(HTTPException):
-        _prepare_experiment(db_session, ready)
-    db_session.rollback()
-    assert db_session.scalars(select(DeliveryTarget)).all() == []
-    assert db_session.scalars(select(DeliveryAttempt)).all() == []
-    assert wire[0] == []
-
-
-@pytest.mark.parametrize("ready", ["short"], indirect=True)
-def test_short_experiment_started_worker_not_reclaimed(client, db_session, ready, wire):
-    from app.services import wechat_official_delivery
-
-    target_id, attempt_id, claim = _prepare_experiment(db_session, ready)
-    attempt = db_session.get(DeliveryAttempt, attempt_id)
-    attempt.response_metadata_json = {**attempt.response_metadata_json, "execution_started": True}
-    db_session.commit()
-    with pytest.raises(HTTPException) as raised:
-        wechat_official_delivery.execute_prepared(db_session, target_id, attempt_id, claim, ready["owner"])
-    assert raised.value.detail == "official_execution_claimed"
-    db_session.rollback()
-    assert wire[0] == [] and attempt.status == "prepared"
 
 
 def test_prepared_claim_survives_rotation_without_first_dispatch(client, db_session, ready, wire, monkeypatch):
@@ -398,7 +227,8 @@ def test_prepared_claim_survives_rotation_without_first_dispatch(client, db_sess
     with pytest.raises(HTTPException) as raised:
         wechat_official_delivery._step(db_session, target, attempt_id, claim, ready["owner"], "token",
             lambda *args: wire[1]().token(None), lambda *args: None)
-    assert raised.value.status_code == 409 and raised.value.detail == "official_publisher_unverified"
+    # A rotated credential changes the runtime fingerprint the claim was made with, so no step can run.
+    assert raised.value.status_code == 409 and raised.value.detail == "official_execution_claim_invalid"
     db_session.rollback()
     attempt = db_session.get(DeliveryAttempt, attempt_id, populate_existing=True)
     assert attempt.status == "prepared" and attempt.response_metadata_json == before
@@ -427,8 +257,7 @@ def test_owned_candidate_cannot_authorize_other_persona_account(client, db_sessi
     assert not db_session.scalars(select(DeliveryAttempt)).all() and wire[0] == []
 
 
-@pytest.mark.parametrize("rotate_a", [False, True])
-def test_two_accounts_share_persona_not_runtime_or_delivery_history(client, db_session, ready, monkeypatch, rotate_a):
+def test_two_accounts_share_persona_not_runtime_or_delivery_history(client, db_session, ready, monkeypatch):
     from app.models import DeliveryTarget
     from app.services import wechat_official_transport
 
@@ -444,10 +273,6 @@ def test_two_accounts_share_persona_not_runtime_or_delivery_history(client, db_s
         "revision": 1, "enabled": True, "credential_ref": ref_b, "credential_version": "v1",
         "platform_account_id": account_b.platform_account_id}))
     db_session.flush()
-    scope_b = {**ready["scope"], "content_account_id": account_b.id, "account_ref": account_b.platform_account_id}
-    capability_integrations.append_verification(db_session, ready["registration"], scope_kind="publisher_action",
-        scope=scope_b, result="verified", actor=ready["owner"].email,
-        evidence={"kind": "human_readback", "reference_hash": "f" * 64})
     db_session.commit()
     target_a = _authorize(client, ready)
     response_b = client.post(ready["auth_url"], json={**ready["auth"], "content_account_id": account_b.id,
@@ -486,12 +311,7 @@ def test_two_accounts_share_persona_not_runtime_or_delivery_history(client, db_s
             return articles[account_id]
 
     monkeypatch.setattr(wechat_official_transport, "OfficialTransport", Transport)
-    if rotate_a:
-        monkeypatch.setenv(f"AICS_WECHAT_ACCOUNT_{account_a.id}_APPSECRET", "c" * 32)
-        denied = client.post(f"/api/v1/delivery-targets/{target_a}/execute", headers=HEADERS)
-        assert denied.status_code == 409, denied.text
-        assert not db_session.scalars(select(DeliveryAttempt)).all() and calls == []
-    for account_id, target in [(account_b.id, target_b)] + ([] if rotate_a else [(account_a.id, target_a)]):
+    for account_id, target in [(account_b.id, target_b)] + [(account_a.id, target_a)]:
         result = client.post(f"/api/v1/delivery-targets/{target}/execute", headers=HEADERS)
         assert result.status_code == 200 and result.json()["status"] == "succeeded", result.text
         attempt = db_session.scalar(select(DeliveryAttempt).where(DeliveryAttempt.target_id == target))
@@ -507,8 +327,6 @@ def test_two_accounts_share_persona_not_runtime_or_delivery_history(client, db_s
         assert saved.approved_candidate_hash == ready["candidate"]["candidate_hash"]
         assert not db_session.scalars(select(PublishedContentRecord)).all()
     assert [item for item in calls if item[0] == account_b.id] == [(account_b.id, step) for step in ["token", "cover", "create"]]
-    if rotate_a:
-        assert all(account_id != account_a.id for account_id, _ in calls)
 
 
 @pytest.mark.parametrize("attempt_status", ["prepared", "running"])
@@ -656,13 +474,6 @@ def test_rotate_after_cover_blocks_create_but_preserves_upload(client, db_sessio
     assert attempt.response_metadata_json["resource_mapping"][0]["remote_ref"] == "exact-cover-id"
 
 
-def test_real_contract_gate_refuses_authorization_without_attempt(client, db_session, ready, wire, monkeypatch):
-    monkeypatch.setattr(wechat_official, "remote_contract_ready", lambda: False)
-    response = client.post(ready["auth_url"], json=ready["auth"], headers=HEADERS)
-    assert response.status_code in (409, 422)
-    assert not db_session.scalars(select(DeliveryAttempt)).all() and wire[0] == []
-
-
 def test_prepared_or_crashed_claim_cannot_be_reclaimed(client, db_session, ready, wire):
     from fastapi import HTTPException
 
@@ -745,8 +556,9 @@ def test_revocation_after_cover_refuses_next_external_step(client, db_session, r
 
     def revoke(self, *args):
         result = original(self, *args)
-        capability_integrations.append_verification(db_session, ready["registration"], scope_kind="publisher_action",
-            scope=ready["scope"], result="revoked", actor=ready["owner"].email, evidence={"kind": "revocation"})
+        # Disabling the publisher registration is the stop switch between steps.
+        ready["registration"].status = "disabled"
+        db_session.commit()
         return result
 
     monkeypatch.setattr(Transport, "upload_cover", revoke)

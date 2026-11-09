@@ -165,11 +165,12 @@ def build_manifest_v5(inputs: dict) -> dict:
             raise ValueError("invalid export metadata")
         manifest["export_metadata"] = metadata
     if "official_render" in inputs:
-        from .wechat_official_render import validate_article_render
+        from .wechat_official_render import IMAGE_MESSAGE_SCHEMA, validate_official_render
 
-        if variant["payload_schema"] != "wechat.article.v1":
+        expected = IMAGE_MESSAGE_SCHEMA if variant["payload_schema"] == "wechat.image_message.v1" else "wechat.official.article.v1"
+        if variant["payload_schema"] not in {"wechat.article.v1", "wechat.image_message.v1"} or inputs["official_render"].get("schema") != expected:
             raise ValueError("official_render_target_mismatch")
-        validate_article_render(inputs["official_render"], canonical, assets, evidence_refs)
+        validate_official_render(inputs["official_render"], canonical, assets, evidence_refs)
         manifest["official_render"] = inputs["official_render"]
     errors = validate_json_bounds(manifest)
     if errors:
@@ -282,6 +283,10 @@ def load_manifest_v5_inputs(db: Session, row: ChannelVariantRevision) -> dict:
         from .wechat_official_render import build_material_article_render
 
         inputs["official_render"] = build_material_article_render(db, row.payload_json, assets, evidence_refs)
+    elif row.payload_schema == "wechat.image_message.v1":
+        from .wechat_official_render import build_material_image_message_render
+
+        inputs["official_render"] = build_material_image_message_render(db, row.payload_json, assets, evidence_refs, unit_id=row.content_unit_id)
     from .creative_packages import external_material_sources
 
     external = external_material_sources(db, row.project_id, assets)

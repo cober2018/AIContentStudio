@@ -37,7 +37,7 @@ def profile_reasons(form: ContentFormSpec, document: dict) -> list[str]:
         roles = media_rules["required_roles"]
         if not isinstance(roles, list) or any(not isinstance(role, str) for role in roles) or len(roles) != len(set(roles)):
             return ["graphic_profile_rules_invalid"]
-        if form.content_form != "image_note" or set(roles) - {"card_image"}:
+        if form.content_form not in {"image_note", "image_message"} or set(roles) - {"card_image"}:
             return ["graphic_profile_rule_unavailable"]
     canvases = document["canvases"]
     reasons = []
@@ -50,7 +50,7 @@ def profile_reasons(form: ContentFormSpec, document: dict) -> list[str]:
     if (rules.get("cover_required") is True or form.media_requirements.get("cover") == "required") and canvases[0].get("role") != "cover":
         reasons.append("graphic_cover_required")
     if media_rules.get("inline") == "required":
-        if form.content_form == "image_note":
+        if form.content_form in {"image_note", "image_message"}:
             has_inline = any(canvas.get("role") == "body" for canvas in canvases)
         else:
             has_inline = any(layer["type"] in {"image", "chart"} and layer["visible"] for canvas in canvases for layer in canvas["layers"])
@@ -118,7 +118,7 @@ def _fact(db: Session, master: ContentMasterRevision, requirement: dict) -> tupl
         issues, coverage = [], {"semantic": "unavailable", "reason": "model_use_excluded" if excluded else "fact_snapshot_invalid"}
     else:
         context = {"facts": [{"id": item.id, "statement": str((item.snapshot_json or {}).get("statement") or "")[:400]} for item in items[:50]]}
-        issues, coverage = _semantic_review("fact_review", text=body, context=context, configured=requirement["metadata"]["semantic"]["configured"])
+        issues, coverage = _semantic_review("fact_review", text=body, context=context, configured=requirement["metadata"]["semantic"]["configured"], review=(db, master))
         if len(items) > 50:
             coverage.update({"semantic": "partial" if coverage["semantic"] == "verified" else coverage["semantic"], "reason": "fact_input_truncated"})
     coverage.update({"deterministic": "exact_claim_refs_only", "model_use_excluded_item_ids": excluded, "invalid_snapshot_item_ids": invalid, "fact_count": len(items), "text_layer_count": len(text_layers)})
@@ -144,7 +144,7 @@ def _identity(db: Session, master: ContentMasterRevision, requirement: dict) -> 
     if not body.strip() or not profile:
         semantic, coverage = [], {"semantic": "unavailable", "reason": "visible_text_missing" if not body.strip() else "identity_scope_missing"}
     else:
-        semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"])
+        semantic, coverage = _semantic_review("identity_review", text=body, context={"identity": profile, "checksum": snapshot.checksum}, configured=requirement["metadata"]["semantic"]["configured"], review=(db, master))
     issues.extend(semantic)
     coverage.update({"deterministic": "explicit_phrases_only", "text_layer_count": len(text_layers), "visual_semantics": "unavailable"})
     status = "blocker" if any(issue["severity"] == "blocker" for issue in issues) else "warning"

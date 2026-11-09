@@ -87,6 +87,8 @@ class IdentityProfile(BaseModel):
     brand_voice_version_id: int | None = None
     # Real photos of the persona; only revision ids are kept, the files live in the common library.
     portrait_material_revision_ids: list[int] | None = Field(default=None, max_length=3)
+    # The one portrait the persona's separate covers (3:4, 4:3) carry; it goes public, so it must be cleared for that.
+    cover_portrait_material_revision_id: int | None = None
     # A folder in the Obsidian vault with this persona's real spoken transcripts; read fresh for each video brief.
     speech_sample_folder: str | None = Field(default=None, max_length=500)
     # The AE 封面 template every edit task of this persona renders its cover text with.
@@ -160,7 +162,7 @@ class Hierarchy:
 
 def hierarchy(db: Session, user: User, *, persona_id: int, account_id: int | None = None, series_id: int | None = None, mutable: bool = False) -> Hierarchy:
     persona = db.get(ContentPersona, persona_id)
-    if persona is None or persona.owner_user_id != user.id:
+    if persona is None or persona.owner_user_id != user.id or (mutable and persona.status == "deleted"):
         raise HTTPException(404, "内容角色不存在")
     brand = db.get(ContentBrand, persona.brand_id) if persona.brand_id else None
     if persona.brand_id and (brand is None or brand.owner_user_id != user.id):
@@ -372,9 +374,9 @@ def publisher_connection(db: Session, user: User, account_id: int) -> dict:
         "revision": config.get("revision", 0), "enabled": config.get("enabled", False),
         "credential_ref": f"AICS_WECHAT_ACCOUNT_{account.id}_APPSECRET",
         "credential_version": config.get("credential_version"),
-        "configured": bool(setting), "verified": False, "executable": False,
+        "configured": bool(setting), "verified": False, "executable": bool(setting) and config.get("enabled") is True,
         "read_only": user.role != "admin" or any(row.status != "active" for _, row in ancestry.members()),
-        "unavailable_reason": "official_contract_unresolved",
+        "unavailable_reason": None if bool(setting) and config.get("enabled") is True else "official_connection_disabled",
     }
 
 
@@ -447,6 +449,15 @@ def save_revision(db: Session, user: User, kind: str, entity_id: int, *, expecte
         if kind != "persona":
             raise HTTPException(422, "portrait_persona_only")
         data["portrait_material_revision_ids"] = _portraits(db, user, data["portrait_material_revision_ids"])
+    if data.get("cover_portrait_material_revision_id") is not None:
+        cover_portrait = data["cover_portrait_material_revision_id"]
+        if kind != "persona":
+            raise HTTPException(422, "cover_portrait_persona_only")
+        # Removing the portrait itself quietly drops it from the covers rather than blocking the removal.
+        if cover_portrait not in (data.get("portrait_material_revision_ids") or []):
+            data.pop("cover_portrait_material_revision_id")
+        elif not db.get(MaterialRevision, cover_portrait).public_use_allowed:
+            raise HTTPException(422, {"code": "cover_portrait_not_public", "message": "这张形象照没允许公开发布，先到素材库把它改成允许公开，再用在封面上"})
     if data.get("cover_template") is not None:
         from .craft_skills import cover_template
 

@@ -946,9 +946,27 @@ def _trimmed(samples, rate: int, channels: int):
     return samples[max(0, first - pad) * channels:min(frames, last + 1 + pad) * channels]
 
 
-def _redub(db: Session, user: User, project_id: int, unit, master, document: dict, line_ids: list[str]) -> dict:
-    import wave
+MATERIAL_LIMIT_BYTES = 30 * 1024 * 1024
 
+
+def _flac(samples, rate: int, channels: int) -> bytes:
+    """Lossless, so lines left alone stay sample-identical; identical channels cost almost nothing in FLAC's side channel."""
+    with tempfile.TemporaryDirectory(prefix="aics-flac-") as folder:
+        # A file, not a pipe: ffmpeg can only write the total length into the header when it can seek back.
+        output = Path(folder) / "voice.flac"
+        done = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-f", "s16le", "-ar", str(rate), "-ac", str(channels), "-i", "-",
+                               "-c:a", "flac", str(output)], input=samples.tobytes(), capture_output=True, check=False, timeout=300)
+        if done.returncode != 0 or not output.exists():
+            _fail("voiceover_audio_unreadable", "拼好的配音编码失败", 409)
+        return output.read_bytes()
+
+
+def _too_large(total_ms: int, size: int) -> None:
+    _fail("voiceover_redub_too_large", f"配音 {total_ms / 1000:.1f} 秒，重配后的整条配音预计约 {size / 1024 / 1024:.1f} MB，"
+          f"超过素材 {MATERIAL_LIMIT_BYTES // 1024 // 1024} MB 上限存不进去；请缩短片子或整条重新生成", 413)
+
+
+def _redub(db: Session, user: User, project_id: int, unit, master, document: dict, line_ids: list[str]) -> dict:
     from ..models import MaterialRevision
     from .edit_handoff import _save
     from .materials import create_material, create_revision, local_file_checked, read_bytes_checked
@@ -994,6 +1012,15 @@ def _redub(db: Session, user: User, project_id: int, unit, master, document: dic
         per_ms = rate * channels / 1000
         fps = (document.get("postproduction") or {}).get("fps") or 60
         fade = round(rate / fps) * channels
+        # Checked before any MiniMax call so a result that cannot be saved is never billed: each redubbed region at its uncompressed worst case.
+        regions = 0
+        for line_id in wanted:
+            index = positions[line_id]
+            region_end = spans[index + 1][0] if index + 1 < len(spans) else total_ms
+            regions += round((region_end - spans[index][0]) * per_ms) * 2
+        expected = len(_flac(original, rate, channels)) + regions
+        if expected > MATERIAL_LIMIT_BYTES:
+            _too_large(total_ms, expected)
         patched = original[:]
         placed = []
         for line_id in sorted(wanted, key=positions.get):
@@ -1036,13 +1063,9 @@ def _redub(db: Session, user: User, project_id: int, unit, master, document: dic
                     patched[b + offset] = int(original[b + offset] * weight)
             placed.append({"line_id": line_id, "order": index + 1, "old_start_ms": start, "old_end_ms": end,
                            "new_start_ms": start, "new_end_ms": start + length, "seams_ms": [seam_a, seam_b]})
-        output = Path(folder) / "voice.wav"
-        with wave.open(str(output), "wb") as handle:
-            handle.setnchannels(channels)
-            handle.setsampwidth(2)
-            handle.setframerate(rate)
-            handle.writeframes(patched.tobytes())
-        content = output.read_bytes()
+        content = _flac(patched, rate, channels)
+    if len(content) > MATERIAL_LIMIT_BYTES:
+        _too_large(total_ms, len(content))
     srt = (revision.metadata_json or {}).get("subtitles_srt")
     if srt:
         kept = [cue for cue in _cues(srt) if not any(item["old_start_ms"] <= (cue[0] + cue[1]) // 2 <= item["old_end_ms"] for item in placed)]
@@ -1051,10 +1074,10 @@ def _redub(db: Session, user: User, project_id: int, unit, master, document: dic
         srt = "\n".join(f"{n}\n{_stamp(cue[0])} --> {_stamp(cue[1])}\n{cue[2]}\n" for n, cue in enumerate(kept, 1))
     material = create_material(db, kind="audio", title=f"配音（重配 {len(placed)} 句）· {unit.title}"[:200], tags=["配音"], created_by=user.email)
     new_revision = create_revision(
-        db, material, content=content, suffix=".wav", declared_mime="audio/wav", source_kind="ai_generated",
+        db, material, content=content, suffix=".flac", declared_mime="audio/flac", source_kind="ai_generated",
         provider_key="minimax.cli", provider_version=config["model_id"], prompt_text="\n".join(lines[item["order"] - 1]["text"] for item in placed)[:4000],
         rights_status="cleared", public_use_allowed=True, model_use_allowed=True, attribution_text="MiniMax 配音",
-        duration_ms=_duration_ms(content, ".wav"),
+        duration_ms=_duration_ms(content, ".flac"),
         metadata={"subtitles_srt": srt, "voice_settings": config, "redub": {"from_revision_id": revision.id, "lines": placed},
                   "source_master_revision_id": master.id},
         created_by=user.email)

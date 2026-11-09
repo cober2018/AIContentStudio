@@ -4,7 +4,6 @@ import os
 
 import pytest
 from PIL import Image
-from test_f7_media_renderers import setup  # noqa: F401 Imported pytest fixture.
 
 
 def request(layers=None):
@@ -144,31 +143,3 @@ def test_runtime_font_bytes_drift_invalidates_fingerprint(renderer, monkeypatch,
     monkeypatch.setenv("GRAPHIC_RENDER_FONT", str(font))
     assert renderer.runtime_fingerprint() != original
     assert renderer.render_master(request()).status == "failed"
-
-
-def test_real_renderer_api_stage_accept_and_explicit_manual_bind(client, db_session, setup, renderer):  # noqa: F811 Pytest fixture injection.
-    from test_f7_media_renderers import decision
-
-    from app.models import ContentMasterRevision, MaterialRevision
-    from app.services.content_harness import providers
-
-    providers.registry.register("renderer", renderer.key, renderer.version, renderer)
-    master = setup["master"]
-    response = client.post(f"{setup['path']}/{master['id']}/media-render-previews", json={**setup["body"],
-        "renderer_key": renderer.key, "renderer_version": renderer.version})
-    assert response.status_code == 200, response.text
-    assert response.json()["verified"] is False
-    accepted = client.post(f"/api/v1/provider-media/{response.json()['stage_id']}/accept", json=decision())
-    assert accepted.status_code == 201, accepted.text
-    revision = db_session.get(MaterialRevision, accepted.json()["material_revision_id"])
-    assert revision.source_metadata_json["renderer_origin"]["render_input_hash"] == response.json()["input_hash"]
-    assert db_session.query(ContentMasterRevision).count() == 1
-    payload = {**master["payload"], "render_asset_ref": [{"canvas_id": "one", "material_revision_id": revision.id}]}
-    saved = client.post(setup["path"], json={"payload_schema": "graphic.master.v2", "payload": payload,
-        "expected_revision": 1, "idempotency_key": "explicit-real-render-bind",
-        "asset_refs": [{"material_revision_id": revision.id, "content_hash": revision.content_hash,
-            "role": "render_output", "slot_key": "one", "placement": {"canvas_id": "one"}}],
-        "render_attestation": {"confirmed": True, "render_input_hash": response.json()["input_hash"]}})
-    assert saved.status_code == 200, saved.text
-    assert db_session.query(ContentMasterRevision).count() == 2
-    assert saved.json()["edit_summary"]["render_attestation"]["origin"] == "manual"

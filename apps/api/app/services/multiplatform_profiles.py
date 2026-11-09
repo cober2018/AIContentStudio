@@ -12,7 +12,7 @@ from .channel_adapters import FIRST_BATCH
 
 DECLARED_TARGETS = tuple(target for target in FIRST_BATCH if target[0] not in {"xueqiu", "juejin"})
 _INSTRUCTIONS = {
-    "wechat": "公众号文章：用清晰标题和完整正文，保留来源声明；草稿箱另需精确授权。",
+    "wechat": "公众号：文章用清晰标题和完整正文；图片消息用有序成品图和一小段纯文字。都可推到草稿箱。",
     "toutiao": "头条文章：标题交代事件与读者收益，概要直述重点，正文解释背景和事实。",
     "baijia": "百家号文章：标题明确主题，概要提供检索线索，正文按主题分节并保留来源。",
     "zhihu": "知乎：文章逐步论证并说明证据边界；回答先直接回应用户确认的问题，再展开依据。",
@@ -29,10 +29,20 @@ _FORM_INSTRUCTIONS = {
     ("zhihu", "answer"): "知乎回答：仅回应用户确认的具体问题；首段直接回答，再解释依据和限制。",
     ("bilibili", "article"): "B站专栏：以主题标题和概要引入，用分节、列表和代码解释技术细节。",
     ("bilibili", "image_note"): "B站图文：用有序真实成品图卡逐步说明主题，正文说明和标签与图卡对应。",
+    ("wechat", "article"): "公众号文章：用清晰标题和完整正文，保留来源声明；可推到公众号草稿箱。",
+    ("wechat", "image_message"): "公众号图片消息：1–20 张有序成品图，第一张是封面；标题不超过 32 字，正文是一小段纯文字，不写 HTML；可推到公众号草稿箱。",
     ("x", "single"): "X 单帖：用一个简洁完整段落陈述重点，保留必要来源和声明。",
     ("x", "thread"): "X 推串：拆成有序短帖，每帖可独立理解，整串保持递进逻辑和精确引用。",
     ("x", "long_post"): "X 长帖：保持连续文字和自然段落，不拆为推串，不添加 Articles 标题结构。",
     ("x", "articles"): "X Articles：用独立标题、概要和 typed 正文段落展开主题，保留标签与来源。",
+}
+
+
+# 公众号 forms push to the draft box; labels are forced so the old 「公众号文章」 form name is replaced.
+_FORM_OVERRIDES = {
+    ("wechat", "article"): {"label": "文章", "delivery_actions": ["copy_package", "manual_handoff", "auto_draft"]},
+    ("wechat", "image_message"): {"label": "图片消息", "publisher_candidates": ["publisher.wechat.official"],
+                                  "delivery_actions": ["copy_package", "manual_handoff", "auto_draft"]},
 }
 
 
@@ -102,6 +112,7 @@ def dry_run_profiles(db, channels: list[str]) -> dict:
                     existing[key] = value
                 else:
                     existing.setdefault(key, value)
+            existing.update(deepcopy(_FORM_OVERRIDES.get((channel, form), {})))
         changes.append({"channel_id": channel, "expected_profile_version_id": current.id if current else None,
                         "expected_profile_hash": _hash(before), "expected_max_version": rows[0].version if rows else 0,
                         "before": before, "after": after, "differences": _diff(before, after),
